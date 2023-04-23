@@ -1,0 +1,569 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstApp" version="1.0"/>
+  <package name="gstreamer-bad-base-camerabinsrc-1.0"/>
+  <namespace name="GstBadBaseCameraBin" version="1.0" shared-library="libgstbasecamerabinsrc-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <function-macro name="BASE_CAMERA_SRC" c:identifier="GST_BASE_CAMERA_SRC" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="BASE_CAMERA_SRC_CAST" c:identifier="GST_BASE_CAMERA_SRC_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="BASE_CAMERA_SRC_CLASS" c:identifier="GST_BASE_CAMERA_SRC_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="BASE_CAMERA_SRC_GET_CLASS" c:identifier="GST_BASE_CAMERA_SRC_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="BASE_CAMERA_SRC_IMAGE_PAD_NAME" value="imgsrc" c:type="GST_BASE_CAMERA_SRC_IMAGE_PAD_NAME">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME" value="preview-image" c:type="GST_BASE_CAMERA_SRC_PREVIEW_MESSAGE_NAME">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="BASE_CAMERA_SRC_VIDEO_PAD_NAME" value="vidsrc" c:type="GST_BASE_CAMERA_SRC_VIDEO_PAD_NAME">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME" value="vfsrc" c:type="GST_BASE_CAMERA_SRC_VIEWFINDER_PAD_NAME">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <class name="BaseCameraSrc" c:symbol-prefix="base_camera_src" c:type="GstBaseCameraSrc" parent="Gst.Bin" glib:type-name="GstBaseCameraSrc" glib:get-type="gst_base_camera_src_get_type" glib:type-struct="BaseCameraSrcClass">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <implements name="Gst.ChildProxy"/>
+      <virtual-method name="construct_pipeline">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_mode" invoker="set_mode">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">Set the chosen #GstCameraBinMode capture mode.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">the camerasrc bin</doc>
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+          <parameter name="mode" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">the mode</doc>
+            <type name="CameraBinMode" c:type="GstCameraBinMode"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_preview">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+          <parameter name="preview_caps" transfer-ownership="none">
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="set_zoom">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+          <parameter name="zoom" transfer-ownership="none">
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="setup_pipeline">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="start_capture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="src" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="stop_capture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="src" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <method name="finish_capture" c:identifier="gst_base_camera_src_finish_capture">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="post_preview" c:identifier="gst_base_camera_src_post_preview">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+          <parameter name="sample" transfer-ownership="none">
+            <type name="Gst.Sample" c:type="GstSample*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_mode" c:identifier="gst_base_camera_src_set_mode">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">Set the chosen #GstCameraBinMode capture mode.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">the camerasrc bin</doc>
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+          <parameter name="mode" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">the mode</doc>
+            <type name="CameraBinMode" c:type="GstCameraBinMode"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="setup_preview" c:identifier="gst_base_camera_src_setup_preview">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">Apply preview caps to preview pipeline and to video source.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">camerasrc bin</doc>
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+          <parameter name="preview_caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">preview caps to set</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="setup_zoom" c:identifier="gst_base_camera_src_setup_zoom">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">Apply zoom configured to camerabin to capture.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">camerasrc object</doc>
+            <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="auto-start" writable="1" transfer-ownership="none">
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="max-zoom" transfer-ownership="none">
+        <type name="gfloat" c:type="gfloat"/>
+      </property>
+      <property name="mode" writable="1" transfer-ownership="none">
+        <type name="CameraBin2Mode"/>
+      </property>
+      <property name="post-previews" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">When %TRUE, preview images should be posted to the bus when
+captures are made</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="preview-caps" writable="1" transfer-ownership="none">
+        <type name="Gst.Caps"/>
+      </property>
+      <property name="preview-filter" writable="1" transfer-ownership="none">
+        <type name="Gst.Element"/>
+      </property>
+      <property name="ready-for-capture" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">When TRUE new capture can be prepared. If FALSE capturing is ongoing
+and starting a new capture immediately is not possible.
+
+Note that calling start-capture from the notify callback of this property
+will cause a deadlock. If you need to react like this on the notify
+function, please schedule a new thread to do it. If you're using glib's
+mainloop you can use g_idle_add() for example.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="zoom" writable="1" transfer-ownership="none">
+        <type name="gfloat" c:type="gfloat"/>
+      </property>
+      <field name="parent">
+        <type name="Gst.Bin" c:type="GstBin"/>
+      </field>
+      <field name="mode">
+        <type name="CameraBinMode" c:type="GstCameraBinMode"/>
+      </field>
+      <field name="auto_start">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="capturing">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="capturing_mutex">
+        <type name="GLib.Mutex" c:type="GMutex"/>
+      </field>
+      <field name="preview_caps">
+        <type name="Gst.Caps" c:type="GstCaps*"/>
+      </field>
+      <field name="post_preview">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="preview_filter">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="preview_pipeline" introspectable="0">
+        <type name="CameraBinPreviewPipelineData" c:type="GstCameraBinPreviewPipelineData*"/>
+      </field>
+      <field name="width">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="height">
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="zoom">
+        <type name="gfloat" c:type="gfloat"/>
+      </field>
+      <field name="max_zoom">
+        <type name="gfloat" c:type="gfloat"/>
+      </field>
+      <field name="_gst_reserved">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <glib:signal name="start-capture" when="last" action="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+      <glib:signal name="stop-capture" when="last" action="1">
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
+    </class>
+    <record name="BaseCameraSrcClass" c:type="GstBaseCameraSrcClass" glib:is-gtype-struct-for="BaseCameraSrc">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <field name="parent">
+        <type name="Gst.BinClass" c:type="GstBinClass"/>
+      </field>
+      <field name="construct_pipeline">
+        <callback name="construct_pipeline">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="setup_pipeline">
+        <callback name="setup_pipeline">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_zoom">
+        <callback name="set_zoom">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+            </parameter>
+            <parameter name="zoom" transfer-ownership="none">
+              <type name="gfloat" c:type="gfloat"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_mode">
+        <callback name="set_mode">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">the camerasrc bin</doc>
+              <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+            </parameter>
+            <parameter name="mode" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">the mode</doc>
+              <type name="CameraBinMode" c:type="GstCameraBinMode"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="set_preview">
+        <callback name="set_preview">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+            </parameter>
+            <parameter name="preview_caps" transfer-ownership="none">
+              <type name="Gst.Caps" c:type="GstCaps*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="start_capture">
+        <callback name="start_capture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="src" transfer-ownership="none">
+              <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="stop_capture">
+        <callback name="stop_capture">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="src" transfer-ownership="none">
+              <type name="BaseCameraSrc" c:type="GstBaseCameraSrc*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <enumeration name="CameraBin2Mode" glib:type-name="GstCameraBin2Mode" glib:get-type="gst_camerabin_mode_get_type" c:type="GstCameraBin2Mode">
+      <member name="mode_image" value="1" c:identifier="Still image capture (default)" glib:nick="mode-image">
+      </member>
+      <member name="mode_video" value="2" c:identifier="Video recording" glib:nick="mode-video">
+      </member>
+    </enumeration>
+    <enumeration name="CameraBinMode" c:type="GstCameraBinMode">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h">Capture mode to use.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h"/>
+      <member name="image" value="1" c:identifier="MODE_IMAGE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h">image capture</doc>
+      </member>
+      <member name="video" value="2" c:identifier="MODE_VIDEO">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabin-enum.h">video capture</doc>
+      </member>
+    </enumeration>
+    <record name="CameraBinPreviewPipelineData" c:type="GstCameraBinPreviewPipelineData" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h"/>
+      <field name="pipeline" writable="1">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="appsrc" writable="1">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="filter" writable="1">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="appsink" writable="1">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="vscale" writable="1">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="element" writable="1">
+        <type name="Gst.Element" c:type="GstElement*"/>
+      </field>
+      <field name="pending_preview_caps" writable="1">
+        <type name="Gst.Caps" c:type="GstCaps*"/>
+      </field>
+      <field name="processing" writable="1">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="processing_lock" writable="1">
+        <type name="GLib.Mutex" c:type="GMutex"/>
+      </field>
+      <field name="processing_cond" writable="1">
+        <type name="GLib.Cond" c:type="GCond"/>
+      </field>
+    </record>
+    <function-macro name="IS_BASE_CAMERA_SRC" c:identifier="GST_IS_BASE_CAMERA_SRC" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_BASE_CAMERA_SRC_CLASS" c:identifier="GST_IS_BASE_CAMERA_SRC_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function name="camerabin_create_preview_pipeline" c:identifier="gst_camerabin_create_preview_pipeline" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Creates a new previewing pipeline that can receive buffers
+to be posted as camerabin preview messages for @element</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">The newly created #GstCameraBinPreviewPipelineData</doc>
+        <type name="CameraBinPreviewPipelineData" c:type="GstCameraBinPreviewPipelineData*"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Owner of this pipeline</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="filter" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Custom filter to process preview data (an extra ref is taken)</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="camerabin_destroy_preview_pipeline" c:identifier="gst_camerabin_destroy_preview_pipeline" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Frees a #GstCameraBinPreviewPipelineData</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="preview" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">the #GstCameraBinPreviewPipelineData</doc>
+          <type name="CameraBinPreviewPipelineData" c:type="GstCameraBinPreviewPipelineData*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="camerabin_preview_pipeline_post" c:identifier="gst_camerabin_preview_pipeline_post" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Converts the @sample to the desired format and posts the preview
+message to the bus.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">%TRUE on success</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="preview" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">the #GstCameraBinPreviewPipelineData</doc>
+          <type name="CameraBinPreviewPipelineData" c:type="GstCameraBinPreviewPipelineData*"/>
+        </parameter>
+        <parameter name="sample" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">the sample to be posted as a preview</doc>
+          <type name="Gst.Sample" c:type="GstSample*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="camerabin_preview_set_caps" c:identifier="gst_camerabin_preview_set_caps" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">The caps that preview buffers should have when posted
+on the bus</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="preview" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">the #GstCameraBinPreviewPipelineData</doc>
+          <type name="CameraBinPreviewPipelineData" c:type="GstCameraBinPreviewPipelineData*"/>
+        </parameter>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">the #GstCaps to be set (a new ref will be taken)</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="camerabin_preview_set_filter" c:identifier="gst_camerabin_preview_set_filter" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Set the filter element into preview pipeline.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">%TRUE on success</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="preview" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">the #GstCameraBinPreviewPipelineData</doc>
+          <type name="CameraBinPreviewPipelineData" c:type="GstCameraBinPreviewPipelineData*"/>
+        </parameter>
+        <parameter name="filter" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstcamerabinpreview.c">Custom filter to process preview data (an extra ref is taken)</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

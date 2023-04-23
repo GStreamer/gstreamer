@@ -46,6 +46,7 @@ if build_gir and not static_build
     gen_sources += basecamerabin_gir
   endif
 endif
+gst_libraries += [[pkg_name, library_def]]
 
 gstbasecamerabin_dep = declare_dependency(link_with : gstbasecamerabin,
   include_directories : [libsinc],

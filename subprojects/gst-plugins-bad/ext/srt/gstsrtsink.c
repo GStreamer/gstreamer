@@ -307,7 +307,7 @@ gst_srt_sink_class_init (GstSRTSinkClass * klass)
    * @gstsrtsink: the srtsink element that emitted this signal
    * @unused: always zero (for ABI compatibility with previous versions)
    * @addr: the #GSocketAddress of the new caller
-   * 
+   *
    * A new caller has connected to @gstsrtsink.
    */
   signals[SIG_CALLER_ADDED] =

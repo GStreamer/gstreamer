@@ -1,0 +1,1150 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
+  <include name="GstVideo" version="1.0"/>
+  <package name="gstreamer-va-1.0"/>
+  <namespace name="GstVa" version="1.0" shared-library="libgstva-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <constant name="ALLOCATOR_VASURFACE" value="VAMemory" c:type="GST_ALLOCATOR_VASURFACE" version="1.22">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="CAPS_FEATURE_MEMORY_VA" value="memory:VAMemory" c:type="GST_CAPS_FEATURE_MEMORY_VA" version="1.20">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="IS_VA_ALLOCATOR" c:identifier="GST_IS_VA_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_ALLOCATOR_CLASS" c:identifier="GST_IS_VA_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DISPLAY" c:identifier="GST_IS_VA_DISPLAY" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DISPLAY_CLASS" c:identifier="GST_IS_VA_DISPLAY_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DISPLAY_DRM" c:identifier="GST_IS_VA_DISPLAY_DRM" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DISPLAY_DRM_CLASS" c:identifier="GST_IS_VA_DISPLAY_DRM_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DISPLAY_WRAPPED" c:identifier="GST_IS_VA_DISPLAY_WRAPPED" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DISPLAY_WRAPPED_CLASS" c:identifier="GST_IS_VA_DISPLAY_WRAPPED_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DMABUF_ALLOCATOR" c:identifier="GST_IS_VA_DMABUF_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_DMABUF_ALLOCATOR_CLASS" c:identifier="GST_IS_VA_DMABUF_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_POOL" c:identifier="GST_IS_VA_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_VA_POOL_CLASS" c:identifier="GST_IS_VA_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="MAP_VA" value="131072" c:type="GST_MAP_VA" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h">Flag indicating that we should map the VASurfaceID instead of to
+system memory, so users can use libva primitives to operate with
+that surface.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <function-macro name="VA_ALLOCATOR" c:identifier="GST_VA_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_ALLOCATOR_CLASS" c:identifier="GST_VA_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_ALLOCATOR_GET_CLASS" c:identifier="GST_VA_ALLOCATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY" c:identifier="GST_VA_DISPLAY" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_CLASS" c:identifier="GST_VA_DISPLAY_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_DRM" c:identifier="GST_VA_DISPLAY_DRM" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_DRM_CLASS" c:identifier="GST_VA_DISPLAY_DRM_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_DRM_GET_CLASS" c:identifier="GST_VA_DISPLAY_DRM_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_GET_CLASS" c:identifier="GST_VA_DISPLAY_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR" value="gst.va.display.handle" c:type="GST_VA_DISPLAY_HANDLE_CONTEXT_TYPE_STR" version="1.20">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="VA_DISPLAY_IS_IMPLEMENTATION" c:identifier="GST_VA_DISPLAY_IS_IMPLEMENTATION" version="1.20" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">Check whether the display is the implementation of the specified
+#GstVaImplementation type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <parameters>
+        <parameter name="display">
+        </parameter>
+        <parameter name="impl">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_WRAPPED" c:identifier="GST_VA_DISPLAY_WRAPPED" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_WRAPPED_CLASS" c:identifier="GST_VA_DISPLAY_WRAPPED_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DISPLAY_WRAPPED_GET_CLASS" c:identifier="GST_VA_DISPLAY_WRAPPED_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DMABUF_ALLOCATOR" c:identifier="GST_VA_DMABUF_ALLOCATOR" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DMABUF_ALLOCATOR_CLASS" c:identifier="GST_VA_DMABUF_ALLOCATOR_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_DMABUF_ALLOCATOR_GET_CLASS" c:identifier="GST_VA_DMABUF_ALLOCATOR_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_POOL" c:identifier="GST_VA_POOL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_POOL_CLASS" c:identifier="GST_VA_POOL_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="VA_POOL_GET_CLASS" c:identifier="GST_VA_POOL_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <class name="VaAllocator" c:symbol-prefix="va_allocator" version="1.22" parent="Gst.Allocator" glib:type-name="GstVaAllocator" glib:get-type="gst_va_allocator_get_type">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">There are two types of VA allocators:
+
+* #GstVaAllocator
+* #GstVaDmabufAllocator</doc>
+      <constructor name="new" c:identifier="gst_va_allocator_new" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Instanciate a new pooled #GstAllocator backed by VASurfaceID.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
+          <type name="Gst.Allocator" c:type="GstAllocator*"/>
+        </return-value>
+        <parameters>
+          <parameter name="display" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </parameter>
+          <parameter name="surface_formats" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GArray
+    of valid #GstVideoFormat for surfaces in current VA context.</doc>
+            <array name="GLib.Array" c:type="GArray*">
+              <type name="guint"/>
+            </array>
+          </parameter>
+        </parameters>
+      </constructor>
+      <function name="alloc" c:identifier="gst_va_allocator_alloc" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Allocate a new VASurfaceID backed #GstMemory.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstMemory backed with a VASurfaceID; %NULL, otherwise.</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="flush" c:identifier="gst_va_allocator_flush" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Removes all the memories in @allocator's pool.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_format" c:identifier="gst_va_allocator_get_format" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Gets current internal configuration of @allocator.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if @allocator is already configured; %FALSE
+otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+          <parameter name="usage_hint" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+          <parameter name="use_derived" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaFeature if derived images
+    are used for buffer mapping.</doc>
+            <type name="VaFeature" c:type="GstVaFeature*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="peek_display" c:identifier="gst_va_allocator_peek_display" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the display which this
+    @allocator belongs to. The reference of the display is unchanged.</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="prepare_buffer" c:identifier="gst_va_allocator_prepare_buffer" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">This method will populate @buffer with pooled VASurfaceID
+memories. It doesn't allocate new VASurfacesID.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if @buffer was populated correctly; %FALSE
+otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">an empty #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="set_format" c:identifier="gst_va_allocator_set_format" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Sets the configuration defined by @info, @usage_hint and
+@use_derived for @allocator, and it tries the configuration, if
+@allocator has not allocated memories yet.
+
+If @allocator has memory allocated already, and frame size and
+format in @info are the same as currently configured in @allocator,
+the rest of @info parameters are updated internally.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if the configuration is valid or updated; %FALSE if
+configuration is not valid or not updated.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="info" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+          <parameter name="usage_hint" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="use_derived" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaFeature</doc>
+            <type name="VaFeature" c:type="GstVaFeature"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="set_hacks" c:identifier="gst_va_allocator_set_hacks" version="1.22" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Internal method to set allocator specific logic changes.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="hacks" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">hacks id to set</doc>
+            <type name="guint32" c:type="guint32"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="setup_buffer" c:identifier="gst_va_allocator_setup_buffer" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Populates an empty @buffer with a VASuface backed #GstMemory.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if @buffer is populated; %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </class>
+    <class name="VaDisplay" c:symbol-prefix="va_display" c:type="GstVaDisplay" version="1.20" parent="Gst.Object" glib:type-name="GstVaDisplay" glib:get-type="gst_va_display_get_type" glib:type-struct="VaDisplayClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">It is a generic wrapper for VADisplay. To create new instances
+subclasses are required, depending on the display type to use
+(v.gr. DRM, X11, Wayland, etc.).
+
+The purpose of this class is to be shared among pipelines via
+#GstContext so all the VA processing elements will use the same
+display entry. Application developers can create their own
+subclass, based on their display, and shared it via the synced bus
+message for the application.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <virtual-method name="create_va_display">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">This is called when the subclass has to create the internal
+VADisplay.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">The created VADisplay</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">a #GstVaDisplay instance</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <method name="get_implementation" c:identifier="gst_va_display_get_implementation" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">Get the the #GstVaImplementation type of @self.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">#GstVaImplementation.</doc>
+          <type name="VaImplementation" c:type="GstVaImplementation"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay type display.</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_va_dpy" c:identifier="gst_va_display_get_va_dpy" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">Get the VA display handle of the @self.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">the VA display handle.</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay type display.</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="initialize" c:identifier="gst_va_display_initialize" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">If the display is set by the user (foreign) it is assumed that the
+driver is already initialized, thus this function is noop.
+
+If the display is opened internally, this function will initialize
+the driver and it will set driver's message callbacks.
+
+NOTE: this function is supposed to be private, only used by
+GstVaDisplay descendants.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">%TRUE if the VA driver can be initialized; %FALSE
+    otherwise</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="description" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+      <property name="va-display" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="gpointer" c:type="gpointer"/>
+      </property>
+      <field name="parent">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">parent #GstObject</doc>
+        <type name="Gst.Object" c:type="GstObject"/>
+      </field>
+    </class>
+    <record name="VaDisplayClass" c:type="GstVaDisplayClass" glib:is-gtype-struct-for="VaDisplay" version="1.20">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">The common VA display object class structure.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <field name="parent_class">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">parent #GstObjectClass</doc>
+        <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
+      </field>
+      <field name="create_va_display">
+        <callback name="create_va_display">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+          <return-value transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">The created VADisplay</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </return-value>
+          <parameters>
+            <parameter name="self" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">a #GstVaDisplay instance</doc>
+              <type name="VaDisplay" c:type="GstVaDisplay*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+    </record>
+    <class name="VaDisplayDrm" c:symbol-prefix="va_display_drm" c:type="GstVaDisplayDrm" version="1.20" parent="VaDisplay" glib:type-name="GstVaDisplayDrm" glib:get-type="gst_va_display_drm_get_type" glib:type-struct="VaDisplayDrmClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.c">This is a #GstVaDisplay subclass to instantiate with DRM devices.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/va_fwd.h"/>
+      <constructor name="new_from_path" c:identifier="gst_va_display_drm_new_from_path" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.c">Creates a new #GstVaDisplay from a DRM device . It will try to open
+and operate the device in @path.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.c">a newly allocated #GstVaDisplay if the
+    specified DRM render device could be opened and initialized;
+    otherwise %NULL is returned.</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </return-value>
+        <parameters>
+          <parameter name="path" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_drm.c">the path to the DRM device</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <property name="path" writable="1" construct-only="1" transfer-ownership="none">
+        <type name="utf8" c:type="gchar*"/>
+      </property>
+    </class>
+    <record name="VaDisplayDrmClass" c:type="GstVaDisplayDrmClass" disguised="1" glib:is-gtype-struct-for="VaDisplayDrm" version="1.20">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/va_fwd.h"/>
+    </record>
+    <class name="VaDisplayWrapped" c:symbol-prefix="va_display_wrapped" c:type="GstVaDisplayWrapped" version="1.20" parent="VaDisplay" glib:type-name="GstVaDisplayWrapped" glib:get-type="gst_va_display_wrapped_get_type" glib:type-struct="VaDisplayWrappedClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.c">This is a #GstVaDisplay instantiaton subclass for custom created
+VADisplay, such as X11 or Wayland, wrapping it.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/va_fwd.h"/>
+      <constructor name="new" c:identifier="gst_va_display_wrapped_new" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.c">Creates a #GstVaDisplay wrapping an already created and initialized
+VADisplay.
+
+The lifetime of @handle must be hold by the provider while the
+pipeline is instantiated. Do not call vaTerminate on it while the
+pipeline is not in NULL state.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.c">a new #GstVaDisplay if @handle is valid,
+    Otherwise %NULL.</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </return-value>
+        <parameters>
+          <parameter name="handle" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay_wrapped.c">a VADisplay to wrap</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </constructor>
+    </class>
+    <record name="VaDisplayWrappedClass" c:type="GstVaDisplayWrappedClass" disguised="1" glib:is-gtype-struct-for="VaDisplayWrapped" version="1.20">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/va_fwd.h"/>
+    </record>
+    <class name="VaDmabufAllocator" c:symbol-prefix="va_dmabuf_allocator" version="1.22" parent="Gst.Allocator" glib:type-name="GstVaDmabufAllocator" glib:get-type="gst_va_dmabuf_allocator_get_type">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">A pooled memory allocator backed by the DMABufs exported from a
+VASurfaceID. Also it is possible to import DMAbufs into a
+VASurfaceID.</doc>
+      <constructor name="new" c:identifier="gst_va_dmabuf_allocator_new" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Instanciate a new pooled allocator backed with both DMABuf and
+VASurfaceID.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a new allocated #GstAllocator</doc>
+          <type name="Gst.Allocator" c:type="GstAllocator*"/>
+        </return-value>
+        <parameters>
+          <parameter name="display" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <function name="flush" c:identifier="gst_va_dmabuf_allocator_flush" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Removes all the memories in @allocator's pool.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_format" c:identifier="gst_va_dmabuf_allocator_get_format" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Gets current internal configuration of @allocator.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if @allocator is already configured; %FALSE
+otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+          <parameter name="usage_hint" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="prepare_buffer" c:identifier="gst_va_dmabuf_allocator_prepare_buffer" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">This method will populate @buffer with pooled VASurfaceID/DMABuf
+memories. It doesn't allocate new VASurfacesID.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if @buffer was populated correctly; %FALSE
+otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">an empty #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="set_format" c:identifier="gst_va_dmabuf_allocator_set_format" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Sets the configuration defined by @info and @usage_hint for
+@allocator, and it tries the configuration, if @allocator has not
+allocated memories yet.
+
+If @allocator has memory allocated already, and frame size and
+format in @info are the same as currently configured in @allocator,
+the rest of @info parameters are updated internally.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if the configuration is valid or updated; %FALSE if
+configuration is not valid or not updated.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+          <parameter name="usage_hint" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="setup_buffer" c:identifier="gst_va_dmabuf_allocator_setup_buffer" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">This funciton creates a new VASurfaceID and exposes its DMABufs,
+later it populates the @buffer with those DMABufs.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if @buffer is populated correctly; %FALSE otherwise.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="buffer" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">an empty #GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </class>
+    <enumeration name="VaFeature" version="1.22" glib:type-name="GstVaFeature" glib:get-type="gst_va_feature_get_type" c:type="GstVaFeature">
+      <member name="disabled" value="0" c:identifier="GST_VA_FEATURE_DISABLED" glib:nick="disabled">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstva.h">The feature is disabled.</doc>
+      </member>
+      <member name="enabled" value="1" c:identifier="GST_VA_FEATURE_ENABLED" glib:nick="enabled">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstva.h">The feature is enabled.</doc>
+      </member>
+      <member name="auto" value="2" c:identifier="GST_VA_FEATURE_AUTO" glib:nick="auto">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstva.h">The feature is enabled automatically.</doc>
+      </member>
+    </enumeration>
+    <enumeration name="VaImplementation" version="1.20" c:type="GstVaImplementation">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">Types of different VA API implemented drivers. These are the typical and
+the most widely used VA drivers.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+      <member name="mesa_gallium" value="0" c:identifier="GST_VA_IMPLEMENTATION_MESA_GALLIUM">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">The mesa gallium implementation.</doc>
+      </member>
+      <member name="intel_i965" value="1" c:identifier="GST_VA_IMPLEMENTATION_INTEL_I965">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">The legacy i965 intel implementation.</doc>
+      </member>
+      <member name="intel_ihd" value="2" c:identifier="GST_VA_IMPLEMENTATION_INTEL_IHD">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">The iHD intel implementation.</doc>
+      </member>
+      <member name="other" value="3" c:identifier="GST_VA_IMPLEMENTATION_OTHER">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">Other implementation.</doc>
+      </member>
+      <member name="invalid" value="4" c:identifier="GST_VA_IMPLEMENTATION_INVALID">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h">Invalid implementation.</doc>
+      </member>
+    </enumeration>
+    <class name="VaPool" c:symbol-prefix="va_pool" version="1.22" parent="Gst.BufferPool" glib:type-name="GstVaPool" glib:get-type="gst_va_pool_get_type">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">@GstVaPool is a buffer pool for VA allocators.</doc>
+      <constructor name="new" c:identifier="gst_va_pool_new" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">A new #GstBufferPool for VA allocators.</doc>
+          <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+        </return-value>
+      </constructor>
+      <constructor name="new_with_config" c:identifier="gst_va_pool_new_with_config" version="1.22">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">a new #GstBufferPool that handles VASurfacesID-backed
+    buffers. If the pool cannot be configured correctly, %NULL is
+    returned.</doc>
+          <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+        </return-value>
+        <parameters>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the #GstCaps of the buffers handled by the new pool.</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the size of the frames to hold.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="min_buffers" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">minimum number of frames to create.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="max_buffers" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">maximum number of frames to create.</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="usage_hint" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">VA usage hint</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="use_derived" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">a #GstVaFeature for derived mapping (only used when
+    VA allocator).</doc>
+            <type name="VaFeature" c:type="GstVaFeature"/>
+          </parameter>
+          <parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the VA allocator to use.</doc>
+            <type name="Gst.Allocator" c:type="GstAllocator*"/>
+          </parameter>
+          <parameter name="alloc_params" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">#GstAllocationParams to use.</doc>
+            <type name="Gst.AllocationParams" c:type="GstAllocationParams*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <function name="requires_video_meta" c:identifier="gst_va_pool_requires_video_meta" version="1.22">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">Retuns: %TRUE if @pool always add #GstVideoMeta to its
+    buffers. Otherwise, %FALSE.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the #GstBufferPool</doc>
+            <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </class>
+    <function name="buffer_pool_config_set_va_alignment" c:identifier="gst_buffer_pool_config_set_va_alignment" version="1.20.2">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">Video alignment is not handled as expected by VA since it uses
+opaque surfaces, not directly mappable memory. Still, decoders
+might need to request bigger surfaces for coded size rather than
+display sizes. This method will set the coded size to bufferpool's
+configuration, out of the typical video aligment.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the #GstStructure with the pool's configuration.</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+        <parameter name="align" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">a #GstVideoAlignment</doc>
+          <type name="GstVideo.VideoAlignment" c:type="const GstVideoAlignment*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_pool_config_set_va_allocation_params" c:identifier="gst_buffer_pool_config_set_va_allocation_params" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">Sets the usage hint for the buffers handled by the buffer pool.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the #GstStructure with the pool's configuration.</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+        <parameter name="usage_hint" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the VA usage hint for new VASurfaceID.</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="use_derived" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">a #GstVaFeature for derived mapping (only used when
+    VA allocator).</doc>
+          <type name="VaFeature" c:type="GstVaFeature"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="context_get_va_display" c:identifier="gst_context_get_va_display" version="1.22">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">whether we find a valid @display in the @context</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstContext may contain the display</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="type_name" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #gchar string of the element type</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="render_device_path" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #gchar string of render device path</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="display_ptr" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #GstVaDisplay we get</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="context_set_va_display" c:identifier="gst_context_set_va_display" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">Set the @display in the @context</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstContext</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="display" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #GstVaDisplay we want to set</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_buffer_create_aux_surface" c:identifier="gst_va_buffer_create_aux_surface" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Creates a new VASurfaceID with @buffer's allocator and attached it
+to it.
+
+*This method is used only by plugin's internal VA decoder.*</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if the new VASurfaceID is attached to @buffer
+    correctly; %FALSE, otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_buffer_get_aux_surface" c:identifier="gst_va_buffer_get_aux_surface" version="1.22" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the VASurfaceID attached to
+    @buffer.</doc>
+        <type name="guint" c:type="VASurfaceID"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_buffer_get_surface" c:identifier="gst_va_buffer_get_surface" version="1.22" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the VASurfaceID in @buffer.</doc>
+        <type name="guint" c:type="VASurfaceID"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_buffer_peek_display" c:identifier="gst_va_buffer_peek_display" version="1.22">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the display which this
+    @buffer belongs to. The reference of the display is unchanged.</doc>
+        <type name="VaDisplay" c:type="GstVaDisplay*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_context_query" c:identifier="gst_va_context_query" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">Query the specified context type name.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="context_type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #gchar string specify the context type name</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_dmabuf_memories_setup" c:identifier="gst_va_dmabuf_memories_setup" version="1.22" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">It imports the array of @mem, representing a single frame, into a
+VASurfaceID and it's attached into every @mem.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if frame is imported correctly into a VASurfaceID;
+%FALSE otherwise.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="display" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </parameter>
+        <parameter name="info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
+          <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+        </parameter>
+        <parameter name="n_planes" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">number of planes</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Memories. One
+    per plane.</doc>
+          <array zero-terminated="0" c:type="GstMemory**" fixed-size="4">
+            <type name="Gst.Memory"/>
+          </array>
+        </parameter>
+        <parameter name="fds" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">array of
+    DMABuf file descriptors.</doc>
+          <array length="2" zero-terminated="0" c:type="uintptr_t*">
+            <type c:type="uintptr_t"/>
+          </array>
+        </parameter>
+        <parameter name="offset" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">array of memory
+    offsets.</doc>
+          <array zero-terminated="0" c:type="gsize*" fixed-size="4">
+            <type name="gsize"/>
+          </array>
+        </parameter>
+        <parameter name="usage_hint" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint.</doc>
+          <type name="guint" c:type="guint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_element_propagate_display_context" c:identifier="gst_va_element_propagate_display_context" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">Propagate @display by posting it as #GstContext in the pipeline's bus.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="display" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #GstVaDisplay to propagate</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_ensure_element_data" c:identifier="gst_va_ensure_element_data" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">Called by the va element to ensure a valid #GstVaDisplay.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">whether a #GstVaDisplay exists in @display_ptr</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstElement</doc>
+          <type name="gpointer" c:type="gpointer"/>
+        </parameter>
+        <parameter name="render_device_path" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #gchar string of render device path</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="display_ptr" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">The #GstVaDisplay to ensure</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_handle_context_query" c:identifier="gst_va_handle_context_query" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">Used by elements when processing their pad's queries, propagating
+element's #GstVaDisplay if the processed query requests it.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">whether we can handle the context query successfully</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="query" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstQuery to query the context</doc>
+          <type name="Gst.Query" c:type="GstQuery*"/>
+        </parameter>
+        <parameter name="display" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstVaDisplay to answer the query</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_handle_set_context" c:identifier="gst_va_handle_set_context" version="1.22">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">Called by elements in their #GstElementClass::set_context vmethod.
+It gets a valid #GstVaDisplay if @context has it.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">whether the @display_ptr could be successfully set to a
+valid #GstVaDisplay in the @context</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="element" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstElement</doc>
+          <type name="Gst.Element" c:type="GstElement*"/>
+        </parameter>
+        <parameter name="context" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">a #GstContext may contain the display</doc>
+          <type name="Gst.Context" c:type="GstContext*"/>
+        </parameter>
+        <parameter name="render_device_path" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #gchar string of render device path</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="display_ptr" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">The #GstVaDisplay to set</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay**"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_memory_get_surface" c:identifier="gst_va_memory_get_surface" version="1.22" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the VASurfaceID in @mem.</doc>
+        <type name="guint" c:type="VASurfaceID"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_memory_peek_display" c:identifier="gst_va_memory_peek_display" version="1.22">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the display which
+    this @mem belongs to. The reference of the display is unchanged.</doc>
+        <type name="VaDisplay" c:type="GstVaDisplay*"/>
+      </return-value>
+      <parameters>
+        <parameter name="mem" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstMemory</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </parameter>
+      </parameters>
+    </function>
+  </namespace>
+</repository>

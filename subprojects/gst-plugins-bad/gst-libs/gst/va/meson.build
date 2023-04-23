@@ -145,6 +145,7 @@ if build_gir
   library_def = {'lib': library_def['lib'], 'gir': [gir]}
   if not static_build
     va_gir = gnome.generate_gir(gstva, kwargs: gir)
+    library_def += {'gir_targets':  library_def.get('gir_targets', []) + [va_gir]}
     va_gen_sources += va_gir
   endif
 endif
