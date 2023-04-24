@@ -1,6 +1,6 @@
 /* GStreamer
- * Copyright 2010 ST-Ericsson SA
- *  @author: Benjamin Gaignard <benjamin.gaignard@stericsson.com>
+ * Copyright 2023 Igalia S.L.
+ *  @author: Thibault Saunier <tsaunier@igalia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,30 +18,15 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#pragma once
 
+#include <gst/gst.h>
+#include <gst/gstbin.h>
 #include "gstautoconvert.h"
-#include "gstautovideoconvert.h"
-#include "gstautovideoflip.h"
-#include "gstautodeinterlace.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
+G_BEGIN_DECLS
 
-  ret |= GST_ELEMENT_REGISTER (autoconvert, plugin);
-  ret |= GST_ELEMENT_REGISTER (autovideoconvert, plugin);
-  ret |= GST_ELEMENT_REGISTER (autodeinterlace, plugin);
-  ret |= GST_ELEMENT_REGISTER (autovideoflip, plugin);
+G_DECLARE_FINAL_TYPE(GstAutoVideoFlip, gst_auto_video_flip, GST, AUTO_VIDEO_FLIP, GstBaseAutoConvert);
+GST_ELEMENT_REGISTER_DECLARE (autovideoflip);
 
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    autoconvert,
-    "Selects converter element based on caps",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+G_END_DECLS
