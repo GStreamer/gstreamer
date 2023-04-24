@@ -330,9 +330,10 @@ gst_d3d11_window_win32_set_render_rectangle (GstD3D11Window * window,
 {
   GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
 
+  self->render_rect = *rect;
+
   if (self->external_hwnd && self->internal_hwnd) {
     g_atomic_int_add (&self->pending_move_window, 1);
-    self->render_rect = *rect;
 
     if (self->internal_hwnd_thread == g_thread_self ()) {
       /* We are on message pumping thread already, handle this synchroniously */
@@ -944,12 +945,21 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
       /* take changes into account: SWP_FRAMECHANGED */
       GetClientRect (self->external_hwnd, &rect);
+
+      if (self->render_rect.x != 0 || self->render_rect.y != 0 ||
+          self->render_rect.w != 0 || self->render_rect.h != 0) {
+        rect.left = self->render_rect.x;
+        rect.top = self->render_rect.y;
+        rect.right = self->render_rect.x + self->render_rect.w;
+        rect.bottom = self->render_rect.y + self->render_rect.h;
+      }
+
       SetWindowPos (self->internal_hwnd, HWND_TOP, rect.left, rect.top,
-          rect.right, rect.bottom,
+          rect.right - rect.left, rect.bottom - rect.top,
           SWP_ASYNCWINDOWPOS | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
           SWP_FRAMECHANGED | SWP_NOACTIVATE);
-      MoveWindow (self->internal_hwnd, rect.left, rect.top, rect.right,
-          rect.bottom, FALSE);
+      MoveWindow (self->internal_hwnd, rect.left, rect.top,
+          rect.right - rect.left, rect.bottom - rect.top, FALSE);
 
       self->overlay_state = GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_OPENED;
       WakeAllConditionVariable (&self->cond);
@@ -960,8 +970,15 @@ sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return 0;
     }
     case WM_SIZE:
-      MoveWindow (self->internal_hwnd, 0, 0, LOWORD (lParam), HIWORD (lParam),
-          FALSE);
+      if (self->render_rect.x != 0 || self->render_rect.y != 0 ||
+          self->render_rect.w != 0 || self->render_rect.h != 0) {
+        MoveWindow (self->internal_hwnd,
+            self->render_rect.x, self->render_rect.y,
+            self->render_rect.w, self->render_rect.h, FALSE);
+      } else {
+        MoveWindow (self->internal_hwnd, 0, 0, LOWORD (lParam), HIWORD (lParam),
+            FALSE);
+      }
       break;
     case WM_CLOSE:
     case WM_DESTROY:{
