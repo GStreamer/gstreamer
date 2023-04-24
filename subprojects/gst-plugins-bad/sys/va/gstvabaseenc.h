@@ -54,6 +54,8 @@ struct _GstVaBaseEnc
 
   gboolean reconf;
 
+  gboolean is_live;
+
   VAProfile profile;
   gint width;
   gint height;

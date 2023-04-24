@@ -778,6 +778,7 @@ static gboolean
 gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
+  GstQuery *query;
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -797,6 +798,13 @@ gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
   if (base->input_state)
     gst_video_codec_state_unref (base->input_state);
   base->input_state = gst_video_codec_state_ref (state);
+
+  /* in case live streaming, we should run on low-latency mode */
+  base->is_live = FALSE;
+  query = gst_query_new_latency ();
+  if (gst_pad_peer_query (GST_VIDEO_ENCODER_SINK_PAD (venc), query))
+    gst_query_parse_latency (query, &base->is_live, NULL, NULL);
+  gst_query_unref (query);
 
   if (!gst_va_base_enc_reset (base))
     return FALSE;
