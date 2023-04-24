@@ -19,23 +19,27 @@ cost of greater complexity, writing new applications is not always easy.
 </div>
 </div>
 
-<div class="row toned-row">
-    <div class="col-lg-2 col-lg-offset-2 col-xs-6 col-md-3">
-      <a class="icon" id="apiref" href="libs.html" data-hotdoc-relative-link=true>API Reference</a>
-    </div>
-    <div class="col-lg-2 col-xs-6 col-md-3">
-      <a class="icon" id="hig" href="application-development/index.html" data-hotdoc-relative-link=true>
-        Application developer manual
-      </a>
-    </div>
-    <div class="col-lg-2 col-xs-6 col-md-3">
-      <a class="icon" id="tutorials" href="tutorials/index.html" data-hotdoc-relative-link=true>
-        Tutorials
-      </a>
-    </div>
-    <div class="col-lg-2 col-xs-6 col-md-3">
-      <a class="icon" id="deploy" href="deploying/index.html" data-hotdoc-relative-link=true>
-        Deploying
-      </a>
+<div class="panel">
+    <div class="panel-body">
+        <div class="row toned-row">
+            <div class="col-lg-2 col-lg-offset-2 col-xs-6 col-md-3">
+              <a class="icon" id="apiref" href="libs.html" data-hotdoc-relative-link=true>API Reference</a>
+            </div>
+            <div class="col-lg-2 col-xs-6 col-md-3">
+              <a class="icon" id="hig" href="application-development/index.html" data-hotdoc-relative-link=true>
+                Application developer manual
+              </a>
+            </div>
+            <div class="col-lg-2 col-xs-6 col-md-3">
+              <a class="icon" id="tutorials" href="tutorials/index.html" data-hotdoc-relative-link=true>
+                Tutorials
+              </a>
+            </div>
+            <div class="col-lg-2 col-xs-6 col-md-3">
+              <a class="icon" id="deploy" href="deploying/index.html" data-hotdoc-relative-link=true>
+                Deploying
+              </a>
+            </div>
+        </div>
     </div>
 </div>
