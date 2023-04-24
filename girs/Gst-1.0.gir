@@ -32854,6 +32854,23 @@ clock, even if the pipeline is not in the PLAYING state.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_configured_latency" c:identifier="gst_pipeline_get_configured_latency" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">Return the configured latency on @pipeline.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstpipeline.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">@pipeline configured latency, or %GST_CLOCK_TIME_NONE if none has been configured
+because @pipeline did not reach the PLAYING state yet.
+
+MT safe.</doc>
+          <type name="ClockTime" c:type="GstClockTime"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="pipeline" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">a #GstPipeline</doc>
+            <type name="Pipeline" c:type="GstPipeline*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_delay" c:identifier="gst_pipeline_get_delay">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpipeline.c">Get the configured delay (see gst_pipeline_set_delay()).</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstpipeline.h"/>
