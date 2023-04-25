@@ -96,14 +96,35 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-vp9"));
 
+static gint
+picture_id_field_len (GstVP9RtpPayPictureIDMode mode)
+{
+  if (VP9_PAY_NO_PICTURE_ID == mode)
+    return 0;
+  if (VP9_PAY_PICTURE_ID_7BITS == mode)
+    return 7;
+  return 15;
+}
+
+static void
+gst_rtp_vp9_pay_picture_id_reset (GstRtpVP9Pay * self)
+{
+  gint nbits;
+
+  if (self->picture_id_mode == VP9_PAY_NO_PICTURE_ID) {
+    self->picture_id = 0;
+  } else {
+    self->picture_id = g_random_int ();
+    nbits = picture_id_field_len (self->picture_id_mode);
+    self->picture_id &= (1 << nbits) - 1;
+  }
+}
+
 static void
 gst_rtp_vp9_pay_init (GstRtpVP9Pay * obj)
 {
   obj->picture_id_mode = DEFAULT_PICTURE_ID_MODE;
-  if (obj->picture_id_mode == VP9_PAY_PICTURE_ID_7BITS)
-    obj->picture_id = g_random_int_range (0, G_MAXUINT8) & 0x7F;
-  else if (obj->picture_id_mode == VP9_PAY_PICTURE_ID_15BITS)
-    obj->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
+  gst_rtp_vp9_pay_picture_id_reset (obj);
 }
 
 static void
@@ -151,10 +172,7 @@ gst_rtp_vp9_pay_set_property (GObject * object,
   switch (prop_id) {
     case PROP_PICTURE_ID_MODE:
       rtpvp9pay->picture_id_mode = g_value_get_enum (value);
-      if (rtpvp9pay->picture_id_mode == VP9_PAY_PICTURE_ID_7BITS)
-        rtpvp9pay->picture_id = g_random_int_range (0, G_MAXUINT8) & 0x7F;
-      else if (rtpvp9pay->picture_id_mode == VP9_PAY_PICTURE_ID_15BITS)
-        rtpvp9pay->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
+      gst_rtp_vp9_pay_picture_id_reset (rtpvp9pay);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -472,6 +490,19 @@ gst_rtp_vp9_payload_next (GstRtpVP9Pay * self, GstBufferList * list,
   return available;
 }
 
+static void
+gst_rtp_vp9_pay_picture_id_increment (GstRtpVP9Pay * self)
+{
+  gint nbits;
+
+  if (self->picture_id_mode == VP9_PAY_NO_PICTURE_ID)
+    return;
+
+  /* Increment and wrap the picture id if it overflows */
+  nbits = picture_id_field_len (self->picture_id_mode);
+  self->picture_id++;
+  self->picture_id &= (1 << nbits) - 1;
+}
 
 static GstFlowReturn
 gst_rtp_vp9_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
@@ -522,10 +553,12 @@ gst_rtp_vp9_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
   GstRtpVP9Pay *self = GST_RTP_VP9_PAY (payload);
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
-    if (self->picture_id_mode == VP9_PAY_PICTURE_ID_7BITS)
-      self->picture_id = g_random_int_range (0, G_MAXUINT8) & 0x7F;
-    else if (self->picture_id_mode == VP9_PAY_PICTURE_ID_15BITS)
-      self->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
+    gst_rtp_vp9_pay_picture_id_reset (self);
+  } else if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
+    guint picture_id = self->picture_id;
+    gst_rtp_vp9_pay_picture_id_increment (self);
+    GST_DEBUG_OBJECT (payload, "Incrementing picture ID on GAP event %u->%u",
+        picture_id, self->picture_id);
   }
 
   return GST_RTP_BASE_PAYLOAD_CLASS (gst_rtp_vp9_pay_parent_class)->sink_event
