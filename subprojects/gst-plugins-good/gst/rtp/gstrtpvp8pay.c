@@ -112,13 +112,17 @@ gst_rtp_vp8_pay_picture_id_reset (GstRtpVP8Pay * obj)
 {
   gint nbits;
 
-  if (obj->picture_id_offset == -1)
-    obj->picture_id = g_random_int ();
-  else
-    obj->picture_id = obj->picture_id_offset;
+  if (obj->picture_id_mode == VP8_PAY_NO_PICTURE_ID) {
+    obj->picture_id = 0;
+  } else {
+    if (obj->picture_id_offset == -1)
+      obj->picture_id = g_random_int ();
+    else
+      obj->picture_id = obj->picture_id_offset;
 
-  nbits = picture_id_field_len (obj->picture_id_mode);
-  obj->picture_id &= (1 << nbits) - 1;
+    nbits = picture_id_field_len (obj->picture_id_mode);
+    obj->picture_id &= (1 << nbits) - 1;
+  }
 }
 
 static void
