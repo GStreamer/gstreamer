@@ -125,7 +125,7 @@ if host_machine.system() != 'windows'
     [['elements/curlftpsink.c'], not curl_dep.found(), [curl_dep]],
     [['elements/curlsmtpsink.c'], not curl_dep.found(), [curl_dep]],
     [['elements/dash_mpd.c'], not xml2_dep.found(), [xml2_dep]],
-    [['elements/dtls.c'], not libcrypto_dep.found(), [libcrypto_dep]],
+    [['elements/dtls.c'], not libcrypto_dep.found() or not openssl_dep.found (), [libcrypto_dep]],
     [['elements/faac.c'],
         not faac_dep.found() or not cc.has_header_symbol('faac.h', 'faacEncOpen') or not cdata.has('HAVE_UNISTD_H'),
         [faac_dep]],
