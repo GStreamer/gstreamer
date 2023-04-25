@@ -917,6 +917,7 @@ _jpegdec_set_color_format (mfxVideoParam * param, GstVideoFormat format)
       param->mfx.JPEGColorFormat = MFX_JPEG_COLORFORMAT_YCbCr;
       break;
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
       param->mfx.JPEGColorFormat = MFX_JPEG_COLORFORMAT_RGB;
       break;
     default:
