@@ -98,7 +98,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/x-vp8"));
 
 static gint
-picture_id_field_len (PictureIDMode mode)
+picture_id_field_len (GstVP8RtpPayPictureIDMode mode)
 {
   if (VP8_PAY_NO_PICTURE_ID == mode)
     return 0;

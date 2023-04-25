@@ -40,9 +40,9 @@ G_BEGIN_DECLS
 
 typedef struct _GstRtpVP9Pay GstRtpVP9Pay;
 typedef struct _GstRtpVP9PayClass GstRtpVP9PayClass;
-typedef enum _VP9PictureIDMode VP9PictureIDMode;
+typedef enum _GstVP9RtpPayPictureIDMode GstVP9RtpPayPictureIDMode;
 
-enum _VP9PictureIDMode {
+enum _GstVP9RtpPayPictureIDMode {
   VP9_PAY_NO_PICTURE_ID,
   VP9_PAY_PICTURE_ID_7BITS,
   VP9_PAY_PICTURE_ID_15BITS,
@@ -59,7 +59,7 @@ struct _GstRtpVP9Pay
   gboolean is_keyframe;
   guint width;
   guint height;
-  VP9PictureIDMode picture_id_mode;
+  GstVP9RtpPayPictureIDMode picture_id_mode;
   guint16 picture_id;
 };
 
