@@ -207,7 +207,7 @@ dnf remove -y meson
 # FIXME: Install ninja from rpm when we update our base image as we fail building
 # documentation with rust plugins as we the version from F31 we hit:
 # `ninja: error: build.ninja:26557: multiple outputs aren't (yet?) supported by depslog; bring this up on the mailing list if it affects you
-pip3 install meson==0.62.2 hotdoc==0.14.1 python-gitlab ninja tomli
+pip3 install meson==0.62.2 hotdoc==0.15 python-gitlab ninja tomli
 
 
 # Remove gst-devel packages installed by builddep above
