@@ -912,6 +912,7 @@ gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
   GstDecodebin3 *dbin = (GstDecodebin3 *) parent;
   GstQuery *query;
   gboolean pull_mode = FALSE;
+  gboolean has_caps = TRUE;
   GstPadLinkReturn res = GST_PAD_LINK_OK;
   DecodebinInput *input = g_object_get_data (G_OBJECT (pad), "decodebin.input");
 
@@ -928,12 +929,26 @@ gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
 
   GST_DEBUG_OBJECT (dbin, "Upstream can do pull-based : %d", pull_mode);
 
-  /* If upstream *can* do pull-based, we always use a parsebin. If not, we will
-   * delay that decision to a later stage (caps/stream/collection event
-   * processing) to figure out if one is really needed or whether an identity
-   * element will be enough */
+  if (!pull_mode) {
+    /* If push-based, query if it will provide some caps */
+    query = gst_query_new_caps (NULL);
+    if (gst_pad_query (peer, query)) {
+      GstCaps *rescaps = NULL;
+      gst_query_parse_caps_result (query, &rescaps);
+      if (!rescaps || gst_caps_is_any (rescaps) || gst_caps_is_empty (rescaps)) {
+        GST_DEBUG_OBJECT (dbin, "Upstream can't provide caps");
+        has_caps = FALSE;
+      }
+    }
+    gst_query_unref (query);
+  }
+
+  /* If upstream *can* do pull-based OR it doesn't have any caps, we always use
+   * a parsebin. If not, we will delay that decision to a later stage
+   * (caps/stream/collection event processing) to figure out if one is really
+   * needed or whether an identity element will be enough */
   INPUT_LOCK (dbin);
-  if (pull_mode) {
+  if (pull_mode || !has_caps) {
     if (!ensure_input_parsebin (dbin, input))
       res = GST_PAD_LINK_REFUSED;
     else if (input->identity) {
@@ -1407,6 +1422,21 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
         INPUT_UNLOCK (dbin);
       } else {
         GST_DEBUG_OBJECT (sinkpad, "Parsebin accepts new caps");
+      }
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      const GstSegment *segment = NULL;
+      gst_event_parse_segment (event, &segment);
+
+      /* All data reaching multiqueue must be in time format. If it's not, we
+       * need to use a parsebin on the incoming stream.
+       */
+      if (segment && segment->format != GST_FORMAT_TIME && !input->parsebin) {
+        GST_DEBUG_OBJECT (sinkpad,
+            "Got a non-time segment, forcing parsebin handling");
+        ensure_input_parsebin (dbin, input);
       }
       break;
     }
