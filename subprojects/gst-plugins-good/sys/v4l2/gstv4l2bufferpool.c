@@ -2218,15 +2218,56 @@ gst_v4l2_buffer_pool_copy_at_threshold (GstV4l2BufferPool * pool, gboolean copy)
   GST_OBJECT_UNLOCK (pool);
 }
 
-gboolean
+static GstFlowReturn
+gst_v4l2_buffer_pool_flush_events (GstV4l2Object * v4l2object)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean event_found;
+
+  /* FIXME simplify this when we drop legacy support for driver without poll()
+   * support. When we do, we can switch the video_fd to non blocking, and just
+   * pop the events directly. */
+
+  do {
+    struct v4l2_event event = { 0, };
+    gint poll_ret;
+
+    event_found = FALSE;
+
+    gst_poll_set_flushing (v4l2object->poll, FALSE);
+
+    do {
+      /* GstPoll don't have 0ns timeout, but 1 will do */
+      poll_ret = gst_poll_wait (v4l2object->poll, 1);
+    } while (poll_ret == EAGAIN || poll_ret == EINTR);
+
+    if (gst_poll_fd_has_pri (v4l2object->poll, &v4l2object->pollfd)) {
+      if (!gst_v4l2_dequeue_event (v4l2object, &event))
+        return GST_FLOW_ERROR;
+
+      event_found = TRUE;
+
+      if (event.type == V4L2_EVENT_SOURCE_CHANGE &&
+          (event.u.src_change.changes & V4L2_EVENT_SRC_CH_RESOLUTION)) {
+        GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+            "Can't streamon capture as the resolution have changed.");
+        ret = GST_V4L2_FLOW_RESOLUTION_CHANGE;
+      }
+    }
+  } while (event_found);
+
+  return ret;
+}
+
+GstFlowReturn
 gst_v4l2_buffer_pool_flush (GstV4l2Object * v4l2object)
 {
   GstBufferPool *bpool = gst_v4l2_object_get_buffer_pool (v4l2object);
   GstV4l2BufferPool *pool;
-  gboolean ret = TRUE;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (!bpool)
-    return FALSE;
+    return GST_FLOW_ERROR;
 
   pool = GST_V4L2_BUFFER_POOL (bpool);
 
@@ -2234,8 +2275,14 @@ gst_v4l2_buffer_pool_flush (GstV4l2Object * v4l2object)
   gst_v4l2_buffer_pool_streamoff (pool);
   GST_OBJECT_UNLOCK (pool);
 
-  if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type))
-    ret = gst_v4l2_buffer_pool_streamon (pool);
+  if (!V4L2_TYPE_IS_OUTPUT (pool->obj->type)) {
+    ret = gst_v4l2_buffer_pool_flush_events (v4l2object);
+
+    /* If the format haven't change, avoid reallocation to go back to
+     * streaming */
+    if (ret == GST_FLOW_OK)
+      ret = gst_v4l2_buffer_pool_streamon (pool);
+  }
 
   gst_object_unref (bpool);
   return ret;

@@ -348,8 +348,12 @@ gst_v4l2_video_dec_flush (GstVideoDecoder * decoder)
 
   /* gst_v4l2_buffer_pool_flush() calls streamon the capture pool and must be
    * called after gst_v4l2_object_unlock_stop() stopped flushing the buffer
-   * pool. */
-  gst_v4l2_buffer_pool_flush (self->v4l2capture);
+   * pool. If the resolution has changed before we stopped the driver we must
+   * reallocate the capture pool. We simply discard the pool, and let the
+   * capture thread handle re-allocation.*/
+  if (gst_v4l2_buffer_pool_flush (self->v4l2capture) ==
+      GST_V4L2_FLOW_RESOLUTION_CHANGE || self->draining)
+    gst_v4l2_object_stop (self->v4l2capture);
 
   return TRUE;
 }
@@ -888,6 +892,7 @@ beach:
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       return;
     }
+
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
   }
 
