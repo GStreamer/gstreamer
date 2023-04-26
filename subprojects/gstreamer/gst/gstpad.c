@@ -5566,8 +5566,9 @@ gst_pad_push_event_unchecked (GstPad * pad, GstEvent * event,
   pad->priv->using++;
   GST_OBJECT_UNLOCK (pad);
 
-  GST_LOG_OBJECT (pad, "sending event %p (%s) to peerpad %" GST_PTR_FORMAT,
-      event, gst_event_type_get_name (event_type), peerpad);
+  GST_LOG_OBJECT (pad,
+      "sending event %" GST_PTR_FORMAT " to peerpad %" GST_PTR_FORMAT,
+      event, peerpad);
 
   ret = gst_pad_send_event_unchecked (peerpad, event, type);
 
