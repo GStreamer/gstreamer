@@ -31,9 +31,11 @@
 #define GST_CAT_DEFAULT gst_gl_mixer_bin_debug
 GST_DEBUG_CATEGORY (gst_gl_mixer_bin_debug);
 
+#define DEFAULT_FORCE_LIVE     FALSE
 #define DEFAULT_LATENCY        0
 #define DEFAULT_START_TIME_SELECTION 0
 #define DEFAULT_START_TIME           (-1)
+#define DEFAULT_MIN_UPSTREAM_LATENCY (0)
 
 typedef enum
 {
@@ -124,6 +126,8 @@ enum
   PROP_START_TIME_SELECTION,
   PROP_START_TIME,
   PROP_CONTEXT,
+  PROP_FORCE_LIVE,
+  PROP_MIN_UPSTREAM_LATENCY,
 };
 
 enum
@@ -216,6 +220,44 @@ gst_gl_mixer_bin_class_init (GstGLMixerBinClass * klass)
           GST_TYPE_GL_CONTEXT, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstGLMixerBin:force-live:
+   *
+   * Causes the element to aggregate on a timeout even when no live source is
+   * connected to its sinks. See #GstGLMixerBin:min-upstream-latency for a
+   * companion property: in the vast majority of cases where you plan to plug in
+   * live sources with a non-zero latency, you should set it to a non-zero value.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_FORCE_LIVE,
+      g_param_spec_boolean ("force-live",
+          "Force Live",
+          "Always operate in live mode and aggregate on timeout regardless of whether any live sources are linked upstream",
+          DEFAULT_FORCE_LIVE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT_ONLY));
+
+  /**
+   * GstGLMixerBin:min-upstream-latency:
+   *
+   * Force minimum upstream latency (in nanoseconds). When sources with a
+   * higher latency are expected to be plugged in dynamically after the
+   * aggregator has started playing, this allows overriding the minimum
+   * latency reported by the initial source(s). This is only taken into
+   * account when larger than the actually reported minimum latency.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_MIN_UPSTREAM_LATENCY,
+      g_param_spec_uint64 ("min-upstream-latency", "Buffer latency",
+          "When sources with a higher latency are expected to be plugged "
+          "in dynamically after the aggregator has started playing, "
+          "this allows overriding the minimum latency reported by the "
+          "initial source(s). This is only taken into account when larger "
+          "than the actually reported minimum latency. (nanoseconds)",
+          0, G_MAXUINT64,
+          DEFAULT_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstMixerBin::create-element:
    * @object: the #GstGLMixerBin
    *
@@ -270,6 +312,12 @@ gst_gl_mixer_bin_init (GstGLMixerBin * self)
 
   if (!res)
     GST_ERROR_OBJECT (self, "failed to create output chain");
+
+  self->force_live = DEFAULT_FORCE_LIVE;
+  self->latency = DEFAULT_LATENCY;
+  self->start_time_selection = DEFAULT_START_TIME_SELECTION;
+  self->start_time = DEFAULT_START_TIME;
+  self->min_upstream_latency = DEFAULT_MIN_UPSTREAM_LATENCY;
 }
 
 static void
@@ -448,6 +496,9 @@ gst_gl_mixer_bin_get_property (GObject * object,
     case PROP_MIXER:
       g_value_set_object (value, self->mixer);
       break;
+    case PROP_FORCE_LIVE:
+      g_value_set_boolean (value, self->force_live);
+      break;
     default:
       if (self->mixer)
         g_object_get_property (G_OBJECT (self->mixer), pspec->name, value);
@@ -474,6 +525,29 @@ gst_gl_mixer_bin_set_property (GObject * object,
       }
       break;
     }
+    case PROP_FORCE_LIVE:
+      self->force_live = g_value_get_boolean (value);
+      break;
+    case PROP_LATENCY:
+      self->latency = g_value_get_uint64 (value);
+      if (self->mixer)
+        g_object_set_property (G_OBJECT (self->mixer), pspec->name, value);
+      break;
+    case PROP_START_TIME_SELECTION:
+      self->start_time_selection = g_value_get_uint (value);
+      if (self->mixer)
+        g_object_set_property (G_OBJECT (self->mixer), pspec->name, value);
+      break;
+    case PROP_START_TIME:
+      self->start_time = g_value_get_uint64 (value);
+      if (self->mixer)
+        g_object_set_property (G_OBJECT (self->mixer), pspec->name, value);
+      break;
+    case PROP_MIN_UPSTREAM_LATENCY:
+      self->min_upstream_latency = g_value_get_uint64 (value);
+      if (self->mixer)
+        g_object_set_property (G_OBJECT (self->mixer), pspec->name, value);
+      break;
     default:
       if (self->mixer)
         g_object_set_property (G_OBJECT (self->mixer), pspec->name, value);

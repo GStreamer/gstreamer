@@ -5546,8 +5546,34 @@
                         "type": "GstGLContext",
                         "writable": false
                     },
+                    "force-live": {
+                        "blurb": "Always operate in live mode and aggregate on timeout regardless of whether any live sources are linked upstream",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": true,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "latency": {
                         "blurb": "Additional latency in live mode to allow upstream to take longer to produce buffers for the current position (in nanoseconds)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "min-upstream-latency": {
+                        "blurb": "When sources with a higher latency are expected to be plugged in dynamically after the aggregator has started playing, this allows overriding the minimum latency reported by the initial source(s). This is only taken into account when larger than the actually reported minimum latency. (nanoseconds)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,

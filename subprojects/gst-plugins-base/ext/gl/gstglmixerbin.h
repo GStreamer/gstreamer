@@ -53,6 +53,13 @@ struct _GstGLMixerBin
   GstElement *download;
   GstPad *srcpad;
 
+  gboolean force_live;
+
+  GstClockTime latency;
+  guint start_time_selection;
+  GstClockTime start_time;
+  GstClockTime min_upstream_latency;
+
   GstGLMixerBinPrivate *priv;
 };
 

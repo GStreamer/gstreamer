@@ -564,10 +564,20 @@ GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (glvideomixer, "glvideomixer",
 static void
 gst_gl_video_mixer_bin_init (GstGLVideoMixerBin * self)
 {
+}
+
+static void
+gst_gl_video_mixer_bin_constructed (GObject * self)
+{
   GstGLMixerBin *mix_bin = GST_GL_MIXER_BIN (self);
 
   gst_gl_mixer_bin_finish_init_with_element (mix_bin,
-      g_object_new (GST_TYPE_GL_VIDEO_MIXER, NULL));
+      g_object_new (GST_TYPE_GL_VIDEO_MIXER,
+          "force-live", mix_bin->force_live,
+          "latency", mix_bin->latency,
+          "start-time-selection", mix_bin->start_time_selection,
+          "start-time", mix_bin->start_time,
+          "min-upstream-latency", mix_bin->min_upstream_latency, NULL));
 }
 
 static void
@@ -580,6 +590,7 @@ gst_gl_video_mixer_bin_class_init (GstGLVideoMixerBinClass * klass)
 
   mixer_class->create_input_pad = _create_video_mixer_input;
 
+  gobject_class->constructed = gst_gl_video_mixer_bin_constructed;
   gobject_class->set_property = gst_gl_video_mixer_bin_set_property;
   gobject_class->get_property = gst_gl_video_mixer_bin_get_property;
 
