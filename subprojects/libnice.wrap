@@ -1,4 +1,4 @@
 [wrap-git]
 directory=libnice
 url=https://gitlab.freedesktop.org/libnice/libnice.git
-revision=0.1.21
+revision=f3688cf286be5776e04204b742a176926079983f
