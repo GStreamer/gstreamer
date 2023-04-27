@@ -526,8 +526,10 @@ gst_wasapi2_can_process_loopback (void)
        * "Windows 11", since build number of "Windows 10 version 21H2" is
        * still 19044.XXX
        */
+
+      /* But other software enables this for build number 19041 or higher... */
       if (osverinfo.dwMajorVersion > 10 ||
-          (osverinfo.dwMajorVersion == 10 && osverinfo.dwBuildNumber >= 20348))
+          (osverinfo.dwMajorVersion == 10 && osverinfo.dwBuildNumber >= 19041))
         ret = TRUE;
     }
 
