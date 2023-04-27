@@ -62,7 +62,13 @@ struct _GstMsdkH264Enc
   guint prop_flag;
   guint p_pyramid;
   guint min_qp;
+  guint min_qp_i;
+  guint min_qp_p;
+  guint min_qp_b;
   guint max_qp;
+  guint max_qp_i;
+  guint max_qp_p;
+  guint max_qp_b;
   guint intra_refresh_type;
   guint intra_refresh_cycle_size;
   gint intra_refresh_qp_delta;
