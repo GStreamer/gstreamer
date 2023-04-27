@@ -92,6 +92,7 @@ enum
   PROP_INTRA_REFRESH_QP_DELTA,
   PROP_INTRA_REFRESH_CYCLE_DIST,
   PROP_DBLK_IDC,
+  PROP_PIC_TIMING_SEI,
 };
 
 enum
@@ -115,6 +116,7 @@ enum
 #define PROP_INTRA_REFRESH_QP_DELTA_DEFAULT   0
 #define PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT 0
 #define PROP_DBLK_IDC_DEFAULT                 0
+#define PROP_PIC_TIMING_SEI_DEFAULT           TRUE
 
 /* *INDENT-OFF* */
 static const gchar *doc_sink_caps_str =
@@ -468,7 +470,6 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
    * "i-frames" by incrementing the value by one in each case*/
   encoder->param.mfx.IdrInterval += 1;
 
-  /* Enable Extended coding options */
   encoder->option2.MaxSliceSize = h265enc->max_slice_size;
   encoder->option2.MinQPI = h265enc->min_qp_i;
   encoder->option2.MinQPP = h265enc->min_qp_p;
@@ -512,12 +513,16 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
     encoder->enable_extopt3 = TRUE;
   }
 
-  if (encoder->option3.LowDelayBRC == MFX_CODINGOPTION_ON) {
-    h265enc->option.Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
-    h265enc->option.Header.BufferSz = sizeof (h265enc->option);
+  /* Fill Extended coding options */
+  h265enc->option.Header.BufferId = MFX_EXTBUFF_CODING_OPTION;
+  h265enc->option.Header.BufferSz = sizeof (h265enc->option);
+  h265enc->option.PicTimingSEI =
+      (h265enc->pic_timing_sei ? MFX_CODINGOPTION_ON : MFX_CODINGOPTION_OFF);
+
+  if (encoder->option3.LowDelayBRC == MFX_CODINGOPTION_ON)
     h265enc->option.NalHrdConformance = MFX_CODINGOPTION_OFF;
-    gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h265enc->option);
-  }
+
+  gst_msdkenc_add_extra_param (encoder, (mfxExtBuffer *) & h265enc->option);
 
   gst_msdkenc_ensure_extended_coding_options (encoder);
 
@@ -768,6 +773,10 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       thiz->dblk_idc = g_value_get_uint (value);
       break;
 
+    case PROP_PIC_TIMING_SEI:
+      thiz->pic_timing_sei = g_value_get_boolean (value);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -870,6 +879,10 @@ gst_msdkh265enc_get_property (GObject * object, guint prop_id, GValue * value,
 
     case PROP_DBLK_IDC:
       g_value_set_uint (value, thiz->dblk_idc);
+      break;
+
+    case PROP_PIC_TIMING_SEI:
+      g_value_set_boolean (value, thiz->pic_timing_sei);
       break;
 
     default:
@@ -1092,6 +1105,17 @@ _msdkh265enc_install_properties (GObjectClass * gobject_class,
           "Option of disable deblocking idc",
           0, 2, PROP_DBLK_IDC_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstMsdkH265Enc:pic-timing-sei:
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_PIC_TIMING_SEI,
+      g_param_spec_boolean ("pic-timing-sei", "Picture Timing SEI",
+          "Insert picture timing SEI with pic_struct syntax",
+          PROP_PIC_TIMING_SEI_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -1165,6 +1189,7 @@ gst_msdkh265enc_init (GTypeInstance * instance, gpointer g_class)
   thiz->intra_refresh_qp_delta = PROP_INTRA_REFRESH_QP_DELTA_DEFAULT;
   thiz->intra_refresh_cycle_dist = PROP_INTRA_REFRESH_CYCLE_DIST_DEFAULT;
   thiz->dblk_idc = PROP_DBLK_IDC_DEFAULT;
+  thiz->pic_timing_sei = PROP_PIC_TIMING_SEI_DEFAULT;
   msdk_enc->num_extra_frames = 1;
 }
 

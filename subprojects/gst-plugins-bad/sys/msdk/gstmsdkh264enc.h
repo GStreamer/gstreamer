@@ -74,6 +74,7 @@ struct _GstMsdkH264Enc
   gint intra_refresh_qp_delta;
   guint intra_refresh_cycle_dist;
   guint dblk_idc;
+  gboolean pic_timing_sei;
 
   GstH264NalParser *parser;
   GArray *cc_sei_array;
