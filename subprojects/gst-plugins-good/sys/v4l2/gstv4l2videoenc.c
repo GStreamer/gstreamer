@@ -302,6 +302,34 @@ done:
 }
 
 static gboolean
+gst_v4l2_video_enc_flush (GstVideoEncoder * encoder)
+{
+  GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
+
+  GST_DEBUG_OBJECT (self, "Flushing");
+
+  /* Ensure the processing thread has stopped for the reverse playback
+   * iscount case */
+  if (g_atomic_int_get (&self->processing)) {
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+    gst_v4l2_object_unlock_stop (self->v4l2output);
+    gst_v4l2_object_unlock_stop (self->v4l2capture);
+    gst_pad_stop_task (encoder->srcpad);
+
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+
+  }
+
+  self->output_flow = GST_FLOW_OK;
+
+  gst_v4l2_object_unlock_stop (self->v4l2output);
+  gst_v4l2_object_unlock_stop (self->v4l2capture);
+
+  return TRUE;
+}
+
+static gboolean
 gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state)
 {
@@ -319,8 +347,8 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
       return TRUE;
     }
 
-    if (gst_v4l2_video_enc_finish (encoder) != GST_FLOW_OK)
-      return FALSE;
+    gst_v4l2_video_enc_finish (encoder);
+    gst_v4l2_video_enc_flush (encoder);
 
     gst_v4l2_object_stop (self->v4l2output);
     gst_v4l2_object_stop (self->v4l2capture);
@@ -350,34 +378,6 @@ gst_v4l2_video_enc_set_format (GstVideoEncoder * encoder,
   GST_DEBUG_OBJECT (self, "output caps: %" GST_PTR_FORMAT, state->caps);
 
   return ret;
-}
-
-static gboolean
-gst_v4l2_video_enc_flush (GstVideoEncoder * encoder)
-{
-  GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
-
-  GST_DEBUG_OBJECT (self, "Flushing");
-
-  /* Ensure the processing thread has stopped for the reverse playback
-   * iscount case */
-  if (g_atomic_int_get (&self->processing)) {
-    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-
-    gst_v4l2_object_unlock_stop (self->v4l2output);
-    gst_v4l2_object_unlock_stop (self->v4l2capture);
-    gst_pad_stop_task (encoder->srcpad);
-
-    GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
-
-  }
-
-  self->output_flow = GST_FLOW_OK;
-
-  gst_v4l2_object_unlock_stop (self->v4l2output);
-  gst_v4l2_object_unlock_stop (self->v4l2capture);
-
-  return TRUE;
 }
 
 struct ProfileLevelCtx
