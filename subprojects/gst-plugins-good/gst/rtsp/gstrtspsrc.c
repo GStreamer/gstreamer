@@ -2449,7 +2449,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
 
       base = get_aggregate_control (src);
       if (g_strcmp0 (control_path, "*") == 0)
-        control_path = g_strdup (base);
+        stream->conninfo.location = g_strdup (base);
       else
         stream->conninfo.location = gst_uri_join_strings (base, control_path);
     }
