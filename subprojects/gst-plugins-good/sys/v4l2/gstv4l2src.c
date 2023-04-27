@@ -558,20 +558,20 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps,
    * enumerate the possibilities */
   caps = gst_caps_normalize (caps);
 
+  /* try hard to avoid TRY_FMT since some UVC camera just crash when this
+   * is called at run-time. */
+  if (gst_v4l2_object_caps_is_subset (obj, caps)) {
+    fcaps = gst_v4l2_object_get_current_caps (obj);
+    GST_DEBUG_OBJECT (basesrc, "reuse current caps %" GST_PTR_FORMAT, fcaps);
+    goto out;
+  }
+
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     gst_v4l2_clear_error (&error);
     if (fcaps)
       gst_caps_unref (fcaps);
 
     fcaps = gst_caps_copy_nth (caps, i);
-
-    /* try hard to avoid TRY_FMT since some UVC camera just crash when this
-     * is called at run-time. */
-    if (gst_v4l2_object_caps_is_subset (obj, fcaps)) {
-      gst_caps_unref (fcaps);
-      fcaps = gst_v4l2_object_get_current_caps (obj);
-      break;
-    }
 
     /* Just check if the format is acceptable, once we know
      * no buffers should be outstanding we try S_FMT.
@@ -606,6 +606,7 @@ gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps,
     return NULL;
   }
 
+out:
   gst_caps_unref (caps);
 
   GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, fcaps);
