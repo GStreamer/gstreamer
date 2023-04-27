@@ -248,8 +248,8 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         .oldLayout = img_mem->barrier.image_layout,
         .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
         /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = 0,
-        .dstQueueFamilyIndex = 0,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .image = img_mem->image,
         .subresourceRange = img_mem->barrier.subresource_range
     };
@@ -260,8 +260,8 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
         .srcAccessMask = buf_mem->barrier.parent.access_flags,
         .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
         /* FIXME: implement exclusive transfers */
-        .srcQueueFamilyIndex = 0,
-        .dstQueueFamilyIndex = 0,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
         .buffer = buf_mem->buffer,
         .offset = region.bufferOffset,
         .size = region.bufferRowLength * region.bufferImageHeight

@@ -1367,8 +1367,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           .oldLayout = render_img_mems[i]->barrier.image_layout,
           .newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
           /* FIXME: implement exclusive transfers */
-          .srcQueueFamilyIndex = 0,
-          .dstQueueFamilyIndex = 0,
+          .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+          .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
           .image = render_img_mems[i]->image,
           .subresourceRange = render_img_mems[i]->barrier.subresource_range
       };
@@ -1380,8 +1380,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           .oldLayout = out_img_mems[i]->barrier.image_layout,
           .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
           /* FIXME: implement exclusive transfers */
-          .srcQueueFamilyIndex = 0,
-          .dstQueueFamilyIndex = 0,
+          .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+          .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
           .image = out_img_mems[i]->image,
           .subresourceRange = out_img_mems[i]->barrier.subresource_range
       };
