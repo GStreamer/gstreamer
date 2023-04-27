@@ -2947,10 +2947,16 @@ handle_mq_input (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
   else
     running_time_pts = GST_CLOCK_STIME_NONE;
 
-  if (GST_CLOCK_TIME_IS_VALID (dts))
+  if (GST_CLOCK_TIME_IS_VALID (dts)) {
     running_time_dts = my_segment_to_running_time (&ctx->in_segment, dts);
-  else
-    running_time_dts = GST_CLOCK_STIME_NONE;
+
+    /* DTS > PTS makes conceptually no sense so catch such invalid DTS here
+     * by clamping to the PTS */
+    running_time_dts = MIN (running_time_pts, running_time_dts);
+  } else {
+    /* If there is no DTS then assume PTS=DTS */
+    running_time_dts = running_time_pts;
+  }
 
   /* Try to make sure we have a valid running time */
   if (!GST_CLOCK_STIME_IS_VALID (ctx->in_running_time)) {
