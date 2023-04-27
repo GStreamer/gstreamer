@@ -1174,6 +1174,32 @@ _build_render_buffer_cmd (GstVulkanSwapper * swapper, guint32 swap_idx,
 
     vkCmdClearColorImage (cmd_buf->cmd, swap_img->image,
         swap_img->barrier.image_layout, &clear, 1, &clear_range);
+
+    /* *INDENT-OFF* */
+    image_memory_barrier = (VkImageMemoryBarrier) {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .pNext = NULL,
+        .srcAccessMask = swap_img->barrier.parent.access_flags,
+        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .oldLayout = swap_img->barrier.image_layout,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        /* FIXME: implement exclusive transfers */
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = swap_img->image,
+        .subresourceRange = swap_img->barrier.subresource_range
+    };
+    /* *INDENT-ON* */
+
+    vkCmdPipelineBarrier (cmd_buf->cmd,
+        swap_img->barrier.parent.pipeline_stages,
+        VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, NULL, 0, NULL, 1,
+        &image_memory_barrier);
+
+    swap_img->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    swap_img->barrier.parent.access_flags = image_memory_barrier.dstAccessMask;
+    swap_img->barrier.image_layout = image_memory_barrier.newLayout;
+
     vkCmdBlitImage (cmd_buf->cmd, img_mem->image, img_mem->barrier.image_layout,
         swap_img->image, swap_img->barrier.image_layout, 1, &blit,
         VK_FILTER_LINEAR);
