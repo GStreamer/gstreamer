@@ -914,7 +914,9 @@ _set_sink (GESLauncher * self, const gchar * sink_desc, SetSinkFunc set_func)
   if (sink_desc != NULL) {
     GError *err = NULL;
     GstElement *sink = gst_parse_bin_from_description_full (sink_desc, TRUE,
-        NULL, GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS, &err);
+        NULL,
+        GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN,
+        &err);
     if (sink == NULL) {
       GST_ERROR ("could not create the requested videosink %s (err: %s), "
           "exiting", err ? err->message : "", sink_desc);
