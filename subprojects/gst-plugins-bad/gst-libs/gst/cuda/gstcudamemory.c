@@ -518,11 +518,13 @@ gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
+      alloc_height *= 2;
+      break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P016_LE:
-      alloc_height *= 2;
+      alloc_height += alloc_height / 2;
       break;
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_I422_10LE:
