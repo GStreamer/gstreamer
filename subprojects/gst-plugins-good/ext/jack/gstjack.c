@@ -106,7 +106,7 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_jack_load_library ()) {
     GST_WARNING ("Failed to load jack library");
-    return FALSE;
+    return TRUE;
   }
 
   ret |= GST_ELEMENT_REGISTER (jackaudiosrc, plugin);
