@@ -134,6 +134,13 @@ gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert)
       .filters = { NULL },
       .rank = GST_RANK_PRIMARY,
     },
+    { /* FIXME: Generically make it so we go through cudaconvert for formats not supported by `glcolorconvert` */
+      .first_elements = { "capsfilter caps=video/x-raw(ANY),format={I420_10LE,I422_10LE,I422_12LE}", "cudaupload", NULL },
+      .colorspace_converters = { "cudaconvert", NULL },
+      .last_elements = { "cudadownload", "capsfilter caps=video/x-raw(memory:GLMemory)", NULL },
+      .filters = { NULL },
+      .rank = GST_RANK_SECONDARY + 2,
+    },
     { /* CUDA -> GL */
       .first_elements = { "capsfilter caps=video/x-raw(memory:CUDAMemory)", "cudadownload", NULL },
       .colorspace_converters = { "glcolorconvert",  "glcolorscale", "glcolorconvert", NULL },
