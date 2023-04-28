@@ -47,6 +47,8 @@ option('y4m', type : 'feature', value : 'auto')
 # Feature options for plugins with external deps
 option('adaptivedemux2', type : 'feature', value : 'auto', description : '2nd generation adaptive demuxer plugin')
 option('aalib', type : 'feature', value : 'auto', description : 'aalib text console video sink plugin')
+option('amrnb', type : 'feature', value : 'auto', description : 'Adaptive Multi-Rate Narrow-Band audio codec plugin')
+option('amrwbdec', type : 'feature', value : 'auto', description : 'Adaptive Multi-Rate Wide-Band audio decoder plugin')
 option('bz2', type : 'feature', value : 'auto', description : 'libbz2 support in the matroska plugin')
 option('cairo', type : 'feature', value : 'auto', description : 'Cairo overlay plugin')
 option('directsound', type : 'feature', value : 'auto', description : 'Directsound audio source/sink plugin')

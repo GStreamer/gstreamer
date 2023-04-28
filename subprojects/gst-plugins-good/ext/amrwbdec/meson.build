@@ -3,7 +3,7 @@ amrwb_dep = dependency('opencore-amrwb', version : '>= 0.1.3', required : get_op
 if amrwb_dep.found()
   amrwbdec = library('gstamrwbdec',
     ['amrwb.c', 'amrwbdec.c'],
-    c_args : ugly_args,
+    c_args : gst_plugins_good_args,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, amrwb_dep],
     install : true,

@@ -51,6 +51,10 @@ This file lists supporting libraries for which gst-plugins-good contains
 plugins, as well as their minimum required version. You can find the
 corresponding plugins in ext/(library)
 
+Package:        opencore-amr (for the AMR-NB decoder and encoder and the AMR-WB decoder)
+URL:            http://sourceforge.net/projects/opencore-amr/
+DebianPackage:  libopencore-amrnb-dev
+
 Package:        Orc
 Version:        >= 0.4.17
 Recommended:    Latest 0.4.x

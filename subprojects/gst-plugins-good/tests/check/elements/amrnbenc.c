@@ -131,7 +131,7 @@ GST_START_TEST (test_enc)
 GST_END_TEST;
 
 static Suite *
-amrnbenc_suite ()
+amrnbenc_suite (void)
 {
   Suite *s = suite_create ("amrnbenc");
   TCase *tc_chain = tcase_create ("general");

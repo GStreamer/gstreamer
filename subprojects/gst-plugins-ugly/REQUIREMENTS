@@ -32,8 +32,6 @@ ext/(library)
 
 a52dec		(for the a52dec AC-3 decoder)
 			http://liba52.sourceforge.net/
-opencore-amr (for the AMR-NB decoder and encoder and the AMR-WB decoder)
-			http://sourceforge.net/projects/opencore-amr/
 libdvdread	(for the dvdreadsrc)
 			http://www.dtek.chalmers.se/groups/dvd/
 			(optional: libcss for encrypted DVDs)

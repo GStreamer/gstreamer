@@ -9,8 +9,6 @@ option('realmedia', type : 'feature', value : 'auto')
 
 # Feature options for plugins that need external deps
 option('a52dec', type : 'feature', value : 'auto', description : 'Dolby Digital (AC-3) audio decoder plugin based on liba52 (GPL - only built if gpl option is also enabled!)')
-option('amrnb', type : 'feature', value : 'auto', description : 'Adaptive Multi-Rate Narrow-Band audio codec plugin')
-option('amrwbdec', type : 'feature', value : 'auto', description : 'Adaptive Multi-Rate Wide-Band audio decoder plugin')
 option('cdio', type : 'feature', value : 'auto', description : 'CD audio source plugin based on libcdio (GPL - only built if gpl option is also enabled!)')
 option('dvdread', type : 'feature', value : 'auto', description : 'DVD video source plugin based on libdvdread (GPL - only built if gpl option is also enabled!)')
 option('mpeg2dec', type : 'feature', value : 'auto', description : 'MPEG 2 video decoder plugin based on libmpeg2 (GPL - only built if gpl option is also enabled!)')

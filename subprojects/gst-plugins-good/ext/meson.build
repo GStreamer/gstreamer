@@ -1,5 +1,7 @@
 subdir('aalib')
 subdir('adaptivedemux2')
+subdir('amrnb')
+subdir('amrwbdec')
 subdir('cairo')
 subdir('flac')
 subdir('gdk_pixbuf')

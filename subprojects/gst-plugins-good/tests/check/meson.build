@@ -136,6 +136,7 @@ libsoup3_dep = dependency('libsoup-3.0', required : false,
 # FIXME: unistd dependency or not tested yet on windows
 if host_machine.system() != 'windows'
   good_tests += [
+    [ 'elements/amrnbenc', not amrnb_dep.found() ],
     [ 'elements/dash_mpd', not adaptivedemux2_dep.found(), [adaptivedemux2_dep] ],
     [ 'pipelines/flacdec', not flac_dep.found() ],
     [ 'elements/gdkpixbufsink', not gdkpixbuf_dep.found(), [gdkpixbuf_dep] ],

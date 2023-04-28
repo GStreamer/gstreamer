@@ -7,7 +7,6 @@ ugly_tests = [
 # FIXME: unistd dependency or not tested yet on windows
 if host_machine.system() != 'windows'
   ugly_tests += [
-    [ 'elements/amrnbenc', not amrnb_dep.found() ],
     [ 'elements/mpeg2dec', not mpeg2_dep.found() or not cdata.has('HAVE_UNISTD_H'), [ gstvideo_dep ] ],
   ]
 endif
