@@ -3413,9 +3413,30 @@ gst_va_h264_enc_get_property (GObject * object, guint prop_id,
     case PROP_CC:
       g_value_set_boolean (value, self->prop.cc);
       break;
-    case PROP_MBBRC:
-      g_value_set_enum (value, self->prop.mbbrc);
+    case PROP_MBBRC:{
+      GstVaFeature mbbrc = GST_VA_FEATURE_AUTO;
+      /* Macroblock-level rate control.
+       * 0: use default,
+       * 1: always enable,
+       * 2: always disable,
+       * other: reserved. */
+      switch (self->prop.mbbrc) {
+        case 2:
+          mbbrc = GST_VA_FEATURE_DISABLED;
+          break;
+        case 1:
+          mbbrc = GST_VA_FEATURE_ENABLED;
+          break;
+        case 0:
+          mbbrc = GST_VA_FEATURE_AUTO;
+          break;
+        default:
+          g_assert_not_reached ();
+      }
+
+      g_value_set_enum (value, mbbrc);
       break;
+    }
     case PROP_BITRATE:
       g_value_set_uint (value, self->prop.bitrate);
       break;
