@@ -6076,6 +6076,20 @@ pause:
         if ((stop = demux->common.segment.stop) == -1)
           stop = demux->last_stop_end;
 
+        /* segment.position will still be at the last timestamp and won't always
+         * include the duration of the last packet. Expand that to the segment
+         * duration so that segment.base is increased correctly to include the
+         * length of the last packet when doing segment seeks. We need to do
+         * this before the segment-done event goes out so everything's ready
+         * for the next seek request coming in. */
+        if (GST_CLOCK_TIME_IS_VALID (stop)) {
+          GST_DEBUG_OBJECT (demux, "End of segment, updating segment.position "
+              "from %" GST_TIME_FORMAT " to stop %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (demux->common.segment.position),
+              GST_TIME_ARGS (stop));
+          demux->common.segment.position = stop;
+        }
+
         GST_LOG_OBJECT (demux, "Sending segment done, at end of segment");
         msg = gst_message_new_segment_done (GST_OBJECT (demux), GST_FORMAT_TIME,
             stop);

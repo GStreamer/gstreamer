@@ -1,5 +1,5 @@
 /* GStreamer unit test for matroskademux
- * Copyright (C) 2015 Tim-Philipp Müller <tim@centricular.com>
+ * Copyright (C) 2015, 2023 Tim-Philipp Müller <tim@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -307,6 +307,183 @@ GST_START_TEST (test_toc_demux)
 
 GST_END_TEST;
 
+static void
+demux_pad_added_cb (GstElement * demux, GstPad * new_pad, gpointer user_data)
+{
+  GstElement *sink = GST_ELEMENT (user_data);
+
+  fail_unless (gst_element_link (demux, sink));
+}
+
+static const gint64 PINKNOISE_MKV_DURATION = 116099773;
+
+static void
+run_segment_looping_test (gint64 start, gint64 stop, gdouble rate)
+{
+  GstStateChangeReturn state_ret;
+  GstMessage *msg;
+  GstElement *src, *sink, *demux, *pipeline;
+  gboolean seek_ret;
+  GstBus *bus;
+  gchar *path;
+
+  g_assert (start >= 0);
+  g_assert (stop >= -1);
+  g_assert (rate > 0.0);
+
+  // only handle a rate for the middle segment case for now
+  g_assert (rate == 1.0 || stop != -1);
+
+  pipeline = gst_pipeline_new ("pipeline");
+  fail_unless (pipeline != NULL, "Failed to create pipeline!");
+
+  bus = gst_element_get_bus (pipeline);
+
+  src = gst_element_factory_make ("filesrc", "filesrc");
+  fail_unless (src != NULL, "Failed to create 'filesrc' element!");
+
+  demux = gst_element_factory_make ("matroskademux", "demux");
+  fail_unless (demux != NULL, "Failed to create matroskademux element");
+
+  sink = gst_element_factory_make ("fakesink", "fakesink");
+  fail_unless (sink != NULL, "Failed to create 'fakesink' element!");
+
+  gst_bin_add_many (GST_BIN (pipeline), src, demux, sink, NULL);
+
+  fail_unless (gst_element_link (src, demux));
+
+  g_signal_connect (demux, "pad-added", G_CALLBACK (demux_pad_added_cb), sink);
+
+  path = g_build_filename (GST_TEST_FILES_PATH, "pinknoise-vorbis.mkv", NULL);
+  GST_LOG ("reading file '%s'", path);
+  g_object_set (src, "location", path, NULL);
+
+  state_ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    GST_LOG ("waiting for pipeline to reach PAUSED state");
+    state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+    fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
+  }
+
+  GST_LOG ("PAUSED, let's play a little..");
+  state_ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (state_ret != GST_STATE_CHANGE_FAILURE);
+
+  GST_LOG ("Send FLUSHING seek with SEGMENT flag set.. "
+      "(start=%" G_GINT64_FORMAT ", stop=%" G_GINT64_FORMAT ")", start, stop);
+
+  if (stop == -1) {
+    seek_ret = gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT, start);
+  } else {
+    seek_ret = gst_element_seek (pipeline, rate, GST_FORMAT_TIME,
+        GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_SEGMENT,
+        GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, stop);
+  }
+  fail_unless (seek_ret == TRUE);
+
+  GST_LOG ("Waiting for pipeline to preroll again after flushing seek..");
+  state_ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+  fail_unless_equals_int (state_ret, GST_STATE_CHANGE_SUCCESS);
+
+  {
+    GstFormat fmt = GST_FORMAT_UNDEFINED;
+    gint64 segment_end = 0;
+
+    GST_LOG ("Waiting for SEGMENT_DONE message..");
+    msg = gst_bus_timed_pop_filtered (bus, -1, GST_MESSAGE_SEGMENT_DONE);
+    fail_unless (msg != NULL);
+
+    gst_message_parse_segment_done (msg, &fmt, &segment_end);
+    fail_unless_equals_int (fmt, GST_FORMAT_TIME);
+    if (stop == -1) {
+      fail_unless_equals_int64 (segment_end, PINKNOISE_MKV_DURATION);
+    } else {
+      fail_unless_equals_int64 (segment_end, stop);
+    }
+    gst_clear_message (&msg);
+  }
+
+  GST_LOG ("Send non-FLUSHING seek to start new segment loop.. "
+      "(start=%" G_GINT64_FORMAT ", stop=%" G_GINT64_FORMAT ")", start, stop);
+
+  /* No segment flag this time, so will be expecting an EOS at the end */
+  if (stop == -1) {
+    seek_ret = gst_element_seek_simple (pipeline, GST_FORMAT_TIME, 0, start);
+  } else {
+    seek_ret = gst_element_seek (pipeline, rate, GST_FORMAT_TIME, 0,
+        GST_SEEK_TYPE_SET, start, GST_SEEK_TYPE_SET, stop);
+  }
+  fail_unless (seek_ret == TRUE);
+
+  GST_LOG ("Waiting for EOS message..");
+  msg = gst_bus_timed_pop_filtered (bus, -1, GST_MESSAGE_EOS);
+  fail_unless (msg != NULL);
+  gst_clear_message (&msg);
+
+  {
+    GstPad *pad = gst_element_get_static_pad (sink, "sink");
+    GstEvent *ev = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+    const GstSegment *segment = NULL;
+
+    gst_event_parse_segment (ev, &segment);
+
+    GST_INFO ("segment %" GST_SEGMENT_FORMAT, segment);
+
+    fail_unless_equals_int64 (segment->start, start);
+    if (stop == -1) {
+      fail_unless_equals_int64 (segment->stop, PINKNOISE_MKV_DURATION);
+      fail_unless_equals_int64 (segment->duration, PINKNOISE_MKV_DURATION);
+      fail_unless_equals_int64 (segment->base, PINKNOISE_MKV_DURATION);
+    } else {
+      fail_unless_equals_int64 (segment->stop, stop);
+      fail_unless_equals_int64 (segment->duration, PINKNOISE_MKV_DURATION);
+      fail_unless_equals_int64 (segment->base, (stop - start) / rate);
+    }
+
+    gst_clear_event (&ev);
+    gst_clear_object (&pad);
+  }
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipeline);
+  gst_clear_object (&bus);
+
+  g_free (path);
+}
+
+/* Make sure segment seeks behave as expected, and the segment base offset
+ * is increased correctly by the clip duration rather than the last timestamp
+ * position. */
+GST_START_TEST (test_segment_looping)
+{
+  run_segment_looping_test (0, -1, 1.0);
+}
+
+GST_END_TEST;
+
+/* If we do a segment seek on a middle segment of the clip, we expect the
+ * base offset of the next segment to be the duration of our selected segment,
+ * not the duration of the entire clip, since we only played that much then. */
+GST_START_TEST (test_segment_looping_middle_segment)
+{
+  run_segment_looping_test (50 * GST_MSECOND, 100 * GST_MSECOND, 1.0);
+}
+
+GST_END_TEST;
+
+/* For positive non-1.0 rates the base offset of the next segment should be
+ * scaled accordingly, since it's in running time not stream time. */
+GST_START_TEST (test_segment_looping_middle_segment_with_rate)
+{
+  run_segment_looping_test (50 * GST_MSECOND, 100 * GST_MSECOND, 2.0);
+}
+
+GST_END_TEST;
+
 static Suite *
 matroskademux_suite (void)
 {
@@ -316,6 +493,9 @@ matroskademux_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_sub_terminator);
   tcase_add_test (tc_chain, test_toc_demux);
+  tcase_add_test (tc_chain, test_segment_looping);
+  tcase_add_test (tc_chain, test_segment_looping_middle_segment);
+  tcase_add_test (tc_chain, test_segment_looping_middle_segment_with_rate);
 
   return s;
 }
