@@ -267,17 +267,9 @@ GST_START_TEST (test_version_checks)
           GST_VERSION_MAJOR, GST_VERSION_MINOR + 1, GST_VERSION_MICRO) == TRUE,
       "Unexpected version check result");
 
-  /* If the nano is set, then we expect that X.Y.Z-1.x >= X.Y.Z, so that a
-   * devel plugin is valid against an upcoming release */
-  if (GST_VERSION_NANO > 0) {
-    fail_unless (gst_default_registry_check_feature_version ("identity",
-            GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO + 1) ==
-        TRUE, "Unexpected version check result");
-  } else {
-    fail_if (gst_default_registry_check_feature_version ("identity",
-            GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO + 1) ==
-        TRUE, "Unexpected version check result");
-  }
+  fail_if (gst_default_registry_check_feature_version ("identity",
+          GST_VERSION_MAJOR, GST_VERSION_MINOR, GST_VERSION_MICRO + 1) ==
+      TRUE, "Unexpected version check result");
 
   if (GST_VERSION_MAJOR > 0) {
     fail_if (gst_default_registry_check_feature_version ("identity",

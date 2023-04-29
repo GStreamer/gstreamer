@@ -33400,8 +33400,13 @@ ranks are equal but the name of p2 comes before the name of p1</doc>
         </parameters>
       </function>
       <method name="check_version" c:identifier="gst_plugin_feature_check_version">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpluginfeature.c">Checks whether the given plugin feature is at least
- the required version</doc>
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpluginfeature.c">Checks whether the given plugin feature is at least the required version.
+
+Note: Since version 1.24 this function no longer returns %TRUE if the
+version is a git development version (e.g. 1.23.0.1) and the check is
+for the "next" micro version, that is it will no longer return %TRUE for
+e.g. 1.23.0.1 if the check is for 1.23.1. It is still possible to parse
+the nano version from the string and do this check that way if needed.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstpluginfeature.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpluginfeature.c">%TRUE if the plugin feature has at least
