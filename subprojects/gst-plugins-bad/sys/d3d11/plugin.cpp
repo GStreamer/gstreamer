@@ -76,6 +76,8 @@
 #include "gstd3d11deinterlace.h"
 #include "gstd3d11testsrc.h"
 #include "gstd3d11overlay.h"
+#include "gstd3d11ipcsink.h"
+#include "gstd3d11ipcsrc.h"
 
 #if !GST_D3D11_WINAPI_ONLY_APP
 #include "gstd3d11screencapturesrc.h"
@@ -238,6 +240,10 @@ plugin_init (GstPlugin * plugin)
       "d3d11testsrc", GST_RANK_NONE, GST_TYPE_D3D11_TEST_SRC);
   gst_element_register (plugin,
       "d3d11overlay", GST_RANK_NONE, GST_TYPE_D3D11_OVERLAY);
+  gst_element_register (plugin,
+      "d3d11ipcsink", GST_RANK_NONE, GST_TYPE_D3D11_IPC_SINK);
+  gst_element_register (plugin,
+      "d3d11ipcsrc", GST_RANK_NONE, GST_TYPE_D3D11_IPC_SRC);
 
 #if !GST_D3D11_WINAPI_ONLY_APP
   if (gst_d3d11_is_windows_8_or_greater ()) {
