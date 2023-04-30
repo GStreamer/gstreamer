@@ -773,10 +773,8 @@ int main (int argc, char *argv[]) {
 	g_print("\"GstDiscovererClass.starting\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstDiscovererClass, starting));
 	g_print("\"GstDiscovererClass.discovered\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstDiscovererClass, discovered));
 	g_print("\"GstDiscovererClass.source_setup\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstDiscovererClass, source_setup));
-	g_print("\"GstDiscovererClass._reserved\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstDiscovererClass, _reserved));
 	g_print("\"sizeof(GstDiscoverer)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstDiscoverer));
 	g_print("\"GstDiscoverer.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstDiscoverer, priv));
-	g_print("\"GstDiscoverer._reserved\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstDiscoverer, _reserved));
 	g_print("\"sizeof(GstRTPBaseAudioPayloadClass)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstRTPBaseAudioPayloadClass));
 	g_print("\"sizeof(GstRTPBaseAudioPayload)\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) sizeof(GstRTPBaseAudioPayload));
 	g_print("\"GstRTPBaseAudioPayload.priv\": \"%" G_GUINT64_FORMAT "\"\n", (guint64) G_STRUCT_OFFSET(GstRTPBaseAudioPayload, priv));

@@ -767,10 +767,8 @@ namespace AbiTester {
 			Console.WriteLine("\"GstDiscovererClass.starting\": \"" + Gst.PbUtils.Discoverer.class_abi.GetFieldOffset("starting") + "\"");
 			Console.WriteLine("\"GstDiscovererClass.discovered\": \"" + Gst.PbUtils.Discoverer.class_abi.GetFieldOffset("discovered") + "\"");
 			Console.WriteLine("\"GstDiscovererClass.source_setup\": \"" + Gst.PbUtils.Discoverer.class_abi.GetFieldOffset("source_setup") + "\"");
-			Console.WriteLine("\"GstDiscovererClass._reserved\": \"" + Gst.PbUtils.Discoverer.class_abi.GetFieldOffset("_reserved") + "\"");
 			Console.WriteLine("\"sizeof(GstDiscoverer)\": \"" + Gst.PbUtils.Discoverer.abi_info.Size + "\"");
 			Console.WriteLine("\"GstDiscoverer.priv\": \"" + Gst.PbUtils.Discoverer.abi_info.GetFieldOffset("priv") + "\"");
-			Console.WriteLine("\"GstDiscoverer._reserved\": \"" + Gst.PbUtils.Discoverer.abi_info.GetFieldOffset("_reserved") + "\"");
 			Console.WriteLine("\"sizeof(GstRTPBaseAudioPayloadClass)\": \"" + Gst.Rtp.RTPBaseAudioPayload.class_abi.Size + "\"");
 			Console.WriteLine("\"sizeof(GstRTPBaseAudioPayload)\": \"" + Gst.Rtp.RTPBaseAudioPayload.abi_info.Size + "\"");
 			Console.WriteLine("\"GstRTPBaseAudioPayload.priv\": \"" + Gst.Rtp.RTPBaseAudioPayload.abi_info.GetFieldOffset("priv") + "\"");

@@ -390,6 +390,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace/object[@cname='GstPbutilsGlobal']/method[@cname='gst_codec_utils_opus_parse_header']" name="hidden">true</attr>
 
 	<!-- Mark reserved fields as padding -->
+	<attr path="//*[contains(@cname, '_reserved')]" name="padding">true</attr>
 	<attr path="//*[contains(@cname, 'gst_reserved')]" name="padding">true</attr>
 	<attr path="//*[contains(@cname, 'gst_reserved2')]" name="padding">true</attr>
 	<attr path="//*[contains(@cname, 'gst_reserved')]" name="padding">true</attr>
