@@ -112,23 +112,35 @@ gst_webrtc_dtls_transport_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_SESSION_ID:
+      GST_OBJECT_LOCK (webrtc);
       g_value_set_uint (value, webrtc->session_id);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     case PROP_TRANSPORT:
+      GST_OBJECT_LOCK (webrtc);
       g_value_set_object (value, webrtc->transport);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     case PROP_STATE:
+      GST_OBJECT_LOCK (webrtc);
       g_value_set_enum (value, webrtc->state);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     case PROP_CLIENT:
+      GST_OBJECT_LOCK (webrtc);
       g_object_get_property (G_OBJECT (webrtc->dtlssrtpenc), "is-client",
           value);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     case PROP_CERTIFICATE:
+      GST_OBJECT_LOCK (webrtc);
       g_object_get_property (G_OBJECT (webrtc->dtlssrtpdec), "pem", value);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     case PROP_REMOTE_CERTIFICATE:
+      GST_OBJECT_LOCK (webrtc);
       g_object_get_property (G_OBJECT (webrtc->dtlssrtpdec), "peer-pem", value);
+      GST_OBJECT_UNLOCK (webrtc);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -182,8 +194,12 @@ on_connection_state_changed (GObject * obj, GParamSpec * pspec,
 static void
 gst_webrtc_dtls_transport_constructed (GObject * object)
 {
-  GstWebRTCDTLSTransport *webrtc = GST_WEBRTC_DTLS_TRANSPORT (object);
+  GstWebRTCDTLSTransport *webrtc = NULL;
   gchar *connection_id;
+
+  G_OBJECT_CLASS (parent_class)->constructed (object);
+
+  webrtc = GST_WEBRTC_DTLS_TRANSPORT (object);
 
   /* XXX: this may collide with another connection_id however this is only a
    * problem if multiple dtls element sets are being used within the same
@@ -192,17 +208,28 @@ gst_webrtc_dtls_transport_constructed (GObject * object)
       g_random_int ());
 
   webrtc->dtlssrtpenc = gst_element_factory_make ("dtlssrtpenc", NULL);
+  gst_object_ref_sink (webrtc->dtlssrtpenc);
   g_object_set (webrtc->dtlssrtpenc, "connection-id", connection_id,
       "is-client", webrtc->client, "rtp-sync", FALSE, NULL);
 
   webrtc->dtlssrtpdec = gst_element_factory_make ("dtlssrtpdec", NULL);
+  gst_object_ref_sink (webrtc->dtlssrtpdec);
   g_object_set (webrtc->dtlssrtpdec, "connection-id", connection_id, NULL);
   g_free (connection_id);
 
   g_signal_connect (webrtc->dtlssrtpenc, "notify::connection-state",
       G_CALLBACK (on_connection_state_changed), webrtc);
+}
 
-  G_OBJECT_CLASS (parent_class)->constructed (object);
+static void
+gst_webrtc_dtls_transport_dispose (GObject * object)
+{
+  GstWebRTCDTLSTransport *webrtc = GST_WEBRTC_DTLS_TRANSPORT (object);
+
+  gst_clear_object (&webrtc->dtlssrtpdec);
+  gst_clear_object (&webrtc->dtlssrtpenc);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -211,6 +238,7 @@ gst_webrtc_dtls_transport_class_init (GstWebRTCDTLSTransportClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->constructed = gst_webrtc_dtls_transport_constructed;
+  gobject_class->dispose = gst_webrtc_dtls_transport_dispose;
   gobject_class->get_property = gst_webrtc_dtls_transport_get_property;
   gobject_class->set_property = gst_webrtc_dtls_transport_set_property;
   gobject_class->finalize = gst_webrtc_dtls_transport_finalize;
