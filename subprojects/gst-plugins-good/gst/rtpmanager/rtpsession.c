@@ -1189,6 +1189,7 @@ rtp_session_reset (RTPSession * sess)
 {
   g_return_if_fail (RTP_IS_SESSION (sess));
 
+  RTP_SESSION_LOCK (sess);
   /* remove all sources */
   g_hash_table_remove_all (sess->ssrcs[sess->mask_idx]);
   sess->total_sources = 0;
@@ -1217,6 +1218,7 @@ rtp_session_reset (RTPSession * sess)
   g_list_free_full (sess->conflicting_addresses,
       (GDestroyNotify) rtp_conflicting_address_free);
   sess->conflicting_addresses = NULL;
+  RTP_SESSION_UNLOCK (sess);
 }
 
 /**
