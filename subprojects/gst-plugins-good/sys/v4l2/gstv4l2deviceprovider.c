@@ -369,6 +369,8 @@ provider_thread (gpointer data)
   if (context == NULL || loop == NULL) {
     provider->started = TRUE;
     g_cond_broadcast (&provider->started_cond);
+    g_clear_pointer (&loop, g_main_loop_unref);
+    g_clear_pointer (&context, g_main_context_unref);
     GST_OBJECT_UNLOCK (provider);
     return NULL;
   }
@@ -451,19 +453,24 @@ gst_v4l2_device_provider_stop (GstDeviceProvider * provider)
   self->loop = NULL;
   GST_OBJECT_UNLOCK (self);
 
-  if (!context || !loop)
+  if (!context || !loop) {
+    g_clear_pointer (&self->loop, g_main_loop_unref);
+    g_clear_pointer (&self->context, g_main_context_unref);
     return;
+  }
 
   idle_stop_source = g_idle_source_new ();
   g_source_set_callback (idle_stop_source, (GSourceFunc) g_main_loop_quit, loop,
-      (GDestroyNotify) g_main_loop_unref);
+      NULL);
   g_source_attach (idle_stop_source, context);
   g_source_unref (idle_stop_source);
-  g_main_context_unref (context);
 
   g_thread_join (self->thread);
   self->thread = NULL;
   self->started = FALSE;
+
+  g_main_loop_unref (loop);
+  g_main_context_unref (context);
 }
 
 #endif
