@@ -229,18 +229,9 @@ typedef struct _DepayGapEventTestData
   guint buffer_type;
 } DepayGapEventTestData;
 
-typedef struct
-{
-  gint seq_num;
-  gint picid;
-  guint buffer_type;
-  gboolean s_bit;
-  gboolean marker_bit;
-} DepayGapEventTestDataFull;
-
 static void
 test_depay_gap_event_base (const DepayGapEventTestData * data,
-    gboolean send_lost_event, gboolean expect_gap_event, int iter)
+    gboolean send_lost_event, gboolean expect_gap_event)
 {
   GstEvent *event;
   GstClockTime pts = 0;
@@ -314,8 +305,7 @@ static const DepayGapEventTestData stop_gap_events_test_data[][2] = {
 
 GST_START_TEST (test_depay_stop_gap_events)
 {
-  test_depay_gap_event_base (&stop_gap_events_test_data[__i__][0], TRUE, FALSE,
-      __i__);
+  test_depay_gap_event_base (&stop_gap_events_test_data[__i__][0], TRUE, FALSE);
 }
 
 GST_END_TEST;
@@ -340,8 +330,7 @@ static const DepayGapEventTestData resend_gap_event_test_data[][2] = {
 
 GST_START_TEST (test_depay_resend_gap_event)
 {
-  test_depay_gap_event_base (&resend_gap_event_test_data[__i__][0], TRUE, TRUE,
-      __i__);
+  test_depay_gap_event_base (&resend_gap_event_test_data[__i__][0], TRUE, TRUE);
 }
 
 GST_END_TEST;
