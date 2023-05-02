@@ -39,7 +39,9 @@ GST_DEBUG_CATEGORY_EXTERN (gst_debug_srtobject);
 
 #define ERROR_TO_WARNING(srtobject, error, suffix)                             \
 G_STMT_START {                                                                 \
-  gchar *text = g_strdup_printf ("%s%s", (error)->message, (suffix));          \
+  gchar *text;                                                                 \
+  g_assert (error);                                                            \
+  text = g_strdup_printf ("%s%s", (error)->message, (suffix));                 \
   GST_WARNING_OBJECT ((srtobject)->element, "warning: %s", text);              \
   gst_element_message_full ((srtobject)->element, GST_MESSAGE_WARNING,         \
     (error)->domain, (error)->code, text, NULL, __FILE__, GST_FUNCTION,        \
