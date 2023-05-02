@@ -60,6 +60,7 @@ struct _GstRtpVP9Pay
   guint width;
   guint height;
   GstVP9RtpPayPictureIDMode picture_id_mode;
+  gint picture_id_offset;
   guint16 picture_id;
 };
 
