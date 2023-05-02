@@ -4428,7 +4428,8 @@ qtdemux_parse_moof (GstQTDemux * qtdemux, const guint8 * buffer, guint length,
       goto missing_tfhd;
 
     /* Sample grouping support */
-    if (stream->protected && (stream->protection_scheme_type == FOURCC_cenc
+    if (stream != NULL && stream->protected
+        && (stream->protection_scheme_type == FOURCC_cenc
             || stream->protection_scheme_type == FOURCC_cbcs)) {
       QtDemuxCencSampleSetInfo *info = stream->protection_scheme_info;
       GNode *sbgp_node, *sgpd_node;
