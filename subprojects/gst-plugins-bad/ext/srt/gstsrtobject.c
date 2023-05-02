@@ -1846,7 +1846,7 @@ gst_srt_object_write_one (GstSRTObject * srtobject, GstBufferList * headers,
 retry:
   if (!srtobject->sent_headers) {
     if (!gst_srt_object_send_headers (srtobject, srtobject->sock,
-            srtobject->poll_id, poll_timeout, headers, error)) {
+            srtobject->poll_id, poll_timeout, headers, &internal_error)) {
       goto err;
     }
 
