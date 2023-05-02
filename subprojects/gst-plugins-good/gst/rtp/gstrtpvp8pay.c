@@ -45,6 +45,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_pay_debug);
 enum
 {
   PROP_0,
+  PROP_PICTURE_ID,
   PROP_PICTURE_ID_MODE,
   PROP_PICTURE_ID_OFFSET
 };
@@ -167,11 +168,24 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
   gobject_class->set_property = gst_rtp_vp8_pay_set_property;
   gobject_class->get_property = gst_rtp_vp8_pay_get_property;
 
+  /**
+   * rtpvp8pay:picture-id:
+   *
+   * Currently used picture-id
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_PICTURE_ID,
+      g_param_spec_int ("picture-id", "Picture ID",
+          "Currently used picture-id for payloading", 0, 0x7FFF, 0,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_PICTURE_ID_MODE,
       g_param_spec_enum ("picture-id-mode", "Picture ID Mode",
           "The picture ID mode for payloading",
           GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE, DEFAULT_PICTURE_ID_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * rtpvp8pay:picture-id-offset:
    *
@@ -232,6 +246,9 @@ gst_rtp_vp8_pay_get_property (GObject * object,
   GstRtpVP8Pay *rtpvp8pay = GST_RTP_VP8_PAY (object);
 
   switch (prop_id) {
+    case PROP_PICTURE_ID:
+      g_value_set_int (value, rtpvp8pay->picture_id);
+      break;
     case PROP_PICTURE_ID_MODE:
       g_value_set_enum (value, rtpvp8pay->picture_id_mode);
       break;

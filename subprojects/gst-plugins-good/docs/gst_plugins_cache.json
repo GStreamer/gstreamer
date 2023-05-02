@@ -16912,6 +16912,20 @@
                     }
                 },
                 "properties": {
+                    "picture-id": {
+                        "blurb": "Currently used picture-id for payloading",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "32767",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": false
+                    },
                     "picture-id-mode": {
                         "blurb": "The picture ID mode for payloading",
                         "conditionally-available": false,
@@ -17020,6 +17034,20 @@
                     }
                 },
                 "properties": {
+                    "picture-id": {
+                        "blurb": "Currently used picture-id for payloading",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "32767",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": false
+                    },
                     "picture-id-mode": {
                         "blurb": "The picture ID mode for payloading",
                         "conditionally-available": false,
