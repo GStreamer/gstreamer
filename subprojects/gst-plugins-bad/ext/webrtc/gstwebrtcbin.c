@@ -8214,6 +8214,11 @@ gst_webrtc_bin_release_pad (GstElement * element, GstPad * pad)
   gst_caps_replace (&webrtc_pad->received_caps, NULL);
   PC_UNLOCK (webrtc);
 
+  if (webrtc_pad->block_id) {
+    gst_pad_remove_probe (GST_PAD (pad), webrtc_pad->block_id);
+    webrtc_pad->block_id = 0;
+  }
+
   _remove_pad (webrtc, webrtc_pad);
 
   PC_LOCK (webrtc);
