@@ -520,6 +520,7 @@ struct _GstClockEntryImpl
 };
 
 char * priv_gst_get_relocated_libgstreamer (void);
+gint   priv_gst_count_directories (const char *filepath);
 
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */

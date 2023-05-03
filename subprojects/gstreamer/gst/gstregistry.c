@@ -1626,6 +1626,74 @@ priv_gst_get_relocated_libgstreamer (void)
   return dir;
 }
 
+int
+priv_gst_count_directories (const char *filepath)
+{
+  int i = 0;
+  char *tmp;
+  gsize len;
+
+  g_return_val_if_fail (!g_path_is_absolute (filepath), 0);
+
+  tmp = g_strdup (filepath);
+  len = strlen (tmp);
+
+  /* ignore UNC share paths entirely */
+  if (len >= 3 && G_IS_DIR_SEPARATOR (tmp[0]) && G_IS_DIR_SEPARATOR (tmp[1])
+      && !G_IS_DIR_SEPARATOR (tmp[2])) {
+    GST_WARNING ("found a UNC share path, ignoring");
+    return 0;
+  }
+
+  /* remove trailing slashes if they exist */
+  while (
+      /* don't remove the trailing slash for C:\.
+       * UNC paths are at least \\s\s */
+      len > 3 && G_IS_DIR_SEPARATOR (tmp[len - 1])) {
+    tmp[len - 1] = '\0';
+    len--;
+  }
+
+  while (tmp) {
+    char *dirname, *basename;
+    len = strlen (tmp);
+
+    if (g_strcmp0 (tmp, ".") == 0)
+      break;
+    if (g_strcmp0 (tmp, "/") == 0)
+      break;
+
+    /* g_path_get_dirname() may return something of the form 'C:.', where C is
+     * a drive letter */
+    if (len == 3 && g_ascii_isalpha (tmp[0]) && tmp[1] == ':' && tmp[2] == '.')
+      break;
+
+    basename = g_path_get_basename (tmp);
+    dirname = g_path_get_dirname (tmp);
+
+    if (g_strcmp0 (basename, "..") == 0) {
+      i--;
+    } else if (g_strcmp0 (basename, ".") == 0) {
+      /* nothing to do */
+    } else {
+      i++;
+    }
+
+    g_clear_pointer (&basename, g_free);
+    g_clear_pointer (&tmp, g_free);
+    tmp = dirname;
+  }
+
+  g_clear_pointer (&tmp, g_free);
+
+  if (i < 0) {
+    g_critical ("path counting resulted in a negative directory count!");
+    return 0;
+  }
+
+  return i;
+}
+
 #ifndef GST_DISABLE_REGISTRY
 /* Unref all plugins marked 'cached', to clear old plugins that no
  * longer exist. Returns %TRUE if any plugins were removed */
