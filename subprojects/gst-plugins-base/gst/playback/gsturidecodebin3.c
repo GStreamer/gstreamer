@@ -583,10 +583,20 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
 }
 
 static void
+current_updated (GstURIDecodeBin3 * dec)
+{
+  GObject *object = G_OBJECT (dec);
+
+  g_object_notify (object, "current-uri");
+  g_object_notify (object, "current-suburi");
+}
+
+static void
 check_output_group_id (GstURIDecodeBin3 * dec)
 {
   GList *iter;
   guint common_group_id = GST_GROUP_ID_INVALID;
+  gboolean notify_current = FALSE;
 
   PLAY_ITEMS_LOCK (dec);
 
@@ -619,9 +629,15 @@ check_output_group_id (GstURIDecodeBin3 * dec)
       dec->output_item->group_id = common_group_id;
       free_play_item (dec, previous_item);
     }
+    notify_current = TRUE;
   }
 
   PLAY_ITEMS_UNLOCK (dec);
+
+  if (notify_current) {
+    /* don't hold the object lock as application could fetch some properties whose getters require this lock as well */
+    current_updated (dec);
+  }
 }
 
 static GstPadProbeReturn
@@ -1986,6 +2002,7 @@ gst_uri_decode_bin3_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       g_atomic_int_set (&uridecodebin->shutdown, 0);
       ret = activate_play_item (uridecodebin->input_item);
+      current_updated (uridecodebin);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto failure;
       break;
