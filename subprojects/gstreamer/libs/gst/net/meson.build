@@ -32,7 +32,7 @@ gst_net = library('gstnet-@0@'.format(apiversion),
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : [gio_dep, gst_base_dep],
+  dependencies : [gio_dep, gst_base_dep, dl_dep],
 )
 
 library_def = {'lib': gst_net}

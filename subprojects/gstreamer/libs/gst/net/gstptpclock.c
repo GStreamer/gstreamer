@@ -49,6 +49,7 @@
  * Since: 1.6
  *
  */
+#define _GNU_SOURCE 1
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -68,6 +69,15 @@
 
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#ifdef G_OS_WIN32
+#include <windows.h>
+static HMODULE gstnet_dll_handle;
+#endif
+
+#ifdef HAVE_DLFCN_H
+#include <dlfcn.h>
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (ptp_debug);
@@ -2050,6 +2060,151 @@ gst_ptp_is_initialized (void)
   return initted;
 }
 
+#ifdef G_OS_WIN32
+/* Note: DllMain is only called when DLLs are loaded or unloaded, so this will
+ * never be called if libgstnet-1.0 is linked statically. Do not add any code
+ * here to, say, initialize variables or set things up since that will only
+ * happen for dynamically-built GStreamer.
+ *
+ * Also, ideally this should not be defined when GStreamer is built statically.
+ * i.e., it should be conditional on #ifdef DLL_EXPORT. It will be ignored, but
+ * if other libraries make the same mistake of defining it when building
+ * statically, there will be a symbol collision during linking. Fixing this
+ * requires one to build two object files: one for static linking and another
+ * for dynamic linking. */
+BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+BOOL WINAPI
+DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
+{
+  if (fdwReason == DLL_PROCESS_ATTACH)
+    gstnet_dll_handle = (HMODULE) hinstDLL;
+  return TRUE;
+}
+
+#endif
+
+static char *
+get_relocated_libgstnet (void)
+{
+  char *dir = NULL;
+
+#ifdef G_OS_WIN32
+  {
+    char *base_dir;
+
+    GST_DEBUG ("attempting to retrieve libgstnet-1.0 location using "
+        "Win32-specific method");
+
+    base_dir =
+        g_win32_get_package_installation_directory_of_module
+        (gstnet_dll_handle);
+    if (!base_dir)
+      return NULL;
+
+    dir = g_build_filename (base_dir, GST_PLUGIN_SUBDIR, NULL);
+    GST_DEBUG ("using DLL dir %s", dir);
+
+    g_free (base_dir);
+  }
+#elif defined(HAVE_DLADDR)
+  {
+    Dl_info info;
+
+    GST_DEBUG ("attempting to retrieve libgstnet-1.0 location using "
+        "dladdr()");
+
+    if (dladdr (&gst_ptp_init, &info)) {
+      GST_LOG ("dli_fname: %s", info.dli_fname);
+
+      if (!info.dli_fname) {
+        return NULL;
+      }
+
+      dir = g_path_get_dirname (info.dli_fname);
+    } else {
+      GST_LOG ("dladdr() failed");
+      return NULL;
+    }
+  }
+#else
+#warning "Unsupported platform for retrieving the current location of a shared library."
+#warning "Relocatable builds will not work."
+  GST_WARNING ("Don't know how to retrieve the location of the shared "
+      "library libgstnet-" GST_API_VERSION);
+#endif
+
+  return dir;
+}
+
+static int
+count_directories (const char *filepath)
+{
+  int i = 0;
+  char *tmp;
+  gsize len;
+
+  g_return_val_if_fail (!g_path_is_absolute (filepath), 0);
+
+  tmp = g_strdup (filepath);
+  len = strlen (tmp);
+
+  /* ignore UNC share paths entirely */
+  if (len >= 3 && G_IS_DIR_SEPARATOR (tmp[0]) && G_IS_DIR_SEPARATOR (tmp[1])
+      && !G_IS_DIR_SEPARATOR (tmp[2])) {
+    GST_WARNING ("found a UNC share path, ignoring");
+    return 0;
+  }
+
+  /* remove trailing slashes if they exist */
+  while (
+      /* don't remove the trailing slash for C:\.
+       * UNC paths are at least \\s\s */
+      len > 3 && G_IS_DIR_SEPARATOR (tmp[len - 1])) {
+    tmp[len - 1] = '\0';
+    len--;
+  }
+
+  while (tmp) {
+    char *dirname, *basename;
+    len = strlen (tmp);
+
+    if (g_strcmp0 (tmp, ".") == 0)
+      break;
+    if (g_strcmp0 (tmp, "/") == 0)
+      break;
+
+    /* g_path_get_dirname() may return something of the form 'C:.', where C is
+     * a drive letter */
+    if (len == 3 && g_ascii_isalpha (tmp[0]) && tmp[1] == ':' && tmp[2] == '.')
+      break;
+
+    basename = g_path_get_basename (tmp);
+    dirname = g_path_get_dirname (tmp);
+
+    if (g_strcmp0 (basename, "..") == 0) {
+      i--;
+    } else if (g_strcmp0 (basename, ".") == 0) {
+      /* nothing to do */
+    } else {
+      i++;
+    }
+
+    g_clear_pointer (&basename, g_free);
+    g_clear_pointer (&tmp, g_free);
+    tmp = dirname;
+  }
+
+  g_clear_pointer (&tmp, g_free);
+
+  if (i < 0) {
+    g_critical ("path counting resulted in a negative directory count!");
+    return 0;
+  }
+
+  return i;
+}
+
+
 /**
  * gst_ptp_init:
  * @clock_id: PTP clock id of this process' clock or %GST_PTP_CLOCK_ID_NONE
@@ -2112,13 +2267,60 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
   argv = g_new0 (gchar *, argc + 2);
   argc_c = 0;
 
+
+  /* Find the gst-ptp-helper */
   env = g_getenv ("GST_PTP_HELPER_1_0");
-  if (env == NULL)
+  if (!env)
     env = g_getenv ("GST_PTP_HELPER");
-  if (env != NULL && *env != '\0') {
+
+  if (env && *env != '\0') {
+    /* use the env-var if it is set */
     argv[argc_c++] = g_strdup (env);
   } else {
-    argv[argc_c++] = g_strdup (GST_PTP_HELPER_INSTALLED);
+    char *relocated_libgstnet;
+
+    /* use the installed version */
+    GST_LOG ("Trying installed PTP helper process");
+
+#define MAX_PATH_DEPTH 64
+
+    relocated_libgstnet = get_relocated_libgstnet ();
+    if (relocated_libgstnet) {
+      int plugin_subdir_depth = count_directories (GST_PLUGIN_SUBDIR);
+
+      GST_DEBUG ("found libgstnet-" GST_API_VERSION " library "
+          "at %s", relocated_libgstnet);
+
+      if (plugin_subdir_depth < MAX_PATH_DEPTH) {
+        const char *filenamev[MAX_PATH_DEPTH + 5];
+        int i = 0, j;
+
+        filenamev[i++] = relocated_libgstnet;
+        for (j = 0; j < plugin_subdir_depth; j++)
+          filenamev[i++] = "..";
+        filenamev[i++] = GST_PTP_HELPER_SUBDIR;
+        filenamev[i++] = "gstreamer-" GST_API_VERSION;
+#ifdef G_OS_WIN32
+        filenamev[i++] = "gst-ptp-helper.exe";
+#else
+        filenamev[i++] = "gst-ptp-helper";
+#endif
+        filenamev[i++] = NULL;
+        g_assert (i <= MAX_PATH_DEPTH + 5);
+
+        GST_DEBUG ("constructing path to system PTP helper using "
+            "plugin dir: \'%s\', PTP helper dir: \'%s\'",
+            GST_PLUGIN_SUBDIR, GST_PTP_HELPER_SUBDIR);
+
+        argv[argc_c++] = g_build_filenamev ((char **) filenamev);
+      } else {
+        GST_WARNING ("GST_PLUGIN_SUBDIR: \'%s\' has too many path segments",
+            GST_PLUGIN_SUBDIR);
+        argv[argc_c++] = g_strdup (GST_PTP_HELPER_INSTALLED);
+      }
+    } else {
+      argv[argc_c++] = g_strdup (GST_PTP_HELPER_INSTALLED);
+    }
   }
 
   GST_LOG ("Using PTP helper process: %s", argv[argc_c - 1]);
