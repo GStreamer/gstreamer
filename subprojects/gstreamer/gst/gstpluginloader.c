@@ -529,6 +529,8 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
       helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
     }
 
+#undef MAX_PATH_DEPTH
+
     GST_DEBUG ("using system plugin scanner at %s", helper_bin);
 
     res = gst_plugin_loader_try_helper (loader, helper_bin);

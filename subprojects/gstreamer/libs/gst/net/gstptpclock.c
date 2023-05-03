@@ -2323,6 +2323,8 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
     }
   }
 
+#undef MAX_PATH_DEPTH
+
   GST_LOG ("Using PTP helper process: %s", argv[argc_c - 1]);
 
   if (clock_id != GST_PTP_CLOCK_ID_NONE) {
