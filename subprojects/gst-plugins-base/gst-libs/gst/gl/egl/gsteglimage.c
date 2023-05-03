@@ -689,107 +689,6 @@ gst_egl_image_from_dmabuf (GstGLContext * context,
       (GstEGLImageDestroyNotify) _destroy_egl_image);
 }
 
-/*
- * Variant of _drm_rgba_fourcc_from_info() that is used in case the GPU can
- * handle YUV formats directly (by using internal shaders, or hardwired
- * YUV->RGB conversion matrices etc.)
- */
-static int
-_drm_direct_fourcc_from_info (const GstVideoInfo * info)
-{
-  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
-
-  GST_DEBUG ("Getting DRM fourcc for %s", gst_video_format_to_string (format));
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_YUY2:
-      return DRM_FORMAT_YUYV;
-
-    case GST_VIDEO_FORMAT_YVYU:
-      return DRM_FORMAT_YVYU;
-
-    case GST_VIDEO_FORMAT_UYVY:
-      return DRM_FORMAT_UYVY;
-
-    case GST_VIDEO_FORMAT_VYUY:
-      return DRM_FORMAT_VYUY;
-
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_VUYA:
-      return DRM_FORMAT_AYUV;
-
-    case GST_VIDEO_FORMAT_NV12:
-      return DRM_FORMAT_NV12;
-
-    case GST_VIDEO_FORMAT_NV21:
-      return DRM_FORMAT_NV21;
-
-    case GST_VIDEO_FORMAT_NV16:
-      return DRM_FORMAT_NV16;
-
-    case GST_VIDEO_FORMAT_NV61:
-      return DRM_FORMAT_NV61;
-
-    case GST_VIDEO_FORMAT_NV24:
-      return DRM_FORMAT_NV24;
-
-    case GST_VIDEO_FORMAT_YUV9:
-      return DRM_FORMAT_YUV410;
-
-    case GST_VIDEO_FORMAT_YVU9:
-      return DRM_FORMAT_YVU410;
-
-    case GST_VIDEO_FORMAT_Y41B:
-      return DRM_FORMAT_YUV411;
-
-    case GST_VIDEO_FORMAT_I420:
-      return DRM_FORMAT_YUV420;
-
-    case GST_VIDEO_FORMAT_YV12:
-      return DRM_FORMAT_YVU420;
-
-    case GST_VIDEO_FORMAT_Y42B:
-      return DRM_FORMAT_YUV422;
-
-    case GST_VIDEO_FORMAT_Y444:
-      return DRM_FORMAT_YUV444;
-
-    case GST_VIDEO_FORMAT_RGB16:
-      return DRM_FORMAT_RGB565;
-
-    case GST_VIDEO_FORMAT_BGR16:
-      return DRM_FORMAT_BGR565;
-
-    case GST_VIDEO_FORMAT_RGBA:
-      return DRM_FORMAT_ABGR8888;
-
-    case GST_VIDEO_FORMAT_RGBx:
-      return DRM_FORMAT_XBGR8888;
-
-    case GST_VIDEO_FORMAT_BGRA:
-      return DRM_FORMAT_ARGB8888;
-
-    case GST_VIDEO_FORMAT_BGRx:
-      return DRM_FORMAT_XRGB8888;
-
-    case GST_VIDEO_FORMAT_ARGB:
-      return DRM_FORMAT_BGRA8888;
-
-    case GST_VIDEO_FORMAT_xRGB:
-      return DRM_FORMAT_BGRX8888;
-
-    case GST_VIDEO_FORMAT_ABGR:
-      return DRM_FORMAT_RGBA8888;
-
-    case GST_VIDEO_FORMAT_xBGR:
-      return DRM_FORMAT_RGBX8888;
-
-    default:
-      GST_INFO ("Unsupported format for direct DMABuf.");
-      return -1;
-  }
-}
-
 /**
  * gst_egl_image_check_dmabuf_direct:
  * @context: a #GstGLContext (must be an EGL context)
@@ -813,7 +712,7 @@ gst_egl_image_check_dmabuf_direct (GstGLContext * context,
   EGLBoolean *external_only;
   int num_modifiers;
   gboolean ret;
-  int fourcc;
+  guint32 fourcc;
   int i;
 
   EGLBoolean (*gst_eglQueryDmaBufFormatsEXT) (EGLDisplay dpy,
@@ -822,8 +721,9 @@ gst_egl_image_check_dmabuf_direct (GstGLContext * context,
       int format, int max_modifiers, EGLuint64KHR * modifiers,
       EGLBoolean * external_only, int *num_modifiers);
 
-  fourcc = _drm_direct_fourcc_from_info (in_info);
-  if (fourcc == -1)
+  fourcc =
+      gst_video_dma_drm_fourcc_from_format (GST_VIDEO_INFO_FORMAT (in_info));
+  if (fourcc == DRM_FORMAT_INVALID)
     return FALSE;
 
   gst_eglQueryDmaBufFormatsEXT =
@@ -937,7 +837,7 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
 
   EGLImageKHR img;
   guint n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
-  gint fourcc;
+  guint32 fourcc;
   gint i;
   gboolean with_modifiers;
 
@@ -953,7 +853,8 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
   if (!gst_egl_image_check_dmabuf_direct (context, in_info, target))
     return NULL;
 
-  fourcc = _drm_direct_fourcc_from_info (in_info);
+  fourcc =
+      gst_video_dma_drm_fourcc_from_format (GST_VIDEO_INFO_FORMAT (in_info));
   with_modifiers = gst_gl_context_check_feature (context,
       "EGL_EXT_image_dma_buf_import_modifiers");
 
