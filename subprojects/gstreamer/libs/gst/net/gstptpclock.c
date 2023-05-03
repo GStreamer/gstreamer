@@ -2268,7 +2268,6 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
   argv = g_new0 (gchar *, argc + 2);
   argc_c = 0;
 
-
   /* Find the gst-ptp-helper */
   env = g_getenv ("GST_PTP_HELPER_1_0");
   if (!env)
