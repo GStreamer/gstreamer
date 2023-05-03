@@ -1913,6 +1913,17 @@ gst_video_flip_change_state (GstElement * element, GstStateChange transition)
 }
 
 static void
+gst_video_flip_constructed (GObject * object)
+{
+  GstVideoFlip *self = GST_VIDEO_FLIP (object);
+
+  if (self->method == (GstVideoOrientationMethod) PROP_METHOD_DEFAULT) {
+    gst_video_flip_set_method (self,
+        (GstVideoOrientationMethod) PROP_METHOD_DEFAULT, FALSE);
+  }
+}
+
+static void
 gst_video_flip_class_init (GstVideoFlipClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
@@ -1925,6 +1936,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
 
   gobject_class->set_property = gst_video_flip_set_property;
   gobject_class->get_property = gst_video_flip_get_property;
+  gobject_class->constructed = gst_video_flip_constructed;
   gobject_class->finalize = gst_video_flip_finalize;
 
   g_object_class_install_property (gobject_class, PROP_METHOD,
@@ -1932,7 +1944,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
           "method (deprecated, use video-direction instead)",
           GST_TYPE_VIDEO_FLIP_METHOD, PROP_METHOD_DEFAULT,
           GST_PARAM_CONTROLLABLE | GST_PARAM_MUTABLE_PLAYING |
-          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_override_property (gobject_class, PROP_VIDEO_DIRECTION,
       "video-direction");
   /* override the overriden property's flags to include the mutable in playing
@@ -1968,6 +1980,12 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
 static void
 gst_video_flip_init (GstVideoFlip * videoflip)
 {
+  /* We initialize to the default and call set_method() from constructed
+   * if the value hasn't changed, this ensures set_method() does get called
+   * even if the non-construct method / direction properties aren't set
+   */
+  videoflip->method = (GstVideoOrientationMethod) PROP_METHOD_DEFAULT;
+
   /* AUTO is not valid for active method, this is just to ensure we setup the
    * method in gst_video_flip_set_method() */
   videoflip->active_method = GST_VIDEO_ORIENTATION_AUTO;
