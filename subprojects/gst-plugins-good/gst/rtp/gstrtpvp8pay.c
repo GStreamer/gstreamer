@@ -109,34 +109,41 @@ picture_id_field_len (GstVP8RtpPayPictureIDMode mode)
 }
 
 static void
-gst_rtp_vp8_pay_picture_id_reset (GstRtpVP8Pay * obj)
+gst_rtp_vp8_pay_picture_id_reset (GstRtpVP8Pay * self)
 {
   gint nbits;
+  gint old_picture_id = self->picture_id;
+  gint picture_id = 0;
 
-  if (obj->picture_id_mode == VP8_PAY_NO_PICTURE_ID) {
-    obj->picture_id = 0;
-  } else {
-    if (obj->picture_id_offset == -1)
-      obj->picture_id = g_random_int ();
-    else
-      obj->picture_id = obj->picture_id_offset;
-
-    nbits = picture_id_field_len (obj->picture_id_mode);
-    obj->picture_id &= (1 << nbits) - 1;
+  if (self->picture_id_mode != VP8_PAY_NO_PICTURE_ID) {
+    if (self->picture_id_offset == -1) {
+      picture_id = g_random_int ();
+    } else {
+      picture_id = self->picture_id_offset;
+    }
+    nbits = picture_id_field_len (self->picture_id_mode);
+    picture_id &= (1 << nbits) - 1;
   }
+  g_atomic_int_set (&self->picture_id, picture_id);
+
+  GST_LOG_OBJECT (self, "picture-id reset %d -> %d",
+      old_picture_id, picture_id);
 }
 
 static void
-gst_rtp_vp8_pay_picture_id_increment (GstRtpVP8Pay * obj)
+gst_rtp_vp8_pay_picture_id_increment (GstRtpVP8Pay * self)
 {
   gint nbits;
 
-  if (obj->picture_id_mode == VP8_PAY_NO_PICTURE_ID)
+  if (self->picture_id_mode == VP8_PAY_NO_PICTURE_ID)
     return;
 
-  nbits = picture_id_field_len (obj->picture_id_mode);
-  obj->picture_id++;
-  obj->picture_id &= (1 << nbits) - 1;
+  /* Atomically increment and wrap the picture id if it overflows */
+  nbits = picture_id_field_len (self->picture_id_mode);
+  gint picture_id = g_atomic_int_get (&self->picture_id);
+  picture_id++;
+  picture_id &= (1 << nbits) - 1;
+  g_atomic_int_set (&self->picture_id, picture_id);
 }
 
 static void
@@ -247,7 +254,7 @@ gst_rtp_vp8_pay_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_PICTURE_ID:
-      g_value_set_int (value, rtpvp8pay->picture_id);
+      g_value_set_int (value, g_atomic_int_get (&rtpvp8pay->picture_id));
       break;
     case PROP_PICTURE_ID_MODE:
       g_value_set_enum (value, rtpvp8pay->picture_id_mode);
@@ -711,9 +718,9 @@ gst_rtp_vp8_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
   GstEventType event_type = GST_EVENT_TYPE (event);
 
   if (event_type == GST_EVENT_GAP || event_type == GST_EVENT_FLUSH_START) {
-    guint picture_id = self->picture_id;
+    gint picture_id = self->picture_id;
     gst_rtp_vp8_pay_picture_id_increment (self);
-    GST_DEBUG_OBJECT (payload, "Incrementing picture ID on %s event %u->%u",
+    GST_DEBUG_OBJECT (payload, "Incrementing picture ID on %s event %d -> %d",
         GST_EVENT_TYPE_NAME (event), picture_id, self->picture_id);
   }
 

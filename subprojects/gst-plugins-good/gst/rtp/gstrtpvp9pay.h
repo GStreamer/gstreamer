@@ -61,7 +61,7 @@ struct _GstRtpVP9Pay
   guint height;
   GstVP9RtpPayPictureIDMode picture_id_mode;
   gint picture_id_offset;
-  guint16 picture_id;
+  gint picture_id;
 };
 
 GType gst_rtp_vp9_pay_get_type (void);

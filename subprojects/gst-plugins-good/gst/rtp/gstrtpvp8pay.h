@@ -63,7 +63,7 @@ struct _GstRtpVP8Pay
   guint partition_size[9];
   GstVP8RtpPayPictureIDMode picture_id_mode;
   gint picture_id_offset;
-  guint16 picture_id;
+  gint picture_id;
   gboolean temporal_scalability_fields_present;
   guint8 tl0picidx;
 };
