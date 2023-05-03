@@ -94,7 +94,7 @@ static const struct
  *
  * Since: 1.18
  */
-FLAGS_TO_STRING(memory_heap, VkMemoryHeapFlagBits);
+FLAGS_TO_STRING(memory_heap, VkMemoryHeapFlags);
 
 static const struct 
 {
