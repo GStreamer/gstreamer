@@ -26,21 +26,11 @@
 
 #include <gst/gst_private.h>
 
-#ifndef G_OS_WIN32
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#else
-#define WIN32_LEAN_AND_MEAN
-
-#define fsync(fd) _commit(fd)
-#include <io.h>
-
-#include <windows.h>
-extern HMODULE _priv_gst_dll_handle;
-#endif
 
 #ifdef HAVE_SYS_UTSNAME_H
 #include <sys/utsname.h>
@@ -487,12 +477,6 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
     /* use the installed version */
     GST_LOG ("Trying installed plugin scanner");
 
-#ifdef G_OS_WIN32
-#define EXESUFFIX ".exe"
-#else
-#define EXESUFFIX
-#endif
-
 #define MAX_PATH_DEPTH 64
 
     relocated_libgstreamer = priv_gst_get_relocated_libgstreamer ();
@@ -511,7 +495,7 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
           filenamev[i++] = "..";
         filenamev[i++] = GST_PLUGIN_SCANNER_SUBDIR;
         filenamev[i++] = "gstreamer-" GST_API_VERSION;
-        filenamev[i++] = "gst-plugin-scanner" EXESUFFIX;
+        filenamev[i++] = "gst-plugin-scanner";
         filenamev[i++] = NULL;
         g_assert (i <= MAX_PATH_DEPTH + 5);
 
@@ -557,12 +541,8 @@ plugin_loader_cleanup_child (GstPluginLoader * l)
   close (l->fd_w.fd);
   close (l->fd_r.fd);
 
-#ifndef G_OS_WIN32
   GST_LOG ("waiting for child process to exit");
   waitpid (l->child_pid, NULL, 0);
-#else
-  g_warning ("FIXME: Implement child process shutdown for Win32");
-#endif
   g_spawn_close_pid (l->child_pid);
 
   l->child_running = FALSE;
@@ -573,6 +553,7 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
 {
   gboolean res = TRUE;
   GstPluginLoader *l;
+  int dup_fd;
 
   l = plugin_loader_new (NULL);
   if (l == NULL)
@@ -581,37 +562,27 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
   /* On entry, the inward pipe is STDIN, and outward is STDOUT.
    * Dup those somewhere better so that plugins printing things
    * won't interfere with anything */
-#ifndef G_OS_WIN32
-  {
-    int dup_fd;
-
-    dup_fd = dup (0);           /* STDIN */
-    if (dup_fd == -1) {
-      GST_ERROR ("Failed to start. Could not dup STDIN, errno %d", errno);
-      res = FALSE;
-      goto beach;
-    }
-    l->fd_r.fd = dup_fd;
-    close (0);
-
-    dup_fd = dup (1);           /* STDOUT */
-    if (dup_fd == -1) {
-      GST_ERROR ("Failed to start. Could not dup STDOUT, errno %d", errno);
-      res = FALSE;
-      goto beach;
-    }
-    l->fd_w.fd = dup_fd;
-    close (1);
-
-    /* Dup stderr down to stdout so things that plugins print are visible,
-     * but don't care if it fails */
-    dup2 (2, 1);
+  dup_fd = dup (0);             /* STDIN */
+  if (dup_fd == -1) {
+    GST_ERROR ("Failed to start. Could not dup STDIN, errno %d", errno);
+    res = FALSE;
+    goto beach;
   }
-#else
-  /* FIXME: Use DuplicateHandle and friends on win32 */
-  l->fd_w.fd = 1;               /* STDOUT */
-  l->fd_r.fd = 0;               /* STDIN */
-#endif
+  l->fd_r.fd = dup_fd;
+  close (0);
+
+  dup_fd = dup (1);             /* STDOUT */
+  if (dup_fd == -1) {
+    GST_ERROR ("Failed to start. Could not dup STDOUT, errno %d", errno);
+    res = FALSE;
+    goto beach;
+  }
+  l->fd_w.fd = dup_fd;
+  close (1);
+
+  /* Dup stderr down to stdout so things that plugins print are visible,
+   * but don't care if it fails */
+  dup2 (2, 1);
 
   gst_poll_add_fd (l->fdset, &l->fd_w);
   gst_poll_add_fd (l->fdset, &l->fd_r);
@@ -624,10 +595,7 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
   /* Loop, listening for incoming packets on the fd and writing responses */
   while (!l->rx_done && exchange_packets (l));
 
-#ifndef G_OS_WIN32
 beach:
-#endif
-
   plugin_loader_free (l);
 
   return res;
