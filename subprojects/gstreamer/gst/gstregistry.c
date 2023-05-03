@@ -1642,6 +1642,7 @@ priv_gst_count_directories (const char *filepath)
   if (len >= 3 && G_IS_DIR_SEPARATOR (tmp[0]) && G_IS_DIR_SEPARATOR (tmp[1])
       && !G_IS_DIR_SEPARATOR (tmp[2])) {
     GST_WARNING ("found a UNC share path, ignoring");
+    g_clear_pointer (&tmp, g_free);
     return 0;
   }
 
