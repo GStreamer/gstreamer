@@ -54,6 +54,8 @@
  * so any input caps will match against this. A catch-all path with an identity element
  * is useful for cases where certain kinds of processing should only be done for specific
  * formats, like the example above (it applies volume only to 44.1 kHz PCM audio).
+ * Setting the path's element property to NULL accomplishes the same goal - switchbin
+ * then forwards the dataflow to its srcpad if that path is selected.
  * </refsect2>
  *
  */
@@ -273,9 +275,7 @@ gst_switch_bin_init (GstSwitchBin * switch_bin)
   switch_bin->num_paths = DEFAULT_NUM_PATHS;
   switch_bin->paths = NULL;
   switch_bin->current_path = NULL;
-  switch_bin->last_stream_start = NULL;
   switch_bin->blocking_probe_id = 0;
-  switch_bin->drop_probe_id = 0;
   switch_bin->last_caps = NULL;
 
   switch_bin->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink",
@@ -329,8 +329,6 @@ gst_switch_bin_finalize (GObject * object)
 
   if (switch_bin->last_caps != NULL)
     gst_caps_unref (switch_bin->last_caps);
-  if (switch_bin->last_stream_start != NULL)
-    gst_event_unref (switch_bin->last_stream_start);
 
   for (i = 0; i < switch_bin->num_paths; ++i) {
     gst_object_unparent (GST_OBJECT (switch_bin->paths[i]));
@@ -400,15 +398,6 @@ gst_switch_bin_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstSwitchBin *switch_bin = GST_SWITCH_BIN (parent);
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_STREAM_START:
-    {
-      GST_DEBUG_OBJECT (switch_bin,
-          "stream-start event observed; copying it for later use");
-      gst_event_replace (&(switch_bin->last_stream_start), event);
-
-      return gst_pad_event_default (pad, parent, event);
-    }
-
     case GST_EVENT_CAPS:
     {
       /* Intercept the caps event to switch to an appropriate path, then
@@ -461,8 +450,8 @@ gst_switch_bin_handle_query (GstPad * pad, GstObject * parent, GstQuery * query,
         caps = NULL;
       } else if ((switch_bin->current_path == NULL)
           || (switch_bin->current_path->element == NULL)) {
-        /* Paths exist, but there is no current path (or the path is a dropping path,
-         * so no element exists) - just return all allowed caps */
+        /* Paths exist, but there is no current path (or the path currently
+         * does not have an element) - just return all allowed caps */
         caps =
             gst_switch_bin_get_allowed_caps (switch_bin, pad, pad_name, filter);
       } else {
@@ -762,9 +751,8 @@ gst_switch_bin_switch_to_path (GstSwitchBin * switch_bin,
     } else {
       GstPad *srcpad;
 
-      /* There is no path element. This will probably yield an error
-       * into the pipeline unless we're shutting down */
-      GST_DEBUG_OBJECT (switch_bin, "path has no element ; will drop data");
+      /* There is no path element. Just forward data. */
+      GST_DEBUG_OBJECT (switch_bin, "path has no element ; will forward data");
 
       srcpad = gst_element_get_static_pad (switch_bin->input_identity, "src");
 
@@ -776,11 +764,6 @@ gst_switch_bin_switch_to_path (GstSwitchBin * switch_bin,
             "could not set the path element's srcpad as the ghost srcpad's target");
         ret = FALSE;
       }
-
-      GST_DEBUG_OBJECT (switch_bin,
-          "pushing stream-start downstream before disabling");
-      gst_element_send_event (switch_bin->input_identity,
-          gst_event_ref (switch_bin->last_stream_start));
 
       gst_object_unref (GST_OBJECT (srcpad));
     }
@@ -808,6 +791,12 @@ gst_switch_bin_find_matching_path (GstSwitchBin * switch_bin,
 
   for (i = 0; i < switch_bin->num_paths; ++i) {
     GstSwitchBinPath *path = switch_bin->paths[i];
+
+    /* Path caps are never supposed to be NULL. Even if the user
+     * specifies NULL as caps in the path properties, the code in
+     * gst_switch_bin_path_set_property () turns them into ANY caps. */
+    g_assert (path->caps != NULL);
+
     if (gst_caps_can_intersect (caps, path->caps))
       return path;
   }
@@ -880,7 +869,7 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
       gst_object_unref (GST_OBJECT (pad));
       gst_query_unref (caps_query);
     } else {
-      /* This is a path with no element (= is a dropping path),
+      /* This is a path with no element.
        * If querying the sink caps, append the path
        * input caps, otherwise the output caps can be ANY */
       if (is_sink_pad)
@@ -1012,7 +1001,7 @@ gst_switch_bin_path_class_init (GstSwitchBinPathClass * klass)
       PROP_ELEMENT,
       g_param_spec_object ("element",
           "Element",
-          "The path's element (if set to NULL, this path will drop any incoming data)",
+          "The path's element",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
   g_object_class_install_property (object_class,
@@ -1158,9 +1147,14 @@ gst_switch_bin_path_use_new_element (GstSwitchBinPath * switch_bin_path,
     switch_bin_path->element = NULL;
   }
 
-  /* If there *is* a new element, use it. new_element == NULL is a valid case;
-   * a NULL element is used in dropping paths, which will just use the drop probe
-   * to drop buffers if they become the current path. */
+  /* If new_element is non-NULL, use it as the path's new element.
+   * If it is NULL, store that NULL pointer. Setting the path element
+   * to NULL is useful if the caller wants to manually remove the
+   * element from the path. (Setting it to NULL unparents & unrefs
+   * the path element.) It is also useful if the caller just wants
+   * to forward data unaltered in that path (switchbin's input_identity
+   * element will then have its srcpad be directly exposed as a ghost
+   * pad on the bin). */
   if (new_element != NULL) {
     gst_bin_add (GST_BIN (switch_bin_path->bin), new_element);
     switch_bin_path->element = new_element;
