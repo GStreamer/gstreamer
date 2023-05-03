@@ -598,14 +598,13 @@ static gboolean
 gst_rtp_vp9_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   GstRtpVP9Pay *self = GST_RTP_VP9_PAY (payload);
+  GstEventType event_type = GST_EVENT_TYPE (event);
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_START) {
-    gst_rtp_vp9_pay_picture_id_reset (self);
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
+  if (event_type == GST_EVENT_GAP || event_type == GST_EVENT_FLUSH_START) {
     guint picture_id = self->picture_id;
     gst_rtp_vp9_pay_picture_id_increment (self);
-    GST_DEBUG_OBJECT (payload, "Incrementing picture ID on GAP event %u->%u",
-        picture_id, self->picture_id);
+    GST_DEBUG_OBJECT (payload, "Incrementing picture ID on %s event %u->%u",
+        GST_EVENT_TYPE_NAME (event), picture_id, self->picture_id);
   }
 
   return GST_RTP_BASE_PAYLOAD_CLASS (gst_rtp_vp9_pay_parent_class)->sink_event
