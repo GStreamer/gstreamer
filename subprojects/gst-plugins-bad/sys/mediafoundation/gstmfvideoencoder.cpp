@@ -1697,12 +1697,17 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
   sink_caps = gst_caps_new_empty_simple ("video/x-raw");
   /* FIXME: don't hardcode max resolution, but MF doesn't provide
    * API for querying supported max resolution... */
-  gst_caps_set_simple (sink_caps,
-      "width", GST_TYPE_INT_RANGE, 64, 8192,
-      "height", GST_TYPE_INT_RANGE, 64, 8192, nullptr);
-  gst_caps_set_simple (src_caps,
-      "width", GST_TYPE_INT_RANGE, 64, 8192,
-      "height", GST_TYPE_INT_RANGE, 64, 8192, nullptr);
+
+  GValue res_val = G_VALUE_INIT;
+  g_value_init (&res_val, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range_step (&res_val, 64, 8192, 2);
+
+  gst_caps_set_value (sink_caps, "width", &res_val);
+  gst_caps_set_value (sink_caps, "heigh", &res_val);
+  gst_caps_set_value (src_caps, "width", &res_val);
+  gst_caps_set_value (src_caps, "heigh", &res_val);
+
+  g_value_unset (&res_val);
 
 #if GST_MF_HAVE_D3D11
   /* Check whether this MFT can support D3D11 */
