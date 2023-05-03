@@ -13789,8 +13789,6 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
 
   gst_qtdemux_guess_bitrate (qtdemux);
 
-  gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
-
   /* If we have still old_streams, it's no more used stream */
   for (i = 0; i < qtdemux->old_streams->len; i++) {
     QtDemuxStream *stream = QTDEMUX_NTH_OLD_STREAM (qtdemux, i);
@@ -13807,6 +13805,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
   }
 
   g_ptr_array_set_size (qtdemux->old_streams, 0);
+
+  gst_element_no_more_pads (GST_ELEMENT_CAST (qtdemux));
 
   /* check if we should post a redirect in case there is a single trak
    * and it is a redirecting trak */
