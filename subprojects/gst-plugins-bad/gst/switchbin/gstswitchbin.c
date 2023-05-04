@@ -813,21 +813,11 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
 
   guint i;
   GstCaps *total_path_caps;
+  gboolean peer_caps_queried = FALSE;
+  gboolean peer_caps_query_successful;
+  GstCaps *peer_caps = NULL;
   gboolean is_sink_pad =
       (gst_pad_get_direction (switch_bin_pad) == GST_PAD_SINK);
-
-  /* The allowed caps are a combination of the caps of all paths, the
-   * filter caps, and the allowed caps as indicated by the result
-   * of the CAPS query on the current path's element.
-   * Since the CAPS query result can be influenced by an element's
-   * current state and link to other elements, the non-current
-   * path elements are not queried.
-   *
-   * In theory, it would be enough to just append all path caps. However,
-   * to refine this a bit further, in case of the current path, the
-   * path caps are first intersected with the result of the CAPS query.
-   * This narrows down the acceptable caps for this current path,
-   * hopefully providing better quality caps. */
 
   if (switch_bin->num_paths == 0) {
     /* No paths exist, so nothing can be returned */
@@ -836,47 +826,92 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
     return NULL;
   }
 
+  /* The allowed caps are a combination of the caps of all paths, the filter
+   * caps, and the result of issuing caps queries to the path elements
+   * (or to the switchbin sink/srcpads when paths have no elements). */
+
   total_path_caps = gst_caps_new_empty ();
 
   for (i = 0; i < switch_bin->num_paths; ++i) {
     GstSwitchBinPath *path = switch_bin->paths[i];
+    GstCaps *queried_caps = NULL;
+    GstCaps *intersected_caps;
+    gboolean query_successful;
+    GstPad *pad;
+    GstQuery *caps_query;
+
+    /* We need to check what caps are handled by up/downstream, relative
+     * to the switchbin src/sinkcaps. If there is an element, issue a
+     * caps query to it to get that information. If there is no element,
+     * then this path is a passthrough path, so the logical step is to
+     * query peers instead. */
 
     if (path->element != NULL) {
-      GstPad *pad;
-      GstCaps *caps, *intersected_caps;
-      GstQuery *caps_query = NULL;
-
       pad = gst_element_get_static_pad (path->element, pad_name);
       caps_query = gst_query_new_caps (NULL);
 
-      /* Query the path element for allowed caps. If this is
-       * successful, intersect the returned caps with the path caps for the sink pad,
-       * and append the result of the intersection to the total_path_caps,
-       * or just append the result to the total_path_caps if collecting srcpad caps. */
-      if (gst_pad_query (pad, caps_query)) {
-        gst_query_parse_caps_result (caps_query, &caps);
-        if (is_sink_pad) {
-          intersected_caps = gst_caps_intersect (caps, path->caps);
-        } else {
-          intersected_caps = gst_caps_copy (caps);
-        }
-        gst_caps_append (total_path_caps, intersected_caps);
-      } else if (is_sink_pad) {
-        /* Just assume the sink pad has the path caps if the query failed */
-        gst_caps_append (total_path_caps, gst_caps_ref (path->caps));
+      query_successful = gst_pad_query (pad, caps_query);
+      if (query_successful) {
+        gst_query_parse_caps_result (caps_query, &queried_caps);
+        /* Ref the caps, otherwise they will be gone when the query is unref'd. */
+        gst_caps_ref (queried_caps);
       }
 
-      gst_object_unref (GST_OBJECT (pad));
       gst_query_unref (caps_query);
+      gst_object_unref (GST_OBJECT (pad));
     } else {
-      /* This is a path with no element.
-       * If querying the sink caps, append the path
-       * input caps, otherwise the output caps can be ANY */
+      /* Unlike in the non-NULL element case above, we issue a query
+       * only once. We need to query the peer, and that peer does not
+       * differ between paths, so querying more than once is redundant. */
+      if (!peer_caps_queried) {
+        pad = is_sink_pad ? switch_bin->srcpad : switch_bin->sinkpad;
+        caps_query = gst_query_new_caps (NULL);
+
+        peer_caps_query_successful = gst_pad_peer_query (pad, caps_query);
+        if (peer_caps_query_successful) {
+          gst_query_parse_caps_result (caps_query, &peer_caps);
+          /* Ref the caps, otherwise they will be gone when the query is unref'd. */
+          gst_caps_ref (peer_caps);
+        }
+
+        gst_query_unref (caps_query);
+
+        peer_caps_queried = TRUE;
+      }
+
+      /* Ref the caps here again because they are unref'd further below and
+       * we want to keep the peer_caps around until all paths are handled. */
+      if (peer_caps != NULL)
+        queried_caps = gst_caps_ref (peer_caps);
+      query_successful = peer_caps_query_successful;
+    }
+
+    if (query_successful) {
+      /* If the caps query above succeeded, we know what up/downstream can
+       * handle. In the sinkpad direction, the path caps further restrict
+       * what caps can be used in this path, so intersect them with the
+       * queried caps. In the srcpad direction, no such restriction exists. */
+
+      if (is_sink_pad)
+        intersected_caps = gst_caps_intersect (queried_caps, path->caps);
+      else
+        intersected_caps = gst_caps_copy (queried_caps);
+
+      gst_caps_append (total_path_caps, intersected_caps);
+    } else {
+      /* If the query failed (for example, because the pad is not yet linked),
+       * we have to make assumptions. In the sinkpad direction, the safest
+       * bet is to use the path caps, since no matter what, only caps that
+       * are a match with them can pass through this path. In the srcpad
+       * direction, there are no restriction, so use ANY caps. */
+
       if (is_sink_pad)
         gst_caps_append (total_path_caps, gst_caps_ref (path->caps));
       else
         gst_caps_append (total_path_caps, gst_caps_new_any ());
     }
+
+    gst_caps_replace (&queried_caps, NULL);
   }
 
   /* Apply filter caps if present */
@@ -890,6 +925,8 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
         GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp_caps);
   }
+
+  gst_caps_replace (&peer_caps, NULL);
 
   return total_path_caps;
 }
@@ -1006,7 +1043,7 @@ gst_switch_bin_path_class_init (GstSwitchBinPathClass * klass)
       PROP_ELEMENT,
       g_param_spec_object ("element",
           "Element",
-          "The path's element",
+          "The path's element (if set to NULL, this path passes through dataflow)",
           GST_TYPE_ELEMENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
   g_object_class_install_property (object_class,
