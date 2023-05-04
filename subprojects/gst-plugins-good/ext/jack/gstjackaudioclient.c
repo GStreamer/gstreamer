@@ -27,10 +27,31 @@
 GST_DEBUG_CATEGORY_STATIC (gst_jack_audio_client_debug);
 #define GST_CAT_DEFAULT gst_jack_audio_client_debug
 
+/* List of threads who are trying to establish an initial server connection.
+ * Poor man's TLS. We don't really want to waste a TLS ID for this, and the
+ * error log callback code path should not be performance sensitive anyway. */
+G_LOCK_DEFINE_STATIC (startups_lock);
+static GList *startups;
+
 static void
 jack_log_error (const gchar * msg)
 {
-  GST_ERROR ("%s", msg);
+  gboolean starting_up;
+
+  G_LOCK (startups_lock);
+  starting_up = startups && g_list_find (startups, g_thread_self ()) != NULL;
+  G_UNLOCK (startups_lock);
+
+  /* Not being able to connect to a JACK server is completely normal in case
+   * jackaudiosink or jackaudiosrc are autoplugged, so we don't want to spew
+   * ERROR log messages in that case. On Linux this is rarely noticable because
+   * pulseaudiosink has a higher rank and is chosen first and alsa comes
+   * alphabetically before jack. */
+  if (starting_up) {
+    GST_WARNING ("%s", msg);
+  } else {
+    GST_ERROR ("%s", msg);
+  }
 }
 
 static void
@@ -502,16 +523,25 @@ gst_jack_audio_client_new (const gchar * id, const gchar * server,
     JackBufferSizeCallback buffer_size, JackSampleRateCallback sample_rate,
     gpointer user_data, jack_status_t * status)
 {
-  GstJackAudioClient *client;
+  GstJackAudioClient *client = NULL;
   GstJackAudioConnection *conn;
 
   g_return_val_if_fail (id != NULL, NULL);
   g_return_val_if_fail (status != NULL, NULL);
 
+  /* So the error log callback knows that we're doing an initial connection
+   * attempt */
+  G_LOCK (startups_lock);
+  startups = g_list_prepend (startups, g_thread_self ());
+  G_UNLOCK (startups_lock);
+
   /* first get a connection for the id/server pair */
   conn = gst_jack_audio_get_connection (id, server, jclient, status);
-  if (conn == NULL)
+
+  if (conn == NULL) {
+    GST_DEBUG ("Could not get server connection (%d)", *status);
     goto no_connection;
+  }
 
   GST_INFO ("new client %s", id);
 
@@ -530,14 +560,14 @@ gst_jack_audio_client_new (const gchar * id, const gchar * server,
   /* add the client to the connection */
   gst_jack_audio_connection_add_client (conn, client);
 
-  return client;
-
-  /* ERRORS */
 no_connection:
-  {
-    GST_DEBUG ("Could not get server connection (%d)", *status);
-    return NULL;
-  }
+
+  /* done connecting */
+  G_LOCK (startups_lock);
+  startups = g_list_remove (startups, g_thread_self ());
+  G_UNLOCK (startups_lock);
+
+  return client;
 }
 
 /**
