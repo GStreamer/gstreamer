@@ -882,7 +882,12 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
   /* Apply filter caps if present */
   if (filter != NULL) {
     GstCaps *tmp_caps = total_path_caps;
-    total_path_caps = gst_caps_intersect (tmp_caps, filter);
+    /* Use filter caps as first caps in intersection along with the
+     * GST_CAPS_INTERSECT_FIRST mode. This makes it possible to
+     * define the order of the resulting caps by making it follow
+     * the order of the filter caps. */
+    total_path_caps = gst_caps_intersect_full (filter, tmp_caps,
+        GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp_caps);
   }
 
