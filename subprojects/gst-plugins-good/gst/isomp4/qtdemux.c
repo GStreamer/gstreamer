@@ -6982,16 +6982,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     stream = QTDEMUX_NTH_STREAM (qtdemux, i);
     position = stream->time_position;
 
-    if (!GST_CLOCK_TIME_IS_VALID (position))
-      continue;
-
-    if (stream->segment_index != -1) {
-      QtDemuxSegment *segment = &stream->segments[stream->segment_index];
-      position += segment->media_start;
-    }
-
     /* position of -1 is EOS */
-    if (position < min_time) {
+    if (position != GST_CLOCK_TIME_NONE && position < min_time) {
       min_time = position;
       target_stream = stream;
     }
