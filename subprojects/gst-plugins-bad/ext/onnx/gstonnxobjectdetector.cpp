@@ -72,7 +72,7 @@
  * videoconvert ! \
  * videoscale ! \
  * 'video/x-raw,width=640,height=383' ! \
- * onnxobjectdetector ! \
+ * onnxobjectdetector \
  * box-node-index=0 \
  * class-node-index=1 \
  * score-node-index=2 \
