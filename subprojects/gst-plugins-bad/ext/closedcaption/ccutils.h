@@ -99,6 +99,7 @@ gboolean        cc_buffer_push_cc_data          (CCBuffer * buf,
 G_GNUC_INTERNAL
 void            cc_buffer_take_cc_data          (CCBuffer * buf,
                                                  const struct cdp_fps_entry * fps_entry,
+                                                 gboolean nul_padding,
                                                  guint8 * cc_data,
                                                  guint * cc_data_len);
 G_GNUC_INTERNAL

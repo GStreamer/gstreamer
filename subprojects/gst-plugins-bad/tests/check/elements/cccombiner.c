@@ -252,7 +252,7 @@ GST_START_TEST (captions_no_output_padding_60fps_608_field1_only)
         if ((i % 2) == 1) {
           fail_unless_equals_int (meta->data[j], cc_data[j]);
         } else {
-          int padding_field2[] = { 0xf9, 0x80, 0x80 };
+          int padding_field2[] = { 0xf9, 0x00, 0x00 };
           fail_unless_equals_int (meta->data[j], padding_field2[j]);
         }
       }

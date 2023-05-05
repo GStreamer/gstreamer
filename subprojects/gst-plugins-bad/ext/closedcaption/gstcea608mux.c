@@ -190,7 +190,7 @@ take_s334_both_fields (GstCea608Mux * self, GstBuffer * buffer)
   gst_buffer_map (buffer, &out, GST_MAP_READWRITE);
 
   cc_data_len = out.size;
-  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, out.data,
+  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, FALSE, out.data,
       &cc_data_len);
   s334_len = drop_ccp_from_cc_data (out.data, cc_data_len);
   if (s334_len < 0) {

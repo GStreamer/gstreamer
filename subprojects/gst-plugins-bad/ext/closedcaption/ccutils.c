@@ -859,12 +859,13 @@ cc_buffer_take_separated (CCBuffer * buf,
 
 void
 cc_buffer_take_cc_data (CCBuffer * buf,
-    const struct cdp_fps_entry *fps_entry, guint8 * cc_data,
-    guint * cc_data_len)
+    const struct cdp_fps_entry *fps_entry, gboolean nul_padding,
+    guint8 * cc_data, guint * cc_data_len)
 {
   guint write_cea608_1_size, write_cea608_2_size, write_ccp_size;
   guint field1_padding, field2_padding;
   gboolean wrote_first;
+  guint8 padding_byte = nul_padding ? 0x00 : 0x80;
 
   cc_buffer_get_out_sizes (buf, fps_entry, &write_cea608_1_size,
       &field1_padding, &write_cea608_2_size, &field2_padding, &write_ccp_size);
@@ -897,11 +898,13 @@ cc_buffer_take_cc_data (CCBuffer * buf,
             GST_TRACE_OBJECT (buf, "writing valid field1 padding because "
                 "we need to write valid field2");
             cc_data[out_i++] = 0xfc;
+            cc_data[out_i++] = 0x80;
+            cc_data[out_i++] = 0x80;
           } else {
             cc_data[out_i++] = 0xf8;
+            cc_data[out_i++] = padding_byte;
+            cc_data[out_i++] = padding_byte;
           }
-          cc_data[out_i++] = 0x80;
-          cc_data[out_i++] = 0x80;
           cea608_1_i += 2;
           buf->last_cea608_written_was_field1 = TRUE;
         }
@@ -915,8 +918,8 @@ cc_buffer_take_cc_data (CCBuffer * buf,
         buf->last_cea608_written_was_field1 = FALSE;
       } else if (cea608_2_i < write_cea608_2_size + field2_padding) {
         cc_data[out_i++] = 0xf9;
-        cc_data[out_i++] = 0x80;
-        cc_data[out_i++] = 0x80;
+        cc_data[out_i++] = padding_byte;
+        cc_data[out_i++] = padding_byte;
         cea608_2_i += 2;
         buf->last_cea608_written_was_field1 = FALSE;
       }

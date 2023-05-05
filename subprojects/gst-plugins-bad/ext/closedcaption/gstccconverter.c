@@ -901,7 +901,7 @@ convert_cea608_raw_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           tc_meta ? &tc_meta->tc : NULL, &self->current_output_timecode))
     goto drop;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1062,7 +1062,7 @@ convert_cea608_s334_1a_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           tc_meta ? &tc_meta->tc : NULL, &self->current_output_timecode))
     goto drop;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1202,7 +1202,7 @@ convert_cea708_cc_data_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           tc_meta ? &tc_meta->tc : NULL, &self->current_output_timecode))
     goto drop;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
@@ -1296,8 +1296,8 @@ convert_cea708_cdp_cea608_s334_1a (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (outbuf, &out, GST_MAP_READWRITE);
 
   cc_data_len = out.size;
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, out.data,
-      &cc_data_len);
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, FALSE,
+      out.data, &cc_data_len);
   s334_len = drop_ccp_from_cc_data (out.data, cc_data_len);
   if (s334_len < 0)
     goto drop;
@@ -1348,7 +1348,8 @@ convert_cea708_cdp_cea708_cc_data (GstCCConverter * self, GstBuffer * inbuf,
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   out_len = (guint) out.size;
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, out.data, &out_len);
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, out.data,
+      &out_len);
 
   gst_buffer_unmap (outbuf, &out);
   self->output_frames++;
@@ -1387,7 +1388,7 @@ convert_cea708_cdp_cea708_cdp (GstCCConverter * self, GstBuffer * inbuf,
           &self->current_output_timecode))
     goto out;
 
-  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, cc_data,
+  cc_buffer_take_cc_data (self->cc_buffer, out_fps_entry, TRUE, cc_data,
       &cc_data_len);
 
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);

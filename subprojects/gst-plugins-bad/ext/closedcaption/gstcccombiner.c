@@ -156,7 +156,8 @@ write_cc_data_to (GstCCCombiner * self, GstBuffer * buffer)
 
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
   len = map.size;
-  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, map.data, &len);
+  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, TRUE, map.data,
+      &len);
   gst_buffer_unmap (buffer, &map);
   gst_buffer_set_size (buffer, len);
 }
@@ -187,8 +188,8 @@ take_s334_both_fields (GstCCCombiner * self, GstBuffer * buffer)
   gst_buffer_map (buffer, &out, GST_MAP_READWRITE);
 
   cc_data_len = out.size;
-  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, out.data,
-      &cc_data_len);
+  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, FALSE,
+      out.data, &cc_data_len);
   s334_len = drop_ccp_from_cc_data (out.data, cc_data_len);
   if (s334_len < 0) {
     s334_len = 0;
@@ -350,16 +351,16 @@ dequeue_caption (GstCCCombiner * self, GstVideoTimeCode * tc, gboolean drain)
       if (GST_BUFFER_FLAG_IS_SET (self->current_video_buffer,
               GST_VIDEO_BUFFER_FLAG_INTERLACED)) {
         if (!GST_VIDEO_BUFFER_IS_BOTTOM_FIELD (self->current_video_buffer)) {
-          cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, cc_data,
-              &cc_data_len);
+          cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, TRUE,
+              cc_data, &cc_data_len);
           caption_data.buffer =
               make_cdp_buffer (self, cc_data, cc_data_len, self->cdp_fps_entry,
               tc);
           g_array_append_val (self->current_frame_captions, caption_data);
         }
       } else {
-        cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, cc_data,
-            &cc_data_len);
+        cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, TRUE,
+            cc_data, &cc_data_len);
         caption_data.buffer =
             make_cdp_buffer (self, cc_data, cc_data_len, self->cdp_fps_entry,
             tc);
