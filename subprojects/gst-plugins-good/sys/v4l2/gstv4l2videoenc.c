@@ -817,6 +817,17 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
   }
 
   if (frame->input_buffer) {
+    /* Process force keyframe event if it was passed */
+    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
+      struct v4l2_control ctrl = { V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME, 1 };
+      if (self->v4l2output->ioctl (self->v4l2output->video_fd, VIDIOC_S_CTRL,
+              &ctrl) < 0)
+        GST_ELEMENT_WARNING (self, RESOURCE, FAILED,
+            (_("Failed to force keyframe.")),
+            ("VIDIOC_S_CTRL (V4L2_CID_MPEG_VIDEO_FORCE_KEY_FRAME) failed: %s (%d)",
+                g_strerror (errno), errno));
+    }
+
     GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
     GST_LOG_OBJECT (encoder, "Passing buffer with frame number %u",
         frame->system_frame_number);
