@@ -1606,6 +1606,7 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
   GstD3D11Memory *dmem;
   ID3D11RenderTargetView *rtv = nullptr;
   GstD3D11ClearRTVFunc clear_func = nullptr;
+  gboolean is_new_texture = TRUE;
 
   device_handle = gst_d3d11_device_get_device_handle (device);
 
@@ -1615,12 +1616,18 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
       GST_ERROR_OBJECT (self, "Couldn't create texture");
       return nullptr;
     }
+  } else {
+    is_new_texture = FALSE;
   }
 
   mem =
       gst_d3d11_allocator_alloc_wrapped_internal (self, device, desc, texture);
   if (!mem)
     return nullptr;
+
+  /* Don't clear external texture */
+  if (!is_new_texture)
+    return mem;
 
   /* Clear with YUV black if needed and possible
    * TODO: do this using UAV if RTV is not allowed (e.g., packed YUV formats) */
