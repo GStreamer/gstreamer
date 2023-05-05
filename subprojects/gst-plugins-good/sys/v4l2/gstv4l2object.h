@@ -228,6 +228,9 @@ struct _GstV4l2Object {
    * on slow USB firmwares. When this is set, gst_v4l2_set_format() will modify
    * the caps to reflect what was negotiated during fixation */
   gboolean skip_try_fmt_probes;
+  
+  guint max_width;
+  guint max_height;
 };
 
 struct _GstV4l2ObjectClassHelper {

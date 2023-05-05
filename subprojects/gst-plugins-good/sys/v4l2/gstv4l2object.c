@@ -53,7 +53,7 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define DEFAULT_PROP_TV_NORM            0
 #define DEFAULT_PROP_IO_MODE            GST_V4L2_IO_AUTO
 
-#define ENCODED_BUFFER_SIZE             (2 * 1024 * 1024)
+#define ENCODED_BUFFER_MIN_SIZE         (256 * 1024)
 #define GST_V4L2_DEFAULT_WIDTH          320
 #define GST_V4L2_DEFAULT_HEIGHT         240
 
@@ -2994,6 +2994,8 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
     goto enum_framesizes_failed;
 
   if (size.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+    guint32 maxw = 0, maxh = 0;
+
     do {
       GST_LOG_OBJECT (v4l2object->dbg_obj, "got discrete frame size %dx%d",
           size.discrete.width, size.discrete.height);
@@ -3010,8 +3012,16 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
           results = g_list_prepend (results, tmp);
       }
 
+      if (w > maxw && h > maxh) {
+        maxw = w;
+        maxh = h;
+      }
+
       size.index++;
     } while (v4l2object->ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
+
+    v4l2object->max_width = maxw;
+    v4l2object->max_height = maxh;
     GST_DEBUG_OBJECT (v4l2object->dbg_obj,
         "done iterating discrete frame sizes");
   } else if (size.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
@@ -3057,6 +3067,9 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
 
       /* no point using the results list here, since there's only one struct */
       gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
+
+      v4l2object->max_width = maxw;
+      v4l2object->max_height = maxh;
     }
   } else if (size.type == V4L2_FRMSIZE_TYPE_CONTINUOUS) {
     guint32 maxw, maxh;
@@ -3086,6 +3099,9 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
 
       /* no point using the results list here, since there's only one struct */
       gst_v4l2_object_update_and_append (v4l2object, pixelformat, ret, tmp);
+
+      v4l2object->max_width = maxw;
+      v4l2object->max_height = maxh;
     }
   } else {
     goto unknown_type;
@@ -3717,6 +3733,19 @@ field_to_str (enum v4l2_field f)
   return "unknown";
 }
 
+static guint
+calculate_max_sizeimage (GstV4l2Object * v4l2object, guint pixel_bitdepth)
+{
+  guint max_width, max_height;
+  guint sizeimage;
+
+  max_width = v4l2object->max_width;
+  max_height = v4l2object->max_height;
+  sizeimage = max_width * max_height * pixel_bitdepth / 8 / 2;
+
+  return MAX (ENCODED_BUFFER_MIN_SIZE, sizeimage);
+}
+
 static gboolean
 gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     gboolean try_only, GstV4l2Error * error)
@@ -3730,6 +3759,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   GstVideoInfo info;
   GstVideoAlignment align;
   gint width, height, fps_n, fps_d;
+  guint pixel_bitdepth = 8;
   gint n_v4l_planes;
   gint i = 0;
   gboolean is_mplane;
@@ -3928,6 +3958,14 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       "%" GST_FOURCC_FORMAT " stride: %d", width, height,
       GST_FOURCC_ARGS (pixelformat), GST_VIDEO_INFO_PLANE_STRIDE (&info, 0));
 
+  s = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_has_field (s, "bit-depth-chroma")) {
+    gst_structure_get_uint (s, "bit-depth-chroma", &pixel_bitdepth);
+    GST_DEBUG_OBJECT (v4l2object->element, "Got pixel bit depth %u from caps",
+        pixel_bitdepth);
+  }
+
   memset (&format, 0x00, sizeof (struct v4l2_format));
   format.type = v4l2object->type;
 
@@ -3952,7 +3990,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     }
 
     if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED)
-      format.fmt.pix_mp.plane_fmt[0].sizeimage = ENCODED_BUFFER_SIZE;
+      format.fmt.pix_mp.plane_fmt[0].sizeimage =
+          calculate_max_sizeimage (v4l2object, pixel_bitdepth);
   } else {
     gint stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
 
@@ -3971,7 +4010,8 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     format.fmt.pix.bytesperline = stride;
 
     if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED)
-      format.fmt.pix.sizeimage = ENCODED_BUFFER_SIZE;
+      format.fmt.pix.sizeimage =
+          calculate_max_sizeimage (v4l2object, pixel_bitdepth);
   }
 
   GST_DEBUG_OBJECT (v4l2object->dbg_obj, "Desired format is %dx%d, format "
@@ -4164,8 +4204,6 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
     goto invalid_planes;
 
   /* used to check colorimetry and interlace mode fields presence */
-  s = gst_caps_get_structure (caps, 0);
-
   if (gst_v4l2_object_get_interlace_mode (format.fmt.pix.field,
           &info.interlace_mode)) {
     if (gst_structure_has_field (s, "interlace-mode")) {
