@@ -154,8 +154,7 @@ endif
 
 install_headers(gst_headers, subdir : 'gstreamer-1.0/gst')
 
-# Some Win32 APIs are not allowed for UWP
-if host_system == 'windows' and not building_for_uwp
+if host_system == 'windows'
   gst_sources += files('gstpluginloader-win32.c')
 else
   gst_sources += files('gstpluginloader.c')

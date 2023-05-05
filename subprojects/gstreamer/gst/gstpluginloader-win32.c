@@ -1210,6 +1210,25 @@ gst_plugin_loader_free (GstPluginLoader * self)
   return got_plugin_detail;
 }
 
+static HANDLE
+gst_plugin_loader_client_create_file (LPCWSTR pipe_name)
+{
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN8)
+  CREATEFILE2_EXTENDED_PARAMETERS params;
+  memset (&params, 0, sizeof (CREATEFILE2_EXTENDED_PARAMETERS));
+  params.dwSize = sizeof (CREATEFILE2_EXTENDED_PARAMETERS);
+  params.dwFileFlags = FILE_FLAG_OVERLAPPED;
+  params.dwSecurityQosFlags = SECURITY_IMPERSONATION;
+
+  return CreateFile2 (pipe_name,
+      GENERIC_READ | GENERIC_WRITE, 0, OPEN_EXISTING, &params);
+#else
+  return CreateFileW (pipe_name,
+      GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+      FILE_FLAG_OVERLAPPED, NULL);
+#endif
+}
+
 /* child process routine */
 gboolean
 _gst_plugin_loader_client_run (const gchar * pipe_name)
@@ -1218,25 +1237,27 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
   Win32PluginLoader loader;
   DWORD pipe_mode = PIPE_READMODE_MESSAGE;
   gchar *err = NULL;
+  LPWSTR pipe_name_wide;
+
+  pipe_name_wide = (LPWSTR) g_utf8_to_utf16 (pipe_name, -1, NULL, NULL, NULL);
+  if (!pipe_name_wide) {
+    GST_ERROR ("Couldn't convert %s to wide string", pipe_name);
+    return FALSE;
+  }
 
   win32_plugin_loader_init (&loader, TRUE);
 
   GST_DEBUG ("Connecting pipe %s", pipe_name);
 
   /* Connect to server's named pipe */
-  loader.pipe = CreateFileA (pipe_name,
-      GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-      FILE_FLAG_OVERLAPPED, NULL);
+  loader.pipe = gst_plugin_loader_client_create_file (pipe_name_wide);
   loader.last_err = GetLastError ();
   if (loader.pipe == INVALID_HANDLE_VALUE) {
     /* Server should be pending (waiting for connection) state already,
      * but do retry if it's not the case */
     if (loader.last_err == ERROR_PIPE_BUSY) {
-      if (WaitNamedPipeA (pipe_name, 5000)) {
-        loader.pipe = CreateFileA (pipe_name,
-            GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-            FILE_FLAG_OVERLAPPED, NULL);
-      }
+      if (WaitNamedPipeW (pipe_name_wide, 5000))
+        loader.pipe = gst_plugin_loader_client_create_file (pipe_name_wide);
 
       loader.last_err = GetLastError ();
     }
@@ -1271,6 +1292,7 @@ _gst_plugin_loader_client_run (const gchar * pipe_name)
 
 out:
   g_free (err);
+  g_free (pipe_name_wide);
   win32_plugin_loader_clear (&loader);
 
   return ret;
