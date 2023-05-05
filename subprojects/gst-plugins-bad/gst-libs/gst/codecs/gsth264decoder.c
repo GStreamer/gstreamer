@@ -1791,10 +1791,16 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
       picture->system_frame_number);
 
   if (!frame) {
-    GST_ERROR_OBJECT (self,
-        "No available codec frame with frame number %d",
-        picture->system_frame_number);
-    UPDATE_FLOW_RETURN (ret, GST_FLOW_ERROR);
+    /* The case where the end_picture() got failed and corresponding
+     * GstVideoCodecFrame was dropped already */
+    if (picture->nonexisting) {
+      GST_DEBUG_OBJECT (self, "Dropping non-existing picture %p", picture);
+    } else {
+      GST_ERROR_OBJECT (self,
+          "No available codec frame with frame number %d",
+          picture->system_frame_number);
+      UPDATE_FLOW_RETURN (ret, GST_FLOW_ERROR);
+    }
 
     gst_h264_picture_unref (picture);
 
