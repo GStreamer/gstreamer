@@ -3046,30 +3046,45 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
         GST_TIME_ARGS (frame->duration));
   }
 
-  /* PTS is expected montone ascending,
+  /* PTS is expected monotone ascending,
    * so a good guess is lowest unsent DTS */
   {
-    GstClockTime min_ts = GST_CLOCK_TIME_NONE;
-    GstVideoCodecFrame *oframe = NULL;
-    gboolean seen_none = FALSE;
+    GstClockTime min_dts = GST_CLOCK_TIME_NONE;
+    GstClockTime min_pts = GST_CLOCK_TIME_NONE;
+    GstVideoCodecFrame *earliest_dts_frame = NULL;
+    GstVideoCodecFrame *earliest_pts_frame = NULL;
+    gboolean frames_without_dts = FALSE;
+    gboolean frames_without_pts = FALSE;
 
-    /* some maintenance regardless */
+    /* Check what is the earliest PTS and DTS in our pendings frames */
     for (l = priv->frames.head; l; l = l->next) {
       GstVideoCodecFrame *tmp = l->data;
 
+      /* ABI.ts contains DTS */
       if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts)) {
-        seen_none = TRUE;
-        continue;
+        frames_without_dts = TRUE;
+      } else if (!GST_CLOCK_TIME_IS_VALID (min_dts)
+          || tmp->abidata.ABI.ts < min_dts) {
+        min_dts = tmp->abidata.ABI.ts;
+        earliest_dts_frame = tmp;
       }
 
-      if (!GST_CLOCK_TIME_IS_VALID (min_ts) || tmp->abidata.ABI.ts < min_ts) {
-        min_ts = tmp->abidata.ABI.ts;
-        oframe = tmp;
+      /* ABI.ts2 contains PTS */
+      if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts2)) {
+        frames_without_pts = TRUE;
+      } else if (!GST_CLOCK_TIME_IS_VALID (min_pts)
+          || tmp->abidata.ABI.ts2 < min_pts) {
+        min_pts = tmp->abidata.ABI.ts2;
+        earliest_pts_frame = tmp;
       }
     }
-    /* save a ts if needed */
-    if (oframe && oframe != frame) {
-      oframe->abidata.ABI.ts = frame->abidata.ABI.ts;
+    /* save dts if needed */
+    if (earliest_dts_frame && earliest_dts_frame != frame) {
+      earliest_dts_frame->abidata.ABI.ts = frame->abidata.ABI.ts;
+    }
+    /* save pts if needed */
+    if (earliest_pts_frame && earliest_pts_frame != frame) {
+      earliest_pts_frame->abidata.ABI.ts2 = frame->abidata.ABI.ts2;
     }
 
     /* and set if needed;
@@ -3077,44 +3092,27 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
     /* also, if we ended up reordered, means this approach is conflicting
      * with some sparse existing PTS, and so it does not work out */
     if (!priv->reordered_output &&
-        !GST_CLOCK_TIME_IS_VALID (frame->pts) && !seen_none &&
+        !GST_CLOCK_TIME_IS_VALID (frame->pts) && !frames_without_dts &&
         GST_CLOCK_TIME_IS_VALID (priv->pts_delta)) {
-      frame->pts = min_ts + priv->pts_delta;
+      frame->pts = min_dts + priv->pts_delta;
       GST_DEBUG_OBJECT (decoder,
           "no valid PTS, using oldest DTS %" GST_TIME_FORMAT,
           GST_TIME_ARGS (frame->pts));
     }
 
-    /* some more maintenance, ts2 holds PTS */
-    min_ts = GST_CLOCK_TIME_NONE;
-    seen_none = FALSE;
-    for (l = priv->frames.head; l; l = l->next) {
-      GstVideoCodecFrame *tmp = l->data;
-
-      if (!GST_CLOCK_TIME_IS_VALID (tmp->abidata.ABI.ts2)) {
-        seen_none = TRUE;
-        continue;
-      }
-
-      if (!GST_CLOCK_TIME_IS_VALID (min_ts) || tmp->abidata.ABI.ts2 < min_ts) {
-        min_ts = tmp->abidata.ABI.ts2;
-        oframe = tmp;
-      }
-    }
-    /* save a ts if needed */
-    if (oframe && oframe != frame) {
-      oframe->abidata.ABI.ts2 = frame->abidata.ABI.ts2;
     }
 
     /* if we detected reordered output, then PTS are void,
      * however those were obtained; bogus input, subclass etc */
-    if (priv->reordered_output && !seen_none) {
+    if (priv->reordered_output && !frames_without_pts) {
       GST_DEBUG_OBJECT (decoder, "invalidating PTS");
       frame->pts = GST_CLOCK_TIME_NONE;
     }
 
-    if (!GST_CLOCK_TIME_IS_VALID (frame->pts) && !seen_none) {
-      frame->pts = min_ts;
+    /* If the frame doesn't have a PTS we can take the earliest PTS from our
+     * pending frame list (Only valid if all pending frames have PTS) */
+    if (!GST_CLOCK_TIME_IS_VALID (frame->pts) && !frames_without_pts) {
+      frame->pts = min_pts;
       GST_DEBUG_OBJECT (decoder,
           "no valid PTS, using oldest PTS %" GST_TIME_FORMAT,
           GST_TIME_ARGS (frame->pts));
