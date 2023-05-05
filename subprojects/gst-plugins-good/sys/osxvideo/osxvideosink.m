@@ -301,11 +301,9 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink)
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
   pool = [[NSAutoreleasePool alloc] init];
 
-  GST_OBJECT_LOCK (osxvideosink);
   gst_osx_video_sink_call_from_main_thread(osxvideosink,
       osxvideosink->osxvideosinkobject,
       @selector(destroy), (id) nil, YES);
-  GST_OBJECT_UNLOCK (osxvideosink);
 #ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
   gst_osx_video_sink_stop_cocoa_loop (osxvideosink);
 #endif
@@ -914,6 +912,7 @@ no_texture_buffer:
 
   pool = [[NSAutoreleasePool alloc] init];
 
+  GST_OBJECT_LOCK (osxvideosink);
   osxwindow = osxvideosink->osxwindow;
   osxvideosink->osxwindow = NULL;
 
@@ -931,6 +930,8 @@ no_texture_buffer:
     }
     g_free (osxwindow);
   }
+  GST_OBJECT_UNLOCK (osxvideosink);
+  
   [pool release];
 }
 
