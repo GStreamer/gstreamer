@@ -1619,8 +1619,9 @@ gst_plugin_ext_dep_extract_env_vars_paths (GstPlugin * plugin,
         gchar *full_path;
 
         if (!g_path_is_absolute (arr[i])) {
-          GST_INFO_OBJECT (plugin, "ignoring environment variable content '%s'"
-              ": either not an absolute path or not a path at all", arr[i]);
+          GST_INFO_OBJECT (plugin, "ignoring environment variable '%s' with "
+              "content #%u '%s': either not an absolute path or not a path at all",
+              components[0], i, arr[i]);
           continue;
         }
 
