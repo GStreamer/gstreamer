@@ -2873,20 +2873,19 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
         size.stepwise.min_height);
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "max width:   %d",
         size.stepwise.max_width);
-    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "min height:  %d",
+    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "max height:  %d",
         size.stepwise.max_height);
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "step width:  %d",
         size.stepwise.step_width);
     GST_DEBUG_OBJECT (v4l2object->dbg_obj, "step height: %d",
         size.stepwise.step_height);
 
-    w = MAX (size.stepwise.min_width, 1);
-    h = MAX (size.stepwise.min_height, 1);
-    maxw = MIN (size.stepwise.max_width, G_MAXINT);
-    maxh = MIN (size.stepwise.max_height, G_MAXINT);
-
     step_w = MAX (size.stepwise.step_width, 1);
     step_h = MAX (size.stepwise.step_height, 1);
+    w = MAX (size.stepwise.min_width, step_w);
+    h = MAX (size.stepwise.min_height, step_h);
+    maxw = MIN (size.stepwise.max_width, G_MAXINT);
+    maxh = MIN (size.stepwise.max_height, G_MAXINT);
 
     /* FIXME: check for sanity and that min/max are multiples of the steps */
 
