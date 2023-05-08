@@ -42,6 +42,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gl/gstglfuncs.h>
+
 #include "gstglelements.h"
 #include "gstglmosaic.h"
 #include "gstglutils.h"

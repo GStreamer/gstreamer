@@ -54,6 +54,7 @@ struct _GstGLBaseMixerPadClass
   GstVideoAggregatorPadClass parent_class;
 };
 
+GST_GL_API
 GType gst_gl_base_mixer_pad_get_type (void);
 
 #define GST_TYPE_GL_BASE_MIXER (gst_gl_base_mixer_get_type())
@@ -95,8 +96,10 @@ struct _GstGLBaseMixerClass
   gpointer _padding[GST_PADDING];
 };
 
+GST_GL_API
 GType gst_gl_base_mixer_get_type(void);
 
+GST_GL_API
 GstGLContext *      gst_gl_base_mixer_get_gl_context        (GstGLBaseMixer * mix);
 
 G_END_DECLS

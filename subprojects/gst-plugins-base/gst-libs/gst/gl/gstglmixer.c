@@ -30,6 +30,8 @@
 
 #include "gstglmixer.h"
 
+#include <gst/gl/gstglfuncs.h>
+
 #define GST_CAT_DEFAULT gst_gl_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_mixer_debug);
 

@@ -24,7 +24,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
-#include <gst/gl/gstglfuncs.h>
 #include "gstglbasemixer.h"
 
 G_BEGIN_DECLS
@@ -61,6 +60,7 @@ struct _GstGLMixerPadClass
   GstGLBaseMixerPadClass parent_class;
 };
 
+GST_GL_API
 GType gst_gl_mixer_pad_get_type (void);
 
 #define GST_TYPE_GL_MIXER (gst_gl_mixer_get_type())
@@ -102,8 +102,10 @@ struct _GstGLMixerClass
   GstGLMixerProcessTextures process_textures;
 };
 
+GST_GL_API
 GType gst_gl_mixer_get_type(void);
 
+GST_GL_API
 gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
 
 G_END_DECLS

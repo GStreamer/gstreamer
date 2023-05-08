@@ -22,7 +22,7 @@
 #ifndef __GST_GL_STEREO_MIX_H__
 #define __GST_GL_STEREO_MIX_H__
 
-#include "gstglmixer.h"
+#include <gst/gl/gstglmixer.h>
 
 G_BEGIN_DECLS
 
@@ -64,7 +64,7 @@ struct _GstGLStereoMix
 {
   GstGLMixer mixer;
 
-  GLuint out_tex_id;
+  guint out_tex_id;
 
   GstGLViewConvert *viewconvert;
   GstGLStereoDownmix downmix_mode;

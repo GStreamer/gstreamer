@@ -21,7 +21,7 @@
 #ifndef _GST_GL_VIDEO_MIXER_H_
 #define _GST_GL_VIDEO_MIXER_H_
 
-#include "gstglmixer.h"
+#include <gst/gl/gstglmixer.h>
 
 G_BEGIN_DECLS
 
@@ -140,9 +140,9 @@ struct _GstGLVideoMixer
     GstGLShader *shader;
     GstGLShader *checker;
 
-    GLuint vao;
-    GLuint vbo_indices;
-    GLuint checker_vbo;
+    guint vao;
+    guint vbo_indices;
+    guint checker_vbo;
     GstGLMemory *out_tex;
 
     gboolean output_geo_change;
