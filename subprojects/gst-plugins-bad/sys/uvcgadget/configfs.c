@@ -563,6 +563,8 @@ configfs_parse_streaming_frame (const char *path,
   ret = ret ? : attribute_read_uint (path, "bFrameIndex", &frame->index);
   ret = ret ? : attribute_read_uint (path, "wWidth", &frame->width);
   ret = ret ? : attribute_read_uint (path, "wHeight", &frame->height);
+  ret = ret ? : attribute_read_uint (path, "dwMaxVideoFrameBufferSize",
+      &frame->maxvideofbsize);
   if (ret)
     return ret;
 

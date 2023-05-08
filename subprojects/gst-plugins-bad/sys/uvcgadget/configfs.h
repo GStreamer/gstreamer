@@ -58,6 +58,7 @@ struct uvc_function_config_frame
   unsigned int height;
   unsigned int num_intervals;
   unsigned int *intervals;
+  unsigned int maxvideofbsize;
 };
 
 /*
