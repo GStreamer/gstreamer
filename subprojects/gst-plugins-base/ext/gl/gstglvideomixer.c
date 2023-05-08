@@ -1845,9 +1845,12 @@ static void
 _video_mixer_process_gl (GstGLContext * context, GstGLVideoMixer * video_mixer)
 {
   GstGLMixer *mixer = GST_GL_MIXER (video_mixer);
+  GstGLFramebuffer *fbo = gst_gl_mixer_get_framebuffer (mixer);
 
-  gst_gl_framebuffer_draw_to_texture (mixer->fbo, video_mixer->out_tex,
+  gst_gl_framebuffer_draw_to_texture (fbo, video_mixer->out_tex,
       gst_gl_video_mixer_callback, video_mixer);
+
+  gst_clear_object (&fbo);
 }
 
 static gboolean

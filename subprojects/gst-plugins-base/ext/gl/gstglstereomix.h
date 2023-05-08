@@ -22,7 +22,7 @@
 #ifndef __GST_GL_STEREO_MIX_H__
 #define __GST_GL_STEREO_MIX_H__
 
-#include <gst/gl/gstglmixer.h>
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
 

@@ -217,6 +217,7 @@ static void
 _mosaic_render (GstGLContext * context, GstGLMosaic * mosaic)
 {
   GstGLMixer *mixer = GST_GL_MIXER (mosaic);
+  GstGLFramebuffer *fbo = gst_gl_mixer_get_framebuffer (mixer);
 
   if (!mosaic->shader) {
     gchar *frag_str = g_strdup_printf ("%s%s",
@@ -230,8 +231,10 @@ _mosaic_render (GstGLContext * context, GstGLMosaic * mosaic)
     g_free (frag_str);
   }
 
-  gst_gl_framebuffer_draw_to_texture (mixer->fbo, mosaic->out_tex,
+  gst_gl_framebuffer_draw_to_texture (fbo, mosaic->out_tex,
       gst_gl_mosaic_callback, mosaic);
+
+  gst_clear_object (&fbo);
 }
 
 static gboolean

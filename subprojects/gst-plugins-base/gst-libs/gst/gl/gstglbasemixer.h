@@ -23,8 +23,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/gl/gl.h>
 #include <gst/video/gstvideoaggregator.h>
+#include <gst/gl/gstglcontext.h>
 
 G_BEGIN_DECLS
 
@@ -53,6 +53,8 @@ struct _GstGLBaseMixerPadClass
 {
   GstVideoAggregatorPadClass parent_class;
 };
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseMixerPad, gst_object_unref);
 
 GST_GL_API
 GType gst_gl_base_mixer_pad_get_type (void);
@@ -95,6 +97,8 @@ struct _GstGLBaseMixerClass
 
   gpointer _padding[GST_PADDING];
 };
+
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseMixer, gst_object_unref);
 
 GST_GL_API
 GType gst_gl_base_mixer_get_type(void);

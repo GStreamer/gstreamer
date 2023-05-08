@@ -30,7 +30,19 @@
 
 #include "gstglmixer.h"
 
+#include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
+
+/**
+ * SECTION:gstglmixer
+ * @short_description: #GstVideoAggregator subclass for transforming RGBA textures
+ * @title: GstGLMixer
+ * @see_also: #GstGLBaseMixer, #GstVideoAggregator
+ *
+ * #GstGLMixer helps implement an element that operates on RGBA textures.
+ *
+ * Since: 1.24
+ */
 
 #define GST_CAT_DEFAULT gst_gl_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_mixer_debug);
@@ -57,6 +69,8 @@ struct _GstGLMixerPrivate
   gboolean gl_resource_ready;
   GMutex gl_resource_lock;
   GCond gl_resource_cond;
+
+  GstGLFramebuffer *fbo;
 };
 
 #define gst_gl_mixer_parent_class parent_class
@@ -533,9 +547,15 @@ _mixer_create_fbo (GstGLContext * context, GstGLMixer * mix)
   guint out_width = GST_VIDEO_INFO_WIDTH (&vagg->info);
   guint out_height = GST_VIDEO_INFO_HEIGHT (&vagg->info);
 
-  mix->fbo =
-      gst_gl_framebuffer_new_with_default_depth (context, out_width,
-      out_height);
+  g_mutex_lock (&mix->priv->gl_resource_lock);
+  if (!mix->priv->fbo)
+    mix->priv->fbo =
+        gst_gl_framebuffer_new_with_default_depth (context, out_width,
+        out_height);
+  g_cond_signal (&mix->priv->gl_resource_cond);
+  if (mix->priv->fbo)
+    mix->priv->gl_resource_ready = TRUE;
+  g_mutex_unlock (&mix->priv->gl_resource_lock);
 }
 
 static gboolean
@@ -554,7 +574,7 @@ gst_gl_mixer_gl_stop (GstGLBaseMixer * base_mix)
     mixer_class->reset (mix);
 
   g_mutex_lock (&mix->priv->gl_resource_lock);
-  gst_clear_object (&mix->fbo);
+  gst_clear_object (&mix->priv->fbo);
   g_mutex_unlock (&mix->priv->gl_resource_lock);
 
   GST_GL_BASE_MIXER_CLASS (parent_class)->gl_stop (base_mix);
@@ -585,13 +605,15 @@ gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 
   g_mutex_lock (&mix->priv->gl_resource_lock);
   mix->priv->gl_resource_ready = FALSE;
-  if (mix->fbo)
-    gst_object_unref (mix->fbo);
+  gst_clear_object (&mix->priv->fbo);
+  g_mutex_unlock (&mix->priv->gl_resource_lock);
 
   gst_gl_context_thread_add (context,
       (GstGLContextThreadFunc) _mixer_create_fbo, mix);
-  if (!mix->fbo) {
-    g_cond_signal (&mix->priv->gl_resource_cond);
+
+  g_mutex_lock (&mix->priv->gl_resource_lock);
+  if (!mix->priv->fbo) {
+    mix->priv->gl_resource_ready = FALSE;
     g_mutex_unlock (&mix->priv->gl_resource_lock);
     goto context_error;
   }
@@ -676,9 +698,9 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
     goto out;
   }
 
-  mix_class->process_textures (mix, out_tex);
-
   g_mutex_unlock (&mix->priv->gl_resource_lock);
+
+  mix_class->process_textures (mix, out_tex);
 
 out:
   gst_video_frame_unmap (&out_frame);
@@ -759,4 +781,23 @@ gst_gl_mixer_stop (GstAggregator * agg)
   gst_gl_mixer_reset (mix);
 
   return GST_AGGREGATOR_CLASS (parent_class)->stop (agg);
+}
+
+/**
+ * gst_gl_mixer_get_framebuffer:
+ * @mix: the #GstGLMixer
+ *
+ * Returns: (transfer full): (nullable): The #GstGLFramebuffer in use by this @mix
+ *
+ * Since: 1.24
+ */
+GstGLFramebuffer *
+gst_gl_mixer_get_framebuffer (GstGLMixer * mix)
+{
+  GstGLFramebuffer *fbo = NULL;
+  g_mutex_lock (&mix->priv->gl_resource_lock);
+  if (mix->priv->fbo)
+    fbo = gst_object_ref (mix->priv->fbo);
+  g_mutex_unlock (&mix->priv->gl_resource_lock);
+  return fbo;
 }

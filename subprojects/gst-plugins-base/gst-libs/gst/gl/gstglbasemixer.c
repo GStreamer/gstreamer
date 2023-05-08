@@ -1,5 +1,4 @@
-/* Generic video mixer plugin
- *
+/*
  * GStreamer
  * Copyright (C) 2015 Matthew Waters <matthew@centricular.com>
  *
@@ -27,6 +26,20 @@
 #include <gst/video/video.h>
 
 #include "gstglbasemixer.h"
+#include <gst/gl/gl.h>
+
+/**
+ * SECTION:gstglbasemixer
+ * @short_description: #GstVideoAggregator subclass for transforming OpenGL resources
+ * @title: GstGLBaseMixer
+ * @see_also: #GstVideoAggregator, #GstGLMixer
+ *
+ * #GstGLBaseMixer handles the nitty gritty details of retrieving an OpenGL
+ * context.  It provides some virtual methods to know when the OpenGL context
+ * is available and is not available within this element.
+ *
+ * Since: 1.24
+ */
 
 #define GST_CAT_DEFAULT gst_gl_base_mixer_debug
 GST_DEBUG_CATEGORY (gst_gl_base_mixer_debug);
@@ -663,7 +676,7 @@ gst_gl_base_mixer_change_state (GstElement * element, GstStateChange transition)
  *
  * Returns: (transfer full) (nullable): the #GstGLContext found by @mix
  *
- * Since: 1.18
+ * Since: 1.24
  */
 GstGLContext *
 gst_gl_base_mixer_get_gl_context (GstGLBaseMixer * mix)

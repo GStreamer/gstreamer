@@ -63,6 +63,7 @@
 
 #include "gstglelements.h"
 #include "gstglstereomix.h"
+#include <gst/gl/gl.h>
 
 #define GST_CAT_DEFAULT gst_gl_stereo_mix_debug
 GST_DEBUG_CATEGORY (gst_gl_stereo_mix_debug);

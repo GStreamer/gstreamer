@@ -23,8 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/gl/gl.h>
-#include "gstglbasemixer.h"
+#include <gst/gl/gstglbasemixer.h>
 
 G_BEGIN_DECLS
 
@@ -60,6 +59,8 @@ struct _GstGLMixerPadClass
   GstGLBaseMixerPadClass parent_class;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLMixerPad, gst_object_unref);
+
 GST_GL_API
 GType gst_gl_mixer_pad_get_type (void);
 
@@ -85,8 +86,6 @@ struct _GstGLMixer
 {
   GstGLBaseMixer vaggregator;
 
-  GstGLFramebuffer *fbo;
-
   GstCaps *out_caps;
 
   GstGLMixerPrivate *priv;
@@ -102,11 +101,16 @@ struct _GstGLMixerClass
   GstGLMixerProcessTextures process_textures;
 };
 
+G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLMixer, gst_object_unref);
+
 GST_GL_API
 GType gst_gl_mixer_get_type(void);
 
 GST_GL_API
 gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
+
+GST_GL_API
+GstGLFramebuffer * gst_gl_mixer_get_framebuffer (GstGLMixer * mix);
 
 G_END_DECLS
 #endif /* __GST_GL_MIXER_H__ */
