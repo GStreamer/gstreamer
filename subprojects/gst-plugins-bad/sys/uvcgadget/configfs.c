@@ -20,10 +20,9 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <linux/videodev2.h>
+#include "linux/videodev2.h"
 
 #include "configfs.h"
-#include "tools.h"
 
 /* -----------------------------------------------------------------------------
  * Path handling and support
