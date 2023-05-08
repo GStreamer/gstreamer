@@ -113,4 +113,7 @@ struct uvc_function_config
 struct uvc_function_config *configfs_parse_uvc_function (const char *function);
 void configfs_free_uvc_function (struct uvc_function_config *fc);
 
+struct uvc_function_config *configfs_parse_uvc_videodev (int fd,
+    const char *video);
+
 #endif

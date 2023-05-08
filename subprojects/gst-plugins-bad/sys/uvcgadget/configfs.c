@@ -945,3 +945,52 @@ done:
 
   return fc;
 }
+
+static char *
+video_find_config_name (const char *video)
+{
+  char *vpath;
+  glob_t globbuf;
+  char *config;
+  int ret;
+
+  ret = asprintf (&vpath,
+      "/sys/class/udc/*/device/gadget*/video4linux/%s", video ? video : "*");
+  if (!ret)
+    return NULL;
+
+  glob (vpath, 0, NULL, &globbuf);
+  free (vpath);
+
+  if (globbuf.gl_pathc != 1)
+    return NULL;
+
+  config = attribute_read_str (globbuf.gl_pathv[0], "function_name");
+
+  globfree (&globbuf);
+
+  return config;
+}
+
+struct uvc_function_config *
+configfs_parse_uvc_videodev (int fd, const char *video)
+{
+  struct uvc_function_config *fc;
+  char *function = NULL;
+  char rpath[PATH_MAX];
+  char *res;
+
+  res = realpath (video, rpath);
+  if (!res)
+    return NULL;
+
+  function = video_find_config_name (basename (rpath));
+  if (!function)
+    return NULL;
+
+  fc = configfs_parse_uvc_function (function);
+
+  free (function);
+
+  return fc;
+}
