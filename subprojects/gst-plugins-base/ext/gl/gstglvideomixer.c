@@ -666,8 +666,6 @@ static gboolean gst_gl_video_mixer_propose_allocation (GstAggregator *
     agg, GstAggregatorPad * agg_pad, GstQuery * decide_query, GstQuery * query);
 static gboolean gst_gl_video_mixer_gl_start (GstGLBaseMixer * base_mix);
 static void gst_gl_video_mixer_gl_stop (GstGLBaseMixer * base_mix);
-static gboolean gst_gl_video_mixer_set_caps (GstGLMixer * mixer,
-    GstCaps * outcaps);
 
 static gboolean gst_gl_video_mixer_process_textures (GstGLMixer * mixer,
     GstGLMemory * out_tex);
@@ -1313,7 +1311,6 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
           GST_TYPE_GL_VIDEO_MIXER_BACKGROUND,
           DEFAULT_BACKGROUND, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_video_mixer_set_caps;
   GST_GL_MIXER_CLASS (klass)->process_textures =
       gst_gl_video_mixer_process_textures;
 
@@ -1796,17 +1793,6 @@ gst_gl_video_mixer_src_event (GstAggregator * agg, GstEvent * event)
   return GST_AGGREGATOR_CLASS (parent_class)->src_event (agg, event);
 }
 
-static gboolean
-gst_gl_video_mixer_set_caps (GstGLMixer * mixer, GstCaps * outcaps)
-{
-  GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
-
-  /* need reconfigure output geometry */
-  video_mixer->output_geo_change = TRUE;
-
-  return TRUE;
-}
-
 static void
 gst_gl_video_mixer_gl_stop (GstGLBaseMixer * base_mix)
 {
@@ -1824,6 +1810,8 @@ static gboolean
 gst_gl_video_mixer_gl_start (GstGLBaseMixer * base_mix)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (base_mix);
+
+  video_mixer->output_geo_change = TRUE;
 
   if (!video_mixer->shader) {
     gchar *frag_str = g_strdup_printf ("%s%s",

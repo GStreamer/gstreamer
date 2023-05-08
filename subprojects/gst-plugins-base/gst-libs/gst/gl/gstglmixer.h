@@ -76,8 +76,6 @@ GType gst_gl_mixer_pad_get_type (void);
 #define GST_GL_MIXER_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GL_MIXER,GstGLMixerClass))
 
-typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer,
-  GstCaps* outcaps);
 typedef gboolean (*GstGLMixerProcessFunc) (GstGLMixer *mix, GstBuffer *outbuf);
 typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix, GstGLMemory *out_tex);
 
@@ -94,7 +92,6 @@ struct _GstGLMixerClass
 {
   GstGLBaseMixerClass parent_class;
 
-  GstGLMixerSetCaps set_caps;
   GstGLMixerProcessFunc process_buffers;
   GstGLMixerProcessTextures process_textures;
 };

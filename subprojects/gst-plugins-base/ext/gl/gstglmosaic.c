@@ -74,7 +74,6 @@ static GstPad *gst_gl_mosaic_request_new_pad (GstElement * element,
 static void gst_gl_mosaic_release_pad (GstElement * element, GstPad * pad);
 
 static void gst_gl_mosaic_gl_stop (GstGLBaseMixer * base_mix);
-static gboolean gst_gl_mosaic_set_caps (GstGLMixer * mixer, GstCaps * outcaps);
 
 static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
     GstGLMemory * out_tex);
@@ -136,7 +135,6 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
       "Filter/Effect/Video", "OpenGL mosaic",
       "Julien Isorce <julien.isorce@gmail.com>");
 
-  GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_set_caps;
   GST_GL_BASE_MIXER_CLASS (klass)->gl_stop = gst_gl_mosaic_gl_stop;
   GST_GL_MIXER_CLASS (klass)->process_textures = gst_gl_mosaic_process_textures;
 }
@@ -202,15 +200,6 @@ gst_gl_mosaic_gl_stop (GstGLBaseMixer * mixer)
   mosaic->zrot = 0.0;
 
   GST_GL_BASE_MIXER_CLASS (gst_gl_mosaic_parent_class)->gl_stop (mixer);
-}
-
-static gboolean
-gst_gl_mosaic_set_caps (GstGLMixer * mixer, GstCaps * outcaps)
-{
-  GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
-
-  g_clear_object (&mosaic->shader);
-  return TRUE;
 }
 
 static void

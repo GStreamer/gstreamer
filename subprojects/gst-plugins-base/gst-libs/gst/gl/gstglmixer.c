@@ -452,8 +452,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
 
-  klass->set_caps = NULL;
-
   gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER_PAD, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER, 0);
 }
@@ -581,7 +579,6 @@ gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 {
   GstGLBaseMixer *base_mix = GST_GL_BASE_MIXER (agg);
   GstGLMixer *mix = GST_GL_MIXER (base_mix);
-  GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
   GstGLContext *context;
   GstBufferPool *pool = NULL;
   GstStructure *config;
@@ -613,9 +610,6 @@ gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
     g_mutex_unlock (&mix->priv->gl_resource_lock);
     goto context_error;
   }
-
-  if (mixer_class->set_caps)
-    mixer_class->set_caps (mix, mix->out_caps);
 
   mix->priv->gl_resource_ready = TRUE;
   g_cond_signal (&mix->priv->gl_resource_cond);
