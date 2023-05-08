@@ -246,6 +246,9 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     if (!img_mem)
       goto mem_create_failed;
 
+    if (!img_mem)
+      goto image_failed;
+
     priv->v_info.offset[i] = priv->v_info.size;
     priv->v_info.size += img_mem->requirements.size;
 
@@ -292,6 +295,11 @@ missing_profile:
     return FALSE;
   }
 #endif
+image_failed:
+  {
+    GST_WARNING_OBJECT (pool, "Failed to allocate image");
+    return FALSE;
+  }
 }
 
 /* This function handles GstBuffer creation */
