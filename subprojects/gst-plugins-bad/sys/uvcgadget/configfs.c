@@ -676,7 +676,7 @@ configfs_parse_streaming_format (const char *path,
     return -EINVAL;
   }
 
-  for (i = 0; i < ARRAY_SIZE (uvc_formats); ++i) {
+  for (i = 0; i < G_N_ELEMENTS (uvc_formats); ++i) {
     if (!memcmp (uvc_formats[i].guid, format->guid, 16)) {
       format->fcc = uvc_formats[i].fcc;
       break;
