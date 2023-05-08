@@ -234,7 +234,7 @@ udc_find_video_device (const char *udc, const char *function)
   int ret;
 
   ret = asprintf (&vpath,
-      "/sys/class/udc/%s/device/gadget/video4linux/video*", udc ? udc : "*");
+      "/sys/class/udc/%s/device/gadget*/video4linux/video*", udc ? udc : "*");
   if (!ret)
     return NULL;
 
