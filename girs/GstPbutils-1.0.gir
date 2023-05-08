@@ -1255,7 +1255,7 @@ after usage.</doc>
       </method>
       <method name="get_stream_id" c:identifier="gst_discoverer_stream_info_get_stream_id">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
-        <return-value transfer-ownership="none">
+        <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer-types.c">the stream ID of this stream. If you wish to
 use the stream ID after the life-time of @info you will need to copy it.</doc>
           <type name="utf8" c:type="const gchar*"/>
