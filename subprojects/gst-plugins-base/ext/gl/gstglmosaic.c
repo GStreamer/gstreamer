@@ -73,7 +73,7 @@ static GstPad *gst_gl_mosaic_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * req_name, const GstCaps * caps);
 static void gst_gl_mosaic_release_pad (GstElement * element, GstPad * pad);
 
-static void gst_gl_mosaic_reset (GstGLMixer * mixer);
+static void gst_gl_mosaic_gl_stop (GstGLBaseMixer * base_mix);
 static gboolean gst_gl_mosaic_set_caps (GstGLMixer * mixer, GstCaps * outcaps);
 
 static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
@@ -137,7 +137,7 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
       "Julien Isorce <julien.isorce@gmail.com>");
 
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_set_caps;
-  GST_GL_MIXER_CLASS (klass)->reset = gst_gl_mosaic_reset;
+  GST_GL_BASE_MIXER_CLASS (klass)->gl_stop = gst_gl_mosaic_gl_stop;
   GST_GL_MIXER_CLASS (klass)->process_textures = gst_gl_mosaic_process_textures;
 }
 
@@ -189,19 +189,19 @@ gst_gl_mosaic_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
-gst_gl_mosaic_reset (GstGLMixer * mixer)
+gst_gl_mosaic_gl_stop (GstGLBaseMixer * mixer)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
-  if (mosaic->shader)
-    gst_object_unref (mosaic->shader);
-  mosaic->shader = NULL;
+  gst_clear_object (&mosaic->shader);
 
   mosaic->attr_position_loc = -1;
   mosaic->attr_texture_loc = -1;
   mosaic->xrot = 0.0;
   mosaic->yrot = 0.0;
   mosaic->zrot = 0.0;
+
+  GST_GL_BASE_MIXER_CLASS (gst_gl_mosaic_parent_class)->gl_stop (mixer);
 }
 
 static gboolean

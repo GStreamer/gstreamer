@@ -568,10 +568,6 @@ static void
 gst_gl_mixer_gl_stop (GstGLBaseMixer * base_mix)
 {
   GstGLMixer *mix = GST_GL_MIXER (base_mix);
-  GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
-
-  if (mixer_class->reset)
-    mixer_class->reset (mix);
 
   g_mutex_lock (&mix->priv->gl_resource_lock);
   gst_clear_object (&mix->priv->fbo);
