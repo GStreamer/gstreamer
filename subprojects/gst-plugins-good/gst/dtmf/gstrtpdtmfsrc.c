@@ -179,7 +179,7 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
       &gst_rtp_dtmf_src_template);
 
   gst_element_class_set_static_metadata (gstelement_class,
-      "RTP DTMF packet generator", "Source/Network",
+      "RTP DTMF packet generator", "Source/Network/RTP",
       "Generates RTP DTMF packets", "Zeeshan Ali <zeeshan.ali@nokia.com>");
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_finalize);
