@@ -3212,7 +3212,7 @@ if no track elements are created or an error occurred.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GstDiscovererInfo representing the discovered URI</doc>
             <type name="GstPbutils.DiscovererInfo"/>
           </parameter>
-          <parameter name="error" transfer-ownership="none">
+          <parameter name="error" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The #GError that occurred, or %NULL</doc>
             <type name="GLib.Error"/>
           </parameter>

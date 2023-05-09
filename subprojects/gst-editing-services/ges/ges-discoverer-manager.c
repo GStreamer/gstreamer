@@ -158,7 +158,7 @@ ges_discoverer_manager_class_init (GESDiscovererManagerClass * klass)
    * GESDiscovererManager::discovered: (attributes doc.skip=true)
    * @manager: the #GESDiscovererManager
    * @info: The #GstDiscovererInfo representing the discovered URI
-   * @error: The #GError that occurred, or %NULL
+   * @error: (nullable): The #GError that occurred, or %NULL
    *
    * Since: 1.24
    */
