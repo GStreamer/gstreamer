@@ -7,9 +7,6 @@
 # with a browser JS app, implemented in Python.
 
 from websockets.version import version as wsv
-from gi.repository import GstSdp
-from gi.repository import GstWebRTC
-from gi.repository import Gst
 import random
 import ssl
 import websockets
@@ -21,8 +18,11 @@ import argparse
 
 import gi
 gi.require_version('Gst', '1.0')
+from gi.repository import Gst  # NOQA
 gi.require_version('GstWebRTC', '1.0')
+from gi.repository import GstWebRTC  # NOQA
 gi.require_version('GstSdp', '1.0')
+from gi.repository import GstSdp  # NOQA
 
 # Ensure that gst-python is installed
 try:
