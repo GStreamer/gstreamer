@@ -23,39 +23,108 @@
  * SECTION:element-switchbin
  * @title: switchbin
  *
- * switchbin is a helper element which chooses between a set of
- * processing chains (paths) based on input caps, and changes if new caps
- * arrive. Paths are child objects, which are accessed by the
- * #GstChildProxy interface.
+ * switchbin is a helper element that chooses between a set of processing
+ * chains (called "paths") based on incoming caps, the caps of the paths,
+ * and the result of caps queries issued to the elements within the paths.
+ * It switches between these paths based on thes caps. Paths are child objects,
+ * which are accessed by the #GstChildProxy interface.
+ *
+ * The intent is to allow for easy construction of dynamic pipelines that
+ * automatically switches between paths based on the caps, which is useful
+ * for cases when certain elements are only to be used for certain types
+ * of dataflow. One common example is a switchbin that inserts postprocessing
+ * elements only if the incoming caps are of a type that allows for such
+ * postprocessing, like when a video dataflow could be raw frames in some
+ * cases and encoded MPEG video in others - postprocessing plugins for
+ * color space conversion, scaling and such then should only be inserted
+ * if the data consists of raw frames, while encoded video is passed
+ * through unchanged.
+ *
+ * Each path has an "element" property. If a #GstElement is passed to this,
+ * switchbin takes ownership over that element. (Any previously set element
+ * is removed and unref'd before the new one is set.) The element property
+ * can also be NULL for a special passthrough mode (see below). In addition,
+ * each path has a "caps" property, which is used for finding matching
+ * paths. These caps are referred to as the "path caps".
+ *
+ * NOTE: Currently, switchbin has a limitation that path elements must
+ * have exactly one "sink" and one "src" pad, both of which need to be
+ * always available, so no request and no sometimes pads.
  *
  * Whenever new input caps are encountered at the switchbin's sinkpad,
- * the * first path with matching caps is picked. The paths are looked at
+ * the first path with matching caps is picked. A "match" means that the
+ * result of gst_caps_can_intersect() is TRUE. The paths are looked at
  * in order: path \#0's caps are looked at first, checked against the new
- * input caps with gst_caps_can_intersect(), and if its return value
+ * input caps with gst_caps_can_intersect(), and if the return value
  * is TRUE, path \#0 is picked. Otherwise, path \#1's caps are looked at etc.
- * If no path matches, an error is reported.
+ * If no path matches, a GST_STREAM_ERROR_WRONG_TYPE error is reported.
+ *
+ * For queries, the concept of "allowed caps" is important. These are the
+ * caps that are possible to use with this switchbin. They are computed
+ * differently for sink- and for srcpads.
+ *
+ * Allowed sinkpad caps are computed by visiting each path, issuing an
+ * internal caps query to the path element's sink pad, intersecting the
+ * result from that query with the path caps, and appending that intersection
+ * to the overall allowed sinkpad caps. Allowed srcpad caps are similar,
+ * except that the result of the internal query is directly attached to the
+ * overall allowed srcpad caps (no intersection with path caps takes place):
+ * The intuition behind this is that in sinkpad direction, only caps that
+ * are compatible with both the path caps and whatever the internal element
+ * can handle are really usable - other caps will be rejected. In srcpad
+ * direction, path caps do not exert an influence.
+ *
+ * The switchbin responds to caps and accept-caps queries in a particular
+ * way. They involve the aforementioned "allowed caps".
+ *
+ * Caps queries are responded to by first checking if there are any paths.
+ * If num-paths is 0, the query always fails. If there is no current path
+ * selected, or if the path has no element, the allowed sink/srcpad caps
+ * (depending on whether the query comes from the sink- or srcpad direction)
+ * is directly used as the response. If a current path is selected, and it
+ * has an element, the query is forwarded to that element instead.
+ *
+ * Accept-caps queries are handled by checking if the switchbin can find
+ * a path whose caps match the caps from that query. If there is one, the
+ * response to that query is TRUE, otherwise FALSE.
+ *
+ * As mentioned before, path caps can in theory be any kind of caps. However,
+ * they always only affect the input side (= the sink pad side of the switchbin).
+ * Path elements can produce output of any type, so their srcpad caps can be
+ * anything, even caps that are entirely different. For example, it is perfectly
+ * valid if the path caps are "video/x-raw", the path element sink pad template
+ * caps also are "video/x-raw", and the src pad caps of the elements are
+ * "application/x-rtp".
+ *
+ * Path elements can be set to NULL. Such paths perform dataflow passthrough.
+ * The path then just forwards data. This includes caps and accept-caps queries.
+ * Since there is no element, the internal caps queries go to the switchbin
+ * peers instead (to the upstream peer when the query is at the switchbin's
+ * srcpad, and to the downstream peer if the query is at the sinkpad).
  *
  * <refsect2>
  * <title>Example launch line</title>
  *
  * In this example, if the data is raw PCM audio with 44.1 kHz, a volume
  * element is used for reducing the audio volume to 10%. Otherwise, it is
- * just passed through. So, a 44.1 kHz MP3 will sound quiet, a 48 kHz MP3
- * will be at full volume.
+ * just passed through. So, 44.1 kHz PCM audio will sound quiet, while
+ * 48 kHz PCM and any non-PCM data will be passed through unmodified.
  *
  * |[
  *   gst-launch-1.0 uridecodebin uri=<URI> ! switchbin num-paths=2 \
  *     path0::element="audioconvert ! volume volume=0.1" path0::caps="audio/x-raw, rate=44100" \
- *     path1::element="identity" path1::caps="ANY" ! \
+ *     path1::caps="ANY" ! \
  *     autoaudiosink
  * ]|
  *
- * This example's path \#1 is a fallback "catch-all" path. Its caps are "ANY" caps,
- * so any input caps will match against this. A catch-all path with an identity element
- * is useful for cases where certain kinds of processing should only be done for specific
- * formats, like the example above (it applies volume only to 44.1 kHz PCM audio).
- * Setting the path's element property to NULL accomplishes the same goal - switchbin
- * then forwards the dataflow to its srcpad if that path is selected.
+ * This example's path \#1 is a passthrough path. Its caps are "ANY" caps,
+ * and its element is NULL (the default value). Dataflow is passed through,
+ * and caps and accept-caps queries are forwarded to the switchbin peers.
+ *
+ * NOTE: Setting the caps to NULL instead of ANY would have accomplíshed
+ * the same in this example, since NULL path caps are internally
+ * interpreted as ANY caps.
+ *
  * </refsect2>
  *
  */
