@@ -129,7 +129,7 @@ create_sampler (GstVulkanFullScreenQuad * self, GError ** error)
 
 static GstVulkanDescriptorSet *
 get_and_update_descriptor_set (GstVulkanFullScreenQuad * self,
-    GstVulkanImageView ** views, GError ** error)
+    GstVulkanImageView ** views, guint n_mems, GError ** error)
 {
   GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
   GstVulkanDescriptorSet *set;
@@ -169,7 +169,7 @@ get_and_update_descriptor_set (GstVulkanFullScreenQuad * self,
       };
     }
 
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->in_info); i++) {
+    for (i = 0; i < n_mems; i++) {
       image_info[i] = (VkDescriptorImageInfo) {
           .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
           .imageView = views[i]->view,
@@ -198,12 +198,13 @@ get_and_update_descriptor_set (GstVulkanFullScreenQuad * self,
 static gboolean
 create_descriptor_set_layout (GstVulkanFullScreenQuad * self, GError ** error)
 {
+  GstVulkanFullScreenQuadPrivate *priv = GET_PRIV (self);
   VkDescriptorSetLayoutBinding bindings[GST_VIDEO_MAX_PLANES + 1] = { {0,} };
   VkDescriptorSetLayoutCreateInfo layout_info;
   VkDescriptorSetLayout descriptor_set_layout;
   int descriptor_n = 0;
   VkResult err;
-  int i;
+  int i, n_mems;
 
   /* *INDENT-OFF* */
   bindings[descriptor_n++] = (VkDescriptorSetLayoutBinding) {
@@ -213,7 +214,8 @@ create_descriptor_set_layout (GstVulkanFullScreenQuad * self, GError ** error)
       .pImmutableSamplers = NULL,
       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
   };
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->in_info); i++) {
+  n_mems = gst_buffer_n_memory (priv->inbuf);
+  for (i = 0; i < n_mems; i++) {
     bindings[descriptor_n++] = (VkDescriptorSetLayoutBinding) {
       .binding = i+1,
       .descriptorCount = 1,
@@ -295,9 +297,10 @@ create_render_pass (GstVulkanFullScreenQuad * self, GError ** error)
   VkSubpassDescription subpass;
   VkRenderPass render_pass;
   VkResult err;
-  int i;
+  int i, n_mems;
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
+  n_mems = gst_buffer_n_memory (priv->outbuf);
+  for (i = 0; i < n_mems; i++) {
     /* *INDENT-OFF* */
     color_attachments[i] = (VkAttachmentDescription) {
         .format = gst_vulkan_format_from_video_info (&self->out_info, i),
@@ -321,14 +324,14 @@ create_render_pass (GstVulkanFullScreenQuad * self, GError ** error)
   /* *INDENT-OFF* */
   subpass = (VkSubpassDescription) {
       .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
-      .colorAttachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
+      .colorAttachmentCount = n_mems,
       .pColorAttachments = color_attachment_refs
   };
 
   render_pass_info = (VkRenderPassCreateInfo) {
       .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
       .pNext = NULL,
-      .attachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
+      .attachmentCount = n_mems,
       .pAttachments = color_attachments,
       .subpassCount = 1,
       .pSubpasses = &subpass
@@ -523,7 +526,7 @@ create_pipeline (GstVulkanFullScreenQuad * self, GError ** error)
       .pNext = NULL,
       .logicOpEnable = VK_FALSE,
       .logicOp = VK_LOGIC_OP_COPY,
-      .attachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),   
+      .attachmentCount = gst_buffer_n_memory (priv->outbuf),
       .pAttachments = color_blend_attachments,
       .blendConstants = { 0.0f, 0.0f, 0.0f, 0.0f }
   };
@@ -575,7 +578,7 @@ create_descriptor_pool (GstVulkanFullScreenQuad * self, GError ** error)
   /* *INDENT-OFF* */
   pool_sizes[0] = (VkDescriptorPoolSize) {
       .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-      .descriptorCount = max_sets * GST_VIDEO_INFO_N_PLANES (&self->in_info),
+      .descriptorCount = max_sets * gst_buffer_n_memory (priv->inbuf),
   };
 
   if (priv->uniforms) {
@@ -615,7 +618,7 @@ create_descriptor_pool (GstVulkanFullScreenQuad * self, GError ** error)
 
 static gboolean
 create_framebuffer (GstVulkanFullScreenQuad * self, GstVulkanImageView ** views,
-    GError ** error)
+    guint n_mems, GError ** error)
 {
   VkImageView attachments[GST_VIDEO_MAX_PLANES] = { 0, };
   VkFramebufferCreateInfo framebuffer_info;
@@ -623,7 +626,7 @@ create_framebuffer (GstVulkanFullScreenQuad * self, GstVulkanImageView ** views,
   VkResult err;
   int i;
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
+  for (i = 0; i < n_mems; i++) {
     attachments[i] = views[i]->view;
   }
 
@@ -632,7 +635,7 @@ create_framebuffer (GstVulkanFullScreenQuad * self, GstVulkanImageView ** views,
       .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
       .pNext = NULL,
       .renderPass = (VkRenderPass) self->render_pass->handle,
-      .attachmentCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
+      .attachmentCount = n_mems,
       .pAttachments = attachments,
       .width = GST_VIDEO_INFO_WIDTH (&self->out_info),
       .height = GST_VIDEO_INFO_HEIGHT (&self->out_info),
@@ -1373,7 +1376,7 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
   GstVulkanFullScreenQuadPrivate *priv;
   GstVulkanImageView *in_views[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanImageView *out_views[GST_VIDEO_MAX_PLANES] = { NULL, };
-  int i;
+  int i, n_mems;
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
   g_return_val_if_fail (fence != NULL, FALSE);
@@ -1392,7 +1395,8 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
       goto error;
 
   if (!self->descriptor_set) {
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->in_info); i++) {
+    n_mems = gst_buffer_n_memory (priv->inbuf);
+    for (i = 0; i < n_mems; i++) {
       GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->inbuf, i);
       if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
         g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1406,12 +1410,13 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
               (GstMiniObject *) in_views[i]));
     }
     if (!(self->descriptor_set =
-            get_and_update_descriptor_set (self, in_views, error)))
+            get_and_update_descriptor_set (self, in_views, n_mems, error)))
       goto error;
   }
 
   if (!self->framebuffer) {
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
+    n_mems = gst_buffer_n_memory (priv->outbuf);
+    for (i = 0; i < n_mems; i++) {
       GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->outbuf, i);
       if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
         g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1424,7 +1429,7 @@ gst_vulkan_full_screen_quad_prepare_draw (GstVulkanFullScreenQuad * self,
               gst_vulkan_trash_mini_object_unref,
               (GstMiniObject *) out_views[i]));
     }
-    if (!create_framebuffer (self, out_views, error))
+    if (!create_framebuffer (self, out_views, n_mems, error))
       goto error;
   }
 
@@ -1461,6 +1466,7 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
   GstVulkanImageView *in_views[GST_VIDEO_MAX_PLANES] = { NULL, };
   GstVulkanImageView *out_views[GST_VIDEO_MAX_PLANES] = { NULL, };
   int i;
+  guint n_in_mems, n_out_mems;
 
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
   g_return_val_if_fail (cmd != NULL, FALSE);
@@ -1468,7 +1474,8 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
 
   priv = GET_PRIV (self);
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->in_info); i++) {
+  n_in_mems = gst_buffer_n_memory (priv->inbuf);
+  for (i = 0; i < n_in_mems; i++) {
     GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->inbuf, i);
     if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
       g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1480,7 +1487,8 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
         gst_vulkan_trash_list_acquire (self->trash_list, fence,
             gst_vulkan_trash_mini_object_unref, (GstMiniObject *) in_views[i]));
   }
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
+  n_out_mems = gst_buffer_n_memory (priv->outbuf);
+  for (i = 0; i < n_out_mems; i++) {
     GstVulkanImageMemory *img_mem = peek_image_from_buffer (priv->outbuf, i);
     if (!gst_is_vulkan_image_memory ((GstMemory *) img_mem)) {
       g_set_error_literal (error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1494,7 +1502,7 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
             (GstMiniObject *) out_views[i]));
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->in_info); i++) {
+  for (i = 0; i < n_in_mems; i++) {
     /* *INDENT-OFF* */
     VkImageMemoryBarrier in_image_memory_barrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -1524,7 +1532,7 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
         in_image_memory_barrier.newLayout;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&self->out_info); i++) {
+  for (i = 0; i < n_out_mems; i++) {
     /* *INDENT-OFF* */
     VkImageMemoryBarrier out_image_memory_barrier = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
@@ -1569,7 +1577,7 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
             GST_VIDEO_INFO_WIDTH (&self->out_info),
             GST_VIDEO_INFO_HEIGHT (&self->out_info)
         },
-        .clearValueCount = GST_VIDEO_INFO_N_PLANES (&self->out_info),
+        .clearValueCount = n_out_mems,
         .pClearValues = clearColors,
     };
     /* *INDENT-ON* */

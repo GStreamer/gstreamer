@@ -1211,6 +1211,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GError *error = NULL;
   VkResult err;
   int i;
+  guint in_n_mems, out_n_mems;
 
   fence = gst_vulkan_device_create_fence (vfilter->device, &error);
   if (!fence)
@@ -1219,7 +1220,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (!gst_vulkan_full_screen_quad_set_input_buffer (conv->quad, inbuf, &error))
     goto error;
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->in_info); i++) {
+  in_n_mems = gst_buffer_n_memory (inbuf);
+  for (i = 0; i < in_n_mems; i++) {
     GstMemory *img_mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_image_memory (img_mem)) {
       g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1237,7 +1239,8 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   {
     gboolean need_render_buf = FALSE;
 
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->out_info); i++) {
+    out_n_mems = gst_buffer_n_memory (outbuf);
+    for (i = 0; i < out_n_mems; i++) {
       GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
       if (!gst_is_vulkan_image_memory (mem)) {
         g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1279,7 +1282,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
     if (need_render_buf) {
       render_buf = gst_buffer_new ();
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->out_info); i++) {
+      for (i = 0; i < out_n_mems; i++) {
         gst_buffer_append_memory (render_buf,
             gst_memory_ref ((GstMemory *) render_img_mems[i]));
       }
@@ -1291,7 +1294,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       render_buf = outbuf;
     }
 
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->out_info); i++) {
+    for (i = 0; i < out_n_mems; i++) {
       GstMemory *img_mem = gst_buffer_peek_memory (render_buf, i);
       if (!gst_is_vulkan_image_memory (img_mem)) {
         g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1352,7 +1355,7 @@ gst_vulkan_color_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
           fence, &error))
     goto unlock_error;
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->out_info); i++) {
+  for (i = 0; i < out_n_mems; i++) {
     if (render_img_mems[i] != out_img_mems[i]) {
       VkImageMemoryBarrier out_image_memory_barrier;
       VkImageMemoryBarrier render_image_memory_barrier;

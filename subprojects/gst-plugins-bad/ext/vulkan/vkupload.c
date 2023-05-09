@@ -228,6 +228,8 @@ _raw_to_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
   struct RawToBufferUpload *raw = impl;
   guint out_width, out_height;
   guint i;
+  VkFormat vk_fmts[4] = { VK_FORMAT_UNDEFINED, };
+  int n_imgs;
 
   if (!gst_video_info_from_caps (&raw->in_info, in_caps))
     return FALSE;
@@ -238,14 +240,16 @@ _raw_to_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
   out_width = GST_VIDEO_INFO_WIDTH (&raw->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&raw->out_info);
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
-    GstVulkanImageMemory *img_mem;
-    VkFormat vk_format;
+  if (!gst_vulkan_format_from_video_info_2 (raw->upload->
+          device->physical_device, &raw->out_info, VK_IMAGE_TILING_OPTIMAL,
+          FALSE, vk_fmts, &n_imgs, NULL))
+    return FALSE;
 
-    vk_format = gst_vulkan_format_from_video_info (&raw->out_info, i);
+  for (i = 0; i < n_imgs; i++) {
+    GstVulkanImageMemory *img_mem;
 
     img_mem = (GstVulkanImageMemory *)
-        gst_vulkan_image_memory_alloc (raw->upload->device, vk_format,
+        gst_vulkan_image_memory_alloc (raw->upload->device, vk_fmts[i],
         out_width, out_height, VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
@@ -272,7 +276,7 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   struct RawToBufferUpload *raw = impl;
   GstVideoFrame v_frame;
   GstFlowReturn ret;
-  guint i;
+  guint i, n_mems;
 
   if (!raw->pool) {
     GstStructure *config;
@@ -301,7 +305,8 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     return GST_FLOW_ERROR;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
+  n_mems = gst_buffer_n_memory (*outbuf);
+  for (i = 0; i < n_mems; i++) {
     GstMapInfo map_info;
     gsize plane_size;
     GstMemory *mem;
@@ -440,7 +445,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GError *error = NULL;
   VkResult err;
   GstVulkanCommandBuffer *cmd_buf;
-  guint i;
+  guint i, n_mems;
 
   if (!raw->cmd_pool) {
     if (!(raw->cmd_pool =
@@ -490,7 +495,8 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       goto unlock_error;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
+  n_mems = gst_buffer_n_memory (*outbuf);
+  for (i = 0; i < n_mems; i++) {
     VkBufferImageCopy region;
     GstMemory *in_mem, *out_mem;
     GstVulkanBufferMemory *buf_mem;
@@ -769,7 +775,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GstVulkanCommandBuffer *cmd_buf;
   GError *error = NULL;
   VkResult err;
-  guint i;
+  guint i, n_mems;
 
   if (!raw->cmd_pool) {
     if (!(raw->cmd_pool =
@@ -819,7 +825,8 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       return FALSE;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
+  n_mems = gst_buffer_n_memory (*outbuf);
+  for (i = 0; i < n_mems; i++) {
     VkBufferImageCopy region;
     GstMemory *in_mem, *out_mem;
     GstVulkanBufferMemory *buf_mem;

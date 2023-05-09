@@ -148,7 +148,7 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GError *error = NULL;
   GstFlowReturn ret;
   VkResult err;
-  int i;
+  int i, n_mems;
 
   if (!raw->cmd_pool) {
     if (!(raw->cmd_pool =
@@ -198,7 +198,8 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
       goto unlock_error;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&raw->out_info); i++) {
+  n_mems = gst_buffer_n_memory (*outbuf);
+  for (i = 0; i < n_mems; i++) {
     VkBufferImageCopy region;
     GstMemory *in_mem, *out_mem;
     GstVulkanBufferMemory *buf_mem;

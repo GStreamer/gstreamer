@@ -292,7 +292,7 @@ calculate_reorder_indexes (GstVideoFormat in_format,
 
 static void
 update_descriptor_set (GstVulkanViewConvert * conv,
-    GstVulkanImageView ** in_views)
+    GstVulkanImageView ** in_views, guint n_mems)
 {
   GstVulkanVideoFilter *vfilter = GST_VULKAN_VIDEO_FILTER (conv);
   VkDescriptorImageInfo image_info[GST_VIDEO_MAX_PLANES];
@@ -308,7 +308,7 @@ update_descriptor_set (GstVulkanViewConvert * conv,
     in_flags = GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vfilter->in_info);
   out_flags = GST_VIDEO_INFO_MULTIVIEW_FLAGS (&vfilter->out_info);
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vfilter->in_info); i++) {
+  for (i = 0; i < n_mems; i++) {
     if ((in_flags & GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST) ==
         (out_flags & GST_VIDEO_MULTIVIEW_FLAGS_RIGHT_VIEW_FIRST)) {
       views[2 * i] = in_views[i]->view;
@@ -319,7 +319,7 @@ update_descriptor_set (GstVulkanViewConvert * conv,
     }
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vfilter->in_info) * 2; i++) {
+  for (i = 0; i < n_mems * 2; i++) {
     /* *INDENT-OFF* */
     image_info[i] = (VkDescriptorImageInfo) {
         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
@@ -1778,7 +1778,8 @@ done:
 }
 
 static gboolean
-create_descriptor_set_layout (GstVulkanViewConvert * conv, GError ** error)
+create_descriptor_set_layout (GstVulkanViewConvert * conv, guint n_mems,
+    GError ** error)
 {
   GstVulkanVideoFilter *vfilter = GST_VULKAN_VIDEO_FILTER (conv);
   VkDescriptorSetLayoutBinding bindings[GST_VIDEO_MAX_PLANES * 2 + 1] =
@@ -1797,9 +1798,9 @@ create_descriptor_set_layout (GstVulkanViewConvert * conv, GError ** error)
       .pImmutableSamplers = NULL,
       .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT
   };
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vfilter->in_info) * 2; i++) {
+  for (i = 0; i < n_mems * 2; i++) {
     bindings[descriptor_n++] = (VkDescriptorSetLayoutBinding) {
-      .binding = i+1,
+      .binding = i + 1,
       .descriptorCount = 1,
       .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
       .pImmutableSamplers = NULL,
@@ -1914,6 +1915,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   GstVulkanFence *fence = NULL;
   GError *error = NULL;
   VkResult err;
+  guint in_n_mems, out_n_mems;
   int i;
 
   if (!gst_vulkan_full_screen_quad_set_input_buffer (conv->quad, inbuf, &error))
@@ -1926,7 +1928,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (!fence)
     goto error;
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->in_info); i++) {
+  in_n_mems = gst_buffer_n_memory (inbuf);
+  for (i = 0; i < in_n_mems; i++) {
     GstMemory *img_mem = gst_buffer_peek_memory (inbuf, i);
     if (!gst_is_vulkan_image_memory (img_mem)) {
       g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1940,7 +1943,8 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
             gst_vulkan_trash_mini_object_unref,
             (GstMiniObject *) in_img_views[i]));
   }
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&conv->quad->out_info); i++) {
+  out_n_mems = gst_buffer_n_memory (outbuf);
+  for (i = 0; i < out_n_mems; i++) {
     GstMemory *mem = gst_buffer_peek_memory (outbuf, i);
     if (!gst_is_vulkan_image_memory (mem)) {
       g_set_error_literal (&error, GST_VULKAN_ERROR, GST_VULKAN_FAILED,
@@ -1964,7 +1968,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   }
 
   if (!conv->quad->descriptor_set_layout)
-    if (!create_descriptor_set_layout (conv, &error))
+    if (!create_descriptor_set_layout (conv, in_n_mems, &error))
       goto error;
 
   if (!gst_vulkan_full_screen_quad_prepare_draw (conv->quad, fence, &error))
@@ -1992,7 +1996,7 @@ gst_vulkan_view_convert_transform (GstBaseTransform * bt, GstBuffer * inbuf,
       goto error;
   }
 
-  update_descriptor_set (conv, in_img_views);
+  update_descriptor_set (conv, in_img_views, in_n_mems);
   if (!gst_vulkan_full_screen_quad_fill_command_buffer (conv->quad, cmd_buf,
           fence, &error))
     goto unlock_error;
