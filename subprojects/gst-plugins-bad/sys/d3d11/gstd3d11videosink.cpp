@@ -1228,8 +1228,6 @@ gst_d3d11_video_sink_unlock_stop (GstBaseSink * sink)
   if (self->window)
     gst_d3d11_window_unlock_stop (self->window);
 
-  gst_clear_buffer (&self->prepared_buffer);
-
   return TRUE;
 }
 
@@ -1441,6 +1439,8 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
     ret = GST_FLOW_ERROR;
   }
+
+  gst_clear_buffer (&self->prepared_buffer);
 
   return ret;
 }
