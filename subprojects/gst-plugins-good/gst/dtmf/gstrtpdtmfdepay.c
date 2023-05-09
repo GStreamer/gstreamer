@@ -187,7 +187,7 @@ gst_rtp_dtmf_depay_class_init (GstRtpDTMFDepayClass * klass)
   GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_depay_debug,
       "rtpdtmfdepay", 0, "rtpdtmfdepay element");
   gst_element_class_set_static_metadata (gstelement_class,
-      "RTP DTMF packet depayloader", "Codec/Depayloader/Network",
+      "RTP DTMF packet depayloader", "Codec/Depayloader/Network/RTP",
       "Generates DTMF Sound from telephone-event RTP packets",
       "Youness Alaoui <youness.alaoui@collabora.co.uk>");
 

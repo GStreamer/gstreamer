@@ -5181,7 +5181,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Depayloader/Network",
+                "klass": "Codec/Depayloader/Network/RTP",
                 "long-name": "RTP DTMF packet depayloader",
                 "pad-templates": {
                     "sink": {
