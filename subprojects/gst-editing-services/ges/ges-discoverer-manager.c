@@ -151,7 +151,7 @@ ges_discoverer_manager_class_init (GESDiscovererManagerClass * klass)
    */
   signals[LOAD_SERIALIZED_INFO_SIGNAL] =
       g_signal_new ("load-serialized-info", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_SIGNAL_RUN_LAST,
       0, NULL, NULL, NULL, GST_TYPE_DISCOVERER_INFO, 1, G_TYPE_STRING);
 
   /**
@@ -164,7 +164,7 @@ ges_discoverer_manager_class_init (GESDiscovererManagerClass * klass)
    */
   signals[DISCOVERER_SIGNAL] =
       g_signal_new ("discovered", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_SIGNAL_RUN_LAST,
       0, NULL, NULL, NULL, G_TYPE_NONE, 2, GST_TYPE_DISCOVERER_INFO,
       G_TYPE_ERROR);
 }

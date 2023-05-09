@@ -3202,7 +3202,7 @@ if no track elements are created or an error occurred.</doc>
       <property name="use-cache" writable="1" construct="1" transfer-ownership="none">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <glib:signal name="discovered" when="last" action="1" version="1.24">
+      <glib:signal name="discovered" when="last" version="1.24">
         <attribute name="doc.skip" value="true"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3218,7 +3218,7 @@ if no track elements are created or an error occurred.</doc>
           </parameter>
         </parameters>
       </glib:signal>
-      <glib:signal name="load-serialized-info" when="last" action="1" version="1.24">
+      <glib:signal name="load-serialized-info" when="last" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Retrieves information about a URI from and external source of information,
 like a cache file. This is used by the discoverer to speed up the
 discovery.</doc>
