@@ -840,6 +840,11 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
     GstPad *pad;
     GstQuery *caps_query;
 
+    /* Path caps are never supposed to be NULL. Even if the user
+     * specifies NULL as caps in the path properties, the code in
+     * gst_switch_bin_path_set_property () turns them into ANY caps. */
+    g_assert (path->caps != NULL);
+
     /* We need to check what caps are handled by up/downstream, relative
      * to the switchbin src/sinkcaps. If there is an element, issue a
      * caps query to it to get that information. If there is no element,
@@ -848,7 +853,7 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
 
     if (path->element != NULL) {
       pad = gst_element_get_static_pad (path->element, pad_name);
-      caps_query = gst_query_new_caps (NULL);
+      caps_query = gst_query_new_caps (filter);
 
       query_successful = gst_pad_query (pad, caps_query);
       if (query_successful) {
@@ -865,7 +870,7 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
        * differ between paths, so querying more than once is redundant. */
       if (!peer_caps_queried) {
         pad = is_sink_pad ? switch_bin->srcpad : switch_bin->sinkpad;
-        caps_query = gst_query_new_caps (NULL);
+        caps_query = gst_query_new_caps (filter);
 
         peer_caps_query_successful = gst_pad_peer_query (pad, caps_query);
         if (peer_caps_query_successful) {
