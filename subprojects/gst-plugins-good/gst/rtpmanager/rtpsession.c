@@ -4712,20 +4712,27 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* check if all the buffers are empty after generation */
   all_empty = TRUE;
 
+  /* Make a local copy of the hashtable. We need to do this because the
+   * generate_rtcp stage below releases the session lock. */
+  table_copy = g_hash_table_new_full (NULL, NULL, NULL,
+      (GDestroyNotify) g_object_unref);
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) clone_ssrcs_hashtable, table_copy);
+
   GST_DEBUG
       ("doing RTCP generation %u for %u sources, early %d, may suppress %d",
       sess->generation, data.num_to_report, data.is_early, data.may_suppress);
 
-  /* generate RTCP for all internal sources */
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-      (GHFunc) generate_rtcp, &data);
+  /* generate RTCP for all internal sources, this might release the
+   * session lock. */
+  g_hash_table_foreach (table_copy, (GHFunc) generate_rtcp, &data);
 
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-      (GHFunc) generate_twcc, &data);
+  g_hash_table_foreach (table_copy, (GHFunc) generate_twcc, &data);
 
   /* update the generation for all the sources that have been reported */
-  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
-      (GHFunc) update_generation, &data);
+  g_hash_table_foreach (table_copy, (GHFunc) update_generation, &data);
+
+  g_hash_table_destroy (table_copy);
 
   /* we keep track of the last report time in order to timeout inactive
    * receivers or senders */
