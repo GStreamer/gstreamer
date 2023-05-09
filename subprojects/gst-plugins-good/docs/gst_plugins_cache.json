@@ -5463,7 +5463,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Source/Network",
+                "klass": "Source/Network/RTP",
                 "long-name": "RTP DTMF packet generator",
                 "pad-templates": {
                     "src": {
