@@ -400,12 +400,6 @@ struct _GstVideoDecoderPrivate
   /* collected output - of buffer objects, not frames */
   GList *output_queued;
 
-
-  /* base_picture_number is the picture number of the reference picture */
-  guint64 base_picture_number;
-  /* combine with base_picture_number, framerate and calcs to yield (presentation) ts */
-  GstClockTime base_timestamp;
-
   /* Properties */
   GstClockTime min_force_key_unit_interval;
   gboolean discard_corrupted_frames;
@@ -1570,9 +1564,6 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
         segment.flags |= priv->decode_flags & GST_SEGMENT_INSTANT_FLAGS;
       }
 
-      priv->base_timestamp = GST_CLOCK_TIME_NONE;
-      priv->base_picture_number = 0;
-
       decoder->input_segment = segment;
       decoder->priv->in_out_segment_sync = FALSE;
 
@@ -2378,7 +2369,6 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
     priv->posted_latency_msg = FALSE;
 
     priv->decode_frame_number = 0;
-    priv->base_picture_number = 0;
 
     if (priv->pool) {
       GST_DEBUG_OBJECT (decoder, "deactivate pool %" GST_PTR_FORMAT,
@@ -2396,7 +2386,6 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
 
   priv->discont = TRUE;
 
-  priv->base_timestamp = GST_CLOCK_TIME_NONE;
   priv->last_timestamp_out = GST_CLOCK_TIME_NONE;
   priv->pts_delta = GST_CLOCK_TIME_NONE;
 
@@ -3028,18 +3017,6 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
    * we have a problem :) */
   if (G_UNLIKELY ((frame->output_buffer == NULL) && !dropping))
     goto no_output_buffer;
-
-  if (GST_CLOCK_TIME_IS_VALID (frame->pts)) {
-    if (frame->pts != priv->base_timestamp) {
-      GST_DEBUG_OBJECT (decoder,
-          "sync timestamp %" GST_TIME_FORMAT " diff %" GST_STIME_FORMAT,
-          GST_TIME_ARGS (frame->pts),
-          GST_STIME_ARGS (GST_CLOCK_DIFF (frame->pts,
-                  decoder->output_segment.start)));
-      priv->base_timestamp = frame->pts;
-      priv->base_picture_number = frame->decode_frame_number;
-    }
-  }
 
   if (frame->duration == GST_CLOCK_TIME_NONE) {
     frame->duration = gst_video_decoder_get_frame_duration (decoder, frame);
