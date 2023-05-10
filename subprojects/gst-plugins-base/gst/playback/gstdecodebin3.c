@@ -497,7 +497,7 @@ static DecodebinInput *create_new_input (GstDecodebin3 * dbin, gboolean main);
 static gboolean set_input_group_id (DecodebinInput * input, guint32 * group_id);
 
 static gboolean reconfigure_output_stream (DecodebinOutputStream * output,
-    MultiQueueSlot * slot);
+    MultiQueueSlot * slot, GstMessage ** msg);
 static void free_output_stream (GstDecodebin3 * dbin,
     DecodebinOutputStream * output);
 static DecodebinOutputStream *create_output_stream (GstDecodebin3 * dbin,
@@ -2328,6 +2328,7 @@ static void
 check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
 {
   DecodebinOutputStream *output;
+  GstMessage *msg = NULL;
 
   SELECTION_LOCK (dbin);
   output = get_output_for_slot (slot);
@@ -2336,7 +2337,7 @@ check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     return;
   }
 
-  if (!reconfigure_output_stream (output, slot)) {
+  if (!reconfigure_output_stream (output, slot, &msg)) {
     GST_DEBUG_OBJECT (dbin, "Removing failing stream from selection: %s ",
         gst_stream_get_stream_id (slot->active_stream));
     slot->dbin->requested_selection =
@@ -2344,12 +2345,14 @@ check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
         gst_stream_get_stream_id (slot->active_stream));
     dbin->selection_updated = TRUE;
     SELECTION_UNLOCK (dbin);
-    reassign_slot (dbin, slot);
-  } else {
-    GstMessage *msg = is_selection_done (dbin);
-    SELECTION_UNLOCK (dbin);
     if (msg)
       gst_element_post_message ((GstElement *) slot->dbin, msg);
+    reassign_slot (dbin, slot);
+  } else {
+    GstMessage *selection_msg = is_selection_done (dbin);
+    SELECTION_UNLOCK (dbin);
+    if (selection_msg)
+      gst_element_post_message ((GstElement *) slot->dbin, selection_msg);
   }
 }
 
@@ -2743,7 +2746,7 @@ keyframe_waiter_probe (GstPad * pad, GstPadProbeInfo * info,
  * associated GstStreams should be disabled */
 static gboolean
 reconfigure_output_stream (DecodebinOutputStream * output,
-    MultiQueueSlot * slot)
+    MultiQueueSlot * slot, GstMessage ** msg)
 {
   GstDecodebin3 *dbin = output->dbin;
   GstCaps *new_caps = (GstCaps *) gst_stream_get_caps (slot->active_stream);
@@ -2851,14 +2854,11 @@ reconfigure_output_stream (DecodebinOutputStream * output,
       if (output->decoder == NULL) {
         GstCaps *caps;
 
-        SELECTION_UNLOCK (dbin);
         /* FIXME : Should we be smarter if there's a missing decoder ?
          * Should we deactivate that stream ? */
         caps = gst_stream_get_caps (slot->active_stream);
-        gst_element_post_message (GST_ELEMENT_CAST (dbin),
-            gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
+        *msg = gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps);
         gst_caps_unref (caps);
-        SELECTION_LOCK (dbin);
         ret = FALSE;
         goto cleanup;
       }
