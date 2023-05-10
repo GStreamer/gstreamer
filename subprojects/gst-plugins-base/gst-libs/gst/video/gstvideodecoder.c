@@ -2441,8 +2441,8 @@ gst_video_decoder_chain_forward (GstVideoDecoder * decoder,
 
     frame = priv->current_frame;
 
-    frame->abidata.ABI.num_subframes++;
     if (gst_video_decoder_get_subframe_mode (decoder)) {
+      frame->abidata.ABI.num_subframes++;
       /* End the frame if the marker flag is set */
       if (!GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_MARKER)
           && (decoder->input_segment.rate > 0.0))
@@ -3859,15 +3859,17 @@ gst_video_decoder_have_frame (GstVideoDecoder * decoder)
     priv->current_frame = NULL;
   } else {
     GstVideoCodecFrame *frame = priv->current_frame;
-    frame->abidata.ABI.num_subframes++;
+
     /* In subframe mode, we keep a ref for ourselves
      * as this frame will be kept during the data collection
      * in parsed mode. The frame reference will be released by
      * finish_(sub)frame or drop_(sub)frame.*/
-    if (gst_video_decoder_get_subframe_mode (decoder))
+    if (gst_video_decoder_get_subframe_mode (decoder)) {
+      frame->abidata.ABI.num_subframes++;
       gst_video_codec_frame_ref (priv->current_frame);
-    else
+    } else {
       priv->current_frame = NULL;
+    }
 
     /* Decode the frame, which gives away our ref */
     ret = gst_video_decoder_decode_frame (decoder, frame);
@@ -3955,7 +3957,8 @@ gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
 
   frame->distance_from_sync = priv->distance_from_sync;
 
-  if (frame->abidata.ABI.num_subframes == 1) {
+  if (!gst_video_decoder_get_subframe_mode (decoder)
+      || frame->abidata.ABI.num_subframes == 1) {
     frame->abidata.ABI.ts = frame->dts;
     frame->abidata.ABI.ts2 = frame->pts;
   }
@@ -4992,7 +4995,9 @@ guint
 gst_video_decoder_get_input_subframe_index (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame)
 {
-  return frame->abidata.ABI.num_subframes;
+  if (gst_video_decoder_get_subframe_mode (decoder))
+    return frame->abidata.ABI.num_subframes;
+  return 1;
 }
 
 /**
