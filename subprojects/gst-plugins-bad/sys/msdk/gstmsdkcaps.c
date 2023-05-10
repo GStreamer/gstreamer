@@ -1702,6 +1702,7 @@ gst_msdkcaps_dec_create_static_caps (GstMsdkContext * context,
       gst_caps_from_string
       ("video/x-raw(memory:VAMemory), format=(string){ NV12 }"));
 #else
+  VAR_UNUSED (dma_caps);
   VAR_UNUSED (dma_caps_str);
   VAR_UNUSED (dma_fmts);
   gst_caps_append (out_caps,
