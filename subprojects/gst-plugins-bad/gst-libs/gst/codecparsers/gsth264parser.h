@@ -352,6 +352,37 @@ typedef enum
   GST_H264_CT_TYPE_UNKNOWN = 2,
 } GstCtType;
 
+/**
+ * GstH264Level:
+ *
+ * H.264 level
+ *
+ * Since: 1.24
+ */
+typedef enum
+{
+  GST_H264_LEVEL_L1 = 10,
+  GST_H264_LEVEL_L1B = 9,
+  GST_H264_LEVEL_L1_1 = 11,
+  GST_H264_LEVEL_L1_2 = 12,
+  GST_H264_LEVEL_L1_3 = 13,
+  GST_H264_LEVEL_L2_0 = 20,
+  GST_H264_LEVEL_L2_1 = 21,
+  GST_H264_LEVEL_L2_2 = 22,
+  GST_H264_LEVEL_L3 = 30,
+  GST_H264_LEVEL_L3_1 = 31,
+  GST_H264_LEVEL_L3_2 = 32,
+  GST_H264_LEVEL_L4 = 40,
+  GST_H264_LEVEL_L4_1 = 41,
+  GST_H264_LEVEL_L4_2 = 42,
+  GST_H264_LEVEL_L5 = 50,
+  GST_H264_LEVEL_L5_1 = 51,
+  GST_H264_LEVEL_L5_2 = 52,
+  GST_H264_LEVEL_L6 = 60,
+  GST_H264_LEVEL_L6_1 = 61,
+  GST_H264_LEVEL_L6_2 = 62,
+} GstH264Level;
+
 typedef struct _GstH264NalParser              GstH264NalParser;
 
 typedef struct _GstH264NalUnit                GstH264NalUnit;
