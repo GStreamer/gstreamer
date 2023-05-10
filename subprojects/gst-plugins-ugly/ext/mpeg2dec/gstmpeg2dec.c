@@ -82,7 +82,7 @@ static gboolean gst_mpeg2dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
 
 static void gst_mpeg2dec_clear_buffers (GstMpeg2dec * mpeg2dec);
-static gboolean gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec,
+static GstFlowReturn gst_mpeg2dec_crop_buffer (GstMpeg2dec * dec,
     GstVideoCodecFrame * in_frame, GstVideoFrame * in_vframe);
 
 static void
