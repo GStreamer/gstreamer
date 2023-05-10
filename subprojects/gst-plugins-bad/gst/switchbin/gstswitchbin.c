@@ -512,37 +512,20 @@ gst_switch_bin_handle_query (GstPad * pad, GstObject * parent, GstQuery * query,
 
       gst_query_parse_caps (query, &filter);
 
+      GST_DEBUG_OBJECT (switch_bin, "new caps query; filter: %" GST_PTR_FORMAT,
+          filter);
+
       PATH_LOCK (switch_bin);
 
       if (switch_bin->num_paths == 0) {
-        /* No paths exist - cannot return any caps */
+        GST_DEBUG_OBJECT (switch_bin, "no paths exist; "
+            "cannot return any caps to query");
         caps = NULL;
-      } else if ((switch_bin->current_path == NULL)
-          || (switch_bin->current_path->element == NULL)) {
-        /* Paths exist, but there is no current path (or the path currently
-         * does not have an element) - just return all allowed caps */
+      } else {
+        GST_DEBUG_OBJECT (switch_bin, "returning all allowed caps to query");
         caps =
             gst_switch_bin_get_allowed_caps (switch_bin, pad, pad_name, filter);
-      } else {
-        /* Paths exist and there is a current path
-         * Forward the query to its element */
-
-        GstQuery *caps_query = gst_query_new_caps (NULL);
-        GstPad *element_pad =
-            gst_element_get_static_pad (switch_bin->current_path->element,
-            pad_name);
-
-        caps = NULL;
-        if (gst_pad_query (element_pad, caps_query)) {
-          GstCaps *query_caps;
-          gst_query_parse_caps_result (caps_query, &query_caps);
-          caps = gst_caps_copy (query_caps);
-        }
-
-        gst_query_unref (caps_query);
-        gst_object_unref (GST_OBJECT (element_pad));
       }
-
 
       PATH_UNLOCK (switch_bin);
 
