@@ -26,7 +26,7 @@
  *
  * ## Examples
  * ```
- * gst-launch-1.0 videotestsrc ! vulkanupload ! vulkanshader fragment-location="myshader.f.spv" ! vulkanimagesink
+ * gst-launch-1.0 videotestsrc ! vulkanupload ! vulkanshaderspv fragment-location="myshader.f.spv" ! vulkansink
  * ```
  * The following is a simple Vulkan passthrough shader with the required inputs.
  * Compile it with `glslc --target-env=vulkan1.0 myshader.frag -o myshader.f.spv`.
