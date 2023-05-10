@@ -69,9 +69,6 @@ struct _GstOSXImage;
 - (void) addToSuperview: (NSView *)superview;
 - (void) removeFromSuperview: (id)unused;
 - (void) setNavigation: (GstNavigation *) nav;
-#ifndef GSTREAMER_GLIB_COCOA_NSAPPLICATION
-- (void) setMainThread: (NSThread *) thread;
-#endif
 
 @end
 
