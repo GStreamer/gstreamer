@@ -811,6 +811,9 @@ new_session_pad (GstElement * session, GstPad * pad, GstSDPDemux * demux)
   if (stream == NULL)
     goto unknown_stream;
 
+  if (stream->srcpad)
+    goto unexpected_pad;
+
   stream->ssrc = ssrc;
 
   /* no need for a timeout anymore now */
@@ -851,6 +854,13 @@ new_session_pad (GstElement * session, GstPad * pad, GstSDPDemux * demux)
   return;
 
   /* ERRORS */
+unexpected_pad:
+  {
+    GST_DEBUG_OBJECT (demux, "ignoring unexpected session pad");
+    GST_SDP_STREAM_UNLOCK (demux);
+    g_free (name);
+    return;
+  }
 unknown_stream:
   {
     GST_DEBUG_OBJECT (demux, "ignoring unknown stream");
