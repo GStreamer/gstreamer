@@ -236,6 +236,8 @@ gst_gl_window_cocoa_create_window (GstGLWindowCocoa *window_cocoa)
     gst_gl_window_cocoa_set_window_handle (window,
         (guintptr) priv->external_view);
 
+  [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+
   return TRUE;
 }
 
