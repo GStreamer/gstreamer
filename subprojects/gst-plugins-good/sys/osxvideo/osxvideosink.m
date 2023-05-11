@@ -84,7 +84,6 @@ static void
 gst_osx_video_sink_call_from_main_thread(GstOSXVideoSink *osxvideosink,
     NSObject * object, SEL function, NSObject *data, BOOL waitUntilDone)
 {
-
   NSThread *thread;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -139,15 +138,19 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
      * from the main thread
      */
     GST_INFO_OBJECT (osxvideosink, "we have a superview, adding our view to it");
-    gst_osx_video_sink_call_from_main_thread(osxvideosink, osxwindow->gstview,
+    gst_osx_video_sink_call_from_main_thread (osxvideosink, osxwindow->gstview,
         @selector(addToSuperview:), osxvideosink->superview, NO);
 
   } else {
-    gst_osx_video_sink_call_from_main_thread(osxvideosink,
+    gst_osx_video_sink_call_from_main_thread (osxvideosink,
       osxvideosink->osxvideosinkobject,
       @selector(createInternalWindow), nil, YES);
     GST_INFO_OBJECT (osxvideosink, "No superview, creating an internal window.");
   }
+
+  gst_osx_video_sink_call_from_main_thread (osxvideosink, osxvideosink->osxvideosinkobject,
+    @selector(setActivationPolicy), nil, YES);
+
   [osxwindow->gstview setNavigation: GST_NAVIGATION(osxvideosink)];
   [osxvideosink->osxwindow->gstview setKeepAspectRatio: osxvideosink->keep_par];
 
@@ -164,7 +167,7 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink)
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
   pool = [[NSAutoreleasePool alloc] init];
 
-  gst_osx_video_sink_call_from_main_thread(osxvideosink,
+  gst_osx_video_sink_call_from_main_thread (osxvideosink,
       osxvideosink->osxvideosinkobject,
       @selector(destroy), (id) nil, YES);
   [pool release];
@@ -292,7 +295,7 @@ gst_osx_video_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_DEBUG ("show_frame");
   bufferobject = [[GstBufferObject alloc] initWithBuffer:buf];
-  gst_osx_video_sink_call_from_main_thread(osxvideosink,
+  gst_osx_video_sink_call_from_main_thread (osxvideosink,
       osxvideosink->osxvideosinkobject,
       @selector(showFrame:), bufferobject, NO);
   [pool release];
@@ -521,7 +524,7 @@ gst_osx_video_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle
   GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (overlay);
   NSView *view = (NSView *) handle_id;
 
-  gst_osx_video_sink_call_from_main_thread(osxvideosink,
+  gst_osx_video_sink_call_from_main_thread (osxvideosink,
       osxvideosink->osxvideosinkobject,
       @selector(setView:), view, YES);
 }
@@ -604,7 +607,7 @@ gst_osx_video_sink_get_type (void)
   if (!osxvideosink->osxwindow->closed) {
     osxvideosink->osxwindow->closed = TRUE;
     GST_ELEMENT_ERROR (osxvideosink, RESOURCE, NOT_FOUND, ("Output window was closed"), (NULL));
-    gst_osx_video_sink_osxwindow_destroy(osxvideosink);
+    gst_osx_video_sink_osxwindow_destroy (osxvideosink);
   }
 }
 
@@ -657,6 +660,11 @@ gst_osx_video_sink_get_type (void)
   [osxwindow->win setDelegate:[[GstWindowDelegate alloc]
       initWithSink:osxvideosink]];
 
+}
+
+- (void) setActivationPolicy
+{
+  [NSApp setActivationPolicy: NSApplicationActivationPolicyRegular];
 }
 
 - (void) setView: (NSView*)view
@@ -814,7 +822,6 @@ no_texture_buffer:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
   if (!gst_element_register (plugin, "osxvideosink",
           GST_RANK_MARGINAL, GST_TYPE_OSX_VIDEO_SINK))
     return FALSE;
