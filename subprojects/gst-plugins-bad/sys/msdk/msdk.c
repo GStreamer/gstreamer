@@ -354,6 +354,7 @@ msdk_init_msdk_session (mfxIMPL impl, mfxVersion * pver,
 
   msdk_session->session = session;
   msdk_session->loader = NULL;
+  msdk_session->impl_idx = 0;
 
   return MFX_ERR_NONE;
 }
@@ -403,6 +404,7 @@ msdk_open_session (mfxIMPL impl)
 
   msdk_session.session = NULL;
   msdk_session.loader = NULL;
+  msdk_session.impl_idx = 0;
   status = msdk_init_msdk_session (impl, &version, &msdk_session);
 
   if (status != MFX_ERR_NONE)
@@ -433,6 +435,7 @@ failed:
   msdk_close_session (&msdk_session);
   msdk_session.session = NULL;
   msdk_session.loader = NULL;
+  msdk_session.impl_idx = 0;
   return msdk_session;
 }
 
