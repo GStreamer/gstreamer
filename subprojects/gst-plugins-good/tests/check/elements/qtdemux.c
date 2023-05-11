@@ -26,8 +26,10 @@
 #include <glib/gstdio.h>
 #include <glib/gprintf.h>
 
+#include <gio/gio.h>
+
 #include <gst/check/check.h>
-#include <gst/app/gstappsink.h>
+#include <gst/app/app.h>
 #include <gst/audio/audio.h>
 
 #define TEST_FILE_PREFIX GST_TEST_FILES_PATH G_DIR_SEPARATOR_S
@@ -1614,6 +1616,127 @@ GST_START_TEST (test_qtdemux_gapless_nero_data_without_itunsmpb)
 
 GST_END_TEST;
 
+GST_START_TEST (test_qtdemux_editlist)
+{
+  const gsize editlist_mp4_size = 5322593;
+  guint8 *editlist_mp4 = NULL;
+  GstElement *src, *sink, *pipe;
+  GstSample *sample;
+  guint frame_count = 0;
+
+  {
+    GZlibDecompressor *decompress;
+    GConverterResult decomp_res;
+    gsize bytes_read, gz_size, mp4_size;
+    guint8 *gz_gz = NULL;
+    guint8 gz[8705];
+
+    /* read .mp4.gz.gz */
+    g_assert (load_file (TEST_FILE_PREFIX "editlists.mp4.gz.gz", &gz_gz, 3597));
+
+    /* mp4.gz.gz -> mp4.gz */
+    decompress = g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP);
+    decomp_res = g_converter_convert (G_CONVERTER (decompress), gz_gz, 3597,
+        gz, 8705, G_CONVERTER_INPUT_AT_END, &bytes_read, &gz_size, NULL);
+    fail_unless_equals_int (decomp_res, G_CONVERTER_FINISHED);
+    fail_unless_equals_int (bytes_read, 3597);
+    fail_unless_equals_int (gz_size, 8705);
+    g_object_unref (decompress);
+    g_clear_pointer (&gz_gz, (GDestroyNotify) g_free);
+
+    editlist_mp4 = g_malloc0 (editlist_mp4_size);
+
+    /* mp4.gz -> mp4 */
+    decompress = g_zlib_decompressor_new (G_ZLIB_COMPRESSOR_FORMAT_GZIP);
+    decomp_res = g_converter_convert (G_CONVERTER (decompress), gz, 8705,
+        editlist_mp4, editlist_mp4_size, G_CONVERTER_INPUT_AT_END, &bytes_read,
+        &mp4_size, NULL);
+    fail_unless_equals_int (decomp_res, G_CONVERTER_FINISHED);
+    fail_unless_equals_int (bytes_read, 8705);
+    fail_unless_equals_int (mp4_size, editlist_mp4_size);
+    g_object_unref (decompress);
+  }
+
+  fail_unless_equals_int (editlist_mp4[28 + 4], 'm');
+  fail_unless_equals_int (editlist_mp4[28 + 5], 'd');
+  fail_unless_equals_int (editlist_mp4[28 + 6], 'a');
+  fail_unless_equals_int (editlist_mp4[28 + 7], 't');
+
+  pipe = gst_parse_launch ("dataurisrc name=src ! qtdemux name=d "
+      "d.video_0 ! appsink name=sink", NULL);
+
+  fail_unless (pipe != NULL);
+
+  src = gst_bin_get_by_name (GST_BIN (pipe), "src");
+  fail_unless (src != NULL);
+
+  sink = gst_bin_get_by_name (GST_BIN (pipe), "sink");
+  fail_unless (sink != NULL);
+
+  /* Convert to data: URI so we can use dataurisrc. Bit silly of course,
+   * should have a memsrc or somesuch, but does the job for now */
+  {
+    gsize s_alloc_len = 32 + (editlist_mp4_size / 3 + 1) * 4 + 4;
+    gchar *s = g_malloc0 (s_alloc_len);
+    gsize s_len = 0;
+    gsize base64_size;
+    gint state = 0;
+    gint save = 0;
+
+    s_len = g_strlcat (s, "data:video/quicktime;base64,", s_alloc_len);
+
+    base64_size =
+        g_base64_encode_step (editlist_mp4, editlist_mp4_size, FALSE, s + s_len,
+        &state, &save);
+    s_len += base64_size;
+    base64_size = g_base64_encode_close (FALSE, s + s_len, &state, &save);
+    s_len += base64_size;
+    g_clear_pointer (&editlist_mp4, (GDestroyNotify) g_free);
+
+    {
+      GValue v = G_VALUE_INIT;
+
+      /* Avoids at least one of the two string copies */
+      g_value_init (&v, G_TYPE_STRING);
+      g_value_take_string (&v, s);
+      g_object_set_property (G_OBJECT (src), "uri", &v);
+      g_value_reset (&v);
+    }
+  }
+
+  g_object_set (sink, "sync", FALSE, NULL);
+
+  gst_element_set_state (pipe, GST_STATE_PLAYING);
+
+  /* wait for preroll */
+  {
+    GstMessage *msg;
+
+    GST_LOG ("waiting for preroll");
+    msg =
+        gst_bus_timed_pop_filtered (GST_ELEMENT_BUS (pipe), -1,
+        GST_MESSAGE_ASYNC_DONE);
+
+    gst_message_unref (msg);
+  }
+
+  /* pull video frames out of qtdemux */
+  while ((sample = gst_app_sink_pull_sample (GST_APP_SINK (sink)))) {
+    ++frame_count;
+    gst_sample_unref (sample);
+  }
+
+  fail_unless_equals_int (frame_count, 361);
+
+  gst_element_set_state (pipe, GST_STATE_NULL);
+
+  gst_clear_object (&src);
+  gst_clear_object (&sink);
+  gst_clear_object (&pipe);
+}
+
+GST_END_TEST;
+
 static Suite *
 qtdemux_suite (void)
 {
@@ -1632,6 +1755,7 @@ qtdemux_suite (void)
   tcase_add_test (tc_chain, test_qtdemux_gapless_itunes_data);
   tcase_add_test (tc_chain, test_qtdemux_gapless_nero_data_with_itunsmpb);
   tcase_add_test (tc_chain, test_qtdemux_gapless_nero_data_without_itunsmpb);
+  tcase_add_test (tc_chain, test_qtdemux_editlist);
 
   return s;
 }
