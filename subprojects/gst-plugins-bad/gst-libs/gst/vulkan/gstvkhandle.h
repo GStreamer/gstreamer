@@ -86,6 +86,8 @@ typedef void (*GstVulkanHandleDestroyNotify) (GstVulkanHandle * handle, gpointer
  * @GST_VULKAN_HANDLE_TYPE_FRAMEBUFFER: framebuffer
  * @GST_VULKAN_HANDLE_TYPE_SHADER: shader
  * @GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION: video session
+ * @GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS: video session parameters
+ * @GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION: sampler with YCBCR conversion
  *
  * Since: 1.18
  */
@@ -106,6 +108,22 @@ typedef enum
    * Since: 1.24
    */
   GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION                  = 8,
+  /**
+   * GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS:
+   *
+   * video session parameters
+   *
+   * Since: 1.24
+   */
+  GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS       = 9,
+  /**
+   * GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION:
+   *
+   * sampler with YCBCR conversion
+   *
+   * Since: 1.24
+   */
+  GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION      = 10,
 } GstVulkanHandleType;
 
 /**

@@ -119,6 +119,12 @@ typedef struct _GstVulkanOperation GstVulkanOperation;
 typedef struct _GstVulkanOperationClass GstVulkanOperationClass;
 typedef struct _GstVulkanOperationPrivate GstVulkanOperationPrivate;
 
+typedef struct _GstVulkanDecoder GstVulkanDecoder;
+typedef struct _GstVulkanDecoderClass GstVulkanDecoderClass;
+typedef struct _GstVulkanDecoderPrivate GstVulkanDecoderPrivate;
+typedef union _GstVulkanDecoderParameters GstVulkanDecoderParameters;
+typedef struct _GstVulkanDecoderPicture GstVulkanDecoderPicture;
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_FWD_H__ */
