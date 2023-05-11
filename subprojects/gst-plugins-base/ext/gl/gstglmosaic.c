@@ -137,6 +137,7 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
 
   GST_GL_BASE_MIXER_CLASS (klass)->gl_stop = gst_gl_mosaic_gl_stop;
   GST_GL_MIXER_CLASS (klass)->process_textures = gst_gl_mosaic_process_textures;
+  gst_gl_mixer_class_add_rgba_pad_templates (GST_GL_MIXER_CLASS (klass));
 }
 
 static void

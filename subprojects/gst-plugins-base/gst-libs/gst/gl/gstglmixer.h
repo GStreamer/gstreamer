@@ -102,6 +102,9 @@ GST_GL_API
 GType gst_gl_mixer_get_type(void);
 
 GST_GL_API
+void gst_gl_mixer_class_add_rgba_pad_templates (GstGLMixerClass * klass);
+
+GST_GL_API
 gboolean gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf);
 
 GST_GL_API

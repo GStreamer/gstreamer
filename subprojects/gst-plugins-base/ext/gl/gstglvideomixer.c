@@ -1303,6 +1303,7 @@ gst_gl_video_mixer_class_init (GstGLVideoMixerClass * klass)
       "Filter/Effect/Video/Compositor", "OpenGL video_mixer",
       "Matthew Waters <matthew@centricular.com>");
 
+  gst_gl_mixer_class_add_rgba_pad_templates (GST_GL_MIXER_CLASS (klass));
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &sink_factory, GST_TYPE_GL_VIDEO_MIXER_PAD);
 

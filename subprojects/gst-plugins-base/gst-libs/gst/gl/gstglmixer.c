@@ -413,11 +413,31 @@ static void gst_gl_mixer_gl_stop (GstGLBaseMixer * mix);
 
 static void gst_gl_mixer_finalize (GObject * object);
 
+/**
+ * gst_gl_mixer_class_add_rgba_pad_templates:
+ * @klass: the #GstGLMixerClass
+ *
+ * Adds the default RGBA pad templates to this class.  If you have any special
+ * template requirements like a different pad subclass or different supported
+ * caps, you should not call this function and add the pad templates yourself
+ * manually.
+ *
+ * Since: 1.24
+ */
+void
+gst_gl_mixer_class_add_rgba_pad_templates (GstGLMixerClass * klass)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  gst_element_class_add_static_pad_template_with_gtype (element_class,
+      &src_factory, GST_TYPE_AGGREGATOR_PAD);
+  gst_element_class_add_static_pad_template_with_gtype (element_class,
+      &sink_factory, GST_TYPE_GL_MIXER_PAD);
+}
+
 static void
 gst_gl_mixer_class_init (GstGLMixerClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstVideoAggregatorClass *videoaggregator_class =
       (GstVideoAggregatorClass *) klass;
   GstAggregatorClass *agg_class = (GstAggregatorClass *) klass;
@@ -429,11 +449,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
 
   gobject_class->get_property = gst_gl_mixer_get_property;
   gobject_class->set_property = gst_gl_mixer_set_property;
-
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &src_factory, GST_TYPE_AGGREGATOR_PAD);
-  gst_element_class_add_static_pad_template_with_gtype (element_class,
-      &sink_factory, GST_TYPE_GL_MIXER_PAD);
 
   agg_class->sink_query = gst_gl_mixer_sink_query;
   agg_class->src_query = gst_gl_mixer_src_query;
