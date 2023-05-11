@@ -1172,7 +1172,12 @@ gst_rtsp_media_set_shared (GstRTSPMedia * media, gboolean shared)
  * gst_rtsp_media_is_shared:
  * @media: a #GstRTSPMedia
  *
- * Check if the pipeline for @media can be shared between multiple clients.
+ * Check if the pipeline for @media can be shared between multiple clients in
+ * theory. This simply returns the value set via gst_rtsp_media_set_shared().
+ *
+ * To know if a media can be shared in practice, i.e. if it's shareable and
+ * either reusable or was never unprepared before, use
+ * gst_rtsp_media_can_be_shared().
  *
  * Returns: %TRUE if the media can be shared between clients.
  */
@@ -1192,6 +1197,39 @@ gst_rtsp_media_is_shared (GstRTSPMedia * media)
 
   return res;
 }
+
+/**
+ * gst_rtsp_media_can_be_shared:
+ * @media: a #GstRTSPMedia
+ *
+ * Check if the pipeline for @media can be shared between multiple clients.
+ *
+ * This checks if the media is shareable and whether it is either reusable or
+ * was never unprepared before.
+ *
+ * The function must be called with gst_rtsp_media_lock().
+ *
+ * Returns: %TRUE if the media can be shared between clients.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_rtsp_media_can_be_shared (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->shared && (priv->reusable || !priv->reused);
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
 
 /**
  * gst_rtsp_media_set_reusable:

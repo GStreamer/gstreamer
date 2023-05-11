@@ -97,6 +97,7 @@ GST_START_TEST (test_setup_url)
   gst_rtsp_url_free (setup_url);
   gst_rtsp_url_free (url);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (sm);
 
   g_object_unref (factory);
@@ -161,6 +162,7 @@ GST_START_TEST (test_rtsp_state)
 
   gst_rtsp_url_free (url);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (sm);
 
   g_object_unref (factory);
@@ -231,6 +233,7 @@ GST_START_TEST (test_transports)
 
   gst_rtsp_url_free (url);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (sm);
 
   g_object_unref (factory);
@@ -317,6 +320,7 @@ GST_START_TEST (test_time_and_rtpinfo)
   gst_rtsp_url_free (setup_url);
   gst_rtsp_url_free (url);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (sm);
 
   g_object_unref (factory);
@@ -372,6 +376,7 @@ GST_START_TEST (test_allocate_channels)
 
   gst_rtsp_url_free (url);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (sm);
 
   g_object_unref (factory);

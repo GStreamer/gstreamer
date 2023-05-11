@@ -3562,6 +3562,25 @@ when the media was not in the suspended state.</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <method name="can_be_shared" c:identifier="gst_rtsp_media_can_be_shared" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media can be shared between multiple clients.
+
+This checks if the media is shareable and whether it is either reusable or
+was never unprepared before.
+
+The function must be called with gst_rtsp_media_lock().</doc>
+        <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">%TRUE if the media can be shared between clients.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="media" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">a #GstRTSPMedia</doc>
+            <type name="RTSPMedia" c:type="GstRTSPMedia*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="collect_streams" c:identifier="gst_rtsp_media_collect_streams">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Find all payloader elements, they should be named pay\%d in the
 element of @media, and create #GstRTSPStreams for them.
@@ -4093,7 +4112,12 @@ unpreparing.</doc>
         </parameters>
       </method>
       <method name="is_shared" c:identifier="gst_rtsp_media_is_shared">
-        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media can be shared between multiple clients.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media can be shared between multiple clients in
+theory. This simply returns the value set via gst_rtsp_media_set_shared().
+
+To know if a media can be shared in practice, i.e. if it's shareable and
+either reusable or was never unprepared before, use
+gst_rtsp_media_can_be_shared().</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">%TRUE if the media can be shared between clients.</doc>
@@ -5281,7 +5305,9 @@ One or more GstRTSPStream objects should be created from the result
 with gst_rtsp_media_create_stream ().
 
 After the media is constructed, it can be configured and then prepared
-with gst_rtsp_media_prepare ().</doc>
+with gst_rtsp_media_prepare ().
+
+The returned media will be locked and must be unlocked afterwards.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">a new #GstRTSPMedia if the media could be prepared.</doc>
@@ -5430,7 +5456,9 @@ One or more GstRTSPStream objects should be created from the result
 with gst_rtsp_media_create_stream ().
 
 After the media is constructed, it can be configured and then prepared
-with gst_rtsp_media_prepare ().</doc>
+with gst_rtsp_media_prepare ().
+
+The returned media will be locked and must be unlocked afterwards.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">a new #GstRTSPMedia if the media could be prepared.</doc>

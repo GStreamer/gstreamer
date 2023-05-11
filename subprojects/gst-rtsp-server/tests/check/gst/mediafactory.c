@@ -81,10 +81,12 @@ GST_START_TEST (test_launch_construct)
 
   media = gst_rtsp_media_factory_construct (factory, url);
   fail_unless (GST_IS_RTSP_MEDIA (media));
+  gst_rtsp_media_unlock (media);
 
   media2 = gst_rtsp_media_factory_construct (factory, url);
   fail_unless (GST_IS_RTSP_MEDIA (media2));
   fail_if (media == media2);
+  gst_rtsp_media_unlock (media2);
 
   g_object_unref (media);
   g_object_unref (media2);
@@ -119,10 +121,12 @@ GST_START_TEST (test_shared)
 
   media = gst_rtsp_media_factory_construct (factory, url);
   fail_unless (GST_IS_RTSP_MEDIA (media));
+  gst_rtsp_media_unlock (media);
 
   media2 = gst_rtsp_media_factory_construct (factory, url);
   fail_unless (GST_IS_RTSP_MEDIA (media2));
   fail_unless (media == media2);
+  gst_rtsp_media_unlock (media2);
 
   g_object_unref (media);
   g_object_unref (media2);
@@ -200,7 +204,7 @@ GST_START_TEST (test_addresspool)
   addr = gst_rtsp_stream_get_multicast_address (stream, G_SOCKET_FAMILY_IPV4);
   fail_unless (addr == NULL);
 
-
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   g_object_unref (pool);
@@ -272,6 +276,7 @@ GST_START_TEST (test_permissions)
   fail_if (gst_rtsp_permissions_is_allowed (perms, "missing",
           "media.factory.access"));
   gst_rtsp_permissions_unref (perms);
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_url_free (url);
@@ -297,6 +302,7 @@ GST_START_TEST (test_reset)
   fail_unless (GST_IS_RTSP_MEDIA (media));
   fail_if (gst_rtsp_media_get_suspend_mode (media) !=
       GST_RTSP_SUSPEND_MODE_NONE);
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_media_factory_set_suspend_mode (factory,
@@ -306,6 +312,7 @@ GST_START_TEST (test_reset)
   fail_unless (GST_IS_RTSP_MEDIA (media));
   fail_if (gst_rtsp_media_get_suspend_mode (media) !=
       GST_RTSP_SUSPEND_MODE_RESET);
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_url_free (url);
@@ -363,6 +370,7 @@ GST_START_TEST (test_mcast_ttl)
   fail_unless (stream != NULL);
   fail_unless (gst_rtsp_stream_get_max_mcast_ttl (stream) == 3);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_url_free (url);
@@ -413,6 +421,7 @@ GST_START_TEST (test_allow_bind_mcast)
   fail_unless (stream != NULL);
   fail_unless (gst_rtsp_stream_is_bind_mcast_address (stream) == TRUE);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);

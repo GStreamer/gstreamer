@@ -128,6 +128,7 @@ GST_START_TEST (test_media_seek)
   gst_rtsp_range_free (range);
 
   fail_unless (gst_rtsp_media_unprepare (media));
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_url_free (url);
@@ -210,6 +211,7 @@ media_playback_seek_one_active_stream (const gchar * launch_line)
   g_free (range_str);
 
   fail_unless (gst_rtsp_media_unprepare (media));
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_url_free (url);
@@ -307,6 +309,7 @@ GST_START_TEST (test_media_seek_no_sinks)
   fail_if (gst_rtsp_media_seek (media, range));
 
   gst_rtsp_range_free (range);
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_url_free (url);
@@ -385,6 +388,7 @@ test_prepare_reusable (const gchar * launch_line, gboolean is_live)
   fail_unless (media_has_sdp (media));
   fail_unless (gst_rtsp_media_unprepare (media));
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);
@@ -439,6 +443,7 @@ GST_START_TEST (test_media_prepare)
       GST_RTSP_THREAD_TYPE_MEDIA, NULL);
   fail_if (gst_rtsp_media_prepare (media, thread));
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);
@@ -606,6 +611,7 @@ GST_START_TEST (test_media_shared_race_test_unsuspend_vs_set_state_null)
   g_cond_clear (&sync_cond);
   g_mutex_clear (&sync_mutex);
   fail_unless (gst_rtsp_media_unprepare (media));
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);
@@ -727,6 +733,7 @@ GST_START_TEST (test_media_take_pipeline)
   pipeline = gst_pipeline_new ("media-pipeline");
   gst_rtsp_media_take_pipeline (media, GST_PIPELINE_CAST (pipeline));
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);
@@ -761,6 +768,7 @@ GST_START_TEST (test_media_reset)
   fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_suspend (media));
   fail_unless (gst_rtsp_media_unprepare (media));
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   media = gst_rtsp_media_factory_construct (factory, url);
@@ -774,6 +782,7 @@ GST_START_TEST (test_media_reset)
   fail_unless_equals_int64 (gst_rtsp_media_seekable (media), G_MAXINT64);
   fail_unless (gst_rtsp_media_suspend (media));
   fail_unless (gst_rtsp_media_unprepare (media));
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
 
   gst_rtsp_url_free (url);
@@ -914,6 +923,7 @@ GST_START_TEST (test_media_pipeline_error)
   ck_assert (!gst_rtsp_media_prepare (media, thread));
   ck_assert_uint_eq (handled_messages, 1);
 
+  gst_rtsp_media_unlock (media);
   g_object_unref (media);
   gst_rtsp_url_free (url);
   g_object_unref (factory);

@@ -1375,6 +1375,8 @@ weak_ref_free (GWeakRef * ref)
  * After the media is constructed, it can be configured and then prepared
  * with gst_rtsp_media_prepare ().
  *
+ * The returned media will be locked and must be unlocked afterwards.
+ *
  * Returns: (transfer full) (nullable): a new #GstRTSPMedia if the media could be prepared.
  */
 GstRTSPMedia *
@@ -1403,45 +1405,65 @@ gst_rtsp_media_factory_construct (GstRTSPMediaFactory * factory,
   if (key) {
     /* we have a key, see if we find a cached media */
     media = g_hash_table_lookup (priv->medias, key);
-    if (media)
-      g_object_ref (media);
-  } else
-    media = NULL;
-
-  if (media == NULL) {
-    /* nothing cached found, try to create one */
-    if (klass->construct) {
-      media = klass->construct (factory, url);
-      if (media)
-        g_signal_emit (factory,
-            gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED], 0, media,
-            NULL);
-    } else
-      media = NULL;
-
     if (media) {
-      /* configure the media */
-      if (klass->configure)
-        klass->configure (factory, media);
+      g_object_ref (media);
+      g_mutex_unlock (&priv->medias_lock);
 
+      /* now need to check if the media is curently in the process of being
+       * unprepared. That always happens while the lock is taken, so take it
+       * here now and then check if we can really use the media */
+      gst_rtsp_media_lock (media);
+      if (!gst_rtsp_media_can_be_shared (media)) {
+        gst_rtsp_media_unlock (media);
+        g_object_unref (media);
+        media = NULL;
+      }
+
+      if (media) {
+        if (key)
+          g_free (key);
+
+        GST_INFO ("reusing cached media %p for url %s", media, url->abspath);
+
+        return media;
+      }
+
+      g_mutex_lock (&priv->medias_lock);
+    }
+  }
+
+  /* nothing cached found, try to create one */
+  if (klass->construct) {
+    media = klass->construct (factory, url);
+    if (media)
       g_signal_emit (factory,
-          gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONFIGURE], 0, media,
+          gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONSTRUCTED], 0, media,
           NULL);
+  }
 
-      /* check if we can cache this media */
-      if (gst_rtsp_media_is_shared (media) && key) {
-        /* insert in the hashtable, takes ownership of the key */
-        g_object_ref (media);
-        g_hash_table_insert (priv->medias, key, media);
-        key = NULL;
-      }
-      if (!gst_rtsp_media_is_reusable (media)) {
-        /* when not reusable, connect to the unprepare signal to remove the item
-         * from our cache when it gets unprepared */
-        g_signal_connect_data (media, "unprepared",
-            (GCallback) media_unprepared, weak_ref_new (factory),
-            (GClosureNotify) weak_ref_free, 0);
-      }
+  if (media) {
+    gst_rtsp_media_lock (media);
+
+    /* configure the media */
+    if (klass->configure)
+      klass->configure (factory, media);
+
+    g_signal_emit (factory,
+        gst_rtsp_media_factory_signals[SIGNAL_MEDIA_CONFIGURE], 0, media, NULL);
+
+    /* check if we can cache this media */
+    if (gst_rtsp_media_is_shared (media) && key) {
+      /* insert in the hashtable, takes ownership of the key */
+      g_object_ref (media);
+      g_hash_table_insert (priv->medias, key, media);
+      key = NULL;
+    }
+    if (!gst_rtsp_media_is_reusable (media)) {
+      /* when not reusable, connect to the unprepare signal to remove the item
+       * from our cache when it gets unprepared */
+      g_signal_connect_data (media, "unprepared",
+          (GCallback) media_unprepared, weak_ref_new (factory),
+          (GClosureNotify) weak_ref_free, 0);
     }
   }
   g_mutex_unlock (&priv->medias_lock);

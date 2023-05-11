@@ -222,6 +222,9 @@ GST_RTSP_SERVER_API
 gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);
 
 GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_can_be_shared    (GstRTSPMedia *media);
+
+GST_RTSP_SERVER_API
 void                  gst_rtsp_media_set_stop_on_disconnect (GstRTSPMedia *media, gboolean stop_on_disconnect);
 
 GST_RTSP_SERVER_API
