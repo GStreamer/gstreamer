@@ -845,7 +845,7 @@ test_webrtc_wait_for_ice_gathering_complete (struct test_webrtc *t)
   g_mutex_lock (&t->lock);
   g_object_get (t->webrtc1, "ice-gathering-state", &ice_state1, NULL);
   g_object_get (t->webrtc2, "ice-gathering-state", &ice_state2, NULL);
-  while (ice_state1 != GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE &&
+  while (ice_state1 != GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE ||
       ice_state2 != GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE) {
     g_cond_wait (&t->cond, &t->lock);
     g_object_get (t->webrtc1, "ice-gathering-state", &ice_state1, NULL);
@@ -1210,6 +1210,9 @@ _check_ice_port_restriction (struct test_webrtc *t, GstElement * element,
   gchar *candidate_typ;
   guint port_as_int;
   guint peer_number;
+
+  if (!candidate || candidate[0] == '\0')
+    return;
 
   regex =
       g_regex_new ("candidate:(\\d+) (1) (UDP|TCP) (\\d+) ([0-9.]+|[0-9a-f:]+)"
@@ -5708,6 +5711,61 @@ GST_START_TEST (test_msid)
 
 GST_END_TEST;
 
+static void
+_check_ice_end_of_candidates (struct test_webrtc *t, GstElement * element,
+    guint mlineindex, gchar * candidate, GstElement * other, gpointer user_data)
+{
+  gint *end_count = user_data;
+
+  if (!candidate || candidate[0] == '\0') {
+    g_atomic_int_inc (end_count);
+  }
+}
+
+static void
+sdp_media_has_end_of_candidates (struct test_webrtc *t, GstElement * element,
+    GstWebRTCSessionDescription * desc, gpointer user_data)
+{
+  guint i;
+
+  for (i = 0; i < gst_sdp_message_medias_len (desc->sdp); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (desc->sdp, i);
+
+    fail_unless_equals_string (gst_sdp_media_get_attribute_val_n (media,
+            "end-of-candidates", 0), "");
+
+    fail_unless (gst_sdp_media_get_attribute_val_n (media, "end-of-candidates",
+            1) == NULL);
+  }
+}
+
+GST_START_TEST (test_ice_end_of_candidates)
+{
+  struct test_webrtc *t = create_audio_test ();
+  GstWebRTCSessionDescription *local_desc;
+  gint end_candidate_count = 0;
+
+  VAL_SDP_INIT (offer, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
+  VAL_SDP_INIT (answer, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
+
+
+  t->on_ice_candidate = _check_ice_end_of_candidates;
+  t->ice_candidate_data = &end_candidate_count;
+  test_validate_sdp (t, &offer, &answer);
+
+  test_webrtc_wait_for_ice_gathering_complete (t);
+
+  fail_unless_equals_int (end_candidate_count, 2);
+
+  g_object_get (t->webrtc1, "current-local-description", &local_desc, NULL);
+  sdp_media_has_end_of_candidates (t, t->webrtc1, local_desc, NULL);
+  gst_webrtc_session_description_free (local_desc);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -5773,6 +5831,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_invalid_add_media_in_answer);
     tcase_add_test (tc, test_add_turn_server);
     tcase_add_test (tc, test_msid);
+    tcase_add_test (tc, test_ice_end_of_candidates);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_remote_notify);

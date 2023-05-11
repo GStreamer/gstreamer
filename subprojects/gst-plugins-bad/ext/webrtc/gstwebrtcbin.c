@@ -821,6 +821,30 @@ _find_transport_for_session (GstWebRTCBin * webrtc, guint session_id)
   return stream;
 }
 
+static gboolean
+match_stream_for_ice_transport (TransportStream * trans,
+    GstWebRTCICETransport * transport)
+{
+  return trans->transport && trans->transport->transport == transport;
+}
+
+static TransportStream *
+_find_transport_for_ice_transport (GstWebRTCBin * webrtc,
+    GstWebRTCICETransport * transport)
+{
+  TransportStream *stream;
+
+  stream = _find_transport (webrtc, transport,
+      (FindTransportFunc) match_stream_for_ice_transport);
+
+  GST_TRACE_OBJECT (webrtc,
+      "Found transport %" GST_PTR_FORMAT " for ice transport %" GST_PTR_FORMAT,
+      stream, transport);
+
+  return stream;
+}
+
+
 typedef gboolean (*FindPadFunc) (GstWebRTCBinPad * p1, gconstpointer data);
 
 static GstWebRTCBinPad *
@@ -1601,13 +1625,6 @@ _update_ice_gathering_state_task (GstWebRTCBin * webrtc, gpointer data)
   return NULL;
 }
 
-static void
-_update_ice_gathering_state (GstWebRTCBin * webrtc)
-{
-  gst_webrtc_bin_enqueue_task (webrtc, _update_ice_gathering_state_task, NULL,
-      NULL, NULL);
-}
-
 static GstStructure *
 _update_ice_connection_state_task (GstWebRTCBin * webrtc, gpointer data)
 {
@@ -2117,10 +2134,26 @@ _on_ice_transport_notify_state (GstWebRTCICETransport * transport,
 }
 
 static void
+_on_local_ice_candidate_cb (GstWebRTCICE * ice, guint session_id,
+    gchar * candidate, GstWebRTCBin * webrtc);
+
+static void
 _on_ice_transport_notify_gathering_state (GstWebRTCICETransport * transport,
     GParamSpec * pspec, GstWebRTCBin * webrtc)
 {
-  _update_ice_gathering_state (webrtc);
+  GstWebRTCICEGatheringState ice_state;
+
+  g_object_get (transport, "gathering-state", &ice_state, NULL);
+  if (ice_state == GST_WEBRTC_ICE_GATHERING_STATE_COMPLETE) {
+    TransportStream *stream =
+        _find_transport_for_ice_transport (webrtc, transport);
+    /* signal end-of-candidates */
+    _on_local_ice_candidate_cb (webrtc->priv->ice, stream->session_id,
+        (char *) "", webrtc);
+  }
+
+  gst_webrtc_bin_enqueue_task (webrtc, _update_ice_gathering_state_task, NULL,
+      NULL, NULL);
 }
 
 static void
@@ -5411,6 +5444,24 @@ _add_ice_candidate_to_sdp (GstWebRTCBin * webrtc,
   gst_sdp_media_add_attribute (media, "candidate", candidate + 10);
 }
 
+static void
+_add_end_of_candidate_to_sdp (GstWebRTCBin * webrtc,
+    GstSDPMessage * sdp, gint mline_index)
+{
+  GstSDPMedia *media = NULL;
+
+  if (mline_index < sdp->medias->len) {
+    media = &g_array_index (sdp->medias, GstSDPMedia, mline_index);
+  }
+
+  if (media == NULL) {
+    GST_WARNING_OBJECT (webrtc, "Couldn't find mline %d to merge ICE candidate",
+        mline_index);
+    return;
+  }
+  gst_sdp_media_add_attribute (media, "end-of-candidates", "");
+}
+
 static gboolean
 _filter_sdp_fields (GQuark field_id, const GValue * value,
     GstStructure * new_structure)
@@ -6861,7 +6912,7 @@ _on_local_ice_candidate_task (GstWebRTCBin * webrtc)
     IceCandidateItem *item = &g_array_index (items, IceCandidateItem, i);
     const gchar *cand = item->candidate;
 
-    if (!g_ascii_strncasecmp (cand, "a=candidate:", 12)) {
+    if (cand && !g_ascii_strncasecmp (cand, "a=candidate:", 12)) {
       /* stripping away "a=" */
       cand += 2;
     }
@@ -6876,12 +6927,24 @@ _on_local_ice_candidate_task (GstWebRTCBin * webrtc)
      * FIXME: This ICE candidate should be stored somewhere with
      * the associated mid and also merged back into any subsequent
      * local descriptions on renegotiation */
-    if (webrtc->current_local_description)
-      _add_ice_candidate_to_sdp (webrtc, webrtc->current_local_description->sdp,
-          item->mlineindex, cand);
-    if (webrtc->pending_local_description)
-      _add_ice_candidate_to_sdp (webrtc, webrtc->pending_local_description->sdp,
-          item->mlineindex, cand);
+    if (webrtc->current_local_description) {
+      if (cand && cand[0] != '\0') {
+        _add_ice_candidate_to_sdp (webrtc,
+            webrtc->current_local_description->sdp, item->mlineindex, cand);
+      } else {
+        _add_end_of_candidate_to_sdp (webrtc,
+            webrtc->current_local_description->sdp, item->mlineindex);
+      }
+    }
+    if (webrtc->pending_local_description) {
+      if (cand && cand[0] != '\0') {
+        _add_ice_candidate_to_sdp (webrtc,
+            webrtc->pending_local_description->sdp, item->mlineindex, cand);
+      } else {
+        _add_end_of_candidate_to_sdp (webrtc,
+            webrtc->pending_local_description->sdp, item->mlineindex);
+      }
+    }
 
     PC_UNLOCK (webrtc);
     g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_ICE_CANDIDATE_SIGNAL],
