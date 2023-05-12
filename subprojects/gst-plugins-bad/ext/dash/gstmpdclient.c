@@ -400,6 +400,7 @@ gst_mpd_client_get_segment_duration (GstMPDClient * client,
     duration = base->duration * GST_SECOND;
     if (scale_dur)
       *scale_dur = duration;
+    /* timescale is > 0 so this division is always valid */
     duration /= base->SegmentBase->timescale;
   }
 

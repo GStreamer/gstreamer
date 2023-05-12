@@ -6590,6 +6590,42 @@ GST_START_TEST
 GST_END_TEST;
 
 /*
+ * Test parsing SegmentTemplate with zero timescale
+ *
+ */
+GST_START_TEST (dash_mpdparser_segmentBase_with_zero_timescale)
+{
+  const gchar *xml =
+      "<?xml version=\"1.0\"?>"
+      "<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\""
+      "     profiles=\"urn:mpeg:dash:profile:isoff-main:2011\">"
+      "  <Period>"
+      "    <SegmentTemplate duration=\"10\""
+      "                     timescale=\"0\">"
+      "    </SegmentTemplate></Period></MPD>";
+
+  gboolean ret;
+  GstMPDClient *mpdclient = gst_mpd_client_new ();
+  GstMPDPeriodNode *periodNode;
+  GstMPDSegmentTemplateNode *segmentTemplate;
+  GstMPDSegmentBaseNode *segmentBase;
+
+  ret = gst_mpd_client_parse (mpdclient, xml, (gint) strlen (xml));
+  assert_equals_int (ret, TRUE);
+
+  periodNode = (GstMPDPeriodNode *) mpdclient->mpd_root_node->Periods->data;
+  segmentTemplate = periodNode->SegmentTemplate;
+  segmentBase = GST_MPD_MULT_SEGMENT_BASE_NODE (segmentTemplate)->SegmentBase;
+
+  /* 0 should get replaced with 1 in timescale */
+  assert_equals_uint64 (segmentBase->timescale, 1);
+
+  gst_mpd_client_free (mpdclient);
+}
+
+GST_END_TEST;
+
+/*
  * create a test suite containing all dash testcases
  */
 static Suite *
@@ -6735,6 +6771,7 @@ dash_suite (void)
   tcase_add_test (tc_simpleMPD, dash_mpdparser_bitstreamSwitching_inheritance);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_various_duration_formats);
   tcase_add_test (tc_simpleMPD, dash_mpdparser_default_presentation_delay);
+  tcase_add_test (tc_simpleMPD, dash_mpdparser_segmentBase_with_zero_timescale);
 
   /* tests checking xlink attributes */
   tcase_add_test (tc_simpleMPD, dash_mpdparser_xlink_period);

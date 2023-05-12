@@ -281,6 +281,10 @@ gst_mpdparser_parse_seg_base_type_ext (GstMPDSegmentBaseNode ** pointer,
   GST_LOG ("attributes of SegmentBaseType extension:");
   if (gst_xml_helper_get_prop_unsigned_integer (a_node, "timescale", 1,
           &intval)) {
+    if (intval == 0) {
+      GST_WARNING ("SegmentBase timescale can not be 0, using 1 instead");
+      intval = 1;
+    }
     seg_base_type->timescale = intval;
   }
   if (gst_xml_helper_get_prop_unsigned_integer_64 (a_node,
