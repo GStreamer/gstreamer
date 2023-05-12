@@ -56,19 +56,19 @@ struct _GstPulseSrc
   gchar *device_description;
 
   gdouble volume;
-  gboolean volume_set:1;
-  gboolean mute:1;
-  gboolean mute_set:1;
+  gboolean volume_set;
+  gboolean mute;
+  gboolean mute_set;
   guint32 current_source_idx;
   gchar *current_source_name;
 
   gint notify; /* atomic */
 
-  gboolean corked:1;
-  gboolean stream_connected:1;
-  gboolean operation_success:1;
-  gboolean paused:1;
-  gboolean in_read:1;
+  gboolean corked;
+  gboolean stream_connected;
+  gboolean operation_success;
+  gboolean paused;
+  gboolean in_read;
 
   GstStructure *properties;
   pa_proplist *proplist;

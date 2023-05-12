@@ -178,9 +178,9 @@ struct _GstPulseRingBuffer
   gint64 m_offset;
   gint64 m_lastoffset;
 
-  gboolean corked:1;
-  gboolean in_commit:1;
-  gboolean paused:1;
+  gboolean corked;
+  gboolean in_commit;
+  gboolean paused;
 };
 struct _GstPulseRingBufferClass
 {
