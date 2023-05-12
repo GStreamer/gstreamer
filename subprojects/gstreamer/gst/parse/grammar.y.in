@@ -732,6 +732,8 @@ static GstElement * gst_parse_element_make (graph_t *graph, element_t *data) {
         g_object_set_property (target, pspec->name, &v);
         g_value_unset (&v);
       }
+
+      gst_object_unref (target);
     }
   }
 
