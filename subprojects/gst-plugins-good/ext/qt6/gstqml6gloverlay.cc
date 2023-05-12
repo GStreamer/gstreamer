@@ -34,8 +34,8 @@
  * a number of reasons.  A couple of examples of this are:
  *
  * 1. Adding `qml6gloverlay` to an already running pipeline
- * 2. Not having any `qml6gloverlay` (or `qml6glsink`) element start up before any
- *    other OpenGL-based element in the pipeline.
+ * 2. Not having any `qml6gloverlay` (or `qml6glsink`, or `qml6glmixer`) element
+ *    start up before any other OpenGL-based element in the pipeline.
  *
  * If one of these scenarios occurs, then there will be multiple OpenGL contexts
  * in use in the pipeline.  This means that either the pipeline will fail to
@@ -46,29 +46,29 @@
  * #GstGLDisplay object and as Qt cannot currently share an existing window
  * system display connection, GStreamer must use the window system display
  * connection provided by Qt.  This window system display connection can be
- * retrieved by either a `qml6glsink` element or a `qml6gloverlay` element. The
- * recommended usage is to have either element (`qml6glsink` or `qml6gloverlay`)
- * be the first to propagate the #GstGLDisplay for the entire pipeline to use by
- * setting either element to the READY element state before any other OpenGL
- * element in the pipeline.
+ * retrieved by either a `qml6glsink` element, a `qml6gloverlay`, or a
+ * `qml6glmixer` element. The recommended usage is to have either element
+ * (`qml6glsink` or `qml6gloverlay` or `qml6glmixer`) be the first to propagate
+ * the #GstGLDisplay for the entire pipeline to use by setting either element
+ * to the READY element state before any other OpenGL element in the pipeline.
  *
- * In a dynamically adding `qml6gloverlay` (or `qml6glsink`) to a pipeline case,
- * there are some considerations for ensuring that the window system display
- * and OpenGL contexts are compatible with Qt.  When the `qml6gloverlay` (or
- * `qml6glsink`) element is added and brought up to READY, it will propagate it's
- * own #GstGLDisplay using the #GstContext mechanism regardless of any existing
- * #GstGLDisplay used by the pipeline previously.  In order for the new
- * #GstGLDisplay to be used, the application must then set the provided
- * #GstGLDisplay containing #GstContext on the pipeline.  This may effectively
- * cause each OpenGL element to replace the window system display and also the
- * OpenGL context it is using.  As such this process may take a significant
- * amount of time and resources as objects are recreated in the new OpenGL
- * context.
+ * In the dynamically adding `qml6gloverlay` (or `qml6glsink`, or `qml6glmixer`)
+ * to a pipeline case, there are some considerations for ensuring that the
+ * window system display and OpenGL contexts are compatible with Qt.  When the
+ * `qml6gloverlay` (or `qml6glsink`, or `qml6glmixer`) element is added and
+ * brought up to READY, it will propagate it's own #GstGLDisplay using the
+ * #GstContext mechanism regardless of any existing #GstGLDisplay used by the
+ * pipeline previously.  In order for the new #GstGLDisplay to be used, the
+ * application must then set the provided #GstGLDisplay containing #GstContext
+ * on the pipeline.  This may effectively cause each OpenGL element to replace
+ * the window system display and also the OpenGL context it is using.  As such
+ * this process may take a significant amount of time and resources as objects
+ * are recreated in the new OpenGL context.
  *
- * All instances of `qml6gloverlay` and `qml6glsink` will return the exact same
- * #GstGLDisplay object while the pipeline is running regardless of whether
- * any `qml6gloverlay` or `qml6glsink` elements are added or removed from the
- * pipeline.
+ * All instances of `qml6gloverlay`, `qml6glsink`, and `qml6glmixer` will
+ * return the exact same #GstGLDisplay object while the pipeline is running
+ * regardless of whether any `qml6gloverlay` or `qml6glsink` elements are
+ * added or removed from the pipeline.
  *
  * The Qml scene will run at the pace of incoming buffers.  One input buffer
  * will cause a render of one output buffer.  The timestamps on the input

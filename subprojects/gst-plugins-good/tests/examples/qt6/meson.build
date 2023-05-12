@@ -17,3 +17,4 @@ endif
 subdir('qmlsink')
 subdir('qmlsrc')
 subdir('qmloverlay')
+subdir('qmlmixer')

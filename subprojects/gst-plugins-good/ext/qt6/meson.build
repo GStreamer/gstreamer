@@ -5,6 +5,7 @@ sources = [
   'gstqt6glutility.cc',
   'gstqml6glsink.cc',
   'gstqml6glsrc.cc',
+  'gstqml6glmixer.cc',
   'gstqml6gloverlay.cc',
   'qt6glitem.cc',
   'qt6glwindow.cc',

@@ -31,6 +31,7 @@ plugin_init (GstPlugin * plugin)
 
   ret |= GST_ELEMENT_REGISTER (qml6glsink, plugin);
   ret |= GST_ELEMENT_REGISTER (qml6glsrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (qml6glmixer, plugin);
   ret |= GST_ELEMENT_REGISTER (qml6gloverlay, plugin);
 
   return ret;
