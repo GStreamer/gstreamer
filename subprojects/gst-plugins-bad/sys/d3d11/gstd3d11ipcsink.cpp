@@ -178,8 +178,8 @@ gst_d3d11_ipc_sink_class_init (GstD3D11IpcSinkClass * klass)
               G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
-      "D3D11 IPC Sink", "Sink/Video",
-      "Send D3D11 memory to peer d3d11ipcsrc elements",
+      "Direct3D11 IPC Sink", "Sink/Video",
+      "Sends Direct3D11 shared handle to peer d3d11ipcsrc elements",
       "Seungha Yang <seungha@centricular.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&pad_template_caps);

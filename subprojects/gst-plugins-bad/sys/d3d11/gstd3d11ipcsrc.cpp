@@ -152,8 +152,8 @@ gst_d3d11_ipc_src_class_init (GstD3D11IpcSrcClass * klass)
               G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
-      "D3D11 IPC Src", "Source/Video",
-      "Receive D3D11 memory from the d3d11ipcsrc element",
+      "Direct3D11 IPC Source", "Source/Video",
+      "Receives Direct3D11 shared handle from the d3d11ipcsink element",
       "Seungha Yang <seungha@centricular.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&pad_template_caps);

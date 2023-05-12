@@ -110,7 +110,7 @@ gst_d3d11_download_class_init (GstD3D11DownloadClass * klass)
   gst_caps_unref (caps);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 downloader", "Filter/Video",
+      "Direct3D11 Downloader", "Filter/Video",
       "Downloads Direct3D11 texture memory into system memory",
       "Seungha Yang <seungha.yang@navercorp.com>");
 

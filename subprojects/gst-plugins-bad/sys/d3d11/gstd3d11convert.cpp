@@ -2239,9 +2239,9 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 colorspace converter and scaler",
+      "Direct3D11 Converter",
       "Filter/Converter/Scaler/Effect/Video/Hardware",
-      "Resizes video and allow color conversion using Direct3D11",
+      "Performs resizing, colorspace conversion, cropping, and flipping/rotating using Direct3D11",
       "Seungha Yang <seungha.yang@navercorp.com>, "
       "Jeongki Kim <jeongki.kim@jeongki.kim>");
 
@@ -2416,7 +2416,7 @@ gst_d3d11_color_convert_class_init (GstD3D11ColorConvertClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 colorspace converter",
+      "Direct3D11 Colorspace Converter",
       "Filter/Converter/Video/Hardware",
       "Color conversion using Direct3D11",
       "Seungha Yang <seungha@centricular.com>");
@@ -2597,7 +2597,7 @@ gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 scaler",
+      "Direct3D11 Scaler",
       "Filter/Converter/Video/Scaler/Hardware",
       "Resizes video using Direct3D11",
       "Seungha Yang <seungha@centricular.com>");

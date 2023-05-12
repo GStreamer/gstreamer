@@ -105,7 +105,7 @@ gst_d3d11_upload_class_init (GstD3D11UploadClass * klass)
   gst_caps_unref (caps);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 uploader", "Filter/Video",
+      "Direct3D11 Uploader", "Filter/Video",
       "Uploads data into Direct3D11 texture memory",
       "Seungha Yang <seungha.yang@navercorp.com>");
 

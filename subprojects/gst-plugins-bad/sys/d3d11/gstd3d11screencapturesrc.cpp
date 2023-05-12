@@ -409,7 +409,7 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_screen_capture_src_set_context);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 screen capture src", "Source/Video",
+      "Direct3D11 Screen Capture Source", "Source/Video",
       "Captures desktop screen", "Seungha Yang <seungha@centricular.com>");
 
   caps = gst_d3d11_get_updated_template_caps (&template_caps);

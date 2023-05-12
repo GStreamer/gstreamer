@@ -464,7 +464,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_video_sink_set_context);
 
   gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 video sink", "Sink/Video",
+      "Direct3D11 Video Sink", "Sink/Video",
       "A Direct3D11 based videosink",
       "Seungha Yang <seungha.yang@navercorp.com>");
 
