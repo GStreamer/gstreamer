@@ -43,16 +43,14 @@ foreach shader: gst_vulkan_shader_sources
   c_shader_header = basename + '.h'
 
   compiled_shader = custom_target(spv_shader,
-                                  input: shader,
-                                  output: spv_shader,
-                                  depfile: '@PLAINNAME@.d',
-                                  command: [glslc] + glslc_build_options + [
-                                    stage_arg,
-                                    '--target-env=vulkan1.0',
-                                    '-MD', '-MF', '@DEPFILE@',
-                                    '@INPUT@',
-                                    '-o', '@OUTPUT@'
-                                  ])
+      input: shader,
+      output: spv_shader,
+      depfile: '@PLAINNAME@.d',
+      command: [glslc] + glslc_build_options + [stage_arg,
+        '--target-env=vulkan1.0',
+        '-MD', '-MF', '@DEPFILE@',
+        '@INPUT@',
+        '-o', '@OUTPUT@'])
 
   c_shader = custom_target (c_shader_source,
       input: compiled_shader,
@@ -63,7 +61,7 @@ foreach shader: gst_vulkan_shader_sources
         '--element-type=gchar',
         '--element-size=1',
         '--linebreak=8',
-        '--input', '@INPUT@', 
+        '--input', '@INPUT@',
         '--output', '@OUTPUT0@',
         '--header-output', '@OUTPUT1@'])
 

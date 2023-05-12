@@ -15,7 +15,7 @@ assert(glslc.found(), 'Expected glslc to be available')
 
 subdir('shaders')
 
-vulkan_sources = [
+vulkan_sources = files(
   'gstvulkan.c',
   'gstvulkanelement.c',
   'vkcolorconvert.c',
@@ -27,22 +27,19 @@ vulkan_sources = [
   'vkupload.c',
   'vkviewconvert.c',
   'vkoverlaycompositor.c',
-]
+)
 
-vulkan_plugin_enum_headers = [
+vulkan_plugin_enum_headers = files(
   'vkviewconvert.h',
-]
+)
 
 vulkan_plugin_enums = gnome.mkenums_simple('gstvulkan-plugins-enumtypes',
     sources : vulkan_plugin_enum_headers,
     body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
     header_prefix : '#include <gst/gst.h>')
-vulkan_plugin_enumtypes_c = vulkan_plugin_enums[0]
-vulkan_plugin_enumtypes_h = vulkan_plugin_enums[1]
-vulkan_plugin_gen_sources = [vulkan_plugin_enumtypes_h]
 
 gstvulkan_plugin = library('gstvulkan',
-  vulkan_sources, vulkan_compiled_shader_sources, vulkan_plugin_enumtypes_c, vulkan_plugin_enumtypes_h,
+  vulkan_sources, vulkan_compiled_shader_sources, vulkan_plugin_enums,
   c_args : gst_plugins_bad_args,
   objc_args : gst_plugins_bad_args,
   link_args : noseh_link_args,
