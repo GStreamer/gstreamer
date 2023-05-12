@@ -1977,7 +1977,10 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
   do {
     got_frame = gst_ffmpegviddec_frame (ffmpegdec, NULL, &ret);
   } while (got_frame && ret == GST_FLOW_OK);
+
+  GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
   avcodec_flush_buffers (ffmpegdec->context);
+  GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   /* FFMpeg will return AVERROR_EOF if it's internal was fully drained
    * then we are translating it to GST_FLOW_EOS. However, because this behavior
@@ -2189,7 +2192,9 @@ gst_ffmpegviddec_flush (GstVideoDecoder * decoder)
 
   if (ffmpegdec->opened) {
     GST_LOG_OBJECT (decoder, "flushing buffers");
+    GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
     avcodec_flush_buffers (ffmpegdec->context);
+    GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
   }
 
   return TRUE;
