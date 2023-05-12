@@ -383,10 +383,10 @@ gst_video_info_dma_drm_new_from_caps (const GstCaps * caps)
 {
   GstVideoInfoDmaDrm *ret;
 
-  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (caps != NULL, NULL);
 
   if (!gst_video_is_dma_drm_caps (caps))
-    return FALSE;
+    return NULL;
 
   ret = gst_video_info_dma_drm_new ();
 
