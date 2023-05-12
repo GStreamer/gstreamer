@@ -1075,6 +1075,11 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   GList *list, *event = NULL;
   guint16 seqnum;
 
+  if (G_LIKELY (head))
+    *head = FALSE;
+  if (percent)
+    *percent = -1;
+
   g_return_val_if_fail (jbuf != NULL, FALSE);
   g_return_val_if_fail (item != NULL, FALSE);
 
