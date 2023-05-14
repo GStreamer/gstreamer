@@ -515,19 +515,8 @@ gst_switch_bin_handle_query (GstPad * pad, GstObject * parent, GstQuery * query,
       GST_DEBUG_OBJECT (switch_bin, "new caps query; filter: %" GST_PTR_FORMAT,
           filter);
 
-      PATH_LOCK (switch_bin);
-
-      if (switch_bin->num_paths == 0) {
-        GST_DEBUG_OBJECT (switch_bin, "no paths exist; "
-            "cannot return any caps to query");
-        caps = NULL;
-      } else {
-        GST_DEBUG_OBJECT (switch_bin, "returning all allowed caps to query");
-        caps =
-            gst_switch_bin_get_allowed_caps (switch_bin, pad, pad_name, filter);
-      }
-
-      PATH_UNLOCK (switch_bin);
+      caps =
+          gst_switch_bin_get_allowed_caps (switch_bin, pad, pad_name, filter);
 
       if (caps != NULL) {
         GST_DEBUG_OBJECT (switch_bin, "%s caps query:  caps: %" GST_PTR_FORMAT,
@@ -861,9 +850,9 @@ static GstCaps *
 gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
     GstPad * switch_bin_pad, gchar const *pad_name, GstCaps * filter)
 {
-  /* must be called with path lock held */
-
   guint i;
+  guint num_paths;
+  GstSwitchBinPath **paths;
   GstCaps *total_path_caps;
   gboolean peer_caps_queried = FALSE;
   gboolean peer_caps_query_successful;
@@ -871,12 +860,36 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
   gboolean is_sink_pad =
       (gst_pad_get_direction (switch_bin_pad) == GST_PAD_SINK);
 
+  /* Acquire references to the paths, path elements, and path caps, then
+   * operate on those references instead of on the actual paths. That way,
+   * we do not need to keep the path lock acquired for the entirety of the
+   * function, which is important, since we need to issue caps queries to
+   * other elements here. Doing that while the path lock is acquired can
+   * cause deadlocks. And since we operate on references here, concurrent
+   * changes to the paths won't cause race conditions. */
+
+  PATH_LOCK (switch_bin);
+
   if (switch_bin->num_paths == 0) {
-    /* No paths exist, so nothing can be returned */
-    GST_ELEMENT_ERROR (switch_bin, STREAM, FAILED, ("no paths defined"),
-        ("there must be at least one path in order for switchbin to do anything"));
+    PATH_UNLOCK (switch_bin);
+
+    /* No paths exist, so nothing can be returned. This is not
+     * necessarily an error - it can happen that caps queries take
+     * place before the caller had a chance to set up paths for example. */
+    GST_DEBUG_OBJECT (switch_bin, "no paths exist; "
+        "cannot return any allowed caps");
     return NULL;
   }
+
+  num_paths = switch_bin->num_paths;
+  paths = g_malloc0_n (num_paths, sizeof (GstSwitchBinPath *));
+  for (i = 0; i < num_paths; ++i)
+    paths[i] = gst_object_ref (switch_bin->paths[i]);
+
+  PATH_UNLOCK (switch_bin);
+
+  /* From this moment on, the original paths are no longer accessed,
+   * so we can release the path lock. */
 
   /* The allowed caps are a combination of the caps of all paths, the filter
    * caps, and the result of issuing caps queries to the path elements
@@ -884,18 +897,28 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
 
   total_path_caps = gst_caps_new_empty ();
 
-  for (i = 0; i < switch_bin->num_paths; ++i) {
-    GstSwitchBinPath *path = switch_bin->paths[i];
+  for (i = 0; i < num_paths; ++i) {
+    GstSwitchBinPath *path = paths[i];
     GstCaps *queried_caps = NULL;
     GstCaps *intersected_caps;
+    GstCaps *path_caps;
+    GstElement *path_element;
     gboolean query_successful;
     GstPad *pad;
     GstQuery *caps_query;
+
+    GST_OBJECT_LOCK (path);
 
     /* Path caps are never supposed to be NULL. Even if the user
      * specifies NULL as caps in the path properties, the code in
      * gst_switch_bin_path_set_property () turns them into ANY caps. */
     g_assert (path->caps != NULL);
+    path_caps = gst_caps_ref (path->caps);
+
+    path_element =
+        (path->element != NULL) ? gst_object_ref (path->element) : NULL;
+
+    GST_OBJECT_UNLOCK (path);
 
     /* We need to check what caps are handled by up/downstream, relative
      * to the switchbin src/sinkcaps. If there is an element, issue a
@@ -903,8 +926,8 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
      * then this path is a passthrough path, so the logical step is to
      * query peers instead. */
 
-    if (path->element != NULL) {
-      pad = gst_element_get_static_pad (path->element, pad_name);
+    if (path_element != NULL) {
+      pad = gst_element_get_static_pad (path_element, pad_name);
       caps_query = gst_query_new_caps (filter);
 
       query_successful = gst_pad_query (pad, caps_query);
@@ -912,10 +935,18 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
         gst_query_parse_caps_result (caps_query, &queried_caps);
         /* Ref the caps, otherwise they will be gone when the query is unref'd. */
         gst_caps_ref (queried_caps);
+        GST_DEBUG_OBJECT (switch_bin, "queried element of path #%u "
+            "(with filter applied if one is present), and query succeeded; "
+            "result: %" GST_PTR_FORMAT, i, (gpointer) queried_caps);
+      } else {
+        GST_DEBUG_OBJECT (switch_bin, "queried element of path #%u "
+            "(with filter applied if one is present), but query failed", i);
       }
 
       gst_query_unref (caps_query);
       gst_object_unref (GST_OBJECT (pad));
+
+      gst_object_unref (GST_OBJECT (path_element));
     } else {
       /* Unlike in the non-NULL element case above, we issue a query
        * only once. We need to query the peer, and that peer does not
@@ -929,6 +960,14 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
           gst_query_parse_caps_result (caps_query, &peer_caps);
           /* Ref the caps, otherwise they will be gone when the query is unref'd. */
           gst_caps_ref (peer_caps);
+          GST_DEBUG_OBJECT (switch_bin, "queried peer of %s pad (with filter "
+              "applied if one is present), and query succeeded; result: %"
+              GST_PTR_FORMAT, is_sink_pad ? "sink" : "src", (gpointer)
+              peer_caps);
+        } else {
+          GST_DEBUG_OBJECT (switch_bin, "queried peer of %s pad "
+              "(with filter applied if one is present), but query failed",
+              is_sink_pad ? "sink" : "src");
         }
 
         gst_query_unref (caps_query);
@@ -950,11 +989,13 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
        * queried caps. In the srcpad direction, no such restriction exists. */
 
       if (is_sink_pad)
-        intersected_caps = gst_caps_intersect (queried_caps, path->caps);
+        intersected_caps = gst_caps_intersect (queried_caps, path_caps);
       else
         intersected_caps = gst_caps_copy (queried_caps);
 
       gst_caps_append (total_path_caps, intersected_caps);
+
+      gst_caps_unref (path_caps);
     } else {
       /* If the query failed (for example, because the pad is not yet linked),
        * we have to make assumptions. In the sinkpad direction, the safest
@@ -963,7 +1004,7 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
        * direction, there are no restriction, so use ANY caps. */
 
       if (is_sink_pad)
-        gst_caps_append (total_path_caps, gst_caps_ref (path->caps));
+        gst_caps_append (total_path_caps, path_caps);
       else
         gst_caps_append (total_path_caps, gst_caps_new_any ());
     }
@@ -984,6 +1025,12 @@ gst_switch_bin_get_allowed_caps (GstSwitchBin * switch_bin,
   }
 
   gst_caps_replace (&peer_caps, NULL);
+
+  /* Clear up the path references we acquired while holding
+   * the path lock earlier. */
+  for (i = 0; i < num_paths; ++i)
+    gst_object_unref (paths[i]);
+  g_free (paths);
 
   return total_path_caps;
 }
