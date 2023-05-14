@@ -417,7 +417,7 @@ gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
   /* If we are streaming here, then it means there is nothing allocation
    * related in the new state and allocation can be ignored */
   if (self->streaming)
-    return TRUE;
+    goto no_internal_changes;
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
@@ -452,6 +452,7 @@ gst_v4l2_codec_h264_dec_decide_allocation (GstVideoDecoder * decoder,
 
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
 
+no_internal_changes:
   /* Our buffer pool is internal, we will let the base class create a video
    * pool, and use it if we are running out of buffers or if downstream does
    * not support GstVideoMeta */

@@ -284,7 +284,7 @@ gst_v4l2_codec_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
   guint num_bitstream;
 
   if (self->streaming)
-    return TRUE;
+    goto no_internal_changes;
 
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
@@ -319,6 +319,7 @@ gst_v4l2_codec_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
 
   self->src_pool = gst_v4l2_codec_pool_new (self->src_allocator, &self->vinfo);
 
+no_internal_changes:
   /* Our buffer pool is internal, we will let the base class create a video
    * pool, and use it if we are running out of buffers or if downstream does
    * not support GstVideoMeta */
