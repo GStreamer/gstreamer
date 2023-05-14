@@ -343,16 +343,10 @@ gst_d3d11_window_win32_set_render_rectangle (GstD3D11Window * window,
        * on message pumping thread is not a worst idea in generall */
       PostMessageA (self->internal_hwnd, WM_GST_D3D11_MOVE_WINDOW, 0, 0);
     }
-  } else {
-    /* XXX: Not sure what's expected behavior if we are drawing on internal
-     * HWND but user wants to specify rectangle.
-     *
-     * - Should we move window to corresponding desktop coordinates ?
-     * - Or should crop correspondingly by modifying viewport of
-     *   render target view of swapchian's backbuffer or so ?
-     * - Or should we ignore set_render_rectangle if we are drawing on
-     *   internal HWND without external HWND ?
-     */
+  } else if (!window->external_handle && self->internal_hwnd) {
+    MoveWindow (self->internal_hwnd,
+        self->render_rect.x, self->render_rect.y, self->render_rect.w,
+        self->render_rect.h, TRUE);
   }
 }
 
@@ -1189,22 +1183,30 @@ gst_d3d11_window_win32_show (GstD3D11Window * window)
     /* if no parent the real size has to be set now because this has not been done
      * when at window creation */
     if (!self->external_hwnd) {
-      RECT rect = { 0, };
-
-      rect.right = width;
-      rect.bottom = height;
-
-      if (AdjustWindowRect (&rect, WS_GST_D3D11, FALSE)) {
-        width = rect.right - rect.left;
-        height = rect.bottom - rect.top;
+      if (self->render_rect.x != 0 || self->render_rect.y != 0 ||
+          self->render_rect.w != 0 || self->render_rect.h != 0) {
+        MoveWindow (self->internal_hwnd,
+            self->render_rect.x, self->render_rect.y, self->render_rect.w,
+            self->render_rect.h, FALSE);
       } else {
-        width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
-        height +=
-            2 * GetSystemMetrics (SM_CYSIZEFRAME) +
-            GetSystemMetrics (SM_CYCAPTION);
+        RECT rect = { 0, };
+
+        rect.right = width;
+        rect.bottom = height;
+
+        if (AdjustWindowRect (&rect, WS_GST_D3D11, FALSE)) {
+          width = rect.right - rect.left;
+          height = rect.bottom - rect.top;
+        } else {
+          width += 2 * GetSystemMetrics (SM_CXSIZEFRAME);
+          height +=
+              2 * GetSystemMetrics (SM_CYSIZEFRAME) +
+              GetSystemMetrics (SM_CYCAPTION);
+        }
+
+        MoveWindow (self->internal_hwnd, 0, 0, width, height, FALSE);
       }
 
-      MoveWindow (self->internal_hwnd, 0, 0, width, height, FALSE);
       ShowWindow (self->internal_hwnd, SW_SHOW);
     } else if (self->internal_hwnd) {
       /* ShowWindow will throw message to message pumping thread (app thread)

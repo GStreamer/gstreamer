@@ -65,6 +65,7 @@ enum
   PROP_PRIMARIES_MODE,
   PROP_DISPLAY_FORMAT,
   PROP_EMIT_PRESENT,
+  PROP_RENDER_RECTANGE,
 };
 
 #define DEFAULT_ADAPTER                   -1
@@ -399,6 +400,13 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
               G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D11VideoSink:render-rectangle:
+   *
+   * Since: 1.24
+   */
+  gst_video_overlay_install_properties (gobject_class, PROP_RENDER_RECTANGE);
+
+  /**
    * GstD3D11VideoSink::begin-draw:
    * @videosink: the #d3d11videosink
    *
@@ -570,6 +578,10 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_EMIT_PRESENT:
       self->emit_present = g_value_get_boolean (value);
+      break;
+    case PROP_RENDER_RECTANGE:
+      gst_video_overlay_set_property (object, PROP_RENDER_RECTANGE,
+          PROP_RENDER_RECTANGE, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
