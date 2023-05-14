@@ -17785,7 +17785,7 @@ The output caps can be any raw video formats or any image formats (jpeg, png, ..
 
 The width, height and pixel-aspect-ratio can also be specified in the output caps.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h"/>
-      <return-value transfer-ownership="full">
+      <return-value transfer-ownership="full" nullable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/convertframe.c">The converted #GstSample, or %NULL if an error happened (in which case @err
 will point to the #GError).</doc>
         <type name="Gst.Sample" c:type="GstSample*"/>

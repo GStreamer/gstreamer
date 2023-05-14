@@ -409,7 +409,7 @@ link_failed:
  *
  * The width, height and pixel-aspect-ratio can also be specified in the output caps.
  *
- * Returns: The converted #GstSample, or %NULL if an error happened (in which case @err
+ * Returns: (nullable) (transfer full): The converted #GstSample, or %NULL if an error happened (in which case @err
  * will point to the #GError).
  */
 GstSample *
