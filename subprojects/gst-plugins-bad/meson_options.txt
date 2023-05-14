@@ -181,6 +181,7 @@ option('voamrwbenc', type : 'feature', value : 'auto', description : 'AMR-WB aud
 option('vulkan', type : 'feature', value : 'auto', description : 'Vulkan video sink plugin')
 option('wasapi', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin')
 option('wasapi2', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin with WinRT API')
+option('webview2', type : 'feature', value : 'auto', description : 'WebView2 plugin')
 option('webp', type : 'feature', value : 'auto', description : 'WebP image codec plugin')
 option('webrtc', type : 'feature', value : 'auto', yield: true, description : 'WebRTC audio/video network bin plugin')
 option('webrtcdsp', type : 'feature', value : 'auto', description : 'Plugin with various audio filters provided by the WebRTC audio processing library')

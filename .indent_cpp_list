@@ -13,5 +13,6 @@ subprojects/gst-plugins-bad/sys/nvcodec
 ^(subprojects/gst-plugins-bad/sys/qsv/)+(\w)+([^/])+(cpp$)
 subprojects/gst-plugins-bad/sys/va
 subprojects/gst-plugins-bad/sys/wasapi2
+subprojects/gst-plugins-bad/sys/webview2
 subprojects/gst-plugins-bad/sys/wic
 ^(subprojects/gst-plugins-bad/sys/win32ipc/)+(\w)+([^/])+(cpp$)
