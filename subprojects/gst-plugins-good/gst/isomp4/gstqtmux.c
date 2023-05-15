@@ -926,16 +926,16 @@ extract_608_field_from_s334_1a (const guint8 * ccdata, gsize ccdata_size,
   /* Iterate over the ccdata and put the corresponding tuples for the given field
    * in the storage */
   for (i = 0; i < ccdata_size; i += 3) {
-    if ((field == 1 && (ccdata[i * 3] & 0x80)) ||
-        (field == 2 && !(ccdata[i * 3] & 0x80))) {
+    if ((field == 1 && (ccdata[i] & 0x80)) ||
+        (field == 2 && !(ccdata[i] & 0x80))) {
       GST_DEBUG ("Storing matching cc for field %d : 0x%02x 0x%02x", field,
-          ccdata[i * 3 + 1], ccdata[i * 3 + 2]);
+          ccdata[i + 1], ccdata[i + 2]);
       if (res_size >= storage_size) {
         storage_size += 128;
         storage = g_realloc (storage, storage_size);
       }
-      storage[res_size] = ccdata[i * 3 + 1];
-      storage[res_size + 1] = ccdata[i * 3 + 2];
+      storage[res_size] = ccdata[i + 1];
+      storage[res_size + 1] = ccdata[i + 2];
       res_size += 2;
     }
   }
