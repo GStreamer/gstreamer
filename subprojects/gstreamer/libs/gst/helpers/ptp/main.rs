@@ -41,6 +41,14 @@ const PTP_EVENT_PORT: u16 = 319;
 /// PTP General message port.
 const PTP_GENERAL_PORT: u16 = 320;
 
+/// StdIO Message Types.
+/// PTP message for the event socket.
+const MSG_TYPE_EVENT: u8 = 0;
+/// PTP message for the general socket.
+const MSG_TYPE_GENERAL: u8 = 1;
+/// Clock ID message
+const MSG_TYPE_CLOCK_ID: u8 = 2;
+
 /// Create a new `UdpSocket` for the given port and configure it for PTP.
 fn create_socket(port: u16) -> Result<UdpSocket, Error> {
     let socket = UdpSocket::bind(SocketAddr::from((Ipv4Addr::UNSPECIFIED, port)))
@@ -139,11 +147,10 @@ fn main() -> Result<(), Error> {
 
     // Write clock ID first
     {
-        let mut clock_id_data = [0u8; 4 + 8];
-        clock_id_data[0..2].copy_from_slice(&8u16.to_le_bytes());
-        clock_id_data[2] = 2;
-        clock_id_data[3] = 0;
-        clock_id_data[4..].copy_from_slice(&clock_id);
+        let mut clock_id_data = [0u8; 3 + 8];
+        clock_id_data[0..2].copy_from_slice(&8u16.to_be_bytes());
+        clock_id_data[2] = MSG_TYPE_CLOCK_ID;
+        clock_id_data[3..].copy_from_slice(&clock_id);
 
         poll.stdout()
             .write_all(&clock_id_data)
@@ -154,8 +161,8 @@ fn main() -> Result<(), Error> {
     //
     // We assume that stdout never blocks and stdin receives a complete valid packet whenever it is
     // ready and never blocks in the middle of a packet.
-    let mut socket_buffer = [0u8; 1500];
-    let mut stdinout_buffer = [0u8; 1504];
+    let mut socket_buffer = [0u8; 8192];
+    let mut stdinout_buffer = [0u8; 8192 + 3];
 
     loop {
         let poll_res = poll.poll().context("Failed polling")?;
@@ -167,9 +174,10 @@ fn main() -> Result<(), Error> {
             .enumerate()
             .filter_map(|(idx, r)| if *r { Some(idx) } else { None })
         {
+            let idx = idx as u8;
             let res = match idx {
-                0 => poll.event_socket().recv(&mut socket_buffer),
-                1 => poll.general_socket().recv(&mut socket_buffer),
+                MSG_TYPE_EVENT => poll.event_socket().recv(&mut socket_buffer),
+                MSG_TYPE_GENERAL => poll.general_socket().recv(&mut socket_buffer),
                 _ => unreachable!(),
             };
 
@@ -185,13 +193,12 @@ fn main() -> Result<(), Error> {
                     );
                 }
                 Ok(read) => {
-                    stdinout_buffer[0..2].copy_from_slice(&(read as u16).to_ne_bytes());
-                    stdinout_buffer[2] = idx as u8;
-                    stdinout_buffer[3] = 0;
-                    stdinout_buffer[4..][..read].copy_from_slice(&socket_buffer[..read]);
+                    stdinout_buffer[0..2].copy_from_slice(&(read as u16).to_be_bytes());
+                    stdinout_buffer[2] = idx;
+                    stdinout_buffer[3..][..read].copy_from_slice(&socket_buffer[..read]);
 
                     poll.stdout()
-                        .write_all(&stdinout_buffer[..(read + 4)])
+                        .write_all(&stdinout_buffer[..(read + 3)])
                         .context("Failed writing to stdout")?;
                 }
             }
@@ -201,10 +208,10 @@ fn main() -> Result<(), Error> {
         // it to the corresponding socket.
         if poll_res.stdin {
             poll.stdin()
-                .read_exact(&mut stdinout_buffer[0..4])
+                .read_exact(&mut stdinout_buffer[0..3])
                 .context("Failed reading packet header from stdin")?;
 
-            let size = u16::from_ne_bytes([stdinout_buffer[0], stdinout_buffer[1]]);
+            let size = u16::from_be_bytes([stdinout_buffer[0], stdinout_buffer[1]]);
             if size as usize > stdinout_buffer.len() {
                 bail!("Invalid packet size on stdin {}", size);
             }
@@ -216,10 +223,10 @@ fn main() -> Result<(), Error> {
 
             let buf = &stdinout_buffer[0..size as usize];
             match type_ {
-                0 => poll
+                MSG_TYPE_EVENT => poll
                     .event_socket()
                     .send_to(buf, (PTP_MULTICAST_ADDR, PTP_EVENT_PORT)),
-                1 => poll
+                MSG_TYPE_GENERAL => poll
                     .general_socket()
                     .send_to(buf, (PTP_MULTICAST_ADDR, PTP_GENERAL_PORT)),
                 _ => unreachable!(),
