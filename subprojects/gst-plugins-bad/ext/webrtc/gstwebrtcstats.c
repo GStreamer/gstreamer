@@ -71,11 +71,14 @@ _set_base_stats (GstStructure * s, GstWebRTCStatsType type, double ts,
 static GstStructure *
 _get_peer_connection_stats (GstWebRTCBin * webrtc)
 {
-  GstStructure *s = gst_structure_new_empty ("unused");
+  guint opened;
+  guint closed;
+  GstStructure *s = gst_structure_new_empty ("peer-connection-stats");
 
-  /* FIXME: datachannel */
-  gst_structure_set (s, "data-channels-opened", G_TYPE_UINT, 0,
-      "data-channels-closed", G_TYPE_UINT, 0, "data-channels-requested",
+  gst_webrtc_bin_get_peer_connection_stats (webrtc, &opened, &closed);
+
+  gst_structure_set (s, "data-channels-opened", G_TYPE_UINT, opened,
+      "data-channels-closed", G_TYPE_UINT, closed, "data-channels-requested",
       G_TYPE_UINT, 0, "data-channels-accepted", G_TYPE_UINT, 0, NULL);
 
   return s;

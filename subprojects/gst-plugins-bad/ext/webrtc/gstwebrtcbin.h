@@ -108,11 +108,15 @@ struct _GstWebRTCBinPrivate
   gboolean bundle;
   GPtrArray *transceivers;
   GPtrArray *transports;
+  /* stats according to https://www.w3.org/TR/webrtc-stats/#dictionary-rtcpeerconnectionstats-members */
+  guint data_channels_opened;
+  guint data_channels_closed;
   GPtrArray *data_channels;
   /* list of data channels we've received a sctp stream for but no data
    * channel protocol for */
   GPtrArray *pending_data_channels;
-  /* dc_lock protects data_channels and pending_data_channels */
+  /* dc_lock protects data_channels and pending_data_channels
+   * and data_channels_opened and data_channels_closed */
   /* lock ordering is pc_lock first, then dc_lock */
   GMutex dc_lock;
 
@@ -171,6 +175,10 @@ gboolean        gst_webrtc_bin_enqueue_task             (GstWebRTCBin * pc,
                                                          gpointer data,
                                                          GDestroyNotify notify,
                                                          GstPromise *promise);
+
+void            gst_webrtc_bin_get_peer_connection_stats(GstWebRTCBin * pc,
+                                                         guint * data_channels_opened,
+                                                         guint * data_channels_closed);
 
 G_END_DECLS
 

@@ -1252,6 +1252,20 @@ gst_webrtc_bin_enqueue_task (GstWebRTCBin * webrtc, GstWebRTCBinFunc func,
   return TRUE;
 }
 
+void
+gst_webrtc_bin_get_peer_connection_stats (GstWebRTCBin * webrtc,
+    guint * data_channels_opened, guint * data_channels_closed)
+{
+  DC_LOCK (webrtc);
+  if (data_channels_opened) {
+    *data_channels_opened = webrtc->priv->data_channels_opened;
+  }
+  if (data_channels_closed) {
+    *data_channels_closed = webrtc->priv->data_channels_closed;
+  }
+  DC_UNLOCK (webrtc);
+}
+
 /* https://www.w3.org/TR/webrtc/#dom-rtciceconnectionstate */
 static GstWebRTCICEConnectionState
 _collate_ice_connection_states (GstWebRTCBin * webrtc)
@@ -2541,6 +2555,7 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
     }
 
     g_ptr_array_add (webrtc->priv->data_channels, gst_object_ref (channel));
+    webrtc->priv->data_channels_opened++;
     DC_UNLOCK (webrtc);
 
     gst_webrtc_bin_update_sctp_priority (webrtc);
@@ -2548,14 +2563,19 @@ _on_data_channel_ready_state (WebRTCDataChannel * channel,
     g_signal_emit (webrtc, gst_webrtc_bin_signals[ON_DATA_CHANNEL_SIGNAL], 0,
         channel);
   } else if (ready_state == GST_WEBRTC_DATA_CHANNEL_STATE_CLOSED) {
+    gboolean found_pending;
     gboolean found;
 
     DC_LOCK (webrtc);
-    found = g_ptr_array_remove (webrtc->priv->pending_data_channels, channel)
+    found_pending =
+        g_ptr_array_remove (webrtc->priv->pending_data_channels, channel);
+    found = found_pending
         || g_ptr_array_remove (webrtc->priv->data_channels, channel);
 
     if (found == FALSE) {
       GST_FIXME_OBJECT (webrtc, "Received close for unknown data channel");
+    } else if (found_pending == FALSE) {
+      webrtc->priv->data_channels_closed++;
     }
     DC_UNLOCK (webrtc);
   }
@@ -7261,6 +7281,7 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
   ret = gst_object_ref (ret);
   webrtc_data_channel_set_webrtcbin (ret, webrtc);
   g_ptr_array_add (webrtc->priv->data_channels, ret);
+  webrtc->priv->data_channels_opened++;
   DC_UNLOCK (webrtc);
 
   gst_webrtc_bin_update_sctp_priority (webrtc);
