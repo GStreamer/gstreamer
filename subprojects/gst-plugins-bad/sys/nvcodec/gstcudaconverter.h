@@ -64,6 +64,13 @@ typedef struct _GstCudaConverterPrivate GstCudaConverterPrivate;
  */
 #define GST_CUDA_CONVERTER_OPT_DEST_HEIGHT   "GstCudaConverter.dest-height"
 
+/**
+ * GST_CUDA_CONVERTER_OPT_ORIENTATION_METHOD:
+ *
+ * #GstVideoOrientationMethod, default #GST_VIDEO_ORIENTATION_IDENTITY
+ */
+#define GST_CUDA_CONVERTER_OPT_ORIENTATION_METHOD   "GstCudaConverter.orientation-method"
+
 struct _GstCudaConverter
 {
   GstObject parent;

@@ -60,9 +60,22 @@ struct _GstCudaBaseConvert
   gint borders_h;
   gint borders_w;
   gboolean add_borders;
+
+  /* orientation */
+  /* method configured via property */
+  GstVideoOrientationMethod method;
+  /* method parsed from tag */
+  GstVideoOrientationMethod tag_method;
+  /* method currently selected based on "method" and "tag_method" */
+  GstVideoOrientationMethod selected_method;
+  /* method previously selected and used for negotiation */
+  GstVideoOrientationMethod active_method;
+
+  GMutex lock;
 };
 
 static void gst_cuda_base_convert_dispose (GObject * object);
+static void gst_cuda_base_convert_finalize (GObject * object);
 static GstCaps *gst_cuda_base_convert_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_cuda_base_convert_fixate_caps (GstBaseTransform * trans,
@@ -103,6 +116,7 @@ gst_cuda_base_convert_class_init (GstCudaBaseConvertClass * klass)
       GST_CUDA_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->dispose = gst_cuda_base_convert_dispose;
+  gobject_class->finalize = gst_cuda_base_convert_finalize;
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
@@ -130,6 +144,7 @@ static void
 gst_cuda_base_convert_init (GstCudaBaseConvert * self)
 {
   self->add_borders = DEFAULT_ADD_BORDERS;
+  g_mutex_init (&self->lock);
 }
 
 static void
@@ -141,6 +156,16 @@ gst_cuda_base_convert_dispose (GObject * object)
   gst_clear_object (&self->converter);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_cuda_base_convert_finalize (GObject * object)
+{
+  GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (object);
+
+  g_mutex_clear (&self->lock);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -610,9 +635,11 @@ static GstCaps *
 gst_cuda_base_convert_fixate_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
+  GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (base);
   GstStructure *ins, *outs;
   const GValue *from_par, *to_par;
   GValue fpar = G_VALUE_INIT, tpar = G_VALUE_INIT;
+  gboolean rotate = FALSE;
 
   othercaps = gst_caps_truncate (othercaps);
   othercaps = gst_caps_make_writable (othercaps);
@@ -621,6 +648,19 @@ gst_cuda_base_convert_fixate_size (GstBaseTransform * base,
 
   from_par = gst_structure_get_value (ins, "pixel-aspect-ratio");
   to_par = gst_structure_get_value (outs, "pixel-aspect-ratio");
+
+  g_mutex_lock (&self->lock);
+  switch (self->selected_method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      rotate = TRUE;
+      break;
+    default:
+      rotate = FALSE;
+      break;
+  }
 
   if (direction == GST_PAD_SINK) {
     if (!from_par) {
@@ -650,8 +690,13 @@ gst_cuda_base_convert_fixate_size (GstBaseTransform * base,
     if (!to_par) {
       gint to_par_n, to_par_d;
 
-      to_par_n = from_par_n;
-      to_par_d = from_par_d;
+      if (rotate) {
+        to_par_n = from_par_n;
+        to_par_d = from_par_d;
+      } else {
+        to_par_n = from_par_n;
+        to_par_d = from_par_d;
+      }
 
       g_value_init (&tpar, GST_TYPE_FRACTION);
       gst_value_set_fraction (&tpar, to_par_n, to_par_d);
@@ -680,6 +725,17 @@ gst_cuda_base_convert_fixate_size (GstBaseTransform * base,
 
     gst_structure_get_int (outs, "width", &w);
     gst_structure_get_int (outs, "height", &h);
+
+    /* swap dimensions when it's rotated */
+    if (rotate) {
+      gint _tmp = from_w;
+      from_w = from_h;
+      from_h = _tmp;
+
+      _tmp = from_par_n;
+      from_par_n = from_par_d;
+      from_par_d = _tmp;
+    }
 
     /* if both width and height are already fixed, we can't do anything
      * about it anymore */
@@ -1046,6 +1102,7 @@ done:
     g_value_unset (&fpar);
   if (to_par == &tpar)
     g_value_unset (&tpar);
+  g_mutex_unlock (&self->lock);
 
   return othercaps;
 }
@@ -1242,19 +1299,71 @@ gst_cuda_base_convert_decide_allocation (GstBaseTransform * trans,
 }
 
 static gboolean
+needs_color_convert (const GstVideoInfo * in_info,
+    const GstVideoInfo * out_info)
+{
+  const GstVideoColorimetry *in_cinfo = &in_info->colorimetry;
+  const GstVideoColorimetry *out_cinfo = &out_info->colorimetry;
+
+  if (in_cinfo->range != out_cinfo->range ||
+      in_cinfo->matrix != out_cinfo->matrix) {
+    return TRUE;
+  }
+
+  if (!gst_video_color_primaries_is_equivalent (in_cinfo->primaries,
+          out_cinfo->primaries)) {
+    return TRUE;
+  }
+
+  if (!gst_video_transfer_function_is_equivalent (in_cinfo->transfer,
+          GST_VIDEO_INFO_COMP_DEPTH (in_info, 0), out_cinfo->transfer,
+          GST_VIDEO_INFO_COMP_DEPTH (out_info, 0))) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info)
 {
   GstCudaBaseConvert *self = GST_CUDA_BASE_CONVERT (btrans);
   gint from_dar_n, from_dar_d, to_dar_n, to_dar_d;
-  GstVideoInfo tmp_info;
+  gboolean need_flip = FALSE;
+  gint in_width, in_height, in_par_n, in_par_d;
+  GstVideoOrientationMethod active_method;
 
   gst_clear_object (&self->converter);
 
-  if (!gst_util_fraction_multiply (in_info->width,
-          in_info->height, in_info->par_n, in_info->par_d, &from_dar_n,
-          &from_dar_d)) {
+  g_mutex_lock (&self->lock);
+  active_method = self->active_method = self->selected_method;
+  g_mutex_unlock (&self->lock);
+
+  if (active_method != GST_VIDEO_ORIENTATION_IDENTITY)
+    need_flip = TRUE;
+
+  switch (active_method) {
+    case GST_VIDEO_ORIENTATION_90R:
+    case GST_VIDEO_ORIENTATION_90L:
+    case GST_VIDEO_ORIENTATION_UL_LR:
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      in_width = in_info->height;
+      in_height = in_info->width;
+      in_par_n = in_info->par_d;
+      in_par_d = in_info->par_n;
+      break;
+    default:
+      in_width = in_info->width;
+      in_height = in_info->height;
+      in_par_n = in_info->par_n;
+      in_par_d = in_info->par_d;
+      break;
+  }
+
+  if (!gst_util_fraction_multiply (in_width,
+          in_height, in_par_n, in_par_d, &from_dar_n, &from_dar_d)) {
     from_dar_n = from_dar_d = -1;
   }
 
@@ -1296,14 +1405,10 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
     return FALSE;
   }
 
-  /* if the only thing different in the caps is the transfer function, and
-   * we're converting between equivalent transfer functions, do passthrough */
-  tmp_info = *in_info;
-  tmp_info.colorimetry.transfer = out_info->colorimetry.transfer;
-  if (gst_video_info_is_equal (&tmp_info, out_info) &&
-      gst_video_transfer_function_is_equivalent (in_info->colorimetry.transfer,
-          in_info->finfo->bits, out_info->colorimetry.transfer,
-          out_info->finfo->bits)) {
+  if (in_width == out_info->width && in_height == out_info->height
+      && in_info->finfo == out_info->finfo && self->borders_w == 0 &&
+      self->borders_h == 0 && !need_flip &&
+      !needs_color_convert (in_info, out_info)) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (self), TRUE);
   } else {
     GstStructure *config;
@@ -1317,7 +1422,9 @@ gst_cuda_base_convert_set_info (GstCudaBaseTransform * btrans,
         GST_CUDA_CONVERTER_OPT_DEST_WIDTH,
         G_TYPE_INT, out_info->width - self->borders_w,
         GST_CUDA_CONVERTER_OPT_DEST_HEIGHT,
-        G_TYPE_INT, out_info->height - self->borders_h, NULL);
+        G_TYPE_INT, out_info->height - self->borders_h,
+        GST_CUDA_CONVERTER_OPT_ORIENTATION_METHOD,
+        GST_TYPE_VIDEO_ORIENTATION_METHOD, active_method, NULL);
 
     self->converter = gst_cuda_converter_new (in_info,
         out_info, btrans->context, config);
@@ -1463,6 +1570,37 @@ gst_cuda_base_convert_set_add_border (GstCudaBaseConvert * self,
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
 }
 
+static void
+gst_cuda_base_convert_set_orientation (GstCudaBaseConvert * self,
+    GstVideoOrientationMethod method, gboolean from_tag)
+{
+  if (method == GST_VIDEO_ORIENTATION_CUSTOM) {
+    GST_WARNING_OBJECT (self, "Unsupported custom orientation");
+    return;
+  }
+
+  g_mutex_lock (&self->lock);
+  if (from_tag)
+    self->tag_method = method;
+  else
+    self->method = method;
+
+  if (self->method == GST_VIDEO_ORIENTATION_AUTO) {
+    self->selected_method = self->tag_method;
+  } else {
+    self->selected_method = self->method;
+  }
+
+  if (self->selected_method != self->active_method) {
+    GST_DEBUG_OBJECT (self, "Rotation orientation %d -> %d",
+        self->active_method, self->selected_method);
+
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
+  }
+
+  g_mutex_unlock (&self->lock);
+}
+
 /**
  * SECTION:element-cudaconvertscale
  * @title: cudaconvertscale
@@ -1486,6 +1624,7 @@ enum
 {
   PROP_CONVERT_SCALE_0,
   PROP_CONVERT_SCALE_ADD_BORDERS,
+  PROP_CONVERT_SCALE_VIDEO_DIRECTION,
 };
 
 struct _GstCudaConvertScale
@@ -1493,19 +1632,34 @@ struct _GstCudaConvertScale
   GstCudaBaseConvert parent;
 };
 
+static void
+    gst_cuda_convert_scale_video_direction_interface_init
+    (GstVideoDirectionInterface * iface)
+{
+}
+
 static void gst_cuda_convert_scale_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_cuda_convert_scale_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
+static gboolean gst_cuda_convert_scale_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
 
-G_DEFINE_TYPE (GstCudaConvertScale, gst_cuda_convert_scale,
-    GST_TYPE_CUDA_BASE_CONVERT);
+#define gst_cuda_convert_scale_parent_class convert_scale_parent_class
+G_DEFINE_TYPE_WITH_CODE (GstCudaConvertScale, gst_cuda_convert_scale,
+    GST_TYPE_CUDA_BASE_CONVERT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_DIRECTION,
+        gst_cuda_convert_scale_video_direction_interface_init));
+
+static void gst_cuda_convert_scale_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer);
 
 static void
 gst_cuda_convert_scale_class_init (GstCudaConvertScaleClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstBaseTransformClass *transform_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_cuda_convert_scale_set_property;
   gobject_class->get_property = gst_cuda_convert_scale_get_property;
@@ -1517,11 +1671,27 @@ gst_cuda_convert_scale_class_init (GstCudaConvertScaleClass * klass)
           DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstCudaConvertScale:video-direction:
+   *
+   * Video rotation/flip method to use
+   *
+   * Since: 1.24
+   */
+  g_object_class_override_property (gobject_class,
+      PROP_CONVERT_SCALE_VIDEO_DIRECTION, "video-direction");
+
   gst_element_class_set_static_metadata (element_class,
       "CUDA colorspace converter and scaler",
-      "Filter/Converter/Video/Scaler/Colorspace/Hardware",
+      "Filter/Converter/Video/Scaler/Colorspace/Effect/Hardware",
       "Resizes video and allow color conversion using CUDA",
       "Seungha Yang <seungha@centricular.com>");
+
+  transform_class->passthrough_on_same_caps = FALSE;
+  transform_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_cuda_convert_scale_before_transform);
+  transform_class->sink_event =
+      GST_DEBUG_FUNCPTR (gst_cuda_convert_scale_sink_event);
 }
 
 static void
@@ -1539,6 +1709,10 @@ gst_cuda_convert_scale_set_property (GObject * object, guint prop_id,
     case PROP_CONVERT_SCALE_ADD_BORDERS:
       gst_cuda_base_convert_set_add_border (base, g_value_get_boolean (value));
       break;
+    case PROP_CONVERT_SCALE_VIDEO_DIRECTION:
+      gst_cuda_base_convert_set_orientation (base, g_value_get_enum (value),
+          FALSE);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1555,11 +1729,83 @@ gst_cuda_convert_scale_get_property (GObject * object, guint prop_id,
     case PROP_CONVERT_SCALE_ADD_BORDERS:
       g_value_set_boolean (value, base->add_borders);
       break;
+    case PROP_CONVERT_SCALE_VIDEO_DIRECTION:
+      g_value_set_enum (value, base->method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static void
+gst_cuda_convert_scale_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer)
+{
+  GstCudaBaseConvert *base = GST_CUDA_BASE_CONVERT (trans);
+  gboolean update = FALSE;
+  GstCaps *in_caps;
+  GstCaps *out_caps;
+  GstBaseTransformClass *klass;
+
+  GST_BASE_TRANSFORM_CLASS (convert_scale_parent_class)->before_transform
+      (trans, buffer);
+
+  g_mutex_lock (&base->lock);
+  if (base->selected_method != base->active_method)
+    update = TRUE;
+  g_mutex_unlock (&base->lock);
+
+  if (!update)
+    return;
+
+  /* basetransform wouldn't call set_caps if in/out caps were not changed.
+   * Update it manually here */
+  GST_DEBUG_OBJECT (base, "Updating caps for direction change");
+
+  in_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
+  if (!in_caps) {
+    GST_WARNING_OBJECT (trans, "sinkpad has no current caps");
+    return;
+  }
+
+  out_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
+  if (!out_caps) {
+    GST_WARNING_OBJECT (trans, "srcpad has no current caps");
+    gst_caps_unref (in_caps);
+    return;
+  }
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  klass->set_caps (trans, in_caps, out_caps);
+  gst_caps_unref (in_caps);
+  gst_caps_unref (out_caps);
+
+  gst_base_transform_reconfigure_src (trans);
+}
+
+static gboolean
+gst_cuda_convert_scale_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstCudaBaseConvert *base = GST_CUDA_BASE_CONVERT (trans);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:{
+      GstTagList *taglist;
+      GstVideoOrientationMethod method = GST_VIDEO_ORIENTATION_IDENTITY;
+
+      gst_event_parse_tag (event, &taglist);
+      if (gst_video_orientation_from_tag (taglist, &method))
+        gst_cuda_base_convert_set_orientation (base, method, TRUE);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return
+      GST_BASE_TRANSFORM_CLASS (convert_scale_parent_class)->sink_event
+      (trans, event);
 }
 
 /**

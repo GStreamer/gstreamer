@@ -664,6 +664,14 @@ typedef struct
 #define WRITE_BGRP "write_bgrp"
 #define WRITE_GBR "write_gbr"
 #define WRITE_GBRA "write_gbra"
+#define ROTATE_IDENTITY "rotate_identity"
+#define ROTATE_90R "rotate_90r"
+#define ROTATE_180 "rotate_180"
+#define ROTATE_90L "rotate_90l"
+#define ROTATE_HORIZ "rotate_horiz"
+#define ROTATE_VERT "rotate_vert"
+#define ROTATE_UL_LR "rotate_ul_lr"
+#define ROTATE_UR_LL "rotate_ur_ll"
 
 /* *INDENT-OFF* */
 const static gchar KERNEL_COMMON[] =
@@ -1173,7 +1181,55 @@ WRITE_GBRA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst1[pos] = scale_to_uchar (sample.z);\n"
 "  dst2[pos] = scale_to_uchar (sample.x);\n"
 "  dst3[pos] = scale_to_uchar (sample.w);\n"
-"}\n";
+"}\n"
+"__device__ inline float2\n"
+ROTATE_IDENTITY "(float x, float y)\n"
+"{\n"
+"  return make_float2(x, y);\n"
+"}\n"
+"\n"
+"__device__ inline float2\n"
+ROTATE_90R "(float x, float y)\n"
+"{\n"
+"  return make_float2(y, 1.0 - x);\n"
+"}\n"
+"\n"
+"__device__ inline float2\n"
+ROTATE_180 "(float x, float y)\n"
+"{\n"
+"  return make_float2(1.0 - x, 1.0 - y);\n"
+"}\n"
+"\n"
+"__device__ inline float2\n"
+ROTATE_90L "(float x, float y)\n"
+"{\n"
+"  return make_float2(1.0 - y, x);\n"
+"}\n"
+"\n"
+"__device__ inline float2\n"
+ROTATE_HORIZ "(float x, float y)\n"
+"{\n"
+"  return make_float2(1.0 - x, y);\n"
+"}\n"
+"\n"
+"__device__ inline float2\n"
+ROTATE_VERT "(float x, float y)\n"
+"{\n"
+"  return make_float2(x, 1.0 - y);\n"
+"}\n"
+"\n"
+"__device__ inline float2\n"
+ROTATE_UL_LR "(float x, float y)\n"
+"{\n"
+"  return make_float2(y, x);\n"
+"}\n"
+"\n"
+"__device__ inline float2\n"
+ROTATE_UR_LL "(float x, float y)\n"
+"{\n"
+"  return make_float2(1.0 - y, 1.0 - x);\n"
+"}\n"
+"\n";
 
 #define GST_CUDA_KERNEL_UNPACK_FUNC "gst_cuda_kernel_unpack_func"
 static const gchar RGB_TO_RGBx[] =
@@ -1307,7 +1363,8 @@ GST_CUDA_KERNEL_MAIN_FUNC "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\
 "  } else {\n"
 "    float x = OFFSET_X + (float) (x_pos - LEFT) / VIEW_WIDTH;\n"
 "    float y = OFFSET_Y + (float) (y_pos - TOP) / VIEW_HEIGHT;\n"
-"    float4 s = %s (tex0, tex1, tex2, tex3, x, y);\n"
+"    float2 rotated = %s (x, y);\n"
+"    float4 s = %s (tex0, tex1, tex2, tex3, rotated.x, rotated.y);\n"
 "    float3 xyz = make_float3 (s.x, s.y, s.z);\n"
 "    float3 rgb = %s (xyz, &TO_RGB_MATRIX);\n"
 "    float3 yuv = %s (rgb, &TO_YUV_MATRIX);\n"
@@ -1388,6 +1445,8 @@ struct _GstCudaConverterPrivate
 {
   GstVideoInfo in_info;
   GstVideoInfo out_info;
+
+  GstVideoOrientationMethod method;
 
   GstStructure *config;
 
@@ -1549,6 +1608,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   const gchar *write_func = NULL;
   const gchar *to_rgb_func = COLOR_SPACE_IDENTITY;
   const gchar *to_yuv_func = COLOR_SPACE_IDENTITY;
+  const gchar *rotate_func = ROTATE_IDENTITY;
   const GstVideoColorimetry *in_color;
   const GstVideoColorimetry *out_color;
   gchar *str;
@@ -1810,6 +1870,32 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   g_ascii_formatd (offset_y, G_ASCII_DTOSTR_BUF_SIZE, "%f",
       (gdouble) 0.5 / priv->dest_rect.height);
 
+  switch (priv->method) {
+    case GST_VIDEO_ORIENTATION_90R:
+      rotate_func = ROTATE_90R;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      rotate_func = ROTATE_180;
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      rotate_func = ROTATE_90L;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      rotate_func = ROTATE_HORIZ;
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      rotate_func = ROTATE_VERT;
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      rotate_func = ROTATE_UL_LR;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      rotate_func = ROTATE_UR_LL;
+      break;
+    default:
+      break;
+  }
+
   str = g_strdup_printf (TEMPLETA_KERNEL, KERNEL_COMMON,
       unpack_function ? unpack_function : "",
       /* TO RGB matrix */
@@ -1860,6 +1946,8 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       /* border colors */
       border_color_str[0], border_color_str[1],
       border_color_str[2], border_color_str[3],
+      /* adjust coord before sampling */
+      rotate_func,
       /* sampler function name */
       priv->texture_fmt->sample_func,
       /* TO RGB conversion function name */
@@ -2003,6 +2091,7 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
 {
   GstCudaConverter *self;
   GstCudaConverterPrivate *priv;
+  gint method;
 
   g_return_val_if_fail (in_info != NULL, NULL);
   g_return_val_if_fail (out_info != NULL, NULL);
@@ -2029,6 +2118,12 @@ gst_cuda_converter_new (const GstVideoInfo * in_info,
       GST_CUDA_CONVERTER_OPT_DEST_WIDTH, out_info->width);
   priv->dest_rect.height = get_opt_int (self,
       GST_CUDA_CONVERTER_OPT_DEST_HEIGHT, out_info->height);
+  if (gst_structure_get_enum (priv->config,
+          GST_CUDA_CONVERTER_OPT_ORIENTATION_METHOD,
+          GST_TYPE_VIDEO_ORIENTATION_METHOD, &method)) {
+    priv->method = method;
+    GST_DEBUG_OBJECT (self, "Selected orientation method %d", method);
+  }
 
   if (!gst_cuda_converter_setup (self))
     goto error;
