@@ -2017,7 +2017,11 @@ gst_ffmpegviddec_frame (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame,
     goto no_codec;
 
   *ret = GST_FLOW_OK;
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  ffmpegdec->context->frame_num++;
+#else
   ffmpegdec->context->frame_number++;
+#endif
 
   got_frame = gst_ffmpegviddec_video_frame (ffmpegdec, frame, ret);
 
