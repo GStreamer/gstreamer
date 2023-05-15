@@ -1828,7 +1828,6 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
       }
       break;
     }
-    default:
     case TYPE_CLOCK_ID:{
       if (CUR_STDIO_HEADER_SIZE != 8) {
         GST_ERROR ("Unexpected clock id size (%u != 8)", CUR_STDIO_HEADER_SIZE);
@@ -1848,6 +1847,8 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
       g_mutex_unlock (&ptp_lock);
       break;
     }
+    default:
+      break;
   }
 
   /* And read the next header */
