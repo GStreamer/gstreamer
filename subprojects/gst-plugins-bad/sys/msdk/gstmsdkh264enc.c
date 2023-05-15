@@ -854,18 +854,33 @@ _msdkh264enc_install_properties (GObjectClass * gobject_class,
           0, 51, PROP_MIN_QP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMsdkH264Enc:min-qp-i:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (gobject_class, PROP_MIN_QP_I,
       g_param_spec_uint ("min-qp-i", "Min QP I",
           "Minimal quantizer scale for I frame",
           0, 51, PROP_MIN_QP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMsdkH264Enc:min-qp-p:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (gobject_class, PROP_MIN_QP_P,
       g_param_spec_uint ("min-qp-p", "Min QP P",
           "Minimal quantizer scale for P frame",
           0, 51, PROP_MIN_QP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMsdkH264Enc:min-qp-b:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (gobject_class, PROP_MIN_QP_B,
       g_param_spec_uint ("min-qp-b", "Min QP B",
           "Minimal quantizer scale for B frame",
@@ -878,18 +893,33 @@ _msdkh264enc_install_properties (GObjectClass * gobject_class,
           0, 51, PROP_MAX_QP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMsdkH264Enc:max-qp-i:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (gobject_class, PROP_MAX_QP_I,
       g_param_spec_uint ("max-qp-i", "Max QP I",
           "Maximum quantizer scale for I frame",
           0, 51, PROP_MAX_QP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMsdkH264Enc:max-qp-p:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (gobject_class, PROP_MAX_QP_P,
       g_param_spec_uint ("max-qp-p", "Max QP P",
           "Maximum quantizer scale for P frame",
           0, 51, PROP_MAX_QP_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstMsdkH264Enc:max-qp-b:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (gobject_class, PROP_MAX_QP_B,
       g_param_spec_uint ("max-qp-b", "Max QP B",
           "Maximum quantizer scale for B frame",
