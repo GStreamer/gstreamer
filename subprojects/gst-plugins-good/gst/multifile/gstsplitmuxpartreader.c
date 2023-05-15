@@ -158,12 +158,12 @@ handle_buffer_measuring (GstSplitMuxPartReader * reader,
    * not to generate output timestamps */
 
   /* Update the stored max duration on the pad,
-   * always preferring making DTS contiguous
+   * always preferring making reordered PTS contiguous
    * where possible */
-  if (GST_BUFFER_DTS_IS_VALID (buf))
-    ts = GST_BUFFER_DTS (buf) + offset;
-  else if (GST_BUFFER_PTS_IS_VALID (buf))
+  if (GST_BUFFER_PTS_IS_VALID (buf))
     ts = GST_BUFFER_PTS (buf) + offset;
+  else if (GST_BUFFER_DTS_IS_VALID (buf))
+    ts = GST_BUFFER_DTS (buf) + offset;
 
   GST_DEBUG_OBJECT (reader, "Pad %" GST_PTR_FORMAT
       " incoming DTS %" GST_TIME_FORMAT
