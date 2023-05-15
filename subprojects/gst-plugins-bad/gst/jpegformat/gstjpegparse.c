@@ -796,25 +796,25 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
       case GST_JPEG_MARKER_COM:
         if (!gst_jpeg_parse_com (parse, &seg)) {
           GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Failed to parse com segment"), ("Invalid data"));
+              ("Invalid data"), ("Failed to parse com segment"));
         }
         break;
       case GST_JPEG_MARKER_APP0:
         if (!gst_jpeg_parse_app0 (parse, &seg)) {
           GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Failed to parse app0 segment"), ("Invalid data"));
+              ("Invalid data"), ("Failed to parse app0 segment"));
         }
         break;
       case GST_JPEG_MARKER_APP1:
         if (!gst_jpeg_parse_app1 (parse, &seg)) {
           GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Failed to parse app1 segment"), ("Invalid data"));
+              ("Invalid data"), ("Failed to parse app1 segment"));
         }
         break;
       case GST_JPEG_MARKER_APP14:
         if (!gst_jpeg_parse_app14 (parse, &seg)) {
           GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Failed to parse app14 segment"), ("Invalid data"));
+              ("Invalid data"), ("Failed to parse app14 segment"));
         }
         break;
       case GST_JPEG_MARKER_DHT:
@@ -831,7 +831,7 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
             parse->sof = marker - 0xc0;
           } else {
             GST_ELEMENT_ERROR (parse, STREAM, FORMAT,
-                ("Duplicated or bad SOF marker"), (NULL));
+                ("Invalid data"), ("Duplicated or bad SOF marker"));
             gst_buffer_unmap (frame->buffer, &mapinfo);
             gst_jpeg_parse_reset (parse);
             return GST_FLOW_ERROR;
