@@ -372,10 +372,22 @@ gst_avdtp_util_parse_sbc_raw (void *config)
   g_value_reset (list);
 
   /* bitpool */
-  value = g_value_init (value, GST_TYPE_INT_RANGE);
-  gst_value_set_int_range (value,
-      MIN (sbc->min_bitpool, TEMPLATE_MAX_BITPOOL),
-      MIN (sbc->max_bitpool, TEMPLATE_MAX_BITPOOL));
+  /* The reported bitpool can be a fixed value instead
+   * of a range, but GStreamer ranges do not allow for
+   * the min == max case, so use int as value in such
+   * cases instead. The bitpool value is used by
+   * sbcenc, sbcdec, rtpsbcpay, and all of them use
+   * a fixated version of that value, so there is no
+   * problem with int vs. int-range type mismatches. */
+  if (sbc->min_bitpool == sbc->max_bitpool) {
+    value = g_value_init (value, G_TYPE_INT);
+    g_value_set_int (value, MIN (sbc->max_bitpool, TEMPLATE_MAX_BITPOOL));
+  } else {
+    value = g_value_init (value, GST_TYPE_INT_RANGE);
+    gst_value_set_int_range (value,
+        MIN (sbc->min_bitpool, TEMPLATE_MAX_BITPOOL),
+        MIN (sbc->max_bitpool, TEMPLATE_MAX_BITPOOL));
+  }
   gst_structure_set_value (structure, "bitpool", value);
   g_value_unset (value);
 
