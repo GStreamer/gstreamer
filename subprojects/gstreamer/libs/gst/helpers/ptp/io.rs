@@ -308,6 +308,42 @@ mod imp {
             Ok(())
         }
     }
+
+    /// Raw, unbuffered handle to `stderr`.
+    ///
+    /// This implements the `Write` trait for writing and is implemented as a singleton to allow
+    /// usage from everywhere at any time for logging purposes.
+    ///
+    /// This does not implement any locking so usage from multiple threads at once will likely
+    /// cause interleaved output.
+    pub struct Stderr(RawFd);
+
+    impl Stderr {
+        #[cfg(not(test))]
+        pub fn acquire() -> Self {
+            Stderr(STDERR_FILENO)
+        }
+    }
+
+    impl Write for Stderr {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            // SAFETY: write() requires a valid fd and a mutable buffer with the given size.
+            // The fd is valid by construction as is the buffer.
+            //
+            // write() will return the number of bytes written or a negative value on errors.
+            let res = unsafe { write(self.0, buf.as_ptr(), buf.len()) };
+
+            if res == -1 {
+                Err(std::io::Error::last_os_error())
+            } else {
+                Ok(res as usize)
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
 }
 
 #[cfg(windows)]
@@ -352,7 +388,7 @@ mod imp {
             // that has to be closed again later.
             unsafe {
                 let event = WSACreateEvent();
-                if event.is_null() || event as isize == -1 {
+                if event.is_null() || event == INVALID_HANDLE_VALUE {
                     Err(io::Error::from_raw_os_error(WSAGetLastError()))
                 } else {
                     Ok(EventHandle(event))
@@ -729,7 +765,7 @@ mod imp {
                 let handle = GetStdHandle(STD_INPUT_HANDLE);
                 if handle.is_null() {
                     bail!("No stdin handle set");
-                } else if handle as isize == -1 {
+                } else if handle == INVALID_HANDLE_VALUE {
                     bail!(source: io::Error::last_os_error(), "Can't get stdin handle");
                 }
 
@@ -932,7 +968,7 @@ mod imp {
                 let handle = GetStdHandle(STD_OUTPUT_HANDLE);
                 if handle.is_null() {
                     bail!("No stdout handle set");
-                } else if handle as isize == -1 {
+                } else if handle == INVALID_HANDLE_VALUE {
                     bail!(
                         source: io::Error::last_os_error(),
                         "Can't get stdout handle"
@@ -993,9 +1029,107 @@ mod imp {
             Ok(())
         }
     }
+
+    /// Raw, unbuffered handle to `stderr`.
+    ///
+    /// This implements the `Write` trait for writing and is implemented as a singleton to allow
+    /// usage from everywhere at any time for logging purposes.
+    ///
+    /// This does not implement any locking so usage from multiple threads at once will likely
+    /// cause interleaved output.
+    pub struct Stderr(HANDLE);
+
+    impl Stderr {
+        #[cfg(not(test))]
+        pub fn acquire() -> Self {
+            use std::sync::Once;
+
+            struct SyncHandle(HANDLE);
+            // SAFETY: This is a single-threaded application and even otherwise writing from
+            // multiple threads at once to a pipe is safe and will only cause interleaved output.
+            unsafe impl Send for SyncHandle {}
+            unsafe impl Sync for SyncHandle {}
+
+            static mut STDERR: SyncHandle = SyncHandle(INVALID_HANDLE_VALUE);
+            static STDERR_ONCE: Once = Once::new();
+
+            STDERR_ONCE.call_once(|| {
+                // SAFETY: GetStdHandle returns a borrowed handle, or 0 if none is set or -1 if an
+                // error has happened.
+                let handle = unsafe {
+                    let handle = GetStdHandle(STD_ERROR_HANDLE);
+                    if handle.is_null() {
+                        return;
+                    } else if handle == INVALID_HANDLE_VALUE {
+                        return;
+                    }
+
+                    handle
+                };
+
+                // SAFETY: GetFileType() is safe to call on any valid handle.
+                let type_ = unsafe { GetFileType(handle) };
+
+                if type_ == FILE_TYPE_CHAR {
+                    // Set the console to raw mode.
+                    //
+                    // SAFETY: Calling this on non-console handles will cause an error but otherwise
+                    // have no negative effects. We can safely change the console mode here as nothing
+                    // else is accessing the console.
+                    unsafe {
+                        let _ = SetConsoleMode(handle, 0);
+                    }
+                } else if type_ != FILE_TYPE_PIPE {
+                    return;
+                }
+
+                // SAFETY: Only accessed in this function and multiple mutable accesses are
+                // prevented by the `Once`.
+                unsafe {
+                    STDERR.0 = handle;
+                }
+            });
+
+            // SAFETY: Only accesses immutably here and all mutable accesses are serialized above
+            // by the `Once`.
+            Stderr(unsafe { STDERR.0 })
+        }
+    }
+
+    impl Write for Stderr {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            if self.0 == INVALID_HANDLE_VALUE {
+                return Ok(buf.len());
+            }
+
+            // SAFETY: Writes the given number of bytes to stderr or at most u32::MAX. On error
+            // zero is returned, otherwise the number of bytes written is set accordingly and
+            // returned.
+            unsafe {
+                let mut lpnumberofbyteswritten = mem::MaybeUninit::uninit();
+                let res = WriteFile(
+                    self.0,
+                    buf.as_ptr(),
+                    cmp::min(buf.len() as u32, u32::MAX) as u32,
+                    lpnumberofbyteswritten.as_mut_ptr(),
+                    ptr::null_mut(),
+                );
+
+                if res == 0 {
+                    Err(io::Error::last_os_error())
+                } else {
+                    Ok(lpnumberofbyteswritten.assume_init() as usize)
+                }
+            }
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
 }
 
-pub use self::imp::{Poll, Stdin, Stdout};
+pub use self::imp::{Poll, Stderr, Stdin, Stdout};
 
 #[cfg(test)]
 mod test {

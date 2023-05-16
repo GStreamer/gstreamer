@@ -116,16 +116,23 @@ mod imp {
             // Skip loopback interfaces, interfaces that are not up and interfaces that can't do
             // multicast. These are all unusable for PTP purposes.
             let flags = ifaddr.ifa_flags;
-            if (flags & IFF_LOOPBACK as u32 != 0)
-                || (flags & IFF_UP as u32 == 0)
-                || (flags & IFF_MULTICAST as u32 == 0)
-            {
+            if flags & IFF_LOOPBACK as u32 != 0 {
+                debug!("Interface {} is loopback interface", name);
+                continue;
+            }
+            if flags & IFF_UP as u32 == 0 {
+                debug!("Interface {} is not up", name);
+                continue;
+            }
+            if flags & IFF_MULTICAST as u32 == 0 {
+                debug!("Interface {} does not support multicast", name);
                 continue;
             }
 
             // If the interface has no address then skip it. Only interfaces with IPv4 addresses
             // are usable for PTP purposes.
             if ifaddr.ifa_addr.is_null() {
+                debug!("Interface {} has no IPv4 address", name);
                 continue;
             }
 
@@ -147,6 +154,7 @@ mod imp {
                 break index;
             };
             if index == 0 {
+                debug!("Interface {} has no valid interface index", name);
                 continue;
             }
 
@@ -163,6 +171,8 @@ mod imp {
                 // pointer and can be used as such.
                 let addr = unsafe { &*(ifaddr.ifa_addr as *const sockaddr_in) };
                 let ip_addr = Ipv4Addr::from(addr.sin_addr.s_addr.to_ne_bytes());
+
+                debug!("Interface {} has IPv4 address {}", name, ip_addr);
 
                 if let Some(if_info) = if_infos.iter_mut().find(|info| info.name == name) {
                     if if_info.ip_addr.is_broadcast() {
@@ -188,6 +198,9 @@ mod imp {
                     if addr.sll_halen == 6 {
                         let mut hw_addr = [0u8; 6];
                         hw_addr.copy_from_slice(&addr.sll_addr[0..6]);
+
+                        debug!("Interface {} has MAC address {:?}", name, hw_addr);
+
                         if let Some(if_info) = if_infos.iter_mut().find(|info| info.name == name) {
                             if if_info.hw_addr.is_none() {
                                 if_info.hw_addr = Some(hw_addr);
@@ -223,6 +236,8 @@ mod imp {
                                 slice::from_raw_parts(sdl_addr_ptr.add(addr.sdl_nlen as usize), 6);
                             hw_addr.copy_from_slice(sdl_addr);
                         }
+
+                        debug!("Interface {} has MAC address {:?}", name, hw_addr);
 
                         if let Some(if_info) = if_infos.iter_mut().find(|info| info.name == name) {
                             if if_info.hw_addr.is_none() {
@@ -315,13 +330,16 @@ mod imp {
         // lost other than the ability to run multiple processes at once.
         unsafe {
             let v = 1i32;
-            let _ = setsockopt(
+            let res = setsockopt(
                 socket.as_raw_fd(),
                 SOL_SOCKET,
                 SO_REUSEADDR,
                 &v as *const _ as *const _,
                 mem::size_of_val(&v) as u32,
             );
+            if res < 0 {
+                warn!("Failed to set SO_REUSEADDR on socket");
+            }
         }
 
         #[cfg(not(any(target_os = "solaris", target_os = "illumos")))]
@@ -333,13 +351,17 @@ mod imp {
             // lost other than the ability to run multiple processes at once.
             unsafe {
                 let v = 1i32;
-                let _ = setsockopt(
+                let res = setsockopt(
                     socket.as_raw_fd(),
                     SOL_SOCKET,
                     SO_REUSEPORT,
                     &v as *const _ as *const _,
                     mem::size_of_val(&v) as u32,
                 );
+
+                if res < 0 {
+                    warn!("Failed to set SO_REUSEPORT on socket");
+                }
             }
         }
     }
@@ -515,17 +537,26 @@ mod imp {
 
             // Skip adapters that are receive-only, can't do multicast or don't have IPv4 support
             // as they're not usable in a PTP context.
-            if address.flags & ADAPTER_FLAG_RECEIVE_ONLY != 0
-                || address.flags & ADAPTER_FLAG_NO_MULTICAST != 0
-                || address.flags & ADAPTER_FLAG_IPV4_ENABLED == 0
-            {
+            if address.flags & ADAPTER_FLAG_RECEIVE_ONLY != 0 {
+                debug!("Interface {} is receive-only interface", adaptername);
+                continue;
+            }
+            if address.flags & ADAPTER_FLAG_NO_MULTICAST != 0 {
+                debug!("Interface {} does not support multicast", adaptername);
+                continue;
+            }
+            if address.flags & ADAPTER_FLAG_IPV4_ENABLED == 0 {
+                debug!("Interface {} has no IPv4 address", adaptername);
                 continue;
             }
 
             // Skip adapters that are loopback or not up.
-            if address.iftype == IF_TYPE_SOFTWARE_LOOPBACK
-                || address.operstatus != IF_OPER_STATUS_UP
-            {
+            if address.iftype == IF_TYPE_SOFTWARE_LOOPBACK {
+                debug!("Interface {} is loopback interface", adaptername);
+                continue;
+            }
+            if address.operstatus != IF_OPER_STATUS_UP {
+                debug!("Interface {} is not up", adaptername);
                 continue;
             }
 
@@ -534,6 +565,7 @@ mod imp {
             // Skip adapters that have no valid interface index as they can't be used to join the
             // PTP multicast group reliably for this interface only.
             if index == 0 {
+                debug!("Interface {} has no valid interface index", adaptername);
                 continue;
             }
 
@@ -595,6 +627,8 @@ mod imp {
                     ip_addr,
                     hw_addr,
                 });
+            } else {
+                debug!("Interface {} has no IPv4 address", adaptername);
             }
         }
 
@@ -653,13 +687,16 @@ mod imp {
         // lost other than the ability to run multiple processes at once.
         unsafe {
             let v = 1i32;
-            let _ = setsockopt(
+            let res = setsockopt(
                 socket.as_raw_socket(),
                 SOL_SOCKET as i32,
                 SO_REUSEADDR as i32,
                 &v as *const _ as *const _,
                 mem::size_of_val(&v) as _,
             );
+            if res < 0 {
+                warn!("Failed to set SO_REUSEADDR on socket");
+            }
         }
     }
 }

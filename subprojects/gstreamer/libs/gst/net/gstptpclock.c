@@ -245,7 +245,18 @@ typedef enum
 } StdIOMessageType;
 
 /* 2 byte BE payload size plus 1 byte message type */
-#define STDIO_MESSAGE_HEADER_SIZE (sizeof (guint16) + sizeof (guint8))
+#define STDIO_MESSAGE_HEADER_SIZE (3)
+
+/* 2 byte BE payload size. Payload format:
+ * - 1 byte GstDebugLevel
+ * - 2 byte BE filename length
+ * - filename UTF-8 string
+ * - 2 byte BE module path length
+ * - module path UTF-8 string
+ * - 4 byte BE line number
+ * - remainder is UTF-8 string
+ */
+#define STDERR_MESSAGE_HEADER_SIZE (2)
 
 static GMutex ptp_lock;
 static GCond ptp_cond;
@@ -257,9 +268,12 @@ static gboolean supported = FALSE;
 #endif
 static GSubprocess *ptp_helper_process;
 static GInputStream *stdout_pipe;
+static GInputStream *stderr_pipe;
 static GOutputStream *stdin_pipe;
-static guint8 stdio_header[STDIO_MESSAGE_HEADER_SIZE];        /* buffer for reading the message header */
-static guint8 stdout_buffer[8192];       /* buffer for reading the message payload */
+static guint8 stdio_header[STDIO_MESSAGE_HEADER_SIZE];  /* buffer for reading the message header */
+static guint8 stdout_buffer[8192];      /* buffer for reading the message payload */
+static guint8 stderr_header[STDERR_MESSAGE_HEADER_SIZE];        /* buffer for reading the message header */
+static guint8 stderr_buffer[8192];      /* buffer for reading the message payload */
 static GThread *ptp_helper_thread;
 static GMainContext *main_context;
 static GMainLoop *main_loop;
@@ -269,6 +283,8 @@ static PtpClockIdentity ptp_clock_id = { GST_PTP_CLOCK_ID_NONE, 0 };
 
 #define CUR_STDIO_HEADER_SIZE (GST_READ_UINT16_BE (stdio_header))
 #define CUR_STDIO_HEADER_TYPE ((StdIOMessageType) stdio_header[2])
+
+#define CUR_STDERR_HEADER_SIZE (GST_READ_UINT16_BE (stderr_header))
 
 typedef struct
 {
@@ -1853,7 +1869,7 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
 
   /* And read the next header */
   memset (&stdio_header, 0, STDIO_MESSAGE_HEADER_SIZE);
-  g_input_stream_read_all_async (stdout_pipe, &stdio_header,
+  g_input_stream_read_all_async (stdout_pipe, stdio_header,
       STDIO_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
       (GAsyncReadyCallback) have_stdout_header, NULL);
 }
@@ -1878,7 +1894,6 @@ have_stdout_header (GInputStream * stdout_pipe, GAsyncResult * res,
     return;
   } else if (read == 0) {
     GST_ERROR ("Got EOF on stdin");
-    g_main_loop_quit (main_loop);
     return;
   } else if (read != STDIO_MESSAGE_HEADER_SIZE) {
     GST_ERROR ("Unexpected read size: %" G_GSIZE_FORMAT, read);
@@ -1894,6 +1909,143 @@ have_stdout_header (GInputStream * stdout_pipe, GAsyncResult * res,
   g_input_stream_read_all_async (stdout_pipe, stdout_buffer,
       CUR_STDIO_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
       (GAsyncReadyCallback) have_stdout_body, NULL);
+}
+
+static void have_stderr_header (GInputStream * stderr_pipe, GAsyncResult * res,
+    gpointer user_data);
+
+static void
+have_stderr_body (GInputStream * stderr_pipe, GAsyncResult * res,
+    gpointer user_data)
+{
+  GError *err = NULL;
+  gsize read;
+#ifndef GST_DISABLE_GST_DEBUG
+  GstByteReader breader;
+  GstDebugLevel level;
+  guint16 filename_length;
+  gchar *filename = NULL;
+  guint16 module_path_length;
+  gchar *module_path = NULL;
+  guint32 line_number;
+  gchar *message = NULL;
+  guint16 message_length;
+  guint8 b;
+#endif
+
+  /* Finish reading the body */
+  if (!g_input_stream_read_all_finish (stderr_pipe, res, &read, &err)) {
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CLOSED) ||
+        g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CONNECTION_CLOSED)) {
+      GST_ERROR ("Got EOF on stderr");
+    } else {
+      GST_ERROR ("Failed to read header from stderr: %s", err->message);
+    }
+    g_clear_error (&err);
+    g_main_loop_quit (main_loop);
+    return;
+  } else if (read == 0) {
+    GST_ERROR ("Got EOF on stderr");
+    g_main_loop_quit (main_loop);
+    return;
+  } else if (read != CUR_STDERR_HEADER_SIZE) {
+    GST_ERROR ("Unexpected read size: %" G_GSIZE_FORMAT, read);
+    g_main_loop_quit (main_loop);
+    return;
+  }
+
+#ifndef GST_DISABLE_GST_DEBUG
+  gst_byte_reader_init (&breader, stderr_buffer, CUR_STDERR_HEADER_SIZE);
+
+  if (!gst_byte_reader_get_uint8 (&breader, &b) || b > GST_LEVEL_MAX)
+    goto err;
+  level = (GstDebugLevel) b;
+  if (!gst_byte_reader_get_uint16_be (&breader, &filename_length)
+      || filename_length > gst_byte_reader_get_remaining (&breader))
+    goto err;
+  filename =
+      g_strndup ((const gchar *) gst_byte_reader_get_data_unchecked (&breader,
+          filename_length), filename_length);
+
+  if (!gst_byte_reader_get_uint16_be (&breader, &module_path_length)
+      || module_path_length > gst_byte_reader_get_remaining (&breader))
+    goto err;
+  module_path =
+      g_strndup ((const gchar *) gst_byte_reader_get_data_unchecked (&breader,
+          module_path_length), module_path_length);
+
+  if (!gst_byte_reader_get_uint32_be (&breader, &line_number))
+    goto err;
+
+  message_length = gst_byte_reader_get_remaining (&breader);
+  message =
+      g_strndup ((const gchar *) gst_byte_reader_get_data_unchecked (&breader,
+          message_length), message_length);
+
+  gst_debug_log_literal (GST_CAT_DEFAULT, level, filename, module_path,
+      line_number, NULL, message);
+
+  g_clear_pointer (&filename, g_free);
+  g_clear_pointer (&module_path, g_free);
+  g_clear_pointer (&message, g_free);
+#endif
+
+  /* And read the next header */
+  memset (&stderr_header, 0, STDERR_MESSAGE_HEADER_SIZE);
+  g_input_stream_read_all_async (stderr_pipe, stderr_header,
+      STDERR_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
+      (GAsyncReadyCallback) have_stderr_header, NULL);
+  return;
+
+#ifndef GST_DISABLE_GST_DEBUG
+err:
+  {
+    GST_ERROR ("Unexpected stderr data");
+    g_clear_pointer (&filename, g_free);
+    g_clear_pointer (&module_path, g_free);
+    g_clear_pointer (&message, g_free);
+    g_main_loop_quit (main_loop);
+    return;
+  }
+#endif
+}
+
+static void
+have_stderr_header (GInputStream * stderr_pipe, GAsyncResult * res,
+    gpointer user_data)
+{
+  GError *err = NULL;
+  gsize read;
+
+  /* Finish reading the header */
+  if (!g_input_stream_read_all_finish (stderr_pipe, res, &read, &err)) {
+    if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CLOSED) ||
+        g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CONNECTION_CLOSED)) {
+      GST_ERROR ("Got EOF on stderr");
+    } else {
+      GST_ERROR ("Failed to read header from stderr: %s", err->message);
+    }
+    g_clear_error (&err);
+    g_main_loop_quit (main_loop);
+    return;
+  } else if (read == 0) {
+    GST_ERROR ("Got EOF on stderr");
+    g_main_loop_quit (main_loop);
+    return;
+  } else if (read != STDERR_MESSAGE_HEADER_SIZE) {
+    GST_ERROR ("Unexpected read size: %" G_GSIZE_FORMAT, read);
+    g_main_loop_quit (main_loop);
+    return;
+  } else if (CUR_STDERR_HEADER_SIZE > 8192 || CUR_STDERR_HEADER_SIZE < 9) {
+    GST_ERROR ("Unexpected size: %u", CUR_STDERR_HEADER_SIZE);
+    g_main_loop_quit (main_loop);
+    return;
+  }
+
+  /* And now read the body */
+  g_input_stream_read_all_async (stderr_pipe, stderr_buffer,
+      CUR_STDERR_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
+      (GAsyncReadyCallback) have_stderr_body, NULL);
 }
 
 /* Cleanup all announce messages and announce message senders
@@ -1996,9 +2148,14 @@ ptp_helper_main (gpointer data)
   g_main_context_push_thread_default (main_context);
 
   memset (&stdio_header, 0, STDIO_MESSAGE_HEADER_SIZE);
-  g_input_stream_read_all_async (stdout_pipe, &stdio_header,
+  g_input_stream_read_all_async (stdout_pipe, stdio_header,
       STDIO_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
       (GAsyncReadyCallback) have_stdout_header, NULL);
+
+  memset (&stderr_header, 0, STDERR_MESSAGE_HEADER_SIZE);
+  g_input_stream_read_all_async (stderr_pipe, stderr_header,
+      STDERR_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
+      (GAsyncReadyCallback) have_stderr_header, NULL);
 
   /* Check all 5 seconds, if we have to cleanup ANNOUNCE or pending syncs message */
   cleanup_source = g_timeout_source_new_seconds (5);
@@ -2259,7 +2416,7 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
   if (interfaces != NULL)
     argc += 2 * g_strv_length (interfaces);
 
-  argv = g_new0 (gchar *, argc + 2);
+  argv = g_new0 (gchar *, argc + 3);
   argc_c = 0;
 
   /* Find the gst-ptp-helper */
@@ -2338,9 +2495,16 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
     }
   }
 
+  /* Check if the helper process should be verbose */
+  env = g_getenv ("GST_PTP_HELPER_VERBOSE");
+  if (env && g_ascii_strcasecmp (env, "no") != 0) {
+    argv[argc_c++] = g_strdup ("-v");
+  }
+
   ptp_helper_process =
       g_subprocess_newv ((const gchar * const *) argv,
-      G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE, &err);
+      G_SUBPROCESS_FLAGS_STDIN_PIPE | G_SUBPROCESS_FLAGS_STDOUT_PIPE |
+      G_SUBPROCESS_FLAGS_STDERR_PIPE, &err);
   if (!ptp_helper_process) {
     GST_ERROR ("Failed to start ptp helper process: %s", err->message);
     g_clear_error (&err);
@@ -2355,7 +2519,10 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
   stdout_pipe = g_subprocess_get_stdout_pipe (ptp_helper_process);
   if (stdout_pipe)
     g_object_ref (stdout_pipe);
-  if (!stdin_pipe || !stdout_pipe) {
+  stderr_pipe = g_subprocess_get_stderr_pipe (ptp_helper_process);
+  if (stderr_pipe)
+    g_object_ref (stderr_pipe);
+  if (!stdin_pipe || !stdout_pipe || !stderr_pipe) {
     GST_ERROR ("Failed to get ptp helper process pipes");
     ret = FALSE;
     supported = FALSE;
@@ -2404,6 +2571,7 @@ done:
     if (ptp_helper_process) {
       g_clear_object (&stdin_pipe);
       g_clear_object (&stdout_pipe);
+      g_clear_object (&stderr_pipe);
       g_subprocess_force_exit (ptp_helper_process);
       g_clear_object (&ptp_helper_process);
     }
@@ -2453,6 +2621,7 @@ gst_ptp_deinit (void)
   if (ptp_helper_process) {
     g_clear_object (&stdin_pipe);
     g_clear_object (&stdout_pipe);
+    g_clear_object (&stderr_pipe);
     g_subprocess_force_exit (ptp_helper_process);
     g_clear_object (&ptp_helper_process);
   }

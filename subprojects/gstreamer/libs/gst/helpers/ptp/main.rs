@@ -22,6 +22,9 @@ use std::{
     net::{Ipv4Addr, SocketAddr, UdpSocket},
 };
 
+#[macro_use]
+mod log;
+
 mod args;
 mod error;
 mod ffi;
@@ -93,6 +96,8 @@ fn join_multicast(
                 }
             }
 
+            info!("Interface {} filtered out", iface.name);
+
             false
         });
 
@@ -102,6 +107,10 @@ fn join_multicast(
         if ifaces.len() != args.interfaces.len() {
             bail!("Not all selected network interfaces found");
         }
+    }
+
+    for iface in &ifaces {
+        info!("Binding to interface {}", iface.name);
     }
 
     for socket in [&event_socket, &general_socket].iter() {
@@ -126,10 +135,12 @@ fn join_multicast(
         args.clock_id.to_be_bytes()
     };
 
+    info!("Using clock ID {:?}", clock_id);
+
     Ok(clock_id)
 }
 
-fn main() -> Result<(), Error> {
+fn run() -> Result<(), Error> {
     let args = args::parse_args().context("Failed parsing commandline parameters")?;
 
     let event_socket = create_socket(PTP_EVENT_PORT).context("Failed creating event socket")?;
@@ -176,8 +187,8 @@ fn main() -> Result<(), Error> {
         {
             let idx = idx as u8;
             let res = match idx {
-                MSG_TYPE_EVENT => poll.event_socket().recv(&mut socket_buffer),
-                MSG_TYPE_GENERAL => poll.general_socket().recv(&mut socket_buffer),
+                MSG_TYPE_EVENT => poll.event_socket().recv_from(&mut socket_buffer),
+                MSG_TYPE_GENERAL => poll.general_socket().recv_from(&mut socket_buffer),
                 _ => unreachable!(),
             };
 
@@ -192,7 +203,15 @@ fn main() -> Result<(), Error> {
                         if idx == 0 { "event" } else { "general" }
                     );
                 }
-                Ok(read) => {
+                Ok((read, addr)) => {
+                    if args.verbose {
+                        trace!(
+                            "Received {} bytes from {} socket from {}",
+                            read,
+                            if idx == 0 { "event" } else { "general" },
+                            addr
+                        );
+                    }
                     stdinout_buffer[0..2].copy_from_slice(&(read as u16).to_be_bytes());
                     stdinout_buffer[2] = idx;
                     stdinout_buffer[3..][..read].copy_from_slice(&socket_buffer[..read]);
@@ -217,6 +236,14 @@ fn main() -> Result<(), Error> {
             }
             let type_ = stdinout_buffer[2];
 
+            if args.verbose {
+                trace!(
+                    "Received {} bytes for {} socket from stdin",
+                    size,
+                    if type_ == 0 { "event" } else { "general" },
+                );
+            }
+
             poll.stdin()
                 .read_exact(&mut stdinout_buffer[0..size as usize])
                 .context("Failed reading packet body from stdin")?;
@@ -238,5 +265,18 @@ fn main() -> Result<(), Error> {
                 )
             })?;
         }
+    }
+}
+
+/// Custom panic hook so we can print them to stderr in a format the main process understands
+fn panic_hook(info: &std::panic::PanicInfo) {
+    error!("Panicked. {}", info);
+}
+
+fn main() {
+    std::panic::set_hook(Box::new(panic_hook));
+
+    if let Err(err) = run() {
+        error!("Exited with error: {:?}", err);
     }
 }

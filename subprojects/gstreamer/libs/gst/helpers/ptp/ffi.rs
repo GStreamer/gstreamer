@@ -31,6 +31,8 @@ pub mod unix {
     // XXX: Once meson has cargo subproject support all of the below can be replaced with the libc crate.
     pub const STDIN_FILENO: RawFd = 0;
     pub const STDOUT_FILENO: RawFd = 1;
+    #[cfg(not(test))]
+    pub const STDERR_FILENO: RawFd = 2;
     pub const O_RDONLY: c_int = 0;
 
     pub const POLLIN: c_short = 0x1;
@@ -547,8 +549,12 @@ pub mod windows {
     // corresponding C headers, MSDN and related documentation.
     //
     // XXX: Once meson has cargo subproject support all of the below can be replaced with the windows-sys crate.
+    pub const INVALID_HANDLE_VALUE: HANDLE = (-1 as isize as usize) as HANDLE;
+
     pub const STD_INPUT_HANDLE: i32 = -10;
     pub const STD_OUTPUT_HANDLE: i32 = -11;
+    #[cfg(not(test))]
+    pub const STD_ERROR_HANDLE: i32 = -12;
 
     pub const FILE_TYPE_CHAR: u32 = 0x0002;
     pub const FILE_TYPE_PIPE: u32 = 0x0003;

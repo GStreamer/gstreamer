@@ -58,9 +58,7 @@ pub fn parse_args() -> Result<Args, Error> {
         clock_id,
     };
 
-    if verbose {
-        eprintln!("Running with arguments {:#?}", args);
-    }
+    info!("Running with arguments {:#?}", args);
 
     Ok(args)
 }
