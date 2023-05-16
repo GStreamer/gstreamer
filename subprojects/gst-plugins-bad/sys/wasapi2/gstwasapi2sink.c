@@ -123,7 +123,8 @@ gst_wasapi2_sink_class_init (GstWasapi2SinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "WASAPI playback device as a GUID string",
+          "Audio device ID as provided by "
+          "Windows.Devices.Enumeration.DeviceInformation.Id",
           NULL, GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
           G_PARAM_STATIC_STRINGS));
 
