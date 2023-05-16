@@ -58,14 +58,6 @@ gst_va_device_new (GstVaDisplay * display, const gchar * render_device_path,
   return device;
 }
 
-static gint
-compare_device_path (gconstpointer a, gconstpointer b, gpointer user_data)
-{
-  const GstVaDevice *pa = a, *pb = b;
-
-  return g_strcmp0 (pa->render_device_path, pb->render_device_path);
-}
-
 #ifdef HAVE_GUDEV
 static gint
 compare_udev_path (gconstpointer a, gconstpointer b)
@@ -110,10 +102,9 @@ gst_va_device_find_devices (void)
       continue;
 
     GST_INFO ("Found VA-API device: %s", path);
-    g_queue_push_head (&devices, gst_va_device_new (dpy, path, i++));
+    g_queue_push_tail (&devices, gst_va_device_new (dpy, path, i++));
   }
 
-  g_queue_sort (&devices, compare_device_path, NULL);
   g_list_free_full (udev_devices, g_object_unref);
   g_object_unref (client);
 
@@ -137,10 +128,9 @@ gst_va_device_find_devices (void)
       continue;
 
     GST_INFO ("Found VA-API device: %s", path);
-    g_queue_push_head (&devices, gst_va_device_new (dpy, path, j++));
+    g_queue_push_tail (&devices, gst_va_device_new (dpy, path, j++));
   }
 
-  g_queue_sort (&devices, compare_device_path, NULL);
   return devices.head;
 }
 #endif
