@@ -67,6 +67,16 @@ compare_device_path (gconstpointer a, gconstpointer b, gpointer user_data)
 }
 
 #ifdef HAVE_GUDEV
+static gint
+compare_udev_path (gconstpointer a, gconstpointer b)
+{
+  GUdevDevice *pa = (GUdevDevice *) a;
+  GUdevDevice *pb = (GUdevDevice *) b;
+
+  return g_strcmp0 (g_udev_device_get_device_file (pa),
+      g_udev_device_get_device_file (pb));
+}
+
 GList *
 gst_va_device_find_devices (void)
 {
@@ -77,6 +87,13 @@ gst_va_device_find_devices (void)
 
   client = g_udev_client_new (NULL);
   udev_devices = g_udev_client_query_by_subsystem (client, "drm");
+
+  if (!udev_devices) {
+    g_object_unref (client);
+    return NULL;
+  }
+
+  udev_devices = g_list_sort (udev_devices, compare_udev_path);
 
   for (dev = udev_devices; dev; dev = g_list_next (dev)) {
     GstVaDisplay *dpy;
