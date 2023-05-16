@@ -96,6 +96,9 @@ if get_option('webrtc').enabled()
   libnice_options += ['gstreamer=enabled']
 endif
 
+# Disable gst-python if we've disabled introspection
+gst_python_option = get_option('python').disable_if(get_option('introspection').disabled())
+
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
   ['gstreamer', {'build-hotdoc': true, 'subproject_options': building_full_options}],
@@ -112,7 +115,7 @@ subprojects = [
   ['gstreamer-vaapi', { 'option': get_option('vaapi'), 'build-hotdoc': true}],
   ['gstreamer-sharp', { 'option': get_option('sharp') }],
   ['pygobject', { 'option': get_option('python'), 'match_gst_version': false, 'sysdep': 'pygobject-3.0', 'sysdep_version': '>= 3.8' }],
-  ['gst-python', { 'option': get_option('python')}],
+  ['gst-python', { 'option': gst_python_option}],
   ['gst-examples', { 'option': get_option('gst-examples'), 'match_gst_versions': false}],
   ['gst-plugins-rs', { 'option': get_option('rs'), 'build-hotdoc': true, 'match_gst_version': false}],
 ]

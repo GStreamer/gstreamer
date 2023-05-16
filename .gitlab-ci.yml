@@ -420,17 +420,11 @@ build fedora clang:
         MESON_ARGS: >-
           ${SIMPLE_BUILD}
           -Dintrospection=disabled
+          -Dpython=disabled
           --force-fallback-for=glib
 
       - BUILD_TYPE: ["--default-library=static"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
-        # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
-        # currently need to statically build ges.
-        #
-        # subprojects/gst-editing-services/meson.build:153:4: ERROR: Problem encountered: Want to build python based modules but it is not supported while static building
-        # https://github.com/mesonbuild/meson/issues/5214
-        # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4281?commit_id=d1a687b61d8fbc5ae35b4bb62aa7fd1d091818f2#note_1875699
-        #
         # VAAPI can't be build statically yet
         # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
         #
@@ -439,9 +433,8 @@ build fedora clang:
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
           -Dvaapi=disabled
-          -Dpython=auto
-          -Dgst-editing-services:python=disabled
           -Dintrospection=disabled
+          -Dpython=disabled
           -Ddoc=disabled
           -Dgstreamer-sharp:tests=disabled
           --force-fallback-for=glib
