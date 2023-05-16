@@ -123,7 +123,7 @@ gst_wasapi_sink_class_init (GstWasapiSinkClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_DEVICE,
       g_param_spec_string ("device", "Device",
-          "WASAPI playback device as a GUID string",
+          "WASAPI device endpoint ID as provided by IMMDevice::GetId",
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class,
