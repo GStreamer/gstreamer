@@ -118,12 +118,19 @@ struct _GstD3D11BaseConvert
 
   /* Updated by subclass */
   gboolean add_borders;
+  gboolean active_add_borders;
+
   guint64 border_color;
+
   GstVideoGammaMode gamma_mode;
+  GstVideoGammaMode active_gamma_mode;
+
   GstVideoPrimariesMode primaries_mode;
+  GstVideoPrimariesMode active_primaries_mode;
 
   /* sampling method, configured via property */
   GstD3D11SamplingMethod sampling_method;
+  GstD3D11SamplingMethod active_sampling_method;
 
   /* orientation */
   /* method configured via property */
@@ -179,6 +186,8 @@ gst_d3d11_base_convert_generate_output (GstBaseTransform * trans,
     GstBuffer ** buffer);
 static gboolean gst_d3d11_base_convert_transform_meta (GstBaseTransform * trans,
     GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
+static void gst_d3d11_base_convert_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer);
 static GstFlowReturn gst_d3d11_base_convert_transform (GstBaseTransform *
     trans, GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
@@ -365,6 +374,8 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_generate_output);
   trans_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_transform_meta);
+  trans_class->before_transform =
+      GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_before_transform);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_transform);
 
   bfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d11_base_convert_set_info);
@@ -376,11 +387,12 @@ gst_d3d11_base_convert_class_init (GstD3D11BaseConvertClass * klass)
 static void
 gst_d3d11_base_convert_init (GstD3D11BaseConvert * self)
 {
-  self->add_borders = DEFAULT_ADD_BORDERS;
+  self->add_borders = self->active_add_borders = DEFAULT_ADD_BORDERS;
   self->border_color = DEFAULT_BORDER_COLOR;
-  self->gamma_mode = DEFAULT_GAMMA_MODE;
-  self->primaries_mode = DEFAULT_PRIMARIES_MODE;
-  self->sampling_method = DEFAULT_SAMPLING_METHOD;
+  self->gamma_mode = self->active_gamma_mode = DEFAULT_GAMMA_MODE;
+  self->primaries_mode = self->active_primaries_mode = DEFAULT_PRIMARIES_MODE;
+  self->sampling_method = self->active_sampling_method =
+      DEFAULT_SAMPLING_METHOD;
 }
 
 static void
@@ -1566,6 +1578,15 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   GstD3D11SRWLockGuard lk (&self->lock);
   self->active_method = self->selected_method;
+  self->active_add_borders = self->add_borders;
+  self->active_gamma_mode = self->gamma_mode;
+  self->active_primaries_mode = self->primaries_mode;
+  self->active_sampling_method = self->sampling_method;
+
+  GST_DEBUG_OBJECT (self, "method %d, add-borders %d, gamma-mode %d, "
+      "primaries-mode %d, sampling %d", self->active_method,
+      self->active_add_borders, self->active_gamma_mode,
+      self->active_primaries_mode, self->active_sampling_method);
 
   if (self->active_method != GST_VIDEO_ORIENTATION_IDENTITY)
     need_flip = TRUE;
@@ -1608,7 +1629,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   self->borders_w = self->borders_h = 0;
   if (to_dar_n != from_dar_n || to_dar_d != from_dar_d) {
-    if (self->add_borders) {
+    if (self->active_add_borders) {
       gint n, d, to_h, to_w;
 
       if (from_dar_n != -1 && from_dar_d != -1
@@ -1655,13 +1676,13 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
 
   config = gst_structure_new ("convert-config",
       GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
-      GST_TYPE_VIDEO_GAMMA_MODE, self->gamma_mode,
+      GST_TYPE_VIDEO_GAMMA_MODE, self->active_gamma_mode,
       GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
-      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode,
+      GST_TYPE_VIDEO_PRIMARIES_MODE, self->active_primaries_mode,
       GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
       GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER,
-      gst_d3d11_base_convert_sampling_method_to_filter (self->sampling_method),
-      nullptr);
+      gst_d3d11_base_convert_sampling_method_to_filter
+      (self->active_sampling_method), nullptr);
 
   self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info,
       config);
@@ -1964,6 +1985,54 @@ gst_d3d11_base_convert_transform_meta (GstBaseTransform * trans,
       outbuf, meta, inbuf);
 }
 
+static void
+gst_d3d11_base_convert_before_transform (GstBaseTransform * trans,
+    GstBuffer * buffer)
+{
+  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (trans);
+  GstCaps *in_caps;
+  GstCaps *out_caps;
+  GstBaseTransformClass *klass;
+  gboolean update = FALSE;
+
+  GST_BASE_TRANSFORM_CLASS (parent_class)->before_transform (trans, buffer);
+
+  AcquireSRWLockExclusive (&self->lock);
+  if (self->selected_method != self->active_method ||
+      self->add_borders != self->active_add_borders ||
+      self->gamma_mode != self->active_gamma_mode ||
+      self->primaries_mode != self->active_primaries_mode ||
+      self->sampling_method != self->active_sampling_method) {
+    update = TRUE;
+  }
+  ReleaseSRWLockExclusive (&self->lock);
+
+  if (!update)
+    return;
+
+  GST_DEBUG_OBJECT (self, "Updating caps for property change");
+
+  in_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SINK_PAD (trans));
+  if (!in_caps) {
+    GST_WARNING_OBJECT (trans, "sinkpad has no current caps");
+    return;
+  }
+
+  out_caps = gst_pad_get_current_caps (GST_BASE_TRANSFORM_SRC_PAD (trans));
+  if (!out_caps) {
+    GST_WARNING_OBJECT (trans, "srcpad has no current caps");
+    gst_caps_unref (in_caps);
+    return;
+  }
+
+  klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
+  klass->set_caps (trans, in_caps, out_caps);
+  gst_caps_unref (in_caps);
+  gst_caps_unref (out_caps);
+
+  gst_base_transform_reconfigure_src (trans);
+}
+
 static GstFlowReturn
 gst_d3d11_base_convert_transform (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf)
@@ -2011,10 +2080,9 @@ gst_d3d11_base_convert_set_add_border (GstD3D11BaseConvert * self,
 {
   GstD3D11SRWLockGuard lk (&self->lock);
 
-  if (add_border != self->add_borders) {
-    self->add_borders = add_border;
+  self->add_borders = add_border;
+  if (self->add_borders != self->active_add_borders)
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
-  }
 }
 
 static void
@@ -2061,9 +2129,11 @@ gst_d3d11_base_convert_set_gamma_mode (GstD3D11BaseConvert * self,
     GstVideoGammaMode mode)
 {
   GstD3D11SRWLockGuard lk (&self->lock);
-  if (self->gamma_mode != mode) {
-    GST_DEBUG_OBJECT (self, "Gamma mode %d -> %d", self->gamma_mode, mode);
-    self->gamma_mode = mode;
+  GstVideoGammaMode prev_mode = self->gamma_mode;
+  self->gamma_mode = mode;
+
+  if (self->gamma_mode != self->active_gamma_mode) {
+    GST_DEBUG_OBJECT (self, "Gamma mode %d -> %d", prev_mode, self->gamma_mode);
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
   }
 }
@@ -2073,23 +2143,26 @@ gst_d3d11_base_convert_set_primaries_mode (GstD3D11BaseConvert * self,
     GstVideoPrimariesMode mode)
 {
   GstD3D11SRWLockGuard lk (&self->lock);
-  if (self->primaries_mode != mode) {
+  GstVideoPrimariesMode prev_mode = self->primaries_mode;
+  self->primaries_mode = mode;
+
+  if (self->primaries_mode != self->active_primaries_mode) {
     gboolean prev_enabled = TRUE;
     gboolean new_enabled = TRUE;
 
     GST_DEBUG_OBJECT (self, "Primaries mode %d -> %d",
-        self->primaries_mode, mode);
+        prev_mode, self->primaries_mode);
 
-    if (self->primaries_mode == GST_VIDEO_PRIMARIES_MODE_NONE)
+    if (prev_mode == GST_VIDEO_PRIMARIES_MODE_NONE)
       prev_enabled = FALSE;
 
-    if (mode == GST_VIDEO_PRIMARIES_MODE_NONE)
+    if (self->primaries_mode == GST_VIDEO_PRIMARIES_MODE_NONE)
       new_enabled = FALSE;
-
-    self->primaries_mode = mode;
 
     if (prev_enabled != new_enabled)
       gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM (self));
+    else
+      self->active_primaries_mode = self->primaries_mode;
   }
 }
 
@@ -2103,10 +2176,9 @@ gst_d3d11_base_convert_set_sampling_method (GstD3D11BaseConvert * self,
       gst_d3d11_sampling_methods[self->sampling_method].value_nick,
       gst_d3d11_sampling_methods[method].value_nick);
 
-  if (self->sampling_method != method) {
-    self->sampling_method = method;
+  self->sampling_method = method;
+  if (self->sampling_method != self->active_sampling_method)
     gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
-  }
 }
 
 /**
