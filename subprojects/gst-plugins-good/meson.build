@@ -321,6 +321,7 @@ gstglproto_dep = dependency('', required : false)
 gstglx11_dep = dependency('', required : false)
 gstglwayland_dep = dependency('', required : false)
 gstglegl_dep = dependency('', required : false)
+gstglviv_fb_dep = dependency('', required : false)
 
 have_gstgl = gstgl_dep.found()
 
@@ -369,6 +370,10 @@ if have_gstgl
   if gst_gl_have_platform_egl
     gstglegl_dep = dependency('gstreamer-gl-egl-1.0', version : gst_req,
         fallback : ['gst-plugins-base', 'gstglegl_dep'], required: true)
+  endif
+  if gst_gl_have_window_viv_fb
+    gstglviv_fb_dep = dependency('gstreamer-gl-viv-fb-1.0', version : gst_req,
+        fallback : ['gst-plugins-base', 'gstglviv_fb_dep'], required: true)
   endif
 endif
 

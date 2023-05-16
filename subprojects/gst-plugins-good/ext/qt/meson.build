@@ -181,6 +181,17 @@ if host_system == 'ios'
   endif
 endif
 
+# EGL windowing for Vivante Framebuffer (e.g. i.MX6)
+qt5_viv_fb = qt5_egl \
+    .require(host_system == 'linux') \
+    .require(gstglviv_fb_dep.found(), error_message: 'gstreamer-gl-viv_fb-1.0 is required') \
+    .require(gst_gl_have_platform_egl, error_message: 'egl platform support in gstreamer-gl is required')
+if qt5_viv_fb.allowed()
+  qt_defines += ['-DHAVE_QT_VIV_FB']
+  optional_deps += gstglviv_fb_dep
+  have_qt_windowing = true
+endif
+
 if qt5_option.require(have_qt_windowing).allowed()
   # rpath is needed to be able to load the plugin on macOS inside the devenv
   qmlgl_kwargs = {}
