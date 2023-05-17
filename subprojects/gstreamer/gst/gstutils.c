@@ -3528,15 +3528,8 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
 GstClockTime
 gst_util_get_timestamp (void)
 {
-#if defined (HAVE_POSIX_TIMERS) && defined(HAVE_MONOTONIC_CLOCK) &&\
-    defined (HAVE_CLOCK_GETTIME)
-  struct timespec now;
-
-  clock_gettime (CLOCK_MONOTONIC, &now);
-  return GST_TIMESPEC_TO_TIME (now);
-#else
-  return g_get_monotonic_time () * 1000;
-#endif
+  priv_gst_clock_init ();
+  return priv_gst_get_monotonic_time ();
 }
 
 /**

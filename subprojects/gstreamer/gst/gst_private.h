@@ -522,5 +522,9 @@ struct _GstClockEntryImpl
 char * priv_gst_get_relocated_libgstreamer (void);
 gint   priv_gst_count_directories (const char *filepath);
 
+void priv_gst_clock_init (void);
+GstClockTime priv_gst_get_monotonic_time (void);
+GstClockTime priv_gst_get_real_time (void);
+
 G_END_DECLS
 #endif /* __GST_PRIVATE_H__ */

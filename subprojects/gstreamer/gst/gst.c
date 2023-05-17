@@ -534,6 +534,8 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     return TRUE;
   }
 
+  priv_gst_clock_init ();
+
   find_executable_path ();
 
   _priv_gst_start_time = gst_util_get_timestamp ();
