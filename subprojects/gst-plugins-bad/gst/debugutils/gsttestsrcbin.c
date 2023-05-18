@@ -343,7 +343,6 @@ gst_test_src_bin_setup_src (GstTestSrcBin * self, const gchar * srcfactory,
   capsfilter = gst_element_factory_make ("capsfilter", NULL);
   if (caps) {
     g_object_set (capsfilter, "caps", caps, NULL);
-    gst_caps_unref (caps);
   }
 
   src = gst_element_factory_make (srcfactory, NULL);
