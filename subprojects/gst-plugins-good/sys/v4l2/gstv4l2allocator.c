@@ -1399,7 +1399,7 @@ gst_v4l2_allocator_dqbuf (GstV4l2Allocator * allocator,
 error:
   if (errno == EPIPE) {
     GST_DEBUG_OBJECT (allocator, "broken pipe signals last buffer");
-    return GST_FLOW_EOS;
+    return GST_V4L2_FLOW_LAST_BUFFER;
   }
 
   GST_ERROR_OBJECT (allocator, "failed dequeuing a %s buffer: %s",

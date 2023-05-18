@@ -884,7 +884,7 @@ beach:
     return;
   }
 
-  if (ret == GST_FLOW_EOS) {
+  if (ret == GST_V4L2_FLOW_LAST_BUFFER) {
     GST_VIDEO_DECODER_STREAM_LOCK (decoder);
     if (self->draining) {
       self->draining = FALSE;
