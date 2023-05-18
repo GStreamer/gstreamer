@@ -112,7 +112,21 @@ endif
 
 # TODO: Android windowing
 
-# TODO: Win32 windowing
+# Win32 windowing
+if host_system == 'windows'
+  qt6_win32 = qt6_option \
+      .require(gst_gl_have_window_win32, error_message: 'win32 windowing support in gstreamer-gl is required') \
+      .require(gst_gl_have_platform_wgl, error_message: 'wgl platform support in gstreamer-gl is required')
+  if qt6_win32.allowed()
+    # for wglMakeCurrent()
+    opengl32_dep = cc.find_library('opengl32', required : qt6_win32)
+    if opengl32_dep.found()
+      qt_defines += ['-DHAVE_QT_WIN32']
+      optional_deps += opengl32_dep
+      have_qt_windowing = true
+    endif
+  endif
+endif
 
 # macOS windowing
 if host_system == 'darwin'
