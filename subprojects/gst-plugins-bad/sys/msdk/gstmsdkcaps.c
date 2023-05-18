@@ -30,6 +30,10 @@
  */
 
 #include "gstmsdkcaps.h"
+#ifndef _WIN32
+#include <libdrm/drm_fourcc.h>
+#include "gstmsdkallocator_libva.h"
+#endif
 
 #define DEFAULT_DELIMITER ", "
 #define PROFILE_DELIMITER DEFAULT_DELIMITER
@@ -215,6 +219,105 @@ _get_media_type (guint codec)
 
   return NULL;
 }
+
+#ifndef _WIN32
+static gboolean
+_dma_fmt_to_dma_drm_fmts (GstMsdkContext * context,
+    GstMsdkContextJobType job_type,
+    const GValue * dma_fmts, GValue * dma_drm_fmts)
+{
+  const gchar *fmt_str;
+  gchar *drm_fmt_str;
+  guint32 drm_fourcc;
+  guint64 modifier;
+  GstVideoFormat fmt;
+  GValue gval = G_VALUE_INIT;
+  GValue mods = G_VALUE_INIT;
+
+  g_return_val_if_fail (dma_fmts != NULL, FALSE);
+  g_return_val_if_fail (context != NULL, FALSE);
+
+  fmt_str = g_value_get_string (dma_fmts);
+  fmt = gst_video_format_from_string (fmt_str);
+
+  g_return_val_if_fail (fmt != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  drm_fourcc = gst_va_drm_fourcc_from_video_format (fmt);
+  if (drm_fourcc == DRM_FORMAT_INVALID)
+    return FALSE;
+
+  g_value_init (&mods, GST_TYPE_LIST);
+  g_value_init (&gval, G_TYPE_STRING);
+
+  gst_msdk_get_supported_modifiers (context, job_type, fmt, &mods);
+
+  for (gint m = 0; m < gst_value_list_get_size (&mods); m++) {
+    const GValue *gmod = gst_value_list_get_value (&mods, m);
+    modifier = g_value_get_uint64 (gmod);
+
+    drm_fmt_str = gst_video_dma_drm_fourcc_to_string (drm_fourcc, modifier);
+    if (!drm_fmt_str)
+      continue;
+
+    g_value_set_string (&gval, drm_fmt_str);
+    gst_value_list_append_value (dma_drm_fmts, &gval);
+
+    GST_DEBUG ("Got modifier: %s", drm_fmt_str);
+    g_free (drm_fmt_str);
+  }
+  g_value_unset (&mods);
+  g_value_unset (&gval);
+
+  return TRUE;
+}
+
+static gboolean
+_dma_fmts_to_dma_drm_fmts (GstMsdkContext * context,
+    GstMsdkContextJobType job_type,
+    const GValue * dma_fmts, GValue * dma_drm_fmts)
+{
+  gint size = gst_value_list_get_size (dma_fmts);
+
+  for (gint f = 0; f < size; f++) {
+    const GValue *dma_fmt = gst_value_list_get_value (dma_fmts, f);
+    if (!dma_fmt)
+      continue;
+
+    _dma_fmt_to_dma_drm_fmts (context, job_type, dma_fmt, dma_drm_fmts);
+  }
+
+  return TRUE;
+}
+
+static GstCaps *
+_create_dma_drm_caps (GstMsdkContext * context,
+    GstMsdkContextJobType job_type, const GValue * dma_formats)
+{
+  GstCaps *dma_drm_caps = NULL;
+  GValue dma_drm_fmts = G_VALUE_INIT;
+
+  g_return_val_if_fail (context != NULL, FALSE);
+  g_return_val_if_fail (dma_formats != NULL, FALSE);
+
+  g_value_init (&dma_drm_fmts, GST_TYPE_LIST);
+
+  if (GST_VALUE_HOLDS_LIST (dma_formats))
+    _dma_fmts_to_dma_drm_fmts (context, job_type, dma_formats, &dma_drm_fmts);
+  else if (G_VALUE_HOLDS_STRING (dma_formats))
+    _dma_fmt_to_dma_drm_fmts (context, job_type, dma_formats, &dma_drm_fmts);
+
+  if (gst_value_list_get_size (&dma_drm_fmts) > 0) {
+    dma_drm_caps = gst_caps_from_string ("video/x-raw(memory:DMABuf)");
+    gst_caps_set_simple (dma_drm_caps, "format", G_TYPE_STRING, "DMA_DRM",
+        NULL);
+    gst_caps_set_value (dma_drm_caps, "drm-format", &dma_drm_fmts);
+  }
+
+  g_value_unset (&dma_drm_fmts);
+
+  return dma_drm_caps;
+}
+#endif
 
 #if (MFX_VERSION >= 2000)
 
@@ -753,8 +856,8 @@ _enc_create_sink_caps (GstMsdkContext * context, guint codec_id,
   gst_caps_set_value (caps, "format", supported_formats);
 
 #ifndef _WIN32
-  dma_caps = gst_caps_from_string ("video/x-raw(memory:DMABuf)");
-  gst_caps_set_value (dma_caps, "format", supported_formats);
+  dma_caps = _create_dma_drm_caps (context, GST_MSDK_JOB_ENCODER,
+      supported_formats);
   gst_caps_append (caps, dma_caps);
 
   gst_caps_append (caps,
@@ -1077,8 +1180,8 @@ _dec_create_src_caps (GstMsdkContext * context,
   gst_caps_set_value (caps, "format", supported_formats);
 
 #ifndef _WIN32
-  dma_caps = gst_caps_from_string ("video/x-raw(memory:DMABuf)");
-  gst_caps_set_value (dma_caps, "format", supported_formats);
+  dma_caps = _create_dma_drm_caps (context, GST_MSDK_JOB_DECODER,
+      supported_formats);
   gst_caps_append (caps, dma_caps);
 
   gst_caps_append (caps,
@@ -1326,8 +1429,7 @@ _vpp_create_caps (GstMsdkContext * context,
   gst_caps_set_value (caps, "format", supported_fmts);
 
 #ifndef _WIN32
-  dma_caps = gst_caps_from_string ("video/x-raw(memory:DMABuf)");
-  gst_caps_set_value (dma_caps, "format", supported_fmts);
+  dma_caps = _create_dma_drm_caps (context, GST_MSDK_JOB_VPP, supported_fmts);
   gst_caps_append (caps, dma_caps);
 
   gst_caps_append (caps,
@@ -1521,10 +1623,11 @@ gst_msdkcaps_enc_create_static_caps (GstMsdkContext * context,
 {
   GstCaps *in_caps = NULL, *out_caps = NULL;
   GstCaps *dma_caps = NULL;
-  gchar *raw_caps_str, *dma_caps_str;
+  gchar *raw_caps_str;
   const gchar *media_type = NULL;
   const char *raw_fmts = NULL;
-  const char *dma_fmts = NULL;
+  const char *dma_fmts_str = NULL;
+  GValue dma_fmts = G_VALUE_INIT;
   GValue supported_profs = G_VALUE_INIT;
 
   raw_fmts = _enc_get_static_raw_formats (codec_id);
@@ -1536,21 +1639,23 @@ gst_msdkcaps_enc_create_static_caps (GstMsdkContext * context,
   g_free (raw_caps_str);
 
 #ifndef _WIN32
-  dma_fmts = _enc_get_static_dma_formats (codec_id);
-  if (!dma_fmts)
+  dma_fmts_str = _enc_get_static_dma_formats (codec_id);
+  if (!dma_fmts_str)
     goto failed;
-  dma_caps_str =
-      g_strdup_printf ("video/x-raw(memory:DMABuf), format=(string){ %s }",
-      dma_fmts);
-  dma_caps = gst_caps_from_string (dma_caps_str);
-  g_free (dma_caps_str);
+
+  g_value_init (&dma_fmts, GST_TYPE_LIST);
+  _strings_to_list (dma_fmts_str, &dma_fmts);
+
+  dma_caps = _create_dma_drm_caps (context, GST_MSDK_JOB_ENCODER, &dma_fmts);
+  g_value_unset (&dma_fmts);
   gst_caps_append (in_caps, dma_caps);
 
   gst_caps_append (in_caps,
       gst_caps_from_string
       ("video/x-raw(memory:VAMemory), format=(string){ NV12 }"));
 #else
-  VAR_UNUSED (dma_caps_str);
+  VAR_UNUSED (dma_caps);
+  VAR_UNUSED (dma_fmts_str);
   VAR_UNUSED (dma_fmts);
   gst_caps_append (in_caps,
       gst_caps_from_string
@@ -1669,10 +1774,11 @@ gst_msdkcaps_dec_create_static_caps (GstMsdkContext * context,
 {
   GstCaps *in_caps = NULL, *out_caps = NULL;
   GstCaps *dma_caps = NULL;
-  gchar *raw_caps_str, *dma_caps_str;
+  gchar *raw_caps_str;
   const gchar *media_type = NULL;
   const char *raw_fmts = NULL;
-  const char *dma_fmts = NULL;
+  const char *dma_fmts_str = NULL;
+  GValue dma_fmts = G_VALUE_INIT;
 
   media_type = _get_media_type (codec_id);
   if (!media_type)
@@ -1689,14 +1795,15 @@ gst_msdkcaps_dec_create_static_caps (GstMsdkContext * context,
   g_free (raw_caps_str);
 
 #ifndef _WIN32
-  dma_fmts = _dec_get_static_dma_formats (codec_id);
-  if (!dma_fmts)
+  dma_fmts_str = _dec_get_static_dma_formats (codec_id);
+  if (!dma_fmts_str)
     goto failed;
-  dma_caps_str =
-      g_strdup_printf ("video/x-raw(memory:DMABuf), format=(string){ %s }",
-      dma_fmts);
-  dma_caps = gst_caps_from_string (dma_caps_str);
-  g_free (dma_caps_str);
+
+  g_value_init (&dma_fmts, GST_TYPE_LIST);
+  _strings_to_list (dma_fmts_str, &dma_fmts);
+
+  dma_caps = _create_dma_drm_caps (context, GST_MSDK_JOB_DECODER, &dma_fmts);
+  g_value_unset (&dma_fmts);
   gst_caps_append (out_caps, dma_caps);
 
   gst_caps_append (out_caps,
@@ -1704,7 +1811,7 @@ gst_msdkcaps_dec_create_static_caps (GstMsdkContext * context,
       ("video/x-raw(memory:VAMemory), format=(string){ NV12 }"));
 #else
   VAR_UNUSED (dma_caps);
-  VAR_UNUSED (dma_caps_str);
+  VAR_UNUSED (dma_fmts_str);
   VAR_UNUSED (dma_fmts);
   gst_caps_append (out_caps,
       gst_caps_from_string
@@ -1777,6 +1884,7 @@ _vpp_create_static_caps (GstMsdkContext * context, GstPadDirection direction)
 {
   GstCaps *caps = NULL, *dma_caps = NULL;
   gchar *caps_str;
+  GValue dma_fmts = G_VALUE_INIT;
 
   caps_str = g_strdup_printf ("video/x-raw, format=(string){ %s }",
       _vpp_get_static_raw_formats (direction));
@@ -1784,18 +1892,18 @@ _vpp_create_static_caps (GstMsdkContext * context, GstPadDirection direction)
   g_free (caps_str);
 
 #ifndef _WIN32
-  caps_str =
-      g_strdup_printf ("video/x-raw(memory:DMABuf), format=(string){ %s }",
-      _vpp_get_static_dma_formats (direction));
-  dma_caps = gst_caps_from_string (caps_str);
-  g_free (caps_str);
+  g_value_init (&dma_fmts, GST_TYPE_LIST);
+  _strings_to_list (_vpp_get_static_dma_formats (direction), &dma_fmts);
+
+  dma_caps = _create_dma_drm_caps (context, GST_MSDK_JOB_VPP, &dma_fmts);
+  g_value_unset (&dma_fmts);
   gst_caps_append (caps, dma_caps);
 
   gst_caps_append (caps, gst_caps_from_string ("video/x-raw(memory:VAMemory), "
           "format=(string){ NV12, VUYA, P010_10LE }"));
 #else
   VAR_UNUSED (dma_caps);
-  VAR_UNUSED (caps_str);
+  VAR_UNUSED (dma_fmts);
 
   gst_caps_append (caps,
       gst_caps_from_string ("video/x-raw(memory:D3D11Memory), "
