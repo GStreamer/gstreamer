@@ -573,6 +573,9 @@ GST_SDP_API
 GstSDPResult            gst_sdp_message_add_media           (GstSDPMessage *msg, GstSDPMedia *media);
 
 GST_SDP_API
+GstSDPResult            gst_sdp_message_remove_media        (GstSDPMessage *msg, guint idx);
+
+GST_SDP_API
 GstSDPResult            gst_sdp_message_dump                (const GstSDPMessage *msg);
 
 /* Media descriptions */

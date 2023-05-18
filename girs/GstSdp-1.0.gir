@@ -3374,6 +3374,25 @@ from a #GstSDPMessage.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="remove_media" c:identifier="gst_sdp_message_remove_media" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">Remove the media at @idx from the array of medias in @msg if found.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">#GST_SDP_OK when the specified media is found at @idx and removed,
+#GST_SDP_EINVAL otherwise.</doc>
+          <type name="SDPResult" c:type="GstSDPResult"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="msg" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">a #GstSDPMessage</doc>
+            <type name="SDPMessage" c:type="GstSDPMessage*"/>
+          </instance-parameter>
+          <parameter name="idx" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">the media index</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="remove_phone" c:identifier="gst_sdp_message_remove_phone" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.c">Remove the phone number in @msg at index @idx.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstsdpmessage.h"/>

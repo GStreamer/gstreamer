@@ -1790,6 +1790,33 @@ gst_sdp_message_add_media (GstSDPMessage * msg, GstSDPMedia * media)
   return GST_SDP_OK;
 }
 
+/**
+ * gst_sdp_message_remove_media:
+ * @msg: a #GstSDPMessage
+ * @idx: the media index
+ *
+ * Remove the media at @idx from the array of medias in @msg if found.
+ *
+ * Returns: #GST_SDP_OK when the specified media is found at @idx and removed,
+ * #GST_SDP_EINVAL otherwise.
+ *
+ * Since: 1.24
+ */
+GstSDPResult
+gst_sdp_message_remove_media (GstSDPMessage * msg, guint idx)
+{
+  GstSDPMedia *media = NULL;
+
+  g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
+  g_return_val_if_fail (idx <= gst_sdp_message_medias_len (msg),
+      GST_SDP_EINVAL);
+
+  media = &g_array_index (msg->medias, GstSDPMedia, idx);
+  gst_sdp_media_uninit (media);
+  g_array_remove_index (msg->medias, idx);
+  return GST_SDP_OK;
+}
+
 /* media access */
 
 /**
