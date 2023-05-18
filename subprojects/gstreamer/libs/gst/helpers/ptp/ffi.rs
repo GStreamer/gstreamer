@@ -485,6 +485,121 @@ pub mod unix {
         }
     }
 
+    #[cfg(target_os = "macos")]
+    pub mod macos {
+        pub use super::*;
+
+        #[repr(C)]
+        pub struct mach_timebase_info {
+            pub numer: u32,
+            pub denom: u32,
+        }
+
+        extern "C" {
+            pub fn mach_timebase_info(info: *mut mach_timebase_info) -> c_int;
+            pub fn mach_absolute_time() -> u64;
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    pub mod clock_gettime {
+        pub use super::*;
+
+        #[cfg(any(
+            target_os = "linux",
+            target_os = "freebsd",
+            target_os = "openbsd",
+            target_os = "netbsd",
+            target_os = "solaris",
+            target_os = "illumos",
+        ))]
+        pub type clock_id_t = c_int;
+
+        #[cfg(target_os = "dragonfly")]
+        pub type clock_id_t = c_ulong;
+
+        #[cfg(any(target_os = "solaris", target_os = "illumos"))]
+        pub type time_t = c_long;
+
+        #[cfg(any(target_os = "openbsd", target_os = "netbsd", target_os = "dragonfly"))]
+        pub type time_t = i64;
+
+        #[cfg(all(target_os = "freebsd", target_arch = "x86"))]
+        pub type time_t = i32;
+        #[cfg(all(target_os = "freebsd", not(target_arch = "x86")))]
+        pub type time_t = i64;
+
+        #[cfg(all(target_os = "linux", target_env = "gnu", target_arch = "riscv32"))]
+        pub type time_t = i64;
+        #[cfg(all(
+            target_os = "linux",
+            target_env = "gnu",
+            any(
+                target_arch = "x86",
+                target_arch = "arm",
+                target_arch = "m68k",
+                target_arch = "mips",
+                target_arch = "powerpc",
+                target_arch = "sparc",
+                all(target_arch = "aarch64", target_pointer_width = "32"),
+            )
+        ))]
+        pub type time_t = i32;
+        #[cfg(all(
+            target_os = "linux",
+            target_env = "gnu",
+            any(
+                target_arch = "x86_64",
+                all(target_arch = "aarch64", target_pointer_width = "64"),
+                target_arch = "powerpc64",
+                target_arch = "mips64",
+                target_arch = "s390x",
+                target_arch = "sparc64",
+                target_arch = "riscv64",
+                target_arch = "loongarch64",
+            )
+        ))]
+        pub type time_t = i64;
+        #[cfg(all(target_os = "linux", target_env = "musl"))]
+        pub type time_t = c_long;
+
+        #[cfg(all(target_os = "linux", target_env = "uclibc", target_arch = "x86_64"))]
+        pub type time_t = c_int;
+        #[cfg(all(
+            target_os = "linux",
+            target_env = "uclibc",
+            not(target_arch = "x86_64"),
+        ))]
+        pub type time_t = c_long;
+
+        #[repr(C)]
+        pub struct timespec {
+            pub tv_sec: time_t,
+            #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
+            pub tv_nsec: i64,
+            #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
+            pub tv_nsec: c_long,
+        }
+
+        #[cfg(any(
+            target_os = "freebsd",
+            target_os = "dragonfly",
+            target_os = "solaris",
+            target_os = "illumos",
+        ))]
+        pub const CLOCK_MONOTONIC: clock_id_t = 4;
+
+        #[cfg(any(target_os = "openbsd", target_os = "netbsd",))]
+        pub const CLOCK_MONOTONIC: clock_id_t = 3;
+
+        #[cfg(target_os = "linux")]
+        pub const CLOCK_MONOTONIC: clock_id_t = 1;
+
+        extern "C" {
+            pub fn clock_gettime(clk_id: clock_id_t, tp: *mut timespec) -> c_int;
+        }
+    }
+
     #[cfg(ptp_helper_permissions = "setcap")]
     pub mod setcaps {
         use super::*;
@@ -623,6 +738,9 @@ pub mod windows {
             lppipeattributes: *mut c_void,
             nsize: u32,
         ) -> i32;
+
+        pub fn QueryPerformanceFrequency(lpfrequence: *mut i64) -> i32;
+        pub fn QueryPerformanceCounter(lpperformancecount: *mut i64) -> i32;
     }
 
     pub const BCRYPT_USE_SYSTEM_PREFERRED_RNG: u32 = 0x00000002;

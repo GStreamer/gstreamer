@@ -239,9 +239,10 @@ typedef struct
 
 typedef enum
 {
-  TYPE_EVENT = 0,               /* PTP message is payload */
-  TYPE_GENERAL = 1,             /* PTP message is payload */
+  TYPE_EVENT = 0,               /* 64-bit monotonic clock time and PTP message is payload */
+  TYPE_GENERAL = 1,             /* 64-bit monotonic clock time and PTP message is payload */
   TYPE_CLOCK_ID = 2,            /* 64-bit clock ID is payload */
+  TYPE_SEND_TIME_ACK = 3,       /* 64-bit monotonic clock time, 8-bit message type, 8-bit domain number and 16-bit sequence number is payload */
 } StdIOMessageType;
 
 /* 2 byte BE payload size plus 1 byte message type */
@@ -990,16 +991,21 @@ handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
 static gboolean
 send_delay_req_timeout (PtpPendingSync * sync)
 {
-  guint8 message[STDIO_MESSAGE_HEADER_SIZE + 44] = { 0, };
+  guint8 message[STDIO_MESSAGE_HEADER_SIZE + 8 + 44] = { 0, };
   GstByteWriter writer;
   gsize written;
   GError *err = NULL;
+  GstClockTime send_time;
 
   GST_TRACE ("Sending delay_req to domain %u", sync->domain);
 
+  sync->delay_req_send_time_local = send_time =
+      gst_clock_get_time (observation_system_clock);
+
   gst_byte_writer_init_with_data (&writer, message, sizeof (message), FALSE);
-  gst_byte_writer_put_uint16_be_unchecked (&writer, 44);
+  gst_byte_writer_put_uint16_be_unchecked (&writer, 8 + 44);
   gst_byte_writer_put_uint8_unchecked (&writer, TYPE_EVENT);
+  gst_byte_writer_put_uint64_be_unchecked (&writer, send_time);
   gst_byte_writer_put_uint8_unchecked (&writer, PTP_MESSAGE_TYPE_DELAY_REQ);
   gst_byte_writer_put_uint8_unchecked (&writer, 2);
   gst_byte_writer_put_uint16_be_unchecked (&writer, 44);
@@ -1016,9 +1022,6 @@ send_delay_req_timeout (PtpPendingSync * sync)
   gst_byte_writer_put_uint8_unchecked (&writer, 0x7f);
   gst_byte_writer_put_uint64_be_unchecked (&writer, 0);
   gst_byte_writer_put_uint16_be_unchecked (&writer, 0);
-
-  sync->delay_req_send_time_local =
-      gst_clock_get_time (observation_system_clock);
 
   if (!g_output_stream_write_all (stdin_pipe, message, sizeof (message),
           &written, NULL, &err)) {
@@ -1835,6 +1838,74 @@ handle_ptp_message (PtpMessage * msg, GstClockTime receive_time)
   }
 }
 
+static void
+handle_send_time_ack (const guint8 * data, gsize size,
+    GstClockTime receive_time)
+{
+  GstByteReader breader;
+  GstClockTime helper_send_time;
+  guint8 message_type;
+  guint8 domain_number;
+  guint16 seqnum;
+  GList *l;
+  PtpDomainData *domain = NULL;
+  PtpPendingSync *sync = NULL;
+
+  gst_byte_reader_init (&breader, data, size);
+  helper_send_time = gst_byte_reader_get_uint64_be_unchecked (&breader);
+  message_type = gst_byte_reader_get_uint8_unchecked (&breader);
+  domain_number = gst_byte_reader_get_uint8_unchecked (&breader);
+  seqnum = gst_byte_reader_get_uint16_be_unchecked (&breader);
+
+  GST_TRACE
+      ("Received SEND_TIME_ACK for message type %d, domain number %d, seqnum %d with send time %"
+      GST_TIME_FORMAT " at receive_time %" GST_TIME_FORMAT, message_type,
+      domain_number, seqnum, GST_TIME_ARGS (helper_send_time),
+      GST_TIME_ARGS (receive_time));
+
+  if (message_type != PTP_MESSAGE_TYPE_DELAY_REQ)
+    return;
+
+  for (l = domain_data; l; l = l->next) {
+    PtpDomainData *tmp = l->data;
+
+    if (domain_number == tmp->domain) {
+      domain = tmp;
+      break;
+    }
+  }
+
+  if (!domain)
+    return;
+
+  /* Check if we know about this one */
+  for (l = domain->pending_syncs.head; l; l = l->next) {
+    PtpPendingSync *tmp = l->data;
+
+    if (tmp->delay_req_seqnum == seqnum) {
+      sync = tmp;
+      break;
+    }
+  }
+
+  if (!sync)
+    return;
+
+  /* Got a DELAY_RESP for this already */
+  if (sync->delay_req_recv_time_remote != GST_CLOCK_TIME_NONE)
+    return;
+
+  if (helper_send_time != 0) {
+    GST_TRACE ("DELAY_REQ message took %" GST_STIME_FORMAT
+        " to helper process, SEND_TIME_ACK took %" GST_STIME_FORMAT
+        " from helper process",
+        GST_STIME_ARGS ((GstClockTimeDiff) (helper_send_time -
+                sync->delay_req_send_time_local)),
+        GST_STIME_ARGS (receive_time - helper_send_time));
+    sync->delay_req_send_time_local = helper_send_time;
+  }
+}
+
 static void have_stdout_header (GInputStream * stdout_pipe, GAsyncResult * res,
     gpointer user_data);
 
@@ -1870,11 +1941,20 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
     case TYPE_EVENT:
     case TYPE_GENERAL:{
       GstClockTime receive_time = gst_clock_get_time (observation_system_clock);
+      GstClockTime helper_receive_time;
       PtpMessage msg;
 
-      if (parse_ptp_message (&msg, (const guint8 *) stdout_buffer,
+      helper_receive_time = GST_READ_UINT64_BE (stdout_buffer);
+
+      if (parse_ptp_message (&msg, (const guint8 *) stdout_buffer + 8,
               CUR_STDIO_HEADER_SIZE)) {
         dump_ptp_message (&msg);
+        if (helper_receive_time != 0) {
+          GST_TRACE ("Message took %" GST_STIME_FORMAT " from helper process",
+              GST_STIME_ARGS ((GstClockTimeDiff) (receive_time -
+                      helper_receive_time)));
+          receive_time = helper_receive_time;
+        }
         handle_ptp_message (&msg, receive_time);
       }
       break;
@@ -1896,6 +1976,19 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
           ptp_clock_id.clock_identity, ptp_clock_id.port_number);
       g_cond_signal (&ptp_cond);
       g_mutex_unlock (&ptp_lock);
+      break;
+    }
+    case TYPE_SEND_TIME_ACK:{
+      GstClockTime receive_time = gst_clock_get_time (observation_system_clock);
+
+      if (CUR_STDIO_HEADER_SIZE != 12) {
+        GST_ERROR ("Unexpected send time ack size (%u != 12)",
+            CUR_STDIO_HEADER_SIZE);
+        g_main_loop_quit (main_loop);
+        return;
+      }
+
+      handle_send_time_ack (stdout_buffer, CUR_STDIO_HEADER_SIZE, receive_time);
       break;
     }
     default:

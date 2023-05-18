@@ -26,6 +26,7 @@ use std::{
 mod log;
 
 mod args;
+mod clock;
 mod error;
 mod ffi;
 mod io;
@@ -51,6 +52,29 @@ const MSG_TYPE_EVENT: u8 = 0;
 const MSG_TYPE_GENERAL: u8 = 1;
 /// Clock ID message
 const MSG_TYPE_CLOCK_ID: u8 = 2;
+/// Send time ACK message
+const MSG_TYPE_SEND_TIME_ACK: u8 = 3;
+
+/// Reads a big endian 64 bit integer from a slice.
+fn read_u64_be(s: &[u8]) -> u64 {
+    assert!(s.len() >= 8);
+
+    (s[7] as u64)
+        | ((s[6] as u64) << 8)
+        | ((s[5] as u64) << 16)
+        | ((s[4] as u64) << 24)
+        | ((s[3] as u64) << 32)
+        | ((s[2] as u64) << 40)
+        | ((s[1] as u64) << 48)
+        | ((s[0] as u64) << 56)
+}
+
+/// Reads a big endian 16 bit integer from a slice.
+fn read_u16_be(s: &[u8]) -> u16 {
+    assert!(s.len() >= 2);
+
+    (s[1] as u16) | ((s[0] as u16) << 8)
+}
 
 /// Create a new `UdpSocket` for the given port and configure it for PTP.
 fn create_socket(port: u16) -> Result<UdpSocket, Error> {
@@ -173,7 +197,7 @@ fn run() -> Result<(), Error> {
     // We assume that stdout never blocks and stdin receives a complete valid packet whenever it is
     // ready and never blocks in the middle of a packet.
     let mut socket_buffer = [0u8; 8192];
-    let mut stdinout_buffer = [0u8; 8192 + 3];
+    let mut stdinout_buffer = [0u8; 8192 + 3 + 8];
 
     loop {
         let poll_res = poll.poll().context("Failed polling")?;
@@ -200,24 +224,36 @@ fn run() -> Result<(), Error> {
                     bail!(
                         source: err,
                         "Failed reading from {} socket",
-                        if idx == 0 { "event" } else { "general" }
+                        if idx == MSG_TYPE_EVENT {
+                            "event"
+                        } else {
+                            "general"
+                        }
                     );
                 }
                 Ok((read, addr)) => {
+                    let recv_time = clock::time();
                     if args.verbose {
                         trace!(
-                            "Received {} bytes from {} socket from {}",
+                            "Received {} bytes from {} socket from {} at {}",
                             read,
-                            if idx == 0 { "event" } else { "general" },
-                            addr
+                            if idx == MSG_TYPE_EVENT {
+                                "event"
+                            } else {
+                                "general"
+                            },
+                            addr,
+                            recv_time,
                         );
                     }
-                    stdinout_buffer[0..2].copy_from_slice(&(read as u16).to_be_bytes());
+
+                    stdinout_buffer[0..2].copy_from_slice(&(read as u16 + 8).to_be_bytes());
                     stdinout_buffer[2] = idx;
-                    stdinout_buffer[3..][..read].copy_from_slice(&socket_buffer[..read]);
+                    stdinout_buffer[3..][..8].copy_from_slice(&recv_time.to_be_bytes());
+                    stdinout_buffer[11..][..read].copy_from_slice(&socket_buffer[..read]);
 
                     poll.stdout()
-                        .write_all(&stdinout_buffer[..(read + 3)])
+                        .write_all(&stdinout_buffer[..(read + 3 + 8)])
                         .context("Failed writing to stdout")?;
                 }
             }
@@ -236,19 +272,38 @@ fn run() -> Result<(), Error> {
             }
             let type_ = stdinout_buffer[2];
 
-            if args.verbose {
-                trace!(
-                    "Received {} bytes for {} socket from stdin",
-                    size,
-                    if type_ == 0 { "event" } else { "general" },
-                );
-            }
-
             poll.stdin()
                 .read_exact(&mut stdinout_buffer[0..size as usize])
                 .context("Failed reading packet body from stdin")?;
 
-            let buf = &stdinout_buffer[0..size as usize];
+            if type_ != MSG_TYPE_EVENT && type_ != MSG_TYPE_GENERAL {
+                warn!("Unexpected stdin message type {}", type_);
+                continue;
+            }
+
+            if args.verbose {
+                trace!(
+                    "Received {} bytes for {} socket from stdin",
+                    size,
+                    if type_ == MSG_TYPE_EVENT {
+                        "event"
+                    } else {
+                        "general"
+                    },
+                );
+            }
+
+            if size < 8 + 32 {
+                bail!("Invalid packet body size");
+            }
+
+            let main_send_time = read_u64_be(&stdinout_buffer[..8]);
+            let buf = &stdinout_buffer[8..size as usize];
+            let message_type = buf[0] & 0x0f;
+            let domain_number = buf[4];
+            let seqnum = read_u16_be(&buf[30..][..2]);
+
+            let send_time = clock::time();
             match type_ {
                 MSG_TYPE_EVENT => poll
                     .event_socket()
@@ -261,9 +316,36 @@ fn run() -> Result<(), Error> {
             .with_context(|| {
                 format!(
                     "Failed sending to {} socket",
-                    if type_ == 0 { "event" } else { "general" }
+                    if type_ == MSG_TYPE_EVENT {
+                        "event"
+                    } else {
+                        "general"
+                    }
                 )
             })?;
+
+            if args.verbose {
+                trace!(
+                    "Sending SEND_TIME_ACK for message type {}, domain number {}, seqnum {} received at {} at {}",
+                    message_type,
+                    domain_number,
+                    seqnum,
+                    main_send_time,
+                    send_time,
+                );
+            }
+
+            stdinout_buffer[0..2].copy_from_slice(&12u16.to_be_bytes());
+            stdinout_buffer[2] = MSG_TYPE_SEND_TIME_ACK;
+            let send_time_ack_msg = &mut stdinout_buffer[3..];
+            send_time_ack_msg[..8].copy_from_slice(&send_time.to_be_bytes());
+            send_time_ack_msg[8] = message_type;
+            send_time_ack_msg[9] = domain_number;
+            send_time_ack_msg[10..][..2].copy_from_slice(&seqnum.to_be_bytes());
+
+            poll.stdout()
+                .write_all(&stdinout_buffer[..(3 + 12)])
+                .context("Failed writing to stdout")?;
         }
     }
 }
