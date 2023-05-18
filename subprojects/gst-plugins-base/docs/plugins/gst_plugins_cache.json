@@ -6882,43 +6882,6 @@
                     }
                 ]
             },
-            "GstGLBaseMixer": {
-                "hierarchy": [
-                    "GstGLBaseMixer",
-                    "GstVideoAggregator",
-                    "GstAggregator",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "kind": "object",
-                "properties": {
-                    "context": {
-                        "blurb": "Get OpenGL context",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "GstGLContext",
-                        "writable": false
-                    }
-                }
-            },
-            "GstGLBaseMixerPad": {
-                "hierarchy": [
-                    "GstGLBaseMixerPad",
-                    "GstVideoAggregatorPad",
-                    "GstAggregatorPad",
-                    "GstPad",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "kind": "object"
-            },
             "GstGLDeinterlaceMethod": {
                 "kind": "enum",
                 "values": [
@@ -7047,19 +7010,6 @@
                     }
                 ]
             },
-            "GstGLMixer": {
-                "hierarchy": [
-                    "GstGLMixer",
-                    "GstGLBaseMixer",
-                    "GstVideoAggregator",
-                    "GstAggregator",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "kind": "object"
-            },
             "GstGLMixerBinStartTimeSelection": {
                 "kind": "enum",
                 "values": [
@@ -7079,21 +7029,6 @@
                         "value": "2"
                     }
                 ]
-            },
-            "GstGLMixerPad": {
-                "hierarchy": [
-                    "GstGLMixerPad",
-                    "GstGLBaseMixerPad",
-                    "GstVideoAggregatorPad",
-                    "GstAggregatorPad",
-                    "GstPad",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "kind": "object",
-                "properties": {},
-                "signals": {}
             },
             "GstGLRotateMethod": {
                 "kind": "enum",

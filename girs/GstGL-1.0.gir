@@ -1049,6 +1049,137 @@ function to allocate and OpenGL resources needed for your application</doc>
                                             to the texture</doc>
       </member>
     </bitfield>
+    <class name="GLBaseMixer" c:symbol-prefix="gl_base_mixer" c:type="GstGLBaseMixer" version="1.24" parent="GstVideo.VideoAggregator" abstract="1" glib:type-name="GstGLBaseMixer" glib:get-type="gst_gl_base_mixer_get_type" glib:type-struct="GLBaseMixerClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.c">#GstGLBaseMixer handles the nitty gritty details of retrieving an OpenGL
+context.  It provides some virtual methods to know when the OpenGL context
+is available and is not available within this element.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <virtual-method name="gl_start" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">called in the GL thread to setup the element GL state.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">whether the start was successful</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mix" transfer-ownership="none">
+            <type name="GLBaseMixer" c:type="GstGLBaseMixer*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="gl_stop" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">called in the GL thread to setup the element GL state.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mix" transfer-ownership="none">
+            <type name="GLBaseMixer" c:type="GstGLBaseMixer*"/>
+          </instance-parameter>
+        </parameters>
+      </virtual-method>
+      <method name="get_gl_context" c:identifier="gst_gl_base_mixer_get_gl_context" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.c">the #GstGLContext found by @mix</doc>
+          <type name="GLContext" c:type="GstGLContext*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mix" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.c">a #GstGLBaseMixer</doc>
+            <type name="GLBaseMixer" c:type="GstGLBaseMixer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <property name="context" version="1.24" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.c">The #GstGLContext in use by this #GstGLBaseMixer</doc>
+        <type name="GLContext"/>
+      </property>
+      <field name="parent">
+        <type name="GstVideo.VideoAggregator" c:type="GstVideoAggregator"/>
+      </field>
+      <field name="display">
+        <type name="GLDisplay" c:type="GstGLDisplay*"/>
+      </field>
+      <field name="context">
+        <type name="GLContext" c:type="GstGLContext*"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="GLBaseMixerPrivate" c:type="GstGLBaseMixerPrivate*"/>
+      </field>
+    </class>
+    <record name="GLBaseMixerClass" c:type="GstGLBaseMixerClass" glib:is-gtype-struct-for="GLBaseMixer" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <field name="parent_class">
+        <type name="GstVideo.VideoAggregatorClass" c:type="GstVideoAggregatorClass"/>
+      </field>
+      <field name="supported_gl_api">
+        <type name="GLAPI" c:type="GstGLAPI"/>
+      </field>
+      <field name="gl_start">
+        <callback name="gl_start">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h">whether the start was successful</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="mix" transfer-ownership="none">
+              <type name="GLBaseMixer" c:type="GstGLBaseMixer*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="gl_stop">
+        <callback name="gl_stop">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="mix" transfer-ownership="none">
+              <type name="GLBaseMixer" c:type="GstGLBaseMixer*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <class name="GLBaseMixerPad" c:symbol-prefix="gl_base_mixer_pad" c:type="GstGLBaseMixerPad" version="1.24" parent="GstVideo.VideoAggregatorPad" glib:type-name="GstGLBaseMixerPad" glib:get-type="gst_gl_base_mixer_pad_get_type" glib:type-struct="GLBaseMixerPadClass">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <field name="parent">
+        <type name="GstVideo.VideoAggregatorPad" c:type="GstVideoAggregatorPad"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="GLBaseMixerPadClass" c:type="GstGLBaseMixerPadClass" glib:is-gtype-struct-for="GLBaseMixerPad" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <field name="parent_class">
+        <type name="GstVideo.VideoAggregatorPadClass" c:type="GstVideoAggregatorPadClass"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="GLBaseMixerPrivate" c:type="GstGLBaseMixerPrivate" disguised="1">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+    </record>
     <class name="GLBaseSrc" c:symbol-prefix="gl_base_src" c:type="GstGLBaseSrc" version="1.18" parent="GstBase.PushSrc" abstract="1" glib:type-name="GstGLBaseSrc" glib:get-type="gst_gl_base_src_get_type" glib:type-struct="GLBaseSrcClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasesrc.c">#GstGLBaseSrc handles the nitty gritty details of retrieving an OpenGL
 context. It also provided some wrappers around #GstBaseSrc's `start()` and
@@ -4562,6 +4693,181 @@ mappings between texture formats.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+    </record>
+    <class name="GLMixer" c:symbol-prefix="gl_mixer" c:type="GstGLMixer" version="1.24" parent="GLBaseMixer" abstract="1" glib:type-name="GstGLMixer" glib:get-type="gst_gl_mixer_get_type" glib:type-struct="GLMixerClass">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">#GstGLMixer helps implement an element that operates on RGBA textures.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <virtual-method name="process_buffers" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h">Perform operations on the input buffers to produce an
+output buffer.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mix" transfer-ownership="none">
+            <type name="GLMixer" c:type="GstGLMixer*"/>
+          </instance-parameter>
+          <parameter name="outbuf" transfer-ownership="none">
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <virtual-method name="process_textures" invoker="process_textures" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">Perform processing required and call #GstGLMixerClass::process_textures().
+Intended for use within implementations of
+#GstGLMixerClass::process_buffers().</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">whether processing of textures succeeded</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mix" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">the #GstGLMixer</doc>
+            <type name="GLMixer" c:type="GstGLMixer*"/>
+          </instance-parameter>
+          <parameter name="out_tex" transfer-ownership="none">
+            <type name="GLMemory" c:type="GstGLMemory*"/>
+          </parameter>
+        </parameters>
+      </virtual-method>
+      <method name="get_framebuffer" c:identifier="gst_gl_mixer_get_framebuffer" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">(nullable): The #GstGLFramebuffer in use by this @mix</doc>
+          <type name="GLFramebuffer" c:type="GstGLFramebuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mix" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">the #GstGLMixer</doc>
+            <type name="GLMixer" c:type="GstGLMixer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="process_textures" c:identifier="gst_gl_mixer_process_textures" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">Perform processing required and call #GstGLMixerClass::process_textures().
+Intended for use within implementations of
+#GstGLMixerClass::process_buffers().</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">whether processing of textures succeeded</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mix" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">the #GstGLMixer</doc>
+            <type name="GLMixer" c:type="GstGLMixer*"/>
+          </instance-parameter>
+          <parameter name="outbuf" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">output @GstBuffer</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <field name="parent">
+        <type name="GLBaseMixer" c:type="GstGLBaseMixer"/>
+      </field>
+      <field name="out_caps">
+        <type name="Gst.Caps" c:type="GstCaps*"/>
+      </field>
+      <field name="priv" readable="0" private="1">
+        <type name="GLMixerPrivate" c:type="GstGLMixerPrivate*"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="GLMixerClass" c:type="GstGLMixerClass" glib:is-gtype-struct-for="GLMixer" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <field name="parent_class">
+        <type name="GLBaseMixerClass" c:type="GstGLBaseMixerClass"/>
+      </field>
+      <field name="process_buffers">
+        <callback name="process_buffers">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="mix" transfer-ownership="none">
+              <type name="GLMixer" c:type="GstGLMixer*"/>
+            </parameter>
+            <parameter name="outbuf" transfer-ownership="none">
+              <type name="Gst.Buffer" c:type="GstBuffer*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="process_textures">
+        <callback name="process_textures">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+          <return-value transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">whether processing of textures succeeded</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="mix" transfer-ownership="none">
+              <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">the #GstGLMixer</doc>
+              <type name="GLMixer" c:type="GstGLMixer*"/>
+            </parameter>
+            <parameter name="out_tex" transfer-ownership="none">
+              <type name="GLMemory" c:type="GstGLMemory*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <method name="add_rgba_pad_templates" c:identifier="gst_gl_mixer_class_add_rgba_pad_templates" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">Adds the default RGBA pad templates to this class.  If you have any special
+template requirements like a different pad subclass or different supported
+caps, you should not call this function and add the pad templates yourself
+manually.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="klass" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.c">the #GstGLMixerClass</doc>
+            <type name="GLMixerClass" c:type="GstGLMixerClass*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <class name="GLMixerPad" c:symbol-prefix="gl_mixer_pad" c:type="GstGLMixerPad" version="1.24" parent="GLBaseMixerPad" glib:type-name="GstGLMixerPad" glib:get-type="gst_gl_mixer_pad_get_type" glib:type-struct="GLMixerPadClass">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <field name="parent">
+        <type name="GLBaseMixerPad" c:type="GstGLBaseMixerPad"/>
+      </field>
+      <field name="current_texture">
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </class>
+    <record name="GLMixerPadClass" c:type="GstGLMixerPadClass" glib:is-gtype-struct-for="GLMixerPad" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <field name="parent_class">
+        <type name="GLBaseMixerPadClass" c:type="GstGLBaseMixerPadClass"/>
+      </field>
+      <field name="_padding" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="GLMixerPrivate" c:type="GstGLMixerPrivate" disguised="1">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
     </record>
     <class name="GLOverlayCompositor" c:symbol-prefix="gl_overlay_compositor" c:type="GstGLOverlayCompositor" parent="Gst.Object" glib:type-name="GstGLOverlayCompositor" glib:get-type="gst_gl_overlay_compositor_get_type" glib:type-struct="GLOverlayCompositorClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgloverlaycompositor.h">Opaque #GstGLOverlayCompositor object</doc>
@@ -9162,6 +9468,48 @@ user-defined purposes.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="GL_BASE_MIXER" c:identifier="GST_GL_BASE_MIXER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_BASE_MIXER_CLASS" c:identifier="GST_GL_BASE_MIXER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_BASE_MIXER_GET_CLASS" c:identifier="GST_GL_BASE_MIXER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_BASE_MIXER_PAD" c:identifier="GST_GL_BASE_MIXER_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_BASE_MIXER_PAD_CLASS" c:identifier="GST_GL_BASE_MIXER_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_BASE_MIXER_PAD_GET_CLASS" c:identifier="GST_GL_BASE_MIXER_PAD_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="GL_BASE_SRC" c:identifier="GST_GL_BASE_SRC" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasesrc.h"/>
       <parameters>
@@ -9507,6 +9855,48 @@ e.g. for `CONFIG_ID`: `GST_GL_CONFIG_ATTRIB_NAME (CONFIG_ID)`</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemory.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <function-macro name="GL_MIXER" c:identifier="GST_GL_MIXER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MIXER_CLASS" c:identifier="GST_GL_MIXER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MIXER_GET_CLASS" c:identifier="GST_GL_MIXER_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MIXER_PAD" c:identifier="GST_GL_MIXER_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MIXER_PAD_CLASS" c:identifier="GST_GL_MIXER_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="GL_MIXER_PAD_GET_CLASS" c:identifier="GST_GL_MIXER_PAD_GET_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="GL_OVERLAY_COMPOSITOR" c:identifier="GST_GL_OVERLAY_COMPOSITOR" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgloverlaycompositor.h"/>
       <parameters>
@@ -9748,6 +10138,34 @@ e.g. for `CONFIG_ID`: `GST_GL_CONFIG_ATTRIB_NAME (CONFIG_ID)`</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="IS_GL_BASE_MIXER" c:identifier="GST_IS_GL_BASE_MIXER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_BASE_MIXER_CLASS" c:identifier="GST_IS_GL_BASE_MIXER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_BASE_MIXER_PAD" c:identifier="GST_IS_GL_BASE_MIXER_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_BASE_MIXER_PAD_CLASS" c:identifier="GST_IS_GL_BASE_MIXER_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasemixer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="IS_GL_BASE_SRC" c:identifier="GST_IS_GL_BASE_SRC" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbasesrc.h"/>
       <parameters>
@@ -9876,6 +10294,34 @@ e.g. for `CONFIG_ID`: `GST_GL_CONFIG_ATTRIB_NAME (CONFIG_ID)`</doc>
     </function-macro>
     <function-macro name="IS_GL_MEMORY_PBO_ALLOCATOR_CLASS" c:identifier="GST_IS_GL_MEMORY_PBO_ALLOCATOR_CLASS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemorypbo.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_MIXER" c:identifier="GST_IS_GL_MIXER" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_MIXER_CLASS" c:identifier="GST_IS_GL_MIXER_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="klass">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_MIXER_PAD" c:identifier="GST_IS_GL_MIXER_PAD" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="IS_GL_MIXER_PAD_CLASS" c:identifier="GST_IS_GL_MIXER_PAD_CLASS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmixer.h"/>
       <parameters>
         <parameter name="klass">
         </parameter>

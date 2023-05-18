@@ -43,15 +43,44 @@ G_BEGIN_DECLS
 typedef struct _GstGLBaseMixerPad GstGLBaseMixerPad;
 typedef struct _GstGLBaseMixerPadClass GstGLBaseMixerPadClass;
 
-/* all information needed for one video stream */
+/**
+ * GstGLBaseMixerPad:
+ *
+ * Since: 1.24
+ */
 struct _GstGLBaseMixerPad
 {
-  GstVideoAggregatorPad parent;                /* subclass the pad */
+  /**
+   * GstGLBaseMixerPad.parent:
+   *
+   * parent #GstVideoAggregatorPad
+   *
+   * Since: 1.24
+   */
+  GstVideoAggregatorPad parent;
+
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 };
 
+/**
+ * GstGLBaseMixerPadClass:
+ *
+ * Since: 1.24
+ */
 struct _GstGLBaseMixerPadClass
 {
+  /**
+   * GstGLBaseMixerPadClass.parent_class:
+   *
+   * parent #GstVideoAggregatorPadClass
+   *
+   * Since: 1.24
+   */
   GstVideoAggregatorPadClass parent_class;
+
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLBaseMixerPad, gst_object_unref);
@@ -75,26 +104,89 @@ typedef struct _GstGLBaseMixer GstGLBaseMixer;
 typedef struct _GstGLBaseMixerClass GstGLBaseMixerClass;
 typedef struct _GstGLBaseMixerPrivate GstGLBaseMixerPrivate;
 
+/**
+ * GstGLBaseMixer:
+ *
+ * Since: 1.24
+ */
 struct _GstGLBaseMixer
 {
-  GstVideoAggregator     vaggregator;
+  /**
+   * GstGLBaseMixer.parent:
+   *
+   * parent #GstVideoAggregator
+   *
+   * Since: 1.24
+   */
+  GstVideoAggregator     parent;
 
+  /**
+   * GstGLBaseMixer.display:
+   *
+   * the currently configured #GstGLDisplay
+   *
+   * Since: 1.24
+   */
   GstGLDisplay          *display;
+  /**
+   * GstGLBaseMixer.context:
+   *
+   * the currently configured #GstGLContext
+   *
+   * Since: 1.24
+   */
   GstGLContext          *context;
 
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 
   GstGLBaseMixerPrivate *priv;
 };
 
+/**
+ * GstGLBaseMixerClass:
+ *
+ * Since: 1.24
+ */
 struct _GstGLBaseMixerClass
 {
+  /**
+   * GstGLBaseMixerClass.parent_class:
+   *
+   * the parent #GstVideoAggregatorClass
+   *
+   * Since: 1.24
+   */
   GstVideoAggregatorClass parent_class;
+  /**
+   * GstGLBaseMixerClass.supported_gl_api:
+   *
+   * the logical-OR of #GstGLAPI's supported by this element
+   *
+   * Since: 1.24
+   */
   GstGLAPI supported_gl_api;
 
+  /**
+   * GstGLBaseMixerClass::gl_start:
+   *
+   * called in the GL thread to setup the element GL state.
+   *
+   * Returns: whether the start was successful
+   *
+   * Since: 1.24
+   */
   gboolean      (*gl_start)     (GstGLBaseMixer * mix);
+  /**
+   * GstGLBaseMixerClass::gl_stop:
+   *
+   * called in the GL thread to setup the element GL state.
+   *
+   * Since: 1.24
+   */
   void          (*gl_stop)      (GstGLBaseMixer * mix);
 
+  /*< private >*/
   gpointer _padding[GST_PADDING];
 };
 

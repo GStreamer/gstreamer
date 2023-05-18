@@ -46,17 +46,53 @@ typedef struct _GstGLMixerPrivate GstGLMixerPrivate;
 typedef struct _GstGLMixerPad GstGLMixerPad;
 typedef struct _GstGLMixerPadClass GstGLMixerPadClass;
 
-/* all information needed for one video stream */
+/**
+ * GstGLMixerPad:
+ *
+ * Since: 1.24
+ */
 struct _GstGLMixerPad
 {
+  /**
+   * GstGLMixerPad.parent:
+   *
+   * parent #GstGLBaseMixerPad
+   *
+   * Since: 1.24
+   */
   GstGLBaseMixerPad parent;
 
+  /**
+   * GstGLMixerPad.current_texture:
+   *
+   * the current input texture for this pad
+   *
+   * Since: 1.24
+   */
   guint current_texture;
+
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 };
 
+/**
+ * GstGLMixerPadClass:
+ *
+ * Since: 1.24
+ */
 struct _GstGLMixerPadClass
 {
+  /**
+   * GstGLMixerPadClass.parent_class:
+   *
+   * parent #GstGLBaseMixerPadClass
+   *
+   * Since: 1.24
+   */
   GstGLBaseMixerPadClass parent_class;
+
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLMixerPad, gst_object_unref);
@@ -76,24 +112,71 @@ GType gst_gl_mixer_pad_get_type (void);
 #define GST_GL_MIXER_GET_CLASS(obj) \
         (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_GL_MIXER,GstGLMixerClass))
 
-typedef gboolean (*GstGLMixerProcessFunc) (GstGLMixer *mix, GstBuffer *outbuf);
-typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix, GstGLMemory *out_tex);
-
+/**
+ * GstGLMixer:
+ *
+ * Since: 1.24
+ */
 struct _GstGLMixer
 {
-  GstGLBaseMixer vaggregator;
+  /**
+   * GstGLMixer.parent:
+   *
+   * Since: 1.24
+   */
+  GstGLBaseMixer parent;
 
+  /**
+   * GstGLMixer.out_caps:
+   *
+   * the configured output #GstCaps
+   *
+   * Since: 1.24
+   */
   GstCaps *out_caps;
 
+  /*< private >*/
   GstGLMixerPrivate *priv;
+
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 };
 
+/**
+ * GstGLMixerClass:
+ *
+ * Since: 1.24
+ */
 struct _GstGLMixerClass
 {
+  /**
+   * GstGLMixerClass.parent_class:
+   *
+   * Since: 1.24
+   */
   GstGLBaseMixerClass parent_class;
 
-  GstGLMixerProcessFunc process_buffers;
-  GstGLMixerProcessTextures process_textures;
+  /**
+   * GstGLMixerClass::process_buffers:
+   *
+   * Perform operations on the input buffers to produce an
+   * output buffer.
+   *
+   * Since: 1.24
+   */
+  gboolean    (*process_buffers)      (GstGLMixer * mix, GstBuffer *outbuf);
+  /**
+   * GstGLMixerClass::process_textures:
+   *
+   * perform operations with the input and output buffers mapped
+   * as textures.  Will not be called if @process_buffers is overriden.
+   *
+   * Since: 1.24
+   */
+  gboolean    (*process_textures)     (GstGLMixer * mix, GstGLMemory *out_tex);
+
+  /*< private >*/
+  gpointer _padding[GST_PADDING];
 };
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstGLMixer, gst_object_unref);

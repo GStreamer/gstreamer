@@ -466,9 +466,6 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
-
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER_PAD, 0);
-  gst_type_mark_as_plugin_api (GST_TYPE_GL_MIXER, 0);
 }
 
 static void
@@ -673,6 +670,19 @@ context_error:
   }
 }
 
+/**
+ * gst_gl_mixer_process_textures:
+ * @mix: the #GstGLMixer
+ * @outbuf: output @GstBuffer
+ *
+ * Perform processing required and call #GstGLMixerClass::process_textures().
+ * Intended for use within implementations of
+ * #GstGLMixerClass::process_buffers().
+ *
+ * Returns: whether processing of textures succeeded
+ *
+ * Since: 1.24
+ */
 gboolean
 gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 {
