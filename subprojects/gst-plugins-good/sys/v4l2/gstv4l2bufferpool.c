@@ -1261,7 +1261,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
   GST_LOG_OBJECT (pool, "dequeueing a buffer");
 
   res = gst_v4l2_allocator_dqbuf (pool->vallocator, &group);
-  if (res == GST_FLOW_EOS)
+  if (res == GST_V4L2_FLOW_LAST_BUFFER)
     goto eos;
   if (res != GST_FLOW_OK)
     goto dqbuf_failed;
@@ -1411,7 +1411,7 @@ poll_failed:
   }
 eos:
   {
-    return GST_FLOW_EOS;
+    return GST_V4L2_FLOW_LAST_BUFFER;
   }
 dqbuf_failed:
   {
@@ -2168,7 +2168,7 @@ buffer_truncated:
   }
 eos:
   {
-    GST_DEBUG_OBJECT (pool, "end of stream reached");
+    GST_DEBUG_OBJECT (pool, "end of sequence reached");
     gst_buffer_unref (*buf);
     *buf = NULL;
     return GST_V4L2_FLOW_LAST_BUFFER;
