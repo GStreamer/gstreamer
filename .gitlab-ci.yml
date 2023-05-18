@@ -43,6 +43,7 @@ variables:
   DEFAULT_MESON_ARGS: >
     -Dlibnice:tests=disabled
     -Dlibnice:examples=disabled
+    -Dlibnice:gupnp=disabled
     -Dopenh264:tests=disabled
     -Dpygobject:tests=false
     -Dpython=enabled
