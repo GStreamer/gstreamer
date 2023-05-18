@@ -1127,37 +1127,17 @@ gst_decodebin3_release_pad (GstElement * element, GstPad * pad)
   gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
   update_requested_selection (dbin);
 
-  gst_ghost_pad_set_target (GST_GHOST_PAD (input->ghost_sink), NULL);
   if (input->parsebin) {
-    gst_bin_remove (GST_BIN (dbin), input->parsebin);
-    gst_element_set_state (input->parsebin, GST_STATE_NULL);
-    g_signal_handler_disconnect (input->parsebin, input->pad_removed_sigid);
-    g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
-    g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
     gst_pad_remove_probe (input->parsebin_sink, probe_id);
-    gst_object_unref (input->parsebin);
-    gst_object_unref (input->parsebin_sink);
-
-    input->parsebin = NULL;
-    input->parsebin_sink = NULL;
-  }
-  if (input->identity) {
-    GstPad *idpad = gst_element_get_static_pad (input->identity, "src");
-    DecodebinInputStream *stream = find_input_stream_for_pad (dbin, idpad);
-    gst_object_unref (idpad);
-    remove_input_stream (dbin, stream);
-    gst_element_set_state (input->identity, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (dbin), input->identity);
-    gst_object_unref (input->identity);
-    input->identity = NULL;
-  }
-
-  if (!input->is_main) {
-    dbin->other_inputs = g_list_remove (dbin->other_inputs, input);
-    free_input (dbin, input);
   }
 
 beach:
+  if (!input->is_main) {
+    dbin->other_inputs = g_list_remove (dbin->other_inputs, input);
+    free_input (dbin, input);
+  } else
+    reset_input (dbin, input);
+
   INPUT_UNLOCK (dbin);
   return;
 }
@@ -1175,6 +1155,7 @@ reset_input (GstDecodebin3 * dbin, DecodebinInput * input)
     g_signal_handler_disconnect (input->parsebin, input->pad_added_sigid);
     g_signal_handler_disconnect (input->parsebin, input->drained_sigid);
     gst_element_set_state (input->parsebin, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (dbin), input->parsebin);
     gst_clear_object (&input->parsebin);
     gst_clear_object (&input->parsebin_sink);
   }
@@ -1184,6 +1165,7 @@ reset_input (GstDecodebin3 * dbin, DecodebinInput * input)
     gst_object_unref (idpad);
     remove_input_stream (dbin, stream);
     gst_element_set_state (input->identity, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (dbin), input->identity);
     gst_clear_object (&input->identity);
   }
   if (input->collection)
