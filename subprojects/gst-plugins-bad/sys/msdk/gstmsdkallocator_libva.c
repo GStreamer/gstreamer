@@ -32,6 +32,7 @@
 
 #include <va/va.h>
 #include <va/va_drmcommon.h>
+#include <libdrm/drm_fourcc.h>
 #include <unistd.h>
 #include "gstmsdkallocator.h"
 #include "gstmsdkallocator_libva.h"
@@ -775,4 +776,71 @@ error_destroy_va_surface:
     GST_ERROR ("Failed to Destroy the VASurfaceID %x", old_surface_id);
     return FALSE;
   }
+}
+
+static guint
+_get_usage_hint (GstMsdkContextJobType job_type)
+{
+  guint hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+
+  switch (job_type) {
+    case GST_MSDK_JOB_DECODER:
+      hint |= VA_SURFACE_ATTRIB_USAGE_HINT_DECODER;
+      break;
+    case GST_MSDK_JOB_ENCODER:
+      hint |= VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+      break;
+    case GST_MSDK_JOB_VPP:
+      hint |= VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
+          VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+      break;
+    default:
+      GST_WARNING ("Unsupported job type %d", job_type);
+      break;
+  }
+
+  return hint;
+}
+
+void
+gst_msdk_get_supported_modifiers (GstMsdkContext * context,
+    GstMsdkContextJobType job_type, GstVideoFormat format, GValue * modifiers)
+{
+  guint64 mod = DRM_FORMAT_MOD_INVALID;
+  guint64 mod_gen = DRM_FORMAT_MOD_INVALID;
+  GValue gmod = G_VALUE_INIT;
+  guint usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+  GstVaDisplay *display =
+      (GstVaDisplay *) gst_msdk_context_get_va_display (context);
+
+  g_value_init (&gmod, G_TYPE_UINT64);
+
+  mod = gst_va_dmabuf_get_modifier_for_format (display, format, usage_hint);
+  if (mod != DRM_FORMAT_MOD_INVALID && mod != DRM_FORMAT_MOD_LINEAR) {
+    g_value_set_uint64 (&gmod, mod);
+    gst_value_list_append_value (modifiers, &gmod);
+  }
+
+  usage_hint = _get_usage_hint (job_type);
+  if (usage_hint != VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC) {
+    mod_gen =
+        gst_va_dmabuf_get_modifier_for_format (display, format, usage_hint);
+    if (mod_gen != mod && mod_gen != DRM_FORMAT_MOD_INVALID &&
+        mod_gen != DRM_FORMAT_MOD_LINEAR) {
+      g_value_set_uint64 (&gmod, mod_gen);
+      gst_value_list_append_value (modifiers, &gmod);
+    }
+  }
+
+  if (mod == DRM_FORMAT_MOD_LINEAR || mod_gen == DRM_FORMAT_MOD_LINEAR) {
+    g_value_set_uint64 (&gmod, DRM_FORMAT_MOD_LINEAR);
+    gst_value_list_append_value (modifiers, &gmod);
+  }
+
+  if (mod == DRM_FORMAT_MOD_INVALID && mod_gen == DRM_FORMAT_MOD_INVALID) {
+    GST_WARNING ("Failed to get modifier %s:0x%016llx",
+        gst_video_format_to_string (format), DRM_FORMAT_MOD_INVALID);
+  }
+
+  g_value_unset (&gmod);
 }

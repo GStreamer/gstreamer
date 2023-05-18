@@ -49,6 +49,10 @@ gboolean
 gst_msdk_replace_mfx_memid (GstMsdkContext *context,
     mfxFrameSurface1 *mfx_surface, VASurfaceID surface_id);
 
+void
+gst_msdk_get_supported_modifiers (GstMsdkContext * context,
+    GstMsdkContextJobType job_type, GstVideoFormat format, GValue * modifiers);
+
 G_END_DECLS
 
 #endif /* GST_MSDK_ALLOCATOR_LIBVA_H_ */
