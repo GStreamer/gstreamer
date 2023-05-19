@@ -99,7 +99,7 @@ gst_gl_stereosplit_class_init (GstGLStereoSplitClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "GLStereoSplit", "Codec/Converter",
       "Splits a stereoscopic stream into separate left/right streams",
-      "Jan Schmidt <jan@centricular.com>\n"
+      "Jan Schmidt <jan@centricular.com>, "
       "Matthew Waters <matthew@centricular.com>");
 
   gobject_class->finalize = (GObjectFinalizeFunc) (stereosplit_finalize);

@@ -450,7 +450,7 @@ gst_ts_demux_class_init (GstTSDemuxClass * klass)
       "MPEG transport stream demuxer",
       "Codec/Demuxer",
       "Demuxes MPEG2 transport streams",
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>\n"
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>, "
       "Edward Hervey <edward.hervey@collabora.co.uk>");
 
   ts_class = GST_MPEGTS_BASE_CLASS (klass);

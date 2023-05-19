@@ -996,7 +996,7 @@
         "description": "Adaptive Streaming 2 plugin",
         "elements": {
             "dashdemux2": {
-                "author": "Edward Hervey <edward@centricular.com>\nJan Schmidt <jan@centricular.com>",
+                "author": "Edward Hervey <edward@centricular.com>, Jan Schmidt <jan@centricular.com>",
                 "description": "Dynamic Adaptive Streaming over HTTP demuxer",
                 "hierarchy": [
                     "GstDashDemux2",
@@ -1121,7 +1121,7 @@
                 "rank": "primary + 1"
             },
             "hlsdemux2": {
-                "author": "Edward Hervey <edward@centricular.com>\nJan Schmidt <jan@centricular.com>",
+                "author": "Edward Hervey <edward@centricular.com>, Jan Schmidt <jan@centricular.com>",
                 "description": "HTTP Live Streaming demuxer",
                 "hierarchy": [
                     "GstHLSDemux2",
@@ -1501,7 +1501,7 @@
         "description": "adds an alpha channel to video - constant or via chroma-keying",
         "elements": {
             "alpha": {
-                "author": "Wim Taymans <wim.taymans@gmail.com>\nEdward Hervey <edward.hervey@collabora.co.uk>\nJan Schmidt <thaytan@noraisin.net>",
+                "author": "Wim Taymans <wim.taymans@gmail.com>, Edward Hervey <edward.hervey@collabora.co.uk>, Jan Schmidt <thaytan@noraisin.net>",
                 "description": "Adds an alpha channel to video - uniform or via chroma-keying",
                 "hierarchy": [
                     "GstAlpha",
@@ -10156,7 +10156,7 @@
         "description": "Reads/Writes buffers from/to sequentially named files",
         "elements": {
             "imagesequencesrc": {
-                "author": "Cesar Fabian Orccon Chipana <cfoch.fabian@gmail.com>\nThibault Saunier <tsaunier@igalia.com>",
+                "author": "Cesar Fabian Orccon Chipana <cfoch.fabian@gmail.com>, Thibault Saunier <tsaunier@igalia.com>",
                 "description": "Create a video stream from a sequence of image files",
                 "hierarchy": [
                     "GstImageSequenceSrc",

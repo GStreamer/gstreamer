@@ -652,7 +652,7 @@ gst_dash_demux2_class_init (GstDashDemux2Class * klass)
       "DASH Demuxer",
       "Codec/Demuxer/Adaptive",
       "Dynamic Adaptive Streaming over HTTP demuxer",
-      "Edward Hervey <edward@centricular.com>\n"
+      "Edward Hervey <edward@centricular.com>, "
       "Jan Schmidt <jan@centricular.com>");
 
 

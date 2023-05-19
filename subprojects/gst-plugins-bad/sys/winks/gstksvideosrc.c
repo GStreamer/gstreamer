@@ -171,8 +171,8 @@ gst_ks_video_src_class_init (GstKsVideoSrcClass * klass)
   gst_element_class_set_static_metadata (gstelement_class, "KsVideoSrc",
       "Source/Video/Hardware",
       "Stream data from a video capture device through Windows kernel streaming",
-      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>\n"
-      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>\n"
+      "Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>, "
+      "Haakon Sporsheim <hakon.sporsheim@tandberg.com>, "
       "Andres Colubri <andres.colubri@gmail.com>");
 
   gst_element_class_add_pad_template (gstelement_class,

@@ -97,7 +97,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
 
   gst_element_class_set_metadata (element_class, "OpenGL color scale",
       "Filter/Effect/Video", "Colorspace converter and video scaler",
-      "Julien Isorce <julien.isorce@gmail.com>\n"
+      "Julien Isorce <julien.isorce@gmail.com>, "
       "Matthew Waters <matthew@centricular.com>");
 
   basetransform_class->passthrough_on_same_caps = TRUE;

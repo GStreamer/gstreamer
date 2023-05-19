@@ -160,7 +160,7 @@ gst_hls_demux_class_init (GstHLSDemuxClass * klass)
       "HLS Demuxer",
       "Codec/Demuxer/Adaptive",
       "HTTP Live Streaming demuxer",
-      "Marc-Andre Lureau <marcandre.lureau@gmail.com>\n"
+      "Marc-Andre Lureau <marcandre.lureau@gmail.com>, "
       "Andoni Morales Alastruey <ylatuya@gmail.com>");
 
   adaptivedemux_class->is_live = gst_hls_demux_is_live;

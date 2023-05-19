@@ -145,8 +145,8 @@ gst_mplex_class_init (GstMplexClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "mplex video multiplexer", "Codec/Muxer",
       "High-quality MPEG/DVD/SVCD/VCD video/audio multiplexer",
-      "Andrew Stevens <andrew.stevens@nexgo.de>\n"
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
+      "Andrew Stevens <andrew.stevens@nexgo.de>, "
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
       "Mark Nauwelaerts <mnauw@users.sourceforge.net>");
 
   gst_element_class_add_static_pad_template (element_class, &src_templ);

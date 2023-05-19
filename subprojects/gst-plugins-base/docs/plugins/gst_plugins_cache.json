@@ -3795,7 +3795,7 @@
                 "rank": "none"
             },
             "glcolorscale": {
-                "author": "Julien Isorce <julien.isorce@gmail.com>\nMatthew Waters <matthew@centricular.com>",
+                "author": "Julien Isorce <julien.isorce@gmail.com>, Matthew Waters <matthew@centricular.com>",
                 "description": "Colorspace converter and video scaler",
                 "hierarchy": [
                     "GstGLColorscale",
@@ -6290,7 +6290,7 @@
                 "rank": "none"
             },
             "glstereosplit": {
-                "author": "Jan Schmidt <jan@centricular.com>\nMatthew Waters <matthew@centricular.com>",
+                "author": "Jan Schmidt <jan@centricular.com>, Matthew Waters <matthew@centricular.com>",
                 "description": "Splits a stereoscopic stream into separate left/right streams",
                 "hierarchy": [
                     "GstGLStereoSplit",
@@ -6371,7 +6371,7 @@
                 "rank": "none"
             },
             "gltransformation": {
-                "author": "Lubosz Sarnecki <lubosz@gmail.com>\nMatthew Waters <matthew@centricular.com>",
+                "author": "Lubosz Sarnecki <lubosz@gmail.com>, Matthew Waters <matthew@centricular.com>",
                 "description": "Transform video on the GPU",
                 "hierarchy": [
                     "GstGLTransformation",
@@ -6763,7 +6763,7 @@
                 "rank": "none"
             },
             "glviewconvert": {
-                "author": "Jan Schmidt <jan@centricular.com>\nMatthew Waters <matthew@centricular.com>",
+                "author": "Jan Schmidt <jan@centricular.com>, Matthew Waters <matthew@centricular.com>",
                 "description": "Convert stereoscopic/multiview video formats",
                 "hierarchy": [
                     "GstGLViewConvertElement",

@@ -638,7 +638,7 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
       "Source/Video",
       "Digital Video Broadcast Source",
       "P2P-VCR, C-Lab, University of Paderborn, "
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>\n"
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>, "
       "Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>");
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_dvbsrc_start);

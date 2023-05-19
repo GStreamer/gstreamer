@@ -201,7 +201,7 @@ gst_hls_demux2_class_init (GstHLSDemux2Class * klass)
       "HLS Demuxer",
       "Codec/Demuxer/Adaptive",
       "HTTP Live Streaming demuxer",
-      "Edward Hervey <edward@centricular.com>\n"
+      "Edward Hervey <edward@centricular.com>, "
       "Jan Schmidt <jan@centricular.com>");
 
   adaptivedemux_class->is_live = gst_hls_demux_is_live;

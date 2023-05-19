@@ -183,9 +183,9 @@ gst_remove_silence_class_init (GstRemoveSilenceClass * klass)
       "RemoveSilence",
       "Filter/Effect/Audio",
       "Removes all the silence periods from the audio stream.",
-      "Tiago Katcipis <tiagokatcipis@gmail.com>\n \
-       Paulo Pizarro  <paulo.pizarro@gmail.com>\n \
-       Nicola Murino  <nicola.murino@gmail.com>");
+      "Tiago Katcipis <tiagokatcipis@gmail.com>, "
+      "Paulo Pizarro  <paulo.pizarro@gmail.com>, "
+      "Nicola Murino  <nicola.murino@gmail.com>");
 
   gst_element_class_add_static_pad_template (gstelement_class, &src_template);
   gst_element_class_add_static_pad_template (gstelement_class, &sink_template);

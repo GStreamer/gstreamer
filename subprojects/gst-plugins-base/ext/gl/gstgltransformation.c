@@ -243,7 +243,7 @@ gst_gl_transformation_class_init (GstGLTransformationClass * klass)
 
   gst_element_class_set_metadata (element_class, "OpenGL transformation filter",
       "Filter/Effect/Video", "Transform video on the GPU",
-      "Lubosz Sarnecki <lubosz@gmail.com>\n"
+      "Lubosz Sarnecki <lubosz@gmail.com>, "
       "Matthew Waters <matthew@centricular.com>");
 
   GST_GL_BASE_FILTER_CLASS (klass)->supported_gl_api =

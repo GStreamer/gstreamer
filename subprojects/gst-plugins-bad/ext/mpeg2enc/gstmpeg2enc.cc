@@ -140,7 +140,7 @@ gst_mpeg2enc_class_init (GstMpeg2encClass * klass)
   gst_element_class_set_static_metadata (element_class,
       "mpeg2enc video encoder", "Codec/Encoder/Video",
       "High-quality MPEG-1/2 video encoder",
-      "Andrew Stevens <andrew.stevens@nexgo.de>\n"
+      "Andrew Stevens <andrew.stevens@nexgo.de>, "
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   video_encoder_class->start = GST_DEBUG_FUNCPTR (gst_mpeg2enc_start);

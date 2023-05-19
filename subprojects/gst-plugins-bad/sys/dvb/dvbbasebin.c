@@ -347,7 +347,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   gst_element_class_set_static_metadata (element_class, "DVB bin",
       "Source/Bin/Video",
       "Access descramble and split DVB streams",
-      "Alessandro Decina <alessandro.d@gmail.com>\n"
+      "Alessandro Decina <alessandro.d@gmail.com>, "
       "Reynaldo H. Verdejo Pinochet <reynaldo@osg.samsung.com>");
 
   gobject_class = G_OBJECT_CLASS (klass);

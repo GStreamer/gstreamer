@@ -114,7 +114,7 @@ gst_gl_view_convert_element_class_init (GstGLViewConvertElementClass * klass)
   gst_element_class_set_metadata (element_class,
       "OpenGL Multiview/3D conversion filter", "Filter",
       "Convert stereoscopic/multiview video formats",
-      "Jan Schmidt <jan@centricular.com>\n"
+      "Jan Schmidt <jan@centricular.com>, "
       "Matthew Waters <matthew@centricular.com>");
 
   GST_GL_FILTER_CLASS (klass)->set_caps = gst_gl_view_convert_element_set_caps;

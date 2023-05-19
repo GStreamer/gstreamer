@@ -338,7 +338,7 @@ gst_image_sequence_src_class_init (GstImageSequenceSrcClass * klass)
   gst_element_class_set_static_metadata (gstelement_class,
       "Image Sequence Source", "Source/File/Video",
       "Create a video stream from a sequence of image files",
-      "Cesar Fabian Orccon Chipana <cfoch.fabian@gmail.com>\n"
+      "Cesar Fabian Orccon Chipana <cfoch.fabian@gmail.com>, "
       "Thibault Saunier <tsaunier@igalia.com>");
 }
 
