@@ -827,46 +827,57 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-gst_video_test_src_parse_caps (const GstCaps * caps,
-    gint * width, gint * height, gint * fps_n, gint * fps_d,
-    GstVideoColorimetry * colorimetry, gint * x_inv, gint * y_inv)
+gst_video_test_src_parse_caps (const GstCaps * caps, GstVideoInfo * info,
+    GstVideoTestSrc * videotestsrc)
 {
   const GstStructure *structure;
-  GstPadLinkReturn ret;
+  gboolean ret;
   const GValue *framerate;
   const gchar *str;
+  gint x_inv = 0, y_inv = 0;
 
   GST_DEBUG ("parsing caps");
 
+  gst_video_info_init (info);
+
   structure = gst_caps_get_structure (caps, 0);
 
-  ret = gst_structure_get_int (structure, "width", width);
-  ret &= gst_structure_get_int (structure, "height", height);
+  ret = gst_structure_get_int (structure, "width", &info->width);
+  ret &= gst_structure_get_int (structure, "height", &info->height);
   framerate = gst_structure_get_value (structure, "framerate");
 
   if (framerate) {
-    *fps_n = gst_value_get_fraction_numerator (framerate);
-    *fps_d = gst_value_get_fraction_denominator (framerate);
+    info->fps_n = gst_value_get_fraction_numerator (framerate);
+    info->fps_d = gst_value_get_fraction_denominator (framerate);
   } else
     goto no_framerate;
 
   if ((str = gst_structure_get_string (structure, "colorimetry")))
-    gst_video_colorimetry_from_string (colorimetry, str);
+    gst_video_colorimetry_from_string (&info->colorimetry, str);
 
   if ((str = gst_structure_get_string (structure, "format"))) {
-    if (g_str_equal (str, "bggr")) {
-      *x_inv = *y_inv = 0;
-    } else if (g_str_equal (str, "rggb")) {
-      *x_inv = *y_inv = 1;
-    } else if (g_str_equal (str, "grbg")) {
-      *x_inv = 0;
-      *y_inv = 1;
-    } else if (g_str_equal (str, "gbrg")) {
-      *x_inv = 1;
-      *y_inv = 0;
+    if (g_str_has_prefix (str, "bggr")) {
+      x_inv = y_inv = 0;
+    } else if (g_str_has_prefix (str, "rggb")) {
+      x_inv = y_inv = 1;
+    } else if (g_str_has_prefix (str, "grbg")) {
+      x_inv = 0;
+      y_inv = 1;
+    } else if (g_str_has_prefix (str, "gbrg")) {
+      x_inv = 1;
+      y_inv = 0;
     } else
       goto invalid_format;
   }
+
+  videotestsrc->bayer = TRUE;
+  videotestsrc->x_invert = x_inv;
+  videotestsrc->y_invert = y_inv;
+
+  info->finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_GRAY8);
+  info->stride[0] = GST_ROUND_UP_4 (info->width);
+  info->size = info->stride[0] * info->height;
+
   return ret;
 
   /* ERRORS */
@@ -960,22 +971,8 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
       goto parse_failed;
 
   } else if (gst_structure_has_name (structure, "video/x-bayer")) {
-    gint x_inv = 0, y_inv = 0;
-
-    gst_video_info_init (&info);
-
-    info.finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_GRAY8);
-
-    if (!gst_video_test_src_parse_caps (caps, &info.width, &info.height,
-            &info.fps_n, &info.fps_d, &info.colorimetry, &x_inv, &y_inv))
+    if (!gst_video_test_src_parse_caps (caps, &info, &videotestsrc))
       goto parse_failed;
-
-    info.size = GST_ROUND_UP_4 (info.width) * info.height;
-    info.stride[0] = GST_ROUND_UP_4 (info.width);
-
-    videotestsrc->bayer = TRUE;
-    videotestsrc->x_invert = x_inv;
-    videotestsrc->y_invert = y_inv;
   } else {
     goto unsupported_caps;
   }
