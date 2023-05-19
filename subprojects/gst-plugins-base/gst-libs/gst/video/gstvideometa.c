@@ -395,11 +395,39 @@ gst_video_meta_unmap (GstVideoMeta * meta, guint plane, GstMapInfo * info)
 }
 
 static gboolean
+gst_video_meta_is_alignment_valid (GstVideoAlignment * align)
+{
+  gint i;
+
+  g_return_val_if_fail (align != NULL, FALSE);
+
+  if (align->padding_top != 0 || align->padding_bottom != 0 ||
+      align->padding_left != 0 || align->padding_right != 0)
+    return TRUE;
+
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    if (align->stride_align[i] != 0)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 gst_video_meta_validate_alignment (GstVideoMeta * meta,
     gsize plane_size[GST_VIDEO_MAX_PLANES])
 {
   GstVideoInfo info;
   guint i;
+
+  if (!gst_video_meta_is_alignment_valid (&meta->alignment)) {
+    GST_LOG ("Set alignment on meta to all zero");
+
+    /* When alignment is invalid, no further check is needed,
+       unless user wants to calculate the pitch for each plane. */
+    if (!plane_size)
+      return TRUE;
+  }
 
   gst_video_info_init (&info);
   gst_video_info_set_format (&info, meta->format, meta->width, meta->height);
