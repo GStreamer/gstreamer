@@ -1826,3 +1826,23 @@ beach:
 #endif
   return FALSE;
 }
+
+/**
+ * gst_gl_context_egl_supports_modifier: (skip)
+ * @context: an EGL #GStGLContext
+ *
+ * Returns: %TRUE if the @context supports the modifiers.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_gl_context_egl_supports_modifier (GstGLContext * context)
+{
+#if GST_GL_HAVE_DMABUF
+  g_return_val_if_fail (GST_IS_GL_CONTEXT_EGL (context), FALSE);
+
+  return gst_gl_context_egl_fetch_dma_formats (context);
+#else
+  return FALSE;
+#endif
+}

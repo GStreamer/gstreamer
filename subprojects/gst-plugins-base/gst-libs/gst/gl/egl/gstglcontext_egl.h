@@ -113,6 +113,8 @@ G_GNUC_INTERNAL
 gboolean            gst_gl_context_egl_get_format_modifiers (GstGLContext * context,
                                                              gint fourcc,
                                                              const GArray ** modifiers);
+G_GNUC_INTERNAL
+gboolean            gst_gl_context_egl_supports_modifier     (GstGLContext * context);
 G_END_DECLS
 
 #endif /* __GST_GL_CONTEXT_EGL_H__ */
