@@ -128,6 +128,8 @@ struct _GstBaseTsMuxPad
   TsMuxProgram *prog;
 
   gchar *language;
+  gint bitrate;
+  gint max_bitrate;
 };
 
 struct _GstBaseTsMuxPadClass

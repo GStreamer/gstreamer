@@ -714,7 +714,7 @@ tsmux_get_new_pid (TsMux * mux)
  */
 TsMuxStream *
 tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
-    gchar * language)
+    gchar * language, guint bitrate, guint max_bitrate)
 {
   TsMuxStream *stream;
   guint16 new_pid;
@@ -743,6 +743,10 @@ tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
   } else {
     stream->language[0] = 0;
   }
+
+  stream->max_bitrate = max_bitrate;
+  /* ignored if it's not audio */
+  stream->audio_bitrate = bitrate;
 
   return stream;
 }

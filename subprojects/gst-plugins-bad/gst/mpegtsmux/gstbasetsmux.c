@@ -118,6 +118,9 @@ gst_base_ts_mux_pad_reset (GstBaseTsMuxPad * pad)
     g_free (pad->language);
     pad->language = NULL;
   }
+
+  pad->bitrate = 0;
+  pad->max_bitrate = 0;
 }
 
 /* GstAggregatorPad implementation */
@@ -726,7 +729,8 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
 
   if (ts_pad->stream == NULL) {
     ts_pad->stream =
-        tsmux_create_stream (mux->tsmux, st, ts_pad->pid, ts_pad->language);
+        tsmux_create_stream (mux->tsmux, st, ts_pad->pid, ts_pad->language,
+        ts_pad->bitrate, ts_pad->max_bitrate);
     if (ts_pad->stream == NULL)
       goto error;
   }
@@ -2080,6 +2084,8 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
     case GST_EVENT_TAG:{
       GstTagList *list;
       gchar *lang = NULL;
+      guint bitrate = 0;
+      guint max_bitrate = 0;
 
       GST_DEBUG_OBJECT (mux, "received tag event");
       gst_event_parse_tag (event, &list);
@@ -2099,6 +2105,14 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
               lang);
         }
         g_free (lang);
+      }
+
+      if (gst_tag_list_get_uint (list, GST_TAG_BITRATE, &bitrate)) {
+        ts_pad->bitrate = bitrate;
+      }
+
+      if (gst_tag_list_get_uint (list, GST_TAG_MAXIMUM_BITRATE, &max_bitrate)) {
+        ts_pad->max_bitrate = bitrate;
       }
 
       /* handled this, don't want collectpads to forward it downstream */

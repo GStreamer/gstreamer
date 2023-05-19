@@ -228,7 +228,7 @@ gboolean        tsmux_add_mpegts_si_section     (TsMux * mux, GstMpegtsSection *
 gboolean        tsmux_send_section              (TsMux *mux, GstMpegtsSection *section);
 
 /* stream management */
-TsMuxStream *	tsmux_create_stream 		(TsMux *mux, guint stream_type, guint16 pid, gchar *language);
+TsMuxStream *	tsmux_create_stream 		(TsMux *mux, guint stream_type, guint16 pid, gchar *language, guint bitrate, guint max_bitrate);
 TsMuxStream *	tsmux_find_stream 		(TsMux *mux, guint16 pid);
 gboolean        tsmux_remove_stream             (TsMux *mux, guint16 pid, TsMuxProgram *program);
 
