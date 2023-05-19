@@ -2049,17 +2049,9 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstMsdkEnc *thiz = GST_MSDKENC (object);
-  GstState state;
   gboolean ret = TRUE;
 
   GST_OBJECT_LOCK (thiz);
-
-  state = GST_STATE (thiz);
-  if ((state != GST_STATE_READY && state != GST_STATE_NULL) &&
-      !(pspec->flags & GST_PARAM_MUTABLE_PLAYING)) {
-    ret = FALSE;
-    goto wrong_state;
-  }
 
   switch (prop_id) {
     case GST_MSDKENC_PROP_HARDWARE:
@@ -2076,23 +2068,32 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
       break;
     case GST_MSDKENC_PROP_BITRATE:
     {
-      guint bitrate = g_value_get_uint (value);
-      /* Ensure that bitrate changed before triggering a reconfig */
-      if (bitrate != thiz->bitrate) {
-        thiz->bitrate = bitrate;
-        thiz->reconfig = TRUE;
-        GST_DEBUG_OBJECT (thiz, "changed bitrate to %u", bitrate);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->bitrate,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed bitrate to %u", thiz->bitrate);
       }
       break;
     }
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE:
-      thiz->max_frame_size = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->max_frame_size,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-frame-size to %u",
+            thiz->max_frame_size);
+      }
       break;
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE_I:
-      thiz->max_frame_size_i = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->max_frame_size_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-frame-size-i to %u",
+            thiz->max_frame_size_i);
+      }
       break;
     case GST_MSDKENC_PROP_MAX_FRAME_SIZE_P:
-      thiz->max_frame_size_p = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->max_frame_size_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-frame-size-p to %u",
+            thiz->max_frame_size_p);
+      }
       break;
     case GST_MSDKENC_PROP_MAX_VBV_BITRATE:
       thiz->max_vbv_bitrate = g_value_get_uint (value);
@@ -2107,16 +2108,28 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
       thiz->lookahead_depth = g_value_get_uint (value);
       break;
     case GST_MSDKENC_PROP_QPI:
-      thiz->qpi = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->qpi,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed qpi to %u", thiz->qpi);
+      }
       break;
     case GST_MSDKENC_PROP_QPP:
-      thiz->qpp = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->qpp,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed qpp to %u", thiz->qpp);
+      }
       break;
     case GST_MSDKENC_PROP_QPB:
-      thiz->qpb = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->qpb,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed qpb to %u", thiz->qpb);
+      }
       break;
     case GST_MSDKENC_PROP_GOP_SIZE:
-      thiz->gop_size = g_value_get_uint (value);
+      if (gst_msdkenc_check_update_property_uint (thiz, &thiz->gop_size,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed gop-size to %u", thiz->gop_size);
+      }
       break;
     case GST_MSDKENC_PROP_REF_FRAMES:
       thiz->ref_frames = g_value_get_uint (value);
@@ -2158,14 +2171,6 @@ gst_msdkenc_set_common_property (GObject * object, guint prop_id,
   }
   GST_OBJECT_UNLOCK (thiz);
   return ret;
-
-  /* ERROR */
-wrong_state:
-  {
-    GST_WARNING_OBJECT (thiz, "setting property in wrong state");
-    GST_OBJECT_UNLOCK (thiz);
-    return ret;
-  }
 }
 
 /* gst_msdkenc_get_common_property:

@@ -669,6 +669,7 @@ static void
 gst_msdkh265enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstMsdkEnc *enc = GST_MSDKENC (object);
   GstMsdkH265Enc *thiz = GST_MSDKH265ENC (object);
 
   if (gst_msdkenc_set_common_property (object, prop_id, value, pspec))
@@ -725,15 +726,24 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       break;
 
     case PROP_MIN_QP_I:
-      thiz->min_qp_i = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-i to %u", thiz->min_qp_i);
+      }
       break;
 
     case PROP_MIN_QP_P:
-      thiz->min_qp_p = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-p to %u", thiz->min_qp_p);
+      }
       break;
 
     case PROP_MIN_QP_B:
-      thiz->min_qp_b = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->min_qp_b,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed min-qp-b to %u", thiz->min_qp_b);
+      }
       break;
 
     case PROP_MAX_QP:
@@ -742,31 +752,56 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       break;
 
     case PROP_MAX_QP_I:
-      thiz->max_qp_i = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_i,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-i to %u", thiz->max_qp_i);
+      }
       break;
 
     case PROP_MAX_QP_P:
-      thiz->max_qp_p = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_p,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-p to %u", thiz->max_qp_p);
+      }
       break;
 
     case PROP_MAX_QP_B:
-      thiz->max_qp_b = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->max_qp_b,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed max-qp-b to %u", thiz->max_qp_b);
+      }
       break;
 
     case PROP_INTRA_REFRESH_TYPE:
-      thiz->intra_refresh_type = g_value_get_enum (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_type,
+              g_value_get_enum (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-type to %u",
+            thiz->intra_refresh_type);
+      }
       break;
 
     case PROP_INTRA_REFRESH_CYCLE_SIZE:
-      thiz->intra_refresh_cycle_size = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_cycle_size,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-cycle-size to %u",
+            thiz->intra_refresh_cycle_size);
+      }
       break;
 
     case PROP_INTRA_REFRESH_QP_DELTA:
-      thiz->intra_refresh_qp_delta = g_value_get_int (value);
+      if (check_update_property_int (enc, &thiz->intra_refresh_qp_delta,
+              g_value_get_int (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-qp-delta to %d",
+            thiz->intra_refresh_qp_delta);
+      }
       break;
 
     case PROP_INTRA_REFRESH_CYCLE_DIST:
-      thiz->intra_refresh_cycle_dist = g_value_get_uint (value);
+      if (check_update_property_uint (enc, &thiz->intra_refresh_cycle_dist,
+              g_value_get_uint (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed intra-refresh-cycle-dist to %u",
+            thiz->intra_refresh_cycle_dist);
+      }
       break;
 
     case PROP_DBLK_IDC:
@@ -774,7 +809,11 @@ gst_msdkh265enc_set_property (GObject * object, guint prop_id,
       break;
 
     case PROP_PIC_TIMING_SEI:
-      thiz->pic_timing_sei = g_value_get_boolean (value);
+      if (check_update_property_bool (enc, &thiz->pic_timing_sei,
+              g_value_get_boolean (value))) {
+        GST_DEBUG_OBJECT (thiz, "changed pic-timimg-sei to %d",
+            thiz->pic_timing_sei);
+      }
       break;
 
     default:
