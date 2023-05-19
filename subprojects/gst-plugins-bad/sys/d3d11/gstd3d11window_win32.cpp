@@ -578,7 +578,7 @@ gst_d3d11_window_win32_create_internal_window (GstD3D11WindowWin32 * self)
     wc.lpfnWndProc = window_proc;
     wc.hInstance = hinstance;
     wc.hIcon = LoadIcon (NULL, IDI_WINLOGO);
-    wc.style = CS_OWNDC | CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+    wc.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
     wc.hCursor = LoadCursor (NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH) GetStockObject (BLACK_BRUSH);
     wc.lpszClassName = "GSTD3D11";
