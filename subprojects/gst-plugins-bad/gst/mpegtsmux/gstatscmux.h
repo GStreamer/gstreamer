@@ -25,6 +25,7 @@
 #define __ATSCMUX_H__
 
 #include "gstbasetsmux.h"
+#include <gst/base/base.h>
 
 G_BEGIN_DECLS
 

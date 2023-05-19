@@ -65,8 +65,6 @@ gst_atsc_mux_stream_get_es_descrs (TsMuxStream * stream,
 {
   GstMpegtsDescriptor *descriptor;
 
-  tsmux_stream_default_get_es_descrs (stream, pmt_stream);
-
   if (stream->stream_type == ATSCMUX_ST_PS_AUDIO_EAC3) {
     guint8 add_info[4];
     guint8 *pos;
@@ -126,6 +124,169 @@ gst_atsc_mux_stream_get_es_descrs (TsMuxStream * stream,
     descriptor =
         gst_mpegts_descriptor_from_custom (GST_MTS_DESC_ATSC_EAC3, add_info, 4);
     g_ptr_array_add (pmt_stream->descriptors, descriptor);
+  } else if (stream->stream_type == TSMUX_ST_PS_AUDIO_AC3) {
+    int wr_size = 0;
+    guint8 *add_info = NULL;
+    guint8 data;
+    guint bitrate;
+    gboolean has_language;
+    guint bitrates[20][2] = {
+      {32000, 0x00}
+      ,
+      {40000, 0x01}
+      ,
+      {48000, 0x02}
+      ,
+      {56000, 0x03}
+      ,
+      {64000, 0x04}
+      ,
+      {80000, 0x05}
+      ,
+      {96000, 0x06}
+      ,
+      {112000, 0x07}
+      ,
+      {128000, 0x08}
+      ,
+      {160000, 0x09}
+      ,
+      {192000, 0x0A}
+      ,
+      {224000, 0x0B}
+      ,
+      {256000, 0x0C}
+      ,
+      {320000, 0x0D}
+      ,
+      {384000, 0x0E}
+      ,
+      {448000, 0x0F}
+      ,
+      {512000, 0x10}
+      ,
+      {576000, 0x11}
+      ,
+      {640000, 0x12}
+    };
+    gint i;
+    guint bitrate_code = 0x12;
+    GstByteWriter writer;
+    gst_byte_writer_init_with_size (&writer, 7, FALSE);
+
+    /* audio_stream_descriptor () | ATSC A/52-2001 Annex A
+     *
+     * descriptor_tag       8 uimsbf
+     * descriptor_length    8 uimsbf
+     * sample_rate_code     3 bslbf
+     * bsid                 5 bslbf
+     * bit_rate_code        6 bslbf
+     * surround_mode        2 bslbf
+     * bsmod                3 bslbf
+     * num_channels         4 bslbf
+     * full_svc             1 bslbf
+     * langcod              8 bslbf
+     * mainid               3 uimsbf
+     * priority             2 bslbf
+     * reserved             3 '111'
+     * textlen              7 uimsbf
+     * text_code            1 bslbf
+     * text                 8*textlen bslbf
+     * language_flag        1 bslbf
+     * language_flag_2      1 bslbf
+     * reserved             6 '111111'
+     * language if flag     3*8 uimbsf
+     * language_2 if flag_2 3*8 uimsbf
+     */
+
+    /* 3 bits sample_rate_code, 5 bits hardcoded bsid (default ver 8) */
+    switch (stream->audio_sampling) {
+      case 48000:
+        data = 0x08;
+        break;
+      case 44100:
+        data = 0x28;
+        break;
+      case 32000:
+        data = 0x48;
+        break;
+      default:
+        data = 0xE8;
+        break;                  /* 48, 44.1 or 32 Khz */
+    }
+    gst_byte_writer_put_uint8 (&writer, data);
+
+    /* 1 bit bit_rate_limit, 5 bits bit_rate_code, 2 bits suround_mode */
+    bitrate = MAX (stream->audio_bitrate, stream->max_bitrate);
+    for (i = 0; i < G_N_ELEMENTS (bitrates); i++) {
+      if (bitrate < bitrates[i][0]) {
+        break;
+      }
+      bitrate_code = bitrates[i][1];
+    }
+    data = bitrate_code << 2;
+    data |= 0x80;               /* This is a maximum bitrate */
+    gst_byte_writer_put_uint8 (&writer, data);
+
+    /* 3 bits bsmod, 4 bits num_channels, 1 bit full_svc */
+    switch (stream->audio_channels) {
+      case 1:
+        data = 0x01 << 1;
+        break;                  /* 1/0 */
+      case 2:
+        data = 0x02 << 1;
+        break;                  /* 2/0 */
+      case 3:
+        data = 0x0A << 1;
+        break;                  /* <= 3 */
+      case 4:
+        data = 0x0B << 1;
+        break;                  /* <= 4 */
+      case 5:
+        data = 0x0C << 1;
+        break;                  /* <= 5 */
+      case 6:
+      default:
+        data = 0x0D << 1;
+        break;                  /* <= 6 */
+    }
+    data |= 0x01;               /* full_svc is hardcoded to 1 for now */
+    gst_byte_writer_put_uint8 (&writer, data);
+
+    /* deprecated langcod */
+    data = 0xff;
+    gst_byte_writer_put_uint8 (&writer, data);
+    /* langcod2 skipped because num_channels > 0 (no dual mono) */
+    /* 3 bits mainid, 2 bits priority, 3 bits reserved */
+    data = 0x0f;
+    gst_byte_writer_put_uint8 (&writer, data);
+    /* 7 bits textlen, 1 bit text_code */
+    data = 0x00;
+    gst_byte_writer_put_uint8 (&writer, data);
+    /* no text provided, jumping directly to language */
+
+    has_language = (stream->language[0] != '\0');
+    if (has_language) {
+      data = 0xbf;
+      gst_byte_writer_put_uint8 (&writer, data);
+      gst_byte_writer_put_data (&writer, (guint8 *) stream->language, 3);
+    } else {
+      data = 0x3f;
+      gst_byte_writer_put_uint8 (&writer, data);
+    }
+
+    descriptor = gst_mpegts_descriptor_from_registration ("AC-3", NULL, 0);
+    g_ptr_array_add (pmt_stream->descriptors, descriptor);
+
+    wr_size = gst_byte_writer_get_size (&writer);
+    add_info = gst_byte_writer_reset_and_get_data (&writer);
+
+    descriptor =
+        gst_mpegts_descriptor_from_custom (GST_MTS_DESC_AC3_AUDIO_STREAM,
+        add_info, wr_size);
+    g_ptr_array_add (pmt_stream->descriptors, descriptor);
+  } else {
+    tsmux_stream_default_get_es_descrs (stream, pmt_stream);
   }
 }
 
