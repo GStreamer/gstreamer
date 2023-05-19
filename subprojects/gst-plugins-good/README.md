@@ -1,4 +1,4 @@
-GStreamer 1.20.x stable series
+GStreamer 1.22.x stable series
 
 WHAT IT IS
 ----------

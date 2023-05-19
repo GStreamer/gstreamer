@@ -2,13 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
-The latest bug-fix release in the stable 1.22 series is 1.22.2 and was
-released on 11 April 2023.
+The latest bug-fix release in the stable 1.22 series is 1.22.3 and was
+released on 19 May 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Tuesday 11 April 2023, 16:45 UTC (log)
+Last updated: Friday 19 May 2023, 01:00 UTC (log)
 
 Introduction
 
@@ -1647,6 +1647,189 @@ List of merge requests and issues fixed in 1.22.2
 
 -   List of Merge Requests applied in 1.22.2
 -   List of Issues fixed in 1.22.2
+
+1.22.3
+
+The third 1.22 bug-fix release (1.22.3) was released on 19 May 2023.
+
+This release only contains bugfixes and it should be safe to update from
+1.22.x.
+
+Highlighted bugfixes in 1.22.3
+
+-   avdec: fix occasional video decoder deadlock on seeking with FFmpeg
+    6.0
+-   decodebin3: fix regression handling input streams without CAPS or
+    TIME segment such as e.g. udpsrc or `pushfilesrc
+-   bluez: a2dpsink: fix Bluetooth SIG Certification test failures
+-   osxvideosink: fix deadlock upon closing output window
+-   qtdemux: fix edit list handling regression and AV1 codec box parsing
+-   qtmux: fix extraction of CEA608 closed caption data from S334-1A
+    packets
+-   rtspsrc: Fix handling of * control path
+-   splitmux: timestamp handling improvements
+-   v4l2videodec: Rework dynamic resolution change handling (needed for
+    IMX6 mainline codec)
+-   videoflip: fix regression with automatically rotating video based on
+    tags
+-   d3d11: many d3d11videosink and d3d11compositor fixes
+-   webrtc, rtp: numerous data race fixes and stability fixes
+-   various bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   tracing: Initialize tracing infrastructure even if the debug system
+    is not compiled in
+-   parse-launch: fix missing unref of looked-up child element
+-   gstutils: Add category and object to most logging messages
+
+gst-plugins-base
+
+-   allocators: Fix fdmem unit test with recent GLib versions
+-   audiotestsrc: Initialize all samples in wave=ticks mode
+-   decodebin3: Handle input streams without CAPS or TIME segment such
+    as e.g. udpsrc or pushfilesrc
+-   decodebin3: fix regression handling streams without caps
+-   decodebin3: fix random hang when remove failing stream
+-   uridecodebin3: Ensure atomic urisourcebin state change
+-   glvideoflip: fix leaked caps
+-   glcontext_wgl: fix missing unref
+-   playsink: Fix volume leak
+
+gst-plugins-good
+
+-   adaptivedemux2: fix critical when using an unsupported URI
+-   dashdemux2: mpdclient: fix divide by 0 if segment has no duration
+-   imagesequencesrc: Properly set default location
+-   multifile: error out if no filename was set
+-   osxvideosink: fix deadlock upon closing output window
+-   rtpmanager: rtpsession: data race leading to critical warnings
+-   rtpmanager: rtpsession: race conditions leading to critical warnings
+-   rtspsrc: Fix handling of * control path
+-   splitmuxsink: Catch invalid DTS to avoid running into problems later
+-   splitmuxsrc: Make PTS contiguous by preference
+-   qtdemux: emit no-more-pads after pruning old pads
+-   Revert “qtdemux: fix conditions for end of segment in reverse
+    playback” to fix edit list regression
+-   qtdemux: Fix av1C parsing
+-   qtmux: Fix extraction of CEA608 data from S334-1A packets
+-   qtwindow: unref caps in destructor
+-   v4l2: device provider: Fix GMainLoop leak
+-   v4l2: videodec: Rework dynamic resolution change handling
+-   v4l2: videodec: Prefer acquired caps over anything downstream
+-   videoflip: fix setting of method property at construction time
+-   videoflip 1.22.2 not rotating video when extracting frames
+
+gst-plugins-bad
+
+-   a2dpsink: Fails many tests in Bluetooth SIG Certification
+-   avdtputil: Use int instead of int range for fixed bitpool values
+-   ccconverter: reintroduce frame count reset on cycle completion
+-   ccconverter: integer overflow & crashing
+-   codectimestamper: remove PC file generation from plugin’s own
+    meson.build
+-   cudamemory: Fix for semi planar YUV memory size decision
+-   d3d11compositor: Reconfigure resource only when output caps is
+    changed
+-   d3d11compositor: Skip zero alpha input
+-   d3d11convert: Fix for runtime property update
+-   d3d11memory: Don’t clear wrapped texture memory
+-   d3d11videosink: Fix for ignored initial render rectangle
+-   d3d11videosink: fix race condition in window unprepare
+-   d3d11videosink: Enhancement for initial window size decision
+-   d3d11videosink: Don’t clear prepared buffer on unlock_stop()
+-   dashdemux: mpdclient: fix divide by 0 if segment has no duration
+-   dtlstransport: Keep strong ref of dtls encoder/decoder
+-   GstPlay: avoid getting property of playbin2 if subtitle_sid is null
+-   GstPlay: fix critical log when using playbin3
+-   h264decoder: Drop nonexisting picture silently without error
+-   dtmf: element classification improvements
+-   mfvideoenc: Allow only even resolution numbers
+-   sctpenc: Fix potential shutdown deadlock
+-   srtpdec: fix “srtp-key” check
+-   tests: disable dtls test if openssl is not present
+-   tsdemux: Set number of channels to 2 for dual mono Opus
+-   va: Various fixes for defects found with MSVC
+-   wasapi2: Allows process loopback capture on Windows 10
+-   webrtcdatachannel: Bind to parent webrtcbin using a weak reference
+-   webrtcbin: Fix potential deadlock when closing before any data was
+    sent
+-   webrtc: Plug leaks of resolved ICE addresses
+-   webrtc: do not tear down data channel before data is flushed
+
+gst-plugins-ugly
+
+-   mpegpsdemux: Rework gap sending
+
+gst-libav
+
+-   avviddec: Temporarily unlock stream lock while flushing buffers
+-   Random freeze and deadlock in ffmpegviddec flush and get_buffer
+    while seeking
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges: base-xml-formatter: Don’t pass non-GObject pointers to
+    GST_DEBUG_OBJECT
+
+gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.22.3
+
+-   glib: Ship Windows process spawning helpers
+-   recipes: add recipe for libltc for timecodestamper element
+-   Add support for RHEL9 and Rocky Linux
+
+Contributors to 1.22.3
+
+Aleksandr Slobodeniuk, Antonio Kevo, Arun Raghavan, Carlos Rafael Giani,
+Daniel Moberg, Edward Hervey, Elliot Chen, François Laignel, Guillaume
+Desmottes, Haihua Hu, Jan Alexander Steffens (heftig), Jan Beich, Jan
+Schmidt, Johan Sternerup, John King, Jordan Petridis, Juan Navarro, Lily
+Foster, Martin Nordholts, Mathieu Duponchelle, Matthew Waters, Matthias
+Fuchs, Michael Olbrich, Mihail Ivanchev, Nick Steel, Nicolas Dufresne,
+Nirbheek Chauhan, Patricia Muscalu, Philippe Normand, Piotr Brzeziński,
+Sanchayan Maity, Sebastian Dröge, Seungha Yang, Stéphane Cerveau,
+Thibault Saunier, Tim-Philipp Müller, Xabier Rodriguez Calvar,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.3
+
+-   List of Merge Requests applied in 1.22.3
+-   List of Issues fixed in 1.22.3
 
 Schedule for 1.24
 
