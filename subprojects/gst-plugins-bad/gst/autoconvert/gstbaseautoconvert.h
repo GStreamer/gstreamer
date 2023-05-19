@@ -70,6 +70,7 @@ typedef struct
   GstRank rank;
   GstCaps *sink_caps;
   GstCaps *src_caps;
+  GstElement *subbin;
 } GstAutoConvertFilterInfo;
 
 struct _GstBaseAutoConvertClass

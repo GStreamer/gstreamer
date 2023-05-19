@@ -185,12 +185,16 @@ gst_base_auto_convert_element_removed (GstBin * bin, GstElement * child)
 }
 
 static void
-gst_auto_convert_filter_info_free (GstAutoConvertFilterInfo * knwon_bin)
+gst_auto_convert_filter_info_free (GstAutoConvertFilterInfo * known_bin)
 {
-  g_free (knwon_bin->name);
-  g_free (knwon_bin->bindesc);
+  g_free (known_bin->name);
+  g_free (known_bin->bindesc);
+  gst_caps_unref (known_bin->sink_caps);
+  gst_caps_unref (known_bin->src_caps);
 
-  g_free (knwon_bin);
+  gst_object_unref (known_bin->subbin);
+
+  g_free (known_bin);
 }
 
 static gint
@@ -280,6 +284,8 @@ gst_base_auto_convert_register_filter (GstBaseAutoConvert * self, gchar * name,
   filter_info->name = name;
   filter_info->bindesc = bindesc;
   filter_info->rank = rank;
+  gst_object_set_name (GST_OBJECT (subbin), filter_info->name);
+  filter_info->subbin = gst_object_ref_sink (subbin);
 
   GST_OBJECT_LOCK (self);
   self->filters_info =
@@ -491,24 +497,14 @@ gst_base_auto_convert_add_element (GstBaseAutoConvert * self,
 {
   GstElement *element = NULL;
   InternalPads *pads;
-  GError *error = NULL;
 
+  g_assert (filter_info->subbin);
+
+
+  element = filter_info->subbin;
   GST_DEBUG_OBJECT (self, "Adding element %s to the baseautoconvert bin",
       filter_info->name);
 
-  element = gst_parse_bin_from_description_full (filter_info->bindesc, TRUE,
-      NULL, GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS | GST_PARSE_FLAG_PLACE_IN_BIN,
-      &error);
-  if (!element) {
-    GST_INFO_OBJECT (self, "Could not build %s: %s", filter_info->name,
-        error->message);
-
-    g_error_free (error);
-
-    return NULL;
-  }
-
-  gst_object_set_name (GST_OBJECT (element), filter_info->name);
   pads = internal_pads_new (self, GST_OBJECT_NAME (element));
   g_hash_table_insert (self->elements, element, pads);
 
@@ -623,7 +619,7 @@ gst_base_auto_convert_activate_element (GstBaseAutoConvert * self,
 
   current_subelement = gst_base_auto_convert_get_subelement (self);
   gst_element_set_locked_state (element, FALSE);
-  if (!gst_bin_add (GST_BIN (self), gst_object_ref (element))) {
+  if (!gst_bin_add (GST_BIN (self), element)) {
     GST_ERROR_OBJECT (self, "Could not add element %s to the bin",
         GST_OBJECT_NAME (element));
     goto error;
@@ -1271,9 +1267,9 @@ gst_base_auto_convert_getcaps (GstBaseAutoConvert * self, GstCaps * filter,
     }
   }
 
-  GST_DEBUG_OBJECT (self, "Returning unioned caps %" GST_PTR_FORMAT, caps);
 
 out:
+  GST_DEBUG_OBJECT (self, "Returning unioned caps %" GST_PTR_FORMAT, caps);
 
   if (other_caps)
     gst_caps_unref (other_caps);
