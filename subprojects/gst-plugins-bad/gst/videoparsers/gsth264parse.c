@@ -3506,11 +3506,13 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   if (format == GST_H264_PARSE_FORMAT_NONE) {
     /* codec_data implies avc */
     if (codec_data_value != NULL) {
-      GST_ERROR ("video/x-h264 caps with codec_data but no stream-format=avc");
+      GST_WARNING_OBJECT (h264parse, "video/x-h264 caps with codec_data "
+          "but no stream-format=avc");
       format = GST_H264_PARSE_FORMAT_AVC;
     } else {
       /* otherwise assume bytestream input */
-      GST_ERROR ("video/x-h264 caps without codec_data or stream-format");
+      GST_WARNING_OBJECT (h264parse, "video/x-h264 caps without codec_data "
+          "or stream-format");
       format = GST_H264_PARSE_FORMAT_BYTE;
     }
   }
