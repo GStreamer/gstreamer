@@ -21,7 +21,8 @@ mod unix {
 
         // Depends on us knowing the syscall number
         if SYS_getrandom == 0 {
-            return Err(io::Error::from(io::ErrorKind::Unsupported));
+            // FIXME: Use Unsupported once we can depend on 1.53
+            return Err(io::Error::from(io::ErrorKind::NotFound));
         }
 
         struct GetRandom;
@@ -127,7 +128,8 @@ mod unix {
                 Ok(n) => {
                     assert_ne!(n, [0u8; 8]);
                 }
-                Err(err) if err.kind() != std::io::ErrorKind::Unsupported => {
+                // FIXME: Use Unsupported once we can depend on 1.53
+                Err(err) if err.kind() != std::io::ErrorKind::NotFound => {
                     panic!("{}", err);
                 }
                 _ => (),
