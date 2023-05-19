@@ -31,11 +31,13 @@ mod error;
 mod ffi;
 mod io;
 mod net;
+mod parse;
 mod privileges;
 mod rand;
 mod thread;
 
 use error::{Context, Error};
+use parse::{PtpClockIdentity, PtpMessagePayload, ReadBytesBEExt, WriteBytesBEExt};
 use rand::rand;
 
 /// PTP Multicast group.
@@ -54,27 +56,6 @@ const MSG_TYPE_GENERAL: u8 = 1;
 const MSG_TYPE_CLOCK_ID: u8 = 2;
 /// Send time ACK message
 const MSG_TYPE_SEND_TIME_ACK: u8 = 3;
-
-/// Reads a big endian 64 bit integer from a slice.
-fn read_u64_be(s: &[u8]) -> u64 {
-    assert!(s.len() >= 8);
-
-    (s[7] as u64)
-        | ((s[6] as u64) << 8)
-        | ((s[5] as u64) << 16)
-        | ((s[4] as u64) << 24)
-        | ((s[3] as u64) << 32)
-        | ((s[2] as u64) << 40)
-        | ((s[1] as u64) << 48)
-        | ((s[0] as u64) << 56)
-}
-
-/// Reads a big endian 16 bit integer from a slice.
-fn read_u16_be(s: &[u8]) -> u16 {
-    assert!(s.len() >= 2);
-
-    (s[1] as u16) | ((s[0] as u16) << 8)
-}
 
 /// Create a new `UdpSocket` for the given port and configure it for PTP.
 fn create_socket(port: u16) -> Result<UdpSocket, Error> {
@@ -186,9 +167,14 @@ fn run() -> Result<(), Error> {
     // Write clock ID first
     {
         let mut clock_id_data = [0u8; 3 + 8];
-        clock_id_data[0..2].copy_from_slice(&8u16.to_be_bytes());
-        clock_id_data[2] = MSG_TYPE_CLOCK_ID;
-        clock_id_data[3..].copy_from_slice(&clock_id);
+        {
+            let mut buf = &mut clock_id_data[..];
+            buf.write_u16be(8).expect("Too small clock ID buffer");
+            buf.write_u8(MSG_TYPE_CLOCK_ID)
+                .expect("Too small clock ID buffer");
+            buf.write_all(&clock_id).expect("Too small clock ID buffer");
+            assert!(buf.is_empty(), "Too big clock ID buffer");
+        }
 
         poll.stdout()
             .write_all(&clock_id_data)
@@ -213,52 +199,98 @@ fn run() -> Result<(), Error> {
             .filter_map(|(idx, r)| if *r { Some(idx) } else { None })
         {
             let idx = idx as u8;
-            let res = match idx {
-                MSG_TYPE_EVENT => poll.event_socket().recv_from(&mut socket_buffer),
-                MSG_TYPE_GENERAL => poll.general_socket().recv_from(&mut socket_buffer),
-                _ => unreachable!(),
-            };
 
-            match res {
-                Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => {
-                    continue 'next_socket;
-                }
-                Err(err) => {
-                    bail!(
-                        source: err,
-                        "Failed reading from {} socket",
-                        if idx == MSG_TYPE_EVENT {
-                            "event"
-                        } else {
-                            "general"
-                        }
-                    );
-                }
-                Ok((read, addr)) => {
-                    let recv_time = clock::time();
-                    if args.verbose {
-                        trace!(
-                            "Received {} bytes from {} socket from {} at {}",
-                            read,
+            // Read all available packets from the socket before going to the next socket.
+            'next_packet: loop {
+                let res = match idx {
+                    MSG_TYPE_EVENT => poll.event_socket().recv_from(&mut socket_buffer),
+                    MSG_TYPE_GENERAL => poll.general_socket().recv_from(&mut socket_buffer),
+                    _ => unreachable!(),
+                };
+
+                let (read, addr) = match res {
+                    Err(err) if err.kind() == std::io::ErrorKind::WouldBlock => {
+                        continue 'next_socket;
+                    }
+                    Err(err) => {
+                        bail!(
+                            source: err,
+                            "Failed reading from {} socket",
                             if idx == MSG_TYPE_EVENT {
                                 "event"
                             } else {
                                 "general"
-                            },
-                            addr,
-                            recv_time,
+                            }
                         );
                     }
+                    Ok((read, addr)) => (read, addr),
+                };
 
-                    stdinout_buffer[0..2].copy_from_slice(&(read as u16 + 8).to_be_bytes());
-                    stdinout_buffer[2] = idx;
-                    stdinout_buffer[3..][..8].copy_from_slice(&recv_time.to_be_bytes());
-                    stdinout_buffer[11..][..read].copy_from_slice(&socket_buffer[..read]);
-
-                    poll.stdout()
-                        .write_all(&stdinout_buffer[..(read + 3 + 8)])
-                        .context("Failed writing to stdout")?;
+                let recv_time = clock::time();
+                if args.verbose {
+                    trace!(
+                        "Received {} bytes from {} socket from {} at {}",
+                        read,
+                        if idx == MSG_TYPE_EVENT {
+                            "event"
+                        } else {
+                            "general"
+                        },
+                        addr,
+                        recv_time,
+                    );
                 }
+
+                let buf = &socket_buffer[..read];
+
+                // Check if this is a valid PTP message, that it is not a PTP message sent from
+                // our own clock ID and in case of a DELAY_RESP that it is for our clock id.
+                let ptp_message = match parse::PtpMessage::parse(buf) {
+                    Ok(msg) => msg,
+                    Err(err) => {
+                        warn!("Received invalid PTP message: {}", err);
+                        continue 'next_packet;
+                    }
+                };
+
+                if args.verbose {
+                    trace!("Received PTP message {:#?}", ptp_message);
+                }
+
+                if ptp_message.source_port_identity.clock_identity == u64::from_be_bytes(clock_id) {
+                    if args.verbose {
+                        trace!("Ignoring our own PTP message");
+                    }
+                    continue 'next_packet;
+                }
+                if let PtpMessagePayload::DelayResp {
+                    requesting_port_identity: PtpClockIdentity { clock_identity, .. },
+                    ..
+                } = ptp_message.message_payload
+                {
+                    if clock_identity != u64::from_be_bytes(clock_id) {
+                        if args.verbose {
+                            trace!("Ignoring PTP DELAY_RESP message for a different clock");
+                        }
+                        continue 'next_packet;
+                    }
+                }
+
+                {
+                    let mut buf = &mut stdinout_buffer[..(read + 3 + 8)];
+                    buf.write_u16be(read as u16 + 8)
+                        .expect("Too small stdout buffer");
+                    buf.write_u8(idx).expect("Too small stdout buffer");
+                    buf.write_u64be(recv_time).expect("Too small stdout buffer");
+                    buf.write_all(&socket_buffer[..read])
+                        .expect("Too small stdout buffer");
+                    assert!(buf.is_empty(), "Too big stdout buffer",);
+                }
+
+                let buf = &stdinout_buffer[..(read + 3 + 8)];
+                poll.stdout()
+                    .write_all(buf)
+                    .context("Failed writing to stdout")?;
             }
         }
 
@@ -296,15 +328,24 @@ fn run() -> Result<(), Error> {
                 );
             }
 
-            if size < 8 + 32 {
+            if size < 8 + 34 {
                 bail!("Invalid packet body size");
             }
 
-            let main_send_time = read_u64_be(&stdinout_buffer[..8]);
-            let buf = &stdinout_buffer[8..size as usize];
-            let message_type = buf[0] & 0x0f;
-            let domain_number = buf[4];
-            let seqnum = read_u16_be(&buf[30..][..2]);
+            let buf = &mut &stdinout_buffer[..(size as usize)];
+            let main_send_time = buf.read_u64be().expect("Too small stdin buffer");
+
+            // We require that the main process only ever sends valid PTP messages with the clock
+            // ID assigned by this process.
+            let ptp_message =
+                parse::PtpMessage::parse(buf).context("Parsing PTP message from main process")?;
+            if ptp_message.source_port_identity.clock_identity != u64::from_be_bytes(clock_id) {
+                bail!("PTP message with unexpected clock identity on stdin");
+            }
+
+            if args.verbose {
+                trace!("Received PTP message from stdin {:#?}", ptp_message);
+            }
 
             let send_time = clock::time();
             match type_ {
@@ -330,24 +371,32 @@ fn run() -> Result<(), Error> {
             if args.verbose {
                 trace!(
                     "Sending SEND_TIME_ACK for message type {}, domain number {}, seqnum {} received at {} at {}",
-                    message_type,
-                    domain_number,
-                    seqnum,
+                    u8::from(ptp_message.message_type),
+                    ptp_message.domain_number,
+                    ptp_message.sequence_id,
                     main_send_time,
                     send_time,
                 );
             }
 
-            stdinout_buffer[0..2].copy_from_slice(&12u16.to_be_bytes());
-            stdinout_buffer[2] = MSG_TYPE_SEND_TIME_ACK;
-            let send_time_ack_msg = &mut stdinout_buffer[3..];
-            send_time_ack_msg[..8].copy_from_slice(&send_time.to_be_bytes());
-            send_time_ack_msg[8] = message_type;
-            send_time_ack_msg[9] = domain_number;
-            send_time_ack_msg[10..][..2].copy_from_slice(&seqnum.to_be_bytes());
+            {
+                let mut buf = &mut stdinout_buffer[..(3 + 12)];
+                buf.write_u16be(12).expect("Too small stdout buffer");
+                buf.write_u8(MSG_TYPE_SEND_TIME_ACK)
+                    .expect("Too small stdout buffer");
+                buf.write_u64be(send_time).expect("Too small stdout buffer");
+                buf.write_u8(ptp_message.message_type.into())
+                    .expect("Too small stdout buffer");
+                buf.write_u8(ptp_message.domain_number)
+                    .expect("Too small stdout buffer");
+                buf.write_u16be(ptp_message.sequence_id)
+                    .expect("Too small stdout buffer");
+                assert!(buf.is_empty(), "Too big stdout buffer",);
+            }
 
+            let buf = &stdinout_buffer[..(3 + 12)];
             poll.stdout()
-                .write_all(&stdinout_buffer[..(3 + 12)])
+                .write_all(buf)
                 .context("Failed writing to stdout")?;
         }
     }
