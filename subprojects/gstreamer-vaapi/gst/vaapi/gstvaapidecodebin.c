@@ -123,21 +123,6 @@ extern gboolean _gst_vaapi_has_video_processing;
 static gboolean gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * self);
 
 static void
-post_missing_element_message (GstVaapiDecodeBin * vaapidecbin,
-    const gchar * missing_factory)
-{
-  GstMessage *msg;
-
-  msg = gst_missing_element_message_new (GST_ELEMENT_CAST (vaapidecbin),
-      missing_factory);
-  gst_element_post_message (GST_ELEMENT_CAST (vaapidecbin), msg);
-
-  GST_ELEMENT_WARNING (vaapidecbin, CORE, MISSING_PLUGIN,
-      ("Missing element '%s' - check your GStreamer installation.",
-          missing_factory), ("video decoding might fail"));
-}
-
-static void
 gst_vaapi_decode_bin_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
@@ -313,6 +298,9 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
     return FALSE;
   }
 
+  if (!has_vpp)
+    return TRUE;
+
   GST_INFO_OBJECT (vaapidecbin, "enabling VPP");
 
   /* capsfilter to force memory:VASurface */
@@ -335,7 +323,6 @@ gst_vaapi_decode_bin_configure (GstVaapiDecodeBin * vaapidecbin)
 
   if (!gst_element_link (capsfilter, vaapidecbin->postproc))
     goto error_sync_state;
-
   if (!gst_element_sync_state_with_parent (capsfilter))
     goto error_sync_state;
   if (!gst_element_sync_state_with_parent (vaapidecbin->postproc))
@@ -377,13 +364,14 @@ error_cannot_set_caps:
   }
 error_vpp_missing:
   {
-    post_missing_element_message (vaapidecbin, "vaapipostproc");
+    GST_ELEMENT_ERROR (vaapidecbin, CORE, PAD,
+        ("Failed to load vaapipostproc."), (NULL));
     return FALSE;
   }
 error_sync_state:
   {
     GST_ELEMENT_ERROR (vaapidecbin, CORE, STATE_CHANGE,
-        ("Failed to sync state of vaapipostproc"), (NULL));
+        ("Failed to sync state of vaapipostproc."), (NULL));
     return FALSE;
   }
 error_link_pad:
