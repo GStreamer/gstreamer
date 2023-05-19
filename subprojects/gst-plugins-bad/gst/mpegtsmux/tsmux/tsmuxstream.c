@@ -856,8 +856,52 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
       break;
     case TSMUX_ST_PS_AUDIO_AC3:
     {
-      guint8 add_info[6];
+      guint8 add_info[10];
       guint8 *pos;
+      guint bitrate;
+      gboolean has_language;
+      guint total_length = 7;
+      guint bitrates[20][2] = {
+        {32000, 0x00}
+        ,
+        {40000, 0x01}
+        ,
+        {48000, 0x02}
+        ,
+        {56000, 0x03}
+        ,
+        {64000, 0x04}
+        ,
+        {80000, 0x05}
+        ,
+        {96000, 0x06}
+        ,
+        {112000, 0x07}
+        ,
+        {128000, 0x08}
+        ,
+        {160000, 0x09}
+        ,
+        {192000, 0x0A}
+        ,
+        {224000, 0x0B}
+        ,
+        {256000, 0x0C}
+        ,
+        {320000, 0x0D}
+        ,
+        {384000, 0x0E}
+        ,
+        {448000, 0x0F}
+        ,
+        {512000, 0x10}
+        ,
+        {576000, 0x11}
+        ,
+        {640000, 0x12}
+      };
+      gint i;
+      guint bitrate_code = 0x12;
 
       pos = add_info;
 
@@ -873,10 +917,18 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
        * num_channels         4 bslbf
        * full_svc             1 bslbf
        * langcod              8 bslbf
-       * [...]
+       * mainid               3 uimsbf
+       * priority             2 bslbf
+       * reserved             3 '111'
+       * textlen              7 uimsbf
+       * text_code            1 bslbf
+       * text                 8*textlen bslbf
+       * language_flag        1 bslbf
+       * language_flag_2      1 bslbf
+       * reserved             6 '111111'
+       * language if flag     3*8 uimbsf
+       * language_2 if flag_2 3*8 uimsbf
        */
-      *pos++ = 0x81;
-      *pos++ = 0x04;
 
       /* 3 bits sample_rate_code, 5 bits hardcoded bsid (default ver 8) */
       switch (stream->audio_sampling) {
@@ -895,103 +947,66 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
       }
 
       /* 1 bit bit_rate_limit, 5 bits bit_rate_code, 2 bits suround_mode */
-      switch (stream->audio_bitrate) {
-        case 32:
-          *pos++ = 0x00 << 2;
+      bitrate = MAX (stream->audio_bitrate, stream->max_bitrate);
+      for (i = 0; i < G_N_ELEMENTS (bitrates); i++) {
+        if (bitrate < bitrates[i][0]) {
           break;
-        case 40:
-          *pos++ = 0x01 << 2;
-          break;
-        case 48:
-          *pos++ = 0x02 << 2;
-          break;
-        case 56:
-          *pos++ = 0x03 << 2;
-          break;
-        case 64:
-          *pos++ = 0x04 << 2;
-          break;
-        case 80:
-          *pos++ = 0x05 << 2;
-          break;
-        case 96:
-          *pos++ = 0x06 << 2;
-          break;
-        case 112:
-          *pos++ = 0x07 << 2;
-          break;
-        case 128:
-          *pos++ = 0x08 << 2;
-          break;
-        case 160:
-          *pos++ = 0x09 << 2;
-          break;
-        case 192:
-          *pos++ = 0x0A << 2;
-          break;
-        case 224:
-          *pos++ = 0x0B << 2;
-          break;
-        case 256:
-          *pos++ = 0x0C << 2;
-          break;
-        case 320:
-          *pos++ = 0x0D << 2;
-          break;
-        case 384:
-          *pos++ = 0x0E << 2;
-          break;
-        case 448:
-          *pos++ = 0x0F << 2;
-          break;
-        case 512:
-          *pos++ = 0x10 << 2;
-          break;
-        case 576:
-          *pos++ = 0x11 << 2;
-          break;
-        case 640:
-          *pos++ = 0x12 << 2;
-          break;
-        default:
-          *pos++ = 0x32 << 2;
-          break;                /* 640 Kb/s upper limit */
+        }
+        bitrate_code = bitrates[i][1];
       }
+      *pos = bitrate_code << 2;
+      *pos++ |= 0x80;           /* This is a maximum bitrate */
 
       /* 3 bits bsmod, 4 bits num_channels, 1 bit full_svc */
       switch (stream->audio_channels) {
         case 1:
-          *pos++ = 0x01 << 1;
+          *pos = 0x01 << 1;
           break;                /* 1/0 */
         case 2:
-          *pos++ = 0x02 << 1;
+          *pos = 0x02 << 1;
           break;                /* 2/0 */
         case 3:
-          *pos++ = 0x0A << 1;
+          *pos = 0x0A << 1;
           break;                /* <= 3 */
         case 4:
-          *pos++ = 0x0B << 1;
+          *pos = 0x0B << 1;
           break;                /* <= 4 */
         case 5:
-          *pos++ = 0x0C << 1;
+          *pos = 0x0C << 1;
           break;                /* <= 5 */
         case 6:
         default:
-          *pos++ = 0x0D << 1;
+          *pos = 0x0D << 1;
           break;                /* <= 6 */
       }
+      *pos++ |= 0x01;           /* full_svc is hardcoded to 1 for now */
 
+      /* deprecated langcod */
+      *pos++ = 0xff;
+      /* 3 bits mainid, 2 bits priority, 3 bits reserved */
+      *pos++ = 0x0f;
+      /* 7 bits textlen, 1 bit text_code */
       *pos++ = 0x00;
+      /* no text provided, jumping directly to language */
 
-      descriptor = gst_mpegts_descriptor_from_registration ("AC-3",
-          add_info, 6);
+      has_language = (stream->language[0] != '\0');
+      if (has_language) {
+        *pos++ = 0xbf;
+        *pos++ = stream->language[0];
+        *pos++ = stream->language[1];
+        *pos++ = stream->language[2];
+        total_length = 10;
+      } else {
+        *pos++ = 0x3f;
+      }
+
+      descriptor = gst_mpegts_descriptor_from_registration ("AC-3", NULL, 0);
       g_ptr_array_add (pmt_stream->descriptors, descriptor);
 
       descriptor =
           gst_mpegts_descriptor_from_custom (GST_MTS_DESC_AC3_AUDIO_STREAM,
-          add_info, 6);
+          add_info, total_length);
       g_ptr_array_add (pmt_stream->descriptors, descriptor);
-
       break;
     }
     case TSMUX_ST_PS_AUDIO_DTS:
