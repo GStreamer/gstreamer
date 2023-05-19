@@ -149,6 +149,7 @@ struct _GstVideoTestSrc {
   GstVideoInfo info; /* protected by the object or stream lock */
   GstVideoChromaResample *subsample;
   gboolean bayer;
+  gint bpp;
   gint x_invert;
   gint y_invert;
 

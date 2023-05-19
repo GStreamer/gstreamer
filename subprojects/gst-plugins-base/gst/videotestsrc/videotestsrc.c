@@ -158,7 +158,8 @@ static void paint_tmpline_ARGB (paintinfo * p, int x, int w);
 static void paint_tmpline_AYUV (paintinfo * p, int x, int w);
 
 static void convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y);
-static void convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y);
+static void convert_hline_bayer8 (paintinfo * p, GstVideoFrame * frame, int y);
+static void convert_hline_bayer16 (paintinfo * p, GstVideoFrame * frame, int y);
 
 #define SCALEBITS 10
 #define ONE_HALF  (1 << (SCALEBITS - 1))
@@ -208,7 +209,6 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   GstVideoInfo *info = &v->info;
 
   width = GST_VIDEO_INFO_WIDTH (info);
-
   if (info->colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_BT601) {
     p->colors = vts_colors_bt601_ycbcr_100;
   } else {
@@ -217,7 +217,10 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
 
   if (v->bayer) {
     p->paint_tmpline = paint_tmpline_ARGB;
-    p->convert_tmpline = convert_hline_bayer;
+    if (v->bpp == 8)
+      p->convert_tmpline = convert_hline_bayer8;
+    else
+      p->convert_tmpline = convert_hline_bayer16;
   } else {
     p->convert_tmpline = convert_hline_generic;
     if (GST_VIDEO_INFO_IS_RGB (info)) {
@@ -236,6 +239,7 @@ videotestsrc_setup_paintinfo (GstVideoTestSrc * v, paintinfo * p, int w, int h)
   p->x_offset = (v->horizontal_speed * v->n_frames) % width;
   if (p->x_offset < 0)
     p->x_offset += width;
+  p->bpp = v->bpp;
   p->x_invert = v->x_invert;
   p->y_invert = v->y_invert;
 
@@ -1679,7 +1683,7 @@ convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
 }
 
 static void
-convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y)
+convert_hline_bayer8 (paintinfo * p, GstVideoFrame * frame, int y)
 {
   int i;
   guint8 *data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
@@ -1693,6 +1697,41 @@ convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y)
   for (i = 0; i < width; i++) {
     int x_offset = 2 - ((i ^ x_inv) & 1);
     R[i] = argb[4 * i + y_offset + x_offset];
+  }
+}
+
+static guint16
+bayer_scale_and_swap (paintinfo * p, const GstVideoFormatInfo * finfo,
+    guint8 r8)
+{
+  guint16 r16 = (r8 << (p->bpp - 8)) | (r8 >> (16 - p->bpp));
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  if (!GST_VIDEO_FORMAT_INFO_IS_LE (finfo))
+    r16 = GUINT16_SWAP_LE_BE (r16);
+#else
+  if (GST_VIDEO_FORMAT_INFO_IS_LE (finfo))
+    r16 = GUINT16_SWAP_LE_BE (r16);
+#endif
+  return r16;
+}
+
+static void
+convert_hline_bayer16 (paintinfo * p, GstVideoFrame * frame, int y)
+{
+  const GstVideoFormatInfo *finfo = frame->info.finfo;
+  guint8 *data = GST_VIDEO_FRAME_PLANE_DATA (frame, 0);
+  guint16 *R16 =
+      (guint16 *) (data + y * GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0));
+  guint8 *argb = p->tmpline;
+  gint width = GST_VIDEO_FRAME_WIDTH (frame);
+  int x_inv = p->x_invert;
+  int y_inv = p->y_invert;
+  int y_offset = 1 - ((y ^ y_inv) & 1);
+  int i;
+
+  for (i = 0; i < width; i++) {
+    int x_offset = 2 - ((i ^ x_inv) & 1);
+    R16[i] = bayer_scale_and_swap (p, finfo, argb[4 * i + y_offset + x_offset]);
   }
 }
 

@@ -89,11 +89,30 @@ enum
   PROP_LAST
 };
 
+#define BAYER_CAPS_GEN(mask, bits, endian)	\
+	" "#mask#bits#endian
 
-#define VTS_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) "," \
+#define BAYER_CAPS_ORD(bits, endian)		\
+	BAYER_CAPS_GEN(bggr, bits, endian)","	\
+	BAYER_CAPS_GEN(rggb, bits, endian)","	\
+	BAYER_CAPS_GEN(grbg, bits, endian)","	\
+	BAYER_CAPS_GEN(gbrg, bits, endian)
+
+#define BAYER_CAPS_BITS(bits)			\
+	BAYER_CAPS_ORD(bits, le)","		\
+	BAYER_CAPS_ORD(bits, be)
+
+#define BAYER_CAPS_ALL				\
+	BAYER_CAPS_ORD(,)"," 			\
+	BAYER_CAPS_BITS(10)","			\
+	BAYER_CAPS_BITS(12)","			\
+	BAYER_CAPS_BITS(14)","			\
+	BAYER_CAPS_BITS(16)
+
+#define VTS_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ","	\
   "multiview-mode = { mono, left, right }"                              \
   ";" \
-  "video/x-bayer, format=(string) { bggr, rggb, grbg, gbrg }, "        \
+  "video/x-bayer, format=(string) {" BAYER_CAPS_ALL " },"\
   "width = " GST_VIDEO_SIZE_RANGE ", "                                 \
   "height = " GST_VIDEO_SIZE_RANGE ", "                                \
   "framerate = " GST_VIDEO_FPS_RANGE ", "                              \
@@ -826,6 +845,8 @@ gst_video_test_src_get_property (GObject * object, guint prop_id,
   }
 }
 
+#define DIV_ROUND_UP(s,v) (((s) + ((v)-1)) / (v))
+
 static gboolean
 gst_video_test_src_parse_caps (const GstCaps * caps, GstVideoInfo * info,
     GstVideoTestSrc * videotestsrc)
@@ -834,7 +855,7 @@ gst_video_test_src_parse_caps (const GstCaps * caps, GstVideoInfo * info,
   gboolean ret;
   const GValue *framerate;
   const gchar *str;
-  gint x_inv = 0, y_inv = 0;
+  gint x_inv = 0, y_inv = 0, bpp = 0, bigendian = 0;
 
   GST_DEBUG ("parsing caps");
 
@@ -868,14 +889,39 @@ gst_video_test_src_parse_caps (const GstCaps * caps, GstVideoInfo * info,
       y_inv = 0;
     } else
       goto invalid_format;
+
+    if (strlen (str) == 4) {    /* 8bit bayer */
+      bpp = 8;
+    } else if (strlen (str) == 8) {     /* 10/12/14/16 le/be bayer */
+      bpp = (gint) g_ascii_strtoull (str + 4, NULL, 10);
+      if (bpp & 1)              /* odd bpp bayer formats not supported */
+        goto invalid_format;
+      if (bpp < 10 || bpp > 16) /* bayer 10,12,14,16 only */
+        goto invalid_format;
+
+      if (g_str_has_suffix (str, "le"))
+        bigendian = 0;
+      else if (g_str_has_suffix (str, "be"))
+        bigendian = 1;
+      else
+        goto invalid_format;
+    } else
+      goto invalid_format;
+
+    if (bpp == 8)
+      info->finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_GRAY8);
+    else if (bigendian)
+      info->finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_GRAY16_BE);
+    else
+      info->finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_GRAY16_LE);
   }
 
   videotestsrc->bayer = TRUE;
+  videotestsrc->bpp = bpp;
   videotestsrc->x_invert = x_inv;
   videotestsrc->y_invert = y_inv;
 
-  info->finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_GRAY8);
-  info->stride[0] = GST_ROUND_UP_4 (info->width);
+  info->stride[0] = GST_ROUND_UP_4 (info->width) * DIV_ROUND_UP (bpp, 8);
   info->size = info->stride[0] * info->height;
 
   return ret;
@@ -971,7 +1017,7 @@ gst_video_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
       goto parse_failed;
 
   } else if (gst_structure_has_name (structure, "video/x-bayer")) {
-    if (!gst_video_test_src_parse_caps (caps, &info, &videotestsrc))
+    if (!gst_video_test_src_parse_caps (caps, &info, videotestsrc))
       goto parse_failed;
   } else {
     goto unsupported_caps;

@@ -42,6 +42,7 @@ struct paintinfo_struct
   GstVideoChromaResample *subsample;
   int x_offset;
 
+  int bpp;
   int x_invert;
   int y_invert;
 
