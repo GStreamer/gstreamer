@@ -49,6 +49,8 @@ struct _GstRGB2Bayer
   GstVideoInfo info;
   int width, height;
   int format;
+  int bpp;
+  int bigendian;
 };
 
 struct _GstRGB2BayerClass

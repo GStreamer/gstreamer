@@ -28,6 +28,8 @@
 #include "gstbayerelements.h"
 #include "gstrgb2bayer.h"
 
+#define DIV_ROUND_UP(s,v) (((s) + ((v)-1)) / (v))
+
 #define GST_CAT_DEFAULT gst_rgb2bayer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -64,12 +66,32 @@ static GstStaticPadTemplate gst_rgb2bayer_sink_template =
     );
 #endif
 
+#define BAYER_CAPS_GEN(mask, bits, endian)	\
+	" "#mask#bits#endian
+
+#define BAYER_CAPS_ORD(bits, endian)		\
+	BAYER_CAPS_GEN(bggr, bits, endian)","	\
+	BAYER_CAPS_GEN(rggb, bits, endian)","	\
+	BAYER_CAPS_GEN(grbg, bits, endian)","	\
+	BAYER_CAPS_GEN(gbrg, bits, endian)
+
+#define BAYER_CAPS_BITS(bits)			\
+	BAYER_CAPS_ORD(bits, le)","		\
+	BAYER_CAPS_ORD(bits, be)
+
+#define BAYER_CAPS_ALL				\
+	BAYER_CAPS_ORD(,)"," 			\
+	BAYER_CAPS_BITS(10)","			\
+	BAYER_CAPS_BITS(12)","			\
+	BAYER_CAPS_BITS(14)","			\
+	BAYER_CAPS_BITS(16)
+
 static GstStaticPadTemplate gst_rgb2bayer_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-bayer,"
-        "format=(string){bggr,gbrg,grbg,rggb},"
+        "format=(string){" BAYER_CAPS_ALL " },"
         "width=[1,MAX],height=[1,MAX]," "framerate=(fraction)[0/1,MAX]")
     );
 
@@ -164,6 +186,7 @@ static gboolean
 gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     gsize * size)
 {
+  GstRGB2Bayer *rgb2bayer = GST_RGB_2_BAYER (trans);
   GstStructure *structure;
   int width;
   int height;
@@ -176,7 +199,8 @@ gst_rgb2bayer_get_unit_size (GstBaseTransform * trans, GstCaps * caps,
     name = gst_structure_get_name (structure);
     /* Our name must be either video/x-bayer video/x-raw */
     if (g_str_equal (name, "video/x-bayer")) {
-      *size = GST_ROUND_UP_4 (width) * height;
+      *size =
+          GST_ROUND_UP_4 (width) * height * DIV_ROUND_UP (rgb2bayer->bpp, 8);
       return TRUE;
     } else {
       /* For output, calculate according to format */
@@ -212,19 +236,51 @@ gst_rgb2bayer_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   gst_structure_get_int (structure, "height", &rgb2bayer->height);
 
   format = gst_structure_get_string (structure, "format");
-  if (g_str_equal (format, "bggr")) {
+  if (g_str_has_prefix (format, "bggr")) {
     rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_BGGR;
-  } else if (g_str_equal (format, "gbrg")) {
+  } else if (g_str_has_prefix (format, "gbrg")) {
     rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_GBRG;
-  } else if (g_str_equal (format, "grbg")) {
+  } else if (g_str_has_prefix (format, "grbg")) {
     rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_GRBG;
-  } else if (g_str_equal (format, "rggb")) {
+  } else if (g_str_has_prefix (format, "rggb")) {
     rgb2bayer->format = GST_RGB_2_BAYER_FORMAT_RGGB;
   } else {
     return FALSE;
   }
 
+  if (strlen (format) == 4) {   /* 8bit bayer */
+    rgb2bayer->bpp = 8;
+  } else if (strlen (format) == 8) {    /* 10/12/14/16 le/be bayer */
+    rgb2bayer->bpp = (gint) g_ascii_strtoull (format + 4, NULL, 10);
+    if (rgb2bayer->bpp & 1)     /* odd rgb2bayer->bpp bayer formats not supported */
+      return FALSE;
+    if (rgb2bayer->bpp < 10 || rgb2bayer->bpp > 16)     /* bayer 10,12,14,16 only */
+      return FALSE;
+
+    if (g_str_has_suffix (format, "le"))
+      rgb2bayer->bigendian = 0;
+    else if (g_str_has_suffix (format, "be"))
+      rgb2bayer->bigendian = 1;
+    else
+      return FALSE;
+  } else
+    return FALSE;
+
   return TRUE;
+}
+
+static guint16
+bayer_scale_and_swap (GstRGB2Bayer * rgb2bayer, guint8 r8)
+{
+  guint16 r16 = (r8 << (rgb2bayer->bpp - 8)) | (r8 >> (16 - rgb2bayer->bpp));
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  if (rgb2bayer->bigendian)
+    r16 = GUINT16_SWAP_LE_BE (r16);
+#else
+  if (!rgb2bayer->bigendian)
+    r16 = GUINT16_SWAP_LE_BE (r16);
+#endif
+  return r16;
 }
 
 static GstFlowReturn
@@ -239,6 +295,7 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   int height = rgb2bayer->height;
   int width = rgb2bayer->width;
   GstVideoFrame frame;
+  int bayer16 = (rgb2bayer->bpp > 8);
 
   if (!gst_video_frame_map (&frame, &rgb2bayer->info, inbuf, GST_MAP_READ))
     goto map_failed;
@@ -251,18 +308,41 @@ gst_rgb2bayer_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   dest = map.data;
   src = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
 
-  for (j = 0; j < height; j++) {
-    guint8 *dest_line = dest + GST_ROUND_UP_4 (width) * j;
-    guint8 *src_line = src + frame.info.stride[0] * j;
+  if (bayer16) {
+    for (j = 0; j < height; j++) {
+      guint16 *dest_line16 = (guint16 *)
+          (dest + GST_ROUND_UP_4 (width) * j * DIV_ROUND_UP (rgb2bayer->bpp,
+              8));
+      guint8 *src_line = src + frame.info.stride[0] * j;
 
-    for (i = 0; i < width; i++) {
-      int is_blue = ((j & 1) << 1) | (i & 1);
-      if (is_blue == rgb2bayer->format) {
-        dest_line[i] = src_line[i * 4 + 3];
-      } else if ((is_blue ^ 3) == rgb2bayer->format) {
-        dest_line[i] = src_line[i * 4 + 1];
-      } else {
-        dest_line[i] = src_line[i * 4 + 2];
+      for (i = 0; i < width; i++) {
+        int is_blue = ((j & 1) << 1) | (i & 1);
+        if (is_blue == rgb2bayer->format) {
+          dest_line16[i] =
+              bayer_scale_and_swap (rgb2bayer, src_line[i * 4 + 3]);
+        } else if ((is_blue ^ 3) == rgb2bayer->format) {
+          dest_line16[i] =
+              bayer_scale_and_swap (rgb2bayer, src_line[i * 4 + 1]);
+        } else {
+          dest_line16[i] =
+              bayer_scale_and_swap (rgb2bayer, src_line[i * 4 + 2]);
+        }
+      }
+    }
+  } else {
+    for (j = 0; j < height; j++) {
+      guint8 *dest_line = dest + GST_ROUND_UP_4 (width) * j;
+      guint8 *src_line = src + frame.info.stride[0] * j;
+
+      for (i = 0; i < width; i++) {
+        int is_blue = ((j & 1) << 1) | (i & 1);
+        if (is_blue == rgb2bayer->format) {
+          dest_line[i] = src_line[i * 4 + 3];
+        } else if ((is_blue ^ 3) == rgb2bayer->format) {
+          dest_line[i] = src_line[i * 4 + 1];
+        } else {
+          dest_line[i] = src_line[i * 4 + 2];
+        }
       }
     }
   }
