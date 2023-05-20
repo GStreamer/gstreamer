@@ -431,9 +431,8 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
 
   gst_bayer2rgb_split_and_upsample_horiz (LINE (3 * 2 + 0), LINE (3 * 2 + 1),
       src + 1 * src_stride, bayer2rgb->width);
-  j = 0;
-  gst_bayer2rgb_split_and_upsample_horiz (LINE (j * 2 + 0), LINE (j * 2 + 1),
-      src + j * src_stride, bayer2rgb->width);
+  gst_bayer2rgb_split_and_upsample_horiz (LINE (0 * 2 + 0), LINE (0 * 2 + 1),
+      src + 0 * src_stride, bayer2rgb->width);
 
   for (j = 0; j < bayer2rgb->height; j++) {
     if (j < bayer2rgb->height - 1) {
