@@ -483,11 +483,13 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
   tmp = g_malloc (2 * 4 * bayer2rgb->width);
 #define LINE(t, x, b) ((t) + (((x) & 7) * ((b)->width)))
 
+  /* Pre-process source line 1 into bottom two lines 6 and 7 as PREVIOUS line */
   gst_bayer2rgb_split_and_upsample_horiz (      /* src line 1 */
       LINE (tmp, 3 * 2 + 0, bayer2rgb), /* tmp buffer line 6 */
       LINE (tmp, 3 * 2 + 1, bayer2rgb), /* tmp buffer line 7 */
       src + 1 * src_stride, bayer2rgb);
 
+  /* Pre-process source line 0 into top two lines 0 and 1 as CURRENT line */
   gst_bayer2rgb_split_and_upsample_horiz (      /* src line 0 */
       LINE (tmp, 0 * 2 + 0, bayer2rgb), /* tmp buffer line 0 */
       LINE (tmp, 0 * 2 + 1, bayer2rgb), /* tmp buffer line 1 */
@@ -495,12 +497,80 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
 
   for (j = 0; j < bayer2rgb->height; j++) {
     if (j < bayer2rgb->height - 1) {
+      /*
+       * Pre-process NEXT source line (j + 1) into two consecutive lines
+       * (2 * (j + 1) + 0) % 8
+       * and
+       * (2 * (j + 1) + 1) % 8
+       *
+       * This cycle here starts with j=0, and therefore
+       * - reads source line 1
+       * - writes tmp buffer lines 2,3
+       * The cycle continues with source line 2 and tmp buffer lines 4,5 etc.
+       */
       gst_bayer2rgb_split_and_upsample_horiz (  /* src line (j + 1) */
           LINE (tmp, (j + 1) * 2 + 0, bayer2rgb),       /* tmp buffer line 2/4/6/0 */
           LINE (tmp, (j + 1) * 2 + 1, bayer2rgb),       /* tmp buffer line 3/5/7/1 */
           src + (j + 1) * src_stride, bayer2rgb);
     }
 
+    /*
+     * Use the pre-processed tmp buffer lines and construct resulting frame.
+     * Assume j=0, the tmp buffer content looks as follows:
+     *   line 0: B0 avg(B0, B1)     B1      avg(B1, B2)     B2      avg(B2, B3)...
+     *   line 1: G0     G0      avg(G0, G1)     G1      avg(G1, G2)     G2...
+     *   line 2: G0 avg(G0, G1)     G1      avg(G1, G2)     G2      avg(G2, G3)...
+     *   line 3: R0     R0      avg(R0, R1)     R1      avg(R1, R2)     R2...
+     *   line 4: empty
+     *   line 5: empty
+     *   line 6: G0 avg(G0, G1)     G1      avg(G1, G2)     G2      avg(G2, G3)...
+     *   line 7: R0     R0      avg(R0, R1)     R1      avg(R1, R2)     R2...
+     * Line 0,1 and 6,7 were populated in pre-process step outside of this loop.
+     * Line 2,3 was populated just above this comment.
+     * The code is currently processing source line 0 (not tmp buffer line 0)
+     * and uses the following tmp buffer lines in the process as inputs to the
+     * merge function:
+     * - tmp buffer line -2 => tmp buffer line 6 => orc g0 values
+     * - tmp buffer line -1 => tmp buffer line 7 => orc r0 values
+     * - tmp buffer line +0 => tmp buffer line 0 => orc b1 values
+     * - tmp buffer line +1 => tmp buffer line 1 => orc g1 values
+     * - tmp buffer line +2 => tmp buffer line 2 => orc g2 values
+     * - tmp buffer line +3 => tmp buffer line 3 => orc r2 values
+     * With j=0, the merge function used is one of bayer_orc_merge_bg_*
+     *
+     * A good material regarding the ORC functions below is
+     * https://www.siliconimaging.com/RGB%20Bayer.htm
+     * chapter
+     * "Interpolating the green component"
+     *
+     * The bayer_orc_merge_bg_* performs BG interpolation.
+     *   # average R from PREVIOUS line and NEXT line
+     *   r = [ avg(r0[0], r2[0]) , avg(r0[1], r2[1]) ]
+     *   # average G from PREVIOUS line and NEXT line
+     *   g = [ avg(g0[0], g2[0]) , avg(g0[1], g2[1]) ]
+     *   # copy CURRENT line G into variable t
+     *   t = [ g1[0]             , g1[1]             ]
+     *   # average G from PREVIOUS, CURRENT, NEXT line
+     *   g = [ avg(g[0], g1[0])  , avg(g[1], g1[1])  ]
+     *   # reorder the content of g and t variables using bit operations
+     *   # (the "g first, t second" order is here because the B pixel we
+     *   #  are now processing does not have its own G value, it only has
+     *   #  G value extrapolated from surrouding G pixels. The following
+     *   #  G pixel has its own G value, so we use it as-is, without any
+     *   #  extrapolation)
+     *   g = [ g, 0 ]
+     *   t = [ 0, t ]
+     *   g = [ g, t ]
+     *   # generate resulting (e.g. BGRx) data
+     *   bg = [ b1[0] , g   , b1[1] , t   ]
+     *   ra = [ r[0]  , 255 , r[1]  , 255 ]
+     *   d  = [ b1[0] , g   , r[0]  , 255 , b1[1] , t , r[1] , 255  ]
+     *
+     * In the next cycle, j=1, line 4,5 would be populated with BG values
+     * calculated from source line 2, merge function would use tmp buffer
+     * inputs from lines 0,1,2,3,4,5 i.e. b0,g0,g1,r1,b2,g2 and the merge
+     * function would be bayer_orc_merge_gr_* .
+     */
     merge[j & 1] (dest + j * dest_stride,       /* output line j */
         LINE (tmp, j * 2 - 2, bayer2rgb),       /* PREVIOUS: even: BG g0 , odd: GR b0 */
         LINE (tmp, j * 2 - 1, bayer2rgb),       /* PREVIOUS: even: BG r0 , odd: GR g0 */
