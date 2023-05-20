@@ -386,8 +386,9 @@ typedef void (*process_func) (guint8 * d0, const guint8 * s0, const guint8 * s1,
 
 static void
 gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
-    int dest_stride, uint8_t * src, int src_stride)
+    int dest_stride, uint8_t * src)
 {
+  const int src_stride = GST_ROUND_UP_4 (bayer2rgb->width);
   int j;
   guint8 *tmp;
   process_func merge[2] = { NULL, NULL };
@@ -472,8 +473,7 @@ gst_bayer2rgb_transform (GstBaseTransform * base, GstBuffer * inbuf,
   }
 
   output = GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
-  gst_bayer2rgb_process (filter, output, frame.info.stride[0],
-      map.data, GST_ROUND_UP_4 (filter->width));
+  gst_bayer2rgb_process (filter, output, frame.info.stride[0], map.data);
 
   gst_video_frame_unmap (&frame);
   gst_buffer_unmap (inbuf, &map);
