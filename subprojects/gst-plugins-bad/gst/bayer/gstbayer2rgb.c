@@ -353,8 +353,9 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 
 static void
 gst_bayer2rgb_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
-    const guint8 * src, int n)
+    const guint8 * src, GstBayer2RGB * bayer2rgb)
 {
+  int n = bayer2rgb->width;
   int i;
 
   dest0[0] = src[0];
@@ -433,19 +434,19 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
   gst_bayer2rgb_split_and_upsample_horiz (      /* src line 1 */
       LINE (tmp, 3 * 2 + 0, bayer2rgb), /* tmp buffer line 6 */
       LINE (tmp, 3 * 2 + 1, bayer2rgb), /* tmp buffer line 7 */
-      src + 1 * src_stride, bayer2rgb->width);
+      src + 1 * src_stride, bayer2rgb);
 
   gst_bayer2rgb_split_and_upsample_horiz (      /* src line 0 */
       LINE (tmp, 0 * 2 + 0, bayer2rgb), /* tmp buffer line 0 */
       LINE (tmp, 0 * 2 + 1, bayer2rgb), /* tmp buffer line 1 */
-      src + 0 * src_stride, bayer2rgb->width);
+      src + 0 * src_stride, bayer2rgb);
 
   for (j = 0; j < bayer2rgb->height; j++) {
     if (j < bayer2rgb->height - 1) {
       gst_bayer2rgb_split_and_upsample_horiz (  /* src line (j + 1) */
           LINE (tmp, (j + 1) * 2 + 0, bayer2rgb),       /* tmp buffer line 2/4/6/0 */
           LINE (tmp, (j + 1) * 2 + 1, bayer2rgb),       /* tmp buffer line 3/5/7/1 */
-          src + (j + 1) * src_stride, bayer2rgb->width);
+          src + (j + 1) * src_stride, bayer2rgb);
     }
 
     merge[j & 1] (dest + j * dest_stride,       /* output line j */
