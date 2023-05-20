@@ -428,23 +428,34 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
   }
 
   tmp = g_malloc (2 * 4 * bayer2rgb->width);
-#define LINE(x) (tmp + ((x)&7) * bayer2rgb->width)
+#define LINE(t, x, b) ((t) + (((x) & 7) * ((b)->width)))
 
-  gst_bayer2rgb_split_and_upsample_horiz (LINE (3 * 2 + 0), LINE (3 * 2 + 1),
+  gst_bayer2rgb_split_and_upsample_horiz (      /* src line 1 */
+      LINE (tmp, 3 * 2 + 0, bayer2rgb), /* tmp buffer line 6 */
+      LINE (tmp, 3 * 2 + 1, bayer2rgb), /* tmp buffer line 7 */
       src + 1 * src_stride, bayer2rgb->width);
-  gst_bayer2rgb_split_and_upsample_horiz (LINE (0 * 2 + 0), LINE (0 * 2 + 1),
+
+  gst_bayer2rgb_split_and_upsample_horiz (      /* src line 0 */
+      LINE (tmp, 0 * 2 + 0, bayer2rgb), /* tmp buffer line 0 */
+      LINE (tmp, 0 * 2 + 1, bayer2rgb), /* tmp buffer line 1 */
       src + 0 * src_stride, bayer2rgb->width);
 
   for (j = 0; j < bayer2rgb->height; j++) {
     if (j < bayer2rgb->height - 1) {
-      gst_bayer2rgb_split_and_upsample_horiz (LINE ((j + 1) * 2 + 0),
-          LINE ((j + 1) * 2 + 1), src + (j + 1) * src_stride, bayer2rgb->width);
+      gst_bayer2rgb_split_and_upsample_horiz (  /* src line (j + 1) */
+          LINE (tmp, (j + 1) * 2 + 0, bayer2rgb),       /* tmp buffer line 2/4/6/0 */
+          LINE (tmp, (j + 1) * 2 + 1, bayer2rgb),       /* tmp buffer line 3/5/7/1 */
+          src + (j + 1) * src_stride, bayer2rgb->width);
     }
 
-    merge[j & 1] (dest + j * dest_stride,
-        LINE (j * 2 - 2), LINE (j * 2 - 1),
-        LINE (j * 2 + 0), LINE (j * 2 + 1),
-        LINE (j * 2 + 2), LINE (j * 2 + 3), bayer2rgb->width >> 1);
+    merge[j & 1] (dest + j * dest_stride,       /* output line j */
+        LINE (tmp, j * 2 - 2, bayer2rgb),       /* PREVIOUS: even: BG g0 , odd: GR b0 */
+        LINE (tmp, j * 2 - 1, bayer2rgb),       /* PREVIOUS: even: BG r0 , odd: GR g0 */
+        LINE (tmp, j * 2 + 0, bayer2rgb),       /* CURRENT: even: BG b1 , odd: GR g1 */
+        LINE (tmp, j * 2 + 1, bayer2rgb),       /* CURRENT: even: BG g1 , odd: GR r1 */
+        LINE (tmp, j * 2 + 2, bayer2rgb),       /* NEXT: even: BG g2 , odd: GR b2 */
+        LINE (tmp, j * 2 + 3, bayer2rgb),       /* NEXT: even: BG r2 , odd: GR g2 */
+        bayer2rgb->width >> 1);
   }
 
   g_free (tmp);
