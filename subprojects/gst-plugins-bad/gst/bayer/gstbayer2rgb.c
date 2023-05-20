@@ -358,6 +358,58 @@ gst_bayer2rgb_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
   int n = bayer2rgb->width;
   int i;
 
+  /*
+   * Pre-process line of source data in 'src' into two neighboring
+   * lines of temporary data 'dest0' and 'dest1' as follows. Note
+   * that first two pixels of both 'dest0' and 'dest1' are special,
+   * and so are the last two pixels of both 'dest0' and 'dest1' .
+   *
+   * The gist of this transformation is this:
+   * - Assume the source data contain this BG bayer pattern on input
+   *   data line 0 (this is the same as src[0, 1, 2, 3, 4, 5 ...]):
+   *   src 0 : B0     G0          B1          G1          B2          G2
+   * - This gets transformed into two lines:
+   *   line 0: B0 avg(B0, B1)     B1      avg(B1, B2)     B2      avg(B2, B3)...
+   *   line 1: G0     G0      avg(G0, G1)     G1      avg(G1, G2)     G2...
+   * - Notice  ^^     ^^      ^^^^^^^^^^^     ^^      ^^^^^^^^^^^
+   *   These are interpolated BG pairs, one for each input bayer pixel.
+   *
+   * The immediatelly following call to this function operates on the next
+   * input data line 1 as follows:
+   * - Assume the source data contain this GR bayer pattern on line 1:
+   *   src 0 : G0     R0          G1          R1          G2          R2
+   * - This gets transformed into two lines:
+   *   line 2: G0 avg(G0, G1)     G1      avg(G1, G2)     G2      avg(G2, G3)...
+   *   line 3: R0     R0      avg(R0, R1)     R1      avg(R1, R2)     R2...
+   * - Notice  ^^     ^^      ^^^^^^^^^^^     ^^      ^^^^^^^^^^^
+   *   These are interpolated GR pairs, one for each input bayer pixel.
+   *
+   * First two pixels are special, two more pixels as an example of the rest:
+   *       ||   0    |       1        ||       2        |       3        ::
+   * ------||--------+----------------++----------------+----------------+:
+   * DEST0 || src[0] | avg(src[0, 2]) ||     src[2]     | avg(src[2, 4]) ::
+   * ------||--------+----------------++----------------+----------------+:
+   * DEST1 || src[1] |     src[1]     || avg(src[1, 3]) |     src[3]     ::
+   * ------||--------+----------------++----------------+----------------+:
+   *
+   * Inner block of pixels:
+   * :       |         n          |        n+1       :
+   * :-------+--------------------+------------------:
+   * : DEST0 |       src[n]       | avg(src[n, n+2]) :
+   * :-------+--------------------+------------------:
+   * : DEST1 | avg(src[n-1, n+1]) |     src[n+1]     :
+   * :-------+--------------------+------------------:
+   *
+   * Last two pixels:
+   *           w is EVEN                          w is ODD
+   * :       |    w-2   |    w-1   ||   :       |    w-2   |    w-1   ||
+   * :-------+----------+----------||   :-------+----------+----------||
+   * : DEST0 | src[w-2] | src[w-2] ||   : DEST0 | src[w-3] | src[w-1] ||
+   * :-------+----------+----------||   :-------+----------+----------||
+   * : DEST1 | src[w-3] | src[w-1] ||   : DEST1 | src[w-2] | src[w-2] ||
+   * :-------+----------+----------||   :-------+----------+----------||
+   */
+
   dest0[0] = src[0];
   dest1[0] = src[1];
   dest0[1] = (src[0] + src[2] + 1) >> 1;
