@@ -89,6 +89,8 @@
 #include "gstbayerelements.h"
 #include "gstbayerorc.h"
 
+#define DIV_ROUND_UP(s,v) (((s) + ((v)-1)) / (v))
+
 #define GST_CAT_DEFAULT gst_bayer2rgb_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -124,6 +126,8 @@ struct _GstBayer2RGB
   int g_off;                    /* offset for green */
   int b_off;                    /* offset for blue */
   int format;
+  int bpp;                      /* bits per pixel, 8/10/12/14/16 */
+  int bigendian;
 };
 
 struct _GstBayer2RGBClass
@@ -131,10 +135,32 @@ struct _GstBayer2RGBClass
   GstBaseTransformClass parent;
 };
 
-#define	SRC_CAPS                                 \
-  GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR }")
+#define BAYER_CAPS_GEN(mask, bits, endian)	\
+	" "#mask#bits#endian
 
-#define SINK_CAPS "video/x-bayer,format=(string){bggr,grbg,gbrg,rggb}," \
+#define BAYER_CAPS_ORD(bits, endian)		\
+	BAYER_CAPS_GEN(bggr, bits, endian)","	\
+	BAYER_CAPS_GEN(rggb, bits, endian)","	\
+	BAYER_CAPS_GEN(grbg, bits, endian)","	\
+	BAYER_CAPS_GEN(gbrg, bits, endian)
+
+#define BAYER_CAPS_BITS(bits)			\
+	BAYER_CAPS_ORD(bits, le)","		\
+	BAYER_CAPS_ORD(bits, be)
+
+#define BAYER_CAPS_ALL				\
+	BAYER_CAPS_ORD(,)"," 			\
+	BAYER_CAPS_BITS(10)","			\
+	BAYER_CAPS_BITS(12)","			\
+	BAYER_CAPS_BITS(14)","			\
+	BAYER_CAPS_BITS(16)
+
+#define	SRC_CAPS                                 \
+  GST_VIDEO_CAPS_MAKE ("{ RGBx, xRGB, BGRx, xBGR, RGBA, ARGB, BGRA, ABGR, " \
+  "RGBA64_LE, ARGB64_LE, BGRA64_LE, ABGR64_LE, " \
+  "RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE }")
+
+#define SINK_CAPS "video/x-bayer,format=(string){" BAYER_CAPS_ALL " }, "\
   "width=(int)[1,MAX],height=(int)[1,MAX],framerate=(fraction)[0/1,MAX]"
 
 enum
@@ -252,23 +278,47 @@ gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
   gst_structure_get_int (structure, "height", &bayer2rgb->height);
 
   format = gst_structure_get_string (structure, "format");
-  if (g_str_equal (format, "bggr")) {
+  if (g_str_has_prefix (format, "bggr")) {
     bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_BGGR;
-  } else if (g_str_equal (format, "gbrg")) {
+  } else if (g_str_has_prefix (format, "gbrg")) {
     bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_GBRG;
-  } else if (g_str_equal (format, "grbg")) {
+  } else if (g_str_has_prefix (format, "grbg")) {
     bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_GRBG;
-  } else if (g_str_equal (format, "rggb")) {
+  } else if (g_str_has_prefix (format, "rggb")) {
     bayer2rgb->format = GST_BAYER_2_RGB_FORMAT_RGGB;
   } else {
     return FALSE;
   }
 
+  if (strlen (format) == 4) {   /* 8bit bayer */
+    bayer2rgb->bpp = 8;
+  } else if (strlen (format) == 8) {    /* 10/12/14/16 le/be bayer */
+    bayer2rgb->bpp = (gint) g_ascii_strtoull (format + 4, NULL, 10);
+    if (bayer2rgb->bpp & 1)     /* odd bayer2rgb->bpp bayer formats not supported */
+      return FALSE;
+    if (bayer2rgb->bpp < 10 || bayer2rgb->bpp > 16)     /* bayer 10,12,14,16 only */
+      return FALSE;
+
+    if (g_str_has_suffix (format, "le"))
+      bayer2rgb->bigendian = 0;
+    else if (g_str_has_suffix (format, "be"))
+      bayer2rgb->bigendian = 1;
+    else
+      return FALSE;
+  } else
+    return FALSE;
+
   /* To cater for different RGB formats, we need to set params for later */
   gst_video_info_from_caps (&info, outcaps);
-  bayer2rgb->r_off = GST_VIDEO_INFO_COMP_OFFSET (&info, 0);
-  bayer2rgb->g_off = GST_VIDEO_INFO_COMP_OFFSET (&info, 1);
-  bayer2rgb->b_off = GST_VIDEO_INFO_COMP_OFFSET (&info, 2);
+  bayer2rgb->r_off =
+      GST_VIDEO_INFO_COMP_OFFSET (&info,
+      0) / DIV_ROUND_UP (GST_VIDEO_INFO_COMP_DEPTH (&info, 0), 8);
+  bayer2rgb->g_off =
+      GST_VIDEO_INFO_COMP_OFFSET (&info,
+      1) / DIV_ROUND_UP (GST_VIDEO_INFO_COMP_DEPTH (&info, 1), 8);
+  bayer2rgb->b_off =
+      GST_VIDEO_INFO_COMP_OFFSET (&info,
+      2) / DIV_ROUND_UP (GST_VIDEO_INFO_COMP_DEPTH (&info, 2), 8);
 
   bayer2rgb->info = info;
 
@@ -283,6 +333,8 @@ gst_bayer2rgb_reset (GstBayer2RGB * filter)
   filter->r_off = 0;
   filter->g_off = 0;
   filter->b_off = 0;
+  filter->bpp = 8;
+  filter->bigendian = 0;
   gst_video_info_init (&filter->info);
 }
 
@@ -326,22 +378,25 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     gsize * size)
 {
   GstStructure *structure;
+  GstBayer2RGB *bayer2rgb;
   int width;
   int height;
   const char *name;
 
   structure = gst_caps_get_structure (caps, 0);
+  bayer2rgb = GST_BAYER2RGB (base);
 
   if (gst_structure_get_int (structure, "width", &width) &&
       gst_structure_get_int (structure, "height", &height)) {
     name = gst_structure_get_name (structure);
     /* Our name must be either video/x-bayer video/x-raw */
     if (strcmp (name, "video/x-raw")) {
-      *size = GST_ROUND_UP_4 (width) * height;
+      *size =
+          GST_ROUND_UP_4 (width) * height * DIV_ROUND_UP (bayer2rgb->bpp, 8);
       return TRUE;
     } else {
-      /* For output, calculate according to format (always 32 bits) */
-      *size = width * height * 4;
+      /* For output, calculate according to format */
+      *size = width * height * DIV_ROUND_UP (bayer2rgb->bpp, 8);
       return TRUE;
     }
 
@@ -352,7 +407,7 @@ gst_bayer2rgb_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 }
 
 static void
-gst_bayer2rgb_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
+gst_bayer2rgb8_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
     const guint8 * src, GstBayer2RGB * bayer2rgb)
 {
   int n = bayer2rgb->width;
@@ -433,19 +488,98 @@ gst_bayer2rgb_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
   }
 }
 
+static guint16
+gswab16 (guint16 val, guint8 swap)
+{
+  if (swap) {
+    return GUINT16_FROM_BE (val);
+  } else {
+    return val;
+  }
+}
+
+static void
+gst_bayer2rgb16_split_and_upsample_horiz (guint16 * dest0, guint16 * dest1,
+    const guint16 * src, GstBayer2RGB * bayer2rgb)
+{
+  int swap = bayer2rgb->bigendian;
+  int n = bayer2rgb->width;
+  int i;
+
+  dest0[0] = gswab16 (src[0], swap);
+  dest1[0] = gswab16 (src[1], swap);
+  dest0[1] = (gswab16 (src[0], swap) + gswab16 (src[2], swap) + 1) >> 1;
+  dest1[1] = gswab16 (src[1], swap);
+
+  if (swap) {
+    bayer16_orc_horiz_upsample_be (dest0 + 2, dest1 + 2, src + 1, (n - 4) >> 1);
+  } else {
+    bayer16_orc_horiz_upsample_le (dest0 + 2, dest1 + 2, src + 1, (n - 4) >> 1);
+  }
+
+  for (i = n - 2; i < n; i++) {
+    if ((i & 1) == 0) {
+      dest0[i] = gswab16 (src[i], swap);
+      dest1[i] = gswab16 (src[i - 1], swap);
+    } else {
+      dest0[i] = gswab16 (src[i - 1], swap);
+      dest1[i] = gswab16 (src[i], swap);
+    }
+  }
+}
+
+static void
+gst_bayer2rgb_split_and_upsample_horiz (guint8 * dest0, guint8 * dest1,
+    const guint8 * src, GstBayer2RGB * bayer2rgb)
+{
+  if (bayer2rgb->bpp == 8) {
+    gst_bayer2rgb8_split_and_upsample_horiz (dest0, dest1, src, bayer2rgb);
+  } else {
+    gst_bayer2rgb16_split_and_upsample_horiz ((guint16 *) dest0,
+        (guint16 *) dest1, (const guint16 *) src, bayer2rgb);
+  }
+}
+
 typedef void (*process_func) (guint8 * d0, const guint8 * s0, const guint8 * s1,
     const guint8 * s2, const guint8 * s3, const guint8 * s4, const guint8 * s5,
     int n);
+
+typedef void (*process_func16) (guint16 * d0, guint16 * d1, const guint8 * s0,
+    const guint8 * s1, const guint8 * s2, const guint8 * s3, const guint8 * s4,
+    const guint8 * s5, int n);
+
+#define LINE(t, x, b) ((t) + (((x) & 7) * ((b)->width * DIV_ROUND_UP((b)->bpp, 8))))
 
 static void
 gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
     int dest_stride, uint8_t * src)
 {
-  const int src_stride = GST_ROUND_UP_4 (bayer2rgb->width);
+  const int src_stride =
+      GST_ROUND_UP_4 (bayer2rgb->width) * DIV_ROUND_UP (bayer2rgb->bpp, 8);
+  const int bayersrc16 = bayer2rgb->bpp > 8;
   int j;
   guint8 *tmp;
+  guint32 *dtmp;
   process_func merge[2] = { NULL, NULL };
+  process_func16 merge16[2] = { NULL, NULL };
   int r_off, g_off, b_off;
+
+  /*
+   * Handle emission of either RGBA64 or RGBA (32bpp) . The default is
+   * emission of RGBA64 in case the input bayer data are >8 bit, since
+   * there is no loss of precision that way.
+   *
+   * The emission of RGBA (32bpp) as done here is done by shifting the
+   * debayered data by the bpp-8 bits right, to fit into the 8 bits per
+   * channel output buffer. This retains precision during calculation,
+   * and the calculation is a bit more expensive in terms of CPU cycles
+   * and memory. An alternative approach would be to downgrade the input
+   * bayer data in gst_bayer2rgb16_split_and_upsample_horiz() already,
+   * and then perform this second part of debayering as if those input
+   * data were 8bpp bayer data. This would increase speed, but decrease
+   * precision.
+   */
+  const int bayerdst16 = (dest_stride / bayer2rgb->width / 4) == 2;
 
   /* We exploit some symmetry in the functions here.  The base functions
    * are all named for the BGGR arrangement.  For RGGB, we swap the
@@ -463,25 +597,38 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
   if (r_off == 2 && g_off == 1 && b_off == 0) {
     merge[0] = bayer_orc_merge_bg_bgra;
     merge[1] = bayer_orc_merge_gr_bgra;
+    merge16[0] = bayer16_orc_merge_bg_bgra;
+    merge16[1] = bayer16_orc_merge_gr_bgra;
   } else if (r_off == 3 && g_off == 2 && b_off == 1) {
     merge[0] = bayer_orc_merge_bg_abgr;
     merge[1] = bayer_orc_merge_gr_abgr;
+    merge16[0] = bayer16_orc_merge_bg_abgr;
+    merge16[1] = bayer16_orc_merge_gr_abgr;
   } else if (r_off == 1 && g_off == 2 && b_off == 3) {
     merge[0] = bayer_orc_merge_bg_argb;
     merge[1] = bayer_orc_merge_gr_argb;
+    merge16[0] = bayer16_orc_merge_bg_argb;
+    merge16[1] = bayer16_orc_merge_gr_argb;
   } else if (r_off == 0 && g_off == 1 && b_off == 2) {
     merge[0] = bayer_orc_merge_bg_rgba;
     merge[1] = bayer_orc_merge_gr_rgba;
+    merge16[0] = bayer16_orc_merge_bg_rgba;
+    merge16[1] = bayer16_orc_merge_gr_rgba;
   }
   if (bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_GRBG ||
       bayer2rgb->format == GST_BAYER_2_RGB_FORMAT_GBRG) {
     process_func tmp = merge[0];
     merge[0] = merge[1];
     merge[1] = tmp;
+    process_func16 tmp16 = merge16[0];
+    merge16[0] = merge16[1];
+    merge16[1] = tmp16;
   }
 
-  tmp = g_malloc (2 * 4 * bayer2rgb->width);
-#define LINE(t, x, b) ((t) + (((x) & 7) * ((b)->width)))
+  tmp = g_malloc (DIV_ROUND_UP (bayer2rgb->bpp, 8) * 2 * 4 * bayer2rgb->width);
+
+  if (bayersrc16 || bayerdst16)
+    dtmp = g_malloc (sizeof (*dtmp) * 2 * bayer2rgb->width);
 
   /* Pre-process source line 1 into bottom two lines 6 and 7 as PREVIOUS line */
   gst_bayer2rgb_split_and_upsample_horiz (      /* src line 1 */
@@ -571,16 +718,40 @@ gst_bayer2rgb_process (GstBayer2RGB * bayer2rgb, uint8_t * dest,
      * inputs from lines 0,1,2,3,4,5 i.e. b0,g0,g1,r1,b2,g2 and the merge
      * function would be bayer_orc_merge_gr_* .
      */
-    merge[j & 1] (dest + j * dest_stride,       /* output line j */
-        LINE (tmp, j * 2 - 2, bayer2rgb),       /* PREVIOUS: even: BG g0 , odd: GR b0 */
-        LINE (tmp, j * 2 - 1, bayer2rgb),       /* PREVIOUS: even: BG r0 , odd: GR g0 */
-        LINE (tmp, j * 2 + 0, bayer2rgb),       /* CURRENT: even: BG b1 , odd: GR g1 */
-        LINE (tmp, j * 2 + 1, bayer2rgb),       /* CURRENT: even: BG g1 , odd: GR r1 */
-        LINE (tmp, j * 2 + 2, bayer2rgb),       /* NEXT: even: BG g2 , odd: GR b2 */
-        LINE (tmp, j * 2 + 3, bayer2rgb),       /* NEXT: even: BG r2 , odd: GR g2 */
-        bayer2rgb->width >> 1);
+    if (bayersrc16) {
+      merge16[j & 1] ((guint16 *) dtmp, /* temporary buffer BG */
+          (guint16 *) (dtmp + bayer2rgb->width),        /* temporary buffer GR */
+          LINE (tmp, j * 2 - 2, bayer2rgb),     /* PREVIOUS: even: BG g0 , odd: GR b0 */
+          LINE (tmp, j * 2 - 1, bayer2rgb),     /* PREVIOUS: even: BG r0 , odd: GR g0 */
+          LINE (tmp, j * 2 + 0, bayer2rgb),     /* CURRENT: even: BG b1 , odd: GR g1 */
+          LINE (tmp, j * 2 + 1, bayer2rgb),     /* CURRENT: even: BG g1 , odd: GR r1 */
+          LINE (tmp, j * 2 + 2, bayer2rgb),     /* NEXT: even: BG g2 , odd: GR b2 */
+          LINE (tmp, j * 2 + 3, bayer2rgb),     /* NEXT: even: BG r2 , odd: GR g2 */
+          bayer2rgb->width >> 1);
+
+      if (bayerdst16)
+        bayer16to16_orc_reorder (dest + j * dest_stride,
+            dtmp, dtmp + bayer2rgb->width, bayer2rgb->bpp, bayer2rgb->width);
+      else
+        bayer16to8_orc_reorder (dest + j * dest_stride,
+            dtmp, dtmp + bayer2rgb->width, bayer2rgb->bpp - 8,
+            bayer2rgb->width);
+    } else {
+      merge[j & 1] (bayerdst16 ? (guint8 *) dtmp : (dest + j * dest_stride),    /* output line j */
+          LINE (tmp, j * 2 - 2, bayer2rgb),     /* PREVIOUS: even: BG g0 , odd: GR b0 */
+          LINE (tmp, j * 2 - 1, bayer2rgb),     /* PREVIOUS: even: BG r0 , odd: GR g0 */
+          LINE (tmp, j * 2 + 0, bayer2rgb),     /* CURRENT: even: BG b1 , odd: GR g1 */
+          LINE (tmp, j * 2 + 1, bayer2rgb),     /* CURRENT: even: BG g1 , odd: GR r1 */
+          LINE (tmp, j * 2 + 2, bayer2rgb),     /* NEXT: even: BG g2 , odd: GR b2 */
+          LINE (tmp, j * 2 + 3, bayer2rgb),     /* NEXT: even: BG r2 , odd: GR g2 */
+          bayer2rgb->width >> 1);
+      if (bayerdst16)
+        bayer8to16_orc_reorder (dest + j * dest_stride, dtmp, bayer2rgb->width);
+    }
   }
 
+  if (bayersrc16)
+    g_free (dtmp);
   g_free (tmp);
 }
 

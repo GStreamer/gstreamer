@@ -248,3 +248,283 @@ x2 mergebw gb, g, b
 x2 mergewl d, ar, gb
 
 
+# 10..16 bit bayer handling
+.function bayer16_orc_horiz_upsample_le
+.dest 4 d0 guint16
+.dest 4 d1 guint16
+.source 4 s guint16
+.temp 4 t
+
+.temp 2 b
+.temp 2 c
+.temp 2 d
+.temp 2 e
+
+splitlw c, b, s
+loadoffl t, s, 1
+splitlw e, d, t
+avguw e, c, e
+mergewl d0, c, e
+avguw b, b, d
+mergewl d1, b, d
+
+.function bayer16_orc_horiz_upsample_be
+.dest 4 d0 guint16
+.dest 4 d1 guint16
+.source 4 s guint16
+.temp 4 t
+
+.temp 2 b
+.temp 2 c
+.temp 2 d
+.temp 2 e
+
+splitlw c, b, s
+swapw b, b
+swapw c, c
+loadoffl t, s, 1
+splitlw e, d, t
+swapw d, d
+swapw e, e
+avguw e, c, e
+mergewl d0, c, e
+avguw b, b, d
+mergewl d1, b, d
+
+.function bayer16_orc_merge_bg_bgra
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 g0 guint8
+.source 4 r0 guint8
+.source 4 b1 guint8
+.source 4 g1 guint8
+.source 4 g2 guint8
+.source 4 r2 guint8
+.temp 4 r
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw r, r0, r2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 65535
+andl t, t, 4294901760
+orl g, t, g
+x2 mergewl d1, b1, g
+x2 mergewl d2, r, 65535
+
+
+.function bayer16_orc_merge_gr_bgra
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 b0 guint8
+.source 4 g0 guint8
+.source 4 g1 guint8
+.source 4 r1 guint8
+.source 4 b2 guint8
+.source 4 g2 guint8
+.temp 4 b
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw b, b0, b2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 4294901760
+andl t, t, 65535
+orl g, t, g
+x2 mergewl d1, b, g
+x2 mergewl d2, r1, 65535
+
+
+.function bayer16_orc_merge_bg_abgr
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 g0 guint8
+.source 4 r0 guint8
+.source 4 b1 guint8
+.source 4 g1 guint8
+.source 4 g2 guint8
+.source 4 r2 guint8
+.temp 4 r
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw r, r0, r2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 65535
+andl t, t, 4294901760
+orl g, t, g
+x2 mergewl d1, 65535, b1
+x2 mergewl d2, g, r
+
+
+.function bayer16_orc_merge_gr_abgr
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 b0 guint8
+.source 4 g0 guint8
+.source 4 g1 guint8
+.source 4 r1 guint8
+.source 4 b2 guint8
+.source 4 g2 guint8
+.temp 4 b
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw b, b0, b2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 4294901760
+andl t, t, 65535
+orl g, t, g
+x2 mergewl d1, 65535, b
+x2 mergewl d2, g, r1
+
+
+.function bayer16_orc_merge_bg_rgba
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 g0 guint8
+.source 4 r0 guint8
+.source 4 b1 guint8
+.source 4 g1 guint8
+.source 4 g2 guint8
+.source 4 r2 guint8
+.temp 4 r
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw r, r0, r2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 65535
+andl t, t, 4294901760
+orl g, t, g
+x2 mergewl d1, r, g
+x2 mergewl d2, b1, 65535
+
+
+.function bayer16_orc_merge_gr_rgba
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 b0 guint8
+.source 4 g0 guint8
+.source 4 g1 guint8
+.source 4 r1 guint8
+.source 4 b2 guint8
+.source 4 g2 guint8
+.temp 4 b
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw b, b0, b2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 4294901760
+andl t, t, 65535
+orl g, t, g
+x2 mergewl d1, r1, g
+x2 mergewl d2, b, 65535
+
+
+.function bayer16_orc_merge_bg_argb
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 g0 guint8
+.source 4 r0 guint8
+.source 4 b1 guint8
+.source 4 g1 guint8
+.source 4 g2 guint8
+.source 4 r2 guint8
+.temp 4 r
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw r, r0, r2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 65535
+andl t, t, 4294901760
+orl g, t, g
+x2 mergewl d1, 65535, r
+x2 mergewl d2, g, b1
+
+
+.function bayer16_orc_merge_gr_argb
+.dest 8 d1 guint16
+.dest 8 d2 guint16
+.source 4 b0 guint8
+.source 4 g0 guint8
+.source 4 g1 guint8
+.source 4 r1 guint8
+.source 4 b2 guint8
+.source 4 g2 guint8
+.temp 4 b
+.temp 4 g
+.temp 4 t
+
+
+x2 avguw b, b0, b2
+x2 avguw g, g0, g2
+copyl t, g1
+x2 avguw g, g, t
+andl g, g, 4294901760
+andl t, t, 65535
+orl g, t, g
+x2 mergewl d1, 65535, r1
+x2 mergewl d2, g, b
+
+
+.function bayer16to16_orc_reorder
+.dest 8 d guint8
+.source 4 s1 guint32
+.source 4 s2 guint32
+.param 4 shift
+.temp 4 u
+.temp 4 v
+.temp 8 q
+
+x2 muluwl q, s1, 0xffff
+x2 shrul q, q, shift
+x2 convuuslw u, q
+x2 muluwl q, s2, 0xffff
+x2 shrul q, q, shift
+x2 convuuslw v, q
+mergelq d, u, v
+
+.function bayer16to8_orc_reorder
+.dest 4 d guint8
+.source 4 s1 guint32
+.source 4 s2 guint32
+.param 4 shift
+.temp 2 u
+.temp 2 v
+.temp 4 l
+
+x2 shruw l, s1, shift
+x2 convuuswb u, l
+x2 shruw l, s2, shift
+x2 convuuswb v, l
+mergewl d, u, v
+
+.function bayer8to16_orc_reorder
+.dest 8 d guint8
+.source 4 s guint32
+
+x4 splatbw d, s
