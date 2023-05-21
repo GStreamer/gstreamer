@@ -1715,6 +1715,13 @@ handle_delay_resp_message (PtpMessage * msg, GstClockTime receive_time)
   PtpDomainData *domain = NULL;
   PtpPendingSync *sync = NULL;
 
+  /* Not for us */
+  if (msg->message_specific.delay_resp.
+      requesting_port_identity.clock_identity != ptp_clock_id.clock_identity
+      || msg->message_specific.delay_resp.
+      requesting_port_identity.port_number != ptp_clock_id.port_number)
+    return;
+
   /* Don't consider messages with the alternate master flag set */
   if ((msg->flag_field & 0x0100))
     return;
@@ -1735,13 +1742,6 @@ handle_delay_resp_message (PtpMessage * msg, GstClockTime receive_time)
   if (domain->have_master_clock
       && compare_clock_identity (&domain->master_clock_identity,
           &msg->source_port_identity) != 0)
-    return;
-
-  /* Not for us */
-  if (msg->message_specific.delay_resp.
-      requesting_port_identity.clock_identity != ptp_clock_id.clock_identity
-      || msg->message_specific.delay_resp.
-      requesting_port_identity.port_number != ptp_clock_id.port_number)
     return;
 
   if (msg->log_message_interval == 0x7f) {
