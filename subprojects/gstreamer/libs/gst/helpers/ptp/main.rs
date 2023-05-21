@@ -81,6 +81,9 @@ fn create_socket(port: u16) -> Result<UdpSocket, Error> {
     let socket = UdpSocket::bind(SocketAddr::from((Ipv4Addr::UNSPECIFIED, port)))
         .with_context(|| format!("Failed to bind socket to port {}", port))?;
 
+    socket
+        .set_nonblocking(true)
+        .context("Failed setting socket non-blocking")?;
     socket.set_ttl(1).context("Failed setting TTL on socket")?;
     socket
         .set_multicast_ttl_v4(1)
