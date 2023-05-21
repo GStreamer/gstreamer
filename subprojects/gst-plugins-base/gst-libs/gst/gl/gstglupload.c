@@ -92,7 +92,11 @@ typedef struct _UploadMethod UploadMethod;
 
 struct _GstGLUploadPrivate
 {
-  GstVideoInfo in_info;
+  union
+  {
+    GstVideoInfo in_info;
+    GstVideoInfoDmaDrm in_info_drm;
+  };
   GstVideoInfo out_info;
   GstCaps *in_caps;
   GstCaps *out_caps;
@@ -571,6 +575,7 @@ struct DmabufUpload
   GstGLTextureTarget target;
   GstVideoInfo out_info;
   /* only used for pointer comparison */
+  gpointer in_caps;
   gpointer out_caps;
 };
 
@@ -1290,9 +1295,10 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   struct DmabufUpload *dmabuf = impl;
-  GstVideoInfo *in_info = &dmabuf->upload->priv->in_info;
+  GstVideoInfoDmaDrm *in_info_drm = &dmabuf->upload->priv->in_info_drm;
+  GstVideoInfo *in_info = &in_info_drm->vinfo;
   GstVideoInfo *out_info = &dmabuf->out_info;
-  guint n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+  guint n_planes;
   GstVideoMeta *meta;
   guint n_mem;
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
@@ -1319,12 +1325,64 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
   }
 
+  if (!gst_gl_context_egl_supports_modifier (dmabuf->upload->context)) {
+    GST_DEBUG_OBJECT (dmabuf->upload, "no modifier support");
+    return FALSE;
+  }
+
   if (dmabuf->target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES &&
       !gst_gl_context_check_feature (dmabuf->upload->context,
           "GL_OES_EGL_image_external")) {
     GST_DEBUG_OBJECT (dmabuf->upload, "no GL_OES_EGL_image_external extension");
     return FALSE;
   }
+
+  /* If caps changes from the last time, do more check. */
+  if (in_caps != dmabuf->in_caps) {
+    GstCapsFeatures *filter_features;
+
+    filter_features =
+        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
+    if (_filter_caps_with_features (in_caps, filter_features, NULL)) {
+      in_info_drm->drm_fourcc = gst_video_dma_drm_fourcc_from_format
+          (GST_VIDEO_INFO_FORMAT (in_info));
+      if (in_info_drm->drm_fourcc == DRM_FORMAT_INVALID) {
+        gst_caps_features_free (filter_features);
+        return FALSE;
+      }
+
+      in_info_drm->drm_modifier = DRM_FORMAT_MOD_LINEAR;
+    } else if (!gst_caps_features_contains (gst_caps_get_features (in_caps, 0),
+            GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      gst_caps_features_free (filter_features);
+      GST_DEBUG_OBJECT (dmabuf->upload,
+          "Not a dma caps %" GST_PTR_FORMAT, in_caps);
+      return FALSE;
+    }
+    gst_caps_features_free (filter_features);
+
+    if (in_info_drm->drm_modifier == DRM_FORMAT_MOD_LINEAR) {
+      g_assert (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_UNKNOWN);
+      g_assert (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_ENCODED);
+    } else {
+      if (!gst_video_info_dma_drm_to_video_info (in_info_drm, in_info))
+        return FALSE;
+    }
+
+    if (dmabuf->direct && !gst_egl_image_check_dmabuf_direct_with_dma_drm
+        (dmabuf->upload->context, in_info_drm, dmabuf->target)) {
+      GST_DEBUG_OBJECT (dmabuf->upload,
+          "Direct mode does not support %" GST_FOURCC_FORMAT ":0x%016"
+          G_GINT64_MODIFIER "x with target: %s",
+          GST_FOURCC_ARGS (in_info_drm->drm_fourcc), in_info_drm->drm_modifier,
+          gst_gl_texture_target_to_string (dmabuf->target));
+      return FALSE;
+    }
+
+    dmabuf->in_caps = in_caps;
+  }
+
+  n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
 
   /* This will eliminate most non-dmabuf out there */
   if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (buffer, 0))) {
@@ -1373,10 +1431,9 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
 
   if (dmabuf->params)
     gst_gl_allocation_params_free ((GstGLAllocationParams *) dmabuf->params);
-  if (!(dmabuf->params =
-          gst_gl_video_allocation_params_new_wrapped_gl_handle (dmabuf->
-              upload->context, NULL, out_info, -1, NULL, dmabuf->target, 0,
-              NULL, NULL, NULL)))
+  if (!(dmabuf->params = gst_gl_video_allocation_params_new_wrapped_gl_handle
+          (dmabuf->upload->context, NULL, out_info, -1, NULL, dmabuf->target,
+              0, NULL, NULL, NULL)))
     return FALSE;
 
   /* Find and validate all memories */
@@ -1414,15 +1471,10 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   }
 
   if (dmabuf->direct) {
-    /* Check if this format is supported by the driver */
     dmabuf->n_mem = 1;
-    if (!gst_egl_image_check_dmabuf_direct (dmabuf->upload->context, in_info,
-            dmabuf->target)) {
-      GST_DEBUG_OBJECT (dmabuf->upload, "direct check failed");
-      return FALSE;
-    }
-  } else
+  } else {
     dmabuf->n_mem = n_planes;
+  }
 
   /* Now create an EGLImage for each dmabuf */
   for (i = 0; i < dmabuf->n_mem; i++) {
@@ -1438,13 +1490,13 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     }
 
     /* otherwise create one and cache it */
-    if (dmabuf->direct)
-      dmabuf->eglimage[i] =
-          gst_egl_image_from_dmabuf_direct_target (dmabuf->upload->context, fd,
-          offset, in_info, dmabuf->target);
-    else
-      dmabuf->eglimage[i] = gst_egl_image_from_dmabuf (dmabuf->upload->context,
-          fd[i], in_info, i, offset[i]);
+    if (dmabuf->direct) {
+      dmabuf->eglimage[i] = gst_egl_image_from_dmabuf_direct_target_with_dma_drm
+          (dmabuf->upload->context, fd, offset, in_info_drm, dmabuf->target);
+    } else {
+      dmabuf->eglimage[i] = gst_egl_image_from_dmabuf_with_dma_drm
+          (dmabuf->upload->context, fd[i], in_info_drm, i, offset[i]);
+    }
 
     if (!dmabuf->eglimage[i]) {
       GST_DEBUG_OBJECT (dmabuf->upload, "could not create eglimage");
@@ -3176,7 +3228,12 @@ _gst_gl_upload_set_caps_unlocked (GstGLUpload * upload, GstCaps * in_caps,
   gst_caps_replace (&upload->priv->in_caps, in_caps);
   gst_caps_replace (&upload->priv->out_caps, out_caps);
 
-  gst_video_info_from_caps (&upload->priv->in_info, in_caps);
+  gst_video_info_dma_drm_init (&upload->priv->in_info_drm);
+  if (gst_video_is_dma_drm_caps (in_caps)) {
+    gst_video_info_dma_drm_from_caps (&upload->priv->in_info_drm, in_caps);
+  } else {
+    gst_video_info_from_caps (&upload->priv->in_info, in_caps);
+  }
   gst_video_info_from_caps (&upload->priv->out_info, out_caps);
 
   upload->priv->method = NULL;
