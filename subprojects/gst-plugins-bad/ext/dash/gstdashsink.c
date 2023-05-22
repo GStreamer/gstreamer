@@ -160,6 +160,7 @@ static const DashSinkMuxer dash_muxer_list[] = {
 #define DEFAULT_MPD_USE_SEGMENT_LIST FALSE
 #define DEFAULT_MPD_MIN_BUFFER_TIME 2000
 #define DEFAULT_MPD_PERIOD_DURATION GST_CLOCK_TIME_NONE
+#define DEFAULT_MPD_SUGGESTED_PRESENTATION_DELAY 0
 
 #define DEFAULT_DASH_SINK_MUXER GST_DASH_SINK_MUXER_TS
 
@@ -184,6 +185,7 @@ enum
   PROP_MPD_MIN_BUFFER_TIME,
   PROP_MPD_BASEURL,
   PROP_MPD_PERIOD_DURATION,
+  PROP_MPD_SUGGESTED_PRESENTATION_DELAY,
 };
 
 enum
@@ -248,6 +250,7 @@ struct _GstDashSink
   guint index;
   GList *streams;
   guint64 minimum_update_period;
+  guint64 suggested_presentation_delay;
   guint64 min_buffer_time;
   gint64 period_duration;
 };
@@ -540,6 +543,21 @@ gst_dash_sink_class_init (GstDashSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstDashSink:suggested-presentation-delay
+   *
+   * set suggested presentation delay of MPD file in milliseconds
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_MPD_SUGGESTED_PRESENTATION_DELAY,
+      g_param_spec_uint64 ("suggested-presentation-delay",
+          "suggested presentation delay",
+          "Provides to the manifest a suggested presentation delay in milliseconds",
+          0, G_MAXUINT64, DEFAULT_MPD_SUGGESTED_PRESENTATION_DELAY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstDashSink::get-playlist-stream:
    * @sink: the #GstDashSink
    * @location: Location for the playlist file
@@ -680,6 +698,7 @@ gst_dash_sink_init (GstDashSink * sink)
 
   sink->min_buffer_time = DEFAULT_MPD_MIN_BUFFER_TIME;
   sink->period_duration = DEFAULT_MPD_PERIOD_DURATION;
+  sink->suggested_presentation_delay = DEFAULT_MPD_SUGGESTED_PRESENTATION_DELAY;
 
   g_mutex_init (&sink->mpd_lock);
 
@@ -756,6 +775,10 @@ gst_dash_sink_generate_mpd_content (GstDashSink * sink,
     if (sink->minimum_update_period)
       gst_mpd_client_set_root_node (sink->mpd_client,
           "minimum-update-period", sink->minimum_update_period, NULL);
+    if (sink->suggested_presentation_delay)
+      gst_mpd_client_set_root_node (sink->mpd_client,
+          "suggested-presentation-delay", sink->suggested_presentation_delay,
+          NULL);
     if (sink->mpd_baseurl)
       gst_mpd_client_add_baseurl_node (sink->mpd_client, "url",
           sink->mpd_baseurl, NULL);
@@ -1111,6 +1134,9 @@ gst_dash_sink_set_property (GObject * object, guint prop_id,
     case PROP_MPD_MINIMUM_UPDATE_PERIOD:
       sink->minimum_update_period = g_value_get_uint64 (value);
       break;
+    case PROP_MPD_SUGGESTED_PRESENTATION_DELAY:
+      sink->suggested_presentation_delay = g_value_get_uint64 (value);
+      break;
     case PROP_MPD_MIN_BUFFER_TIME:
       sink->min_buffer_time = g_value_get_uint64 (value);
       break;
@@ -1156,6 +1182,9 @@ gst_dash_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MPD_MINIMUM_UPDATE_PERIOD:
       g_value_set_uint64 (value, sink->minimum_update_period);
+      break;
+    case PROP_MPD_SUGGESTED_PRESENTATION_DELAY:
+      g_value_set_uint64 (value, sink->suggested_presentation_delay);
       break;
     case PROP_MPD_MIN_BUFFER_TIME:
       g_value_set_uint64 (value, sink->min_buffer_time);
