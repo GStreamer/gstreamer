@@ -73,8 +73,6 @@
 
 G_BEGIN_DECLS
 
-#define TSMUX_MAX_ES_INFO_LENGTH ((1 << 12) - 1)
-
 #define TSMUX_PID_AUTO ((guint16)-1)
 
 #define TSMUX_START_PROGRAM_ID 0x0001
@@ -178,9 +176,6 @@ struct TsMux {
   /* callback to create a new stream */
   TsMuxNewStreamFunc new_stream_func;
   void *new_stream_data;
-
-  /* scratch space for writing ES_info descriptors */
-  guint8 es_info_buf[TSMUX_MAX_ES_INFO_LENGTH];
 
   guint64 bitrate;
   guint64 n_bytes;
