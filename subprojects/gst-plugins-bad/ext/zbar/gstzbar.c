@@ -57,7 +57,6 @@
 
 #include <gst/video/video.h>
 
-
 GST_DEBUG_CATEGORY_STATIC (zbar_debug);
 #define GST_CAT_DEFAULT zbar_debug
 
@@ -73,12 +72,14 @@ enum
   PROP_0,
   PROP_MESSAGE,
   PROP_ATTACH_FRAME,
-  PROP_CACHE
+  PROP_CACHE,
+  PROP_BINARY
 };
 
 #define DEFAULT_CACHE    FALSE
 #define DEFAULT_MESSAGE  TRUE
 #define DEFAULT_ATTACH_FRAME FALSE
+#define DEFAULT_BINARY FALSE
 
 #define ZBAR_YUV_CAPS \
     "{ Y800, I420, YV12, NV12, NV21, Y41B, Y42B, YUV9, YVU9 }"
@@ -156,6 +157,18 @@ gst_zbar_class_init (GstZBarClass * g_class)
           G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
           G_PARAM_STATIC_STRINGS));
 
+  /**
+   * zbar:binary:
+   *
+   * Enable or disable binary QR codes, where binary data is not converted to text.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_BINARY,
+      g_param_spec_boolean ("binary", "binary",
+          "Enable or disable binary QR codes, where binary data is not converted to text",
+          DEFAULT_BINARY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (gstelement_class, "Barcode detector",
       "Filter/Analyzer/Video",
       "Detect bar codes in the video streams",
@@ -179,6 +192,7 @@ gst_zbar_init (GstZBar * zbar)
   zbar->cache = DEFAULT_CACHE;
   zbar->message = DEFAULT_MESSAGE;
   zbar->attach_frame = DEFAULT_ATTACH_FRAME;
+  zbar->binary = DEFAULT_BINARY;
 
   zbar->scanner = zbar_image_scanner_create ();
 }
@@ -212,6 +226,9 @@ gst_zbar_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_ATTACH_FRAME:
       zbar->attach_frame = g_value_get_boolean (value);
       break;
+    case PROP_BINARY:
+      zbar->binary = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -236,6 +253,9 @@ gst_zbar_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ATTACH_FRAME:
       g_value_set_boolean (value, zbar->attach_frame);
+      break;
+    case PROP_BINARY:
+      g_value_set_boolean (value, zbar->binary);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -345,6 +365,9 @@ gst_zbar_start (GstBaseTransform * base)
 
   /* start the cache if enabled (e.g. for filtering dupes) */
   zbar_image_scanner_enable_cache (zbar->scanner, zbar->cache);
+  /* use binary mode if enabled */
+  zbar_image_scanner_set_config (zbar->scanner, 0, ZBAR_CFG_BINARY,
+      zbar->binary);
 
   return TRUE;
 }

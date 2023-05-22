@@ -1,4 +1,4 @@
-zbar_dep = dependency('zbar', version : '>= 0.9', required : get_option('zbar'))
+zbar_dep = dependency('zbar', version : '>= 0.23.1', required : get_option('zbar'))
 
 zbar_sources = [
   'gstzbar.c',
