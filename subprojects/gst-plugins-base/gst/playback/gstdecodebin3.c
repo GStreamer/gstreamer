@@ -852,6 +852,42 @@ parsebin_drained_cb (GstElement * parsebin, DecodebinInput * input)
   }
 }
 
+static gboolean
+clear_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GST_DEBUG_OBJECT (pad, "clearing sticky event %" GST_PTR_FORMAT, *event);
+  gst_event_unref (*event);
+  *event = NULL;
+  return TRUE;
+}
+
+static gboolean
+copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *gpad = GST_PAD_CAST (user_data);
+
+  GST_DEBUG_OBJECT (gpad, "store sticky event %" GST_PTR_FORMAT, *event);
+  gst_pad_store_sticky_event (gpad, *event);
+
+  return TRUE;
+}
+
+static gboolean
+decode_pad_set_target (GstGhostPad * pad, GstPad * target)
+{
+  gboolean res = gst_ghost_pad_set_target (pad, target);
+  if (!res)
+    return res;
+
+  if (target == NULL)
+    gst_pad_sticky_events_foreach (GST_PAD_CAST (pad), clear_sticky_events,
+        NULL);
+  else
+    gst_pad_sticky_events_foreach (target, copy_sticky_events, pad);
+
+  return res;
+}
+
 /* Call with INPUT_LOCK taken */
 static gboolean
 ensure_input_parsebin (GstDecodebin3 * dbin, DecodebinInput * input)
@@ -2822,7 +2858,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
       output->drop_probe_id = 0;
     }
 
-    if (!gst_ghost_pad_set_target ((GstGhostPad *) output->src_pad, NULL)) {
+    if (!decode_pad_set_target ((GstGhostPad *) output->src_pad, NULL)) {
       GST_ERROR_OBJECT (dbin, "Could not release decoder pad");
       gst_caps_unref (new_caps);
       goto cleanup;
@@ -2838,7 +2874,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     /* Otherwise if we have no decoder yet but the output is linked make
      * sure that the ghost pad is really unlinked in case no decoder was
      * needed previously */
-    if (!gst_ghost_pad_set_target ((GstGhostPad *) output->src_pad, NULL)) {
+    if (!decode_pad_set_target ((GstGhostPad *) output->src_pad, NULL)) {
       GST_ERROR_OBJECT (dbin, "Could not release ghost pad");
       gst_caps_unref (new_caps);
       goto cleanup;
@@ -2935,7 +2971,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
   gst_caps_unref (new_caps);
 
   output->linked = TRUE;
-  if (!gst_ghost_pad_set_target ((GstGhostPad *) output->src_pad,
+  if (!decode_pad_set_target ((GstGhostPad *) output->src_pad,
           output->decoder_src)) {
     GST_ERROR_OBJECT (dbin, "Could not expose decoder pad");
     ret = FALSE;
@@ -3556,7 +3592,7 @@ free_output_stream (GstDecodebin3 * dbin, DecodebinOutputStream * output)
     output->slot = NULL;
   }
   gst_object_replace ((GstObject **) & output->decoder_sink, NULL);
-  gst_ghost_pad_set_target ((GstGhostPad *) output->src_pad, NULL);
+  decode_pad_set_target ((GstGhostPad *) output->src_pad, NULL);
   gst_object_replace ((GstObject **) & output->decoder_src, NULL);
   if (output->src_exposed) {
     gst_element_remove_pad ((GstElement *) dbin, output->src_pad);
