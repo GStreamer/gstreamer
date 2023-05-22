@@ -30,7 +30,8 @@
  *
  * * #GstClockTime `timestamp`: the timestamp of the buffer that triggered the message.
  * * gchar * `type`: the symbol type.
- * * gchar * `symbol`: the detected bar code data.
+ * * gchar * `symbol`: the detected bar code data, as a string.
+ * * GBytes * `symbol-bytes`: the detected bar code data, as bytes. (Since 1.26)
  * * gint `quality`: an unscaled, relative quantity: larger values are better than smaller
  *   values.
  * * #GstSample `frame`: the frame in which the barcode message was detected, if
@@ -299,6 +300,8 @@ gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
   for (; symbol; symbol = zbar_symbol_next (symbol)) {
     zbar_symbol_type_t typ = zbar_symbol_get_type (symbol);
     const char *data = zbar_symbol_get_data (symbol);
+    unsigned len = zbar_symbol_get_data_length (symbol);
+    GBytes *data_bytes = g_bytes_new (data, len);
     gint quality = zbar_symbol_get_quality (symbol);
 
     GST_DEBUG_OBJECT (zbar, "decoded %s symbol \"%s\" at quality %d",
@@ -328,7 +331,9 @@ gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
           "stream-time", G_TYPE_UINT64, stream_time,
           "running-time", G_TYPE_UINT64, running_time,
           "type", G_TYPE_STRING, zbar_get_symbol_name (typ),
-          "symbol", G_TYPE_STRING, data, "quality", G_TYPE_INT, quality, NULL);
+          "symbol", G_TYPE_STRING, data,
+          "symbol-bytes", G_TYPE_BYTES, data_bytes,
+          "quality", G_TYPE_INT, quality, NULL);
 
       if (GST_CLOCK_TIME_IS_VALID (duration))
         gst_structure_set (s, "duration", G_TYPE_UINT64, duration, NULL);
@@ -345,6 +350,7 @@ gst_zbar_transform_frame_ip (GstVideoFilter * vfilter, GstVideoFrame * frame)
       m = gst_message_new_element (GST_OBJECT (zbar), s);
       gst_element_post_message (GST_ELEMENT (zbar), m);
 
+      g_bytes_unref (data_bytes);
     } else if (zbar->attach_frame)
       GST_WARNING_OBJECT (zbar,
           "attach-frame=true has no effect if message=false");
