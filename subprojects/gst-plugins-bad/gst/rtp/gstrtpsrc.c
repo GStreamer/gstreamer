@@ -780,8 +780,8 @@ gst_rtp_src_start (GstRtpSrc * self)
 dns_resolve_failed:
   GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
       ("Could not resolve hostname '%s'", gst_uri_get_host (self->uri)),
-      ("DNS resolver reported: %s", error->message));
-  g_error_free (error);
+      ("DNS resolver reported: %s", error ? error->message : "[unknown]"));
+  g_clear_error (&error);
   return FALSE;
 }
 
