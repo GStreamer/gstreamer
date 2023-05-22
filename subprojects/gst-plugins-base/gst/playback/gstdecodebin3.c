@@ -2794,6 +2794,24 @@ keyframe_waiter_probe (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_DROP;
 }
 
+static void
+remove_decoder_link (DecodebinOutputStream * output, MultiQueueSlot * slot)
+{
+  GstDecodebin3 *dbin = output->dbin;
+
+  gst_pad_unlink (slot->src_pad, output->decoder_sink);
+  if (output->drop_probe_id) {
+    gst_pad_remove_probe (slot->src_pad, output->drop_probe_id);
+    output->drop_probe_id = 0;
+  }
+
+  gst_element_set_locked_state (output->decoder, TRUE);
+  gst_element_set_state (output->decoder, GST_STATE_NULL);
+
+  gst_bin_remove ((GstBin *) dbin, output->decoder);
+  output->decoder = NULL;
+}
+
 /* Returns FALSE if the output couldn't be properly configured and the
  * associated GstStreams should be disabled */
 static gboolean
@@ -2941,25 +2959,14 @@ reconfigure_output_stream (DecodebinOutputStream * output,
             "Decoder '%s' failed to reach READY state, trying the next type",
             GST_ELEMENT_NAME (output->decoder));
         decoder_failed = TRUE;
+        remove_decoder_link (output, slot);
       }
       if (!gst_pad_query_accept_caps (output->decoder_sink, new_caps)) {
         GST_DEBUG_OBJECT (dbin,
             "Decoder '%s' did not accept the caps, trying the next type",
             GST_ELEMENT_NAME (output->decoder));
         decoder_failed = TRUE;
-      }
-      if (decoder_failed) {
-        gst_pad_unlink (slot->src_pad, output->decoder_sink);
-        if (output->drop_probe_id) {
-          gst_pad_remove_probe (slot->src_pad, output->drop_probe_id);
-          output->drop_probe_id = 0;
-        }
-
-        gst_element_set_locked_state (output->decoder, TRUE);
-        gst_element_set_state (output->decoder, GST_STATE_NULL);
-
-        gst_bin_remove ((GstBin *) dbin, output->decoder);
-        output->decoder = NULL;
+        remove_decoder_link (output, slot);
       }
       next_factory = next_factory->next;
     }
