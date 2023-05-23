@@ -36,6 +36,19 @@ GST_VULKAN_API
 GType gst_vulkan_physical_device_get_type       (void);
 
 /**
+ * GstVulkanQueueFamilyOps:
+ * @video: video operation supported by queue family
+ * @query: if queue family supports queries
+ *
+ * Since: 1.24
+ */
+struct _GstVulkanQueueFamilyOps
+{
+  guint32 video;
+  gboolean query;
+};
+
+/**
  * GstVulkanPhysicalDevice:
  * @parent: the parent #GstObject
  * @instance: the parent #GstVulkanInstance for this physical device
@@ -66,13 +79,13 @@ struct _GstVulkanPhysicalDevice
   guint32 n_queue_families;
 
   /**
-   * GstVulkanPhysicalDevice.queue_family_video_ops:
+   * GstVulkanPhysicalDevice.queue_family_ops:
    *
-   * vulkan video operations allowed per queue family
+   * vulkan operations allowed per queue family
    *
    * Since: 1.24
    */
-  guint32 *queue_family_video_ops;
+  GstVulkanQueueFamilyOps *queue_family_ops;
 
   /* <private> */
   gpointer _reserved        [GST_PADDING];

@@ -4528,8 +4528,8 @@ called.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">number of elements in @queue_family_props</doc>
         <type name="guint32" c:type="guint32"/>
       </field>
-      <field name="queue_family_video_ops">
-        <type name="guint32" c:type="guint32*"/>
+      <field name="queue_family_ops">
+        <type name="VulkanQueueFamilyOps" c:type="GstVulkanQueueFamilyOps*"/>
       </field>
       <field name="_reserved" readable="0" private="1">
         <array zero-terminated="0" fixed-size="4">
@@ -4700,6 +4700,17 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         <array zero-terminated="0" fixed-size="4">
           <type name="gpointer" c:type="gpointer"/>
         </array>
+      </field>
+    </record>
+    <record name="VulkanQueueFamilyOps" c:type="GstVulkanQueueFamilyOps" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h"/>
+      <field name="video" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">video operation supported by queue family</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="query" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">if queue family supports queries</doc>
+        <type name="gboolean" c:type="gboolean"/>
       </field>
     </record>
     <record name="VulkanQueuePrivate" c:type="GstVulkanQueuePrivate" disguised="1">

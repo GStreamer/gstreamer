@@ -261,7 +261,7 @@ gst_vulkan_physical_device_finalize (GObject * object)
   g_free (priv->available_extensions);
   priv->available_extensions = NULL;
 
-  g_free (device->queue_family_video_ops);
+  g_free (device->queue_family_ops);
   g_free (device->queue_family_props);
   device->queue_family_props = NULL;
 
@@ -565,7 +565,7 @@ dump_queue_properties (GstVulkanPhysicalDevice * device, GError ** error)
         " timestamp bits and a minimum image transfer granuality of %"
         GST_VULKAN_EXTENT3D_FORMAT, i, device->queue_family_props[i].queueCount,
         device->queue_family_props[i].queueFlags, queue_flags_str,
-        device->queue_family_video_ops[i],
+        device->queue_family_ops[i].video,
         device->queue_family_props[i].timestampValidBits,
         GST_VULKAN_EXTENT3D_ARGS (device->
             queue_family_props[i].minImageTransferGranularity));
@@ -1009,15 +1009,24 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
       void *next = NULL;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
       VkQueueFamilyVideoPropertiesKHR *queue_family_video_props;
+      VkQueueFamilyQueryResultStatusPropertiesKHR *queue_family_query_props;
 
       queue_family_video_props =
           g_new0 (VkQueueFamilyVideoPropertiesKHR, device->n_queue_families);
+      queue_family_query_props =
+          g_new0 (VkQueueFamilyQueryResultStatusPropertiesKHR,
+          device->n_queue_families);
 #endif
       props = g_new0 (VkQueueFamilyProperties2, device->n_queue_families);
       for (i = 0; i < device->n_queue_families; i++) {
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+        queue_family_query_props[i].sType =
+            VK_STRUCTURE_TYPE_QUEUE_FAMILY_QUERY_RESULT_STATUS_PROPERTIES_KHR;
+
         queue_family_video_props[i].sType =
             VK_STRUCTURE_TYPE_QUEUE_FAMILY_VIDEO_PROPERTIES_KHR;
+        queue_family_video_props[i].pNext = &queue_family_query_props[i];
+
         next = &queue_family_video_props[i];
 #endif
         props[i].sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2;
@@ -1028,15 +1037,17 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 
       device->queue_family_props =
           g_new0 (VkQueueFamilyProperties, device->n_queue_families);
-      device->queue_family_video_ops =
-          g_new (guint32, device->n_queue_families);
+      device->queue_family_ops =
+          g_new0 (GstVulkanQueueFamilyOps, device->n_queue_families);
       for (i = 0; i < device->n_queue_families; i++) {
         memcpy (&device->queue_family_props[i], &props[i].queueFamilyProperties,
             sizeof (device->queue_family_props[i]));
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-        device->queue_family_video_ops[i] =
+        device->queue_family_ops[i].video =
             queue_family_video_props[i].videoCodecOperations;
+        device->queue_family_ops[i].query =
+            queue_family_query_props[i].queryResultStatusSupport;
 #endif
       }
       g_free (props);
