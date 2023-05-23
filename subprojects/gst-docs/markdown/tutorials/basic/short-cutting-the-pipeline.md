@@ -448,8 +448,8 @@ by using `g_source_remove()` (The idle function is implemented as a
 static gboolean push_data (CustomData *data) {
   GstBuffer *buffer;
   GstFlowReturn ret;
+  GstMapInfo map;
   int i;
-  gint16 *raw;
   gint num_samples = CHUNK_SIZE / 2; /* Because each sample is 16 bits */
   gfloat freq;
 
@@ -461,7 +461,14 @@ static gboolean push_data (CustomData *data) {
   GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (num_samples, GST_SECOND, SAMPLE_RATE);
 
   /* Generate some psychodelic waveforms */
-  raw = (gint16 *)GST_BUFFER_DATA (buffer);
+  if (gst_buffer_map (buf, &map, GST_MAP_READ)) {
+    gint16 *raw = (gint16 *) map.data;
+
+    /* create samples here */
+
+    /* unmap buffer when done */
+    gst_buffer_unmap (buf, &map);
+  }
 ```
 
 This is the function that feeds `appsrc`. It will be called by GLib at
@@ -482,9 +489,11 @@ same and is set using the `GST_BUFFER_DURATION` in `GstBuffer`.
 `gst_util_uint64_scale()` is a utility function that scales (multiply
 and divide) numbers which can be large, without fear of overflows.
 
-The bytes that for the buffer can be accessed with GST\_BUFFER\_DATA in
-`GstBuffer` (Be careful not to write past the end of the buffer: you
-allocated it, so you know its size).
+In order access the memory of the buffer you first have to map it with
+`gst_buffer_map()`, which will give you a pointer and a size inside the
+`GstMapInfo` structure which `gst_buffer_map()` will populate on success.
+Be careful not to write past the end of the buffer: you allocated it,
+so you know its size in bytes and samples.
 
 We will skip over the waveform generation, since it is outside the scope
 of this tutorial (it is simply a funny way of generating a pretty
@@ -497,6 +506,13 @@ g_signal_emit_by_name (data->app_source, "push-buffer", buffer, &ret);
 /* Free the buffer now that we are done with it */
 gst_buffer_unref (buffer);
 ```
+
+Note that there is also `gst_app_src_push_buffer()` as part of the
+`gstreamer-app-1.0` library, which is perhaps a better function to use
+to push a buffer into appsrc than the signal emission above, because it has
+a proper type signature so it's harder to get wrong. However, be aware
+that if you use `gst_app_src_push_buffer()` it will take ownership of the
+buffer passed instead, so in that case you won't have to unref it after pushing. 
 
 Once we have the buffer ready, we pass it to `appsrc` with the
 `push-buffer` action signal (see information box at the end of [](tutorials/playback/playbin-usage.md)), and then
@@ -520,16 +536,25 @@ static GstFlowReturn new_sample (GstElement *sink, CustomData *data) {
 
 Finally, this is the function that gets called when the
 `appsink` receives a buffer. We use the `pull-sample` action signal to
-retrieve the buffer and then just print some indicator on the screen. We
-can retrieve the data pointer using the `GST_BUFFER_DATA` macro and the
-data size using the `GST_BUFFER_SIZE` macro in `GstBuffer`. Remember
-that this buffer does not have to match the buffer that we produced in
+retrieve the buffer and then just print some indicator on the screen.
+
+Note that there is also `gst_app_src_pull_sample()` as part of the
+`gstreamer-app-1.0` library, which is perhaps a better function to use
+to pull a sample/buffer out of an appsink than the signal emission above,
+because it has a proper type signature so it's harder to get wrong.
+
+In order to get to the data pointer we need to use `gst_buffer_map()` just
+like above, which will populate a `GstMapInfo` helper struct with a pointer to
+the data and the size of the data in bytes. Don't forget to `gst_buffer_unmap()`
+the buffer again when done with the data.
+
+Remember that this buffer does not have to match the buffer that we produced in
 the `push_data` function, any element in the path could have altered the
 buffers in any way (Not in this example: there is only a `tee` in the
-path between `appsrc` and `appsink`, and it does not change the content
+path between `appsrc` and `appsink`, and the `tee` does not change the content
 of the buffers).
 
-We then `gst_buffer_unref()` the buffer, and this tutorial is done.
+We then `gst_sample_unref()` the retrieved sample, and this tutorial is done.
 
 ## Conclusion
 
@@ -543,4 +568,4 @@ In a playbin-based pipeline, the same goals are achieved in a slightly
 different way. [](tutorials/playback/short-cutting-the-pipeline.md) shows
 how to do it.
 
-It has been a pleasure having you here, and see you soon\!
+It has been a pleasure having you here, and see you soon!
