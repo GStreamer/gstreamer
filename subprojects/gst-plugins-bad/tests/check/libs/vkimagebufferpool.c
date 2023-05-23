@@ -33,15 +33,19 @@ static GstVulkanQueue *queue = NULL;
 static gboolean
 _choose_queue (GstVulkanDevice * device, GstVulkanQueue * _queue, gpointer data)
 {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   guint flags =
       device->physical_device->queue_family_props[_queue->family].queueFlags;
+  guint expected_flags = VK_QUEUE_COMPUTE_BIT;
 
-  if ((flags & VK_QUEUE_COMPUTE_BIT) != 0) {
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  if (data)
+    expected_flags = VK_QUEUE_VIDEO_DECODE_BIT_KHR;
+#endif
+
+  if ((flags & expected_flags) != 0) {
     gst_object_replace ((GstObject **) & queue, GST_OBJECT_CAST (_queue));
     return FALSE;
   }
-#endif
 
   return TRUE;
 }
@@ -175,7 +179,21 @@ GST_START_TEST (test_decoding_image)
   };
   /* *INDENT-ON* */
 
+  /* force to use a queue with decoding support */
+  if (queue && (device->physical_device->queue_family_ops[queue->family].video
+          & VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR) == 0)
+    gst_clear_object (&queue);
+
+  if (!queue) {
+    gst_vulkan_device_foreach_queue (device, _choose_queue,
+        GUINT_TO_POINTER (1));
+  }
+
   if (!queue)
+    return;
+
+  if ((device->physical_device->queue_family_ops[queue->family].video
+          & VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR) == 0)
     return;
 
   dec_caps = gst_vulkan_video_profile_to_caps (&profile);
