@@ -730,7 +730,7 @@ def deinit_pygst():
             setattr(cname_class[1], mname, fake_method)
 
 real_init = Gst.init
-def init(argv):
+def init(argv=None):
     init_pygst()
 
     if Gst.is_initialized():
