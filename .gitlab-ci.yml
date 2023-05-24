@@ -543,6 +543,7 @@ build msys2 :
   script:
     - *build
 
+    - export XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)"
     - echo "-> Running ${TEST_SUITE}"
     - >
       ./gst-env.py
