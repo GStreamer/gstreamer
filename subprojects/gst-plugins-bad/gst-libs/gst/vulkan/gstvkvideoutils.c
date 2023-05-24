@@ -289,7 +289,7 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
     return FALSE;
 
   for (i = 0; i < G_N_ELEMENTS (video_chroma_map); i++) {
-    if (g_strcmp0 (chroma_sub, video_chroma_map[i].chroma_str)) {
+    if (g_strcmp0 (chroma_sub, video_chroma_map[i].chroma_str) == 0) {
       profile->profile.chromaSubsampling = video_chroma_map[i].chroma;
       break;
     }
