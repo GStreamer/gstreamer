@@ -801,12 +801,6 @@ gst_flv_mux_release_pad (GstElement * element, GstPad * pad)
 static GstFlowReturn
 gst_flv_mux_push (GstFlvMux * mux, GstBuffer * buffer)
 {
-  GstAggregator *agg = GST_AGGREGATOR (mux);
-  GstAggregatorPad *srcpad = GST_AGGREGATOR_PAD (agg->srcpad);
-
-  if (GST_BUFFER_PTS_IS_VALID (buffer))
-    srcpad->segment.position = GST_BUFFER_PTS (buffer);
-
   /* pushing the buffer that rewrites the header will make it no longer be the
    * total output size in bytes, but it doesn't matter at that point */
   mux->byte_count += gst_buffer_get_size (buffer);
@@ -1660,6 +1654,8 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvMuxPad * pad,
 {
   GstBuffer *tag;
   GstFlowReturn ret;
+  GstClockTime pts = GST_BUFFER_PTS (buffer);
+  GstClockTime duration = GST_BUFFER_DURATION (buffer);
   GstClockTime dts =
       gst_flv_mux_segment_to_running_time (&GST_AGGREGATOR_PAD (pad)->segment,
       GST_BUFFER_DTS (buffer));
@@ -1677,6 +1673,14 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvMuxPad * pad,
 
   if (ret == GST_FLOW_OK && GST_CLOCK_TIME_IS_VALID (dts))
     pad->last_timestamp = dts;
+
+  if (ret == GST_FLOW_OK && GST_CLOCK_TIME_IS_VALID (pts)) {
+    GstAggregator *agg = GST_AGGREGATOR (mux);
+    GstAggregatorPad *srcpad = GST_AGGREGATOR_PAD (agg->srcpad);
+    srcpad->segment.position = pts;
+    if (GST_CLOCK_TIME_IS_VALID (duration))
+      srcpad->segment.position += duration;
+  }
 
   return ret;
 }
