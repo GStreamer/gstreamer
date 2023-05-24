@@ -248,12 +248,10 @@ commitlint:
 # build setup templates
 #
 # Expects:
-# BUILD_TYPE: Dynamic or shared library
+# BUILD_TYPE: Proxy of meson's --default-library arg
 #   must be 'shared' or 'static' or 'both'
-#   corresponds to --default-library meson arg
 # BUILD_GST_DEBUG: Build with gst debug symbols or not
-#   must be a string of a boolean, "true" or "false". Not yaml bool.
-#   corresponds to -Dgstreamer:gst_debug meson arg
+#   must be a string like this: -Dgstreamer:gst_debug=true.
 # GST_WERROR: make warning fatal or not
 #   must be a string of a boolean, "true" or "false". Not yaml bool.
 # SUBPROJECTS_CACHE_DIR: The location in the image of the subprojects cache
@@ -266,7 +264,7 @@ commitlint:
   - date -R
   - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
   - date -R
-  - export ARGS="--default-library=${BUILD_TYPE:-both} -Dgstreamer:gst_debug=${BUILD_GST_DEBUG:-true} ${MESON_ARGS}"
+  - export ARGS="${BUILD_TYPE:---default-library=both} ${BUILD_GST_DEBUG:--Dgstreamer:gst_debug=true} ${MESON_ARGS}"
   - echo $GST_WERROR
   - |-
     if [ "$GST_WERROR" = "true" ]; then
@@ -326,7 +324,7 @@ commitlint:
   # Also need to take into account I/O of pulling docker images and uploading artifacts
   timeout: '45min'
   variables:
-    BUILD_GST_DEBUG: "true"
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
     GST_WERROR: "true"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/subprojects"
@@ -376,11 +374,11 @@ build fedora gcc:
     CXX: 'ccache g++'
   parallel:
     matrix:
-      - BUILD_TYPE: ['shared', 'both']
-        BUILD_GST_DEBUG: ["true", "false", ]
+      - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
 
-      - BUILD_TYPE: ['static']
-        BUILD_GST_DEBUG: ["true", "false"]
+      - BUILD_TYPE: ["--default-library=static"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
         # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
         # currently need to statically build ges.
         #
@@ -402,11 +400,11 @@ build fedora clang:
     CXX: 'ccache clang++'
   parallel:
     matrix:
-      - BUILD_TYPE: ['shared', 'both']
-        BUILD_GST_DEBUG: ["true"]
+      - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true"]
 
-      - BUILD_TYPE: ['shared', 'both']
-        BUILD_GST_DEBUG: ["false"]
+      - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=false"]
         # FIXME:
         # clang complains about the gir files when gst_debug is false:
         # We can merge the two parallel: matrix after
@@ -417,8 +415,8 @@ build fedora clang:
         #     ^
         MESON_ARGS: "${SIMPLE_BUILD} -Dintrospection=disabled"
 
-      - BUILD_TYPE: ['static']
-        BUILD_GST_DEBUG: ["true", "false"]
+      - BUILD_TYPE: ["--default-library=static"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
         # Passing Dpython=enabled prohibits us from -Dgst-editing-services:python=disabled which we
         # currently need to statically build ges.
         #
@@ -556,7 +554,6 @@ build macos:
    - '.build'
    - '.macos image'
   variables:
-    BUILD_GST_DEBUG: "true"
     # gst-libav/ffmpeg throws Wundef errors
     GST_WERROR: "false"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
@@ -569,8 +566,8 @@ build macos:
         - subprojects/macos-*/*
   parallel:
     matrix:
-      - BUILD_TYPE: ['both']
-        BUILD_GST_DEBUG: ["true"]
+      - BUILD_TYPE: ["--default-library=both"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true"]
         # FIXME: We currently don't have pkg-config required by gobject-introspection/pygobject/sharp
         # macos doesn't support vaapi
         MESON_ARGS: >-
@@ -720,7 +717,7 @@ gstreamer-full static build:
   extends: '.build fedora x86_64'
   stage: 'build'
   variables:
-    BUILD_TYPE: "static"
+    BUILD_TYPE: "--default-library=static"
     MESON_ARGS: >-
       -Ddoc=disabled
     SUBPROJECTS_CACHE_DIR: "/subprojects"
@@ -732,9 +729,9 @@ gstreamer-full-minimal static build:
   extends: 'gstreamer-full static build'
   stage: 'build'
   variables:
-    BUILD_GST_DEBUG: 'false'
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=false"
     GST_WERROR: "true"
-    BUILD_TYPE: "static"
+    BUILD_TYPE: "--default-library=static"
     MESON_ARGS: >-
       -Ddoc=disabled
       -Dauto_features=disabled
