@@ -2376,11 +2376,31 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
         if (slot->active_stream == NULL) {
           slot->active_stream = stream;
         } else if (slot->active_stream != stream) {
-          GST_FIXME_OBJECT (pad, "Handle stream changes (%s => %s) !",
+          gboolean stream_type_changed =
+              gst_stream_get_stream_type (stream) !=
+              gst_stream_get_stream_type (slot->active_stream);
+
+          GST_DEBUG_OBJECT (pad, "Stream change (%s => %s) !",
               gst_stream_get_stream_id (slot->active_stream),
               gst_stream_get_stream_id (stream));
           gst_object_unref (slot->active_stream);
           slot->active_stream = stream;
+
+          if (stream_type_changed) {
+            /* The stream type has changed, we get rid of the current output. A
+             * new one (targetting the new stream type) will be created once the
+             * caps are received. */
+            GST_DEBUG_OBJECT (pad,
+                "Stream type change, discarding current output stream");
+            if (slot->output) {
+              DecodebinOutputStream *output = slot->output;
+              SELECTION_LOCK (dbin);
+              dbin->output_streams =
+                  g_list_remove (dbin->output_streams, output);
+              free_output_stream (dbin, output);
+              SELECTION_UNLOCK (dbin);
+            }
+          }
         } else
           gst_object_unref (stream);
 #if 0                           /* Disabled because stream-start is pushed for every buffer on every unlinked pad */
@@ -2615,6 +2635,20 @@ get_slot_for_input (GstDecodebin3 * dbin, DecodebinInputStream * input)
     /* Already used input, return that one */
     if (slot->input == input) {
       GST_DEBUG_OBJECT (dbin, "Returning already specified slot %d", slot->id);
+      if (input_type && slot->type != input_type) {
+        /* The input stream type has changed. It is the responsibility of the
+         * user of decodebin3 to ensure that the inputs are coherent.
+         *
+         * The only case where the stream type will change is when switching
+         * between sources which have non-intersecting stream types (ex:
+         * switching from audio-only file to video-only file)
+         *
+         * NOTE : We need to change the slot type here, since it is notified as
+         * soon as the *input* of the slot changes.
+         */
+        GST_DEBUG_OBJECT (dbin, "Changing multiqueue slot stream type");
+        slot->type = input_type;
+      }
       return slot;
     }
   }
