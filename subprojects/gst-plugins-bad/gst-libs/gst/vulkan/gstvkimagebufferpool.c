@@ -379,7 +379,7 @@ prepare_buffer (GstVulkanImageBufferPool * vk_pool, GstBuffer * buffer)
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   if ((priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR) != 0 &&
-      (priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR) != 0) {
+      (priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR) == 0) {
     new_layout = VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR;
     new_access = VK_ACCESS_TRANSFER_READ_BIT | VK_ACCESS_TRANSFER_WRITE_BIT;
   } else if ((priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR) != 0) {
@@ -543,6 +543,13 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   for (i = 0; i < priv->n_imgs; i++) {
     GstMemory *mem;
     guint width, height;
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    VkVideoProfileListInfoKHR profile_list = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
+      .profileCount = 1,
+      .pProfiles = &priv->profile.profile,
+    };
+#endif
 
     if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) != priv->n_imgs) {
       width = GST_VIDEO_INFO_WIDTH (&priv->v_info);
@@ -558,7 +565,7 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     /* *INDENT-ON* */
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
     if (priv->has_profile)
-      image_info.pNext = &priv->profile;
+      image_info.pNext = &profile_list;
 #endif
 
     mem = gst_vulkan_image_memory_alloc_with_image_info (vk_pool->device,
