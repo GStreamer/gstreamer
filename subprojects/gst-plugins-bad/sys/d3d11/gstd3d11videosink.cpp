@@ -1440,8 +1440,6 @@ gst_d3d11_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
     ret = GST_FLOW_ERROR;
   }
 
-  gst_clear_buffer (&self->prepared_buffer);
-
   return ret;
 }
 
