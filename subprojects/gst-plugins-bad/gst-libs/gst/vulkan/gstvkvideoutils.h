@@ -21,7 +21,7 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/vulkan/vulkan.h>
+#include <gst/vulkan/gstvkapi.h>
 
 G_BEGIN_DECLS
 
@@ -39,6 +39,7 @@ struct _GstVulkanVideoProfile
   VkVideoProfileInfoKHR profile;
   VkVideoDecodeUsageInfoKHR usage;
   union {
+    VkBaseInStructure base;
     VkVideoDecodeH264ProfileInfoKHR h264;
     VkVideoDecodeH265ProfileInfoKHR h265;
   } codec;
@@ -51,5 +52,8 @@ GstCaps *               gst_vulkan_video_profile_to_caps        (const GstVulkan
 GST_VULKAN_API
 gboolean                gst_vulkan_video_profile_from_caps      (GstVulkanVideoProfile * profile,
                                                                  GstCaps * caps);
+GST_VULKAN_API
+gboolean                gst_vulkan_video_profile_is_valid       (GstVulkanVideoProfile * profile,
+                                                                 guint codec);
 
 G_END_DECLS

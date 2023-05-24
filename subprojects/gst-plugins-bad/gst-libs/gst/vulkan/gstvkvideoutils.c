@@ -323,3 +323,45 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
 #endif
   return TRUE;
 }
+
+/**
+ * gst_vulkan_video_profile_is_valid: (skip)
+ * @profile: the output profile
+ * @codec: VkVideoCodecOperationFlagBitsKHR described by @profile
+ *
+ * Returns: %TRUE if @profile is correct and matches with @codec
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_vulkan_video_profile_is_valid (GstVulkanVideoProfile * profile, guint codec)
+{
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  int i;
+  VkVideoCodecOperationFlagBitsKHR op = codec;
+  VkStructureType stype = VK_STRUCTURE_TYPE_MAX_ENUM;
+
+  if (op == VK_VIDEO_CODEC_OPERATION_NONE_KHR)
+    return FALSE;
+
+  if (profile->profile.videoCodecOperation != op)
+    return FALSE;
+
+  for (i = 0; i < G_N_ELEMENTS (video_codecs_map); i++) {
+    if (op == video_codecs_map[i].codec) {
+      stype = video_codecs_map[i].stype;
+      break;
+    }
+  }
+
+  if (stype == VK_STRUCTURE_TYPE_MAX_ENUM)
+    return FALSE;
+
+  if (profile->codec.base.sType != stype)
+    return FALSE;
+
+  return TRUE;
+
+#endif
+  return FALSE;
+}
