@@ -305,15 +305,23 @@ _gl_memory_upload_transform_caps (gpointer impl, GstGLContext * context,
       (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
   GstCaps *ret;
 
-  ret =
-      _set_caps_features_with_passthrough (caps,
-      GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
-
-  gst_caps_features_free (passthrough);
-
   if (direction == GST_PAD_SINK) {
     GstCaps *tmp;
+    GstCapsFeatures *filter_features;
     GstGLTextureTarget target_mask;
+
+    filter_features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+        GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
+    if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
+      gst_caps_features_free (filter_features);
+      gst_caps_features_free (passthrough);
+      return NULL;
+    }
+    gst_caps_features_free (filter_features);
+
+    ret = _set_caps_features_with_passthrough (tmp,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+    gst_caps_unref (tmp);
 
     if (upload->input_target != GST_GL_TEXTURE_TARGET_NONE) {
       target_mask = 1 << upload->input_target;
@@ -329,6 +337,9 @@ _gl_memory_upload_transform_caps (gpointer impl, GstGLContext * context,
   } else {
     gint i, n;
 
+    ret = _set_caps_features_with_passthrough (caps,
+        GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+
     n = gst_caps_get_size (ret);
     for (i = 0; i < n; i++) {
       GstStructure *s = gst_caps_get_structure (ret, i);
@@ -336,6 +347,12 @@ _gl_memory_upload_transform_caps (gpointer impl, GstGLContext * context,
       gst_structure_remove_fields (s, "texture-target", NULL);
     }
   }
+
+  gst_caps_features_free (passthrough);
+
+  GST_DEBUG_OBJECT (upload->upload, "direction %s, transformed %"
+      GST_PTR_FORMAT " into %" GST_PTR_FORMAT,
+      direction == GST_PAD_SRC ? "src" : "sink", caps, ret);
 
   return ret;
 }
@@ -390,35 +407,42 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   guint n_pools, i;
   GstCaps *caps;
   GstCapsFeatures *features;
+  GstAllocator *allocator;
+  GstAllocationParams params;
 
   gst_query_parse_allocation (query, &caps, NULL);
   if (caps == NULL)
     goto invalid_caps;
-  features = gst_caps_get_features (caps, 0);
 
+  g_assert (gst_caps_is_fixed (caps));
+
+  features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
+      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
   /* Only offer our custom allocator if that type of memory was negotiated. */
-  if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
-    GstAllocator *allocator;
-    GstAllocationParams params;
-    gst_allocation_params_init (&params);
+  if (!_filter_caps_with_features (caps, features, NULL)) {
+    gst_caps_features_free (features);
+    return;
+  }
+  gst_caps_features_free (features);
 
-    allocator =
-        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
-            upload->context));
-    gst_query_add_allocation_param (query, allocator, &params);
-    gst_object_unref (allocator);
+  gst_allocation_params_init (&params);
+
+  allocator =
+      GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
+          upload->context));
+  gst_query_add_allocation_param (query, allocator, &params);
+  gst_object_unref (allocator);
 
 #if GST_GL_HAVE_PLATFORM_EGL
-    if (upload->upload->context
-        && gst_gl_context_get_gl_platform (upload->upload->context) ==
-        GST_GL_PLATFORM_EGL) {
-      allocator =
-          GST_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_EGL_ALLOCATOR_NAME));
-      gst_query_add_allocation_param (query, allocator, &params);
-      gst_object_unref (allocator);
-    }
-#endif
+  if (upload->upload->context
+      && gst_gl_context_get_gl_platform (upload->upload->context) ==
+      GST_GL_PLATFORM_EGL) {
+    allocator =
+        GST_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_EGL_ALLOCATOR_NAME));
+    gst_query_add_allocation_param (query, allocator, &params);
+    gst_object_unref (allocator);
   }
+#endif
 
   n_pools = gst_query_get_n_allocation_pools (query);
   for (i = 0; i < n_pools; i++) {
