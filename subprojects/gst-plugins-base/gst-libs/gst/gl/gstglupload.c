@@ -528,6 +528,7 @@ gst_egl_image_cache_unref (GstEGLImageCache * cache)
   if (g_atomic_int_dec_and_test (&cache->ref_count)) {
     g_hash_table_unref (cache->hash_table);
     g_mutex_clear (&cache->lock);
+    g_free (cache);
   }
 }
 
