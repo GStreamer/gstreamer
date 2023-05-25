@@ -1784,14 +1784,24 @@ _upload_meta_upload_transform_caps (gpointer impl, GstGLContext * context,
   GstCapsFeatures *passthrough =
       gst_caps_features_from_string
       (GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
+  GstCapsFeatures *filter_features;
   GstCaps *ret;
 
   if (direction == GST_PAD_SINK) {
     GstCaps *tmp;
 
-    ret =
-        _set_caps_features_with_passthrough (caps,
+    filter_features = gst_caps_features_from_string
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META);
+    if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
+      gst_caps_features_free (filter_features);
+      gst_caps_features_free (passthrough);
+      return NULL;
+    }
+    gst_caps_features_free (filter_features);
+
+    ret = _set_caps_features_with_passthrough (tmp,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+    gst_caps_unref (tmp);
 
     tmp = _caps_intersect_texture_target (ret, 1 << GST_GL_TEXTURE_TARGET_2D);
     gst_caps_unref (ret);
