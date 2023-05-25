@@ -333,6 +333,7 @@ static StdVideoH265PictureParameterSet h265_pps;
   endif
   if have_vk_video
     vulkan_conf.set('GST_VULKAN_HAVE_VIDEO_EXTENSIONS', 1)
+    vulkan_priv_sources += files('gstvkvideo-private.c')
   elif get_option('vulkan-video').enabled()
     error('Vulkan Video extensions headers not found')
   endif
