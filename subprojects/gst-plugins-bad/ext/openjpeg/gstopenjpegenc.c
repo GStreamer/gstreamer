@@ -939,7 +939,9 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame,
 
   for (i = 0; i < ncomps; i++) {
     comps[i].prec = GST_VIDEO_FRAME_COMP_DEPTH (frame, i);
+#if (OPJ_VERSION_MAJOR == 2 && OPJ_VERSION_MINOR < 5)
     comps[i].bpp = GST_VIDEO_FRAME_COMP_DEPTH (frame, i);
+#endif
     comps[i].sgnd = 0;
     comps[i].w = GST_VIDEO_FRAME_COMP_WIDTH (frame, i);
     comps[i].dx =
