@@ -356,6 +356,8 @@ static void gst_dash_demux_dispose (GObject * obj);
 /* GstAdaptiveDemuxStream */
 static GstFlowReturn
 gst_dash_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream);
+static void
+gst_dash_demux_stream_create_tracks (GstAdaptiveDemux2Stream * stream);
 static GstClockTime
 gst_dash_demux_stream_get_presentation_offset (GstAdaptiveDemux2Stream *
     stream);
@@ -497,6 +499,8 @@ gst_dash_demux_stream_class_init (GstDashDemux2StreamClass * klass)
       gst_dash_demux_stream_data_received;
   adaptivedemux2stream_class->need_another_chunk =
       gst_dash_demux_stream_need_another_chunk;
+  adaptivedemux2stream_class->create_tracks =
+      gst_dash_demux_stream_create_tracks;
 }
 
 
@@ -834,7 +838,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
   GST_DEBUG_OBJECT (demux, "Creating stream objects");
   for (i = 0; i < gst_mpd_client2_get_nb_active_stream (demux->client); i++) {
     GstDashDemux2Stream *stream;
-    GstAdaptiveDemuxTrack *track;
+    GstAdaptiveDemuxTrack *track = NULL;
     GstStreamType streamtype;
     GstActiveStream *active_stream;
     GstCaps *caps, *codec_caps;
@@ -896,12 +900,18 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
         tags = gst_tag_list_new (GST_TAG_LANGUAGE_NAME, lang, NULL);
     }
 
-    /* Create the track this stream provides */
-    track = gst_adaptive_demux_track_new (GST_ADAPTIVE_DEMUX_CAST (demux),
-        streamtype, GST_STREAM_FLAG_NONE, stream_id, codec_caps, tags);
-
     stream = gst_dash_demux_stream_new (demux->client->period_idx, stream_id);
     GST_ADAPTIVE_DEMUX2_STREAM_CAST (stream)->stream_type = streamtype;
+
+    /* Maybe there are multiple tracks in one stream such as some mpeg-ts
+     * streams, need create track by stream->stream_collection lately */
+    if (!codec_caps) {
+      GST_ADAPTIVE_DEMUX2_STREAM_CAST (stream)->pending_tracks = TRUE;
+    } else {
+      /* Create the track this stream provides */
+      track = gst_adaptive_demux_track_new (GST_ADAPTIVE_DEMUX_CAST (demux),
+          streamtype, GST_STREAM_FLAG_NONE, stream_id, codec_caps, tags);
+    }
 
     g_free (stream_id);
     if (tags)
@@ -910,9 +920,11 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
 
     gst_adaptive_demux2_add_stream (GST_ADAPTIVE_DEMUX_CAST (demux),
         GST_ADAPTIVE_DEMUX2_STREAM_CAST (stream));
-    gst_adaptive_demux2_stream_add_track (GST_ADAPTIVE_DEMUX2_STREAM_CAST
-        (stream), track);
-    stream->track = track;
+    if (track) {
+      gst_adaptive_demux2_stream_add_track (GST_ADAPTIVE_DEMUX2_STREAM_CAST
+          (stream), track);
+      stream->track = track;
+    }
     stream->active_stream = active_stream;
 
     if (active_stream->cur_representation) {
@@ -942,6 +954,46 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
   }
 
   return TRUE;
+}
+
+static void
+gst_dash_demux_stream_create_tracks (GstAdaptiveDemux2Stream * stream)
+{
+  guint i;
+  gchar *stream_id;
+
+  /* Use the stream->stream_collection to check and
+   * create the track which has not yet been created */
+  for (i = 0; i < gst_stream_collection_get_size (stream->stream_collection);
+      i++) {
+    GstStream *gst_stream =
+        gst_stream_collection_get_stream (stream->stream_collection, i);
+    GstStreamType stream_type = gst_stream_get_stream_type (gst_stream);
+    GstAdaptiveDemuxTrack *track;
+    GstTagList *tags = gst_stream_get_tags (gst_stream);
+    GstCaps *caps = gst_stream_get_caps (gst_stream);
+
+    if (stream_type == GST_STREAM_TYPE_UNKNOWN)
+      continue;
+
+    GST_DEBUG_OBJECT (stream, "create track type %d of the stream",
+        stream_type);
+    stream->stream_type |= stream_type;
+    stream_id =
+        g_strdup_printf ("%s-%d", gst_stream_type_get_name (stream_type), i);
+    /* Create the track this stream provides */
+    track = gst_adaptive_demux_track_new (stream->demux,
+        stream_type, GST_STREAM_FLAG_NONE, stream_id, caps, tags);
+    g_free (stream_id);
+
+    track->upstream_stream_id =
+        g_strdup (gst_stream_get_stream_id (gst_stream));
+    gst_adaptive_demux2_stream_add_track (stream, track);
+    gst_adaptive_demux_track_unref (track);
+
+    if (tags)
+      gst_tag_list_unref (tags);
+  }
 }
 
 static void
