@@ -1953,6 +1953,21 @@ gst_base_ts_mux_send_event (GstElement * element, GstEvent * event)
   return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 }
 
+/* Must be called with mux->lock held */
+static void
+gst_base_ts_mux_resend_all_pmts (GstBaseTsMux * mux)
+{
+  GList *cur;
+
+  /* output PMT for each program */
+  for (cur = mux->tsmux->programs; cur; cur = cur->next) {
+    TsMuxProgram *program = (TsMuxProgram *) cur->data;
+
+    program->pmt_changed = TRUE;
+    tsmux_resend_pmt (program);
+  }
+}
+
 /* GstAggregator implementation */
 
 static gboolean
@@ -1970,7 +1985,6 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
     {
       GstCaps *caps;
       GstFlowReturn ret;
-      GList *cur;
 
       g_mutex_lock (&mux->lock);
       if (ts_pad->stream == NULL) {
@@ -1996,14 +2010,8 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
       mux->tsmux->si_changed = TRUE;
       tsmux_resend_pat (mux->tsmux);
       tsmux_resend_si (mux->tsmux);
+      gst_base_ts_mux_resend_all_pmts (mux);
 
-      /* output PMT for each program */
-      for (cur = mux->tsmux->programs; cur; cur = cur->next) {
-        TsMuxProgram *program = (TsMuxProgram *) cur->data;
-
-        program->pmt_changed = TRUE;
-        tsmux_resend_pmt (program);
-      }
       g_mutex_unlock (&mux->lock);
 
       res = TRUE;
@@ -2096,10 +2104,19 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
 
         lang_code = gst_tag_get_language_code_iso_639_2B (lang);
         if (lang_code) {
+          gchar *old_language = g_strdup (ts_pad->language);
           GST_DEBUG_OBJECT (ts_pad, "Setting language to '%s'", lang_code);
 
           g_free (ts_pad->language);
           ts_pad->language = g_strdup (lang_code);
+          strncpy (ts_pad->stream->language, lang_code, 3);
+          ts_pad->stream->language[3] = 0;
+          if (g_strcmp0 (old_language, lang_code) != 0) {
+            g_mutex_lock (&mux->lock);
+            gst_base_ts_mux_resend_all_pmts (mux);
+            g_mutex_unlock (&mux->lock);
+          }
+          g_free (old_language);
         } else {
           GST_WARNING_OBJECT (ts_pad, "Did not get language code for '%s'",
               lang);
