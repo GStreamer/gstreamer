@@ -1269,6 +1269,21 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
   const GstMpegtsDescriptor *desc = NULL;
   int i, nb;
 
+  if (bstream->stream_type == ST_PS_AUDIO_AC3 &&
+      !mpegts_get_descriptor_from_stream (bstream,
+          GST_MTS_DESC_DVB_ENHANCED_AC3)) {
+    const GstMpegtsDescriptor *ac3_desc =
+        mpegts_get_descriptor_from_stream (bstream,
+        GST_MTS_DESC_AC3_AUDIO_STREAM);
+    if (ac3_desc && DESC_AC_AUDIO_STREAM_has_lang1 (ac3_desc->data)) {
+      gchar lang_code[4];
+
+      memcpy (lang_code, DESC_AC_AUDIO_STREAM_lang1_code (ac3_desc->data), 3);
+      lang_code[3] = '\0';
+      add_iso639_language_to_tags (stream, lang_code);
+    }
+  }
+
   desc =
       mpegts_get_descriptor_from_stream (bstream,
       GST_MTS_DESC_ISO_639_LANGUAGE);

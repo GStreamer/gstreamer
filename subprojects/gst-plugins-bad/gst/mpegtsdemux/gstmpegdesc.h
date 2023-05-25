@@ -211,6 +211,10 @@
 
 /* AC3_audio_stream_descriptor */
 #define DESC_AC_AUDIO_STREAM_bsid(desc)             ((desc)[2] & 0x1f)
+#define DESC_AC_AUDIO_STREAM_channels(desc)         ((desc[4] >> 1) & 0x0f)
+#define DESC_AC_AUDIO_STREAM_textlen(desc)          ((desc[7 + (DESC_AC_AUDIO_STREAM_channels(desc)==0)] >> 1) & 0x7f)
+#define DESC_AC_AUDIO_STREAM_has_lang1(desc)        ((desc[8 + DESC_AC_AUDIO_STREAM_textlen(desc)] >> 7) & 0x01)
+#define DESC_AC_AUDIO_STREAM_lang1_code(desc)       (desc + 9 + DESC_AC_AUDIO_STREAM_textlen(desc))
 
 /* FIXME : Move list of well know registration ids to an enum
  * in the mpegts library.
