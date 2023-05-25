@@ -2083,11 +2083,21 @@ _raw_data_upload_transform_caps (gpointer impl, GstGLContext * context,
 
   if (direction == GST_PAD_SINK) {
     GstGLTextureTarget target_mask = 0;
+    GstCapsFeatures *filter_features;
     GstCaps *tmp;
 
-    ret =
-        _set_caps_features_with_passthrough (caps,
+    filter_features =
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
+      gst_caps_features_free (filter_features);
+      gst_caps_features_free (passthrough);
+      return NULL;
+    }
+    gst_caps_features_free (filter_features);
+
+    ret = _set_caps_features_with_passthrough (tmp,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+    gst_caps_unref (tmp);
 
     target_mask |= 1 << GST_GL_TEXTURE_TARGET_2D;
     target_mask |= 1 << GST_GL_TEXTURE_TARGET_RECTANGLE;
@@ -2120,6 +2130,16 @@ _raw_data_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
 {
   struct RawUpload *raw = impl;
   GstCapsFeatures *features;
+
+  features =
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  /* Also consider the omited system memory feature cases, such as
+     video/x-raw(meta:GstVideoOverlayComposition) */
+  if (!_filter_caps_with_features (in_caps, features, NULL)) {
+    gst_caps_features_free (features);
+    return FALSE;
+  }
+  gst_caps_features_free (features);
 
   features = gst_caps_get_features (out_caps, 0);
   if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
