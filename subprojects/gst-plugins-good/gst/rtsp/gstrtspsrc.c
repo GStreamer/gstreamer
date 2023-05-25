@@ -6469,6 +6469,8 @@ gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
   GstRTSPStatusCode thecode;
   gchar *content_base = NULL;
   GstRTSPResult res;
+  GstRTSPMethod rstpMethod = response->type_data.request.method;
+  int count_requst = 0;
 
 next:
   if (conninfo->flushing) {
@@ -6477,6 +6479,14 @@ next:
   } else {
     res = gst_rtspsrc_connection_receive (src, conninfo, response,
         src->tcp_timeout);
+  }
+
+  if (rstpMethod == GST_RTSP_TEARDOWN){
+    if (count_requst == 100){
+      GST_DEBUG_OBJECT (src, "No valid response for 100 times for GST_RTSP_TEARDOWN request, going to exit the loop");
+      goto handle_request_failed;
+    }
+    count_requst++;
   }
 
   if (res < 0)
@@ -6605,6 +6615,8 @@ again:
   gst_rtsp_connection_reset_timeout (conninfo->connection);
   if (!response)
     return res;
+
+  response->type_data.request.method = request->type_data.request.method;
 
   res = gst_rtsp_src_receive_response (src, conninfo, response, code);
   if (res == GST_RTSP_EEOF) {
