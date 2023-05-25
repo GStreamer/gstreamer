@@ -25,6 +25,7 @@
 
 #include "common.h"
 #include "gstossaudioelements.h"
+#include "gstossdeviceprovider.h"
 #include "gstosssink.h"
 #include "gstosssrc.h"
 
@@ -32,6 +33,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEVICE_PROVIDER_REGISTER (ossdeviceprovider, plugin);
+
   GST_ELEMENT_REGISTER (osssrc, plugin);
   GST_ELEMENT_REGISTER (osssink, plugin);
 

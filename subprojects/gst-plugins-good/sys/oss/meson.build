@@ -26,7 +26,7 @@ endif
 
 if have_oss
   plugins += [library('gstossaudio',
-    'gstossaudio.c', 'gstossaudioelement.c', 'gstosshelper.c', 'gstosssink.c', 'gstosssrc.c',
+    'gstossaudio.c', 'gstossaudioelement.c', 'gstossdeviceprovider.c', 'gstosshelper.c', 'gstosssink.c', 'gstosssrc.c',
     c_args : gst_plugins_good_args,
     include_directories : [configinc, libsinc],
     dependencies : [gstaudio_dep, gstbase_dep],
