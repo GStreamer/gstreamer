@@ -14,6 +14,16 @@ these operations:
   If you don't want to create a new account you should also be able to sign in
   with a Google, GitHub or Twitter account.
 
+- Due to an [influx of spam](https://gitlab.freedesktop.org/freedesktop/freedesktop/-/wikis/home)
+  user accounts on GitLab are restricted by default and can't fork projects,
+  which is needed to create a Merge Request.
+
+  Please [file an issue and fill in the User Verification template][user-verification]
+  in order to get full access. Sorry for the hassle, and thanks for your
+  understanding.
+
+[user-verification]: https://gitlab.freedesktop.org/freedesktop/freedesktop/issues/new?issuable_template=User%20verification
+
 ## How to File Issues and Request for Enhancements
 
 ### Where to File Issues and Feature Requests
@@ -103,7 +113,7 @@ In a nutshell, you will:
 1. [Clone](https://github.com/git-guides/git-clone) the gstreamer repository on
    your development machine
 1. Create a [fork](https://docs.gitlab.com/ee/user/project/repository/forking_workflow.html)
-   of it in your gitlab namespace
+   of it in your gitlab namespace (you may have to obtain forking permission first)
 1. Add that fork as a [git "remote"](https://github.com/git-guides/git-remote)
    to the clone on your machine
 1. Setup a [branch](https://docs.gitlab.com/ee/user/project/repository/branches/)
@@ -132,6 +142,11 @@ Select the namespace (your username), ensure that the visibility is set to
 "Public", and hit the "Fork project" button:
 
 ![Fork settings](images/contribute/fork-settings.png)
+
+**Please note** that new gitlab accounts do not have permission to create forks by
+default, so you will have to [first file an issue and fill in the user verification
+template][user-verification] as mentioned above in order to get forking rights.
+This should be a fairly quick process.
 
 A new repository will be created in your user namespace
 (<https://gitlab.freedesktop.org/$GITLAB_USERNAME/gstreamer>). You will be redirected
