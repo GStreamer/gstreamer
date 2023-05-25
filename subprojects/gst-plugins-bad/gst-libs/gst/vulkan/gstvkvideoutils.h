@@ -32,7 +32,8 @@ G_BEGIN_DECLS
  *
  * Since: 1.24
  */
-struct _GstVulkanVideoProfile {
+struct _GstVulkanVideoProfile
+{
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   VkVideoProfileInfoKHR profile;
   union {
@@ -46,7 +47,6 @@ struct _GstVulkanVideoProfile {
 
 GST_VULKAN_API
 GstCaps *               gst_vulkan_video_profile_to_caps        (const GstVulkanVideoProfile * profile);
-
 GST_VULKAN_API
 gboolean                gst_vulkan_video_profile_from_caps      (GstVulkanVideoProfile * profile,
                                                                  GstCaps * caps);
