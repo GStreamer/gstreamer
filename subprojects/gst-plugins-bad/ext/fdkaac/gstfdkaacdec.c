@@ -237,7 +237,7 @@ gst_fdkaacdec_map_channels (GstFdkAacDec * self, const CStreamInfo * in,
 
   DEF_CHANSET (front, 7);
   DEF_CHANSET (side, 2);
-  DEF_CHANSET (rear, 3);
+  DEF_CHANSET (rear, 5);
   DEF_CHANSET (lfe, 2);
   DEF_CHANSET (top_front, 3);
   DEF_CHANSET (top_center, 3);
