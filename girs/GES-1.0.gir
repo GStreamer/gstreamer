@@ -1499,7 +1499,7 @@ do_time_effect_change (GESClip * clip)
   children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
 
   for (tmp = children; tmp; tmp = tmp-&gt;next)
-    ges_track_element_set_auto_clamp_control_source (tmp-&gt;data, FALSE);
+    ges_track_element_set_auto_clamp_control_sources (tmp-&gt;data, FALSE);
 
   // add time effect, or set their children properties, or move them around
   ...
@@ -1520,7 +1520,7 @@ do_time_effect_change (GESClip * clip)
     // handle error
 
   for (tmp = children; tmp; tmp = tmp-&gt;next)
-    ges_track_element_set_auto_clamp_control_source (tmp-&gt;data, TRUE);
+    ges_track_element_set_auto_clamp_control_sources (tmp-&gt;data, TRUE);
 
   g_list_free_full (children, gst_object_unref);
   gst_object_unref (source);
