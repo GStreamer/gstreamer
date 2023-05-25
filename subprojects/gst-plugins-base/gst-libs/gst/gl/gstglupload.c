@@ -2658,13 +2658,22 @@ _nvmm_upload_transform_caps (gpointer impl, GstGLContext * context,
 
   if (direction == GST_PAD_SINK) {
     GstCaps *tmp;
+    GstCapsFeatures *filter_features;
 
-    ret =
-        _set_caps_features_with_passthrough (caps,
+    filter_features =
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_NVMM);
+    if (!_filter_caps_with_features (caps, filter_features, &tmp)) {
+      gst_caps_features_free (filter_features);
+      gst_caps_features_free (passthrough);
+      return NULL;
+    }
+    gst_caps_features_free (filter_features);
+
+    ret = _set_caps_features_with_passthrough (tmp,
         GST_CAPS_FEATURE_MEMORY_GL_MEMORY, passthrough);
+    gst_caps_unref (tmp);
 
-    tmp =
-        _caps_intersect_texture_target (ret,
+    tmp = _caps_intersect_texture_target (ret,
         1 << GST_GL_TEXTURE_TARGET_EXTERNAL_OES);
     gst_caps_unref (ret);
     ret = tmp;
@@ -2700,6 +2709,7 @@ _nvmm_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
   GstVideoInfo *out_info = &nvmm->out_info;
   GstVideoMeta *meta;
   GstMapInfo in_map_info = GST_MAP_INFO_INIT;
+  GstCapsFeatures *features;
   guint n_mem;
   guint i;
 
@@ -2722,6 +2732,10 @@ _nvmm_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
 
   if (!gst_gl_context_check_feature (nvmm->upload->context,
           "EGL_KHR_image_base"))
+    return FALSE;
+
+  features = gst_caps_get_features (in_caps, 0);
+  if (!gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_NVMM))
     return FALSE;
 
   if (!gst_buffer_map (buffer, &in_map_info, GST_MAP_READ)) {
