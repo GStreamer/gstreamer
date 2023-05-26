@@ -79,6 +79,7 @@ G_DEFINE_TYPE_WITH_CODE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT,
 enum
 {
   CLOSED,
+  MAP,
   LAST_SIGNAL
 };
 
@@ -155,6 +156,9 @@ gst_wl_window_class_init (GstWlWindowClass * klass)
 
   signals[CLOSED] = g_signal_new ("closed", G_TYPE_FROM_CLASS (gobject_class),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+  signals[MAP] = g_signal_new ("map", G_TYPE_FROM_CLASS (gobject_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+
 }
 
 static void
@@ -509,6 +513,7 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
       gst_wl_window_update_borders (self);
       wl_surface_commit (priv->area_surface_wrapper);
       priv->is_area_surface_mapped = TRUE;
+      g_signal_emit (self, signals[MAP], 0);
     }
   } else {
     /* clear both video and parent surfaces */
