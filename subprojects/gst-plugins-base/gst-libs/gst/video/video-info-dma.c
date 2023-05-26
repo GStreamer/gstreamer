@@ -399,6 +399,50 @@ gst_video_info_dma_drm_new_from_caps (const GstCaps * caps)
 }
 
 /**
+ * gst_video_info_dma_drm_from_video_info:
+ * @drm_info: (out caller-allocates): #GstVideoInfoDmaDrm
+ * @info: a #GstVideoInfo
+ * @modifier: the associated modifier value.
+ *
+ * Fills @drm_info if @info's format has a valid drm format and @modifier is also
+ * valid
+ *
+ * Returns: %TRUE if @drm_info is filled correctly.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
+    const GstVideoInfo * info, guint64 modifier)
+{
+  GstVideoFormat format;
+  guint32 fourcc;
+
+  g_return_val_if_fail (drm_info != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  if (modifier == DRM_FORMAT_MOD_INVALID)
+    return FALSE;
+  format = GST_VIDEO_INFO_FORMAT (info);
+  fourcc = gst_video_dma_drm_fourcc_from_format (format);
+  if (fourcc == DRM_FORMAT_INVALID)
+    return FALSE;
+
+  drm_info->vinfo = *info;
+  drm_info->drm_fourcc = fourcc;
+  drm_info->drm_modifier = modifier;
+
+  /* no need to change format to GST_VIDEO_INFO_ENCODED since its modifier is
+   * linear */
+  if (modifier == DRM_FORMAT_MOD_LINEAR)
+    return TRUE;
+
+  return gst_video_info_set_interlaced_format (&drm_info->vinfo,
+      GST_VIDEO_FORMAT_ENCODED, GST_VIDEO_INFO_INTERLACE_MODE (info),
+      GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
+}
+
+/**
  * gst_video_dma_drm_fourcc_from_string:
  * @format_str: a drm format string
  * @modifier: (out) (optional): Return the modifier in @format or %NULL

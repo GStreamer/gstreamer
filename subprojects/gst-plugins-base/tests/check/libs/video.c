@@ -4160,6 +4160,12 @@ GST_START_TEST (test_info_dma_drm)
   gst_caps_unref (caps);
   gst_caps_unref (ncaps);
 
+  fail_unless (gst_video_info_dma_drm_from_video_info (&info, &vinfo, 0));
+  fail_unless (GST_VIDEO_INFO_FORMAT (&info.vinfo) == GST_VIDEO_FORMAT_NV12);
+
+  fail_unless (gst_video_info_dma_drm_from_video_info (&info, &vinfo,
+          0x100000000000002));
+  fail_unless (GST_VIDEO_INFO_FORMAT (&info.vinfo) == GST_VIDEO_FORMAT_ENCODED);
 }
 
 GST_END_TEST;
