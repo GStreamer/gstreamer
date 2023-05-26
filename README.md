@@ -43,7 +43,9 @@ Meson 0.62 or newer is required.
 
 On Linux and macOS you can get meson through your package manager or using:
 
-  $ pip3 install --user meson
+```  
+$ pip3 install --user meson
+```
 
 This will install meson into `~/.local/bin` which may or may not be included
 automatically in your PATH by default.
