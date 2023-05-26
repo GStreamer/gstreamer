@@ -204,6 +204,13 @@ typedef struct _DecodebinInputStream DecodebinInputStream;
 typedef struct _DecodebinInput DecodebinInput;
 typedef struct _DecodebinOutputStream DecodebinOutputStream;
 
+typedef struct
+{
+  GstElement *element;
+  GstMessage *error;            // Last error message seen for that element
+  GstMessage *latency;          // Last latency message seen for that element
+} CandidateDecoder;
+
 struct _GstDecodebin3
 {
   GstBin bin;
@@ -264,6 +271,8 @@ struct _GstDecodebin3
 
   /* Properties */
   GstCaps *caps;
+
+  GList *candidate_decoders;
 };
 
 struct _GstDecodebin3Class
@@ -917,6 +926,30 @@ send_sticky_events (GstDecodebin3 * dbin, GstPad * pad)
   gst_object_unref (data.peer);
 
   return data.ret;
+}
+
+static CandidateDecoder *
+add_candidate_decoder (GstDecodebin3 * dbin, GstElement * element)
+{
+  GST_OBJECT_LOCK (dbin);
+  CandidateDecoder *candidate;
+  candidate = g_new0 (CandidateDecoder, 1);
+  candidate->element = element;
+  dbin->candidate_decoders =
+      g_list_prepend (dbin->candidate_decoders, candidate);
+  GST_OBJECT_UNLOCK (dbin);
+  return candidate;
+}
+
+static void
+remove_candidate_decoder (GstDecodebin3 * dbin, CandidateDecoder * candidate)
+{
+  GST_OBJECT_LOCK (dbin);
+  dbin->candidate_decoders =
+      g_list_remove (dbin->candidate_decoders, candidate);
+  if (candidate->error)
+    gst_message_unref (candidate->error);
+  GST_OBJECT_UNLOCK (dbin);
 }
 
 /* Call with INPUT_LOCK taken */
@@ -2046,8 +2079,33 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
 {
   GstDecodebin3 *dbin = (GstDecodebin3 *) bin;
   gboolean posting_collection = FALSE;
+  GList *l;
 
   GST_DEBUG_OBJECT (bin, "Got Message %s", GST_MESSAGE_TYPE_NAME (message));
+
+  GST_OBJECT_LOCK (dbin);
+  for (l = dbin->candidate_decoders; l; l = l->next) {
+    CandidateDecoder *candidate = l->data;
+    if (GST_OBJECT_CAST (candidate->element) == GST_MESSAGE_SRC (message)) {
+      if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
+        if (candidate->error)
+          gst_message_unref (candidate->error);
+        candidate->error = message;
+        GST_OBJECT_UNLOCK (dbin);
+        return;
+      } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_LATENCY) {
+        if (candidate->latency)
+          gst_message_unref (candidate->latency);
+        GST_DEBUG_OBJECT (bin, "store latency message for %" GST_PTR_FORMAT,
+            candidate->element);
+        candidate->latency = message;
+        GST_OBJECT_UNLOCK (dbin);
+        return;
+      }
+      break;
+    }
+  }
+  GST_OBJECT_UNLOCK (dbin);
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_STREAM_COLLECTION:
@@ -2136,6 +2194,27 @@ drop_message:
   {
     GST_DEBUG_OBJECT (bin, "dropping message");
     gst_message_unref (message);
+  }
+}
+
+static void
+handle_stored_latency_message (GstDecodebin3 * dbin,
+    DecodebinOutputStream * output, CandidateDecoder * candidate)
+{
+  GstClockTime min, max;
+  if (candidate->latency && GST_IS_VIDEO_DECODER (candidate->element)) {
+    gst_video_decoder_get_latency (GST_VIDEO_DECODER (candidate->element),
+        &min, &max);
+    GST_DEBUG_OBJECT (dbin,
+        "Got latency update from %" GST_PTR_FORMAT ". min: %"
+        GST_TIME_FORMAT " max: %" GST_TIME_FORMAT, candidate->element,
+        GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+    output->decoder_latency = min;
+    /* Trigger recalculation */
+    gst_decodebin3_update_min_interleave (dbin);
+
+    GST_BIN_CLASS (parent_class)->handle_message (GST_BIN_CAST (dbin),
+        candidate->latency);
   }
 }
 
@@ -2948,6 +3027,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
 
     while (next_factory) {
       gboolean decoder_failed = FALSE;
+      CandidateDecoder *candidate = NULL;
 
       /* If we don't have a decoder yet, instantiate one */
       output->decoder = gst_element_factory_create ((GstElementFactory *)
@@ -2972,6 +3052,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
             (GstPadProbeCallback) keyframe_waiter_probe, output, NULL);
       }
 
+      candidate = add_candidate_decoder (dbin, output->decoder);
       if (gst_pad_link_full (slot->src_pad, output->decoder_sink,
               GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK) {
         GST_WARNING_OBJECT (dbin, "could not link to %s:%s",
@@ -3016,6 +3097,9 @@ reconfigure_output_stream (DecodebinOutputStream * output,
         GST_PAD_STREAM_UNLOCK (output->decoder_sink);
         output->linked = TRUE;
         GST_DEBUG ("created decoder %" GST_PTR_FORMAT, output->decoder);
+
+        handle_stored_latency_message (dbin, output, candidate);
+        remove_candidate_decoder (dbin, candidate);
       }
 
       break;
@@ -3024,6 +3108,8 @@ reconfigure_output_stream (DecodebinOutputStream * output,
       {
         if (decoder_failed)
           remove_decoder_link (output, slot);
+        if (candidate)
+          remove_candidate_decoder (dbin, candidate);
 
         if (!next_factory->next) {
           ret = FALSE;
