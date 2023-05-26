@@ -462,6 +462,17 @@ scrollable_window_adjustment_changed_cb (GtkAdjustment * adjustment,
 }
 
 static void
+wl_window_map_cb (GstWlWindow * wl_window, GstGtkWaylandSink * self)
+{
+  GstGtkWaylandSinkPrivate *priv =
+      gst_gtk_wayland_sink_get_instance_private (self);
+
+  GST_DEBUG_OBJECT (self, "waylandsink surface is ready");
+
+  gtk_gst_base_widget_queue_draw (GTK_GST_BASE_WIDGET (priv->gtk_widget));
+}
+
+static void
 setup_wl_window (GstGtkWaylandSink * self)
 {
   GstGtkWaylandSinkPrivate *priv =
@@ -487,6 +498,8 @@ setup_wl_window (GstGtkWaylandSink * self)
         wl_surface, &priv->render_lock);
     gst_wl_window_set_rotate_method (priv->wl_window,
         priv->current_rotate_method);
+    g_signal_connect_object (priv->wl_window, "map",
+        G_CALLBACK (wl_window_map_cb), self, 0);
   }
 
   /* In order to position the subsurface correctly within a scrollable widget,
