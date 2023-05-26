@@ -74,7 +74,7 @@ if use_wayland
     darwin_versions : osxversion,
     install : true,
     dependencies : [gst_dep, gstallocators_dep, gstvideo_dep, libdrm_dep,
-                    wl_client_dep, wl_protocol_dep]
+                    wl_client_dep]
   )
 
   pkg_name = 'gstreamer-wayland-1.0'
@@ -90,7 +90,7 @@ if use_wayland
   gstwayland_dep = declare_dependency(link_with : gstwayland,
     include_directories : [libsinc],
     dependencies : [gst_dep, gstallocators_dep, gstvideo_dep, libdrm_dep,
-                    wl_client_dep, wl_protocol_dep])
+                    wl_client_dep])
 
   install_headers(wl_headers, subdir: 'gstreamer-1.0/gst/wayland')
   meson.override_dependency(pkg_name, gstwayland_dep)
