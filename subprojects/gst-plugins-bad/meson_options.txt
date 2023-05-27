@@ -108,6 +108,7 @@ option('directshow', type : 'feature', value : 'auto', description : 'Directshow
 option('dtls', type : 'feature', value : 'auto', description : 'DTLS encoder and decoder plugin')
 option('dts', type : 'feature', value : 'auto', description : 'DTS audio decoder plugin (GPL - only built if gpl option is also enabled!)')
 option('dvb', type : 'feature', value : 'auto', description : 'DVB video bin and source plugin')
+option('dwrite', type : 'feature', value : 'auto', description : 'DirectWrite plugin')
 option('faac', type : 'feature', value : 'auto', description : 'Free AAC audio encoder plugin')
 option('faad', type : 'feature', value : 'auto', description : 'Free AAC audio decoder plugin (GPL - only built if gpl option is also enabled!)')
 option('fbdev', type : 'feature', value : 'auto', description : 'Framebuffer video sink plugin')
