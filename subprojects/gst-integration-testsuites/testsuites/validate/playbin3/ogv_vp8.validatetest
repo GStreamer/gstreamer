@@ -1,0 +1,6 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    args = {
+         "playbin3 uri=file://$(media_dir)/defaults/ogg/wpt-test-ogg-vp8.ogv name=playbin video-sink=\"$(videosink) name=videosink\" audio-sink=\"$(audiosink)\"",
+    },
+    scenario=play_5s

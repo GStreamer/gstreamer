@@ -580,6 +580,9 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
     if ((packet->bytes >= 7 && memcmp (packet->packet, "OVP80\2 ", 7) == 0) ||
         packet->b_o_s ||
         (packet->bytes >= 5 && memcmp (packet->packet, "OVP80", 5) == 0)) {
+      /* Request the first packet being pushed downstream to have the header
+         flag set, unblocking the keyframe_waiter_probe in decodebin3. */
+      pad->need_header_flag = TRUE;
       /* We don't push header packets for VP8 */
       goto done;
     }
@@ -818,9 +821,11 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
   if (delta_unit)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-  /* set header flag for buffers that are also in the streamheaders */
-  if (is_header)
+  /* set header flag for buffers that are also in the streamheaders or when explicitely requested (VP8). */
+  if (is_header || pad->need_header_flag) {
+    pad->need_header_flag = FALSE;
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+  }
 
   if (packet->packet != NULL) {
     /* copy packet in buffer */
