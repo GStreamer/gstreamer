@@ -761,6 +761,22 @@ is_keyframe_vp8 (GstOggStream * pad, gint64 granulepos)
   return ((gpos & 0x07ffffff) == 0);
 }
 
+static gboolean
+is_packet_keyframe_vp8 (GstOggStream * pad, ogg_packet * packet)
+{
+  guint32 hdr;
+  gboolean is_kf = FALSE;
+
+  if (packet->bytes < 3) {
+    return FALSE;
+  }
+
+  hdr = GST_READ_UINT24_LE (packet->packet);
+
+  is_kf = (hdr & 0x1);
+  return is_kf;
+}
+
 static gint64
 granulepos_to_granule_vp8 (GstOggStream * pad, gint64 gpos)
 {
@@ -2576,7 +2592,7 @@ const GstOggMap mappers[] = {
     granulepos_to_granule_vp8,
     granule_to_granulepos_vp8,
     is_keyframe_vp8,
-    NULL,
+    is_packet_keyframe_vp8,
     is_header_vp8,
     packet_duration_vp8,
     granulepos_to_key_granule_vp8,

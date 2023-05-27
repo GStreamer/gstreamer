@@ -102,6 +102,8 @@ struct _GstOggPad
 
   GList *continued;
 
+  gboolean need_header_flag;
+
   gboolean discont;
   GstFlowReturn last_ret;       /* last return of _pad_push() */
   gboolean is_eos;
