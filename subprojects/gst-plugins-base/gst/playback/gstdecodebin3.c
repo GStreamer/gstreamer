@@ -2938,35 +2938,29 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     GList *factories, *next_factory;
 
     factories = next_factory = create_decoder_factory_list (dbin, new_caps);
-    while (!output->decoder) {
+    if (!next_factory) {
+      GST_DEBUG ("Could not find an element for caps %" GST_PTR_FORMAT,
+          new_caps);
+      g_assert (output->decoder == NULL);
+      ret = FALSE;
+      goto missing_decoder;
+    }
+
+    while (next_factory) {
       gboolean decoder_failed = FALSE;
 
       /* If we don't have a decoder yet, instantiate one */
-      if (next_factory) {
-        output->decoder = gst_element_factory_create ((GstElementFactory *)
-            next_factory->data, NULL);
-        GST_DEBUG ("Created decoder %" GST_PTR_FORMAT, output->decoder);
-      } else {
-        GST_DEBUG ("Could not find an element for caps %" GST_PTR_FORMAT,
-            new_caps);
-        g_assert (output->decoder == NULL);
-      }
+      output->decoder = gst_element_factory_create ((GstElementFactory *)
+          next_factory->data, NULL);
+      GST_DEBUG ("Trying decoder %" GST_PTR_FORMAT, output->decoder);
 
-      if (output->decoder == NULL) {
-        GstCaps *caps;
+      if (output->decoder == NULL)
+        goto try_next;
 
-        /* FIXME : Should we be smarter if there's a missing decoder ?
-         * Should we deactivate that stream ? */
-        caps = gst_stream_get_caps (slot->active_stream);
-        *msg = gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps);
-        gst_caps_unref (caps);
-        ret = FALSE;
-        goto cleanup;
-      }
       if (!gst_bin_add ((GstBin *) dbin, output->decoder)) {
-        GST_ERROR_OBJECT (dbin, "could not add decoder to pipeline");
-        ret = FALSE;
-        goto cleanup;
+        GST_WARNING_OBJECT (dbin, "could not add decoder '%s' to pipeline",
+            GST_ELEMENT_NAME (output->decoder));
+        goto try_next;
       }
       output->decoder_sink =
           gst_element_get_static_pad (output->decoder, "sink");
@@ -2977,27 +2971,29 @@ reconfigure_output_stream (DecodebinOutputStream * output,
             gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_BUFFER,
             (GstPadProbeCallback) keyframe_waiter_probe, output, NULL);
       }
+
       if (gst_pad_link_full (slot->src_pad, output->decoder_sink,
               GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK) {
-        GST_ERROR_OBJECT (dbin, "could not link to %s:%s",
+        GST_WARNING_OBJECT (dbin, "could not link to %s:%s",
             GST_DEBUG_PAD_NAME (output->decoder_sink));
-        ret = FALSE;
-        goto cleanup;
+        goto try_next;
       }
+
       if (gst_element_set_state (output->decoder,
               GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
-        GST_DEBUG_OBJECT (dbin,
-            "Decoder '%s' failed to reach READY state, trying the next type",
+        GST_WARNING_OBJECT (dbin,
+            "Decoder '%s' failed to reach READY state",
             GST_ELEMENT_NAME (output->decoder));
         decoder_failed = TRUE;
-        remove_decoder_link (output, slot);
+        goto try_next;
       }
+
       if (!gst_pad_query_accept_caps (output->decoder_sink, new_caps)) {
         GST_DEBUG_OBJECT (dbin,
             "Decoder '%s' did not accept the caps, trying the next type",
             GST_ELEMENT_NAME (output->decoder));
         decoder_failed = TRUE;
-        remove_decoder_link (output, slot);
+        goto try_next;
       }
 
       /* First lock element's sinkpad stream lock so no data reaches
@@ -3013,13 +3009,32 @@ reconfigure_output_stream (DecodebinOutputStream * output,
         GST_WARNING_OBJECT (dbin,
             "Decoder '%s' failed to reach PAUSED state",
             GST_ELEMENT_NAME (output->decoder));
-        remove_decoder_link (output, slot);
+        decoder_failed = TRUE;
+        goto try_next;
       } else {
         /* Everything went well */
         GST_PAD_STREAM_UNLOCK (output->decoder_sink);
+        output->linked = TRUE;
+        GST_DEBUG ("created decoder %" GST_PTR_FORMAT, output->decoder);
       }
 
-      next_factory = next_factory->next;
+      break;
+
+    try_next:
+      {
+        if (decoder_failed)
+          remove_decoder_link (output, slot);
+
+        if (!next_factory->next) {
+          ret = FALSE;
+          if (!decoder_failed)
+            goto cleanup;
+          if (output->decoder == NULL)
+            goto missing_decoder;
+        } else {
+          next_factory = next_factory->next;
+        }
+      }
     }
     gst_plugin_feature_list_free (factories);
   } else {
@@ -3028,7 +3043,6 @@ reconfigure_output_stream (DecodebinOutputStream * output,
   }
   gst_caps_unref (new_caps);
 
-  output->linked = TRUE;
   if (!decode_pad_set_target ((GstGhostPad *) output->src_pad,
           output->decoder_src)) {
     GST_ERROR_OBJECT (dbin, "Could not expose decoder pad");
@@ -3059,6 +3073,14 @@ reconfigure_output_stream (DecodebinOutputStream * output,
 
   output->slot = slot;
   return ret;
+
+missing_decoder:
+  {
+    GstCaps *caps;
+    caps = gst_stream_get_caps (slot->active_stream);
+    *msg = gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps);
+    gst_caps_unref (caps);
+  }
 
 cleanup:
   {
