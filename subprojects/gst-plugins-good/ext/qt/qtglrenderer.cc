@@ -152,7 +152,7 @@ shared_render_data_free (struct SharedRenderData * data)
     delete data->m_context;
   data->m_context = nullptr;
   if (data->m_surface)
-    delete data->m_surface;
+    data->m_surface->deleteLater();
   data->m_surface = nullptr;
 }
 
@@ -281,7 +281,6 @@ bool CreateSurfaceWorker::event(QEvent * ev)
         g_mutex_lock (&m_sharedRenderData->lock);
         m_sharedRenderData->m_surface = new GstBackingSurface;
         m_sharedRenderData->m_surface->create();
-        m_sharedRenderData->m_surface->moveToThread (m_sharedRenderData->m_renderThread);
         GST_TRACE ("%p created surface %p", m_sharedRenderData,
             m_sharedRenderData->m_surface);
         g_cond_broadcast (&m_sharedRenderData->cond);
