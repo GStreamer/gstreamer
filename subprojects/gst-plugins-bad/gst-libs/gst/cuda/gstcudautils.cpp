@@ -1671,3 +1671,34 @@ gst_cuda_create_user_token (void)
 
   return user_token.fetch_add (1);
 }
+
+/**
+ * _gst_cuda_debug:
+ * @result: CUDA result code
+ * @cat: a #GstDebugCategory
+ * @file: the file that checking the result code
+ * @function: the function that checking the result code
+ * @line: the line that checking the result code
+ *
+ * Returns: %TRUE if CUDA device API call result is CUDA_SUCCESS
+ *
+ * Since: 1.24
+ */
+gboolean
+_gst_cuda_debug (CUresult result, GstDebugCategory * cat,
+    const gchar * file, const gchar * function, gint line)
+{
+  if (result != CUDA_SUCCESS) {
+#ifndef GST_DISABLE_GST_DEBUG
+    const gchar *_error_name, *_error_text;
+    CuGetErrorName (result, &_error_name);
+    CuGetErrorString (result, &_error_text);
+    gst_debug_log (cat, GST_LEVEL_WARNING, file, function, line,
+        NULL, "CUDA call failed: %s, %s", _error_name, _error_text);
+#endif
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
