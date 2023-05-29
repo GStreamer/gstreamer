@@ -466,6 +466,8 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   guint old_codec;
   GstBuffer *old_codec_data = NULL;
 
+  GST_DEBUG_OBJECT (pad, "%" GST_PTR_FORMAT, caps);
+
   old_codec = pad->codec;
   if (pad->codec_data)
     old_codec_data = gst_buffer_ref (pad->codec_data);
@@ -497,6 +499,7 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
 
   if (ret && mux->streamable && mux->state != GST_FLV_MUX_STATE_HEADER) {
     if (old_codec != pad->codec) {
+      GST_DEBUG_OBJECT (pad, "pad info changed");
       pad->info_changed = TRUE;
     }
 
@@ -505,11 +508,14 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
 
       gst_buffer_map (old_codec_data, &map, GST_MAP_READ);
       if (map.size != gst_buffer_get_size (pad->codec_data) ||
-          gst_buffer_memcmp (pad->codec_data, 0, map.data, map.size))
+          gst_buffer_memcmp (pad->codec_data, 0, map.data, map.size)) {
+        GST_DEBUG_OBJECT (pad, "codec data changed");
         pad->info_changed = TRUE;
+      }
 
       gst_buffer_unmap (old_codec_data, &map);
     } else if (!old_codec_data && pad->codec_data) {
+      GST_DEBUG_OBJECT (pad, "codec data changed");
       pad->info_changed = TRUE;
     }
 
@@ -533,6 +539,8 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   GstStructure *s;
   guint old_codec, old_rate, old_width, old_channels;
   GstBuffer *old_codec_data = NULL;
+
+  GST_DEBUG_OBJECT (pad, "%" GST_PTR_FORMAT, caps);
 
   old_codec = pad->codec;
   old_rate = pad->rate;
@@ -676,6 +684,7 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
   if (ret && mux->streamable && mux->state != GST_FLV_MUX_STATE_HEADER) {
     if (old_codec != pad->codec || old_rate != pad->rate ||
         old_width != pad->width || old_channels != pad->channels) {
+      GST_DEBUG_OBJECT (pad, "pad info changed");
       pad->info_changed = TRUE;
     }
 
@@ -684,11 +693,14 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
 
       gst_buffer_map (old_codec_data, &map, GST_MAP_READ);
       if (map.size != gst_buffer_get_size (pad->codec_data) ||
-          gst_buffer_memcmp (pad->codec_data, 0, map.data, map.size))
+          gst_buffer_memcmp (pad->codec_data, 0, map.data, map.size)) {
+        GST_DEBUG_OBJECT (pad, "codec data changed");
         pad->info_changed = TRUE;
+      }
 
       gst_buffer_unmap (old_codec_data, &map);
     } else if (!old_codec_data && pad->codec_data) {
+      GST_DEBUG_OBJECT (pad, "codec data changed");
       pad->info_changed = TRUE;
     }
 
