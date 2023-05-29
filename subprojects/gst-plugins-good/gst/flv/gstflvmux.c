@@ -519,8 +519,10 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
       pad->info_changed = TRUE;
     }
 
-    if (pad->info_changed)
+    if (pad->info_changed) {
       mux->state = GST_FLV_MUX_STATE_HEADER;
+      mux->new_metadata = TRUE;
+    }
   }
 
   if (old_codec_data)
@@ -704,8 +706,10 @@ gst_flv_mux_audio_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
       pad->info_changed = TRUE;
     }
 
-    if (pad->info_changed)
+    if (pad->info_changed) {
       mux->state = GST_FLV_MUX_STATE_HEADER;
+      mux->new_metadata = TRUE;
+    }
   }
 
   if (old_codec_data)

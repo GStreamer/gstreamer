@@ -533,7 +533,7 @@ GST_START_TEST (test_video_caps_late)
 
 
   /* push from flvmux to demux */
-  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 6));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 7));
 
   /* verify we got 2x audio and 1x video buffers out of flvdemux */
   gst_buffer_unref (gst_harness_pull (a_sink));
@@ -630,7 +630,7 @@ GST_START_TEST (test_video_caps_change_streamable)
   gst_harness_crank_single_clock_wait (mux);
 
   /* push from flvmux to demux */
-  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 2));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 3));
 
   /* should accept without the constraint */
   while ((event = gst_harness_try_pull_event (v_sink))) {
@@ -735,7 +735,7 @@ GST_START_TEST (test_audio_caps_change_streamable)
   gst_harness_crank_single_clock_wait (mux);
 
   /* push from flvmux to demux */
-  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 2));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 3));
 
   /* should accept without the constraint */
   while ((event = gst_harness_try_pull_event (a_sink))) {
@@ -820,7 +820,7 @@ GST_START_TEST (test_video_caps_change_streamable_single)
               duration)));
 
   /* push from flvmux to demux */
-  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 2));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 3));
 
   /* should accept without the constraint */
   while ((event = gst_harness_try_pull_event (v_sink))) {
@@ -906,7 +906,7 @@ GST_START_TEST (test_audio_caps_change_streamable_single)
               base_time + duration, duration)));
 
   /* push from flvmux to demux */
-  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 2));
+  fail_unless_equals_int (GST_FLOW_OK, gst_harness_sink_push_many (mux, 3));
 
   /* should accept without the constraint */
   while ((event = gst_harness_try_pull_event (a_sink))) {
