@@ -358,7 +358,7 @@ gst_cuda_memory_copy_ensure_gl_interop (GstGLContext * context, gboolean * ret)
   cuda_ret = CuGLGetDevices (&device_count,
       device_list, 1, CU_GL_DEVICE_LIST_ALL);
 
-  if (cuda_ret != CUDA_SUCCESS || device_count == 0)
+  if (!gst_cuda_result (cuda_ret) || device_count == 0)
     return;
 
   *ret = TRUE;
