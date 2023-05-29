@@ -25,6 +25,8 @@
 #include "gstcudacontext.h"
 #include "gstcuda-private.h"
 #include <atomic>
+#include <set>
+#include <string>
 
 #ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
@@ -1672,6 +1674,43 @@ gst_cuda_create_user_token (void)
   return user_token.fetch_add (1);
 }
 
+static gboolean
+_abort_on_error (CUresult result)
+{
+  static std::set < CUresult > abort_list;
+  GST_CUDA_CALL_ONCE_BEGIN {
+    const gchar *env = g_getenv ("GST_CUDA_CRITICAL_ERRORS");
+    if (!env)
+      return;
+
+    gchar **split = g_strsplit (env, ",", 0);
+    gchar **iter;
+    for (iter = split; *iter; iter++) {
+      int error_code = 0;
+      try {
+        error_code = std::stoi (*iter);
+      } catch ( ...) {
+        GST_WARNING ("Invalid argument \"%s\"", *iter);
+        continue;
+      };
+
+      if (error_code > 0)
+        abort_list.insert ((CUresult) error_code);
+    }
+
+    g_strfreev (split);
+  }
+  GST_CUDA_CALL_ONCE_END;
+
+  if (abort_list.empty ())
+    return FALSE;
+
+  if (abort_list.find (result) != abort_list.end ())
+    return TRUE;
+
+  return FALSE;
+}
+
 /**
  * _gst_cuda_debug:
  * @result: CUDA result code
@@ -1696,6 +1735,10 @@ _gst_cuda_debug (CUresult result, GstDebugCategory * cat,
     gst_debug_log (cat, GST_LEVEL_WARNING, file, function, line,
         NULL, "CUDA call failed: %s, %s", _error_name, _error_text);
 #endif
+    if (_abort_on_error (result)) {
+      GST_ERROR ("Critical error %d, abort", (gint) result);
+      g_abort ();
+    }
 
     return FALSE;
   }

@@ -1226,7 +1226,7 @@ Retrieves the #GstCudaContext in @context and places the result in @cuda_ctx.</d
         </parameter>
       </parameters>
     </function>
-    <function-macro name="cuda_result" c:identifier="gst_cuda_result" introspectable="0">
+    <function-macro name="cuda_result" c:identifier="gst_cuda_result" version="1.22" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.h"/>
       <parameters>
         <parameter name="result">
