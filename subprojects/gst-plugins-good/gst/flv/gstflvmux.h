@@ -98,7 +98,7 @@ struct _GstFlvMux {
   gboolean skip_backwards_streams;
 
   GstTagList *tags;
-  gboolean new_tags;
+  gboolean new_metadata;
   GList *index;
   guint64 byte_count;
   GstClockTime duration;

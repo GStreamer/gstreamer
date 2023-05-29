@@ -329,7 +329,7 @@ gst_flv_mux_init (GstFlvMux * mux)
   mux->metadatacreator = g_strdup (DEFAULT_METADATACREATOR);
   mux->encoder = g_strdup (DEFAULT_METADATACREATOR);
 
-  mux->new_tags = FALSE;
+  mux->new_metadata = FALSE;
 
   gst_flv_mux_reset (GST_ELEMENT (mux));
 }
@@ -384,7 +384,7 @@ gst_flv_mux_reset (GstElement * element)
   mux->byte_count = 0;
 
   mux->duration = GST_CLOCK_TIME_NONE;
-  mux->new_tags = FALSE;
+  mux->new_metadata = FALSE;
   mux->first_timestamp = GST_CLOCK_TIME_NONE;
   mux->last_dts = 0;
 
@@ -442,7 +442,7 @@ gst_flv_mux_sink_event (GstAggregator * aggregator, GstAggregatorPad * pad,
       gst_event_parse_tag (event, &list);
       gst_tag_setter_merge_tags (setter, list, mode);
       gst_flv_mux_store_codec_tags (mux, flvpad, list);
-      mux->new_tags = TRUE;
+      mux->new_metadata = TRUE;
       ret = TRUE;
       break;
     }
@@ -1595,7 +1595,7 @@ gst_flv_mux_write_header (GstFlvMux * mux)
     ret = gst_flv_mux_push (mux, metadata);
     if (ret != GST_FLOW_OK)
       goto failure_metadata;
-    mux->new_tags = FALSE;
+    mux->new_metadata = FALSE;
   }
   if (video_codec_data != NULL) {
     ret = gst_flv_mux_push (mux, video_codec_data);
@@ -2050,11 +2050,11 @@ gst_flv_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
     }
   }
 
-  if (mux->new_tags && mux->streamable) {
+  if (mux->new_metadata && mux->streamable) {
     GstBuffer *buf = gst_flv_mux_create_metadata (mux);
     if (buf)
       gst_flv_mux_push (mux, buf);
-    mux->new_tags = FALSE;
+    mux->new_metadata = FALSE;
   }
 
   if (best) {
