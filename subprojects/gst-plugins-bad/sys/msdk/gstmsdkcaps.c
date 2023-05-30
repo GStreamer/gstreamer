@@ -33,6 +33,7 @@
 
 #ifndef _WIN32
 #include <libdrm/drm_fourcc.h>
+#include <gst/video/video-info-dma.h>
 #include "gstmsdkallocator_libva.h"
 #include <gst/va/gstvavideoformat.h>
 #endif
@@ -2046,6 +2047,11 @@ gst_msdkcaps_video_info_from_caps (const GstCaps * caps,
     if (modifier)
       *modifier = drm_info->drm_modifier;
 
+    /* We need to update the offset/stride in info */
+    GstVideoFormat drm_video_format =
+        gst_va_video_format_from_drm_fourcc (drm_info->drm_fourcc);
+    gst_video_info_set_format
+        (info, drm_video_format, drm_info->vinfo.width, drm_info->vinfo.height);
     gst_video_info_dma_drm_free (drm_info);
   } else
 #endif

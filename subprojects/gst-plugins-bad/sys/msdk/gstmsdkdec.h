@@ -81,6 +81,7 @@ struct _GstMsdkDec
   gboolean initialized;
   gboolean sfc;
   gboolean ds_has_known_allocator;
+  guint64 modifier;
 
   /* for packetization */
   GstAdapter *adapter;
