@@ -92,6 +92,8 @@ struct _GstMsdkVPP
   /* To check if sinkcaps have HDR SEIs*/
   gboolean have_mdcv;
   gboolean have_cll;
+  guint64 sink_modifier;
+  guint64 src_modifier;
 
   /* element properties */
   gboolean hardware;
