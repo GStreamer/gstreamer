@@ -30,9 +30,11 @@
  */
 
 #include "gstmsdkcaps.h"
+
 #ifndef _WIN32
 #include <libdrm/drm_fourcc.h>
 #include "gstmsdkallocator_libva.h"
+#include <gst/va/gstvavideoformat.h>
 #endif
 
 #define DEFAULT_DELIMITER ", "
@@ -1991,7 +1993,13 @@ gst_msdkcaps_set_strings (GstCaps * caps,
     if (!s)
       return FALSE;
 
-    gst_structure_set_value (s, field, &list);
+    /* When we use this function to get a fixated caps, we should set
+     * a single value instead of a list in the corresponding field.
+     */
+    if (gst_value_list_get_size (&list) == 1)
+      gst_structure_set_value (s, field, gst_value_list_get_value (&list, 0));
+    else
+      gst_structure_set_value (s, field, &list);
   } else {
     gst_caps_set_value (caps, field, &list);
   }
@@ -2020,3 +2028,83 @@ gst_msdkcaps_remove_structure (GstCaps * caps, const gchar * features)
 
   return TRUE;
 }
+
+gboolean
+gst_msdkcaps_video_info_from_caps (const GstCaps * caps,
+    GstVideoInfo * info, guint64 * modifier)
+{
+  g_return_val_if_fail (caps != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+#ifndef _WIN32
+  if (gst_video_is_dma_drm_caps (caps)) {
+    GstVideoInfoDmaDrm *drm_info = gst_video_info_dma_drm_new_from_caps (caps);
+    if (!drm_info)
+      goto failed;
+
+    *info = drm_info->vinfo;
+    if (modifier)
+      *modifier = drm_info->drm_modifier;
+
+    gst_video_info_dma_drm_free (drm_info);
+  } else
+#endif
+
+  if (!gst_video_info_from_caps (info, caps))
+    goto failed;
+
+  return TRUE;
+
+failed:
+  GST_ERROR_OBJECT (caps, "Failed to get video info fom caps");
+  return FALSE;
+}
+
+#ifndef _WIN32
+GstCaps *
+gst_msdkcaps_video_info_to_drm_caps (GstVideoInfo * info, guint64 modifier)
+{
+  GstVideoInfoDmaDrm drm_info;
+
+  gst_video_info_dma_drm_init (&drm_info);
+  drm_info.vinfo = *info;
+  drm_info.drm_fourcc =
+      gst_va_drm_fourcc_from_video_format (GST_VIDEO_INFO_FORMAT (info));
+  drm_info.drm_modifier = modifier;
+
+  return gst_video_info_dma_drm_to_caps (&drm_info);
+}
+
+guint64
+get_msdkcaps_get_modifier (const GstCaps * caps)
+{
+  guint64 modifier = DRM_FORMAT_MOD_INVALID;
+  guint size = gst_caps_get_size (caps);
+
+  for (guint i = 0; i < size; i++) {
+    GstCapsFeatures *f = gst_caps_get_features (caps, i);
+
+    if (gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+      GstStructure *s = gst_caps_get_structure (caps, i);
+      const GValue *drm_fmts = gst_structure_get_value (s, "drm-format");
+      const gchar *drm_str = NULL;
+
+      if (!drm_fmts)
+        continue;
+
+      if (G_VALUE_HOLDS_STRING (drm_fmts))
+        drm_str = g_value_get_string (drm_fmts);
+      else if (GST_VALUE_HOLDS_LIST (drm_fmts)) {
+        const GValue *val = gst_value_list_get_value (drm_fmts, 0);
+        drm_str = g_value_get_string (val);
+      }
+
+      gst_video_dma_drm_fourcc_from_string (drm_str, &modifier);
+    }
+  }
+
+  GST_DEBUG ("got modifier: 0x%016lx", modifier);
+
+  return modifier;
+}
+#endif
