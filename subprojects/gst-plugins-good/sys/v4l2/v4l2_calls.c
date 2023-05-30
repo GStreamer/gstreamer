@@ -307,6 +307,10 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       } else {
         GST_WARNING_OBJECT (e, "Failed querying control %d on device '%s'. "
             "(%d - %s)", n, v4l2object->videodev, errno, strerror (errno));
+        if (n > (V4L2_CID_PRIVATE_BASE + V4L2_CID_MAX_CTRLS)) {
+          GST_DEBUG_OBJECT (e, "Finish control by reaching V4L2_CID_MAX_CTRLS");
+          break;
+        }
         continue;
       }
     }
