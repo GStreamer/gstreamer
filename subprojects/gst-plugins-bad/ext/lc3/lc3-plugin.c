@@ -24,6 +24,11 @@
 #include "gstlc3dec.h"
 #include "gstlc3enc.h"
 
+/**
+ * plugin-lc3:
+ *
+ * Since: 1.24
+ */
 
 static gboolean
 plugin_init (GstPlugin * plugin)

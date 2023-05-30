@@ -22,8 +22,7 @@
  *
  * The lc3dec decodes LC3 data into raw audio.
  *
- * <refsect2>
- * <title>Example launch line</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 -v filesrc location=encoded.lc3 blocksize=200 ! \
  *   audio/x-lc3,frame-bytes=100,frame-duration-us=10000,channels=2,rate=48000,channel-mask=\(bitmask\)0x00000000000000003 !\
@@ -31,7 +30,8 @@
  * ]|
  *
  * Decodes the LC3 frames each with 100 bytes of size, converts it to raw audio and saves into a .wav file
- * </refsect2>
+ *
+ * Since: 1.24
  */
 
 #ifdef HAVE_CONFIG_H
@@ -158,14 +158,14 @@ gst_lc3_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   GST_DEBUG_OBJECT (lc3_dec, "input caps %" GST_PTR_FORMAT, caps);
 
   s = gst_caps_get_structure (caps, 0);
-  if (FALSE == gst_structure_get_int (s, "frame-duration-us",
+  if (!gst_structure_get_int (s, "frame-duration-us",
           &lc3_dec->frame_duration_us)) {
     GST_ERROR_OBJECT (lc3_dec,
         "sink caps does not contain 'frame-duration-us'");
     return FALSE;
   }
 
-  if (FALSE == gst_structure_get_int (s, "frame-bytes", &lc3_dec->frame_bytes)) {
+  if (!gst_structure_get_int (s, "frame-bytes", &lc3_dec->frame_bytes)) {
     GST_ERROR_OBJECT (lc3_dec, "sink caps does not contain 'frame-bytes'");
     return FALSE;
   }
@@ -182,7 +182,6 @@ gst_lc3_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   gst_audio_channel_positions_from_mask (in_ch, in_chmsk, pos);
   gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16LE, in_rate, in_ch,
       pos);
-
 
   /* get rate, format, channels from the output caps */
   lc3_dec->rate = GST_AUDIO_INFO_RATE (&info);
@@ -232,10 +231,8 @@ gst_lc3_dec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   lc3_dec->dec_ch = g_new0 (lc3_decoder_t, lc3_dec->channels);
 
   for (guint8 i = 0; i < lc3_dec->channels; i++) {
-    /* The decoder can resample for us.
-     * But we leave the resampling to before
-     * decoding explicitly for now. So pass the same
-     * sample rate for sr_hz and sr_pcm_hz
+    /* The decoder can resample for us. But we leave the resampling to before decoding
+     * explicitly for now. So pass the same sample rate for sr_hz and sr_pcm_hz
      */
     lc3_dec->dec_ch[i] =
         lc3_setup_decoder (lc3_dec->frame_duration_us, lc3_dec->rate,
@@ -271,8 +268,11 @@ gst_lc3_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
 
   gst_buffer_map (inbuf, &in_map, GST_MAP_READ);
 
-  if (G_UNLIKELY (in_map.size == 0 && !do_plc))
+  if (G_UNLIKELY (in_map.size == 0 && !do_plc)) {
+    GST_ERROR_OBJECT (lc3_dec,
+        "PLC handled by the base class, should not get a zero sized buffer");
     return GST_FLOW_ERROR;
+  }
 
   GST_LOG_OBJECT (lc3_dec, "received %lu bytes ", in_map.size);
 
@@ -282,7 +282,8 @@ gst_lc3_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     goto mixed_frames;
 
   output_size = lc3_dec->frame_samples * lc3_dec->bpf;
-  GST_LOG_OBJECT (lc3_dec, "allocating %lu bytes to output buff", output_size);
+  GST_LOG_OBJECT (lc3_dec, "allocating %lu bytes to output buffer",
+      output_size);
   outbuf = gst_audio_decoder_allocate_output_buffer (decoder, output_size);
 
   if (outbuf == NULL)
@@ -294,10 +295,8 @@ gst_lc3_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     gint ret = 0;
     void *in = in_map.data ? in_map.data + (c * lc3_dec->frame_bytes) : NULL;
     ret =
-        lc3_decode (lc3_dec->dec_ch[c],
-        in, lc3_dec->frame_bytes,
-        lc3_dec->format,
-        out_map.data + (c * lc3_dec->bpf / lc3_dec->channels),
+        lc3_decode (lc3_dec->dec_ch[c], in, lc3_dec->frame_bytes,
+        lc3_dec->format, out_map.data + (c * lc3_dec->bpf / lc3_dec->channels),
         lc3_dec->channels);
 
     if (ret < 0) {
@@ -307,7 +306,6 @@ gst_lc3_dec_handle_frame (GstAudioDecoder * decoder, GstBuffer * inbuf)
     } else if (ret == 1) {
       GST_INFO_OBJECT (lc3_dec, "PLC operated for channel: %d", c + 1);
     }
-
   }
 
   audio_meta = gst_buffer_get_audio_clipping_meta (inbuf);

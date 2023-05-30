@@ -38,7 +38,6 @@ struct _GstLc3Dec
   gint frame_bytes;
   gint frame_samples;
   enum lc3_pcm_format format;
-  int bitrate;
   /* bytes per sample */
   gint bpf;
 };

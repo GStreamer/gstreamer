@@ -23,20 +23,18 @@
  * The lc3enc element encodes raw audio using the Low Complexity Communication
  * Codec (LC3).
  *
- * <refsect2>
- * <title>Example launch pipeline</title>
+ * ## Example pipeline
  * |[
  * gst-launch-1.0 audiotestsrc ! lc3enc ! audio/x-lc3,channels=2,rate=48000,frame-duration-us=10000 !\
  *  filesink location=audio.lc3
  * ]|
+ *
  * Encodes a sine wave into LC3 format using the config params frame-duration-us
  * specified by the caps downstream and save it to file audio.lc3
- * </refsect2>
+ *
+ * Since: 1.24
  */
 
-#include "gst/gstbuffer.h"
-#include "gst/gstevent.h"
-#include "gst/gstpad.h"
 #include <stdlib.h>
 #ifdef HAVE_CONFIG_H
 #include "config.h"

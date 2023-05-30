@@ -150,6 +150,7 @@ if host_machine.system() != 'windows'
     [['elements/x265enc.c'], not x265_dep.found(), [x265_dep]],
     [['elements/zbar.c'], not zbar_dep.found(), [zbar_dep]],
     [['elements/zxing.c'], not zxing_dep.found(), [zxing_dep]],
+    [['elements/lc3.c'], not lc3_dep.found(), [lc3_dep]],
   ]
 endif
 
