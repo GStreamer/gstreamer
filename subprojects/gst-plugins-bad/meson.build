@@ -471,11 +471,6 @@ else
 endif
 cdata.set('GST_ENABLE_EXTRA_CHECKS', not get_option('extra-checks').disabled())
 
-gnustl_dep = declare_dependency()
-if host_system == 'android'
-  gnustl_dep = dependency('gnustl', required : false)
-endif
-
 # Disable compiler warnings for unused variables and args if gst debug system is disabled
 if gst_dep.type_name() == 'internal'
   gst_debug_disabled = not subproject('gstreamer').get_variable('gst_debug')

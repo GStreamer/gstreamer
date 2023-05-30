@@ -9,10 +9,6 @@ if get_option('soundtouch').disabled()
   subdir_done()
 endif
 
-if not gnustl_dep.found() and get_option('soundtouch').enabled()
-  error('soundtouch plugin enabled but could not find gnustl dep for Android c++ support')
-endif
-
 soundtouch_dep = dependency('soundtouch', required : false)
 if soundtouch_dep.found()
   soundtouch_cargs += ['-DHAVE_SOUNDTOUCH_1_4']
@@ -36,7 +32,7 @@ if soundtouch_dep.found()
     c_args : gst_plugins_bad_args + soundtouch_cargs,
     cpp_args : gst_plugins_bad_args + soundtouch_cargs,
     include_directories : [configinc],
-    dependencies : [gstaudio_dep, soundtouch_dep, gnustl_dep],
+    dependencies : [gstaudio_dep, soundtouch_dep],
     install : true,
     install_dir : plugins_install_dir)
   plugins += [gstsoundtouch]

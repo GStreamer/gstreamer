@@ -135,9 +135,6 @@ if host_system == 'android'
       optional_deps += [qt5androidextras, glesv2_dep]
       qt_defines += ['-DHAVE_QT_ANDROID']
       have_qt_windowing = true
-      # Needed for C++11 support in Cerbero. People building with Android
-      # in some other way need to add the necessary bits themselves.
-      optional_deps += dependency('gnustl', required : false)
     endif
   endif
 endif
