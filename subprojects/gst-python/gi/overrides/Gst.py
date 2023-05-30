@@ -760,6 +760,23 @@ for cname_klass in [o for o in inspect.getmembers(Gst) if isinstance(o[1], type(
                           for o in cname_klass[1].__dict__
                           if isinstance(cname_klass[1].__dict__[o], type(Gst.init))]))
 
+pre_init_functions = set([
+    "init",
+    "init_check",
+    "deinit",
+    "is_initialized",
+    "debug_add_log_function",
+    "debug_add_ring_buffer_logger",
+    "debug_remove_log_function",
+    "debug_remove_log_function_by_data",
+    "debug_remove_ring_buffer_logger",
+    "debug_set_active",
+    "debug_set_color_mode",
+    "debug_set_color_mode_from_string",
+    "debug_set_colored",
+    "debug_set_default_threshold",
+])
+
 
 def init_pygst():
     for fname, function in real_functions:
@@ -773,7 +790,7 @@ def init_pygst():
 
 def deinit_pygst():
     for fname, func in real_functions:
-        if fname not in ["init", "init_check", "deinit", "is_initialized"]:
+        if fname not in pre_init_functions:
             setattr(Gst, fname, fake_method)
     for cname_class, methods in class_methods:
         for mname, method in methods:
