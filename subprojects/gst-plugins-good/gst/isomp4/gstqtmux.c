@@ -6087,9 +6087,9 @@ gst_qt_mux_audio_sink_set_caps (GstQTMuxPad * qtpad, GstCaps * caps)
   } else if (strcmp (mimetype, "audio/x-ac3") == 0) {
     entry.fourcc = FOURCC_ac_3;
 
-    /* Fixed values according to TS 102 366 but it also mentions that
-     * they should be ignored */
-    entry.channels = 2;
+    /* TS 102 366 mentions that these fields should be ignored,
+     * but be friendly and fill in the channel count like FFmpeg does */
+    entry.channels = channels;
     entry.sample_size = 16;
 
     /* AC-3 needs an extension atom but its data can only be obtained from

@@ -13205,6 +13205,16 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           entry->bytes_per_packet = entry->bytes_per_sample;
           break;
         }
+
+          /* According to TS 102 366, the channel count in
+           * a (E)AC3SampleEntry box is to be ignored */
+        case 0x20736d:
+        case GST_MAKE_FOURCC ('e', 'c', '-', '3'):
+        case GST_MAKE_FOURCC ('s', 'a', 'c', '3'):     // Nero Recode
+        case FOURCC_ac_3:
+          entry->n_channels = 0;
+          break;
+
         default:
           break;
       }
