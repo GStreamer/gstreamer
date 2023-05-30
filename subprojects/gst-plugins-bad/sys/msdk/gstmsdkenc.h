@@ -142,6 +142,7 @@ struct _GstMsdkEnc
   gboolean use_va;
   gboolean use_d3d11;
   gboolean initialized;
+  guint64 modifier;
 
   /* element properties */
   gboolean hardware;
