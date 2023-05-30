@@ -50,7 +50,16 @@
 #  define FREE_COM_STRING(s) G_STMT_START { delete[] s; } G_STMT_END
 #  define CONVERT_TO_COM_STRING(s) G_STMT_START { char * _s = (char *)s; s = _com_util::ConvertStringToBSTR(_s); g_free(_s); } G_STMT_END
 # endif /* __MINGW32__ */
-#else
+#elif defined(__APPLE__)
+
+#include <CoreFoundation/CoreFoundation.h>
+
+#define COMSTR_T CFStringRef
+#define CONVERT_COM_STRING(s) G_STMT_START { CFStringRef _s = (CFStringRef)s; s = (char*) malloc(100); CFStringGetCString(_s, s, 100, kCFStringEncodingUTF8); CFRelease(_s); } G_STMT_END
+#define FREE_COM_STRING(s) free(s);
+#define CONVERT_TO_COM_STRING(s) G_STMT_START { char * _s = (char *)s; s = CFStringCreateWithCString(kCFAllocatorDefault, _s, kCFStringEncodingUTF8); g_free(_s); } G_STMT_END
+#define WINAPI
+#else /* Linux */
 #define COMSTR_T const char*
 #define CONVERT_COM_STRING(s)
 #define CONVERT_TO_COM_STRING(s)
