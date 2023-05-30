@@ -10,7 +10,7 @@ gstpython = python.extension_module('_gi_gst',
     install_dir : pygi_override_dir,
     install_tag: 'python-runtime',
     include_directories : [configinc],
-    dependencies : [gst_dep, python_dep, pygobject_dep])
+    dependencies : [gst_dep.partial_dependency(compile_args: true, includes: true, sources: true), python_dep, pygobject_dep])
 
 env = environment()
 env.prepend('_GI_OVERRIDES_PATH', [
