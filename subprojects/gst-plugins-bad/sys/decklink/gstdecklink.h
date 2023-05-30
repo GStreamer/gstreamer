@@ -63,7 +63,8 @@
 #define COMSTR_T const char*
 #define CONVERT_COM_STRING(s)
 #define CONVERT_TO_COM_STRING(s)
-#define FREE_COM_STRING(s)
+/* While this is a const char*, the string still has to be freed */
+#define FREE_COM_STRING(s) free(s);
 #define WINAPI
 #endif /* G_OS_WIN32 */
 
