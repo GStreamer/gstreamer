@@ -311,7 +311,9 @@ GST_END_TEST
 static Suite *
 gl_launch_lines_suite (void)
 {
+#if GST_GL_HAVE_OPENGL
   gboolean have_gldifferencematte;
+#endif
   gboolean have_gloverlay;
 
   Suite *s = suite_create ("OpenGL pipelines");
@@ -320,10 +322,11 @@ gl_launch_lines_suite (void)
   /* time out after 60s, not the default 3 */
   tcase_set_timeout (tc_chain, 60);
 
+#if GST_GL_HAVE_OPENGL
   have_gldifferencematte =
       gst_registry_check_feature_version (gst_registry_get (),
       "gldifferencematte", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
-
+#endif
   have_gloverlay =
       gst_registry_check_feature_version (gst_registry_get (),
       "gloverlay", GST_VERSION_MAJOR, GST_VERSION_MINOR, 0);
