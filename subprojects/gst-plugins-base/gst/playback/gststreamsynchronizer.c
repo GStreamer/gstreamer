@@ -388,6 +388,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       GST_STREAM_SYNCHRONIZER_LOCK (self);
       self->have_group_id &= have_group_id;
       have_group_id = self->have_group_id;
+      self->eos = FALSE;
 
       stream = gst_streamsync_pad_get_stream (pad);
 
