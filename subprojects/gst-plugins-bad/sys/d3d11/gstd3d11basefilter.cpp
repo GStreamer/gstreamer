@@ -26,6 +26,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_base_filter_debug);
 #define GST_CAT_DEFAULT gst_d3d11_base_filter_debug
 
+#define META_TAG_VIDEO meta_tag_video_quark
+static GQuark meta_tag_video_quark;
+
 enum
 {
   PROP_0,
@@ -57,6 +60,8 @@ gst_d3d11_base_filter_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
 static void gst_d3d11_base_filter_before_transform (GstBaseTransform * trans,
     GstBuffer * buffer);
+static gboolean gst_d3d11_base_filter_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
 static void
 gst_d3d11_base_filter_class_init (GstD3D11BaseFilterClass * klass)
@@ -96,9 +101,12 @@ gst_d3d11_base_filter_class_init (GstD3D11BaseFilterClass * klass)
   trans_class->query = GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_query);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_before_transform);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_d3d11_base_filter_transform_meta);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D11_BASE_FILTER,
       (GstPluginAPIFlags) 0);
+  meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 }
 
 static void
@@ -340,4 +348,22 @@ out:
   gst_clear_caps (&out_caps);
 
   return;
+}
+
+static gboolean
+gst_d3d11_base_filter_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (!tags || (g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO))) {
+    return TRUE;
+  }
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
+      meta, inbuf);
 }
