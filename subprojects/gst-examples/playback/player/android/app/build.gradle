@@ -45,6 +45,7 @@ android {
             path 'src/main/jni/Android.mk'
         }
     }
+    ndkVersion '25.2.9519653'
 }
 
 afterEvaluate {
