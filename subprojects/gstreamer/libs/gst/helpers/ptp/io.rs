@@ -696,7 +696,17 @@ mod imp {
                         if res == 0 { "event" } else { "general" },
                     );
                 }
-                assert!(networkevents.lnetworkevents & FD_READ != 0);
+
+                // FIXME: This seems to happen every now and then although it shouldn't, and in
+                // that case a packet always seems to be queued up on the socket. As the sockets
+                // are non-blocking it also wouldn't be a problem otherwise, so let's just log this
+                // here and ignore it.
+                if networkevents.lnetworkevents & FD_READ == 0 {
+                    debug!(
+                        "Socket {} woke up but has neither an error nor a FD_READ event",
+                        res
+                    );
+                }
             }
 
             Ok(PollResult {
