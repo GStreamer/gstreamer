@@ -124,7 +124,6 @@ gst_video_scale_class_init (GstVideoScaleClass * klass)
       "Video scaler", "Filter/Converter/Video/Scaler",
       "Resizes video", "Wim Taymans <wim.taymans@gmail.com>");
 
-  convertscale_class->any_memory = TRUE;
   convertscale_class->converts = FALSE;
   convertscale_class->scales = TRUE;
 }
