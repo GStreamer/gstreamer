@@ -581,12 +581,19 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       GstSyncStream *stream;
       GList *l;
       GstClockTime new_group_start_time = 0;
+      gboolean reset_time;
+
+      gst_event_parse_flush_stop (event, &reset_time);
 
       GST_STREAM_SYNCHRONIZER_LOCK (self);
+
       stream = gst_streamsync_pad_get_stream (pad);
-      GST_DEBUG_OBJECT (pad, "Resetting segment for stream %d",
-          stream->stream_number);
-      gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
+
+      if (reset_time) {
+        GST_DEBUG_OBJECT (pad, "Resetting segment for stream %d",
+            stream->stream_number);
+        gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
+      }
 
       stream->is_eos = FALSE;
       stream->eos_sent = FALSE;
@@ -594,32 +601,35 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       stream->wait = FALSE;
       g_cond_broadcast (&stream->stream_finish_cond);
 
-      for (l = self->streams; l; l = l->next) {
-        GstSyncStream *ostream = l->data;
-        GstClockTime start_running_time;
+      if (reset_time) {
+        for (l = self->streams; l; l = l->next) {
+          GstSyncStream *ostream = l->data;
+          GstClockTime start_running_time;
 
-        if (ostream == stream || ostream->flushing)
-          continue;
+          if (ostream == stream || ostream->flushing)
+            continue;
 
-        if (ostream->segment.format == GST_FORMAT_TIME) {
-          if (ostream->segment.rate > 0)
-            start_running_time =
-                gst_segment_to_running_time (&ostream->segment,
-                GST_FORMAT_TIME, ostream->segment.start);
-          else
-            start_running_time =
-                gst_segment_to_running_time (&ostream->segment,
-                GST_FORMAT_TIME, ostream->segment.stop);
+          if (ostream->segment.format == GST_FORMAT_TIME) {
+            if (ostream->segment.rate > 0)
+              start_running_time =
+                  gst_segment_to_running_time (&ostream->segment,
+                  GST_FORMAT_TIME, ostream->segment.start);
+            else
+              start_running_time =
+                  gst_segment_to_running_time (&ostream->segment,
+                  GST_FORMAT_TIME, ostream->segment.stop);
 
-          new_group_start_time = MAX (new_group_start_time, start_running_time);
+            new_group_start_time =
+                MAX (new_group_start_time, start_running_time);
+          }
         }
-      }
 
-      GST_DEBUG_OBJECT (pad,
-          "Updating group start time from %" GST_TIME_FORMAT " to %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (self->group_start_time),
-          GST_TIME_ARGS (new_group_start_time));
-      self->group_start_time = new_group_start_time;
+        GST_DEBUG_OBJECT (pad,
+            "Updating group start time from %" GST_TIME_FORMAT " to %"
+            GST_TIME_FORMAT, GST_TIME_ARGS (self->group_start_time),
+            GST_TIME_ARGS (new_group_start_time));
+        self->group_start_time = new_group_start_time;
+      }
 
       gst_syncstream_unref (stream);
       GST_STREAM_SYNCHRONIZER_UNLOCK (self);
