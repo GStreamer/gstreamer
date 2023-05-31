@@ -383,6 +383,7 @@ start_pipeline (WebRTC * webrtc)
   GstStateChangeReturn ret;
   GError *error = NULL;
   GstPad *pad;
+  GstBus *bus;
 
   webrtc->pipe =
       gst_parse_launch ("webrtcbin name=sendrecv "
