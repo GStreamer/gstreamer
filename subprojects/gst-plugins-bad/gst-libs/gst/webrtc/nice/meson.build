@@ -22,6 +22,9 @@ deps = [gstwebrtc_dep, libnice_dep]
 if libnice_dep.found()
   libnice_version = libnice_dep.version()
   libnice_c_args = []
+  if libnice_version.version_compare('> 0.1.21.1')
+    libnice_c_args += '-DHAVE_LIBNICE_CONSENT_FIX'
+  endif
   libgstwebrtcnice = library('gstwebrtcnice-' + api_version,
     libgstwebrtcnice_sources, libgstwebrtcnice_headers,
     c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API', '-DBUILDING_GST_WEBRTCNICE', '-DG_LOG_DOMAIN="GStreamer-webrtcnice"'] + libnice_c_args,
