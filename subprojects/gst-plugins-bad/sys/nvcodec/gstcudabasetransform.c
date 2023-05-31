@@ -34,6 +34,10 @@
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_base_transform_debug);
 #define GST_CAT_DEFAULT gst_cuda_base_transform_debug
 
+/* cached quark to avoid contention on the global quark table lock */
+#define META_TAG_VIDEO meta_tag_video_quark
+static GQuark meta_tag_video_quark;
+
 enum
 {
   PROP_0,
@@ -63,6 +67,9 @@ static gboolean gst_cuda_base_transform_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
 static void gst_cuda_base_transform_before_transform (GstBaseTransform * trans,
     GstBuffer * buffer);
+static gboolean
+gst_cuda_base_transform_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf);
 
 static void
 gst_cuda_base_transform_class_init (GstCudaBaseTransformClass * klass)
@@ -100,11 +107,14 @@ gst_cuda_base_transform_class_init (GstCudaBaseTransformClass * klass)
   trans_class->query = GST_DEBUG_FUNCPTR (gst_cuda_base_transform_query);
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_cuda_base_transform_before_transform);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_cuda_base_transform_transform_meta);
 
   GST_DEBUG_CATEGORY_INIT (gst_cuda_base_transform_debug,
       "cudabasefilter", 0, "cudabasefilter Element");
 
   gst_type_mark_as_plugin_api (GST_TYPE_CUDA_BASE_TRANSFORM, 0);
+  meta_tag_video_quark = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
 }
 
 static void
@@ -345,4 +355,21 @@ out:
   gst_clear_caps (&out_caps);
 
   return;
+}
+
+static gboolean
+gst_cuda_base_transform_transform_meta (GstBaseTransform * trans,
+    GstBuffer * outbuf, GstMeta * meta, GstBuffer * inbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (!tags || (g_strv_length ((gchar **) tags) == 1
+          && gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO)))
+    return TRUE;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, outbuf,
+      meta, inbuf);
 }
