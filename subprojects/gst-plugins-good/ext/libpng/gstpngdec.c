@@ -250,7 +250,7 @@ gst_pngdec_caps_create_and_set (GstPngDec * pngdec)
 
   /* Add alpha channel if 16-bit depth, but not for GRAY images */
   if ((bpc > 8) && (color_type != PNG_COLOR_TYPE_GRAY)) {
-    png_set_add_alpha (pngdec->png, 0xffff, PNG_FILLER_BEFORE);
+    png_set_add_alpha (pngdec->png, 0xffff, PNG_FILLER_AFTER);
     png_set_swap (pngdec->png);
   }
 #if 0
