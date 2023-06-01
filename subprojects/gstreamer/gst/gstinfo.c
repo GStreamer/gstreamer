@@ -2387,8 +2387,8 @@ parse_debug_level (gchar * str, GstDebugLevel * level)
  * %FALSE if adding the threshold described by @list to the one already set.
  *
  * Sets the debug logging wanted in the same form as with the GST_DEBUG
- * environment variable. You can use wildcards such as '*', but note that
- * the order matters when you use wild cards, e.g. "foosrc:6,*src:3,*:2" sets
+ * environment variable. You can use wildcards such as `*`, but note that
+ * the order matters when you use wild cards, e.g. `foosrc:6,*src:3,*:2` sets
  * everything to log level 2.
  *
  * Since: 1.2
