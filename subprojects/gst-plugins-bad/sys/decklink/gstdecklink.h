@@ -51,16 +51,20 @@
 
 #define COMSTR_T CFStringRef
 #define CONVERT_COM_STRING(s) G_STMT_START { \
-        CFStringRef _s = (CFStringRef)s; \
-        CFIndex _length; \
-        CFStringGetBytes(_s, CFRangeMake(0, CFStringGetLength(_s)), kCFStringEncodingUTF8, 0, FALSE, NULL, 0, &_length); \
-        _length += 1; \
-        s = (char *) malloc(_length); \
-        CFStringGetCString(_s, s, _length, kCFStringEncodingUTF8); \
-        CFRelease(_s); \
-    } G_STMT_END
+  CFStringRef _s = (CFStringRef)s; \
+  CFIndex _length; \
+  CFStringGetBytes(_s, CFRangeMake(0, CFStringGetLength(_s)), kCFStringEncodingUTF8, 0, FALSE, NULL, 0, &_length); \
+  _length += 1; \
+  s = (char *) malloc(_length); \
+  CFStringGetCString(_s, s, _length, kCFStringEncodingUTF8); \
+  CFRelease(_s); \
+} G_STMT_END
 #define FREE_COM_STRING(s) free(s);
-#define CONVERT_TO_COM_STRING(s) G_STMT_START { char * _s = (char *)s; s = CFStringCreateWithCString(kCFAllocatorDefault, _s, kCFStringEncodingUTF8); g_free(_s); } G_STMT_END
+#define CONVERT_TO_COM_STRING(s) G_STMT_START { \
+  char * _s = (char *)s; \
+  s = CFStringCreateWithCString(kCFAllocatorDefault, _s, kCFStringEncodingUTF8); \
+  g_free(_s); \
+} G_STMT_END
 #define WINAPI
 #else /* Linux */
 #include "linux/DeckLinkAPI.h"
