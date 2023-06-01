@@ -117,6 +117,63 @@ struct _GstGLUploadPrivate
 G_DEFINE_TYPE_WITH_CODE (GstGLUpload, gst_gl_upload, GST_TYPE_OBJECT,
     G_ADD_PRIVATE (GstGLUpload) DEBUG_INIT);
 
+static gboolean
+filter_features (GstCapsFeatures * features,
+    G_GNUC_UNUSED GstStructure * structure, gpointer user_data)
+{
+  const GstCapsFeatures *user_features = user_data;
+  GQuark feature;
+  guint i, num;
+
+  if (gst_caps_features_is_any (features))
+    return TRUE;
+
+  num = gst_caps_features_get_size (user_features);
+  for (i = 0; i < num; i++) {
+    feature = gst_caps_features_get_nth_id (user_features, i);
+    if (gst_caps_features_contains_id (features, feature))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+_filter_caps_with_features (const GstCaps * caps,
+    const GstCapsFeatures * features, GstCaps ** ret_caps)
+{
+  GstCaps *tmp = NULL;
+  gboolean ret = TRUE;
+
+  if (gst_caps_is_empty (caps))
+    return FALSE;
+
+  if (gst_caps_is_any (caps)) {
+    if (ret_caps) {
+      tmp = gst_caps_new_empty ();
+      gst_caps_set_features_simple (tmp, gst_caps_features_copy (features));
+      *ret_caps = tmp;
+    }
+
+    return TRUE;
+  }
+
+  tmp = gst_caps_copy (caps);
+  gst_caps_filter_and_map_in_place (tmp, filter_features, (gpointer) features);
+
+  if (gst_caps_is_empty (tmp)) {
+    gst_clear_caps (&tmp);
+    ret = FALSE;
+  }
+
+  if (ret_caps)
+    *ret_caps = tmp;
+  else
+    gst_clear_caps (&tmp);
+
+  return ret;
+}
+
 static GstCaps *
 _set_caps_features_with_passthrough (const GstCaps * caps,
     const gchar * feature_name, GstCapsFeatures * passthrough)
