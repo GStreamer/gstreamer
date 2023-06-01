@@ -622,51 +622,6 @@ error_create_surface:
   }
 }
 
-static VASurfaceID
-_get_va_surface (GstBuffer * buf, GstVideoInfo * info,
-    GstMsdkContext * msdk_context)
-{
-  VASurfaceID va_surface = VA_INVALID_ID;
-
-  if (!info) {
-    va_surface = gst_va_buffer_get_surface (buf);
-  } else {
-    /* Update offset/stride/size if there is VideoMeta attached to
-     * the dma buffer, which is then used to get vasurface */
-    GstMemory *mem;
-    gint i, fd;
-    GstVideoMeta *vmeta;
-
-    vmeta = gst_buffer_get_video_meta (buf);
-    if (vmeta) {
-      if (GST_VIDEO_INFO_FORMAT (info) != vmeta->format ||
-          GST_VIDEO_INFO_WIDTH (info) != vmeta->width ||
-          GST_VIDEO_INFO_HEIGHT (info) != vmeta->height ||
-          GST_VIDEO_INFO_N_PLANES (info) != vmeta->n_planes) {
-        GST_ERROR ("VideoMeta attached to buffer is not matching"
-            "the negotiated width/height/format");
-        return va_surface;
-      }
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); ++i) {
-        GST_VIDEO_INFO_PLANE_OFFSET (info, i) = vmeta->offset[i];
-        GST_VIDEO_INFO_PLANE_STRIDE (info, i) = vmeta->stride[i];
-      }
-      GST_VIDEO_INFO_SIZE (info) = gst_buffer_get_size (buf);
-    }
-
-    mem = gst_buffer_peek_memory (buf, 0);
-    fd = gst_dmabuf_memory_get_fd (mem);
-    if (fd < 0)
-      return va_surface;
-    /* export dmabuf to vasurface */
-    if (!gst_msdk_export_dmabuf_to_vasurface (msdk_context, info, fd,
-            &va_surface))
-      return VA_INVALID_ID;
-  }
-
-  return va_surface;
-}
-
 /* Currently parameter map_flag is not useful on Linux */
 GstMsdkSurface *
 gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
@@ -690,13 +645,7 @@ gst_msdk_import_to_msdk_surface (GstBuffer * buf, GstMsdkContext * msdk_context,
     return msdk_surface;
   }
 
-  if (gst_msdk_is_va_mem (mem)) {
-    va_surface = _get_va_surface (buf, NULL, NULL);
-  } else if (gst_is_dmabuf_memory (mem)) {
-    /* For dma memory, videoinfo is used with dma fd to create va surface. */
-    GstVideoInfo info = *vinfo;
-    va_surface = _get_va_surface (buf, &info, msdk_context);
-  }
+  va_surface = gst_va_buffer_get_surface (buf);
 
   if (va_surface == VA_INVALID_ID) {
     g_slice_free (GstMsdkSurface, msdk_surface);
