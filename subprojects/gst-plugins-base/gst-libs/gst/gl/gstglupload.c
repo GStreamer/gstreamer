@@ -1601,7 +1601,7 @@ _dma_buf_upload_free (gpointer impl)
 
 static const UploadMethod _dma_buf_upload = {
   "Dmabuf",
-  METHOD_FLAG_CAN_ACCEPT_RAW,
+  0,
   &_dma_buf_upload_caps,
   &_dma_buf_upload_new,
   &_dma_buf_upload_transform_caps,
@@ -1746,7 +1746,7 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
 
 static const UploadMethod _direct_dma_buf_upload = {
   "DirectDmabuf",
-  METHOD_FLAG_CAN_ACCEPT_RAW,
+  0,
   &_dma_buf_upload_caps,
   &_direct_dma_buf_upload_new,
   &_direct_dma_buf_upload_transform_caps,
@@ -1768,7 +1768,7 @@ _direct_dma_buf_external_upload_new (GstGLUpload * upload)
 
 static const UploadMethod _direct_dma_buf_external_upload = {
   "DirectDmabufExternal",
-  METHOD_FLAG_CAN_ACCEPT_RAW,
+  0,
   &_dma_buf_upload_caps,
   &_direct_dma_buf_external_upload_new,
   &_direct_dma_buf_upload_transform_caps,
