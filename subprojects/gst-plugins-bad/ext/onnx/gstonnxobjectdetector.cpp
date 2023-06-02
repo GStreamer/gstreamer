@@ -643,9 +643,15 @@ gst_onnx_object_detector_process (GstBaseTransform * trans, GstBuffer * buf)
   }
   if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
     GstOnnxObjectDetector *self = GST_ONNX_OBJECT_DETECTOR (trans);
-    auto boxes = GST_ONNX_MEMBER (self)->run (info.data, vmeta,
-        self->label_file ? self->label_file : "",
-        self->score_threshold);
+    std::vector < GstOnnxNamespace::GstMlBoundingBox > boxes;
+    try {
+      boxes = GST_ONNX_MEMBER (self)->run (info.data, vmeta,
+          self->label_file ? self->label_file : "", self->score_threshold);
+    }
+    catch (Ort::Exception & ortex) {
+      GST_ERROR_OBJECT (self, "%s", ortex.what ());
+      return FALSE;
+    }
   for (auto & b:boxes) {
       auto vroi_meta = gst_buffer_add_video_region_of_interest_meta (buf,
           GST_ONNX_OBJECT_DETECTOR_META_NAME,
