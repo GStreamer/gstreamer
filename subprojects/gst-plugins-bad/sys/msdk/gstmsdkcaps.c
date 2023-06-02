@@ -224,6 +224,38 @@ _get_media_type (guint codec)
 }
 
 #ifndef _WIN32
+/* For RGB cases, the byte orders are different between vaImageFormat (LSB) and
+ * GStreamer video format (MSB). This function corrects the mapping between
+ * different order manners.
+ */
+static void
+_fix_map (GstMsdkContext * context)
+{
+  GstVaDisplay *display = NULL;
+  VAImageFormat *va_formats;
+  VADisplay dpy;
+  VAStatus status;
+  int max, num = 0;
+
+  display = (GstVaDisplay *) gst_msdk_context_get_va_display (context);
+  dpy = gst_va_display_get_va_dpy (display);
+  gst_object_unref (display);
+
+  max = vaMaxNumImageFormats (dpy);
+  if (max == 0)
+    return;
+
+  va_formats = g_new (VAImageFormat, max);
+  status = vaQueryImageFormats (dpy, va_formats, &num);
+  gst_va_video_format_fix_map (va_formats, num);
+
+  if (status != VA_STATUS_SUCCESS)
+    GST_WARNING ("vaQueryImageFormats: %s", vaErrorStr (status));
+
+  g_free (va_formats);
+  return;
+}
+
 static gboolean
 _dma_fmt_to_dma_drm_fmts (GstMsdkContext * context,
     GstMsdkContextJobType job_type,
@@ -244,6 +276,8 @@ _dma_fmt_to_dma_drm_fmts (GstMsdkContext * context,
   fmt = gst_video_format_from_string (fmt_str);
 
   g_return_val_if_fail (fmt != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+
+  _fix_map (context);
 
   drm_fourcc = gst_va_drm_fourcc_from_video_format (fmt);
   if (drm_fourcc == DRM_FORMAT_INVALID)
