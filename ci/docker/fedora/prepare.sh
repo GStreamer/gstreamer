@@ -220,8 +220,8 @@ rpm -i --reinstall *.rpm
 rm -f *.rpm
 
 # Install Rust
-RUSTUP_VERSION=1.25.2
-RUST_VERSION=1.69.0
+RUSTUP_VERSION=1.26.0
+RUST_VERSION=1.70.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 dnf install -y wget
@@ -238,7 +238,7 @@ chmod +x rustup-init;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-cargo install cargo-c --version 0.9.17+cargo-0.69
+cargo install cargo-c --version 0.9.20+cargo-0.71
 rustup --version
 cargo --version
 rustc --version
