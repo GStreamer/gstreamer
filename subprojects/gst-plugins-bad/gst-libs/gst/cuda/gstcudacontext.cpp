@@ -51,6 +51,8 @@ enum
   PROP_0,
   PROP_DEVICE_ID,
   PROP_DXGI_ADAPTER_LUID,
+  PROP_VIRTUAL_MEMORY,
+  PROP_OS_HANDLE,
 };
 
 struct _GstCudaContextPrivate
@@ -59,6 +61,8 @@ struct _GstCudaContextPrivate
   CUdevice device;
   guint device_id;
   gint64 dxgi_adapter_luid;
+  gboolean virtual_memory_supported;
+  gboolean os_handle_supported;
 
   gint tex_align;
 
@@ -111,6 +115,30 @@ gst_cuda_context_class_init (GstCudaContextClass * klass)
               G_PARAM_STATIC_STRINGS)));
 #endif
 
+  /**
+   * GstCudaContext:virtual-memory:
+   *
+   * Virtual memory management supportability
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_VIRTUAL_MEMORY,
+      g_param_spec_boolean ("virtual-memory", "Virtual Memory",
+          "Whether virtual memory management is supporte or not", FALSE,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstCudaContext:os-handle:
+   *
+   * OS handle supportability in virtual memory management
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_OS_HANDLE,
+      g_param_spec_boolean ("os-handle", "OS Handle",
+          "Whether OS specific handle is supported via virtual memory", FALSE,
+          (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
+
   gst_cuda_memory_init_once ();
 }
 
@@ -155,6 +183,12 @@ gst_cuda_context_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DXGI_ADAPTER_LUID:
       g_value_set_int64 (value, priv->dxgi_adapter_luid);
+      break;
+    case PROP_VIRTUAL_MEMORY:
+      g_value_set_boolean (value, priv->virtual_memory_supported);
+      break;
+    case PROP_OS_HANDLE:
+      g_value_set_boolean (value, priv->os_handle_supported);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -515,7 +549,6 @@ gst_cuda_context_can_access_peer (GstCudaContext * ctx, GstCudaContext * peer)
   return ret;
 }
 
-
 /**
  * gst_cuda_context_new_wrapped:
  * @handler: A
@@ -566,6 +599,25 @@ gst_cuda_context_new_wrapped (CUcontext handler, CUdevice device)
       gst_cuda_context_find_dxgi_adapter_luid (self->priv->device);
 #endif
 
+  if (gst_cuda_virtual_memory_symbol_loaded ()) {
+    CUresult ret;
+    int supported = 0;
+    ret = CuDeviceGetAttribute (&supported,
+        CU_DEVICE_ATTRIBUTE_VIRTUAL_MEMORY_MANAGEMENT_SUPPORTED, device);
+    if (ret == CUDA_SUCCESS && supported)
+      self->priv->virtual_memory_supported = TRUE;
+
+#ifdef G_OS_WIN32
+    ret = CuDeviceGetAttribute (&supported,
+        CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_WIN32_HANDLE_SUPPORTED, device);
+#else
+    ret = CuDeviceGetAttribute (&supported,
+        CU_DEVICE_ATTRIBUTE_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR_SUPPORTED,
+        device);
+#endif
+    if (ret == CUDA_SUCCESS && supported)
+      self->priv->os_handle_supported = TRUE;
+  }
 
   std::lock_guard < std::mutex > lk (list_lock);
   g_object_weak_ref (G_OBJECT (self),
