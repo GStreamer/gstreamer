@@ -23,6 +23,9 @@
 #endif
 
 #include "gstvavideoformat.h"
+#ifndef G_OS_WIN32
+#include <libdrm/drm_fourcc.h>
+#endif
 
 #define GST_CAT_DEFAULT gst_va_display_debug
 GST_DEBUG_CATEGORY_EXTERN (gst_va_display_debug);
@@ -35,62 +38,73 @@ static struct FormatMap
   GstVideoFormat format;
   guint va_rtformat;
   VAImageFormat va_format;
+  /* The drm fourcc may have different definition from VA */
+  guint drm_fourcc;
 } format_map[] = {
-#define F(format, fourcc, rtformat, order, bpp, depth, r, g, b, a) {      \
+#ifndef G_OS_WIN32
+#define F(format, drm, fourcc, rtformat, order, bpp, depth, r, g, b, a) { \
     G_PASTE (GST_VIDEO_FORMAT_, format),                                \
     G_PASTE (VA_RT_FORMAT_, rtformat),                             \
     { VA_FOURCC fourcc, G_PASTE (G_PASTE (VA_, order), _FIRST),    \
-      bpp, depth, r, g, b, a } }
-#define G(format, fourcc, rtformat, order, bpp) \
-    F (format, fourcc, rtformat, order, bpp, 0, 0, 0 ,0, 0)
-  G (NV12, ('N', 'V', '1', '2'), YUV420, NSB, 12),
-  G (NV21, ('N', 'V', '2', '1'), YUV420, NSB, 21),
-  G (VUYA, ('A', 'Y', 'U', 'V'), YUV444, LSB, 32),
-  F (RGBA, ('R', 'G', 'B', 'A'), RGB32, LSB, 32, 32, 0x000000ff,
+      bpp, depth, r, g, b, a }, G_PASTE (DRM_FORMAT_, drm) }
+#else
+#define F(format, drm, fourcc, rtformat, order, bpp, depth, r, g, b, a) { \
+    G_PASTE (GST_VIDEO_FORMAT_, format),                                \
+    G_PASTE (VA_RT_FORMAT_, rtformat),                             \
+    { VA_FOURCC fourcc, G_PASTE (G_PASTE (VA_, order), _FIRST),    \
+      bpp, depth, r, g, b, a }, 0 /* DRM_FORMAT_INVALID */ }
+#endif
+#define G(format, drm, fourcc, rtformat, order, bpp) \
+    F (format, drm, fourcc, rtformat, order, bpp, 0, 0, 0 ,0, 0)
+  G (NV12, NV12, ('N', 'V', '1', '2'), YUV420, NSB, 12),
+  G (NV21, NV21, ('N', 'V', '2', '1'), YUV420, NSB, 21),
+  G (VUYA, AYUV, ('A', 'Y', 'U', 'V'), YUV444, LSB, 32),
+  F (RGBA, RGBA8888, ('R', 'G', 'B', 'A'), RGB32, LSB, 32, 32, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0xff000000),
-  F (RGBx, ('R', 'G', 'B', 'X'), RGB32, LSB, 32, 24, 0x000000ff,
+  F (RGBx, RGBX8888, ('R', 'G', 'B', 'X'), RGB32, LSB, 32, 24, 0x000000ff,
       0x0000ff00, 0x00ff0000, 0x00000000),
-  F (BGRA, ('B', 'G', 'R', 'A'), RGB32, LSB, 32, 32, 0x00ff0000,
+  F (BGRA, BGRA8888, ('B', 'G', 'R', 'A'), RGB32, LSB, 32, 32, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0xff000000),
-  F (ARGB, ('A', 'R', 'G', 'B'), RGB32, LSB, 32, 32, 0x0000ff00,
+  F (ARGB, ARGB8888, ('A', 'R', 'G', 'B'), RGB32, LSB, 32, 32, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x000000ff),
-  F (xRGB, ('X', 'R', 'G', 'B'), RGB32, LSB, 32, 24, 0x0000ff00,
+  F (xRGB, XRGB8888, ('X', 'R', 'G', 'B'), RGB32, LSB, 32, 24, 0x0000ff00,
       0x00ff0000, 0xff000000, 0x00000000),
-  F (ABGR, ('A', 'B', 'G', 'R'), RGB32, LSB, 32, 32, 0xff000000,
+  F (ABGR, ABGR8888, ('A', 'B', 'G', 'R'), RGB32, LSB, 32, 32, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x000000ff),
-  F (xBGR, ('X', 'B', 'G', 'R'), RGB32, LSB, 32, 24, 0xff000000,
+  F (xBGR, XBGR8888, ('X', 'B', 'G', 'R'), RGB32, LSB, 32, 24, 0xff000000,
       0x00ff0000, 0x0000ff00, 0x00000000),
-  F (BGRx, ('B', 'G', 'R', 'X'), RGB32, LSB, 32, 24, 0x00ff0000,
+  F (BGRx, BGRX8888, ('B', 'G', 'R', 'X'), RGB32, LSB, 32, 24, 0x00ff0000,
       0x0000ff00, 0x000000ff, 0x00000000),
-  G (UYVY, ('U', 'Y', 'V', 'Y'), YUV422, NSB, 16),
-  G (YUY2, ('Y', 'U', 'Y', '2'), YUV422, NSB, 16),
-  G (AYUV, ('A', 'Y', 'U', 'V'), YUV444, LSB, 32),
+  G (UYVY, UYVY, ('U', 'Y', 'V', 'Y'), YUV422, NSB, 16),
+  G (YUY2, YUYV, ('Y', 'U', 'Y', '2'), YUV422, NSB, 16),
+  G (AYUV, AYUV, ('A', 'Y', 'U', 'V'), YUV444, LSB, 32),
   /* F (????, NV11), */
-  G (YV12, ('Y', 'V', '1', '2'), YUV420, NSB, 12),
+  G (YV12, YVU420, ('Y', 'V', '1', '2'), YUV420, NSB, 12),
   /* F (????, P208), */
-  G (I420, ('I', '4', '2', '0'), YUV420, NSB, 12),
+  G (I420, YUV420, ('I', '4', '2', '0'), YUV420, NSB, 12),
   /* F (????, YV24), */
   /* F (????, YV32), */
   /* F (????, Y800), */
   /* F (????, IMC3), */
   /* F (????, 411P), */
   /* F (????, 411R), */
-  G (Y42B, ('4', '2', '2', 'H'), YUV422, LSB, 16),
+  G (Y42B, YUV422, ('4', '2', '2', 'H'), YUV422, LSB, 16),
   /* F (????, 422V), */
   /* F (????, 444P), */
-  G (RGBP, ('R', 'G', 'B', 'P'), RGBP, LSB, 8),
+  /* No RGBP support in drm fourcc */
+  G (RGBP, INVALID, ('R', 'G', 'B', 'P'), RGBP, LSB, 8),
   /* F (????, BGRP), */
   /* F (????, RGB565), */
   /* F (????, BGR565), */
-  G (Y210, ('Y', '2', '1', '0'), YUV422_10, NSB, 32),
+  G (Y210, Y210, ('Y', '2', '1', '0'), YUV422_10, NSB, 32),
   /* F (????, Y216), */
-  G (Y410, ('Y', '4', '1', '0'), YUV444_10, NSB, 32),
-  G (Y212_LE, ('Y', '2', '1', '2'), YUV422_12, NSB, 32),
-  G (Y412_LE, ('Y', '4', '1', '2'), YUV444_12, NSB, 32),
+  G (Y410, Y410, ('Y', '4', '1', '0'), YUV444_10, NSB, 32),
+  G (Y212_LE, Y212, ('Y', '2', '1', '2'), YUV422_12, NSB, 32),
+  G (Y412_LE, Y412, ('Y', '4', '1', '2'), YUV444_12, NSB, 32),
   /* F (????, Y416), */
   /* F (????, YV16), */
-  G (P010_10LE, ('P', '0', '1', '0'), YUV420_10, NSB, 24),
-  G (P012_LE, ('P', '0', '1', '2'), YUV420_12, NSB, 24),
+  G (P010_10LE, P010, ('P', '0', '1', '0'), YUV420_10, NSB, 24),
+  G (P012_LE, P012, ('P', '0', '1', '2'), YUV420_12, NSB, 24),
   /* F (P016_LE, P016, ????), */
   /* F (????, I010), */
   /* F (????, IYUV), */
@@ -98,19 +112,20 @@ static struct FormatMap
   /* F (????, A2B10G10R10), */
   /* F (????, X2R10G10B10), */
   /* F (????, X2B10G10R10), */
-  G (GRAY8, ('Y', '8', '0', '0'), YUV400, NSB, 8),
-  G (Y444, ('4', '4', '4', 'P'), YUV444, NSB, 24),
+  /* No GRAY8 support in drm fourcc */
+  G (GRAY8, INVALID, ('Y', '8', '0', '0'), YUV400, NSB, 8),
+  G (Y444, YUV444, ('4', '4', '4', 'P'), YUV444, NSB, 24),
   /* F (????, Y16), */
   /* G (VYUY, VYUY, YUV422), */
   /* G (YVYU, YVYU, YUV422), */
   /* F (ARGB64, ARGB64, ????), */
   /* F (????, ABGR64), */
-  F (RGB16, ('R', 'G', '1', '6'), RGB16, NSB, 16, 16, 0x0000f800,
+  F (RGB16, RGB565, ('R', 'G', '1', '6'), RGB16, NSB, 16, 16, 0x0000f800,
      0x000007e0, 0x0000001f, 0x00000000),
-  F (RGB, ('R', 'G', '2', '4'), RGB32, NSB, 32, 24, 0x00ff0000,
+  F (RGB, RGB888, ('R', 'G', '2', '4'), RGB32, NSB, 32, 24, 0x00ff0000,
      0x0000ff00, 0x000000ff, 0x00000000),
-  F (BGR10A2_LE, ('A', 'R', '3', '0'), RGB32, LSB, 32, 30, 0x3ff00000,
-     0x000ffc00, 0x000003ff, 0x30000000),
+  F (BGR10A2_LE, ARGB2101010, ('A', 'R', '3', '0'), RGB32, LSB, 32, 30,
+     0x3ff00000, 0x000ffc00, 0x000003ff, 0x30000000),
 #undef F
 #undef G
 };
@@ -118,47 +133,54 @@ static struct FormatMap
 static const struct RBG32FormatMap
 {
   GstVideoFormat format;
+  guint drm_fourcc;
   VAImageFormat va_format[2];
 } rgb32_format_map[] = {
 #define  F(fourcc, order, bpp, depth, r, g, b, a)                       \
   {  VA_FOURCC fourcc, G_PASTE (G_PASTE (VA_, order), _FIRST), bpp, depth, r, g, b, a }
 #define  A(fourcc, order, r, g, b, a) F (fourcc, order, 32, 32, r, g, b, a)
 #define  X(fourcc, order, r, g, b) F (fourcc, order, 32, 24, r, g, b, 0x0)
-  { GST_VIDEO_FORMAT_ARGB, {
+#ifndef G_OS_WIN32
+#define  D(format, drm_fourcc) G_PASTE (GST_VIDEO_FORMAT_, format), G_PASTE (DRM_FORMAT_, drm_fourcc)
+#else
+#define  D(format, drm_fourcc) G_PASTE (GST_VIDEO_FORMAT_, format), 0 /* DRM_FORMAT_INVALID */
+#endif
+  { D (ARGB, BGRA8888), {
       A (('B', 'G', 'R', 'A'), LSB, 0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff),
       A (('A', 'R', 'G', 'B'), MSB, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
     } },
-  { GST_VIDEO_FORMAT_RGBA, {
+  { D (RGBA, ABGR8888), {
       A (('A', 'B', 'G', 'R'), LSB, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000),
       A (('R', 'G', 'B', 'A'), MSB, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff),
     } },
-  { GST_VIDEO_FORMAT_ABGR, {
+  { D (ABGR, RGBA8888), {
       A (('R', 'G', 'B', 'A'), LSB, 0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff),
       A (('A', 'B', 'G', 'R'), MSB, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000),
     } },
-  { GST_VIDEO_FORMAT_BGRA, {
+  { D (BGRA, ARGB8888), {
       A (('A', 'R', 'G', 'B'), LSB, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
       A (('B', 'G', 'R', 'A'), MSB, 0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff),
     } },
-  { GST_VIDEO_FORMAT_xRGB, {
+  { D (xRGB, BGRX8888), {
       X (('B', 'G', 'R', 'X'), LSB, 0x0000ff00, 0x00ff0000, 0xff000000),
       X (('X', 'R', 'G', 'B'), MSB, 0x00ff0000, 0x0000ff00, 0x000000ff),
     } },
-  { GST_VIDEO_FORMAT_RGBx, {
+  { D (RGBx, XBGR8888), {
       X (('X', 'B', 'G', 'R'), LSB, 0x000000ff, 0x0000ff00, 0x00ff0000),
       X (('R', 'G', 'B', 'X'), MSB, 0xff000000, 0x00ff0000, 0x0000ff00),
     } },
-  { GST_VIDEO_FORMAT_xBGR, {
+  { D (xBGR, RGBX8888), {
       X (('R', 'G', 'B', 'X'), LSB, 0xff000000, 0x00ff0000, 0x0000ff00),
       X (('X', 'B', 'G', 'R'), MSB, 0x000000ff, 0x0000ff00, 0x00ff0000),
     } },
-  { GST_VIDEO_FORMAT_BGRx, {
+  { D (BGRx, XRGB8888), {
       X (('X', 'R', 'G', 'B'), LSB, 0x00ff0000, 0x0000ff00, 0x000000ff),
       X (('B', 'G', 'R', 'X'), MSB, 0x0000ff00, 0x00ff0000, 0xff000000),
     } },
 #undef X
 #undef A
 #undef F
+#undef D
 };
 /* *INDENT-ON* */
 
@@ -169,6 +191,19 @@ get_format_map_from_va_fourcc (guint va_fourcc)
 
   for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
     if (format_map[i].va_format.fourcc == va_fourcc)
+      return &format_map[i];
+  }
+
+  return NULL;
+}
+
+static const struct FormatMap *
+get_format_map_from_drm_fourcc (guint drm_fourcc)
+{
+  int i;
+
+  for (i = 0; i < G_N_ELEMENTS (format_map); i++) {
+    if (format_map[i].drm_fourcc == drm_fourcc)
       return &format_map[i];
   }
 
@@ -244,6 +279,22 @@ gst_va_fourcc_from_video_format (GstVideoFormat format)
   return map ? map->va_format.fourcc : 0;
 }
 
+GstVideoFormat
+gst_va_video_format_from_drm_fourcc (guint fourcc)
+{
+  const struct FormatMap *map = get_format_map_from_drm_fourcc (fourcc);
+
+  return map ? map->format : GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+guint
+gst_va_drm_fourcc_from_video_format (GstVideoFormat format)
+{
+  const struct FormatMap *map = get_format_map_from_video_format (format);
+
+  return map ? map->drm_fourcc : 0;
+}
+
 guint
 gst_va_chroma_from_video_format (GstVideoFormat format)
 {
@@ -312,14 +363,17 @@ gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
 }
 
 static GstVideoFormat
-find_gst_video_format_in_rgb32_map (VAImageFormat * image_format)
+find_gst_video_format_in_rgb32_map (VAImageFormat * image_format,
+    guint * drm_fourcc)
 {
   guint i, j;
 
   for (i = 0; i < G_N_ELEMENTS (rgb32_format_map); i++) {
     for (j = 0; j < G_N_ELEMENTS (rgb32_format_map[i].va_format); j++) {
-      if (va_format_is_same (&rgb32_format_map[i].va_format[j], image_format))
+      if (va_format_is_same (&rgb32_format_map[i].va_format[j], image_format)) {
+        *drm_fourcc = rgb32_format_map[i].drm_fourcc;
         return rgb32_format_map[i].format;
+      }
     }
   }
 
@@ -339,13 +393,14 @@ fix_map (gpointer data)
   GstVideoFormat format;
   VAImageFormat *image_format;
   struct FormatMap *map;
+  guint drm_fourcc = 0;
   guint i;
 
   for (i = 0; i < args->len; i++) {
     image_format = &args->image_formats[i];
     if (!va_format_is_rgb (image_format))
       continue;
-    format = find_gst_video_format_in_rgb32_map (image_format);
+    format = find_gst_video_format_in_rgb32_map (image_format, &drm_fourcc);
     if (format == GST_VIDEO_FORMAT_UNKNOWN)
       continue;
     map = get_format_map_from_video_format (format);
@@ -355,11 +410,14 @@ fix_map (gpointer data)
       continue;
 
     map->va_format = *image_format;
+    map->drm_fourcc = drm_fourcc;
 
-    GST_INFO ("GST_VIDEO_FORMAT_%s => { fourcc %"
-        GST_FOURCC_FORMAT ", %s, bpp %d, depth %d, R %#010x, G %#010x, "
-        "B %#010x, A %#010x }", gst_video_format_to_string (map->format),
+    GST_INFO ("GST_VIDEO_FORMAT_%s => { fourcc %" GST_FOURCC_FORMAT ", "
+        "drm fourcc %" GST_FOURCC_FORMAT ", %s, bpp %d, depth %d, "
+        "R %#010x, G %#010x, B %#010x, A %#010x }",
+        gst_video_format_to_string (map->format),
         GST_FOURCC_ARGS (map->va_format.fourcc),
+        GST_FOURCC_ARGS (map->drm_fourcc),
         (map->va_format.byte_order == 1) ? "LSB" : "MSB",
         map->va_format.bits_per_pixel, map->va_format.depth,
         map->va_format.red_mask, map->va_format.green_mask,

@@ -34,6 +34,12 @@ GST_VA_API
 guint                 gst_va_fourcc_from_video_format     (GstVideoFormat format);
 
 GST_VA_API
+GstVideoFormat        gst_va_video_format_from_drm_fourcc (guint fourcc);
+
+GST_VA_API
+guint                 gst_va_drm_fourcc_from_video_format (GstVideoFormat format);
+
+GST_VA_API
 guint                 gst_va_chroma_from_video_format     (GstVideoFormat format);
 
 GST_VA_API
