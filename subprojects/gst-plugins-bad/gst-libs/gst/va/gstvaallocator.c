@@ -132,8 +132,7 @@ gst_va_buffer_surface_unref (gpointer data)
 }
 
 static GstVaBufferSurface *
-gst_va_buffer_surface_new (VASurfaceID surface, GstVideoFormat format,
-    gint width, gint height)
+gst_va_buffer_surface_new (VASurfaceID surface)
 {
   GstVaBufferSurface *buf = g_new (GstVaBufferSurface, 1);
 
@@ -624,7 +623,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
     goto failed;
   }
 
-  buf = gst_va_buffer_surface_new (surface, format, desc.width, desc.height);
+  buf = gst_va_buffer_surface_new (surface);
   if (G_UNLIKELY (info)) {
     *info = self->info;
     GST_VIDEO_INFO_SIZE (info) = 0;
@@ -1048,8 +1047,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   GST_LOG_OBJECT (display, "Created surface %#x [%dx%d]", surface,
       ext_buf.width, ext_buf.height);
 
-  buf = gst_va_buffer_surface_new (surface, rt_format, ext_buf.width,
-      ext_buf.height);
+  buf = gst_va_buffer_surface_new (surface);
   buf->display = gst_object_ref (display);
   buf->n_mems = n_planes;
   memcpy (buf->mems, mem, sizeof (buf->mems));
@@ -2037,7 +2035,6 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
   VASurfaceID surface = VA_INVALID_ID;
   GstVaDisplay *display = NULL;
   GstVideoFormat format;
-  gint width, height;
   GstVaBufferSurface *surface_buffer;
 
   mem = gst_buffer_peek_memory (buffer, 0);
@@ -2067,8 +2064,6 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     }
 
     display = self->display;
-    width = GST_VIDEO_INFO_WIDTH (&self->info);
-    height = GST_VIDEO_INFO_HEIGHT (&self->info);
     if (!va_create_surfaces (self->display, rt_format, fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info),
             GST_VIDEO_INFO_HEIGHT (&self->info), self->usage_hint, NULL,
@@ -2083,8 +2078,6 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
     }
 
     display = self->display;
-    width = GST_VIDEO_INFO_WIDTH (&self->info);
-    height = GST_VIDEO_INFO_HEIGHT (&self->info);
     format = GST_VIDEO_INFO_FORMAT (&self->info);
     if (!va_create_surfaces (self->display, self->rt_format, self->fourcc,
             GST_VIDEO_INFO_WIDTH (&self->info),
@@ -2098,7 +2091,7 @@ gst_va_buffer_create_aux_surface (GstBuffer * buffer)
   if (!display || surface == VA_INVALID_ID)
     return FALSE;
 
-  surface_buffer = gst_va_buffer_surface_new (surface, format, width, height);
+  surface_buffer = gst_va_buffer_surface_new (surface);
   surface_buffer->display = gst_object_ref (display);
   g_atomic_int_add (&surface_buffer->ref_count, 1);
 
