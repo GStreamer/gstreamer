@@ -9341,23 +9341,33 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
 
   GST_OBJECT_LOCK (src);
   cmd = src->pending_cmd;
-  if (cmd == CMD_RECONNECT || cmd == CMD_PLAY || cmd == CMD_PAUSE
-      || cmd == CMD_LOOP || cmd == CMD_OPEN || cmd == CMD_GET_PARAMETER
-      || cmd == CMD_SET_PARAMETER) {
-    if (g_queue_is_empty (&src->set_get_param_q)) {
-      src->pending_cmd = CMD_LOOP;
-      if (cmd == CMD_GET_PARAMETER || cmd == CMD_SET_PARAMETER)
-          cmd = CMD_LOOP;
-    } else {
-      ParameterRequest *next_req;
-      if (cmd == CMD_GET_PARAMETER || cmd == CMD_SET_PARAMETER) {
-        req = g_queue_pop_head (&src->set_get_param_q);
+
+  switch (cmd) {
+    case CMD_CLOSE:
+      src->pending_cmd = CMD_WAIT;
+      break;
+    case CMD_GET_PARAMETER:
+    case CMD_SET_PARAMETER:
+      req = g_queue_pop_head (&src->set_get_param_q);
+      if (!req)
+        cmd = CMD_LOOP;
+      /* fall through */
+    case CMD_OPEN:
+    case CMD_PLAY:
+    case CMD_PAUSE:
+    case CMD_LOOP:
+    case CMD_RECONNECT:
+      if (g_queue_is_empty (&src->set_get_param_q)) {
+        src->pending_cmd = CMD_LOOP;
+      } else {
+        ParameterRequest *next_req;
+        next_req = g_queue_peek_head (&src->set_get_param_q);
+        src->pending_cmd = next_req->cmd;
       }
-      next_req = g_queue_peek_head (&src->set_get_param_q);
-      src->pending_cmd = next_req ? next_req->cmd : CMD_LOOP;
-    }
-  } else
-    src->pending_cmd = CMD_WAIT;
+      break;
+    default:
+      break;
+  }
   GST_DEBUG_OBJECT (src, "got command %s", cmd_to_string (cmd));
 
   /* we got the message command, so ensure communication is possible again */
