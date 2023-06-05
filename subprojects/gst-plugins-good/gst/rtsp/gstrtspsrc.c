@@ -9346,6 +9346,8 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
       || cmd == CMD_SET_PARAMETER) {
     if (g_queue_is_empty (&src->set_get_param_q)) {
       src->pending_cmd = CMD_LOOP;
+      if (cmd == CMD_GET_PARAMETER || cmd == CMD_SET_PARAMETER)
+          cmd = CMD_LOOP;
     } else {
       ParameterRequest *next_req;
       if (cmd == CMD_GET_PARAMETER || cmd == CMD_SET_PARAMETER) {
