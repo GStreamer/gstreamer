@@ -38,6 +38,8 @@ GType gst_d3d11_ipc_io_mode_get_type (void);
 G_DECLARE_FINAL_TYPE (GstD3D11IpcClient, gst_d3d11_ipc_client,
     GST, D3D11_IPC_CLIENT, GstObject);
 
+void                gst_d3d11_ipc_client_deinit (void);
+
 GstD3D11IpcClient * gst_d3d11_ipc_client_new (const std::string & address,
                                               GstD3D11Device * device,
                                               GstD3D11IpcIOMode io_mode,

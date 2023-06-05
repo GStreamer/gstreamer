@@ -78,6 +78,7 @@
 #include "gstd3d11overlay.h"
 #include "gstd3d11ipcsink.h"
 #include "gstd3d11ipcsrc.h"
+#include "gstd3d11ipcclient.h"
 
 #if !GST_D3D11_WINAPI_ONLY_APP
 #include "gstd3d11screencapturesrc.h"
@@ -112,6 +113,12 @@ GST_DEBUG_CATEGORY (gst_d3d11_screen_capture_device_debug);
 #endif
 
 #define GST_CAT_DEFAULT gst_d3d11_debug
+
+static void
+plugin_deinit (gpointer data)
+{
+  gst_d3d11_ipc_client_deinit ();
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -260,6 +267,10 @@ plugin_init (GstPlugin * plugin)
         GST_TYPE_D3D11_SCREEN_CAPTURE_DEVICE_PROVIDER);
   }
 #endif
+
+  g_object_set_data_full (G_OBJECT (plugin),
+      "plugin-d3d11-shutdown", (gpointer) "shutdown-data",
+      (GDestroyNotify) plugin_deinit);
 
   return TRUE;
 }

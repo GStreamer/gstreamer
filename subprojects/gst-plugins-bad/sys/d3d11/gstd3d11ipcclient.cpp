@@ -37,6 +37,21 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_ipc_client_debug);
 #define GST_CAT_DEFAULT gst_d3d11_ipc_client_debug
 
+static GThreadPool *gc_thread_pool = nullptr;
+/* *INDENT-OFF* */
+std::mutex gc_pool_lock;
+/* *INDENT-ON* */
+
+void
+gst_d3d11_ipc_client_deinit (void)
+{
+  std::lock_guard < std::mutex > lk (gc_pool_lock);
+  if (gc_thread_pool) {
+    g_thread_pool_free (gc_thread_pool, FALSE, TRUE);
+    gc_thread_pool = nullptr;
+  }
+}
+
 GType
 gst_d3d11_ipc_io_mode_get_type (void)
 {
@@ -998,6 +1013,37 @@ gst_d3d11_ipc_client_get_caps (GstD3D11IpcClient * client)
   return caps;
 }
 
+static void
+gst_d3d11_ipc_client_stop_async (GstD3D11IpcClient * client, gpointer user_data)
+{
+  GstD3D11IpcClientPrivate *priv = client->priv;
+
+  GST_DEBUG_OBJECT (client, "Stopping");
+  std::unique_lock < std::mutex > lk (priv->lock);
+  while (!priv->aborted)
+    priv->cond.wait (lk);
+  lk.unlock ();
+
+  SetEvent (priv->cancellable);
+  g_clear_pointer (&priv->loop_thread, g_thread_join);
+
+  GST_DEBUG_OBJECT (client, "Stopped");
+
+  gst_object_unref (client);
+}
+
+static void
+gst_d3d11_ipc_client_push_stop_async (GstD3D11IpcClient * client)
+{
+  std::lock_guard < std::mutex > lk (gc_pool_lock);
+  if (!gc_thread_pool) {
+    gc_thread_pool = g_thread_pool_new ((GFunc) gst_d3d11_ipc_client_stop_async,
+        nullptr, -1, FALSE, nullptr);
+  }
+
+  g_thread_pool_push (gc_thread_pool, gst_object_ref (client), nullptr);
+}
+
 void
 gst_d3d11_ipc_client_stop (GstD3D11IpcClient * client)
 {
@@ -1011,18 +1057,23 @@ gst_d3d11_ipc_client_stop (GstD3D11IpcClient * client)
   priv->shutdown = true;
   SetEvent (priv->wakeup_event);
 
-  std::unique_lock < std::mutex > lk (priv->lock);
-  while (!priv->aborted)
-    priv->cond.wait (lk);
-  lk.unlock ();
+  if (priv->io_mode == GST_D3D11_IPC_IO_COPY) {
+    std::unique_lock < std::mutex > lk (priv->lock);
+    while (!priv->aborted)
+      priv->cond.wait (lk);
+    lk.unlock ();
 
-  GST_DEBUG_OBJECT (client, "Terminating");
+    GST_DEBUG_OBJECT (client, "Terminating");
 
-  SetEvent (priv->cancellable);
+    SetEvent (priv->cancellable);
 
-  g_clear_pointer (&priv->loop_thread, g_thread_join);
+    g_clear_pointer (&priv->loop_thread, g_thread_join);
 
-  GST_DEBUG_OBJECT (client, "Stopped");
+    GST_DEBUG_OBJECT (client, "Stopped");
+  } else {
+    /* We don't know when imported memory gets released */
+    gst_d3d11_ipc_client_push_stop_async (client);
+  }
 }
 
 void
