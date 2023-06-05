@@ -179,9 +179,6 @@ GST_PLUGIN_STATIC_DECLARE(hls);
 #if defined(GST_IOS_PLUGIN_ID3TAG) || defined(GST_IOS_PLUGINS_CODECS)
 GST_PLUGIN_STATIC_DECLARE(id3tag);
 #endif
-#if defined(GST_IOS_PLUGIN_KATE) || defined(GST_IOS_PLUGINS_CODECS)
-GST_PLUGIN_STATIC_DECLARE(kate);
-#endif
 #if defined(GST_IOS_PLUGIN_MIDI) || defined(GST_IOS_PLUGINS_CODECS)
 GST_PLUGIN_STATIC_DECLARE(midi);
 #endif
@@ -744,9 +741,6 @@ gst_ios_init (void)
 #endif
 #if defined(GST_IOS_PLUGIN_ID3TAG) || defined(GST_IOS_PLUGINS_CODECS)
     GST_PLUGIN_STATIC_REGISTER(id3tag);
-#endif
-#if defined(GST_IOS_PLUGIN_KATE) || defined(GST_IOS_PLUGINS_CODECS)
-    GST_PLUGIN_STATIC_REGISTER(kate);
 #endif
 #if defined(GST_IOS_PLUGIN_MIDI) || defined(GST_IOS_PLUGINS_CODECS)
     GST_PLUGIN_STATIC_REGISTER(midi);
