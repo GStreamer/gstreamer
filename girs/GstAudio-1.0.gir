@@ -1090,6 +1090,62 @@ transition band for the kaiser window. 0.087 is the default.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_BUFFER_TIME" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_BUFFER_TIME" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_DSD_FORMAT" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_DSD_FORMAT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_FORMAT_TYPE" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_FORMAT_TYPE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_INFO" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_INFO" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_LATENCY_TIME" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_LATENCY_TIME" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_SEGLATENCY" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_SEGLATENCY" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_SEGSIZE" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_SEGSIZE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="AUDIO_RING_BUFFER_SPEC_SEGTOTAL" c:identifier="GST_AUDIO_RING_BUFFER_SPEC_SEGTOTAL" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+      <parameters>
+        <parameter name="spec">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="AUDIO_RING_BUFFER_WAIT" c:identifier="GST_AUDIO_RING_BUFFER_WAIT" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
       <parameters>
@@ -8601,9 +8657,16 @@ with a flush or stop.</doc>
       <member name="flac" value="14" c:identifier="GST_AUDIO_RING_BUFFER_FORMAT_TYPE_FLAC" glib:nick="flac">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h">samples in FLAC format (Since: 1.12)</doc>
       </member>
+      <member name="dsd" value="15" c:identifier="GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DSD" glib:nick="dsd">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h">samples in DSD format (Since: 1.24)</doc>
+      </member>
     </enumeration>
     <record name="AudioRingBufferSpec" c:type="GstAudioRingBufferSpec">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h">The structure containing the format specification of the ringbuffer.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h">The structure containing the format specification of the ringbuffer.
+
+When @type is GST_AUDIO_RING_BUFFER_FORMAT_TYPE_DSD, the @dsd_format
+is valid (otherwise it is unused). Also, when DSD is the sample type,
+only the rate, channels, position, and bpf fields in @info are populated.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
       <field name="caps" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h">The caps that generated the Spec.</doc>
@@ -8638,11 +8701,20 @@ with a flush or stop.</doc>
  defaults to segtotal</doc>
         <type name="gint" c:type="gint"/>
       </field>
-      <field name="_gst_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="4">
-          <type name="gpointer" c:type="gpointer"/>
-        </array>
-      </field>
+      <union name="ABI" c:type="ABI">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+        <record name="abi" c:type="abi">
+          <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+          <field name="dsd_format" writable="1">
+            <type name="DsdFormat" c:type="GstDsdFormat"/>
+          </field>
+        </record>
+        <field name="_gst_reserved" readable="0" private="1">
+          <array zero-terminated="0" fixed-size="4">
+            <type name="gpointer" c:type="gpointer"/>
+          </array>
+        </field>
+      </union>
     </record>
     <enumeration name="AudioRingBufferState" glib:type-name="GstAudioRingBufferState" glib:get-type="gst_audio_ring_buffer_state_get_type" c:type="GstAudioRingBufferState">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h">The state of the ringbuffer.</doc>
@@ -9502,6 +9574,485 @@ rate differs this implicitly marks the next data as discontinuous.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="DSD_CAPS_MAKE" c:identifier="GST_DSD_CAPS_MAKE" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">Generic caps string for DSD audio, for use in pad templates.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="format">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">string format that describes the DSD bits grouping,
+    as string (e.g. "DSDU32BE", "DSDU8", etc.)</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="DSD_FORMATS_ALL" value="{ DSDU32BE, DSDU16BE, DSDU8, DSDU32LE, DSDU16LE }" c:type="GST_DSD_FORMATS_ALL" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">List of all DSD formats, for use in template caps strings.
+
+Big endian formats are preferred, since little-endian ones flip around
+the DSD bytes, and most DSD hardware uses big endian formats.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <function-macro name="DSD_INFO_CHANNELS" c:identifier="GST_DSD_INFO_CHANNELS" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="info">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_INFO_FORMAT" c:identifier="GST_DSD_INFO_FORMAT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="info">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_INFO_IS_VALID" c:identifier="GST_DSD_INFO_IS_VALID" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="i">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_INFO_LAYOUT" c:identifier="GST_DSD_INFO_LAYOUT" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="info">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_INFO_POSITION" c:identifier="GST_DSD_INFO_POSITION" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="info">
+        </parameter>
+        <parameter name="c">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_INFO_RATE" c:identifier="GST_DSD_INFO_RATE" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="info">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_INFO_REVERSED_BYTES" c:identifier="GST_DSD_INFO_REVERSED_BYTES" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="info">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_INFO_STRIDE" c:identifier="GST_DSD_INFO_STRIDE" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">Calculates the stride for a given #GstDsdInfo.
+
+Note that this is only useful if the info's audio layout
+is GST_AUDIO_LAYOUT_INTERLEAVED.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="info">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_MAKE_DSD_RATE_44x" c:identifier="GST_DSD_MAKE_DSD_RATE_44x" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">Calculates a valid DSD-44x rate (in bytes) from commonly used rate
+multiplier specifications like DSD64, DSD128 etc.
+
+For example, to get the rate for DSD64-44x, use 64 as the multiplier
+argument.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="multiplier">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="DSD_MAKE_DSD_RATE_48x" c:identifier="GST_DSD_MAKE_DSD_RATE_48x" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">Calculates a valid DSD-48x rate (in bytes) from commonly used rate
+multiplier specifications like DSD64, DSD128 etc.
+
+For example, to get the rate for DSD64-48x, use 64 as the multiplier
+argument.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="multiplier">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="DSD_MEDIA_TYPE" value="audio/x-dsd" c:type="GST_DSD_MEDIA_TYPE" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">The GStreamer media type for DSD.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="DSD_SILENCE_PATTERN_BYTE" value="105" c:type="GST_DSD_SILENCE_PATTERN_BYTE" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">Silence pattern for DSD data.
+
+In DSD, a nullbyte does not correspond to silence. To fill memory regions
+with "DSD silence", these regions must be filled with byte 0x69 instead
+(this is the DSD silence pattern). This constant provides that pattern
+in a more readable fashion.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <enumeration name="DsdFormat" version="1.24" glib:type-name="GstDsdFormat" glib:get-type="gst_dsd_format_get_type" c:type="GstDsdFormat">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">Enum value describing how DSD bits are grouped.</doc>
+      <member name="dsd_format_u8" value="0" c:identifier="GST_DSD_FORMAT_U8" glib:nick="dsd-format-u8">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">8 DSD bits in 1 byte</doc>
+      </member>
+      <member name="dsd_format_u16le" value="1" c:identifier="GST_DSD_FORMAT_U16LE" glib:nick="dsd-format-u16le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, little endian order</doc>
+      </member>
+      <member name="dsd_format_u16be" value="2" c:identifier="GST_DSD_FORMAT_U16BE" glib:nick="dsd-format-u16be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, big endian order</doc>
+      </member>
+      <member name="dsd_format_u32le" value="3" c:identifier="GST_DSD_FORMAT_U32LE" glib:nick="dsd-format-u32le">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, little endian order</doc>
+      </member>
+      <member name="dsd_format_u32be" value="4" c:identifier="GST_DSD_FORMAT_U32BE" glib:nick="dsd-format-u32be">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, big endian order</doc>
+      </member>
+      <member name="num_dsd_formats" value="5" c:identifier="GST_NUM_DSD_FORMATS" glib:nick="num-dsd-formats">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">number of valid DSD formats</doc>
+      </member>
+      <member name="dsd_format_unknown" value="4294967295" c:identifier="GST_DSD_FORMAT_UNKNOWN" glib:nick="dsd-format-unknown">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">unknown / invalid DSD format</doc>
+      </member>
+      <member name="dsd_format_u16" value="1" c:identifier="GST_DSD_FORMAT_U16" glib:nick="dsd-format-u16">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">16 DSD bits in 2 bytes, native endianness</doc>
+      </member>
+      <member name="dsd_format_u32" value="3" c:identifier="GST_DSD_FORMAT_U32" glib:nick="dsd-format-u32">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h">32 DSD bits in 4 bytes, native endianness</doc>
+      </member>
+      <function name="from_string" c:identifier="gst_dsd_format_from_string" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Convert the @format string to its #GstDsdFormat.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">the #GstDsdFormat for @format or GST_DSD_FORMAT_UNKNOWN when the
+string is not a known format.</doc>
+          <type name="DsdFormat" c:type="GstDsdFormat"/>
+        </return-value>
+        <parameters>
+          <parameter name="str" transfer-ownership="none">
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="get_width" c:identifier="gst_dsd_format_get_width" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Number of bytes in this DSD grouping format.</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">a #GstDsdFormat</doc>
+            <type name="DsdFormat" c:type="GstDsdFormat"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="to_string" c:identifier="gst_dsd_format_to_string" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Returns a string containing a descriptive name for
+the #GstDsdFormat if there is one, or NULL otherwise.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">the name corresponding to @format</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">a #GstDsdFormat</doc>
+            <type name="DsdFormat" c:type="GstDsdFormat"/>
+          </parameter>
+        </parameters>
+      </function>
+    </enumeration>
+    <record name="DsdInfo" c:type="GstDsdInfo" version="1.24" glib:type-name="GstDsdInfo" glib:get-type="gst_dsd_info_get_type" c:symbol-prefix="dsd_info">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">Information describing DSD audio properties.
+
+In DSD, the "sample format" is the bit. Unlike PCM, there are no further
+"sample formats" in DSD. However, in software, DSD bits are grouped into
+bytes (since dealing with individual bits is impractical), and these bytes
+in turn are grouped into words. This becomes relevant when interleaving
+channels and transmitting DSD data through audio APIs. The different
+types of grouping DSD bytes are referred to as the "DSD grouping forma"
+or just "DSD format". #GstDsdFormat has a list of valid ways of grouping
+DSD bytes into words.
+
+DSD rates are equivalent to PCM sample rates, except that they specify
+how many DSD bytes are consumed per second. This refers to the bytes per
+second _per channel_; the rate does not change when the number of channel
+changes. (Strictly speaking, it would be more correct to measure the
+*bits* per second, since the bit is the DSD "sample format", but it is
+more practical to use bytes.) In DSD, bit rates are always an integer
+multiple of the CD audio rate (44100) or the DAT rate (48000). DSD64-44x
+is 44100 * 64 = 2822400 bits per second, or 352800 bytes per second
+(the latter would be used in this info structure). DSD64-48x is
+48000 * 64 = 3072000 bits per second, or 384000 bytes per second.
+#GST_DSD_MAKE_DSD_RATE_44x can be used for specifying DSD-44x rates,
+*and #GST_DSD_MAKE_DSD_RATE_48x can be used for specifying DSD-48x ones.
+Also, since DSD-48x is less well known, when the multiplier is given
+without the 44x/48x specifier, 44x is typically implied.
+
+It is important to know that in DSD, different format widths correspond
+to different playtimes. That is, a word with 32 DSD bits covers two times
+as much playtime as a word with 16 DSD bits. This is in contrast to PCM,
+where one word (= one PCM sample) always covers a time period of 1/samplerate,
+no matter how many bits a PCM sample is made of. For this reason, DSD
+and PCM widths and strides cannot be used the same way.
+
+Multiple channels are arranged in DSD data either interleaved or non-
+interleaved. This is similar to PCM. Interleaved layouts rotate between
+channels and words. First, word 0 of channel 0 is present. Then word
+0 of channel 1 follows. Then word 0 of channel 2 etc. until all
+channels are through, then comes word 1 of channel 0 etc.
+
+Non-interleaved data is planar. First, all words of channel 0 are
+present, then all words of channel 1 etc. Unlike interleaved data,
+non-interleaved data can be sparse, that is, there can be space in
+between the planes. the @positions array specifies the plane offsets.
+
+In uncommon cases, the DSD bits in the data bytes can be stored in reverse
+order. For example, normally, in DSDU8, the first byte contains DSD bits
+0 to 7, and the most significant bit of that byte is DSD bit 0. If this
+order is reversed, then bit 7 is the first one instead. In that ase,
+@reversed_bytes is set to TRUE.
+
+Use the provided macros to access the info in this structure.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <field name="format" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">DSD grouping format</doc>
+        <type name="DsdFormat" c:type="GstDsdFormat"/>
+      </field>
+      <field name="rate" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">DSD rate</doc>
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="channels" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">number of channels (must be at least 1)</doc>
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="layout" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">audio layout</doc>
+        <type name="AudioLayout" c:type="GstAudioLayout"/>
+      </field>
+      <field name="reversed_bytes" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">true if the DSD bits in the data bytes are reversed,
+  that is, the least significant bit comes first</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="positions" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">positions for each channel</doc>
+        <array zero-terminated="0" fixed-size="64">
+          <type name="AudioChannelPosition" c:type="GstAudioChannelPosition"/>
+        </array>
+      </field>
+      <field name="flags" writable="1">
+        <type name="AudioFlags" c:type="GstAudioFlags"/>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <constructor name="new" c:identifier="gst_dsd_info_new" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Allocate a new #GstDsdInfo that is also initialized with
+gst_dsd_info_init().</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a new #GstDsdInfo. free with gst_dsd_info_free().</doc>
+          <type name="DsdInfo" c:type="GstDsdInfo*"/>
+        </return-value>
+      </constructor>
+      <constructor name="new_from_caps" c:identifier="gst_dsd_info_new_from_caps" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Parse @caps to generate a #GstDsdInfo.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">A #GstDsdInfo, or %NULL if @caps couldn't be parsed</doc>
+          <type name="DsdInfo" c:type="GstDsdInfo*"/>
+        </return-value>
+        <parameters>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstCaps</doc>
+            <type name="Gst.Caps" c:type="const GstCaps*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="copy" c:identifier="gst_dsd_info_copy" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Copy a GstDsdInfo structure.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a new #GstDsdInfo. free with gst_dsd_info_free.</doc>
+          <type name="DsdInfo" c:type="GstDsdInfo*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="const GstDsdInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="free" c:identifier="gst_dsd_info_free" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Free a GstDsdInfo structure previously allocated with gst_dsd_info_new()
+or gst_dsd_info_copy().</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="GstDsdInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="is_equal" c:identifier="gst_dsd_info_is_equal" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Compares two #GstDsdInfo and returns whether they are equal or not</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">%TRUE if @info and @other are equal, else %FALSE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="const GstDsdInfo*"/>
+          </instance-parameter>
+          <parameter name="other" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="const GstDsdInfo*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_format" c:identifier="gst_dsd_info_set_format" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Set the default info for the DSD info of @format and @rate and @channels.
+
+Note: This initializes @info first, no values are preserved.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="GstDsdInfo*"/>
+          </instance-parameter>
+          <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the format</doc>
+            <type name="DsdFormat" c:type="GstDsdFormat"/>
+          </parameter>
+          <parameter name="rate" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the DSD rate</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="channels" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the number of channels</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="positions" transfer-ownership="none">
+            <type name="AudioChannelPosition" c:type="const GstAudioChannelPosition*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="to_caps" c:identifier="gst_dsd_info_to_caps" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Convert the values of @info into a #GstCaps.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the new #GstCaps containing the
+         info of @info.</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="const GstDsdInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="from_caps" c:identifier="gst_dsd_info_from_caps" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Parse @caps and update @info.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">TRUE if @caps could be parsed</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="GstDsdInfo*"/>
+          </parameter>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstCaps</doc>
+            <type name="Gst.Caps" c:type="const GstCaps*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="init" c:identifier="gst_dsd_info_init" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Initialize @info with default values.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+            <type name="DsdInfo" c:type="GstDsdInfo*"/>
+          </parameter>
+        </parameters>
+      </function>
+    </record>
+    <record name="DsdPlaneOffsetMeta" c:type="GstDsdPlaneOffsetMeta" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">Buffer metadata describing planar DSD contents in the buffer. This is not needed
+for interleaved DSD data, and is required for non-interleaved (= planar) data.
+
+The different channels in @offsets are always in the GStreamer channel order.
+Zero-copy channel reordering can be implemented by swapping the values in
+@offsets.
+
+It is not allowed for channels to overlap in memory,
+i.e. for each i in [0, channels), the range
+[@offsets[i], @offsets[i] + @num_bytes_per_channel) must not overlap
+with any other such range.
+
+It is, however, allowed to have parts of the buffer memory unused, by using
+@offsets and @num_bytes_per_channel in such a way that leave gaps on it.
+This is used to implement zero-copy clipping in non-interleaved buffers.
+
+Obviously, due to the above, it is not safe to infer the
+number of valid bytes from the size of the buffer. You should always
+use the @num_bytes_per_channel variable of this metadata.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">parent #GstMeta</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="num_channels" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">number of channels in the DSD data</doc>
+        <type name="gint" c:type="gint"/>
+      </field>
+      <field name="num_bytes_per_channel" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">the number of valid bytes per channel in the buffer</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="offsets" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">the offsets (in bytes) where each channel plane starts in the buffer</doc>
+        <type name="gsize" c:type="gsize*"/>
+      </field>
+      <field name="priv_offsets_arr" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="8">
+          <type name="gsize" c:type="gsize"/>
+        </array>
+      </field>
+      <field name="_gst_reserved" readable="0" private="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+      <function name="get_info" c:identifier="gst_dsd_plane_offset_meta_get_info">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
     <function-macro name="FRAMES_TO_CLOCK_TIME" c:identifier="GST_FRAMES_TO_CLOCK_TIME" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio.h">Calculate clocktime from sample @frames and @rate.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio.h"/>
@@ -9709,6 +10260,11 @@ rate differs this implicitly marks the next data as discontinuous.</doc>
     <constant name="META_TAG_AUDIO_STR" value="audio" c:type="GST_META_TAG_AUDIO_STR" version="1.2">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio.h">This metadata is relevant for audio streams.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="META_TAG_DSD_PLANE_OFFSETS_STR" value="dsdplaneoffsets" c:type="GST_META_TAG_DSD_PLANE_OFFSETS_STR" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h">This metadata stays relevant as long as the DSD plane offsets are unchanged.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <function-macro name="STREAM_VOLUME_GET_INTERFACE" c:identifier="GST_STREAM_VOLUME_GET_INTERFACE" introspectable="0">
@@ -10844,6 +11400,54 @@ that you must add enough memory on the @buffer before adding this meta.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_add_dsd_plane_offset_meta" c:identifier="gst_buffer_add_dsd_plane_offset_meta" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Allocates and attaches a #GstDsdPlaneOffsetMeta on @buffer, which must be
+writable for that purpose. The fields of the #GstDsdPlaneOffsetMeta are
+directly populated from the arguments of this function.
+
+If @offsets is NULL, then the meta's offsets field is left uninitialized.
+This is useful if for example offset values are to be calculated in the
+meta's offsets field in-place. Similarly, @num_bytes_per_channel can be
+set to 0, but only if @offsets is NULL. This is useful if the number of
+bytes per channel is known only later.
+
+It is not allowed for channels to overlap in memory,
+i.e. for each i in [0, channels), the range
+[@offsets[i], @offsets[i] + @num_bytes_per_channel) must not overlap
+with any other such range. This function will assert if the parameters
+specified cause this restriction to be violated.
+
+It is, obviously, also not allowed to specify parameters that would cause
+out-of-bounds memory access on @buffer. This is also checked, which means
+that you must add enough memory on the @buffer before adding this meta.
+
+This meta is only needed for non-interleaved (= planar) DSD data.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the #GstDsdPlaneOffsetMeta that was attached
+  on the @buffer</doc>
+        <type name="DsdPlaneOffsetMeta" c:type="GstDsdPlaneOffsetMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="num_channels" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Number of channels in the DSD data</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="num_bytes_per_channel" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Number of bytes per channel</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="offsets" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the offsets (in bytes) where each channel plane starts
+  in the buffer</doc>
+          <type name="gsize" c:type="gsize*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function-macro name="buffer_get_audio_clipping_meta" c:identifier="gst_buffer_get_audio_clipping_meta" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudiometa.h"/>
       <parameters>
@@ -10906,6 +11510,166 @@ there is no such metadata on @buffer.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="buffer_get_dsd_plane_offset_meta" c:identifier="gst_buffer_get_dsd_plane_offset_meta" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <parameters>
+        <parameter name="b">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function name="dsd_convert" c:identifier="gst_dsd_convert" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Converts DSD data from one layout and grouping format to another.
+@num_bytes must be an integer multiple of the width of both input
+and output format. For example, if the input format is GST_DSD_FORMAT_U32LE,
+and the output format is GST_DSD_FORMAT_U16BE, then @num_bytes must
+be an integer multiple of both 4 (U32LE width) and 2 (U16BE width).
+
+@reverse_byte_bits is necessary if the bit order within the DSD bytes
+needs to be reversed. This is rarely necessary, and is not to be
+confused with the endianness of formats (which determines the ordering
+of *bytes*).
+
+@input_plane_offsets must not be NULL if @input_layout is set to
+#GST_AUDIO_LAYOUT_NON_INTERLEAVED. The same applies to @output_plane_offsets.
+These plane offsets define the starting offset of the planes (there is
+exactly one plane per channel) within @input_data and @output_data
+respectively. If GST_AUDIO_LAYOUT_INTERLEAVED is used, the plane offsets
+are ignored.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="input_data" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the DSD format conversion's input source</doc>
+          <type name="guint8" c:type="const guint8*"/>
+        </parameter>
+        <parameter name="output_data" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">the DSD format conversion's output destination</doc>
+          <type name="guint8" c:type="guint8*"/>
+        </parameter>
+        <parameter name="input_format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">DSD format of the input data to convert from</doc>
+          <type name="DsdFormat" c:type="GstDsdFormat"/>
+        </parameter>
+        <parameter name="output_format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">DSD format of the output data to convert to</doc>
+          <type name="DsdFormat" c:type="GstDsdFormat"/>
+        </parameter>
+        <parameter name="input_layout" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Input data layout</doc>
+          <type name="AudioLayout" c:type="GstAudioLayout"/>
+        </parameter>
+        <parameter name="output_layout" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Output data layout</doc>
+          <type name="AudioLayout" c:type="GstAudioLayout"/>
+        </parameter>
+        <parameter name="input_plane_offsets" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Plane offsets for non-interleaved input data</doc>
+          <type name="gsize" c:type="const gsize*"/>
+        </parameter>
+        <parameter name="output_plane_offsets" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Plane offsets for non-interleaved output data</doc>
+          <type name="gsize" c:type="const gsize*"/>
+        </parameter>
+        <parameter name="num_dsd_bytes" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">How many bytes with DSD data to convert</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+        <parameter name="num_channels" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Number of channels (must be at least 1)</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+        <parameter name="reverse_bytes" transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="dsd_format_from_string" c:identifier="gst_dsd_format_from_string" moved-to="DsdFormat.from_string" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Convert the @format string to its #GstDsdFormat.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">the #GstDsdFormat for @format or GST_DSD_FORMAT_UNKNOWN when the
+string is not a known format.</doc>
+        <type name="DsdFormat" c:type="GstDsdFormat"/>
+      </return-value>
+      <parameters>
+        <parameter name="str" transfer-ownership="none">
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="dsd_format_get_width" c:identifier="gst_dsd_format_get_width" moved-to="DsdFormat.get_width" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Number of bytes in this DSD grouping format.</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">a #GstDsdFormat</doc>
+          <type name="DsdFormat" c:type="GstDsdFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="dsd_format_to_string" c:identifier="gst_dsd_format_to_string" moved-to="DsdFormat.to_string" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">Returns a string containing a descriptive name for
+the #GstDsdFormat if there is one, or NULL otherwise.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">the name corresponding to @format</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsdformat.c">a #GstDsdFormat</doc>
+          <type name="DsdFormat" c:type="GstDsdFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="dsd_info_from_caps" c:identifier="gst_dsd_info_from_caps" moved-to="DsdInfo.from_caps" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Parse @caps and update @info.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">TRUE if @caps could be parsed</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+          <type name="DsdInfo" c:type="GstDsdInfo*"/>
+        </parameter>
+        <parameter name="caps" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstCaps</doc>
+          <type name="Gst.Caps" c:type="const GstCaps*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="dsd_info_init" c:identifier="gst_dsd_info_init" moved-to="DsdInfo.init" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">Initialize @info with default values.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.c">a #GstDsdInfo</doc>
+          <type name="DsdInfo" c:type="GstDsdInfo*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="dsd_plane_offset_meta_api_get_type" c:identifier="gst_dsd_plane_offset_meta_api_get_type">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <return-value transfer-ownership="none">
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="dsd_plane_offset_meta_get_info" c:identifier="gst_dsd_plane_offset_meta_get_info" moved-to="DsdPlaneOffsetMeta.get_info">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstdsd.h"/>
+      <return-value transfer-ownership="none">
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
     <function name="stream_volume_convert_volume" c:identifier="gst_stream_volume_convert_volume" moved-to="StreamVolume.convert_volume">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/streamvolume.h"/>
       <return-value transfer-ownership="none">
