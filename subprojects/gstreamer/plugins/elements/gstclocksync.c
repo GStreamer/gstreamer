@@ -609,17 +609,13 @@ gst_clock_sync_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_clock_id_unschedule (clocksync->clock_id);
       }
       GST_OBJECT_UNLOCK (clocksync);
-
-      GST_PAD_STREAM_LOCK (pad);
-      gst_clock_sync_reset_qos (clocksync);
-      GST_PAD_STREAM_UNLOCK (pad);
-
       break;
     case GST_EVENT_FLUSH_STOP:
       GST_OBJECT_LOCK (clocksync);
       clocksync->flushing = FALSE;
       gst_segment_init (&clocksync->segment, GST_FORMAT_UNDEFINED);
       GST_OBJECT_UNLOCK (clocksync);
+      gst_clock_sync_reset_qos (clocksync);
       clocksync->is_first = TRUE;
       break;
     default:
