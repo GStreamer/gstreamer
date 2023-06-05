@@ -806,7 +806,6 @@ gst_d3d11_ipc_sink_render (GstBaseSink * sink, GstBuffer * buf)
 
   ret = gst_d3d11_ipc_server_send_data (priv->server, priv->prepared_sample,
       priv->layout, priv->resource_name, pts);
-  gst_clear_sample (&priv->prepared_sample);
 
   return ret;
 }
