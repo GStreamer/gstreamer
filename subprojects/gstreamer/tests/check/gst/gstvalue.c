@@ -773,6 +773,16 @@ GST_START_TEST (test_flagset)
   g_value_unset (&dest);
   g_value_unset (&value);
   g_value_unset (&value2);
+
+  /* Check that we reject flagset looking string that holds 64 bit integers. */
+  g_value_init (&value, GST_TYPE_FLAG_SET);
+  string = g_strdup ("AB24:0x0100000000000002");
+
+  fail_if (gst_value_deserialize (&value, string),
+      "matched something that isn't a flagset %s", string);
+
+  g_free (string);
+  g_value_unset (&value);
 }
 
 GST_END_TEST;

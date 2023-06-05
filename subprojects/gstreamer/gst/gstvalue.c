@@ -7900,6 +7900,16 @@ gst_value_deserialize_flagset (GValue * dest, const gchar * s)
   if (G_UNLIKELY ((mask == 0 && errno == EINVAL) || cur == next))
     goto try_as_flags_string;
 
+  if (g_str_has_prefix (cur, "0x") || g_str_has_prefix (cur, "0X"))
+    cur += 2;
+
+  /* Flagsets are 32 bits hex numbers, so do not accept any number that has more
+   * then 8 characters. strtoul() accepts unlimited number of leading zeros and
+   * 64bit numbers on 64bit platforms.
+   */
+  if ((next - cur) > 8)
+    return FALSE;
+
   /* Next char should be NULL terminator, or a ':'. If ':', we need the flag string after */
   if (G_UNLIKELY (next[0] == 0)) {
     res = TRUE;
