@@ -259,6 +259,9 @@ GST_D3D11_API
 gpointer                          gst_d3d11_memory_get_token_data (GstD3D11Memory * mem,
                                                                    gint64 token);
 
+GST_D3D11_API
+gboolean                          gst_d3d11_memory_get_nt_handle  (GstD3D11Memory * mem,
+                                                                   HANDLE * handle);
 
 /**
  * GstD3D11Allocator:

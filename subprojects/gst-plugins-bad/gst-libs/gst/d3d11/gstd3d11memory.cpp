@@ -31,6 +31,7 @@
 #include <memory>
 #include <queue>
 #include <atomic>
+#include <wrl.h>
 
 /**
  * SECTION:gstd3d11memory
@@ -39,6 +40,10 @@
  *
  * Since: 1.22
  */
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d11_allocator_debug);
 #define GST_CAT_DEFAULT gst_d3d11_allocator_debug
@@ -366,6 +371,8 @@ struct _GstD3D11MemoryPrivate
 
   ID3D11VideoProcessorInputView *processor_input_view = nullptr;
   ID3D11VideoProcessorOutputView *processor_output_view = nullptr;
+
+  HANDLE nt_handle = nullptr;
 
   std::map < gint64, std::unique_ptr < GstD3D11MemoryTokenData >> token_map;
 
@@ -1392,6 +1399,63 @@ gst_d3d11_memory_get_token_data (GstD3D11Memory * mem, gint64 token)
   return ret;
 }
 
+/**
+ * gst_d3d11_memory_get_nt_handle:
+ * @mem: a #GstD3D11Memory
+ * @handle: (out) (transfer none): a sharable NT handle
+ *
+ * Creates unnamed sharable NT handle via IDXGIResource1::CreateSharedHandle
+ * or returns already created handle. The returned @handle is owned by
+ * @mem and therefore caller shouldn't close the handle.
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_d3d11_memory_get_nt_handle (GstD3D11Memory * mem, HANDLE * handle)
+{
+  GstD3D11MemoryPrivate *priv;
+  const guint misc_flags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX |
+      D3D11_RESOURCE_MISC_SHARED_NTHANDLE;
+  ComPtr < IDXGIResource1 > resource;
+  HRESULT hr;
+
+  g_return_val_if_fail (gst_is_d3d11_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (handle, FALSE);
+
+  *handle = nullptr;
+
+  priv = mem->priv;
+  if (!priv->texture)
+    return FALSE;
+
+  GstD3D11SRWLockGuard lk (GST_D3D11_MEMORY_GET_LOCK (mem));
+
+  if (priv->nt_handle) {
+    *handle = priv->nt_handle;
+    return TRUE;
+  }
+
+  if ((priv->desc.MiscFlags & misc_flags) != misc_flags)
+    return FALSE;
+
+  hr = priv->texture->QueryInterface (IID_PPV_ARGS (&resource));
+  if (!gst_d3d11_result (hr, mem->device))
+    return FALSE;
+
+  gst_d3d11_device_lock (mem->device);
+  hr = resource->CreateSharedHandle (nullptr,
+      DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE, nullptr, handle);
+  gst_d3d11_device_unlock (mem->device);
+  if (!gst_d3d11_result (hr, mem->device))
+    return FALSE;
+
+  priv->nt_handle = *handle;
+
+  return TRUE;
+}
+
 /* GstD3D11Allocator */
 struct _GstD3D11AllocatorPrivate
 {
@@ -1524,6 +1588,9 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_LOG_OBJECT (allocator, "Free memory %p", mem);
 
   dmem_priv->token_map.clear ();
+
+  if (dmem_priv->nt_handle)
+    CloseHandle (dmem_priv->nt_handle);
 
   GST_D3D11_CLEAR_COM (dmem_priv->keyed_mutex);
 
