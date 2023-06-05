@@ -49,7 +49,7 @@ gst_d3d11_ipc_pkt_identify (std::vector < guint8 > &buf,
 
 bool
 gst_d3d11_ipc_pkt_build_config (std::vector < guint8 > &buf,
-    gint64 adapter_luid, GstCaps * caps)
+    DWORD pid, gint64 adapter_luid, GstCaps * caps)
 {
   GstD3D11IpcPacketHeader header;
   guint8 *ptr;
@@ -66,7 +66,7 @@ gst_d3d11_ipc_pkt_build_config (std::vector < guint8 > &buf,
 
   header.type = GstD3D11IpcPktType::CONFIG;
   header.magic = GST_D3D11_IPC_MAGIC_NUMBER;
-  header.payload_size = sizeof (gint64) + caps_size;
+  header.payload_size = sizeof (DWORD) + sizeof (gint64) + caps_size;
 
   buf.resize (GST_D3D11_IPC_PKT_HEADER_SIZE + header.payload_size);
 
@@ -74,6 +74,9 @@ gst_d3d11_ipc_pkt_build_config (std::vector < guint8 > &buf,
 
   memcpy (ptr, &header, GST_D3D11_IPC_PKT_HEADER_SIZE);
   ptr += GST_D3D11_IPC_PKT_HEADER_SIZE;
+
+  memcpy (ptr, &pid, sizeof (DWORD));
+  ptr += sizeof (DWORD);
 
   memcpy (ptr, &adapter_luid, sizeof (gint64));
   ptr += sizeof (gint64);
@@ -86,7 +89,7 @@ gst_d3d11_ipc_pkt_build_config (std::vector < guint8 > &buf,
 
 bool
 gst_d3d11_ipc_pkt_parse_config (std::vector < guint8 > &buf,
-    gint64 & adapter_luid, GstCaps ** caps)
+    DWORD & pid, gint64 & adapter_luid, GstCaps ** caps)
 {
   GstD3D11IpcPacketHeader header;
   const guint8 *ptr;
@@ -106,6 +109,9 @@ gst_d3d11_ipc_pkt_parse_config (std::vector < guint8 > &buf,
   }
 
   ptr += GST_D3D11_IPC_PKT_HEADER_SIZE;
+
+  memcpy (&pid, ptr, sizeof (DWORD));
+  ptr += sizeof (DWORD);
 
   memcpy (&adapter_luid, ptr, sizeof (gint64));
   ptr += sizeof (gint64);
@@ -135,28 +141,25 @@ gst_d3d11_ipc_pkt_build_need_data (std::vector < guint8 > &buf)
 bool
 gst_d3d11_ipc_pkt_build_have_data (std::vector < guint8 > &buf,
     GstClockTime pts, const GstD3D11IpcMemLayout & layout,
-    const std::wstring & name, GstCaps * caps)
+    const HANDLE handle, GstCaps * caps)
 {
   GstD3D11IpcPacketHeader header;
   guint8 *ptr;
-  guint name_size;
   gchar *caps_str = nullptr;
   guint caps_size = 1;
-
-  name_size = (name.length () + 1) * sizeof (wchar_t);
 
   if (caps) {
     caps_str = gst_caps_serialize (caps, GST_SERIALIZE_FLAG_NONE);
     if (!caps_str)
       return false;
 
-    caps_size = strlen (caps_str) + 1;
+    caps_size += strlen (caps_str) + 1;
   }
 
   header.type = GstD3D11IpcPktType::HAVE_DATA;
   header.magic = GST_D3D11_IPC_MAGIC_NUMBER;
   header.payload_size = sizeof (GstClockTime) + sizeof (GstD3D11IpcMemLayout) +
-      name_size + caps_size;
+      sizeof (HANDLE) + caps_size;
 
   buf.resize (GST_D3D11_IPC_PKT_HEADER_SIZE + header.payload_size);
 
@@ -170,8 +173,8 @@ gst_d3d11_ipc_pkt_build_have_data (std::vector < guint8 > &buf,
   memcpy (ptr, &layout, sizeof (GstD3D11IpcMemLayout));
   ptr += sizeof (GstD3D11IpcMemLayout);
 
-  wcscpy ((wchar_t *) ptr, name.c_str ());
-  ptr += name_size;
+  memcpy (ptr, &handle, sizeof (HANDLE));
+  ptr += sizeof (HANDLE);
 
   if (caps) {
     *ptr = 1;
@@ -191,7 +194,7 @@ gst_d3d11_ipc_pkt_build_have_data (std::vector < guint8 > &buf,
 bool
 gst_d3d11_ipc_pkt_parse_have_data (const std::vector < guint8 > &buf,
     GstClockTime & pts, GstD3D11IpcMemLayout & layout,
-    std::wstring & name, GstCaps ** caps)
+    HANDLE & handle, GstCaps ** caps)
 {
   GstD3D11IpcPacketHeader header;
   const guint8 *ptr;
@@ -219,9 +222,8 @@ gst_d3d11_ipc_pkt_parse_have_data (const std::vector < guint8 > &buf,
   memcpy (&layout, ptr, sizeof (GstD3D11IpcMemLayout));
   ptr += sizeof (GstD3D11IpcMemLayout);
 
-  name = (wchar_t *) ptr;
-
-  ptr += (name.size () + 1) * sizeof (wchar_t);
+  memcpy (&handle, ptr, sizeof (HANDLE));
+  ptr += sizeof (HANDLE);
 
   if (*ptr) {
     ptr++;
@@ -250,14 +252,14 @@ gst_d3d11_ipc_pkt_build_read_done (std::vector < guint8 > &buf)
 
 void
 gst_d3d11_ipc_pkt_build_release_data (std::vector < guint8 > &buf,
-    const std::wstring & name)
+    const HANDLE handle)
 {
   GstD3D11IpcPacketHeader header;
   guint8 *ptr;
 
   header.type = GstD3D11IpcPktType::RELEASE_DATA;
   header.magic = GST_D3D11_IPC_MAGIC_NUMBER;
-  header.payload_size = (name.size () + 1) * sizeof (wchar_t);
+  header.payload_size = sizeof (HANDLE);
 
   buf.resize (GST_D3D11_IPC_PKT_HEADER_SIZE + header.payload_size);
 
@@ -265,16 +267,30 @@ gst_d3d11_ipc_pkt_build_release_data (std::vector < guint8 > &buf,
   memcpy (ptr, &header, GST_D3D11_IPC_PKT_HEADER_SIZE);
   ptr += GST_D3D11_IPC_PKT_HEADER_SIZE;
 
-  wcscpy ((wchar_t *) ptr, name.c_str ());
+  memcpy (ptr, &handle, sizeof (HANDLE));
 }
 
 bool
 gst_d3d11_ipc_pkt_parse_release_data (std::vector < guint8 > &buf,
-    std::wstring & name)
+    HANDLE & handle)
 {
-  g_return_val_if_fail (buf.size () > GST_D3D11_IPC_PKT_HEADER_SIZE, false);
+  GstD3D11IpcPacketHeader header;
+  const guint8 *ptr;
 
-  name = (wchar_t *) (&buf[0] + GST_D3D11_IPC_PKT_HEADER_SIZE);
+  g_return_val_if_fail (buf.size () >=
+      GST_D3D11_IPC_PKT_HEADER_SIZE + sizeof (HANDLE), false);
+
+  ptr = &buf[0];
+  memcpy (&header, ptr, GST_D3D11_IPC_PKT_HEADER_SIZE);
+
+  if (header.type != GstD3D11IpcPktType::RELEASE_DATA ||
+      header.magic != GST_D3D11_IPC_MAGIC_NUMBER ||
+      header.payload_size != sizeof (HANDLE)) {
+    return false;
+  }
+  ptr += GST_D3D11_IPC_PKT_HEADER_SIZE;
+
+  memcpy (&handle, ptr, sizeof (HANDLE));
 
   return true;
 }
@@ -379,41 +395,4 @@ gst_d3d11_ipc_win32_error_to_string (guint err)
   rtrim (ret);
 
   return ret;
-}
-
-gint64
-gst_d3d11_ipc_get_shared_resource_token (void)
-{
-  static gint64 token = 0;
-
-  GST_D3D11_CALL_ONCE_BEGIN {
-    token = gst_d3d11_create_user_token ();
-  } GST_D3D11_CALL_ONCE_END;
-
-  return token;
-}
-
-static DWORD
-gst_d3d11_ipc_get_pid (void)
-{
-  static DWORD pid = 0;
-
-  GST_D3D11_CALL_ONCE_BEGIN {
-    pid = GetCurrentProcessId ();
-  } GST_D3D11_CALL_ONCE_END;
-
-  return pid;
-}
-
-std::wstring
-gst_d3d11_ipc_get_resource_prefix (void)
-{
-  static ULONG global_index = 0;
-
-  std::wstring prefix = std::wstring (L"Local\\gst.d3d11.ipc.") +
-      std::to_wstring (gst_d3d11_ipc_get_pid ()) + std::wstring (L".") +
-      std::to_wstring (InterlockedIncrement (&global_index)) +
-      std::wstring (L".");
-
-  return prefix;
 }

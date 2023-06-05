@@ -41,7 +41,7 @@ struct GstD3D11IpcServerData
   }
 
   GstSample *sample = nullptr;
-  std::wstring name;
+  HANDLE handle = nullptr;
   GstD3D11IpcMemLayout layout;
   GstClockTime pts;
   guint64 seq_num;
@@ -120,6 +120,7 @@ struct GstD3D11IpcServerPrivate
   std::string address;
   HANDLE cancellable;
   HANDLE wakeup_event;
+  DWORD pid;
 };
 /* *INDENT-ON* */
 
@@ -157,6 +158,7 @@ static void
 gst_d3d11_ipc_server_init (GstD3D11IpcServer * self)
 {
   self->priv = new GstD3D11IpcServerPrivate ();
+  self->priv->pid = GetCurrentProcessId ();
 }
 
 static void
@@ -275,12 +277,11 @@ gst_d3d11_ipc_server_have_data (GstD3D11IpcServer * self,
     caps = nullptr;
   }
 
-  auto handle_dump = gst_d3d11_ipc_wstring_to_string (conn->data->name);
-  GST_LOG_OBJECT (self, "Sending HAVE-DATA with handle \"%s\", conn-id :%u",
-      handle_dump.c_str (), conn->id);
+  GST_LOG_OBJECT (self, "Sending HAVE-DATA with handle \"%p\", conn-id :%u",
+      conn->data->handle, conn->id);
 
   if (!gst_d3d11_ipc_pkt_build_have_data (conn->server_msg, conn->data->pts,
-          conn->data->layout, conn->data->name, caps)) {
+          conn->data->layout, conn->data->handle, caps)) {
     GST_ERROR_OBJECT (self, "Couldn't build HAVE-DATA pkt, conn-id: %u",
         conn->id);
     gst_d3d11_ipc_server_close_connection (self, conn);
@@ -295,23 +296,21 @@ static bool
 gst_d3d11_ipc_server_on_release_data (GstD3D11IpcServer * self,
     GstD3D11IpcServerConn * conn)
 {
-  std::wstring name;
   bool found = false;
+  HANDLE handle = nullptr;
 
-  if (!gst_d3d11_ipc_pkt_parse_release_data (conn->client_msg, name)) {
+  if (!gst_d3d11_ipc_pkt_parse_release_data (conn->client_msg, handle)) {
     GST_ERROR_OBJECT (self, "Couldn't parse RELEASE-DATA, conn-id: %u",
         conn->id);
     return false;
   }
 
-  auto handle_dump = gst_d3d11_ipc_wstring_to_string (name);
-  GST_LOG_OBJECT (self, "RELEASE-DATA \"%s\", conn-id: %u",
-      handle_dump.c_str (), conn->id);
+  GST_LOG_OBJECT (self, "RELEASE-DATA \"%p\", conn-id: %u", handle, conn->id);
 
   for (auto it = conn->peer_handles.begin (); it != conn->peer_handles.end ();
       it++) {
-    auto other = (*it)->name;
-    if (name == other) {
+    auto other = (*it)->handle;
+    if (handle == other) {
       found = true;
       conn->peer_handles.erase (it);
       break;
@@ -481,8 +480,8 @@ gst_d3d11_ipc_server_config_data (GstD3D11IpcServer * self,
 
   gst_caps_replace (&conn->caps, caps);
 
-  gst_d3d11_ipc_pkt_build_config (conn->server_msg, priv->adapter_luid,
-      conn->caps);
+  gst_d3d11_ipc_pkt_build_config (conn->server_msg,
+      priv->pid, priv->adapter_luid, conn->caps);
   conn->type = GstD3D11IpcPktType::CONFIG;
 
   GST_LOG_OBJECT (self, "Sending CONFIG, conn-id %u", conn->id);
@@ -744,8 +743,7 @@ out:
 
 GstFlowReturn
 gst_d3d11_ipc_server_send_data (GstD3D11IpcServer * server, GstSample * sample,
-    const GstD3D11IpcMemLayout & layout, const std::wstring & name,
-    GstClockTime pts)
+    const GstD3D11IpcMemLayout & layout, HANDLE handle, GstClockTime pts)
 {
   GstD3D11IpcServerPrivate *priv;
 
@@ -764,7 +762,7 @@ gst_d3d11_ipc_server_send_data (GstD3D11IpcServer * server, GstSample * sample,
 
   auto data = std::make_shared < GstD3D11IpcServerData > ();
   data->sample = gst_sample_ref (sample);
-  data->name = name;
+  data->handle = handle;
   data->layout = layout;
   data->pts = pts;
   data->seq_num = priv->seq_num;

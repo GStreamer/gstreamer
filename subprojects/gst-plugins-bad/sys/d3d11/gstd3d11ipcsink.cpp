@@ -70,25 +70,8 @@ enum
 #define DEFAULT_MIN_BUFFER_SIZE 0
 
 /* *INDENT-OFF* */
-struct GstD3D11IpcSinkResource
-{
-  ~GstD3D11IpcSinkResource ()
-  {
-    if (handle)
-      CloseHandle (handle);
-  }
-
-  HANDLE handle = nullptr;
-  std::wstring name;
-};
-
 struct GstD3D11IpcSinkPrivate
 {
-  GstD3D11IpcSinkPrivate ()
-  {
-    prefix = gst_d3d11_ipc_get_resource_prefix ();
-  }
-
   GstD3D11Device *device = nullptr;
 
   GstBufferPool *fallback_pool = nullptr;
@@ -97,10 +80,8 @@ struct GstD3D11IpcSinkPrivate
   GstD3D11IpcServer *server = nullptr;
   GstCaps *caps = nullptr;
   GstSample *prepared_sample = nullptr;
+  HANDLE prepared_handle = nullptr;
   GstD3D11IpcMemLayout layout;
-  std::wstring resource_name;
-  std::wstring prefix;
-  guint64 seq_num = 0;
 
   std::mutex lock;
 
@@ -670,10 +651,8 @@ gst_d3d11_ipc_sink_prepare (GstBaseSink * sink, GstBuffer * buf)
   GstD3D11IpcSinkPrivate *priv = self->priv;
   GstBuffer *uploaded;
   GstD3D11Memory *dmem;
-  std::wstring name;
   GstVideoFrame frame;
-  GstD3D11IpcSinkResource *resource;
-  gint64 token = gst_d3d11_ipc_get_shared_resource_token ();
+  HANDLE nt_handle = nullptr;
 
   gst_clear_sample (&priv->prepared_sample);
 
@@ -703,51 +682,15 @@ gst_d3d11_ipc_sink_prepare (GstBaseSink * sink, GstBuffer * buf)
 
   gst_video_frame_unmap (&frame);
 
-  gst_d3d11_device_lock (dmem->device);
-  resource = (GstD3D11IpcSinkResource *)
-      gst_d3d11_memory_get_token_data (dmem, token);
-  if (!resource) {
-    ID3D11Resource *d3d11_resource =
-        gst_d3d11_memory_get_resource_handle (dmem);
-    HRESULT hr;
-    ComPtr < IDXGIResource1 > dxgi_resource;
-    std::wstring name = priv->prefix + std::to_wstring (priv->seq_num);
-    HANDLE handle;
-
-    priv->seq_num++;
-
-    hr = d3d11_resource->QueryInterface (IID_PPV_ARGS (&dxgi_resource));
-    if (!gst_d3d11_result (hr, dmem->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't get IDXGIResource1 interface");
-      gst_d3d11_device_unlock (dmem->device);
-      gst_buffer_unref (uploaded);
-      return GST_FLOW_ERROR;
-    }
-
-    hr = dxgi_resource->CreateSharedHandle (nullptr,
-        DXGI_SHARED_RESOURCE_READ, name.c_str (), &handle);
-    if (!gst_d3d11_result (hr, dmem->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create shared handle");
-      gst_d3d11_device_unlock (dmem->device);
-      gst_buffer_unref (uploaded);
-      return GST_FLOW_ERROR;
-    }
-
-    resource = new GstD3D11IpcSinkResource ();
-    resource->handle = handle;
-    resource->name = name;
-    /* *INDENT-OFF* */
-    gst_d3d11_memory_set_token_data (dmem, token, resource,
-        [] (gpointer data) -> void {
-          delete (GstD3D11IpcSinkResource *) data;
-        });
-    /* *INDENT-ON* */
+  if (!gst_d3d11_memory_get_nt_handle (dmem, &nt_handle)) {
+    GST_ERROR_OBJECT (self, "Couldn't get NT handle");
+    gst_buffer_unref (uploaded);
+    return GST_FLOW_ERROR;
   }
-  gst_d3d11_device_unlock (dmem->device);
 
   priv->prepared_sample = gst_sample_new (uploaded,
       priv->caps, nullptr, nullptr);
-  priv->resource_name = resource->name;
+  priv->prepared_handle = nt_handle;
 
   gst_buffer_unref (uploaded);
 
@@ -805,7 +748,7 @@ gst_d3d11_ipc_sink_render (GstBaseSink * sink, GstBuffer * buf)
   }
 
   ret = gst_d3d11_ipc_server_send_data (priv->server, priv->prepared_sample,
-      priv->layout, priv->resource_name, pts);
+      priv->layout, priv->prepared_handle, pts);
 
   return ret;
 }

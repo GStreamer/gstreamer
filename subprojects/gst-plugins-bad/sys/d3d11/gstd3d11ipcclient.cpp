@@ -91,8 +91,7 @@ struct GstD3D11IpcImportData
 {
   ~GstD3D11IpcImportData ()
   {
-    auto dump = gst_d3d11_ipc_wstring_to_string (name);
-    GST_LOG_OBJECT (client, "Release handle \"%s\"", dump.c_str ());
+    GST_LOG_OBJECT (client, "Release handle \"%p\"", server_handle);
     gst_object_unref (client);
   }
 
@@ -100,7 +99,7 @@ struct GstD3D11IpcImportData
   ComPtr<ID3D11Texture2D> texture;
   ComPtr<IDXGIKeyedMutex> mutex;
   GstD3D11IpcMemLayout layout;
-  std::wstring name;
+  HANDLE server_handle = nullptr;
 };
 
 struct GstD3D11IpcReleaseData
@@ -132,6 +131,8 @@ struct GstD3D11IpcClientPrivate
 
     CloseHandle (wakeup_event);
     CloseHandle (cancellable);
+    if (server_process)
+      CloseHandle (server_process);
   }
 
   std::string address;
@@ -139,6 +140,7 @@ struct GstD3D11IpcClientPrivate
   GstClockTime timeout;
   HANDLE wakeup_event;
   HANDLE cancellable;
+  HANDLE server_process = nullptr;
   std::mutex lock;
   std::condition_variable cond;
   GstD3D11Device *device = nullptr;
@@ -154,7 +156,7 @@ struct GstD3D11IpcClientPrivate
   GThread *loop_thread = nullptr;
   std::queue <GstSample *> samples;
   std::shared_ptr<GstD3D11IpcClientConn> conn;
-  std::queue<std::wstring> unused_data;
+  std::queue<HANDLE> unused_data;
   std::vector<std::weak_ptr<GstD3D11IpcImportData>> imported;
 };
 /* *INDENT-ON* */
@@ -309,12 +311,28 @@ gst_d3d11_ipc_client_config_data (GstD3D11IpcClient * self)
   gint64 prev_luid, luid;
   GstCaps *caps = nullptr;
   auto conn = priv->conn;
+  DWORD server_pid;
   std::lock_guard < std::mutex > lk (priv->lock);
 
   g_object_get (priv->device, "adapter-luid", &prev_luid, nullptr);
 
-  if (!gst_d3d11_ipc_pkt_parse_config (conn->server_msg, luid, &caps)) {
+  if (!gst_d3d11_ipc_pkt_parse_config (conn->server_msg,
+          server_pid, luid, &caps)) {
     GST_ERROR_OBJECT (self, "Couldn't parse CONFIG-DATA");
+    return false;
+  }
+
+  if (priv->server_process) {
+    GST_WARNING_OBJECT (self, "Have server process handle already");
+    CloseHandle (priv->server_process);
+  }
+
+  priv->server_process = OpenProcess (PROCESS_DUP_HANDLE, FALSE, server_pid);
+  if (!priv->server_process) {
+    guint last_err = GetLastError ();
+    auto err = gst_d3d11_ipc_win32_error_to_string (last_err);
+    GST_ERROR_OBJECT (self, "Couldn't open server process, 0x%x (%s)",
+        last_err, err.c_str ());
     return false;
   }
 
@@ -343,15 +361,14 @@ gst_d3d11_ipc_client_release_imported_data (GstD3D11IpcReleaseData * data)
 {
   GstD3D11IpcClient *self = data->self;
   GstD3D11IpcClientPrivate *priv = self->priv;
-  auto name = data->imported->name;
-  auto handle_dump = gst_d3d11_ipc_wstring_to_string (name);
+  HANDLE server_handle = data->imported->server_handle;
 
-  GST_LOG_OBJECT (self, "Releasing data \"%s\"", handle_dump.c_str ());
+  GST_LOG_OBJECT (self, "Releasing data \"%p\"", server_handle);
 
   data->imported = nullptr;
 
   priv->lock.lock ();
-  priv->unused_data.push (name);
+  priv->unused_data.push (server_handle);
   priv->lock.unlock ();
 
   SetEvent (priv->wakeup_event);
@@ -373,13 +390,14 @@ gst_d3d11_ipc_client_have_data (GstD3D11IpcClient * self)
   GstD3D11IpcMemLayout layout;
   std::shared_ptr < GstD3D11IpcImportData > import_data;
   std::unique_lock < std::mutex > lk (priv->lock);
-  std::wstring name;
+  HANDLE server_handle = nullptr;
+  HANDLE client_handle = nullptr;
   auto conn = priv->conn;
   ComPtr < ID3D11Texture2D > texture;
   HRESULT hr;
 
   if (!gst_d3d11_ipc_pkt_parse_have_data (conn->server_msg,
-          pts, layout, name, &caps)) {
+          pts, layout, server_handle, &caps)) {
     GST_ERROR_OBJECT (self, "Couldn't parse HAVE-DATA packet");
     return false;
   }
@@ -387,67 +405,48 @@ gst_d3d11_ipc_client_have_data (GstD3D11IpcClient * self)
   if (!gst_d3d11_client_update_caps (self, caps))
     return false;
 
-  auto handle_dump = gst_d3d11_ipc_wstring_to_string (name);
-  GST_LOG_OBJECT (self, "Importing handle \"%s\"", handle_dump.c_str ());
-
-  /* Check if this memory handle was imported already */
-  /* *INDENT-OFF* */
-  if (priv->io_mode == GST_D3D11_IPC_IO_IMPORT && !priv->imported.empty ()) {
-    GST_LOG_OBJECT (self, "Checking already imported handles, size %"
-        G_GSIZE_FORMAT, priv->imported.size ());
-    for (auto it = priv->imported.begin (); it != priv->imported.end (); ) {
-      auto data = it->lock ();
-      if (!data) {
-        it = priv->imported.erase (it);
-      } else {
-        if (data->name == name) {
-          GST_DEBUG_OBJECT (self, "Already imported handle");
-          import_data = data;
-          break;
-        }
-
-        it++;
-      }
-    }
+  if (!DuplicateHandle (priv->server_process, server_handle,
+          GetCurrentProcess (), &client_handle, 0, FALSE,
+          DUPLICATE_SAME_ACCESS)) {
+    guint last_err = GetLastError ();
+    auto err = gst_d3d11_ipc_win32_error_to_string (last_err);
+    GST_ERROR_OBJECT (self, "Couldn't duplicate handle, 0x%x (%s)",
+        last_err, err.c_str ());
+    return false;
   }
-  /* *INDENT-ON* */
 
-  if (!import_data) {
-    ID3D11Device *device = gst_d3d11_device_get_device_handle (priv->device);
-    ComPtr < ID3D11Device1 > device1;
-    ComPtr < IDXGIKeyedMutex > mutex;
+  GST_LOG_OBJECT (self, "Importing server handle %p", server_handle);
 
-    hr = device->QueryInterface (IID_PPV_ARGS (&device1));
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (self, "ID3D11Device1 interface is not available");
-      return false;
-    }
+  ID3D11Device *device = gst_d3d11_device_get_device_handle (priv->device);
+  ComPtr < ID3D11Device1 > device1;
+  ComPtr < IDXGIKeyedMutex > mutex;
 
-    hr = device1->OpenSharedResourceByName (name.c_str (),
-        DXGI_SHARED_RESOURCE_READ, IID_PPV_ARGS (&texture));
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't open resource");
-      return false;
-    }
-
-    hr = texture->QueryInterface (IID_PPV_ARGS (&mutex));
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (self, "couldn't get keyed mutex interface");
-      return false;
-    }
-
-    import_data = std::make_shared < GstD3D11IpcImportData > ();
-    import_data->client = (GstD3D11IpcClient *) gst_object_ref (self);
-    import_data->texture = texture;
-    import_data->mutex = mutex;
-    import_data->layout = layout;
-    import_data->name = name;
-
-    if (priv->io_mode == GST_D3D11_IPC_IO_IMPORT)
-      priv->imported.push_back (import_data);
-  } else {
-    texture = import_data->texture;
+  hr = device->QueryInterface (IID_PPV_ARGS (&device1));
+  if (!gst_d3d11_result (hr, priv->device)) {
+    GST_ERROR_OBJECT (self, "ID3D11Device1 interface is not available");
+    return false;
   }
+
+  hr = device1->OpenSharedResource1 (client_handle, IID_PPV_ARGS (&texture));
+  CloseHandle (client_handle);
+
+  if (!gst_d3d11_result (hr, priv->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't open resource");
+    return false;
+  }
+
+  hr = texture->QueryInterface (IID_PPV_ARGS (&mutex));
+  if (!gst_d3d11_result (hr, priv->device)) {
+    GST_ERROR_OBJECT (self, "couldn't get keyed mutex interface");
+    return false;
+  }
+
+  import_data = std::make_shared < GstD3D11IpcImportData > ();
+  import_data->client = (GstD3D11IpcClient *) gst_object_ref (self);
+  import_data->texture = texture;
+  import_data->mutex = mutex;
+  import_data->layout = layout;
+  import_data->server_handle = server_handle;
 
   if (priv->io_mode == GST_D3D11_IPC_IO_COPY) {
     ID3D11DeviceContext *context =
@@ -487,7 +486,7 @@ gst_d3d11_ipc_client_have_data (GstD3D11IpcClient * self)
 
     gst_memory_unmap (mem, &info);
 
-    priv->unused_data.push (name);
+    priv->unused_data.push (server_handle);
   } else {
     GstMemory *mem;
     gint stride[GST_VIDEO_MAX_PLANES];
@@ -514,6 +513,8 @@ gst_d3d11_ipc_client_have_data (GstD3D11IpcClient * self)
         GST_VIDEO_INFO_FORMAT (&priv->info), GST_VIDEO_INFO_WIDTH (&priv->info),
         GST_VIDEO_INFO_HEIGHT (&priv->info),
         GST_VIDEO_INFO_N_PLANES (&priv->info), offset, stride);
+
+    priv->imported.push_back (import_data);
   }
 
   GST_BUFFER_PTS (buffer) = pts;
@@ -770,13 +771,12 @@ gst_d3d11_ipc_client_continue (GstD3D11IpcClient * self)
   }
 
   if (!priv->unused_data.empty ()) {
-    auto name = priv->unused_data.front ();
+    HANDLE server_handle = priv->unused_data.front ();
     priv->unused_data.pop ();
 
-    auto handle_dump = gst_d3d11_ipc_wstring_to_string (name);
-    GST_LOG_OBJECT (self, "Sending RELEASE-DATA \"%s\"", handle_dump.c_str ());
+    GST_LOG_OBJECT (self, "Sending RELEASE-DATA %p", server_handle);
 
-    gst_d3d11_ipc_pkt_build_release_data (conn->client_msg, name);
+    gst_d3d11_ipc_pkt_build_release_data (conn->client_msg, server_handle);
     conn->type = GstD3D11IpcPktType::RELEASE_DATA;
     lk.unlock ();
 

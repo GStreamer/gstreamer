@@ -91,18 +91,6 @@ struct GstD3D11IpcMemLayout
 };
 #pragma pack(pop)
 
-struct GstD3D11IpcHandleData
-{
-  ~GstD3D11IpcHandleData ()
-  {
-    if (handle)
-      CloseHandle (handle);
-  }
-
-  HANDLE handle = nullptr;
-  std::wstring name;
-};
-
 constexpr guint GST_D3D11_IPC_PKT_HEADER_SIZE = sizeof (GstD3D11IpcPacketHeader);
 
 #define GST_D3D11_IPC_FORMATS \
@@ -113,10 +101,12 @@ bool gst_d3d11_ipc_pkt_identify (std::vector<guint8> & buf,
                                  GstD3D11IpcPacketHeader & header);
 
 bool gst_d3d11_ipc_pkt_build_config (std::vector<guint8> & buf,
+                                     DWORD pid,
                                      gint64 adapter_luid,
                                      GstCaps * caps);
 
 bool gst_d3d11_ipc_pkt_parse_config (std::vector<guint8> & buf,
+                                     DWORD & pid,
                                      gint64 & adapter_luid,
                                      GstCaps ** caps);
 
@@ -125,22 +115,22 @@ void gst_d3d11_ipc_pkt_build_need_data (std::vector<guint8> & buf);
 bool gst_d3d11_ipc_pkt_build_have_data (std::vector<guint8> & buf,
                                         GstClockTime pts,
                                         const GstD3D11IpcMemLayout & layout,
-                                        const std::wstring & name,
+                                        const HANDLE handle,
                                         GstCaps * caps);
 
 bool gst_d3d11_ipc_pkt_parse_have_data (const std::vector<guint8> & buf,
                                         GstClockTime & pts,
                                         GstD3D11IpcMemLayout & layout,
-                                        std::wstring & name,
+                                        HANDLE & handle,
                                         GstCaps ** caps);
 
 void gst_d3d11_ipc_pkt_build_read_done (std::vector<guint8> & buf);
 
 void gst_d3d11_ipc_pkt_build_release_data (std::vector<guint8> & buf,
-                                           const std::wstring & name);
+                                           const HANDLE handle);
 
 bool gst_d3d11_ipc_pkt_parse_release_data (std::vector<guint8> & buf,
-                                           std::wstring & name);
+                                           HANDLE & handle);
 
 void gst_d3d11_ipc_pkt_build_eos (std::vector<guint8> & buf);
 
@@ -156,6 +146,3 @@ std::wstring gst_d3d11_ipc_string_to_wstring (const std::string & str);
 
 std::string gst_d3d11_ipc_win32_error_to_string (guint err);
 
-gint64 gst_d3d11_ipc_get_shared_resource_token (void);
-
-std::wstring gst_d3d11_ipc_get_resource_prefix (void);

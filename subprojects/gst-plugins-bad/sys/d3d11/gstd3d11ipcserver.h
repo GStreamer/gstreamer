@@ -35,7 +35,7 @@ GstD3D11IpcServer * gst_d3d11_ipc_server_new (const std::string & address,
 GstFlowReturn       gst_d3d11_ipc_server_send_data (GstD3D11IpcServer * server,
                                                     GstSample * sample,
                                                     const GstD3D11IpcMemLayout & layout,
-                                                    const std::wstring & name,
+                                                    HANDLE handle,
                                                     GstClockTime pts);
 
 void                gst_d3d11_ipc_server_stop      (GstD3D11IpcServer * server);
