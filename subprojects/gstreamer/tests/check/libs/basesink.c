@@ -282,6 +282,69 @@ GST_START_TEST (basesink_position_query_handles_segment_offset)
 
 GST_END_TEST;
 
+GST_START_TEST (basesink_stream_start_after_eos)
+{
+  GstElement *pipeline, *sink;
+  GstPad *pad;
+  GstEvent *ev;
+  GstSegment segment;
+  GstBuffer *buf;
+  GstFlowReturn ret;
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (sink, "async", FALSE, "sync", FALSE, NULL);
+  pad = gst_element_get_static_pad (sink, "sink");
+
+  pipeline = gst_pipeline_new (NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  /* Normal data flow and EOS */
+  ev = gst_event_new_stream_start ("test");
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  ev = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  buf = gst_buffer_new_and_alloc (4);
+  ret = gst_pad_chain (pad, buf);
+  fail_unless (ret == GST_FLOW_OK);
+
+  ev = gst_event_new_eos ();
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  /* After EOS event, flow return should be EOS */
+  buf = gst_buffer_new_and_alloc (4);
+  ret = gst_pad_chain (pad, buf);
+  fail_unless (ret == GST_FLOW_EOS);
+
+  /* New data flow with new stream-start */
+  ev = gst_event_new_stream_start ("test");
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  ev = gst_event_new_segment (&segment);
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  buf = gst_buffer_new_and_alloc (4);
+  ret = gst_pad_chain (pad, buf);
+  fail_unless (ret == GST_FLOW_OK);
+
+  ev = gst_event_new_eos ();
+  fail_unless (gst_pad_send_event (pad, ev));
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pad);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_basesrc_suite (void)
 {
@@ -294,6 +357,7 @@ gst_basesrc_suite (void)
   tcase_add_test (tc, basesink_test_gap);
   tcase_add_test (tc, basesink_test_eos_after_playing);
   tcase_add_test (tc, basesink_position_query_handles_segment_offset);
+  tcase_add_test (tc, basesink_stream_start_after_eos);
 
   return s;
 }
