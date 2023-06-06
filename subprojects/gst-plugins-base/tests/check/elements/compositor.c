@@ -2516,6 +2516,235 @@ GST_START_TEST (test_reverse)
 
 GST_END_TEST;
 
+static void
+eos_test_msg_cb (GstBus * bus, GstMessage * message, gboolean * got_eos)
+{
+  switch (message->type) {
+    case GST_MESSAGE_EOS:
+      *got_eos = TRUE;
+      g_main_loop_quit (main_loop);
+      break;
+    case GST_MESSAGE_ERROR:
+      g_main_loop_quit (main_loop);
+      break;
+    default:
+      break;
+  }
+}
+
+typedef struct
+{
+  GMutex lock;
+  GCond cond;
+  GstBuffer *buf;
+} EosTestData;
+
+static void
+after_eos_handoff_buffer_cb (GstElement * sink, GstBuffer * buf, GstPad * pad,
+    EosTestData * data)
+{
+  g_mutex_lock (&data->lock);
+  gst_buffer_replace (&data->buf, buf);
+  g_cond_signal (&data->cond);
+  g_mutex_unlock (&data->lock);
+}
+
+/* This test checks that aggregator can restart after outputting EOS if
+ * one of its input streams does so.
+ */
+GST_START_TEST (test_stream_start_after_eos)
+{
+  GstElement *bin, *src1, *src2, *compositor, *sink;
+  GstElement *cp1, *cp2, *cp3;
+  GstCaps *caps;
+  GstBus *bus;
+  GstStateChangeReturn state_res;
+  gboolean res;
+  gboolean got_eos = FALSE;
+  EosTestData test_data;
+
+  g_mutex_init (&test_data.lock);
+  g_cond_init (&test_data.cond);
+  test_data.buf = NULL;
+
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src1 = gst_element_factory_make ("videotestsrc", NULL);
+  src2 = gst_element_factory_make ("videotestsrc", NULL);
+  compositor = gst_element_factory_make ("compositor", NULL);
+  cp1 = gst_element_factory_make ("capsfilter", NULL);
+  cp2 = gst_element_factory_make ("capsfilter", NULL);
+  cp3 = gst_element_factory_make ("capsfilter", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  gst_bin_add_many (GST_BIN (bin), src1, src2, compositor, sink, cp1, cp2,
+      cp3, NULL);
+
+  g_object_set (src1, "num-buffers", 1, "is-live", TRUE, NULL);
+  g_object_set (src2, "num-buffers", 1, "is-live", TRUE, NULL);
+
+  res = gst_element_link_many (src1, cp1, compositor, NULL);
+  fail_unless (res);
+  res = gst_element_link_many (src2, cp2, compositor, NULL);
+  fail_unless (res);
+  res = gst_element_link_many (compositor, cp3, sink, NULL);
+  fail_unless (res);
+
+  caps = gst_caps_from_string ("video/x-raw,width=(int)64,height=(int)64,"
+      "framerate=(fraction)10/1");
+  fail_unless (caps != NULL);
+
+  g_object_set (cp1, "caps", caps, NULL);
+  g_object_set (cp2, "caps", caps, NULL);
+  g_object_set (cp3, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::error", (GCallback) eos_test_msg_cb,
+      &got_eos);
+  g_signal_connect (bus, "message::eos", (GCallback) eos_test_msg_cb, &got_eos);
+
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  g_main_loop_run (main_loop);
+
+  /* Wait for EOS */
+  fail_unless (got_eos);
+
+  /* Configure new input */
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", (GCallback) after_eos_handoff_buffer_cb,
+      &test_data);
+
+  /* Run a source again */
+  state_res = gst_element_set_state (src1, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  gst_element_sync_state_with_parent (src1);
+
+  g_mutex_lock (&test_data.lock);
+  while (!test_data.buf)
+    g_cond_wait (&test_data.cond, &test_data.lock);
+  g_mutex_unlock (&test_data.lock);
+  gst_buffer_unref (test_data.buf);
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+
+  g_mutex_clear (&test_data.lock);
+  g_cond_clear (&test_data.cond);
+}
+
+GST_END_TEST;
+
+/* This test checks that aggregator restarts after outputting an EOS
+ * when a new input stream is added
+ */
+GST_START_TEST (test_new_pad_after_eos)
+{
+  GstElement *bin, *src1, *src2, *src3, *compositor, *sink;
+  GstElement *cp1, *cp2, *cp3, *cp4;
+  GstCaps *caps;
+  GstBus *bus;
+  GstStateChangeReturn state_res;
+  gboolean res;
+  gboolean got_eos = FALSE;
+  EosTestData test_data;
+
+  g_mutex_init (&test_data.lock);
+  g_cond_init (&test_data.cond);
+  test_data.buf = NULL;
+
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src1 = gst_element_factory_make ("videotestsrc", NULL);
+  src2 = gst_element_factory_make ("videotestsrc", NULL);
+  src3 = gst_element_factory_make ("videotestsrc", NULL);
+  compositor = gst_element_factory_make ("compositor", NULL);
+  cp1 = gst_element_factory_make ("capsfilter", NULL);
+  cp2 = gst_element_factory_make ("capsfilter", NULL);
+  cp3 = gst_element_factory_make ("capsfilter", NULL);
+  cp4 = gst_element_factory_make ("capsfilter", NULL);
+  sink = gst_element_factory_make ("fakesink", NULL);
+  gst_bin_add_many (GST_BIN (bin), src1, src2, compositor, sink, cp1, cp2,
+      cp3, NULL);
+
+  g_object_set (src1, "num-buffers", 1, "is-live", TRUE, NULL);
+  g_object_set (src2, "num-buffers", 1, "is-live", TRUE, NULL);
+  g_object_set (src3, "num-buffers", 1, "is-live", TRUE, NULL);
+
+  res = gst_element_link_many (src1, cp1, compositor, NULL);
+  fail_unless (res);
+  res = gst_element_link_many (src2, cp2, compositor, NULL);
+  fail_unless (res);
+  res = gst_element_link_many (compositor, cp3, sink, NULL);
+  fail_unless (res);
+
+  caps = gst_caps_from_string ("video/x-raw,width=(int)64,height=(int)64,"
+      "framerate=(fraction)10/1");
+  fail_unless (caps != NULL);
+
+  g_object_set (cp1, "caps", caps, NULL);
+  g_object_set (cp2, "caps", caps, NULL);
+  g_object_set (cp3, "caps", caps, NULL);
+  g_object_set (cp4, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::error", (GCallback) eos_test_msg_cb,
+      &got_eos);
+  g_signal_connect (bus, "message::eos", (GCallback) eos_test_msg_cb, &got_eos);
+
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  g_main_loop_run (main_loop);
+
+  /* Wait for EOS */
+  fail_unless (got_eos);
+
+  /* Configure new input */
+  g_object_set (sink, "signal-handoffs", TRUE, NULL);
+  g_signal_connect (sink, "handoff", (GCallback) after_eos_handoff_buffer_cb,
+      &test_data);
+
+  gst_bin_add_many (GST_BIN (bin), src3, cp4, NULL);
+  res = gst_element_link_many (src3, cp4, compositor, NULL);
+  fail_unless (res);
+
+  gst_element_sync_state_with_parent (cp4);
+  gst_element_sync_state_with_parent (src3);
+
+  g_mutex_lock (&test_data.lock);
+  while (!test_data.buf)
+    g_cond_wait (&test_data.cond, &test_data.lock);
+  g_mutex_unlock (&test_data.lock);
+  gst_buffer_unref (test_data.buf);
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* cleanup */
+  g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+
+  g_mutex_clear (&test_data.lock);
+  g_cond_clear (&test_data.cond);
+}
+
+GST_END_TEST;
+
 static Suite *
 compositor_suite (void)
 {
@@ -2558,6 +2787,8 @@ compositor_suite (void)
   tcase_add_test (tc_chain, test_gap_events);
   tcase_add_test (tc_chain, test_signals);
   tcase_add_test (tc_chain, test_reverse);
+  tcase_add_test (tc_chain, test_stream_start_after_eos);
+  tcase_add_test (tc_chain, test_new_pad_after_eos);
 
   return s;
 }
