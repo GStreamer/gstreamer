@@ -1384,12 +1384,20 @@ G_STMT_START { \
     gint mpegversion = 0;
     gst_structure_get_int (s, "mpegversion", &mpegversion);
 
-    if (mpegversion == 2) {
-      SET_META ("MPEG2");
-      cdata->codec = gst_v4l2_mpeg2_get_codec ();
-    } else {
-      SET_META ("MPEG4");
-      cdata->codec = gst_v4l2_mpeg4_get_codec ();
+    switch (mpegversion) {
+        /* MPEG 2 decoders supports MPEG 1 format */
+      case 1:
+      case 2:
+        SET_META ("MPEG2");
+        cdata->codec = gst_v4l2_mpeg2_get_codec ();
+        break;
+      case 4:
+        SET_META ("MPEG4");
+        cdata->codec = gst_v4l2_mpeg4_get_codec ();
+        break;
+      default:
+        g_warning ("Unsupported MPEG Video version %i", mpegversion);
+        break;
     }
   } else if (gst_structure_has_name (s, "video/x-h263")) {
     SET_META ("H263");
