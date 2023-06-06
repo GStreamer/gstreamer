@@ -1801,6 +1801,12 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
         } else {
           gst_video_flip_set_method (vf, method, TRUE);
         }
+
+        if (vf->method == GST_VIDEO_ORIENTATION_AUTO) {
+          /* update the orientation tag as we rotate the video accordingly */
+          gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, "image-orientation",
+              "rotate-0", NULL);
+        }
       } else {
         // no orientation in tag
         if (gst_tag_list_get_scope (taglist) == GST_TAG_SCOPE_STREAM) {
