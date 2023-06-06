@@ -2104,19 +2104,20 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
 
         lang_code = gst_tag_get_language_code_iso_639_2B (lang);
         if (lang_code) {
-          gchar *old_language = g_strdup (ts_pad->language);
-          GST_DEBUG_OBJECT (ts_pad, "Setting language to '%s'", lang_code);
 
-          g_free (ts_pad->language);
-          ts_pad->language = g_strdup (lang_code);
-          strncpy (ts_pad->stream->language, lang_code, 3);
-          ts_pad->stream->language[3] = 0;
-          if (g_strcmp0 (old_language, lang_code) != 0) {
-            g_mutex_lock (&mux->lock);
-            gst_base_ts_mux_resend_all_pmts (mux);
-            g_mutex_unlock (&mux->lock);
+          g_mutex_lock (&mux->lock);
+          if (g_strcmp0 (ts_pad->language, lang_code) != 0) {
+            GST_DEBUG_OBJECT (ts_pad, "Setting language to '%s'", lang_code);
+
+            g_free (ts_pad->language);
+            ts_pad->language = g_strdup (lang_code);
+            if (ts_pad->stream) {
+              strncpy (ts_pad->stream->language, lang_code, 3);
+              ts_pad->stream->language[3] = 0;
+              gst_base_ts_mux_resend_all_pmts (mux);
+            }
           }
-          g_free (old_language);
+          g_mutex_unlock (&mux->lock);
         } else {
           GST_WARNING_OBJECT (ts_pad, "Did not get language code for '%s'",
               lang);
