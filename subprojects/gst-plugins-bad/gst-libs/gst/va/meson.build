@@ -64,7 +64,7 @@ else
   va_required = va_opt
 endif
 
-libva_req = ['>= 1.6']
+libva_req = ['>= 1.12']
 if host_system == 'windows'
   libva_req = ['>= 1.18']
 endif

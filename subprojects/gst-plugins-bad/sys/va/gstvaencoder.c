@@ -679,7 +679,6 @@ guint
 gst_va_encoder_get_prediction_direction (GstVaEncoder * self,
     VAProfile profile, VAEntrypoint entrypoint)
 {
-#if VA_CHECK_VERSION(1,9,0)
   VAStatus status;
   VADisplay dpy;
   VAConfigAttrib attrib = {.type = VAConfigAttribPredictionDirection };
@@ -708,9 +707,6 @@ gst_va_encoder_get_prediction_direction (GstVaEncoder * self,
 
   return attrib.value & (VA_PREDICTION_DIRECTION_PREVIOUS |
       VA_PREDICTION_DIRECTION_FUTURE | VA_PREDICTION_DIRECTION_BI_NOT_EMPTY);
-#else
-  return 0;
-#endif
 }
 
 guint32

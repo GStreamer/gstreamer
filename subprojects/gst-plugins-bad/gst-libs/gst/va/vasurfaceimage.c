@@ -296,7 +296,6 @@ va_check_surface (GstVaDisplay * display, VASurfaceID surface)
 gboolean
 va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
 {
-#if VA_CHECK_VERSION (1, 12, 0)
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   /* *INDENT-OFF* */
   VACopyObject obj_src = {
@@ -326,7 +325,4 @@ va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
     return FALSE;
   }
   return TRUE;
-#else
-  return FALSE;
-#endif
 }

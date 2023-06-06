@@ -126,10 +126,7 @@ _is_screen_content_ext_profile (VAProfile profile)
 {
   if (profile == VAProfileHEVCSccMain || profile == VAProfileHEVCSccMain10
       || profile == VAProfileHEVCSccMain444
-#if VA_CHECK_VERSION(1, 8, 0)
-      || profile == VAProfileHEVCSccMain444_10
-#endif
-      )
+      || profile == VAProfileHEVCSccMain444_10)
     return TRUE;
 
   return FALSE;
@@ -964,9 +961,7 @@ static const struct
   P (SCREEN_EXTENDED_MAIN, SccMain),
   P (SCREEN_EXTENDED_MAIN_10, SccMain10),
   P (SCREEN_EXTENDED_MAIN_444, SccMain444),
-#if VA_CHECK_VERSION(1, 8, 0)
   P (SCREEN_EXTENDED_MAIN_444_10, SccMain444_10),
-#endif
   /*P (SCREEN_EXTENDED_HIGH_THROUGHPUT_444, ),
   P (SCREEN_EXTENDED_HIGH_THROUGHPUT_444_10, ),
   P (SCREEN_EXTENDED_HIGH_THROUGHPUT_444_14, ),

@@ -41,7 +41,6 @@ struct _GstVaSurfaceCopy
 static gboolean
 _has_copy (GstVaDisplay * display)
 {
-#if VA_CHECK_VERSION (1, 12, 0)
   VADisplay dpy;
   VADisplayAttribute attr = {
     .type = VADisplayAttribCopy,
@@ -58,9 +57,6 @@ _has_copy (GstVaDisplay * display)
   }
 
   return TRUE;
-#else
-  return FALSE;
-#endif
 }
 
 GstVaSurfaceCopy *

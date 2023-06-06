@@ -137,7 +137,6 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
               device->render_device_path);
         }
         break;
-#if VA_CHECK_VERSION(1, 8, 0)
       case AV1:
         if (!gst_va_av1_dec_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE)) {
@@ -145,7 +144,6 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
               device->render_device_path);
         }
         break;
-#endif
       case JPEG:
         if (!gst_va_jpeg_dec_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE)) {

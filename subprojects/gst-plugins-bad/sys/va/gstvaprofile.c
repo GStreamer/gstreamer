@@ -91,7 +91,6 @@ static const struct ProfileMap
       "profile = (string) screen-extended-main-10"),
   P (HEVC, SccMain444, "screen-extended-main-444", "video/x-h265",
       "profile = (string) screen-extended-main-444"),
-#if VA_CHECK_VERSION(1,7,0)
   /* Spec A.2:
      "Main" compliant decoders must be able to decode streams with
      seq_profile equal to 0.
@@ -110,11 +109,8 @@ static const struct ProfileMap
      we just map "0" to "main" and "1" to "high".  */
   P (AV1, Profile0, "main", "video/x-av1", "profile = (string) main"),
   P (AV1, Profile1, "high", "video/x-av1", "profile = (string) high"),
-#endif
-#if VA_CHECK_VERSION(1, 8, 0)
   P (HEVC, SccMain444_10, "screen-extended-main-444-10", "video/x-h265",
       "profile = (string) screen-extended-main-444-10"),
-#endif
 #undef P
 };
 /* *INDENT-ON* */

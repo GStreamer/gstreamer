@@ -487,10 +487,7 @@ _is_scc_enabled (GstVaH265Enc * self)
   if (base->profile == VAProfileHEVCSccMain
       || base->profile == VAProfileHEVCSccMain10
       || base->profile == VAProfileHEVCSccMain444
-#if VA_CHECK_VERSION(1, 8, 0)
-      || base->profile == VAProfileHEVCSccMain444_10
-#endif
-      )
+      || base->profile == VAProfileHEVCSccMain444_10)
     return TRUE;
 
   return FALSE;
@@ -686,7 +683,6 @@ _h265_fill_ptl (GstVaH265Enc * self,
         ptl->one_picture_only_constraint_flag = 0;
         ptl->lower_bit_rate_constraint_flag = 1;
         break;
-#if VA_CHECK_VERSION(1, 8, 0)
       case VAProfileHEVCSccMain444_10:
         ptl->max_14bit_constraint_flag = 1;
         ptl->max_12bit_constraint_flag = 1;
@@ -699,7 +695,6 @@ _h265_fill_ptl (GstVaH265Enc * self,
         ptl->one_picture_only_constraint_flag = 0;
         ptl->lower_bit_rate_constraint_flag = 1;
         break;
-#endif
       default:
         GST_WARNING_OBJECT (self, "do not support the profile: %s of screen"
             " content coding extensions.", gst_va_profile_name (base->profile));
@@ -893,7 +888,6 @@ _h265_fill_sps (GstVaH265Enc * self,
     .sps_3d_extension_flag = 0,
     .sps_scc_extension_flag = _is_scc_enabled (self),
     /* if sps_scc_extension_flag */
-#if VA_CHECK_VERSION(1, 8, 0)
     .sps_scc_extension_params = {
       .sps_curr_pic_ref_enabled_flag = 1,
       .palette_mode_enabled_flag =
@@ -906,7 +900,6 @@ _h265_fill_sps (GstVaH265Enc * self,
       .motion_vector_resolution_control_idc = 0,
       .intra_boundary_filtering_disabled_flag = 0,
     },
-#endif
   };
   /* *INDENT-ON* */
 
@@ -984,14 +977,12 @@ _h265_fill_pps (GstVaH265Enc * self,
     .pps_3d_extension_flag = 0,
     .pps_scc_extension_flag = _is_scc_enabled (self),
     /* if pps_scc_extension_flag*/
-#if VA_CHECK_VERSION(1, 8, 0)
     .pps_scc_extension_params = {
       .pps_curr_pic_ref_enabled_flag =
           pic_param->scc_fields.bits.pps_curr_pic_ref_enabled_flag,
       .residual_adaptive_colour_transform_enabled_flag = 0,
       .pps_palette_predictor_initializers_present_flag = 0,
     },
-#endif
   };
   /* *INDENT-ON* */
 }
@@ -1355,9 +1346,7 @@ _h265_fill_sequence_parameter (GstVaH265Enc * self,
     case VAProfileHEVCSccMain:
     case VAProfileHEVCSccMain10:
     case VAProfileHEVCSccMain444:
-#if VA_CHECK_VERSION(1, 8, 0)
     case VAProfileHEVCSccMain444_10:
-#endif
       profile_idc = GST_H265_PROFILE_IDC_SCREEN_CONTENT_CODING;
       break;
     default:
@@ -1431,9 +1420,7 @@ _h265_fill_sequence_parameter (GstVaH265Enc * self,
     /* if (vui_fields.bits.vui_timing_info_present_flag) */
     .vui_num_units_in_tick = GST_VIDEO_INFO_FPS_D (&base->input_state->info),
     .vui_time_scale = GST_VIDEO_INFO_FPS_N (&base->input_state->info),
-#if VA_CHECK_VERSION(1, 8, 0)
     .scc_fields.bits.palette_mode_enabled_flag = _is_scc_enabled (self),
-#endif
   };
   /* *INDENT-ON* */
 
@@ -1553,10 +1540,8 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     },
     /* We use coding_type here, set this to 0. */
     .hierarchical_level_plus1 = hierarchical_level_plus1,
-#if VA_CHECK_VERSION(1, 8, 0)
     .scc_fields.bits.pps_curr_pic_ref_enabled_flag =
         _is_scc_enabled (self),
-#endif
   };
   /* *INDENT-ON* */
 
@@ -1727,10 +1712,8 @@ _h265_fill_slice_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
       .collocated_from_l0_flag = (frame_type == GST_H265_I_SLICE ?
           0 : self->features.collocated_from_l0_flag),
     },
-#if VA_CHECK_VERSION(1, 10, 0)
     .pred_weight_table_bit_offset = 0,
     .pred_weight_table_bit_length = 0,
-#endif
   };
   /* *INDENT-ON* */
 
@@ -2632,15 +2615,6 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
   GArray *caps_candidates = NULL;
   GArray *chroma_candidates = NULL;
   guint depth = 0, chrome = 0;
-  gboolean support_scc = TRUE;
-
-  /* We do not have scc_fields defined in sequence and picture
-     before 1.8.0, just disable scc all. */
-#if VA_CHECK_VERSION(1, 8, 0)
-  support_scc = TRUE;
-#else
-  support_scc = FALSE;
-#endif
 
   caps_candidates = g_array_new (TRUE, TRUE, sizeof (VAProfile));
   chroma_candidates = g_array_new (TRUE, TRUE, sizeof (VAProfile));
@@ -2706,19 +2680,15 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     if (depth == 8) {
       profile = VAProfileHEVCMain444;
       g_array_append_val (chroma_candidates, profile);
-      if (support_scc) {
-        profile = VAProfileHEVCSccMain444;
-        g_array_append_val (chroma_candidates, profile);
-      }
+      profile = VAProfileHEVCSccMain444;
+      g_array_append_val (chroma_candidates, profile);
     }
 
     if (depth <= 10) {
       profile = VAProfileHEVCMain444_10;
       g_array_append_val (chroma_candidates, profile);
-#if VA_CHECK_VERSION(1, 8, 0)
       profile = VAProfileHEVCSccMain444_10;
       g_array_append_val (chroma_candidates, profile);
-#endif
     }
 
     if (depth <= 12) {
@@ -2741,19 +2711,15 @@ _h265_decide_profile (GstVaH265Enc * self, VAProfile * _profile,
     if (depth == 8) {
       profile = VAProfileHEVCMain;
       g_array_append_val (chroma_candidates, profile);
-      if (support_scc) {
-        profile = VAProfileHEVCSccMain;
-        g_array_append_val (chroma_candidates, profile);
-      }
+      profile = VAProfileHEVCSccMain;
+      g_array_append_val (chroma_candidates, profile);
     }
 
     if (depth <= 10) {
       profile = VAProfileHEVCMain10;
       g_array_append_val (chroma_candidates, profile);
-      if (support_scc) {
-        profile = VAProfileHEVCSccMain10;
-        g_array_append_val (chroma_candidates, profile);
-      }
+      profile = VAProfileHEVCSccMain10;
+      g_array_append_val (chroma_candidates, profile);
     }
 
     if (depth <= 12) {
@@ -3819,7 +3785,6 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
   prediction_direction = gst_va_encoder_get_prediction_direction (base->encoder,
       base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
   if (prediction_direction) {
-#if VA_CHECK_VERSION(1,9,0)
     if (!(prediction_direction & VA_PREDICTION_DIRECTION_PREVIOUS)) {
       GST_INFO_OBJECT (self, "No forward prediction support");
       forward_num = 0;
@@ -3841,7 +3806,6 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
       GST_INFO_OBJECT (self, "Enable low-delay-b mode");
       self->gop.low_delay_b_mode = TRUE;
     }
-#endif
   }
 
   if (forward_num > self->gop.num_ref_frames)
