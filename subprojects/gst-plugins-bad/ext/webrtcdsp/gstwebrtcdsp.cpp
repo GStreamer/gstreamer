@@ -404,7 +404,7 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
     goto done;
   }
 
-  gst_audio_buffer_map (&abuf, &self->info, buf, GST_MAP_READWRITE);
+  gst_audio_buffer_map (&abuf, &probe->info, buf, GST_MAP_READWRITE);
 
   if (probe->interleaved) {
     int16_t * const data = (int16_t * const) abuf.planes[0];
