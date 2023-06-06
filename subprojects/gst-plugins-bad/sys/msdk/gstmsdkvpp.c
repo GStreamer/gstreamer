@@ -59,15 +59,9 @@
 #include "gstmsdkvpputil.h"
 #include "gstmsdkallocator.h"
 
-#define EXT_FORMATS     ""
-
 #ifndef _WIN32
 #include "gstmsdkallocator_libva.h"
 #include <gst/va/gstvaallocator.h>
-#if VA_CHECK_VERSION(1, 4, 1)
-#undef EXT_FORMATS
-#define EXT_FORMATS     ", BGR10A2_LE"
-#endif
 #else
 #include <gst/d3d11/gstd3d11.h>
 #endif

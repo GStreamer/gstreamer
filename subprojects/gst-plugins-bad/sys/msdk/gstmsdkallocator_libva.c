@@ -331,7 +331,6 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->Y = data->V + 2;
         data->A = data->V + 3;
         break;
-#if VA_CHECK_VERSION(1, 4, 1)
       case VA_FOURCC_A2R10G10B10:
         data->Pitch = mem_id->image.pitches[0];
         data->R = buf + mem_id->image.offsets[0];
@@ -339,8 +338,6 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->B = data->R;
         data->A = data->R;
         break;
-#endif
-#if VA_CHECK_VERSION(1, 2, 0)
       case VA_FOURCC_Y210:
       case VA_FOURCC_Y216:
         data->Pitch = mem_id->image.pitches[0];
@@ -359,7 +356,6 @@ gst_msdk_frame_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * data)
         data->V = data->U + 4;
         data->A = data->U + 6;
         break;
-#endif
       case VA_FOURCC_ABGR:
         data->Pitch = mem_id->image.pitches[0];
         data->R = buf + mem_id->image.offsets[0];
@@ -517,11 +513,7 @@ gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
       va_fourcc = VA_FOURCC_YUY2;
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
-#if VA_CHECK_VERSION(1, 2, 0)
       va_chroma = VA_RT_FORMAT_YUV420_10;
-#else
-      va_chroma = VA_RT_FORMAT_YUV420_10BPP;
-#endif
       va_fourcc = VA_FOURCC_P010;
       break;
     case GST_VIDEO_FORMAT_UYVY:
@@ -538,13 +530,10 @@ gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
       va_chroma = VA_RT_FORMAT_YUV444;
       va_fourcc = VA_FOURCC_AYUV;
       break;
-#if VA_CHECK_VERSION(1, 4, 1)
     case GST_VIDEO_FORMAT_BGR10A2_LE:
       va_chroma = VA_RT_FORMAT_RGB32_10;
       va_fourcc = VA_FOURCC_A2R10G10B10;
       break;
-#endif
-#if VA_CHECK_VERSION(1, 2, 0)
     case GST_VIDEO_FORMAT_Y210:
       va_chroma = VA_RT_FORMAT_YUV422_10;
       va_fourcc = VA_FOURCC_Y210;
@@ -565,7 +554,6 @@ gst_msdk_export_dmabuf_to_vasurface (GstMsdkContext * context,
       va_chroma = VA_RT_FORMAT_YUV444_12;
       va_fourcc = VA_FOURCC_Y416;
       break;
-#endif
 #if (MFX_VERSION >= 2004)
     case GST_VIDEO_FORMAT_RGBP:
       va_chroma = VA_RT_FORMAT_RGBP;
