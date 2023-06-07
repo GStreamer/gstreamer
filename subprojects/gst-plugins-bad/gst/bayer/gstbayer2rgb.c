@@ -206,7 +206,7 @@ static void
 gst_bayer2rgb_init (GstBayer2RGB * filter)
 {
   gst_bayer2rgb_reset (filter);
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
+  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), FALSE);
 }
 
 /* No properties are implemented, so only a warning is produced */
