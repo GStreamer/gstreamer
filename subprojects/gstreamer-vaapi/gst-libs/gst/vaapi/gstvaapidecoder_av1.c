@@ -589,7 +589,7 @@ av1_fill_global_motion_info (VADecPictureParameterBufferAV1 * pic_param,
   guint i, j;
 
   for (i = 0; i < 7; i++) {
-    pic_param->wm[i].wmtype =
+    pic_param->wm[i].wmtype = (VAAV1TransformationType)
         frame_header->global_motion_params.gm_type[GST_AV1_REF_LAST_FRAME + i];
 
     for (j = 0; j < 6; j++)
