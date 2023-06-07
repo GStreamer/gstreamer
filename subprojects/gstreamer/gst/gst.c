@@ -213,8 +213,11 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-  if (fdwReason == DLL_PROCESS_ATTACH)
+  if (fdwReason == DLL_PROCESS_ATTACH) {
     _priv_gst_dll_handle = (HMODULE) hinstDLL;
+    priv_gst_clock_init ();
+  }
+
   return TRUE;
 }
 

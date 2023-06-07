@@ -3528,7 +3528,11 @@ gst_parse_bin_from_description_full (const gchar * bin_description,
 GstClockTime
 gst_util_get_timestamp (void)
 {
+#if defined(G_OS_WIN32) && !defined(GST_STATIC_COMPILATION)
+  /* priv_gst_clock_init() is called in DllMain */
+#else
   priv_gst_clock_init ();
+#endif
   return priv_gst_get_monotonic_time ();
 }
 
