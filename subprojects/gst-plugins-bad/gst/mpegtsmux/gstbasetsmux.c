@@ -2098,11 +2098,11 @@ gst_base_ts_mux_sink_event (GstAggregator * agg, GstAggregatorPad * agg_pad,
       GST_DEBUG_OBJECT (mux, "received tag event");
       gst_event_parse_tag (event, &list);
 
-      /* Matroska wants ISO 639-2B code, taglist most likely contains 639-1 */
+      /* MPEG wants ISO 639-2T code, taglist most likely contains 639-1 */
       if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
         const gchar *lang_code;
 
-        lang_code = gst_tag_get_language_code_iso_639_2B (lang);
+        lang_code = gst_tag_get_language_code_iso_639_2T (lang);
         if (lang_code) {
 
           g_mutex_lock (&mux->lock);
