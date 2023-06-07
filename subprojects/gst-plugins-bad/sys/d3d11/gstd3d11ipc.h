@@ -138,8 +138,6 @@ void gst_d3d11_ipc_pkt_build_fin (std::vector<guint8> & buf);
 
 bool gst_d3d11_ipc_clock_is_system (GstClock * clock);
 
-GstClockTime gst_d3d11_ipc_clock_now (void);
-
 std::string gst_d3d11_ipc_wstring_to_string (const std::wstring & str);
 
 std::wstring gst_d3d11_ipc_string_to_wstring (const std::string & str);

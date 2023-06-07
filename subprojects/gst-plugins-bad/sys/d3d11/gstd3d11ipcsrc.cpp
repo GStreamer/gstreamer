@@ -479,7 +479,7 @@ gst_d3d11_ipc_src_create (GstBaseSrc * src, guint64 offset, guint size,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  now_system = gst_d3d11_ipc_clock_now ();
+  now_system = gst_util_get_timestamp ();
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
   now_gst = gst_clock_get_time (clock);
   base_time = GST_ELEMENT_CAST (self)->base_time;

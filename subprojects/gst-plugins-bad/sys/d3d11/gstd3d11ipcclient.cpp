@@ -857,7 +857,7 @@ gst_d3d11_ipc_client_loop_thread_func (GstD3D11IpcClient * self)
   DWORD mode = PIPE_READMODE_MESSAGE;
   guint wait_ret;
   HANDLE pipe = INVALID_HANDLE_VALUE;
-  GstClockTime start_time = gst_d3d11_ipc_clock_now ();
+  GstClockTime start_time = gst_util_get_timestamp ();
   HANDLE waitables[] = { priv->cancellable, priv->wakeup_event };
   std::wstring address = gst_d3d11_ipc_string_to_wstring (priv->address);
 
@@ -895,7 +895,7 @@ gst_d3d11_ipc_client_loop_thread_func (GstD3D11IpcClient * self)
       break;
 
     if (priv->timeout > 0) {
-      diff = gst_d3d11_ipc_clock_now () - start_time;
+      diff = gst_util_get_timestamp () - start_time;
       if (diff > priv->timeout) {
         GST_WARNING_OBJECT (self, "Timeout");
         priv->aborted = true;

@@ -713,7 +713,7 @@ gst_d3d11_ipc_sink_render (GstBaseSink * sink, GstBuffer * buf)
     return GST_FLOW_ERROR;
   }
 
-  pts = now_system = gst_d3d11_ipc_clock_now ();
+  pts = now_system = gst_util_get_timestamp ();
   buf_pts = GST_BUFFER_PTS (buf);
   if (!GST_CLOCK_TIME_IS_VALID (buf_pts))
     buf_pts = GST_BUFFER_DTS (buf);

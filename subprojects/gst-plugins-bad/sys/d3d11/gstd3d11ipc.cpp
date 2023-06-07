@@ -344,20 +344,6 @@ gst_d3d11_ipc_clock_is_system (GstClock * clock)
   return false;
 }
 
-GstClockTime
-gst_d3d11_ipc_clock_now (void)
-{
-  static LARGE_INTEGER freq;
-  LARGE_INTEGER cur_time;
-
-  GST_D3D11_CALL_ONCE_BEGIN {
-    QueryPerformanceFrequency (&freq);
-  } GST_D3D11_CALL_ONCE_END;
-
-  QueryPerformanceCounter (&cur_time);
-  return gst_util_uint64_scale (cur_time.QuadPart, GST_SECOND, freq.QuadPart);
-}
-
 std::string
 gst_d3d11_ipc_wstring_to_string (const std::wstring & str)
 {
