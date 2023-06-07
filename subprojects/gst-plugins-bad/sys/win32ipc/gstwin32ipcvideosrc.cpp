@@ -73,7 +73,6 @@ struct _GstWin32IpcVideoSrc
   gboolean have_video_meta;
   gsize offset[GST_VIDEO_MAX_PLANES];
   gint stride[GST_VIDEO_MAX_PLANES];
-  LARGE_INTEGER frequency;
   GstBufferPool *pool;
 
   /* properties */
@@ -156,7 +155,6 @@ gst_win32_ipc_video_src_init (GstWin32IpcVideoSrc * self)
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
   self->pipe_name = g_strdup (DEFAULT_PIPE_NAME);
   self->processing_deadline = DEFAULT_PROCESSING_DEADLINE;
-  QueryPerformanceFrequency (&self->frequency);
 
   GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
@@ -426,7 +424,6 @@ gst_win32_ipc_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
   GstClockTime base_time;
   GstClockTime now_qpc;
   GstClockTime now_gst;
-  LARGE_INTEGER cur_time;
   gboolean is_qpc = TRUE;
   gboolean need_video_meta = FALSE;
 
@@ -529,9 +526,7 @@ gst_win32_ipc_video_src_create (GstBaseSrc * src, guint64 offset, guint size,
     win32_ipc_mmf_unref (mmf);
   }
 
-  QueryPerformanceCounter (&cur_time);
-  now_qpc = gst_util_uint64_scale (cur_time.QuadPart, GST_SECOND,
-      self->frequency.QuadPart);
+  now_qpc = gst_util_get_timestamp ();
   clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
   now_gst = gst_clock_get_time (clock);
   base_time = GST_ELEMENT_CAST (self)->base_time;

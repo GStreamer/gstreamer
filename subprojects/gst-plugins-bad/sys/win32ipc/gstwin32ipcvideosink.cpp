@@ -67,7 +67,6 @@ struct _GstWin32IpcVideoSink
 
   GstVideoInfo info;
   Win32IpcPipeServer *pipe;
-  LARGE_INTEGER frequency;
 
   Win32IpcVideoInfo minfo;
 
@@ -150,7 +149,6 @@ static void
 gst_win32_ipc_video_sink_init (GstWin32IpcVideoSink * self)
 {
   self->pipe_name = g_strdup (DEFAULT_PIPE_NAME);
-  QueryPerformanceFrequency (&self->frequency);
 
   GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   GST_OBJECT_FLAG_SET (self, GST_ELEMENT_FLAG_REQUIRE_CLOCK);
@@ -453,7 +451,6 @@ static GstFlowReturn
 gst_win32_ipc_video_sink_render (GstBaseSink * sink, GstBuffer * buf)
 {
   GstWin32IpcVideoSink *self = GST_WIN32_IPC_VIDEO_SINK (sink);
-  LARGE_INTEGER cur_time;
   GstClockTime pts;
   GstClockTime now_qpc;
   GstClockTime buf_pts;
@@ -473,9 +470,7 @@ gst_win32_ipc_video_sink_render (GstBaseSink * sink, GstBuffer * buf)
 
   mmf = mem->mmf;
 
-  QueryPerformanceCounter (&cur_time);
-  pts = now_qpc = gst_util_uint64_scale (cur_time.QuadPart, GST_SECOND,
-      self->frequency.QuadPart);
+  pts = now_qpc = gst_util_get_timestamp ();
 
   buf_pts = GST_BUFFER_PTS (buf);
   if (!GST_CLOCK_TIME_IS_VALID (buf_pts))
