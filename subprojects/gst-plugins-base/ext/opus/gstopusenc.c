@@ -508,8 +508,7 @@ gst_opus_enc_find_channel_position_in_vorbis_order (GstOpusEnc * enc,
     }
   }
   GST_WARNING_OBJECT (enc,
-      "Channel position %s is not representable in Vorbis order",
-      gst_opus_channel_names[position]);
+      "Channel position %d is not representable in Vorbis order", position);
   return -1;
 }
 
@@ -615,8 +614,8 @@ gst_opus_enc_setup_channel_mappings (GstOpusEnc * enc,
          needs to be done */
       if (!positions_done[position]) {
         int cv;
-        GST_DEBUG_OBJECT (enc, "Channel position %s is not mapped yet, adding",
-            gst_opus_channel_names[position]);
+        GST_DEBUG_OBJECT (enc, "Channel position %d is not mapped yet, adding",
+            position);
         cv = gst_opus_enc_find_channel_position_in_vorbis_order (enc, position);
         if (cv < 0)
           goto unpositioned;
