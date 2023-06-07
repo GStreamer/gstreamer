@@ -1162,6 +1162,95 @@ GST_START_TEST (rtp_klv_fragmented)
 
 GST_END_TEST;
 
+typedef struct
+{
+  gint buffer_count;
+  gint drop_index;
+} KlvDepayProbeData;
+
+static GstPadProbeReturn
+rtp_klv_do_packet_loss_depay_probe_cb (GstPad * pad, GstPadProbeInfo * info,
+    KlvDepayProbeData * data)
+{
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST) {
+    GstBufferList *buffer_list = info->data;
+    gint length = gst_buffer_list_length (buffer_list);
+
+    if (data->drop_index >= 0) {
+      gint drop_offset = data->drop_index - data->buffer_count;
+
+      if (0 <= drop_offset && drop_offset < length)
+        gst_buffer_list_remove (buffer_list, drop_offset, 1);
+    }
+
+    data->buffer_count += length;
+  } else {
+    if (data->buffer_count == data->drop_index)
+      ret = GST_PAD_PROBE_DROP;
+    data->buffer_count++;
+  }
+
+  return ret;
+}
+
+GST_START_TEST (rtp_klv_fragmented_packet_loss)
+{
+  /* Number of KLV frames to push through the pipeline */
+  const guint FRAME_COUNT = 5;
+
+  /* Repeat frame data */
+  int frame_data_size = sizeof (rtp_KLV_frame_data);
+  guint8 *frame_data = malloc (FRAME_COUNT * sizeof (rtp_KLV_frame_data));
+  for (guint i = 0; i < FRAME_COUNT; i++)
+    memcpy (frame_data + i * frame_data_size, rtp_KLV_frame_data,
+        frame_data_size);
+
+  /* Create RTP pipeline. */
+  rtp_pipeline *p =
+      rtp_pipeline_create (frame_data, frame_data_size, FRAME_COUNT,
+      "meta/x-klv, parsed=(bool)true", "rtpklvpay", "rtpklvdepay");
+
+  if (p == NULL) {
+    return;
+  }
+
+  /* Force super-small mtu of 60 to fragment KLV unit (4 fragments per unit) */
+  g_object_set (p->rtppay, "mtu", 60, NULL);
+
+  /* Drop the 7:th fragment on the depayloader's sink pad */
+  KlvDepayProbeData sink_probe_data = {.buffer_count = 0,.drop_index = 7 };
+  GstPad *depay_sink = gst_element_get_static_pad (p->rtpdepay, "sink");
+  gst_pad_add_probe (depay_sink,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      (GstPadProbeCallback) rtp_klv_do_packet_loss_depay_probe_cb,
+      &sink_probe_data, NULL);
+  gst_object_unref (depay_sink);
+
+  /* Count buffers on the depayloader's source pad */
+  KlvDepayProbeData src_probe_data = {.buffer_count = 0,.drop_index = -1 };
+  GstPad *depay_src = gst_element_get_static_pad (p->rtpdepay, "src");
+  gst_pad_add_probe (depay_src,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+      (GstPadProbeCallback) rtp_klv_do_packet_loss_depay_probe_cb,
+      &src_probe_data, NULL);
+  gst_object_unref (depay_src);
+
+  /* Run RTP pipeline. */
+  rtp_pipeline_run (p);
+
+  /* Destroy RTP pipeline. */
+  rtp_pipeline_destroy (p);
+
+  free (frame_data);
+
+  /* We should be able to decode all RTP buffers except for the second one */
+  g_assert_cmpuint (src_probe_data.buffer_count, ==, FRAME_COUNT - 1);
+}
+
+GST_END_TEST;
+
 static const guint8 rtp_L16_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -1801,6 +1890,7 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_h265_list_gt_mtu_hvc1);
   tcase_add_test (tc_chain, rtp_klv);
   tcase_add_test (tc_chain, rtp_klv_fragmented);
+  tcase_add_test (tc_chain, rtp_klv_fragmented_packet_loss);
   tcase_add_test (tc_chain, rtp_L16);
   tcase_add_test (tc_chain, rtp_L24);
   tcase_add_test (tc_chain, rtp_mp2t);

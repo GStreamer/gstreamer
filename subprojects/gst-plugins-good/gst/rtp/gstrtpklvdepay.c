@@ -330,8 +330,8 @@ gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     }
   }
 
-  /* If this is the first packet and looks like a start, clear resync flag */
-  if (klvdepay->resync && klvdepay->last_marker_seq == -1 && start)
+  /* If this looks like a start, clear the resync flag */
+  if (klvdepay->resync && start)
     klvdepay->resync = FALSE;
 
   if (marker)
