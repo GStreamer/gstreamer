@@ -91,6 +91,27 @@ gst_atomic_int_set_release (gst_atomic_int * x, gint val)
 {
   atomic_store_explicit (x, val, memory_order_release);
 }
+#elif defined G_OS_WIN32
+/* MSVC's C11 atomic might require special cflags
+ * https://devblogs.microsoft.com/cppblog/c11-atomics-in-visual-studio-2022-version-17-5-preview-2/
+ *
+ * Can remove this code once below GLib MR is merged
+ * https://gitlab.gnome.org/GNOME/glib/-/merge_requests/3436
+ */
+
+typedef LONG gst_atomic_int;
+
+static inline int
+gst_atomic_int_get_acquire (gst_atomic_int * x)
+{
+  return InterlockedAndAcquire (x, 1);
+}
+
+static inline void
+gst_atomic_int_set_release (gst_atomic_int * x, gint val)
+{
+  InterlockedOrRelease (x, 1);
+}
 #else /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS) */
 typedef int gst_atomic_int;
 #define gst_atomic_int_get_acquire(x) g_atomic_int_get(x)
