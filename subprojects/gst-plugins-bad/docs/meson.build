@@ -142,6 +142,8 @@ if build_gir
 
     if gstva_dep.found()
         libs += [{'name': 'va', 'gir': va_gir, 'lib': gstva_dep, 'suffix': 'lib'}]
+    else
+        libs += [{'name': 'va', 'gir-file': join_paths(meson.global_source_root(), 'girs', 'GstVa-1.0.gir'), 'lib': []}]
     endif
 
     if gstvulkan_dep.found()
@@ -180,25 +182,34 @@ foreach lib_def: libs
   endforeach
   c_sources += extra_sources
 
-    if lib_def.has_key('gir')
+    if lib_def.has_key('gir') or lib_def.has_key('gir-file')
         if has_gi_extension
-            gir = lib_def['gir']
+            if lib_def.has_key('gir')
+                gir_targets = lib_def['gir']
+                gir = gir_targets[0]
+                gir_file = gir[0].full_path()
+            else
+                gir_targets = []
+                gir = []
+                gir_file = lib_def['gir-file']
+            endif
+
             prefix = lib_def.get('prefix', '')
             suffix = lib_def.get('suffix', '')
             libs_doc += [hotdoc.generate_doc(prefix + name + suffix,
                 project_version: api_version,
                 gi_c_sources: c_sources,
-                gi_sources: gir[0].full_path(),
+                gi_sources: gir_file,
                 gi_c_source_filters: excludes,
                 sitemap: join_paths('libs', name, 'sitemap.txt'),
                 index: join_paths('libs/', name, 'index.md'),
                 gi_index: join_paths('libs/', name, 'index.md'),
                 gi_smart_index: true,
                 gi_order_generated_subpages: true,
-                dependencies: [lib, gir],
+                dependencies: [lib, gir_targets],
                 c_flags: '-DGST_USE_UNSTABLE_API',
                 install: false,
-                depends: gir[0],
+                depends: gir,
             )]
         endif
     else
