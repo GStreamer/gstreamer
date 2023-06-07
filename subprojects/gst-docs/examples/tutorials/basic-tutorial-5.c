@@ -2,30 +2,19 @@
 
 #include <gtk/gtk.h>
 #include <gst/gst.h>
-#include <gst/video/videooverlay.h>
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
 #endif
 
 #include <gdk/gdk.h>
-#if defined (GDK_WINDOWING_X11)
-#include <gdk/gdkx.h>
-#elif defined (GDK_WINDOWING_WIN32)
-#include <gdk/gdkwin32.h>
-#elif defined (GDK_WINDOWING_QUARTZ)
-#include <gdk/gdkquartz.h>
-#if GTK_CHECK_VERSION(3, 24, 10)
-#include <AppKit/AppKit.h>
-NSView *gdk_quartz_window_get_nsview (GdkWindow * window);
-#endif
-#endif
 
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData
 {
   GstElement *playbin;          /* Our one and only pipeline */
 
+  GtkWidget *sink_widget;       /* The widget where our video will be displayed */
   GtkWidget *slider;            /* Slider widget to keep track of current position */
   GtkWidget *streams_list;      /* Text widget to display info about the streams */
   gulong slider_update_signal_id;       /* Signal ID for the slider update signal */
@@ -33,31 +22,6 @@ typedef struct _CustomData
   GstState state;               /* Current state of the pipeline */
   gint64 duration;              /* Duration of the clip, in nanoseconds */
 } CustomData;
-
-/* This function is called when the GUI toolkit creates the physical window that will hold the video.
- * At this point we can retrieve its handler (which has a different meaning depending on the windowing system)
- * and pass it to GStreamer through the XOverlay interface. */
-static void
-realize_cb (GtkWidget * widget, CustomData * data)
-{
-  GdkWindow *window = gtk_widget_get_window (widget);
-  guintptr window_handle;
-
-  if (!gdk_window_ensure_native (window))
-    g_error ("Couldn't create native window needed for GstXOverlay!");
-
-  /* Retrieve window handler from GDK */
-#if defined (GDK_WINDOWING_WIN32)
-  window_handle = (guintptr) GDK_WINDOW_HWND (window);
-#elif defined (GDK_WINDOWING_QUARTZ)
-  window_handle = gdk_quartz_window_get_nsview (window);
-#elif defined (GDK_WINDOWING_X11)
-  window_handle = GDK_WINDOW_XID (window);
-#endif
-  /* Pass it to playbin, which implements XOverlay and will forward it to the video sink */
-  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->playbin),
-      window_handle);
-}
 
 /* This function is called when the PLAY button is clicked */
 static void
@@ -88,26 +52,6 @@ delete_event_cb (GtkWidget * widget, GdkEvent * event, CustomData * data)
   gtk_main_quit ();
 }
 
-/* This function is called everytime the video window needs to be redrawn (due to damage/exposure,
- * rescaling, etc). GStreamer takes care of this in the PAUSED and PLAYING states, otherwise,
- * we simply draw a black rectangle to avoid garbage showing up. */
-static gboolean
-draw_cb (GtkWidget * widget, cairo_t * cr, CustomData * data)
-{
-  if (data->state < GST_STATE_PAUSED) {
-    GtkAllocation allocation;
-
-    /* Cairo is a 2D graphics library which we use here to clean the video window.
-     * It is used by GStreamer for other reasons, so it will always be available to us. */
-    gtk_widget_get_allocation (widget, &allocation);
-    cairo_set_source_rgb (cr, 0, 0, 0);
-    cairo_rectangle (cr, 0, 0, allocation.width, allocation.height);
-    cairo_fill (cr);
-  }
-
-  return FALSE;
-}
-
 /* This function is called when the slider changes its position. We perform a seek to the
  * new position here. */
 static void
@@ -124,20 +68,14 @@ static void
 create_ui (CustomData * data)
 {
   GtkWidget *main_window;       /* The uppermost window, containing all other windows */
-  GtkWidget *video_window;      /* The drawing area where the video will be shown */
   GtkWidget *main_box;          /* VBox to hold main_hbox and the controls */
-  GtkWidget *main_hbox;         /* HBox to hold the video_window and the stream info text widget */
+  GtkWidget *main_hbox;         /* HBox to hold the video sink and the stream info text widget */
   GtkWidget *controls;          /* HBox to hold the buttons and the slider */
   GtkWidget *play_button, *pause_button, *stop_button;  /* Buttons */
 
   main_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect (G_OBJECT (main_window), "delete-event",
       G_CALLBACK (delete_event_cb), data);
-
-  video_window = gtk_drawing_area_new ();
-  gtk_widget_set_double_buffered (video_window, FALSE);
-  g_signal_connect (video_window, "realize", G_CALLBACK (realize_cb), data);
-  g_signal_connect (video_window, "draw", G_CALLBACK (draw_cb), data);
 
   play_button =
       gtk_button_new_from_icon_name ("media-playback-start",
@@ -174,7 +112,7 @@ create_ui (CustomData * data)
   gtk_box_pack_start (GTK_BOX (controls), data->slider, TRUE, TRUE, 2);
 
   main_hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-  gtk_box_pack_start (GTK_BOX (main_hbox), video_window, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (main_hbox), data->sink_widget, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (main_hbox), data->streams_list, FALSE, FALSE, 2);
 
   main_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
@@ -381,6 +319,7 @@ tutorial_main (int argc, char *argv[])
   CustomData data;
   GstStateChangeReturn ret;
   GstBus *bus;
+  GstElement *gtkglsink, *videosink;
 
   /* Initialize GTK */
   gtk_init (&argc, &argv);
@@ -395,7 +334,28 @@ tutorial_main (int argc, char *argv[])
   /* Create the elements */
   data.playbin = gst_element_factory_make ("playbin", "playbin");
 
-  if (!data.playbin) {
+  videosink = gst_element_factory_make ("glsinkbin", "glsinkbin");
+  gtkglsink = gst_element_factory_make ("gtkglsink", "gtkglsink");
+
+  /* Here we create the GTK Sink element which will provide us with a GTK widget where
+   * GStreamer will render the video at and we can add to our UI.
+   * Try to create the OpenGL version of the video sink, and fallback if that fails */
+  if (gtkglsink != NULL && videosink != NULL) {
+    g_print ("Successfully created GTK GL Sink");
+
+    g_object_set (videosink, "sink", gtkglsink, NULL);
+
+    /* The gtkglsink creates the gtk widget for us. This is accessible through a property.
+     * So we get it and use it later to add it to our gui. */
+    g_object_get (gtkglsink, "widget", &data.sink_widget, NULL);
+  } else {
+    g_printerr ("Could not create gtkglsink, falling back to gtksink.\n");
+
+    videosink = gst_element_factory_make ("gtksink", "gtksink");
+    g_object_get (videosink, "widget", &data.sink_widget, NULL);
+  }
+
+  if (!data.playbin || !videosink) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
@@ -404,6 +364,9 @@ tutorial_main (int argc, char *argv[])
   g_object_set (data.playbin, "uri",
       "https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm",
       NULL);
+
+  /* Set the video-sink  */
+  g_object_set (data.playbin, "video-sink", videosink, NULL);
 
   /* Connect to interesting signals in playbin */
   g_signal_connect (G_OBJECT (data.playbin), "video-tags-changed",
@@ -433,6 +396,7 @@ tutorial_main (int argc, char *argv[])
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
     gst_object_unref (data.playbin);
+    gst_object_unref (videosink);
     return -1;
   }
 
@@ -445,6 +409,8 @@ tutorial_main (int argc, char *argv[])
   /* Free resources */
   gst_element_set_state (data.playbin, GST_STATE_NULL);
   gst_object_unref (data.playbin);
+  gst_object_unref (videosink);
+
   return 0;
 }
 
