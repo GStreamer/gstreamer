@@ -53908,23 +53908,26 @@ if the conversion worked or not.</doc>
       </parameters>
     </function>
     <function name="util_simplify_fraction" c:identifier="gst_util_simplify_fraction" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Calculates the simpler representation of @a and @b.
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Calculates the simpler representation of @numerator and @denominator and
+update both values with the resulting simplified fraction.
 
 Simplify a fraction using a simple continued fraction decomposition.
 The idea here is to convert fractions such as 333333/10000000 to 1/30
 using 32 bit arithmetic only. The algorithm is not perfect and relies
 upon two arbitrary parameters to remove non-significative terms from
 the simple continued fraction decomposition. Using 8 and 333 for
-n_terms and threshold respectively seems to give nice results.</doc>
+@n_terms and @threshold respectively seems to give nice results.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
       <return-value transfer-ownership="none">
         <type name="none" c:type="void"/>
       </return-value>
       <parameters>
         <parameter name="numerator" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">First value as #gint</doc>
           <type name="gint" c:type="gint*"/>
         </parameter>
         <parameter name="denominator" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Second value as #gint</doc>
           <type name="gint" c:type="gint*"/>
         </parameter>
         <parameter name="n_terms" transfer-ownership="none">
@@ -53932,6 +53935,7 @@ n_terms and threshold respectively seems to give nice results.</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
         <parameter name="threshold" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">threshold (typical value: 333)</doc>
           <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>

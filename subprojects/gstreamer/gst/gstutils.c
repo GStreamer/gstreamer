@@ -3675,21 +3675,20 @@ gst_util_greatest_common_divisor_int64 (gint64 a, gint64 b)
 
 /**
  * gst_util_simplify_fraction:
- * @a: First value as #gint
- * @b: Second value as #gint
+ * @numerator: First value as #gint
+ * @denominator: Second value as #gint
  * @n_terms: non-significative terms (typical value: 8)
- * @threashold: threshold (typical value: 333)
+ * @threshold: threshold (typical value: 333)
  *
- * Calculates the simpler representation of @a and @b.
+ * Calculates the simpler representation of @numerator and @denominator and
+ * update both values with the resulting simplified fraction.
  *
  * Simplify a fraction using a simple continued fraction decomposition.
  * The idea here is to convert fractions such as 333333/10000000 to 1/30
  * using 32 bit arithmetic only. The algorithm is not perfect and relies
  * upon two arbitrary parameters to remove non-significative terms from
  * the simple continued fraction decomposition. Using 8 and 333 for
- * n_terms and threshold respectively seems to give nice results.
- *
- * Returns: simple representation of @a and @b
+ * @n_terms and @threshold respectively seems to give nice results.
  *
  * Since: 1.24
  */
