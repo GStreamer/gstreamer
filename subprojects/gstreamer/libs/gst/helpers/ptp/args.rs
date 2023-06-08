@@ -44,7 +44,11 @@ pub fn parse_args() -> Result<Args, Error> {
             }
             "-c" | "--clock-id" => {
                 let clock_id_arg = args.next().context("No clock-id following -c")?;
-                clock_id = clock_id_arg.parse::<u64>().context("Invalid clock ID")?;
+                if !clock_id_arg.starts_with("0x") && !clock_id_arg.starts_with("0X") {
+                    bail!("Clock ID not starting with 0x");
+                }
+                clock_id =
+                    u64::from_str_radix(&clock_id_arg[2..], 16).context("Invalid clock ID")?;
             }
             arg => {
                 bail!("Unknown command-line argument {}", arg);
