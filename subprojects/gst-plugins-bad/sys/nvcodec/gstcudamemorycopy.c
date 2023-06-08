@@ -1077,11 +1077,16 @@ gst_cuda_download_before_transform (GstBaseTransform * trans,
   GST_BASE_TRANSFORM_CLASS (parent_class)->before_transform (trans, buffer);
 
   old = gst_base_transform_is_passthrough (trans);
-  if (copy->in_type == copy->out_type ||
-      (copy->in_type == GST_CUDA_BUFFER_COPY_CUDA &&
-          copy->out_type == GST_CUDA_BUFFER_COPY_SYSTEM &&
-          copy->downstream_supports_video_meta)) {
+  if (copy->in_type == copy->out_type) {
     new = TRUE;
+  } else if (copy->in_type == GST_CUDA_BUFFER_COPY_CUDA &&
+      copy->out_type == GST_CUDA_BUFFER_COPY_SYSTEM &&
+      copy->downstream_supports_video_meta) {
+    GstMemory *mem = gst_buffer_peek_memory (buffer, 0);
+    /* zero-copy decoded memory belongs to NVDEC's fixed size pool.
+     * We should return the memory to the decoder as soon as possible */
+    if (!gst_cuda_memory_is_from_fixed_pool (mem))
+      new = TRUE;
   }
 
   if (new != old) {

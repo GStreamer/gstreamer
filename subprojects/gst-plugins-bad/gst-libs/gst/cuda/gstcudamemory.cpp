@@ -78,6 +78,8 @@ struct _GstCudaMemoryPrivate
 
   gboolean saw_io = FALSE;
 
+  gboolean from_fixed_pool = FALSE;
+
   std::map < gint64, std::unique_ptr < GstCudaMemoryTokenData >> token_map;
 
   gpointer user_data = nullptr;
@@ -1036,6 +1038,31 @@ gst_cuda_allocator_alloc_wrapped (GstCudaAllocator * allocator,
       GST_ALLOCATOR_CAST (allocator), nullptr, info->size, 0, 0, info->size);
 
   return GST_MEMORY_CAST (mem);
+}
+
+void
+gst_cuda_memory_set_from_fixed_pool (GstMemory * mem)
+{
+  GstCudaMemory *cmem;
+
+  if (!gst_is_cuda_memory (mem))
+    return;
+
+  cmem = GST_CUDA_MEMORY_CAST (mem);
+  cmem->priv->from_fixed_pool = TRUE;
+}
+
+gboolean
+gst_cuda_memory_is_from_fixed_pool (GstMemory * mem)
+{
+  GstCudaMemory *cmem;
+
+  if (!gst_is_cuda_memory (mem))
+    return FALSE;
+
+  cmem = GST_CUDA_MEMORY_CAST (mem);
+
+  return cmem->priv->from_fixed_pool;
 }
 
 #define GST_CUDA_POOL_ALLOCATOR_IS_FLUSHING(alloc)  (g_atomic_int_get (&alloc->priv->flushing))

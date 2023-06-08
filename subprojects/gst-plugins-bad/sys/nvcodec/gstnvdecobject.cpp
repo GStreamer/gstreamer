@@ -29,6 +29,7 @@
 #include <memory>
 #include <string.h>
 #include <algorithm>
+#include <gst/cuda/gstcuda-private.h>
 
 extern "C"
 {
@@ -523,6 +524,7 @@ gst_nv_dec_object_export_surface (GstNvDecObject * object,
     mem = gst_cuda_allocator_alloc_wrapped (nullptr, object->context,
         stream, &info, output->devptr, output,
         (GDestroyNotify) gst_nv_dec_output_free);
+    gst_cuda_memory_set_from_fixed_pool (mem);
 
     priv->output_map[output->devptr] = mem;
   } else {
