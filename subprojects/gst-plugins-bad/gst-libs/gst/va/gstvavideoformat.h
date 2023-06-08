@@ -54,6 +54,11 @@ GstVideoFormat        gst_va_video_format_from_va_image_format (const VAImageFor
 GST_VA_API
 GstVideoFormat        gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
                                                                      GArray * surface_formats);
+
+GST_VA_API
+gboolean              gst_va_video_info_from_dma_info     (GstVideoInfo * info,
+                                                           const GstVideoInfoDmaDrm * drm_info);
+
 GST_VA_API
 void                  gst_va_video_format_fix_map         (VAImageFormat * image_formats,
                                                            gint num);

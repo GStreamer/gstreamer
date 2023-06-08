@@ -362,6 +362,40 @@ gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
+/* Convert the GstVideoInfoDmaDrm into a traditional GstVideoInfo
+   with recognized format. */
+gboolean
+gst_va_video_info_from_dma_info (GstVideoInfo * info,
+    const GstVideoInfoDmaDrm * drm_info)
+{
+  GstVideoFormat video_format;
+
+  g_return_val_if_fail (drm_info, FALSE);
+  g_return_val_if_fail (info, FALSE);
+
+  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_ENCODED) {
+    *info = drm_info->vinfo;
+    return TRUE;
+  }
+
+  /* The non linear DMA format will be recognized as FORMAT_ENCODED,
+     but we still need to know its real format to set the info such
+     as pitch and stride. Because va plugins have its internal mapping
+     between drm fourcc and video format, we do not use the standard
+     conversion API here. */
+  video_format = gst_va_video_format_from_drm_fourcc (drm_info->drm_fourcc);
+  if (video_format == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+
+  *info = drm_info->vinfo;
+
+  if (!gst_video_info_set_format (info, video_format,
+          GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info)))
+    return FALSE;
+
+  return TRUE;
+}
+
 static GstVideoFormat
 find_gst_video_format_in_rgb32_map (VAImageFormat * image_format,
     guint * drm_fourcc)
