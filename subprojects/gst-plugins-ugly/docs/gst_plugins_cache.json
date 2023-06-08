@@ -995,7 +995,7 @@
                 "long-name": "x264 H.264 Encoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n         format: { Y444, Y42B, I420, YV12, NV12, Y444_10LE, I422_10LE, I420_10LE }\n",
+                        "caps": "video/x-raw:\n      framerate: [ 0/1, 2147483647/1 ]\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n         format: { Y444, Y42B, I420, YV12, NV12, GRAY8, Y444_10LE, I422_10LE, I420_10LE }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
