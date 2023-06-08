@@ -137,12 +137,14 @@ struct _GstNetClientInternalClock
   GSocketAddress *servaddr;
   GCancellable *cancel;
   gboolean made_cancel_fd;
+  gboolean marked_corrupted;
 
   GstClockTime timeout_expiration;
   GstClockTime roundtrip_limit;
   GstClockTime rtt_avg;
   GstClockTime minimum_update_interval;
   GstClockTime last_remote_poll_interval;
+  GstClockTime last_remote_time;
   GstClockTime remote_avg_old;
   guint skipped_updates;
   GstClockTime last_rtts[MEDIAN_PRE_FILTERING_WINDOW];
@@ -230,6 +232,7 @@ gst_net_client_internal_clock_init (GstNetClientInternalClock * self)
   self->last_remote_poll_interval = GST_CLOCK_TIME_NONE;
   self->skipped_updates = 0;
   self->last_rtts_missing = MEDIAN_PRE_FILTERING_WINDOW;
+  self->marked_corrupted = FALSE;
   self->remote_avg_old = 0;
 }
 
@@ -373,6 +376,11 @@ gst_net_client_internal_clock_observe_times (GstNetClientInternalClock * self,
       "local1 %" G_GUINT64_FORMAT " remote1 %" G_GUINT64_FORMAT " remote2 %"
       G_GUINT64_FORMAT " local2 %" G_GUINT64_FORMAT, local_1, remote_1,
       remote_2, local_2);
+
+  /* if we are ahead of time the time server may have been reset */
+  if (self->last_remote_time > remote_1 || self->marked_corrupted)
+    goto corrupted;
+  self->last_remote_time = remote_1;
 
   /* If the server told us a poll interval and it's bigger than the
    * one configured via the property, use the server's */
@@ -648,6 +656,14 @@ gst_net_client_internal_clock_observe_times (GstNetClientInternalClock * self,
 bogus_observation:
   /* Schedule a new packet again soon */
   self->timeout_expiration = gst_util_get_timestamp () + (GST_SECOND / 4);
+  return;
+
+corrupted:
+  if (!self->marked_corrupted) {
+    GST_ERROR_OBJECT (self, "Remote clock time reverted, mark clock invalid");
+    self->marked_corrupted = TRUE;
+  }
+  GST_OBJECT_UNLOCK (self);
   return;
 }
 
@@ -1196,7 +1212,13 @@ gst_net_client_clock_finalize (GObject * object)
         update_clock_cache (cache);
       } else {
         GstClock *sysclock = gst_system_clock_obtain ();
-        GstClockTime time = gst_clock_get_time (sysclock) + 60 * GST_SECOND;
+        GstClockTime time = gst_clock_get_time (sysclock);
+        GstNetClientInternalClock *internal_clock =
+            GST_NET_CLIENT_INTERNAL_CLOCK (cache->clock);
+
+        /* only defer deletion if the clock is not marked corrupted */
+        if (!internal_clock->marked_corrupted)
+          time += 60 * GST_SECOND;
 
         cache->remove_id = gst_clock_new_single_shot_id (sysclock, time);
         gst_clock_id_wait_async (cache->remove_id, remove_clock_cache, cache,
@@ -1364,6 +1386,9 @@ gst_net_client_clock_constructed (GObject * object)
     ClockCache *tmp = l->data;
     GstNetClientInternalClock *internal_clock =
         GST_NET_CLIENT_INTERNAL_CLOCK (tmp->clock);
+
+    if (internal_clock->marked_corrupted)
+      break;
 
     if (strcmp (internal_clock->address, self->priv->address) == 0 &&
         internal_clock->port == self->priv->port) {
