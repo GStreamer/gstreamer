@@ -24,6 +24,7 @@
 #endif
 
 #include <stdio.h>
+#include <string.h>
 
 #include <glib.h>
 #include <glib/gstdio.h>
@@ -484,6 +485,86 @@ GST_START_TEST (test_uri_interface)
 
 GST_END_TEST;
 
+static void
+test_buffered_write (guint num_buf, guint num_mem_per_buf)
+{
+  GstElement *filesink;
+  guint i, j;
+  gchar *tmp_fn;
+  GstSegment segment;
+  const gsize size_per_mem = 4;
+  gsize total_size = size_per_mem * num_buf * num_mem_per_buf;
+  GStatBuf stat_buf;
+
+  tmp_fn = create_temporary_file ();
+  if (!tmp_fn)
+    return;
+
+  filesink = setup_filesink ();
+  g_object_set (filesink, "location", tmp_fn, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (filesink, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_stream_start ("test")));
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  for (i = 0; i < num_buf; i++) {
+    GstBuffer *buf = gst_buffer_new ();
+    for (j = 0; j < num_mem_per_buf; j++) {
+      GstMemory *mem = gst_allocator_alloc (NULL, size_per_mem, NULL);
+      GstMapInfo info;
+      fail_unless (mem != NULL);
+
+      fail_unless (gst_memory_map (mem, &info, GST_MAP_WRITE));
+      memset (info.data, 0, info.size);
+      gst_memory_unmap (mem, &info);
+
+      gst_buffer_append_memory (buf, mem);
+    }
+
+    fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_OK);
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  fail_unless_equals_int (gst_element_set_state (filesink, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+
+  cleanup_filesink (filesink);
+
+  if (g_stat (tmp_fn, &stat_buf) == 0)
+    fail_unless_equals_int64 (stat_buf.st_size, total_size);
+
+  g_remove (tmp_fn);
+  g_free (tmp_fn);
+}
+
+GST_START_TEST (test_buffered_write_17_1)
+{
+  test_buffered_write (17, 1);
+}
+
+GST_END_TEST;
+
+
+GST_START_TEST (test_buffered_write_9_2)
+{
+  test_buffered_write (9, 2);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_buffered_write_6_3)
+{
+  test_buffered_write (6, 3);
+}
+
+GST_END_TEST;
+
 static Suite *
 filesink_suite (void)
 {
@@ -496,6 +577,9 @@ filesink_suite (void)
   tcase_add_test (tc_chain, test_uri_interface);
   tcase_add_test (tc_chain, test_seeking);
   tcase_add_test (tc_chain, test_flush);
+  tcase_add_test (tc_chain, test_buffered_write_17_1);
+  tcase_add_test (tc_chain, test_buffered_write_9_2);
+  tcase_add_test (tc_chain, test_buffered_write_6_3);
 
   return s;
 }

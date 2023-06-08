@@ -540,6 +540,10 @@ gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
         current_buf_mem_idx = 0;
     }
     current_buf_idx = i;
+    if (current_buf_mem_idx != 0) {
+      g_assert (current_buf_idx > 0);
+      current_buf_idx--;
+    }
   }
 
   do {
@@ -629,6 +633,10 @@ gst_writev_buffer_list (GstObject * sink, gint fd, GstPoll * fdset,
           current_buf_mem_idx = 0;
       }
       current_buf_idx = i;
+      if (current_buf_mem_idx != 0) {
+        g_assert (current_buf_idx > 0);
+        current_buf_idx--;
+      }
     }
   } while (left > 0);
 
