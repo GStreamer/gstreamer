@@ -85,6 +85,12 @@ pub mod unix {
     ))]
     pub const SOL_SOCKET: c_int = 1;
 
+    #[cfg(target_os = "macos")]
+    pub const FIOCLEX: c_ulong = 0x20006601;
+
+    #[cfg(target_os = "macos")]
+    pub const SO_NOSIGPIPE: c_int = 0x1022;
+
     #[cfg(any(
         target_os = "solaris",
         target_os = "illumos",
@@ -144,6 +150,41 @@ pub mod unix {
         )),
     ))]
     pub const SO_REUSEPORT: c_int = 15;
+
+    #[cfg(any(target_os = "freebsd", target_os = "dragonfly", target_os = "netbsd"))]
+    pub const SOCK_CLOEXEC: c_int = 0x10000000;
+    #[cfg(target_os = "openbsd")]
+    pub const SOCK_CLOEXEC: c_int = 0x8000;
+    #[cfg(any(target_os = "solaris", target_os = "illumos"))]
+    pub const SOCK_CLOEXEC: c_int = 0x080000;
+    #[cfg(all(
+        target_os = "linux",
+        any(target_arch = "sparc", target_arch = "sparc64"),
+    ))]
+    pub const SOCK_CLOEXEC: c_int = 0x400000;
+    #[cfg(all(
+        target_os = "linux",
+        not(any(target_arch = "sparc", target_arch = "sparc64")),
+    ))]
+    pub const SOCK_CLOEXEC: c_int = 0x80000;
+
+    #[cfg(any(
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "netbsd",
+        target_os = "openbsd",
+        target_os = "macos",
+    ))]
+    pub const SOCK_DGRAM: c_int = 2;
+    #[cfg(any(target_os = "solaris", target_os = "illumos"))]
+    pub const SOCK_DGRAM: c_int = 1;
+    #[cfg(all(target_os = "linux", any(target_arch = "mips", target_arch = "mips64"),))]
+    pub const SOCK_DGRAM: c_int = 1;
+    #[cfg(all(
+        target_os = "linux",
+        not(any(target_arch = "mips", target_arch = "mips64")),
+    ))]
+    pub const SOCK_DGRAM: c_int = 2;
 
     pub const AF_INET: c_int = 2;
     #[cfg(any(
@@ -226,6 +267,20 @@ pub mod unix {
         pub fn freeifaddrs(ifa: *mut ifaddrs);
 
         pub fn setpriority(which: c_int, who: c_int, prio: c_int) -> c_int;
+
+        #[cfg_attr(target_os = "netbsd", link_name = "__socket30")]
+        #[cfg_attr(target_os = "illumos", link_name = "__xnet_socket")]
+        pub fn socket(domain: c_int, ty: c_int, protocol: c_int) -> c_int;
+
+        #[cfg_attr(target_os = "illumos", link_name = "__xnet_bind")]
+        #[cfg_attr(
+            all(target_os = "macos", target_arch = "x86"),
+            link_name = "bind$UNIX2003"
+        )]
+        pub fn bind(socket: c_int, address: *const sockaddr, address_len: u32) -> c_int;
+
+        #[cfg(target_os = "macos")]
+        pub fn ioctl(fd: c_int, request: c_ulong, ...) -> c_int;
 
         #[cfg(test)]
         pub fn pipe(pipefd: *mut i32) -> i32;
@@ -665,6 +720,7 @@ pub mod windows {
     //
     // XXX: Once meson has cargo subproject support all of the below can be replaced with the windows-sys crate.
     pub const INVALID_HANDLE_VALUE: HANDLE = (-1 as isize as usize) as HANDLE;
+    pub const INVALID_SOCKET: SOCKET = (-1 as isize as usize) as SOCKET;
 
     pub const STD_INPUT_HANDLE: i32 = -10;
     pub const STD_OUTPUT_HANDLE: i32 = -11;
@@ -827,9 +883,25 @@ pub mod windows {
             value: *const c_void,
             option_len: i32,
         ) -> i32;
+
+        pub fn WSASocketW(
+            af: i32,
+            ty: i32,
+            protocol: i32,
+            lpprotocolinfo: *const c_void,
+            g: u32,
+            dwflags: u32,
+        ) -> SOCKET;
+        pub fn bind(s: SOCKET, name: *const SOCKADDR, namelen: i32) -> i32;
+        pub fn closesocket(socket: SOCKET) -> i32;
     }
 
     pub const AF_INET: u32 = 2;
+
+    pub const SOCK_DGRAM: u16 = 2u16;
+
+    pub const WSA_FLAG_OVERLAPPED: u32 = 1u32;
+    pub const WSA_FLAG_NO_HANDLE_INHERIT: u32 = 128u32;
 
     pub const GAA_FLAG_SKIP_ANYCAST: u32 = 0x0002;
     pub const GAA_FLAG_SKIP_MULTICAST: u32 = 0x0004;
@@ -873,11 +945,13 @@ pub mod windows {
         pub anonymous: IP_ADAPTER_UNICAST_ADDRESS_LH_0_0,
     }
 
+    // XXX: Actually SOCKADDR_IN but we don't care about others
     #[repr(C)]
     pub struct SOCKADDR {
         pub sa_family: u16,
         pub sin_port: u16,
         pub in_addr: IN_ADDR,
+        pub sin_zero: [u8; 8],
     }
 
     #[repr(C)]

@@ -19,7 +19,7 @@
 
 use std::{
     io::{Read, Write},
-    net::{Ipv4Addr, SocketAddr, UdpSocket},
+    net::{Ipv4Addr, UdpSocket},
 };
 
 #[macro_use]
@@ -59,7 +59,7 @@ const MSG_TYPE_SEND_TIME_ACK: u8 = 3;
 
 /// Create a new `UdpSocket` for the given port and configure it for PTP.
 fn create_socket(port: u16) -> Result<UdpSocket, Error> {
-    let socket = UdpSocket::bind(SocketAddr::from((Ipv4Addr::UNSPECIFIED, port)))
+    let socket = net::create_udp_socket(&Ipv4Addr::UNSPECIFIED, port)
         .with_context(|| format!("Failed to bind socket to port {}", port))?;
 
     socket
@@ -69,8 +69,6 @@ fn create_socket(port: u16) -> Result<UdpSocket, Error> {
     socket
         .set_multicast_ttl_v4(1)
         .context("Failed to set multicast TTL on socket")?;
-
-    net::set_reuse(&socket);
 
     Ok(socket)
 }

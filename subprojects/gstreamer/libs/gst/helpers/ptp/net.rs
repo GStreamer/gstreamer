@@ -262,7 +262,106 @@ mod imp {
         Ok(if_infos)
     }
 
-    // Join multicast address for a given interface.
+    /// Create an `UdpSocket` and bind it to the given address but set `SO_REUSEADDR` and/or
+    /// `SO_REUSEPORT` before doing so.
+    ///
+    /// `UdpSocket::bind()` does not allow setting custom options before binding.
+    pub fn create_udp_socket(addr: &Ipv4Addr, port: u16) -> Result<UdpSocket, io::Error> {
+        use std::os::unix::io::FromRawFd;
+
+        /// Helper struct to keep a raw fd and close it on drop
+        struct Fd(i32);
+        impl Drop for Fd {
+            fn drop(&mut self) {
+                unsafe {
+                    // SAFETY: The integer is a valid fd by construction.
+                    let _ = close(self.0);
+                }
+            }
+        }
+
+        // SAFETY: Calling socket() is safe at any time and will simply fail if invalid parameters
+        // are passed.
+        let fd = unsafe {
+            #[cfg(any(
+                target_os = "linux",
+                target_os = "freebsd",
+                target_os = "openbsd",
+                target_os = "netbsd",
+                target_os = "dragonfly",
+                target_os = "solaris",
+                target_os = "illumos",
+            ))]
+            let ty = SOCK_DGRAM | SOCK_CLOEXEC;
+            #[cfg(target_os = "macos")]
+            let ty = SOCK_DGRAM;
+
+            let res = socket(AF_INET, ty, 0);
+            if res == -1 {
+                return Err(io::Error::last_os_error());
+            }
+            Fd(res)
+        };
+
+        // SAFETY: A valid socket fd is passed to ioctl() and setsockopt() and the parameters to
+        // setsockopt() are according to the type expected by SO_NOSIGPIPE.
+        #[cfg(target_os = "macos")]
+        unsafe {
+            let res = ioctl(fd.0, FIOCLEX);
+            if res == -1 {
+                return Err(io::Error::last_os_error());
+            }
+
+            let val = 1i32;
+            let res = setsockopt(
+                fd.0,
+                SOL_SOCKET,
+                SO_NOSIGPIPE,
+                &val as *const _ as *const _,
+                mem::size_of_val(&val) as _,
+            );
+            if res < 0 {
+                return Err(io::Error::last_os_error());
+            }
+        }
+
+        // SAFETY: A valid socket fd is passed here.
+        unsafe {
+            set_reuse(fd.0);
+        }
+
+        // SAFETY: A valid socket fd is passed together with a valid sockaddr_in and its size.
+        unsafe {
+            let addr = sockaddr_in {
+                sin_family: AF_INET as _,
+                sin_port: u16::to_be(port),
+                sin_addr: in_addr {
+                    s_addr: u32::from_ne_bytes(addr.octets()),
+                },
+                sin_zero: [0u8; 8],
+                #[cfg(any(
+                    target_os = "freebsd",
+                    target_os = "openbsd",
+                    target_os = "netbsd",
+                    target_os = "dragonfly",
+                    target_os = "macos",
+                ))]
+                sin_len: mem::size_of::<sockaddr_in>() as _,
+            };
+            let res = bind(
+                fd.0,
+                &addr as *const _ as *const _,
+                mem::size_of_val(&addr) as _,
+            );
+            if res < 0 {
+                return Err(io::Error::last_os_error());
+            }
+        }
+
+        unsafe { Ok(UdpSocket::from_raw_fd(mem::ManuallyDrop::new(fd).0)) }
+    }
+
+    /// Join multicast address for a given interface.
     pub fn join_multicast_v4(
         socket: &UdpSocket,
         addr: &Ipv4Addr,
@@ -322,7 +421,9 @@ mod imp {
     /// Allow multiple sockets to bind to the same address / port.
     ///
     /// This is best-effort and might not actually do anything.
-    pub fn set_reuse(socket: &UdpSocket) {
+    ///
+    /// SAFETY: Must be called with a valid socket fd.
+    unsafe fn set_reuse(socket: i32) {
         // SAFETY: SO_REUSEADDR takes an i32 value that can be 0/false or 1/true and
         // enables the given feature on the socket.
         //
@@ -331,7 +432,7 @@ mod imp {
         unsafe {
             let v = 1i32;
             let res = setsockopt(
-                socket.as_raw_fd(),
+                socket,
                 SOL_SOCKET,
                 SO_REUSEADDR,
                 &v as *const _ as *const _,
@@ -352,7 +453,7 @@ mod imp {
             unsafe {
                 let v = 1i32;
                 let res = setsockopt(
-                    socket.as_raw_fd(),
+                    socket,
                     SOL_SOCKET,
                     SO_REUSEPORT,
                     &v as *const _ as *const _,
@@ -374,10 +475,10 @@ mod imp {
     use std::{
         ffi::{CStr, OsString},
         io, marker, mem,
-        net::UdpSocket,
+        net::{Ipv4Addr, SocketAddr, UdpSocket},
         os::{
             raw::*,
-            windows::{ffi::OsStringExt, io::AsRawSocket},
+            windows::{ffi::OsStringExt, io::AsRawSocket, raw::SOCKET},
         },
         ptr, slice,
     };
@@ -635,6 +736,70 @@ mod imp {
         Ok(if_infos)
     }
 
+    /// Create an `UdpSocket` and bind it to the given address but set `SO_REUSEADDR` and/or
+    /// `SO_REUSEPORT` before doing so.
+    ///
+    /// `UdpSocket::bind()` does not allow setting custom options before binding.
+    pub fn create_udp_socket(addr: &Ipv4Addr, port: u16) -> Result<UdpSocket, io::Error> {
+        use std::os::windows::io::FromRawSocket;
+
+        // XXX: Make sure Rust std is calling WSAStartup()
+        let _ = UdpSocket::bind(SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0)))?;
+
+        /// Helper struct to keep a raw socket and close it on drop
+        struct Socket(SOCKET);
+        impl Drop for Socket {
+            fn drop(&mut self) {
+                unsafe {
+                    // SAFETY: The socket is valid by construction.
+                    let _ = closesocket(self.0);
+                }
+            }
+        }
+
+        // SAFETY: Calling WSASocketW() is safe at any time and will simply fail if invalid parameters
+        // are passed or something else goes wrong.
+        let socket = unsafe {
+            let res = WSASocketW(
+                AF_INET as _,
+                SOCK_DGRAM as _,
+                0,
+                ptr::null_mut(),
+                0,
+                WSA_FLAG_OVERLAPPED | WSA_FLAG_NO_HANDLE_INHERIT,
+            );
+            if res == INVALID_SOCKET {
+                return Err(io::Error::from_raw_os_error(WSAGetLastError()));
+            }
+            Socket(res)
+        };
+
+        // SAFETY: A valid socket is passed here.
+        unsafe {
+            set_reuse(socket.0);
+        }
+
+        // SAFETY: A valid socket fd is passed together with a valid SOCKADDR and its size.
+        unsafe {
+            let addr = SOCKADDR {
+                sa_family: AF_INET as _,
+                sin_port: u16::to_be(port),
+                in_addr: IN_ADDR {
+                    S_un: IN_ADDR_0 {
+                        S_addr: u32::from_ne_bytes(addr.octets()),
+                    },
+                },
+                sin_zero: [0; 8],
+            };
+            let res = bind(socket.0, &addr, mem::size_of_val(&addr) as _);
+            if res < 0 {
+                return Err(io::Error::from_raw_os_error(WSAGetLastError()));
+            }
+        }
+
+        unsafe { Ok(UdpSocket::from_raw_socket(mem::ManuallyDrop::new(socket).0)) }
+    }
+
     // Join multicast address for a given interface.
     pub fn join_multicast_v4(
         socket: &UdpSocket,
@@ -679,7 +844,9 @@ mod imp {
     /// Allow multiple sockets to bind to the same address / port.
     ///
     /// This is best-effort and might not actually do anything.
-    pub fn set_reuse(socket: &UdpSocket) {
+    ///
+    /// SAFETY: Must be called with a valid socket.
+    unsafe fn set_reuse(socket: SOCKET) {
         // SAFETY: SO_REUSEADDR takes an i32 value that can be 0/false or 1/true and
         // enables the given feature on the socket.
         //
@@ -688,7 +855,7 @@ mod imp {
         unsafe {
             let v = 1i32;
             let res = setsockopt(
-                socket.as_raw_socket(),
+                socket,
                 SOL_SOCKET as i32,
                 SO_REUSEADDR as i32,
                 &v as *const _ as *const _,
@@ -716,7 +883,7 @@ mod test {
     }
 
     #[test]
-    fn test_join_multicast() {
+    fn test_create_socket_join_multicast() {
         let ifaces = super::query_interfaces().unwrap();
         let iface = if ifaces.is_empty() {
             return;
@@ -724,12 +891,24 @@ mod test {
             &ifaces[0]
         };
 
-        let socket = std::net::UdpSocket::bind(std::net::SocketAddr::from((
+        let socket = super::create_udp_socket(&std::net::Ipv4Addr::UNSPECIFIED, 0).unwrap();
+        super::join_multicast_v4(&socket, &std::net::Ipv4Addr::new(224, 0, 0, 1), iface).unwrap();
+
+        let local_addr = socket.local_addr().unwrap();
+
+        let socket2 = std::net::UdpSocket::bind(std::net::SocketAddr::from((
             std::net::Ipv4Addr::UNSPECIFIED,
             0,
         )))
         .unwrap();
-        super::set_reuse(&socket);
-        super::join_multicast_v4(&socket, &std::net::Ipv4Addr::new(224, 0, 0, 1), iface).unwrap();
+        socket2
+            .send_to(
+                &[1, 2, 3, 4],
+                std::net::SocketAddr::from((std::net::Ipv4Addr::LOCALHOST, local_addr.port())),
+            )
+            .unwrap();
+        let mut buf = [0u8; 4];
+        socket.recv(&mut buf).unwrap();
+        assert_eq!(buf, [1, 2, 3, 4]);
     }
 }
