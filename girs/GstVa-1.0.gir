@@ -690,7 +690,7 @@ configuration is not valid or not updated.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstAllocator</doc>
             <type name="Gst.Allocator" c:type="GstAllocator*"/>
           </parameter>
-          <parameter name="info" transfer-ownership="none">
+          <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
             <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
           </parameter>
@@ -701,7 +701,7 @@ configuration is not valid or not updated.</doc>
         </parameters>
       </function>
       <function name="setup_buffer" c:identifier="gst_va_dmabuf_allocator_setup_buffer" version="1.22">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">This funciton creates a new VASurfaceID and exposes its DMABufs,
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">This function creates a new VASurfaceID and exposes its DMABufs,
 later it populates the @buffer with those DMABufs.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
         <return-value transfer-ownership="none">
@@ -977,6 +977,28 @@ to it.
         <parameter name="context_type" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvautils.c">the #gchar string specify the context type name</doc>
           <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="va_dmabuf_get_modifier_for_format" c:identifier="gst_va_dmabuf_get_modifier_for_format" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Get the underlying modifier for specified @format and @usage_hint.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">the underlying modifier.</doc>
+        <type name="guint64" c:type="guint64"/>
+      </return-value>
+      <parameters>
+        <parameter name="display" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
+          <type name="VaDisplay" c:type="GstVaDisplay*"/>
+        </parameter>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoFormat</doc>
+          <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+        </parameter>
+        <parameter name="usage_hint" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
+          <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>
     </function>
