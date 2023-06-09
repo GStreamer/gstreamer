@@ -135,7 +135,7 @@ va_export_surface_to_dmabuf (GstVaDisplay * display, VASurfaceID surface,
   status = vaExportSurfaceHandle (dpy, surface,
       VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2, flags, desc);
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR ("vaExportSurfaceHandle: %s", vaErrorStr (status));
+    GST_INFO ("vaExportSurfaceHandle: %s", vaErrorStr (status));
     return FALSE;
   }
 
