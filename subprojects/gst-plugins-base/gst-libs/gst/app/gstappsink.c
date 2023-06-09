@@ -795,6 +795,11 @@ gst_app_sink_stop (GstBaseSink * psink)
   gst_caps_replace (&priv->last_caps, NULL);
   gst_segment_init (&priv->preroll_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&priv->last_segment, GST_FORMAT_UNDEFINED);
+  priv->sample = gst_sample_make_writable (priv->sample);
+  gst_sample_set_buffer (priv->sample, NULL);
+  gst_sample_set_buffer_list (priv->sample, NULL);
+  gst_sample_set_caps (priv->sample, NULL);
+  gst_sample_set_segment (priv->sample, NULL);
   g_mutex_unlock (&priv->mutex);
 
   return TRUE;
