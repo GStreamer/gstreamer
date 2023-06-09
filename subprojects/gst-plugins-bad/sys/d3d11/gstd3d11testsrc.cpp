@@ -201,7 +201,13 @@ typedef struct
 
 typedef struct
 {
-  const ColorValue *clear_color[2];
+  ColorValue value;
+  gboolean is_valid;
+} StaticColor;
+
+typedef struct
+{
+  StaticColor static_color[2];
   GstD3D11TestSrcQuad *quad[2];
   GstD3D11TestSrcPattern pattern;
 } GstD3D11TestSrcRender;
@@ -224,6 +230,8 @@ struct _GstD3D11TestSrc
   D3D11_VIEWPORT viewport;
   ID2D1Factory *d2d_factory;
   gint64 token;
+  gfloat alpha;
+  GstD3D11ConverterAlphaMode alpha_mode;
 
   gboolean reverse;
   gint64 n_frames;
@@ -318,7 +326,7 @@ static const gchar templ_ps_snow[] =
     "  float4 output;\n"
     "  float val = get_rand (time * input.Texture);\n"
     "  output.rgb = float3(val, val, val);\n"
-    "  output.a = 1.0f;\n"
+    "  output.a = %s;\n"
     "  return output;\n"
     "}";
 
@@ -347,7 +355,8 @@ static const gchar templ_ps_checker[] =
     "  float result = fmod (xy_mod.x + xy_mod.y, 2.0);\n"
     "  output.r = step (result, 0.5);\n"
     "  output.g = 1.0 - output.r;\n"
-    "  output.ba = float2 (0.0f, 1.0f);\n"
+    "  output.b = 0;\n"
+    "  output.a = %s;\n"
     "  return output;\n"
     "}";
 /* *INDENT-ON* */
@@ -373,6 +382,8 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11Buffer > index_buffer;
   ComPtr < ID3D11Buffer > const_buffer;
   GstD3D11TestSrcQuad *quad;
+  gchar *ps_src;
+  gchar float_str_buf[G_ASCII_DTOSTR_BUF_SIZE];
 
   memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
@@ -400,8 +411,10 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     return FALSE;
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (self->device,
-      templ_ps_snow, "main", &ps);
+  g_ascii_formatd (float_str_buf, G_ASCII_DTOSTR_BUF_SIZE, "%f", self->alpha);
+  ps_src = g_strdup_printf (templ_ps_snow, float_str_buf);
+  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
+  g_free (ps_src);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
@@ -672,25 +685,28 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
     vertex_data[base].color.r = color->r;
     vertex_data[base].color.g = color->g;
     vertex_data[base].color.b = color->b;
-    vertex_data[base].color.a = color->a;
+    vertex_data[base].color.a = self->alpha;
 
     /* top left */
     vertex_data[base + 1].position.x = left;
     vertex_data[base + 1].position.y = top;
     vertex_data[base + 1].position.z = 0.0f;
     vertex_data[base + 1].color = vertex_data[base].color;
+    vertex_data[base + 1].color.a = self->alpha;
 
     /* top right */
     vertex_data[base + 2].position.x = right;
     vertex_data[base + 2].position.y = top;
     vertex_data[base + 2].position.z = 0.0f;
     vertex_data[base + 2].color = vertex_data[base].color;
+    vertex_data[base + 2].color.a = self->alpha;
 
     /* bottom right */
     vertex_data[base + 3].position.x = right;
     vertex_data[base + 3].position.y = bottom;
     vertex_data[base + 3].position.z = 0.0f;
     vertex_data[base + 3].color = vertex_data[base].color;
+    vertex_data[base + 3].color.a = self->alpha;
 
     /* clockwise indexing */
     indices[idx_base] = base;   /* bottom left */
@@ -729,25 +745,28 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
     vertex_data[base].color.r = color->r;
     vertex_data[base].color.g = color->g;
     vertex_data[base].color.b = color->b;
-    vertex_data[base].color.a = color->a;
+    vertex_data[base].color.a = self->alpha;
 
     /* top left */
     vertex_data[base + 1].position.x = left;
     vertex_data[base + 1].position.y = top;
     vertex_data[base + 1].position.z = 0.0f;
     vertex_data[base + 1].color = vertex_data[base].color;
+    vertex_data[base + 1].color.a = self->alpha;
 
     /* top right */
     vertex_data[base + 2].position.x = right;
     vertex_data[base + 2].position.y = top;
     vertex_data[base + 2].position.z = 0.0f;
     vertex_data[base + 2].color = vertex_data[base].color;
+    vertex_data[base + 2].color.a = self->alpha;
 
     /* bottom right */
     vertex_data[base + 3].position.x = right;
     vertex_data[base + 3].position.y = bottom;
     vertex_data[base + 3].position.z = 0.0f;
     vertex_data[base + 3].color = vertex_data[base].color;
+    vertex_data[base + 3].color.a = self->alpha;
 
     /* clockwise indexing */
     indices[idx_base] = base;   /* bottom left */
@@ -788,25 +807,28 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
     vertex_data[base].color.r = color->r;
     vertex_data[base].color.g = color->g;
     vertex_data[base].color.b = color->b;
-    vertex_data[base].color.a = color->a;
+    vertex_data[base].color.a = self->alpha;
 
     /* top left */
     vertex_data[base + 1].position.x = left;
     vertex_data[base + 1].position.y = top;
     vertex_data[base + 1].position.z = 0.0f;
     vertex_data[base + 1].color = vertex_data[base].color;
+    vertex_data[base + 1].color.a = self->alpha;
 
     /* top right */
     vertex_data[base + 2].position.x = right;
     vertex_data[base + 2].position.y = top;
     vertex_data[base + 2].position.z = 0.0f;
     vertex_data[base + 2].color = vertex_data[base].color;
+    vertex_data[base + 2].color.a = self->alpha;
 
     /* bottom right */
     vertex_data[base + 3].position.x = right;
     vertex_data[base + 3].position.y = bottom;
     vertex_data[base + 3].position.z = 0.0f;
     vertex_data[base + 3].color = vertex_data[base].color;
+    vertex_data[base + 3].color.a = self->alpha;
 
     /* clockwise indexing */
     indices[idx_base] = base;   /* bottom left */
@@ -847,25 +869,28 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
     vertex_data[base].color.r = color->r;
     vertex_data[base].color.g = color->g;
     vertex_data[base].color.b = color->b;
-    vertex_data[base].color.a = color->a;
+    vertex_data[base].color.a = self->alpha;
 
     /* top left */
     vertex_data[base + 1].position.x = left;
     vertex_data[base + 1].position.y = top;
     vertex_data[base + 1].position.z = 0.0f;
     vertex_data[base + 1].color = vertex_data[base].color;
+    vertex_data[base + 1].color.a = self->alpha;
 
     /* top right */
     vertex_data[base + 2].position.x = right;
     vertex_data[base + 2].position.y = top;
     vertex_data[base + 2].position.z = 0.0f;
     vertex_data[base + 2].color = vertex_data[base].color;
+    vertex_data[base + 2].color.a = self->alpha;
 
     /* bottom right */
     vertex_data[base + 3].position.x = right;
     vertex_data[base + 3].position.y = bottom;
     vertex_data[base + 3].position.z = 0.0f;
     vertex_data[base + 3].color = vertex_data[base].color;
+    vertex_data[base + 3].color.a = self->alpha;
 
     /* clockwise indexing */
     indices[idx_base] = base;   /* bottom left */
@@ -914,6 +939,7 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11Buffer > index_buffer;
   GstD3D11TestSrcQuad *quad;
   gchar *ps_src;
+  gchar float_str_buf[G_ASCII_DTOSTR_BUF_SIZE];
 
   memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
@@ -941,8 +967,10 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     return FALSE;
   }
 
+  g_ascii_formatd (float_str_buf, G_ASCII_DTOSTR_BUF_SIZE, "%f", self->alpha);
+
   ps_src = g_strdup_printf (templ_ps_checker,
-      self->info.width, self->info.height, checker_size);
+      self->info.width, self->info.height, checker_size, float_str_buf);
   hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
   g_free (ps_src);
   if (!gst_d3d11_result (hr, self->device)) {
@@ -1070,10 +1098,14 @@ enum
   PROP_ADAPTER,
   PROP_IS_LIVE,
   PROP_PATTERN,
+  PROP_ALPHA,
+  PROP_ALPHA_MODE,
 };
 
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_PATTERN GST_D3D11_TEST_SRC_SMPTE
+#define DEFAULT_ALPHA 1.0f
+#define DEFAULT_ALPHA_MODE GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED
 
 static void gst_d3d11_test_src_dispose (GObject * object);
 static void gst_d3d11_test_src_set_property (GObject * object,
@@ -1132,6 +1164,33 @@ gst_d3d11_test_src_class_init (GstD3D11TestSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D11TestSrc:alpha:
+   *
+   * Global alpha value to apply
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ALPHA,
+      g_param_spec_float ("alpha", "Alpha", "Global alpha value to use",
+          0, 1, DEFAULT_ALPHA,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11TestSrc:alpha-mode:
+   *
+   * Alpha mode to use
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ALPHA_MODE,
+      g_param_spec_enum ("alpha-mode", "Alpha Mode",
+          "alpha mode to use", GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
+          GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d11_test_src_set_context);
 
@@ -1171,6 +1230,8 @@ gst_d3d11_test_src_init (GstD3D11TestSrc * self)
 
   self->adapter_index = DEFAULT_ADAPTER;
   self->pattern = DEFAULT_PATTERN;
+  self->alpha = DEFAULT_ALPHA;
+  self->alpha_mode = DEFAULT_ALPHA_MODE;
 }
 
 static void
@@ -1199,6 +1260,12 @@ gst_d3d11_test_src_set_property (GObject * object, guint prop_id,
     case PROP_PATTERN:
       self->pattern = (GstD3D11TestSrcPattern) g_value_get_enum (value);
       break;
+    case PROP_ALPHA:
+      self->alpha = g_value_get_float (value);
+      break;
+    case PROP_ALPHA_MODE:
+      self->alpha_mode = (GstD3D11ConverterAlphaMode) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1220,6 +1287,12 @@ gst_d3d11_test_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PATTERN:
       g_value_set_enum (value, self->pattern);
+      break;
+    case PROP_ALPHA:
+      g_value_set_float (value, self->alpha);
+      break;
+    case PROP_ALPHA_MODE:
+      g_value_set_enum (value, self->alpha_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1357,6 +1430,15 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
     goto error;
   }
 
+  /* D2D uses premultiplied alpha */
+  if (self->pattern == GST_D3D11_TEST_SRC_CIRCULAR ||
+      self->pattern == GST_D3D11_TEST_SRC_BALL) {
+    g_object_set (self->converter, "src-alpha-mode",
+        GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
+  }
+
+  g_object_set (self->converter, "dest-alpha-mode", self->alpha_mode, nullptr);
+
   draw_caps = gst_video_info_to_caps (&draw_info);
   params = gst_d3d11_allocation_params_new (self->device, &draw_info,
       GST_D3D11_ALLOCATION_FLAG_DEFAULT,
@@ -1406,19 +1488,29 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
         goto error;
       break;
     case GST_D3D11_TEST_SRC_BLACK:
-      render->clear_color[0] = &color_table[COLOR_BLACK];
+      render->static_color[0].value = color_table[COLOR_BLACK];
+      render->static_color[0].value.a = self->alpha;
+      render->static_color[0].is_valid = TRUE;
       break;
     case GST_D3D11_TEST_SRC_WHITE:
-      render->clear_color[0] = &color_table[COLOR_WHITE];
+      render->static_color[0].value = color_table[COLOR_WHITE];
+      render->static_color[0].value.a = self->alpha;
+      render->static_color[0].is_valid = TRUE;
       break;
     case GST_D3D11_TEST_SRC_RED:
-      render->clear_color[0] = &color_table[COLOR_RED];
+      render->static_color[0].value = color_table[COLOR_RED];
+      render->static_color[0].value.a = self->alpha;
+      render->static_color[0].is_valid = TRUE;
       break;
     case GST_D3D11_TEST_SRC_GREEN:
-      render->clear_color[0] = &color_table[COLOR_GREEN];
+      render->static_color[0].value = color_table[COLOR_GREEN];
+      render->static_color[0].value.a = self->alpha;
+      render->static_color[0].is_valid = TRUE;
       break;
     case GST_D3D11_TEST_SRC_BLUE:
-      render->clear_color[0] = &color_table[COLOR_BLUE];
+      render->static_color[0].value = color_table[COLOR_BLUE];
+      render->static_color[0].value.a = self->alpha;
+      render->static_color[0].is_valid = TRUE;
       break;
     case GST_D3D11_TEST_SRC_CHECKERS1:
       if (!setup_checker_render (self, render, 1))
@@ -1437,8 +1529,12 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
         goto error;
       break;
     case GST_D3D11_TEST_SRC_BLINK:
-      render->clear_color[0] = &color_table[COLOR_BLACK];
-      render->clear_color[1] = &color_table[COLOR_WHITE];
+      render->static_color[0].value = color_table[COLOR_BLACK];
+      render->static_color[0].value.a = self->alpha;
+      render->static_color[0].is_valid = TRUE;
+      render->static_color[1].value = color_table[COLOR_WHITE];
+      render->static_color[1].value.a = self->alpha;
+      render->static_color[1].is_valid = TRUE;
       break;
     case GST_D3D11_TEST_SRC_CIRCULAR:
     case GST_D3D11_TEST_SRC_BALL:
@@ -1748,11 +1844,11 @@ gst_d3d11_test_src_draw_ball (GstD3D11TestSrc * self,
       return FALSE;
     }
 
-    stops[0].color = D2D1::ColorF (D2D1::ColorF::White);
+    stops[0].color = D2D1::ColorF (D2D1::ColorF::White, self->alpha);
     stops[0].position = 0.0f;
-    stops[1].color = D2D1::ColorF (D2D1::ColorF::Snow);
+    stops[1].color = D2D1::ColorF (D2D1::ColorF::Snow, self->alpha);
     stops[1].position = 0.3f;
-    stops[2].color = D2D1::ColorF (D2D1::ColorF::Black);
+    stops[2].color = D2D1::ColorF (D2D1::ColorF::Black, self->alpha);
     stops[2].position = 1.0f;
 
     hr = d2d_target->CreateGradientStopCollection (stops, 3, D2D1_GAMMA_1_0,
@@ -1849,9 +1945,9 @@ gst_d3d11_test_src_draw_circular (GstD3D11TestSrc * self,
     for (guint i = 0; i < G_N_ELEMENTS (stops); i++) {
       FLOAT diff;
       if ((i % 2) == 0)
-        stops[i].color = D2D1::ColorF (D2D1::ColorF::Black);
+        stops[i].color = D2D1::ColorF (D2D1::ColorF::Black, self->alpha);
       else
-        stops[i].color = D2D1::ColorF (D2D1::ColorF::White);
+        stops[i].color = D2D1::ColorF (D2D1::ColorF::White, self->alpha);
 
       stops[i].position = position;
       diff = position / G_N_ELEMENTS (stops) * 2;
@@ -1903,11 +1999,11 @@ gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
   D3D11_MAPPED_SUBRESOURCE map;
   UINT offsets = 0;
 
-  if (render->clear_color[0]) {
-    if (render->clear_color[1] && (self->n_frames % 2) == 1)
-      context->ClearRenderTargetView (rtv, render->clear_color[1]->color);
+  if (render->static_color[0].is_valid) {
+    if (render->static_color[1].is_valid && (self->n_frames % 2) == 1)
+      context->ClearRenderTargetView (rtv, render->static_color[1].value.color);
     else
-      context->ClearRenderTargetView (rtv, render->clear_color[0]->color);
+      context->ClearRenderTargetView (rtv, render->static_color[0].value.color);
     return TRUE;
   }
 
