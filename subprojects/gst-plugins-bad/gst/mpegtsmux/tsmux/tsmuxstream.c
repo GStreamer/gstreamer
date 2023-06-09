@@ -100,15 +100,18 @@ struct TsMuxStreamBuffer
  * tsmux_stream_new:
  * @pid: a PID
  * @stream_type: the stream type
+ * @stream_number: stream number
  *
- * Create a new stream with PID of @pid and @stream_type.
+ * Create a new stream with PID of @pid and @stream_type,
+ * with stream number @stream_number.
  *
  * Returns: a new #TsMuxStream.
  */
 TsMuxStream *
-tsmux_stream_new (guint16 pid, guint stream_type)
+tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
 {
   TsMuxStream *stream = g_new0 (TsMuxStream, 1);
+  gboolean supports_user_specified_stream_number = FALSE;
 
   stream->state = TSMUX_STREAM_STATE_HEADER;
   stream->pi.pid = pid;
@@ -125,10 +128,16 @@ tsmux_stream_new (guint16 pid, guint stream_type)
     case TSMUX_ST_VIDEO_MPEG4:
     case TSMUX_ST_VIDEO_H264:
     case TSMUX_ST_VIDEO_HEVC:
-      /* FIXME: Assign sequential IDs? */
-      stream->id = 0xE0;
+      if (stream_number > 0xF) {
+        GST_WARNING
+            ("video stream number %d is greater than 0xF. Setting to 0.",
+            stream_number);
+        stream_number = 0;
+      }
+      stream->id = 0xE0 | stream_number;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       stream->is_video_stream = TRUE;
+      supports_user_specified_stream_number = TRUE;
       break;
     case TSMUX_ST_VIDEO_JP2K:
       stream->id = 0xBD;
@@ -138,10 +147,16 @@ tsmux_stream_new (guint16 pid, guint stream_type)
     case TSMUX_ST_AUDIO_AAC:
     case TSMUX_ST_AUDIO_MPEG1:
     case TSMUX_ST_AUDIO_MPEG2:
-      /* FIXME: Assign sequential IDs? */
+      if (stream_number > 0x1F) {
+        GST_WARNING
+            ("audio stream number %d is greater than 0x1F. Setting to 0.",
+            stream_number);
+        stream_number = 0;
+      }
       stream->is_audio = TRUE;
-      stream->id = 0xC0;
+      stream->id = 0xC0 | stream_number;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      supports_user_specified_stream_number = TRUE;
       break;
     case TSMUX_ST_VIDEO_DIRAC:
     case TSMUX_ST_PS_AUDIO_LPCM:
@@ -207,6 +222,12 @@ tsmux_stream_new (guint16 pid, guint stream_type)
     default:
       /* Might be a custom stream type implemented by a subclass */
       break;
+  }
+
+  if (!supports_user_specified_stream_number && stream_number != 0) {
+    GST_WARNING
+        ("Attempt to set stream number %d for unsupported stream type %d",
+        stream_number, stream_type);
   }
 
   stream->first_ts = GST_CLOCK_STIME_NONE;

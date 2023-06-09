@@ -93,6 +93,15 @@ GST_DEBUG_CATEGORY (gst_base_ts_mux_debug);
 
 G_DEFINE_TYPE (GstBaseTsMuxPad, gst_base_ts_mux_pad, GST_TYPE_AGGREGATOR_PAD);
 
+#define DEFAULT_PAD_STREAM_NUMBER 0
+
+enum
+{
+  PAD_PROP_0,
+  PAD_PROP_STREAM_NUMBER,
+};
+
+
 /* Internals */
 
 static void
@@ -164,15 +173,68 @@ gst_base_ts_mux_pad_dispose (GObject * obj)
 }
 
 static void
+gst_base_ts_mux_pad_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (object);
+
+  switch (prop_id) {
+    case PAD_PROP_STREAM_NUMBER:
+      ts_pad->stream_number = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_base_ts_mux_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (object);
+
+  switch (prop_id) {
+    case PAD_PROP_STREAM_NUMBER:
+      g_value_set_int (value, ts_pad->stream_number);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_base_ts_mux_pad_class_init (GstBaseTsMuxPadClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstAggregatorPadClass *gstaggpad_class = GST_AGGREGATOR_PAD_CLASS (klass);
 
   gobject_class->dispose = gst_base_ts_mux_pad_dispose;
+  gobject_class->set_property = gst_base_ts_mux_pad_set_property;
+  gobject_class->get_property = gst_base_ts_mux_pad_get_property;
+
   gstaggpad_class->flush = gst_base_ts_mux_pad_flush;
 
   gst_type_mark_as_plugin_api (GST_TYPE_BASE_TS_MUX, 0);
+
+  /**
+   * GstBaseTsMuxPad:stream-number:
+   *
+   * Set stream number for AVC video stream
+   * or AAC audio streams.
+   *
+   * video stream number is stored in 4 bits
+   * audio stream number is stored in 5 bits.
+   * See Table 2-22 of ITU-T H222.0 for details on AAC and AVC stream numbers
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PAD_PROP_STREAM_NUMBER,
+      g_param_spec_int ("stream-number", "stream number",
+          "stream number", 0x0, 0x1F, DEFAULT_PAD_STREAM_NUMBER,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
 
 static void
@@ -728,9 +790,12 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   }
 
   if (ts_pad->stream == NULL) {
+    gint stream_number = DEFAULT_PAD_STREAM_NUMBER;
+
+    g_object_get (ts_pad, "stream-number", &stream_number, NULL);
     ts_pad->stream =
-        tsmux_create_stream (mux->tsmux, st, ts_pad->pid, ts_pad->language,
-        ts_pad->bitrate, ts_pad->max_bitrate);
+        tsmux_create_stream (mux->tsmux, st, stream_number, ts_pad->pid,
+        ts_pad->language, ts_pad->bitrate, ts_pad->max_bitrate);
     if (ts_pad->stream == NULL)
       goto error;
   }

@@ -225,7 +225,7 @@ struct TsMuxStream {
 };
 
 /* stream management */
-TsMuxStream *	tsmux_stream_new 		(guint16 pid, guint stream_type);
+TsMuxStream *	tsmux_stream_new 		(guint16 pid, guint stream_type, guint stream_number);
 void 		tsmux_stream_free 		(TsMuxStream *stream);
 
 guint16         tsmux_stream_get_pid            (TsMuxStream *stream);

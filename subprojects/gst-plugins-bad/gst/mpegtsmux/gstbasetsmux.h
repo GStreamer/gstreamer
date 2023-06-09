@@ -130,6 +130,7 @@ struct _GstBaseTsMuxPad
   gchar *language;
   gint bitrate;
   gint max_bitrate;
+  gint stream_number;
 };
 
 struct _GstBaseTsMuxPadClass

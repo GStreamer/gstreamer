@@ -703,9 +703,10 @@ tsmux_get_new_pid (TsMux * mux)
  * tsmux_create_stream:
  * @mux: a #TsMux
  * @stream_type: the stream type
+ * @stream_number: stream number
  * @pid: the PID of the new stream.
  *
- * Create a new stream of @stream_type in the muxer session @mux.
+ * Create a new stream of @stream_type with @stream_number in the muxer session @mux.
  *
  * When @pid is set to #TSMUX_PID_AUTO, a new free PID will automatically
  * be allocated for the new stream.
@@ -713,8 +714,8 @@ tsmux_get_new_pid (TsMux * mux)
  * Returns: a new #TsMuxStream.
  */
 TsMuxStream *
-tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
-    gchar * language, guint bitrate, guint max_bitrate)
+tsmux_create_stream (TsMux * mux, guint stream_type, guint stream_number,
+    guint16 pid, gchar * language, guint bitrate, guint max_bitrate)
 {
   TsMuxStream *stream;
   guint16 new_pid;
@@ -732,7 +733,9 @@ tsmux_create_stream (TsMux * mux, guint stream_type, guint16 pid,
   if (tsmux_find_stream (mux, new_pid))
     return NULL;
 
-  stream = mux->new_stream_func (new_pid, stream_type, mux->new_stream_data);
+  stream =
+      mux->new_stream_func (new_pid, stream_type, stream_number,
+      mux->new_stream_data);
 
   mux->streams = g_list_prepend (mux->streams, stream);
   mux->nb_streams++;

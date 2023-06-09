@@ -292,9 +292,9 @@ gst_atsc_mux_stream_get_es_descrs (TsMuxStream * stream,
 
 static TsMuxStream *
 gst_atsc_mux_create_new_stream (guint16 new_pid,
-    TsMuxStreamType stream_type, GstBaseTsMux * mpegtsmux)
+    TsMuxStreamType stream_type, guint stream_number, GstBaseTsMux * mpegtsmux)
 {
-  TsMuxStream *ret = tsmux_stream_new (new_pid, stream_type);
+  TsMuxStream *ret = tsmux_stream_new (new_pid, stream_type, stream_number);
 
   if (stream_type == ATSCMUX_ST_PS_AUDIO_EAC3) {
     ret->id = 0xBD;
