@@ -741,7 +741,7 @@ gst_type_find_helper_for_data_with_caps (GstObject * obj,
 
   factories = gst_type_find_list_factories_for_caps (obj, caps);
   if (!factories) {
-    GST_ERROR_OBJECT (obj, "Failed to typefind for caps: %" GST_PTR_FORMAT,
+    GST_INFO_OBJECT (obj, "Failed to typefind for caps: %" GST_PTR_FORMAT,
         caps);
     goto out;
   }
