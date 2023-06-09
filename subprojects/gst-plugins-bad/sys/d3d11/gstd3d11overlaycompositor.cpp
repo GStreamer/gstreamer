@@ -57,6 +57,27 @@ static const gchar templ_pixel_shader[] =
     "  return shaderTexture.Sample(samplerState, input.Texture);\n"
     "}\n";
 
+static const gchar templ_premul_pixel_shader[] =
+    "Texture2D shaderTexture;\n"
+    "SamplerState samplerState;\n"
+    "struct PS_INPUT\n"
+    "{\n"
+    "  float4 Position: SV_POSITION;\n"
+    "  float2 Texture: TEXCOORD;\n"
+    "};\n"
+    "float4 main(PS_INPUT input): SV_TARGET\n"
+    "{\n"
+    "  float4 sample = shaderTexture.Sample(samplerState, input.Texture);\n"
+    "  float4 unpremul_sample;\n"
+    "  if (sample.a == 0 || sample.a == 1)\n"
+    "    return sample;\n"
+    "  unpremul_sample.r = saturate (sample.r / sample.a);\n"
+    "  unpremul_sample.g = saturate (sample.g / sample.a);\n"
+    "  unpremul_sample.b = saturate (sample.b / sample.a);\n"
+    "  unpremul_sample.a = sample.a;\n"
+    "  return unpremul_sample;\n"
+    "}\n";
+
 static const gchar templ_vertex_shader[] =
     "struct VS_INPUT\n"
     "{\n"
@@ -83,6 +104,7 @@ struct _GstD3D11OverlayCompositorPrivate
   D3D11_VIEWPORT viewport;
 
   ID3D11PixelShader *ps;
+  ID3D11PixelShader *premul_ps;
   ID3D11VertexShader *vs;
   ID3D11InputLayout *layout;
   ID3D11SamplerState *sampler;
@@ -99,6 +121,7 @@ typedef struct
   ID3D11Texture2D *texture;
   ID3D11ShaderResourceView *srv;
   ID3D11Buffer *vertex_buffer;
+  gboolean premul_alpha;
 } GstD3D11CompositionOverlay;
 
 static void gst_d3d11_overlay_compositor_dispose (GObject * object);
@@ -133,6 +156,7 @@ gst_d3d11_overlay_compositor_dispose (GObject * object)
   gst_d3d11_overlay_compositor_free_overlays (self);
 
   GST_D3D11_CLEAR_COM (priv->ps);
+  GST_D3D11_CLEAR_COM (priv->premul_ps);
   GST_D3D11_CLEAR_COM (priv->vs);
   GST_D3D11_CLEAR_COM (priv->layout);
   GST_D3D11_CLEAR_COM (priv->sampler);
@@ -172,6 +196,8 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   ComPtr < ID3D11Texture2D > texture;
   ComPtr < ID3D11ShaderResourceView > srv;
   ComPtr < ID3D11Buffer > vertex_buffer;
+  GstVideoOverlayFormatFlags flags;
+  gboolean premul_alpha = FALSE;
 
   memset (&subresource_data, 0, sizeof (subresource_data));
   memset (&texture_desc, 0, sizeof (texture_desc));
@@ -187,8 +213,16 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     return nullptr;
   }
 
+  flags = gst_video_overlay_rectangle_get_flags (overlay_rect);
+  if ((flags & GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA) != 0) {
+    premul_alpha = TRUE;
+    flags = GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA;
+  } else {
+    flags = GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE;
+  }
+
   buf = gst_video_overlay_rectangle_get_pixels_unscaled_argb (overlay_rect,
-      GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
+      flags);
   if (!buf) {
     GST_ERROR_OBJECT (self, "Failed to get overlay buffer");
     return nullptr;
@@ -314,6 +348,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   overlay->texture = texture.Detach ();
   overlay->srv = srv.Detach ();
   overlay->vertex_buffer = vertex_buffer.Detach ();
+  overlay->premul_alpha = premul_alpha;
 
   return overlay;
 }
@@ -350,6 +385,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
   ComPtr < ID3D11PixelShader > ps;
+  ComPtr < ID3D11PixelShader > premul_ps;
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
   ComPtr < ID3D11SamplerState > sampler;
@@ -384,6 +420,13 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
       templ_pixel_shader, "main", &ps);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
+    return FALSE;
+  }
+
+  hr = gst_d3d11_create_pixel_shader_simple (device,
+      templ_premul_pixel_shader, "main", &premul_ps);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Couldn't create premul pixel shader");
     return FALSE;
   }
 
@@ -464,6 +507,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   context_handle->Unmap (index_buffer.Get (), 0);
 
   priv->ps = ps.Detach ();
+  priv->premul_ps = premul_ps.Detach ();
   priv->vs = vs.Detach ();
   priv->layout = layout.Detach ();
   priv->sampler = sampler.Detach ();
@@ -653,7 +697,6 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
   context->IASetIndexBuffer (priv->index_buffer, DXGI_FORMAT_R16_UINT, 0);
   context->PSSetSamplers (0, 1, &priv->sampler);
   context->VSSetShader (priv->vs, nullptr, 0);
-  context->PSSetShader (priv->ps, nullptr, 0);
   context->RSSetViewports (1, &priv->viewport);
   context->OMSetRenderTargets (1, rtv, nullptr);
   context->OMSetBlendState (priv->blend, nullptr, 0xffffffff);
@@ -661,6 +704,11 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
   for (iter = priv->overlays; iter; iter = g_list_next (iter)) {
     GstD3D11CompositionOverlay *overlay =
         (GstD3D11CompositionOverlay *) iter->data;
+
+    if (overlay->premul_alpha)
+      context->PSSetShader (priv->premul_ps, nullptr, 0);
+    else
+      context->PSSetShader (priv->ps, nullptr, 0);
 
     context->PSSetShaderResources (0, 1, &overlay->srv);
     context->IASetVertexBuffers (0,
