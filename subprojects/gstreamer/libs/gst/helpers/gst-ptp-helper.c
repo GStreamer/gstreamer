@@ -71,10 +71,37 @@ static gboolean verbose = FALSE;
 static guint64 clock_id = (guint64) - 1;
 static guint8 clock_id_array[8];
 
+static gboolean
+parse_clock_id (const gchar * option_name, const gchar * value, gpointer data,
+    GError ** err)
+{
+  gchar *endptr;
+  guint64 v;
+
+  errno = 0;
+  v = g_ascii_strtoull (value, &endptr, 16);
+  if (endptr == NULL || *endptr != '\0') {
+    g_set_error (err, G_OPTION_ERROR, G_OPTION_ERROR_UNKNOWN_OPTION,
+        "Cannot parse integer value \"%s\" for --clock-id", value);
+    return FALSE;
+  }
+
+  if (errno != 0) {
+    g_set_error (err, G_OPTION_ERROR, G_OPTION_ERROR_UNKNOWN_OPTION,
+        "Cannot parse integer value \"%s\" for --clock-id: %s", value,
+        g_strerror (errno));
+    return FALSE;
+  }
+
+  clock_id = v;
+
+  return TRUE;
+}
+
 static GOptionEntry opt_entries[] = {
   {"interface", 'i', 0, G_OPTION_ARG_STRING_ARRAY, &ifaces,
       "Interface to listen on", NULL},
-  {"clock-id", 'c', 0, G_OPTION_ARG_INT64, &clock_id,
+  {"clock-id", 'c', 0, G_OPTION_ARG_CALLBACK, parse_clock_id,
       "PTP clock id", NULL},
   {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
       "Be verbose", NULL},
