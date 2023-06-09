@@ -102,6 +102,27 @@ GType gst_d3d11_converter_sampler_filter_get_type (void);
 #define GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER (gst_d3d11_converter_sampler_filter_get_type())
 
 /**
+ * GstD3D11ConverterAlphaMode:
+ * @GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED: Unspecified alpha mode
+ * @GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED: Premultiplied alpha
+ * @GST_D3D11_CONVERTER_ALPHA_MODE_STRAIGHT: Straight alpha
+ *
+ * Alpha mode. Enum values are idnetical to DXGI_ALPHA_MODE
+ *
+ * Since: 1.24
+ */
+typedef enum
+{
+  GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED = 0,
+  GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED = 1,
+  GST_D3D11_CONVERTER_ALPHA_MODE_STRAIGHT = 2,
+} GstD3D11ConverterAlphaMode;
+
+GST_D3D11_API
+GType gst_d3d11_converter_alpha_mode_get_type (void);
+#define GST_TYPE_D3D11_CONVERTER_ALPHA_MODE (gst_d3d11_converter_alpha_mode_get_type())
+
+/**
  * GstD3D11Converter:
  *
  * Opaque GstD3D11Converter struct
