@@ -136,6 +136,45 @@ typedef enum
 } GstCudaMemoryTransfer;
 
 /**
+ * GstCudaMemoryAllocMethod:
+ *
+ * CUDA memory allocation method
+ *
+ * Since: 1.24
+ */
+typedef enum
+{
+  /**
+   * GST_CUDA_MEMORY_ALLOC_UNKNOWN:
+   *
+   * Since: 1.24
+   */
+  GST_CUDA_MEMORY_ALLOC_UNKNOWN,
+
+  /**
+   * GST_CUDA_MEMORY_ALLOC_MALLOC:
+   *
+   * Memory allocated via cuMemAlloc or cuMemAllocPitch
+   *
+   * Since: 1.24
+   */
+  GST_CUDA_MEMORY_ALLOC_MALLOC,
+
+  /**
+   * GST_CUDA_MEMORY_ALLOC_MMAP:
+   *
+   * Memory allocated via cuMemCreate and cuMemMap
+   *
+   * Since: 1.24
+   */
+  GST_CUDA_MEMORY_ALLOC_MMAP,
+} GstCudaMemoryAllocMethod;
+
+#define GST_TYPE_CUDA_MEMORY_ALLOC_METHOD (gst_cuda_memory_alloc_method_get_type())
+GST_CUDA_API
+GType gst_cuda_memory_alloc_method_get_type (void);
+
+/**
  * GstCudaMemory:
  *
  * Since: 1.22
@@ -183,6 +222,13 @@ void            gst_cuda_memory_set_token_data (GstCudaMemory * mem,
 GST_CUDA_API
 gpointer        gst_cuda_memory_get_token_data (GstCudaMemory * mem,
                                                 gint64 token);
+
+GST_CUDA_API
+GstCudaMemoryAllocMethod gst_cuda_memory_get_alloc_method (GstCudaMemory * mem);
+
+GST_CUDA_API
+gboolean        gst_cuda_memory_export (GstCudaMemory * mem,
+                                        gpointer os_handle);
 
 /**
  * GstCudaAllocator:
@@ -239,6 +285,14 @@ GstMemory *     gst_cuda_allocator_alloc_wrapped (GstCudaAllocator * allocator,
                                                   CUdeviceptr dev_ptr,
                                                   gpointer user_data,
                                                   GDestroyNotify notify);
+
+GST_CUDA_API
+GstMemory *     gst_cuda_allocator_virtual_alloc (GstCudaAllocator * allocator,
+                                                  GstCudaContext * context,
+                                                  GstCudaStream * stream,
+                                                  const GstVideoInfo * info,
+                                                  const CUmemAllocationProp * prop,
+                                                  CUmemAllocationGranularity_flags granularity_flags);
 
 /**
  * GstCudaPoolAllocator:

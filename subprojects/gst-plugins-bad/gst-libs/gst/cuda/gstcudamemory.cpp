@@ -29,10 +29,34 @@
 #include <map>
 #include <memory>
 
+#ifdef G_OS_WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (cuda_allocator_debug);
 #define GST_CAT_DEFAULT cuda_allocator_debug
 
 static GstAllocator *_gst_cuda_allocator = nullptr;
+
+GType
+gst_cuda_memory_alloc_method_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue alloc_methods[] = {
+    {GST_CUDA_MEMORY_ALLOC_UNKNOWN, "GST_CUDA_MEMORY_ALLOC_UNKNOWN", "unknown"},
+    {GST_CUDA_MEMORY_ALLOC_MALLOC, "GST_CUDA_MEMORY_ALLOC_MALLOC", "malloc"},
+    {GST_CUDA_MEMORY_ALLOC_MMAP, "GST_CUDA_MEMORY_ALLOC_MMAP", "mmap"},
+    {0, nullptr, nullptr}
+  };
+
+  GST_CUDA_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstCudaMemoryAllocMethod", alloc_methods);
+  } GST_CUDA_CALL_ONCE_END;
+
+  return type;
+}
 
 /* *INDENT-OFF* */
 struct GstCudaMemoryTokenData
@@ -59,8 +83,22 @@ struct _GstCudaMemoryPrivate
     memset (&texture, 0, sizeof (texture));
   }
 
+  GstCudaMemoryAllocMethod alloc_method = GST_CUDA_MEMORY_ALLOC_MALLOC;
+
   CUdeviceptr data = 0;
   void *staging = nullptr;
+
+  /* virtual memory */
+  gsize max_size = 0;
+  CUmemGenericAllocationHandle handle = 0;
+  CUmemAllocationProp alloc_prop;
+  gboolean exported = FALSE;
+
+#ifdef G_OS_WIN32
+  HANDLE os_handle = nullptr;
+#else
+  int os_handle = 0;
+#endif
 
   /* params used for cuMemAllocPitch */
   gsize pitch = 0;
@@ -144,106 +182,68 @@ gst_cuda_allocator_init (GstCudaAllocator * allocator)
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
-static GstMemory *
-gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
-    GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info,
-    guint width_in_bytes, guint alloc_height)
+static gboolean
+gst_cuda_allocator_update_info (const GstVideoInfo * reference,
+    gsize pitch, gsize alloc_height, GstVideoInfo * aligned)
 {
-  GstCudaMemoryPrivate *priv;
-  GstCudaMemory *mem;
-  CUdeviceptr data;
-  gboolean ret = FALSE;
-  gsize pitch;
-  guint height = GST_VIDEO_INFO_HEIGHT (info);
-  GstVideoInfo *alloc_info;
+  GstVideoInfo ret = *reference;
+  guint height = reference->height;
 
-  if (!gst_cuda_context_push (context))
-    return nullptr;
+  ret.size = pitch * alloc_height;
 
-  ret = gst_cuda_result (CuMemAllocPitch (&data, &pitch, width_in_bytes,
-          alloc_height, 16));
-  gst_cuda_context_pop (nullptr);
-
-  if (!ret) {
-    GST_ERROR_OBJECT (self, "Failed to allocate CUDA memory");
-    return nullptr;
-  }
-
-  mem = g_new0 (GstCudaMemory, 1);
-  mem->priv = priv = new GstCudaMemoryPrivate ();
-
-  priv->data = data;
-  priv->pitch = pitch;
-  priv->width_in_bytes = width_in_bytes;
-  priv->height = alloc_height;
-  priv->texture_align = gst_cuda_context_get_texture_alignment (context);
-  if (stream)
-    priv->stream = gst_cuda_stream_ref (stream);
-
-  mem->context = (GstCudaContext *) gst_object_ref (context);
-  mem->info = *info;
-  mem->info.size = pitch * alloc_height;
-
-  alloc_info = &mem->info;
-  gst_memory_init (GST_MEMORY_CAST (mem), (GstMemoryFlags) 0,
-      GST_ALLOCATOR_CAST (self), nullptr, alloc_info->size, 0, 0,
-      alloc_info->size);
-
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
+  switch (GST_VIDEO_INFO_FORMAT (reference)) {
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
       /* we are wasting space yes, but required so that this memory
        * can be used in kernel function */
-      alloc_info->stride[0] = pitch;
-      alloc_info->stride[1] = pitch;
-      alloc_info->stride[2] = pitch;
-      alloc_info->offset[0] = 0;
-      alloc_info->offset[1] = alloc_info->stride[0] * height;
-      alloc_info->offset[2] = alloc_info->offset[1] +
-          alloc_info->stride[1] * height / 2;
+      ret.stride[0] = pitch;
+      ret.stride[1] = pitch;
+      ret.stride[2] = pitch;
+      ret.offset[0] = 0;
+      ret.offset[1] = ret.stride[0] * height;
+      ret.offset[2] = ret.offset[1] + (ret.stride[1] * (height + 1) / 2);
       break;
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_I422_12LE:
-      alloc_info->stride[0] = pitch;
-      alloc_info->stride[1] = pitch;
-      alloc_info->stride[2] = pitch;
-      alloc_info->offset[0] = 0;
-      alloc_info->offset[1] = alloc_info->stride[0] * height;
-      alloc_info->offset[2] = alloc_info->offset[1] +
-          alloc_info->stride[1] * height;
+      ret.stride[0] = pitch;
+      ret.stride[1] = pitch;
+      ret.stride[2] = pitch;
+      ret.offset[0] = 0;
+      ret.offset[1] = ret.stride[0] * height;
+      ret.offset[2] = ret.offset[1] + (ret.stride[1] * height);
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P016_LE:
-      alloc_info->stride[0] = pitch;
-      alloc_info->stride[1] = pitch;
-      alloc_info->offset[0] = 0;
-      alloc_info->offset[1] = alloc_info->stride[0] * height;
+      ret.stride[0] = pitch;
+      ret.stride[1] = pitch;
+      ret.offset[0] = 0;
+      ret.offset[1] = ret.stride[0] * height;
       break;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_16LE:
     case GST_VIDEO_FORMAT_RGBP:
     case GST_VIDEO_FORMAT_BGRP:
     case GST_VIDEO_FORMAT_GBR:
-      alloc_info->stride[0] = pitch;
-      alloc_info->stride[1] = pitch;
-      alloc_info->stride[2] = pitch;
-      alloc_info->offset[0] = 0;
-      alloc_info->offset[1] = alloc_info->stride[0] * height;
-      alloc_info->offset[2] = alloc_info->offset[1] * 2;
+      ret.stride[0] = pitch;
+      ret.stride[1] = pitch;
+      ret.stride[2] = pitch;
+      ret.offset[0] = 0;
+      ret.offset[1] = ret.stride[0] * height;
+      ret.offset[2] = ret.offset[1] * 2;
       break;
     case GST_VIDEO_FORMAT_GBRA:
-      alloc_info->stride[0] = pitch;
-      alloc_info->stride[1] = pitch;
-      alloc_info->stride[2] = pitch;
-      alloc_info->stride[3] = pitch;
-      alloc_info->offset[0] = 0;
-      alloc_info->offset[1] = alloc_info->stride[0] * height;
-      alloc_info->offset[2] = alloc_info->offset[1] * 2;
-      alloc_info->offset[3] = alloc_info->offset[1] * 3;
+      ret.stride[0] = pitch;
+      ret.stride[1] = pitch;
+      ret.stride[2] = pitch;
+      ret.stride[3] = pitch;
+      ret.offset[0] = 0;
+      ret.offset[1] = ret.stride[0] * height;
+      ret.offset[2] = ret.offset[1] * 2;
+      ret.offset[3] = ret.offset[1] * 3;
       break;
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_RGBA:
@@ -257,16 +257,66 @@ gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
     case GST_VIDEO_FORMAT_RGB10A2_LE:
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
-      alloc_info->stride[0] = pitch;
-      alloc_info->offset[0] = 0;
+      ret.stride[0] = pitch;
+      ret.offset[0] = 0;
       break;
     default:
-      GST_ERROR_OBJECT (self, "Unexpected format %s",
-          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
-      g_assert_not_reached ();
-      gst_memory_unref (GST_MEMORY_CAST (mem));
-      return nullptr;
+      return FALSE;
   }
+
+  *aligned = ret;
+
+  return TRUE;
+}
+
+static GstMemory *
+gst_cuda_allocator_alloc_internal (GstCudaAllocator * self,
+    GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info,
+    guint width_in_bytes, guint alloc_height)
+{
+  GstCudaMemoryPrivate *priv;
+  GstCudaMemory *mem;
+  CUdeviceptr data;
+  gboolean ret = FALSE;
+  gsize pitch;
+  GstVideoInfo alloc_info;
+
+  if (!gst_cuda_context_push (context))
+    return nullptr;
+
+  ret = gst_cuda_result (CuMemAllocPitch (&data, &pitch, width_in_bytes,
+          alloc_height, 16));
+  gst_cuda_context_pop (nullptr);
+
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "Failed to allocate CUDA memory");
+    return nullptr;
+  }
+
+  if (!gst_cuda_allocator_update_info (info, pitch, alloc_height, &alloc_info)) {
+    GST_ERROR_OBJECT (self, "Couldn't calculate aligned info");
+    gst_cuda_context_push (context);
+    CuMemFree (data);
+    gst_cuda_context_pop (nullptr);
+    return nullptr;
+  }
+
+  mem = g_new0 (GstCudaMemory, 1);
+  mem->context = (GstCudaContext *) gst_object_ref (context);
+  mem->info = alloc_info;
+  mem->priv = priv = new GstCudaMemoryPrivate ();
+
+  priv->data = data;
+  priv->pitch = pitch;
+  priv->width_in_bytes = width_in_bytes;
+  priv->height = alloc_height;
+  priv->texture_align = gst_cuda_context_get_texture_alignment (context);
+  if (stream)
+    priv->stream = gst_cuda_stream_ref (stream);
+
+  gst_memory_init (GST_MEMORY_CAST (mem), (GstMemoryFlags) 0,
+      GST_ALLOCATOR_CAST (self), nullptr, alloc_info.size, 0, 0,
+      alloc_info.size);
 
   return GST_MEMORY_CAST (mem);
 }
@@ -297,7 +347,20 @@ gst_cuda_allocator_free (GstAllocator * allocator, GstMemory * memory)
   if (priv->notify) {
     priv->notify (priv->user_data);
   } else if (priv->data) {
-    gst_cuda_result (CuMemFree (priv->data));
+    if (priv->alloc_method == GST_CUDA_MEMORY_ALLOC_MMAP) {
+      gst_cuda_result (CuMemUnmap (priv->data, priv->max_size));
+      gst_cuda_result (CuMemAddressFree (priv->data, priv->max_size));
+      gst_cuda_result (CuMemRelease (priv->handle));
+      if (priv->exported) {
+#ifdef G_OS_WIN32
+        CloseHandle (priv->os_handle);
+#else
+        close (priv->os_handle);
+#endif
+      }
+    } else {
+      gst_cuda_result (CuMemFree (priv->data));
+    }
   }
 
   if (priv->staging)
@@ -868,34 +931,79 @@ gst_cuda_memory_get_token_data (GstCudaMemory * mem, gint64 token)
 }
 
 /**
- * gst_cuda_allocator_alloc:
- * @allocator: (transfer none) (allow-none): a #GstCudaAllocator
- * @context: (transfer none): a #GstCudaContext
- * @stream: (transfer none) (allow-none): a #GstCudaStream
- * @info: a #GstVideoInfo
+ * gst_cuda_memory_get_alloc_method:
+ * @mem: a #GstCudaMemory
  *
- * Returns: (transfer full) (nullable): a newly allocated #GstCudaMemory
+ * Query allocation method
  *
- * Since: 1.22
+ * Since: 1.24
  */
-GstMemory *
-gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
-    GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info)
+GstCudaMemoryAllocMethod
+gst_cuda_memory_get_alloc_method (GstCudaMemory * mem)
+{
+  g_return_val_if_fail (gst_is_cuda_memory (GST_MEMORY_CAST (mem)),
+      GST_CUDA_MEMORY_ALLOC_UNKNOWN);
+
+  return mem->priv->alloc_method;
+}
+
+/**
+ * gst_cuda_memory_export:
+ * @mem: a #GstCudaMemory
+ * @os_handle: (out caller-allocates): a pointer to OS handle
+ *
+ * Exports virtual memory handle to OS specific handle.
+ *
+ * On Windows, @os_handle should be pointer to HANDLE (i.e., void **), and
+ * pointer to file descriptor (i.e., int *) on Linux.
+ *
+ * The returned @os_handle is owned by @mem and therefore caller shouldn't
+ * close the handle.
+ *
+ * returns: %TRUE if successful
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_cuda_memory_export (GstCudaMemory * mem, gpointer os_handle)
+{
+  GstCudaMemoryPrivate *priv;
+
+  g_return_val_if_fail (gst_is_cuda_memory (GST_MEMORY_CAST (mem)), FALSE);
+  g_return_val_if_fail (os_handle != nullptr, FALSE);
+
+  priv = mem->priv;
+
+  if (priv->alloc_method != GST_CUDA_MEMORY_ALLOC_MMAP)
+    return FALSE;
+
+  if (priv->alloc_prop.requestedHandleTypes == CU_MEM_HANDLE_TYPE_NONE)
+    return FALSE;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->exported) {
+    CUresult ret;
+
+    ret = CuMemExportToShareableHandle ((void *) &priv->os_handle, priv->handle,
+        priv->alloc_prop.requestedHandleTypes, 0);
+    if (!gst_cuda_result (ret))
+      return FALSE;
+
+    priv->exported = TRUE;
+  }
+#ifdef G_OS_WIN32
+  *((HANDLE *) os_handle) = priv->os_handle;
+#else
+  *((int *) os_handle) = priv->os_handle;
+#endif
+
+  return TRUE;
+}
+
+static guint
+gst_cuda_allocator_calculate_alloc_height (const GstVideoInfo * info)
 {
   guint alloc_height;
-
-  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
-  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), nullptr);
-  g_return_val_if_fail (info != nullptr, nullptr);
-
-  if (stream && stream->context != context) {
-    GST_ERROR_OBJECT (context,
-        "stream object is holding different CUDA context");
-    return nullptr;
-  }
-
-  if (!allocator)
-    allocator = (GstCudaAllocator *) _gst_cuda_allocator;
 
   alloc_height = GST_VIDEO_INFO_HEIGHT (info);
 
@@ -941,6 +1049,41 @@ gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
     default:
       break;
   }
+
+  return alloc_height;
+}
+
+/**
+ * gst_cuda_allocator_alloc:
+ * @allocator: (transfer none) (allow-none): a #GstCudaAllocator
+ * @context: (transfer none): a #GstCudaContext
+ * @stream: (transfer none) (allow-none): a #GstCudaStream
+ * @info: a #GstVideoInfo
+ *
+ * Returns: (transfer full) (nullable): a newly allocated #GstCudaMemory
+ *
+ * Since: 1.22
+ */
+GstMemory *
+gst_cuda_allocator_alloc (GstCudaAllocator * allocator,
+    GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info)
+{
+  guint alloc_height;
+
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
+  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), nullptr);
+  g_return_val_if_fail (info != nullptr, nullptr);
+
+  if (stream && stream->context != context) {
+    GST_ERROR_OBJECT (context,
+        "stream object is holding different CUDA context");
+    return nullptr;
+  }
+
+  if (!allocator)
+    allocator = (GstCudaAllocator *) _gst_cuda_allocator;
+
+  alloc_height = gst_cuda_allocator_calculate_alloc_height (info);
 
   return gst_cuda_allocator_alloc_internal (allocator, context, stream,
       info, info->stride[0], alloc_height);
@@ -1063,6 +1206,154 @@ gst_cuda_memory_is_from_fixed_pool (GstMemory * mem)
   cmem = GST_CUDA_MEMORY_CAST (mem);
 
   return cmem->priv->from_fixed_pool;
+}
+
+static size_t
+do_align (size_t value, size_t align)
+{
+  if (align == 0)
+    return value;
+
+  return ((value + align - 1) / align) * align;
+}
+
+/**
+ * gst_cuda_allocator_virtual_alloc:
+ * @allocator: a #GstCudaAllocator
+ * @context: a #GstCudaContext
+ * @stream: a #GstCudaStream
+ * @info: a #GstVideoInfo
+ * @prop: allocation property
+ * @granularity_flags: allocation flags
+ *
+ * Allocates new #GstMemory object with CUDA virtual memory.
+ *
+ * Returns: (transfer full) (nullable): a newly allocated memory object or
+ * %NULL if allocation is not supported
+ *
+ * Since: 1.24
+ */
+GstMemory *
+gst_cuda_allocator_virtual_alloc (GstCudaAllocator * allocator,
+    GstCudaContext * context, GstCudaStream * stream, const GstVideoInfo * info,
+    const CUmemAllocationProp * prop,
+    CUmemAllocationGranularity_flags granularity_flags)
+{
+  guint alloc_height;
+  guint id = 0;
+  size_t granularity;
+  size_t stride;
+  size_t size;
+  size_t max_size;
+  CUresult ret;
+  gint texture_alignment;
+  CUmemGenericAllocationHandle handle;
+  CUdeviceptr ptr;
+  CUmemAccessDesc access_desc;
+  GstCudaMemoryPrivate *priv;
+  GstCudaMemory *mem;
+  GstVideoInfo alloc_info;
+
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
+  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), nullptr);
+  g_return_val_if_fail (info != nullptr, nullptr);
+  g_return_val_if_fail (prop != nullptr, nullptr);
+
+  if (stream && stream->context != context) {
+    GST_ERROR_OBJECT (context,
+        "stream object is holding different CUDA context");
+    return nullptr;
+  }
+
+  g_object_get (context, "cuda-device-id", &id, nullptr);
+  if ((gint) id != prop->location.id) {
+    GST_ERROR_OBJECT (context, "Different device id");
+    return nullptr;
+  }
+
+  if (!allocator)
+    allocator = (GstCudaAllocator *) _gst_cuda_allocator;
+
+  alloc_height = gst_cuda_allocator_calculate_alloc_height (info);
+  texture_alignment = gst_cuda_context_get_texture_alignment (context);
+
+  stride = do_align (info->stride[0], texture_alignment);
+  if (!gst_cuda_allocator_update_info (info, stride, alloc_height, &alloc_info)) {
+    GST_ERROR_OBJECT (context, "Couldn't calculate aligned info");
+    return nullptr;
+  }
+
+  if (!gst_cuda_context_push (context))
+    return nullptr;
+
+  ret = CuMemGetAllocationGranularity (&granularity, prop, granularity_flags);
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (context, "Couldn't get granularity");
+    goto error;
+  }
+
+  size = stride * alloc_height;
+  max_size = do_align (size, granularity);
+
+  ret = CuMemCreate (&handle, max_size, prop, 0);
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (context, "Couldn't create memory");
+    goto error;
+  }
+
+  ret = CuMemAddressReserve (&ptr, max_size, 0, 0, 0);
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (context, "Couldn't reserve memory");
+    gst_cuda_result (CuMemRelease (handle));
+    goto error;
+  }
+
+  ret = CuMemMap (ptr, max_size, 0, handle, 0);
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (context, "Couldn't map memory");
+    CuMemAddressFree (ptr, max_size);
+    CuMemRelease (handle);
+    goto error;
+  }
+
+  memset (&access_desc, 0, sizeof (CUmemAccessDesc));
+  access_desc.location.id = (int) id;
+  access_desc.location.type = CU_MEM_LOCATION_TYPE_DEVICE;
+  access_desc.flags = CU_MEM_ACCESS_FLAGS_PROT_READWRITE;
+  ret = CuMemSetAccess (ptr, max_size, &access_desc, 1);
+  if (!gst_cuda_result (ret)) {
+    GST_ERROR_OBJECT (context, "Couldn't set access");
+    CuMemUnmap (ptr, max_size);
+    CuMemAddressFree (ptr, max_size);
+    CuMemRelease (handle);
+    goto error;
+  }
+
+  mem = g_new0 (GstCudaMemory, 1);
+  mem->context = (GstCudaContext *) gst_object_ref (context);
+  mem->info = alloc_info;
+  mem->priv = priv = new GstCudaMemoryPrivate ();
+
+  priv->data = ptr;
+  priv->pitch = stride;
+  priv->width_in_bytes = info->stride[0];
+  priv->height = alloc_height;
+  priv->texture_align = texture_alignment;
+  if (stream)
+    priv->stream = gst_cuda_stream_ref (stream);
+  priv->alloc_method = GST_CUDA_MEMORY_ALLOC_MMAP;
+  priv->max_size = max_size;
+  priv->handle = handle;
+  priv->alloc_prop = *prop;
+
+  gst_memory_init (GST_MEMORY_CAST (mem), (GstMemoryFlags) 0,
+      GST_ALLOCATOR_CAST (allocator), nullptr, max_size, 0, 0, size);
+
+  return GST_MEMORY_CAST (mem);
+
+error:
+  gst_cuda_context_pop (nullptr);
+  return nullptr;
 }
 
 #define GST_CUDA_POOL_ALLOCATOR_IS_FLUSHING(alloc)  (g_atomic_int_get (&alloc->priv->flushing))
