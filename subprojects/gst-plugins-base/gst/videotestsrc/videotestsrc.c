@@ -1688,23 +1688,11 @@ convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y)
   gint width = GST_VIDEO_FRAME_WIDTH (frame);
   int x_inv = p->x_invert;
   int y_inv = p->y_invert;
+  int y_offset = 1 - ((y ^ y_inv) & 1);
 
-  if ((y ^ y_inv) & 1) {
-    for (i = 0; i < width; i++) {
-      if ((i ^ x_inv) & 1) {
-        R[i] = argb[4 * i + 1];
-      } else {
-        R[i] = argb[4 * i + 2];
-      }
-    }
-  } else {
-    for (i = 0; i < width; i++) {
-      if ((i ^ x_inv) & 1) {
-        R[i] = argb[4 * i + 2];
-      } else {
-        R[i] = argb[4 * i + 3];
-      }
-    }
+  for (i = 0; i < width; i++) {
+    int x_offset = 2 - ((i ^ x_inv) & 1);
+    R[i] = argb[4 * i + y_offset + x_offset];
   }
 }
 
