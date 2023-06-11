@@ -138,7 +138,9 @@ void                  gst_va_base_enc_add_codec_tag       (GstVaBaseEnc * base,
                                                            const gchar * codec_name);
 void                  gst_va_base_enc_reset_state         (GstVaBaseEnc * base);
 GstBuffer *           gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
-                                                            GstVaEncodePicture * picture);
+                                                            GstVaEncodePicture * picture,
+                                                            const guint8 * prefix_data,
+                                                            guint prefix_data_len);
 gint                  gst_va_base_enc_copy_output_data    (GstVaBaseEnc * base,
                                                            GstVaEncodePicture * picture,
                                                            guint8 * data,

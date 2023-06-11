@@ -4630,7 +4630,8 @@ gst_va_h265_enc_prepare_output (GstVaBaseEnc * base,
   base->output_frame_count++;
   frame->duration = base->frame_duration;
 
-  buf = gst_va_base_enc_create_output_buffer (base, frame_enc->picture);
+  buf = gst_va_base_enc_create_output_buffer (base,
+      frame_enc->picture, NULL, 0);
   if (!buf) {
     GST_ERROR_OBJECT (base, "Failed to create output buffer");
     return FALSE;

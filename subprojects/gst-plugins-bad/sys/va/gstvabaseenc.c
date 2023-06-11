@@ -271,7 +271,8 @@ gst_va_base_enc_import_input_buffer (GstVaBaseEnc * base,
 
 GstBuffer *
 gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
-    GstVaEncodePicture * picture)
+    GstVaEncodePicture * picture, const guint8 * prefix_data,
+    guint prefix_data_len)
 {
   guint coded_size;
   goffset offset;
@@ -300,7 +301,7 @@ gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
     coded_size += seg->size;
 
   buf = gst_video_encoder_allocate_output_buffer (GST_VIDEO_ENCODER_CAST (base),
-      coded_size);
+      coded_size + prefix_data_len);
   if (!buf) {
     va_unmap_buffer (base->display, picture->coded_buffer);
     GST_ERROR_OBJECT (base, "Failed to allocate output buffer, size %d",
@@ -309,6 +310,12 @@ gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
   }
 
   offset = 0;
+  if (prefix_data) {
+    g_assert (prefix_data_len > 0);
+    gst_buffer_fill (buf, offset, prefix_data, prefix_data_len);
+    offset += prefix_data_len;
+  }
+
   for (seg = seg_list; seg; seg = seg->next) {
     gsize write_size;
 
