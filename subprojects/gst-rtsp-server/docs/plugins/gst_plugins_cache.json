@@ -103,7 +103,7 @@
                         "writable": true
                     },
                     "port-range": {
-                        "blurb": "Client port range that can be used to receive RTCP data, eg. 3000-3005 (NULL = no restrictions)",
+                        "blurb": "Client port range that can be used to send RTP data and receive RTCP data, eg. 3000-3005 (NULL = no restrictions)",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
