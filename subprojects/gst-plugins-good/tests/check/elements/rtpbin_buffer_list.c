@@ -25,6 +25,12 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 
+#if G_BYTE_ORDER == G_BIG_ENDIAN
+#define READ_UINT64(mem) GST_READ_UINT64_BE(mem)
+#else
+#define READ_UINT64(mem) GST_READ_UINT64_LE(mem)
+#endif
+
 /* UDP/IP is assumed for bandwidth calculation */
 #define UDP_IP_HEADER_OVERHEAD 28
 
@@ -236,8 +242,8 @@ check_header (GstBuffer * buffer, guint index)
    * most likely be changed in gstrtpbin.
    */
   fail_unless (info.data != NULL);
-  fail_unless_equals_uint64 (*(guint64 *) info.data,
-      *(guint64 *) rtp_header[index]);
+  fail_unless_equals_uint64 (READ_UINT64 (info.data),
+      READ_UINT64 (rtp_header[index]));
   fail_unless (*(guint16 *) (info.data + 12) ==
       *(guint16 *) (rtp_header[index] + 12));
 
