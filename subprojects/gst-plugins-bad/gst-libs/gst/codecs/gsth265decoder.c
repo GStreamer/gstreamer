@@ -424,23 +424,68 @@ gst_h265_decoder_set_latency (GstH265Decoder * self, const GstH265SPS * sps,
   gst_video_decoder_set_latency (GST_VIDEO_DECODER (self), min, max);
 }
 
-static GstFlowReturn
-gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
+typedef struct
 {
-  GstH265DecoderPrivate *priv = self->priv;
-  gint max_dpb_size;
-  gint prev_max_dpb_size;
-  gint MaxLumaPS;
-  const gint MaxDpbPicBuf = 6;
-  gint PicSizeInSamplesY;
-  guint8 field_seq_flag = 0;
-  guint8 progressive_source_flag = 0;
-  guint8 interlaced_source_flag = 0;
-  GstFlowReturn ret = GST_FLOW_OK;
+  const gchar *level_name;
+  guint8 level_idc;
+  guint32 MaxLumaPs;
+} GstH265LevelLimits;
 
-  /* A.4.1 */
-  MaxLumaPS = 35651584;
+/* *INDENT-OFF* */
+/* Table A.8 - General tier and level limits */
+static const GstH265LevelLimits level_limits[] = {
+  /* level    idc   MaxLumaPs */
+  {  "1",     30,    36864    },
+  {  "2",     60,    122880   },
+  {  "2.1",   63,    245760   },
+  {  "3",     90,    552960   },
+  {  "3.1",   93,    983040   },
+  {  "4",     120,   2228224  },
+  {  "4.1",   123,   2228224  },
+  {  "5",     150,   8912896  },
+  {  "5.1",   153,   8912896  },
+  {  "5.2",   156,   8912896  },
+  {  "6",     180,   35651584 },
+  {  "6.1",   183,   35651584 },
+  {  "6.2",   186,   35651584 },
+};
+/* *INDENT-ON* */
+
+static gint
+gst_h265_decoder_get_max_dpb_size_from_sps (GstH265Decoder * self,
+    GstH265SPS * sps)
+{
+  guint i;
+  guint PicSizeInSamplesY;
+  /* Default is the worst case level 6.2 */
+  guint32 MaxLumaPS = G_MAXUINT32;
+  const gint MaxDpbPicBuf = 6;
+  gint max_dpb_size;
+
+  /* Unknown level */
+  if (sps->profile_tier_level.level_idc == 0)
+    return 16;
+
   PicSizeInSamplesY = sps->width * sps->height;
+  for (i = 0; i < G_N_ELEMENTS (level_limits); i++) {
+    if (sps->profile_tier_level.level_idc <= level_limits[i].level_idc) {
+      if (PicSizeInSamplesY <= level_limits[i].MaxLumaPs) {
+        MaxLumaPS = level_limits[i].MaxLumaPs;
+      } else {
+        GST_DEBUG_OBJECT (self,
+            "%u (%dx%d) exceeds allowed max luma sample for level \"%s\" %u",
+            PicSizeInSamplesY, sps->width, sps->height,
+            level_limits[i].level_name, level_limits[i].MaxLumaPs);
+      }
+      break;
+    }
+  }
+
+  /* Unknown level */
+  if (MaxLumaPS == G_MAXUINT32)
+    return 16;
+
+  /* A.4.2 */
   if (PicSizeInSamplesY <= (MaxLumaPS >> 2))
     max_dpb_size = MaxDpbPicBuf * 4;
   else if (PicSizeInSamplesY <= (MaxLumaPS >> 1))
@@ -450,7 +495,21 @@ gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
   else
     max_dpb_size = MaxDpbPicBuf;
 
-  max_dpb_size = MIN (max_dpb_size, 16);
+  return MIN (max_dpb_size, 16);
+}
+
+static GstFlowReturn
+gst_h265_decoder_process_sps (GstH265Decoder * self, GstH265SPS * sps)
+{
+  GstH265DecoderPrivate *priv = self->priv;
+  gint max_dpb_size;
+  gint prev_max_dpb_size;
+  guint8 field_seq_flag = 0;
+  guint8 progressive_source_flag = 0;
+  guint8 interlaced_source_flag = 0;
+  GstFlowReturn ret = GST_FLOW_OK;
+
+  max_dpb_size = gst_h265_decoder_get_max_dpb_size_from_sps (self, sps);
 
   if (sps->vui_parameters_present_flag)
     field_seq_flag = sps->vui_params.field_seq_flag;
