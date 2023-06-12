@@ -73,6 +73,7 @@ typedef struct _GstNvAV1Dec
   guint num_output_surfaces;
   guint init_max_width;
   guint init_max_height;
+  gint max_display_delay;
 } GstNvAV1Dec;
 
 typedef struct _GstNvAV1DecClass
@@ -90,9 +91,11 @@ enum
   PROP_NUM_OUTPUT_SURFACES,
   PROP_INIT_MAX_WIDTH,
   PROP_INIT_MAX_HEIGHT,
+  PROP_MAX_DISPLAY_DELAY,
 };
 
 #define DEFAULT_NUM_OUTPUT_SURFACES 0
+#define DEFAULT_MAX_DISPLAY_DELAY -1
 
 static GTypeClass *parent_class = nullptr;
 
@@ -201,6 +204,19 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
           (GParamFlags) (GST_PARAM_MUTABLE_READY | G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstNvAV1Dec:max-display-delay:
+   *
+   * Maximum display delay
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_MAX_DISPLAY_DELAY,
+      g_param_spec_int ("max-display-delay", "Max Display Delay",
+          "Improves pipelining of decode with display, 0 means no delay "
+          "(auto = -1)", -1, 16, DEFAULT_MAX_DISPLAY_DELAY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_nv_av1_dec_set_context);
 
   parent_class = (GTypeClass *) g_type_class_peek_parent (klass);
@@ -254,6 +270,7 @@ static void
 gst_nv_av1_dec_init (GstNvAV1Dec * self)
 {
   self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
+  self->max_display_delay = DEFAULT_MAX_DISPLAY_DELAY;
 }
 
 static void
@@ -271,6 +288,9 @@ gst_nv_av1_dec_set_property (GObject * object, guint prop_id,
       break;
     case PROP_INIT_MAX_HEIGHT:
       self->init_max_height = g_value_get_uint (value);
+      break;
+    case PROP_MAX_DISPLAY_DELAY:
+      self->max_display_delay = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -297,6 +317,9 @@ gst_nv_av1_dec_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_INIT_MAX_HEIGHT:
       g_value_set_uint (value, self->init_max_height);
+      break;
+    case PROP_MAX_DISPLAY_DELAY:
+      g_value_set_int (value, self->max_display_delay);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1028,6 +1051,11 @@ static guint
 gst_nv_av1_dec_get_preferred_output_delay (GstAV1Decoder * decoder,
     gboolean is_live)
 {
+  GstNvAV1Dec *self = GST_NV_AV1_DEC (decoder);
+
+  if (self->max_display_delay >= 0)
+    return self->max_display_delay;
+
   /* Prefer to zero latency for live pipeline */
   if (is_live)
     return 0;
