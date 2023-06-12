@@ -67,7 +67,9 @@ GstD3D11AllocationParams * gst_buffer_pool_config_get_d3d11_allocation_params (G
 GST_D3D11_API
 void                 gst_buffer_pool_config_set_d3d11_allocation_params (GstStructure * config,
                                                                          GstD3D11AllocationParams * params);
-
+GST_D3D11_API                                                                     
+GstFlowReturn gst_d3d11_buffer_pool_alloc_buffer (GstBufferPool * pool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 G_END_DECLS
 
 #endif /* __GST_D3D11_BUFFER_POOL_H__ */

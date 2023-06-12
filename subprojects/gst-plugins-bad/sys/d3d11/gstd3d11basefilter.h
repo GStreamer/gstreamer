@@ -47,7 +47,7 @@ struct _GstD3D11BaseFilter
 
   GstVideoInfo in_info;
   GstVideoInfo out_info;
-
+  
   /* properties */
   gint adapter;
 };

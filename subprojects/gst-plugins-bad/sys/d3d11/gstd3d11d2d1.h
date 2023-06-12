@@ -57,6 +57,7 @@ struct _Gstd3d11d2d1
 {
   GstD3D11BaseFilter parent;
   gboolean enabled;
+  GstBufferPool* priv_pool;
 };
 
 G_END_DECLS

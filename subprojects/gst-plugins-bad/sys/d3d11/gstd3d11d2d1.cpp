@@ -62,6 +62,8 @@
 #include <gst/gst.h>
 #include <d2d1.h>
 #include "gstd3d11d2d1.h"
+#include <gst/d3d11/gstd3d11bufferpool.h>
+
 
 /* Filter signals and args */
 enum
@@ -108,6 +110,8 @@ static void gst_d3d11_d2d1_get_property (GObject * object,
 static gboolean
 gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query);
 static GstFlowReturn
+gst_d3d11_d2d1_prepare_output_buffer(GstBaseTransform* trans, GstBuffer* inbuf, GstBuffer** outbuf);
+static GstFlowReturn
 gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
     GstBuffer* outbuf);
 
@@ -151,6 +155,9 @@ gst_d3d11_d2d1_class_init (Gstd3d11d2d1Class * klass)
 
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR(gst_d3d11_d2d1_decide_allocation);
+ /* trans_class->generate_output =
+      GST_DEBUG_FUNCPTR(gst_d3d11_d2d1_generate_output);*/
+  trans_class->prepare_output_buffer = GST_DEBUG_FUNCPTR(gst_d3d11_d2d1_prepare_output_buffer);
   trans_class->transform = GST_DEBUG_FUNCPTR(gst_d3d11_d2d1_transform);
   trans_class->passthrough_on_same_caps = FALSE;
 
@@ -259,6 +266,7 @@ static gboolean
 gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
 {
     GstD3D11BaseFilter* filter = GST_D3D11_BASE_FILTER(trans);
+    Gstd3d11d2d1* d2d1 = GST_D3D11D2D1(trans);
     GstCaps* outcaps = NULL;
     GstBufferPool* pool = NULL;
     guint size, min, max;
@@ -330,7 +338,7 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
             GstD3D11AllocationParams* d3d11_params;
 
             config = gst_buffer_pool_get_config(pool);
-            d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params(config);
+            d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params(config);            
 
             use_proposed_pool = ((d3d11_params->desc[0].BindFlags & bind_flags) == bind_flags);
             GST_DEBUG_OBJECT(filter, "Bind flags (%u) are %scompatible to required ones (%u)",
@@ -356,6 +364,8 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
 
     GST_DEBUG_OBJECT(filter, "Creating a new buffer pool");
     pool = gst_d3d11_buffer_pool_new(filter->device);
+    //to access in generate_ouput
+    d2d1->priv_pool = (GstBufferPool*)gst_object_ref(pool);
 
     config = gst_buffer_pool_get_config(pool);
     gst_buffer_pool_config_add_option(config, GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -387,6 +397,35 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
     return GST_BASE_TRANSFORM_CLASS(parent_class)->decide_allocation(trans,
         query);
 }
+
+static GstFlowReturn
+gst_d3d11_d2d1_prepare_output_buffer(GstBaseTransform* trans, GstBuffer* input, GstBuffer** outbuf)
+{
+    GstD3D11BaseFilter* filter = GST_D3D11_BASE_FILTER(trans);
+    Gstd3d11d2d1* d2d1 = GST_D3D11D2D1(trans);
+    GstFlowReturn ret = GST_FLOW_OK;
+
+    if (outbuf == NULL)
+        return GST_FLOW_OK;
+
+
+    GstStructure* config;
+    GstAllocator* allocator = NULL;
+    GstBufferPool* pool = d2d1->priv_pool;
+
+    GstAllocationParams* params = NULL;
+    GstBufferPoolAcquireParams acquire_params = {0};
+    config = gst_buffer_pool_get_config(pool);
+
+    gst_buffer_pool_config_get_allocator(config, &allocator, params);
+
+    //if (GST_BUFFER_POOL_CLASS(parent_class)->alloc_buffer != NULL) {
+    ret = gst_d3d11_buffer_pool_alloc_buffer(pool, outbuf, &acquire_params);
+    //}
+
+    return ret;
+}
+
 
 static void
 gst_d3d11_d2d1_init (Gstd3d11d2d1 * d2d1)
