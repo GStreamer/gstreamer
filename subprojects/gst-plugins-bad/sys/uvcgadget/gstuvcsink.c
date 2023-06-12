@@ -363,11 +363,6 @@ gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
-  if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_DATA (info)) != GST_EVENT_CAPS)
-    return GST_PAD_PROBE_OK;
-
-  gst_pad_remove_probe (pad, GST_PAD_PROBE_INFO_ID (info));
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
     {
