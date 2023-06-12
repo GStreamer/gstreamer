@@ -1283,7 +1283,7 @@ gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
           is_rtcp ? "rtcp" : "rtp");
       gst_event_unref (otherev);
     } else {
-      new_stream_id = gst_pad_create_stream_id (pad, GST_ELEMENT (filter),
+      new_stream_id = gst_element_decorate_stream_id (GST_ELEMENT (filter),
           is_rtcp ? "rtcp" : "rtp");
     }
 
