@@ -1033,6 +1033,14 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
   if (out_sync_meta)
     gst_gl_sync_meta_set_sync_point (out_sync_meta, context);
 
+  /* since gl api is async operation, when return from transform()
+   * function, basetransform will unref input buffer immidiately,
+   * but gpu may still reading input buffer for rendering. Add parent
+   * buffer meta to hold one reference of inbuf, this can avoid this
+   * buffer sync problem.
+   */
+  gst_buffer_add_parent_buffer_meta (outbuf, inbuf);
+
   return ret ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
 
