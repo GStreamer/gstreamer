@@ -99,7 +99,8 @@ GST_ELEMENT_REGISTER_DECLARE (webrtcechoprobe);
 GstWebrtcEchoProbe *gst_webrtc_acquire_echo_probe (const gchar * name);
 void gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe);
 gint gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self,
-    GstClockTime rec_time, GstBuffer ** buf);
+    GstClockTime rec_time, GstBuffer ** buf, GstAudioInfo * info,
+    gboolean * interleaved);
 
 G_END_DECLS
 #endif /* __GST_WEBRTC_ECHO_PROBE_H__ */

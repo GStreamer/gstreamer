@@ -370,6 +370,8 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
   GstWebrtcEchoProbe *probe = NULL;
   webrtc::AudioProcessing *apm;
   GstBuffer *buf = NULL;
+  GstAudioInfo info;
+  gboolean interleaved = self->interleaved;
   GstAudioBuffer abuf;
   GstFlowReturn ret = GST_FLOW_OK;
   gint err, delay;
@@ -377,36 +379,38 @@ gst_webrtc_dsp_analyze_reverse_stream (GstWebrtcDsp * self,
   GST_OBJECT_LOCK (self);
   if (self->echo_cancel)
     probe = GST_WEBRTC_ECHO_PROBE (g_object_ref (self->probe));
+  info = self->info;
   GST_OBJECT_UNLOCK (self);
 
   /* If echo cancellation is disabled */
   if (!probe)
     return GST_FLOW_OK;
 
-  webrtc::StreamConfig config (probe->info.rate, probe->info.channels,
-      false);
-  apm = self->apm;
+  delay =
+    gst_webrtc_echo_probe_read (probe, rec_time, &buf, &info, &interleaved);
 
-  delay = gst_webrtc_echo_probe_read (probe, rec_time, &buf);
+  apm = self->apm;
   apm->set_stream_delay_ms (delay);
+
+  webrtc::StreamConfig config (info.rate, info.channels, false);
 
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
   if (delay < 0)
     goto done;
 
-  if (probe->info.rate != self->info.rate) {
+  if (info.rate != self->info.rate) {
     GST_ELEMENT_ERROR (self, STREAM, FORMAT,
         ("Echo Probe has rate %i , while the DSP is running at rate %i,"
          " use a caps filter to ensure those are the same.",
-         probe->info.rate, self->info.rate), (NULL));
+         info.rate, self->info.rate), (NULL));
     ret = GST_FLOW_ERROR;
     goto done;
   }
 
-  gst_audio_buffer_map (&abuf, &probe->info, buf, GST_MAP_READWRITE);
+  gst_audio_buffer_map (&abuf, &info, buf, GST_MAP_READWRITE);
 
-  if (probe->interleaved) {
+  if (interleaved) {
     int16_t * const data = (int16_t * const) abuf.planes[0];
 
     if ((err = apm->ProcessReverseStream (data, config, config, data)) < 0)

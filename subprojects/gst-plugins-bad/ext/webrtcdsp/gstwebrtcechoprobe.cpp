@@ -304,7 +304,7 @@ gst_webrtc_release_echo_probe (GstWebrtcEchoProbe * probe)
 
 gint
 gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
-    GstBuffer ** buf)
+    GstBuffer ** buf, GstAudioInfo * info, gboolean * interleaved)
 {
   GstClockTimeDiff diff;
   gsize avail, skip, offset, size = 0;
@@ -315,9 +315,16 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
   /* We always return a buffer -- if don't have data (size == 0), we generate a
    * silence buffer */
 
-  if (!GST_CLOCK_TIME_IS_VALID (self->latency) ||
-      !GST_AUDIO_INFO_IS_VALID (&self->info))
+  if (!GST_CLOCK_TIME_IS_VALID (self->latency))
     goto copy;
+
+  /* If we have a format, use that, else generate silence in input format */
+  if (!GST_AUDIO_INFO_IS_VALID (&self->info)) {
+    goto copy;
+  } else {
+   *info = self->info;
+   *interleaved = self->interleaved;
+  }
 
   if (self->interleaved)
     avail = gst_adapter_available (self->adapter) / self->info.bpf;
@@ -375,11 +382,14 @@ gst_webrtc_echo_probe_read (GstWebrtcEchoProbe * self, GstClockTime rec_time,
 
 copy:
   if (!size) {
-    /* No data, provide a period's worth of silence */
-    *buf = gst_buffer_new_allocate (NULL, self->period_size, NULL);
-    gst_buffer_memset (*buf, 0, 0, self->period_size);
-    gst_buffer_add_audio_meta (*buf, &self->info, self->period_samples,
-        NULL);
+    /* No data, provide a period's worth of silence, using our format if we have
+     * it, or the provided format if we don't */
+    guint period_samples = info->rate / 100;
+    guint period_size = period_samples * info->bpf;
+
+    *buf = gst_buffer_new_allocate (NULL, period_size, NULL);
+    gst_buffer_memset (*buf, 0, 0, period_size);
+    gst_buffer_add_audio_meta (*buf, info, period_samples, NULL);
   } else {
     /* We have some actual data, pop period_samples' worth if have it, else pad
      * with silence and provide what we do have */
