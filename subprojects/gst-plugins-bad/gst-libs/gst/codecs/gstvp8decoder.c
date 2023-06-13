@@ -193,8 +193,8 @@ gst_vp8_decoder_check_codec_change (GstVp8Decoder * self,
     g_assert (klass->new_sequence);
 
     ret = klass->new_sequence (self, frame_hdr,
-        /* last/golden/alt 3 pictures */
-        3 + priv->preferred_output_delay);
+        /* last/golden/alt 3 reference pictures + current picture */
+        4 + priv->preferred_output_delay);
   }
 
   return ret;
