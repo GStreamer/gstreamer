@@ -813,7 +813,7 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
     self->op_flags &= ~VPP_CONVERT_CROP;
   }
   gst_va_filter_enable_cropping (btrans->filter,
-      (self->op_flags & VPP_CONVERT_CROP));
+      (self->op_flags & VPP_CONVERT_CROP) == VPP_CONVERT_CROP);
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -879,13 +879,13 @@ gst_va_vpp_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
     return TRUE;
 
   /* don't copy colorspace/size/orientation specific metadata */
-  if ((self->op_flags & VPP_CONVERT_FORMAT)
+  if ((self->op_flags & VPP_CONVERT_FORMAT) == VPP_CONVERT_FORMAT
       && gst_meta_api_type_has_tag (info->api, META_TAG_COLORSPACE))
     return FALSE;
-  else if ((self->op_flags & (VPP_CONVERT_SIZE | VPP_CONVERT_CROP))
+  else if ((self->op_flags & (VPP_CONVERT_SIZE | VPP_CONVERT_CROP)) != 0
       && gst_meta_api_type_has_tag (info->api, META_TAG_SIZE))
     return FALSE;
-  else if ((self->op_flags & VPP_CONVERT_DIRECTION)
+  else if ((self->op_flags & VPP_CONVERT_DIRECTION) == VPP_CONVERT_DIRECTION
       && gst_meta_api_type_has_tag (info->api, META_TAG_ORIENTATION))
     return FALSE;
   else if (gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO))
