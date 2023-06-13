@@ -593,6 +593,9 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     obj->rle_data_size = GST_READ_UINT24_BE (payload);
     payload += 3;
 
+    if (end - payload > obj->rle_data_size)
+      return 0;
+
     PGS_DUMP ("%d bytes of RLE data, of %d bytes total.\n",
         (int) (end - payload), obj->rle_data_size);
 
