@@ -1927,7 +1927,7 @@ gst_aggregator_default_sink_event_pre_queue (GstAggregator * self,
     SRC_LOCK (self);
     PAD_LOCK (aggpad);
 
-    if (event_type == GST_EVENT_STREAM_START) {
+    if (event_type == GST_EVENT_STREAM_START && priv->running) {
       GstTaskState task_state;
       aggpad->priv->flow_return = GST_FLOW_OK;
 
