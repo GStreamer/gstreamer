@@ -251,7 +251,8 @@ gst_vp9_decoder_check_codec_change (GstVp9Decoder * self,
   }
 
   ret = klass->new_sequence (self, frame_hdr,
-      GST_VP9_REF_FRAMES + priv->preferred_output_delay);
+      /* +1 for the current frame */
+      GST_VP9_REF_FRAMES + 1 + priv->preferred_output_delay);
 
   if (ret != GST_FLOW_OK)
     priv->had_sequence = FALSE;
