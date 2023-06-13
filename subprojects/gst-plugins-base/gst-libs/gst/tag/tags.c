@@ -530,7 +530,8 @@ gst_tag_image_data_to_image_sample (const guint8 * image_data,
   GstStructure *image_info = NULL;
 
   g_return_val_if_fail (image_data != NULL, NULL);
-  g_return_val_if_fail (image_data_len > 0, NULL);
+  g_return_val_if_fail (image_data_len > 0
+      || image_data_len == G_MAXUINT32, NULL);
   g_return_val_if_fail (gst_tag_image_type_is_valid (image_type), NULL);
 
   GST_DEBUG ("image data len: %u bytes", image_data_len);
