@@ -311,14 +311,10 @@ gst_asf_put_time (guint8 * buf, guint64 time)
 void
 gst_asf_put_guid (guint8 * buf, Guid guid)
 {
-  guint32 *aux32 = (guint32 *) buf;
-  guint16 *aux16 = (guint16 *) & (buf[4]);
-  guint64 *aux64 = (guint64 *) & (buf[8]);
-  *aux32 = GUINT32_TO_LE (guid.v1);
-  *aux16 = GUINT16_TO_LE (guid.v2);
-  aux16 = (guint16 *) & (buf[6]);
-  *aux16 = GUINT16_TO_LE (guid.v3);
-  *aux64 = GUINT64_TO_BE (guid.v4);
+  GST_WRITE_UINT32_LE (buf + 0, guid.v1);
+  GST_WRITE_UINT16_LE (buf + 4, guid.v2);
+  GST_WRITE_UINT16_LE (buf + 6, guid.v3);
+  GST_WRITE_UINT64_BE (buf + 8, guid.v4);
 }
 
 /**
