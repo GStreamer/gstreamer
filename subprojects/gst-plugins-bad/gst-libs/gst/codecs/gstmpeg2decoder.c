@@ -802,8 +802,8 @@ gst_mpeg2_decoder_handle_picture (GstMpeg2Decoder * decoder,
         &priv->seq_display_ext : NULL,
         _seq_scalable_ext_is_valid (&priv->seq_scalable_ext) ?
         &priv->seq_scalable_ext : NULL,
-        /* previous/next 2 pictures */
-        2 + priv->preferred_output_delay);
+        /* previous/next 2 pictures + current picture */
+        3 + priv->preferred_output_delay);
 
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (decoder, "new sequence error");
