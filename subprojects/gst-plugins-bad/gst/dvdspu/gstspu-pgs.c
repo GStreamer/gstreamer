@@ -607,7 +607,8 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     PGS_DUMP ("%d bytes of additional RLE data\n", (int) (end - payload));
     /* Check that the data chunk is for this object version, and fits in the buffer */
     if (obj->rle_data_ver == obj_ver &&
-        obj->rle_data_used + end - payload <= obj->rle_data_size) {
+        end - payload <= obj->rle_data_size &&
+        obj->rle_data_used <= obj->rle_data_size - (end - payload)) {
 
       memcpy (obj->rle_data + obj->rle_data_used, payload, end - payload);
       obj->rle_data_used += end - payload;
