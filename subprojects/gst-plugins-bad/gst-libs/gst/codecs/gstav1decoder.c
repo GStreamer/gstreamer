@@ -409,7 +409,8 @@ gst_av1_decoder_process_sequence (GstAV1Decoder * self, GstAV1OBU * obu)
   }
 
   ret = klass->new_sequence (self, &seq_header,
-      GST_AV1_TOTAL_REFS_PER_FRAME + priv->preferred_output_delay);
+      /* +1 for the current frame */
+      GST_AV1_TOTAL_REFS_PER_FRAME + 1 + priv->preferred_output_delay);
   if (ret != GST_FLOW_OK) {
     GST_ERROR_OBJECT (self, "subclass does not want accept new sequence");
     return ret;
