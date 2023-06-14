@@ -48,6 +48,7 @@ struct _GstAjaSrc {
   GMutex queue_lock;
   GCond queue_cond;
   GstQueueArray *queue;
+  guint queue_num_frames;
   gboolean playing;
   gboolean shutdown;
   gboolean flushing;
