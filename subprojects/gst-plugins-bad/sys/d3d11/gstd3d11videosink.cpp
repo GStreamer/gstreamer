@@ -1358,6 +1358,27 @@ gst_d3d11_video_sink_check_device_update (GstD3D11VideoSink * self,
   self->device = (GstD3D11Device *) gst_object_ref (dmem->device);
 }
 
+static gboolean
+gst_d3d11_video_sink_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
+    GstBuffer * uploaded)
+{
+  GstVideoOverlayCompositionMeta *cmeta;
+
+  if ((*meta)->info->api != GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)
+    return TRUE;
+
+  cmeta = (GstVideoOverlayCompositionMeta *) (*meta);
+  if (!cmeta->overlay)
+    return TRUE;
+
+  if (gst_video_overlay_composition_n_rectangles (cmeta->overlay) == 0)
+    return TRUE;
+
+  gst_buffer_add_video_overlay_composition_meta (uploaded, cmeta->overlay);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_d3d11_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
 {
@@ -1382,8 +1403,6 @@ gst_d3d11_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
   }
 
   if (!gst_is_d3d11_buffer (buffer)) {
-    GstVideoOverlayCompositionMeta *overlay_meta;
-
     ret = gst_buffer_pool_acquire_buffer (self->pool, &self->prepared_buffer,
         nullptr);
     if (ret != GST_FLOW_OK)
@@ -1404,11 +1423,9 @@ gst_d3d11_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
       gst_memory_unmap (mem, &info);
     }
 
-    overlay_meta = gst_buffer_get_video_overlay_composition_meta (buffer);
-    if (overlay_meta) {
-      gst_buffer_add_video_overlay_composition_meta (self->prepared_buffer,
-          overlay_meta->overlay);
-    }
+    gst_buffer_foreach_meta (buffer,
+        (GstBufferForeachMetaFunc) gst_d3d11_video_sink_foreach_meta,
+        self->prepared_buffer);
   } else {
     self->prepared_buffer = gst_buffer_ref (buffer);
   }
