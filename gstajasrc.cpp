@@ -2156,7 +2156,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   GstClock *clock = NULL;
   AUTOCIRCULATE_TRANSFER transfer;
   guint64 frames_dropped_last = G_MAXUINT64;
-  gboolean have_signal = TRUE;
+  gboolean have_signal = TRUE, discont = TRUE;
   guint iterations_without_frame = 0;
   NTV2VideoFormat last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
 
@@ -2228,6 +2228,7 @@ restart:
           gst_queue_array_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
           have_signal = FALSE;
+          discont = TRUE;
         }
         self->device->device->WaitForInputVerticalInterrupt(self->channel);
         continue;
@@ -2351,6 +2352,7 @@ restart:
         gst_queue_array_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
         have_signal = FALSE;
+        discont = TRUE;
       }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
@@ -2387,6 +2389,7 @@ restart:
         gst_queue_array_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
         have_signal = FALSE;
+        discont = TRUE;
       }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
@@ -2436,6 +2439,7 @@ restart:
       g_cond_signal(&self->queue_cond);
 
       frames_dropped_last = status.acFramesDropped;
+      discont = TRUE;
     }
 
     if (status.IsRunning() && status.acBufferLevel > 1) {
@@ -2589,28 +2593,13 @@ restart:
       else
         now_gst = 0;
 
+      // TODO: Drift detection and compensation
       GST_BUFFER_PTS(video_buffer) = now_gst;
       GST_BUFFER_DURATION(video_buffer) = gst_util_uint64_scale(
           GST_SECOND, self->configured_info.fps_d, self->configured_info.fps_n);
       GST_BUFFER_PTS(audio_buffer) = now_gst;
       GST_BUFFER_DURATION(audio_buffer) = gst_util_uint64_scale(
           GST_SECOND, self->configured_info.fps_d, self->configured_info.fps_n);
-
-      // TODO: Drift detection and compensation
-
-      QueueItem item = {
-          .type = QUEUE_ITEM_TYPE_FRAME,
-          .frame = {.capture_time = now_gst,
-                    .video_buffer = video_buffer,
-                    .audio_buffer = audio_buffer,
-                    .anc_buffer = anc_buffer,
-                    .anc_buffer2 = anc_buffer2,
-                    .tc = time_code,
-                    .detected_format =
-                        (self->quad_mode
-                             ? ::GetQuadSizedVideoFormat(current_video_format)
-                             : current_video_format),
-                    .vpid = vpid_a}};
 
       while (self->queue_num_frames >= self->queue_size) {
         guint n = gst_queue_array_get_length(self->queue);
@@ -2636,11 +2625,32 @@ restart:
             gst_queue_array_drop_struct(self->queue, i, NULL);
             gst_queue_array_push_tail_struct(self->queue, &item);
             self->queue_num_frames -= 1;
+            discont = TRUE;
             g_cond_signal(&self->queue_cond);
             break;
           }
         }
       }
+
+      if (discont) {
+        GST_BUFFER_FLAG_SET(video_buffer, GST_BUFFER_FLAG_DISCONT);
+        GST_BUFFER_FLAG_SET(audio_buffer, GST_BUFFER_FLAG_DISCONT);
+        discont = FALSE;
+      }
+
+      QueueItem item = {
+          .type = QUEUE_ITEM_TYPE_FRAME,
+          .frame = {.capture_time = now_gst,
+                    .video_buffer = video_buffer,
+                    .audio_buffer = audio_buffer,
+                    .anc_buffer = anc_buffer,
+                    .anc_buffer2 = anc_buffer2,
+                    .tc = time_code,
+                    .detected_format =
+                        (self->quad_mode
+                             ? ::GetQuadSizedVideoFormat(current_video_format)
+                             : current_video_format),
+                    .vpid = vpid_a}};
 
       GST_TRACE_OBJECT(self, "Queuing frame %" GST_TIME_FORMAT,
                        GST_TIME_ARGS(now_gst));
@@ -2668,6 +2678,7 @@ restart:
           gst_queue_array_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
           have_signal = FALSE;
+          discont = TRUE;
         }
       }
 
