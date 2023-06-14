@@ -426,8 +426,10 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
   }
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    gst_va_dmabuf_allocator_get_format (allocator, &self->priv->srcpad_info,
-        NULL);
+    GstVideoInfoDmaDrm dma_info;
+
+    gst_va_dmabuf_allocator_get_format (allocator, &dma_info, NULL);
+    self->priv->srcpad_info = dma_info.vinfo;
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
     gst_va_allocator_get_format (allocator, &self->priv->srcpad_info, NULL,
         NULL);

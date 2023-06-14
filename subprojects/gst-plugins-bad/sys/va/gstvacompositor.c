@@ -737,7 +737,10 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   }
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    gst_va_dmabuf_allocator_get_format (allocator, &vagg->info, NULL);
+    GstVideoInfoDmaDrm dma_info;
+
+    gst_va_dmabuf_allocator_get_format (allocator, &dma_info, NULL);
+    vagg->info = dma_info.vinfo;
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
     gst_va_allocator_get_format (allocator, &vagg->info, NULL, NULL);
   }
@@ -819,7 +822,10 @@ _get_sinkpad_pool (GstVaCompositor * self, GstVaCompositorPad * pad)
   }
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    gst_va_dmabuf_allocator_get_format (allocator, &info, NULL);
+    GstVideoInfoDmaDrm dma_info;
+
+    gst_va_dmabuf_allocator_get_format (allocator, &dma_info, NULL);
+    info = dma_info.vinfo;
   } else if (GST_IS_VA_ALLOCATOR (allocator)) {
     gst_va_allocator_get_format (allocator, &info, NULL, NULL);
   }

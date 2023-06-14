@@ -49,11 +49,11 @@ GST_VA_API
 void                  gst_va_dmabuf_allocator_flush       (GstAllocator * allocator);
 GST_VA_API
 gboolean              gst_va_dmabuf_allocator_set_format  (GstAllocator * allocator,
-                                                           GstVideoInfo * info,
+                                                           GstVideoInfoDmaDrm * info,
                                                            guint usage_hint);
 GST_VA_API
 gboolean              gst_va_dmabuf_allocator_get_format  (GstAllocator * allocator,
-                                                           GstVideoInfo * info,
+                                                           GstVideoInfoDmaDrm * info,
                                                            guint * usage_hint);
 
 GST_VA_API

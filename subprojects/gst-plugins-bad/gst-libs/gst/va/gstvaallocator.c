@@ -445,6 +445,8 @@ gst_va_dmabuf_allocator_init (GstVaDmabufAllocator * self)
   self->parent_copy = allocator->mem_copy;
   allocator->mem_copy = gst_va_dmabuf_mem_copy;
 
+  gst_video_info_dma_drm_init (&self->info);
+
   gst_va_memory_pool_init (&self->pool);
 }
 
@@ -546,7 +548,7 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
   VASurfaceAttribExternalBuffers *extbuf = NULL, ext_buf;
   GstVideoFormat format;
   VASurfaceID surface;
-  guint64 prev_modifier;
+  guint64 prev_modifier = DRM_FORMAT_MOD_INVALID;
 
   _init_debug_category ();
 
@@ -691,7 +693,7 @@ gst_va_dmabuf_allocator_setup_buffer_full (GstAllocator * allocator,
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
 
   if (!_va_create_surface_and_export_to_dmabuf (self->display, self->usage_hint,
-          NULL, 0, &self->info.vinfo, &surface, &desc))
+          &self->info.drm_modifier, 1, &self->info.vinfo, &surface, &desc))
     return FALSE;
 
   buf = gst_va_buffer_surface_new (surface);
@@ -956,16 +958,16 @@ gst_va_dmabuf_allocator_try (GstAllocator * allocator)
 /**
  * gst_va_dmabuf_allocator_set_format:
  * @allocator: a #GstAllocator
- * @info: (in) (out caller-allocates) (not nullable): a #GstVideoInfo
+ * @info: (in) (out caller-allocates) (not nullable): a #GstVideoInfoDmaDrm
  * @usage_hint: VA usage hint
  *
  * Sets the configuration defined by @info and @usage_hint for
  * @allocator, and it tries the configuration, if @allocator has not
  * allocated memories yet.
  *
- * If @allocator has memory allocated already, and frame size and
- * format in @info are the same as currently configured in @allocator,
- * the rest of @info parameters are updated internally.
+ * If @allocator has memory allocated already, and frame size, format
+ * and modifier in @info are the same as currently configured in
+ * @allocator, the rest of @info parameters are updated internally.
  *
  * Returns: %TRUE if the configuration is valid or updated; %FALSE if
  * configuration is not valid or not updated.
@@ -974,14 +976,10 @@ gst_va_dmabuf_allocator_try (GstAllocator * allocator)
  */
 gboolean
 gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
-    GstVideoInfo * info, guint usage_hint)
+    GstVideoInfoDmaDrm * info, guint usage_hint)
 {
   GstVaDmabufAllocator *self;
   gboolean ret;
-
-  /* TODO: change API to pass GstVideoInfoDmaDrm, though ignoring the drm
-   * modifier since that's set by the driver. Still we might want to pass the
-   * list of available modifiers by upstream for the negotiated format */
 
   g_return_val_if_fail (GST_IS_VA_DMABUF_ALLOCATOR (allocator), FALSE);
   g_return_val_if_fail (info, FALSE);
@@ -989,28 +987,29 @@ gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
   self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
   if (gst_va_memory_pool_surface_count (&self->pool) != 0) {
-    if (GST_VIDEO_INFO_FORMAT (info)
+    if (info->drm_modifier == self->info.drm_modifier
+        && GST_VIDEO_INFO_FORMAT (&info->vinfo)
         == GST_VIDEO_INFO_FORMAT (&self->info.vinfo)
-        && GST_VIDEO_INFO_WIDTH (info)
+        && GST_VIDEO_INFO_WIDTH (&info->vinfo)
         == GST_VIDEO_INFO_WIDTH (&self->info.vinfo)
-        && GST_VIDEO_INFO_HEIGHT (info)
+        && GST_VIDEO_INFO_HEIGHT (&info->vinfo)
         == GST_VIDEO_INFO_HEIGHT (&self->info.vinfo)
         && usage_hint == self->usage_hint) {
-      *info = self->info.vinfo; /* update callee info (offset & stride) */
+      *info = self->info;       /* update callee info (offset & stride) */
       return TRUE;
     }
     return FALSE;
   }
 
   self->usage_hint = usage_hint;
-  self->info.vinfo = *info;
+  self->info = *info;
 
   g_clear_pointer (&self->copy, gst_va_surface_copy_free);
 
   ret = gst_va_dmabuf_allocator_try (allocator);
 
   if (ret)
-    *info = self->info.vinfo;
+    *info = self->info;
 
   return ret;
 }
@@ -1018,7 +1017,7 @@ gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
 /**
  * gst_va_dmabuf_allocator_get_format:
  * @allocator: a #GstAllocator
- * @info: (out) (optional): a #GstVideoInfo
+ * @info: (out) (optional): a #GstVideoInfoDmaDrm
  * @usage_hint: (out) (optional): VA usage hint
  *
  * Gets current internal configuration of @allocator.
@@ -1030,7 +1029,7 @@ gst_va_dmabuf_allocator_set_format (GstAllocator * allocator,
  */
 gboolean
 gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
-    GstVideoInfo * info, guint * usage_hint)
+    GstVideoInfoDmaDrm * info, guint * usage_hint)
 {
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (allocator);
 
@@ -1038,7 +1037,7 @@ gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
     return FALSE;
 
   if (info)
-    *info = self->info.vinfo;
+    *info = self->info;
   if (usage_hint)
     *usage_hint = self->usage_hint;
 

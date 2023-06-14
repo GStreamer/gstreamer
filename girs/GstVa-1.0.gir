@@ -642,8 +642,8 @@ otherwise.</doc>
             <type name="Gst.Allocator" c:type="GstAllocator*"/>
           </parameter>
           <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfoDmaDrm</doc>
+            <type name="GstVideo.VideoInfoDmaDrm" c:type="GstVideoInfoDmaDrm*"/>
           </parameter>
           <parameter name="usage_hint" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
@@ -676,9 +676,9 @@ otherwise.</doc>
 @allocator, and it tries the configuration, if @allocator has not
 allocated memories yet.
 
-If @allocator has memory allocated already, and frame size and
-format in @info are the same as currently configured in @allocator,
-the rest of @info parameters are updated internally.</doc>
+If @allocator has memory allocated already, and frame size, format
+and modifier in @info are the same as currently configured in
+@allocator, the rest of @info parameters are updated internally.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">%TRUE if the configuration is valid or updated; %FALSE if
@@ -691,8 +691,8 @@ configuration is not valid or not updated.</doc>
             <type name="Gst.Allocator" c:type="GstAllocator*"/>
           </parameter>
           <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfoDmaDrm</doc>
+            <type name="GstVideo.VideoInfoDmaDrm" c:type="GstVideoInfoDmaDrm*"/>
           </parameter>
           <parameter name="usage_hint" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
