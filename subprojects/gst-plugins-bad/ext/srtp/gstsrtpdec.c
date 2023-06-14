@@ -1260,7 +1260,7 @@ gst_srtp_dec_iterate_internal_links_rtcp (GstPad * pad, GstObject * parent)
   return gst_srtp_dec_iterate_internal_links (pad, parent, TRUE);
 }
 
-static void
+static gboolean
 gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
     GstPad * otherpad, gboolean is_rtcp)
 {
@@ -1304,7 +1304,8 @@ gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
     else
       caps = gst_caps_new_empty_simple ("application/x-rtp");
 
-    gst_pad_set_caps (pad, caps);
+    ev = gst_event_new_caps (caps);
+    gst_pad_push_event (pad, ev);
     gst_caps_unref (caps);
   }
 
@@ -1314,8 +1315,16 @@ gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
   } else {
     ev = gst_pad_get_sticky_event (otherpad, GST_EVENT_SEGMENT, 0);
 
-    if (ev)
+    if (ev) {
       gst_pad_push_event (pad, ev);
+    } else if (GST_PAD_IS_FLUSHING (otherpad)) {
+      /* We didn't get a Segment event from otherpad
+       * and otherpad is flushing => we are most likely shutting down */
+      goto err;
+    } else {
+      GST_WARNING_OBJECT (filter, "No Segment event to push");
+      goto err;
+    }
   }
 
   if (is_rtcp)
@@ -1323,6 +1332,10 @@ gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
   else
     filter->rtp_has_segment = TRUE;
 
+  return TRUE;
+
+err:
+  return FALSE;
 }
 
 /*
@@ -1500,15 +1513,24 @@ push_out:
   /* Push buffer to source pad */
   if (is_rtcp) {
     otherpad = filter->rtcp_srcpad;
-    if (!filter->rtcp_has_segment)
-      gst_srtp_dec_push_early_events (filter, filter->rtcp_srcpad,
-          filter->rtp_srcpad, TRUE);
+    if (!filter->rtcp_has_segment) {
+      if (!gst_srtp_dec_push_early_events (filter, filter->rtcp_srcpad,
+              filter->rtp_srcpad, TRUE)) {
+        ret = GST_FLOW_FLUSHING;
+        goto drop_buffer;
+      }
+    }
   } else {
     otherpad = filter->rtp_srcpad;
-    if (!filter->rtp_has_segment)
-      gst_srtp_dec_push_early_events (filter, filter->rtp_srcpad,
-          filter->rtcp_srcpad, FALSE);
+    if (!filter->rtp_has_segment) {
+      if (!gst_srtp_dec_push_early_events (filter, filter->rtp_srcpad,
+              filter->rtcp_srcpad, FALSE)) {
+        ret = GST_FLOW_FLUSHING;
+        goto drop_buffer;
+      }
+    }
   }
+
   ret = gst_pad_push (otherpad, buf);
 
   return ret;
