@@ -1192,12 +1192,12 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       wbuf = gst_wl_linux_dmabuf_construct_wl_buffer (buffer, priv->display,
           &priv->drm_info);
 
-    /* DMABuf did not work, let try and make this a dmabuf, it does not matter
-     * if it was a SHM since the compositor needs to copy that anyway, and
-     * offloading the compositor from a copy helps maintaining a smoother
-     * desktop.
-     */
-    if (!priv->skip_dumb_buffer_copy) {
+    if (!wbuf && !priv->skip_dumb_buffer_copy) {
+      /* DMABuf did not work, let try and make this a dmabuf, it does not matter
+       * if it was a SHM since the compositor needs to copy that anyway, and
+       * offloading the compositor from a copy helps maintaining a smoother
+       * desktop.
+       */
       GstVideoFrame src, dst;
 
       if (!gst_gtk_wayland_activate_drm_dumb_pool (self)) {
