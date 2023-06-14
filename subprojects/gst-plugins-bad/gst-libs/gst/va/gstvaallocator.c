@@ -41,6 +41,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <libdrm/drm_fourcc.h>
+#else
+#define DRM_FORMAT_MOD_LINEAR  0ULL
+#define DRM_FORMAT_MOD_INVALID 0xffffffffffffff
 #endif
 
 #include "gstvasurfacecopy.h"
