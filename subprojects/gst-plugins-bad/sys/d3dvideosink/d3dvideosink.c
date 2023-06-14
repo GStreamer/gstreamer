@@ -634,6 +634,7 @@ gst_d3dvideosink_navigation_send_event (GstNavigation * navigation,
       gst_element_post_message (GST_ELEMENT_CAST (sink),
           gst_navigation_message_new_event (GST_OBJECT_CAST (sink), event));
     }
+    gst_event_unref (event);
     gst_object_unref (pad);
   }
 }
