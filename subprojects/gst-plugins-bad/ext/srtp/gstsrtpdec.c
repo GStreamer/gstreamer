@@ -1260,6 +1260,53 @@ gst_srtp_dec_iterate_internal_links_rtcp (GstPad * pad, GstObject * parent)
   return gst_srtp_dec_iterate_internal_links (pad, parent, TRUE);
 }
 
+/* Partial backport to 1.22 of `gst_element_decorate_stream_id_internal`,
+ * which was introduced in 1.23 */
+static gchar *
+decorate_stream_id_private (GstElement * element, const gchar * stream_id)
+{
+  gchar *upstream_stream_id = NULL, *new_stream_id;
+  GstQuery *query;
+  gchar *uri = NULL;
+
+  /* Try to generate a stream-id from the URI query and
+   * if it fails take a random number instead */
+  query = gst_query_new_uri ();
+  if (gst_element_query (element, query)) {
+    gst_query_parse_uri (query, &uri);
+  }
+
+  if (uri) {
+    GChecksum *cs;
+
+    /* And then generate an SHA256 sum of the URI */
+    cs = g_checksum_new (G_CHECKSUM_SHA256);
+    g_checksum_update (cs, (const guchar *) uri, strlen (uri));
+    g_free (uri);
+    upstream_stream_id = g_strdup (g_checksum_get_string (cs));
+    g_checksum_free (cs);
+  } else {
+    /* Just get some random number if the URI query fails */
+    GST_FIXME_OBJECT (element, "Creating random stream-id, consider "
+        "implementing a deterministic way of creating a stream-id");
+    upstream_stream_id =
+        g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
+        g_random_int (), g_random_int ());
+  }
+
+  gst_query_unref (query);
+
+  if (stream_id) {
+    new_stream_id = g_strconcat (upstream_stream_id, "/", stream_id, NULL);
+  } else {
+    new_stream_id = g_strdup (upstream_stream_id);
+  }
+
+  g_free (upstream_stream_id);
+
+  return new_stream_id;
+}
+
 static void
 gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
     GstPad * otherpad, gboolean is_rtcp)
@@ -1283,7 +1330,7 @@ gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
           is_rtcp ? "rtcp" : "rtp");
       gst_event_unref (otherev);
     } else {
-      new_stream_id = gst_pad_create_stream_id (pad, GST_ELEMENT (filter),
+      new_stream_id = decorate_stream_id_private (GST_ELEMENT (filter),
           is_rtcp ? "rtcp" : "rtp");
     }
 
