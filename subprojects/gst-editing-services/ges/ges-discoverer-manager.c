@@ -31,6 +31,7 @@ enum
 enum
 {
   LOAD_SERIALIZED_INFO_SIGNAL,
+  DISCOVERER_SOURCE_SETUP,
   DISCOVERER_SIGNAL,
   N_SIGNALS
 };
@@ -153,6 +154,19 @@ ges_discoverer_manager_class_init (GESDiscovererManagerClass * klass)
       g_signal_new ("load-serialized-info", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       0, NULL, NULL, NULL, GST_TYPE_DISCOVERER_INFO, 1, G_TYPE_STRING);
+
+  /**
+   * GESDiscovererManager::source-setup:
+   * @manager: the #GESDiscovererManager
+   * @source: The source #GstElement to setup
+   *
+   * Allows to setup the source element before the discoverer runs.
+   *
+   * Since: 1.24
+   */
+  signals[DISCOVERER_SOURCE_SETUP] =
+      g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, GST_TYPE_ELEMENT);
 
   /**
    * GESDiscovererManager::discovered: (attributes doc.skip=true)
@@ -286,6 +300,12 @@ proxy_load_serialized_info_cb (GESDiscovererManager * self, const gchar * uri)
 }
 
 static void
+source_setup_cb (GESDiscovererManager * self, GstElement * source)
+{
+  g_signal_emit (self, signals[DISCOVERER_SOURCE_SETUP], 0, source);
+}
+
+static void
 proxy_discovered_cb (GESDiscovererManager * self,
     GstDiscovererInfo * info, GError * err, gpointer user_data)
 {
@@ -301,6 +321,8 @@ create_discoverer (GESDiscovererManager * self)
   discoverer = gst_discoverer_new (self->timeout, NULL);
   g_signal_connect_swapped (discoverer, "load-serialized-info",
       G_CALLBACK (proxy_load_serialized_info_cb), self);
+  g_signal_connect_swapped (discoverer, "source-setup",
+      G_CALLBACK (source_setup_cb), self);
   g_signal_connect_swapped (discoverer, "discovered",
       G_CALLBACK (proxy_discovered_cb), self);
   g_object_set (discoverer, "use-cache", self->use_cache, NULL);

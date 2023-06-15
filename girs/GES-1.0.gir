@@ -3234,6 +3234,18 @@ discovery.</doc>
           </parameter>
         </parameters>
       </glib:signal>
+      <glib:signal name="source-setup" when="last" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">Allows to setup the source element before the discoverer runs.</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="source" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.c">The source #GstElement to setup</doc>
+            <type name="Gst.Element"/>
+          </parameter>
+        </parameters>
+      </glib:signal>
     </class>
     <record name="DiscovererManagerClass" c:type="GESDiscovererManagerClass" glib:is-gtype-struct-for="DiscovererManager">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-discoverer-manager.h"/>
