@@ -363,8 +363,6 @@ gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
 {
   GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
 
-  GST_DEBUG_OBJECT (self, "pad is blocked now!");
-
   if (GST_EVENT_TYPE (GST_PAD_PROBE_INFO_DATA (info)) != GST_EVENT_CAPS)
     return GST_PAD_PROBE_OK;
 
@@ -392,7 +390,6 @@ gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
           GST_DEBUG_OBJECT (self, "something went wrong!");
       }
 
-      GST_DEBUG_OBJECT (self, "pad is unblocked now");
       return GST_PAD_PROBE_REMOVE;
     }
     default:
