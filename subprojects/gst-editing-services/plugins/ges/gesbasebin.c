@@ -61,8 +61,10 @@ ges_base_bin_dispose (GObject * object)
   GESBaseBin *self = GES_BASE_BIN (object);
   GESBaseBinPrivate *priv = ges_base_bin_get_instance_private (self);
 
-  if (priv->timeline)
+  if (priv->timeline) {
+    gst_bin_remove (GST_BIN (self), GST_ELEMENT (priv->timeline));
     gst_clear_object (&priv->timeline);
+  }
 }
 
 static void
