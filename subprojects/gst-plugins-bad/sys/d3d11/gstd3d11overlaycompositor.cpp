@@ -105,6 +105,8 @@ struct GstD3D11CompositionOverlay
   {
     if (overlay_rect)
       gst_video_overlay_rectangle_unref (overlay_rect);
+    if (d3d11_buffer)
+      gst_buffer_unref (d3d11_buffer);
   }
 
   GstVideoOverlayRectangle *overlay_rect = nullptr;
@@ -112,6 +114,7 @@ struct GstD3D11CompositionOverlay
   ComPtr<ID3D11ShaderResourceView> srv;
   ComPtr<ID3D11Buffer> vertex_buffer;
   gboolean premul_alpha = FALSE;
+  GstBuffer *d3d11_buffer = nullptr;
 };
 
 typedef std::shared_ptr<GstD3D11CompositionOverlay> GstD3D11CompositionOverlayPtr;
@@ -195,6 +198,8 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   ComPtr < ID3D11Buffer > vertex_buffer;
   GstVideoOverlayFormatFlags flags;
   gboolean premul_alpha = FALSE;
+  GstMemory *mem;
+  gboolean is_d3d11 = FALSE;
 
   memset (&subresource_data, 0, sizeof (subresource_data));
   memset (&texture_desc, 0, sizeof (texture_desc));
@@ -225,51 +230,66 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     return nullptr;
   }
 
-  vmeta = gst_buffer_get_video_meta (buf);
-  if (!vmeta) {
-    GST_ERROR_OBJECT (self, "Failed to get video meta");
-    return nullptr;
+  mem = gst_buffer_peek_memory (buf, 0);
+  if (gst_is_d3d11_memory (mem)) {
+    GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
+    if (dmem->device == self->device) {
+      srv = gst_d3d11_memory_get_shader_resource_view (dmem, 0);
+      if (srv) {
+        texture = (ID3D11Texture2D *)
+            gst_d3d11_memory_get_resource_handle (dmem);
+        is_d3d11 = TRUE;
+      }
+    }
   }
 
-  if (!gst_video_meta_map (vmeta,
-          0, &info, (gpointer *) & data, &stride, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Failed to map");
-    return nullptr;
-  }
+  if (!is_d3d11) {
+    vmeta = gst_buffer_get_video_meta (buf);
+    if (!vmeta) {
+      GST_ERROR_OBJECT (self, "Failed to get video meta");
+      return nullptr;
+    }
 
-  /* Do create texture and upload data at once, for create immutable texture */
-  subresource_data.pSysMem = data;
-  subresource_data.SysMemPitch = stride;
-  subresource_data.SysMemSlicePitch = 0;
+    if (!gst_video_meta_map (vmeta,
+            0, &info, (gpointer *) & data, &stride, GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "Failed to map");
+      return nullptr;
+    }
 
-  texture_desc.Width = vmeta->width;
-  texture_desc.Height = vmeta->height;
-  texture_desc.MipLevels = 1;
-  texture_desc.ArraySize = 1;
-  texture_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-  texture_desc.SampleDesc.Count = 1;
-  texture_desc.SampleDesc.Quality = 0;
-  texture_desc.Usage = D3D11_USAGE_IMMUTABLE;
-  texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-  texture_desc.CPUAccessFlags = 0;
+    /* Do create texture and upload data at once, for create immutable texture */
+    subresource_data.pSysMem = data;
+    subresource_data.SysMemPitch = stride;
+    subresource_data.SysMemSlicePitch = 0;
 
-  hr = device_handle->CreateTexture2D (&texture_desc,
-      &subresource_data, &texture);
-  gst_video_meta_unmap (vmeta, 0, &info);
+    texture_desc.Width = vmeta->width;
+    texture_desc.Height = vmeta->height;
+    texture_desc.MipLevels = 1;
+    texture_desc.ArraySize = 1;
+    texture_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    texture_desc.SampleDesc.Count = 1;
+    texture_desc.SampleDesc.Quality = 0;
+    texture_desc.Usage = D3D11_USAGE_IMMUTABLE;
+    texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    texture_desc.CPUAccessFlags = 0;
 
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Failed to create texture");
-    return nullptr;
-  }
+    hr = device_handle->CreateTexture2D (&texture_desc,
+        &subresource_data, &texture);
+    gst_video_meta_unmap (vmeta, 0, &info);
 
-  srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-  srv_desc.Texture2D.MipLevels = 1;
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (self, "Failed to create texture");
+      return nullptr;
+    }
 
-  hr = device_handle->CreateShaderResourceView (texture.Get (), &srv_desc,
-      &srv);
-  if (!gst_d3d11_result (hr, device) || !srv) {
-    GST_ERROR_OBJECT (self, "Failed to create shader resource view");
-    return nullptr;
+    srv_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srv_desc.Texture2D.MipLevels = 1;
+
+    hr = device_handle->CreateShaderResourceView (texture.Get (), &srv_desc,
+        &srv);
+    if (!gst_d3d11_result (hr, device) || !srv) {
+      GST_ERROR_OBJECT (self, "Failed to create shader resource view");
+      return nullptr;
+    }
   }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -346,6 +366,8 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   overlay->srv = srv;
   overlay->vertex_buffer = vertex_buffer;
   overlay->premul_alpha = premul_alpha;
+  if (is_d3d11)
+    overlay->d3d11_buffer = gst_buffer_ref (buf);
 
   return overlay;
 }
@@ -680,6 +702,13 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
   for (auto overlay : priv->overlays) {
     ID3D11ShaderResourceView *srv[] = { overlay->srv.Get () };
     ID3D11Buffer *vertex_buf[] = { overlay->vertex_buffer.Get () };
+    GstMapInfo info;
+    GstMemory *mem = nullptr;
+
+    if (overlay->d3d11_buffer) {
+      mem = gst_buffer_peek_memory (overlay->d3d11_buffer, 0);
+      gst_memory_map (mem, &info, (GstMapFlags) (GST_MAP_D3D11 | GST_MAP_READ));
+    }
 
     if (overlay->premul_alpha)
       context->PSSetShader (priv->premul_ps.Get (), nullptr, 0);
@@ -690,6 +719,9 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
     context->IASetVertexBuffers (0, 1, vertex_buf, &strides, &offsets);
 
     context->DrawIndexed (6, 0, 0);
+
+    if (mem)
+      gst_memory_unmap (mem, &info);
   }
   /* *INDENT-ON* */
 
