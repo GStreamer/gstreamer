@@ -806,8 +806,8 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
     return FALSE;
   }
 
-  /* Additional 4 frames to help zero-copying */
-  dpb_size += 4;
+  /* Additional 2 frames to help zero-copying */
+  dpb_size += 2;
 
   decoder->input_state = gst_video_codec_state_ref (input_state);
   decoder->info = decoder->output_info = *out_info;
