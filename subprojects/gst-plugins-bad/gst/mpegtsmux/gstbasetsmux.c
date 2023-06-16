@@ -876,6 +876,32 @@ gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
   return ret;
 }
 
+static guint16
+get_pmt_pcr_pid (GstBaseTsMux * mux, const gchar * prop_name)
+{
+  if (mux->prog_map == NULL)
+    return 0;
+  gint pcr_pid = 0;
+  if (!gst_structure_get (mux->prog_map, prop_name, G_TYPE_INT, &pcr_pid, NULL))
+    return 0;
+  if (pcr_pid < 1 || pcr_pid > G_MAXUINT16)
+    return 0;
+  return (guint16) pcr_pid;
+}
+
+static gchar *
+get_pmt_pcr_sink (GstBaseTsMux * mux, const gchar * prop_name)
+{
+  if (mux->prog_map == NULL)
+    return 0;
+  gchar *pcr_sink = NULL;
+  if (!gst_structure_get (mux->prog_map, prop_name, G_TYPE_STRING, &pcr_sink,
+          NULL)) {
+    return NULL;
+  }
+  return pcr_sink;
+}
+
 /* Must be called with mux->lock held */
 static GstFlowReturn
 gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
@@ -945,6 +971,7 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
     if (ret != GST_FLOW_OK)
       goto no_stream;
   }
+  ts_pad->stream->program = ts_pad->prog;
 
   if (ts_pad->prog->pcr_stream == NULL) {
     /* Take the first stream of the program for the PCR */
@@ -957,17 +984,23 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
 
   /* Check for user-specified PCR PID */
   prop_name = g_strdup_printf ("PCR_%d", ts_pad->prog->pgm_number);
-  if (mux->prog_map && gst_structure_has_field (mux->prog_map, prop_name)) {
-    const gchar *sink_name =
-        gst_structure_get_string (mux->prog_map, prop_name);
-
-    if (!g_strcmp0 (name, sink_name)) {
-      GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
-          "program (prog_id = %d)", ts_pad->pid, ts_pad->prog->pgm_number);
-      tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
-    }
+  guint16 pcr_pid = get_pmt_pcr_pid (mux, prop_name);
+  if (pcr_pid) {
+    GST_DEBUG_OBJECT (mux, "User specified PID %d as PCR for "
+        "program (prog_id = %d)", pcr_pid, ts_pad->prog->pgm_number);
+    tsmux_program_set_pcr_pid (ts_pad->prog, pcr_pid);
+    goto have_pcr_pid;
   }
-  g_free (prop_name);
+  gchar *pcr_sink_name = get_pmt_pcr_sink (mux, prop_name);
+  if (!g_strcmp0 (GST_PAD_NAME (pad), pcr_sink_name)) {
+    GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
+        "program (prog_id = %d)", ts_pad->pid, ts_pad->prog->pgm_number);
+    tsmux_program_set_pcr_stream (ts_pad->prog, ts_pad->stream);
+  }
+  g_clear_pointer (&pcr_sink_name, g_free);
+
+have_pcr_pid:
+  g_clear_pointer (&prop_name, g_free);
 
   return ret;
 
@@ -1383,7 +1416,7 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
     }
   }
 
-  if (G_UNLIKELY (prog->pcr_stream == NULL)) {
+  if (!prog->pcr_pid && G_UNLIKELY (prog->pcr_stream == NULL)) {
     /* Take the first data stream for the PCR */
     GST_DEBUG_OBJECT (best,
         "Use stream (pid=%d) from pad as PCR for program (prog_id = %d)",
