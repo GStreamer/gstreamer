@@ -13460,7 +13460,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             dops_data = stsd_entry_data + 35;
 
           channels = GST_READ_UINT8 (dops_data + 10);
-          rate = GST_READ_UINT32_LE (dops_data + 13);
+          rate = GST_READ_UINT32_BE (dops_data + 13);
           channel_mapping_family = GST_READ_UINT8 (dops_data + 19);
           stream_count = GST_READ_UINT8 (dops_data + 20);
           coupled_count = GST_READ_UINT8 (dops_data + 21);
