@@ -5706,9 +5706,9 @@ build_opus_extension (guint32 rate, guint8 channels, guint8 mapping_family,
   gst_byte_writer_init (&bw);
   hdl &= gst_byte_writer_put_uint8 (&bw, 0x00); /* version number */
   hdl &= gst_byte_writer_put_uint8 (&bw, channels);
-  hdl &= gst_byte_writer_put_uint16_le (&bw, pre_skip);
-  hdl &= gst_byte_writer_put_uint32_le (&bw, rate);
-  hdl &= gst_byte_writer_put_uint16_le (&bw, output_gain);
+  hdl &= gst_byte_writer_put_uint16_be (&bw, pre_skip);
+  hdl &= gst_byte_writer_put_uint32_be (&bw, rate);
+  hdl &= gst_byte_writer_put_uint16_be (&bw, output_gain);
   hdl &= gst_byte_writer_put_uint8 (&bw, mapping_family);
   if (mapping_family > 0) {
     hdl &= gst_byte_writer_put_uint8 (&bw, stream_count);
