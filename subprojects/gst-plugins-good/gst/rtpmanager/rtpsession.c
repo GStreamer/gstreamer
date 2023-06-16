@@ -82,6 +82,7 @@ enum
 #define DEFAULT_FAVOR_NEW            FALSE
 #define DEFAULT_TWCC_FEEDBACK_INTERVAL GST_CLOCK_TIME_NONE
 #define DEFAULT_UPDATE_NTP64_HEADER_EXT TRUE
+#define DEFAULT_TIMEOUT_INACTIVE_SOURCES TRUE
 
 enum
 {
@@ -110,6 +111,7 @@ enum
   PROP_RTCP_DISABLE_SR_TIMESTAMP,
   PROP_TWCC_FEEDBACK_INTERVAL,
   PROP_UPDATE_NTP64_HEADER_EXT,
+  PROP_TIMEOUT_INACTIVE_SOURCES,
   PROP_LAST,
 };
 
@@ -660,6 +662,21 @@ rtp_session_class_init (RTPSessionClass * klass)
       DEFAULT_UPDATE_NTP64_HEADER_EXT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * RTPSession:timeout-inactive-sources:
+   *
+   * Whether inactive sources should be timed out
+   *
+   * Since: 1.24
+   */
+  properties[PROP_TIMEOUT_INACTIVE_SOURCES] =
+      g_param_spec_boolean ("timeout-inactive-sources",
+      "Time out inactive sources",
+      "Whether sources that don't receive RTP or RTCP packets for longer "
+      "than 5x RTCP interval should be removed",
+      DEFAULT_TIMEOUT_INACTIVE_SOURCES,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 
   klass->get_source_by_ssrc =
@@ -706,6 +723,7 @@ rtp_session_init (RTPSession * sess)
   sess->mtu = DEFAULT_RTCP_MTU;
 
   sess->update_ntp64_header_ext = DEFAULT_UPDATE_NTP64_HEADER_EXT;
+  sess->timeout_inactive_sources = DEFAULT_TIMEOUT_INACTIVE_SOURCES;
 
   sess->probation = DEFAULT_PROBATION;
   sess->max_dropout_time = DEFAULT_MAX_DROPOUT_TIME;
@@ -950,6 +968,9 @@ rtp_session_set_property (GObject * object, guint prop_id,
     case PROP_UPDATE_NTP64_HEADER_EXT:
       sess->update_ntp64_header_ext = g_value_get_boolean (value);
       break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      sess->timeout_inactive_sources = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1038,6 +1059,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_UPDATE_NTP64_HEADER_EXT:
       g_value_set_boolean (value, sess->update_ntp64_header_ext);
+      break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      g_value_set_boolean (value, sess->timeout_inactive_sources);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3793,6 +3817,7 @@ typedef struct
   gboolean may_suppress;
   GQueue output;
   guint nacked_seqnums;
+  gboolean timeout_inactive_sources;
 } ReportData;
 
 static void
@@ -4186,27 +4211,29 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     remove = TRUE;
   }
 
-  /* sources that were inactive for more than 5 times the deterministic reporting
-   * interval get timed out. the min timeout is 5 seconds. */
-  /* mind old time that might pre-date last time going to PLAYING */
-  btime = MAX (source->last_activity, sess->start_time);
-  if (data->current_time > btime) {
-    interval = MAX (binterval * 5, 5 * GST_SECOND);
-    if (data->current_time - btime > interval) {
-      GST_DEBUG ("removing timeout source %08x, last %" GST_TIME_FORMAT,
-          source->ssrc, GST_TIME_ARGS (btime));
-      if (source->internal) {
-        /* this is an internal source that is not using our suggested ssrc.
-         * since there must be another source using this ssrc, we can remove
-         * this one instead of making it a receiver forever */
-        if (source->ssrc != sess->suggested_ssrc
-            && source->media_ssrc != sess->suggested_ssrc) {
-          rtp_source_mark_bye (source, "timed out");
-          /* do not schedule bye here, since we are inside the RTCP timeout
-           * processing and scheduling bye will interfere with SR/RR sending */
+  if (data->timeout_inactive_sources) {
+    /* sources that were inactive for more than 5 times the deterministic reporting
+     * interval get timed out. the min timeout is 5 seconds. */
+    /* mind old time that might pre-date last time going to PLAYING */
+    btime = MAX (source->last_activity, sess->start_time);
+    if (data->current_time > btime) {
+      interval = MAX (binterval * 5, 5 * GST_SECOND);
+      if (data->current_time - btime > interval) {
+        GST_DEBUG ("removing timeout source %08x, last %" GST_TIME_FORMAT,
+            source->ssrc, GST_TIME_ARGS (btime));
+        if (source->internal) {
+          /* this is an internal source that is not using our suggested ssrc.
+           * since there must be another source using this ssrc, we can remove
+           * this one instead of making it a receiver forever */
+          if (source->ssrc != sess->suggested_ssrc
+              && source->media_ssrc != sess->suggested_ssrc) {
+            rtp_source_mark_bye (source, "timed out");
+            /* do not schedule bye here, since we are inside the RTCP timeout
+             * processing and scheduling bye will interfere with SR/RR sending */
+          }
+        } else {
+          remove = TRUE;
         }
-      } else {
-        remove = TRUE;
       }
     }
   }
@@ -4660,6 +4687,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.num_to_report = 0;
   data.may_suppress = FALSE;
   data.nacked_seqnums = 0;
+  data.timeout_inactive_sources = sess->timeout_inactive_sources;
   g_queue_init (&data.output);
 
   RTP_SESSION_LOCK (sess);

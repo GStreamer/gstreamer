@@ -100,6 +100,8 @@ struct _GstRtpBin {
 
   gboolean       update_ntp64_header_ext;
 
+  gboolean       timeout_inactive_sources;
+
   /*< private >*/
   GstRtpBinPrivate *priv;
 };

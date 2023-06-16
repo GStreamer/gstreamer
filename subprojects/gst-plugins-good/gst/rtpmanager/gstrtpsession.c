@@ -224,6 +224,7 @@ enum
 #define DEFAULT_NTP_TIME_SOURCE      GST_RTP_NTP_TIME_SOURCE_NTP
 #define DEFAULT_RTCP_SYNC_SEND_TIME  TRUE
 #define DEFAULT_UPDATE_NTP64_HEADER_EXT  TRUE
+#define DEFAULT_TIMEOUT_INACTIVE_SOURCES TRUE
 
 enum
 {
@@ -246,7 +247,8 @@ enum
   PROP_RTP_PROFILE,
   PROP_NTP_TIME_SOURCE,
   PROP_RTCP_SYNC_SEND_TIME,
-  PROP_UPDATE_NTP64_HEADER_EXT
+  PROP_UPDATE_NTP64_HEADER_EXT,
+  PROP_TIMEOUT_INACTIVE_SOURCES,
 };
 
 #define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->priv->lock)
@@ -830,6 +832,22 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           DEFAULT_UPDATE_NTP64_HEADER_EXT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpSession:timeout-inactive-sources:
+   *
+   * Whether inactive sources should be timed out
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TIMEOUT_INACTIVE_SOURCES,
+      g_param_spec_boolean ("timeout-inactive-sources",
+          "Time out inactive sources",
+          "Whether sources that don't receive RTP or RTCP packets for longer "
+          "than 5x RTCP interval should be removed",
+          DEFAULT_TIMEOUT_INACTIVE_SOURCES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -1008,6 +1026,10 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
       g_object_set_property (G_OBJECT (priv->session),
           "update-ntp64-header-ext", value);
       break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      g_object_set_property (G_OBJECT (priv->session),
+          "timeout-inactive-sources", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1090,6 +1112,10 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_UPDATE_NTP64_HEADER_EXT:
       g_object_get_property (G_OBJECT (priv->session),
           "update-ntp64-header-ext", value);
+      break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      g_object_get_property (G_OBJECT (priv->session),
+          "timeout-inactive-sources", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

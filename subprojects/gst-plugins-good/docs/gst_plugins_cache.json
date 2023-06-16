@@ -17679,6 +17679,18 @@
                         "type": "GstStructure",
                         "writable": true
                     },
+                    "timeout-inactive-sources": {
+                        "blurb": "Whether sources that don't receive RTP or RTCP packets for longer than 5x RTCP interval should be removed",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "ts-offset-smoothing-factor": {
                         "blurb": "Sets a smoothing factor for the timestamp offset in number of values for a calculated running moving average. (0 = no smoothing factor)",
                         "conditionally-available": false,
@@ -19611,6 +19623,18 @@
                         "type": "GstStructure",
                         "writable": false
                     },
+                    "timeout-inactive-sources": {
+                        "blurb": "Whether sources that don't receive RTP or RTCP packets for longer than 5x RTCP interval should be removed",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "twcc-stats": {
                         "blurb": "Various statistics from TWCC",
                         "conditionally-available": false,
@@ -20453,6 +20477,18 @@
                         "readable": true,
                         "type": "GstStructure",
                         "writable": false
+                    },
+                    "timeout-inactive-sources": {
+                        "blurb": "Whether sources that don't receive RTP or RTCP packets for longer than 5x RTCP interval should be removed",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
                     },
                     "twcc-feedback-interval": {
                         "blurb": "The interval to send TWCC reports on",

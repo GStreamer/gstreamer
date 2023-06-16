@@ -79,6 +79,7 @@ enum
 #define DEFAULT_REDIRECT         TRUE
 #define DEFAULT_RTCP_MODE        GST_SDP_DEMUX_RTCP_MODE_SENDRECV
 #define DEFAULT_MEDIA            NULL
+#define DEFAULT_TIMEOUT_INACTIVE_RTP_SOURCES TRUE
 
 enum
 {
@@ -89,6 +90,7 @@ enum
   PROP_REDIRECT,
   PROP_RTCP_MODE,
   PROP_MEDIA,
+  PROP_TIMEOUT_INACTIVE_RTP_SOURCES,
 };
 
 static void gst_sdp_demux_finalize (GObject * object);
@@ -202,6 +204,23 @@ gst_sdp_demux_class_init (GstSDPDemuxClass * klass)
           "Media to use, e.g. audio or video (NULL = all)", DEFAULT_MEDIA,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstSDPDemux:timeout-inactive-rtp-sources:
+   *
+   * Whether inactive RTP sources in the underlying RTP session
+   * should be timed out.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TIMEOUT_INACTIVE_RTP_SOURCES,
+      g_param_spec_boolean ("timeout-inactive-rtp-sources",
+          "Time out inactive sources",
+          "Whether RTP sources that don't receive RTP or RTCP packets for longer "
+          "than 5x RTCP interval should be removed",
+          DEFAULT_TIMEOUT_INACTIVE_RTP_SOURCES,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template (gstelement_class, &sinktemplate);
   gst_element_class_add_static_pad_template (gstelement_class, &rtptemplate);
 
@@ -284,6 +303,9 @@ gst_sdp_demux_set_property (GObject * object, guint prop_id,
       demux->media = g_intern_string (g_value_get_string (value));
       GST_OBJECT_UNLOCK (demux);
       break;
+    case PROP_TIMEOUT_INACTIVE_RTP_SOURCES:
+      demux->timeout_inactive_rtp_sources = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -318,6 +340,9 @@ gst_sdp_demux_get_property (GObject * object, guint prop_id, GValue * value,
       GST_OBJECT_LOCK (demux);
       g_value_set_string (value, demux->media);
       GST_OBJECT_UNLOCK (demux);
+      break;
+    case PROP_TIMEOUT_INACTIVE_RTP_SOURCES:
+      g_value_set_boolean (value, demux->timeout_inactive_rtp_sources);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1021,6 +1046,9 @@ gst_sdp_demux_configure_manager (GstSDPDemux * demux, char *rtsp_sdp)
         demux);
     g_signal_connect (demux->session, "on-timeout", (GCallback) on_timeout,
         demux);
+
+    g_object_set (demux->session, "timeout-inactive-sources",
+        demux->timeout_inactive_rtp_sources, NULL);
   }
 
   g_object_set (demux->session, "latency", demux->latency, NULL);

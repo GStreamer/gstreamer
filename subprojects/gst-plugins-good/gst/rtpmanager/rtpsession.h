@@ -315,6 +315,8 @@ struct _RTPSession {
 
   gboolean update_ntp64_header_ext;
 
+  gboolean timeout_inactive_sources;
+
   /* Transport-wide cc-extension */
   RTPTWCCManager *twcc;
   RTPTWCCStats *twcc_stats;

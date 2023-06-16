@@ -124,6 +124,7 @@ struct _GstSDPDemux {
   gboolean          redirect;
   const gchar      *media; /* if non-NULL only hook up these kinds of media (video/audio) */ /* interned string */
   GstSDPDemuxRTCPMode rtcp_mode;
+  gboolean          timeout_inactive_rtp_sources;
 
   /* session management */
   GstElement      *session;

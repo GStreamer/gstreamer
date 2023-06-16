@@ -358,6 +358,7 @@ enum
 #define DEFAULT_MIN_TS_OFFSET        MIN_TS_OFFSET_ROUND_OFF_COMP
 #define DEFAULT_TS_OFFSET_SMOOTHING_FACTOR  0
 #define DEFAULT_UPDATE_NTP64_HEADER_EXT TRUE
+#define DEFAULT_TIMEOUT_INACTIVE_SOURCES TRUE
 
 enum
 {
@@ -391,6 +392,7 @@ enum
   PROP_FEC_DECODERS,
   PROP_FEC_ENCODERS,
   PROP_UPDATE_NTP64_HEADER_EXT,
+  PROP_TIMEOUT_INACTIVE_SOURCES,
 };
 
 #define GST_RTP_BIN_RTCP_SYNC_TYPE (gst_rtp_bin_rtcp_sync_get_type())
@@ -782,6 +784,9 @@ create_session (GstRtpBin * rtpbin, gint id)
 
   g_object_set (session, "update-ntp64-header-ext",
       rtpbin->update_ntp64_header_ext, NULL);
+
+  g_object_set (session, "timeout-inactive-sources",
+      rtpbin->timeout_inactive_sources, NULL);
 
   GST_OBJECT_UNLOCK (rtpbin);
 
@@ -3002,6 +3007,22 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           DEFAULT_UPDATE_NTP64_HEADER_EXT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpBin:timeout-inactive-sources:
+   *
+   * Whether inactive sources should be timed out
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TIMEOUT_INACTIVE_SOURCES,
+      g_param_spec_boolean ("timeout-inactive-sources",
+          "Time out inactive sources",
+          "Whether sources that don't receive RTP or RTCP packets for longer "
+          "than 5x RTCP interval should be removed",
+          DEFAULT_TIMEOUT_INACTIVE_SOURCES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -3093,6 +3114,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->min_ts_offset_is_set = FALSE;
   rtpbin->ts_offset_smoothing_factor = DEFAULT_TS_OFFSET_SMOOTHING_FACTOR;
   rtpbin->update_ntp64_header_ext = DEFAULT_UPDATE_NTP64_HEADER_EXT;
+  rtpbin->timeout_inactive_sources = DEFAULT_TIMEOUT_INACTIVE_SOURCES;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -3439,6 +3461,13 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       gst_rtp_bin_propagate_property_to_session (rtpbin,
           "update-ntp64-header-ext", value);
       break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->timeout_inactive_sources = g_value_get_boolean (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      gst_rtp_bin_propagate_property_to_session (rtpbin,
+          "timeout-inactive-sources", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -3550,6 +3579,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_UPDATE_NTP64_HEADER_EXT:
       g_value_set_boolean (value, rtpbin->update_ntp64_header_ext);
+      break;
+    case PROP_TIMEOUT_INACTIVE_SOURCES:
+      g_value_set_boolean (value, rtpbin->timeout_inactive_sources);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
