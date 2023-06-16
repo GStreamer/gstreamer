@@ -569,9 +569,6 @@ _fixup_src_caps (GstVaDisplay * display, GstCaps * caps)
         }
         gst_structure_set_value (s, "format", &out);
         g_value_unset (&out);
-      } else if (gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
-        /* dmabuf exportation only handles NV12 */
-        gst_structure_set (s, "format", G_TYPE_STRING, "NV12", NULL);
       }
     }
 
@@ -579,6 +576,7 @@ _fixup_src_caps (GstVaDisplay * display, GstCaps * caps)
   } else if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965)) {
     GstCaps *ret;
     GstStructure *s;
+    GstCapsFeatures *f;
     guint i, len;
 
     ret = gst_caps_copy (caps);
@@ -586,6 +584,12 @@ _fixup_src_caps (GstVaDisplay * display, GstCaps * caps)
     len = gst_caps_get_size (ret);
     for (i = 0; i < len; i++) {
       s = gst_caps_get_structure (ret, i);
+      f = gst_caps_get_features (ret, i);
+
+      /* DMA kind formats have modifiers, we should not change */
+      if (gst_caps_features_contains (f, GST_CAPS_FEATURE_MEMORY_DMABUF))
+        continue;
+
       /* only NV12 works in this nigthmare */
       gst_structure_set (s, "format", G_TYPE_STRING, "NV12", NULL);
     }
