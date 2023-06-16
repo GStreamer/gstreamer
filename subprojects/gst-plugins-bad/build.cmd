@@ -1,0 +1,1 @@
+meson --backend=vs2022 --default-library=static buildmsvc

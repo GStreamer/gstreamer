@@ -536,12 +536,7 @@ pkgconfig.generate(
 gpl_allowed = get_option('gpl').allowed()
 
 subdir('gst-libs')
-subdir('gst')
 subdir('sys')
-subdir('ext')
-subdir('tests')
-subdir('data')
-subdir('tools')
 
 if have_orcc
   update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')
