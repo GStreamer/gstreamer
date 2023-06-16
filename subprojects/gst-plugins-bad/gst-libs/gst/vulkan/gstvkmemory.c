@@ -262,7 +262,8 @@ gst_vulkan_memory_find_memory_type_index_with_requirements (GstVulkanDevice *
   for (i = 0; i < props->memoryTypeCount; i++) {
     if (!(req->memoryTypeBits & (1 << i)))
       continue;
-    if ((props->memoryTypes[i].propertyFlags & properties) != properties)
+    if ((properties != G_MAXUINT32)
+        && (props->memoryTypes[i].propertyFlags & properties) != properties)
       continue;
     if (req->size > props->memoryHeaps[props->memoryTypes[i].heapIndex].size)
       continue;
