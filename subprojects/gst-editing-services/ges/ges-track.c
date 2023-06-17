@@ -454,40 +454,50 @@ ges_track_change_state (GstElement * element, GstStateChange transition)
       transition);
 }
 
+void
+ges_track_select_subtimeline_streams (GESTrack * track,
+    GstStreamCollection * collection, GstElement * subtimeline)
+{
+  GList *selected_streams = NULL;
+
+  for (gint i = 0; i < gst_stream_collection_get_size (collection); i++) {
+    GstStream *stream = gst_stream_collection_get_stream (collection, i);
+    GstStreamType stype = gst_stream_get_stream_type (stream);
+
+    if ((track->type == GES_TRACK_TYPE_VIDEO && stype == GST_STREAM_TYPE_VIDEO)
+        || (track->type == GES_TRACK_TYPE_AUDIO
+            && stype == GST_STREAM_TYPE_AUDIO)
+        || (stype == GST_STREAM_TYPE_UNKNOWN)) {
+
+      selected_streams =
+          g_list_append (selected_streams,
+          g_strdup (gst_stream_get_stream_id (stream)));
+    }
+  }
+
+  if (selected_streams) {
+    gst_element_send_event (subtimeline,
+        gst_event_new_select_streams (selected_streams));
+
+    g_list_free_full (selected_streams, g_free);
+  }
+}
+
 static void
 ges_track_handle_message (GstBin * bin, GstMessage * message)
 {
   GESTrack *track = GES_TRACK (bin);
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_COLLECTION) {
-    gint i;
-    GList *selected_streams = NULL;
     GstStreamCollection *collection;
 
     gst_message_parse_stream_collection (message, &collection);
-
-    for (i = 0; i < gst_stream_collection_get_size (collection); i++) {
-      GstStream *stream = gst_stream_collection_get_stream (collection, i);
-      GstStreamType stype = gst_stream_get_stream_type (stream);
-
-      if ((track->type == GES_TRACK_TYPE_VIDEO
-              && stype == GST_STREAM_TYPE_VIDEO)
-          || (track->type == GES_TRACK_TYPE_AUDIO
-              && stype == GST_STREAM_TYPE_AUDIO)
-          || (stype == GST_STREAM_TYPE_UNKNOWN)) {
-
-        selected_streams =
-            g_list_append (selected_streams,
-            (gchar *) gst_stream_get_stream_id (stream));
-      }
-    }
-
-    if (selected_streams) {
-      gst_element_send_event (GST_ELEMENT (GST_MESSAGE_SRC (message)),
-          gst_event_new_select_streams (selected_streams));
-      g_list_free (selected_streams);
+    if (GES_IS_TIMELINE (GST_MESSAGE_SRC (message))) {
+      ges_track_select_subtimeline_streams (track, collection,
+          GST_ELEMENT (GST_MESSAGE_SRC (message)));
     }
   }
+
   gst_element_post_message (GST_ELEMENT_CAST (bin), message);
 }
 
