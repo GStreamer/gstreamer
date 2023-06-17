@@ -1,0 +1,4 @@
+meta,
+    args = {
+         "uridecodebin uri=\"ges:+track video +track audio +test-clip blue d=1.0\" name=d ! fakesink d. ! fakesink",
+    },

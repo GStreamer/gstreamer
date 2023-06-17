@@ -2185,7 +2185,7 @@ remove_source (GstURIDecodeBin * bin)
 }
 
 /* is called when a dynamic source element created a new pad. */
-static void
+static gboolean
 source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
 {
   GstElement *decoder;
@@ -2208,7 +2208,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
     GST_URI_DECODE_BIN_UNLOCK (bin);
     gst_caps_unref (rawcaps);
     expose_decoded_pad (element, pad, bin);
-    return;
+    return TRUE;
   }
   gst_caps_unref (rawcaps);
 
@@ -2228,14 +2228,14 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   gst_element_sync_state_with_parent (decoder);
   GST_URI_DECODE_BIN_UNLOCK (bin);
 
-  return;
+  return TRUE;
 
   /* ERRORS */
 no_decodebin:
   {
     /* error was posted */
     GST_URI_DECODE_BIN_UNLOCK (bin);
-    return;
+    return FALSE;
   }
 could_not_link:
   {
@@ -2244,7 +2244,7 @@ could_not_link:
         (NULL), ("Can't link source to decoder element"));
     GST_URI_DECODE_BIN_UNLOCK (bin);
     do_async_done (bin);
-    return;
+    return FALSE;
   }
 }
 
@@ -2265,12 +2265,27 @@ is_live_source (GstElement * source)
   return is_live;
 }
 
+typedef struct
+{
+  GstURIDecodeBin *decoder;
+  gboolean res;
+} ExposeSourceData;
+
+static gboolean
+expose_source_pad (GstElement * element, GstPad * pad, ExposeSourceData * data)
+{
+  data->res |= source_new_pad (element, pad, data->decoder);
+
+  return TRUE;
+}
+
 /* construct and run the source and decoder elements until we found
  * all the streams or until a preroll queue has been filled.
 */
 static gboolean
 setup_source (GstURIDecodeBin * decoder)
 {
+  gboolean res = TRUE;
   gboolean is_raw, have_out, is_dynamic;
   GstElement *source;
 
@@ -2355,20 +2370,19 @@ setup_source (GstURIDecodeBin * decoder)
       if (!setup_streaming (decoder))
         goto streaming_failed;
     } else {
-      GstElement *dec_elem;
+      ExposeSourceData data = { decoder, FALSE };
 
-      /* no streaming source, we can link now */
-      GST_DEBUG_OBJECT (decoder, "Plugging decodebin to source");
+      GST_DEBUG_OBJECT (decoder, "Expose %" GST_PTR_FORMAT " srcpads",
+          decoder->source);
 
-      dec_elem = make_decoder (decoder);
-      if (!dec_elem)
-        goto no_decoder;
+      /* error message is posted if expose_source_pad fails */
+      gst_element_foreach_src_pad (decoder->source,
+          (GstElementForeachPadFunc) expose_source_pad, &data);
 
-      if (!gst_element_link_pads (decoder->source, NULL, dec_elem, "sink"))
-        goto could_not_link;
+      res = data.res;
     }
   }
-  return TRUE;
+  return res;
 
   /* ERRORS */
 no_source:
@@ -2388,20 +2402,9 @@ invalid_source:
         (_("Source element is invalid.")), (NULL));
     return FALSE;
   }
-no_decoder:
-  {
-    /* message was posted */
-    return FALSE;
-  }
 streaming_failed:
   {
     /* message was posted */
-    return FALSE;
-  }
-could_not_link:
-  {
-    GST_ELEMENT_ERROR (decoder, CORE, NEGOTIATION,
-        (NULL), ("Can't link source to decoder element"));
     return FALSE;
   }
 }

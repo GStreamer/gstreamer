@@ -955,3 +955,4 @@ validate.test.rtp.h264.payloader_nego_profile
 validate.test.rtp.rtpsession_recv_simple
 validate.test.rtp.rtpsession_send_simple
 validate.test.scaletempo.playbin_audio_filter.fast_forward
+validate.test.uridecodebin.uridecodebin_source_with_several_srcpads
