@@ -509,13 +509,13 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
 
   context_handle->Unmap (index_buffer.Get (), 0);
 
-  priv->ps = ps.Detach ();
-  priv->premul_ps = premul_ps.Detach ();
-  priv->vs = vs.Detach ();
-  priv->layout = layout.Detach ();
-  priv->sampler = sampler.Detach ();
-  priv->blend = blend.Detach ();
-  priv->index_buffer = index_buffer.Detach ();
+  priv->ps = ps;
+  priv->premul_ps = premul_ps;
+  priv->vs = vs;
+  priv->layout = layout;
+  priv->sampler = sampler;
+  priv->blend = blend;
+  priv->index_buffer = index_buffer;
 
   priv->viewport.TopLeftX = 0;
   priv->viewport.TopLeftY = 0;
