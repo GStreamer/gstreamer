@@ -325,7 +325,7 @@ gst_va_video_info_from_caps (GstVideoInfo * info, guint64 * modifier,
   if (!gst_video_info_dma_drm_from_caps (&drm_info, caps))
     return FALSE;
 
-  if (!gst_va_video_info_from_dma_info (info, &drm_info))
+  if (!gst_va_dma_drm_info_to_video_info (&drm_info, info))
     return FALSE;
 
   if (modifier)

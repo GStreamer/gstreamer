@@ -365,10 +365,12 @@ gst_va_video_surface_format_from_image_format (GstVideoFormat image_format,
 /* Convert the GstVideoInfoDmaDrm into a traditional GstVideoInfo
    with recognized format. */
 gboolean
-gst_va_video_info_from_dma_info (GstVideoInfo * info,
-    const GstVideoInfoDmaDrm * drm_info)
+gst_va_dma_drm_info_to_video_info (const GstVideoInfoDmaDrm * drm_info,
+    GstVideoInfo * info)
 {
   GstVideoFormat video_format;
+  GstVideoInfo tmp_info;
+  guint i;
 
   g_return_val_if_fail (drm_info, FALSE);
   g_return_val_if_fail (info, FALSE);
@@ -387,11 +389,18 @@ gst_va_video_info_from_dma_info (GstVideoInfo * info,
   if (video_format == GST_VIDEO_FORMAT_UNKNOWN)
     return FALSE;
 
-  *info = drm_info->vinfo;
-
-  if (!gst_video_info_set_format (info, video_format,
-          GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info)))
+  if (!gst_video_info_set_format (&tmp_info, video_format,
+          GST_VIDEO_INFO_WIDTH (&drm_info->vinfo),
+          GST_VIDEO_INFO_HEIGHT (&drm_info->vinfo)))
     return FALSE;
+
+  *info = drm_info->vinfo;
+  info->finfo = tmp_info.finfo;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    info->stride[i] = tmp_info.stride[i];
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    info->offset[i] = tmp_info.offset[i];
+  info->size = tmp_info.size;
 
   return TRUE;
 }
