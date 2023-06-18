@@ -11394,6 +11394,28 @@ info in @drm_info.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="to_video_info" c:identifier="gst_video_info_dma_drm_to_video_info" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Convert the #GstVideoInfoDmaDrm into a traditional #GstVideoInfo with
+recognized video format. For DMA kind memory, the non linear DMA format
+should be recognized as #GST_VIDEO_FORMAT_ENCODED. This helper function
+sets @info's video format into the default value according to @drm_info's
+drm_fourcc field.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">%TRUE if @info is converted correctly.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="drm_info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">a #GstVideoInfoDmaDrm</doc>
+            <type name="VideoInfoDmaDrm" c:type="const GstVideoInfoDmaDrm*"/>
+          </instance-parameter>
+          <parameter name="info" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">#GstVideoInfo</doc>
+            <type name="VideoInfo" c:type="GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </method>
       <function name="from_caps" c:identifier="gst_video_info_dma_drm_from_caps" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-info-dma.c">Parse @caps and update @info. Please note that the @caps should be
 a dma drm caps. The gst_video_is_dma_drm_caps() can be used to verify

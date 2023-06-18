@@ -75,6 +75,11 @@ gboolean             gst_video_info_dma_drm_from_video_info
                                                           (GstVideoInfoDmaDrm * drm_info,
                                                            const GstVideoInfo * info,
                                                            guint64 modifier);
+
+GST_VIDEO_API
+gboolean             gst_video_info_dma_drm_to_video_info (const GstVideoInfoDmaDrm * drm_info,
+                                                           GstVideoInfo * info);
+
 GST_VIDEO_API
 GstVideoInfoDmaDrm * gst_video_info_dma_drm_new_from_caps (const GstCaps * caps);
 

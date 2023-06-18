@@ -443,6 +443,57 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
 }
 
 /**
+ * gst_video_info_dma_drm_to_video_info:
+ * @drm_info: a #GstVideoInfoDmaDrm
+ * @info: (out caller-allocates): #GstVideoInfo
+ *
+ * Convert the #GstVideoInfoDmaDrm into a traditional #GstVideoInfo with
+ * recognized video format. For DMA kind memory, the non linear DMA format
+ * should be recognized as #GST_VIDEO_FORMAT_ENCODED. This helper function
+ * sets @info's video format into the default value according to @drm_info's
+ * drm_fourcc field.
+ *
+ * Returns: %TRUE if @info is converted correctly.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_video_info_dma_drm_to_video_info (const GstVideoInfoDmaDrm * drm_info,
+    GstVideoInfo * info)
+{
+  GstVideoFormat video_format;
+  GstVideoInfo tmp_info;
+  guint i;
+
+  g_return_val_if_fail (drm_info, FALSE);
+  g_return_val_if_fail (info, FALSE);
+
+  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_ENCODED) {
+    *info = drm_info->vinfo;
+    return TRUE;
+  }
+
+  video_format = gst_video_dma_drm_fourcc_to_format (drm_info->drm_fourcc);
+  if (video_format == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+
+  if (!gst_video_info_set_format (&tmp_info, video_format,
+          GST_VIDEO_INFO_WIDTH (&drm_info->vinfo),
+          GST_VIDEO_INFO_HEIGHT (&drm_info->vinfo)))
+    return FALSE;
+
+  *info = drm_info->vinfo;
+  info->finfo = tmp_info.finfo;
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    info->stride[i] = tmp_info.stride[i];
+  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    info->offset[i] = tmp_info.offset[i];
+  info->size = tmp_info.size;
+
+  return TRUE;
+}
+
+/**
  * gst_video_dma_drm_fourcc_from_string:
  * @format_str: a drm format string
  * @modifier: (out) (optional): Return the modifier in @format or %NULL
