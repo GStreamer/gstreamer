@@ -2154,13 +2154,13 @@ gst_dwrite_base_overlay_render_text (GstDWriteBaseOverlay * self)
       goto error;
     }
 
+    gst_d3d11_device_lock (priv->device);
     texture = (ID3D11Texture2D *) info.data;
     if (!gst_dwrite_base_overlay_get_d2d_target (self, texture, &target)) {
+      gst_d3d11_device_unlock (priv->device);
       gst_memory_unmap (mem, &info);
       goto error;
     }
-
-    gst_d3d11_device_lock (priv->device);
   }
 
   bg_color = unpack_argb (priv->background_color);
