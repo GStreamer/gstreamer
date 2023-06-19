@@ -1053,6 +1053,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
       g_free (props);
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
       g_free (queue_family_video_props);
+      g_free (queue_family_query_props);
 #endif
     }
   } else
