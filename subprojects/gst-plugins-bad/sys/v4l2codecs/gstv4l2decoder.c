@@ -659,14 +659,43 @@ gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
     return ret;
   }
 
+  return reqbufs.count;
+}
+
+gint
+gst_v4l2_decoder_create_buffers (GstV4l2Decoder * self,
+    GstPadDirection direction, guint num_buffers)
+{
+  gint ret;
+  struct v4l2_create_buffers createbufs = {
+    .count = num_buffers,
+    .memory = V4L2_MEMORY_MMAP,
+    .format.type = direction_to_buffer_type (self, direction),
+  };
+
+  GST_DEBUG_OBJECT (self, "Creating %u buffers", num_buffers);
+
+  ret = ioctl (self->video_fd, VIDIOC_G_FMT, &createbufs.format);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_G_FMT failed: %s", g_strerror (errno));
+    return ret;
+  }
+
+  ret = ioctl (self->video_fd, VIDIOC_CREATE_BUFS, &createbufs);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_CREATE_BUFS failed: %s",
+        g_strerror (errno));
+    return ret;
+  }
+
   if (direction == GST_PAD_SINK) {
-    if (reqbufs.capabilities & V4L2_BUF_CAP_SUPPORTS_M2M_HOLD_CAPTURE_BUF)
+    if (createbufs.capabilities & V4L2_BUF_CAP_SUPPORTS_M2M_HOLD_CAPTURE_BUF)
       self->supports_holding_capture = TRUE;
     else
       self->supports_holding_capture = FALSE;
   }
 
-  return reqbufs.count;
+  return createbufs.index;
 }
 
 gboolean
