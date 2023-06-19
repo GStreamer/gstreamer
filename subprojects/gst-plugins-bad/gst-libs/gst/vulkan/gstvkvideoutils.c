@@ -274,6 +274,7 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
           break;
         }
         default:
+          profile->profile.pNext = NULL;
           break;
       }
 
