@@ -1,0 +1,32 @@
+From c47cf796fcf98641cb34929d17de041b26c54447 Mon Sep 17 00:00:00 2001
+From: Chun-wei Fan <fanc999@yahoo.com.tw>
+Date: Tue, 27 Dec 2022 12:57:04 +0800
+Subject: [PATCH 1/9] tools/psl.c: Fix build on Windows
+
+localtime_r() is not available on Windows but a more-secure variant
+of localtime(), localtime_s() is provided on Windows.
+
+Define localtime_r() on Windows as its arguments are reversed as compared
+to localetime_s(), to achive more or less the same purpose.
+---
+ tools/psl.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/tools/psl.c b/tools/psl.c
+index 95d8b65..054d0b6 100644
+--- a/tools/psl.c
++++ b/tools/psl.c
+@@ -38,6 +38,10 @@
+ 
+ #ifdef _WIN32
+ # include <winsock2.h> // WSAStartup, WSACleanup
++
++// Windows does not have localtime_r but has localtime_s, which is more or less
++// the same except that the arguments are reversed
++# define localtime_r(t_sec,t_now) localtime_s(t_now,t_sec)
+ #endif
+ 
+ #include <stdlib.h>
+-- 
+2.34.1
+
