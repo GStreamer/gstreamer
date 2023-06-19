@@ -145,6 +145,7 @@ GST_START_TEST (test_vulkan_profiles)
   fail_unless (caps);
 
   fail_unless (gst_vulkan_video_profile_from_caps (&profile2, caps));
+  gst_caps_unref (caps);
   fail_unless (profile2.profile.sType
       == VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR);
   fail_unless (profile2.profile.videoCodecOperation
