@@ -8862,6 +8862,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_alac:
       case FOURCC_fLaC:
       case FOURCC_aavd:
+      case FOURCC_opus:
       {
         guint32 version;
         guint32 offset;
@@ -8873,6 +8874,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
           min_size = 20;
         else if (fourcc == FOURCC_fLaC)
           min_size = 86;
+        else if (fourcc == FOURCC_opus)
+          min_size = 55;
         else
           min_size = 40;
 
@@ -13444,34 +13447,95 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         case FOURCC_opus:
         {
-          const guint8 *dops_data;
           guint8 *channel_mapping = NULL;
-          guint32 rate;
-          guint8 channels;
+          guint32 dops_len, rate;
+          guint8 n_channels;
           guint8 channel_mapping_family;
           guint8 stream_count;
           guint8 coupled_count;
           guint8 i;
 
-          version = GST_READ_UINT16_BE (stsd_entry_data + 16);
-          if (version == 1)
-            dops_data = stsd_entry_data + 51;
-          else
-            dops_data = stsd_entry_data + 35;
+          GNode *opus;
+          GNode *dops;
 
-          channels = GST_READ_UINT8 (dops_data + 10);
-          rate = GST_READ_UINT32_BE (dops_data + 13);
-          channel_mapping_family = GST_READ_UINT8 (dops_data + 19);
-          stream_count = GST_READ_UINT8 (dops_data + 20);
-          coupled_count = GST_READ_UINT8 (dops_data + 21);
-
-          if (channels > 0) {
-            channel_mapping = g_malloc (channels * sizeof (guint8));
-            for (i = 0; i < channels; i++)
-              channel_mapping[i] = GST_READ_UINT8 (dops_data + i + 22);
+          opus = qtdemux_tree_get_child_by_type (stsd, FOURCC_opus);
+          if (opus == NULL) {
+            GST_WARNING_OBJECT (qtdemux, "Opus Sample Entry not found");
+            goto corrupt_file;
           }
 
-          entry->caps = gst_codec_utils_opus_create_caps (rate, channels,
+          dops = qtdemux_tree_get_child_by_type (opus, FOURCC_dops);
+          if (dops == NULL) {
+            GST_WARNING_OBJECT (qtdemux, "Opus Specific Box not found");
+            goto corrupt_file;
+          }
+
+          /* Opus Specific Box content:
+           * 4 bytes: length
+           * 4 bytes: "dOps"
+           * 1 byte: Version;
+           * 1 byte: OutputChannelCount;
+           * 2 bytes: PreSkip (big-endians);
+           * 4 bytes: InputSampleRate (big-endians);
+           * 2 bytes: OutputGain (big-endians);
+           * 1 byte: ChannelMappingFamily;
+           * if (ChannelMappingFamily != 0) {
+           *   1 byte: StreamCount;
+           *   1 byte: CoupledCount;
+           *   for (OutputChannel in 0..OutputChannelCount) {
+           *     1 byte: ChannelMapping;
+           *   }
+           * }
+           */
+
+          dops_len = QT_UINT32 ((guint8 *) dops->data);
+          if (len < offset + dops_len) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Opus Sample Entry has bogus size %" G_GUINT32_FORMAT, len);
+            goto corrupt_file;
+          }
+          if (dops_len < 19) {
+            GST_WARNING_OBJECT (qtdemux,
+                "Opus Specific Box has bogus size %" G_GUINT32_FORMAT,
+                dops_len);
+            goto corrupt_file;
+          }
+
+          n_channels = GST_READ_UINT8 ((guint8 *) dops->data + 9);
+          rate = GST_READ_UINT32_BE ((guint8 *) dops->data + 12);
+          channel_mapping_family = GST_READ_UINT8 ((guint8 *) dops->data + 18);
+
+          if (channel_mapping_family != 0) {
+            if (dops_len < 21 + n_channels) {
+              GST_WARNING_OBJECT (qtdemux,
+                  "Opus Specific Box has bogus size %" G_GUINT32_FORMAT,
+                  dops_len);
+              goto corrupt_file;
+            }
+
+            stream_count = GST_READ_UINT8 ((guint8 *) dops->data + 19);
+            coupled_count = GST_READ_UINT8 ((guint8 *) dops->data + 20);
+
+            if (n_channels > 0) {
+              channel_mapping = g_malloc (n_channels * sizeof (guint8));
+              for (i = 0; i < n_channels; i++)
+                channel_mapping[i] =
+                    GST_READ_UINT8 ((guint8 *) dops->data + i + 21);
+            }
+          } else if (n_channels == 1) {
+            stream_count = 1;
+            coupled_count = 0;
+          } else if (n_channels == 2) {
+            stream_count = 1;
+            coupled_count = 1;
+          } else {
+            GST_WARNING_OBJECT (qtdemux,
+                "Opus unexpected nb of channels %d without channel mapping",
+                n_channels);
+            goto corrupt_file;
+          }
+
+          entry->caps = gst_codec_utils_opus_create_caps (rate, n_channels,
               channel_mapping_family, stream_count, coupled_count,
               channel_mapping);
           g_free (channel_mapping);
@@ -13827,6 +13891,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             }
             break;
           }
+          case FOURCC_opus:
           case FOURCC_lpcm:
           case FOURCC_in24:
           case FOURCC_in32:
