@@ -273,6 +273,11 @@ gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         goto beach;
       }
 
+      /* Forward seek event first and return if succeeded */
+      ret = gst_pad_event_default (pad, parent, event);
+      if (ret)
+        break;
+
       /* Convert that seek to a seeking in bytes at position 0,
          FIXME: could use an index */
       ret = gst_pad_push_event (self->sinkpad,
