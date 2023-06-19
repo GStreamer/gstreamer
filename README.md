@@ -43,7 +43,7 @@ Meson 0.62 or newer is required.
 
 On Linux and macOS you can get meson through your package manager or using:
 
-```  
+```
 $ pip3 install --user meson
 ```
 
@@ -180,7 +180,8 @@ List of plugins with (A)GPL-licensed dependencies (non-exhaustive) in gst-plugin
 ### Static build
 
 Since *1.18.0* when doing a static build using `--default-library=static`, a
-shared library `gstreamer-full-1.0` will be produced and includes all enabled
+shared library `gstreamer-full-1.0`, in addition to a package config file,
+will be produced and includes all enabled
 GStreamer plugins and libraries. A list of libraries that needs to be exposed in
 `gstreamer-full-1.0` ABI can be set using `gst-full-libraries` option. glib-2.0,
 gobject-2.0 and gstreamer-1.0 are always included.
@@ -233,6 +234,16 @@ This will cause the features/plugins that are not registered to not be included 
 
 This is an experimental feature, backward incompatible changes could still be
 made in the future.
+Only linux-like platforms are currently well supported when Windows should be considered as *experimental* as the symbols export is still under discussion.
+
+
+Since *1.24.0* it is also possible to link an application with GStreamer statically. It means that all the gstreamer libraries
+will be linked within your library or application. However, it is important to note that even though the `gstreamer-full` library can be statically built into the application, it does not contain all of the code (core libraries and plugins). Instead, it relies on all the other static libraries. Hence, while the `gstreamer-full` library provides a cohesive access point, the actual functionality is distributed across various static libraries.
+You can enable this option using `-Dgst-full-target-type=static_library` which is by default set to `shared_library`. The buildsystem will produce a set of archives depending on your `gstreamer-full` configuration as explained above. Your application can now check the `gstreamer-full` dependency within meson or with the package config file.
+In both case, the application can rely on the `gstreamer-full-1.0.pc` file generated during the build process to retrieve
+all its dependencies.
+In that configuration, the *features* selected during the build configuration will be automatically registered during the
+call of `gst_init`.
 
 ### Building documentation
 
