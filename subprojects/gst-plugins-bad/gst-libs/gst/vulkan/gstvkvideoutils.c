@@ -282,10 +282,11 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
   }
   if (i == G_N_ELEMENTS (video_codecs_map))
     return FALSE;
-
-  if (!gst_structure_get (structure, "chroma-format", G_TYPE_STRING,
-          &chroma_sub, "bit-depth-luma", G_TYPE_UINT, &luma, "bit-depth-chroma",
-          G_TYPE_UINT, &chroma, NULL))
+  chroma_sub = gst_structure_get_string (structure, "chroma-format");
+  if (!chroma_sub)
+    return FALSE;
+  if (!gst_structure_get (structure, "bit-depth-luma", G_TYPE_UINT, &luma,
+          "bit-depth-chroma", G_TYPE_UINT, &chroma, NULL))
     return FALSE;
 
   for (i = 0; i < G_N_ELEMENTS (video_chroma_map); i++) {
