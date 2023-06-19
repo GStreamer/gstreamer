@@ -3,3 +3,4 @@ directory=libpsl
 url=https://github.com/rockdaboot/libpsl.git
 revision=0.21.2
 clone-recursive=true
+diff_files = libpsl-0.21.2/0001-tools-psl.c-Fix-build-on-Windows.patch, libpsl-0.21.2/0002-tools-psl.c-Fix-logic-fallout-and-warning.patch
