@@ -97,6 +97,8 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_alac, "alac", 0,},
   {FOURCC_fLaC, "fLaC", 0, qtdemux_dump_fLaC},
   {FOURCC_dfLa, "dfLa", 0, qtdemux_dump_dfLa},
+  {FOURCC_opus, "opus", 0, qtdemux_dump_opus},
+  {FOURCC_dops, "dOps", 0, qtdemux_dump_dops},
   {FOURCC_wave, "wave", QT_FLAG_CONTAINER},
   {FOURCC_appl, "appl", QT_FLAG_CONTAINER},
   {FOURCC_cfhd, "cfhd", QT_FLAG_CONTAINER},
