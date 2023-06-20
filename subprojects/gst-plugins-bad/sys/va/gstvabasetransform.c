@@ -49,6 +49,8 @@ struct _GstVaBaseTransformPrivate
   GstCaps *sinkpad_caps;
   GstVideoInfo sinkpad_info;
   GstBufferPool *sinkpad_pool;
+  guint uncropped_width;
+  guint uncropped_height;
 
   GstCaps *filter_caps;
 };
@@ -756,14 +758,67 @@ _try_import_dmabuf_unlocked (GstVaBaseTransform * self, GstBuffer * inbuf)
       mems, fd, offset, VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ);
 }
 
+static gboolean
+_check_uncropped_size (GstVaBaseTransform * self, GstBuffer * inbuf)
+{
+  GstVideoCropMeta *crop_meta;
+  GstVideoMeta *video_meta;
+
+  crop_meta = gst_buffer_get_video_crop_meta (inbuf);
+  video_meta = gst_buffer_get_video_meta (inbuf);
+
+  if (!crop_meta) {
+    if (self->priv->uncropped_width > 0 || self->priv->uncropped_height > 0) {
+      self->priv->uncropped_width = 0;
+      self->priv->uncropped_height = 0;
+      return TRUE;
+    }
+
+    return FALSE;
+  }
+
+  if (!video_meta) {
+    GST_WARNING_OBJECT (self, "The buffer has video crop meta without "
+        "video meta, the cropped result may be wrong.");
+    self->priv->uncropped_width = 0;
+    self->priv->uncropped_height = 0;
+    return FALSE;
+  }
+
+  if (video_meta->width < crop_meta->x + crop_meta->width ||
+      video_meta->height < crop_meta->y + crop_meta->height) {
+    GST_WARNING_OBJECT (self, "Invalid video meta or crop meta, "
+        "the cropped result may be wrong.");
+    self->priv->uncropped_width = 0;
+    self->priv->uncropped_height = 0;
+    return FALSE;
+  }
+
+  if (self->priv->uncropped_width != video_meta->width ||
+      self->priv->uncropped_height != video_meta->height) {
+    self->priv->uncropped_width = video_meta->width;
+    self->priv->uncropped_height = video_meta->height;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 static GstBufferPool *
-_get_sinkpad_pool (GstVaBaseTransform * self)
+_get_sinkpad_pool (GstVaBaseTransform * self, GstBuffer * inbuf)
 {
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
   GstCaps *caps;
   GstVideoInfo in_info;
   guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
+
+  if (_check_uncropped_size (self, inbuf)) {
+    if (self->priv->sinkpad_pool)
+      gst_buffer_pool_set_active (self->priv->sinkpad_pool, FALSE);
+
+    gst_clear_object (&self->priv->sinkpad_pool);
+  }
 
   if (self->priv->sinkpad_pool)
     return self->priv->sinkpad_pool;
@@ -775,6 +830,16 @@ _get_sinkpad_pool (GstVaBaseTransform * self)
 
   gst_caps_set_features_simple (caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+
+  /* When the input buffer contains video crop meta, the real video
+     resolution can be bigger than the caps. The video meta should
+     contain the real video resolution. */
+  if (self->priv->uncropped_width > 0)
+    gst_caps_set_simple (caps, "width", G_TYPE_INT,
+        self->priv->uncropped_width, NULL);
+  if (self->priv->uncropped_height > 0)
+    gst_caps_set_simple (caps, "height", G_TYPE_INT,
+        self->priv->uncropped_height, NULL);
 
   if (!gst_video_info_from_caps (&in_info, caps)) {
     GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
@@ -849,7 +914,7 @@ gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
   /* input buffer doesn't come from a vapool, thus it is required to
    * have a pool, grab from it a new buffer and copy the input
    * buffer to the new one */
-  if (!(pool = _get_sinkpad_pool (self)))
+  if (!(pool = _get_sinkpad_pool (self, inbuf)))
     return GST_FLOW_ERROR;
 
   ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
