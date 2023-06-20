@@ -9615,7 +9615,7 @@ gst_rtspsrc_send_event (GstElement * element, GstEvent * event)
       res = TRUE;
       gst_event_replace (&rtspsrc->initial_seek, event);
     }
-    gst_event_unref (event);
+    gst_event_unref (event); 
   } else if (GST_EVENT_IS_DOWNSTREAM (event)) {
     res = gst_rtspsrc_push_event (rtspsrc, event);
   } else {
