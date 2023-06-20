@@ -25,6 +25,7 @@
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11_fwd.h>
 #include <gst/d3d11/gstd3d11format.h>
+#include <d2d1.h>
 
 G_BEGIN_DECLS
 
@@ -248,6 +249,12 @@ GST_D3D11_API
 ID3D11VideoProcessorOutputView *  gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
                                                                               ID3D11VideoDevice * video_device,
                                                                               ID3D11VideoProcessorEnumerator * enumerator);
+
+
+GST_D3D11_API
+ID2D1RenderTarget* gst_d3d11_memory_get_d2d1_render_target (GstD3D11Memory * mem,
+                                                            ID2D1Factory * factory);
+
 
 /**
  * GstD3D11Allocator:

@@ -337,6 +337,9 @@ struct _GstD3D11MemoryPrivate
 
   GDestroyNotify notify;
   gpointer user_data;
+
+  IDXGISurface* dxgi_surface;
+  ID2D1RenderTarget* d2d1_render_target;
 };
 
 static inline D3D11_MAP
@@ -1266,6 +1269,65 @@ gst_d3d11_memory_get_processor_output_view (GstD3D11Memory * mem,
   return mem->priv->processor_output_view;
 }
 
+/**
+ * gst_d3d11_memory_get_d2d1_render_target:
+ * @mem: a #GstD3D11Memory
+ * @factory: a #ID2D1Factory
+ *
+ * Returns: (transfer none) (nullable): a pointer to the
+ * ID2D1RenderTarget or %NULL if it can't be created for this type of memory
+ *
+ * Since: Added by vicon
+ */
+ID2D1RenderTarget* gst_d3d11_memory_get_d2d1_render_target (GstD3D11Memory* mem,
+    ID2D1Factory* factory)
+{
+    g_return_val_if_fail (gst_is_d3d11_memory(GST_MEMORY_CAST(mem)), NULL);
+    g_return_val_if_fail (mem->priv != NULL, NULL);
+    g_return_val_if_fail (factory != NULL, NULL);
+
+    if (mem->priv->d2d1_render_target != NULL)
+        return mem->priv->d2d1_render_target;
+
+    const guint bind_flags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    if ((mem->priv->desc.BindFlags & bind_flags) != bind_flags) {
+        GST_ERROR ("Texture bind flags (%u) are not compatible", mem->priv->desc.BindFlags);
+        return NULL;
+    }
+
+    D2D1_RENDER_TARGET_PROPERTIES props =
+        D2D1::RenderTargetProperties(
+            D2D1_RENDER_TARGET_TYPE_DEFAULT,
+            D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
+            0.0,
+            0.0);
+
+    ID2D1RenderTarget* pRenderTarget = NULL;
+    IDXGISurface* dxgi_surface = NULL;
+
+    HRESULT hr = ((ID3D11Resource*)mem->priv->texture)->QueryInterface(&dxgi_surface);
+    if (!gst_d3d11_result(hr, mem->device)) {
+        GST_ERROR("Could not query IDXGISurface, hr: 0x%x", (guint)hr);
+        return NULL;
+    }
+
+    ID2D1RenderTarget* render_target = NULL;
+    hr = factory->CreateDxgiSurfaceRenderTarget (
+        dxgi_surface,
+        &props,
+        &render_target);
+
+    if (!gst_d3d11_result (hr, mem->device)) {
+        GST_ERROR("Could not create CreateDxgiSurfaceRenderTarget, hr: 0x%x", (guint)hr);
+        dxgi_surface->Release();
+        return NULL;
+    }
+
+    mem->priv->d2d1_render_target = render_target;
+    mem->priv->dxgi_surface = dxgi_surface;
+    return render_target;
+}
+
 /* GstD3D11Allocator */
 struct _GstD3D11AllocatorPrivate
 {
@@ -1410,6 +1472,9 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_D3D11_CLEAR_COM (dmem_priv->buffer);
 
   GST_D3D11_CLEAR_COM (dmem_priv->decoder_handle);
+
+  GST_D3D11_CLEAR_COM (dmem_priv->dxgi_surface);
+  GST_D3D11_CLEAR_COM (dmem_priv->d2d1_render_target);
 
   gst_clear_object (&dmem->device);
 
