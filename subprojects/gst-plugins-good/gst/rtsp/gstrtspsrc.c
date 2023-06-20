@@ -2986,6 +2986,12 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     GST_DEBUG_OBJECT (src, "stopping flush");
     gst_rtspsrc_flush (src, FALSE, playing);
   }
+  if(playing)
+  {
+    gst_rtspsrc_close (src, FALSE, TRUE);
+    gst_rtspsrc_pause (src, FALSE);
+    src->state = GST_RTSP_STATE_SEEKING;
+  } 
 
   /* now we did the seek and can activate the new segment values */
   src->segment = seeksegment;
