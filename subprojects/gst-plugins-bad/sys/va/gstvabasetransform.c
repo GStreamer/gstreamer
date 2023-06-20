@@ -40,6 +40,15 @@ enum
 
 static GParamSpec *properties[N_PROPERTIES];
 
+#define META_TAG_COLORSPACE meta_tag_colorspace_quark
+static GQuark meta_tag_colorspace_quark;
+#define META_TAG_SIZE meta_tag_size_quark
+static GQuark meta_tag_size_quark;
+#define META_TAG_ORIENTATION meta_tag_orientation_quark
+static GQuark meta_tag_orientation_quark;
+#define META_TAG_VIDEO meta_tag_video_quark
+static GQuark meta_tag_video_quark;
+
 struct _GstVaBaseTransformPrivate
 {
   GstVideoInfo srcpad_info;
@@ -622,6 +631,15 @@ gst_va_base_transform_class_init (GstVaBaseTransformClass * klass)
   GstElementClass *element_class;
   GstBaseTransformClass *trans_class;
 
+#define D(type) \
+  G_PASTE (META_TAG_, type) = \
+    g_quark_from_static_string (G_PASTE (G_PASTE (GST_META_TAG_VIDEO_, type), _STR))
+  D (COLORSPACE);
+  D (SIZE);
+  D (ORIENTATION);
+#undef D
+  META_TAG_VIDEO = g_quark_from_static_string (GST_META_TAG_VIDEO_STR);
+
   gobject_class = G_OBJECT_CLASS (klass);
   element_class = GST_ELEMENT_CLASS (klass);
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
@@ -893,6 +911,43 @@ _try_import_buffer (GstVaBaseTransform * self, GstBuffer * inbuf)
   return ret;
 }
 
+typedef struct
+{
+  GstVaBaseTransform *self;
+  GstBuffer *outbuf;
+} CopyMetaData;
+
+static gboolean
+foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
+{
+  CopyMetaData *data = user_data;
+  GstVaBaseTransform *self = data->self;
+  GstBuffer *outbuf = data->outbuf;
+  const GstMetaInfo *info = (*meta)->info;
+  gboolean do_copy = FALSE;
+
+  if (gst_meta_api_type_has_tag (info->api, META_TAG_COLORSPACE)
+      || gst_meta_api_type_has_tag (info->api, META_TAG_SIZE)
+      || gst_meta_api_type_has_tag (info->api, META_TAG_ORIENTATION)
+      || gst_meta_api_type_has_tag (info->api, META_TAG_VIDEO)) {
+    do_copy = TRUE;
+  }
+
+  if (do_copy) {
+    GstMetaTransformCopy copy_data = { FALSE, 0, -1 };
+    /* simply copy then */
+    if (info->transform_func) {
+      GST_DEBUG_OBJECT (self, "copy metadata %s", g_type_name (info->api));
+      info->transform_func (outbuf, *meta, inbuf,
+          _gst_meta_transform_copy, &copy_data);
+    } else {
+      GST_DEBUG_OBJECT (self, "couldn't copy metadata %s",
+          g_type_name (info->api));
+    }
+  }
+  return TRUE;
+}
+
 GstFlowReturn
 gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
     GstBuffer * inbuf, GstBuffer ** buf)
@@ -902,6 +957,7 @@ gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
   GstFlowReturn ret;
   GstVideoFrame in_frame, out_frame;
   gboolean imported, copied;
+  CopyMetaData data;
 
   g_return_val_if_fail (GST_IS_VA_BASE_TRANSFORM (self), GST_FLOW_ERROR);
 
@@ -940,10 +996,13 @@ gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
   if (!copied)
     goto invalid_buffer;
 
-  /* copy metadata, default implemenation of baseclass will copy everything
-   * what we need */
-  GST_BASE_TRANSFORM_CLASS (parent_class)->copy_metadata
-      (GST_BASE_TRANSFORM_CAST (self), inbuf, buffer);
+  gst_buffer_copy_into (buffer, inbuf,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+
+  data.self = self;
+  data.outbuf = buffer;
+
+  gst_buffer_foreach_meta (inbuf, foreach_metadata, &data);
 
   *buf = buffer;
 
