@@ -760,3 +760,4 @@ ges.test.edit_deeply_nested_timeline_too_short
 ges.test.play_deeply_nested_back_to_back
 ges.test.play_two_nested_back_to_back
 ges.test.seek_on_stack_change_on_internal_subtimeline
+ges.test.videoscale_effect

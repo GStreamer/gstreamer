@@ -113,6 +113,24 @@ gst_compositor_operator_get_type_and_default_value (int *default_operator_value)
   return operator_gtype;
 }
 
+static gboolean
+scales_downstream (GstFramePositioner * self)
+{
+  if (self->scale_in_compositor)
+    return TRUE;
+
+  if (!self->track_source)
+    return self->scale_in_compositor;
+
+  GESTimelineElement *parent = GES_TIMELINE_ELEMENT_PARENT (self->track_source);
+
+  if (!parent || !GES_IS_CLIP (parent)) {
+    return self->scale_in_compositor;
+  }
+
+  return ges_clip_has_scale_effect (GES_CLIP (parent));
+}
+
 static void
 _weak_notify_cb (GstFramePositioner * pos, GObject * old)
 {
@@ -274,7 +292,7 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
   caps = gst_caps_from_string ("video/x-raw(ANY)");
 
   if (pos->track_width && pos->track_height &&
-      (!track_mixing || !pos->scale_in_compositor)) {
+      (!track_mixing || !scales_downstream (pos))) {
     gst_caps_set_simple (caps, "width", G_TYPE_INT,
         pos->track_width, "height", G_TYPE_INT, pos->track_height, NULL);
   }
@@ -321,6 +339,13 @@ gst_frame_positioner_update_properties (GstFramePositioner * pos,
   reposition_properties (pos, old_track_width, old_track_height);
 
 done:
+  if (scales_downstream (pos) && pos->natural_width && pos->natural_height) {
+    GST_DEBUG_OBJECT (pos,
+        "Forcing natural width in source make downstream scaling work");
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, pos->natural_width,
+        "height", G_TYPE_INT, pos->natural_height, NULL);
+  }
+
   GST_DEBUG_OBJECT (pos, "setting caps %" GST_PTR_FORMAT, caps);
 
   g_object_set (pos->capsfilter, "caps", caps, NULL);

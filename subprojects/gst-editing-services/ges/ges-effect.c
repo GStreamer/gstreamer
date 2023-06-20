@@ -23,10 +23,23 @@
  * @short_description: adds an effect build from a parse-launch style bin
  * description to a stream in a GESSourceClip or a GESLayer
  *
- * Currently we only support effects with N sinkpads and one single srcpad.
- * Apart from `gesaudiomixer` and `gescompositor` which can be used as effects
- * and where sinkpads will be requested as needed based on the timeline topology
- * GES will always request at most one sinkpad per effect (when required).
+ * Any GStreamer filter can be used as effects in GES. The only restriction we
+ * have is that effects element should have a single [sinkpad](GST_PAD_SINK)
+ * (which will be requested if necessary) and a single [srcpad](GST_PAD_SRC).
+ *
+ * Note that `gesaudiomixer` and `gescompositor` can be used as effects even
+ * though they can have several sinkpads.
+ *
+ * ## GES specific effects:
+ *
+ * * **`gesvideoscale`**: GES implements a specific scaling bin that allows
+ *   specifying where scaling will happen inside the chain of effects. By
+ *   default scaling can happen either in the source (if the source doesn't have
+ *   a specific size, like `videotestsrc` or [mixing](ges_track_set_mixing) has
+ *   been disabled) or in the mixing element otherwise, when adding that element
+ *   as an effect, GES guarantees that the scaling will happen in it. This can
+ *   be useful for example if you want to crop the video before scaling or apply
+ *   rounding corners to the video after scaling, etc...
  *
  * > Note: GES always adds converters (`audioconvert ! audioresample !
  * > audioconvert` for audio effects and `videoconvert` for video effects) to

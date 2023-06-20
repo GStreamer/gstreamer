@@ -462,6 +462,7 @@ G_GNUC_INTERNAL void              ges_clip_set_add_error          (GESClip * cli
 G_GNUC_INTERNAL void              ges_clip_take_add_error         (GESClip * clip, GError ** error);
 G_GNUC_INTERNAL void              ges_clip_set_remove_error       (GESClip * clip, GError * error);
 G_GNUC_INTERNAL void              ges_clip_take_remove_error      (GESClip * clip, GError ** error);
+G_GNUC_INTERNAL gboolean          ges_clip_has_scale_effect       (GESClip * clip);
 
 /****************************************************
  *              GESLayer                            *

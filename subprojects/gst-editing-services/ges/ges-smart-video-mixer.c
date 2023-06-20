@@ -240,8 +240,13 @@ set_pad_properties_from_composition_meta (GstPad * mixer_pad,
     g_object_set (mixer_pad, "alpha", meta->alpha * transalpha, NULL);
   }
 
-  g_object_set (mixer_pad, "xpos", meta->posx, "ypos",
-      meta->posy, "width", meta->width, "height", meta->height, NULL);
+  g_object_set (mixer_pad, "xpos", meta->posx, "ypos", meta->posy, NULL);
+
+  if (meta->width >= 0)
+    g_object_set (mixer_pad, "width", meta->width, NULL);
+
+  if (meta->height >= 0)
+    g_object_set (mixer_pad, "height", meta->height, NULL);
 
   if (self->ABI.abi.has_operator)
     g_object_set (mixer_pad, "operator", meta->operator, NULL);
