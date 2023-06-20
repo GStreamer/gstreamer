@@ -15,5 +15,4 @@
 
 #define PACKAGE "gst-vicondewarp-plugin"
 
-#define PACKAGE_VERSION "1.19.0.1"
-
+#define PACKAGE_VERSION "1.0.0"
