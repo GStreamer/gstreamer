@@ -987,9 +987,23 @@ _ges_container_add_child_from_struct (GESTimeline * timeline,
 
   }
 
-  res = ges_container_add (container, child);
+  if (GES_IS_CLIP (container) && GES_IS_BASE_EFFECT (child)) {
+    GList *effects = ges_clip_get_top_effects (GES_CLIP (container));
+
+    res =
+        ges_clip_add_top_effect (GES_CLIP (container), GES_BASE_EFFECT (child),
+        0, error);
+
+    g_list_free_full (effects, gst_object_unref);
+  } else {
+    res = ges_container_add (container, child);
+  }
+
   if (res == FALSE) {
-    g_error_new (GES_ERROR, 0, "Could not add child to container");
+    if (!*error)
+      *error = g_error_new (GES_ERROR, 0, "Could not add child to container");
+
+    goto beach;
   } else {
     g_object_set_qdata (G_OBJECT (timeline), LAST_CHILD_QDATA, child);
   }
