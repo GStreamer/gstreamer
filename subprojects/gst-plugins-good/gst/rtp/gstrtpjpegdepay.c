@@ -677,6 +677,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     size = MakeHeaders (map.data, type, width, height, qtable, precision, dri);
     gst_buffer_unmap (outbuf, &map);
     gst_buffer_resize (outbuf, 0, size);
+    outbuf->pts = rtp->buffer->pts;
 
     GST_DEBUG_OBJECT (rtpjpegdepay, "pushing %u bytes of header", size);
 
@@ -726,6 +727,9 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
     }
 
     gst_rtp_drop_non_video_meta (rtpjpegdepay, outbuf);
+    if (outbuf != NULL){
+      outbuf->pts = gst_adapter_prev_pts(rtpjpegdepay->adapter, NULL);
+    }
 
     GST_DEBUG_OBJECT (rtpjpegdepay, "returning %u bytes", avail);
   }
