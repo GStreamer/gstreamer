@@ -1,23 +1,24 @@
-plugin_c_args = ['-DHAVE_CONFIG_H']
+if not get_option('vicondewarp').disabled()
+  subdir_done()
+endif
 
+gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
+    fallback : ['gst-plugins-base', 'video_dep'])
 
+vicondewarp_dir_base = meson.current_source_dir()
+vicondewarp_dir_lib = join_paths(vicondewarp_dir_base, 'lib')
+lib_dewarp = cc.find_library('IMV1', dirs: vicondewarp_dir_lib, required: true)
 
-plugin_dep = dependency('gstreamer-video-1.0',
-    fallback: ['gst-plugins-base', 'audio_dep'])
-
-dir_base = meson.current_source_dir()
-dir_lib = join_paths(dir_base, 'lib')
-lib_dewarp = cc.find_library('IMV1', dirs: dir_lib, required: true)
-
-# Plugin 1
-plugin_sources = [
+vicondewarp_sources = [
   'gstvicondewarp.cpp'
   ]
 
-gstpluginexample = library('gstvicondewarp',
-  plugin_sources,
-  c_args: plugin_c_args,
-  dependencies : [gst_dep, plugin_dep, lib_dewarp],
+gstvicondewarp = library('gstvicondewarp',
+  vicondewarp_sources,
+  dependencies : [gst_dep, gstvideo_dep, lib_dewarp],
   install : true,
   install_dir : plugins_install_dir,
 )
+
+pkgconfig.generate(gstvicondewarp, install_dir : plugins_pkgconfig_install_dir)
+plugins += [gstvicondewarp]
