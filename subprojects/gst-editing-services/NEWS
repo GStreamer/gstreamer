@@ -2,13 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
-The latest bug-fix release in the stable 1.22 series is 1.22.3 and was
-released on 19 May 2023.
+The latest bug-fix release in the stable 1.22 series is 1.22.4 and was
+released on 20 June 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Friday 19 May 2023, 01:00 UTC (log)
+Last updated: Tuesday 20 June 2023, 16:30 UTC (log)
 
 Introduction
 
@@ -1830,6 +1830,183 @@ List of merge requests and issues fixed in 1.22.3
 
 -   List of Merge Requests applied in 1.22.3
 -   List of Issues fixed in 1.22.3
+
+1.22.4
+
+The fourth 1.22 bug-fix release (1.22.4) was released on 20 June 2023.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.22.x.
+
+Highlighted bugfixes in 1.22.4
+
+-   Security fixes for flacparse, dvdspu, and subparse
+-   d3d11videosink: Fix error on pause and play
+-   decklink: Correctly handle SDK strings on macOS and free strings
+    after usage on Linux
+-   filesink: Fix buffered mode writing of buffer lists and buffers with
+    multiple memories
+-   gldownload: handle passthrough without a critical
+-   h265parse: Fix framerate handling regression
+-   oggdemux: vp8 fixes
+-   mp4mux, qtmux, qtdemux: Opus audio mapping fixes
+-   pngdec: Fix wrong colours output from 16bit RGB images
+-   ptp clock: Work around ptpd bug in default configuration
+-   srtpdec: fix critical warnings on shutdown
+-   v4l2src: fix support for bayer format
+-   v4l2videoenc: support force-keyframe event in v4l2 encoder
+-   vtenc: apply DTS offset to ensure DTS <= PTS
+-   gst-python: allow more functions to be called before gst_init()
+-   cerbero: fix vaapi variant; add qt6 build on windows; ensure errors
+    on unguarded use of new APIs, require macOS 10.13
+-   packages: ship codecalpha, rtponvif, dvbsubenc, switchbin,
+    videosignal plugins; fix pango crash on 32-bit windows
+-   various bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   filesink: Fix buffered mode writing of buffer lists and buffers with
+    multiple memories
+-   basesink: Clear EOS flag on STREAM-START event
+-   typefindhelper: downgrade bogus error level debug log message
+-   ptp: Correctly parse clock ID from the commandline parameters in the
+    helper
+-   ptp: Work around bug in ptpd in default configuration
+
+gst-plugins-base
+
+-   alsasink: Fix stall for transition from PAUSED to READY with USB
+    speakerphone.
+-   appsink: unref buffer in prev sample early so buffers from v4l2 can
+    be released properly
+-   basetextoverlay: Fix typo in “text-y” property description
+-   gldownload: handle passthrough without a critical
+-   glfilter: add parent meta to output buffer for input buffer
+-   oggdemux: vp8: Push headers downstream and detect keyframe packets
+-   opus: Fix potential crash when getting unexpected channel position
+-   streamsynchronizer: reset eos on STREAM_START
+-   subparse: Look for the closing > of a tag after the opening <
+-   video: convertframe: Add D3D11 specific conversion path
+-   videometa: Only validate the alignment only when it contains some
+    info
+-   video-blend: Fix linking error with C++
+
+gst-plugins-good
+
+-   flacparse: Avoid integer overflow in available data check for image
+    tags
+-   flvmux: use the correct timestamp to calculate wait times
+-   isomp4: Fix (E)AC-3 channel count handling
+-   jpegdec: fixes related to interlaced jpeg
+-   pngdec: Fix wrong colours output from 16bit RGB images
+-   qtmux, qtdemux: fix byte order for opus extension
+-   rtspsrc: Do not try send dropped get/set parameter
+-   qt5, qt6: Add more meson options and eliminate all automagic
+-   qt: glrenderer: don’t attempt to use QWindow from non-Qt main thread
+-   qml6glsink: Support building on win32
+-   v4l2src: fix support for bayer format
+-   v4l2: Change to query only up to
+    V4L2_CID_PRIVATE_BASE+V4L2_CID_MAX_CTRLS
+-   v4l2videodec: treat MPEG-1 format as MPEG-2
+-   v4l2videoenc: support force keyframe event in v4l2 encoder
+-   tests: rtpbin_buffer_list: fix possible unaligned write/read on
+    32-bit ARM
+
+gst-plugins-bad
+
+-   asfmux: fix possible unaligned write on 32-bit ARM
+-   d3d11videosink: Fix error on pause and play
+-   d3dvideosink: Fix navigation event leak
+-   decklink: Correctly handle SDK strings on macOS and free strings
+    after usage on Linux
+-   dvdspu: Make sure enough data is allocated for the available data
+-   fdkaacdec: Support up to 5 rear channels
+-   h265parse: Fix framerate handling
+-   kmssink: Add STM32 LTDC and NXP i.MX8M Plus LCDIFv3 auto-detection
+-   sdpdemux: ensure that only one srcpad is created per stream
+-   srtpdec: fix critical warnings on shutdown
+-   testsrcbin: Remove spurious caps unref
+-   va: map the mbbrc to correct enum value in get_property()
+-   vtenc: apply DTS offset to ensure DTS <= PTS
+-   vtdec: time glitches on h264 playback
+-   waylandsink: Emit “map” signal boarder surface is ready
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   vaapidecodebin: don’t load vaapipostproc if not available
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   python: More functions can be called before gst_init()
+
+gst-editing-services
+
+-   ges: launcher: Never put sinks in a GstPipeline
+
+gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.22.4
+
+-   Ship codecalpha, rtponvif, dvbsubenc, switchbin, videosignal plugins
+-   pango: Fix crash on Windows 32bit build
+-   qml6: Add support for building the qml6 plugin on Windows and bump
+    meson to 1.1.1
+-   vaapi: update vaapi variant/recipe for meson option changes
+-   packages: Put libass in the same category as assrender
+-   cerbero: Don’t extract if already extracted in fetch
+-   darwin: Ensure errors on unguarded use of new APIs, require macOS
+    10.13
+
+Contributors to 1.22.4
+
+Andoni Morales Alastruey, Arun Raghavan, Colin Kinloch, Daniel Morin,
+Edward Hervey, ekwange, Elliot Chen, François Laignel, Guillaume
+Desmottes, Haihua Hu, He Junyan, Hou Qi, Jan Alexander Steffens
+(heftig), Jochen Henneberg, Jordan Petridis, Kevin Song, Maksym
+Khomenko, Marek Vasut, Mathieu Duponchelle, Matthew Waters,
+Mengkejiergeli Ba, Michael Olbrich, Nicolas Beland, Nicolas Dufresne,
+Nirbheek Chauhan, Philippe Normand, Piotr Brzeziński, Sebastian Dröge,
+Seungha Yang, Thibault Saunier, Tim-Philipp Müller, Víctor Manuel Jáquez
+Leal, William Manley, Xavier Claessens, Yuri Fedoseev,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.4
+
+-   List of Merge Requests applied in 1.22.4
+-   List of Issues fixed in 1.22.4
 
 Schedule for 1.24
 
