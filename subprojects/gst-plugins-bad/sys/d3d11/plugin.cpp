@@ -88,6 +88,10 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
+#ifdef HAVE_D2D1
+#include "gstd3d11d2d1.h"
+#endif
+
 GST_DEBUG_CATEGORY (gst_d3d11_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_plugin_utils_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_format_debug);
@@ -108,6 +112,12 @@ GST_DEBUG_CATEGORY (gst_d3d11_deinterlace_debug);
 #if !GST_D3D11_WINAPI_ONLY_APP
 GST_DEBUG_CATEGORY (gst_d3d11_screen_capture_debug);
 GST_DEBUG_CATEGORY (gst_d3d11_screen_capture_device_debug);
+#endif
+
+
+
+#ifdef HAVE_D2D1
+GST_DEBUG_CATEGORY(gst_d3d11_d2d1_debug);
 #endif
 
 #define GST_CAT_DEFAULT gst_d3d11_debug
@@ -160,6 +170,11 @@ plugin_init (GstPlugin * plugin)
   hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
   if (FAILED (hr))
     return TRUE;
+
+#ifdef HAVE_D2D1
+  GST_DEBUG_CATEGORY_INIT(gst_d3d11_d2d1_debug,
+      "d3d11d2d1", 0, "d3d11d2d1 element");
+#endif
 
   /* Enumerate devices to register decoders per device and to get the highest
    * feature level */
@@ -255,6 +270,11 @@ plugin_init (GstPlugin * plugin)
         "d3d11screencapturedeviceprovider", GST_RANK_PRIMARY,
         GST_TYPE_D3D11_SCREEN_CAPTURE_DEVICE_PROVIDER);
   }
+#endif
+
+#ifdef HAVE_D2D1
+  gst_element_register(plugin,
+      "d3d11d2d1", GST_RANK_NONE, GST_TYPE_D3D11D2D1);
 #endif
 
   return TRUE;
