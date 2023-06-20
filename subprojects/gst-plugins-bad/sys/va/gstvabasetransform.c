@@ -768,38 +768,38 @@ _get_sinkpad_pool (GstVaBaseTransform * self)
   if (self->priv->sinkpad_pool)
     return self->priv->sinkpad_pool;
 
-  gst_allocation_params_init (&params);
+  if (self->priv->sinkpad_caps)
+    caps = gst_caps_copy (self->priv->sinkpad_caps);
+  else
+    caps = gst_caps_copy (self->in_caps);
 
-  if (self->priv->sinkpad_caps) {
-    caps = self->priv->sinkpad_caps;
-    if (!gst_video_info_from_caps (&in_info, caps)) {
-      GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-      return NULL;
-    }
-  } else {
-    caps = self->in_caps;
-    in_info = self->in_info;
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+
+  if (!gst_video_info_from_caps (&in_info, caps)) {
+    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
+    return NULL;
   }
 
   size = GST_VIDEO_INFO_SIZE (&in_info);
 
   allocator = gst_va_base_transform_allocator_from_caps (self, caps);
+  g_assert (GST_IS_VA_ALLOCATOR (allocator));
+
   self->priv->sinkpad_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
       usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
   if (!self->priv->sinkpad_pool) {
+    gst_caps_unref (caps);
     gst_object_unref (allocator);
     return NULL;
   }
 
-  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    gst_va_dmabuf_allocator_get_format (allocator, &self->priv->sinkpad_info,
-        NULL);
-  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    gst_va_allocator_get_format (allocator, &self->priv->sinkpad_info, NULL,
-        NULL);
-  }
+  gst_va_allocator_get_format (allocator, &self->priv->sinkpad_info,
+      NULL, NULL);
 
   gst_object_unref (allocator);
+  gst_caps_unref (caps);
 
   if (!gst_buffer_pool_set_active (self->priv->sinkpad_pool, TRUE)) {
     GST_WARNING_OBJECT (self, "failed to active the sinkpad pool %"
