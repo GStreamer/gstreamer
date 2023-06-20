@@ -13539,6 +13539,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               channel_mapping_family, stream_count, coupled_count,
               channel_mapping);
           g_free (channel_mapping);
+
+          entry->sampled = TRUE;
+
           break;
         }
         default:
