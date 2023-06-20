@@ -6630,6 +6630,7 @@ next:
 
   if (rstpMethod == GST_RTSP_TEARDOWN){
     if (count_requst == 100){
+      GST_DEBUG_OBJECT (src, "No valid response for 100 times for GST_RTSP_TEARDOWN request, going to exit the loop");
       goto handle_request_failed;
     }
     count_requst++;
