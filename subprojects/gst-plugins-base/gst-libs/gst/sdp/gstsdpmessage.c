@@ -3636,6 +3636,9 @@ gst_sdp_media_get_caps_from_media (const GstSDPMedia * media, gint pt)
     /* we fail if we cannot find one */
     if (rate == -1)
       goto no_rate;
+
+    if (rate == 0 && name != NULL && (!g_strcmp0(name,"h264") || !g_strcmp0(name,"H264")))
+      rate = 90000;
   }
 
   tmp = g_ascii_strdown (media->media, -1);
