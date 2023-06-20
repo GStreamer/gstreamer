@@ -1195,6 +1195,10 @@ gst_gl_context_egl_destroy_context (GstGLContext * context)
     gst_object_unref (window);
   }
 
+  if (window) {
+    gst_object_unref (window);
+  }
+
   gst_gl_context_egl_activate (context, FALSE);
 
   if (egl->egl_surface) {
