@@ -529,9 +529,9 @@ gst_d3d11_crop_transform(GstBaseTransform* trans, GstBuffer* inbuf,
         goto invalid_memory;
     }
     gst_d3d11_device_lock(device);
-    for (int i = 0; i < gst_buffer_n_memory(outbuf); i++) {
-        GstD3D11Memory* mem =
-            (GstD3D11Memory*)gst_buffer_peek_memory(outbuf, i);
+    for (int i = 0; i < gst_buffer_n_memory(inbuf); i++) {
+        GstD3D11Memory* mem = (GstD3D11Memory*)gst_buffer_peek_memory(outbuf, i);
+        GstD3D11Memory* src_dmem = (GstD3D11Memory*) gst_buffer_peek_memory(inbuf, i);
 
         guint subidx;
         D3D11_BOX src_box = { 0, };
@@ -566,8 +566,10 @@ gst_d3d11_crop_transform(GstBaseTransform* trans, GstBuffer* inbuf,
 
         }
 
+        guint src_subidx = gst_d3d11_memory_get_subresource_index(src_dmem);
+
         context_handle->CopySubresourceRegion((ID3D11Resource*)out_map[i].data,
-            subidx, 0, 0, 0, (ID3D11Resource*)in_map[i].data, 0, &src_box);
+            subidx, 0, 0, 0, (ID3D11Resource*)in_map[i].data, src_subidx, &src_box);
     }
     gst_d3d11_device_unlock(device);
 
