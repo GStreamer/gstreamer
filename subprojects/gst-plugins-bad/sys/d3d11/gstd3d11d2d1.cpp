@@ -292,11 +292,11 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
         return FALSE;
     }
 
-    if (d3d11_format->dxgi_format == DXGI_FORMAT_UNKNOWN) {
-        dxgi_format = d3d11_format->resource_format[0];
+    if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
+        dxgi_format = d3d11_format.resource_format[0];
     }
     else {
-        dxgi_format = d3d11_format->dxgi_format;
+        dxgi_format = d3d11_format.dxgi_format;
     }
 
     device_handle = gst_d3d11_device_get_device_handle(filter->device);
