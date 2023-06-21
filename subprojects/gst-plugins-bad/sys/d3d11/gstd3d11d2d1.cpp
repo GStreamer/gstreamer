@@ -61,8 +61,9 @@
 
 #include <gst/gst.h>
 #include <d2d1.h>
+#include  <gst/d3d11/gstd3d11memory.h>
+#include <gst/d3d11/gstd3d11device.h>
 #include "gstd3d11d2d1.h"
-
 /* Filter signals and args */
 enum
 {

@@ -61,6 +61,8 @@
 #endif
 
 #include <gst/gst.h>
+#include  <gst/d3d11/gstd3d11memory.h>
+#include <gst/d3d11/gstd3d11device.h>
 
 #include "gstd3d11crop.h"
 
