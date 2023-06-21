@@ -189,6 +189,7 @@ gst_stream_collection_set_upstream_id (GstStreamCollection * collection,
 {
   g_return_if_fail (collection->upstream_id == NULL);
 
+  GST_OBJECT_LOCK (collection);
   /* Upstream ID should only be set once on construction, but let's
    * not leak in case someone does something silly */
   if (collection->upstream_id)
@@ -196,6 +197,15 @@ gst_stream_collection_set_upstream_id (GstStreamCollection * collection,
 
   if (upstream_id)
     collection->upstream_id = g_strdup (upstream_id);
+
+  /* We hold the object lock, replace directly */
+  g_free (GST_OBJECT_NAME (collection));
+  if (upstream_id)
+    GST_OBJECT_NAME (collection) = g_strdup (upstream_id);
+  else
+    GST_OBJECT_NAME (collection) = g_strdup ("unparented");
+
+  GST_OBJECT_UNLOCK (collection);
 }
 
 /**
