@@ -61,8 +61,6 @@
 #endif
 
 #include <gst/gst.h>
-#include  <gst/d3d11/gstd3d11memory.h>
-#include <gst/d3d11/gstd3d11device.h>
 
 #include "gstd3d11crop.h"
 
@@ -610,7 +608,7 @@ gst_d3d11_crop_decide_allocation(GstBaseTransform* trans, GstQuery* query)
     GstStructure* config;
     gboolean update_pool = FALSE;
     GstVideoInfo vinfo;
-    const GstD3D11Format* d3d11_format;
+    GstD3D11Format d3d11_format;
     GstD3D11AllocationParams* d3d11_params;
     guint bind_flags = 0;
     guint i;
@@ -626,9 +624,8 @@ gst_d3d11_crop_decide_allocation(GstBaseTransform* trans, GstQuery* query)
 
     gst_video_info_from_caps(&vinfo, outcaps);
 
-    d3d11_format = gst_d3d11_device_format_from_gst(filter->device,
-        GST_VIDEO_INFO_FORMAT(&vinfo));
-    if (!d3d11_format) {
+    if (!gst_d3d11_device_get_format(filter->device,
+        GST_VIDEO_INFO_FORMAT(&vinfo), &d3d11_format)) {
         GST_ERROR_OBJECT(filter, "Unknown format caps %" GST_PTR_FORMAT, outcaps);
         return FALSE;
     }

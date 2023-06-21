@@ -61,8 +61,6 @@
 
 #include <gst/gst.h>
 #include <d2d1.h>
-#include  <gst/d3d11/gstd3d11memory.h>
-#include <gst/d3d11/gstd3d11device.h>
 #include "gstd3d11d2d1.h"
 /* Filter signals and args */
 enum
@@ -265,7 +263,7 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
     guint size, min, max;
     GstStructure* config;
     GstVideoInfo vinfo;
-    const GstD3D11Format* d3d11_format;
+    GstD3D11Format d3d11_format;
     GstD3D11AllocationParams* d3d11_params;
     const guint bind_flags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
     DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
@@ -288,9 +286,8 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
         return FALSE;
     }
 
-    d3d11_format = gst_d3d11_device_format_from_gst(filter->device,
-        GST_VIDEO_INFO_FORMAT(&vinfo));
-    if (!d3d11_format) {
+    if (!gst_d3d11_device_get_format(filter->device,
+        GST_VIDEO_INFO_FORMAT(&vinfo), &d3d11_format)) {
         GST_ERROR_OBJECT(filter, "Unknown format caps %" GST_PTR_FORMAT, outcaps);
         return FALSE;
     }
