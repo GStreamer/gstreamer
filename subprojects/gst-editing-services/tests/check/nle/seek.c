@@ -1,6 +1,8 @@
 #include "common.h"
 static const gchar *compositor_element = NULL;
 
+static void late_ges_init (void);
+
 typedef struct _SeekInfo
 {
   GstClockTime position;        /* Seek value and segment position */
@@ -476,6 +478,8 @@ GST_START_TEST (test_complex_operations)
   GstElement *comp, *oper, *source1, *source2;
   GList *segments = NULL, *seeks = NULL;
 
+  late_ges_init ();
+
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
 
@@ -592,6 +596,8 @@ GST_START_TEST (test_complex_operations_bis)
   gboolean ret = FALSE;
   GstElement *comp, *oper, *source1, *source2;
   GList *segments = NULL, *seeks = NULL;
+
+  late_ges_init ();
 
   comp =
       gst_element_factory_make_or_warn ("nlecomposition", "test_composition");
@@ -715,6 +721,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_simplest)
 {
+  late_ges_init ();
+
   test_simplest_full ();
 }
 
@@ -723,6 +731,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_one_after_other)
 {
+  late_ges_init ();
+
   test_one_after_other_full ();
 }
 
@@ -731,6 +741,8 @@ GST_END_TEST;
 
 GST_START_TEST (test_one_under_another)
 {
+  late_ges_init ();
+
   test_one_under_another_full ();
 }
 
@@ -739,11 +751,26 @@ GST_END_TEST;
 
 GST_START_TEST (test_one_bin_after_other)
 {
+  late_ges_init ();
+
   test_one_bin_after_other_full ();
 }
 
 GST_END_TEST;
 
+static void
+late_ges_init ()
+{
+  /* We need to do this inside the test cases, not during the initialization
+   * of the suite, as ges_init() will initialize thread pools, which cannot
+   * work properly after a fork. */
+
+  if (atexit (ges_deinit) != 0) {
+    GST_ERROR ("failed to set ges_deinit as exit function");
+  }
+
+  ges_init ();
+}
 
 static Suite *
 gnonlin_suite (void)
@@ -751,7 +778,6 @@ gnonlin_suite (void)
   Suite *s = suite_create ("gnonlin-seek");
   TCase *tc_chain = tcase_create ("general");
 
-  ges_init ();
   suite_add_tcase (s, tc_chain);
 
   if (gst_registry_check_feature_version (gst_registry_get (), "compositor", 1,

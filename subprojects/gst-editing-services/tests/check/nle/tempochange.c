@@ -20,6 +20,8 @@
 #include "common.h"
 #include "plugins/nle/nleobject.h"
 
+static void late_ges_init (void);
+
 typedef struct _PadEventData
 {
   gchar *name;
@@ -386,6 +388,8 @@ GST_START_TEST (test_tempochange_play)
   gdouble rates[3] = { 0.5, 4.0, 1.0 };
   guint i, j;
 
+  late_ges_init ();
+
   for (i = 0; i < G_N_ELEMENTS (rates); i++) {
     gdouble rate = rates[i];
     GST_DEBUG ("rate = %g", rate);
@@ -517,6 +521,8 @@ GST_START_TEST (test_tempochange_seek)
   guint i, j;
   GstClockTime offset = 0.1 * GST_SECOND;
 
+  late_ges_init ();
+
   for (i = 0; i < G_N_ELEMENTS (rates); i++) {
     gdouble rate = rates[i];
     GST_DEBUG ("rate = %g", rate);
@@ -629,17 +635,26 @@ GST_START_TEST (test_tempochange_seek)
 
 GST_END_TEST;
 
-static Suite *
-gnonlin_suite (void)
+static void
+late_ges_init ()
 {
-  Suite *s = suite_create ("nle");
-  TCase *tc_chain = tcase_create ("tempochange");
+  /* We need to do this inside the test cases, not during the initialization
+   * of the suite, as ges_init() will initialize thread pools, which cannot
+   * work properly after a fork. */
 
   if (atexit (ges_deinit) != 0) {
     GST_ERROR ("failed to set ges_deinit as exit function");
   }
 
   ges_init ();
+}
+
+static Suite *
+gnonlin_suite (void)
+{
+  Suite *s = suite_create ("nle");
+  TCase *tc_chain = tcase_create ("tempochange");
+
   suite_add_tcase (s, tc_chain);
 
   /* give the tests a little more time than the default
