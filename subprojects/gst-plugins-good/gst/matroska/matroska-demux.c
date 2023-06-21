@@ -6242,17 +6242,17 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
           "received format %d segment %" GST_SEGMENT_FORMAT, segment->format,
           segment);
 
-      if (demux->common.state < GST_MATROSKA_READ_STATE_DATA) {
-        GST_DEBUG_OBJECT (demux, "still starting");
-        goto exit;
-      }
-
       if (segment->format == GST_FORMAT_TIME) {
         demux->upstream_format_is_time = TRUE;
         demux->segment_seqnum = gst_event_get_seqnum (event);
         gst_segment_copy_into (segment, &demux->common.segment);
         GST_DEBUG_OBJECT (demux, "Got segment in TIME format: %" GST_PTR_FORMAT,
             event);
+        goto exit;
+      }
+
+      if (demux->common.state < GST_MATROSKA_READ_STATE_DATA) {
+        GST_DEBUG_OBJECT (demux, "still starting");
         goto exit;
       }
 
