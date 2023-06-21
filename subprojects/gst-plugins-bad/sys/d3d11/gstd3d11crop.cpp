@@ -624,8 +624,8 @@ gst_d3d11_crop_decide_allocation(GstBaseTransform* trans, GstQuery* query)
 
     gst_video_info_from_caps(&vinfo, outcaps);
 
-//    d3d11_format = gst_d3d11_device_format_from_gst(filter->device,
-//        GST_VIDEO_INFO_FORMAT(&vinfo));
+    d3d11_format = gst_d3d11_device_format_from_gst(filter->device,
+        GST_VIDEO_INFO_FORMAT(&vinfo));
     if (!d3d11_format) {
         GST_ERROR_OBJECT(filter, "Unknown format caps %" GST_PTR_FORMAT, outcaps);
         return FALSE;
@@ -684,8 +684,8 @@ gst_d3d11_crop_decide_allocation(GstBaseTransform* trans, GstQuery* query)
 
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params(config);
     if (!d3d11_params) {
- //        d3d11_params = gst_d3d11_allocation_params_new(filter->device, &vinfo,
- //           (GstD3D11AllocationFlags)0, bind_flags);
+        d3d11_params = gst_d3d11_allocation_params_new(filter->device, &vinfo,
+            (GstD3D11AllocationFlags)0, bind_flags);
     }
     else {
         /* Set bind flag */
