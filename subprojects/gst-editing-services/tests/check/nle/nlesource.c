@@ -26,6 +26,7 @@ GST_START_TEST (test_simple_videotestsrc)
 
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
+  g_object_set (sink, "sync", FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
 
@@ -126,6 +127,7 @@ GST_START_TEST (test_videotestsrc_in_bin)
 
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
+  g_object_set (sink, "sync", FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), nlesource, sink, NULL);
 

@@ -15,6 +15,7 @@ fill_pipeline_and_check (GstElement * comp, GList * segments,
   pipeline = gst_pipeline_new ("test_pipeline");
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
+  g_object_set (sink, "sync", FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
@@ -563,6 +564,7 @@ GST_START_TEST (test_renegotiation)
 
 
   sink = gst_element_factory_make_or_warn ("fakeaudiosink", "sink");
+  g_object_set (sink, "sync", FALSE, NULL);
   audioconvert = gst_element_factory_make_or_warn ("audioconvert", "aconv");
 
   gst_bin_add_many (GST_BIN (pipeline), comp, audioconvert, sink, NULL);

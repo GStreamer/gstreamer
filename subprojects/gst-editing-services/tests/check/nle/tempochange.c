@@ -284,6 +284,7 @@ _setup_test (GstElement * pipeline, gdouble rate)
 
   /* sink */
   sink = gst_element_factory_make_or_warn ("fakeaudiosink", "sink");
+  g_object_set (sink, "sync", FALSE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
   gst_element_link (comp, sink);

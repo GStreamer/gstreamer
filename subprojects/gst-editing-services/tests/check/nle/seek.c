@@ -37,6 +37,7 @@ fill_pipeline_and_check (GstElement * comp, GList * segments, GList * seeks)
   pipeline = gst_pipeline_new ("test_pipeline");
   sink = gst_element_factory_make_or_warn ("fakevideosink", "sink");
   fail_if (sink == NULL);
+  g_object_set (sink, "sync", FALSE, NULL);
 
   gst_bin_add_many (GST_BIN (pipeline), comp, sink, NULL);
 
