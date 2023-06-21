@@ -363,7 +363,7 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
         gst_buffer_pool_config_get_d3d11_allocation_params(config));
 
     d3d11_params = gst_d3d11_allocation_params_new(filter->device, &vinfo,
-            (GstD3D11AllocationFlags)0, bind_flags);
+            (GstD3D11AllocationFlags)0, bind_flags,0);
 
     gst_buffer_pool_config_set_d3d11_allocation_params(config, d3d11_params);
     gst_d3d11_allocation_params_free(d3d11_params);

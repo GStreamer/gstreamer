@@ -684,7 +684,7 @@ gst_d3d11_crop_decide_allocation(GstBaseTransform* trans, GstQuery* query)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params(config);
     if (!d3d11_params) {
         d3d11_params = gst_d3d11_allocation_params_new(filter->device, &vinfo,
-            (GstD3D11AllocationFlags)0, bind_flags);
+            (GstD3D11AllocationFlags)0, bind_flags,0);
     }
     else {
         /* Set bind flag */
