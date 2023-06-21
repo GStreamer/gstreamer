@@ -1315,12 +1315,18 @@ GST_START_TEST (videodecoder_playback_event_order)
 
 GST_END_TEST;
 
+/*
+ * MODE_META_COPY: takes an extra ref to the input buffer to check metas
+ *                 are copied to a writable buffer.
+ *                 see: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4912
+ */
 typedef enum
 {
   MODE_NONE = 0,
   MODE_SUBFRAMES = 1,
   MODE_PACKETIZED = 1 << 1,
   MODE_META_ROI = 1 << 2,
+  MODE_META_COPY = 1 << 3,
 } SubframeMode;
 
 static void
@@ -1379,10 +1385,19 @@ videodecoder_playback_subframe_mode (SubframeMode mode)
       gst_buffer_add_video_region_of_interest_meta (buffer, "face", 0, 0, 10,
           10);
 
+    /* Take an extra ref to check that we ensure buffer is writable when copying metas
+     * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4912
+     */
+    if (mode & MODE_META_COPY) {
+      gst_buffer_ref (buffer);
+    }
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
     fail_unless (gst_pad_push_event (mysrcpad,
             gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
                 gst_structure_new_empty ("custom1"))));
+    if (mode & MODE_META_COPY) {
+      gst_buffer_unref (buffer);
+    }
   }
   /* Send EOS */
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
@@ -1540,6 +1555,14 @@ GST_START_TEST (videodecoder_playback_packetized_subframes_metadata)
 
 GST_END_TEST;
 
+GST_START_TEST (videodecoder_playback_packetized_subframes_metadata_copy)
+{
+  videodecoder_playback_subframe_mode (MODE_SUBFRAMES |
+      MODE_PACKETIZED | MODE_META_ROI | MODE_META_COPY);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (videodecoder_playback_invalid_ts_packetized)
 {
   videodecoder_playback_invalid_ts_subframe_mode (MODE_PACKETIZED);
@@ -1589,6 +1612,7 @@ gst_videodecoder_suite (void)
   tcase_add_test (tc, videodecoder_playback_parsed_subframes);
   tcase_add_test (tc, videodecoder_playback_packetized_subframes);
   tcase_add_test (tc, videodecoder_playback_packetized_subframes_metadata);
+  tcase_add_test (tc, videodecoder_playback_packetized_subframes_metadata_copy);
   tcase_add_test (tc, videodecoder_playback_invalid_ts_packetized);
   tcase_add_test (tc, videodecoder_playback_invalid_ts_packetized_subframes);
 
