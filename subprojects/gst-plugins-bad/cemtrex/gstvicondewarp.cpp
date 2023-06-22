@@ -60,14 +60,15 @@ auto string2ColorFormat(const std::string& format)
 
 	if (format == "NV12")
 	{
-		colorFormat = IMV_Defs::E_YUV_NV12;
+		colorFormat = IMV_Defs::E_YUV_NV12_STD;
 	}
 
 	return colorFormat;
 }
 
 InputOutputBuffers::InputOutputBuffers() :
-	m_in{ new IMV_Buffer() }, m_out{ new IMV_Buffer() }, m_outputBuffer{ nullptr }, m_inputBuffer{ nullptr }
+	m_in{ new IMV_Buffer() }, m_out{ new IMV_Buffer() }, m_outputBuffer{ nullptr }, m_inputBuffer{ nullptr },
+	m_width{ 0 }, m_height{ 0 }, m_inputMap{ 0 }, m_outputMap{ 0 }
 {
 }
 
@@ -106,7 +107,8 @@ bool InputOutputBuffers::setInputBuffer(GstBuffer* inputBuffer, int width, int h
 		return false;
 	}
 
-	if (gst_buffer_map(m_outputBuffer, &m_outputMap, (GstMapFlags)(GST_MAP_WRITE)) == FALSE) {
+	if (gst_buffer_map(m_outputBuffer, &m_outputMap, (GstMapFlags)(GST_MAP_WRITE)) == FALSE)
+	{
 		reset();
 		return false;
 	}
@@ -114,21 +116,21 @@ bool InputOutputBuffers::setInputBuffer(GstBuffer* inputBuffer, int width, int h
 	m_outputBuffer->pts = inputBuffer->pts;
 	m_outputBuffer->dts = inputBuffer->dts;
 
-	m_in->data = m_inputMap.data;
-	m_in->frameWidth = width;
-	m_in->frameHeight = height;
 	m_in->frameX = 0;
 	m_in->frameY = 0;
 	m_in->width = width;
 	m_in->height = height;
+	m_in->frameWidth = width;
+	m_in->frameHeight = height;
+	m_in->data = m_inputMap.data;
 
-	m_out->data = m_outputMap.data;
-	m_out->frameWidth = width;
-	m_out->frameHeight = height;
 	m_out->frameX = 0;
 	m_out->frameY = 0;
 	m_out->width = width;
 	m_out->height = height;
+	m_out->frameWidth = width;
+	m_out->frameHeight = height;
+	m_out->data = m_outputMap.data;
 
 	return true;
 }
@@ -163,7 +165,6 @@ GstBuffer* InputOutputBuffers::outputTransferFull()
 	m_inputBuffer = nullptr;
 	return outputBuffer;
 }
-
 
 DewarpPlugin::DewarpPlugin() : m_mountPos{ 0 }, m_viewType{ 0 }, m_data{ 0 }, m_camera{ new IMV_CameraInterface() },
 m_isCameraSetup{ false }, m_isLensCalibrated{ false }
@@ -210,25 +211,29 @@ void DewarpPlugin::setProperties(const GstStructure* properties)
 	char zoomKey[] = "view_1_zoom";
 	char rollKey[] = "view_1_roll";
 
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 4; i++)
+	{
 		panKey[5] = tiltKey[5] = zoomKey[5] = rollKey[5] = '1' + i;
 		m_data[i].m_pan = g_value_get_float(gst_structure_get_value(properties, panKey));
 		m_data[i].m_tilt = g_value_get_float(gst_structure_get_value(properties, tiltKey));
 		m_data[i].m_zoom = g_value_get_float(gst_structure_get_value(properties, zoomKey));
 		m_data[i].m_roll = g_value_get_float(gst_structure_get_value(properties, rollKey));
 	}
-
-	setPosition();
 }
 
 void DewarpPlugin::setMountPos(int mountPos)
 {
+	if (m_mountPos != mountPos)
+	{
+		m_isCameraSetup = false;
+	}
 	m_mountPos = mountPos;
 }
 
 void DewarpPlugin::setViewType(int viewType)
 {
-	if (m_viewType != viewType) {
+	if (m_viewType != viewType)
+	{
 		m_isCameraSetup = false;
 	}
 	m_viewType = viewType;
@@ -254,6 +259,52 @@ std::string DewarpPlugin::getLensName()
 	return m_lensName;
 }
 
+bool DewarpPlugin::calibrateLens(std::string format, int width, int height, GstCaps* caps, GstBuffer* originalInputBuffer)
+{
+	auto colorFormat = string2ColorFormat(format);
+	GstBuffer* inputBuffer = nullptr;
+	m_acsInfo = "";
+	m_camera->SetACS(nullptr);
+
+	if (colorFormat != IMV_Defs::E_RGBA_32_STD)
+	{
+		GError* errMsg;
+		// Calibration using a different format is not as efficient as RGBA
+		GstCaps* toCaps = gst_caps_from_string("video/x-raw(memory:D3D11Memory), format = (string)RGBA");
+		auto* fromSample = gst_sample_new(originalInputBuffer, caps, NULL, NULL);
+		auto* toSample = gst_video_convert_sample(fromSample, toCaps, GST_CLOCK_TIME_NONE, &errMsg);
+		inputBuffer = gst_sample_get_buffer(toSample);
+		colorFormat = IMV_Defs::E_RGBA_32_STD;
+	}
+
+	m_camera->SetLens((char*)m_lensName.c_str());
+	m_camera->SetZoomLimits(23.f, 180.f);
+	m_camera->SetNavigationType(IMV_Defs::E_NAV_360xFOV_LOCKED);
+
+	if (!m_buffers.setInputBuffer(inputBuffer == nullptr ? originalInputBuffer : inputBuffer, width, height))
+	{
+		if (inputBuffer == nullptr)
+		{
+			gst_buffer_unref(inputBuffer);
+		}
+		return false;
+	}
+
+	auto result = m_camera->SetVideoParams(m_buffers.in(), m_buffers.out(), colorFormat, m_viewType, m_mountPos);
+
+	switch (result)
+	{
+	case IMV_Defs::E_ERR_OK:
+		auto* info = m_camera->GetACS();
+		m_acsInfo = info;
+		m_camera->SetACS(info);
+		m_camera->SetFiltering(IMV_Defs::E_FILTER_BILINEAR_ONSTOP);
+		return true;
+	}
+
+	return false;
+}
+
 bool DewarpPlugin::setUpCamera(std::string format, int width, int height, GstBuffer* originalInputBuffer)
 {
 	auto result = m_camera->SetVideoParams(m_buffers.in(), m_buffers.out(), string2ColorFormat(format), m_viewType, m_mountPos);
@@ -274,51 +325,7 @@ bool DewarpPlugin::setUpCamera(std::string format, int width, int height, GstBuf
 			}
 		}
 	}
-	setPosition();
 	return true;
-}
-
-
-bool DewarpPlugin::calibrateLens(std::string format, int width, int height, GstCaps* caps, GstBuffer* originalInputBuffer)
-{
-	auto colorFormat = string2ColorFormat(format);
-	GstBuffer* inputBuffer = originalInputBuffer;
-	m_acsInfo = "";
-	m_camera->SetACS(nullptr);
-
-	if (colorFormat != IMV_Defs::E_RGBA_32_STD)
-	{
-		GError* errMsg;
-		// Calibration using a different format is not as efficient as RGBA
-		GstCaps* toCaps = gst_caps_from_string("video/x-raw(memory:D3D11Memory), format = (string)RGBA");
-		auto* fromSample = gst_sample_new(originalInputBuffer, caps, NULL, NULL);
-		auto* toSample = gst_video_convert_sample(fromSample, toCaps, GST_CLOCK_TIME_NONE, &errMsg);
-		inputBuffer = gst_sample_get_buffer(toSample);
-		colorFormat = IMV_Defs::E_RGBA_32_STD;
-	}
-
-	m_camera->SetLens((char*)m_lensName.c_str());
-	m_camera->SetZoomLimits(23.f, 180.f);
-	m_camera->SetNavigationType(IMV_Defs::E_NAV_360x360_STABILIZED);
-
-	InputOutputBuffers buffers;
-	if (!buffers.setInputBuffer(inputBuffer, width, height))
-	{
-		return false;
-	}
-
-	auto result = m_camera->SetVideoParams(buffers.in(), buffers.out(), colorFormat, m_viewType, m_mountPos);
-
-	switch (result)
-	{
-	case IMV_Defs::E_ERR_OK:
-		auto* info = m_camera->GetACS();
-		m_acsInfo = info;
-		m_camera->SetACS(info);
-		return true;
-	}
-
-	return false;
 }
 
 bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer)
@@ -345,14 +352,17 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 	{
 		if (!calibrateLens(bufferFormat, width, height, inputCaps, inputBuffer))
 		{
+			m_buffers.reset();
 			return false;
 		}
 		m_isLensCalibrated = true;
 	}
-
-	if (!m_buffers.setInputBuffer(inputBuffer, width, height))
+	else
 	{
-		return false;
+		if (!m_buffers.setInputBuffer(inputBuffer, width, height))
+		{
+			return false;
+		}
 	}
 
 	if (m_isCameraSetup == false)
@@ -365,6 +375,7 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 		m_isCameraSetup = true;
 	}
 
+	setPosition();
 	auto ret = m_camera->Update();
 
 	if (ret != IMV_Defs::E_ERR_OK)
@@ -610,14 +621,21 @@ static GstFlowReturn
 gst_vicondewarp_chain(GstPad* pad, GstObject* parent, GstBuffer* buffer)
 {
 	auto* thiz = GST_VICONDEWARP(parent);
-
-	if (thiz != nullptr && thiz->plugin != nullptr) {
-		if (thiz->plugin->chain(thiz->srcpad, thiz->inputCaps, buffer)) {
-			return GST_FLOW_OK;
-		}
+	if (thiz == nullptr)
+	{
+		gst_pad_push(pad, buffer);
 	}
-
-	gst_pad_push(thiz->srcpad, buffer);
+	else
+	{
+		if (thiz != nullptr && thiz->plugin != nullptr)
+		{
+			if (thiz->plugin->chain(thiz->srcpad, thiz->inputCaps, buffer))
+			{
+				return GST_FLOW_OK;
+			}
+		}
+		gst_pad_push(thiz->srcpad, buffer);
+	}
 
 	return GST_FLOW_OK;
 }
