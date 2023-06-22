@@ -212,6 +212,11 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 	auto res = gst_structure_get_int(capsInfo, "width", &width);
 	res |= gst_structure_get_int(capsInfo, "height", &height);
 
+    if (width != m_in->width || width != m_out->width || height != m_in->height || height != m_out->height)
+    {
+        m_isCameraSetup = false;
+    }
+
 	gst_caps_unref(caps);
 
 	if (!res) {
