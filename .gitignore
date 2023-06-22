@@ -66,3 +66,6 @@ subprojects/*/
 # launch.json will be modified by users depending on the pipeline to test
 # We keep these files in the ignore list so they do not appear as modified
 .vscode/*
+
+# clangd integration
+.cache/*
