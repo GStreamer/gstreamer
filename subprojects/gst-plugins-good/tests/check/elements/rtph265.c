@@ -1181,6 +1181,87 @@ GST_START_TEST (test_rtph265pay_delta_unit_flag)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtph265pay_delta_unit_multiple_nal)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph265pay mtu=28");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h265,alignment=au,stream-format=hvc1,"
+      "codec_data=(buffer)0104080000009e28000000003ff000fcfff8f800000f032000"
+      "01001740010c01ffff0408000003009e2800000300003fba0240210001002f4201010"
+      "408000003009e2800000300003f90041020b2dd492657ff80008000b5060606040000"
+      "03000400000300782022000100074401c172b02240");
+
+  /* append two NAL's, each in separate memory blocks to the input buffer */
+  buffer = wrap_static_buffer (h265_hvc1_idr_data, sizeof (h265_hvc1_idr_data));
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer (h265_hvc1_idr_data, sizeof (h265_hvc1_idr_data)));
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* each NAL should be split into two buffers and pushed as a buffer list,
+   * only the first buffer of the first buffer list should be marked as a
+   * non-delta unit */
+  buffer = gst_harness_pull (h);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+  buffer = gst_harness_pull (h);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+
+  buffer = gst_harness_pull (h);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+  buffer = gst_harness_pull (h);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtph265pay_delta_unit_single_nal_multiple_memories)
+{
+  GstHarness *h = gst_harness_new_parse ("rtph265pay mtu=28");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+
+  gst_harness_set_src_caps_str (h,
+      "video/x-h265,alignment=au,stream-format=hvc1,"
+      "codec_data=(buffer)0104080000009e28000000003ff000fcfff8f800000f032000"
+      "01001740010c01ffff0408000003009e2800000300003fba0240210001002f4201010"
+      "408000003009e2800000300003f90041020b2dd492657ff80008000b5060606040000"
+      "03000400000300782022000100074401c172b02240");
+
+  /* append one NAL spanning over two memory blocks to the input buffer */
+  gsize second_mem_size = 10;
+  gsize first_mem_size = sizeof (h265_hvc1_idr_data) - second_mem_size;
+  buffer = wrap_static_buffer (h265_hvc1_idr_data, first_mem_size);
+  buffer = gst_buffer_append (buffer,
+      wrap_static_buffer (h265_hvc1_idr_data + first_mem_size,
+          second_mem_size));
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* the NAL should be split into two buffers and pushed as a buffer list, only
+   * the first buffer in the buffer list should be marked as a non-delta unit */
+  buffer = gst_harness_pull (h);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+  buffer = gst_harness_pull (h);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_rtph265pay_delta_unit_flag_config_interval)
 {
   GstHarness *h = gst_harness_new_parse ("rtph265pay timestamp-offset=123"
@@ -1305,6 +1386,9 @@ rtph265_suite (void)
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_until_vcl);
   tcase_add_test (tc_chain, test_rtph265pay_aggregate_verify_nalu_hdr);
   tcase_add_test (tc_chain, test_rtph265pay_delta_unit_flag);
+  tcase_add_test (tc_chain, test_rtph265pay_delta_unit_multiple_nal);
+  tcase_add_test (tc_chain,
+      test_rtph265pay_delta_unit_single_nal_multiple_memories);
   tcase_add_test (tc_chain, test_rtph265pay_delta_unit_flag_config_interval);
 
   return s;
