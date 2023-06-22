@@ -34,6 +34,7 @@ private:
 	GstMapInfo m_inputMap;
 	GstMapInfo m_outputMap;
 	GstBuffer* m_outputBuffer;
+	GstBuffer* m_inputBuffer;
 	int m_width;
 	int m_height;
 };
