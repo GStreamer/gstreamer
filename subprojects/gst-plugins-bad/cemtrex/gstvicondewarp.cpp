@@ -18,7 +18,7 @@ void saveToPNG(const char* fileName, GstCaps* from_caps, GstBuffer* buf)
 	auto* snapshot_caps = gst_caps_from_string("image/png");
 	auto* from_sample = gst_sample_new(buf, from_caps, NULL, NULL);
 	auto* to_sample = gst_video_convert_sample(from_sample, snapshot_caps, GST_CLOCK_TIME_NONE, NULL);
-	auto buffer = gst_sample_get_buffer(to_sample);
+	auto* buffer = gst_sample_get_buffer(to_sample);
 
 	gst_buffer_map(buffer, &map_png, GST_MAP_READ);
 	g_file_set_contents(fileName, (const gchar*)map_png.data, map_png.size, NULL);
@@ -26,6 +26,7 @@ void saveToPNG(const char* fileName, GstCaps* from_caps, GstBuffer* buf)
 	gst_caps_unref(snapshot_caps);
 	gst_sample_unref(from_sample);
 	gst_buffer_unmap(buffer, &map_png);
+	gst_buffer_unref(buffer);
 	gst_sample_unref(to_sample);
 }
 
@@ -94,15 +95,15 @@ void DewarpPlugin::setPosition()
 	switch (m_viewType)
 	{
 	case IMV_Defs::E_VTYPE_QUAD:
-		for (int i = 1; i < 5; i++) {
-			auto result = m_camera->SetPosition(&(m_data[i].m_pan), &(m_data[i].m_tilt), &(m_data[i].m_roll), &(m_data[i].m_zoom), IMV_Defs::E_COOR_ABSOLUTE, i);
+
+		for (int i = 0; i < 4; i++) {
+			auto result = m_camera->SetPosition(&(m_data[i].m_pan), &(m_data[i].m_tilt), &(m_data[i].m_roll), &(m_data[i].m_zoom), IMV_Defs::E_COOR_ABSOLUTE, i+1);
 			if (result != IMV_Defs::E_ERR_OK)
 			{
-				GST_ERROR("We have some problem setting the position values");
+				GST_ERROR("We have some problem setting the position %d values", i+1);
 			}
 		}
 		break;
-
 	case IMV_Defs::E_VTYPE_PERI:
 	case IMV_Defs::E_VTYPE_PERI_CUSTOM:
 		if (m_mountPos == IMV_Defs::E_CPOS_GROUND || m_mountPos == IMV_Defs::E_CPOS_CEILING) {
@@ -124,7 +125,7 @@ void DewarpPlugin::setProperties(const GstStructure* properties)
 	char zoomKey[] = "view_1_zoom";
 	char rollKey[] = "view_1_roll";
 
-	for (int i = 0; i < 3; i++) {
+	for (int i = 0; i < 4; i++) {
 		panKey[5] = tiltKey[5] = zoomKey[5] = rollKey[5] = '1' + i;
 		m_data[i].m_pan = g_value_get_float(gst_structure_get_value(properties, panKey));
 		m_data[i].m_tilt = g_value_get_float(gst_structure_get_value(properties, tiltKey));
@@ -149,6 +150,9 @@ void DewarpPlugin::setMountPos(int mountPos)
 
 void DewarpPlugin::setViewType(int viewType)
 {
+	if (m_viewType != viewType) {
+		m_isCameraSetup = false;
+	}
 	m_viewType = viewType;
 }
 
@@ -388,7 +392,9 @@ gst_vicondewarp_finalize(GObject* object)
 	if (thiz->plugin != nullptr) {
 		delete thiz->plugin;
 	}
-	gst_structure_free(thiz->properties);
+	if (thiz->properties != NULL) {
+		gst_structure_free(thiz->properties);
+	}
 	G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -402,7 +408,7 @@ gst_vicondewarp_set_property(GObject* object, guint prop_id, const GValue* value
 		thiz->silent = g_value_get_boolean(value);
 		break;
 	case PROP_STATUS:
-		thiz->plugin->setOnOff(g_value_get_boolean(value) == TRUE);
+		thiz->plugin->setOnOff(g_value_get_boolean(value) != FALSE);
 		break;
 	case PROP_MOUNTPOS:
 		thiz->plugin->setMountPos(g_value_get_int(value));
@@ -411,8 +417,12 @@ gst_vicondewarp_set_property(GObject* object, guint prop_id, const GValue* value
 		thiz->plugin->setViewType(g_value_get_int(value));
 		break;
 	case PROP_DEWARP_PROPERTIES:
-		thiz->plugin->setProperties(gst_value_get_structure(value));
+	{
+		auto* pointer = gst_value_get_structure(value);
+		thiz->plugin->setProperties(pointer);
+		thiz->properties = pointer ? gst_structure_copy(pointer) : NULL;
 		break;
+	}
 	case PROP_LENSNAME:
 	{
 		thiz->plugin->setLensName(g_value_get_string(value));
