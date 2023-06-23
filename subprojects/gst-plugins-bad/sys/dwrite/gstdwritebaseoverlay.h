@@ -57,8 +57,6 @@ struct _GstDWriteBaseOverlayClass
   gboolean     (*sink_event) (GstDWriteBaseOverlay * overlay,
                               GstEvent * event);
 
-  gboolean     (*start)      (GstDWriteBaseOverlay * overlay);
-
   WString      (*get_text)   (GstDWriteBaseOverlay * overlay,
                               const std::wstring & default_text,
                               GstBuffer * buffer);
