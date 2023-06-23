@@ -60,6 +60,9 @@ struct _GstDWriteBaseOverlayClass
   WString      (*get_text)   (GstDWriteBaseOverlay * overlay,
                               const std::wstring & default_text,
                               GstBuffer * buffer);
+
+  void         (*after_transform) (GstDWriteBaseOverlay * overlay,
+                                   GstBuffer * buffer);
 };
 
 GType gst_dwrite_base_overlay_get_type (void);

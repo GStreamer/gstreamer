@@ -2198,6 +2198,7 @@ gst_dwrite_base_overlay_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 {
   GstDWriteBaseOverlay *self = GST_DWRITE_BASE_OVERLAY (trans);
   GstDWriteBaseOverlayPrivate *priv = self->priv;
+  GstDWriteBaseOverlayClass *klass = GST_DWRITE_BASE_OVERLAY_GET_CLASS (self);
   gboolean ret = FALSE;
   std::lock_guard < std::mutex > lk (priv->prop_lock);
 
@@ -2240,6 +2241,9 @@ gst_dwrite_base_overlay_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   if (!ret)
     return GST_FLOW_ERROR;
+
+  if (klass->after_transform)
+    klass->after_transform (self, outbuf);
 
   return GST_FLOW_OK;
 }

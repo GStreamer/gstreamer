@@ -58,12 +58,14 @@ if cc.get_id() != 'msvc'
   extra_args += extra_mingw_args
 endif
 
+subdir('libcaption')
+
 gstdwrite = library('gstdwrite',
   dwrite_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstd3d11_dep, d2d_dep, dwrite_lib],
+  dependencies : [gstbase_dep, gstvideo_dep, gstd3d11_dep, d2d_dep, dwrite_lib, dwrite_libcaption_dep],
   install : true,
   install_dir : plugins_install_dir,
 )
