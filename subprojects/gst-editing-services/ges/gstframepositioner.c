@@ -494,7 +494,7 @@ gst_frame_positioner_class_init (GstFramePositionerClass * klass)
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
-  GST_DEBUG_CATEGORY_INIT (_framepositioner, "framepositioner",
+  GST_DEBUG_CATEGORY_INIT (_framepositioner, "gesframepositioner",
       GST_DEBUG_FG_YELLOW, "ges frame positioner");
 
   gst_element_class_add_static_pad_template (GST_ELEMENT_CLASS (klass),
