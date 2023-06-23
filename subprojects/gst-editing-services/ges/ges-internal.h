@@ -191,6 +191,9 @@ ges_timeline_get_smart_rendering (GESTimeline *timeline);
 G_GNUC_INTERNAL GstStreamCollection*
 ges_timeline_get_stream_collection (GESTimeline *timeline);
 
+G_GNUC_INTERNAL gboolean
+ges_timeline_in_current_thread (GESTimeline *timeline);
+
 G_GNUC_INTERNAL void
 ges_auto_transition_set_source (GESAutoTransition * self, GESTrackElement * source, GESEdge edge);
 

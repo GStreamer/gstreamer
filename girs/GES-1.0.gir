@@ -7138,18 +7138,18 @@ is really not in good shape and is deprecated.</doc>
 #GESAsset with `GES_TYPE_TIMELINE` as @extractable_type itself. That
 means that you can extract #GESTimeline from a project as followed:
 
-|[
- GESProject *project;
- GESTimeline *timeline;
+```c
+GESProject *project;
+GESTimeline *timeline;
 
- project = ges_project_new ("file:///path/to/a/valid/project/uri");
+project = ges_project_new ("file:///path/to/a/valid/project/uri");
 
- // Here you can connect to the various signal to get more infos about
- // what is happening and recover from errors if possible
- ...
+// Here you can connect to the various signal to get more infos about
+// what is happening and recover from errors if possible
+...
 
- timeline = ges_asset_extract (GES_ASSET (project));
-]|
+timeline = ges_asset_extract (GES_ASSET (project));
+```
 
 The #GESProject class offers a higher level API to handle #GESAsset-s.
 It lets you request new asset, and it informs you about new assets through
@@ -7185,7 +7185,9 @@ other locations, it will never be updated again and the first valid URI is
 the URI it will keep refering to.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A newly created #GESProject</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A newly created #GESProject
+
+MT safe.</doc>
           <type name="Project" c:type="GESProject*"/>
         </return-value>
         <parameters>
@@ -7310,7 +7312,9 @@ the URI it will keep refering to.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset could be added %FALSE it was already
-in the project</doc>
+in the project.
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7326,11 +7330,13 @@ in the project</doc>
       </method>
       <method name="add_encoding_profile" c:identifier="ges_project_add_encoding_profile">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Adds @profile to the project. It lets you save in what format
-the project has been renders and keep a reference to those formats.
-Also, those formats will be saves to the project file when possible.</doc>
+the project will be rendered and keep a reference to those formats.
+Also, those formats will be saved to the project file when possible.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if @profile could be added, %FALSE otherwize</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if @profile could be added, %FALSE otherwise
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7340,13 +7346,16 @@ Also, those formats will be saves to the project file when possible.</doc>
           </instance-parameter>
           <parameter name="profile" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A #GstEncodingProfile to add to the project. If a profile with
-the same name already exists, it will be replaced</doc>
+the same name already exists, it will be replaced.</doc>
             <type name="GstPbutils.EncodingProfile" c:type="GstEncodingProfile*"/>
           </parameter>
         </parameters>
       </method>
       <method name="add_formatter" c:identifier="ges_project_add_formatter" version="1.18">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Adds a formatter as used to load @project</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Adds a formatter to be used to load @project</doc>
+        <doc-version xml:space="preserve">
+
+MT safe.</doc-version>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -7368,8 +7377,10 @@ the same name already exists, it will be replaced</doc>
 @project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset started to be added %FALSE it was already
-in the project</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset was added and started loading, %FALSE it was
+already in the project.
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7393,7 +7404,9 @@ in the project</doc>
 @project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The newly created #GESAsset or %NULL.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The newly created #GESAsset or %NULL.
+
+MT safe.</doc>
           <type name="Asset" c:type="GESAsset*"/>
         </return-value>
         <parameters>
@@ -7415,7 +7428,9 @@ in the project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The #GESAsset with
-@id or %NULL if no asset with @id as an ID</doc>
+@id or %NULL if no asset with @id as an ID
+
+MT safe.</doc>
           <type name="Asset" c:type="GESAsset*"/>
         </return-value>
         <parameters>
@@ -7440,7 +7455,9 @@ to retrieve from @object</doc>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">A set of loading asset
 that will be added to @project. Note that those Asset are *not* loaded yet,
-and thus can not be used</doc>
+and thus can not be used.
+
+MT safe.</doc>
           <type name="GLib.List" c:type="GList*">
             <type name="Asset"/>
           </type>
@@ -7456,7 +7473,9 @@ and thus can not be used</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Retrieve the uri that is currently set on @project</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">a newly allocated string representing uri.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">a newly allocated string representing uri.
+
+MT safe.</doc>
           <type name="utf8" c:type="gchar*"/>
         </return-value>
         <parameters>
@@ -7473,7 +7492,9 @@ in time.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The list of
-#GESAsset the object contains</doc>
+#GESAsset the object contains
+
+MT safe.</doc>
           <type name="GLib.List" c:type="GList*">
             <type name="Asset"/>
           </type>
@@ -7512,7 +7533,9 @@ list of #GstEncodingProfile used in @project</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Loads @project into @timeline</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be loaded %FALSE otherwize.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be loaded %FALSE otherwise.
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7527,10 +7550,12 @@ list of #GstEncodingProfile used in @project</doc>
         </parameters>
       </method>
       <method name="remove_asset" c:identifier="ges_project_remove_asset">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">remove a @asset to from @project.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">Remove @asset from @project.</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset could be removed %FALSE otherwise</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the asset could be removed %FALSE otherwise
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7550,7 +7575,9 @@ is one of the timelines that have been extracted from @project
 (using ges_asset_extract (@project);)</doc>
         <source-position filename="../subprojects/gst-editing-services/ges/ges-project.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be save, %FALSE otherwize</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">%TRUE if the project could be save, %FALSE otherwise
+
+MT safe.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
@@ -7687,7 +7714,7 @@ failed loading</doc>
         </parameters>
       </glib:signal>
       <glib:signal name="missing-uri" when="last">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">|[
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">```c
 static gchar
 source_moved_cb (GESProject *project, GError *error, GESAsset *asset_with_error)
 {
@@ -7703,7 +7730,7 @@ main (int argc, gchar ** argv)
   g_signal_connect (project, "missing-uri", source_moved_cb, NULL);
   timeline = ges_asset_extract (GES_ASSET (project));
 }
-]|</doc>
+```</doc>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-project.c">The new URI of @wrong_asset</doc>
           <type name="utf8" c:type="gchar*"/>
