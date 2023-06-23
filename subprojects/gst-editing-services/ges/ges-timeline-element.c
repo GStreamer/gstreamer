@@ -295,10 +295,10 @@ _get_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_PARENT:
-      g_value_take_object (value, self->parent);
+      g_value_set_object (value, self->parent);
       break;
     case PROP_TIMELINE:
-      g_value_take_object (value, self->timeline);
+      g_value_set_object (value, self->timeline);
       break;
     case PROP_START:
       g_value_set_uint64 (value, self->start);
