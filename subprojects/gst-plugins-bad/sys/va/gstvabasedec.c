@@ -798,6 +798,7 @@ _caps_video_format_from_chroma (GstCaps * caps, GstCapsFeatures * features,
   GstCapsFeatures *feats;
   GstStructure *structure;
   const GValue *format;
+  GstVideoFormat fmt, ret_fmt = GST_VIDEO_FORMAT_UNKNOWN;
 
   num_structures = gst_caps_get_size (caps);
   for (i = 0; i < num_structures; i++) {
@@ -806,10 +807,23 @@ _caps_video_format_from_chroma (GstCaps * caps, GstCapsFeatures * features,
       continue;
     structure = gst_caps_get_structure (caps, i);
     format = gst_structure_get_value (structure, "format");
-    return _find_video_format_from_chroma (format, chroma_type);
+
+    fmt = _find_video_format_from_chroma (format, chroma_type);
+    if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    /* Record the first valid format as the fallback if we can
+       not find a better one. */
+    if (ret_fmt == GST_VIDEO_FORMAT_UNKNOWN)
+      ret_fmt = fmt;
+
+    if (gst_va_chroma_from_video_format (fmt) == chroma_type) {
+      ret_fmt = fmt;
+      break;
+    }
   }
 
-  return GST_VIDEO_FORMAT_UNKNOWN;
+  return ret_fmt;
 }
 
 static GstVideoFormat
