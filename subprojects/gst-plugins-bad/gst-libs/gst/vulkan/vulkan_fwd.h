@@ -113,6 +113,7 @@ typedef struct _GstVulkanFullScreenQuadPrivate GstVulkanFullScreenQuadPrivate;
 
 typedef struct _GstVulkanQueueFamilyOps GstVulkanQueueFamilyOps;
 typedef struct _GstVulkanVideoProfile GstVulkanVideoProfile;
+typedef struct _GstVulkanVideoCapabilities GstVulkanVideoCapabilities;
 
 typedef struct _GstVulkanOperation GstVulkanOperation;
 typedef struct _GstVulkanOperationClass GstVulkanOperationClass;
