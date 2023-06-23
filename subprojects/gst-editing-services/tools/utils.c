@@ -95,6 +95,7 @@ sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
   gchar *prev_arg = NULL;
   GString *track_def;
   GString *timeline_str;
+  gboolean adds_tracks = FALSE;
 
   gchar *string = g_strdup (" ");
 
@@ -103,6 +104,8 @@ sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
     gchar *sanitized = _sanitize_argument (args[i], prev_arg);
 
     new_string = g_strconcat (string, " ", sanitized, NULL);
+
+    adds_tracks |= (g_strcmp0 (args[i], "+track") == 0);
 
     g_free (sanitized);
     g_free (string);
@@ -116,7 +119,7 @@ sanitize_timeline_description (gchar ** args, GESLauncherParsedOptions * opts)
     return NULL;
   }
 
-  if (strstr (string, "+track")) {
+  if (adds_tracks) {
     gchar *res = g_strconcat ("ges:", string, NULL);
     g_free (string);
 
