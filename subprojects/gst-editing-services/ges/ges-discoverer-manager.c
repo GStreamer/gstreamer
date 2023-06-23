@@ -321,11 +321,12 @@ ges_discoverer_manager_get_discoverer (GESDiscovererManager * self)
   ret = g_hash_table_lookup (self->discoverers, g_thread_self ());
   if (!ret) {
     ret = create_discoverer (self);
-    g_hash_table_insert (self->discoverers, g_thread_self (), ret);
+  } else {
+    g_hash_table_steal (self->discoverers, g_thread_self ());
   }
   g_mutex_unlock (&self->lock);
 
-  return gst_object_ref (ret);
+  return ret;
 }
 
 gboolean
@@ -339,7 +340,11 @@ ges_discoverer_manager_start_discovery (GESDiscovererManager * self,
   discoverer = ges_discoverer_manager_get_discoverer (self);
 
   gboolean res = gst_discoverer_discover_uri_async (discoverer, uri);
-  gst_object_unref (discoverer);
+
+  g_mutex_lock (&self->lock);
+  g_hash_table_insert (self->discoverers, g_thread_self (), discoverer);
+  g_mutex_unlock (&self->lock);
+
 
   return res;
 }
