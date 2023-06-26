@@ -50,7 +50,6 @@ struct _GstD3D11BufferPoolPrivate
   GstD3D11Allocator *alloc[GST_VIDEO_MAX_PLANES];
 
   GstD3D11AllocationParams *d3d11_params;
-  gboolean texture_array_pool;
 
   gint stride[GST_VIDEO_MAX_PLANES];
   gsize offset[GST_VIDEO_MAX_PLANES];
@@ -66,10 +65,6 @@ static gboolean gst_d3d11_buffer_pool_set_config (GstBufferPool * pool,
     GstStructure * config);
 static GstFlowReturn gst_d3d11_buffer_pool_alloc_buffer (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
-static GstFlowReturn gst_d3d11_buffer_pool_acquire_buffer (GstBufferPool * pool,
-    GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
-static void gst_d3d11_buffer_pool_reset_buffer (GstBufferPool * pool,
-    GstBuffer * buffer);
 static gboolean gst_d3d11_buffer_pool_start (GstBufferPool * pool);
 static gboolean gst_d3d11_buffer_pool_stop (GstBufferPool * pool);
 
@@ -84,8 +79,6 @@ gst_d3d11_buffer_pool_class_init (GstD3D11BufferPoolClass * klass)
   bufferpool_class->get_options = gst_d3d11_buffer_pool_get_options;
   bufferpool_class->set_config = gst_d3d11_buffer_pool_set_config;
   bufferpool_class->alloc_buffer = gst_d3d11_buffer_pool_alloc_buffer;
-  bufferpool_class->acquire_buffer = gst_d3d11_buffer_pool_acquire_buffer;
-  bufferpool_class->reset_buffer = gst_d3d11_buffer_pool_reset_buffer;
   bufferpool_class->start = gst_d3d11_buffer_pool_start;
   bufferpool_class->stop = gst_d3d11_buffer_pool_stop;
 
@@ -244,10 +237,6 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
           max_buffers, max_array_size);
       max_buffers = max_array_size;
     }
-
-    priv->texture_array_pool = TRUE;
-  } else {
-    priv->texture_array_pool = FALSE;
   }
 
   offset = 0;
@@ -370,17 +359,10 @@ gst_d3d11_buffer_pool_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   GstFlowReturn ret = GST_FLOW_OK;
 
   buf = gst_buffer_new ();
-  /* In case of texture-array, we are releasing memory objects in
-   * the GstBufferPool::reset_buffer() so that GstD3D11Memory objects can be
-   * returned to the GstD3D11PoolAllocator. So, underlying GstD3D11Memory
-   * will be filled in the later GstBufferPool::acquire_buffer() call.
-   * Don't fill memory here for non-texture-array therefore */
-  if (!priv->texture_array_pool) {
-    ret = gst_d3d11_buffer_pool_fill_buffer (self, buf);
-    if (ret != GST_FLOW_OK) {
-      gst_buffer_unref (buf);
-      return ret;
-    }
+  ret = gst_d3d11_buffer_pool_fill_buffer (self, buf);
+  if (ret != GST_FLOW_OK) {
+    gst_buffer_unref (buf);
+    return ret;
   }
 
   gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
@@ -391,48 +373,6 @@ gst_d3d11_buffer_pool_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   *buffer = buf;
 
   return GST_FLOW_OK;
-}
-
-static GstFlowReturn
-gst_d3d11_buffer_pool_acquire_buffer (GstBufferPool * pool,
-    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
-{
-  GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (pool);
-  GstD3D11BufferPoolPrivate *priv = self->priv;
-  GstFlowReturn ret;
-
-  ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool,
-      buffer, params);
-
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  /* Don't need special handling for non-texture-array case */
-  if (!priv->texture_array_pool)
-    return ret;
-
-  /* Baseclass will hold empty buffer in this case, fill GstMemory */
-  g_assert (gst_buffer_n_memory (*buffer) == 0);
-
-  return gst_d3d11_buffer_pool_fill_buffer (self, *buffer);
-}
-
-static void
-gst_d3d11_buffer_pool_reset_buffer (GstBufferPool * pool, GstBuffer * buffer)
-{
-  GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (pool);
-  GstD3D11BufferPoolPrivate *priv = self->priv;
-
-  /* If we are using texture array, we should return GstD3D11Memory to
-   * to the GstD3D11PoolAllocator, so that the allocator can wake up
-   * if it's waiting for available memory object */
-  if (priv->texture_array_pool) {
-    GST_LOG_OBJECT (self, "Returning memory to allocator");
-    gst_buffer_remove_all_memory (buffer);
-  }
-
-  GST_BUFFER_POOL_CLASS (parent_class)->reset_buffer (pool, buffer);
-  GST_BUFFER_FLAGS (buffer) = 0;
 }
 
 static gboolean
