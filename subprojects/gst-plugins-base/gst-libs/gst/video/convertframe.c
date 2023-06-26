@@ -189,26 +189,35 @@ failed:
   return NULL;
 }
 
+typedef enum _BUFFER_MEM_TYPE { BUFFER_MEM_NONE, GL_MEMORY, D3D11_MEMORY, BUFFER_MEM_MAX } BUFFER_MEM_TYPE;
+
 static GstElement *
 build_convert_frame_pipeline (GstElement ** src_element,
     GstElement ** sink_element, GstCaps * from_caps,
     GstVideoCropMeta * cmeta, GstCaps * to_caps, GError ** err)
 {
-  GstElement *vcrop = NULL, *csp = NULL, *csp2 = NULL, *vscale = NULL;
-  GstElement *src = NULL, *sink = NULL, *encoder = NULL, *pipeline;
+  GstElement* vcrop = NULL, * csp = NULL, * csp2 = NULL, * vscale = NULL;
+  GstElement* gldownload = NULL, *gloverlay = NULL, * d3d11upload = NULL, * d3d11download = NULL, * d3d11overlay = NULL;
+  GstElement* src = NULL, * sink = NULL, * encoder = NULL, * pipeline;
   GstElement *dl = NULL;
   GstVideoInfo info;
   GError *error = NULL;
   GstCapsFeatures *features;
+  
+  BUFFER_MEM_TYPE hw_mem_type = BUFFER_MEM_NONE;
 
   features = gst_caps_get_features (from_caps, 0);
   if (features && gst_caps_features_contains (features, "memory:D3D11Memory")) {
+    GST_DEBUG("This is D3D11 buffer \n");
+    hw_mem_type = D3D11_MEMORY;
     return build_convert_frame_pipeline_d3d11 (src_element, sink_element,
         from_caps, to_caps, err);
   }
 #ifdef HAVE_GL
   if (features &&
       gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_GL_MEMORY))
+      GST_DEBUG ("This is GL buffer \n");
+      hw_mem_type = GL_MEMORY;
     if (!create_element ("gldownload", &dl, &error))
       goto no_elements;
 #endif
@@ -222,6 +231,25 @@ build_convert_frame_pipeline (GstElement ** src_element,
       if (!create_element ("videoconvert", &csp2, &error))
         goto no_elements;
     }
+  }
+
+  switch (hw_mem_type)
+  {
+    case GL_MEMORY:
+      /*if this is gl_memory then create extra elements*/
+      if (!create_element("gloverlaycompositor", &gloverlay, &error) ||
+        !create_element("gldownload", &gldownload, &error))
+        goto no_elements;
+      break;
+    case D3D11_MEMORY :
+      /*if this is d3d11 memory then create extra elements*/
+      if (!create_element("d3d11upload", &d3d11upload, &error) || 
+        !create_element("d3d11colorconvert", &d3d11overlay, &error) ||
+        !create_element("d3d11download", &d3d11download, &error))
+        goto no_elements;
+      break;
+    default:
+      break;
   }
 
   /* videoscale is here to correct for the pixel-aspect-ratio for us */
@@ -241,6 +269,19 @@ build_convert_frame_pipeline (GstElement ** src_element,
 
   GST_DEBUG ("adding elements");
   gst_bin_add_many (GST_BIN (pipeline), src, csp, vscale, sink, NULL);
+  
+  switch (hw_mem_type)
+  {
+  case GL_MEMORY:
+      gst_bin_add_many(GST_BIN(pipeline), gloverlay, gldownload, NULL);
+      break;
+  case D3D11_MEMORY:
+      gst_bin_add_many(GST_BIN(pipeline), d3d11upload, d3d11overlay, d3d11download, NULL);
+      break;
+  default:
+      break;
+  }
+
   if (vcrop)
     gst_bin_add_many (GST_BIN (pipeline), vcrop, csp2, NULL);
   if (dl)
@@ -263,6 +304,49 @@ build_convert_frame_pipeline (GstElement ** src_element,
 
   /* FIXME: linking is still way too expensive, profile this properly */
   if (vcrop) {
+
+     switch (hw_mem_type)
+    {
+      case GL_MEMORY:
+        /*if this is gl_memory then link gldownload element to src*/ 
+        GST_DEBUG ("linking src->glcompositor");
+        if (!gst_element_link_pads (src, "src", gloverlay, "sink"))
+          goto link_failed;
+
+        GST_DEBUG ("linking glcompositor->gldownload");
+        if (!gst_element_link_pads (gloverlay, "src", gldownload, "sink"))
+          goto link_failed;
+
+        GST_DEBUG ("linking gldownload->csp2");
+        if (!gst_element_link_pads (gldownload, "src", csp2, "sink"))
+          goto link_failed;
+        break;
+
+      case D3D11_MEMORY:
+        /*if this is gl_memory then link gldownload element to src*/
+        GST_DEBUG("linking src->d3d11compositor");
+        if (!gst_element_link_pads(src, "src", d3d11upload, "sink"))
+          goto link_failed;
+          GST_DEBUG("linking src->d3d11compositor");
+        if (!gst_element_link_pads(d3d11upload, "src", d3d11overlay, "sink"))
+          goto link_failed;
+
+        GST_DEBUG("linking d3d11compositor->d3d11download");
+        if (!gst_element_link_pads(d3d11overlay, "src", d3d11download, "sink"))
+          goto link_failed;
+
+        GST_DEBUG("linking d3d11download->csp2");
+        if (!gst_element_link_pads(d3d11download, "src", csp2, "sink"))
+          goto link_failed;
+
+        break;
+      default:
+        GST_DEBUG ("linking gldownload->csp2");
+          if (!gst_element_link_pads (src, "src", csp2, "sink"))
+            goto link_failed;
+        break;
+    }
+
     if (!dl) {
       GST_DEBUG ("linking src->csp2");
       if (!gst_element_link_pads (src, "src", csp2, "sink"))
@@ -297,6 +381,49 @@ build_convert_frame_pipeline (GstElement ** src_element,
       GST_DEBUG ("linking dl->csp");
       if (!gst_element_link_pads (dl, "src", csp, "sink"))
         goto link_failed;
+    }
+    switch (hw_mem_type)
+    {
+      case GL_MEMORY:
+      GST_DEBUG ("linking src->glcompositor");
+      if (!gst_element_link_pads (src, "src", gloverlay, "sink"))
+        goto link_failed;
+      GST_DEBUG ("linking glcompositor->downloader");
+      if (!gst_element_link_pads (gloverlay, "src", gldownload, "sink"))
+        goto link_failed;
+      
+      GST_DEBUG ("linking gldownload->csp");
+      if (!gst_element_link_pads (gldownload, "src", csp, "sink"))
+        goto link_failed;
+        break;
+
+      case D3D11_MEMORY:
+        /*if this is gl_memory then link gldownload element to src*/
+        GST_DEBUG("linking src->d3d11compositor");
+        if (!gst_element_link_pads(src, "src", d3d11upload, "sink"))
+          goto link_failed;
+
+        GST_DEBUG("linking src->d3d11compositor");
+        if (!gst_element_link_pads(d3d11upload, "src", d3d11overlay, "sink"))
+          goto link_failed;
+
+        GST_DEBUG("linking d3d11compositor->d3d11download");
+        if (!gst_element_link_pads(d3d11overlay, "src", d3d11download, "sink"))
+          goto link_failed;
+
+        GST_DEBUG("linking d3d11download->csp");
+        if (!gst_element_link_pads(d3d11download, "src", csp, "sink"))
+        {
+          goto link_failed;
+        }
+        break;
+      default:
+        GST_DEBUG ("linking src->csp");
+        if (!gst_element_link_pads(src, "src", csp, "sink"))
+        {
+          goto link_failed;
+        }
+        break;
     }
   }
 
