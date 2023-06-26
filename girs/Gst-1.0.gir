@@ -6437,10 +6437,9 @@ contained in @caps.</doc>
       <method name="filter_and_map_in_place" c:identifier="gst_caps_filter_and_map_in_place" version="1.6">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstcaps.c">Calls the provided function once for each structure and caps feature in the
 #GstCaps. In contrast to gst_caps_foreach(), the function may modify the
-structure and features. In contrast to gst_caps_filter_and_map_in_place(),
-the structure and features are removed from the caps if %FALSE is returned
-from the function.
-The caps must be mutable.</doc>
+structure and features. In contrast to gst_caps_map_in_place(), the structure
+and features are removed from the caps if %FALSE is returned from the
+function. The caps must be mutable.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstcaps.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>

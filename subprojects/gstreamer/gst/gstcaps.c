@@ -2646,10 +2646,9 @@ gst_caps_map_in_place (GstCaps * caps, GstCapsMapFunc func, gpointer user_data)
  *
  * Calls the provided function once for each structure and caps feature in the
  * #GstCaps. In contrast to gst_caps_foreach(), the function may modify the
- * structure and features. In contrast to gst_caps_filter_and_map_in_place(),
- * the structure and features are removed from the caps if %FALSE is returned
- * from the function.
- * The caps must be mutable.
+ * structure and features. In contrast to gst_caps_map_in_place(), the structure
+ * and features are removed from the caps if %FALSE is returned from the
+ * function. The caps must be mutable.
  *
  * Since: 1.6
  */
