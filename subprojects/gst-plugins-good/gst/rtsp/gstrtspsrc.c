@@ -3127,6 +3127,9 @@ static GstEvent *
 gst_rtspsrc_update_src_event (GstRTSPSrc * self, GstRTSPStream * stream,
     GstEvent * event)
 {
+  if (!self)
+      return event;
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:{
       GChecksum *cs;
