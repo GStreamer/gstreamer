@@ -133,4 +133,7 @@ gboolean            gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Convert
                                                                  GstBuffer * in_buf,
                                                                  GstBuffer * out_buf);
 
+gboolean            gst_d3d11_converter_update_src_rect(GstD3D11Converter* converter,
+  RECT* src_rect = null);
+
 G_END_DECLS
