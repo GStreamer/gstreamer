@@ -1956,7 +1956,7 @@ struct _GstD3D11PoolAllocatorPrivate
 
   std::atomic<guint> outstanding;
   guint cur_mems = 0;
-  gboolean flushing = FALSE;
+  gboolean flushing = TRUE;
 
   /* Calculated memory size, based on Direct3D11 staging texture map.
    * Note that, we cannot know the actually staging texture memory size prior
