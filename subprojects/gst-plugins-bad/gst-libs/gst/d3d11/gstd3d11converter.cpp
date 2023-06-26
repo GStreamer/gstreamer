@@ -1262,11 +1262,12 @@ gst_d3d11_color_convert_get_filtering(GstD3D11Converter* self)
 {
   gboolean bilinear_filtering = TRUE;
 
+  /*
   if (gst_structure_has_field(self->config, "bilinear-filtering")) {
     if (!gst_structure_get_boolean(self->config, "bilinear-filtering", &bilinear_filtering)) {
       bilinear_filtering = TRUE;
     }
-  }
+  }*/
 
   return bilinear_filtering ? D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT :
     D3D11_FILTER_MIN_MAG_MIP_POINT;
