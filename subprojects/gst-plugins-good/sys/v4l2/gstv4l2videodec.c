@@ -974,7 +974,8 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
     gst_buffer_unref (codec_data);
 
     /* Only wait for source change if the formats supports it */
-    if (self->v4l2output->fmtdesc->flags & V4L2_FMT_FLAG_DYN_RESOLUTION) {
+    if (!GST_V4L2_IS_ACTIVE (self->v4l2capture) &&
+        self->v4l2output->fmtdesc->flags & V4L2_FMT_FLAG_DYN_RESOLUTION) {
       gst_v4l2_object_unlock_stop (self->v4l2capture);
       self->wait_for_source_change = TRUE;
     }
