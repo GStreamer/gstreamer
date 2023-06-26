@@ -63,6 +63,10 @@ gboolean                 gst_rtsp_stream_is_tcp_receiver (GstRTSPStream * stream
 void                     gst_rtsp_media_set_enable_rtcp (GstRTSPMedia *media, gboolean enable);
 void                     gst_rtsp_stream_set_enable_rtcp (GstRTSPStream *stream, gboolean enable);
 
+void                     gst_rtsp_stream_set_drop_delta_units (GstRTSPStream * stream, gboolean drop);
+
+gboolean                 gst_rtsp_stream_install_drop_probe (GstRTSPStream * stream);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SERVER_INTERNAL_H__ */

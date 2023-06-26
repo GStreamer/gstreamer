@@ -146,6 +146,8 @@ gstsdp_dep = dependency('gstreamer-sdp-1.0', version : gst_req,
   fallback : ['gst-plugins-base', 'sdp_dep'])
 gstapp_dep = dependency('gstreamer-app-1.0', version : gst_req,
   fallback : ['gst-plugins-base', 'app_dep'])
+gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
+  fallback : ['gst-plugins-base', 'video_dep'])
 gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
 if host_machine.system() != 'windows'

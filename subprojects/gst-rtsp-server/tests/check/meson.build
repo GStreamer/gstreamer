@@ -57,7 +57,8 @@ foreach test_name : rtsp_server_tests
   exe = executable(test_name, fname,
     include_directories : rtspserver_incs,
     c_args : rtspserver_args + test_c_args,
-    dependencies : [gstcheck_dep, gstrtsp_dep, gstrtp_dep, gst_rtsp_server_dep]
+    dependencies : [gstcheck_dep, gstrtsp_dep, gstrtp_dep, gst_rtsp_server_dep,
+      gstvideo_dep]
   )
   test(test_name, exe,
     env : env,

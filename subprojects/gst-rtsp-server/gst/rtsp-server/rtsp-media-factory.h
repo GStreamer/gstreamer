@@ -192,6 +192,21 @@ GST_RTSP_SERVER_API
 guint                 gst_rtsp_media_factory_get_buffer_size  (GstRTSPMediaFactory * factory);
 
 GST_RTSP_SERVER_API
+void                  gst_rtsp_media_factory_set_ensure_keyunit_on_start  (GstRTSPMediaFactory * factory,
+                                                                           gboolean ensure_keyunit_on_start);
+
+GST_RTSP_SERVER_API
+gboolean              gst_rtsp_media_factory_get_ensure_keyunit_on_start  (GstRTSPMediaFactory * factory);
+
+GST_RTSP_SERVER_API
+void                  gst_rtsp_media_factory_set_ensure_keyunit_on_start_timeout  (GstRTSPMediaFactory * factory,
+                                                                                   guint timeout);
+
+GST_RTSP_SERVER_API
+guint          gst_rtsp_media_factory_get_ensure_keyunit_on_start_timeout  (GstRTSPMediaFactory * factory);
+
+
+GST_RTSP_SERVER_API
 void                  gst_rtsp_media_factory_set_retransmission_time (GstRTSPMediaFactory * factory,
                                                                       GstClockTime time);
 

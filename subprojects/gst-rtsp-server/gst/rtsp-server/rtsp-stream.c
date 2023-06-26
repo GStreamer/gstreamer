@@ -230,6 +230,14 @@ struct _GstRTSPStreamPrivate
   gulong block_early_rtcp_probe;
   GstPad *block_early_rtcp_pad_ipv6;
   gulong block_early_rtcp_probe_ipv6;
+
+  /* set to drop delta units in blocking pad */
+  gboolean drop_delta_units;
+
+  /* used to indicate that the drop probe has dropped a buffer and should be
+   * removed */
+  gboolean remove_drop_probe;
+
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -357,6 +365,8 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
   priv->block_early_rtcp_probe = 0;
   priv->block_early_rtcp_pad_ipv6 = NULL;
   priv->block_early_rtcp_probe_ipv6 = 0;
+  priv->drop_delta_units = FALSE;
+  priv->remove_drop_probe = FALSE;
 }
 
 typedef struct _UdpClientAddrInfo UdpClientAddrInfo;
@@ -4317,7 +4327,7 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
     else
       g_object_get (priv->appsink[0], "last-sample", &last_sample, NULL);
 
-    if (last_sample) {
+    if (last_sample && !priv->blocking) {
       GstCaps *caps;
       GstBuffer *buffer;
       GstSegment *segment;
@@ -4373,6 +4383,8 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
         gst_sample_unref (last_sample);
       }
     } else if (priv->blocking) {
+      if (last_sample != NULL)
+        gst_sample_unref (last_sample);
       if (seq) {
         if (!priv->blocked_buffer)
           goto stats;
@@ -5326,6 +5338,14 @@ rtp_pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       gst_rtp_buffer_unmap (&rtp);
     }
     priv->position = GST_BUFFER_TIMESTAMP (buffer);
+    if (priv->drop_delta_units) {
+      if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        g_assert (!priv->blocking);
+        GST_DEBUG_OBJECT (pad, "dropping delta-unit buffer");
+        ret = GST_PAD_PROBE_DROP;
+        goto done;
+      }
+    }
   } else if ((info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST)) {
     GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
@@ -5338,12 +5358,20 @@ rtp_pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       gst_rtp_buffer_unmap (&rtp);
     }
     priv->position = GST_BUFFER_TIMESTAMP (buffer);
+    if (priv->drop_delta_units) {
+      if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT)) {
+        g_assert (!priv->blocking);
+        GST_DEBUG_OBJECT (pad, "dropping delta-unit buffer");
+        ret = GST_PAD_PROBE_DROP;
+        goto done;
+      }
+    }
   } else if ((info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM)) {
     if (GST_EVENT_TYPE (info->data) == GST_EVENT_GAP) {
       gst_event_parse_gap (info->data, &priv->position, NULL);
     } else {
       ret = GST_PAD_PROBE_PASS;
-      g_mutex_unlock (&priv->lock);
+      GST_WARNING ("Passing event.");
       goto done;
     }
   } else {
@@ -5371,6 +5399,11 @@ rtp_pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     gst_event_unref (event);
   }
 
+  /* make sure to block on the correct frame type */
+  if (priv->drop_delta_units) {
+    g_assert (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  }
+
   priv->blocking = TRUE;
 
   GST_DEBUG_OBJECT (pad, "Now blocking");
@@ -5378,14 +5411,44 @@ rtp_pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GST_DEBUG_OBJECT (stream, "position: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (priv->position));
 
-  g_mutex_unlock (&priv->lock);
-
   gst_element_post_message (priv->payloader,
       gst_message_new_element (GST_OBJECT_CAST (priv->payloader),
           gst_structure_new ("GstRTSPStreamBlocking", "is_complete",
               G_TYPE_BOOLEAN, priv->is_complete, NULL)));
-
 done:
+  g_mutex_unlock (&priv->lock);
+  return ret;
+}
+
+/* this probe will drop a single buffer. It is used when an old buffer is
+ * blocking the pipeline, such as between a DESCRIBE and a PLAY request. */
+static GstPadProbeReturn
+drop_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstRTSPStreamPrivate *priv;
+  GstRTSPStream *stream;
+  /* drop an old buffer stuck in a blocked pipeline */
+  GstPadProbeReturn ret = GST_PAD_PROBE_DROP;
+
+  stream = user_data;
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+
+  if ((info->type & GST_PAD_PROBE_TYPE_BUFFER ||
+          info->type & GST_PAD_PROBE_TYPE_BUFFER_LIST)) {
+    /* if a buffer has been dropped then remove this probe */
+    if (priv->remove_drop_probe) {
+      priv->remove_drop_probe = FALSE;
+      ret = GST_PAD_PROBE_REMOVE;
+    } else {
+      priv->blocking = FALSE;
+      priv->remove_drop_probe = TRUE;
+    }
+  } else {
+    ret = GST_PAD_PROBE_PASS;
+  }
+  g_mutex_unlock (&priv->lock);
   return ret;
 }
 
@@ -5423,6 +5486,26 @@ done:
   return ret;
 }
 
+static void
+install_drop_probe (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+
+  priv = stream->priv;
+
+  /* if receiver */
+  if (priv->sinkpad)
+    return;
+
+  /* install for data channel only */
+  if (priv->send_src[0]) {
+    gst_pad_add_probe (priv->send_src[0],
+        GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
+        GST_PAD_PROBE_TYPE_BUFFER_LIST |
+        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM, drop_probe,
+        g_object_ref (stream), g_object_unref);
+  }
+}
 
 static void
 set_blocked (GstRTSPStream * stream, gboolean blocked)
@@ -5494,6 +5577,34 @@ gst_rtsp_stream_set_blocked (GstRTSPStream * stream, gboolean blocked)
   priv = stream->priv;
   g_mutex_lock (&priv->lock);
   set_blocked (stream, blocked);
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtsp_stream_install_drop_probe:
+ * @stream: a #GstRTSPStream
+ *
+ * This probe can be installed when the currently blocking buffer should be
+ * dropped. When it has successfully dropped the buffer, it will remove itself.
+ * The goal is to avoid sending old data, typically when there has been a delay
+ * between a DESCRIBE and a PLAY request.
+ *
+ * Returns: %TRUE on success
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_rtsp_stream_install_drop_probe (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  install_drop_probe (stream);
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
@@ -6413,5 +6524,27 @@ gst_rtsp_stream_unblock_rtcp (GstRTSPStream * stream)
     gst_object_unref (priv->block_early_rtcp_pad_ipv6);
     priv->block_early_rtcp_pad_ipv6 = NULL;
   }
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_set_drop_delta_units:
+ * @stream: a #GstRTSPStream
+ * @drop: TRUE if delta unit frames are supposed to be dropped.
+ *
+ * Decide whether the blocking probe is supposed to drop delta units at the
+ * beginning of a stream.
+ *
+ * Since: 1.24
+ */
+void
+gst_rtsp_stream_set_drop_delta_units (GstRTSPStream * stream, gboolean drop)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+  priv = stream->priv;
+  g_mutex_lock (&priv->lock);
+  priv->drop_delta_units = drop;
   g_mutex_unlock (&priv->lock);
 }
