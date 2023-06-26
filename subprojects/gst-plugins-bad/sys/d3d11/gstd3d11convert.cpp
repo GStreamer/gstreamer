@@ -2175,6 +2175,19 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+ * GstD3D11Convert:bilinear-filtering:
+ *
+ * Use bilinear filtering on scaling
+ *
+ * Since: 1.21
+ */
+  g_object_class_install_property(gobject_class, PROP_CONVERT_BILINEAR_FILTERING,
+    g_param_spec_boolean("bilinear-filtering", "Bilinear filtering",
+      "Use bilinear filtering on scaling",
+      DEFAULT_BILINEAR_FILTERING, (GParamFlags)(GST_PARAM_MUTABLE_PLAYING |
+        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D11Convert:primaries-mode:
    *
    * Primaries conversion mode
@@ -2198,18 +2211,7 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
 }
 
 
-/**
- * GstD3D11Convert:bilinear-filtering:
- *
- * Use bilinear filtering on scaling
- *
- * Since: 1.21
- */
-g_object_class_install_property(gobject_class, PROP_CONVERT_BILINEAR_FILTERING,
-  g_param_spec_boolean("bilinear-filtering", "Bilinear filtering",
-    "Use bilinear filtering on scaling",
-    DEFAULT_BILINEAR_FILTERING, (GParamFlags)(GST_PARAM_MUTABLE_PLAYING |
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
 
 static void
 gst_d3d11_convert_init (GstD3D11Convert * self)
@@ -2564,6 +2566,18 @@ gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
           "Add black borders if necessary to keep the display aspect ratio",
           DEFAULT_ADD_BORDERS, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  /**
+ * GstD3D11Convert:bilinear-filtering:
+ *
+ * Use bilinear filtering on scaling
+ *
+ * Since: 1.21
+ */
+  g_object_class_install_property(gobject_class, PROP_SCALE_BILINEAR_FILTERING,
+    g_param_spec_boolean("bilinear-filtering", "Bilinear filtering",
+      "Use bilinear filtering on scaling",
+      DEFAULT_BILINEAR_FILTERING, (GParamFlags)(GST_PARAM_MUTABLE_PLAYING |
+        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstD3D11Scale:border-color:
@@ -2589,18 +2603,7 @@ gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_d3d11_scale_fixate_caps);
 }
 
-/**
- * GstD3D11Convert:bilinear-filtering:
- *
- * Use bilinear filtering on scaling
- *
- * Since: 1.21
- */
-g_object_class_install_property(gobject_class, PROP_SCALE_BILINEAR_FILTERING,
-  g_param_spec_boolean("bilinear-filtering", "Bilinear filtering",
-    "Use bilinear filtering on scaling",
-    DEFAULT_BILINEAR_FILTERING, (GParamFlags)(GST_PARAM_MUTABLE_PLAYING |
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
 
 static void
 gst_d3d11_scale_init (GstD3D11Scale * self)
