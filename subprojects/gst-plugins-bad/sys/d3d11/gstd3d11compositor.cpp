@@ -43,6 +43,7 @@
 #endif
 
 #include "gstd3d11compositor.h"
+#include "gst/d3d11/gstd3d11converter.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 #include <wrl.h>
@@ -395,7 +396,7 @@ gst_d3d11_compositor_pad_class_init (GstD3D11CompositorPadClass * klass)
   object_class->get_property = gst_d3d11_compositor_pad_get_property;
 
 
-  g_object_class_install_property(gobject_class,
+  g_object_class_install_property(object_class,
     PROP_PAD_CROP,
     g_param_spec_boxed("crop", "crop properties",
       "provide left,right,top,bottom coordinates",
@@ -872,6 +873,7 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 {
   GstD3D11CompositorPad *cpad = GST_D3D11_COMPOSITOR_PAD (pad);
   GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (vagg);
+  RECT rect;
   gint width, height;
   GstVideoInfo *info = &vagg->info;
   GstVideoRectangle frame_rect;
