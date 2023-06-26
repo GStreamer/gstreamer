@@ -1,9 +1,8 @@
-
 /*
- * GStreamer gstreamer-onnx
- * Copyright (C) 2021 Collabora Ltd
+ * GStreamer gstreamer-tensorid
+ * Copyright (C) 2023 Collabora Ltd
  *
- * gstonnx.c
+ * gsttensorid.h
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,25 +19,16 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef __GST_TENSOR_ID_H__
+#define __GST_TENSOR_ID_H__
+
+G_BEGIN_DECLS
+/**
+ * gst_tensorid_get_quark get tensor id
+ *
+ * @param tensor_id unique string id for tensor node
+ */
+    GQuark gst_tensorid_get_quark (const char *tensor_id);
+
+G_END_DECLS
 #endif
-
-#include "decoders/gstssdobjectdetector.h"
-#include "gstonnxinference.h"
-#include "tensor/gsttensormeta.h"
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean success = GST_ELEMENT_REGISTER (ssd_object_detector, plugin);
-  success |= GST_ELEMENT_REGISTER (onnx_inference, plugin);
-
-  return success;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    onnx,
-    "ONNX neural network plugin",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

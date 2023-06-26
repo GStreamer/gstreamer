@@ -1,8 +1,8 @@
 /*
- * GStreamer gstreamer-onnxelement
+ * GStreamer gstreamer-onnxenums
  * Copyright (C) 2021 Collabora Ltd
  *
- * gstonnxelement.h
+ * gstonnxenums.h
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,10 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_ONNX_ELEMENT_H__
-#define __GST_ONNX_ELEMENT_H__
-
-#include <gst/gst.h>
+#ifndef __GST_ONNX_ENUMS_H__
+#define __GST_ONNX_ENUMS_H__
 
 typedef enum
 {
@@ -39,26 +37,5 @@ typedef enum
   GST_ONNX_EXECUTION_PROVIDER_CUDA,
 } GstOnnxExecutionProvider;
 
-typedef enum {
-  /* Height Width Channel (a.k.a. interleaved) format */
-  GST_ML_MODEL_INPUT_IMAGE_FORMAT_HWC,
 
-  /* Channel Height Width  (a.k.a. planar) format */
-  GST_ML_MODEL_INPUT_IMAGE_FORMAT_CHW,
-} GstMlModelInputImageFormat;
-
-
-G_BEGIN_DECLS
-
-GType gst_onnx_optimization_level_get_type (void);
-#define GST_TYPE_ONNX_OPTIMIZATION_LEVEL (gst_onnx_optimization_level_get_type ())
-
-GType gst_onnx_execution_provider_get_type (void);
-#define GST_TYPE_ONNX_EXECUTION_PROVIDER (gst_onnx_execution_provider_get_type ())
-
-GType gst_ml_model_input_image_format_get_type (void);
-#define GST_TYPE_ML_MODEL_INPUT_IMAGE_FORMAT (gst_ml_model_input_image_format_get_type ())
-
-G_END_DECLS
-
-#endif
+#endif  /*  __GST_ONNX_ENUMS_H__  */

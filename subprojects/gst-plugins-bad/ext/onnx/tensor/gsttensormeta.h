@@ -1,9 +1,8 @@
-
 /*
- * GStreamer gstreamer-onnx
- * Copyright (C) 2021 Collabora Ltd
+ * GStreamer gstreamer-tensormeta
+ * Copyright (C) 2023 Collabora Ltd
  *
- * gstonnx.c
+ * gsttensormeta.h
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,25 +19,38 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_TENSOR_META_H__
+#define __GST_TENSOR_META_H__
 
-#include "decoders/gstssdobjectdetector.h"
-#include "gstonnxinference.h"
-#include "tensor/gsttensormeta.h"
+#include <gst/gst.h>
+#include "gsttensor.h"
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+/**
+ * GstTensorMeta:
+ *
+ * @meta base GstMeta
+ * @num_tensors number of tensors
+ * @tensor @ref GstTensor for each tensor
+ * @batch_size model batch size
+ *
+ * Since: 1.24
+ */
+typedef struct _GstTensorMeta
 {
-  gboolean success = GST_ELEMENT_REGISTER (ssd_object_detector, plugin);
-  success |= GST_ELEMENT_REGISTER (onnx_inference, plugin);
+  GstMeta meta;
 
-  return success;
-}
+  gint num_tensors;
+  GstTensor *tensor;
+  int batch_size;
+} GstTensorMeta;
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    onnx,
-    "ONNX neural network plugin",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+G_BEGIN_DECLS
+
+GType gst_tensor_meta_api_get_type (void);
+const GstMetaInfo *gst_tensor_meta_get_info (void);
+GList *gst_tensor_meta_get_all_from_buffer (GstBuffer * buffer);
+gint gst_tensor_meta_get_index_from_id(GstTensorMeta *meta, GQuark id);
+
+G_END_DECLS
+
+#endif

@@ -1,9 +1,8 @@
-
 /*
- * GStreamer gstreamer-onnx
+ * GStreamer gstreamer-ml
  * Copyright (C) 2021 Collabora Ltd
  *
- * gstonnx.c
+ * gstml.h
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,25 +19,23 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef __GST_ML_H__
+#define __GST_ML_H__
+
+
+/**
+ * GstMlInputImageFormat:
+ *
+ * @GST_ML_INPUT_IMAGE_FORMAT_HWC Height Width Channel (a.k.a. interleaved) format
+ * @GST_ML_INPUT_IMAGE_FORMAT_CHW Channel Height Width  (a.k.a. planar) format
+ *
+ * Since: 1.20
+ */
+typedef enum {
+  GST_ML_INPUT_IMAGE_FORMAT_HWC,
+  GST_ML_INPUT_IMAGE_FORMAT_CHW,
+} GstMlInputImageFormat;
+
+
+
 #endif
-
-#include "decoders/gstssdobjectdetector.h"
-#include "gstonnxinference.h"
-#include "tensor/gsttensormeta.h"
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean success = GST_ELEMENT_REGISTER (ssd_object_detector, plugin);
-  success |= GST_ELEMENT_REGISTER (onnx_inference, plugin);
-
-  return success;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    onnx,
-    "ONNX neural network plugin",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
