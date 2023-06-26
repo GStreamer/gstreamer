@@ -1348,7 +1348,8 @@ setup_next_uri_locked (GstDiscoverer * dc)
 
     if (!ready) {
       /* Start timeout */
-      handle_current_async (dc);
+      if (dc->priv->processing)
+        handle_current_async (dc);
     } else {
       g_idle_add_full (G_PRIORITY_DEFAULT_IDLE,
           (GSourceFunc) emit_discovererd_and_next, gst_object_ref (dc),
@@ -2080,8 +2081,8 @@ start_discovering (GstDiscoverer * dc)
       g_source_attach (source, dc->priv->ctx);
       goto beach;
     }
-
-    handle_current_async (dc);
+    if (dc->priv->processing)
+      handle_current_async (dc);
   } else {
     if (!ready)
       handle_current_sync (dc);
