@@ -426,6 +426,7 @@ build fedora clang:
       -Dvaapi=disabled
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
+      -Dgst-plugins-bad:d3d11-wgc=enabled
     # Needs to not be empty otherwise the newline -> space replace command in
     # `script:` will fail
     MESON_CROSS_ARGS: ' '
