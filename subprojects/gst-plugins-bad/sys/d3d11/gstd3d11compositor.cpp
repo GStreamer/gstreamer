@@ -606,7 +606,7 @@ gst_d3d11_compositor_pad_set_property (GObject * object, guint prop_id,
         pad->crop_top = top;
         pad->crop_right = right;
         pad->crop_bottom = bottom;
-    //    gst_d3d11_converter_update_src_rect(pad->convert, &rect);
+        gst_d3d11_converter_update_src_rect(pad->convert, &rect);
         gst_structure_free(pad->crop_properties);
         pad->crop_properties = NULL;
       }
@@ -938,7 +938,7 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
     rect.top = cpad->crop_top;
     rect.right = cpad->crop_right;
     rect.bottom = cpad->crop_bottom;
-    // gst_d3d11_converter_update_src_rect(cpad->convert, &rect);
+    gst_d3d11_converter_update_src_rect(cpad->convert, &rect);
     cpad->apply_crop = FALSE;
   }
 
