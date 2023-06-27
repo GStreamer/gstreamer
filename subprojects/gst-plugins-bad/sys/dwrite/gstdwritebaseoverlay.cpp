@@ -159,6 +159,7 @@ struct _GstDWriteBaseOverlayPrivate
       GstDWriteBaseOverlayBlendMode::UNKNOWN;
   gboolean attach_meta = FALSE;
   gboolean is_d3d11 = FALSE;
+  guint downstream_min_buffers = 0;
 
   GstBufferPool *bitmap_pool = nullptr;
   GstBufferPool *text_pool = nullptr;
@@ -942,6 +943,9 @@ gst_dwrite_base_overlay_decide_allocation (GstBaseTransform * trans,
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  GST_DEBUG_OBJECT (self, "Downstream min buffer: %d", min);
+  priv->downstream_min_buffers = min;
+
   gst_object_unref (pool);
 
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
@@ -1025,8 +1029,6 @@ gst_dwrite_base_overlay_propose_allocation (GstBaseTransform * trans,
     }
 
     size = info.size;
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-
     if (is_d3d11) {
       GstD3D11AllocationParams *params;
       guint bind_flags = 0;
@@ -1057,7 +1059,8 @@ gst_dwrite_base_overlay_propose_allocation (GstBaseTransform * trans,
       gst_d3d11_allocation_params_free (params);
     }
 
-    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    gst_buffer_pool_config_set_params (config,
+        caps, size, priv->downstream_min_buffers, 0);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       GST_ERROR_OBJECT (self, "Couldn't set config");
@@ -1073,7 +1076,8 @@ gst_dwrite_base_overlay_propose_allocation (GstBaseTransform * trans,
       gst_structure_free (config);
     }
 
-    gst_query_add_allocation_pool (query, pool, size, 0, 0);
+    gst_query_add_allocation_pool (query,
+        pool, size, priv->downstream_min_buffers, 0);
     gst_object_unref (pool);
   }
 
