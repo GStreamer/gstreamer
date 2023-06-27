@@ -362,7 +362,7 @@ gst_dwrite_base_overlay_class_init (GstDWriteBaseOverlayClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 #ifdef HAVE_DWRITE_COLOR_FONT
   if (gst_dwrite_is_windows_10_or_greater ()) {
-    g_object_class_install_property (object_class, PROP_VISIBLE,
+    g_object_class_install_property (object_class, PROP_ENABLE_COLOR_FONT,
         g_param_spec_boolean ("color-font", "Color Font",
             "Enable color font, requires Windows 10 or newer",
             DEFAULT_COLOR_FONT,
@@ -607,6 +607,9 @@ gst_dwrite_base_overlay_set_property (GObject * object, guint prop_id,
     case PROP_PARAGRAPH_ALIGNMENT:
       update_enum (self, (gint *) & priv->paragraph_align, value);
       break;
+    case PROP_ENABLE_COLOR_FONT:
+      priv->color_font = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -695,6 +698,9 @@ gst_dwrite_base_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PARAGRAPH_ALIGNMENT:
       g_value_set_enum (value, priv->paragraph_align);
+      break;
+    case PROP_ENABLE_COLOR_FONT:
+      g_value_set_boolean (value, priv->color_font);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
