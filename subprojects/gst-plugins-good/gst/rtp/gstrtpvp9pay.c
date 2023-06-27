@@ -510,7 +510,8 @@ gst_rtp_vp9_create_header_buffer (GstRtpVP9Pay * self,
 
 static guint
 gst_rtp_vp9_payload_next (GstRtpVP9Pay * self, GstBufferList * list,
-    guint offset, GstBuffer * buffer, gsize buffer_size, gsize max_payload_len)
+    guint offset, GstBuffer * buffer, gsize buffer_size, gsize max_payload_len,
+    gboolean delta_unit)
 {
   GstBuffer *header;
   GstBuffer *sub;
@@ -531,6 +532,9 @@ gst_rtp_vp9_payload_next (GstRtpVP9Pay * self, GstBufferList * list,
   gst_rtp_copy_video_meta (self, header, buffer);
 
   out = gst_buffer_append (header, sub);
+
+  if (delta_unit)
+    GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
 
   gst_buffer_list_insert (list, -1, out);
 
@@ -561,8 +565,10 @@ gst_rtp_vp9_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   GstBufferList *list;
   gsize size, max_paylen;
   guint offset, mtu, vp9_hdr_len;
+  gboolean delta_unit;
 
   size = gst_buffer_get_size (buffer);
+  delta_unit = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
 
   if (G_UNLIKELY (!gst_rtp_vp9_pay_parse_frame (self, buffer, size))) {
     GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
@@ -579,7 +585,12 @@ gst_rtp_vp9_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   offset = 0;
   while (offset < size) {
     offset +=
-        gst_rtp_vp9_payload_next (self, list, offset, buffer, size, max_paylen);
+        gst_rtp_vp9_payload_next (self, list, offset, buffer, size, max_paylen,
+        delta_unit);
+
+    /* only the first outgoing packet should not have the DELTA_UNIT flag */
+    if (!delta_unit)
+      delta_unit = TRUE;
   }
 
   ret = gst_rtp_base_payload_push_list (payload, list);
