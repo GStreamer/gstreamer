@@ -7,6 +7,7 @@ dwrite_sources = [
   'gstdwritebitmapmemory.cpp',
   'gstdwritebitmappool.cpp',
   'gstdwriteclockoverlay.cpp',
+  'gstdwritesubtitlemux.cpp',
   'gstdwritetextoverlay.cpp',
   'gstdwritetimeoverlay.cpp',
   'plugin.cpp',
