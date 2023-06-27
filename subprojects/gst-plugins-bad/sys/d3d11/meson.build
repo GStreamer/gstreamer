@@ -32,6 +32,7 @@ extra_args = ['-DGST_USE_UNSTABLE_API']
 extra_dep = []
 
 d3d11_option = get_option('d3d11')
+d3d11_wgc_option = get_option('d3d11-wgc')
 if host_system != 'windows' or d3d11_option.disabled()
   subdir_done()
 endif
@@ -55,26 +56,34 @@ endif
 
 d2d_dep = cc.find_library('d2d1', required: d3d11_option)
 have_d2d_h = cc.has_header('d2d1.h', required: d3d11_option)
+dwmapi_lib = cc.find_library('dwmapi', required: d3d11_wgc_option)
+have_wgc = false
 
-have_wgc = cxx.compiles('''
-    #include<windows.h>
-    #include<winstring.h>
-    #include<roapi.h>
-    #include<windows.graphics.capture.h>,
-    #include<windows.graphics.capture.interop.h>
-    #include<windows.graphics.directx.direct3d11.h>
-    #include<windows.graphics.directx.direct3d11.interop.h>
-    #include<wrl.h>
-    using namespace Microsoft::WRL;
-    using namespace ABI::Windows::Graphics::Capture;
-    ComPtr<IDirect3D11CaptureFramePoolStatics> pool_statics;
-    ComPtr<IDirect3D11CaptureFramePoolStatics2> pool_statics2;
-    ComPtr<IDirect3D11CaptureFramePool> pool;
-    ComPtr<IGraphicsCaptureSession> session;
-    ComPtr<IGraphicsCaptureSession2> session2;
-    ComPtr<IGraphicsCaptureSession3> session3;
-    ''',
-    name: 'Windows Graphics Capture support in Windows SDK')
+if not d3d11_wgc_option.disabled()
+  have_wgc = cxx.compiles('''
+      #include<windows.h>
+      #include<winstring.h>
+      #include<roapi.h>
+      #include<windows.graphics.capture.h>,
+      #include<windows.graphics.capture.interop.h>
+      #include<windows.graphics.directx.direct3d11.h>
+      #include<windows.graphics.directx.direct3d11.interop.h>
+      #include<wrl.h>
+      using namespace Microsoft::WRL;
+      using namespace ABI::Windows::Graphics::Capture;
+      ComPtr<IDirect3D11CaptureFramePoolStatics> pool_statics;
+      ComPtr<IDirect3D11CaptureFramePoolStatics2> pool_statics2;
+      ComPtr<IDirect3D11CaptureFramePool> pool;
+      ComPtr<IGraphicsCaptureSession> session;
+      ComPtr<IGraphicsCaptureSession2> session2;
+      ComPtr<IGraphicsCaptureSession3> session3;
+      ''',
+      name: 'Windows Graphics Capture support in Windows SDK')
+
+  if d3d11_wgc_option.enabled() and not have_wgc
+    error('The Windows Graphics Capture feature is enabled but not supported by Windows SDK')
+  endif
+endif
 
 # if build target is Windows 10 and WINAPI_PARTITION_APP is allowed,
 # we can build UWP only modules as well
@@ -97,7 +106,6 @@ if d3d11_winapi_desktop
     extra_dep += [winmm_lib]
   endif
 
-  dwmapi_lib = cc.find_library('dwmapi', required: false)
   if have_wgc and dwmapi_lib.found()
     d3d11_sources += ['gstd3d11winrtcapture.cpp']
     extra_args += ['-DHAVE_WINRT_CAPTURE']
