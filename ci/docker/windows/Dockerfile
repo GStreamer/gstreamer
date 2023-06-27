@@ -8,10 +8,30 @@ SHELL ["powershell","-NoLogo", "-NonInteractive", "-Command"]
 
 RUN Install-WindowsFeature -Name Server-Media-Foundation
 
+# Visual Studio can't be installed with choco.
+# It depends on dotnetfx v4.8.0.20190930, which requires a reboot: dotnetfx (exit code 3010)
+# https://github.com/microsoft/vs-dockerfiles/blob/main/native-desktop/
+# Set up environment to collect install errors.
+COPY Install.cmd C:\TEMP\
+RUN Invoke-WebRequest -Uri https://aka.ms/vscollect.exe -OutFile C:\TEMP\collect.exe
+# Download channel for fixed install.
+RUN Invoke-WebRequest -Uri https://aka.ms/vs/17/release/channel -OutFile C:\TEMP\VisualStudio.chman
+# Download and install Build Tools for Visual Studio 2022 for native desktop workload.
+RUN Invoke-WebRequest -Uri https://aka.ms/vs/17/release/vs_buildtools.exe -OutFile C:\TEMP\vs_buildtools.exe
+RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
+    --channelUri C:\TEMP\VisualStudio.chman `
+    --installChannelUri C:\TEMP\VisualStudio.chman `
+    --add Microsoft.VisualStudio.Workload.VCTools `
+    --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 `
+    --includeRecommended `
+    --installPath C:\BuildTools
+
+RUN Get-ChildItem 'C:\BuildTools\VC\Tools\MSVC'
+RUN Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\lib'
+
 # Install Chocolatey
 RUN iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
 # Install required packages
-RUN choco install -y vcredist140
 RUN choco install -y cmake --installargs 'ADD_CMAKE_TO_PATH=System'
 RUN choco install -y git --params '/NoAutoCrlf /NoCredentialManager /NoShellHereIntegration /NoGuiHereIntegration /NoShellIntegration'
 RUN choco install -y git-lfs
@@ -27,30 +47,6 @@ RUN New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSyste
 RUN git config --system core.longpaths true
 
 RUN c:\msys64\usr\bin\bash -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja'
-# Visual Studio can't be installed with choco.
-# It depends on dotnetfx v4.8.0.20190930, which requires a reboot: dotnetfx (exit code 3010)
-# https://github.com/microsoft/vs-dockerfiles/blob/main/native-desktop/
-# Set up environment to collect install errors.
-COPY Install.cmd C:\TEMP\
-RUN Invoke-WebRequest -Uri https://aka.ms/vscollect.exe -OutFile C:\TEMP\collect.exe
-# Download channel for fixed install.
-RUN Invoke-WebRequest -Uri https://aka.ms/vs/16/release/channel -OutFile C:\TEMP\VisualStudio.chman
-# Download and install Build Tools for Visual Studio 2017 for native desktop workload.
-RUN Invoke-WebRequest -Uri https://aka.ms/vs/16/release/vs_buildtools.exe -OutFile C:\TEMP\vs_buildtools.exe
-RUN C:\TEMP\Install.cmd C:\TEMP\vs_buildtools.exe --quiet --wait --norestart --nocache `
-    --channelUri C:\TEMP\VisualStudio.chman `
-    --installChannelUri C:\TEMP\VisualStudio.chman `
-    --add Microsoft.VisualStudio.Workload.VCTools `
-    --add Microsoft.VisualStudio.Workload.UniversalBuildTools `
-    --add Microsoft.VisualStudio.Component.VC.Tools.ARM64 `
-    --add Microsoft.VisualStudio.Component.VC.Tools.ARM `
-    --add Microsoft.VisualStudio.Component.UWP.VC.ARM64 `
-    --includeRecommended `
-    --installPath C:\BuildTools
-
-RUN Get-ChildItem C:\BuildTools
-RUN Get-ChildItem C:\BuildTools\VC\Tools\MSVC
-RUN Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\lib'
 
 RUN pip3 install meson==1.1.1
 

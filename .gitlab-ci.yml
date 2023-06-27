@@ -449,38 +449,36 @@ build fedora clang:
     # Renormalize line endings
     - git add --renormalize .
     - ci/scripts/handle-subprojects-cache.py subprojects/
-    # For some reason, options are separated by newline instead of space, so we
-    # have to replace them first.
-    - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
-    - $env:MESON_CROSS_ARGS = $env:MESON_CROSS_ARGS.replace("`n"," ")
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
-        meson compile -C build"
+    - echo $env:MESON_ARGS
   artifacts:
    expire_in: "7 days"
    when: "always"
    paths:
      - 'build/meson-logs/'
 
-build vs2019 amd64:
+.build windows native:
   extends: '.build windows'
+  script:
+    - !reference [".build windows", "script"]
+    - meson setup --vsenv build $env:MESON_ARGS
+    - meson compile -C build
+    - .\gst-env.py gst-inspect-1.0.exe --version
+    - .\gst-env.py gst-inspect-1.0.exe
+    - mkdir destdir
+    - meson install -C build --destdir installdir
+    - Remove-Item -Recurse -Force build\installdir
+
+build vs2022 amd64:
+  extends: '.build windows native'
   variables:
     ARCH: 'amd64'
-  script:
-    - !reference [".build windows", "script",]
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        .\gst-env.py gst-inspect-1.0.exe --version &&
-        .\gst-env.py gst-inspect-1.0.exe &&
-        mkdir .\destdir &&
-        meson install --destdir=$env:CI_PROJECT_DIR\destdir -C build &&
-        rmdir /s /q  $env:CI_PROJECT_DIR\destdir"
 
-build vs2019 x86:
-  extends: '.build windows'
+build vs2022 x86:
+  extends: '.build windows native'
   variables:
     ARCH: 'x86'
 
-build vs2019 arm64 uwp:
+build vs2022 arm64:
   extends: '.build windows'
   variables:
     ARCH: 'arm64'
@@ -490,8 +488,23 @@ build vs2019 arm64 uwp:
       -Dgst-plugins-base:pango=disabled
       -Dgst-plugins-good:cairo=disabled
       -Dgst-devtools:cairo=disabled
-      --cross-file ci/meson/vs2019-arm64-cross-file.txt
-      --native-file ci/meson/vs2019-x64-native-file.txt
+      --cross-file ci/meson/vs2022-paths.ini
+      --cross-file ci/meson/vs2022-arm64-cross.ini
+      --native-file ci/meson/vs2022-paths.ini
+      --native-file ci/meson/vs2022-x64-native.ini
+  script:
+    - !reference [".build windows", "script"]
+    # For some reason, options are separated by newline instead of space, so we
+    # have to replace them first.
+    - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
+    - $env:MESON_CROSS_ARGS = $env:MESON_CROSS_ARGS.replace("`n"," ")
+      # Setting up a cross build with MSVC is still non-trivial because
+      # the --vsenv argument cannot be used to set it up
+    - echo $env:MESON_ARGS
+    - echo $env:MESON_CROSS_ARGS
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
+        meson setup build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
+        meson compile -C build "
 
 build msys2 :
   extends: '.build windows'
@@ -502,24 +515,12 @@ build msys2 :
       allow_failure: true
       when: 'manual'
   script:
-    # Make sure powershell exits on errors
-    # https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-6
-    - $ErrorActionPreference = "Stop"
-
-    # Set the code page to UTF-8
-    - chcp 65001
-
+    - !reference [".build windows", "script"]
+    # Replace backslashes with forward so bash doesn't complain
+    - $env:CI_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\','/')
     # Configure MSYS2 to use the UCRT64 environment, start in the same directory
     # and inherit PATH
-    - $env:MSYSTEM = "UCRT64"
-    - $env:CHERE_INVOKING = "1"
-    - $env:MSYS2_PATH_TYPE = "inherit"
-    # For some reason, options are separated by newline instead of space, so we
-    # have to replace them first.
-    - $env:MESON_ARGS = $env:MESON_ARGS.replace("`n"," ")
-    # Replace forward slashes with backwards so bash doesn't complain
-    - $env:_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\','/')
-    - C:\msys64\usr\bin\bash -lc "meson build $env:MESON_ARGS && ninja -C build"
+    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -use-full-path -lc "meson setup build $env:MESON_ARGS && ninja -C build"
 
 # ---- Tests ----- #
 
