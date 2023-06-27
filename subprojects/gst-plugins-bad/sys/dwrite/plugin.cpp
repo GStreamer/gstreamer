@@ -31,6 +31,7 @@
 #include "gstdwriteclockoverlay.h"
 #include "gstdwritetextoverlay.h"
 #include "gstdwritetimeoverlay.h"
+#include "gstdwritesubtitleoverlay.h"
 
 GST_DEBUG_CATEGORY (gst_dwrite_debug);
 
@@ -47,6 +48,8 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_DWRITE_TEXT_OVERLAY);
   gst_element_register (plugin, "dwritetimeoverlay", GST_RANK_NONE,
       GST_TYPE_DWRITE_TIME_OVERLAY);
+  gst_element_register (plugin, "dwritesubtitleoverlay", GST_RANK_NONE,
+      GST_TYPE_DWRITE_SUBTITLE_OVERLAY);
 
   return TRUE;
 }

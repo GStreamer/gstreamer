@@ -78,6 +78,10 @@ enum
   PROP_ENABLE_COLOR_FONT,
 };
 
+/* *INDENT-OFF* */
+static std::vector <GParamSpec *> _pspec;
+/* *INDENT-ON* */
+
 enum class GstDWriteBaseOverlayBlendMode
 {
   UNKNOWN,
@@ -248,128 +252,9 @@ gst_dwrite_base_overlay_class_init (GstDWriteBaseOverlayClass * klass)
   object_class->set_property = gst_dwrite_base_overlay_set_property;
   object_class->get_property = gst_dwrite_base_overlay_get_property;
 
-  g_object_class_install_property (object_class, PROP_VISIBLE,
-      g_param_spec_boolean ("visible", "Visible",
-          "Whether to draw text", DEFAULT_VISIBLE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_FONT_FAMILY,
-      g_param_spec_string ("font-family", "Font Family",
-          "Font family to use", DEFAULT_FONT_FAMILY,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_FONT_SIZE,
-      g_param_spec_float ("font-size", "Font Size",
-          "Font size to use", 0.1f, 1638.f, DEFAULT_FONT_SIZE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_REFERENCE_FRAME_SIZE,
-      g_param_spec_uint ("reference-frame-size", "Reference Frame Size",
-          "Reference Frame size used for \"auto-resize\"", 16, 16384,
-          DEFAULT_REFERENCE_FRAME_SIZE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_AUTO_RESIZE,
-      g_param_spec_boolean ("auto-resize", "Auto Resize",
-          "Calculate font size to be equivalent to \"font-size\" at "
-          "\"reference-frame-size\"", DEFAULT_AUTO_RESIZE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_FONT_WEIGHT,
-      g_param_spec_enum ("font-weight", "Font Weight",
-          "Font Weight", GST_TYPE_DWRITE_FONT_WEIGHT,
-          DEFAULT_FONT_WEIGHT,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_FONT_STYLE,
-      g_param_spec_enum ("font-style", "Font Style",
-          "Font Style", GST_TYPE_DWRITE_FONT_STYLE,
-          DEFAULT_FONT_STYLE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_FONT_STRETCH,
-      g_param_spec_enum ("font-stretch", "Font Stretch",
-          "Font Stretch", GST_TYPE_DWRITE_FONT_STRETCH,
-          DEFAULT_FONT_STRETCH,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_TEXT,
-      g_param_spec_string ("text", "Text",
-          "Text to render", "",
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_COLOR,
-      g_param_spec_uint ("color", "Color",
-          "Text color to use (big-endian ARGB)", 0, G_MAXUINT32, DEFAULT_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_OUTLINE_COLOR,
-      g_param_spec_uint ("outline-color", "Outline Color",
-          "Text outline color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_OUTLINE_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_UNDERLINE_COLOR,
-      g_param_spec_uint ("underline-color", "Underline Color",
-          "Underline color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_UNDERLINE_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_UNDERLINE_OUTLINE_COLOR,
-      g_param_spec_uint ("underline-outline-color", "Underline Outline Color",
-          "Outline of underline color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_UNDERLINE_OUTLINE_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_STRIKETHROUGH_COLOR,
-      g_param_spec_uint ("strikethrough-color", "Strikethrough Color",
-          "Strikethrough color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_STRIKETHROUGH_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class,
-      PROP_STRIKETHROUGH_OUTLINE_COLOR,
-      g_param_spec_uint ("strikethrough-outline-color",
-          "Strikethrough Outline Color",
-          "Outline of strikethrough color to use (big-endian ARGB)",
-          0, G_MAXUINT32, DEFAULT_STRIKETHROUGH_OUTLINE_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_SHADOW_COLOR,
-      g_param_spec_uint ("shadow-color", "Shadow Color",
-          "Shadow color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_SHADOW_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_BACKGROUND_COLOR,
-      g_param_spec_uint ("background-color", "Background Color",
-          "Background color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_BACKGROUND_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_LAYOUT_X,
-      g_param_spec_double ("layout-x", "Layout X",
-          "Normalized X coordinate of text layout", 0, 1,
-          DEFAULT_LAYOUT_XY,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_LAYOUT_Y,
-      g_param_spec_double ("layout-y", "Layout Y",
-          "Normalized Y coordinate of text layout", 0, 1,
-          DEFAULT_LAYOUT_XY,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_LAYOUT_WIDTH,
-      g_param_spec_double ("layout-width", "Layout Width",
-          "Normalized width of text layout", 0, 1,
-          DEFAULT_LAYOUT_WH,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_LAYOUT_HEIGHT,
-      g_param_spec_double ("layout-height", "Layout Height",
-          "Normalized height of text layout", 0, 1,
-          DEFAULT_LAYOUT_WH,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_TEXT_ALIGNMENT,
-      g_param_spec_enum ("text-alignment", "Text Alignment",
-          "Text Alignment", GST_TYPE_DWRITE_TEXT_ALIGNMENT,
-          DEFAULT_TEXT_ALIGNMENT,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  g_object_class_install_property (object_class, PROP_PARAGRAPH_ALIGNMENT,
-      g_param_spec_enum ("paragraph-alignment", "Paragraph alignment",
-          "Paragraph Alignment", GST_TYPE_DWRITE_PARAGRAPH_ALIGNMENT,
-          DEFAULT_PARAGRAPH_ALIGNMENT,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-#ifdef HAVE_DWRITE_COLOR_FONT
-  if (gst_dwrite_is_windows_10_or_greater ()) {
-    g_object_class_install_property (object_class, PROP_ENABLE_COLOR_FONT,
-        g_param_spec_boolean ("color-font", "Color Font",
-            "Enable color font, requires Windows 10 or newer",
-            DEFAULT_COLOR_FONT,
-            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
-                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  }
-#endif
+  gst_dwrite_base_overlay_build_param_specs (_pspec);
+  for (guint i = 0; i < (guint) _pspec.size (); i++)
+    g_object_class_install_property (object_class, i + 1, _pspec[i]);
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
   gst_element_class_add_static_pad_template (element_class, &src_template);
@@ -2252,4 +2137,100 @@ gst_dwrite_base_overlay_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     klass->after_transform (self, outbuf);
 
   return GST_FLOW_OK;
+}
+
+void
+gst_dwrite_base_overlay_build_param_specs (std::vector < GParamSpec * >&pspec)
+{
+  pspec.push_back (g_param_spec_boolean ("visible", "Visible",
+          "Whether to draw text", DEFAULT_VISIBLE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_string ("font-family", "Font Family",
+          "Font family to use", DEFAULT_FONT_FAMILY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_float ("font-size", "Font Size",
+          "Font size to use", 0.1f, 1638.f, DEFAULT_FONT_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("reference-frame-size",
+          "Reference Frame Size",
+          "Reference Frame size used for \"auto-resize\"", 16, 16384,
+          DEFAULT_REFERENCE_FRAME_SIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_boolean ("auto-resize", "Auto Resize",
+          "Calculate font size to be equivalent to \"font-size\" at "
+          "\"reference-frame-size\"", DEFAULT_AUTO_RESIZE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_enum ("font-weight", "Font Weight",
+          "Font Weight", GST_TYPE_DWRITE_FONT_WEIGHT, DEFAULT_FONT_WEIGHT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_enum ("font-style", "Font Style", "Font Style",
+          GST_TYPE_DWRITE_FONT_STYLE, DEFAULT_FONT_STYLE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_enum ("font-stretch", "Font Stretch",
+          "Font Stretch", GST_TYPE_DWRITE_FONT_STRETCH, DEFAULT_FONT_STRETCH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_string ("text", "Text", "Text to render", "",
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("color", "Color",
+          "Text color to use (big-endian ARGB)", 0, G_MAXUINT32, DEFAULT_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("outline-color", "Outline Color",
+          "Text outline color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_OUTLINE_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("underline-color", "Underline Color",
+          "Underline color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_UNDERLINE_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("underline-outline-color",
+          "Underline Outline Color",
+          "Outline of underline color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_UNDERLINE_OUTLINE_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("strikethrough-color",
+          "Strikethrough Color", "Strikethrough color to use (big-endian ARGB)",
+          0, G_MAXUINT32, DEFAULT_STRIKETHROUGH_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("strikethrough-outline-color",
+          "Strikethrough Outline Color",
+          "Outline of strikethrough color to use (big-endian ARGB)", 0,
+          G_MAXUINT32, DEFAULT_STRIKETHROUGH_OUTLINE_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("shadow-color", "Shadow Color",
+          "Shadow color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_SHADOW_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint ("background-color", "Background Color",
+          "Background color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_BACKGROUND_COLOR,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_double ("layout-x", "Layout X",
+          "Normalized X coordinate of text layout", 0, 1, DEFAULT_LAYOUT_XY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_double ("layout-y", "Layout Y",
+          "Normalized Y coordinate of text layout", 0, 1, DEFAULT_LAYOUT_XY,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_double ("layout-width", "Layout Width",
+          "Normalized width of text layout", 0, 1, DEFAULT_LAYOUT_WH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_double ("layout-height", "Layout Height",
+          "Normalized height of text layout", 0, 1, DEFAULT_LAYOUT_WH,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_enum ("text-alignment", "Text Alignment",
+          "Text Alignment", GST_TYPE_DWRITE_TEXT_ALIGNMENT,
+          DEFAULT_TEXT_ALIGNMENT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_enum ("paragraph-alignment",
+          "Paragraph alignment", "Paragraph Alignment",
+          GST_TYPE_DWRITE_PARAGRAPH_ALIGNMENT, DEFAULT_PARAGRAPH_ALIGNMENT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+#ifdef HAVE_DWRITE_COLOR_FONT
+  if (gst_dwrite_is_windows_10_or_greater ()) {
+    pspec.push_back (g_param_spec_boolean ("color-font", "Color Font",
+            "Enable color font, requires Windows 10 or newer",
+            DEFAULT_COLOR_FONT,
+            (GParamFlags) (GST_PARAM_CONDITIONALLY_AVAILABLE |
+                G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  }
+#endif
 }

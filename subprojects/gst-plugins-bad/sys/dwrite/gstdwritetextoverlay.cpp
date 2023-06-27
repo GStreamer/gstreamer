@@ -39,6 +39,10 @@ enum
   PROP_REMOVE_CC_META,
 };
 
+/* *INDENT-OFF* */
+static std::vector<GParamSpec *> _pspec;
+/* *INDENT-ON* */
+
 #define DEFAULT_ENABLE_CC TRUE
 #define DEFAULT_CC_FIELD -1
 #define DEFAULT_CC_TIMEOUT GST_CLOCK_TIME_NONE
@@ -54,6 +58,7 @@ struct GstDWriteTextOverlayPrivate
   guint8 selected_field;
 
   std::string closed_caption;
+  std::string text;
 
   /* properties */
   gboolean enable_cc = DEFAULT_ENABLE_CC;
@@ -101,31 +106,9 @@ gst_dwrite_text_overlay_class_init (GstDWriteTextOverlayClass * klass)
   object_class->set_property = gst_dwrite_text_overlay_set_property;
   object_class->get_property = gst_dwrite_text_overlay_get_property;
 
-  g_object_class_install_property (object_class, PROP_ENABLE_CC,
-      g_param_spec_boolean ("enable-cc", "Enable CC",
-          "Enable closed caption rendering",
-          DEFAULT_ENABLE_CC,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (object_class, PROP_CC_FIELD,
-      g_param_spec_int ("cc-field", "CC Field",
-          "The closed caption field to render when available, (-1 = automatic)",
-          -1, 1, DEFAULT_CC_FIELD,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (object_class, PROP_CC_TIMEOUT,
-      g_param_spec_uint64 ("cc-timeout", "CC Timeout",
-          "Duration after which to erase overlay when no cc data has arrived "
-          "for the selected field, in nanoseconds unit", 16 * GST_SECOND,
-          GST_CLOCK_TIME_NONE, DEFAULT_CC_TIMEOUT,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  g_object_class_install_property (object_class, PROP_REMOVE_CC_META,
-      g_param_spec_boolean ("remove-cc-meta", "Remove CC Meta",
-          "Remove caption meta from output buffers "
-          "when closed caption rendering is enabled",
-          DEFAULT_REMOVE_CC_META,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  gst_dwrite_text_overlay_build_param_specs (_pspec);
+  for (guint i = 0; i < _pspec.size (); i++)
+    g_object_class_install_property (object_class, i + 1, _pspec[i]);
 
   gst_element_class_set_static_metadata (element_class,
       "DirectWrite Text Overlay", "Filter/Editor/Video",
@@ -488,6 +471,115 @@ gst_dwrite_text_overlay_decode_raw (GstDWriteTextOverlay * self,
   }
 }
 
+static void
+xml_text (GMarkupParseContext * context, const gchar * text, gsize text_len,
+    gpointer user_data, GError ** error)
+{
+  gchar **accum = (gchar **) user_data;
+  gchar *concat;
+
+  if (*accum) {
+    concat = g_strconcat (*accum, text, NULL);
+    g_free (*accum);
+    *accum = concat;
+  } else {
+    *accum = g_strdup (text);
+  }
+}
+
+static gchar *
+gst_dwrite_text_overlay_strip_markup (GstDWriteTextOverlay * self,
+    const gchar * markup)
+{
+  GMarkupParser parser = { 0, };
+  GMarkupParseContext *context;
+  gchar *accum = nullptr;
+
+  parser.text = xml_text;
+  context = g_markup_parse_context_new (&parser,
+      (GMarkupParseFlags) 0, &accum, nullptr);
+
+  if (!g_markup_parse_context_parse (context, "<root>", 6, nullptr))
+    goto error;
+
+  if (!g_markup_parse_context_parse (context, markup, strlen (markup), nullptr))
+    goto error;
+
+  if (!g_markup_parse_context_parse (context, "</root>", 7, nullptr))
+    goto error;
+
+  if (!g_markup_parse_context_end_parse (context, nullptr))
+    goto error;
+
+done:
+  g_markup_parse_context_free (context);
+  return accum;
+
+error:
+  g_free (accum);
+  accum = nullptr;
+  goto done;
+}
+
+static void
+gst_dwrite_text_overlay_extract_meta (GstDWriteTextOverlay * self,
+    GstDWriteSubtitleMeta * meta)
+{
+  GstDWriteTextOverlayPrivate *priv = self->priv;
+  GstCaps *caps = nullptr;
+  GstStructure *s;
+  const gchar *format;
+  std::string str;
+  GstMapInfo info;
+
+  if (!meta || !meta->subtitle || !meta->stream)
+    return;
+
+  caps = gst_stream_get_caps (meta->stream);
+  if (!caps)
+    return;
+
+  if (gst_buffer_get_size (meta->subtitle) == 0)
+    goto out;
+
+  if (!gst_buffer_map (meta->subtitle, &info, GST_MAP_READ))
+    goto out;
+
+  s = gst_caps_get_structure (caps, 0);
+  format = gst_structure_get_string (s, "format");
+  /* TODO: parse pango attributs and make layout based on that */
+  if (g_strcmp0 (format, "pango-markup") == 0) {
+    gchar *stripped = gst_dwrite_text_overlay_strip_markup (self,
+        (gchar *) info.data);
+    gst_buffer_unmap (meta->subtitle, &info);
+
+    if (!stripped)
+      goto out;
+
+    if (priv->text.empty ()) {
+      priv->text = stripped;
+    } else {
+      priv->text += "\n";
+      priv->text += stripped;
+    }
+  } else {
+    std::string ret;
+    ret.resize (info.size);
+    memcpy (&ret[0], info.data, info.size);
+    gst_buffer_unmap (meta->subtitle, &info);
+    auto len = strlen (ret.c_str ());
+    ret.resize (len);
+
+    if (priv->text.empty ())
+      priv->text = ret;
+    else
+      priv->text += " " + ret;
+  }
+
+out:
+  gst_clear_caps (&caps);
+}
+
 static gboolean
 gst_dwrite_text_overlay_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
     GstDWriteTextOverlay * self)
@@ -495,36 +587,38 @@ gst_dwrite_text_overlay_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
   GstDWriteTextOverlayPrivate *priv = self->priv;
   GstVideoCaptionMeta *cc_meta;
 
-  if ((*meta)->info->api != GST_VIDEO_CAPTION_META_API_TYPE)
-    return TRUE;
-
-  cc_meta = (GstVideoCaptionMeta *) (*meta);
-  switch (cc_meta->caption_type) {
-    case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
-      gst_dwrite_text_overlay_decode_raw (self, cc_meta->data, cc_meta->size,
-          priv->running_time);
-      break;
-    case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
-      gst_dwrite_text_overlay_decode_s334_1a (self, cc_meta->data,
-          cc_meta->size, priv->running_time);
-      break;
-    case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
-      gst_dwrite_text_overlay_decode_cc_data (self, cc_meta->data,
-          cc_meta->size, priv->running_time);
-      break;
-    case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
-    {
-      guint len, pos = 0;
-      len = gst_dwrite_text_overlay_extract_cdp (self, cc_meta->data,
-          cc_meta->size, &pos);
-      if (len > 0) {
-        gst_dwrite_text_overlay_decode_cc_data (self, cc_meta->data + pos,
-            len, priv->running_time);
+  if (priv->enable_cc && (*meta)->info->api == GST_VIDEO_CAPTION_META_API_TYPE) {
+    cc_meta = (GstVideoCaptionMeta *) (*meta);
+    switch (cc_meta->caption_type) {
+      case GST_VIDEO_CAPTION_TYPE_CEA608_RAW:
+        gst_dwrite_text_overlay_decode_raw (self, cc_meta->data, cc_meta->size,
+            priv->running_time);
+        break;
+      case GST_VIDEO_CAPTION_TYPE_CEA608_S334_1A:
+        gst_dwrite_text_overlay_decode_s334_1a (self, cc_meta->data,
+            cc_meta->size, priv->running_time);
+        break;
+      case GST_VIDEO_CAPTION_TYPE_CEA708_RAW:
+        gst_dwrite_text_overlay_decode_cc_data (self, cc_meta->data,
+            cc_meta->size, priv->running_time);
+        break;
+      case GST_VIDEO_CAPTION_TYPE_CEA708_CDP:
+      {
+        guint len, pos = 0;
+        len = gst_dwrite_text_overlay_extract_cdp (self, cc_meta->data,
+            cc_meta->size, &pos);
+        if (len > 0) {
+          gst_dwrite_text_overlay_decode_cc_data (self, cc_meta->data + pos,
+              len, priv->running_time);
+        }
+        break;
       }
-      break;
+      default:
+        break;
     }
-    default:
-      break;
+  } else if ((*meta)->info->api == GST_DWRITE_SUBTITLE_META_API_TYPE) {
+    GstDWriteSubtitleMeta *smeta = (GstDWriteSubtitleMeta *) (*meta);
+    gst_dwrite_text_overlay_extract_meta (self, smeta);
   }
 
   return TRUE;
@@ -538,14 +632,17 @@ gst_dwrite_text_overlay_get_text (GstDWriteBaseOverlay * overlay,
   GstDWriteTextOverlay *self = GST_DWRITE_TEXT_OVERLAY (overlay);
   GstDWriteTextOverlayPrivate *priv = self->priv;
   std::lock_guard < std::mutex > lk (priv->lock);
+  WString text_wide;
+
+  priv->text.clear ();
 
   priv->running_time = gst_segment_to_running_time (&trans->segment,
       GST_FORMAT_TIME, GST_BUFFER_PTS (buffer));
 
-  if (priv->enable_cc) {
-    gst_buffer_foreach_meta (buffer,
-        (GstBufferForeachMetaFunc) gst_dwrite_text_overlay_foreach_meta, self);
+  gst_buffer_foreach_meta (buffer,
+      (GstBufferForeachMetaFunc) gst_dwrite_text_overlay_foreach_meta, self);
 
+  if (priv->enable_cc) {
     if (GST_CLOCK_TIME_IS_VALID (priv->timeout) &&
         GST_CLOCK_TIME_IS_VALID (priv->running_time) &&
         GST_CLOCK_TIME_IS_VALID (priv->caption_running_time) &&
@@ -561,10 +658,19 @@ gst_dwrite_text_overlay_get_text (GstDWriteBaseOverlay * overlay,
     priv->closed_caption.clear ();
   }
 
-  if (priv->closed_caption.empty ())
+  if (priv->closed_caption.empty () && priv->text.empty ())
     return default_text;
 
-  auto text_wide = gst_dwrite_string_to_wstring (priv->closed_caption);
+  if (!priv->text.empty ())
+    text_wide = gst_dwrite_string_to_wstring (priv->text);
+
+  if (!priv->closed_caption.empty ()) {
+    if (!text_wide.empty ())
+      text_wide += L"\n";
+
+    text_wide += gst_dwrite_string_to_wstring (priv->closed_caption);
+  }
+
   if (default_text.empty ())
     return text_wide;
 
@@ -575,11 +681,15 @@ static gboolean
 gst_dwrite_text_overlay_remove_meta (GstBuffer * buffer, GstMeta ** meta,
     GstDWriteTextOverlay * self)
 {
-  if ((*meta)->info->api != GST_VIDEO_CAPTION_META_API_TYPE)
-    return TRUE;
+  GstDWriteTextOverlayPrivate *priv = self->priv;
 
-  GST_TRACE_OBJECT (self, "Removing caption meta");
-  *meta = nullptr;
+  if ((*meta)->info->api == GST_VIDEO_CAPTION_META_API_TYPE &&
+      priv->enable_cc && priv->remove_caption_meta) {
+    GST_TRACE_OBJECT (self, "Removing caption meta");
+    *meta = nullptr;
+  } else if ((*meta)->info->api == GST_DWRITE_SUBTITLE_META_API_TYPE) {
+    *meta = nullptr;
+  }
 
   return TRUE;
 }
@@ -592,9 +702,29 @@ gst_dwrite_text_overlay_after_transform (GstDWriteBaseOverlay * overlay,
   GstDWriteTextOverlayPrivate *priv = self->priv;
   std::lock_guard < std::mutex > lk (priv->lock);
 
-  if (!priv->enable_cc || !priv->remove_caption_meta)
-    return;
-
   gst_buffer_foreach_meta (buffer,
       (GstBufferForeachMetaFunc) gst_dwrite_text_overlay_remove_meta, self);
+}
+
+void
+gst_dwrite_text_overlay_build_param_specs (std::vector < GParamSpec * >&pspec)
+{
+  pspec.push_back (g_param_spec_boolean ("enable-cc", "Enable CC",
+          "Enable closed caption rendering",
+          DEFAULT_ENABLE_CC,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_int ("cc-field", "CC Field",
+          "The closed caption field to render when available, (-1 = automatic)",
+          -1, 1, DEFAULT_CC_FIELD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_uint64 ("cc-timeout", "CC Timeout",
+          "Duration after which to erase overlay when no cc data has arrived "
+          "for the selected field, in nanoseconds unit", 16 * GST_SECOND,
+          GST_CLOCK_TIME_NONE, DEFAULT_CC_TIMEOUT,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+  pspec.push_back (g_param_spec_boolean ("remove-cc-meta", "Remove CC Meta",
+          "Remove caption meta from output buffers "
+          "when closed caption rendering is enabled",
+          DEFAULT_REMOVE_CC_META,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 }
