@@ -180,7 +180,7 @@ gst_vulkan_device_constructed (GObject * object)
   const char *optional_extensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME,
-#if (defined(VK_VERSION_1_3) || (defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 170))
+#if defined(VK_KHR_synchronization2)
     VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 #endif
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
