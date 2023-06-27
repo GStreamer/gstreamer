@@ -831,6 +831,43 @@ GST_START_TEST (test_depay_resend_gap_event)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pay_delta_unit_flag)
+{
+  guint8 vp8_bitstream_payload[] = {
+    0x30, 0x00, 0x00, 0x9d, 0x01, 0x2a, 0xb0, 0x00,
+    0x90, 0x00, 0x06, 0x47, 0x08, 0x85, 0x85, 0x88,
+    0x99, 0x84, 0x88, 0x21, 0x00
+  };
+
+  /* set mtu so that the buffer is split into multiple packets */
+  GstHarness *h = gst_harness_new_parse ("rtpvp8pay mtu=28");
+  GstFlowReturn ret;
+  GstBuffer *buffer;
+
+  gst_harness_set_src_caps_str (h, "video/x-vp8");
+
+  buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      vp8_bitstream_payload, sizeof (vp8_bitstream_payload), 0,
+      sizeof (vp8_bitstream_payload), NULL, NULL);
+
+  ret = gst_harness_push (h, buffer);
+  fail_unless_equals_int (ret, GST_FLOW_OK);
+
+  /* the input buffer should be split into two buffers and pushed as a buffer
+   * list, only the first buffer of the first buffer list should be marked as a
+   * non-delta unit */
+  buffer = gst_harness_pull (h);
+  fail_unless (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+  buffer = gst_harness_pull (h);
+  fail_unless (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT));
+  gst_buffer_unref (buffer);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpvp8_suite (void)
 {
@@ -849,6 +886,7 @@ rtpvp8_suite (void)
   tcase_add_test (tc_chain, test_pay_continuous_picture_id_and_tl0picidx);
   tcase_add_test (tc_chain, test_pay_tl0picidx_split_buffer);
   tcase_add_test (tc_chain, test_pay_continuous_picture_id_on_flush);
+  tcase_add_test (tc_chain, test_pay_delta_unit_flag);
 
   suite_add_tcase (s, (tc_chain = tcase_create ("vp8depay")));
   tcase_add_loop_test (tc_chain, test_depay_stop_gap_events, 0,

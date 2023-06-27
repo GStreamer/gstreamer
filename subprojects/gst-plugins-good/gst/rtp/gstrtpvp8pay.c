@@ -611,7 +611,7 @@ gst_rtp_vp8_drop_vp8_meta (gpointer element, GstBuffer * buf)
 static guint
 gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
     guint offset, GstBuffer * buffer, gsize buffer_size, gsize max_payload_len,
-    GstCustomMeta * meta)
+    GstCustomMeta * meta, gboolean delta_unit)
 {
   guint partition;
   GstBuffer *header;
@@ -651,6 +651,9 @@ gst_rtp_vp8_payload_next (GstRtpVP8Pay * self, GstBufferList * list,
 
   out = gst_buffer_append (header, sub);
 
+  if (delta_unit)
+    GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
+
   gst_buffer_list_insert (list, -1, out);
 
   return available;
@@ -666,9 +669,12 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   GstCustomMeta *meta;
   gsize size, max_paylen;
   guint offset, mtu, vp8_hdr_len;
+  gboolean delta_unit;
 
   size = gst_buffer_get_size (buffer);
   meta = gst_buffer_get_custom_meta (buffer, "GstVP8Meta");
+  delta_unit = GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
   if (G_UNLIKELY (!gst_rtp_vp8_pay_parse_frame (self, buffer, size))) {
     GST_ELEMENT_ERROR (self, STREAM, ENCODE, (NULL),
         ("Failed to parse VP8 frame"));
@@ -699,7 +705,11 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   while (offset < size) {
     offset +=
         gst_rtp_vp8_payload_next (self, list, offset, buffer, size,
-        max_paylen, meta);
+        max_paylen, meta, delta_unit);
+
+    /* only the first outgoing packet should not have the DELTA_UNIT flag */
+    if (!delta_unit)
+      delta_unit = TRUE;
   }
 
   ret = gst_rtp_base_payload_push_list (payload, list);
