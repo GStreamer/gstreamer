@@ -133,10 +133,6 @@ enum class GstDWriteBaseOverlayBlendMode
 /* *INDENT-OFF* */
 struct _GstDWriteBaseOverlayPrivate
 {
-  GstPad *video_pad = nullptr;
-  GstPad *text_pad = nullptr;
-  GstPad *src_pad = nullptr;
-
   GstD3D11Device *device = nullptr;
 
   GstVideoInfo bgra_info;
