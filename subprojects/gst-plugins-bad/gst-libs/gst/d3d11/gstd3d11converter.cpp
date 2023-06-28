@@ -1262,12 +1262,11 @@ gst_d3d11_color_convert_get_filtering(GstD3D11Converter* self)
 {
   gboolean bilinear_filtering = TRUE;
 
-  /*
   if (gst_structure_has_field(self->config, "bilinear-filtering")) {
     if (!gst_structure_get_boolean(self->config, "bilinear-filtering", &bilinear_filtering)) {
       bilinear_filtering = TRUE;
     }
-  }*/
+  }
 
   return bilinear_filtering ? D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT :
     D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -1653,7 +1652,7 @@ gst_d3d11_converter_apply_orientation (GstD3D11Converter * self,
 }
 
 static gboolean
-gst_d3d11_converter_update_src_rect (GstD3D11Converter * self, RECT* src_rect = NULL )
+gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
 {
   GstD3D11ConverterPrivate *priv = self->priv;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -1666,31 +1665,6 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self, RECT* src_rect = 
 
   if (!priv->update_src_rect)
     return TRUE;
-
-
-
-  if (src_rect) {
-    g_return_val_if_fail(self != NULL, FALSE);
-    g_return_val_if_fail(src_rect != NULL, FALSE);
-
-    gst_d3d11_device_lock(self->device);
-    if (priv->src_rect.left != src_rect->left ||
-      priv->src_rect.top != src_rect->top ||
-      priv->src_rect.right != src_rect->right ||
-      priv->src_rect.bottom != src_rect->bottom) {
-      priv->src_rect = *src_rect;
-
-      /* vertex buffer will be updated on next convert() call */
-      //priv->update_vertex = TRUE;
-      priv->update_src_rect = TRUE;
-
-    }
-    gst_d3d11_device_unlock(self->device);
-
-    return TRUE;
-  }
-
-
 
   priv->update_src_rect = FALSE;
 

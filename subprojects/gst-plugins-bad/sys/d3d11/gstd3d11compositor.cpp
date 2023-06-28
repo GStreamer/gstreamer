@@ -43,7 +43,6 @@
 #endif
 
 #include "gstd3d11compositor.h"
-#include "gst/d3d11/gstd3d11converter.h"
 #include "gstd3d11pluginutils.h"
 #include <string.h>
 #include <wrl.h>
@@ -296,10 +295,6 @@ struct _GstD3D11CompositorPad
   GstD3D11CompositorSizingPolicy sizing_policy;
   GstStructure* crop_properties;
   gboolean      apply_crop;
-  gint   crop_left;
-  gint   crop_right;
-  gint   crop_top;
-  gint   crop_bottom;
 
   GstVideoGammaMode gamma_mode;
   GstVideoPrimariesMode primaries_mode;
@@ -396,7 +391,7 @@ gst_d3d11_compositor_pad_class_init (GstD3D11CompositorPadClass * klass)
   object_class->get_property = gst_d3d11_compositor_pad_get_property;
 
 
-  g_object_class_install_property(object_class,
+  g_object_class_install_property(gobject_class,
     PROP_PAD_CROP,
     g_param_spec_boxed("crop", "crop properties",
       "provide left,right,top,bottom coordinates",
@@ -482,11 +477,7 @@ gst_d3d11_compositor_pad_init (GstD3D11CompositorPad * pad)
   pad->alpha = DEFAULT_PAD_ALPHA;
   pad->op = DEFAULT_PAD_OPERATOR;
   pad->sizing_policy = DEFAULT_PAD_SIZING_POLICY;
-  pad->crop_properties = NULL;//gst_structure_from_string("props,left=200,right=200,top=300,bottom=300", NULL);
-  pad->crop_left = -1;
-  pad->crop_right = -1;
-  pad->crop_top = -1;
-  pad->crop_bottom = -1;
+  pad->crop_properties = gst_structure_from_string("props,left=200,right=200,top=300,bottom=300", NULL);
   pad->apply_crop = FALSE;
   pad->desc = blend_templ[DEFAULT_PAD_OPERATOR];
   pad->gamma_mode = DEFAULT_PAD_GAMMA_MODE;
@@ -582,13 +573,15 @@ gst_d3d11_compositor_pad_set_property (GObject * object, guint prop_id,
     case PROP_PAD_CROP:
     {
       GST_DEBUG_OBJECT(pad, "setting crop parameters");
-      if (pad->crop_properties != NULL)
-      {
+      int left;
+      int right;
+      int top;
+      int bottom;
+      if (pad->crop_properties)
         gst_structure_free(pad->crop_properties);
-        pad->crop_properties = NULL;
-      }
       pad->crop_properties =
         gst_structure_copy(gst_value_get_structure(value));
+      pad->apply_crop = TRUE;
       if (pad->convert != NULL)
       {
         int left, right, top, bottom;
@@ -602,15 +595,8 @@ gst_d3d11_compositor_pad_set_property (GObject * object, guint prop_id,
         rect.top = top;
         rect.right = right;
         rect.bottom = bottom;
-        pad->crop_left = left;
-        pad->crop_top = top;
-        pad->crop_right = right;
-        pad->crop_bottom = bottom;
         gst_d3d11_converter_update_src_rect(pad->convert, &rect);
-        gst_structure_free(pad->crop_properties);
-        pad->crop_properties = NULL;
       }
-      pad->apply_crop = TRUE;
       break;
     }
     default:
@@ -873,7 +859,6 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
 {
   GstD3D11CompositorPad *cpad = GST_D3D11_COMPOSITOR_PAD (pad);
   GstD3D11Compositor *self = GST_D3D11_COMPOSITOR (vagg);
-  RECT rect;
   gint width, height;
   GstVideoInfo *info = &vagg->info;
   GstVideoRectangle frame_rect;
@@ -925,19 +910,18 @@ gst_d3d11_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
   if (cpad->apply_crop == TRUE)
   {
 
-
-#if 0
     int left, right, top, bottom;
+
     gst_structure_get_int(cpad->crop_properties, "left", &left);
     gst_structure_get_int(cpad->crop_properties, "right", &right);
     gst_structure_get_int(cpad->crop_properties, "top", &top);
     gst_structure_get_int(cpad->crop_properties, "bottom", &bottom);
     GST_DEBUG_OBJECT(pad, "Applying  coordinates %d %d %d %d", left, top, right, bottom);
-#endif
-    rect.left = cpad->crop_left;
-    rect.top = cpad->crop_top;
-    rect.right = cpad->crop_right;
-    rect.bottom = cpad->crop_bottom;
+
+    rect.left = left;
+    rect.top = top;
+    rect.right = right;
+    rect.bottom = bottom;
     gst_d3d11_converter_update_src_rect(cpad->convert, &rect);
     cpad->apply_crop = FALSE;
   }
