@@ -366,6 +366,8 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->image && !mem->wrapped)
     vkDestroyImage (mem->device->device, mem->image, NULL);
 
+  gst_clear_object (&mem->barrier.parent.queue);
+
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
 

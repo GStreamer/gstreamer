@@ -271,6 +271,8 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
   if (mem->buffer && !mem->wrapped)
     vkDestroyBuffer (mem->device->device, mem->buffer, NULL);
 
+  gst_clear_object (&mem->barrier.parent.queue);
+
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
 
