@@ -147,6 +147,10 @@ GST_VULKAN_API
 GstVulkanFence *    gst_vulkan_device_create_fence          (GstVulkanDevice * device,
                                                              GError ** error);
 
+GST_VULKAN_API
+GstVulkanQueue *    gst_vulkan_device_select_queue          (GstVulkanDevice * device,
+                                                             VkQueueFlagBits expected_flags);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_DEVICE_H__ */

@@ -1070,3 +1070,58 @@ gst_vulkan_device_enable_layer (GstVulkanDevice * device, const gchar * name)
 
   return ret;
 }
+
+struct choose_queue
+{
+  guint expected_flags;
+  GstVulkanQueue *queue;
+};
+
+static gboolean
+_choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
+    struct choose_queue *data)
+{
+  guint flags =
+      device->physical_device->queue_family_props[queue->family].queueFlags;
+
+  if ((flags & data->expected_flags) != 0) {
+    if (data->queue)
+      gst_object_unref (data->queue);
+    data->queue = gst_object_ref (queue);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_device_select_queue
+ * @device: a #GstVulkanDevice
+ * @expected_flags:  a VkQueueFlagBits
+ *
+ * Select a compatible queue from the @device supporting the @expected_flags.
+ *
+ * Returns: (transfer full): a #GstVulkanQueue for @queue matching the
+ *                           @expected_flags
+ *
+ * Since: 1.24
+ */
+GstVulkanQueue *
+gst_vulkan_device_select_queue (GstVulkanDevice * device,
+    VkQueueFlagBits expected_flags)
+{
+  struct choose_queue data;
+
+  data.expected_flags = expected_flags;
+  data.queue = NULL;
+
+  if (!gst_vulkan_device_open (device, NULL)) {
+    gst_object_unref (device);
+    goto beach;
+  }
+  gst_vulkan_device_foreach_queue (device,
+      (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
+
+beach:
+  return data.queue;
+}

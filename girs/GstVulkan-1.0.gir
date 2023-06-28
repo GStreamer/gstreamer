@@ -1866,6 +1866,25 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="select_queue" c:identifier="gst_vulkan_device_select_queue" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">Select a compatible queue from the @device supporting the @expected_flags.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanQueue for @queue matching the
+                          @expected_flags</doc>
+          <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="device" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanDevice</doc>
+            <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+          </instance-parameter>
+          <parameter name="expected_flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a VkQueueFlagBits</doc>
+            <type name="Vulkan.QueueFlagBits" c:type="VkQueueFlagBits"/>
+          </parameter>
+        </parameters>
+      </method>
       <property name="instance" transfer-ownership="none">
         <type name="VulkanInstance"/>
       </property>
