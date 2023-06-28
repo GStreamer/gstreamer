@@ -37,7 +37,10 @@ struct _GstPngEnc
   GstVideoEncoder parent;
 
   GstVideoCodecState *input_state;
-  GstBuffer *buffer_out;
+
+  GstMemory *output_mem;
+  GstMapInfo output_map;
+  gsize output_mem_pos;
 
   png_structp png_struct_ptr;
   png_infop png_info_ptr;
