@@ -1257,20 +1257,20 @@ get_vuya_component (GstVideoFormat format, gchar * y, gchar * u,
   }
 }
 
-static D3D11_FILTER
-gst_d3d11_color_convert_get_filtering(GstD3D11Converter* self)
-{
-  gboolean bilinear_filtering = TRUE;
+// static D3D11_FILTER
+// gst_d3d11_color_convert_get_filtering(GstD3D11Converter* self)
+// {
+//   gboolean bilinear_filtering = TRUE;
 
-  if (gst_structure_has_field(self->config, "bilinear-filtering")) {
-    if (!gst_structure_get_boolean(self->config, "bilinear-filtering", &bilinear_filtering)) {
-      bilinear_filtering = TRUE;
-    }
-  }
+//   if (gst_structure_has_field(self->config, "bilinear-filtering")) {
+//     if (!gst_structure_get_boolean(self->config, "bilinear-filtering", &bilinear_filtering)) {
+//       bilinear_filtering = TRUE;
+//     }
+//   }
 
-  return bilinear_filtering ? D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT :
-    D3D11_FILTER_MIN_MAG_MIP_POINT;
-}
+//   return bilinear_filtering ? D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT :
+//     D3D11_FILTER_MIN_MAG_MIP_POINT;
+// }
 
 
 static gboolean
@@ -1306,7 +1306,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
 
-  sampler_desc.Filter = gst_d3d11_color_convert_get_filtering(self);
+  //sampler_desc.Filter = gst_d3d11_color_convert_get_filtering(self);
   sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
   sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
   sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;

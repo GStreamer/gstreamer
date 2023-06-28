@@ -2187,18 +2187,7 @@ gst_d3d11_convert_class_init (GstD3D11ConvertClass * klass)
           DEFAULT_PRIMARIES_MODE, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
-  gst_element_class_set_static_metadata (element_class,
-      "Direct3D11 colorspace converter and scaler",
-      "Filter/Converter/Scaler/Effect/Video/Hardware",
-      "Resizes video and allow color conversion using Direct3D11",
-      "Seungha Yang <seungha.yang@navercorp.com>, "
-      "Jeongki Kim <jeongki.kim@jeongki.kim>");
-
-  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d11_convert_sink_event);
-}
-
-
-/**
+  /**
  * GstD3D11Convert:bilinear-filtering:
  *
  * Use bilinear filtering on scaling
@@ -2210,6 +2199,17 @@ g_object_class_install_property(gobject_class, PROP_CONVERT_BILINEAR_FILTERING,
     "Use bilinear filtering on scaling",
     DEFAULT_BILINEAR_FILTERING, (GParamFlags)(GST_PARAM_MUTABLE_PLAYING |
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  gst_element_class_set_static_metadata (element_class,
+      "Direct3D11 colorspace converter and scaler",
+      "Filter/Converter/Scaler/Effect/Video/Hardware",
+      "Resizes video and allow color conversion using Direct3D11",
+      "Seungha Yang <seungha.yang@navercorp.com>, "
+      "Jeongki Kim <jeongki.kim@jeongki.kim>");
+
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d11_convert_sink_event);
+}
+
 
 static void
 gst_d3d11_convert_init (GstD3D11Convert * self)
@@ -2578,6 +2578,19 @@ gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
           DEFAULT_BORDER_COLOR, (GParamFlags) (GST_PARAM_MUTABLE_PLAYING |
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+    /**
+   * GstD3D11Convert:bilinear-filtering:
+   *
+   * Use bilinear filtering on scaling
+   *
+   * Since: 1.21
+   */
+  g_object_class_install_property(gobject_class, PROP_SCALE_BILINEAR_FILTERING,
+    g_param_spec_boolean("bilinear-filtering", "Bilinear filtering",
+      "Use bilinear filtering on scaling",
+      DEFAULT_BILINEAR_FILTERING, (GParamFlags)(GST_PARAM_MUTABLE_PLAYING |
+        G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class,
       "Direct3D11 scaler",
       "Filter/Converter/Video/Scaler/Hardware",
@@ -2588,19 +2601,6 @@ gst_d3d11_scale_class_init (GstD3D11ScaleClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d11_scale_transform_caps);
   trans_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_d3d11_scale_fixate_caps);
 }
-
-/**
- * GstD3D11Convert:bilinear-filtering:
- *
- * Use bilinear filtering on scaling
- *
- * Since: 1.21
- */
-g_object_class_install_property(gobject_class, PROP_SCALE_BILINEAR_FILTERING,
-  g_param_spec_boolean("bilinear-filtering", "Bilinear filtering",
-    "Use bilinear filtering on scaling",
-    DEFAULT_BILINEAR_FILTERING, (GParamFlags)(GST_PARAM_MUTABLE_PLAYING |
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
 static void
 gst_d3d11_scale_init (GstD3D11Scale * self)
