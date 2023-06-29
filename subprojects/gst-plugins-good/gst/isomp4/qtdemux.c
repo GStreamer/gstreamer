@@ -1152,6 +1152,10 @@ gst_qtdemux_adjust_seek (GstQTDemux * qtdemux, gint64 desired_time,
     if (CUR_STREAM (str)->sparse && !use_sparse)
       continue;
 
+    /* raw audio streams can be ignored as we can seek anywhere within them */
+    if (str->subtype == FOURCC_soun && str->need_clip)
+      continue;
+
     seg_idx = gst_qtdemux_find_segment (qtdemux, str, desired_time);
     GST_DEBUG_OBJECT (qtdemux, "align segment %d", seg_idx);
 
