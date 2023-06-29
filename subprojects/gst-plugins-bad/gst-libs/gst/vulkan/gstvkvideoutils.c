@@ -117,17 +117,17 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
 
       switch (profile->profile.videoCodecOperation) {
         case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
-          if (profile->codec.h264.sType == video_codecs_map[i].stype) {
+          if (profile->codec.h264dec.sType == video_codecs_map[i].stype) {
             int j;
             for (j = 0; j < G_N_ELEMENTS (h264_profile_map); j++) {
-              if (profile->codec.h264.stdProfileIdc
+              if (profile->codec.h264dec.stdProfileIdc
                   == h264_profile_map[j].vk_profile) {
                 profile_str = h264_profile_map[j].profile_str;
                 break;
               }
             }
             for (j = 0; j < G_N_ELEMENTS (h264_layout_map); j++) {
-              if (profile->codec.h264.pictureLayout
+              if (profile->codec.h264dec.pictureLayout
                   == h264_layout_map[j].layout) {
                 layout = h264_layout_map[j].layout_str;
                 break;
@@ -136,10 +136,10 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
           }
           break;
         case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
-          if (profile->codec.h265.sType == video_codecs_map[i].stype) {
+          if (profile->codec.h265dec.sType == video_codecs_map[i].stype) {
             int j;
             for (j = 0; j < G_N_ELEMENTS (h265_profile_map); j++) {
-              if (profile->codec.h265.stdProfileIdc
+              if (profile->codec.h265dec.stdProfileIdc
                   == h265_profile_map[j].vk_profile)
                 profile_str = h265_profile_map[j].profile_str;
             }
@@ -235,17 +235,17 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
         case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:{
           int j;
 
-          profile->codec.h264.sType = video_codecs_map[i].stype;
-          profile->codec.h264.stdProfileIdc =
+          profile->codec.h264dec.sType = video_codecs_map[i].stype;
+          profile->codec.h264dec.stdProfileIdc =
               STD_VIDEO_H264_PROFILE_IDC_INVALID;
-          profile->codec.h264.pictureLayout =
+          profile->codec.h264dec.pictureLayout =
               VK_VIDEO_DECODE_H264_PICTURE_LAYOUT_FLAG_BITS_MAX_ENUM_KHR;
           profile->usage.pNext = &profile->codec;
 
           profile_str = gst_structure_get_string (structure, "profile");
           for (j = 0; profile_str && j < G_N_ELEMENTS (h264_profile_map); j++) {
             if (g_strcmp0 (profile_str, h264_profile_map[j].profile_str) == 0) {
-              profile->codec.h264.stdProfileIdc =
+              profile->codec.h264dec.stdProfileIdc =
                   h264_profile_map[j].vk_profile;
               break;
             }
@@ -253,7 +253,7 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
           layout = gst_structure_get_string (structure, "interlace-mode");
           for (j = 0; layout && j < G_N_ELEMENTS (h264_layout_map); j++) {
             if (g_strcmp0 (layout, h264_layout_map[j].layout_str) == 0) {
-              profile->codec.h264.pictureLayout = h264_layout_map[j].layout;
+              profile->codec.h264dec.pictureLayout = h264_layout_map[j].layout;
               break;
             }
           }
@@ -262,15 +262,15 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
         case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:{
           int j;
 
-          profile->codec.h265.sType = video_codecs_map[i].stype;
-          profile->codec.h265.stdProfileIdc =
+          profile->codec.h265dec.sType = video_codecs_map[i].stype;
+          profile->codec.h265dec.stdProfileIdc =
               STD_VIDEO_H265_PROFILE_IDC_INVALID;
           profile->usage.pNext = &profile->codec;
 
           profile_str = gst_structure_get_string (structure, "profile");
           for (j = 0; profile_str && j < G_N_ELEMENTS (h265_profile_map); j++) {
             if (g_strcmp0 (profile_str, h265_profile_map[j].profile_str) == 0) {
-              profile->codec.h265.stdProfileIdc =
+              profile->codec.h265dec.stdProfileIdc =
                   h265_profile_map[j].vk_profile;
               break;
             }

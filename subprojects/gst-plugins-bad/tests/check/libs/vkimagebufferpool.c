@@ -134,7 +134,7 @@ GST_START_TEST (test_vulkan_profiles)
       .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_10_BIT_KHR,
       .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_10_BIT_KHR,
     },
-    .codec.h265 = {
+    .codec.h265dec = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_KHR,
       .stdProfileIdc = STD_VIDEO_H265_PROFILE_IDC_MAIN_10,
     }
@@ -150,8 +150,8 @@ GST_START_TEST (test_vulkan_profiles)
       == VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR);
   fail_unless (profile2.profile.videoCodecOperation
       == profile.profile.videoCodecOperation);
-  fail_unless (profile2.codec.h265.stdProfileIdc
-      == profile.codec.h265.stdProfileIdc);
+  fail_unless (profile2.codec.h265dec.stdProfileIdc
+      == profile.codec.h265dec.stdProfileIdc);
 }
 
 GST_END_TEST;
@@ -172,7 +172,7 @@ GST_START_TEST (test_decoding_image)
       .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
       .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
     },
-    .codec.h264 = {
+    .codec.h264dec = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR,
       .stdProfileIdc = STD_VIDEO_H264_PROFILE_IDC_MAIN,
       .pictureLayout = VK_VIDEO_DECODE_H264_PICTURE_LAYOUT_PROGRESSIVE_KHR,
