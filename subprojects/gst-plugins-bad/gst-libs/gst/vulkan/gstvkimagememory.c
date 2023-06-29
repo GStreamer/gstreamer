@@ -91,6 +91,8 @@ gst_vulkan_image_memory_init (GstVulkanImageMemory * mem,
   mem->barrier.parent.type = GST_VULKAN_BARRIER_TYPE_IMAGE;
   mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
   mem->barrier.parent.access_flags = 0;
+  mem->barrier.parent.semaphore = VK_NULL_HANDLE;
+  mem->barrier.parent.semaphore_value = 0;
   mem->barrier.image_layout = VK_IMAGE_LAYOUT_UNDEFINED;
   /* *INDENT-OFF* */
   mem->barrier.subresource_range = (VkImageSubresourceRange) {
@@ -162,6 +164,27 @@ _vk_image_mem_new_alloc_with_image_info (GstAllocator * allocator,
   /* XXX: to avoid handling pNext lifetime  */
   mem->create_info.pNext = NULL;
   mem->image = image;
+
+#if defined(VK_KHR_timeline_semaphore)
+  if (gst_vulkan_device_is_extension_enabled (device,
+          VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME)) {
+    VkSemaphoreTypeCreateInfo semaphore_type_info = {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_TYPE_CREATE_INFO,
+      .semaphoreType = VK_SEMAPHORE_TYPE_TIMELINE,
+      .initialValue = 0,
+    };
+    VkSemaphoreCreateInfo semaphore_create_info = {
+      .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+      .pNext = &semaphore_type_info,
+    };
+
+    err = vkCreateSemaphore (device->device, &semaphore_create_info, NULL,
+        &mem->barrier.parent.semaphore);
+    if (gst_vulkan_error_to_g_error (err, &error, "vkCreateSemaphore") < 0)
+      goto vk_error;
+  }
+#endif
+
 
   err = vkGetPhysicalDeviceImageFormatProperties (gpu, image_info->format,
       VK_IMAGE_TYPE_2D, image_info->tiling, image_info->usage, 0,
@@ -370,6 +393,11 @@ _vk_image_mem_free (GstAllocator * allocator, GstMemory * memory)
 
   if (mem->vk_mem)
     gst_memory_unref ((GstMemory *) mem->vk_mem);
+
+  if (mem->barrier.parent.semaphore) {
+    vkDestroySemaphore (mem->device->device, mem->barrier.parent.semaphore,
+        NULL);
+  }
 
   if (mem->notify)
     mem->notify (mem->user_data);

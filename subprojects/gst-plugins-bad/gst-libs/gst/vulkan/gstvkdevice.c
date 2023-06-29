@@ -180,6 +180,9 @@ gst_vulkan_device_constructed (GObject * object)
   const char *optional_extensions[] = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME,
     VK_KHR_SAMPLER_YCBCR_CONVERSION_EXTENSION_NAME,
+#if defined(VK_KHR_timeline_semaphore)
+    VK_KHR_TIMELINE_SEMAPHORE_EXTENSION_NAME,
+#endif
 #if defined(VK_KHR_synchronization2)
     VK_KHR_SYNCHRONIZATION_2_EXTENSION_NAME,
 #endif
