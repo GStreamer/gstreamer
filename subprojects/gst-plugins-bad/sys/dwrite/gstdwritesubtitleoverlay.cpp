@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (dwrite_subtitle_overlay_debug);
 static GstStaticPadTemplate video_templ = GST_STATIC_PAD_TEMPLATE ("video",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_DWRITE_CAPS)
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 static GstStaticPadTemplate text_templ = GST_STATIC_PAD_TEMPLATE ("text",
@@ -46,7 +46,7 @@ static GstStaticPadTemplate text_templ = GST_STATIC_PAD_TEMPLATE ("text",
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_DWRITE_CAPS)
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 /* *INDENT-OFF* */

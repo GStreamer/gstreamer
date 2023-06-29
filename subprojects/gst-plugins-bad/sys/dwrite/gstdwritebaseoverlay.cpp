@@ -40,13 +40,13 @@ using namespace Microsoft::WRL;
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_DWRITE_CAPS)
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_DWRITE_CAPS)
+    GST_STATIC_CAPS ("video/x-raw(ANY)")
     );
 
 enum
@@ -176,6 +176,8 @@ struct _GstDWriteBaseOverlayPrivate
 
   std::wstring prev_text;
   std::wstring cur_text;
+
+  gboolean force_passthrough = FALSE;
 
   /* properties */
   gboolean visible = DEFAULT_VISIBLE;
@@ -861,8 +863,10 @@ gst_dwrite_base_overlay_propose_allocation (GstBaseTransform * trans,
           decide_query, query))
     return FALSE;
 
-  if (!decide_query)
+  if (!decide_query) {
+    GST_DEBUG_OBJECT (self, "Passthrough");
     return TRUE;
+  }
 
   gst_query_parse_allocation (query, &caps, nullptr);
 
@@ -995,7 +999,8 @@ gst_dwrite_base_overlay_add_feature (GstCaps * caps)
         gst_caps_features_copy (gst_caps_get_features (caps, i));
     GstCaps *c = gst_caps_new_full (gst_structure_copy (s), nullptr);
 
-    if (!gst_caps_features_contains (f,
+    if (!gst_caps_features_is_any (f) &&
+        !gst_caps_features_contains (f,
             GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
       gst_caps_features_add (f,
           GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION);
@@ -1403,6 +1408,7 @@ gst_dwrite_base_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   GstDWriteBaseOverlay *self = GST_DWRITE_BASE_OVERLAY (trans);
   GstDWriteBaseOverlayPrivate *priv = self->priv;
   GstCapsFeatures *features;
+  gboolean is_system = FALSE;
 
   GST_DEBUG_OBJECT (self, "Set caps, in caps %" GST_PTR_FORMAT
       ", out caps %" GST_PTR_FORMAT, incaps, outcaps);
@@ -1411,6 +1417,7 @@ gst_dwrite_base_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   priv->blend_mode = GstDWriteBaseOverlayBlendMode::UNKNOWN;
   priv->is_d3d11 = FALSE;
   priv->attach_meta = FALSE;
+  priv->force_passthrough = FALSE;
 
   if (!gst_video_info_from_caps (&self->info, incaps)) {
     GST_WARNING_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, incaps);
@@ -1439,6 +1446,9 @@ gst_dwrite_base_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
           GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
     priv->attach_meta = TRUE;
     GST_DEBUG_OBJECT (self, "Downstream support overlay meta");
+  } else if (features && gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY)) {
+    is_system = TRUE;
   }
 
   priv->prop_lock.lock ();
@@ -1449,6 +1459,15 @@ gst_dwrite_base_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   priv->layout_size.x = priv->layout_width * self->info.width;
   priv->layout_size.y = priv->layout_height * self->info.height;
   priv->prop_lock.unlock ();
+
+  if (!priv->is_d3d11 && !priv->attach_meta && !is_system) {
+    GST_WARNING_OBJECT (self,
+        "Not d3d11/system memory without composition meta support");
+    priv->force_passthrough = TRUE;
+    gst_base_transform_set_passthrough (trans, TRUE);
+  } else {
+    gst_base_transform_set_passthrough (trans, FALSE);
+  }
 
   gst_dwrite_base_overlay_decide_blend_mode (self);
 
@@ -1602,6 +1621,14 @@ gst_dwrite_base_overlay_prepare_output_buffer (GstBaseTransform * trans,
   GstFlowReturn ret;
   gboolean is_d3d11 = FALSE;
   gboolean upload_ret;
+
+  if (priv->force_passthrough) {
+    GST_TRACE_OBJECT (self, "Force passthrough");
+
+    return
+        GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
+        inbuf, outbuf);
+  }
 
   std::lock_guard < std::mutex > lk (priv->prop_lock);
   /* Invisible, do passthrough */
