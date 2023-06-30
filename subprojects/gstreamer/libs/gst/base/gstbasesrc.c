@@ -4195,11 +4195,11 @@ gst_base_src_push_segment (GstBaseSrc * src, const GstSegment * segment)
   src->priv->segment_pending = FALSE;
   src->priv->segment_seqnum = gst_util_seqnum_next ();
   gst_event_set_seqnum (seg_event, src->priv->segment_seqnum);
-  gst_pad_push_event (src->srcpad, seg_event);
-
-  GST_DEBUG_OBJECT (src, "Sending new segment %" GST_SEGMENT_FORMAT, segment);
 
   GST_OBJECT_UNLOCK (src);
+
+  GST_DEBUG_OBJECT (src, "Sending new segment %" GST_SEGMENT_FORMAT, segment);
+  gst_pad_push_event (src->srcpad, seg_event);
 
   src->running = TRUE;
 
