@@ -1585,6 +1585,7 @@ needs_segment (GstMiniObject * obj)
   return TRUE;
 }
 
+/* Called holding the priv->lock, and releases it temporarily */
 static void
 ensure_segment (GstAppSrc * appsrc)
 {
@@ -1595,8 +1596,10 @@ ensure_segment (GstAppSrc * appsrc)
       GST_EVENT_SEGMENT, 0);
 
   if (!seg_event) {
+    g_mutex_unlock (&priv->mutex);
     GST_DEBUG_OBJECT (appsrc, "sending default segment");
     gst_base_src_push_segment (GST_BASE_SRC_CAST (appsrc), &priv->last_segment);
+    g_mutex_lock (&priv->mutex);
   } else {
     gst_event_unref (seg_event);
   }
