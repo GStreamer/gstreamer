@@ -6,7 +6,8 @@ FROM 'mcr.microsoft.com/windows/server:ltsc2022'
 ENV ErrorActionPreference='Stop'
 SHELL ["powershell","-NoLogo", "-NonInteractive", "-Command"]
 
-RUN Install-WindowsFeature -Name Server-Media-Foundation
+# Not needed right now, disable for now
+#RUN Install-WindowsFeature -Name Server-Media-Foundation
 
 # Visual Studio can't be installed with choco.
 # It depends on dotnetfx v4.8.0.20190930, which requires a reboot: dotnetfx (exit code 3010)
