@@ -544,37 +544,6 @@ struct choose_data
   GstVulkanQueue *queue;
 };
 
-static gboolean
-_choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
-    struct choose_data *data)
-{
-  guint flags =
-      device->physical_device->queue_family_props[queue->family].queueFlags;
-
-  if ((flags & VK_QUEUE_GRAPHICS_BIT) != 0) {
-    if (data->queue)
-      gst_object_unref (data->queue);
-    data->queue = gst_object_ref (queue);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-static GstVulkanQueue *
-_find_graphics_queue (GstVulkanDownload * download)
-{
-  struct choose_data data;
-
-  data.download = download;
-  data.queue = NULL;
-
-  gst_vulkan_device_foreach_queue (download->device,
-      (GstVulkanDeviceForEachQueueFunc) _choose_queue, &data);
-
-  return data.queue;
-}
-
 static GstStateChangeReturn
 gst_vulkan_download_change_state (GstElement * element,
     GstStateChange transition)
@@ -615,7 +584,9 @@ gst_vulkan_download_change_state (GstElement * element,
       if (!gst_vulkan_queue_run_context_query (GST_ELEMENT (vk_download),
               &vk_download->queue)) {
         GST_DEBUG_OBJECT (vk_download, "No queue retrieved from peer elements");
-        vk_download->queue = _find_graphics_queue (vk_download);
+        vk_download->queue =
+            gst_vulkan_device_select_queue (vk_download->device,
+            VK_QUEUE_GRAPHICS_BIT);
       }
       if (!vk_download->queue) {
         GST_ELEMENT_ERROR (vk_download, RESOURCE, NOT_FOUND,

@@ -318,24 +318,6 @@ image_failed:
   }
 }
 
-#if defined(VK_KHR_synchronization2)
-static gboolean
-_choose_queue (GstVulkanDevice * device, GstVulkanQueue * _queue,
-    gpointer user_data)
-{
-  GstVulkanQueue **queue = user_data;
-  guint flags =
-      device->physical_device->queue_family_props[_queue->family].queueFlags;
-
-  if ((flags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT)) != 0) {
-    *queue = gst_object_ref (_queue);
-    return FALSE;
-  }
-
-  return TRUE;
-}
-#endif
-
 static gboolean
 prepare_buffer (GstVulkanImageBufferPool * vk_pool, GstBuffer * buffer)
 {
@@ -350,7 +332,9 @@ prepare_buffer (GstVulkanImageBufferPool * vk_pool, GstBuffer * buffer)
     GstVulkanCommandPool *cmd_pool;
     GstVulkanQueue *queue = NULL;
 
-    gst_vulkan_device_foreach_queue (vk_pool->device, _choose_queue, &queue);
+    queue =
+        gst_vulkan_device_select_queue (vk_pool->device,
+        VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
     if (!queue)
       return FALSE;
     cmd_pool = gst_vulkan_queue_create_command_pool (queue, &error);
