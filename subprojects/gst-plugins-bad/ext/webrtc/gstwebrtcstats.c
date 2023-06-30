@@ -584,9 +584,9 @@ _get_stats_from_ice_candidates (GstWebRTCBin * webrtc,
       can->stream_id, can->ipaddr, can->port);
   stats = gst_structure_new_empty (id);
 
-  if (strcmp (candidate_tag, "local")) {
+  if (g_str_equal (candidate_tag, "local")) {
     type = GST_WEBRTC_STATS_LOCAL_CANDIDATE;
-  } else if (strcmp (candidate_tag, "remote")) {
+  } else if (g_str_equal (candidate_tag, "remote")) {
     type = GST_WEBRTC_STATS_REMOTE_CANDIDATE;
   } else {
     GST_WARNING_OBJECT (webrtc, "Invalid ice candidate tag: %s", candidate_tag);
