@@ -49,8 +49,8 @@ G_STMT_START {                                                                 \
 } G_STMT_END
 
 #if SRT_VERSION_VALUE > 0x10402
-#define REASON_FORMAT "s"
-#define REASON_ARGS(reason) srt_rejectreason_str (reason)
+#define REASON_FORMAT "s (%d)"
+#define REASON_ARGS(reason) srt_rejectreason_str (reason), (reason)
 #else
 /* srt_rejectreason_str() is unavailable in libsrt 1.4.2 and prior due to
  * unexported symbol. See https://github.com/Haivision/srt/pull/1728. */
