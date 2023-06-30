@@ -922,23 +922,24 @@ if need_win_gbm != 'no'
   endif
 endif
 
+if cc.has_function ('glTexDirectVIV', dependencies : gles2_dep)
+  glconf.set('GST_GL_HAVE_VIV_DIRECTVIV', 1)
+endif
+
 if need_platform_egl != 'no' and need_win_viv_fb != 'no'
   if egl_dep.found() and cc.has_function ('fbGetDisplay', dependencies : egl_dep)
-    if cc.has_function ('glTexDirectVIV', dependencies : gles2_dep)
-      enabled_gl_winsys += 'viv-fb'
-      glconf.set('GST_GL_HAVE_WINDOW_VIV_FB', 1)
-      glconf.set('GST_GL_HAVE_VIV_DIRECTVIV', 1)
-      gl_priv_sources += [
-        'viv-fb/gstgldisplay_viv_fb.c',
-        'viv-fb/gstglwindow_viv_fb_egl.c',
-      ]
-      gl_cpp_args += ['-DEGL_API_FB']
-      gl_viv_fb_headers = [
-        'viv-fb/gstgldisplay_viv_fb.h',
-        'viv-fb/gstglwindow_viv_fb_egl.h',
-      ]
-      install_headers(gl_viv_fb_headers, subdir : 'gstreamer-1.0/gst/gl/viv-fb')
-    endif
+    enabled_gl_winsys += 'viv-fb'
+    glconf.set('GST_GL_HAVE_WINDOW_VIV_FB', 1)
+    gl_priv_sources += [
+      'viv-fb/gstgldisplay_viv_fb.c',
+      'viv-fb/gstglwindow_viv_fb_egl.c',
+    ]
+    gl_cpp_args += ['-DEGL_API_FB']
+    gl_viv_fb_headers = [
+      'viv-fb/gstgldisplay_viv_fb.h',
+      'viv-fb/gstglwindow_viv_fb_egl.h',
+    ]
+    install_headers(gl_viv_fb_headers, subdir : 'gstreamer-1.0/gst/gl/viv-fb')
   endif
 endif
 
