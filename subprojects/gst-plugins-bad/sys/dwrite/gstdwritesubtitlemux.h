@@ -25,11 +25,11 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_DWRITE_SUBTITLE_MUX_PAD (gst_dwrite_subtitle_mux_pad_get_type())
-G_DECLARE_FINAL_TYPE (GstSubtitleMuxPad, gst_dwrite_subtitle_mux_pad,
+G_DECLARE_FINAL_TYPE (GstDWriteSubtitleMuxPad, gst_dwrite_subtitle_mux_pad,
     GST, DWRITE_SUBTITLE_MUX_PAD, GstAggregatorPad)
 
 #define GST_TYPE_DWRITE_SUBTITLE_MUX (gst_dwrite_subtitle_mux_get_type())
-G_DECLARE_FINAL_TYPE (GstSubtitleMux, gst_dwrite_subtitle_mux,
+G_DECLARE_FINAL_TYPE (GstDWriteSubtitleMux, gst_dwrite_subtitle_mux,
     GST, DWRITE_SUBTITLE_MUX, GstAggregator)
 
 G_END_DECLS
