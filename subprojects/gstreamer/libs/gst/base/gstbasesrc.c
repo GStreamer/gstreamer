@@ -3845,11 +3845,22 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc, gboolean flushing)
 static gboolean
 gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
 {
+  GstBaseSrcClass *bclass;
+
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+
   /* we are now able to grab the LIVE lock, when we get it, we can be
    * waiting for PLAYING while blocked in the LIVE cond or we can be waiting
    * for the clock. */
   GST_LIVE_LOCK (basesrc);
   GST_DEBUG_OBJECT (basesrc, "unschedule clock");
+
+  /* unlock subclasses locked in ::create, we only do this when we stop playing. */
+  if (!live_play) {
+    GST_DEBUG_OBJECT (basesrc, "unlock");
+    if (bclass->unlock)
+      bclass->unlock (basesrc);
+  }
 
   /* unblock clock sync (if any) */
   if (basesrc->clock_id)
@@ -3861,6 +3872,11 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
 
   if (live_play) {
     gboolean start;
+
+    /* clear our unlock request when going to PLAYING */
+    GST_DEBUG_OBJECT (basesrc, "unlock stop");
+    if (bclass->unlock_stop)
+      bclass->unlock_stop (basesrc);
 
     /* for live sources we restart the timestamp correction */
     GST_OBJECT_LOCK (basesrc);
