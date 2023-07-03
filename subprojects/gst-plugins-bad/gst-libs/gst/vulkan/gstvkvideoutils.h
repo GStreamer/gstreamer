@@ -55,5 +55,8 @@ gboolean                gst_vulkan_video_profile_from_caps      (GstVulkanVideoP
 GST_VULKAN_API
 gboolean                gst_vulkan_video_profile_is_valid       (GstVulkanVideoProfile * profile,
                                                                  guint codec);
+GST_VULKAN_API
+gboolean                gst_vulkan_video_profile_is_equal       (const GstVulkanVideoProfile * a,
+                                                                 const GstVulkanVideoProfile * b);
 
 G_END_DECLS

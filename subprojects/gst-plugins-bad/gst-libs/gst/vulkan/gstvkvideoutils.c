@@ -365,3 +365,44 @@ gst_vulkan_video_profile_is_valid (GstVulkanVideoProfile * profile, guint codec)
 #endif
   return FALSE;
 }
+
+/**
+ * gst_vulkan_video_profile_is_equal:
+ * @a: a #GstVulkanVideoProfile
+ * @b: another #GstVulkanVideoProfile
+ *
+ * Returns: whether @a and @b contains the same information.
+ */
+gboolean
+gst_vulkan_video_profile_is_equal (const GstVulkanVideoProfile * a,
+    const GstVulkanVideoProfile * b)
+{
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+  gboolean profile;
+
+  g_return_val_if_fail (a && b, FALSE);
+
+  profile = ((a->profile.videoCodecOperation == b->profile.videoCodecOperation)
+      && (a->profile.chromaSubsampling == b->profile.chromaSubsampling)
+      && (a->profile.chromaBitDepth == b->profile.chromaBitDepth)
+      && (a->profile.lumaBitDepth == b->profile.lumaBitDepth)
+      && (a->codec.base.sType == b->codec.base.sType));
+
+  if (!profile)
+    return FALSE;
+
+  switch (a->profile.videoCodecOperation) {
+    case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
+      return ((a->codec.h264dec.stdProfileIdc == b->codec.h264dec.stdProfileIdc)
+          && a->codec.h264dec.pictureLayout == b->codec.h264dec.pictureLayout);
+    case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
+      return (a->codec.h265dec.stdProfileIdc == b->codec.h265dec.stdProfileIdc);
+    default:
+      return FALSE;
+  }
+
+  g_assert_not_reached ();
+#else
+  return FALSE;
+#endif
+}
