@@ -33,6 +33,12 @@ vulkan_plugin_enum_headers = files(
   'vkviewconvert.h',
 )
 
+extra_deps = []
+if vulkan_conf.get('GST_VULKAN_HAVE_VIDEO_EXTENSIONS') == 1
+  vulkan_sources += files('vkh264dec.c')
+  extra_deps += gstcodecs_dep
+endif
+
 vulkan_plugin_enums = gnome.mkenums_simple('gstvulkan-plugins-enumtypes',
     sources : vulkan_plugin_enum_headers,
     body_prefix : '#ifdef HAVE_CONFIG_H\n#include "config.h"\n#endif',
@@ -44,7 +50,7 @@ gstvulkan_plugin = library('gstvulkan',
   objc_args : gst_plugins_bad_args,
   link_args : noseh_link_args,
   include_directories : [configinc],
-  dependencies : [gstvideo_dep, gstbase_dep, gstvulkan_dep, vulkan_dep, gio_dep],
+  dependencies : [gstvideo_dep, gstbase_dep, gstvulkan_dep, vulkan_dep, gio_dep] + extra_deps,
   install : true,
   install_dir : plugins_install_dir,
 )
