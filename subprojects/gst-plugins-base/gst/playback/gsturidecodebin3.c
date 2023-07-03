@@ -1949,8 +1949,15 @@ gst_uri_decode_bin3_set_suburi (GstURIDecodeBin3 * dec, const gchar * uri)
   /* FIXME : Handle instant-uri-change. Should we just apply it automatically to
    * the current input item ? */
 
-  item = next_inactive_play_item (dec);
-  play_item_set_suburi (item, uri);
+  if (dec->input_item->posted_about_to_finish) {
+    /* WARNING : Setting sub-uri in gapless mode is unreliable */
+    GST_ELEMENT_WARNING (dec, CORE, NOT_IMPLEMENTED,
+        ("Setting sub-uri in gapless mode is not handled"),
+        ("Setting sub-uri in gapless mode is not implemented"));
+  } else {
+    item = next_inactive_play_item (dec);
+    play_item_set_suburi (item, uri);
+  }
 }
 
 /* Sync source handlers for the given play item. Might require creating/removing some
