@@ -949,6 +949,7 @@ remove_candidate_decoder (GstDecodebin3 * dbin, CandidateDecoder * candidate)
       g_list_remove (dbin->candidate_decoders, candidate);
   if (candidate->error)
     gst_message_unref (candidate->error);
+  g_free (candidate);
   GST_OBJECT_UNLOCK (dbin);
 }
 
