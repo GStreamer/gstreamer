@@ -1,0 +1,1025 @@
+<!-- This file was automatically generated from C sources - DO NOT EDIT!
+To affect the contents of this file, edit the original C definitions,
+and/or use gtk-doc annotations.  -->
+<repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
+  <include name="Gst" version="1.0"/>
+  <include name="GstBase" version="1.0"/>
+  <package name="gstreamer-analytics-1.0"/>
+  <namespace name="GstAnalytics" version="1.0" shared-library="libgstanalytics-1.0.so.0" c:identifier-prefixes="GstAnalytics,Gst" c:symbol-prefixes="gst_analytics,gst">
+    <alias name="MtdType" c:type="GstAnalyticsMtdType">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Type of analytics meta data</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <type name="guint32" c:type="guint32"/>
+    </alias>
+    <constant name="AN_RELATION_META_TAG" value="GST-ANALYSIS-RELATION-META-TAG" c:type="GST_AN_RELATION_META_TAG">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <record name="ClsMtd" c:type="GstAnalyticsClsMtd" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h">Handle containing data required to use gst_analytics_cls_mtd APIs. This type
+is generally expected to be allocated on the stack.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_index_by_quark" c:identifier="gst_analytics_cls_mtd_get_index_by_quark" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">index of the class associated with @quarks ( and label) or
+    a negative value on failure.</doc>
+          <type name="gint" c:type="gint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance handle</doc>
+            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </instance-parameter>
+          <parameter name="quark" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Quark of the class
+Get index of class represented by @quark</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_length" c:identifier="gst_analytics_cls_mtd_get_length" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Number of classes in this classification instance</doc>
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance handle
+Get number of classes</doc>
+            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_level" c:identifier="gst_analytics_cls_mtd_get_level" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get confidence level for class at @index</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">confidence level for @index, &lt;0.0 if the call failed.</doc>
+          <type name="gfloat" c:type="gfloat"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">instance handle</doc>
+            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </instance-parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Object class index</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_quark" c:identifier="gst_analytics_cls_mtd_get_quark" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Quark of this class (label) associated with @index</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance handle</doc>
+            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </instance-parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">index of the class
+Get quark of the class at @index</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_type_name" c:identifier="gst_analytics_cls_mtd_get_type_name" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get the static string representing #GstAnalyticsMtd type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">#GstAnalyticsMtd type name.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+      </function>
+      <function name="get_type_quark" c:identifier="gst_analytics_cls_mtd_get_type_quark" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get a quark identifying #GstAnalyticsMtd type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Quark of #GstAnalyticsMtd type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
+    <constant name="INF_RELATION_SPAN" value="-1" c:type="GST_INF_RELATION_SPAN">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <function-macro name="MTD_CAST" c:identifier="GST_ANALYTICS_MTD_CAST" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <parameters>
+        <parameter name="mtd">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <constant name="MTD_TYPE_ANY" value="0" c:type="GST_ANALYTICS_MTD_TYPE_ANY" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">A wildcard matching any type of analysis</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
+    <record name="Mtd" c:type="GstAnalyticsMtd" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Handle containing data required to use gst_analytics_mtd API. This type
+is generally expected to be allocated on the stack.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_id" c:identifier="gst_analytics_mtd_get_id" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of @instance</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd
+Get instance id</doc>
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_size" c:identifier="gst_analytics_mtd_get_size" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">@instance Instance of #GstAnalyticsRelatableMtd
+Get instance size</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Size (in bytes) of this instance or 0 on failure.</doc>
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_type_quark" c:identifier="gst_analytics_mtd_get_type_quark" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">quark associated with type.</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd
+Get analysis result type.</doc>
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+    </record>
+    <record name="ODMtd" c:type="GstAnalyticsODMtd" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Handle containing data required to use gst_analytics_od_mtd APIs. This type
+is generally expected to be allocated on the stack.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_location" c:identifier="gst_analytics_od_mtd_get_location" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Retrieve location and location confidence level.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">TRUE on success, otherwise FALSE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">instance</doc>
+            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+          </instance-parameter>
+          <parameter name="x" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">x component of upper-left corner of the object location</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="y" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">y component of upper-left corner of the object location</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="w" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box width of the object location</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="h" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box height of the object location</doc>
+            <type name="gint" c:type="gint*"/>
+          </parameter>
+          <parameter name="loc_conf_lvl" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Confidence on object location</doc>
+            <type name="gfloat" c:type="gfloat*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_type" c:identifier="gst_analytics_od_mtd_get_type" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark different from on success and 0 on failure.</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Instance handle
+Quark of the class of object associated with this location.</doc>
+            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="get_type_name" c:identifier="gst_analytics_od_mtd_get_type_name" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a text representing object-detection metadata type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">#GstAnalyticsMtd type name.</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+      </function>
+      <function name="get_type_quark" c:identifier="gst_analytics_od_mtd_get_type_quark" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a quark that represent object-detection metadata type</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark of #GstAnalyticsMtd type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
+    <bitfield name="RelTypes" version="1.24" c:type="GstAnalyticsRelTypes">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <member name="none" value="0" c:identifier="GST_ANALYTICS_REL_TYPE_NONE">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">No relation</doc>
+      </member>
+      <member name="is_part_of" value="2" c:identifier="GST_ANALYTICS_REL_TYPE_IS_PART_OF">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">First analysis-meta is part of second analysis-meta</doc>
+      </member>
+      <member name="contain" value="4" c:identifier="GST_ANALYTICS_REL_TYPE_CONTAIN">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">First analysis-meta contain second analysis-meta.</doc>
+      </member>
+      <member name="relate_to" value="8" c:identifier="GST_ANALYTICS_REL_TYPE_RELATE_TO">
+      </member>
+      <member name="last" value="16" c:identifier="GST_ANALYTICS_REL_TYPE_LAST">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">reserved</doc>
+      </member>
+      <member name="any" value="2147483647" c:identifier="GST_ANALYTICS_REL_TYPE_ANY">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Only use for criteria.</doc>
+      </member>
+    </bitfield>
+    <record name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Base structure for analysis-metadata that can be placed in relation. Only
+other analysis-metadata based on GstAnalyticsRelatableMtdData should
+directly use this structure.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <field name="analysis_type" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Identify the type of analysis-metadata</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </field>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="size" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Size in bytes of the instance</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="free">
+        <callback name="free">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="mtd_data" transfer-ownership="none">
+              <type name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_gst_reserved" writable="1">
+        <array zero-terminated="0" fixed-size="4">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
+    </record>
+    <record name="RelationMeta" c:type="GstAnalyticsRelationMeta" disguised="1">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <method name="add_cls_mtd" c:identifier="gst_analytics_relation_meta_add_cls_mtd" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Add analytic classification metadata to @instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Added successfully</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance of #GstAnalyticsRelationMeta where to add classification instance</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="length" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">length of @confidence_levels</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="confidence_levels" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">confidence levels</doc>
+            <array length="0" zero-terminated="0" c:type="gfloat*">
+              <type name="gfloat" c:type="gfloat"/>
+            </array>
+          </parameter>
+          <parameter name="class_quarks" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">labels of this
+   classification. Order define index, quark, labels relation. This array
+   need to exist as long has this classification meta exist.</doc>
+            <array length="0" zero-terminated="0" c:type="GQuark*">
+              <type name="GLib.Quark" c:type="GQuark"/>
+            </array>
+          </parameter>
+          <parameter name="cls_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Handle updated to newly added classification meta.</doc>
+            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_mtd" c:identifier="gst_analytics_relation_meta_add_mtd" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Add a relatable metadata to @meta. This method is meant to be used by
+new struct sub-classing GstAnalyticsRelatableMtd.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">New GstAnalyticsRelatableMtdData instance.
+
+Since 1.24</doc>
+          <type name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Type of relatable (#GstAnalyticsRelatableMtd)</doc>
+            <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Size required</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="rlt_mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Updated handle</doc>
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_od_mtd" c:identifier="gst_analytics_relation_meta_add_od_mtd" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Added successfully</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Instance of #GstAnalyticsRelationMeta where to add classification instance</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark of the object type</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="x" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">x component of bounding box upper-left corner</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="y" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">y component of bounding box upper-left corner</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="w" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box width</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="h" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">bounding box height</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="loc_conf_lvl" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">confidence level on the object location</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="od_mtd" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Handle updated with newly added object detection
+   meta. Add an object-detetion metadata to @instance.</doc>
+            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_one_cls_mtd" c:identifier="gst_analytics_relation_meta_add_one_cls_mtd" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Add analytic classification metadata to @instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Added successfully</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance of #GstAnalyticsRelationMeta where to add classification instance</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="confidence_level" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">confidence levels</doc>
+            <type name="gfloat" c:type="gfloat"/>
+          </parameter>
+          <parameter name="class_quark" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">labels of this
+   classification. Order define index, quark, labels relation. This array
+   need to exist as long has this classification meta exist.</doc>
+            <type name="GLib.Quark" c:type="GQuark"/>
+          </parameter>
+          <parameter name="cls_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Handle updated to newly added classification meta.</doc>
+            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_tracking_mtd" c:identifier="gst_analytics_relation_meta_add_tracking_mtd" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Added successfully</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Instance of GstAnalyticsRelationMeta where to add tracking mtd</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="tracking_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Tracking id</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+          <parameter name="tracking_first_seen" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Timestamp of first time the object was observed.</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+          <parameter name="trk_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Handle updated with newly added tracking meta.
+Add an analytic tracking metadata to @instance.</doc>
+            <type name="TrackingMtd" c:type="GstAnalyticsTrackingMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="exist" c:identifier="gst_analytics_relation_meta_exist">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Verify existence of relation(s) between @an_meta_first_d and
+@an_meta_second_id according to relation condition @cond_types. It optionally
+also return a shortest path of relations ( compliant with @cond_types)
+between @an_meta_first_id and @an_meta_second_id.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">TRUE if a relation between exit between @an_meta_first_id and
+ @an_meta_second_id, otherwise FALSE.
+
+Since 1.24</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="rmeta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstAnalyticsRelationMeta describing analysis-meta
+   relation</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_first_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">First analysis-meta</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="an_meta_second_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Second analysis-meta</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="max_relation_span" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Maximum number of relation between @an_meta_first_id and
+   @an_meta_second_id.
+   A value of 1 mean only only consider direct relation.</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="cond_types" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">condition on relation types.</doc>
+            <type name="RelTypes" c:type="GstAnalyticsRelTypes"/>
+          </parameter>
+          <parameter name="relations_path" direction="out" caller-allocates="1" transfer-ownership="full" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">
+   If not NULL this list will be filled with relation path between
+   @an_meta_first_id and
+   @an_meta_second_id. List value should be access with GSList API. Use
+   GPOINTER_TO_INT(iter-&gt;data) where iter is a GSList element to get
+   analysis-meta id on the relation path. Free this list with g_slist_free
+   (@relations_path) after using.</doc>
+            <array zero-terminated="0" name="GLib.Array" c:type="GArray**">
+              <type name="gint"/>
+            </array>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_cls_mtd" c:identifier="gst_analytics_relation_meta_get_cls_mtd">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
+otherwise this method return FALSE and @rlt is invalid.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">TRUE if successful.
+
+Since 1.24</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Instance of #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Id of #GstAnalyticsClsMtd instance to retrieve</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Will be filled with relatable
+   meta</doc>
+            <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_direct_related" c:identifier="gst_analytics_relation_meta_get_direct_related">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">TRUE if @rlt_mtd was updated, other wise FALSE
+
+Since 1.24</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">GstAnalyticsRelationMeta instance where to query for
+   GstAnalyticsRelatableMtd.</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of GstAnalyticsMtd involved in relation to query</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="relation_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Type of relation to filter on.</doc>
+            <type name="RelTypes" c:type="GstAnalyticsRelTypes"/>
+          </parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Type of GstAnalyticsMtd to filter on</doc>
+            <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+          </parameter>
+          <parameter name="state" direction="inout" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Opaque data to store state of the query.
+   If @state point to NULL, the first analytics-metadata directly related
+   to @an_meta_id will be set in @rlt_mtd. Doesn't need to be free.</doc>
+            <type name="gpointer" c:type="gpointer*"/>
+          </parameter>
+          <parameter name="rlt_mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Handle updated to directly related relatable meta.</doc>
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_mtd" c:identifier="gst_analytics_relation_meta_get_mtd">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
+otherwise this method return FALSE and @rlt is invalid.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">TRUE if successful.
+
+Since 1.24</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of GstAnalyticsMtd instance to retrieve</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Filter on a specific type of analysis, use
+ %GST_ANALYTICS_MTD_TYPE_ANY to match any type</doc>
+            <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Will be filled with relatable
+   meta</doc>
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_mtd_data" c:identifier="gst_analytics_relation_meta_get_mtd_data" introspectable="0">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of GstAnalyticsRelatableMtdData
+
+Since 1.24</doc>
+          <type name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of GstAnalyticsMtd instance to retrieve</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_od_mtd" c:identifier="gst_analytics_relation_meta_get_od_mtd">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
+otherwise this method return FALSE and @rlt is invalid.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">TRUE if successful.
+
+Since 1.24</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="xbmeta" transfer-ownership="none">
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Id of #GstAnalyticsOdMtd instance to retrieve</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Will be filled with relatable
+   meta</doc>
+            <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_relation" c:identifier="gst_analytics_relation_meta_get_relation" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">relation description between first and second analysis-meta.
+
+Get relations between first and second analysis-meta.
+Ids (@an_meta_first_id and @an_meta_second_id) must be from a call to
+@gst_analytics_mtd_get_id (handle).</doc>
+          <type name="RelTypes" c:type="GstAnalyticsRelTypes"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_first_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of first analysis-meta</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="an_meta_second_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of second  analysis-meta</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_tracking_mtd" c:identifier="gst_analytics_relation_meta_get_tracking_mtd">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Fill @rlt if a analytics-meta with id == @an_meta_id exist in @meta instance,
+otherwise this method return FALSE and @rlt is invalid.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">TRUE if successful.
+
+Since 1.24</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="xbmeta" transfer-ownership="none">
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="an_meta_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Id of GstAnalyticsMtd instance to retrieve</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Will be filled with relatable
+   meta</doc>
+            <type name="TrackingMtd" c:type="GstAnalyticsTrackingMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="iterate" c:identifier="gst_analytics_relation_meta_iterate">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">FALSE if end was reached and iteration is completed.
+
+Since 1.24</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of GstAnalyticsRelationMeta</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="state" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Opaque data to store iteration state, initialize to NULL, no need to
+   free it.</doc>
+            <type name="gpointer" c:type="gpointer*"/>
+          </parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Type of GstAnalyticsMtd to iterate on or use
+ %GST_ANALYTICS_MTD_TYPE_ANY for any.</doc>
+            <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+          </parameter>
+          <parameter name="rlt_mtd" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Handle updated to iterated GstAnalyticsRelatableMtd.</doc>
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_relation" c:identifier="gst_analytics_relation_meta_set_relation" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Sets the relation (#GstAnalyticsRelTypes) between @an_meta_first and
+   @an_meta_second.
+Ids must have been obtained a call to
+   @gst_analytics_mtd_get_id(handle).</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">TRUE on success and FALSE on failure.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Parameter to receive new maximum number of
+   analysis-meta described by relation.</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstAnalyticsRelTypes defining relation between two analysis-meta</doc>
+            <type name="RelTypes" c:type="GstAnalyticsRelTypes"/>
+          </parameter>
+          <parameter name="an_meta_first_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">first meta id</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+          <parameter name="an_meta_second_id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">second meta id</doc>
+            <type name="gint" c:type="gint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_info" c:identifier="gst_analytics_relation_meta_get_info">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
+    <record name="RelationMetaInitParams" c:type="GstAnalyticsRelationMetaInitParams" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">GstAnalyticsRelationMeta initialization parameters.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <field name="initial_relation_order" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Initial relations order.</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+      <field name="initial_buf_size" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Buffer size in bytes to store relatable metadata</doc>
+        <type name="gsize" c:type="gsize"/>
+      </field>
+    </record>
+    <record name="TrackingMtd" c:type="GstAnalyticsTrackingMtd" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Store information on results of object tracking</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_info" c:identifier="gst_analytics_tracking_mtd_get_info" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Retrieve tracking information.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Successfully retrieved info.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Instance of tracking metadata</doc>
+            <type name="TrackingMtd" c:type="GstAnalyticsTrackingMtd*"/>
+          </instance-parameter>
+          <parameter name="tracking_id" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Updated tracking id</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
+          <parameter name="tracking_first_seen" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Updated timestamp of the tracking first observation.</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+          <parameter name="tracking_last_seen" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Updated timestamp of the tracking last observation.</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime*"/>
+          </parameter>
+          <parameter name="tracking_lost" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Has the tracking been lost</doc>
+            <type name="gboolean" c:type="gboolean*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_lost" c:identifier="gst_analytics_tracking_mtd_set_lost" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Update successful</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Instance of GstAnalyticsTrackingMtd.
+Set tracking to lost</doc>
+            <type name="TrackingMtd" c:type="GstAnalyticsTrackingMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="update_last_seen" c:identifier="gst_analytics_tracking_mtd_update_last_seen" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">GstAnalyticsTrackingMtd instance</doc>
+            <type name="TrackingMtd" c:type="GstAnalyticsTrackingMtd*"/>
+          </instance-parameter>
+          <parameter name="last_seen" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Timestamp of last time this object was tracked</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_type_name" c:identifier="gst_analytics_tracking_mtd_get_type_name">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+        <return-value transfer-ownership="none">
+          <type name="utf8" c:type="const gchar*"/>
+        </return-value>
+      </function>
+      <function name="get_type_quark" c:identifier="gst_analytics_tracking_mtd_get_type_quark" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Quark representing the type of GstAnalyticsRelatableMtd
+
+Get the quark identifying the relatable type</doc>
+          <type name="GLib.Quark" c:type="GQuark"/>
+        </return-value>
+      </function>
+    </record>
+    <function name="buffer_add_analytics_relation_meta" c:identifier="gst_buffer_add_analytics_relation_meta">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Attach a analysis-results-meta-relation  meta (#GstAnalyticsRelationMeta)to @buffer.
+
+A #GstAnalyticsRelationMeta is a metadata describing relation between other
+analysis meta. It's more efficient to use #gst_buffer_add_analytics_relation_meta_full
+and providing the maximum number of analysis meta that will attached to a buffer.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Newly attached #GstAnalyticsRelationMeta
+
+Since 1.24</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_add_analytics_relation_meta_full" c:identifier="gst_buffer_add_analytics_relation_meta_full">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Attache a analysis-results relation-meta (#GstAnalyticsRelationMeta) to @buffer.
+
+A #GstAnalyticsRelationMeta is a metadata describing relation between other
+analysis meta.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Newly attached #GstAnalyticsRelationMeta
+
+Since 1.24</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="init_params" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Initialization parameters</doc>
+          <type name="RelationMetaInitParams" c:type="GstAnalyticsRelationMetaInitParams*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_get_analytics_relation_meta" c:identifier="gst_buffer_get_analytics_relation_meta" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Retrives the meta or %NULL if it doesn't exist</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">The #GstAnalyticsRelationMeta if there is one</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="cls_mtd_get_type_name" c:identifier="gst_analytics_cls_mtd_get_type_name" moved-to="ClsMtd.get_type_name" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get the static string representing #GstAnalyticsMtd type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">#GstAnalyticsMtd type name.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+    </function>
+    <function name="cls_mtd_get_type_quark" c:identifier="gst_analytics_cls_mtd_get_type_quark" moved-to="ClsMtd.get_type_quark" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get a quark identifying #GstAnalyticsMtd type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Quark of #GstAnalyticsMtd type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </return-value>
+    </function>
+    <function name="od_mtd_get_type_name" c:identifier="gst_analytics_od_mtd_get_type_name" moved-to="ODMtd.get_type_name" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a text representing object-detection metadata type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">#GstAnalyticsMtd type name.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+    </function>
+    <function name="od_mtd_get_type_quark" c:identifier="gst_analytics_od_mtd_get_type_quark" moved-to="ODMtd.get_type_quark" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a quark that represent object-detection metadata type</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark of #GstAnalyticsMtd type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+      </return-value>
+    </function>
+    <function name="relation_get_length" c:identifier="gst_analytics_relation_get_length" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">@instance Instance of #GstAnalyticsRelationMeta
+Get number of relatable meta attached to instance</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Number of analysis-meta attached to this
+instance.</doc>
+        <type name="gsize" c:type="gsize"/>
+      </return-value>
+      <parameters>
+        <parameter name="instance" transfer-ownership="none">
+          <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="relation_meta_api_get_type" c:identifier="gst_analytics_relation_meta_api_get_type" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">GType of GstAnalyticsRelationMeta</doc>
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="relation_meta_get_info" c:identifier="gst_analytics_relation_meta_get_info" moved-to="RelationMeta.get_info">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
+    <function name="tracking_mtd_get_type_name" c:identifier="gst_analytics_tracking_mtd_get_type_name" moved-to="TrackingMtd.get_type_name">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+      <return-value transfer-ownership="none">
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+    </function>
+    <function name="tracking_mtd_get_type_quark" c:identifier="gst_analytics_tracking_mtd_get_type_quark" moved-to="TrackingMtd.get_type_quark" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Quark representing the type of GstAnalyticsRelatableMtd
+
+Get the quark identifying the relatable type</doc>
+        <type name="GLib.Quark" c:type="GQuark"/>
+      </return-value>
+    </function>
+  </namespace>
+</repository>

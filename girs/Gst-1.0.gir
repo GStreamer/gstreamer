@@ -22114,6 +22114,16 @@ In hindsight, this tag should have been called "memory-layout".</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <function-macro name="META_TRANSFORM_IS_CLEAR" c:identifier="GST_META_TRANSFORM_IS_CLEAR" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Check if the transform type is clearing the content of the meta without
+freeing it.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <parameters>
+        <parameter name="type">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a transform type</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="META_TRANSFORM_IS_COPY" c:identifier="GST_META_TRANSFORM_IS_COPY" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Check if the transform type is a copy transform</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
