@@ -3156,11 +3156,10 @@ gst_rtspsrc_handle_src_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstRTSPStream *stream;
-  GstRTSPSrc *self = GST_RTSPSRC (GST_OBJECT_PARENT (parent));
 
   stream = gst_pad_get_element_private (pad);
 
-  event = gst_rtspsrc_update_src_event (self, stream, event);
+  event = gst_rtspsrc_update_src_event (stream->parent, stream, event);
 
   return gst_pad_push_event (stream->srcpad, event);
 }
