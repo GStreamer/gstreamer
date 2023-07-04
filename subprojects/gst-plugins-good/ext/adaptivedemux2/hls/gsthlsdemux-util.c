@@ -944,6 +944,10 @@ gst_hlsdemux_handle_content_webvtt (GstHLSDemux * demux,
 out:
   if (ret) {
     gchar *newfile;
+
+    /* Ensure file always ends with an empty newline by adding an empty
+     * line. This helps downstream parsers properly detect entries */
+    g_ptr_array_add (builder, g_strdup ("\n"));
     /* Add NULL-terminator to string list */
     g_ptr_array_add (builder, NULL);
     newfile = g_strjoinv ("\n", (gchar **) builder->pdata);
