@@ -279,7 +279,7 @@ gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
     if (self->internal_hwnd_thread == g_thread_self ()) {
       /* State changing thread is identical to internal window thread.
        * window can be closed here */
-     // gst_d3d11_window_win32_release_external_handle(self->external_hwnd);
+      gst_d3d11_window_win32_release_external_handle(self->external_hwnd);
       GST_INFO_OBJECT (self, "Closing internal window immediately");
       gst_d3d11_window_win32_destroy_internal_window (self->internal_hwnd);
       RemovePropA(self->internal_hwnd, D3D11_WINDOW_PROP_NAME);
@@ -916,7 +916,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     self = (GstD3D11WindowWin32*)GetPropA(hWnd, D3D11_WINDOW_PROP_NAME);
     if (uMsg == WM_GST_D3D11_DESTROY_INTERNAL_WINDOW) {
       GST_INFO("Handle destroy window message");
-      gst_d3d11_window_win32_release_external_handle(self);
+      gst_d3d11_window_win32_release_external_handle(self->external_hwnd);
       gst_d3d11_window_win32_destroy_internal_window(hWnd);
       g_assert(GST_IS_D3D11_WINDOW_WIN32(self));
       g_assert(self->internal_hwnd == hWnd);
