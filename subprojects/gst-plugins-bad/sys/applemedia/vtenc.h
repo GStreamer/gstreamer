@@ -21,6 +21,7 @@
 #define __GST_VTENC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstqueuearray.h>
 #include <gst/codecparsers/gsth264parser.h>
 #include <gst/video/video.h>
 #include <VideoToolbox/VideoToolbox.h>
@@ -74,8 +75,6 @@ struct _GstVTEnc
   gboolean dump_properties;
   gboolean dump_attributes;
 
-  gint caps_width, caps_height;
-  gint caps_fps_n, caps_fps_d;
   gboolean have_field_order;
   GstVideoCodecState *input_state;
   GstVideoInfo video_info;
@@ -83,7 +82,16 @@ struct _GstVTEnc
   CFDictionaryRef keyframe_props;
   GstClockTime dts_offset;
 
-  GAsyncQueue * cur_outframes;
+  GstQueueArray * output_queue;
+  /* Protects output_queue, is_flushing and pause_task */
+  GMutex queue_mutex;
+  GCond queue_cond;
+  
+  /* downstream_ret is protected by the STREAM_LOCK */
+  GstFlowReturn downstream_ret;
+  gboolean negotiate_downstream;
+  gboolean is_flushing;
+  gboolean pause_task;
 };
 
 void gst_vtenc_register_elements (GstPlugin * plugin);
