@@ -32,13 +32,13 @@ G_BEGIN_DECLS
 
 /**
  * GstDsdFormat:
- * @GST_NUM_DSD_FORMATS: number of valid DSD formats
  * @GST_DSD_FORMAT_UNKNOWN: unknown / invalid DSD format
  * @GST_DSD_FORMAT_U8: 8 DSD bits in 1 byte
  * @GST_DSD_FORMAT_U16LE: 16 DSD bits in 2 bytes, little endian order
  * @GST_DSD_FORMAT_U16BE: 16 DSD bits in 2 bytes, big endian order
  * @GST_DSD_FORMAT_U32LE: 32 DSD bits in 4 bytes, little endian order
  * @GST_DSD_FORMAT_U32BE: 32 DSD bits in 4 bytes, big endian order
+ * @GST_NUM_DSD_FORMATS: number of valid DSD formats
  * @GST_DSD_FORMAT_U16: 16 DSD bits in 2 bytes, native endianness
  * @GST_DSD_FORMAT_U32: 32 DSD bits in 4 bytes, native endianness
  *
@@ -47,6 +47,7 @@ G_BEGIN_DECLS
  * Since: 1.24
  */
 typedef enum {
+  GST_DSD_FORMAT_UNKNOWN = -1,
   GST_DSD_FORMAT_U8 = 0,
   GST_DSD_FORMAT_U16LE,
   GST_DSD_FORMAT_U16BE,
@@ -54,8 +55,6 @@ typedef enum {
   GST_DSD_FORMAT_U32BE,
 
   GST_NUM_DSD_FORMATS,
-
-  GST_DSD_FORMAT_UNKNOWN = 0xffffffff,
 
   /* native endianness equivalents */
   GST_DSD_FORMAT_U16 = _GST_DSD_FORMAT_NE(U16),
