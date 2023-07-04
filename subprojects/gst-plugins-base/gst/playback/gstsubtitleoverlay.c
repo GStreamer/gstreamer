@@ -1736,7 +1736,6 @@ gst_subtitle_overlay_video_sink_setcaps (GstSubtitleOverlay * self,
   if (!gst_video_info_from_caps (&info, caps)) {
     GST_ERROR_OBJECT (self, "Failed to parse caps");
     ret = FALSE;
-    GST_SUBTITLE_OVERLAY_UNLOCK (self);
     goto out;
   }
 
