@@ -581,7 +581,8 @@ gst_dsd_info_to_caps (const GstDsdInfo * info)
   GstAudioFlags flags;
 
   g_return_val_if_fail (info != NULL, NULL);
-  g_return_val_if_fail (info->format < GST_NUM_DSD_FORMATS, NULL);
+  g_return_val_if_fail (info->format > GST_DSD_FORMAT_UNKNOWN
+      && info->format < GST_NUM_DSD_FORMATS, NULL);
   g_return_val_if_fail (info->rate >= 1, NULL);
   g_return_val_if_fail (info->channels >= 1, NULL);
 
@@ -1002,8 +1003,10 @@ gst_dsd_convert (const guint8 * input_data, guint8 * output_data,
 {
   g_return_if_fail (input_data != NULL);
   g_return_if_fail (output_data != NULL);
-  g_return_if_fail (input_format < GST_NUM_DSD_FORMATS);
-  g_return_if_fail (output_format < GST_NUM_DSD_FORMATS);
+  g_return_if_fail (input_format > GST_DSD_FORMAT_UNKNOWN
+      && input_format < GST_NUM_DSD_FORMATS);
+  g_return_if_fail (output_format > GST_DSD_FORMAT_UNKNOWN
+      && output_format < GST_NUM_DSD_FORMATS);
   g_return_if_fail (input_layout == GST_AUDIO_LAYOUT_INTERLEAVED
       || input_plane_offsets != NULL);
   g_return_if_fail (output_layout == GST_AUDIO_LAYOUT_INTERLEAVED
