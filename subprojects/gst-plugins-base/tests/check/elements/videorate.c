@@ -1090,6 +1090,25 @@ static TestInfo caps_negotiation_tests[] = {
       .expected_src_caps =
         "video/x-raw, framerate=(fraction)15/1;"
         "video/x-raw, framerate=(fraction)[0/1, 20/1]"},
+  {
+        .caps = "video/x-raw, framerate=0/1",
+        .drop_only = TRUE,
+        .expected_sink_caps =
+        "video/x-raw, framerate=(fraction)0/1;"
+        "video/x-raw, framerate=(fraction)[0/1, MAX];",
+      .expected_src_caps =
+        "video/x-raw, framerate=(fraction)0/1;"
+        "video/x-raw, framerate=(fraction)[0/1, MAX]"},
+  {
+        .caps = "video/x-raw, framerate=0/1",
+        .drop_only = TRUE,
+        .max_rate = 15,
+        .expected_sink_caps =
+        "video/x-raw, framerate=(fraction)0/1;"
+        "video/x-raw, framerate=(fraction)[0/1, MAX];",
+      .expected_src_caps =
+        "video/x-raw, framerate=(fraction)0/1;"
+        "video/x-raw, framerate=(fraction)[0/1, 15/1]"},
 };
 
 static gboolean

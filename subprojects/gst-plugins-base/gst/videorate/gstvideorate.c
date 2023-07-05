@@ -503,6 +503,11 @@ gst_video_rate_transform_caps (GstBaseTransform * trans,
         /* We can provide everything up to the maximum framerate at the src */
         gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE,
             0, 1, max_num, max_denom, NULL);
+      } else if (min_num == 0) {
+        /* if provided with variable framerate input, then we don't have a
+         * restriction on the output framerate currently */
+        gst_structure_set (s2, "framerate", GST_TYPE_FRACTION_RANGE,
+            min_num, 1, maxrate, 1, NULL);
       }
     } else if (direction == GST_PAD_SINK) {
       gint min_num = 0, min_denom = 1;
