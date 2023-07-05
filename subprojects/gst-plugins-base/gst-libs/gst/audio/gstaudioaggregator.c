@@ -638,12 +638,24 @@ gst_audio_aggregator_recalculate_latency (GstAudioAggregator * aagg)
   GST_OBJECT_UNLOCK (aagg);
 }
 
+
+static void
+gst_audio_aggregator_constructed (GObject * object)
+{
+  GstAudioAggregator *aagg = GST_AUDIO_AGGREGATOR (object);
+
+  gst_audio_aggregator_translate_output_buffer_duration (aagg,
+      DEFAULT_OUTPUT_BUFFER_DURATION);
+  gst_audio_aggregator_recalculate_latency (aagg);
+}
+
 static void
 gst_audio_aggregator_class_init (GstAudioAggregatorClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstAggregatorClass *gstaggregator_class = (GstAggregatorClass *) klass;
 
+  gobject_class->constructed = gst_audio_aggregator_constructed;
   gobject_class->set_property = gst_audio_aggregator_set_property;
   gobject_class->get_property = gst_audio_aggregator_get_property;
   gobject_class->dispose = gst_audio_aggregator_dispose;
@@ -758,10 +770,6 @@ gst_audio_aggregator_init (GstAudioAggregator * aagg)
 
   aagg->priv->alignment_threshold = DEFAULT_ALIGNMENT_THRESHOLD;
   aagg->priv->discont_wait = DEFAULT_DISCONT_WAIT;
-
-  gst_audio_aggregator_translate_output_buffer_duration (aagg,
-      DEFAULT_OUTPUT_BUFFER_DURATION);
-  gst_audio_aggregator_recalculate_latency (aagg);
 
   aagg->current_caps = NULL;
 
