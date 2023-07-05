@@ -255,6 +255,16 @@ _timeline_track_removed_cb (GESTimeline * timeline, GESTrack * track,
 }
 
 static void
+ges_pipeline_constructed (GObject * object)
+{
+  GESPipeline *self = GES_PIPELINE (object);
+
+  ges_pipeline_set_mode (self, DEFAULT_TIMELINE_MODE);
+
+  ((GObjectClass *) ges_pipeline_parent_class)->constructed (object);
+}
+
+static void
 ges_pipeline_dispose (GObject * object)
 {
   GESPipeline *self = GES_PIPELINE (object);
@@ -301,6 +311,8 @@ ges_pipeline_class_init (GESPipelineClass * klass)
   GST_DEBUG_CATEGORY_INIT (ges_pipeline_debug, "gespipeline",
       GST_DEBUG_FG_YELLOW, "ges pipeline");
 
+
+  object_class->constructed = ges_pipeline_constructed;
   object_class->dispose = ges_pipeline_dispose;
   object_class->get_property = ges_pipeline_get_property;
   object_class->set_property = ges_pipeline_set_property;
@@ -404,8 +416,6 @@ ges_pipeline_init (GESPipeline * self)
     goto no_playsink;
   if (G_UNLIKELY (self->priv->encodebin == NULL))
     goto no_encodebin;
-
-  ges_pipeline_set_mode (self, DEFAULT_TIMELINE_MODE);
 
   return;
 
