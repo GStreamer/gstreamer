@@ -166,16 +166,21 @@ gst_video_center_rect (const GstVideoRectangle * src,
 /* Initing stuff */
 
 static void
+gst_video_sink_constructed (GObject * obj)
+{
+  /* 20ms is more than enough, 80-130ms is noticeable */
+  gst_base_sink_set_processing_deadline (GST_BASE_SINK (obj), 15 * GST_MSECOND);
+  gst_base_sink_set_max_lateness (GST_BASE_SINK (obj), 5 * GST_MSECOND);
+  gst_base_sink_set_qos_enabled (GST_BASE_SINK (obj), TRUE);
+
+  G_OBJECT_CLASS (parent_class)->constructed (obj);
+}
+
+static void
 gst_video_sink_init (GstVideoSink * videosink)
 {
   videosink->width = 0;
   videosink->height = 0;
-
-  /* 20ms is more than enough, 80-130ms is noticeable */
-  gst_base_sink_set_processing_deadline (GST_BASE_SINK (videosink),
-      15 * GST_MSECOND);
-  gst_base_sink_set_max_lateness (GST_BASE_SINK (videosink), 5 * GST_MSECOND);
-  gst_base_sink_set_qos_enabled (GST_BASE_SINK (videosink), TRUE);
 
   videosink->priv = gst_video_sink_get_instance_private (videosink);
 }
@@ -189,6 +194,7 @@ gst_video_sink_class_init (GstVideoSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->constructed = gst_video_sink_constructed;
   gobject_class->set_property = gst_video_sink_set_property;
   gobject_class->get_property = gst_video_sink_get_property;
 
