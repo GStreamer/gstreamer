@@ -1080,6 +1080,17 @@ nle_composition_set_property (GObject * object, guint property_id,
 }
 
 static void
+nle_composition_constructed (GObject * obj)
+{
+  NleCompositionPrivate *priv = NLE_COMPOSITION (obj)->priv;
+
+  priv->id = gst_pad_create_stream_id (NLE_OBJECT_SRC (obj),
+      GST_ELEMENT (obj), NULL);
+
+  ((GObjectClass *) parent_class)->constructed (obj);
+}
+
+static void
 nle_composition_class_init (NleCompositionClass * klass)
 {
   GObjectClass *gobject_class;
@@ -1098,6 +1109,8 @@ nle_composition_class_init (NleCompositionClass * klass)
       " Mathieu Duponchelle <mathieu.duponchelle@opencreed.com>,"
       " Thibault Saunier <tsaunier@gnome.org>");
 
+
+  gobject_class->constructed = GST_DEBUG_FUNCPTR (nle_composition_constructed);
   gobject_class->dispose = GST_DEBUG_FUNCPTR (nle_composition_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (nle_composition_finalize);
   gobject_class->get_property =
@@ -1195,8 +1208,6 @@ nle_composition_init (NleComposition * comp)
 
   nle_composition_reset (comp);
 
-  priv->id = gst_pad_create_stream_id (NLE_OBJECT_SRC (comp),
-      GST_ELEMENT (comp), NULL);
   priv->drop_tags = DEFAULT_DROP_TAGS;
   priv->nle_event_pad_func = GST_PAD_EVENTFUNC (NLE_OBJECT_SRC (comp));
   gst_pad_set_event_function (NLE_OBJECT_SRC (comp),
