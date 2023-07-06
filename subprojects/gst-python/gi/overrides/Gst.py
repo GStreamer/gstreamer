@@ -83,14 +83,14 @@ class Bin(Gst.Bin):
             if not Gst.Bin.add(self, arg):
                 raise AddError(arg)
 
-    def make_and_add(self, factory_name, instance_name=None):
+    def make_and_add(self, factoryname, name=None):
         '''
         @raises: Gst.AddError
         '''
-        elem = Gst.ElementFactory.make(factory_name, instance_name)
+        elem = Gst.ElementFactory.make(factoryname, name)
         if not elem:
             raise AddError(
-                'No such element: {}'.format(factory_name))
+                'No such element: {}'.format(factoryname))
         self.add(elem)
         return elem
 
@@ -288,8 +288,8 @@ class ElementFactory(Gst.ElementFactory):
         return self.get_metadata("klass")
 
     @classmethod
-    def make(cls, factory_name, instance_name=None):
-        return Gst.ElementFactory.make(factory_name, instance_name)
+    def make(cls, factoryname, name=None):
+        return Gst.ElementFactory.make(factoryname, name)
 
 
 class Pipeline(Gst.Pipeline):
