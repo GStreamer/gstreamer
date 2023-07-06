@@ -24,6 +24,38 @@
  * @short_description: Base class for RTP depayloader
  *
  * Provides a base class for RTP depayloaders
+ *
+ * In order to handle RTP header extensions correctly if the
+ * depayloader aggregates multiple RTP packet payloads into one output
+ * buffer this class provides the function
+ * gst_rtp_base_depayload_set_aggregate_hdrext_enabled(). If the
+ * aggregation is enabled the virtual functions
+ * @GstRTPBaseDepayload.process or
+ * @GstRTPBaseDepayload.process_rtp_packet must tell the base class
+ * what happens to the current RTP packet. By default the base class
+ * assumes that the packet payload is used with the next output
+ * buffer.
+ *
+ * If the RTP packet will not be used with an output buffer
+ * gst_rtp_base_depayload_dropped() must be called. A typical
+ * situation would be if we are waiting for a keyframe.
+ *
+ * If the RTP packet will be used but not with the current output
+ * buffer but with the next one gst_rtp_base_depayload_delayed() must
+ * be called. This may happen if the current RTP packet signals the
+ * start of a new output buffer and the currently processed output
+ * buffer will be pushed first. The undelay happens implicitly once
+ * the current buffer has been pushed or
+ * gst_rtp_base_depayload_flush() has been called.
+ *
+ * If gst_rtp_base_depayload_flush() is called all RTP packets that
+ * have not been dropped since the last output buffer are dropped,
+ * e.g. if an output buffer is discarded due to malformed data. This
+ * may or may not include the current RTP packet depending on the 2nd
+ * parameter @keep_current.
+ *
+ * Be aware that in case gst_rtp_base_depayload_push_list() is used
+ * each buffer will see the same list of RTP header extensions.
  */
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -75,6 +107,13 @@ struct _GstRTPBaseDepayloadPrivate
 
   /* array of GstRTPHeaderExtension's * */
   GPtrArray *header_exts;
+
+  /* maintain buffer list for header extensions read() */
+  gboolean hdrext_aggregate;
+  GstBufferList *hdrext_buffers;
+  GstBuffer *hdrext_delayed;
+  GstBuffer *hdrext_outbuf;
+  gboolean hdrext_read_result;
 };
 
 /* Filter signals and args */
@@ -137,6 +176,11 @@ static GstEvent *create_segment_event (GstRTPBaseDepayload * filter,
 static void gst_rtp_base_depayload_add_extension (GstRTPBaseDepayload *
     rtpbasepayload, GstRTPHeaderExtension * ext);
 static void gst_rtp_base_depayload_clear_extensions (GstRTPBaseDepayload *
+    rtpbasepayload);
+
+static gboolean gst_rtp_base_depayload_operate_hdrext_buffer (GstBuffer **
+    buffer, guint idx, gpointer depayloader);
+static void gst_rtp_base_depayload_reset_hdrext_buffers (GstRTPBaseDepayload *
     rtpbasepayload);
 
 GType
@@ -404,11 +448,13 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->source_info = DEFAULT_SOURCE_INFO;
   priv->max_reorder = DEFAULT_MAX_REORDER;
   priv->auto_hdr_ext = DEFAULT_AUTO_HEADER_EXTENSION;
+  priv->hdrext_aggregate = FALSE;
 
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 
   priv->header_exts =
       g_ptr_array_new_with_free_func ((GDestroyNotify) gst_object_unref);
+  priv->hdrext_buffers = gst_buffer_list_new ();
 }
 
 static void
@@ -417,7 +463,7 @@ gst_rtp_base_depayload_finalize (GObject * object)
   GstRTPBaseDepayload *rtpbasedepayload = GST_RTP_BASE_DEPAYLOAD (object);
 
   g_ptr_array_unref (rtpbasedepayload->priv->header_exts);
-  rtpbasedepayload->priv->header_exts = NULL;
+  gst_clear_buffer_list (&rtpbasedepayload->priv->hdrext_buffers);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -808,6 +854,22 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
 
   priv->input_buffer = in;
 
+  if (discont) {
+    gst_rtp_base_depayload_reset_hdrext_buffers (filter);
+    g_assert_null (priv->hdrext_delayed);
+  }
+
+  /* update RTP buffer cache for header extensions */
+  if (priv->hdrext_aggregate) {
+    GstBuffer *b = gst_buffer_new ();
+    /* make a copy of the buffer that only contains the RTP header
+       with the extensions to not waste too much memory */
+    guint s = gst_rtp_buffer_get_header_len (&rtp);
+    gst_buffer_copy_into (b, in,
+        GST_BUFFER_COPY_MEMORY | GST_BUFFER_COPY_DEEP, 0, s);
+    gst_buffer_list_add (priv->hdrext_buffers, b);
+  }
+
   if (process_rtp_packet_func != NULL) {
     out_buf = process_rtp_packet_func (filter, &rtp);
     gst_rtp_buffer_unmap (&rtp);
@@ -820,10 +882,22 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
 
   /* let's send it out to processing */
   if (out_buf) {
-    if (priv->process_flow_ret == GST_FLOW_OK)
+    if (priv->process_flow_ret == GST_FLOW_OK) {
       priv->process_flow_ret = gst_rtp_base_depayload_push (filter, out_buf);
-    else
+    } else {
       gst_buffer_unref (out_buf);
+      gst_rtp_base_depayload_reset_hdrext_buffers (filter);
+    }
+  }
+
+  /* if the current buffer is delayed the depayloader should either
+     have called gst_rtp_base_depayload_push() internally or returned
+     a buffer that's pushed, either way the buffer cache should be
+     empty here and we append the delayed buffer */
+  if (priv->hdrext_delayed) {
+    g_assert_true (gst_buffer_list_length (priv->hdrext_buffers) == 0);
+    gst_buffer_list_add (priv->hdrext_buffers, priv->hdrext_delayed);
+    priv->hdrext_delayed = NULL;
   }
 
   gst_buffer_unref (in);
@@ -1284,11 +1358,33 @@ out:
 }
 
 static gboolean
+gst_rtp_base_depayload_operate_hdrext_buffer (GstBuffer ** buffer,
+    guint idx, gpointer depayloader)
+{
+  GstRTPBaseDepayload *depayload = depayloader;
+
+  depayload->priv->hdrext_read_result |=
+      read_rtp_header_extensions (depayload, *buffer,
+      depayload->priv->hdrext_outbuf);
+  return TRUE;
+}
+
+static void
+gst_rtp_base_depayload_reset_hdrext_buffers (GstRTPBaseDepayload * depayload)
+{
+  GstRTPBaseDepayloadPrivate *priv = depayload->priv;
+
+  gst_buffer_list_unref (priv->hdrext_buffers);
+  priv->hdrext_buffers = gst_buffer_list_new ();
+}
+
+static gboolean
 gst_rtp_base_depayload_set_headers (GstRTPBaseDepayload * depayload,
     GstBuffer * buffer)
 {
   GstRTPBaseDepayloadPrivate *priv = depayload->priv;
   GstClockTime pts, dts, duration;
+  gboolean ret = FALSE;
 
   pts = GST_BUFFER_PTS (buffer);
   dts = GST_BUFFER_DTS (buffer);
@@ -1318,10 +1414,25 @@ gst_rtp_base_depayload_set_headers (GstRTPBaseDepayload * depayload,
     if (priv->source_info)
       add_rtp_source_meta (buffer, priv->input_buffer);
 
-    return read_rtp_header_extensions (depayload, priv->input_buffer, buffer);
+    if (priv->hdrext_aggregate) {
+      priv->hdrext_read_result = FALSE;
+      priv->hdrext_outbuf = buffer;
+      /* if we have an empty list but a delayed RTP buffer let's use it */
+      if (!gst_buffer_list_length (priv->hdrext_buffers) &&
+          priv->hdrext_delayed) {
+        gst_buffer_list_add (priv->hdrext_buffers, priv->hdrext_delayed);
+        priv->hdrext_delayed = NULL;
+      }
+      gst_buffer_list_foreach (priv->hdrext_buffers,
+          gst_rtp_base_depayload_operate_hdrext_buffer, depayload);
+      ret = priv->hdrext_read_result;
+      priv->hdrext_outbuf = NULL;
+    } else {
+      ret = read_rtp_header_extensions (depayload, priv->input_buffer, buffer);
+    }
   }
 
-  return FALSE;
+  return ret;
 }
 
 static GstFlowReturn
@@ -1446,6 +1557,8 @@ gst_rtp_base_depayload_do_push (GstRTPBaseDepayload * filter, gboolean is_list,
   error_buffer:
     gst_clear_buffer (&buf);
   }
+
+  gst_rtp_base_depayload_reset_hdrext_buffers (filter);
 
   return res;
 }
@@ -1717,4 +1830,147 @@ gboolean
 gst_rtp_base_depayload_is_source_info_enabled (GstRTPBaseDepayload * depayload)
 {
   return depayload->priv->source_info;
+}
+
+/**
+ * gst_rtp_base_depayload_set_aggregate_hdrext_enabled:
+ * @depayload: a #GstRTPBaseDepayload
+ * @enable: whether to aggregate header extensions per output buffer
+ *
+ * Enable or disable aggregating header extensions.
+ *
+ * Since: 1.24
+ **/
+void
+gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GstRTPBaseDepayload *
+    depayload, gboolean enable)
+{
+  depayload->priv->hdrext_aggregate = enable;
+  if (!enable)
+    gst_rtp_base_depayload_reset_hdrext_buffers (depayload);
+}
+
+/**
+ * gst_rtp_base_depayload_is_aggregate_hdrext_enabled:
+ * @depayload: a #GstRTPBaseDepayload
+ *
+ * Queries whether header extensions will be aggregated per depayloaded buffers.
+ *
+ * Returns: %TRUE if aggregate-header-extension is enabled.
+ *
+ * Since: 1.24
+ **/
+gboolean
+gst_rtp_base_depayload_is_aggregate_hdrext_enabled (GstRTPBaseDepayload *
+    depayload)
+{
+  return depayload->priv->hdrext_aggregate;
+}
+
+/**
+ * gst_rtp_base_depayload_dropped:
+ * @depayload: a #GstRTPBaseDepayload
+ *
+ * Called from @GstRTPBaseDepayload.process or
+ * @GstRTPBaseDepayload.process_rtp_packet if the depayloader does not
+ * use the current buffer for the output buffer. This will either drop
+ * the delayed buffer or the last buffer from the header extension
+ * cache.
+ *
+ * A typical use-case is when the depayloader implementation is
+ * dropping an input RTP buffer while waiting for the first keyframe.
+ *
+ * Must be called with the stream lock held.
+ *
+ * Since: 1.24
+ **/
+void
+gst_rtp_base_depayload_dropped (GstRTPBaseDepayload * depayload)
+{
+  GstRTPBaseDepayloadPrivate *priv = depayload->priv;
+  guint l = gst_buffer_list_length (priv->hdrext_buffers);
+
+  if (priv->hdrext_delayed) {
+    gst_clear_buffer (&priv->hdrext_delayed);
+  } else if (l) {
+    gst_buffer_list_remove (priv->hdrext_buffers, l - 1, 1);
+  }
+}
+
+/**
+ * gst_rtp_base_depayload_delayed:
+ * @depayload: a #GstRTPBaseDepayload
+ *
+ * Called from @GstRTPBaseDepayload.process or
+ * @GstRTPBaseDepayload.process_rtp_packet when the depayloader needs
+ * to keep the current input RTP header for use with the next output
+ * buffer.
+ *
+ * The delayed buffer will remain until the end of processing the
+ * current output buffer and then enqueued for processing with the
+ * next output buffer.
+ *
+ * A typical use-case is when the depayloader implementation will
+ * start a new output buffer for the current input RTP buffer but push
+ * the current output buffer first.
+ *
+ * Must be called with the stream lock held.
+ *
+ * Since: 1.24
+ **/
+void
+gst_rtp_base_depayload_delayed (GstRTPBaseDepayload * depayload)
+{
+  GstRTPBaseDepayloadPrivate *priv = depayload->priv;
+  guint l = gst_buffer_list_length (priv->hdrext_buffers);
+
+  if (l) {
+    priv->hdrext_delayed = gst_buffer_list_get (priv->hdrext_buffers, l - 1);
+    gst_buffer_ref (priv->hdrext_delayed);
+    gst_buffer_list_remove (priv->hdrext_buffers, l - 1, 1);
+  }
+}
+
+/**
+ * gst_rtp_base_depayload_flush:
+ * @depayload: a #GstRTPBaseDepayload
+ * @keep_current: if the current RTP buffer shall be kept
+ *
+ * If @GstRTPBaseDepayload.process or
+ * @GstRTPBaseDepayload.process_rtp_packet drop an output buffer this
+ * function tells the base class to flush header extension cache as
+ * well.
+ *
+ * This will not drop an input RTP header marked as delayed from
+ * gst_rtp_base_depayload_delayed().
+ *
+ * If @keep_current is %TRUE the current input RTP header will be kept
+ * and enqueued after flushing the previous input RTP headers.
+ *
+ * A typical use-case for @keep_current is when the depayloader
+ * implementation invalidates the current output buffer and starts a
+ * new one with the current RTP input buffer.
+ *
+ * Must be called with the stream lock held.
+ *
+ * Since: 1.24
+ **/
+void
+gst_rtp_base_depayload_flush (GstRTPBaseDepayload * depayload,
+    gboolean keep_current)
+{
+  GstRTPBaseDepayloadPrivate *priv = depayload->priv;
+  guint l = gst_buffer_list_length (priv->hdrext_buffers);
+
+  /* if the current buffer shall not be kept or has already been
+     removed from the cache clear the cache */
+  if (!keep_current || priv->hdrext_delayed) {
+    gst_rtp_base_depayload_reset_hdrext_buffers (depayload);
+  } else if (l) {
+    /* clear all cached buffers (if any) except the delayed */
+    GstBuffer *b = gst_buffer_list_get (priv->hdrext_buffers, l - 1);
+    gst_buffer_ref (b);
+    gst_rtp_base_depayload_reset_hdrext_buffers (depayload);
+    gst_buffer_list_add (priv->hdrext_buffers, b);
+  }
 }

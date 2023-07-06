@@ -199,6 +199,7 @@ gst_rtp_dummy_hdr_ext_read (GstRTPHeaderExtension * ext,
 
   if (dummy->read_count % 5 == 1) {
     /* Every fifth buffer triggers caps change. */
+    ++dummy->caps_field_value;
     gst_rtp_header_extension_set_wants_update_non_rtp_src_caps (ext, TRUE);
   }
 
@@ -236,7 +237,7 @@ gst_rtp_dummy_hdr_ext_update_non_rtp_src_caps (GstRTPHeaderExtension * ext,
   GstRTPDummyHdrExt *dummy = GST_RTP_DUMMY_HDR_EXT (ext);
 
   gst_caps_set_simple (caps, "dummy-hdrext-val", G_TYPE_UINT,
-      ++dummy->caps_field_value, NULL);
+      dummy->caps_field_value, NULL);
 
   return TRUE;
 }

@@ -48,7 +48,16 @@ typedef enum
   GST_RTP_DUMMY_RETURN_TO_PUSH,
   GST_RTP_DUMMY_USE_PUSH_FUNC,
   GST_RTP_DUMMY_USE_PUSH_LIST_FUNC,
+  GST_RTP_DUMMY_USE_PUSH_AGGREGATE_FUNC,
 } GstRtpDummyPushMethod;
+
+typedef enum
+{
+  GST_RTP_DUMMY_PUSH_AGGREGATE_DEFAULT,
+  GST_RTP_DUMMY_PUSH_AGGREGATE_DROP,
+  GST_RTP_DUMMY_PUSH_AGGREGATE_DELAYED,
+  GST_RTP_DUMMY_PUSH_AGGREGATE_FLUSH,
+} GstRtpDummyPushAggregateMethod;
 
 typedef struct _GstRtpDummyDepay GstRtpDummyDepay;
 typedef struct _GstRtpDummyDepayClass GstRtpDummyDepayClass;
@@ -60,6 +69,10 @@ struct _GstRtpDummyDepay
 
   GstRtpDummyPushMethod push_method;
   guint num_buffers_in_blist;
+
+  GstRtpDummyPushAggregateMethod aggregate_method;
+  guint num_buffers_to_aggregate;
+  guint num_buffers_aggregated;
 };
 
 struct _GstRtpDummyDepayClass
@@ -112,6 +125,8 @@ gst_rtp_dummy_depay_init (GstRtpDummyDepay * depay)
 {
   depay->rtptime = 0;
   depay->num_buffers_in_blist = 1;
+  depay->num_buffers_to_aggregate = 1;
+  depay->num_buffers_aggregated = 0;
 }
 
 static GstRtpDummyDepay *
@@ -180,6 +195,34 @@ gst_rtp_dummy_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       gst_rtp_base_depayload_push_list (depayload, blist);
       break;
     }
+    case GST_RTP_DUMMY_USE_PUSH_AGGREGATE_FUNC:
+      ++self->num_buffers_aggregated;
+      if (self->num_buffers_aggregated != self->num_buffers_to_aggregate) {
+        switch (self->aggregate_method) {
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_DROP:
+            gst_rtp_base_depayload_dropped (depayload);
+            break;
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_DEFAULT:
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_DELAYED:
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_FLUSH:
+            break;
+        }
+        gst_clear_buffer (&outbuf);
+      } else {
+        switch (self->aggregate_method) {
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_DELAYED:
+            gst_rtp_base_depayload_delayed (depayload);
+            break;
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_FLUSH:
+            gst_rtp_base_depayload_flush (depayload, TRUE);
+            break;
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_DROP:
+          case GST_RTP_DUMMY_PUSH_AGGREGATE_DEFAULT:
+            break;
+        }
+        self->num_buffers_aggregated = 0;
+      }
+      break;
     case GST_RTP_DUMMY_RETURN_TO_PUSH:
       break;
   }
@@ -1877,6 +1920,170 @@ GST_START_TEST (rtp_base_depayload_hdr_ext_caps_change)
 
 GST_END_TEST;
 
+static GstFlowReturn
+hdr_ext_aggregate_chain_func (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
+{
+  GstFlowReturn res;
+  GstCaps *caps;
+  guint val;
+  GstPad *srcpad;
+  GstElement *depay;
+  static gboolean first = TRUE;
+  static guint expected_caps_val = 0;
+
+  res = gst_check_chain_func (pad, parent, buffer);
+  if (res != GST_FLOW_OK) {
+    return res;
+  }
+
+  caps = gst_pad_get_current_caps (pad);
+
+  fail_unless (gst_structure_get_uint (gst_caps_get_structure (caps, 0),
+          "dummy-hdrext-val", &val));
+
+  srcpad = gst_pad_get_peer (pad);
+  depay = gst_pad_get_parent_element (srcpad);
+
+  switch (GST_RTP_DUMMY_DEPAY (depay)->aggregate_method) {
+    case GST_RTP_DUMMY_PUSH_AGGREGATE_DEFAULT:
+      /* Every fifth buffer increments "dummy-hdrext-val", but we
+         aggregate 5 buffers per output buffer so we increment for every
+         output buffer. */
+      expected_caps_val++;
+      break;
+    case GST_RTP_DUMMY_PUSH_AGGREGATE_DROP:
+      /* We aggregate 5 buffers per output buffer but drop 4 of them
+         from the buffer cache. */
+      if (g_list_length (buffers) % 5 == 1) {
+        expected_caps_val++;
+      }
+      break;
+    case GST_RTP_DUMMY_PUSH_AGGREGATE_DELAYED:
+      /* We aggregate 6 buffers per output buffer but delay the 6th one
+         which will then account to the 2nd output buffer. Thus the 1st
+         output buffer will process 5 header extensions (val increments
+         by one) whereas the 2nd buffer will process 6 (val increments
+         by two)! */
+      if (first) {
+        first = FALSE;
+        expected_caps_val++;
+      } else {
+        expected_caps_val += 2;
+      }
+      break;
+    case GST_RTP_DUMMY_PUSH_AGGREGATE_FLUSH:
+      /* We aggregate 5 buffers per output buffer but flush 4 of them
+         from the hdr ext buffer cache. */
+      if (g_list_length (buffers) % 5 == 1) {
+        expected_caps_val++;
+      }
+      break;
+  }
+
+  gst_object_unref (depay);
+  gst_object_unref (srcpad);
+
+  fail_unless_equals_int (expected_caps_val, val);
+
+  gst_caps_unref (caps);
+
+  return res;
+}
+
+static void
+hdr_ext_aggregate_test (gint n_buffers, gint n_aggregate,
+    GstRtpDummyPushAggregateMethod method)
+{
+  GstRTPHeaderExtension *ext;
+  State *state;
+  guint i;
+
+  state = create_depayloader ("application/x-rtp", NULL);
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (state->element), TRUE);
+  gst_pad_set_chain_function (state->sinkpad, hdr_ext_aggregate_chain_func);
+  ext = rtp_dummy_hdr_ext_new ();
+  gst_rtp_header_extension_set_id (ext, 1);
+
+  GST_RTP_DUMMY_DEPAY (state->element)->push_method =
+      GST_RTP_DUMMY_USE_PUSH_AGGREGATE_FUNC;
+  GST_RTP_DUMMY_DEPAY (state->element)->num_buffers_to_aggregate = n_aggregate;
+  GST_RTP_DUMMY_DEPAY (state->element)->aggregate_method = method;
+
+  g_signal_emit_by_name (state->element, "add-extension", ext);
+  set_state (state, GST_STATE_PLAYING);
+
+  for (i = 0; i < n_buffers; ++i) {
+    push_rtp_buffer (state, "pts", 0 * GST_SECOND,
+        "rtptime", G_GUINT64_CONSTANT (0x1234), "seq", 0x4242 + i, "hdrext-1",
+        ext, NULL);
+  }
+
+  set_state (state, GST_STATE_NULL);
+  validate_buffers_received (n_buffers / n_aggregate);
+  gst_object_unref (ext);
+  destroy_depayloader (state);
+}
+
+GST_START_TEST (rtp_base_depayload_hdr_ext_aggregate)
+{
+  const gint num_buffers = 30;
+  const gint num_buffers_aggregate = 5; /* must match the modulo from
+                                           hdrext */
+
+  fail_unless_equals_int (num_buffers % num_buffers_aggregate, 0);
+
+  hdr_ext_aggregate_test (num_buffers, num_buffers_aggregate,
+      GST_RTP_DUMMY_PUSH_AGGREGATE_DEFAULT);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_base_depayload_hdr_ext_aggregate_drop)
+{
+  const gint num_buffers = 30;
+  const gint num_buffers_aggregate = 5; /* must match the modulo from
+                                           hdrext */
+
+  fail_unless_equals_int (num_buffers % num_buffers_aggregate, 0);
+
+  hdr_ext_aggregate_test (num_buffers, num_buffers_aggregate,
+      GST_RTP_DUMMY_PUSH_AGGREGATE_DROP);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_base_depayload_hdr_ext_aggregate_delayed)
+{
+  const gint num_buffers = 12;  /* must be two times
+                                   num_buffers_aggregate */
+  const gint num_buffers_aggregate = 6; /* must match the modulo from
+                                           hdrext + 1 */
+
+  fail_unless_equals_int (num_buffers % num_buffers_aggregate, 0);
+  fail_unless_equals_int (num_buffers / num_buffers_aggregate, 2);
+
+  hdr_ext_aggregate_test (num_buffers, num_buffers_aggregate,
+      GST_RTP_DUMMY_PUSH_AGGREGATE_DELAYED);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (rtp_base_depayload_hdr_ext_aggregate_flush)
+{
+  const gint num_buffers = 30;
+  const gint num_buffers_aggregate = 5; /* must match the modulo from
+                                           hdrext */
+
+  fail_unless_equals_int (num_buffers % num_buffers_aggregate, 0);
+
+  hdr_ext_aggregate_test (num_buffers, num_buffers_aggregate,
+      GST_RTP_DUMMY_PUSH_AGGREGATE_FLUSH);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -1921,7 +2128,10 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_depayload_multiple_exts);
   tcase_add_test (tc_chain, rtp_base_depayload_caps_request_ignored);
   tcase_add_test (tc_chain, rtp_base_depayload_hdr_ext_caps_change);
-
+  tcase_add_test (tc_chain, rtp_base_depayload_hdr_ext_aggregate);
+  tcase_add_test (tc_chain, rtp_base_depayload_hdr_ext_aggregate_drop);
+  tcase_add_test (tc_chain, rtp_base_depayload_hdr_ext_aggregate_delayed);
+  tcase_add_test (tc_chain, rtp_base_depayload_hdr_ext_aggregate_flush);
   return s;
 }
 

@@ -2332,7 +2332,39 @@ audio codec</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbaseaudiopayload.h"/>
     </record>
     <class name="RTPBaseDepayload" c:symbol-prefix="rtp_base_depayload" c:type="GstRTPBaseDepayload" parent="Gst.Element" abstract="1" glib:type-name="GstRTPBaseDepayload" glib:get-type="gst_rtp_base_depayload_get_type" glib:type-struct="RTPBaseDepayloadClass">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Provides a base class for RTP depayloaders</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Provides a base class for RTP depayloaders
+
+In order to handle RTP header extensions correctly if the
+depayloader aggregates multiple RTP packet payloads into one output
+buffer this class provides the function
+gst_rtp_base_depayload_set_aggregate_hdrext_enabled(). If the
+aggregation is enabled the virtual functions
+@GstRTPBaseDepayload.process or
+@GstRTPBaseDepayload.process_rtp_packet must tell the base class
+what happens to the current RTP packet. By default the base class
+assumes that the packet payload is used with the next output
+buffer.
+
+If the RTP packet will not be used with an output buffer
+gst_rtp_base_depayload_dropped() must be called. A typical
+situation would be if we are waiting for a keyframe.
+
+If the RTP packet will be used but not with the current output
+buffer but with the next one gst_rtp_base_depayload_delayed() must
+be called. This may happen if the current RTP packet signals the
+start of a new output buffer and the currently processed output
+buffer will be pushed first. The undelay happens implicitly once
+the current buffer has been pushed or
+gst_rtp_base_depayload_flush() has been called.
+
+If gst_rtp_base_depayload_flush() is called all RTP packets that
+have not been dropped since the last output buffer are dropped,
+e.g. if an output buffer is discarded due to malformed data. This
+may or may not include the current RTP packet depending on the 2nd
+parameter @keep_current.
+
+Be aware that in case gst_rtp_base_depayload_push_list() is used
+each buffer will see the same list of RTP header extensions.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
       <virtual-method name="handle_event">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
@@ -2404,6 +2436,100 @@ audio codec</doc>
           </parameter>
         </parameters>
       </virtual-method>
+      <method name="delayed" c:identifier="gst_rtp_base_depayload_delayed" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Called from @GstRTPBaseDepayload.process or
+@GstRTPBaseDepayload.process_rtp_packet when the depayloader needs
+to keep the current input RTP header for use with the next output
+buffer.
+
+The delayed buffer will remain until the end of processing the
+current output buffer and then enqueued for processing with the
+next output buffer.
+
+A typical use-case is when the depayloader implementation will
+start a new output buffer for the current input RTP buffer but push
+the current output buffer first.
+
+Must be called with the stream lock held.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="depayload" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">a #GstRTPBaseDepayload</doc>
+            <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="dropped" c:identifier="gst_rtp_base_depayload_dropped" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Called from @GstRTPBaseDepayload.process or
+@GstRTPBaseDepayload.process_rtp_packet if the depayloader does not
+use the current buffer for the output buffer. This will either drop
+the delayed buffer or the last buffer from the header extension
+cache.
+
+A typical use-case is when the depayloader implementation is
+dropping an input RTP buffer while waiting for the first keyframe.
+
+Must be called with the stream lock held.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="depayload" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">a #GstRTPBaseDepayload</doc>
+            <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="flush" c:identifier="gst_rtp_base_depayload_flush" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">If @GstRTPBaseDepayload.process or
+@GstRTPBaseDepayload.process_rtp_packet drop an output buffer this
+function tells the base class to flush header extension cache as
+well.
+
+This will not drop an input RTP header marked as delayed from
+gst_rtp_base_depayload_delayed().
+
+If @keep_current is %TRUE the current input RTP header will be kept
+and enqueued after flushing the previous input RTP headers.
+
+A typical use-case for @keep_current is when the depayloader
+implementation invalidates the current output buffer and starts a
+new one with the current RTP input buffer.
+
+Must be called with the stream lock held.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="depayload" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">a #GstRTPBaseDepayload</doc>
+            <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
+          </instance-parameter>
+          <parameter name="keep_current" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">if the current RTP buffer shall be kept</doc>
+            <type name="gboolean" c:type="gboolean"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="is_aggregate_hdrext_enabled" c:identifier="gst_rtp_base_depayload_is_aggregate_hdrext_enabled" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Queries whether header extensions will be aggregated per depayloaded buffers.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">%TRUE if aggregate-header-extension is enabled.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="depayload" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">a #GstRTPBaseDepayload</doc>
+            <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="is_source_info_enabled" c:identifier="gst_rtp_base_depayload_is_source_info_enabled" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Queries whether #GstRTPSourceMeta will be added to depayloaded buffers.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
@@ -2456,6 +2582,23 @@ the outgoing buffer when it didn't have a timestamp already.</doc>
           <parameter name="out_list" transfer-ownership="full">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">a #GstBufferList</doc>
             <type name="Gst.BufferList" c:type="GstBufferList*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_aggregate_hdrext_enabled" c:identifier="gst_rtp_base_depayload_set_aggregate_hdrext_enabled" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Enable or disable aggregating header extensions.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="depayload" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">a #GstRTPBaseDepayload</doc>
+            <type name="RTPBaseDepayload" c:type="GstRTPBaseDepayload*"/>
+          </instance-parameter>
+          <parameter name="enable" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">whether to aggregate header extensions per output buffer</doc>
+            <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
       </method>
