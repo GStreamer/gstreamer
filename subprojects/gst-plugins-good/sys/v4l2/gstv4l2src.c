@@ -1149,6 +1149,23 @@ gst_v4l2src_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
+static gboolean
+gst_v4l2src_handle_resolution_change (GstV4l2Src * v4l2src)
+{
+  GST_INFO_OBJECT (v4l2src, "Resolution change detected.");
+
+  /* It is required to always cycle through streamoff, we also need to
+   * streamoff in order to allow locking a new DV_TIMING which will
+   * influence the output of TRY_FMT */
+  gst_v4l2src_stop (GST_BASE_SRC (v4l2src));
+
+  /* Force renegotiation */
+  v4l2src->renegotiation_adjust = v4l2src->offset + 1;
+  v4l2src->pending_set_fmt = TRUE;
+
+  return gst_base_src_negotiate (GST_BASE_SRC (v4l2src));
+}
+
 static GstFlowReturn
 gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 {
@@ -1167,18 +1184,7 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
 
     if (G_UNLIKELY (ret != GST_FLOW_OK)) {
       if (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE) {
-        GST_INFO_OBJECT (v4l2src, "Resolution change detected.");
-
-        /* It is required to always cycle through streamoff, we also need to
-         * streamoff in order to allow locking a new DV_TIMING which will
-         * influence the output of TRY_FMT */
-        gst_v4l2src_stop (GST_BASE_SRC (src));
-
-        /* Force renegotiation */
-        v4l2src->renegotiation_adjust = v4l2src->offset + 1;
-        v4l2src->pending_set_fmt = TRUE;
-
-        if (!gst_base_src_negotiate (GST_BASE_SRC (src))) {
+        if (!gst_v4l2src_handle_resolution_change (v4l2src)) {
           ret = GST_FLOW_NOT_NEGOTIATED;
           goto error;
         }
@@ -1194,6 +1200,13 @@ gst_v4l2src_create (GstPushSrc * src, GstBuffer ** buf)
       ret = gst_v4l2_buffer_pool_process (obj_pool, buf, NULL);
       if (obj_pool)
         gst_object_unref (obj_pool);
+
+      if (G_UNLIKELY (ret == GST_V4L2_FLOW_RESOLUTION_CHANGE)) {
+        if (!gst_v4l2src_handle_resolution_change (v4l2src)) {
+          ret = GST_FLOW_NOT_NEGOTIATED;
+          goto error;
+        }
+      }
     }
 
   } while (ret == GST_V4L2_FLOW_CORRUPTED_BUFFER ||
