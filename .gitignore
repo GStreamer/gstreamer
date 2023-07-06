@@ -22,7 +22,6 @@ prefix/
 /gst-integration-testsuites
 /gst-editing-services
 /gstreamer-vaapi
-/gst-omx
 /gstreamer-sharp
 /pygobject
 /gst-python
@@ -47,7 +46,6 @@ subprojects/*/
 !subprojects/gst-examples
 !subprojects/gst-integration-testsuites
 !subprojects/gst-libav
-!subprojects/gst-omx
 !subprojects/gst-plugins-bad
 !subprojects/gst-plugins-base
 !subprojects/gst-plugins-good

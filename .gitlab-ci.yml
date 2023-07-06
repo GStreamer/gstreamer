@@ -61,8 +61,6 @@ variables:
   SIMPLE_BUILD: >-
     ${DEFAULT_MESON_ARGS}
     -Dsharp=enabled
-    -Domx=enabled
-    -Dgst-omx:target=generic
     -Ddoc=disabled
 
 workflow:
@@ -287,7 +285,6 @@ commitlint:
   - subprojects/gst-editing-services/**/*
   - subprojects/gst-integration-testsuites/**/*
   - subprojects/gst-libav/**/*
-  - subprojects/gst-omx/**/*
   - subprojects/gst-plugins-bad/**/*
   - subprojects/gst-plugins-base/**/*
   - subprojects/gst-plugins-good/**/*
@@ -598,7 +595,6 @@ integration testsuites fedora:
   variables:
     MESON_ARGS: >-
       ${SIMPLE_BUILD}
-      -Domx=disabled
       -Dsharp=disabled
       -Dvaapi=disabled
       -Dexamples=disabled
@@ -845,7 +841,6 @@ build documentation:
       - subprojects/gst-devtools/**/*
       - subprojects/gst-editing-services/**/*
       - subprojects/gst-libav/**/*
-      - subprojects/gst-omx/**/*
       - subprojects/gst-plugins-bad/**/*
       - subprojects/gst-plugins-base/**/*
       - subprojects/gst-plugins-good/**/*

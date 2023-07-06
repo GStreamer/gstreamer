@@ -84,7 +84,6 @@ meson \
     -Dbad=disabled \
     -Dlibav=disabled \
     -Dges=disabled \
-    -Domx=disabled \
     -Dvaapi=disabled \
     -Dsharp=disabled \
     -Drs=disabled \

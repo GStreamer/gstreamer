@@ -43,14 +43,6 @@ Technologies](http://en.wikipedia.org/wiki/Imagination_Technologies) or
 [S3 Graphics](http://en.wikipedia.org/wiki/S3_Graphics). Accessible to
 GStreamer through the [gstreamer-vaapi](https://gitlab.freedesktop.org/gstreamer/gstreamer/-/tree/main/subprojects/gstreamer-vaapi/) package.
 
- - [OpenMAX](http://en.wikipedia.org/wiki/OpenMAX) (*Open Media
-Acceleration*): Managed by the non-profit technology consortium [Khronos
-Group](http://en.wikipedia.org/wiki/Khronos_Group "Khronos Group"),
-it is a "royalty-free, cross-platform set of C-language programming
-interfaces that provides abstractions for routines especially useful for
-audio, video, and still images". Accessible to GStreamer through
-the [gst-omx](http://git.freedesktop.org/gstreamer/gst-omx) plugin.
-
  - [OVD](http://developer.amd.com/sdks/AMDAPPSDK/assets/OpenVideo_Decode_API.PDF)
 (*Open Video Decode*): Another API from [AMD
 Graphics](http://en.wikipedia.org/wiki/AMD_Graphics), designed to be a

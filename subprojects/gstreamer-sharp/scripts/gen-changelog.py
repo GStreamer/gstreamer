@@ -29,7 +29,6 @@ changelog_starts = {
     'gst-editing-services': 'ee8bf88ebf131cf7c7161356540efc20bf411e14',
     'gst-python': 'b3e564eff577e2f577d795051bbcca85d47c89dc',
     'gstreamer-vaapi': 'c89e9afc5d43837c498a55f8f13ddf235442b83b',
-    'gst-omx': 'd2463b017f222e678978582544a9c9a80edfd330',
     'gst-devtools': 'da962d096af9460502843e41b7d25fdece7ff1c2',
     'gstreamer-sharp': 'b94528f8e7979df49fedf137dfa228d8fe475e1b',
 }

@@ -105,7 +105,6 @@ dnf install -y \
     valgrind \
     vulkan \
     vulkan-devel \
-    mesa-omx-drivers \
     mesa-libGL \
     mesa-libGL-devel \
     mesa-libGLU \
