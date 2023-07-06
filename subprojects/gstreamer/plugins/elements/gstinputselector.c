@@ -2041,6 +2041,7 @@ gst_input_selector_change_state (GstElement * element,
       self->playing = TRUE;
       GST_INPUT_SELECTOR_BROADCAST (self);
       GST_INPUT_SELECTOR_UNLOCK (self);
+      break;
     }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:{
       GList *walk;
