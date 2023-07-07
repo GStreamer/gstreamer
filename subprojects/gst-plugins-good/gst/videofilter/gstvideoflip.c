@@ -1804,8 +1804,18 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
 
         if (vf->method == GST_VIDEO_ORIENTATION_AUTO) {
           /* update the orientation tag as we rotate the video accordingly */
-          gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, "image-orientation",
-              "rotate-0", NULL);
+          if (gst_tag_list_is_writable (taglist)) {
+            gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+                "image-orientation", "rotate-0", NULL);
+          } else {
+            taglist = gst_tag_list_copy (taglist);
+
+            gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+                "image-orientation", "rotate-0", NULL);
+
+            gst_event_unref (event);
+            event = gst_event_new_tag (taglist);
+          }
         }
       } else {
         // no orientation in tag
