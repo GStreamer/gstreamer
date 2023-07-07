@@ -171,7 +171,8 @@ check_conversion (TestFrame * frames, guint size)
 
     /* sanity check that the correct values were wrapped */
     for (j = 0; j < GST_VIDEO_INFO_N_PLANES (&in_info); j++) {
-      for (k = 0; k < _video_info_plane_size (&in_info, j); k++) {
+      int plane_size = _video_info_plane_size (&in_info, j);
+      for (k = 0; k < plane_size; k++) {
         if (frames[i].data[j][k] != IGNORE_MAGIC)
           fail_unless (((gchar *) in_frame.data[j])[k] == frames[i].data[j][k]);
       }
@@ -212,7 +213,10 @@ check_conversion (TestFrame * frames, guint size)
 
       /* check that the converted values are correct */
       for (k = 0; k < GST_VIDEO_INFO_N_PLANES (&out_info); k++) {
-        for (l = 0; l < _video_info_plane_size (&out_info, k); l++) {
+        int plane_size = _video_info_plane_size (&out_info, k);
+        GST_MEMDUMP ("expected plane", (guint8 *) out_data[k], plane_size);
+        GST_MEMDUMP ("produced plane", out_frame.data[k], plane_size);
+        for (l = 0; l < plane_size; l++) {
           gchar out_pixel = ((gchar *) out_frame.data[k])[l];
           if (out_data[k][l] != IGNORE_MAGIC && out_pixel != IGNORE_MAGIC)
             fail_unless (out_pixel == out_data[k][l]);
