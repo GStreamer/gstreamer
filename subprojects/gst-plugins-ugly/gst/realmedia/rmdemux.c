@@ -2007,6 +2007,7 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   guint packet_size = stream->packet_size;
   guint height = stream->subpackets->len;
   guint leaf_size = stream->leaf_size;
+  guint size;
   guint p, x;
 
   g_assert (stream->height == height);
@@ -2014,7 +2015,12 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   GST_LOG_OBJECT (rmdemux, "packet_size = %u, leaf_size = %u, height= %u",
       packet_size, leaf_size, height);
 
-  outbuf = gst_buffer_new_and_alloc (height * packet_size);
+  if (!g_uint_checked_mul (&size, height, packet_size)) {
+    GST_ERROR_OBJECT (rmdemux, "overflowing audio packet size");
+    return GST_FLOW_ERROR;
+  }
+
+  outbuf = gst_buffer_new_and_alloc (size);
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
 
   for (p = 0; p < height; ++p) {
