@@ -603,7 +603,7 @@ gst_line_cache_get_lines (GstLineCache * cache, gint idx, gint out_line,
             cache->need_line_data))
       break;
   }
-  GST_DEBUG ("no lines");
+  GST_LOG ("no lines");
   return NULL;
 }
 
@@ -667,7 +667,7 @@ converter_alloc_new (guint stride, guint n_lines, gpointer user_data,
 {
   ConverterAlloc *alloc;
 
-  GST_DEBUG ("stride %d, n_lines %d", stride, n_lines);
+  GST_LOG ("stride %d, n_lines %d", stride, n_lines);
   alloc = g_new0 (ConverterAlloc, 1);
   alloc->data = g_malloc (stride * n_lines);
   alloc->stride = stride;
@@ -706,7 +706,7 @@ get_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
   ConverterAlloc *alloc = user_data;
   gpointer tmpline;
 
-  GST_DEBUG ("get temp line %d (%p %d)", idx, alloc, alloc->idx);
+  GST_LOG ("get temp line %d (%p %d)", idx, alloc, alloc->idx);
   tmpline = &alloc->data[alloc->stride * alloc->idx];
   alloc->idx = (alloc->idx + 1) % alloc->n_lines;
 
@@ -720,7 +720,7 @@ get_border_temp_line (GstLineCache * cache, gint idx, gpointer user_data)
   GstVideoConverter *convert = alloc->user_data;
   gpointer tmpline;
 
-  GST_DEBUG ("get temp line %d (%p %d)", idx, alloc, alloc->idx);
+  GST_LOG ("get temp line %d (%p %d)", idx, alloc, alloc->idx);
   tmpline = &alloc->data[alloc->stride * alloc->idx] +
       (convert->out_x * convert->pack_pstride);
   alloc->idx = (alloc->idx + 1) % alloc->n_lines;
@@ -862,7 +862,7 @@ chain_unpack_line (GstVideoConverter * convert, gint idx)
   convert->unpack_pstride = convert->current_pstride;
   convert->identity_unpack = (convert->current_format == info->finfo->format);
 
-  GST_DEBUG ("chain unpack line format %s, pstride %d, identity_unpack %d",
+  GST_LOG ("chain unpack line format %s, pstride %d, identity_unpack %d",
       gst_video_format_to_string (convert->current_format),
       convert->current_pstride, convert->identity_unpack);
 
@@ -882,7 +882,7 @@ chain_upsample (GstVideoConverter * convert, GstLineCache * prev, gint idx)
   video_converter_compute_resample (convert, idx);
 
   if (convert->upsample_p[idx] || convert->upsample_i[idx]) {
-    GST_DEBUG ("chain upsample");
+    GST_LOG ("chain upsample");
     prev = convert->upsample_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
@@ -992,14 +992,10 @@ color_matrix_scale_components (MatrixData * m, double a1, double a2, double a3)
 static void
 color_matrix_debug (const MatrixData * s)
 {
-  GST_DEBUG ("[%f %f %f %f]", s->dm[0][0], s->dm[0][1], s->dm[0][2],
-      s->dm[0][3]);
-  GST_DEBUG ("[%f %f %f %f]", s->dm[1][0], s->dm[1][1], s->dm[1][2],
-      s->dm[1][3]);
-  GST_DEBUG ("[%f %f %f %f]", s->dm[2][0], s->dm[2][1], s->dm[2][2],
-      s->dm[2][3]);
-  GST_DEBUG ("[%f %f %f %f]", s->dm[3][0], s->dm[3][1], s->dm[3][2],
-      s->dm[3][3]);
+  GST_LOG ("[%f %f %f %f]", s->dm[0][0], s->dm[0][1], s->dm[0][2], s->dm[0][3]);
+  GST_LOG ("[%f %f %f %f]", s->dm[1][0], s->dm[1][1], s->dm[1][2], s->dm[1][3]);
+  GST_LOG ("[%f %f %f %f]", s->dm[2][0], s->dm[2][1], s->dm[2][2], s->dm[2][3]);
+  GST_LOG ("[%f %f %f %f]", s->dm[3][0], s->dm[3][1], s->dm[3][2], s->dm[3][3]);
 }
 
 static void
@@ -1011,13 +1007,13 @@ color_matrix_convert (MatrixData * s)
     for (j = 0; j < 4; j++)
       s->im[i][j] = rint (s->dm[i][j]);
 
-  GST_DEBUG ("[%6d %6d %6d %6d]", s->im[0][0], s->im[0][1], s->im[0][2],
+  GST_LOG ("[%6d %6d %6d %6d]", s->im[0][0], s->im[0][1], s->im[0][2],
       s->im[0][3]);
-  GST_DEBUG ("[%6d %6d %6d %6d]", s->im[1][0], s->im[1][1], s->im[1][2],
+  GST_LOG ("[%6d %6d %6d %6d]", s->im[1][0], s->im[1][1], s->im[1][2],
       s->im[1][3]);
-  GST_DEBUG ("[%6d %6d %6d %6d]", s->im[2][0], s->im[2][1], s->im[2][2],
+  GST_LOG ("[%6d %6d %6d %6d]", s->im[2][0], s->im[2][1], s->im[2][2],
       s->im[2][3]);
-  GST_DEBUG ("[%6d %6d %6d %6d]", s->im[3][0], s->im[3][1], s->im[3][2],
+  GST_LOG ("[%6d %6d %6d %6d]", s->im[3][0], s->im[3][1], s->im[3][2],
       s->im[3][3]);
 }
 
@@ -1337,16 +1333,16 @@ prepare_matrix (GstVideoConverter * convert, MatrixData * data)
   if (convert->current_bits == 8) {
     if (!convert->unpack_rgb && convert->pack_rgb
         && is_ayuv_to_rgb_matrix (data)) {
-      GST_DEBUG ("use fast AYUV -> RGB matrix");
+      GST_LOG ("use fast AYUV -> RGB matrix");
       data->matrix_func = video_converter_matrix8_AYUV_ARGB;
     } else if (is_no_clip_matrix (data)) {
-      GST_DEBUG ("use 8bit table");
+      GST_LOG ("use 8bit table");
       data->matrix_func = video_converter_matrix8_table;
       videoconvert_convert_init_tables (data);
     } else {
       gint a03, a13, a23;
 
-      GST_DEBUG ("use 8bit matrix");
+      GST_LOG ("use 8bit matrix");
       data->matrix_func = video_converter_matrix8;
 
       data->orc_p1 = (((guint64) (guint16) data->im[2][0]) << 48) |
@@ -1367,7 +1363,7 @@ prepare_matrix (GstVideoConverter * convert, MatrixData * data)
           (((guint64) (guint16) a13) << 32) | (((guint64) (guint16) a03) << 16);
     }
   } else {
-    GST_DEBUG ("use 16bit matrix");
+    GST_LOG ("use 16bit matrix");
     data->matrix_func = video_converter_matrix16;
   }
 }
@@ -1507,9 +1503,9 @@ setup_gamma_decode (GstVideoConverter * convert)
 
   convert->gamma_dec.width = convert->current_width;
   if (convert->gamma_dec.gamma_table) {
-    GST_DEBUG ("gamma decode already set up");
+    GST_LOG ("gamma decode already set up");
   } else if (convert->current_bits == 8) {
-    GST_DEBUG ("gamma decode 8->16: %d", func);
+    GST_LOG ("gamma decode 8->16: %d", func);
     convert->gamma_dec.gamma_func = gamma_convert_u8_u16;
     t = convert->gamma_dec.gamma_table = g_malloc (sizeof (guint16) * 256);
 
@@ -1517,7 +1513,7 @@ setup_gamma_decode (GstVideoConverter * convert)
       t[i] =
           rint (gst_video_transfer_function_decode (func, i / 255.0) * 65535.0);
   } else {
-    GST_DEBUG ("gamma decode 16->16: %d", func);
+    GST_LOG ("gamma decode 16->16: %d", func);
     convert->gamma_dec.gamma_func = gamma_convert_u16_u16;
     t = convert->gamma_dec.gamma_table = g_malloc (sizeof (guint16) * 65536);
 
@@ -1541,11 +1537,11 @@ setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
 
   convert->gamma_enc.width = convert->current_width;
   if (convert->gamma_enc.gamma_table) {
-    GST_DEBUG ("gamma encode already set up");
+    GST_LOG ("gamma encode already set up");
   } else if (target_bits == 8) {
     guint8 *t;
 
-    GST_DEBUG ("gamma encode 16->8: %d", func);
+    GST_LOG ("gamma encode 16->8: %d", func);
     convert->gamma_enc.gamma_func = gamma_convert_u16_u8;
     t = convert->gamma_enc.gamma_table = g_malloc (sizeof (guint8) * 65536);
 
@@ -1555,7 +1551,7 @@ setup_gamma_encode (GstVideoConverter * convert, gint target_bits)
   } else {
     guint16 *t;
 
-    GST_DEBUG ("gamma encode 16->16: %d", func);
+    GST_LOG ("gamma encode 16->16: %d", func);
     convert->gamma_enc.gamma_func = gamma_convert_u16_u16;
     t = convert->gamma_enc.gamma_table = g_malloc (sizeof (guint16) * 65536);
 
@@ -1583,7 +1579,7 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev,
       compute_matrix_to_RGB (convert, &convert->to_RGB_matrix);
 
       /* matrix is in 0..1 range, scale to current bits */
-      GST_DEBUG ("chain RGB convert");
+      GST_LOG ("chain RGB convert");
       scale = 1 << convert->current_bits;
       color_matrix_scale_components (&convert->to_RGB_matrix,
           (float) scale, (float) scale, (float) scale);
@@ -1604,7 +1600,7 @@ chain_convert_to_RGB (GstVideoConverter * convert, GstLineCache * prev,
     gst_line_cache_set_need_line_func (prev,
         do_convert_to_RGB_lines, idx, convert, NULL);
 
-    GST_DEBUG ("chain gamma decode");
+    GST_LOG ("chain gamma decode");
     setup_gamma_decode (convert);
   }
   return prev;
@@ -1625,7 +1621,7 @@ chain_hscale (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 
   gst_video_scaler_get_coeff (convert->h_scaler[idx], 0, NULL, &taps);
 
-  GST_DEBUG ("chain hscale %d->%d, taps %d, method %d",
+  GST_LOG ("chain hscale %d->%d, taps %d, method %d",
       convert->in_width, convert->out_width, taps, method);
 
   convert->current_width = convert->out_width;
@@ -1670,7 +1666,7 @@ chain_vscale (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 
   gst_video_scaler_get_coeff (convert->v_scaler_p[idx], 0, NULL, &taps);
 
-  GST_DEBUG ("chain vscale %d->%d, taps %d, method %d, backlog %d",
+  GST_LOG ("chain vscale %d->%d, taps %d, method %d, backlog %d",
       convert->in_height, convert->out_height, taps, method, backlog);
 
   prev->backlog = backlog;
@@ -1693,14 +1689,14 @@ chain_scale (GstVideoConverter * convert, GstLineCache * prev, gboolean force,
   s0 = convert->current_width * convert->current_height;
   s3 = convert->out_width * convert->out_height;
 
-  GST_DEBUG ("in pixels %d <> out pixels %d", s0, s3);
+  GST_LOG ("in pixels %d <> out pixels %d", s0, s3);
 
   if (s3 <= s0 || force) {
     /* we are making the image smaller or are forced to resample */
     s1 = convert->out_width * convert->current_height;
     s2 = convert->current_width * convert->out_height;
 
-    GST_DEBUG ("%d <> %d", s1, s2);
+    GST_LOG ("%d <> %d", s1, s2);
 
     if (s1 <= s2) {
       /* h scaling first produces less pixels */
@@ -1743,11 +1739,11 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
         colorimetry.primaries, convert->out_info.colorimetry.primaries);
   }
 
-  GST_DEBUG ("matrix %d -> %d (%d)", convert->in_info.colorimetry.matrix,
+  GST_LOG ("matrix %d -> %d (%d)", convert->in_info.colorimetry.matrix,
       convert->out_info.colorimetry.matrix, same_matrix);
-  GST_DEBUG ("bits %d -> %d (%d)", convert->unpack_bits, convert->pack_bits,
+  GST_LOG ("bits %d -> %d (%d)", convert->unpack_bits, convert->pack_bits,
       same_bits);
-  GST_DEBUG ("primaries %d -> %d (%d)", convert->in_info.colorimetry.primaries,
+  GST_LOG ("primaries %d -> %d (%d)", convert->in_info.colorimetry.primaries,
       convert->out_info.colorimetry.primaries, same_primaries);
 
   color_matrix_set_identity (&convert->convert_matrix);
@@ -1770,9 +1766,9 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     /* Get the RGB_TO_XYZ_input_matrix */
     color_matrix_RGB_to_XYZ (&p1, pi->Rx, pi->Ry, pi->Gx, pi->Gy, pi->Bx,
         pi->By, pi->Wx, pi->Wy);
-    GST_DEBUG ("to XYZ matrix");
+    GST_LOG ("to XYZ matrix");
     color_matrix_debug (&p1);
-    GST_DEBUG ("current matrix");
+    GST_LOG ("current matrix");
     /* convert_matrix = RGB_TO_XYZ_input_matrix * input_RGB */
     color_matrix_multiply (&convert->convert_matrix, &convert->convert_matrix,
         &p1);
@@ -1789,7 +1785,7 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     color_matrix_RGB_to_XYZ (&p2, pi->Rx, pi->Ry, pi->Gx, pi->Gy, pi->Bx,
         pi->By, pi->Wx, pi->Wy);
     color_matrix_invert (&p2, &p2);
-    GST_DEBUG ("to RGB matrix");
+    GST_LOG ("to RGB matrix");
     color_matrix_debug (&p2);
     /* Finally:
      * convert_matrix = XYZ_to_RGB_output_matrix * RGB_TO_XYZ_input_matrix * RGB_input
@@ -1798,7 +1794,7 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
      */
     color_matrix_multiply (&convert->convert_matrix, &p2,
         &convert->convert_matrix);
-    GST_DEBUG ("current matrix");
+    GST_LOG ("current matrix");
     color_matrix_debug (&convert->convert_matrix);
   }
 
@@ -1815,14 +1811,14 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
         color_matrix_scale_components (&convert->convert_matrix,
             1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
       }
-      GST_DEBUG ("to RGB matrix");
+      GST_LOG ("to RGB matrix");
       compute_matrix_to_RGB (convert, &convert->convert_matrix);
-      GST_DEBUG ("current matrix");
+      GST_LOG ("current matrix");
       color_matrix_debug (&convert->convert_matrix);
 
-      GST_DEBUG ("to YUV matrix");
+      GST_LOG ("to YUV matrix");
       compute_matrix_to_YUV (convert, &convert->convert_matrix, FALSE);
-      GST_DEBUG ("current matrix");
+      GST_LOG ("current matrix");
       color_matrix_debug (&convert->convert_matrix);
       if (convert->in_bits > convert->out_bits) {
         gint scale = 1 << (convert->in_bits - convert->out_bits);
@@ -1858,7 +1854,7 @@ chain_convert (GstVideoConverter * convert, GstLineCache * prev, gint idx)
   }
 
   if (do_conversion) {
-    GST_DEBUG ("chain conversion");
+    GST_LOG ("chain conversion");
     prev = convert->convert_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = pass_alloc;
@@ -1944,7 +1940,7 @@ chain_alpha (GstVideoConverter * convert, GstLineCache * prev, gint idx)
       break;
   }
 
-  GST_DEBUG ("chain alpha mode %d", convert->alpha_mode);
+  GST_LOG ("chain alpha mode %d", convert->alpha_mode);
   prev = convert->alpha_lines[idx] = gst_line_cache_new (prev);
   prev->write_input = TRUE;
   prev->pass_alloc = TRUE;
@@ -1966,7 +1962,7 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev,
   if (do_gamma) {
     gint scale;
 
-    GST_DEBUG ("chain gamma encode");
+    GST_LOG ("chain gamma encode");
     setup_gamma_encode (convert, convert->pack_bits);
 
     convert->current_bits = convert->pack_bits;
@@ -1995,7 +1991,7 @@ chain_convert_to_YUV (GstVideoConverter * convert, GstLineCache * prev,
        * to expected scale here, otherwise offset of the matrix would be
        * very wrong
        */
-      GST_DEBUG ("chain YUV convert");
+      GST_LOG ("chain YUV convert");
       scale = 1 << convert->pack_bits;
       color_matrix_scale_components (&convert->to_YUV_matrix,
           1 / (float) scale, 1 / (float) scale, 1 / (float) scale);
@@ -2021,7 +2017,7 @@ static GstLineCache *
 chain_downsample (GstVideoConverter * convert, GstLineCache * prev, gint idx)
 {
   if (convert->downsample_p[idx] || convert->downsample_i[idx]) {
-    GST_DEBUG ("chain downsample");
+    GST_LOG ("chain downsample");
     prev = convert->downsample_lines[idx] = gst_line_cache_new (prev);
     prev->write_input = TRUE;
     prev->pass_alloc = TRUE;
@@ -2048,7 +2044,7 @@ chain_dither (GstVideoConverter * convert, GstLineCache * prev, gint idx)
     return prev;
 
   target_quant = GET_OPT_DITHER_QUANTIZATION (convert);
-  GST_DEBUG ("method %d, target-quantization %d", method, target_quant);
+  GST_LOG ("method %d, target-quantization %d", method, target_quant);
 
   if (convert->pack_pal) {
     quant[0] = 47;
@@ -2082,7 +2078,7 @@ chain_dither (GstVideoConverter * convert, GstLineCache * prev, gint idx)
   }
 
   if (do_dither) {
-    GST_DEBUG ("chain dither");
+    GST_LOG ("chain dither");
 
     convert->dither[idx] = gst_video_dither_new (method,
         flags, convert->pack_format, quant, convert->current_width);
@@ -2106,7 +2102,7 @@ chain_pack (GstVideoConverter * convert, GstLineCache * prev, gint idx)
   convert->identity_pack =
       (convert->out_info.finfo->format ==
       convert->out_info.finfo->unpack_format);
-  GST_DEBUG ("chain pack line format %s, pstride %d, identity_pack %d (%d %d)",
+  GST_LOG ("chain pack line format %s, pstride %d, identity_pack %d (%d %d)",
       gst_video_format_to_string (convert->current_format),
       convert->current_pstride, convert->identity_pack,
       convert->out_info.finfo->format, convert->out_info.finfo->unpack_format);
@@ -2150,11 +2146,11 @@ setup_allocators (GstVideoConverter * convert)
      * keep track of the maximum number of lines we need for each intermediate
      * step.  */
     for (prev = cache = convert->pack_lines[i]; cache; cache = cache->prev) {
-      GST_DEBUG ("looking at cache %p, %d lines, %d backlog", cache,
+      GST_LOG ("looking at cache %p, %d lines, %d backlog", cache,
           cache->n_lines, cache->backlog);
       prev->n_lines = MAX (prev->n_lines, cache->n_lines);
       if (!cache->pass_alloc) {
-        GST_DEBUG ("cache %p, needs %d lines", prev, prev->n_lines);
+        GST_LOG ("cache %p, needs %d lines", prev, prev->n_lines);
         prev = cache;
       }
     }
@@ -2839,7 +2835,7 @@ video_converter_compute_resample (GstVideoConverter * convert, gint idx)
   sfinfo = in_info->finfo;
   dfinfo = out_info->finfo;
 
-  GST_DEBUG ("site: %d->%d, w_sub: %d->%d, h_sub: %d->%d", in_info->chroma_site,
+  GST_LOG ("site: %d->%d, w_sub: %d->%d, h_sub: %d->%d", in_info->chroma_site,
       out_info->chroma_site, sfinfo->w_sub[2], dfinfo->w_sub[2],
       sfinfo->h_sub[2], dfinfo->h_sub[2]);
 
@@ -2925,7 +2921,7 @@ get_dest_line (GstLineCache * cache, gint idx, gpointer user_data)
   cline = CLAMP (idx, 0, convert->out_maxheight - 1);
 
   line = FRAME_GET_LINE (convert->dest, cline);
-  GST_DEBUG ("get dest line %d %p", cline, line);
+  GST_LOG ("get dest line %d %p", cline, line);
 
   if (convert->borderline) {
     gint r_border = (out_x + convert->out_width) * pstride;
@@ -2952,13 +2948,13 @@ do_unpack_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
 
   if (cache->alloc_writable || !convert->identity_unpack) {
     tmpline = gst_line_cache_alloc_line (cache, out_line);
-    GST_DEBUG ("unpack line %d (%u) %p", in_line, cline, tmpline);
+    GST_LOG ("unpack line %d (%u) %p", in_line, cline, tmpline);
     UNPACK_FRAME (convert->src, tmpline, cline, convert->in_x,
         convert->in_width);
   } else {
     tmpline = ((guint8 *) FRAME_GET_LINE (convert->src, cline)) +
         convert->in_x * convert->unpack_pstride;
-    GST_DEBUG ("get src line %d (%u) %p", in_line, cline, tmpline);
+    GST_LOG ("get src line %d (%u) %p", in_line, cline, tmpline);
   }
   gst_line_cache_add_line (cache, in_line, tmpline);
 
@@ -2986,7 +2982,7 @@ do_upsample_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
       n_lines);
 
   if (convert->upsample[idx]) {
-    GST_DEBUG ("doing upsample %d-%d %p", start_line, start_line + n_lines - 1,
+    GST_LOG ("doing upsample %d-%d %p", start_line, start_line + n_lines - 1,
         lines[0]);
     gst_video_chroma_resample (convert->upsample[idx], lines,
         convert->in_width);
@@ -3010,13 +3006,13 @@ do_convert_to_RGB_lines (GstLineCache * cache, gint idx, gint out_line,
   destline = lines[0];
 
   if (data->matrix_func) {
-    GST_DEBUG ("to RGB line %d %p", in_line, destline);
+    GST_LOG ("to RGB line %d %p", in_line, destline);
     data->matrix_func (data, destline);
   }
   if (convert->gamma_dec.gamma_func) {
     destline = gst_line_cache_alloc_line (cache, out_line);
 
-    GST_DEBUG ("gamma decode line %d %p->%p", in_line, lines[0], destline);
+    GST_LOG ("gamma decode line %d %p->%p", in_line, lines[0], destline);
     convert->gamma_dec.gamma_func (&convert->gamma_dec, destline, lines[0]);
   }
   gst_line_cache_add_line (cache, in_line, destline);
@@ -3035,7 +3031,7 @@ do_hscale_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
 
   destline = gst_line_cache_alloc_line (cache, out_line);
 
-  GST_DEBUG ("hresample line %d %p->%p", in_line, lines[0], destline);
+  GST_LOG ("hresample line %d %p->%p", in_line, lines[0], destline);
   gst_video_scaler_horizontal (convert->h_scaler[idx], convert->h_scale_format,
       lines[0], destline, 0, convert->out_width);
 
@@ -3060,7 +3056,7 @@ do_vscale_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
 
   destline = gst_line_cache_alloc_line (cache, out_line);
 
-  GST_DEBUG ("vresample line %d %d-%d %p->%p", in_line, sline,
+  GST_LOG ("vresample line %d %d-%d %p->%p", in_line, sline,
       sline + n_lines - 1, lines[0], destline);
   gst_video_scaler_vertical (convert->v_scaler[idx], convert->v_scale_format,
       lines, destline, cline, convert->v_scale_width);
@@ -3097,24 +3093,24 @@ do_convert_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
 
     /* FIXME, we can scale in the conversion matrix */
     if (in_bits == 8) {
-      GST_DEBUG ("8->16 line %d %p->%p", in_line, srcline, destline);
+      GST_LOG ("8->16 line %d %p->%p", in_line, srcline, destline);
       video_orc_convert_u8_to_u16 (destline, srcline, width * 4);
       srcline = destline;
     }
 
     if (data->matrix_func) {
-      GST_DEBUG ("matrix line %d %p", in_line, srcline);
+      GST_LOG ("matrix line %d %p", in_line, srcline);
       data->matrix_func (data, srcline);
     }
 
     /* FIXME, dither here */
     if (out_bits == 8) {
-      GST_DEBUG ("16->8 line %d %p->%p", in_line, srcline, destline);
+      GST_LOG ("16->8 line %d %p->%p", in_line, srcline, destline);
       video_orc_convert_u16_to_u8 (destline, srcline, width * 4);
     }
   } else {
     if (data->matrix_func) {
-      GST_DEBUG ("matrix line %d %p", in_line, destline);
+      GST_LOG ("matrix line %d %p", in_line, destline);
       data->matrix_func (data, destline);
     }
   }
@@ -3134,7 +3130,7 @@ do_alpha_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
   lines = gst_line_cache_get_lines (cache->prev, idx, out_line, in_line, 1);
   destline = lines[0];
 
-  GST_DEBUG ("alpha line %d %p", in_line, destline);
+  GST_LOG ("alpha line %d %p", in_line, destline);
   convert->alpha_func (convert, destline, width);
 
   gst_line_cache_add_line (cache, in_line, destline);
@@ -3156,11 +3152,11 @@ do_convert_to_YUV_lines (GstLineCache * cache, gint idx, gint out_line,
   if (convert->gamma_enc.gamma_func) {
     destline = gst_line_cache_alloc_line (cache, out_line);
 
-    GST_DEBUG ("gamma encode line %d %p->%p", in_line, lines[0], destline);
+    GST_LOG ("gamma encode line %d %p->%p", in_line, lines[0], destline);
     convert->gamma_enc.gamma_func (&convert->gamma_enc, destline, lines[0]);
   }
   if (data->matrix_func) {
-    GST_DEBUG ("to YUV line %d %p", in_line, destline);
+    GST_LOG ("to YUV line %d %p", in_line, destline);
     data->matrix_func (data, destline);
   }
   gst_line_cache_add_line (cache, in_line, destline);
@@ -3187,7 +3183,7 @@ do_downsample_lines (GstLineCache * cache, gint idx, gint out_line,
       n_lines);
 
   if (convert->downsample[idx]) {
-    GST_DEBUG ("downsample line %d %d-%d %p", in_line, start_line,
+    GST_LOG ("downsample line %d %d-%d %p", in_line, start_line,
         start_line + n_lines - 1, lines[0]);
     gst_video_chroma_resample (convert->downsample[idx], lines,
         convert->out_width);
@@ -3210,7 +3206,7 @@ do_dither_lines (GstLineCache * cache, gint idx, gint out_line, gint in_line,
   destline = lines[0];
 
   if (convert->dither[idx]) {
-    GST_DEBUG ("Dither line %d %p", in_line, destline);
+    GST_LOG ("Dither line %d %p", in_line, destline);
     gst_video_dither_line (convert->dither[idx], destline, 0, out_line,
         convert->out_width);
   }
@@ -3248,7 +3244,7 @@ convert_generic_task (ConvertTask * task)
       /* take away the border */
       guint8 *l = ((guint8 *) lines[0]) - task->lb_width;
       /* and pack into destination */
-      GST_DEBUG ("pack line %d %p (%p)", i + task->out_y, lines[0], l);
+      GST_LOG ("pack line %d %p (%p)", i + task->out_y, lines[0], l);
       PACK_FRAME (task->dest, l, i + task->out_y, task->out_maxwidth);
     }
   }
@@ -3279,12 +3275,12 @@ video_converter_generic (GstVideoConverter * convert, const GstVideoFrame * src,
   convert->dest = dest;
 
   if (GST_VIDEO_FRAME_IS_INTERLACED (src)) {
-    GST_DEBUG ("setup interlaced frame");
+    GST_LOG ("setup interlaced frame");
     convert->upsample = convert->upsample_i;
     convert->downsample = convert->downsample_i;
     convert->v_scaler = convert->v_scaler_i;
   } else {
-    GST_DEBUG ("setup progressive frame");
+    GST_LOG ("setup progressive frame");
     convert->upsample = convert->upsample_p;
     convert->downsample = convert->downsample_p;
     convert->v_scaler = convert->v_scaler_p;
@@ -7425,7 +7421,7 @@ setup_scale (GstVideoConverter * convert)
     case GST_VIDEO_FORMAT_GRAY16_LE:
 #endif
       if (method != GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
-        GST_DEBUG ("%s only with nearest resampling",
+        GST_LOG ("%s only with nearest resampling",
             gst_video_format_to_string (in_format));
         return FALSE;
       }
@@ -7558,11 +7554,11 @@ setup_scale (GstVideoConverter * convert)
       convert->fout_y[i] = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (out_finfo,
           out_comp[0], convert->out_y);
 
-      GST_DEBUG ("plane %d: %dx%d -> %dx%d", i, iw, ih, ow, oh);
-      GST_DEBUG ("plane %d: pstride %d", i, pstride);
-      GST_DEBUG ("plane %d: in_x %d, in_y %d", i, convert->fin_x[i],
+      GST_LOG ("plane %d: %dx%d -> %dx%d", i, iw, ih, ow, oh);
+      GST_LOG ("plane %d: pstride %d", i, pstride);
+      GST_LOG ("plane %d: in_x %d, in_y %d", i, convert->fin_x[i],
           convert->fin_y[i]);
-      GST_DEBUG ("plane %d: out_x %d, out_y %d", i, convert->fout_x[i],
+      GST_LOG ("plane %d: out_x %d, out_y %d", i, convert->fout_x[i],
           convert->fout_y[i]);
 
       if (comp == -1) {
@@ -7580,11 +7576,11 @@ setup_scale (GstVideoConverter * convert)
           else
             convert->ffill[i] = 0x00;
         }
-        GST_DEBUG ("plane %d fill %02x", i, convert->ffill[i]);
+        GST_LOG ("plane %d fill %02x", i, convert->ffill[i]);
         continue;
       } else {
         convert->fsplane[i] = GST_VIDEO_FORMAT_INFO_PLANE (in_finfo, comp);
-        GST_DEBUG ("plane %d -> %d (comp %d)", i, convert->fsplane[i], comp);
+        GST_LOG ("plane %d -> %d (comp %d)", i, convert->fsplane[i], comp);
       }
 
       config = gst_structure_copy (convert->config);
@@ -7596,46 +7592,46 @@ setup_scale (GstVideoConverter * convert)
       if (iw == ow) {
         if (!interlaced && ih == oh) {
           convert->fconvert[i] = convert_plane_hv;
-          GST_DEBUG ("plane %d: copy", i);
+          GST_LOG ("plane %d: copy", i);
         } else if (!interlaced && ih == 2 * oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_v_halve;
-          GST_DEBUG ("plane %d: vertical halve", i);
+          GST_LOG ("plane %d: vertical halve", i);
         } else if (!interlaced && 2 * ih == oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_v_double;
-          GST_DEBUG ("plane %d: vertical double", i);
+          GST_LOG ("plane %d: vertical double", i);
         } else {
           convert->fconvert[i] = convert_plane_hv;
-          GST_DEBUG ("plane %d: vertical scale", i);
+          GST_LOG ("plane %d: vertical scale", i);
           need_v_scaler = TRUE;
         }
       } else if (ih == oh) {
         if (!interlaced && iw == 2 * ow && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_h_halve;
-          GST_DEBUG ("plane %d: horizontal halve", i);
+          GST_LOG ("plane %d: horizontal halve", i);
         } else if (!interlaced && 2 * iw == ow && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_h_double;
-          GST_DEBUG ("plane %d: horizontal double", i);
+          GST_LOG ("plane %d: horizontal double", i);
         } else {
           convert->fconvert[i] = convert_plane_hv;
-          GST_DEBUG ("plane %d: horizontal scale", i);
+          GST_LOG ("plane %d: horizontal scale", i);
           need_h_scaler = TRUE;
         }
       } else {
         if (!interlaced && iw == 2 * ow && ih == 2 * oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_LINEAR) {
           convert->fconvert[i] = convert_plane_hv_halve;
-          GST_DEBUG ("plane %d: horizontal/vertical halve", i);
+          GST_LOG ("plane %d: horizontal/vertical halve", i);
         } else if (!interlaced && 2 * iw == ow && 2 * ih == oh && pstride == 1
             && resample_method == GST_VIDEO_RESAMPLER_METHOD_NEAREST) {
           convert->fconvert[i] = convert_plane_hv_double;
-          GST_DEBUG ("plane %d: horizontal/vertical double", i);
+          GST_LOG ("plane %d: horizontal/vertical double", i);
         } else {
           convert->fconvert[i] = convert_plane_hv;
-          GST_DEBUG ("plane %d: horizontal/vertical scale", i);
+          GST_LOG ("plane %d: horizontal/vertical scale", i);
           need_v_scaler = TRUE;
           need_h_scaler = TRUE;
         }
@@ -8193,7 +8189,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
   need_copy = (convert->alpha_mode & ALPHA_MODE_COPY) == ALPHA_MODE_COPY;
   need_set = (convert->alpha_mode & ALPHA_MODE_SET) == ALPHA_MODE_SET;
   need_mult = (convert->alpha_mode & ALPHA_MODE_MULT) == ALPHA_MODE_MULT;
-  GST_DEBUG ("alpha copy %d, set %d, mult %d", need_copy, need_set, need_mult);
+  GST_LOG ("alpha copy %d, set %d, mult %d", need_copy, need_set, need_mult);
 
   in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
@@ -8244,7 +8240,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
         && (transforms[i].alpha_mult || !need_mult)) {
       guint j;
 
-      GST_DEBUG ("using fastpath");
+      GST_LOG ("using fastpath");
       if (transforms[i].needs_color_matrix)
         video_converter_compute_matrix (convert);
       convert->convert = transforms[i].convert;
@@ -8262,7 +8258,7 @@ video_converter_lookup_fastpath (GstVideoConverter * convert)
       return TRUE;
     }
   }
-  GST_DEBUG ("no fastpath found");
+  GST_LOG ("no fastpath found");
   return FALSE;
 }
 
