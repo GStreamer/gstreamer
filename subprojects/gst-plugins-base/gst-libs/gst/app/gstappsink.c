@@ -1069,6 +1069,7 @@ restart:
   if (G_UNLIKELY (!priv->last_caps &&
           gst_pad_has_current_caps (GST_BASE_SINK_PAD (psink)))) {
     priv->last_caps = gst_pad_get_current_caps (GST_BASE_SINK_PAD (psink));
+    priv->sample = gst_sample_make_writable (priv->sample);
     gst_sample_set_caps (priv->sample, priv->last_caps);
     GST_DEBUG_OBJECT (appsink, "activating pad caps %" GST_PTR_FORMAT,
         priv->last_caps);
