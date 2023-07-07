@@ -2977,7 +2977,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* If an accurate seek was requested, we want to clip the segment we
    * output in ONVIF mode to the requested bounds */
-  src->clip_out_segment = ! !(flags & GST_SEEK_FLAG_ACCURATE);
+  src->clip_out_segment = !!(flags & GST_SEEK_FLAG_ACCURATE);
   src->seek_seqnum = gst_event_get_seqnum (event);
 
   /* prepare for streaming again */
@@ -2986,14 +2986,13 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     GST_DEBUG_OBJECT (src, "stopping flush");
     gst_rtspsrc_flush (src, FALSE, playing);
   }
-  if(playing)
-  {
+  if (playing) {
     GST_INFO_OBJECT (src, "closing connection and doing pause");
     gst_rtspsrc_close (src, FALSE, TRUE);
     gst_rtspsrc_pause (src, FALSE);
     src->state = GST_RTSP_STATE_SEEKING;
-    src->clip_out_segment = ! !(flags & GST_SEEK_FLAG_ACCURATE);
-  } 
+    src->clip_out_segment = !!(flags & GST_SEEK_FLAG_ACCURATE);
+  }
 
   /* now we did the seek and can activate the new segment values */
   src->segment = seeksegment;
@@ -3127,9 +3126,6 @@ static GstEvent *
 gst_rtspsrc_update_src_event (GstRTSPSrc * self, GstRTSPStream * stream,
     GstEvent * event)
 {
-  if (!self)
-      return event;
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:{
       GChecksum *cs;
@@ -6631,9 +6627,10 @@ next:
         src->tcp_timeout);
   }
 
-  if (rstpMethod == GST_RTSP_TEARDOWN){
-    if (count_requst == 100){
-      GST_DEBUG_OBJECT (src, "No valid response for 100 times for GST_RTSP_TEARDOWN request, going to exit the loop");
+  if (rstpMethod == GST_RTSP_TEARDOWN) {
+    if (count_requst == 100) {
+      GST_DEBUG_OBJECT (src,
+          "No valid response for 100 times for GST_RTSP_TEARDOWN request, going to exit the loop");
       goto handle_request_failed;
     }
     count_requst++;
@@ -6871,9 +6868,9 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
             gst_rtspsrc_try_send (src, conninfo, request, response,
                 &int_code)) < 0)
       goto error;
-    
-    if(int_code == 501){
-	    int_code=200;
+
+    if (int_code == 501) {
+      int_code = 200;
     }
     switch (int_code) {
       case GST_RTSP_STS_UNAUTHORIZED:
@@ -9630,7 +9627,7 @@ gst_rtspsrc_send_event (GstElement * element, GstEvent * event)
       res = TRUE;
       gst_event_replace (&rtspsrc->initial_seek, event);
     }
-    gst_event_unref (event); 
+    gst_event_unref (event);
   } else if (GST_EVENT_IS_DOWNSTREAM (event)) {
     res = gst_rtspsrc_push_event (rtspsrc, event);
   } else {
@@ -9728,7 +9725,8 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri,
   /* Special cases */
 was_ok:
   {
-    GST_DEBUG_OBJECT (src, "URI was ok: '%s'", GST_STR_NULL (src->conninfo.url_str));
+    GST_DEBUG_OBJECT (src, "URI was ok: '%s'",
+        GST_STR_NULL (src->conninfo.url_str));
     return TRUE;
   }
 sdp_failed:
