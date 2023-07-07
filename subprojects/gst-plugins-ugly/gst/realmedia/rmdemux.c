@@ -2168,7 +2168,13 @@ gst_rmdemux_descramble_sipr_audio (GstRMDemux * rmdemux,
       GST_BUFFER_PTS (outbuf) = GST_BUFFER_PTS (b);
     }
 
-    gst_buffer_extract (b, 0, outmap.data + packet_size * p, packet_size);
+    if (gst_buffer_extract (b, 0, outmap.data + packet_size * p,
+            packet_size) != packet_size) {
+      GST_ERROR_OBJECT (rmdemux, "not enough SIPR audio data available");
+      gst_buffer_unmap (outbuf, &outmap);
+      gst_buffer_unref (outbuf);
+      return GST_FLOW_ERROR;
+    }
   }
   gst_buffer_unmap (outbuf, &outmap);
 
