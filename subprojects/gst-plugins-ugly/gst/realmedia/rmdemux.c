@@ -2011,8 +2011,8 @@ gst_rmdemux_descramble_audio (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
 
   g_assert (stream->height == height);
 
-  GST_LOG ("packet_size = %u, leaf_size = %u, height= %u", packet_size,
-      leaf_size, height);
+  GST_LOG_OBJECT (rmdemux, "packet_size = %u, leaf_size = %u, height= %u",
+      packet_size, leaf_size, height);
 
   outbuf = gst_buffer_new_and_alloc (height * packet_size);
   gst_buffer_map (outbuf, &outmap, GST_MAP_WRITE);
