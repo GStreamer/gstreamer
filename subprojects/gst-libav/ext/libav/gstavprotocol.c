@@ -98,7 +98,7 @@ gst_ffmpegdata_read (void *priv_data, unsigned char *buf, int size)
 
   GST_DEBUG ("Returning %d bytes", res);
 
-  return res;
+  return res == 0 ? AVERROR_EOF : res;
 }
 
 static int
