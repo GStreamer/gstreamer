@@ -448,6 +448,8 @@ gst_matroska_parse_protection_meta (gpointer * data_out, gsize * size_out,
 
   /* Unencrypted buffer */
   if (!(signal_byte & GST_MATROSKA_BLOCK_ENCRYPTED)) {
+    *size_out = gst_byte_reader_get_remaining (&reader);
+    gst_byte_reader_get_data (&reader, *size_out, (const guint8 **) data_out);
     return TRUE;
   }
 
