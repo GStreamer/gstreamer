@@ -2065,6 +2065,69 @@ GST_START_TEST (test_data_channel_create)
 GST_END_TEST;
 
 static void
+signal_data_channel (struct test_webrtc *t,
+    GstElement * element, GObject * our, gpointer user_data)
+{
+  test_webrtc_signal_state_unlocked (t, STATE_CUSTOM);
+}
+
+GST_START_TEST (test_data_channel_create_two_channels)
+{
+  struct test_webrtc *t = test_webrtc_new ();
+  GObject *channel = NULL;
+  GObject *channel2 = NULL;
+  VAL_SDP_INIT (media_count, _count_num_sdp_media, GUINT_TO_POINTER (1), NULL);
+  VAL_SDP_INIT (offer, on_sdp_has_datachannel, NULL, &media_count);
+  gchar *label;
+  GstStructure *options = NULL;
+
+  t->on_negotiation_needed = NULL;
+  t->on_ice_candidate = NULL;
+  t->on_prepare_data_channel = have_prepare_data_channel;
+  t->on_data_channel = signal_data_channel;
+
+  fail_if (gst_element_set_state (t->webrtc1, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label", NULL,
+      &channel);
+  g_assert_nonnull (channel);
+  g_object_get (channel, "label", &label, NULL);
+  g_assert_cmpstr (label, ==, "label");
+  g_free (label);
+  g_object_unref (channel);
+
+  fail_if (gst_element_set_state (t->webrtc1, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE);
+
+  /* Wait SCTP transport creation */
+  test_validate_sdp_full (t, &offer, &offer, 1 << STATE_CUSTOM, FALSE);
+
+  /* Create another channel on an existing SCTP transport, forcing an ID that
+     should comply with the max-channels requiremennt, this should not raise a
+     critical warning, the id is beneath the required limits. */
+  options =
+      gst_structure_new ("options", "id", G_TYPE_INT, 2, "negotiated",
+      G_TYPE_BOOLEAN, TRUE, NULL);
+  g_signal_emit_by_name (t->webrtc1, "create-data-channel", "label2", options,
+      &channel2);
+  gst_structure_free (options);
+  g_assert_nonnull (channel2);
+  g_object_get (channel2, "label", &label, NULL);
+  g_assert_cmpstr (label, ==, "label2");
+  g_free (label);
+  g_object_unref (channel2);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+static void
 have_data_channel (struct test_webrtc *t, GstElement * element,
     GObject * our, gpointer user_data)
 {
@@ -5847,6 +5910,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_ice_end_of_candidates);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
+      tcase_add_test (tc, test_data_channel_create_two_channels);
       tcase_add_test (tc, test_data_channel_remote_notify);
       tcase_add_test (tc, test_data_channel_transfer_string);
       tcase_add_test (tc, test_data_channel_transfer_data);

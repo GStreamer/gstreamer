@@ -7223,6 +7223,10 @@ gst_webrtc_bin_create_data_channel (GstWebRTCBin * webrtc, const gchar * label,
     g_object_get (webrtc->priv->sctp_transport, "max-channels", &max_channels,
         NULL);
 
+    if (max_channels <= 0) {
+      max_channels = 65534;
+    }
+
     g_return_val_if_fail (id <= max_channels, NULL);
   }
 
