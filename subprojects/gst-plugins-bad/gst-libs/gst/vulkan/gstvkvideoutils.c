@@ -27,13 +27,14 @@
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 /* *INDENT-OFF* */
 static const struct {
+  GstVulkanVideoOperation video_operation;
   VkVideoCodecOperationFlagBitsKHR codec;
   const char *mime;
   VkStructureType stype;
 } video_codecs_map[] = {
-  { VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR, "video/x-h264",
+  { GST_VULKAN_VIDEO_OPERATION_DECODE, VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR, "video/x-h264",
       VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR },
-  { VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR, "video/x-h265",
+  { GST_VULKAN_VIDEO_OPERATION_DECODE, VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR, "video/x-h265",
       VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_KHR },
 };
 
@@ -201,6 +202,7 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
  * gst_vulkan_video_profile_from_caps: (skip)
  * @profile: (out): the output profile
  * @caps: a #GstCaps to parse
+ * @video_operation: a supported video operation
  *
  * Returns: %TRUE if @caps was parsed correctly, otherwise %FALSE
  *
@@ -208,15 +210,17 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
  */
 gboolean
 gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
-    GstCaps * caps)
+    GstCaps * caps, GstVulkanVideoOperation video_operation)
 {
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   const GstStructure *structure;
-  const char *mime, *chroma_sub, *profile_str = NULL, *layout = NULL;
-  int i, luma, chroma;
+  const gchar *mime, *chroma_sub, *profile_str = NULL, *layout = NULL;
+  gint i, luma, chroma;
 
   g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
   g_return_val_if_fail (profile, FALSE);
+  g_return_val_if_fail (video_operation < GST_VULKAN_VIDEO_OPERATION_UNKNOWN,
+      FALSE);
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -228,7 +232,8 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
 
   mime = gst_structure_get_name (structure);
   for (i = 0; i < G_N_ELEMENTS (video_codecs_map); i++) {
-    if (g_strcmp0 (video_codecs_map[i].mime, mime) == 0) {
+    if ((video_codecs_map[i].video_operation == video_operation)
+        && (g_strcmp0 (video_codecs_map[i].mime, mime) == 0)) {
       profile->profile.videoCodecOperation = video_codecs_map[i].codec;
 
       switch (profile->profile.videoCodecOperation) {

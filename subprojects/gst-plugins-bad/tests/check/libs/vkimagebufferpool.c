@@ -144,7 +144,8 @@ GST_START_TEST (test_vulkan_profiles)
   caps = gst_vulkan_video_profile_to_caps (&profile);
   fail_unless (caps);
 
-  fail_unless (gst_vulkan_video_profile_from_caps (&profile2, caps));
+  fail_unless (gst_vulkan_video_profile_from_caps (&profile2, caps,
+          GST_VULKAN_VIDEO_OPERATION_DECODE));
   gst_caps_unref (caps);
   fail_unless (profile2.profile.sType
       == VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR);

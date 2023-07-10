@@ -169,7 +169,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
               & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
                   | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
     priv->has_profile =
-        gst_vulkan_video_profile_from_caps (&priv->profile, decode_caps);
+        gst_vulkan_video_profile_from_caps (&priv->profile, decode_caps,
+        GST_VULKAN_VIDEO_OPERATION_DECODE);
   }
 #endif
   gst_clear_caps (&decode_caps);
