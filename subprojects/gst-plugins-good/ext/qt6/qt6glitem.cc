@@ -291,7 +291,10 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     gst_gl_context_activate (this->priv->other_context, TRUE);
 
   if (!texNode) {
+    bool is_smooth = this->smooth ();
     texNode = new GstQSG6OpenGLNode (this);
+    texNode->setFiltering (is_smooth ? QSGTexture::Filtering::Linear :
+        QSGTexture::Filtering::Nearest);
     this->priv->m_node = texNode;
   }
 
