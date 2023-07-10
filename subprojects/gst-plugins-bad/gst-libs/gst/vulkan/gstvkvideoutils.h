@@ -48,6 +48,9 @@ struct _GstVulkanVideoProfile
     VkBaseInStructure base;
     VkVideoDecodeH264ProfileInfoKHR h264dec;
     VkVideoDecodeH265ProfileInfoKHR h265dec;
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
+    VkVideoEncodeH264ProfileInfoKHR h264enc;
+#endif
   } codec;
 #endif
   gpointer _reserved[GST_PADDING];

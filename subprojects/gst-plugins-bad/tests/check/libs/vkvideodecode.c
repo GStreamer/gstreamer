@@ -275,7 +275,7 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
   gst_object_unref (out_pool);
 }
 
-#include "vkcodecparams.c"
+#include "vkcodecparams_h264.c"
 
 static VkVideoDecodeH264SessionParametersAddInfoKHR h264_params = {
   .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_KHR,
@@ -440,6 +440,8 @@ GST_START_TEST (test_h264_decoder)
 }
 
 GST_END_TEST;
+
+#include "vkcodecparams_h265.c"
 
 static VkVideoDecodeH265SessionParametersAddInfoKHR h265_params = {
   .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_KHR,
