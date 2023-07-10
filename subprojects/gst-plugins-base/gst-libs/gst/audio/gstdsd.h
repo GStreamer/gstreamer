@@ -311,7 +311,7 @@ void          gst_dsd_convert            (const guint8 *input_data,
                                           const gsize *output_plane_offsets,
                                           gsize num_dsd_bytes, 
                                           gint num_channels, 
-                                          gboolean reverse_bytes);
+                                          gboolean reverse_byte_bits);
 
 /**
  * gst_dsd_format_is_le:

@@ -345,7 +345,7 @@ gst_dsd_info_init (GstDsdInfo * info)
  * @format: the format
  * @rate: the DSD rate
  * @channels: the number of channels
- * @position: (array fixed-size=64) (nullable): the channel positions
+ * @positions: (array fixed-size=64) (nullable): the channel positions
  *
  * Set the default info for the DSD info of @format and @rate and @channels.
  *

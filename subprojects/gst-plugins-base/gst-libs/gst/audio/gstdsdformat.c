@@ -25,9 +25,9 @@
 
 /**
  * gst_dsd_format_from_string:
- * @format: a format string
+ * @str: a DSD format string
  *
- * Convert the @format string to its #GstDsdFormat.
+ * Convert the DSD format string @str to its #GstDsdFormat.
  *
  * Returns: the #GstDsdFormat for @format or GST_DSD_FORMAT_UNKNOWN when the
  * string is not a known format.
