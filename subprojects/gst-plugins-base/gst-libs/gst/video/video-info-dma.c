@@ -232,7 +232,9 @@ gst_video_is_dma_drm_caps (const GstCaps * caps)
     return FALSE;
 
   structure = gst_caps_get_structure (caps, 0);
-  if (gst_structure_has_field (structure, "format"))
+
+  if (g_strcmp0 (gst_structure_get_string (structure, "format"),
+          "DMA_DRM") != 0)
     return FALSE;
 
   return TRUE;
@@ -243,8 +245,8 @@ gst_video_is_dma_drm_caps (const GstCaps * caps)
  * @drm_info: a #GstVideoInfoDmaDrm
  *
  * Convert the values of @drm_info into a #GstCaps. Please note that the
- * @caps returned will be a dma drm caps which does not contain format field,
- * but contains a drm-format field instead. The value of drm-format field is
+ * @caps returned will be a dma drm caps which sets format field to DMA_DRM,
+ * and contains a new drm-format field. The value of drm-format field is
  * composed of a drm fourcc and a modifier, such as NV12:0x0100000000000002.
  *
  * Returns: (transfer full) (nullable): a new #GstCaps containing the
@@ -273,8 +275,8 @@ gst_video_info_dma_drm_to_caps (const GstVideoInfoDmaDrm * drm_info)
       drm_info->drm_modifier);
 
   structure = gst_caps_get_structure (caps, 0);
-  gst_structure_remove_field (structure, "format");
-  gst_structure_set (structure, "drm-format", G_TYPE_STRING, str, NULL);
+  gst_structure_set (structure, "format", G_TYPE_STRING, "DMA_DRM",
+      "drm-format", G_TYPE_STRING, str, NULL);
 
   g_free (str);
 
@@ -337,17 +339,15 @@ gst_video_info_dma_drm_from_caps (GstVideoInfoDmaDrm * drm_info,
   }
 
   /* If the modifier is linear, set the according format in video info,
-   * otherwise, just set the format to GST_VIDEO_FORMAT_ENCODED. */
+   * otherwise, just let the format to be GST_VIDEO_FORMAT_DMA_DRM. */
   /* TODO: Some well known tiled format such as NV12_4L4, NV12_16L16,
    * NV12_64Z32, NV12_16L32S */
   format = gst_video_dma_drm_fourcc_to_format (fourcc);
   if (modifier == DRM_FORMAT_MOD_LINEAR && format != GST_VIDEO_FORMAT_UNKNOWN) {
     gst_structure_set (structure, "format", G_TYPE_STRING,
         gst_video_format_to_string (format), NULL);
-  } else {
-    gst_structure_set (structure, "format", G_TYPE_STRING,
-        gst_video_format_to_string (GST_VIDEO_FORMAT_ENCODED), NULL);
   }
+
   gst_structure_remove_field (structure, "drm-format");
 
   if (!gst_video_info_from_caps (&drm_info->vinfo, tmp_caps)) {
@@ -432,13 +432,13 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
   drm_info->drm_fourcc = fourcc;
   drm_info->drm_modifier = modifier;
 
-  /* no need to change format to GST_VIDEO_INFO_ENCODED since its modifier is
+  /* no need to change format to GST_VIDEO_INFO_DMA_DRM since its modifier is
    * linear */
   if (modifier == DRM_FORMAT_MOD_LINEAR)
     return TRUE;
 
   return gst_video_info_set_interlaced_format (&drm_info->vinfo,
-      GST_VIDEO_FORMAT_ENCODED, GST_VIDEO_INFO_INTERLACE_MODE (info),
+      GST_VIDEO_FORMAT_DMA_DRM, GST_VIDEO_INFO_INTERLACE_MODE (info),
       GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info));
 }
 
@@ -449,7 +449,7 @@ gst_video_info_dma_drm_from_video_info (GstVideoInfoDmaDrm * drm_info,
  *
  * Convert the #GstVideoInfoDmaDrm into a traditional #GstVideoInfo with
  * recognized video format. For DMA kind memory, the non linear DMA format
- * should be recognized as #GST_VIDEO_FORMAT_ENCODED. This helper function
+ * should be recognized as #GST_VIDEO_FORMAT_DMA_DRM. This helper function
  * sets @info's video format into the default value according to @drm_info's
  * drm_fourcc field.
  *
@@ -468,7 +468,7 @@ gst_video_info_dma_drm_to_video_info (const GstVideoInfoDmaDrm * drm_info,
   g_return_val_if_fail (drm_info, FALSE);
   g_return_val_if_fail (info, FALSE);
 
-  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_ENCODED) {
+  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_DMA_DRM) {
     *info = drm_info->vinfo;
     return TRUE;
   }
