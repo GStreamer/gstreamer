@@ -7343,6 +7343,8 @@ static const VideoFormat formats[] = {
   MAKE_YUV_T_FORMAT (NV12_10LE40_4L4, "raw video",
       GST_MAKE_FOURCC ('M', 'H', '2', '1'), DPTH10_10_10, PSTR0, PLANE011,
       OFFS001, SUB420, PACK_NV12_10LE40_TILED, TILE_10bit_4x4 (LINEAR)),
+  {0x00000000, {GST_VIDEO_FORMAT_DMA_DRM, "DMA_DRM", "DMA DRM video",
+          GST_VIDEO_FORMAT_FLAG_COMPLEX, DPTH0, PSTR0, PLANE_NA, OFFS0}},
 };
 
 G_GNUC_END_IGNORE_DEPRECATIONS;
@@ -7818,7 +7820,8 @@ generate_raw_video_formats (gpointer data)
 
     all->formats[i] = gst_video_format_from_string (g_value_get_string (v));
     g_assert (all->formats[i] != GST_VIDEO_FORMAT_UNKNOWN
-        && all->formats[i] != GST_VIDEO_FORMAT_ENCODED);
+        && all->formats[i] != GST_VIDEO_FORMAT_ENCODED
+        && all->formats[i] != GST_VIDEO_FORMAT_DMA_DRM);
   }
 
   g_value_unset (&list);
@@ -7905,7 +7908,8 @@ gst_video_make_raw_caps_with_features (const GstVideoFormat formats[],
       GValue v = G_VALUE_INIT;
 
       g_return_val_if_fail (formats[i] != GST_VIDEO_FORMAT_UNKNOWN
-          && formats[i] != GST_VIDEO_FORMAT_ENCODED, NULL);
+          && formats[i] != GST_VIDEO_FORMAT_ENCODED
+          && formats[i] != GST_VIDEO_FORMAT_DMA_DRM, NULL);
 
       g_value_init (&v, G_TYPE_STRING);
       g_value_set_static_string (&v, gst_video_format_to_string (formats[i]));

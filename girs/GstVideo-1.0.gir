@@ -10110,6 +10110,12 @@ for details about the layout and packing of these formats in memory.</doc>
       <member name="nv12_10le40_4l4" value="113" c:identifier="GST_VIDEO_FORMAT_NV12_10LE40_4L4" glib:nick="nv12-10le40-4l4">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">@GST_VIDEO_FORMAT_NV12_10LE40 with 4x4 pixels tiles (5 bytes per tile row) (Since: 1.24)</doc>
       </member>
+      <member name="dma_drm" value="114" c:identifier="GST_VIDEO_FORMAT_DMA_DRM" glib:nick="dma-drm">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">DMA DRM special format. It's only used with
+                           memory:DMABuf #GstCapsFeatures, where an extra
+                           parameter (drm-format) is required to define the
+                           image format and its memory layout.</doc>
+      </member>
       <function name="from_fourcc" c:identifier="gst_video_format_from_fourcc">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Converts a FOURCC value into the corresponding #GstVideoFormat.
 If the FOURCC cannot be represented by #GstVideoFormat,

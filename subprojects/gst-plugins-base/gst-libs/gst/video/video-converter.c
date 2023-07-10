@@ -7355,6 +7355,7 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_NV12_8L128:
     case GST_VIDEO_FORMAT_NV12_10BE_8L128:
     case GST_VIDEO_FORMAT_NV12_10LE40_4L4:
+    case GST_VIDEO_FORMAT_DMA_DRM:
       res = format;
       g_assert_not_reached ();
       break;

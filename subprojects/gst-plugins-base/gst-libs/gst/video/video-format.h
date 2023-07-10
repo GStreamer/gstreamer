@@ -146,6 +146,10 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FORMAT_NV12_8L128 : NV12 with 8x128 tiles in linear order (Since: 1.22)
  * @GST_VIDEO_FORMAT_NV12_10BE_8L128 : NV12 10bit big endian with 8x128 tiles in linear order (Since: 1.22)
  * @GST_VIDEO_FORMAT_NV12_10LE40_4L4: @GST_VIDEO_FORMAT_NV12_10LE40 with 4x4 pixels tiles (5 bytes per tile row) (Since: 1.24)
+ * @GST_VIDEO_FORMAT_DMA_DRM: DMA DRM special format. It's only used with
+ *                            memory:DMABuf #GstCapsFeatures, where an extra
+ *                            parameter (drm-format) is required to define the
+ *                            image format and its memory layout.
  *
  * Enum value describing the most common video formats.
  *
@@ -411,6 +415,17 @@ typedef enum {
    * Since: 1.24
    */
   GST_VIDEO_FORMAT_NV12_10LE40_4L4,
+  /**
+   * GST_VIDEO_FORMAT_DMA_DRM:
+   *
+   * @GST_VIDEO_FORMAT_DMA_DRM represent the DMA DRM special format. It's
+   * only used with memory:DMABuf #GstCapsFeatures, where an extra
+   * parameter (drm-format) is required to define the image format and
+   * its memory layout.
+   *
+   * Since: 1.24
+   */
+  GST_VIDEO_FORMAT_DMA_DRM,
 } GstVideoFormat;
 
 #define GST_VIDEO_MAX_PLANES 4
