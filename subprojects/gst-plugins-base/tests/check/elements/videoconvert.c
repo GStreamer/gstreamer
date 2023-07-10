@@ -85,6 +85,9 @@ check_pad_template (GstPadTemplate * tmpl)
   gst_caps_unref (caps);
 
   for (i = 2; i < num_formats; ++i) {
+    if (i == GST_VIDEO_FORMAT_DMA_DRM)
+      continue;
+
     if (!formats_supported[i]) {
       g_error ("videoconvert doesn't support format '%s'",
           gst_video_format_to_string ((GstVideoFormat) i));

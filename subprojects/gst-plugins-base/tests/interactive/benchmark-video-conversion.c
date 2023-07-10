@@ -59,6 +59,9 @@ do_benchmark_conversions (guint width, guint height, const gchar * in_format,
     GstVideoFrame inframe;
     GstBuffer *inbuffer;
 
+    if (infmt == GST_VIDEO_FORMAT_DMA_DRM)
+      continue;
+
     infmt_str = gst_video_format_to_string (infmt);
     if (in_format != NULL && !g_str_equal (in_format, infmt_str))
       continue;
@@ -75,6 +78,9 @@ do_benchmark_conversions (guint width, guint height, const gchar * in_format,
       GstVideoConverter *convert;
       gdouble elapsed, convert_sec;
       gint count;
+
+      if (outfmt == GST_VIDEO_FORMAT_DMA_DRM)
+        continue;
 
       outfmt_str = gst_video_format_to_string (outfmt);
       if (out_format != NULL && !g_str_equal (out_format, outfmt_str))
