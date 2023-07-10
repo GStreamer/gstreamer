@@ -225,8 +225,12 @@ GstQt6D3D11VideoItem::updatePaintNode (QSGNode * old_node,
 
   GST_TRACE ("%p updatePaintNode", this);
 
-  if (!new_node)
+  if (!new_node) {
+    bool is_smooth = this->smooth ();
     new_node = new GstQSG6D3D11Node (this, qt_device_);
+    new_node->setFiltering (is_smooth ? QSGTexture::Filtering::Linear :
+        QSGTexture::Filtering::Nearest);
+  }
 
   if (force_aspect_ratio_ && caps_) {
     src.w = display_width_;
