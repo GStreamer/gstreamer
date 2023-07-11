@@ -1147,7 +1147,7 @@ class GstValidateTest(Test):
         msg = ""
         result = Result.PASSED
         if self.result == Result.TIMEOUT:
-            with open(self.logfile) as f:
+            with open(self.logfile, errors="surrogateescape") as f:
                 signal_fault_info = self.fault_sig_regex.findall(f.read())
                 if signal_fault_info:
                     result = Result.FAILED
