@@ -352,9 +352,12 @@ if gstgl_dep.found()
   message('GStreamer OpenGL platforms: @0@'.format(' '.join(gst_gl_platforms)))
   message('GStreamer OpenGL apis: @0@'.format(' '.join(gst_gl_apis)))
 
-  foreach ws : ['x11', 'wayland', 'android', 'cocoa', 'eagl', 'win32', 'dispmanx', 'viv_fb']
+  foreach ws : ['x11', 'wayland', 'android', 'cocoa', 'eagl', 'win32', 'dispmanx']
     set_variable('gst_gl_have_window_@0@'.format(ws), gst_gl_winsys.contains(ws))
   endforeach
+  # Handling viv-fb separately, because the winsys is called "viv-fb", but the
+  # variable suffix must be "viv_fb" (dashes are not allowed in variable names).
+  set_variable('gst_gl_have_window_viv_fb', gst_gl_winsys.contains('viv-fb'))
 
   foreach p : ['glx', 'egl', 'cgl', 'eagl', 'wgl']
     set_variable('gst_gl_have_platform_@0@'.format(p), gst_gl_platforms.contains(p))
