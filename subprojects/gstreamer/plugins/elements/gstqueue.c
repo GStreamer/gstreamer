@@ -1556,7 +1556,11 @@ out_flushing:
     gst_pad_pause_task (queue->srcpad);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (ret));
-    if (ret == GST_FLOW_FLUSHING) {
+
+    /* flush internal queue except for not-linked and eos
+     * not-linked: reconfigure event will start srcpad task
+     * eos: stream-start can clear eos and will start srcpad task again */
+    if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_EOS) {
       gst_queue_locked_flush (queue, FALSE);
     } else {
       GST_QUEUE_SIGNAL_DEL (queue);

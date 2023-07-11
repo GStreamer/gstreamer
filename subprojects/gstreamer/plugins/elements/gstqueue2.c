@@ -3235,7 +3235,11 @@ out_flushing:
     GstFlowReturn ret = queue->srcresult;
 
     gst_pad_pause_task (queue->srcpad);
-    if (ret == GST_FLOW_FLUSHING) {
+
+    /* flush internal queue except for not-linked and eos
+     * not-linked: reconfigure event will start srcpad task
+     * eos: stream-start can clear eos and will start srcpad task again */
+    if (ret != GST_FLOW_NOT_LINKED && ret != GST_FLOW_EOS) {
       gst_queue2_locked_flush (queue, FALSE, FALSE);
     } else {
       GST_QUEUE2_SIGNAL_DEL (queue);
