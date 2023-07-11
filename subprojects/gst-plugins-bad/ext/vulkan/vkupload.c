@@ -187,9 +187,6 @@ struct RawToBufferUpload
   GstVideoInfo in_info;
   GstVideoInfo out_info;
 
-  GstBufferPool *pool;
-  gboolean pool_active;
-
   gsize alloc_sizes[GST_VIDEO_MAX_PLANES];
 };
 
@@ -278,26 +275,16 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GstVideoFrame v_frame;
   GstFlowReturn ret;
   guint i, n_mems;
+  GstBufferPool *pool;
 
-  if (!raw->pool) {
-    GstStructure *config;
-    guint min = 0, max = 0;
-    gsize size = 1;
+  pool = gst_base_transform_get_buffer_pool
+      (GST_BASE_TRANSFORM_CAST (raw->upload));
+  if (!pool)
+    return GST_FLOW_ERROR;
 
-    raw->pool = gst_vulkan_buffer_pool_new (raw->upload->device);
-    config = gst_buffer_pool_get_config (raw->pool);
-    gst_buffer_pool_config_set_params (config, raw->upload->out_caps, size, min,
-        max);
-    gst_buffer_pool_set_config (raw->pool, config);
-  }
-  if (!raw->pool_active) {
-    gst_buffer_pool_set_active (raw->pool, TRUE);
-    raw->pool_active = TRUE;
-  }
-
-  if ((ret =
-          gst_buffer_pool_acquire_buffer (raw->pool, outbuf,
-              NULL)) != GST_FLOW_OK)
+  gst_buffer_pool_set_active (pool, TRUE);
+  if ((ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL))
+      != GST_FLOW_OK)
     goto out;
 
   if (!gst_video_frame_map (&v_frame, &raw->in_info, inbuf, GST_MAP_READ)) {
@@ -336,23 +323,13 @@ _raw_to_buffer_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   ret = GST_FLOW_OK;
 
 out:
+  gst_object_unref (pool);
   return ret;
 }
 
 static void
 _raw_to_buffer_free (gpointer impl)
 {
-  struct RawToBufferUpload *raw = impl;
-
-  if (raw->pool) {
-    if (raw->pool_active) {
-      gst_buffer_pool_set_active (raw->pool, FALSE);
-    }
-    raw->pool_active = FALSE;
-    gst_object_unref (raw->pool);
-    raw->pool = NULL;
-  }
-
   g_free (impl);
 }
 
@@ -378,9 +355,6 @@ struct BufferToImageUpload
 
   GstVideoInfo in_info;
   GstVideoInfo out_info;
-
-  GstBufferPool *pool;
-  gboolean pool_active;
 
   GstVulkanOperation *exec;
 };
@@ -446,6 +420,17 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   guint i, n_mems, n_planes;
   GArray *barriers = NULL;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  GstBufferPool *pool;
+
+  pool = gst_base_transform_get_buffer_pool
+      (GST_BASE_TRANSFORM_CAST (raw->upload));
+  if (!pool)
+    return GST_FLOW_ERROR;
+
+  gst_buffer_pool_set_active (pool, TRUE);
+  if ((ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL))
+      != GST_FLOW_OK)
+    goto out;
 
   if (!raw->exec) {
     GstVulkanCommandPool *cmd_pool =
@@ -456,27 +441,6 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     raw->exec = gst_vulkan_operation_new (cmd_pool);
     gst_object_unref (cmd_pool);
   }
-
-  if (!raw->pool) {
-    GstStructure *config;
-    guint min = 0, max = 0;
-    gsize size = 1;
-
-    raw->pool = gst_vulkan_image_buffer_pool_new (raw->upload->device);
-    config = gst_buffer_pool_get_config (raw->pool);
-    gst_buffer_pool_config_set_params (config, raw->upload->out_caps, size, min,
-        max);
-    gst_buffer_pool_set_config (raw->pool, config);
-  }
-  if (!raw->pool_active) {
-    gst_buffer_pool_set_active (raw->pool, TRUE);
-    raw->pool_active = TRUE;
-  }
-
-  if ((ret =
-          gst_buffer_pool_acquire_buffer (raw->pool, outbuf,
-              NULL)) != GST_FLOW_OK)
-    goto out;
 
   if (!gst_vulkan_operation_add_dependency_frame (raw->exec, *outbuf,
           VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT))
@@ -586,6 +550,7 @@ _buffer_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   ret = GST_FLOW_OK;
 
 out:
+  gst_object_unref (pool);
   return ret;
 
 unlock_error:
@@ -605,15 +570,6 @@ static void
 _buffer_to_image_free (gpointer impl)
 {
   struct BufferToImageUpload *raw = impl;
-
-  if (raw->pool) {
-    if (raw->pool_active) {
-      gst_buffer_pool_set_active (raw->pool, FALSE);
-    }
-    raw->pool_active = FALSE;
-    gst_object_unref (raw->pool);
-    raw->pool = NULL;
-  }
 
   if (raw->exec) {
     if (!gst_vulkan_operation_wait (raw->exec)) {
@@ -650,9 +606,6 @@ struct RawToImageUpload
 
   GstVideoInfo in_info;
   GstVideoInfo out_info;
-
-  GstBufferPool *pool;
-  gboolean pool_active;
 
   GstBufferPool *in_pool;
   gboolean in_pool_active;
@@ -731,6 +684,17 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GArray *barriers = NULL;
   guint i, n_mems, n_planes;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+  GstBufferPool *pool;
+
+  pool = gst_base_transform_get_buffer_pool
+      (GST_BASE_TRANSFORM_CAST (raw->upload));
+  if (!pool)
+    return GST_FLOW_ERROR;
+
+  gst_buffer_pool_set_active (pool, TRUE);
+  if ((ret = gst_buffer_pool_acquire_buffer (pool, outbuf, NULL))
+      != GST_FLOW_OK)
+    goto out;
 
   if (!raw->exec) {
     GstVulkanCommandPool *cmd_pool =
@@ -739,27 +703,6 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     raw->exec = gst_vulkan_operation_new (cmd_pool);
     gst_object_unref (cmd_pool);
   }
-
-  if (!raw->pool) {
-    GstStructure *config;
-    guint min = 0, max = 0;
-    gsize size = 1;
-
-    raw->pool = gst_vulkan_image_buffer_pool_new (raw->upload->device);
-    config = gst_buffer_pool_get_config (raw->pool);
-    gst_buffer_pool_config_set_params (config, raw->upload->out_caps, size, min,
-        max);
-    gst_buffer_pool_set_config (raw->pool, config);
-  }
-  if (!raw->pool_active) {
-    gst_buffer_pool_set_active (raw->pool, TRUE);
-    raw->pool_active = TRUE;
-  }
-
-  if ((ret =
-          gst_buffer_pool_acquire_buffer (raw->pool, outbuf,
-              NULL)) != GST_FLOW_OK)
-    goto out;
 
   if (!gst_vulkan_operation_begin (raw->exec, &error))
     goto error;
@@ -926,6 +869,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   ret = GST_FLOW_OK;
 
 out:
+  gst_object_unref (pool);
   if (in_vk_copy)
     gst_buffer_unref (in_vk_copy);
 
@@ -948,15 +892,6 @@ static void
 _raw_to_image_free (gpointer impl)
 {
   struct RawToImageUpload *raw = impl;
-
-  if (raw->pool) {
-    if (raw->pool_active) {
-      gst_buffer_pool_set_active (raw->pool, FALSE);
-    }
-    raw->pool_active = FALSE;
-    gst_object_unref (raw->pool);
-    raw->pool = NULL;
-  }
 
   if (raw->in_pool) {
     if (raw->in_pool_active) {
@@ -1424,6 +1359,48 @@ gst_vulkan_upload_propose_allocation (GstBaseTransform * bt,
 static gboolean
 gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
 {
+  GstVulkanUpload *vk_upload = GST_VULKAN_UPLOAD (bt);
+  GstBufferPool *pool = NULL;
+  GstStructure *config;
+  GstCaps *caps;
+  guint min, max, size;
+  gboolean update_pool;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps)
+    return FALSE;
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+
+    update_pool = TRUE;
+  } else {
+    GstVideoInfo vinfo;
+
+    gst_video_info_init (&vinfo);
+    gst_video_info_from_caps (&vinfo, caps);
+    size = vinfo.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  if (!pool || !GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool)) {
+    if (pool)
+      gst_object_unref (pool);
+    pool = gst_vulkan_image_buffer_pool_new (vk_upload->device);
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
   return TRUE;
 }
 
