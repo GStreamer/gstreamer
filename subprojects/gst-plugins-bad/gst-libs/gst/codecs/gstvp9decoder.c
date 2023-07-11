@@ -377,6 +377,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
   GstVp9ParserResult pres;
   GstMapInfo map;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn output_ret = GST_FLOW_OK;
   gboolean intra_only = FALSE;
   gboolean check_codec_change = FALSE;
   GstVp9DecoderOutputFrame output_frame;
@@ -561,7 +562,13 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
   }
 
-  gst_vp9_decoder_drain_output_queue (self, priv->preferred_output_delay, &ret);
+  gst_vp9_decoder_drain_output_queue (self,
+      priv->preferred_output_delay, &output_ret);
+  if (output_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self,
+        "Output returned %s", gst_flow_get_name (output_ret));
+    return output_ret;
+  }
 
   if (ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,

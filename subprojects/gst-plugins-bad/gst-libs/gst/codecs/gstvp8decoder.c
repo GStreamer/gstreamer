@@ -375,6 +375,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
   GstVp8ParserResult pres;
   GstVp8Picture *picture = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn output_ret = GST_FLOW_OK;
   GstVp8DecoderOutputFrame output_frame;
 
   GST_LOG_OBJECT (self,
@@ -483,7 +484,13 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
     gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
   }
 
-  gst_vp8_decoder_drain_output_queue (self, priv->preferred_output_delay, &ret);
+  gst_vp8_decoder_drain_output_queue (self, priv->preferred_output_delay,
+      &output_ret);
+  if (output_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self,
+        "Output returned %s", gst_flow_get_name (output_ret));
+    return output_ret;
+  }
 
   if (ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,

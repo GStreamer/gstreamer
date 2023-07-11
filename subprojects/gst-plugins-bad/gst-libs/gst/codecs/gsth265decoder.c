@@ -136,6 +136,8 @@ struct _GstH265DecoderPrivate
   GstQueueArray *output_queue;
 
   gboolean input_state_changed;
+
+  GstFlowReturn last_flow;
 };
 
 typedef struct
@@ -267,6 +269,7 @@ gst_h265_decoder_start (GstVideoDecoder * decoder)
   priv->dpb = gst_h265_dpb_new ();
   priv->new_bitstream = TRUE;
   priv->prev_nal_is_eos = FALSE;
+  priv->last_flow = GST_FLOW_OK;
 
   return TRUE;
 }
@@ -1696,7 +1699,6 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
   GstH265DecoderPrivate *priv = self->priv;
   GstVideoCodecFrame *frame = NULL;
   GstH265DecoderOutputFrame output_frame;
-  GstFlowReturn flow_ret = GST_FLOW_OK;
 
   g_assert (ret != NULL);
 
@@ -1730,8 +1732,7 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
   gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
 
   gst_h265_decoder_drain_output_queue (self, priv->preferred_output_delay,
-      &flow_ret);
-  UPDATE_FLOW_RETURN (ret, flow_ret);
+      &priv->last_flow);
 }
 
 static void
@@ -1791,7 +1792,7 @@ gst_h265_decoder_dpb_init (GstH265Decoder * self, const GstH265Slice * slice,
   if (slice->clear_dpb) {
     if (picture->NoOutputOfPriorPicsFlag) {
       GST_DEBUG_OBJECT (self, "Clear dpb");
-      gst_h265_decoder_drain_output_queue (self, 0, &ret);
+      gst_h265_decoder_drain_output_queue (self, 0, &priv->last_flow);
       gst_h265_decoder_clear_dpb (self, FALSE);
     } else {
       gst_h265_dpb_delete_unused (priv->dpb);
@@ -1999,6 +2000,7 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
 
   gst_h265_decoder_reset_frame_state (self);
 
+  priv->last_flow = GST_FLOW_OK;
   priv->current_frame = frame;
 
   if (!gst_buffer_map (in_buf, &map, GST_MAP_READ)) {
@@ -2078,6 +2080,12 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
   } else {
     /* This picture was dropped */
     gst_video_decoder_release_frame (decoder, frame);
+  }
+
+  if (priv->last_flow != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self,
+        "Last flow %s", gst_flow_get_name (priv->last_flow));
+    return priv->last_flow;
   }
 
   if (decode_ret == GST_FLOW_ERROR) {

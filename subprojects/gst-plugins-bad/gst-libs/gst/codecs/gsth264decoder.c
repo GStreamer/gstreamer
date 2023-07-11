@@ -150,6 +150,9 @@ struct _GstH264DecoderPrivate
   GstQueueArray *output_queue;
 
   gboolean input_state_changed;
+
+  /* Return value from output_picture() */
+  GstFlowReturn last_flow;
 };
 
 typedef struct
@@ -416,6 +419,7 @@ gst_h264_decoder_reset (GstH264Decoder * self)
   priv->width = 0;
   priv->height = 0;
   priv->nal_length_size = 4;
+  priv->last_flow = GST_FLOW_OK;
 }
 
 static gboolean
@@ -526,6 +530,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
       GST_TIME_ARGS (GST_BUFFER_DTS (in_buf)));
 
   priv->current_frame = frame;
+  priv->last_flow = GST_FLOW_OK;
 
   gst_buffer_map (in_buf, &map, GST_MAP_READ);
   if (priv->in_format == GST_H264_DECODER_FORMAT_AVC) {
@@ -575,6 +580,12 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
   gst_h264_decoder_finish_current_picture (self, &decode_ret);
   gst_video_codec_frame_unref (frame);
   priv->current_frame = NULL;
+
+  if (priv->last_flow != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self,
+        "Last flow %s", gst_flow_get_name (priv->last_flow));
+    return priv->last_flow;
+  }
 
   if (decode_ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (self, 1, STREAM, DECODE,
@@ -1768,7 +1779,6 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
   GstH264DecoderPrivate *priv = self->priv;
   GstVideoCodecFrame *frame = NULL;
   GstH264DecoderOutputFrame output_frame;
-  GstFlowReturn flow_ret = GST_FLOW_OK;
 #ifndef GST_DISABLE_GST_DEBUG
   guint32 last_output_poc;
 #endif
@@ -1813,8 +1823,7 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
   gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
 
   gst_h264_decoder_drain_output_queue (self, priv->preferred_output_delay,
-      &flow_ret);
-  UPDATE_FLOW_RETURN (ret, flow_ret);
+      &priv->last_flow);
 }
 
 static void

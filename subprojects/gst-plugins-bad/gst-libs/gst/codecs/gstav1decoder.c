@@ -676,6 +676,7 @@ gst_av1_decoder_handle_frame (GstVideoDecoder * decoder,
   GstBuffer *in_buf = frame->input_buffer;
   GstMapInfo map;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn output_ret = GST_FLOW_OK;
   guint32 total_consumed, consumed;
   GstAV1OBU obu;
   GstAV1ParserResult res;
@@ -784,7 +785,13 @@ out:
     gst_video_decoder_drop_frame (decoder, frame);
   }
 
-  gst_av1_decoder_drain_output_queue (self, priv->preferred_output_delay, &ret);
+  gst_av1_decoder_drain_output_queue (self,
+      priv->preferred_output_delay, &output_ret);
+  if (output_ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (self,
+        "Output returned %s", gst_flow_get_name (output_ret));
+    return output_ret;
+  }
 
   priv->current_picture = NULL;
   priv->current_frame = NULL;
