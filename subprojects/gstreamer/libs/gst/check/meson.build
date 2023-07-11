@@ -3,6 +3,7 @@ gst_check_sources = files(
   'gstcheck.c',
   'gstconsistencychecker.c',
   'gstharness.c',
+  'gstharnesslink.c',
   'gsttestclock.c',
 )
 gst_check_headers = files(
