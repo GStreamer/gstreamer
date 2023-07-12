@@ -1,0 +1,46 @@
+From 8c0727b1c3ea7eaa97cf05affb3efb4469a4443f Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Wed, 12 Jul 2023 10:53:59 +0530
+Subject: [PATCH] meson: Always use posix path, even on Windows
+
+Fix build error when using MSYS2 and building inside C:\Users
+
+```
+FAILED: subprojects/fontconfig/test/test_bz89617.exe.p/test-bz89617.c.obj
+"cc" [...] "-DSRCDIR=\"C:\\Users\\Administrator\\runner\\builds\\nirbheek\\gstreamer\\subprojects\\fontconfig\\test\"" [...] ../subprojects/fontconfig/test/test-bz89617.c
+../subprojects/fontconfig/test/test-bz89617.c: In function 'main':
+../subprojects/fontconfig/test/test-bz89617.c:33:76: error: incomplete universal character name \U
+   33 |     if (!FcConfigAppFontAddFile (config, (const FcChar8 *)SRCDIR "/4x6.pcf") ||
+      |                                                                            ^
+../subprojects/fontconfig/test/test-bz89617.c:33:76: warning: unknown escape sequence: '\A'
+../subprojects/fontconfig/test/test-bz89617.c:33:76: warning: unknown escape sequence: '\g'
+../subprojects/fontconfig/test/test-bz89617.c:33:76: warning: unknown escape sequence: '\s'
+```
+---
+ test/meson.build | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/test/meson.build b/test/meson.build
+index 59de427..9265662 100644
+--- a/test/meson.build
++++ b/test/meson.build
+@@ -1,5 +1,6 @@
++fsmod = import('fs')
+ tests = [
+-  ['test-bz89617.c', {'c_args': ['-DSRCDIR="@0@"'.format(meson.current_source_dir())]}],
++  ['test-bz89617.c', {'c_args': ['-DSRCDIR="@0@"'.format(fsmod.as_posix(meson.current_source_dir()))]}],
+   ['test-bz131804.c'],
+   ['test-bz96676.c'],
+   ['test-name-parse.c'],
+@@ -12,7 +13,7 @@ tests = [
+ if host_machine.system() != 'windows'
+   tests += [
+     # FIXME: ['test-migration.c'],
+-    ['test-bz106632.c', {'c_args': ['-DFONTFILE="@0@"'.format(join_paths(meson.current_source_dir(), '4x6.pcf'))]}],
++    ['test-bz106632.c', {'c_args': ['-DFONTFILE="@0@"'.format(fsmod.as_posix(join_paths(meson.current_source_dir(), '4x6.pcf')))]}],
+     ['test-issue107.c'], # FIXME: fails on mingw
+     # FIXME: this needs NotoSans-hinted.zip font downloaded and unpacked into test build directory! see run-test.sh
+     ['test-crbug1004254.c', {'dependencies': dependency('threads')}], # for pthread
+-- 
+2.41.0.windows.2
+
