@@ -453,7 +453,7 @@ build fedora clang:
    paths:
      - 'build/meson-logs/'
 
-.build windows native:
+build vs2022 amd64:
   extends: '.build windows'
   script:
     - !reference [".build windows", "script"]
@@ -465,18 +465,24 @@ build fedora clang:
     - meson install -C build --destdir installdir
     - Remove-Item -Recurse -Force build\installdir
 
-build vs2022 amd64:
-  extends: '.build windows native'
-  variables:
-    ARCH: 'amd64'
+.build windows cross:
+  extends: '.build windows'
+  script:
+    - !reference [".build windows", "script"]
+      # Setting up a cross build with MSVC is still non-trivial because
+      # the --vsenv argument cannot be used to set it up
+    - echo $env:MESON_CROSS_ARGS
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
+        meson setup build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
+        meson compile -C build "
 
 build vs2022 x86:
-  extends: '.build windows native'
+  extends: '.build windows cross'
   variables:
     ARCH: 'x86'
 
 build vs2022 arm64:
-  extends: '.build windows'
+  extends: '.build windows cross'
   variables:
     ARCH: 'arm64'
     # pango pulls in cairo which pulls in pixman which doesn't build because of
@@ -489,15 +495,6 @@ build vs2022 arm64:
       --cross-file ci/meson/vs2022-arm64-cross.ini
       --native-file ci/meson/vs2022-paths.ini
       --native-file ci/meson/vs2022-x64-native.ini
-  script:
-    - !reference [".build windows", "script"]
-      # Setting up a cross build with MSVC is still non-trivial because
-      # the --vsenv argument cannot be used to set it up
-    - echo $env:MESON_ARGS
-    - echo $env:MESON_CROSS_ARGS
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson setup build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
-        meson compile -C build "
 
 build msys2 :
   extends: '.build windows'
