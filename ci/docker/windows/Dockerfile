@@ -49,14 +49,14 @@ RUN New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSyste
     -Name "LongPathsEnabled" -Value 1 -PropertyType DWORD -Force
 RUN git config --system core.longpaths true
 
-RUN c:\msys64\usr\bin\bash -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja'
+COPY upgrade_msys2.ps1 C:\
+RUN C:\upgrade_msys2.ps1
 
-RUN pip3 install meson==1.1.1
+RUN C:\msys64\msys2_shell.cmd -ucrt64 -defterm -here -no-start -use-full-path -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja'
+
+RUN python -m pip install meson==1.1.1
 
 RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git config --global user.name "GStreamer CI system"'
-
-COPY install_mingw.ps1 C:\
-RUN C:\install_mingw.ps1
 
 COPY install_rust.ps1 C:\
 RUN C:\install_rust.ps1
@@ -67,4 +67,4 @@ COPY prepare_gst_env.ps1 C:\
 RUN C:\prepare_gst_env.ps1
 
 COPY prepare_cerbero_env.sh  C:\
-RUN C:\MinGW\msys\1.0\bin\bash.exe --login -c "C:/prepare_cerbero_env.sh"
+RUN C:\msys64\msys2_shell.cmd -ucrt64 -defterm -here -no-start -use-full-path -lc "C:/prepare_cerbero_env.sh"

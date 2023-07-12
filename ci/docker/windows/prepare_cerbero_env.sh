@@ -18,7 +18,7 @@ echo 'vs_install_version = "vs17"' >> localconf.cbc
 # Fetch all package requirements for a visualstudio gstreamer build
 ./cerbero-uninstalled -t -v visualstudio -c localconf.cbc -c config/win64.cbc fetch-package --jobs=4 gstreamer-1.0
 
-# Fixup the MSYS installation
+# Fixup the MSYS2 installation
 ./cerbero-uninstalled -t -c localconf.cbc -c config/win64.cbc bootstrap -y --build-tools=no --toolchains=no --offline
 
 # Wipe visualstudio package dist, sources, logs, and the build tools recipes
