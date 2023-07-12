@@ -1,0 +1,11 @@
+set-globals, media_dir="$(test_dir)/../../../medias/"
+meta,
+    seek=false,
+    handles-states=false,
+    args = {
+         "filesrc location=\"$(media_dir)/edit-lists/simple/ibpibp-non-frag.mp4\" ! qtdemux ! fakesink async=false",
+    },
+    configs = {
+       "$(validateflow), pad=fakesink0:sink, record-buffers=true, logged-event-types={segment}",
+        "change-issue-severity, issue-id=event::eos-has-wrong-seqnum, new-severity=ignore",
+    }
