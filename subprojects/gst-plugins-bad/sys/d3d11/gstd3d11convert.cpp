@@ -73,6 +73,7 @@ struct _GstD3D11BaseConvert
   /* Updated by subclass */
   gboolean add_borders;
   gboolean bilinear_filtering;
+  gboolean active_bilinear_filtering;
 
   gboolean active_add_borders;
 
@@ -93,6 +94,7 @@ struct _GstD3D11BaseConvert
   GstVideoOrientationMethod selected_method;
   /* method previously selected and used for negotiation */
   GstVideoOrientationMethod active_method;
+  
 
   SRWLOCK lock;
 };
@@ -308,7 +310,7 @@ static void
 gst_d3d11_base_convert_init (GstD3D11BaseConvert * self)
 {
   self->add_borders = self->active_add_borders = DEFAULT_ADD_BORDERS;
-  self->bilinear_filtering = DEFAULT_BILINEAR_FILTERING;
+  self->bilinear_filtering = self->active_bilinear_filtering = DEFAULT_BILINEAR_FILTERING;
   self->border_color = DEFAULT_BORDER_COLOR;
   self->gamma_mode = self->active_gamma_mode = DEFAULT_GAMMA_MODE;
   self->primaries_mode = self->active_primaries_mode = DEFAULT_PRIMARIES_MODE;
@@ -1476,6 +1478,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   GstD3D11SRWLockGuard lk (&self->lock);
   self->active_method = self->selected_method;
   self->active_add_borders = self->add_borders;
+  self->active_bilinear_filtering = self->bilinear_filtering;
   self->active_gamma_mode = self->gamma_mode;
   self->active_primaries_mode = self->primaries_mode;
 
@@ -1483,6 +1486,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       "primaries-mode %d", self->active_method,
       self->active_add_borders, self->active_gamma_mode,
       self->active_primaries_mode);
+  GST_DEBUG_OBJECT (self, "bilinear filtering %d", self->active_bilinear_filtering);
 
   if (self->active_method != GST_VIDEO_ORIENTATION_IDENTITY)
     need_flip = TRUE;
@@ -1574,7 +1578,9 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
       GST_TYPE_VIDEO_GAMMA_MODE, self->active_gamma_mode,
       GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
-      GST_TYPE_VIDEO_PRIMARIES_MODE, self->active_primaries_mode, nullptr);
+      GST_TYPE_VIDEO_PRIMARIES_MODE, self->active_primaries_mode, 
+      GST_D3D11_CONVERTER_BILINEAR_FILTERING, 
+      G_TYPE_BOOLEAN, self->bilinear_filtering, nullptr);
 
   self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info,
       config);
@@ -1625,6 +1631,8 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
     g_object_set (self->converter, "fill-border", TRUE, "border-color",
         self->border_color, nullptr);
   }
+
+  
 
   return TRUE;
 }
@@ -1893,7 +1901,8 @@ gst_d3d11_base_convert_before_transform (GstBaseTransform * trans,
   if (self->selected_method != self->active_method ||
       self->add_borders != self->active_add_borders ||
       self->gamma_mode != self->active_gamma_mode ||
-      self->primaries_mode != self->active_primaries_mode) {
+      self->primaries_mode != self->active_primaries_mode ||
+      self->bilinear_filtering != self->active_bilinear_filtering) {
     update = TRUE;
   }
   ReleaseSRWLockExclusive (&self->lock);
@@ -1955,6 +1964,8 @@ gst_d3d11_base_convert_transform (GstBaseTransform * trans,
         "src-width", (gint) in_rect.right - in_rect.left,
         "src-height", (gint) in_rect.bottom - in_rect.top, nullptr);
   }
+
+  
 
   if (!gst_d3d11_converter_convert_buffer (self->converter, inbuf, outbuf)) {
     GST_ELEMENT_ERROR (self, CORE, FAILED, (nullptr),
@@ -2221,11 +2232,12 @@ static void
 gst_d3d11_base_convert_set_bilinear_filtering(GstD3D11BaseConvert* self,
   gboolean bilinear_filtering)
 {
-  gboolean prev = self->bilinear_filtering;
+  GstD3D11SRWLockGuard lk (&self->lock);
 
   self->bilinear_filtering = bilinear_filtering;
-  if (prev != self->bilinear_filtering)
+  if (self->bilinear_filtering != self->active_add_borders)
     gst_base_transform_reconfigure_src(GST_BASE_TRANSFORM_CAST(self));
+   self->active_add_borders =  self->bilinear_filtering; 
 }
 
 static void

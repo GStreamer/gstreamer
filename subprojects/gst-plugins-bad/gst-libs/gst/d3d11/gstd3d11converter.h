@@ -81,6 +81,8 @@ GType gst_d3d11_converter_backend_get_type (void);
  */
 #define GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE "GstD3D11Converter.primaries-mode"
 
+#define GST_D3D11_CONVERTER_BILINEAR_FILTERING "bilinear-filtering"
+
 /**
  * GstD3D11Converter:
  *
