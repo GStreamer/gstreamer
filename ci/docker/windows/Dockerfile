@@ -4,6 +4,8 @@ FROM 'mcr.microsoft.com/windows/server:ltsc2022'
 
 # Make sure any failure in PowerShell is fatal
 ENV ErrorActionPreference='Stop'
+# Speed up Invoke-WebRequest by disabling progress bar
+ENV ProgressPreference='SilentlyContinue'
 SHELL ["powershell","-NoLogo", "-NonInteractive", "-Command"]
 
 # Not needed right now, disable for now
