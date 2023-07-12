@@ -782,7 +782,7 @@ out:
     if (priv->current_picture)
       gst_av1_picture_unref (priv->current_picture);
 
-    gst_video_decoder_drop_frame (decoder, frame);
+    gst_video_decoder_release_frame (decoder, frame);
   }
 
   gst_av1_decoder_drain_output_queue (self,

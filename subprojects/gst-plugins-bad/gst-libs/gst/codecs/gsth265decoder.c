@@ -2068,7 +2068,7 @@ gst_h265_decoder_handle_frame (GstVideoDecoder * decoder,
           ("Failed to decode data"), (NULL), decode_ret);
     }
 
-    gst_video_decoder_drop_frame (decoder, frame);
+    gst_video_decoder_release_frame (decoder, frame);
     gst_clear_h265_picture (&priv->current_picture);
 
     return decode_ret;

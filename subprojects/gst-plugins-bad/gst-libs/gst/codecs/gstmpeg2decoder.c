@@ -1320,7 +1320,7 @@ failed:
           ret);
     }
 
-    gst_video_decoder_drop_frame (decoder, frame);
+    gst_video_decoder_release_frame (decoder, frame);
     gst_clear_mpeg2_picture (&priv->current_picture);
     gst_clear_mpeg2_picture (&priv->first_field);
     priv->current_frame = NULL;

@@ -404,7 +404,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
           GST_PTR_FORMAT, in_buf);
 
       gst_buffer_unmap (in_buf, &map);
-      gst_video_decoder_drop_frame (decoder, frame);
+      gst_video_decoder_release_frame (decoder, frame);
 
       return GST_FLOW_OK;
     }
@@ -516,7 +516,7 @@ error:
           ("Failed to decode data"), (NULL), ret);
     }
 
-    gst_video_decoder_drop_frame (decoder, frame);
+    gst_video_decoder_release_frame (decoder, frame);
 
     return ret;
   }

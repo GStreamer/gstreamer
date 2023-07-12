@@ -570,7 +570,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
           ("Failed to decode data"), (NULL), decode_ret);
     }
 
-    gst_video_decoder_drop_frame (decoder, frame);
+    gst_video_decoder_release_frame (decoder, frame);
     gst_clear_h264_picture (&priv->current_picture);
     priv->current_frame = NULL;
 
@@ -1850,7 +1850,7 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self,
       priv->current_picture->nonexisting = TRUE;
 
       /* this fake nonexisting picture will not trigger ouput_picture() */
-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self),
+      gst_video_decoder_release_frame (GST_VIDEO_DECODER (self),
           gst_video_codec_frame_ref (priv->current_frame));
     }
   }
