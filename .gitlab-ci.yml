@@ -447,6 +447,8 @@ build fedora clang:
     - git add --renormalize subprojects/packagefiles
     - ci/scripts/handle-subprojects-cache.py subprojects/
     - echo $env:MESON_ARGS
+    # We do not pick up any deps with cmake, so speed up dependency checks
+    - $env:CMAKE = 'false'
   artifacts:
    expire_in: "7 days"
    when: "always"
