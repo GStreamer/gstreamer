@@ -295,7 +295,6 @@ commitlint:
   - subprojects/gst-python/**/*
   - subprojects/gstreamer/**/*
   - subprojects/gstreamer-sharp/**/*
-  - subprojects/gstreamer-vaapi/**/*
   - subprojects/gst-rtsp-server/**/*
 
 .build:
@@ -329,6 +328,8 @@ commitlint:
       when: manual
     - changes:
         *modules_changes
+    - changes:
+        - subprojects/gstreamer-vaapi/**/*
 
 .build fedora x86_64:
   extends:
@@ -580,6 +581,11 @@ check fedora:
   extends: '.test fedora x86_64'
   variables:
     TEST_SUITE: "check.gst*"
+  rules:
+    - changes:
+        *modules_changes
+    - changes:
+        - subprojects/gstreamer-vaapi/**/*
 
 integration testsuites fedora:
   extends: '.test fedora x86_64'
@@ -619,7 +625,6 @@ gstreamer-full static build:
     BUILD_TYPE: "static"
     MESON_ARGS: >-
       -Ddoc=disabled
-
   script:
   - *build
   - meson test -C build -v test-gst-full
@@ -657,6 +662,11 @@ gstreamer-full-minimal static build:
   stage: 'test'
   variables:
     EXTRA_VALIDATE_ARGS: "--valgrind"
+  rules:
+    - changes:
+        *modules_changes
+    - changes:
+        - subprojects/gstreamer-vaapi/**/*
 
 valgrind core:
   extends: '.valgrind fedora x86_64'
