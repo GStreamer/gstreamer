@@ -940,6 +940,8 @@ validate.test.interlace.interlace_deinterlace
 validate.test.interlace.interlace_deinterlace_alternate
 validate.test.matroska.demux_flush_within_cluster.default
 validate.test.mp4.qtdemux_change_edit_list.default
+validate.test.mp4.qtdemux_ibpibp_non_frag_pull.default
+validate.test.mp4.qtdemux_ibpibp_non_frag_push.default
 validate.test.mp4.qtdemux_reverse_playback_full_gop.reverse_playback_full_gop
 validate.test.mp4.redirect.play_15s
 validate.test.mse.segment_future_past_mse

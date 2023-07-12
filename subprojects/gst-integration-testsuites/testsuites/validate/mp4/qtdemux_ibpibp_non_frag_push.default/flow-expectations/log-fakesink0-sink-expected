@@ -1,0 +1,8 @@
+event segment: format=TIME, start=0:00:00.333333333, offset=0:00:00.000000000, stop=0:00:02.333333333, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.333333333
+buffer: dts=0:00:00.000000000, pts=0:00:00.333333333, dur=0:00:00.333333333, flags=discont tag-memory
+buffer: dts=0:00:00.333333333, pts=0:00:01.000000000, dur=0:00:00.333333333, flags=delta-unit tag-memory
+buffer: dts=0:00:00.666666666, pts=0:00:00.666666666, dur=0:00:00.333333334, flags=delta-unit tag-memory
+buffer: dts=0:00:01.000000000, pts=0:00:01.333333333, dur=0:00:00.333333333, flags=tag-memory
+buffer: dts=0:00:01.333333333, pts=0:00:02.000000000, dur=0:00:00.333333333, flags=delta-unit tag-memory
+buffer: dts=0:00:01.666666666, pts=0:00:01.666666666, dur=0:00:00.333333334, flags=delta-unit tag-memory
+event eos: (no structure)
