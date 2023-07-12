@@ -1,9 +1,8 @@
 [wrap-file]
-directory = pango-1.50.12
-source_url = https://download.gnome.org/sources/pango/1.50/pango-1.50.12.tar.xz
-source_filename = pango-1.50.12.tar.xz
-source_hash = caef96d27bbe792a6be92727c73468d832b13da57c8071ef79b9df69ee058fe3
-diff_files = pango-1.50.12/0001-meson-Fix-pangoft2.pc-when-using-freetype-and-fontco.patch
+directory = pango-1.50.14
+source_url = https://download.gnome.org/sources/pango/1.50/pango-1.50.14.tar.xz
+source_filename = pango-1.50.14.tar.xz
+source_hash = 1d67f205bfc318c27a29cfdfb6828568df566795df0cb51d2189cde7f2d581e8
 
 [provide]
 pango = libpango_dep
