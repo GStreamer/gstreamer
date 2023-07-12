@@ -1,8 +1,8 @@
-[wrap-git]
-directory=cairo
-url=https://gitlab.freedesktop.org/cairo/cairo.git
-depth=1
-revision=1.17.6
+[wrap-file]
+directory = cairo-1.17.8
+source_url = https://cairographics.org/snapshots/cairo-1.17.8.tar.xz
+source_filename = cairo-1.17.8.tar.xz
+source_hash = 5b10c8892d1b58d70d3f0ba5b47863a061262fa56b9dc7944161f8c8b783bc64
 
 [provide]
 cairo = libcairo_dep
