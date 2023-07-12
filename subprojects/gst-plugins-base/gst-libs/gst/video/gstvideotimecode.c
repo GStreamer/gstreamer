@@ -95,28 +95,28 @@ gst_video_time_code_is_valid (const GstVideoTimeCode * tc)
       return FALSE;
   }
 
-  /* We either need a specific X/1001 framerate, otherwise an integer
-   * framerate or less than 1 frame per second */
+  /* We need either a specific X/1001 framerate, or less than 1 FPS,
+   * otherwise an integer framerate. */
   if (tc->config.fps_d == 1001) {
     if (tc->config.fps_n != 30000 && tc->config.fps_n != 60000 &&
-        tc->config.fps_n != 24000)
+        tc->config.fps_n != 24000 && tc->config.fps_n != 120000)
       return FALSE;
   } else if (tc->config.fps_n >= tc->config.fps_d
       && tc->config.fps_n % tc->config.fps_d != 0) {
     return FALSE;
   }
 
-  /* We only support 30000/1001 and 60000/1001 as drop-frame framerates.
-   * 24000/1001 is *not* a drop-frame framerate! */
+  /* We support only 30000/1001, 60000/1001, and 120000/1001 (see above) as
+   * drop-frame framerates. 24000/1001 is *not* a drop-frame framerate! */
   if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) {
-    if (tc->config.fps_d != 1001 || (tc->config.fps_n != 30000
-            && tc->config.fps_n != 60000))
+    if (tc->config.fps_d != 1001 || tc->config.fps_n == 24000)
       return FALSE;
   }
 
   /* Drop-frame framerates require skipping over the first two
-   * timecodes every minutes except for every tenth minute in case
-   * of 30000/1001 and the first four timecodes for 60000/1001 */
+   * timecodes every minute except for every tenth minute in case
+   * of 30000/1001, the first four timecodes for 60000/1001,
+   * and the first eight timecodes for 120000/1001. */
   if ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) &&
       tc->minutes % 10 && tc->seconds == 0 && tc->frames < fr / 15) {
     return FALSE;
