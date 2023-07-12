@@ -444,7 +444,7 @@ build fedora clang:
     # Set the code page to UTF-8
     - chcp 65001
     # Renormalize line endings
-    - git add --renormalize .
+    - git add --renormalize subprojects/packagefiles
     - ci/scripts/handle-subprojects-cache.py subprojects/
     - echo $env:MESON_ARGS
   artifacts:
