@@ -120,11 +120,12 @@ if add_languages('cpp', native: false, required: false)
   ]
 endif
 
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_STATE_IGNORE_ELEMENTS"',
-  '-DTESTFILE="' + meson.current_source_dir() + '/meson.build"',
+  '-DTESTFILE="' + fsmod.as_posix(meson.current_source_dir()) + '/meson.build"',
   '-DGST_DISABLE_DEPRECATED',
 ]
 

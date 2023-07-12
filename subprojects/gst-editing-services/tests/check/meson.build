@@ -25,12 +25,13 @@ ges_tests = [
     ['nle/tempochange']
 ]
 
+fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
   '-UG_DISABLE_CAST_CHECKS',
-  '-DGES_TEST_FILES_PATH="@0@"'.format(join_paths(meson.current_source_dir(), 'assets')),
+  '-DGES_TEST_FILES_PATH="@0@"'.format(fsmod.as_posix(join_paths(meson.current_source_dir(), 'assets'))),
   '-DGST_CHECK_TEST_ENVIRONMENT_BEACON="GST_STATE_IGNORE_ELEMENTS"',
-  '-DTESTFILE="' + meson.current_source_dir() + '/meson.build"',
+  '-DTESTFILE="' + fsmod.as_posix(meson.current_source_dir()) + '/meson.build"',
   '-DGST_USE_UNSTABLE_API',
 ]
 
