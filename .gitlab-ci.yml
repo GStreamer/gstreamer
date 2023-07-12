@@ -499,18 +499,15 @@ build vs2022 arm64:
 build msys2 :
   extends: '.build windows'
   timeout: '60min'
-  rules:
-    - changes:
-        *modules_changes
-      allow_failure: true
-      when: 'manual'
   script:
     - !reference [".build windows", "script"]
     # Replace backslashes with forward so bash doesn't complain
     - $env:CI_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\','/')
+    # Windows Graphics Capture currently requires Visual Studio
+    - $env:MESON_ARGS = $env:MESON_ARGS.replace('-Dgst-plugins-bad:d3d11-wgc=enabled','')
     # Configure MSYS2 to use the UCRT64 environment, start in the same directory
     # and inherit PATH
-    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -use-full-path -lc "meson setup build $env:MESON_ARGS && ninja -C build"
+    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS && meson compile -C build"
 
 # ---- Tests ----- #
 
