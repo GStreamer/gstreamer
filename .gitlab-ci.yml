@@ -445,7 +445,9 @@ build fedora clang:
     - chcp 65001
     # Renormalize line endings
     - git add --renormalize subprojects/packagefiles
+    - $env:PYTHONUNBUFFERED = '1'
     - ci/scripts/handle-subprojects-cache.py subprojects/
+    - $env:PYTHONUNBUFFERED = ''
     - echo $env:MESON_ARGS
     # We do not pick up any deps with cmake, so speed up dependency checks
     - $env:CMAKE = 'false'
