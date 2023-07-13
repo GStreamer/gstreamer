@@ -54,7 +54,7 @@ RUN C:\upgrade_msys2.ps1
 
 RUN C:\msys64\msys2_shell.cmd -ucrt64 -defterm -here -no-start -use-full-path -lc 'pacman -S --noconfirm mingw-w64-ucrt-x86_64-toolchain ninja'
 
-RUN python -m pip install meson==1.1.1
+RUN python -m pip install meson==1.1.1 python-gitlab
 
 RUN 'git config --global user.email "cirunner@gstreamer.freedesktop.org"; git config --global user.name "GStreamer CI system"'
 
@@ -62,9 +62,15 @@ COPY install_rust.ps1 C:\
 RUN C:\install_rust.ps1
 
 ARG DEFAULT_BRANCH="main"
+ARG CI_PROJECT_NAMESPACE
+ARG CI_COMMIT_REF_NAME
 
+ENV CI_PROJECT_NAMESPACE=$CI_PROJECT_NAMESPACE
+ENV CI_COMMIT_REF_NAME=$CI_COMMIT_REF_NAME
 COPY prepare_gst_env.ps1 C:\
 RUN C:\prepare_gst_env.ps1
 
+ENV CI="true"
+COPY get_cerbero_clone_args.py C:\
 COPY prepare_cerbero_env.sh  C:\
 RUN C:\msys64\msys2_shell.cmd -ucrt64 -defterm -here -no-start -use-full-path -lc "C:/prepare_cerbero_env.sh"

@@ -14,8 +14,13 @@ $secure_pw = ConvertTo-SecureString $plaintext_pw -AsPlainText -Force
 C:\msys64\ucrt64\bin\openssl.exe pkcs12 -export -nokeys -out $env:TEMP\certs.pfx -in $cert_pem -passout pass:$plaintext_pw
 Import-PfxCertificate -Password $secure_pw  -CertStoreLocation Cert:\LocalMachine\Root -FilePath $env:TEMP\certs.pfx
 
-Write-Host "Cloning GStreamer"
-git clone -b $env:DEFAULT_BRANCH https://gitlab.freedesktop.org/gstreamer/gstreamer.git C:\gstreamer
+$namespace = "gstreamer"
+if ($env:CI_COMMIT_REF_NAME -ne $env:DEFAULT_BRANCH) {
+  $namespace = $env:CI_PROJECT_NAMESPACE
+}
+$url = "https://gitlab.freedesktop.org/$namespace/gstreamer.git"
+Write-Host "Cloning GStreamer branch $env:CI_COMMIT_REF_NAME from $url"
+git clone -b $env:CI_COMMIT_REF_NAME $url C:\gstreamer
 
 # download the subprojects to try and cache them
 Write-Host "Downloading subprojects"

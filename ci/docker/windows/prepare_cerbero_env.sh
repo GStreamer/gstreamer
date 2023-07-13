@@ -2,8 +2,12 @@
 
 set -eux
 
-cd C:/
-git clone -b ${DEFAULT_BRANCH} https://gitlab.freedesktop.org/gstreamer/cerbero.git C:/cerbero
+# Clone `-b main gstreamer/cerbero` by default, but if running on a gstreamer
+# branch in another namespace that has a corresponding cerbero branch by the
+# same name, clone that instead.
+clone_args="$(py -3 C:/get_cerbero_clone_args.py)"
+echo "Cloning Cerbero using $clone_args"
+git clone $clone_args C:/cerbero
 cd C:/cerbero
 
 echo 'local_sources="C:/cerbero/cerbero-sources"' > localconf.cbc
