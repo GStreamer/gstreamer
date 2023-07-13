@@ -219,7 +219,7 @@ rm -f *.rpm
 
 # Install Rust
 RUSTUP_VERSION=1.26.0
-RUST_VERSION=1.70.0
+RUST_VERSION=1.71.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 dnf install -y wget
@@ -236,7 +236,7 @@ chmod +x rustup-init;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-cargo install cargo-c --version 0.9.20+cargo-0.71
+cargo install cargo-c --version 0.9.21+cargo-0.71
 rustup --version
 cargo --version
 rustc --version
