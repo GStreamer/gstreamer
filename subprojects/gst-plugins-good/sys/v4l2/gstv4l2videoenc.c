@@ -517,6 +517,26 @@ negotiate_profile_and_level (GstCapsFeatures * features, GstStructure * s,
   return failed;
 }
 
+static GstCaps *
+gst_v4l2_video_enc_sink_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
+{
+  GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
+  GstCaps *probed_caps = NULL;
+  GstCaps *caps;
+
+  if (self->probed_sinkcaps)
+    probed_caps = gst_caps_ref (self->probed_sinkcaps);
+
+  caps = gst_video_encoder_proxy_getcaps (encoder, probed_caps, filter);
+
+  if (probed_caps)
+    gst_caps_unref (probed_caps);
+
+  GST_DEBUG_OBJECT (self, "Returning sink caps %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
 static gboolean
 gst_v4l2_video_enc_negotiate (GstVideoEncoder * encoder)
 {
@@ -1005,34 +1025,8 @@ static gboolean
 gst_v4l2_video_enc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
 {
   gboolean ret = TRUE;
-  GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
 
   switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CAPS:{
-      GstCaps *filter, *result = NULL;
-      GstPad *pad = GST_VIDEO_ENCODER_SINK_PAD (encoder);
-
-      gst_query_parse_caps (query, &filter);
-
-      if (self->probed_sinkcaps)
-        result = gst_caps_ref (self->probed_sinkcaps);
-      else
-        result = gst_pad_get_pad_template_caps (pad);
-
-      if (filter) {
-        GstCaps *tmp = result;
-        result =
-            gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
-        gst_caps_unref (tmp);
-      }
-
-      GST_DEBUG_OBJECT (self, "Returning sink caps %" GST_PTR_FORMAT, result);
-
-      gst_query_set_caps_result (query, result);
-      gst_caps_unref (result);
-      break;
-    }
-
     default:
       ret = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (encoder, query);
       break;
@@ -1166,6 +1160,8 @@ gst_v4l2_video_enc_class_init (GstV4l2VideoEncClass * klass)
   video_encoder_class->flush = GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_flush);
   video_encoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_set_format);
+  video_encoder_class->getcaps =
+      GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_sink_getcaps);
   video_encoder_class->negotiate =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_negotiate);
   video_encoder_class->decide_allocation =
