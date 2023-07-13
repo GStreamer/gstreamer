@@ -1,0 +1,37 @@
+From 6081263d131848842b916a6d2506c1a612be7f81 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Thu, 13 Jul 2023 07:28:52 +0530
+Subject: [PATCH] meson: Always write utf-8 files with LF newlines
+
+Otherwise, MSYS2 gperf chokes on the CRLF newlines translated by
+`open()`, even though we explicitly write out `\n`
+
+```
+[1/48] Generating src/fcobjshash.h with a custom command
+FAILED: src/fcobjshash.h
+"C:\msys64\usr\bin\gperf.EXE" "--pic" "-m" "100" "src/fcobjshash.gperf" "--output-file" "src/fcobjshash.h"
+src/fcobjshash.gperf:17: warning: junk after %% is ignored
+src/fcobjshash.gperf:2: warning: junk after %} is ignored
+src/fcobjshash.gperf:3: junk after declaration
+ninja: build stopped: subcommand failed.
+```
+---
+ src/cutout.py | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/cutout.py b/src/cutout.py
+index 6b46529..9fe46ce 100644
+--- a/src/cutout.py
++++ b/src/cutout.py
+@@ -29,7 +29,7 @@ if __name__== '__main__':
+ 
+     stdout = ret.stdout.decode('utf8')
+ 
+-    with open(args[0].output, 'w') as out:
++    with open(args[0].output, 'w', encoding='utf-8', newline='\n') as out:
+         write = True
+         for l in stdout.split('\n'):
+             l = l.strip('\r')
+-- 
+2.41.0
+
