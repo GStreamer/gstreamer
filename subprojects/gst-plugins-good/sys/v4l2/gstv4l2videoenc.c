@@ -1022,20 +1022,6 @@ gst_v4l2_video_enc_src_query (GstVideoEncoder * encoder, GstQuery * query)
 }
 
 static gboolean
-gst_v4l2_video_enc_sink_query (GstVideoEncoder * encoder, GstQuery * query)
-{
-  gboolean ret = TRUE;
-
-  switch (GST_QUERY_TYPE (query)) {
-    default:
-      ret = GST_VIDEO_ENCODER_CLASS (parent_class)->sink_query (encoder, query);
-      break;
-  }
-
-  return ret;
-}
-
-static gboolean
 gst_v4l2_video_enc_sink_event (GstVideoEncoder * encoder, GstEvent * event)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
@@ -1168,8 +1154,6 @@ gst_v4l2_video_enc_class_init (GstV4l2VideoEncClass * klass)
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_decide_allocation);
   video_encoder_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_propose_allocation);
-  video_encoder_class->sink_query =
-      GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_sink_query);
   video_encoder_class->src_query =
       GST_DEBUG_FUNCPTR (gst_v4l2_video_enc_src_query);
   video_encoder_class->sink_event =
