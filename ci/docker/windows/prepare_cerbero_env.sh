@@ -23,7 +23,8 @@ echo 'vs_install_version = "vs17"' >> localconf.cbc
 
 # Wipe visualstudio package dist, sources, logs, and the build tools recipes
 ./cerbero-uninstalled -t -v visualstudio -c localconf.cbc -c config/win64.cbc wipe --force --build-tools
-# Vendored sources get confused with hard links
-rm -rvf /c/cerbero/cerbero-sources/*/cargo-vendor
+# Vendored sources get confused with hard links. This is not needed anyway,
+# because cargo stores sources in ~/.cargo/registry/ for offline use.
+rm -rf /c/cerbero/cerbero-sources/*/cargo-vendor
 # clean the localconf
 rm -v /c/cerbero/localconf.cbc
