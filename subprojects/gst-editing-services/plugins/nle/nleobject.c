@@ -56,6 +56,10 @@ GST_DEBUG_CATEGORY_STATIC (nleobject_debug);
 
 static GObjectClass *parent_class = NULL;
 
+#ifdef HAVE_GST_VALIDATE
+extern void nle_validate_init (void);
+#endif
+
 /****************************************************
  *              Helper macros                       *
  ****************************************************/
@@ -334,6 +338,10 @@ nle_object_class_init (NleObjectClass * klass)
       G_TYPE_BOOLEAN, 1, G_TYPE_BOOLEAN);
 
   gst_type_mark_as_plugin_api (NLE_TYPE_OBJECT, 0);
+
+#ifdef HAVE_GST_VALIDATE
+  nle_validate_init ();
+#endif
 }
 
 static void

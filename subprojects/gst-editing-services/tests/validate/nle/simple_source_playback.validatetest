@@ -1,0 +1,15 @@
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args={
+        "nlesource name=s inpoint=0 duration=200000000 ! $(videosink)",
+    }
+
+nle-add-child,
+    object-name="s",
+    desc="videotestsrc ! timeoverlay"
+
+play
+check-position, on-message=eos, expected-position=0.2
+
+stop

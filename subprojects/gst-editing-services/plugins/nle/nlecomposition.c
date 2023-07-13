@@ -3729,3 +3729,105 @@ _nle_composition_remove_object (NleComposition * comp, NleObject * object)
 
   return TRUE;
 }
+
+
+
+GstElement *nle_composition_get_nle_object_by_name (NleComposition * comp,
+    const gchar * name);
+
+GstElement *
+nle_find_object_in_bin_recurse (GstBin * object, const gchar * name)
+{
+  GstElement *res = gst_bin_get_by_name_recurse_up (GST_BIN (object), name);
+
+  if (res)
+    return res;
+
+  GstIterator *it =
+      gst_bin_iterate_all_by_element_factory_name (GST_BIN (object),
+      "nlecomposition");
+  GValue item = G_VALUE_INIT;
+
+  while (gst_iterator_next (it, &item) == GST_ITERATOR_OK) {
+    GstElement *compo = g_value_get_object (&item);
+
+    if (NLE_IS_COMPOSITION (compo)) {
+      res =
+          nle_composition_get_nle_object_by_name (NLE_COMPOSITION (compo),
+          name);
+
+      if (res) {
+        g_value_reset (&item);
+        break;
+      }
+    }
+
+    g_value_reset (&item);
+  }
+  gst_iterator_free (it);
+
+  return res;
+}
+
+GstElement *
+nle_composition_get_nle_object_by_name (NleComposition * comp,
+    const gchar * name)
+{
+  NleCompositionPrivate *priv = comp->priv;
+  GList *l;
+  GstElement *res = NULL;
+
+  GST_INFO_OBJECT (comp, "Looking for child: %s", name);
+
+  GST_OBJECT_LOCK (comp);
+  GList *objs = NULL;
+
+  /* FIXME Implement a task to retrieve objects if needed */
+  objs =
+      g_list_copy_deep (priv->objects_start, (GCopyFunc) gst_object_ref, NULL);
+  GST_OBJECT_UNLOCK (comp);
+
+  /* Check in the list of objects, already added */
+  for (l = objs; l; l = l->next) {
+    NleObject *obj = NLE_OBJECT (l->data);
+
+    if (!g_strcmp0 (GST_OBJECT_NAME (obj), name)) {
+      res = gst_object_ref (GST_ELEMENT (obj));
+      break;
+    }
+
+    res = nle_find_object_in_bin_recurse (GST_BIN (obj), name);
+    if (res) {
+      break;
+    }
+  }
+
+  g_list_free_full (objs, (GDestroyNotify) gst_object_unref);
+  if (res)
+    goto done;
+
+  ACTIONS_LOCK (comp);
+  /* Check if the object is about to be added */
+  for (GList * tmp = comp->priv->actions; tmp != NULL; tmp = tmp->next) {
+    Action *act = tmp->data;
+
+    if (ACTION_CALLBACK (act) == G_CALLBACK (_add_object_func)) {
+      ChildIOData *d = ((GClosure *) act)->data;
+
+      if (!g_strcmp0 (GST_OBJECT_NAME (d->object), name)) {
+        res = gst_object_ref (GST_ELEMENT (d->object));
+        break;
+      }
+
+      res = nle_find_object_in_bin_recurse (GST_BIN (d->object), name);
+      if (res) {
+        break;
+      }
+
+    }
+  }
+  ACTIONS_UNLOCK (comp);
+
+done:
+  return res;
+}

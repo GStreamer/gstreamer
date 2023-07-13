@@ -1,0 +1,15 @@
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    args={
+        "nlecomposition name=compo ! $(videosink)",
+    }
+
+nle-add-child, object-name="compo", desc="nlesource name=s inpoint=0 duration=200000000"
+nle-add-child, object-name="s", desc="videotestsrc pattern=blue"
+
+play
+check-position, on-message=eos, expected-position=0.2
+
+stop
+
