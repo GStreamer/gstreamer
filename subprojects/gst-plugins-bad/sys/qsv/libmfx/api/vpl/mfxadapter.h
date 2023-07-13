@@ -31,8 +31,12 @@ extern "C"
    MFX_WRN_OUT_OF_RANGE  Not enough memory to report back entire list of adapters. In this case as many adapters as possible will be returned.
 
    @since This function is available since API version 1.31.
+
+   @deprecated Deprecated in API version 2.9. Use MFXEnumImplementations and MFXSetConfigFilterProperty to query adapter capabilities and
+               to select a suitable adapter for the input workload.
+               Use MFX_DEPRECATED_OFF macro to turn off the deprecation message visualization.
 */
-mfxStatus MFX_CDECL MFXQueryAdapters(mfxComponentInfo* input_info, mfxAdaptersInfo* adapters);
+MFX_DEPRECATED mfxStatus MFX_CDECL MFXQueryAdapters(mfxComponentInfo* input_info, mfxAdaptersInfo* adapters);
 
 /*!
    @brief
@@ -49,8 +53,12 @@ mfxStatus MFX_CDECL MFXQueryAdapters(mfxComponentInfo* input_info, mfxAdaptersIn
    MFX_WRN_OUT_OF_RANGE Not enough memory to report back entire list of adapters. In this case as many adapters as possible will be returned.
 
    @since This function is available since API version 1.31.
+
+   @deprecated Deprecated in API version 2.9. Use MFXEnumImplementations and MFXSetConfigFilterProperty to query adapter capabilities and
+               to select a suitable adapter for the input workload.
+               Use MFX_DEPRECATED_OFF macro to turn off the deprecation message visualization.
 */
-mfxStatus MFX_CDECL MFXQueryAdaptersDecode(mfxBitstream* bitstream, mfxU32 codec_id, mfxAdaptersInfo* adapters);
+MFX_DEPRECATED mfxStatus MFX_CDECL MFXQueryAdaptersDecode(mfxBitstream* bitstream, mfxU32 codec_id, mfxAdaptersInfo* adapters);
 
 /*!
    @brief
@@ -63,8 +71,12 @@ mfxStatus MFX_CDECL MFXQueryAdaptersDecode(mfxBitstream* bitstream, mfxU32 codec
    MFX_ERR_NULL_PTR  num_adapters pointer is NULL.
 
    @since This function is available since API version 1.31.
+
+   @deprecated Deprecated in API version 2.9. Use MFXEnumImplementations and MFXSetConfigFilterProperty to query adapter capabilities and
+               to select a suitable adapter for the input workload.
+               Use MFX_DEPRECATED_OFF macro to turn off the deprecation message visualization.
 */
-mfxStatus MFX_CDECL MFXQueryAdaptersNumber(mfxU32* num_adapters);
+MFX_DEPRECATED mfxStatus MFX_CDECL MFXQueryAdaptersNumber(mfxU32* num_adapters);
 #ifdef __cplusplus
 } // extern "C"
 #endif

@@ -107,6 +107,7 @@ enum PropIdx {
     ePropExtDev_LUIDDeviceNodeMask,
     ePropExtDev_DRMRenderNodeNum,
     ePropExtDev_DRMPrimaryNodeNum,
+    ePropExtDev_RevisionID,
     ePropExtDev_DeviceName,
 
     // special properties not part of description struct
@@ -182,6 +183,7 @@ static const PropVariant PropIdxTab[] = {
     { "ePropExtDev_LUIDDeviceNodeMask",     MFX_VARIANT_TYPE_U32 },
     { "ePropExtDev_DRMRenderNodeNum",       MFX_VARIANT_TYPE_U32 },
     { "ePropExtDev_DRMPrimaryNodeNum",      MFX_VARIANT_TYPE_U32 },
+    { "ePropExtDev_RevisionID",             MFX_VARIANT_TYPE_U16 },
     { "ePropExtDev_DeviceName",             MFX_VARIANT_TYPE_PTR },
 
     { "ePropSpecial_HandleType",            MFX_VARIANT_TYPE_U32 },
@@ -553,6 +555,9 @@ mfxStatus ConfigCtxVPL::SetFilterProperty(const mfxU8 *name, mfxVariant value) {
         }
         else if (nextProp == "DRMPrimaryNodeNum") {
             return ValidateAndSetProp(ePropExtDev_DRMPrimaryNodeNum, value);
+        }
+        else if (nextProp == "RevisionID") {
+            return ValidateAndSetProp(ePropExtDev_RevisionID, value);
         }
         else if (nextProp == "DeviceName") {
             return ValidateAndSetProp(ePropExtDev_DeviceName, value);
@@ -1124,6 +1129,8 @@ mfxStatus ConfigCtxVPL::CheckPropsExtDevID(const mfxVariant cfgPropsAll[],
         }
     }
 
+    CHECK_PROP(ePropExtDev_RevisionID, U16, libImplExtDevID->RevisionID);
+
     // check string: DeviceName (string match)
     if (cfgPropsAll[ePropExtDev_DeviceName].Type != MFX_VARIANT_TYPE_UNSET) {
         std::string filtName = *(std::string *)(cfgPropsAll[ePropExtDev_DeviceName].Data.Ptr);
@@ -1515,27 +1522,15 @@ bool ConfigCtxVPL::CheckLowLatencyConfig(std::list<ConfigCtxVPL *> configCtxList
     return bLowLatency;
 }
 
-#include <gst/gst.h>
-
 bool ConfigCtxVPL::ParseDeviceIDx86(mfxChar *cDeviceID, mfxU32 &deviceID, mfxU32 &adapterIdx) {
     std::string strDevID(cDeviceID);
-    // XXX: std::regex is crashing on Windows + gcc
-#if 0
     std::regex reDevIDAll("[0-9a-fA-F]+/[0-9]+");
     std::regex reDevIDMin("[0-9a-fA-F]+");
-#else
-    static const gchar *reDevIDAll = "[0-9a-fA-F]+/[0-9]+";
-    static const gchar *reDevIDMin = "[0-9a-fA-F]+";
-
-    if (!cDeviceID)
-        return false;
-#endif
 
     deviceID   = DEVICE_ID_UNKNOWN;
     adapterIdx = ADAPTER_IDX_UNKNOWN;
 
     bool bHasAdapterIdx = false;
-#if 0
     if (std::regex_match(strDevID, reDevIDAll)) {
         // check for DeviceID in format "devID/adapterIdx"
         //   devID = hex value
@@ -1551,25 +1546,6 @@ bool ConfigCtxVPL::ParseDeviceIDx86(mfxChar *cDeviceID, mfxU32 &deviceID, mfxU32
         // invalid format
         return false;
     }
-#else
-    if (g_regex_match_simple(reDevIDAll, cDeviceID,
-        (GRegexCompileFlags)0, (GRegexMatchFlags)0)) {
-        // check for DeviceID in format "devID/adapterIdx"
-        //   devID = hex value
-        //   adapterIdx = decimal integer
-        bHasAdapterIdx = true;
-    }
-    else if (g_regex_match_simple(reDevIDMin, cDeviceID,
-        (GRegexCompileFlags)0, (GRegexMatchFlags)0)) {
-        // check for DeviceID in format "devID"
-        //   (no adpaterIdx)
-        bHasAdapterIdx = false;
-    }
-    else {
-        // invalid format
-        return false;
-    }
-#endif
 
     // get deviceID (value before the slash, if present)
     try {

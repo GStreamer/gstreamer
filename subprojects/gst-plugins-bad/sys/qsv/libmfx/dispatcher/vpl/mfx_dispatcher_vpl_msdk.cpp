@@ -4,6 +4,7 @@
   # SPDX-License-Identifier: MIT
   ############################################################################*/
 
+#include <fstream>
 #include "vpl/mfx_dispatcher_vpl.h"
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -12,7 +13,7 @@
 
 #ifdef __linux__
     #include <pthread.h>
-    #define strncpy_s(dst, size, src, cnt) strcpy((dst), (src)) // NOLINT
+    #define strncpy_s(dst, size, src, cnt) strncpy((dst), (src), (cnt)) // NOLINT
 #endif
 
 // leave table formatting alone
@@ -39,7 +40,7 @@ const mfxIMPL msdkImplTab[MAX_NUM_IMPL_MSDK] = {
 #define NUM_POOL_POLICIES_MSDK 0
 
 static const mfxPoolPolicyDescription PoolPolicies = {
-    { 0, 1 },                   // struct Version
+    {{ 0, 1 }},                   // struct Version
     {},                         // reserved
     NUM_POOL_POLICIES_MSDK,     // NumPoolPolicies
     nullptr,
@@ -96,6 +97,20 @@ static const mfxImplementedFunctions msdkImplFuncs = {
     (mfxChar**)msdkImplFuncsNames
 };
 
+// optional extBuf to limit threads created in MSDK session creation
+// to enable, set vplParam.NumExtParam and vplParam.ExtParam before calling MFXInitEx2()
+static const mfxExtThreadsParam extThreadParam = {
+    {MFX_EXTBUFF_THREADS_PARAM, sizeof(mfxExtThreadsParam)},
+    2,
+    0,
+    0,
+    {},
+};
+
+static const mfxExtBuffer* extParams[1] = { 
+    (mfxExtBuffer *)&extThreadParam,
+};
+
 // end table formatting
 // clang-format on
 
@@ -127,6 +142,14 @@ mfxStatus LoaderCtxMSDK::OpenSession(mfxSession *session,
     // set acceleration mode - will be mapped to 1.x API
     mfxInitializationParam vplParam = {};
     vplParam.AccelerationMode       = accelMode;
+
+#ifdef __linux__
+    vplParam.ExtParam    = (mfxExtBuffer **)&extParams;
+    vplParam.NumExtParam = 1;
+#else
+    vplParam.ExtParam    = nullptr;
+    vplParam.NumExtParam = 0;
+#endif
 
     return MFXInitEx2(reqVersion,
                       vplParam,
@@ -212,6 +235,14 @@ mfxStatus LoaderCtxMSDK::QueryAPIVersion(STRING_TYPE libNameFull, mfxVersion *ms
         mfxInitializationParam vplParam = {};
         vplParam.AccelerationMode =
             (mfxAccelerationMode)CvtAccelType(MFX_IMPL_HARDWARE, implDefault & 0xFF00);
+
+#ifdef __linux__
+        vplParam.ExtParam    = (mfxExtBuffer **)&extParams;
+        vplParam.NumExtParam = 1;
+#else
+        vplParam.ExtParam    = nullptr;
+        vplParam.NumExtParam = 0;
+#endif
 
         mfxU16 deviceID;
         sts = MFXInitEx2(reqVersion,
@@ -335,8 +366,11 @@ mfxStatus LoaderCtxMSDK::QueryMSDKCaps(STRING_TYPE libNameFull,
 
     // fill in strings
     strncpy_s(m_id.ImplName, sizeof(m_id.ImplName), strImplName, sizeof(strImplName));
+    m_id.ImplName[sizeof(m_id.ImplName) - 1] = 0;
     strncpy_s(m_id.License, sizeof(m_id.License), strLicense, sizeof(strLicense));
+    m_id.License[sizeof(m_id.License) - 1] = 0;
     strncpy_s(m_id.Keywords, sizeof(m_id.Keywords), strKeywords, sizeof(strKeywords));
+    m_id.Keywords[sizeof(m_id.Keywords) - 1] = 0;
 
     m_id.VendorID    = 0x8086;
     m_id.NumExtParam = 0;
@@ -422,6 +456,10 @@ mfxStatus LoaderCtxMSDK::CheckD3D9Support(mfxU64 luid, STRING_TYPE libNameFull, 
         mfxInitializationParam vplParam = {};
         vplParam.AccelerationMode       = MFX_ACCEL_MODE_VIA_D3D9;
 
+        // thread limit not enabled on Windows
+        vplParam.ExtParam    = nullptr;
+        vplParam.NumExtParam = 0;
+
         mfxU16 deviceID;
         sts = MFXInitEx2(reqVersion,
                          vplParam,
@@ -446,6 +484,27 @@ mfxStatus LoaderCtxMSDK::CheckD3D9Support(mfxU64 luid, STRING_TYPE libNameFull, 
 #endif
 }
 
+mfxU32 read_device_file(std::string &path) {
+    mfxU32 result = 0;
+    std::string line;
+    std::ifstream dev_str(path);
+    if (!dev_str.is_open()) {
+        return 0;
+    }
+    std::getline(dev_str, line);
+    dev_str.close();
+    try {
+        result = std::stoul(line, 0, 16);
+    }
+    catch (std::invalid_argument &) {
+        return 0;
+    }
+    catch (std::out_of_range &) {
+        return 0;
+    }
+    return result;
+}
+
 mfxStatus LoaderCtxMSDK::GetRenderNodeDescription(mfxU32 adapterID,
                                                   mfxU32 &vendorID,
                                                   mfxU16 &deviceID) {
@@ -459,28 +518,12 @@ mfxStatus LoaderCtxMSDK::GetRenderNodeDescription(mfxU32 adapterID,
     std::string vendorPath = "/sys/class/drm/renderD" + nodeStr + "/device/vendor";
     std::string devPath    = "/sys/class/drm/renderD" + nodeStr + "/device/device";
 
-    // check if vendor == 0x8086
-    FILE *vendorFile = fopen(vendorPath.c_str(), "r");
-    if (vendorFile) {
-        unsigned int u32 = 0;
-        int nRead        = fscanf(vendorFile, "%x", &u32);
-        if (nRead == 1)
-            vendorID = (mfxU32)u32;
-        fclose(vendorFile);
-    }
+    vendorID = read_device_file(vendorPath);
 
     if (vendorID != 0x8086)
         return MFX_ERR_UNSUPPORTED;
 
-    // get deviceID for this node
-    FILE *devFile = fopen(devPath.c_str(), "r");
-    if (devFile) {
-        unsigned int u32 = 0;
-        int nRead        = fscanf(devFile, "%x", &u32);
-        if (nRead == 1)
-            deviceID = (mfxU32)u32;
-        fclose(devFile);
-    }
+    deviceID = read_device_file(devPath);
 
     if (deviceID == 0)
         return MFX_ERR_UNSUPPORTED;
@@ -524,6 +567,9 @@ mfxStatus LoaderCtxMSDK::QueryExtDeviceID(mfxExtendedDeviceId *extDeviceID,
     // default - no DRM node
     extDeviceID->DRMRenderNodeNum  = 0;
     extDeviceID->DRMPrimaryNodeNum = 0x7FFFFFFF;
+
+    // default - no PCI RevisionID
+    extDeviceID->RevisionID        = 0xFFFF;
 
     snprintf(extDeviceID->DeviceName, sizeof(extDeviceID->DeviceName), "%s", strImplName);
 

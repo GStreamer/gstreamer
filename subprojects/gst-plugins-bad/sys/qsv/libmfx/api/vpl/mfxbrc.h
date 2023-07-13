@@ -53,15 +53,15 @@ typedef struct {
                                          initial_cpb_removal_delay==0 && initial_cpb_removal_offset == 0 && HRD control is switched on. */
     mfxU32 reserved1[7];
     mfxU32 MaxFrameSize;            /*!< Max frame size in bytes. Option for repack feature. Driver calls PAK until current frame size is
-                                         less than or equal to maxFrameSize, or number of repacking for this frame is equal to maxNumRePak. Repack is available
-                                         if there is driver support, MaxFrameSize !=0, and MaxNumRePak != 0. Ignored if maxNumRePak == 0. */
-    mfxU8  DeltaQP[8];              /*!< Option for repack feature. Ignored if maxNumRePak == 0 or maxNumRePak==0. If current
-                                         frame size > maxFrameSize and/or number of repacking (nRepack) for this frame <= maxNumRePak,
+                                         less than or equal to MaxFrameSize, or number of repacking for this frame is equal to MaxNumRePak. Repack is available
+                                         if there is driver support, MaxFrameSize !=0, and MaxNumRePak != 0. Ignored if MaxNumRePak == 0. */
+    mfxU8  DeltaQP[8];              /*!< Option for repack feature. Ignored if MaxNumRePak == 0 or MaxNumRePak==0. If current
+                                         frame size > MaxFrameSize and/or number of repacking (nRepack) for this frame <= MaxNumRePak,
                                          PAK is called with QP = mfxBRCFrameCtrl::QpY + Sum(DeltaQP[i]), where i = [0,nRepack].
-                                         Non zero DeltaQP[nRepack] are ignored if nRepack > maxNumRePak.
-                                         If repacking feature is on ( maxFrameSize & maxNumRePak are not zero), it is calculated by the encoder. */
-    mfxU16 MaxNumRepak;             /*!< Number of possible repacks in driver if current frame size > maxFrameSize. Ignored if maxFrameSize==0.
-                                         See maxFrameSize description. Possible values are in the range of 0 to 8. */
+                                         Non zero DeltaQP[nRepack] are ignored if nRepack > MaxNumRePak.
+                                         If repacking feature is on ( MaxFrameSize & MaxNumRePak are not zero), it is calculated by the encoder. */
+    mfxU16 MaxNumRepak;             /*!< Number of possible repacks in driver if current frame size > MaxFrameSize. Ignored if MaxFrameSize==0.
+                                         See MaxFrameSize description. Possible values are in the range of 0 to 8. */
     mfxU16 NumExtParam;             /*!< Reserved for future use. */
     mfxExtBuffer** ExtParam;        /*!< Reserved for future use. */
 } mfxBRCFrameCtrl;

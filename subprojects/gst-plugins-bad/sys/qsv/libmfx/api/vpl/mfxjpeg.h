@@ -85,7 +85,7 @@ typedef struct {
     mfxExtBuffer    Header; /*!< Extension buffer header. Header.BufferId must be equal to MFX_EXTBUFF_JPEG_QT. */
 
     mfxU16  reserved[7];
-    mfxU16  NumTable;       /*!< Number of quantization tables defined in Qmarray. */
+    mfxU16  NumTable;       /*!< Number of quantization tables defined in Qm array. */
 
     mfxU16    Qm[4][64];    /*!< Quantization table values. */
 } mfxExtJPEGQuantTables;

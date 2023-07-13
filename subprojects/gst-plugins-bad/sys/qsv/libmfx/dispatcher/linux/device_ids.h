@@ -12,6 +12,7 @@
 //   https://github.com/Intel-Media-SDK/MediaSDK/blob/master/_studio/shared/include/mfxstructures-int.h
 
 #include <algorithm>
+#include <fstream>
 #include <string>
 #include <vector>
 
@@ -384,30 +385,47 @@ static mfxStatus get_devices(std::vector<Device> &allDevices) {
 
     int i = 0;
     for (; i < 64; ++i) {
-        int ret;
         Device device;
         std::string path = std::string(dir) + "/renderD" + std::to_string(128 + i) + vendor_id_file;
+        std::string line;
+        std::ifstream dev_str;
 
-        FILE *file = fopen(path.c_str(), "r");
-        if (!file)
+        dev_str.open(path);
+        if (!dev_str.is_open()) {
             continue;
-        ret = fscanf(file, "%x", &device.vendor_id);
-        fclose(file);
-        if (ret != 1)
+        }
+        std::getline(dev_str, line);
+        dev_str.close();
+        try {
+            device.vendor_id = std::stoul(line, 0, 16);
+        }
+        catch (std::invalid_argument &) {
             continue;
+        }
+        catch (std::out_of_range &) {
+            continue;
+        }
 
         // Filter out non-Intel devices
         if (device.vendor_id != 0x8086)
             continue;
 
         path = std::string(dir) + "/renderD" + std::to_string(128 + i) + device_id_file;
-        file = fopen(path.c_str(), "r");
-        if (!file)
+        dev_str.open(path);
+        if (!dev_str.is_open()) {
             continue;
-        ret = fscanf(file, "%x", &device.device_id);
-        fclose(file);
-        if (ret != 1)
+        }
+        std::getline(dev_str, line);
+        dev_str.close();
+        try {
+            device.device_id = std::stoul(line, 0, 16);
+        }
+        catch (std::invalid_argument &) {
             continue;
+        }
+        catch (std::out_of_range &) {
+            continue;
+        }
 
         device.platform = get_platform(device.device_id);
 
