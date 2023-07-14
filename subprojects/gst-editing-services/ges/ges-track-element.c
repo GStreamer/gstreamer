@@ -304,9 +304,11 @@ ges_track_element_set_asset (GESExtractable * extractable, GESAsset * asset)
   gst_object_set_name (GST_OBJECT (nleobject), tmp);
   g_free (tmp);
 
-  object->priv->nleobject = gst_object_ref (nleobject);
-  g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
-      object);
+  if (!object->priv->nleobject) {
+    object->priv->nleobject = gst_object_ref (nleobject);
+    g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
+        object);
+  }
 
   /* Set some properties on the NleObject */
   g_object_set (object->priv->nleobject,
@@ -1008,6 +1010,10 @@ ges_track_element_create_gnl_object_func (GESTrackElement * self)
 
   if (G_UNLIKELY (nleobject == NULL))
     goto no_nleobject;
+
+  self->priv->nleobject = gst_object_ref (nleobject);
+  g_object_set_qdata (G_OBJECT (nleobject), NLE_OBJECT_TRACK_ELEMENT_QUARK,
+      self);
 
   if (klass->create_element) {
     GST_DEBUG ("Calling subclass 'create_element' vmethod");
