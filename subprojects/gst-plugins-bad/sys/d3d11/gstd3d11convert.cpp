@@ -1575,6 +1575,8 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
   }
 
   config = gst_structure_new ("convert-config",
+    GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
+    GST_D3D11_CONVERTER_BACKEND_SHADER,
       GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
       GST_TYPE_VIDEO_GAMMA_MODE, self->active_gamma_mode,
       GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
