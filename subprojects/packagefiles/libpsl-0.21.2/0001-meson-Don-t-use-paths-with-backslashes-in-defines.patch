@@ -34,7 +34,7 @@ index c2381af..d8c266d 100644
 --- a/tests/meson.build
 +++ b/tests/meson.build
 @@ -10,13 +10,14 @@ psl_ascii_dafsa = custom_target('psl_ascii.dafsa',
-   build_by_default: false,
+   output : 'psl_ascii.dafsa',
    command : [python, psl_make_dafsa, '--output-format=binary', '--encoding=ascii', '@INPUT@', '@OUTPUT@'])
  
 +fsmod = import('fs')

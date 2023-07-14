@@ -17,7 +17,7 @@ libdl_dep = cc.find_library('dl', required: false)
 static_args = []
 static_deps = []
 default_library = get_option('default_library')
-if default_library in ['static', 'both']
+if default_library in ['static', 'both'] or get_option('soup-lookup-dep')
   libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48',
                             required : false, fallback : ['libsoup', 'libsoup_dep'],
                             default_options: ['sysprof=disabled'])
