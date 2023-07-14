@@ -427,6 +427,8 @@ build fedora clang:
       -Dvaapi=disabled
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
+      -Dgst-plugins-good:soup=enabled
+      -Dgst-plugins-good:soup-lookup-dep=true
       -Dgst-plugins-bad:d3d11-wgc=enabled
   rules:
     # If this matches, it means the pipeline is running against either the main
@@ -490,9 +492,12 @@ build vs2022 arm64:
     ARCH: 'arm64'
     # pango pulls in cairo which pulls in pixman which doesn't build because of
     # https://github.com/mesonbuild/meson/issues/9889
+    # libsoup requires glib-compile-resources, which isn't available in a cross
+    # build
     MESON_CROSS_ARGS: >-
       -Dgst-plugins-base:pango=disabled
       -Dgst-plugins-good:cairo=disabled
+      -Dgst-plugins-good:soup-lookup-dep=false
       -Dgst-devtools:cairo=disabled
       --cross-file ci/meson/vs2022-paths.ini
       --cross-file ci/meson/vs2022-arm64-cross.ini
