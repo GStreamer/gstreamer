@@ -301,8 +301,6 @@ gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
       return FALSE;
     }
 
-    allowed_caps = gst_caps_make_writable (allowed_caps);
-    allowed_caps = gst_caps_fixate (allowed_caps);
     s = gst_caps_get_structure (allowed_caps, 0);
 
     profile = gst_structure_get_string (s, "profile");
@@ -316,7 +314,7 @@ gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
       } else if (!strcmp (profile, "constrained-baseline")) {
         thiz->profile = MFX_PROFILE_AVC_CONSTRAINED_BASELINE;
       } else {
-        g_assert_not_reached ();
+        thiz->profile = MFX_PROFILE_UNKNOWN;
       }
     }
 
