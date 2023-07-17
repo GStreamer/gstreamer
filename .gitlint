@@ -3,6 +3,7 @@ line-length=100
 
 [general]
 ignore=body-is-missing
+regex-style-search=True
 
 [body-max-line-length]
 line-length=120
