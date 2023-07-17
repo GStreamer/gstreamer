@@ -2434,6 +2434,15 @@ gst_webrtc_bin_attach_tos (GstWebRTCBin * webrtc)
   gst_webrtc_bin_update_sctp_priority (webrtc);
 }
 
+static void
+on_transceiver_notify_direction (GstWebRTCRTPTransceiver * transceiver,
+    GParamSpec * pspec, GstWebRTCBin * webrtc)
+{
+  PC_LOCK (webrtc);
+  _update_need_negotiation (webrtc);
+  PC_UNLOCK (webrtc);
+}
+
 static WebRTCTransceiver *
 _create_webrtc_transceiver (GstWebRTCBin * webrtc,
     GstWebRTCRTPTransceiverDirection direction, guint mline, GstWebRTCKind kind,
@@ -2463,6 +2472,8 @@ _create_webrtc_transceiver (GstWebRTCBin * webrtc,
 
   g_signal_connect_object (sender, "notify::priority",
       G_CALLBACK (gst_webrtc_bin_attach_tos), webrtc, G_CONNECT_SWAPPED);
+  g_signal_connect_object (trans, "notify::direction",
+      G_CALLBACK (on_transceiver_notify_direction), webrtc, G_CONNECT_DEFAULT);
 
   g_ptr_array_add (webrtc->priv->transceivers, trans);
 
