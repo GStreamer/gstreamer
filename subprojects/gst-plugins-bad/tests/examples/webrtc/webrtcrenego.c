@@ -8,8 +8,9 @@ static GMainLoop *loop;
 static GstElement *pipe1, *webrtc1, *webrtc2, *extra_src;
 static GstBus *bus1;
 
-#define SEND_SRC(pattern) "videotestsrc is-live=true pattern=" pattern " ! timeoverlay ! queue ! vp8enc ! rtpvp8pay ! queue ! " \
-    "capsfilter caps=application/x-rtp,media=video,payload=96,encoding-name=VP8"
+#define SEND_SRC(pattern, pt) "videotestsrc is-live=true pattern=" pattern \
+    " ! timeoverlay ! queue ! vp8enc ! rtpvp8pay ! queue ! capsfilter " \
+    " caps=application/x-rtp,media=video,payload=" pt ",encoding-name=VP8"
 
 static void
 _element_message (GstElement * parent, GstMessage * msg)
@@ -199,8 +200,8 @@ stream_change (gpointer data)
 {
   if (!extra_src) {
     g_print ("Adding extra stream\n");
-    extra_src =
-        gst_parse_bin_from_description (SEND_SRC ("circular"), TRUE, NULL);
+    extra_src = gst_parse_bin_from_description (SEND_SRC ("circular", "97"),
+        TRUE, NULL);
 
     gst_element_set_locked_state (extra_src, TRUE);
     gst_bin_add (GST_BIN (pipe1), extra_src);
@@ -249,8 +250,9 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   loop = g_main_loop_new (NULL, FALSE);
-  pipe1 = gst_parse_launch (SEND_SRC ("smpte")
-      " ! webrtcbin name=smpte bundle-policy=max-bundle " SEND_SRC ("ball")
+  pipe1 = gst_parse_launch (SEND_SRC ("smpte", "96")
+      " ! webrtcbin name=smpte bundle-policy=max-bundle "
+      SEND_SRC ("ball", "96")
       " ! webrtcbin name=ball bundle-policy=max-bundle", NULL);
   g_object_set (pipe1, "message-forward", TRUE, NULL);
   bus1 = gst_pipeline_get_bus (GST_PIPELINE (pipe1));
