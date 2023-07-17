@@ -16,7 +16,7 @@ _element_message (GstElement * parent, GstMessage * msg)
 {
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_EOS:{
-      GstElement *receive, *webrtc;
+      GstElement *receive;
       GstPad *pad, *peer;
 
       g_print ("Got element EOS message from %s parent %s\n",
@@ -27,11 +27,9 @@ _element_message (GstElement * parent, GstMessage * msg)
       pad = gst_element_get_static_pad (receive, "sink");
       peer = gst_pad_get_peer (pad);
 
-      webrtc = GST_ELEMENT (gst_pad_get_parent (peer));
       gst_bin_remove (GST_BIN (pipe1), receive);
 
       gst_pad_unlink (peer, pad);
-      gst_element_release_request_pad (webrtc, peer);
 
       gst_object_unref (pad);
       gst_object_unref (peer);
