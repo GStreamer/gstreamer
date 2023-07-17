@@ -218,9 +218,12 @@ stream_change (gpointer data)
     g_print ("Removing extra stream\n");
     pad = gst_element_get_static_pad (extra_src, "src");
     peer = gst_pad_get_peer (pad);
-    gst_element_send_event (extra_src, gst_event_new_eos ());
 
     g_object_get (peer, "transceiver", &transceiver, NULL);
+    /* Instead of removing the source, you can add a pad probe to block data
+     * flow, and you can set this to SENDONLY later to switch this track from
+     * inactive to sendonly, but this only works with non-gstreamer receivers
+     * at present. */
     g_object_set (transceiver, "direction",
         GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE, NULL);
 
