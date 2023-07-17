@@ -49,6 +49,15 @@ function onConnectClicked() {
     setConnectButtonState("Disconnect");
 }
 
+function onTextKeyPress(e) {
+    e = e ? e : window.event;
+    if (e.code == "Enter") {
+        onConnectClicked();
+        return false;
+    }
+    return true;
+}
+
 function getOurId() {
     return Math.floor(Math.random() * (9000 - 10) + 10).toString();
 }
