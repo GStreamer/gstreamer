@@ -106,6 +106,7 @@ static GstQueryQuarks query_quarks[] = {
   {GST_QUERY_DRAIN, "drain", 0},
   {GST_QUERY_CONTEXT, "context", 0},
   {GST_QUERY_BITRATE, "bitrate", 0},
+  {GST_QUERY_SELECTABLE, "selectable", 0},
 
   {0, NULL, 0}
 };
