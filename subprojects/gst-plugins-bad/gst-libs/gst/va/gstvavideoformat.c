@@ -375,7 +375,7 @@ gst_va_dma_drm_info_to_video_info (const GstVideoInfoDmaDrm * drm_info,
   g_return_val_if_fail (drm_info, FALSE);
   g_return_val_if_fail (info, FALSE);
 
-  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_ENCODED) {
+  if (GST_VIDEO_INFO_FORMAT (&drm_info->vinfo) != GST_VIDEO_FORMAT_DMA_DRM) {
     *info = drm_info->vinfo;
     return TRUE;
   }
