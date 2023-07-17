@@ -110,6 +110,11 @@ struct _GstAV1Parse
   gchar *colorimetry;
   GstAV1Profile profile;
 
+  gint fps_n;
+  gint fps_d;
+  /* incaps framerate overwrites the AV1 time info */
+  gboolean has_input_fps;
+
   GstAV1ParseAligment in_align;
   gboolean detect_annex_b;
   GstAV1ParseAligment align;
@@ -641,7 +646,6 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   GstStructure *s = NULL;
   gint width, height;
   gint par_n = 0, par_d = 0;
-  gint fps_n = 0, fps_d = 0;
   const gchar *profile = NULL;
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (self))))
@@ -685,14 +689,11 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
     }
   }
 
-  if (s && gst_structure_has_field (s, "framerate")) {
-    gst_structure_get_fraction (s, "framerate", &fps_n, &fps_d);
-  }
-
-  if (fps_n > 0 && fps_d > 0) {
+  if (self->fps_n > 0 && self->fps_d > 0) {
     gst_caps_set_simple (final_caps, "framerate",
-        GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-    gst_base_parse_set_frame_rate (GST_BASE_PARSE (self), fps_n, fps_d, 0, 0);
+        GST_TYPE_FRACTION, self->fps_n, self->fps_d, NULL);
+    gst_base_parse_set_frame_rate (GST_BASE_PARSE (self),
+        self->fps_n, self->fps_d, 0, 0);
   }
 
   /* When not RGB, the chroma format is needed. */
@@ -877,6 +878,15 @@ gst_av1_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
   profile = gst_structure_get_string (str, "profile");
   if (profile)
     self->profile = gst_av1_parse_profile_from_string (profile);
+
+  if (gst_structure_has_field (str, "framerate")) {
+    gst_structure_get_fraction (str, "framerate", &self->fps_n, &self->fps_d);
+    self->has_input_fps = TRUE;
+  } else {
+    self->fps_n = 0;
+    self->fps_d = 1;
+    self->has_input_fps = FALSE;
+  }
 
   /* get upstream align from caps */
   align = gst_av1_parse_alignment_from_caps (caps);
@@ -1195,6 +1205,34 @@ gst_av1_parse_cache_one_obu (GstAV1Parse * self, GstBuffer * buffer,
   }
 }
 
+static void
+gst_av1_parse_calculate_framerate (GstAV1TimingInfo * ti,
+    gint * fps_n, gint * fps_d)
+{
+  /* To calculate framerate, we use this formula:
+   *
+   *              time_scale                             1
+   * fps = -------------------------  x  ---------------------------------
+   *       num_units_in_display_tick     num_ticks_per_picture_minus_1 + 1
+   */
+  if (ti->equal_picture_interval) {
+    gint gcd;
+
+    *fps_n = ti->time_scale;
+    *fps_d = ti->num_units_in_display_tick *
+        (ti->num_ticks_per_picture_minus_1 + 1);
+
+    gcd = gst_util_greatest_common_divisor (*fps_n, *fps_d);
+    if (gcd) {
+      *fps_n /= gcd;
+      *fps_d /= gcd;
+    }
+  } else {
+    *fps_n = 0;
+    *fps_d = 1;
+  }
+}
+
 static GstAV1ParserResult
 gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
 {
@@ -1268,6 +1306,18 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
   if (self->profile != seq_header.seq_profile) {
     self->profile = seq_header.seq_profile;
     self->update_caps = TRUE;
+  }
+
+  if (!self->has_input_fps) {
+    gint fps_n, fps_d;
+
+    gst_av1_parse_calculate_framerate (&seq_header.timing_info, &fps_n, &fps_d);
+
+    if (self->fps_n != fps_n || self->fps_d != fps_d) {
+      self->fps_n = fps_n;
+      self->fps_d = fps_d;
+      self->update_caps = TRUE;
+    }
   }
 
   val = (self->parser->state.operating_point_idc >> 8) & 0x0f;
