@@ -2768,7 +2768,6 @@ get_slot_for_input (GstDecodebin3 * dbin, DecodebinInputStream * input)
 
   if (empty_slot) {
     GST_DEBUG_OBJECT (dbin, "Re-using existing unused slot %d", empty_slot->id);
-    empty_slot->input = input;
     return empty_slot;
   }
 
