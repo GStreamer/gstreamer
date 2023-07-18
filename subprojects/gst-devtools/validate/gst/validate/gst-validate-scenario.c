@@ -257,6 +257,7 @@ struct _GstValidateScenarioPrivate
   gboolean changing_state;
   gboolean needs_async_done;
   gboolean ignore_eos;
+  gboolean ignore_invalid_positions;
   gboolean allow_errors;
   GstState target_state;
 
@@ -2300,7 +2301,9 @@ _check_position (GstValidateScenario * scenario, GstValidateAction * act,
       GST_CLOCK_TIME_IS_VALID (priv->segment_stop) ? priv->segment_stop +
       priv->seek_pos_tol : -1;
 
-  if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
+  if (priv->ignore_invalid_positions) {
+    GST_DEBUG_OBJECT (scenario, "Ignoring invalid position");
+  } else if ((GST_CLOCK_TIME_IS_VALID (stop_with_tolerance)
           && *position > stop_with_tolerance)
       || (priv->seek_flags & GST_SEEK_FLAG_ACCURATE
           && *position < start_with_tolerance
@@ -4726,6 +4729,8 @@ gst_validate_scenario_load_structures (GstValidateScenario * scenario,
       }
 
       gst_structure_get_boolean (structure, "ignore-eos", &priv->ignore_eos);
+      gst_structure_get_boolean (structure, "ignore-invalid-positions",
+          &priv->ignore_invalid_positions);
       gst_structure_get_boolean (structure, "allow-errors",
           &priv->allow_errors);
       gst_structure_get_boolean (structure, "actions-on-idle",
