@@ -2362,70 +2362,65 @@ is_selection_done (GstDecodebin3 * dbin)
   return msg;
 }
 
-/* Must be called with SELECTION_LOCK taken */
+/* Must be called with SELECTION_LOCK taken
+ *
+ * This code is used to propagate the final EOS if all slots and inputs are
+ * drained.
+ **/
 static void
-check_all_slot_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
+check_inputs_and_slots_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
 {
-  gboolean all_drained = TRUE;
   GList *iter;
 
-  GST_DEBUG_OBJECT (dbin, "check slot for eos");
+  GST_DEBUG_OBJECT (dbin, "checking slots for eos");
 
   for (iter = dbin->slots; iter; iter = iter->next) {
     MultiQueueSlot *slot = iter->data;
 
-    if (!slot->output)
-      continue;
-
-    if (slot->is_drained) {
-      GST_LOG_OBJECT (slot->sink_pad, "slot %p is drained", slot);
-      continue;
+    if (slot->output && !slot->is_drained) {
+      GST_LOG_OBJECT (slot->sink_pad, "Not drained, not all slots are done");
+      return;
     }
-
-    all_drained = FALSE;
-    break;
   }
 
   /* Also check with the inputs, data might be pending */
-  if (all_drained)
-    all_drained = all_inputs_are_eos (dbin);
+  if (!all_inputs_are_eos (dbin))
+    return;
 
-  if (all_drained) {
-    GST_DEBUG_OBJECT (dbin,
-        "All active slots are drained, and no pending input, push EOS");
+  GST_DEBUG_OBJECT (dbin,
+      "All active slots are drained, and no pending input, push EOS");
 
-    for (iter = dbin->input_streams; iter; iter = iter->next) {
-      DecodebinInputStream *input = (DecodebinInputStream *) iter->data;
-      GstPad *peer = gst_pad_get_peer (input->srcpad);
+  for (iter = dbin->input_streams; iter; iter = iter->next) {
+    DecodebinInputStream *input = (DecodebinInputStream *) iter->data;
+    GstPad *peer = gst_pad_get_peer (input->srcpad);
 
-      /* Send EOS to all slots */
-      if (peer) {
-        GstEvent *stream_start, *eos;
+    /* Send EOS to all slots */
+    if (peer) {
+      GstEvent *stream_start, *eos;
 
-        stream_start =
-            gst_pad_get_sticky_event (input->srcpad, GST_EVENT_STREAM_START, 0);
+      stream_start =
+          gst_pad_get_sticky_event (input->srcpad, GST_EVENT_STREAM_START, 0);
 
-        /* First forward a custom STREAM_START event to reset the EOS status (if any) */
-        if (stream_start) {
-          GstStructure *s;
-          GstEvent *custom_stream_start = gst_event_copy (stream_start);
-          gst_event_unref (stream_start);
-          s = (GstStructure *) gst_event_get_structure (custom_stream_start);
-          gst_structure_set (s, "decodebin3-flushing-stream-start",
-              G_TYPE_BOOLEAN, TRUE, NULL);
-          gst_pad_send_event (peer, custom_stream_start);
-        }
+      /* First forward a custom STREAM_START event to reset the EOS status (if
+       * any) */
+      if (stream_start) {
+        GstStructure *s;
+        GstEvent *custom_stream_start = gst_event_copy (stream_start);
+        gst_event_unref (stream_start);
+        s = (GstStructure *) gst_event_get_structure (custom_stream_start);
+        gst_structure_set (s, "decodebin3-flushing-stream-start",
+            G_TYPE_BOOLEAN, TRUE, NULL);
+        gst_pad_send_event (peer, custom_stream_start);
+      }
 
-        eos = gst_event_new_eos ();
-        gst_event_set_seqnum (eos, gst_event_get_seqnum (ev));
-        gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (eos),
-            CUSTOM_FINAL_EOS_QUARK, (gchar *) CUSTOM_FINAL_EOS_QUARK_DATA,
-            NULL);
-        gst_pad_send_event (peer, eos);
-        gst_object_unref (peer);
-      } else
-        GST_DEBUG_OBJECT (dbin, "no output");
-    }
+      eos = gst_event_new_eos ();
+      gst_event_set_seqnum (eos, gst_event_get_seqnum (ev));
+      gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (eos),
+          CUSTOM_FINAL_EOS_QUARK, (gchar *) CUSTOM_FINAL_EOS_QUARK_DATA, NULL);
+      gst_pad_send_event (peer, eos);
+      gst_object_unref (peer);
+    } else
+      GST_DEBUG_OBJECT (dbin, "no output");
   }
 }
 
@@ -2568,7 +2563,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
             free_multiqueue_slot_async (dbin, slot);
             ret = GST_PAD_PROBE_REMOVE;
           } else if (!was_drained) {
-            check_all_slot_for_eos (dbin, ev);
+            check_inputs_and_slots_for_eos (dbin, ev);
           }
           if (ret == GST_PAD_PROBE_HANDLED)
             gst_event_unref (ev);
@@ -2615,7 +2610,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
            * when all output streams are also eos */
           ret = GST_PAD_PROBE_DROP;
           SELECTION_LOCK (dbin);
-          check_all_slot_for_eos (dbin, ev);
+          check_inputs_and_slots_for_eos (dbin, ev);
           SELECTION_UNLOCK (dbin);
         }
       }

@@ -84,6 +84,7 @@ static gboolean
 all_inputs_are_eos (GstDecodebin3 * dbin)
 {
   GList *tmp;
+
   /* First check input streams */
   for (tmp = dbin->input_streams; tmp; tmp = tmp->next) {
     DecodebinInputStream *input = (DecodebinInputStream *) tmp->data;
@@ -91,7 +92,7 @@ all_inputs_are_eos (GstDecodebin3 * dbin)
       return FALSE;
   }
 
-  GST_DEBUG_OBJECT (dbin, "All streams are EOS");
+  GST_DEBUG_OBJECT (dbin, "All input streams are EOS");
   return TRUE;
 }
 
