@@ -248,6 +248,22 @@ gst_uvc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CAPS:
       GST_DEBUG_OBJECT (self, "Handling %" GST_PTR_FORMAT, event);
 
+      /* If the UVC host did not yet commit a format, the cur_caps may contain
+       * all probed caps. In this case, the element is not able to detect, if
+       * the caps have changed when the stream is enabled. Take the caps from
+       * upstream to be able to detect a change.
+       */
+      if (!GST_CAPS_IS_SIMPLE (self->cur_caps)) {
+        GstCaps *caps;
+
+        gst_event_parse_caps (event, &caps);
+        gst_caps_replace (&self->cur_caps, caps);
+
+        GST_DEBUG_OBJECT (self,
+            "UVC host didn't select a format, yet. Using upstream %"
+            GST_PTR_FORMAT, self->cur_caps);
+      }
+
       /* EVENT CAPS signals that the buffers after the event will use new caps.
        * If the UVC host requested a new format, we now must start the stream.
        */
