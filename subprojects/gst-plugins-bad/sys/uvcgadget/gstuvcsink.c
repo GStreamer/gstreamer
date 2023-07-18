@@ -221,8 +221,6 @@ gst_uvc_sink_get_configured_caps (GstUvcSink * self)
   return gst_caps_new_full (s, NULL);
 }
 
-static void gst_uvc_sink_create_buffer_peer_probe (GstUvcSink * self);
-
 static gboolean gst_uvc_sink_to_fakesink (GstUvcSink * self);
 static gboolean gst_uvc_sink_to_v4l2sink (GstUvcSink * self);
 
@@ -393,8 +391,10 @@ gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
 
 static GstPadProbeReturn
 gst_uvc_sink_sinkpad_buffer_peer_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self)
+    GstPadProbeInfo * info, gpointer user_data)
 {
+  GstUvcSink *self = user_data;
+
   if (self->streamon || self->streamoff)
     return GST_PAD_PROBE_DROP;
 
@@ -405,10 +405,16 @@ gst_uvc_sink_sinkpad_buffer_peer_probe (GstPad * pad,
 
 static GstPadProbeReturn
 gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self)
+    GstPadProbeInfo * info, gpointer user_data)
 {
+  GstUvcSink *self = user_data;
+
   if (self->streamon || self->streamoff) {
-    gst_uvc_sink_create_buffer_peer_probe (self);
+    /* Drop all incoming buffers until the streamoff or streamon is done. */
+    self->buffer_peer_probe_id =
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+        gst_uvc_sink_sinkpad_buffer_peer_probe, self, NULL);
+
     GST_DEBUG_OBJECT (self, "Send reconfigure");
     gst_pad_push_event (self->sinkpad, gst_event_new_reconfigure ());
   }
@@ -417,19 +423,6 @@ gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
     gst_uvc_sink_to_fakesink (self);
 
   return GST_PAD_PROBE_PASS;
-}
-
-static void
-gst_uvc_sink_create_buffer_peer_probe (GstUvcSink * self)
-{
-  GstPad *peerpad = gst_pad_get_peer (self->sinkpad);
-  if (peerpad) {
-    self->buffer_peer_probe_id =
-        gst_pad_add_probe (peerpad, GST_PAD_PROBE_TYPE_BUFFER,
-        (GstPadProbeCallback) gst_uvc_sink_sinkpad_buffer_peer_probe, self,
-        NULL);
-    gst_object_unref (peerpad);
-  }
 }
 
 static void
@@ -450,7 +443,7 @@ gst_uvc_sink_create_idle_probe (GstUvcSink * self)
   if (peerpad) {
     self->idle_probe_id =
         gst_pad_add_probe (peerpad, GST_PAD_PROBE_TYPE_IDLE,
-        (GstPadProbeCallback) gst_uvc_sink_sinkpad_idle_probe, self, NULL);
+        gst_uvc_sink_sinkpad_idle_probe, self, NULL);
     gst_object_unref (peerpad);
   }
 }
