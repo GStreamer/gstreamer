@@ -227,6 +227,25 @@ static gboolean gst_uvc_sink_to_v4l2sink (GstUvcSink * self);
 static GstPadProbeReturn gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
     GstPadProbeInfo * info, GstUvcSink * self);
 
+static void
+gst_uvc_sink_update_streaming (GstUvcSink * self)
+{
+  if (self->streamon) {
+    g_atomic_int_set (&self->streamon, FALSE);
+    gst_uvc_sink_to_v4l2sink (self);
+
+    if (!self->streaming)
+      GST_DEBUG_OBJECT (self, "something went wrong!");
+  }
+
+  if (self->streamoff) {
+    g_atomic_int_set (&self->streamoff, FALSE);
+
+    if (self->streaming)
+      GST_DEBUG_OBJECT (self, "something went wrong!");
+  }
+}
+
 static gboolean
 gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
@@ -247,21 +266,9 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
             (GstPadProbeCallback) gst_uvc_sink_sinkpad_event_peer_probe,
             self, NULL);
       } else {
-        if (self->streamon) {
-          g_atomic_int_set (&self->streamon, FALSE);
-          gst_uvc_sink_to_v4l2sink (self);
-
-          if (!self->streaming)
-            GST_DEBUG_OBJECT (self, "something went wrong!");
-        }
-
-        if (self->streamoff) {
-          g_atomic_int_set (&self->streamoff, FALSE);
-
-          if (self->streaming)
-            GST_DEBUG_OBJECT (self, "something went wrong!");
-        }
+        gst_uvc_sink_update_streaming (self);
       }
+
       return TRUE;
     }
     case GST_QUERY_ALLOCATION:
@@ -366,20 +373,7 @@ gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
       if (self->streamon || self->streamoff)
         g_atomic_int_set (&self->caps_changed, FALSE);
 
-      if (self->streamon) {
-        g_atomic_int_set (&self->streamon, FALSE);
-        gst_uvc_sink_to_v4l2sink (self);
-
-        if (!self->streaming)
-          GST_DEBUG_OBJECT (self, "something went wrong!");
-      }
-
-      if (self->streamoff) {
-        g_atomic_int_set (&self->streamoff, FALSE);
-
-        if (self->streaming)
-          GST_DEBUG_OBJECT (self, "something went wrong!");
-      }
+      gst_uvc_sink_update_streaming (self);
 
       return GST_PAD_PROBE_REMOVE;
     }
