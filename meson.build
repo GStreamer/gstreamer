@@ -33,12 +33,12 @@ endif
 # Install gst-indent pre-commit hook
 run_command(python3, '-c', 'import shutil; shutil.copy("scripts/git-hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")', check: false)
 
-
-gitlint = find_program('gitlint', required: false)
+gitlint_req = '>= 0.18'
+gitlint = find_program('gitlint', version: gitlint_req, required: false)
 if gitlint.found()
   run_command(gitlint, 'install-hook', check: false)
 else
-  message('gitlint not found, please install it with your package manager or `python3 -m pip install gitlint` to enable the commit message hook')
+  message('gitlint not found or too old, please install it with your package manager or `python3 -m pip install gitlint` to enable the commit message hook')
 endif
 
 # On macOS, you have to run "Install Certificates.command" otherwise Python
