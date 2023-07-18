@@ -1102,8 +1102,8 @@ gst_h264_parser_parse_user_data_unregistered (GstH264NalParser * nalparser,
 
   for (int i = 0; i < 16; i++) {
     READ_UINT8 (nr, urud->uuid[i], 8);
-    --payload_size;
   }
+  payload_size -= 16;
 
   urud->size = payload_size;
 

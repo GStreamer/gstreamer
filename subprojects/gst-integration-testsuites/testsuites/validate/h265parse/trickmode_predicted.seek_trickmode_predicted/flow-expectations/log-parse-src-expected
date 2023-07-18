@@ -4,14 +4,14 @@ event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, s
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ /\\\ HEVC\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\;";
 event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2019-07-15T17:28:39Z\,\ container-format\=\(string\)\"ISO\\\ MP4/M4A\"\;";
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\;";
-buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header
+buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header, meta=GstVideoSEIUserDataUnregisteredMeta
 buffer: dts=0:00:00.033333333, pts=0:00:00.166666666, dur=0:00:00.033333333, flags=marker delta-unit
 buffer: dts=0:00:00.066666666, pts=0:00:00.133333333, dur=0:00:00.033333333, flags=marker delta-unit
 event flush-start: (no structure)
 event flush-stop: GstEventFlushStop, reset-time=(boolean)true;
 event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, flags=0x201, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.066666666
 event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.265\\\ \\\(Main\\\ 10\\\ Profile\\\)\"\,\ encoder\=\(string\)x265\,\ bitrate\=\(uint\)1547698\;";
-buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header
+buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont marker header, meta=GstVideoSEIUserDataUnregisteredMeta
 buffer: dts=0:00:00.033333333, pts=0:00:00.166666666, dur=0:00:00.033333333, flags=marker delta-unit
 buffer: dts=0:00:00.133333333, pts=0:00:00.266666666, dur=0:00:00.033333333, flags=marker delta-unit
 buffer: dts=0:00:00.233333333, pts=0:00:00.366666666, dur=0:00:00.033333333, flags=marker delta-unit

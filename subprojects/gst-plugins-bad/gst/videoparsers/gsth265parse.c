@@ -121,6 +121,9 @@ static gboolean gst_h265_parse_src_event (GstBaseParse * parse,
 static void
 gst_h265_parse_process_sei_user_data (GstH265Parse * h265parse,
     GstH265RegisteredUserData * rud);
+static void
+gst_h265_parse_process_sei_user_data_unregistered (GstH265Parse * h265parse,
+    GstH265UserDataUnregistered * urud);
 
 static void
 gst_h265_parse_class_init (GstH265ParseClass * klass)
@@ -179,6 +182,7 @@ gst_h265_parse_finalize (GObject * object)
 {
   GstH265Parse *h265parse = GST_H265_PARSE (object);
 
+  gst_video_user_data_unregistered_clear (&h265parse->user_data_unregistered);
   g_object_unref (h265parse->frame_out);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -581,6 +585,10 @@ gst_h265_parse_process_sei (GstH265Parse * h265parse, GstH265NalUnit * nalu)
         gst_h265_parse_process_sei_user_data (h265parse,
             &sei.payload.registered_user_data);
         break;
+      case GST_H265_SEI_USER_DATA_UNREGISTERED:
+        gst_h265_parse_process_sei_user_data_unregistered (h265parse,
+            &sei.payload.user_data_unregistered);
+        break;
       case GST_H265_SEI_BUF_PERIOD:
         /* FIXME */
         break;
@@ -707,6 +715,21 @@ gst_h265_parse_process_sei_user_data (GstH265Parse * h265parse,
   gst_video_parse_user_data ((GstElement *) h265parse, &h265parse->user_data,
       &br, field, provider_code);
 
+}
+
+static void
+gst_h265_parse_process_sei_user_data_unregistered (GstH265Parse * h265parse,
+    GstH265UserDataUnregistered * urud)
+{
+  GstByteReader br;
+
+  if (urud->data == NULL || urud->size < 1)
+    return;
+
+  gst_byte_reader_init (&br, urud->data, urud->size);
+
+  gst_video_parse_user_data_unregistered ((GstElement *) h265parse,
+      &h265parse->user_data_unregistered, &br, urud->uuid);
 }
 
 /* caller guarantees 2 bytes of nal payload */
@@ -3097,6 +3120,9 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
   gst_video_push_user_data ((GstElement *) h265parse, &h265parse->user_data,
       parse_buffer);
+
+  gst_video_push_user_data_unregistered ((GstElement *) h265parse,
+      &h265parse->user_data_unregistered, parse_buffer);
 
   gst_h265_parse_reset_frame (h265parse);
 

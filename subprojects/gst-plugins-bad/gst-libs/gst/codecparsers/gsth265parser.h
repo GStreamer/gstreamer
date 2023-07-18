@@ -348,11 +348,19 @@ typedef enum
  *
  * The type of SEI message.
  */
+/**
+ * GST_H265_SEI_USER_DATA_UNREGISTERED
+ *
+ * User data unregistered (D.2.7)
+ *
+ * Since: 1.24
+ */
 typedef enum
 {
   GST_H265_SEI_BUF_PERIOD = 0,
   GST_H265_SEI_PIC_TIMING = 1,
   GST_H265_SEI_REGISTERED_USER_DATA = 4,
+  GST_H265_SEI_USER_DATA_UNREGISTERED = 5,
   GST_H265_SEI_RECOVERY_POINT = 6,
   GST_H265_SEI_TIME_CODE = 136,
   GST_H265_SEI_MASTERING_DISPLAY_COLOUR_VOLUME = 137,
@@ -446,6 +454,7 @@ typedef struct _GstH265SliceHdr                 GstH265SliceHdr;
 
 typedef struct _GstH265PicTiming                GstH265PicTiming;
 typedef struct _GstH265RegisteredUserData     	GstH265RegisteredUserData;
+typedef struct _GstH265UserDataUnregistered     GstH265UserDataUnregistered;
 typedef struct _GstH265BufferingPeriod          GstH265BufferingPeriod;
 typedef struct _GstH265RecoveryPoint            GstH265RecoveryPoint;
 typedef struct _GstH265TimeCode                 GstH265TimeCode;
@@ -1577,6 +1586,22 @@ struct _GstH265RegisteredUserData
   guint size;
 };
 
+/**
+ * GstH265UserDataUnregistered:
+ * @uuid: an uuid_iso_iec_11578.
+ * @data: the data of user_data_payload_byte
+ * @size: the size of @data in bytes
+ *
+ * The User data unregistered SEI message syntax.
+ *
+ * Since: 1.24
+ */
+struct _GstH265UserDataUnregistered
+{
+  guint8 uuid[16];
+  const guint8 *data;
+  guint size;
+};
 
 /**
  * GstH265TimeCode:
@@ -1642,6 +1667,13 @@ struct _GstH265ContentLightLevel
   guint16 max_pic_average_light_level;
 };
 
+/**
+ * _GstH265SEIMessage.payload.user_data_unregistered:
+ *
+ * User Data Unregistered
+ *
+ * Since: 1.24
+ */
 struct _GstH265SEIMessage
 {
   GstH265SEIPayloadType payloadType;
@@ -1654,6 +1686,7 @@ struct _GstH265SEIMessage
     GstH265TimeCode time_code;
     GstH265MasteringDisplayColourVolume mastering_display_colour_volume;
     GstH265ContentLightLevel content_light_level;
+    GstH265UserDataUnregistered user_data_unregistered;
     /* ... could implement more */
   } payload;
 };

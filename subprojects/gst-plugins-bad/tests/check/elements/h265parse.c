@@ -24,6 +24,7 @@
  */
 
 #include <gst/check/check.h>
+#include <gst/video/video-sei.h>
 #include "parser.h"
 
 #define SRC_CAPS_TMPL   "video/x-h265, parsed=(boolean)false"
@@ -1116,6 +1117,58 @@ GST_START_TEST (test_drain)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_sei_userdefinedunregistered)
+{
+  GstVideoSEIUserDataUnregisteredMeta *meta;
+  GstHarness *h;
+  GstBuffer *buf;
+
+  const guint8 bytestream[] = {
+    0x00, 0x00, 0x00, 0x01, 0x42, 0x01, 0x01, 0x04, 0x08, 0x00, 0x00, 0x03,
+    0x00, 0x9e, 0x08, 0x00, 0x00, 0x03, 0x00, 0x00, 0x1e, 0x90, 0x11, 0x08,
+    0xb2, 0xca, 0xcd, 0x57, 0x95, 0xcd, 0xc0, 0x80, 0x80, 0x01, 0x00, 0x00,
+    0x03, 0x00, 0x01, 0x00, 0x00, 0x03, 0x00, 0x19, 0x08, 0x00, 0x00, 0x00,
+    0x01, 0x44, 0x01, 0xc1, 0x73, 0x18, 0x31, 0x08, 0x90,
+    // SEI
+    0x00, 0x00, 0x01, 0x4e, 0x01,
+    0x05,                       // SEI Type.
+    0x18,                       // SEI Payload size (16 UUID size + 8 payload size = 24).
+    // SEI User Data Unregistered UUID.
+    0xee, 0x2c, 0xa2, 0xde, 0x09, 0xb5, 0x17, 0x47, 0xdb, 0xbb, 0x55, 0xa4,
+    0xfe, 0x7f, 0xc2, 0xfc,
+    // SEI User Data Unregistered Payload.
+    0x4e, 0x78, 0x32, 0x36, 0x35, 0x20, 0x28, 0x62,
+  };
+  const gsize bytestream_size = sizeof (bytestream);
+  const guint8 uuid[] = {
+    0xee, 0x2c, 0xa2, 0xde, 0x09, 0xb5, 0x17, 0x47, 0xdb, 0xbb, 0x55, 0xa4,
+    0xfe, 0x7f, 0xc2, 0xfc
+  };
+  const guint8 payload[] = { 0x4e, 0x78, 0x32, 0x36, 0x35, 0x20, 0x28, 0x62 };
+
+  h = gst_harness_new ("h265parse");
+  gst_harness_set_src_caps_str (h, "video/x-h265, stream-format=byte-stream");
+
+  buf = gst_buffer_new_and_alloc (bytestream_size);
+  gst_buffer_fill (buf, 0, bytestream, bytestream_size);
+  fail_unless_equals_int (gst_harness_push (h, buf), GST_FLOW_OK);
+
+  gst_harness_push_event (h, gst_event_new_eos ());
+
+  buf = gst_harness_pull (h);
+  meta = gst_buffer_get_video_sei_user_data_unregistered_meta (buf);
+  fail_unless (meta != NULL);
+
+  fail_unless (memcmp (meta->uuid, uuid, 16) == 0);
+  fail_unless_equals_int (meta->size, G_N_ELEMENTS (payload));
+  fail_unless (memcmp (meta->data, payload, meta->size) == 0);
+
+  gst_buffer_unref (buf);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
 
 static Suite *
 h265parse_harnessed_suite (void)
@@ -1151,6 +1204,8 @@ h265parse_harnessed_suite (void)
   tcase_add_test (tc_chain, test_parse_sc_with_half_header);
 
   tcase_add_test (tc_chain, test_drain);
+
+  tcase_add_test (tc_chain, test_parse_sei_userdefinedunregistered);
 
   return s;
 }
