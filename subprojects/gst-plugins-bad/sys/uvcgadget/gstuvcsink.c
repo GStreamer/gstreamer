@@ -224,9 +224,6 @@ gst_uvc_sink_get_configured_caps (GstUvcSink * self)
 static gboolean gst_uvc_sink_to_fakesink (GstUvcSink * self);
 static gboolean gst_uvc_sink_to_v4l2sink (GstUvcSink * self);
 
-static GstPadProbeReturn gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self);
-
 static void
 gst_uvc_sink_update_streaming (GstUvcSink * self)
 {
@@ -243,6 +240,32 @@ gst_uvc_sink_update_streaming (GstUvcSink * self)
 }
 
 static gboolean
+gst_uvc_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstUvcSink *self = GST_UVCSINK (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      GST_DEBUG_OBJECT (self, "Handling %" GST_PTR_FORMAT, event);
+
+      /* EVENT CAPS signals that the buffers after the event will use new caps.
+       * If the UVC host requested a new format, we now must start the stream.
+       */
+      if (self->caps_changed) {
+        if (self->streamon || self->streamoff)
+          g_atomic_int_set (&self->caps_changed, FALSE);
+
+        gst_uvc_sink_update_streaming (self);
+      }
+      break;
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, parent, event);
+}
+
+static gboolean
 gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstUvcSink *self = GST_UVCSINK (parent);
@@ -256,14 +279,8 @@ gst_uvc_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GST_DEBUG_OBJECT (self, "caps %" GST_PTR_FORMAT, self->cur_caps);
       gst_query_set_caps_result (query, self->cur_caps);
 
-      if (self->caps_changed) {
-        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BLOCK |
-            GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-            (GstPadProbeCallback) gst_uvc_sink_sinkpad_event_peer_probe,
-            self, NULL);
-      } else {
+      if (!self->caps_changed)
         gst_uvc_sink_update_streaming (self);
-      }
 
       return TRUE;
     }
@@ -353,31 +370,6 @@ gst_uvc_sink_to_v4l2sink (GstUvcSink * self)
   gst_element_set_state (GST_ELEMENT (self->fakesink), GST_STATE_READY);
 
   return TRUE;
-}
-
-static GstPadProbeReturn
-gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
-    GstPadProbeInfo * info, GstUvcSink * self)
-{
-  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GST_DEBUG_OBJECT (self, "caps %p", event);
-
-      if (self->streamon || self->streamoff)
-        g_atomic_int_set (&self->caps_changed, FALSE);
-
-      gst_uvc_sink_update_streaming (self);
-
-      return GST_PAD_PROBE_REMOVE;
-    }
-    default:
-      return GST_PAD_PROBE_PASS;
-  }
-
-  return GST_PAD_PROBE_PASS;
 }
 
 static GstPadProbeReturn
@@ -506,6 +498,7 @@ gst_uvc_sink_init (GstUvcSink * self)
   g_atomic_int_set (&self->streamoff, FALSE);
 
   gst_pad_set_query_function (self->sinkpad, gst_uvc_sink_query);
+  gst_pad_set_event_function (self->sinkpad, gst_uvc_sink_event);
 
   self->cur_caps = gst_caps_new_empty ();
 }
