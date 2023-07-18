@@ -118,6 +118,13 @@ if get_option('build-tools-source') == 'subproject'
     subproject('win-nasm')
   elif build_system == 'darwin'
     subproject('macos-bison-binary')
+    # Newer macOS provides /usr/lib/pkgconfig/libpcre2-8.pc which is broken
+    # because it says headers are in /usr/include but that directory doesn't
+    # exist. It can only be used to find the library, which only exists on
+    # newer macOS at /usr/lib/libpcre2-8.dylib, so it's also unusable.
+    #
+    # jit support requires macOS 11.0 or newer, so disable it by default
+    subproject('pcre2', default_options: ['default_library=static', 'jit=disabled'])
   endif
 endif
 
