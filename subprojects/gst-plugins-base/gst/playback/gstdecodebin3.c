@@ -495,10 +495,6 @@ static gboolean gst_decodebin3_send_event (GstElement * element,
     GstEvent * event);
 
 static void gst_decode_bin_update_factories_list (GstDecodebin3 * dbin);
-#if 0
-static gboolean have_factory (GstDecodebin3 * dbin, GstCaps * caps,
-    GstElementFactoryListType ftype);
-#endif
 
 static void reset_input (GstDecodebin3 * dbin, DecodebinInput * input);
 static void free_input (GstDecodebin3 * dbin, DecodebinInput * input);
@@ -2279,24 +2275,6 @@ get_output_for_slot (MultiQueueSlot * slot)
   /* 1. if in EXPOSE_ALL_MODE, just accept */
   GST_FIXME_OBJECT (dbin, "Handle EXPOSE_ALL_MODE");
 
-#if 0
-  /* FIXME : The idea around this was to avoid activating a stream for
-   *     which we have no decoder. Unfortunately it is way too
-   *     expensive. Need to figure out a better solution */
-  /* 2. Is there a potential decoder (if one is required) */
-  if (!gst_caps_can_intersect (caps, dbin->caps)
-      && !have_factory (dbin, (GstCaps *) caps,
-          GST_ELEMENT_FACTORY_TYPE_DECODER)) {
-    GST_WARNING_OBJECT (dbin, "Don't have a decoder for %" GST_PTR_FORMAT,
-        caps);
-    SELECTION_UNLOCK (dbin);
-    gst_element_post_message (GST_ELEMENT_CAST (dbin),
-        gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
-    SELECTION_LOCK (dbin);
-    return NULL;
-  }
-#endif
-
   /* 3. In default mode check if we should expose */
   id_in_list = (gchar *) stream_in_list (dbin->requested_selection, stream_id);
   if (id_in_list || dbin->upstream_selected) {
@@ -2548,31 +2526,6 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
           }
         } else
           gst_object_unref (stream);
-#if 0                           /* Disabled because stream-start is pushed for every buffer on every unlinked pad */
-        {
-          gboolean is_active, is_requested;
-          /* Quick check to see if we're in the current selection */
-          /* FIXME : Re-check all slot<=>output mappings based on requested_selection */
-          SELECTION_LOCK (dbin);
-          GST_DEBUG_OBJECT (dbin, "Checking active selection");
-          is_active = stream_in_list (dbin->active_selection, stream_id);
-          GST_DEBUG_OBJECT (dbin, "Checking requested selection");
-          is_requested = stream_in_list (dbin->requested_selection, stream_id);
-          SELECTION_UNLOCK (dbin);
-          if (is_active)
-            GST_DEBUG_OBJECT (pad, "Slot in ACTIVE selection (output:%p)",
-                slot->output);
-          if (is_requested)
-            GST_DEBUG_OBJECT (pad, "Slot in REQUESTED selection (output:%p)",
-                slot->output);
-          else if (slot->output) {
-            GST_DEBUG_OBJECT (pad,
-                "Slot needs to be deactivated ? It's no longer in requested selection");
-          } else if (!is_active)
-            GST_DEBUG_OBJECT (pad,
-                "Slot in neither active nor requested selection");
-        }
-#endif
       }
         break;
       case GST_EVENT_CAPS:
@@ -2842,35 +2795,6 @@ link_input_to_slot (DecodebinInputStream * input, MultiQueueSlot * slot)
   slot->pending_stream = input->active_stream;
   slot->input = input;
 }
-
-#if 0
-static gboolean
-have_factory (GstDecodebin3 * dbin, GstCaps * caps,
-    GstElementFactoryListType ftype)
-{
-  gboolean ret = FALSE;
-  GList *res;
-
-  g_mutex_lock (&dbin->factories_lock);
-  gst_decode_bin_update_factories_list (dbin);
-  if (ftype == GST_ELEMENT_FACTORY_TYPE_DECODER)
-    res =
-        gst_element_factory_list_filter (dbin->decoder_factories,
-        caps, GST_PAD_SINK, TRUE);
-  else
-    res =
-        gst_element_factory_list_filter (dbin->decodable_factories,
-        caps, GST_PAD_SINK, TRUE);
-  g_mutex_unlock (&dbin->factories_lock);
-
-  if (res) {
-    ret = TRUE;
-    gst_plugin_feature_list_free (res);
-  }
-
-  return ret;
-}
-#endif
 
 static GList *
 create_decoder_factory_list (GstDecodebin3 * dbin, GstCaps * caps)
@@ -3642,13 +3566,6 @@ gst_decodebin3_send_event (GstElement * element, GstEvent * event)
     dbin->pending_select_streams = g_list_copy (streams);
     SELECTION_UNLOCK (dbin);
 
-#if 0
-    /* Send event upstream */
-    if ((peer = gst_pad_get_peer (pad))) {
-      gst_pad_send_event (peer, event);
-      gst_object_unref (peer);
-    }
-#endif
     /* Finally handle the switch */
     if (streams) {
       handle_stream_switch (dbin, streams, seqnum);
