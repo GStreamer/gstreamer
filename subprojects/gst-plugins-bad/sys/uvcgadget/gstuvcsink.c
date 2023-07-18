@@ -125,14 +125,14 @@ gst_v4l2uvc_fourcc_to_bare_struct (guint32 fourcc)
   return structure;
 }
 
-/* The UVC EVENT_DATA from the host, which is commiting the currently
+/* The UVC EVENT_DATA from the host, which is committing the currently
  * selected configuration (format+resolution+framerate) is only selected
  * by some index values (except the framerate). We have to transform
  * those values to an valid caps string that we can return on the caps
  * query.
  */
-static gboolean
-gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
+static GstCaps *
+gst_uvc_sink_get_configured_caps (GstUvcSink * self)
 {
   struct v4l2_fmtdesc format;
   struct v4l2_frmsizeenum size;
@@ -151,7 +151,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
   if (ioctl (device_fd, VIDIOC_ENUM_FMT, &format) < 0) {
     GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Linux kernel error"),
         ("VIDIOC_ENUM_FMT failed: %s (%d)", g_strerror (errno), errno));
-    return FALSE;
+    return NULL;
   }
 
   s = gst_v4l2uvc_fourcc_to_bare_struct (format.pixelformat);
@@ -163,7 +163,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
   if (ioctl (device_fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0) {
     GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Linux kernel error"),
         ("VIDIOC_ENUM_FRAMESIZES failed: %s (%d)", g_strerror (errno), errno));
-    return FALSE;
+    return NULL;
   }
 
   GST_LOG_OBJECT (self, "got discrete frame size %dx%d",
@@ -173,7 +173,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
   height = MIN (size.discrete.height, G_MAXINT);
 
   if (!width || !height)
-    return FALSE;
+    return NULL;
 
   g_value_init (&framerate, GST_TYPE_FRACTION);
 
@@ -196,7 +196,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
     GST_ELEMENT_ERROR (self, RESOURCE, READ, ("Linux kernel error"),
         ("VIDIOC_ENUM_FRAMEINTERVALS failed: %s (%d)",
             g_strerror (errno), errno));
-    return FALSE;
+    return NULL;
   }
 
   do {
@@ -218,10 +218,7 @@ gst_uvc_sink_parse_cur_caps (GstUvcSink * self)
 
   gst_structure_take_value (s, "framerate", &framerate);
 
-  gst_clear_caps (&self->cur_caps);
-  self->cur_caps = gst_caps_new_full (s, NULL);
-
-  return TRUE;
+  return gst_caps_new_full (s, NULL);
 }
 
 static void gst_uvc_sink_create_buffer_peer_probe (GstUvcSink * self);
@@ -636,19 +633,26 @@ gst_uvc_sink_task (gpointer data)
         GST_DEBUG_OBJECT (self, "UVC_EVENT_DATA");
         uvc_events_process_data (self, &uvc_event->data);
         if (self->control == UVC_VS_COMMIT_CONTROL) {
-          GstCaps *caps, *prev_caps;
+          GstCaps *configured_caps;
+          GstCaps *prev_caps;
 
           prev_caps = gst_caps_copy (self->cur_caps);
-          gst_uvc_sink_parse_cur_caps (self);
-          caps = gst_caps_copy (self->cur_caps);
+
+          /* The configured caps are not sufficient for negotiation. Select caps
+           * from the probed caps that match the configured caps.
+           */
+          configured_caps = gst_uvc_sink_get_configured_caps (self);
           gst_clear_caps (&self->cur_caps);
           self->cur_caps =
-              gst_caps_intersect_full (self->probed_caps, caps,
+              gst_caps_intersect_full (self->probed_caps, configured_caps,
               GST_CAPS_INTERSECT_FIRST);
+          GST_INFO_OBJECT (self, "UVC host selected %" GST_PTR_FORMAT,
+              self->cur_caps);
+          gst_caps_unref (configured_caps);
+
           if (!gst_caps_is_equal (self->probed_caps, prev_caps))
             self->caps_changed = !gst_caps_is_equal (self->cur_caps, prev_caps);
           gst_caps_unref (prev_caps);
-          gst_caps_unref (caps);
         }
         break;
       default:
