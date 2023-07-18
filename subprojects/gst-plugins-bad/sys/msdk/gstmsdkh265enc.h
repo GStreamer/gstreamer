@@ -76,6 +76,12 @@ struct _GstMsdkH265Enc
   /* roi[0] for current ROI and roi[1] for previous ROI */
   mfxExtEncoderROI roi[2];
 
+  /* HDR SEI */
+  mfxExtMasteringDisplayColourVolume mdcv;
+  mfxExtContentLightLevelInfo cll;
+  gboolean have_mdcv;
+  gboolean have_cll;
+
   GstH265Parser *parser;
   GArray *cc_sei_array;
 };
