@@ -3,3 +3,4 @@ directory = pixman-0.42.2
 source_url = https://www.cairographics.org/releases/pixman-0.42.2.tar.gz
 source_filename = pixman-0.42.2.tar.gz
 source_hash = ea1480efada2fd948bc75366f7c349e1c96d3297d09a3fe62626e38e234a625e
+diff_files = pixman-0.42.2/0001-pixman-arma64-Adjustments-to-build-with-llvm-integra.patch
