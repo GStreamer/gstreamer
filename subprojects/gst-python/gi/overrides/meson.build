@@ -4,13 +4,21 @@ python.install_sources(pysources,
   subdir: 'gi/overrides',
 )
 
+host_system = host_machine.system()
+if host_system == 'windows'
+  gst_dep_for_gi = gst_dep
+else
+  gst_dep_for_gi = gst_dep.partial_dependency(compile_args: true, includes: true, sources: true)
+endif
+
 gstpython = python.extension_module('_gi_gst',
     sources: ['gstmodule.c'],
     install: true,
     install_dir : pygi_override_dir,
     install_tag: 'python-runtime',
     include_directories : [configinc],
-    dependencies : [gst_dep.partial_dependency(compile_args: true, includes: true, sources: true), python_dep, pygobject_dep])
+    dependencies : [gst_dep_for_gi, python_dep, pygobject_dep],
+)
 
 env = environment()
 env.prepend('_GI_OVERRIDES_PATH', [
