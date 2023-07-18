@@ -2325,6 +2325,11 @@ is_selection_done (GstDecodebin3 * dbin)
 
   GST_LOG_OBJECT (dbin, "Checking");
 
+  if (dbin->upstream_selected) {
+    GST_DEBUG ("Upstream handles stream selection, returning");
+    return NULL;
+  }
+
   if (dbin->to_activate != NULL) {
     GST_DEBUG ("Still have streams to activate");
     return NULL;
