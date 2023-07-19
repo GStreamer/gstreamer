@@ -407,16 +407,14 @@ static GstPadProbeReturn
 gst_uvc_sink_sinkpad_idle_probe (GstPad * pad,
     GstPadProbeInfo * info, GstUvcSink * self)
 {
-  if (self->streamon) {
+  if (self->streamon || self->streamoff) {
     gst_uvc_sink_create_buffer_peer_probe (self);
+    GST_DEBUG_OBJECT (self, "Send reconfigure");
     gst_pad_push_event (self->sinkpad, gst_event_new_reconfigure ());
   }
 
-  if (self->streamoff) {
-    gst_uvc_sink_create_buffer_peer_probe (self);
-    gst_pad_push_event (self->sinkpad, gst_event_new_reconfigure ());
+  if (self->streamoff)
     gst_uvc_sink_to_fakesink (self);
-  }
 
   return GST_PAD_PROBE_PASS;
 }
