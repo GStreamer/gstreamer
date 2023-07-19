@@ -70,6 +70,10 @@
 #define RTPHDREXT_STREAM_ID GST_RTP_HDREXT_BASE "sdes:rtp-stream-id"
 #define RTPHDREXT_REPAIRED_STREAM_ID GST_RTP_HDREXT_BASE "sdes:repaired-rtp-stream-id"
 
+#if !GLIB_CHECK_VERSION(2, 74, 0)
+#define G_CONNECT_DEFAULT 0
+#endif
+
 /**
  * SECTION: element-webrtcbin
  * title: webrtcbin
