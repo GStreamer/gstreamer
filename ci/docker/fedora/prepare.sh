@@ -236,7 +236,6 @@ chmod +x rustup-init;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
-cargo install cargo-c --version 0.9.21+cargo-0.71
 rustup --version
 cargo --version
 rustc --version
