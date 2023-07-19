@@ -363,9 +363,11 @@ gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
     {
       GST_DEBUG_OBJECT (self, "caps %p", event);
 
+      if (self->streamon || self->streamoff)
+        g_atomic_int_set (&self->caps_changed, FALSE);
+
       if (self->streamon) {
         g_atomic_int_set (&self->streamon, FALSE);
-        g_atomic_int_set (&self->caps_changed, FALSE);
         gst_uvc_sink_to_v4l2sink (self);
 
         if (!self->streaming)
@@ -374,7 +376,6 @@ gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
 
       if (self->streamoff) {
         g_atomic_int_set (&self->streamoff, FALSE);
-        g_atomic_int_set (&self->caps_changed, FALSE);
 
         if (self->streaming)
           GST_DEBUG_OBJECT (self, "something went wrong!");
