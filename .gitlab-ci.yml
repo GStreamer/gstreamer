@@ -413,7 +413,7 @@ build fedora clang:
   needs:
     - "trigger"
     - "windows amd64 docker"
-  timeout: '45min'
+  timeout: '90m'
   variables:
     MESON_ARGS: >-
       ${DEFAULT_MESON_ARGS}
@@ -503,7 +503,6 @@ build vs2022 arm64:
 
 build msys2:
   extends: '.build windows'
-  timeout: '60min'
   script:
     - !reference [".build windows", "script"]
     # Replace backslashes with forward so bash doesn't complain
