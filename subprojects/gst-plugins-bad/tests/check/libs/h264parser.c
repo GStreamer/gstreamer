@@ -332,6 +332,16 @@ static guint8 h264_sei_user_data_registered[] = {
   0x00, 0xff, 0x80
 };
 
+static guint8 h264_sei_user_data_unregistered[] = {
+  0x00, 0x00, 0x00, 0x01, 0x06,
+  0x05,                         // Payload type.
+  0x18,                         // Payload size.
+  0x4D, 0x49, 0x53, 0x50, 0x6D, 0x69, 0x63, 0x72, 0x6F, 0x73, 0x65, 0x63,
+  0x74, 0x69, 0x6D, 0x65,       // UUID.
+  0x70, 0x69, 0x67, 0x73, 0x20, 0x66, 0x6c, 0x79,       // Payload data
+  0x80
+};
+
 /* frame packing, side-by-side */
 static guint8 h264_sei_frame_packing[] = {
   0x00, 0x00, 0x00, 0x01, 0x06, 0x2d, 0x07, 0x81, 0x81, 0x00, 0x00, 0x03,
@@ -423,6 +433,15 @@ check_sei_user_data_registered (const GstH264RegisteredUserData * a,
     return FALSE;
 
   return !memcmp (a->data, b->data, a->size);
+}
+
+static gboolean
+check_sei_user_data_unregistered (const GstH264UserDataUnregistered * a,
+    const GstH264UserDataUnregistered * b)
+{
+  return a->size == b->size &&
+      !memcmp (a->uuid, b->uuid, sizeof (a->uuid)) &&
+      !memcmp (a->data, b->data, a->size);
 }
 
 static gboolean
@@ -594,6 +613,9 @@ GST_START_TEST (test_h264_create_sei)
     {h264_sei_user_data_registered, G_N_ELEMENTS (h264_sei_user_data_registered),
         GST_H264_SEI_REGISTERED_USER_DATA, {0,},
         (SEICheckFunc) check_sei_user_data_registered},
+    {h264_sei_user_data_unregistered, G_N_ELEMENTS (h264_sei_user_data_unregistered),
+        GST_H264_SEI_USER_DATA_UNREGISTERED, {0,},
+        (SEICheckFunc) check_sei_user_data_unregistered},
     {h264_sei_frame_packing, G_N_ELEMENTS (h264_sei_frame_packing),
         GST_H264_SEI_FRAME_PACKING, {0,},
         (SEICheckFunc) check_sei_frame_packing},
@@ -671,6 +693,16 @@ GST_START_TEST (test_h264_create_sei)
 
       dst_rud->data = g_malloc (src_rud->size);
       memcpy ((guint8 *) dst_rud->data, src_rud->data, src_rud->size);
+    } else if (test_list[i].type == GST_H264_SEI_USER_DATA_UNREGISTERED) {
+      GstH264UserDataUnregistered *dst_udu =
+          &test_list[i].parsed_message.payload.user_data_unregistered;
+      const GstH264SEIMessage *src_msg =
+          &g_array_index (msg_array, GstH264SEIMessage, 0);
+      const GstH264UserDataUnregistered *src_udu =
+          &src_msg->payload.user_data_unregistered;
+
+      dst_udu->data = g_malloc (src_udu->size);
+      memcpy ((guint8 *) dst_udu->data, src_udu->data, src_udu->size);
     }
     g_array_unref (msg_array);
   }
