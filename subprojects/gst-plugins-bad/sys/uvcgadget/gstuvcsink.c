@@ -230,20 +230,16 @@ static GstPadProbeReturn gst_uvc_sink_sinkpad_event_peer_probe (GstPad * pad,
 static void
 gst_uvc_sink_update_streaming (GstUvcSink * self)
 {
-  if (self->streamon) {
-    g_atomic_int_set (&self->streamon, FALSE);
+  if (self->streamon && !self->streaming)
+    GST_ERROR_OBJECT (self, "Unexpected STREAMON");
+  if (self->streamoff && self->streaming)
+    GST_ERROR_OBJECT (self, "Unexpected STREAMOFF");
+
+  if (self->streamon)
     gst_uvc_sink_to_v4l2sink (self);
 
-    if (!self->streaming)
-      GST_DEBUG_OBJECT (self, "something went wrong!");
-  }
-
-  if (self->streamoff) {
-    g_atomic_int_set (&self->streamoff, FALSE);
-
-    if (self->streaming)
-      GST_DEBUG_OBJECT (self, "something went wrong!");
-  }
+  g_atomic_int_set (&self->streamon, FALSE);
+  g_atomic_int_set (&self->streamoff, FALSE);
 }
 
 static gboolean
