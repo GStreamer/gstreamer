@@ -988,6 +988,7 @@ _init_classes (void)
     }
   } else {
     android_hardware_camera_parameters.EFFECT_EMBOSS = NULL;
+    g_clear_error (&err);
   }
 
   fieldID =
@@ -1009,6 +1010,7 @@ _init_classes (void)
     }
   } else {
     android_hardware_camera_parameters.EFFECT_SKETCH = NULL;
+    g_clear_error (&err);
   }
 
   fieldID =
@@ -1030,6 +1032,7 @@ _init_classes (void)
     }
   } else {
     android_hardware_camera_parameters.EFFECT_NEON = NULL;
+    g_clear_error (&err);
   }
 
   fieldID =
@@ -1528,6 +1531,7 @@ _init_classes (void)
     }
   } else {
     android_hardware_camera_parameters.SCENE_MODE_BACKLIGHT = NULL;
+    g_clear_error (&err);
   }
 
   fieldID =
@@ -1549,6 +1553,7 @@ _init_classes (void)
     }
   } else {
     android_hardware_camera_parameters.SCENE_MODE_FLOWERS = NULL;
+    g_clear_error (&err);
   }
 
   fieldID =
@@ -1570,6 +1575,7 @@ _init_classes (void)
     }
   } else {
     android_hardware_camera_parameters.SCENE_MODE_AR = NULL;
+    g_clear_error (&err);
   }
 
   fieldID =
@@ -1591,6 +1597,7 @@ _init_classes (void)
     }
   } else {
     android_hardware_camera_parameters.SCENE_MODE_HDR = NULL;
+    g_clear_error (&err);
   }
 
   fieldID =
