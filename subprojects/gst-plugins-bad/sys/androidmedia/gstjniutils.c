@@ -201,6 +201,7 @@ jobject
 gst_amc_jni_object_make_global (JNIEnv * env, jobject object)
 {
   jobject ret;
+  g_return_val_if_fail (object != NULL, NULL);
 
   ret = (*env)->NewGlobalRef (env, object);
   if (!ret) {
@@ -215,6 +216,7 @@ jobject
 gst_amc_jni_object_ref (JNIEnv * env, jobject object)
 {
   jobject ret;
+  g_return_val_if_fail (object != NULL, NULL);
 
   ret = (*env)->NewGlobalRef (env, object);
   if (!ret) {
