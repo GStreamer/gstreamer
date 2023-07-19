@@ -4137,9 +4137,15 @@ _h265_setup_encoding_features (GstVaH265Enc * self)
   self->features.transform_skip_enabled_flag =
       (features.bits.transform_skip != 0);
 
-  self->features.cu_qp_delta_enabled_flag =
-      (self->rc.rc_ctrl_mode != VA_RC_CQP);
-  self->features.diff_cu_qp_delta_depth = features.bits.cu_qp_delta;
+  if (self->rc.rc_ctrl_mode != VA_RC_CQP)
+    self->features.cu_qp_delta_enabled_flag = !!features.bits.cu_qp_delta;
+  else
+    self->features.cu_qp_delta_enabled_flag = 0;
+
+  if (self->features.cu_qp_delta_enabled_flag) {
+    self->features.diff_cu_qp_delta_depth =
+        self->features.log2_diff_max_min_luma_coding_block_size;
+  }
 
   /* TODO: use weighted pred */
   self->features.weighted_pred_flag = FALSE;
