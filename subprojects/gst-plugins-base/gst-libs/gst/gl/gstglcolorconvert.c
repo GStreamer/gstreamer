@@ -3259,6 +3259,21 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
 }
 
 /**
+ * gst_gl_color_convert_swizzle_shader_string:
+ * @context: a #GstGLContext
+ *
+ * Returns: (transfer full): a shader string that can be used to swizzle vec
+ * components in a GLSL shader.
+ *
+ * Since: 1.24
+ */
+gchar *
+gst_gl_color_convert_swizzle_shader_string (GstGLContext * context)
+{
+  return g_strdup (glsl_func_swizzle);
+}
+
+/**
  * gst_gl_color_convert_yuv_to_rgb_shader_string:
  * @context: a #GstGLContext
  *

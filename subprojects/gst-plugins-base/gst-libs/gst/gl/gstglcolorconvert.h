@@ -152,6 +152,9 @@ GST_GL_API
 GstBuffer * gst_gl_color_convert_perform    (GstGLColorConvert * convert, GstBuffer * inbuf);
 
 GST_GL_API
+gchar *     gst_gl_color_convert_swizzle_shader_string (GstGLContext * context);
+
+GST_GL_API
 gchar *     gst_gl_color_convert_yuv_to_rgb_shader_string (GstGLContext * context);
 
 G_END_DECLS

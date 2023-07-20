@@ -1543,6 +1543,20 @@ The glcolorconvertelement provides a GStreamer element that uses
           </parameter>
         </parameters>
       </function>
+      <function name="swizzle_shader_string" c:identifier="gst_gl_color_convert_swizzle_shader_string" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a shader string that can be used to swizzle vec
+components in a GLSL shader.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a #GstGLContext</doc>
+            <type name="GLContext" c:type="GstGLContext*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="transform_caps" c:identifier="gst_gl_color_convert_transform_caps" version="1.6">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">Provides an implementation of #GstBaseTransformClass.transform_caps()</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
