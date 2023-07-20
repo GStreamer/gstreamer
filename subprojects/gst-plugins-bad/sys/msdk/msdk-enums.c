@@ -371,6 +371,10 @@ gst_msdkvpp_scaling_mode_get_type (void)
     {MFX_SCALING_MODE_DEFAULT, "Default Scaling", "disable"},
     {MFX_SCALING_MODE_LOWPOWER, "Lowpower Scaling", "lowpower"},
     {MFX_SCALING_MODE_QUALITY, "High Quality Scaling", "quality"},
+#if (MFX_VERSION >= 2007)
+    {MFX_SCALING_MODE_INTEL_GEN_COMPUTE,
+        "Compute Mode Scaling (running on EUs)", "compute"},
+#endif
     {0, NULL, NULL}
   };
 

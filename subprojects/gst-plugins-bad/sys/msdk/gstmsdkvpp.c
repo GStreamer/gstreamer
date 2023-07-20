@@ -1076,11 +1076,22 @@ ensure_filters (GstMsdkVPP * thiz)
 
   /* Scaling Mode */
   if (thiz->flags & GST_MSDK_FLAG_SCALING_MODE) {
-    mfxExtVPPScaling *mfx_scaling = &thiz->mfx_scaling;
-    mfx_scaling->Header.BufferId = MFX_EXTBUFF_VPP_SCALING;
-    mfx_scaling->Header.BufferSz = sizeof (mfxExtVPPScaling);
-    mfx_scaling->ScalingMode = thiz->scaling_mode;
-    gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_scaling);
+    gboolean scaling_mode_is_compute = FALSE;
+#if (MFX_VERSION >= 2007)
+    if (thiz->scaling_mode == MFX_SCALING_MODE_INTEL_GEN_COMPUTE)
+      scaling_mode_is_compute = TRUE;
+#endif
+    if (MFX_RUNTIME_VERSION_ATLEAST (thiz->version, 2, 7) ||
+        !scaling_mode_is_compute) {
+      mfxExtVPPScaling *mfx_scaling = &thiz->mfx_scaling;
+      mfx_scaling->Header.BufferId = MFX_EXTBUFF_VPP_SCALING;
+      mfx_scaling->Header.BufferSz = sizeof (mfxExtVPPScaling);
+      mfx_scaling->ScalingMode = thiz->scaling_mode;
+      gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_scaling);
+    } else {
+      GST_WARNING_OBJECT (thiz,
+          "Compute scaling mode not supported, ignore it...");
+    }
   }
 
   /* FRC */
