@@ -158,25 +158,25 @@ struct shader_templ
   GstGLTextureTarget target;
 };
 
-#define glsl_func_yuv_to_rgb \
-    "vec3 yuv_to_rgb (vec3 val, vec3 offset, vec3 ycoeff, vec3 ucoeff, vec3 vcoeff) {\n" \
+static const char glsl_func_yuv_to_rgb[] = \
+    "vec3 yuv_to_rgb (vec3 yuv, vec3 offset, vec3 ycoeff, vec3 ucoeff, vec3 vcoeff) {\n" \
     "  vec3 rgb;\n"                 \
-    "  val += offset;\n"            \
-    "  rgb.r = dot(val, ycoeff);\n" \
-    "  rgb.g = dot(val, ucoeff);\n" \
-    "  rgb.b = dot(val, vcoeff);\n" \
+    "  yuv += offset;\n"            \
+    "  rgb.r = dot(yuv, ycoeff);\n" \
+    "  rgb.g = dot(yuv, ucoeff);\n" \
+    "  rgb.b = dot(yuv, vcoeff);\n" \
     "  return rgb;\n"               \
-    "}\n"
+    "}\n";
 
-#define glsl_func_rgb_to_yuv \
-    "vec3 rgb_to_yuv (vec3 val, vec3 offset, vec3 rcoeff, vec3 gcoeff, vec3 bcoeff) {\n" \
+static const char glsl_func_rgb_to_yuv[] = \
+    "vec3 rgb_to_yuv (vec3 rgb, vec3 offset, vec3 rcoeff, vec3 gcoeff, vec3 bcoeff) {\n" \
     "  vec3 yuv;\n"                         \
-    "  yuv.r = dot(val.rgb, rcoeff);\n"     \
-    "  yuv.g = dot(val.rgb, gcoeff);\n"     \
-    "  yuv.b = dot(val.rgb, bcoeff);\n"     \
+    "  yuv.r = dot(rgb.rgb, rcoeff);\n"     \
+    "  yuv.g = dot(rgb.rgb, gcoeff);\n"     \
+    "  yuv.b = dot(rgb.rgb, bcoeff);\n"     \
     "  yuv += offset;\n"                    \
     "  return yuv;\n"                       \
-    "}\n"
+    "}\n";
 
 static const char glsl_func_swizzle[] = "vec4 swizzle(vec4 texel, int[4] components) {\n" \
   "  return vec4(texel[components[0]], texel[components[1]], texel[components[2]], texel[components[3]]);\n" \
@@ -190,7 +190,7 @@ static const char glsl_func_swizzle[] = "vec4 swizzle(vec4 texel, int[4] compone
   "vec2 swizzle2(vec3 texel, int[3] components) {\n" \
   "  return vec2(texel[components[0]], texel[components[1]]);\n" \
   "}\n" \
-  "vec2 swizzle2(vec4 texel, int[3] components) {\n" \
+  "vec2 swizzle2(vec4 texel, int[4] components) {\n" \
   "  return vec2(texel[components[0]], texel[components[1]]);\n" \
   "}\n" \
   "vec3 swizzle3(vec4 texel, int[4] components) {\n" \
@@ -3256,4 +3256,27 @@ _do_convert_draw (GstGLContext * context, GstGLColorConvert * convert)
   gst_gl_context_clear_framebuffer (context);
 
   return ret;
+}
+
+/**
+ * gst_gl_color_convert_yuv_to_rgb_shader_string:
+ * @context: a #GstGLContext
+ *
+ * The returned glsl function has declaration:
+ *
+ * `vec3 yuv_to_rgb (vec3 rgb, vec3 offset, vec3 ycoeff, vec3 ucoeff, vec3 vcoeff);`
+ *
+ * The Y component is placed in the 0th index of the returned value, The U component in the
+ * 1st, and the V component in the 2nd.  offset, ycoeff, ucoeff, and vcoeff are the
+ * specific coefficients and offset used for the conversion.
+ *
+ * Returns: (transfer full): a glsl function that can be used to convert from
+ * yuv to rgb
+ *
+ * Since: 1.24
+ */
+gchar *
+gst_gl_color_convert_yuv_to_rgb_shader_string (GstGLContext * context)
+{
+  return g_strdup (glsl_func_yuv_to_rgb);
 }

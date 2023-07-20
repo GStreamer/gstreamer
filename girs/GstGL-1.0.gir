@@ -1569,6 +1569,27 @@ The glcolorconvertelement provides a GStreamer element that uses
           </parameter>
         </parameters>
       </function>
+      <function name="yuv_to_rgb_shader_string" c:identifier="gst_gl_color_convert_yuv_to_rgb_shader_string" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">The returned glsl function has declaration:
+
+`vec3 yuv_to_rgb (vec3 rgb, vec3 offset, vec3 ycoeff, vec3 ucoeff, vec3 vcoeff);`
+
+The Y component is placed in the 0th index of the returned value, The U component in the
+1st, and the V component in the 2nd.  offset, ycoeff, ucoeff, and vcoeff are the
+specific coefficients and offset used for the conversion.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a glsl function that can be used to convert from
+yuv to rgb</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">a #GstGLContext</doc>
+            <type name="GLContext" c:type="GstGLContext*"/>
+          </parameter>
+        </parameters>
+      </function>
       <method name="decide_allocation" c:identifier="gst_gl_color_convert_decide_allocation" version="1.8">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.c">Provides an implementation of #GstBaseTransformClass.decide_allocation()</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
