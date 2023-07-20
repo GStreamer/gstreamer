@@ -11999,12 +11999,12 @@
                 "long-name": "Qt Video Overlay",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(ANY):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n\nvideo/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "caps": "video/x-raw(ANY):\n         format: { RGBA, BGRA, YV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n\nvideo/x-raw(ANY):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -12101,7 +12101,7 @@
                 "long-name": "Qt Video Sink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGB, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGB, RGBA, BGRA, YV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
                         "direction": "sink",
                         "presence": "always"
                     }

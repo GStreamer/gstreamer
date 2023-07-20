@@ -26,7 +26,7 @@
 
 #include <gst/video/video.h>
 #include "qtitem.h"
-#include "gstqsgtexture.h"
+#include "gstqsgmaterial.h"
 #include "gstqtglutility.h"
 
 #include <QtCore/QMutexLocker>
@@ -283,9 +283,10 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   if (!this->priv->initted)
     return oldNode;
 
-  QSGSimpleTextureNode *texNode = static_cast<QSGSimpleTextureNode *> (oldNode);
+  QSGGeometryNode *texNode = static_cast<QSGGeometryNode *> (oldNode);
   GstVideoRectangle src, dst, result;
-  GstQSGTexture *tex;
+  GstQSGMaterial *tex = nullptr;
+  QSGGeometry *geometry = nullptr;
 
   g_mutex_lock (&this->priv->lock);
 
@@ -300,13 +301,22 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   if (gst_gl_context_get_current() == NULL)
     gst_gl_context_activate (this->priv->other_context, TRUE);
 
-  if (!texNode) {
-    texNode = new QSGSimpleTextureNode ();
-    texNode->setOwnsTexture (true);
-    texNode->setTexture (new GstQSGTexture ());
+  if (texNode) {
+    geometry = texNode->geometry();
+    tex = static_cast<GstQSGMaterial *>(texNode->material());
+    if (tex && !tex->compatibleWith(&this->priv->v_info)) {
+      delete texNode;
+      texNode = nullptr;
+    }
   }
 
-  tex = static_cast<GstQSGTexture *> (texNode->texture());
+  if (!texNode) {
+    texNode = new QSGGeometryNode();
+    geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
+    texNode->setGeometry(geometry);
+    tex = new GstQSGMaterial();
+    texNode->setMaterial(tex);
+  }
 
   if ((old_buffer = tex->getBuffer(&was_bound))) {
     if (old_buffer == this->priv->buffer) {
@@ -360,7 +370,9 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
     result.h = boundingRect().height();
   }
 
-  texNode->setRect (QRectF (result.x, result.y, result.w, result.h));
+  QRectF rect(result.x, result.y, result.w, result.h);
+  QRectF sourceRect(0, 0, 1, 1);
+  QSGGeometry::updateTexturedRectGeometry(geometry, rect, sourceRect);
 
   g_mutex_unlock (&this->priv->lock);
 

@@ -1,7 +1,7 @@
 sources = [
   'gstplugin.cc',
   'gstqtelement.cc',
-  'gstqsgtexture.cc',
+  'gstqsgmaterial.cc',
   'gstqtglutility.cc',
   'gstqtoverlay.cc',
   'gstqtsink.cc',
@@ -14,7 +14,6 @@ sources = [
 moc_headers = [
   'qtitem.h',
   'qtwindow.h',
-  'gstqsgtexture.h',
   'qtglrenderer.h',
 ]
 

@@ -18,34 +18,37 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_QSG_TEXTURE_H__
-#define __GST_QSG_TEXTURE_H__
+#ifndef __GST_QSG_MATERIAL_H__
+#define __GST_QSG_MATERIAL_H__
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/gl/gl.h>
 
 #include "gstqtgl.h"
-#include <QtQuick/QSGTexture>
+#include <QtQuick/QSGMaterial>
+#include <QtQuick/QSGMaterialShader>
 #include <QtGui/QOpenGLFunctions>
+#include <QtGui/QOpenGLShaderProgram>
 
-class GstQSGTexture : public QSGTexture, protected QOpenGLFunctions
+class GstQSGMaterialShader;
+
+class GstQSGMaterial : public QSGMaterial
 {
-    Q_OBJECT
 public:
-    GstQSGTexture ();
-    ~GstQSGTexture ();
+    GstQSGMaterial ();
+    ~GstQSGMaterial ();
 
     void setCaps (GstCaps * caps);
     gboolean setBuffer (GstBuffer * buffer);
     GstBuffer * getBuffer (gboolean * was_bound);
+    bool compatibleWith(GstVideoInfo *v_info);
 
-    /* QSGTexture */
-    void bind ();
-    int textureId () const;
-    QSize textureSize () const;
-    bool hasAlphaChannel () const;
-    bool hasMipmaps () const;
+    void bind(GstQSGMaterialShader *);
+
+    /* QSGMaterial */
+    QSGMaterialType *type() const override { static QSGMaterialType type; return &type; };
+    QSGMaterialShader *createShader() const override;
 
 private:
     GstBuffer * buffer_;
@@ -53,9 +56,13 @@ private:
     GstBuffer * sync_buffer_;
     GWeakRef qt_context_ref_;
     GstMemory * mem_;
-    GLuint dummy_tex_id_;
     GstVideoInfo v_info;
     GstVideoFrame v_frame;
+    float *cms_offset;
+    float *cms_ycoeff;
+    float *cms_ucoeff;
+    float *cms_vcoeff;
+    guint dummy_textures[GST_VIDEO_MAX_PLANES];
 };
 
-#endif /* __GST_QSG_TEXTURE_H__ */
+#endif /* __GST_QSG_MATERIAL_H__ */
