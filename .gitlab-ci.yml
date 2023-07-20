@@ -517,7 +517,7 @@ build msys2:
     # Replace backslashes with forward so bash doesn't complain
     - $env:CI_PROJECT_DIR = $env:CI_PROJECT_DIR.replace('\','/')
     # Windows Graphics Capture currently requires Visual Studio
-    - $env:MESON_ARGS = $env:MESON_ARGS.replace('-Dgst-plugins-bad:d3d11-wgc=enabled','')
+    - $env:MESON_ARGS = $env:MESON_ARGS.replace('-Dgst-plugins-bad:d3d11-wgc=enabled','') + ' -Dpython=disabled -Dintrospection=disabled'
     # Configure MSYS2 to use the UCRT64 environment, start in the same directory
     # and inherit PATH
     - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS && meson compile -C build"
