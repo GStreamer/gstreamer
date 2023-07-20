@@ -2,13 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
-The latest bug-fix release in the stable 1.22 series is 1.22.4 and was
-released on 20 June 2023.
+The latest bug-fix release in the stable 1.22 series is 1.22.5 and was
+released on 20 July 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Tuesday 20 June 2023, 16:30 UTC (log)
+Last updated: Thursday 20 July 2023, 12:00 UTC (log)
 
 Introduction
 
@@ -2007,6 +2007,187 @@ List of merge requests and issues fixed in 1.22.4
 
 -   List of Merge Requests applied in 1.22.4
 -   List of Issues fixed in 1.22.4
+
+1.22.5
+
+The fifth 1.22 bug-fix release (1.22.5) was released on 20 July 2023.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.22.x.
+
+Highlighted bugfixes in 1.22.5
+
+-   Security fixes for the RealMedia demuxer
+-   vaapi decoders, postproc: Disable DMAbuf from caps negotiation to
+    fix garbled video in some cases
+-   decodebin3, playbin3, parsebin fixes, especially for stream
+    reconfiguration
+-   hlsdemux2: fix early seeking; don’t pass referer when updating
+    playlists; webvtt fixes
+-   gtk: Fix critical caused by pointer movement when stream is getting
+    ready
+-   qt6: Set sampler filtering method, fixes bad quality with qml6glsink
+    and gstqt6d3d11
+-   v4l2src: handle resolution change when buffers are copied
+-   videoflip: update orientation tag in auto mode
+-   video timecode: Add support for framerates lower than 1fps and
+    accept 119.88 (120/1.001) fps
+-   webrtcsink: fixes for x264enc and NVIDIA encoders
+-   cerbero: Pull ninja from system if possible, avoid spurious
+    bootstrap of cmake
+-   packages: Recipe updates for ffmpeg, libsoup, orc
+-   various bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   taglist, plugins: fix compiler warnings with GLib >= 2.76
+-   tracerutils: allow casting parameter types
+-   inputselector: fix playing variable is never set
+
+gst-plugins-base
+
+-   appsink: add missing make_writable call
+-   audioaggregator: Do not post message before being constructed
+-   decodebin3: Prevent a critical warning when reassigning output slots
+-   decodebin3: Fix slot input linking when the associated stream has
+    changed
+-   decodebin3: Remove spurious input locking during parsebin
+    reconfiguration
+-   urisourcebin: Set source element to READY before querying it
+-   gl/viv-fb: meson build updates
+-   plugins: fix compiler warnings with GLib >= 2.76
+-   subtitleoverlay: fix mutex error if sink caps is not video
+-   video: timecode: Add support for framerates lower than 1fps
+-   video: accept timecode of 119.88 (120/1.001) FPS
+-   video: cannot attach time code meta when frame rate is 119.88
+    (120000/1001)
+-   videodecoder: fix copying buffer metas
+
+gst-plugins-good
+
+-   adaptivedemux2: Fix early seeking
+-   hlsdemux2: Ensure processed webvtt ends with empty new line
+-   hlsdemux2: Don’t set a referer when updating playlists
+-   matroska: demux: Strip signal byte when encrypted
+-   rtspsrc: Fix crash when is-live=false
+-   gtk: Fix critical caused by pointer movement when stream is getting
+    ready
+-   qt6: Set sampler filtering method, fixes bad quality with qml6glsink
+    and gstqt6d3d11
+-   qtdemux: opus: set entry as sampled
+-   v4l2src: handle resolution change when buffers are copied
+-   v4l2videodec: Fix handling of initial gaps
+-   v4l2videodec: correctly register v4l2mpeg2dec
+-   v4l2videoenc: replace custom QUERY_CAPS handling with getcaps
+    callback
+-   videoflip: update orientation tag in auto mode
+-   videoflip: fix critical when tag list is not writable
+
+gst-plugins-bad
+
+-   d3d11bufferpool: Fix heavy CPU usage in case of fixed-size pool
+-   jpegparser: jpegdecoder: Don’t pollute bus and comply with spec
+-   plugins: fix compiler warnings with GLib >= 2.76
+-   webrtcbin: Prevent critical warning when creating an additional data
+    channel
+-   webrtcstats: Properly report IceCandidate type
+
+gst-plugins-ugly
+
+-   rmdemux: add some integer overflow checks
+
+gst-plugins-rs
+
+-   fallbackswitch: Change the threshold for trailing buffers
+-   fallbackswitch: Fix pad health calculation and notifies
+-   fmp4mux: Fix draining in chunk mode if keyframes are too late
+-   livesync: Wait for the end timestamp of the previous buffer before
+    looking at queue
+-   livesync: Improve EOS handling
+-   togglerecord: Clip segment before calculating timestamp/duration
+-   togglerecord: Error out if main stream buffer has no valid running
+    time
+-   webrtcsink: fix pipeline when input caps contain max-framerate
+-   webrtcsink: Configure only 4 threads for x264enc
+-   webrtcsink: Translate force-keyunit events to force-IDR action
+    signal for NVIDIA encoders
+-   webrtcsink: Set config-interval=-1 and aggregate-mode=zero-latency
+    on rtph264pay and rtph265pay
+-   webrtcsink: Set VP8/VP9 payloader based on payloader element factory
+    name
+-   webrtcink: Use correct property types for nvvideoconvert
+-   webrtc/signalling: fix race condition in message ordering
+-   videofx: Minimize dependencies of the image crate
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   vaapidecode,vaapipostproc: Disable DMAbuf from caps negotiation.
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges: some fixes for 32-bit systems
+-   ges, nle: Avoid setting state or sending query when constructing
+    objects
+
+gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.22.5
+
+-   Pull ninja from system if possible, avoid spurious bootstrap of
+    cmake
+-   ffmpeg: update to 5.0.3
+-   libsoup: update to 2.74.3
+-   orc: update to 0.4.34
+
+Contributors to 1.22.5
+
+Andoni Morales Alastruey, Bastien Nocera, Carlos Rafael Giani, David
+Craven, Doug Nazar, Edward Hervey, François Laignel, Guillaume
+Desmottes, He Junyan, Hou Qi, Jan Alexander Steffens (heftig), Jan
+Schmidt, Maksym Khomenko, Mathieu Duponchelle, Matthew Waters, Michael
+Olbrich, Michael Tretter, Nicolas Dufresne, Nirbheek Chauhan, Philippe
+Normand, Ruslan Khamidullin, Sebastian Dröge, Seungha Yang, Théo
+Maillart, Thibault Saunier, Tim-Philipp Müller, Víctor Manuel Jáquez
+Leal, Vivia Nikolaidou, Yatin Maan,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.5
+
+-   List of Merge Requests applied in 1.22.5
+-   List of Issues fixed in 1.22.5
 
 Schedule for 1.24
 
