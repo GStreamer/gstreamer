@@ -11213,6 +11213,31 @@ NDC coordinates in @matrix.</doc>
         <type name="GType" c:type="GType"/>
       </return-value>
     </function>
+    <function name="gl_swizzle_invert" c:identifier="gst_gl_swizzle_invert" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">Given @swizzle, produce @inversion such that:
+
+@swizzle[@inversion[i]] == identity[i] where:
+- identity = {0, 1, 2,...}
+- unset fields are marked by -1</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="swizzle" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">input swizzle</doc>
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
+            <type name="gint" c:type="gint"/>
+          </array>
+        </parameter>
+        <parameter name="inversion" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">resulting inversion</doc>
+          <array zero-terminated="0" c:type="gint*" fixed-size="4">
+            <type name="gint" c:type="gint"/>
+          </array>
+        </parameter>
+      </parameters>
+    </function>
     <function name="gl_sync_meta_api_get_type" c:identifier="gst_gl_sync_meta_api_get_type">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglsyncmeta.h"/>
       <return-value transfer-ownership="none">
@@ -11362,6 +11387,35 @@ NDC coordinates in @matrix.</doc>
         <parameter name="min" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglsl.c">the minor GL version</doc>
           <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="gl_video_format_swizzle" c:identifier="gst_gl_video_format_swizzle" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">Calculates the swizzle indices for @video_format and @gl_format in order to
+access a texture such that accessing a texel from a texture through the swizzle
+index produces values in the order (R, G, B, A) or (Y, U, V, A).
+
+For multi-planer formats, the swizzle index uses the same component order (RGBA/YUVA)
+and should be applied after combining multiple planes into a single rgba/yuva value.
+e.g. sampling from a NV12 format would have Y from one texture and UV from
+another texture into a (Y, U, V) value.  Add an Aplha component and then
+perform swizzling.  Sampling from NV21 would produce (Y, V, U) which is then
+swizzled to (Y, U, V).</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">whether valid swizzle indices could be found</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </return-value>
+      <parameters>
+        <parameter name="video_format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstVideoFormat in use</doc>
+          <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+        </parameter>
+        <parameter name="swizzle" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the returned swizzle indices</doc>
+          <array zero-terminated="0" c:type="int*" fixed-size="4">
+            <type name="gint" c:type="int"/>
+          </array>
         </parameter>
       </parameters>
     </function>

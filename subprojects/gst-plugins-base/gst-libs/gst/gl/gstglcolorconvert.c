@@ -1625,64 +1625,10 @@ _index_to_shader_swizzle (int idx)
 }
 
 static void
-get_rgb_format_gl_swizzle_order (GstVideoFormat format,
-    gint swizzle[GST_VIDEO_MAX_COMPONENTS])
-{
-  const GstVideoFormatInfo *finfo = gst_video_format_get_info (format);
-  int c_i = 0, i;
-
-  g_return_if_fail (finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB
-      || format == GST_VIDEO_FORMAT_AYUV || format == GST_VIDEO_FORMAT_VUYA);
-
-  for (i = 0; i < finfo->n_components; i++) {
-    swizzle[c_i++] = finfo->poffset[i];
-  }
-
-  /* special case spaced RGB formats as the space does not contain a poffset
-   * value and we need all four components to be valid in order to swizzle
-   * correctly */
-  if (format == GST_VIDEO_FORMAT_xRGB || format == GST_VIDEO_FORMAT_xBGR) {
-    swizzle[c_i++] = 0;
-  } else if (format == GST_VIDEO_FORMAT_RGBx || format == GST_VIDEO_FORMAT_BGRx) {
-    swizzle[c_i++] = 3;
-  } else {
-    for (i = finfo->n_components; i < GST_VIDEO_MAX_COMPONENTS; i++) {
-      swizzle[c_i++] = -1;
-    }
-  }
-}
-
-static void
 video_format_to_gl_reorder (GstVideoFormat v_format, gint * reorder,
     gboolean input)
 {
   switch (v_format) {
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_VUYA:
-      get_rgb_format_gl_swizzle_order (v_format, reorder);
-      break;
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_BGRP:
-      reorder[0] = 2;
-      reorder[1] = 1;
-      reorder[2] = 0;
-      reorder[3] = 3;
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_RGBP:
-      reorder[0] = 0;
-      reorder[1] = 1;
-      reorder[2] = 2;
-      reorder[3] = 3;
-      break;
     case GST_VIDEO_FORMAT_UYVY:
       reorder[0] = 1;
       reorder[1] = 0;
@@ -1698,84 +1644,14 @@ video_format_to_gl_reorder (GstVideoFormat v_format, gint * reorder,
       reorder[2] = 0;
       reorder[3] = input ? 3 : 2;
       break;
-    case GST_VIDEO_FORMAT_AV12:
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV16:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P010_10BE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P012_BE:
-    case GST_VIDEO_FORMAT_P016_LE:
-    case GST_VIDEO_FORMAT_P016_BE:
-    case GST_VIDEO_FORMAT_NV12_16L32S:
-    case GST_VIDEO_FORMAT_NV12_4L4:
-      reorder[0] = 0;
-      reorder[1] = 1;
-      reorder[2] = 2;
-      reorder[3] = 3;
-      break;
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV61:
-      reorder[0] = 0;
-      reorder[1] = 2;
-      reorder[2] = 1;
-      reorder[3] = 3;
-      break;
-    case GST_VIDEO_FORMAT_Y410:
-    case GST_VIDEO_FORMAT_Y412_LE:
-    case GST_VIDEO_FORMAT_Y412_BE:
-      reorder[0] = 1;
-      reorder[1] = 0;
-      reorder[2] = 2;
-      reorder[3] = 0;
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_A420:
-      reorder[0] = 0;
-      reorder[1] = 1;
-      reorder[2] = 2;
-      reorder[3] = 3;
-      break;
-    case GST_VIDEO_FORMAT_YV12:
-      reorder[0] = 0;
-      reorder[1] = 2;
-      reorder[2] = 1;
-      reorder[3] = 3;
-      break;
     default:
-      g_assert_not_reached ();
+      if (!gst_gl_video_format_swizzle (v_format, reorder))
+        g_assert_not_reached ();
       break;
   }
 
   GST_TRACE ("swizzle: %u, %u, %u, %u", reorder[0], reorder[1], reorder[2],
       reorder[3]);
-}
-
-/* given a swizzle index, produce an index such that:
- *
- * swizzle[idx[i]] == identity[i] where:
- * - swizzle is the original swizzle
- * - idx is the result
- * - identity = {0, 1, 2,...}
- * - unset fields are marked by -1
- */
-static void
-swizzle_identity_order (gint * swizzle, gint * idx)
-{
-  int i;
-
-  for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
-    idx[i] = -1;
-  }
-
-  for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++) {
-    if (swizzle[i] >= 0 && swizzle[i] < 4 && idx[swizzle[i]] == -1) {
-      idx[swizzle[i]] = i;
-    }
-  }
 }
 
 static void
@@ -1797,7 +1673,7 @@ calculate_reorder_indexes (GstVideoFormat in_format,
     for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++)
       ret_out[i] = out_reorder[i];
   } else {
-    swizzle_identity_order (out_reorder, ret_out);
+    gst_gl_swizzle_invert (out_reorder, ret_out);
   }
 
   for (i = 0; i < GST_VIDEO_MAX_COMPONENTS; i++)
