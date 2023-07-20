@@ -112,6 +112,12 @@ if qt5_egl.allowed()
   qt_defines += ['-DHAVE_QT_EGLFS']
   optional_deps += gstglegl_dep
   have_qt_windowing = true
+
+  # EGL windowing for Vivante Framebuffer (e.g. i.MX6)
+  if gstglviv_fb_dep.found()
+    qt_defines += ['-DHAVE_QT_VIV_FB']
+    optional_deps += gstglviv_fb_dep
+  endif
 endif
 
 # Android windowing
@@ -171,17 +177,6 @@ if host_system == 'ios'
     qt_defines += ['-DHAVE_QT_IOS']
     have_qt_windowing = true
   endif
-endif
-
-# EGL windowing for Vivante Framebuffer (e.g. i.MX6)
-qt5_viv_fb = qt5_egl \
-    .require(host_system == 'linux') \
-    .require(gstglviv_fb_dep.found(), error_message: 'gstreamer-gl-viv_fb-1.0 is required') \
-    .require(gst_gl_have_platform_egl, error_message: 'egl platform support in gstreamer-gl is required')
-if qt5_viv_fb.allowed()
-  qt_defines += ['-DHAVE_QT_VIV_FB']
-  optional_deps += gstglviv_fb_dep
-  have_qt_windowing = true
 endif
 
 if qt5_option.require(have_qt_windowing).allowed()
