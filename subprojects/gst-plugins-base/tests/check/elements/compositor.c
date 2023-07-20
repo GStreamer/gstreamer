@@ -2081,7 +2081,7 @@ GST_START_TEST (test_pad_z_order)
 
 GST_END_TEST;
 
-/* 
+/*
  * Test that the pad numbering assigned by aggregator behaves as follows:
  * 1. If a pad number is requested, it must be assigned if it is available
  * 2. When numbering automatically, the largest available pad number is used
