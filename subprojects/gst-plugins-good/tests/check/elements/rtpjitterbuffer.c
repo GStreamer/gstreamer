@@ -29,6 +29,7 @@
 #include <gst/check/gsttestclock.h>
 #include <gst/check/gstharness.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtcpbuffer.h>
 
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
@@ -57,6 +58,11 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "clock-rate = (int) [ 1, 2147483647 ]")
+    );
+static GstStaticPadTemplate rtcpsrctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtcp")
     );
 
 static void
@@ -707,6 +713,71 @@ construct_deterministic_initial_state (GstHarness * h, gint latency_ms)
   fail_unless_equals_int (0, gst_harness_events_in_queue (h));
 
   return next_seqnum;
+}
+
+static GstBuffer *
+setup_rtcp_sender_report (GstElement * jitterbuffer,
+    guint64 ntp_time_seconds, guint32 rtp_time)
+{
+  GstRTCPBuffer rtcp_buf = GST_RTCP_BUFFER_INIT;
+  GstRTCPPacket packet;
+  GstBuffer *srep_buf;
+
+  srep_buf = gst_rtcp_buffer_new (1000);
+
+  if (gst_rtcp_buffer_map (srep_buf, GST_MAP_READWRITE, &rtcp_buf)) {
+    if (gst_rtcp_buffer_add_packet (&rtcp_buf, GST_RTCP_TYPE_SR, &packet)) {
+      gst_rtcp_packet_sr_set_sender_info (&packet, TEST_BUF_SSRC,       /* SSRC */
+          /* ntp_time_seconds is the test time in seconds since Jan 1 1900.
+             Here it is converted to NTP format  */
+          (guint64) ntp_time_seconds << 32,     /* NTP timestamp */
+          rtp_time,             /* RTP timestamp */
+          1,                    /* sender's packet count */
+          100);                 /* sender's octet count */
+    }
+
+    gst_rtcp_buffer_unmap (&rtcp_buf);
+  }
+
+  return srep_buf;
+}
+
+static GstPad *
+setup_rtcp_pads (GstElement * jitterbuffer)
+{
+  GstPad *rtcp_fxsrc_pad;
+  GstPad *rtcp_sink_pad;
+  GstPadTemplate *pad_tmp;
+  GstCaps *rtcp_caps;
+
+  pad_tmp = gst_static_pad_template_get (&rtcpsrctemplate);
+
+  rtcp_fxsrc_pad = gst_pad_new_from_template (pad_tmp, "src");
+  fail_if (rtcp_fxsrc_pad == NULL, "Could not create a srcpad");
+
+  rtcp_sink_pad = gst_element_request_pad_simple (jitterbuffer, "sink_rtcp");
+  fail_if (rtcp_sink_pad == NULL, "Could not get sink pad from %s",
+      GST_ELEMENT_NAME (jitterbuffer));
+
+  fail_unless (gst_pad_link (rtcp_fxsrc_pad, rtcp_sink_pad) == GST_PAD_LINK_OK,
+      "Could not link source and %s sink pads",
+      GST_ELEMENT_NAME (jitterbuffer));
+
+  gst_pad_set_active (rtcp_sink_pad, TRUE);
+  gst_pad_set_active (rtcp_fxsrc_pad, TRUE);
+
+
+  rtcp_caps = gst_caps_new_simple ("application/x-rtcp",
+      "clock-rate", G_TYPE_INT, TEST_BUF_CLOCK_RATE, NULL);
+
+  gst_check_setup_events_with_stream_id (rtcp_fxsrc_pad, jitterbuffer,
+      rtcp_caps, GST_FORMAT_TIME, "/test/jitbuf/rtcp");
+
+  gst_object_unref (pad_tmp);
+  gst_caps_unref (rtcp_caps);
+  gst_object_unref (rtcp_sink_pad);
+
+  return rtcp_fxsrc_pad;
 }
 
 GST_START_TEST (test_lost_event)
@@ -3498,6 +3569,65 @@ GST_START_TEST (test_gap_using_rtx_does_not_stall)
 
 GST_END_TEST;
 
+GST_START_TEST (test_early_rtcp_sr_allows_meta)
+{
+  GstElement *jitterbuffer;
+  GstPad *rtcp_fxsrc_pad;
+  GstBuffer *srep_buf;
+  GstBuffer *rtp_buffer;
+  GstReferenceTimestampMeta *meta;
+  GstCaps *ntp_caps;
+
+  // No buffers since we want to control them later
+  jitterbuffer = setup_jitterbuffer (0);
+
+  g_object_set (G_OBJECT (jitterbuffer),
+      "add-reference-timestamp-meta", TRUE, NULL);
+
+  fail_unless (start_jitterbuffer (jitterbuffer)
+      == GST_STATE_CHANGE_SUCCESS, "could not set to playing");
+
+  srep_buf = setup_rtcp_sender_report (jitterbuffer, 3899471400, 1000);
+
+  rtcp_fxsrc_pad = setup_rtcp_pads (jitterbuffer);
+
+  /* rtcp sr is first */
+  gst_pad_push (rtcp_fxsrc_pad, srep_buf);
+
+  /* create rtp buf, with matching rtp timestamp */
+  rtp_buffer = gst_rtp_buffer_new_allocate (0, 0, 0);
+
+  if (rtp_buffer) {
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+    if (gst_rtp_buffer_map (rtp_buffer, GST_MAP_WRITE, &rtp)) {
+      gst_rtp_buffer_set_ssrc (&rtp, TEST_BUF_SSRC);
+      /* first rtp buffer, but second buffer overall, arrives 1 clock unit 
+         after rtcp sr */
+      gst_rtp_buffer_set_timestamp (&rtp, 1001);
+
+      gst_rtp_buffer_unmap (&rtp);
+    }
+  }
+
+  /* RTP buf is second */
+  gst_pad_push (mysrcpad, rtp_buffer);
+
+  ntp_caps = gst_caps_new_empty_simple ("timestamp/x-ntp");
+
+  meta = gst_buffer_get_reference_timestamp_meta (rtp_buffer, ntp_caps);
+
+  /* result should match the test time plus one clock unit. One
+     clock unit is 125000 nanoseconds */
+  fail_unless (meta->timestamp == (3899471400 * GST_SECOND + 125000));
+
+  /* cleanup */
+  cleanup_jitterbuffer (jitterbuffer);
+  gst_object_unref (rtcp_fxsrc_pad);
+  gst_caps_unref (ntp_caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -3577,6 +3707,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_multiple_lost_do_not_stall);
   tcase_add_test (tc_chain, test_reset_using_rtx_packets_does_not_stall);
   tcase_add_test (tc_chain, test_gap_using_rtx_does_not_stall);
+  tcase_add_test (tc_chain, test_early_rtcp_sr_allows_meta);
 
 
   return s;

@@ -4835,6 +4835,12 @@ out:
   priv->last_known_ext_rtptime = ext_rtptime;
   priv->last_known_ntpnstime = ntpnstime;
 
+  if (G_UNLIKELY (priv->last_ssrc == -1)) {
+    GST_DEBUG_OBJECT (jitterbuffer, "SSRC changed from %u to %u",
+        priv->last_ssrc, ssrc);
+    priv->last_ssrc = ssrc;
+  }
+
   if (priv->last_ntpnstime != GST_CLOCK_TIME_NONE
       && ntpnstime - priv->last_ntpnstime < priv->sync_interval * GST_MSECOND) {
     gst_buffer_replace (&priv->last_sr, NULL);
