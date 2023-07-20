@@ -154,6 +154,8 @@ void                    gst_gl_format_type_from_sized_gl_format     (GstGLFormat
 GST_GL_API
 gboolean                gst_gl_format_is_supported                  (GstGLContext * context,
                                                                      GstGLFormat format);
+GST_GL_API
+guint                   gst_gl_format_n_components                  (GstGLFormat gl_format);
 
 GST_GL_API
 GstGLTextureTarget      gst_gl_texture_target_from_string           (const gchar * str);

@@ -3914,6 +3914,19 @@ See also: gst_gl_filter_render_to_target()</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="n_components" c:identifier="gst_gl_format_n_components" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the number of components in a #GstGLFormat</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <parameter name="gl_format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstGLFormat</doc>
+            <type name="GLFormat" c:type="GstGLFormat"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="type_from_sized_gl_format" c:identifier="gst_gl_format_type_from_sized_gl_format" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">Get the unsized format and type from @format for usage in glReadPixels,
 glTex{Sub}Image*, glTexImage* and similar functions.</doc>
@@ -10753,6 +10766,19 @@ The returned #GstGLContext will be shared with a GStreamer created OpenGL contex
         </parameter>
         <parameter name="format" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstGLFormat to check is supported by @context</doc>
+          <type name="GLFormat" c:type="GstGLFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="gl_format_n_components" c:identifier="gst_gl_format_n_components" moved-to="GLFormat.n_components" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the number of components in a #GstGLFormat</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="gl_format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglformat.c">the #GstGLFormat</doc>
           <type name="GLFormat" c:type="GstGLFormat"/>
         </parameter>
       </parameters>

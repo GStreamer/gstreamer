@@ -416,6 +416,47 @@ gst_gl_format_type_from_sized_gl_format (GstGLFormat format,
 }
 
 /**
+ * gst_gl_format_n_components:
+ * @gl_format: the #GstGLFormat
+ *
+ * Returns: the number of components in a #GstGLFormat
+ *
+ * Since: 1.24
+ */
+guint
+gst_gl_format_n_components (GstGLFormat gl_format)
+{
+  switch (gl_format) {
+    case GST_GL_LUMINANCE:
+    case GST_GL_ALPHA:
+    case GST_GL_RED:
+    case GST_GL_R8:
+    case GST_GL_DEPTH_COMPONENT16:
+    case GST_GL_R16:
+      return 1;
+    case GST_GL_LUMINANCE_ALPHA:
+    case GST_GL_RG:
+    case GST_GL_RG8:
+    case GST_GL_DEPTH24_STENCIL8:
+    case GST_GL_RG16:
+      return 2;
+    case GST_GL_RGB:
+    case GST_GL_RGB8:
+    case GST_GL_RGB565:
+    case GST_GL_RGB16:
+      return 3;
+    case GST_GL_RGBA:
+    case GST_GL_RGBA8:
+    case GST_GL_RGBA16:
+    case GST_GL_RGB10_A2:
+      return 4;
+    default:
+      g_warn_if_reached ();
+      return 0;
+  }
+}
+
+/**
  * gst_gl_format_is_supported:
  * @context: a #GstGLContext
  * @format: the #GstGLFormat to check is supported by @context
