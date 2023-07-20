@@ -1145,6 +1145,7 @@ GST_END_TEST;
 
 #define H264_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/h264/%d.h264"
 #define H265_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/h265/%d.h265"
+#define AV1_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/av1/%d.obu"
 #define AAC_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/aac/%d.aac"
 #define MP3_8K_FILE GST_TEST_FILES_PATH G_DIR_SEPARATOR_S "flv_test/mp3_8k/%d.mp3"
 #define H264_CAPS "video/x-h264,stream-format=avc,codec_data=(buffer)01f4000dffe1001b67f4000d91968141fb016a0c0c0c80000003008000001e478a155001000468ce3192fff8f800,framerate=30/1"
@@ -1153,6 +1154,7 @@ GST_END_TEST;
 #define H265_CAPS "video/x-h265, stream-format=(string)hvc1, alignment=(string)au, pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)30/1, \
                 codec_data=(buffer)0104080000009e08000000003ff000fcfff8f800000f03200001001740010c01ffff0408000003009e0800000300003f959809210001\
 002f4201010408000003009e0800000300003f90014101e2cb2b3492657ff80008000b506060604000000300400000078222000100074401c172b46240"
+#define AV1_CAPS "video/x-av1, stream-format=(string)obu-stream, alignment=(string)tu, profile=(string)main, bit-depth-luma=(uint)8, chroma-format=(string)4:2:0, codec_data=(buffer)81010c000a0b00000003b4fd9e0fffcc02, width=(int)160, height=(int)90, framerate=(fraction)15/1, pixel-aspect-ratio=(fraction)1/1"
 
 typedef struct
 {
@@ -1573,6 +1575,7 @@ GST_START_TEST (test_multiple_video_tracks)
   {
     H264_TRACK_ID = 0,
     H265_TRACK_ID = 1,
+    AV1_TRACK_ID = 2,
     MAX_TRACKS,
   };
 
@@ -1583,6 +1586,7 @@ GST_START_TEST (test_multiple_video_tracks)
       "multifilesrc location=\"" H264_FILE "\" caps=\"" H264_CAPS "\" ! mux.video \
      multifilesrc location=\"" H265_FILE "\" caps=\"" H265_CAPS
       "\" ! mux.video_1 \
+     multifilesrc location=\"" AV1_FILE "\" caps=\"" AV1_CAPS "\" ! mux.video_2 \
      eflvmux name=mux ! flvdemux name=demux \
     ";
 
@@ -1593,6 +1597,10 @@ GST_START_TEST (test_multiple_video_tracks)
   video_tracks[H265_TRACK_ID].caps = gst_caps_from_string (H265_CAPS);
   video_tracks[H265_TRACK_ID].current_ts = 0;
   video_tracks[H265_TRACK_ID].in_buffer_queue = g_async_queue_new ();
+
+  video_tracks[AV1_TRACK_ID].caps = gst_caps_from_string (AV1_CAPS);
+  video_tracks[AV1_TRACK_ID].current_ts = 0;
+  video_tracks[AV1_TRACK_ID].in_buffer_queue = g_async_queue_new ();
 
   video_tracks_info.video_tracks = video_tracks;
   video_tracks_info.num_video_tracks = MAX_TRACKS;

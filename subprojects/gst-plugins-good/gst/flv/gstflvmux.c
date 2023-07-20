@@ -43,6 +43,7 @@
 
 #include <gst/audio/audio.h>
 #include <gst/base/gstbytewriter.h>
+#include <gst/pbutils/codec-utils.h>
 
 #include "gstflvelements.h"
 #include "gstflvmux.h"
@@ -572,6 +573,14 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
           GST_PAD_NAME (pad));
     }
     pad->codec = FLV_VIDEO_CODEC_H265_HVC1_FOURCC;
+  } else if (strcmp (gst_structure_get_name (s), "video/x-av1") == 0) {
+    if (pad->flv_track_mode == GST_FLV_TRACK_MODE_LEGACY) {
+      ret = FALSE;
+      GST_WARNING_OBJECT (mux,
+          "%s pad's track type is set to legacy, AV1 is only possible with multitrack or non-multitrack types",
+          GST_PAD_NAME (pad));
+    }
+    pad->codec = FLV_VIDEO_CODEC_AV1_AV01_FOURCC;
   } else {
     ret = FALSE;
   }
@@ -603,6 +612,17 @@ gst_flv_mux_video_pad_setcaps (GstFlvMuxPad * pad, GstCaps * caps)
       gst_buffer_replace (&pad->codec_data, gst_value_get_buffer (val));
     else if (!val && pad->codec_data)
       gst_buffer_unref (pad->codec_data);
+  }
+
+  if (ret && pad->codec == FLV_VIDEO_CODEC_AV1_AV01_FOURCC
+      && !gst_structure_has_field (s, "codec_data")) {
+    gst_clear_buffer (&pad->codec_data);
+    pad->codec_data = gst_codec_utils_av1_create_av1c_from_caps (caps);
+    if (!pad->codec_data) {
+      ret = FALSE;
+      GST_WARNING_OBJECT (mux,
+          "Failed to generate AV1CodecConfigurationRecord from caps");
+    }
   }
 
   if (ret && mux->streamable && mux->state != GST_FLV_MUX_STATE_HEADER) {
@@ -1977,7 +1997,8 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
           pad->track_id, pad->codec);
 
       if ((pad->codec == FLV_VIDEO_CODEC_H264_AVC1_FOURCC
-              || pad->codec == FLV_VIDEO_CODEC_H265_HVC1_FOURCC)
+              || pad->codec == FLV_VIDEO_CODEC_H265_HVC1_FOURCC
+              || pad->codec == FLV_VIDEO_CODEC_AV1_AV01_FOURCC)
           && type == FLV_VIDEO_PACKET_TYPE_CODED_FRAMES) {
         write_success &=
             gst_byte_writer_put_uint24_be (&payload_header_writer, cts);
@@ -2232,12 +2253,13 @@ gst_flv_mux_prepare_src_caps (GstFlvMux * mux, GstBuffer ** header_buf,
   for (l = GST_ELEMENT_CAST (mux)->sinkpads; l != NULL; l = l->next) {
     GstFlvMuxPad *pad = l->data;
 
-    /* Get H.264 or H.265 and AAC codec data, if present */
+    /* Get H.264, H.265 or AV1 and AAC codec data, if present */
     if (pad && (
             (pad->type == GST_FLV_MUX_TRACK_TYPE_VIDEO
                 && (pad->codec == FLV_VIDEO_CODEC_H264_AVC1
                     || pad->codec == FLV_VIDEO_CODEC_H264_AVC1_FOURCC
-                    || pad->codec == FLV_VIDEO_CODEC_H265_HVC1_FOURCC))
+                    || pad->codec == FLV_VIDEO_CODEC_H265_HVC1_FOURCC
+                    || pad->codec == FLV_VIDEO_CODEC_AV1_AV01_FOURCC))
             || ((pad->type == GST_FLV_MUX_TRACK_TYPE_AUDIO
                     && (pad->codec == FLV_AUDIO_CODEC_AAC
                         || pad->codec == FLV_AUDIO_CODEC_AAC_FOURCC)))

@@ -43,7 +43,8 @@ G_BEGIN_DECLS
         audio/x-mulaw, channels = (int) { 1, 2 }, rate = (int) 8000; \
         audio/x-speex, channels = (int) 1, rate = (int) 16000;"
 
-#define FLV_ENHANCED_VIDEO_CAPS "video/x-h265, stream-format=(string)hvc1, alignment=(string)au;"
+#define FLV_ENHANCED_VIDEO_CAPS "video/x-h265, stream-format=(string)hvc1, alignment=(string)au; \
+        video/x-av1, stream-format=(string)obu-stream, alignment=(string)tu;"
 
 #define GST_TYPE_FLV_MUX_PAD (gst_flv_mux_pad_get_type())
 #define GST_FLV_MUX_PAD(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_FLV_MUX_PAD, GstFlvMuxPad))

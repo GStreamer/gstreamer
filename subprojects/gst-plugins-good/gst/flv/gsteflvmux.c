@@ -140,7 +140,8 @@ static GstStaticPadTemplate multitrack_videosink_templ =
     GST_PAD_SINK,
     GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/x-h264, stream-format=avc;"
-        "video/x-h265, stream-format=hvc1;")
+        "video/x-h265, stream-format=hvc1;"
+        "video/x-av1, stream-format=obu-stream, alignment=tu;")
     );
 
 static GstStaticPadTemplate audiosink_templ = GST_STATIC_PAD_TEMPLATE ("audio",

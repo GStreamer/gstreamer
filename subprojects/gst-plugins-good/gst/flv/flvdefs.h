@@ -92,6 +92,7 @@ typedef enum
   FLV_VIDEO_CODEC_VP6_ALPHA = 5,
   FLV_VIDEO_CODEC_H264_AVC1 = 7,
   // rtmp enhanced spec - define by fourcc code
+  FLV_VIDEO_CODEC_AV1_AV01_FOURCC = GST_MAKE_FOURCC('a','v','0','1'),
   FLV_VIDEO_CODEC_H265_HVC1_FOURCC = GST_MAKE_FOURCC('h','v','c','1'),
   FLV_VIDEO_CODEC_H264_AVC1_FOURCC = GST_MAKE_FOURCC('a','v','c','1'),
 } GstFlvVideoCodec;

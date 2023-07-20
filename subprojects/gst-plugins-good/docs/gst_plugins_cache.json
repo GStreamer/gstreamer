@@ -6372,13 +6372,13 @@
                         "type": "GstAggregatorPad"
                     },
                     "video": {
-                        "caps": "video/x-flash-video:\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n      alignment: au\n",
+                        "caps": "video/x-flash-video:\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n      alignment: au\nvideo/x-av1:\n  stream-format: obu-stream\n      alignment: tu\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstEFlvMuxPad"
                     },
                     "video_%%u": {
-                        "caps": "video/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n",
+                        "caps": "video/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\nvideo/x-av1:\n  stream-format: obu-stream\n      alignment: tu\n",
                         "direction": "sink",
                         "presence": "request",
                         "type": "GstFlvMuxPad"
@@ -6415,12 +6415,12 @@
                         "presence": "always"
                     },
                     "video": {
-                        "caps": "video/x-flash-video:\n     flvversion: 1\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n      alignment: au\n",
+                        "caps": "video/x-flash-video:\n     flvversion: 1\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n      alignment: au\nvideo/x-av1:\n  stream-format: obu-stream\n      alignment: tu\n",
                         "direction": "src",
                         "presence": "sometimes"
                     },
                     "video_%%u": {
-                        "caps": "video/x-flash-video:\n     flvversion: 1\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n      alignment: au\n",
+                        "caps": "video/x-flash-video:\n     flvversion: 1\nvideo/x-flash-screen:\nvideo/x-vp6-flash:\nvideo/x-vp6-alpha:\nvideo/x-h264:\n  stream-format: avc\nvideo/x-h265:\n  stream-format: hvc1\n      alignment: au\nvideo/x-av1:\n  stream-format: obu-stream\n      alignment: tu\n",
                         "direction": "src",
                         "presence": "sometimes"
                     }
