@@ -192,7 +192,7 @@ static gboolean
 gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 {
   GstVaapiDisplay *const display = GST_VAAPI_PLUGIN_BASE_DISPLAY (decode);
-  GstCaps *out_caps, *raw_caps, *va_caps, *dma_caps, *gltexup_caps, *base_caps;
+  GstCaps *out_caps, *raw_caps, *va_caps, *gltexup_caps, *base_caps;
   GArray *formats;
   gint min_width, min_height, max_width, max_height;
   guint mem_types;
@@ -207,7 +207,7 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
   if (!decode->decoder)
     return FALSE;
 
-  dma_caps = gltexup_caps = NULL;
+  gltexup_caps = NULL;
 
   formats = gst_vaapi_decoder_get_surface_attributes (decode->decoder,
       &min_width, &min_height, &max_width, &max_height, &mem_types);
@@ -272,8 +272,6 @@ gst_vaapidecode_ensure_allowed_srcpad_caps (GstVaapiDecode * decode)
 #endif
 
   out_caps = va_caps;
-  if (dma_caps)
-    gst_caps_append (out_caps, dma_caps);
   if (gltexup_caps)
     gst_caps_append (out_caps, gltexup_caps);
   gst_caps_append (out_caps, raw_caps);
