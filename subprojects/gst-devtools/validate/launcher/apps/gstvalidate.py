@@ -554,8 +554,14 @@ class GstValidateCheckAccurateSeekingTestGenerator(GstValidatePipelineTestsGener
                     + reference_frame_dir + '", framerate=%d/%d' % (framerate.numerator, framerate.denominator)
                 ]
 
+            source = extra_data.get("source")
+            if source is None:
+                source = "uridecodebin"
+            else:
+                test_name = f"{source}.{test_name}"
+
             pipelines[test_name] = {
-                "pipeline": "uridecodebin uri=" + media_info.get_uri() + " ! deinterlace ! videoconvert ! video/x-raw,interlace-mode=progressive,format=I420 ! videoconvert name=videoconvert ! %(videosink)s",
+                "pipeline": f"{source} uri=" + media_info.get_uri() + " ! deinterlace ! videoconvert ! video/x-raw,interlace-mode=progressive,format=I420 ! videoconvert name=videoconvert ! %(videosink)s",
                 "media_info": media_info,
                 "config": config,
             }
