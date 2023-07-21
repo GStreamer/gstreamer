@@ -6092,13 +6092,22 @@ gst_qtdemux_push_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
     if (info->crypto_info == NULL) {
       if (stream->protection_scheme_type == FOURCC_cbcs) {
-        crypto_info = qtdemux_get_cenc_sample_properties (qtdemux, stream, 0);
-        if (!crypto_info || !gst_buffer_add_protection_meta (buf, crypto_info)) {
-          GST_ERROR_OBJECT (qtdemux,
-              "failed to attach cbcs metadata to buffer");
-          qtdemux_gst_structure_free (crypto_info);
+        if (CUR_STREAM (stream)->fourcc == FOURCC_enca ||
+            CUR_STREAM (stream)->fourcc == FOURCC_encs ||
+            CUR_STREAM (stream)->fourcc == FOURCC_enct ||
+            CUR_STREAM (stream)->fourcc == FOURCC_encv) {
+          crypto_info = qtdemux_get_cenc_sample_properties (qtdemux, stream, 0);
+          if (!crypto_info
+              || !gst_buffer_add_protection_meta (buf, crypto_info)) {
+            GST_ERROR_OBJECT (qtdemux,
+                "failed to attach cbcs metadata to buffer");
+            qtdemux_gst_structure_free (crypto_info);
+          } else {
+            GST_TRACE_OBJECT (qtdemux, "added cbcs protection metadata");
+          }
         } else {
-          GST_TRACE_OBJECT (qtdemux, "added cbcs protection metadata");
+          GST_TRACE_OBJECT (qtdemux,
+              "cbcs stream is not encrypted yet, not adding protection metadata");
         }
       } else {
         GST_DEBUG_OBJECT (qtdemux,
