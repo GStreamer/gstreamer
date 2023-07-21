@@ -9135,6 +9135,9 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       case FOURCC_dvhe:
       case FOURCC_mjp2:
       case FOURCC_encv:
+      case FOURCC_H266:
+      case FOURCC_vvc1:
+      case FOURCC_vvi1:
       {
         guint32 version;
         guint32 str_len;
@@ -13507,6 +13510,62 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak, guint32 * mvhd_matrix)
             }
             break;
           }
+          case FOURCC_H266:
+          case FOURCC_vvc1:
+          case FOURCC_vvi1:
+          {
+            guint len = QT_UINT32 (stsd_entry_data);
+            len = len <= 0x56 ? 0 : len - 0x56;
+            const guint8 *vvc_data = stsd_entry_data + 0x56;
+
+            /* find vvcC, which is a FullBox. */
+            while (len >= 12) {
+              guint size = QT_UINT32 (vvc_data);
+
+              if (size < 12 || size > len)
+                break;
+
+              switch (QT_FOURCC (vvc_data + 4)) {
+                case FOURCC_vvcC:
+                {
+                  /* parse, if found */
+                  GstBuffer *buf;
+                  guint8 version;
+
+                  if (size < 12 + 1)
+                    break;
+
+                  GST_DEBUG_OBJECT (qtdemux, "found vvcC codec_data in stsd");
+
+                  /* First 4 bytes are the length of the atom, the next 4 bytes
+                   * are the fourcc, the next 1 byte is the version, the next 3 bytes are flags and the
+                   * subsequent bytes are the decoder configuration record. */
+                  version = vvc_data[8];
+                  if (version != 0) {
+                    GST_ERROR_OBJECT (qtdemux,
+                        "Unsupported vvcC version %u. Only version 0 is supported",
+                        version);
+                    break;
+                  }
+
+                  gst_codec_utils_h266_caps_set_level_tier_and_profile
+                      (entry->caps, vvc_data + 12, size - 12);
+
+                  buf = gst_buffer_new_and_alloc (size - 12);
+                  gst_buffer_fill (buf, 0, vvc_data + 12, size - 12);
+                  gst_caps_set_simple (entry->caps,
+                      "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                  gst_buffer_unref (buf);
+                  break;
+                }
+                default:
+                  break;
+              }
+              len -= size;
+              vvc_data += size;
+            }
+            break;
+          }
           case FOURCC_mp4v:
           case FOURCC_MP4V:
           case FOURCC_fmp4:
@@ -16880,6 +16939,19 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("H.265 / HEVC");
       caps = gst_caps_new_simple ("video/x-h265",
           "stream-format", G_TYPE_STRING, "hev1",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
+    case FOURCC_H266:
+    case FOURCC_vvc1:
+      _codec ("H.266 / VVC");
+      caps = gst_caps_new_simple ("video/x-h266",
+          "stream-format", G_TYPE_STRING, "vvc1",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
+    case FOURCC_vvi1:
+      _codec ("H.266 / VVC");
+      caps = gst_caps_new_simple ("video/x-h266",
+          "stream-format", G_TYPE_STRING, "vvi1",
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case FOURCC_rle_:
