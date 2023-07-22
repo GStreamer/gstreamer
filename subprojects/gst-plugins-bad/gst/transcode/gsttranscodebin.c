@@ -124,6 +124,9 @@ typedef struct
 
 #define DEFAULT_AVOID_REENCODING   FALSE
 
+GST_DEBUG_CATEGORY_STATIC(gst_transcodebin_debug);
+#define GST_CAT_DEFAULT gst_transcodebin_debug
+
 G_DEFINE_TYPE (GstTranscodeBin, gst_transcode_bin, GST_TYPE_BIN);
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (transcodebin, "transcodebin", GST_RANK_NONE,
       GST_TYPE_TRANSCODE_BIN, transcodebin_element_init (plugin));
@@ -303,6 +306,9 @@ find_stream (GstTranscodeBin * self, const gchar * stream_id, GstPad * pad)
   TranscodingStream *res = NULL;
 
   GST_OBJECT_LOCK (self);
+  GST_DEBUG_OBJECT (self,
+      "Looking for stream %s in %u existing transcoding streams",
+      stream_id, self->transcoding_streams->len);
   for (i = 0; i < self->transcoding_streams->len; i = i + 1) {
     TranscodingStream *s = self->transcoding_streams->pdata[i];
 
@@ -317,6 +323,7 @@ find_stream (GstTranscodeBin * self, const gchar * stream_id, GstPad * pad)
 
 done:
   GST_OBJECT_UNLOCK (self);
+  GST_DEBUG_OBJECT (self, "Look-up result: %p", res);
 
   return res;
 }
@@ -327,6 +334,9 @@ setup_stream (GstTranscodeBin * self, GstStream * stream)
   TranscodingStream *res = NULL;
   GstPad *encodebin_pad = get_encodebin_pad_from_stream (self, stream);
 
+  GST_DEBUG_OBJECT (self,
+      "Encodebin pad for stream %" GST_PTR_FORMAT " : %" GST_PTR_FORMAT, stream,
+      encodebin_pad);
   if (encodebin_pad) {
     GST_INFO_OBJECT (self,
         "Going to transcode stream %s (encodebin pad: %" GST_PTR_FORMAT ")",
@@ -410,6 +420,31 @@ gst_transcode_bin_link_encodebin_pad (GstTranscodeBin * self, GstPad * pad,
   }
 }
 
+static void
+query_upstream_selectable (GstTranscodeBin * self, GstPad * pad)
+{
+  GstQuery *query;
+  gboolean result;
+
+  /* Query whether upstream can handle stream selection or not */
+  query = gst_query_new_selectable ();
+  result = GST_PAD_IS_SINK (pad) ? gst_pad_peer_query (pad, query)
+      : gst_pad_query (pad, query);
+  if (result) {
+    GST_FIXME_OBJECT (self,
+        "We force `transcodebin` to upstream selection"
+        " mode if *any* of the inputs is. This means things might break if"
+        " there's a mix");
+    gst_query_parse_selectable (query, &self->upstream_selected);
+    GST_DEBUG_OBJECT (pad, "Upstream is selectable : %d",
+        self->upstream_selected);
+  } else {
+    self->upstream_selected = FALSE;
+    GST_DEBUG_OBJECT (pad, "Upstream does not handle SELECTABLE query");
+  }
+  gst_query_unref (query);
+}
+
 static GstPadProbeReturn
 wait_stream_start_probe (GstPad * pad,
     GstPadProbeInfo * info, GstTranscodeBin * self)
@@ -420,6 +455,7 @@ wait_stream_start_probe (GstPad * pad,
   GST_INFO_OBJECT (self,
       "Got pad %" GST_PTR_FORMAT " with stream:: %" GST_PTR_FORMAT, pad,
       info->data);
+  query_upstream_selectable (self, pad);
   gst_transcode_bin_link_encodebin_pad (self, pad, info->data);
 
   return GST_PAD_PROBE_REMOVE;
@@ -440,6 +476,7 @@ decodebin_pad_added_cb (GstElement * decodebin, GstPad * pad,
     gst_event_parse_stream_start (sstart_event, &stream_id);
     GST_INFO_OBJECT (self, "Got pad %" GST_PTR_FORMAT " with stream ID: %s",
         pad, stream_id);
+    query_upstream_selectable (self, pad);
     gst_transcode_bin_link_encodebin_pad (self, pad, sstart_event);
     return;
   }
@@ -773,25 +810,8 @@ sink_event_function (GstPad * sinkpad, GstTranscodeBin * self, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_STREAM_START:
-    {
-      GstQuery *q = gst_query_new_selectable ();
-
-      /* Query whether upstream can handle stream selection or not */
-      if (gst_pad_peer_query (sinkpad, q)) {
-        GST_FIXME_OBJECT (self, "We force `transcodebin` to upstream selection"
-            " mode if *any* of the inputs is. This means things might break if"
-            " there's a mix");
-        gst_query_parse_selectable (q, &self->upstream_selected);
-        GST_DEBUG_OBJECT (sinkpad, "Upstream is selectable : %d",
-            self->upstream_selected);
-      } else {
-        self->upstream_selected = FALSE;
-        GST_DEBUG_OBJECT (sinkpad, "Upstream does not handle SELECTABLE query");
-      }
-      gst_query_unref (q);
-
+      query_upstream_selectable (self, sinkpad);
       break;
-    }
     default:
       break;
   }
@@ -996,6 +1016,9 @@ gst_transcode_bin_class_init (GstTranscodeBinClass * klass)
   object_class->dispose = gst_transcode_bin_dispose;
   object_class->get_property = gst_transcode_bin_get_property;
   object_class->set_property = gst_transcode_bin_set_property;
+
+  GST_DEBUG_CATEGORY_INIT (gst_transcodebin_debug, "transcodebin", 0,
+      "Transcodebin element");
 
   gstelement_klass = (GstElementClass *) klass;
   gstelement_klass->change_state =
