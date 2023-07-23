@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 PYTHON="python3"
 if [[ $OS =~ Windows ]]; then
