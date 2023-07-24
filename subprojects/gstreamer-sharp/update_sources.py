@@ -22,9 +22,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "bindinate":
         bindinate  = True
 
-    print("Building all code")
-    subprocess.check_call([ninja, "-C", buildroot])
-
     if 'gstreamer-sharp' in os.environ['MESON_SUBDIR']:
         subproject_prefix = 'gstreamer-sharp@@'
     else:
