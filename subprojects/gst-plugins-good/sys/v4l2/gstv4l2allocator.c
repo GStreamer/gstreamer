@@ -357,7 +357,6 @@ gst_v4l2_allocator_release (GstV4l2Allocator * allocator, GstV4l2Memory * mem)
 
   switch (allocator->memory) {
     case V4L2_MEMORY_DMABUF:
-      close (mem->dmafd);
       mem->dmafd = -1;
       break;
     case V4L2_MEMORY_USERPTR:
@@ -396,8 +395,7 @@ gst_v4l2_allocator_free (GstAllocator * gallocator, GstMemory * gmem)
         obj->munmap (mem->data, group->planes[mem->plane].length);
     }
 
-    /* This apply for both mmap with expbuf, and dmabuf imported memory */
-    if (mem->dmafd >= 0)
+    if (allocator->memory == V4L2_MEMORY_MMAP && mem->dmafd >= 0)
       close (mem->dmafd);
   }
 
