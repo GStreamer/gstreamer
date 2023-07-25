@@ -456,6 +456,23 @@ build vs2022 amd64:
     # FIXME: https://github.com/mesonbuild/meson/pull/11007
     PKG_CONFIG: ${CI_PROJECT_DIR}/subprojects/win-pkgconfig/pkg-config.exe
 
+build vs2022 amd64 full-static:
+  extends: ".build windows"
+  script:
+    - !reference [".build windows", "script"]
+    - echo $env:MESON_ARGS
+    - cmd.exe /C "meson setup --vsenv build --default-library=static $env:MESON_ARGS"
+    - meson compile -C build
+    - .\gst-env.py gst-inspect-1.0.exe --version
+    - .\gst-env.py gst-inspect-1.0.exe
+  variables:
+    MESON_ARGS: >-
+      -Dintrospection=disabled
+      -Dpython=disabled
+      -Dlibav=disabled
+      -Ddoc=disabled
+      -Dgst-full-target-type=static_library
+
 .build windows cross:
   extends: '.build windows'
   script:
