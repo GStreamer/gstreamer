@@ -164,16 +164,18 @@ gst_v4l2_buffer_pool_copy_buffer (GstV4l2BufferPool * pool, GstBuffer * dest,
     gst_video_frame_unmap (&dest_frame);
   } else {
     GstMapInfo map;
+    gsize filled_size;
 
     GST_DEBUG_OBJECT (pool, "copy raw bytes");
 
     if (!gst_buffer_map (src, &map, GST_MAP_READ))
       goto invalid_buffer;
 
-    gst_buffer_fill (dest, 0, map.data, gst_buffer_get_size (src));
+    filled_size =
+        gst_buffer_fill (dest, 0, map.data, gst_buffer_get_size (src));
 
     gst_buffer_unmap (src, &map);
-    gst_buffer_resize (dest, 0, gst_buffer_get_size (src));
+    gst_buffer_resize (dest, 0, filled_size);
   }
 
   gst_buffer_copy_into (dest, src,
