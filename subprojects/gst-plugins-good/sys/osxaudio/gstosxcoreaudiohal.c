@@ -1174,6 +1174,24 @@ gst_core_audio_initialize_impl (GstCoreAudio * core_audio,
 
     if (core_audio->is_src) {
       propertySize = sizeof (*frame_size);
+
+      // Attempt to configure the requested frame size if smaller than the device's
+      // This will apparently modify the size for all audio devices in the current process so should
+      // be done conservatively
+      if (frame_size != 0) {
+        guint32 cur_frame_size;
+        status = AudioUnitGetProperty (core_audio->audiounit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0,   /* N/A for global */
+            &cur_frame_size, &propertySize);
+        if (!status && *frame_size < cur_frame_size) {
+          status = AudioUnitSetProperty (core_audio->audiounit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0, /* N/A for global */
+              frame_size, propertySize);
+          if (status) {
+            GST_WARNING_OBJECT (core_audio->osxbuf,
+                "Failed to set desired frame size of %u: %d", *frame_size,
+                (int) status);
+          }
+        }
+      }
       status = AudioUnitGetProperty (core_audio->audiounit, kAudioDevicePropertyBufferFrameSize, kAudioUnitScope_Global, 0,     /* N/A for global */
           frame_size, &propertySize);
 

@@ -127,6 +127,7 @@ gboolean gst_core_audio_close                                (GstCoreAudio *core
 gboolean gst_core_audio_initialize                           (GstCoreAudio *core_audio,
                                                               AudioStreamBasicDescription format,
                                                               GstCaps *caps,
+                                                              guint32 frames_per_packet,
                                                               gboolean is_passthrough);
 
 void gst_core_audio_uninitialize                             (GstCoreAudio *core_audio);

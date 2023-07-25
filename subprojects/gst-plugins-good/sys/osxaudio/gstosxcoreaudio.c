@@ -208,22 +208,26 @@ gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
 
 gboolean
 gst_core_audio_initialize (GstCoreAudio * core_audio,
-    AudioStreamBasicDescription format, GstCaps * caps, gboolean is_passthrough)
+    AudioStreamBasicDescription format, GstCaps * caps,
+    guint32 frames_per_packet, gboolean is_passthrough)
 {
-  guint32 frame_size;
-
   GST_DEBUG_OBJECT (core_audio,
       "Initializing: passthrough:%d caps:%" GST_PTR_FORMAT, is_passthrough,
       caps);
 
   if (!gst_core_audio_initialize_impl (core_audio, format, caps,
-          is_passthrough, &frame_size)) {
+          is_passthrough, &frames_per_packet)) {
     return FALSE;
   }
 
   if (core_audio->is_src) {
     /* create AudioBufferList needed for recording */
-    core_audio->recBufferSize = frame_size * format.mBytesPerFrame;
+    core_audio->recBufferSize = frames_per_packet * format.mBytesPerFrame;
+
+    GST_DEBUG_OBJECT (core_audio,
+        "Allocating record buffers %u bytes %u frames",
+        core_audio->recBufferSize, frames_per_packet);
+
     core_audio->recBufferList =
         buffer_list_alloc (format.mChannelsPerFrame, core_audio->recBufferSize,
         /* Currently always TRUE (i.e. interleaved) */
