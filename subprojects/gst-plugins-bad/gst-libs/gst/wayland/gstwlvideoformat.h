@@ -48,6 +48,6 @@ GST_WL_API
 const gchar *gst_wl_shm_format_to_string (enum wl_shm_format wl_format);
 
 GST_WL_API
-const gchar *gst_wl_dmabuf_format_to_string (guint wl_format);
+gchar * gst_wl_dmabuf_format_to_string (guint wl_format, guint64 modifier);
 
 G_END_DECLS

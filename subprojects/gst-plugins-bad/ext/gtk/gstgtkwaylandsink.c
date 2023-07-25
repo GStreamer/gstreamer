@@ -50,8 +50,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (WL_VIDEO_FORMATS) ";"
-        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_DMABUF,
-            WL_VIDEO_FORMATS))
+        GST_VIDEO_DMA_DRM_CAPS_MAKE)
     );
 
 static void gst_gtk_wayland_sink_get_property (GObject * object,
@@ -109,6 +108,7 @@ typedef struct _GstGtkWaylandSinkPrivate
 
   gboolean video_info_changed;
   GstVideoInfo video_info;
+  guint64 modifier;
   GstCaps *caps;
 
   gboolean redraw_pending;
@@ -797,10 +797,11 @@ gst_gtk_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   if (priv->display) {
     GValue shm_list = G_VALUE_INIT, dmabuf_list = G_VALUE_INIT;
     GValue value = G_VALUE_INIT;
-    GArray *formats;
+    GArray *formats, *modifiers;
     gint i;
     guint fmt;
     GstVideoFormat gfmt;
+    guint64 mod;
 
     g_value_init (&shm_list, GST_TYPE_LIST);
     g_value_init (&dmabuf_list, GST_TYPE_LIST);
@@ -822,17 +823,19 @@ gst_gtk_wayland_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 
     /* Add corresponding dmabuf formats */
     formats = gst_wl_display_get_dmabuf_formats (priv->display);
+    modifiers = gst_wl_display_get_dmabuf_modifiers (priv->display);
     for (i = 0; i < formats->len; i++) {
       fmt = g_array_index (formats, uint32_t, i);
       gfmt = gst_wl_dmabuf_format_to_video_format (fmt);
+      mod = g_array_index (modifiers, guint64, i);
       if (gfmt != GST_VIDEO_FORMAT_UNKNOWN) {
         g_value_init (&value, G_TYPE_STRING);
-        g_value_set_static_string (&value, gst_video_format_to_string (gfmt));
+        g_value_take_string (&value, gst_wl_dmabuf_format_to_string (fmt, mod));
         gst_value_list_append_and_take_value (&dmabuf_list, &value);
       }
     }
 
-    gst_structure_take_value (gst_caps_get_structure (caps, 1), "format",
+    gst_structure_take_value (gst_caps_get_structure (caps, 1), "drm-format",
         &dmabuf_list);
 
     GST_DEBUG_OBJECT (self, "display caps: %" GST_PTR_FORMAT, caps);
@@ -948,14 +951,26 @@ gst_gtk_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       gst_gtk_wayland_sink_get_instance_private (self);
   gboolean use_dmabuf;
   GstVideoFormat format;
+  GstVideoInfoDmaDrm drm_info;
 
   GST_DEBUG_OBJECT (self, "set caps %" GST_PTR_FORMAT, caps);
 
-  /* extract info from caps */
-  if (!gst_video_info_from_caps (&priv->video_info, caps))
-    goto invalid_format;
+  gst_video_info_dma_drm_init (&drm_info);
+
+  if (gst_video_is_dma_drm_caps (caps)) {
+    if (!gst_video_info_dma_drm_from_caps (&drm_info, caps))
+      goto invalid_format;
+
+    if (!gst_video_info_dma_drm_to_video_info (&drm_info, &priv->video_info))
+      goto invalid_format;
+  } else {
+    /* extract info from caps */
+    if (!gst_video_info_from_caps (&priv->video_info, caps))
+      goto invalid_format;
+  }
 
   format = GST_VIDEO_INFO_FORMAT (&priv->video_info);
+  priv->modifier = drm_info.drm_modifier;
   priv->video_info_changed = TRUE;
   priv->skip_dumb_buffer_copy = FALSE;
 
@@ -970,9 +985,11 @@ gst_gtk_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   /* validate the format base on the memory type. */
   if (use_dmabuf) {
-    if (!gst_wl_display_check_format_for_dmabuf (priv->display, format))
+    if (!gst_wl_display_check_format_for_dmabuf (priv->display, format,
+            drm_info.drm_modifier))
       goto unsupported_format;
-  } else if (!gst_wl_display_check_format_for_shm (priv->display, format)) {
+  } else if (!gst_wl_display_check_format_for_shm (priv->display, format,
+          drm_info.drm_modifier)) {
     /* Note: we still support dmabuf in this case, but formats must also be
      * supported on SHM interface to ensure a fallback is possible as we are
      * not guarantied we'll get dmabuf in the buffers. */
@@ -1037,6 +1054,8 @@ gst_gtk_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     GstStructure *config;
     pool = gst_wl_video_buffer_pool_new ();
     config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config,
+        caps, priv->video_info.size, 2, 0);
     gst_buffer_pool_config_set_allocator (config,
         gst_wl_shm_allocator_get (), NULL);
     gst_buffer_pool_set_config (pool, config);
@@ -1117,6 +1136,7 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   GstVideoFormat format;
   GstMemory *mem;
   struct wl_buffer *wbuf = NULL;
+  guint64 modifier;
 
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -1162,7 +1182,8 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       "display, creating it", buffer);
 
   format = GST_VIDEO_INFO_FORMAT (&priv->video_info);
-  if (gst_wl_display_check_format_for_dmabuf (priv->display, format)) {
+  modifier = priv->modifier;
+  if (gst_wl_display_check_format_for_dmabuf (priv->display, format, modifier)) {
     guint i, nb_dmabuf = 0;
 
     for (i = 0; i < gst_buffer_n_memory (buffer); i++)
@@ -1171,7 +1192,7 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
 
     if (nb_dmabuf && (nb_dmabuf == gst_buffer_n_memory (buffer)))
       wbuf = gst_wl_linux_dmabuf_construct_wl_buffer (buffer, priv->display,
-          &priv->video_info);
+          &priv->video_info, modifier);
 
     /* DMABuf did not work, let try and make this a dmabuf, it does not matter
      * if it was a SHM since the compositor needs to copy that anyway, and
@@ -1195,7 +1216,7 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
       /* attach a wl_buffer if there isn't one yet */
       if (G_UNLIKELY (!wlbuffer)) {
         wbuf = gst_wl_linux_dmabuf_construct_wl_buffer (to_render,
-            priv->display, &priv->video_info);
+            priv->display, &priv->video_info, modifier);
 
         if (G_UNLIKELY (!wbuf)) {
           GST_WARNING_OBJECT (self, "failed to import DRM Dumb dmabuf");
@@ -1226,7 +1247,9 @@ gst_gtk_wayland_sink_show_frame (GstVideoSink * vsink, GstBuffer * buffer)
   }
 
 handle_shm:
-  if (!wbuf && gst_wl_display_check_format_for_shm (priv->display, format)) {
+  if (!wbuf
+      && gst_wl_display_check_format_for_shm (priv->display, format,
+          modifier)) {
     if (gst_buffer_n_memory (buffer) == 1 && gst_is_fd_memory (mem))
       wbuf = gst_wl_shm_memory_construct_wl_buffer (mem, priv->display,
           &priv->video_info);

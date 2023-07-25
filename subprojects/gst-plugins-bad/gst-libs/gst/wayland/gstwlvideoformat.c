@@ -140,9 +140,11 @@ gst_wl_shm_format_to_string (enum wl_shm_format wl_format)
       (gst_wl_shm_format_to_video_format (wl_format));
 }
 
-const gchar *
-gst_wl_dmabuf_format_to_string (guint wl_format)
+gchar *
+gst_wl_dmabuf_format_to_string (guint wl_format, guint64 modifier)
 {
-  return gst_video_format_to_string
-      (gst_wl_dmabuf_format_to_video_format (wl_format));
+  GstVideoFormat gst_format = gst_wl_dmabuf_format_to_video_format (wl_format);
+  const guint32 fourcc = gst_video_dma_drm_fourcc_from_format (gst_format);
+
+  return gst_video_dma_drm_fourcc_to_string (fourcc, modifier);
 }

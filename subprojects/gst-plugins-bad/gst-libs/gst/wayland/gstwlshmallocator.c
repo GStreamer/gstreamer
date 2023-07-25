@@ -34,6 +34,7 @@
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <drm_fourcc.h>
 
 #define GST_CAT_DEFAULT gst_wl_shm_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
@@ -219,7 +220,7 @@ gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem, GstWlDisplay * display,
   g_return_val_if_fail (gst_is_fd_memory (mem), NULL);
   g_return_val_if_fail (size <= memsize, NULL);
   g_return_val_if_fail (gst_wl_display_check_format_for_shm (display,
-          GST_VIDEO_INFO_FORMAT (info)), NULL);
+          GST_VIDEO_INFO_FORMAT (info), DRM_FORMAT_MOD_INVALID), NULL);
 
   GST_DEBUG_OBJECT (display, "Creating wl_buffer from SHM of size %"
       G_GSSIZE_FORMAT " (%d x %d, stride %d), format %s", size, width, height,
