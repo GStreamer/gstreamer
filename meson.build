@@ -85,10 +85,14 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
 endif
 
 building_full = get_option('default_library') == 'static'
-building_full_static = get_option('gst-full-target-type') == 'static_library'
+building_full_static = false
 building_full_options = []
 if building_full
-building_full_options = ['gstreamer-full=enabled']
+  building_full_options = ['gstreamer-static-full=false']
+  building_full_static = get_option('gst-full-target-type') == 'static_library'
+  if building_full_static
+    building_full_options = ['gstreamer-static-full=true']
+  endif
 endif
 
 libnice_options = []
@@ -471,10 +475,7 @@ if building_full
     link_depends : link_deps,
     install : true,
   )
-  gst_full_c_flags =  []
-  if building_full_static or get_option('default_library') == 'static'
-    gst_full_c_flags += ['-DGST_STATIC_COMPILATION']
-  endif
+  gst_full_c_flags =  ['-DGST_STATIC_COMPILATION']
 
   gst_full_libs = [gstfull]
 

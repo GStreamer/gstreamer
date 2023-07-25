@@ -119,7 +119,7 @@
 #endif
 #endif
 
-#ifdef GST_FULL_COMPILATION
+#ifdef GST_FULL_STATIC_COMPILATION
 void gst_init_static_plugins ();
 #endif
 
@@ -622,7 +622,7 @@ gst_register_core_elements (GstPlugin * plugin)
 static void
 init_static_plugins (void)
 {
-#ifdef GST_FULL_COMPILATION
+#ifdef GST_FULL_STATIC_COMPILATION
   gst_init_static_plugins ();
 #else
   GModule *module;
