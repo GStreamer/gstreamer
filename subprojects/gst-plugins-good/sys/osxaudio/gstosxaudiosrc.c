@@ -339,6 +339,12 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
   gint remaining;
   UInt32 n;
   gint offset = 0;
+  guint64 sample_position;
+  GstAudioRingBufferSpec *spec = &GST_AUDIO_RING_BUFFER (buf)->spec;
+  guint bpf = GST_AUDIO_INFO_BPF (&spec->info);
+
+  GST_LOG_OBJECT (buf, "in sample position %f frames %u",
+      inTimeStamp->mSampleTime, inNumberFrames);
 
   /* Previous invoke of AudioUnitRender changed mDataByteSize into
    * number of bytes actually read. Reset the members. */
@@ -359,6 +365,7 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
    *       not just the first one. */
 
   remaining = buf->core_audio->recBufferList->mBuffers[0].mDataByteSize;
+  sample_position = inTimeStamp->mSampleTime;
 
   while (remaining) {
     if (!gst_audio_ring_buffer_prepare_read (GST_AUDIO_RING_BUFFER (buf),
@@ -377,8 +384,16 @@ gst_osx_audio_src_io_proc (GstOsxAudioRingBuffer * buf,
     buf->segoffset += len;
     offset += len;
     remaining -= len;
+    sample_position += len / bpf;
 
     if ((gint) buf->segoffset == GST_AUDIO_RING_BUFFER (buf)->spec.segsize) {
+      /* Calculate the timestamp corresponding to the first sample in the segment */
+      guint64 seg_sample_pos = sample_position - (spec->segsize / bpf);
+      GstClockTime ts = gst_util_uint64_scale_int (seg_sample_pos, GST_SECOND,
+          GST_AUDIO_INFO_RATE (&spec->info));
+      gst_audio_ring_buffer_set_timestamp (GST_AUDIO_RING_BUFFER (buf),
+          writeseg, ts);
+
       /* we wrote one segment */
       gst_audio_ring_buffer_advance (GST_AUDIO_RING_BUFFER (buf), 1);
 
