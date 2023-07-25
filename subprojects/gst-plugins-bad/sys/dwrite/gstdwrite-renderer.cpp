@@ -312,13 +312,13 @@ STDMETHODIMP
     D2D1_COLOR_F color;
     BOOL enabled;
 
-    effect->GetBrushColor (GST_DWRITE_BRUSH_TEXT, &color, &enabled);
+    effect->GetBrushColor (GST_DWRITE_BRUSH_FORGROUND, &color, &enabled);
     if (enabled) {
       target->CreateSolidColorBrush (color, &brush);
       fg_color = color;
     }
 
-    effect->GetBrushColor (GST_DWRITE_BRUSH_TEXT_OUTLINE, &color, &enabled);
+    effect->GetBrushColor (GST_DWRITE_BRUSH_OUTLINE, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &outline_brush);
 
@@ -451,7 +451,6 @@ STDMETHODIMP
   ComPtr < ID2D1TransformedGeometry > transformed;
   ComPtr < IGstDWriteTextEffect > effect;
   ComPtr < ID2D1SolidColorBrush > brush;
-  ComPtr < ID2D1SolidColorBrush > outline_brush;
   RenderContext *render_ctx;
   ID2D1RenderTarget *target;
   ID2D1Factory *factory;
@@ -492,18 +491,9 @@ STDMETHODIMP
     effect->GetBrushColor (GST_DWRITE_BRUSH_UNDERLINE, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &brush);
-
-    effect->GetBrushColor (GST_DWRITE_BRUSH_UNDERLINE_OUTLINE, &color,
-        &enabled);
-    if (enabled)
-      target->CreateSolidColorBrush (color, &outline_brush);
   } else {
     target->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::Black), &brush);
-    outline_brush = brush;
   }
-
-  if (outline_brush)
-    target->DrawGeometry (transformed.Get (), outline_brush.Get ());
 
   if (brush)
     target->FillGeometry (transformed.Get (), brush.Get ());
@@ -520,7 +510,6 @@ STDMETHODIMP
   ComPtr < ID2D1TransformedGeometry > transformed;
   ComPtr < IGstDWriteTextEffect > effect;
   ComPtr < ID2D1SolidColorBrush > brush;
-  ComPtr < ID2D1SolidColorBrush > outline_brush;
   RenderContext *render_ctx;
   ID2D1RenderTarget *target;
   ID2D1Factory *factory;
@@ -563,18 +552,9 @@ STDMETHODIMP
     effect->GetBrushColor (GST_DWRITE_BRUSH_STRIKETHROUGH, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &brush);
-
-    effect->GetBrushColor (GST_DWRITE_BRUSH_STRIKETHROUGH_OUTLINE, &color,
-        &enabled);
-    if (enabled)
-      target->CreateSolidColorBrush (color, &outline_brush);
   } else {
     target->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::Black), &brush);
-    outline_brush = brush;
   }
-
-  if (outline_brush)
-    target->DrawGeometry (transformed.Get (), outline_brush.Get ());
 
   if (brush)
     target->FillGeometry (transformed.Get (), brush.Get ());

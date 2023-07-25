@@ -55,7 +55,6 @@ enum
   PROP_VISIBLE,
   PROP_FONT_FAMILY,
   PROP_FONT_SIZE,
-  PROP_REFERENCE_FRAME_SIZE,
   PROP_AUTO_RESIZE,
   PROP_FONT_WEIGHT,
   PROP_FONT_STYLE,
@@ -63,10 +62,6 @@ enum
   PROP_TEXT,
   PROP_COLOR,
   PROP_OUTLINE_COLOR,
-  PROP_UNDERLINE_COLOR,
-  PROP_UNDERLINE_OUTLINE_COLOR,
-  PROP_STRIKETHROUGH_COLOR,
-  PROP_STRIKETHROUGH_OUTLINE_COLOR,
   PROP_SHADOW_COLOR,
   PROP_BACKGROUND_COLOR,
   PROP_LAYOUT_X,
@@ -120,12 +115,8 @@ enum class GstDWriteBaseOverlayBlendMode
 #define DEFAULT_FONT_WEIGHT DWRITE_FONT_WEIGHT_NORMAL
 #define DEFAULT_FONT_STYLE DWRITE_FONT_STYLE_NORMAL
 #define DEFAULT_FONT_STRETCH DWRITE_FONT_STRETCH_NORMAL
-#define DEFAULT_COLOR 0xffffffff
+#define DEFAULT_FOREGROUND_COLOR 0xffffffff
 #define DEFAULT_OUTLINE_COLOR 0xff000000
-#define DEFAULT_UNDERLINE_COLOR 0x0
-#define DEFAULT_UNDERLINE_OUTLINE_COLOR 0x0
-#define DEFAULT_STRIKETHROUGH_COLOR 0x0
-#define DEFAULT_STRIKETHROUGH_OUTLINE_COLOR 0x0
 #define DEFAULT_SHADOW_COLOR 0x80000000
 #define DEFAULT_BACKGROUND_COLOR 0x0
 #define DEFAULT_LAYOUT_XY 0.03f
@@ -140,14 +131,12 @@ struct _GstDWriteBaseOverlayPrivate
   GstD3D11Device *device = nullptr;
 
   GstVideoInfo bgra_info;
-  GstSegment text_segment;
 
   std::mutex prop_lock;
   std::condition_variable cond;
   std::recursive_mutex context_lock;
 
   ComPtr<IDWriteFactory> dwrite_factory;
-  ComPtr<IDWriteFontCollection> font_collection;
   ComPtr<IDWriteTextFormat> text_format;
   ComPtr<IDWriteTextLayout> layout;
 
@@ -183,19 +172,14 @@ struct _GstDWriteBaseOverlayPrivate
   gboolean visible = DEFAULT_VISIBLE;
   std::string font_family = DEFAULT_FONT_FAMILY;
   gfloat font_size = DEFAULT_FONT_SIZE;
-  guint reference_frame_size = DEFAULT_REFERENCE_FRAME_SIZE;
   gboolean auto_resize = DEFAULT_AUTO_RESIZE;
   DWRITE_FONT_WEIGHT font_weight = DEFAULT_FONT_WEIGHT;
   DWRITE_FONT_STYLE font_style = DEFAULT_FONT_STYLE;
   DWRITE_FONT_STRETCH font_stretch = DEFAULT_FONT_STRETCH;
 
   std::wstring default_text;
-  guint text_color = DEFAULT_COLOR;
+  guint foreground_color = DEFAULT_FOREGROUND_COLOR;
   guint outline_color = DEFAULT_OUTLINE_COLOR;
-  guint underline_color = DEFAULT_UNDERLINE_COLOR;
-  guint underline_outline_color = DEFAULT_UNDERLINE_OUTLINE_COLOR;
-  guint strikethrough_color = DEFAULT_STRIKETHROUGH_COLOR;
-  guint strikethrough_outline_color = DEFAULT_STRIKETHROUGH_OUTLINE_COLOR;
   guint shadow_color = DEFAULT_SHADOW_COLOR;
   guint background_color = DEFAULT_BACKGROUND_COLOR;
 
@@ -387,16 +371,6 @@ gst_dwrite_base_overlay_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_REFERENCE_FRAME_SIZE:
-    {
-      guint size = g_value_get_uint (value);
-      if (size != priv->reference_frame_size) {
-        priv->reference_frame_size = size;
-        priv->text_format = nullptr;
-        gst_dwrite_base_overlay_clear_layout (self);
-      }
-      break;
-    }
     case PROP_AUTO_RESIZE:
     {
       gboolean auto_resize = g_value_get_uint (value);
@@ -453,22 +427,10 @@ gst_dwrite_base_overlay_set_property (GObject * object, guint prop_id,
       break;
     }
     case PROP_COLOR:
-      update_uint (self, &priv->text_color, value);
+      update_uint (self, &priv->foreground_color, value);
       break;
     case PROP_OUTLINE_COLOR:
       update_uint (self, &priv->outline_color, value);
-      break;
-    case PROP_UNDERLINE_COLOR:
-      update_uint (self, &priv->underline_color, value);
-      break;
-    case PROP_UNDERLINE_OUTLINE_COLOR:
-      update_uint (self, &priv->underline_outline_color, value);
-      break;
-    case PROP_STRIKETHROUGH_COLOR:
-      update_uint (self, &priv->strikethrough_color, value);
-      break;
-    case PROP_STRIKETHROUGH_OUTLINE_COLOR:
-      update_uint (self, &priv->strikethrough_outline_color, value);
       break;
     case PROP_SHADOW_COLOR:
       update_uint (self, &priv->shadow_color, value);
@@ -521,9 +483,6 @@ gst_dwrite_base_overlay_get_property (GObject * object, guint prop_id,
     case PROP_FONT_SIZE:
       g_value_set_float (value, priv->font_size);
       break;
-    case PROP_REFERENCE_FRAME_SIZE:
-      g_value_set_uint (value, priv->reference_frame_size);
-      break;
     case PROP_AUTO_RESIZE:
       g_value_set_boolean (value, priv->auto_resize);
       break;
@@ -545,22 +504,10 @@ gst_dwrite_base_overlay_get_property (GObject * object, guint prop_id,
       }
       break;
     case PROP_COLOR:
-      g_value_set_uint (value, priv->text_color);
+      g_value_set_uint (value, priv->foreground_color);
       break;
     case PROP_OUTLINE_COLOR:
       g_value_set_uint (value, priv->outline_color);
-      break;
-    case PROP_UNDERLINE_COLOR:
-      g_value_set_uint (value, priv->underline_color);
-      break;
-    case PROP_UNDERLINE_OUTLINE_COLOR:
-      g_value_set_uint (value, priv->underline_outline_color);
-      break;
-    case PROP_STRIKETHROUGH_COLOR:
-      g_value_set_uint (value, priv->strikethrough_color);
-      break;
-    case PROP_STRIKETHROUGH_OUTLINE_COLOR:
-      g_value_set_uint (value, priv->strikethrough_outline_color);
       break;
     case PROP_SHADOW_COLOR:
       g_value_set_uint (value, priv->shadow_color);
@@ -1905,8 +1852,7 @@ gst_dwrite_base_overlay_update_text_format (GstDWriteBaseOverlay * self)
   gst_dwrite_base_overlay_clear_layout (self);
 
   if (priv->auto_resize) {
-    font_size = (FLOAT) self->info.width * priv->font_size /
-        priv->reference_frame_size;
+    font_size = (FLOAT) self->info.width * priv->font_size / 640;
   } else {
     font_size = priv->font_size;
   }
@@ -1975,35 +1921,11 @@ gst_dwrite_base_overlay_create_layout (GstDWriteBaseOverlay * self,
   priv->layout->SetMaxWidth (priv->layout_size.x);
   priv->layout->SetMaxHeight (priv->layout_size.y);
 
-  color = unpack_argb (priv->text_color);
-  effect->SetBrushColor (GST_DWRITE_BRUSH_TEXT, &color);
+  color = unpack_argb (priv->foreground_color);
+  effect->SetBrushColor (GST_DWRITE_BRUSH_FORGROUND, &color);
 
   color = unpack_argb (priv->outline_color);
-  effect->SetBrushColor (GST_DWRITE_BRUSH_TEXT_OUTLINE, &color);
-
-  color = unpack_argb (priv->underline_color);
-  effect->SetBrushColor (GST_DWRITE_BRUSH_UNDERLINE, &color);
-
-  color = unpack_argb (priv->underline_outline_color);
-  effect->SetBrushColor (GST_DWRITE_BRUSH_UNDERLINE_OUTLINE, &color);
-
-  if (priv->underline_color || priv->underline_outline_color) {
-    priv->layout->SetUnderline (TRUE, range);
-  } else {
-    priv->layout->SetUnderline (FALSE, range);
-  }
-
-  color = unpack_argb (priv->strikethrough_color);
-  effect->SetBrushColor (GST_DWRITE_BRUSH_STRIKETHROUGH, &color);
-
-  color = unpack_argb (priv->strikethrough_outline_color);
-  effect->SetBrushColor (GST_DWRITE_BRUSH_STRIKETHROUGH_OUTLINE, &color);
-
-  if (priv->strikethrough_color || priv->strikethrough_outline_color) {
-    priv->layout->SetStrikethrough (TRUE, range);
-  } else {
-    priv->layout->SetStrikethrough (FALSE, range);
-  }
+  effect->SetBrushColor (GST_DWRITE_BRUSH_OUTLINE, &color);
 
   color = unpack_argb (priv->shadow_color);
   effect->SetBrushColor (GST_DWRITE_BRUSH_SHADOW, &color);
@@ -2178,11 +2100,6 @@ gst_dwrite_base_overlay_build_param_specs (std::vector < GParamSpec * >&pspec)
   pspec.push_back (g_param_spec_float ("font-size", "Font Size",
           "Font size to use", 0.1f, 1638.f, DEFAULT_FONT_SIZE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  pspec.push_back (g_param_spec_uint ("reference-frame-size",
-          "Reference Frame Size",
-          "Reference Frame size used for \"auto-resize\"", 16, 16384,
-          DEFAULT_REFERENCE_FRAME_SIZE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   pspec.push_back (g_param_spec_boolean ("auto-resize", "Auto Resize",
           "Calculate font size to be equivalent to \"font-size\" at "
           "\"reference-frame-size\"", DEFAULT_AUTO_RESIZE,
@@ -2198,30 +2115,13 @@ gst_dwrite_base_overlay_build_param_specs (std::vector < GParamSpec * >&pspec)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   pspec.push_back (g_param_spec_string ("text", "Text", "Text to render", "",
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  pspec.push_back (g_param_spec_uint ("color", "Color",
-          "Text color to use (big-endian ARGB)", 0, G_MAXUINT32, DEFAULT_COLOR,
+  pspec.push_back (g_param_spec_uint ("foreground-color", "Foreground Color",
+          "Foreground color to use (big-endian ARGB)", 0, G_MAXUINT32,
+          DEFAULT_FOREGROUND_COLOR,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   pspec.push_back (g_param_spec_uint ("outline-color", "Outline Color",
           "Text outline color to use (big-endian ARGB)", 0, G_MAXUINT32,
           DEFAULT_OUTLINE_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  pspec.push_back (g_param_spec_uint ("underline-color", "Underline Color",
-          "Underline color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_UNDERLINE_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  pspec.push_back (g_param_spec_uint ("underline-outline-color",
-          "Underline Outline Color",
-          "Outline of underline color to use (big-endian ARGB)", 0, G_MAXUINT32,
-          DEFAULT_UNDERLINE_OUTLINE_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  pspec.push_back (g_param_spec_uint ("strikethrough-color",
-          "Strikethrough Color", "Strikethrough color to use (big-endian ARGB)",
-          0, G_MAXUINT32, DEFAULT_STRIKETHROUGH_COLOR,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-  pspec.push_back (g_param_spec_uint ("strikethrough-outline-color",
-          "Strikethrough Outline Color",
-          "Outline of strikethrough color to use (big-endian ARGB)", 0,
-          G_MAXUINT32, DEFAULT_STRIKETHROUGH_OUTLINE_COLOR,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
   pspec.push_back (g_param_spec_uint ("shadow-color", "Shadow Color",
           "Shadow color to use (big-endian ARGB)", 0, G_MAXUINT32,
