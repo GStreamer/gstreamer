@@ -24,8 +24,8 @@
 #include "gstosxcoreaudio.h"
 #include "gstosxcoreaudiocommon.h"
 
-GST_DEBUG_CATEGORY_STATIC (osx_audio_debug);
-#define GST_CAT_DEFAULT osx_audio_debug
+GST_DEBUG_CATEGORY (osx_coreaudio_debug);
+#define GST_CAT_DEFAULT osx_coreaudio_debug
 
 G_DEFINE_TYPE (GstCoreAudio, gst_core_audio, G_TYPE_OBJECT);
 
@@ -260,7 +260,7 @@ gst_core_audio_select_device (GstCoreAudio * core_audio)
 void
 gst_core_audio_init_debug (void)
 {
-  GST_DEBUG_CATEGORY_INIT (osx_audio_debug, "osxaudio", 0,
+  GST_DEBUG_CATEGORY_INIT (osx_coreaudio_debug, "osxaudio", 0,
       "OSX Audio Elements");
 }
 

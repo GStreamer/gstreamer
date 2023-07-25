@@ -23,6 +23,9 @@
 
 #include "gstosxcoreaudiocommon.h"
 
+GST_DEBUG_CATEGORY_EXTERN (osx_coreaudio_debug);
+#define GST_CAT_DEFAULT osx_coreaudio_debug
+
 void
 gst_core_audio_remove_render_callback (GstCoreAudio * core_audio)
 {
