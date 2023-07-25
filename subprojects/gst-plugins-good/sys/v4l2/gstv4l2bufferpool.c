@@ -2048,6 +2048,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
           GstV4l2MemoryGroup *group;
           gint index;
           gboolean outstanding;
+          gsize queued_size = 0;
+          gsize remaining_size = 0;
 
           if ((*buf)->pool != bpool)
             goto copying;
@@ -2121,6 +2123,13 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
             goto start_failed;
           }
 
+          /* Save the amount of data that has been submitted for encoded data */
+          if (GST_VIDEO_INFO_FORMAT (&pool->caps_info) ==
+              GST_VIDEO_FORMAT_ENCODED) {
+            queued_size = gst_buffer_get_size (to_queue);
+            remaining_size = gst_buffer_get_size (*buf) - queued_size;
+          }
+
           /* Remove our ref, we will still hold this buffer in acquire as needed,
            * otherwise the pool will think it is outstanding and will refuse to stop. */
           gst_buffer_unref (to_queue);
@@ -2143,6 +2152,14 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
                * thread waiting for a buffer in _acquire(). */
               gst_v4l2_buffer_pool_complete_release_buffer (bpool, buffer,
                   FALSE);
+          }
+
+          /* For encoded data, just queue de remaining in the next available
+           * buffer. */
+          if (remaining_size) {
+            *buf = gst_buffer_make_writable (*buf);
+            gst_buffer_resize (*buf, queued_size, -1);
+            return gst_v4l2_buffer_pool_process (pool, buf, frame_number);
           }
           break;
         }
