@@ -4135,8 +4135,10 @@ GST_START_TEST (test_info_dma_drm)
   const char *nondma_str = "video/x-raw, format=NV12, width=16, height=16";
   const char *dma_str = "video/x-raw(memory:DMABuf), format=NV12, width=16, "
       "height=16";
-  const char *drm_str = "video/x-raw(memory:DMABuf), width=16, height=16, "
-      "format=DMA_DRM, drm-format=NV12:0x100000000000002";
+  const char *drm_str = "video/x-raw(memory:DMABuf), format=DMA_DRM, "
+      "width=16, height=16, interlace-mode=(string)progressive, "
+      "pixel-aspect-ratio=(fraction)1/1, framerate=(fraction)0/1, "
+      "drm-format=NV12:0x0100000000000002";
   const char *invaliddrm_str = "video/x-raw(memory:DMABuf), width=16, "
       "height=16, format=DMA_DRM, drm-format=ZZZZ:0xRGCSEz9ew80";
   GstCaps *caps, *ncaps;
@@ -4164,7 +4166,7 @@ GST_START_TEST (test_info_dma_drm)
 
   ncaps = gst_video_info_dma_drm_to_caps (&drm_info);
   fail_unless (ncaps);
-  fail_if (gst_caps_is_equal (caps, ncaps));
+  fail_unless (gst_caps_is_equal (caps, ncaps));
   gst_caps_unref (caps);
   gst_caps_unref (ncaps);
 
@@ -4179,8 +4181,12 @@ GST_START_TEST (test_info_dma_drm)
   drm_info.drm_modifier = 0x100000000000002;
   ncaps = gst_video_info_dma_drm_to_caps (&drm_info);
   fail_unless (ncaps);
+  /* remove some fields unrelated to this test. */
+  gst_structure_remove_fields (gst_caps_get_structure (ncaps, 0),
+      "chroma-site", "colorimetry", NULL);
+
   caps = gst_caps_from_string (drm_str);
-  fail_if (gst_caps_is_equal (caps, ncaps));
+  fail_unless (gst_caps_is_equal (caps, ncaps));
   gst_caps_unref (caps);
   gst_caps_unref (ncaps);
 
