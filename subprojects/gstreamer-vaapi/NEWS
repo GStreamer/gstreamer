@@ -2,8 +2,8 @@ GStreamer 1.20 Release Notes
 
 GStreamer 1.20.0 was originally released on 3 February 2022.
 
-The latest bug-fix release in the now old-stable 1.20 series is 1.20.6
-and was released on 23 February 2023.
+The latest bug-fix release in the now old-stable 1.20 series is 1.20.7
+and was released on 26 July 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.20/ for the latest
 version of this document.
@@ -11,7 +11,7 @@ version of this document.
 The GStreamer 1.20 stable series has since been superseded by the
 GStreamer 1.22 stable release series.
 
-Last updated: Thursday 23 February 2023, 00:30 UTC (log)
+Last updated: Wednesday 26 July 2023, 10:00 UTC (log)
 
 Introduction
 
@@ -3224,6 +3224,142 @@ List of merge requests and issues fixed in 1.20.6
 
 -   List of Merge Requests applied in 1.20.6
 -   List of Issues fixed in 1.20.6
+
+1.20.7
+
+The seventh 1.20 bug-fix release (1.20.7) was released on 26 July 2023.
+
+This release only contains bugfixes and it should be safe to upgrade
+from 1.20.x.
+
+Highlighted bugfixes in 1.20.7
+
+-   Security fixes for flacparse, dvdspu, and subparse, and the
+    RealMedia demuxer
+-   h265parse: Fix framerate handling
+-   filesink: Fix buffered mode writing of buffer lists and buffers with
+    multiple memories
+-   asfmux, rtpbin_buffer_list test: fix possible unaligned write/read
+    on 32-bit ARM
+-   ptp clock: Work around bug in ptpd in default configuration
+-   qtdemux: fix reverse playback regression with edit lists
+-   rtspsrc: various control path handling server compatibility
+    improvements
+-   avviddec: fix potential deadlock on seeking with FFmpeg 6.x
+-   cerbero: Fix pango crash on 32bit Windows; move libass into non-GPL
+    codecs
+-   Miscellaneous bug fixes, memory leak fixes, and other stability and
+    reliability improvements
+
+gstreamer
+
+-   ptp: Correctly parse clock ID from the commandline parameters in the
+    helper
+-   ptp: Work around bug in ptpd in default configuration
+
+Core Elements
+
+-   filesink: Fix buffered mode writing of buffer lists and buffers with
+    multiple memories
+
+gst-plugins-base
+
+-   audiotestsrc: Initialize all samples in wave=ticks mode
+-   glimagesink: Fix render rect assertion
+-   subparse: Look for the closing > of a tag after the opening <
+-   urisourcebin: Don’t try to plug a typefinder on dynamic sources
+-   video-blend: Fix linking error with C++
+-   tests: allocators: Fix fdmem test with recent GLib
+
+gst-plugins-good
+
+-   flacparse: Avoid integer overflow in available data check for image
+    tags
+-   imagesequencesrc: Properly set default location
+-   qtdemux: Fix av1C parsing
+-   qtdemux: dropping frames, incorrectly interpreting edit list
+    (regression from 1.16)
+-   qtdemux: Revert “fix conditions for end of segment in reverse
+    playback” to fix edit list regression
+-   qtmux: Fix extraction of CEA608 data from S334-1A packets
+-   rtpjpegdepay: fix logic error when checking if an EOI is present
+-   rtspsrc: Skip PTs with caps incompatible to the global caps
+-   rtspsrc: Fix handling of * control path
+-   rtspsrc: Consider “451: Parameter Not Understood” when handling
+    broken control urls
+
+gst-plugins-bad
+
+-   asfmux, rtpbin_buffer_list test: fix possible unaligned write/read
+    on 32-bit ARM
+-   cea708overlay: fix HCR interpretation
+-   dvdspu: Make sure enough data is allocated for the available data
+-   h265parse: Fix framerate handling
+-   ksvideo, dshow: Fix reference leaks device providers
+-   tsdemux: Set number of channels to 2 for dual mono Opus
+
+gst-plugins-ugly
+
+-   rmdemux: add some integer overflow checks
+
+gst-libav
+
+-   avviddec: Temporarily unlock stream lock while flushing buffers,
+    fixes potential deadlock on seeking with FFmpeg 6.x
+-   avauddec/avviddec: Free packet side data after usage
+
+gst-rtsp-server
+
+-   rtsp-server: media: fix potential deadlock when EOS is sent while
+    paused or prerolling
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   No changes
+
+gst-examples:
+
+-   No changes
+
+Development build environment + gst-full build
+
+-   No major changes
+
+Cerbero build tool and packaging changes in 1.20.7
+
+-   pango: Fix crash on Windows 32bit build
+-   glib: Ship Windows process spawning helpers
+
+Contributors to 1.20.7
+
+Adrien De Coninck, Edward Hervey, Enrique Ocaña González, Jan Alexander
+Steffens (heftig), Mathieu Duponchelle, Matt Feury, Matthew Waters,
+Mengkejiergeli Ba, Nicolas Dufresne, Nirbheek Chauhan, Sebastian Dröge,
+Seungha Yang, Tim-Philipp Müller,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.20.7
+
+-   List of Merge Requests applied in 1.20.7
+-   List of Issues fixed in 1.20.7
 
 Schedule for 1.22
 
