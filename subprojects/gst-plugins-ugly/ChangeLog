@@ -1,7 +1,47 @@
+2023-07-07 10:08:21 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Check for integer overflow when calculation audio packet size
+	  Fixes ZDI-CAN-21444
+	  https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2782
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5077>
+
+2023-07-07 10:08:03 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Use GST_LOG_OBJECT instead of GST_LOG
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5077>
+
+2023-07-07 10:00:19 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Check that enough SIPR audio data is available when copying
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5077>
+
+2023-07-07 09:59:20 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Check for integer overflows when calculating the size of SIPR audio buffers
+	  Fixes ZDI-CAN-21443
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2782
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5077>
+
+2023-07-07 09:59:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Use GST_LOG_OBJECT instead of GST_LOG
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5077>
+
+2023-02-24 00:23:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.6 ===
 
 2023-02-23 18:23:07 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-plugins-ugly.doap:

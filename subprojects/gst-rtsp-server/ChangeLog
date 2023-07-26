@@ -1,7 +1,22 @@
+2023-04-04 20:03:31 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/rtsp-server/rtsp-media.c:
+	  rtsp-server: media: First set state to PLAYING again temporarily, then send EOS
+	  Sending the EOS event while the pipeline is PAUSED can deadlock on the
+	  stream lock if a sink is currently blocked because of pre-rolling.
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4569>
+
+2023-02-24 00:23:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* docs/gst_plugins_cache.json:
+	* meson.build:
+	  Back to development
+
 === release 1.20.6 ===
 
 2023-02-23 18:23:07 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* docs/gst_plugins_cache.json:

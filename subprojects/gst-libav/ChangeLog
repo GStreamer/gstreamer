@@ -1,7 +1,32 @@
+2023-05-12 09:50:04 +0300  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Temporarily unlock stream lock while flushing buffers
+	  This can call into the decoder again from other threads and try to take
+	  the stream lock from there, which would cause a deadlock.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2558
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4831>
+
+2023-02-28 14:00:26 +0200  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavviddec.c:
+	  ffmpeg: avauddec/avviddec: Free packet side data after usage
+	  As we don't use proper refcounting with AVPacket we have to manage this
+	  ourselves.
+	  Fixes https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2006
+	  Part-of: <https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/4079>
+
+2023-02-24 00:23:26 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* meson.build:
+	  Back to development
+
 === release 1.20.6 ===
 
 2023-02-23 18:23:07 +0000  Tim-Philipp Müller <tim@centricular.com>
 
+	* ChangeLog:
 	* NEWS:
 	* RELEASE:
 	* gst-libav.doap:
