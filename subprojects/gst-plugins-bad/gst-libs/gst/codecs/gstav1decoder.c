@@ -787,14 +787,15 @@ out:
 
   gst_av1_decoder_drain_output_queue (self,
       priv->preferred_output_delay, &output_ret);
+
+  priv->current_picture = NULL;
+  priv->current_frame = NULL;
+
   if (output_ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (self,
         "Output returned %s", gst_flow_get_name (output_ret));
     return output_ret;
   }
-
-  priv->current_picture = NULL;
-  priv->current_frame = NULL;
 
   if (ret == GST_FLOW_ERROR) {
     GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
