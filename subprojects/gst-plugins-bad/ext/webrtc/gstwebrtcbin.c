@@ -9113,7 +9113,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
       G_CALLBACK (gst_webrtc_bin_add_turn_server), NULL, NULL, NULL,
       G_TYPE_BOOLEAN, 1, G_TYPE_STRING);
 
-  /*
+  /**
    * GstWebRTCBin::create-data-channel:
    * @object: the #GstWebRTCBin
    * @label: the label for the data channel
