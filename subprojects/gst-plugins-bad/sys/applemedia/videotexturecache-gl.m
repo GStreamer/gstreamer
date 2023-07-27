@@ -21,6 +21,10 @@
 #  include "config.h"
 #endif
 
+#include <gst/gst.h>
+
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+
 #if !HAVE_IOS
 #import <AppKit/AppKit.h>
 #include "iosurfaceglmemory.h"
@@ -203,7 +207,7 @@ _do_create_memory (GstGLContext * context, ContextThreadData * data)
         plane = 0;
         goto success;
       case GST_VIDEO_FORMAT_NV12: {
-        GstGLFormat texifmt, texfmt;
+        GstGLFormat texfmt;
 
         if (plane == 0)
           texformat = GST_GL_LUMINANCE;
@@ -260,3 +264,5 @@ gst_video_texture_cache_gl_create_memory (GstVideoTextureCache * cache,
 
   return data.memory;
 }
+
+G_GNUC_END_IGNORE_DEPRECATIONS

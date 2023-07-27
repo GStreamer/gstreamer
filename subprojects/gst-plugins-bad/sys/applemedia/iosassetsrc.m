@@ -436,6 +436,7 @@ gst_ios_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   iface->set_uri = gst_ios_asset_src_uri_set_uri;
 }
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
 
 @implementation GstAssetsLibrary
 
@@ -477,3 +478,5 @@ gst_ios_asset_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
   return self.result;
 }
 @end
+
+G_GNUC_END_IGNORE_DEPRECATIONS

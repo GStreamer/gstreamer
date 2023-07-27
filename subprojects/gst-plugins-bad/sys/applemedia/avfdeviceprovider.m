@@ -97,8 +97,9 @@ gst_avf_device_provider_probe (GstDeviceProvider * provider)
   GList *result;
 
   result = NULL;
-
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
   NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+G_GNUC_END_IGNORE_DEPRECATIONS
   AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
   for (int i = 0; i < [devices count]; i++) {
     AVCaptureDevice *device = [devices objectAtIndex:i];

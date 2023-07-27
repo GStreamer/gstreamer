@@ -266,7 +266,7 @@ static AVCaptureDeviceType GstAVFVideoSourceDeviceType2AVCaptureDeviceType(GstAV
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_BUILT_IN_TELEPHOTO_CAMERA:
       return AVCaptureDeviceTypeBuiltInTelephotoCamera;
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_BUILT_IN_DUAL_CAMERA:
-      return AVCaptureDeviceTypeBuiltInDuoCamera;
+      return AVCaptureDeviceTypeBuiltInDualCamera;
     case GST_AVF_VIDEO_SOURCE_DEVICE_TYPE_DEFAULT:
       g_assert_not_reached();
   }
@@ -421,7 +421,9 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
       return NO;
     }
   } else { // deviceIndex takes priority over position and deviceType
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
     NSArray *devices = [AVCaptureDevice devicesWithMediaType:mediaType];
+G_GNUC_END_IGNORE_DEPRECATIONS
     if (deviceIndex >= [devices count]) {
       GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
                           ("Invalid video capture device index"), (NULL));
@@ -717,6 +719,7 @@ static AVCaptureVideoOrientation GstAVFVideoSourceOrientation2AVCaptureVideoOrie
             NULL));
     }
 #else
+    (void) pixel_formats;
     GST_WARNING ("Screen capture is not supported by iOS");
 #endif
     return result;
