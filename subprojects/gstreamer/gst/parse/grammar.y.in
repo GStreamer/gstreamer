@@ -1223,6 +1223,9 @@ static int yyerror (void *scanner, graph_t *graph, const char *s);
 element: IDENTIFIER              {
             $$ = gst_parse_element_new();
             $$->factory_name = $1;
+
+            /* silence unused but set warnings/errors */
+            (void) yynerrs;
                                               }
   | element PRESET	          {
             $$->presets = g_slist_append ($$->presets, $2);
