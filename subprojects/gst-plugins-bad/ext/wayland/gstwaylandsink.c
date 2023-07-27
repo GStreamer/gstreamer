@@ -773,6 +773,8 @@ gst_wayland_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     GstStructure *config;
     pool = gst_wl_video_buffer_pool_new ();
     config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config,
+        caps, self->video_info.size, 2, 0);
     gst_buffer_pool_config_set_allocator (config,
         gst_wl_shm_allocator_get (), NULL);
     gst_buffer_pool_set_config (pool, config);
