@@ -129,10 +129,6 @@ GST_DEBUG_CATEGORY_EXTERN (adaptivedemux2_debug);
 #define DEFAULT_CURRENT_LEVEL_TIME_VIDEO 0
 #define DEFAULT_CURRENT_LEVEL_TIME_AUDIO 0
 
-#define GST_API_GET_LOCK(d) (&(GST_ADAPTIVE_DEMUX_CAST(d)->priv->api_lock))
-#define GST_API_LOCK(d)   g_mutex_lock (GST_API_GET_LOCK (d));
-#define GST_API_UNLOCK(d) g_mutex_unlock (GST_API_GET_LOCK (d));
-
 enum
 {
   PROP_0,
@@ -557,7 +553,6 @@ gst_adaptive_demux_init (GstAdaptiveDemux * demux,
 
   demux->priv->scheduler_task = gst_adaptive_demux_loop_new ();
 
-  g_mutex_init (&demux->priv->api_lock);
   g_mutex_init (&demux->priv->segment_lock);
 
   g_mutex_init (&demux->priv->tracks_lock);
@@ -622,7 +617,6 @@ gst_adaptive_demux_finalize (GObject * object)
   downloadhelper_free (demux->download_helper);
 
   g_rec_mutex_clear (&demux->priv->manifest_lock);
-  g_mutex_clear (&demux->priv->api_lock);
   g_mutex_clear (&demux->priv->segment_lock);
 
   g_mutex_clear (&demux->priv->buffering_lock);
@@ -691,18 +685,14 @@ gst_adaptive_demux_change_state (GstElement * element,
 
       gst_task_join (demux->priv->output_task);
 
-      GST_API_LOCK (demux);
       gst_adaptive_demux_reset (demux);
-      GST_API_UNLOCK (demux);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_API_LOCK (demux);
       gst_adaptive_demux_reset (demux);
 
       gst_adaptive_demux_loop_start (demux->priv->scheduler_task);
       if (g_atomic_int_get (&demux->priv->have_manifest))
         gst_adaptive_demux_start_manifest_update_task (demux);
-      GST_API_UNLOCK (demux);
       if (g_atomic_int_compare_and_exchange (&demux->running, FALSE, TRUE))
         GST_DEBUG_OBJECT (demux, "demuxer has started running");
       /* gst_task_start (demux->priv->output_task); */
@@ -955,7 +945,6 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
   gsize available;
   GstBuffer *manifest_buffer;
 
-  GST_API_LOCK (demux);
   GST_MANIFEST_LOCK (demux);
 
   demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
@@ -1074,7 +1063,6 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
 
 unlock_out:
   GST_MANIFEST_UNLOCK (demux);
-  GST_API_UNLOCK (demux);
 
   return ret;
 
@@ -1100,7 +1088,6 @@ no_streams:
 invalid_manifest:
   {
     GST_MANIFEST_UNLOCK (demux);
-    GST_API_UNLOCK (demux);
 
     /* In most cases, this will happen if we set a wrong url in the
      * source element and we have received the 404 HTML response instead of
@@ -1222,7 +1209,6 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
 
   switch (event->type) {
     case GST_EVENT_FLUSH_STOP:{
-      GST_API_LOCK (demux);
       GST_MANIFEST_LOCK (demux);
 
       gst_adaptive_demux_reset (demux);
@@ -1230,7 +1216,6 @@ gst_adaptive_demux_sink_event (GstPad * pad, GstObject * parent,
       ret = gst_pad_event_default (pad, parent, event);
 
       GST_MANIFEST_UNLOCK (demux);
-      GST_API_UNLOCK (demux);
 
       return ret;
     }
@@ -2057,10 +2042,8 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
   seqnum = gst_event_get_seqnum (event);
 
-  GST_API_LOCK (demux);
   if (!GST_ADAPTIVE_SCHEDULER_LOCK (demux)) {
     GST_LOG_OBJECT (demux, "Failed to acquire scheduler context");
-    GST_API_UNLOCK (demux);
     return FALSE;
   }
 
@@ -2354,7 +2337,6 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
 
 unlock_return:
   GST_ADAPTIVE_SCHEDULER_UNLOCK (demux);
-  GST_API_UNLOCK (demux);
   gst_event_unref (event);
 
   return ret;

@@ -107,8 +107,6 @@ struct _GstAdaptiveDemuxPrivate
    */
   gboolean streams_can_download_fragments;
 
-  GMutex api_lock;
-
   /* Protects demux and stream segment information
    * Needed because seeks can update segment information
    * without needing to stop tasks when they just want to
