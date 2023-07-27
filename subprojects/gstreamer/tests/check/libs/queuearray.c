@@ -200,9 +200,9 @@ GST_START_TEST (test_array_grow_end)
 GST_END_TEST;
 
 static int
-compare_pointer_value (gconstpointer a, gconstpointer b)
+compare_pointer_value (guintptr a, guintptr b)
 {
-  return (int) ((guintptr) a - (guintptr) b);
+  return (int) (a - b);
 }
 
 GST_START_TEST (test_array_drop2)
@@ -232,8 +232,8 @@ GST_START_TEST (test_array_drop2)
       gpointer dropped;
 
       if (g_random_boolean () && g_random_boolean () && in_array[i]) {
-        idx = gst_queue_array_find (array, compare_pointer_value,
-            GUINT_TO_POINTER (i));
+        idx = gst_queue_array_find (array,
+            (GCompareFunc) compare_pointer_value, GUINT_TO_POINTER (i));
         dropped = gst_queue_array_drop_element (array, idx);
         fail_unless_equals_int (i, GPOINTER_TO_INT (dropped));
         in_array[i] = FALSE;
@@ -341,6 +341,273 @@ GST_START_TEST (test_array_peek_pop_tail)
 
 GST_END_TEST;
 
+GST_START_TEST (test_array_push_sorted)
+{
+  GstQueueArray *array;
+  gint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new (10);
+
+  /* Fill it with odd values */
+  for (i = 1; i < 10; i += 2)
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+
+  /* Now try to push even values, in reverse order because why not */
+  for (i = 8; i >= 0; i -= 2)
+    gst_queue_array_push_sorted (array, GINT_TO_POINTER (i),
+        (GCompareDataFunc) compare_pointer_value, NULL);
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Check that the array is now 0-9 in correct order */
+  for (i = 0; i < 10; i++)
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_pop_head (array)),
+        i);
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_array_push_sorted_wrapped)
+{
+  GstQueueArray *array;
+  gint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new (10);
+
+  /* Push and pull 4 values to offset head/tail.
+   * Pushing +1's the tail and popping +1's the head, so the push after this will
+   * store data at [4] internally, and further 10 pushes will cause the array
+   * to wrap around. */
+  for (i = 0; i < 4; i++) {
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_pop_head (array)),
+        i);
+  }
+
+  /* Fill it with odd values */
+  for (i = 1; i < 10; i += 2)
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+
+  /* Now try to push even values, in reverse order because why not */
+  for (i = 8; i >= 0; i -= 2)
+    gst_queue_array_push_sorted (array, GINT_TO_POINTER (i),
+        (GCompareDataFunc) compare_pointer_value, NULL);
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Check that the array is now 0-9 in correct order */
+  for (i = 0; i < 10; i++)
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_pop_head (array)),
+        i);
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
+typedef struct
+{
+  gint value;
+} CompareTestStruct;
+
+static int
+compare_struct_value (CompareTestStruct * a, CompareTestStruct * b)
+{
+  return a->value - b->value;
+}
+
+GST_START_TEST (test_array_push_sorted_struct)
+{
+  GstQueueArray *array;
+  gint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new_for_struct (sizeof (CompareTestStruct), 10);
+
+  /* Fill it with odd values */
+  for (i = 1; i < 10; i += 2) {
+    CompareTestStruct s = { i };
+    gst_queue_array_push_tail_struct (array, &s);
+  }
+
+  /* Now try to push even values, in reverse order because why not */
+  for (i = 8; i >= 0; i -= 2) {
+    CompareTestStruct s = { i };
+    gst_queue_array_push_sorted_struct (array, &s,
+        (GCompareDataFunc) compare_struct_value, NULL);
+  }
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Check that the array is now 0-9 in correct order */
+  for (i = 0; i < 10; i++) {
+    CompareTestStruct *s = gst_queue_array_pop_head_struct (array);
+    fail_unless_equals_int (s->value, i);
+  }
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_array_push_sorted_struct_wrapped)
+{
+  GstQueueArray *array;
+  gint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new_for_struct (sizeof (CompareTestStruct), 10);
+
+  /* Push and pull 4 values to offset head/tail.
+   * Pushing +1's the tail and popping +1's the head, so the push after this will
+   * store data at [4] internally, and further 10 pushes will cause the array
+   * to wrap around. */
+  for (i = 0; i < 4; i++) {
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_pop_head (array)),
+        i);
+  }
+
+  /* Fill it with odd values */
+  for (i = 1; i < 10; i += 2) {
+    CompareTestStruct s = { i };
+    gst_queue_array_push_tail_struct (array, &s);
+  }
+
+  /* Now try to push even values, in reverse order because why not */
+  for (i = 8; i >= 0; i -= 2) {
+    CompareTestStruct s = { i };
+    gst_queue_array_push_sorted_struct (array, &s,
+        (GCompareDataFunc) compare_struct_value, NULL);
+  }
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Check that the array is now 0-9 in correct order */
+  for (i = 0; i < 10; i++) {
+    CompareTestStruct *s = gst_queue_array_pop_head_struct (array);
+    fail_unless_equals_int (s->value, i);
+  }
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_array_sort)
+{
+  GstQueueArray *array;
+  gint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new (10);
+
+  /* Fill it with odd values */
+  for (i = 1; i < 10; i += 2)
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+
+  /* Now try to push even values, in reverse order because why not */
+  for (i = 8; i >= 0; i -= 2)
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Sort the array */
+  gst_queue_array_sort (array, (GCompareDataFunc) compare_pointer_value, NULL);
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Check that the array is now 0-9 in correct order */
+  for (i = 0; i < 10; i++)
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_pop_head (array)),
+        i);
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_array_sort_struct)
+{
+  GstQueueArray *array;
+  gint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new_for_struct (sizeof (CompareTestStruct), 10);
+
+  /* Fill it with odd values */
+  for (i = 1; i < 10; i += 2) {
+    CompareTestStruct s = { i };
+    gst_queue_array_push_tail_struct (array, &s);
+  }
+
+  /* Now try to push even values, in reverse order because why not */
+  for (i = 8; i >= 0; i -= 2) {
+    CompareTestStruct s = { i };
+    gst_queue_array_push_tail_struct (array, &s);
+  }
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Sort the array */
+  gst_queue_array_sort (array, (GCompareDataFunc) compare_struct_value, NULL);
+
+  /* Check that the array is now 0-9 in correct order */
+  for (i = 0; i < 10; i++) {
+    CompareTestStruct *s = gst_queue_array_pop_head_struct (array);
+    fail_unless_equals_int (s->value, i);
+  }
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_array_sort_wrapped)
+{
+  GstQueueArray *array;
+  gint i;
+
+  /* Create an array of initial size 10 */
+  array = gst_queue_array_new (10);
+
+  /* Push and pull 4 values to offset head/tail */
+  for (i = 0; i < 4; i++) {
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_pop_head (array)),
+        i);
+  }
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 0);
+
+  /* Fill it with odd values */
+  for (i = 1; i < 10; i += 2)
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+
+  /* Now try to push even values, in reverse order because why not
+   * At this point the array should've wrapped around (head > tail) */
+  for (i = 8; i >= 0; i -= 2)
+    gst_queue_array_push_tail (array, GINT_TO_POINTER (i));
+
+  fail_unless_equals_int (gst_queue_array_get_length (array), 10);
+
+  /* Sort the array */
+  gst_queue_array_sort (array, (GCompareDataFunc) compare_pointer_value, NULL);
+
+  /* Check that the array is now 0-9 in correct order */
+  for (i = 0; i < 10; i++)
+    fail_unless_equals_int (GPOINTER_TO_INT (gst_queue_array_pop_head (array)),
+        i);
+
+  gst_queue_array_free (array);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_queue_array_suite (void)
 {
@@ -358,6 +625,13 @@ gst_queue_array_suite (void)
   tcase_add_test (tc_chain, test_array_grow_from_prealloc1);
   tcase_add_test (tc_chain, test_array_peek_pop_tail);
   tcase_add_test (tc_chain, test_array_peek_nth);
+  tcase_add_test (tc_chain, test_array_push_sorted);
+  tcase_add_test (tc_chain, test_array_push_sorted_wrapped);
+  tcase_add_test (tc_chain, test_array_push_sorted_struct);
+  tcase_add_test (tc_chain, test_array_push_sorted_struct_wrapped);
+  tcase_add_test (tc_chain, test_array_sort);
+  tcase_add_test (tc_chain, test_array_sort_struct);
+  tcase_add_test (tc_chain, test_array_sort_wrapped);
 
   return s;
 }

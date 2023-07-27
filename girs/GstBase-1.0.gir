@@ -13322,6 +13322,72 @@ it from the queue.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="push_sorted" c:identifier="gst_queue_array_push_sorted" version="1.24" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Pushes @data to the queue @array, finding the correct position
+by comparing @data with each array element using @func.
+
+This has a time complexity of O(n), so depending on the size of the queue
+and expected access patterns, a different data structure might be better.
+
+Assumes that the array is already sorted. If it is not, make sure
+to call gst_queue_array_sort() first.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="array" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a #GstQueueArray object</doc>
+            <type name="QueueArray" c:type="GstQueueArray*"/>
+          </instance-parameter>
+          <parameter name="data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">object to push</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="func" transfer-ownership="none" closure="2">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">comparison function</doc>
+            <type name="GLib.CompareDataFunc" c:type="GCompareDataFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">data for comparison function</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="push_sorted_struct" c:identifier="gst_queue_array_push_sorted_struct" version="1.24" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Pushes the element at address @p_struct into the queue @array
+(copying the contents of a structure of the struct_size specified
+when creating the queue into the array), finding the correct position
+by comparing the element at @p_struct with each element in the array using @func.
+
+This has a time complexity of O(n), so depending on the size of the queue
+and expected access patterns, a different data structure might be better.
+
+Assumes that the array is already sorted. If it is not, make sure
+to call gst_queue_array_sort() first.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="array" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a #GstQueueArray object</doc>
+            <type name="QueueArray" c:type="GstQueueArray*"/>
+          </instance-parameter>
+          <parameter name="p_struct" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">address of element or structure to push into the queue</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+          <parameter name="func" transfer-ownership="none" closure="2">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">comparison function</doc>
+            <type name="GLib.CompareDataFunc" c:type="GCompareDataFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">data for comparison function</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="push_tail" c:identifier="gst_queue_array_push_tail" version="1.2" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Pushes @data to the tail of the queue @array.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
@@ -13376,6 +13442,28 @@ the array element it is given, but not free the element itself.</doc>
           <parameter name="clear_func" transfer-ownership="none" scope="async">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a function to clear an element of @array</doc>
             <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="sort" c:identifier="gst_queue_array_sort" version="1.24" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">Sorts the queue @array by comparing elements against each other using
+the provided @compare_func.</doc>
+        <source-position filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="array" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">a #GstQueueArray object</doc>
+            <type name="QueueArray" c:type="GstQueueArray*"/>
+          </instance-parameter>
+          <parameter name="compare_func" transfer-ownership="none" closure="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">comparison function</doc>
+            <type name="GLib.CompareDataFunc" c:type="GCompareDataFunc"/>
+          </parameter>
+          <parameter name="user_data" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">data for comparison function</doc>
+            <type name="gpointer" c:type="gpointer"/>
           </parameter>
         </parameters>
       </method>
