@@ -632,27 +632,24 @@ handle_buffer (GstRtpOnvifTimestamp * self, GstBuffer * buf)
     }
   } else if (GST_BUFFER_PTS_IS_VALID (buf) || GST_BUFFER_DTS_IS_VALID (buf)) {
     time = get_utc_from_offset (self, buf);
-    if (self->prop_drop_out_of_segment && time == GST_CLOCK_TIME_NONE) {
-      GST_ERROR_OBJECT (self, "Failed to get stream time");
-      gst_rtp_buffer_unmap (&rtp);
-      return FALSE;
-    }
   } else {
     GST_INFO_OBJECT (self,
         "Buffer doesn't contain any valid DTS or PTS timestamp");
     goto done;
   }
 
-  if (time == GST_CLOCK_TIME_NONE) {
-    GST_ERROR_OBJECT (self, "failed calculating timestamp");
+  if (self->prop_drop_out_of_segment && !GST_CLOCK_TIME_IS_VALID (time)) {
+    GST_ERROR_OBJECT (self, "Failed to get stream time");
     gst_rtp_buffer_unmap (&rtp);
     return FALSE;
   }
 
   /* convert to NTP time. upper 32 bits should contain the seconds
    * and the lower 32 bits, the fractions of a second. */
-  time = gst_util_uint64_scale (time, (G_GINT64_CONSTANT (1) << 32),
-      GST_SECOND);
+  if (GST_CLOCK_TIME_IS_VALID (time)) {
+    time = gst_util_uint64_scale (time, (G_GINT64_CONSTANT (1) << 32),
+        GST_SECOND);
+  }
 
   GST_DEBUG_OBJECT (self, "timestamp: %" G_GUINT64_FORMAT, time);
 
