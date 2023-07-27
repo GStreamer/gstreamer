@@ -62,6 +62,7 @@ typedef struct
   gboolean async_connect;
   GstStructure *stats;
   guint idle_timeout;
+  gboolean no_eof_is_error;
 
   /* If both self->lock and OBJECT_LOCK are needed,
    * self->lock must be taken first */
@@ -71,6 +72,8 @@ typedef struct
   gboolean running, flushing;
   gboolean timeout;
   gboolean started;
+  /* TRUE if there was an error with the connection to the RTMP server */
+  gboolean connection_error;
 
   GstTask *task;
   GRecMutex task_lock;
@@ -139,6 +142,7 @@ enum
   PROP_ASYNC_CONNECT,
   PROP_STATS,
   PROP_IDLE_TIMEOUT,
+  PROP_NO_EOF_IS_ERROR,
 };
 
 #define DEFAULT_IDLE_TIMEOUT 0
@@ -216,6 +220,21 @@ gst_rtmp2_src_class_init (GstRtmp2SrcClass * klass)
           "The maximum allowed time in seconds for valid packets not to arrive "
           "from the peer (0 = no timeout)",
           0, G_MAXUINT, DEFAULT_IDLE_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtmp2Src:no-eof-is-error:
+   *
+   * If set, an error is raised if the connection is closed without receiving an EOF RTMP message first.
+   " If not set, those are reported using EOS.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_NO_EOF_IS_ERROR,
+      g_param_spec_boolean ("no-eof-is-error",
+          "No EOF is error",
+          "If set, an error is raised if the connection is closed without receiving an EOF RTMP message first. "
+          "If not set, those are reported using EOS", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (gst_rtmp2_src_debug_category, "rtmp2src", 0,
@@ -330,6 +349,11 @@ gst_rtmp2_src_set_property (GObject * object, guint property_id,
       self->idle_timeout = g_value_get_uint (value);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_NO_EOF_IS_ERROR:
+      GST_OBJECT_LOCK (self);
+      self->no_eof_is_error = g_value_get_boolean (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -422,6 +446,11 @@ gst_rtmp2_src_get_property (GObject * object, guint property_id,
       g_value_set_uint (value, self->idle_timeout);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_NO_EOF_IS_ERROR:
+      GST_OBJECT_LOCK (self);
+      g_value_set_boolean (value, self->no_eof_is_error);
+      GST_OBJECT_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -471,6 +500,7 @@ gst_rtmp2_src_start (GstBaseSrc * src)
   self->last_ts = GST_CLOCK_TIME_NONE;
   self->timeout = FALSE;
   self->started = FALSE;
+  self->connection_error = FALSE;
 
   if (async) {
     gst_task_start (self->task);
@@ -607,7 +637,15 @@ gst_rtmp2_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   while (!self->message) {
     if (!self->running) {
-      ret = GST_FLOW_EOS;
+      if (self->no_eof_is_error && self->connection_error) {
+        GST_DEBUG_OBJECT (self,
+            "stopped because of connection error, return ERROR");
+        ret = GST_FLOW_ERROR;
+      } else {
+        GST_DEBUG_OBJECT (self, "stopped, return EOS");
+        ret = GST_FLOW_EOS;
+      }
+
       goto out;
     }
     if (self->flushing) {
@@ -926,6 +964,7 @@ error_callback (GstRtmpConnection * connection, const GError * error,
   } else if (self->loop) {
     GST_INFO_OBJECT (self, "Connection error: %s %d %s",
         g_quark_to_string (error->domain), error->code, error->message);
+    self->connection_error = TRUE;
     stop_task (self);
   }
   g_mutex_unlock (&self->lock);
@@ -999,6 +1038,7 @@ connect_task_done (GObject * object, GAsyncResult * result, gpointer user_data)
         G_CALLBACK (control_callback), self, 0);
   } else {
     send_connect_error (self, error);
+    self->connection_error = TRUE;
     stop_task (self);
     g_error_free (error);
   }
