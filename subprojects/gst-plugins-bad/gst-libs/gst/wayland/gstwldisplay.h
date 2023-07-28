@@ -57,11 +57,11 @@ gpointer gst_wl_display_lookup_buffer (GstWlDisplay * self, gpointer gstmem);
 
 GST_WL_API
 gboolean gst_wl_display_check_format_for_shm (GstWlDisplay * self,
-    GstVideoFormat format, guint64 modifier);
+    const GstVideoInfo *video_info);
 
 GST_WL_API
 gboolean gst_wl_display_check_format_for_dmabuf (GstWlDisplay * self,
-    GstVideoFormat format, guint64 modifier);
+    const GstVideoInfoDmaDrm *drm_info);
 
 GST_WL_API
 struct wl_display *gst_wl_display_get_display (GstWlDisplay * self);

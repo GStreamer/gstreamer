@@ -235,17 +235,13 @@ static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
 
 gboolean
 gst_wl_display_check_format_for_shm (GstWlDisplay * self,
-    GstVideoFormat format, guint64 modifier)
+    const GstVideoInfo * video_info)
 {
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (video_info);
   enum wl_shm_format shm_fmt;
   GArray *formats;
   guint i;
-
-  if (modifier != DRM_FORMAT_MOD_INVALID && modifier != DRM_FORMAT_MOD_LINEAR) {
-    GST_ERROR ("SHM interface does not support modifiers");
-    return FALSE;
-  }
 
   shm_fmt = gst_video_format_to_wl_shm_format (format);
   if (shm_fmt == (enum wl_shm_format) -1)
@@ -262,23 +258,21 @@ gst_wl_display_check_format_for_shm (GstWlDisplay * self,
 
 gboolean
 gst_wl_display_check_format_for_dmabuf (GstWlDisplay * self,
-    GstVideoFormat format, guint64 modifier)
+    const GstVideoInfoDmaDrm * drm_info)
 {
   GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  guint64 modifier = drm_info->drm_modifier;
+  guint fourcc = drm_info->drm_fourcc;
   GArray *formats, *modifiers;
-  guint i, dmabuf_fmt;
+  guint i;
 
   if (!priv->dmabuf)
-    return FALSE;
-
-  dmabuf_fmt = gst_video_format_to_wl_dmabuf_format (format);
-  if (!dmabuf_fmt)
     return FALSE;
 
   formats = priv->dmabuf_formats;
   modifiers = priv->dmabuf_modifiers;
   for (i = 0; i < formats->len; i++) {
-    if (g_array_index (formats, uint32_t, i) == dmabuf_fmt) {
+    if (g_array_index (formats, uint32_t, i) == fourcc) {
       if (g_array_index (modifiers, guint64, i) == modifier) {
         return TRUE;
       }
