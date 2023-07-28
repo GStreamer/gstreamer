@@ -375,7 +375,7 @@ gst_dwrite_text_overlay_decode_cc_data (GstDWriteTextOverlay * self,
       case LIBCAPTION_READY:
       {
         auto len = caption_frame_to_text (&priv->frame,
-            &priv->closed_caption[0], TRUE);
+            &priv->closed_caption[0], FALSE);
         priv->closed_caption.resize (len);
         break;
       }
@@ -421,7 +421,7 @@ gst_dwrite_text_overlay_decode_s334_1a (GstDWriteTextOverlay * self,
       case LIBCAPTION_READY:
       {
         auto len = caption_frame_to_text (&priv->frame,
-            &priv->closed_caption[0], TRUE);
+            &priv->closed_caption[0], FALSE);
         priv->closed_caption.resize (len);
         break;
       }
@@ -456,7 +456,7 @@ gst_dwrite_text_overlay_decode_raw (GstDWriteTextOverlay * self,
       case LIBCAPTION_READY:
       {
         auto len = caption_frame_to_text (&priv->frame,
-            &priv->closed_caption[0], TRUE);
+            &priv->closed_caption[0], FALSE);
         priv->closed_caption.resize (len);
         break;
       }
