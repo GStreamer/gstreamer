@@ -1136,7 +1136,7 @@ _amc_gl_possibly_wait_for_gl_sync (struct gl_sync *sync, gint64 end_time)
    *
    * As a result, we need to advance the ready counter somehow ourselves when
    * such events happen. There is no reliable way of knowing when/if the frame
-   * listener is going to fire.  The only uniqueu identifier,
+   * listener is going to fire.  The only unique identifier,
    * SurfaceTexture::get_timestamp seems to always return 0.
    *
    * The maximum queue size as defined in
