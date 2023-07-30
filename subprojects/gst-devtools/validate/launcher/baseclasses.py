@@ -683,7 +683,7 @@ class Test(Loggable):
             self.out.write("# `%s`\n\n"
                            "## Command\n\n``` bash\n%s\n```\n\n" % (
                                self.classname, self.get_command_repr()))
-            self.out.write("## %s output\n\n``` \n\n" % os.path.basename(self.application))
+            self.out.write("## %s output\n\n``` log \n\n" % os.path.basename(self.application))
             self.out.flush()
         else:
             message = "Launching: %s%s\n" \
@@ -951,12 +951,14 @@ class GstValidateTest(Test):
         subproc_env["GST_VALIDATE_UUID"] = self.get_uuid()
         subproc_env["GST_VALIDATE_LOGSDIR"] = self.options.logsdir
 
+        no_color = True
         if 'GST_DEBUG' in os.environ and not self.options.redirect_logs and not self.options.debug:
             gstlogsfile = os.path.splitext(self.logfile)[0] + '.gstdebug'
             self.extra_logfiles.add(gstlogsfile)
             subproc_env["GST_DEBUG_FILE"] = gstlogsfile
+            no_color = self.options.no_color
 
-        if self.options.no_color:
+        if no_color:
             subproc_env["GST_DEBUG_NO_COLOR"] = '1'
 
         # Ensure XInitThreads is called, see bgo#731525
