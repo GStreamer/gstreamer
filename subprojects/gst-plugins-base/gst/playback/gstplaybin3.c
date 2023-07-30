@@ -1857,10 +1857,11 @@ gst_play_bin3_send_event (GstElement * element, GstEvent * event)
     /* Don't reconfigure playsink just yet, until the streams-selected
      * message(s) tell us as streams become active / available */
 
+    GST_PLAY_BIN3_UNLOCK (playbin);
+
     /* Send this event directly to uridecodebin, so it works even
      * if uridecodebin didn't add any pads yet */
     res = gst_element_send_event (playbin->uridecodebin, event);
-    GST_PLAY_BIN3_UNLOCK (playbin);
 
     return res;
   }
