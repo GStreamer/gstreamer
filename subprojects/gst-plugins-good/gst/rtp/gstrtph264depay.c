@@ -213,6 +213,9 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
 static void
 gst_rtp_h264_depay_init (GstRtpH264Depay * rtph264depay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtph264depay), TRUE);
+
   rtph264depay->adapter = gst_adapter_new ();
   rtph264depay->picture_adapter = gst_adapter_new ();
   rtph264depay->byte_stream = DEFAULT_BYTE_STREAM;
@@ -1096,6 +1099,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
       GST_LOG_OBJECT (depayload,
           "Dropping %" GST_PTR_FORMAT ", we are waiting for a keyframe",
           outbuf);
+      gst_rtp_base_depayload_flush (depayload, FALSE);
       gst_buffer_unref (outbuf);
     }
   }
@@ -1214,8 +1218,10 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
      * type.  Assume that the remote payloader is buggy (didn't set the end bit
      * when the FU ended) and send out what we gathered thusfar */
     if (G_UNLIKELY (rtph264depay->current_fu_type != 0 &&
-            nal_unit_type != rtph264depay->current_fu_type))
+            nal_unit_type != rtph264depay->current_fu_type)) {
+      gst_rtp_base_depayload_delayed (depayload);
       gst_rtp_h264_finish_fragmentation_unit (rtph264depay);
+    }
 
     switch (nal_unit_type) {
       case 0:
@@ -1324,8 +1330,10 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           /* If a new FU unit started, while still processing an older one.
            * Assume that the remote payloader is buggy (doesn't set the end
            * bit) and send out what we've gathered thusfar */
-          if (G_UNLIKELY (rtph264depay->current_fu_type != 0))
+          if (G_UNLIKELY (rtph264depay->current_fu_type != 0)) {
+            gst_rtp_base_depayload_delayed (depayload);
             gst_rtp_h264_finish_fragmentation_unit (rtph264depay);
+          }
 
           rtph264depay->current_fu_type = nal_unit_type;
           rtph264depay->fu_timestamp = timestamp;
@@ -1361,6 +1369,7 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             /* previous FU packet missing start bit? */
             GST_WARNING_OBJECT (rtph264depay, "missing FU start bit on an "
                 "earlier packet. Dropping.");
+            gst_rtp_base_depayload_flush (depayload, FALSE);
             gst_adapter_clear (rtph264depay->adapter);
             return NULL;
           }
@@ -1371,6 +1380,7 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
                 "%u to %u within Fragmentation Unit. Data was lost, dropping "
                 "stored.", rtph264depay->last_fu_seqnum,
                 gst_rtp_buffer_get_seq (rtp));
+            gst_rtp_base_depayload_flush (depayload, FALSE);
             gst_adapter_clear (rtph264depay->adapter);
             return NULL;
           }
@@ -1435,23 +1445,27 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 empty_packet:
   {
     GST_DEBUG_OBJECT (rtph264depay, "empty packet");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 undefined_type:
   {
     GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,
         (NULL), ("Undefined packet type"));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph264depay, "waiting for start");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 not_implemented:
   {
     GST_ELEMENT_ERROR (rtph264depay, STREAM, FORMAT,
         (NULL), ("NAL unit type %d not supported yet", nal_unit_type));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 }

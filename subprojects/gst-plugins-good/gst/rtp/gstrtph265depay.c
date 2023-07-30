@@ -152,6 +152,9 @@ gst_rtp_h265_depay_class_init (GstRtpH265DepayClass * klass)
 static void
 gst_rtp_h265_depay_init (GstRtpH265Depay * rtph265depay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtph265depay), TRUE);
+
   rtph265depay->adapter = gst_adapter_new ();
   rtph265depay->picture_adapter = gst_adapter_new ();
   rtph265depay->output_format = DEFAULT_STREAM_FORMAT;
@@ -1293,8 +1296,10 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
      * type.  Assume that the remote payloader is buggy (didn't set the end bit
      * when the FU ended) and send out what we gathered thusfar */
     if (G_UNLIKELY (rtph265depay->current_fu_type != 0 &&
-            nal_unit_type != rtph265depay->current_fu_type))
+            nal_unit_type != rtph265depay->current_fu_type)) {
+      gst_rtp_base_depayload_delayed (depayload);
       gst_rtp_h265_finish_fragmentation_unit (rtph265depay);
+    }
 
     switch (nal_unit_type) {
       case 48:
@@ -1428,8 +1433,10 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           /* If a new FU unit started, while still processing an older one.
            * Assume that the remote payloader is buggy (doesn't set the end
            * bit) and send out what we've gathered thusfar */
-          if (G_UNLIKELY (rtph265depay->current_fu_type != 0))
+          if (G_UNLIKELY (rtph265depay->current_fu_type != 0)) {
+            gst_rtp_base_depayload_delayed (depayload);
             gst_rtp_h265_finish_fragmentation_unit (rtph265depay);
+          }
 
           rtph265depay->current_fu_type = nal_unit_type;
           rtph265depay->fu_timestamp = timestamp;
@@ -1475,6 +1482,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
             /* previous FU packet missing start bit? */
             GST_WARNING_OBJECT (rtph265depay, "missing FU start bit on an "
                 "earlier packet. Dropping.");
+            gst_rtp_base_depayload_flush (depayload, FALSE);
             gst_adapter_clear (rtph265depay->adapter);
             return NULL;
           }
@@ -1485,6 +1493,7 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
                 "%u to %u within Fragmentation Unit. Data was lost, dropping "
                 "stored.", rtph265depay->last_fu_seqnum,
                 gst_rtp_buffer_get_seq (rtp));
+            gst_rtp_base_depayload_flush (depayload, FALSE);
             gst_adapter_clear (rtph265depay->adapter);
             return NULL;
           }
@@ -1560,11 +1569,13 @@ gst_rtp_h265_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 empty_packet:
   {
     GST_DEBUG_OBJECT (rtph265depay, "empty packet");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph265depay, "waiting for start");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 #if 0
@@ -1572,6 +1583,7 @@ not_implemented_donl_present:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
         (NULL), ("DONL field present not supported yet"));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 #endif
@@ -1579,6 +1591,7 @@ not_implemented:
   {
     GST_ELEMENT_ERROR (rtph265depay, STREAM, FORMAT,
         (NULL), ("NAL unit type %d not supported yet", nal_unit_type));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 }
