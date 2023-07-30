@@ -82,6 +82,9 @@ enum
 static void
 gst_rtp_vp8_depay_init (GstRtpVP8Depay * self)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (self), TRUE);
+
   self->adapter = gst_adapter_new ();
   self->started = FALSE;
   self->wait_for_keyframe = DEFAULT_WAIT_FOR_KEYFRAME;
@@ -351,6 +354,8 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
   if (frame_start) {
     if (G_UNLIKELY (self->started)) {
       GST_DEBUG_OBJECT (depay, "Incomplete frame, flushing adapter");
+      /* keep the current buffer because it may still be used later */
+      gst_rtp_base_depayload_flush (depay, TRUE);
       gst_adapter_clear (self->adapter);
       self->started = FALSE;
 
@@ -425,6 +430,7 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
       GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
 
       if (self->waiting_for_keyframe) {
+        gst_rtp_base_depayload_flush (depay, FALSE);
         gst_buffer_unref (out);
         out = NULL;
         GST_INFO_OBJECT (self, "Dropping inter-frame before intra-frame");
@@ -473,10 +479,12 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstRTPBuffer * rtp)
   }
 
 done:
+  gst_rtp_base_depayload_dropped (depay);
   return NULL;
 
 too_small:
   GST_DEBUG_OBJECT (self, "Invalid rtp packet (too small), ignoring");
+  gst_rtp_base_depayload_flush (depay, FALSE);
   gst_adapter_clear (self->adapter);
   self->started = FALSE;
 
