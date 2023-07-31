@@ -1,0 +1,48 @@
+From dd5683ce6495ee3e39968043f9b1a2a4dec5cde6 Mon Sep 17 00:00:00 2001
+From: Marius Kintel <marius@kintel.net>
+Date: Wed, 28 Jun 2023 14:38:36 +0000
+Subject: [PATCH] meson: Allow fallback & static build of pcre subproject
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Using `allow_fallback: false` on the first check for libpcre
+was unnecessary, as `required: false` already disables using
+fallbacks. `allow_fallback: false` meant that
+`--force-fallback-for` couldn’t work. This commit fixes that.
+
+Also allow the fallback libpcre to be built statically so it
+can be linked into GLib.
+
+Helps: #3025
+---
+ meson.build | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 1c62ea352..9e7448386 100644
+--- a/meson.build
++++ b/meson.build
+@@ -2050,7 +2050,9 @@ else
+ endif
+ 
+ pcre2_req = '>=10.32'
+-pcre2 = dependency('libpcre2-8', version: pcre2_req, required: false, allow_fallback: false)
++
++# Pick up pcre from the system, or if "--force-fallback-for libpcre2-8" was specified
++pcre2 = dependency('libpcre2-8', version: pcre2_req, required: false, default_options: ['default_library=static'])
+ if not pcre2.found()
+   if cc.get_id() == 'msvc' or cc.get_id() == 'clang-cl'
+   # MSVC: Search for the PCRE2 library by the configuration, which corresponds
+@@ -2066,7 +2068,7 @@ endif
+ 
+ # Try again with the fallback
+ if not pcre2.found()
+-  pcre2 = dependency('libpcre2-8', version: pcre2_req, allow_fallback: true)
++  pcre2 = dependency('libpcre2-8', version: pcre2_req, allow_fallback: true, default_options: ['default_library=static'])
+   assert(pcre2.type_name() == 'internal')
+   # static flags are automatically enabled by the subproject if it's built
+   # with default_library=static
+-- 
+2.37.1 (Apple Git-137.1)
+
