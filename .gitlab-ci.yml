@@ -843,6 +843,7 @@ build documentation:
       when: never
     - changes:
       - .gitlab-ci.yml
+      - .gitlab-image-tags.yml
       - ci/gitlab/*.py
       - subprojects/*.wrap
       - subprojects/gst-docs/**/*
