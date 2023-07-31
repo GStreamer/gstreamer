@@ -712,7 +712,7 @@ gst_validate_ssim_compare_image_file (GstValidateSsim * self,
 
   if (!real_ref_file) {
     GST_VALIDATE_REPORT (self, GENERAL_INPUT_ERROR,
-        "Could find ref file for %s", ref_file);
+        "Could not find ref file: %s for file: %s", ref_file, file);
     goto fail;
   }
 
@@ -848,7 +848,7 @@ _check_directory (GstValidateSsim * self, const gchar * ref_dir,
       gchar *ref_file = NULL;
 
       if (!g_file_test (compared_file, G_FILE_TEST_IS_REGULAR)) {
-        GST_INFO_OBJECT (self, "Could not find file %s", compared_file);
+        GST_ERROR_OBJECT (self, "Could not find file %s", compared_file);
         nnotfound++;
         res = FALSE;
       } else {
