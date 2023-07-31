@@ -142,8 +142,8 @@ static const gfloat from_rgb_bt709_vcoeff[] = {0.440654f, -0.400285f, -0.040370f
     "uniform float height;\n"    \
     "uniform float poffset_x;\n" \
     "uniform float poffset_y;\n" \
-    "uniform int[4] input_swizzle;\n" \
-    "uniform int[4] output_swizzle;\n"
+    "uniform int input_swizzle[4];\n" \
+    "uniform int output_swizzle[4];\n"
 
 #define MAX_FUNCTIONS 4
 
@@ -178,22 +178,22 @@ static const char glsl_func_rgb_to_yuv[] = \
     "  return yuv;\n"                       \
     "}\n";
 
-static const char glsl_func_swizzle[] = "vec4 swizzle(vec4 texel, int[4] components) {\n" \
+static const char glsl_func_swizzle[] = "vec4 swizzle(vec4 texel, int components[4]) {\n" \
   "  return vec4(texel[components[0]], texel[components[1]], texel[components[2]], texel[components[3]]);\n" \
   "}\n" \
-  "vec3 swizzle(vec3 texel, int[3] components) {\n" \
+  "vec3 swizzle(vec3 texel, int components[3]) {\n" \
   "  return vec3(texel[components[0]], texel[components[1]], texel[components[2]]);\n" \
   "}\n" \
-  "vec2 swizzle(vec2 texel, int[2] components) {\n" \
+  "vec2 swizzle(vec2 texel, int components[2]) {\n" \
   "  return vec2(texel[components[0]], texel[components[1]]);\n" \
   "}\n" \
-  "vec2 swizzle2(vec3 texel, int[3] components) {\n" \
+  "vec2 swizzle2(vec3 texel, int components[3]) {\n" \
   "  return vec2(texel[components[0]], texel[components[1]]);\n" \
   "}\n" \
-  "vec2 swizzle2(vec4 texel, int[4] components) {\n" \
+  "vec2 swizzle2(vec4 texel, int components[4]) {\n" \
   "  return vec2(texel[components[0]], texel[components[1]]);\n" \
   "}\n" \
-  "vec3 swizzle3(vec4 texel, int[4] components) {\n" \
+  "vec3 swizzle3(vec4 texel, int components[4]) {\n" \
   "  return vec3(texel[components[0]], texel[components[1]], texel[components[2]]);\n" \
   "}\n";
 
