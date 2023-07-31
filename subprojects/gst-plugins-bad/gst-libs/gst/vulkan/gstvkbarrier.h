@@ -69,8 +69,8 @@ struct _GstVulkanBarrierMemoryInfo
   GstVulkanBarrierType type;
   GstVulkanBarrierFlags flags;
   GstVulkanQueue * queue;
-  VkPipelineStageFlags pipeline_stages;
-  VkAccessFlags access_flags;
+  guint64 pipeline_stages;
+  guint64 access_flags;
 
   /* <private> */
   gpointer _reserved        [GST_PADDING];
