@@ -777,7 +777,7 @@ valgrind ges:
     MESON_ARGS: >-
       ${SIMPLE_BUILD}
       -Ddoc=enabled
-      -Drs=enabled
+      -Drs=disabled
       -Dgst-docs:fatal_warnings=true
     # Disable werror for the docs build, we don't need it
     GST_WERROR: 'false'
