@@ -261,6 +261,9 @@ struct _GstBaseSrcPrivate
 
   /* for _submit_buffer_list() */
   GstBufferList *pending_bufferlist;
+
+  /* to delay unlock_stop */
+  gboolean pending_unlock_stop;
 };
 
 #define BASE_SRC_HAS_PENDING_BUFFER_LIST(src) \
@@ -2538,6 +2541,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   GstBuffer *res_buf;
   GstBuffer *in_buf;
   gboolean own_res_buf;
+  gboolean pending_unlock_stop;
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
@@ -2590,6 +2594,17 @@ again:
 
 retry_create:
   GST_LIVE_UNLOCK (src);
+
+  /* Undo our unlocking initiated from set_playing function. This is done here
+   * since we require the stream lock to call this virtual function. */
+  GST_OBJECT_LOCK (src);
+  pending_unlock_stop = src->priv->pending_unlock_stop;
+  src->priv->pending_unlock_stop = FALSE;
+  GST_OBJECT_UNLOCK (src);
+
+  if (pending_unlock_stop && bclass->unlock_stop)
+    bclass->unlock_stop (src);
+
   ret = bclass->create (src, offset, length, &res_buf);
   GST_LIVE_LOCK (src);
 
@@ -3879,14 +3894,10 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
   if (live_play) {
     gboolean start;
 
-    /* clear our unlock request when going to PLAYING */
-    GST_DEBUG_OBJECT (basesrc, "unlock stop");
-    if (bclass->unlock_stop)
-      bclass->unlock_stop (basesrc);
-
     /* for live sources we restart the timestamp correction */
     GST_OBJECT_LOCK (basesrc);
     basesrc->priv->latency = -1;
+    basesrc->priv->pending_unlock_stop = TRUE;
     GST_OBJECT_UNLOCK (basesrc);
     /* have to restart the task in case it stopped because of the unlock when
      * we went to PAUSED. Only do this if we operating in push mode. */
