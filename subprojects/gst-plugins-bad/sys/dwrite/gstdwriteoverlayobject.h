@@ -103,9 +103,6 @@ GstFlowReturn gst_dwrite_overlay_object_prepare_output (GstDWriteOverlayObject *
 gboolean  gst_dwrite_overlay_object_draw (GstDWriteOverlayObject * object,
                                           GstBuffer * buffer,
                                           IDWriteTextLayout * layout,
-                                          D2D1_COLOR_F background_color,
-                                          D2D1_RECT_F background_padding,
-                                          gboolean enable_color_font,
                                           gint x,
                                           gint y);
 

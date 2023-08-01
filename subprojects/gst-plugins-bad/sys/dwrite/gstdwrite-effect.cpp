@@ -90,8 +90,10 @@ IGstDWriteTextEffect::Clone (IGstDWriteTextEffect ** effect)
   if (!copy)
     return E_OUTOFMEMORY;
 
-  for (UINT i = 0; i <= GST_DWRITE_BRUSH_SHADOW; i++)
+  for (UINT i = 0; i < GST_DWRITE_BRUSH_LAST; i++)
     copy->brush_[i] = this->brush_[i];
+
+  copy->enable_color_font_ = enable_color_font_;
 
   *effect = copy;
 
@@ -127,9 +129,28 @@ IGstDWriteTextEffect::SetBrushColor (GST_DWRITE_BRUSH_TARGET target,
   return S_OK;
 }
 
+STDMETHODIMP
+IGstDWriteTextEffect::SetEnableColorFont (BOOL enable)
+{
+  enable_color_font_ = enable;
+
+  return S_OK;
+}
+
+STDMETHODIMP
+IGstDWriteTextEffect::GetEnableColorFont (BOOL * enable)
+{
+  if (!enable)
+    return E_INVALIDARG;
+
+  *enable = enable_color_font_ ;
+
+  return S_OK;
+}
+
 IGstDWriteTextEffect::IGstDWriteTextEffect (void)
 {
-  for (UINT32 i = 0; i < GST_DWRITE_BRUSH_SHADOW; i++)
+  for (UINT32 i = 0; i < GST_DWRITE_BRUSH_LAST; i++)
     brush_[i] = D2D1::ColorF (D2D1::ColorF::Black);
 
   /* Disable custom shadow effects by default */

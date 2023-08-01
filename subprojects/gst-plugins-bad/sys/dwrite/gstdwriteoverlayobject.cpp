@@ -1055,14 +1055,12 @@ gst_dwrite_overlay_object_get_target_from_bitmap (GstDWriteOverlayObject * self,
 
 static gboolean
 gst_dwrite_overlay_object_draw_layout (GstDWriteOverlayObject * self,
-    IDWriteTextLayout * layout, D2D1_COLOR_F background_color,
-    D2D1_RECT_F background_padding, gboolean enable_color_font, gint x, gint y)
+    IDWriteTextLayout * layout, gint x, gint y)
 {
   GstDWriteOverlayObjectPrivate *priv = self->priv;
   gint width, height;
   GstMemory *mem;
   ComPtr < ID2D1RenderTarget > target;
-  D2D1_POINT_2F origin;
   GstMapInfo info;
 
   if (priv->layout_buf) {
@@ -1136,14 +1134,10 @@ gst_dwrite_overlay_object_draw_layout (GstDWriteOverlayObject * self,
     }
   }
 
-  origin.x = 0;
-  origin.y = 0;
-
   target->BeginDraw ();
   target->Clear (D2D1::ColorF (D2D1::ColorF::Black, 0.0));
-  priv->renderer->Draw (D2D1::Point2F (), D2D1::SizeF (1.0, 1.0),
-      D2D1::Rect (0, 0, width, height), background_color,
-      background_padding, enable_color_font, layout, target.Get ());
+  priv->renderer->Draw (D2D1::Point2F (),
+      D2D1::Rect (0, 0, width, height), layout, target.Get ());
   target->EndDraw ();
 
   if (!priv->use_bitmap) {
@@ -1279,17 +1273,13 @@ error:
 
 gboolean
 gst_dwrite_overlay_object_draw (GstDWriteOverlayObject * object,
-    GstBuffer * buffer, IDWriteTextLayout * layout,
-    D2D1_COLOR_F background_color, D2D1_RECT_F background_padding,
-    gboolean enable_color_font, gint x, gint y)
+    GstBuffer * buffer, IDWriteTextLayout * layout, gint x, gint y)
 {
   GstDWriteOverlayObjectPrivate *priv = object->priv;
   gboolean ret = FALSE;
 
-  if (!gst_dwrite_overlay_object_draw_layout (object, layout, background_color,
-          background_padding, enable_color_font, x, y)) {
+  if (!gst_dwrite_overlay_object_draw_layout (object, layout, x, y))
     return FALSE;
-  }
 
   switch (priv->blend_mode) {
     case GstDWriteBlendMode::ATTACH_TEXTURE:

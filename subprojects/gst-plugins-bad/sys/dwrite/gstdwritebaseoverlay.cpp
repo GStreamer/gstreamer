@@ -115,7 +115,6 @@ struct _GstDWriteBaseOverlayPrivate
 
   D2D_POINT_2F layout_origin;
   D2D_POINT_2F layout_size;
-  D2D1_RECT_F background_padding;
 
   std::wstring prev_text;
   std::wstring cur_text;
@@ -771,7 +770,6 @@ gst_dwrite_base_overlay_update_text_format (GstDWriteBaseOverlay * self)
 {
   GstDWriteBaseOverlayPrivate *priv = self->priv;
   FLOAT font_size;
-  FLOAT background_padding;
   HRESULT hr;
 
   if (priv->text_format)
@@ -784,12 +782,6 @@ gst_dwrite_base_overlay_update_text_format (GstDWriteBaseOverlay * self)
   } else {
     font_size = priv->font_size;
   }
-
-  background_padding = (font_size / priv->font_size) * 5.0f;
-  priv->background_padding.left = priv->background_padding.top =
-      -background_padding;
-  priv->background_padding.right = priv->background_padding.bottom =
-      background_padding;
 
   std::wstring wfont_family = gst_dwrite_string_to_wstring (priv->font_family);
 
@@ -863,6 +855,11 @@ gst_dwrite_base_overlay_create_layout (GstDWriteBaseOverlay * self,
   color = unpack_argb (priv->shadow_color);
   effect->SetBrushColor (GST_DWRITE_BRUSH_SHADOW, &color);
 
+  color = unpack_argb (priv->background_color);
+  effect->SetBrushColor (GST_DWRITE_BRUSH_BACKGROUND, &color);
+
+  effect->SetEnableColorFont (priv->color_font);
+
   hr = priv->layout->SetDrawingEffect (effect.Get (), range);
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't set drawing effect");
@@ -881,8 +878,6 @@ gst_dwrite_base_overlay_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstDWriteBaseOverlayPrivate *priv = self->priv;
   GstDWriteBaseOverlayClass *klass = GST_DWRITE_BASE_OVERLAY_GET_CLASS (self);
   std::lock_guard < std::mutex > lk (priv->prop_lock);
-  D2D1_COLOR_F bg_color;
-  D2D1_RECT_F bg_padding = D2D1::RectF ();
 
   if (!priv->overlay) {
     GST_ERROR_OBJECT (self, "Overlay object is not configured");
@@ -897,13 +892,8 @@ gst_dwrite_base_overlay_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
-  bg_color = unpack_argb (priv->background_color);
-  if (priv->background_color)
-    bg_padding = priv->background_padding;
-
   if (!gst_dwrite_overlay_object_draw (priv->overlay, outbuf,
-          priv->layout.Get (), bg_color, bg_padding, priv->color_font,
-          priv->layout_origin.x, priv->layout_origin.y)) {
+          priv->layout.Get (), priv->layout_origin.x, priv->layout_origin.y)) {
     GST_ERROR_OBJECT (self, "Draw failed");
     return GST_FLOW_ERROR;
   }

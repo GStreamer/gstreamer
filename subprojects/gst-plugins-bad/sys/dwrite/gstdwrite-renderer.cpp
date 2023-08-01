@@ -31,88 +31,20 @@ GST_DEBUG_CATEGORY_EXTERN (gst_dwrite_debug);
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 
+enum class RenderPath
+{
+  BACKGROUND,
+  TEXT,
+};
+
 struct RenderContext
 {
-  gboolean collect_geometry;
-  std::vector<ComPtr<ID2D1Geometry>> backgrounds;
-  D2D1_RECT_F background_padding = D2D1::RectF ();
+  RenderPath render_path;
   ID2D1Factory *factory;
   ID2D1RenderTarget *target;
   RECT client_rect;
-  D2D1_SIZE_F scale;
-  gboolean enable_color_font;
 };
 /* *INDENT-ON* */
-
-static HRESULT
-CombineTwoGeometries (ID2D1Factory * factory, ID2D1Geometry * a,
-    ID2D1Geometry * b, ID2D1Geometry ** result)
-{
-  HRESULT hr;
-  ComPtr < ID2D1GeometrySink > sink;
-  ComPtr < ID2D1PathGeometry > geometry;
-
-  hr = factory->CreatePathGeometry (&geometry);
-  if (FAILED (hr)) {
-    GST_WARNING ("Couldn't create path geometry, 0x%x", (guint) hr);
-    return hr;
-  }
-
-  hr = geometry->Open (&sink);
-  if (FAILED (hr)) {
-    GST_WARNING ("Couldn't open path geometry, 0x%x", (guint) hr);
-    return hr;
-  }
-
-  hr = a->CombineWithGeometry (b,
-      D2D1_COMBINE_MODE_UNION, nullptr, sink.Get ());
-  if (FAILED (hr)) {
-    GST_WARNING ("Couldn't combine geometry, 0x%x", (guint) hr);
-    return hr;
-  }
-
-  hr = sink->Close ();
-  if (FAILED (hr)) {
-    GST_WARNING ("Couldn't close sink, 0x%x", (guint) hr);
-    return hr;
-  }
-
-  *result = geometry.Detach ();
-
-  return S_OK;
-}
-
-static void
-CombineGeometries (ID2D1Factory * factory,
-    std::vector < ComPtr < ID2D1Geometry >> &geometries,
-    ID2D1Geometry ** result)
-{
-  ComPtr < ID2D1Geometry > combined;
-  HRESULT hr;
-
-  if (geometries.empty ())
-    return;
-
-  /* *INDENT-OFF* */
-  for (const auto & it: geometries) {
-    if (!combined) {
-      combined = it;
-    } else {
-      ComPtr <ID2D1Geometry> tmp;
-      hr = CombineTwoGeometries (factory, it.Get (), combined.Get (), &tmp);
-      if (FAILED (hr))
-        return;
-
-      combined = tmp;
-    }
-  }
-  /* *INDENT-ON* */
-
-  if (!combined)
-    return;
-
-  *result = combined.Detach ();
-}
 
 STDMETHODIMP
     IGstDWriteTextRenderer::CreateInstance (IDWriteFactory * factory,
@@ -227,6 +159,7 @@ STDMETHODIMP
   HRESULT hr;
   RECT client_rect;
   D2D1_COLOR_F fg_color = D2D1::ColorF (D2D1::ColorF::Black);
+  BOOL enable_color_font = FALSE;
 
   g_assert (context != nullptr);
 
@@ -234,6 +167,43 @@ STDMETHODIMP
   client_rect = render_ctx->client_rect;
   target = render_ctx->target;
   factory = render_ctx->factory;
+
+  if (client_effect)
+    client_effect->QueryInterface (IID_IGstDWriteTextEffect, &effect);
+
+  if (render_ctx->render_path == RenderPath::BACKGROUND) {
+    D2D1_COLOR_F color;
+    BOOL enabled;
+    DWRITE_FONT_METRICS font_metrics;
+    FLOAT run_width = 0;
+    FLOAT adjust, ascent, descent;
+    D2D1_RECT_F bg_rect;
+    ComPtr < ID2D1SolidColorBrush > bg_brush;
+
+    if (!effect)
+      return S_OK;
+
+    effect->GetBrushColor (GST_DWRITE_BRUSH_BACKGROUND, &color, &enabled);
+    if (!enabled)
+      return S_OK;
+
+    for (UINT32 i = 0; i < glyph_run->glyphCount; i++)
+      run_width += glyph_run->glyphAdvances[i];
+
+    glyph_run->fontFace->GetMetrics (&font_metrics);
+    adjust = glyph_run->fontEmSize / font_metrics.designUnitsPerEm;
+    ascent = adjust * font_metrics.ascent;
+    descent = adjust * font_metrics.descent;
+
+    bg_rect = D2D1::RectF (origin_x, origin_y - ascent, origin_x + run_width,
+        origin_y + descent);
+
+    target->CreateSolidColorBrush (color, &bg_brush);
+    target->FillRectangle (bg_rect, bg_brush.Get ());
+    target->DrawRectangle (bg_rect, bg_brush.Get ());
+
+    return S_OK;
+  }
 
   hr = factory->CreatePathGeometry (&geometry);
   if (FAILED (hr))
@@ -254,59 +224,10 @@ STDMETHODIMP
   sink->Close ();
 
   hr = factory->CreateTransformedGeometry (geometry.Get (),
-      D2D1::Matrix3x2F::Translation (origin_x, origin_y) *
-      D2D1::Matrix3x2F::Scale (render_ctx->scale), &transformed);
+      D2D1::Matrix3x2F::Translation (origin_x, origin_y), &transformed);
 
   if (FAILED (hr))
     return hr;
-
-  /* Create new path geometry from the bound rect.
-   * Note that rect geometry cannot be used since the combined background
-   * geometry might not be represented as a single rectangle */
-  if (render_ctx->collect_geometry) {
-    D2D1_RECT_F bounds;
-    ComPtr < ID2D1RectangleGeometry > rect_geometry;
-    ComPtr < ID2D1PathGeometry > path_geometry;
-    ComPtr < ID2D1GeometrySink > path_sink;
-
-    hr = transformed->GetBounds (nullptr, &bounds);
-    if (FAILED (hr))
-      return hr;
-
-    bounds.left += render_ctx->background_padding.left;
-    bounds.right += render_ctx->background_padding.right;
-    bounds.top += render_ctx->background_padding.top;
-    bounds.bottom += render_ctx->background_padding.bottom;
-
-    bounds.left = MAX (bounds.left, (FLOAT) client_rect.left);
-    bounds.right = MIN (bounds.right, (FLOAT) client_rect.right);
-    bounds.top = MAX (bounds.top, (FLOAT) client_rect.top);
-    bounds.bottom = MIN (bounds.bottom, (FLOAT) client_rect.bottom);
-
-    hr = factory->CreateRectangleGeometry (bounds, &rect_geometry);
-    if (FAILED (hr))
-      return hr;
-
-    hr = factory->CreatePathGeometry (&path_geometry);
-    if (FAILED (hr))
-      return hr;
-
-    hr = path_geometry->Open (&path_sink);
-    if (FAILED (hr))
-      return hr;
-
-    hr = rect_geometry->Outline (nullptr, path_sink.Get ());
-    if (FAILED (hr))
-      return hr;
-
-    path_sink->Close ();
-    render_ctx->backgrounds.push_back (path_geometry);
-
-    return S_OK;
-  }
-
-  if (client_effect)
-    client_effect->QueryInterface (IID_IGstDWriteTextEffect, &effect);
 
   if (effect) {
     D2D1_COLOR_F color;
@@ -325,13 +246,15 @@ STDMETHODIMP
     effect->GetBrushColor (GST_DWRITE_BRUSH_SHADOW, &color, &enabled);
     if (enabled)
       target->CreateSolidColorBrush (color, &shadow_brush);
+
+    effect->GetEnableColorFont (&enable_color_font);
   } else {
     target->CreateSolidColorBrush (D2D1::ColorF (D2D1::ColorF::Black), &brush);
     outline_brush = brush;
   }
 
 #ifdef HAVE_DWRITE_COLOR_FONT
-  if (render_ctx->enable_color_font) {
+  if (enable_color_font) {
     const DWRITE_GLYPH_IMAGE_FORMATS supported_formats =
         DWRITE_GLYPH_IMAGE_FORMATS_TRUETYPE |
         DWRITE_GLYPH_IMAGE_FORMATS_CFF |
@@ -422,10 +345,10 @@ STDMETHODIMP
 #endif /* HAVE_DWRITE_COLOR_FONT */
 
   if (shadow_brush) {
-    /* TODO: do we want to make this shadow configurable ? */
+    FLOAT adjust = glyph_run->fontEmSize * 0.06;
     hr = factory->CreateTransformedGeometry (geometry.Get (),
-        D2D1::Matrix3x2F::Translation (origin_x + 1.5, origin_y + 1.5) *
-        D2D1::Matrix3x2F::Scale (render_ctx->scale), &shadow_transformed);
+        D2D1::Matrix3x2F::Translation (origin_x + adjust, origin_y + adjust),
+        &shadow_transformed);
 
     if (FAILED (hr))
       return hr;
@@ -459,7 +382,7 @@ STDMETHODIMP
   g_assert (context != nullptr);
 
   render_ctx = (RenderContext *) context;
-  if (render_ctx->collect_geometry)
+  if (render_ctx->render_path == RenderPath::BACKGROUND)
     return S_OK;
 
   target = render_ctx->target;
@@ -474,8 +397,7 @@ STDMETHODIMP
   }
 
   hr = factory->CreateTransformedGeometry (geometry.Get (),
-      D2D1::Matrix3x2F::Translation (origin_x, origin_y) *
-      D2D1::Matrix3x2F::Scale (render_ctx->scale), &transformed);
+      D2D1::Matrix3x2F::Translation (origin_x, origin_y), &transformed);
   if (FAILED (hr)) {
     GST_WARNING ("Couldn't create transformed geometry, 0x%x", (guint) hr);
     return hr;
@@ -518,7 +440,7 @@ STDMETHODIMP
   g_assert (context != nullptr);
 
   render_ctx = (RenderContext *) context;
-  if (render_ctx->collect_geometry)
+  if (render_ctx->render_path == RenderPath::BACKGROUND)
     return S_OK;
 
   target = render_ctx->target;
@@ -534,8 +456,7 @@ STDMETHODIMP
   }
 
   hr = factory->CreateTransformedGeometry (geometry.Get (),
-      D2D1::Matrix3x2F::Translation (origin_x, origin_y) *
-      D2D1::Matrix3x2F::Scale (render_ctx->scale), &transformed);
+      D2D1::Matrix3x2F::Translation (origin_x, origin_y), &transformed);
 
   if (FAILED (hr)) {
     GST_WARNING ("Couldn't create transformed geometry, 0x%x", (guint) hr);
@@ -582,11 +503,8 @@ IGstDWriteTextRenderer::~IGstDWriteTextRenderer (void)
 
 STDMETHODIMP
     IGstDWriteTextRenderer::Draw (const D2D1_POINT_2F & origin,
-    const D2D1_SIZE_F & scale, const RECT & client_rect,
-    const D2D1_COLOR_F & background_color,
-    const D2D1_RECT_F & background_padding,
-    gboolean enable_color_font,
-    IDWriteTextLayout * layout, ID2D1RenderTarget * target)
+    const RECT & client_rect, IDWriteTextLayout * layout,
+    ID2D1RenderTarget * target)
 {
   HRESULT hr;
   RenderContext context;
@@ -596,40 +514,14 @@ STDMETHODIMP
   g_return_val_if_fail (target != nullptr, E_INVALIDARG);
 
   target->GetFactory (&d2d_factory);
+  context.render_path = RenderPath::BACKGROUND;
   context.client_rect = client_rect;
   context.target = target;
   context.factory = d2d_factory.Get ();
-  context.scale = scale;
-  context.enable_color_font = enable_color_font;
 
-  if (IGstDWriteTextEffect::IsEnabledColor (background_color)) {
-    ComPtr < ID2D1Geometry > geometry;
+  hr = layout->Draw (&context, this, origin.x, origin.y);
 
-    context.collect_geometry = TRUE;
-    context.background_padding = background_padding;
-
-    hr = layout->Draw (&context, this, origin.x, origin.y);
-    if (FAILED (hr)) {
-      GST_WARNING ("Couldn't draw layout for collecting geometry, 0x%x",
-          (guint) hr);
-      return hr;
-    }
-
-    CombineGeometries (d2d_factory.Get (), context.backgrounds, &geometry);
-    if (geometry) {
-      ComPtr < ID2D1SolidColorBrush > brush;
-      hr = target->CreateSolidColorBrush (background_color, &brush);
-      if (FAILED (hr)) {
-        GST_WARNING ("Couldn't create solid brush, 0x%x", (guint) hr);
-        return hr;
-      }
-
-      target->FillGeometry (geometry.Get (), brush.Get ());
-    }
-  }
-
-  context.collect_geometry = FALSE;
-
+  context.render_path = RenderPath::TEXT;
   hr = layout->Draw (&context, this, origin.x, origin.y);
 
   if (FAILED (hr)) {
