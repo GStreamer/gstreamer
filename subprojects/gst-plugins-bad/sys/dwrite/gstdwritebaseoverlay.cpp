@@ -152,7 +152,6 @@ struct _GstDWriteBaseOverlayPrivate
       GstDWriteBaseOverlayBlendMode::UNKNOWN;
   gboolean attach_meta = FALSE;
   gboolean is_d3d11 = FALSE;
-  guint downstream_min_buffers = 0;
 
   GstBufferPool *bitmap_pool = nullptr;
   GstBufferPool *text_pool = nullptr;
@@ -672,12 +671,14 @@ gst_dwrite_base_overlay_decide_allocation (GstBaseTransform * trans,
   GstDWriteBaseOverlayPrivate *priv = self->priv;
   guint min, max, size;
   gboolean update_pool;
-  gboolean is_d3d11 = FALSE;
   GstCaps *caps = nullptr;
   GstVideoInfo info;
   GstBufferPool *pool = nullptr;
   GstCapsFeatures *features;
   GstStructure *config;
+  GstD3D11AllocationParams *params;
+  guint bind_flags = 0;
+  GstD3D11Format d3d11_format;
 
   GST_DEBUG_OBJECT (self, "Decide allocation");
 
@@ -693,9 +694,10 @@ gst_dwrite_base_overlay_decide_allocation (GstBaseTransform * trans,
   }
 
   features = gst_caps_get_features (caps, 0);
-  if (features && gst_caps_features_contains (features,
+  if (!features || !gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-    is_d3d11 = TRUE;
+    GST_DEBUG_OBJECT (self, "Not a d3d11 memory");
+    goto done;
   }
 
   if (gst_query_get_n_allocation_pools (query) > 0) {
@@ -706,7 +708,7 @@ gst_dwrite_base_overlay_decide_allocation (GstBaseTransform * trans,
     size = info.size;
   }
 
-  if (pool && is_d3d11) {
+  if (pool) {
     std::lock_guard < std::recursive_mutex > lk (priv->context_lock);
     if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), -1,
             &priv->device)) {
@@ -723,46 +725,36 @@ gst_dwrite_base_overlay_decide_allocation (GstBaseTransform * trans,
     }
   }
 
-  if (!pool) {
-    if (is_d3d11)
-      pool = gst_d3d11_buffer_pool_new (priv->device);
-    else
-      pool = gst_video_buffer_pool_new ();
-  }
+  if (!pool)
+    pool = gst_d3d11_buffer_pool_new (priv->device);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
-  if (is_d3d11) {
-    GstD3D11AllocationParams *params;
-    guint bind_flags = 0;
-    GstD3D11Format d3d11_format;
-
-    gst_d3d11_device_get_format (priv->device, GST_VIDEO_INFO_FORMAT (&info),
-        &d3d11_format);
-    if ((d3d11_format.format_support[0] &
-            D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0) {
-      bind_flags |= D3D11_BIND_SHADER_RESOURCE;
-    }
-
-    if ((d3d11_format.format_support[0] &
-            D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
-      bind_flags |= D3D11_BIND_RENDER_TARGET;
-    }
-
-    params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-    if (!params) {
-      params = gst_d3d11_allocation_params_new (priv->device, &info,
-          GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
-    } else {
-      for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
-        params->desc[i].BindFlags |= bind_flags;
-    }
-
-    gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
-    gst_d3d11_allocation_params_free (params);
+  gst_d3d11_device_get_format (priv->device, GST_VIDEO_INFO_FORMAT (&info),
+      &d3d11_format);
+  if ((d3d11_format.format_support[0] &
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0) {
+    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
   }
+
+  if ((d3d11_format.format_support[0] &
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
+    bind_flags |= D3D11_BIND_RENDER_TARGET;
+  }
+
+  params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+  if (!params) {
+    params = gst_d3d11_allocation_params_new (priv->device, &info,
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
+  } else {
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
+      params->desc[i].BindFlags |= bind_flags;
+  }
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+  gst_d3d11_allocation_params_free (params);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (self, "Couldn't set config");
@@ -770,24 +762,19 @@ gst_dwrite_base_overlay_decide_allocation (GstBaseTransform * trans,
     return FALSE;
   }
 
-  /* Get updated size in case of d3d11 */
-  if (is_d3d11) {
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr,
-        nullptr);
-    gst_structure_free (config);
-  }
+/* Get updated size in case of d3d11 */
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
-  GST_DEBUG_OBJECT (self, "Downstream min buffer: %d", min);
-  priv->downstream_min_buffers = min;
-
   gst_object_unref (pool);
 
+done:
   return GST_BASE_TRANSFORM_CLASS (parent_class)->decide_allocation (trans,
       query);
 }
@@ -797,12 +784,17 @@ gst_dwrite_base_overlay_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
   GstDWriteBaseOverlay *self = GST_DWRITE_BASE_OVERLAY (trans);
-  GstDWriteBaseOverlayPrivate *priv = self->priv;
   GstCaps *caps = nullptr;
   GstVideoInfo info;
   GstCapsFeatures *features;
-  gboolean is_d3d11 = FALSE;
-  gboolean has_meta = FALSE;
+  gboolean ret;
+  guint min, max, size;
+  GstBufferPool *pool;
+  GstD3D11BufferPool *dpool;
+  GstStructure *config;
+  GstD3D11AllocationParams *params;
+  guint bind_flags = 0;
+  GstD3D11Format d3d11_format;
 
   GST_DEBUG_OBJECT (self, "Propose allocation");
 
@@ -815,8 +807,11 @@ gst_dwrite_base_overlay_propose_allocation (GstBaseTransform * trans,
     return TRUE;
   }
 
-  gst_query_parse_allocation (query, &caps, nullptr);
+  ret = gst_pad_peer_query (trans->srcpad, query);
+  if (!ret)
+    return FALSE;
 
+  gst_query_parse_allocation (query, &caps, nullptr);
   if (!caps) {
     GST_WARNING_OBJECT (self, "Query without caps");
     return FALSE;
@@ -828,108 +823,59 @@ gst_dwrite_base_overlay_propose_allocation (GstBaseTransform * trans,
   }
 
   features = gst_caps_get_features (caps, 0);
-  if (features) {
-    if (gst_caps_features_contains (features,
-            GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-      is_d3d11 = TRUE;
-    }
-
-    if (gst_caps_features_contains (features,
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION)) {
-      has_meta = TRUE;
-    }
+  if (!features || !gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
+    GST_DEBUG_OBJECT (self, "Not a d3d11 memory");
+    return TRUE;
   }
 
-  if (gst_query_get_n_allocation_pools (query) == 0) {
-    GstBufferPool *pool;
-    GstStructure *config;
-    guint size;
+  if (gst_query_get_n_allocation_pools (query) == 0)
+    return TRUE;
 
-    if (is_d3d11) {
-      std::lock_guard < std::recursive_mutex > lk (priv->context_lock);
-      if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self), -1,
-              &priv->device)) {
-        GST_ERROR_OBJECT (self, "Couldn't create deice");
-        return FALSE;
-      }
+  gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+  if (!pool)
+    return TRUE;
 
-      pool = gst_d3d11_buffer_pool_new (priv->device);
-    } else {
-      pool = gst_video_buffer_pool_new ();
-    }
-
-    GST_DEBUG_OBJECT (self, "Creating new pool with caps %" GST_PTR_FORMAT,
-        caps);
-
-    config = gst_buffer_pool_get_config (pool);
-
-    gst_buffer_pool_config_add_option (config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    if (!is_d3d11) {
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
-    }
-
-    size = info.size;
-    if (is_d3d11) {
-      GstD3D11AllocationParams *params;
-      guint bind_flags = 0;
-      GstD3D11Format d3d11_format;
-
-      gst_d3d11_device_get_format (priv->device, GST_VIDEO_INFO_FORMAT (&info),
-          &d3d11_format);
-      if ((d3d11_format.format_support[0] &
-              D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0) {
-        bind_flags |= D3D11_BIND_SHADER_RESOURCE;
-      }
-
-      if ((d3d11_format.format_support[0] &
-              D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
-        bind_flags |= D3D11_BIND_RENDER_TARGET;
-      }
-
-      params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
-      if (!params) {
-        params = gst_d3d11_allocation_params_new (priv->device, &info,
-            GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
-      } else {
-        for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
-          params->desc[i].BindFlags |= bind_flags;
-      }
-
-      gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
-      gst_d3d11_allocation_params_free (params);
-    }
-
-    gst_buffer_pool_config_set_params (config,
-        caps, size, priv->downstream_min_buffers, 0);
-
-    if (!gst_buffer_pool_set_config (pool, config)) {
-      GST_ERROR_OBJECT (self, "Couldn't set config");
-      gst_object_unref (pool);
-      return FALSE;
-    }
-
-    /* Get updated size in case of d3d11 */
-    if (is_d3d11) {
-      config = gst_buffer_pool_get_config (pool);
-      gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr,
-          nullptr);
-      gst_structure_free (config);
-    }
-
-    gst_query_add_allocation_pool (query,
-        pool, size, priv->downstream_min_buffers, 0);
+  if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
     gst_object_unref (pool);
+    return TRUE;
   }
 
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, nullptr);
-
-  if (has_meta && !gst_query_find_allocation_meta (query,
-          GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, nullptr)) {
-    gst_query_add_allocation_meta (query,
-        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, nullptr);
+  dpool = GST_D3D11_BUFFER_POOL (pool);
+  gst_d3d11_device_get_format (dpool->device, GST_VIDEO_INFO_FORMAT (&info),
+      &d3d11_format);
+  if ((d3d11_format.format_support[0] &
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0) {
+    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
   }
+
+  if ((d3d11_format.format_support[0] &
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
+    bind_flags |= D3D11_BIND_RENDER_TARGET;
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+  if (!params) {
+    params = gst_d3d11_allocation_params_new (dpool->device, &info,
+        GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
+  } else {
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
+      params->desc[i].BindFlags |= bind_flags;
+  }
+
+  gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+  gst_d3d11_allocation_params_free (params);
+
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_ERROR_OBJECT (self, "Couldn't set config");
+    gst_object_unref (pool);
+    return FALSE;
+  }
+
+  gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  gst_object_unref (pool);
 
   return TRUE;
 }
