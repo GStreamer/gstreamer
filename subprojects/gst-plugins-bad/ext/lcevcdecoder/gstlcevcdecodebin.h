@@ -17,28 +17,32 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __GST_LCEVC_DECODE_BIN_H__
+#define __GST_LCEVC_DECODE_BIN_H__
 
 #include <gst/gst.h>
 
-#include "gstlcevcdec.h"
-#include "gstlcevch264decodebin.h"
+G_BEGIN_DECLS
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+/* When wrapping, use the original rank plus this offset. The ad-hoc rules is
+ * that hardware implementation will use PRIMARY+1 or +2 to override the
+ * software decoder, so the offset must be large enough to jump over those.
+ * This should also be small enough so that a marginal (64) or secondary
+ * wrapper does not cross the PRIMARY line.
+ */
+#define GST_LCEVC_DECODE_BIN_RANK_OFFSET 10
+
+#define GST_TYPE_LCEVC_DECODE_BIN (gst_lcevc_decode_bin_get_type())
+G_DECLARE_DERIVABLE_TYPE (GstLcevcDecodeBin,
+    gst_lcevc_decode_bin, GST, LCEVC_DECODE_BIN, GstBin);
+
+struct _GstLcevcDecodeBinClass
 {
-  gboolean ret = FALSE;
+  GstBinClass parent_class;
 
-  ret |= GST_ELEMENT_REGISTER (lcevcdec, plugin);
-  ret |= GST_ELEMENT_REGISTER (lcevch264decodebin, plugin);
+  GstCaps * (*get_base_decoder_sink_caps) (GstLcevcDecodeBin * base);
+};
 
-  return ret;
-}
+G_END_DECLS
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    lcevcdecoder,
-    "LCEVC decoder",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+#endif /* __GST_LCEVC_DECODE_BIN_H__ */

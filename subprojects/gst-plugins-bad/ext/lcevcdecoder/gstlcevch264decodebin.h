@@ -17,28 +17,18 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
+#ifndef __GST_LCEVC_H264_DECODE_BIN_H__
+#define __GST_LCEVC_H264_DECODE_BIN_H__
+
+#include "gstlcevcdecodebin.h"
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_LCEVC_H264_DECODE_BIN (gst_lcevc_h264_decode_bin_get_type())
+G_DECLARE_FINAL_TYPE (GstLcevcH264DecodeBin, gst_lcevc_h264_decode_bin,
+    GST, LCEVC_H264_DECODE_BIN, GstLcevcDecodeBin);
+
+GST_ELEMENT_REGISTER_DECLARE (lcevch264decodebin);
+
+G_END_DECLS
 #endif
-
-#include <gst/gst.h>
-
-#include "gstlcevcdec.h"
-#include "gstlcevch264decodebin.h"
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  gboolean ret = FALSE;
-
-  ret |= GST_ELEMENT_REGISTER (lcevcdec, plugin);
-  ret |= GST_ELEMENT_REGISTER (lcevch264decodebin, plugin);
-
-  return ret;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    lcevcdecoder,
-    "LCEVC decoder",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
