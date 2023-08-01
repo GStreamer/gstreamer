@@ -3057,6 +3057,9 @@ reconfigure_output_stream (DecodebinOutputStream * output,
     ret = FALSE;
     goto cleanup;
   }
+
+  output->linked = TRUE;
+
   if (output->src_exposed == FALSE) {
     GstEvent *stream_start;
 
