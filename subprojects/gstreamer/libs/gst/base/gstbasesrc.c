@@ -2588,6 +2588,7 @@ again:
   res_buf = in_buf = *buf;
   own_res_buf = (*buf == NULL);
 
+retry_create:
   GST_LIVE_UNLOCK (src);
   ret = bclass->create (src, offset, length, &res_buf);
   GST_LIVE_LOCK (src);
@@ -2596,13 +2597,18 @@ again:
   if (src->is_live) {
     if (G_UNLIKELY (!src->live_running)) {
       GstFlowReturn wait_ret;
+
+      /* no need keep old buffer while in pause */
+      if (ret == GST_FLOW_OK && own_res_buf)
+        gst_buffer_unref (res_buf);
+
       wait_ret = gst_base_src_wait_playing_unlocked (src);
       if (wait_ret != GST_FLOW_OK) {
-        if (ret == GST_FLOW_OK && own_res_buf)
-          gst_buffer_unref (res_buf);
         ret = wait_ret;
         goto stopped;
       }
+
+      goto retry_create;
     }
   }
 
