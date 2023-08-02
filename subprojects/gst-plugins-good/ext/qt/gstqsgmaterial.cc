@@ -234,7 +234,7 @@ vertexShaderForFormat(GstVideoFormat v_format)
   "uniform sampler2D " UNIFORM_TRIPLANAR_PLANE2 ";\n"
 
 #define uniform_swizzle \
-  "uniform int[4] " UNIFORM_SWIZZLE_COMPONENTS_NAME ";\n"
+  "uniform int " UNIFORM_SWIZZLE_COMPONENTS_NAME "[4];\n"
 #define uniform_opacity \
   "uniform float " UNIFORM_OPACITY_NAME ";\n"
 #define uniform_yuv_to_rgb_color_matrix \
