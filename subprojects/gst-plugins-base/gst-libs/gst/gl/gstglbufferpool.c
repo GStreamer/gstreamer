@@ -28,6 +28,8 @@
 #include "gstglsyncmeta.h"
 #include "gstglutils.h"
 
+#define DEFAULT_FREE_QUEUE_MIN_DEPTH 0
+
 /**
  * SECTION:gstglbufferpool
  * @title: GstGLBufferPool
@@ -52,6 +54,11 @@ struct _GstGLBufferPoolPrivate
   GstCaps *caps;
   gboolean add_videometa;
   gboolean add_glsyncmeta;
+
+  gsize free_queue_min_depth;
+  /* work around the GPU still potentially executing a buffer after it has been
+   * freed by keeping N buffers before being able to reuse them */
+  GQueue *free_cache_buffers;
 };
 
 static void gst_gl_buffer_pool_finalize (GObject * object);
@@ -113,6 +120,18 @@ gst_gl_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, &alloc_params))
     goto wrong_config;
+
+  {
+    guint min_free_queue_size =
+        gst_buffer_pool_config_get_gl_min_free_queue_size (config);
+    if (min_buffers < min_free_queue_size) {
+      min_buffers = MAX (min_buffers, min_free_queue_size);
+    }
+    if (max_buffers != 0 && max_buffers < min_buffers)
+      goto wrong_buffer_count;
+
+    priv->free_queue_min_depth = min_free_queue_size;
+  }
 
   gst_caps_replace (&priv->caps, caps);
 
@@ -255,12 +274,31 @@ wrong_allocator:
     GST_WARNING_OBJECT (pool, "Incorrect allocator type for this pool");
     return FALSE;
   }
+wrong_buffer_count:
+  {
+    GST_WARNING_OBJECT (pool, "Cannot achieve minimum buffer requirements");
+    return FALSE;
+  }
 }
 
 static gboolean
 gst_gl_buffer_pool_start (GstBufferPool * pool)
 {
   return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
+}
+
+static gboolean
+gst_gl_buffer_pool_stop (GstBufferPool * pool)
+{
+  GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
+  GstGLBufferPoolPrivate *priv = glpool->priv;
+  GstBuffer *buffer;
+
+  while ((buffer = g_queue_pop_head (priv->free_cache_buffers))) {
+    GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buffer);
+  }
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
 /* This function handles GstBuffer creation */
@@ -301,6 +339,27 @@ mem_create_failed:
   }
 }
 
+static void
+gst_gl_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
+{
+  GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
+  GstGLBufferPoolPrivate *priv = glpool->priv;
+
+  if (priv->free_queue_min_depth == 0
+      && g_queue_get_length (priv->free_cache_buffers) == 0) {
+    GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buffer);
+  } else {
+    g_queue_push_tail (priv->free_cache_buffers, buffer);
+
+    while (g_queue_get_length (priv->free_cache_buffers) >
+        priv->free_queue_min_depth) {
+      GstBuffer *release_buffer = g_queue_pop_head (priv->free_cache_buffers);
+      GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool,
+          release_buffer);
+    }
+  }
+}
+
 /**
  * gst_gl_buffer_pool_new:
  * @context: the #GstGLContext to use
@@ -333,7 +392,9 @@ gst_gl_buffer_pool_class_init (GstGLBufferPoolClass * klass)
   gstbufferpool_class->get_options = gst_gl_buffer_pool_get_options;
   gstbufferpool_class->set_config = gst_gl_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_gl_buffer_pool_alloc;
+  gstbufferpool_class->release_buffer = gst_gl_buffer_pool_release_buffer;
   gstbufferpool_class->start = gst_gl_buffer_pool_start;
+  gstbufferpool_class->stop = gst_gl_buffer_pool_stop;
 }
 
 static void
@@ -348,6 +409,8 @@ gst_gl_buffer_pool_init (GstGLBufferPool * pool)
   priv->caps = NULL;
   priv->add_videometa = TRUE;
   priv->add_glsyncmeta = FALSE;
+  priv->free_queue_min_depth = DEFAULT_FREE_QUEUE_MIN_DEPTH;
+  priv->free_cache_buffers = g_queue_new ();
 }
 
 static void
@@ -360,6 +423,8 @@ gst_gl_buffer_pool_finalize (GObject * object)
 
   if (priv->caps)
     gst_caps_unref (priv->caps);
+
+  g_clear_pointer (&priv->free_cache_buffers, g_queue_free);
 
   G_OBJECT_CLASS (gst_gl_buffer_pool_parent_class)->finalize (object);
 
@@ -438,4 +503,57 @@ gst_buffer_pool_config_set_gl_allocation_params (GstStructure * config,
 
   gst_structure_set (config, "gl-allocation-params",
       GST_TYPE_GL_ALLOCATION_PARAMS, params, NULL);
+}
+
+/**
+ * gst_buffer_pool_config_set_gl_min_free_queue_size:
+ * @config: a buffer pool config
+ * @queue_size: the number of buffers
+ *
+ * Instructs the #GstGLBufferPool to keep @queue_size amount of buffers around
+ * before allowing them for reuse.
+ *
+ * This is helpful to allow GPU processing to complete before the CPU
+ * operations on the same buffer could start.  Particularly useful when
+ * uploading or downloading data to/from the GPU.
+ *
+ * A value of 0 disabled this functionality.
+ *
+ * This value must be less than the configured maximum amount of buffers for
+ * this @config.
+ *
+ * Since: 1.24
+ */
+void
+gst_buffer_pool_config_set_gl_min_free_queue_size (GstStructure * config,
+    guint queue_size)
+{
+  g_return_if_fail (config != NULL);
+
+  gst_structure_set (config, "gl-min-free-queue-size",
+      G_TYPE_UINT, queue_size, NULL);
+}
+
+/**
+ * gst_buffer_pool_config_get_gl_min_free_queue_size:
+ * @config: a buffer pool config
+ *
+ * See gst_buffer_pool_config_set_gl_min_free_queue_size().
+ *
+ * Returns: then number of buffers configured the free queue
+ *
+ * Since: 1.24
+ */
+guint
+gst_buffer_pool_config_get_gl_min_free_queue_size (GstStructure * config)
+{
+  guint queue_size = 0;
+
+  g_return_val_if_fail (config != NULL, 0);
+
+  if (!gst_structure_get (config, "gl-min-free-queue-size",
+          G_TYPE_UINT, &queue_size, NULL))
+    queue_size = 0;
+
+  return queue_size;
 }

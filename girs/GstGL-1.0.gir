@@ -10526,6 +10526,20 @@ you are writing to OpenGL. Conversely, combining #GST_MAP_GL with
         </parameter>
       </parameters>
     </function>
+    <function name="buffer_pool_config_get_gl_min_free_queue_size" c:identifier="gst_buffer_pool_config_get_gl_min_free_queue_size" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">See gst_buffer_pool_config_set_gl_min_free_queue_size().</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">then number of buffers configured the free queue</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_pool_config_set_gl_allocation_params" c:identifier="gst_buffer_pool_config_set_gl_allocation_params">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">Sets @params on @config</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
@@ -10540,6 +10554,33 @@ you are writing to OpenGL. Conversely, combining #GST_MAP_GL with
         <parameter name="params" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">a #GstGLAllocationParams</doc>
           <type name="GLAllocationParams" c:type="const GstGLAllocationParams*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_pool_config_set_gl_min_free_queue_size" c:identifier="gst_buffer_pool_config_set_gl_min_free_queue_size" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">Instructs the #GstGLBufferPool to keep @queue_size amount of buffers around
+before allowing them for reuse.
+
+This is helpful to allow GPU processing to complete before the CPU
+operations on the same buffer could start.  Particularly useful when
+uploading or downloading data to/from the GPU.
+
+A value of 0 disabled this functionality.
+
+This value must be less than the configured maximum amount of buffers for
+this @config.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+        <parameter name="queue_size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglbufferpool.c">the number of buffers</doc>
+          <type name="guint" c:type="guint"/>
         </parameter>
       </parameters>
     </function>

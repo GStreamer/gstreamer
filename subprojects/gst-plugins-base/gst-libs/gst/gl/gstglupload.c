@@ -458,7 +458,6 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstVideoInfo info;
     gsize size;
 
-
     if (!gst_video_info_from_caps (&info, caps))
       goto invalid_caps;
 
@@ -468,6 +467,8 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     /* the normal size of a frame */
     size = info.size;
     gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    /* keep one buffer around before allowing acquire */
+    gst_buffer_pool_config_set_gl_min_free_queue_size (config, 1);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_GL_SYNC_META);
     if (upload->upload->priv->out_caps) {

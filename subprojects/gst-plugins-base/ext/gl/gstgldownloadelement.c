@@ -1453,6 +1453,7 @@ gst_gl_download_element_propose_allocation (GstBaseTransform * bt,
   /* the normal size of a frame */
   size = info.size;
   gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+  gst_buffer_pool_config_set_gl_min_free_queue_size (config, 1);
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
