@@ -2050,6 +2050,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
           gboolean outstanding;
           gsize queued_size = 0;
           gsize remaining_size = 0;
+          guint split_count = 1;
+          guint num_queued;
 
           if ((*buf)->pool != bpool)
             goto copying;
@@ -2132,7 +2134,7 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
 
           /* Remove our ref, we will still hold this buffer in acquire as needed,
            * otherwise the pool will think it is outstanding and will refuse to stop. */
-          gst_buffer_unref (to_queue);
+          gst_clear_buffer (&to_queue);
 
           /* release as many buffer as possible */
           while (gst_v4l2_buffer_pool_dqbuf (pool, &buffer, &outstanding,
@@ -2142,7 +2144,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
                   FALSE);
           }
 
-          if (g_atomic_int_get (&pool->num_queued) >= pool->min_latency) {
+          num_queued = g_atomic_int_get (&pool->num_queued);
+          if (num_queued >= pool->min_latency && num_queued > split_count) {
             /* all buffers are queued, try to dequeue one and release it back
              * into the pool so that _acquire can get to it again. */
             ret =
@@ -2159,7 +2162,8 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer ** buf,
           if (remaining_size) {
             *buf = gst_buffer_make_writable (*buf);
             gst_buffer_resize (*buf, queued_size, -1);
-            return gst_v4l2_buffer_pool_process (pool, buf, frame_number);
+            split_count++;
+            goto copying;
           }
           break;
         }
