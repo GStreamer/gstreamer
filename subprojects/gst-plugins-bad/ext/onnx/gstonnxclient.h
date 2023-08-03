@@ -55,6 +55,8 @@ namespace GstOnnxNamespace {
     bool hasSession(void);
     void setInputImageFormat(GstMlInputImageFormat format);
     GstMlInputImageFormat getInputImageFormat(void);
+    void setInputImageDatatype(GstTensorType datatype);
+    GstTensorType getInputImageDatatype(void);
     std::vector < Ort::Value > run (uint8_t * img_data, GstVideoInfo vinfo);
     std::vector < const char *> genOutputNamesRaw(void);
     bool isFixedInputImageSize(void);
@@ -63,6 +65,10 @@ namespace GstOnnxNamespace {
     GstTensorMeta* copy_tensors_to_meta(std::vector < Ort::Value > &outputs,GstBuffer* buffer);
     void parseDimensions(GstVideoInfo vinfo);
   private:
+
+    template < typename T>
+    void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
+        uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride);
     bool doRun(uint8_t * img_data, GstVideoInfo vinfo, std::vector < Ort::Value > &modelOutput);
     Ort::Env env;
     Ort::Session * session;
@@ -77,6 +83,8 @@ namespace GstOnnxNamespace {
     std::vector < Ort::AllocatedStringPtr > outputNames;
     std::vector < GQuark > outputIds;
     GstMlInputImageFormat inputImageFormat;
+    GstTensorType inputDatatype;
+    size_t inputDatatypeSize;
     bool fixedInputImageSize;
   };
 }
