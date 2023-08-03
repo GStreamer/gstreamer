@@ -35,10 +35,20 @@ G_DEFINE_TYPE (GstCoreAudio, gst_core_audio, G_TYPE_OBJECT);
 #include "gstosxcoreaudiohal.c"
 #endif
 
+static void
+gst_core_audio_finalize (GObject * object)
+{
+  GstCoreAudio *core_audio = GST_CORE_AUDIO (object);
+  g_mutex_clear (&core_audio->timing_lock);
+
+  G_OBJECT_CLASS (gst_core_audio_parent_class)->finalize (object);
+}
 
 static void
 gst_core_audio_class_init (GstCoreAudioClass * klass)
 {
+  GObjectClass *object_klass = G_OBJECT_CLASS (klass);
+  object_klass->finalize = gst_core_audio_finalize;
 }
 
 static void
@@ -54,6 +64,8 @@ gst_core_audio_init (GstCoreAudio * core_audio)
   core_audio->hog_pid = -1;
   core_audio->disabled_mixing = FALSE;
 #endif
+
+  g_mutex_init (&core_audio->timing_lock);
 }
 
 static gboolean
@@ -202,8 +214,94 @@ gboolean
 gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
     gdouble rate, guint * samples, gdouble * latency)
 {
-  return gst_core_audio_get_samples_and_latency_impl (core_audio, rate,
+  uint64_t now_ns = AudioConvertHostTimeToNanos (AudioGetCurrentHostTime ());
+  gboolean ret = gst_core_audio_get_samples_and_latency_impl (core_audio, rate,
       samples, latency);
+
+  if (!ret)
+    return FALSE;
+
+  CORE_AUDIO_TIMING_LOCK (core_audio);
+
+  uint32_t samples_remain = 0;
+  uint64_t anchor_ns =
+      AudioConvertHostTimeToNanos (core_audio->anchor_hosttime);
+
+  if (core_audio->is_src) {
+    int64_t captured_ns =
+        core_audio->rate_scalar * (int64_t) (now_ns - anchor_ns);
+
+    /* src, the anchor time is the timestamp of the first sample in the last
+     * packet received, and we increment up from there, unless the device gets stopped. */
+    if (captured_ns > 0) {
+      if (core_audio->io_proc_active) {
+        samples_remain = (uint32_t) (captured_ns * rate / GST_SECOND);
+      } else {
+        samples_remain = core_audio->anchor_pend_samples;
+      }
+    } else {
+      /* Time went backward. This shouldn't happen for sources, but report something anyway */
+      samples_remain =
+          (uint32_t) (-captured_ns * rate / GST_SECOND) +
+          core_audio->anchor_pend_samples;
+    }
+
+    GST_DEBUG_OBJECT (core_audio,
+        "now_ns %" G_GUINT64_FORMAT " anchor %" G_GUINT64_FORMAT " elapsed ns %"
+        G_GINT64_FORMAT " rate %f captured_ns %" G_GINT64_FORMAT
+        " anchor_pend_samples %u samples_remain %u", now_ns, anchor_ns,
+        now_ns - anchor_ns, rate, captured_ns, core_audio->anchor_pend_samples,
+        samples_remain);
+  } else {
+    /* Sink, the anchor time is the time the most recent buffer will commence play out,
+     * and we count down to 0 for unplayed samples beyond that */
+    int64_t unplayed_ns =
+        core_audio->rate_scalar * (int64_t) (anchor_ns - now_ns);
+    if (unplayed_ns > 0) {
+      samples_remain =
+          (uint32_t) (unplayed_ns * rate / GST_SECOND) +
+          core_audio->anchor_pend_samples;
+    } else {
+      uint32_t samples_played = (uint32_t) (-unplayed_ns * rate / GST_SECOND);
+      if (samples_played < core_audio->anchor_pend_samples) {
+        samples_remain = core_audio->anchor_pend_samples - samples_played;
+      }
+    }
+
+    GST_DEBUG_OBJECT (core_audio,
+        "now_ns %" G_GUINT64_FORMAT " anchor %" G_GUINT64_FORMAT " elapsed ns %"
+        G_GINT64_FORMAT " rate %f unplayed_ns %" G_GINT64_FORMAT
+        " anchor_pend_samples %u", now_ns, anchor_ns, now_ns - anchor_ns, rate,
+        unplayed_ns, core_audio->anchor_pend_samples);
+  }
+
+  CORE_AUDIO_TIMING_UNLOCK (core_audio);
+
+  GST_DEBUG_OBJECT (core_audio, "samples = %u latency %f", samples_remain,
+      *latency);
+
+  *samples = samples_remain;
+  return TRUE;
+}
+
+void
+gst_core_audio_update_timing (GstCoreAudio * core_audio,
+    const AudioTimeStamp * inTimeStamp, unsigned int inNumberFrames)
+{
+  AudioTimeStampFlags target_flags =
+      kAudioTimeStampSampleHostTimeValid | kAudioTimeStampRateScalarValid;
+
+  if ((inTimeStamp->mFlags & target_flags) == target_flags) {
+    core_audio->anchor_hosttime = inTimeStamp->mHostTime;
+    core_audio->anchor_pend_samples = inNumberFrames;
+    core_audio->rate_scalar = inTimeStamp->mRateScalar;
+
+    GST_DEBUG_OBJECT (core_audio,
+        "anchor hosttime_ns %" G_GUINT64_FORMAT
+        " scalar_rate %f anchor_pend_samples %u",
+        AudioConvertHostTimeToNanos (core_audio->anchor_hosttime),
+        core_audio->rate_scalar, core_audio->anchor_pend_samples);
+  }
 }
 
 gboolean

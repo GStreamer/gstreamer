@@ -544,7 +544,13 @@ gst_osx_audio_sink_io_proc (GstOsxAudioRingBuffer * buf,
       gst_audio_ring_buffer_clear (GST_AUDIO_RING_BUFFER (buf), readseg);
 
       /* we wrote one segment */
+      CORE_AUDIO_TIMING_LOCK (buf->core_audio);
       gst_audio_ring_buffer_advance (GST_AUDIO_RING_BUFFER (buf), 1);
+      /* FIXME: Update the timestamp and reported frames in smaller increments
+       * when the segment size is larger than the total inNumberFrames */
+      gst_core_audio_update_timing (buf->core_audio, inTimeStamp,
+          inNumberFrames);
+      CORE_AUDIO_TIMING_UNLOCK (buf->core_audio);
 
       buf->segoffset = 0;
     }

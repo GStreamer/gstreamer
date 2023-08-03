@@ -77,6 +77,9 @@ G_BEGIN_DECLS
 typedef struct _GstCoreAudio GstCoreAudio;
 typedef struct _GstCoreAudioClass GstCoreAudioClass;
 
+#define CORE_AUDIO_TIMING_LOCK(core_audio) (g_mutex_lock(&(core_audio->timing_lock)))
+#define CORE_AUDIO_TIMING_UNLOCK(core_audio) (g_mutex_unlock(&(core_audio->timing_lock)))
+
 struct _GstCoreAudio
 {
   GObject object;
@@ -107,6 +110,11 @@ struct _GstCoreAudio
   AudioStreamBasicDescription original_format, stream_format;
   AudioDeviceIOProcID procID;
 #endif
+
+  GMutex timing_lock;
+  uint64_t anchor_hosttime;
+  uint32_t anchor_pend_samples;
+  float rate_scalar;
 };
 
 struct _GstCoreAudioClass
@@ -142,6 +150,10 @@ gboolean gst_core_audio_get_samples_and_latency              (GstCoreAudio * cor
                                                               gdouble rate,
                                                               guint *samples,
                                                               gdouble *latency);
+
+void gst_core_audio_update_timing                            (GstCoreAudio * core_audio,
+                                                              const AudioTimeStamp * inTimeStamp,
+                                                              unsigned int inNumberFrames);
 
 void  gst_core_audio_set_volume                              (GstCoreAudio *core_audio,
                                                               gfloat volume);
