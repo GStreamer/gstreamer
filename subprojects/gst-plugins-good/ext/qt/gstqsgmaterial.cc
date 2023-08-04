@@ -173,6 +173,36 @@ GstQSGMaterialShader::fragmentShader() const
   return fragment;
 }
 
+#define DEFINE_MATERIAL(format) \
+class G_PASTE(GstQSGMaterial_,format) : public GstQSGMaterial { \
+public: \
+  G_PASTE(GstQSGMaterial_,format)(); \
+  ~G_PASTE(GstQSGMaterial_,format)(); \
+  QSGMaterialType *type() const override { static QSGMaterialType type; return &type; }; \
+}; \
+G_PASTE(GstQSGMaterial_,format)::G_PASTE(GstQSGMaterial_,format)() {} \
+G_PASTE(GstQSGMaterial_,format)::~G_PASTE(GstQSGMaterial_,format)() {}
+
+DEFINE_MATERIAL(RGBA);
+DEFINE_MATERIAL(RGBA_SWIZZLE);
+DEFINE_MATERIAL(YUV_TRIPLANAR);
+
+GstQSGMaterial *
+GstQSGMaterial::new_for_format(GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_RGBA:
+      return static_cast<GstQSGMaterial *>(new GstQSGMaterial_RGBA());
+    case GST_VIDEO_FORMAT_BGRA:
+      return static_cast<GstQSGMaterial *>(new GstQSGMaterial_RGBA_SWIZZLE());
+    case GST_VIDEO_FORMAT_YV12:
+      return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_TRIPLANAR());
+    default:
+      g_assert_not_reached ();
+  }
+}
+
 GstQSGMaterial::GstQSGMaterial ()
 {
   static gsize _debug;

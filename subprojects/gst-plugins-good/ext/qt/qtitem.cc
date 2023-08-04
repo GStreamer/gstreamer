@@ -314,7 +314,7 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
     texNode = new QSGGeometryNode();
     geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
     texNode->setGeometry(geometry);
-    tex = new GstQSGMaterial();
+    tex = GstQSGMaterial::new_for_format(GST_VIDEO_INFO_FORMAT (&this->priv->v_info));
     texNode->setMaterial(tex);
   }
 

@@ -35,9 +35,11 @@ class GstQSGMaterialShader;
 
 class GstQSGMaterial : public QSGMaterial
 {
+protected:
+    GstQSGMaterial();
+    ~GstQSGMaterial();
 public:
-    GstQSGMaterial ();
-    ~GstQSGMaterial ();
+    static GstQSGMaterial *new_for_format (GstVideoFormat format);
 
     void setCaps (GstCaps * caps);
     gboolean setBuffer (GstBuffer * buffer);
@@ -47,7 +49,6 @@ public:
     void bind(GstQSGMaterialShader *);
 
     /* QSGMaterial */
-    QSGMaterialType *type() const override { static QSGMaterialType type; return &type; };
     QSGMaterialShader *createShader() const override;
 
 private:
