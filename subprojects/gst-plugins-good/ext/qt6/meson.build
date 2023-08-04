@@ -42,7 +42,7 @@ if not add_languages('cpp', native: false, required: qt6_option)
 endif
 
 qt6_mod = import('qt6')
-if not qt6_mod.has_tools()
+if not qt6_mod.has_tools(method: qt6_method)
   if qt6_option.enabled()
     error('qt6 qmlglsink plugin is enabled, but qt specific tools were not found')
   endif
@@ -152,7 +152,7 @@ endif
 
 if qt6_option.require(have_qt_windowing).allowed()
   # Build it!
-  moc_files = qt6_mod.preprocess(moc_headers : moc_headers)
+  moc_files = qt6_mod.preprocess(moc_headers : moc_headers, method: qt6_method)
   gstqml6gl = library('gstqml6', sources, moc_files,
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,
