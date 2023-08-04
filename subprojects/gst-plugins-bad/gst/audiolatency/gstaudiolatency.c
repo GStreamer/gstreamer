@@ -455,7 +455,12 @@ gst_audiolatency_src_probe (GstPad * pad, GstPadProbeInfo * info,
       GST_LOG_OBJECT (self,
           "Forwarded latency event to sinkpad. Result %d %" GST_PTR_FORMAT, res,
           event);
-      return res ? GST_PAD_PROBE_HANDLED : GST_PAD_PROBE_DROP;
+      if (!res) {
+        /* This doesn't actually do anything - pad probe handling ignores
+         * it, but maybe one day */
+        GST_PAD_PROBE_INFO_FLOW_RETURN (info) = GST_FLOW_ERROR;
+      }
+      return GST_PAD_PROBE_HANDLED;
     }
   }
 
