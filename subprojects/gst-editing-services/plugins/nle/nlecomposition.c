@@ -1968,7 +1968,8 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
           curdiff = priv->seek_segment->stop - priv->current_stack_stop;
         else
           curdiff = priv->current_stack_start - priv->seek_segment->start;
-        GST_DEBUG ("curdiff %" GST_TIME_FORMAT, GST_TIME_ARGS (curdiff));
+        GST_DEBUG_OBJECT (comp, "curdiff %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (curdiff));
         if ((curdiff != 0) && ((timestamp < curdiff)
                 || (curdiff > timestamp + diff))) {
           GST_DEBUG_OBJECT (comp,
@@ -2146,8 +2147,8 @@ refine_start_stop_in_region_above_priority (NleComposition * composition,
  */
 
 static GNode *
-convert_list_to_tree (GList ** stack, GstClockTime * start,
-    GstClockTime * stop, guint32 * highprio)
+convert_list_to_tree (NleComposition * comp, GList ** stack,
+    GstClockTime * start, GstClockTime * stop, guint32 * highprio)
 {
   GNode *ret;
   guint nbsinks;
@@ -2203,7 +2204,8 @@ convert_list_to_tree (GList ** stack, GstClockTime * start,
 
     /* FIXME : if num_sinks == -1 : request the proper number of pads */
     for (tmp = g_list_next (*stack); tmp && (!limit || nbsinks);) {
-      g_node_append (ret, convert_list_to_tree (&tmp, start, stop, highprio));
+      g_node_append (ret, convert_list_to_tree (comp, &tmp, start, stop,
+              highprio));
       if (limit)
         nbsinks--;
     }
@@ -2319,7 +2321,7 @@ get_stack_list (NleComposition * comp, GstClockTime timestamp,
 
   /* convert that list to a stack */
   tmp = stack;
-  ret = convert_list_to_tree (&tmp, &nstart, &nstop, &highest);
+  ret = convert_list_to_tree (comp, &tmp, &nstart, &nstop, &highest);
   if (GST_CLOCK_TIME_IS_VALID (first_out_of_stack)) {
     if (reverse && nstart < first_out_of_stack)
       nstart = first_out_of_stack;
@@ -3156,7 +3158,7 @@ resync_state:
     g_atomic_int_set (&priv->stack_initialization_seek_sent, FALSE);
   gst_element_set_locked_state (priv->current_bin, FALSE);
 
-  GST_DEBUG ("going back to parent state");
+  GST_DEBUG_OBJECT (comp, "going back to parent state");
   priv->suppress_child_error = TRUE;
   if (!gst_element_sync_state_with_parent (priv->current_bin)) {
     gst_element_set_locked_state (priv->current_bin, TRUE);
@@ -3170,7 +3172,7 @@ resync_state:
   }
 
   priv->suppress_child_error = FALSE;
-  GST_DEBUG ("gone back to parent state");
+  GST_DEBUG_OBJECT (comp, "gone back to parent state");
 
   return TRUE;
 }
