@@ -25,6 +25,23 @@
 #include <gst/video/video.h>
 #include <va/va.h>
 
+#ifndef G_OS_WIN32
+#include <libdrm/drm_fourcc.h>
+#else
+/**
+ * DRM_FORMAT_INVALID: (skip) (attributes doc.skip=true)
+ */
+#define DRM_FORMAT_INVALID     0
+/**
+ * DRM_FORMAT_MOD_LINEAR: (skip) (attributes doc.skip=true)
+ */
+#define DRM_FORMAT_MOD_LINEAR  0ULL
+/**
+ * DRM_FORMAT_MOD_INVALID: (skip) (attributes doc.skip=true)
+ */
+#define DRM_FORMAT_MOD_INVALID 0xffffffffffffff
+#endif
+
 G_BEGIN_DECLS
 
 GST_VA_API
