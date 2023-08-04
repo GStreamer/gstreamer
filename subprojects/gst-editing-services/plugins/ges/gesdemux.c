@@ -32,6 +32,7 @@
  * uri scheme.
  **/
 
+#include "plugins/shared/nlegesplugin.h"
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -70,6 +71,10 @@ struct _GESDemux
 
 G_DEFINE_TYPE (GESDemux, ges_demux, ges_base_bin_get_type ());
 #define GES_DEMUX(obj) ((GESDemux*)obj)
+
+static void
+ges_demux_adapt_timeline_duration (GESDemux * self, GESTimeline * timeline,
+    GstElement * parent);
 
 enum
 {
@@ -344,75 +349,61 @@ ges_demux_set_srcpad_probe (GstElement * element, GstPad * pad,
   return TRUE;
 }
 
-static void
-ges_demux_adapt_timeline_duration (GESDemux * self, GESTimeline * timeline)
+void
+ges_demux_adapt_timeline_duration (GESDemux * self, GESTimeline * timeline,
+    GstElement * parent)
 {
-  GType nleobject_type = g_type_from_name ("NleObject");
-  GstObject *parent, *tmpparent;
+  GstClockTime duration, inpoint, timeline_duration;
 
-  parent = gst_object_get_parent (GST_OBJECT (self));
-  while (parent) {
-    if (g_type_is_a (G_OBJECT_TYPE (parent), nleobject_type)) {
-      GstClockTime duration, inpoint, timeline_duration;
+  g_object_get (parent, "duration", &duration, "inpoint", &inpoint, NULL);
+  g_object_get (timeline, "duration", &timeline_duration, NULL);
 
-      g_object_get (parent, "duration", &duration, "inpoint", &inpoint, NULL);
-      g_object_get (timeline, "duration", &timeline_duration, NULL);
+  GST_DEBUG_OBJECT (self, "Adapting duration");
+  if (inpoint + duration > timeline_duration) {
+    GESLayer *layer = ges_timeline_get_layer (timeline, 0);
 
-      if (inpoint + duration > timeline_duration) {
-        GESLayer *layer = ges_timeline_get_layer (timeline, 0);
+    if (layer) {
+      GESClip *clip = GES_CLIP (ges_test_clip_new ());
+      GList *tmp, *tracks = ges_timeline_get_tracks (timeline);
 
-        if (layer) {
-          GESClip *clip = GES_CLIP (ges_test_clip_new ());
-          GList *tmp, *tracks = ges_timeline_get_tracks (timeline);
+      g_object_set (clip, "start", timeline_duration, "duration",
+          inpoint + duration, "vpattern", GES_VIDEO_TEST_PATTERN_SMPTE75, NULL);
+      ges_layer_add_clip (layer, clip);
+      for (tmp = tracks; tmp; tmp = tmp->next) {
+        if (GES_IS_VIDEO_TRACK (tmp->data)) {
+          GESEffect *text;
+          GstCaps *caps;
+          gchar *effect_str_full = NULL;
+          const gchar *effect_str =
+              "textoverlay text=\"Nested timeline too short, please FIX!\" halignment=center valignment=center";
 
-          g_object_set (clip, "start", timeline_duration, "duration",
-              inpoint + duration, "vpattern", GES_VIDEO_TEST_PATTERN_SMPTE75,
-              NULL);
-          ges_layer_add_clip (layer, clip);
-          for (tmp = tracks; tmp; tmp = tmp->next) {
-            if (GES_IS_VIDEO_TRACK (tmp->data)) {
-              GESEffect *text;
-              GstCaps *caps;
-              gchar *effect_str_full = NULL;
-              const gchar *effect_str =
-                  "textoverlay text=\"Nested timeline too short, please FIX!\" halignment=center valignment=center";
-
-              g_object_get (tmp->data, "restriction-caps", &caps, NULL);
-              if (caps) {
-                gchar *caps_str = gst_caps_to_string (caps);
-                effect_str = effect_str_full =
-                    g_strdup_printf
-                    ("videoconvertscale ! capsfilter caps=\"%s\" ! %s",
-                    caps_str, effect_str);
-                g_free (caps_str);
-                gst_caps_unref (caps);
-              }
-              text = ges_effect_new (effect_str);
-              g_free (effect_str_full);
-
-              if (!ges_container_add (GES_CONTAINER (clip),
-                      GES_TIMELINE_ELEMENT (text))) {
-                GST_ERROR ("Could not add text overlay to ending clip!");
-              }
-            }
-
+          g_object_get (tmp->data, "restriction-caps", &caps, NULL);
+          if (caps) {
+            gchar *caps_str = gst_caps_to_string (caps);
+            effect_str = effect_str_full =
+                g_strdup_printf
+                ("videoconvertscale ! capsfilter caps=\"%s\" ! %s", caps_str,
+                effect_str);
+            g_free (caps_str);
+            gst_caps_unref (caps);
           }
-          g_list_free_full (tracks, gst_object_unref);
-          GST_INFO_OBJECT (timeline,
-              "Added test clip with duration: %" GST_TIME_FORMAT " - %"
-              GST_TIME_FORMAT " to match parent nleobject duration",
-              GST_TIME_ARGS (timeline_duration),
-              GST_TIME_ARGS (inpoint + duration - timeline_duration));
+          text = ges_effect_new (effect_str);
+          g_free (effect_str_full);
+
+          if (!ges_container_add (GES_CONTAINER (clip),
+                  GES_TIMELINE_ELEMENT (text))) {
+            GST_ERROR ("Could not add text overlay to ending clip!");
+          }
         }
+
       }
-      gst_object_unref (parent);
-
-      return;
+      g_list_free_full (tracks, gst_object_unref);
+      GST_INFO_OBJECT (timeline,
+          "Added test clip with duration: %" GST_TIME_FORMAT " - %"
+          GST_TIME_FORMAT " to match parent nleobject duration",
+          GST_TIME_ARGS (timeline_duration),
+          GST_TIME_ARGS (inpoint + duration - timeline_duration));
     }
-
-    tmpparent = parent;
-    parent = gst_object_get_parent (GST_OBJECT (parent));
-    gst_object_unref (tmpparent);
   }
 }
 
@@ -450,7 +441,20 @@ ges_demux_create_timeline (GESDemux * self, gchar * uri, GError ** error)
   if (data.error)
     goto done;
 
-  ges_demux_adapt_timeline_duration (self, data.timeline);
+  NleQueryParentNleObject *query_parent =
+      g_atomic_rc_box_new0 (NleQueryParentNleObject);
+  GType query_gtype = g_type_from_name ("NleQueryParentNleObject");
+  gst_element_post_message (GST_ELEMENT (self),
+      gst_message_new_element (GST_OBJECT (self),
+          gst_structure_new (NLE_QUERY_PARENT_NLE_OBJECT, "query",
+              query_gtype, query_parent, NULL)));
+  g_mutex_lock (&query_parent->lock);
+  if (query_parent->nle_object) {
+    ges_demux_adapt_timeline_duration (self, data.timeline,
+        query_parent->nle_object);
+  }
+  g_mutex_unlock (&query_parent->lock);
+  g_boxed_free (query_gtype, query_parent);
 
   query = gst_query_new_uri ();
   if (gst_pad_peer_query (self->sinkpad, query)) {
