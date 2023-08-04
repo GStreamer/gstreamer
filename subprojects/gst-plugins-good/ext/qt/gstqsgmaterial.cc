@@ -82,7 +82,7 @@ public:
       program()->setUniformValue(m_id_opacity, state.opacity());
 
     GstQSGMaterial *mat = static_cast<GstQSGMaterial *>(newMaterial);
-    mat->bind(this);
+    mat->bind(this, this->v_format);
   }
 
   char const *const *attributeNames() const override
@@ -378,7 +378,7 @@ GstQSGMaterial::getBuffer (gboolean * was_bound)
 }
 
 void
-GstQSGMaterial::bind(GstQSGMaterialShader *shader)
+GstQSGMaterial::bind(GstQSGMaterialShader *shader, GstVideoFormat v_format)
 {
   const GstGLFuncs *gl;
   GstGLContext *context, *qt_context;
@@ -473,12 +473,13 @@ out:
   if (G_UNLIKELY (use_dummy_tex)) {
     QOpenGLContext *qglcontext = QOpenGLContext::currentContext ();
     QOpenGLFunctions *funcs = qglcontext->functions ();
+    const GstVideoFormatInfo *finfo = gst_video_format_get_info (v_format);
 
     /* Create dummy texture if not already present.
      * Use the Qt OpenGL functions instead of the GstGL ones,
      * since we are using the Qt OpenGL context here, and we must
      * be able to delete the texture in the destructor. */
-    for (int i = GST_VIDEO_FRAME_N_PLANES (&this->v_frame) - 1; i >= 0; i--) {
+    for (int i = finfo->n_planes - 1; i >= 0; i--) {
       shader->program()->setUniformValue(shader->tex_uniforms[i], i);
       funcs->glActiveTexture(GL_TEXTURE0 + i);
 
@@ -491,7 +492,7 @@ out:
         const int tex_sidelength = 64;
 
         std::vector < guint8 > dummy_data (tex_sidelength * tex_sidelength * 4, 0);
-        switch (GST_VIDEO_FRAME_FORMAT (&this->v_frame)) {
+        switch (v_format) {
           case GST_VIDEO_FORMAT_RGBA:
           case GST_VIDEO_FORMAT_BGRA:
           case GST_VIDEO_FORMAT_RGB:

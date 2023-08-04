@@ -46,7 +46,7 @@ public:
     GstBuffer * getBuffer (gboolean * was_bound);
     bool compatibleWith(GstVideoInfo *v_info);
 
-    void bind(GstQSGMaterialShader *);
+    void bind(GstQSGMaterialShader *, GstVideoFormat);
 
     /* QSGMaterial */
     QSGMaterialShader *createShader() const override;
