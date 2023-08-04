@@ -140,6 +140,11 @@ nle_bin_handle_message (GstBin * bin, GstMessage * message)
 
       return;
     }
+  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_COLLECTION) {
+    GST_INFO_OBJECT (bin, "Dropping stream collection message, "
+        " those are internal to and should be kept as such");
+
+    return;
   }
 
   return GST_BIN_CLASS (parent_class)->handle_message (bin, message);

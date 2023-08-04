@@ -488,17 +488,37 @@ ges_track_handle_message (GstBin * bin, GstMessage * message)
 {
   GESTrack *track = GES_TRACK (bin);
 
-  if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_STREAM_COLLECTION) {
-    GstStreamCollection *collection;
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_STREAM_COLLECTION:
+      g_error ("Internal stream collection messages should be kept internal");
+      break;
+    case GST_MESSAGE_ELEMENT:
+    {
+      const GstStructure *s = gst_message_get_structure (message);
 
-    gst_message_parse_stream_collection (message, &collection);
-    if (GES_IS_TIMELINE (GST_MESSAGE_SRC (message))) {
-      ges_track_select_subtimeline_streams (track, collection,
-          GST_ELEMENT (GST_MESSAGE_SRC (message)));
+      if (gst_structure_has_name (s, "ges-timeline-collection")) {
+        GstStreamCollection *collection;
+
+        gst_structure_get (s, "collection", GST_TYPE_STREAM_COLLECTION,
+            &collection, NULL);
+
+        ges_track_select_subtimeline_streams (track, collection,
+            GST_ELEMENT (GST_MESSAGE_SRC (message)));
+
+        GST_INFO_OBJECT (bin,
+            "Handled ges-timeline-collection message, dropping");
+
+        gst_message_unref (message);
+        return;
+      }
+
+      break;
     }
+    default:
+      break;
   }
 
-  gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+  GST_BIN_CLASS (ges_track_parent_class)->handle_message (bin, message);
 }
 
 /* GObject virtual methods */

@@ -752,7 +752,7 @@ _extract (GESAsset * asset, GError ** error)
   GESUriSourceAssetPrivate *priv = GES_URI_SOURCE_ASSET (asset)->priv;
 
   if (GST_IS_DISCOVERER_STREAM_INFO (priv->sinfo) == FALSE) {
-    GST_WARNING_OBJECT (asset, "Can not extract as no strean info set");
+    GST_WARNING_OBJECT (asset, "Can not extract as no stream info set");
 
     return NULL;
   }

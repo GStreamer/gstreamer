@@ -514,6 +514,16 @@ forward:
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
+static void
+ges_timeline_post_stream_collection (GESTimeline * timeline)
+{
+  gst_element_post_message ((GstElement *) timeline,
+      gst_message_new_element ((GstObject *) timeline,
+          gst_structure_new ("ges-timeline-collection", "collection",
+              GST_TYPE_STREAM_COLLECTION, timeline->priv->stream_collection,
+              NULL)));
+}
+
 static GstStateChangeReturn
 ges_timeline_change_state (GstElement * element, GstStateChange transition)
 {
@@ -524,9 +534,7 @@ ges_timeline_change_state (GstElement * element, GstStateChange transition)
       transition);
 
   if (transition == GST_STATE_CHANGE_READY_TO_PAUSED)
-    gst_element_post_message ((GstElement *) timeline,
-        gst_message_new_stream_collection ((GstObject *) timeline,
-            timeline->priv->stream_collection));
+    ges_timeline_post_stream_collection (timeline);
   return res;
 }
 
@@ -2894,9 +2902,7 @@ ges_timeline_commit (GESTimeline * timeline)
   UNLOCK_DYN (timeline);
 
   if (pcollection != timeline->priv->stream_collection) {
-    gst_element_post_message ((GstElement *) timeline,
-        gst_message_new_stream_collection ((GstObject *) timeline,
-            timeline->priv->stream_collection));
+    ges_timeline_post_stream_collection (timeline);
   }
 
   ges_timeline_emit_snapping (timeline, NULL, NULL, GST_CLOCK_TIME_NONE);
