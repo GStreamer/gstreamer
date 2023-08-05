@@ -23624,7 +23624,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "GStreamer souphttpsrc 1.23.0.1 ",
+                        "default": "GStreamer souphttpsrc {VERSION} ",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
