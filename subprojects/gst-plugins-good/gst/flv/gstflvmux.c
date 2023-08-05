@@ -47,6 +47,8 @@
 #include "gstflvmux.h"
 #include "amfdefs.h"
 
+#include <gst/glib-compat-private.h>
+
 GST_DEBUG_CATEGORY_STATIC (flvmux_debug);
 #define GST_CAT_DEFAULT flvmux_debug
 
@@ -61,7 +63,7 @@ enum
 
 #define DEFAULT_STREAMABLE FALSE
 #define MAX_INDEX_ENTRIES 128
-#define DEFAULT_METADATACREATOR "GStreamer " PACKAGE_VERSION " FLV muxer"
+#define DEFAULT_METADATACREATOR "GStreamer {VERSION} FLV muxer"
 #define DEFAULT_SKIP_BACKWARDS_STREAMS FALSE
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
@@ -1125,29 +1127,37 @@ gst_flv_mux_create_metadata (GstFlvMux * mux)
     tags_written++;
   }
 
-  _gst_buffer_new_and_alloc (2 + 15 + 1 + 2 + strlen (mux->metadatacreator),
-      &tmp, &data);
+  GString *tag_string = g_string_new (mux->metadatacreator);
+  g_string_replace (tag_string, "{VERSION}", PACKAGE_VERSION, 0);
+
+  _gst_buffer_new_and_alloc (2 + 15 + 1 + 2 + tag_string->len, &tmp, &data);
   data[0] = 0;                  /* 15 bytes name */
   data[1] = 15;
   memcpy (&data[2], "metadatacreator", 15);
   data[17] = 2;                 /* string */
-  data[18] = (strlen (mux->metadatacreator) >> 8) & 0xff;
-  data[19] = (strlen (mux->metadatacreator)) & 0xff;
-  memcpy (&data[20], mux->metadatacreator, strlen (mux->metadatacreator));
+  data[18] = (tag_string->len >> 8) & 0xff;
+  data[19] = tag_string->len & 0xff;
+  memcpy (&data[20], tag_string->str, tag_string->len);
   script_tag = gst_buffer_append (script_tag, tmp);
   tags_written++;
 
-  _gst_buffer_new_and_alloc (2 + 7 + 1 + 2 + strlen (mux->encoder),
-      &tmp, &data);
+  g_string_truncate (tag_string, 0);
+  g_string_append (tag_string, mux->encoder);
+  g_string_replace (tag_string, "{VERSION}", PACKAGE_VERSION, 0);
+
+  _gst_buffer_new_and_alloc (2 + 7 + 1 + 2 + tag_string->len, &tmp, &data);
   data[0] = 0;                  /* 7 bytes name */
   data[1] = 7;
   memcpy (&data[2], "encoder", 7);
   data[9] = 2;                  /* string */
-  data[10] = (strlen (mux->encoder) >> 8) & 0xff;
-  data[11] = (strlen (mux->encoder)) & 0xff;
-  memcpy (&data[12], mux->encoder, strlen (mux->encoder));
+  data[10] = (tag_string->len >> 8) & 0xff;
+  data[11] = tag_string->len & 0xff;
+  memcpy (&data[12], tag_string->str, tag_string->len);
   script_tag = gst_buffer_append (script_tag, tmp);
   tags_written++;
+
+  g_string_free (tag_string, TRUE);
+  tag_string = NULL;
 
   {
     time_t secs;
