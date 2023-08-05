@@ -101,6 +101,8 @@
 
 #include "gstrtspclientsink.h"
 
+#include "../glib-compat-private.h"
+
 typedef struct _GstRtspClientSinkPad GstRtspClientSinkPad;
 typedef GstGhostPadClass GstRtspClientSinkPadClass;
 
@@ -301,7 +303,7 @@ gst_rtsp_client_sink_ntp_time_source_get_type (void)
 #define DEFAULT_TLS_DATABASE     NULL
 #define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
-#define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
+#define DEFAULT_USER_AGENT       "GStreamer/{VERSION}"
 #define DEFAULT_PROFILES         GST_RTSP_PROFILE_AVP
 #define DEFAULT_RTX_TIME_MS      500
 #define DEFAULT_PUBLISH_CLOCK_MODE GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK
@@ -2166,9 +2168,13 @@ gst_rtsp_client_sink_init_request (GstRTSPClientSink * sink,
     return res;
 
   /* set user-agent */
-  if (sink->user_agent)
-    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT,
-        sink->user_agent);
+  if (sink->user_agent) {
+    GString *user_agent = g_string_new (sink->user_agent);
+
+    g_string_replace (user_agent, "{VERSION}", PACKAGE_VERSION, 0);
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, user_agent->str);
+    g_string_free (user_agent, TRUE);
+  }
 
   return res;
 }
