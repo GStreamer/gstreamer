@@ -434,7 +434,8 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_SSL_CA_FILE,
       g_param_spec_string ("ssl-ca-file", "SSL CA File",
           "Location of a SSL anchor CA file to use", DEFAULT_SSL_CA_FILE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+          | GST_PARAM_DOC_SHOW_DEFAULT));
 
   /**
    * GstSoupHTTPSrc::ssl-use-system-ca-file:
@@ -450,7 +451,8 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_SSL_USE_SYSTEM_CA_FILE,
       g_param_spec_boolean ("ssl-use-system-ca-file", "Use System CA File",
           "Use system CA file", DEFAULT_SSL_USE_SYSTEM_CA_FILE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS
+          | GST_PARAM_DOC_SHOW_DEFAULT));
 
   /**
    * GstSoupHTTPSrc::tls-database:
