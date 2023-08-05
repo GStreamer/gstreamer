@@ -117,6 +117,8 @@
 #include "gstrtspelements.h"
 #include "gstrtspsrc.h"
 
+#include <gst/glib-compat-private.h>
+
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
@@ -299,7 +301,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_TLS_INTERACTION     NULL
 #define DEFAULT_DO_RETRANSMISSION        TRUE
 #define DEFAULT_NTP_TIME_SOURCE  NTP_TIME_SOURCE_NTP
-#define DEFAULT_USER_AGENT       "GStreamer/" PACKAGE_VERSION
+#define DEFAULT_USER_AGENT       "GStreamer/{VERSION}"
 #define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
 #define DEFAULT_RFC7273_SYNC         FALSE
 #define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
@@ -894,6 +896,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * GstRTSPSrc::user-agent:
    *
    * The string to set in the User-Agent header.
+   *
+   * If the string contains `{VERSION}` that will be replaced with the
+   * GStreamer version at runtime (since GStreamer 1.24).
    *
    * Since: 1.6
    */
@@ -5467,8 +5472,13 @@ gst_rtspsrc_init_request (GstRTSPSrc * src, GstRTSPMessage * msg,
     return res;
 
   /* set user-agent */
-  if (src->user_agent)
-    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, src->user_agent);
+  if (src->user_agent) {
+    GString *user_agent = g_string_new (src->user_agent);
+
+    g_string_replace (user_agent, "{VERSION}", PACKAGE_VERSION, 0);
+    gst_rtsp_message_add_header (msg, GST_RTSP_HDR_USER_AGENT, user_agent->str);
+    g_string_free (user_agent, TRUE);
+  }
 
   return res;
 }
