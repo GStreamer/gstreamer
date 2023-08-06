@@ -4,7 +4,7 @@ lc3_sources = [
   'gstlc3enc.c',
 ]
 
-lc3_dep = dependency('liblc3', required:get_option ('lc3'))
+lc3_dep = dependency('lc3', required:get_option ('lc3'))
 
 if lc3_dep.found()
   gstlc3 = library('gstlc3',

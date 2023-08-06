@@ -4,3 +4,5 @@ url=https://github.com/google/liblc3.git
 depth=1
 revision=v1.0.3
 
+[provide]
+lc3 = liblc3_dep
