@@ -543,33 +543,37 @@ _fixup_src_caps (GstVaDisplay * display, GstCaps * caps)
 {
   if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_IHD)) {
     GstCaps *ret;
-    GstStructure *s;
-    GstCapsFeatures *f;
     guint i, len;
 
     ret = gst_caps_copy (caps);
 
     len = gst_caps_get_size (ret);
     for (i = 0; i < len; i++) {
-      s = gst_caps_get_structure (ret, i);
-      f = gst_caps_get_features (ret, i);
-      if (gst_caps_features_is_equal (f,
-              GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)) {
-        /* rgbp is not correctly mapped into memory */
-        guint i, size;
-        GValue out = G_VALUE_INIT;
-        const GValue *in = gst_structure_get_value (s, "format");
+      guint j, size;
+      GValue out = G_VALUE_INIT;
+      const GValue *in;
+      GstStructure *s;
+      GstCapsFeatures *f;
 
-        size = gst_value_list_get_size (in);
-        gst_value_list_init (&out, size);
-        for (i = 0; i < size; i++) {
-          const GValue *fmt = gst_value_list_get_value (in, i);
-          if (g_strcmp0 (g_value_get_string (fmt), "RGBP") != 0)
-            gst_value_list_append_value (&out, fmt);
-        }
-        gst_structure_set_value (s, "format", &out);
-        g_value_unset (&out);
+      f = gst_caps_get_features (ret, i);
+      if (!gst_caps_features_is_equal (f,
+              GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY))
+        continue;
+
+      s = gst_caps_get_structure (ret, i);
+
+      in = gst_structure_get_value (s, "format");
+
+      size = gst_value_list_get_size (in);
+      gst_value_list_init (&out, size);
+      for (j = 0; j < size; j++) {
+        const GValue *fmt = gst_value_list_get_value (in, j);
+
+        /* rgbp is not correctly mapped into memory */
+        if (g_strcmp0 (g_value_get_string (fmt), "RGBP") != 0)
+          gst_value_list_append_value (&out, fmt);
       }
+      gst_structure_take_value (s, "format", &out);
     }
 
     return ret;
