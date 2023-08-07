@@ -447,7 +447,9 @@ gst_hls_sink2_handle_message (GstBin * bin, GstMessage * message)
             entry_location = g_path_get_basename (sink->current_location);
           } else {
             gchar *name = g_path_get_basename (sink->current_location);
-            entry_location = g_build_filename (sink->playlist_root, name, NULL);
+            /* g_build_filename() will insert back slash on Windows */
+            entry_location = g_build_path ("/",
+                sink->playlist_root, name, NULL);
             g_free (name);
           }
 
