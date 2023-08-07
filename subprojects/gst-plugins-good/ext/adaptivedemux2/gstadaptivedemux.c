@@ -986,6 +986,7 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
       GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
           (_("Invalid manifest URI")),
           ("Manifest URI needs to use either data:, http:// or https://"));
+      gst_query_unref (query);
       ret = FALSE;
       goto unlock_out;
     }
