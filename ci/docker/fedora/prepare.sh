@@ -219,7 +219,7 @@ rm -f *.rpm
 
 # Install Rust
 RUSTUP_VERSION=1.26.0
-RUST_VERSION=1.71.0
+RUST_VERSION=1.71.1
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 dnf install -y wget
