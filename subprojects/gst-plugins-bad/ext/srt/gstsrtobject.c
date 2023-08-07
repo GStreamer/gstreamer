@@ -139,6 +139,7 @@ struct srt_constant_params
 
 static const bool bool_false = false;
 static const bool bool_true = true;
+static const int32_t int32_zero = 0;
 static const struct linger no_linger = { 0, 0 };
 
 /* *INDENT-OFF* */
@@ -147,6 +148,7 @@ static const struct srt_constant_params srt_params[] = {
   {"SRTO_RCVSYN",    SRTO_RCVSYN,    &bool_false, sizeof bool_false}, /* non-blocking */
   {"SRTO_LINGER",    SRTO_LINGER,    &no_linger,  sizeof no_linger},  /* no linger time */
   {"SRTO_TSBPDMODE", SRTO_TSBPDMODE, &bool_true,  sizeof bool_true},  /* Timestamp-based Packet Delivery mode must be enabled */
+  {"SRTO_IPV6ONLY",  SRTO_IPV6ONLY,  &int32_zero, sizeof int32_zero}, /* must be either 0 or 1 before binding to :: */
   {NULL, -1, NULL, 0},
 };
 /* *INDENT-ON* */
