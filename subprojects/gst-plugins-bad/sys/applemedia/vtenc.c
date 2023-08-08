@@ -768,14 +768,14 @@ gst_vtenc_start (GstVideoEncoder * enc)
   self->is_flushing = FALSE;
   self->downstream_ret = GST_FLOW_OK;
 
-  self->output_queue = gst_queue_array_new (0);
+  self->output_queue = gst_queue_array_new (VTENC_OUTPUT_QUEUE_SIZE);
   /* Set clear_func to unref all remaining frames in gst_queue_array_free() */
   gst_queue_array_set_clear_func (self->output_queue,
       (GDestroyNotify) gst_video_codec_frame_unref);
 
   /* Create the output task, but pause it immediately */
   self->pause_task = TRUE;
-  if (!gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (enc),
+  if (!gst_pad_start_task (GST_VIDEO_ENCODER_SRC_PAD (enc),
           (GstTaskFunction) gst_vtenc_loop, self, NULL)) {
     GST_ERROR_OBJECT (self, "failed to start output thread");
     return FALSE;
@@ -1741,7 +1741,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 
   /* If this condition changes later while we're still in this function,
    * it'll just fail on next frame encode or in _finish() */
-  task_state = gst_pad_get_task_state (GST_VIDEO_DECODER_SRC_PAD (self));
+  task_state = gst_pad_get_task_state (GST_VIDEO_ENCODER_SRC_PAD (self));
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
     /* Abort if our loop failed to push frames downstream... */
     if (self->downstream_ret != GST_FLOW_OK) {
