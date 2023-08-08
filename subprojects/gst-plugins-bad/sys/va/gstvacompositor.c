@@ -1099,7 +1099,7 @@ gst_va_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
 {
   GstVaCompositor *self = GST_VA_COMPOSITOR (agg);
 
-  if (!gst_video_info_from_caps (&self->other_info, caps)) {
+  if (!gst_va_video_info_from_caps (&self->other_info, NULL, caps)) {
     GST_ERROR_OBJECT (self, "invalid caps");
     return FALSE;
   }
@@ -1363,6 +1363,141 @@ _choose_format (GstVideoFormat fmt1, GstVideoFormat fmt2)
 #undef CHOOSE_FORMAT
 }
 
+static GstCaps *
+gst_va_compositor_update_caps (GstVideoAggregator * vagg, GstCaps * src_caps)
+{
+  GList *tmp;
+  GstVideoFormat fmt, best_va, best_dma, best_sys;
+  GstVideoAggregatorPad *pad;
+  GstVaCompositorPad *va_pad;
+  GArray *va_formats, *dma_formats, *modifiers, *sys_formats;
+  GstCaps *ret_caps = NULL, *clip_caps = NULL;
+  guint i;
+
+  /* We only decide caps feature and video format here. Other fields are
+     fixated in fixate_src_caps() later.
+     We consider the features first, in the order of "memory:VAMemory",
+     "memory:DMABuf" and "memory:SystemMemory". Then within that feature,
+     we iterate each input pad's format and find the best matched one. */
+  va_formats = _collect_formats_in_caps_by_feature (src_caps,
+      GST_CAPS_FEATURE_MEMORY_VA, NULL);
+  dma_formats = _collect_formats_in_caps_by_feature (src_caps,
+      GST_CAPS_FEATURE_MEMORY_DMABUF, &modifiers);
+  sys_formats = _collect_formats_in_caps_by_feature (src_caps,
+      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
+
+  best_va = GST_VIDEO_FORMAT_UNKNOWN;
+  best_dma = GST_VIDEO_FORMAT_UNKNOWN;
+  best_sys = GST_VIDEO_FORMAT_UNKNOWN;
+
+  GST_OBJECT_LOCK (vagg);
+
+  for (tmp = GST_ELEMENT (vagg)->sinkpads; tmp; tmp = tmp->next) {
+    pad = tmp->data;
+    va_pad = GST_VA_COMPOSITOR_PAD (pad);
+
+    g_assert (!GST_IS_VIDEO_AGGREGATOR_CONVERT_PAD (pad));
+
+    if (!pad->info.finfo)
+      continue;
+
+    if (!va_pad->sinkpad_caps)
+      continue;
+
+    fmt = GST_VIDEO_INFO_FORMAT (&va_pad->in_info);
+    if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    if (va_formats) {
+      for (i = 0; i < va_formats->len; i++) {
+        if (fmt == g_array_index (va_formats, GstVideoFormat, i))
+          break;
+      }
+
+      if (i < va_formats->len)
+        best_va = _choose_format (best_va, fmt);
+    }
+
+    if (dma_formats) {
+      for (i = 0; i < dma_formats->len; i++) {
+        if (fmt == g_array_index (dma_formats, GstVideoFormat, i))
+          break;
+      }
+
+      if (i < dma_formats->len)
+        best_dma = _choose_format (best_dma, fmt);
+    }
+
+    if (sys_formats) {
+      for (i = 0; i < sys_formats->len; i++) {
+        if (fmt == g_array_index (sys_formats, GstVideoFormat, i))
+          break;
+      }
+
+      if (i < sys_formats->len)
+        best_sys = _choose_format (best_sys, fmt);
+    }
+  }
+
+  GST_OBJECT_UNLOCK (vagg);
+
+  if (va_formats) {
+    if (best_va != GST_VIDEO_FORMAT_UNKNOWN) {
+      clip_caps = _caps_from_format_and_feature (best_va,
+          DRM_FORMAT_MOD_INVALID, GST_CAPS_FEATURE_MEMORY_VA);
+    } else {
+      clip_caps = gst_caps_new_empty_simple ("video/x-raw");
+      gst_caps_set_features_simple (clip_caps,
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+    }
+  } else if (dma_formats) {
+    g_assert (dma_formats->len == modifiers->len);
+
+    if (best_dma != GST_VIDEO_FORMAT_UNKNOWN) {
+      for (i = 0; i < dma_formats->len; i++) {
+        if (best_dma == g_array_index (dma_formats, GstVideoFormat, i))
+          break;
+      }
+
+      g_assert (i < dma_formats->len);
+      g_assert (i < modifiers->len);
+      clip_caps = _caps_from_format_and_feature (best_dma,
+          g_array_index (modifiers, guint64, i),
+          GST_CAPS_FEATURE_MEMORY_DMABUF);
+    } else {
+      clip_caps = gst_caps_new_empty_simple ("video/x-raw");
+      gst_caps_set_features_simple (clip_caps,
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+    }
+  } else if (sys_formats) {
+    if (best_sys != GST_VIDEO_FORMAT_UNKNOWN) {
+      clip_caps = _caps_from_format_and_feature (best_sys,
+          DRM_FORMAT_MOD_INVALID, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    } else {
+      clip_caps = gst_caps_new_empty_simple ("video/x-raw");
+    }
+  }
+
+  if (clip_caps)
+    ret_caps = gst_caps_intersect (src_caps, clip_caps);
+
+  if (clip_caps)
+    gst_caps_unref (clip_caps);
+  if (va_formats)
+    g_array_unref (va_formats);
+  if (dma_formats)
+    g_array_unref (dma_formats);
+  if (modifiers)
+    g_array_unref (modifiers);
+  if (sys_formats)
+    g_array_unref (sys_formats);
+
+  GST_DEBUG_OBJECT (vagg, "update src caps: %" GST_PTR_FORMAT
+      "get result caps: %" GST_PTR_FORMAT, src_caps, ret_caps);
+
+  return ret_caps;
+}
+
 static gboolean
 gst_va_compositor_pad_set_info_unlocked (GstVaCompositorPad * pad,
     GstCaps * caps)
@@ -1499,6 +1634,7 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_compositor_aggregate_frames);
   vagg_class->create_output_buffer =
       GST_DEBUG_FUNCPTR (gst_va_compositor_create_output_buffer);
+  vagg_class->update_caps = GST_DEBUG_FUNCPTR (gst_va_compositor_update_caps);
 
   /**
    * GstVaCompositor:device-path:
