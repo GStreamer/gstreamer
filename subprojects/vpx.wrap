@@ -1,0 +1,7 @@
+[wrap-git]
+url = https://gitlab.freedesktop.org/gstreamer/meson-ports/libvpx.git
+revision = meson-1.13
+clone-recursive = false
+
+[provide]
+dependency_names = vpx
