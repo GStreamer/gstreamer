@@ -28,6 +28,18 @@ if ole32_dep.found() and ksuser_dep.found() and have_audioclient_h
     wasapi_args += ['-DHAVE_AUDCLNT_STREAMOPTIONS']
   endif
 
+  # MinGW defines some of these GUIDs in headers, whereas with MSVC we're
+  # expected to define them in the code. Check which ones we need to provide.
+  if cc.get_id() != 'msvc'
+    if cc.has_header_symbol('audioclient.h', 'IID_IAudioClient')
+      wasapi_args += ['-DHAVE_AUDCLNT_GUIDS']
+    endif
+
+    if cc.has_header_symbol('audioclient.h', 'IID_IAudioClient3')
+      wasapi_args += ['-DHAVE_AUDCLNT3_GUID']
+    endif
+  endif
+
   gstwasapi = library('gstwasapi',
     wasapi_sources,
     c_args : gst_plugins_bad_args + wasapi_args,
