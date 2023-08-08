@@ -47,6 +47,7 @@
 #include "gstvacompositor.h"
 
 #include <gst/va/gstva.h>
+#include <gst/va/gstvavideoformat.h>
 #include <gst/va/vasurfaceimage.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
@@ -79,6 +80,13 @@ struct _GstVaCompositorPad
   gint width;
   gint height;
   gdouble alpha;
+
+  GstCaps *sinkpad_caps;
+  union
+  {
+    GstVideoInfo in_info;
+    GstVideoInfoDmaDrm in_drm_info;
+  };
 };
 
 enum
@@ -168,6 +176,8 @@ gst_va_compositor_pad_finalize (GObject * object)
     gst_clear_object (&self->pool);
   }
 
+  gst_clear_caps (&self->sinkpad_caps);
+
   G_OBJECT_CLASS (gst_va_compositor_pad_parent_class)->finalize (object);
 }
 
@@ -180,6 +190,8 @@ gst_va_compositor_pad_init (GstVaCompositorPad * self)
   self->width = DEFAULT_PAD_WIDTH;
   self->height = DEFAULT_PAD_HEIGHT;
   self->alpha = DEFAULT_PAD_ALPHA;
+
+  self->sinkpad_caps = NULL;
 }
 
 static void
@@ -1177,6 +1189,45 @@ gst_va_compositor_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
   return gst_caps_fixate (ret);
 }
 
+static gboolean
+gst_va_compositor_pad_set_info_unlocked (GstVaCompositorPad * pad,
+    GstCaps * caps)
+{
+  if (!gst_video_is_dma_drm_caps (caps)) {
+    gst_video_info_dma_drm_init (&pad->in_drm_info);
+    return gst_video_info_from_caps (&pad->in_info, caps);
+  }
+
+  if (!gst_video_info_dma_drm_from_caps (&pad->in_drm_info, caps))
+    return FALSE;
+  if (!gst_va_dma_drm_info_to_video_info (&pad->in_drm_info, &pad->in_info))
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
+gst_va_compositor_sink_event (GstAggregator * agg, GstAggregatorPad * bpad,
+    GstEvent * event)
+{
+  GstVaCompositorPad *va_pad = GST_VA_COMPOSITOR_PAD (bpad);
+  GstCaps *caps;
+
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CAPS) {
+    gst_event_parse_caps (event, &caps);
+
+    GST_OBJECT_LOCK (agg);
+    if (!gst_va_compositor_pad_set_info_unlocked (va_pad, caps)) {
+      GST_OBJECT_UNLOCK (agg);
+      return FALSE;
+    }
+    gst_caps_replace (&va_pad->sinkpad_caps, caps);
+    GST_OBJECT_UNLOCK (agg);
+  }
+
+  return GST_AGGREGATOR_CLASS (parent_class)->sink_event (agg, bpad, event);
+}
+
 /* *INDENT-OFF* */
 static const gchar *caps_str =
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VA,
@@ -1268,6 +1319,7 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_va_compositor_negotiated_src_caps);
   agg_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_va_compositor_decide_allocation);
+  agg_class->sink_event = GST_DEBUG_FUNCPTR (gst_va_compositor_sink_event);
 
   vagg_class->aggregate_frames =
       GST_DEBUG_FUNCPTR (gst_va_compositor_aggregate_frames);
