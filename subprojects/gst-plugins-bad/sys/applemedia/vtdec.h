@@ -21,6 +21,7 @@
 #ifndef _GST_VTDEC_H_
 #define _GST_VTDEC_H_
 
+#include <gst/base/gstqueuearray.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideodecoder.h>
 #include <CoreMedia/CoreMedia.h>
@@ -52,10 +53,18 @@ struct _GstVtdec
   GstVideoInfo video_info;
   CMFormatDescriptionRef format_description;
   VTDecompressionSessionRef session;
-  GAsyncQueue *reorder_queue;
-  gint reorder_queue_length;
   GstVideoTextureCache *texture_cache;
   GstGLContextHelper *ctxh;
+
+  GstQueueArray *reorder_queue;
+  gint dbp_size;
+  GMutex queue_mutex;
+  GCond queue_cond;
+
+  GstFlowReturn downstream_ret;
+  gboolean is_flushing;
+  gboolean is_draining;
+  gboolean pause_task;
 
 #if defined(APPLEMEDIA_MOLTENVK)
   GstVulkanInstance *instance;
