@@ -49,6 +49,7 @@
 #include <gst/va/gstva.h>
 #include <gst/va/gstvavideoformat.h>
 #include <gst/va/vasurfaceimage.h>
+#include <gst/va/gstvavideoformat.h>
 #include <gst/video/video.h>
 #include <va/va_drmcommon.h>
 
@@ -1187,6 +1188,125 @@ gst_va_compositor_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
   }
 
   return gst_caps_fixate (ret);
+}
+
+static GstCaps *
+_caps_from_format_and_feature (GstVideoFormat format,
+    guint64 modifier, const gchar * feature)
+{
+  GstCaps *caps;
+  gboolean is_dma = g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0;
+
+  caps = gst_caps_new_empty_simple ("video/x-raw");
+
+  if (is_dma) {
+    gchar *dma_str;
+    guint32 fourcc = gst_va_drm_fourcc_from_video_format (format);
+
+    dma_str = gst_video_dma_drm_fourcc_to_string (fourcc, modifier);
+
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING, "DMA_DRM",
+        "drm-format", G_TYPE_STRING, dma_str, NULL);
+    g_free (dma_str);
+  } else {
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING,
+        gst_video_format_to_string (format), NULL);
+  }
+
+  if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0 ||
+      g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_VA) == 0)
+    gst_caps_set_features_simple (caps,
+        gst_caps_features_from_string (feature));
+
+  return caps;
+}
+
+static GArray *
+_collect_formats_in_caps_by_feature (GstCaps * caps,
+    const gchar * feature, GArray ** ret_modifiers)
+{
+  guint i, j, len, capslen;
+  GstCapsFeatures *features;
+  GstStructure *structure;
+  gboolean is_dma;
+  GstVideoFormat fmt;
+  guint64 modifier;
+  GArray *formats, *modifiers = NULL;
+  const GValue *format;
+  guint32 fourcc;
+
+  is_dma = (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0);
+
+  formats = g_array_new (FALSE, TRUE, sizeof (GstVideoFormat));
+  if (is_dma)
+    modifiers = g_array_new (FALSE, TRUE, sizeof (guint64));
+
+  capslen = gst_caps_get_size (caps);
+  for (i = 0; i < capslen; i++) {
+    features = gst_caps_get_features (caps, i);
+    if (!gst_caps_features_contains (features, feature))
+      continue;
+
+    structure = gst_caps_get_structure (caps, i);
+
+    format = (is_dma) ? gst_structure_get_value (structure, "drm-format")
+        : gst_structure_get_value (structure, "format");
+    if (!format)
+      continue;
+
+    if (GST_VALUE_HOLDS_LIST (format)) {
+      len = gst_value_list_get_size (format);
+
+      for (j = 0; j < len; j++) {
+        const GValue *val;
+
+        val = gst_value_list_get_value (format, j);
+        if (!G_VALUE_HOLDS_STRING (val))
+          continue;
+
+        if (is_dma) {
+          fourcc = gst_video_dma_drm_fourcc_from_string
+              (g_value_get_string (val), &modifier);
+          fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+        } else {
+          fmt = gst_video_format_from_string (g_value_get_string (val));
+        }
+        if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
+          continue;
+
+        g_array_append_val (formats, fmt);
+
+        if (is_dma)
+          g_array_append_val (modifiers, modifier);
+      }
+    } else if (G_VALUE_HOLDS_STRING (format)) {
+      if (is_dma) {
+        fourcc = gst_video_dma_drm_fourcc_from_string
+            (g_value_get_string (format), &modifier);
+        fmt = gst_va_video_format_from_drm_fourcc (fourcc);
+      } else {
+        fmt = gst_video_format_from_string (g_value_get_string (format));
+      }
+      if (fmt != GST_VIDEO_FORMAT_UNKNOWN) {
+        g_array_append_val (formats, fmt);
+        if (is_dma)
+          g_array_append_val (modifiers, modifier);
+      }
+    }
+  }
+
+  if (formats->len == 0)
+    g_clear_pointer (&formats, g_array_unref);
+
+  if (modifiers && modifiers->len == 0)
+    g_clear_pointer (&modifiers, g_array_unref);
+
+  if (ret_modifiers)
+    *ret_modifiers = modifiers;
+  else if (modifiers)
+    g_array_unref (modifiers);
+
+  return formats;
 }
 
 static GstVideoFormat
