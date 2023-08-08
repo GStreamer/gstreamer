@@ -1189,6 +1189,60 @@ gst_va_compositor_fixate_src_caps (GstAggregator * agg, GstCaps * caps)
   return gst_caps_fixate (ret);
 }
 
+static GstVideoFormat
+_choose_format (GstVideoFormat fmt1, GstVideoFormat fmt2)
+{
+  const GstVideoFormatInfo *info1 = gst_video_format_get_info (fmt1);
+  const GstVideoFormatInfo *info2 = gst_video_format_get_info (fmt2);
+
+
+#define IS_KNONWN(info) (GST_VIDEO_FORMAT_INFO_FORMAT(info) != GST_VIDEO_FORMAT_UNKNOWN)
+#define IS_8_BITS(info) (GST_VIDEO_FORMAT_INFO_BITS (info) == 8)
+#define IS_RGB_PLANAR(info) (GST_VIDEO_FORMAT_INFO_N_PLANES (info) == 1)
+#define IS_YUV_420(info) ((GST_VIDEO_FORMAT_INFO_W_SUB (info, 1) == 1)  \
+                          && (GST_VIDEO_FORMAT_INFO_H_SUB (info, 1) == 1))
+#define CHOOSE_FORMAT(cmp)                        \
+    G_STMT_START {                                \
+      if (cmp (info1) && !cmp (info2)) return fmt1; \
+      if (!cmp (info1) && cmp (info2)) return fmt2; \
+    } G_STMT_END;
+
+  /* prefer the other if one is unknown */
+  CHOOSE_FORMAT (IS_KNONWN);
+
+  /* Prefer non-complex format */
+  CHOOSE_FORMAT (!GST_VIDEO_FORMAT_INFO_IS_COMPLEX);
+
+  /* Prefer the depth of 8 */
+  CHOOSE_FORMAT (IS_8_BITS);
+
+  /* Prefer RGB */
+  CHOOSE_FORMAT (GST_VIDEO_FORMAT_INFO_IS_RGB);
+
+  if (GST_VIDEO_FORMAT_INFO_IS_RGB (info1)
+      && GST_VIDEO_FORMAT_INFO_IS_RGB (info2)) {
+    /* Prefer packed RGB than planar. */
+    CHOOSE_FORMAT (IS_RGB_PLANAR);
+
+    /* Prefer RGB with alpha channel. */
+    CHOOSE_FORMAT (GST_VIDEO_FORMAT_INFO_HAS_ALPHA);
+  }
+
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (info1)
+      && GST_VIDEO_FORMAT_INFO_IS_YUV (info2)) {
+    /* Prefer YUV 4:2:0. */
+    CHOOSE_FORMAT (IS_YUV_420);
+  }
+
+  /* Fallback */
+  return fmt1;
+
+#undef IS_8_BITS
+#undef IS_RGB_PLANAR
+#undef IS_YUV_420
+#undef CHOOSE_FORMAT
+}
+
 static gboolean
 gst_va_compositor_pad_set_info_unlocked (GstVaCompositorPad * pad,
     GstCaps * caps)
