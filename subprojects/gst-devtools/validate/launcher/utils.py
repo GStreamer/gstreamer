@@ -376,6 +376,8 @@ class BackTraceGenerator(Loggable):
         else:
             coredumpctl = ['coredumpctl']
 
+        coredumpctl.append('-q')
+
         try:
             subprocess.check_output(coredumpctl)
             self.coredumpctl = coredumpctl
