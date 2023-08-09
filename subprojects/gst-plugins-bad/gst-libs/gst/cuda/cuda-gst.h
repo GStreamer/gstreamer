@@ -169,6 +169,108 @@ CUresult CUDAAPI CuLaunchKernel       (CUfunction f,
                                        void **kernelParams,
                                        void **extra);
 
+GST_CUDA_API
+CUresult CUDAAPI CuEventCreate       (CUevent *phEvent,
+                                      unsigned int Flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuEventDestroy      (CUevent hEvent);
+
+GST_CUDA_API
+CUresult CUDAAPI CuEventRecord       (CUevent hEvent,
+                                      CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuEventSynchronize  (CUevent hEvent);
+
+GST_CUDA_API
+CUresult CUDAAPI CuIpcGetEventHandle (CUipcEventHandle *pHandle,
+                                      CUevent event);
+
+GST_CUDA_API
+CUresult CUDAAPI CuIpcOpenEventHandle (CUevent* phEvent,
+                                       CUipcEventHandle handle);
+
+GST_CUDA_API
+CUresult CUDAAPI CuIpcGetMemHandle   (CUipcMemHandle *pHandle,
+                                      CUdeviceptr dptr);
+
+GST_CUDA_API
+CUresult CUDAAPI CuIpcOpenMemHandle  (CUdeviceptr *pdptr,
+                                      CUipcMemHandle handle,
+                                      unsigned int Flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuIpcCloseMemHandle (CUdeviceptr dptr);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemAddressReserve (CUdeviceptr *ptr,
+                                      size_t size,
+                                      size_t alignment,
+                                      CUdeviceptr addr,
+                                      unsigned long long flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemAddressFree    (CUdeviceptr ptr,
+                                      size_t size);
+
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemCreate         (CUmemGenericAllocationHandle *handle,
+                                      size_t size,
+                                      const CUmemAllocationProp *prop,
+                                      unsigned long long flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemRelease        (CUmemGenericAllocationHandle handle);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemExportToShareableHandle (void *shareableHandle,
+                                               CUmemGenericAllocationHandle handle,
+                                               CUmemAllocationHandleType handleType,
+                                               unsigned long long flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemImportFromShareableHandle (CUmemGenericAllocationHandle *handle,
+                                                 void *osHandle,
+                                                 CUmemAllocationHandleType shHandleType);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemSetAccess (CUdeviceptr ptr,
+                                 size_t size,
+                                 const CUmemAccessDesc *desc,
+                                 size_t count);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemGetAccess (unsigned long long *flags,
+                                 const CUmemLocation *location,
+                                 CUdeviceptr ptr);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemGetAllocationGranularity (size_t *granularity,
+                                                const CUmemAllocationProp *prop,
+                                                CUmemAllocationGranularity_flags option);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemGetAllocationPropertiesFromHandle (CUmemAllocationProp *prop,
+                                                         CUmemGenericAllocationHandle handle);
+
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemMap (CUdeviceptr ptr,
+                           size_t size,
+                           size_t offset,
+                           CUmemGenericAllocationHandle handle,
+                           unsigned long long flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemUnmap (CUdeviceptr ptr,
+                             size_t size);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemRetainAllocationHandle (CUmemGenericAllocationHandle *handle,
+                                              void *addr);
+
 /* cudaGL.h */
 GST_CUDA_API
 CUresult CUDAAPI CuGraphicsGLRegisterImage  (CUgraphicsResource * pCudaResource,

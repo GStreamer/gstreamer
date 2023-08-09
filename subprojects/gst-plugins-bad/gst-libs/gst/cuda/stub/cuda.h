@@ -30,6 +30,7 @@ typedef gpointer CUarray;
 typedef gpointer CUmodule;
 typedef gpointer CUfunction;
 typedef gpointer CUmipmappedArray;
+typedef gpointer CUevent;
 
 typedef guint64  CUtexObject;
 typedef guintptr CUdeviceptr;
@@ -38,6 +39,8 @@ typedef gint CUdevice;
 typedef enum
 {
   CUDA_SUCCESS = 0,
+  CUDA_ERROR_ALREADY_MAPPED = 208,
+  CUDA_ERROR_NOT_SUPPORTED = 801,
 } CUresult;
 
 typedef enum
@@ -51,6 +54,7 @@ typedef enum
 typedef enum
 {
   CU_DEVICE_ATTRIBUTE_TEXTURE_ALIGNMENT = 14,
+  CU_DEVICE_ATTRIBUTE_UNIFIED_ADDRESSING = 41,
   CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR = 75,
   CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR = 76,
 } CUdevice_attribute;
@@ -109,6 +113,14 @@ typedef enum
 {
   CU_RES_VIEW_FORMAT_NONE = 0,
 } CUresourceViewFormat;
+
+typedef enum
+{
+  CU_EVENT_DEFAULT = 0x0,
+  CU_EVENT_BLOCKING_SYNC = 0x1,
+  CU_EVENT_DISABLE_TIMING = 0x2,
+  CU_EVENT_INTERPROCESS = 0x4,
+} CUevent_flags;
 
 typedef struct
 {
@@ -192,6 +204,87 @@ typedef struct
   guint reserved[16];
 } CUDA_RESOURCE_VIEW_DESC;
 
+typedef enum
+{
+  CU_IPC_MEM_LAZY_ENABLE_PEER_ACCESS = 0x1
+} CUipcMem_flags;
+
+#define CU_IPC_HANDLE_SIZE 64
+typedef struct
+{
+  char reserved[CU_IPC_HANDLE_SIZE];
+} CUipcMemHandle;
+
+typedef struct
+{
+  char reserved[CU_IPC_HANDLE_SIZE];
+} CUipcEventHandle;
+
+typedef unsigned long long CUmemGenericAllocationHandle;
+
+typedef enum
+{
+  CU_MEM_HANDLE_TYPE_NONE = 0x0,
+  CU_MEM_HANDLE_TYPE_POSIX_FILE_DESCRIPTOR = 0x1,
+  CU_MEM_HANDLE_TYPE_WIN32 = 0x2,
+  CU_MEM_HANDLE_TYPE_WIN32_KMT = 0x4,
+  CU_MEM_HANDLE_TYPE_MAX = 0x7FFFFFFF
+} CUmemAllocationHandleType;
+
+typedef enum
+{
+  CU_MEM_ACCESS_FLAGS_PROT_NONE = 0x0,
+  CU_MEM_ACCESS_FLAGS_PROT_READ  = 0x1,
+  CU_MEM_ACCESS_FLAGS_PROT_READWRITE = 0x3,
+  CU_MEM_ACCESS_FLAGS_PROT_MAX = 0x7FFFFFFF
+} CUmemAccess_flags;
+
+typedef enum
+{
+  CU_MEM_LOCATION_TYPE_INVALID = 0x0,
+  CU_MEM_LOCATION_TYPE_DEVICE = 0x1,
+  CU_MEM_LOCATION_TYPE_MAX = 0x7FFFFFFF
+} CUmemLocationType;
+
+typedef enum CUmemAllocationType_enum {
+  CU_MEM_ALLOCATION_TYPE_INVALID = 0x0,
+  CU_MEM_ALLOCATION_TYPE_PINNED = 0x1,
+  CU_MEM_ALLOCATION_TYPE_MAX = 0x7FFFFFFF
+} CUmemAllocationType;
+
+typedef enum
+{
+  CU_MEM_ALLOC_GRANULARITY_MINIMUM = 0x0,
+  CU_MEM_ALLOC_GRANULARITY_RECOMMENDED = 0x1
+} CUmemAllocationGranularity_flags;
+
+typedef struct
+{
+  CUmemLocationType type;
+  int id;
+} CUmemLocation;
+
+typedef struct
+{
+  CUmemAllocationType type;
+  CUmemAllocationHandleType requestedHandleTypes;
+  CUmemLocation location;
+  void *win32HandleMetaData;
+  struct
+  {
+    unsigned char compressionType;
+    unsigned char gpuDirectRDMACapable;
+    unsigned short usage;
+    unsigned char reserved[4];
+  } allocFlags;
+} CUmemAllocationProp;
+
+typedef struct
+{
+  CUmemLocation location;
+  CUmemAccess_flags flags;
+} CUmemAccessDesc;
+
 #define CUDA_VERSION 10000
 
 #ifdef _WIN32
@@ -213,6 +306,8 @@ typedef struct
 #define cuMemcpy2D cuMemcpy2D_v2
 #define cuMemcpy2DAsync cuMemcpy2DAsync_v2
 #define cuMemFree cuMemFree_v2
+
+#define cuEventDestroy cuEventDestroy_v2
 
 #define CU_TRSF_READ_AS_INTEGER 1
 

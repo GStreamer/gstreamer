@@ -43,10 +43,18 @@ GST_DEBUG_CATEGORY (gst_cudaloader_debug);
   } \
 } G_STMT_END;
 
+#define LOAD_OPTIONAL_SYMBOL(name,func) G_STMT_START { \
+  if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &vtable->func)) { \
+    GST_WARNING ("Failed to load '%s', %s", G_STRINGIFY (name), g_module_error()); \
+    return; \
+  } \
+} G_STMT_END;
+
 /* *INDENT-OFF* */
 typedef struct _GstNvCodecCudaVTable
 {
   gboolean loaded;
+  gboolean have_virtual_alloc;
 
   CUresult (CUDAAPI * CuInit) (unsigned int Flags);
   CUresult (CUDAAPI * CuGetErrorName) (CUresult error, const char **pStr);
@@ -125,6 +133,22 @@ typedef struct _GstNvCodecCudaVTable
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       CUGLDeviceList deviceList);
 
+  CUresult (CUDAAPI * CuEventCreate) (CUevent *phEvent, unsigned int Flags);
+  CUresult (CUDAAPI * CuEventDestroy) (CUevent hEvent);
+  CUresult (CUDAAPI * CuEventRecord) (CUevent hEvent, CUstream hStream);
+  CUresult (CUDAAPI * CuEventSynchronize) (CUevent hEvent);
+
+  CUresult (CUDAAPI * CuIpcGetEventHandle) (CUipcEventHandle *pHandle,
+      CUevent event);
+  CUresult (CUDAAPI * CuIpcOpenEventHandle) (CUevent* phEvent,
+      CUipcEventHandle handle);
+
+  CUresult (CUDAAPI * CuIpcGetMemHandle) (CUipcMemHandle *pHandle,
+      CUdeviceptr dptr);
+  CUresult (CUDAAPI * CuIpcOpenMemHandle) (CUdeviceptr *pdptr,
+      CUipcMemHandle handle, unsigned int Flags);
+  CUresult (CUDAAPI * CuIpcCloseMemHandle) (CUdeviceptr dptr);
+
 #ifdef G_OS_WIN32
   CUresult (CUDAAPI * CuGraphicsD3D11RegisterResource) (CUgraphicsResource *
       pCudaResource, ID3D11Resource * pD3DResource, unsigned int Flags);
@@ -134,10 +158,65 @@ typedef struct _GstNvCodecCudaVTable
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       ID3D11Device * pD3D11Device, CUd3d11DeviceList deviceList);
 #endif
+
+  CUresult (CUDAAPI * CuMemAddressReserve) (CUdeviceptr *ptr, size_t size,
+      size_t alignment, CUdeviceptr addr, unsigned long long flags);
+  CUresult (CUDAAPI * CuMemAddressFree) (CUdeviceptr ptr, size_t size);
+  CUresult (CUDAAPI * CuMemCreate) (CUmemGenericAllocationHandle *handle,
+      size_t size, const CUmemAllocationProp *prop, unsigned long long flags);
+  CUresult (CUDAAPI * CuMemRelease) (CUmemGenericAllocationHandle handle);
+  CUresult (CUDAAPI * CuMemExportToShareableHandle) (void *shareableHandle,
+      CUmemGenericAllocationHandle handle, CUmemAllocationHandleType handleType,
+      unsigned long long flags);
+  CUresult (CUDAAPI * CuMemImportFromShareableHandle)
+      (CUmemGenericAllocationHandle *handle, void *osHandle,
+       CUmemAllocationHandleType shHandleType);
+  CUresult (CUDAAPI * CuMemSetAccess) (CUdeviceptr ptr, size_t size,
+      const CUmemAccessDesc *desc, size_t count);
+  CUresult (CUDAAPI * CuMemGetAccess) (unsigned long long *flags,
+      const CUmemLocation *location, CUdeviceptr ptr);
+  CUresult (CUDAAPI * CuMemGetAllocationGranularity) (size_t *granularity,
+      const CUmemAllocationProp *prop, CUmemAllocationGranularity_flags option);
+  CUresult (CUDAAPI * CuMemGetAllocationPropertiesFromHandle)
+      (CUmemAllocationProp *prop, CUmemGenericAllocationHandle handle);
+  CUresult (CUDAAPI * CuMemMap) (CUdeviceptr ptr, size_t size, size_t offset,
+       CUmemGenericAllocationHandle handle, unsigned long long flags);
+  CUresult (CUDAAPI * CuMemUnmap) (CUdeviceptr ptr, size_t size);
+  CUresult (CUDAAPI * CuMemRetainAllocationHandle)
+      (CUmemGenericAllocationHandle *handle, void *addr);
 } GstNvCodecCudaVTable;
 /* *INDENT-ON* */
 
 static GstNvCodecCudaVTable gst_cuda_vtable = { 0, };
+
+static void
+gst_cuda_load_optional_symbols (GModule * module)
+{
+  GstNvCodecCudaVTable *vtable = &gst_cuda_vtable;
+
+  LOAD_OPTIONAL_SYMBOL (cuMemAddressReserve, CuMemAddressReserve);
+  LOAD_OPTIONAL_SYMBOL (cuMemAddressFree, CuMemAddressFree);
+  LOAD_OPTIONAL_SYMBOL (cuMemCreate, CuMemCreate);
+  LOAD_OPTIONAL_SYMBOL (cuMemRelease, CuMemRelease);
+  LOAD_OPTIONAL_SYMBOL (cuMemExportToShareableHandle,
+      CuMemExportToShareableHandle);
+  LOAD_OPTIONAL_SYMBOL (cuMemImportFromShareableHandle,
+      CuMemImportFromShareableHandle);
+  LOAD_OPTIONAL_SYMBOL (cuMemSetAccess, CuMemSetAccess);
+  LOAD_OPTIONAL_SYMBOL (cuMemGetAccess, CuMemGetAccess);
+  LOAD_OPTIONAL_SYMBOL (cuMemGetAllocationGranularity,
+      CuMemGetAllocationGranularity);
+  LOAD_OPTIONAL_SYMBOL (cuMemGetAllocationPropertiesFromHandle,
+      CuMemGetAllocationPropertiesFromHandle);
+  LOAD_OPTIONAL_SYMBOL (cuMemMap, CuMemMap);
+  LOAD_OPTIONAL_SYMBOL (cuMemUnmap, CuMemUnmap);
+  LOAD_OPTIONAL_SYMBOL (cuMemRetainAllocationHandle,
+      CuMemRetainAllocationHandle);
+
+  GST_INFO ("Virtual alloc symbols are loaded");
+
+  vtable->have_virtual_alloc = TRUE;
+}
 
 static void
 gst_cuda_load_library_once_func (void)
@@ -205,6 +284,18 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuTexObjectDestroy, CuTexObjectDestroy);
   LOAD_SYMBOL (cuLaunchKernel, CuLaunchKernel);
 
+  LOAD_SYMBOL (cuEventCreate, CuEventCreate);
+  LOAD_SYMBOL (cuEventDestroy, CuEventDestroy);
+  LOAD_SYMBOL (cuEventRecord, CuEventRecord);
+  LOAD_SYMBOL (cuEventSynchronize, CuEventSynchronize);
+
+  LOAD_SYMBOL (cuIpcGetEventHandle, CuIpcGetEventHandle);
+  LOAD_SYMBOL (cuIpcOpenEventHandle, CuIpcOpenEventHandle);
+
+  LOAD_SYMBOL (cuIpcGetMemHandle, CuIpcGetMemHandle);
+  LOAD_SYMBOL (cuIpcOpenMemHandle, CuIpcOpenMemHandle);
+  LOAD_SYMBOL (cuIpcCloseMemHandle, CuIpcCloseMemHandle);
+
   /* cudaGL.h */
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
@@ -219,6 +310,8 @@ gst_cuda_load_library_once_func (void)
 #endif
 
   vtable->loaded = TRUE;
+
+  gst_cuda_load_optional_symbols (module);
 }
 
 /**
@@ -238,6 +331,14 @@ gst_cuda_load_library (void)
   } GST_CUDA_CALL_ONCE_END;
 
   return gst_cuda_vtable.loaded;
+}
+
+gboolean
+gst_cuda_virtual_memory_symbol_loaded (void)
+{
+  gst_cuda_load_library ();
+
+  return gst_cuda_vtable.have_virtual_alloc;
 }
 
 CUresult CUDAAPI
@@ -555,6 +656,211 @@ CuLaunchKernel (CUfunction f, unsigned int gridDimX,
   return gst_cuda_vtable.CuLaunchKernel (f, gridDimX, gridDimY, gridDimZ,
       blockDimX, blockDimY, blockDimZ, sharedMemBytes, hStream, kernelParams,
       extra);
+}
+
+CUresult CUDAAPI
+CuEventCreate (CUevent * phEvent, unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuEventCreate);
+
+  return gst_cuda_vtable.CuEventCreate (phEvent, Flags);
+}
+
+CUresult CUDAAPI
+CuEventDestroy (CUevent hEvent)
+{
+  g_assert (gst_cuda_vtable.CuEventDestroy);
+
+  return gst_cuda_vtable.CuEventDestroy (hEvent);
+}
+
+CUresult CUDAAPI
+CuEventRecord (CUevent hEvent, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuEventRecord);
+
+  return gst_cuda_vtable.CuEventRecord (hEvent, hStream);
+}
+
+CUresult CUDAAPI
+CuEventSynchronize (CUevent hEvent)
+{
+  g_assert (gst_cuda_vtable.CuEventSynchronize);
+
+  return gst_cuda_vtable.CuEventSynchronize (hEvent);
+}
+
+CUresult CUDAAPI
+CuIpcGetEventHandle (CUipcEventHandle * pHandle, CUevent event)
+{
+  g_assert (gst_cuda_vtable.CuIpcGetEventHandle);
+
+  return gst_cuda_vtable.CuIpcGetEventHandle (pHandle, event);
+}
+
+CUresult CUDAAPI
+CuIpcOpenEventHandle (CUevent * phEvent, CUipcEventHandle handle)
+{
+  g_assert (gst_cuda_vtable.CuIpcOpenEventHandle);
+
+  return gst_cuda_vtable.CuIpcOpenEventHandle (phEvent, handle);
+}
+
+CUresult CUDAAPI
+CuIpcGetMemHandle (CUipcMemHandle * pHandle, CUdeviceptr dptr)
+{
+  g_assert (gst_cuda_vtable.CuIpcGetMemHandle);
+
+  return gst_cuda_vtable.CuIpcGetMemHandle (pHandle, dptr);
+}
+
+CUresult CUDAAPI
+CuIpcOpenMemHandle (CUdeviceptr * pdptr, CUipcMemHandle handle,
+    unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuIpcOpenMemHandle);
+
+  return gst_cuda_vtable.CuIpcOpenMemHandle (pdptr, handle, Flags);
+}
+
+CUresult CUDAAPI
+CuIpcCloseMemHandle (CUdeviceptr dptr)
+{
+  g_assert (gst_cuda_vtable.CuIpcCloseMemHandle);
+
+  return gst_cuda_vtable.CuIpcCloseMemHandle (dptr);
+}
+
+CUresult CUDAAPI
+CuMemAddressReserve (CUdeviceptr * ptr, size_t size, size_t alignment,
+    CUdeviceptr addr, unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemAddressReserve)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAddressReserve (ptr,
+      size, alignment, addr, flags);
+}
+
+CUresult CUDAAPI
+CuMemAddressFree (CUdeviceptr ptr, size_t size)
+{
+  if (!gst_cuda_vtable.CuMemAddressFree)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemAddressFree (ptr, size);
+}
+
+CUresult CUDAAPI
+CuMemCreate (CUmemGenericAllocationHandle * handle, size_t size,
+    const CUmemAllocationProp * prop, unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemCreate)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemCreate (handle, size, prop, flags);
+}
+
+CUresult CUDAAPI
+CuMemRelease (CUmemGenericAllocationHandle handle)
+{
+  if (!gst_cuda_vtable.CuMemRelease)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemRelease (handle);
+}
+
+CUresult CUDAAPI
+CuMemExportToShareableHandle (void *shareableHandle,
+    CUmemGenericAllocationHandle handle, CUmemAllocationHandleType handleType,
+    unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemExportToShareableHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemExportToShareableHandle (shareableHandle,
+      handle, handleType, flags);
+}
+
+CUresult CUDAAPI
+CuMemImportFromShareableHandle (CUmemGenericAllocationHandle * handle,
+    void *osHandle, CUmemAllocationHandleType shHandleType)
+{
+  if (!gst_cuda_vtable.CuMemImportFromShareableHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemImportFromShareableHandle (handle,
+      osHandle, shHandleType);
+}
+
+CUresult CUDAAPI
+CuMemSetAccess (CUdeviceptr ptr, size_t size, const CUmemAccessDesc * desc,
+    size_t count)
+{
+  if (!gst_cuda_vtable.CuMemSetAccess)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemSetAccess (ptr, size, desc, count);
+}
+
+CUresult CUDAAPI
+CuMemGetAccess (unsigned long long *flags, const CUmemLocation * location,
+    CUdeviceptr ptr)
+{
+  if (!gst_cuda_vtable.CuMemGetAccess)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemGetAccess (flags, location, ptr);
+}
+
+CUresult CUDAAPI
+CuMemGetAllocationGranularity (size_t *granularity,
+    const CUmemAllocationProp * prop, CUmemAllocationGranularity_flags option)
+{
+  if (!gst_cuda_vtable.CuMemGetAllocationGranularity)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemGetAllocationGranularity (granularity,
+      prop, option);
+}
+
+CUresult CUDAAPI
+CuMemGetAllocationPropertiesFromHandle (CUmemAllocationProp * prop,
+    CUmemGenericAllocationHandle handle)
+{
+  if (!gst_cuda_vtable.CuMemGetAllocationPropertiesFromHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemGetAllocationPropertiesFromHandle (prop, handle);
+}
+
+
+CUresult CUDAAPI
+CuMemMap (CUdeviceptr ptr, size_t size, size_t offset,
+    CUmemGenericAllocationHandle handle, unsigned long long flags)
+{
+  if (!gst_cuda_vtable.CuMemMap)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemMap (ptr, size, offset, handle, flags);
+}
+
+CUresult CUDAAPI
+CuMemUnmap (CUdeviceptr ptr, size_t size)
+{
+  if (!gst_cuda_vtable.CuMemUnmap)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemUnmap (ptr, size);
+}
+
+CUresult CUDAAPI
+CuMemRetainAllocationHandle (CUmemGenericAllocationHandle * handle, void *addr)
+{
+  if (!gst_cuda_vtable.CuMemRetainAllocationHandle)
+    return CUDA_ERROR_NOT_SUPPORTED;
+
+  return gst_cuda_vtable.CuMemRetainAllocationHandle (handle, addr);
 }
 
 /* cudaGL.h */
