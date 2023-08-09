@@ -1886,6 +1886,7 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
 
   READ_UINT8 (&nr, vps->max_layers_minus1, 6);
   READ_UINT8 (&nr, vps->max_sub_layers_minus1, 3);
+  CHECK_ALLOWED (vps->max_sub_layers_minus1, 0, 6);
   READ_UINT8 (&nr, vps->temporal_id_nesting_flag, 1);
 
   /* skip reserved_0xffff_16bits */
@@ -2056,6 +2057,7 @@ gst_h265_parse_sps (GstH265Parser * parser, GstH265NalUnit * nalu,
   READ_UINT8 (&nr, sps->vps_id, 4);
 
   READ_UINT8 (&nr, sps->max_sub_layers_minus1, 3);
+  CHECK_ALLOWED (sps->max_sub_layers_minus1, 0, 6);
   READ_UINT8 (&nr, sps->temporal_id_nesting_flag, 1);
 
   if (!gst_h265_parse_profile_tier_level (&sps->profile_tier_level, &nr,
