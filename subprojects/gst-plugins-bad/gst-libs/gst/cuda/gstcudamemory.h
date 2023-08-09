@@ -332,6 +332,13 @@ GstCudaPoolAllocator * gst_cuda_pool_allocator_new (GstCudaContext * context,
                                                     const GstVideoInfo * info);
 
 GST_CUDA_API
+GstCudaPoolAllocator * gst_cuda_pool_allocator_new_for_virtual_memory (GstCudaContext * context,
+                                                                       GstCudaStream * stream,
+                                                                       const GstVideoInfo * info,
+                                                                       const CUmemAllocationProp * prop,
+                                                                       CUmemAllocationGranularity_flags granularity_flags);
+
+GST_CUDA_API
 GstFlowReturn          gst_cuda_pool_allocator_acquire_memory (GstCudaPoolAllocator * allocator,
                                                                GstMemory ** memory);
 

@@ -35,6 +35,7 @@
 
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
+#include <sddl.h>
 #endif
 
 #ifdef HAVE_NVCODEC_NVMM
@@ -1744,4 +1745,86 @@ _gst_cuda_debug (CUresult result, GstDebugCategory * cat,
   }
 
   return TRUE;
+}
+
+#ifdef G_OS_WIN32
+/* Defined in ntdef.h */
+struct OBJECT_ATTRIBUTES
+{
+  ULONG Length;
+  HANDLE RootDirectory;
+  PVOID ObjectName;
+  ULONG Attributes;
+  PVOID SecurityDescriptor;
+  PVOID SecurityQualityOfService;
+};
+#endif
+
+gpointer
+gst_cuda_get_win32_handle_metadata (void)
+{
+#ifdef G_OS_WIN32
+  static const gchar sddl[] = "D:P(OA;;GARCSDWDWORPWPCCDCLCSWLODTCRFA;;;WD)";
+  static OBJECT_ATTRIBUTES attr;
+  static BOOL initialized = FALSE;
+
+  /*
+   * D:P(string_ace) -> DACL protected with "string_ace"
+   *
+   * ace_string format
+   * ace_type;ace_flags;rights;object_guid;inherit_object_guid;account_sid
+   *
+   * ace_type: OA (ACCESS_ALLOWED_OBJECT_ACE_TYPE)
+   *
+   * ace_flags: (empty)
+   *
+   * rights: GARCSDWDWOCCDCLCSWLODTWPRPCRFA (allow all)
+   * - Generic access rights
+   *   GA (GENERIC_ALL)
+   * - Standard access right
+   *   RC (READ_CONTROL) SD (DELETE) WD (WRITE_DAC) WO (WRITE_OWNER)
+   * - Directory service object access right
+   *   RP (ADS_RIGHT_DS_READ_PROP)
+   *   WP (ADS_RIGHT_DS_WRITE_PROP)
+   *   CC (ADS_RIGHT_DS_CREATE_CHILD)
+   *   DC (ADS_RIGHT_DS_DELETE_CHILD)
+   *   LC (ADS_RIGHT_ACTRL_DS_LIST)
+   *   SW (ADS_RIGHT_DS_SELF)
+   *   LO (ADS_RIGHT_DS_LIST_OBJECT)
+   *   DT (ADS_RIGHT_DS_DELETE_TREE)
+   *   CR (ADS_RIGHT_DS_CONTROL_ACCESS)
+   * - File access rights
+   *   FA (FILE_GENERIC_ALL)
+   *
+   * object_guid: (empty)
+   *
+   * inherit_object_guid (empty)
+   *
+   * account_sid: WD (SDDL_EVERYONE)
+   *
+   * See also
+   * https://learn.microsoft.com/en-us/windows/win32/secauthz/security-descriptor-string-format
+   */
+  GST_CUDA_CALL_ONCE_BEGIN {
+    PSECURITY_DESCRIPTOR desc;
+
+    memset (&attr, 0, sizeof (OBJECT_ATTRIBUTES));
+
+    initialized = ConvertStringSecurityDescriptorToSecurityDescriptorA (sddl,
+        SDDL_REVISION_1, &desc, nullptr);
+    if (!initialized)
+      return;
+
+    attr.Length = sizeof (OBJECT_ATTRIBUTES);
+    attr.SecurityDescriptor = desc;
+  }
+  GST_CUDA_CALL_ONCE_END;
+
+  if (!initialized)
+    return nullptr;
+
+  return &attr;
+#else
+  return nullptr;
+#endif
 }

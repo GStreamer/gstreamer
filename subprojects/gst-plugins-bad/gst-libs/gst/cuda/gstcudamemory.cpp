@@ -1363,6 +1363,10 @@ struct _GstCudaPoolAllocatorPrivate
   GstAtomicQueue *queue;
   GstPoll *poll;
 
+  GstCudaMemoryAllocMethod alloc_method;
+  CUmemAllocationProp prop;
+  CUmemAllocationGranularity_flags granularity_flags;
+
   GRecMutex lock;
   gboolean started;
   gboolean active;
@@ -1412,6 +1416,7 @@ gst_cuda_pool_allocator_init (GstCudaPoolAllocator * allocator)
   priv->flushing = 1;
   priv->active = FALSE;
   priv->started = FALSE;
+  priv->alloc_method = GST_CUDA_MEMORY_ALLOC_MALLOC;
 
   /* 1 control write for flushing - the flush token */
   gst_poll_write_control (priv->poll);
@@ -1669,8 +1674,14 @@ gst_cuda_pool_allocator_alloc (GstCudaPoolAllocator * self, GstMemory ** mem)
 
   /* increment the allocation counter */
   g_atomic_int_add (&priv->cur_mems, 1);
-  new_mem = gst_cuda_allocator_alloc ((GstCudaAllocator *) _gst_cuda_allocator,
-      self->context, self->stream, &self->info);
+  if (priv->alloc_method == GST_CUDA_MEMORY_ALLOC_MMAP) {
+    new_mem = gst_cuda_allocator_virtual_alloc (nullptr,
+        self->context, self->stream, &self->info, &priv->prop,
+        priv->granularity_flags);
+  } else {
+    new_mem = gst_cuda_allocator_alloc (nullptr,
+        self->context, self->stream, &self->info);
+  }
   if (!new_mem) {
     GST_ERROR_OBJECT (self, "Failed to allocate new memory");
     g_atomic_int_add (&priv->cur_mems, -1);
@@ -1793,6 +1804,49 @@ gst_cuda_pool_allocator_new (GstCudaContext * context, GstCudaStream * stream,
   if (stream)
     self->stream = gst_cuda_stream_ref (stream);
   self->info = *info;
+
+  return self;
+}
+
+/**
+ * gst_cuda_pool_allocator_new_for_virtual_memory:
+ * @context: a #GstCudaContext
+ * @stream: (allow-none): a #GstCudaStream
+ * @info: a #GstVideoInfo
+ *
+ * Creates a new #GstCudaPoolAllocator instance for virtual memory allocation.
+ *
+ * Returns: (transfer full): a new #GstCudaPoolAllocator instance
+ *
+ * Since: 1.24
+ */
+GstCudaPoolAllocator *
+gst_cuda_pool_allocator_new_for_virtual_memory (GstCudaContext * context,
+    GstCudaStream * stream, const GstVideoInfo * info,
+    const CUmemAllocationProp * prop,
+    CUmemAllocationGranularity_flags granularity_flags)
+{
+  GstCudaPoolAllocator *self;
+
+  g_return_val_if_fail (GST_IS_CUDA_CONTEXT (context), nullptr);
+  g_return_val_if_fail (!stream || GST_IS_CUDA_STREAM (stream), nullptr);
+  g_return_val_if_fail (prop, nullptr);
+
+  self = (GstCudaPoolAllocator *)
+      g_object_new (GST_TYPE_CUDA_POOL_ALLOCATOR, nullptr);
+  gst_object_ref_sink (self);
+
+  self->context = (GstCudaContext *) gst_object_ref (context);
+  if (stream)
+    self->stream = gst_cuda_stream_ref (stream);
+  self->info = *info;
+
+  self->priv->prop = *prop;
+  self->priv->alloc_method = GST_CUDA_MEMORY_ALLOC_MMAP;
+  if (self->priv->prop.requestedHandleTypes == CU_MEM_HANDLE_TYPE_WIN32) {
+    self->priv->prop.win32HandleMetaData =
+        gst_cuda_get_win32_handle_metadata ();
+  }
 
   return self;
 }

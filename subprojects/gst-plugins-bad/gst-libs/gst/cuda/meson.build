@@ -66,6 +66,14 @@ if host_system == 'windows'
     subdir_done()
   endif
 
+  # ConvertStringSecurityDescriptorToSecurityDescriptorA
+  advapi32_lib = cxx.find_library('advapi32', required: false)
+  if not advapi32_lib.found()
+    subdir_done()
+  endif
+
+  gstcuda_platform_dep += [advapi32_lib]
+
   # MinGW 32bits build workaround
   if cc.get_id() != 'msvc'
     extra_args += cc.get_supported_arguments([
