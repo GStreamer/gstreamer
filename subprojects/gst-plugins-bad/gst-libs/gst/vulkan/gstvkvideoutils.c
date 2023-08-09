@@ -220,7 +220,11 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
 
   structure = gst_caps_get_structure (caps, 0);
 
+  profile->usage.sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR;
+  profile->usage.videoUsageHints = VK_VIDEO_DECODE_USAGE_DEFAULT_KHR;
+
   profile->profile.sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR;
+  profile->profile.pNext = &profile->usage;
 
   mime = gst_structure_get_name (structure);
   for (i = 0; i < G_N_ELEMENTS (video_codecs_map); i++) {
@@ -236,7 +240,7 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
               STD_VIDEO_H264_PROFILE_IDC_INVALID;
           profile->codec.h264.pictureLayout =
               VK_VIDEO_DECODE_H264_PICTURE_LAYOUT_FLAG_BITS_MAX_ENUM_KHR;
-          profile->profile.pNext = &profile->codec;
+          profile->usage.pNext = &profile->codec;
 
           profile_str = gst_structure_get_string (structure, "profile");
           for (j = 0; profile_str && j < G_N_ELEMENTS (h264_profile_map); j++) {
@@ -261,7 +265,7 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
           profile->codec.h265.sType = video_codecs_map[i].stype;
           profile->codec.h265.stdProfileIdc =
               STD_VIDEO_H265_PROFILE_IDC_INVALID;
-          profile->profile.pNext = &profile->codec;
+          profile->usage.pNext = &profile->codec;
 
           profile_str = gst_structure_get_string (structure, "profile");
           for (j = 0; profile_str && j < G_N_ELEMENTS (h265_profile_map); j++) {
@@ -274,7 +278,7 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
           break;
         }
         default:
-          profile->profile.pNext = NULL;
+          profile->usage.pNext = NULL;
           break;
       }
 
