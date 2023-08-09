@@ -979,6 +979,9 @@ gst_app_sink_event (GstBaseSink * sink, GstEvent * event)
     gst_queue_array_push_tail (priv->queue, gst_event_ref (event));
     gst_queue_status_info_push_event (&priv->queue_status_info);
 
+    if ((priv->wait_status & APP_WAITING))
+      g_cond_signal (&priv->cond);
+
     g_mutex_unlock (&priv->mutex);
 
     if (callbacks && callbacks->callbacks.new_event) {
