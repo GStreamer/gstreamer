@@ -274,7 +274,7 @@
  * @title: ismlmux
  * @short_description: Muxer for ISML smooth streaming (.isml) files
  *
- * This element merges streams (audio and video) into MJ2 (.mj2) files.
+ * This element merges streams (audio and video) into ISML (.isml) files.
  *
  * The following background intends to explain why various similar muxers
  * are present in this plugin.
@@ -309,10 +309,10 @@
  *
  * ## Example pipelines
  * |[
- * gst-launch-1.0 v4l2src num-buffers=50 ! queue ! jp2kenc ! mj2mux ! filesink location=video.mj2
+ * gst-launch-1.0 videotestsrc num-buffers=50 ! queue ! x264enc ! ismlmux fragment-duration=10 ! filesink location=video.isml
  * ]|
- * Records a video stream captured from a v4l2 device, encodes it into JPEG-2000
- * and muxes it into an mj2 file.
+ * Records a video stream captured from a v4l2 device, encodes it into H.264
+ * and muxes it into an isml file.
  *
  * Documentation last reviewed on 2011-04-21
  */
