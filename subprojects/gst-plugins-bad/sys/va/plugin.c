@@ -51,6 +51,13 @@ GST_DEBUG_CATEGORY (gstva_debug);
  * DMABuf after a tee */
 GRecMutex GST_VA_SHARED_LOCK = { 0, };
 
+#ifdef G_OS_WIN32
+/* Windows support is still experimental */
+#define GST_VA_RANK_PRIMARY GST_RANK_NONE
+#else
+#define GST_VA_RANK_PRIMARY (GST_RANK_PRIMARY + 1)
+#endif
+
 static void
 plugin_add_dependencies (GstPlugin * plugin)
 {
@@ -103,45 +110,43 @@ plugin_register_decoders (GstPlugin * plugin, GstVaDevice * device,
 
     switch (codec) {
       case H264:
-        /* avdec_h264 has primary rank, make this higher than it */
         if (!gst_va_h264_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_PRIMARY + 1)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register H264 decoder: %s",
               device->render_device_path);
         }
         break;
       case HEVC:
-        /* avdec_h265 has primary rank, make this higher than it */
         if (!gst_va_h265_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_PRIMARY + 1)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register H265 decoder: %s",
               device->render_device_path);
         }
         break;
       case VP8:
         if (!gst_va_vp8_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_PRIMARY)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register VP8 decoder: %s",
               device->render_device_path);
         }
         break;
       case VP9:
         if (!gst_va_vp9_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_PRIMARY)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register VP9 decoder: %s",
               device->render_device_path);
         }
         break;
       case MPEG2:
         if (!gst_va_mpeg2_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_SECONDARY)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register Mpeg2 decoder: %s",
               device->render_device_path);
         }
         break;
       case AV1:
         if (!gst_va_av1_dec_register (plugin, device, sinkcaps, srccaps,
-                GST_RANK_PRIMARY)) {
+                GST_VA_RANK_PRIMARY)) {
           GST_WARNING ("Failed to register AV1 decoder: %s",
               device->render_device_path);
         }
