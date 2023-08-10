@@ -101,7 +101,7 @@ mxf_d10_sound_handle_essence_element (const MXFUL * key, GstBuffer * buffer,
   gst_buffer_map (buffer, &map, GST_MAP_READ);
 
   /* Now transform raw AES3 into raw audio, see SMPTE 331M */
-  if ((map.size - 4) % 32 != 0) {
+  if (map.size < 4 || (map.size - 4) % 32 != 0) {
     gst_buffer_unmap (buffer, &map);
     GST_ERROR ("Invalid D10 sound essence buffer size");
     return GST_FLOW_ERROR;
@@ -201,6 +201,7 @@ mxf_d10_create_caps (MXFMetadataTimelineTrack * track, GstTagList ** tags,
     GstAudioFormat audio_format;
 
     if (s->channel_count == 0 ||
+        s->channel_count > 8 ||
         s->quantization_bits == 0 ||
         s->audio_sampling_rate.n == 0 || s->audio_sampling_rate.d == 0) {
       GST_ERROR ("Invalid descriptor");
