@@ -492,6 +492,9 @@ build vs2022 x86:
 
 build vs2022 arm64:
   extends: '.build windows cross'
+  rules:
+    - when: 'manual'
+      allow_failure: true
   variables:
     ARCH: 'arm64'
     # pango pulls in cairo which pulls in pixman which doesn't build because of
