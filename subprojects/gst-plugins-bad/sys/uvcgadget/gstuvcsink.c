@@ -611,8 +611,6 @@ gst_uvc_sink_task (gpointer data)
           GstCaps *configured_caps;
           GstCaps *prev_caps;
 
-          prev_caps = gst_caps_copy (self->cur_caps);
-
           /* The configured caps are not sufficient for negotiation. Select caps
            * from the probed caps that match the configured caps.
            */
@@ -625,8 +623,12 @@ gst_uvc_sink_task (gpointer data)
               self->cur_caps);
           gst_caps_unref (configured_caps);
 
-          if (!gst_caps_is_equal (self->probed_caps, prev_caps))
-            self->caps_changed = !gst_caps_is_equal (self->cur_caps, prev_caps);
+          prev_caps = gst_pad_get_current_caps (self->sinkpad);
+          if (!gst_caps_is_subset (prev_caps, self->cur_caps)) {
+            self->caps_changed = TRUE;
+            GST_DEBUG_OBJECT (self,
+                "caps changed from %" GST_PTR_FORMAT, prev_caps);
+          }
           gst_caps_unref (prev_caps);
         }
         break;
