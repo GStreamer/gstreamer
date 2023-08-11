@@ -813,6 +813,81 @@ modesetting_failed:
 }
 
 static gboolean
+get_all_formats_and_modifiers (GstKMSSink * self, drmModePlane * plane,
+    GArray ** ret_formats, GArray ** ret_modifiers)
+{
+  guint32 i;
+  drmModeObjectProperties *plane_props = NULL;
+  drmModePropertyRes **plane_props_info = NULL;
+  drmModeFormatModifierIterator iter = { 0 };
+  drmModePropertyBlobPtr blob;
+  GArray *formats = NULL, *modifiers = NULL;
+  gboolean ret = FALSE;
+
+  plane_props = drmModeObjectGetProperties (self->fd,
+      plane->plane_id, DRM_MODE_OBJECT_PLANE);
+  if (!plane_props)
+    goto out;
+
+  plane_props_info =
+      g_malloc0 (plane_props->count_props * sizeof (drmModePropertyRes *));
+  for (i = 0; i < plane_props->count_props; i++)
+    plane_props_info[i] = drmModeGetProperty (self->fd, plane_props->props[i]);
+
+  formats = g_array_new (FALSE, FALSE, sizeof (guint32));
+  modifiers = g_array_new (FALSE, FALSE, sizeof (guint64));
+
+  for (i = 0; i < plane_props->count_props; i++) {
+    if (strcmp (plane_props_info[i]->name, "IN_FORMATS"))
+      continue;
+
+    blob = drmModeGetPropertyBlob (self->fd, plane_props->prop_values[i]);
+    if (!blob)
+      continue;
+
+    while (drmModeFormatModifierBlobIterNext (blob, &iter)) {
+      g_array_append_val (formats, iter.fmt);
+      g_array_append_val (modifiers, iter.mod);
+      GST_DEBUG_OBJECT (self, "Plane id %d, get format/modifier pair %"
+          GST_FOURCC_FORMAT ":0x%016" G_GINT64_MODIFIER "x",
+          plane->plane_id, GST_FOURCC_ARGS (iter.fmt), iter.mod);
+    }
+
+    drmModeFreePropertyBlob (blob);
+  }
+
+  if (formats->len == 0)
+    goto out;
+
+  *ret_formats = formats;
+  formats = NULL;
+  *ret_modifiers = modifiers;
+  modifiers = NULL;
+  ret = TRUE;
+
+out:
+  if (plane_props_info) {
+    g_assert (plane_props);
+    for (i = 0; i < plane_props->count_props; i++) {
+      if (plane_props_info[i])
+        drmModeFreeProperty (plane_props_info[i]);
+    }
+
+    g_free (plane_props_info);
+  }
+
+  if (plane_props)
+    drmModeFreeObjectProperties (plane_props);
+
+  if (formats)
+    g_array_unref (formats);
+  if (modifiers)
+    g_array_unref (modifiers);
+
+  return ret;
+}
+
+static gboolean
 ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
     drmModePlane * plane, drmModeRes * res)
 {
