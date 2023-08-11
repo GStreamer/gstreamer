@@ -163,6 +163,7 @@ class Test(Loggable):
 
     def copy(self, nth=None):
         copied_test = copy.copy(self)
+        copied_test.reports = copy.deepcopy(self.reports)
         if nth:
             copied_test.classname += '_it' + str(nth)
             copied_test._uuid = None
