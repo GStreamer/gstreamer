@@ -71,6 +71,7 @@ struct _GstKMSSink {
   GstStructure *plane_props;
 
   GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm vinfo_drm;
   GstCaps *allowed_caps;
   GstBufferPool *pool;
   GstAllocator *allocator;

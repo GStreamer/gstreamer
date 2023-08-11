@@ -1616,11 +1616,41 @@ gst_kms_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstKMSSink *self;
   GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm vinfo_drm;
 
   self = GST_KMS_SINK (bsink);
 
-  if (!gst_video_info_from_caps (&vinfo, caps))
-    goto invalid_format;
+  if (gst_video_is_dma_drm_caps (caps)) {
+    GstVideoFormat video_format;
+    GstVideoInfo tmp_info;
+    guint i;
+
+    if (!gst_video_info_dma_drm_from_caps (&vinfo_drm, caps))
+      goto invalid_format;
+
+    self->vinfo_drm = vinfo_drm;
+
+    /* Convert the dma to traditional video info */
+    video_format = gst_video_format_from_drm (vinfo_drm.drm_fourcc);
+    if (video_format == GST_VIDEO_FORMAT_UNKNOWN)
+      goto invalid_format;
+
+    if (!gst_video_info_set_format (&tmp_info, video_format,
+            GST_VIDEO_INFO_WIDTH (&vinfo_drm.vinfo),
+            GST_VIDEO_INFO_HEIGHT (&vinfo_drm.vinfo)))
+      goto invalid_format;
+
+    vinfo = vinfo_drm.vinfo;
+    vinfo.finfo = tmp_info.finfo;
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+      vinfo.stride[i] = tmp_info.stride[i];
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+      vinfo.offset[i] = tmp_info.offset[i];
+    vinfo.size = tmp_info.size;
+  } else {
+    if (!gst_video_info_from_caps (&vinfo, caps))
+      goto invalid_format;
+  }
   self->vinfo = vinfo;
 
   if (!gst_kms_sink_calculate_display_ratio (self, &vinfo,
@@ -1842,6 +1872,11 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
   if (!self->has_prime_import)
     return FALSE;
 
+  /* Not a DMA format. */
+  if (GST_VIDEO_INFO_FORMAT (&self->vinfo_drm.vinfo) !=
+      GST_VIDEO_FORMAT_DMA_DRM)
+    return FALSE;
+
   /* This will eliminate most non-dmabuf out there */
   if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
     return FALSE;
@@ -1904,8 +1939,8 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
   GST_LOG_OBJECT (self, "found these prime ids: %d, %d, %d, %d", prime_fds[0],
       prime_fds[1], prime_fds[2], prime_fds[3]);
 
-  kmsmem = gst_kms_allocator_dmabuf_import (self->allocator,
-      prime_fds, n_planes, mems_skip, &self->vinfo, 0);
+  kmsmem = gst_kms_allocator_dmabuf_import (self->allocator, prime_fds,
+      n_planes, mems_skip, &self->vinfo, self->vinfo_drm.drm_modifier);
   if (!kmsmem)
     return FALSE;
 
@@ -2470,6 +2505,7 @@ gst_kms_sink_init (GstKMSSink * sink)
   gst_poll_fd_init (&sink->pollfd);
   sink->poll = gst_poll_new (TRUE);
   gst_video_info_init (&sink->vinfo);
+  gst_video_info_dma_drm_init (&sink->vinfo_drm);
   sink->skip_vsync = FALSE;
 
 #ifdef HAVE_DRM_HDR
