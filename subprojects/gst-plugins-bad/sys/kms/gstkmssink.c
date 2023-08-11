@@ -1728,7 +1728,7 @@ gst_kms_sink_import_dmabuf (GstKMSSink * self, GstBuffer * inbuf,
       prime_fds[1], prime_fds[2], prime_fds[3]);
 
   kmsmem = gst_kms_allocator_dmabuf_import (self->allocator,
-      prime_fds, n_planes, mems_skip, &self->vinfo);
+      prime_fds, n_planes, mems_skip, &self->vinfo, 0);
   if (!kmsmem)
     return FALSE;
 
