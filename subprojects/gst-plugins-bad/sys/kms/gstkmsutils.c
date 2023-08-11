@@ -198,7 +198,7 @@ GstCaps *
 gst_kms_sink_caps_template_fill (void)
 {
   gint i;
-  GstCaps *caps;
+  GstCaps *caps, *dma_caps;
   GstStructure *template;
 
   caps = gst_caps_new_empty ();
@@ -210,7 +210,12 @@ gst_kms_sink_caps_template_fill (void)
         "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
     gst_caps_append_structure (caps, template);
   }
-  return gst_caps_simplify (caps);
+
+  caps = gst_caps_simplify (caps);
+
+  dma_caps = gst_caps_from_string (GST_VIDEO_DMA_DRM_CAPS_MAKE);
+
+  return gst_caps_merge (caps, dma_caps);
 }
 
 static const gint device_par_map[][2] = {

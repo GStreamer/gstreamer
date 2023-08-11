@@ -1004,10 +1004,9 @@ static gboolean
 ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
     drmModePlane * plane, drmModeRes * res)
 {
-  GstCaps *out_caps, *tmp_caps, *caps;
+  GstCaps *out_caps, *tmp_caps, *raw_caps, *dma_caps;
+  GArray *all_formats = NULL, *all_modifiers = NULL;
   int i, j;
-  GstVideoFormat fmt;
-  const gchar *format;
   drmModeModeInfo *mode;
   gint count_modes;
 
@@ -1018,6 +1017,12 @@ ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
   if (!out_caps)
     return FALSE;
 
+  if (!self->has_prime_import || !get_all_formats_and_modifiers (self, plane,
+          &all_formats, &all_modifiers)) {
+    GST_INFO_OBJECT (self, "Not support prime import or fail to query "
+        "the fourcc and modifier list, no DMA mode support.");
+  }
+
   if (conn && self->modesetting_enabled)
     count_modes = conn->count_modes;
   else
@@ -1025,44 +1030,28 @@ ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
 
   for (i = 0; i < count_modes; i++) {
     tmp_caps = gst_caps_new_empty ();
-    if (!tmp_caps)
-      return FALSE;
 
     mode = NULL;
     if (conn && self->modesetting_enabled)
       mode = &conn->modes[i];
 
     for (j = 0; j < plane->count_formats; j++) {
-      fmt = gst_video_format_from_drm (plane->formats[j]);
-      if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
-        GST_INFO_OBJECT (self, "ignoring format %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (plane->formats[j]));
-        continue;
-      }
+      raw_caps = create_raw_caps (self, plane->formats[j], all_formats,
+          all_modifiers, mode, res);
+      dma_caps = create_dma_drm_caps (self, plane->formats[j], all_formats,
+          all_modifiers, mode, res);
 
-      format = gst_video_format_to_string (fmt);
-
-      if (mode) {
-        caps = gst_caps_new_simple ("video/x-raw",
-            "format", G_TYPE_STRING, format,
-            "width", G_TYPE_INT, mode->hdisplay,
-            "height", G_TYPE_INT, mode->vdisplay,
-            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-      } else {
-        caps = gst_caps_new_simple ("video/x-raw",
-            "format", G_TYPE_STRING, format,
-            "width", GST_TYPE_INT_RANGE, res->min_width, res->max_width,
-            "height", GST_TYPE_INT_RANGE, res->min_height, res->max_height,
-            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-      }
-      if (!caps)
-        continue;
-
-      tmp_caps = gst_caps_merge (tmp_caps, caps);
+      if (raw_caps)
+        tmp_caps = gst_caps_merge (tmp_caps, raw_caps);
+      if (dma_caps)
+        tmp_caps = gst_caps_merge (tmp_caps, dma_caps);
     }
 
     out_caps = gst_caps_merge (out_caps, gst_caps_simplify (tmp_caps));
   }
+
+  g_clear_pointer (&all_formats, g_array_unref);
+  g_clear_pointer (&all_modifiers, g_array_unref);
 
   if (gst_caps_is_empty (out_caps)) {
     GST_DEBUG_OBJECT (self, "allowed caps is empty");
