@@ -65,6 +65,11 @@ static const char MFX_PLUGINID_VP9D_HW;
 #define MFX_API_SDK  "Intel(R) Media SDK"
 #endif
 
+
+#define MFX_RUNTIME_VERSION_ATLEAST(MFX_VERSION, MAJOR, MINOR) \
+    ((MFX_VERSION.Major > (MAJOR)) ||                           \
+    (MFX_VERSION.Major == (MAJOR) && MFX_VERSION.Minor >= (MINOR)))
+
 G_BEGIN_DECLS
 
 #define GST_MSDK_CAPS_MAKE(format) \

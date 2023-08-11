@@ -1089,6 +1089,49 @@ ensure_filters (GstMsdkVPP * thiz)
     mfx_frc->Algorithm = thiz->frc_algm;
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_frc);
   }
+
+  /* Color properties */
+#if (MFX_VERSION >= 2000)
+  if (MFX_RUNTIME_VERSION_ATLEAST (thiz->version, 2, 0)) {
+    GstVideoInfo *in_vinfo = &thiz->sinkpad_info;
+    GstVideoInfo *out_vinfo = &thiz->srcpad_info;
+    mfxExtVideoSignalInfo in_vsi, out_vsi;
+
+    if (in_vinfo->colorimetry.primaries || in_vinfo->colorimetry.transfer
+        || in_vinfo->colorimetry.matrix || in_vinfo->colorimetry.range) {
+      memset (&in_vsi, 0, sizeof (mfxExtVideoSignalInfo));
+      in_vsi.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO_IN;
+      in_vsi.Header.BufferSz = sizeof (in_vsi);
+      in_vsi.ColourDescriptionPresent = 1;
+      in_vsi.VideoFullRange =
+          (in_vinfo->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255);
+      in_vsi.ColourPrimaries =
+          gst_video_color_primaries_to_iso (in_vinfo->colorimetry.primaries);
+      in_vsi.TransferCharacteristics =
+          gst_video_transfer_function_to_iso (in_vinfo->colorimetry.transfer);
+      in_vsi.MatrixCoefficients =
+          gst_video_color_matrix_to_iso (in_vinfo->colorimetry.matrix);
+      gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & in_vsi);
+    }
+
+    if (out_vinfo->colorimetry.primaries || out_vinfo->colorimetry.transfer
+        || out_vinfo->colorimetry.matrix || out_vinfo->colorimetry.range) {
+      memset (&out_vsi, 0, sizeof (mfxExtVideoSignalInfo));
+      out_vsi.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO_OUT;
+      out_vsi.Header.BufferSz = sizeof (out_vsi);
+      out_vsi.ColourDescriptionPresent = 1;
+      out_vsi.VideoFullRange =
+          (out_vinfo->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255);
+      out_vsi.ColourPrimaries =
+          gst_video_color_primaries_to_iso (out_vinfo->colorimetry.primaries);
+      out_vsi.TransferCharacteristics =
+          gst_video_transfer_function_to_iso (out_vinfo->colorimetry.transfer);
+      out_vsi.MatrixCoefficients =
+          gst_video_color_matrix_to_iso (out_vinfo->colorimetry.matrix);
+      gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & out_vsi);
+    }
+  }
+#endif
 }
 
 static void
@@ -1134,6 +1177,11 @@ gst_msdkvpp_initialize (GstMsdkVPP * thiz)
 
   GST_OBJECT_LOCK (thiz);
   session = gst_msdk_context_get_session (thiz->context);
+  status = MFXQueryVersion (session, &thiz->version);
+  if (status != MFX_ERR_NONE) {
+    GST_ERROR_OBJECT (thiz, "VPP failed to query version");
+    goto no_vpp;
+  }
 
   /* Close the current session if the session has been initialized,
    * otherwise the subsequent function call of MFXVideoVPP_Init() will

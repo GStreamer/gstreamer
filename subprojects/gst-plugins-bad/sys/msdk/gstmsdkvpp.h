@@ -131,6 +131,8 @@ struct _GstMsdkVPP
   mfxFrameAllocRequest request[2];
   GList* locked_in_surfaces;
   GList* locked_out_surfaces;
+
+  mfxVersion version;
 };
 
 struct _GstMsdkVPPClass
