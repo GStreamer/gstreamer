@@ -106,6 +106,7 @@ enum
   PROP_CROP_RIGHT,
   PROP_CROP_TOP,
   PROP_CROP_BOTTOM,
+  PROP_HDR_TONE_MAPPING,
   PROP_N,
 };
 
@@ -131,6 +132,7 @@ enum
 #define PROP_CROP_RIGHT_DEFAULT          0
 #define PROP_CROP_TOP_DEFAULT            0
 #define PROP_CROP_BOTTOM_DEFAULT         0
+#define PROP_HDR_TONE_MAPPING_DEFAULT    0
 
 /* 8 should enough for a normal encoder */
 #define SRC_POOL_SIZE_DEFAULT            8
@@ -1096,6 +1098,11 @@ ensure_filters (GstMsdkVPP * thiz)
     GstVideoInfo *in_vinfo = &thiz->sinkpad_info;
     GstVideoInfo *out_vinfo = &thiz->srcpad_info;
     mfxExtVideoSignalInfo in_vsi, out_vsi;
+    mfxExtMasteringDisplayColourVolume mdcv;
+    mfxExtContentLightLevelInfo cll;
+    const guint chroma_den = 50000;
+    const guint luma_den = 10000;
+    gint tmap = 0;
 
     if (in_vinfo->colorimetry.primaries || in_vinfo->colorimetry.transfer
         || in_vinfo->colorimetry.matrix || in_vinfo->colorimetry.range) {
@@ -1112,6 +1119,70 @@ ensure_filters (GstMsdkVPP * thiz)
       in_vsi.MatrixCoefficients =
           gst_video_color_matrix_to_iso (in_vinfo->colorimetry.matrix);
       gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & in_vsi);
+    }
+
+    if (thiz->hdr_tone_mapping) {
+      if (thiz->have_mdcv) {
+        memset (&mdcv, 0, sizeof (mfxExtMasteringDisplayColourVolume));
+        mdcv.Header.BufferId = MFX_EXTBUFF_MASTERING_DISPLAY_COLOUR_VOLUME_IN;
+        mdcv.Header.BufferSz = sizeof (mfxExtMasteringDisplayColourVolume);
+
+        mdcv.DisplayPrimariesX[0] =
+            MIN ((thiz->mdcv_info.display_primaries[1].x * chroma_den),
+            chroma_den);
+        mdcv.DisplayPrimariesY[0] =
+            MIN ((thiz->mdcv_info.display_primaries[1].y * chroma_den),
+            chroma_den);
+        mdcv.DisplayPrimariesX[1] =
+            MIN ((thiz->mdcv_info.display_primaries[2].x * chroma_den),
+            chroma_den);
+        mdcv.DisplayPrimariesY[1] =
+            MIN ((thiz->mdcv_info.display_primaries[2].y * chroma_den),
+            chroma_den);
+        mdcv.DisplayPrimariesX[2] =
+            MIN ((thiz->mdcv_info.display_primaries[0].x * chroma_den),
+            chroma_den);
+        mdcv.DisplayPrimariesY[2] =
+            MIN ((thiz->mdcv_info.display_primaries[0].y * chroma_den),
+            chroma_den);
+
+        mdcv.WhitePointX =
+            MIN ((thiz->mdcv_info.white_point.x * chroma_den), chroma_den);
+        mdcv.WhitePointY =
+            MIN ((thiz->mdcv_info.white_point.y * chroma_den), chroma_den);
+
+        /* From vpl spec, MaxDisplayMasteringLuminance is in the unit of 1 nits,
+         * MinDisplayMasteringLuminance is in the unit of 0.0001 nits.
+         */
+        mdcv.MaxDisplayMasteringLuminance =
+            thiz->mdcv_info.max_display_mastering_luminance;
+        mdcv.MinDisplayMasteringLuminance =
+            thiz->mdcv_info.min_display_mastering_luminance * luma_den;
+
+        gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & mdcv);
+        tmap = 1;
+      }
+
+      if (thiz->have_cll) {
+        memset (&cll, 0, sizeof (mfxExtContentLightLevelInfo));
+        cll.Header.BufferId = MFX_EXTBUFF_CONTENT_LIGHT_LEVEL_INFO;
+        cll.Header.BufferSz = sizeof (mfxExtContentLightLevelInfo);
+
+        cll.MaxContentLightLevel =
+            MIN (thiz->cll_info.max_content_light_level, 65535);
+        cll.MaxPicAverageLightLevel =
+            MIN (thiz->cll_info.max_frame_average_light_level, 65535);
+
+        gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & cll);
+        tmap = 1;
+      }
+    }
+
+    if (tmap) {
+      out_vinfo->colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      out_vinfo->colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
+      out_vinfo->colorimetry.range = GST_VIDEO_COLOR_RANGE_16_235;
+      out_vinfo->colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
     }
 
     if (out_vinfo->colorimetry.primaries || out_vinfo->colorimetry.transfer
@@ -1339,8 +1410,29 @@ gst_msdkvpp_set_caps (GstBaseTransform * trans, GstCaps * caps,
       gst_util_uint64_scale (GST_SECOND, GST_VIDEO_INFO_FPS_D (&out_info),
       GST_VIDEO_INFO_FPS_N (&out_info)) : 0;
 
+  thiz->have_mdcv = thiz->have_cll = FALSE;
+  if (gst_video_mastering_display_info_from_caps (&thiz->mdcv_info, caps))
+    thiz->have_mdcv = TRUE;
+
+  if (gst_video_content_light_level_from_caps (&thiz->cll_info, caps))
+    thiz->have_cll = TRUE;
+
   if (!gst_msdkvpp_initialize (thiz))
     return FALSE;
+
+  if (!thiz->hdr_tone_mapping) {
+    if (thiz->have_mdcv) {
+      if (!gst_video_mastering_display_info_add_to_caps (&thiz->mdcv_info,
+              out_caps))
+        GST_WARNING ("Failed to add mastering display info to caps");
+    }
+
+    if (thiz->have_cll) {
+      if (!gst_video_content_light_level_add_to_caps (&thiz->cll_info,
+              out_caps))
+        GST_WARNING ("Failed to add content light level to caps");
+    }
+  }
 
   /* set passthrough according to filter operation change */
   gst_msdkvpp_set_passthrough (thiz);
@@ -1607,6 +1699,9 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
     case PROP_CROP_BOTTOM:
       thiz->crop_bottom = g_value_get_uint (value);
       break;
+    case PROP_HDR_TONE_MAPPING:
+      thiz->hdr_tone_mapping = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1681,6 +1776,9 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
       break;
     case PROP_CROP_BOTTOM:
       g_value_set_uint (value, thiz->crop_bottom);
+      break;
+    case PROP_HDR_TONE_MAPPING:
+      g_value_set_boolean (value, thiz->hdr_tone_mapping);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1853,6 +1951,16 @@ _msdkvpp_install_properties (GObjectClass * gobject_class)
       "Crop Bottom", "Pixels to crop at bottom",
       0, G_MAXUINT16, PROP_CROP_BOTTOM_DEFAULT,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+  /**
+   * GstMsdkVPP:hdr-tone-mapping:
+   *
+   * Since: 1.24
+   */
+  obj_properties[PROP_HDR_TONE_MAPPING] =
+      g_param_spec_boolean ("hdr-tone-mapping", "HDR tone mapping",
+      "Enable HDR to SDR tone mapping (supported from TGL platforms)",
+      PROP_HDR_TONE_MAPPING_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_N, obj_properties);
 }
@@ -1940,6 +2048,7 @@ gst_msdkvpp_init (GTypeInstance * instance, gpointer g_class)
   thiz->crop_right = PROP_CROP_RIGHT_DEFAULT;
   thiz->crop_top = PROP_CROP_TOP_DEFAULT;
   thiz->crop_bottom = PROP_CROP_BOTTOM_DEFAULT;
+  thiz->hdr_tone_mapping = PROP_HDR_TONE_MAPPING_DEFAULT;
 
   gst_video_info_init (&thiz->sinkpad_info);
   gst_video_info_init (&thiz->srcpad_info);
