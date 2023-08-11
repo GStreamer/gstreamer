@@ -887,6 +887,119 @@ out:
   return ret;
 }
 
+static GstCaps *
+create_dma_drm_caps (GstKMSSink * self, guint32 fourcc, GArray * formats,
+    GArray * modifiers, drmModeModeInfo * mode, drmModeRes * res)
+{
+  guint i;
+  GPtrArray *drm_formats;
+  GValue drm_value = G_VALUE_INIT;
+  gchar *drm_fmt;
+  GstCaps *caps = NULL;
+
+  drm_formats = g_ptr_array_new ();
+
+  for (i = 0; i < formats->len; i++) {
+    if (fourcc != g_array_index (formats, guint32, i))
+      continue;
+
+    /* Skip the unrecognized fourcc. */
+    if (gst_video_dma_drm_fourcc_to_format (fourcc) == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    /* Skip the unrecognized fourcc by ourself. */
+    if (gst_video_format_from_drm (fourcc) == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    drm_fmt = gst_video_dma_drm_fourcc_to_string (fourcc,
+        g_array_index (modifiers, guint64, i));
+
+    if (!drm_fmt)
+      continue;
+
+    g_ptr_array_add (drm_formats, drm_fmt);
+  }
+
+  if (drm_formats->len == 0) {
+    g_ptr_array_unref (drm_formats);
+    return NULL;
+  }
+
+  if (drm_formats->len == 1) {
+    g_value_init (&drm_value, G_TYPE_STRING);
+    g_value_take_string (&drm_value, g_ptr_array_index (drm_formats, 0));
+  } else {
+    GValue item = G_VALUE_INIT;
+
+    gst_value_list_init (&drm_value, drm_formats->len);
+
+    for (i = 0; i < drm_formats->len; i++) {
+      g_value_init (&item, G_TYPE_STRING);
+      g_value_take_string (&item, g_ptr_array_index (drm_formats, i));
+      gst_value_list_append_value (&drm_value, &item);
+      g_value_unset (&item);
+    }
+  }
+
+  if (mode) {
+    caps = gst_caps_new_simple ("video/x-raw",
+        "format", G_TYPE_STRING, "DMA_DRM",
+        "width", G_TYPE_INT, mode->hdisplay,
+        "height", G_TYPE_INT, mode->vdisplay,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  } else {
+    caps = gst_caps_new_simple ("video/x-raw",
+        "format", G_TYPE_STRING, "DMA_DRM",
+        "width", GST_TYPE_INT_RANGE, res->min_width, res->max_width,
+        "height", GST_TYPE_INT_RANGE, res->min_height, res->max_height,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  }
+
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+  gst_caps_set_value (caps, "drm-format", &drm_value);
+  g_value_unset (&drm_value);
+
+  /* The strings are already token by the GValue, no need to free. */
+  g_ptr_array_unref (drm_formats);
+
+  return caps;
+}
+
+static GstCaps *
+create_raw_caps (GstKMSSink * self, guint32 fourcc, GArray * formats,
+    GArray * modifiers, drmModeModeInfo * mode, drmModeRes * res)
+{
+  GstVideoFormat fmt;
+  const gchar *format;
+  GstCaps *caps = NULL;
+
+  fmt = gst_video_format_from_drm (fourcc);
+  if (fmt == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_INFO_OBJECT (self, "ignoring format %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fourcc));
+    return NULL;
+  }
+
+  format = gst_video_format_to_string (fmt);
+
+  if (mode) {
+    caps = gst_caps_new_simple ("video/x-raw",
+        "format", G_TYPE_STRING, format,
+        "width", G_TYPE_INT, mode->hdisplay,
+        "height", G_TYPE_INT, mode->vdisplay,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  } else {
+    caps = gst_caps_new_simple ("video/x-raw",
+        "format", G_TYPE_STRING, format,
+        "width", GST_TYPE_INT_RANGE, res->min_width, res->max_width,
+        "height", GST_TYPE_INT_RANGE, res->min_height, res->max_height,
+        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+  }
+
+  return caps;
+}
+
 static gboolean
 ensure_allowed_caps (GstKMSSink * self, drmModeConnector * conn,
     drmModePlane * plane, drmModeRes * res)
