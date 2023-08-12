@@ -263,6 +263,41 @@ This method is conceptually identical to gst_buffer_pool_set_active method.</doc
           </parameter>
         </parameters>
       </method>
+      <method name="virtual_alloc" c:identifier="gst_cuda_allocator_virtual_alloc" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">Allocates new #GstMemory object with CUDA virtual memory.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a newly allocated memory object or
+%NULL if allocation is not supported</doc>
+          <type name="Gst.Memory" c:type="GstMemory*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="allocator" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaAllocator</doc>
+            <type name="CudaAllocator" c:type="GstCudaAllocator*"/>
+          </instance-parameter>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaContext</doc>
+            <type name="CudaContext" c:type="GstCudaContext*"/>
+          </parameter>
+          <parameter name="stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaStream</doc>
+            <type name="CudaStream" c:type="GstCudaStream*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="prop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">allocation property</doc>
+            <type name="CudaGst.memAllocationProp" c:type="const CUmemAllocationProp*"/>
+          </parameter>
+          <parameter name="granularity_flags" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">allocation flags</doc>
+            <type name="CudaGst.memAllocationGranularity_flags" c:type="CUmemAllocationGranularity_flags"/>
+          </parameter>
+        </parameters>
+      </method>
       <field name="parent">
         <type name="Gst.Allocator" c:type="GstAllocator"/>
       </field>
@@ -462,6 +497,14 @@ so all CUDA functions that operate on the current context are affected.</doc>
       <property name="cuda-device-id" writable="1" construct-only="1" transfer-ownership="none">
         <type name="guint" c:type="guint"/>
       </property>
+      <property name="os-handle" version="1.24" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">OS handle supportability in virtual memory management</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
+      <property name="virtual-memory" version="1.24" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudacontext.cpp">Virtual memory management supportability</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <field name="object">
         <type name="Gst.Object" c:type="GstObject"/>
       </field>
@@ -645,6 +688,43 @@ Free with gst_cuda_graphics_resource_free</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+      <method name="export" c:identifier="gst_cuda_memory_export" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">Exports virtual memory handle to OS specific handle.
+
+On Windows, @os_handle should be pointer to HANDLE (i.e., void **), and
+pointer to file descriptor (i.e., int *) on Linux.
+
+The returned @os_handle is owned by @mem and therefore caller shouldn't
+close the handle.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">%TRUE if successful</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaMemory</doc>
+            <type name="CudaMemory" c:type="GstCudaMemory*"/>
+          </instance-parameter>
+          <parameter name="os_handle" direction="out" caller-allocates="1" transfer-ownership="none" nullable="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a pointer to OS handle</doc>
+            <type name="gpointer" c:type="gpointer"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_alloc_method" c:identifier="gst_cuda_memory_get_alloc_method" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">Query allocation method</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+        <return-value transfer-ownership="none">
+          <type name="CudaMemoryAllocMethod" c:type="GstCudaMemoryAllocMethod"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="mem" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaMemory</doc>
+            <type name="CudaMemory" c:type="GstCudaMemory*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_stream" c:identifier="gst_cuda_memory_get_stream" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">Gets CUDA stream object associated with @mem</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
@@ -765,6 +845,15 @@ CUDA stream is in use</doc>
         </return-value>
       </function>
     </record>
+    <enumeration name="CudaMemoryAllocMethod" version="1.24" glib:type-name="GstCudaMemoryAllocMethod" glib:get-type="gst_cuda_memory_alloc_method_get_type" c:type="GstCudaMemoryAllocMethod">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h">CUDA memory allocation method</doc>
+      <member name="unknown" value="0" c:identifier="GST_CUDA_MEMORY_ALLOC_UNKNOWN" glib:nick="unknown">
+      </member>
+      <member name="malloc" value="1" c:identifier="GST_CUDA_MEMORY_ALLOC_MALLOC" glib:nick="malloc">
+      </member>
+      <member name="mmap" value="2" c:identifier="GST_CUDA_MEMORY_ALLOC_MMAP" glib:nick="mmap">
+      </member>
+    </enumeration>
     <record name="CudaMemoryPrivate" c:type="GstCudaMemoryPrivate" disguised="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
     </record>
@@ -800,6 +889,34 @@ CUDA stream is in use</doc>
           <parameter name="info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstVideoInfo</doc>
             <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+        </parameters>
+      </constructor>
+      <constructor name="new_for_virtual_memory" c:identifier="gst_cuda_pool_allocator_new_for_virtual_memory" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">Creates a new #GstCudaPoolAllocator instance for virtual memory allocation.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a new #GstCudaPoolAllocator instance</doc>
+          <type name="CudaPoolAllocator" c:type="GstCudaPoolAllocator*"/>
+        </return-value>
+        <parameters>
+          <parameter name="context" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaContext</doc>
+            <type name="CudaContext" c:type="GstCudaContext*"/>
+          </parameter>
+          <parameter name="stream" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstCudaStream</doc>
+            <type name="CudaStream" c:type="GstCudaStream*"/>
+          </parameter>
+          <parameter name="info" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.cpp">a #GstVideoInfo</doc>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
+          </parameter>
+          <parameter name="prop" transfer-ownership="none">
+            <type name="CudaGst.memAllocationProp" c:type="const CUmemAllocationProp*"/>
+          </parameter>
+          <parameter name="granularity_flags" transfer-ownership="none">
+            <type name="CudaGst.memAllocationGranularity_flags" c:type="CUmemAllocationGranularity_flags"/>
           </parameter>
         </parameters>
       </constructor>
@@ -1011,6 +1128,19 @@ CUDA device/host memory</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
+    <function name="buffer_pool_config_get_cuda_alloc_method" c:identifier="gst_buffer_pool_config_get_cuda_alloc_method" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.cpp">Gets configured allocation method</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.h"/>
+      <return-value transfer-ownership="none">
+        <type name="CudaMemoryAllocMethod" c:type="GstCudaMemoryAllocMethod"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.cpp">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_pool_config_get_cuda_stream" c:identifier="gst_buffer_pool_config_get_cuda_stream" version="1.24">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.h"/>
       <return-value transfer-ownership="full" nullable="1">
@@ -1022,6 +1152,22 @@ on @config or %NULL if @config doesn't hold #GstCudaStream</doc>
         <parameter name="config" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.cpp">a buffer pool config</doc>
           <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="buffer_pool_config_set_cuda_alloc_method" c:identifier="gst_buffer_pool_config_set_cuda_alloc_method" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.cpp">Sets allocation method</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="config" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudabufferpool.cpp">a buffer pool config</doc>
+          <type name="Gst.Structure" c:type="GstStructure*"/>
+        </parameter>
+        <parameter name="method" transfer-ownership="none">
+          <type name="CudaMemoryAllocMethod" c:type="GstCudaMemoryAllocMethod"/>
         </parameter>
       </parameters>
     </function>
