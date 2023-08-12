@@ -270,17 +270,19 @@ typedef struct
 
 typedef struct
 {
+  unsigned char compressionType;
+  unsigned char gpuDirectRDMACapable;
+  unsigned short usage;
+  unsigned char reserved[4];
+} CUmemAllocationPropAllocFlags;
+
+typedef struct
+{
   CUmemAllocationType type;
   CUmemAllocationHandleType requestedHandleTypes;
   CUmemLocation location;
   void *win32HandleMetaData;
-  struct
-  {
-    unsigned char compressionType;
-    unsigned char gpuDirectRDMACapable;
-    unsigned short usage;
-    unsigned char reserved[4];
-  } allocFlags;
+  CUmemAllocationPropAllocFlags allocFlags;
 } CUmemAllocationProp;
 
 typedef struct
