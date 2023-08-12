@@ -22,6 +22,7 @@
 #include <mfapi.h>
 #include <wrl.h>
 #include <memory>
+#include <atomic>
 
 GST_DEBUG_CATEGORY_STATIC (gst_wasapi2_ring_buffer_debug);
 #define GST_CAT_DEFAULT gst_wasapi2_ring_buffer_debug
@@ -141,6 +142,7 @@ private:
 struct GstWasapi2RingBufferPrivate
 {
   std::shared_ptr<GstWasapi2RingBufferPtr> obj_ptr;
+  std::atomic<bool> monitor_device_mute;
 };
 /* *INDENT-ON* */
 
@@ -185,8 +187,6 @@ struct _GstWasapi2RingBuffer
   GMutex volume_lock;
   gboolean mute_changed;
   gboolean volume_changed;
-
-  gboolean monitor_device_mute;
 
   GstCaps *supported_caps;
 
@@ -254,6 +254,7 @@ gst_wasapi2_ring_buffer_init (GstWasapi2RingBuffer * self)
 
   self->priv = new GstWasapi2RingBufferPrivate ();
   self->priv->obj_ptr = std::make_shared < GstWasapi2RingBufferPtr > (self);
+  self->priv->monitor_device_mute.store (false, std::memory_order_release);
 }
 
 static void
@@ -484,7 +485,7 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
   gint segment;
   guint8 *readptr;
   gint len;
-  gboolean is_device_muted;
+  bool is_device_muted;
 
   if (!capture_client) {
     GST_ERROR_OBJECT (self, "IAudioCaptureClient is not available");
@@ -498,7 +499,8 @@ gst_wasapi2_ring_buffer_read (GstWasapi2RingBuffer * self)
     goto out;
   }
 
-  is_device_muted = g_atomic_int_get (&self->monitor_device_mute) &&
+  is_device_muted =
+      self->priv->monitor_device_mute.load (std::memory_order_acquire) &&
       gst_wasapi2_client_is_endpoint_muted (self->client);
 
   to_read_bytes = to_read * GST_AUDIO_INFO_BPF (info);
@@ -1517,5 +1519,5 @@ gst_wasapi2_ring_buffer_set_device_mute_monitoring (GstWasapi2RingBuffer * buf,
 {
   g_return_if_fail (GST_IS_WASAPI2_RING_BUFFER (buf));
 
-  g_atomic_int_set (&buf->monitor_device_mute, value);
+  buf->priv->monitor_device_mute.store (value, std::memory_order_release);
 }

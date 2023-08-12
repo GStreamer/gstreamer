@@ -40,6 +40,7 @@
 #include <string>
 #include <locale>
 #include <codecvt>
+#include <atomic>
 
 /* *INDENT-OFF* */
 using namespace ABI::Windows::ApplicationModel::Core;
@@ -315,7 +316,7 @@ public:
   {
     GstWasapi2Client *client = (GstWasapi2Client *) g_weak_ref_get (&client_);
     if (client) {
-      gst_wasapi2_client_set_endpoint_muted (client, !!notify->bMuted);
+      gst_wasapi2_client_set_endpoint_muted (client, notify->bMuted);
       gst_object_unref (client);
     }
     return S_OK;
@@ -349,9 +350,16 @@ enum
 #define DEFAULT_DEVICE_INDEX  -1
 #define DEFAULT_DEVICE_CLASS  GST_WASAPI2_CLIENT_DEVICE_CLASS_CAPTURE
 
+struct GstWasapi2ClientPrivate
+{
+  std::atomic < bool >is_endpoint_muted;
+};
+
 struct _GstWasapi2Client
 {
   GstObject parent;
+
+  GstWasapi2ClientPrivate *priv;
 
   GstWasapi2ClientDeviceClass device_class;
   gchar *device_id;
@@ -366,7 +374,6 @@ struct _GstWasapi2Client
   GMutex endpoint_volume_lock;
   IAudioEndpointVolume *audio_endpoint_volume;
   GstWasapiEndpointVolumeCallback *endpoint_volume_callback;
-  gint is_endpoint_muted;
 
   GstCaps *supported_caps;
 
@@ -481,6 +488,9 @@ gst_wasapi2_client_init (GstWasapi2Client * self)
 
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
+
+  self->priv = new GstWasapi2ClientPrivate ();
+  self->priv->is_endpoint_muted.store (false, std::memory_order_release);
 }
 
 static void
@@ -530,6 +540,8 @@ gst_wasapi2_client_finalize (GObject * object)
   g_cond_clear (&self->init_cond);
 
   g_mutex_clear (&self->endpoint_volume_lock);
+
+  delete self->priv;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -664,7 +676,7 @@ gst_wasapi2_client_on_endpoint_volume_activated (GstWasapi2Client * self,
 
         hr = audio_endpoint_volume->GetMute (&initially_muted);
         if (gst_wasapi2_result (hr)) {
-          gst_wasapi2_client_set_endpoint_muted (self, !!initially_muted);
+          gst_wasapi2_client_set_endpoint_muted (self, initially_muted);
         }
       }
     }
@@ -679,7 +691,7 @@ gst_wasapi2_client_set_endpoint_muted (GstWasapi2Client * self, gboolean muted)
 {
   GST_DEBUG_OBJECT (self, "Audio Endpoint Volume: muted=%d", muted);
 
-  g_atomic_int_set (&self->is_endpoint_muted, muted);
+  self->priv->is_endpoint_muted.store (muted, std::memory_order_release);
 }
 
 /* *INDENT-OFF* */
@@ -1287,5 +1299,5 @@ gst_wasapi2_client_is_endpoint_muted (GstWasapi2Client * client)
 {
   g_return_val_if_fail (GST_IS_WASAPI2_CLIENT (client), FALSE);
 
-  return g_atomic_int_get (&client->is_endpoint_muted);
+  return client->priv->is_endpoint_muted.load (std::memory_order_acquire);
 }
