@@ -1124,6 +1124,15 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
       /* Make sure the ringbuffer will start again if interrupted during event_wait() */
       g_atomic_int_set (&sink->eos_rendering, 1);
       clear_force_start_flag = TRUE;
+
+      /* For gap events, don't actually wait for the clock to
+       * reach that time, or it will drain the ringbuffer, just
+       * ensure we're prerolled and let the next actual buffer
+       * get rendered where it belongs */
+      if (GST_EVENT_TYPE (event) == GST_EVENT_GAP) {
+        ret = gst_base_sink_do_preroll (bsink, GST_MINI_OBJECT_CAST (event));
+        goto done;
+      }
       break;
     default:
       break;
