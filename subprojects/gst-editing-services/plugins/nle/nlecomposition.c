@@ -45,7 +45,6 @@ GST_DEBUG_CATEGORY_STATIC (nlecomposition_debug);
 #define _do_init              \
   GST_DEBUG_CATEGORY_INIT (nlecomposition_debug,"nlecomposition", GST_DEBUG_FG_BLUE | GST_DEBUG_BOLD, "NLE Composition");
 #define nle_composition_parent_class parent_class
-#define QUERY_NEEDS_INITIALIZATION_SEEK_MESSAGE_STRUCT_NAME "nlecomposition-query-needs-initialization-seek"
 
 enum
 {
@@ -228,6 +227,23 @@ typedef struct
 GType nle_composition_query_needs_initialization_seek_get_type (void) G_GNUC_CONST;
 G_DEFINE_BOXED_TYPE (NleCompositionQueryNeedsInitializationSeek,
     nle_composition_query_needs_initialization_seek,
+    g_atomic_rc_box_acquire, g_atomic_rc_box_release);
+/* *INDENT-ON* */
+
+#define QUERY_PIPELINE_POSITION_STRUCT_NAME "nlecomposition-query-pipeline-position"
+typedef struct
+{
+  GMutex lock;
+
+  GstClockTime position;
+  gboolean answered;
+} NleCompositionQueryPipelinePosition;
+
+/* *INDENT-OFF* */
+#define NLE_TYPE_COMPOSITION_QUERY_PIPELINE_POSITION nle_composition_query_pipeline_position_get_type ()
+GType nle_composition_query_pipeline_position_get_type (void) G_GNUC_CONST;
+G_DEFINE_BOXED_TYPE (NleCompositionQueryPipelinePosition,
+    nle_composition_query_pipeline_position,
     g_atomic_rc_box_acquire, g_atomic_rc_box_release);
 /* *INDENT-ON* */
 
@@ -1039,8 +1055,7 @@ nle_composition_handle_message (GstBin * bin, GstMessage * message)
     GST_DEBUG_OBJECT (comp, "Dropping message %" GST_PTR_FORMAT " from "
         "object being teared down to READY!", message);
     goto drop;
-  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT &&
-      GST_MESSAGE_SRC (message) != GST_OBJECT_CAST (comp)) {
+  } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ELEMENT) {
     const GstStructure *structure = gst_message_get_structure (message);
 
     if (gst_structure_has_name (structure,
@@ -1061,6 +1076,36 @@ nle_composition_handle_message (GstBin * bin, GstMessage * message)
 
       g_atomic_rc_box_release (q);
 
+      return;
+    } else if (gst_structure_has_name (structure,
+            QUERY_PIPELINE_POSITION_STRUCT_NAME)) {
+      NleCompositionQueryPipelinePosition *q;
+
+      /* First let parents answer */
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+
+      gst_structure_get (structure, "query",
+          NLE_TYPE_COMPOSITION_QUERY_PIPELINE_POSITION, &q, NULL);
+      g_assert (q);
+
+      g_mutex_lock (&q->lock);
+      if (!q->answered) {
+        GstClockTime position = get_current_position (comp);
+
+        if (position > NLE_OBJECT_STOP (GST_MESSAGE_SRC (message))
+            || position < NLE_OBJECT_START (GST_MESSAGE_SRC (message))) {
+          GST_INFO_OBJECT (comp,
+              "Global position outside of querying subcomposition, returning TIME_NONE");
+
+          position = GST_CLOCK_TIME_NONE;
+        }
+
+        q->answered = TRUE;
+        q->position = position;
+      }
+      g_mutex_unlock (&q->lock);
+
+      /* We recursed up already */
       return;
     }
   }
@@ -1772,22 +1817,6 @@ get_current_position (NleComposition * comp)
 
   parent = gst_object_get_parent (GST_OBJECT (comp));
   while ((tmp = parent)) {
-    if (NLE_IS_COMPOSITION (parent)) {
-      GstClockTime parent_position =
-          get_current_position (NLE_COMPOSITION (parent));
-
-      if (parent_position > NLE_OBJECT_STOP (comp)
-          || parent_position < NLE_OBJECT_START (comp)) {
-        GST_INFO_OBJECT (comp,
-            "Global position outside of subcomposition, returning TIME_NONE");
-
-        return GST_CLOCK_TIME_NONE;
-      }
-
-      value =
-          parent_position - NLE_OBJECT_START (comp) + NLE_OBJECT_INPOINT (comp);
-    }
-
     if (GST_IS_PIPELINE (parent)) {
       if (gst_element_query_position (GST_ELEMENT (parent), GST_FORMAT_TIME,
               &value)) {
@@ -1796,7 +1825,6 @@ get_current_position (NleComposition * comp)
         return value;
       }
     }
-
 
     parent = gst_object_get_parent (GST_OBJECT (parent));
     gst_object_unref (tmp);
@@ -1853,6 +1881,34 @@ beach:
   }
 
   return (guint64) value;
+}
+
+static GstClockTime
+query_ancestors_position (NleComposition * comp)
+{
+  GstClockTime res;
+  NleCompositionQueryPipelinePosition *q =
+      g_atomic_rc_box_new0 (NleCompositionQueryPipelinePosition);
+  GstStructure *structure =
+      gst_structure_new (QUERY_PIPELINE_POSITION_STRUCT_NAME,
+      "query", NLE_TYPE_COMPOSITION_QUERY_PIPELINE_POSITION,
+      g_atomic_rc_box_acquire (q), NULL);
+  GstMessage *message = gst_message_new_element (GST_OBJECT (comp), structure);
+
+  if (!gst_element_post_message (GST_ELEMENT (comp), message)) {
+    GST_ERROR_OBJECT (comp, "Querying ancestor position failed");
+  }
+
+  g_mutex_lock (&q->lock);
+  if (q->answered) {
+    res = q->position;
+  } else {
+    res = get_current_position (comp);
+  }
+  g_mutex_unlock (&q->lock);
+  g_atomic_rc_box_release (q);
+
+  return res;
 }
 
 /* WITH OBJECTS LOCK TAKEN */
@@ -2613,7 +2669,7 @@ _commit_func (NleComposition * comp, UpdateCompositionData * ucompo)
 
   /* Get current so that it represent the duration it was
    * before commiting children */
-  curpos = get_current_position (comp);
+  curpos = query_ancestors_position (comp);
 
   if (!_commit_all_values (comp, ucompo->reason)) {
     GST_DEBUG_OBJECT (comp, "Nothing to commit, leaving");
