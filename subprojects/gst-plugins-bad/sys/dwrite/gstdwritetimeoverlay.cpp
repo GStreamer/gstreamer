@@ -190,7 +190,7 @@ gst_dwrite_time_overlay_class_init (GstDWriteTimeOverlayClass * klass)
       GST_DEBUG_FUNCPTR (gst_dwrite_time_overlay_get_text);
 
   GST_DEBUG_CATEGORY_INIT (dwrite_time_overlay_debug,
-      "d3d11timeoverlay", 0, "d3d11timeoverlay");
+      "dwritetimeoverlay", 0, "dwritetimeoverlay");
 
   gst_type_mark_as_plugin_api (GST_TYPE_DWrite_TIME_OVERLAY_TIME_LINE,
       (GstPluginAPIFlags) 0);
