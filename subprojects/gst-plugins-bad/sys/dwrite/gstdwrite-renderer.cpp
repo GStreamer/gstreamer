@@ -43,8 +43,51 @@ struct RenderContext
   ID2D1Factory *factory;
   ID2D1RenderTarget *target;
   RECT client_rect;
+  std::vector<DWRITE_LINE_METRICS> line_metrics;
+  UINT line_index = 0;
+  UINT char_index = 0;
+  ComPtr<ID2D1Geometry> bg_rect;
+  D2D1_COLOR_F bg_color = D2D1::ColorF (D2D1::ColorF::Black, 0.0);
 };
 /* *INDENT-ON* */
+
+static HRESULT
+CombineTwoGeometries (ID2D1Factory * factory, ID2D1Geometry * a,
+    ID2D1Geometry * b, ID2D1Geometry ** result)
+{
+  HRESULT hr;
+  ComPtr < ID2D1GeometrySink > sink;
+  ComPtr < ID2D1PathGeometry > geometry;
+
+  hr = factory->CreatePathGeometry (&geometry);
+  if (FAILED (hr)) {
+    GST_WARNING ("Couldn't create path geometry, 0x%x", (guint) hr);
+    return hr;
+  }
+
+  hr = geometry->Open (&sink);
+  if (FAILED (hr)) {
+    GST_WARNING ("Couldn't open path geometry, 0x%x", (guint) hr);
+    return hr;
+  }
+
+  hr = a->CombineWithGeometry (b,
+      D2D1_COMBINE_MODE_UNION, nullptr, sink.Get ());
+  if (FAILED (hr)) {
+    GST_WARNING ("Couldn't combine geometry, 0x%x", (guint) hr);
+    return hr;
+  }
+
+  hr = sink->Close ();
+  if (FAILED (hr)) {
+    GST_WARNING ("Couldn't close sink, 0x%x", (guint) hr);
+    return hr;
+  }
+
+  *result = geometry.Detach ();
+
+  return S_OK;
+}
 
 STDMETHODIMP
     IGstDWriteTextRenderer::CreateInstance (IDWriteFactory * factory,
@@ -179,28 +222,79 @@ STDMETHODIMP
     FLOAT adjust, ascent, descent;
     D2D1_RECT_F bg_rect;
     ComPtr < ID2D1SolidColorBrush > bg_brush;
+    DWRITE_LINE_METRICS line_metrics =
+        render_ctx->line_metrics.at (render_ctx->line_index);
 
-    if (!effect)
-      return S_OK;
+    if (effect &&
+        render_ctx->char_index + line_metrics.trailingWhitespaceLength <
+        line_metrics.length) {
+      effect->GetBrushColor (GST_DWRITE_BRUSH_BACKGROUND, &color, &enabled);
+      if (enabled) {
+        ComPtr < ID2D1RectangleGeometry > rect_geometry;
+        ComPtr < ID2D1PathGeometry > path_geometry;
+        ComPtr < ID2D1GeometrySink > path_sink;
 
-    effect->GetBrushColor (GST_DWRITE_BRUSH_BACKGROUND, &color, &enabled);
-    if (!enabled)
-      return S_OK;
+        for (UINT32 i = 0; i < glyph_run->glyphCount; i++)
+          run_width += glyph_run->glyphAdvances[i];
 
-    for (UINT32 i = 0; i < glyph_run->glyphCount; i++)
-      run_width += glyph_run->glyphAdvances[i];
+        glyph_run->fontFace->GetMetrics (&font_metrics);
+        adjust = glyph_run->fontEmSize / font_metrics.designUnitsPerEm;
+        ascent = adjust * font_metrics.ascent;
+        descent = adjust * font_metrics.descent;
 
-    glyph_run->fontFace->GetMetrics (&font_metrics);
-    adjust = glyph_run->fontEmSize / font_metrics.designUnitsPerEm;
-    ascent = adjust * font_metrics.ascent;
-    descent = adjust * font_metrics.descent;
+        bg_rect =
+            D2D1::RectF (origin_x, origin_y - ascent, origin_x + run_width,
+            origin_y + descent);
 
-    bg_rect = D2D1::RectF (origin_x, origin_y - ascent, origin_x + run_width,
-        origin_y + descent);
+        hr = factory->CreateRectangleGeometry (bg_rect, &rect_geometry);
+        if (FAILED (hr))
+          return hr;
 
-    target->CreateSolidColorBrush (color, &bg_brush);
-    target->FillRectangle (bg_rect, bg_brush.Get ());
-    target->DrawRectangle (bg_rect, bg_brush.Get ());
+        hr = factory->CreatePathGeometry (&path_geometry);
+        if (FAILED (hr))
+          return hr;
+
+        hr = path_geometry->Open (&path_sink);
+        if (FAILED (hr))
+          return hr;
+
+        hr = rect_geometry->Outline (nullptr, path_sink.Get ());
+        if (FAILED (hr))
+          return hr;
+
+        path_sink->Close ();
+
+        if (render_ctx->bg_rect) {
+          if (render_ctx->bg_color.r == color.r &&
+              render_ctx->bg_color.g == color.g &&
+              render_ctx->bg_color.b == color.b &&
+              render_ctx->bg_color.a == color.a) {
+            ComPtr < ID2D1Geometry > combined;
+            hr = CombineTwoGeometries (factory,
+                render_ctx->bg_rect.Get (), path_geometry.Get (), &combined);
+            if (FAILED (hr))
+              return hr;
+
+            render_ctx->bg_rect = combined;
+          } else {
+            target->CreateSolidColorBrush (render_ctx->bg_color, &bg_brush);
+            target->FillGeometry (render_ctx->bg_rect.Get (), bg_brush.Get ());
+            render_ctx->bg_rect = nullptr;
+          }
+        }
+
+        if (!render_ctx->bg_rect) {
+          render_ctx->bg_rect = path_geometry;
+          render_ctx->bg_color = color;
+        }
+      }
+    }
+
+    render_ctx->char_index += glyph_run_desc->stringLength;
+    if (render_ctx->char_index >= line_metrics.length) {
+      render_ctx->line_index++;
+      render_ctx->char_index = 0;
+    }
 
     return S_OK;
   }
@@ -509,9 +603,20 @@ STDMETHODIMP
   HRESULT hr;
   RenderContext context;
   ComPtr < ID2D1Factory > d2d_factory;
+  UINT32 num_lines = 0;
 
   g_return_val_if_fail (layout != nullptr, E_INVALIDARG);
   g_return_val_if_fail (target != nullptr, E_INVALIDARG);
+
+  hr = layout->GetLineMetrics (nullptr, 0, &num_lines);
+  if (hr != E_NOT_SUFFICIENT_BUFFER)
+    return hr;
+
+  context.line_metrics.resize (num_lines);
+  hr = layout->GetLineMetrics (&context.line_metrics[0],
+      context.line_metrics.size (), &num_lines);
+  if (FAILED (hr))
+    return hr;
 
   target->GetFactory (&d2d_factory);
   context.render_path = RenderPath::BACKGROUND;
@@ -520,6 +625,18 @@ STDMETHODIMP
   context.factory = d2d_factory.Get ();
 
   hr = layout->Draw (&context, this, origin.x, origin.y);
+
+  if (FAILED (hr)) {
+    GST_WARNING ("Background Draw failed with 0x%x", (guint) hr);
+    return hr;
+  }
+
+  if (context.bg_rect) {
+    ComPtr < ID2D1SolidColorBrush > bg_brush;
+    target->CreateSolidColorBrush (context.bg_color, &bg_brush);
+    target->FillGeometry (context.bg_rect.Get (), bg_brush.Get ());
+    context.bg_rect = nullptr;
+  }
 
   context.render_path = RenderPath::TEXT;
   hr = layout->Draw (&context, this, origin.x, origin.y);
