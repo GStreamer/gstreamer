@@ -766,13 +766,22 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
     goto format_mismatch;
 
   /* if the only thing different in the caps is the transfer function, and
-   * we're converting between equivalent transfer functions, do passthrough */
+   * we're converting between equivalent transfer functions and not
+   * quantizing/dithering or adjusting alpha, then do passthrough */
   tmp_info = *in_info;
   tmp_info.colorimetry.transfer = out_info->colorimetry.transfer;
+
+  gboolean need_dither = (priv->dither_quantization > 1)
+      && (priv->dither != GST_VIDEO_DITHER_NONE);
+  gboolean need_alpha = GST_VIDEO_INFO_HAS_ALPHA (out_info)
+      && ((priv->alpha_mode == GST_VIDEO_ALPHA_MODE_SET) ||
+      (priv->alpha_mode == GST_VIDEO_ALPHA_MODE_MULT
+          && priv->alpha_value != 1.0));
+
   if (gst_video_info_is_equal (&tmp_info, out_info) &&
       gst_video_transfer_function_is_equivalent (in_info->colorimetry.transfer,
           in_info->finfo->bits, out_info->colorimetry.transfer,
-          out_info->finfo->bits)) {
+          out_info->finfo->bits) && !need_dither && !need_alpha) {
     gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (filter), TRUE);
   } else {
     GstStructure *options;
