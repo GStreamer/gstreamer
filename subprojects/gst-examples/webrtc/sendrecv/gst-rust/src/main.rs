@@ -377,7 +377,7 @@ impl App {
                 bail!("Answer creation future got no response");
             }
             Err(err) => {
-                bail!("Answer creation future got error response: {err:?}", err);
+                bail!("Answer creation future got error response: {err:?}");
             }
         };
 

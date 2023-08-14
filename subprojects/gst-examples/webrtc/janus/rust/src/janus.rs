@@ -503,10 +503,11 @@ impl JanusGateway {
             .static_pad("sink")
             .expect("Failed to get sink pad from encoder");
 
-        if let Ok(video_ghost_pad) = gst::GhostPad::with_target(Some("video_sink"), &sinkpad) {
-            encode_bin.add_pad(&video_ghost_pad)?;
-            srcpad.link(&video_ghost_pad)?;
-        }
+        let video_ghost_pad = gst::GhostPad::builder_with_target(&sinkpad)?
+            .name("video_sink")
+            .build();
+        encode_bin.add_pad(&video_ghost_pad)?;
+        srcpad.link(&video_ghost_pad)?;
 
         let sinkpad2 = webrtcbin
             .request_pad_simple("sink_%u")
@@ -515,11 +516,11 @@ impl JanusGateway {
             .by_name("webrtc-vsink")
             .expect("No webrtc-vsink found");
         let srcpad = vsink.static_pad("src").expect("Element without src pad");
-        if let Ok(webrtc_ghost_pad) = gst::GhostPad::with_target(Some("webrtc_video_src"), &srcpad)
-        {
-            encode_bin.add_pad(&webrtc_ghost_pad)?;
-            webrtc_ghost_pad.link(&sinkpad2)?;
-        }
+        let webrtc_ghost_pad = gst::GhostPad::builder_with_target(&srcpad)?
+            .name("webrtc_video_src")
+            .build();
+        encode_bin.add_pad(&webrtc_ghost_pad)?;
+        webrtc_ghost_pad.link(&sinkpad2)?;
 
         let transceiver = webrtcbin.emit_by_name::<glib::Object>("get-transceiver", &[&0i32]);
         transceiver.set_property("do-nack", false);

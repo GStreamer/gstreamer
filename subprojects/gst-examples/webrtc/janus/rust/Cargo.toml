@@ -11,15 +11,15 @@ clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 url = "2"
 rand = "0.8"
-async-tungstenite = { version = "0.20", features = ["gio-runtime"] }
-gst = { package = "gstreamer", version = "0.20" }
-gst-webrtc = { package = "gstreamer-webrtc", version = "0.20" }
-gst-sdp = { package = "gstreamer-sdp", version = "0.20" }
+async-tungstenite = { version = "0.23", features = ["gio-runtime"] }
+gst = { package = "gstreamer", version = "0.21" }
+gst-webrtc = { package = "gstreamer-webrtc", version = "0.21" }
+gst-sdp = { package = "gstreamer-sdp", version = "0.21" }
 serde = "1"
 serde_derive = "1"
 serde_json = "1.0.53"
 http = "0.2"
-glib = "0.17"
-gio = "0.17"
+glib = "0.18"
+gio = "0.18"
 log = "0.4.8"
 env_logger = "0.10"

@@ -20,7 +20,7 @@
 
 use anyhow::bail;
 use gst::prelude::*;
-use std::sync::{Arc, Weak};
+use std::sync::{Arc, Mutex, Weak};
 
 mod janus;
 
@@ -36,6 +36,7 @@ struct AppWeak(Weak<AppInner>);
 #[derive(Debug)]
 struct AppInner {
     pipeline: gst::Pipeline,
+    bus_watch: Mutex<Option<gst::bus::BusWatchGuard>>,
 }
 
 // To be able to access the App's fields directly
@@ -71,18 +72,24 @@ impl App {
             .expect("Couldn't downcast pipeline");
 
         let bus = pipeline.bus().unwrap();
-        let app = App(Arc::new(AppInner { pipeline }));
+        let app = App(Arc::new(AppInner {
+            pipeline,
+            bus_watch: Mutex::default(),
+        }));
 
         let app_weak = app.downgrade();
-        bus.add_watch_local(move |_bus, msg| {
-            let app = upgrade_weak!(app_weak, glib::Continue(false));
+        let bus_watch = bus
+            .add_watch_local(move |_bus, msg| {
+                let app = upgrade_weak!(app_weak, glib::ControlFlow::Break);
 
-            if app.handle_pipeline_message(msg).is_err() {
-                return glib::Continue(false);
-            }
-            glib::Continue(true)
-        })
-        .expect("Unable to add bus watch");
+                if app.handle_pipeline_message(msg).is_err() {
+                    return glib::ControlFlow::Break;
+                }
+                glib::ControlFlow::Continue
+            })
+            .expect("Unable to add bus watch");
+        *app.0.bus_watch.lock().unwrap() = Some(bus_watch);
+
         Ok(app)
     }
 
