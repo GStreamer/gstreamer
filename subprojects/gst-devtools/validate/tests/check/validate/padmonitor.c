@@ -1067,6 +1067,8 @@ gst_validate_suite (void)
   if (atexit (gst_validate_deinit) != 0) {
     GST_ERROR ("failed to set gst_validate_deinit as exit function");
   }
+  // Do not abort on critical issues, as this test will generate them on purpose.
+  g_setenv ("GST_VALIDATE", "print_issues", TRUE);
 
   fake_elements_register ();
 

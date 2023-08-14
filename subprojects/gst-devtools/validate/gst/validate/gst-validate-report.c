@@ -48,7 +48,8 @@
 #include "gst-validate-scenario.h"
 
 static GstClockTime _gst_validate_report_start_time = 0;
-static GstValidateDebugFlags _gst_validate_flags = 0;
+static GstValidateDebugFlags _gst_validate_flags =
+    GST_VALIDATE_FATAL_CRITICALS | GST_VALIDATE_PRINT_ISSUES;
 static GHashTable *_gst_validate_issues = NULL;
 static FILE **log_files = NULL;
 static gboolean output_is_tty = TRUE;
@@ -639,7 +640,7 @@ gst_validate_report_init (void)
 
     /* init the debug flags */
     var = g_getenv ("GST_VALIDATE");
-    if (var && strlen (var) > 0) {
+    if (var) {
       _gst_validate_flags =
           g_parse_debug_string (var, keys, G_N_ELEMENTS (keys));
     }
