@@ -601,8 +601,8 @@ _ensure_rate_control (GstVaH264Enc * self)
 
     factor = (guint64) self->mb_width * self->mb_height * bits_per_mb;
     bitrate = gst_util_uint64_scale (factor,
-        GST_VIDEO_INFO_FPS_N (&base->input_state->info),
-        GST_VIDEO_INFO_FPS_D (&base->input_state->info)) / 1000;
+        GST_VIDEO_INFO_FPS_N (&base->in_info),
+        GST_VIDEO_INFO_FPS_D (&base->in_info)) / 1000;
     GST_INFO_OBJECT (self, "target bitrate computed to %u kbps", bitrate);
   }
 
@@ -704,8 +704,8 @@ _calculate_level (GstVaH264Enc * self)
   PicSizeMbs = self->mb_width * self->mb_height;
   MaxDpbMbs = PicSizeMbs * (self->gop.num_ref_frames + 1);
   MaxMBPS = gst_util_uint64_scale_int_ceil (PicSizeMbs,
-      GST_VIDEO_INFO_FPS_N (&base->input_state->info),
-      GST_VIDEO_INFO_FPS_D (&base->input_state->info));
+      GST_VIDEO_INFO_FPS_N (&base->in_info),
+      GST_VIDEO_INFO_FPS_D (&base->in_info));
 
   for (i = 0; i < G_N_ELEMENTS (_va_h264_level_limits); i++) {
     const GstVaH264LevelLimits *const limits = &_va_h264_level_limits[i];
@@ -949,9 +949,9 @@ _generate_gop_structure (GstVaH264Enc * self)
 
   /* If not set, generate a idr every second */
   if (self->gop.idr_period == 0) {
-    self->gop.idr_period = (GST_VIDEO_INFO_FPS_N (&base->input_state->info)
-        + GST_VIDEO_INFO_FPS_D (&base->input_state->info) - 1) /
-        GST_VIDEO_INFO_FPS_D (&base->input_state->info);
+    self->gop.idr_period = (GST_VIDEO_INFO_FPS_N (&base->in_info)
+        + GST_VIDEO_INFO_FPS_D (&base->in_info) - 1) /
+        GST_VIDEO_INFO_FPS_D (&base->in_info);
   }
 
   /* Do not use a too huge GOP size. */
@@ -1346,7 +1346,7 @@ _decide_profile (GstVaH264Enc * self, VAProfile * _profile, guint * _rt_format)
     goto out;
   }
 
-  in_format = GST_VIDEO_INFO_FORMAT (&base->input_state->info);
+  in_format = GST_VIDEO_INFO_FORMAT (&base->in_info);
   rt_format = _get_rtformat (self, in_format);
   if (!rt_format) {
     GST_ERROR_OBJECT (self, "unsupported video format %s",
@@ -1538,9 +1538,9 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   guint max_ref_frames, max_surfaces = 0, rt_format = 0, codedbuf_size;
   gint width, height;
 
-  width = GST_VIDEO_INFO_WIDTH (&base->input_state->info);
-  height = GST_VIDEO_INFO_HEIGHT (&base->input_state->info);
-  format = GST_VIDEO_INFO_FORMAT (&base->input_state->info);
+  width = GST_VIDEO_INFO_WIDTH (&base->in_info);
+  height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
+  format = GST_VIDEO_INFO_FORMAT (&base->in_info);
   codedbuf_size = base->codedbuf_size;
 
   need_negotiation =
@@ -1575,15 +1575,15 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   self->mb_height = GST_ROUND_UP_16 (base->height) / 16;
 
   /* Frame rate is needed for rate control and PTS setting. */
-  if (GST_VIDEO_INFO_FPS_N (&base->input_state->info) == 0
-      || GST_VIDEO_INFO_FPS_D (&base->input_state->info) == 0) {
+  if (GST_VIDEO_INFO_FPS_N (&base->in_info) == 0
+      || GST_VIDEO_INFO_FPS_D (&base->in_info) == 0) {
     GST_INFO_OBJECT (self, "Unknown framerate, just set to 30 fps");
-    GST_VIDEO_INFO_FPS_N (&base->input_state->info) = 30;
-    GST_VIDEO_INFO_FPS_D (&base->input_state->info) = 1;
+    GST_VIDEO_INFO_FPS_N (&base->in_info) = 30;
+    GST_VIDEO_INFO_FPS_D (&base->in_info) = 1;
   }
   base->frame_duration = gst_util_uint64_scale (GST_SECOND,
-      GST_VIDEO_INFO_FPS_D (&base->input_state->info),
-      GST_VIDEO_INFO_FPS_N (&base->input_state->info));
+      GST_VIDEO_INFO_FPS_D (&base->in_info),
+      GST_VIDEO_INFO_FPS_N (&base->in_info));
 
   GST_DEBUG_OBJECT (self, "resolution:%dx%d, MB size: %dx%d,"
       " frame duration is %" GST_TIME_FORMAT,
@@ -2180,10 +2180,10 @@ _fill_sequence_param (GstVaH264Enc * self,
     },
     .aspect_ratio_idc = 0xff,
     /* FIXME: what if no framerate info is provided */
-    .sar_width = GST_VIDEO_INFO_PAR_N (&base->input_state->info),
-    .sar_height = GST_VIDEO_INFO_PAR_D (&base->input_state->info),
-    .num_units_in_tick = GST_VIDEO_INFO_FPS_D (&base->input_state->info),
-    .time_scale = GST_VIDEO_INFO_FPS_N (&base->input_state->info) * 2,
+    .sar_width = GST_VIDEO_INFO_PAR_N (&base->in_info),
+    .sar_height = GST_VIDEO_INFO_PAR_D (&base->in_info),
+    .num_units_in_tick = GST_VIDEO_INFO_FPS_D (&base->in_info),
+    .time_scale = GST_VIDEO_INFO_FPS_N (&base->in_info) * 2,
   };
   /* *INDENT-ON* */
 

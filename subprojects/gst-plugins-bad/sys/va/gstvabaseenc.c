@@ -729,6 +729,9 @@ gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
+  if (!gst_va_video_info_from_caps (&base->in_info, NULL, state->caps))
+    return FALSE;
+
   if (base->input_state)
     gst_video_codec_state_unref (base->input_state);
   base->input_state = gst_video_codec_state_ref (state);
@@ -879,6 +882,7 @@ gst_va_base_enc_init (GstVaBaseEnc * self)
   g_queue_init (&self->reorder_list);
   g_queue_init (&self->ref_list);
   g_queue_init (&self->output_list);
+  gst_video_info_init (&self->in_info);
 
   self->priv = gst_va_base_enc_get_instance_private (self);
 }
