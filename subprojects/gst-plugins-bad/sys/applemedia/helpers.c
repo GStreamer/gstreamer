@@ -59,7 +59,7 @@ gst_video_format_to_cvpixelformat (GstVideoFormat fmt)
   switch (fmt) {
       /* YUV */
     case GST_VIDEO_FORMAT_I420:
-      return kCVPixelFormatType_420YpCbCr8PlanarFullRange;
+      return kCVPixelFormatType_420YpCbCr8Planar;
     case GST_VIDEO_FORMAT_NV12:
       return kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
     case GST_VIDEO_FORMAT_UYVY:
