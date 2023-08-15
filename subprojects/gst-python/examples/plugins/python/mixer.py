@@ -17,7 +17,6 @@ import gi
 gi.require_version('Gst', '1.0')
 gi.require_version('GstBase', '1.0')
 gi.require_version('GObject', '2.0')
-
 from gi.repository import Gst, GObject, GstBase
 
 Gst.init_python()
@@ -41,27 +40,29 @@ OCAPS = Gst.Caps(Gst.Structure('video/x-raw',
                                height=240,
                                framerate=Gst.Fraction(30, 1)))
 
+
 class BlendData:
     def __init__(self, outimg):
         self.outimg = outimg
         self.pts = 0
         self.eos = True
 
+
 class Videomixer(GstBase.Aggregator):
-    __gstmetadata__ = ('Videomixer','Video/Mixer', \
-                      'Python video mixer', 'Mathieu Duponchelle')
+    __gstmetadata__ = ('Videomixer', 'Video/Mixer',
+                       'Python video mixer', 'Mathieu Duponchelle')
 
     __gsttemplates__ = (
-            Gst.PadTemplate.new_with_gtype("sink_%u",
-                                Gst.PadDirection.SINK,
-                                Gst.PadPresence.REQUEST,
-                                ICAPS,
-                                GstBase.AggregatorPad.__gtype__),
-            Gst.PadTemplate.new_with_gtype("src",
-                                Gst.PadDirection.SRC,
-                                Gst.PadPresence.ALWAYS,
-                                OCAPS,
-                                GstBase.AggregatorPad.__gtype__)
+        Gst.PadTemplate.new_with_gtype("sink_%u",
+                                       Gst.PadDirection.SINK,
+                                       Gst.PadPresence.REQUEST,
+                                       ICAPS,
+                                       GstBase.AggregatorPad.__gtype__),
+        Gst.PadTemplate.new_with_gtype("src",
+                                       Gst.PadDirection.SRC,
+                                       Gst.PadPresence.ALWAYS,
+                                       OCAPS,
+                                       GstBase.AggregatorPad.__gtype__)
     )
 
     def mix_buffers(self, agg, pad, bdata):
@@ -72,6 +73,10 @@ class Videomixer(GstBase.Aggregator):
 
         bdata.outimg = Image.blend(bdata.outimg, img, alpha=0.5)
         bdata.pts = buf.pts
+
+        # Need to ensure the PIL image has been released, or unmap will fail
+        # with an outstanding memoryview buffer error
+        del img
 
         buf.unmap(info)
 
@@ -91,7 +96,7 @@ class Videomixer(GstBase.Aggregator):
         outbuf = Gst.Buffer.new_allocate(None, len(data), None)
         outbuf.fill(0, data)
         outbuf.pts = bdata.pts
-        self.finish_buffer (outbuf)
+        self.finish_buffer(outbuf)
 
         # We are EOS when no pad was ready to be aggregated,
         # this would obviously not work for live
@@ -99,6 +104,7 @@ class Videomixer(GstBase.Aggregator):
             return Gst.FlowReturn.EOS
 
         return Gst.FlowReturn.OK
+
 
 GObject.type_register(Videomixer)
 __gstelementfactory__ = ("py_videomixer", Gst.Rank.NONE, Videomixer)
