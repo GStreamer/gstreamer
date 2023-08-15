@@ -5072,13 +5072,15 @@ gst_h265_parser_parse_decoder_config_record (GstH265Parser * parser,
   g_assert (gst_bit_reader_get_pos (&br) == 23 * 8);
   for (i = 0; i < num_of_arrays; i++) {
     GstH265DecoderConfigRecordNalUnitArray array;
+    guint8 nalu_type;
     GstH265NalUnit nalu;
     guint16 num_nalu, j;
     guint offset;
 
     READ_CONFIG_UINT8 (array.array_completeness, 1);
     SKIP_CONFIG_BITS (1);
-    READ_CONFIG_UINT8 (array.nal_unit_type, 6);
+    READ_CONFIG_UINT8 (nalu_type, 6);
+    array.nal_unit_type = nalu_type;
 
     READ_CONFIG_UINT16 (num_nalu, 16);
 
@@ -5090,6 +5092,15 @@ gst_h265_parser_parse_decoder_config_record (GstH265Parser * parser,
           2, &nalu);
       if (result != GST_H265_PARSER_OK) {
         g_array_unref (array.nalu);
+        /* Ignores parsing error if this is the last nalu and not an essential
+         * nalu for decoding */
+        if (i + 1 == num_of_arrays && j + 1 == num_nalu &&
+            nalu_type != GST_H265_NAL_VPS && nalu_type != GST_H265_NAL_SPS &&
+            nalu_type != GST_H265_NAL_PPS) {
+          GST_WARNING ("Couldn't parse the last nalu, type %d at array %d / %d",
+              nalu_type, i, j);
+          goto out;
+        }
         goto error;
       }
 
@@ -5106,6 +5117,7 @@ gst_h265_parser_parse_decoder_config_record (GstH265Parser * parser,
     }
   }
 
+out:
   *config = ret;
   return GST_H265_PARSER_OK;
 
