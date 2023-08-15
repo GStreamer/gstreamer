@@ -56,7 +56,7 @@
 
 extern volatile gboolean glib_on_error_halt;
 
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
 static void fault_restore (void);
 static void fault_spin (void);
 #endif
@@ -95,7 +95,7 @@ static gboolean waiting_eos = FALSE;
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)gst_print
 
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
 static void
 fault_handler_sighandler (int signum)
 {
@@ -161,7 +161,7 @@ fault_setup (void)
   sigaction (SIGSEGV, &action, NULL);
   sigaction (SIGQUIT, &action, NULL);
 }
-#endif /* G_OS_UNIX */
+#endif /* G_OS_UNIX && !__APPLE__ */
 
 #if 0
 typedef struct _GstIndexStats
@@ -1184,7 +1184,7 @@ real_main (int argc, char *argv[])
 
   gst_tools_print_version ();
 
-#ifdef G_OS_UNIX
+#if defined (G_OS_UNIX) && !defined (__APPLE__)
   if (!no_fault)
     fault_setup ();
 #endif
