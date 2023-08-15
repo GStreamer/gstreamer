@@ -133,6 +133,10 @@ if cc.get_id() == 'msvc'
       '/we4053', # one void operand for '?:'
       '/we4062', # enumerator 'identifier' in switch of enum 'enumeration' is not handled
       '/we4098', # 'function' : void function returning a value
+      '/we4101', # 'identifier' : unreferenced local variable
+      '/we4189', # 'identifier' : local variable is initialized but not referenced
+      '/we4996', # 'identifier': was declared deprecated
+      '-D_CRT_SECURE_NO_WARNINGS', #  error C4996: 'identifier': This function or variable may be unsafe. Consider using identifier_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
     ])
   endif
   add_project_arguments(msvc_args, language: ['c', 'cpp'])
@@ -208,6 +212,7 @@ warning_flags = [
   '-Waggregate-return',
   '-Wvla',
   '-Wpointer-arith',
+  '-Werror=deprecated-declarations' # to fail on FFmpeg deprecated usage
 ]
 
 foreach extra_arg : warning_flags
