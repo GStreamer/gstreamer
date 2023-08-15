@@ -450,6 +450,10 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
 
   gst_ffmpegviddec_context_set_flags (ffmpegdec->context,
       AV_CODEC_FLAG_OUTPUT_CORRUPT, ffmpegdec->output_corrupt);
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  gst_ffmpegviddec_context_set_flags (ffmpegdec->context,
+      AV_CODEC_FLAG_COPY_OPAQUE, TRUE);
+#endif
 
   return TRUE;
 
@@ -910,6 +914,18 @@ gst_ffmpegviddec_can_direct_render (GstFFMpegVidDec * ffmpegdec)
       AV_CODEC_CAP_DR1);
 }
 
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+static void
+gst_ffmpeg_opaque_free (void *opaque, guint8 * data)
+{
+  GstVideoCodecFrame *frame = (GstVideoCodecFrame *) opaque;
+
+  GST_DEBUG ("Releasing frame %p", frame);
+
+  gst_video_codec_frame_unref (frame);
+}
+#endif
+
 /* called when ffmpeg wants us to allocate a buffer to write the decoded frame
  * into. We try to give it memory from our pool */
 static int
@@ -922,20 +938,36 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   guint c;
   GstFlowReturn ret;
   int create_buffer_flags = 0;
+  gint system_frame_number = 0;
 
   ffmpegdec = GST_FFMPEGVIDDEC (context->opaque);
 
+  GST_DEBUG_OBJECT (ffmpegdec, "flags %d", flags);
   GST_DEBUG_OBJECT (ffmpegdec, "getting buffer picture %p", picture);
 
   /* apply the last info we have seen to this picture, when we get the
    * picture back from ffmpeg we can use this to correctly timestamp the output
    * buffer */
-  GST_DEBUG_OBJECT (ffmpegdec, "opaque value SN %d",
-      (gint32) picture->reordered_opaque);
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  {
+    GstVideoCodecFrame *input_frame =
+        av_buffer_get_opaque (picture->opaque_ref);
+    g_assert (input_frame != NULL);
+
+    GST_DEBUG_OBJECT (ffmpegdec, "input_frame %p", input_frame);
+    /* ******************************* */
+    /* Test if the stored frame in the opaque matches the one video decoder has for that ref ! */
+    system_frame_number = input_frame->system_frame_number;
+  }
+#else
+  system_frame_number = (gint) picture->reordered_opaque;
+#endif
+  GST_DEBUG_OBJECT (ffmpegdec, "opaque value SN %d", system_frame_number);
 
   frame =
       gst_video_decoder_get_frame (GST_VIDEO_DECODER (ffmpegdec),
-      picture->reordered_opaque);
+      system_frame_number);
+
   if (G_UNLIKELY (frame == NULL))
     goto no_frame;
 
@@ -1723,7 +1755,9 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
 
   gst_video_frame_unmap (&vframe);
 
+#if LIBAVCODEC_VERSION_MAJOR < 60
   ffmpegdec->picture->reordered_opaque = -1;
+#endif
 
   return ret;
 
@@ -1748,14 +1782,6 @@ not_negotiated:
     GST_DEBUG_OBJECT (ffmpegdec, "not negotiated");
     return GST_FLOW_NOT_NEGOTIATED;
   }
-}
-
-static void
-gst_avpacket_init (AVPacket * packet, guint8 * data, guint size)
-{
-  memset (packet, 0, sizeof (AVPacket));
-  packet->data = data;
-  packet->size = size;
 }
 
 /*
@@ -1847,10 +1873,15 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   GST_DEBUG_OBJECT (ffmpegdec, "picture: display %d",
       ffmpegdec->picture->display_picture_number);
 #endif
-  GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque %p",
-      ffmpegdec->picture->opaque);
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque_ref %p",
+      ffmpegdec->picture->opaque_ref);
+#else
   GST_DEBUG_OBJECT (ffmpegdec, "picture: reordered opaque %" G_GUINT64_FORMAT,
       (guint64) ffmpegdec->picture->reordered_opaque);
+#endif
+  GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque %p",
+      ffmpegdec->picture->opaque);
   GST_DEBUG_OBJECT (ffmpegdec, "repeat_pict:%d",
       ffmpegdec->picture->repeat_pict);
   GST_DEBUG_OBJECT (ffmpegdec, "corrupted frame: %d",
@@ -2095,7 +2126,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   gboolean got_frame;
   GstMapInfo minfo;
   GstFlowReturn ret = GST_FLOW_OK;
-  AVPacket packet;
+  AVPacket *packet;
 
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %" G_GSIZE_FORMAT ", dts %" GST_TIME_FORMAT
@@ -2108,6 +2139,9 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
         ("Failed to map buffer for reading"));
     return GST_FLOW_ERROR;
   }
+
+  if (minfo.size == 0)
+    goto done;
 
   /* treat frame as void until a buffer is requested for it */
   if (!GST_VIDEO_CODEC_FRAME_FLAG_IS_SET (frame,
@@ -2135,27 +2169,37 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     data = ffmpegdec->padded;
   }
 
-  /* now decode the frame */
-  gst_avpacket_init (&packet, data, size);
+  /* Note: We use `av_packet_alloc()` so that it is properly initialized by
+   * FFmpeg and it can be properly cleaned-up (via `av_packet_unref()`) by
+   * FFmpeg also. */
+  packet = av_packet_alloc ();
+  packet->data = data;
+  packet->size = size;
 
-  if (!packet.size)
-    goto done;
+  /* Store a reference to the input frame. This will be carried along by FFmpeg
+   * to the resulting AVPicture */
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  {
+    packet->opaque_ref =
+        av_buffer_create (NULL, 0, gst_ffmpeg_opaque_free,
+        gst_video_codec_frame_ref (frame), 0);
+    GST_DEBUG_OBJECT (ffmpegdec, "Store incoming frame %u on AVPacket opaque",
+        frame->system_frame_number);
+  }
+#else
+  ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
+  ffmpegdec->picture->reordered_opaque = (gint64) frame->system_frame_number;
+  GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %u",
+      frame->system_frame_number);
+#endif
 
   if (ffmpegdec->palette) {
     guint8 *pal;
 
-    pal = av_packet_new_side_data (&packet, AV_PKT_DATA_PALETTE,
-        AVPALETTE_SIZE);
+    pal = av_packet_new_side_data (packet, AV_PKT_DATA_PALETTE, AVPALETTE_SIZE);
     gst_buffer_extract (ffmpegdec->palette, 0, pal, AVPALETTE_SIZE);
     GST_DEBUG_OBJECT (ffmpegdec, "copy pal %p %p", &packet, pal);
   }
-
-  /* save reference to the timing info */
-  ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
-  ffmpegdec->picture->reordered_opaque = (gint64) frame->system_frame_number;
-
-  GST_DEBUG_OBJECT (ffmpegdec, "stored opaque values idx %d",
-      frame->system_frame_number);
 
   /* This might call into get_buffer() from another thread,
    * which would cause a deadlock. Release the lock here
@@ -2163,12 +2207,12 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
    * See https://bugzilla.gnome.org/show_bug.cgi?id=726020
    */
   GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
-  if (avcodec_send_packet (ffmpegdec->context, &packet) < 0) {
+  if (avcodec_send_packet (ffmpegdec->context, packet) < 0) {
     GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
-    av_packet_free_side_data (&packet);
+    av_packet_unref (packet);
     goto send_packet_failed;
   }
-  av_packet_free_side_data (&packet);
+  av_packet_unref (packet);
   GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   do {
