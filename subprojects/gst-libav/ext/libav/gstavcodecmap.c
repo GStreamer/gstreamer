@@ -68,19 +68,39 @@ static const struct
       AV_CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
 };
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+static void
+gst_ffmpeg_channel_positions_to_layout (const GstAudioChannelPosition *
+    const pos, gint channels, AVChannelLayout * layout)
+#else
 static guint64
-gst_ffmpeg_channel_positions_to_layout (GstAudioChannelPosition * pos,
-    gint channels)
+gst_ffmpeg_channel_positions_to_layout (const GstAudioChannelPosition *
+    const pos, gint channels)
+#endif
 {
   gint i, j;
   guint64 ret = 0;
   gint channels_found = 0;
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  g_assert (layout);
+
+  if (!pos) {
+    memset (layout, 0, sizeof (AVChannelLayout));
+    return;
+  }
+
+  if (channels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_MONO) {
+    *layout = (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
+    return;
+  }
+#else
   if (!pos)
     return 0;
 
   if (channels == 1 && pos[0] == GST_AUDIO_CHANNEL_POSITION_MONO)
     return AV_CH_LAYOUT_MONO;
+#endif
 
   for (i = 0; i < channels; i++) {
     for (j = 0; j < G_N_ELEMENTS (_ff_to_gst_layout); j++) {
@@ -92,19 +112,42 @@ gst_ffmpeg_channel_positions_to_layout (GstAudioChannelPosition * pos,
     }
   }
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  if (channels_found != channels && av_channel_layout_check (layout)) {
+    memset (layout, 0, sizeof (AVChannelLayout));
+    return;
+  }
+
+  layout->u.mask = ret;
+  layout->nb_channels = channels_found;
+  layout->order = AV_CHANNEL_ORDER_NATIVE;
+#else
   if (channels_found != channels)
     return 0;
   return ret;
+#endif
 }
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+gboolean
+gst_ffmpeg_channel_layout_to_gst (const AVChannelLayout * channel_layout,
+    gint channels, GstAudioChannelPosition * pos)
+#else
 gboolean
 gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     GstAudioChannelPosition * pos)
+#endif
 {
   guint nchannels = 0;
   gboolean none_layout = FALSE;
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  g_assert (channel_layout);
+
+  if (channel_layout->nb_channels == 0 || channels > 64) {
+#else
   if (channel_layout == 0 || channels > 64) {
+#endif
     nchannels = channels;
     none_layout = TRUE;
   } else {
@@ -114,16 +157,25 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
      * as FRONT_CENTER but we distinguish between the two in
      * GStreamer
      */
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+    static const AVChannelLayout mono = AV_CHANNEL_LAYOUT_MONO;
+    if (channels == 1
+        && (av_channel_layout_compare (channel_layout, &mono) == 0)) {
+#else
     if (channels == 1 && channel_layout == AV_CH_LAYOUT_MONO) {
+#endif
       pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
       return TRUE;
     }
-
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+    nchannels = channel_layout->nb_channels;
+#else
     for (i = 0; i < 64; i++) {
       if ((channel_layout & (G_GUINT64_CONSTANT (1) << i)) != 0) {
         nchannels++;
       }
     }
+#endif
 
     if (nchannels != channels) {
       GST_ERROR ("Number of channels is different (%u != %u)", channels,
@@ -133,12 +185,30 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     } else {
 
       for (i = 0, j = 0; i < G_N_ELEMENTS (_ff_to_gst_layout); i++) {
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+        if (channel_layout->order == AV_CHANNEL_ORDER_NATIVE) {
+          if ((channel_layout->u.mask & _ff_to_gst_layout[i].ff) != 0) {
+            pos[j++] = _ff_to_gst_layout[i].gst;
+
+            if (_ff_to_gst_layout[i].gst == GST_AUDIO_CHANNEL_POSITION_NONE)
+              none_layout = TRUE;
+          }
+        } else if (channel_layout->order == AV_CHANNEL_ORDER_CUSTOM) {
+          if (_ff_to_gst_layout[i].ff == (1ULL << channel_layout->u.map[i].id)) {
+            pos[j++] = _ff_to_gst_layout[i].gst;
+
+            if (_ff_to_gst_layout[i].gst == GST_AUDIO_CHANNEL_POSITION_NONE)
+              none_layout = TRUE;
+          }
+        }
+#else
         if ((channel_layout & _ff_to_gst_layout[i].ff) != 0) {
           pos[j++] = _ff_to_gst_layout[i].gst;
 
           if (_ff_to_gst_layout[i].gst == GST_AUDIO_CHANNEL_POSITION_NONE)
             none_layout = TRUE;
         }
+#endif
       }
 
       if (j != nchannels) {
@@ -151,8 +221,13 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
 
   if (!none_layout
       && !gst_audio_check_valid_channel_positions (pos, nchannels, FALSE)) {
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+    GST_ERROR ("Invalid channel layout %" G_GUINT64_FORMAT
+        " - assuming NONE layout", channel_layout->u.mask);
+#else
     GST_ERROR ("Invalid channel layout %" G_GUINT64_FORMAT
         " - assuming NONE layout", channel_layout);
+#endif
     none_layout = TRUE;
   }
 
@@ -439,6 +514,7 @@ gst_ff_vid_caps_new (AVCodecContext * context, const AVCodec * codec,
   return caps;
 }
 
+#if LIBAVUTIL_VERSION_INT < AV_VERSION_INT(57, 28, 100)
 static gint
 get_nbits_set (guint64 n)
 {
@@ -452,6 +528,7 @@ get_nbits_set (guint64 n)
 
   return x;
 }
+#endif
 
 static void
 gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
@@ -551,10 +628,32 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
   va_list var_args;
 
   /* fixed, non-probing context */
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  if (context != NULL && context->ch_layout.nb_channels > 0) {
+#else
   if (context != NULL && context->channels != -1) {
+#endif
     GstAudioChannelPosition pos[64];
     guint64 mask;
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+    caps = gst_caps_new_simple (mimetype,
+        "rate", G_TYPE_INT, context->sample_rate,
+        "channels", G_TYPE_INT, context->ch_layout.nb_channels, NULL);
+
+    static const AVChannelLayout mono = AV_CHANNEL_LAYOUT_MONO;
+    const gboolean needs_mask = (context->ch_layout.nb_channels == 1 &&
+        av_channel_layout_compare (&context->ch_layout, &mono) != 0)
+        || (context->ch_layout.nb_channels > 1
+        && gst_ffmpeg_channel_layout_to_gst (&context->ch_layout,
+            context->ch_layout.nb_channels, pos));
+
+    if (needs_mask &&
+        gst_audio_channel_positions_to_mask (pos,
+            context->ch_layout.nb_channels, FALSE, &mask)) {
+      gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
+    }
+#else
     caps = gst_caps_new_simple (mimetype,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
@@ -566,6 +665,7 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
             &mask)) {
       gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
     }
+#endif
   } else if (encode) {
     gint maxchannels = 2;
     const gint *rates = NULL;
@@ -687,15 +787,30 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
         break;
     }
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+    if (codec && codec->ch_layouts) {
+      const AVChannelLayout *layouts = codec->ch_layouts;
+#else
     if (codec && codec->channel_layouts) {
       const uint64_t *layouts = codec->channel_layouts;
+#endif
       GstAudioChannelPosition pos[64];
 
       caps = gst_caps_new_empty ();
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+      // Layout array is terminated with a zeroed layout.
+      AVChannelLayout zero;
+      memset (&zero, 0, sizeof (AVChannelLayout));
+      while (av_channel_layout_compare (layouts, &zero) != 0) {
+        const gint nbits_set = layouts->nb_channels;
+
+        if (gst_ffmpeg_channel_layout_to_gst (layouts, nbits_set, pos)) {
+#else
       while (*layouts) {
         gint nbits_set = get_nbits_set (*layouts);
 
         if (gst_ffmpeg_channel_layout_to_gst (*layouts, nbits_set, pos)) {
+#endif
           guint64 mask;
 
           if (gst_audio_channel_positions_to_mask (pos, nbits_set, FALSE,
@@ -2676,7 +2791,12 @@ gst_ffmpeg_caps_to_smpfmt (const GstCaps * caps,
 
   structure = gst_caps_get_structure (caps, 0);
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  gst_structure_get_int (structure, "channels",
+      &context->ch_layout.nb_channels);
+#else
   gst_structure_get_int (structure, "channels", &context->channels);
+#endif
   gst_structure_get_int (structure, "rate", &context->sample_rate);
   gst_structure_get_int (structure, "block_align", &context->block_align);
   if (gst_structure_get_int (structure, "bitrate", &bitrate))
@@ -3096,10 +3216,15 @@ gst_ffmpeg_audioinfo_to_context (GstAudioInfo * info, AVCodecContext * context)
   const enum AVSampleFormat *smpl_fmts;
   enum AVSampleFormat smpl_fmt = -1;
 
-  context->channels = info->channels;
   context->sample_rate = info->rate;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+  gst_ffmpeg_channel_positions_to_layout (info->position, info->channels,
+      &context->ch_layout);
+#else
+  context->channels = info->channels;
   context->channel_layout =
       gst_ffmpeg_channel_positions_to_layout (info->position, info->channels);
+#endif
 
   codec = context->codec;
 
@@ -3534,7 +3659,11 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
       if ((layout = gst_structure_get_string (str, "layout"))) {
         if (!strcmp (layout, "g721")) {
           context->sample_rate = 8000;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+          context->ch_layout = (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
+#else
           context->channels = 1;
+#endif
           context->bit_rate = 32000;
         }
       }
@@ -3576,7 +3705,11 @@ gst_ffmpeg_caps_with_codecid (enum AVCodecID codec_id,
   switch (codec_id) {
     case AV_CODEC_ID_QCELP:
       /* QCELP is always mono, no matter what the caps say */
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+      context->ch_layout = (AVChannelLayout) AV_CHANNEL_LAYOUT_MONO;
+#else
       context->channels = 1;
+#endif
       break;
     case AV_CODEC_ID_ADPCM_G726:
       if (context->sample_rate && context->bit_rate)

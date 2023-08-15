@@ -1584,12 +1584,16 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
     case AV_CODEC_ID_DSD_MSBF_PLANAR:
     {
       int channel_idx;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+      const int num_channels = avstream->codecpar->ch_layout.nb_channels;
+#else
       int num_channels = avstream->codecpar->channels;
+#endif
       int num_bytes_per_channel = pkt.size / num_channels;
       GstDsdPlaneOffsetMeta *plane_ofs_meta;
 
       plane_ofs_meta = gst_buffer_add_dsd_plane_offset_meta (outbuf,
-          avstream->codecpar->channels, num_bytes_per_channel, NULL);
+          num_channels, num_bytes_per_channel, NULL);
 
       for (channel_idx = 0; channel_idx < num_channels; ++channel_idx) {
         plane_ofs_meta->offsets[channel_idx] =

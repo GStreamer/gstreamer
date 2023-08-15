@@ -125,9 +125,14 @@ gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
                                   enum AVCodecID ** audio_codec_list,
 				  AVOutputFormat * plugin);
 
-
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+gboolean
+gst_ffmpeg_channel_layout_to_gst (const AVChannelLayout * channel_layout, gint channels,
+    GstAudioChannelPosition * pos);
+#else
 gboolean
 gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
     GstAudioChannelPosition * pos);
+#endif
 
 #endif /* __GST_FFMPEG_CODECMAP_H__ */
