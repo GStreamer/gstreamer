@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY (cuda_ipc_client_debug);
 
 static GThreadPool *gc_thread_pool = nullptr;
 /* *INDENT-OFF* */
-std::mutex gc_pool_lock;
+static std::mutex gc_pool_lock;
 /* *INDENT-ON* */
 
 void

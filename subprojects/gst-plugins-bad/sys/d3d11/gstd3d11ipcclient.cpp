@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d11_ipc_client_debug);
 
 static GThreadPool *gc_thread_pool = nullptr;
 /* *INDENT-OFF* */
-std::mutex gc_pool_lock;
+static std::mutex gc_pool_lock;
 /* *INDENT-ON* */
 
 void
