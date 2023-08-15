@@ -29,7 +29,7 @@ import weakref
 from ..overrides import override
 from ..module import get_introspection_module
 
-from gi.repository import GLib
+from gi.repository import GLib, GObject
 
 
 Gst = get_introspection_module('Gst')
@@ -628,6 +628,50 @@ class ValueList(Gst.ValueList):
 
 ValueList = override(ValueList)
 __all__.append('ValueList')
+
+
+class TagList(Gst.TagList):
+    def __init__(self):
+        Gst.TagList.__init__(self)
+
+    def __getitem__(self, index):
+        if index >= self.n_tags():
+            raise IndexError('taglist index out of range')
+
+        key = self.nth_tag_name(index)
+        (res, val) = Gst.TagList.copy_value(self, key)
+        if not res:
+            raise KeyError(f"tag {key} not found")
+        return val
+
+    def __setitem__(self, key, value):
+        self.add(Gst.TagMergeMode.REPLACE, key, value)
+
+    def keys(self):
+        keys = set()
+
+        def foreach(list, fid, value, udata):
+            keys.add(fid)
+            return True
+
+        self.foreach(foreach, None, None)
+        return keys
+
+    def enumerate(self):
+        return map(lambda k: (k, Gst.TagList.copy_value(self, k)[1]), self.keys())
+
+    def __len__(self):
+        return len(self.n_tags())
+
+    def __str__(self):
+        return self.to_string()
+
+    def __repr__(self):
+        return '<Gst.TagList %s>' % (str(self))
+
+
+TagList = override(TagList)
+__all__.append('TagList')
 
 # From https://docs.python.org/3/library/itertools.html
 
