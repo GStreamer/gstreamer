@@ -1,0 +1,107 @@
+#!/usr/bin/env python
+# gst-python
+# Copyright (C) 2006 Andy Wingo <wingo at pobox.com>
+# Copyright (C) 2023 Jan Schmidt <jan at centricular.com>
+#
+# This library is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Library General Public
+# License as published by the Free Software Foundation; either
+# version 2 of the License, or (at your option) any later version.
+#
+# This library is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Library General Public License for more details.
+#
+# You should have received a copy of the GNU Library General Public
+# License along with this library; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+import os
+import sys
+import gi
+
+gi.require_version("GLib", "2.0")
+gi.require_version("Gst", "1.0")
+gi.require_version("GstPbutils", "1.0")
+from gi.repository import GLib, Gst, GstPbutils
+
+def fail(path, info):
+    error = info.get_result()
+    print(f"Discovery of {path} failed with result {error}")
+    sys.exit(1)
+
+def print_stream_info(stream_info, depth):
+    indent = " "*depth
+
+    stream_type = stream_info.get_stream_type_nick()
+    stream_num = stream_info.get_stream_number()
+    stream_id = stream_info.get_stream_id()
+    caps = stream_info.get_caps()
+    print(f"{indent}{stream_type} #{stream_num}: {caps}")
+    print(f"{indent}  Stream ID: {stream_id}")
+
+    tags = stream_info.get_tags()
+    if tags is not None:
+        print(f"{indent}  Tags: ")
+        for (key, tag) in tags.enumerate():
+            print(f"{indent}    {key}: {tag}")
+
+    if isinstance(stream_info, GstPbutils.DiscovererVideoInfo) or isinstance(stream_info, GstPbutils.DiscovererAudioInfo):
+        print(f"{indent}Bitrate: {stream_info.get_bitrate()}")
+        print(f"{indent}Max Bitrate: {stream_info.get_max_bitrate()}")
+    print()
+
+def print_topology(stream_info, depth):
+    print_stream_info(stream_info, depth)
+    
+    next = stream_info.get_next()
+    if next is not None:
+        print_topology (next, depth + 2);
+    elif isinstance(stream_info, GstPbutils.DiscovererContainerInfo):
+      streams = stream_info.get_streams()
+      for tmpinf in streams:
+        print_topology (tmpinf, depth + 2);
+
+def succeed(info):
+    print(f"URI: {info.get_uri()}")
+    # Print properties
+    duration = info.get_duration()
+    seekable = info.get_seekable()
+    is_live = info.get_live()
+
+    print(f"Duration: {Gst.TIME_ARGS(duration)}\nSeekable: {seekable}\nLive: {is_live}")
+
+    print_topology(info.get_stream_info(), 0)
+    sys.exit(0)
+
+def discover(path):
+    def discovered(d, info, err):
+        if info.get_result() == GstPbutils.DiscovererResult.OK:
+            succeed(info)
+        else:
+            fail(path, info)
+
+    d = GstPbutils.Discoverer.new(5 * Gst.SECOND)
+    d.connect('discovered', discovered)
+    d.start()
+    d.discover_uri_async(path)
+    GLib.MainLoop().run()
+
+def usage():
+    print("usage: gst-discover PATH-TO-MEDIA-FILE", file=sys.stderr)
+    sys.exit(1)
+
+def main(argv):
+    if len(argv) != 2:
+        usage()
+    path = argv.pop()
+    if not os.path.isfile(path):
+        print(f"error: file {path} does not exist", file=sys.stderr)
+        usage()
+
+    Gst.init(sys.argv)
+    return discover('file://' + os.path.abspath(path))
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))
