@@ -590,7 +590,11 @@ gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec, GstFlowReturn * ret,
     goto no_codec;
 
   *ret = GST_FLOW_OK;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 2, 100)
+  ffmpegdec->context->frame_num++;
+#else
   ffmpegdec->context->frame_number++;
+#endif
 
   oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
