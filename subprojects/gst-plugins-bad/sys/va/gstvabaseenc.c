@@ -22,6 +22,7 @@
 
 #include <gst/va/gstva.h>
 #include <gst/va/vasurfaceimage.h>
+#include <gst/va/gstvavideoformat.h>
 
 #include "vacompat.h"
 #include "gstvacaps.h"
@@ -58,6 +59,8 @@ G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaBaseEnc, gst_va_base_enc,
     GST_DEBUG_CATEGORY_INIT (gst_va_base_enc_debug,
         "vabaseenc", 0, "vabaseenc element"););
 /* *INDENT-ON* */
+
+extern GRecMutex GST_VA_SHARED_LOCK;
 
 static void
 gst_va_base_enc_reset_state_default (GstVaBaseEnc * base)
@@ -205,6 +208,35 @@ _get_sinkpad_pool (GstVaBaseEnc * base)
 
   g_assert (base->input_state);
   caps = gst_caps_copy (base->input_state->caps);
+  g_assert (gst_caps_is_fixed (caps));
+  /* For DMA buffer, we can only import linear buffers.
+     Replace the drm-format into format field. */
+  if (gst_video_is_dma_drm_caps (caps)) {
+    GstVideoInfoDmaDrm dma_info;
+    GstVideoInfo info;
+
+    if (!gst_video_info_dma_drm_from_caps (&dma_info, caps)) {
+      GST_ERROR_OBJECT (base, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+      gst_caps_unref (caps);
+      return NULL;
+    }
+
+    if (dma_info.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
+      GST_ERROR_OBJECT (base, "Cannot import non-linear DMA buffer");
+      gst_caps_unref (caps);
+      return NULL;
+    }
+
+    if (!gst_va_dma_drm_info_to_video_info (&dma_info, &info)) {
+      GST_ERROR_OBJECT (base, "Cannot get va video info");
+      gst_caps_unref (caps);
+      return NULL;
+    }
+
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING,
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&info)), NULL);
+    gst_structure_remove_field (gst_caps_get_structure (caps, 0), "drm-format");
+  }
   gst_caps_set_features_simple (caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
 
@@ -241,10 +273,94 @@ _get_sinkpad_pool (GstVaBaseEnc * base)
   return base->priv->raw_pool;
 }
 
+static inline gsize
+_get_plane_data_size (GstVideoInfo * info, guint plane)
+{
+  gint comp[GST_VIDEO_MAX_COMPONENTS];
+  gint height, padded_height;
+
+  gst_video_format_info_component (info->finfo, plane, comp);
+
+  height = GST_VIDEO_INFO_HEIGHT (info);
+  padded_height =
+      GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (info->finfo, comp[0], height);
+
+  return GST_VIDEO_INFO_PLANE_STRIDE (info, plane) * padded_height;
+}
+
+static gboolean
+_try_import_dmabuf_unlocked (GstVaBaseEnc * base, GstBuffer * inbuf)
+{
+  GstVideoMeta *meta;
+  GstVideoInfo in_info = base->in_info;
+  GstMemory *mems[GST_VIDEO_MAX_PLANES];
+  guint i, n_mem, n_planes, usage_hint;
+  gsize offset[GST_VIDEO_MAX_PLANES];
+  uintptr_t fd[GST_VIDEO_MAX_PLANES];
+
+  n_planes = GST_VIDEO_INFO_N_PLANES (&in_info);
+  n_mem = gst_buffer_n_memory (inbuf);
+  meta = gst_buffer_get_video_meta (inbuf);
+
+  /* This will eliminate most non-dmabuf out there */
+  if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
+    return FALSE;
+
+  /* We cannot have multiple dmabuf per plane */
+  if (n_mem > n_planes)
+    return FALSE;
+
+  /* Update video info based on video meta */
+  if (meta) {
+    GST_VIDEO_INFO_WIDTH (&in_info) = meta->width;
+    GST_VIDEO_INFO_HEIGHT (&in_info) = meta->height;
+
+    for (i = 0; i < meta->n_planes; i++) {
+      GST_VIDEO_INFO_PLANE_OFFSET (&in_info, i) = meta->offset[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (&in_info, i) = meta->stride[i];
+    }
+  }
+
+  /* Find and validate all memories */
+  for (i = 0; i < n_planes; i++) {
+    guint plane_size;
+    guint length;
+    guint mem_idx;
+    gsize mem_skip;
+
+    plane_size = _get_plane_data_size (&in_info, i);
+
+    if (!gst_buffer_find_memory (inbuf, in_info.offset[i], plane_size,
+            &mem_idx, &length, &mem_skip))
+      return FALSE;
+
+    /* We can't have more then one dmabuf per plane */
+    if (length != 1)
+      return FALSE;
+
+    mems[i] = gst_buffer_peek_memory (inbuf, mem_idx);
+
+    /* And all memory found must be dmabuf */
+    if (!gst_is_dmabuf_memory (mems[i]))
+      return FALSE;
+
+    offset[i] = mems[i]->offset + mem_skip;
+    fd[i] = gst_dmabuf_memory_get_fd (mems[i]);
+  }
+
+  usage_hint = va_get_surface_usage_hint (base->display,
+      VAEntrypointEncSlice, GST_PAD_SINK, TRUE);
+
+  /* Now create a VASurfaceID for the buffer */
+  return gst_va_dmabuf_memories_setup (base->display, &in_info, n_planes,
+      mems, fd, offset, usage_hint);
+}
+
 static gboolean
 _try_import_buffer (GstVaBaseEnc * base, GstBuffer * inbuf)
 {
   VASurfaceID surface;
+  gboolean ret;
 
   /* The VA buffer. */
   surface = gst_va_buffer_get_surface (inbuf);
@@ -252,9 +368,11 @@ _try_import_buffer (GstVaBaseEnc * base, GstBuffer * inbuf)
       (gst_va_buffer_peek_display (inbuf) == base->display))
     return TRUE;
 
-  /* TODO: DMA buffer. */
+  g_rec_mutex_lock (&GST_VA_SHARED_LOCK);
+  ret = _try_import_dmabuf_unlocked (base, inbuf);
+  g_rec_mutex_unlock (&GST_VA_SHARED_LOCK);
 
-  return FALSE;
+  return ret;
 }
 
 static GstFlowReturn
