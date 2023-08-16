@@ -437,6 +437,7 @@ if building_full
   # Build shared library
   gstfull = build_target('gstreamer-full-1.0',
     init_static_plugins_c,
+    c_args: ['-DBUILDING_GST'],
     target_type: get_option('gst-full-target-type'),
     link_args: gstfull_link_args,
     link_whole : exposed_libs,
@@ -445,7 +446,7 @@ if building_full
     install : true,
   )
   gst_full_c_flags =  []
-  if building_full_static
+  if building_full_static or get_option('default_library') == 'static'
     gst_full_c_flags += ['-DGST_STATIC_COMPILATION']
   endif
 

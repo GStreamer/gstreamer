@@ -14,6 +14,7 @@ $dynamic_types_declaration
 $plugins_declaration
 $giomodules_declaration
 
+_GST_EXPORT
 void
 gst_init_static_plugins (void)
 {
