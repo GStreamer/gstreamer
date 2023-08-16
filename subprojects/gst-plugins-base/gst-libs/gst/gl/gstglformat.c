@@ -231,6 +231,13 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_BGRP:
     case GST_VIDEO_FORMAT_GBRA:
       return GST_GL_R8;
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_10BE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_10BE:
+    case GST_VIDEO_FORMAT_A444_10LE:
+    case GST_VIDEO_FORMAT_A444_10BE:
+      return GST_GL_R16;
     default:
       n_plane_components = 4;
       g_assert_not_reached ();
@@ -538,6 +545,12 @@ gst_gl_video_format_swizzle (GstVideoFormat video_format, int *swizzle)
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_10BE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_10BE:
+    case GST_VIDEO_FORMAT_A444_10LE:
+    case GST_VIDEO_FORMAT_A444_10BE:
       swizzle[0] = 0;
       swizzle[1] = 1;
       swizzle[2] = 2;
