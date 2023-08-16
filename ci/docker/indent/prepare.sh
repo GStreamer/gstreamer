@@ -33,7 +33,7 @@ meson install -C _build
 wget -O gstbayer2rgb.c "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/raw/main/subprojects/gst-plugins-bad/gst/bayer/gstbayer2rgb.c?inline=false"
 
 for i in 1 2; do
-indent \
+gst-indent-1.0 \
   --braces-on-if-line \
   --case-brace-indentation0 \
   --case-indentation2 \

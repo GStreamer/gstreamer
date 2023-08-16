@@ -283,7 +283,7 @@ def get_subprocess_env(options, gst_version):
         return get_wine_subprocess_env(options, env)
 
     prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'meson'),
-        options.sysroot)
+                    options.sysroot)
 
     env["GST_PLUGIN_SYSTEM_PATH"] = ""
     env["GST_PLUGIN_SCANNER"] = os.path.normpath(
@@ -304,10 +304,10 @@ def get_subprocess_env(options, gst_version):
         lib_path_envvar = 'LD_LIBRARY_PATH'
 
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(SCRIPTDIR, 'subprojects',
-                                                        'gst-python', 'plugin'),
+                                                         'gst-python', 'plugin'),
                     options.sysroot)
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(PREFIX_DIR, 'lib',
-                                                        'gstreamer-1.0'),
+                                                         'gstreamer-1.0'),
                     options.sysroot)
     prepend_env_var(env, "GST_PLUGIN_PATH", os.path.join(options.builddir, 'subprojects',
                                                          'libnice', 'gst'),
@@ -322,7 +322,11 @@ def get_subprocess_env(options, gst_version):
     prepend_env_var(env, "PKG_CONFIG_PATH", os.path.join(PREFIX_DIR, 'lib', 'pkgconfig'),
                     options.sysroot)
 
-    # gst-indent
+    # gst-indent-1.0
+    prepend_env_var(env, "PATH", os.path.join(options.builddir, 'subprojects',
+                    'gst-indent', 'src'),
+                    options.sysroot)
+    # gst-indent (FIXME: remove or move into gst-indent module)
     prepend_env_var(env, "PATH", os.path.join(SCRIPTDIR, 'scripts'),
                     options.sysroot)
 
@@ -502,7 +506,7 @@ def get_subprocess_env(options, gst_version):
 
 def get_windows_shell():
     command = ['powershell.exe', '-noprofile', '-executionpolicy', 'bypass', '-file',
-        os.path.join(SCRIPTDIR, 'data', 'misc', 'cmd_or_ps.ps1')]
+               os.path.join(SCRIPTDIR, 'data', 'misc', 'cmd_or_ps.ps1')]
     result = subprocess.check_output(command)
     return result.decode().strip()
 
@@ -588,7 +592,8 @@ if __name__ == "__main__":
                 for p in BASH_COMPLETION_PATHS:
                     if os.path.exists(p):
                         bash_completions_files += os.listdir(path=p)
-                bc_rc = BC_RC.format(bash_completions=' '.join(bash_completions_files), bash_completions_paths=' '.join(BASH_COMPLETION_PATHS))
+                bc_rc = BC_RC.format(bash_completions=' '.join(bash_completions_files),
+                                     bash_completions_paths=' '.join(BASH_COMPLETION_PATHS))
                 tmprc.write(bc_rc)
                 tmprc.flush()
             args.append("--rcfile")

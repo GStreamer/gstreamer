@@ -21,7 +21,7 @@ Steps to sync with upstream:
 
 1. Clone libcheck from the above git repository
 2. Copy files into this directory
-3. Run GNU indent on all the code
+3. Run gst-indent-1.0 on all the code
 4. Fix internal #includes
 5. Manually inspect the diff
 6. Update configure.ac, m4/check-checks.m4, meson.build files, etc
