@@ -7258,6 +7258,18 @@
                         "type": "gchararray",
                         "writable": true
                     },
+                    "enforce-increasing-timestamps": {
+                        "blurb": "If set to true, flvmux will modify buffers timestamps to ensure they are always strictly increasing, inside one stream and also between the audio and video streams",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "metadatacreator": {
                         "blurb": "The value of metadatacreator in the meta packet.",
                         "conditionally-available": false,

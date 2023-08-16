@@ -59,12 +59,14 @@ enum
   PROP_METADATACREATOR,
   PROP_ENCODER,
   PROP_SKIP_BACKWARDS_STREAMS,
+  PROP_ENFORCE_INCREASING_TIMESTAMPS,
 };
 
 #define DEFAULT_STREAMABLE FALSE
 #define MAX_INDEX_ENTRIES 128
 #define DEFAULT_METADATACREATOR "GStreamer {VERSION} FLV muxer"
 #define DEFAULT_SKIP_BACKWARDS_STREAMS FALSE
+#define DEFAULT_ENFORCE_INCREASING_TIMESTAMPS TRUE
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -293,6 +295,23 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
           DEFAULT_SKIP_BACKWARDS_STREAMS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+ /**
+   * GstFlvMux:enforce-increasing-timestamps:
+   *
+   * If set to true, flvmux will modify buffers timestamps to ensure they are always
+   * strictly increasing, inside one stream and also between the audio and video streams.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_ENFORCE_INCREASING_TIMESTAMPS,
+      g_param_spec_boolean ("enforce-increasing-timestamps",
+          "Enforce increasing timestamps",
+          "If set to true, flvmux will modify buffers timestamps to ensure they are always "
+          "strictly increasing, inside one stream and also between the audio and video streams",
+          DEFAULT_ENFORCE_INCREASING_TIMESTAMPS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstaggregator_class->create_new_pad =
       GST_DEBUG_FUNCPTR (gst_flv_mux_create_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_flv_mux_release_pad);
@@ -330,6 +349,7 @@ gst_flv_mux_init (GstFlvMux * mux)
   mux->streamable = DEFAULT_STREAMABLE;
   mux->metadatacreator = g_strdup (DEFAULT_METADATACREATOR);
   mux->encoder = g_strdup (DEFAULT_METADATACREATOR);
+  mux->enforce_increasing_timestamps = DEFAULT_ENFORCE_INCREASING_TIMESTAMPS;
 
   mux->new_metadata = FALSE;
 
@@ -1263,7 +1283,7 @@ gst_flv_mux_buffer_to_tag_internal (GstFlvMux * mux, GstBuffer * buffer,
    * it expects timestamps to go forward not only inside one stream, but
    * also between the audio & video streams.
    */
-  if (dts < mux->last_dts) {
+  if (dts < mux->last_dts && mux->enforce_increasing_timestamps) {
     GST_WARNING_OBJECT (pad, "Got backwards dts! (%" GST_TIME_FORMAT
         " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (dts * GST_MSECOND),
         GST_TIME_ARGS (mux->last_dts * GST_MSECOND));
@@ -2139,6 +2159,9 @@ gst_flv_mux_get_property (GObject * object,
     case PROP_SKIP_BACKWARDS_STREAMS:
       g_value_set_boolean (value, mux->skip_backwards_streams);
       break;
+    case PROP_ENFORCE_INCREASING_TIMESTAMPS:
+      g_value_set_boolean (value, mux->enforce_increasing_timestamps);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2181,6 +2204,9 @@ gst_flv_mux_set_property (GObject * object,
       break;
     case PROP_SKIP_BACKWARDS_STREAMS:
       mux->skip_backwards_streams = g_value_get_boolean (value);
+      break;
+    case PROP_ENFORCE_INCREASING_TIMESTAMPS:
+      mux->enforce_increasing_timestamps = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

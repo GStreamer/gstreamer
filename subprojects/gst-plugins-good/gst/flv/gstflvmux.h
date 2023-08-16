@@ -96,6 +96,7 @@ struct _GstFlvMux {
   gchar *metadatacreator;
   gchar *encoder;
   gboolean skip_backwards_streams;
+  gboolean enforce_increasing_timestamps;
 
   GstTagList *tags;
   gboolean new_metadata;
