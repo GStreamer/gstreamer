@@ -400,6 +400,10 @@ if building_full
   # glib and gobject are part of our public API. If we are using glib from the
   # system then our pkg-config file must require it. If we built it as
   # subproject then we need to link_whole it.
+  # Note that link_whole dependencies aren't exposed transitively in
+  # Windows/Cygwin, because symbols from static libraries must
+  # be manually marked as exported through a module definition file.
+  # See e.g. https://github.com/FFmpeg/FFmpeg/blob/3057ce797f6e1348b978f5ffe9e2afd2224544f0/configure#L5726
   glib_deps = []
   glib_dep = dependency('glib-2.0')
   gobject_dep = dependency('gobject-2.0')
@@ -450,7 +454,14 @@ if building_full
     gst_full_c_flags += ['-DGST_STATIC_COMPILATION']
   endif
 
-  gst_full_dep = declare_dependency(link_with: gstfull,
+  gst_full_libs = [gstfull]
+
+  # See above re: symbol exports in Win32
+  if ['windows', 'cygwin'].contains(host_machine.system())
+    gst_full_libs += exposed_libs
+  endif
+
+  gst_full_dep = declare_dependency(link_with: gst_full_libs,
     compile_args: gst_full_c_flags,
     dependencies : incdir_deps + glib_deps,
     include_directories: include_directories('.')
