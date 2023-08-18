@@ -8165,6 +8165,21 @@ be called in when the ringbuffer is acquired.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="set_errored" c:identifier="gst_audio_ring_buffer_set_errored" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.c">Mark the ringbuffer as errored after it has started.
+
+MT safe.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="buf" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.c">the #GstAudioRingBuffer that has encountered an error</doc>
+            <type name="AudioRingBuffer" c:type="GstAudioRingBuffer*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="set_flushing" c:identifier="gst_audio_ring_buffer_set_flushing">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/gstaudioringbuffer.c">Set the ringbuffer to flushing mode or normal mode.
 

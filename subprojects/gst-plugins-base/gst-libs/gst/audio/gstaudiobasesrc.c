@@ -1229,7 +1229,7 @@ gst_audio_base_src_post_message (GstElement * element, GstMessage * message)
      * flow error message */
     ret = GST_ELEMENT_CLASS (parent_class)->post_message (element, message);
 
-    g_atomic_int_set (&ringbuffer->state, GST_AUDIO_RING_BUFFER_STATE_ERROR);
+    gst_audio_ring_buffer_set_errored (ringbuffer);
     GST_AUDIO_RING_BUFFER_SIGNAL (ringbuffer);
     gst_object_unref (ringbuffer);
   } else {

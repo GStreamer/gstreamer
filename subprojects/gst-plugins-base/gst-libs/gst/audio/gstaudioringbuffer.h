@@ -379,6 +379,9 @@ gboolean        gst_audio_ring_buffer_pause           (GstAudioRingBuffer *buf);
 GST_AUDIO_API
 gboolean        gst_audio_ring_buffer_stop            (GstAudioRingBuffer *buf);
 
+GST_AUDIO_API
+void 		gst_audio_ring_buffer_set_errored     (GstAudioRingBuffer *buf);
+
 /* get status */
 
 GST_AUDIO_API
