@@ -44,6 +44,7 @@ struct _GstMDNSDeviceProvider
 struct _ListenerContext
 {
   GMutex lock;
+  GCond stop_cond;
   GstDeviceProvider *provider;
 
   /* The following fields are protected by @lock */
@@ -362,9 +363,18 @@ _listen (ListenerContext * ctx)
 done:
   GST_INFO_OBJECT (ctx->provider, "Done listening");
 
+  /* Wait until we're told to stop, or gst_mdns_device_provider_stop()
+     can access a freed context */
+  g_mutex_lock (&ctx->lock);
+  while (!ctx->stop) {
+    g_cond_wait (&ctx->stop_cond, &ctx->lock);
+  }
+  g_mutex_unlock (&ctx->lock);
+
   g_sequence_free (ctx->last_seen_devices);
   g_hash_table_unref (ctx->devices);
   g_mutex_clear (&ctx->lock);
+  g_cond_clear (&ctx->stop_cond);
   g_free (ctx);
 
   return NULL;
@@ -385,6 +395,7 @@ gst_mdns_device_provider_start (GstDeviceProvider * provider)
   ListenerContext *ctx = g_new0 (ListenerContext, 1);
 
   g_mutex_init (&ctx->lock);
+  g_cond_init (&ctx->stop_cond);
   ctx->provider = provider;
   ctx->devices =
       g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
@@ -405,6 +416,7 @@ gst_mdns_device_provider_stop (GstDeviceProvider * provider)
 
   g_mutex_lock (&self->current_ctx->lock);
   self->current_ctx->stop = true;
+  g_cond_broadcast (&self->current_ctx->stop_cond);
   g_mutex_unlock (&self->current_ctx->lock);
 
   self->current_ctx = NULL;
