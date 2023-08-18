@@ -120,6 +120,8 @@ if __name__ == "__main__":
         filename = os.path.basename(plugin).strip()
         if filename.startswith('libgst') and filename.endswith('.a'):
             plugin_name = filename[len('libgst'):-len('.a')]
+        elif filename.startswith('libgst') and filename.endswith('.lib'):
+            plugin_name = filename[len('libgst'):-len('.lib')]
         plugins_registration += ['GST_PLUGIN_STATIC_REGISTER(%s);' % (plugin_name)]
         plugins_declaration += ['GST_PLUGIN_STATIC_DECLARE(%s);' % (plugin_name)]
 
