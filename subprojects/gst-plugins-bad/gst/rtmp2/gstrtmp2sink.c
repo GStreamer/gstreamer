@@ -821,7 +821,7 @@ static GstFlowReturn
 gst_rtmp2_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstRtmp2Sink *self = GST_RTMP2_SINK (sink);
-  GstBuffer *message;
+  GstBuffer *message = NULL;
   GstFlowReturn ret;
 
   if (G_UNLIKELY (should_drop_header (self, buffer))) {
@@ -833,7 +833,7 @@ gst_rtmp2_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 
   if (G_UNLIKELY (!buffer_to_message (self, buffer, &message))) {
     GST_ELEMENT_ERROR (self, STREAM, FAILED, ("Failed to convert FLV to RTMP"),
-        ("Failed to convert %" GST_PTR_FORMAT, message));
+        ("Failed to convert %" GST_PTR_FORMAT, buffer));
     return GST_FLOW_ERROR;
   }
 
