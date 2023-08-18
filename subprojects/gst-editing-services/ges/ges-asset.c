@@ -1254,6 +1254,7 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     g_error_free (lerr);
 
   /* asset owned by cache */
+  LOCK_CACHE;
   asset = ges_asset_cache_lookup (extractable_type, real_id);
   if (asset) {
     while (proxied) {
@@ -1318,6 +1319,7 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     }
     g_type_class_unref (klass);
   }
+  UNLOCK_CACHE;
 
   if (real_id)
     g_free (real_id);
@@ -1403,7 +1405,11 @@ ges_asset_request_async (GType extractable_type,
   }
 
   /* Check if we already have an asset for this ID */
+  LOCK_CACHE;
   asset = ges_asset_cache_lookup (extractable_type, real_id);
+  GESAssetCacheEntry *entry = _lookup_entry (extractable_type, id);
+  if (entry)
+    asset = entry->asset;
   if (asset) {
     task = g_task_new (asset, NULL, callback, user_data);
 
@@ -1420,7 +1426,7 @@ ges_asset_request_async (GType extractable_type,
 
           goto done;
         case ASSET_INITIALIZING:
-          GST_DEBUG_OBJECT (asset, "Asset in cache and but not "
+          GST_DEBUG_OBJECT (asset, "Asset in cache but not "
               "initialized, setting a new callback");
           ges_asset_cache_append_task (extractable_type, real_id, task);
           task = NULL;
@@ -1455,6 +1461,7 @@ ges_asset_request_async (GType extractable_type,
           goto done;
         default:
           GST_WARNING ("Case %i not handle, returning", asset->priv->state);
+          UNLOCK_CACHE;
           return;
       }
     }
@@ -1463,7 +1470,9 @@ ges_asset_request_async (GType extractable_type,
   g_async_initable_new_async (ges_extractable_type_get_asset_type
       (extractable_type), G_PRIORITY_DEFAULT, cancellable, callback, user_data,
       "id", real_id, "extractable-type", extractable_type, NULL);
+
 done:
+  UNLOCK_CACHE;
   if (task)
     gst_object_unref (task);
   if (real_id)
