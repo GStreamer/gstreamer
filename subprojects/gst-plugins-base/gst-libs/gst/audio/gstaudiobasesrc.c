@@ -45,6 +45,10 @@
 GST_DEBUG_CATEGORY_STATIC (gst_audio_base_src_debug);
 #define GST_CAT_DEFAULT gst_audio_base_src_debug
 
+/* This function is public in >= 1.23, but internal in 1.22 */
+G_GNUC_INTERNAL
+    void __gst_audio_ring_buffer_set_errored (GstAudioRingBuffer * buf);
+
 struct _GstAudioBaseSrcPrivate
 {
   /* the clock slaving algorithm in use */
@@ -1229,7 +1233,7 @@ gst_audio_base_src_post_message (GstElement * element, GstMessage * message)
      * flow error message */
     ret = GST_ELEMENT_CLASS (parent_class)->post_message (element, message);
 
-    g_atomic_int_set (&ringbuffer->state, GST_AUDIO_RING_BUFFER_STATE_ERROR);
+    __gst_audio_ring_buffer_set_errored (ringbuffer);
     GST_AUDIO_RING_BUFFER_SIGNAL (ringbuffer);
     gst_object_unref (ringbuffer);
   } else {
