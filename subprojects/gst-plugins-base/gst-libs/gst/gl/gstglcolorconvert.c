@@ -1088,8 +1088,14 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!context || (USING_GLES3 (context) || USING_OPENGL (context)))
     _append_value_string_list (supported_formats, "YUY2", "UYVY", NULL);
 
-  if (!context || gst_gl_format_is_supported (context, GST_GL_RGBA16))
+  if (!context || gst_gl_format_is_supported (context, GST_GL_RGBA16)) {
     _append_value_string_list (supported_formats, "ARGB64", NULL);
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    _append_value_string_list (supported_formats, "RGBA64_LE", NULL);
+#else
+    _append_value_string_list (supported_formats, "RGBA64_BE", NULL);
+#endif
+  }
 
   if (!context || gst_gl_format_is_supported (context, GST_GL_RGB565))
     _append_value_string_list (supported_formats, "RGB16", "BGR16", NULL);
@@ -1160,7 +1166,7 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
 
   _init_value_string_list (&rgb_formats, "RGBA", "ARGB", "BGRA", "ABGR", "RGBx",
       "xRGB", "BGRx", "xBGR", "RGB", "BGR", "ARGB64", "BGR10A2_LE",
-      "RGB10A2_LE", NULL);
+      "RGB10A2_LE", "RGBA64_LE", "RGBA64_BE", NULL);
   _init_supported_formats (context, output, &supported_formats);
   gst_value_intersect (&supported_rgb_formats, &rgb_formats,
       &supported_formats);
@@ -1786,66 +1792,9 @@ out:
 static guint
 _get_n_textures (GstVideoFormat v_format)
 {
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_VUYA:
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-    case GST_VIDEO_FORMAT_GRAY16_BE:
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_RGB16:
-    case GST_VIDEO_FORMAT_BGR16:
-    case GST_VIDEO_FORMAT_ARGB64:
-    case GST_VIDEO_FORMAT_BGR10A2_LE:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-    case GST_VIDEO_FORMAT_Y410:
-    case GST_VIDEO_FORMAT_Y210:
-    case GST_VIDEO_FORMAT_Y212_LE:
-    case GST_VIDEO_FORMAT_Y212_BE:
-    case GST_VIDEO_FORMAT_Y412_LE:
-    case GST_VIDEO_FORMAT_Y412_BE:
-      return 1;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV16:
-    case GST_VIDEO_FORMAT_NV61:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P010_10BE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P012_BE:
-    case GST_VIDEO_FORMAT_P016_LE:
-    case GST_VIDEO_FORMAT_P016_BE:
-    case GST_VIDEO_FORMAT_NV12_16L32S:
-    case GST_VIDEO_FORMAT_NV12_4L4:
-      return 2;
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y41B:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_RGBP:
-    case GST_VIDEO_FORMAT_BGRP:
-    case GST_VIDEO_FORMAT_AV12:
-      return 3;
-    case GST_VIDEO_FORMAT_GBRA:
-    case GST_VIDEO_FORMAT_A420:
-      return 4;
-    default:
-      g_assert_not_reached ();
-      return 0;
-  }
+  const GstVideoFormatInfo *finfo = gst_video_format_get_info (v_format);
+
+  return finfo->n_planes;
 }
 
 static void

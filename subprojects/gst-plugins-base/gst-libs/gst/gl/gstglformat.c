@@ -172,6 +172,8 @@ gst_gl_format_from_video_info (GstGLContext * context,
     case GST_VIDEO_FORMAT_VUYA:
       n_plane_components = 4;
       break;
+    case GST_VIDEO_FORMAT_RGBA64_LE:
+    case GST_VIDEO_FORMAT_RGBA64_BE:
     case GST_VIDEO_FORMAT_ARGB64:
       return GST_GL_RGBA16;
     case GST_VIDEO_FORMAT_RGB:
@@ -474,7 +476,7 @@ get_single_planar_format_gl_swizzle_order (GstVideoFormat format,
       || format == GST_VIDEO_FORMAT_AYUV || format == GST_VIDEO_FORMAT_VUYA);
 
   for (i = 0; i < finfo->n_components; i++) {
-    swizzle[c_i++] = finfo->poffset[i];
+    swizzle[c_i++] = finfo->poffset[i] / (GST_ROUND_UP_8 (finfo->bits) / 8);
   }
 
   /* special case spaced RGB formats as the space does not contain a poffset
