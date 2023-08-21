@@ -3180,11 +3180,14 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     off = 23;
 
     for (i = 0; i < num_nal_arrays; i++) {
+      guint8 nalu_type;
+
       if (off + 3 >= size) {
         gst_buffer_unmap (codec_data, &map);
         goto hvcc_too_small;
       }
 
+      nalu_type = data[off] & 0x3f;
       num_nals = GST_READ_UINT16_BE (data + off + 1);
       off += 3;
       for (j = 0; j < num_nals; j++) {
@@ -3192,6 +3195,15 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
             data, off, size, 2, &nalu);
 
         if (parseres != GST_H265_PARSER_OK) {
+          if (i + 1 == num_nal_arrays && j + 1 == num_nals &&
+              nalu_type != GST_H265_NAL_VPS && nalu_type != GST_H265_NAL_SPS &&
+              nalu_type != GST_H265_NAL_PPS) {
+            GST_WARNING_OBJECT (h265parse,
+                "Couldn't parse the last nalu, type %d at array %d / %d",
+                nalu_type, i, j);
+            goto codec_data_done;
+          }
+          GST_ERROR ("aaa, %d", nalu_type);
           gst_buffer_unmap (codec_data, &map);
           goto hvcc_too_small;
         }
@@ -3200,6 +3212,7 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
         off = nalu.offset + nalu.size;
       }
     }
+  codec_data_done:
     gst_buffer_unmap (codec_data, &map);
 
     /* don't confuse codec_data with inband vps/sps/pps */
