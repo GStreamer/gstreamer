@@ -6513,9 +6513,13 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
       GstClockTime position = GST_CLOCK_TIME_NONE;
 
       _get_position (scenario, NULL, &position);
+      SCENARIO_UNLOCK (scenario);
+
       GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
           "%i actions were not executed: %s (position: %" GST_TIME_FORMAT
           ")", nb_actions, actions, GST_TIME_ARGS (position));
+
+      SCENARIO_LOCK (scenario);
     }
     g_free (actions);
   }
