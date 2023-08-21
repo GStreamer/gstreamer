@@ -15863,6 +15863,129 @@
                 },
                 "rank": "primary"
             },
+            "rtppassthroughpay": {
+                "author": "Sebastian Dröge <sebastian@centricular.com>, Jonas Danielsson <jonas.danielsson@spiideo.com>",
+                "description": "Passes through RTP packets",
+                "hierarchy": [
+                    "GstRtpPassthroughPay",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Payloader/Network/RTP",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "application/x-rtp:\n        payload: [ 0, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "application/x-rtp:\n        payload: [ 0, 127 ]\n     clock-rate: [ 1, 2147483647 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "mtu": {
+                        "blurb": "Maximum size of one packet",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "28",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "pt": {
+                        "blurb": "The payload type of the packets",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "128",
+                        "max": "128",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "seqnum": {
+                        "blurb": "The RTP sequence number of the last processed packet",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "65535",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "seqnum-offset": {
+                        "blurb": "Offset to add to all outgoing seqnum (-1 = random)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "65535",
+                        "min": "-1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gint",
+                        "writable": true
+                    },
+                    "stats": {
+                        "blurb": "Various statistics",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "application/x-rtp-payload-stats, clock-rate=(uint)0, running-time=(guint64)18446744073709551615, seqnum=(uint)0, timestamp=(uint)0, ssrc=(uint)0, pt=(uint)128, seqnum-offset=(uint)0, timestamp-offset=(uint)0;",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
+                        "writable": false
+                    },
+                    "timestamp": {
+                        "blurb": "The RTP timestamp of the last processed packet",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": false
+                    },
+                    "timestamp-offset": {
+                        "blurb": "Offset to add to all outgoing timestamps (default = random)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
             "rtppcmadepay": {
                 "author": "Edgard Lima <edgard.lima@gmail.com>, Zeeshan Ali <zeenix@gmail.com>",
                 "description": "Extracts PCMA audio from RTP packets",
