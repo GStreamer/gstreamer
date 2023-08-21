@@ -26,6 +26,7 @@
 #include "gstvaencoder.h"
 
 #include <gst/va/gstvavideoformat.h>
+#include <gst/va/vasurfaceimage.h>
 
 #include "gstvacaps.h"
 #include "gstvaprofile.h"
@@ -305,7 +306,7 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
     guint max_buffers)
 {
   GstAllocator *allocator = NULL;
-  guint usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+  guint usage_hint;
   GstVideoInfo info;
   GstAllocationParams params = { 0, };
   GstBufferPool *pool;
@@ -313,6 +314,9 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
   GstCaps *caps = NULL;
 
   gst_video_info_set_format (&info, format, coded_width, coded_height);
+
+  usage_hint = va_get_surface_usage_hint (display,
+      VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
 
   size = GST_VIDEO_INFO_SIZE (&info);
 

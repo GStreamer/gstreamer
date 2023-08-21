@@ -196,7 +196,7 @@ _get_sinkpad_pool (GstVaBaseEnc * base)
 {
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
-  guint size, usage_hint = 0;
+  guint size, usage_hint;
   GArray *surface_formats = NULL;
   GstCaps *caps = NULL;
 
@@ -215,6 +215,9 @@ _get_sinkpad_pool (GstVaBaseEnc * base)
   surface_formats = gst_va_encoder_get_surface_formats (base->encoder);
 
   allocator = gst_va_allocator_new (base->display, surface_formats);
+
+  usage_hint = va_get_surface_usage_hint (base->display,
+      VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
 
   base->priv->raw_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
       usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
@@ -405,7 +408,7 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   GstCaps *caps;
   GstVideoInfo info;
   gboolean need_pool = FALSE;
-  guint size, usage_hint = 0;
+  guint size, usage_hint;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps)
@@ -415,6 +418,9 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
     GST_ERROR_OBJECT (base, "Cannot parse caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
+
+  usage_hint = va_get_surface_usage_hint (base->display,
+      VAEntrypointEncSlice, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
 
   size = GST_VIDEO_INFO_SIZE (&info);
 
