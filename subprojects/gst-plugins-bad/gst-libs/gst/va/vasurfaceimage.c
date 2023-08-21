@@ -341,3 +341,37 @@ va_copy_surface (GstVaDisplay * display, VASurfaceID dst, VASurfaceID src)
   }
   return TRUE;
 }
+
+guint
+va_get_surface_usage_hint (GstVaDisplay * display, VAEntrypoint entrypoint,
+    GstPadDirection dir, gboolean is_dma)
+{
+  switch (entrypoint) {
+    case VAEntrypointVideoProc:{
+      /* For DMA kind caps, we use VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
+         VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE to detect the modifiers.
+         And in runtime, we should use the same flags in order to keep
+         the same modifiers. */
+      if (is_dma)
+        return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
+            VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+
+      if (dir == GST_PAD_SINK)
+        return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
+      else if (dir == GST_PAD_SRC)
+        return VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+
+      break;
+    }
+    case VAEntrypointVLD:
+      return VA_SURFACE_ATTRIB_USAGE_HINT_DECODER;
+    case VAEntrypointEncSlice:
+    case VAEntrypointEncSliceLP:
+    case VAEntrypointEncPicture:
+      return VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
+    default:
+      break;
+  }
+
+  return VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+}
