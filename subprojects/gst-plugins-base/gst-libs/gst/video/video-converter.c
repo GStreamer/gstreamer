@@ -7235,6 +7235,8 @@ get_scale_format (GstVideoFormat format, gint plane)
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_GRAY8:
     case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A444:
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
     case GST_VIDEO_FORMAT_GBR:

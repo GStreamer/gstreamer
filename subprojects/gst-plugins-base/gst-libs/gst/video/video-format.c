@@ -4250,6 +4250,64 @@ pack_I422_12BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+#define PACK_A444 GST_VIDEO_FORMAT_AYUV, unpack_A444, 1, pack_A444
+static void
+unpack_A444 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  int i;
+  guint8 *restrict sa = GET_A_LINE (y);
+  guint8 *restrict sy = GET_Y_LINE (y);
+  guint8 *restrict su = GET_U_LINE (y);
+  guint8 *restrict sv = GET_V_LINE (y);
+  guint8 *restrict d = dest, A, Y, U, V;
+
+  sa += x;
+  sy += x;
+  su += x;
+  sv += x;
+
+  for (i = 0; i < width; i++) {
+    A = sa[i];
+    Y = sy[i];
+    U = su[i];
+    V = sv[i];
+
+    d[i * 4 + 0] = A;
+    d[i * 4 + 1] = Y;
+    d[i * 4 + 2] = U;
+    d[i * 4 + 3] = V;
+  }
+}
+
+static void
+pack_A444 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  int i;
+  guint8 *restrict da = GET_A_LINE (y);
+  guint8 *restrict dy = GET_Y_LINE (y);
+  guint8 *restrict du = GET_U_LINE (y);
+  guint8 *restrict dv = GET_V_LINE (y);
+  guint8 A, Y, U, V;
+  const guint8 *restrict s = src;
+
+  for (i = 0; i < width; i++) {
+    A = (s[i * 4 + 0]);
+    Y = (s[i * 4 + 1]);
+    U = (s[i * 4 + 2]);
+    V = (s[i * 4 + 3]);
+
+    da[i] = A;
+    dy[i] = Y;
+    du[i] = U;
+    dv[i] = V;
+  }
+}
+
 #define PACK_A444_10LE GST_VIDEO_FORMAT_AYUV64, unpack_A444_10LE, 1, pack_A444_10LE
 static void
 unpack_A444_10LE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
@@ -4519,6 +4577,85 @@ unpack_A420_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       su++;
       sv++;
     }
+  }
+}
+
+#define PACK_A422 GST_VIDEO_FORMAT_AYUV, unpack_A422, 1, pack_A422
+static void
+unpack_A422 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  int i;
+  const guint8 *restrict sa = GET_A_LINE (y);
+  const guint8 *restrict sy = GET_Y_LINE (y);
+  const guint8 *restrict su = GET_U_LINE (y);
+  const guint8 *restrict sv = GET_V_LINE (y);
+  guint8 *restrict d = dest, A, Y, U, V;
+
+  sa += x;
+  sy += x;
+  su += x >> 1;
+  sv += x >> 1;
+
+  for (i = 0; i < width; i++) {
+    A = sa[i];
+    Y = sy[i];
+    U = su[(i >> 1)];
+    V = sv[(i >> 1)];
+
+    d[i * 4 + 0] = A;
+    d[i * 4 + 1] = Y;
+    d[i * 4 + 2] = U;
+    d[i * 4 + 3] = V;
+
+    if (x & 1) {
+      x = 0;
+      su++;
+      sv++;
+    }
+  }
+}
+
+static void
+pack_A422 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  int i;
+  guint8 *restrict da = GET_A_LINE (y);
+  guint8 *restrict dy = GET_Y_LINE (y);
+  guint8 *restrict du = GET_U_LINE (y);
+  guint8 *restrict dv = GET_V_LINE (y);
+  guint8 A0, Y0, A1, Y1, U, V;
+  const guint8 *restrict s = src;
+
+  for (i = 0; i < width - 1; i += 2) {
+    A0 = s[i * 4 + 0];
+    Y0 = s[i * 4 + 1];
+    A1 = s[i * 4 + 4];
+    Y1 = s[i * 4 + 5];
+    U = s[i * 4 + 2];
+    V = s[i * 4 + 3];
+
+    da[i + 0] = A0;
+    dy[i + 0] = Y0;
+    da[i + 1] = A1;
+    dy[i + 1] = Y1;
+    du[i >> 1] = U;
+    dv[i >> 1] = V;
+  }
+  if (i == width - 1) {
+    A0 = s[i * 4 + 0];
+    Y0 = s[i * 4 + 1];
+    U = s[i * 4 + 2];
+    V = s[i * 4 + 3];
+
+    da[i + 0] = A0;
+    dy[i + 0] = Y0;
+    du[i >> 1] = U;
+    dv[i >> 1] = V;
   }
 }
 
@@ -7649,6 +7786,10 @@ static const VideoFormat formats[] = {
   MAKE_YUV_ST_FORMAT (MT2110R, "raw video",
       GST_MAKE_FOURCC ('M', 'T', '2', 'R'), DPTH10_10_10, PSTR0, PLANE011,
       OFFS001, SUB420, PACK_MT2110R_TILED, TILE_10bit_16x32s (LINEAR)),
+  MAKE_YUVA_FORMAT (A422, "raw video", GST_MAKE_FOURCC ('A', '4', '2', '2'),
+      DPTH8888, PSTR1111, PLANE0123, OFFS0, SUB4224, PACK_A422),
+  MAKE_YUVA_FORMAT (A444, "raw video", GST_MAKE_FOURCC ('A', '4', '4', '4'),
+      DPTH8888, PSTR1111, PLANE0123, OFFS0, SUB4444, PACK_A444),
 };
 
 G_GNUC_END_IGNORE_DEPRECATIONS;
