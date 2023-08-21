@@ -22,6 +22,7 @@
 
 #include <gst/va/gstva.h>
 #include <gst/va/gstvavideoformat.h>
+#include <gst/va/vasurfaceimage.h>
 
 #include "gstvacaps.h"
 #include "gstvapluginutils.h"
@@ -283,7 +284,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
   GstAllocationParams other_params, params;
   gboolean update_pool = FALSE, update_allocator = FALSE;
   GstBufferPool *pool = NULL, *other_pool = NULL;
-  guint size = 0, min, max;
+  guint size = 0, min, max, usage_hint;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   gboolean ret = TRUE;
   gboolean dont_use_other_pool = FALSE;
@@ -405,8 +406,11 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
     if (_need_video_crop (base))
       gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
+    usage_hint = va_get_surface_usage_hint (base->display,
+        VAEntrypointVLD, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+
     gst_buffer_pool_config_set_va_allocation_params (config,
-        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO);
+        usage_hint, GST_VA_FEATURE_AUTO);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       ret = FALSE;
@@ -491,7 +495,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstCaps *caps = NULL;
   GstVideoInfo info;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  guint size = 0, min, max;
+  guint size = 0, min, max, usage_hint;
   gboolean update_pool = FALSE, update_allocator = FALSE;
   gboolean has_videometa, has_video_crop_meta;
   gboolean dont_use_other_pool = FALSE;
@@ -593,8 +597,11 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     if (base->need_valign)
       gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
+    usage_hint = va_get_surface_usage_hint (base->display,
+        VAEntrypointVLD, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+
     gst_buffer_pool_config_set_va_allocation_params (config,
-        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO);
+        usage_hint, GST_VA_FEATURE_AUTO);
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       ret = FALSE;
