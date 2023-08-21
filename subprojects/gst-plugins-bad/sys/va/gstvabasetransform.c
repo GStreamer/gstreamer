@@ -26,6 +26,7 @@
 
 #include <gst/va/gstva.h>
 #include <gst/va/gstvavideoformat.h>
+#include <gst/va/vasurfaceimage.h>
 
 #include "gstvacaps.h"
 #include "gstvapluginutils.h"
@@ -234,9 +235,7 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   GstCaps *caps;
   GstVideoInfo info;
   gboolean update_allocator = FALSE;
-  guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;        /* it migth be
-                                                                         * used by a va
-                                                                         * decoder */
+  guint size, usage_hint;
 
   gst_clear_caps (&self->priv->sinkpad_caps);
 
@@ -254,10 +253,14 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   gst_query_parse_allocation (query, &caps, NULL);
   if (!caps)
     return FALSE;
+
   if (!gst_va_video_info_from_caps (&info, NULL, caps)) {
     GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
+
+  usage_hint = va_get_surface_usage_hint (self->display,
+      VAEntrypointVideoProc, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
 
   size = GST_VIDEO_INFO_SIZE (&info);
 
@@ -345,7 +348,7 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
   GstCaps *outcaps = NULL;
   GstStructure *config;
   GstVideoInfo vinfo;
-  guint min, max, size = 0, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
+  guint min, max, size = 0, usage_hint;
   gboolean update_pool, update_allocator, has_videometa, copy_frames;
   gboolean dont_use_other_pool = FALSE;
 
@@ -409,6 +412,9 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
 
   if (!pool)
     pool = gst_va_pool_new ();
+
+  usage_hint = va_get_surface_usage_hint (self->display,
+      VAEntrypointVideoProc, GST_PAD_SRC, gst_video_is_dma_drm_caps (outcaps));
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
@@ -716,7 +722,7 @@ _try_import_dmabuf_unlocked (GstVaBaseTransform * self, GstBuffer * inbuf)
   GstVideoMeta *meta;
   GstVideoInfo in_info = btrans->in_info;
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
-  guint i, n_mem, n_planes;
+  guint i, n_mem, n_planes, usage_hint;
   gsize offset[GST_VIDEO_MAX_PLANES];
   uintptr_t fd[GST_VIDEO_MAX_PLANES];
 
@@ -770,9 +776,12 @@ _try_import_dmabuf_unlocked (GstVaBaseTransform * self, GstBuffer * inbuf)
     fd[i] = gst_dmabuf_memory_get_fd (mems[i]);
   }
 
+  usage_hint = va_get_surface_usage_hint (self->display,
+      VAEntrypointVideoProc, GST_PAD_SINK, TRUE);
+
   /* Now create a VASurfaceID for the buffer */
   return gst_va_dmabuf_memories_setup (btrans->display, &in_info, n_planes,
-      mems, fd, offset, VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ);
+      mems, fd, offset, usage_hint);
 }
 
 static gboolean
@@ -828,7 +837,7 @@ _get_sinkpad_pool (GstVaBaseTransform * self, GstBuffer * inbuf)
   GstAllocationParams params = { 0, };
   GstCaps *caps;
   GstVideoInfo in_info;
-  guint size, usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ;
+  guint size, usage_hint;
 
   if (_check_uncropped_size (self, inbuf)) {
     if (self->priv->sinkpad_pool)
@@ -892,6 +901,9 @@ _get_sinkpad_pool (GstVaBaseTransform * self, GstBuffer * inbuf)
     gst_caps_unref (caps);
     return NULL;
   }
+
+  usage_hint = va_get_surface_usage_hint (self->display,
+      VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
 
   size = GST_VIDEO_INFO_SIZE (&in_info);
 
