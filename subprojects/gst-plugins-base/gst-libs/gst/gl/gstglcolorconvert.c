@@ -279,6 +279,7 @@ static const gchar templ_PLANAR_YUV_to_RGB_BODY[] =
     "yuva.y = texture2D(Utex, texcoord * tex_scale1).r;\n"
     "yuva.z = texture2D(Vtex, texcoord * tex_scale2).r;\n"
     "%s"
+    "yuva = yuva * in_bitdepth_factor;\n"
     "yuva = swizzle(yuva, input_swizzle);\n"
     "rgba.rgb = yuv_to_rgb (yuva.xyz, offset, coeff1, coeff2, coeff3);\n"
     "rgba.a = yuva.a;\n"
@@ -286,7 +287,7 @@ static const gchar templ_PLANAR_YUV_to_RGB_BODY[] =
 
 static const struct shader_templ templ_PLANAR_YUV_to_RGB =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, Utex, Vtex;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, Utex, Vtex;\n" "uniform float in_bitdepth_factor;\n",
     { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -295,7 +296,7 @@ static const struct shader_templ templ_PLANAR_YUV_to_RGB =
 static const struct shader_templ templ_A420_to_RGB =
   { NULL,
     /* 4th uniform is the alpha buffer */
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, Utex, Vtex, Atex;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, Utex, Vtex, Atex;\n" "uniform float in_bitdepth_factor;\n",
     { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -335,6 +336,7 @@ static const gchar templ_RGB_to_PLANAR_YUV_BODY[] =
     "yuva.yz = rgb_to_yuv (uv_texel.rgb, offset, coeff1, coeff2, coeff3).yz;\n"
     "yuva.a = texel.a;\n"
     "yuva = swizzle(yuva, output_swizzle);\n"
+    "yuva = yuva * out_bitdepth_factor;\n"
     "gl_FragData[0] = vec4(yuva.x, 0.0, 0.0, 1.0);\n"
     "gl_FragData[1] = vec4(yuva.y, 0.0, 0.0, 1.0);\n"
     "gl_FragData[2] = vec4(yuva.z, 0.0, 0.0, 1.0);\n"
@@ -343,7 +345,7 @@ static const gchar templ_RGB_to_PLANAR_YUV_BODY[] =
 static const struct shader_templ templ_RGB_to_PLANAR_YUV =
   { NULL,
     DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n"
-    "uniform vec2 chroma_sampling;\n",
+    "uniform vec2 chroma_sampling;\n" "uniform float out_bitdepth_factor;\n",
     { glsl_func_swizzle, glsl_func_rgb_to_yuv, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -593,6 +595,8 @@ struct ConvertInfo
   gfloat chroma_sampling[2];
   int input_swizzle[GST_VIDEO_MAX_PLANES];
   int output_swizzle[GST_VIDEO_MAX_PLANES];
+  gfloat in_bitdepth_factor;
+  gfloat out_bitdepth_factor;
 };
 
 struct _GstGLColorConvertPrivate
@@ -1134,6 +1138,16 @@ _init_supported_formats (GstGLContext * context, gboolean output,
     _append_value_string_list (supported_formats, "Y412_LE", NULL);
 #else
     _append_value_string_list (supported_formats, "Y412_BE", NULL);
+#endif
+  }
+
+  if (!context || gst_gl_format_is_supported (context, GST_GL_R16)) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    _append_value_string_list (supported_formats, "A420_10LE", "A422_10LE",
+        "A444_10LE", NULL);
+#else
+    _append_value_string_list (supported_formats, "A420_10BE", "A422_10BE",
+        "A444_10BE", NULL);
 #endif
   }
 
@@ -1944,6 +1958,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
 {
   struct ConvertInfo *info = &convert->priv->convert_info;
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
+  const GstVideoFormatInfo *in_finfo = gst_video_format_get_info (in_format);
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const gchar *out_format_str = gst_video_format_to_string (out_format);
   gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
@@ -1961,6 +1976,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
 #endif
 
   info->out_n_textures = 1;
+  info->out_bitdepth_factor = 1.0;
 
   calculate_reorder_indexes (in_format, out_format, info->input_swizzle,
       info->output_swizzle);
@@ -1998,8 +2014,15 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[0] = "Ytex";
         info->shader_tex_names[1] = "Utex";
         info->shader_tex_names[2] = "Vtex";
+        info->in_bitdepth_factor = 1.0;
         break;
       case GST_VIDEO_FORMAT_A420:
+      case GST_VIDEO_FORMAT_A420_10LE:
+      case GST_VIDEO_FORMAT_A420_10BE:
+      case GST_VIDEO_FORMAT_A422_10LE:
+      case GST_VIDEO_FORMAT_A422_10BE:
+      case GST_VIDEO_FORMAT_A444_10LE:
+      case GST_VIDEO_FORMAT_A444_10BE:
         info->templ = &templ_A420_to_RGB;
         info->frag_body =
             g_strdup_printf (templ_PLANAR_YUV_to_RGB_BODY,
@@ -2008,6 +2031,9 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[1] = "Utex";
         info->shader_tex_names[2] = "Vtex";
         info->shader_tex_names[3] = "Atex";
+        info->in_bitdepth_factor =
+            (float) ((1 << GST_ROUND_UP_8 (in_finfo->bits)) -
+            1) / (float) ((1 << in_finfo->bits) - 1);
         break;
       case GST_VIDEO_FORMAT_YUY2:
       {
@@ -2133,6 +2159,7 @@ _RGB_to_YUV (GstGLColorConvert * convert)
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   const gchar *in_format_str = gst_video_format_to_string (in_format);
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
+  const GstVideoFormatInfo *out_finfo = gst_video_format_get_info (out_format);
   gchar *pixel_order = _RGB_pixel_order (in_format_str, "rgba");
   const gchar *alpha;
 
@@ -2147,13 +2174,11 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
       info->templ = &templ_RGB_to_AYUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, alpha);
-      info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_VUYA:
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
       info->templ = &templ_RGB_to_AYUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, alpha);
-      info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_Y410:
     case GST_VIDEO_FORMAT_Y412_LE:
@@ -2161,7 +2186,6 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       alpha = _is_RGBx (in_format) ? "1.0" : "texel.a";
       info->templ = &templ_RGB_to_AYUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, alpha);
-      info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -2169,26 +2193,24 @@ _RGB_to_YUV (GstGLColorConvert * convert)
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_Y41B:
     case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_10BE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_10BE:
+    case GST_VIDEO_FORMAT_A444_10LE:
+    case GST_VIDEO_FORMAT_A444_10BE:
       info->templ = &templ_RGB_to_PLANAR_YUV;
       if (out_format == GST_VIDEO_FORMAT_A420) {
         alpha = "gl_FragData[3] = vec4(yuva.a, 0.0, 0.0, 1.0);\n";
-        info->out_n_textures = 4;
       } else {
         alpha = "";
-        info->out_n_textures = 3;
       }
       info->frag_body = g_strdup_printf (templ_RGB_to_PLANAR_YUV_BODY, alpha);
-      if (out_format == GST_VIDEO_FORMAT_Y444) {
-        info->chroma_sampling[0] = info->chroma_sampling[1] = 1.0f;
-      } else if (out_format == GST_VIDEO_FORMAT_Y42B) {
-        info->chroma_sampling[0] = 2.0f;
-        info->chroma_sampling[1] = 1.0f;
-      } else if (out_format == GST_VIDEO_FORMAT_Y41B) {
-        info->chroma_sampling[0] = 4.0f;
-        info->chroma_sampling[1] = 1.0f;
-      } else {
-        info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
-      }
+      info->chroma_sampling[0] = (float) (1 << out_finfo->w_sub[1]);
+      info->chroma_sampling[1] = (float) (1 << out_finfo->h_sub[1]);
+      info->out_bitdepth_factor =
+          (float) ((1 << out_finfo->bits) -
+          1) / (float) ((1 << GST_ROUND_UP_8 (out_finfo->bits)) - 1);
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_Y210:
@@ -2197,19 +2219,16 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->templ = &templ_RGB_to_YUY2_UYVY;
       info->frag_body = g_strdup_printf (templ_RGB_to_YUY2_UYVY_BODY,
           'x', 'y', 'x', 'z');
-      info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_UYVY:
       info->templ = &templ_RGB_to_YUY2_UYVY,
           info->frag_body = g_strdup_printf (templ_RGB_to_YUY2_UYVY_BODY,
           'y', 'x', 'z', 'x');
-      info->out_n_textures = 1;
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV16:
       info->templ = &templ_RGB_to_SEMI_PLANAR_YUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY, "");
-      info->out_n_textures = 2;
       if (out_format == GST_VIDEO_FORMAT_NV16) {
         info->chroma_sampling[0] = 2.0f;
         info->chroma_sampling[1] = 1.0f;
@@ -2221,14 +2240,12 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->templ = &templ_RGB_to_SEMI_PLANAR_YUV,
           info->frag_body = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY,
           "gl_FragData[2] = vec4(yuva.a, 0.0, 0.0, 1.0);\n");
-      info->out_n_textures = 3;
       info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
       break;
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_NV61:
       info->templ = &templ_RGB_to_SEMI_PLANAR_YUV;
       info->frag_body = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY, "");
-      info->out_n_textures = 2;
       if (out_format == GST_VIDEO_FORMAT_NV61) {
         info->chroma_sampling[0] = 2.0f;
         info->chroma_sampling[1] = 1.0f;
@@ -2266,7 +2283,6 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
   gchar *pixel_order = _RGB_pixel_order (in_format_str, "rgba");
   gchar *alpha = NULL;
 
-  info->out_n_textures = 1;
   info->shader_tex_names[0] = "tex";
 
   if (_is_RGBx (in_format)) {
@@ -2571,6 +2587,12 @@ _init_convert (GstGLColorConvert * convert)
     goto error;
   }
 
+  memset (info, 0, sizeof (*info));
+  info->in_n_textures =
+      _get_n_textures (GST_VIDEO_INFO_FORMAT (&convert->in_info));
+  info->out_n_textures =
+      _get_n_textures (GST_VIDEO_INFO_FORMAT (&convert->out_info));
+
   if (GST_VIDEO_INFO_IS_RGB (&convert->in_info)) {
     if (GST_VIDEO_INFO_IS_RGB (&convert->out_info)) {
       _RGB_to_RGB (convert);
@@ -2601,7 +2623,7 @@ _init_convert (GstGLColorConvert * convert)
     }
   }
 
-  if (!info->frag_body || info->in_n_textures == 0 || info->out_n_textures == 0)
+  if (!info->frag_body)
     goto unhandled_format;
 
   /* multiple draw targets not supported on GLES2... */
@@ -2699,6 +2721,13 @@ _init_convert (GstGLColorConvert * convert)
       info->input_swizzle);
   gst_gl_shader_set_uniform_1iv (convert->shader, "output_swizzle", 4,
       info->output_swizzle);
+
+  /* if we need to convert from a 10/12/14-in-16 bit format to the relevant
+   * 0.0->1.0 float (or vice versa) */
+  gst_gl_shader_set_uniform_1f (convert->shader, "in_bitdepth_factor",
+      info->in_bitdepth_factor);
+  gst_gl_shader_set_uniform_1f (convert->shader, "out_bitdepth_factor",
+      info->out_bitdepth_factor);
 
   gst_gl_context_clear_shader (convert->context);
 
@@ -2847,9 +2876,17 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
         GstGLVideoAllocationParams *params;
         GstGLBaseMemoryAllocator *base_mem_allocator;
         GstAllocator *allocator;
+        GstVideoFormat temp_format = GST_VIDEO_FORMAT_RGBA;
         GstVideoInfo temp_info;
 
-        gst_video_info_set_format (&temp_info, GST_VIDEO_FORMAT_RGBA, out_width,
+        if (convert->out_info.finfo->bits > 8) {
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+          temp_format = GST_VIDEO_FORMAT_RGBA64_LE;
+#else
+          temp_format = GST_VIDEO_FORMAT_RGBA64_BE;
+#endif
+        }
+        gst_video_info_set_format (&temp_info, temp_format, out_width,
             out_height);
 
         allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
