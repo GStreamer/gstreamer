@@ -25,6 +25,7 @@
 #include "gstvacaps.h"
 
 #include <gst/va/gstvavideoformat.h>
+#include <gst/va/vasurfaceimage.h>
 #include <va/va_drmcommon.h>
 
 #include "gstvadisplay_priv.h"
@@ -219,23 +220,8 @@ gst_va_create_dma_caps (GstVaDisplay * display, VAEntrypoint entrypoint,
   GstCaps *caps = NULL;
   guint i;
 
-  switch (entrypoint) {
-    case VAEntrypointVLD:
-      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_DECODER;
-      break;
-    case VAEntrypointEncSlice:
-    case VAEntrypointEncSliceLP:
-    case VAEntrypointEncPicture:
-      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_ENCODER;
-      break;
-    case VAEntrypointVideoProc:
-      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_VPP_READ |
-          VA_SURFACE_ATTRIB_USAGE_HINT_VPP_WRITE;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
+  usage_hint = va_get_surface_usage_hint (display,
+      entrypoint, GST_PAD_UNKNOWN, TRUE);
 
   drm_formats_str = g_ptr_array_new_with_free_func (g_free);
 
