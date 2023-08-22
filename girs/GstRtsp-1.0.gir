@@ -2997,6 +2997,9 @@ UTC times will be converted to nanoseconds since 1900.</doc>
       <member name="ok" value="0" c:identifier="GST_RTSP_OK" glib:nick="ok">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">no error</doc>
       </member>
+      <member name="ok_redirect" value="1" c:identifier="GST_RTSP_OK_REDIRECT" version="1.24" glib:nick="ok-redirect">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is successful, but was redirected.</doc>
+      </member>
       <member name="error" value="-1" c:identifier="GST_RTSP_ERROR" glib:nick="error">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">some unspecified error occurred</doc>
       </member>
@@ -3093,6 +3096,12 @@ UTC times will be converted to nanoseconds since 1900.</doc>
       <member name="not_modified" value="304" c:identifier="GST_RTSP_STS_NOT_MODIFIED" glib:nick="not-modified">
       </member>
       <member name="use_proxy" value="305" c:identifier="GST_RTSP_STS_USE_PROXY" glib:nick="use-proxy">
+      </member>
+      <member name="redirect_temporarily" value="307" c:identifier="GST_RTSP_STS_REDIRECT_TEMPORARILY" version="1.24" glib:nick="redirect-temporarily">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is temporarily redirected</doc>
+      </member>
+      <member name="redirect_permanently" value="308" c:identifier="GST_RTSP_STS_REDIRECT_PERMANENTLY" version="1.24" glib:nick="redirect-permanently">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is permanently redirected</doc>
       </member>
       <member name="bad_request" value="400" c:identifier="GST_RTSP_STS_BAD_REQUEST" glib:nick="bad-request">
       </member>

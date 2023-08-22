@@ -65,6 +65,7 @@ G_STMT_START { \
 /**
  * GstRTSPResult:
  * @GST_RTSP_OK: no error
+ * @GST_RTSP_OK_REDIRECT: no error, but redirected
  * @GST_RTSP_ERROR: some unspecified error occurred
  * @GST_RTSP_EINVAL: invalid arguments were provided to a function
  * @GST_RTSP_EINTR: an operation was canceled
@@ -87,6 +88,16 @@ G_STMT_START { \
  */
 typedef enum {
   GST_RTSP_OK          =  0,
+
+  /**
+   * GST_RTSP_OK_REDIRECT:
+   *
+   * RTSP request is successful, but was redirected.
+   *
+   * Since: 1.24
+   */
+  GST_RTSP_OK_REDIRECT =  1,
+
   /* errors */
   GST_RTSP_ERROR       = -1,
   GST_RTSP_EINVAL      = -2,
@@ -365,6 +376,25 @@ typedef enum {
   GST_RTSP_STS_SEE_OTHER                            = 303,
   GST_RTSP_STS_NOT_MODIFIED                         = 304,
   GST_RTSP_STS_USE_PROXY                            = 305,
+
+  /**
+   * GST_RTSP_STS_REDIRECT_TEMPORARILY:
+   *
+   * RTSP request is temporarily redirected
+   *
+   * Since: 1.24
+   */
+  GST_RTSP_STS_REDIRECT_TEMPORARILY                 = 307,
+
+  /**
+   * GST_RTSP_STS_REDIRECT_PERMANENTLY:
+   *
+   * RTSP request is permanently redirected
+   *
+   * Since: 1.24
+   */
+  GST_RTSP_STS_REDIRECT_PERMANENTLY                 = 308,
+
   GST_RTSP_STS_BAD_REQUEST                          = 400,
   GST_RTSP_STS_UNAUTHORIZED                         = 401,
   GST_RTSP_STS_PAYMENT_REQUIRED                     = 402,
