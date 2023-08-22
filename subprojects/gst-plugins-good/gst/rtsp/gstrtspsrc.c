@@ -1256,7 +1256,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
    * @sample: RTP sample to send back
    *
    * Deprecated: 1.22: Use action signal GstRTSPSrc::push-backchannel-sample instead.
-   * IMPORTANT: Please note that this signal decrements the reference count 
+   * IMPORTANT: Please note that this signal decrements the reference count
    *            of sample internally! So it cannot be used from other
    *            language bindings in general.
    *
@@ -5351,6 +5351,8 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
   GstRTSPResult res;
   GstRTSPMessage response;
   gboolean retry = FALSE;
+  GstRTSPUrl *url;
+  gchar *new_url;
   memset (&response, 0, sizeof (response));
   gst_rtsp_message_init (&response);
   do {
@@ -5431,7 +5433,19 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
 
       if (res == GST_RTSP_OK)
         info->connected = TRUE;
-      else if (!retry)
+      else if (res == GST_RTSP_OK_REDIRECT) {
+        url = gst_rtsp_connection_get_url (info->connection);
+
+        if (url == NULL || info->url_str == NULL)
+          goto could_not_connect;
+
+        new_url = gst_rtsp_url_get_request_uri (url);
+        GST_DEBUG_OBJECT (src, "redirected from %s to %s", info->url_str,
+            new_url);
+        g_free (info->url_str);
+        info->url_str = new_url;
+        info->connected = TRUE;
+      } else if (!retry)
         goto could_not_connect;
     }
   } while (!info->connected && retry);
