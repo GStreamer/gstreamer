@@ -317,7 +317,8 @@ gst_wayland_sink_set_property (GObject * object,
       GST_OBJECT_UNLOCK (self);
       break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!gst_video_overlay_set_property (object, PROP_LAST, prop_id, value))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
