@@ -101,6 +101,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
     GstVideoInfo info;
     GstCaps *caps;
     GstVideoAlignment align;
+    guint min_buffers, max_buffers;
 
     format = gst_msdk_get_video_format_from_mfx_fourcc (fourcc);
     gst_video_info_set_format (&info, format, req->Info.CropW, req->Info.CropH);
@@ -110,16 +111,19 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         (&info, req->Info.Width, req->Info.Height, &align);
     gst_video_info_align (&info, &align);
 
-    caps = gst_video_info_to_caps (&info);
-
     pool = gst_msdk_context_get_alloc_pool (context);
     if (!pool) {
       goto error_alloc;
     }
 
     config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+    if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
+            &max_buffers))
+      goto error_alloc;
+
+    max_buffers = MAX (max_buffers, surfaces_num);
     gst_buffer_pool_config_set_params (config, caps,
-        GST_VIDEO_INFO_SIZE (&info), surfaces_num, surfaces_num);
+        GST_VIDEO_INFO_SIZE (&info), min_buffers, max_buffers);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
     gst_buffer_pool_config_add_option (config,
