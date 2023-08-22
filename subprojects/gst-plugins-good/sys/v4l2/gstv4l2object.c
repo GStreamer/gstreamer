@@ -4052,7 +4052,9 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   /* Passing HDR10 information
    *
-   * TODO: should not configure capture of v4l2transform for HDR to HDR conversion.
+   * TODO: 
+   *  - Missing capture (v4l2src) HDR10 configuration and/or reporting
+   *  - The API is not capable of HDR to HDR conversion as controls are not specific to queues
    */
   if (V4L2_TYPE_IS_OUTPUT (v4l2object->type)) {
     GstVideoMasteringDisplayInfo video_master_display_info;
