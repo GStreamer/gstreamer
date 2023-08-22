@@ -478,6 +478,24 @@ gst_gl_window_wayland_egl_close (GstGLWindow * gl_window)
   g_source_unref (window_egl->wl_source);
   window_egl->wl_source = NULL;
 
+  if (window_egl->display.registry)
+    wl_registry_destroy (window_egl->display.registry);
+
+  if (window_egl->display.compositor)
+    wl_compositor_destroy (window_egl->display.compositor);
+
+  if (window_egl->display.subcompositor)
+    wl_subcompositor_destroy (window_egl->display.subcompositor);
+
+  if (window_egl->display.xdg_wm_base)
+    xdg_wm_base_destroy (window_egl->display.xdg_wm_base);
+
+  if (window_egl->display.shell)
+    wl_shell_destroy (window_egl->display.shell);
+
+  if (window_egl->display.seat)
+    wl_seat_destroy (window_egl->display.seat);
+
   wl_proxy_wrapper_destroy (window_egl->display.display);
   wl_event_queue_destroy (window_egl->window.queue);
 
