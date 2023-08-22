@@ -5575,6 +5575,9 @@ again:
       goto again;
     }
 
+    if (v4l2object->formats)
+      gst_v4l2_object_clear_format_list (v4l2object);
+
     return GST_V4L2_FLOW_RESOLUTION_CHANGE;
   }
 
