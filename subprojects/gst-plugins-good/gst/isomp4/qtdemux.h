@@ -112,6 +112,9 @@ struct _QtDemuxGaplessAudioInfo {
 struct _GstQTDemux {
   GstElement element;
 
+  /* properties, protected by the object lock */
+  guint64 max_atom_size;
+
   /* Global state */
   enum QtDemuxState state;
 

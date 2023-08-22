@@ -7833,6 +7833,22 @@
                         "presence": "sometimes"
                     }
                 },
+                "properties": {
+                    "max-atom-size": {
+                        "blurb": "Maximum allowed size, in bytes, for non-mdat atoms. Encountering an atom with a higher size will raise a fatal error.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "33554432",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "playing",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    }
+                },
                 "rank": "primary",
                 "signals": {}
             },

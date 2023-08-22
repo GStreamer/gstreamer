@@ -83,9 +83,6 @@
 # include <zlib.h>
 #endif
 
-/* max. size considered 'sane' for non-mdat atoms */
-#define QTDEMUX_MAX_ATOM_SIZE (32*1024*1024)
-
 /* if the sample index is larger than this, something is likely wrong */
 #define QTDEMUX_MAX_SAMPLE_INDEX_SIZE (200*1024*1024)
 
@@ -149,6 +146,16 @@ typedef struct _QtDemuxAavdEncryptionInfo QtDemuxAavdEncryptionInfo;
     GST_TRACE("Unlocking from thread %p", g_thread_self()); \
     g_mutex_unlock (QTDEMUX_EXPOSE_GET_LOCK (demux)); \
  } G_STMT_END
+
+ /* properties */
+
+#define DEFAULT_PROP_MAX_ATOM_SIZE (32*1024*1024)
+
+enum
+{
+  PROP_0,
+  PROP_MAX_ATOM_SIZE
+};
 
 /*
  * Quicktime has tracks and segments. A track is a continuous piece of
@@ -412,6 +419,42 @@ static GstFlowReturn gst_qtdemux_combine_flows (GstQTDemux * demux,
     QtDemuxStream * stream, GstFlowReturn ret);
 
 static void
+gst_qtdemux_set_property (GObject * object, guint prop_id, const GValue * value,
+    GParamSpec * pspec)
+{
+  GstQTDemux *self = GST_QTDEMUX (object);
+
+  switch (prop_id) {
+    case PROP_MAX_ATOM_SIZE:
+      GST_OBJECT_LOCK (self);
+      self->max_atom_size = g_value_get_uint64 (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_qtdemux_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstQTDemux *self = GST_QTDEMUX (object);
+
+  switch (prop_id) {
+    case PROP_MAX_ATOM_SIZE:
+      GST_OBJECT_LOCK (self);
+      g_value_set_uint64 (value, self->max_atom_size);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_qtdemux_class_init (GstQTDemuxClass * klass)
 {
   GObjectClass *gobject_class;
@@ -422,6 +465,8 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->set_property = gst_qtdemux_set_property;
+  gobject_class->get_property = gst_qtdemux_get_property;
   gobject_class->dispose = gst_qtdemux_dispose;
   gobject_class->finalize = gst_qtdemux_finalize;
 
@@ -446,6 +491,22 @@ gst_qtdemux_class_init (GstQTDemuxClass * klass)
       "Codec/Demuxer",
       "Demultiplex a QuickTime file into audio and video streams",
       "David Schleef <ds@schleef.org>, Wim Taymans <wim@fluendo.com>");
+
+  /**
+   * GstQTDemux:max-atom-size:
+   *
+   * Maximum allowed size, in bytes, for non-mdat atoms.
+   * Encountering an atom with a higher size will raise a fatal error.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_MAX_ATOM_SIZE,
+      g_param_spec_uint64 ("max-atom-size", "Max atom size",
+          "Maximum allowed size, in bytes, for non-mdat atoms. "
+          "Encountering an atom with a higher size will raise a fatal error.",
+          0, G_MAXUINT64, DEFAULT_PROP_MAX_ATOM_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
 
   GST_DEBUG_CATEGORY_INIT (qtdemux_debug, "qtdemux", 0, "qtdemux plugin");
   gst_riff_init ();
@@ -477,6 +538,8 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   GST_OBJECT_FLAG_SET (qtdemux, GST_ELEMENT_FLAG_INDEXABLE);
 
   gst_qtdemux_reset (qtdemux, TRUE);
+
+  qtdemux->max_atom_size = DEFAULT_PROP_MAX_ATOM_SIZE;
 }
 
 static void
@@ -538,6 +601,7 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
   GstFlowReturn flow;
   GstMapInfo map;
   gsize bsize;
+  guint64 max_atom_size;
 
   if (G_UNLIKELY (size == 0)) {
     GstFlowReturn ret;
@@ -555,18 +619,24 @@ gst_qtdemux_pull_atom (GstQTDemux * qtdemux, guint64 offset, guint64 size,
     gst_buffer_unref (tmp);
   }
 
+  GST_OBJECT_LOCK (qtdemux);
+  max_atom_size = qtdemux->max_atom_size;
+  GST_OBJECT_UNLOCK (qtdemux);
+
   /* Sanity check: catch bogus sizes (fuzzed/broken files) */
-  if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
+  if (G_UNLIKELY (size > max_atom_size)) {
     if (qtdemux->state != QTDEMUX_STATE_MOVIE && qtdemux->got_moov) {
       /* we're pulling header but already got most interesting bits,
        * so never mind the rest (e.g. tags) (that much) */
-      GST_WARNING_OBJECT (qtdemux, "atom has bogus size %" G_GUINT64_FORMAT,
-          size);
+      GST_WARNING_OBJECT (qtdemux,
+          "atom has bogus size %" G_GUINT64_FORMAT " max-atom-size: %"
+          G_GUINT64_FORMAT, size, max_atom_size);
       return GST_FLOW_EOS;
     } else {
       GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
           (_("This file is invalid and cannot be played.")),
-          ("atom has bogus size %" G_GUINT64_FORMAT, size));
+          ("atom has bogus size %" G_GUINT64_FORMAT " max-atom-size: %"
+              G_GUINT64_FORMAT, size, max_atom_size));
       return GST_FLOW_ERROR;
     }
   }
@@ -5034,6 +5104,8 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
       if (length == G_MAXUINT64) {
         /* Read until the end */
         gint64 duration;
+        guint64 max_atom_size;
+
         if (!gst_pad_peer_query_duration (qtdemux->sinkpad, GST_FORMAT_BYTES,
                 &duration)) {
           GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
@@ -5051,11 +5123,16 @@ gst_qtdemux_loop_state_header (GstQTDemux * qtdemux)
           goto beach;
         }
         length = duration - cur_offset;
-        if (length > QTDEMUX_MAX_ATOM_SIZE) {
+
+        GST_OBJECT_LOCK (qtdemux);
+        max_atom_size = qtdemux->max_atom_size;
+        GST_OBJECT_UNLOCK (qtdemux);
+
+        if (length > max_atom_size) {
           GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
               (_("Cannot demux file")),
-              ("Moov atom size %" G_GINT64_FORMAT " > maximum %d", length,
-                  QTDEMUX_MAX_ATOM_SIZE));
+              ("Moov atom size %" G_GINT64_FORMAT " > max-atom-size %"
+                  G_GUINT64_FORMAT, length, max_atom_size));
           ret = GST_FLOW_ERROR;
           goto beach;
         }
@@ -8238,11 +8315,16 @@ static GstFlowReturn
 gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 {
   GstFlowReturn ret = GST_FLOW_OK;
+  guint64 max_atom_size;
 
   /* we never really mean to buffer that much */
   if (demux->neededbytes == -1) {
     goto eos;
   }
+
+  GST_OBJECT_LOCK (demux);
+  max_atom_size = demux->max_atom_size;
+  GST_OBJECT_UNLOCK (demux);
 
   while (((gst_adapter_available (demux->adapter)) >= demux->neededbytes) &&
       (ret == GST_FLOW_OK || (ret == GST_FLOW_NOT_LINKED && force))) {
@@ -8350,11 +8432,12 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
                 demux->mdatoffset = demux->offset;
             }
           }
-        } else if (G_UNLIKELY (size > QTDEMUX_MAX_ATOM_SIZE)) {
+        } else if (G_UNLIKELY (size > max_atom_size)) {
           GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
               (_("This file is invalid and cannot be played.")),
-              ("atom %" GST_FOURCC_FORMAT " has bogus size %" G_GUINT64_FORMAT,
-                  GST_FOURCC_ARGS (fourcc), size));
+              ("atom %" GST_FOURCC_FORMAT " has bogus size %" G_GUINT64_FORMAT
+                  " max-atom-size %" G_GUINT64_FORMAT, GST_FOURCC_ARGS (fourcc),
+                  size, max_atom_size));
           ret = GST_FLOW_ERROR;
           break;
         } else {
