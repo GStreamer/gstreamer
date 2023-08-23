@@ -223,6 +223,7 @@ struct _GstURIDecodeBin3
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
+  gchar *download_dir;
   gboolean use_buffering;
   guint64 ring_buffer_max_size;
   gboolean instant_uri;         /* Whether URI changes should be applied immediately or not */
@@ -313,6 +314,7 @@ enum
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
   PROP_DOWNLOAD,
+  PROP_DOWNLOAD_DIR,
   PROP_USE_BUFFERING,
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_CAPS,
@@ -470,6 +472,23 @@ gst_uri_decode_bin3_class_init (GstURIDecodeBin3Class * klass)
       g_param_spec_boolean ("download", "Download",
           "Attempt download buffering when buffering network streams",
           DEFAULT_DOWNLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstURIDecodeBin3:download-dir:
+   *
+   * The directory where buffers are downloaded to, if 'download' is enabled.
+   * If not set (default), the XDG cache directory is used.
+   * Will be applied to the next 'uri' played or until the element go back to
+   * the PAUSED state.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_DOWNLOAD_DIR,
+      g_param_spec_string ("download-dir", "Download Directory",
+          "The directory where buffers are downloaded to, if 'download' is enabled. "
+          "If not set (default), the XDG cache directory is used.",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstURIDecodeBin3::use-buffering:
    *
@@ -919,6 +938,7 @@ gst_uri_decode_bin3_dispose (GObject * obj)
   }
   g_list_free (dec->play_items);
   dec->play_items = NULL;
+  g_clear_pointer (&dec->download_dir, g_free);
 
   g_mutex_clear (&dec->play_items_lock);
 
@@ -1499,6 +1519,7 @@ new_source_handler (GstURIDecodeBin3 * uridecodebin, GstPlayItem * item,
   g_object_set (handler->urisourcebin,
       "connection-speed", uridecodebin->connection_speed / 1000,
       "download", uridecodebin->download,
+      "download-dir", uridecodebin->download_dir,
       "use-buffering", uridecodebin->use_buffering,
       "buffer-duration", uridecodebin->buffer_duration,
       "buffer-size", uridecodebin->buffer_size,
@@ -1576,6 +1597,9 @@ gst_uri_decode_bin3_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DOWNLOAD:
       dec->download = g_value_get_boolean (value);
+      break;
+    case PROP_DOWNLOAD_DIR:
+      dec->download_dir = g_value_dup_string (value);
       break;
     case PROP_USE_BUFFERING:
       dec->use_buffering = g_value_get_boolean (value);
@@ -1670,6 +1694,9 @@ gst_uri_decode_bin3_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DOWNLOAD:
       g_value_set_boolean (value, dec->download);
+      break;
+    case PROP_DOWNLOAD_DIR:
+      g_value_set_string (value, dec->download_dir);
       break;
     case PROP_USE_BUFFERING:
       g_value_set_boolean (value, dec->use_buffering);

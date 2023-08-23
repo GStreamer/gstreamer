@@ -12072,6 +12072,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "download-dir": {
+                        "blurb": "The directory where buffers are downloaded to, if 'download' is enabled. If not set (default), the XDG cache directory is used.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "instant-uri": {
                         "blurb": "When enabled, URI changes are applied immediately",
                         "conditionally-available": false,
