@@ -36,6 +36,7 @@ GST_DEBUG_CATEGORY (cuda_ipc_client_debug);
 static GThreadPool *gc_thread_pool = nullptr;
 /* *INDENT-OFF* */
 static std::mutex gc_pool_lock;
+static std::recursive_mutex import_lock_;
 /* *INDENT-ON* */
 
 void
@@ -88,9 +89,14 @@ struct GstCudaIpcHandle
 
   ~GstCudaIpcHandle ()
   {
+    std::lock_guard <std::recursive_mutex> lk (import_lock_);
+    auto handle_dump = gst_cuda_ipc_mem_handle_to_string (handle);
+    GST_LOG ("Closing handle %s", handle_dump.c_str ());
     gst_cuda_context_push (ctx);
     CuIpcCloseMemHandle (dptr);
     gst_cuda_context_pop (nullptr);
+    gst_object_unref (ctx);
+    GST_LOG ("Closed handle %s", handle_dump.c_str ());
   }
 
   CUipcMemHandle handle;
@@ -115,16 +121,17 @@ public:
   std::shared_ptr<GstCudaIpcHandle>
   ImportHandle (CUipcMemHandle mem_handle, GstCudaContext * ctx)
   {
-    std::lock_guard <std::mutex> lk (lock_);
+    std::lock_guard <std::recursive_mutex> lk (import_lock_);
     CUresult ret;
     CUdeviceptr dptr = 0;
+    auto handle_dump = gst_cuda_ipc_mem_handle_to_string (mem_handle);
+    GST_LOG ("Trying to import handle %s", handle_dump.c_str ());
     auto it = import_table_.begin ();
     while (it != import_table_.end ()) {
       auto data = it->lock ();
       if (!data) {
         it = import_table_.erase (it);
       } else if (gst_cuda_ipc_handle_is_equal (data->handle, mem_handle)) {
-        auto handle_dump = gst_cuda_ipc_mem_handle_to_string (mem_handle);
         GST_LOG ("Returning already imported data %s", handle_dump.c_str ());
         return data;
       } else {
@@ -143,6 +150,8 @@ public:
       return nullptr;
     }
 
+    GST_LOG ("Imported handle %s", handle_dump.c_str ());
+
     auto rst = std::make_shared<GstCudaIpcHandle> (mem_handle, dptr, ctx);
     import_table_.push_back (rst);
 
@@ -151,7 +160,6 @@ public:
 
 private:
   std::vector<std::weak_ptr<GstCudaIpcHandle>> import_table_;
-  std::mutex lock_;
 };
 
 /* Global IPC handle table for legacy mode, since multiple CuIpcOpenMemHandle()
@@ -299,11 +307,15 @@ gst_cuda_ipc_client_set_flushing (GstCudaIpcClient * client, bool flushing)
   priv = client->priv;
   klass = GST_CUDA_IPC_CLIENT_GET_CLASS (client);
 
+  GST_DEBUG_OBJECT (client, "Setting flush %d", flushing);
+
   klass->set_flushing (client, flushing);
 
   std::lock_guard < std::mutex > lk (priv->lock);
   priv->flushing = flushing;
   priv->cond.notify_all ();
+
+  GST_DEBUG_OBJECT (client, "Setting flush %d done", flushing);
 }
 
 static gpointer
@@ -566,7 +578,9 @@ gst_cuda_ipc_client_release_imported_data (GstCudaIpcReleaseData * data)
 
   GST_LOG_OBJECT (self, "Releasing data %s", handle_dump.c_str ());
 
+  import_lock_.lock ();
   data->imported = nullptr;
+  import_lock_.unlock ();
 
   priv->lock.lock ();
   priv->unused_data.push (handle);
