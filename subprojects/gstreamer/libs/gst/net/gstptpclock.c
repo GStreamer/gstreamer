@@ -239,8 +239,8 @@ typedef struct
 
 typedef enum
 {
-  TYPE_EVENT = 0,               /* 64-bit monotonic clock time and PTP message is payload */
-  TYPE_GENERAL = 1,             /* 64-bit monotonic clock time and PTP message is payload */
+  TYPE_EVENT = 0,               /* 8-bit interface index, 64-bit monotonic clock time and PTP message is payload */
+  TYPE_GENERAL = 1,             /* 8-bit interface index, 64-bit monotonic clock time and PTP message is payload */
   TYPE_CLOCK_ID = 2,            /* 64-bit clock ID is payload */
   TYPE_SEND_TIME_ACK = 3,       /* 64-bit monotonic clock time, 8-bit message type, 8-bit domain number and 16-bit sequence number is payload */
 } StdIOMessageType;
@@ -292,6 +292,7 @@ typedef struct
   GstClockTime receive_time;
 
   PtpClockIdentity master_clock_identity;
+  guint8 iface_idx;
 
   guint8 grandmaster_priority_1;
   PtpClockQuality grandmaster_clock_quality;
@@ -306,6 +307,7 @@ typedef struct
 typedef struct
 {
   PtpClockIdentity master_clock_identity;
+  guint8 iface_idx;
 
   GstClockTime announce_interval;       /* last interval we received */
   GQueue announce_messages;
@@ -322,6 +324,7 @@ typedef struct
   GstClockTime follow_up_recv_time_local;
 
   GSource *timeout_source;
+  guint8 iface_idx;
   guint16 delay_req_seqnum;
   GstClockTime delay_req_send_time_local;       /* t3, -1 if we wait for FOLLOW_UP */
   GstClockTime delay_req_recv_time_remote;      /* t4, -1 if we wait */
@@ -355,6 +358,7 @@ typedef struct
   /* Last selected master clock */
   gboolean have_master_clock;
   PtpClockIdentity master_clock_identity;
+  guint8 iface_idx;
   guint64 grandmaster_identity;
 
   /* Last SYNC or FOLLOW_UP timestamp we received */
@@ -722,8 +726,11 @@ compare_announce_message (const PtpAnnounceMessage * a,
     else if (a->master_clock_identity.port_number >
         b->master_clock_identity.port_number)
       return 1;
-    else
-      g_assert_not_reached ();
+
+    if (a->iface_idx < b->iface_idx)
+      return -1;
+    else if (a->iface_idx > b->iface_idx)
+      return 1;
 
     return 0;
   }
@@ -819,13 +826,15 @@ select_best_master_clock (PtpDomainData * domain, GstClockTime now)
 
   if (domain->have_master_clock
       && compare_clock_identity (&domain->master_clock_identity,
-          &best->master_clock_identity) == 0) {
+          &best->master_clock_identity) == 0
+      && domain->iface_idx == best->iface_idx) {
     GST_DEBUG ("Master clock in domain %u did not change", domain->domain);
   } else {
     GST_DEBUG ("Selected master clock for domain %u: 0x%016" G_GINT64_MODIFIER
-        "x %u with grandmaster clock 0x%016" G_GINT64_MODIFIER "x",
-        domain->domain, best->master_clock_identity.clock_identity,
-        best->master_clock_identity.port_number, best->grandmaster_identity);
+        "x %u on interface %u with grandmaster clock 0x%016" G_GINT64_MODIFIER
+        "x", domain->domain, best->master_clock_identity.clock_identity,
+        best->master_clock_identity.port_number, best->iface_idx,
+        best->grandmaster_identity);
 
     domain->have_master_clock = TRUE;
     domain->grandmaster_identity = best->grandmaster_identity;
@@ -833,9 +842,11 @@ select_best_master_clock (PtpDomainData * domain, GstClockTime now)
     /* Opportunistic master clock selection likely gave us the same master
      * clock before, no need to reset all statistics */
     if (compare_clock_identity (&domain->master_clock_identity,
-            &best->master_clock_identity) != 0) {
+            &best->master_clock_identity) != 0
+        || domain->iface_idx != best->iface_idx) {
       memcpy (&domain->master_clock_identity, &best->master_clock_identity,
           sizeof (PtpClockIdentity));
+      domain->iface_idx = best->iface_idx;
       domain->mean_path_delay = 0;
       domain->last_delay_req = 0;
       domain->last_path_delays_missing = 9;
@@ -865,7 +876,8 @@ select_best_master_clock (PtpDomainData * domain, GstClockTime now)
 }
 
 static void
-handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
+handle_announce_message (PtpMessage * msg, guint8 iface_idx,
+    GstClockTime receive_time)
 {
   GList *l;
   PtpDomainData *domain = NULL;
@@ -925,7 +937,7 @@ handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
     PtpAnnounceSender *tmp = l->data;
 
     if (compare_clock_identity (&tmp->master_clock_identity,
-            &msg->source_port_identity) == 0) {
+            &msg->source_port_identity) == 0 && tmp->iface_idx == iface_idx) {
       sender = tmp;
       break;
     }
@@ -936,6 +948,7 @@ handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
 
     memcpy (&sender->master_clock_identity, &msg->source_port_identity,
         sizeof (PtpClockIdentity));
+    sender->iface_idx = iface_idx;
     g_queue_init (&sender->announce_messages);
     domain->announce_senders =
         g_list_prepend (domain->announce_senders, sender);
@@ -968,6 +981,7 @@ handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
   announce->sequence_id = msg->sequence_id;
   memcpy (&announce->master_clock_identity, &msg->source_port_identity,
       sizeof (PtpClockIdentity));
+  announce->iface_idx = iface_idx;
   announce->grandmaster_identity =
       msg->message_specific.announce.grandmaster_identity;
   announce->grandmaster_priority_1 =
@@ -991,7 +1005,7 @@ handle_announce_message (PtpMessage * msg, GstClockTime receive_time)
 static gboolean
 send_delay_req_timeout (PtpPendingSync * sync)
 {
-  guint8 message[STDIO_MESSAGE_HEADER_SIZE + 8 + 44] = { 0, };
+  guint8 message[STDIO_MESSAGE_HEADER_SIZE + 1 + 8 + 44] = { 0, };
   GstByteWriter writer;
   gsize written;
   GError *err = NULL;
@@ -1003,8 +1017,9 @@ send_delay_req_timeout (PtpPendingSync * sync)
       gst_clock_get_time (observation_system_clock);
 
   gst_byte_writer_init_with_data (&writer, message, sizeof (message), FALSE);
-  gst_byte_writer_put_uint16_be_unchecked (&writer, 8 + 44);
+  gst_byte_writer_put_uint16_be_unchecked (&writer, 1 + 8 + 44);
   gst_byte_writer_put_uint8_unchecked (&writer, TYPE_EVENT);
+  gst_byte_writer_put_uint8_unchecked (&writer, sync->iface_idx);
   gst_byte_writer_put_uint64_be_unchecked (&writer, send_time);
   gst_byte_writer_put_uint8_unchecked (&writer, PTP_MESSAGE_TYPE_DELAY_REQ);
   gst_byte_writer_put_uint8_unchecked (&writer, 2);
@@ -1058,6 +1073,7 @@ send_delay_req (PtpDomainData * domain, PtpPendingSync * sync)
   }
 
   domain->last_delay_req = now;
+  sync->iface_idx = domain->iface_idx;
   sync->delay_req_seqnum = domain->last_delay_req_seqnum++;
 
   /* IEEE 1588 9.5.11.2 */
@@ -1481,7 +1497,8 @@ out:
 }
 
 static void
-handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
+handle_sync_message (PtpMessage * msg, guint8 iface_idx,
+    GstClockTime receive_time)
 {
   GList *l;
   PtpDomainData *domain = NULL;
@@ -1523,15 +1540,20 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
 
   /* If we have a master clock, ignore this message if it's not coming from there */
   if (domain->have_master_clock
-      && compare_clock_identity (&domain->master_clock_identity,
-          &msg->source_port_identity) != 0)
+      && (compare_clock_identity (&domain->master_clock_identity,
+              &msg->source_port_identity) != 0
+          || domain->iface_idx != iface_idx)) {
+    GST_TRACE ("SYNC msg not from current clock master. Ignoring");
     return;
+  }
 
 #ifdef USE_OPPORTUNISTIC_CLOCK_SELECTION
   /* Opportunistic selection of master clock */
-  if (!domain->have_master_clock)
+  if (!domain->have_master_clock) {
     memcpy (&domain->master_clock_identity, &msg->source_port_identity,
         sizeof (PtpClockIdentity));
+    domain->iface_idx = iface_idx;
+  }
 #else
   if (!domain->have_master_clock)
     return;
@@ -1613,7 +1635,8 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
 }
 
 static void
-handle_follow_up_message (PtpMessage * msg, GstClockTime receive_time)
+handle_follow_up_message (PtpMessage * msg, guint8 iface_idx,
+    GstClockTime receive_time)
 {
   GList *l;
   PtpDomainData *domain = NULL;
@@ -1643,8 +1666,9 @@ handle_follow_up_message (PtpMessage * msg, GstClockTime receive_time)
 
   /* If we have a master clock, ignore this message if it's not coming from there */
   if (domain->have_master_clock
-      && compare_clock_identity (&domain->master_clock_identity,
-          &msg->source_port_identity) != 0) {
+      && (compare_clock_identity (&domain->master_clock_identity,
+              &msg->source_port_identity) != 0
+          || domain->iface_idx != iface_idx)) {
     GST_TRACE ("FOLLOW_UP msg not from current clock master. Ignoring");
     return;
   }
@@ -1709,7 +1733,8 @@ handle_follow_up_message (PtpMessage * msg, GstClockTime receive_time)
 }
 
 static void
-handle_delay_resp_message (PtpMessage * msg, GstClockTime receive_time)
+handle_delay_resp_message (PtpMessage * msg, guint8 iface_idx,
+    GstClockTime receive_time)
 {
   GList *l;
   PtpDomainData *domain = NULL;
@@ -1740,9 +1765,12 @@ handle_delay_resp_message (PtpMessage * msg, GstClockTime receive_time)
 
   /* If we have a master clock, ignore this message if it's not coming from there */
   if (domain->have_master_clock
-      && compare_clock_identity (&domain->master_clock_identity,
-          &msg->source_port_identity) != 0)
+      && (compare_clock_identity (&domain->master_clock_identity,
+              &msg->source_port_identity) != 0
+          || domain->iface_idx != iface_idx)) {
+    GST_TRACE ("DELAY_RESP msg not from current clock master. Ignoring");
     return;
+  }
 
   if (msg->log_message_interval == 0x7f) {
     domain->min_delay_req_interval = GST_SECOND;
@@ -1809,7 +1837,8 @@ handle_delay_resp_message (PtpMessage * msg, GstClockTime receive_time)
 }
 
 static void
-handle_ptp_message (PtpMessage * msg, GstClockTime receive_time)
+handle_ptp_message (PtpMessage * msg, guint8 iface_idx,
+    GstClockTime receive_time)
 {
   /* Ignore our own messages */
   if (msg->source_port_identity.clock_identity == ptp_clock_id.clock_identity &&
@@ -1818,20 +1847,20 @@ handle_ptp_message (PtpMessage * msg, GstClockTime receive_time)
     return;
   }
 
-  GST_TRACE ("Message type %d receive_time %" GST_TIME_FORMAT,
-      msg->message_type, GST_TIME_ARGS (receive_time));
+  GST_TRACE ("Message type %d iface idx %d receive_time %" GST_TIME_FORMAT,
+      msg->message_type, iface_idx, GST_TIME_ARGS (receive_time));
   switch (msg->message_type) {
     case PTP_MESSAGE_TYPE_ANNOUNCE:
-      handle_announce_message (msg, receive_time);
+      handle_announce_message (msg, iface_idx, receive_time);
       break;
     case PTP_MESSAGE_TYPE_SYNC:
-      handle_sync_message (msg, receive_time);
+      handle_sync_message (msg, iface_idx, receive_time);
       break;
     case PTP_MESSAGE_TYPE_FOLLOW_UP:
-      handle_follow_up_message (msg, receive_time);
+      handle_follow_up_message (msg, iface_idx, receive_time);
       break;
     case PTP_MESSAGE_TYPE_DELAY_RESP:
-      handle_delay_resp_message (msg, receive_time);
+      handle_delay_resp_message (msg, iface_idx, receive_time);
       break;
     default:
       break;
@@ -1941,12 +1970,14 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
     case TYPE_EVENT:
     case TYPE_GENERAL:{
       GstClockTime receive_time = gst_clock_get_time (observation_system_clock);
+      guint8 iface_idx;
       GstClockTime helper_receive_time;
       PtpMessage msg;
 
-      helper_receive_time = GST_READ_UINT64_BE (stdout_buffer);
+      iface_idx = GST_READ_UINT8 (stdout_buffer);
+      helper_receive_time = GST_READ_UINT64_BE (stdout_buffer + 1);
 
-      if (parse_ptp_message (&msg, (const guint8 *) stdout_buffer + 8,
+      if (parse_ptp_message (&msg, (const guint8 *) stdout_buffer + 1 + 8,
               CUR_STDIO_HEADER_SIZE)) {
         dump_ptp_message (&msg);
         if (helper_receive_time != 0) {
@@ -1955,7 +1986,7 @@ have_stdout_body (GInputStream * stdout_pipe, GAsyncResult * res,
                       helper_receive_time)));
           receive_time = helper_receive_time;
         }
-        handle_ptp_message (&msg, receive_time);
+        handle_ptp_message (&msg, iface_idx, receive_time);
       }
       break;
     }

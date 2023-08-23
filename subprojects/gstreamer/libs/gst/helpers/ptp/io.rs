@@ -8,25 +8,59 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
+use std::net::UdpSocket;
+
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum SocketType {
+    EventSocket,
+    GeneralSocket,
+}
+
 /// Result of polling the inputs of the `Poll`.
-///
-/// Any input that has data available for reading will be set to `true`, potentially multiple
-/// at once.
 ///
 /// Note that reading from the sockets is non-blocking but reading from stdin is blocking so
 /// special care has to be taken to only read as much as is available.
-pub struct PollResult {
-    pub event_socket: bool,
-    pub general_socket: bool,
-    pub stdin: bool,
+pub struct PollResult<'a> {
+    ready_sockets: &'a [(usize, SocketType, &'a UdpSocket)],
+    sockets: &'a [(UdpSocket, UdpSocket)],
+    stdin: Option<&'a Stdin>,
+    stdout: &'a Stdout,
+}
+
+impl<'a> PollResult<'a> {
+    /// Returns the sockets that are currently ready for reading.
+    pub fn ready_sockets(&self) -> &[(usize, SocketType, &UdpSocket)] {
+        &self.ready_sockets
+    }
+
+    /// Returns the event socket.
+    pub fn event_socket(&self, idx: usize) -> &UdpSocket {
+        &self.sockets[idx].0
+    }
+
+    /// Returns the general socket.
+    pub fn general_socket(&self, idx: usize) -> &UdpSocket {
+        &self.sockets[idx].1
+    }
+
+    /// Returns standard input if there is data to read.
+    pub fn stdin(&self) -> Option<&Stdin> {
+        self.stdin
+    }
+
+    /// Returns standard output.
+    pub fn stdout(&self) -> &Stdout {
+        self.stdout
+    }
 }
 
 #[cfg(unix)]
 mod imp {
-    use super::PollResult;
+    use super::{PollResult, SocketType};
 
     use std::{
         io::{self, Read, Write},
+        mem,
         net::UdpSocket,
         os::unix::io::{AsRawFd, RawFd},
     };
@@ -37,10 +71,11 @@ mod imp {
     ///
     /// This carries the event/general UDP socket and stdin/stdout.
     pub struct Poll {
-        event_socket: UdpSocket,
-        general_socket: UdpSocket,
+        sockets: Vec<(UdpSocket, UdpSocket)>,
         stdin: Stdin,
         stdout: Stdout,
+        pollfd: Vec<pollfd>,
+        results_cache: Vec<(usize, SocketType, &'static UdpSocket)>,
     }
 
     #[cfg(test)]
@@ -83,7 +118,7 @@ mod imp {
     }
 
     #[cfg(test)]
-    impl Read for Pipe {
+    impl<'a> Read for &'a Pipe {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             // SAFETY: read() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
@@ -122,25 +157,27 @@ mod imp {
 
     impl Poll {
         /// Name of the input based on the `struct pollfd` index.
-        fn fd_name(idx: usize) -> &'static str {
+        fn fd_name(idx: usize, len: usize) -> &'static str {
             match idx {
-                0 => "event socket",
-                1 => "general socket",
-                2 => "stdin",
+                i if i == len - 1 => "stdin",
+                i if i % 2 == 0 => "event socket",
+                i if i % 2 == 1 => "general socket",
                 _ => unreachable!(),
             }
         }
 
-        /// Create a new `Poll` instance from the two sockets.
-        pub fn new(event_socket: UdpSocket, general_socket: UdpSocket) -> Result<Self, Error> {
+        /// Create a new `Poll` instance from the pairs of sockets.
+        pub fn new(sockets: Vec<(UdpSocket, UdpSocket)>) -> Result<Self, Error> {
             let stdin = Stdin::acquire();
             let stdout = Stdout::acquire();
+            let n_sockets = sockets.len();
 
             Ok(Self {
-                event_socket,
-                general_socket,
+                sockets,
                 stdin,
                 stdout,
+                pollfd: Vec::with_capacity(n_sockets * 2 + 1),
+                results_cache: Vec::with_capacity(n_sockets * 2),
             })
         }
 
@@ -157,57 +194,63 @@ mod imp {
 
             Ok((
                 Self {
-                    event_socket,
-                    general_socket,
+                    sockets: vec![(event_socket, general_socket)],
                     stdin: Stdin(stdin.read),
                     stdout: Stdout(stdout.write),
+                    pollfd: Vec::with_capacity(3),
+                    results_cache: Vec::with_capacity(2),
                 },
                 stdin,
                 stdout,
             ))
         }
 
-        /// Mutable reference to the event socket.
-        pub fn event_socket(&mut self) -> &mut UdpSocket {
-            &mut self.event_socket
+        /// Reference to the event socket.
+        #[allow(unused)]
+        pub fn event_socket(&self, iface: usize) -> &UdpSocket {
+            &self.sockets[iface].0
         }
 
-        /// Mutable reference to the general socket.
-        pub fn general_socket(&mut self) -> &mut UdpSocket {
-            &mut self.general_socket
+        /// Reference to the general socket.
+        #[allow(unused)]
+        pub fn general_socket(&self, iface: usize) -> &UdpSocket {
+            &self.sockets[iface].1
         }
 
-        /// Mutable reference to stdin for reading.
-        pub fn stdin(&mut self) -> &mut Stdin {
-            &mut self.stdin
+        /// Reference to stdin for reading.
+        #[allow(unused)]
+        pub fn stdin(&self) -> &Stdin {
+            &self.stdin
         }
 
-        /// Mutable reference to stdout for writing.
-        pub fn stdout(&mut self) -> &mut Stdout {
-            &mut self.stdout
+        /// Reference to stdout for writing.
+        pub fn stdout(&self) -> &Stdout {
+            &self.stdout
         }
 
         /// Poll the event socket, general socket and stdin for available data to read.
         ///
         /// This blocks until at least one input has data available.
-        pub fn poll(&mut self) -> Result<PollResult, Error> {
-            let mut pollfd = [
-                pollfd {
-                    fd: self.event_socket.as_raw_fd(),
+        pub fn poll<'a>(&'a mut self) -> Result<PollResult<'a>, Error> {
+            self.pollfd.clear();
+            for (event_socket, general_socket) in &self.sockets {
+                self.pollfd.push(pollfd {
+                    fd: event_socket.as_raw_fd(),
                     events: POLLIN,
                     revents: 0,
-                },
-                pollfd {
-                    fd: self.general_socket.as_raw_fd(),
+                });
+                self.pollfd.push(pollfd {
+                    fd: general_socket.as_raw_fd(),
                     events: POLLIN,
                     revents: 0,
-                },
-                pollfd {
-                    fd: self.stdin.0,
-                    events: POLLIN,
-                    revents: 0,
-                },
-            ];
+                });
+            }
+
+            self.pollfd.push(pollfd {
+                fd: self.stdin.0,
+                events: POLLIN,
+                revents: 0,
+            });
 
             // SAFETY: Polls the given pollfds above and requires a valid number to be passed.
             // A negative timeout means that it will wait until at least one of the pollfds is
@@ -219,7 +262,7 @@ mod imp {
             // On EINTR polling should be retried.
             unsafe {
                 loop {
-                    let res = poll(pollfd[..].as_mut_ptr(), pollfd.len() as _, -1);
+                    let res = poll(self.pollfd[..].as_mut_ptr(), self.pollfd.len() as _, -1);
                     if res == -1 {
                         let err = std::io::Error::last_os_error();
                         if err.kind() == std::io::ErrorKind::Interrupted {
@@ -233,20 +276,60 @@ mod imp {
             }
 
             // Check for errors or hangup first
-            for (idx, pfd) in pollfd.iter().enumerate() {
+            for (idx, pfd) in self.pollfd.iter().enumerate() {
                 if pfd.revents & (POLLERR | POLLNVAL) != 0 {
-                    bail!("Poll error on {}", Self::fd_name(idx));
+                    bail!(
+                        "Poll error on {} for interface {}",
+                        Self::fd_name(idx, self.pollfd.len()),
+                        idx / 2
+                    );
                 }
 
                 if pfd.revents & POLLHUP != 0 {
-                    bail!("Hang up during polling on {}", Self::fd_name(idx));
+                    bail!(
+                        "Hang up during polling on {} for interface {}",
+                        Self::fd_name(idx, self.pollfd.len()),
+                        idx / 2
+                    );
+                }
+            }
+
+            self.results_cache.clear();
+            // SAFETY: References have the same memory representation independent of lifetime
+            let ready_sockets = unsafe {
+                mem::transmute::<
+                    &mut Vec<(usize, SocketType, &'static UdpSocket)>,
+                    &mut Vec<(usize, SocketType, &'a UdpSocket)>,
+                >(&mut self.results_cache)
+            };
+
+            for (idx, pfd) in self.pollfd.iter().enumerate() {
+                if pfd.revents & POLLIN != 0 {
+                    if idx == self.pollfd.len() - 1 {
+                        break;
+                    }
+                    if idx % 2 == 0 {
+                        ready_sockets.push((
+                            idx / 2,
+                            SocketType::EventSocket,
+                            &self.sockets[idx / 2].0,
+                        ));
+                    } else {
+                        ready_sockets.push((
+                            idx / 2,
+                            SocketType::GeneralSocket,
+                            &self.sockets[idx / 2].1,
+                        ));
+                    }
                 }
             }
 
             Ok(PollResult {
-                event_socket: pollfd[0].revents & POLLIN != 0,
-                general_socket: pollfd[1].revents & POLLIN != 0,
-                stdin: pollfd[2].revents & POLLIN != 0,
+                ready_sockets: &*ready_sockets,
+                sockets: &self.sockets,
+                stdin: (self.pollfd[self.pollfd.len() - 1].revents & POLLIN != 0)
+                    .then_some(&self.stdin),
+                stdout: &self.stdout,
             })
         }
     }
@@ -263,6 +346,12 @@ mod imp {
     }
 
     impl Read for Stdin {
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            <&Stdin as Read>::read(&mut &*self, buf)
+        }
+    }
+
+    impl<'a> Read for &'a Stdin {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             // SAFETY: read() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
@@ -290,6 +379,16 @@ mod imp {
     }
 
     impl Write for Stdout {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            <&Stdout as Write>::write(&mut &*self, buf)
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            <&Stdout as Write>::flush(&mut &*self)
+        }
+    }
+
+    impl<'a> Write for &Stdout {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             // SAFETY: write() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
@@ -327,6 +426,16 @@ mod imp {
 
     impl Write for Stderr {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            <&Stderr as Write>::write(&mut &*self, buf)
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            <&Stderr as Write>::flush(&mut &*self)
+        }
+    }
+
+    impl<'a> Write for &'a Stderr {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             // SAFETY: write() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
             //
@@ -348,7 +457,7 @@ mod imp {
 
 #[cfg(windows)]
 mod imp {
-    use super::PollResult;
+    use super::{PollResult, SocketType};
 
     use std::{
         cmp,
@@ -371,12 +480,12 @@ mod imp {
     ///
     /// This carries the event/general UDP socket and stdin/stdout.
     pub struct Poll {
-        event_socket: UdpSocket,
-        event_socket_event: EventHandle,
-        general_socket: UdpSocket,
-        general_socket_event: EventHandle,
+        sockets: Vec<(UdpSocket, UdpSocket)>,
+        events: Vec<(EventHandle, EventHandle)>,
         stdin: Stdin,
         stdout: Stdout,
+        handles: Vec<HANDLE>,
+        results_cache: Vec<(usize, SocketType, &'static UdpSocket)>,
     }
 
     /// Helper struct for a WSA event.
@@ -456,7 +565,7 @@ mod imp {
     }
 
     #[cfg(test)]
-    impl Read for Pipe {
+    impl<'a> Read for &'a Pipe {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             // SAFETY: Reads the given number of bytes into the buffer from the stdin handle.
             unsafe {
@@ -510,57 +619,70 @@ mod imp {
     impl Poll {
         /// Internal constructor.
         pub fn new_internal(
-            event_socket: UdpSocket,
-            general_socket: UdpSocket,
+            sockets: Vec<(UdpSocket, UdpSocket)>,
             stdin: Stdin,
             stdout: Stdout,
         ) -> Result<Self, Error> {
             // Create event objects for the readability of the sockets.
-            let event_socket_event = EventHandle::new().context("Failed creating WSA event")?;
-            let general_socket_event = EventHandle::new().context("Failed creating WSA event")?;
+            let events = sockets
+                .iter()
+                .map(|(_event_socket, _general_socket)| -> Result<_, Error> {
+                    Ok((
+                        EventHandle::new().context("Failed creating WSA event")?,
+                        EventHandle::new().context("Failed creating WSA event")?,
+                    ))
+                })
+                .collect::<Result<Vec<_>, Error>>()?;
 
-            // SAFETY: WSAEventSelect() requires a valid socket and WSA event, which are both
-            // passed here, and the bitflag of events that should be selected for.
-            //
-            // On error a non-zero value is returned.
-            unsafe {
-                if WSAEventSelect(event_socket.as_raw_socket(), event_socket_event.0, FD_READ) != 0
-                {
-                    bail!(
-                        source: io::Error::from_raw_os_error(WSAGetLastError()),
-                        "Failed selecting for read events on event socket"
-                    );
-                }
+            for ((event_socket, general_socket), (event_socket_event, general_socket_event)) in
+                Iterator::zip(sockets.iter(), events.iter())
+            {
+                // SAFETY: WSAEventSelect() requires a valid socket and WSA event, which are both
+                // passed here, and the bitflag of events that should be selected for.
+                //
+                // On error a non-zero value is returned.
+                unsafe {
+                    if WSAEventSelect(event_socket.as_raw_socket(), event_socket_event.0, FD_READ)
+                        != 0
+                    {
+                        bail!(
+                            source: io::Error::from_raw_os_error(WSAGetLastError()),
+                            "Failed selecting for read events on event socket"
+                        );
+                    }
 
-                if WSAEventSelect(
-                    general_socket.as_raw_socket(),
-                    general_socket_event.0,
-                    FD_READ,
-                ) != 0
-                {
-                    bail!(
-                        source: io::Error::from_raw_os_error(WSAGetLastError()),
-                        "Failed selecting for read events on general socket"
-                    );
+                    if WSAEventSelect(
+                        general_socket.as_raw_socket(),
+                        general_socket_event.0,
+                        FD_READ,
+                    ) != 0
+                    {
+                        bail!(
+                            source: io::Error::from_raw_os_error(WSAGetLastError()),
+                            "Failed selecting for read events on general socket"
+                        );
+                    }
                 }
             }
 
+            let n_sockets = sockets.len();
+
             Ok(Self {
-                event_socket,
-                event_socket_event,
-                general_socket,
-                general_socket_event,
+                sockets,
+                events,
                 stdin,
                 stdout,
+                handles: Vec::with_capacity(n_sockets * 2 + 1),
+                results_cache: Vec::with_capacity(1),
             })
         }
 
         /// Create a new `Poll` instance from the two sockets.
-        pub fn new(event_socket: UdpSocket, general_socket: UdpSocket) -> Result<Self, Error> {
+        pub fn new(sockets: Vec<(UdpSocket, UdpSocket)>) -> Result<Self, Error> {
             let stdin = Stdin::acquire().context("Failure acquiring stdin handle")?;
             let stdout = Stdout::acquire().context("Failed acquiring stdout handle")?;
 
-            Self::new_internal(event_socket, general_socket, stdin, stdout)
+            Self::new_internal(sockets, stdin, stdout)
         }
 
         #[cfg(test)]
@@ -579,45 +701,53 @@ mod imp {
             let stdout =
                 Stdout::from_handle(stdout_pipe.write).context("Failed acquiring stdout handle")?;
 
-            let poll = Self::new_internal(event_socket, general_socket, stdin, stdout)?;
+            let poll = Self::new_internal(vec![(event_socket, general_socket)], stdin, stdout)?;
 
             Ok((poll, stdin_pipe, stdout_pipe))
         }
 
-        /// Mutable reference to the event socket.
-        pub fn event_socket(&mut self) -> &mut UdpSocket {
-            &mut self.event_socket
+        /// Reference to the event socket.
+        #[allow(unused)]
+        pub fn event_socket(&self, iface: usize) -> &UdpSocket {
+            &self.sockets[iface].0
         }
 
-        /// Mutable reference to the general socket.
-        pub fn general_socket(&mut self) -> &mut UdpSocket {
-            &mut self.general_socket
+        /// Reference to the general socket.
+        #[allow(unused)]
+        pub fn general_socket(&self, iface: usize) -> &UdpSocket {
+            &self.sockets[iface].1
         }
 
-        /// Mutable reference to stdin for reading.
-        pub fn stdin(&mut self) -> &mut Stdin {
-            &mut self.stdin
+        /// Reference to stdin for reading.
+        #[allow(unused)]
+        pub fn stdin(&self) -> &Stdin {
+            &self.stdin
         }
 
-        /// Mutable reference to stdout for writing.
-        pub fn stdout(&mut self) -> &mut Stdout {
-            &mut self.stdout
+        /// Reference to stdout for writing.
+        pub fn stdout(&self) -> &Stdout {
+            &self.stdout
         }
 
         /// Poll the event socket, general socket and stdin for available data to read.
         ///
         /// This blocks until at least one input has data available.
-        pub fn poll(&mut self) -> Result<PollResult, Error> {
-            let handles = [
-                self.event_socket_event.0,
-                self.general_socket_event.0,
+        pub fn poll<'a>(&'a mut self) -> Result<PollResult<'a>, Error> {
+            self.handles.clear();
+
+            for (event_socket_event, general_socket_event) in &self.events {
+                self.handles.push(event_socket_event.0);
+                self.handles.push(general_socket_event.0);
+            }
+
+            self.handles.push(
                 // If stdin is a pipe then we use the signalling event, otherwise stdin itself.
                 if let Some(ref thread_state) = self.stdin.thread_state {
                     thread_state.event
                 } else {
                     self.stdin.handle
                 },
-            ];
+            );
 
             // If stdin is a pipe and currently no data is pending on it then signal
             // the reading thread to try reading one byte and blocking for that long.
@@ -641,8 +771,12 @@ mod imp {
             // On error u32::MAX is returned, otherwise an index into the array of handles is
             // returned for the handle that became ready.
             let res = unsafe {
-                let res =
-                    WaitForMultipleObjects(handles.len() as _, handles[..].as_ptr(), 0, u32::MAX);
+                let res = WaitForMultipleObjects(
+                    self.handles.len() as _,
+                    self.handles[..].as_ptr(),
+                    0,
+                    u32::MAX,
+                );
                 if res == u32::MAX {
                     bail!(
                         source: io::Error::from_raw_os_error(WSAGetLastError()),
@@ -651,21 +785,30 @@ mod imp {
                 }
 
                 assert!(
-                    (0..=2).contains(&res),
+                    (0..self.handles.len()).contains(&(res as usize)),
                     "Unexpected WaitForMultipleObjects() return value {}",
                     res,
                 );
 
-                res
+                res as usize
+            };
+
+            self.results_cache.clear();
+            // SAFETY: References have the same memory representation independent of lifetime
+            let ready_sockets = unsafe {
+                mem::transmute::<
+                    &mut Vec<(usize, SocketType, &'static UdpSocket)>,
+                    &mut Vec<(usize, SocketType, &'a UdpSocket)>,
+                >(&mut self.results_cache)
             };
 
             // For the sockets, enumerate the events that woke up the waiting, collect any errors
             // and reset the event objects.
-            if (0..=1).contains(&res) {
-                let (socket, event) = if res == 0 {
-                    (&self.event_socket, &self.event_socket_event)
+            if res < self.handles.len() - 1 {
+                let (socket, event) = if res % 2 == 0 {
+                    (&self.sockets[res / 2].0, &self.events[res / 2].0)
                 } else {
-                    (&self.general_socket, &self.general_socket_event)
+                    (&self.sockets[res / 2].1, &self.events[res / 2].1)
                 };
 
                 // SAFETY: Requires a valid socket and event, which is given by construction here.
@@ -681,8 +824,9 @@ mod imp {
                     {
                         bail!(
                             source: io::Error::from_raw_os_error(WSAGetLastError()),
-                            "Failed enumerating network events on {} socket",
-                            if res == 0 { "event" } else { "general" },
+                            "Failed enumerating network events on {} socket for interface {}",
+                            if res % 2 == 0 { "event" } else { "general" },
+                            res / 2,
                         );
                     }
 
@@ -692,8 +836,9 @@ mod imp {
                 if networkevents.ierrorcode[FD_READ_BIT] != 0 {
                     bail!(
                         source: io::Error::from_raw_os_error(networkevents.ierrorcode[FD_READ_BIT]),
-                        "Error on {} socket while waiting for events",
+                        "Error on {} socket for interface {} while waiting for events",
                         if res == 0 { "event" } else { "general" },
+                        res / 2,
                     );
                 }
 
@@ -707,12 +852,22 @@ mod imp {
                         res
                     );
                 }
+                ready_sockets.push((
+                    res / 2,
+                    if res % 2 == 0 {
+                        SocketType::EventSocket
+                    } else {
+                        SocketType::GeneralSocket
+                    },
+                    socket,
+                ));
             }
 
             Ok(PollResult {
-                event_socket: res == 0,
-                general_socket: res == 1,
-                stdin: res == 2,
+                ready_sockets: &*ready_sockets,
+                sockets: &self.sockets,
+                stdin: (res == self.handles.len() - 1).then_some(&self.stdin),
+                stdout: &self.stdout,
             })
         }
     }
@@ -918,6 +1073,12 @@ mod imp {
     }
 
     impl Read for Stdin {
+        fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+            <&Stdin as Read>::read(&mut &*self, buf)
+        }
+    }
+
+    impl<'a> Read for &'a Stdin {
         fn read(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
             if buf.is_empty() {
                 return Ok(0);
@@ -926,7 +1087,7 @@ mod imp {
             // If a read byte is pending from the readiness signalling thread then
             // read that first here before reading any remaining data.
             let mut already_read = 0;
-            if let Some(ref mut thread_state) = self.thread_state {
+            if let Some(ref thread_state) = self.thread_state {
                 let mut guard = thread_state.buffer.lock().unwrap();
                 assert!(!guard.fill_buffer);
                 if guard.buffer_filled {
@@ -1013,6 +1174,16 @@ mod imp {
     }
 
     impl Write for Stdout {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            <&Stdout as Write>::write(&mut &*self, buf)
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            <&Stdout as Write>::flush(&mut &*self)
+        }
+    }
+
+    impl<'a> Write for &'a Stdout {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             // SAFETY: Writes the given number of bytes to stdout or at most u32::MAX. On error
             // zero is returned, otherwise the number of bytes written is set accordingly and
@@ -1108,6 +1279,16 @@ mod imp {
 
     impl Write for Stderr {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+            <&Stderr as Write>::write(&mut &*self, buf)
+        }
+
+        fn flush(&mut self) -> io::Result<()> {
+            <&Stderr as Write>::flush(&mut &*self)
+        }
+    }
+
+    impl<'a> Write for &'a Stderr {
+        fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             if self.0 == INVALID_HANDLE_VALUE {
                 return Ok(buf.len());
             }
@@ -1145,6 +1326,8 @@ pub use self::imp::{Poll, Stderr, Stdin, Stdout};
 mod test {
     #[test]
     fn test_poll() {
+        use super::{Poll, SocketType};
+
         use std::io::prelude::*;
 
         let event_socket = std::net::UdpSocket::bind(std::net::SocketAddr::from((
@@ -1167,8 +1350,7 @@ mod test {
         )))
         .unwrap();
 
-        let (mut poll, mut stdin, _stdout) =
-            super::Poll::new_test(event_socket, general_socket).unwrap();
+        let (mut poll, mut stdin, _stdout) = Poll::new_test(event_socket, general_socket).unwrap();
 
         let mut buf = [0u8; 4];
 
@@ -1177,29 +1359,32 @@ mod test {
                 .send_to(&[1, 2, 3, 4], (std::net::Ipv4Addr::LOCALHOST, event_port))
                 .unwrap();
             let res = poll.poll().unwrap();
-            assert!(res.event_socket);
-            assert!(!res.general_socket);
-            assert!(!res.stdin);
-            assert_eq!(poll.event_socket().recv(&mut buf).unwrap(), 4);
+            assert_eq!(res.ready_sockets().len(), 1);
+            assert_eq!(res.ready_sockets()[0].0, 0);
+            assert_eq!(res.ready_sockets()[0].1, SocketType::EventSocket);
+            assert_eq!(res.ready_sockets()[0].2.recv(&mut buf).unwrap(), 4);
             assert_eq!(buf, [1, 2, 3, 4]);
 
             send_socket
                 .send_to(&[1, 2, 3, 4], (std::net::Ipv4Addr::LOCALHOST, general_port))
                 .unwrap();
             let res = poll.poll().unwrap();
-            assert!(!res.event_socket);
-            assert!(res.general_socket);
-            assert!(!res.stdin);
-            assert_eq!(poll.general_socket().recv(&mut buf).unwrap(), 4);
+
+            assert_eq!(res.ready_sockets().len(), 1);
+            assert_eq!(res.ready_sockets()[0].0, 0);
+            assert_eq!(res.ready_sockets()[0].1, SocketType::GeneralSocket);
+            assert_eq!(res.ready_sockets()[0].2.recv(&mut buf).unwrap(), 4);
             assert_eq!(buf, [1, 2, 3, 4]);
 
             stdin.write_all(&[1, 2, 3, 4]).unwrap();
             let res = poll.poll().unwrap();
-            assert!(!res.event_socket);
-            assert!(!res.general_socket);
-            assert!(res.stdin);
-            poll.stdin().read_exact(&mut buf).unwrap();
-            assert_eq!(buf, [1, 2, 3, 4]);
+            assert!(res.ready_sockets().is_empty());
+            {
+                let mut stdin = res.stdin();
+                let stdin = stdin.as_mut().unwrap();
+                stdin.read_exact(&mut buf).unwrap();
+                assert_eq!(buf, [1, 2, 3, 4]);
+            }
         }
 
         drop(poll);

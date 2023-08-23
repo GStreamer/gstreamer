@@ -399,6 +399,93 @@ mod imp {
                 }
             }
 
+            #[cfg(not(any(
+                target_os = "openbsd",
+                target_os = "dragonfly",
+                target_os = "netbsd",
+                target_os = "macos"
+            )))]
+            {
+                let mreqn = ip_mreqn {
+                    imr_multiaddr: in_addr {
+                        s_addr: u32::from_ne_bytes(Ipv4Addr::UNSPECIFIED.octets()),
+                    },
+                    imr_address: in_addr {
+                        s_addr: u32::from_ne_bytes(Ipv4Addr::UNSPECIFIED.octets()),
+                    },
+                    imr_ifindex: iface.index as _,
+                };
+
+                // SAFETY: Requires a valid ip_mreq or ip_mreqn struct to be passed together
+                // with its size for checking which of the two it is. On errors a negative
+                // integer is returned.
+                unsafe {
+                    if setsockopt(
+                        socket.as_raw_fd(),
+                        IPPROTO_IP,
+                        IP_MULTICAST_IF,
+                        &mreqn as *const _ as *const _,
+                        mem::size_of_val(&mreqn) as _,
+                    ) < 0
+                    {
+                        bail!(
+                            source: io::Error::last_os_error(),
+                            "Failed joining multicast group for interface {}",
+                            iface.name,
+                        );
+                    }
+                }
+            }
+            #[cfg(any(target_os = "openbsd", target_os = "dragonfly", target_os = "macos"))]
+            {
+                let addr = in_addr {
+                    s_addr: u32::from_ne_bytes(iface.ip_addr.octets()),
+                };
+
+                // SAFETY: Requires a valid in_addr struct to be passed together with its size for
+                // checking which of the two it is. On errors a negative integer is returned.
+                unsafe {
+                    if setsockopt(
+                        socket.as_raw_fd(),
+                        IPPROTO_IP,
+                        IP_MULTICAST_IF,
+                        &addr as *const _ as *const _,
+                        mem::size_of_val(&addr) as _,
+                    ) < 0
+                    {
+                        bail!(
+                            source: io::Error::last_os_error(),
+                            "Failed joining multicast group for interface {}",
+                            iface.name,
+                        );
+                    }
+                }
+            }
+            #[cfg(target_os = "netbsd")]
+            {
+                let idx = (iface.index as u32).to_be();
+
+                // SAFETY: Requires a valid in_addr struct or interface index in network byte order
+                // to be passed together with its size for checking which of the two it is. On
+                // errors a negative integer is returned.
+                unsafe {
+                    if setsockopt(
+                        socket.as_raw_fd(),
+                        IPPROTO_IP,
+                        IP_MULTICAST_IF,
+                        &idx as *const _ as *const _,
+                        mem::size_of_val(&idx) as _,
+                    ) < 0
+                    {
+                        bail!(
+                            source: io::Error::last_os_error(),
+                            "Failed joining multicast group for interface {}",
+                            iface.name,
+                        );
+                    }
+                }
+            }
+
             Ok(())
         }
         #[cfg(any(target_os = "solaris", target_os = "illumos"))]
@@ -413,6 +500,29 @@ mod imp {
                         iface.name, iface.ip_addr
                     )
                 })?;
+
+            let addr = in_addr {
+                s_addr: u32::from_ne_bytes(iface.ip_addr.octets()),
+            };
+
+            // SAFETY: Requires a valid in_addr struct to be passed together with its size for
+            // checking which of the two it is. On errors a negative integer is returned.
+            unsafe {
+                if setsockopt(
+                    socket.as_raw_fd(),
+                    IPPROTO_IP,
+                    IP_MULTICAST_IF,
+                    &addr as *const _ as *const _,
+                    mem::size_of_val(&addr) as _,
+                ) < 0
+                {
+                    bail!(
+                        source: io::Error::last_os_error(),
+                        "Failed setting multicast interface {}",
+                        iface.name,
+                    );
+                }
+            }
 
             Ok(())
         }
@@ -832,6 +942,31 @@ mod imp {
             {
                 bail!(
                     source: io::Error::from_raw_os_error(WSAGetLastError()),
+                    "Failed joining multicast group for interface {}",
+                    iface.name,
+                );
+            }
+        }
+
+        let addr = IN_ADDR {
+            S_un: IN_ADDR_0 {
+                S_addr: u32::from_ne_bytes(Ipv4Addr::new(0, 0, 0, iface.index as u8).octets()),
+            },
+        };
+
+        // SAFETY: Requires a valid IN_ADDR struct to be passed together with its size for checking
+        // which of the two it is. On errors a negative integer is returned.
+        unsafe {
+            if setsockopt(
+                socket.as_raw_socket(),
+                IPPROTO_IP as i32,
+                IP_MULTICAST_IF as i32,
+                &addr as *const _ as *const _,
+                mem::size_of_val(&addr) as _,
+            ) < 0
+            {
+                bail!(
+                    source: io::Error::last_os_error(),
                     "Failed joining multicast group for interface {}",
                     iface.name,
                 );
