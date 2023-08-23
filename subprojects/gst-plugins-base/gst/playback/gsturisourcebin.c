@@ -168,6 +168,7 @@ struct _GstURISourceBin
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
   gboolean download;
+  gchar *download_dir;
   gboolean use_buffering;
   gdouble low_watermark;
   gdouble high_watermark;
@@ -250,6 +251,7 @@ enum
   PROP_BUFFER_SIZE,
   PROP_BUFFER_DURATION,
   PROP_DOWNLOAD,
+  PROP_DOWNLOAD_DIR,
   PROP_USE_BUFFERING,
   PROP_RING_BUFFER_MAX_SIZE,
   PROP_LOW_WATERMARK,
@@ -365,6 +367,20 @@ gst_uri_source_bin_class_init (GstURISourceBinClass * klass)
       g_param_spec_boolean ("download", "Download",
           "Attempt download buffering when buffering network streams",
           DEFAULT_DOWNLOAD, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+ /**
+   * GstURISourceBin:download-dir:
+   *
+   * The directory where buffers are downloaded to, if 'download' is enabled.
+   * If not set (default), the XDG cache directory is used.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_DOWNLOAD_DIR,
+      g_param_spec_string ("download-dir", "Download Directory",
+          "The directory where buffers are downloaded to, if 'download' is enabled. "
+          "If not set (default), the XDG cache directory is used.",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstURISourceBin::use-buffering:
@@ -543,6 +559,7 @@ gst_uri_source_bin_finalize (GObject * obj)
   g_mutex_clear (&urisrc->buffering_lock);
   g_mutex_clear (&urisrc->buffering_post_lock);
   g_free (urisrc->uri);
+  g_free (urisrc->download_dir);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -575,6 +592,10 @@ gst_uri_source_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_DOWNLOAD:
       urisrc->download = g_value_get_boolean (value);
+      break;
+    case PROP_DOWNLOAD_DIR:
+      g_free (urisrc->download_dir);
+      urisrc->download_dir = g_value_dup_string (value);
       break;
     case PROP_USE_BUFFERING:
       urisrc->use_buffering = g_value_get_boolean (value);
@@ -633,6 +654,9 @@ gst_uri_source_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DOWNLOAD:
       g_value_set_boolean (value, urisrc->download);
+      break;
+    case PROP_DOWNLOAD_DIR:
+      g_value_set_string (value, urisrc->download_dir);
       break;
     case PROP_USE_BUFFERING:
       g_value_set_boolean (value, urisrc->use_buffering);
@@ -1042,7 +1066,18 @@ setup_downloadbuffer (GstURISourceBin * urisrc, GstElement * downloadbuffer)
   gchar *temp_template, *filename;
   const gchar *tmp_dir, *prgname;
 
-  tmp_dir = g_get_user_cache_dir ();
+  if (urisrc->download_dir) {
+    tmp_dir = urisrc->download_dir;
+
+    if (g_mkdir_with_parents (tmp_dir, 0700) != 0) {
+      GST_ELEMENT_ERROR (urisrc, RESOURCE, SETTINGS,
+          (_("Failed to create download directory '%s'."), tmp_dir), ("%s",
+              g_strerror (errno)));
+    }
+  } else {
+    tmp_dir = g_get_user_cache_dir ();
+  }
+
   prgname = g_get_prgname ();
   if (prgname == NULL)
     prgname = "GStreamer";
