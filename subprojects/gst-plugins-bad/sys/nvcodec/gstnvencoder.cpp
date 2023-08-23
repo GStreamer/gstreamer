@@ -183,6 +183,7 @@ gst_nv_encoder_init (GstNvEncoder * self)
 
   gst_video_encoder_set_min_pts (GST_VIDEO_ENCODER (self),
       GST_SECOND * 60 * 60 * 1000);
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_VIDEO_ENCODER_SINK_PAD (self));
 }
 
 static void
