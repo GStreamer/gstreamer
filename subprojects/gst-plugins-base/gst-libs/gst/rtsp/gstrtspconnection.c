@@ -135,6 +135,12 @@ gst_rtsp_serialized_message_clear (GstRTSPSerializedMessage * msg)
 #define SEND_FLAGS 0
 #endif
 
+typedef struct
+{
+  gchar *key;
+  gchar *value;
+} GstRTSPExtraHttpHeader;
+
 typedef enum
 {
   TUNNEL_STATE_NONE,
@@ -218,6 +224,9 @@ struct _GstRTSPConnection
 
   gchar *proxy_host;
   guint proxy_port;
+
+  /* HTTP tunneling */
+  GArray *extra_http_headers;
 };
 
 enum
@@ -416,6 +425,9 @@ gst_rtsp_connection_create (const GstRTSPUrl * url, GstRTSPConnection ** conn)
   newconn->version = 0;
 
   newconn->content_length_limit = G_MAXUINT;
+
+  newconn->extra_http_headers =
+      g_array_new (FALSE, FALSE, sizeof (GstRTSPExtraHttpHeader));
 
   *conn = newconn;
 
@@ -864,6 +876,21 @@ get_tunneled_connection_uri_strdup (GstRTSPUrl * url, guint16 port)
       url->query ? url->query : "");
 }
 
+static void
+add_extra_headers (GstRTSPMessage * msg, GArray * headers)
+{
+  for (int i = 0; i < headers->len; i++) {
+    GstRTSPExtraHttpHeader *hdr =
+        &g_array_index (headers, GstRTSPExtraHttpHeader, i);
+
+    /* Remove any existing header */
+    gst_rtsp_message_remove_header_by_name (msg, hdr->key, -1);
+
+    /* and add... */
+    gst_rtsp_message_add_header_by_name (msg, hdr->key, hdr->value);
+  }
+}
+
 static GstRTSPResult
 setup_tunneling (GstRTSPConnection * conn, gint64 timeout, gchar * uri,
     GstRTSPMessage * response)
@@ -905,6 +932,7 @@ setup_tunneling (GstRTSPConnection * conn, gint64 timeout, gchar * uri,
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CACHE_CONTROL, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_PRAGMA, "no-cache");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, host);
+  add_extra_headers (msg, conn->extra_http_headers);
 
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
    * request from being base64 encoded */
@@ -992,6 +1020,7 @@ setup_tunneling (GstRTSPConnection * conn, gint64 timeout, gchar * uri,
       "Sun, 9 Jan 1972 00:00:00 GMT");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_CONTENT_LENGTH, "32767");
   gst_rtsp_message_add_header (msg, GST_RTSP_HDR_HOST, host);
+  add_extra_headers (msg, conn->extra_http_headers);
 
   /* we need to temporarily set conn->tunneled to FALSE to prevent the HTTP
    * request from being base64 encoded */
@@ -2994,6 +3023,15 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
   g_timer_destroy (conn->timer);
   gst_rtsp_url_free (conn->url);
   g_free (conn->proxy_host);
+
+  for (gint i = 0; i < conn->extra_http_headers->len; i++) {
+    GstRTSPExtraHttpHeader *header =
+        &g_array_index (conn->extra_http_headers, GstRTSPExtraHttpHeader, i);
+
+    g_free (header->key);
+    g_free (header->value);
+  }
+  g_array_free (conn->extra_http_headers, TRUE);
   g_free (conn);
 
   return res;
@@ -3633,6 +3671,31 @@ gst_rtsp_connection_get_ignore_x_server_reply (const GstRTSPConnection * conn)
   g_return_val_if_fail (conn != NULL, FALSE);
 
   return conn->ignore_x_server_reply;
+}
+
+/**
+ * gst_rtsp_connection_add_extra_http_request_header:
+ * @conn: a #GstRTSPConnection
+ * @key: HTTP header name
+ * @value: HTTP header value
+ *
+ * Add header to be appended to any HTTP request made by connection.
+ * If the header already exists then the old header is replaced by the new header.
+ *
+ * Only applicable in HTTP tunnel mode.
+ *
+ * Since: 1.24
+ */
+void
+gst_rtsp_connection_add_extra_http_request_header (GstRTSPConnection * conn,
+    const gchar * key, const gchar * value)
+{
+  GstRTSPExtraHttpHeader header;
+
+  header.key = strdup (key);
+  header.value = strdup (value);
+
+  g_array_append_val (conn->extra_http_headers, header);
 }
 
 /**
