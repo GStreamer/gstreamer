@@ -2892,6 +2892,7 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
         GstAllocator *allocator;
         GstVideoFormat temp_format = GST_VIDEO_FORMAT_RGBA;
         GstVideoInfo temp_info;
+        GstGLFormat tex_format;
 
         if (convert->out_info.finfo->bits > 8) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -2902,11 +2903,12 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
         }
         gst_video_info_set_format (&temp_info, temp_format, out_width,
             out_height);
+        tex_format = gst_gl_format_from_video_info (context, &temp_info, 0);
 
         allocator = gst_allocator_find (GST_GL_MEMORY_ALLOCATOR_NAME);
         base_mem_allocator = GST_GL_BASE_MEMORY_ALLOCATOR (allocator);
         params = gst_gl_video_allocation_params_new (context, NULL, &temp_info,
-            0, NULL, convert->priv->to_texture_target, GST_GL_RGBA);
+            0, NULL, convert->priv->to_texture_target, tex_format);
 
         convert->priv->out_tex[j] =
             (GstGLMemory *) gst_gl_base_memory_alloc (base_mem_allocator,
