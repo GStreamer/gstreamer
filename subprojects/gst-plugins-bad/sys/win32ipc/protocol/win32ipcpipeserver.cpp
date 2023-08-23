@@ -449,6 +449,9 @@ out:
 
   self->conn.clear ();
 
+  if (pipe != INVALID_HANDLE_VALUE)
+    CloseHandle (pipe);
+
   lk.lock ();
   CloseHandle (overlap.hEvent);
   self->last_err = ERROR_OPERATION_ABORTED;
