@@ -1144,10 +1144,10 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!context || gst_gl_format_is_supported (context, GST_GL_R16)) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     _append_value_string_list (supported_formats, "A420_10LE", "A422_10LE",
-        "A444_10LE", NULL);
+        "A444_10LE", "A444_12LE", "A422_12LE", "A420_12LE", NULL);
 #else
     _append_value_string_list (supported_formats, "A420_10BE", "A422_10BE",
-        "A444_10BE", NULL);
+        "A444_10BE", "A444_12BE", "A422_12BE", "A420_12BE", NULL);
 #endif
   }
 
@@ -2019,12 +2019,18 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       case GST_VIDEO_FORMAT_A420:
       case GST_VIDEO_FORMAT_A420_10LE:
       case GST_VIDEO_FORMAT_A420_10BE:
+      case GST_VIDEO_FORMAT_A420_12LE:
+      case GST_VIDEO_FORMAT_A420_12BE:
       case GST_VIDEO_FORMAT_A422:
       case GST_VIDEO_FORMAT_A422_10LE:
       case GST_VIDEO_FORMAT_A422_10BE:
+      case GST_VIDEO_FORMAT_A422_12LE:
+      case GST_VIDEO_FORMAT_A422_12BE:
       case GST_VIDEO_FORMAT_A444:
       case GST_VIDEO_FORMAT_A444_10LE:
       case GST_VIDEO_FORMAT_A444_10BE:
+      case GST_VIDEO_FORMAT_A444_12LE:
+      case GST_VIDEO_FORMAT_A444_12BE:
         info->templ = &templ_A420_to_RGB;
         info->frag_body =
             g_strdup_printf (templ_PLANAR_YUV_to_RGB_BODY,
@@ -2197,10 +2203,16 @@ _RGB_to_YUV (GstGLColorConvert * convert)
     case GST_VIDEO_FORMAT_A420:
     case GST_VIDEO_FORMAT_A420_10LE:
     case GST_VIDEO_FORMAT_A420_10BE:
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A420_12BE:
     case GST_VIDEO_FORMAT_A422_10LE:
     case GST_VIDEO_FORMAT_A422_10BE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A422_12BE:
     case GST_VIDEO_FORMAT_A444_10LE:
     case GST_VIDEO_FORMAT_A444_10BE:
+    case GST_VIDEO_FORMAT_A444_12LE:
+    case GST_VIDEO_FORMAT_A444_12BE:
       info->templ = &templ_RGB_to_PLANAR_YUV;
       if (out_format == GST_VIDEO_FORMAT_A420) {
         alpha = "gl_FragData[3] = vec4(yuva.a, 0.0, 0.0, 1.0);\n";
