@@ -1086,7 +1086,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!output || (!context || context->gl_vtable->DrawBuffers))
     _append_value_string_list (supported_formats, "GBRA", "GBR", "RGBP", "BGRP",
         "Y444", "I420", "YV12", "Y42B", "Y41B", "NV12", "NV21", "NV16", "NV61",
-        "A420", "AV12", NULL);
+        "A420", "AV12", "A444", "A422", NULL);
 
   /* Requires reading from a RG/LA framebuffer... */
   if (!context || (USING_GLES3 (context) || USING_OPENGL (context)))
@@ -2019,8 +2019,10 @@ _YUV_to_RGB (GstGLColorConvert * convert)
       case GST_VIDEO_FORMAT_A420:
       case GST_VIDEO_FORMAT_A420_10LE:
       case GST_VIDEO_FORMAT_A420_10BE:
+      case GST_VIDEO_FORMAT_A422:
       case GST_VIDEO_FORMAT_A422_10LE:
       case GST_VIDEO_FORMAT_A422_10BE:
+      case GST_VIDEO_FORMAT_A444:
       case GST_VIDEO_FORMAT_A444_10LE:
       case GST_VIDEO_FORMAT_A444_10BE:
         info->templ = &templ_A420_to_RGB;
