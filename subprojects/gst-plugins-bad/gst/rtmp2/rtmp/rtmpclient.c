@@ -602,13 +602,6 @@ send_connect (GTask * task)
     goto out;
   }
 
-  if (!flash_ver) {
-    g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_NOT_INITIALIZED,
-        "Flash version is not set");
-    g_object_unref (task);
-    goto out;
-  }
-
   if (data->auth_query) {
     const gchar *query = data->auth_query;
     appstr = g_strdup_printf ("%s?%s", app, query);
@@ -649,9 +642,11 @@ send_connect (GTask * task)
     gst_amf_node_append_field_string (node, "type", "nonprivate", -1);
   }
 
-  /* "Flash Player version. It is the same string as returned by the
-   * ApplicationScript getversion () function." */
-  gst_amf_node_append_field_string (node, "flashVer", flash_ver, -1);
+  if (flash_ver) {
+    /* "Flash Player version. It is the same string as returned by the
+     * ApplicationScript getversion () function." */
+    gst_amf_node_append_field_string (node, "flashVer", flash_ver, -1);
+  }
 
   /* "URL of the source SWF file making the connection."
    * XXX: libavformat sends "swfUrl" here, if provided. */
