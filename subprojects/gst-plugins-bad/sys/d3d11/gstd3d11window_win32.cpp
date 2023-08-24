@@ -1104,7 +1104,7 @@ gst_d3d11_window_win32_create_swap_chain (GstD3D11Window * window,
     if (gst_d3d11_is_windows_8_or_greater ())
       desc1.Scaling = DXGI_SCALING_NONE;
     desc1.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
-    desc1.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
+    desc1.AlphaMode = DXGI_ALPHA_MODE_PREMULTIPLIED;
     desc1.Flags = swapchain_flags;
 
     new_swapchain = create_swap_chain_for_hwnd (self, device,

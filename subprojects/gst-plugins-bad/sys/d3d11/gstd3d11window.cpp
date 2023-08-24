@@ -765,6 +765,11 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     return GST_FLOW_ERROR;
   }
 
+  if (GST_VIDEO_INFO_HAS_ALPHA (&window->info)) {
+    g_object_set (window->converter, "dest-alpha-mode",
+        GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
+  }
+
   if (have_hdr10_meta) {
     g_object_set (window->converter, "src-mastering-display-info", mdcv_str,
         "src-content-light-level", cll_str, nullptr);

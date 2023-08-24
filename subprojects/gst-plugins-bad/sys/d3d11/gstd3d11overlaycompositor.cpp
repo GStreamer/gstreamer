@@ -71,14 +71,12 @@ static const gchar templ_premul_pixel_shader[] =
     "float4 main(PS_INPUT input): SV_TARGET\n"
     "{\n"
     "  float4 sample = shaderTexture.Sample(samplerState, input.Texture);\n"
-    "  float4 unpremul_sample;\n"
-    "  if (sample.a == 0 || sample.a == 1)\n"
-    "    return sample;\n"
-    "  unpremul_sample.r = saturate (sample.r / sample.a);\n"
-    "  unpremul_sample.g = saturate (sample.g / sample.a);\n"
-    "  unpremul_sample.b = saturate (sample.b / sample.a);\n"
-    "  unpremul_sample.a = sample.a;\n"
-    "  return unpremul_sample;\n"
+    "  float4 premul_sample;\n"
+    "  premul_sample.r = saturate (sample.r * sample.a);\n"
+    "  premul_sample.g = saturate (sample.g * sample.a);\n"
+    "  premul_sample.b = saturate (sample.b * sample.a);\n"
+    "  premul_sample.a = sample.a;\n"
+    "  return premul_sample;\n"
     "}\n";
 
 static const gchar templ_vertex_shader[] =
@@ -459,11 +457,11 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   blend_desc.AlphaToCoverageEnable = FALSE;
   blend_desc.IndependentBlendEnable = FALSE;
   blend_desc.RenderTarget[0].BlendEnable = TRUE;
-  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+  blend_desc.RenderTarget[0].SrcBlend = D3D11_BLEND_ONE;
   blend_desc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
   blend_desc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
   blend_desc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+  blend_desc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
   blend_desc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
   blend_desc.RenderTarget[0].RenderTargetWriteMask =
       D3D11_COLOR_WRITE_ENABLE_ALL;
@@ -710,7 +708,7 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
       gst_memory_map (mem, &info, (GstMapFlags) (GST_MAP_D3D11 | GST_MAP_READ));
     }
 
-    if (overlay->premul_alpha)
+    if (!overlay->premul_alpha)
       context->PSSetShader (priv->premul_ps.Get (), nullptr, 0);
     else
       context->PSSetShader (priv->ps.Get (), nullptr, 0);
