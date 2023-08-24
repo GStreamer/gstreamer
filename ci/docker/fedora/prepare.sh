@@ -232,7 +232,7 @@ export CARGO_HOME="/usr/local/cargo"
 export PATH="/usr/local/cargo/bin:$PATH"
 
 chmod +x rustup-init;
-./rustup-init -y --no-modify-path --profile minimal --default-toolchain $RUST_VERSION;
+./rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION;
 rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
