@@ -359,18 +359,30 @@ if building_full
   gst_c_args = ['-DHAVE_CONFIG_H']
 
   # Generate a .c file which declare and register all built plugins
-  all_plugin_names = ';'.join(plugins_names)
-
   static_plugins = get_option('gst-full-plugins')
+  plugins_to_be_initialized = []
   if static_plugins == '*'
-    static_plugins = all_plugin_names
+    all_plugin_names = ';'.join(plugins_names)
+  else
+    missing_plugins = []
+    foreach plugin : static_plugins.split(';')
+      if plugins_names.contains(plugin)
+        plugins_to_be_initialized += [plugin]
+      else
+        missing_plugins += [plugin]
+      endif
+    endforeach
+    if missing_plugins.length() > 0
+      error('Some gstreamer-full plugins enabled via the \'gst-full-plugins\' option are not available, please enable the corresponding meson options: @0@'.format(', '.join(missing_plugins)))
+    endif
+    all_plugin_names = ';'.join(plugins_to_be_initialized)
   endif
   generate_init_static_plugins = find_program('scripts/generate_init_static_plugins.py')
   init_static_plugins_c = configure_file(
     output: 'gstinitstaticplugins.c',
     command : [generate_init_static_plugins,
                '-o ' + '@OUTPUT@',
-               '-p ' + static_plugins,
+               '-p ' + all_plugin_names,
                '-e ' + get_option('gst-full-elements'),
                '-t ' + get_option('gst-full-typefind-functions'),
                '-d ' + get_option('gst-full-device-providers'),
