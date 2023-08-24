@@ -328,7 +328,7 @@ gst_va_decoder_set_frame_size_with_surfaces (GstVaDecoder * self,
       VA_PROGRESSIVE, render_targets, num_render_targets, &context);
 
   if (status != VA_STATUS_SUCCESS) {
-    GST_ERROR_OBJECT (self, "vaDestroyConfig: %s", vaErrorStr (status));
+    GST_ERROR_OBJECT (self, "vaCreateContext: %s", vaErrorStr (status));
     return FALSE;
   }
 
