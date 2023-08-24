@@ -136,7 +136,7 @@ fedora amd64 docker:
     FDO_DISTRIBUTION_VERSION: 'bookworm'
     FDO_REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
-    FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils'
+    FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils ca-certificates'
     FDO_DISTRIBUTION_EXEC: 'ci/docker/indent/prepare.sh'
 
 gst-indent amd64 docker:

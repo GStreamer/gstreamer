@@ -7,7 +7,7 @@ variables:
   ###
   FEDORA_TAG:  '2023-08-25.1'
 
-  INDENT_TAG: '2023-06-14.1'
+  INDENT_TAG: '2023-08-24.3'
 
   LINT_TAG: '2023-02-16.5'
 
