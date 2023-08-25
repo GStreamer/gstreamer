@@ -300,6 +300,7 @@ commitlint:
   - .gitlab-image-tags.yml
   - gst-env.py
   - ci/gitlab/*.py
+  - ci/scripts/**/*
   - meson.build
   - subprojects/*.wrap
   - subprojects/gst-devtools/**/*
