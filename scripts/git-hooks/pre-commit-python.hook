@@ -40,7 +40,7 @@ def copy_files_to_tmp_dir(files):
         filepath = os.path.dirname(filename)
         if not os.path.exists(filepath):
             os.makedirs(filepath)
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding="utf-8") as f:
             system('git', 'show', ':' + name, stdout=f)
 
     return tempdir
