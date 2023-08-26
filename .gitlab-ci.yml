@@ -379,7 +379,10 @@ build fedora gcc:
         #
         # VAAPI can't be build statically yet
         # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled"
+        #
+        # Disabling gstreamer-sharp tests because they download things as part of configure with
+        # nuget which frequently fails on the CI (possibly because we're hammering the site)
+        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled -Dgstreamer-sharp:tests=disabled"
 
 build fedora clang:
   extends: '.build fedora x86_64'
@@ -414,7 +417,10 @@ build fedora clang:
         #
         # VAAPI can't be build statically yet
         # subprojects/gstreamer-vaapi/meson.build:8:2: ERROR: Problem encountered: GStreamer-VAAPI plugin not supported with `static` builds yet.
-        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled"
+        #
+        # Disabling gstreamer-sharp tests because they download things as part of configure with
+        # nuget which frequently fails on the CI (possibly because we're hammering the site)
+        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled -Dgstreamer-sharp:tests=disabled"
 
 .build windows:
   image: $WINDOWS_IMAGE
