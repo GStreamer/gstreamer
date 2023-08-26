@@ -3824,7 +3824,7 @@ gst_sdp_media_set_media_from_caps (const GstCaps * caps, GstSDPMedia * media)
 
   /* get clock-rate, media type and params for the rtpmap attribute */
   if (!gst_structure_get_int (s, "clock-rate", &caps_rate)) {
-    GST_ERROR ("ignoring stream without payload type");
+    GST_ERROR ("ignoring stream without clock rate");
     goto error;
   }
   caps_enc = gst_structure_get_string (s, "encoding-name");
