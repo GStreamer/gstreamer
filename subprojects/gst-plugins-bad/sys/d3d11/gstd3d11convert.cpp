@@ -1189,6 +1189,7 @@ static gboolean
 gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     GstQuery * decide_query, GstQuery * query)
 {
+  GstD3D11BaseConvert *self = GST_D3D11_BASE_CONVERT (trans);
   GstD3D11BaseFilter *filter = GST_D3D11_BASE_FILTER (trans);
   GstVideoInfo info;
   GstBufferPool *pool = NULL;
@@ -1205,8 +1206,18 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
   ID3D11Device *device_handle;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->propose_allocation (trans,
-          decide_query, query))
+          decide_query, query)) {
     return FALSE;
+  }
+
+  if (self->same_caps) {
+    if (!gst_pad_peer_query (trans->srcpad, query))
+      return FALSE;
+
+    gst_query_add_allocation_meta (query,
+        GST_VIDEO_CROP_META_API_TYPE, nullptr);
+    return TRUE;
+  }
 
   gst_query_parse_allocation (query, &caps, NULL);
 
