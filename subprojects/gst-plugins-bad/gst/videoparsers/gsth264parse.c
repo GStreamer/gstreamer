@@ -3208,6 +3208,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstEvent *event;
   GstBuffer *parse_buffer = NULL;
   gboolean is_interlaced = FALSE;
+  GstH264SPS *sps;
 
   h264parse = GST_H264_PARSE (parse);
 
@@ -3369,8 +3370,15 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     parse_buffer = frame->buffer = gst_buffer_make_writable (frame->buffer);
   }
 
-  if (!gst_buffer_get_video_time_code_meta (parse_buffer)) {
+  sps = h264parse->nalparser->last_sps;
+  if (sps && sps->vui_parameters_present_flag &&
+      sps->vui_parameters.timing_info_present_flag &&
+      sps->vui_parameters.time_scale > 0 &&
+      sps->vui_parameters.num_units_in_tick > 0 &&
+      h264parse->parsed_fps_n > 0 && h264parse->parsed_fps_d > 0 &&
+      !gst_buffer_get_video_time_code_meta (parse_buffer)) {
     guint i = 0;
+    GstH264VUIParams *vui = &sps->vui_parameters;
 
     for (i = 0; i < 3 && h264parse->num_clock_timestamp; i++) {
       GstH264ClockTimestamp *tim =
@@ -3378,6 +3386,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       gint field_count = -1;
       guint n_frames;
       GstVideoTimeCodeFlags flags = 0;
+      guint64 scale_n, scale_d;
 
       if (!h264parse->pic_timing_sei.clock_timestamp_flag[i])
         continue;
@@ -3424,9 +3433,37 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         is_interlaced = TRUE;
       }
 
-      n_frames =
-          gst_util_uint64_scale_int (tim->n_frames, 1,
-          2 - tim->nuit_field_based_flag);
+      /* Equation D-1 (without and tOffset)
+       *
+       * clockTimestamp = ( ( hH * 60 + mM ) * 60 + sS ) * time_scale +
+       *                  nFrames * ( num_units_in_tick * ( 1 + nuit_field_based_flag ) )
+       * => timestamp = clockTimestamp / time_scale
+       *
+       * <taking only frame part>
+       * timestamp = nFrames * ( num_units_in_tick * ( 1 + nuit_field_based_flag ) ) / time_scale
+       *
+       * <timecode's timestamp of frame part>
+       * timecode_timestamp = n_frames * fps_d / fps_n
+       *
+       * <Scaling Equation>
+       * n_frames = nFrames * ( num_units_in_tick * ( 1 + nuit_field_based_flag ) ) / time_scale
+       *            * fps_n / fps_d
+       *
+       *                       fps_n * ( num_units_in_tick * ( 1 + nuit_field_based_flag ) )
+       *          = nFrames * --------------------------------------------------------------
+       *                       fps_d * time_scale
+       *
+       * NOTE: "time_scale / num_units_in_tick" value is expected field rate
+       * (i.e., framerate = time_scale / (2 * num_units_in_tick)), so the above
+       * equation can be simplified if the bitstream is conveying field rate
+       * using time_scale / num_units_in_tick
+       * => "n_frames = nFrames * (1 + nuit_field_based_flag) / 2".
+       */
+      scale_n = h264parse->parsed_fps_n * vui->num_units_in_tick
+          * (1 + tim->nuit_field_based_flag);
+      scale_d = h264parse->parsed_fps_d * vui->time_scale;
+
+      n_frames = gst_util_uint64_scale (tim->n_frames, scale_n, scale_d);
 
       GST_LOG_OBJECT (h264parse,
           "Add time code meta %02u:%02u:%02u:%02u",
