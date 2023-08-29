@@ -449,6 +449,9 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
   /* center the video_subsurface inside area_subsurface */
   if (priv->video_viewport) {
     gst_video_center_rect (&src, &dst, &res, TRUE);
+    wp_viewport_set_source (priv->video_viewport, wl_fixed_from_int (0),
+        wl_fixed_from_int (0), wl_fixed_from_int (priv->video_width),
+        wl_fixed_from_int (priv->video_height));
     wp_viewport_set_destination (priv->video_viewport, res.w, res.h);
   } else {
     gst_video_center_rect (&src, &dst, &res, FALSE);
