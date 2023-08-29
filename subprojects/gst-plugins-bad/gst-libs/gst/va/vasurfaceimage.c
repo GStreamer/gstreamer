@@ -115,8 +115,24 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
     /* *INDENT-ON* */
   }
 
+retry:
   status = vaCreateSurfaces (dpy, rt_format, width, height, surfaces,
       num_surfaces, attrs, num_attrs);
+
+  if (status == VA_STATUS_ERROR_ATTR_NOT_SUPPORTED
+      && attrs[num_attrs - 1].type == VASurfaceAttribDRMFormatModifiers) {
+    int i;
+
+    /* if requested modifiers contain linear, let's remove the attribute and
+     * "hope" the driver will create linear dmabufs */
+    for (i = 0; i < num_modifiers; ++i) {
+      if (modifiers[i] == DRM_FORMAT_MOD_LINEAR) {
+        num_attrs--;
+        goto retry;
+      }
+    }
+  }
+
   if (status != VA_STATUS_SUCCESS) {
     GST_ERROR ("vaCreateSurfaces: %s", vaErrorStr (status));
     return FALSE;
