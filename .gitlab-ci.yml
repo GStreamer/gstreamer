@@ -188,6 +188,10 @@ windows amd64 docker:
       )
     - ci/docker/windows/container.ps1 $CI_REGISTRY $CI_REGISTRY_USER $CI_REGISTRY_PASSWORD $WINDOWS_IMAGE $WINDOWS_UPSTREAM_IMAGE $DOCKERFILE
 
+.macos image:
+  image: "registry.freedesktop.org/gstreamer/gstreamer/macos-arm64/13-ventura:2023-08-29.1"
+  tags:
+    - gst-mac-arm
 
 # ---- Preparation ----- #
 #
@@ -205,9 +209,7 @@ gst indent:
     - ./scripts/check-format-c
     - ./scripts/format-csharp --check
   rules:
-    # Don't check indentation on post merge pipelines
-    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: 'manual'
+    - !reference [.upstream-branch-rules, rules]
     - if: '$CI_PROJECT_NAMESPACE != "gstreamer" || $CI_COMMIT_BRANCH != $GST_UPSTREAM_BRANCH'
       when: 'always'
 
@@ -254,29 +256,33 @@ commitlint:
 #   corresponds to -Dgstreamer:gst_debug meson arg
 # GST_WERROR: make warning fatal or not
 #   must be a string of a boolean, "true" or "false". Not yaml bool.
-#
+# SUBPROJECTS_CACHE_DIR: The location in the image of the subprojects cache
+# HAVE_CCACHE: whether we have ccache available
+#   must be a string of a boolean, "true" or "false". Not yaml bool.
 .build_template: &build
   - export RUSTUP_HOME="/usr/local/rustup"
   - export CARGO_HOME="/usr/local/cargo"
   - export PATH="/usr/local/cargo/bin:$PATH"
   - date -R
-  - ci/scripts/handle-subprojects-cache.py subprojects/
+  - ci/scripts/handle-subprojects-cache.py --cache-dir ${SUBPROJECTS_CACHE_DIR} subprojects/
   - date -R
   - export ARGS="--default-library=${BUILD_TYPE:-both} -Dgstreamer:gst_debug=${BUILD_GST_DEBUG:-true} ${MESON_ARGS}"
+  - echo $GST_WERROR
   - |-
-    if [ $GST_WERROR == "true" ]; then
+    if [ "$GST_WERROR" = "true" ]; then
       export ARGS="$ARGS --native-file ./ci/meson/gst-werror.ini"
     fi
   - echo $ARGS
   - date -R
-  - meson build/ $ARGS
+  - meson setup build/ $(echo ${ARGS})
   - date -R
   - ninja -C build/
   - date -R
-  - ccache --show-stats
+  - test "x$HAVE_CCACHE" = "xtrue" && ccache --show-stats
 
 .build_ccache_vars:
   variables:
+    HAVE_CCACHE: 'true'
     CCACHE_COMPILERCHECK: 'content'
     CCACHE_COMPRESS: 'true'
     CCACHE_BASEDIR: '/cache/gstreamer/gstreamer'
@@ -305,10 +311,15 @@ commitlint:
   - subprojects/gstreamer-sharp/**/*
   - subprojects/gst-rtsp-server/**/*
 
+.upstream-branch-rules:
+  rules:
+    # If this matches, it means the pipeline is running against either the main
+    # or a stable branch, so make it manual
+    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
+      when: manual
+
 .build:
   stage: 'build'
-  extends:
-    - '.build_ccache_vars'
   needs:
     - "trigger"
   # Taking into account the slowest shared runner + time needed to upload the binaries to artifacts
@@ -318,6 +329,7 @@ commitlint:
     BUILD_GST_DEBUG: "true"
     GST_WERROR: "true"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
     - *build
     - ./gst-env.py gst-inspect-1.0 --version
@@ -330,10 +342,7 @@ commitlint:
     paths:
       - 'meson-logs/'
   rules:
-    # If this matches, it means the pipeline is running against either the main
-    # or a stable branch, so make it manual
-    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: manual
+    - !reference [.upstream-branch-rules, rules]
     - changes:
         *modules_changes
     - changes:
@@ -344,12 +353,14 @@ commitlint:
     - '.fedora image'
     - '.fdo.suffixed-image@fedora'
     - '.build'
+    - '.build_ccache_vars'
   needs:
     - "trigger"
     - "fedora amd64 docker"
   variables:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
 
   script:
     - *build
@@ -444,10 +455,7 @@ build fedora clang:
       -Dgst-plugins-good:soup-lookup-dep=true
       -Dgst-plugins-bad:d3d11-wgc=enabled
   rules:
-    # If this matches, it means the pipeline is running against either the main
-    # or a stable branch, so make it manual
-    - if: '$CI_PROJECT_NAMESPACE == "gstreamer" && $CI_COMMIT_BRANCH == $GST_UPSTREAM_BRANCH'
-      when: manual
+    - !reference [.upstream-branch-rules, rules]
     - changes:
         *modules_changes
     - changes:
@@ -462,7 +470,7 @@ build fedora clang:
     # Renormalize line endings
     - git add --renormalize subprojects/packagefiles
     - $env:PYTHONUNBUFFERED = '1'
-    - ci/scripts/handle-subprojects-cache.py subprojects/
+    - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
     - $env:PYTHONUNBUFFERED = ''
     - echo $env:MESON_ARGS
     # We do not pick up any deps with cmake, so speed up dependency checks
@@ -543,6 +551,40 @@ build msys2:
     # and inherit PATH
     - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS && meson compile -C build"
 
+build macos:
+  extends:
+   - '.build'
+   - '.macos image'
+  variables:
+    BUILD_GST_DEBUG: "true"
+    # gst-libav/ffmpeg throws Wundef errors
+    GST_WERROR: "false"
+    MESON_ARGS: "${DEFAULT_MESON_ARGS}"
+    SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
+  rules:
+    - !reference [.upstream-branch-rules, rules]
+    - changes:
+        *modules_changes
+    - changes:
+        - subprojects/macos-*/*
+  parallel:
+    matrix:
+      - BUILD_TYPE: ['both']
+        BUILD_GST_DEBUG: ["true"]
+        # FIXME: We currently don't have pkg-config required by gobject-introspection/pygobject/sharp
+        # macos doesn't support vaapi
+        MESON_ARGS: >-
+          ${SIMPLE_BUILD}
+          -Dintrospection=disabled
+          -Dvaapi=disabled
+          -Dsharp=disabled
+          -Dpython=disabled
+          -Ddoc=disabled
+          -Dgst-plugins-base:pango=enabled
+          -Dgst-plugins-good:cairo=enabled
+          -Dgst-plugins-good:soup=enabled
+          -Dgst-plugins-good:soup-lookup-dep=true
+
 # ---- Tests ----- #
 
 .test:
@@ -554,6 +596,7 @@ build msys2:
   variables:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
 
     # Disable colored output to avoid weird rendering issues
     GST_DEBUG_NO_COLOR: "true"
@@ -680,6 +723,7 @@ gstreamer-full static build:
     BUILD_TYPE: "static"
     MESON_ARGS: >-
       -Ddoc=disabled
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
   - *build
   - meson test -C build -v test-gst-full
@@ -703,6 +747,7 @@ gstreamer-full-minimal static build:
       -Dgst-full-typefind-functions=typefindfunctions:wav,flv
       -Dgst-full-device-providers=alsa:alsadeviceprovider
       -Dgst-full-dynamic-types=pbtypes:video_multiview_flagset
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
 
   script:
   - *build
@@ -827,12 +872,13 @@ valgrind ges:
       -Dgst-docs:fatal_warnings=true
     # Disable werror for the docs build, we don't need it
     GST_WERROR: 'false'
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
   - export PATH=/usr/local/cargo/bin/:/usr/local/bin/:$PATH
   - export RUSTUP_HOME='/usr/local/rustup'
 
-  - ci/scripts/handle-subprojects-cache.py subprojects/
+  - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
   - echo $MESON_ARGS
   - meson build/ $MESON_ARGS
   - ccache --show-stats

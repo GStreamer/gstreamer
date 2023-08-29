@@ -27,5 +27,5 @@ Write-Host "Downloading subprojects"
 meson subprojects download --sourcedir C:\gstreamer
 
 Write-Host "Caching subprojects into /subprojects/"
-python C:/gstreamer/ci/scripts/handle-subprojects-cache.py --build C:/gstreamer/subprojects
+python C:/gstreamer/ci/scripts/handle-subprojects-cache.py --build --cache-dir /subprojects C:/gstreamer/subprojects
 Remove-Item -Recurse -Force C:\gstreamer
