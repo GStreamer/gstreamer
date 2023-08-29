@@ -26,6 +26,12 @@
 
 GST_DEBUG_CATEGORY (gst_qt6_d3d11_debug);
 
+/**
+ * plugin-qt6d3d11:
+ *
+ * Since: 1.24
+ */
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
