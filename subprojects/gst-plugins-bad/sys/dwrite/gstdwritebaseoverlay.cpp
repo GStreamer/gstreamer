@@ -223,6 +223,16 @@ gst_dwrite_base_overlay_class_init (GstDWriteBaseOverlayClass * klass)
 
   gst_type_mark_as_plugin_api (GST_TYPE_DWRITE_BASE_OVERLAY,
       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DWRITE_FONT_WEIGHT,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DWRITE_FONT_STYLE,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DWRITE_FONT_STRETCH,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DWRITE_TEXT_ALIGNMENT,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_DWRITE_PARAGRAPH_ALIGNMENT,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
