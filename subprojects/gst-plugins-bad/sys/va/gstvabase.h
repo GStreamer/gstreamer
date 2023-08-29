@@ -46,3 +46,5 @@ struct _GstVaBufferImporter
 GstFlowReturn         gst_va_buffer_importer_import       (GstVaBufferImporter * base,
                                                            GstBuffer * inbuf,
                                                            GstBuffer ** outbuf);
+
+gboolean              gst_va_base_convert_caps_to_va      (GstCaps * caps);

@@ -763,37 +763,11 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   else
     caps = gst_caps_copy (self->in_caps);
 
-  g_assert (gst_caps_is_fixed (caps));
-  /* For DMA buffer, we can only import linear buffers.
-     Replace the drm-format into format field. */
-  if (gst_video_is_dma_drm_caps (caps)) {
-    GstVideoInfoDmaDrm dma_info;
-    GstVideoInfo info;
-
-    if (!gst_video_info_dma_drm_from_caps (&dma_info, caps)) {
-      GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-      gst_caps_unref (caps);
-      return NULL;
-    }
-
-    if (dma_info.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
-      GST_ERROR_OBJECT (self, "Cannot import non-linear DMA buffer");
-      gst_caps_unref (caps);
-      return NULL;
-    }
-
-    if (!gst_va_dma_drm_info_to_video_info (&dma_info, &info)) {
-      GST_ERROR_OBJECT (self, "Cannot get va video info");
-      gst_caps_unref (caps);
-      return NULL;
-    }
-
-    gst_caps_set_simple (caps, "format", G_TYPE_STRING,
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&info)), NULL);
-    gst_structure_remove_field (gst_caps_get_structure (caps, 0), "drm-format");
+  if (!gst_va_base_convert_caps_to_va (caps)) {
+    GST_ERROR_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
+    gst_caps_unref (caps);
+    return NULL;
   }
-  gst_caps_set_features_simple (caps,
-      gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
 
   /* When the input buffer contains video crop meta, the real video
      resolution can be bigger than the caps. The video meta should
