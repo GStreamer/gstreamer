@@ -47,10 +47,6 @@
 #define GST_CAT_DEFAULT gstva_debug
 GST_DEBUG_CATEGORY (gstva_debug);
 
-/* big bad mutex to exclusive access to shared stream buffers, such as
- * DMABuf after a tee */
-GRecMutex GST_VA_SHARED_LOCK = { 0, };
-
 #ifdef G_OS_WIN32
 /* Windows support is still experimental */
 #define GST_VA_RANK_PRIMARY GST_RANK_NONE
