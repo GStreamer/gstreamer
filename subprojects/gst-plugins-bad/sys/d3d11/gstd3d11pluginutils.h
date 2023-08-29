@@ -38,6 +38,17 @@ typedef enum
   GST_D3D11_DEVICE_VENDOR_XBOX,
 } GstD3D11DeviceVendor;
 
+
+typedef enum
+{
+  GST_D3D11_ALPHA_MODE_UNSPECIFIED = 0,
+  GST_D3D11_ALPHA_MODE_PREMULTIPLIED,
+  GST_D3D11_ALPHA_MODE_STRAIGHT,
+} GstD3D11AlphaMode;
+
+#define GST_TYPE_D3D11_ALPHA_MODE (gst_d3d11_alpha_mode_get_type())
+GType gst_d3d11_alpha_mode_get_type (void);
+
 void            gst_d3d11_plugin_utils_init         (D3D_FEATURE_LEVEL feature_level);
 
 GstCaps *       gst_d3d11_get_updated_template_caps (GstStaticCaps * template_caps);

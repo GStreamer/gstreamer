@@ -231,7 +231,7 @@ struct _GstD3D11TestSrc
   ID2D1Factory *d2d_factory;
   gint64 token;
   gfloat alpha;
-  GstD3D11ConverterAlphaMode alpha_mode;
+  GstD3D11AlphaMode alpha_mode;
 
   gboolean reverse;
   gint64 n_frames;
@@ -1105,7 +1105,7 @@ enum
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_PATTERN GST_D3D11_TEST_SRC_SMPTE
 #define DEFAULT_ALPHA 1.0f
-#define DEFAULT_ALPHA_MODE GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED
+#define DEFAULT_ALPHA_MODE GST_D3D11_ALPHA_MODE_UNSPECIFIED
 
 static void gst_d3d11_test_src_dispose (GObject * object);
 static void gst_d3d11_test_src_set_property (GObject * object,
@@ -1186,8 +1186,7 @@ gst_d3d11_test_src_class_init (GstD3D11TestSrcClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_ALPHA_MODE,
       g_param_spec_enum ("alpha-mode", "Alpha Mode",
-          "alpha mode to use", GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
-          GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED,
+          "alpha mode to use", GST_TYPE_D3D11_ALPHA_MODE, DEFAULT_ALPHA_MODE,
           (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
               G_PARAM_STATIC_STRINGS)));
 
@@ -1220,6 +1219,8 @@ gst_d3d11_test_src_class_init (GstD3D11TestSrcClass * klass)
       "d3d11testsrc");
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D11_TEST_SRC_PATTERN,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_ALPHA_MODE,
       (GstPluginAPIFlags) 0);
 }
 
@@ -1264,7 +1265,7 @@ gst_d3d11_test_src_set_property (GObject * object, guint prop_id,
       self->alpha = g_value_get_float (value);
       break;
     case PROP_ALPHA_MODE:
-      self->alpha_mode = (GstD3D11ConverterAlphaMode) g_value_get_enum (value);
+      self->alpha_mode = (GstD3D11AlphaMode) g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -390,7 +390,9 @@ gst_d3d11_screen_capture_src_class_init (GstD3D11ScreenCaptureSrcClass * klass)
                 GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_STATIC_STRINGS)));
 
     /**
-     * GstD3D11ScreenCaptureSrc:hwnd-capture-mode:
+     * GstD3D11ScreenCaptureSrc:window-capture-mode:
+     *
+     * Window capture mode to use
      *
      * Since: 1.24
      */

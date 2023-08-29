@@ -30,6 +30,46 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_plugin_utils_debug);
 #define GST_CAT_DEFAULT gst_d3d11_plugin_utils_debug
 
+/**
+ * GstD3D11AlphaMode:
+ *
+ * Since: 1.24
+ */
+GType
+gst_d3d11_alpha_mode_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue alpha_mode[] = {
+    /**
+     * GstD3D11AlphaMode::unspecified:
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_ALPHA_MODE_UNSPECIFIED, "Unspecified", "unspecified"},
+
+    /**
+     * GstD3D11AlphaMode::premultiplied:
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_ALPHA_MODE_PREMULTIPLIED, "Premultiplied", "premultiplied"},
+
+    /**
+     * GstD3D11AlphaMode::straight:
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_ALPHA_MODE_STRAIGHT, "Straight", "straight"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D11AlphaMode", alpha_mode);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return type;
+}
+
 /* Max Texture Dimension for feature level 11_0 ~ 12_1 */
 static guint _gst_d3d11_texture_max_dimension = 16384;
 
