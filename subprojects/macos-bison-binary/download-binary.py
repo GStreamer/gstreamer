@@ -25,11 +25,13 @@ dest = BASENAME.format(version, arch)
 dest_path = os.path.join(source_dir, dest)
 extract_path = EXTRACTDIR.format(version, arch)
 
+
 def get_sha256(tarf):
     hasher = hashlib.sha256()
     with open(tarf, 'rb') as f:
         hasher.update(f.read())
     return hasher.hexdigest()
+
 
 def download():
     for url in (GSTREAMER_URL.format(dest),):
@@ -48,9 +50,11 @@ def download():
         print('Couldn\'t download {!r}! Try downloading it manually and '
               'placing it into {!r}'.format(dest, curdir), file=sys.stderr)
 
+
 def print_extract_dir():
     'Print the extracted directory name'
     print(extract_path, end='')
+
 
 if os.path.isfile(dest_path):
     found_sha256 = get_sha256(dest_path)
