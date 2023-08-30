@@ -307,6 +307,11 @@ gst_wl_window_new_toplevel (GstWlDisplay * display, const GstVideoInfo * info,
     }
     xdg_toplevel_add_listener (priv->xdg_toplevel,
         &xdg_toplevel_listener, self);
+    if (g_get_prgname ()) {
+      xdg_toplevel_set_app_id (priv->xdg_toplevel, g_get_prgname ());
+    } else {
+      xdg_toplevel_set_app_id (priv->xdg_toplevel, "org.gstreamer.wayland");
+    }
 
     gst_wl_window_ensure_fullscreen (self, fullscreen);
 

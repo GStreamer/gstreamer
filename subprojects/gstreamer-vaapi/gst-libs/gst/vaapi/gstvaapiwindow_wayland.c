@@ -222,6 +222,11 @@ gst_vaapi_window_wayland_show (GstVaapiWindow * window)
   /* Create a toplevel window out of it */
   priv->xdg_toplevel = xdg_surface_get_toplevel (priv->xdg_surface);
   g_return_val_if_fail (priv->xdg_toplevel, FALSE);
+  if (g_get_prgname ()) {
+    xdg_toplevel_set_app_id (priv->xdg_toplevel, g_get_prgname ());
+  } else {
+    xdg_toplevel_set_app_id (priv->xdg_toplevel, "org.gstreamer.wayland");
+  }
   xdg_toplevel_set_title (priv->xdg_toplevel, "VA-API Wayland window");
   wl_proxy_set_queue ((struct wl_proxy *) priv->xdg_toplevel,
       priv->event_queue);

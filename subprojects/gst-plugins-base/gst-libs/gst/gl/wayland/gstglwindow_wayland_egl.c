@@ -305,6 +305,11 @@ create_xdg_surface_and_toplevel (GstGLWindowWaylandEGL * window_egl)
 
   /* Then the XDG top-level */
   xdg_toplevel = xdg_surface_get_toplevel (xdg_surface);
+  if (g_get_prgname ()) {
+    xdg_toplevel_set_app_id (xdg_toplevel, g_get_prgname ());
+  } else {
+    xdg_toplevel_set_app_id (xdg_toplevel, "org.gstreamer.wayland");
+  }
   xdg_toplevel_set_title (xdg_toplevel, "OpenGL Renderer");
   xdg_toplevel_add_listener (xdg_toplevel, &xdg_toplevel_listener, window_egl);
 
