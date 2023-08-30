@@ -7,7 +7,7 @@ Fuzzing GStreamer
 * Fuzzing targets
 
   Fuzzing targets as small applications where we can test a specific
-  element or API. The goal is to have them be as small/targetted as
+  element or API. The goal is to have them be as small/targeted as
   possible.
 
     ex: appsrc ! <some_element> ! fakesink num-buffers=<small>
@@ -43,7 +43,7 @@ Fuzzing GStreamer
   * Add a standalone build script
 
     We need to be able to build and test the fuzzing targets outside
-    of the oss-fuzz infrastructure, and do that in our continous
+    of the oss-fuzz infrastructure, and do that in our continuous
     integration system.
 
     We need:
