@@ -58,7 +58,7 @@ gboolean              gst_va_dmabuf_allocator_get_format  (GstAllocator * alloca
 
 GST_VA_API
 gboolean              gst_va_dmabuf_memories_setup        (GstVaDisplay * display,
-                                                           GstVideoInfo * info,
+                                                           GstVideoInfoDmaDrm * drm_info,
                                                            GstMemory * mem[GST_VIDEO_MAX_PLANES],
                                                            uintptr_t fds[GST_VIDEO_MAX_PLANES],
                                                            gsize offset[GST_VIDEO_MAX_PLANES],

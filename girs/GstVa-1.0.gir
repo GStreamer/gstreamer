@@ -1016,10 +1016,9 @@ VASurfaceID and it's attached into every @mem.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaDisplay</doc>
           <type name="VaDisplay" c:type="GstVaDisplay*"/>
         </parameter>
-        <parameter name="info" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
-          <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
-        </parameter>
+        <parameter name="drm_info" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfoDmaDrm</doc>
+          <type name="GstVideo.VideoInfoDmaDrm" c:type="GstVideoInfoDmaDrm*"/>
         </parameter>
         <parameter name="mem" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Memories. One

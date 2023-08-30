@@ -46,6 +46,10 @@
 #include "gstvavideoformat.h"
 #include "vasurfaceimage.h"
 
+#ifndef DRM_FORMAT_INVALID
+#define DRM_FORMAT_INVALID    0
+#endif
+
 #define GST_CAT_DEFAULT gst_va_memory_debug
 GST_DEBUG_CATEGORY (gst_va_memory_debug);
 
@@ -1051,7 +1055,7 @@ _is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
 /**
  * gst_va_dmabuf_memories_setup:
  * @display: a #GstVaDisplay
- * @info: a #GstVideoInfo
+ * @drm_info: a #GstVideoInfoDmaDrm
  * @mem: (array fixed-size=4) (element-type GstMemory): Memories. One
  *     per plane.
  * @fds: (array fixed-size=4) (element-type uintptr_t): array of
@@ -1070,12 +1074,14 @@ _is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
  */
 /* XXX: use a surface pool to control the created surfaces */
 gboolean
-gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
-    GstMemory * mem[GST_VIDEO_MAX_PLANES], uintptr_t fds[GST_VIDEO_MAX_PLANES],
-    gsize offset[GST_VIDEO_MAX_PLANES], guint usage_hint)
+gst_va_dmabuf_memories_setup (GstVaDisplay * display,
+    GstVideoInfoDmaDrm * drm_info, GstMemory * mem[GST_VIDEO_MAX_PLANES],
+    uintptr_t fds[GST_VIDEO_MAX_PLANES], gsize offset[GST_VIDEO_MAX_PLANES],
+    guint usage_hint)
 {
   GstVideoFormat format;
   GstVaBufferSurface *buf;
+  GstVideoInfo *info = &drm_info->vinfo;
   /* *INDENT-OFF* */
   VADRMPRIMESurfaceDescriptor desc = {
     .width = GST_VIDEO_INFO_WIDTH (info),
@@ -1085,7 +1091,8 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   };
   /* *INDENT-ON* */
   VASurfaceID surface;
-  guint32 fourcc, rt_format;
+  guint32 fourcc, rt_format, drm_fourcc;
+  guint64 drm_modifier;
   guint i, j, prev, n_planes;
   gboolean ret;
 
@@ -1093,8 +1100,15 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
 
   n_planes = GST_VIDEO_INFO_N_PLANES (info);
 
-  format = GST_VIDEO_INFO_FORMAT (info);
+  format = (drm_info->drm_fourcc == DRM_FORMAT_INVALID) ?
+      GST_VIDEO_INFO_FORMAT (info) :
+      gst_va_video_format_from_drm_fourcc (drm_info->drm_fourcc);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+
+  drm_fourcc = (drm_info->drm_fourcc == DRM_FORMAT_INVALID) ?
+      gst_va_drm_fourcc_from_video_format (format) : drm_info->drm_fourcc;
+  if (drm_fourcc == 0)
     return FALSE;
 
   rt_format = gst_va_chroma_from_video_format (format);
@@ -1105,10 +1119,12 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   if (fourcc == 0)
     return FALSE;
 
+  drm_modifier = (drm_info->drm_modifier == DRM_FORMAT_MOD_INVALID) ?
+      DRM_FORMAT_MOD_LINEAR : drm_info->drm_modifier;
+
   desc.fourcc = fourcc;
   desc.layers[0].num_planes = n_planes;
-  /* FIXME: use GstVideoInfoDmaDrm */
-  desc.layers[0].drm_format = gst_va_drm_fourcc_from_video_format (format);
+  desc.layers[0].drm_format = drm_fourcc;
 
   for (i = j = 0; i < n_planes; i++) {
     desc.layers[0].pitch[i] = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
@@ -1121,8 +1137,7 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
 
     desc.objects[j].fd = fds[i];
     desc.objects[j].size = _get_fd_size (fds[i]);
-    /* FIXME: use GstVideoInfoDmaDrm */
-    desc.objects[j].drm_format_modifier = DRM_FORMAT_MOD_LINEAR;
+    desc.objects[j].drm_format_modifier = drm_modifier;
 
     desc.layers[0].object_index[i] = j;
     j++;
