@@ -34,7 +34,7 @@ gboolean              va_create_surfaces                  (GstVaDisplay * displa
                                                            gint usage_hint,
                                                            guint64 * modifiers,
                                                            guint num_modifiers,
-                                                           VASurfaceAttribExternalBuffers * ext_buf,
+                                                           VADRMPRIMESurfaceDescriptor * desc,
                                                            VASurfaceID * surfaces,
                                                            guint num_surfaces);
 gboolean              va_destroy_surfaces                 (GstVaDisplay * display,

@@ -48,10 +48,25 @@ va_destroy_surfaces (GstVaDisplay * display, VASurfaceID * surfaces,
   return TRUE;
 }
 
+static gboolean
+_rt_format_is_rgb (guint rt_format)
+{
+  switch (rt_format) {
+    case VA_RT_FORMAT_RGB16:
+    case VA_RT_FORMAT_RGB32:
+    case VA_RT_FORMAT_RGB32_10:
+      return TRUE;
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
 gboolean
 va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
     guint width, guint height, gint usage_hint, guint64 * modifiers,
-    guint num_modifiers, VASurfaceAttribExternalBuffers * ext_buf,
+    guint num_modifiers, VADRMPRIMESurfaceDescriptor * desc,
     VASurfaceID * surfaces, guint num_surfaces)
 {
   VADisplay dpy = gst_va_display_get_va_dpy (display);
@@ -67,14 +82,20 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
       .type = VASurfaceAttribMemoryType,
       .flags = VA_SURFACE_ATTRIB_SETTABLE,
       .value.type = VAGenericValueTypeInteger,
-      .value.value.i = (ext_buf && ext_buf->num_buffers > 0)
-                               ? VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME
+      .value.value.i = (desc && desc->num_objects > 0)
+                               ? VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2
                                : VA_SURFACE_ATTRIB_MEM_TYPE_VA,
     },
   };
   VADRMFormatModifierList modifier_list = {
     .num_modifiers = num_modifiers,
     .modifiers = modifiers,
+  };
+  VASurfaceAttribExternalBuffers extbuf = {
+    .width = width,
+    .height = height,
+    .num_planes = 1,
+    .pixel_format = fourcc,
   };
   /* *INDENT-ON* */
   VAStatus status;
@@ -95,14 +116,25 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
     /* *INDENT-ON* */
   }
 
-  if (ext_buf) {
+  if (desc && desc->num_objects > 0) {
     /* *INDENT-OFF* */
     attrs[num_attrs++] = (VASurfaceAttrib) {
       .type = VASurfaceAttribExternalBufferDescriptor,
       .flags = VA_SURFACE_ATTRIB_SETTABLE,
       .value.type = VAGenericValueTypePointer,
-      .value.value.p = ext_buf,
+      .value.value.p = desc,
     };
+    /* *INDENT-ON* */
+  } else if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965)
+      && _rt_format_is_rgb (rt_format)) {
+    /* HACK(victor): disable tiling for i965 driver for RGB formats */
+    /* *INDENT-OFF* */
+     attrs[num_attrs++] = (VASurfaceAttrib) {
+       .type = VASurfaceAttribExternalBufferDescriptor,
+       .flags = VA_SURFACE_ATTRIB_SETTABLE,
+       .value.type = VAGenericValueTypePointer,
+       .value.value.p = &extbuf,
+     };
     /* *INDENT-ON* */
   }
 

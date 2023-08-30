@@ -545,7 +545,6 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
 {
   VADRMPRIMESurfaceDescriptor desc = { 0, };
   guint32 i, fourcc, rt_format, export_flags;
-  VASurfaceAttribExternalBuffers *extbuf = NULL, ext_buf;
   GstVideoFormat format;
   VASurfaceID surface;
   guint64 prev_modifier = DRM_FORMAT_MOD_INVALID;
@@ -559,24 +558,9 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
   if (fourcc == 0 || rt_format == 0)
     return FALSE;
 
-  /* HACK(victor): disable tiling for i965 driver for RGB formats */
-  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (display, INTEL_I965)
-      && GST_VIDEO_INFO_IS_RGB (info)) {
-    /* *INDENT-OFF* */
-    ext_buf = (VASurfaceAttribExternalBuffers) {
-      .width = GST_VIDEO_INFO_WIDTH (info),
-      .height = GST_VIDEO_INFO_HEIGHT (info),
-      .num_planes = GST_VIDEO_INFO_N_PLANES (info),
-      .pixel_format = fourcc,
-    };
-    /* *INDENT-ON* */
-
-    extbuf = &ext_buf;
-  }
-
   if (!va_create_surfaces (display, rt_format, fourcc,
           GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info),
-          usage_hint, modifiers, num_modifiers, extbuf, &surface, 1))
+          usage_hint, modifiers, num_modifiers, NULL, &surface, 1))
     return FALSE;
 
   /* workaround for missing layered dmabuf formats in i965 */
@@ -1044,6 +1028,26 @@ gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
   return TRUE;
 }
 
+static gboolean
+_is_fd_repeated (uintptr_t fds[GST_VIDEO_MAX_PLANES], guint cur, guint * prev)
+{
+  guint i;
+
+  g_assert (cur <= GST_VIDEO_MAX_PLANES);
+
+  if (cur == 0)
+    return FALSE;
+
+  for (i = 0; i < cur; i++) {
+    if (fds[i] == fds[cur]) {
+      if (prev)
+        *prev = i;
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
 /**
  * gst_va_dmabuf_memories_setup:
  * @display: a #GstVaDisplay
@@ -1073,18 +1077,16 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   GstVideoFormat format;
   GstVaBufferSurface *buf;
   /* *INDENT-OFF* */
-  VASurfaceAttribExternalBuffers ext_buf = {
+  VADRMPRIMESurfaceDescriptor desc = {
     .width = GST_VIDEO_INFO_WIDTH (info),
     .height = GST_VIDEO_INFO_HEIGHT (info),
-    .data_size = GST_VIDEO_INFO_SIZE (info),
-    .num_planes = GST_VIDEO_INFO_N_PLANES (info),
-    .buffers = fds,
-    .num_buffers = GST_VIDEO_INFO_N_PLANES (info),
+    /* GStreamer can only describe one PRIME layer */
+    .num_layers = 1,
   };
   /* *INDENT-ON* */
   VASurfaceID surface;
   guint32 fourcc, rt_format;
-  guint i, n_planes;
+  guint i, j, prev, n_planes;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), FALSE);
@@ -1103,21 +1105,38 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   if (fourcc == 0)
     return FALSE;
 
-  ext_buf.pixel_format = fourcc;
+  desc.fourcc = fourcc;
+  desc.layers[0].num_planes = n_planes;
+  /* FIXME: use GstVideoInfoDmaDrm */
+  desc.layers[0].drm_format = gst_va_drm_fourcc_from_video_format (format);
 
-  for (i = 0; i < n_planes; i++) {
-    ext_buf.pitches[i] = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
-    ext_buf.offsets[i] = offset[i];
+  for (i = j = 0; i < n_planes; i++) {
+    desc.layers[0].pitch[i] = GST_VIDEO_INFO_PLANE_STRIDE (info, i);
+    desc.layers[0].offset[i] = offset[i];
+
+    if (_is_fd_repeated (fds, i, &prev)) {
+      desc.layers[0].object_index[i] = prev;
+      continue;
+    }
+
+    desc.objects[j].fd = fds[i];
+    desc.objects[j].size = _get_fd_size (fds[i]);
+    /* FIXME: use GstVideoInfoDmaDrm */
+    desc.objects[j].drm_format_modifier = DRM_FORMAT_MOD_LINEAR;
+
+    desc.layers[0].object_index[i] = j;
+    j++;
   }
 
-  ret = va_create_surfaces (display, rt_format, ext_buf.pixel_format,
-      ext_buf.width, ext_buf.height, usage_hint, NULL, 0, &ext_buf, &surface,
-      1);
+  desc.num_objects = j;
+
+  ret = va_create_surfaces (display, rt_format, fourcc, desc.width, desc.height,
+      usage_hint, NULL, 0, &desc, &surface, 1);
   if (!ret)
     return FALSE;
 
-  GST_LOG_OBJECT (display, "Created surface %#x [%dx%d]", surface,
-      ext_buf.width, ext_buf.height);
+  GST_LOG_OBJECT (display, "Created surface %#x [%dx%d]", surface, desc.width,
+      desc.height);
 
   buf = gst_va_buffer_surface_new (surface);
   buf->display = gst_object_ref (display);
