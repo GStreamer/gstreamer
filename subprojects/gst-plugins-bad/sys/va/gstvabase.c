@@ -102,8 +102,8 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
       importer->entrypoint, GST_PAD_SINK, TRUE);
 
   /* Now create a VASurfaceID for the buffer */
-  return gst_va_dmabuf_memories_setup (importer->display, &in_info, n_planes,
-      mems, fd, offset, usage_hint);
+  return gst_va_dmabuf_memories_setup (importer->display, &in_info, mems, fd,
+      offset, usage_hint);
 }
 
 static gboolean

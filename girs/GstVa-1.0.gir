@@ -1020,9 +1020,6 @@ VASurfaceID and it's attached into every @mem.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVideoInfo</doc>
           <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
         </parameter>
-        <parameter name="n_planes" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">number of planes</doc>
-          <type name="guint" c:type="guint"/>
         </parameter>
         <parameter name="mem" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">Memories. One
@@ -1034,7 +1031,7 @@ VASurfaceID and it's attached into every @mem.</doc>
         <parameter name="fds" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">array of
     DMABuf file descriptors.</doc>
-          <array length="2" zero-terminated="0" c:type="uintptr_t*">
+          <array zero-terminated="0" c:type="uintptr_t*" fixed-size="4">
             <type c:type="uintptr_t"/>
           </array>
         </parameter>

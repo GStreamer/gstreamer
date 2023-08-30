@@ -1048,10 +1048,9 @@ gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
  * gst_va_dmabuf_memories_setup:
  * @display: a #GstVaDisplay
  * @info: a #GstVideoInfo
- * @n_planes: number of planes
  * @mem: (array fixed-size=4) (element-type GstMemory): Memories. One
  *     per plane.
- * @fds: (array length=n_planes) (element-type uintptr_t): array of
+ * @fds: (array fixed-size=4) (element-type uintptr_t): array of
  *     DMABuf file descriptors.
  * @offset: (array fixed-size=4) (element-type gsize): array of memory
  *     offsets.
@@ -1066,11 +1065,10 @@ gst_va_dmabuf_allocator_get_format (GstAllocator * allocator,
  * Since: 1.22
  */
 /* XXX: use a surface pool to control the created surfaces */
-/* XXX: remove n_planes argument and use GST_VIDEO_INFO_N_PLANES (info) */
 gboolean
 gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
-    guint n_planes, GstMemory * mem[GST_VIDEO_MAX_PLANES],
-    uintptr_t * fds, gsize offset[GST_VIDEO_MAX_PLANES], guint usage_hint)
+    GstMemory * mem[GST_VIDEO_MAX_PLANES], uintptr_t fds[GST_VIDEO_MAX_PLANES],
+    gsize offset[GST_VIDEO_MAX_PLANES], guint usage_hint)
 {
   GstVideoFormat format;
   GstVaBufferSurface *buf;
@@ -1086,12 +1084,12 @@ gst_va_dmabuf_memories_setup (GstVaDisplay * display, GstVideoInfo * info,
   /* *INDENT-ON* */
   VASurfaceID surface;
   guint32 fourcc, rt_format;
-  guint i;
+  guint i, n_planes;
   gboolean ret;
 
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), FALSE);
-  g_return_val_if_fail (n_planes > 0
-      && n_planes <= GST_VIDEO_MAX_PLANES, FALSE);
+
+  n_planes = GST_VIDEO_INFO_N_PLANES (info);
 
   format = GST_VIDEO_INFO_FORMAT (info);
   if (format == GST_VIDEO_FORMAT_UNKNOWN)
