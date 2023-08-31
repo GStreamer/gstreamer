@@ -127,7 +127,7 @@ fn run() -> Result<(), Error> {
         let general_socket =
             create_socket(PTP_GENERAL_PORT).context("Failed creating general socket")?;
 
-        for socket in [&event_socket, &general_socket] {
+        for socket in [&event_socket, &general_socket].iter() {
             net::join_multicast_v4(socket, &PTP_MULTICAST_ADDR, iface)
                 .context("Failed to join multicast group")?;
         }
@@ -201,7 +201,9 @@ fn run() -> Result<(), Error> {
                     Err(err) => {
                         bail!(
                             source: err,
-                            "Failed reading from {:?} socket for interface {}", type_, idx,
+                            "Failed reading from {:?} socket for interface {}",
+                            type_,
+                            idx,
                         );
                     }
                     Ok((read, addr)) => (read, addr),

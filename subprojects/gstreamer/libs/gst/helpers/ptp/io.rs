@@ -327,8 +327,11 @@ mod imp {
             Ok(PollResult {
                 ready_sockets: &*ready_sockets,
                 sockets: &self.sockets,
-                stdin: (self.pollfd[self.pollfd.len() - 1].revents & POLLIN != 0)
-                    .then_some(&self.stdin),
+                stdin: if self.pollfd[self.pollfd.len() - 1].revents & POLLIN != 0 {
+                    Some(&self.stdin)
+                } else {
+                    None
+                },
                 stdout: &self.stdout,
             })
         }
@@ -866,7 +869,11 @@ mod imp {
             Ok(PollResult {
                 ready_sockets: &*ready_sockets,
                 sockets: &self.sockets,
-                stdin: (res == self.handles.len() - 1).then_some(&self.stdin),
+                stdin: if res == self.handles.len() - 1 {
+                    Some(&self.stdin)
+                } else {
+                    None
+                },
                 stdout: &self.stdout,
             })
         }
