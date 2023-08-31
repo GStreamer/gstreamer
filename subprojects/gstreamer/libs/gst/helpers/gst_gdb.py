@@ -525,12 +525,13 @@ class GdbGstStructure:
         else:
             _gdb_write(indent, "%s:" % (self.name()))
         for (key, value) in self.values():
-            _gdb_write(indent + 1, "%s: %s" % (key, str(value)))
+            _gdb_write(indent+1, "%s: %s" % (key, str(value)))
 
 
 class GdbGstSegment:
     def __init__(self, val):
-        self.val = val
+        t = gdb.lookup_type("GstSegment").pointer().pointer()
+        self.val = val.cast(t).dereference()
         self.fmt = str(self.val["format"]).split("_")[-1].lower()
 
     def format_value(self, n):
