@@ -8,7 +8,9 @@ if sys.version_info[0] >= 3:
     long = int
 
 # This is not quite right, as local vars may override symname
-def read_global_var (symname):
+
+
+def read_global_var(symname):
     return gdb.selected_frame().read_var(symname)
 
 
@@ -43,14 +45,15 @@ def g_quark_to_string(quark):
     return None
 
 ##
-## imported from glib: gobject/gobject_gdb.py
+# imported from glib: gobject/gobject_gdb.py
 ##
 
-def g_type_to_typenode (gtype):
-    def lookup_fundamental_type (typenode):
+
+def g_type_to_typenode(gtype):
+    def lookup_fundamental_type(typenode):
         if typenode == 0:
             return None
-        val = read_global_var ("static_fundamental_type_nodes")
+        val = read_global_var("static_fundamental_type_nodes")
         if val is None:
             return None
         return val[typenode >> 2].address
@@ -58,24 +61,26 @@ def g_type_to_typenode (gtype):
     gtype = long(gtype)
     typenode = gtype - gtype % 4
     if typenode > (255 << 2):
-        typenode = gdb.Value(typenode).cast (gdb.lookup_type("TypeNode").pointer())
+        typenode = gdb.Value(typenode).cast(gdb.lookup_type("TypeNode").pointer())
     else:
-        typenode = lookup_fundamental_type (typenode)
+        typenode = lookup_fundamental_type(typenode)
     return typenode
 
-def g_type_to_name (gtype):
+
+def g_type_to_name(gtype):
     typenode = g_type_to_typenode(gtype)
-    if typenode != None:
-        return g_quark_to_string (typenode["qname"])
+    if typenode:
+        return g_quark_to_string(typenode["qname"])
     return None
 
-def g_type_name_from_instance (instance):
+
+def g_type_name_from_instance(instance):
     if long(instance) != 0:
         try:
-            inst = instance.cast (gdb.lookup_type("GTypeInstance").pointer())
+            inst = instance.cast(gdb.lookup_type("GTypeInstance").pointer())
             klass = inst["g_class"]
             gtype = klass["g_type"]
-            name = g_type_to_name (gtype)
+            name = g_type_to_name(gtype)
             return name
         except RuntimeError:
             pass
