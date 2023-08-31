@@ -280,7 +280,7 @@ def gst_object_pipeline(obj):
         pass
 
     if not g_inherits_type(obj, "GstElement"):
-        raise Exception("Toplevel parent is not a GstElement")
+        raise Exception("Toplevel %s parent is not a GstElement" % obj)
     return obj.cast(gdb.lookup_type("GstElement").pointer())
 
 
@@ -391,6 +391,7 @@ class GdbGstCaps:
         if len(items) != 1:
             _gdb_write(indent, prefix)
             prefix = ""
+        s = ""
         for (features, structure) in items:
             s = "%s %s" % (prefix, structure.name())
             tmp = str(features)
