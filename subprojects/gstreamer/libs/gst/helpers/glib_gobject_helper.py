@@ -49,29 +49,53 @@ def g_quark_to_string(quark):
 ##
 
 
+def is_fundamental(gtype):
+    gtype = long(gtype)
+    typenode = gtype - gtype % 4
+
+    return typenode < (255 << 2)
+
+
 def g_type_to_typenode(gtype):
     def lookup_fundamental_type(typenode):
         if typenode == 0:
             return None
         val = read_global_var("static_fundamental_type_nodes")
-        if val is None:
+        if val is None or val.is_optimized_out:
             return None
         return val[typenode >> 2].address
 
     gtype = long(gtype)
     typenode = gtype - gtype % 4
-    if typenode > (255 << 2):
-        typenode = gdb.Value(typenode).cast(gdb.lookup_type("TypeNode").pointer())
+    if not is_fundamental(gtype):
+        res = gdb.Value(typenode).cast(gdb.lookup_type("TypeNode").pointer())
     else:
-        typenode = lookup_fundamental_type(typenode)
-    return typenode
+        res = lookup_fundamental_type(typenode)
+
+    return res
+
+
+def g_type_fundamental_name(gtype):
+    if is_fundamental(gtype):
+        return g_type_to_name(gtype)
+    else:
+        typenode = g_type_to_typenode(gtype)
+        if typenode:
+            return g_quark_to_string(typenode["qname"])
+        return None
+
+    return g_type_to_name(typenode["supers"][int(typenode["n_supers"])])
 
 
 def g_type_to_name(gtype):
     typenode = g_type_to_typenode(gtype)
     if typenode:
         return g_quark_to_string(typenode["qname"])
-    return None
+
+    try:
+        return gdb.parse_and_eval(f"g_type_name({gtype})").string()
+    except Exception:
+        return None
 
 
 def g_type_name_from_instance(instance):

@@ -23,7 +23,7 @@ import sys
 import re
 
 from glib_gobject_helper import g_type_to_name, g_type_name_from_instance, \
-    g_type_to_typenode, g_quark_to_string
+    g_type_to_typenode, g_quark_to_string, g_type_fundamental_name
 
 if sys.version_info[0] >= 3:
     long = int
@@ -214,11 +214,8 @@ def _g_array_iter(array, element_type):
 
 
 def _g_value_get_value(val):
-    typenode = g_type_to_typenode(val["g_type"])
-    if not typenode:
-        return None
-    tname = g_quark_to_string(typenode["qname"])
-    fname = g_type_to_name(typenode["supers"][int(typenode["n_supers"])])
+    tname = g_type_to_name(val["g_type"])
+    fname = g_type_fundamental_name(val["g_type"])
     if fname in ("gchar", "guchar", "gboolean", "gint", "guint", "glong",
                  "gulong", "gint64", "guint64", "gfloat", "gdouble",
                  "gpointer", "GFlags"):
