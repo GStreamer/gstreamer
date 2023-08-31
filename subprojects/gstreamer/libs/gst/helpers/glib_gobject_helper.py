@@ -1,5 +1,5 @@
 ##
-## imported from glib: glib/glib_gdb.py
+# imported from glib: glib/glib_gdb.py
 ##
 import gdb
 import sys
@@ -11,23 +11,35 @@ if sys.version_info[0] >= 3:
 def read_global_var (symname):
     return gdb.selected_frame().read_var(symname)
 
-def g_quark_to_string (quark):
+
+def g_quark_to_string(quark):
     if quark is None:
         return None
     quark = long(quark)
     if quark == 0:
         return None
+    max_q = None
     try:
-        val = read_global_var ("quarks")
-        max_q = long(read_global_var ("quark_seq_id"))
-    except:
+        val = read_global_var("quarks")
         try:
-            val = read_global_var ("g_quarks")
-            max_q = long(read_global_var ("g_quark_seq_id"))
-        except:
-            return None;
-    if quark < max_q:
-        return val[quark].string()
+            max_q = long(read_global_var("quark_seq_id"))
+        # quark_seq_id gets optimized out in some builds so work around it
+        except gdb.error:
+            pass
+    except Exception:
+        try:
+            val = read_global_var("g_quarks")
+            try:
+                max_q = long(read_global_var("g_quark_seq_id"))
+            except gdb.error:
+                pass
+        except Exception:
+            return None
+    if max_q is None or quark < max_q:
+        try:
+            return val[quark].string()
+        except gdb.MemoryError:
+            print("Invalid quark %d" % quark)
     return None
 
 ##
