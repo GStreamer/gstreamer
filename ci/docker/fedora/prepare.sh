@@ -7,7 +7,7 @@ set -eux
 sed -i '/tsflags=nodocs/d' /etc/dnf/dnf.conf
 dnf -y swap coreutils-single coreutils-full
 
-dnf install -y git-core dnf-plugins-core python3-pip
+dnf install -y git-core dnf-plugins-core python3-pip toolbox-experience
 
 # Configure git for various usage
 git config --global user.email "gstreamer@gstreamer.net"

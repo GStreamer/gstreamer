@@ -116,6 +116,7 @@ trigger:
 
 .fedora image:
   variables:
+    FDO_BASE_IMAGE: 'registry.fedoraproject.org/fedora-toolbox:34'
     FDO_DISTRIBUTION_VERSION: '34'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
