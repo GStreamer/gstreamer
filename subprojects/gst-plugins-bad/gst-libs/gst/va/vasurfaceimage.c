@@ -81,6 +81,8 @@ va_create_surfaces (GstVaDisplay * display, guint rt_format, guint fourcc,
   guint num_attrs = 2;
 
   g_return_val_if_fail (num_surfaces > 0, FALSE);
+  /* must have modifiers when num_modifiers > 0 */
+  g_return_val_if_fail (num_modifiers == 0 || modifiers, FALSE);
 
   if (fourcc > 0) {
     /* *INDENT-OFF* */
