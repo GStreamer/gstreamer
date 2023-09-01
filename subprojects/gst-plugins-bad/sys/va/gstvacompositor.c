@@ -83,6 +83,7 @@ struct _GstVaCompositorPad
   gdouble alpha;
 
   GstCaps *sinkpad_caps;
+  GstVideoInfo sinkpad_info;
   union
   {
     GstVideoInfo in_info;
@@ -807,7 +808,6 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
   GstCaps *caps;
-  GstVideoInfo info;
   guint usage_hint;
 
   if (pad->pool)
@@ -815,11 +815,12 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
 
   gst_allocation_params_init (&params);
 
-  caps = gst_pad_get_current_caps (GST_PAD (pad));
+  caps = gst_caps_copy (pad->sinkpad_caps);
   if (!caps)
     return NULL;
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+
+  if (!gst_va_base_convert_caps_to_va (caps)) {
+    GST_ERROR_OBJECT (self, "Invalid caps %" GST_PTR_FORMAT, caps);
     gst_caps_unref (caps);
     return NULL;
   }
@@ -837,14 +838,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
     return NULL;
   }
 
-  if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
-    GstVideoInfoDmaDrm dma_info;
-
-    gst_va_dmabuf_allocator_get_format (allocator, &dma_info, NULL);
-    info = dma_info.vinfo;
-  } else if (GST_IS_VA_ALLOCATOR (allocator)) {
-    gst_va_allocator_get_format (allocator, &info, NULL, NULL);
-  }
+  gst_va_allocator_get_format (allocator, &pad->sinkpad_info, NULL, NULL);
 
   gst_object_unref (allocator);
 
@@ -861,6 +855,7 @@ static GstFlowReturn
 gst_va_compositor_import_buffer (GstVaCompositor * self,
     GstVaCompositorPad * pad, GstBuffer * inbuf, GstBuffer ** buf)
 {
+  /* Already hold GST_OBJECT_LOCK */
   GstVaBufferImporter importer = {
     .element = GST_ELEMENT_CAST (self),
 #ifndef GST_DISABLE_GST_DEBUG
@@ -870,21 +865,9 @@ gst_va_compositor_import_buffer (GstVaCompositor * self,
     .entrypoint = VAEntrypointVideoProc,
     .get_sinkpad_pool = _get_sinkpad_pool,
     .pool_data = pad,
+    .in_drm_info = &pad->in_drm_info,
+    .sinkpad_info = &pad->sinkpad_info,
   };
-  GstCaps *caps;
-  GstVideoInfo info;
-
-  caps = gst_pad_get_current_caps (GST_PAD (pad));
-  if (!caps)
-    return GST_FLOW_ERROR;
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (caps);
-    return GST_FLOW_ERROR;
-  }
-  gst_caps_unref (caps);
-
-  importer.in_info = importer.sinkpad_info = &info;
 
   return gst_va_buffer_importer_import (&importer, inbuf, buf);
 }
