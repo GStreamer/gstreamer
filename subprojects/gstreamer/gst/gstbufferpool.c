@@ -1217,6 +1217,14 @@ remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
   if (!GST_META_FLAG_IS_SET (*meta, GST_META_FLAG_POOLED)) {
     GST_META_FLAG_UNSET (*meta, GST_META_FLAG_LOCKED);
     *meta = NULL;
+  } else {
+    const GstMetaInfo *info = (*meta)->info;
+
+    /* If we can clear it, don't free it */
+    if (info->transform_func) {
+      info->transform_func (NULL, *meta, buffer, _gst_meta_transform_clear,
+          NULL);
+    }
   }
   return TRUE;
 }

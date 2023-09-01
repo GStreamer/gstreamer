@@ -80,6 +80,7 @@ typedef enum {
  * @flag: the #GstMetaFlags to clear.
  *
  * Clears a metadata flag.
+ *
  */
 #define GST_META_FLAG_UNSET(meta,flag)         (GST_META_FLAGS (meta) &= ~(flag))
 
@@ -188,6 +189,28 @@ typedef struct {
   gsize offset;
   gsize size;
 } GstMetaTransformCopy;
+
+/**
+ * gst_meta_transform_clear:
+ *
+ * GQuark for the "gst-clear" transform.
+ *
+ * Since: 1.24
+ */
+
+GST_API GQuark _gst_meta_transform_clear;
+
+/**
+ * GST_META_TRANSFORM_IS_CLEAR:
+ * @type: a transform type
+ *
+ * Check if the transform type is clearing the content of the meta without
+ * freeing it.
+ *
+ * Since: 1.24
+ */
+#define GST_META_TRANSFORM_IS_CLEAR(type) ((type) == _gst_meta_transform_clear)
+
 
 /**
  * GstMetaTransformFunction:
