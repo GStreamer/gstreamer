@@ -28552,6 +28552,18 @@
                         "type": "gchararray",
                         "writable": true
                     },
+                    "enable-navigation-events": {
+                        "blurb": "When enabled, navigation events are handled",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "endx": {
                         "blurb": "X coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
                         "conditionally-available": false,

@@ -104,6 +104,7 @@ option('ximagesrc', type : 'feature', value : 'auto', description : 'X11 ximages
 option('ximagesrc-xshm', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XSHM support)')
 option('ximagesrc-xfixes', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XFixes support)')
 option('ximagesrc-xdamage', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (XDamage support)')
+option('ximagesrc-navigation', type : 'feature', value : 'auto', description : 'X11 ximagesrc plugin (Navigation support)')
 
 # v4l2 plugin options
 option('v4l2', type : 'feature', value : 'auto', description : 'Build video4linux2 source/sink plugin')
