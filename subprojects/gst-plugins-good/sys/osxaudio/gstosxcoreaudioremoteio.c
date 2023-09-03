@@ -126,6 +126,7 @@ static gboolean
 gst_core_audio_select_device_impl (GstCoreAudio * core_audio)
 {
   /* No device selection in iOS */
+  core_audio->is_default = TRUE;
   return TRUE;
 }
 

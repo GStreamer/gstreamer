@@ -93,7 +93,7 @@ gst_osx_audio_device_provider_init (GstOsxAudioDeviceProvider * provider)
 static GstOsxAudioDevice *
 gst_osx_audio_device_provider_probe_device (GstOsxAudioDeviceProvider *
     provider, AudioDeviceID device_id, const gchar * device_name,
-    GstOsxAudioDeviceType type)
+    GstOsxAudioDeviceType type, gboolean is_default)
 {
   GstOsxAudioDevice *device = NULL;
   GstCoreAudio *core_audio;
@@ -101,6 +101,7 @@ gst_osx_audio_device_provider_probe_device (GstOsxAudioDeviceProvider *
   core_audio = gst_core_audio_new (NULL);
   core_audio->is_src = type == GST_OSX_AUDIO_DEVICE_TYPE_SOURCE ? TRUE : FALSE;
   core_audio->device_id = device_id;
+  core_audio->is_default = is_default;
 
   if (!gst_core_audio_open (core_audio)) {
     GST_ERROR ("CoreAudio device could not be opened");
@@ -118,42 +119,66 @@ done:
 }
 
 static inline gchar *
-_audio_device_get_name (AudioDeviceID device_id, gboolean output)
+_audio_device_get_cfstring_prop (AudioDeviceID device_id, gboolean output,
+    AudioObjectPropertyElement prop_id)
 {
   OSStatus status = noErr;
   UInt32 propertySize = 0;
-  gchar *device_name = NULL;
-  AudioObjectPropertyScope prop_scope;
+  CFStringRef prop_val;
+  gchar *result = NULL;
 
-  AudioObjectPropertyAddress deviceNameAddress = {
-    kAudioDevicePropertyDeviceName,
+  AudioObjectPropertyAddress propAddress = {
+    prop_id,
     kAudioDevicePropertyScopeOutput,
     kAudioObjectPropertyElementMain
   };
 
-  prop_scope = output ? kAudioDevicePropertyScopeOutput :
+  propAddress.mScope = output ? kAudioDevicePropertyScopeOutput :
       kAudioDevicePropertyScopeInput;
-
-  deviceNameAddress.mScope = prop_scope;
 
   /* Get the length of the device name */
   status = AudioObjectGetPropertyDataSize (device_id,
-      &deviceNameAddress, 0, NULL, &propertySize);
+      &propAddress, 0, NULL, &propertySize);
   if (status != noErr) {
     goto beach;
   }
 
-  /* Get the name of the device */
-  device_name = (gchar *) g_malloc (propertySize);
+  /* Get the requested property */
   status = AudioObjectGetPropertyData (device_id,
-      &deviceNameAddress, 0, NULL, &propertySize, device_name);
+      &propAddress, 0, NULL, &propertySize, &prop_val);
   if (status != noErr) {
-    g_free (device_name);
-    device_name = NULL;
+    goto beach;
   }
 
+  /* Convert to UTF-8 C String */
+  CFIndex prop_len = CFStringGetLength (prop_val);
+  CFIndex max_size =
+      CFStringGetMaximumSizeForEncoding (prop_len, kCFStringEncodingUTF8) + 1;
+  result = g_malloc (max_size);
+
+  if (!CFStringGetCString (prop_val, result, max_size, kCFStringEncodingUTF8)) {
+    g_free (result);
+    result = NULL;
+  }
+
+  CFRelease (prop_val);
+
 beach:
-  return device_name;
+  return result;
+}
+
+static inline gchar *
+_audio_device_get_name (AudioDeviceID device_id, gboolean output)
+{
+  return _audio_device_get_cfstring_prop (device_id, output,
+      kAudioObjectPropertyName);
+}
+
+static inline gchar *
+_audio_device_get_uid (AudioDeviceID device_id, gboolean output)
+{
+  return _audio_device_get_cfstring_prop (device_id, output,
+      kAudioDevicePropertyDeviceUID);
 }
 
 static inline gboolean
@@ -208,6 +233,35 @@ _audio_device_has_input (AudioDeviceID device_id)
   }
 
   return TRUE;
+}
+
+
+static inline AudioDeviceID
+_audio_system_get_default_device (gboolean output)
+{
+  OSStatus status = noErr;
+  UInt32 propertySize = sizeof (AudioDeviceID);
+  AudioDeviceID device_id = kAudioDeviceUnknown;
+  AudioObjectPropertySelector prop_selector;
+
+  prop_selector = output ? kAudioHardwarePropertyDefaultOutputDevice :
+      kAudioHardwarePropertyDefaultInputDevice;
+
+  AudioObjectPropertyAddress defaultDeviceAddress = {
+    prop_selector,
+    kAudioObjectPropertyScopeGlobal,
+    kAudioObjectPropertyElementMain
+  };
+
+  status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
+      &defaultDeviceAddress, 0, NULL, &propertySize, &device_id);
+  if (status != noErr) {
+    GST_ERROR ("failed getting default output device: %d", (int) status);
+  }
+
+  GST_DEBUG ("Default device id: %u", (unsigned) device_id);
+
+  return device_id;
 }
 
 static inline AudioDeviceID *
@@ -320,12 +374,15 @@ gst_osx_audio_device_provider_probe_internal (GstOsxAudioDeviceProvider * self,
     type = GST_OSX_AUDIO_DEVICE_TYPE_SINK;
   }
 
+  AudioDeviceID default_device = _audio_system_get_default_device (!is_src);
+
   for (i = 0; i < ndevices; i++) {
     gchar *device_name;
 
     if ((device_name = _audio_device_get_name (osx_devices[i], FALSE))) {
       gboolean has_output = _audio_device_has_output (osx_devices[i]);
       gboolean has_input = _audio_device_has_input (osx_devices[i]);
+      gboolean is_default = (default_device == osx_devices[i]);
 
       if (is_src && !has_input) {
         goto cleanup;
@@ -335,7 +392,7 @@ gst_osx_audio_device_provider_probe_internal (GstOsxAudioDeviceProvider * self,
 
       device =
           gst_osx_audio_device_provider_probe_device (self, osx_devices[i],
-          device_name, type);
+          device_name, type, is_default);
       if (device) {
         if (is_src) {
           GST_DEBUG ("Input Device ID: %u Name: %s",
@@ -553,9 +610,19 @@ gst_osx_audio_device_new (AudioDeviceID device_id, const gchar * device_name,
   const gchar *element_name = NULL;
   const gchar *klass = NULL;
   GstCaps *template_caps, *caps;
+  GstStructure *props = gst_structure_new_empty ("properties");
 
   g_return_val_if_fail (device_id > 0, NULL);
   g_return_val_if_fail (device_name, NULL);
+
+  gst_structure_set (props, "is-default", G_TYPE_BOOLEAN,
+      core_audio->is_default, NULL);
+
+  gchar *uid = _audio_device_get_uid (device_id, !core_audio->is_src);
+  if (uid != NULL) {
+    gst_structure_set (props, "unique-id", G_TYPE_STRING, uid, NULL);
+    g_free (uid);
+  }
 
   switch (type) {
     case GST_OSX_AUDIO_DEVICE_TYPE_SOURCE:
@@ -582,8 +649,8 @@ gst_osx_audio_device_new (AudioDeviceID device_id, const gchar * device_name,
   }
 
   gstdev = g_object_new (GST_TYPE_OSX_AUDIO_DEVICE, "device-id",
-      device_id, "display-name", device_name, "caps", caps, "device-class",
-      klass, NULL);
+      device_id, "display-name", device_name, "caps", caps,
+      "properties", props, "device-class", klass, NULL);
 
   gstdev->element = element_name;
 
