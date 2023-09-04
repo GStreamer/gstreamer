@@ -3244,6 +3244,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
 {
   GstFlowReturn flow_return;
   GstClockTime buf_pts;
+  GstClockTime buf_duration;
 
   GST_TRACE_OBJECT (aggpad,
       "entering chain internal with %" GST_PTR_FORMAT, buffer);
@@ -3256,6 +3257,7 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
   PAD_UNLOCK (aggpad);
 
   buf_pts = GST_BUFFER_PTS (buffer);
+  buf_duration = GST_BUFFER_DURATION (buffer);
 
   for (;;) {
     SRC_LOCK (self);
@@ -3312,6 +3314,9 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
         if (aggpad->priv->head_segment.format == GST_FORMAT_TIME) {
           start_time = buf_pts;
           if (start_time != -1) {
+            if (aggpad->priv->head_segment.rate < 0.0 && buf_duration != -1) {
+              start_time += buf_duration;
+            }
             start_time = MAX (start_time, aggpad->priv->head_segment.start);
             start_time =
                 gst_segment_to_running_time (&aggpad->priv->head_segment,
