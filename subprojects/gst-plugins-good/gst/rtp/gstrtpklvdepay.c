@@ -108,6 +108,9 @@ gst_rtp_klv_depay_class_init (GstRtpKlvDepayClass * klass)
 static void
 gst_rtp_klv_depay_init (GstRtpKlvDepay * klvdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (klvdepay), TRUE);
+
   klvdepay->adapter = gst_adapter_new ();
 }
 
@@ -261,6 +264,7 @@ gst_rtp_klv_depay_process_data (GstRtpKlvDepay * klvdepay)
 bad_klv_packet:
   {
     GST_WARNING_OBJECT (klvdepay, "bad KLV packet, dropping");
+    gst_rtp_base_depayload_flush (GST_RTP_BASE_DEPAYLOAD (klvdepay), TRUE);
     gst_rtp_klv_depay_reset (klvdepay);
     return NULL;
   }
@@ -357,6 +361,8 @@ gst_rtp_klv_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 
   if (marker)
     outbuf = gst_rtp_klv_depay_process_data (klvdepay);
+  else if (outbuf)
+    gst_rtp_base_depayload_delayed (depayload);
 
 done:
 
