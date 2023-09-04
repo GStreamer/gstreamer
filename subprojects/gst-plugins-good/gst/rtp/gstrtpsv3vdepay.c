@@ -98,6 +98,9 @@ gst_rtp_sv3v_depay_class_init (GstRtpSV3VDepayClass * klass)
 static void
 gst_rtp_sv3v_depay_init (GstRtpSV3VDepay * rtpsv3vdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpsv3vdepay), TRUE);
+
   rtpsv3vdepay->adapter = gst_adapter_new ();
 }
 
@@ -281,6 +284,7 @@ bad_packet:
   {
     GST_ELEMENT_WARNING (rtpsv3vdepay, STREAM, DECODE,
         (NULL), ("Packet was too short"));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 }
