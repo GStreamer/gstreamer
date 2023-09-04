@@ -1,7 +1,7 @@
 sources = [
   'gstplugin.cc',
   'gstqt6element.cc',
-  'gstqsg6glnode.cc',
+  'gstqsg6material.cc',
   'gstqt6glutility.cc',
   'gstqml6glsink.cc',
   'gstqml6glsrc.cc',
@@ -14,9 +14,14 @@ sources = [
 
 moc_headers = [
   'qt6glitem.h',
-  'gstqsg6glnode.h',
   'qt6glwindow.h',
   'qt6glrenderer.h',
+]
+
+shader_sources = [
+  'vertex.vert',
+  'RGBA.frag',
+  'YUV_TRIPLANAR.frag',
 ]
 
 qt6qml_dep = dependency('', required: false)
@@ -50,7 +55,7 @@ if not qt6_mod.has_tools(method: qt6_method)
 endif
 
 qt6qml_dep = dependency('qt6', modules : ['Core', 'Gui', 'Qml', 'Quick'],
-                        method: qt6_method, required: qt6_option, static: host_system == 'ios')
+                        method: qt6_method, required: qt6_option, static: host_system == 'ios', private_headers: true)
 if not qt6qml_dep.found()
   subdir_done()
 endif
@@ -153,7 +158,24 @@ endif
 if qt6_option.require(have_qt_windowing).allowed()
   # Build it!
   moc_files = qt6_mod.preprocess(moc_headers : moc_headers, method: qt6_method)
-  gstqml6gl = library('gstqml6', sources, moc_files,
+  # TODO: dist backup qsb shaders?
+  qsb = find_program('qsb-qt6', 'qsb')
+  shaders = []
+  foreach shader: shader_sources
+    qsb_shader = shader + '.qsb'
+    dist_shader = shader + '-dist.qsb'
+
+    compiled_shader = custom_target(qsb_shader,
+      input: shader,
+      output: qsb_shader,
+      command: [qsb, '--glsl=100 es,120,330', '--batchable', '--output', '@OUTPUT@', '@INPUT@']
+    )
+    shaders += [compiled_shader]
+  endforeach
+  resource_file = configure_file(input: 'resources.qrc', output: 'resources.qrc', copy: true)
+  qresources = qt6_mod.compile_resources(sources: resource_file, method: qt6_method)
+
+  gstqml6gl = library('gstqml6', sources, moc_files, qresources,
     cpp_args : gst_plugins_good_args + qt_defines,
     link_args : noseh_link_args,
     include_directories: [configinc, libsinc],

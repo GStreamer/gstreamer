@@ -26,14 +26,13 @@
 
 #include <gst/video/video.h>
 #include "qt6glitem.h"
-#include "gstqsg6glnode.h"
 #include "gstqt6glutility.h"
+#include "gstqsg6material.h"
 
 #include <QtCore/QMutexLocker>
 #include <QtCore/QPointer>
 #include <QtGui/QGuiApplication>
 #include <QtQuick/QQuickWindow>
-#include <QtQuick/QSGSimpleTextureNode>
 
 /**
  * SECTION:Qt6GLVideoItem
@@ -88,8 +87,6 @@ struct _Qt6GLVideoItemPrivate
    * FIXME: Ideally we would use fences for this but there seems to be no
    * way to reliably "try wait" on a fence */
   GQueue potentially_unbound_buffers;
-
-  GstQSG6OpenGLNode *m_node;
 };
 
 Qt6GLVideoItem::Qt6GLVideoItem()
@@ -276,31 +273,54 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     UpdatePaintNodeData * updatePaintNodeData)
 {
   GstBuffer *old_buffer;
+  GstQSGMaterial *tex = nullptr;
+  QSGGeometry *geometry = nullptr;
+  bool was_bound = false;
 
   if (!this->priv->initted)
     return oldNode;
 
-  GstQSG6OpenGLNode *texNode = static_cast<GstQSG6OpenGLNode *> (oldNode);
+  QSGGeometryNode *texNode = static_cast<QSGGeometryNode *> (oldNode);
   GstVideoRectangle src, dst, result;
 
   g_mutex_lock (&this->priv->lock);
 
   GST_TRACE ("%p updatePaintNode", this);
 
+  if (!this->priv->caps) {
+    GST_LOG ("%p no caps yet", this);
+    g_mutex_unlock (&this->priv->lock);
+    return NULL;
+  }
+
   if (gst_gl_context_get_current() == NULL)
     gst_gl_context_activate (this->priv->other_context, TRUE);
 
-  if (!texNode) {
-    bool is_smooth = this->smooth ();
-    texNode = new GstQSG6OpenGLNode (this);
-    texNode->setFiltering (is_smooth ? QSGTexture::Filtering::Linear :
-        QSGTexture::Filtering::Nearest);
-    this->priv->m_node = texNode;
+  if (texNode) {
+    tex = static_cast<GstQSGMaterial *>(texNode->material());
+    if (tex && !tex->compatibleWith(&this->priv->v_info)) {
+      delete texNode;
+      texNode = nullptr;
+    }
   }
 
-  if ((old_buffer = texNode->getBuffer())) {
+  if (!texNode) {
+    bool is_smooth = this->smooth ();
+    texNode = new QSGGeometryNode();
+    geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
+    texNode->setGeometry(geometry);
+    tex = GstQSGMaterial::new_for_format(GST_VIDEO_INFO_FORMAT (&this->priv->v_info));
+    tex->setFiltering(is_smooth ? QSGTexture::Filtering::Linear :
+        QSGTexture::Filtering::Nearest);
+    texNode->setMaterial(tex);
+  }
+
+  if ((old_buffer = tex->getBuffer(&was_bound))) {
     if (old_buffer == this->priv->buffer) {
       /* same buffer */
+      gst_buffer_unref (old_buffer);
+    } else if (!was_bound) {
+      GST_TRACE ("old buffer %p was not bound yet, unreffing", old_buffer);
       gst_buffer_unref (old_buffer);
     } else {
       GstBuffer *tmp_buffer;
@@ -326,8 +346,8 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     old_buffer = NULL;
   }
 
-  texNode->setCaps (this->priv->caps);
-  texNode->setBuffer (this->priv->buffer);
+  tex->setCaps (this->priv->caps);
+  tex->setBuffer (this->priv->buffer);
 
   if (this->priv->force_aspect_ratio && this->priv->caps) {
     src.w = this->priv->display_width;
@@ -346,7 +366,10 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     result.h = boundingRect().height();
   }
 
-  texNode->setRect (QRectF (result.x, result.y, result.w, result.h));
+  geometry = texNode->geometry();
+  QRectF rect(result.x, result.y, result.w, result.h);
+  QRectF sourceRect(0, 0, 1, 1);
+  QSGGeometry::updateTexturedRectGeometry(geometry, rect, sourceRect);
 
   g_mutex_unlock (&this->priv->lock);
 
@@ -713,7 +736,6 @@ Qt6GLVideoItem::onSceneGraphInitialized ()
 void
 Qt6GLVideoItem::onSceneGraphInvalidated ()
 {
-  this->priv->m_node = nullptr;
   GST_FIXME ("%p scene graph invalidated", this);
 }
 
@@ -790,13 +812,11 @@ Qt6GLVideoItem::handleWindowChanged (QQuickWindow * win)
     this->priv->qt_context = NULL;
     this->priv->initted = FALSE;
   }
-  this->priv->m_node = nullptr;
 }
 
 void
 Qt6GLVideoItem::releaseResources()
 {
-  this->priv->m_node = nullptr;
 }
 
 gboolean
