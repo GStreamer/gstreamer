@@ -3190,6 +3190,10 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
         if (aggpad->priv->head_segment.format == GST_FORMAT_TIME) {
           start_time = buf_pts;
           if (start_time != -1) {
+            GstClockTime buf_duration = GST_BUFFER_DURATION (buffer);
+            if (aggpad->priv->head_segment.rate < 0.0 && buf_duration != -1) {
+              start_time += buf_duration;
+            }
             start_time = MAX (start_time, aggpad->priv->head_segment.start);
             start_time =
                 gst_segment_to_running_time (&aggpad->priv->head_segment,
