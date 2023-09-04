@@ -29,6 +29,14 @@
 
 #include <drm_fourcc.h>
 
+/* This can be removed once we can bump the required wl_client_dep,
+ * which again is blocked by a CI image update, see
+ * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5275
+ */
+#ifndef WL_SHM_FORMAT_P010
+#define WL_SHM_FORMAT_P010 DRM_FORMAT_P010
+#endif
+
 #define GST_CAT_DEFAULT gst_wl_videoformat_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
@@ -74,6 +82,7 @@ static const wl_VideoFormat wl_formats[] = {
   {WL_SHM_FORMAT_NV21, DRM_FORMAT_NV21, GST_VIDEO_FORMAT_NV21},
   {WL_SHM_FORMAT_NV16, DRM_FORMAT_NV16, GST_VIDEO_FORMAT_NV16},
   {WL_SHM_FORMAT_NV61, DRM_FORMAT_NV61, GST_VIDEO_FORMAT_NV61},
+  {WL_SHM_FORMAT_P010, DRM_FORMAT_P010, GST_VIDEO_FORMAT_P010_10LE},
   {WL_SHM_FORMAT_YUV410, DRM_FORMAT_YUV410, GST_VIDEO_FORMAT_YUV9},
   {WL_SHM_FORMAT_YVU410, DRM_FORMAT_YVU410, GST_VIDEO_FORMAT_YVU9},
   {WL_SHM_FORMAT_YUV411, DRM_FORMAT_YUV411, GST_VIDEO_FORMAT_Y41B},
