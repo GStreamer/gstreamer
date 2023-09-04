@@ -134,6 +134,9 @@ static void
 gst_rtp_h263p_depay_init (GstRtpH263PDepay * rtph263pdepay)
 {
   rtph263pdepay->adapter = gst_adapter_new ();
+
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtph263pdepay), TRUE);
 }
 
 static void
@@ -447,16 +450,19 @@ too_small:
   {
     GST_ELEMENT_WARNING (rtph263pdepay, STREAM, DECODE,
         ("Packet payload was too small"), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 waiting_start:
   {
     GST_DEBUG_OBJECT (rtph263pdepay, "waiting for picture start");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 empty_frame:
   {
     GST_WARNING_OBJECT (rtph263pdepay, "Depayloaded frame is empty, dropping");
+    gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
 }
