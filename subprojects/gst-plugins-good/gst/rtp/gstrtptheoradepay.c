@@ -116,6 +116,8 @@ gst_rtp_theora_depay_class_init (GstRtpTheoraDepayClass * klass)
 static void
 gst_rtp_theora_depay_init (GstRtpTheoraDepay * rtptheoradepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtptheoradepay), TRUE);
   rtptheoradepay->adapter = gst_adapter_new ();
 }
 
@@ -422,10 +424,10 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
 {
   GstRtpTheoraDepay *rtptheoradepay;
   GstBuffer *outbuf;
-  GstFlowReturn ret;
   gint payload_len;
   GstMapInfo map;
   GstBuffer *payload_buffer = NULL;
+  GstBufferList *outbufs = NULL;
   guint8 *payload;
   guint32 header, ident;
   guint8 F, TDT, packets;
@@ -491,12 +493,15 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
     if (F == 1) {
       /* if we start a packet, clear adapter and start assembling. */
       gst_adapter_clear (rtptheoradepay->adapter);
+      gst_rtp_base_depayload_flush (depayload, TRUE);
       GST_DEBUG_OBJECT (depayload, "start assemble");
       rtptheoradepay->assembling = TRUE;
     }
 
-    if (!rtptheoradepay->assembling)
+    if (!rtptheoradepay->assembling) {
+      gst_rtp_base_depayload_dropped (depayload);
       goto no_output;
+    }
 
     /* skip header and length. */
     vdata = gst_rtp_buffer_get_payload_subbuffer (rtp, 6, -1);
@@ -525,6 +530,8 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
   /* we not assembling anymore now */
   rtptheoradepay->assembling = FALSE;
   gst_adapter_clear (rtptheoradepay->adapter);
+
+  outbufs = gst_buffer_list_new ();
 
   /* payload now points to a length with that many theora data bytes.
    * Iterate over the packets and send them out.
@@ -562,6 +569,12 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
     /* handle in-band configuration */
     if (G_UNLIKELY (TDT == 1)) {
       GST_DEBUG_OBJECT (rtptheoradepay, "in-band configuration");
+
+      /* push all buffers we found so far and clear the cached header
+         extensions if any */
+      gst_rtp_base_depayload_push_list (depayload, outbufs);
+      gst_rtp_base_depayload_flush (depayload, FALSE);
+
       if (!gst_rtp_theora_depay_parse_inband_configuration (rtptheoradepay,
               ident, payload, payload_len, length))
         goto invalid_configuration;
@@ -584,10 +597,10 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload,
     /* make sure to read next length */
     length = 0;
 
-    ret = gst_rtp_base_depayload_push (depayload, outbuf);
-    if (ret != GST_FLOW_OK)
-      break;
+    gst_buffer_list_add (outbufs, outbuf);
   }
+
+  gst_rtp_base_depayload_push_list (depayload, outbufs);
 
   if (rtptheoradepay->needs_keyframe)
     goto request_keyframe;
@@ -607,23 +620,30 @@ switch_failed:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Could not switch codebooks"));
+    gst_rtp_base_depayload_dropped (depayload);
     goto request_config;
   }
 packet_short:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Packet was too short (%d < 4)", payload_len));
+    gst_rtp_base_depayload_dropped (depayload);
     goto request_keyframe;
   }
 ignore_reserved:
   {
     GST_WARNING_OBJECT (rtptheoradepay, "reserved TDT ignored");
+    gst_rtp_base_depayload_dropped (depayload);
     goto out;
   }
 length_short:
   {
     GST_ELEMENT_WARNING (rtptheoradepay, STREAM, DECODE,
         (NULL), ("Packet contains invalid data"));
+    /* there may already be some buffers to push so do that before
+       leaving */
+    gst_rtp_base_depayload_push_list (depayload, outbufs);
+    gst_rtp_base_depayload_flush (depayload, FALSE);
     goto request_keyframe;
   }
 invalid_configuration:
