@@ -849,7 +849,8 @@ gst_h265_decoder_process_slice (GstH265Decoder * self, GstH265Slice * slice)
 
     picture = gst_h265_picture_new ();
     /* This allows accessing the frame from the picture. */
-    picture->system_frame_number = priv->current_frame->system_frame_number;
+    GST_CODEC_PICTURE_FRAME_NUMBER (picture) =
+        priv->current_frame->system_frame_number;
 
     priv->current_picture = picture;
 
@@ -1714,12 +1715,12 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
   priv->last_output_poc = picture->pic_order_cnt;
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
   if (!frame) {
     GST_ERROR_OBJECT (self,
         "No available codec frame with frame number %d",
-        picture->system_frame_number);
+        GST_CODEC_PICTURE_FRAME_NUMBER (picture));
     UPDATE_FLOW_RETURN (ret, GST_FLOW_ERROR);
 
     gst_h265_picture_unref (picture);
@@ -1747,7 +1748,7 @@ gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush)
   if (!flush) {
     while ((picture = gst_h265_dpb_bump (priv->dpb, TRUE)) != NULL) {
       GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
-          picture->system_frame_number);
+          GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
       if (frame)
         gst_video_decoder_release_frame (decoder, frame);
@@ -1855,8 +1856,8 @@ gst_h265_decoder_start_current_picture (GstH265Decoder * self)
   /* If subclass didn't update output state at this point,
    * marking this picture as a discont and stores current input state */
   if (priv->input_state_changed) {
-    priv->current_picture->discont_state =
-        gst_video_codec_state_ref (self->input_state);
+    gst_h265_picture_set_discont_state (priv->current_picture,
+        self->input_state);
     priv->input_state_changed = FALSE;
   }
 
@@ -1907,7 +1908,7 @@ gst_h265_decoder_finish_picture (GstH265Decoder * self,
   /* This picture is decode only, drop corresponding frame */
   if (!picture->output_flag) {
     GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
-        picture->system_frame_number);
+        GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
     gst_video_decoder_release_frame (decoder, frame);
   }

@@ -237,8 +237,8 @@ gst_va_h265_dec_output_picture (GstH265Decoder * decoder,
 
   gst_buffer_replace (&frame->output_buffer, va_pic->gstbuffer);
 
-  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state,
-      picture->buffer_flags);
+  ret = gst_va_base_dec_process_output (base, frame,
+      GST_CODEC_PICTURE (picture)->discont_state, picture->buffer_flags);
   gst_h265_picture_unref (picture);
 
   if (ret)

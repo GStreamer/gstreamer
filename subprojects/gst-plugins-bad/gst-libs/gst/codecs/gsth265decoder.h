@@ -101,7 +101,7 @@ struct _GstH265DecoderClass
    *
    * Optional. Called whenever new #GstH265Picture is created.
    * Subclass can set implementation specific user data
-   * on the #GstH265Picture via gst_h265_picture_set_user_data()
+   * on the #GstH265Picture via gst_h265_picture_set_user_data
    */
   GstFlowReturn (*new_picture)      (GstH265Decoder * decoder,
                                      GstVideoCodecFrame * frame,

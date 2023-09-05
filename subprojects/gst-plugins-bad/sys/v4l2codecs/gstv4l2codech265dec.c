@@ -814,7 +814,7 @@ lookup_dpb_index (struct v4l2_hevc_dpb_entry dpb[16], GstH265Picture * ref_pic)
   if (!ref_pic)
     return 0xff;
 
-  ref_ts = (guint64) ref_pic->system_frame_number * 1000;
+  ref_ts = (guint64) GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * 1000;
   for (i = 0; i < 16; i++) {
     if (dpb[i].timestamp == ref_ts)
       return i;
@@ -1010,7 +1010,7 @@ gst_v4l2_codec_h265_dec_fill_decode_params (GstV4l2CodecH265Dec * self,
        * The reference is multiplied by 1000 because it's wassed as micro
        * seconds and this TS is nanosecond.
        */
-      .timestamp = (guint64) ref_pic->system_frame_number * 1000,
+      .timestamp = (guint64) GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * 1000,
       .flags = ref_pic->long_term ? V4L2_HEVC_DPB_ENTRY_LONG_TERM_REFERENCE : 0,
       .field_pic = ref_pic->pic_struct,
       .pic_order_cnt_val = ref_pic->pic_order_cnt,
@@ -1191,21 +1191,23 @@ gst_v4l2_codec_h265_dec_output_picture (GstH265Decoder * decoder,
   GstV4l2CodecH265Dec *self = GST_V4L2_CODEC_H265_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_h265_picture_get_user_data (picture);
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gint ret;
 
-  if (picture->discont_state) {
+  if (codec_picture->discont_state) {
     if (!gst_video_decoder_negotiate (vdec)) {
       GST_ERROR_OBJECT (vdec, "Could not re-negotiate with updated state");
       return FALSE;
     }
   }
 
-  GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
+  GST_DEBUG_OBJECT (self, "Output picture %u",
+      codec_picture->system_frame_number);
 
   ret = gst_v4l2_request_set_done (request);
   if (ret == 0) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Decoding frame %u took too long", picture->system_frame_number),
+        ("Decoding frame %u took too long", codec_picture->system_frame_number),
         (NULL));
     goto error;
   } else if (ret < 0) {
@@ -1217,7 +1219,8 @@ gst_v4l2_codec_h265_dec_output_picture (GstH265Decoder * decoder,
 
   if (gst_v4l2_request_failed (request)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+        ("Failed to decode frame %u", codec_picture->system_frame_number),
+        (NULL));
     goto error;
   }
 
@@ -1311,16 +1314,17 @@ gst_v4l2_codec_h265_dec_submit_bitstream (GstV4l2CodecH265Dec * self,
         self->bitstream);
   } else {
     GstVideoCodecFrame *frame;
+    guint32 system_frame_number = GST_CODEC_PICTURE_FRAME_NUMBER (picture);
 
     frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-        picture->system_frame_number);
+        system_frame_number);
     g_return_val_if_fail (frame, FALSE);
 
     if (!gst_v4l2_codec_h265_dec_ensure_output_buffer (self, frame))
       goto done;
 
     request = gst_v4l2_decoder_alloc_request (self->decoder,
-        picture->system_frame_number, self->bitstream, frame->output_buffer);
+        system_frame_number, self->bitstream, frame->output_buffer);
 
     gst_video_codec_frame_unref (frame);
   }

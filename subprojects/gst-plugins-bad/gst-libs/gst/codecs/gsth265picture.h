@@ -27,6 +27,7 @@
 
 #include <gst/gst.h>
 #include <gst/codecs/codecs-prelude.h>
+#include <gst/codecs/gstcodecpicture.h>
 #include <gst/codecparsers/gsth265parser.h>
 #include <gst/video/video.h>
 
@@ -60,12 +61,9 @@ struct _GstH265Slice
 struct _GstH265Picture
 {
   /*< private >*/
-  GstMiniObject parent;
+  GstCodecPicture parent;
 
   GstH265SliceType type;
-
-  /* From GstVideoCodecFrame */
-  guint32 system_frame_number;
 
   gint pic_order_cnt;
   gint pic_order_cnt_msb;
@@ -89,12 +87,6 @@ struct _GstH265Picture
   guint8 duplicate_flag;
 
   GstVideoBufferFlags buffer_flags;
-
-  /* decoder input state if this picture is discont point */
-  GstVideoCodecState *discont_state;
-
-  gpointer user_data;
-  GDestroyNotify notify;
 };
 
 GST_CODECS_API
@@ -132,13 +124,27 @@ gst_clear_h265_picture (GstH265Picture ** picture)
   }
 }
 
-GST_CODECS_API
-void gst_h265_picture_set_user_data (GstH265Picture * picture,
-                                     gpointer user_data,
-                                     GDestroyNotify notify);
+static inline void
+gst_h265_picture_set_user_data (GstH265Picture * picture, gpointer user_data,
+    GDestroyNotify notify)
+{
+  gst_codec_picture_set_user_data (GST_CODEC_PICTURE (picture),
+      user_data, notify);
+}
 
-GST_CODECS_API
-gpointer gst_h265_picture_get_user_data (GstH265Picture * picture);
+static inline gpointer
+gst_h265_picture_get_user_data (GstH265Picture * picture)
+{
+  return gst_codec_picture_get_user_data (GST_CODEC_PICTURE (picture));
+}
+
+static inline void
+gst_h265_picture_set_discont_state (GstH265Picture * picture,
+    GstVideoCodecState * discont_state)
+{
+  gst_codec_picture_set_discont_state (GST_CODEC_PICTURE (picture),
+      discont_state);
+}
 
 /*******************
  * GstH265Dpb *

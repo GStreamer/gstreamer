@@ -22,23 +22,12 @@
 #endif
 
 #include "gsth265picture.h"
+#include "gstcodecpicture-private.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_h265_decoder_debug);
 #define GST_CAT_DEFAULT gst_h265_decoder_debug
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstH265Picture, gst_h265_picture);
-
-static void
-_gst_h265_picture_free (GstH265Picture * picture)
-{
-  if (picture->notify)
-    picture->notify (picture->user_data);
-
-  if (picture->discont_state)
-    gst_video_codec_state_unref (picture->discont_state);
-
-  g_free (picture);
-}
 
 /**
  * gst_h265_picture_new:
@@ -62,49 +51,9 @@ gst_h265_picture_new (void)
 
   gst_mini_object_init (GST_MINI_OBJECT_CAST (pic), 0,
       GST_TYPE_H265_PICTURE, NULL, NULL,
-      (GstMiniObjectFreeFunction) _gst_h265_picture_free);
+      (GstMiniObjectFreeFunction) gst_codec_picture_free);
 
   return pic;
-}
-
-/**
- * gst_h265_picture_set_user_data:
- * @picture: a #GstH265Picture
- * @user_data: (nullable): private data
- * @notify: (closure user_data): a #GDestroyNotify
- *
- * Sets @user_data on the picture and the #GDestroyNotify that will be called when
- * the picture is freed.
- *
- * If a @user_data was previously set, then the previous set @notify will be called
- * before the @user_data is replaced.
- */
-void
-gst_h265_picture_set_user_data (GstH265Picture * picture, gpointer user_data,
-    GDestroyNotify notify)
-{
-  g_return_if_fail (GST_IS_H265_PICTURE (picture));
-
-  if (picture->notify)
-    picture->notify (picture->user_data);
-
-  picture->user_data = user_data;
-  picture->notify = notify;
-}
-
-/**
- * gst_h265_picture_get_user_data:
- * @picture: a #GstH265Picture
- *
- * Gets private data set on the picture via
- * gst_h265_picture_set_user_data() previously.
- *
- * Returns: (transfer none) (nullable): The previously set user_data
- */
-gpointer
-gst_h265_picture_get_user_data (GstH265Picture * picture)
-{
-  return picture->user_data;
 }
 
 struct _GstH265Dpb
@@ -474,7 +423,7 @@ gst_h265_dpb_get_picture (GstH265Dpb * dpb, guint32 system_frame_number)
     GstH265Picture *picture =
         g_array_index (dpb->pic_list, GstH265Picture *, i);
 
-    if (picture->system_frame_number == system_frame_number) {
+    if (GST_CODEC_PICTURE_FRAME_NUMBER (picture) == system_frame_number) {
       gst_h265_picture_ref (picture);
       return picture;
     }
