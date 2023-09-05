@@ -110,6 +110,7 @@ struct _GstRTPBaseDepayloadPrivate
 
   /* maintain buffer list for header extensions read() */
   gboolean hdrext_aggregate;
+  gboolean hdrext_seen;
   GstBufferList *hdrext_buffers;
   GstBuffer *hdrext_delayed;
   GstBuffer *hdrext_outbuf;
@@ -449,6 +450,7 @@ gst_rtp_base_depayload_init (GstRTPBaseDepayload * filter,
   priv->max_reorder = DEFAULT_MAX_REORDER;
   priv->auto_hdr_ext = DEFAULT_AUTO_HEADER_EXTENSION;
   priv->hdrext_aggregate = FALSE;
+  priv->hdrext_seen = FALSE;
 
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 
@@ -859,8 +861,14 @@ gst_rtp_base_depayload_handle_buffer (GstRTPBaseDepayload * filter,
     g_assert_null (priv->hdrext_delayed);
   }
 
-  /* update RTP buffer cache for header extensions */
-  if (priv->hdrext_aggregate) {
+  /* update RTP buffer cache for header extensions if any */
+  if (priv->hdrext_aggregate &&
+      !priv->hdrext_seen && gst_rtp_buffer_get_extension (&rtp)) {
+    GST_INFO_OBJECT (filter, "Activate RTP header ext aggregation");
+    priv->hdrext_seen = priv->hdrext_aggregate;
+  }
+
+  if (priv->hdrext_seen) {
     GstBuffer *b = gst_buffer_new ();
     /* make a copy of the buffer that only contains the RTP header
        with the extensions to not waste too much memory */
@@ -1685,6 +1693,10 @@ gst_rtp_base_depayload_change_state (GstElement * element,
       priv->negotiated = FALSE;
       priv->discont = FALSE;
       priv->segment_seqnum = GST_SEQNUM_INVALID;
+      priv->hdrext_seen = FALSE;
+      if (priv->hdrext_delayed)
+        gst_buffer_unref (priv->hdrext_delayed);
+      gst_rtp_base_depayload_reset_hdrext_buffers (filter);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
