@@ -91,7 +91,7 @@ gst_ffmpeg_channel_positions_to_layout (const GstAudioChannelPosition *
 {
   gint i, j;
   guint64 ret = 0;
-  gint channels_found = 0;
+  gint channels_found = 0, none_channels = 0;
 
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
   g_assert (layout);
@@ -117,17 +117,30 @@ gst_ffmpeg_channel_positions_to_layout (const GstAudioChannelPosition *
 #endif
 
   for (i = 0; i < channels; i++) {
-    for (j = 0; j < G_N_ELEMENTS (_ff_to_gst_layout); j++) {
-      if (_ff_to_gst_layout[j].gst == pos[i]) {
-        ret |= _ff_to_gst_layout[j].ff;
-        channels_found++;
-        break;
+    if (pos[i] == GST_AUDIO_CHANNEL_POSITION_NONE) {
+      /* We cannot handle some positioned and some unpositioned channels. Assume
+       * all are unpositioned */
+      none_channels++;
+      goto beach;
+    } else {
+      for (j = 0; j < G_N_ELEMENTS (_ff_to_gst_layout); j++) {
+        if (_ff_to_gst_layout[j].gst == pos[i]) {
+          ret |= _ff_to_gst_layout[j].ff;
+          channels_found++;
+          break;
+        }
       }
     }
   }
 
+beach:
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
-  if (channels_found != channels && av_channel_layout_check (layout)) {
+  if (none_channels > 0) {
+    av_channel_layout_uninit (layout);
+    layout->order = AV_CHANNEL_ORDER_UNSPEC;
+    layout->nb_channels = channels;
+    return;
+  } else if (channels_found != channels && av_channel_layout_check (layout)) {
     av_channel_layout_uninit (layout);
     return;
   }
@@ -250,6 +263,25 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
   if (none_layout) {
     if (nchannels == 1) {
       pos[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
+    } else if (nchannels == 2
+        && channel_layout->order != AV_CHANNEL_ORDER_CUSTOM) {
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+    } else {
+      guint i;
+
+      if (nchannels == 2 && channel_layout->order == AV_CHANNEL_ORDER_CUSTOM
+          && channel_layout->u.map[0].id == AV_CHAN_FRONT_LEFT
+          && channel_layout->u.map[1].id == AV_CHAN_FRONT_RIGHT) {
+        pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+        pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      } else {
+        for (i = 0; i < nchannels && i < 64; i++)
+          pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
+      }
+    }
+#else
     } else if (nchannels == 2) {
       pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
       pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
@@ -259,6 +291,7 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
       for (i = 0; i < nchannels && i < 64; i++)
         pos[i] = GST_AUDIO_CHANNEL_POSITION_NONE;
     }
+#endif
   }
 
   return TRUE;
