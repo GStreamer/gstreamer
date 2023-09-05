@@ -647,20 +647,9 @@ gst_nv_h265_dec_new_picture (GstH265Decoder * decoder,
     GstVideoCodecFrame * cframe, GstH265Picture * picture)
 {
   GstNvH265Dec *self = GST_NV_H265_DEC (decoder);
-  GstNvDecSurface *surface;
-  GstFlowReturn ret;
 
-  ret = gst_nv_decoder_acquire_surface (self->decoder, &surface);
-  if (ret != GST_FLOW_OK)
-    return ret;
-
-  GST_LOG_OBJECT (self, "New decoder surface %p (index %d)",
-      surface, surface->index);
-
-  gst_h265_picture_set_user_data (picture,
-      surface, (GDestroyNotify) gst_nv_dec_surface_unref);
-
-  return GST_FLOW_OK;
+  return gst_nv_decoder_new_picture (self->decoder,
+      GST_CODEC_PICTURE (picture));
 }
 
 static GstFlowReturn
@@ -668,34 +657,10 @@ gst_nv_h265_dec_output_picture (GstH265Decoder * decoder,
     GstVideoCodecFrame * frame, GstH265Picture * picture)
 {
   GstNvH265Dec *self = GST_NV_H265_DEC (decoder);
-  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstNvDecSurface *surface;
-  GstFlowReturn ret = GST_FLOW_ERROR;
 
-  GST_LOG_OBJECT (self,
-      "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
-
-  surface = (GstNvDecSurface *) gst_h265_picture_get_user_data (picture);
-  if (!surface) {
-    GST_ERROR_OBJECT (self, "No decoder surface in picture %p", picture);
-    goto error;
-  }
-
-  ret = gst_nv_decoder_finish_surface (self->decoder,
-      vdec, GST_CODEC_PICTURE (picture)->discont_state, surface,
-      &frame->output_buffer);
-  if (ret != GST_FLOW_OK)
-    goto error;
-
-  gst_h265_picture_unref (picture);
-
-  return gst_video_decoder_finish_frame (GST_VIDEO_DECODER (self), frame);
-
-error:
-  gst_video_decoder_drop_frame (vdec, frame);
-  gst_h265_picture_unref (picture);
-
-  return ret;
+  return gst_nv_decoder_output_picture (self->decoder,
+      GST_VIDEO_DECODER (decoder), frame, GST_CODEC_PICTURE (picture),
+      picture->buffer_flags);
 }
 
 static GstNvDecSurface *

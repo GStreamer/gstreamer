@@ -361,9 +361,11 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
 }
 
 GstFlowReturn
-gst_nv_decoder_acquire_surface (GstNvDecoder * decoder,
-    GstNvDecSurface ** surface)
+gst_nv_decoder_new_picture (GstNvDecoder * decoder, GstCodecPicture * picture)
 {
+  GstNvDecSurface *surface;
+  GstFlowReturn ret;
+
   g_return_val_if_fail (GST_IS_NV_DECODER (decoder), GST_FLOW_ERROR);
 
   if (!decoder->object) {
@@ -394,7 +396,14 @@ gst_nv_decoder_acquire_surface (GstNvDecoder * decoder,
     }
   }
 
-  return gst_nv_dec_object_acquire_surface (decoder->object, surface);
+  ret = gst_nv_dec_object_acquire_surface (decoder->object, &surface);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  gst_codec_picture_set_user_data (picture,
+      surface, (GDestroyNotify) gst_nv_dec_surface_unref);
+
+  return GST_FLOW_OK;
 }
 
 gboolean
@@ -710,38 +719,39 @@ done:
 }
 
 GstFlowReturn
-gst_nv_decoder_finish_surface (GstNvDecoder * decoder,
-    GstVideoDecoder * videodec, GstVideoCodecState * input_state,
-    GstNvDecSurface * surface, GstBuffer ** buffer)
+gst_nv_decoder_output_picture (GstNvDecoder * decoder,
+    GstVideoDecoder * videodec, GstVideoCodecFrame * frame,
+    GstCodecPicture * picture, guint buffer_flags)
 {
-  GstBuffer *outbuf = nullptr;
-  gboolean ret = FALSE;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstNvDecSurface *surface;
   GstCudaStream *stream;
-  GstFlowReturn flow_ret;
 
-  g_return_val_if_fail (GST_IS_NV_DECODER (decoder), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), GST_FLOW_ERROR);
-  g_return_val_if_fail (decoder->object != nullptr, GST_FLOW_ERROR);
-  g_return_val_if_fail (surface != nullptr, GST_FLOW_ERROR);
-  g_return_val_if_fail (buffer != nullptr, GST_FLOW_ERROR);
-
-  if (input_state) {
-    if (!gst_nv_decoder_negotiate (decoder, videodec, input_state)) {
+  if (picture->discont_state) {
+    if (!gst_nv_decoder_negotiate (decoder, videodec, picture->discont_state)) {
       GST_ERROR_OBJECT (videodec, "Couldn't re-negotiate with updated state");
-      return GST_FLOW_NOT_NEGOTIATED;
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto error;
     }
+  }
+
+  surface = (GstNvDecSurface *) gst_codec_picture_get_user_data (picture);
+  if (!surface) {
+    GST_ERROR_OBJECT (decoder, "No decoder frame in picture %p", picture);
+    goto error;
   }
 
   if (!gst_cuda_context_push (decoder->context)) {
     GST_ERROR_OBJECT (decoder, "Couldn't push context");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto error;
   }
 
   stream = decoder->stream;
-  flow_ret = gst_nv_dec_object_map_surface (decoder->object, surface, stream);
-  if (flow_ret != GST_FLOW_OK) {
+  ret = gst_nv_dec_object_map_surface (decoder->object, surface, stream);
+  if (ret != GST_FLOW_OK) {
     gst_cuda_context_pop (nullptr);
-    return flow_ret;
+    goto error;
   }
 
   if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA &&
@@ -752,13 +762,14 @@ gst_nv_decoder_finish_surface (GstNvDecoder * decoder,
     GstBuffer *buf;
     GstVideoInfo *info = &decoder->info;
 
-    flow_ret = gst_nv_dec_object_export_surface (decoder->object,
+    ret = gst_nv_dec_object_export_surface (decoder->object,
         surface, stream, &mem);
-    if (flow_ret != GST_FLOW_OK) {
+    if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (decoder, "Couldn't export surface");
       gst_nv_dec_object_unmap_surface (decoder->object, surface);
       gst_cuda_context_pop (nullptr);
-      return flow_ret;
+
+      goto error;
     }
 
     gst_cuda_context_pop (nullptr);
@@ -776,67 +787,77 @@ gst_nv_decoder_finish_surface (GstNvDecoder * decoder,
         GST_VIDEO_INFO_HEIGHT (info), GST_VIDEO_INFO_N_PLANES (info),
         cmem->info.offset, cmem->info.stride);
 
-    *buffer = buf;
-    return GST_FLOW_OK;
-  }
+    frame->output_buffer = buf;
+  } else {
+    gboolean copy_ret = FALSE;
 
-  outbuf = gst_video_decoder_allocate_output_buffer (videodec);
-  if (!outbuf) {
-    GST_ERROR_OBJECT (videodec, "Couldn't allocate output buffer");
+    frame->output_buffer = gst_video_decoder_allocate_output_buffer (videodec);
+    if (!frame->output_buffer) {
+      GST_ERROR_OBJECT (videodec, "Couldn't allocate output buffer");
+      gst_nv_dec_object_unmap_surface (decoder->object, surface);
+      gst_cuda_context_pop (nullptr);
+      ret = GST_FLOW_ERROR;
+      goto error;
+    }
+
+    switch (decoder->output_type) {
+      case GST_NV_DECODER_OUTPUT_TYPE_SYSTEM:
+        copy_ret = gst_nv_decoder_copy_frame_to_system (decoder,
+            surface, frame->output_buffer);
+        break;
+#ifdef HAVE_CUDA_GST_GL
+      case GST_NV_DECODER_OUTPUT_TYPE_GL:
+        g_assert (decoder->gl_context != nullptr);
+
+        copy_ret = gst_nv_decoder_copy_frame_to_gl (decoder,
+            GST_GL_CONTEXT (decoder->gl_context), surface,
+            frame->output_buffer);
+        break;
+#endif
+      case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
+        copy_ret = gst_nv_decoder_copy_frame_to_cuda (decoder,
+            surface, frame->output_buffer, stream);
+        break;
+      default:
+        g_assert_not_reached ();
+        gst_nv_dec_object_unmap_surface (decoder->object, surface);
+        gst_cuda_context_pop (nullptr);
+        ret = GST_FLOW_ERROR;
+        goto error;
+    }
+
+    /* FIXME: This is the case where OpenGL context of downstream glbufferpool
+     * belongs to non-nvidia (or different device).
+     * There should be enhancement to ensure nvdec has compatible OpenGL context
+     */
+    if (!copy_ret && decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_GL) {
+      GST_WARNING_OBJECT (videodec,
+          "Couldn't copy frame to GL memory, fallback to system memory");
+      decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
+
+      copy_ret = gst_nv_decoder_copy_frame_to_system (decoder, surface,
+          frame->output_buffer);
+    }
+
     gst_nv_dec_object_unmap_surface (decoder->object, surface);
     gst_cuda_context_pop (nullptr);
-    return GST_FLOW_ERROR;
-  }
 
-  switch (decoder->output_type) {
-    case GST_NV_DECODER_OUTPUT_TYPE_SYSTEM:
-      ret = gst_nv_decoder_copy_frame_to_system (decoder, surface, outbuf);
-      break;
-#ifdef HAVE_CUDA_GST_GL
-    case GST_NV_DECODER_OUTPUT_TYPE_GL:
-      g_assert (decoder->gl_context != nullptr);
-
-      ret = gst_nv_decoder_copy_frame_to_gl (decoder,
-          GST_GL_CONTEXT (decoder->gl_context), surface, outbuf);
-      break;
-#endif
-    case GST_NV_DECODER_OUTPUT_TYPE_CUDA:
-      ret = gst_nv_decoder_copy_frame_to_cuda (decoder,
-          surface, outbuf, stream);
-      break;
-    default:
-      g_assert_not_reached ();
+    if (!copy_ret) {
+      GST_WARNING_OBJECT (videodec, "Failed to copy frame");
       goto error;
+    }
   }
 
-  /* FIXME: This is the case where OpenGL context of downstream glbufferpool
-   * belongs to non-nvidia (or different device).
-   * There should be enhancement to ensure nvdec has compatible OpenGL context
-   */
-  if (!ret && decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_GL) {
-    GST_WARNING_OBJECT (videodec,
-        "Couldn't copy frame to GL memory, fallback to system memory");
-    decoder->output_type = GST_NV_DECODER_OUTPUT_TYPE_SYSTEM;
+  GST_BUFFER_FLAG_SET (frame->output_buffer, buffer_flags);
+  gst_codec_picture_unref (picture);
 
-    ret = gst_nv_decoder_copy_frame_to_system (decoder, surface, outbuf);
-  }
-
-  gst_nv_dec_object_unmap_surface (decoder->object, surface);
-  gst_cuda_context_pop (nullptr);
-
-  if (!ret) {
-    GST_WARNING_OBJECT (videodec, "Failed to copy frame");
-    goto error;
-  }
-
-  *buffer = outbuf;
-
-  return GST_FLOW_OK;
+  return gst_video_decoder_finish_frame (videodec, frame);
 
 error:
-  gst_nv_dec_object_unmap_surface (decoder->object, surface);
-  gst_clear_buffer (&outbuf);
-  return GST_FLOW_ERROR;
+  gst_codec_picture_unref (picture);
+  gst_video_decoder_release_frame (videodec, frame);
+
+  return ret;
 }
 
 typedef enum

@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/cuda/gstcuda.h>
+#include <gst/codecs/gstcodecpicture.h>
 #include "gstcuvidloader.h"
 #include "gstnvdecobject.h"
 
@@ -57,17 +58,17 @@ gboolean       gst_nv_decoder_configure (GstNvDecoder * decoder,
                                          guint init_max_width,
                                          guint init_max_height);
 
-GstFlowReturn  gst_nv_decoder_acquire_surface (GstNvDecoder * decoder,
-                                               GstNvDecSurface ** surface);
+GstFlowReturn  gst_nv_decoder_new_picture (GstNvDecoder * decoder,
+                                           GstCodecPicture * picture);
 
 gboolean       gst_nv_decoder_decode         (GstNvDecoder * decoder,
                                               CUVIDPICPARAMS * params);
 
-GstFlowReturn  gst_nv_decoder_finish_surface (GstNvDecoder * decoder,
+GstFlowReturn  gst_nv_decoder_output_picture (GstNvDecoder * decoder,
                                               GstVideoDecoder * videodec,
-                                              GstVideoCodecState * input_state,
-                                              GstNvDecSurface *surface,
-                                              GstBuffer ** buffer);
+                                              GstVideoCodecFrame * frame,
+                                              GstCodecPicture * picture,
+                                              guint buffer_flags);
 
 void           gst_nv_decoder_set_flushing   (GstNvDecoder * decoder,
                                               gboolean flushing);
