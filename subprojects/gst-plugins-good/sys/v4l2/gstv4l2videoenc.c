@@ -770,8 +770,6 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
 
   task_state = gst_pad_get_task_state (GST_VIDEO_ENCODER_SRC_PAD (self));
   if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
-    GstBufferPool *pool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
-
     /* It is possible that the processing thread stopped due to an error or
      * when the last buffer has been met during the draining process. */
     if (self->output_flow != GST_FLOW_OK &&
@@ -780,14 +778,13 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
       GST_DEBUG_OBJECT (self, "Processing loop stopped with error: %s, leaving",
           gst_flow_get_name (self->output_flow));
       ret = self->output_flow;
-      if (pool)
-        gst_object_unref (pool);
       goto drop;
     }
 
-    /* Ensure input internal pool is active */
-    if (!gst_buffer_pool_is_active (pool)) {
-      GstStructure *config = gst_buffer_pool_get_config (pool);
+    /* Ensure input internal output pool is active */
+    GstBufferPool *opool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
+    if (!gst_buffer_pool_is_active (opool)) {
+      GstStructure *config = gst_buffer_pool_get_config (opool);
       guint min = MAX (self->v4l2output->min_buffers,
           GST_V4L2_MIN_BUFFERS (self->v4l2output));
 
@@ -795,19 +792,19 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
           self->v4l2output->info.size, min, min);
 
       /* There is no reason to refuse this config */
-      if (!gst_buffer_pool_set_config (pool, config)) {
-        if (pool)
-          gst_object_unref (pool);
+      if (!gst_buffer_pool_set_config (opool, config)) {
+        if (opool)
+          gst_object_unref (opool);
         goto activate_failed;
       }
 
-      if (!gst_buffer_pool_set_active (pool, TRUE)) {
-        if (pool)
-          gst_object_unref (pool);
+      if (!gst_buffer_pool_set_active (opool, TRUE)) {
+        if (opool)
+          gst_object_unref (opool);
         goto activate_failed;
       }
-      if (pool)
-        gst_object_unref (pool);
+      if (opool)
+        gst_object_unref (opool);
     }
 
     {
