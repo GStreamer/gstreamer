@@ -518,8 +518,8 @@ gst_va_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
   GST_LOG_OBJECT (self,
       "Outputting picture %p (poc %d)", picture, picture->pic_order_cnt);
 
-  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state,
-      picture->buffer_flags);
+  ret = gst_va_base_dec_process_output (base, frame,
+      GST_CODEC_PICTURE (picture)->discont_state, picture->buffer_flags);
   gst_mpeg2_picture_unref (picture);
 
   if (ret)

@@ -95,7 +95,7 @@ struct _GstMpeg2DecoderClass
    *
    * Optional. Called whenever new #GstMpeg2Picture is created.
    * Subclass can set implementation specific user data
-   * on the #GstMpeg2Picture via gst_mpeg2_picture_set_user_data()
+   * on the #GstMpeg2Picture via gst_mpeg2_picture_set_user_data
    *
    * Since: 1.20
    */
@@ -111,7 +111,7 @@ struct _GstMpeg2DecoderClass
    *
    * Called when a new field picture is created for interlaced field picture.
    * Subclass can attach implementation specific user data on @second_field via
-   * gst_mpeg2_picture_set_user_data()
+   * gst_mpeg2_picture_set_user_data
    *
    * Since: 1.20
    */

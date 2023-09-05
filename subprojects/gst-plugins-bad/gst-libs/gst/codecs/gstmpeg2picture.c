@@ -23,6 +23,7 @@
 #endif
 
 #include "gstmpeg2picture.h"
+#include "gstcodecpicture-private.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_mpeg2_decoder_debug);
 #define GST_CAT_DEFAULT gst_mpeg2_decoder_debug
@@ -37,13 +38,7 @@ _gst_mpeg2_picture_free (GstMpeg2Picture * picture)
   if (picture->first_field)
     gst_mpeg2_picture_unref (picture->first_field);
 
-  if (picture->notify)
-    picture->notify (picture->user_data);
-
-  if (picture->discont_state)
-    gst_video_codec_state_unref (picture->discont_state);
-
-  g_free (picture);
+  gst_codec_picture_free (GST_CODEC_PICTURE (picture));
 }
 
 /**
@@ -72,50 +67,6 @@ gst_mpeg2_picture_new (void)
   GST_TRACE ("New picture %p", pic);
 
   return pic;
-}
-
-/**
- * gst_mpeg2_picture_set_user_data:
- * @picture: a #GstMpeg2Picture
- * @user_data: private data
- * @notify: (closure user_data): a #GDestroyNotify
- *
- * Sets @user_data on the picture and the #GDestroyNotify that will be called when
- * the picture is freed.
- *
- * If a @user_data was previously set, then the previous set @notify will be called
- * before the @user_data is replaced.
- *
- * Since: 1.20
- */
-void
-gst_mpeg2_picture_set_user_data (GstMpeg2Picture * picture, gpointer user_data,
-    GDestroyNotify notify)
-{
-  g_return_if_fail (GST_IS_MPEG2_PICTURE (picture));
-
-  if (picture->notify)
-    picture->notify (picture->user_data);
-
-  picture->user_data = user_data;
-  picture->notify = notify;
-}
-
-/**
- * gst_mpeg2_picture_get_user_data:
- * @picture: a #GstMpeg2Picture
- *
- * Gets private data set on the picture via
- * gst_mpeg2_picture_set_user_data() previously.
- *
- * Returns: (transfer none): The previously set user_data
- *
- * Since: 1.20
- */
-gpointer
-gst_mpeg2_picture_get_user_data (GstMpeg2Picture * picture)
-{
-  return picture->user_data;
 }
 
 struct _GstMpeg2Dpb

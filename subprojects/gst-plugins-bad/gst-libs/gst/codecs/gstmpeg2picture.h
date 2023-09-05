@@ -22,6 +22,7 @@
 #define __GST_MPEG2_PICTURE_H__
 
 #include <gst/codecs/codecs-prelude.h>
+#include <gst/codecs/gstcodecpicture.h>
 #include <gst/codecparsers/gstmpegvideoparser.h>
 #include <gst/video/video.h>
 
@@ -79,10 +80,8 @@ struct _GstMpeg2Slice
 struct _GstMpeg2Picture
 {
   /*< private >*/
-  GstMiniObject parent;
+  GstCodecPicture parent;
 
-  /* From GstVideoCodecFrame */
-  guint32 system_frame_number;
   gboolean needed_for_output;
   /* For interlaced streams */
   GstMpeg2Picture *first_field;
@@ -93,12 +92,6 @@ struct _GstMpeg2Picture
   gint tsn;
   GstMpegVideoPictureStructure structure;
   GstMpegVideoPictureType type;
-
-  /* decoder input state if this picture is discont point */
-  GstVideoCodecState *discont_state;
-
-  gpointer user_data;
-  GDestroyNotify notify;
 };
 
 /**
@@ -148,14 +141,27 @@ gst_clear_mpeg2_picture (GstMpeg2Picture ** picture)
   }
 }
 
-GST_CODECS_API
-void gst_mpeg2_picture_set_user_data (GstMpeg2Picture * picture,
-                                      gpointer user_data,
-                                      GDestroyNotify notify);
+static inline void
+gst_mpeg2_picture_set_user_data (GstMpeg2Picture * picture, gpointer user_data,
+    GDestroyNotify notify)
+{
+  gst_codec_picture_set_user_data (GST_CODEC_PICTURE (picture),
+      user_data, notify);
+}
 
-GST_CODECS_API
-gpointer gst_mpeg2_picture_get_user_data (GstMpeg2Picture * picture);
+static inline gpointer
+gst_mpeg2_picture_get_user_data (GstMpeg2Picture * picture)
+{
+  return gst_codec_picture_get_user_data (GST_CODEC_PICTURE (picture));
+}
 
+static inline void
+gst_mpeg2_picture_set_discont_state (GstMpeg2Picture * picture,
+    GstVideoCodecState * discont_state)
+{
+  gst_codec_picture_set_discont_state (GST_CODEC_PICTURE (picture),
+      discont_state);
+}
 
 /**
  * GstMpeg2Dpb:
