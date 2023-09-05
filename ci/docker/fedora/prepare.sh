@@ -29,12 +29,14 @@ dnf install -y \
     libaom \
     libaom-devel \
     libcaca-devel \
+    libcurl-devel \
     libdav1d \
     libdav1d-devel \
     libdrm-devel \
     ccache \
     cmake \
     clang-devel \
+    curl \
     elfutils \
     elfutils-libs \
     elfutils-devel \
@@ -254,10 +256,8 @@ RUSTUP_VERSION=1.26.0
 RUST_VERSION=1.73.0
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
-dnf install -y wget
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
-wget $RUSTUP_URL
-dnf remove -y wget
+curl -o rustup-init $RUSTUP_URL
 
 export RUSTUP_HOME="/usr/local/rustup"
 export CARGO_HOME="/usr/local/cargo"
