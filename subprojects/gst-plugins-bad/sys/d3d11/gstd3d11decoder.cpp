@@ -1226,10 +1226,10 @@ gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * decoder,
 }
 
 GstFlowReturn
-gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
-    ID3D11VideoDecoderOutputView * output_view,
-    GstD3D11DecodeInputStreamArgs * input_args)
+gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
+    GstCodecPicture * picture, GstD3D11DecodeInputStreamArgs * input_args)
 {
+  ID3D11VideoDecoderOutputView *output_view;
   guint d3d11_buffer_size;
   gpointer d3d11_buffer;
   D3D11_VIDEO_DECODER_BUFFER_DESC buffer_desc[4];
@@ -1237,8 +1237,15 @@ gst_d3d11_decoder_decode_frame (GstD3D11Decoder * decoder,
   GstFlowReturn ret = GST_FLOW_OK;
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), GST_FLOW_ERROR);
-  g_return_val_if_fail (output_view != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (picture != nullptr, GST_FLOW_ERROR);
   g_return_val_if_fail (input_args != nullptr, GST_FLOW_ERROR);
+
+  output_view = gst_d3d11_decoder_get_output_view_from_picture (decoder,
+      picture, nullptr);
+  if (!output_view) {
+    GST_ERROR_OBJECT (decoder, "No output view attached");
+    return GST_FLOW_ERROR;
+  }
 
   memset (buffer_desc, 0, sizeof (buffer_desc));
 
@@ -1387,14 +1394,14 @@ error:
   return GST_FLOW_ERROR;
 }
 
-GstBuffer *
-gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
-    GstVideoDecoder * videodec)
+GstFlowReturn
+gst_d3d11_decoder_new_picture (GstD3D11Decoder * decoder,
+    GstVideoDecoder * videodec, GstCodecPicture * picture)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
 
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), GST_FLOW_ERROR);
 
   if (!decoder->internal_pool) {
     /* Try negotiate again whatever the previous negotiation result was.
@@ -1407,15 +1414,14 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
 
     if (!gst_d3d11_decoder_prepare_output_view_pool (decoder)) {
       GST_ERROR_OBJECT (videodec, "Failed to setup internal pool");
-      return NULL;
+      return GST_FLOW_ERROR;
     }
   } else if (!gst_buffer_pool_set_active (decoder->internal_pool, TRUE)) {
     GST_ERROR_OBJECT (videodec, "Couldn't set active internal pool");
-    return NULL;
+    return GST_FLOW_ERROR;
   }
 
   ret = gst_buffer_pool_acquire_buffer (decoder->internal_pool, &buf, NULL);
-
   if (ret != GST_FLOW_OK || !buf) {
     if (ret != GST_FLOW_FLUSHING) {
       GST_ERROR_OBJECT (videodec, "Couldn't get buffer from pool, ret %s",
@@ -1424,34 +1430,47 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
       GST_DEBUG_OBJECT (videodec, "We are flusing");
     }
 
-    return NULL;
+    return ret;
   }
 
   if (!gst_d3d11_decoder_ensure_output_view (decoder, buf)) {
     GST_ERROR_OBJECT (videodec, "Output view unavailable");
     gst_buffer_unref (buf);
 
-    return NULL;
+    return GST_FLOW_ERROR;
   }
 
-  return buf;
+  gst_codec_picture_set_user_data (picture,
+      buf, (GDestroyNotify) gst_buffer_unref);
+
+  return GST_FLOW_OK;
 }
 
 ID3D11VideoDecoderOutputView *
-gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
-    GstBuffer * buffer, guint8 * index)
+gst_d3d11_decoder_get_output_view_from_picture (GstD3D11Decoder * decoder,
+    GstCodecPicture * picture, guint8 * index)
 {
   GstMemory *mem;
   GstD3D11Memory *dmem;
   ID3D11VideoDecoderOutputView *view;
+  GstBuffer *buffer;
 
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), NULL);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), nullptr);
+  g_return_val_if_fail (picture, nullptr);
+
+  if (index)
+    *index = 0xff;
+
+  buffer = (GstBuffer *) gst_codec_picture_get_user_data (picture);
+  if (!buffer) {
+    GST_DEBUG_OBJECT (decoder, "picture without attached user data");
+    return nullptr;
+  }
 
   mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_d3d11_memory (mem)) {
     GST_WARNING_OBJECT (decoder, "Not a d3d11 memory");
-    return NULL;
+    return nullptr;
   }
 
   dmem = (GstD3D11Memory *) mem;
@@ -1460,7 +1479,7 @@ gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
 
   if (!view) {
     GST_ERROR_OBJECT (decoder, "Decoder output view is unavailable");
-    return NULL;
+    return nullptr;
   }
 
   if (index) {
@@ -1595,20 +1614,25 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
   return TRUE;
 }
 
-gboolean
-gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
-    GstVideoDecoder * videodec, GstVideoCodecState * input_state,
-    gint display_width, gint display_height,
-    GstBuffer * decoder_buffer, GstBuffer ** output)
+GstFlowReturn
+gst_d3d11_decoder_output_picture (GstD3D11Decoder * decoder,
+    GstVideoDecoder * videodec, GstVideoCodecFrame * frame,
+    GstCodecPicture * picture, guint buffer_flags,
+    gint display_width, gint display_height)
 {
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-  g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (decoder_buffer), FALSE);
-  g_return_val_if_fail (output != NULL, FALSE);
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *view_buffer;
 
-  if (input_state) {
+  if (picture->discont_state) {
     g_clear_pointer (&decoder->input_state, gst_video_codec_state_unref);
-    decoder->input_state = gst_video_codec_state_ref (input_state);
+    decoder->input_state = gst_video_codec_state_ref (picture->discont_state);
+  }
+
+  view_buffer = (GstBuffer *) gst_codec_picture_get_user_data (picture);
+  if (!view_buffer) {
+    GST_ERROR_OBJECT (decoder, "Could not get output view");
+    ret = GST_FLOW_ERROR;
+    goto error;
   }
 
   if (display_width != GST_VIDEO_INFO_WIDTH (&decoder->output_info) ||
@@ -1622,29 +1646,31 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
 
     if (!gst_video_decoder_negotiate (videodec)) {
       GST_ERROR_OBJECT (videodec, "Failed to re-negotiate with new frame size");
-      return FALSE;
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto error;
     }
-  } else if (input_state) {
+  } else if (picture->discont_state) {
     if (!gst_video_decoder_negotiate (videodec)) {
       GST_ERROR_OBJECT (videodec, "Could not re-negotiate with updated state");
-      return FALSE;
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto error;
     }
   }
 
-  if (gst_d3d11_decoder_can_direct_render (decoder, videodec, decoder_buffer,
+  if (gst_d3d11_decoder_can_direct_render (decoder, videodec, view_buffer,
           display_width, display_height)) {
     GstMemory *mem;
 
-    mem = gst_buffer_peek_memory (decoder_buffer, 0);
+    mem = gst_buffer_peek_memory (view_buffer, 0);
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
     if (decoder->need_crop) {
       GstVideoCropMeta *crop_meta;
 
-      decoder_buffer = gst_buffer_make_writable (decoder_buffer);
-      crop_meta = gst_buffer_get_video_crop_meta (decoder_buffer);
+      view_buffer = gst_buffer_make_writable (view_buffer);
+      crop_meta = gst_buffer_get_video_crop_meta (view_buffer);
       if (!crop_meta)
-        crop_meta = gst_buffer_add_video_crop_meta (decoder_buffer);
+        crop_meta = gst_buffer_add_video_crop_meta (view_buffer);
 
       crop_meta->x = decoder->offset_x;
       crop_meta->y = decoder->offset_y;
@@ -1654,19 +1680,32 @@ gst_d3d11_decoder_process_output (GstD3D11Decoder * decoder,
       GST_TRACE_OBJECT (decoder, "Attatching crop meta");
     }
 
-    *output = gst_buffer_ref (decoder_buffer);
+    frame->output_buffer = gst_buffer_ref (view_buffer);
+  } else {
+    frame->output_buffer = gst_video_decoder_allocate_output_buffer (videodec);
+    if (!frame->output_buffer) {
+      GST_ERROR_OBJECT (videodec, "Couldn't allocate output buffer");
+      ret = GST_FLOW_ERROR;
+      goto error;
+    }
 
-    return TRUE;
+    if (!gst_d3d11_decoder_crop_and_copy_buffer (decoder, view_buffer,
+            frame->output_buffer)) {
+      ret = GST_FLOW_ERROR;
+      goto error;
+    }
   }
 
-  *output = gst_video_decoder_allocate_output_buffer (videodec);
-  if (*output == NULL) {
-    GST_ERROR_OBJECT (videodec, "Couldn't allocate output buffer");
-    return FALSE;
-  }
+  GST_BUFFER_FLAG_SET (frame->output_buffer, buffer_flags);
+  gst_codec_picture_unref (picture);
 
-  return gst_d3d11_decoder_crop_and_copy_buffer (decoder, decoder_buffer,
-      *output);
+  return gst_video_decoder_finish_frame (videodec, frame);
+
+error:
+  gst_codec_picture_unref (picture);
+  gst_video_decoder_release_frame (videodec, frame);
+
+  return ret;
 }
 
 gboolean

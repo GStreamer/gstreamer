@@ -23,6 +23,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11.h>
+#include <gst/codecs/gstcodecpicture.h>
 
 G_BEGIN_DECLS
 
@@ -83,25 +84,25 @@ gboolean          gst_d3d11_decoder_configure     (GstD3D11Decoder * decoder,
                                                    gint coded_height,
                                                    guint dpb_size);
 
-GstFlowReturn     gst_d3d11_decoder_decode_frame  (GstD3D11Decoder * decoder,
-                                                   ID3D11VideoDecoderOutputView * output_view,
-                                                   GstD3D11DecodeInputStreamArgs * input_args);
+GstFlowReturn     gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
+                                                    GstCodecPicture * picture,
+                                                    GstD3D11DecodeInputStreamArgs * input_args);
 
+GstFlowReturn     gst_d3d11_decoder_new_picture   (GstD3D11Decoder * decoder,
+                                                   GstVideoDecoder * videodec,
+                                                   GstCodecPicture * picture);
 
-GstBuffer *       gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
-                                                            GstVideoDecoder * videodec);
+ID3D11VideoDecoderOutputView * gst_d3d11_decoder_get_output_view_from_picture (GstD3D11Decoder * decoder,
+                                                                               GstCodecPicture * picture,
+                                                                               guint8 * view_id);
 
-ID3D11VideoDecoderOutputView * gst_d3d11_decoder_get_output_view_from_buffer (GstD3D11Decoder * decoder,
-                                                                              GstBuffer * buffer,
-                                                                              guint8 * view_id);
-
-gboolean          gst_d3d11_decoder_process_output      (GstD3D11Decoder * decoder,
+GstFlowReturn     gst_d3d11_decoder_output_picture      (GstD3D11Decoder * decoder,
                                                          GstVideoDecoder * videodec,
-                                                         GstVideoCodecState * in_state,
+                                                         GstVideoCodecFrame * frame,
+                                                         GstCodecPicture * picture,
+                                                         guint buffer_flags,
                                                          gint display_width,
-                                                         gint display_height,
-                                                         GstBuffer * decoder_buffer,
-                                                         GstBuffer ** output);
+                                                         gint display_height);
 
 gboolean          gst_d3d11_decoder_negotiate           (GstD3D11Decoder * decoder,
                                                          GstVideoDecoder * videodec);

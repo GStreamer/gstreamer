@@ -415,23 +415,9 @@ gst_d3d11_mpeg2_dec_new_picture (GstMpeg2Decoder * decoder,
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstD3D11Mpeg2DecInner *inner = self->inner;
-  GstBuffer *view_buffer;
 
-  view_buffer = gst_d3d11_decoder_get_output_view_buffer (inner->d3d11_decoder,
-      GST_VIDEO_DECODER (decoder));
-  if (!view_buffer) {
-    GST_DEBUG_OBJECT (self, "No available output view buffer");
-    return GST_FLOW_ERROR;
-  }
-
-  GST_LOG_OBJECT (self, "New output view buffer %" GST_PTR_FORMAT, view_buffer);
-
-  gst_mpeg2_picture_set_user_data (picture,
-      view_buffer, (GDestroyNotify) gst_buffer_unref);
-
-  GST_LOG_OBJECT (self, "New MPEG2 picture %p", picture);
-
-  return GST_FLOW_OK;
+  return gst_d3d11_decoder_new_picture (inner->d3d11_decoder,
+      GST_VIDEO_DECODER (decoder), GST_CODEC_PICTURE (picture));
 }
 
 static GstFlowReturn
@@ -456,34 +442,6 @@ gst_d3d11_mpeg2_dec_new_field_picture (GstMpeg2Decoder * decoder,
       gst_buffer_ref (view_buffer), (GDestroyNotify) gst_buffer_unref);
 
   return GST_FLOW_OK;
-}
-
-static ID3D11VideoDecoderOutputView *
-gst_d3d11_mpeg2_dec_get_output_view_from_picture (GstD3D11Mpeg2Dec * self,
-    GstMpeg2Picture * picture, guint8 * view_id)
-{
-  GstD3D11Mpeg2DecInner *inner = self->inner;
-  GstBuffer *view_buffer;
-  ID3D11VideoDecoderOutputView *view;
-
-  if (!picture)
-    return NULL;
-
-  view_buffer = (GstBuffer *) gst_mpeg2_picture_get_user_data (picture);
-  if (!view_buffer) {
-    GST_DEBUG_OBJECT (self, "current picture does not have output view buffer");
-    return NULL;
-  }
-
-  view =
-      gst_d3d11_decoder_get_output_view_from_buffer (inner->d3d11_decoder,
-      view_buffer, view_id);
-  if (!view) {
-    GST_DEBUG_OBJECT (self, "current picture does not have output view handle");
-    return NULL;
-  }
-
-  return view;
 }
 
 static inline WORD
@@ -518,6 +476,7 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstD3D11Mpeg2DecInner *inner = self->inner;
+  GstD3D11Decoder *d3d11_decoder = inner->d3d11_decoder;
   DXVA_PictureParameters *pic_params = &inner->pic_params;
   DXVA_QmatrixData *iq_matrix = &inner->iq_matrix;
   ID3D11VideoDecoderOutputView *view;
@@ -527,8 +486,8 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
   gboolean is_field =
       picture->structure != GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
 
-  view = gst_d3d11_mpeg2_dec_get_output_view_from_picture (self, picture,
-      &view_id);
+  view = gst_d3d11_decoder_get_output_view_from_picture (d3d11_decoder,
+      GST_CODEC_PICTURE (picture), &view_id);
   if (!view) {
     GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return GST_FLOW_ERROR;
@@ -546,8 +505,8 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
     case GST_MPEG_VIDEO_PICTURE_TYPE_B:{
       if (next_picture) {
         other_view =
-            gst_d3d11_mpeg2_dec_get_output_view_from_picture (self,
-            next_picture, &other_view_id);
+            gst_d3d11_decoder_get_output_view_from_picture (d3d11_decoder,
+            GST_CODEC_PICTURE (next_picture), &other_view_id);
         if (other_view)
           pic_params->wBackwardRefPictureIndex = other_view_id;
       }
@@ -556,8 +515,8 @@ gst_d3d11_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
     case GST_MPEG_VIDEO_PICTURE_TYPE_P:{
       if (prev_picture) {
         other_view =
-            gst_d3d11_mpeg2_dec_get_output_view_from_picture (self,
-            prev_picture, &other_view_id);
+            gst_d3d11_decoder_get_output_view_from_picture (d3d11_decoder,
+            GST_CODEC_PICTURE (prev_picture), &other_view_id);
         if (other_view)
           pic_params->wForwardRefPictureIndex = other_view_id;
       }
@@ -677,8 +636,6 @@ gst_d3d11_mpeg2_dec_end_picture (GstMpeg2Decoder * decoder,
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstD3D11Mpeg2DecInner *inner = self->inner;
-  ID3D11VideoDecoderOutputView *view;
-  guint8 view_id = 0xff;
   GstD3D11DecodeInputStreamArgs input_args;
   gboolean is_field =
       picture->structure != GST_MPEG_VIDEO_PICTURE_STRUCTURE_FRAME;
@@ -686,13 +643,6 @@ gst_d3d11_mpeg2_dec_end_picture (GstMpeg2Decoder * decoder,
 
   if (inner->bitstream_buffer.empty ()) {
     GST_ERROR_OBJECT (self, "No bitstream buffer to submit");
-    return GST_FLOW_ERROR;
-  }
-
-  view = gst_d3d11_mpeg2_dec_get_output_view_from_picture (self, picture,
-      &view_id);
-  if (!view) {
-    GST_ERROR_OBJECT (self, "current picture does not have output view handle");
     return GST_FLOW_ERROR;
   }
 
@@ -724,8 +674,8 @@ gst_d3d11_mpeg2_dec_end_picture (GstMpeg2Decoder * decoder,
     input_args.inverse_quantization_matrix_size = sizeof (DXVA_QmatrixData);
   }
 
-  return gst_d3d11_decoder_decode_frame (inner->d3d11_decoder,
-      view, &input_args);
+  return gst_d3d11_decoder_decode_picture (inner->d3d11_decoder,
+      GST_CODEC_PICTURE (picture), &input_args);
 }
 
 static GstFlowReturn
@@ -734,45 +684,10 @@ gst_d3d11_mpeg2_dec_output_picture (GstMpeg2Decoder * decoder,
 {
   GstD3D11Mpeg2Dec *self = GST_D3D11_MPEG2_DEC (decoder);
   GstD3D11Mpeg2DecInner *inner = self->inner;
-  GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
-  GstBuffer *view_buffer;
 
-  GST_LOG_OBJECT (self, "Outputting picture %p", picture);
-
-  view_buffer = (GstBuffer *) gst_mpeg2_picture_get_user_data (picture);
-
-  if (!view_buffer) {
-    GST_ERROR_OBJECT (self, "Could not get output view");
-    goto error;
-  }
-
-  if (!gst_d3d11_decoder_process_output (inner->d3d11_decoder, vdec,
-          GST_CODEC_PICTURE (picture)->discont_state, inner->width,
-          inner->height, view_buffer, &frame->output_buffer)) {
-    GST_ERROR_OBJECT (self, "Failed to copy buffer");
-    goto error;
-  }
-
-  if (picture->buffer_flags != 0) {
-    gboolean interlaced =
-        (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_INTERLACED) != 0;
-    gboolean tff = (picture->buffer_flags & GST_VIDEO_BUFFER_FLAG_TFF) != 0;
-
-    GST_TRACE_OBJECT (self,
-        "apply buffer flags 0x%x (interlaced %d, top-field-first %d)",
-        picture->buffer_flags, interlaced, tff);
-    GST_BUFFER_FLAG_SET (frame->output_buffer, picture->buffer_flags);
-  }
-
-  gst_mpeg2_picture_unref (picture);
-
-  return gst_video_decoder_finish_frame (vdec, frame);
-
-error:
-  gst_mpeg2_picture_unref (picture);
-  gst_video_decoder_release_frame (vdec, frame);
-
-  return GST_FLOW_ERROR;
+  return gst_d3d11_decoder_output_picture (inner->d3d11_decoder,
+      GST_VIDEO_DECODER (decoder), frame, GST_CODEC_PICTURE (picture),
+      picture->buffer_flags, inner->width, inner->height);
 }
 
 void
