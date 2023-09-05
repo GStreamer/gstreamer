@@ -744,7 +744,8 @@ gst_nv_vp9_dec_output_picture (GstVp9Decoder * decoder,
   }
 
   ret = gst_nv_decoder_finish_surface (self->decoder,
-      vdec, picture->discont_state, surface, &frame->output_buffer);
+      vdec, GST_CODEC_PICTURE (picture)->discont_state, surface,
+      &frame->output_buffer);
   if (ret != GST_FLOW_OK)
     goto error;
 

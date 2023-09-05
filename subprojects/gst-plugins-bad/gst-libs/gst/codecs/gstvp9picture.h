@@ -21,6 +21,7 @@
 #define __GST_VP9_PICTURE_H__
 
 #include <gst/codecs/codecs-prelude.h>
+#include <gst/codecs/gstcodecpicture.h>
 #include <gst/codecs/gstvp9statefulparser.h>
 #include <gst/video/video.h>
 
@@ -36,22 +37,13 @@ typedef struct _GstVp9Picture GstVp9Picture;
 struct _GstVp9Picture
 {
   /*< private >*/
-  GstMiniObject parent;
-
-  /* From GstVideoCodecFrame */
-  guint32 system_frame_number;
+  GstCodecPicture parent;
 
   GstVp9FrameHeader frame_hdr;
 
   /* raw data and size (does not have ownership) */
   const guint8 * data;
   gsize size;
-
-  /* decoder input state if this picture is discont point */
-  GstVideoCodecState *discont_state;
-
-  gpointer user_data;
-  GDestroyNotify notify;
 };
 
 GST_CODECS_API
@@ -89,13 +81,27 @@ gst_clear_vp9_picture (GstVp9Picture ** picture)
   }
 }
 
-GST_CODECS_API
-void gst_vp9_picture_set_user_data (GstVp9Picture * picture,
-                                    gpointer user_data,
-                                    GDestroyNotify notify);
+static inline void
+gst_vp9_picture_set_user_data (GstVp9Picture * picture, gpointer user_data,
+    GDestroyNotify notify)
+{
+  gst_codec_picture_set_user_data (GST_CODEC_PICTURE (picture),
+      user_data, notify);
+}
 
-GST_CODECS_API
-gpointer gst_vp9_picture_get_user_data (GstVp9Picture * picture);
+static inline gpointer
+gst_vp9_picture_get_user_data (GstVp9Picture * picture)
+{
+  return gst_codec_picture_get_user_data (GST_CODEC_PICTURE (picture));
+}
+
+static inline void
+gst_vp9_picture_set_discont_state (GstVp9Picture * picture,
+    GstVideoCodecState * discont_state)
+{
+  gst_codec_picture_set_discont_state (GST_CODEC_PICTURE (picture),
+      discont_state);
+}
 
 /*******************
  * GstVp9Dpb *

@@ -492,11 +492,11 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
       goto unmap_and_error;
     }
 
-    picture->system_frame_number = pic_to_dup->system_frame_number;
+    GST_CODEC_PICTURE_COPY_FRAME_NUMBER (picture, pic_to_dup);
   } else {
     picture = gst_vp9_picture_new ();
     picture->frame_hdr = frame_hdr;
-    picture->system_frame_number = frame->system_frame_number;
+    GST_CODEC_PICTURE_FRAME_NUMBER (picture) = frame->system_frame_number;
     picture->data = map.data;
     picture->size = map.size;
 
@@ -552,7 +552,7 @@ gst_vp9_decoder_handle_frame (GstVideoDecoder * decoder,
     /* If subclass didn't update output state at this point,
      * marking this picture as a discont and stores current input state */
     if (priv->input_state_changed) {
-      picture->discont_state = gst_video_codec_state_ref (self->input_state);
+      gst_vp9_picture_set_discont_state (picture, self->input_state);
       priv->input_state_changed = FALSE;
     }
 
