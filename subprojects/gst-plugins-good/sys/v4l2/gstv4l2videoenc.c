@@ -780,7 +780,9 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
       ret = self->output_flow;
       goto drop;
     }
+  }
 
+  {
     /* Ensure input internal output pool is active */
     GstBufferPool *opool = gst_v4l2_object_get_buffer_pool (self->v4l2output);
     if (!gst_buffer_pool_is_active (opool)) {
@@ -819,7 +821,9 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
       if (opool)
         gst_object_unref (opool);
     }
+  }
 
+  if (task_state == GST_TASK_STOPPED || task_state == GST_TASK_PAUSED) {
     {
       GstBufferPool *cpool =
           gst_v4l2_object_get_buffer_pool (self->v4l2capture);
