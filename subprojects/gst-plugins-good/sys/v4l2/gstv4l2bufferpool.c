@@ -1298,6 +1298,9 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
         group->planes[i].bytesused, i, group->buffer.flags,
         GST_TIME_ARGS (timestamp), pool->num_queued, outbuf, old_buffer_state);
 
+    if (GST_VIDEO_INFO_FORMAT (&pool->caps_info) == GST_VIDEO_FORMAT_ENCODED)
+      break;
+
     /* Ensure our offset matches the expected plane size, or image size if
      * there is only one memory */
     if (group->n_mem == 1) {
