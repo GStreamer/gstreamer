@@ -463,9 +463,12 @@ static void
 gst_rtp_base_depayload_finalize (GObject * object)
 {
   GstRTPBaseDepayload *rtpbasedepayload = GST_RTP_BASE_DEPAYLOAD (object);
+  GstRTPBaseDepayloadPrivate *priv = rtpbasedepayload->priv;
 
   g_ptr_array_unref (rtpbasedepayload->priv->header_exts);
   gst_clear_buffer_list (&rtpbasedepayload->priv->hdrext_buffers);
+  if (priv->hdrext_delayed)
+    gst_buffer_unref (priv->hdrext_delayed);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
