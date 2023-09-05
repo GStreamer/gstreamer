@@ -4052,7 +4052,7 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
 
   /* Passing HDR10 information
    *
-   * TODO: 
+   * TODO:
    *  - Missing capture (v4l2src) HDR10 configuration and/or reporting
    *  - The API is not capable of HDR to HDR conversion as controls are not specific to queues
    */
@@ -4580,8 +4580,9 @@ gst_v4l2_object_acquire_format (GstV4l2Object * v4l2object, GstVideoInfo * info)
       goto unsupported_field;
   }
 
-  gst_video_info_set_interlaced_format (info, format, interlace_mode, width,
-      height);
+  if (!gst_video_info_set_interlaced_format (info, format, interlace_mode,
+          width, height))
+    goto invalid_dimensions;
 
   gst_v4l2_object_get_colorspace (v4l2object, &fmt, &info->colorimetry);
   gst_v4l2_object_get_streamparm (v4l2object, info);
