@@ -2374,18 +2374,13 @@ gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
                   g_value_reset (&v);
 
                   encoded_ret = gst_caps_merge_structure (encoded_ret, tmp3);
-
                   have_profile_level = TRUE;
                 }
-              }
-
-              if (have_profile_level) {
                 gst_structure_free (tmp2);
               } else {
                 encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+                have_profile_level = TRUE;
               }
-
-              have_profile_level = TRUE;
             }
           }
 
