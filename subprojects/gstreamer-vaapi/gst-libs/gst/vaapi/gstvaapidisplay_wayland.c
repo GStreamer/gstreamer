@@ -132,7 +132,9 @@ dmabuf_modifier (void *data, struct zwp_linux_dmabuf_v1 *zwp_linux_dmabuf,
       format, gst_video_format_to_string (gst_vaapi_video_format_from_drm_format
           (format)), drm_format.modifier);
 
+  g_mutex_lock (&priv->dmabuf_formats_lock);
   g_array_append_val (priv->dmabuf_formats, drm_format);
+  g_mutex_unlock (&priv->dmabuf_formats_lock);
 }
 
 static const struct zwp_linux_dmabuf_v1_listener dmabuf_listener = {
@@ -261,7 +263,9 @@ gst_vaapi_display_wayland_close_display (GstVaapiDisplay * display)
   g_clear_pointer (&priv->compositor, wl_compositor_destroy);
   g_clear_pointer (&priv->registry, wl_registry_destroy);
 
+  g_mutex_lock (&priv->dmabuf_formats_lock);
   g_array_unref (priv->dmabuf_formats);
+  g_mutex_unlock (&priv->dmabuf_formats_lock);
 
   if (priv->wl_display) {
     if (!priv->use_foreign_display)
@@ -341,6 +345,7 @@ gst_vaapi_display_wayland_init (GstVaapiDisplayWayland * display)
   display->priv = priv;
   priv->event_fd = -1;
   priv->dmabuf_formats = g_array_new (FALSE, FALSE, sizeof (GstDRMFormat));
+  g_mutex_init (&priv->dmabuf_formats_lock);
 }
 
 static void

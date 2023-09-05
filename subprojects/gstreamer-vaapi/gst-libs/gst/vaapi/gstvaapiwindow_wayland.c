@@ -616,26 +616,36 @@ static GstVaapiDmabufStatus
 dmabuf_format_supported (GstVaapiDisplayWaylandPrivate * const priv_display,
     guint format, guint64 modifier)
 {
-  GArray *formats = priv_display->dmabuf_formats;
+  GArray *formats;
   gboolean linear = FALSE;
+  gboolean dontcare = FALSE;
   gint i;
 
+  g_mutex_lock (&priv_display->dmabuf_formats_lock);
+  formats = priv_display->dmabuf_formats;
   for (i = 0; i < formats->len; i++) {
     GstDRMFormat fmt = g_array_index (formats, GstDRMFormat, i);
     if (fmt.format == format && (fmt.modifier == modifier ||
-            (fmt.modifier == DRM_FORMAT_MOD_INVALID && modifier == 0)))
-      return GST_VAAPI_DMABUF_SUCCESS;
+            (fmt.modifier == DRM_FORMAT_MOD_INVALID && modifier == 0))) {
+      dontcare = TRUE;
+      break;
+    }
     if (fmt.format == format && (fmt.modifier == 0 ||
             fmt.modifier == DRM_FORMAT_MOD_INVALID))
       linear = TRUE;
   }
+  g_mutex_unlock (&priv_display->dmabuf_formats_lock);
+
+  if (dontcare)
+    return GST_VAAPI_DMABUF_SUCCESS;
+
   if (linear)
     return GST_VAAPI_DMABUF_BAD_MODIFIER;
   else
     return GST_VAAPI_DMABUF_BAD_FORMAT;
 }
 
-GstVideoFormat
+static GstVideoFormat
 check_format (GstVaapiDisplay * const display, gint index,
     GstVideoFormat expect)
 {
@@ -662,14 +672,17 @@ check_format (GstVaapiDisplay * const display, gint index,
   return format;
 }
 
-GstVideoFormat
+static GstVideoFormat
 choose_next_format (GstVaapiDisplay * const display, gint * next_index)
 {
   GstVaapiDisplayWaylandPrivate *const priv_display =
       GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE (display);
-  GArray *formats = priv_display->dmabuf_formats;
+  GArray *formats;
   GstVideoFormat format;
   gint i;
+
+  g_mutex_lock (&priv_display->dmabuf_formats_lock);
+  formats = priv_display->dmabuf_formats;
 
   if (*next_index < 0) {
     *next_index = 0;
@@ -677,7 +690,7 @@ choose_next_format (GstVaapiDisplay * const display, gint * next_index)
     for (i = 0; i < formats->len; i++) {
       format = check_format (display, i, GST_VIDEO_FORMAT_RGBA);
       if (format != GST_VIDEO_FORMAT_UNKNOWN)
-        return format;
+        goto out;
     }
   }
 
@@ -685,11 +698,15 @@ choose_next_format (GstVaapiDisplay * const display, gint * next_index)
     format = check_format (display, i, GST_VIDEO_FORMAT_UNKNOWN);
     if (format != GST_VIDEO_FORMAT_UNKNOWN) {
       *next_index = i + 1;
-      return format;
+      goto out;
     }
   }
   *next_index = formats->len;
-  return GST_VIDEO_FORMAT_UNKNOWN;
+  format = GST_VIDEO_FORMAT_UNKNOWN;
+
+out:
+  g_mutex_unlock (&priv_display->dmabuf_formats_lock);
+  return format;
 }
 
 static GstVaapiDmabufStatus
