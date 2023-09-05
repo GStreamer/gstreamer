@@ -1275,6 +1275,12 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
         group->buffer.index);
   }
 
+  if (group->buffer.flags & V4L2_BUF_FLAG_LAST &&
+      group->planes[0].bytesused == 0) {
+    GST_DEBUG_OBJECT (pool, "Empty last buffer, signalling eos.");
+    goto eos;
+  }
+
   outbuf = pool->buffers[group->buffer.index];
   if (outbuf == NULL)
     goto no_buffer;
