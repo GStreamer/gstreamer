@@ -444,17 +444,20 @@ gst_v4l2_codec_vp8_dec_fill_references (GstV4l2CodecVp8Dec * self)
 {
   GstVp8Decoder *decoder = &self->parent;
 
-  if (decoder->last_picture)
+  if (decoder->last_picture) {
     self->frame_header.last_frame_ts =
-        decoder->last_picture->system_frame_number * 1000;
+        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->last_picture) * 1000;
+  }
 
-  if (decoder->golden_ref_picture)
+  if (decoder->golden_ref_picture) {
     self->frame_header.golden_frame_ts =
-        decoder->golden_ref_picture->system_frame_number * 1000;
+        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->golden_ref_picture) * 1000;
+  }
 
-  if (decoder->alt_ref_picture)
+  if (decoder->alt_ref_picture) {
     self->frame_header.alt_frame_ts =
-        decoder->alt_ref_picture->system_frame_number * 1000;
+        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->alt_ref_picture) * 1000;
+  }
 
   GST_DEBUG_OBJECT (self, "Passing references: last %u, golden %u, alt %u",
       (guint32) self->frame_header.last_frame_ts / 1000,
@@ -624,14 +627,14 @@ gst_v4l2_codec_vp8_dec_end_picture (GstVp8Decoder * decoder,
   }
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
   g_return_val_if_fail (frame, GST_FLOW_ERROR);
   g_warn_if_fail (frame->output_buffer == NULL);
   frame->output_buffer = buffer;
   gst_video_codec_frame_unref (frame);
 
   request = gst_v4l2_decoder_alloc_request (self->decoder,
-      picture->system_frame_number, self->bitstream, buffer);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture), self->bitstream, buffer);
   if (!request) {
     GST_ELEMENT_ERROR (decoder, RESOURCE, NO_SPACE_LEFT,
         ("Failed to allocate a media request object."), (NULL));
@@ -722,16 +725,18 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = gst_vp8_picture_get_user_data (picture);
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gint ret;
 
-  if (picture->discont_state) {
+  if (codec_picture->discont_state) {
     if (!gst_video_decoder_negotiate (vdec)) {
       GST_ERROR_OBJECT (vdec, "Could not re-negotiate with updated state");
       return FALSE;
     }
   }
 
-  GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
+  GST_DEBUG_OBJECT (self, "Output picture %u",
+      codec_picture->system_frame_number);
 
   ret = gst_v4l2_request_set_done (request);
   if (ret == 0) {
@@ -748,7 +753,8 @@ gst_v4l2_codec_vp8_dec_output_picture (GstVp8Decoder * decoder,
 
   if (gst_v4l2_request_failed (request)) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+        ("Failed to decode frame %u", codec_picture->system_frame_number),
+        (NULL));
     goto error;
   }
 

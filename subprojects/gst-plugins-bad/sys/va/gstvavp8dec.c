@@ -375,7 +375,7 @@ gst_va_vp8_dec_end_picture (GstVp8Decoder * decoder, GstVp8Picture * picture)
   GstVaDecodePicture *va_pic;
 
   GST_LOG_OBJECT (base, "end picture %p, (system_frame_number %d)",
-      picture, picture->system_frame_number);
+      picture, GST_CODEC_PICTURE (picture)->system_frame_number);
 
   va_pic = gst_vp8_picture_get_user_data (picture);
 
@@ -392,13 +392,15 @@ gst_va_vp8_dec_output_picture (GstVp8Decoder * decoder,
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVaVp8Dec *self = GST_VA_VP8_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gboolean ret;
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (system_frame_number %d)",
-      picture, picture->system_frame_number);
+      picture, codec_picture->system_frame_number);
 
-  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state, 0);
+  ret = gst_va_base_dec_process_output (base, frame,
+      codec_picture->discont_state, 0);
   gst_vp8_picture_unref (picture);
 
   if (ret)

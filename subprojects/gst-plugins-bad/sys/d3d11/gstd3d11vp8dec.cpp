@@ -645,8 +645,8 @@ gst_d3d11_vp8_dec_output_picture (GstVp8Decoder * decoder,
   }
 
   if (!gst_d3d11_decoder_process_output (inner->d3d11_decoder, vdec,
-          picture->discont_state, inner->width, inner->height, view_buffer,
-          &frame->output_buffer)) {
+          GST_CODEC_PICTURE (picture)->discont_state, inner->width,
+          inner->height, view_buffer, &frame->output_buffer)) {
     GST_ERROR_OBJECT (self, "Failed to copy buffer");
     goto error;
   }

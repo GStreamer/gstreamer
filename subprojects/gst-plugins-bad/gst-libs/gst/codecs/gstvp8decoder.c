@@ -422,10 +422,9 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
 
   picture = gst_vp8_picture_new ();
   picture->frame_hdr = frame_hdr;
-  picture->pts = GST_BUFFER_PTS (in_buf);
   picture->data = map.data;
   picture->size = map.size;
-  picture->system_frame_number = frame->system_frame_number;
+  GST_CODEC_PICTURE_FRAME_NUMBER (picture) = frame->system_frame_number;
 
   if (klass->new_picture) {
     ret = klass->new_picture (self, frame, picture);
@@ -474,7 +473,7 @@ gst_vp8_decoder_handle_frame (GstVideoDecoder * decoder,
     /* If subclass didn't update output state at this point,
      * marking this picture as a discont and stores current input state */
     if (priv->input_state_changed) {
-      picture->discont_state = gst_video_codec_state_ref (self->input_state);
+      gst_vp8_picture_set_discont_state (picture, self->input_state);
       priv->input_state_changed = FALSE;
     }
 
