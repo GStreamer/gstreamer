@@ -473,7 +473,7 @@ gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
   if (!flush) {
     while ((picture = gst_h264_dpb_bump (priv->dpb, TRUE)) != NULL) {
       GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
-          picture->system_frame_number);
+          GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
       if (frame)
         gst_video_decoder_release_frame (decoder, frame);
@@ -796,7 +796,7 @@ gst_h264_decoder_split_frame (GstH264Decoder * self, GstH264Picture * picture)
   other_field->frame_num = picture->frame_num;
   other_field->ref = picture->ref;
   other_field->nonexisting = picture->nonexisting;
-  other_field->system_frame_number = picture->system_frame_number;
+  GST_CODEC_PICTURE_COPY_FRAME_NUMBER (other_field, picture);
   other_field->field_pic_flag = picture->field_pic_flag;
 
   return other_field;
@@ -1034,11 +1034,12 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
   g_assert (priv->active_sps != NULL);
   g_assert (priv->active_pps != NULL);
 
+  current_picture = priv->current_picture;
+
   /* If subclass didn't update output state at this point,
    * marking this picture as a discont and stores current input state */
   if (priv->input_state_changed) {
-    priv->current_picture->discont_state =
-        gst_video_codec_state_ref (self->input_state);
+    gst_h264_picture_set_discont_state (current_picture, self->input_state);
     priv->input_state_changed = FALSE;
   }
 
@@ -1055,8 +1056,6 @@ gst_h264_decoder_start_current_picture (GstH264Decoder * self)
 
   if (!gst_h264_decoder_init_current_picture (self))
     return GST_FLOW_ERROR;
-
-  current_picture = priv->current_picture;
 
   /* If the new picture is an IDR, flush DPB */
   if (current_picture->idr) {
@@ -1294,7 +1293,8 @@ gst_h264_decoder_parse_slice (GstH264Decoder * self, GstH264NalUnit * nalu)
     }
 
     /* This allows accessing the frame from the picture. */
-    picture->system_frame_number = priv->current_frame->system_frame_number;
+    GST_CODEC_PICTURE_FRAME_NUMBER (picture) =
+        priv->current_frame->system_frame_number;
     priv->current_picture = picture;
 
     ret = gst_h264_decoder_start_current_picture (self);
@@ -1798,7 +1798,7 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
 #endif
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
   if (!frame) {
     /* The case where the end_picture() got failed and corresponding
@@ -1808,7 +1808,7 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
     } else {
       GST_ERROR_OBJECT (self,
           "No available codec frame with frame number %d",
-          picture->system_frame_number);
+          GST_CODEC_PICTURE_FRAME_NUMBER (picture));
       UPDATE_FLOW_RETURN (ret, GST_FLOW_ERROR);
     }
 
@@ -2109,10 +2109,10 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
    * drop codec frame of the second field because we are consuming
    * only the first codec frame via GstH264Decoder::output_picture() method */
   if (picture->second_field && picture->other_field &&
-      picture->system_frame_number !=
-      picture->other_field->system_frame_number) {
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture) !=
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture->other_field)) {
     GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
-        picture->system_frame_number);
+        GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
     gst_video_decoder_release_frame (decoder, frame);
   }
