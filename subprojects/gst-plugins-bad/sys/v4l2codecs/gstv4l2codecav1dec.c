@@ -547,7 +547,7 @@ gst_v4l2_codec_av1_fill_refs (GstV4l2CodecAV1Dec * self,
 
     /* the decoder might not have filled all slots in the first few frames */
     self->v4l2_frame.reference_frame_ts[i] =
-        ref_pic ? ref_pic->system_frame_number * 1000 : 0;
+        ref_pic ? GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * 1000 : 0;
   }
 
   memcpy (self->v4l2_frame.ref_frame_idx, frame_hdr->ref_frame_idx,
@@ -1133,11 +1133,11 @@ gst_v4l2_codec_av1_dec_duplicate_picture (GstAV1Decoder * decoder,
   GstAV1Picture *new_picture;
 
   GST_DEBUG_OBJECT (decoder, "Duplicate picture %u",
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
   new_picture = gst_av1_picture_new ();
   new_picture->frame_hdr = picture->frame_hdr;
-  new_picture->system_frame_number = picture->system_frame_number;
+  GST_CODEC_PICTURE_COPY_FRAME_NUMBER (new_picture, picture);
 
   if (GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_HOLDS_BUFFER)) {
     GstBuffer *output_buffer = gst_av1_picture_get_user_data (picture);
@@ -1286,7 +1286,7 @@ gst_v4l2_codec_av1_dec_end_picture (GstAV1Decoder * decoder,
   gst_memory_resize (self->bitstream, 0, bytesused);
 
   frame = gst_video_decoder_get_frame (GST_VIDEO_DECODER (self),
-      picture->system_frame_number);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture));
   g_return_val_if_fail (frame, FALSE);
 
   flow_ret = gst_buffer_pool_acquire_buffer (GST_BUFFER_POOL (self->src_pool),
@@ -1301,7 +1301,8 @@ gst_v4l2_codec_av1_dec_end_picture (GstAV1Decoder * decoder,
   }
 
   request = gst_v4l2_decoder_alloc_request (self->decoder,
-      picture->system_frame_number, self->bitstream, frame->output_buffer);
+      GST_CODEC_PICTURE_FRAME_NUMBER (picture), self->bitstream,
+      frame->output_buffer);
 
   gst_video_codec_frame_unref (frame);
 
@@ -1389,9 +1390,11 @@ gst_v4l2_codec_av1_dec_output_picture (GstAV1Decoder * decoder,
   GstV4l2CodecAV1Dec *self = GST_V4L2_CODEC_AV1_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
   GstV4l2Request *request = NULL;
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gint ret;
 
-  GST_DEBUG_OBJECT (self, "Output picture %u", picture->system_frame_number);
+  GST_DEBUG_OBJECT (self, "Output picture %u",
+      codec_picture->system_frame_number);
 
   if (!GST_MINI_OBJECT_FLAG_IS_SET (picture, FLAG_PICTURE_HOLDS_BUFFER))
     request = gst_av1_picture_get_user_data (picture);
@@ -1410,7 +1413,8 @@ gst_v4l2_codec_av1_dec_output_picture (GstAV1Decoder * decoder,
 
     if (gst_v4l2_request_failed (request)) {
       GST_ELEMENT_ERROR (self, STREAM, DECODE,
-          ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+          ("Failed to decode frame %u", codec_picture->system_frame_number),
+          (NULL));
       goto error;
     }
 
@@ -1425,7 +1429,8 @@ gst_v4l2_codec_av1_dec_output_picture (GstAV1Decoder * decoder,
   /* This may happen if we duplicate a picture witch failed to decode */
   if (!frame->output_buffer) {
     GST_ELEMENT_ERROR (self, STREAM, DECODE,
-        ("Failed to decode frame %u", picture->system_frame_number), (NULL));
+        ("Failed to decode frame %u", codec_picture->system_frame_number),
+        (NULL));
     goto error;
   }
 

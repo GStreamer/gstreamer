@@ -923,7 +923,7 @@ gst_va_av1_dec_end_picture (GstAV1Decoder * decoder, GstAV1Picture * picture)
   GstVaDecodePicture *va_pic;
 
   GST_LOG_OBJECT (self, "end picture %p, (system_frame_number %d)",
-      picture, picture->system_frame_number);
+      picture, GST_CODEC_PICTURE_FRAME_NUMBER (picture));
 
   va_pic = gst_av1_picture_get_user_data (picture);
 
@@ -942,6 +942,7 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
   GstVaAV1Dec *self = GST_VA_AV1_DEC (decoder);
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
   GstVideoDecoder *vdec = GST_VIDEO_DECODER (decoder);
+  GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   gboolean ret;
 
   g_assert (picture->frame_hdr.show_frame ||
@@ -949,7 +950,7 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
 
   GST_LOG_OBJECT (self,
       "Outputting picture %p (system_frame_number %d)",
-      picture, picture->system_frame_number);
+      picture, codec_picture->system_frame_number);
 
   if (picture->frame_hdr.show_existing_frame) {
     GstVaDecodePicture *pic;
@@ -959,7 +960,8 @@ gst_va_av1_dec_output_picture (GstAV1Decoder * decoder,
     frame->output_buffer = gst_buffer_ref (pic->gstbuffer);
   }
 
-  ret = gst_va_base_dec_process_output (base, frame, picture->discont_state, 0);
+  ret = gst_va_base_dec_process_output (base,
+      frame, codec_picture->discont_state, 0);
   gst_av1_picture_unref (picture);
 
   if (ret)

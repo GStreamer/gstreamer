@@ -491,7 +491,7 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
       return GST_FLOW_ERROR;
     }
 
-    picture->system_frame_number = ref_picture->system_frame_number;
+    GST_CODEC_PICTURE_COPY_FRAME_NUMBER (picture, ref_picture);
     picture->frame_hdr = *frame_header;
     priv->current_picture = picture;
   } else {
@@ -501,7 +501,8 @@ gst_av1_decoder_decode_frame_header (GstAV1Decoder * self,
     picture->show_frame = frame_header->show_frame;
     picture->showable_frame = frame_header->showable_frame;
     picture->apply_grain = frame_header->film_grain_params.apply_grain;
-    picture->system_frame_number = priv->current_frame->system_frame_number;
+    GST_CODEC_PICTURE_FRAME_NUMBER (picture) =
+        priv->current_frame->system_frame_number;
     picture->temporal_id = obu->header.obu_temporal_id;
     picture->spatial_id = obu->header.obu_spatial_id;
 
@@ -761,8 +762,8 @@ out:
         /* If subclass didn't update output state at this point,
          * marking this picture as a discont and stores current input state */
         if (priv->input_state_changed) {
-          priv->current_picture->discont_state =
-              gst_video_codec_state_ref (self->input_state);
+          gst_av1_picture_set_discont_state (priv->current_picture,
+              self->input_state);
           priv->input_state_changed = FALSE;
         }
 
