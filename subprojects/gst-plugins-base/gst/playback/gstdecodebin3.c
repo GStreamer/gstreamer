@@ -2159,7 +2159,9 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       if (!input->parsebin && !input->identity) {
         if (gst_decodebin_input_requires_parsebin (input, newcaps)) {
           GST_DEBUG_OBJECT (sinkpad, "parsebin is required for input");
+          INPUT_LOCK (dbin);
           gst_decodebin_input_ensure_parsebin (input);
+          INPUT_UNLOCK (dbin);
           break;
         }
         GST_DEBUG_OBJECT (sinkpad,
@@ -2205,7 +2207,9 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       if (segment && segment->format != GST_FORMAT_TIME && !input->parsebin) {
         GST_DEBUG_OBJECT (sinkpad,
             "Got a non-time segment, forcing parsebin handling");
+        INPUT_LOCK (dbin);
         gst_decodebin_input_ensure_parsebin (input);
+        INPUT_UNLOCK (dbin);
       }
       break;
     }
