@@ -163,7 +163,6 @@ class Test(Loggable):
 
     def copy(self, nth=None):
         copied_test = copy.copy(self)
-        copied_test.reports = copy.deepcopy(self.reports)
         if nth:
             copied_test.classname += '_it' + str(nth)
             copied_test._uuid = None
@@ -743,10 +742,6 @@ class Test(Loggable):
             clean_env[n] = self.proc_env.get(n, None)
         self.proc_env = clean_env
 
-        # Don't keep around JSON report objects, they were processed
-        # in check_results already
-        self.reports = []
-
         return self.result
 
 
@@ -1001,6 +996,11 @@ class GstValidateTest(Test):
         self.speed = 1.0
         self.actions_infos = []
 
+    def copy(self, nth=None):
+        new_test = super().copy(nth=nth)
+        new_test.reports = copy.deepcopy(self.reports)
+        return new_test
+
     def build_arguments(self):
         super(GstValidateTest, self).build_arguments()
         if "GST_VALIDATE" in os.environ:
@@ -1232,6 +1232,15 @@ class GstValidateTest(Test):
         result = super(GstValidateTest, self).get_valgrind_suppressions()
         result.extend(utils.get_gst_build_valgrind_suppressions())
         return result
+
+    def test_end(self, retry_on_failures=False):
+        ret = super().test_end(retry_on_failures=retry_on_failures)
+
+        # Don't keep around JSON report objects, they were processed
+        # in check_results already
+        self.reports = []
+
+        return ret
 
 
 class VariableFramerateMode(Enum):
