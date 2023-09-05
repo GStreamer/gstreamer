@@ -101,6 +101,7 @@
 #include <string.h>
 
 #include "gstappsrc.h"
+#include "gstapputils.h"
 
 typedef enum
 {
@@ -178,11 +179,7 @@ struct _GstAppSrcPrivate
   gboolean flushing;
   gboolean started;
   gboolean is_eos;
-  guint64 queued_bytes, queued_buffers;
-  /* Used to calculate the current time level */
-  GstClockTime last_in_running_time, last_out_running_time;
-  /* Updated based on the above whenever they change */
-  GstClockTime queued_time;
+  GstQueueStatusInfo queue_status_info;
   guint64 offset;
   GstAppStreamType current_type;
 
@@ -795,11 +792,7 @@ gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
   gst_queue_array_clear (priv->delayed_events);
   priv->pushed_buffer = FALSE;
 
-  priv->queued_bytes = 0;
-  priv->queued_buffers = 0;
-  priv->queued_time = 0;
-  priv->last_in_running_time = GST_CLOCK_TIME_NONE;
-  priv->last_out_running_time = GST_CLOCK_TIME_NONE;
+  gst_queue_status_info_reset (&priv->queue_status_info);
   priv->need_discont_upstream = FALSE;
   priv->need_discont_downstream = FALSE;
 }
@@ -1384,92 +1377,18 @@ gst_app_src_update_queued_pop (GstAppSrc * appsrc, GstMiniObject * item,
     gboolean update_offset)
 {
   GstAppSrcPrivate *priv = appsrc->priv;
-  guint buf_size = 0;
-  guint n_buffers = 0;
-  GstClockTime end_buffer_ts = GST_CLOCK_TIME_NONE;
+  guint64 old_queued_bytes = priv->queue_status_info.queued_bytes;
+  guint64 bytes_dequeued;
 
-  if (GST_IS_BUFFER (item)) {
-    GstBuffer *buf = GST_BUFFER_CAST (item);
-    buf_size = gst_buffer_get_size (buf);
-    n_buffers = 1;
+  gst_queue_status_info_pop (&priv->queue_status_info, item,
+      &priv->current_segment, &priv->last_segment, GST_OBJECT_CAST (appsrc));
 
-    end_buffer_ts = GST_BUFFER_DTS_OR_PTS (buf);
-    if (end_buffer_ts != GST_CLOCK_TIME_NONE
-        && GST_BUFFER_DURATION_IS_VALID (buf))
-      end_buffer_ts += GST_BUFFER_DURATION (buf);
-
-    GST_LOG_OBJECT (appsrc, "have buffer %p of size %u", buf, buf_size);
-  } else if (GST_IS_BUFFER_LIST (item)) {
-    GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (item);
-    guint i;
-
-    n_buffers = gst_buffer_list_length (buffer_list);
-
-    for (i = 0; i < n_buffers; i++) {
-      GstBuffer *tmp = gst_buffer_list_get (buffer_list, i);
-      GstClockTime ts = GST_BUFFER_DTS_OR_PTS (tmp);
-
-      buf_size += gst_buffer_get_size (tmp);
-      /* Update to the last buffer's timestamp that is known */
-      if (ts != GST_CLOCK_TIME_NONE) {
-        end_buffer_ts = ts;
-        if (GST_BUFFER_DURATION_IS_VALID (tmp))
-          end_buffer_ts += GST_BUFFER_DURATION (tmp);
-      }
-    }
-  }
-
-  priv->queued_bytes -= buf_size;
-  priv->queued_buffers -= n_buffers;
-
-  /* Update time level if working on a TIME segment */
-  if ((priv->current_segment.format == GST_FORMAT_TIME
-          || (priv->current_segment.format == GST_FORMAT_UNDEFINED
-              && priv->last_segment.format == GST_FORMAT_TIME))
-      && end_buffer_ts != GST_CLOCK_TIME_NONE) {
-    const GstSegment *segment =
-        priv->current_segment.format ==
-        GST_FORMAT_TIME ? &priv->current_segment : &priv->last_segment;
-
-    /* Clip to the current segment boundaries */
-    if (segment->stop != -1 && end_buffer_ts > segment->stop)
-      end_buffer_ts = segment->stop;
-    else if (segment->start > end_buffer_ts)
-      end_buffer_ts = segment->start;
-
-    priv->last_out_running_time =
-        gst_segment_to_running_time (segment, GST_FORMAT_TIME, end_buffer_ts);
-
-    GST_TRACE_OBJECT (appsrc,
-        "Last in running time %" GST_TIME_FORMAT ", last out running time %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (priv->last_in_running_time),
-        GST_TIME_ARGS (priv->last_out_running_time));
-
-    /* If timestamps on both sides are known, calculate the current
-     * fill level in time and consider the queue empty if the output
-     * running time is lower than the input one (i.e. some kind of reset
-     * has happened).
-     */
-    if (priv->last_out_running_time != GST_CLOCK_TIME_NONE
-        && priv->last_in_running_time != GST_CLOCK_TIME_NONE) {
-      if (priv->last_out_running_time > priv->last_in_running_time) {
-        priv->queued_time = 0;
-      } else {
-        priv->queued_time =
-            priv->last_in_running_time - priv->last_out_running_time;
-      }
-    }
-  }
-
-  GST_DEBUG_OBJECT (appsrc,
-      "Currently queued: %" G_GUINT64_FORMAT " bytes, %" G_GUINT64_FORMAT
-      " buffers, %" GST_TIME_FORMAT, priv->queued_bytes,
-      priv->queued_buffers, GST_TIME_ARGS (priv->queued_time));
+  bytes_dequeued = old_queued_bytes - priv->queue_status_info.queued_bytes;
 
   /* only update the offset when in random_access mode and when requested by
    * the caller, i.e. not when just dropping the item */
   if (update_offset && priv->stream_type == GST_APP_STREAM_TYPE_RANDOM_ACCESS)
-    priv->offset += buf_size;
+    priv->offset += bytes_dequeued;
 }
 
 /* Update the currently queued bytes/buffers/time information for the item
@@ -1479,99 +1398,11 @@ static void
 gst_app_src_update_queued_push (GstAppSrc * appsrc, GstMiniObject * item)
 {
   GstAppSrcPrivate *priv = appsrc->priv;
-  GstClockTime start_buffer_ts = GST_CLOCK_TIME_NONE;
-  GstClockTime end_buffer_ts = GST_CLOCK_TIME_NONE;
-  guint buf_size = 0;
-  guint n_buffers = 0;
-
-  if (GST_IS_BUFFER (item)) {
-    GstBuffer *buf = GST_BUFFER_CAST (item);
-
-    buf_size = gst_buffer_get_size (buf);
-    n_buffers = 1;
-
-    start_buffer_ts = end_buffer_ts = GST_BUFFER_DTS_OR_PTS (buf);
-    if (end_buffer_ts != GST_CLOCK_TIME_NONE
-        && GST_BUFFER_DURATION_IS_VALID (buf))
-      end_buffer_ts += GST_BUFFER_DURATION (buf);
-  } else if (GST_IS_BUFFER_LIST (item)) {
-    GstBufferList *buffer_list = GST_BUFFER_LIST_CAST (item);
-    guint i;
-
-    n_buffers = gst_buffer_list_length (buffer_list);
-
-    for (i = 0; i < n_buffers; i++) {
-      GstBuffer *tmp = gst_buffer_list_get (buffer_list, i);
-      GstClockTime ts = GST_BUFFER_DTS_OR_PTS (tmp);
-
-      buf_size += gst_buffer_get_size (tmp);
-
-      if (ts != GST_CLOCK_TIME_NONE) {
-        if (start_buffer_ts == GST_CLOCK_TIME_NONE)
-          start_buffer_ts = ts;
-        end_buffer_ts = ts;
-        if (GST_BUFFER_DURATION_IS_VALID (tmp))
-          end_buffer_ts += GST_BUFFER_DURATION (tmp);
-      }
-    }
-  }
-
-  priv->queued_bytes += buf_size;
-  priv->queued_buffers += n_buffers;
-
-  /* Update time level if working on a TIME segment */
-  if (priv->last_segment.format == GST_FORMAT_TIME
-      && end_buffer_ts != GST_CLOCK_TIME_NONE) {
-    /* Clip to the last segment boundaries */
-    if (priv->last_segment.stop != -1
-        && end_buffer_ts > priv->last_segment.stop)
-      end_buffer_ts = priv->last_segment.stop;
-    else if (priv->last_segment.start > end_buffer_ts)
-      end_buffer_ts = priv->last_segment.start;
-
-    priv->last_in_running_time =
-        gst_segment_to_running_time (&priv->last_segment, GST_FORMAT_TIME,
-        end_buffer_ts);
-
-    /* If this is the only buffer then we can directly update the queued time
-     * here. This is especially useful if this was the first buffer because
-     * otherwise we would have to wait until it is actually unqueued to know
-     * the queued duration */
-    if (priv->queued_buffers == 1) {
-      if (priv->last_segment.stop != -1
-          && start_buffer_ts > priv->last_segment.stop)
-        start_buffer_ts = priv->last_segment.stop;
-      else if (priv->last_segment.start > start_buffer_ts)
-        start_buffer_ts = priv->last_segment.start;
-
-      priv->last_out_running_time =
-          gst_segment_to_running_time (&priv->last_segment, GST_FORMAT_TIME,
-          start_buffer_ts);
-    }
-
-    GST_TRACE_OBJECT (appsrc,
-        "Last in running time %" GST_TIME_FORMAT ", last out running time %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (priv->last_in_running_time),
-        GST_TIME_ARGS (priv->last_out_running_time));
-
-    if (priv->last_out_running_time != GST_CLOCK_TIME_NONE
-        && priv->last_in_running_time != GST_CLOCK_TIME_NONE) {
-      if (priv->last_out_running_time > priv->last_in_running_time) {
-        priv->queued_time = 0;
-      } else {
-        priv->queued_time =
-            priv->last_in_running_time - priv->last_out_running_time;
-      }
-    }
-  }
-
-  GST_DEBUG_OBJECT (appsrc,
-      "Currently queued: %" G_GUINT64_FORMAT " bytes, %" G_GUINT64_FORMAT
-      " buffers, %" GST_TIME_FORMAT, priv->queued_bytes, priv->queued_buffers,
-      GST_TIME_ARGS (priv->queued_time));
+  gst_queue_status_info_push (&priv->queue_status_info, item,
+      &priv->last_segment, GST_OBJECT_CAST (appsrc));
 }
 
-/* check if @obj should be send after the CAPS and SEGMENT events */
+/* check if @obj should be sent after the CAPS and SEGMENT events */
 static gboolean
 needs_segment (GstMiniObject * obj)
 {
@@ -1828,11 +1659,11 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       /* see if we go lower than the min-percent */
       if (priv->min_percent) {
         if ((priv->max_bytes
-                && priv->queued_bytes * 100 / priv->max_bytes <=
-                priv->min_percent) || (priv->max_buffers
-                && priv->queued_buffers * 100 / priv->max_buffers <=
-                priv->min_percent) || (priv->max_time
-                && priv->queued_time * 100 / priv->max_time <=
+                && priv->queue_status_info.queued_bytes * 100 /
+                priv->max_bytes <= priv->min_percent) || (priv->max_buffers
+                && priv->queue_status_info.queued_buffers * 100 /
+                priv->max_buffers <= priv->min_percent) || (priv->max_time
+                && priv->queue_status_info.queued_time * 100 / priv->max_time <=
                 priv->min_percent)) {
           /* ignore flushing state, we got a buffer and we will return it now.
            * Errors will be handled in the next round */
@@ -2211,7 +2042,7 @@ gst_app_src_get_current_level_bytes (GstAppSrc * appsrc)
   priv = appsrc->priv;
 
   GST_OBJECT_LOCK (appsrc);
-  queued = priv->queued_bytes;
+  queued = priv->queue_status_info.queued_bytes;
   GST_DEBUG_OBJECT (appsrc, "current level bytes is %" G_GUINT64_FORMAT,
       queued);
   GST_OBJECT_UNLOCK (appsrc);
@@ -2299,7 +2130,7 @@ gst_app_src_get_current_level_buffers (GstAppSrc * appsrc)
   priv = appsrc->priv;
 
   GST_OBJECT_LOCK (appsrc);
-  queued = priv->queued_buffers;
+  queued = priv->queue_status_info.queued_buffers;
   GST_DEBUG_OBJECT (appsrc, "current level buffers is %" G_GUINT64_FORMAT,
       queued);
   GST_OBJECT_UNLOCK (appsrc);
@@ -2388,7 +2219,7 @@ gst_app_src_get_current_level_time (GstAppSrc * appsrc)
   priv = appsrc->priv;
 
   GST_OBJECT_LOCK (appsrc);
-  queued = priv->queued_time;
+  queued = priv->queue_status_info.queued_time;
   GST_DEBUG_OBJECT (appsrc, "current level time is %" GST_TIME_FORMAT,
       GST_TIME_ARGS (queued));
   GST_OBJECT_UNLOCK (appsrc);
@@ -2631,16 +2462,16 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
     if (priv->is_eos)
       goto eos;
 
-    if ((priv->max_bytes && priv->queued_bytes >= priv->max_bytes) ||
-        (priv->max_buffers && priv->queued_buffers >= priv->max_buffers) ||
-        (priv->max_time && priv->queued_time >= priv->max_time)) {
+    if (gst_queue_status_info_is_full (&priv->queue_status_info,
+            priv->max_buffers, priv->max_bytes, priv->max_time)) {
       GST_DEBUG_OBJECT (appsrc,
           "queue filled (queued %" G_GUINT64_FORMAT " bytes, max %"
           G_GUINT64_FORMAT " bytes, " "queued %" G_GUINT64_FORMAT
           " buffers, max %" G_GUINT64_FORMAT " buffers, " "queued %"
           GST_TIME_FORMAT " time, max %" GST_TIME_FORMAT " time)",
-          priv->queued_bytes, priv->max_bytes, priv->queued_buffers,
-          priv->max_buffers, GST_TIME_ARGS (priv->queued_time),
+          priv->queue_status_info.queued_bytes, priv->max_bytes,
+          priv->queue_status_info.queued_buffers, priv->max_buffers,
+          GST_TIME_ARGS (priv->queue_status_info.queued_time),
           GST_TIME_ARGS (priv->max_time));
 
       if (first) {
