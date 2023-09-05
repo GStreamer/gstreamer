@@ -3442,7 +3442,7 @@ out:
  * The validation for completeness of @au and @sei is caller's responsibility.
  * Both @au and @sei must be byte-stream formatted
  *
- * Returns: (nullable): a SEI inserted #GstBuffer or %NULL
+ * Returns: (transfer full) (nullable): a SEI inserted #GstBuffer or %NULL
  *   if cannot figure out proper position to insert a @sei
  *
  * Since: 1.18
@@ -3472,7 +3472,7 @@ gst_h264_parser_insert_sei (GstH264NalParser * nalparser, GstBuffer * au,
  * Nal prefix type of both @au and @sei must be packetized, and
  * also the size of nal length field must be identical to @nal_length_size
  *
- * Returns: (nullable): a SEI inserted #GstBuffer or %NULL
+ * Returns: (transfer full) (nullable): a SEI inserted #GstBuffer or %NULL
  *   if cannot figure out proper position to insert a @sei
  *
  * Since: 1.18
