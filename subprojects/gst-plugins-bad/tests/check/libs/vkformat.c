@@ -69,11 +69,13 @@ GST_START_TEST (test_format_from_video_info_2)
 
   fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_RGBA, 620,
           480));
+  fail_unless (GST_VIDEO_INFO_COLORIMETRY (&vinfo).transfer ==
+      GST_VIDEO_TRANSFER_SRGB);
 
   fail_unless (gst_vulkan_format_from_video_info_2 (phy_dev, &vinfo,
           VK_IMAGE_TILING_LINEAR, TRUE, vk_fmts, &n_imgs, &supported_usage));
 
-  fail_unless (n_imgs == 1 && vk_fmts[0] == VK_FORMAT_R8G8B8A8_UNORM);
+  fail_unless (n_imgs == 1 && vk_fmts[0] == VK_FORMAT_R8G8B8A8_SRGB);
 
   fail_unless (gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_RGBA, 620,
           480));
@@ -83,7 +85,7 @@ GST_START_TEST (test_format_from_video_info_2)
   fail_unless (gst_vulkan_format_from_video_info_2 (phy_dev, &vinfo,
           VK_IMAGE_TILING_LINEAR, TRUE, vk_fmts, &n_imgs, &supported_usage));
 
-  fail_unless (n_imgs == 1 && vk_fmts[0] == VK_FORMAT_R8G8B8A8_SRGB);
+  fail_unless (n_imgs == 1 && vk_fmts[0] == VK_FORMAT_R8G8B8A8_UNORM);
 }
 
 GST_END_TEST;

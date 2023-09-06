@@ -646,8 +646,8 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
     }
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
-      if (basics_primary && GST_VIDEO_INFO_COLORIMETRY (info).transfer !=
-          GST_VIDEO_TRANSFER_SRGB) {
+      if (basics_primary && (GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
+              GST_VIDEO_TRANSFER_SRGB)) {
         if (fmts)
           fmts[0] = vk_formats_map[i].vkfrmt;
         if (n_imgs)
@@ -655,7 +655,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
         if (usage)
           *usage = _get_usage (feats_primary);
       } else if (basics_secondary
-          && GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
+          && GST_VIDEO_INFO_COLORIMETRY (info).transfer !=
           GST_VIDEO_TRANSFER_SRGB) {
         if (fmts)
           fmts[0] = vk_formats_map[i].vkfrmts[0];
@@ -667,8 +667,8 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
         return FALSE;
       }
     } else {
-      if (basics_primary && !(no_multiplane
-              && GST_VIDEO_INFO_N_PLANES (info) > 1)) {
+      if (basics_primary && !no_multiplane
+          && GST_VIDEO_INFO_N_PLANES (info) > 1) {
         if (fmts)
           fmts[0] = vk_formats_map[i].vkfrmt;
         if (n_imgs)
