@@ -122,20 +122,15 @@ gst_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad * vpad,
 {
   GstGLMixerPad *pad = GST_GL_MIXER_PAD (vpad);
   GstGLMixer *mix = GST_GL_MIXER (vagg);
-  GstVideoInfo gl_info;
   GstGLSyncMeta *sync_meta;
 
   pad->current_texture = 0;
-
-  gst_video_info_set_format (&gl_info,
-      GST_VIDEO_FORMAT_RGBA,
-      GST_VIDEO_INFO_WIDTH (&vpad->info), GST_VIDEO_INFO_HEIGHT (&vpad->info));
 
   sync_meta = gst_buffer_get_gl_sync_meta (buffer);
   if (sync_meta)
     gst_gl_sync_meta_wait (sync_meta, GST_GL_BASE_MIXER (mix)->context);
 
-  if (!gst_video_frame_map (prepared_frame, &gl_info, buffer,
+  if (!gst_video_frame_map (prepared_frame, &vpad->info, buffer,
           GST_MAP_READ | GST_MAP_GL)) {
     GST_ERROR_OBJECT (pad, "Failed to map input frame");
     return FALSE;
