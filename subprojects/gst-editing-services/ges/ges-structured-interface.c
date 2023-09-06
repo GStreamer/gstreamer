@@ -301,11 +301,58 @@ typedef struct
   gboolean res;
 } SetKeyframesData;
 
+
+typedef struct
+{
+  gboolean ok;
+  union
+  {
+    struct
+    {
+      gdouble v;
+    } Ok;
+
+    struct
+    {
+      const gchar *err;
+    } Err;
+  };
+} ValueToDoubleRes;
+
+static ValueToDoubleRes
+value_to_double (const GValue * v)
+{
+  GValue v2 = G_VALUE_INIT;
+  ValueToDoubleRes res = { 0, };
+
+  if (G_VALUE_HOLDS_STRING (v)) {
+    errno = 0;
+    res.Ok.v = g_ascii_strtod (g_value_get_string (v), NULL);
+
+    if (errno)
+      res.Err.err = g_strerror (errno);
+    else
+      res.ok = TRUE;
+
+    return res;
+  }
+
+  g_value_init (&v2, G_TYPE_DOUBLE);
+  res.ok = g_value_transform (v, &v2);
+  if (res.ok) {
+    res.Ok.v = g_value_get_double (&v2);
+  } else {
+    res.Err.err = "unsupported conversion";
+  }
+  g_value_reset (&v2);
+
+  return res;
+}
+
 static gboolean
 un_set_keyframes_foreach (GQuark field_id, const GValue * value,
     SetKeyframesData * d)
 {
-  GValue v = G_VALUE_INIT;
   GError **error = &d->error;
   gchar *tmp;
   gint i;
@@ -335,21 +382,17 @@ un_set_keyframes_foreach (GQuark field_id, const GValue * value,
     return TRUE;
   }
 
-  g_value_init (&v, G_TYPE_DOUBLE);
-  REPORT_UNLESS (g_value_transform (value, &v), err,
-      "Could not convert keyframe %f value %s to double", ts,
-      gst_value_serialize (value));
+  ValueToDoubleRes res = value_to_double (value);
+  REPORT_UNLESS (res.ok, err,
+      "Could not convert keyframe %f value (%s)%s to double (%s)", ts,
+      G_VALUE_TYPE_NAME (value), gst_value_serialize (value), res.Err.err);
 
   REPORT_UNLESS (gst_timed_value_control_source_set (d->source, ts * GST_SECOND,
-          g_value_get_double (&v)), err, "Could not set keyframe %f=%f", ts,
-      g_value_get_double (&v));
+          res.Ok.v), err, "Could not set keyframe %f=%f", ts, res.Ok.v);
 
-  g_value_reset (&v);
   return TRUE;
 
 err:
-  if (v.g_type)
-    g_value_reset (&v);
   d->res = FALSE;
   return FALSE;
 }
@@ -424,7 +467,6 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
   if (absolute) {
     GParamSpec *pspec;
     const GValue *v;
-    GValue v2 = G_VALUE_INIT;
 
     if (!ges_timeline_element_lookup_child (element, property_name, NULL,
             &pspec)) {
@@ -446,8 +488,8 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
       goto done;
     }
 
-    g_value_init (&v2, G_TYPE_DOUBLE);
-    if (!g_value_transform (v, &v2)) {
+    ValueToDoubleRes res = value_to_double (v);
+    if (!res.ok) {
       gchar *struct_str = gst_structure_to_string (structure);
 
       *error = g_error_new (GES_ERROR, 0,
@@ -457,10 +499,11 @@ _ges_add_remove_keyframe_from_struct (GESTimeline * timeline,
       g_free (struct_str);
       goto done;
     }
-    value = g_value_get_double (&v2);
-    g_value_reset (&v2);
-  } else
+
+    value = res.Ok.v;
+  } else {
     GET_AND_CHECK ("value", G_TYPE_DOUBLE, &value, done);
+  }
 
   setting_value =
       !g_strcmp0 (gst_structure_get_name (structure), "add-keyframe");
