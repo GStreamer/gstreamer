@@ -183,8 +183,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
   tiling = priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
   found = gst_vulkan_format_from_video_info_2 (vk_pool->device->physical_device,
-      &priv->v_info, tiling, no_multiplane, priv->vk_fmts, &priv->n_imgs,
-      &supported_usage);
+      &priv->v_info, tiling, no_multiplane, priv->usage, priv->vk_fmts,
+      &priv->n_imgs, &supported_usage);
   if (!found)
     goto no_vk_format;
 

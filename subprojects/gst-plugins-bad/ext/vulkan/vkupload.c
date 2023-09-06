@@ -229,6 +229,8 @@ _raw_to_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
   guint out_width, out_height;
   guint i;
   VkFormat vk_fmts[4] = { VK_FORMAT_UNDEFINED, };
+  VkImageUsageFlags usage =
+      VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
   int n_imgs;
 
   if (!gst_video_info_from_caps (&raw->in_info, in_caps))
@@ -242,7 +244,7 @@ _raw_to_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
 
   if (!gst_vulkan_format_from_video_info_2 (raw->upload->
           device->physical_device, &raw->out_info, VK_IMAGE_TILING_OPTIMAL,
-          FALSE, vk_fmts, &n_imgs, NULL))
+          FALSE, usage, vk_fmts, &n_imgs, NULL))
     return FALSE;
 
   for (i = 0; i < n_imgs; i++) {
@@ -250,8 +252,7 @@ _raw_to_buffer_set_caps (gpointer impl, GstCaps * in_caps, GstCaps * out_caps)
 
     img_mem = (GstVulkanImageMemory *)
         gst_vulkan_image_memory_alloc (raw->upload->device, vk_fmts[i],
-        out_width, out_height, VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT,
+        out_width, out_height, VK_IMAGE_TILING_OPTIMAL, usage,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 
     raw->alloc_sizes[i] = img_mem->requirements.size;

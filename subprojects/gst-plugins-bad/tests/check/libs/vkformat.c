@@ -57,13 +57,15 @@ GST_START_TEST (test_format_from_video_info_2)
           480));
 
   fail_unless (gst_vulkan_format_from_video_info_2 (phy_dev, &vinfo,
-          VK_IMAGE_TILING_OPTIMAL, TRUE, vk_fmts, &n_imgs, &supported_usage));
+          VK_IMAGE_TILING_OPTIMAL, TRUE, 0, vk_fmts, &n_imgs,
+          &supported_usage));
 
   fail_unless (n_imgs == 2 && vk_fmts[0] == VK_FORMAT_R8_UNORM
       && vk_fmts[1] == VK_FORMAT_R8G8_UNORM);
 
   fail_unless (gst_vulkan_format_from_video_info_2 (phy_dev, &vinfo,
-          VK_IMAGE_TILING_LINEAR, FALSE, vk_fmts, &n_imgs, &supported_usage));
+          VK_IMAGE_TILING_LINEAR, FALSE, 0, vk_fmts, &n_imgs,
+          &supported_usage));
 
   fail_unless (n_imgs == 1 && vk_fmts[0] == VK_FORMAT_G8_B8R8_2PLANE_420_UNORM);
 
@@ -73,7 +75,7 @@ GST_START_TEST (test_format_from_video_info_2)
       GST_VIDEO_TRANSFER_SRGB);
 
   fail_unless (gst_vulkan_format_from_video_info_2 (phy_dev, &vinfo,
-          VK_IMAGE_TILING_LINEAR, TRUE, vk_fmts, &n_imgs, &supported_usage));
+          VK_IMAGE_TILING_LINEAR, TRUE, 0, vk_fmts, &n_imgs, &supported_usage));
 
   fail_unless (n_imgs == 1 && vk_fmts[0] == VK_FORMAT_R8G8B8A8_SRGB);
 
@@ -83,7 +85,7 @@ GST_START_TEST (test_format_from_video_info_2)
       (&GST_VIDEO_INFO_COLORIMETRY (&vinfo), "smpte240m"));
 
   fail_unless (gst_vulkan_format_from_video_info_2 (phy_dev, &vinfo,
-          VK_IMAGE_TILING_LINEAR, TRUE, vk_fmts, &n_imgs, &supported_usage));
+          VK_IMAGE_TILING_LINEAR, TRUE, 0, vk_fmts, &n_imgs, &supported_usage));
 
   fail_unless (n_imgs == 1 && vk_fmts[0] == VK_FORMAT_R8G8B8A8_UNORM);
 }

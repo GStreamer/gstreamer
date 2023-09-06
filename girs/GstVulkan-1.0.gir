@@ -6324,6 +6324,9 @@ properties.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">query for vulkan formats without multiple images</doc>
           <type name="gboolean" c:type="gboolean"/>
         </parameter>
+        <parameter name="requested_usage" transfer-ownership="none">
+          <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+        </parameter>
         <parameter name="fmts" direction="out" caller-allocates="1" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">Vulkan formats per image/plane</doc>
           <array zero-terminated="0" c:type="VkFormat*" fixed-size="4">

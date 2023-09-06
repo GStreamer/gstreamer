@@ -145,6 +145,7 @@ gboolean                        gst_vulkan_format_from_video_info_2            (
                                                                                 GstVideoInfo * info,
                                                                                 VkImageTiling tiling,
                                                                                 gboolean no_multiplane,
+                                                                                VkImageUsageFlags requested_usage,
                                                                                 VkFormat fmts[GST_VIDEO_MAX_PLANES],
                                                                                 int * n_imgs,
                                                                                 VkImageUsageFlags * usage);

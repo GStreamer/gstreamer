@@ -580,7 +580,8 @@ _get_usage (guint64 feature)
 gboolean
 gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
     GstVideoInfo * info, VkImageTiling tiling, gboolean no_multiplane,
-    VkFormat fmts[GST_VIDEO_MAX_PLANES], int *n_imgs, VkImageUsageFlags * usage)
+    VkImageUsageFlags requested_usage, VkFormat fmts[GST_VIDEO_MAX_PLANES],
+    int *n_imgs, VkImageUsageFlags * usage_ret)
 {
   int i;
 #if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
@@ -609,6 +610,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
   for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
     gboolean basics_primary = FALSE, basics_secondary = FALSE;
     guint64 feats_primary = 0, feats_secondary = 0;
+    VkImageUsageFlags usage = 0;
 
     if (vk_formats_map[i].format != GST_VIDEO_INFO_FORMAT (info))
       continue;
@@ -648,48 +650,65 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
     if (GST_VIDEO_INFO_IS_RGB (info)) {
       if (basics_primary && (GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
               GST_VIDEO_TRANSFER_SRGB)) {
-        if (fmts)
-          fmts[0] = vk_formats_map[i].vkfrmt;
-        if (n_imgs)
-          *n_imgs = 1;
-        if (usage)
-          *usage = _get_usage (feats_primary);
-      } else if (basics_secondary
+        usage = _get_usage (feats_primary);
+        if ((requested_usage & usage) == requested_usage) {
+          if (fmts)
+            fmts[0] = vk_formats_map[i].vkfrmt;
+          if (n_imgs)
+            *n_imgs = 1;
+          if (usage_ret)
+            *usage_ret = usage;
+          return TRUE;
+        }
+      }
+
+      if (basics_secondary
           && GST_VIDEO_INFO_COLORIMETRY (info).transfer !=
           GST_VIDEO_TRANSFER_SRGB) {
-        if (fmts)
-          fmts[0] = vk_formats_map[i].vkfrmts[0];
-        if (n_imgs)
-          *n_imgs = 1;
-        if (usage)
-          *usage = _get_usage (feats_secondary);
-      } else {
-        return FALSE;
+        usage = _get_usage (feats_secondary);
+        if ((requested_usage & usage) == requested_usage) {
+          if (fmts)
+            fmts[0] = vk_formats_map[i].vkfrmts[0];
+          if (n_imgs)
+            *n_imgs = 1;
+          if (usage_ret)
+            *usage_ret = usage;
+          return TRUE;
+        }
       }
+      return FALSE;
     } else {
       if (basics_primary && !no_multiplane
           && GST_VIDEO_INFO_N_PLANES (info) > 1) {
-        if (fmts)
-          fmts[0] = vk_formats_map[i].vkfrmt;
-        if (n_imgs)
-          *n_imgs = 1;
-        if (usage)
-          *usage = _get_usage (feats_primary);
-      } else if (basics_secondary) {
-        if (fmts) {
-          memcpy (fmts, vk_formats_map[i].vkfrmts,
-              GST_VIDEO_MAX_PLANES * sizeof (VkFormat));
+        usage = _get_usage (feats_primary);
+        if ((requested_usage & usage) == requested_usage) {
+          if (fmts)
+            fmts[0] = vk_formats_map[i].vkfrmt;
+          if (n_imgs)
+            *n_imgs = 1;
+          if (usage_ret)
+            *usage_ret = usage;
+          return TRUE;
         }
-        if (n_imgs)
-          *n_imgs = GST_VIDEO_INFO_N_PLANES (info);
-        if (usage)
-          *usage = _get_usage (feats_secondary);
-      } else {
-        return FALSE;
       }
-    }
 
-    return TRUE;
+      if (basics_secondary) {
+        usage = _get_usage (feats_secondary);
+        if ((requested_usage & usage) == requested_usage) {
+          if (fmts) {
+            memcpy (fmts, vk_formats_map[i].vkfrmts,
+                GST_VIDEO_MAX_PLANES * sizeof (VkFormat));
+          }
+          if (n_imgs)
+            *n_imgs = GST_VIDEO_INFO_N_PLANES (info);
+          if (usage_ret)
+            *usage_ret = usage;
+
+          return TRUE;
+        }
+      }
+      return FALSE;
+    }
   }
 
   return FALSE;
