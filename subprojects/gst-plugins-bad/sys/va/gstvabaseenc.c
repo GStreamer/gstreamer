@@ -219,7 +219,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
 
   gst_allocation_params_init (&params);
 
-  size = GST_VIDEO_INFO_SIZE (&base->input_state->info);
+  size = GST_VIDEO_INFO_SIZE (&base->in_info);
 
   surface_formats = gst_va_encoder_get_surface_formats (base->encoder);
 
@@ -261,7 +261,7 @@ gst_va_base_enc_import_input_buffer (GstVaBaseEnc * base,
 #endif
     .display = base->display,
     .entrypoint = GST_VA_BASE_ENC_ENTRYPOINT (base),
-    .in_info = &base->input_state->info,
+    .in_info = &base->in_info,
     .sinkpad_info = &base->priv->sinkpad_info,
     .get_sinkpad_pool = _get_sinkpad_pool,
   };
@@ -975,8 +975,8 @@ gst_va_base_enc_add_frame_rate_parameter (GstVaBaseEnc * base,
     /* denominator = framerate >> 16 & 0xffff;
      * numerator   = framerate & 0xffff; */
     .fr.framerate =
-        (GST_VIDEO_INFO_FPS_N (&base->input_state->info) & 0xffff) |
-        ((GST_VIDEO_INFO_FPS_D (&base->input_state->info) & 0xffff) << 16)
+        (GST_VIDEO_INFO_FPS_N (&base->in_info) & 0xffff) |
+        ((GST_VIDEO_INFO_FPS_D (&base->in_info) & 0xffff) << 16)
   };
   /* *INDENT-ON* */
 
