@@ -91,11 +91,40 @@
 #define GST_CAT_DEFAULT gst_debug_qml6_gl_overlay
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
+/* *INDENT-OFF* */
+static GstStaticPadTemplate qml6_overlay_src_pad_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw(" GST_CAPS_FEATURE_MEMORY_GL_MEMORY "), "
+      "format = (string) RGBA, "
+      "width = " GST_VIDEO_SIZE_RANGE ", "
+      "height = " GST_VIDEO_SIZE_RANGE ", "
+      "framerate = " GST_VIDEO_FPS_RANGE ","
+      "texture-target = (string) 2D"
+    ));
+
+static GstStaticPadTemplate qml6_overlay_sink_pad_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-raw(ANY), "
+      "format = (string) { RGBA, BGRA, YV12 }, "
+      "width = " GST_VIDEO_SIZE_RANGE ", "
+      "height = " GST_VIDEO_SIZE_RANGE ", "
+      "framerate = " GST_VIDEO_FPS_RANGE ","
+      "texture-target = (string) 2D"
+    ));
+/* *INDENT-ON* */
+
 static void gst_qml6_gl_overlay_finalize (GObject * object);
 static void gst_qml6_gl_overlay_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
 static void gst_qml6_gl_overlay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * param_spec);
+
+static GstCaps * gst_qml6_overlay_transform_internal_caps (GstGLFilter * filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps);
 
 static gboolean gst_qml6_gl_overlay_gl_start (GstGLBaseFilter * bfilter);
 static void gst_qml6_gl_overlay_gl_stop (GstGLBaseFilter * bfilter);
@@ -193,10 +222,15 @@ gst_qml6_gl_overlay_class_init (GstQml6GLOverlayClass * klass)
       g_signal_new ("qml-scene-destroyed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 
-  gst_gl_filter_add_rgba_pad_templates (glfilter_class);
+  gst_element_class_add_static_pad_template (element_class,
+      &qml6_overlay_src_pad_template);
+  gst_element_class_add_static_pad_template (element_class,
+      &qml6_overlay_sink_pad_template);
 
   btrans_class->prepare_output_buffer = gst_qml6_gl_overlay_prepare_output_buffer;
   btrans_class->transform = gst_qml6_gl_overlay_transform;
+
+  glfilter_class->transform_internal_caps = gst_qml6_overlay_transform_internal_caps;
 
   glbasefilter_class->gl_start = gst_qml6_gl_overlay_gl_start;
   glbasefilter_class->gl_stop = gst_qml6_gl_overlay_gl_stop;
@@ -396,6 +430,24 @@ gst_qml6_gl_overlay_gl_set_caps (GstGLBaseFilter * bfilter, GstCaps * in_caps,
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   return TRUE;
+}
+
+static GstCaps *
+gst_qml6_overlay_transform_internal_caps (GstGLFilter * filter,
+    GstPadDirection direction, GstCaps * caps, GstCaps * filter_caps)
+{
+  GstCaps *tmp = GST_GL_FILTER_CLASS (parent_class)->transform_internal_caps (filter, direction, caps, filter_caps);
+  int i, n;
+
+  n = gst_caps_get_size (tmp);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (tmp, i);
+
+    gst_structure_remove_fields (s, "format", "colorimetry", "chroma-site",
+        "texture-target", NULL);
+  }
+
+  return tmp;
 }
 
 static GstFlowReturn
