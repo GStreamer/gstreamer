@@ -1145,11 +1145,11 @@ _init_supported_formats (GstGLContext * context, gboolean output,
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     _append_value_string_list (supported_formats, "A420_10LE", "A422_10LE",
         "A444_10LE", "A444_12LE", "A422_12LE", "A420_12LE", "A444_16LE",
-        "A422_16LE", "A420_16LE", NULL);
+        "A422_16LE", "A420_16LE", "I420_12LE", "I420_10LE", NULL);
 #else
     _append_value_string_list (supported_formats, "A420_10BE", "A422_10BE",
         "A444_10BE", "A444_12BE", "A422_12BE", "A420_12BE", "A444_16BE",
-        "A422_16BE", "A420_16BE", NULL);
+        "A422_16BE", "A420_16BE", "I420_12BE", "I420_10BE", NULL);
 #endif
   }
 
@@ -2006,6 +2006,10 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[0] = "tex";
         break;
       case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_I420_10LE:
+      case GST_VIDEO_FORMAT_I420_10BE:
+      case GST_VIDEO_FORMAT_I420_12LE:
+      case GST_VIDEO_FORMAT_I420_12BE:
       case GST_VIDEO_FORMAT_Y444:
       case GST_VIDEO_FORMAT_Y42B:
       case GST_VIDEO_FORMAT_Y41B:
@@ -2016,7 +2020,9 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[0] = "Ytex";
         info->shader_tex_names[1] = "Utex";
         info->shader_tex_names[2] = "Vtex";
-        info->in_bitdepth_factor = 1.0;
+        info->in_bitdepth_factor =
+            (float) ((1 << GST_ROUND_UP_8 (in_finfo->bits)) -
+            1) / (float) ((1 << in_finfo->bits) - 1);
         break;
       case GST_VIDEO_FORMAT_A420:
       case GST_VIDEO_FORMAT_A420_10LE:
@@ -2204,6 +2210,10 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       info->frag_body = g_strdup_printf (templ_RGB_to_AYUV_BODY, alpha);
       break;
     case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_10BE:
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I420_12BE:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y42B:

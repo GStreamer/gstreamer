@@ -9647,7 +9647,7 @@ user-defined purposes.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <constant name="GL_COLOR_CONVERT_EXT_FORMATS" value=", RGBA64_LE, BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE, A444_16LE, A422_16LE, A420_16LE, A444_12LE, A422_12LE, A420_12LE, A420_10LE, A422_10LE, A444_10LE" c:type="GST_GL_COLOR_CONVERT_EXT_FORMATS" introspectable="0">
+    <constant name="GL_COLOR_CONVERT_EXT_FORMATS" value=", RGBA64_LE, BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE, A444_16LE, A422_16LE, A420_16LE, A444_12LE, A422_12LE, A420_12LE, A420_10LE, A422_10LE, A444_10LE, I420_12LE, I420_10LE" c:type="GST_GL_COLOR_CONVERT_EXT_FORMATS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglcolorconvert.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
@@ -9894,7 +9894,7 @@ e.g. for `CONFIG_ID`: `GST_GL_CONFIG_ATTRIB_NAME (CONFIG_ID)`</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemorypbo.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
-    <constant name="GL_MEMORY_VIDEO_EXT_FORMATS" value=", RGBA64_LE, BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE, A444_16LE, A422_16LE, A420_16LE, A444_12LE, A422_12LE, A420_12LE, A420_10LE, A422_10LE, A444_10LE" c:type="GST_GL_MEMORY_VIDEO_EXT_FORMATS" introspectable="0">
+    <constant name="GL_MEMORY_VIDEO_EXT_FORMATS" value=", RGBA64_LE, BGR10A2_LE, RGB10A2_LE, P010_10LE, P012_LE, P016_LE, Y212_LE, Y412_LE, A444_16LE, A422_16LE, A420_16LE, A444_12LE, A422_12LE, A420_12LE, A420_10LE, A422_10LE, A444_10LE, I420_12LE, I420_10LE" c:type="GST_GL_MEMORY_VIDEO_EXT_FORMATS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglmemory.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
