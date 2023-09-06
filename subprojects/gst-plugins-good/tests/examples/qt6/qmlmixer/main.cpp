@@ -67,6 +67,10 @@ int main(int argc, char *argv[])
 
     GstElement *pipeline = gst_pipeline_new (NULL);
     GstElement *src0 = gst_element_factory_make ("videotestsrc", NULL);
+    GstElement *capsfilter = gst_element_factory_make ("capsfilter", NULL);
+    GstCaps *caps = gst_caps_from_string ("video/x-raw,format=YV12");
+    g_object_set (capsfilter, "caps", caps, NULL);
+    gst_clear_caps (&caps);
     GstElement *glupload0 = gst_element_factory_make ("glupload", NULL);
     GstElement *src1 = gst_element_factory_make ("videotestsrc", NULL);
     gst_util_set_object_arg ((GObject *) src1, "pattern", "ball");
@@ -78,8 +82,8 @@ int main(int argc, char *argv[])
 
     g_assert (src0 && glupload0 && mixer && sink);
 
-    gst_bin_add_many (GST_BIN (pipeline), src0, glupload0, src1, glupload1, mixer, sink, NULL);
-    gst_element_link_many (src0, glupload0, mixer, sink, NULL);
+    gst_bin_add_many (GST_BIN (pipeline), src0, capsfilter, glupload0, src1, glupload1, mixer, sink, NULL);
+    gst_element_link_many (src0, capsfilter, glupload0, mixer, sink, NULL);
     gst_element_link_many (src1, glupload1, mixer, NULL);
 
     /* load qmlglsink output */

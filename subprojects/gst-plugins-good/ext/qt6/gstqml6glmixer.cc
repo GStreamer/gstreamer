@@ -121,7 +121,7 @@ gst_qml6_gl_mixer_pad_prepare_frame (GstVideoAggregatorPad *vagg_pad, GstVideoAg
     GstCaps *in_caps;
     GstGLContext *context;
 
-    in_caps = gst_video_info_to_caps (&vagg->info);
+    in_caps = gst_video_info_to_caps (&vagg_pad->info);
     gst_caps_set_features_simple (in_caps, gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
     pad->widget->setCaps (in_caps);
     gst_clear_caps (&in_caps);
@@ -273,7 +273,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%u",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-            "RGBA"))
+            "{ RGBA, BGRA, YV12 }"))
     );
 
 struct _GstQml6GLMixer {
