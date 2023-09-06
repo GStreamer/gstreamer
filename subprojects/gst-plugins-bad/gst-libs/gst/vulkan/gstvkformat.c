@@ -649,7 +649,9 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
       if (basics_primary && (GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
-              GST_VIDEO_TRANSFER_SRGB)) {
+              GST_VIDEO_TRANSFER_SRGB
+              || GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
+              GST_VIDEO_TRANSFER_UNKNOWN)) {
         usage = _get_usage (feats_primary);
         if ((requested_usage & usage) == requested_usage) {
           if (fmts)
