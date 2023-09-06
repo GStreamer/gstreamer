@@ -1769,7 +1769,6 @@ gst_gl_context_egl_fetch_dma_formats (GstGLContext * context)
 failed:
   {
     g_free (formats);
-    GST_OBJECT_UNLOCK (context);
     return FALSE;
   }
 }
