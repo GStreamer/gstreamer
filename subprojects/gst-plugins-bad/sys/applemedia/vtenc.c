@@ -698,6 +698,15 @@ gst_vtenc_pause_output_loop (GstVTEnc * self)
   g_mutex_unlock (&self->queue_mutex);
 }
 
+static void
+gst_vtenc_set_flushing_flag (GstVTEnc * self)
+{
+  g_mutex_lock (&self->queue_mutex);
+  self->is_flushing = TRUE;
+  g_cond_signal (&self->queue_cond);
+  g_mutex_unlock (&self->queue_mutex);
+}
+
 static GstFlowReturn
 gst_vtenc_finish_encoding (GstVTEnc * self, gboolean is_flushing)
 {
@@ -712,17 +721,15 @@ gst_vtenc_finish_encoding (GstVTEnc * self, gboolean is_flushing)
   /* If output loop failed to push things downstream */
   if (self->downstream_ret != GST_FLOW_OK
       && self->downstream_ret != GST_FLOW_FLUSHING) {
+    /* Tells enqueue_buffer() to instantly discard any new encoded frames */
+    gst_vtenc_set_flushing_flag (self);
     GST_WARNING_OBJECT (self, "Output loop stopped with error (%s), leaving",
         gst_flow_get_name (self->downstream_ret));
     return self->downstream_ret;
   }
 
-  if (is_flushing) {
-    g_mutex_lock (&self->queue_mutex);
-    self->is_flushing = TRUE;
-    g_cond_signal (&self->queue_cond);
-    g_mutex_unlock (&self->queue_mutex);
-  }
+  if (is_flushing)
+    gst_vtenc_set_flushing_flag (self);
 
   if (!gst_vtenc_ensure_output_loop (self)) {
     GST_ERROR_OBJECT (self, "Output loop failed to resume");
@@ -2107,7 +2114,7 @@ gst_vtenc_loop (GstVTEnc * self)
   /* We need to empty the queue immediately so that enqueue_buffer() 
    * can push out the current buffer, otherwise it can block other
    * encoder callbacks completely */
-  if (ret == GST_FLOW_FLUSHING) {
+  if (ret != GST_FLOW_OK) {
     g_mutex_lock (&self->queue_mutex);
 
     while ((outframe = gst_queue_array_pop_head (self->output_queue))) {
