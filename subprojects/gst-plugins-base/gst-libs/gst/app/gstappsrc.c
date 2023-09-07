@@ -1967,6 +1967,46 @@ gst_app_src_get_stream_type (GstAppSrc * appsrc)
   return stream_type;
 }
 
+#define GST_APP_SRC_SET_PROPERTY(prop_name, value, ...)                         \
+G_STMT_START {                                                                  \
+  GstAppSrcPrivate *priv;                                                       \
+                                                                                \
+  g_return_if_fail (GST_IS_APP_SRC (appsrc));                                   \
+                                                                                \
+  priv = appsrc->priv;                                                          \
+                                                                                \
+  g_mutex_lock (&priv->mutex);                                                  \
+                                                                                \
+  if (value != priv->prop_name) {                                               \
+    GST_DEBUG_OBJECT (appsrc, __VA_ARGS__);                                     \
+    priv->prop_name = value;                                                    \
+    /* signal the change */                                                     \
+    g_cond_broadcast (&priv->cond);                                             \
+  }                                                                             \
+                                                                                \
+  g_mutex_unlock (&priv->mutex);                                                \
+                                                                                \
+} G_STMT_END
+
+#define GST_APP_SRC_GET_PROPERTY(type, prop_name, fallback, ...)                \
+G_STMT_START {                                                                  \
+  type result;                                                                  \
+  GstAppSrcPrivate *priv;                                                       \
+                                                                                \
+  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), fallback);                     \
+                                                                                \
+  priv = appsrc->priv;                                                          \
+                                                                                \
+  g_mutex_lock (&priv->mutex);                                                  \
+                                                                                \
+  result = priv->prop_name;                                                     \
+  GST_DEBUG_OBJECT (appsrc, __VA_ARGS__);                                       \
+                                                                                \
+  g_mutex_unlock (&priv->mutex);                                                \
+                                                                                \
+  return result;                                                                \
+} G_STMT_END
+
 /**
  * gst_app_src_set_max_bytes:
  * @appsrc: a #GstAppSrc
@@ -1979,20 +2019,8 @@ gst_app_src_get_stream_type (GstAppSrc * appsrc)
 void
 gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
 {
-  GstAppSrcPrivate *priv;
-
-  g_return_if_fail (GST_IS_APP_SRC (appsrc));
-
-  priv = appsrc->priv;
-
-  g_mutex_lock (&priv->mutex);
-  if (max != priv->max_bytes) {
-    GST_DEBUG_OBJECT (appsrc, "setting max-bytes to %" G_GUINT64_FORMAT, max);
-    priv->max_bytes = max;
-    /* signal the change */
-    g_cond_broadcast (&priv->cond);
-  }
-  g_mutex_unlock (&priv->mutex);
+  GST_APP_SRC_SET_PROPERTY (max_bytes, max,
+      "setting max-bytes to %" G_GUINT64_FORMAT, max);
 }
 
 /**
@@ -2006,19 +2034,8 @@ gst_app_src_set_max_bytes (GstAppSrc * appsrc, guint64 max)
 guint64
 gst_app_src_get_max_bytes (GstAppSrc * appsrc)
 {
-  guint64 result;
-  GstAppSrcPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), 0);
-
-  priv = appsrc->priv;
-
-  g_mutex_lock (&priv->mutex);
-  result = priv->max_bytes;
-  GST_DEBUG_OBJECT (appsrc, "getting max-bytes of %" G_GUINT64_FORMAT, result);
-  g_mutex_unlock (&priv->mutex);
-
-  return result;
+  GST_APP_SRC_GET_PROPERTY (guint64, max_bytes, 0,
+      "getting max-bytes of %" G_GUINT64_FORMAT, result);
 }
 
 /**
@@ -2034,20 +2051,8 @@ gst_app_src_get_max_bytes (GstAppSrc * appsrc)
 guint64
 gst_app_src_get_current_level_bytes (GstAppSrc * appsrc)
 {
-  guint64 queued;
-  GstAppSrcPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), -1);
-
-  priv = appsrc->priv;
-
-  GST_OBJECT_LOCK (appsrc);
-  queued = priv->queue_status_info.queued_bytes;
-  GST_DEBUG_OBJECT (appsrc, "current level bytes is %" G_GUINT64_FORMAT,
-      queued);
-  GST_OBJECT_UNLOCK (appsrc);
-
-  return queued;
+  GST_APP_SRC_GET_PROPERTY (guint64, queue_status_info.queued_bytes, -1,
+      "current level bytes is %" G_GUINT64_FORMAT, result);
 }
 
 /**
@@ -2064,20 +2069,8 @@ gst_app_src_get_current_level_bytes (GstAppSrc * appsrc)
 void
 gst_app_src_set_max_buffers (GstAppSrc * appsrc, guint64 max)
 {
-  GstAppSrcPrivate *priv;
-
-  g_return_if_fail (GST_IS_APP_SRC (appsrc));
-
-  priv = appsrc->priv;
-
-  g_mutex_lock (&priv->mutex);
-  if (max != priv->max_buffers) {
-    GST_DEBUG_OBJECT (appsrc, "setting max-buffers to %" G_GUINT64_FORMAT, max);
-    priv->max_buffers = max;
-    /* signal the change */
-    g_cond_broadcast (&priv->cond);
-  }
-  g_mutex_unlock (&priv->mutex);
+  GST_APP_SRC_SET_PROPERTY (max_buffers, max,
+      "setting max-buffers to %" G_GUINT64_FORMAT, max);
 }
 
 /**
@@ -2093,20 +2086,8 @@ gst_app_src_set_max_buffers (GstAppSrc * appsrc, guint64 max)
 guint64
 gst_app_src_get_max_buffers (GstAppSrc * appsrc)
 {
-  guint64 result;
-  GstAppSrcPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), 0);
-
-  priv = appsrc->priv;
-
-  g_mutex_lock (&priv->mutex);
-  result = priv->max_buffers;
-  GST_DEBUG_OBJECT (appsrc, "getting max-buffers of %" G_GUINT64_FORMAT,
-      result);
-  g_mutex_unlock (&priv->mutex);
-
-  return result;
+  GST_APP_SRC_GET_PROPERTY (guint64, max_buffers, 0,
+      "getting max-buffers of %" G_GUINT64_FORMAT, result);
 }
 
 /**
@@ -2122,20 +2103,8 @@ gst_app_src_get_max_buffers (GstAppSrc * appsrc)
 guint64
 gst_app_src_get_current_level_buffers (GstAppSrc * appsrc)
 {
-  guint64 queued;
-  GstAppSrcPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), -1);
-
-  priv = appsrc->priv;
-
-  GST_OBJECT_LOCK (appsrc);
-  queued = priv->queue_status_info.queued_buffers;
-  GST_DEBUG_OBJECT (appsrc, "current level buffers is %" G_GUINT64_FORMAT,
-      queued);
-  GST_OBJECT_UNLOCK (appsrc);
-
-  return queued;
+  GST_APP_SRC_GET_PROPERTY (guint64, queue_status_info.queued_buffers, -1,
+      "current level buffers is %" G_GUINT64_FORMAT, result);
 }
 
 /**
@@ -2152,21 +2121,8 @@ gst_app_src_get_current_level_buffers (GstAppSrc * appsrc)
 void
 gst_app_src_set_max_time (GstAppSrc * appsrc, GstClockTime max)
 {
-  GstAppSrcPrivate *priv;
-
-  g_return_if_fail (GST_IS_APP_SRC (appsrc));
-
-  priv = appsrc->priv;
-
-  g_mutex_lock (&priv->mutex);
-  if (max != priv->max_time) {
-    GST_DEBUG_OBJECT (appsrc, "setting max-time to %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (max));
-    priv->max_time = max;
-    /* signal the change */
-    g_cond_broadcast (&priv->cond);
-  }
-  g_mutex_unlock (&priv->mutex);
+  GST_APP_SRC_SET_PROPERTY (max_time, max,
+      "setting max-time to %" GST_TIME_FORMAT, GST_TIME_ARGS (max));
 }
 
 /**
@@ -2182,20 +2138,8 @@ gst_app_src_set_max_time (GstAppSrc * appsrc, GstClockTime max)
 GstClockTime
 gst_app_src_get_max_time (GstAppSrc * appsrc)
 {
-  GstClockTime result;
-  GstAppSrcPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), 0);
-
-  priv = appsrc->priv;
-
-  g_mutex_lock (&priv->mutex);
-  result = priv->max_time;
-  GST_DEBUG_OBJECT (appsrc, "getting max-time of %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (result));
-  g_mutex_unlock (&priv->mutex);
-
-  return result;
+  GST_APP_SRC_GET_PROPERTY (GstClockTime, max_time, 0,
+      "getting max-time of %" GST_TIME_FORMAT, GST_TIME_ARGS (result));
 }
 
 /**
@@ -2211,21 +2155,13 @@ gst_app_src_get_max_time (GstAppSrc * appsrc)
 GstClockTime
 gst_app_src_get_current_level_time (GstAppSrc * appsrc)
 {
-  gint64 queued;
-  GstAppSrcPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), GST_CLOCK_TIME_NONE);
-
-  priv = appsrc->priv;
-
-  GST_OBJECT_LOCK (appsrc);
-  queued = priv->queue_status_info.queued_time;
-  GST_DEBUG_OBJECT (appsrc, "current level time is %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (queued));
-  GST_OBJECT_UNLOCK (appsrc);
-
-  return queued;
+  GST_APP_SRC_GET_PROPERTY (GstClockTime, queue_status_info.queued_time,
+      GST_CLOCK_TIME_NONE, "current level time is %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (result));
 }
+
+#undef GST_APP_SRC_SET_PROPERTY
+#undef GST_APP_SRC_GET_PROPERTY
 
 static void
 gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
