@@ -3055,7 +3055,8 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     for (i = 0; i < h265parse->time_code.num_clock_ts; i++) {
       gint field_count = -1;
-      guint n_frames;
+      guint64 n_frames_tmp;
+      guint n_frames = G_MAXUINT32;
       GstVideoTimeCodeFlags flags = 0;
       guint64 scale_n, scale_d;
 
@@ -3128,25 +3129,33 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
        *          = nFrames * ------------------------------------------------------------------
        *                       fps_d * vui_time_scale
        */
-      scale_n = h265parse->parsed_fps_n * vui->num_units_in_tick
-          * (1 + h265parse->time_code.units_field_based_flag[i]);
-      scale_d = h265parse->parsed_fps_d * vui->time_scale;
+      scale_n = (guint64) h265parse->parsed_fps_n * vui->num_units_in_tick;
+      scale_d = (guint64) h265parse->parsed_fps_d * vui->time_scale;
 
-      n_frames =
+      n_frames_tmp =
           gst_util_uint64_scale_int (h265parse->time_code.n_frames[i], scale_n,
           scale_d);
+      if (n_frames_tmp <= G_MAXUINT32) {
+        if (h265parse->time_code.units_field_based_flag[i])
+          n_frames_tmp *= 2;
 
-      gst_buffer_add_video_time_code_meta_full (parse_buffer,
-          h265parse->parsed_fps_n,
-          h265parse->parsed_fps_d,
-          NULL,
-          flags,
-          h265parse->time_code.hours_flag[i] ? h265parse->time_code.
-          hours_value[i] : 0,
-          h265parse->time_code.minutes_flag[i] ? h265parse->time_code.
-          minutes_value[i] : 0,
-          h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
-          seconds_value[i] : 0, n_frames, field_count);
+        if (n_frames_tmp <= G_MAXUINT32)
+          n_frames = (guint) n_frames_tmp;
+      }
+
+      if (n_frames != G_MAXUINT32) {
+        gst_buffer_add_video_time_code_meta_full (parse_buffer,
+            h265parse->parsed_fps_n,
+            h265parse->parsed_fps_d,
+            NULL,
+            flags,
+            h265parse->time_code.hours_flag[i] ? h265parse->time_code.
+            hours_value[i] : 0,
+            h265parse->time_code.minutes_flag[i] ? h265parse->time_code.
+            minutes_value[i] : 0,
+            h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
+            seconds_value[i] : 0, n_frames, field_count);
+      }
     }
   }
 

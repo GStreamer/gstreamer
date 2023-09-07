@@ -3384,7 +3384,8 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       GstH264ClockTimestamp *tim =
           &h264parse->pic_timing_sei.clock_timestamp[i];
       gint field_count = -1;
-      guint n_frames;
+      guint64 n_frames_tmp;
+      guint n_frames = G_MAXUINT32;
       GstVideoTimeCodeFlags flags = 0;
       guint64 scale_n, scale_d;
 
@@ -3459,24 +3460,32 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
        * using time_scale / num_units_in_tick
        * => "n_frames = nFrames * (1 + nuit_field_based_flag) / 2".
        */
-      scale_n = h264parse->parsed_fps_n * vui->num_units_in_tick
-          * (1 + tim->nuit_field_based_flag);
-      scale_d = h264parse->parsed_fps_d * vui->time_scale;
+      scale_n = (guint64) h264parse->parsed_fps_n * vui->num_units_in_tick;
+      scale_d = (guint64) h264parse->parsed_fps_d * vui->time_scale;
 
-      n_frames = gst_util_uint64_scale (tim->n_frames, scale_n, scale_d);
+      n_frames_tmp = gst_util_uint64_scale (tim->n_frames, scale_n, scale_d);
+      if (n_frames_tmp <= G_MAXUINT32) {
+        if (tim->nuit_field_based_flag)
+          n_frames_tmp *= 2;
 
-      GST_LOG_OBJECT (h264parse,
-          "Add time code meta %02u:%02u:%02u:%02u",
-          tim->hours_value, tim->minutes_value, tim->seconds_value, n_frames);
+        if (n_frames_tmp <= G_MAXUINT32)
+          n_frames = (guint) n_frames_tmp;
+      }
 
-      gst_buffer_add_video_time_code_meta_full (parse_buffer,
-          h264parse->parsed_fps_n,
-          h264parse->parsed_fps_d,
-          NULL,
-          flags,
-          tim->hours_flag ? tim->hours_value : 0,
-          tim->minutes_flag ? tim->minutes_value : 0,
-          tim->seconds_flag ? tim->seconds_value : 0, n_frames, field_count);
+      if (n_frames != G_MAXUINT32) {
+        GST_LOG_OBJECT (h264parse,
+            "Add time code meta %02u:%02u:%02u:%02u",
+            tim->hours_value, tim->minutes_value, tim->seconds_value, n_frames);
+
+        gst_buffer_add_video_time_code_meta_full (parse_buffer,
+            h264parse->parsed_fps_n,
+            h264parse->parsed_fps_d,
+            NULL,
+            flags,
+            tim->hours_flag ? tim->hours_value : 0,
+            tim->minutes_flag ? tim->minutes_value : 0,
+            tim->seconds_flag ? tim->seconds_value : 0, n_frames, field_count);
+      }
     }
 
     h264parse->num_clock_timestamp = 0;
