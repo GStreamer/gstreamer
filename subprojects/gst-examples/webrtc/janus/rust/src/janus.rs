@@ -101,13 +101,13 @@ pub struct Args {
 struct Base {
     janus: String,
     transaction: Option<String>,
-    session_id: Option<i64>,
+    session_id: Option<u64>,
     sender: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct DataHolder {
-    id: i64,
+    id: u64,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -186,8 +186,8 @@ impl std::ops::Deref for Peer {
 
 #[derive(Clone, Copy, Debug)]
 struct ConnectionHandle {
-    id: i64,
-    session_id: i64,
+    id: u64,
+    session_id: u64,
 }
 
 // Actual peer state
