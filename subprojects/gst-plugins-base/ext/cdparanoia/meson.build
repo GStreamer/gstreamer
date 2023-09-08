@@ -35,6 +35,7 @@ if cdparanoia_found
   # was in 2008.
   extra_args = cc.get_supported_arguments([
       '-Wno-discarded-qualifiers',
+      '-Wno-incompatible-pointer-types-discards-qualifiers',
       '-Wno-unused-variable'
   ])
 
