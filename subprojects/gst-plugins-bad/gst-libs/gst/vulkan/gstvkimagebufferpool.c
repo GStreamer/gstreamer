@@ -130,12 +130,12 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   VkImageTiling tiling;
-  VkImageUsageFlags supported_usage;
+  VkImageUsageFlags requested_usage, supported_usage;
   VkImageCreateInfo image_info;
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL, *decode_caps = NULL;
   GstCapsFeatures *features;
-  gboolean found, no_multiplane = FALSE, ret = TRUE;
+  gboolean found, no_multiplane, ret = TRUE;
   guint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
@@ -178,12 +178,22 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
       && !priv->has_profile)
     goto missing_profile;
 
-  no_multiplane = !priv->has_profile;
+  if (priv->has_profile) {
+    no_multiplane = FALSE;
+
+    /* HACK(victor): NVIDIA & RADV drivers don't report decoding features for
+     * color format. Setting usage to zero to short circuit validation. */
+    requested_usage = 0;
+  } else
 #endif
+  {
+    no_multiplane = TRUE;
+    requested_usage = priv->usage;
+  }
 
   tiling = priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
   found = gst_vulkan_format_from_video_info_2 (vk_pool->device->physical_device,
-      &priv->v_info, tiling, no_multiplane, priv->usage, priv->vk_fmts,
+      &priv->v_info, tiling, no_multiplane, requested_usage, priv->vk_fmts,
       &priv->n_imgs, &supported_usage);
   if (!found)
     goto no_vk_format;
