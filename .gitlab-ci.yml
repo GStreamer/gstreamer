@@ -640,6 +640,31 @@ integration testsuites fedora:
     EXTRA_VALIDATE_ARGS: "--timeout-factor=2 --retry-on-failures --parts=${CI_NODE_TOTAL} --part-index=${CI_NODE_INDEX} --sync"
     TEST_SUITE: "validate ges"
 
+check video formats:
+  stage: 'test'
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build_ccache_vars'
+  needs:
+    - "trigger"
+    - "fedora amd64 docker"
+  tags: ['gstreamer']
+  variables:
+    MESON_ARGS: "${SIMPLE_BUILD}"
+    VIDEO_TOKEN: "GST_VIDEO_FORMATS_ALL_STR"
+    VIDEO_HEADER: "subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"
+    WL_TOKEN: "GST_WL_VIDEO_FORMATS"
+    WL_HEADER: "subprojects/gst-plugins-bad/gst-libs/gst/wayland/gstwlvideoformat.h"
+  script:
+    - *build
+    - meson devenv -C build -w . ./scripts/sort_video_formats.py ${VIDEO_TOKEN} ${VIDEO_HEADER}
+    - meson devenv -C build -w . ./scripts/sort_video_formats.py -b ${WL_TOKEN} ${WL_HEADER}
+  rules:
+    - changes:
+      - ${VIDEO_HEADER}
+      - ${WL_HEADER}
+
 playbin3 integration:
   extends: 'integration testsuites fedora'
   variables:
