@@ -50,6 +50,7 @@ plugin_init (GstPlugin * plugin)
    * Since: 1.20
    */
   ret |= GST_ELEMENT_REGISTER (av1parse, plugin);
+  ret |= GST_ELEMENT_REGISTER (h266parse, plugin);
 
   return ret;
 }
