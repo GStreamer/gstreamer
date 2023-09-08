@@ -403,6 +403,9 @@ build fedora clang:
     matrix:
       - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true"]
+        MESON_ARGS: >-
+          ${SIMPLE_BUILD}
+          --force-fallback-for=glib
 
       - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=false"]
@@ -414,7 +417,10 @@ build fedora clang:
         # ../subprojects/gstreamer/gst/gstchildproxy.h:57: Error: Gst: identifier not found on the first line:
         #   * GstChildProxyInterface.get_child_by_name:
         #     ^
-        MESON_ARGS: "${SIMPLE_BUILD} -Dintrospection=disabled"
+        MESON_ARGS: >-
+          ${SIMPLE_BUILD}
+          -Dintrospection=disabled
+          --force-fallback-for=glib
 
       - BUILD_TYPE: ["--default-library=static"]
         BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
@@ -430,7 +436,15 @@ build fedora clang:
         #
         # Disabling gstreamer-sharp tests because they download things as part of configure with
         # nuget which frequently fails on the CI (possibly because we're hammering the site)
-        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled -Dgstreamer-sharp:tests=disabled"
+        MESON_ARGS: >-
+          ${DEFAULT_MESON_ARGS}
+          -Dvaapi=disabled
+          -Dpython=auto
+          -Dgst-editing-services:python=disabled
+          -Dintrospection=disabled
+          -Ddoc=disabled
+          -Dgstreamer-sharp:tests=disabled
+          --force-fallback-for=glib
 
 .build windows:
   image: $WINDOWS_IMAGE
