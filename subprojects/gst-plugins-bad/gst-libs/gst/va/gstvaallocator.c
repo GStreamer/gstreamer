@@ -1296,7 +1296,11 @@ _update_info (GstVideoInfo * info, const VAImage * image)
     GST_VIDEO_INFO_PLANE_STRIDE (info, i) = image->pitches[i];
   }
 
-  GST_VIDEO_INFO_SIZE (info) = image->data_size;
+  /* Don't update image size for one planed images since drivers might add extra
+   * bits which will drop wrong raw images with filesink, for example. Multiple
+   * plane images require video meta */
+  if (image->num_planes > 1)
+    GST_VIDEO_INFO_SIZE (info) = image->data_size;
 }
 
 static inline gboolean
@@ -1344,6 +1348,11 @@ _update_image_info (GstVaAllocator * va_allocator)
 
 done:
   _update_info (&va_allocator->info, &image);
+  if (GST_VIDEO_INFO_SIZE (&va_allocator->info) > image.data_size) {
+    GST_WARNING_OBJECT (va_allocator,
+        "image size is lesser than the minimum required");
+  }
+
   va_destroy_image (va_allocator->display, image.image_id);
   va_destroy_surfaces (va_allocator->display, &surface, 1);
 
