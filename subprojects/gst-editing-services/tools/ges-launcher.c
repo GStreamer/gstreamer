@@ -312,9 +312,12 @@ static gboolean
 _parse_track_type (const gchar * option_name, const gchar * value,
     GESLauncherParsedOptions * opts, GError ** error)
 {
-  if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, value, &opts->track_types))
+  guint flags = 0;
+
+  if (!get_flags_from_string (GES_TYPE_TRACK_TYPE, value, &flags))
     return FALSE;
 
+  opts->track_types = (GESTrackType) flags;
   return TRUE;
 }
 
