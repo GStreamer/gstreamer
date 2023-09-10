@@ -117,6 +117,9 @@ gst_rtp_sbc_depay_class_init (GstRtpSbcDepayClass * klass)
 static void
 gst_rtp_sbc_depay_init (GstRtpSbcDepay * rtpsbcdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpsbcdepay), TRUE);
+
   rtpsbcdepay->adapter = gst_adapter_new ();
   rtpsbcdepay->stream_align =
       gst_audio_stream_align_new (48000, 40 * GST_MSECOND, 1 * GST_SECOND);
@@ -318,10 +321,11 @@ gst_rtp_sbc_depay_process (GstRTPBaseDepayload * base, GstRTPBuffer * rtp)
     if (start && gst_adapter_available (depay->adapter)) {
       GST_WARNING_OBJECT (depay, "Missing last fragment");
       gst_adapter_clear (depay->adapter);
-
+      gst_rtp_base_depayload_flush (base, TRUE);
     } else if (!start && !gst_adapter_available (depay->adapter)) {
       GST_WARNING_OBJECT (depay, "Missing start fragment");
       gst_buffer_unref (data);
+      gst_rtp_base_depayload_dropped (base);
       data = NULL;
       goto out;
     }
@@ -387,5 +391,11 @@ out:
 bad_packet:
   GST_ELEMENT_WARNING (depay, STREAM, DECODE,
       ("Received invalid RTP payload, dropping"), (NULL));
+  gst_rtp_base_depayload_dropped (base);
+  /* if the adapter has been cleared before using this error out we
+     have the clear the header ext cache as well */
+  if (!gst_adapter_available (depay->adapter))
+    gst_rtp_base_depayload_flush (base, FALSE);
+
   goto out;
 }
