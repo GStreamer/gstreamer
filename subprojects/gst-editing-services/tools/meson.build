@@ -1,6 +1,6 @@
 deps = [ges_dep, gstpbutils_dep, gio_dep, gstvideo_dep, gstaudio_dep]
 
-ges_tool_args = [ges_c_args, '-UG_LOG_DOMAIN']
+ges_tool_args = ['-DHAVE_CONFIG_H']
 if gstvalidate_dep.found()
   deps = deps + [gstvalidate_dep]
   ges_tool_args += ['-DGST_USE_UNSTABLE_API']
