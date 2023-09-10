@@ -106,6 +106,8 @@ gst_rtp_mp4v_depay_class_init (GstRtpMP4VDepayClass * klass)
 static void
 gst_rtp_mp4v_depay_init (GstRtpMP4VDepay * rtpmp4vdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpmp4vdepay), TRUE);
   rtpmp4vdepay->adapter = gst_adapter_new ();
 }
 
