@@ -1,11 +1,10 @@
 [wrap-file]
-directory = glib-2.76.4
-source_url = https://download.gnome.org/sources/glib/2.76/glib-2.76.4.tar.xz
-source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/glib/2.76/glib-2.76.4.tar.xz
-source_filename = glib-2.76.4.tar.xz
-source_hash = 5a5a191c96836e166a7771f7ea6ca2b0069c603c7da3cba1cd38d1694a395dda  
-wrapdb_version = 2.76.4
-diff_files = glib-2.76.4/0001-meson-help-gobject-introspection-locate-source-and-b.patch, glib-2.76.4/0001-meson-Allow-fallback-static-build-of-pcre-subproject.patch
+directory = glib-2.78.0
+source_url = https://download.gnome.org/sources/glib/2.78/glib-2.78.0.tar.xz
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/glib_2.78.0-1/glib-2.78.0.tar.xz
+source_filename = glib-2.78.0.tar.xz
+source_hash = 44eaab8b720877ce303c5540b657b126f12dc94972d9880b52959f43fb537b30
+wrapdb_version = 2.78.0-1
 
 [provide]
 dependency_names = gthread-2.0, gobject-2.0, gmodule-no-export-2.0, gmodule-export-2.0, gmodule-2.0, glib-2.0, gio-2.0, gio-windows-2.0, gio-unix-2.0
