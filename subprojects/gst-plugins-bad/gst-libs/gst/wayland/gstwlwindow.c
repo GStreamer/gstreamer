@@ -63,6 +63,9 @@ typedef struct _GstWlWindowPrivate
   /* the size of the video in the buffers */
   gint video_width, video_height;
 
+  /* video width scaled according to par */
+  gint scaled_width;
+
   enum wl_output_transform buffer_transform;
 
   /* when this is not set both the area_surface and the video_surface are not
@@ -431,7 +434,7 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
     case WL_OUTPUT_TRANSFORM_180:
     case WL_OUTPUT_TRANSFORM_FLIPPED:
     case WL_OUTPUT_TRANSFORM_FLIPPED_180:
-      src.w = priv->video_width;
+      src.w = priv->scaled_width;
       src.h = priv->video_height;
       break;
     case WL_OUTPUT_TRANSFORM_90:
@@ -439,7 +442,7 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
     case WL_OUTPUT_TRANSFORM_FLIPPED_90:
     case WL_OUTPUT_TRANSFORM_FLIPPED_270:
       src.w = priv->video_height;
-      src.h = priv->video_width;
+      src.h = priv->scaled_width;
       break;
   }
 
@@ -497,8 +500,9 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
 
   if (G_UNLIKELY (info)) {
-    priv->video_width =
+    priv->scaled_width =
         gst_util_uint64_scale_int_round (info->width, info->par_n, info->par_d);
+    priv->video_width = info->width;
     priv->video_height = info->height;
 
     wl_subsurface_set_sync (priv->video_subsurface);
@@ -611,14 +615,14 @@ gst_wl_window_update_geometry (GstWlWindow * self)
   if (!priv->configured)
     return;
 
-  if (priv->video_width != 0) {
+  if (priv->scaled_width != 0) {
     wl_subsurface_set_sync (priv->video_subsurface);
     gst_wl_window_resize_video_surface (self, TRUE);
   }
 
   wl_surface_commit (priv->area_surface_wrapper);
 
-  if (priv->video_width != 0)
+  if (priv->scaled_width != 0)
     wl_subsurface_set_desync (priv->video_subsurface);
 }
 
