@@ -537,7 +537,10 @@ gst_gl_video_format_swizzle (GstVideoFormat video_format, int *swizzle)
 {
   const GstVideoFormatInfo *finfo = gst_video_format_get_info (video_format);
 
-  if (finfo->n_planes == 1) {
+  if (finfo->n_planes == 1 &&
+      (finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB ||
+          video_format == GST_VIDEO_FORMAT_AYUV ||
+          video_format == GST_VIDEO_FORMAT_VUYA)) {
     get_single_planar_format_gl_swizzle_order (video_format, swizzle);
     return TRUE;
   }
