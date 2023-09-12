@@ -79,8 +79,8 @@ which accept a timeout parameter to limit the amount of time to wait.
 
 Appsink will internally use a queue to collect buffers from the streaming
 thread. If the application is not pulling samples fast enough, this queue
-will consume a lot of memory over time. The "max-buffers" property can be
-used to limit the queue size. The "drop" property controls whether the
+will consume a lot of memory over time. The "max-buffers", "max-time" and "max-bytes"
+properties can be used to limit the queue size. The "drop" property controls whether the
 streaming thread blocks or if older buffers are dropped when the maximum
 queue size is reached. Note that blocking the streaming thread can negatively
 affect real-time performance and should be avoided.
@@ -325,7 +325,7 @@ condition.</doc>
       </method>
       <method name="get_drop" c:identifier="gst_app_sink_get_drop">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Check if @appsink will drop old buffers when the maximum amount of queued
-buffers is reached.</doc>
+data is reached (meaning max buffers, time or bytes limit, whichever is hit first).</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">%TRUE if @appsink is dropping old buffers when the queue is
@@ -360,6 +360,34 @@ signals.</doc>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The maximum amount of buffers that can be queued.</doc>
           <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_max_bytes" c:identifier="gst_app_sink_get_max_bytes" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the maximum total size, in bytes, that can be queued in @appsink.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The maximum amount of bytes that can be queued</doc>
+          <type name="guint64" c:type="guint64"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_max_time" c:identifier="gst_app_sink_get_max_time" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the maximum total duration that can be queued in @appsink.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">The maximum total duration that can be queued.</doc>
+          <type name="Gst.ClockTime" c:type="GstClockTime"/>
         </return-value>
         <parameters>
           <instance-parameter name="appsink" transfer-ownership="none">
@@ -567,7 +595,7 @@ you must check the caps on the samples to get the actual used caps.</doc>
       </method>
       <method name="set_drop" c:identifier="gst_app_sink_set_drop">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Instruct @appsink to drop old buffers when the maximum amount of queued
-buffers is reached.</doc>
+data is reached, that is, when any configured limit is hit (max-buffers, max-time or max-bytes).</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -605,7 +633,8 @@ the application prefers to operate in pull mode.</doc>
       <method name="set_max_buffers" c:identifier="gst_app_sink_set_max_buffers">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set the maximum amount of buffers that can be queued in @appsink. After this
 amount of buffers are queued in appsink, any more buffers will block upstream
-elements until a sample is pulled from @appsink.</doc>
+elements until a sample is pulled from @appsink, unless 'drop' is set, in which
+case new buffers will be discarded.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -618,6 +647,46 @@ elements until a sample is pulled from @appsink.</doc>
           <parameter name="max" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the maximum number of buffers to queue</doc>
             <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_max_bytes" c:identifier="gst_app_sink_set_max_bytes" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set the maximum total size that can be queued in @appsink. After this
+amount of buffers are queued in appsink, any more buffers will block upstream
+elements until a sample is pulled from @appsink, unless 'drop' is set, in which
+case new buffers will be discarded.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+          <parameter name="max" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the maximum total size of buffers to queue, in bytes</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_max_time" c:identifier="gst_app_sink_set_max_time" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set the maximum total duration that can be queued in @appsink. After this
+amount of buffers are queued in appsink, any more buffers will block upstream
+elements until a sample is pulled from @appsink, unless 'drop' is set, in which
+case new buffers will be discarded.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="appsink" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">a #GstAppSink</doc>
+            <type name="AppSink" c:type="GstAppSink*"/>
+          </instance-parameter>
+          <parameter name="max" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">the maximum total duration to queue</doc>
+            <type name="Gst.ClockTime" c:type="GstClockTime"/>
           </parameter>
         </parameters>
       </method>
@@ -758,9 +827,22 @@ condition.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="max-buffers" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Maximum amount of buffers in the queue (0 = unlimited).</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="wait-on-eos" writable="1" transfer-ownership="none">
+      <property name="max-bytes" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Maximum amount of bytes in the queue (0 = unlimited)</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="max-time" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Maximum total duration of data in the queue (0 = unlimited)</doc>
+        <type name="guint64" c:type="guint64"/>
+      </property>
+      <property name="wait-on-eos" version="1.8" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Wait for all buffers to be processed after receiving an EOS.
+
+In cases where it is uncertain if an @appsink will have a consumer for its buffers
+when it receives an EOS, set to %FALSE to ensure that the @appsink will not hang.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="basesink">
@@ -885,7 +967,7 @@ can pull samples at its own rate.
 Note that when the application does not pull samples fast enough, the
 queued samples could consume a lot of memory, especially when dealing with
 raw video frames. It's possible to control the behaviour of the queue with
-the "drop" and "max-buffers" properties.
+the "drop" and "max-buffers" / "max-bytes" / "max-time" set of properties.
 
 If an EOS event was received before any buffers, this function returns
 %NULL. Use gst_app_sink_is_eos () to check for the EOS condition.</doc>
@@ -906,7 +988,7 @@ Events can be pulled when the appsink is in the READY, PAUSED or PLAYING state.
 Note that when the application does not pull samples fast enough, the
 queued samples could consume a lot of memory, especially when dealing with
 raw video frames. It's possible to control the behaviour of the queue with
-the "drop" and "max-buffers" properties.
+the "drop" and "max-buffers" / "max-bytes" / "max-time" set of properties.
 
 This function will only pull serialized events, excluding
 the EOS event for which this functions returns
@@ -971,7 +1053,7 @@ can pull samples at its own rate.
 Note that when the application does not pull samples fast enough, the
 queued samples could consume a lot of memory, especially when dealing with
 raw video frames. It's possible to control the behaviour of the queue with
-the "drop" and "max-buffers" properties.
+the "drop" and "max-buffers" / "max-bytes" / "max-time" set of properties.
 
 If an EOS event was received before any buffers or the timeout expires,
 this function returns %NULL. Use gst_app_sink_is_eos () to check

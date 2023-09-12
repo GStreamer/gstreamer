@@ -339,6 +339,34 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "max-bytes": {
+                        "blurb": "The maximum amount of bytes to queue internally (0 = unlimited)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
+                    "max-time": {
+                        "blurb": "The maximum total duration to queue internally (in ns, 0 = unlimited)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "18446744073709551615",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint64",
+                        "writable": true
+                    },
                     "wait-on-eos": {
                         "blurb": "Wait for all buffers to be processed after receiving an EOS",
                         "conditionally-available": false,
