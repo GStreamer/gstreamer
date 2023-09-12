@@ -1114,17 +1114,53 @@ gst_vulkan_color_convert_start (GstBaseTransform * bt)
 }
 
 static gboolean
+vulkan_color_convert_can_passthrough_info (const GstVideoInfo * in,
+    const GstVideoInfo * out)
+{
+  gint i;
+
+  if (GST_VIDEO_INFO_FORMAT (in) != GST_VIDEO_INFO_FORMAT (out))
+    return FALSE;
+  if (GST_VIDEO_INFO_WIDTH (in) != GST_VIDEO_INFO_WIDTH (out))
+    return FALSE;
+  if (GST_VIDEO_INFO_HEIGHT (in) != GST_VIDEO_INFO_HEIGHT (out))
+    return FALSE;
+  if (GST_VIDEO_INFO_SIZE (in) != GST_VIDEO_INFO_SIZE (out))
+    return FALSE;
+
+  for (i = 0; i < in->finfo->n_planes; i++) {
+    if (in->stride[i] != out->stride[i])
+      return FALSE;
+    if (in->offset[i] != out->offset[i])
+      return FALSE;
+  }
+
+  if (!gst_video_colorimetry_is_equal (&in->colorimetry, &out->colorimetry))
+    return FALSE;
+  if (in->chroma_site != out->chroma_site)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_vulkan_color_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
     GstCaps * out_caps)
 {
   GstVulkanVideoFilter *vfilter = GST_VULKAN_VIDEO_FILTER (bt);
   GstVulkanColorConvert *conv = GST_VULKAN_COLOR_CONVERT (bt);
   GstVulkanHandle *vert, *frag;
+  gboolean passthrough;
   int i;
 
   if (!GST_BASE_TRANSFORM_CLASS (parent_class)->set_caps (bt, in_caps,
           out_caps))
     return FALSE;
+
+  passthrough =
+      vulkan_color_convert_can_passthrough_info (&vfilter->in_info,
+      &vfilter->out_info);
+  gst_base_transform_set_passthrough (bt, passthrough);
 
   if (!gst_vulkan_full_screen_quad_set_info (conv->quad, &vfilter->in_info,
           &vfilter->out_info))
@@ -1133,6 +1169,11 @@ gst_vulkan_color_convert_set_caps (GstBaseTransform * bt, GstCaps * in_caps,
   if (conv->current_shader) {
     conv->current_shader->notify (conv->current_shader);
     conv->current_shader = NULL;
+  }
+
+  if (passthrough) {
+    conv->current_shader = NULL;
+    return TRUE;
   }
 
   for (i = 0; i < G_N_ELEMENTS (shader_infos); i++) {
