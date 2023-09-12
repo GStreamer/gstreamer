@@ -682,7 +682,7 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   GstVulkanCommandBuffer *cmd_buf;
   GError *error = NULL;
   GArray *barriers = NULL;
-  guint i, n_mems, n_planes;
+  guint i, n_mems, n_planes, n_out_mems;
   VkImageLayout dst_layout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
   GstBufferPool *pool;
 
@@ -747,8 +747,11 @@ _raw_to_image_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
   }
   g_clear_pointer (&barriers, g_array_unref);
 
-  n_mems = gst_buffer_n_memory (*outbuf);
-  n_planes = GST_VIDEO_INFO_N_PLANES (&raw->out_info);
+  n_mems = gst_buffer_n_memory (inbuf);
+  n_out_mems = gst_buffer_n_memory (*outbuf);
+  if (n_mems != n_out_mems)
+    goto unlock_error;
+  n_planes = GST_VIDEO_INFO_N_PLANES (&raw->in_info);
 
   for (i = 0; i < n_mems; i++) {
     VkBufferImageCopy region;
