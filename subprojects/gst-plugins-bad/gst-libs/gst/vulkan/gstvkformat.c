@@ -493,10 +493,13 @@ gst_vulkan_format_from_video_info (GstVideoInfo * v_info, guint plane)
     if (vk_formats_map[i].format != GST_VIDEO_INFO_FORMAT (v_info))
       continue;
 
-    if (GST_VIDEO_INFO_IS_RGB (v_info) &&
-        (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
-            GST_VIDEO_TRANSFER_SRGB)) {
-      return vk_formats_map[i].vkfrmts[0];
+    if (GST_VIDEO_INFO_IS_RGB (v_info)) {
+      if (GST_VIDEO_INFO_COLORIMETRY (v_info).transfer ==
+          GST_VIDEO_TRANSFER_SRGB) {
+        return vk_formats_map[i].vkfrmt;
+      } else {
+        return vk_formats_map[i].vkfrmts[0];
+      }
     } else if (GST_VIDEO_INFO_IS_YUV (v_info) &&
         GST_VIDEO_INFO_N_PLANES (v_info) > plane) {
       return vk_formats_map[i].vkfrmts[plane];
