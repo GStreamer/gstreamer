@@ -513,8 +513,8 @@ gst_vulkan_format_from_video_info (GstVideoInfo * v_info, guint plane)
 
 struct vkUsage
 {
-#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
-  const VkFormatFeatureFlagBits2 feature;
+#if defined (VK_KHR_format_feature_flags2)
+  const VkFormatFeatureFlagBits2KHR feature;
 #else
   const VkFormatFeatureFlagBits feature;
 #endif
@@ -535,14 +535,14 @@ _get_usage (guint64 feature)
     {VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT,
           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT},
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-    {VK_FORMAT_FEATURE_VIDEO_DECODE_OUTPUT_BIT_KHR,
+    {VK_FORMAT_FEATURE_2_VIDEO_DECODE_OUTPUT_BIT_KHR,
           VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR},
-    {VK_FORMAT_FEATURE_VIDEO_DECODE_DPB_BIT_KHR,
+    {VK_FORMAT_FEATURE_2_VIDEO_DECODE_DPB_BIT_KHR,
           VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR},
 #ifdef VK_ENABLE_BETA_EXTENSIONS
-    {VK_FORMAT_FEATURE_VIDEO_ENCODE_DPB_BIT_KHR,
+    {VK_FORMAT_FEATURE_2_VIDEO_ENCODE_DPB_BIT_KHR,
           VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR},
-    {VK_FORMAT_FEATURE_VIDEO_ENCODE_INPUT_BIT_KHR,
+    {VK_FORMAT_FEATURE_2_VIDEO_ENCODE_INPUT_BIT_KHR,
           VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR},
 #endif
 #endif
@@ -580,11 +580,11 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
 {
   int i;
   VkPhysicalDevice gpu;
-#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
-  VkFormatProperties2 prop = {
-    .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2,
+#if defined (VK_KHR_get_physical_device_properties2)
+  VkFormatProperties2KHR prop = {
+    .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2_KHR,
   };
-  PFN_vkGetPhysicalDeviceFormatProperties2
+  PFN_vkGetPhysicalDeviceFormatProperties2KHR
       gst_vkGetPhysicalDeviceFormatProperties2 = NULL;
 
   gst_vkGetPhysicalDeviceFormatProperties2 =
@@ -607,7 +607,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
     if (vk_formats_map[i].format != GST_VIDEO_INFO_FORMAT (info))
       continue;
 
-#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
+#if defined (VK_KHR_get_physical_device_properties2)
     if (gst_vkGetPhysicalDeviceFormatProperties2) {
       gst_vkGetPhysicalDeviceFormatProperties2 (gpu, vk_formats_map[i].vkfrmt,
           &prop);
