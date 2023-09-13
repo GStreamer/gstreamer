@@ -155,6 +155,9 @@ struct _GstH264Picture
 
   GstH264DecRefPicMarking dec_ref_pic_marking;
 
+  /* Set by decoder to trace the number of delayed output pictures */
+  guint32 reorder_frame_number;
+
   /* For interlaced decoding */
   gboolean second_field;
   GstH264Picture * other_field;
