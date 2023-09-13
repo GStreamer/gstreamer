@@ -2050,6 +2050,10 @@ get_stats_for_srtsock (GstSRTObject * srtobject, SRTSOCKET srtsock)
       "negotiated-latency-ms", G_TYPE_INT, stats.msSndTsbPdDelay,
       "packets-received", G_TYPE_INT64, stats.pktRecvTotal,
       "packets-received-lost", G_TYPE_INT, stats.pktRcvLossTotal,
+      /* number of retransmitted packets registered at receiver side */
+      "packets-received-retransmitted", G_TYPE_INT, stats.pktRcvRetrans,
+      /* number of dropped packets by the receiver */
+      "packets-received-dropped", G_TYPE_INT, stats.pktRcvDropTotal,
       /* number of sent ACK packets */
       "packet-ack-sent", G_TYPE_INT, stats.pktSentACK,
       /* number of sent NAK packets */
