@@ -74,7 +74,7 @@ struct _MsdkDecTask
   gboolean decode_only;
 };
 
-static gboolean gst_msdkdec_drain (GstVideoDecoder * decoder);
+static GstFlowReturn gst_msdkdec_drain (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_flush (GstVideoDecoder * decoder);
 static gboolean gst_msdkdec_negotiate (GstMsdkDec * thiz, gboolean hard_reset);
 
