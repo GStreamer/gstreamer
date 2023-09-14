@@ -31,6 +31,7 @@ onevpl_extra_args = []
 
 extra_args = [
   '-DGST_USE_UNSTABLE_API',
+  '-DMFX_DEPRECATED_OFF'
 ]
 
 msdk_option = get_option('msdk')
