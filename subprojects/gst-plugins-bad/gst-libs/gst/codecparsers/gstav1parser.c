@@ -2129,20 +2129,37 @@ gst_av1_parse_segmentation_params (GstAV1Parser * parser, GstBitReader * br,
         }
       }
     } else {
-      /* Copy it from prime_ref */
-      g_assert (frame_header->primary_ref_frame != GST_AV1_PRIMARY_REF_NONE);
-      g_assert (parser->state.ref_info.
-          entry[frame_header->ref_frame_idx[frame_header->primary_ref_frame]].
-          ref_valid);
-      memcpy (seg_params,
-          &parser->state.ref_info.
-          entry[frame_header->ref_frame_idx[frame_header->
-                  primary_ref_frame]].ref_segmentation_params,
-          sizeof (GstAV1SegmenationParams));
+      gint8 ref_idx;
+      GstAV1SegmenationParams *ref_seg_params;
 
-      seg_params->segmentation_update_map = 0;
-      seg_params->segmentation_temporal_update = 0;
-      seg_params->segmentation_update_data = 0;
+      /* Copy it from prime_ref */
+      if (frame_header->primary_ref_frame >= GST_AV1_PRIMARY_REF_NONE) {
+        GST_WARNING ("Invalid primary_ref_frame %d",
+            frame_header->primary_ref_frame);
+        return GST_AV1_PARSER_BITSTREAM_ERROR;
+      }
+
+      ref_idx = frame_header->ref_frame_idx[frame_header->primary_ref_frame];
+      if (ref_idx >= GST_AV1_NUM_REF_FRAMES || ref_idx < 0) {
+        GST_WARNING ("Invalid ref_frame_idx %d", ref_idx);
+        return GST_AV1_PARSER_BITSTREAM_ERROR;
+      }
+
+      if (!parser->state.ref_info.entry[ref_idx].ref_valid) {
+        GST_WARNING ("Reference frame at index %d is unavailable", ref_idx);
+        return GST_AV1_PARSER_BITSTREAM_ERROR;
+      }
+
+      ref_seg_params =
+          &parser->state.ref_info.entry[ref_idx].ref_segmentation_params;
+
+      for (i = 0; i < GST_AV1_MAX_SEGMENTS; i++) {
+        for (j = 0; j < GST_AV1_SEG_LVL_MAX; j++) {
+          seg_params->feature_enabled[i][j] =
+              ref_seg_params->feature_enabled[i][j];
+          seg_params->feature_data[i][j] = ref_seg_params->feature_data[i][j];
+        }
+      }
     }
   } else {
     seg_params->segmentation_update_map = 0;
