@@ -1012,6 +1012,10 @@ gst_amc_video_enc_handle_output_frame (GstAmcVideoEnc * self,
     GstBuffer *out_buf;
     GstPad *srcpad;
 
+    if (buffer_info->flags & BUFFER_FLAG_PARTIAL_FRAME) {
+      GST_FIXME_OBJECT (self, "partial frames are currently not handled");
+    }
+
     srcpad = GST_VIDEO_ENCODER_SRC_PAD (encoder);
     out_buf =
         gst_video_encoder_allocate_output_buffer (encoder, buffer_info->size);
