@@ -4,6 +4,7 @@ d3d12_sources = [
   'gstd3d12fence.cpp',
   'gstd3d12format.cpp',
   'gstd3d12h264dec.cpp',
+  'gstd3d12h265dec.cpp',
   'gstd3d12memory.cpp',
   'gstd3d12utils.cpp',
   'plugin.cpp',
