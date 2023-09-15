@@ -53,6 +53,9 @@ static const DecoderFormat format_list[] = {
   {GST_DXVA_CODEC_H265, D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN, DXGI_FORMAT_NV12},
   {GST_DXVA_CODEC_H265, D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN10,
       DXGI_FORMAT_P010},
+  {GST_DXVA_CODEC_VP9, D3D12_VIDEO_DECODE_PROFILE_VP9, DXGI_FORMAT_NV12},
+  {GST_DXVA_CODEC_VP9, D3D12_VIDEO_DECODE_PROFILE_VP9_10BIT_PROFILE2,
+      DXGI_FORMAT_P010},
 };
 
 /* *INDENT-OFF* */
@@ -1009,12 +1012,23 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
     goto error;
   }
 
-  if (picture->discont_state) {
-    g_clear_pointer (&priv->input_state, gst_video_codec_state_unref);
-    priv->input_state = gst_video_codec_state_ref (picture->discont_state);
+  if (display_width != GST_VIDEO_INFO_WIDTH (&priv->output_info) ||
+      display_height != GST_VIDEO_INFO_HEIGHT (&priv->output_info)) {
+    GST_INFO_OBJECT (videodec, "Frame size changed, do renegotiate");
+
+    gst_video_info_set_format (&priv->output_info,
+        GST_VIDEO_INFO_FORMAT (&priv->info), display_width, display_height);
+    GST_VIDEO_INFO_INTERLACE_MODE (&priv->output_info) =
+        GST_VIDEO_INFO_INTERLACE_MODE (&priv->info);
 
     if (!gst_video_decoder_negotiate (videodec)) {
       GST_ERROR_OBJECT (videodec, "Failed to re-negotiate with new frame size");
+      ret = GST_FLOW_NOT_NEGOTIATED;
+      goto error;
+    }
+  } else if (picture->discont_state) {
+    if (!gst_video_decoder_negotiate (videodec)) {
+      GST_ERROR_OBJECT (videodec, "Could not re-negotiate with updated state");
       ret = GST_FLOW_NOT_NEGOTIATED;
       goto error;
     }
@@ -1405,6 +1419,10 @@ gst_d3d12_decoder_get_profiles (const GUID & profile,
     list.push_back ("main");
   } else if (profile == D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN10) {
     list.push_back ("main-10");
+  } else if (profile == D3D12_VIDEO_DECODE_PROFILE_VP9) {
+    list.push_back ("0");
+  } else if (profile == D3D12_VIDEO_DECODE_PROFILE_VP9_10BIT_PROFILE2) {
+    list.push_back ("2");
   } else {
     g_assert_not_reached ();
   }
@@ -1505,26 +1523,8 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
     src_caps_string += format_string;
   }
 
-  std::string profile_string;
-  /* *INDENT-OFF* */
-  if (profiles.size () > 1) {
-    profile_string = "{ ";
-    bool first = true;
-    for (auto it: profiles) {
-      if (!first)
-        profile_string += ", ";
-
-      profile_string += it;
-      first = false;
-    }
-
-    profile_string += " }";
-  } else {
-    profile_string = profiles[0];
-  }
-  /* *INDENT-ON* */
-
   std::string sink_caps_string;
+  std::string profile_string;
 
   switch (codec) {
     case GST_DXVA_CODEC_H264:
@@ -1537,13 +1537,48 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
           "stream-format=(string) { hev1, hvc1, byte-stream }, "
           "alignment=(string) au";
       break;
+    case GST_DXVA_CODEC_VP9:
+      if (profiles.size () > 1) {
+        sink_caps_string =
+            "video/x-vp9, alignment = (string) frame, profile = (string) 0; "
+            "video/x-vp9, alignment = (string) frame, profile = (string) 2, "
+            "bit-depth-luma = (uint) 10, bit-depth-chroma = (uint) 10";
+      } else if (profiles[0] == "0") {
+        sink_caps_string =
+            "video/x-vp9, alignment = (string) frame, profile = (string) 0";
+      } else {
+        sink_caps_string =
+            "video/x-vp9, alignment = (string) frame, profile = (string) 2, "
+            "bit-depth-luma = (uint) 10, bit-depth-chroma = (uint) 10";
+      }
+      break;
     default:
       g_assert_not_reached ();
       return nullptr;
   }
 
-  sink_caps_string += ", profile=(string) ";
-  sink_caps_string += profile_string;
+  /* *INDENT-OFF* */
+  if (codec != GST_DXVA_CODEC_VP9) {
+    if (profiles.size () > 1) {
+      profile_string = "{ ";
+      bool first = true;
+      for (auto it : profiles) {
+        if (!first)
+          profile_string += ", ";
+
+        profile_string += it;
+        first = false;
+      }
+
+      profile_string += " }";
+    } else {
+      profile_string = profiles[0];
+    }
+
+    sink_caps_string += ", profile=(string) ";
+    sink_caps_string += profile_string;
+  }
+  /* *INDENT-ON* */
 
   GstCaps *src_caps = gst_caps_from_string (src_caps_string.c_str ());
   GstCaps *sink_caps = gst_caps_from_string (sink_caps_string.c_str ());

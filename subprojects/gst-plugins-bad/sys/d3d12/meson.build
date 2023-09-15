@@ -7,6 +7,7 @@ d3d12_sources = [
   'gstd3d12h265dec.cpp',
   'gstd3d12memory.cpp',
   'gstd3d12utils.cpp',
+  'gstd3d12vp9dec.cpp',
   'plugin.cpp',
 ]
 
