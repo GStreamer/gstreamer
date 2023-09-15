@@ -1,4 +1,5 @@
 d3d12_sources = [
+  'gstd3d12av1dec.cpp',
   'gstd3d12decoder.cpp',
   'gstd3d12device.cpp',
   'gstd3d12fence.cpp',

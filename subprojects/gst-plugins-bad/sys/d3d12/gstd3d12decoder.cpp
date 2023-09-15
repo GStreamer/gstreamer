@@ -37,6 +37,7 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <algorithm>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_decoder_debug);
 #define GST_CAT_DEFAULT gst_d3d12_decoder_debug
@@ -45,17 +46,22 @@ struct DecoderFormat
 {
   GstDxvaCodec codec;
   const GUID decode_profile;
-  DXGI_FORMAT format;
+  DXGI_FORMAT format[3];
 };
 
 static const DecoderFormat format_list[] = {
-  {GST_DXVA_CODEC_H264, D3D12_VIDEO_DECODE_PROFILE_H264, DXGI_FORMAT_NV12},
-  {GST_DXVA_CODEC_H265, D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN, DXGI_FORMAT_NV12},
+  {GST_DXVA_CODEC_H264, D3D12_VIDEO_DECODE_PROFILE_H264,
+      {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
+  {GST_DXVA_CODEC_H265, D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN,
+      {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
   {GST_DXVA_CODEC_H265, D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN10,
       DXGI_FORMAT_P010},
-  {GST_DXVA_CODEC_VP9, D3D12_VIDEO_DECODE_PROFILE_VP9, DXGI_FORMAT_NV12},
+  {GST_DXVA_CODEC_VP9, D3D12_VIDEO_DECODE_PROFILE_VP9,
+      {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
   {GST_DXVA_CODEC_VP9, D3D12_VIDEO_DECODE_PROFILE_VP9_10BIT_PROFILE2,
-      DXGI_FORMAT_P010},
+      {DXGI_FORMAT_P010, DXGI_FORMAT_UNKNOWN,}},
+  {GST_DXVA_CODEC_AV1, D3D12_VIDEO_DECODE_PROFILE_AV1_PROFILE0,
+      {DXGI_FORMAT_NV12, DXGI_FORMAT_P010}},
 };
 
 /* *INDENT-OFF* */
@@ -766,6 +772,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   ID3D12Fence *fence_handle;
   std::vector < D3D12_RESOURCE_BARRIER > pre_barriers;
   std::vector < D3D12_RESOURCE_BARRIER > post_barriers;
+  std::vector < GstD3D12DecoderPicture * >configured_ref_pics;
 
   if (!decoder_pic) {
     GST_ERROR_OBJECT (decoder, "No attached decoder picture");
@@ -776,6 +783,9 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     GST_ERROR_OBJECT (decoder, "No bitstream buffer passed");
     return GST_FLOW_ERROR;
   }
+
+  GST_LOG_OBJECT (decoder, "End picture with dxva-id %d, num-ref-pics %u",
+      decoder_pic->view_id, ref_pics->len);
 
   /* Wait for previous fence if needed */
   gst_d3d12_fence_wait (priv->fence);
@@ -808,6 +818,13 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
 
     if (!ref_dec_pic || ref_dec_pic == decoder_pic)
       continue;
+
+    if (std::find (configured_ref_pics.begin (), configured_ref_pics.end (),
+            ref_dec_pic) != configured_ref_pics.end ()) {
+      continue;
+    }
+
+    configured_ref_pics.push_back (ref_dec_pic);
 
     dmem = (GstD3D12Memory *) ref_dec_pic->mem;
 
@@ -1185,10 +1202,25 @@ gst_d3d12_decoder_open (GstD3D12Decoder * self)
 
   const DecoderFormat *decoder_foramt = nullptr;
   for (guint i = 0; i < G_N_ELEMENTS (format_list); i++) {
-    if (format_list[i].codec != priv->codec ||
-        format_list[i].format != priv->decoder_format) {
+    decoder_foramt = nullptr;
+
+    if (format_list[i].codec != priv->codec)
       continue;
+
+    for (guint j = 0; j < G_N_ELEMENTS (format_list[i].format); j++) {
+      DXGI_FORMAT format = format_list[i].format[j];
+
+      if (format == DXGI_FORMAT_UNKNOWN)
+        break;
+
+      if (format == priv->decoder_format) {
+        decoder_foramt = &format_list[i];
+        break;
+      }
     }
+
+    if (!decoder_foramt)
+      continue;
 
     D3D12_FEATURE_DATA_VIDEO_DECODE_SUPPORT s;
     s.NodeIndex = 0;
@@ -1220,7 +1252,6 @@ gst_d3d12_decoder_open (GstD3D12Decoder * self)
       continue;
     }
 
-    decoder_foramt = &format_list[i];
     support = s;
 
     GST_INFO_OBJECT (self,
@@ -1423,6 +1454,8 @@ gst_d3d12_decoder_get_profiles (const GUID & profile,
     list.push_back ("0");
   } else if (profile == D3D12_VIDEO_DECODE_PROFILE_VP9_10BIT_PROFILE2) {
     list.push_back ("2");
+  } else if (profile == D3D12_VIDEO_DECODE_PROFILE_AV1_PROFILE0) {
+    list.push_back ("main");
   } else {
     g_assert_not_reached ();
   }
@@ -1452,33 +1485,38 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
     s.Configuration.DecodeProfile = format_list[i].decode_profile;
     s.Configuration.BitstreamEncryption = D3D12_BITSTREAM_ENCRYPTION_TYPE_NONE;
     s.Configuration.InterlaceType = D3D12_VIDEO_FRAME_CODED_INTERLACE_TYPE_NONE;
-    s.DecodeFormat = format_list[i].format;
     s.FrameRate = { 0, 1 };
     s.BitRate = 0;
 
     bool supported = false;
-    for (guint j = 0; j < G_N_ELEMENTS (gst_dxva_resolutions); j++) {
-      s.Width = gst_dxva_resolutions[j].width;
-      s.Height = gst_dxva_resolutions[j].height;
-
-      hr = video_device->CheckFeatureSupport
-          (D3D12_FEATURE_VIDEO_DECODE_SUPPORT, &s,
-          sizeof (D3D12_FEATURE_DATA_VIDEO_DECODE_SUPPORT));
-      if (FAILED (hr))
+    for (guint j = 0; j < G_N_ELEMENTS (format_list[i].format); j++) {
+      s.DecodeFormat = format_list[i].format[j];
+      if (s.DecodeFormat == DXGI_FORMAT_UNKNOWN)
         break;
 
-      if ((s.SupportFlags & D3D12_VIDEO_DECODE_SUPPORT_FLAG_SUPPORTED) == 0)
-        break;
+      for (guint k = 0; k < G_N_ELEMENTS (gst_dxva_resolutions); k++) {
+        s.Width = gst_dxva_resolutions[k].width;
+        s.Height = gst_dxva_resolutions[k].height;
 
-      if (max_resolution.width < gst_dxva_resolutions[j].width)
-        max_resolution.width = gst_dxva_resolutions[j].width;
-      if (max_resolution.height < gst_dxva_resolutions[j].height)
-        max_resolution.height = gst_dxva_resolutions[j].height;
+        hr = video_device->CheckFeatureSupport
+            (D3D12_FEATURE_VIDEO_DECODE_SUPPORT, &s,
+            sizeof (D3D12_FEATURE_DATA_VIDEO_DECODE_SUPPORT));
+        if (FAILED (hr))
+          break;
 
-      supported_formats.insert (format_list[i].format);
-      config_flags = s.ConfigurationFlags;
-      tier = s.DecodeTier;
-      supported = true;
+        if ((s.SupportFlags & D3D12_VIDEO_DECODE_SUPPORT_FLAG_SUPPORTED) == 0)
+          break;
+
+        if (max_resolution.width < gst_dxva_resolutions[k].width)
+          max_resolution.width = gst_dxva_resolutions[k].width;
+        if (max_resolution.height < gst_dxva_resolutions[k].height)
+          max_resolution.height = gst_dxva_resolutions[k].height;
+
+        supported_formats.insert (format_list[i].format[j]);
+        config_flags = s.ConfigurationFlags;
+        tier = s.DecodeTier;
+        supported = true;
+      }
     }
 
     if (supported)
@@ -1551,6 +1589,9 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
             "video/x-vp9, alignment = (string) frame, profile = (string) 2, "
             "bit-depth-luma = (uint) 10, bit-depth-chroma = (uint) 10";
       }
+      break;
+    case GST_DXVA_CODEC_AV1:
+      sink_caps_string = "video/x-av1, alignment = (string) frame";
       break;
     default:
       g_assert_not_reached ();

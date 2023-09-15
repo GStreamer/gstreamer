@@ -26,6 +26,7 @@
 #include "gstd3d12h264dec.h"
 #include "gstd3d12h265dec.h"
 #include "gstd3d12vp9dec.h"
+#include "gstd3d12av1dec.h"
 
 #include <wrl.h>
 
@@ -85,6 +86,8 @@ plugin_init (GstPlugin * plugin)
     gst_d3d12_h265_dec_register (plugin, device, video_device.Get (),
         GST_RANK_NONE);
     gst_d3d12_vp9_dec_register (plugin, device, video_device.Get (),
+        GST_RANK_NONE);
+    gst_d3d12_av1_dec_register (plugin, device, video_device.Get (),
         GST_RANK_NONE);
 
     gst_object_unref (device);
