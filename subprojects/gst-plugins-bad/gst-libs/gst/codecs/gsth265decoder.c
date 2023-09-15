@@ -841,7 +841,6 @@ gst_h265_decoder_process_slice (GstH265Decoder * self, GstH265Slice * slice)
   priv->active_sps = priv->active_pps->sps;
 
   if (!priv->current_picture) {
-    GstH265DecoderClass *klass = GST_H265_DECODER_GET_CLASS (self);
     GstH265Picture *picture;
     GstFlowReturn ret = GST_FLOW_OK;
 
@@ -853,16 +852,6 @@ gst_h265_decoder_process_slice (GstH265Decoder * self, GstH265Slice * slice)
         priv->current_frame->system_frame_number;
 
     priv->current_picture = picture;
-
-    if (klass->new_picture)
-      ret = klass->new_picture (self, priv->current_frame, picture);
-
-    if (ret != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (self, "subclass does not want accept new picture");
-      priv->current_picture = NULL;
-      gst_h265_picture_unref (picture);
-      return ret;
-    }
 
     ret = gst_h265_decoder_start_current_picture (self);
     if (ret != GST_FLOW_OK) {
@@ -1849,7 +1838,7 @@ gst_h265_decoder_start_current_picture (GstH265Decoder * self)
   if (GST_H265_IS_NAL_TYPE_RASL (priv->current_slice.nalu.type) &&
       priv->associated_irap_NoRaslOutputFlag) {
     GST_DEBUG_OBJECT (self, "Drop current picture");
-    gst_h265_picture_replace (&priv->current_picture, NULL);
+    gst_clear_h265_picture (&priv->current_picture);
     return GST_FLOW_OK;
   }
 
@@ -1872,16 +1861,28 @@ gst_h265_decoder_start_current_picture (GstH265Decoder * self)
       &priv->current_slice, priv->current_picture);
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (self, "Failed to init dpb");
+    gst_clear_h265_picture (&priv->current_picture);
     return ret;
   }
 
   klass = GST_H265_DECODER_GET_CLASS (self);
+
+  if (klass->new_picture)
+    ret = klass->new_picture (self, priv->current_frame, priv->current_picture);
+
+  if (ret != GST_FLOW_OK) {
+    GST_WARNING_OBJECT (self, "subclass does not want accept new picture");
+    gst_clear_h265_picture (&priv->current_picture);
+    return ret;
+  }
+
   if (klass->start_picture) {
     ret = klass->start_picture (self, priv->current_picture,
         &priv->current_slice, priv->dpb);
 
     if (ret != GST_FLOW_OK) {
       GST_WARNING_OBJECT (self, "subclass does not want to start picture");
+      gst_clear_h265_picture (&priv->current_picture);
       return ret;
     }
   }
