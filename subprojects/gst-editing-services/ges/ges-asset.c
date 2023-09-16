@@ -1313,7 +1313,7 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
           NULL, NULL, "id", real_id, "extractable-type",
           extractable_type, NULL);
     } else {
-      GST_WARNING ("Tried to create an Asset for type %s but no ->init method",
+      GST_INFO ("Tried to create an Asset for type %s but no ->init method",
           g_type_name (extractable_type));
     }
     g_type_class_unref (klass);
