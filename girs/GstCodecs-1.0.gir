@@ -1649,6 +1649,9 @@ should not exceed the max size of DPB.</doc>
       <field name="dec_ref_pic_marking" introspectable="0" readable="0" private="1">
         <type c:type="GstH264DecRefPicMarking"/>
       </field>
+      <field name="reorder_frame_number" readable="0" private="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
       <field name="second_field" readable="0" private="1">
         <type name="gboolean" c:type="gboolean"/>
       </field>
