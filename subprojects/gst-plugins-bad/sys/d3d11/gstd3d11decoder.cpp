@@ -207,12 +207,6 @@ private:
 };
 /* *INDENT-ON* */
 
-enum
-{
-  PROP_0,
-  PROP_DEVICE,
-};
-
 struct _GstD3D11Decoder
 {
   GstObject parent;
@@ -229,7 +223,7 @@ struct _GstD3D11Decoder
 
   GstVideoInfo info;
   GstVideoInfo output_info;
-  GstDXVACodec codec;
+  GstDxvaCodec codec;
   gint offset_x;
   gint offset_y;
   gint coded_width;
@@ -272,11 +266,6 @@ struct _GstD3D11Decoder
   guint timer_resolution;
 };
 
-static void gst_d3d11_decoder_constructed (GObject * object);
-static void gst_d3d11_decoder_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
 static void gst_d3d11_decoder_dispose (GObject * obj);
 static void gst_d3d11_decoder_finalize (GObject * obj);
 static gboolean gst_d3d11_decoder_can_direct_render (GstD3D11Decoder * decoder,
@@ -291,90 +280,14 @@ gst_d3d11_decoder_class_init (GstD3D11DecoderClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->constructed = gst_d3d11_decoder_constructed;
-  gobject_class->set_property = gst_d3d11_decoder_set_property;
-  gobject_class->get_property = gst_d3d11_decoder_get_property;
   gobject_class->dispose = gst_d3d11_decoder_dispose;
   gobject_class->finalize = gst_d3d11_decoder_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_DEVICE,
-      g_param_spec_object ("device", "Device",
-          "D3D11 Devicd to use", GST_TYPE_D3D11_DEVICE,
-          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY |
-              G_PARAM_STATIC_STRINGS)));
 }
 
 static void
 gst_d3d11_decoder_init (GstD3D11Decoder * self)
 {
-}
-
-static void
-gst_d3d11_decoder_constructed (GObject * object)
-{
-  GstD3D11Decoder *self = GST_D3D11_DECODER (object);
-  ID3D11VideoDevice *video_device;
-  ID3D11VideoContext *video_context;
-
-  if (!self->device) {
-    GST_ERROR_OBJECT (self, "No D3D11Device available");
-    return;
-  }
-
-  video_device = gst_d3d11_device_get_video_device_handle (self->device);
-  if (!video_device) {
-    GST_WARNING_OBJECT (self, "ID3D11VideoDevice is not available");
-    return;
-  }
-
-  video_context = gst_d3d11_device_get_video_context_handle (self->device);
-  if (!video_context) {
-    GST_WARNING_OBJECT (self, "ID3D11VideoContext is not available");
-    return;
-  }
-
-  self->video_device = video_device;
-  video_device->AddRef ();
-
-  self->video_context = video_context;
-  video_context->AddRef ();
-
-  BOOL ret = QueryPerformanceFrequency (&self->frequency);
-  g_assert (ret);
-
-  return;
-}
-
-static void
-gst_d3d11_decoder_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstD3D11Decoder *self = GST_D3D11_DECODER (object);
-
-  switch (prop_id) {
-    case PROP_DEVICE:
-      self->device = (GstD3D11Device *) g_value_dup_object (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstD3D11Decoder *self = GST_D3D11_DECODER (object);
-
-  switch (prop_id) {
-    case PROP_DEVICE:
-      g_value_set_object (value, self->device);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  QueryPerformanceFrequency (&self->frequency);
 }
 
 static void
@@ -439,35 +352,41 @@ gst_d3d11_decoder_finalize (GObject * obj)
 }
 
 GstD3D11Decoder *
-gst_d3d11_decoder_new (GstD3D11Device * device, GstDXVACodec codec)
+gst_d3d11_decoder_new (GstD3D11Device * device, GstDxvaCodec codec)
 {
   GstD3D11Decoder *self;
+  ID3D11VideoDevice *video_device;
+  ID3D11VideoContext *video_context;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
   g_return_val_if_fail (codec > GST_DXVA_CODEC_NONE, nullptr);
   g_return_val_if_fail (codec < GST_DXVA_CODEC_LAST, nullptr);
 
-  self = (GstD3D11Decoder *)
-      g_object_new (GST_TYPE_D3D11_DECODER, "device", device, NULL);
-
-  if (!self->video_device || !self->video_context) {
-    gst_object_unref (self);
-    return NULL;
+  video_device = gst_d3d11_device_get_video_device_handle (device);
+  if (!video_device) {
+    GST_WARNING_OBJECT (device, "ID3D11VideoDevice is not available");
+    return nullptr;
   }
 
+  video_context = gst_d3d11_device_get_video_context_handle (device);
+  if (!video_context) {
+    GST_WARNING_OBJECT (device, "ID3D11VideoContext is not available");
+    return nullptr;
+  }
+
+  self = (GstD3D11Decoder *) g_object_new (GST_TYPE_D3D11_DECODER, nullptr);
+
+  self->device = (GstD3D11Device *) gst_object_ref (device);
   self->codec = codec;
+  self->video_device = video_device;
+  video_device->AddRef ();
+
+  self->video_context = video_context;
+  video_context->AddRef ();
 
   gst_object_ref_sink (self);
 
   return self;
-}
-
-gboolean
-gst_d3d11_decoder_is_configured (GstD3D11Decoder * decoder)
-{
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-
-  return decoder->configured;
 }
 
 static gboolean
@@ -606,35 +525,9 @@ error:
   return FALSE;
 }
 
-static const gchar *
-gst_dxva_codec_to_string (GstDXVACodec codec)
-{
-  switch (codec) {
-    case GST_DXVA_CODEC_NONE:
-      return "none";
-    case GST_DXVA_CODEC_H264:
-      return "H.264";
-    case GST_DXVA_CODEC_VP9:
-      return "VP9";
-    case GST_DXVA_CODEC_H265:
-      return "H.265";
-    case GST_DXVA_CODEC_VP8:
-      return "VP8";
-    case GST_DXVA_CODEC_MPEG2:
-      return "MPEG2";
-    case GST_DXVA_CODEC_AV1:
-      return "AV1";
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  return "Unknown";
-}
-
 gboolean
 gst_d3d11_decoder_get_supported_decoder_profile (GstD3D11Device * device,
-    GstDXVACodec codec, GstVideoFormat format, const GUID ** selected_profile)
+    GstDxvaCodec codec, GstVideoFormat format, const GUID ** selected_profile)
 {
   GUID *guid_list = nullptr;
   const GUID *profile = nullptr;
@@ -780,7 +673,7 @@ out:
   return ret;
 }
 
-gboolean
+GstFlowReturn
 gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
     GstVideoCodecState * input_state, const GstVideoInfo * out_info,
     gint offset_x, gint offset_y, gint coded_width, gint coded_height,
@@ -788,13 +681,14 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
 {
   GstD3D11Format d3d11_format;
 
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
-  g_return_val_if_fail (out_info != NULL, FALSE);
-  g_return_val_if_fail (input_state != NULL, FALSE);
-  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (out_info), FALSE);
+  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), GST_FLOW_ERROR);
+  g_return_val_if_fail (out_info != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (input_state != NULL, GST_FLOW_ERROR);
+  g_return_val_if_fail (coded_width >= GST_VIDEO_INFO_WIDTH (out_info),
+      GST_FLOW_ERROR);
   g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (out_info),
-      FALSE);
-  g_return_val_if_fail (dpb_size > 0, FALSE);
+      GST_FLOW_ERROR);
+  g_return_val_if_fail (dpb_size > 0, GST_FLOW_ERROR);
 
   gst_d3d11_decoder_reset (decoder);
 
@@ -803,7 +697,7 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
       d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
   /* Additional 2 frames to help zero-copying */
@@ -825,7 +719,7 @@ gst_d3d11_decoder_configure (GstD3D11Decoder * decoder,
   else
     decoder->need_crop = FALSE;
 
-  return TRUE;
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -1225,9 +1119,95 @@ gst_d3d11_decoder_submit_decoder_buffers (GstD3D11Decoder * decoder,
   return TRUE;
 }
 
+static ID3D11VideoDecoderOutputView *
+gst_d3d11_decoder_get_output_view_from_picture (GstD3D11Decoder * self,
+    GstCodecPicture * picture, guint8 * index)
+{
+  GstMemory *mem;
+  GstD3D11Memory *dmem;
+  ID3D11VideoDecoderOutputView *view;
+  GstBuffer *buffer;
+
+  if (index)
+    *index = 0xff;
+
+  buffer = (GstBuffer *) gst_codec_picture_get_user_data (picture);
+  if (!buffer) {
+    GST_DEBUG_OBJECT (self, "picture without attached user data");
+    return nullptr;
+  }
+
+  mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_d3d11_memory (mem)) {
+    GST_WARNING_OBJECT (self, "Not a d3d11 memory");
+    return nullptr;
+  }
+
+  dmem = (GstD3D11Memory *) mem;
+  view = gst_d3d11_memory_get_decoder_output_view (dmem, self->video_device,
+      self->decoder_handle, &self->decoder_profile);
+
+  if (!view) {
+    GST_ERROR_OBJECT (self, "Decoder output view is unavailable");
+    return nullptr;
+  }
+
+  if (index) {
+    if (self->use_array_of_texture) {
+      ID3D11Resource *texture;
+      ComPtr < IGstD3D11DecoderViewData > data;
+      UINT size;
+
+      texture = gst_d3d11_memory_get_resource_handle (dmem);
+      size = sizeof (IGstD3D11DecoderViewData *);
+
+      texture->GetPrivateData (IID_GST_D3D11_DECODER_VIEW_DATA,
+          &size, data.GetAddressOf ());
+
+      if (!data) {
+        GST_ERROR_OBJECT (self, "memory has no private data");
+        return nullptr;
+      }
+
+      *index = data->GetViewIndex ();
+    } else {
+      *index = gst_d3d11_memory_get_subresource_index (dmem);
+    }
+  }
+
+  return view;
+}
+
+guint8
+gst_d3d11_decoder_get_picture_id (GstD3D11Decoder * decoder,
+    GstCodecPicture * picture)
+{
+  guint8 id = 0xff;
+
+  if (!picture)
+    return 0xff;
+
+  if (!gst_d3d11_decoder_get_output_view_from_picture (decoder, picture, &id))
+    return 0xff;
+
+  return id;
+}
+
 GstFlowReturn
-gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
-    GstCodecPicture * picture, GstD3D11DecodeInputStreamArgs * input_args)
+gst_d3d11_decoder_start_picture (GstD3D11Decoder * decoder,
+    GstCodecPicture * picture, guint8 * picture_id)
+{
+  if (!gst_d3d11_decoder_get_output_view_from_picture (decoder,
+          picture, picture_id)) {
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
+}
+
+GstFlowReturn
+gst_d3d11_decoder_end_picture (GstD3D11Decoder * decoder,
+    GstCodecPicture * picture, const GstDxvaDecodingArgs * args)
 {
   ID3D11VideoDecoderOutputView *output_view;
   guint d3d11_buffer_size;
@@ -1238,7 +1218,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
 
   g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), GST_FLOW_ERROR);
   g_return_val_if_fail (picture != nullptr, GST_FLOW_ERROR);
-  g_return_val_if_fail (input_args != nullptr, GST_FLOW_ERROR);
+  g_return_val_if_fail (args != nullptr, GST_FLOW_ERROR);
 
   output_view = gst_d3d11_decoder_get_output_view_from_picture (decoder,
       picture, nullptr);
@@ -1250,21 +1230,21 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
   memset (buffer_desc, 0, sizeof (buffer_desc));
 
   buffer_desc[0].BufferType = D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS;
-  buffer_desc[0].DataSize = input_args->picture_params_size;
+  buffer_desc[0].DataSize = args->picture_params_size;
 
   buffer_desc[1].BufferType = D3D11_VIDEO_DECODER_BUFFER_SLICE_CONTROL;
-  buffer_desc[1].DataSize = input_args->slice_control_size;
+  buffer_desc[1].DataSize = args->slice_control_size;
 
   buffer_desc[2].BufferType = D3D11_VIDEO_DECODER_BUFFER_BITSTREAM;
   buffer_desc[2].DataOffset = 0;
-  buffer_desc[2].DataSize = input_args->bitstream_size;
+  buffer_desc[2].DataSize = args->bitstream_size;
 
   buffer_desc_size = 3;
-  if (input_args->inverse_quantization_matrix &&
-      input_args->inverse_quantization_matrix_size > 0) {
+  if (args->inverse_quantization_matrix &&
+      args->inverse_quantization_matrix_size > 0) {
     buffer_desc[3].BufferType =
         D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX;
-    buffer_desc[3].DataSize = input_args->inverse_quantization_matrix_size;
+    buffer_desc[3].DataSize = args->inverse_quantization_matrix_size;
     buffer_desc_size++;
   }
 
@@ -1281,7 +1261,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  if (d3d11_buffer_size < input_args->picture_params_size) {
+  if (d3d11_buffer_size < args->picture_params_size) {
     GST_ERROR_OBJECT (decoder,
         "Too small picture param buffer size %d", d3d11_buffer_size);
 
@@ -1290,8 +1270,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  memcpy (d3d11_buffer, input_args->picture_params,
-      input_args->picture_params_size);
+  memcpy (d3d11_buffer, args->picture_params, args->picture_params_size);
 
   if (!gst_d3d11_decoder_release_decoder_buffer (decoder,
           D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS)) {
@@ -1306,7 +1285,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  if (d3d11_buffer_size < input_args->slice_control_size) {
+  if (d3d11_buffer_size < args->slice_control_size) {
     GST_ERROR_OBJECT (decoder,
         "Too small slice control buffer size %d", d3d11_buffer_size);
 
@@ -1315,8 +1294,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  memcpy (d3d11_buffer,
-      input_args->slice_control, input_args->slice_control_size);
+  memcpy (d3d11_buffer, args->slice_control, args->slice_control_size);
 
   if (!gst_d3d11_decoder_release_decoder_buffer (decoder,
           D3D11_VIDEO_DECODER_BUFFER_SLICE_CONTROL)) {
@@ -1331,7 +1309,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  if (d3d11_buffer_size < input_args->bitstream_size) {
+  if (d3d11_buffer_size < args->bitstream_size) {
     GST_ERROR_OBJECT (decoder, "Too small bitstream buffer size %d",
         d3d11_buffer_size);
 
@@ -1340,7 +1318,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  memcpy (d3d11_buffer, input_args->bitstream, input_args->bitstream_size);
+  memcpy (d3d11_buffer, args->bitstream, args->bitstream_size);
 
   if (!gst_d3d11_decoder_release_decoder_buffer (decoder,
           D3D11_VIDEO_DECODER_BUFFER_BITSTREAM)) {
@@ -1348,7 +1326,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
     goto error;
   }
 
-  if (input_args->inverse_quantization_matrix_size > 0) {
+  if (args->inverse_quantization_matrix_size > 0) {
     if (!gst_d3d11_decoder_get_decoder_buffer (decoder,
             D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX,
             &d3d11_buffer_size, &d3d11_buffer)) {
@@ -1357,7 +1335,7 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
       goto error;
     }
 
-    if (d3d11_buffer_size < input_args->inverse_quantization_matrix_size) {
+    if (d3d11_buffer_size < args->inverse_quantization_matrix_size) {
       GST_ERROR_OBJECT (decoder,
           "Too small inverse quantization matrix buffer buffer %d",
           d3d11_buffer_size);
@@ -1367,8 +1345,8 @@ gst_d3d11_decoder_decode_picture (GstD3D11Decoder * decoder,
       goto error;
     }
 
-    memcpy (d3d11_buffer, input_args->inverse_quantization_matrix,
-        input_args->inverse_quantization_matrix_size);
+    memcpy (d3d11_buffer, args->inverse_quantization_matrix,
+        args->inverse_quantization_matrix_size);
 
     if (!gst_d3d11_decoder_release_decoder_buffer (decoder,
             D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX)) {
@@ -1446,66 +1424,19 @@ gst_d3d11_decoder_new_picture (GstD3D11Decoder * decoder,
   return GST_FLOW_OK;
 }
 
-ID3D11VideoDecoderOutputView *
-gst_d3d11_decoder_get_output_view_from_picture (GstD3D11Decoder * decoder,
-    GstCodecPicture * picture, guint8 * index)
+GstFlowReturn
+gst_d3d11_decoder_duplicate_picture (GstD3D11Decoder * decoder,
+    GstCodecPicture * src, GstCodecPicture * dst)
 {
-  GstMemory *mem;
-  GstD3D11Memory *dmem;
-  ID3D11VideoDecoderOutputView *view;
-  GstBuffer *buffer;
+  GstBuffer *buf = (GstBuffer *) gst_codec_picture_get_user_data (src);
 
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), nullptr);
-  g_return_val_if_fail (picture, nullptr);
+  if (!buf)
+    return GST_FLOW_ERROR;
 
-  if (index)
-    *index = 0xff;
+  gst_codec_picture_set_user_data (dst, gst_buffer_ref (buf),
+      (GDestroyNotify) gst_buffer_unref);
 
-  buffer = (GstBuffer *) gst_codec_picture_get_user_data (picture);
-  if (!buffer) {
-    GST_DEBUG_OBJECT (decoder, "picture without attached user data");
-    return nullptr;
-  }
-
-  mem = gst_buffer_peek_memory (buffer, 0);
-  if (!gst_is_d3d11_memory (mem)) {
-    GST_WARNING_OBJECT (decoder, "Not a d3d11 memory");
-    return nullptr;
-  }
-
-  dmem = (GstD3D11Memory *) mem;
-  view = gst_d3d11_memory_get_decoder_output_view (dmem, decoder->video_device,
-      decoder->decoder_handle, &decoder->decoder_profile);
-
-  if (!view) {
-    GST_ERROR_OBJECT (decoder, "Decoder output view is unavailable");
-    return nullptr;
-  }
-
-  if (index) {
-    if (decoder->use_array_of_texture) {
-      ID3D11Resource *texture;
-      ComPtr < IGstD3D11DecoderViewData > data;
-      UINT size;
-
-      texture = gst_d3d11_memory_get_resource_handle (dmem);
-      size = sizeof (IGstD3D11DecoderViewData *);
-
-      texture->GetPrivateData (IID_GST_D3D11_DECODER_VIEW_DATA,
-          &size, data.GetAddressOf ());
-
-      if (!data) {
-        GST_ERROR_OBJECT (decoder, "memory has no private data");
-        return nullptr;
-      }
-
-      *index = data->GetViewIndex ();
-    } else {
-      *index = gst_d3d11_memory_get_subresource_index (dmem);
-    }
-  }
-
-  return view;
+  return GST_FLOW_OK;
 }
 
 static void
@@ -1617,7 +1548,7 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
 GstFlowReturn
 gst_d3d11_decoder_output_picture (GstD3D11Decoder * decoder,
     GstVideoDecoder * videodec, GstVideoCodecFrame * frame,
-    GstCodecPicture * picture, guint buffer_flags,
+    GstCodecPicture * picture, GstVideoBufferFlags buffer_flags,
     gint display_width, gint display_height)
 {
   GstFlowReturn ret = GST_FLOW_OK;
@@ -2001,18 +1932,28 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
   return TRUE;
 }
 
-gboolean
-gst_d3d11_decoder_set_flushing (GstD3D11Decoder * decoder,
-    GstVideoDecoder * videodec, gboolean flushing)
+static void
+gst_d3d11_decoder_set_flushing (GstD3D11Decoder * self, gboolean flushing)
 {
-  g_return_val_if_fail (GST_IS_D3D11_DECODER (decoder), FALSE);
+  GstD3D11SRWLockGuard lk (&self->lock);
+  if (self->internal_pool)
+    gst_buffer_pool_set_flushing (self->internal_pool, flushing);
+  self->flushing = flushing;
+}
 
-  GstD3D11SRWLockGuard lk (&decoder->lock);
-  if (decoder->internal_pool)
-    gst_buffer_pool_set_flushing (decoder->internal_pool, flushing);
-  decoder->flushing = flushing;
-
-  return TRUE;
+void
+gst_d3d11_decoder_sink_event (GstD3D11Decoder * decoder, GstEvent * event)
+{
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      gst_d3d11_decoder_set_flushing (decoder, TRUE);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_d3d11_decoder_set_flushing (decoder, FALSE);
+      break;
+    default:
+      break;
+  }
 }
 
 static gboolean
@@ -2257,7 +2198,7 @@ struct _GstD3D11DecoderClassData
  * Returns: (transfer full): the new #GstD3D11DecoderClassData
  */
 GstD3D11DecoderClassData *
-gst_d3d11_decoder_class_data_new (GstD3D11Device * device, GstDXVACodec codec,
+gst_d3d11_decoder_class_data_new (GstD3D11Device * device, GstDxvaCodec codec,
     GstCaps * sink_caps, GstCaps * src_caps, guint max_resolution)
 {
   GstD3D11DecoderClassData *ret;
@@ -2342,7 +2283,7 @@ gst_d3d11_decoder_class_data_free (GstD3D11DecoderClassData * data)
 
 typedef struct _GstD3D11DecoderDocCaps
 {
-  GstDXVACodec codec;
+  GstDxvaCodec codec;
   const gchar *sink_caps;
   const gchar *src_caps;
 } GstD3D11DecoderDocCaps;

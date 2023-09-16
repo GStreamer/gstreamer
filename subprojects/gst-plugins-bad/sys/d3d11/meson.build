@@ -37,7 +37,7 @@ if host_system != 'windows' or d3d11_option.disabled()
   subdir_done()
 endif
 
-if not gstd3d11_dep.found() or not cc.has_header('dxva.h') or not cc.has_header('d3d9.h')
+if not gstd3d11_dep.found() or not gstdxva_dep.found()
   if d3d11_option.enabled()
     error('The d3d11 was enabled explicitly, but required dependencies were not found.')
   endif
@@ -129,7 +129,7 @@ gstd3d11 = library('gstd3d11',
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gstcontroller_dep,
-                  gstd3d11_dep, gstcodecs_dep, d2d_dep] + extra_dep,
+                  gstd3d11_dep, gstdxva_dep, d2d_dep] + extra_dep,
   install : true,
   install_dir : plugins_install_dir,
 )
