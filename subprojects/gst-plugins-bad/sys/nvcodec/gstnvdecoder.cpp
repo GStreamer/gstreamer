@@ -91,6 +91,7 @@ struct _GstNvDecoder
   gboolean configured;
   guint downstream_min_buffers;
   guint num_output_surfaces;
+  gboolean wait_on_pool_full;
 
   GMutex lock;
 
@@ -726,6 +727,7 @@ gst_nv_decoder_output_picture (GstNvDecoder * decoder,
   GstFlowReturn ret = GST_FLOW_OK;
   GstNvDecSurface *surface;
   GstCudaStream *stream;
+  gboolean can_export = FALSE;
 
   if (picture->discont_state) {
     if (!gst_nv_decoder_negotiate (decoder, videodec, picture->discont_state)) {
@@ -754,13 +756,31 @@ gst_nv_decoder_output_picture (GstNvDecoder * decoder,
     goto error;
   }
 
-  if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA &&
+  if (videodec->input_segment.rate > 0 &&
+      decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA &&
       (guint) decoder->create_info.ulNumOutputSurfaces >=
       decoder->downstream_min_buffers) {
+    if (decoder->wait_on_pool_full) {
+      can_export = TRUE;
+    } else {
+      guint num_free_surfaces =
+          gst_nv_dec_object_get_num_free_surfaces (decoder->object);
+
+      /* If downstream didn't propose pool but we have free surfaces */
+      if (num_free_surfaces > 0)
+        can_export = TRUE;
+      else
+        GST_LOG_OBJECT (decoder, "No more free output surface, need copy");
+    }
+  }
+
+  if (can_export) {
     GstMemory *mem;
     GstCudaMemory *cmem;
     GstBuffer *buf;
     GstVideoInfo *info = &decoder->info;
+
+    GST_LOG_OBJECT (decoder, "Exporting output surface without copy");
 
     ret = gst_nv_dec_object_export_surface (decoder->object,
         surface, stream, &mem);
@@ -1542,6 +1562,9 @@ gst_nv_decoder_ensure_cuda_pool (GstNvDecoder * decoder, GstQuery * query)
     if (outcaps)
       gst_video_info_from_caps (&vinfo, outcaps);
     size = (guint) vinfo.size;
+    decoder->wait_on_pool_full = FALSE;
+  } else {
+    decoder->wait_on_pool_full = TRUE;
   }
 
   config = gst_buffer_pool_get_config (pool);

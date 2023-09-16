@@ -79,6 +79,8 @@ GstFlowReturn    gst_nv_dec_object_export_surface (GstNvDecObject * object,
                                                    GstCudaStream * stream,
                                                    GstMemory ** memory);
 
+guint            gst_nv_dec_object_get_num_free_surfaces (GstNvDecObject * object);
+
 GType gst_nv_dec_surface_get_type (void);
 
 static inline GstNvDecSurface *

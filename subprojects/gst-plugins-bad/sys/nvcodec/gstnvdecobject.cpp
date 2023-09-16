@@ -547,6 +547,18 @@ gst_nv_dec_object_export_surface (GstNvDecObject * object,
   return GST_FLOW_OK;
 }
 
+guint
+gst_nv_dec_object_get_num_free_surfaces (GstNvDecObject * object)
+{
+  GstNvDecObjectPrivate *priv = object->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+
+  if (object->num_mapped >= object->create_info.ulNumOutputSurfaces)
+    return 0;
+
+  return object->create_info.ulNumOutputSurfaces - object->num_mapped;
+}
+
 static gboolean
 gst_nv_dec_surface_dispose (GstNvDecSurface * surf)
 {
