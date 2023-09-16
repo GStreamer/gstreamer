@@ -77,6 +77,7 @@ typedef struct _GstD3D11H265DecInner
   guint8 chroma_format_idc = 0;
   GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
   GstVideoInterlaceMode interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  gint max_dpb_size = 0;
 } GstD3D11H265DecInner;
 /* *INDENT-ON* */
 
@@ -219,6 +220,22 @@ gst_d3d11_h265_dec_set_context (GstElement * element, GstContext * context)
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
+static void
+gst_d3d11_h265_dec_reset (GstD3D11H265Dec * self)
+{
+  GstD3D11H265DecInner *inner = self->inner;
+
+  inner->width = 0;
+  inner->height = 0;
+  inner->coded_width = 0;
+  inner->coded_height = 0;
+  inner->bitdepth = 0;
+  inner->chroma_format_idc = 0;
+  inner->out_format = GST_VIDEO_FORMAT_UNKNOWN;
+  inner->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  inner->max_dpb_size = 0;
+}
+
 static gboolean
 gst_d3d11_h265_dec_open (GstVideoDecoder * decoder)
 {
@@ -232,6 +249,8 @@ gst_d3d11_h265_dec_open (GstVideoDecoder * decoder)
     GST_ERROR_OBJECT (self, "Failed to open decoder");
     return FALSE;
   }
+
+  gst_d3d11_h265_dec_reset (self);
 
   return TRUE;
 }
@@ -382,6 +401,12 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
     modified = TRUE;
   }
 
+  if (inner->max_dpb_size < max_dpb_size) {
+    GST_INFO_OBJECT (self, "Requires larger DPB size (%d -> %d)",
+        inner->max_dpb_size, max_dpb_size);
+    modified = TRUE;
+  }
+
   if (modified || !gst_d3d11_decoder_is_configured (inner->d3d11_decoder)) {
     GstVideoInfo info;
 
@@ -410,6 +435,7 @@ gst_d3d11_h265_dec_new_sequence (GstH265Decoder * decoder,
         inner->out_format, inner->width, inner->height);
     GST_VIDEO_INFO_INTERLACE_MODE (&info) = inner->interlace_mode;
 
+    inner->max_dpb_size = max_dpb_size;
     if (!gst_d3d11_decoder_configure (inner->d3d11_decoder,
             decoder->input_state, &info, inner->crop_x, inner->crop_y,
             inner->coded_width, inner->coded_height, max_dpb_size)) {
