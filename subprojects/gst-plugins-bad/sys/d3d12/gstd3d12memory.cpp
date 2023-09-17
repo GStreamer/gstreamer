@@ -33,14 +33,143 @@
 #include <atomic>
 #include <queue>
 
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
+
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_allocator_debug);
 #define GST_CAT_DEFAULT gst_d3d12_allocator_debug
 
 static GstD3D12Allocator *_d3d12_memory_allocator = nullptr;
 
-/* *INDENT-OFF* */
-using namespace Microsoft::WRL;
+static gint
+gst_d3d12_allocation_params_compare (const GstD3D12AllocationParams * p1,
+    const GstD3D12AllocationParams * p2)
+{
+  g_return_val_if_fail (p1, -1);
+  g_return_val_if_fail (p2, -1);
 
+  if (p1 == p2)
+    return 0;
+
+  return -1;
+}
+
+static void
+gst_d3d12_allocation_params_init (GType type)
+{
+  static GstValueTable table = {
+    0, (GstValueCompareFunc) gst_d3d12_allocation_params_compare,
+    nullptr, nullptr
+  };
+
+  table.type = type;
+  gst_value_register (&table);
+}
+
+G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D12AllocationParams,
+    gst_d3d12_allocation_params,
+    (GBoxedCopyFunc) gst_d3d12_allocation_params_copy,
+    (GBoxedFreeFunc) gst_d3d12_allocation_params_free,
+    gst_d3d12_allocation_params_init (g_define_type_id));
+
+GstD3D12AllocationParams *
+gst_d3d12_allocation_params_new (GstD3D12Device * device,
+    const GstVideoInfo * info, GstD3D12AllocationFlags flags,
+    D3D12_RESOURCE_FLAGS resource_flags)
+{
+  GstD3D12AllocationParams *ret;
+  GstD3D12Format d3d12_format;
+  GstVideoFormat format;
+
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  g_return_val_if_fail (info, nullptr);
+
+  format = GST_VIDEO_INFO_FORMAT (info);
+  if (!gst_d3d12_device_get_format (device, format, &d3d12_format)) {
+    GST_WARNING_OBJECT (device, "%s is not supported",
+        gst_video_format_to_string (format));
+    return nullptr;
+  }
+
+  ret = g_new0 (GstD3D12AllocationParams, 1);
+  ret->info = *info;
+  ret->aligned_info = *info;
+  ret->d3d12_format = d3d12_format;
+
+  if (d3d12_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+      g_assert (d3d12_format.resource_format[i] != DXGI_FORMAT_UNKNOWN);
+
+      ret->desc[i] =
+          CD3D12_RESOURCE_DESC::Tex2D (d3d12_format.resource_format[i],
+          GST_VIDEO_INFO_COMP_WIDTH (info, i),
+          GST_VIDEO_INFO_COMP_HEIGHT (info, i), resource_flags);
+    }
+  } else {
+    ret->desc[0] = CD3D12_RESOURCE_DESC::Tex2D (d3d12_format.dxgi_format,
+        info->width, info->height, resource_flags);
+  }
+
+  ret->flags = flags;
+
+  return ret;
+}
+
+GstD3D12AllocationParams *
+gst_d3d12_allocation_params_copy (GstD3D12AllocationParams * src)
+{
+  GstD3D12AllocationParams *dst;
+
+  g_return_val_if_fail (src != NULL, NULL);
+
+  dst = g_new0 (GstD3D12AllocationParams, 1);
+  memcpy (dst, src, sizeof (GstD3D12AllocationParams));
+
+  return dst;
+}
+
+void
+gst_d3d12_allocation_params_free (GstD3D12AllocationParams * params)
+{
+  g_free (params);
+}
+
+gboolean
+gst_d3d12_allocation_params_alignment (GstD3D12AllocationParams * params,
+    const GstVideoAlignment * align)
+{
+  guint padding_width, padding_height;
+  GstVideoInfo *info;
+  GstVideoInfo new_info;
+
+  g_return_val_if_fail (params, FALSE);
+  g_return_val_if_fail (align, FALSE);
+
+  /* d3d11 does not support stride align. Consider padding only */
+  padding_width = align->padding_left + align->padding_right;
+  padding_height = align->padding_top + align->padding_bottom;
+
+  info = &params->info;
+
+  if (!gst_video_info_set_format (&new_info, GST_VIDEO_INFO_FORMAT (info),
+          GST_VIDEO_INFO_WIDTH (info) + padding_width,
+          GST_VIDEO_INFO_HEIGHT (info) + padding_height)) {
+    GST_WARNING ("Set format failed");
+    return FALSE;
+  }
+
+  params->aligned_info = new_info;
+
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
+    params->desc[i].Width = GST_VIDEO_INFO_COMP_WIDTH (&new_info, i);
+    params->desc[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (&new_info, i);
+  }
+
+  return TRUE;
+}
+
+/* *INDENT-OFF* */
 struct _GstD3D12MemoryPrivate
 {
   ComPtr<ID3D12Resource> resource;

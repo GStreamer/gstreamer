@@ -460,7 +460,7 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
 
   gst_d3d12_decoder_reset (decoder);
 
-  if (!gst_d3d12_device_get_device_format (priv->device,
+  if (!gst_d3d12_device_get_format (priv->device,
           GST_VIDEO_INFO_FORMAT (info), &device_format) ||
       device_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
@@ -526,13 +526,7 @@ gst_d3d12_decoder_prepare_allocator (GstD3D12Decoder * self)
   D3D12_HEAP_PROPERTIES heap_prop =
       CD3D12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
   D3D12_RESOURCE_DESC desc = CD3D12_RESOURCE_DESC::Tex2D (priv->decoder_format,
-      priv->aligned_width,
-      priv->aligned_height,
-      array_size,
-      1,
-      1,
-      0,
-      resource_flags);
+      priv->aligned_width, priv->aligned_height, resource_flags, array_size);
 
   priv->allocator = (GstD3D12Allocator *)
       gst_d3d12_pool_allocator_new (priv->device,
@@ -547,9 +541,7 @@ gst_d3d12_decoder_prepare_allocator (GstD3D12Decoder * self)
     D3D12_RESOURCE_DESC ref_desc =
         CD3D12_RESOURCE_DESC::Tex2D (priv->decoder_format,
         priv->aligned_width,
-        priv->aligned_height,
-        1,
-        1);
+        priv->aligned_height);
 
     priv->output_allocator = (GstD3D12Allocator *)
         gst_d3d12_pool_allocator_new (priv->device, &heap_prop,
@@ -974,10 +966,7 @@ gst_d3d12_decoder_ensure_staging_texture (GstD3D12Decoder * self)
   ID3D12Device *device = gst_d3d12_device_get_device_handle (priv->device);
   D3D12_RESOURCE_DESC tex_desc =
       CD3D12_RESOURCE_DESC::Tex2D (priv->decoder_format,
-      priv->aligned_width,
-      priv->aligned_height,
-      1,
-      1);
+      priv->aligned_width, priv->aligned_height);
 
   device->GetCopyableFootprints (&tex_desc, 0, 2, 0, priv->layout, nullptr,
       nullptr, &size);

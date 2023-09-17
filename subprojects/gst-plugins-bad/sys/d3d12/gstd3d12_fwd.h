@@ -51,5 +51,7 @@ typedef struct _GstD3D12PoolAllocatorPrivate GstD3D12PoolAllocatorPrivate;
 
 typedef struct _GstD3D12Format GstD3D12Format;
 
+typedef struct _GstD3D12AllocationParams GstD3D12AllocationParams;
+
 G_END_DECLS
 

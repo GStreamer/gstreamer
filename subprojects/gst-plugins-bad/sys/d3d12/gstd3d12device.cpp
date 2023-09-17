@@ -713,7 +713,7 @@ gst_d3d12_device_get_factory_handle (GstD3D12Device * device)
 }
 
 gboolean
-gst_d3d12_device_get_device_format (GstD3D12Device * device,
+gst_d3d12_device_get_format (GstD3D12Device * device,
     GstVideoFormat format, GstD3D12Format * device_format)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);

@@ -143,11 +143,11 @@ struct CD3D12_RESOURCE_DESC : public D3D12_RESOURCE_DESC
       DXGI_FORMAT format,
       UINT64 width,
       UINT height,
+      D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE,
       UINT16 array_size = 1,
-      UINT16 mip_levels = 0,
+      UINT16 mip_levels = 1,
       UINT sample_count = 1,
       UINT sample_quality = 0,
-      D3D12_RESOURCE_FLAGS flags = D3D12_RESOURCE_FLAG_NONE,
       D3D12_TEXTURE_LAYOUT layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
       UINT64 alignment = 0)
   {

@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "gstd3d12_fwd.h"
+#include "gstd3d12format.h"
 
 G_BEGIN_DECLS
 
@@ -77,6 +78,35 @@ typedef enum
   GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD   = (GST_MEMORY_FLAG_LAST << 0),
   GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
 } GstD3D12MemoryTransfer;
+
+typedef enum
+{
+  GST_D3D12_ALLOCATION_FLAG_DEFAULT = 0,
+  GST_D3D12_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 0),
+} GstD3D12AllocationFlags;
+
+struct _GstD3D12AllocationParams
+{
+  D3D12_RESOURCE_DESC desc[GST_VIDEO_MAX_PLANES];
+  GstVideoInfo info;
+  GstVideoInfo aligned_info;
+  GstD3D12Format d3d12_format;
+  GstD3D12AllocationFlags flags;
+};
+
+GType                      gst_d3d12_allocation_params_get_type (void);
+
+GstD3D12AllocationParams * gst_d3d12_allocation_params_new      (GstD3D12Device * device,
+                                                                 const GstVideoInfo * info,
+                                                                 GstD3D12AllocationFlags flags,
+                                                                 D3D12_RESOURCE_FLAGS resource_flags);
+
+GstD3D12AllocationParams * gst_d3d12_allocation_params_copy     (GstD3D12AllocationParams * src);
+
+void                       gst_d3d12_allocation_params_free     (GstD3D12AllocationParams * params);
+
+gboolean                   gst_d3d12_allocation_params_alignment (GstD3D12AllocationParams * parms,
+                                                                  const GstVideoAlignment * align);
 
 struct _GstD3D12Memory
 {
