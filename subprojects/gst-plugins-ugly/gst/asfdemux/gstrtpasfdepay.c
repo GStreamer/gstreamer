@@ -104,6 +104,9 @@ gst_rtp_asf_depay_class_init (GstRtpAsfDepayClass * klass)
 static void
 gst_rtp_asf_depay_init (GstRtpAsfDepay * depay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (depay), TRUE);
+
   depay->adapter = gst_adapter_new ();
 }
 
@@ -335,6 +338,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   GstRtpAsfDepay *depay;
   const guint8 *payload;
   GstBuffer *outbuf;
+  GstBufferList *outbufs = NULL;
   gboolean S, L, R, D, I;
   guint payload_len, hdr_len, offset;
   guint len_offs;
@@ -359,6 +363,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
   GST_LOG_OBJECT (depay, "got payload len of %u", payload_len);
 
+  outbufs = gst_buffer_list_new ();
   do {
     guint packet_len;
 
@@ -473,9 +478,12 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           gst_rtp_buffer_get_payload_subbuffer (&rtpbuf, offset, packet_len);
     }
 
-    /* If we haven't completed a full ASF packet, return */
-    if (!outbuf)
+    /* If we haven't completed a full ASF packet, return but first
+       push what we have so far */
+    if (!outbuf) {
+      gst_rtp_base_depayload_push_list (depayload, outbufs);
       return NULL;
+    }
 
     outbuf = gst_rtp_asf_depay_update_padding (depay, outbuf);
 
@@ -490,7 +498,7 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
     GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
-    gst_rtp_base_depayload_push (depayload, outbuf);
+    gst_buffer_list_add (outbufs, outbuf);
 
     /* only apply the timestamp to the first buffer of this packet */
     timestamp = -1;
@@ -500,6 +508,8 @@ gst_rtp_asf_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     offset += packet_len;
     payload_len -= packet_len;
   } while (payload_len > 0);
+
+  gst_rtp_base_depayload_push_list (depayload, outbufs);
 
   gst_rtp_buffer_unmap (&rtpbuf);
 
@@ -511,6 +521,12 @@ too_small:
     gst_rtp_buffer_unmap (&rtpbuf);
     GST_WARNING_OBJECT (depayload, "Payload too small, expected at least 4 "
         "bytes for header, but got only %d bytes", payload_len);
+    if (gst_buffer_list_length (outbufs) == 0) {
+      gst_rtp_base_depayload_dropped (depayload);
+      gst_buffer_list_unref (outbufs);
+    } else {
+      gst_rtp_base_depayload_push_list (depayload, outbufs);
+    }
     return NULL;
   }
 }
