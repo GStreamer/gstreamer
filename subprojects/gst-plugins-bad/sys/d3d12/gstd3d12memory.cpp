@@ -529,15 +529,12 @@ gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem, guint plane,
   return TRUE;
 }
 
-gboolean
-gst_d3d12_memory_get_plane_count (GstD3D12Memory * mem, guint * count)
+guint
+gst_d3d12_memory_get_plane_count (GstD3D12Memory * mem)
 {
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (count != nullptr, FALSE);
+  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), 0);
 
-  *count = mem->priv->num_subresources;
-
-  return TRUE;
+  return mem->priv->num_subresources;
 }
 
 gboolean

@@ -139,8 +139,7 @@ gboolean          gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem,
                                                           guint plane,
                                                           guint * index);
 
-gboolean          gst_d3d12_memory_get_plane_count       (GstD3D12Memory * mem,
-                                                          guint * count);
+guint             gst_d3d12_memory_get_plane_count       (GstD3D12Memory * mem);
 
 gboolean          gst_d3d12_memory_get_plane_size        (GstD3D12Memory * mem,
                                                           guint plane,

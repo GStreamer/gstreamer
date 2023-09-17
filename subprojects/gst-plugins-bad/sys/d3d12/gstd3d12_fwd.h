@@ -53,5 +53,9 @@ typedef struct _GstD3D12Format GstD3D12Format;
 
 typedef struct _GstD3D12AllocationParams GstD3D12AllocationParams;
 
+typedef struct _GstD3D12BufferPool GstD3D12BufferPool;
+typedef struct _GstD3D12BufferPoolClass GstD3D12BufferPoolClass;
+typedef struct _GstD3D12BufferPoolPrivate GstD3D12BufferPoolPrivate;
+
 G_END_DECLS
 
