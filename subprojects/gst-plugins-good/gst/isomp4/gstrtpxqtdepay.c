@@ -146,6 +146,9 @@ gst_rtp_xqt_depay_class_init (GstRtpXQTDepayClass * klass)
 static void
 gst_rtp_xqt_depay_init (GstRtpXQTDepay * rtpxqtdepay)
 {
+  gst_rtp_base_depayload_set_aggregate_hdrext_enabled (GST_RTP_BASE_DEPAYLOAD
+      (rtpxqtdepay), TRUE);
+
   rtpxqtdepay->adapter = gst_adapter_new ();
 }
 
@@ -551,6 +554,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       case 2:
       {
         guint slen;
+        GstBufferList *outbufs = NULL;
 
         /* multiple samples per packet. 
          *                      1                   2                   3
@@ -571,6 +575,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
          * . ......                                                        .
          * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
          */
+        outbufs = gst_buffer_list_new ();
         while (payload_len > 8) {
           s = (payload[0] & 0x80) != 0; /* contains sync sample */
           slen = (payload[2] << 8) | payload[3];
@@ -590,7 +595,7 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           if (!s)
             GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-          gst_rtp_base_depayload_push (depayload, outbuf);
+          gst_buffer_list_add (outbufs, outbuf);
 
           /* aligned on 32 bit boundary */
           slen = GST_ROUND_UP_4 (slen);
@@ -598,6 +603,8 @@ gst_rtp_xqt_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
           payload += slen;
           payload_len -= slen;
         }
+        gst_rtp_base_depayload_push_list (depayload, outbufs);
+        outbuf = NULL;
         break;
       }
       case 3:
@@ -630,30 +637,35 @@ done:
 need_resync:
   {
     GST_DEBUG_OBJECT (rtpxqtdepay, "waiting for marker");
+    gst_rtp_base_depayload_dropped (depayload);
     goto done;
   }
 wrong_version:
   {
     GST_ELEMENT_WARNING (rtpxqtdepay, STREAM, DECODE,
         ("Unknown payload version."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     goto done;
   }
 pck_reserved:
   {
     GST_ELEMENT_WARNING (rtpxqtdepay, STREAM, DECODE,
         ("PCK reserved 0."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     goto done;
   }
 wrong_length:
   {
     GST_ELEMENT_WARNING (rtpxqtdepay, STREAM, DECODE,
         ("Wrong payload length."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     goto done;
   }
 unknown_format:
   {
     GST_ELEMENT_WARNING (rtpxqtdepay, STREAM, DECODE,
         ("Unknown payload format."), (NULL));
+    gst_rtp_base_depayload_dropped (depayload);
     goto done;
   }
 }
