@@ -68,6 +68,10 @@ gboolean                gst_d3d12_device_get_device_format        (GstD3D12Devic
                                                                    GstVideoFormat format,
                                                                    GstD3D12Format * device_format);
 
+guint64                 gst_d3d12_device_get_fence_value          (GstD3D12Device * device);
+
+ID3D12CommandQueue *    gst_d3d12_device_get_copy_queue           (GstD3D12Device * device);
+
 void                    gst_d3d12_device_d3d12_debug              (GstD3D12Device * device,
                                                                    const gchar * file,
                                                                    const gchar * function,

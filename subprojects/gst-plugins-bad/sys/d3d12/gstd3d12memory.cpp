@@ -25,6 +25,7 @@
 #include "gstd3d12device.h"
 #include "gstd3d12utils.h"
 #include "gstd3d12format.h"
+#include "gstd3d12fence.h"
 #include <string.h>
 #include <wrl.h>
 #include <mutex>
@@ -43,15 +44,22 @@ using namespace Microsoft::WRL;
 struct _GstD3D12MemoryPrivate
 {
   ComPtr<ID3D12Resource> resource;
+  ComPtr<ID3D12Resource> staging;
 
   ComPtr<ID3D12DescriptorHeap> srv_heap;
   ComPtr<ID3D12DescriptorHeap> rtv_heap;
+
+  ComPtr<ID3D12CommandAllocator> copy_ca;
+  ComPtr<ID3D12GraphicsCommandList> copy_cl;
 
   guint srv_increment_size = 0;
   guint rtv_increment_size = 0;
 
   guint num_srv = 0;
   guint num_rtv = 0;
+
+  guint cpu_map_count = 0;
+  gpointer staging_ptr = nullptr;
 
   D3D12_RESOURCE_DESC desc;
   D3D12_RESOURCE_STATES state;
@@ -62,11 +70,181 @@ struct _GstD3D12MemoryPrivate
   guint num_subresources;
   guint subresource_index[GST_VIDEO_MAX_PLANES];
 
-  std::recursive_mutex lock;
+  std::mutex lock;
 };
 /* *INDENT-ON* */
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12Memory, gst_d3d12_memory);
+
+static gboolean
+gst_d3d12_memory_ensure_staging_resource (GstD3D12Memory * dmem)
+{
+  GstD3D12MemoryPrivate *priv = dmem->priv;
+
+  if (priv->staging)
+    return TRUE;
+
+  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS) == 0) {
+    GST_ERROR_OBJECT (dmem->device, "simultaneous access is not supported");
+    return FALSE;
+  }
+
+  HRESULT hr;
+  ID3D12Device *device = gst_d3d12_device_get_device_handle (dmem->device);
+  D3D12_HEAP_PROPERTIES prop =
+      CD3D12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_READBACK);
+  D3D12_RESOURCE_DESC desc = CD3D12_RESOURCE_DESC::Buffer (priv->size);
+  ComPtr < ID3D12Resource > staging;
+
+  hr = device->CreateCommittedResource (&prop, D3D12_HEAP_FLAG_NONE,
+      &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS (&staging));
+  if (!gst_d3d12_result (hr, dmem->device)) {
+    GST_ERROR_OBJECT (dmem->device, "Couldn't create readback resource");
+    return FALSE;
+  }
+
+  /* And map persistently */
+  hr = staging->Map (0, nullptr, &priv->staging_ptr);
+  if (!gst_d3d12_result (hr, dmem->device)) {
+    GST_ERROR_OBJECT (dmem->device, "Couldn't map readback resource");
+    return FALSE;
+  }
+
+  ComPtr < ID3D12CommandAllocator > copy_ca;
+  ComPtr < ID3D12GraphicsCommandList > copy_cl;
+
+  hr = device->CreateCommandAllocator (D3D12_COMMAND_LIST_TYPE_COPY,
+      IID_PPV_ARGS (&copy_ca));
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_COPY,
+      copy_ca.Get (), nullptr, IID_PPV_ARGS (&copy_cl));
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  hr = copy_cl->Close ();
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  priv->staging = staging;
+  priv->copy_ca = copy_ca;
+  priv->copy_cl = copy_cl;
+
+  GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d12_memory_download (GstD3D12Memory * dmem)
+{
+  GstD3D12MemoryPrivate *priv = dmem->priv;
+  HRESULT hr;
+  ID3D12CommandQueue *queue;
+
+  if (!priv->staging ||
+      !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD)) {
+    return TRUE;
+  }
+
+  gst_d3d12_fence_wait (dmem->fence);
+
+  queue = gst_d3d12_device_get_copy_queue (dmem->device);
+  if (!queue)
+    return FALSE;
+
+  hr = priv->copy_ca->Reset ();
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  hr = priv->copy_cl->Reset (priv->copy_ca.Get (), nullptr);
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  for (guint i = 0; i < priv->num_subresources; i++) {
+    D3D12_TEXTURE_COPY_LOCATION src =
+        CD3D12_TEXTURE_COPY_LOCATION (priv->resource.Get (),
+        priv->subresource_index[i]);
+    D3D12_TEXTURE_COPY_LOCATION dst =
+        CD3D12_TEXTURE_COPY_LOCATION (priv->staging.Get (), priv->layout[i]);
+
+    priv->copy_cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
+  }
+
+  hr = priv->copy_cl->Close ();
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  ID3D12CommandList *list[] = { priv->copy_cl.Get () };
+  queue->ExecuteCommandLists (1, list);
+
+  guint64 fence_value = gst_d3d12_device_get_fence_value (dmem->device);
+  hr = queue->Signal (gst_d3d12_fence_get_handle (dmem->fence), fence_value);
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  gst_d3d12_fence_set_event_on_completion_value (dmem->fence, fence_value);
+  gst_d3d12_fence_wait (dmem->fence);
+
+  GST_MEMORY_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+
+  return TRUE;
+}
+
+static gboolean
+gst_d3d12_memory_upload (GstD3D12Memory * dmem)
+{
+  GstD3D12MemoryPrivate *priv = dmem->priv;
+  HRESULT hr;
+  ID3D12CommandQueue *queue;
+
+  if (!priv->staging ||
+      !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD)) {
+    return TRUE;
+  }
+
+  queue = gst_d3d12_device_get_copy_queue (dmem->device);
+  if (!queue)
+    return FALSE;
+
+  hr = priv->copy_ca->Reset ();
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  hr = priv->copy_cl->Reset (priv->copy_ca.Get (), nullptr);
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  for (guint i = 0; i < priv->num_subresources; i++) {
+    D3D12_TEXTURE_COPY_LOCATION src =
+        CD3D12_TEXTURE_COPY_LOCATION (priv->staging.Get (), priv->layout[i]);
+    D3D12_TEXTURE_COPY_LOCATION dst =
+        CD3D12_TEXTURE_COPY_LOCATION (priv->resource.Get (),
+        priv->subresource_index[i]);
+
+    priv->copy_cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
+  }
+
+  hr = priv->copy_cl->Close ();
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  ID3D12CommandList *list[] = { priv->copy_cl.Get () };
+  queue->ExecuteCommandLists (1, list);
+
+  guint64 fence_value = gst_d3d12_device_get_fence_value (dmem->device);
+  hr = queue->Signal (gst_d3d12_fence_get_handle (dmem->fence), fence_value);
+  if (!gst_d3d12_result (hr, dmem->device))
+    return FALSE;
+
+  gst_d3d12_fence_set_event_on_completion_value (dmem->fence, fence_value);
+  gst_d3d12_fence_wait (dmem->fence);
+
+  GST_MEMORY_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+
+  return TRUE;
+}
 
 static gpointer
 gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
@@ -74,18 +252,39 @@ gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   GstD3D12Memory *dmem = GST_D3D12_MEMORY_CAST (mem);
   GstD3D12MemoryPrivate *priv = dmem->priv;
   GstMapFlags flags = info->flags;
+  std::lock_guard < std::mutex > lk (priv->lock);
 
-  if ((flags & GST_MAP_D3D12) == 0) {
-    GST_ERROR ("CPU access to d3d12 resource is not allowed yet");
-    return nullptr;
+  if ((flags & GST_MAP_D3D12) == GST_MAP_D3D12) {
+    if (!gst_d3d12_memory_upload (dmem)) {
+      GST_ERROR_OBJECT (mem->allocator, "Upload failed");
+      return nullptr;
+    }
+
+    if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE) {
+      GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    }
+
+    return priv->resource.Get ();
   }
 
-  /* Holds lock while we are being mapped. We will not allow concurrent
-   * access to the texture unlike D3D11 for now
-   * (unless we use D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS flag) */
-  priv->lock.lock ();
+  if (priv->cpu_map_count == 0) {
+    if (!gst_d3d12_memory_ensure_staging_resource (dmem)) {
+      GST_ERROR_OBJECT (mem->allocator, "Couldn't create staging resource");
+      return nullptr;
+    }
 
-  return priv->resource.Get ();
+    if (!gst_d3d12_memory_download (dmem)) {
+      GST_ERROR_OBJECT (mem->allocator, "Couldn't download resource");
+      return nullptr;
+    }
+
+    if ((flags & GST_MAP_WRITE) == GST_MAP_WRITE)
+      GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+  }
+
+  priv->cpu_map_count++;
+
+  return priv->staging_ptr;
 }
 
 static void
@@ -94,12 +293,17 @@ gst_d3d12_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
   GstD3D12Memory *dmem = GST_D3D12_MEMORY_CAST (mem);
   GstD3D12MemoryPrivate *priv = dmem->priv;
 
-  if ((info->flags & GST_MAP_D3D12) == 0) {
-    GST_ERROR ("CPU access to d3d12 resource is not allowed yet");
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if ((info->flags & GST_MAP_D3D12) == GST_MAP_D3D12) {
+    if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
+      GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
     return;
   }
 
-  priv->lock.unlock ();
+  if ((info->flags & GST_MAP_WRITE) == GST_MAP_WRITE)
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+
+  priv->cpu_map_count--;
 }
 
 static GstMemory *
@@ -310,7 +514,7 @@ gst_d3d12_memory_ensure_shader_resource_view (GstD3D12Memory * mem)
     return FALSE;
   }
 
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  std::lock_guard < std::mutex > lk (priv->lock);
   if (priv->num_srv)
     return TRUE;
 
@@ -427,7 +631,7 @@ gst_d3d12_memory_ensure_render_target_view (GstD3D12Memory * mem)
     return FALSE;
   }
 
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  std::lock_guard < std::mutex > lk (priv->lock);
   if (priv->num_rtv)
     return TRUE;
 
@@ -524,11 +728,14 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
 
   GST_LOG_OBJECT (allocator, "Free memory %p", mem);
 
-  /* XXX: probably we might want to check whether this resource is still
-   * being used by GPU or not, via fence or something */
+  if (dmem->fence) {
+    gst_d3d12_fence_wait (dmem->fence);
+    gst_d3d12_fence_unref (dmem->fence);
+  }
+
+  delete dmem->priv;
 
   gst_clear_object (&dmem->device);
-  delete dmem->priv;
 
   g_free (dmem);
 }
@@ -559,6 +766,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * self,
   priv->state = initial_state;
 
   mem->device = (GstD3D12Device *) gst_object_ref (device);
+  mem->fence = gst_d3d12_fence_new (device);
 
   mem->priv->size = 0;
   for (guint i = 0; i < mem->priv->num_subresources; i++) {
@@ -586,19 +794,13 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * self,
         &size);
 
     /* Update offset manually */
-    if (i > 1) {
-      priv->layout[i].Offset = priv->layout[i - 1].Offset +
-          priv->layout[i - 1].Footprint.RowPitch *
-          priv->layout[i - 1].Footprint.Height;
-    }
-
+    priv->layout[i].Offset = priv->size;
     priv->size += size;
   }
 
   gst_memory_init (GST_MEMORY_CAST (mem),
       (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (self), nullptr,
       mem->priv->size, 0, 0, mem->priv->size);
-
 
   GST_LOG_OBJECT (self, "Allocated new memory %p with size %" G_GUINT64_FORMAT,
       mem, priv->size);

@@ -157,6 +157,11 @@ using namespace Microsoft::WRL;
 
 struct _GstD3D12DevicePrivate
 {
+  _GstD3D12DevicePrivate ()
+  {
+    fence_value = 1;
+  }
+
   ComPtr<ID3D12Device> device;
   ComPtr<IDXGIAdapter1> adapter;
   ComPtr<IDXGIFactory2> factory;
@@ -164,6 +169,8 @@ struct _GstD3D12DevicePrivate
   std::mutex lock;
   std::recursive_mutex extern_lock;
   std::atomic<guint64> fence_value;
+
+  ComPtr<ID3D12CommandQueue> copy_queue;
 
 #ifdef HAVE_D3D12_SDKLAYERS_H
   ComPtr<ID3D12InfoQueue> info_queue;
@@ -722,6 +729,39 @@ gst_d3d12_device_get_device_format (GstD3D12Device * device,
   /* *INDENT-ON* */
 
   return FALSE;
+}
+
+guint64
+gst_d3d12_device_get_fence_value (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), G_MAXUINT64);
+
+  return device->priv->fence_value.fetch_add (1);
+}
+
+ID3D12CommandQueue *
+gst_d3d12_device_get_copy_queue (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+
+  auto priv = device->priv;
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->copy_queue) {
+    HRESULT hr;
+    D3D12_COMMAND_QUEUE_DESC desc = { };
+    ComPtr < ID3D12CommandQueue > queue;
+
+    desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+    desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+
+    hr = priv->device->CreateCommandQueue (&desc, IID_PPV_ARGS (&queue));
+    if (!gst_d3d12_result (hr, device))
+      return nullptr;
+
+    priv->copy_queue = queue;
+  }
+
+  return priv->copy_queue.Get ();
 }
 
 static inline GstDebugLevel

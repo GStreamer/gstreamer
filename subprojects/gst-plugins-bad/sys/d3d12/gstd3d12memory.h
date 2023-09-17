@@ -67,12 +67,24 @@ G_BEGIN_DECLS
  */
 #define GST_MAP_D3D12 (GST_MAP_FLAG_LAST << 1)
 
+/**
+ * GstD3D12MemoryTransfer:
+ *
+ * Pending memory transfer operation
+ */
+typedef enum
+{
+  GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD   = (GST_MEMORY_FLAG_LAST << 0),
+  GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
+} GstD3D12MemoryTransfer;
+
 struct _GstD3D12Memory
 {
   GstMemory mem;
 
   /*< public >*/
   GstD3D12Device *device;
+  GstD3D12Fence *fence;
 
   /*< private >*/
   GstD3D12MemoryPrivate *priv;
