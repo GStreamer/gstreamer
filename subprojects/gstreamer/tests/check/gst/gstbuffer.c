@@ -258,7 +258,7 @@ GST_START_TEST (test_metadata_writable)
   ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 2);
   fail_unless (gst_buffer_is_writable (buffer) == FALSE);
 
-  /* Check that make_metadata_writable produces a new sub-buffer with 
+  /* Check that make_metadata_writable produces a new sub-buffer with
    * writable metadata. */
   sub1 = gst_buffer_make_writable (buffer);
   fail_if (sub1 == buffer);
@@ -967,6 +967,37 @@ GST_START_TEST (test_auto_unmap)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reference_timestamp_meta_serialization)
+{
+  GstCaps *reference =
+      gst_caps_new_simple ("timestamp/x-unix", NULL, NULL, NULL);
+
+  /* Serialize */
+  GstBuffer *buffer = gst_buffer_new ();
+  GstReferenceTimestampMeta *meta =
+      gst_buffer_add_reference_timestamp_meta (buffer, reference, 1, 2);
+  GByteArray *data = g_byte_array_new ();
+  fail_unless (gst_meta_serialize_simple ((GstMeta *) meta, data));
+  gst_buffer_unref (buffer);
+
+  /* Deserialize */
+  buffer = gst_buffer_new ();
+  guint32 consumed;
+  meta = (GstReferenceTimestampMeta *) gst_meta_deserialize (buffer, data->data,
+      data->len, &consumed);
+  fail_unless (meta);
+  fail_unless (consumed == data->len);
+  fail_unless (gst_caps_is_equal (meta->reference, reference));
+  fail_unless_equals_uint64 (meta->timestamp, 1);
+  fail_unless_equals_uint64 (meta->duration, 2);
+  gst_buffer_unref (buffer);
+
+  gst_caps_unref (reference);
+  g_byte_array_unref (data);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffer_suite (void)
 {
@@ -994,6 +1025,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_wrapped_bytes);
   tcase_add_test (tc_chain, test_new_memdup);
   tcase_add_test (tc_chain, test_auto_unmap);
+  tcase_add_test (tc_chain, test_reference_timestamp_meta_serialization);
 
   return s;
 }

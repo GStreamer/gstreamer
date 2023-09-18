@@ -82,6 +82,7 @@ gst_headers = files(
   'gstbufferlist.h',
   'gstbufferpool.h',
   'gstbus.h',
+  'gstbytearrayinterface.h',
   'gstcaps.h',
   'gstcapsfeatures.h',
   'gstchildproxy.h',

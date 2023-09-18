@@ -4215,6 +4215,70 @@ GST_START_TEST (test_info_dma_drm)
 
 GST_END_TEST;
 
+GST_START_TEST (test_video_meta_serialize)
+{
+  GstBuffer *buf;
+  GstVideoInfo info;
+  GstVideoMeta *meta;
+  GstVideoAlignment alig;
+
+  gst_video_alignment_reset (&alig);
+  alig.padding_left = 2;
+  alig.padding_right = 6;
+  alig.padding_top = 2;
+  alig.padding_bottom = 6;
+
+  gst_video_info_init (&info);
+  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12, 1920, 1080);
+  g_assert (gst_video_info_align (&info, &alig));
+
+  /* Add video meta */
+  buf = gst_buffer_new ();
+  meta = gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
+      GST_VIDEO_INFO_FORMAT (&info), GST_VIDEO_INFO_WIDTH (&info),
+      GST_VIDEO_INFO_HEIGHT (&info), GST_VIDEO_INFO_N_PLANES (&info),
+      info.offset, info.stride);
+  g_assert (gst_video_meta_set_alignment (meta, alig));
+
+  /* Serialize */
+  GByteArray *data = g_byte_array_new ();
+  fail_unless (gst_meta_serialize_simple ((GstMeta *) meta, data));
+  gst_buffer_unref (buf);
+
+  /* Create a new buffer */
+  buf = gst_buffer_new ();
+  guint32 consumed;
+  meta = (GstVideoMeta *) gst_meta_deserialize (buf, data->data, data->len,
+      &consumed);
+  fail_unless (meta);
+  fail_unless (consumed == data->len);
+  g_byte_array_unref (data);
+
+  /* Check meta's content */
+  g_assert_cmpuint (meta->flags, ==, GST_VIDEO_FRAME_FLAG_NONE);
+  g_assert_cmpuint (meta->format, ==, GST_VIDEO_FORMAT_NV12);
+  g_assert_cmpuint (meta->id, ==, 0);
+  g_assert_cmpuint (meta->width, ==, 1920);
+  g_assert_cmpuint (meta->height, ==, 1080);
+  g_assert_cmpuint (meta->alignment.padding_top, ==, 2);
+  g_assert_cmpuint (meta->alignment.padding_bottom, ==, 6);
+  g_assert_cmpuint (meta->alignment.padding_left, ==, 2);
+  g_assert_cmpuint (meta->alignment.padding_right, ==, 6);
+
+  g_assert_cmpuint (meta->n_planes, ==, GST_VIDEO_INFO_N_PLANES (&info));
+  for (int i = 0; i < meta->n_planes; i++) {
+    g_assert_cmpuint (meta->stride[i], ==, GST_VIDEO_INFO_PLANE_STRIDE (&info,
+            i));
+    g_assert_cmpuint (meta->offset[i], ==, GST_VIDEO_INFO_PLANE_OFFSET (&info,
+            i));
+    g_assert_cmpuint (meta->alignment.stride_align[i], ==, 0);
+  }
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 video_suite (void)
 {
@@ -4273,6 +4337,7 @@ video_suite (void)
   tcase_add_test (tc_chain, test_auto_video_frame_unmap);
   tcase_add_test (tc_chain, test_video_color_primaries_equivalent);
   tcase_add_test (tc_chain, test_info_dma_drm);
+  tcase_add_test (tc_chain, test_video_meta_serialize);
 
   return s;
 }

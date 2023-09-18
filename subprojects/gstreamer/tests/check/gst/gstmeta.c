@@ -808,6 +808,53 @@ GST_START_TEST (test_meta_custom_transform)
 
 GST_END_TEST;
 
+GST_START_TEST (test_meta_custom_serialize)
+{
+  const GstMetaInfo *info;
+  GstCustomMeta *meta;
+  GstBuffer *buffer;
+
+  info = gst_meta_register_custom_simple ("test-custom-serialize");
+  fail_unless (info != NULL);
+
+  /* add some metadata */
+  buffer = gst_buffer_new ();
+  meta = gst_buffer_add_custom_meta (buffer, "test-custom-serialize");
+  gst_structure_set (meta->structure, "test-field", G_TYPE_INT, 42, NULL);
+
+  /* Serialize */
+  GByteArray *data = g_byte_array_new ();
+  fail_unless (gst_meta_serialize_simple ((GstMeta *) meta, data));
+  gst_buffer_unref (buffer);
+
+  /* Create a new buffer */
+  buffer = gst_buffer_new ();
+  guint32 consumed;
+  meta = (GstCustomMeta *) gst_meta_deserialize (buffer, data->data, data->len,
+      &consumed);
+  fail_unless (meta);
+  fail_unless (consumed == data->len);
+
+  /* Check meta's content */
+  fail_unless (gst_custom_meta_has_name (meta, "test-custom-serialize"));
+  gint val;
+  fail_unless (gst_structure_get_int (meta->structure, "test-field", &val));
+  fail_unless_equals_int (val, 42);
+
+  /* Add field that cannot be serialized */
+  GstElement *bin = gst_bin_new ("mybin");
+  gst_structure_set (meta->structure, "test-field-obj", GST_TYPE_BIN, bin,
+      NULL);
+  g_byte_array_set_size (data, 0);
+  fail_if (gst_meta_serialize_simple ((GstMeta *) meta, data));
+  fail_if (data->len != 0);
+  gst_object_unref (bin);
+  gst_buffer_unref (buffer);
+  g_byte_array_unref (data);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_buffermeta_suite (void)
 {
@@ -827,6 +874,7 @@ gst_buffermeta_suite (void)
   tcase_add_test (tc_chain, test_meta_seqnum);
   tcase_add_test (tc_chain, test_meta_custom);
   tcase_add_test (tc_chain, test_meta_custom_transform);
+  tcase_add_test (tc_chain, test_meta_custom_serialize);
 
   return s;
 }

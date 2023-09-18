@@ -1578,6 +1578,106 @@ GST_START_TEST (test_audio_make_raw_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_audio_meta_serialize)
+{
+  GstBuffer *buf;
+  GstAudioInfo info;
+  GstAudioMeta *meta;
+
+  GstAudioChannelPosition position[] = { GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT
+  };
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S32, 44100, 2, position);
+  info.layout = GST_AUDIO_LAYOUT_NON_INTERLEAVED;
+
+  /* Add audio meta */
+  gsize samples = 1;
+  gsize buf_size = 4 * 2 * samples;
+  buf = gst_buffer_new_and_alloc (buf_size);
+  gsize offsets[] = { 0, buf_size / 2 };
+  meta = gst_buffer_add_audio_meta (buf, &info, samples, offsets);
+
+  /* Serialize */
+  GByteArray *data = g_byte_array_new ();
+  fail_unless (gst_meta_serialize_simple ((GstMeta *) meta, data));
+  gst_buffer_unref (buf);
+
+  /* Create a new buffer */
+  buf = gst_buffer_new_and_alloc (buf_size);
+  guint32 consumed;
+  meta = (GstAudioMeta *) gst_meta_deserialize (buf, data->data, data->len,
+      &consumed);
+  fail_unless (meta);
+  fail_unless (consumed == data->len);
+  g_byte_array_unref (data);
+
+  /* Check meta's content */
+  g_assert_cmpint (meta->info.finfo->format, ==, GST_AUDIO_FORMAT_S32);
+  g_assert_cmpint (meta->info.layout, ==, GST_AUDIO_LAYOUT_NON_INTERLEAVED);
+  g_assert_cmpint (meta->info.rate, ==, 44100);
+  g_assert_cmpint (meta->info.channels, ==, 2);
+  g_assert_cmpint (meta->info.position[0], ==,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT);
+  g_assert_cmpint (meta->info.position[1], ==,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
+  g_assert_cmpuint (meta->samples, ==, samples);
+  g_assert_cmpuint (meta->offsets[0], ==, 0);
+  g_assert_cmpuint (meta->offsets[1], ==, buf_size / 2);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_audio_meta_serialize_65_chans)
+{
+  GstBuffer *buf;
+  GstAudioInfo info;
+  GstAudioMeta *meta;
+
+  /* With more than 64 channels we cannot have positions */
+  gst_audio_info_init (&info);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S32, 44100, 65, NULL);
+  info.layout = GST_AUDIO_LAYOUT_NON_INTERLEAVED;
+
+  /* Add audio meta */
+  gsize samples = 1;
+  gsize buf_size = 4 * 65 * samples;
+  buf = gst_buffer_new_and_alloc (buf_size);
+  gsize offsets[65];
+  for (int i = 0; i < 65; i++)
+    offsets[i] = i * samples * 4;
+  meta = gst_buffer_add_audio_meta (buf, &info, samples, offsets);
+
+  /* Serialize */
+  GByteArray *data = g_byte_array_new ();
+  fail_unless (gst_meta_serialize_simple ((GstMeta *) meta, data));
+  gst_buffer_unref (buf);
+
+  /* Create a new buffer */
+  buf = gst_buffer_new_and_alloc (buf_size);
+  guint32 consumed;
+  meta = (GstAudioMeta *) gst_meta_deserialize (buf, data->data, data->len,
+      &consumed);
+  fail_unless (meta);
+  fail_unless (consumed == data->len);
+  g_byte_array_unref (data);
+
+  /* Check meta's content */
+  g_assert_cmpint (meta->info.finfo->format, ==, GST_AUDIO_FORMAT_S32);
+  g_assert_cmpint (meta->info.layout, ==, GST_AUDIO_LAYOUT_NON_INTERLEAVED);
+  g_assert_cmpint (meta->info.rate, ==, 44100);
+  g_assert_cmpint (meta->info.channels, ==, 65);
+  g_assert_cmpuint (meta->samples, ==, samples);
+  for (int i = 0; i < 65; i++)
+    g_assert_cmpuint (meta->offsets[i], ==, i * samples * 4);
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -1616,6 +1716,8 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_audio_buffer_and_audio_meta);
   tcase_add_test (tc_chain, test_audio_info_from_caps);
   tcase_add_test (tc_chain, test_audio_make_raw_caps);
+  tcase_add_test (tc_chain, test_audio_meta_serialize);
+  tcase_add_test (tc_chain, test_audio_meta_serialize_65_chans);
 
   return s;
 }

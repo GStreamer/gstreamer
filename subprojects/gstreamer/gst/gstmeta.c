@@ -193,6 +193,46 @@ custom_transform_func (GstBuffer * transbuf, GstMeta * meta,
   return TRUE;
 }
 
+static gboolean
+custom_serialize_func (const GstMeta * meta, GstByteArrayInterface * data,
+    guint8 * version)
+{
+  const GstCustomMeta *cmeta = (const GstCustomMeta *) meta;
+  gchar *str =
+      gst_structure_serialize (cmeta->structure, GST_SERIALIZE_FLAG_STRICT);
+  if (str == NULL)
+    return FALSE;
+
+  gboolean ret = gst_byte_array_interface_append_data (data, (guint8 *) str,
+      strlen (str) + 1);
+  g_free (str);
+
+  return ret;
+}
+
+static GstMeta *
+custom_deserialize_func (const GstMetaInfo * info, GstBuffer * buffer,
+    const guint8 * data, gsize size, guint8 version)
+{
+  if (version != 0 || size < 1 || data[size - 1] != '\0')
+    return NULL;
+
+  GstStructure *structure =
+      gst_structure_new_from_string ((const gchar *) data);
+  if (structure == NULL)
+    return NULL;
+
+  GstMeta *meta = gst_buffer_add_meta (buffer, info, NULL);
+  GstCustomMeta *cmeta = (GstCustomMeta *) meta;
+
+  gst_structure_set_parent_refcount (cmeta->structure, NULL);
+  gst_structure_take (&cmeta->structure, structure);
+  gst_structure_set_parent_refcount (cmeta->structure,
+      &GST_MINI_OBJECT_REFCOUNT (buffer));
+
+  return meta;
+}
+
 /**
  * gst_custom_meta_get_structure:
  *
@@ -274,9 +314,10 @@ gst_meta_register_custom (const gchar * name, const gchar ** tags,
   if (api == G_TYPE_INVALID)
     goto done;
 
-  info = (GstMetaInfoImpl *) gst_meta_register (api, name,
+  info = (GstMetaInfoImpl *) gst_meta_register_serializable (api, name,
       sizeof (GstCustomMeta),
-      custom_init_func, custom_free_func, custom_transform_func);
+      custom_init_func, custom_free_func, custom_transform_func,
+      custom_serialize_func, custom_deserialize_func);
 
   if (!info)
     goto done;
@@ -364,28 +405,12 @@ gst_meta_api_type_get_tags (GType api)
   return (const gchar * const *) tags;
 }
 
-/**
- * gst_meta_register:
- * @api: the type of the #GstMeta API
- * @impl: the name of the #GstMeta implementation
- * @size: the size of the #GstMeta structure
- * @init_func: (scope async): a #GstMetaInitFunction
- * @free_func: (scope async): a #GstMetaFreeFunction
- * @transform_func: (scope async): a #GstMetaTransformFunction
- *
- * Register a new #GstMeta implementation.
- *
- * The same @info can be retrieved later with gst_meta_get_info() by using
- * @impl as the key.
- *
- * Returns: (transfer none): a #GstMetaInfo that can be used to
- * access metadata.
- */
-
-const GstMetaInfo *
-gst_meta_register (GType api, const gchar * impl, gsize size,
+static const GstMetaInfo *
+gst_meta_register_internal (GType api, const gchar * impl, gsize size,
     GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
-    GstMetaTransformFunction transform_func)
+    GstMetaTransformFunction transform_func,
+    GstMetaSerializeFunction serialize_func,
+    GstMetaDeserializeFunction deserialize_func)
 {
   GstMetaInfo *info;
   GType type;
@@ -412,6 +437,8 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
   info->init_func = init_func;
   info->free_func = free_func;
   info->transform_func = transform_func;
+  info->serialize_func = serialize_func;
+  info->deserialize_func = deserialize_func;
   ((GstMetaInfoImpl *) info)->is_custom = FALSE;
 
   GST_CAT_DEBUG (GST_CAT_META,
@@ -424,6 +451,62 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
   g_rw_lock_writer_unlock (&lock);
 
   return info;
+}
+
+/**
+ * gst_meta_register:
+ * @api: the type of the #GstMeta API
+ * @impl: the name of the #GstMeta implementation
+ * @size: the size of the #GstMeta structure
+ * @init_func: (scope async): a #GstMetaInitFunction
+ * @free_func: (scope async): a #GstMetaFreeFunction
+ * @transform_func: (scope async): a #GstMetaTransformFunction
+ *
+ * Register a new #GstMeta implementation.
+ *
+ * The same @info can be retrieved later with gst_meta_get_info() by using
+ * @impl as the key.
+ *
+ * Returns: (transfer none): a #GstMetaInfo that can be used to
+ * access metadata.
+ */
+const GstMetaInfo *
+gst_meta_register (GType api, const gchar * impl, gsize size,
+    GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
+    GstMetaTransformFunction transform_func)
+{
+  return gst_meta_register_internal (api, impl, size, init_func, free_func,
+      transform_func, NULL, NULL);
+}
+
+/**
+ * gst_meta_register_serializable:
+ * @api: the type of the #GstMeta API
+ * @impl: the name of the #GstMeta implementation
+ * @size: the size of the #GstMeta structure
+ * @init_func: (scope async): a #GstMetaInitFunction
+ * @free_func: (scope async): a #GstMetaFreeFunction
+ * @transform_func: (scope async): a #GstMetaTransformFunction
+ * @serialize_func: (scope async): a #GstMetaSerializeFunction
+ * @deserialize_func: (scope async): a #GstMetaDeserializeFunction
+ *
+ * Same as gst_meta_register() but also set serialize/deserialize functions.
+ *
+ * Returns: (transfer none): a #GstMetaInfo that can be used to access metadata.
+ *
+ * Since: 1.24
+ */
+const GstMetaInfo *
+gst_meta_register_serializable (GType api, const gchar * impl, gsize size,
+    GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
+    GstMetaTransformFunction transform_func,
+    GstMetaSerializeFunction serialize_func,
+    GstMetaDeserializeFunction deserialize_func)
+{
+  g_return_val_if_fail (serialize_func != NULL, NULL);
+  g_return_val_if_fail (deserialize_func != NULL, NULL);
+  return gst_meta_register_internal (api, impl, size, init_func, free_func,
+      transform_func, serialize_func, deserialize_func);
 }
 
 /**
@@ -496,4 +579,181 @@ gst_meta_compare_seqnum (const GstMeta * meta1, const GstMeta * meta2)
     return 0;
 
   return (seqnum1 < seqnum2) ? -1 : 1;
+}
+
+/**
+ * gst_meta_serialize:
+ * @meta: a #GstMeta
+ * @data: #GstByteArrayInterface to append serialization data
+ *
+ * Serialize @meta into a format that can be stored or transmitted and later
+ * deserialized by gst_meta_deserialize().
+ *
+ * This is only supported for meta that implements #GstMetaInfo.serialize_func,
+ * %FALSE is returned otherwise.
+ *
+ * Upon failure, @data->data pointer could have been reallocated, but @data->len
+ * won't be modified. This is intended to be able to append multiple metas
+ * into the same #GByteArray.
+ *
+ * Since serialization size is often the same for every buffer, caller may want
+ * to remember the size of previous data to preallocate the next.
+ *
+ * Returns: %TRUE on success, %FALSE otherwise.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_meta_serialize (const GstMeta * meta, GstByteArrayInterface * data)
+{
+  g_return_val_if_fail (meta != NULL, FALSE);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  if (meta->info->serialize_func != NULL) {
+    const gchar *name = g_type_name (meta->info->type);
+    guint32 name_len = strlen (name);
+    guint32 orig_len = data->len;
+    guint8 version = 0;
+
+    /* Format: [total size][name_len][name][\0][version][payload]
+     * Preallocate space for header but only write it on success because we
+     * don't have every info yet.
+     */
+    guint8 header_size = 2 * sizeof (guint32) + name_len + 2;
+    if (!gst_byte_array_interface_set_size (data, data->len + header_size))
+      return FALSE;
+    if (meta->info->serialize_func (meta, data, &version)) {
+      guint8 *header = data->data + orig_len;
+      GST_WRITE_UINT32_LE (header + 0, data->len - orig_len);
+      GST_WRITE_UINT32_LE (header + 4, name_len);
+      memcpy (header + 8, name, name_len + 1);
+      header[header_size - 1] = version;
+      return TRUE;
+    }
+    // Serialization failed, rollback.
+    gst_byte_array_interface_set_size (data, orig_len);
+  }
+
+  return FALSE;
+}
+
+typedef struct
+{
+  GstByteArrayInterface parent;
+  GByteArray *data;
+} ByteArrayImpl;
+
+static gboolean
+byte_array_impl_resize (GstByteArrayInterface * parent, gsize length)
+{
+  ByteArrayImpl *self = (ByteArrayImpl *) parent;
+
+  g_byte_array_set_size (self->data, length);
+  parent->data = self->data->data;
+  return TRUE;
+}
+
+/**
+ * gst_meta_serialize_simple:
+ * @meta: a #GstMeta
+ * @data: #GByteArray to append serialization data
+ *
+ * Same as gst_meta_serialize() but with a #GByteArray instead of
+ * #GstByteArrayInterface.
+ *
+ * Returns: %TRUE on success, %FALSE otherwise.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_meta_serialize_simple (const GstMeta * meta, GByteArray * data)
+{
+  ByteArrayImpl impl;
+
+  gst_byte_array_interface_init (&impl.parent);
+  impl.parent.data = data->data;
+  impl.parent.len = data->len;
+  impl.parent.resize = byte_array_impl_resize;
+  impl.data = data;
+  return gst_meta_serialize (meta, (GstByteArrayInterface *) & impl);
+}
+
+/**
+ * gst_meta_deserialize:
+ * @buffer: a #GstBuffer
+ * @data: serialization data obtained from gst_meta_serialize()
+ * @size: size of @data
+ * @consumed: (out): total size used by this meta, could be less than @size
+ *
+ * Recreate a #GstMeta from serialized data returned by
+ * gst_meta_serialize() and add it to @buffer.
+ *
+ * Note that the meta must have been previously registered by calling one of
+ * `gst_*_meta_get_info ()` functions.
+ *
+ * @consumed is set to the number of bytes that can be skipped from @data to
+ * find the next meta serialization, if any. In case of parsing error that does
+ * not allow to determine that size, @consumed is set to 0.
+ *
+ * Returns: (transfer none) (nullable): the metadata owned by @buffer, or %NULL.
+ *
+ * Since: 1.24
+ */
+GstMeta *
+gst_meta_deserialize (GstBuffer * buffer, const guint8 * data, gsize size,
+    guint32 * consumed)
+{
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (consumed != NULL, NULL);
+
+  *consumed = 0;
+
+  /* Format: [total size][name_len][name][\0][version][payload] */
+  if (size < 2 * sizeof (guint32))
+    goto bad_header;
+
+  guint32 total_size = GST_READ_UINT32_LE (data + 0);
+  guint32 name_len = GST_READ_UINT32_LE (data + 4);
+  guint32 header_size = 2 * sizeof (guint32) + name_len + 2;
+  if (size < total_size || total_size < header_size)
+    goto bad_header;
+
+  guint8 version = data[header_size - 1];
+  const gchar *name = (const gchar *) (data + 2 * sizeof (guint32));
+  if (name[name_len] != '\0')
+    goto bad_header;
+
+  *consumed = total_size;
+
+  const GstMetaInfo *info = gst_meta_get_info (name);
+  if (info == NULL) {
+    GST_CAT_WARNING (GST_CAT_META,
+        "%s does not correspond to a registered meta", name);
+    return NULL;
+  }
+
+  if (info->deserialize_func == NULL) {
+    GST_CAT_WARNING (GST_CAT_META, "Meta %s does not support deserialization",
+        name);
+    return NULL;
+  }
+
+  const guint8 *payload = data + header_size;
+  guint32 payload_size = total_size - header_size;
+  GstMeta *meta =
+      info->deserialize_func (info, buffer, payload, payload_size, version);
+  if (meta == NULL) {
+    GST_CAT_WARNING (GST_CAT_META, "Failed to deserialize %s payload", name);
+    GST_CAT_MEMDUMP (GST_CAT_META, "Meta serialization payload", payload,
+        payload_size);
+    return NULL;
+  }
+
+  return meta;
+
+bad_header:
+  GST_CAT_WARNING (GST_CAT_META, "Could not parse meta serialization header");
+  GST_CAT_MEMDUMP (GST_CAT_META, "Meta serialization data", data, size);
+  return NULL;
 }
