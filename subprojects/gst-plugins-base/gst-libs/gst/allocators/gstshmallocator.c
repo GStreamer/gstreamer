@@ -62,16 +62,11 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
 
 #ifdef HAVE_MEMFD_CREATE
   fd = memfd_create ("gst-shm", MFD_CLOEXEC | MFD_ALLOW_SEALING);
-  if (fd >= 0) {
-    /* We can add this seal before calling posix_fallocate(), as
-     * the file is currently zero-sized anyway.
-     *
-     * There is also no need to check for the return value, we
-     * couldn't do anything with it anyway.
-     */
-    fcntl (fd, F_ADD_SEALS, F_SEAL_SHRINK);
-  } else
-#endif
+  if (fd < 0) {
+    GST_ERROR_OBJECT (self, "memfd_create() failed: %s", strerror (errno));
+    return NULL;
+  }
+#else
   {
     char filename[1024];
     static int init = 0;
@@ -87,6 +82,7 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
 
     shm_unlink (filename);
   }
+#endif
 
   if (ftruncate (fd, size) < 0) {
     GST_ERROR_OBJECT (self, "ftruncate failed: %s", strerror (errno));
@@ -102,16 +98,19 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
     return NULL;
   }
 
-  /* Map R/W and keep it mapped to avoid useless mmap/munmap */
+  /* We use GST_FD_MEMORY_FLAG_KEEP_MAPPED, so make sure the first map is RW. */
   if (!gst_memory_map (mem, &info, GST_MAP_READWRITE)) {
     GST_ERROR_OBJECT (self, "GstFdMemory map failed");
-    close (fd);
+    gst_memory_unref (mem);
     return NULL;
   }
-
-  /* unmap will not really munmap(), we just
-   * need it to release the miniobject lock */
   gst_memory_unmap (mem, &info);
+
+#ifdef HAVE_MEMFD_CREATE
+  /* Now that it's kept mapped RW, seal it for any future mapping. This ensures
+   * that other processes receiving this memfd won't be able to modify it. */
+  fcntl (fd, F_ADD_SEALS, F_SEAL_SHRINK | F_SEAL_FUTURE_WRITE);
+#endif
 
   return mem;
 #else
