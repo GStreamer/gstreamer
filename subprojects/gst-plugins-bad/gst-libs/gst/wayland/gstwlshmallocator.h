@@ -29,27 +29,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_WL_SHM_ALLOCATOR (gst_wl_shm_allocator_get_type ())
-
-GST_WL_API
-G_DECLARE_FINAL_TYPE (GstWlShmAllocator, gst_wl_shm_allocator, GST, WL_SHM_ALLOCATOR, GstFdAllocator);
-
-#define GST_ALLOCATOR_WL_SHM "wl_shm"
-
-struct _GstWlShmAllocator
-{
-  GstFdAllocator parent_instance;
-};
-
-GST_WL_API
-void gst_wl_shm_allocator_init_once (void);
-
-GST_WL_API
-GstAllocator * gst_wl_shm_allocator_get (void);
-
-GST_WL_API
-gboolean gst_is_wl_shm_memory (GstMemory * mem);
-
 GST_WL_API
 struct wl_buffer * gst_wl_shm_memory_construct_wl_buffer (GstMemory * mem,
     GstWlDisplay * display, const GstVideoInfo * info);

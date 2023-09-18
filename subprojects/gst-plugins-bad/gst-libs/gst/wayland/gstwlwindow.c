@@ -580,7 +580,7 @@ gst_wl_window_update_borders (GstWlWindow * self)
   /* draw the area_subsurface */
   gst_video_info_set_format (&info, format, width, height);
 
-  alloc = gst_wl_shm_allocator_get ();
+  alloc = gst_shm_allocator_get ();
 
   buf = gst_buffer_new_allocate (alloc, info.size, NULL);
   gst_buffer_memset (buf, 0, 0, info.size);

@@ -1,7 +1,9 @@
-/* GStreamer
- * Copyright (C) 2012 GStreamer developers
+/* GStreamer shared memory allocator
  *
- * allocators.h: single include header for gst-allocators library
+ * Copyright (C) 2012 Intel Corporation
+ * Copyright (C) 2012 Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+ * Copyright (C) 2023 Netflix Inc.
+ *  Author: Xavier Claessens <xavier.claessens@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,16 +21,19 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_ALLOCATORS_H__
-#define __GST_ALLOCATORS_H__
+#pragma once
 
-#include <gst/allocators/allocators-prelude.h>
-
-#include <gst/allocators/gstdmabuf.h>
 #include <gst/allocators/gstfdmemory.h>
-#include <gst/allocators/gstphysmemory.h>
-#include <gst/allocators/gstdrmdumb.h>
-#include <gst/allocators/gstshmallocator.h>
 
-#endif /* __GST_ALLOCATORS_H__ */
+G_BEGIN_DECLS
 
+#define GST_ALLOCATOR_SHM "shm"
+
+#define GST_TYPE_SHM_ALLOCATOR gst_shm_allocator_get_type ()
+GST_ALLOCATORS_API
+G_DECLARE_FINAL_TYPE (GstShmAllocator, gst_shm_allocator, GST, SHM_ALLOCATOR, GstFdAllocator)
+
+GST_ALLOCATORS_API void gst_shm_allocator_init_once (void);
+GST_ALLOCATORS_API GstAllocator* gst_shm_allocator_get (void);
+
+G_END_DECLS
