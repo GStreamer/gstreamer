@@ -142,6 +142,7 @@ if host_machine.system() != 'windows'
     [['elements/jpegparse.c'], not cdata.has('HAVE_UNISTD_H')],
     [['elements/netsim.c']],
     [['elements/shm.c'], not shm_enabled, shm_deps],
+    [['elements/unixfd.c'], not gio_unix_dep.found()],
     [['elements/voaacenc.c'],
         not voaac_dep.found() or not cdata.has('HAVE_UNISTD_H'), [voaac_dep]],
     [['elements/webrtcbin.c'], not libnice_dep.found(), [gstwebrtc_dep]],
