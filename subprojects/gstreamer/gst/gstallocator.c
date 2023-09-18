@@ -104,7 +104,8 @@ _fallback_mem_copy (GstMemory * mem, gssize offset, gssize size)
 
   /* use the same allocator as the memory we copy  */
   allocator = mem->allocator;
-  if (GST_OBJECT_FLAG_IS_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC))
+  if (GST_OBJECT_FLAG_IS_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC) ||
+      GST_OBJECT_FLAG_IS_SET (allocator, GST_ALLOCATOR_FLAG_NO_COPY))
     allocator = NULL;
   copy = gst_allocator_alloc (allocator, size, &params);
 
