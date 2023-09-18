@@ -28,6 +28,10 @@ if cc.has_function('memfd_create')
     '-DHAVE_MEMFD_CREATE',
     '-D_GNU_SOURCE',
   ]
+elif cc.has_function('shm_open')
+  gst_allocators_cargs += [
+    '-DHAVE_SHM_OPEN',
+  ]
 endif
 
 gstallocators = library('gstallocators-@0@'.format(api_version),

@@ -52,7 +52,7 @@ static GstMemory *
 gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
     GstAllocationParams * params)
 {
-#ifdef HAVE_MMAP
+#if defined(HAVE_MEMFD_CREATE) || defined(HAVE_SHM_OPEN)
   GstShmAllocator *self = GST_SHM_ALLOCATOR (allocator);
   int fd;
   GstMemory *mem;
@@ -75,19 +75,17 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   {
     char filename[1024];
     static int init = 0;
+    int flags = O_RDWR | O_CREAT | O_EXCL;
+    int perms = S_IRUSR | S_IWUSR | S_IRGRP;
 
-    /* allocate shm pool */
-    snprintf (filename, 1024, "%s/%s-%d-%s", g_get_user_runtime_dir (),
-        "gst-shm", init++, "XXXXXX");
-
-    fd = g_mkstemp (filename);
+    snprintf (filename, 1024, "/gst-shm.%d.%d", getpid (), init++);
+    fd = shm_open (filename, flags, perms);
     if (fd < 0) {
-      GST_ERROR_OBJECT (self, "opening temp file %s failed: %s", filename,
-          strerror (errno));
+      GST_ERROR_OBJECT (self, "shm_open() failed: %s", strerror (errno));
       return NULL;
     }
 
-    unlink (filename);
+    shm_unlink (filename);
   }
 
   if (ftruncate (fd, size) < 0) {
@@ -104,7 +102,7 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
     return NULL;
   }
 
-  /* we need to map the memory in order to unlink the file without losing it */
+  /* Map R/W and keep it mapped to avoid useless mmap/munmap */
   if (!gst_memory_map (mem, &info, GST_MAP_READWRITE)) {
     GST_ERROR_OBJECT (self, "GstFdMemory map failed");
     close (fd);
