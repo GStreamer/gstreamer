@@ -93,14 +93,13 @@ Configuring a module (or several in one go when in gst-build) is done by
 executing:
 
 ``` shell
-meson <build_directory>
+meson setup <build_directory>
 ```
 
 The `build_directory` is where all the build instructions and output will be
 located (This is also called *"out of directory"* building). If the directory is
-not created it will be done so at this point. Note that calling `meson` without
-any *command* argument is implicitly calling the `meson setup` command (i.e. to
-do the initial configuration of a project).
+not created it will be done so at this point. Note that older versions of `meson`
+could run without any *command* argument, this is now deprecated.
 
 There is only one restriction regarding the location of the `build_directory`:
 it can't be the same as the source directory (i.e. where you cloned your module).
