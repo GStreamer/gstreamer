@@ -74,6 +74,7 @@ gst_d3d12_vp9_dec_class_init (GstD3D12Vp9DecClass * klass, gpointer data)
       GST_DEBUG_FUNCPTR (gst_d3d12_vp9_dec_decide_allocation);
   decoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_d3d12_vp9_dec_sink_query);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_d3d12_vp9_dec_src_query);
+  decoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_d3d12_vp9_dec_sink_event);
 
   dxva_class->configure = GST_DEBUG_FUNCPTR (gst_d3d12_vp9_dec_configure);
   dxva_class->new_picture = GST_DEBUG_FUNCPTR (gst_d3d12_vp9_dec_new_picture);
@@ -199,6 +200,17 @@ gst_d3d12_vp9_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
   }
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
+}
+
+static gboolean
+gst_d3d12_vp9_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
+{
+  GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (decoder);
+
+  if (self->decoder)
+    gst_d3d12_decoder_sink_event (self->decoder, event);
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }
 
 static GstFlowReturn

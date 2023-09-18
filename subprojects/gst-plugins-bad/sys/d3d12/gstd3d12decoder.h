@@ -71,6 +71,8 @@ struct GstD3D12DecoderSubClassData
       GstQuery * query); \
   static gboolean module_obj_name##_src_query (GstVideoDecoder * decoder, \
       GstQuery * query); \
+  static gboolean module_obj_name##_sink_event (GstVideoDecoder * decoder, \
+      GstEvent * event); \
   static GstFlowReturn module_obj_name##_configure (ParentName * decoder, \
       GstVideoCodecState * input_state, const GstVideoInfo * info, \
       gint crop_x, gint crop_y, \
@@ -140,6 +142,9 @@ gboolean          gst_d3d12_decoder_negotiate         (GstD3D12Decoder * decoder
 gboolean          gst_d3d12_decoder_decide_allocation (GstD3D12Decoder * decoder,
                                                        GstVideoDecoder * videodec,
                                                        GstQuery * query);
+
+void              gst_d3d12_decoder_sink_event        (GstD3D12Decoder * decoder,
+                                                       GstEvent * event);
 
 /* Utils for element registration */
 GstD3D12DecoderClassData * gst_d3d12_decoder_check_feature_support   (GstD3D12Device * device,
