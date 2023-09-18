@@ -363,7 +363,8 @@ enum
   PROP_ONVIF_MODE,
   PROP_ONVIF_RATE_CONTROL,
   PROP_IS_LIVE,
-  PROP_IGNORE_X_SERVER_REPLY
+  PROP_IGNORE_X_SERVER_REPLY,
+  PROP_EXTRA_HTTP_REQUEST_HEADERS,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -1098,6 +1099,22 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_IGNORE_X_SERVER_REPLY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstRTSPSrc:extra-http-request-headers
+   *
+   * When in tunneled mode append provided headers to any HTTP requests
+   * made by rtspsrc.
+   *
+   * Only applicable for RTSP over HTTP.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_EXTRA_HTTP_REQUEST_HEADERS,
+      g_param_spec_boxed ("extra-http-request-headers", "Extra Headers",
+          "Extra headers to append to HTTP requests when in tunneled mode",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -1527,6 +1544,8 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->is_live = DEFAULT_IS_LIVE;
   src->seek_seqnum = GST_SEQNUM_INVALID;
   src->group_id = GST_GROUP_ID_INVALID;
+  src->prop_extra_http_request_headers =
+      gst_structure_new_empty ("extra-http-request-headers");
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1601,6 +1620,11 @@ gst_rtspsrc_finalize (GObject * object)
 
   if (rtspsrc->initial_seek)
     gst_event_unref (rtspsrc->initial_seek);
+
+  if (rtspsrc->prop_extra_http_request_headers) {
+    gst_structure_free (rtspsrc->prop_extra_http_request_headers);
+    rtspsrc->prop_extra_http_request_headers = NULL;
+  }
 
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
@@ -1872,6 +1896,16 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_IGNORE_X_SERVER_REPLY:
       rtspsrc->ignore_x_server_reply = g_value_get_boolean (value);
       break;
+    case PROP_EXTRA_HTTP_REQUEST_HEADERS:{
+      const GstStructure *s = gst_value_get_structure (value);
+      if (rtspsrc->prop_extra_http_request_headers) {
+        gst_structure_free (rtspsrc->prop_extra_http_request_headers);
+      }
+      rtspsrc->prop_extra_http_request_headers =
+          s ? gst_structure_copy (s) :
+          gst_structure_new_empty ("extra-http-request-headers");
+    }
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2044,6 +2078,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_IGNORE_X_SERVER_REPLY:
       g_value_set_boolean (value, rtspsrc->ignore_x_server_reply);
+      break;
+    case PROP_EXTRA_HTTP_REQUEST_HEADERS:
+      gst_value_set_structure (value, rtspsrc->prop_extra_http_request_headers);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5289,6 +5326,18 @@ accept_certificate_cb (GTlsConnection * conn, GTlsCertificate * peer_cert,
   return accept;
 }
 
+static gboolean
+_add_header_to_conn (GQuark field_id, const GValue * value, gpointer user_data)
+{
+  const gchar *key_str = g_quark_to_string (field_id);
+  const gchar *value_str = g_value_get_string (value);
+
+  GstRTSPConnection *conn = (GstRTSPConnection *) user_data;
+  gst_rtsp_connection_add_extra_http_request_header (conn, key_str, value_str);
+
+  return TRUE;
+}
+
 static GstRTSPResult
 gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
     gboolean async)
@@ -5346,6 +5395,11 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
             src->proxy_port);
         gst_rtsp_connection_set_proxy (info->connection, src->proxy_host,
             src->proxy_port);
+      }
+
+      if (src->prop_extra_http_request_headers != NULL) {
+        gst_structure_foreach (src->prop_extra_http_request_headers,
+            _add_header_to_conn, info->connection);
       }
     }
 

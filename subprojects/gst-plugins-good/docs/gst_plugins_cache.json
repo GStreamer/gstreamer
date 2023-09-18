@@ -21342,6 +21342,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "extra-http-request-headers": {
+                        "blurb": "Extra headers to append to HTTP requests when in tunneled mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "extra-http-request-headers;",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstStructure",
+                        "writable": true
+                    },
                     "ignore-x-server-reply": {
                         "blurb": "Whether to ignore the x-server-ip-address server header reply",
                         "conditionally-available": false,

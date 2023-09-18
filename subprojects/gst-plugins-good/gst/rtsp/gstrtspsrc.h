@@ -280,6 +280,7 @@ struct _GstRTSPSrc {
   gboolean          onvif_rate_control;
   gboolean          is_live;
   gboolean          ignore_x_server_reply;
+  GstStructure     *prop_extra_http_request_headers;
 
   /* state */
   GstRTSPState       state;
