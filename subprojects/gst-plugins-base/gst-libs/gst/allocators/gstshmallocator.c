@@ -136,7 +136,7 @@ gst_shm_allocator_init (GstShmAllocator * self)
 
   alloc->mem_type = GST_ALLOCATOR_SHM;
 
-  GST_OBJECT_FLAG_SET (self, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
+  GST_OBJECT_FLAG_SET (self, GST_ALLOCATOR_FLAG_NO_COPY);
 }
 
 void
