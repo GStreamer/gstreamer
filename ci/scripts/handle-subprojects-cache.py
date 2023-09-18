@@ -44,8 +44,7 @@ def create_cache_in_image(options):
 
 
 def copy_cache(options):
-    # FIXME Remove when not needed anymore.
-    for path in [DEST, "/gst-build/subprojects", r"C:\gst-build\subprojects"]:
+    for path in [DEST, r"C:\gst-build\subprojects"]:
         if not os.path.exists(path):
             print("%s doesn't exist." % path)
             continue
