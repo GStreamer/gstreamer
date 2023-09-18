@@ -184,8 +184,6 @@ gst_d3d12_device_enable_debug (void)
   static gboolean enabled = FALSE;
 
   GST_D3D12_CALL_ONCE_BEGIN {
-    GST_DEBUG_CATEGORY_INIT (gst_d3d12_device_debug,
-        "d3d12device", 0, "d3d12 device object");
     GST_DEBUG_CATEGORY_INIT (gst_d3d12_sdk_debug,
         "d3d12debuglayer", 0, "d3d12 SDK layer debug");
 
@@ -544,6 +542,9 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   HRESULT hr;
   UINT factory_flags = 0;
   guint index = 0;
+
+  GST_DEBUG_CATEGORY_INIT (gst_d3d12_device_debug,
+      "d3d12device", 0, "d3d12 device object");
 
 #ifdef HAVE_D3D12_SDKLAYERS_H
   if (gst_d3d12_device_enable_debug ())
