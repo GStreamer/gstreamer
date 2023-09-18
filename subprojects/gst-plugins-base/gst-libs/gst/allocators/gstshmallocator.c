@@ -58,7 +58,11 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   GstMemory *mem;
   GstMapInfo info;
 
-  /* TODO: make use of the allocation params, if necessary */
+  /* See _sysmem_new_block() for details */
+  gsize maxsize = size + params->prefix + params->padding;
+  gsize align = params->align;
+  align |= gst_memory_alignment;
+  maxsize += align;
 
 #ifdef HAVE_MEMFD_CREATE
   fd = memfd_create ("gst-shm", MFD_CLOEXEC | MFD_ALLOW_SEALING);
@@ -84,7 +88,7 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   }
 #endif
 
-  if (ftruncate (fd, size) < 0) {
+  if (ftruncate (fd, maxsize) < 0) {
     GST_ERROR_OBJECT (self, "ftruncate failed: %s", strerror (errno));
     close (fd);
     return NULL;
@@ -104,6 +108,27 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
     gst_memory_unref (mem);
     return NULL;
   }
+
+  /* See _sysmem_new_block() for details */
+  guint8 *data = info.data;
+  gsize aoffset;
+  if ((aoffset = ((guintptr) data & align))) {
+    aoffset = (align + 1) - aoffset;
+    data += aoffset;
+    maxsize -= aoffset;
+  }
+
+  if (params->prefix && (params->flags & GST_MEMORY_FLAG_ZERO_PREFIXED))
+    memset (data, 0, params->prefix);
+
+  gsize padding = maxsize - (params->prefix + size);
+  if (padding && (params->flags & GST_MEMORY_FLAG_ZERO_PADDED))
+    memset (data + params->prefix + size, 0, padding);
+
+  mem->align = align;
+  mem->maxsize = maxsize;
+  mem->offset = params->prefix + aoffset;
+
   gst_memory_unmap (mem, &info);
 
 #ifdef HAVE_MEMFD_CREATE
