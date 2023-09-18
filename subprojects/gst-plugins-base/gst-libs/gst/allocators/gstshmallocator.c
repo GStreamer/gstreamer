@@ -21,6 +21,25 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstshmallocator
+ * @title: GstShmAllocator
+ * @short_description: Allocator for file-descriptor backed shared memory
+ * @see_also: #GstMemory and #GstFdAllocator
+ *
+ * This is a subclass of #GstFdAllocator that implements the
+ * gst_allocator_alloc() method using `memfd_create()` when available, POSIX
+ * `shm_open()` otherwise. Platforms not supporting any of those (Windows) will
+ * always return %NULL.
+ *
+ * Note that allocating new shared memories has a significant performance cost,
+ * it is thus recommended to keep a pool of pre-allocated #GstMemory, using
+ * #GstBufferPool. For that reason, this allocator has the
+ * %GST_ALLOCATOR_FLAG_NO_COPY flag set.
+ *
+ * Since: 1.24
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -161,6 +180,14 @@ gst_shm_allocator_init (GstShmAllocator * self)
   GST_OBJECT_FLAG_SET (self, GST_ALLOCATOR_FLAG_NO_COPY);
 }
 
+/**
+ * gst_shm_allocator_init_once:
+ *
+ * Register a #GstShmAllocator using gst_allocator_register() with the name
+ * %GST_ALLOCATOR_SHM. This is no-op after the first call.
+ *
+ * Since: 1.24
+ */
 void
 gst_shm_allocator_init_once (void)
 {
@@ -177,6 +204,17 @@ gst_shm_allocator_init_once (void)
   }
 }
 
+/**
+ * gst_shm_allocator_get:
+ *
+ * Get the #GstShmAllocator singleton previously registered with
+ * gst_shm_allocator_init_once().
+ *
+ * Returns: (transfer full) (nullable): a #GstAllocator or %NULL if
+ * gst_shm_allocator_init_once() has not been previously called.
+ *
+ * Since: 1.24
+ */
 GstAllocator *
 gst_shm_allocator_get (void)
 {

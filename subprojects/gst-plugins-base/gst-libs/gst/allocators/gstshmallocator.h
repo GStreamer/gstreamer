@@ -27,8 +27,39 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_ALLOCATOR_SHM:
+ *
+ * Name of this allocator, to be used for example with gst_allocator_find() and
+ * gst_memory_is_type().
+ *
+ * Since: 1.24
+ */
 #define GST_ALLOCATOR_SHM "shm"
 
+/**
+ * GstShmAllocator:
+ *
+ * Private intance object for #GstShmAllocator.
+ *
+ * Since: 1.24
+ */
+
+/**
+ * GstShmAllocatorClass.parent_class:
+ *
+ * Parent Class.
+ *
+ * Since: 1.24
+ */
+
+/**
+ * GST_TYPE_SHM_ALLOCATOR:
+ *
+ * Macro that returns the #GstShmAllocator type.
+ *
+ * Since: 1.24
+ */
 #define GST_TYPE_SHM_ALLOCATOR gst_shm_allocator_get_type ()
 GST_ALLOCATORS_API
 G_DECLARE_FINAL_TYPE (GstShmAllocator, gst_shm_allocator, GST, SHM_ALLOCATOR, GstFdAllocator)
