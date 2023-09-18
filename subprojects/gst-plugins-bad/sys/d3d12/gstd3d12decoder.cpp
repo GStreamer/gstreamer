@@ -36,7 +36,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <atomic>
 #include <algorithm>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_decoder_debug);
@@ -185,11 +184,6 @@ GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12DecoderPicture, gst_d3d12_decoder_picture);
 
 struct GstD3D12DecoderPrivate
 {
-  GstD3D12DecoderPrivate ()
-  {
-    fence_value = 1;
-  }
-
   ~GstD3D12DecoderPrivate()
   {
     if (input_state)
@@ -267,12 +261,10 @@ struct GstD3D12DecoderPrivate
   /* Used for download decoded picture to staging */
   ComPtr<ID3D12CommandAllocator> copy_ca;
   ComPtr<ID3D12GraphicsCommandList> copy_cl;
-  ComPtr<ID3D12CommandQueue> copy_cq;
 
   ComPtr<ID3D12Resource> staging;
 
   GstD3D12Fence *fence = nullptr;
-  std::atomic<UINT64> fence_value;
 
   gint64 luid;
 
@@ -363,7 +355,6 @@ gst_d3d12_decoder_new (GstD3D12Device * device, GstDxvaCodec codec)
   ComPtr < ID3D12VideoDevice > video_device;
   ComPtr < ID3D12CommandAllocator > copy_ca;
   ComPtr < ID3D12GraphicsCommandList > copy_cl;
-  ComPtr < ID3D12CommandQueue > copy_cq;
   ComPtr < ID3D12CommandAllocator > ca;
   ComPtr < ID3D12VideoDecodeCommandList > cl;
   ComPtr < ID3D12CommandQueue > cq;
@@ -391,12 +382,6 @@ gst_d3d12_decoder_new (GstD3D12Device * device, GstDxvaCodec codec)
     return nullptr;
 
   hr = copy_cl->Close ();
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-  desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-  hr = device_handle->CreateCommandQueue (&desc, IID_PPV_ARGS (&copy_cq));
   if (!gst_d3d12_result (hr, device))
     return nullptr;
 
@@ -429,7 +414,6 @@ gst_d3d12_decoder_new (GstD3D12Device * device, GstDxvaCodec codec)
   priv->video_device = video_device;
   priv->copy_ca = copy_ca;
   priv->copy_cl = copy_cl;
-  priv->copy_cq = copy_cq;
   priv->ca = ca;
   priv->cl = cl;
   priv->cq = cq;
@@ -939,7 +923,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   priv->cq->ExecuteCommandLists (1, cl);
 
   fence_handle = gst_d3d12_fence_get_handle (priv->fence);
-  fence_value = priv->fence_value.fetch_add (1);
+  fence_value = gst_d3d12_device_get_fence_value (priv->device);
   hr = priv->cq->Signal (fence_handle, fence_value);
   if (!gst_d3d12_result (hr, priv->device)) {
     GST_DEBUG_OBJECT (decoder, "Couldn't signal fence value");
@@ -1004,12 +988,19 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
   void *map_data;
   HRESULT hr;
   GstVideoFrame vframe;
+  ID3D12CommandQueue *copy_queue;
 
   g_return_val_if_fail (GST_IS_D3D12_DECODER (decoder), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), GST_FLOW_ERROR);
   g_return_val_if_fail (picture != nullptr, GST_FLOW_ERROR);
 
   priv = decoder->priv;
+
+  copy_queue = gst_d3d12_device_get_copy_queue (priv->device);
+  if (!copy_queue) {
+    ret = GST_FLOW_ERROR;
+    goto error;
+  }
 
   decoder_pic = (GstD3D12DecoderPicture *)
       gst_codec_picture_get_user_data (picture);
@@ -1120,10 +1111,10 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
   }
 
   list[0] = priv->copy_cl.Get ();
-  priv->copy_cq->ExecuteCommandLists (1, list);
+  copy_queue->ExecuteCommandLists (1, list);
 
-  fence_value = priv->fence_value.fetch_add (1);
-  hr = priv->copy_cq->Signal (gst_d3d12_fence_get_handle (priv->fence),
+  fence_value = gst_d3d12_device_get_fence_value (priv->device);
+  hr = copy_queue->Signal (gst_d3d12_fence_get_handle (priv->fence),
       fence_value);
   if (!gst_d3d12_result (hr, priv->device)) {
     ret = GST_FLOW_ERROR;
