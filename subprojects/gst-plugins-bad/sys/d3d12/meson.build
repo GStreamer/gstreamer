@@ -26,7 +26,7 @@ endif
 d3d12_lib = cc.find_library('d3d12', required : d3d12_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d12_option)
 
-if not gstdxva_dep.found() or not d3d12_lib.found() or not dxgi_lib.found()
+if not gstdxva_dep.found() or not gstd3d11_dep.found() or not d3d12_lib.found() or not dxgi_lib.found()
   if d3d12_option.enabled()
     error('The d3d12 was enabled explicitly, but required GstD3D11 dependencies were not found.')
   endif
@@ -74,7 +74,7 @@ gstd3d12 = library('gstd3d12',
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep,
-                  gstdxva_dep, d3d12_lib, dxgi_lib],
+                  gstdxva_dep, gstd3d11_dep, d3d12_lib, dxgi_lib],
   install : true,
   install_dir : plugins_install_dir,
 )

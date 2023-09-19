@@ -276,7 +276,7 @@ gst_d3d12_h264_dec_output_picture (GstDxvaH264Decoder * decoder,
 
 void
 gst_d3d12_h264_dec_register (GstPlugin * plugin, GstD3D12Device * device,
-    ID3D12VideoDevice * video_device, guint rank)
+    ID3D12VideoDevice * video_device, guint rank, gboolean d3d11_interop)
 {
   GType type;
   gchar *type_name;
@@ -299,7 +299,7 @@ gst_d3d12_h264_dec_register (GstPlugin * plugin, GstD3D12Device * device,
 
   type_info.class_data =
       gst_d3d12_decoder_check_feature_support (device, video_device,
-      GST_DXVA_CODEC_H264);
+      GST_DXVA_CODEC_H264, d3d11_interop);
   if (!type_info.class_data)
     return;
 
