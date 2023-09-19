@@ -440,8 +440,8 @@ gst_pulse_device_provider_probe (GstDeviceProvider * provider)
     state = pa_context_get_state (c);
 
     if (!PA_CONTEXT_IS_GOOD (state)) {
-      GST_ELEMENT_ERROR (self, RESOURCE, FAILED, ("Failed to connect: %s",
-              pa_strerror (pa_context_errno (c))), (NULL));
+      GST_ERROR_OBJECT (self, "Failed to connect: %s",
+          pa_strerror (pa_context_errno (c)));
       goto failed;
     }
 
