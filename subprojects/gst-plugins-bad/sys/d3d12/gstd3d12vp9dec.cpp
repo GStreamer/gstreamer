@@ -56,6 +56,7 @@ gst_d3d12_vp9_dec_class_init (GstD3D12Vp9DecClass * klass, gpointer data)
   GstDxvaVp9DecoderClass *dxva_class = GST_DXVA_VP9_DECODER_CLASS (klass);
   GstD3D12DecoderClassData *cdata = (GstD3D12DecoderClassData *) data;
 
+  gobject_class->finalize = gst_d3d12_vp9_dec_finalize;
   gobject_class->get_property = gst_d3d12_vp9_dec_get_property;
 
   element_class->set_context =
@@ -92,6 +93,21 @@ gst_d3d12_vp9_dec_class_init (GstD3D12Vp9DecClass * klass, gpointer data)
 static void
 gst_d3d12_vp9_dec_init (GstD3D12Vp9Dec * self)
 {
+  GstD3D12Vp9DecClass *klass = GST_D3D12_VP9_DEC_GET_CLASS (self);
+  GstD3D12DecoderSubClassData *cdata = &klass->class_data;
+
+  self->decoder = gst_d3d12_decoder_new (GST_DXVA_CODEC_VP9,
+      cdata->adapter_luid);
+}
+
+static void
+gst_d3d12_vp9_dec_finalize (GObject * object)
+{
+  GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (object);
+
+  gst_object_unref (self->decoder);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -108,11 +124,8 @@ static void
 gst_d3d12_vp9_dec_set_context (GstElement * element, GstContext * context)
 {
   GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (element);
-  GstD3D12Vp9DecClass *klass = GST_D3D12_VP9_DEC_GET_CLASS (self);
-  GstD3D12DecoderSubClassData *cdata = &klass->class_data;
 
-  gst_d3d12_handle_set_context_for_adapter_luid (element,
-      context, cdata->adapter_luid, &self->device);
+  gst_d3d12_decoder_set_context (self->decoder, element, context);
 
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
@@ -121,11 +134,8 @@ static gboolean
 gst_d3d12_vp9_dec_open (GstVideoDecoder * decoder)
 {
   GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (decoder);
-  GstD3D12Vp9DecClass *klass = GST_D3D12_VP9_DEC_GET_CLASS (self);
-  GstD3D12DecoderSubClassData *cdata = &klass->class_data;
 
-  return gst_d3d12_decoder_proxy_open (decoder, cdata, &self->device,
-      &self->decoder);
+  return gst_d3d12_decoder_open (self->decoder, GST_ELEMENT (self));
 }
 
 static gboolean
@@ -133,10 +143,7 @@ gst_d3d12_vp9_dec_close (GstVideoDecoder * decoder)
 {
   GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (decoder);
 
-  gst_clear_object (&self->decoder);
-  gst_clear_object (&self->device);
-
-  return TRUE;
+  return gst_d3d12_decoder_close (self->decoder);
 }
 
 static gboolean
@@ -169,16 +176,8 @@ gst_d3d12_vp9_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (decoder);
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:
-      if (gst_d3d12_handle_context_query (GST_ELEMENT (decoder),
-              query, self->device)) {
-        return TRUE;
-      }
-      break;
-    default:
-      break;
-  }
+  if (gst_d3d12_decoder_handle_query (self->decoder, GST_ELEMENT (self), query))
+    return TRUE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
 }
@@ -188,16 +187,8 @@ gst_d3d12_vp9_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (decoder);
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:
-      if (gst_d3d12_handle_context_query (GST_ELEMENT (decoder),
-              query, self->device)) {
-        return TRUE;
-      }
-      break;
-    default:
-      break;
-  }
+  if (gst_d3d12_decoder_handle_query (self->decoder, GST_ELEMENT (self), query))
+    return TRUE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
 }
@@ -207,8 +198,7 @@ gst_d3d12_vp9_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
 {
   GstD3D12Vp9Dec *self = GST_D3D12_VP9_DEC (decoder);
 
-  if (self->decoder)
-    gst_d3d12_decoder_sink_event (self->decoder, event);
+  gst_d3d12_decoder_sink_event (self->decoder, event);
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }

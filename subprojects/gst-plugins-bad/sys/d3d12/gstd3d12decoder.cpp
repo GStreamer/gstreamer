@@ -207,14 +207,7 @@ struct GstD3D12DecoderPrivate
       gst_buffer_pool_set_active (output_pool, FALSE);
       gst_object_unref (output_pool);
     }
-
-    if (device)
-      gst_object_unref (device);
   }
-
-  GstD3D12Device *device = nullptr;
-
-  GstDxvaCodec codec = GST_DXVA_CODEC_NONE;
 
   /* reference textures */
   GstBufferPool *dpb_pool = nullptr;
@@ -284,6 +277,12 @@ struct _GstD3D12Decoder
 {
   GstObject parent;
 
+  GstDxvaCodec codec;
+  GstD3D12Device *device;
+  gint64 adapter_luid;
+
+  CRITICAL_SECTION context_lock;
+
   GstD3D12DecoderPrivate *priv;
 };
 
@@ -303,9 +302,7 @@ gst_d3d12_decoder_class_init (GstD3D12DecoderClass * klass)
 static void
 gst_d3d12_decoder_init (GstD3D12Decoder * self)
 {
-  GstD3D12DecoderPrivate *priv;
-
-  self->priv = priv = new GstD3D12DecoderPrivate ();
+  InitializeCriticalSection (&self->context_lock);
 }
 
 static void
@@ -313,7 +310,8 @@ gst_d3d12_decoder_finalize (GObject * object)
 {
   GstD3D12Decoder *self = GST_D3D12_DECODER (object);
 
-  delete self->priv;
+  gst_d3d12_decoder_close (self);
+  DeleteCriticalSection (&self->context_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -356,80 +354,107 @@ gst_d3d12_decoder_reset (GstD3D12Decoder * self)
 }
 
 GstD3D12Decoder *
-gst_d3d12_decoder_new (GstD3D12Device * device, GstDxvaCodec codec)
+gst_d3d12_decoder_new (GstDxvaCodec codec, gint64 adapter_luid)
 {
   GstD3D12Decoder *self;
-  GstD3D12DecoderPrivate *priv;
-  ComPtr < ID3D12VideoDevice > video_device;
-  ComPtr < ID3D12CommandAllocator > copy_ca;
-  ComPtr < ID3D12GraphicsCommandList > copy_cl;
-  ComPtr < ID3D12CommandAllocator > ca;
-  ComPtr < ID3D12VideoDecodeCommandList > cl;
-  ComPtr < ID3D12CommandQueue > cq;
-  ID3D12Device *device_handle;
-  D3D12_COMMAND_QUEUE_DESC desc = { };
-  HRESULT hr;
 
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (codec > GST_DXVA_CODEC_NONE, nullptr);
   g_return_val_if_fail (codec < GST_DXVA_CODEC_LAST, nullptr);
 
-  device_handle = gst_d3d12_device_get_device_handle (device);
-  hr = device_handle->QueryInterface (IID_PPV_ARGS (&video_device));
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  hr = device_handle->CreateCommandAllocator (D3D12_COMMAND_LIST_TYPE_COPY,
-      IID_PPV_ARGS (&copy_ca));
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  hr = device_handle->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_COPY,
-      copy_ca.Get (), nullptr, IID_PPV_ARGS (&copy_cl));
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  hr = copy_cl->Close ();
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  hr = device_handle->CreateCommandAllocator
-      (D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, IID_PPV_ARGS (&ca));
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  hr = device_handle->CreateCommandList (0,
-      D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, ca.Get (), nullptr,
-      IID_PPV_ARGS (&cl));
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  hr = cl->Close ();
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
-  desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
-  desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-  hr = device_handle->CreateCommandQueue (&desc, IID_PPV_ARGS (&cq));
-  if (!gst_d3d12_result (hr, device))
-    return nullptr;
-
   self = (GstD3D12Decoder *) g_object_new (GST_TYPE_D3D12_DECODER, nullptr);
-  priv = self->priv;
-  priv->codec = codec;
-  priv->device = (GstD3D12Device *) gst_object_ref (device);
-  priv->fence = gst_d3d12_fence_new (device);
-  priv->video_device = video_device;
-  priv->copy_ca = copy_ca;
-  priv->copy_cl = copy_cl;
-  priv->ca = ca;
-  priv->cl = cl;
-  priv->cq = cq;
-  g_object_get (priv->device, "adapter-luid", &priv->luid, nullptr);
-
-  gst_object_ref_sink (self);
+  self->codec = codec;
+  self->adapter_luid = adapter_luid;
 
   return self;
+}
+
+gboolean
+gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
+{
+  if (!gst_d3d12_ensure_element_data_for_adapter_luid (element,
+          decoder->adapter_luid, &decoder->device)) {
+    GST_ERROR_OBJECT (element, "Cannot create d3d12device");
+    return FALSE;
+  }
+
+  if (!decoder->priv) {
+    GstD3D12DecoderPrivate *priv;
+    ComPtr < ID3D12VideoDevice > video_device;
+    ComPtr < ID3D12CommandAllocator > copy_ca;
+    ComPtr < ID3D12GraphicsCommandList > copy_cl;
+    ComPtr < ID3D12CommandAllocator > ca;
+    ComPtr < ID3D12VideoDecodeCommandList > cl;
+    ComPtr < ID3D12CommandQueue > cq;
+    ID3D12Device *device_handle;
+    D3D12_COMMAND_QUEUE_DESC desc = { };
+    HRESULT hr;
+
+    device_handle = gst_d3d12_device_get_device_handle (decoder->device);
+    hr = device_handle->QueryInterface (IID_PPV_ARGS (&video_device));
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    hr = device_handle->CreateCommandAllocator (D3D12_COMMAND_LIST_TYPE_COPY,
+        IID_PPV_ARGS (&copy_ca));
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    hr = device_handle->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_COPY,
+        copy_ca.Get (), nullptr, IID_PPV_ARGS (&copy_cl));
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    hr = copy_cl->Close ();
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    hr = device_handle->CreateCommandAllocator
+        (D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, IID_PPV_ARGS (&ca));
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    hr = device_handle->CreateCommandList (0,
+        D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, ca.Get (), nullptr,
+        IID_PPV_ARGS (&cl));
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    hr = cl->Close ();
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
+    desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+    hr = device_handle->CreateCommandQueue (&desc, IID_PPV_ARGS (&cq));
+    if (!gst_d3d12_result (hr, decoder->device))
+      return FALSE;
+
+    priv = new GstD3D12DecoderPrivate ();
+    priv->fence = gst_d3d12_fence_new (decoder->device);
+    priv->video_device = video_device;
+    priv->copy_ca = copy_ca;
+    priv->copy_cl = copy_cl;
+    priv->ca = ca;
+    priv->cl = cl;
+    priv->cq = cq;
+
+    decoder->priv = priv;
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_decoder_close (GstD3D12Decoder * decoder)
+{
+  if (decoder->priv) {
+    delete decoder->priv;
+    decoder->priv = nullptr;
+  }
+
+  gst_clear_object (&decoder->device);
+
+  return TRUE;
 }
 
 GstFlowReturn
@@ -450,9 +475,14 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   GstD3D12DecoderPrivate *priv = decoder->priv;
   GstD3D12Format device_format;
 
+  if (!priv) {
+    GST_ERROR_OBJECT (decoder, "Device is not configured");
+    return GST_FLOW_ERROR;
+  }
+
   gst_d3d12_decoder_reset (decoder);
 
-  if (!gst_d3d12_device_get_format (priv->device,
+  if (!gst_d3d12_device_get_format (decoder->device,
           GST_VIDEO_INFO_FORMAT (info), &device_format) ||
       device_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (decoder, "Could not determine dxgi format from %s",
@@ -460,7 +490,7 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  if (priv->codec == GST_DXVA_CODEC_H264)
+  if (decoder->codec == GST_DXVA_CODEC_H264)
     dpb_size += 1;
 
   priv->input_state = gst_video_codec_state_ref (input_state);
@@ -529,7 +559,7 @@ gst_d3d12_decoder_prepare_pool (GstD3D12Decoder * self)
     max_buffers = 0;
   }
 
-  params = gst_d3d12_allocation_params_new (priv->device, info, alloc_flags,
+  params = gst_d3d12_allocation_params_new (self->device, info, alloc_flags,
       resource_flags);
 
   gst_video_alignment_reset (&align);
@@ -540,7 +570,7 @@ gst_d3d12_decoder_prepare_pool (GstD3D12Decoder * self)
   if (!priv->use_array_of_texture)
     params->desc[0].DepthOrArraySize = (UINT16) max_buffers;
 
-  priv->dpb_pool = gst_d3d12_buffer_pool_new (priv->device);
+  priv->dpb_pool = gst_d3d12_buffer_pool_new (self->device);
   config = gst_buffer_pool_get_config (priv->dpb_pool);
   caps = gst_video_info_to_caps (info);
 
@@ -560,10 +590,10 @@ gst_d3d12_decoder_prepare_pool (GstD3D12Decoder * self)
    * texture pool for outputting without VIDEO_DECODE_REFERENCE_ONLY flag */
   if (priv->reference_only) {
     GST_DEBUG_OBJECT (self, "Creating output only allocator");
-    priv->output_pool = gst_d3d12_buffer_pool_new (priv->device);
+    priv->output_pool = gst_d3d12_buffer_pool_new (self->device);
     config = gst_buffer_pool_get_config (priv->output_pool);
 
-    params = gst_d3d12_allocation_params_new (priv->device, info, alloc_flags,
+    params = gst_d3d12_allocation_params_new (self->device, info, alloc_flags,
         D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
     gst_d3d12_allocation_params_alignment (params, &align);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
@@ -739,7 +769,7 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
 
   if (!priv->bitstream) {
     ID3D12Device *device_handle =
-        gst_d3d12_device_get_device_handle (priv->device);
+        gst_d3d12_device_get_device_handle (self->device);
     ComPtr < ID3D12Resource > bitstream;
     size_t alloc_size = GST_ROUND_UP_128 (size) + 1024;
 
@@ -749,7 +779,7 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
     hr = device_handle->CreateCommittedResource (&heap_prop,
         D3D12_HEAP_FLAG_NONE, &desc,
         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&bitstream));
-    if (!gst_d3d12_result (hr, priv->device)) {
+    if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Failed to create bitstream buffer");
       return FALSE;
     }
@@ -762,7 +792,7 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
   }
 
   hr = priv->bitstream->Map (0, nullptr, &map_data);
-  if (!gst_d3d12_result (hr, priv->device)) {
+  if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't map bitstream buffer");
     return FALSE;
   }
@@ -819,13 +849,13 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   memset (&out_args, 0, sizeof (D3D12_VIDEO_DECODE_OUTPUT_STREAM_ARGUMENTS));
 
   hr = priv->ca->Reset ();
-  if (!gst_d3d12_result (hr, priv->device)) {
+  if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't reset command allocator");
     return GST_FLOW_ERROR;
   }
 
   hr = priv->cl->Reset (priv->ca.Get ());
-  if (!gst_d3d12_result (hr, priv->device)) {
+  if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't reset command list");
     return GST_FLOW_ERROR;
   }
@@ -959,7 +989,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   priv->cl->ResourceBarrier (post_barriers.size (), &post_barriers[0]);
 
   hr = priv->cl->Close ();
-  if (!gst_d3d12_result (hr, priv->device)) {
+  if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't record decoding command");
     return GST_FLOW_ERROR;
   }
@@ -968,9 +998,9 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   priv->cq->ExecuteCommandLists (1, cl);
 
   fence_handle = gst_d3d12_fence_get_handle (priv->fence);
-  fence_value = gst_d3d12_device_get_fence_value (priv->device);
+  fence_value = gst_d3d12_device_get_fence_value (decoder->device);
   hr = priv->cq->Signal (fence_handle, fence_value);
-  if (!gst_d3d12_result (hr, priv->device)) {
+  if (!gst_d3d12_result (hr, decoder->device)) {
     GST_DEBUG_OBJECT (decoder, "Couldn't signal fence value");
     return GST_FLOW_ERROR;
   }
@@ -992,7 +1022,7 @@ gst_d3d12_decoder_ensure_staging_texture (GstD3D12Decoder * self)
   ComPtr < ID3D12Resource > staging;
   HRESULT hr;
   UINT64 size;
-  ID3D12Device *device = gst_d3d12_device_get_device_handle (priv->device);
+  ID3D12Device *device = gst_d3d12_device_get_device_handle (self->device);
   D3D12_RESOURCE_DESC tex_desc =
       CD3D12_RESOURCE_DESC::Tex2D (priv->decoder_format,
       priv->aligned_width, priv->aligned_height);
@@ -1006,7 +1036,7 @@ gst_d3d12_decoder_ensure_staging_texture (GstD3D12Decoder * self)
 
   hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
       &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS (&staging));
-  if (!gst_d3d12_result (hr, priv->device))
+  if (!gst_d3d12_result (hr, self->device))
     return FALSE;
 
   priv->staging = staging;
@@ -1088,7 +1118,7 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
 
   priv = decoder->priv;
 
-  copy_queue = gst_d3d12_device_get_copy_queue (priv->device);
+  copy_queue = gst_d3d12_device_get_copy_queue (decoder->device);
   if (!copy_queue) {
     ret = GST_FLOW_ERROR;
     goto error;
@@ -1168,7 +1198,7 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
     mem = gst_buffer_peek_memory (frame->output_buffer, 0);
     if (gst_is_d3d12_memory (mem)) {
       dmem = GST_D3D12_MEMORY_CAST (mem);
-      if (dmem->device == priv->device) {
+      if (dmem->device == decoder->device) {
         out_resource = gst_d3d12_memory_get_resource_handle (dmem);
         gst_d3d12_memory_get_subresource_index (dmem, 0, &out_subresource[0]);
         gst_d3d12_memory_get_subresource_index (dmem, 1, &out_subresource[1]);
@@ -1194,13 +1224,13 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
 
     /* Copy texture to staging */
     hr = priv->copy_ca->Reset ();
-    if (!gst_d3d12_result (hr, priv->device)) {
+    if (!gst_d3d12_result (hr, decoder->device)) {
       ret = GST_FLOW_ERROR;
       goto error;
     }
 
     hr = priv->copy_cl->Reset (priv->copy_ca.Get (), nullptr);
-    if (!gst_d3d12_result (hr, priv->device)) {
+    if (!gst_d3d12_result (hr, decoder->device)) {
       ret = GST_FLOW_ERROR;
       goto error;
     }
@@ -1243,7 +1273,7 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
     }
 
     hr = priv->copy_cl->Close ();
-    if (!gst_d3d12_result (hr, priv->device)) {
+    if (!gst_d3d12_result (hr, decoder->device)) {
       GST_ERROR_OBJECT (videodec, "Couldn't record copy command");
       ret = GST_FLOW_ERROR;
       goto error;
@@ -1252,10 +1282,10 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
     list[0] = priv->copy_cl.Get ();
     copy_queue->ExecuteCommandLists (1, list);
 
-    fence_value = gst_d3d12_device_get_fence_value (priv->device);
+    fence_value = gst_d3d12_device_get_fence_value (decoder->device);
     hr = copy_queue->Signal (gst_d3d12_fence_get_handle (out_fence),
         fence_value);
-    if (!gst_d3d12_result (hr, priv->device)) {
+    if (!gst_d3d12_result (hr, decoder->device)) {
       ret = GST_FLOW_ERROR;
       goto error;
     }
@@ -1266,7 +1296,7 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
       gst_d3d12_fence_wait (out_fence);
 
       hr = priv->staging->Map (0, nullptr, &map_data);
-      if (!gst_d3d12_result (hr, priv->device)) {
+      if (!gst_d3d12_result (hr, decoder->device)) {
         ret = GST_FLOW_ERROR;
         goto error;
       }
@@ -1303,7 +1333,7 @@ error:
 }
 
 static gboolean
-gst_d3d12_decoder_open (GstD3D12Decoder * self)
+gst_d3d12_decoder_create (GstD3D12Decoder * self)
 {
   GstD3D12DecoderPrivate *priv = self->priv;
   HRESULT hr;
@@ -1327,7 +1357,7 @@ gst_d3d12_decoder_open (GstD3D12Decoder * self)
   for (guint i = 0; i < G_N_ELEMENTS (format_list); i++) {
     decoder_foramt = nullptr;
 
-    if (format_list[i].codec != priv->codec)
+    if (format_list[i].codec != self->codec)
       continue;
 
     for (guint j = 0; j < G_N_ELEMENTS (format_list[i].format); j++) {
@@ -1415,7 +1445,7 @@ gst_d3d12_decoder_open (GstD3D12Decoder * self)
     desc.NodeMask = 0;
     desc.Configuration = support.Configuration;
     hr = video_device->CreateVideoDecoder (&desc, IID_PPV_ARGS (&decoder));
-    if (!gst_d3d12_result (hr, priv->device)) {
+    if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Failed to create decoder");
       return FALSE;
     }
@@ -1433,7 +1463,7 @@ gst_d3d12_decoder_open (GstD3D12Decoder * self)
   heap_desc.BitRate = 0;
   heap_desc.MaxDecodePictureBufferCount = priv->dpb_size;
   hr = video_device->CreateVideoDecoderHeap (&heap_desc, IID_PPV_ARGS (&heap));
-  if (!gst_d3d12_result (hr, priv->device)) {
+  if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to create decoder heap");
     return FALSE;
   }
@@ -1525,7 +1555,7 @@ gst_d3d12_decoder_negotiate (GstD3D12Decoder * decoder,
 
   priv->downstream_supports_d3d12 = d3d12_supported;
 
-  return gst_d3d12_decoder_open (decoder);
+  return gst_d3d12_decoder_create (decoder);
 }
 
 gboolean
@@ -1577,7 +1607,7 @@ gst_d3d12_decoder_decide_allocation (GstD3D12Decoder * decoder,
       gst_clear_object (&pool);
     } else {
       GstD3D12BufferPool *dpool = GST_D3D12_BUFFER_POOL (pool);
-      if (dpool->device != priv->device) {
+      if (dpool->device != decoder->device) {
         GST_DEBUG_OBJECT (videodec, "Different device, will create new one");
         gst_clear_object (&pool);
       }
@@ -1586,7 +1616,7 @@ gst_d3d12_decoder_decide_allocation (GstD3D12Decoder * decoder,
 
   if (!pool) {
     if (use_d3d12_pool)
-      pool = gst_d3d12_buffer_pool_new (priv->device);
+      pool = gst_d3d12_buffer_pool_new (decoder->device);
     else
       pool = gst_video_buffer_pool_new ();
 
@@ -1606,7 +1636,7 @@ gst_d3d12_decoder_decide_allocation (GstD3D12Decoder * decoder,
 
     params = gst_buffer_pool_config_get_d3d12_allocation_params (config);
     if (!params) {
-      params = gst_d3d12_allocation_params_new (priv->device, &vinfo,
+      params = gst_d3d12_allocation_params_new (decoder->device, &vinfo,
           GST_D3D12_ALLOCATION_FLAG_DEFAULT,
           D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
     } else {
@@ -1704,6 +1734,27 @@ gst_d3d12_decoder_sink_event (GstD3D12Decoder * decoder, GstEvent * event)
     default:
       break;
   }
+}
+
+void
+gst_d3d12_decoder_set_context (GstD3D12Decoder * decoder, GstElement * element,
+    GstContext * context)
+{
+  GstD3D12CSLockGuard lk (&decoder->context_lock);
+
+  gst_d3d12_handle_set_context_for_adapter_luid (element,
+      context, decoder->adapter_luid, &decoder->device);
+}
+
+gboolean
+gst_d3d12_decoder_handle_query (GstD3D12Decoder * decoder, GstElement * element,
+    GstQuery * query)
+{
+  if (GST_QUERY_TYPE (query) != GST_QUERY_CONTEXT)
+    return FALSE;
+
+  GstD3D12CSLockGuard lk (&decoder->context_lock);
+  return gst_d3d12_handle_context_query (element, query, decoder->device);
 }
 
 enum
@@ -2032,28 +2083,4 @@ gst_d3d12_decoder_proxy_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-gboolean
-gst_d3d12_decoder_proxy_open (GstVideoDecoder * videodec,
-    GstD3D12DecoderSubClassData * subclass_data, GstD3D12Device ** device,
-    GstD3D12Decoder ** decoder)
-{
-  GstElement *elem = GST_ELEMENT (videodec);
-
-  if (!gst_d3d12_ensure_element_data_for_adapter_luid (elem,
-          subclass_data->adapter_luid, device)) {
-    GST_ERROR_OBJECT (elem, "Cannot create d3d12device");
-    return FALSE;
-  }
-
-  *decoder = gst_d3d12_decoder_new (*device, subclass_data->codec);
-
-  if (*decoder == nullptr) {
-    GST_ERROR_OBJECT (elem, "Cannot create d3d12 decoder");
-    gst_clear_object (device);
-    return FALSE;
-  }
-
-  return TRUE;
 }
