@@ -81,7 +81,7 @@ SOURCES += \
     gstplugin.cc \
     gstqtelement.cc \
     gstqtglutility.cc \
-    gstqsgtexture.cc \
+    gstqsgmaterial.cc \
     gstqtoverlay.cc \
     gstqtsink.cc \
     gstqtsrc.cc \
@@ -91,7 +91,7 @@ SOURCES += \
 
 HEADERS += \
 	gstqtelements.h \
-    gstqsgtexture.h \
+    gstqsgmaterial.h \
     gstqtgl.h \
     gstqtglutility.h \
     gstqtoverlay.h \
