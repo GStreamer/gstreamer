@@ -29,7 +29,7 @@ these operations:
 ### Where to File Issues and Feature Requests
 
 - If your issue is security related, please see
-  [GStreamer Security Center][https://gstreamer.freedesktop.org/security/] before
+  [GStreamer Security Center](https://gstreamer.freedesktop.org/security/) before
   continuing.
 
 - Create a new issue if there is no existing report for this problem yet.
