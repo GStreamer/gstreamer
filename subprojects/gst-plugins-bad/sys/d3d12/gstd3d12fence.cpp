@@ -51,7 +51,6 @@ struct _GstD3D12FencePrivate
   HANDLE event_handle;
   std::mutex lock;
   guint64 value = 0;
-  gboolean can_wait = FALSE;
 };
 /* *INDENT-ON* */
 
@@ -108,21 +107,15 @@ gst_d3d12_fence_set_event_on_completion_value (GstD3D12Fence * fence,
     guint64 value)
 {
   GstD3D12FencePrivate *priv;
-  HRESULT hr;
 
   g_return_val_if_fail (fence != nullptr, FALSE);
 
   priv = fence->priv;
 
   std::lock_guard < std::mutex > lk (priv->lock);
-  hr = priv->fence->SetEventOnCompletion (value, priv->event_handle);
-  if (!gst_d3d12_result (hr, fence->device)) {
-    GST_ERROR_OBJECT (fence->device, "Failed to set completion event");
-    return FALSE;
-  }
-
-  priv->value = value;
-  priv->can_wait = TRUE;
+  auto current = priv->fence->GetCompletedValue ();
+  if (value > current)
+    priv->value = value;
 
   return TRUE;
 }
@@ -143,15 +136,27 @@ gst_d3d12_fence_wait_for (GstD3D12Fence * fence, guint timeout_ms)
   GstD3D12FencePrivate *priv = fence->priv;
 
   std::lock_guard < std::mutex > lk (priv->lock);
-  if (!priv->can_wait)
+  if (!priv->value)
     return;
 
-  GST_TRACE ("Waiting for fence to be signalled with value %" G_GUINT64_FORMAT,
-      priv->value);
-  WaitForSingleObjectEx (priv->event_handle, timeout_ms, FALSE);
-  GST_TRACE ("Signalled with value %" G_GUINT64_FORMAT, priv->value);
+  auto current = priv->fence->GetCompletedValue ();
+  if (current < priv->value) {
+    HRESULT hr;
+    GST_TRACE ("Waiting for fence to be signalled with value %" G_GUINT64_FORMAT
+        ", current: %" G_GUINT64_FORMAT, priv->value, current);
 
-  priv->can_wait = FALSE;
+    hr = priv->fence->SetEventOnCompletion (priv->value, priv->event_handle);
+    if (!gst_d3d12_result (hr, fence->device)) {
+      GST_ERROR_OBJECT (fence->device, "Failed to set completion event");
+      return;
+    }
+
+    WaitForSingleObjectEx (priv->event_handle, timeout_ms, FALSE);
+    GST_TRACE ("Signalled with value %" G_GUINT64_FORMAT, priv->value);
+  } else {
+    GST_TRACE ("target %" G_GUINT64_FORMAT " <= target: %" G_GUINT64_FORMAT,
+        priv->value, current);
+  }
 }
 
 void
