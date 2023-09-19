@@ -137,7 +137,7 @@ gst_d3d11_vp9_dec_open (GstVideoDecoder * decoder)
    * reliable, since 1b means that it's supported and 0b indicates it may not be
    * supported. Because some GPUs can support it even if the bit 12 is not
    * set, do filtering by vendor for now (AMD and Intel looks fine) */
-  if (gst_d3d11_get_device_vendor (self->device) ==
+  if (gst_d3d11_get_device_vendor_from_id (cdata->vendor_id) ==
       GST_D3D11_DEVICE_VENDOR_NVIDIA) {
     gst_vp9_decoder_set_non_keyframe_format_change_support (vp9dec, FALSE);
   }

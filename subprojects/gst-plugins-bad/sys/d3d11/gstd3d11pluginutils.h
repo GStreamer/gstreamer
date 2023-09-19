@@ -57,6 +57,8 @@ gboolean        gst_d3d11_is_windows_8_or_greater   (void);
 
 GstD3D11DeviceVendor gst_d3d11_get_device_vendor    (GstD3D11Device * device);
 
+GstD3D11DeviceVendor gst_d3d11_get_device_vendor_from_id (guint vendor_id);
+
 gboolean        gst_d3d11_hdr_meta_data_to_dxgi     (GstVideoMasteringDisplayInfo * minfo,
                                                      GstVideoContentLightLevel * cll,
                                                      DXGI_HDR_METADATA_HDR10 * dxgi_hdr10);

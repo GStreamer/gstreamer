@@ -127,24 +127,11 @@ gst_d3d11_is_windows_8_or_greater (void)
 }
 
 GstD3D11DeviceVendor
-gst_d3d11_get_device_vendor (GstD3D11Device * device)
+gst_d3d11_get_device_vendor_from_id (guint vendor_id)
 {
-  guint device_id = 0;
-  guint vendor_id = 0;
-  gchar *desc = NULL;
   GstD3D11DeviceVendor vendor = GST_D3D11_DEVICE_VENDOR_UNKNOWN;
 
-  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device),
-      GST_D3D11_DEVICE_VENDOR_UNKNOWN);
-
-  g_object_get (device, "device-id", &device_id, "vendor-id", &vendor_id,
-      "description", &desc, NULL);
-
   switch (vendor_id) {
-    case 0:
-      if (device_id == 0 && desc && g_strrstr (desc, "SraKmd"))
-        vendor = GST_D3D11_DEVICE_VENDOR_XBOX;
-      break;
     case 0x1002:
     case 0x1022:
       vendor = GST_D3D11_DEVICE_VENDOR_AMD;
@@ -162,9 +149,32 @@ gst_d3d11_get_device_vendor (GstD3D11Device * device)
       break;
   }
 
+  return vendor;
+}
+
+GstD3D11DeviceVendor
+gst_d3d11_get_device_vendor (GstD3D11Device * device)
+{
+  guint device_id = 0;
+  guint vendor_id = 0;
+  gchar *desc = nullptr;
+  GstD3D11DeviceVendor vendor = GST_D3D11_DEVICE_VENDOR_UNKNOWN;
+
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device),
+      GST_D3D11_DEVICE_VENDOR_UNKNOWN);
+
+  g_object_get (device, "device-id", &device_id, "vendor-id", &vendor_id,
+      "description", &desc, nullptr);
+
+  if (device_id == 0 && desc && g_strrstr (desc, "SraKmd"))
+    vendor = GST_D3D11_DEVICE_VENDOR_XBOX;
+
   g_free (desc);
 
-  return vendor;
+  if (vendor != GST_D3D11_DEVICE_VENDOR_UNKNOWN)
+    return vendor;
+
+  return gst_d3d11_get_device_vendor_from_id (vendor_id);
 }
 
 gboolean
