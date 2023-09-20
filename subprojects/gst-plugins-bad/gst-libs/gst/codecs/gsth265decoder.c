@@ -1842,14 +1842,6 @@ gst_h265_decoder_start_current_picture (GstH265Decoder * self)
     return GST_FLOW_OK;
   }
 
-  /* If subclass didn't update output state at this point,
-   * marking this picture as a discont and stores current input state */
-  if (priv->input_state_changed) {
-    gst_h265_picture_set_discont_state (priv->current_picture,
-        self->input_state);
-    priv->input_state_changed = FALSE;
-  }
-
   if (!gst_h265_decoder_prepare_rps (self, &priv->current_slice,
           priv->current_picture)) {
     GST_WARNING_OBJECT (self, "Failed to prepare ref pic set");
@@ -1885,6 +1877,14 @@ gst_h265_decoder_start_current_picture (GstH265Decoder * self)
       gst_clear_h265_picture (&priv->current_picture);
       return ret;
     }
+  }
+
+  /* If subclass didn't update output state at this point,
+   * marking this picture as a discont and stores current input state */
+  if (priv->input_state_changed) {
+    gst_h265_picture_set_discont_state (priv->current_picture,
+        self->input_state);
+    priv->input_state_changed = FALSE;
   }
 
   return GST_FLOW_OK;
