@@ -1034,6 +1034,25 @@ GST_START_TEST (test_flags)
 
 GST_END_TEST;
 
+GST_START_TEST (test_strict)
+{
+  GstStructure *s;
+
+  GstElement *bin = gst_bin_new ("mybin");
+  s = gst_structure_new ("test-struct", "obj", GST_TYPE_BIN, bin, NULL);
+  fail_unless (s);
+  fail_if (gst_structure_serialize (s, GST_SERIALIZE_FLAG_STRICT));
+  gst_structure_free (s);
+  gst_object_unref (bin);
+
+  s = gst_structure_new ("test-struct", "ptr", G_TYPE_POINTER, NULL, NULL);
+  fail_unless (s);
+  fail_if (gst_structure_serialize (s, GST_SERIALIZE_FLAG_STRICT));
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_structure_suite (void)
 {
@@ -1067,6 +1086,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_filter_and_map_in_place);
   tcase_add_test (tc_chain, test_flagset);
   tcase_add_test (tc_chain, test_flags);
+  tcase_add_test (tc_chain, test_strict);
   return s;
 }
 

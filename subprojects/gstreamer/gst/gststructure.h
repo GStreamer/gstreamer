@@ -33,10 +33,22 @@ GST_API GType _gst_structure_type;
 typedef struct _GstStructure GstStructure;
 
 /**
+ * GST_SERIALIZE_FLAG_STRICT:
+ *
+ * Serialization fails if a value cannot be serialized instead of using
+ * placeholder "NULL" value (e.g. pointers, objects).
+ *
+ * Since: 1.24
+ */
+
+/**
  * GstSerializeFlags:
  * @GST_SERIALIZE_FLAG_NONE: No special flags specified.
  * @GST_SERIALIZE_FLAG_BACKWARD_COMPAT: Serialize using the old format for
  *                                      nested structures.
+ * @GST_SERIALIZE_FLAG_STRICT: Serialization fails if a value cannot be
+ *  serialized instead of using placeholder "NULL" value (e.g. pointers,
+ *  objects). (Since 1.24)
  *
  * Since: 1.20
  */
@@ -44,6 +56,7 @@ typedef enum
 {
   GST_SERIALIZE_FLAG_NONE = 0,
   GST_SERIALIZE_FLAG_BACKWARD_COMPAT = (1 << 0),
+  GST_SERIALIZE_FLAG_STRICT = (1 << 1),
 } GstSerializeFlags;
 
 #define GST_TYPE_STRUCTURE             (_gst_structure_type)

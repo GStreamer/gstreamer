@@ -2033,6 +2033,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
   guint i, len;
   gboolean nested_structs_brackets =
       !(flags & GST_SERIALIZE_FLAG_BACKWARD_COMPAT);
+  gboolean strict = (flags & GST_SERIALIZE_FLAG_STRICT) != 0;
 
   g_return_val_if_fail (s != NULL, FALSE);
 
@@ -2069,7 +2070,8 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
 
       g_string_append_c (s, '[');
       g_string_append (s, g_quark_to_string (substruct->name));
-      priv_gst_structure_append_to_gstring (substruct, s, flags);
+      if (!priv_gst_structure_append_to_gstring (substruct, s, flags))
+        return FALSE;
       g_string_append_c (s, ']');
     } else if (nested_structs_brackets
         && G_VALUE_TYPE (&field->value) == GST_TYPE_CAPS) {
@@ -2081,9 +2083,13 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
     } else if (t) {
       g_string_append (s, t);
       g_free (t);
+      if (strict && G_VALUE_HOLDS_OBJECT (&field->value))
+        return FALSE;
     } else if (G_TYPE_CHECK_VALUE_TYPE (&field->value, G_TYPE_POINTER)) {
       gpointer ptr = g_value_get_pointer (&field->value);
 
+      if (strict)
+        return FALSE;
       if (!ptr)
         g_string_append (s, "NULL");
       else
@@ -2093,6 +2099,8 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
         GST_WARNING ("No value transform to serialize field '%s' of type '%s'",
             g_quark_to_string (field->name),
             _priv_gst_value_gtype_to_abbr (type));
+      if (strict)
+        return FALSE;
       /* TODO(ensonic): don't print NULL if field->value is not empty */
       g_string_append (s, "NULL");
     }
@@ -2168,7 +2176,10 @@ structure_serialize (const GstStructure * structure, GstSerializeFlags flags)
    * avoid unnecessary reallocs within GString */
   s = g_string_sized_new (STRUCTURE_ESTIMATED_STRING_LEN (structure));
   g_string_append (s, g_quark_to_string (structure->name));
-  priv_gst_structure_append_to_gstring (structure, s, flags);
+  if (!priv_gst_structure_append_to_gstring (structure, s, flags)) {
+    g_string_free (s, TRUE);
+    return NULL;
+  }
   return g_string_free (s, FALSE);
 
 }
