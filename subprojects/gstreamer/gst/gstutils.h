@@ -1040,11 +1040,11 @@ gchar *                 gst_element_decorate_stream_id  (GstElement   *element,
 GST_API
 gchar *   gst_element_decorate_stream_id_printf_valist  (GstElement * element,
                                                          const gchar * format,
-                                                         va_list var_args) G_GNUC_PRINTF (2, 0) G_GNUC_MALLOC;;
+                                                         va_list var_args) G_GNUC_PRINTF (2, 0) G_GNUC_MALLOC;
 GST_API
 gchar *          gst_element_decorate_stream_id_printf  (GstElement * element,
                                                          const gchar * format,
-                                                         ...) G_GNUC_PRINTF (2, 3) G_GNUC_MALLOC;;
+                                                         ...) G_GNUC_PRINTF (2, 3) G_GNUC_MALLOC;
 /* util elementfactory functions */
 
 GST_API
