@@ -1049,6 +1049,12 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
           "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
 
+    case AV_CODEC_ID_MXPEG:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-mxpeg",
+          NULL);
+      break;
+
     case AV_CODEC_ID_JPEG2000:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "image/x-j2c",
