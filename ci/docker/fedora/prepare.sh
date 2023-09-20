@@ -237,7 +237,7 @@ rm rustup-init;
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 
 # Apparently rustup did not do that, and it fails now
-cargo install cargo-c --version 0.9.23+cargo-0.72.2
+cargo install cargo-c --version 0.9.24+cargo-0.73.0
 
 rustup --version
 cargo --version
