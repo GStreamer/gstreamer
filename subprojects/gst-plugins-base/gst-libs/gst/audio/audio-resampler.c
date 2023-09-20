@@ -257,7 +257,7 @@ convert_taps_##type##_c (gdouble *tmp_taps, gpointer taps,              \
   for (j = 0; j < n_taps; j++)                                          \
     t[j] = floor (offset + tmp_taps[j] * multiplier / weight);          \
   if (!exact)                                                           \
-    GST_WARNING ("can't find exact taps");                              \
+    GST_DEBUG ("can't find exact taps");                                \
 }
 
 #define MAKE_CONVERT_TAPS_FLOAT_FUNC(type)                              \
