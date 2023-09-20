@@ -2189,6 +2189,183 @@ List of merge requests and issues fixed in 1.22.5
 -   List of Merge Requests applied in 1.22.5
 -   List of Issues fixed in 1.22.5
 
+1.22.6
+
+The sixth 1.22 bug-fix release (1.22.6) was released on 20 September
+2023.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.22.x.
+
+Highlighted bugfixes in 1.22.6
+
+-   Security fixes for the MXF demuxer and H.265 video parser
+-   Fix latency regression in H.264 hardware decoder base class
+-   androidmedia: fix HEVC codec profile registration and fix coded_data
+    handling
+-   decodebin3: fix switching from a raw stream to an encoded stream
+-   gst-inspect: prettier and more correct signal and action signals
+    printing
+-   rtmp2: Allow NULL flash version, omitting the field, for better RTMP
+    server compatibility
+-   rtspsrc: better compatibility with buggy RTSP servers that don’t set
+    a clock-rate
+-   rtpjitterbuffer: fix integer overflow that led to more packets being
+    declared lost than have been lost
+-   v4l2: fix video encoding regression on RPi and fix support for left
+    and top padding
+-   waylandsink: Crop surfaces to their display width height
+-   cerbero: recognise Manjaro; add Rust support for MSVC ARM64; cmake
+    detection fixes
+-   various bug fixes, build fixes, memory leak fixes, and other
+    stability and reliability improvements
+
+gstreamer
+
+-   gst-inspect: prettier and more correct signal printing, and print
+    action signals in g_signal_emit_by_name() format
+-   gst-launch: Disable fault signal handlers on macOS
+
+gst-plugins-base
+
+-   audio: Make sure to stop ringbuffer on error
+-   decodebin3: avoid identity, sinkpad, parsebin leakage when reset
+    input
+-   decodebin3: Ensure the slot is unlinked before linking to decoder
+-   sdp: fix wrong debug log error message for missing clock-rate in
+    caps
+-   sdp: Parse zero clock-rate as default
+
+gst-plugins-good
+
+-   adaptivedemux2: fix memory leak
+-   pulsedeviceprovider: fix incorrect usage of GST_ELEMENT_ERROR
+-   qt: Unbreak build with qt-egl enabled but viv_fb missing
+-   qt: Fix searching of qt5/qt6 tools with qmake in Meson
+-   qtdemux: Fix premature EOS when some files are played in push mode
+-   qtdemux: attach cbcs crypt info at the right moment
+-   rtpjitterbuffer: Avoid integer overflow in max saveable packets
+    calculation with negative offset
+-   videoflip: fix concurrent access when modifying the tag list
+-   v4l2: allocator: Don’t close foreign dmabuf
+-   v4l2: bufferpool: Fix large encoded stream regression
+-   v4l2: bufferpool: Problems when checking for truncated buffer
+-   v4l2: Fix support for left and top padding
+-   v4l2object: clear format lists if source change event is received
+
+gst-plugins-bad
+
+-   androidmedia/enc: handle codec-data before popping
+    GstVideoCodecFrames
+-   androidmedia: fix hevc codec profile registration
+-   androidmedia: Small fixes
+-   androidmedia: Add more null checks (of env) to JNI utilities
+-   applemedia: Fix pixel format for I420 and NV12
+-   audiolatency: Forward latency query and event upstream
+-   av1parser: Fix segmentation params update
+-   codecparsers: Fix MPEG-1 aspect ratio table
+-   d3d11convert: Passthrough allocation query on same caps
+-   h264decoder: Update latency dynamically
+-   h265parser: Allow partially broken hvcC data
+-   h265parser: Fix possible overflow using max_sub_layers_minus1
+-   hlssink2: Always use forward slash separator
+-   mdns: Fix a crash on context error
+-   mxfdemux: Fix integer overflow causing out of bounds writes when
+    handling invalid uncompressed video and check channels for AES3
+-   nvencoder: Fix negotiation error when interlace-mode is unspecified
+-   rtmp2: Allow NULL flash version, omitting the field
+-   rtmp2sink: fix crash if message conversion failed
+-   transcodebin: Fixes for upstream selectable support
+-   va: Fix in error logs functions mismatches
+-   waylandsink: Crop surfaces to their display width height
+-   waylandsink: Fix cropping for video with non-square aspect ratio
+-   webrtc: Fix docs for create-data-channel action signal
+-   win32ipc: Fix pipe handle leak
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-plugins-rs
+
+-   fallbackswitch: locking/deadlock fixes
+-   onvifmetadataparse: Skip metadata frames with unrepresentable UTC
+    time
+-   transcriberbin: Configure audioresample in front of transcriber
+-   webrtcsink: Propagate GstContext messages
+-   webrtcsink: Add support for d3d11 memory and qsvh264enc
+-   webrtcsink: fix TWCC extension adding
+-   webrtcsink: don’t forget to setup encoders for discoveries
+-   webrtcsink: NVIDIA V4L2 encoders always require NVMM memory
+-   meson: Fix handling of optional deps, and don’t require Python 3.8
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   No changes
+
+gst-validate + gst-integration-testsuites
+
+-   gst-validate: Disable fault signal handlers on macOS
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   macos-bison: Update to 3.8.2 and add an ARM64 build
+-   wrap: update libpsl to 0.21.2
+
+Cerbero build tool and packaging changes in 1.22.6
+
+-   Add Rust support for MSVC ARM64
+-   Recognise PERL5LIB as a joinable Unix variable
+-   Recognise Manjaro as an Arch derivative
+-   Fix picking up cmake from build-tools
+
+Contributors to 1.22.6
+
+Akihiro Sagawa, Alicia Boya García, Guillaume Desmottes, Haihua Hu,
+Hugues Fruchet, Ivan Molodetskikh, Jan Alexander Steffens (heftig), Jan
+Schmidt, L. E. Segovia, Mathieu Duponchelle, Matthew Waters, Ming Qian,
+Nicolas Dufresne, Nirbheek Chauhan, Olivier Blin, Olivier Crête,
+Philippe Normand, Piotr Brzeziński, Robert Ayrapetyan, Ryan Pavlik,
+Sebastian Dröge, Seungha Yang, Stéphane Cerveau, Stephan Seitz, Thomas
+Schneider, Tim-Philipp Müller, Víctor Manuel Jáquez Leal, Wang Chuan,
+Xabier Rodriguez Calvar,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.6
+
+-   List of Merge Requests applied in 1.22.6
+-   List of Issues fixed in 1.22.6
+
 Schedule for 1.24
 
 Our next major feature release will be 1.24, and 1.23 will be the
