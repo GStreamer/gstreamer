@@ -55,8 +55,10 @@ struct _GstMpegAudioParse {
 
   gint         rate;
   gint         channels;
+  gint         mode;
   gint         layer;
   gint         version;
+  gint         crc;
 
   GstClockTime max_bitreservoir;
 
@@ -69,8 +71,8 @@ struct _GstMpegAudioParse {
 
   gboolean     sent_codec_tag;
   guint        last_posted_bitrate;
-  gint         last_posted_crc, last_crc;
-  guint        last_posted_channel_mode, last_mode;
+  gint         last_posted_crc;
+  guint        last_posted_channel_mode;
 
   gboolean     outgoing_frame_is_xing_header;
 
