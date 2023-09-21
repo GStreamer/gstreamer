@@ -135,6 +135,11 @@ struct _GstMsdkVPP
   mfxExtBuffer *extra_params[MAX_EXTRA_PARAMS];
   guint num_extra_params;
 
+  mfxExtVideoSignalInfo in_vsi;
+  mfxExtVideoSignalInfo out_vsi;
+  mfxExtMasteringDisplayColourVolume mdcv;
+  mfxExtContentLightLevelInfo cll;
+
   mfxFrameAllocRequest request[2];
   GList* locked_in_surfaces;
   GList* locked_out_surfaces;

@@ -1108,83 +1108,81 @@ ensure_filters (GstMsdkVPP * thiz)
   if (MFX_RUNTIME_VERSION_ATLEAST (thiz->version, 2, 0)) {
     GstVideoInfo *in_vinfo = &thiz->sinkpad_info;
     GstVideoInfo *out_vinfo = &thiz->srcpad_info;
-    mfxExtVideoSignalInfo in_vsi, out_vsi;
-    mfxExtMasteringDisplayColourVolume mdcv;
-    mfxExtContentLightLevelInfo cll;
+    mfxExtVideoSignalInfo *in_vsi = &thiz->in_vsi;
+    mfxExtVideoSignalInfo *out_vsi = &thiz->out_vsi;
+    mfxExtMasteringDisplayColourVolume *mdcv = &thiz->mdcv;
+    mfxExtContentLightLevelInfo *cll = &thiz->cll;
     const guint chroma_den = 50000;
     const guint luma_den = 10000;
     gint tmap = 0;
 
     if (in_vinfo->colorimetry.primaries || in_vinfo->colorimetry.transfer
         || in_vinfo->colorimetry.matrix || in_vinfo->colorimetry.range) {
-      memset (&in_vsi, 0, sizeof (mfxExtVideoSignalInfo));
-      in_vsi.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO_IN;
-      in_vsi.Header.BufferSz = sizeof (in_vsi);
-      in_vsi.ColourDescriptionPresent = 1;
-      in_vsi.VideoFullRange =
+      in_vsi->Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO_IN;
+      in_vsi->Header.BufferSz = sizeof (in_vsi);
+      in_vsi->ColourDescriptionPresent = 1;
+      in_vsi->VideoFullRange =
           (in_vinfo->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255);
-      in_vsi.ColourPrimaries =
+      in_vsi->ColourPrimaries =
           gst_video_color_primaries_to_iso (in_vinfo->colorimetry.primaries);
-      in_vsi.TransferCharacteristics =
+      in_vsi->TransferCharacteristics =
           gst_video_transfer_function_to_iso (in_vinfo->colorimetry.transfer);
-      in_vsi.MatrixCoefficients =
+      in_vsi->MatrixCoefficients =
           gst_video_color_matrix_to_iso (in_vinfo->colorimetry.matrix);
-      gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & in_vsi);
+      gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) in_vsi);
     }
 
     if (thiz->hdr_tone_mapping) {
       if (thiz->have_mdcv) {
-        memset (&mdcv, 0, sizeof (mfxExtMasteringDisplayColourVolume));
-        mdcv.Header.BufferId = MFX_EXTBUFF_MASTERING_DISPLAY_COLOUR_VOLUME_IN;
-        mdcv.Header.BufferSz = sizeof (mfxExtMasteringDisplayColourVolume);
+        mdcv->Header.BufferId = MFX_EXTBUFF_MASTERING_DISPLAY_COLOUR_VOLUME_IN;
+        mdcv->Header.BufferSz = sizeof (mfxExtMasteringDisplayColourVolume);
 
-        mdcv.DisplayPrimariesX[0] =
+        mdcv->DisplayPrimariesX[0] =
             MIN ((thiz->mdcv_info.display_primaries[1].x * chroma_den),
             chroma_den);
-        mdcv.DisplayPrimariesY[0] =
+        mdcv->DisplayPrimariesY[0] =
             MIN ((thiz->mdcv_info.display_primaries[1].y * chroma_den),
             chroma_den);
-        mdcv.DisplayPrimariesX[1] =
+        mdcv->DisplayPrimariesX[1] =
             MIN ((thiz->mdcv_info.display_primaries[2].x * chroma_den),
             chroma_den);
-        mdcv.DisplayPrimariesY[1] =
+        mdcv->DisplayPrimariesY[1] =
             MIN ((thiz->mdcv_info.display_primaries[2].y * chroma_den),
             chroma_den);
-        mdcv.DisplayPrimariesX[2] =
+        mdcv->DisplayPrimariesX[2] =
             MIN ((thiz->mdcv_info.display_primaries[0].x * chroma_den),
             chroma_den);
-        mdcv.DisplayPrimariesY[2] =
+        mdcv->DisplayPrimariesY[2] =
             MIN ((thiz->mdcv_info.display_primaries[0].y * chroma_den),
             chroma_den);
 
-        mdcv.WhitePointX =
+        mdcv->WhitePointX =
             MIN ((thiz->mdcv_info.white_point.x * chroma_den), chroma_den);
-        mdcv.WhitePointY =
+        mdcv->WhitePointY =
             MIN ((thiz->mdcv_info.white_point.y * chroma_den), chroma_den);
 
         /* From vpl spec, MaxDisplayMasteringLuminance is in the unit of 1 nits,
          * MinDisplayMasteringLuminance is in the unit of 0.0001 nits.
          */
-        mdcv.MaxDisplayMasteringLuminance =
+        mdcv->MaxDisplayMasteringLuminance =
             thiz->mdcv_info.max_display_mastering_luminance;
-        mdcv.MinDisplayMasteringLuminance =
+        mdcv->MinDisplayMasteringLuminance =
             thiz->mdcv_info.min_display_mastering_luminance * luma_den;
 
-        gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & mdcv);
+        gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mdcv);
         tmap = 1;
       }
 
       if (thiz->have_cll) {
-        memset (&cll, 0, sizeof (mfxExtContentLightLevelInfo));
-        cll.Header.BufferId = MFX_EXTBUFF_CONTENT_LIGHT_LEVEL_INFO;
-        cll.Header.BufferSz = sizeof (mfxExtContentLightLevelInfo);
+        cll->Header.BufferId = MFX_EXTBUFF_CONTENT_LIGHT_LEVEL_INFO;
+        cll->Header.BufferSz = sizeof (mfxExtContentLightLevelInfo);
 
-        cll.MaxContentLightLevel =
+        cll->MaxContentLightLevel =
             MIN (thiz->cll_info.max_content_light_level, 65535);
-        cll.MaxPicAverageLightLevel =
+        cll->MaxPicAverageLightLevel =
             MIN (thiz->cll_info.max_frame_average_light_level, 65535);
 
-        gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & cll);
+        gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) cll);
         tmap = 1;
       }
     }
@@ -1198,19 +1196,18 @@ ensure_filters (GstMsdkVPP * thiz)
 
     if (out_vinfo->colorimetry.primaries || out_vinfo->colorimetry.transfer
         || out_vinfo->colorimetry.matrix || out_vinfo->colorimetry.range) {
-      memset (&out_vsi, 0, sizeof (mfxExtVideoSignalInfo));
-      out_vsi.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO_OUT;
-      out_vsi.Header.BufferSz = sizeof (out_vsi);
-      out_vsi.ColourDescriptionPresent = 1;
-      out_vsi.VideoFullRange =
+      out_vsi->Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO_OUT;
+      out_vsi->Header.BufferSz = sizeof (out_vsi);
+      out_vsi->ColourDescriptionPresent = 1;
+      out_vsi->VideoFullRange =
           (out_vinfo->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255);
-      out_vsi.ColourPrimaries =
+      out_vsi->ColourPrimaries =
           gst_video_color_primaries_to_iso (out_vinfo->colorimetry.primaries);
-      out_vsi.TransferCharacteristics =
+      out_vsi->TransferCharacteristics =
           gst_video_transfer_function_to_iso (out_vinfo->colorimetry.transfer);
-      out_vsi.MatrixCoefficients =
+      out_vsi->MatrixCoefficients =
           gst_video_color_matrix_to_iso (out_vinfo->colorimetry.matrix);
-      gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) & out_vsi);
+      gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) out_vsi);
     }
   }
 #endif
