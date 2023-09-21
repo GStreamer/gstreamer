@@ -1300,6 +1300,7 @@ get_planar_component (GstVideoFormat format, gchar * x, gchar * y, gchar * z,
     case GST_VIDEO_FORMAT_GBR:
     case GST_VIDEO_FORMAT_GBR_10LE:
     case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
       *x = 'y';
       *y = 'z';
       *z = 'x';
@@ -1988,6 +1989,7 @@ gst_d3d11_converter_update_dest_rect (GstD3D11Converter * self)
     case GST_VIDEO_FORMAT_GBR:
     case GST_VIDEO_FORMAT_GBR_10LE:
     case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
     case GST_VIDEO_FORMAT_GBRA:
     case GST_VIDEO_FORMAT_GBRA_10LE:
     case GST_VIDEO_FORMAT_GBRA_12LE:
@@ -2093,6 +2095,7 @@ gst_d3d11_converter_prepare_output (GstD3D11Converter * self,
     case GST_VIDEO_FORMAT_GBR:
     case GST_VIDEO_FORMAT_GBR_10LE:
     case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
     {
       gchar x, y, z, w;
       guint scale;
@@ -2272,6 +2275,7 @@ gst_d3d11_converter_prepare_sample_texture (GstD3D11Converter * self,
     case GST_VIDEO_FORMAT_GBR:
     case GST_VIDEO_FORMAT_GBR_10LE:
     case GST_VIDEO_FORMAT_GBR_12LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
     case GST_VIDEO_FORMAT_GBRA:
     case GST_VIDEO_FORMAT_GBRA_10LE:
     case GST_VIDEO_FORMAT_GBRA_12LE:
@@ -3027,6 +3031,7 @@ gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self)
       case GST_VIDEO_FORMAT_GBR:
       case GST_VIDEO_FORMAT_GBR_10LE:
       case GST_VIDEO_FORMAT_GBR_12LE:
+      case GST_VIDEO_FORMAT_GBR_16LE:
         priv->clear_color[0][0] = converted[1];
         priv->clear_color[1][0] = converted[2];
         priv->clear_color[2][0] = converted[0];

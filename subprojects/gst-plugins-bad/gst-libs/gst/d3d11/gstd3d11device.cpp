@@ -566,6 +566,7 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_GBR:
       case GST_VIDEO_FORMAT_GBR_10LE:
       case GST_VIDEO_FORMAT_GBR_12LE:
+      case GST_VIDEO_FORMAT_GBR_16LE:
       case GST_VIDEO_FORMAT_GBRA:
       case GST_VIDEO_FORMAT_GBRA_10LE:
       case GST_VIDEO_FORMAT_GBRA_12LE:
