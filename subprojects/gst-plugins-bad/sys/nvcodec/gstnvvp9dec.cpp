@@ -483,7 +483,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     if (frame_hdr->bit_depth == 10) {
       out_format = GST_VIDEO_FORMAT_P010_10LE;
     } else {
-      out_format = GST_VIDEO_FORMAT_P016_LE;
+      out_format = GST_VIDEO_FORMAT_P012_LE;
     }
   }
 

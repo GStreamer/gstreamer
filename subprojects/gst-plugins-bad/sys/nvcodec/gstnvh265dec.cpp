@@ -127,6 +127,8 @@ typedef struct _GstNvH265Dec
   guint init_max_width;
   guint init_max_height;
   gint max_display_delay;
+
+  GstVideoFormat out_format;
 } GstNvH265Dec;
 
 typedef struct _GstNvH265DecClass
@@ -559,6 +561,9 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   guint crop_width, crop_height;
   gboolean modified = FALSE;
   guint max_width, max_height;
+  GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
+  gboolean is_gbr = FALSE;
+  const GstH265VUIParams *vui = &sps->vui_params;
 
   GST_LOG_OBJECT (self, "new sequence");
 
@@ -600,44 +605,59 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
     modified = TRUE;
   }
 
-  if (modified || !gst_nv_decoder_is_configured (self->decoder)) {
-    GstVideoInfo info;
-    GstVideoFormat out_format = GST_VIDEO_FORMAT_UNKNOWN;
+  if (sps->chroma_format_idc == 3 && vui->colour_description_present_flag &&
+      gst_video_color_matrix_from_iso (vui->matrix_coefficients) ==
+      GST_VIDEO_COLOR_MATRIX_RGB) {
+    is_gbr = TRUE;
+  }
 
-    if (self->bitdepth == 8) {
-      if (self->chroma_format_idc == 1) {
+  switch (self->bitdepth) {
+    case 8:
+      if (self->chroma_format_idc == 1)
         out_format = GST_VIDEO_FORMAT_NV12;
-      } else if (self->chroma_format_idc == 3) {
-        out_format = GST_VIDEO_FORMAT_Y444;
-      } else {
-        GST_FIXME_OBJECT (self, "8 bits supports only 4:2:0 or 4:4:4 format");
-      }
-    } else if (self->bitdepth == 10) {
+      else if (self->chroma_format_idc == 3)
+        out_format = is_gbr ? GST_VIDEO_FORMAT_GBR : GST_VIDEO_FORMAT_Y444;
+      break;
+    case 10:
       if (self->chroma_format_idc == 1) {
         out_format = GST_VIDEO_FORMAT_P010_10LE;
       } else if (self->chroma_format_idc == 3) {
-        out_format = GST_VIDEO_FORMAT_Y444_16LE;
-      } else {
-        GST_FIXME_OBJECT (self, "10 bits supports only 4:2:0 or 4:4:4 format");
+        out_format = is_gbr ?
+            GST_VIDEO_FORMAT_GBR_16LE : GST_VIDEO_FORMAT_Y444_16LE;
       }
-    } else if (self->bitdepth == 12 || self->bitdepth == 16) {
+      break;
+    case 12:
       if (self->chroma_format_idc == 1) {
-        out_format = GST_VIDEO_FORMAT_P016_LE;
+        out_format = GST_VIDEO_FORMAT_P012_LE;
       } else if (self->chroma_format_idc == 3) {
-        out_format = GST_VIDEO_FORMAT_Y444_16LE;
-      } else {
-        GST_FIXME_OBJECT (self, "%d bits supports only 4:2:0 or 4:4:4 format",
-            self->bitdepth);
+        out_format = is_gbr ?
+            GST_VIDEO_FORMAT_GBR_16LE : GST_VIDEO_FORMAT_Y444_16LE;
       }
-    }
+      break;
+    default:
+      break;
+  }
 
-    if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
-      GST_ERROR_OBJECT (self, "Could not support bitdepth/chroma format");
-      return GST_FLOW_NOT_NEGOTIATED;
-    }
+  if (out_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_ERROR_OBJECT (self,
+        "Could not support bitdepth (%d) / chroma (%d) format", self->bitdepth,
+        self->chroma_format_idc);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
-    gst_video_info_set_format (&info, out_format, GST_ROUND_UP_2 (self->width),
-        GST_ROUND_UP_2 (self->height));
+  if (self->out_format != out_format) {
+    GST_INFO_OBJECT (self, "Output format changed %s -> %s",
+        gst_video_format_to_string (self->out_format),
+        gst_video_format_to_string (out_format));
+    self->out_format = out_format;
+    modified = TRUE;
+  }
+
+  if (modified || !gst_nv_decoder_is_configured (self->decoder)) {
+    GstVideoInfo info;
+
+    gst_video_info_set_format (&info, self->out_format,
+        GST_ROUND_UP_2 (self->width), GST_ROUND_UP_2 (self->height));
 
     self->max_dpb_size = max_dpb_size;
     max_width = gst_nv_decoder_get_max_output_size (self->coded_width,

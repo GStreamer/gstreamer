@@ -55,6 +55,8 @@
 #include <gst/cuda/gstcudastream.h>
 #include "gstnvdecoder.h"
 #include <string.h>
+#include <string>
+#include <set>
 
 extern "C"
 {
@@ -157,13 +159,13 @@ chroma_format_from_video_format (GstVideoFormat format)
   switch (format) {
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P010_10BE:
+    case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
-    case GST_VIDEO_FORMAT_P016_BE:
       return cudaVideoChromaFormat_420;
     case GST_VIDEO_FORMAT_Y444:
     case GST_VIDEO_FORMAT_Y444_16LE:
-    case GST_VIDEO_FORMAT_Y444_16BE:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_16LE:
       return cudaVideoChromaFormat_444;
     default:
       g_assert_not_reached ();
@@ -180,14 +182,14 @@ output_format_from_video_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_NV12:
       return cudaVideoSurfaceFormat_NV12;
     case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P010_10BE:
+    case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
-    case GST_VIDEO_FORMAT_P016_BE:
       return cudaVideoSurfaceFormat_P016;
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GBR:
       return cudaVideoSurfaceFormat_YUV444;
     case GST_VIDEO_FORMAT_Y444_16LE:
-    case GST_VIDEO_FORMAT_Y444_16BE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
       return cudaVideoSurfaceFormat_YUV444_16Bit;
     default:
       g_assert_not_reached ();
@@ -1067,7 +1069,6 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
   guint bitdepth_minus8[3] = { 0, 2, 4 };
   GstNvDecoderFormatFlags format_flags = (GstNvDecoderFormatFlags) 0;
   guint c_idx, b_idx;
-  guint num_support = 0;
   cudaVideoChromaFormat chroma_list[] = {
 #if 0
     /* FIXME: support monochrome */
@@ -1078,12 +1079,11 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
     cudaVideoChromaFormat_420,
     cudaVideoChromaFormat_444,
   };
-  GValue format_list = G_VALUE_INIT;
-  GValue format = G_VALUE_INIT;
   GValue profile_list = G_VALUE_INIT;
   const GstNvdecoderCodecMap *codec_map = nullptr;
   guint i;
   gboolean ret = FALSE;
+  std::set < std::string > formats;
 
   for (i = 0; i < G_N_ELEMENTS (codec_map_list); i++) {
     if (codec_map_list[i].codec == codec) {
@@ -1127,8 +1127,6 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
     return TRUE;
   }
 
-  g_value_init (&format_list, GST_TYPE_LIST);
-  g_value_init (&format, G_TYPE_STRING);
   g_value_init (&profile_list, GST_TYPE_LIST);
 
   if (CuCtxPushCurrent (cuda_ctx) != CUDA_SUCCESS)
@@ -1180,25 +1178,15 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
       switch (chroma_list[c_idx]) {
         case cudaVideoChromaFormat_420:
           if (bitdepth_minus8[b_idx] == 0) {
-            g_value_set_string (&format, "NV12");
+            formats.insert ("NV12");
           } else if (bitdepth_minus8[b_idx] == 2) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-            g_value_set_string (&format, "P010_10LE");
-#else
-            g_value_set_string (&format, "P010_10BE");
-#endif
+            formats.insert ("P010_10LE");
           } else if (bitdepth_minus8[b_idx] == 4) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-            g_value_set_string (&format, "P016_LE");
-#else
-            g_value_set_string (&format, "P016_BE");
-#endif
+            formats.insert ("P012_LE");
           } else {
             GST_WARNING ("unhandled bitdepth %d", bitdepth_minus8[b_idx] + 8);
             break;
           }
-          num_support++;
-          gst_value_list_append_value (&format_list, &format);
           break;
         case cudaVideoChromaFormat_444:
           if (cudaVideoCodec_JPEG == codec) {
@@ -1208,19 +1196,17 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
           }
 
           if (bitdepth_minus8[b_idx] == 0) {
-            g_value_set_string (&format, "Y444");
+            formats.insert ("Y444");
+            if (codec == cudaVideoCodec_HEVC)
+              formats.insert ("GBR");
           } else if (bitdepth_minus8[b_idx] == 2 || bitdepth_minus8[b_idx] == 4) {
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-            g_value_set_string (&format, "Y444_16LE");
-#else
-            g_value_set_string (&format, "Y444_16BE");
-#endif
+            formats.insert ("Y444_16LE");
+            if (codec == cudaVideoCodec_HEVC)
+              formats.insert ("GBR_16LE");
           } else {
             GST_WARNING ("unhandled bitdepth %d", bitdepth_minus8[b_idx] + 8);
             break;
           }
-          num_support++;
-          gst_value_list_append_value (&format_list, &format);
           break;
         default:
           break;
@@ -1228,35 +1214,74 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
     }
   }
 
-  if (num_support == 0) {
+  if (formats.empty ()) {
     GST_INFO ("device can not support %s", codec_map->codec_name);
     goto done;
   }
-
-  src_templ = gst_caps_new_simple ("video/x-raw",
-      "width", GST_TYPE_INT_RANGE, min_width, max_width,
-      "height", GST_TYPE_INT_RANGE, min_height, max_height,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, nullptr);
-
-  gst_caps_set_value (src_templ, "format", &format_list);
+#define APPEND_STRING(dst,set,str) G_STMT_START { \
+  if (set.find(str) != set.end()) { \
+    if (!first) \
+      dst += ", "; \
+    dst += str; \
+    first = false; \
+  } \
+} G_STMT_END
 
   {
-    GstCaps *cuda_caps = gst_caps_copy (src_templ);
-    gst_caps_set_features_simple (cuda_caps,
+    std::string format_str;
+    if (formats.size () == 1) {
+      format_str += *(formats.begin ());
+    } else {
+      bool first = true;
+      format_str += "{ ";
+      APPEND_STRING (format_str, formats, "NV12");
+      APPEND_STRING (format_str, formats, "P010_10LE");
+      APPEND_STRING (format_str, formats, "P012_LE");
+      APPEND_STRING (format_str, formats, "Y444");
+      APPEND_STRING (format_str, formats, "Y444_16LE");
+      APPEND_STRING (format_str, formats, "GBR");
+      APPEND_STRING (format_str, formats, "GBR_16LE");
+      format_str += " }";
+    }
+
+    std::string src_caps_string =
+        "video/x-raw, format = (string) " + format_str;
+    GstCaps *raw_caps = gst_caps_from_string (src_caps_string.c_str ());
+
+    src_templ = gst_caps_copy (raw_caps);
+    gst_caps_set_features_simple (src_templ,
         gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_CUDA_MEMORY));
 
     /* OpenGL specific */
 #ifdef HAVE_CUDA_GST_GL
-    {
-      GstCaps *gl_caps = gst_caps_copy (src_templ);
-      gst_caps_set_features_simple (gl_caps,
-          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
-      gst_caps_append (src_templ, gl_caps);
-    }
-#endif
+    format_str.clear ();
 
-    gst_caps_append (src_templ, cuda_caps);
+    if (formats.size () == 1) {
+      format_str += *(formats.begin ());
+    } else {
+      bool first = true;
+      format_str += "{ ";
+      APPEND_STRING (format_str, formats, "NV12");
+      APPEND_STRING (format_str, formats, "P010_10LE");
+      APPEND_STRING (format_str, formats, "P012_LE");
+      APPEND_STRING (format_str, formats, "Y444");
+      APPEND_STRING (format_str, formats, "GBR");
+      format_str += " }";
+    }
+
+    src_caps_string = "video/x-raw, format = (string) " + format_str;
+    GstCaps *gl_caps = gst_caps_from_string (src_caps_string.c_str ());
+    gst_caps_set_features_simple (gl_caps,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_GL_MEMORY));
+    gst_caps_append (src_templ, gl_caps);
+#endif
+    gst_caps_append (src_templ, raw_caps);
   }
+#undef APPEND_STRING
+
+  gst_caps_set_simple (src_templ,
+      "width", GST_TYPE_INT_RANGE, min_width, max_width,
+      "height", GST_TYPE_INT_RANGE, min_height, max_height, nullptr);
 
   sink_templ = gst_caps_from_string (codec_map->sink_caps_string);
   gst_caps_set_simple (sink_templ,
@@ -1274,8 +1299,6 @@ gst_nv_decoder_check_device_caps (CUcontext cuda_ctx, cudaVideoCodec codec,
   CuCtxPopCurrent (nullptr);
 
 done:
-  g_value_unset (&format_list);
-  g_value_unset (&format);
   g_value_unset (&profile_list);
 
   if (!sink_templ || !src_templ) {
@@ -1487,7 +1510,10 @@ gst_nv_decoder_negotiate (GstNvDecoder * decoder,
           break;
         }
 #ifdef HAVE_CUDA_GST_GL
-        if (features && gst_caps_features_contains (features,
+        /* TODO: gl does not support Y444_16 and GBR_16 */
+        if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_Y444_16LE &&
+            GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_FORMAT_GBR_16LE &&
+            features && gst_caps_features_contains (features,
                 GST_CAPS_FEATURE_MEMORY_GL_MEMORY)) {
           GST_DEBUG_OBJECT (videodec, "found GL memory feature");
           have_gl = TRUE;
