@@ -41,6 +41,8 @@
 GST_DEBUG_CATEGORY_STATIC (mpg123_debug);
 #define GST_CAT_DEFAULT mpg123_debug
 
+#define CHANNEL_MASK_STEREO (GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) | GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT))
+
 /* Omitted sample formats that mpg123 supports (or at least can support):
  *  - 8bit integer signed
  *  - 8bit integer unsigned
@@ -587,6 +589,7 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
   /* "encoding" is the sample format specifier for mpg123 */
   int encoding;
   int sample_rate, num_channels;
+  guint64 channel_mask = 0;
   GstAudioFormat format;
   GstMpg123AudioDec *mpg123_decoder;
   gboolean retval = FALSE;
@@ -613,6 +616,35 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
     if (!gst_structure_get_int (structure, "channels", &num_channels)) {
       err = TRUE;
       GST_ERROR_OBJECT (dec, "Input caps do not have a channel value");
+    } else {
+      gboolean have_channel_mask = gst_structure_get (structure,
+          "channel-mask", GST_TYPE_BITMASK, &channel_mask, NULL);
+      switch (num_channels) {
+        case 1:
+          /* Mono should have no channel-mask in the caps */
+          if (have_channel_mask) {
+            GST_WARNING_OBJECT (dec, "Input caps have a channel-mask for mono"
+                " (%" G_GUINT64_FORMAT ")", channel_mask);
+            channel_mask = 0;
+          }
+          break;
+        case 2:
+          /* Stereo may have a channel-mask in the caps, which
+           * must be either dual-mono (unpositioned) or stereo */
+          if (!have_channel_mask)
+            channel_mask = CHANNEL_MASK_STEREO;
+          else if (channel_mask != 0 && channel_mask != CHANNEL_MASK_STEREO) {
+            GST_WARNING_OBJECT (dec,
+                "Input caps have an invalid channel-mask for stereo"
+                " (%" G_GUINT64_FORMAT ")", channel_mask);
+            channel_mask = CHANNEL_MASK_STEREO;
+          }
+          break;
+        default:
+          /* Any other value shouldn't be possible given the pad caps */
+          g_warn_if_reached ();
+          break;
+      }
     }
 
     if (G_UNLIKELY (err))
@@ -713,11 +745,27 @@ gst_mpg123_audio_dec_set_format (GstAudioDecoder * dec, GstCaps * input_caps)
           "mpg123_format() failed: %s",
           mpg123_strerror (mpg123_decoder->handle));
     } else {
+      GstAudioChannelPosition positions[2] =
+          { GST_AUDIO_CHANNEL_POSITION_NONE, GST_AUDIO_CHANNEL_POSITION_NONE };
+      gchar *positions_str = NULL;
+
+      if (num_channels == 1 || channel_mask != 0) {
+        /* Handle everything but dual-mono */
+        gst_audio_channel_positions_from_mask (num_channels, channel_mask,
+            positions);
+      }
+
       gst_audio_info_init (&(mpg123_decoder->next_audioinfo));
       gst_audio_info_set_format (&(mpg123_decoder->next_audioinfo), format,
-          sample_rate, num_channels, NULL);
-      GST_LOG_OBJECT (dec, "The next audio format is: %s, %u Hz, %u channels",
-          gst_audio_format_to_string (format), sample_rate, num_channels);
+          sample_rate, num_channels, positions);
+
+      GST_LOG_OBJECT (dec,
+          "The next audio format is: %s, %u Hz, %u channels %s",
+          gst_audio_format_to_string (format), sample_rate, num_channels,
+          (positions_str =
+              gst_audio_channel_positions_to_string (positions, num_channels)));
+      g_free (positions_str);
+
       mpg123_decoder->has_next_audioinfo = TRUE;
 
       retval = TRUE;
