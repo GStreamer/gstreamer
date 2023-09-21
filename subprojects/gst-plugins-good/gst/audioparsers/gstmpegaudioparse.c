@@ -764,7 +764,8 @@ gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
       &version, &layer, &channels, &bitrate, &rate, &mode, &crc);
 
   if (channels != mp3parse->channels || rate != mp3parse->rate ||
-      layer != mp3parse->layer || version != mp3parse->version)
+      layer != mp3parse->layer || version != mp3parse->version ||
+      mode != mp3parse->mode)
     caps_change = TRUE;
   else
     caps_change = FALSE;
@@ -828,6 +829,24 @@ gst_mpeg_audio_parse_handle_frame (GstBaseParse * parse,
         "layer", G_TYPE_INT, layer,
         "rate", G_TYPE_INT, rate,
         "channels", G_TYPE_INT, channels, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+    switch (mode) {
+      case MPEG_AUDIO_CHANNEL_MODE_MONO:
+        /* No mask */
+        break;
+
+      case MPEG_AUDIO_CHANNEL_MODE_DUAL_CHANNEL:
+        gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK,
+            G_GUINT64_CONSTANT (0), NULL);
+        break;
+
+      default:
+        gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK,
+            (GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_LEFT) |
+                GST_AUDIO_CHANNEL_POSITION_MASK (FRONT_RIGHT)), NULL);
+        break;
+    }
+
     gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
     gst_caps_unref (caps);
 
