@@ -86,6 +86,9 @@ struct _GstAacParse {
 
   gint last_parsed_sample_rate;
   gint last_parsed_channels;
+
+  guint8 *pce, *pce_comment;
+  guint pce_bits, pce_comment_bytes;
 };
 
 /**
