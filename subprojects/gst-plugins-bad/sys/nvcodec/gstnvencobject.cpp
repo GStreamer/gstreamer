@@ -301,12 +301,14 @@ GstNvEncObject::InitSession (NV_ENC_INITIALIZE_PARAMS * params,
       buffer_format_ = NV_ENC_BUFFER_FORMAT_NV12;
       break;
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GBR:
       buffer_format_ = NV_ENC_BUFFER_FORMAT_YUV444;
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
       buffer_format_ = NV_ENC_BUFFER_FORMAT_YUV420_10BIT;
       break;
     case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
       buffer_format_ = NV_ENC_BUFFER_FORMAT_YUV444_10BIT;
       break;
     default:

@@ -991,8 +991,10 @@ gst_nv_h265_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
       allowed_formats.insert("P010_10LE");
     } else if (iter == "main-444") {
       allowed_formats.insert("Y444");
+      allowed_formats.insert("GBR");
     } else if (iter == "main-444-10") {
       allowed_formats.insert("Y444_16LE");
+      allowed_formats.insert("GBR_16LE");
     }
   }
   /* *INDENT-ON* */
@@ -1096,6 +1098,7 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
       }
       break;
     case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GBR:
       if (downstream_profiles.find ("main-444") == downstream_profiles.end ()) {
         GST_ERROR_OBJECT (self, "Downstream does not support 4:4:4 profile");
         return FALSE;
@@ -1105,6 +1108,7 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
       }
       break;
     case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
       if (downstream_profiles.find ("main-444-10") ==
           downstream_profiles.end ()) {
         GST_ERROR_OBJECT (self,
@@ -1341,7 +1345,19 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
   }
 
   vui->colourDescriptionPresentFlag = 1;
-  vui->colourMatrix = gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_GBR_16LE:
+      /* color matrix must be "Identity" */
+      vui->colourMatrix =
+          gst_video_color_matrix_to_iso (GST_VIDEO_COLOR_MATRIX_RGB);
+      break;
+    default:
+      vui->colourMatrix =
+          gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+      break;
+  }
+
   vui->colourPrimaries =
       gst_video_color_primaries_to_iso (info->colorimetry.primaries);
   vui->transferCharacteristics =
@@ -1926,16 +1942,20 @@ gst_nv_h265_encoder_create_class_data (GstObject * device, gpointer session,
         formats.insert ("NV12");
         break;
       case NV_ENC_BUFFER_FORMAT_YUV444:
-        if (dev_caps.yuv444_encode)
+        if (dev_caps.yuv444_encode) {
           formats.insert ("Y444");
+          formats.insert ("GBR");
+        }
         break;
       case NV_ENC_BUFFER_FORMAT_YUV420_10BIT:
         if (dev_caps.supports_10bit_encode)
           formats.insert ("P010_10LE");
         break;
       case NV_ENC_BUFFER_FORMAT_YUV444_10BIT:
-        if (dev_caps.supports_10bit_encode && dev_caps.yuv444_encode)
+        if (dev_caps.supports_10bit_encode && dev_caps.yuv444_encode) {
           formats.insert ("Y444_16LE");
+          formats.insert ("GBR_16LE");
+        }
         break;
       default:
         break;
@@ -1965,6 +1985,8 @@ gst_nv_h265_encoder_create_class_data (GstObject * device, gpointer session,
     APPEND_STRING (format_str, formats, "P010_10LE");
     APPEND_STRING (format_str, formats, "Y444");
     APPEND_STRING (format_str, formats, "Y444_16LE");
+    APPEND_STRING (format_str, formats, "GBR");
+    APPEND_STRING (format_str, formats, "GBR_16LE");
     format_str += " }";
   }
 
@@ -2301,6 +2323,8 @@ gst_nv_h265_encoder_register_auto_select (GstPlugin * plugin,
     APPEND_STRING (format_str, formats, "P010_10LE");
     APPEND_STRING (format_str, formats, "Y444");
     APPEND_STRING (format_str, formats, "Y444_16LE");
+    APPEND_STRING (format_str, formats, "GBR");
+    APPEND_STRING (format_str, formats, "GBR_16LE");
     format_str += " }";
   }
 
