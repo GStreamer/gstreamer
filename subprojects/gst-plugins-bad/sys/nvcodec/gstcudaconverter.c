@@ -635,6 +635,8 @@ typedef struct
 #define SAMPLE_RGBP "sample_rgbp"
 #define SAMPLE_BGRP "sample_bgrp"
 #define SAMPLE_GBR "sample_gbr"
+#define SAMPLE_GBR_10 "sample_gbr_10"
+#define SAMPLE_GBR_12 "sample_gbr_12"
 #define SAMPLE_GBRA "sample_gbra"
 
 #define WRITE_I420 "write_i420"
@@ -642,10 +644,10 @@ typedef struct
 #define WRITE_NV12 "write_nv12"
 #define WRITE_NV21 "write_nv21"
 #define WRITE_P010 "write_p010"
-/* same as P010 */
-#define WRITE_P016 "write_p010"
 #define WRITE_I420_10 "write_i420_10"
 #define WRITE_Y444 "write_y444"
+#define WRITE_Y444_10 "write_y444_10"
+#define WRITE_Y444_12 "write_y444_12"
 #define WRITE_Y444_16 "write_y444_16"
 #define WRITE_RGBA "write_rgba"
 #define WRITE_RGBx "write_rgbx"
@@ -663,6 +665,9 @@ typedef struct
 #define WRITE_RGBP "write_rgbp"
 #define WRITE_BGRP "write_bgrp"
 #define WRITE_GBR "write_gbr"
+#define WRITE_GBR_10 "write_gbr_10"
+#define WRITE_GBR_12 "write_gbr_12"
+#define WRITE_GBR_16 "write_gbr_16"
 #define WRITE_GBRA "write_gbra"
 #define ROTATE_IDENTITY "rotate_identity"
 #define ROTATE_90R "rotate_90r"
@@ -792,7 +797,7 @@ SAMPLE_YUV_PLANAR_12BIS "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
 "  float luma = tex2D<float>(tex0, x, y);\n"
 "  float u = tex2D<float>(tex1, x, y);\n"
 "  float v = tex2D<float>(tex2, x, y);\n"
-"  /* (1 << 6) to scale [0, 1.0) range */\n"
+"  /* (1 << 4) to scale [0, 1.0) range */\n"
 "  return make_float4 (luma * 16, u * 16, v * 16, 1);\n"
 "}\n"
 "\n"
@@ -892,6 +897,27 @@ SAMPLE_GBR "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
 "  float r = tex2D<float>(tex2, x, y);\n"
 "  return make_float4 (r, g, b, 1);\n"
 "}\n"
+"__device__ inline float4\n"
+SAMPLE_GBR_10 "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
+"    cudaTextureObject_t tex2, cudaTextureObject_t tex3, float x, float y)\n"
+"{\n"
+"  float g = tex2D<float>(tex0, x, y);\n"
+"  float b = tex2D<float>(tex1, x, y);\n"
+"  float r = tex2D<float>(tex2, x, y);\n"
+"  /* (1 << 6) to scale [0, 1.0) range */\n"
+"  return make_float4 (r * 64, g * 64, b * 64, 1);\n"
+"}\n"
+"\n"
+"__device__ inline float4\n"
+SAMPLE_GBR_12 "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
+"    cudaTextureObject_t tex2, cudaTextureObject_t tex3, float x, float y)\n"
+"{\n"
+"  float g = tex2D<float>(tex0, x, y);\n"
+"  float b = tex2D<float>(tex1, x, y);\n"
+"  float r = tex2D<float>(tex2, x, y);\n"
+"  /* (1 << 4) to scale [0, 1.0) range */\n"
+"  return make_float4 (r * 16, g * 16, b * 16, 1);\n"
+"}\n"
 "\n"
 "__device__ inline float4\n"
 SAMPLE_GBRA "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
@@ -984,6 +1010,26 @@ WRITE_Y444 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst0[pos] = scale_to_uchar (sample.x);\n"
 "  dst1[pos] = scale_to_uchar (sample.y);\n"
 "  dst2[pos] = scale_to_uchar (sample.z);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+WRITE_Y444_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  *(unsigned short *) &dst0[pos] = scale_to_10bits (sample.x);\n"
+"  *(unsigned short *) &dst1[pos] = scale_to_10bits (sample.y);\n"
+"  *(unsigned short *) &dst2[pos] = scale_to_10bits (sample.z);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+WRITE_Y444_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  *(unsigned short *) &dst0[pos] = scale_to_12bits (sample.x);\n"
+"  *(unsigned short *) &dst1[pos] = scale_to_12bits (sample.y);\n"
+"  *(unsigned short *) &dst2[pos] = scale_to_12bits (sample.z);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1170,6 +1216,36 @@ WRITE_GBR "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
 "  dst0[pos] = scale_to_uchar (sample.y);\n"
 "  dst1[pos] = scale_to_uchar (sample.z);\n"
 "  dst2[pos] = scale_to_uchar (sample.x);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+WRITE_GBR_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  *(unsigned short *) &dst0[pos] = scale_to_10bits (sample.y);\n"
+"  *(unsigned short *) &dst1[pos] = scale_to_10bits (sample.z);\n"
+"  *(unsigned short *) &dst2[pos] = scale_to_10bits (sample.x);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+WRITE_GBR_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  *(unsigned short *) &dst0[pos] = scale_to_12bits (sample.y);\n"
+"  *(unsigned short *) &dst1[pos] = scale_to_12bits (sample.z);\n"
+"  *(unsigned short *) &dst2[pos] = scale_to_12bits (sample.x);\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+WRITE_GBR_16 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 2 + y * stride0;\n"
+"  *(unsigned short *) &dst0[pos] = scale_to_ushort (sample.y);\n"
+"  *(unsigned short *) &dst1[pos] = scale_to_ushort (sample.z);\n"
+"  *(unsigned short *) &dst2[pos] = scale_to_ushort (sample.x);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1406,9 +1482,12 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_YUV_SEMI_PLANAR (NV12, UNSIGNED_INT8, SAMPLE_SEMI_PLANAR),
   MAKE_FORMAT_YUV_SEMI_PLANAR (NV21, UNSIGNED_INT8, SAMPLE_SEMI_PLANAR_SWAP),
   MAKE_FORMAT_YUV_SEMI_PLANAR (P010_10LE, UNSIGNED_INT16, SAMPLE_SEMI_PLANAR),
+  MAKE_FORMAT_YUV_SEMI_PLANAR (P012_LE, UNSIGNED_INT16, SAMPLE_SEMI_PLANAR),
   MAKE_FORMAT_YUV_SEMI_PLANAR (P016_LE, UNSIGNED_INT16, SAMPLE_SEMI_PLANAR),
   MAKE_FORMAT_YUV_PLANAR (I420_10LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR_10BIS),
   MAKE_FORMAT_YUV_PLANAR (Y444, UNSIGNED_INT8, SAMPLE_YUV_PLANAR),
+  MAKE_FORMAT_YUV_PLANAR (Y444_10LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR_10BIS),
+  MAKE_FORMAT_YUV_PLANAR (Y444_12LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR_12BIS),
   MAKE_FORMAT_YUV_PLANAR (Y444_16LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR),
   MAKE_FORMAT_RGB (RGBA, UNSIGNED_INT8, SAMPLE_RGBA),
   MAKE_FORMAT_RGB (BGRA, UNSIGNED_INT8, SAMPLE_BGRA),
@@ -1423,6 +1502,9 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_RGBP (RGBP, UNSIGNED_INT8, SAMPLE_RGBP),
   MAKE_FORMAT_RGBP (BGRP, UNSIGNED_INT8, SAMPLE_BGRP),
   MAKE_FORMAT_RGBP (GBR, UNSIGNED_INT8, SAMPLE_GBR),
+  MAKE_FORMAT_RGBP (GBR_10LE, UNSIGNED_INT16, SAMPLE_GBR_10),
+  MAKE_FORMAT_RGBP (GBR_12LE, UNSIGNED_INT16, SAMPLE_GBR_12),
+  MAKE_FORMAT_RGBP (GBR_16LE, UNSIGNED_INT16, SAMPLE_GBR),
   MAKE_FORMAT_RGBAP (GBRA, UNSIGNED_INT8, SAMPLE_GBRA),
 };
 
@@ -1641,16 +1723,21 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       write_func = WRITE_NV21;
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
-      write_func = WRITE_P010;
-      break;
+    case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
-      write_func = WRITE_P016;
+      write_func = WRITE_P010;
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
       write_func = WRITE_I420_10;
       break;
     case GST_VIDEO_FORMAT_Y444:
       write_func = WRITE_Y444;
+      break;
+    case GST_VIDEO_FORMAT_Y444_10LE:
+      write_func = WRITE_Y444_10;
+      break;
+    case GST_VIDEO_FORMAT_Y444_12LE:
+      write_func = WRITE_Y444_12;
       break;
     case GST_VIDEO_FORMAT_Y444_16LE:
       write_func = WRITE_Y444_16;
@@ -1702,6 +1789,15 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       break;
     case GST_VIDEO_FORMAT_GBR:
       write_func = WRITE_GBR;
+      break;
+    case GST_VIDEO_FORMAT_GBR_10LE:
+      write_func = WRITE_GBR_10;
+      break;
+    case GST_VIDEO_FORMAT_GBR_12LE:
+      write_func = WRITE_GBR_12;
+      break;
+    case GST_VIDEO_FORMAT_GBR_16LE:
+      write_func = WRITE_GBR_16;
       break;
     case GST_VIDEO_FORMAT_GBRA:
       write_func = WRITE_GBRA;
