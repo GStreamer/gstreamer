@@ -37,9 +37,25 @@ wait_preroll (GstElement * element)
   fail_unless (state_res == GST_STATE_CHANGE_SUCCESS);
 }
 
+static GstPadProbeReturn
+buffer_pad_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstBuffer *buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+  if (buffer != NULL) {
+    GstCustomMeta *cmeta =
+        gst_buffer_add_custom_meta (buffer, "unix-fd-custom-meta");
+    GstStructure *s = gst_custom_meta_get_structure (cmeta);
+    gst_structure_set (s, "field", G_TYPE_INT, 42, NULL);
+  }
+  return GST_PAD_PROBE_OK;
+}
+
 GST_START_TEST (test_unixfd_videotestsrc)
 {
   GError *error = NULL;
+
+  const gchar *tags[] = { NULL };
+  gst_meta_register_custom ("unix-fd-custom-meta", tags, NULL, NULL, NULL);
 
   /* Ensure we don't have socket from previous failed test */
   gchar *socket_path =
@@ -50,15 +66,26 @@ GST_START_TEST (test_unixfd_videotestsrc)
 
   /* Setup source */
   gchar *pipeline_str =
-      g_strdup_printf ("videotestsrc ! unixfdsink socket-path=%s", socket_path);
+      g_strdup_printf ("videotestsrc name=src ! unixfdsink socket-path=%s",
+      socket_path);
   GstElement *pipeline_service = gst_parse_launch (pipeline_str, &error);
   g_assert_no_error (error);
   g_free (pipeline_str);
+
+  /* Add a custom meta on each buffer */
+  GstElement *src = gst_bin_get_by_name (GST_BIN (pipeline_service), "src");
+  GstPad *pad = gst_element_get_static_pad (src, "src");
+  gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER, buffer_pad_probe_cb, NULL,
+      NULL);
+  gst_object_unref (src);
+  gst_object_unref (pad);
+
   wait_preroll (pipeline_service);
 
   /* Setup sink */
   pipeline_str =
-      g_strdup_printf ("unixfdsrc socket-path=%s ! fakesink", socket_path);
+      g_strdup_printf ("unixfdsrc socket-path=%s ! fakesink name=sink",
+      socket_path);
   GstElement *pipeline_client_1 = gst_parse_launch (pipeline_str, &error);
   g_assert_no_error (error);
   wait_preroll (pipeline_client_1);
@@ -72,6 +99,22 @@ GST_START_TEST (test_unixfd_videotestsrc)
   GstElement *pipeline_client_2 = gst_parse_launch (pipeline_str, &error);
   g_assert_no_error (error);
   wait_preroll (pipeline_client_2);
+
+  /* Check we received our custom meta */
+  GstSample *sample;
+  GstElement *sink = gst_bin_get_by_name (GST_BIN (pipeline_client_2), "sink");
+  g_object_get (sink, "last-sample", &sample, NULL);
+  fail_unless (sample);
+  GstBuffer *buffer = gst_sample_get_buffer (sample);
+  GstCustomMeta *cmeta =
+      gst_buffer_get_custom_meta (buffer, "unix-fd-custom-meta");
+  fail_unless (cmeta);
+  GstStructure *s = gst_custom_meta_get_structure (cmeta);
+  gint value;
+  fail_unless (gst_structure_get_int (s, "field", &value));
+  fail_unless_equals_int (value, 42);
+  gst_object_unref (sink);
+  gst_sample_unref (sample);
 
   /* Teardown */
   fail_unless (gst_element_set_state (pipeline_client_1,

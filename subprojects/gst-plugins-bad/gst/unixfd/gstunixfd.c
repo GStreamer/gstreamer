@@ -49,7 +49,7 @@ G_STATIC_ASSERT (sizeof (ReleaseBufferPayload) == 8);
 
 gboolean
 gst_unix_fd_send_command (GSocket * socket, CommandType type, GUnixFDList * fds,
-    const gchar * payload, gsize payload_size, GError ** error)
+    const guint8 * payload, gsize payload_size, GError ** error)
 {
   Command command = { type, payload_size };
   GOutputVector vect[] = {
@@ -76,7 +76,7 @@ gst_unix_fd_send_command (GSocket * socket, CommandType type, GUnixFDList * fds,
 
 gboolean
 gst_unix_fd_receive_command (GSocket * socket, GCancellable * cancellable,
-    CommandType * type, GUnixFDList ** fds, gchar ** payload,
+    CommandType * type, GUnixFDList ** fds, guint8 ** payload,
     gsize * payload_size, GError ** error)
 {
   Command command;
@@ -98,8 +98,8 @@ gst_unix_fd_receive_command (GSocket * socket, GCancellable * cancellable,
   if (command.payload_size > 0) {
     *payload = g_malloc (command.payload_size);
     *payload_size = command.payload_size;
-    if (g_socket_receive (socket, *payload, command.payload_size, cancellable,
-            error) < (gssize) command.payload_size) {
+    if (g_socket_receive (socket, (gchar *) * payload, command.payload_size,
+            cancellable, error) < (gssize) command.payload_size) {
       g_clear_pointer (payload, g_free);
       ret = FALSE;
       goto out;
@@ -133,8 +133,8 @@ out:
 }
 
 gboolean
-gst_unix_fd_parse_new_buffer (gchar * payload, gsize payload_size,
-    NewBufferPayload ** new_buffer)
+gst_unix_fd_parse_new_buffer (guint8 * payload, gsize payload_size,
+    NewBufferPayload ** new_buffer, guint32 * consumed)
 {
   if (payload == NULL || payload_size < sizeof (NewBufferPayload))
     return FALSE;
@@ -146,11 +146,13 @@ gst_unix_fd_parse_new_buffer (gchar * payload, gsize payload_size,
   if (payload_size < struct_size)
     return FALSE;
 
+  *consumed = struct_size;
+
   return TRUE;
 }
 
 gboolean
-gst_unix_fd_parse_release_buffer (gchar * payload, gsize payload_size,
+gst_unix_fd_parse_release_buffer (guint8 * payload, gsize payload_size,
     ReleaseBufferPayload ** release_buffer)
 {
   if (payload == NULL || payload_size < sizeof (ReleaseBufferPayload))
@@ -162,12 +164,12 @@ gst_unix_fd_parse_release_buffer (gchar * payload, gsize payload_size,
 }
 
 gboolean
-gst_unix_fd_parse_caps (gchar * payload, gsize payload_size, gchar ** caps_str)
+gst_unix_fd_parse_caps (guint8 * payload, gsize payload_size, gchar ** caps_str)
 {
   if (payload == NULL || payload_size < 1 || payload[payload_size - 1] != '\0')
     return FALSE;
 
-  *caps_str = payload;
+  *caps_str = (gchar *) payload;
 
   return TRUE;
 }

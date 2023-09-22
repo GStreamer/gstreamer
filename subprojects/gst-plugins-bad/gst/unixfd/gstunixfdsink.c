@@ -86,6 +86,7 @@ struct _GstUnixFdSink
   GHashTable *clients;
   GstCaps *caps;
   gboolean uses_monotonic_clock;
+  GByteArray *payload;
 };
 
 G_DEFINE_TYPE (GstUnixFdSink, gst_unix_fd_sink, GST_TYPE_BASE_SINK);
@@ -199,7 +200,7 @@ incoming_command_cb (GSocket * socket, GIOCondition cond, gpointer user_data)
   GstUnixFdSink *self = user_data;
   Client *client;
   CommandType command;
-  gchar *payload = NULL;
+  guint8 *payload = NULL;
   gsize payload_size;
   GError *error = NULL;
 
@@ -264,12 +265,12 @@ on_error:
   return G_SOURCE_REMOVE;
 }
 
-static gchar *
+static guint8 *
 caps_to_payload (GstCaps * caps, gsize * payload_size)
 {
   gchar *payload = gst_caps_to_string (caps);
   *payload_size = strlen (payload) + 1;
-  return payload;
+  return (guint8 *) payload;
 }
 
 static gboolean
@@ -303,7 +304,7 @@ new_client_cb (GSocket * socket, GIOCondition cond, gpointer user_data)
    * we don't want this client to miss a caps event or receive a buffer while we
    * send initial caps. */
   gsize payload_size;
-  gchar *payload = caps_to_payload (self->caps, &payload_size);
+  guint8 *payload = caps_to_payload (self->caps, &payload_size);
   if (!gst_unix_fd_send_command (client_socket, COMMAND_TYPE_CAPS, NULL,
           payload, payload_size, &error)) {
     GST_ERROR_OBJECT (self, "Failed to send caps to new client %p: %s", client,
@@ -365,6 +366,13 @@ gst_unix_fd_sink_start (GstBaseSink * bsink)
 
   self->thread = g_thread_new ("unixfdsink", thread_cb, self);
 
+  /* Preallocate the minimum payload size for a buffer with a single memory and
+   * no metas. Chances are that every buffer will require roughly the same
+   * payload size, by reusing the same GByteArray we avoid reallocations. */
+  self->payload =
+      g_byte_array_sized_new (sizeof (NewBufferPayload) +
+      sizeof (MemoryPayload));
+
 out:
   GST_OBJECT_UNLOCK (self);
   g_clear_error (&error);
@@ -385,6 +393,7 @@ gst_unix_fd_sink_stop (GstBaseSink * bsink)
   g_clear_object (&self->socket);
   gst_clear_caps (&self->caps);
   g_hash_table_remove_all (self->clients);
+  g_clear_pointer (&self->payload, g_byte_array_unref);
 
   if (self->socket_type == G_UNIX_SOCKET_ADDRESS_PATH)
     g_unlink (self->socket_path);
@@ -394,7 +403,7 @@ gst_unix_fd_sink_stop (GstBaseSink * bsink)
 
 static void
 send_command_to_all (GstUnixFdSink * self, CommandType type, GUnixFDList * fds,
-    const gchar * payload, gsize payload_size, GstBuffer * buffer)
+    const guint8 * payload, gsize payload_size, GstBuffer * buffer)
 {
   GHashTableIter iter;
   GSocket *socket;
@@ -435,6 +444,21 @@ calculate_timestamp (GstClockTime timestamp, GstClockTime base_time,
   return timestamp;
 }
 
+static guint16
+serialize_metas (GstBuffer * buffer, GByteArray * payload)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  guint16 n_meta = 0;
+
+  while ((meta = gst_buffer_iterate_meta (buffer, &state)) != NULL) {
+    if (gst_meta_serialize_simple (meta, payload))
+      n_meta++;
+  }
+
+  return n_meta;
+}
+
 static GstFlowReturn
 gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
 {
@@ -442,11 +466,11 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   GstFlowReturn ret = GST_FLOW_OK;
   GError *error = NULL;
 
-  /* Allocate payload */
   guint n_memory = gst_buffer_n_memory (buffer);
-  gsize payload_size =
+  gsize struct_size =
       sizeof (NewBufferPayload) + sizeof (MemoryPayload) * n_memory;
-  gchar *payload = g_malloc0 (payload_size);
+  g_byte_array_set_size (self->payload, struct_size);
+  guint32 n_meta = serialize_metas (buffer, self->payload);
 
   GstClockTime latency = gst_base_sink_get_latency (GST_BASE_SINK_CAST (self));
   GstClockTime base_time = gst_element_get_base_time (GST_ELEMENT_CAST (self));
@@ -456,7 +480,7 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
         gst_clock_get_time (GST_ELEMENT_CLOCK (self)));
   }
 
-  NewBufferPayload *new_buffer = (NewBufferPayload *) payload;
+  NewBufferPayload *new_buffer = (NewBufferPayload *) self->payload->data;
   /* Cast buffer pointer to guint64 identifier. Client will send us back that
    * id so we know which buffer to unref. */
   new_buffer->id = (guint64) buffer;
@@ -472,6 +496,7 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   new_buffer->flags = GST_BUFFER_FLAGS (buffer);
   new_buffer->type = MEMORY_TYPE_DEFAULT;
   new_buffer->n_memory = n_memory;
+  new_buffer->n_meta = n_meta;
 
   gboolean dmabuf_count = 0;
   GUnixFDList *fds = g_unix_fd_list_new ();
@@ -507,14 +532,13 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     new_buffer->type = MEMORY_TYPE_DMABUF;
 
   GST_OBJECT_LOCK (self);
-  send_command_to_all (self, COMMAND_TYPE_NEW_BUFFER, fds, payload,
-      payload_size, buffer);
+  send_command_to_all (self, COMMAND_TYPE_NEW_BUFFER, fds,
+      self->payload->data, self->payload->len, buffer);
   GST_OBJECT_UNLOCK (self);
 
 out:
   g_clear_object (&fds);
   g_clear_error (&error);
-  g_free (payload);
   return ret;
 }
 
@@ -532,7 +556,7 @@ gst_unix_fd_sink_event (GstBaseSink * bsink, GstEvent * event)
       GST_DEBUG_OBJECT (self, "Send new caps to all clients: %" GST_PTR_FORMAT,
           self->caps);
       gsize payload_size;
-      gchar *payload = caps_to_payload (self->caps, &payload_size);
+      guint8 *payload = caps_to_payload (self->caps, &payload_size);
       send_command_to_all (self, COMMAND_TYPE_CAPS, NULL, payload, payload_size,
           NULL);
       g_free (payload);

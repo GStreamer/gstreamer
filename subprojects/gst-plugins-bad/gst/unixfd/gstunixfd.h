@@ -57,7 +57,7 @@ typedef struct {
   guint32 flags;
   guint8 type;
   guint8 n_memory;
-  guint16 padding;
+  guint16 n_meta;
   MemoryPayload memories[];
 } NewBufferPayload;
 
@@ -66,17 +66,17 @@ typedef struct {
 } ReleaseBufferPayload;
 
 gboolean gst_unix_fd_send_command(GSocket * socket, CommandType type,
-    GUnixFDList * fds, const gchar * payload, gsize payload_size,
+    GUnixFDList * fds, const guint8 * payload, gsize payload_size,
     GError ** error);
-gboolean gst_unix_fd_receive_command(GSocket * socket,
-    GCancellable * cancellable, CommandType *type, GUnixFDList ** fds,
-    gchar ** payload, gsize *payload_size, GError ** error);
+gboolean gst_unix_fd_receive_command (GSocket *socket,
+    GCancellable *cancellable, CommandType *type, GUnixFDList **fds,
+    guint8 **payload, gsize *payload_size, GError **error);
 
-gboolean gst_unix_fd_parse_new_buffer(gchar *payload, gsize payload_size,
-    NewBufferPayload **new_buffer);
-gboolean gst_unix_fd_parse_release_buffer(gchar *payload, gsize payload_size,
+gboolean gst_unix_fd_parse_new_buffer (guint8 *payload, gsize payload_size,
+    NewBufferPayload **new_buffer, guint32 *consumed);
+gboolean gst_unix_fd_parse_release_buffer(guint8 *payload, gsize payload_size,
     ReleaseBufferPayload **release_buffer);
-gboolean gst_unix_fd_parse_caps(gchar *payload, gsize payload_size,
+gboolean gst_unix_fd_parse_caps (guint8 *payload, gsize payload_size,
     gchar **caps_str);
 
 GSocket *gst_unix_fd_socket_new(const gchar *socket_path,

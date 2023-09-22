@@ -103,7 +103,7 @@ memory_weak_ref_cb (GstUnixFdSrc * self, GstMemory * mem)
     ReleaseBufferPayload payload = { ctx->id };
     GError *error = NULL;
     if (!gst_unix_fd_send_command (self->socket, COMMAND_TYPE_RELEASE_BUFFER,
-            NULL, (const gchar *) &payload, sizeof (payload), &error)) {
+            NULL, (guint8 *) & payload, sizeof (payload), &error)) {
       GST_WARNING_OBJECT (self, "Failed to send release-buffer command: %s",
           error->message);
       g_clear_error (&error);
@@ -301,7 +301,7 @@ gst_unix_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GstUnixFdSrc *self = GST_UNIX_FD_SRC (psrc);
   CommandType command;
   GUnixFDList *fds = NULL;
-  gchar *payload = NULL;
+  guint8 *payload = NULL;
   gsize payload_size;
   GError *error = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
@@ -327,7 +327,9 @@ again:
       goto on_error;
     case COMMAND_TYPE_NEW_BUFFER:{
       NewBufferPayload *new_buffer;
-      if (!gst_unix_fd_parse_new_buffer (payload, payload_size, &new_buffer)) {
+      guint32 payload_off = 0;
+      if (!gst_unix_fd_parse_new_buffer (payload, payload_size, &new_buffer,
+              &payload_off)) {
         GST_ERROR_OBJECT (self, "Received new-buffer with wrong payload size");
         ret = GST_FLOW_ERROR;
         goto on_error;
@@ -341,8 +343,8 @@ again:
 
       if (g_unix_fd_list_get_length (fds) != new_buffer->n_memory) {
         GST_ERROR_OBJECT (self,
-            "Received new buffer command with %d file descriptors instead of %d",
-            g_unix_fd_list_get_length (fds), new_buffer->n_memory);
+            "Received new buffer command with %d file descriptors instead of "
+            "%d", g_unix_fd_list_get_length (fds), new_buffer->n_memory);
         ret = GST_FLOW_ERROR;
         goto on_error;
       }
@@ -378,6 +380,18 @@ again:
       GST_BUFFER_OFFSET (*outbuf) = new_buffer->offset;
       GST_BUFFER_OFFSET_END (*outbuf) = new_buffer->offset_end;
       GST_BUFFER_FLAGS (*outbuf) = new_buffer->flags;
+
+      for (int i = 0; i < new_buffer->n_meta; i++) {
+        guint32 consumed = 0;
+        gst_meta_deserialize (*outbuf, (guint8 *) payload + payload_off,
+            payload_size - payload_off, &consumed);
+        if (consumed == 0) {
+          GST_ERROR_OBJECT (self, "Malformed meta serialization");
+          ret = GST_FLOW_ERROR;
+          goto on_error;
+        }
+        payload_off += consumed;
+      }
 
       GST_OBJECT_LOCK (self);
       for (int i = 0; i < new_buffer->n_memory; i++) {
