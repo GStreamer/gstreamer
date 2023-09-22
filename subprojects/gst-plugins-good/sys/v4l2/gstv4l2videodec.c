@@ -465,10 +465,8 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
   /* Prefer the acquired caps over anything suggested downstream, this ensure
    * that we preserves the bit depth, as we don't have any fancy fixation
    * process */
-  if (gst_caps_is_subset (acquired_caps, caps)) {
-    gst_caps_unref (acquired_caps);
+  if (gst_caps_is_subset (acquired_caps, caps))
     goto use_acquired_caps;
-  }
 
   /* Fixate pixel format */
   caps = gst_caps_fixate (caps);
@@ -482,6 +480,7 @@ gst_v4l2_video_dec_negotiate (GstVideoDecoder * decoder)
     gst_v4l2_clear_error (&error);
 
 use_acquired_caps:
+  gst_caps_unref (acquired_caps);
   gst_caps_unref (caps);
 
   /* catch possible bogus driver that don't enumerate the format it actually
