@@ -10501,10 +10501,16 @@ this functionality yet.</doc>
       </function>
     </enumeration>
     <record name="CustomMeta" c:type="GstCustomMeta" version="1.20">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Simple typing wrapper around #GstMeta</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Extra custom metadata. The @structure field is the same as returned by
+gst_custom_meta_get_structure().</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
       <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">parent #GstMeta</doc>
         <type name="Meta" c:type="GstMeta"/>
+      </field>
+      <field name="structure" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a #GstStructure containing custom metadata. (Since: 1.24)</doc>
+        <type name="Structure" c:type="GstStructure*"/>
       </field>
       <method name="get_structure" c:identifier="gst_custom_meta_get_structure" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Retrieve the #GstStructure backing a custom meta, the structure's mutability
@@ -25860,6 +25866,21 @@ access metadata.</doc>
           <parameter name="destroy_data" transfer-ownership="none" scope="async">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">#GDestroyNotify for user_data</doc>
             <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="register_custom_simple" c:identifier="gst_meta_register_custom_simple" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Simplified version of gst_meta_register_custom(), with no tags and no
+transform function.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaInfo that can be used to access metadata.</doc>
+          <type name="MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+        <parameters>
+          <parameter name="name" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the name of the #GstMeta implementation</doc>
+            <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
       </function>
@@ -51646,6 +51667,21 @@ access metadata.</doc>
         <parameter name="destroy_data" transfer-ownership="none" scope="async">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">#GDestroyNotify for user_data</doc>
           <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="meta_register_custom_simple" c:identifier="gst_meta_register_custom_simple" moved-to="Meta.register_custom_simple" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Simplified version of gst_meta_register_custom(), with no tags and no
+transform function.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaInfo that can be used to access metadata.</doc>
+        <type name="MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+      <parameters>
+        <parameter name="name" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the name of the #GstMeta implementation</doc>
+          <type name="utf8" c:type="const gchar*"/>
         </parameter>
       </parameters>
     </function>

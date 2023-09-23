@@ -116,14 +116,26 @@ struct _GstMeta {
 };
 
 /**
- * GstCustomMeta:
+ * GstCustomMeta.structure:
  *
- * Simple typing wrapper around #GstMeta
+ * #GstStructure containing custom metadata.
+ *
+ * Since: 1.24
+ */
+
+/**
+ * GstCustomMeta:
+ * @meta: parent #GstMeta
+ * @structure: a #GstStructure containing custom metadata. (Since: 1.24)
+ *
+ * Extra custom metadata. The @structure field is the same as returned by
+ * gst_custom_meta_get_structure().
  *
  * Since: 1.20
  */
 typedef struct {
   GstMeta meta;
+  GstStructure *structure;
 } GstCustomMeta;
 
 #include <gst/gstbuffer.h>
@@ -266,6 +278,9 @@ GST_API
 const GstMetaInfo *  gst_meta_register_custom   (const gchar *name, const gchar **tags,
                                                  GstCustomMetaTransformFunction transform_func,
                                                  gpointer user_data, GDestroyNotify destroy_data);
+
+GST_API
+const GstMetaInfo *  gst_meta_register_custom_simple (const gchar *name);
 
 GST_API
 gboolean             gst_meta_info_is_custom    (const GstMetaInfo *info);
