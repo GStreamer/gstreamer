@@ -2977,6 +2977,20 @@ Formats are sorted by decreasing "quality", using these criteria by priority:
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <constant name="VIDEO_FORMATS_ANY" value="{ " c:type="GST_VIDEO_FORMATS_ANY" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">This is similar to %GST_VIDEO_FORMATS_ALL but includes formats like DMA_DRM
+that do not have a software converter. This should be used for passthrough
+template caps.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="VIDEO_FORMATS_ANY_STR" value="DMA_DRM, " c:type="GST_VIDEO_FORMATS_ANY_STR" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">This is similar to %GST_VIDEO_FORMATS_ALL_STR but includes formats like
+DMA_DRM for which no software converter exists. This should be used for
+passthrough template caps.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <function-macro name="VIDEO_FORMAT_INFO_BITS" c:identifier="GST_VIDEO_FORMAT_INFO_BITS" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <parameters>
@@ -18496,6 +18510,25 @@ the #GstVideoFormat if there is one, or NULL otherwise.</doc>
         <parameter name="format" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">a #GstVideoFormat video format</doc>
           <type name="VideoFormat" c:type="GstVideoFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="video_formats_any" c:identifier="gst_video_formats_any" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Return all the raw video formats supported by GStreamer including
+special opaque formats such as %GST_VIDEO_FORMAT_DMA_DRM for which
+no software conversion exists. This should be use for passthrough
+template cpas.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">an array of #GstVideoFormat</doc>
+        <array length="0" zero-terminated="0" c:type="const GstVideoFormat*">
+          <type name="VideoFormat" c:type="GstVideoFormat"/>
+        </array>
+      </return-value>
+      <parameters>
+        <parameter name="len" direction="out" caller-allocates="0" transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">the number of elements in the returned array</doc>
+          <type name="guint" c:type="guint*"/>
         </parameter>
       </parameters>
     </function>

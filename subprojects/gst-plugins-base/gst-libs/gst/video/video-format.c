@@ -8041,6 +8041,7 @@ gst_video_format_from_string (const gchar * format)
     if (strcmp (GST_VIDEO_FORMAT_INFO_NAME (&formats[i].info), format) == 0)
       return GST_VIDEO_FORMAT_INFO_FORMAT (&formats[i].info);
   }
+
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
@@ -8204,8 +8205,8 @@ struct RawVideoFormats
   guint n;
 };
 
-static gpointer
-generate_raw_video_formats (gpointer data)
+static struct RawVideoFormats *
+generate_video_formats (const gchar * formats)
 {
   GValue list = G_VALUE_INIT;
   struct RawVideoFormats *all = g_new (struct RawVideoFormats, 1);
@@ -8217,7 +8218,7 @@ generate_raw_video_formats (gpointer data)
   /* Workaround a bug in our parser that would lead to segfaults
    * when deserializing container types using static strings,
    * see https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/446 */
-  tmp = g_strdup (GST_VIDEO_FORMATS_ALL);
+  tmp = g_strdup (formats);
   res = gst_value_deserialize (&list, tmp);
   g_assert (res);
   g_free (tmp);
@@ -8230,13 +8231,24 @@ generate_raw_video_formats (gpointer data)
 
     all->formats[i] = gst_video_format_from_string (g_value_get_string (v));
     g_assert (all->formats[i] != GST_VIDEO_FORMAT_UNKNOWN
-        && all->formats[i] != GST_VIDEO_FORMAT_ENCODED
-        && all->formats[i] != GST_VIDEO_FORMAT_DMA_DRM);
+        && all->formats[i] != GST_VIDEO_FORMAT_ENCODED);
   }
 
   g_value_unset (&list);
 
   return all;
+}
+
+static gpointer
+generate_raw_video_formats (gpointer data)
+{
+  return generate_video_formats (GST_VIDEO_FORMATS_ALL);
+}
+
+static gpointer
+generate_any_video_formats (gpointer data)
+{
+  return generate_video_formats (GST_VIDEO_FORMATS_ANY);
 }
 
 /**
@@ -8259,6 +8271,33 @@ gst_video_formats_raw (guint * len)
   g_once (&raw_video_formats_once, generate_raw_video_formats, NULL);
 
   all = raw_video_formats_once.retval;
+  *len = all->n;
+  return all->formats;
+}
+
+/**
+ * gst_video_formats_any:
+ * @len: (out): the number of elements in the returned array
+ *
+ * Return all the raw video formats supported by GStreamer including
+ * special opaque formats such as %GST_VIDEO_FORMAT_DMA_DRM for which
+ * no software conversion exists. This should be use for passthrough
+ * template cpas.
+ *
+ * Returns: (transfer none) (array length=len): an array of #GstVideoFormat
+ * Since: 1.24
+ */
+const GstVideoFormat *
+gst_video_formats_any (guint * len)
+{
+  static GOnce any_video_formats_once = G_ONCE_INIT;
+  struct RawVideoFormats *all;
+
+  g_return_val_if_fail (len, NULL);
+
+  g_once (&any_video_formats_once, generate_any_video_formats, NULL);
+
+  all = any_video_formats_once.retval;
   *len = all->n;
   return all->formats;
 }
@@ -8318,8 +8357,7 @@ gst_video_make_raw_caps_with_features (const GstVideoFormat formats[],
       GValue v = G_VALUE_INIT;
 
       g_return_val_if_fail (formats[i] != GST_VIDEO_FORMAT_UNKNOWN
-          && formats[i] != GST_VIDEO_FORMAT_ENCODED
-          && formats[i] != GST_VIDEO_FORMAT_DMA_DRM, NULL);
+          && formats[i] != GST_VIDEO_FORMAT_ENCODED, NULL);
 
       g_value_init (&v, G_TYPE_STRING);
       g_value_set_static_string (&v, gst_video_format_to_string (formats[i]));

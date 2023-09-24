@@ -1117,6 +1117,17 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
 #endif
 
 /**
+ * GST_VIDEO_FORMATS_ANY_STR:
+ *
+ * This is similar to %GST_VIDEO_FORMATS_ALL_STR but includes formats like
+ * DMA_DRM for which no software converter exists. This should be used for
+ * passthrough template caps.
+ *
+ * Since: 1.24
+ */
+#define GST_VIDEO_FORMATS_ANY_STR "DMA_DRM, " GST_VIDEO_FORMATS_ALL_STR
+
+/**
  * GST_VIDEO_FORMATS_ALL:
  *
  * List of all video formats, for use in template caps strings.
@@ -1137,8 +1148,22 @@ gconstpointer  gst_video_format_get_palette          (GstVideoFormat format, gsi
  */
 #define GST_VIDEO_FORMATS_ALL "{ " GST_VIDEO_FORMATS_ALL_STR " }"
 
+/**
+ * GST_VIDEO_FORMATS_ANY:
+ *
+ * This is similar to %GST_VIDEO_FORMATS_ALL but includes formats like DMA_DRM
+ * that do not have a software converter. This should be used for passthrough
+ * template caps.
+ *
+ * Since: 1.24
+ */
+#define GST_VIDEO_FORMATS_ANY "{ " GST_VIDEO_FORMATS_ANY_STR " }"
+
 GST_VIDEO_API
 const GstVideoFormat * gst_video_formats_raw (guint * len);
+
+GST_VIDEO_API
+const GstVideoFormat * gst_video_formats_any (guint * len);
 
 /**
  * GST_VIDEO_CAPS_MAKE:
