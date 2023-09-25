@@ -76,7 +76,7 @@ We will skip GStreamer initialization, since it is the same as the
 previous tutorial:
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-2.c[13:16] }}
+  {{ tutorials/basic-tutorial-2.c[17:20] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -97,7 +97,7 @@ more meaningful debug output). If you pass [NULL] for the name, however,
 GStreamer will provide a unique name for you.
 
 For this tutorial we create two elements: a [videotestsrc] and
-an [autovideosink]. There are no filter elements. Hence, the pipeline would 
+an [autovideosink]. There are no filter elements. Hence, the pipeline would
 look like the following:
 
 ![](images/basic-concepts-pipeline.png)
@@ -118,7 +118,7 @@ platform-independent.
 ### Pipeline creation
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-2.c[17:19] }}
+  {{ tutorials/basic-tutorial-2.c[21:23] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -130,7 +130,7 @@ before they can be used, because it takes care of some clocking and
 messaging functions. We create the pipeline with [gst_pipeline_new]\().
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-2.c[25:32] }}
+  {{ tutorials/basic-tutorial-2.c[29:36] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -184,28 +184,28 @@ properties) or inquired to find out about the element's internal state
   let us assume we have a Gst Element `source` with a property `pattern`
 
   The current state of a property can be fetched by either:
-  1. Accessing the property as an attribute of the `props` attribute of an 
+  1. Accessing the property as an attribute of the `props` attribute of an
   element. Ex: `_ = source.props.pattern` to print it on the screen
-  2. Using the `get_property` method of the element. 
+  2. Using the `get_property` method of the element.
   Ex: `_ = source.get_property("pattern")`
 
   And properties can be set by one of three methods:
-  1. Setting the property as an attribute of the `props` attribute. 
+  1. Setting the property as an attribute of the `props` attribute.
   Ex: `source.props.pattern = 1` or equivalently `source.props.pattern="snow"`
-  2. Using the `set_property` method of the element. 
+  2. Using the `set_property` method of the element.
   Ex: `source.set_property("pattern", 1)` or equivalently `source.set_property("pattern", "snow")`
   3. Using the `Gst.util_set_object_arg()` method. This mode also allows you to
-  pass Gst Caps and other structures. Ex: `Gst.util_set_object_arg(source, "pattern", "snow")`, 
+  pass Gst Caps and other structures. Ex: `Gst.util_set_object_arg(source, "pattern", "snow")`,
   or equivalently, `Gst.util_set_object_arg(source, "pattern", 1)`
 
-  Note: In all three methods of setting a property, if a string is passed as 
-  the value to set, it has to be the serialized version of a flag or value 
+  Note: In all three methods of setting a property, if a string is passed as
+  the value to set, it has to be the serialized version of a flag or value
   (using [gst_value_serialize]\())
 {{ END_LANG.md }}
 
-Coming back to what's in the example above, 
+Coming back to what's in the example above,
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-2.c[33:35] }}
+  {{ tutorials/basic-tutorial-2.c[37:39] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -229,7 +229,7 @@ of the tutorial is very similar to the previous one, but we are going to
 add more error checking:
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-2.c[36:43] }}
+  {{ tutorials/basic-tutorial-2.c[40:47] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
@@ -242,7 +242,7 @@ details are given in [Basic tutorial 3: Dynamic
 pipelines].
 
 {{ C+JS_FALLBACK.md }}
-  {{ tutorials/basic-tutorial-2.c[44:75] }}
+  {{ tutorials/basic-tutorial-2.c[48:79] }}
 {{ END_LANG.md }}
 
 {{ PY.md }}
