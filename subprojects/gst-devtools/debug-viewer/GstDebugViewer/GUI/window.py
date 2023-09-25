@@ -572,10 +572,8 @@ class Window (object):
     @action
     def handle_open_file_action_activate(self, action):
 
-        dialog = Gtk.FileChooserDialog(None, self.gtk_window,
-                                       Gtk.FileChooserAction.OPEN,
-                                       (Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL,
-                                        Gtk.STOCK_OPEN, Gtk.ResponseType.ACCEPT,))
+        dialog = Gtk.FileChooserNative.new(None, self.gtk_window,
+                                       Gtk.FileChooserAction.OPEN, None, None)
         response = dialog.run()
         dialog.hide()
         if response == Gtk.ResponseType.ACCEPT:
