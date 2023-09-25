@@ -532,7 +532,10 @@ class Window (object):
         view = self.log_view
         model = view.get_model()
 
-        start_path, end_path = view.get_visible_range()
+        visible_range = view.get_visible_range()
+        if visible_range is None:
+            return
+        start_path, end_path = visible_range
         start_index, end_index = start_path[0], end_path[0]
 
         for line_index in range(start_index, end_index + 1):
