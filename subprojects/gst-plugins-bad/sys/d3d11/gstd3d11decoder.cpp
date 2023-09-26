@@ -1661,6 +1661,11 @@ gst_d3d11_decoder_negotiate (GstD3D11Decoder * decoder,
   info = &decoder->output_info;
   input_state = decoder->input_state;
 
+  if (!decoder->configured) {
+    GST_WARNING_OBJECT (videodec, "Decoder is not configured");
+    return FALSE;
+  }
+
   alternate_interlaced =
       (GST_VIDEO_INFO_INTERLACE_MODE (info) ==
       GST_VIDEO_INTERLACE_MODE_ALTERNATE);
