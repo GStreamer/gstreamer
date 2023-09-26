@@ -99,7 +99,7 @@ transfer_completion_cb (gpointer src_object, GAsyncResult * res,
   DownloadRequest *request = transfer->request;
 
   if (transfer->blocking)
-    return;                     /* Somehow a completion got signalled for a blocking request */
+    return;
 
   download_request_lock (request);
   request->in_use = FALSE;
@@ -201,7 +201,8 @@ finish_transfer_task (DownloadHelper * dh, GTask * transfer_task,
 
       if (transfer->blocking)
         g_cond_broadcast (&transfer->cond);
-      else if (error != NULL)
+
+      if (error != NULL)
         g_task_return_error (transfer_task, error);
       else
         g_task_return_boolean (transfer_task, TRUE);
@@ -806,8 +807,8 @@ downloadhelper_stop (DownloadHelper * dh)
     transfer->complete = TRUE;
     if (transfer->blocking)
       g_cond_broadcast (&transfer->cond);
-    else
-      g_task_return_boolean (transfer_task, TRUE);
+
+    g_task_return_boolean (transfer_task, TRUE);
   }
 
   g_array_set_size (dh->active_transfers, 0);
