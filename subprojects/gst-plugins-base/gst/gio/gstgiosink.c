@@ -144,12 +144,15 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
 
   gstgiobasesink_class->get_stream =
       GST_DEBUG_FUNCPTR (gst_gio_sink_get_stream);
-  gstgiobasesink_class->close_on_stop = TRUE;
 }
 
 static void
 gst_gio_sink_init (GstGioSink * sink)
 {
+  GstGioBaseSink *bsink = GST_GIO_BASE_SINK (sink);
+
+  // TRUE is the historical default for this element
+  bsink->close_on_stop = TRUE;
 }
 
 static void

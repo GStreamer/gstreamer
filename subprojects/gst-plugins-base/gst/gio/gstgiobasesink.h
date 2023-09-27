@@ -55,6 +55,7 @@ struct _GstGioBaseSink
 
   /* < private > */
   GOutputStream *stream;
+  gboolean close_on_stop;
 };
 
 struct _GstGioBaseSinkClass 
@@ -62,7 +63,6 @@ struct _GstGioBaseSinkClass
   GstBaseSinkClass parent_class;
 
   GOutputStream * (*get_stream) (GstGioBaseSink *bsink);
-  gboolean close_on_stop;
 };
 
 GType gst_gio_base_sink_get_type (void);
