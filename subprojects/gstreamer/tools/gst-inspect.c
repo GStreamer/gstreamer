@@ -490,7 +490,10 @@ print_object_properties_info (GObject * obj, GObjectClass * obj_class,
           RESET_COLOR);
       first_flag = FALSE;
     }
-    if (param->flags & GST_PARAM_MUTABLE_PLAYING) {
+    if (param->flags & G_PARAM_CONSTRUCT_ONLY) {
+      g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR,
+          _("can be set only at object construction time"), RESET_COLOR);
+    } else if (param->flags & GST_PARAM_MUTABLE_PLAYING) {
       g_print (", %s%s%s", PROP_ATTR_VALUE_COLOR,
           _("changeable in NULL, READY, PAUSED or PLAYING state"), RESET_COLOR);
     } else if (param->flags & GST_PARAM_MUTABLE_PAUSED) {
