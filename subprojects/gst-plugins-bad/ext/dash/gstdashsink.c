@@ -100,6 +100,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_dash_sink_debug);
  * GstDashSinkMuxerType:
  * @GST_DASH_SINK_MUXER_TS: Use mpegtsmux
  * @GST_DASH_SINK_MUXER_MP4: Use mp4mux
+ * @GST_DASH_SINK_MUXER_DASHMP4: Use dashmp4mux
  *
  * Muxer type
  */
@@ -107,6 +108,7 @@ typedef enum
 {
   GST_DASH_SINK_MUXER_TS = 0,
   GST_DASH_SINK_MUXER_MP4 = 1,
+  GST_DASH_SINK_MUXER_DASHMP4 = 2,
 } GstDashSinkMuxerType;
 
 typedef struct _DashSinkMuxer
@@ -124,7 +126,14 @@ gst_dash_sink_muxer_get_type (void)
   static GType dash_sink_muxer_type = 0;
   static const GEnumValue muxer_type[] = {
     {GST_DASH_SINK_MUXER_TS, "Use mpegtsmux", "ts"},
-    {GST_DASH_SINK_MUXER_MP4, "Use mp4mux", "mp4"},
+    {GST_DASH_SINK_MUXER_MP4, "Use mp4mux (deprecated, non-functional)", "mp4"},
+    /**
+     * GstDashSinkMuxerType::dashmp4
+     *
+     *
+     * Since: 1.24
+     */
+    {GST_DASH_SINK_MUXER_DASHMP4, "Use dashmp4mux", "dashmp4"},
     {0, NULL, NULL},
   };
 
@@ -144,6 +153,11 @@ static const DashSinkMuxer dash_muxer_list[] = {
   {
         GST_DASH_SINK_MUXER_MP4,
         "mp4mux",
+        "video/mp4",
+      "mp4"},
+  {
+        GST_DASH_SINK_MUXER_DASHMP4,
+        "dashmp4mux",
         "video/mp4",
       "mp4"},
 };
@@ -646,9 +660,13 @@ gst_dash_sink_add_splitmuxsink (GstDashSink * sink, GstDashSinkStream * stream)
       gst_element_factory_make (dash_muxer_list[sink->muxer].element_name,
       NULL);
 
-  if (sink->muxer == GST_DASH_SINK_MUXER_MP4)
+  if (sink->muxer == GST_DASH_SINK_MUXER_MP4) {
     g_object_set (mux, "fragment-duration", sink->target_duration * GST_MSECOND,
         NULL);
+  } else if (sink->muxer == GST_DASH_SINK_MUXER_DASHMP4) {
+    g_object_set (mux, "fragment-duration", sink->target_duration * GST_SECOND,
+        NULL);
+  }
 
   g_return_val_if_fail (mux != NULL, FALSE);
 
