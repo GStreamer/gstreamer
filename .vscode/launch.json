@@ -12,15 +12,26 @@
       "windows": {
         "type": "cppvsdbg",
         "program": "gst-launch-1.0.exe",
+        "envFile": "${workspaceFolder}/${config:mesonbuild.buildFolder}/meson-vscode.env",
       },
       "osx": {
-        // https://github.com/microsoft/vscode-cpptools/issues/8411
         "MIMode": "lldb",
+        // lldb-mi doesn't support large environment variables: https://github.com/lldb-tools/lldb-mi/pull/87
+        "environment": [
+          {
+            "name": "GST_PLUGIN_PATH",
+            "value": "${workspaceFolder}/${config:mesonbuild.buildFolder}/subprojects",
+          },
+          {
+            "name": "GST_PLUGIN_SCANNER",
+            "value": "${workspaceFolder}/${config:mesonbuild.buildFolder}/subprojects/gstreamer/libs/gst/helpers/gst-plugin-scanner",
+          },
+        ],
       },
       "linux": {
-        "MIMode": "gdb"
+        "MIMode": "gdb",
+        "envFile": "${workspaceFolder}/${config:mesonbuild.buildFolder}/meson-vscode.env",
       },
-      "envFile": "${workspaceFolder}/${config:mesonbuild.buildFolder}/meson-vscode.env",
       "cwd": "${workspaceFolder}/${config:mesonbuild.buildFolder}/subprojects/gstreamer/tools/",
       "program": "${workspaceFolder}/${config:mesonbuild.buildFolder}/subprojects/gstreamer/tools/gst-launch-1.0",
       "args": [
