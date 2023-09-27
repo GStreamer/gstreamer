@@ -645,6 +645,7 @@ typedef struct
 #define WRITE_NV21 "write_nv21"
 #define WRITE_P010 "write_p010"
 #define WRITE_I420_10 "write_i420_10"
+#define WRITE_I420_12 "write_i420_12"
 #define WRITE_Y444 "write_y444"
 #define WRITE_Y444_10 "write_y444_10"
 #define WRITE_Y444_12 "write_y444_12"
@@ -999,6 +1000,18 @@ WRITE_I420_10 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2
 "    unsigned int pos = x + (y / 2) * stride1;\n"
 "    *(unsigned short *) &dst1[pos] = scale_to_10bits (sample.y);\n"
 "    *(unsigned short *) &dst2[pos] = scale_to_10bits (sample.z);\n"
+"  }\n"
+"}\n"
+"\n"
+"__device__ inline void\n"
+WRITE_I420_12 "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  *(unsigned short *) &dst0[x * 2 + y * stride0] = scale_to_12bits (sample.x);\n"
+"  if (x % 2 == 0 && y % 2 == 0) {\n"
+"    unsigned int pos = x + (y / 2) * stride1;\n"
+"    *(unsigned short *) &dst1[pos] = scale_to_12bits (sample.y);\n"
+"    *(unsigned short *) &dst2[pos] = scale_to_12bits (sample.z);\n"
 "  }\n"
 "}\n"
 "\n"
@@ -1485,6 +1498,7 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_YUV_SEMI_PLANAR (P012_LE, UNSIGNED_INT16, SAMPLE_SEMI_PLANAR),
   MAKE_FORMAT_YUV_SEMI_PLANAR (P016_LE, UNSIGNED_INT16, SAMPLE_SEMI_PLANAR),
   MAKE_FORMAT_YUV_PLANAR (I420_10LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR_10BIS),
+  MAKE_FORMAT_YUV_PLANAR (I420_12LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR_12BIS),
   MAKE_FORMAT_YUV_PLANAR (Y444, UNSIGNED_INT8, SAMPLE_YUV_PLANAR),
   MAKE_FORMAT_YUV_PLANAR (Y444_10LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR_10BIS),
   MAKE_FORMAT_YUV_PLANAR (Y444_12LE, UNSIGNED_INT16, SAMPLE_YUV_PLANAR_12BIS),
@@ -1729,6 +1743,9 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       break;
     case GST_VIDEO_FORMAT_I420_10LE:
       write_func = WRITE_I420_10;
+      break;
+    case GST_VIDEO_FORMAT_I420_12LE:
+      write_func = WRITE_I420_12;
       break;
     case GST_VIDEO_FORMAT_Y444:
       write_func = WRITE_Y444;

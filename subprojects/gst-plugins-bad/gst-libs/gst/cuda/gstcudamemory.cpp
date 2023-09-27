@@ -195,6 +195,7 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
       /* we are wasting space yes, but required so that this memory
        * can be used in kernel function */
       ret.stride[0] = pitch;
@@ -738,6 +739,7 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_YUV_SEMI_PLANAR (P012_LE, UNSIGNED_INT16),
   MAKE_FORMAT_YUV_SEMI_PLANAR (P016_LE, UNSIGNED_INT16),
   MAKE_FORMAT_YUV_PLANAR (I420_10LE, UNSIGNED_INT16),
+  MAKE_FORMAT_YUV_PLANAR (I420_12LE, UNSIGNED_INT16),
   MAKE_FORMAT_YUV_PLANAR (Y444, UNSIGNED_INT8),
   MAKE_FORMAT_YUV_PLANAR (Y444_10LE, UNSIGNED_INT16),
   MAKE_FORMAT_YUV_PLANAR (Y444_12LE, UNSIGNED_INT16),
@@ -1028,6 +1030,7 @@ gst_cuda_allocator_calculate_alloc_height (const GstVideoInfo * info)
     case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
     case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
       alloc_height = GST_ROUND_UP_2 (alloc_height);
       break;
     default:
@@ -1038,6 +1041,7 @@ gst_cuda_allocator_calculate_alloc_height (const GstVideoInfo * info)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I420_12LE:
       alloc_height *= 2;
       break;
     case GST_VIDEO_FORMAT_NV12:
