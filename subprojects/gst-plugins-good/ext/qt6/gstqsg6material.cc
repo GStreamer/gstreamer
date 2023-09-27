@@ -208,7 +208,9 @@ GstQSGTexture::GstQSGTexture(QRhiTexture * texture)
 {
   switch (texture->format()) {
     case QRhiTexture::RGBA8:
+#if (QT_VERSION >= QT_VERSION_CHECK(6, 4, 0))
     case QRhiTexture::RGB10A2:
+#endif
     case QRhiTexture::RGBA16F:
     case QRhiTexture::RGBA32F:
       this->m_has_alpha = true;
