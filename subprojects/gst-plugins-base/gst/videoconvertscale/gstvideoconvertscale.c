@@ -181,7 +181,7 @@ enum
 
 static GstStaticCaps gst_video_convert_scale_format_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS) ";"
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS));
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ANY));
 
 static GQuark _size_quark;
 static GQuark _scale_quark;

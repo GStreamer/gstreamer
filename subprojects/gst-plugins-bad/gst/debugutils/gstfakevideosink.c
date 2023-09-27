@@ -162,7 +162,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY",
-            "{ " GST_VIDEO_FORMATS_ALL_STR ", " "DMA_DRM" " }")));
+            GST_VIDEO_FORMATS_ANY)));
 
 G_DEFINE_TYPE (GstFakeVideoSink, gst_fake_video_sink, GST_TYPE_BIN);
 GST_ELEMENT_REGISTER_DEFINE (fakevideosink, "fakevideosink",

@@ -297,7 +297,7 @@ gst_deinterlace_locking_get_type (void)
 #define DEINTERLACE_CAPS GST_VIDEO_CAPS_MAKE(DEINTERLACE_VIDEO_FORMATS)
 
 #define DEINTERLACE_ALL_CAPS DEINTERLACE_CAPS ";" \
-    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ALL)
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ANY)
 
 static GstStaticCaps progressive_caps =
 GST_STATIC_CAPS ("video/x-raw(ANY),interlace-mode=(string)progressive");
