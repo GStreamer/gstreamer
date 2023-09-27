@@ -60,6 +60,10 @@ def parse_format_from_c(token, filename):
 
 
 def score_endian(fmt, endian):
+    native_endianness = [GstVideo.VideoFormat.ARGB64, GstVideo.VideoFormat.AYUV64]
+    if fmt.format in native_endianness:
+        return -1
+
     score = 0
     if fmt.flags & GstVideo.VideoFormatFlags.LE:
         score = 1
@@ -69,6 +73,17 @@ def score_endian(fmt, endian):
         return score
 
 
+def score_pixel_stride(fmt):
+    # Prefer power-of-two strides over odd ones, e.g. xRGB over RGB
+    def scale_non_power_of_two(x):
+        if (x & (x - 1) == 0) and x != 0:
+            return x
+        else:
+            return x * 100
+
+    return [scale_non_power_of_two(x) for x in fmt.pixel_stride]
+
+
 def sort_video_formats(formats, endian):
     return sorted(formats, key=lambda x: (-x.n_components,
                                           [-d for d in x.depth],
@@ -76,9 +91,11 @@ def sort_video_formats(formats, endian):
                                           x.h_sub,
                                           -x.n_planes,
                                           score_endian(x, endian),
-                                          [-s for s in x.pixel_stride],
                                           (x.flags & GstVideo.VideoFormatFlags.COMPLEX),
                                           not (x.flags & GstVideo.VideoFormatFlags.YUV),
+                                          score_pixel_stride(x),
+                                          [s for s in x.pixel_stride],
+                                          [o for o in x.poffset],
                                           x.name))
 
 
