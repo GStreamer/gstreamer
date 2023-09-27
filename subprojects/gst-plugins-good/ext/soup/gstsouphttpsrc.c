@@ -96,6 +96,7 @@
 
 #define GST_TYPE_SOUP_SESSION (gst_soup_session_get_type())
 #define GST_SOUP_SESSION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_SOUP_SESSION, GstSoupSession))
+#define gst_soup_session_parent_class session_parent_class
 
 GType gst_soup_session_get_type (void);
 
@@ -139,8 +140,9 @@ gst_soup_session_finalize (GObject * obj)
   GSource *src;
 
   /* handle disposing of failure cases */
-  if (!sess->loop)
-    return;
+  if (!sess->loop) {
+    goto cleanup;
+  }
 
   src = g_idle_source_new ();
 
@@ -152,6 +154,8 @@ gst_soup_session_finalize (GObject * obj)
   g_assert (!g_main_context_is_owner (g_main_loop_get_context (sess->loop)));
   g_thread_join (sess->thread);
   g_main_loop_unref (sess->loop);
+cleanup:
+  G_OBJECT_CLASS (session_parent_class)->finalize (obj);
 }
 
 static void
