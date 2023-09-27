@@ -936,6 +936,7 @@ validate.test.h264.parse.trickmode_predicted.seek_trickmode_predicted
 validate.test.h264.x264enc_youtube_bitrate.fullhd_lowframerate
 validate.test.h265parse.alternate
 validate.test.h265parse.trickmode_predicted.seek_trickmode_predicted
+validate.test.inter.audio-planar
 validate.test.interlace.interlace_deinterlace
 validate.test.interlace.interlace_deinterlace_alternate
 validate.test.matroska.demux_flush_within_cluster.default
