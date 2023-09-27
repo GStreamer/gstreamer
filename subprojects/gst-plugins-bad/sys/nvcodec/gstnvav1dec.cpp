@@ -79,6 +79,7 @@ typedef struct _GstNvAV1DecClass
 {
   GstAV1DecoderClass parent_class;
   guint cuda_device_id;
+  gint64 adapter_luid;
   guint max_width;
   guint max_height;
 } GstNvAV1DecClass;
@@ -262,6 +263,7 @@ gst_nv_av1_dec_class_init (GstNvAV1DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_nv_av1_dec_get_preferred_output_delay);
 
   klass->cuda_device_id = cdata->cuda_device_id;
+  klass->adapter_luid = cdata->adapter_luid;
   klass->max_width = cdata->max_width;
   klass->max_height = cdata->max_height;
 
@@ -275,7 +277,8 @@ gst_nv_av1_dec_init (GstNvAV1Dec * self)
 {
   GstNvAV1DecClass *klass = GST_NV_AV1_DEC_GET_CLASS (self);
 
-  self->decoder = gst_nv_decoder_new (klass->cuda_device_id);
+  self->decoder =
+      gst_nv_decoder_new (klass->cuda_device_id, klass->adapter_luid);
 
   self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
   self->max_display_delay = DEFAULT_MAX_DISPLAY_DELAY;
@@ -1015,8 +1018,8 @@ gst_nv_av1_dec_get_preferred_output_delay (GstAV1Decoder * decoder,
 }
 
 void
-gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id, guint rank,
-    GstCaps * sink_caps, GstCaps * src_caps)
+gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id,
+    gint64 adapter_luid, guint rank, GstCaps * sink_caps, GstCaps * src_caps)
 {
   GType type;
   gchar *type_name;
@@ -1051,6 +1054,7 @@ gst_nv_av1_dec_register (GstPlugin * plugin, guint device_id, guint rank,
   cdata->sink_caps = gst_caps_ref (sink_caps);
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
+  cdata->adapter_luid = adapter_luid;
 
   type_info.class_data = cdata;
 

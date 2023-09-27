@@ -134,6 +134,7 @@ typedef struct _GstNvH265DecClass
 {
   GstH265DecoderClass parent_class;
   guint cuda_device_id;
+  gint64 adapter_luid;
   guint max_width;
   guint max_height;
 } GstNvH265DecClass;
@@ -324,6 +325,7 @@ gst_nv_h265_dec_class_init (GstNvH265DecClass * klass,
       GST_DEBUG_FUNCPTR (gst_nv_h265_dec_get_preferred_output_delay);
 
   klass->cuda_device_id = cdata->cuda_device_id;
+  klass->adapter_luid = cdata->adapter_luid;
   klass->max_width = cdata->max_width;
   klass->max_height = cdata->max_height;
 
@@ -337,7 +339,8 @@ gst_nv_h265_dec_init (GstNvH265Dec * self)
 {
   GstNvH265DecClass *klass = GST_NV_H265_DEC_GET_CLASS (self);
 
-  self->decoder = gst_nv_decoder_new (klass->cuda_device_id);
+  self->decoder =
+      gst_nv_decoder_new (klass->cuda_device_id, klass->adapter_luid);
 
   self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
   self->max_display_delay = DEFAULT_MAX_DISPLAY_DELAY;
@@ -1150,8 +1153,8 @@ gst_nv_h265_dec_get_preferred_output_delay (GstH265Decoder * decoder,
 }
 
 void
-gst_nv_h265_dec_register (GstPlugin * plugin, guint device_id, guint rank,
-    GstCaps * sink_caps, GstCaps * src_caps)
+gst_nv_h265_dec_register (GstPlugin * plugin, guint device_id,
+    gint64 adapter_luid, guint rank, GstCaps * sink_caps, GstCaps * src_caps)
 {
   GType type;
   gchar *type_name;
@@ -1207,6 +1210,7 @@ gst_nv_h265_dec_register (GstPlugin * plugin, guint device_id, guint rank,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   cdata->src_caps = gst_caps_ref (src_caps);
   cdata->cuda_device_id = device_id;
+  cdata->adapter_luid = adapter_luid;
 
   type_name = g_strdup ("GstNvH265Dec");
   feature_name = g_strdup ("nvh265dec");

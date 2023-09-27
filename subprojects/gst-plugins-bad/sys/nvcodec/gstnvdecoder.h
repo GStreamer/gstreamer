@@ -38,11 +38,13 @@ typedef struct _GstNvDecoderClassData
   GstCaps *sink_caps;
   GstCaps *src_caps;
   guint cuda_device_id;
+  gint64 adapter_luid;
   guint max_width;
   guint max_height;
 } GstNvDecoderClassData;
 
-GstNvDecoder * gst_nv_decoder_new (guint device_id);
+GstNvDecoder * gst_nv_decoder_new (guint device_id,
+                                   gint64 adapter_luid);
 
 gboolean       gst_nv_decoder_open (GstNvDecoder * decoder,
                                     GstElement * element);
