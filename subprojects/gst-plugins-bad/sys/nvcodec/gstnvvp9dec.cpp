@@ -48,7 +48,6 @@ typedef struct _GstNvVp9Dec
 {
   GstVp9Decoder parent;
 
-  GstCudaContext *context;
   GstNvDecoder *decoder;
   CUVIDPICPARAMS params;
 
@@ -88,6 +87,7 @@ static GTypeClass *parent_class = nullptr;
 #define GST_NV_VP9_DEC_GET_CLASS(object) \
     (G_TYPE_INSTANCE_GET_CLASS ((object),G_TYPE_FROM_INSTANCE (object),GstNvVp9DecClass))
 
+static void gst_nv_vp9_dec_finalize (GObject * object);
 static void gst_nv_vp9_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_nv_vp9_dec_get_property (GObject * object, guint prop_id,
@@ -101,6 +101,8 @@ static gboolean gst_nv_vp9_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_nv_vp9_dec_negotiate (GstVideoDecoder * decoder);
 static gboolean gst_nv_vp9_dec_decide_allocation (GstVideoDecoder *
     decoder, GstQuery * query);
+static gboolean gst_nv_vp9_dec_sink_query (GstVideoDecoder * decoder,
+    GstQuery * query);
 static gboolean gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder,
     GstQuery * query);
 static gboolean gst_nv_vp9_dec_sink_event (GstVideoDecoder * decoder,
@@ -129,6 +131,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
   GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
   GstVp9DecoderClass *vp9decoder_class = GST_VP9_DECODER_CLASS (klass);
 
+  object_class->finalize = gst_nv_vp9_dec_finalize;
   object_class->set_property = gst_nv_vp9_dec_set_property;
   object_class->get_property = gst_nv_vp9_dec_get_property;
 
@@ -227,6 +230,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
   decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_negotiate);
   decoder_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_decide_allocation);
+  decoder_class->sink_query = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_sink_query);
   decoder_class->src_query = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_src_query);
   decoder_class->sink_event = GST_DEBUG_FUNCPTR (gst_nv_vp9_dec_sink_event);
 
@@ -255,8 +259,22 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
 static void
 gst_nv_vp9_dec_init (GstNvVp9Dec * self)
 {
+  GstNvVp9DecClass *klass = GST_NV_VP9_DEC_GET_CLASS (self);
+
+  self->decoder = gst_nv_decoder_new (klass->cuda_device_id);
+
   self->num_output_surfaces = DEFAULT_NUM_OUTPUT_SURFACES;
   self->max_display_delay = DEFAULT_MAX_DISPLAY_DELAY;
+}
+
+static void
+gst_nv_vp9_dec_finalize (GObject * object)
+{
+  GstNvVp9Dec *self = GST_NV_VP9_DEC (object);
+
+  gst_object_unref (self->decoder);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -317,20 +335,9 @@ static void
 gst_nv_vp9_dec_set_context (GstElement * element, GstContext * context)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (element);
-  GstNvVp9DecClass *klass = GST_NV_VP9_DEC_GET_CLASS (self);
 
-  GST_DEBUG_OBJECT (self, "set context %s",
-      gst_context_get_context_type (context));
+  gst_nv_decoder_handle_set_context (self->decoder, element, context);
 
-  if (gst_cuda_handle_set_context (element, context, klass->cuda_device_id,
-          &self->context)) {
-    goto done;
-  }
-
-  if (self->decoder)
-    gst_nv_decoder_handle_set_context (self->decoder, element, context);
-
-done:
   GST_ELEMENT_CLASS (parent_class)->set_context (element, context);
 }
 
@@ -339,27 +346,12 @@ gst_nv_vp9_dec_open (GstVideoDecoder * decoder)
 {
   GstVp9Decoder *vp9dec = GST_VP9_DECODER (decoder);
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
-  GstNvVp9DecClass *klass = GST_NV_VP9_DEC_GET_CLASS (self);
-
-  if (!gst_cuda_ensure_element_context (GST_ELEMENT (self),
-          klass->cuda_device_id, &self->context)) {
-    GST_ERROR_OBJECT (self, "Required element data is unavailable");
-    return FALSE;
-  }
-
-  self->decoder = gst_nv_decoder_new (self->context);
-  if (!self->decoder) {
-    GST_ERROR_OBJECT (self, "Failed to create decoder object");
-    gst_clear_object (&self->context);
-
-    return FALSE;
-  }
 
   /* NVDEC doesn't support non-keyframe resolution change and it will result
    * in outputting broken frames */
   gst_vp9_decoder_set_non_keyframe_format_change_support (vp9dec, FALSE);
 
-  return TRUE;
+  return gst_nv_decoder_open (self->decoder, GST_ELEMENT (decoder));
 }
 
 static gboolean
@@ -367,10 +359,7 @@ gst_nv_vp9_dec_close (GstVideoDecoder * decoder)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
 
-  gst_clear_object (&self->decoder);
-  gst_clear_object (&self->context);
-
-  return TRUE;
+  return gst_nv_decoder_close (self->decoder);
 }
 
 static gboolean
@@ -381,8 +370,7 @@ gst_nv_vp9_dec_stop (GstVideoDecoder * decoder)
 
   ret = GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
 
-  if (self->decoder)
-    gst_nv_decoder_reset (self->decoder);
+  gst_nv_decoder_reset (self->decoder);
 
   return ret;
 }
@@ -395,9 +383,8 @@ gst_nv_vp9_dec_negotiate (GstVideoDecoder * decoder)
 
   GST_DEBUG_OBJECT (self, "negotiate");
 
-  gst_nv_decoder_negotiate (self->decoder, decoder, vp9dec->input_state);
-
-  /* TODO: add support D3D11 memory */
+  if (!gst_nv_decoder_negotiate (self->decoder, decoder, vp9dec->input_state))
+    return FALSE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder);
 }
@@ -417,23 +404,23 @@ gst_nv_vp9_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 }
 
 static gboolean
+gst_nv_vp9_dec_sink_query (GstVideoDecoder * decoder, GstQuery * query)
+{
+  GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
+
+  if (gst_nv_decoder_handle_query (self->decoder, GST_ELEMENT (decoder), query))
+    return TRUE;
+
+  return GST_VIDEO_DECODER_CLASS (parent_class)->sink_query (decoder, query);
+}
+
+static gboolean
 gst_nv_vp9_dec_src_query (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
 
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_CONTEXT:
-      if (gst_cuda_handle_context_query (GST_ELEMENT (decoder), query,
-              self->context)) {
-        return TRUE;
-      } else if (self->decoder &&
-          gst_nv_decoder_handle_context_query (self->decoder, decoder, query)) {
-        return TRUE;
-      }
-      break;
-    default:
-      break;
-  }
+  if (gst_nv_decoder_handle_query (self->decoder, GST_ELEMENT (decoder), query))
+    return TRUE;
 
   return GST_VIDEO_DECODER_CLASS (parent_class)->src_query (decoder, query);
 }
@@ -442,9 +429,6 @@ static gboolean
 gst_nv_vp9_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
 {
   GstNvVp9Dec *self = GST_NV_VP9_DEC (decoder);
-
-  if (!self->decoder)
-    goto done;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -457,7 +441,6 @@ gst_nv_vp9_dec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
       break;
   }
 
-done:
   return GST_VIDEO_DECODER_CLASS (parent_class)->sink_event (decoder, event);
 }
 
