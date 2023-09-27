@@ -749,13 +749,10 @@ _append_drm_formats_from_video_format (GstGLContext * context,
           &dma_modifiers))
     return;
 
-  /* No modifier info, we just consider it as linear and external_only. */
+  /* No modifier info, lets warn and move on */
   if (!dma_modifiers) {
-    if (flags | INCLUDE_EXTERNAL) {
-      drm_format =
-          gst_video_dma_drm_fourcc_to_string (fourcc, DRM_FORMAT_MOD_LINEAR);
-      g_ptr_array_add (drm_formats, drm_format);
-    }
+    GST_WARNING_OBJECT (context, "Undefined modifiers list for %"
+        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
     return;
   }
 
