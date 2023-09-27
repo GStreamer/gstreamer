@@ -493,6 +493,21 @@ get_single_planar_format_gl_swizzle_order (GstVideoFormat format,
   g_return_if_fail (finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB
       || format == GST_VIDEO_FORMAT_AYUV || format == GST_VIDEO_FORMAT_VUYA);
 
+  if (format == GST_VIDEO_FORMAT_BGR10A2_LE) {
+    swizzle[0] = 2;
+    swizzle[1] = 1;
+    swizzle[2] = 0;
+    swizzle[3] = 3;
+    return;
+  }
+  if (format == GST_VIDEO_FORMAT_RGB10A2_LE) {
+    swizzle[0] = 0;
+    swizzle[1] = 1;
+    swizzle[2] = 2;
+    swizzle[3] = 3;
+    return;
+  }
+
   for (i = 0; i < finfo->n_components; i++) {
     swizzle[c_i++] = finfo->poffset[i] / (GST_ROUND_UP_8 (finfo->bits) / 8);
   }
