@@ -70,6 +70,12 @@
  * ```
  * Composite WPE with a video stream, sink_0 pad properties have to match the video dimensions.
  *
+ * ```shell
+ * weston -S $HOME/weston-sock -B headless-backend.so --use-gl &
+ * WAYLAND_DISPLAY=$HOME/weston-sock gst-launch-1.0 wpevideosrc location=https://google.com ! queue ! fakevideosink
+ * ```
+ * Render Google.com with WPE in a headless Weston compositor. This can be useful for server-side WPE video processing.
+ *
  * Since: 1.16
  */
 
