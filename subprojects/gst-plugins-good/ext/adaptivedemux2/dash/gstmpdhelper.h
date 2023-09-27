@@ -63,8 +63,7 @@ gboolean gst_mpd_helper_get_SAP_type (xmlNode * a_node, const gchar * property_n
 
 const gchar * gst_mpd_helper_mimetype_to_caps (const gchar * mimeType);
 GstCaps *gst_mpd_helper_mimetype_to_codec_caps (const gchar * mimeType);
-const gchar * gst_mpd_helper_get_video_codec_from_mime (GstCaps * caps);
-const gchar * gst_mpd_helper_get_audio_codec_from_mime (GstCaps * caps);
+
 GstUri *gst_mpd_helper_combine_urls (GstUri * base, GList * list, gchar ** query, guint idx);
 int gst_mpd_helper_strncmp_ext (const char *s1, const char *s2);
 
