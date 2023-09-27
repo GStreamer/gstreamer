@@ -27,6 +27,7 @@
 #include <atomic>
 #include <set>
 #include <string>
+#include <mutex>
 
 #ifdef HAVE_CUDA_GST_GL
 #include <gst/gl/gl.h>
@@ -1307,8 +1308,14 @@ ensure_d3d11_interop (GstCudaContext * context, GstD3D11Device * device)
 static GstCudaGraphicsResource *
 ensure_cuda_d3d11_graphics_resource (GstCudaContext * context, GstMemory * mem)
 {
-  GQuark quark;
+  static gint64 d3d11_interop_token = 0;
+  static std::once_flag once_flag;
   GstCudaGraphicsResource *ret = nullptr;
+  GstD3D11Memory *dmem;
+
+  GST_CUDA_CALL_ONCE_BEGIN {
+    d3d11_interop_token = gst_d3d11_create_user_token ();
+  } GST_CUDA_CALL_ONCE_END;
 
   if (!gst_is_d3d11_memory (mem)) {
     GST_WARNING_OBJECT (context, "memory is not D3D11 memory, %s",
@@ -1316,9 +1323,9 @@ ensure_cuda_d3d11_graphics_resource (GstCudaContext * context, GstMemory * mem)
     return nullptr;
   }
 
-  quark = gst_cuda_quark_from_id (GST_CUDA_QUARK_GRAPHICS_RESOURCE);
+  dmem = GST_D3D11_MEMORY_CAST (mem);
   ret = (GstCudaGraphicsResource *)
-      gst_mini_object_get_qdata (GST_MINI_OBJECT (mem), quark);
+      gst_d3d11_memory_get_token_data (dmem, d3d11_interop_token);
 
   if (!ret) {
     ret = gst_cuda_graphics_resource_new (context,
@@ -1331,11 +1338,11 @@ ensure_cuda_d3d11_graphics_resource (GstCudaContext * context, GstMemory * mem)
       GST_ERROR_OBJECT (context, "failed to register d3d11 resource");
       gst_cuda_graphics_resource_free (ret);
 
-      return nullptr;
+      ret = nullptr;
+    } else {
+      gst_d3d11_memory_set_token_data (dmem, d3d11_interop_token, ret,
+          (GDestroyNotify) gst_cuda_graphics_resource_free);
     }
-
-    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem), quark, ret,
-        (GDestroyNotify) gst_cuda_graphics_resource_free);
   }
 
   return ret;
