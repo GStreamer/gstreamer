@@ -556,13 +556,12 @@ gst_rtp_vp8_create_header_buffer (GstRtpVP8Pay * self, guint8 partid,
       gboolean use_temporal_scaling = FALSE;
 
       if (meta) {
-        GstStructure *s = gst_custom_meta_get_structure (meta);
-        gst_structure_get_boolean (s, "use-temporal-scaling",
+        gst_structure_get_boolean (meta->structure, "use-temporal-scaling",
             &use_temporal_scaling);
 
         if (use_temporal_scaling)
-          gst_structure_get (s, "layer-id", G_TYPE_UINT, &temporal_layer,
-              "layer-sync", G_TYPE_BOOLEAN, &layer_sync, NULL);
+          gst_structure_get (meta->structure, "layer-id", G_TYPE_UINT,
+              &temporal_layer, "layer-sync", G_TYPE_BOOLEAN, &layer_sync, NULL);
       }
 
       /* FIXME: Support a prediction structure where higher layers don't
@@ -682,13 +681,12 @@ gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
   }
 
   if (meta) {
-    GstStructure *s = gst_custom_meta_get_structure (meta);
     gboolean use_temporal_scaling;
     /* For interop it's most likely better to keep the temporal scalability
      * fields present if the stream previously had them present. Alternating
      * whether these fields are present or not may confuse the receiver. */
 
-    gst_structure_get_boolean (s, "use-temporal-scaling",
+    gst_structure_get_boolean (meta->structure, "use-temporal-scaling",
         &use_temporal_scaling);
     if (use_temporal_scaling)
       self->temporal_scalability_fields_present = TRUE;

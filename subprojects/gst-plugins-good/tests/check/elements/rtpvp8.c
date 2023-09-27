@@ -105,12 +105,10 @@ add_vp8_meta (GstBuffer * buffer, gboolean use_temporal_scaling,
     gboolean layer_sync, guint layer_id, guint tl0picidx)
 {
   GstCustomMeta *meta;
-  GstStructure *s;
 
   meta = gst_buffer_add_custom_meta (buffer, "GstVP8Meta");
   fail_unless (meta != NULL);
-  s = gst_custom_meta_get_structure (meta);
-  gst_structure_set (s,
+  gst_structure_set (meta->structure,
       "use-temporal-scaling", G_TYPE_BOOLEAN, use_temporal_scaling,
       "layer-sync", G_TYPE_BOOLEAN, layer_sync,
       "layer-id", G_TYPE_UINT, layer_id,
@@ -873,10 +871,9 @@ rtpvp8_suite (void)
 {
   Suite *s = suite_create ("rtpvp8");
   TCase *tc_chain;
-  static const gchar *tags[] = { NULL };
 
   /* Register custom GstVP8Meta manually */
-  gst_meta_register_custom ("GstVP8Meta", tags, NULL, NULL, NULL);
+  gst_meta_register_custom_simple ("GstVP8Meta");
 
   suite_add_tcase (s, (tc_chain = tcase_create ("vp8pay")));
   tcase_add_loop_test (tc_chain, test_pay_no_meta, 0,

@@ -2953,7 +2953,6 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
   GstElementClass *gstelement_class = (GstElementClass *) klass;
-  static const gchar *meta_tags[] = { NULL };
 
   aggregator_parent_class = g_type_class_peek_parent (klass);
 
@@ -3070,8 +3069,7 @@ gst_aggregator_class_init (GstAggregatorClass * klass)
       GST_TYPE_CLOCK_TIME, GST_TYPE_CLOCK_TIME,
       GST_TYPE_STRUCTURE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
-  gst_meta_register_custom ("GstAggregatorMissingDataMeta", meta_tags, NULL,
-      NULL, NULL);
+  gst_meta_register_custom_simple ("GstAggregatorMissingDataMeta");
 }
 
 static inline gpointer

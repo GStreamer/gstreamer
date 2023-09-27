@@ -31,9 +31,8 @@ void
 vpx_element_init (GstPlugin * plugin)
 {
   static gsize res = FALSE;
-  static const gchar *tags[] = { NULL };
   if (g_once_init_enter (&res)) {
-    gst_meta_register_custom ("GstVP8Meta", tags, NULL, NULL, NULL);
+    gst_meta_register_custom_simple ("GstVP8Meta");
     g_once_init_leave (&res, TRUE);
   }
 }
