@@ -126,7 +126,6 @@ option('gsm', type : 'feature', value : 'auto', description : 'GSM encoder/decod
 option('gtk3', type : 'feature', value : 'auto', description : 'GTK+ video sink plugin')
 option('ipcpipeline', type : 'feature', value : 'auto', description : 'Inter-process communication plugin')
 option('iqa', type : 'feature', value : 'auto', description : 'Image quality assessment plugin (AGPL - only built if gpl option is also enabled!)')
-option('kate', type : 'feature', value : 'auto', description : 'Kate subtitle parser, tagger, and codec plugin')
 option('kms', type : 'feature', value : 'auto', description : 'KMS video sink plugin')
 option('ladspa', type : 'feature', value : 'auto', description : 'LADSPA plugin bridge')
 option('lc3', type : 'feature', value : 'auto', description : 'LC3 (Bluetooth) LE audio codec plugin')

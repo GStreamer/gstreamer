@@ -49,8 +49,6 @@ libamrnb	(for AMR-NB support)
 			(http://www.penguin.cz/~utx/amr)
 libamrwb	(for AMR-WB support)
 			(http://www.penguin.cz/~utx/amr)
-libkate		(for Kate support)
-			(http://libkate.googlecode.com/)
 librtmp         (for RTMP support)
 			(http://rtmpdump.mplayerhq.hu/)
 
