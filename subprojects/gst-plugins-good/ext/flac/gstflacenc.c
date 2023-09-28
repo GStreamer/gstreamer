@@ -484,7 +484,7 @@ static gboolean
 add_cuesheet (const GstToc * toc, guint sample_rate,
     FLAC__StreamMetadata * cuesheet)
 {
-  gint8 track_num = 0;
+  guint8 track_num = 0;
   gint64 start, stop;
   gchar *isrc = NULL;
   const gchar *is_legal;
