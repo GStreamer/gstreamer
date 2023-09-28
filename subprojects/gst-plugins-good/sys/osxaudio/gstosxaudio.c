@@ -37,21 +37,15 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "osxaudiosink", GST_RANK_PRIMARY,
-          GST_TYPE_OSX_AUDIO_SINK)) {
-    return FALSE;
-  }
-  if (!gst_element_register (plugin, "osxaudiosrc", GST_RANK_PRIMARY,
-          GST_TYPE_OSX_AUDIO_SRC)) {
-    return FALSE;
-  }
+  gboolean ret = FALSE;
+
+  ret |= GST_ELEMENT_REGISTER (osxaudiosrc, plugin);
+  ret |= GST_ELEMENT_REGISTER (osxaudiosink, plugin);
 #ifndef HAVE_IOS
-  if (!gst_device_provider_register (plugin, "osxaudiodeviceprovider",
-          GST_RANK_PRIMARY, GST_TYPE_OSX_AUDIO_DEVICE_PROVIDER))
-    return FALSE;
+  ret |= GST_DEVICE_PROVIDER_REGISTER (osxaudiodeviceprovider, plugin);
 #endif
 
-  return TRUE;
+  return ret;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

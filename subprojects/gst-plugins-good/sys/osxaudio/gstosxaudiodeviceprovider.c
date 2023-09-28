@@ -51,6 +51,9 @@ static GstOsxAudioDevice *gst_osx_audio_device_new (AudioDeviceID device_id,
 
 G_DEFINE_TYPE (GstOsxAudioDeviceProvider, gst_osx_audio_device_provider,
     GST_TYPE_DEVICE_PROVIDER);
+GST_DEVICE_PROVIDER_REGISTER_DEFINE (osxaudiodeviceprovider,
+    "osxaudiodeviceprovider", GST_RANK_PRIMARY,
+    GST_TYPE_OSX_AUDIO_DEVICE_PROVIDER);
 
 static GList *gst_osx_audio_device_provider_probe (GstDeviceProvider *
     provider);

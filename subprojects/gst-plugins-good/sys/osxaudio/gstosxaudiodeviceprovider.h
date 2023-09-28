@@ -87,5 +87,7 @@ struct _GstOsxAudioDeviceClass
 
 GType gst_osx_audio_device_get_type (void);
 
+GST_DEVICE_PROVIDER_REGISTER_DECLARE(osxaudiodeviceprovider);
+
 G_END_DECLS
 #endif /* __GST_OSX_AUDIO_DEIVCE_PROVIDER_H__ */

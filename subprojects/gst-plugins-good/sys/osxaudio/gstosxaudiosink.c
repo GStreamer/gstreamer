@@ -148,6 +148,8 @@ gst_osx_audio_sink_do_init (GType type)
 #define gst_osx_audio_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstOsxAudioSink, gst_osx_audio_sink,
     GST_TYPE_AUDIO_BASE_SINK, gst_osx_audio_sink_do_init (g_define_type_id));
+GST_ELEMENT_REGISTER_DEFINE (osxaudiosink, "osxaudiosink", GST_RANK_PRIMARY,
+    GST_TYPE_OSX_AUDIO_SINK);
 
 static void
 gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
