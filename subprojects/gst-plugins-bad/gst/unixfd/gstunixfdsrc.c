@@ -65,7 +65,7 @@ struct _GstUnixFdSrc
   GSocket *socket;
   GCancellable *cancellable;
 
-  GstAllocator *allocator;
+  GstAllocator *allocators[MEMORY_TYPE_LAST];
   GHashTable *memories;
   gboolean uses_monotonic_clock;
 };
@@ -121,7 +121,8 @@ gst_unix_fd_src_init (GstUnixFdSrc * self)
 
   self->cancellable = g_cancellable_new ();
   self->memories = g_hash_table_new (NULL, NULL);
-  self->allocator = gst_fd_allocator_new ();
+  self->allocators[0] = gst_fd_allocator_new ();
+  self->allocators[1] = gst_dmabuf_allocator_new ();
   gst_base_src_set_live (GST_BASE_SRC (self), TRUE);
 }
 
@@ -133,7 +134,8 @@ gst_unix_fd_src_finalize (GObject * object)
   g_free (self->socket_path);
   g_object_unref (self->cancellable);
   g_hash_table_unref (self->memories);
-  gst_object_unref (self->allocator);
+  for (int i = 0; i < MEMORY_TYPE_LAST; i++)
+    gst_object_unref (self->allocators[i]);
 
   G_OBJECT_CLASS (gst_unix_fd_src_parent_class)->finalize (object);
 }
@@ -339,6 +341,13 @@ again:
         goto on_error;
       }
 
+      if (new_buffer->type >= MEMORY_TYPE_LAST) {
+        GST_ERROR_OBJECT (self, "Unknown buffer type %d", new_buffer->type);
+        ret = GST_FLOW_ERROR;
+        goto on_error;
+      }
+      GstAllocator *allocator = self->allocators[new_buffer->type];
+
       gint *fds_arr = g_unix_fd_list_steal_fds (fds, NULL);
 
       BufferContext *ctx = g_new0 (BufferContext, 1);
@@ -366,7 +375,7 @@ again:
 
       GST_OBJECT_LOCK (self);
       for (int i = 0; i < new_buffer->n_memory; i++) {
-        GstMemory *mem = gst_fd_allocator_alloc (self->allocator, fds_arr[i],
+        GstMemory *mem = gst_fd_allocator_alloc (allocator, fds_arr[i],
             new_buffer->memories[i].size, GST_FD_MEMORY_FLAG_NONE);
         gst_memory_resize (mem, new_buffer->memories[i].offset,
             new_buffer->memories[i].size);

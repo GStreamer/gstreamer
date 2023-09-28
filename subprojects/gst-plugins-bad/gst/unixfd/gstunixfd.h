@@ -35,6 +35,13 @@ typedef enum
   COMMAND_TYPE_EOS = 3,
 } CommandType;
 
+typedef enum
+{
+  MEMORY_TYPE_DEFAULT = 0,
+  MEMORY_TYPE_DMABUF = 1,
+  MEMORY_TYPE_LAST,
+} MemoryType;
+
 typedef struct {
   guint64 size;
   guint64 offset;
@@ -48,9 +55,9 @@ typedef struct {
   guint64 offset;
   guint64 offset_end;
   guint32 flags;
+  guint8 type;
   guint8 n_memory;
-  guint8 padding8;
-  guint16 padding16;
+  guint16 padding;
   MemoryPayload memories[];
 } NewBufferPayload;
 

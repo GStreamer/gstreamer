@@ -461,8 +461,10 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   new_buffer->offset = GST_BUFFER_OFFSET (buffer);
   new_buffer->offset_end = GST_BUFFER_OFFSET_END (buffer);
   new_buffer->flags = GST_BUFFER_FLAGS (buffer);
+  new_buffer->type = MEMORY_TYPE_DEFAULT;
   new_buffer->n_memory = n_memory;
 
+  gboolean dmabuf_count = 0;
   GUnixFDList *fds = g_unix_fd_list_new ();
   for (int i = 0; i < n_memory; i++) {
     GstMemory *mem = gst_buffer_peek_memory (buffer, i);
@@ -471,6 +473,9 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
       ret = GST_FLOW_ERROR;
       goto out;
     }
+
+    if (gst_is_dmabuf_memory (mem))
+      dmabuf_count++;
 
     if (g_unix_fd_list_append (fds, gst_fd_memory_get_fd (mem), &error) < 0) {
       GST_ERROR_OBJECT (self, "Failed to append FD: %s", error->message);
@@ -482,6 +487,15 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     new_buffer->memories[i].size = gst_memory_get_sizes (mem, &offset, NULL);
     new_buffer->memories[i].offset = offset;
   }
+
+  if (dmabuf_count > 0 && dmabuf_count != n_memory) {
+    GST_ERROR_OBJECT (self, "Some but not all memories are DMABuf");
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+
+  if (dmabuf_count > 0)
+    new_buffer->type = MEMORY_TYPE_DMABUF;
 
   GST_OBJECT_LOCK (self);
   send_command_to_all (self, COMMAND_TYPE_NEW_BUFFER, fds, payload,
