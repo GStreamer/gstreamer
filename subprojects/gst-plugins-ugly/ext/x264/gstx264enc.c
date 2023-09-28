@@ -2592,55 +2592,66 @@ gst_x264_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
       query);
 }
 
-static void
-gst_x264_enc_add_cc (GstBuffer * buffer, x264_picture_t * pic_in)
+static gboolean
+gst_x264_enc_add_cc (GstVideoCaptionMeta * cc_meta,
+    x264_sei_payload_t * payload)
 {
-  GstVideoCaptionMeta *cc_meta;
+  if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
+    return FALSE;
+
+  payload->payload_type = 4;    /* Registered user data */
+  payload->payload_size = 10 + cc_meta->size + 1;
+  payload->payload = g_malloc0 (payload->payload_size);
+  payload->payload[0] = 181;    /* 8-bits itu_t_t35_country_code */
+  payload->payload[1] = 0;      /* 16-bits itu_t_t35_provider_code */
+  payload->payload[2] = 49;
+  payload->payload[3] = 'G';    /* 32-bits ATSC_user_identifier */
+  payload->payload[4] = 'A';
+  payload->payload[5] = '9';
+  payload->payload[6] = '4';
+  payload->payload[7] = 3;      /* 8-bits ATSC1_data_user_data_type_code */
+  /* 8-bits:
+   * 1 bit process_em_data_flag (0)
+   * 1 bit process_cc_data_flag (1)
+   * 1 bit additional_data_flag (0)
+   * 5-bits cc_count
+   */
+  payload->payload[8] = ((cc_meta->size / 3) & 0x1f) | 0x40;
+  payload->payload[9] = 255;    /* 8 bits em_data, unused */
+  memcpy (payload->payload + 10, cc_meta->data, cc_meta->size);
+  payload->payload[cc_meta->size + 10] = 255;   /* 8 marker bits */
+
+  return TRUE;
+}
+
+static void
+gst_x264_enc_add_sei (GstBuffer * buffer, x264_picture_t * pic_in)
+{
+  x264_sei_t *sei = &pic_in->extra_sei;
+  GstMeta *meta;
   gpointer iter = NULL;
+  gint num_payloads = 0;
 
-  while ((cc_meta =
-          (GstVideoCaptionMeta *) gst_buffer_iterate_meta_filtered (buffer,
-              &iter, GST_VIDEO_CAPTION_META_API_TYPE))) {
-    guint i = pic_in->extra_sei.num_payloads;
+  while ((meta = gst_buffer_iterate_meta (buffer, &iter))) {
+    if (meta->info->api == GST_VIDEO_CAPTION_META_API_TYPE)
+      num_payloads += 1;
+  }
 
-    if (cc_meta->caption_type != GST_VIDEO_CAPTION_TYPE_CEA708_RAW)
-      continue;
+  sei->num_payloads = 0;
+  sei->payloads = g_new0 (x264_sei_payload_t, num_payloads);
+  sei->sei_free = g_free;       /* used for both payloads array and each payload */
 
-    pic_in->extra_sei.num_payloads += 1;
+  iter = NULL;
 
-    if (!pic_in->extra_sei.payloads)
-      pic_in->extra_sei.payloads = g_new0 (x264_sei_payload_t, 1);
-    else
-      pic_in->extra_sei.payloads =
-          g_renew (x264_sei_payload_t, pic_in->extra_sei.payloads,
-          pic_in->extra_sei.num_payloads);
+  while ((meta = gst_buffer_iterate_meta (buffer, &iter))) {
+    x264_sei_payload_t *payload = &sei->payloads[sei->num_payloads];
 
-    pic_in->extra_sei.sei_free = g_free;
+    if (meta->info->api == GST_VIDEO_CAPTION_META_API_TYPE) {
+      GstVideoCaptionMeta *cc_meta = (GstVideoCaptionMeta *) meta;
 
-    pic_in->extra_sei.payloads[i].payload_size = cc_meta->size + 11;
-    pic_in->extra_sei.payloads[i].payload =
-        g_malloc0 (pic_in->extra_sei.payloads[i].payload_size);
-    pic_in->extra_sei.payloads[i].payload_type = 4;     /* Registered user data */
-    memcpy (pic_in->extra_sei.payloads[i].payload + 10, cc_meta->data,
-        cc_meta->size);
-    pic_in->extra_sei.payloads[i].payload[0] = 181;     /* 8-bits itu_t_t35_country_code */
-    pic_in->extra_sei.payloads[i].payload[1] = 0;       /* 16-bits itu_t_t35_provider_code */
-    pic_in->extra_sei.payloads[i].payload[2] = 49;
-    pic_in->extra_sei.payloads[i].payload[3] = 'G';     /* 32-bits ATSC_user_identifier */
-    pic_in->extra_sei.payloads[i].payload[4] = 'A';
-    pic_in->extra_sei.payloads[i].payload[5] = '9';
-    pic_in->extra_sei.payloads[i].payload[6] = '4';
-    pic_in->extra_sei.payloads[i].payload[7] = 3;       /* 8-bits ATSC1_data_user_data_type_code */
-    /* 8-bits:
-     * 1 bit process_em_data_flag (0)
-     * 1 bit process_cc_data_flag (1)
-     * 1 bit additional_data_flag (0)
-     * 5-bits cc_count
-     */
-    pic_in->extra_sei.payloads[i].payload[8] =
-        ((cc_meta->size / 3) & 0x1f) | 0x40;
-    pic_in->extra_sei.payloads[i].payload[9] = 255;     /* 8 bits em_data, unused */
-    pic_in->extra_sei.payloads[i].payload[cc_meta->size + 10] = 255;    /* 8 marker bits */
+      if (gst_x264_enc_add_cc (cc_meta, payload))
+        sei->num_payloads += 1;
+    }
   }
 }
 
@@ -2701,7 +2712,7 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
     }
   }
 
-  gst_x264_enc_add_cc (frame->input_buffer, &pic_in);
+  gst_x264_enc_add_sei (frame->input_buffer, &pic_in);
 
   ret = gst_x264_enc_encode_frame (encoder, &pic_in, frame, &i_nal, TRUE);
 
