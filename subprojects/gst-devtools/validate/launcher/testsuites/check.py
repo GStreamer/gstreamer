@@ -22,6 +22,8 @@ GStreamer unit tests
 """
 from launcher import utils
 
+import os
+
 TEST_MANAGER = "check"
 
 KNOWN_NOT_LEAKY = r'^check.gst-devtools.*|^check.gstreamer.*|^check-gst-plugins-base|^check.gst-plugins-ugly|^check.gst-plugins-good'
@@ -118,9 +120,7 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-editing-services.check_keyframes_in_compositor_two_sources', 'Valgrind exit with an exitcode 20 but shows no issue: https://gitlab.freedesktop.org/thiblahute/gst-editing-services/-/jobs/4079972'),
     (r'check.gst-plugins-good.elements_splitmuxsrc.test_splitmuxsrc_sparse_streams', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/739'),
     (r'check.gst-plugins-good.elements_udpsrc.test_udpsrc_empty_packet', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/740'),
-    (r'check.gst-plugins-good.elements_souphttpsrc2.test_icy_stream', 'flaky in valgrind, leaks in CI but not locally'),
     (r'check.gst-plugins-bad.elements_svthevc*', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3011'),
-
 ]
 
 BLACKLIST = [
@@ -169,10 +169,11 @@ BLACKLIST = [
     (r'check.gst-editing-services.nle_simple.test_one_bin_after_other$', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/802'),
     (r'check.gstreamer-vaapi.*$', 'only run the tests explicitly'),
     (r'check.gst-rtsp-server.gst_rtspserver.test_multiple_transports', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/767'),
-    (r'check.gst-plugins-bad.elements_vkcolorconvert.test_vulkan_color_convert_rgba_reorder$', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
-    (r'check.gst-plugins-bad.libs_vkformat.test_format_from_video_info_2$', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
-    (r'check.gst-plugins-bad.libs_vkimagebufferpool.test_image$', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
-    (r'check.gst-plugins-bad.libs_vkwindow.test_window_new$', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
+]
+
+CI_BLACKLIST = [
+    (r'check.gst-plugins-bad.elements_vk*', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
+    (r'check.gst-plugins-bad.libs_vk*', 'Mesa in the CI image is older, will start passing once we update to llvm16 and mesa 23.1'),
     (r'check.gst-plugins-good.elements_souphttpsrc2.test_icy_stream', 'flaky in valgrind, leaks in CI but not locally'),
 ]
 
@@ -251,6 +252,9 @@ def setup_tests(test_manager, options):
         test_manager.set_default_blacklist(VALGRIND_BLACKLIST)
         if options.long_limit <= utils.LONG_TEST:
             test_manager.set_default_blacklist(LONG_VALGRIND_TESTS)
+
+    if 'CI_COMMIT_SHA' in os.environ:
+        test_manager.set_default_blacklist(CI_BLACKLIST)
 
     test_manager.add_expected_issues(KNOWN_ISSUES)
 
