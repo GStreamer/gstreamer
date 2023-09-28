@@ -478,8 +478,7 @@ gst_nv_vp9_dec_new_sequence (GstVp9Decoder * decoder,
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  gst_video_info_set_format (&info, out_format, GST_ROUND_UP_2 (self->width),
-      GST_ROUND_UP_2 (self->height));
+  gst_video_info_set_format (&info, out_format, self->width, self->height);
 
   max_width = gst_nv_decoder_get_max_output_size (self->width,
       self->init_max_width, klass->max_width);

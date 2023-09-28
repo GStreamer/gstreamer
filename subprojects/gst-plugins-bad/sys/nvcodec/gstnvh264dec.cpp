@@ -632,8 +632,7 @@ gst_nv_h264_dec_new_sequence (GstH264Decoder * decoder, const GstH264SPS * sps,
       return GST_FLOW_NOT_NEGOTIATED;
     }
 
-    gst_video_info_set_format (&info, out_format, GST_ROUND_UP_2 (self->width),
-        GST_ROUND_UP_2 (self->height));
+    gst_video_info_set_format (&info, out_format, self->width, self->height);
     if (self->interlaced)
       GST_VIDEO_INFO_INTERLACE_MODE (&info) = GST_VIDEO_INTERLACE_MODE_MIXED;
 

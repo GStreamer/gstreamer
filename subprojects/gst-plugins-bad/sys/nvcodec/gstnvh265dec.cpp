@@ -642,8 +642,8 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   if (modified || !gst_nv_decoder_is_configured (self->decoder)) {
     GstVideoInfo info;
 
-    gst_video_info_set_format (&info, self->out_format,
-        GST_ROUND_UP_2 (self->width), GST_ROUND_UP_2 (self->height));
+    gst_video_info_set_format (&info,
+        self->out_format, self->width, self->height);
 
     self->max_dpb_size = max_dpb_size;
     max_width = gst_nv_decoder_get_max_output_size (self->coded_width,

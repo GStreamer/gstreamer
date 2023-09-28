@@ -464,8 +464,7 @@ gst_nv_vp8_dec_new_sequence (GstVp8Decoder * decoder,
     GstVideoInfo info;
 
     gst_video_info_set_format (&info,
-        GST_VIDEO_FORMAT_NV12, GST_ROUND_UP_2 (self->width),
-        GST_ROUND_UP_2 (self->height));
+        GST_VIDEO_FORMAT_NV12, self->width, self->height);
 
     max_width = gst_nv_decoder_get_max_output_size (self->width,
         self->init_max_width, klass->max_width);

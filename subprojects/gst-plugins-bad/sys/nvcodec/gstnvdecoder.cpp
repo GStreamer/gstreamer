@@ -94,7 +94,8 @@ struct _GstNvDecoder
   GstCudaStream *stream;
 
   GstVideoInfo info;
-  GstVideoInfo coded_info;
+  GstVideoInfo aligned_info;
+
   CUVIDDECODECREATEINFO create_info;
 
   gboolean alloc_aux_frame;
@@ -314,8 +315,8 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   }
 
   decoder->info = *info;
-  gst_video_info_set_format (&decoder->coded_info, format,
-      coded_width, coded_height);
+  gst_video_info_set_format (&decoder->aligned_info, format,
+      GST_ROUND_UP_2 (info->width), GST_ROUND_UP_2 (info->height));
 
   g_mutex_lock (&decoder->lock);
   if (decoder->object) {
@@ -335,10 +336,10 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
         coded_bitdepth == (guint) decoder->create_info.bitDepthMinus8 + 8) {
       CUVIDRECONFIGUREDECODERINFO reconfig_info = { 0, };
 
-      reconfig_info.ulWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
-      reconfig_info.ulHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
-      reconfig_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (info);
-      reconfig_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (info);
+      reconfig_info.ulWidth = coded_width;
+      reconfig_info.ulHeight = coded_height;
+      reconfig_info.ulTargetWidth = decoder->aligned_info.width;
+      reconfig_info.ulTargetHeight = decoder->aligned_info.height;
       reconfig_info.ulNumDecodeSurfaces = alloc_size;
       reconfig_info.display_area.right = GST_VIDEO_INFO_WIDTH (info);
       reconfig_info.display_area.bottom = GST_VIDEO_INFO_HEIGHT (info);
@@ -365,8 +366,8 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
 
   decoder->num_output_surfaces = num_output_surfaces;
 
-  create_info.ulWidth = GST_VIDEO_INFO_WIDTH (&decoder->coded_info);
-  create_info.ulHeight = GST_VIDEO_INFO_HEIGHT (&decoder->coded_info);
+  create_info.ulWidth = coded_width;
+  create_info.ulHeight = coded_height;
   create_info.ulNumDecodeSurfaces = alloc_size;
   create_info.CodecType = codec;
   create_info.ChromaFormat = chroma_format_from_video_format (format);
@@ -381,8 +382,8 @@ gst_nv_decoder_configure (GstNvDecoder * decoder, cudaVideoCodec codec,
   create_info.OutputFormat = output_format_from_video_format (format);
   create_info.DeinterlaceMode = cudaVideoDeinterlaceMode_Weave;
 
-  create_info.ulTargetWidth = GST_VIDEO_INFO_WIDTH (info);
-  create_info.ulTargetHeight = GST_VIDEO_INFO_HEIGHT (info);
+  create_info.ulTargetWidth = decoder->aligned_info.width;
+  create_info.ulTargetHeight = decoder->aligned_info.height;
   /* Will be updated on negotiate() */
   create_info.ulNumOutputSurfaces = 1;
 
@@ -613,7 +614,7 @@ gst_nv_decoder_copy_frame_to_gl_internal (GstGLContext * context,
         * GST_VIDEO_INFO_COMP_PSTRIDE (info, i);
 
     copy_params.srcDevice = surface->devptr +
-        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&self->info));
+        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&self->aligned_info));
     copy_params.dstDevice = dst_ptr;
     copy_params.Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
 
@@ -753,7 +754,7 @@ gst_nv_decoder_copy_frame_to_system (GstNvDecoder * decoder,
 
   for (guint i = 0; i < GST_VIDEO_FRAME_N_PLANES (&video_frame); i++) {
     copy_params.srcDevice = surface->devptr +
-        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
+        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->aligned_info));
     copy_params.dstHost = GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
     copy_params.Height = GST_VIDEO_FRAME_COMP_HEIGHT (&video_frame, i);
@@ -802,7 +803,7 @@ gst_nv_decoder_copy_frame_to_cuda (GstNvDecoder * decoder,
 
   for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&decoder->info); i++) {
     copy_params.srcDevice = surface->devptr +
-        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->info));
+        (i * surface->pitch * GST_VIDEO_INFO_HEIGHT (&decoder->aligned_info));
     copy_params.dstDevice =
         (CUdeviceptr) GST_VIDEO_FRAME_PLANE_DATA (&video_frame, i);
     copy_params.dstPitch = GST_VIDEO_FRAME_PLANE_STRIDE (&video_frame, i);
