@@ -342,8 +342,10 @@ if building_full
   cdata = configuration_data()
   cdata.set_quoted('GST_API_VERSION', apiversion)
   cdata.set_quoted('GETTEXT_PACKAGE', 'gstreamer-full-1.0')
-  cdata.set_quoted('PACKAGE_VERSION', gst_version)
+  cdata.set_quoted('PACKAGE_VERSION', meson.project_version())
   cdata.set_quoted('GST_PACKAGE_ORIGIN', get_option('package-origin'))
+  cdata.set_quoted('GST_FULL_LICENSE', get_option('gstreamer-full-license'))
+  cdata.set_quoted('GST_PLUGIN_FULL_FEATURES_NAME', 'fullstaticfeatures')
   configure_file(output : 'config.h', configuration : cdata)
   configinc = include_directories('.')
   gst_c_args = ['-DHAVE_CONFIG_H']
@@ -441,7 +443,7 @@ if building_full
   # Build shared library
   gstfull = build_target('gstreamer-full-1.0',
     init_static_plugins_c,
-    c_args: ['-DBUILDING_GST'],
+    c_args: ['-DBUILDING_GST'] + gst_c_args,
     target_type: get_option('gst-full-target-type'),
     link_args: gstfull_link_args,
     link_whole : exposed_libs,
