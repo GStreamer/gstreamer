@@ -1254,6 +1254,15 @@ gst_video_aggregator_default_update_caps (GstVideoAggregator * vagg,
   best_format_caps = gst_caps_copy (caps);
   gst_caps_set_simple (best_format_caps, "format", G_TYPE_STRING,
       gst_video_format_to_string (best_format), NULL);
+  /*
+   * set_simple() will likely create some invalid combination, as it may as an
+   * example set format to NV12 with memory:DMABuf caps feature where DMA_DRM
+   * format might be the only supported formats. Simply intersect with the
+   * original to fix this.
+   */
+  ret = gst_caps_intersect (best_format_caps, caps);
+  gst_caps_replace (&best_format_caps, ret);
+  gst_clear_caps (&ret);
 
   if (chroma_site != NULL)
     gst_caps_set_simple (best_format_caps, "chroma-site", G_TYPE_STRING,
