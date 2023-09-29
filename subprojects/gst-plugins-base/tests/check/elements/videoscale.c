@@ -193,6 +193,9 @@ videoscale_get_allowed_caps_for_method (int method)
   ret = g_new0 (GstCaps *, n + 1);
 
   for (i = 0; i < n; i++) {
+    /* Skip passthrough caps */
+    if (gst_caps_features_is_any (gst_caps_get_features (caps, i)))
+      continue;
     s = gst_caps_get_structure (caps, i);
     ret[i] = gst_caps_new_empty ();
     gst_caps_append_structure (ret[i], gst_structure_copy (s));
