@@ -3,3 +3,4 @@ if get_option('tests').disabled()
 endif
 subdir('static-plugins')
 subdir('python')
+subdir('virtme')

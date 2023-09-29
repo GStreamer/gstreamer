@@ -761,6 +761,55 @@ gstreamer-full-minimal static build:
   - strip build/libgstreamer-full-1.0.so
   - ls -l build/libgstreamer-full-1.0.so
 
+# v4l2-stateless-decoders tests
+fluster v4l2-stateless on visl:
+  extends: 'gstreamer-full static build'
+  stage: 'test'
+  variables:
+    BUILD_GST_DEBUG: '-Dgstreamer:gst_debug=false'
+    GST_WERROR: "true"
+    BUILD_TYPE: "--default-library=static"
+    MESON_ARGS: >-
+      -Dvirtme_kernel_image=/opt/linux/bzImage
+      -Dauto_features=disabled
+      -Dgstreamer:check=enabled
+      -Ddoc=disabled
+      -Dtests=enabled
+      -Dtools=enabled
+      -Dbase=enabled
+      -Dbad=enabled
+      -Dugly=disabled
+      -Dlibav=disabled
+      -Drtsp_server=disabled
+      -Dges=disabled
+      -Dgst-plugins-bad:debugutils=enabled
+      -Dgst-plugins-bad:ivfparse=enabled
+      -Dgst-plugins-bad:v4l2codecs=enabled
+      -Dgst-plugins-bad:videoparsers=enabled
+      -Dgst-plugins-base:app=enabled
+      -Dgst-plugins-base:videoconvertscale=enabled
+      -Dgst-plugins-base:typefind=enabled
+      -Dgst-plugins-base:playback=enabled
+      -Dgst-plugins-good:matroska=enabled
+    SUBPROJECTS_CACHE_DIR: "/subprojects"
+  script:
+  - *build
+  - meson test -C build -v --suite v4l2-stateless-decoders
+  artifacts:
+    reports:
+      junit: build/fluster-results-*.xml
+  rules:
+    - changes:
+      - .gitlab-ci.yml
+      - .gitlab-image-tags.yml
+      - subprojects/gst-plugins-bad/sys/v4l2codecs/*
+      - subprojects/gst-plugins-bad/gst-libs/gst/codecparsers/*
+      - subprojects/gst-plugins-bad/gst-libs/gst/codecs/*
+      - subprojects/gst-plugins-bad/gst/videoparsers/*
+      - tests/virtme/*
+      - ci/scripts/build-linux.sh
+      - ci/docker/fedora/*
+
 # Valgrind
 .valgrind fedora x86_64:
   extends: '.test fedora x86_64'

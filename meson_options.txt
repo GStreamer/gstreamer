@@ -41,6 +41,7 @@ option('gst-full-target-type', type : 'combo', value : 'shared_library', choices
   description : '''The type of library of gstreamer-full-1.0.''')
 option('orc-source', type: 'combo', choices: ['system', 'subproject', 'auto'], value: 'subproject')
 option('build-tools-source', type: 'combo', choices: ['system', 'subproject'], value: 'subproject')
+option('virtme_kernel_image', type: 'string', value: '', description: 'Path to a Linux kernel image to be used for virtme testing')
 
 # License-related feature options
 option('gpl', type: 'feature', value: 'disabled',
