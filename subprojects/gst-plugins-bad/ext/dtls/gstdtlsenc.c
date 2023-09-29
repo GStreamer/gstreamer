@@ -480,13 +480,18 @@ src_task_loop (GstPad * pad)
 
   if (self->send_initial_events) {
     GstSegment segment;
-    gchar s_id[32];
+    gchar *stream_id;
     GstCaps *caps;
+    GstEvent *stream_start_event;
 
     self->send_initial_events = FALSE;
 
-    g_snprintf (s_id, sizeof (s_id), "dtlsenc-%08x", g_random_int ());
-    gst_pad_push_event (self->src, gst_event_new_stream_start (s_id));
+    stream_id =
+        gst_pad_create_stream_id (self->src, GST_ELEMENT_CAST (self), NULL);
+    stream_start_event = gst_event_new_stream_start (stream_id);
+    gst_event_set_group_id (stream_start_event, gst_util_group_id_next ());
+    gst_pad_push_event (self->src, stream_start_event);
+    g_free (stream_id);
     caps = gst_caps_new_empty_simple ("application/x-dtls");
     gst_pad_push_event (self->src, gst_event_new_caps (caps));
     gst_caps_unref (caps);
