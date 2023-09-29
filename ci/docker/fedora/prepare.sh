@@ -289,6 +289,16 @@ git -C /gstreamer submodule update --init --depth=1
 meson subprojects download --sourcedir /gstreamer
 /gstreamer/ci/scripts/handle-subprojects-cache.py --build --cache-dir /subprojects /gstreamer/subprojects/
 
+# Build a linux image for virtme fluster tests
+/gstreamer/ci/scripts/build-linux.sh \
+    "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git" \
+    "v6.5.8" \
+    /opt/linux/bzImage \
+    'MEDIA_SUPPORT' \
+    'MEDIA_TEST_SUPPORT' \
+    'V4L_TEST_DRIVERS' \
+    'CONFIG_VIDEO_VISL'
+
 # Run git gc to prune unwanted refs and reduce the size of the image
 for i in $(find /subprojects/ -mindepth 1 -maxdepth 1 -type d);
 do

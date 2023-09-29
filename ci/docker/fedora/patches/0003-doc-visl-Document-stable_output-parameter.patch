@@ -1,0 +1,29 @@
+From 9f42a31c52b39daa9062046b6f0241a0a41b3512 Mon Sep 17 00:00:00 2001
+From: Detlev Casanova <detlev.casanova@collabora.com>
+Date: Mon, 2 Oct 2023 14:35:52 -0400
+Subject: [PATCH 3/5] doc: visl: Document stable_output parameter
+
+Reviewed-by: Daniel Almeida <daniel.almeida@collabora.com>
+Signed-off-by: Detlev Casanova <detlev.casanova@collabora.com>
+---
+ Documentation/admin-guide/media/visl.rst | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/Documentation/admin-guide/media/visl.rst b/Documentation/admin-guide/media/visl.rst
+index 7d2dc78341c9..5b26fd943571 100644
+--- a/Documentation/admin-guide/media/visl.rst
++++ b/Documentation/admin-guide/media/visl.rst
+@@ -49,6 +49,10 @@ Module parameters
+   visl_dprintk_frame_start, visl_dprintk_nframes, but controls the dumping of
+   buffer data through debugfs instead.
+ 
++- stable_output: Limit the information written on each output frame to make
++  sure that, for a given input, the output frames are always exactly the same.
++  This is useful for automated tests to check that output frames are correct.
++
+ What is the default use case for this driver?
+ ---------------------------------------------
+ 
+-- 
+2.41.0
+
