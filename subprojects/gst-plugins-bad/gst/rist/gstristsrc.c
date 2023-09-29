@@ -41,6 +41,22 @@
  * gst-play-1.0 "rist://0.0.0.0:5004?receiver-buffer=700"
  * ]|
  *
+ * In order to use a dynamic payload type the element needs to be able
+ * to set the correct caps. It can be done through setting the #GstRistSrc:caps
+ * property or one can use the #GstRistSrc:encoding-name property and the
+ * element can work out the caps from it.
+ *
+ * ## Example pipelines for sending and receiving dynamic payload
+ * |[
+ * gst-launch-1.0 videotestsrc ! videoconvert ! x264enc ! h264parse ! \
+ *     rtph264pay ! ristsink address=127.0.0.1 port=5000
+ * ]| Encode and payload H264 video from videotestsrc. The H264 RTP packets are
+ * sent on port 5000.
+ * |[
+ * gst-launch-1.0 ristsrc address=0.0.0.0 port=5000 encoding-name="h264" ! \
+ *     rtph264depay ! h264parse ! matroskamux ! filesink location=h264.mkv
+ * ] Receive and depayload the H264 video via RIST.
+ *
  * Additionally, this element supports link bonding, which means it
  * can receive the same stream from multiple addresses. Each address
  * will be mapped to its own RTP session. In order to enable bonding
@@ -92,7 +108,9 @@ enum
   PROP_MULTICAST_LOOPBACK,
   PROP_MULTICAST_IFACE,
   PROP_MULTICAST_TTL,
-  PROP_BONDING_ADDRESSES
+  PROP_BONDING_ADDRESSES,
+  PROP_CAPS,
+  PROP_ENCODING_NAME
 };
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
@@ -156,6 +174,10 @@ struct _GstRistSrc
    * to fail state changes later */
   gboolean construct_failed;
   const gchar *missing_plugin;
+
+  /* For handling dynamic payload */
+  GstCaps *caps;
+  gchar *encoding_name;
 };
 
 static void gst_rist_src_uri_init (gpointer g_iface, gpointer iface_data);
@@ -236,22 +258,52 @@ static GstCaps *
 gst_rist_src_request_pt_map (GstRistSrc * src, guint session_id, guint pt,
     GstElement * rtpbin)
 {
-  const GstRTPPayloadInfo *pt_info;
+  const GstRTPPayloadInfo *pt_info = NULL;
   GstCaps *ret;
 
-  pt_info = gst_rtp_payload_info_for_pt (pt);
-  if (!pt_info || !pt_info->clock_rate)
-    return NULL;
+  GST_DEBUG_OBJECT (src,
+      "Requesting caps for session-id 0x%x and pt %u.", session_id, pt);
 
-  ret = gst_caps_new_simple ("application/x-rtp",
-      "media", G_TYPE_STRING, pt_info->media,
-      "encoding_name", G_TYPE_STRING, pt_info->encoding_name,
-      "clock-rate", G_TYPE_INT, (gint) pt_info->clock_rate, NULL);
+  if (G_UNLIKELY (src->caps)) {
+    GST_DEBUG_OBJECT (src,
+        "Full caps were set, no need for lookup %" GST_PTR_FORMAT, src->caps);
+    return gst_caps_copy (src->caps);
+  }
 
-  /* FIXME add sprop-parameter-set if any */
-  g_warn_if_fail (pt_info->encoding_parameters == NULL);
+  if (src->encoding_name != NULL) {
+    /* Unfortunately, the media needs to be passed in the function. Since
+     * it is not known, try for video if video not found. */
+    pt_info = gst_rtp_payload_info_for_name ("video", src->encoding_name);
+    if (pt_info == NULL)
+      pt_info = gst_rtp_payload_info_for_name ("audio", src->encoding_name);
 
-  return ret;
+  }
+
+  /* If we have not found any info from encoding-name we will try with a
+   * static one. We need to check that is not a dynamic, since some encoders
+   * do not use dynamic values. */
+  if (pt_info == NULL) {
+    if (!GST_RTP_PAYLOAD_IS_DYNAMIC (pt))
+      pt_info = gst_rtp_payload_info_for_pt (pt);
+  }
+
+  if (pt_info != NULL) {
+    ret = gst_caps_new_simple ("application/x-rtp",
+        "media", G_TYPE_STRING, pt_info->media,
+        "encoding-name", G_TYPE_STRING, pt_info->encoding_name,
+        "clock-rate", G_TYPE_INT, (gint) pt_info->clock_rate, NULL);
+
+    GST_DEBUG_OBJECT (src, "Decided on caps %" GST_PTR_FORMAT, ret);
+
+    /* FIXME add sprop-parameter-set if any */
+    g_warn_if_fail (pt_info->encoding_parameters == NULL);
+
+    return ret;
+  }
+
+  GST_DEBUG_OBJECT (src,
+      "Could not determine caps based on pt or encoding name.");
+  return NULL;
 }
 
 static GstElement *
@@ -406,6 +458,9 @@ gst_rist_src_init (GstRistSrc * src)
 
   g_mutex_init (&src->bonds_lock);
   src->bonds = g_ptr_array_new ();
+
+  src->encoding_name = NULL;
+  src->caps = NULL;
 
   /* Construct the RIST RTP receiver pipeline.
    *
@@ -1118,6 +1173,14 @@ gst_rist_src_get_property (GObject * object, guint prop_id,
       g_value_take_string (value, gst_rist_src_get_bonds (src));
       break;
 
+    case PROP_CAPS:
+      gst_value_set_caps (value, src->caps);
+      break;
+
+    case PROP_ENCODING_NAME:
+      g_value_set_string (value, src->encoding_name);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1218,6 +1281,31 @@ gst_rist_src_set_property (GObject * object, guint prop_id,
       gst_rist_src_set_bonds (src, g_value_get_string (value));
       break;
 
+    case PROP_CAPS:
+    {
+      const GstCaps *new_caps_val = gst_value_get_caps (value);
+      GstCaps *new_caps = NULL;
+
+      if (new_caps_val != NULL)
+        new_caps = gst_caps_copy (new_caps_val);
+
+      gst_caps_replace (&src->caps, new_caps);
+
+      break;
+    }
+
+    case PROP_ENCODING_NAME:
+    {
+      g_free (src->encoding_name);
+      src->encoding_name = g_value_dup_string (value);
+      if (bond->rtp_src) {
+        GstCaps *caps = gst_rist_src_request_pt_map (src, 0, 96, NULL);
+        g_object_set (G_OBJECT (bond->rtp_src), "caps", caps, NULL);
+        gst_caps_unref (caps);
+      }
+      break;
+    }
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1245,6 +1333,9 @@ gst_rist_src_finalize (GObject * object)
 
   g_clear_object (&src->jitterbuffer);
   g_clear_object (&src->rtxbin);
+
+  gst_caps_unref (src->caps);
+  g_free (src->encoding_name);
 
   g_mutex_unlock (&src->bonds_lock);
   g_mutex_clear (&src->bonds_lock);
@@ -1349,6 +1440,31 @@ gst_rist_src_class_init (GstRistSrcClass * klass)
       g_param_spec_string ("bonding-addresses", "Bonding Addresses",
           "Comma (,) separated list of <address>:<port> to receive from. "
           "Only used if 'enable-bonding' is set.", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+/**
+ * GstRistSrc:encoding-name:
+ *
+ * Set the encoding name of the stream to use. This is a short-hand for
+ * the full caps and maps typically to the encoding-name in the RTP caps.
+ *
+ * Since: 1.24
+ */
+  g_object_class_install_property (object_class, PROP_ENCODING_NAME,
+      g_param_spec_string ("encoding-name", "Caps encoding name",
+          "Encoding name use to determine caps parameters",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+/**
+ * GstRistSrc:caps:
+ *
+ * The RTP caps of the incoming RIST stream.
+ *
+ * Since: 1.24
+ */
+  g_object_class_install_property (object_class, PROP_CAPS,
+      g_param_spec_boxed ("caps", "Caps",
+          "The caps of the incoming stream", GST_TYPE_CAPS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
