@@ -25,6 +25,7 @@ dnf install -y \
     aalib-devel \
     aom \
     bat \
+    busybox \
     intel-mediasdk-devel \
     libaom \
     libaom-devel \
@@ -62,6 +63,7 @@ dnf install -y \
     gupnp-igd-devel \
     gssdp \
     gssdp-devel \
+    iproute \
     faac-devel \
     ffmpeg \
     ffmpeg-libs \
@@ -111,6 +113,7 @@ dnf install -y \
     opencv-devel \
     openjpeg2 \
     openjpeg2-devel \
+    qemu-system-x86 \
     SDL2 \
     SDL2-devel \
     sbc \
@@ -236,7 +239,7 @@ dnf builddep -y gstreamer1 \
     python3-gstreamer1
 
 dnf remove -y meson -x ninja-build
-pip3 install meson==1.2.3 hotdoc==0.15 python-gitlab tomli
+pip3 install meson==1.2.3 hotdoc==0.15 python-gitlab tomli junitparser
 
 # Remove gst-devel packages installed by builddep above
 dnf remove -y "gstreamer1*devel"
@@ -282,6 +285,23 @@ cargo install cargo-c --version 0.9.27+cargo-0.74.0
 rustup --version
 cargo --version
 rustc --version
+
+# Install virtme-ng
+git clone https://github.com/arighi/virtme-ng.git
+pushd virtme-ng
+git fetch --tags
+git checkout v1.8
+./setup.py install --prefix=/usr
+popd
+
+# Install fluster
+pushd /opt/
+git clone https://github.com/fluendo/fluster.git
+pushd fluster
+git checkout 303a6edfda1701c8bc351909fb1173a0958810c2
+./fluster.py download
+popd
+popd
 
 # get gstreamer and make all subprojects available
 git clone -b ${GIT_BRANCH} ${GIT_URL} /gstreamer
