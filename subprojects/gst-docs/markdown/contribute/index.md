@@ -426,24 +426,20 @@ In the simplest case, you might be able to get away with just doing a `git pull
 
 #### Coding Style
 
-Try to stick to the GStreamer indentation and coding style. There is a script
-called [`gst-indent`][gst-indent] which you can run over your `.c` or `.cpp`
-files if you want your code auto-indented before making the patch. The script
-requires GNU indent to be installed already. Please do _not_ run `gst-indent` on
-header files, our header file indentation is free-form. If you build GStreamer
-from git, a local commit hook will be installed that checks if your commit
-conforms to the required style (also using GNU indent).
+Try to stick to the GStreamer indentation and coding style. There is an
+application called [`gst-indent`][gst-indent] which should be available
+in a GStreamer development environment and which you can run over your `.c` or
+`.cpp` files if you want your code auto-indented before making the patch.
 
-Different versions of GNU indent may occasionally yield slightly different
-indentations. If that happens, please ignore any indentation changes in
-sections of code that your patch does not touch. You can do that by staging
-changes selectively via `git add -p`. You can bypass the local indentation
-check hook by using `git commit -n`, but it will still be checked again later
-when you submit your changes through GitLab for merging.
+Please do _not_ run `gst-indent` on header files, our header file
+indentation is free-form.
+
+If you build GStreamer from git, a local commit hook will be installed that
+checks if your commit conforms to the required style. You can bypass that local
+indentation check hook by using `git commit -n`, but it will still be checked
+again later on the CI when you submit your changes through GitLab for merging.
 
 We are working on making this less hasslesome.
-
-[gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/blob/main/scripts/gst-indent-all
 
 Compiler requirements:
  - we are targetting the C99 compiler and preprocesser feature subset
@@ -461,7 +457,7 @@ Other style guidelines:
    - declare variables inline (as opposed to only at the beginning of a block)
    - use advanced/nicer struct initialisers
 
-[gst-indent]: https://gitlab.freedesktop.org/gstreamer/gstreamer/tree/master/tools/gst-indent
+[gst-indent]: https://gitlab.freedesktop.org/gstreamer/gst-indent/
 [bitreader]: https://gstreamer.freedesktop.org/documentation/base/gstbitreader.html?gi-language=c#GstBitReader
 [bytereader]: https://gstreamer.freedesktop.org/documentation/base/gstbytereader.html?gi-language=c#GstByteReader
 
