@@ -7,12 +7,27 @@
 #ifndef _GST_SVTAV1ENC_H_
 #define _GST_SVTAV1ENC_H_
 
+#include <EbSvtAv1.h>
+#include <EbSvtAv1Enc.h>
+
+/*
+* SVT-AV1 headers define TRUE and FALSE defines which can conflict
+* or replace glib's defines. This is why we include the SVT-AV1
+* headers first and the glib.h so we will only be using glib's
+* TRUE/FALSE defines.
+*/
+#ifdef TRUE
+#undef TRUE
+#endif
+#ifdef FALSE
+#undef FALSE
+#endif
+
+#include <glib.h>
+
 #include <string.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
-
-#include <EbSvtAv1.h>
-#include <EbSvtAv1Enc.h>
 
 G_BEGIN_DECLS
 

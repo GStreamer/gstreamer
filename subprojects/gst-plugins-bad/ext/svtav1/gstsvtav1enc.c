@@ -21,10 +21,10 @@
 
 #include "config.h"
 
+#include "gstsvtav1enc.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideoencoder.h>
-#include "gstsvtav1enc.h"
 
 #if !SVT_AV1_CHECK_VERSION(1,2,1)
 #define SVT_AV1_RC_MODE_CQP_OR_CRF 0
