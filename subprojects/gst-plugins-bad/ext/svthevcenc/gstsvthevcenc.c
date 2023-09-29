@@ -1501,7 +1501,7 @@ gst_svthevc_enc_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   GstCaps *caps;
   GstVideoInfo info;
   GstVideoAlignment video_align;
-  GstBufferPool *pool;
+  GstBufferPool *pool = NULL;
   GstStructure *config;
   guint i, size, min, max;
 
