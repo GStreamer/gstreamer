@@ -286,7 +286,7 @@ generate | sed \
   -e "s/gstreplace/$gstreplace/g" \
   -e "s/replace/$replace/g" >$basedir/plugins/${gstreplace}plugin.c
 
-gst-indent $basedir/plugins/${gstreplace}plugin.c || echo "Warning: could not run gst-indent on the generated code." 1>&2
+gst-indent-1.0 $basedir/plugins/${gstreplace}plugin.c || echo "Warning: could not run gst-indent on the generated code." 1>&2
 rm -f $basedir/plugins/${gstreplace}plugin.c~
 
 cat >$basedir/plugins/${gstreplace}.c <<EOF

@@ -543,7 +543,7 @@ generate | sed \
   -e "s/gstreplace/$gstreplace/g" \
   -e "s/replace/$replace/g" >$gstreplace.c
 
-gst-indent $gstreplace.c
+gst-indent-1.0 $gstreplace.c
 
 gcc -O2 -Wall $(pkg-config --cflags gstreamer-1.0) -c -o $gstreplace.o $gstreplace.c
 gcc -o $gstreplace $gstreplace.o $(pkg-config --libs gstreamer-1.0)
