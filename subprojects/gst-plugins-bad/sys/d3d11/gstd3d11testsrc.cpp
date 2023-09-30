@@ -189,6 +189,21 @@ enum
 
 typedef struct
 {
+  FLOAT time;
+  FLOAT alpha;
+  FLOAT padding[2];
+} SnowConstBuffer;
+
+typedef struct
+{
+  FLOAT width;
+  FLOAT height;
+  FLOAT checker_size;
+  FLOAT alpha;
+} CheckerConstBuffer;
+
+typedef struct
+{
   ID3D11PixelShader *ps;
   ID3D11VertexShader *vs;
   ID3D11InputLayout *layout;
@@ -197,6 +212,10 @@ typedef struct
   ID3D11Buffer *const_buffer;
   guint vertex_stride;
   guint index_count;
+  gboolean is_checker;
+  gboolean is_snow;
+  CheckerConstBuffer checker_const_buffer;
+  SnowConstBuffer snow_const_buffer;
 } GstD3D11TestSrcQuad;
 
 typedef struct
@@ -242,12 +261,6 @@ struct _GstD3D11TestSrc
 
 typedef struct
 {
-  FLOAT time;
-  FLOAT padding[3];
-} TimeConstBuffer;
-
-typedef struct
-{
   struct
   {
     FLOAT x;
@@ -288,7 +301,7 @@ static const gchar templ_vs_coord[] =
     "  float4 Position: SV_POSITION;\n"
     "  float2 Texture: TEXCOORD;\n"
     "};\n"
-    "VS_OUTPUT main (VS_INPUT input)\n"
+    "VS_OUTPUT VSMain_coord (VS_INPUT input)\n"
     "{\n"
     "  return input;\n"
     "}";
@@ -302,16 +315,17 @@ static const gchar templ_vs_color[] =
     "  float4 Position: SV_POSITION;\n"
     "  float4 Color: COLOR;\n"
     "};\n"
-    "VS_OUTPUT main (VS_INPUT input)\n"
+    "VS_OUTPUT VSMain_color (VS_INPUT input)\n"
     "{\n"
     "  return input;\n"
     "}";
 
 static const gchar templ_ps_snow[] =
-    "cbuffer TimeConstBuffer : register(b0)\n"
+    "cbuffer SnowConstBuffer : register(b0)\n"
     "{\n"
     "  float time;\n"
-    "  float3 padding;\n"
+    "  float alpha;\n"
+    "  float2 padding;\n"
     "}\n"
     "struct PS_INPUT {\n"
     "  float4 Position: SV_POSITION;\n"
@@ -321,12 +335,12 @@ static const gchar templ_ps_snow[] =
     "{\n"
     "  return frac(sin(dot(uv, float2(12.9898,78.233))) * 43758.5453);\n"
     "}\n"
-    "float4 main(PS_INPUT input) : SV_Target\n"
+    "float4 PSMain_snow(PS_INPUT input) : SV_Target\n"
     "{\n"
     "  float4 output;\n"
     "  float val = get_rand (time * input.Texture);\n"
     "  output.rgb = float3(val, val, val);\n"
-    "  output.a = %s;\n"
+    "  output.a = alpha;\n"
     "  return output;\n"
     "}";
 
@@ -335,20 +349,24 @@ static const gchar templ_ps_smpte[] =
     "  float4 Position: SV_POSITION;\n"
     "  float4 Color: COLOR;\n"
     "};\n"
-    "float4 main(PS_INPUT input) : SV_TARGET\n"
+    "float4 PSMain_smpte (PS_INPUT input) : SV_TARGET\n"
     "{\n"
     "  return input.Color;\n"
     "}";
 
 static const gchar templ_ps_checker[] =
-    "static const float width = %d;\n"
-    "static const float height = %d;\n"
-    "static const float checker_size = %d;\n"
+    "cbuffer CheckerConstBuffer : register(b0)\n"
+    "{\n"
+    "  float width;\n"
+    "  float height;\n"
+    "  float checker_size;\n"
+    "  float alpha;\n"
+    "};\n"
     "struct PS_INPUT {\n"
     "  float4 Position: SV_POSITION;\n"
     "  float2 Texture: TEXCOORD;\n"
     "};\n"
-    "float4 main(PS_INPUT input) : SV_Target\n"
+    "float4 PSMain_checker (PS_INPUT input) : SV_Target\n"
     "{\n"
     "  float4 output;\n"
     "  float2 xy_mod = floor (0.5 * input.Texture * float2 (width, height) / checker_size);\n"
@@ -356,7 +374,7 @@ static const gchar templ_ps_checker[] =
     "  output.r = step (result, 0.5);\n"
     "  output.g = 1.0 - output.r;\n"
     "  output.b = 0;\n"
-    "  output.a = %s;\n"
+    "  output.a = alpha;\n"
     "  return output;\n"
     "}";
 /* *INDENT-ON* */
@@ -382,8 +400,6 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11Buffer > index_buffer;
   ComPtr < ID3D11Buffer > const_buffer;
   GstD3D11TestSrcQuad *quad;
-  gchar *ps_src;
-  gchar float_str_buf[G_ASCII_DTOSTR_BUF_SIZE];
 
   memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
@@ -405,16 +421,14 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   input_desc[1].InstanceDataStepRate = 0;
 
   hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_coord,
-      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+      "VSMain_coord", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile vertext shader");
     return FALSE;
   }
 
-  g_ascii_formatd (float_str_buf, G_ASCII_DTOSTR_BUF_SIZE, "%f", self->alpha);
-  ps_src = g_strdup_printf (templ_ps_snow, float_str_buf);
-  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
-  g_free (ps_src);
+  hr = gst_d3d11_create_pixel_shader_simple (self->device,
+      templ_ps_snow, "PSMain_snow", &ps);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
@@ -443,7 +457,7 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (TimeConstBuffer);
+  buffer_desc.ByteWidth = sizeof (SnowConstBuffer);
   buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
   hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
@@ -566,6 +580,9 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   quad->const_buffer = const_buffer.Detach ();
   quad->vertex_stride = sizeof (UvVertexData);
   quad->index_count = 6;
+  quad->is_snow = TRUE;
+  quad->snow_const_buffer.time = 0;
+  quad->snow_const_buffer.alpha = self->alpha;
 
   return TRUE;
 }
@@ -612,14 +629,14 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
   input_desc[1].InstanceDataStepRate = 0;
 
   hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_color,
-      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+      "VSMain_color", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile vertext shader");
     return FALSE;
   }
 
   hr = gst_d3d11_create_pixel_shader_simple (self->device,
-      templ_ps_smpte, "main", &ps);
+      templ_ps_smpte, "PSMain_smpte", &ps);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
@@ -937,9 +954,8 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11InputLayout > layout;
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11Buffer > const_buffer;
   GstD3D11TestSrcQuad *quad;
-  gchar *ps_src;
-  gchar float_str_buf[G_ASCII_DTOSTR_BUF_SIZE];
 
   memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
@@ -961,18 +977,14 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   input_desc[1].InstanceDataStepRate = 0;
 
   hr = gst_d3d11_create_vertex_shader_simple (self->device, templ_vs_coord,
-      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+      "VSMain_coord", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile vertext shader");
     return FALSE;
   }
 
-  g_ascii_formatd (float_str_buf, G_ASCII_DTOSTR_BUF_SIZE, "%f", self->alpha);
-
-  ps_src = g_strdup_printf (templ_ps_checker,
-      self->info.width, self->info.height, checker_size, float_str_buf);
-  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
-  g_free (ps_src);
+  hr = gst_d3d11_create_pixel_shader_simple (self->device,
+      templ_ps_checker, "PSMain_checker", &ps);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
@@ -997,6 +1009,16 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Failed to create index buffer");
+    return FALSE;
+  }
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (CheckerConstBuffer);
+  buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create constant buffer");
     return FALSE;
   }
 
@@ -1064,8 +1086,14 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   quad->layout = layout.Detach ();
   quad->vertex_buffer = vertex_buffer.Detach ();
   quad->index_buffer = index_buffer.Detach ();
+  quad->const_buffer = const_buffer.Detach ();
   quad->vertex_stride = sizeof (UvVertexData);
   quad->index_count = 6;
+  quad->is_checker = TRUE;
+  quad->checker_const_buffer.width = self->info.width;
+  quad->checker_const_buffer.height = self->info.height;
+  quad->checker_const_buffer.checker_size = checker_size;
+  quad->checker_const_buffer.alpha = self->alpha;
 
   return TRUE;
 }
@@ -1996,7 +2024,6 @@ gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
 {
   GstD3D11TestSrcRender *render = self->render;
   HRESULT hr;
-  TimeConstBuffer *time_buf;
   D3D11_MAPPED_SUBRESOURCE map;
   UINT offsets = 0;
 
@@ -2032,8 +2059,17 @@ gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
         return FALSE;
       }
 
-      time_buf = (TimeConstBuffer *) map.pData;
-      time_buf->time = (FLOAT) pts / GST_SECOND;
+      if (quad->is_snow) {
+        SnowConstBuffer *const_buf = (SnowConstBuffer *) map.pData;
+        const_buf->time = (FLOAT) pts / GST_SECOND;
+        const_buf->alpha = self->alpha;
+      } else if (quad->is_checker) {
+        CheckerConstBuffer *const_buf = (CheckerConstBuffer *) map.pData;
+        quad->checker_const_buffer.alpha = self->alpha;
+        memcpy (const_buf, &quad->checker_const_buffer,
+            sizeof (CheckerConstBuffer));
+      }
+
       context->Unmap (quad->const_buffer, 0);
 
       context->PSSetConstantBuffers (0, 1, &quad->const_buffer);
