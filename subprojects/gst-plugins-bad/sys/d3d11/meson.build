@@ -123,8 +123,15 @@ if cc.get_id() != 'msvc'
   extra_args += extra_mingw_args
 endif
 
+hlsl_precompiled = []
+fxc = find_program ('fxc', required : get_option ('d3d11-hlsl-precompile'))
+if cc.get_id() == 'msvc' and fxc.found()
+  subdir('hlsl')
+  extra_args += ['-DHLSL_PRECOMPILED']
+endif
+
 gstd3d11 = library('gstd3d11',
-  d3d11_sources,
+  d3d11_sources + hlsl_precompiled,
   c_args : gst_plugins_bad_args + extra_c_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],

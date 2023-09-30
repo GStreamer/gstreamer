@@ -150,109 +150,6 @@ gst_d3d11_compositor_sizing_policy_get_type (void)
 }
 
 /* *INDENT-OFF* */
-static const gchar checker_vs_src[] =
-    "struct VS_INPUT\n"
-    "{\n"
-    "  float4 Position : POSITION;\n"
-    "};\n"
-    "\n"
-    "struct VS_OUTPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "\n"
-    "VS_OUTPUT main(VS_INPUT input)\n"
-    "{\n"
-    "  return input;\n"
-    "}\n";
-
-static const gchar checker_ps_src_rgb[] =
-    "static const float blocksize = 8.0;\n"
-    "static const float4 high = float4(0.667, 0.667, 0.667, 1.0);\n"
-    "static const float4 low = float4(0.333, 0.333, 0.333, 1.0);\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane: SV_TARGET;\n"
-    "};\n"
-    "PS_OUTPUT main(PS_INPUT input)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  if ((input.Position.x % (blocksize * 2.0)) >= blocksize) {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) >= blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  } else {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) < blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  }\n"
-    "  return output;\n"
-    "}\n";
-
-static const gchar checker_ps_src_vuya[] =
-    "static const float blocksize = 8.0;\n"
-    "static const float4 high = float4(0.5, 0.5, 0.667, 1.0);\n"
-    "static const float4 low = float4(0.5, 0.5, 0.333, 1.0);\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane: SV_TARGET;\n"
-    "};\n"
-    "PS_OUTPUT main(PS_INPUT input)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  if ((input.Position.x % (blocksize * 2.0)) >= blocksize) {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) >= blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  } else {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) < blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  }\n"
-    "  return output;\n"
-    "}\n";
-
-static const gchar checker_ps_src_luma[] =
-    "static const float blocksize = 8.0;\n"
-    "static const float4 high = float4(0.667, 0.0, 0.0, 1.0);\n"
-    "static const float4 low = float4(0.333, 0.0, 0.0, 1.0);\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "};\n"
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane: SV_TARGET;\n"
-    "};\n"
-    "PS_OUTPUT main(PS_INPUT input)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  if ((input.Position.x % (blocksize * 2.0)) >= blocksize) {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) >= blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  } else {\n"
-    "    if ((input.Position.y % (blocksize * 2.0)) < blocksize)\n"
-    "      output.Plane = low;\n"
-    "    else\n"
-    "      output.Plane = high;\n"
-    "  }\n"
-    "  return output;\n"
-    "}\n";
-
 static D3D11_RENDER_TARGET_BLEND_DESC blend_templ[] = {
   /* SOURCE */
   {
@@ -1934,7 +1831,6 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
   D3D11_MAPPED_SUBRESOURCE map;
-  D3D11_INPUT_ELEMENT_DESC input_desc;
   D3D11_BUFFER_DESC buffer_desc;
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
@@ -1942,36 +1838,24 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
   HRESULT hr;
-  const gchar *ps_src;
 
   device_handle = gst_d3d11_device_get_device_handle (self->device);
   context_handle = gst_d3d11_device_get_device_context_handle (self->device);
 
   if (GST_VIDEO_INFO_IS_RGB (info)) {
-    ps_src = checker_ps_src_rgb;
+    hr = gst_d3d11_get_pixel_shader_checker_rgb (self->device, &ps);
   } else if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_VUYA) {
-    ps_src = checker_ps_src_vuya;
+    hr = gst_d3d11_get_pixel_shader_checker_vuya (self->device, &ps);
   } else {
-    ps_src = checker_ps_src_luma;
+    hr = gst_d3d11_get_pixel_shader_checker_luma (self->device, &ps);
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (self->device, ps_src, "main", &ps);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't setup pixel shader");
     return nullptr;
   }
 
-  memset (&input_desc, 0, sizeof (D3D11_INPUT_ELEMENT_DESC));
-  input_desc.SemanticName = "POSITION";
-  input_desc.SemanticIndex = 0;
-  input_desc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
-  input_desc.InputSlot = 0;
-  input_desc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc.InstanceDataStepRate = 0;
-
-  hr = gst_d3d11_create_vertex_shader_simple (self->device, checker_vs_src,
-      "main", &input_desc, 1, &vs, &layout);
+  hr = gst_d3d11_get_vertex_shader_pos (self->device, &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't setup vertex shader");
     return nullptr;

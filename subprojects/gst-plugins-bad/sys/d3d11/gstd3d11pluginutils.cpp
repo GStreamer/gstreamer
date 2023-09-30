@@ -26,9 +26,16 @@
 
 #include <windows.h>
 #include <versionhelpers.h>
+#include <wrl.h>
+
+#include "hlsl/gstd3d11-hlsl.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_plugin_utils_debug);
 #define GST_CAT_DEFAULT gst_d3d11_plugin_utils_debug
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 /**
  * GstD3D11AlphaMode:
@@ -687,4 +694,217 @@ gst_d3d11_buffer_pool_new_with_options (GstD3D11Device * device,
   }
 
   return pool;
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_checker_luma (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_checker_luma, sizeof (g_PSMain_checker_luma),
+      g_PSMain_checker_luma_str, "PSMain_checker_luma", ps);
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_checker_rgb (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_checker_rgb, sizeof (g_PSMain_checker_rgb),
+      g_PSMain_checker_rgb_str, "PSMain_checker_rgb", ps);
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_checker_vuya (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_checker_vuya, sizeof (g_PSMain_checker_vuya),
+      g_PSMain_checker_vuya_str, "PSMain_checker_vuya", ps);
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_checker (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_checker, sizeof (g_PSMain_checker),
+      g_PSMain_checker_str, "PSMain_checker", ps);
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_color (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_color, sizeof (g_PSMain_color),
+      g_PSMain_color_str, "PSMain_color", ps);
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_sample_premul (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_sample_premul, sizeof (g_PSMain_sample_premul),
+      g_PSMain_sample_premul_str, "PSMain_sample_premul", ps);
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_sample (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_sample, sizeof (g_PSMain_sample),
+      g_PSMain_sample_str, "PSMain_sample", ps);
+}
+
+HRESULT
+gst_d3d11_get_pixel_shader_snow (GstD3D11Device * device,
+    ID3D11PixelShader ** ps)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_pixel_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  return gst_d3d11_device_get_pixel_shader (device, token,
+      g_PSMain_snow, sizeof (g_PSMain_snow),
+      g_PSMain_snow_str, "PSMain_snow", ps);
+}
+
+HRESULT
+gst_d3d11_get_vertex_shader_color (GstD3D11Device * device,
+    ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_vertex_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  D3D11_INPUT_ELEMENT_DESC input_desc[2];
+
+  input_desc[0].SemanticName = "POSITION";
+  input_desc[0].SemanticIndex = 0;
+  input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+  input_desc[0].InputSlot = 0;
+  input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+  input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+  input_desc[0].InstanceDataStepRate = 0;
+
+  input_desc[1].SemanticName = "COLOR";
+  input_desc[1].SemanticIndex = 0;
+  input_desc[1].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+  input_desc[1].InputSlot = 0;
+  input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+  input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+  input_desc[1].InstanceDataStepRate = 0;
+
+  return gst_d3d11_device_get_vertex_shader (device, token,
+      g_VSMain_color, sizeof (g_VSMain_color),
+      g_VSMain_color_str, "VSMain_color", input_desc, G_N_ELEMENTS (input_desc),
+      vs, layout);
+}
+
+HRESULT
+gst_d3d11_get_vertex_shader_coord (GstD3D11Device * device,
+    ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_vertex_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  D3D11_INPUT_ELEMENT_DESC input_desc[2];
+
+  input_desc[0].SemanticName = "POSITION";
+  input_desc[0].SemanticIndex = 0;
+  input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+  input_desc[0].InputSlot = 0;
+  input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+  input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+  input_desc[0].InstanceDataStepRate = 0;
+
+  input_desc[1].SemanticName = "TEXCOORD";
+  input_desc[1].SemanticIndex = 0;
+  input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+  input_desc[1].InputSlot = 0;
+  input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+  input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+  input_desc[1].InstanceDataStepRate = 0;
+
+  return gst_d3d11_device_get_vertex_shader (device, token,
+      g_VSMain_coord, sizeof (g_VSMain_coord),
+      g_VSMain_coord_str, "VSMain_coord", input_desc, G_N_ELEMENTS (input_desc),
+      vs, layout);
+}
+
+HRESULT
+gst_d3d11_get_vertex_shader_pos (GstD3D11Device * device,
+    ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
+{
+  static gint64 token = 0;
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    token = gst_d3d11_vertex_shader_token_new ();
+  } GST_D3D11_CALL_ONCE_END;
+
+  D3D11_INPUT_ELEMENT_DESC input_desc;
+
+  input_desc.SemanticName = "POSITION";
+  input_desc.SemanticIndex = 0;
+  input_desc.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+  input_desc.InputSlot = 0;
+  input_desc.AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+  input_desc.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+  input_desc.InstanceDataStepRate = 0;
+
+  return gst_d3d11_device_get_vertex_shader (device, token,
+      g_VSMain_pos, sizeof (g_VSMain_pos),
+      g_VSMain_pos_str, "VSMain_pos", &input_desc, 1, vs, layout);
 }

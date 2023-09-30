@@ -47,56 +47,6 @@ typedef struct
   } texture;
 } VertexData;
 
-static const gchar templ_pixel_shader[] =
-    "Texture2D shaderTexture;\n"
-    "SamplerState samplerState;\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "float4 main(PS_INPUT input): SV_TARGET\n"
-    "{\n"
-    "  return shaderTexture.Sample(samplerState, input.Texture);\n"
-    "}\n";
-
-static const gchar templ_premul_pixel_shader[] =
-    "Texture2D shaderTexture;\n"
-    "SamplerState samplerState;\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "float4 main(PS_INPUT input): SV_TARGET\n"
-    "{\n"
-    "  float4 sample = shaderTexture.Sample(samplerState, input.Texture);\n"
-    "  float4 premul_sample;\n"
-    "  premul_sample.r = saturate (sample.r * sample.a);\n"
-    "  premul_sample.g = saturate (sample.g * sample.a);\n"
-    "  premul_sample.b = saturate (sample.b * sample.a);\n"
-    "  premul_sample.a = sample.a;\n"
-    "  return premul_sample;\n"
-    "}\n";
-
-static const gchar templ_vertex_shader[] =
-    "struct VS_INPUT\n"
-    "{\n"
-    "  float4 Position : POSITION;\n"
-    "  float2 Texture : TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "struct VS_OUTPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "VS_OUTPUT main(VS_INPUT input)\n"
-    "{\n"
-    "  return input;\n"
-    "}\n";
-
 struct GstD3D11CompositionOverlay
 {
   ~GstD3D11CompositionOverlay ()
@@ -378,7 +328,6 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   GstD3D11Device *device = self->device;
   HRESULT hr;
   D3D11_SAMPLER_DESC sampler_desc;
-  D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_BLEND_DESC blend_desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -394,7 +343,6 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   ComPtr < ID3D11Buffer > index_buffer;
 
   memset (&sampler_desc, 0, sizeof (sampler_desc));
-  memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
   memset (&blend_desc, 0, sizeof (blend_desc));
 
@@ -417,40 +365,21 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
     return FALSE;
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (device,
-      templ_pixel_shader, "main", &ps);
+  hr = gst_d3d11_get_pixel_shader_sample (device, &ps);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
     return FALSE;
   }
 
-  hr = gst_d3d11_create_pixel_shader_simple (device,
-      templ_premul_pixel_shader, "main", &premul_ps);
+  hr = gst_d3d11_get_pixel_shader_sample_premul (device, &premul_ps);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create premul pixel shader");
     return FALSE;
   }
 
-  input_desc[0].SemanticName = "POSITION";
-  input_desc[0].SemanticIndex = 0;
-  input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-  input_desc[0].InputSlot = 0;
-  input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[0].InstanceDataStepRate = 0;
-
-  input_desc[1].SemanticName = "TEXCOORD";
-  input_desc[1].SemanticIndex = 0;
-  input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-  input_desc[1].InputSlot = 0;
-  input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[1].InstanceDataStepRate = 0;
-
-  hr = gst_d3d11_create_vertex_shader_simple (device, templ_vertex_shader,
-      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  hr = gst_d3d11_get_vertex_shader_coord (device, &vs, &layout);
   if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't vertex pixel shader");
+    GST_ERROR_OBJECT (self, "Couldn't create vertex pixel shader");
     return FALSE;
   }
 

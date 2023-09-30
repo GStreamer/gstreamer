@@ -23,15 +23,22 @@
 #endif
 
 #include "gstd3d11device.h"
+#include "gstd3d11device-private.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11format.h"
 #include "gstd3d11-private.h"
 #include "gstd3d11memory.h"
+#include "gstd3d11compile.h"
+#include "gstd3d11shadercache.h"
 #include <gmodule.h>
 #include <wrl.h>
 
 #include <windows.h>
 #include <versionhelpers.h>
+#include <map>
+#include <utility>
+#include <atomic>
+#include <mutex>
 
 /**
  * SECTION:gstd3d11device
@@ -92,42 +99,49 @@ enum
 #define DEFAULT_ADAPTER 0
 #define DEFAULT_CREATE_FLAGS 0
 
+/* *INDENT-OFF* */
 struct _GstD3D11DevicePrivate
 {
-  guint adapter;
-  guint device_id;
-  guint vendor_id;
-  gboolean hardware;
-  gchar *description;
-  guint create_flags;
-  gint64 adapter_luid;
+  guint adapter = 0;
+  guint device_id = 0;
+  guint vendor_id = 0;
+  gboolean hardware = 0;
+  gchar *description = nullptr;
+  guint create_flags = 0;
+  gint64 adapter_luid = 0;
 
-  ID3D11Device *device;
-  ID3D11Device5 *device5;
-  ID3D11DeviceContext *device_context;
-  ID3D11DeviceContext4 *device_context4;
+  ID3D11Device *device = nullptr;
+  ID3D11Device5 *device5 = nullptr;
+  ID3D11DeviceContext *device_context = nullptr;
+  ID3D11DeviceContext4 *device_context4 = nullptr;
 
-  ID3D11VideoDevice *video_device;
-  ID3D11VideoContext *video_context;
+  ID3D11VideoDevice *video_device = nullptr;
+  ID3D11VideoContext *video_context = nullptr;
 
-  IDXGIFactory1 *factory;
-  GArray *format_table;
+  IDXGIFactory1 *factory = nullptr;
+  GArray *format_table = nullptr;
 
-  CRITICAL_SECTION extern_lock;
-  SRWLOCK resource_lock;
+  std::recursive_mutex extern_lock;
+  std::mutex resource_lock;
 
   LARGE_INTEGER frequency;
 
+  D3D_FEATURE_LEVEL feature_level;
+  std::map <gint64, ComPtr<ID3D11PixelShader>> ps_cache;
+  std::map <gint64,
+      std::pair<ComPtr<ID3D11VertexShader>, ComPtr<ID3D11InputLayout>>> vs_cache;
+
 #if HAVE_D3D11SDKLAYERS_H
-  ID3D11Debug *d3d11_debug;
-  ID3D11InfoQueue *d3d11_info_queue;
+  ID3D11Debug *d3d11_debug = nullptr;
+  ID3D11InfoQueue *d3d11_info_queue = nullptr;
 #endif
 
 #if HAVE_DXGIDEBUG_H
-  IDXGIDebug *dxgi_debug;
-  IDXGIInfoQueue *dxgi_info_queue;
+  IDXGIDebug *dxgi_debug = nullptr;
+  IDXGIInfoQueue *dxgi_info_queue = nullptr;
 #endif
 };
+/* *INDENT-ON* */
 
 static void
 debug_init_once (void)
@@ -144,7 +158,7 @@ debug_init_once (void)
 
 #define gst_d3d11_device_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstD3D11Device, gst_d3d11_device, GST_TYPE_OBJECT,
-    G_ADD_PRIVATE (GstD3D11Device); debug_init_once ());
+    debug_init_once ());
 
 static void gst_d3d11_device_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
@@ -405,13 +419,10 @@ gst_d3d11_device_init (GstD3D11Device * self)
 {
   GstD3D11DevicePrivate *priv;
 
-  priv = (GstD3D11DevicePrivate *)
-      gst_d3d11_device_get_instance_private (self);
+  priv = new GstD3D11DevicePrivate ();
   priv->adapter = DEFAULT_ADAPTER;
   priv->format_table = g_array_sized_new (FALSE, FALSE,
       sizeof (GstD3D11Format), GST_D3D11_N_FORMATS);
-
-  InitializeCriticalSection (&priv->extern_lock);
 
   self->priv = priv;
 }
@@ -732,6 +743,9 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
+  priv->ps_cache.clear ();
+  priv->vs_cache.clear ();
+
   GST_D3D11_CLEAR_COM (priv->device5);
   GST_D3D11_CLEAR_COM (priv->device_context4);
   GST_D3D11_CLEAR_COM (priv->video_device);
@@ -763,8 +777,9 @@ gst_d3d11_device_finalize (GObject * object)
   GST_LOG_OBJECT (self, "finalize");
 
   g_array_unref (priv->format_table);
-  DeleteCriticalSection (&priv->extern_lock);
   g_free (priv->description);
+
+  delete priv;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1113,6 +1128,7 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
   priv->description = g_utf16_to_utf8 ((gunichar2 *) adapter_desc.Description,
       -1, nullptr, nullptr, nullptr);
   priv->adapter_luid = gst_d3d11_luid_to_int64 (&adapter_desc.AdapterLuid);
+  priv->feature_level = priv->device->GetFeatureLevel ();
 
   DXGI_ADAPTER_DESC1 desc1;
   hr = adapter->GetDesc1 (&desc1);
@@ -1276,7 +1292,7 @@ gst_d3d11_device_get_video_device_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   priv = device->priv;
-  GstD3D11SRWLockGuard lk (&priv->resource_lock);
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
   if (!priv->video_device) {
     HRESULT hr;
     ID3D11VideoDevice *video_device = NULL;
@@ -1309,7 +1325,7 @@ gst_d3d11_device_get_video_context_handle (GstD3D11Device * device)
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), NULL);
 
   priv = device->priv;
-  GstD3D11SRWLockGuard lk (&priv->resource_lock);
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
   if (!priv->video_context) {
     HRESULT hr;
     ID3D11VideoContext *video_context = NULL;
@@ -1342,7 +1358,7 @@ gst_d3d11_device_lock (GstD3D11Device * device)
   priv = device->priv;
 
   GST_TRACE_OBJECT (device, "device locking");
-  EnterCriticalSection (&priv->extern_lock);
+  priv->extern_lock.lock ();
   GST_TRACE_OBJECT (device, "device locked");
 }
 
@@ -1364,7 +1380,7 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
 
   priv = device->priv;
 
-  LeaveCriticalSection (&priv->extern_lock);
+  priv->extern_lock.unlock ();
   GST_TRACE_OBJECT (device, "device unlocked");
 }
 
@@ -1663,4 +1679,166 @@ gst_d3d11_fence_wait (GstD3D11Fence * fence)
   priv->synced = TRUE;
 
   return TRUE;
+}
+
+gint64
+gst_d3d11_pixel_shader_token_new (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > token_ { 0 };
+  /* *INDENT-ON* */
+
+  return token_.fetch_add (1);
+}
+
+gint64
+gst_d3d11_vertex_shader_token_new (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > token_ { 0 };
+  /* *INDENT-ON* */
+
+  return token_.fetch_add (1);
+}
+
+HRESULT
+gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
+    const void *bytecode, gsize bytecode_len, const gchar * source,
+    const gchar * entry_point, ID3D11PixelShader ** ps)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  HRESULT hr;
+  ComPtr < ID3D11PixelShader > shader;
+
+  GST_DEBUG_OBJECT (device, "Getting pixel shader \"%s\" for token %"
+      G_GINT64_FORMAT, entry_point, token);
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  auto cached = priv->ps_cache.find (token);
+  if (cached != priv->ps_cache.end ()) {
+    GST_DEBUG_OBJECT (device,
+        "Found cached pixel shader \"%s\" for token %" G_GINT64_FORMAT,
+        entry_point, token);
+    *ps = cached->second.Get ();
+    (*ps)->AddRef ();
+    return S_OK;
+  }
+
+  GST_LOG_OBJECT (device,
+      "Creating pixel shader for token %" G_GINT64_FORMAT ", source:\n%s",
+      token, source);
+
+  if (priv->feature_level >= D3D_FEATURE_LEVEL_11_0) {
+    ComPtr < ID3DBlob > blob;
+    const void *data;
+    gsize size;
+
+    if (bytecode && bytecode_len > 1) {
+      data = bytecode;
+      size = bytecode_len;
+      GST_DEBUG_OBJECT (device,
+          "Creating shader \"%s\" using precompiled bytecode", entry_point);
+    } else {
+      hr = gst_d3d11_shader_cache_get_pixel_shader_blob (token,
+          source, entry_point, &blob);
+      if (!gst_d3d11_result (hr, device))
+        return hr;
+
+      data = blob->GetBufferPointer ();
+      size = blob->GetBufferSize ();
+    }
+
+    hr = priv->device->CreatePixelShader (data, size, nullptr, &shader);
+    if (!gst_d3d11_result (hr, device))
+      return hr;
+  } else {
+    hr = gst_d3d11_create_pixel_shader_simple (device, source, entry_point,
+        &shader);
+    if (!gst_d3d11_result (hr, device))
+      return hr;
+  }
+
+  GST_DEBUG_OBJECT (device,
+      "Created pixel shader \"%s\" for token %" G_GINT64_FORMAT,
+      entry_point, token);
+  priv->ps_cache[token] = shader;
+  *ps = shader.Detach ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
+    const void *bytecode, gsize bytecode_len, const gchar * source,
+    const gchar * entry_point, const D3D11_INPUT_ELEMENT_DESC * input_desc,
+    guint desc_len, ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  HRESULT hr;
+  ComPtr < ID3D11VertexShader > shader;
+  ComPtr < ID3D11InputLayout > input_layout;
+
+  GST_DEBUG_OBJECT (device, "Getting vertext shader \"%s\" for token %"
+      G_GINT64_FORMAT, entry_point, token);
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  auto cached = priv->vs_cache.find (token);
+  if (cached != priv->vs_cache.end ()) {
+    GST_DEBUG_OBJECT (device,
+        "Found cached vertex shader \"%s\" for token %" G_GINT64_FORMAT,
+        entry_point, token);
+    *vs = cached->second.first.Get ();
+    *layout = cached->second.second.Get ();
+    (*vs)->AddRef ();
+    (*layout)->AddRef ();
+    return S_OK;
+  }
+
+  GST_LOG_OBJECT (device,
+      "Creating vertex shader for token %" G_GINT64_FORMAT ", shader: \n%s",
+      token, source);
+
+  if (priv->feature_level >= D3D_FEATURE_LEVEL_11_0) {
+    ComPtr < ID3DBlob > blob;
+    const void *data;
+    gsize size;
+
+    if (bytecode && bytecode_len > 1) {
+      data = bytecode;
+      size = bytecode_len;
+      GST_DEBUG_OBJECT (device,
+          "Creating shader \"%s\" using precompiled bytecode", entry_point);
+    } else {
+      hr = gst_d3d11_shader_cache_get_vertex_shader_blob (token,
+          source, entry_point, &blob);
+      if (!gst_d3d11_result (hr, device))
+        return hr;
+
+      data = blob->GetBufferPointer ();
+      size = blob->GetBufferSize ();
+    }
+
+    hr = priv->device->CreateVertexShader (data, size, nullptr, &shader);
+    if (!gst_d3d11_result (hr, device))
+      return hr;
+
+    hr = priv->device->CreateInputLayout (input_desc, desc_len, data,
+        size, &input_layout);
+    if (!gst_d3d11_result (hr, device))
+      return hr;
+  } else {
+    hr = gst_d3d11_create_vertex_shader_simple (device, source, entry_point,
+        input_desc, desc_len, &shader, &input_layout);
+    if (!gst_d3d11_result (hr, device))
+      return hr;
+  }
+
+  GST_DEBUG_OBJECT (device, "Created vertex shader \"%s\" for token %"
+      G_GINT64_FORMAT, entry_point, token);
+  priv->vs_cache[token] = std::make_pair (shader, input_layout);
+
+  *vs = shader.Detach ();
+  *layout = input_layout.Detach ();
+
+  return S_OK;
 }

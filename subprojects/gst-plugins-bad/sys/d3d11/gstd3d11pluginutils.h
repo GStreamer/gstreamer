@@ -25,6 +25,7 @@
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11.h>
 #include <gst/d3d11/gstd3d11-private.h>
+#include <gst/d3d11/gstd3d11device-private.h>
 
 G_BEGIN_DECLS
 
@@ -99,6 +100,42 @@ GstBufferPool * gst_d3d11_buffer_pool_new_with_options  (GstD3D11Device * device
                                                          GstD3D11AllocationParams * alloc_params,
                                                          guint min_buffers,
                                                          guint max_buffers);
+
+HRESULT         gst_d3d11_get_pixel_shader_checker_luma (GstD3D11Device * device,
+                                                         ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_pixel_shader_checker_rgb  (GstD3D11Device * device,
+                                                         ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_pixel_shader_checker_vuya (GstD3D11Device * device,
+                                                         ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_pixel_shader_checker (GstD3D11Device * device,
+                                                    ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_pixel_shader_color   (GstD3D11Device * device,
+                                                    ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_pixel_shader_sample_premul (GstD3D11Device * device,
+                                                          ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_pixel_shader_sample  (GstD3D11Device * device,
+                                                    ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_pixel_shader_snow   (GstD3D11Device * device,
+                                                   ID3D11PixelShader ** ps);
+
+HRESULT         gst_d3d11_get_vertex_shader_color  (GstD3D11Device * device,
+                                                   ID3D11VertexShader ** vs,
+                                                   ID3D11InputLayout ** layout);
+
+HRESULT         gst_d3d11_get_vertex_shader_coord  (GstD3D11Device * device,
+                                                   ID3D11VertexShader ** vs,
+                                                   ID3D11InputLayout ** layout);
+
+HRESULT         gst_d3d11_get_vertex_shader_pos   (GstD3D11Device * device,
+                                                   ID3D11VertexShader ** vs,
+                                                   ID3D11InputLayout ** layout);
 
 G_END_DECLS
 
