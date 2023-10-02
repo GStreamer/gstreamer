@@ -2063,17 +2063,32 @@ gst_nv_encoder_preset_get_type (void)
 {
   static GType preset_type = 0;
   static const GEnumValue presets[] = {
-    {GST_NV_ENCODER_PRESET_DEFAULT, "Default", "default"},
-    {GST_NV_ENCODER_PRESET_HP, "High Performance", "hp"},
-    {GST_NV_ENCODER_PRESET_HQ, "High Quality", "hq"},
-    {GST_NV_ENCODER_PRESET_LOW_LATENCY_DEFAULT, "Low Latency", "low-latency"},
-    {GST_NV_ENCODER_PRESET_LOW_LATENCY_HQ, "Low Latency, High Quality",
+    {GST_NV_ENCODER_PRESET_DEFAULT, "Default (deprecated, use p1~7 with tune)",
+        "default"},
+    {GST_NV_ENCODER_PRESET_HP,
+        "High Performance (deprecated, use p1~7 with tune)", "hp"},
+    {GST_NV_ENCODER_PRESET_HQ, "High Quality (deprecated, use p1~7 with tune)",
+        "hq"},
+    {GST_NV_ENCODER_PRESET_LOW_LATENCY_DEFAULT,
+        "Low Latency (deprecated, use p1~7 with tune)", "low-latency"},
+    {GST_NV_ENCODER_PRESET_LOW_LATENCY_HQ,
+          "Low Latency (deprecated, use p1~7 with tune), High Quality",
         "low-latency-hq"},
-    {GST_NV_ENCODER_PRESET_LOW_LATENCY_HP, "Low Latency, High Performance",
+    {GST_NV_ENCODER_PRESET_LOW_LATENCY_HP,
+          "Low Latency (deprecated, use p1~7 with tune), High Performance",
         "low-latency-hp"},
-    {GST_NV_ENCODER_PRESET_LOSSLESS_DEFAULT, "Lossless", "lossless"},
-    {GST_NV_ENCODER_PRESET_LOSSLESS_HP, "Lossless, High Performance",
+    {GST_NV_ENCODER_PRESET_LOSSLESS_DEFAULT,
+        "Lossless (deprecated, use p1~7 with tune)", "lossless"},
+    {GST_NV_ENCODER_PRESET_LOSSLESS_HP,
+          "Lossless (deprecated, use p1~7 with tune), High Performance",
         "lossless-hp"},
+    {GST_NV_ENCODER_PRESET_P1, "P1, fastest", "p1"},
+    {GST_NV_ENCODER_PRESET_P2, "P2, faster", "p2"},
+    {GST_NV_ENCODER_PRESET_P3, "P3, fast", "p3"},
+    {GST_NV_ENCODER_PRESET_P4, "P4, medium", "p4"},
+    {GST_NV_ENCODER_PRESET_P5, "P5, slow", "p5"},
+    {GST_NV_ENCODER_PRESET_P6, "P6, slower", "p6"},
+    {GST_NV_ENCODER_PRESET_P7, "P7, slowest", "p7"},
     {0, NULL, NULL},
   };
 
@@ -2084,41 +2099,6 @@ gst_nv_encoder_preset_get_type (void)
   }
 
   return preset_type;
-}
-
-void
-gst_nv_encoder_preset_to_guid (GstNvEncoderPreset preset, GUID * guid)
-{
-  switch (preset) {
-    case GST_NV_ENCODER_PRESET_DEFAULT:
-      *guid = NV_ENC_PRESET_DEFAULT_GUID;
-      break;
-    case GST_NV_ENCODER_PRESET_HP:
-      *guid = NV_ENC_PRESET_HP_GUID;
-      break;
-    case GST_NV_ENCODER_PRESET_HQ:
-      *guid = NV_ENC_PRESET_HQ_GUID;
-      break;
-    case GST_NV_ENCODER_PRESET_LOW_LATENCY_DEFAULT:
-      *guid = NV_ENC_PRESET_LOW_LATENCY_DEFAULT_GUID;
-      break;
-    case GST_NV_ENCODER_PRESET_LOW_LATENCY_HQ:
-      *guid = NV_ENC_PRESET_LOW_LATENCY_HQ_GUID;
-      break;
-    case GST_NV_ENCODER_PRESET_LOW_LATENCY_HP:
-      *guid = NV_ENC_PRESET_LOW_LATENCY_HP_GUID;
-      break;
-    case GST_NV_ENCODER_PRESET_LOSSLESS_DEFAULT:
-      *guid = NV_ENC_PRESET_LOSSLESS_DEFAULT_GUID;
-      break;
-    case GST_NV_ENCODER_PRESET_LOSSLESS_HP:
-      *guid = NV_ENC_PRESET_LOSSLESS_HP_GUID;
-      break;
-    default:
-      break;
-  }
-
-  *guid = NV_ENC_PRESET_DEFAULT_GUID;
 }
 
 /**
@@ -2135,9 +2115,12 @@ gst_nv_encoder_rc_mode_get_type (void)
     {GST_NV_ENCODER_RC_MODE_VBR, "Variable Bit Rate", "vbr"},
     {GST_NV_ENCODER_RC_MODE_CBR, "Constant Bit Rate", "cbr"},
     {GST_NV_ENCODER_RC_MODE_CBR_LOWDELAY_HQ,
-        "Low-Delay CBR, High Quality", "cbr-ld-hq"},
-    {GST_NV_ENCODER_RC_MODE_CBR_HQ, "CBR, High Quality (slower)", "cbr-hq"},
-    {GST_NV_ENCODER_RC_MODE_VBR_HQ, "VBR, High Quality (slower)", "vbr-hq"},
+        "Low-Delay CBR, High Quality "
+          "(deprecated, use cbr with tune and multipass)", "cbr-ld-hq"},
+    {GST_NV_ENCODER_RC_MODE_CBR_HQ, "CBR, High Quality "
+          "(deprecated, use cbr with tune and multipass)", "cbr-hq"},
+    {GST_NV_ENCODER_RC_MODE_VBR_HQ, "VBR, High Quality "
+          "(deprecated, use vbr with tune and multipass)", "vbr-hq"},
     {0, NULL, NULL},
   };
 
@@ -2150,27 +2133,148 @@ gst_nv_encoder_rc_mode_get_type (void)
   return rc_mode_type;
 }
 
-NV_ENC_PARAMS_RC_MODE
-gst_nv_encoder_rc_mode_to_native (GstNvEncoderRCMode rc_mode)
+void
+gst_nv_encoder_preset_to_native (GstNvEncoderPreset preset,
+    GstNvEncoderTune tune, GUID * preset_guid, NV_ENC_TUNING_INFO * tune_info)
 {
-  switch (rc_mode) {
-    case GST_NV_ENCODER_RC_MODE_CONSTQP:
-      return NV_ENC_PARAMS_RC_CONSTQP;
-    case GST_NV_ENCODER_RC_MODE_VBR:
-      return NV_ENC_PARAMS_RC_VBR;
-    case GST_NV_ENCODER_RC_MODE_CBR:
-      return NV_ENC_PARAMS_RC_CBR;
-    case GST_NV_ENCODER_RC_MODE_CBR_LOWDELAY_HQ:
-      return NV_ENC_PARAMS_RC_CBR_LOWDELAY_HQ;
-    case GST_NV_ENCODER_RC_MODE_CBR_HQ:
-      return NV_ENC_PARAMS_RC_CBR_HQ;
-    case GST_NV_ENCODER_RC_MODE_VBR_HQ:
-      return NV_ENC_PARAMS_RC_VBR_HQ;
+  gboolean is_low_latency = FALSE;
+  gboolean is_lossless = FALSE;
+  switch (preset) {
+    case GST_NV_ENCODER_PRESET_DEFAULT:
+      *preset_guid = NV_ENC_PRESET_P4_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_HP:
+      *preset_guid = NV_ENC_PRESET_P1_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_HQ:
+      *preset_guid = NV_ENC_PRESET_P7_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_LOW_LATENCY_DEFAULT:
+      is_low_latency = TRUE;
+      *preset_guid = NV_ENC_PRESET_P4_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_LOW_LATENCY_HQ:
+      is_low_latency = TRUE;
+      *preset_guid = NV_ENC_PRESET_P7_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_LOW_LATENCY_HP:
+      is_low_latency = TRUE;
+      *preset_guid = NV_ENC_PRESET_P1_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_LOSSLESS_DEFAULT:
+      is_lossless = TRUE;
+      *preset_guid = NV_ENC_PRESET_P4_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_LOSSLESS_HP:
+      is_lossless = TRUE;
+      *preset_guid = NV_ENC_PRESET_P1_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_P1:
+      *preset_guid = NV_ENC_PRESET_P1_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_P2:
+      *preset_guid = NV_ENC_PRESET_P2_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_P3:
+      *preset_guid = NV_ENC_PRESET_P3_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_P4:
+      *preset_guid = NV_ENC_PRESET_P4_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_P5:
+      *preset_guid = NV_ENC_PRESET_P5_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_P6:
+      *preset_guid = NV_ENC_PRESET_P6_GUID;
+      break;
+    case GST_NV_ENCODER_PRESET_P7:
+      *preset_guid = NV_ENC_PRESET_P7_GUID;
+      break;
     default:
+      *preset_guid = NV_ENC_PRESET_P4_GUID;
       break;
   }
 
-  return NV_ENC_PARAMS_RC_VBR;
+  switch (tune) {
+    case GST_NV_ENCODER_TUNE_DEFAULT:
+      if (is_low_latency)
+        *tune_info = NV_ENC_TUNING_INFO_LOW_LATENCY;
+      else if (is_lossless)
+        *tune_info = NV_ENC_TUNING_INFO_LOSSLESS;
+      else
+        *tune_info = NV_ENC_TUNING_INFO_HIGH_QUALITY;
+      break;
+    case GST_NV_ENCODER_TUNE_HIGH_QUALITY:
+      *tune_info = NV_ENC_TUNING_INFO_HIGH_QUALITY;
+      break;
+    case GST_NV_ENCODER_TUNE_LOW_LATENCY:
+      *tune_info = NV_ENC_TUNING_INFO_LOW_LATENCY;
+      break;
+    case GST_NV_ENCODER_TUNE_ULTRA_LOW_LATENCY:
+      *tune_info = NV_ENC_TUNING_INFO_ULTRA_LOW_LATENCY;
+      break;
+    case GST_NV_ENCODER_TUNE_LOSSLESS:
+      *tune_info = NV_ENC_TUNING_INFO_LOSSLESS;
+      break;
+    default:
+      *tune_info = NV_ENC_TUNING_INFO_HIGH_QUALITY;
+      break;
+  }
+}
+
+void
+gst_nv_encoder_rc_mode_to_native (GstNvEncoderRCMode rc_mode,
+    GstNvEncoderMultiPass multipass, NV_ENC_PARAMS_RC_MODE * rc_mode_native,
+    NV_ENC_MULTI_PASS * multipass_native)
+{
+  gboolean is_hq = FALSE;
+  switch (rc_mode) {
+    case GST_NV_ENCODER_RC_MODE_CONSTQP:
+      *rc_mode_native = NV_ENC_PARAMS_RC_CONSTQP;
+      break;
+    case GST_NV_ENCODER_RC_MODE_VBR:
+      *rc_mode_native = NV_ENC_PARAMS_RC_VBR;
+      break;
+    case GST_NV_ENCODER_RC_MODE_CBR:
+      *rc_mode_native = NV_ENC_PARAMS_RC_CBR;
+      break;
+    case GST_NV_ENCODER_RC_MODE_CBR_LOWDELAY_HQ:
+      is_hq = TRUE;
+      *rc_mode_native = NV_ENC_PARAMS_RC_CBR;
+      break;
+    case GST_NV_ENCODER_RC_MODE_CBR_HQ:
+      is_hq = TRUE;
+      *rc_mode_native = NV_ENC_PARAMS_RC_CBR;
+      break;
+    case GST_NV_ENCODER_RC_MODE_VBR_HQ:
+      is_hq = TRUE;
+      *rc_mode_native = NV_ENC_PARAMS_RC_VBR;
+      break;
+    default:
+      *rc_mode_native = NV_ENC_PARAMS_RC_VBR;
+      break;
+  }
+
+  switch (multipass) {
+    case GST_NV_ENCODER_MULTI_PASS_DEFAULT:
+      if (is_hq)
+        *multipass_native = NV_ENC_TWO_PASS_QUARTER_RESOLUTION;
+      else
+        *multipass_native = NV_ENC_MULTI_PASS_DISABLED;
+      break;
+    case GST_NV_ENCODER_MULTI_PASS_DISABLED:
+      *multipass_native = NV_ENC_MULTI_PASS_DISABLED;
+      break;
+    case GST_NV_ENCODER_TWO_PASS_QUARTER_RESOLUTION:
+      *multipass_native = NV_ENC_TWO_PASS_QUARTER_RESOLUTION;
+      break;
+    case GST_NV_ENCODER_TWO_PASS_FULL_RESOLUTION:
+      *multipass_native = NV_ENC_TWO_PASS_FULL_RESOLUTION;
+      break;
+    default:
+      *multipass_native = NV_ENC_MULTI_PASS_DISABLED;
+      break;
+  }
 }
 
 /**
@@ -2210,6 +2314,113 @@ gst_nv_encoder_sei_insert_mode_get_type (void)
 
   GST_CUDA_CALL_ONCE_BEGIN {
     type = g_enum_register_static ("GstNvEncoderSeiInsertMode", insert_modes);
+  } GST_CUDA_CALL_ONCE_END;
+
+  return type;
+}
+
+/**
+ * GstNvEncoderMultiPass:
+ *
+ * Since: 1.24
+ */
+GType
+gst_nv_encoder_multi_pass_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue modes[] = {
+    /**
+     * GstNvEncoderMultiPass::disabled:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_MULTI_PASS_DEFAULT,
+        "Disable multi-pass when cqp, vbr or cbr is used. "
+          "Otherwise encoder will select it based on rc-mode", "default"},
+
+    /**
+     * GstNvEncoderMultiPass::disabled:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_MULTI_PASS_DISABLED, "Disabled", "disabled"},
+
+    /**
+     * GstNvEncoderMultiPass::two-pass-quarter:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_TWO_PASS_QUARTER_RESOLUTION,
+          "Two pass with quarter resolution encoding in first pass",
+        "two-pass-quarter"},
+
+    /**
+     * GstNvEncoderMultiPass::two-pass:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_TWO_PASS_FULL_RESOLUTION, "Two pass", "two-pass"},
+    {0, nullptr, nullptr}
+  };
+
+  GST_CUDA_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstNvEncoderMultiPass", modes);
+  } GST_CUDA_CALL_ONCE_END;
+
+  return type;
+}
+
+/**
+ * GstNvEncoderTune:
+ *
+ * Since: 1.24
+ */
+GType
+gst_nv_encoder_tune_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue modes[] = {
+    /**
+     * GstNvEncoderTune::default:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_TUNE_DEFAULT, "High quality when p1~7 preset is used. "
+          "Otherwise encoder will select it based on preset", "default"},
+
+    /**
+     * GstNvEncoderTune::high-quality:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_TUNE_HIGH_QUALITY, "High quality", "high-quality"},
+
+    /**
+     * GstNvEncoderMultiPass::low-latency:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_TUNE_LOW_LATENCY, "Low latency", "low-latency"},
+
+    /**
+     * GstNvEncoderMultiPass::ultra-low-latency:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_TUNE_ULTRA_LOW_LATENCY, "Ultra low latency",
+        "ultra-low-latency"},
+
+    /**
+     * GstNvEncoderMultiPass::lossless:
+     *
+     * Since: 1.24
+     */
+    {GST_NV_ENCODER_TUNE_LOSSLESS, "Lossless", "lossless"},
+    {0, nullptr, nullptr}
+  };
+
+  GST_CUDA_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstNvEncoderTune", modes);
   } GST_CUDA_CALL_ONCE_END;
 
   return type;

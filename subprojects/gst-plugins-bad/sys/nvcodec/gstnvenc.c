@@ -151,6 +151,18 @@ NvEncGetEncodePresetConfig (void *encoder, GUID encodeGUID,
 }
 
 NVENCSTATUS NVENCAPI
+NvEncGetEncodePresetConfigEx (void *encoder, GUID encodeGUID,
+    GUID presetGUID, NV_ENC_TUNING_INFO tuningInfo,
+    NV_ENC_PRESET_CONFIG * presetConfig)
+{
+  if (!nvenc_api.nvEncGetEncodePresetConfigEx)
+    return NV_ENC_ERR_UNIMPLEMENTED;
+
+  return nvenc_api.nvEncGetEncodePresetConfigEx (encoder, encodeGUID,
+      presetGUID, tuningInfo, presetConfig);
+}
+
+NVENCSTATUS NVENCAPI
 NvEncGetEncodeCaps (void *encoder, GUID encodeGUID,
     NV_ENC_CAPS_PARAM * capsParam, int *capsVal)
 {
