@@ -1099,7 +1099,8 @@ gst_cc_combiner_change_state (GstElement * element, GstStateChange transition)
       self->max_scheduled = self->prop_max_scheduled;
       self->output_padding = self->prop_output_padding;
       cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);
-      cc_buffer_set_output_padding (self->cc_buffer, self->prop_output_padding);
+      cc_buffer_set_output_padding (self->cc_buffer, self->prop_output_padding,
+          self->prop_output_padding);
       break;
     default:
       break;

@@ -107,7 +107,13 @@ GST_START_TEST (captions_and_eos)
   GstBuffer *second_video_buf, *second_caption_buf;
   const guint8 cc_data[3] = { 0xfc, 0x20, 0x20 };
 
-  h = gst_harness_new_with_padnames ("cccombiner", "sink", "src");
+  GstElement *element = gst_element_factory_make ("cccombiner", NULL);
+  g_assert (element != NULL);
+  /* these must be set before it changes the state */
+  g_object_set (element, "schedule", FALSE, "output-padding", FALSE, NULL);
+
+  h = gst_harness_new_with_element (element, "sink", "src");
+  gst_object_unref (element);
   h2 = gst_harness_new_with_element (h->element, NULL, NULL);
   caption_pad = gst_element_request_pad_simple (h->element, "caption");
   gst_harness_add_element_sink_pad (h2, caption_pad);

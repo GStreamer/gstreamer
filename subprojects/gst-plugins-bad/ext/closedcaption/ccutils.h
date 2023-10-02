@@ -130,7 +130,8 @@ void            cc_buffer_set_max_buffer_time   (CCBuffer * buf,
                                                  GstClockTime max_time);
 G_GNUC_INTERNAL
 void            cc_buffer_set_output_padding    (CCBuffer * buf,
-                                                 gboolean output_padding);
+                                                 gboolean output_padding,
+                                                 gboolean output_ccp_padding);
 
 G_END_DECLS
 

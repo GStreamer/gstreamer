@@ -1881,4 +1881,5 @@ gst_cc_converter_init (GstCCConverter * self)
   self->in_field = 0;
   self->out_field = 0;
   self->cc_buffer = cc_buffer_new ();
+  cc_buffer_set_output_padding (self->cc_buffer, TRUE, FALSE);
 }

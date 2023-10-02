@@ -436,7 +436,7 @@ gst_cea608_mux_init (GstCea608Mux * self)
 {
   self->cc_buffer = cc_buffer_new ();
   cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);
-  cc_buffer_set_output_padding (self->cc_buffer, TRUE);
+  cc_buffer_set_output_padding (self->cc_buffer, TRUE, FALSE);
   self->cdp_fps_entry = &null_fps_entry;
   self->start_time = GST_CLOCK_TIME_NONE;
 }
