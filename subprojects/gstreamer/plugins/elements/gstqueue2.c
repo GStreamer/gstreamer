@@ -538,8 +538,9 @@ gst_queue2_init (GstQueue2 * queue)
 
   queue->sinktime = GST_CLOCK_TIME_NONE;
   queue->srctime = GST_CLOCK_TIME_NONE;
-  queue->sink_tainted = TRUE;
-  queue->src_tainted = TRUE;
+  queue->sink_start_time = GST_CLOCK_TIME_NONE;
+  queue->sink_tainted = FALSE;
+  queue->src_tainted = FALSE;
 
   queue->srcresult = GST_FLOW_FLUSHING;
   queue->sinkresult = GST_FLOW_FLUSHING;
@@ -769,19 +770,29 @@ update_time_level (GstQueue2 * queue)
     queue->src_tainted = FALSE;
   }
 
-  GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (queue->sinktime), GST_TIME_ARGS (queue->srctime));
+  GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT
+      ", sink-start-time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (queue->sinktime), GST_TIME_ARGS (queue->srctime),
+      GST_TIME_ARGS (queue->sink_start_time));
 
-  if (queue->sinktime != GST_CLOCK_TIME_NONE
-      && queue->srctime != GST_CLOCK_TIME_NONE
-      && queue->sinktime >= queue->srctime)
-    queue->cur_level.time = queue->sinktime - queue->srctime;
-  else
+  if (GST_CLOCK_TIME_IS_VALID (queue->sinktime)) {
+    if (!GST_CLOCK_TIME_IS_VALID (queue->srctime) &&
+        GST_CLOCK_TIME_IS_VALID (queue->sink_start_time) &&
+        queue->sinktime >= queue->sink_start_time) {
+      /* If we got input buffers but output thread didn't push any buffer yet */
+      queue->cur_level.time = queue->sinktime - queue->sink_start_time;
+    } else if (GST_CLOCK_TIME_IS_VALID (queue->srctime) &&
+        queue->sinktime >= queue->srctime) {
+      queue->cur_level.time = queue->sinktime - queue->srctime;
+    } else {
+      queue->cur_level.time = 0;
+    }
+  } else {
     queue->cur_level.time = 0;
+  }
 }
 
-/* take a SEGMENT event and apply the values to segment, updating the time
- * level of queue. */
+/* take a SEGMENT event and apply the values to segment */
 static void
 apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
     gboolean is_sink)
@@ -808,13 +819,11 @@ apply_segment (GstQueue2 * queue, GstEvent * event, GstSegment * segment,
 
   GST_DEBUG_OBJECT (queue, "configured SEGMENT %" GST_SEGMENT_FORMAT, segment);
 
+  /* Will be updated on buffer flows */
   if (is_sink)
-    queue->sink_tainted = TRUE;
+    queue->sink_tainted = FALSE;
   else
-    queue->src_tainted = TRUE;
-
-  /* segment can update the time level of the queue */
-  update_time_level (queue);
+    queue->src_tainted = FALSE;
 }
 
 static void
@@ -827,6 +836,12 @@ apply_gap (GstQueue2 * queue, GstEvent * event,
   gst_event_parse_gap (event, &timestamp, &duration);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time)) {
+      queue->sink_start_time = gst_segment_to_running_time (segment,
+          GST_FORMAT_TIME, timestamp);
+      GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (queue->sink_start_time));
+    }
 
     if (GST_CLOCK_TIME_IS_VALID (duration)) {
       timestamp += duration;
@@ -911,6 +926,14 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
   if (timestamp == GST_CLOCK_TIME_NONE)
     timestamp = segment->position;
 
+  if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time) &&
+      GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    queue->sink_start_time = gst_segment_to_running_time (segment,
+        GST_FORMAT_TIME, timestamp);
+    GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (queue->sink_start_time));
+  }
+
   /* add duration */
   if (duration != GST_CLOCK_TIME_NONE)
     timestamp += duration;
@@ -931,6 +954,7 @@ apply_buffer (GstQueue2 * queue, GstBuffer * buffer, GstSegment * segment,
 
 struct BufListData
 {
+  GstClockTime first_timestamp;
   GstClockTime timestamp;
   guint bitrate;
 };
@@ -949,8 +973,12 @@ buffer_list_apply_time (GstBuffer ** buf, guint idx, gpointer data)
       GST_TIME_ARGS (GST_BUFFER_DURATION (*buf)));
 
   btime = GST_BUFFER_DTS_OR_PTS (*buf);
-  if (GST_CLOCK_TIME_IS_VALID (btime))
+  if (GST_CLOCK_TIME_IS_VALID (btime)) {
+    if (!GST_CLOCK_TIME_IS_VALID (bld->first_timestamp))
+      bld->first_timestamp = btime;
+
     *timestamp = btime;
+  }
 
   if (GST_BUFFER_DURATION_IS_VALID (*buf))
     *timestamp += GST_BUFFER_DURATION (*buf);
@@ -973,6 +1001,8 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
 {
   struct BufListData bld;
 
+  bld.first_timestamp = GST_CLOCK_TIME_NONE;
+
   /* if no timestamp is set, assume it's continuous with the previous time */
   bld.timestamp = segment->position;
 
@@ -988,6 +1018,14 @@ apply_buffer_list (GstQueue2 * queue, GstBufferList * buffer_list,
   }
 
   gst_buffer_list_foreach (buffer_list, buffer_list_apply_time, &bld);
+
+  if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time) &&
+      GST_CLOCK_TIME_IS_VALID (bld.first_timestamp)) {
+    queue->sink_start_time = gst_segment_to_running_time (segment,
+        GST_FORMAT_TIME, bld.first_timestamp);
+    GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (queue->sink_start_time));
+  }
 
   GST_DEBUG_OBJECT (queue, "last_stop updated to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (bld.timestamp));
@@ -1909,7 +1947,8 @@ gst_queue2_locked_flush (GstQueue2 * queue, gboolean full, gboolean clear_temp)
   gst_segment_init (&queue->sink_segment, GST_FORMAT_TIME);
   gst_segment_init (&queue->src_segment, GST_FORMAT_TIME);
   queue->sinktime = queue->srctime = GST_CLOCK_TIME_NONE;
-  queue->sink_tainted = queue->src_tainted = TRUE;
+  queue->sink_start_time = GST_CLOCK_TIME_NONE;
+  queue->sink_tainted = queue->src_tainted = FALSE;
   if (queue->starting_segment != NULL)
     gst_event_unref (queue->starting_segment);
   queue->starting_segment = NULL;

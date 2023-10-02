@@ -86,6 +86,7 @@ struct _GstQueue2
 
   /* Position of src/sink */
   GstClockTime sinktime, srctime;
+  GstClockTime sink_start_time;
   /* TRUE if either position needs to be recalculated */
   gboolean sink_tainted, src_tainted;
   /* Bitrates taken from tags */
