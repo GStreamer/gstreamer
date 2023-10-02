@@ -3007,6 +3007,12 @@ gst_rtsp_media_get_rates (GstRTSPMedia * media, gdouble * rate,
 static void
 stream_update_blocked (GstRTSPStream * stream, GstRTSPMedia * media)
 {
+  /* only unblock complete live streams when media is prepared */
+  if (media->priv->is_live &&
+      media->priv->status == GST_RTSP_MEDIA_STATUS_PREPARED &&
+      !media->priv->blocked && !gst_rtsp_stream_is_complete (stream))
+    return;
+
   gst_rtsp_stream_set_blocked (stream, media->priv->blocked);
 }
 
