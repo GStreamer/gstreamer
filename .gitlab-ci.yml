@@ -264,7 +264,7 @@ commitlint:
   - export CARGO_HOME="/usr/local/cargo"
   - export PATH="/usr/local/cargo/bin:$PATH"
   - date -R
-  - ci/scripts/handle-subprojects-cache.py --cache-dir ${SUBPROJECTS_CACHE_DIR} subprojects/
+  - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
   - date -R
   - export ARGS="--default-library=${BUILD_TYPE:-both} -Dgstreamer:gst_debug=${BUILD_GST_DEBUG:-true} ${MESON_ARGS}"
   - echo $GST_WERROR
