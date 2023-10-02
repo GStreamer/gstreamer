@@ -7,6 +7,79 @@ and/or use gtk-doc annotations.  -->
   <package name="gstreamer-video-1.0"/>
   <c:include name="gst/video/video.h"/>
   <namespace name="GstVideo" version="1.0" shared-library="libgstvideo-1.0.so.0" c:identifier-prefixes="Gst" c:symbol-prefixes="gst">
+    <record name="AncillaryMeta" c:type="GstAncillaryMeta" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">#GstMeta for carrying SMPTE-291M Ancillary data. Note that all the ADF fields
+   (@DID to @checksum) are 10bit values with parity/non-parity high-bits set.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Parent #GstMeta</doc>
+        <type name="Gst.Meta" c:type="GstMeta"/>
+      </field>
+      <field name="field" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The field where the ancillary data is located</doc>
+        <type name="AncillaryMetaField" c:type="GstAncillaryMetaField"/>
+      </field>
+      <field name="c_not_y_channel" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Which channel (luminance or chrominance) the ancillary
+   data is located. 0 if content is SD or stored in the luminance channel
+   (default). 1 if HD and stored in the chrominance channel.</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="line" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The line on which the ancillary data is located (max 11bit). There
+   are two special values: 0x7ff if no line is specified (default), 0x7fe
+   to specify the ancillary data is on any valid line before active video</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="offset" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The location of the ancillary data packet in a SDI raster relative
+   to the start of active video (max 12bits). A value of 0 means the ADF of
+   the ancillary packet starts immediately following SAV. There are 3
+   special values: 0xfff: No specified location (default), 0xffe: within
+   HANC data space, 0xffd: within the ancillary data space located between
+   SAV and EAV</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="DID" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Data Identified</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="SDID_block_number" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Secondary Data identification (if type 2) or Data block
+   number (if type 1)</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="data_count" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The amount of user data</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="data" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The User data</doc>
+        <type name="guint16" c:type="guint16*"/>
+      </field>
+      <field name="checksum" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">The checksum of the ADF</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <function name="get_info" c:identifier="gst_ancillary_meta_get_info">
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
+        <return-value transfer-ownership="none">
+          <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+      </function>
+    </record>
+    <enumeration name="AncillaryMetaField" version="1.24" glib:type-name="GstAncillaryMetaField" glib:get-type="gst_ancillary_meta_field_get_type" c:type="GstAncillaryMetaField">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Location of a @GstAncillaryMeta.</doc>
+      <member name="progressive" value="0" c:identifier="GST_ANCILLARY_META_FIELD_PROGRESSIVE" glib:nick="progressive">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Progressive or no field specified (default)</doc>
+      </member>
+      <member name="interlaced_first" value="16" c:identifier="GST_ANCILLARY_META_FIELD_INTERLACED_FIRST" glib:nick="interlaced-first">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Interlaced first field</doc>
+      </member>
+      <member name="interlaced_second" value="17" c:identifier="GST_ANCILLARY_META_FIELD_INTERLACED_SECOND" glib:nick="interlaced-second">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Interlaced second field</doc>
+      </member>
+    </enumeration>
     <constant name="BUFFER_POOL_OPTION_VIDEO_AFFINE_TRANSFORMATION_META" value="GstBufferPoolOptionVideoAffineTransformation" c:type="GST_BUFFER_POOL_OPTION_VIDEO_AFFINE_TRANSFORMATION_META">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideoaffinetransformationmeta.h"/>
       <type name="utf8" c:type="gchar*"/>
@@ -15799,6 +15872,33 @@ data.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">An error occurred</doc>
       </member>
     </enumeration>
+    <function name="ancillary_meta_api_get_type" c:identifier="gst_ancillary_meta_api_get_type">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
+      <return-value transfer-ownership="none">
+        <type name="GType" c:type="GType"/>
+      </return-value>
+    </function>
+    <function name="ancillary_meta_get_info" c:identifier="gst_ancillary_meta_get_info" moved-to="AncillaryMeta.get_info">
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
+      <return-value transfer-ownership="none">
+        <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
+    <function name="buffer_add_ancillary_meta" c:identifier="gst_buffer_add_ancillary_meta" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">Adds a new #GstAncillaryMeta to the @buffer. The caller is responsible for setting the appropriate
+fields.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">A new #GstAncillaryMeta, or %NULL if an error happened.</doc>
+        <type name="AncillaryMeta" c:type="GstAncillaryMeta*"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">A #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="buffer_add_video_afd_meta" c:identifier="gst_buffer_add_video_afd_meta" version="1.18">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.c">Attaches #GstVideoAFDMeta metadata to @buffer with the given
 parameters.</doc>
@@ -16249,6 +16349,18 @@ parameters.</doc>
         </parameter>
       </parameters>
     </function>
+    <function-macro name="buffer_get_ancillary_meta" c:identifier="gst_buffer_get_ancillary_meta" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Gets the #GstAncillaryMeta that might be present on @b.
+
+Note: It is quite likely that there might be more than one ancillary meta on
+a given buffer. This function will only return the first one. See gst_buffer_iterate_ancillary_meta() for a way to iterate over all ancillary metas of the buffer.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
+      <parameters>
+        <parameter name="b">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">A #GstBuffer</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="buffer_get_video_afd_meta" c:identifier="gst_buffer_get_video_afd_meta" version="1.18" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Gets the #GstVideoAFDMeta that might be present on @b.
 
@@ -16404,6 +16516,22 @@ no such metadata on @buffer.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/gstvideometa.h"/>
       <parameters>
         <parameter name="b">
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="buffer_iterate_ancillary_meta" c:identifier="gst_buffer_iterate_ancillary_meta" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">Retrieves the next #GstAncillaryMeta after the current one according to
+@s. If @s points to %NULL, the first #GstAncillaryMeta will be returned (if
+any).
+
+@s will be updated with an opaque state pointer.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h"/>
+      <parameters>
+        <parameter name="b">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">A #GstBuffer</doc>
+        </parameter>
+        <parameter name="s">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-anc.h">An opaque state pointer</doc>
         </parameter>
       </parameters>
     </function-macro>

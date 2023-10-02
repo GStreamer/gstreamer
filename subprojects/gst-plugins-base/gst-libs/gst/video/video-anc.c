@@ -30,6 +30,11 @@
  * SECTION:gstvideoanc
  * @title: GstVideo Ancillary
  * @short_description: Utilities for Ancillary data, VBI and Closed Caption
+ * @private_symbols:
+ * - GST_ANCILLARY_META_INFO
+ * - GST_ANCILLARY_META_API_TYPE
+ * - gst_ancillary_meta_get_info
+ * - gst_ancillary_meta_api_get_type
  *
  * A collection of objects and methods to assist with handling Ancillary Data
  * present in Vertical Blanking Interval as well as Closed Caption.
@@ -1117,6 +1122,117 @@ gst_video_caption_type_to_caps (GstVideoCaptionType type)
   }
 
   return caption_caps;
+}
+
+/* Ancillary Meta Implementation */
+
+GType
+gst_ancillary_meta_api_get_type (void)
+{
+  static GType type = 0;
+
+  if (g_once_init_enter (&type)) {
+    static const gchar *tags[] = { NULL };
+    GType _type = gst_meta_api_type_register ("GstAncillaryMetaAPI", tags);
+    GST_INFO ("registering");
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+static gboolean
+gst_ancillary_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
+{
+  GstAncillaryMeta *ameta = (GstAncillaryMeta *) meta;
+
+  /* Set sensible default values */
+  ameta->field = GST_ANCILLARY_META_FIELD_PROGRESSIVE;
+  ameta->c_not_y_channel = 0;
+  ameta->line = 0x7ff;
+  ameta->offset = 0xfff;
+
+  ameta->DID = ameta->SDID_block_number = ameta->data_count = 0;
+  ameta->data = NULL;
+  ameta->checksum = 0;
+
+  return TRUE;
+}
+
+static void
+gst_ancillary_meta_free (GstMeta * meta, GstBuffer * buffer)
+{
+  GstAncillaryMeta *ameta = (GstAncillaryMeta *) meta;
+
+  g_free (ameta->data);
+}
+
+static gboolean
+gst_ancillary_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstAncillaryMeta *dmeta, *smeta;
+
+  /* We always copy over the ancillary meta */
+  smeta = (GstAncillaryMeta *) meta;
+
+  dmeta =
+      (GstAncillaryMeta *) gst_buffer_add_meta (dest, GST_ANCILLARY_META_INFO,
+      NULL);
+
+  dmeta->field = smeta->field;
+  dmeta->c_not_y_channel = smeta->c_not_y_channel;
+  dmeta->line = smeta->line;
+  dmeta->offset = smeta->offset;
+  dmeta->DID = smeta->DID;
+  dmeta->SDID_block_number = smeta->SDID_block_number;
+  dmeta->data_count = smeta->data_count;
+  dmeta->data = g_memdup2 (smeta->data, (smeta->data_count & 0xff) * 2);
+  dmeta->checksum = smeta->checksum;
+
+  return TRUE;
+}
+
+const GstMetaInfo *
+gst_ancillary_meta_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
+    const GstMetaInfo *mi = gst_meta_register (GST_ANCILLARY_META_API_TYPE,
+        "GstAncillaryMeta",
+        sizeof (GstAncillaryMeta),
+        gst_ancillary_meta_init,
+        gst_ancillary_meta_free,
+        gst_ancillary_meta_transform);
+    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) mi);
+  }
+  return meta_info;
+
+}
+
+/**
+ * gst_buffer_add_ancillary_meta:
+ * @buffer: A #GstBuffer
+ *
+ * Adds a new #GstAncillaryMeta to the @buffer. The caller is responsible for setting the appropriate
+ * fields.
+ *
+ * Since: 1.24
+ *
+ * Returns: (transfer none): A new #GstAncillaryMeta, or %NULL if an error happened.
+ */
+
+GstAncillaryMeta *
+gst_buffer_add_ancillary_meta (GstBuffer * buffer)
+{
+  GstAncillaryMeta *meta;
+
+  meta =
+      (GstAncillaryMeta *) gst_buffer_add_meta (buffer, GST_ANCILLARY_META_INFO,
+      NULL);
+  g_assert (meta != NULL);
+
+  return meta;
 }
 
 /* Active Format Description (AFD) Meta implementation */
