@@ -864,6 +864,64 @@ GST_START_TEST (test_flush_on_error)
 
 GST_END_TEST;
 
+GST_START_TEST (test_time_level_before_output)
+{
+  GstElement *queue2;
+  GstPad *sinkpad;
+  GstPad *srcpad;
+  GstBuffer *buffer1;
+  GstBuffer *buffer2;
+  GstSegment segment;
+  GstClockTime time;
+  GstCaps *caps;
+
+  queue2 = gst_element_factory_make ("queue2", NULL);
+  g_object_set (queue2, "max-size-time", 5 * GST_SECOND, NULL);
+
+  sinkpad = gst_element_get_static_pad (queue2, "sink");
+  srcpad = gst_element_get_static_pad (queue2, "src");
+
+  gst_pad_add_probe (srcpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+      NULL, NULL, NULL);
+
+  fail_unless (gst_element_set_state (queue2,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_pad_send_event (sinkpad, gst_event_new_stream_start ("test"));
+  caps = gst_caps_new_empty_simple ("foo/x-bar");
+  gst_pad_send_event (sinkpad, gst_event_new_caps (caps));
+  gst_caps_unref (caps);
+
+  gst_segment_init (&segment, GST_FORMAT_BYTES);
+  gst_pad_send_event (sinkpad, gst_event_new_segment (&segment));
+
+  buffer1 = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer1) = 25 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer1) = GST_SECOND;
+  gst_pad_chain (sinkpad, buffer1);
+
+  /* Pushed 1 second duration buffer, should report 1 seconds */
+  g_object_get (queue2, "current-level-time", &time, NULL);
+  fail_unless_equals_int64 (time, GST_SECOND);
+
+  buffer2 = gst_buffer_new_and_alloc (4);
+  gst_pad_chain (sinkpad, buffer2);
+
+  /* Pushed with unknown duration, timelevel should not be changed */
+  g_object_get (queue2, "current-level-time", &time, NULL);
+  fail_unless_equals_int64 (time, GST_SECOND);
+
+  fail_unless (gst_element_set_state (queue2,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+
+  gst_object_unref (sinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (queue2);
+}
+
+GST_END_TEST;
+
 static Suite *
 queue2_suite (void)
 {
@@ -883,6 +941,7 @@ queue2_suite (void)
   tcase_add_test (tc_chain, test_bitrate_query);
   tcase_add_test (tc_chain, test_ready_paused_buffering_message);
   tcase_add_test (tc_chain, test_flush_on_error);
+  tcase_add_test (tc_chain, test_time_level_before_output);
 
   return s;
 }
