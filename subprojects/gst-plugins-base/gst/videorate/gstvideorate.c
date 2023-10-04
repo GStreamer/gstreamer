@@ -930,6 +930,9 @@ gst_video_rate_rollback_to_prev_caps_if_needed (GstVideoRate * videorate)
     if (videorate->in_caps)
       prev_caps = gst_caps_ref (videorate->in_caps);
 
+    GST_DEBUG_OBJECT (videorate, "rollback to previous caps %" GST_PTR_FORMAT,
+        prev_caps);
+
     if (!gst_pad_send_event (GST_BASE_TRANSFORM_SINK_PAD (videorate),
             gst_event_new_caps (videorate->prev_caps)
         )) {
