@@ -162,6 +162,7 @@ download_request_despatch_completion (DownloadRequest * request)
   DownloadRequestPrivate *priv = DOWNLOAD_REQUEST_PRIVATE (request);
   switch (request->state) {
     case DOWNLOAD_REQUEST_STATE_UNSENT:
+    case DOWNLOAD_REQUEST_STATE_CANCELLED:
       if (priv->cancellation_cb)
         priv->cancellation_cb (request, request->state, priv->cb_data);
       break;
