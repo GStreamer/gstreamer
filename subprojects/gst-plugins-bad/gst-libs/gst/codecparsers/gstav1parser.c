@@ -2229,6 +2229,8 @@ gst_av1_parse_tile_info (GstAV1Parser * parser, GstBitReader * br,
       ((parser->state.mi_cols + 31) >> 5) : ((parser->state.mi_cols + 15) >> 4);
   sb_rows = seq_header->use_128x128_superblock ? ((parser->state.mi_rows +
           31) >> 5) : ((parser->state.mi_rows + 15) >> 4);
+  sb_cols = MIN (GST_AV1_MAX_TILE_COLS, sb_cols);
+  sb_rows = MIN (GST_AV1_MAX_TILE_ROWS, sb_rows);
   sb_shift = seq_header->use_128x128_superblock ? 5 : 4;
   sb_size = sb_shift + 2;
   max_tile_width_sb = GST_AV1_MAX_TILE_WIDTH >> sb_size;
