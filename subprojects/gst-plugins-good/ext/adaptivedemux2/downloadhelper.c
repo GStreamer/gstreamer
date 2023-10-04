@@ -268,7 +268,7 @@ on_read_ready (GObject * source, GAsyncResult * result, gpointer user_data)
 
     if (!g_cancellable_is_cancelled (transfer->cancellable)) {
       GST_ERROR ("Failed to read stream: %s", error->message);
-      if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT)
+      if (request->state != DOWNLOAD_REQUEST_STATE_CANCELLED)
         request->state = DOWNLOAD_REQUEST_STATE_ERROR;
       finish_transfer_task (dh, transfer_task, error);
     } else {
@@ -316,9 +316,8 @@ on_read_ready (GObject * source, GAsyncResult * result, gpointer user_data)
     }
 
     if (gst_buffer != NULL) {
-      /* Unsent means cancellation is in progress, so don't override
-       * the state. Otherwise make sure it is LOADING */
-      if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT)
+      /* Don't override CANCELLED state. Otherwise make sure it is LOADING */
+      if (request->state != DOWNLOAD_REQUEST_STATE_CANCELLED)
         request->state = DOWNLOAD_REQUEST_STATE_LOADING;
 
       GST_LOG ("Adding %u bytes to buffer",
@@ -354,12 +353,13 @@ finish_transfer:
         G_GINT64_FORMAT, status_code, request->uri,
         request->range_start, request->range_end);
 
-    if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT) {
+    if (request->state != DOWNLOAD_REQUEST_STATE_CANCELLED) {
       if (SOUP_STATUS_IS_SUCCESSFUL (status_code)
-          || SOUP_STATUS_IS_REDIRECTION (status_code))
+          || SOUP_STATUS_IS_REDIRECTION (status_code)) {
         request->state = DOWNLOAD_REQUEST_STATE_COMPLETE;
-      else
+      } else {
         request->state = DOWNLOAD_REQUEST_STATE_ERROR;
+      }
     }
   }
   request->download_end_time = now;
@@ -529,7 +529,7 @@ on_request_sent (GObject * source, GAsyncResult * result, gpointer user_data)
           G_GINT64_FORMAT, request->status_code, request->uri,
           request->range_start, request->range_end);
 
-      if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT)
+      if (request->state != DOWNLOAD_REQUEST_STATE_CANCELLED)
         request->state = DOWNLOAD_REQUEST_STATE_ERROR;
       finish_transfer_task (dh, transfer_task, error);
     } else {
@@ -544,8 +544,8 @@ on_request_sent (GObject * source, GAsyncResult * result, gpointer user_data)
     return;
   }
 
-  /* If the state went back to UNSENT, we were cancelled so don't override it */
-  if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT &&
+  /* If the state is cancelled don't override it */
+  if (request->state != DOWNLOAD_REQUEST_STATE_CANCELLED &&
       request->state != DOWNLOAD_REQUEST_STATE_HEADERS_RECEIVED) {
 
     request->state = DOWNLOAD_REQUEST_STATE_HEADERS_RECEIVED;
@@ -586,7 +586,9 @@ finish_transfer_error:
     GST_LOG ("request complete. Code %d URI %s range %" G_GINT64_FORMAT " %"
         G_GINT64_FORMAT, _soup_message_get_status (msg), request->uri,
         request->range_start, request->range_end);
-    if (request->state != DOWNLOAD_REQUEST_STATE_UNSENT)
+
+    /* If the state is cancelled don't override it */
+    if (request->state != DOWNLOAD_REQUEST_STATE_CANCELLED)
       request->state = DOWNLOAD_REQUEST_STATE_ERROR;
   }
 
@@ -690,6 +692,13 @@ submit_transfer (DownloadHelper * dh, GTask * transfer_task)
   DownloadRequest *request = transfer->request;
 
   download_request_lock (request);
+  if (request->state == DOWNLOAD_REQUEST_STATE_CANCELLED) {
+    download_request_unlock (request);
+
+    GST_DEBUG ("Don't submit already cancelled transfer");
+    return;
+  }
+
   request->state = DOWNLOAD_REQUEST_STATE_OPEN;
   request->download_request_time =
       gst_adaptive_demux_clock_get_time (dh->clock);
@@ -800,8 +809,7 @@ downloadhelper_stop (DownloadHelper * dh)
     DownloadRequest *request = transfer->request;
 
     download_request_lock (request);
-    /* Reset the state to UNSENT, to indicate cancellation, like an XMLHttpRequest does */
-    request->state = DOWNLOAD_REQUEST_STATE_UNSENT;
+    request->state = DOWNLOAD_REQUEST_STATE_CANCELLED;
     download_request_unlock (request);
 
     transfer->complete = TRUE;
@@ -967,8 +975,7 @@ downloadhelper_cancel_request (DownloadHelper * dh, DownloadRequest * request)
   GST_DEBUG ("Cancelling request for URI %s range %" G_GINT64_FORMAT " %"
       G_GINT64_FORMAT, request->uri, request->range_start, request->range_end);
 
-  request->state = DOWNLOAD_REQUEST_STATE_UNSENT;
-
+  request->state = DOWNLOAD_REQUEST_STATE_CANCELLED;
   for (i = dh->active_transfers->len - 1; i >= 0; i--) {
     GTask *transfer_task = g_array_index (dh->active_transfers, GTask *, i);
     DownloadHelperTransfer *transfer = g_task_get_task_data (transfer_task);
