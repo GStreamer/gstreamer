@@ -2130,13 +2130,13 @@ gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
       profiles.insert ((gchar *) walk->data);
 
     if (cdata->device_mode == GST_NV_ENCODER_DEVICE_D3D11 &&
-        adapter_luid_size < G_N_ELEMENTS (adapter_luid_list) - 1) {
+        adapter_luid_size <= G_N_ELEMENTS (adapter_luid_list) - 1) {
       adapter_luid_list[adapter_luid_size] = cdata->adapter_luid;
       adapter_luid_size++;
     }
 
     if (cdata->device_mode == GST_NV_ENCODER_DEVICE_CUDA &&
-        cuda_device_id_size < G_N_ELEMENTS (cuda_device_id_list) - 1) {
+        cuda_device_id_size <= G_N_ELEMENTS (cuda_device_id_list) - 1) {
       cuda_device_id_list[cuda_device_id_size] = cdata->cuda_device_id;
       cuda_device_id_size++;
     }
