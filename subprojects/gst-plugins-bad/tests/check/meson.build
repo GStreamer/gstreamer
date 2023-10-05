@@ -69,6 +69,7 @@ base_tests = [
   [['elements/rtpsrc.c'], get_option('rtp').disabled()],
   [['elements/rtpsink.c'], get_option('rtp').disabled()],
   [['elements/sdpdemux.c'], get_option('sdp').disabled(), [gstsdp_dep]],
+  [['elements/srt.c'], not srt_dep.found(), [srt_dep]],
   [['elements/srtp.c'], not srtp_dep.found(), [srtp_dep]],
   [['elements/switchbin.c'], get_option('switchbin').disabled()],
   [['elements/videoframe-audiolevel.c'], get_option('videoframe_audiolevel').disabled()],
