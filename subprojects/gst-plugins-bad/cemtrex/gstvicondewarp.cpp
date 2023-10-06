@@ -328,7 +328,7 @@ bool DewarpPlugin::setUpCamera(std::string format, int width, int height, GstBuf
 	return true;
 }
 
-bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer)
+GstFlowReturn DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer)
 {
 	std::unique_lock<std::mutex> renderLock(m_render);
 
@@ -340,7 +340,7 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 	std::string bufferFormat;
 	if (!getCapsInfo(inputCaps, bufferFormat, width, height))
 	{
-		return false;
+		return GST_FLOW_CUSTOM_ERROR_2;
 	}
 
 	if (m_isCameraSetup && (width != m_buffers.width() || height != m_buffers.height()))
@@ -353,7 +353,7 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 		if (!calibrateLens(bufferFormat, width, height, inputCaps, inputBuffer))
 		{
 			m_buffers.reset();
-			return false;
+			return GST_FLOW_CUSTOM_ERROR_2;
 		}
 		m_isLensCalibrated = true;
 	}
@@ -361,7 +361,7 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 	{
 		if (!m_buffers.setInputBuffer(inputBuffer, width, height))
 		{
-			return false;
+			return GST_FLOW_CUSTOM_ERROR_2;
 		}
 	}
 
@@ -370,7 +370,7 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 		if (!setUpCamera(bufferFormat, width, height, inputBuffer))
 		{
 			m_buffers.reset();
-			return false;
+			return GST_FLOW_CUSTOM_ERROR_2;
 		}
 		m_isCameraSetup = true;
 	}
@@ -382,16 +382,16 @@ bool DewarpPlugin::chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* inputBuffer
 	{
 		GST_ERROR("Error to updating output buffer");
 		m_buffers.reset();
-		return false;
+		return GST_FLOW_CUSTOM_ERROR_2;
 	}
 
 #ifdef VICON_DEBUG_LIBRARY
 	saveToPNG("output_frame.png", inputCaps, outputBuffer);
 #endif
 	auto* outputBuffer = m_buffers.outputTransferFull();
-	gst_pad_push(pad, outputBuffer);
+	return gst_pad_push(pad, outputBuffer);
 
-	return true;
+	//return true;
 }
 
 /* thiz signals and args */
@@ -620,24 +620,28 @@ gst_vicondewarp_sink_event(GstPad* pad, GstObject* parent,
 static GstFlowReturn
 gst_vicondewarp_chain(GstPad* pad, GstObject* parent, GstBuffer* buffer)
 {
+  GstFlowReturn flow_return;
+
 	auto* thiz = GST_VICONDEWARP(parent);
 	if (thiz == nullptr)
 	{
-		gst_pad_push(pad, buffer);
+		flow_return = gst_pad_push(pad, buffer);
 	}
 	else
 	{
 		if (thiz != nullptr && thiz->plugin != nullptr)
 		{
-			if (thiz->plugin->chain(thiz->srcpad, thiz->inputCaps, buffer))
-			{
+      flow_return = thiz->plugin->chain(thiz->srcpad, thiz->inputCaps, buffer);
+      if (flow_return != GST_FLOW_CUSTOM_ERROR_2) return flow_return;
+
+			/*{
 				return GST_FLOW_OK;
-			}
+			}*/
 		}
-		gst_pad_push(thiz->srcpad, buffer);
+    flow_return = gst_pad_push(thiz->srcpad, buffer);
 	}
 
-	return GST_FLOW_OK;
+	return flow_return;
 }
 
 /* entry point to initialize the plug-in

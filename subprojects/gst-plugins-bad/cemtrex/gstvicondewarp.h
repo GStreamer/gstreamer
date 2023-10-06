@@ -44,7 +44,7 @@ class DewarpPlugin
 public:
 	explicit DewarpPlugin();
 	~DewarpPlugin();
-	bool chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* buffer);
+  GstFlowReturn chain(GstPad* pad, GstCaps* inputCaps, GstBuffer* buffer);
 	void setPosition();
 
 	void setProperties(const GstStructure* properties);
