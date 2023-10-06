@@ -30,7 +30,7 @@ pub struct PollResult<'a> {
 impl<'a> PollResult<'a> {
     /// Returns the sockets that are currently ready for reading.
     pub fn ready_sockets(&self) -> &[(usize, SocketType, &UdpSocket)] {
-        &self.ready_sockets
+        self.ready_sockets
     }
 
     /// Returns the event socket.
@@ -118,7 +118,7 @@ mod imp {
     }
 
     #[cfg(test)]
-    impl<'a> Read for &'a Pipe {
+    impl Read for &Pipe {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             // SAFETY: read() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
@@ -354,7 +354,7 @@ mod imp {
         }
     }
 
-    impl<'a> Read for &'a Stdin {
+    impl Read for &Stdin {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             // SAFETY: read() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
@@ -391,7 +391,7 @@ mod imp {
         }
     }
 
-    impl<'a> Write for &Stdout {
+    impl Write for &Stdout {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             // SAFETY: write() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
@@ -437,7 +437,7 @@ mod imp {
         }
     }
 
-    impl<'a> Write for &'a Stderr {
+    impl Write for &Stderr {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             // SAFETY: write() requires a valid fd and a mutable buffer with the given size.
             // The fd is valid by construction as is the buffer.
@@ -568,7 +568,7 @@ mod imp {
     }
 
     #[cfg(test)]
-    impl<'a> Read for &'a Pipe {
+    impl Read for &Pipe {
         fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
             // SAFETY: Reads the given number of bytes into the buffer from the stdin handle.
             unsafe {
@@ -1085,7 +1085,7 @@ mod imp {
         }
     }
 
-    impl<'a> Read for &'a Stdin {
+    impl Read for &Stdin {
         fn read(&mut self, mut buf: &mut [u8]) -> io::Result<usize> {
             if buf.is_empty() {
                 return Ok(0);
@@ -1190,7 +1190,7 @@ mod imp {
         }
     }
 
-    impl<'a> Write for &'a Stdout {
+    impl Write for &Stdout {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             // SAFETY: Writes the given number of bytes to stdout or at most u32::MAX. On error
             // zero is returned, otherwise the number of bytes written is set accordingly and
@@ -1294,7 +1294,7 @@ mod imp {
         }
     }
 
-    impl<'a> Write for &'a Stderr {
+    impl Write for &Stderr {
         fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
             if self.0 == INVALID_HANDLE_VALUE {
                 return Ok(buf.len());
