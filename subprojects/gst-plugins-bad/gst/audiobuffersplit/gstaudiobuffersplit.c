@@ -572,7 +572,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
       GstClockTime silence_time =
           gst_util_uint64_scale (silence_samples, GST_SECOND, rate);
 
-      if (silence_time > self->max_silence_time) {
+      if (silence_time > self->max_silence_time && self->max_silence_time != 0) {
         GST_DEBUG_OBJECT (self,
             "Not inserting %" G_GUINT64_FORMAT " samples of silence (%"
             GST_TIME_FORMAT " exceeds maximum %" GST_TIME_FORMAT ")",
