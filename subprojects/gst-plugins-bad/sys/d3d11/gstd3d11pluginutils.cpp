@@ -28,7 +28,7 @@
 #include <versionhelpers.h>
 #include <wrl.h>
 
-#include "hlsl/gstd3d11-hlsl.h"
+#include "hlsl/gstd3d11plugin-hlsl.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_plugin_utils_debug);
 #define GST_CAT_DEFAULT gst_d3d11_plugin_utils_debug

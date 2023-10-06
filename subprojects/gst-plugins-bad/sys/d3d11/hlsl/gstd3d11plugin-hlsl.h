@@ -20,17 +20,17 @@
 #pragma once
 
 #ifdef HLSL_PRECOMPILED
-#include "ps-checker-luma.h"
-#include "ps-checker-rgb.h"
-#include "ps-checker-vuya.h"
-#include "ps-checker.h"
-#include "ps-color.h"
-#include "ps-sample-premul.h"
-#include "ps-sample.h"
-#include "ps-snow.h"
-#include "vs-color.h"
-#include "vs-coord.h"
-#include "vs-pos.h"
+#include "PSMain_checker_luma.h"
+#include "PSMain_checker_rgb.h"
+#include "PSMain_checker_vuya.h"
+#include "PSMain_checker.h"
+#include "PSMain_color.h"
+#include "PSMain_sample_premul.h"
+#include "PSMain_sample.h"
+#include "PSMain_snow.h"
+#include "VSMain_color.h"
+#include "VSMain_coord.h"
+#include "VSMain_pos.h"
 #else
 const BYTE g_PSMain_checker_luma[] = { 0 };
 const BYTE g_PSMain_checker_rgb[] = { 0 };
@@ -45,14 +45,14 @@ const BYTE g_VSMain_coord[] = { 0 };
 const BYTE g_VSMain_pos[] = { 0 };
 #endif
 
-#include "ps-checker-luma.hlsl"
-#include "ps-checker-rgb.hlsl"
-#include "ps-checker-vuya.hlsl"
-#include "ps-checker.hlsl"
-#include "ps-color.hlsl"
-#include "ps-sample-premul.hlsl"
-#include "ps-sample.hlsl"
-#include "ps-snow.hlsl"
-#include "vs-color.hlsl"
-#include "vs-coord.hlsl"
-#include "vs-pos.hlsl"
+#include "PSMain_checker_luma.hlsl"
+#include "PSMain_checker_rgb.hlsl"
+#include "PSMain_checker_vuya.hlsl"
+#include "PSMain_checker.hlsl"
+#include "PSMain_color.hlsl"
+#include "PSMain_sample_premul.hlsl"
+#include "PSMain_sample.hlsl"
+#include "PSMain_snow.hlsl"
+#include "VSMain_color.hlsl"
+#include "VSMain_coord.hlsl"
+#include "VSMain_pos.hlsl"
