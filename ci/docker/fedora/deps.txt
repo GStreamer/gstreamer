@@ -93,6 +93,8 @@ qt5-qtx11extras-devel
 redhat-rpm-config
 sbc-devel
 SDL2-devel
+srt-devel
+srt-libs
 toolbox-experience
 valgrind
 vulkan-devel
