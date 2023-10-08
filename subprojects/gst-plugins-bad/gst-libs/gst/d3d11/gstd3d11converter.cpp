@@ -669,8 +669,6 @@ enum
   PROP_DEST_MASTERING_DISPLAY_INFO,
   PROP_DEST_CONTENT_LIGHT_LEVEL,
   PROP_VIDEO_DIRECTION,
-  PROP_SRC_ALPHA_MODE,
-  PROP_DEST_ALPHA_MODE,
 };
 
 struct _GstD3D11ConverterPrivate
@@ -890,14 +888,6 @@ gst_d3d11_converter_class_init (GstD3D11ConverterClass * klass)
       g_param_spec_enum ("video-direction", "Video Direction",
           "Video direction", GST_TYPE_VIDEO_ORIENTATION_METHOD,
           GST_VIDEO_ORIENTATION_IDENTITY, param_flags));
-  g_object_class_install_property (object_class, PROP_SRC_ALPHA_MODE,
-      g_param_spec_enum ("src-alpha-mode", "Src Alpha Mode",
-          "Src alpha mode to use", GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
-          GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED, param_flags));
-  g_object_class_install_property (object_class, PROP_DEST_ALPHA_MODE,
-      g_param_spec_enum ("dest-alpha-mode", "Dest Alpha Mode",
-          "Dest alpha mode to use", GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
-          GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED, param_flags));
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_converter_debug,
       "d3d11converter", 0, "d3d11converter");
@@ -1119,38 +1109,6 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_SRC_ALPHA_MODE:
-    {
-      DWORD prev_premul = priv->const_data.in_premul_alpha;
-      priv->src_alpha_mode = (GstD3D11ConverterAlphaMode)
-          g_value_get_enum (value);
-      if (priv->src_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED) {
-        priv->const_data.in_premul_alpha = TRUE;
-      } else {
-        priv->const_data.in_premul_alpha = FALSE;
-      }
-
-      if (prev_premul != priv->const_data.in_premul_alpha) {
-        priv->update_alpha = TRUE;
-      }
-      break;
-    }
-    case PROP_DEST_ALPHA_MODE:
-    {
-      DWORD prev_premul = priv->const_data.out_premul_alpha;
-      priv->dst_alpha_mode = (GstD3D11ConverterAlphaMode)
-          g_value_get_enum (value);
-      if (priv->dst_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED) {
-        priv->const_data.out_premul_alpha = TRUE;
-      } else {
-        priv->const_data.out_premul_alpha = FALSE;
-      }
-
-      if (prev_premul != priv->const_data.out_premul_alpha) {
-        priv->update_alpha = TRUE;
-      }
-      break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1231,12 +1189,6 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_DIRECTION:
       g_value_set_enum (value, priv->video_direction);
-      break;
-    case PROP_SRC_ALPHA_MODE:
-      g_value_set_enum (value, priv->src_alpha_mode);
-      break;
-    case PROP_DEST_ALPHA_MODE:
-      g_value_set_enum (value, priv->dst_alpha_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3265,8 +3217,20 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
 
     gst_structure_get_enum (config, GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
         GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER, (int *) &sampler_filter);
+
+    gst_structure_get_enum (config, GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE,
+        GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, (int *) &priv->src_alpha_mode);
+    gst_structure_get_enum (config, GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE,
+        GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, (int *) &priv->dst_alpha_mode);
+
     gst_structure_free (config);
   }
+
+  if (priv->src_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED)
+    priv->const_data.in_premul_alpha = TRUE;
+
+  if (priv->dst_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED)
+    priv->const_data.out_premul_alpha = TRUE;
 
   if (!wanted_backend) {
     wanted_backend =

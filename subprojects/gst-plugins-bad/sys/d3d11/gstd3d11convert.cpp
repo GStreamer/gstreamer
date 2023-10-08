@@ -1724,7 +1724,12 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
       GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER,
       gst_d3d11_base_convert_sampling_method_to_filter
-      (self->active_sampling_method), nullptr);
+      (self->active_sampling_method),
+      GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE,
+      GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
+      self->src_alpha_mode,
+      GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE,
+      GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, self->dst_alpha_mode, nullptr);
 
   self->converter = gst_d3d11_converter_new (filter->device, in_info, out_info,
       config);
@@ -1769,9 +1774,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       "dest-y", (gint) self->out_rect.top,
       "dest-width", (gint) (self->out_rect.right - self->out_rect.left),
       "dest-height", (gint) (self->out_rect.bottom - self->out_rect.top),
-      "video-direction", self->active_method,
-      "src-alpha-mode", self->src_alpha_mode,
-      "dest-alpha-mode", self->dst_alpha_mode, nullptr);
+      "video-direction", self->active_method, nullptr);
 
   if (self->borders_w > 0 || self->borders_h > 0) {
     g_object_set (self->converter, "fill-border", TRUE, "border-color",
@@ -2245,9 +2248,10 @@ gst_d3d11_base_convert_set_src_alpha_mode (GstD3D11BaseConvert * self,
 {
   GstD3D11SRWLockGuard lk (&self->lock);
 
-  self->src_alpha_mode = mode;
-  if (self->converter)
-    g_object_set (self->converter, "src-alpha-mode", mode, nullptr);
+  if (self->src_alpha_mode != mode) {
+    self->src_alpha_mode = mode;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
 }
 
 static void
@@ -2256,9 +2260,10 @@ gst_d3d11_base_convert_set_dst_alpha_mode (GstD3D11BaseConvert * self,
 {
   GstD3D11SRWLockGuard lk (&self->lock);
 
-  self->dst_alpha_mode = mode;
-  if (self->converter)
-    g_object_set (self->converter, "dest-alpha-mode", mode, nullptr);
+  if (self->dst_alpha_mode != mode) {
+    self->dst_alpha_mode = mode;
+    gst_base_transform_reconfigure_src (GST_BASE_TRANSFORM_CAST (self));
+  }
 }
 
 /**

@@ -755,6 +755,19 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
   gst_video_info_apply_dxgi_color_space (swapchain_colorspace,
       &window->render_info);
 
+  if (GST_VIDEO_INFO_HAS_ALPHA (&window->info)) {
+    if (config) {
+      gst_structure_set (config, GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE,
+          GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
+          GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
+    } else {
+      config = gst_structure_new ("convert-config",
+          GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE,
+          GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
+          GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
+    }
+  }
+
   window->converter = gst_d3d11_converter_new (device,
       &window->info, &window->render_info, config);
 
@@ -763,11 +776,6 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
     g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_FAILED,
         "Cannot create converter");
     return GST_FLOW_ERROR;
-  }
-
-  if (GST_VIDEO_INFO_HAS_ALPHA (&window->info)) {
-    g_object_set (window->converter, "dest-alpha-mode",
-        GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
   }
 
   if (have_hdr10_meta) {

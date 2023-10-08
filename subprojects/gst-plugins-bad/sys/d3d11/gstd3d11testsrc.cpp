@@ -1299,7 +1299,17 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
 
   config = gst_structure_new ("converter-config",
       GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
-      GST_D3D11_CONVERTER_BACKEND_SHADER, nullptr);
+      GST_D3D11_CONVERTER_BACKEND_SHADER,
+      GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE,
+      GST_TYPE_D3D11_CONVERTER_ALPHA_MODE, self->alpha_mode, nullptr);
+
+  /* D2D uses premultiplied alpha */
+  if (self->pattern == GST_D3D11_TEST_SRC_CIRCULAR ||
+      self->pattern == GST_D3D11_TEST_SRC_BALL) {
+    gst_structure_set (config, GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE,
+        GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
+        GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
+  }
 
   gst_video_info_set_format (&draw_info, GST_VIDEO_FORMAT_BGRA,
       self->info.width, self->info.height);
@@ -1310,15 +1320,6 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
     GST_ERROR_OBJECT (self, "Failed to create converter");
     goto error;
   }
-
-  /* D2D uses premultiplied alpha */
-  if (self->pattern == GST_D3D11_TEST_SRC_CIRCULAR ||
-      self->pattern == GST_D3D11_TEST_SRC_BALL) {
-    g_object_set (self->converter, "src-alpha-mode",
-        GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
-  }
-
-  g_object_set (self->converter, "dest-alpha-mode", self->alpha_mode, nullptr);
 
   draw_caps = gst_video_info_to_caps (&draw_info);
   params = gst_d3d11_allocation_params_new (self->device, &draw_info,

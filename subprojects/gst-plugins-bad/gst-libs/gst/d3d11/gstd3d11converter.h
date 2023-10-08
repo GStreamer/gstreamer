@@ -123,6 +123,26 @@ GType gst_d3d11_converter_alpha_mode_get_type (void);
 #define GST_TYPE_D3D11_CONVERTER_ALPHA_MODE (gst_d3d11_converter_alpha_mode_get_type())
 
 /**
+ * GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE:
+ *
+ * Set the source alpha mode.
+ * Default is #GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED.
+ *
+ * Since: 1.24
+ */
+#define GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE "GstD3D11Converter.src-alpha-mode"
+
+/**
+ * GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE:
+ *
+ * Set the source alpha mode.
+ * Default is #GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED.
+ *
+ * Since: 1.24
+ */
+#define GST_D3D11_CONVERTER_OPT_DEST_ALPHA_MODE "GstD3D11Converter.dest-alpha-mode"
+
+/**
  * GstD3D11Converter:
  *
  * Opaque GstD3D11Converter struct
