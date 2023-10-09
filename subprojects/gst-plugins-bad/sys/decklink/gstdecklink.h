@@ -37,19 +37,17 @@
 #define COMSTR_T BSTR
 #define CONVERT_COM_STRING(s) G_STMT_START { \
   BSTR _s = (BSTR)s; \
-  int _s_length = ::SysStringLen(_s); \
-  int _length = ::WideCharToMultiByte(CP_ACP, 0, (wchar_t*)_s, _s_length, NULL, 0, NULL, NULL); \
+  int _length = ::WideCharToMultiByte(CP_ACP, 0, (wchar_t*)_s, -1, NULL, 0, NULL, NULL); \
   s = (char *) malloc(_length); \
-  ::WideCharToMultiByte(CP_ACP, 0, (wchar_t*)_s, _s_length, s, _length, NULL, NULL); \
+  ::WideCharToMultiByte(CP_ACP, 0, (wchar_t*)_s, -1, s, _length, NULL, NULL); \
   ::SysFreeString(_s); \
 } G_STMT_END
 #define FREE_COM_STRING(s) free(s);
 #define CONVERT_TO_COM_STRING(s) G_STMT_START { \
   char * _s = (char *)s; \
-  int _s_length = strlen((char*)_s); \
-  int _length = ::MultiByteToWideChar(CP_ACP, 0, (char*)_s, _s_length, NULL, 0); \
+  int _length = ::MultiByteToWideChar(CP_ACP, 0, (char*)_s, -1, NULL, 0); \
   s = ::SysAllocStringLen(NULL, _length); \
-  ::MultiByteToWideChar(CP_ACP, 0, (char*)_s, _s_length, s, _length); \
+  ::MultiByteToWideChar(CP_ACP, 0, (char*)_s, -1, s, _length); \
   g_free(_s); \
 } G_STMT_END
 #elif defined(__APPLE__)
