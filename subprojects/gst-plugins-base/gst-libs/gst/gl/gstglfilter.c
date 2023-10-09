@@ -1038,7 +1038,8 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
    * buffer meta to hold one reference of inbuf, this can avoid this
    * buffer sync problem.
    */
-  gst_buffer_add_parent_buffer_meta (outbuf, inbuf);
+  if (inbuf != outbuf)
+    gst_buffer_add_parent_buffer_meta (outbuf, inbuf);
 
   return ret ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
