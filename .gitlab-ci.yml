@@ -877,11 +877,14 @@ valgrind ges:
 .documentation:
   extends: '.build fedora x86_64'
   variables:
+    # Disable svthevcenc until the following MR is merged
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/5447
     MESON_ARGS: >-
       ${SIMPLE_BUILD}
       -Ddoc=enabled
       -Drs=enabled
       -Dgst-docs:fatal_warnings=true
+      -Dgst-plugins-bad:svthevcenc=disabled
     # Disable werror for the docs build, we don't need it
     GST_WERROR: 'false'
     SUBPROJECTS_CACHE_DIR: "/subprojects"
