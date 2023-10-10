@@ -2225,12 +2225,14 @@ _RGB_to_YUV (GstGLColorConvert * convert)
     case GST_VIDEO_FORMAT_A420_12BE:
     case GST_VIDEO_FORMAT_A420_16LE:
     case GST_VIDEO_FORMAT_A420_16BE:
+    case GST_VIDEO_FORMAT_A422:
     case GST_VIDEO_FORMAT_A422_10LE:
     case GST_VIDEO_FORMAT_A422_10BE:
     case GST_VIDEO_FORMAT_A422_12LE:
     case GST_VIDEO_FORMAT_A422_12BE:
     case GST_VIDEO_FORMAT_A422_16LE:
     case GST_VIDEO_FORMAT_A422_16BE:
+    case GST_VIDEO_FORMAT_A444:
     case GST_VIDEO_FORMAT_A444_10LE:
     case GST_VIDEO_FORMAT_A444_10BE:
     case GST_VIDEO_FORMAT_A444_12LE:
@@ -2238,7 +2240,7 @@ _RGB_to_YUV (GstGLColorConvert * convert)
     case GST_VIDEO_FORMAT_A444_16LE:
     case GST_VIDEO_FORMAT_A444_16BE:
       info->templ = &templ_RGB_to_PLANAR_YUV;
-      if (out_format == GST_VIDEO_FORMAT_A420) {
+      if (GST_VIDEO_FORMAT_INFO_HAS_ALPHA (out_finfo)) {
         alpha = "gl_FragData[3] = vec4(yuva.a, 0.0, 0.0, 1.0);\n";
       } else {
         alpha = "";
