@@ -987,6 +987,19 @@ color_matrix_identity (GstD3D11ColorMatrix * m)
   }
 }
 
+void
+gst_d3d11_color_matrix_init (GstD3D11ColorMatrix * matrix)
+{
+  g_return_if_fail (matrix);
+
+  color_matrix_identity (matrix);
+  for (guint i = 0; i < 3; i++) {
+    matrix->min[i] = 0;
+    matrix->max[i] = 1;
+    matrix->offset[i] = 0;
+  }
+}
+
 static gboolean
 color_matrix_invert (GstD3D11ColorMatrix * dst, GstD3D11ColorMatrix * src)
 {

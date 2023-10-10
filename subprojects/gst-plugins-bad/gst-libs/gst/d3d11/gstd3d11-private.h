@@ -161,6 +161,9 @@ typedef struct _GstD3D11ColorMatrix
 } GstD3D11ColorMatrix;
 
 GST_D3D11_API
+void            gst_d3d11_color_matrix_init (GstD3D11ColorMatrix * matrix);
+
+GST_D3D11_API
 gchar *         gst_d3d11_dump_color_matrix (GstD3D11ColorMatrix * matrix);
 
 GST_D3D11_API

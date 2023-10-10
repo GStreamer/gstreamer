@@ -2,6 +2,7 @@ d3d11_sources = [
   'gstd3d11bufferpool.cpp',
   'gstd3d11compile.cpp',
   'gstd3d11converter.cpp',
+  'gstd3d11converterbuilder.cpp',
   'gstd3d11device.cpp',
   'gstd3d11format.cpp',
   'gstd3d11memory.cpp',
@@ -167,6 +168,13 @@ if cc.get_id() != 'msvc'
   extra_comm_args += extra_args
 endif
 
+hlsl_precompiled = []
+fxc = find_program ('fxc', required : get_option ('d3d11-hlsl-precompile'))
+if cc.get_id() == 'msvc' and fxc.found()
+  subdir('hlsl')
+  extra_comm_args += ['-DHLSL_PRECOMPILED']
+endif
+
 configure_file(
   input : 'gstd3d11config.h.meson',
   output : 'gstd3d11config.h',
@@ -177,7 +185,7 @@ configure_file(
 
 pkg_name = 'gstreamer-d3d11-' + api_version
 gstd3d11 = library('gstd3d11-' + api_version,
-  d3d11_sources,
+  d3d11_sources + hlsl_precompiled,
   c_args : gst_plugins_bad_args + extra_c_args + extra_comm_args,
   cpp_args : gst_plugins_bad_args + extra_comm_args,
   include_directories : [configinc, libsinc],

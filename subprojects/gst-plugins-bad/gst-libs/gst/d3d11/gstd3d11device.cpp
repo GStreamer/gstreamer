@@ -1705,9 +1705,72 @@ gst_d3d11_vertex_shader_token_new (void)
 }
 
 HRESULT
+gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
+    gint64 token, const void *bytecode, gsize bytecode_size,
+    const gchar * source, gsize source_size, const gchar * entry_point,
+    const D3D_SHADER_MACRO * defines, ID3D11PixelShader ** ps)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  HRESULT hr;
+  ComPtr < ID3D11PixelShader > shader;
+  ComPtr < ID3DBlob > blob;
+  const void *data;
+  gsize size;
+
+  GST_LOG_OBJECT (device,
+      "Creating pixel shader for token %" G_GINT64_FORMAT ", source:\n%s",
+      token, source);
+
+  if (priv->feature_level >= D3D_FEATURE_LEVEL_11_0) {
+    if (bytecode && bytecode_size > 1) {
+      data = bytecode;
+      size = bytecode_size;
+      GST_DEBUG_OBJECT (device,
+          "Creating shader \"%s\" using precompiled bytecode", entry_point);
+    } else {
+      hr = gst_d3d11_shader_cache_get_pixel_shader_blob (token,
+          source, source_size, entry_point, defines, &blob);
+      if (!gst_d3d11_result (hr, device))
+        return hr;
+
+      data = blob->GetBufferPointer ();
+      size = blob->GetBufferSize ();
+    }
+  } else {
+    const gchar *target;
+    if (priv->feature_level >= D3D_FEATURE_LEVEL_10_0)
+      target = "ps_4_0";
+    else if (priv->feature_level >= D3D_FEATURE_LEVEL_9_3)
+      target = "ps_4_0_level_9_3";
+    else
+      target = "ps_4_0_level_9_1";
+
+    hr = gst_d3d11_compile (source, source_size, nullptr, defines,
+        nullptr, entry_point, target, 0, 0, &blob, nullptr);
+    if (!gst_d3d11_result (hr, device))
+      return hr;
+
+    data = blob->GetBufferPointer ();
+    size = blob->GetBufferSize ();
+  }
+
+  hr = priv->device->CreatePixelShader (data, size, nullptr, &shader);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  GST_DEBUG_OBJECT (device,
+      "Created pixel shader \"%s\" for token %" G_GINT64_FORMAT,
+      entry_point, token);
+  *ps = shader.Detach ();
+
+  return S_OK;
+}
+
+HRESULT
 gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
-    const void *bytecode, gsize bytecode_len, const gchar * source,
-    gsize source_size, const gchar * entry_point, ID3D11PixelShader ** ps)
+    const void *bytecode, gsize bytecode_size, const gchar * source,
+    gsize source_size, const gchar * entry_point,
+    const D3D_SHADER_MACRO * defines, ID3D11PixelShader ** ps)
 {
   GstD3D11DevicePrivate *priv = device->priv;
   HRESULT hr;
@@ -1727,43 +1790,11 @@ gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
     return S_OK;
   }
 
-  GST_LOG_OBJECT (device,
-      "Creating pixel shader for token %" G_GINT64_FORMAT ", source:\n%s",
-      token, source);
+  hr = gst_d3d11_device_get_pixel_shader_uncached (device, token, bytecode,
+      bytecode_size, source, source_size, entry_point, defines, &shader);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
 
-  if (priv->feature_level >= D3D_FEATURE_LEVEL_11_0) {
-    ComPtr < ID3DBlob > blob;
-    const void *data;
-    gsize size;
-
-    if (bytecode && bytecode_len > 1) {
-      data = bytecode;
-      size = bytecode_len;
-      GST_DEBUG_OBJECT (device,
-          "Creating shader \"%s\" using precompiled bytecode", entry_point);
-    } else {
-      hr = gst_d3d11_shader_cache_get_pixel_shader_blob (token,
-          source, source_size, entry_point, &blob);
-      if (!gst_d3d11_result (hr, device))
-        return hr;
-
-      data = blob->GetBufferPointer ();
-      size = blob->GetBufferSize ();
-    }
-
-    hr = priv->device->CreatePixelShader (data, size, nullptr, &shader);
-    if (!gst_d3d11_result (hr, device))
-      return hr;
-  } else {
-    hr = gst_d3d11_create_pixel_shader_simple (device, source, entry_point,
-        &shader);
-    if (!gst_d3d11_result (hr, device))
-      return hr;
-  }
-
-  GST_DEBUG_OBJECT (device,
-      "Created pixel shader \"%s\" for token %" G_GINT64_FORMAT,
-      entry_point, token);
   priv->ps_cache[token] = shader;
   *ps = shader.Detach ();
 
@@ -1772,7 +1803,7 @@ gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
 
 HRESULT
 gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
-    const void *bytecode, gsize bytecode_len, const gchar * source,
+    const void *bytecode, gsize bytecode_size, const gchar * source,
     gsize source_size, const gchar * entry_point,
     const D3D11_INPUT_ELEMENT_DESC * input_desc, guint desc_len,
     ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
@@ -1807,9 +1838,9 @@ gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
     const void *data;
     gsize size;
 
-    if (bytecode && bytecode_len > 1) {
+    if (bytecode && bytecode_size > 1) {
       data = bytecode;
-      size = bytecode_len;
+      size = bytecode_size;
       GST_DEBUG_OBJECT (device,
           "Creating shader \"%s\" using precompiled bytecode", entry_point);
     } else {

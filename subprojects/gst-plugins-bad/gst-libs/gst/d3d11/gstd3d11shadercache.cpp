@@ -36,7 +36,7 @@ static std::map <gint64, ID3DBlob *> vs_blob_;
 HRESULT
 gst_d3d11_shader_cache_get_pixel_shader_blob (gint64 token,
     const gchar * source, gsize source_size, const gchar * entry_point,
-    ID3DBlob ** blob)
+    const D3D_SHADER_MACRO * defines, ID3DBlob ** blob)
 {
   std::lock_guard < std::mutex > lk (cache_lock_);
 
@@ -47,7 +47,7 @@ gst_d3d11_shader_cache_get_pixel_shader_blob (gint64 token,
     return S_OK;
   }
 
-  HRESULT hr = gst_d3d11_compile (source, source_size, nullptr, nullptr,
+  HRESULT hr = gst_d3d11_compile (source, source_size, nullptr, defines,
       nullptr, entry_point, "ps_5_0", 0, 0, blob, nullptr);
   if (FAILED (hr))
     return hr;

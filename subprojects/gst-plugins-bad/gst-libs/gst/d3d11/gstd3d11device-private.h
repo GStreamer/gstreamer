@@ -38,7 +38,19 @@ HRESULT gst_d3d11_device_get_pixel_shader  (GstD3D11Device * device,
                                             const gchar * source,
                                             gsize source_size,
                                             const gchar * entry_point,
+                                            const D3D_SHADER_MACRO * defines,
                                             ID3D11PixelShader ** ps);
+
+GST_D3D11_API
+HRESULT gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
+                                                    gint64 token,
+                                                    const void * bytecode,
+                                                    gsize bytecode_size,
+                                                    const gchar * source,
+                                                    gsize source_size,
+                                                    const gchar * entry_point,
+                                                    const D3D_SHADER_MACRO * defines,
+                                                    ID3D11PixelShader ** ps);
 
 GST_D3D11_API
 HRESULT gst_d3d11_device_get_vertex_shader (GstD3D11Device * device,

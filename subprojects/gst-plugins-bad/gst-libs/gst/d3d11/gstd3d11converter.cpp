@@ -24,12 +24,14 @@
 #endif
 
 #include "gstd3d11-private.h"
+#include "gstd3d11device-private.h"
 #include "gstd3d11converter.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11memory.h"
 #include "gstd3d11compile.h"
 #include "gstd3d11bufferpool.h"
+#include "gstd3d11converterbuilder.h"
 #include <wrl.h>
 #include <string.h>
 #include <math.h>
@@ -127,8 +129,7 @@ using namespace Microsoft::WRL;
 /* D3D11_VIDEO_PROCESSOR_FEATURE_CAPS_MIRROR */
 #define PROCESSOR_FEATURE_CAPS_MIRROR (0x200)
 
-/* *INDENT-OFF* */
-typedef struct
+struct PSColorSpace
 {
   /* + 1 for 16bytes alignment  */
   FLOAT coeffX[4];
@@ -137,512 +138,32 @@ typedef struct
   FLOAT offset[4];
   FLOAT min[4];
   FLOAT max[4];
-} PSColorSpace;
+};
 
-typedef struct
+struct PSConstBuffer
 {
-  PSColorSpace to_rgb_buf;
-  PSColorSpace to_yuv_buf;
-  PSColorSpace XYZ_convert_buf;
+  PSColorSpace preCoeff;
+  PSColorSpace postCoeff;
+  PSColorSpace primariesCoeff;
   FLOAT alpha;
-  DWORD in_premul_alpha;
-  DWORD out_premul_alpha;
-  FLOAT padding;
-} PSConstBuffer;
+  FLOAT padding[3];
+};
 
-typedef struct
+struct VertexData
 {
-  struct {
+  struct
+  {
     FLOAT x;
     FLOAT y;
     FLOAT z;
   } position;
-  struct {
+  struct
+  {
     FLOAT u;
     FLOAT v;
   } texture;
-} VertexData;
-
-/* output struct */
-static const gchar templ_OUTPUT_SINGLE_PLANE[] =
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane_0: SV_TARGET0;\n"
-    "};";
-
-static const gchar templ_OUTPUT_TWO_PLANES[] =
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane_0: SV_TARGET0;\n"
-    "  float4 Plane_1: SV_TARGET1;\n"
-    "};";
-
-static const gchar templ_OUTPUT_THREE_PLANES[] =
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane_0: SV_TARGET0;\n"
-    "  float4 Plane_1: SV_TARGET1;\n"
-    "  float4 Plane_2: SV_TARGET2;\n"
-    "};";
-
-static const gchar templ_OUTPUT_FOUR_PLANES[] =
-    "struct PS_OUTPUT\n"
-    "{\n"
-    "  float4 Plane_0: SV_TARGET0;\n"
-    "  float4 Plane_1: SV_TARGET1;\n"
-    "  float4 Plane_2: SV_TARGET2;\n"
-    "  float4 Plane_3: SV_TARGET3;\n"
-    "};";
-
-typedef struct
-{
-  const gchar *output_template;
-  guint num_rtv;
-} PSOutputType;
-
-enum
-{
-  OUTPUT_SINGLE_PLANE = 0,
-  OUTPUT_TWO_PLANES,
-  OUTPUT_THREE_PLANES,
-  OUTPUT_FOUR_PLANES,
 };
 
-static const PSOutputType output_types[] = {
-  {templ_OUTPUT_SINGLE_PLANE, 1},
-  {templ_OUTPUT_TWO_PLANES, 2},
-  {templ_OUTPUT_THREE_PLANES, 3},
-  {templ_OUTPUT_FOUR_PLANES, 4},
-};
-
-/* colorspace conversion */
-static const gchar templ_COLOR_SPACE_IDENTITY[] =
-    "{\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_COLOR_SPACE_CONVERT[] =
-    "{\n"
-    "  float3 out_space;\n"
-    "  out_space.x = dot (coeff.CoeffX, sample);\n"
-    "  out_space.y = dot (coeff.CoeffY, sample);\n"
-    "  out_space.z = dot (coeff.CoeffZ, sample);\n"
-    "  out_space += coeff.Offset;\n"
-    "  return clamp (out_space, coeff.Min, coeff.Max);\n"
-    "}";
-
-static const gchar templ_COLOR_SPACE_CONVERT_LUMA[] =
-    "{\n"
-    "  float3 out_space;\n"
-    "  out_space.x = dot (coeff.CoeffX, sample) + coeff.Offset.x;\n"
-    "  out_space.x = clamp (out_space.x, coeff.Min.x, coeff.Max.x);\n"
-    "  out_space.y = 0.5;\n"
-    "  out_space.z = 0.5;\n"
-    "  return out_space;\n"
-    "}";
-
-static const gchar templ_COLOR_SPACE_CONVERT_CHROMA[] =
-    "{\n"
-    "  float3 out_space;\n"
-    "  out_space.x = 0.0;\n"
-    "  out_space.y = dot (coeff.CoeffY, sample) + coeff.Offset.y;\n"
-    "  out_space.z = dot (coeff.CoeffZ, sample) + coeff.Offset.z;\n"
-    "  return clamp (out_space, coeff.Min, coeff.Max);\n"
-    "}";
-
-static const gchar templ_COLOR_SPACE_GRAY_TO_RGB[] =
-    "{\n"
-    "  return float3 (sample.x, sample.x, sample.x);\n"
-    "}";
-
-static const gchar templ_COLOR_SPACE_GRAY_TO_RGB_RANGE_ADJUST[] =
-    "{\n"
-    "  float gray;\n"
-    "  gray = coeff.CoeffX.x * sample.x + coeff.Offset.x;\n"
-    "  gray = clamp (gray, coeff.Min.x, coeff.Max.x);\n"
-    "  return float3 (gray, gray, gray);\n"
-    "}";
-
-/* sampling */
-static const gchar templ_SAMPLE_DEFAULT[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  return shaderTexture[0].Sample(samplerState, uv);\n"
-    "}";
-
-static const gchar templ_SAMPLE_VUYA[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  return shaderTexture[0].Sample(samplerState, uv).%c%c%c%c;\n"
-    "}";
-
-static const gchar templ_SAMPLE_YUV_LUMA[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-    "  sample.y = 0.5;\n"
-    "  sample.z = 0.5;\n"
-    "  sample.a = 1.0;\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_SAMPLE_YUV_LUMA_SCALED[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample.x = saturate (shaderTexture[0].Sample(samplerState, uv).x * %d);\n"
-    "  sample.y = 0.5;\n"
-    "  sample.z = 0.5;\n"
-    "  sample.a = 1.0;\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_SAMPLE_SEMI_PLANAR[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample.x  = shaderTexture[0].Sample(samplerState, uv).x;\n"
-    "  sample.yz = shaderTexture[1].Sample(samplerState, uv).%c%c;\n"
-    "  sample.a = 1.0;\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_SAMPLE_SEMI_PLANAR_CHROMA[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample.x = 0.0;\n"
-    "  sample.yz = shaderTexture[1].Sample(samplerState, uv).%c%c;\n"
-    "  sample.a = 1.0;\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_SAMPLE_PLANAR[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float3 sample;\n"
-    "  sample.%c = shaderTexture[0].Sample(samplerState, uv).x;\n"
-    "  sample.%c = shaderTexture[1].Sample(samplerState, uv).x;\n"
-    "  sample.%c = shaderTexture[2].Sample(samplerState, uv).x;\n"
-    "  return float4 (saturate(sample * %d), 1.0);\n"
-    "}";
-
-static const gchar templ_SAMPLE_PLANAR_4[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample.%c = shaderTexture[0].Sample(samplerState, uv).x;\n"
-    "  sample.%c = shaderTexture[1].Sample(samplerState, uv).x;\n"
-    "  sample.%c = shaderTexture[2].Sample(samplerState, uv).x;\n"
-    "  sample.%c = shaderTexture[3].Sample(samplerState, uv).x;\n"
-    "  return saturate(sample * %d);\n"
-    "}";
-
-static const gchar templ_SAMPLE_PLANAR_CHROMA[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float3 sample;\n"
-    "  sample.x = 0.0;\n"
-    "  sample.%c = shaderTexture[1].Sample(samplerState, uv).x;\n"
-    "  sample.%c = shaderTexture[2].Sample(samplerState, uv).x;\n"
-    "  return float4 (saturate(sample * %d), 1.0);\n"
-    "}";
-
-static const gchar templ_SAMPLE_YUV_PACKED[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample.xyz = shaderTexture[0].Sample(samplerState, uv).%c%c%c;\n"
-    "  sample.a = 1.0;\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_SAMPLE_GRAY[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-    "  sample.y = 0.5;\n"
-    "  sample.z = 0.5;\n"
-    "  sample.a = 1.0;\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_SAMPLE_GRAY_CHROMA[] =
-    "float4 sample_texture (float2 uv)\n"
-    "{\n"
-    "  return float4 (0.0, 0.5, 0.5, 1.0);\n"
-    "}";
-
-/* building output */
-static const gchar templ_OUTPUT_DEFAULT[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = sample;\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_VUYA[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  float4 vuya;\n"
-    "  vuya.%c%c%c = sample.xyz;\n"
-    "  vuya.%c = sample.a;\n"
-    "  output.Plane_0 = vuya;\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_LUMA[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.x, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_CHROMA_SEMI_PLANAR[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.%c%c, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_LUMA_SCALED[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.x / %d, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_CHROMA_PLANAR[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_CHROMA_PLANAR_SCALED[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.%c / %d, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (sample.%c / %d, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_PLANAR[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_2 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_PLANAR_SCALED[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  float3 scaled = sample.xyz / %d;\n"
-    "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_PLANAR_4[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_2 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_3 = float4 (sample.%c, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-static const gchar templ_OUTPUT_PLANAR_4_SCALED[] =
-    "PS_OUTPUT build_output (float4 sample)\n"
-    "{\n"
-    "  PS_OUTPUT output;\n"
-    "  float4 scaled = sample / %d;\n"
-    "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_3 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
-    "  return output;\n"
-    "}";
-
-/* gamma and XYZ convert */
-static const gchar templ_GAMMA_DECODE_IDENTITY[] =
-    "float3 gamma_decode (float3 sample)\n"
-    "{\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_GAMMA_DECODE[] =
-    "float3 gamma_decode (float3 sample)\n"
-    "{\n"
-    "  float3 dec;\n"
-    "  dec.x = gammaDecLUT.Sample (samplerState, sample.x);\n"
-    "  dec.y = gammaDecLUT.Sample (samplerState, sample.y);\n"
-    "  dec.z = gammaDecLUT.Sample (samplerState, sample.z);\n"
-    "  return dec;\n"
-    "}";
-
-static const gchar templ_GAMMA_ENCODE_IDENTITY[] =
-    "float3 gamma_encode (float3 sample)\n"
-    "{\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_GAMMA_ENCODE[] =
-    "float3 gamma_encode (float3 sample)\n"
-    "{\n"
-    "  float3 enc;\n"
-    "  enc.x = gammaEncLUT.Sample (samplerState, sample.x);\n"
-    "  enc.y = gammaEncLUT.Sample (samplerState, sample.y);\n"
-    "  enc.z = gammaEncLUT.Sample (samplerState, sample.z);\n"
-    "  return enc;\n"
-    "}";
-
-static const gchar templ_XYZ_CONVERT_IDENTITY[] =
-    "float3 XYZ_convert (float3 sample)\n"
-    "{\n"
-    "  return sample;\n"
-    "}";
-
-static const gchar templ_XYZ_CONVERT[] =
-    "float3 XYZ_convert (float3 sample)\n"
-    "{\n"
-    "  float3 out_space;\n"
-    "  out_space.x = dot (primariesCoeff.CoeffX, sample);\n"
-    "  out_space.y = dot (primariesCoeff.CoeffY, sample);\n"
-    "  out_space.z = dot (primariesCoeff.CoeffZ, sample);\n"
-    "  return saturate (out_space);\n"
-    "}";
-
-static const gchar templ_pixel_shader[] =
-    "struct PSColorSpace\n"
-    "{\n"
-    "  float3 CoeffX;\n"
-    "  float3 CoeffY;\n"
-    "  float3 CoeffZ;\n"
-    "  float3 Offset;\n"
-    "  float3 Min;\n"
-    "  float3 Max;\n"
-    "  float padding;\n"
-    "};\n"
-    "cbuffer PsConstBuffer : register(b0)\n"
-    "{\n"
-    /* RGB <-> YUV conversion */
-    "  PSColorSpace toRGBCoeff;\n"
-    "  PSColorSpace toYUVCoeff;\n"
-    "  PSColorSpace primariesCoeff;\n"
-    "  float AlphaMul;\n"
-    "  dword InPremulAlpha;\n"
-    "  dword OutPremulAlpha;\n"
-    "};\n"
-    "Texture2D shaderTexture[4] : register(t0);\n"
-    "Texture1D<float> gammaDecLUT: register(t4);\n"
-    "Texture1D<float> gammaEncLUT: register(t5);\n"
-    "SamplerState samplerState : register(s0);\n"
-    "struct PS_INPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    /* struct PS_OUTPUT */
-    "%s\n"
-    /* sample_texture() function */
-    "%s\n"
-    "float3 to_rgb (float3 sample, PSColorSpace coeff)\n"
-    "%s\n"
-    "float3 to_yuv (float3 sample, PSColorSpace coeff)\n"
-    "%s\n"
-    /* build_output() function */
-    "%s\n"
-    /* gamma_decode() function */
-    "%s\n"
-    /* gamma_encode() function */
-    "%s\n"
-    /* XYZ_convert() function */
-    "%s\n"
-    "float4 alpha_premul (float4 sample)\n"
-    "{\n"
-    "  float4 premul_tex;\n"
-    "  premul_tex.r = sample.r * sample.a;\n"
-    "  premul_tex.g = sample.g * sample.a;\n"
-    "  premul_tex.b = sample.b * sample.a;\n"
-    "  premul_tex.a = sample.a;\n"
-    "  return premul_tex;\n"
-    "}\n"
-    "float4 alpha_unpremul (float4 sample)\n"
-    "{\n"
-    "  float4 unpremul_tex;\n"
-    "  if (sample.a == 0 || sample.a == 1)\n"
-    "    return sample;\n"
-    "  unpremul_tex.r = saturate (sample.r / sample.a);\n"
-    "  unpremul_tex.g = saturate (sample.g / sample.a);\n"
-    "  unpremul_tex.b = saturate (sample.b / sample.a);\n"
-    "  unpremul_tex.a = sample.a;\n"
-    "  return unpremul_tex;\n"
-    "}\n"
-    "PS_OUTPUT main(PS_INPUT input)\n"
-    "{\n"
-    "  float4 sample;\n"
-    "  sample = sample_texture (input.Texture);\n"
-    "  if (InPremulAlpha)\n"
-    "    sample = alpha_unpremul (sample);\n"
-    "  sample.a = saturate (sample.a * AlphaMul);\n"
-    "  sample.xyz = to_rgb (sample.xyz, toRGBCoeff);\n"
-    "  sample.xyz = gamma_decode (sample.xyz);\n"
-    "  sample.xyz = XYZ_convert (sample.xyz);\n"
-    "  sample.xyz = gamma_encode (sample.xyz);\n"
-    "  sample.xyz = to_yuv (sample.xyz, toYUVCoeff);\n"
-    "  if (OutPremulAlpha)\n"
-    "    sample = alpha_premul (sample);\n"
-    "  return build_output (sample);\n"
-    "}\n";
-
-static const gchar templ_vertex_shader[] =
-    "struct VS_INPUT\n"
-    "{\n"
-    "  float4 Position : POSITION;\n"
-    "  float2 Texture : TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "struct VS_OUTPUT\n"
-    "{\n"
-    "  float4 Position: SV_POSITION;\n"
-    "  float2 Texture: TEXCOORD;\n"
-    "};\n"
-    "\n"
-    "VS_OUTPUT main(VS_INPUT input)\n"
-    "{\n"
-    "  return input;\n"
-    "}\n";
-/* *INDENT-ON* */
-
-typedef struct
-{
-  const PSOutputType *ps_output[CONVERTER_MAX_QUADS];
-  gchar *sample_texture_func[CONVERTER_MAX_QUADS];
-  const gchar *to_rgb_func[CONVERTER_MAX_QUADS];
-  const gchar *to_yuv_func[CONVERTER_MAX_QUADS];
-  gchar *build_output_func[CONVERTER_MAX_QUADS];
-  const gchar *gamma_decode_func;
-  const gchar *gamma_encode_func;
-  const gchar *XYZ_convert_func;
-} ConvertInfo;
 
 enum
 {
@@ -673,36 +194,49 @@ enum
 
 struct _GstD3D11ConverterPrivate
 {
+  ~_GstD3D11ConverterPrivate ()
+  {
+    g_free (in_mdcv_str);
+    g_free (out_mdcv_str);
+    g_free (in_cll_str);
+    g_free (out_cll_str);
+
+    if (unpack_convert)
+      gst_video_converter_free (unpack_convert);
+
+    gst_clear_buffer (&piv_inbuf);
+    gst_clear_buffer (&fallback_inbuf);
+  }
+
   GstVideoInfo in_info;
   GstVideoInfo out_info;
 
   GstD3D11Format in_d3d11_format;
   GstD3D11Format out_d3d11_format;
 
-  guint num_input_view;
-  guint num_output_view;
+  guint num_input_view = 0;
+  guint num_output_view = 0;
 
-  GstD3D11ConverterBackend supported_backend;
+  GstD3D11ConverterBackend supported_backend = (GstD3D11ConverterBackend) 0;
+  CONVERT_TYPE convert_type = CONVERT_TYPE::IDENTITY;
 
-  ID3D11Buffer *vertex_buffer;
-  ID3D11Buffer *index_buffer;
-  ID3D11Buffer *const_buffer;
-  ID3D11VertexShader *vs;
-  ID3D11InputLayout *layout;
-  ID3D11SamplerState *linear_sampler;
-  ID3D11PixelShader *ps[CONVERTER_MAX_QUADS];
+  ComPtr < ID3D11Buffer > vertex_buffer;
+  ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11Buffer > const_buffer;
+  ComPtr < ID3D11VertexShader > vs;
+  ComPtr < ID3D11InputLayout > layout;
+  ComPtr < ID3D11SamplerState > sampler;
+  ComPtr < ID3D11SamplerState > linear_sampler;
+  PixelShaderList ps;
   D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
 
-  ID3D11Texture1D *gamma_dec_lut;
-  ID3D11Texture1D *gamma_enc_lut;
-  ID3D11ShaderResourceView *gamma_dec_srv;
-  ID3D11ShaderResourceView *gamma_enc_srv;
+  ComPtr < ID3D11Texture1D > gamma_dec_lut;
+  ComPtr < ID3D11Texture1D > gamma_enc_lut;
+  ComPtr < ID3D11ShaderResourceView > gamma_dec_srv;
+  ComPtr < ID3D11ShaderResourceView > gamma_enc_srv;
 
   D3D11_BLEND_DESC blend_desc;
-  ID3D11BlendState *blend;
-
-  gboolean fast_path;
-  gboolean do_primaries;
+  ComPtr < ID3D11BlendState > blend;
 
   gint input_texture_width;
   gint input_texture_height;
@@ -710,88 +244,88 @@ struct _GstD3D11ConverterPrivate
   gboolean update_dest_rect;
   gboolean update_alpha;
 
-  ConvertInfo convert_info;
   PSConstBuffer const_data;
 
   gboolean clear_background;
   FLOAT clear_color[4][4];
   GstD3D11ColorMatrix clear_color_matrix;
 
-  GstVideoConverter *unpack_convert;
+  GstVideoConverter *unpack_convert = nullptr;
 
   /* video processor */
   D3D11_VIDEO_COLOR background_color;
-  ID3D11VideoDevice *video_device;
-  ID3D11VideoContext2 *video_context2;
-  ID3D11VideoContext1 *video_context;
-  ID3D11VideoProcessorEnumerator1 *enumerator;
-  ID3D11VideoProcessor *processor;
+  ComPtr < ID3D11VideoDevice > video_device;
+  ComPtr < ID3D11VideoContext2 > video_context2;
+  ComPtr < ID3D11VideoContext1 > video_context;
+  ComPtr < ID3D11VideoProcessorEnumerator1 > enumerator;
+  ComPtr < ID3D11VideoProcessor > processor;
   D3D11_VIDEO_PROCESSOR_CAPS processor_caps;
   RECT src_rect;
   RECT dest_rect;
   RECT dest_full_rect;
-  gboolean processor_in_use;
-  gboolean processor_direction_not_supported;
-  gboolean enable_mirror;
-  gboolean flip_h;
-  gboolean flip_v;
-  gboolean enable_rotation;
-  D3D11_VIDEO_PROCESSOR_ROTATION rotation;
+  gboolean processor_in_use = FALSE;
+  gboolean processor_direction_not_supported = FALSE;
+  gboolean enable_mirror = FALSE;
+  gboolean flip_h = FALSE;
+  gboolean flip_v = FALSE;
+  gboolean enable_rotation = FALSE;
+  D3D11_VIDEO_PROCESSOR_ROTATION rotation =
+      D3D11_VIDEO_PROCESSOR_ROTATION_IDENTITY;
 
   /* HDR10 */
-  gboolean have_in_hdr10;
-  gboolean have_out_hdr10;
-  gboolean in_hdr10_updated;
-  gboolean out_hdr10_updated;
+  gboolean have_in_hdr10 = FALSE;
+  gboolean have_out_hdr10 = FALSE;
+  gboolean in_hdr10_updated = FALSE;
+  gboolean out_hdr10_updated = FALSE;
   DXGI_HDR_METADATA_HDR10 in_hdr10_meta;
   DXGI_HDR_METADATA_HDR10 out_hdr10_meta;
-  gchar *in_mdcv_str;
-  gchar *out_mdcv_str;
-  gchar *in_cll_str;
-  gchar *out_cll_str;
+  gchar *in_mdcv_str = nullptr;
+  gchar *out_mdcv_str = nullptr;
+  gchar *in_cll_str = nullptr;
+  gchar *out_cll_str = nullptr;
 
   /* Fallback buffer and info, for shader */
   GstVideoInfo fallback_info;
-  GstBuffer *fallback_inbuf;
+  GstBuffer *fallback_inbuf = nullptr;
 
   /* Fallback buffer used for processor */
   GstVideoInfo piv_info;
-  GstBuffer *piv_inbuf;
+  GstBuffer *piv_inbuf = nullptr;
 
   GstVideoOrientationMethod video_direction;
 
   SRWLOCK prop_lock;
 
   /* properties */
-  gint src_x;
-  gint src_y;
-  gint src_width;
-  gint src_height;
-  gint dest_x;
-  gint dest_y;
-  gint dest_width;
-  gint dest_height;
-  gdouble alpha;
+  gint src_x = 0;
+  gint src_y = 0;
+  gint src_width = 0;
+  gint src_height = 0;
+  gint dest_x = 0;
+  gint dest_y = 0;
+  gint dest_width = 0;
+  gint dest_height = 0;
+  gdouble alpha = 0;
   gfloat blend_factor[4];
-  guint blend_sample_mask;
-  gboolean fill_border;
-  guint64 border_color;
-  GstD3D11ConverterAlphaMode src_alpha_mode;
-  GstD3D11ConverterAlphaMode dst_alpha_mode;
+  guint blend_sample_mask = 0;
+  gboolean fill_border = FALSE;
+  guint64 border_color = 0;
+  GstD3D11ConverterAlphaMode src_alpha_mode =
+      GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED;
+  GstD3D11ConverterAlphaMode dst_alpha_mode =
+      GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED;
 };
 
 static void gst_d3d11_converter_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_d3d11_converter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_d3d11_converter_dispose (GObject * object);
 static void gst_d3d11_converter_finalize (GObject * object);
 static void
 gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self);
 
 #define gst_d3d11_converter_parent_class parent_class
-G_DEFINE_TYPE_WITH_PRIVATE (GstD3D11Converter, gst_d3d11_converter,
-    GST_TYPE_OBJECT);
+G_DEFINE_TYPE (GstD3D11Converter, gst_d3d11_converter, GST_TYPE_OBJECT);
 
 static void
 gst_d3d11_converter_class_init (GstD3D11ConverterClass * klass)
@@ -802,7 +336,6 @@ gst_d3d11_converter_class_init (GstD3D11ConverterClass * klass)
 
   object_class->set_property = gst_d3d11_converter_set_property;
   object_class->get_property = gst_d3d11_converter_get_property;
-  object_class->dispose = gst_d3d11_converter_dispose;
   object_class->finalize = gst_d3d11_converter_finalize;
 
   g_object_class_install_property (object_class, PROP_SRC_X,
@@ -896,63 +429,18 @@ gst_d3d11_converter_class_init (GstD3D11ConverterClass * klass)
 static void
 gst_d3d11_converter_init (GstD3D11Converter * self)
 {
-  self->priv = (GstD3D11ConverterPrivate *)
-      gst_d3d11_converter_get_instance_private (self);
-  self->priv->src_alpha_mode = self->priv->dst_alpha_mode =
-      GST_D3D11_CONVERTER_ALPHA_MODE_UNSPECIFIED;
-}
-
-static void
-gst_d3d11_converter_dispose (GObject * object)
-{
-  GstD3D11Converter *self = GST_D3D11_CONVERTER (object);
-  GstD3D11ConverterPrivate *priv = self->priv;
-
-  GST_D3D11_CLEAR_COM (priv->vertex_buffer);
-  GST_D3D11_CLEAR_COM (priv->index_buffer);
-  GST_D3D11_CLEAR_COM (priv->const_buffer);
-  GST_D3D11_CLEAR_COM (priv->vs);
-  GST_D3D11_CLEAR_COM (priv->layout);
-  GST_D3D11_CLEAR_COM (priv->linear_sampler);
-  GST_D3D11_CLEAR_COM (priv->gamma_dec_lut);
-  GST_D3D11_CLEAR_COM (priv->gamma_dec_srv);
-  GST_D3D11_CLEAR_COM (priv->gamma_enc_lut);
-  GST_D3D11_CLEAR_COM (priv->gamma_enc_srv);
-  GST_D3D11_CLEAR_COM (priv->video_device);
-  GST_D3D11_CLEAR_COM (priv->video_context2);
-  GST_D3D11_CLEAR_COM (priv->video_context);
-  GST_D3D11_CLEAR_COM (priv->enumerator);
-  GST_D3D11_CLEAR_COM (priv->processor);
-  GST_D3D11_CLEAR_COM (priv->blend);
-
-  for (guint i = 0; i < CONVERTER_MAX_QUADS; i++)
-    GST_D3D11_CLEAR_COM (priv->ps[i]);
-
-  gst_clear_buffer (&priv->fallback_inbuf);
-  gst_clear_buffer (&priv->piv_inbuf);
-  gst_clear_object (&self->device);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  self->priv = new GstD3D11ConverterPrivate ();
 }
 
 static void
 gst_d3d11_converter_finalize (GObject * object)
 {
   GstD3D11Converter *self = GST_D3D11_CONVERTER (object);
-  GstD3D11ConverterPrivate *priv = self->priv;
 
-  for (guint i = 0; i < CONVERTER_MAX_QUADS; i++) {
-    g_free (priv->convert_info.sample_texture_func[i]);
-    g_free (priv->convert_info.build_output_func[i]);
-  }
+  delete self->priv;
 
-  g_free (priv->in_mdcv_str);
-  g_free (priv->out_mdcv_str);
-  g_free (priv->in_cll_str);
-  g_free (priv->out_cll_str);
-
-  if (priv->unpack_convert)
-    gst_video_converter_free (priv->unpack_convert);
+  if (self->device)
+    gst_object_unref (self->device);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1039,12 +527,10 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
     case PROP_BLEND_STATE:{
       ID3D11BlendState *blend =
           (ID3D11BlendState *) g_value_get_pointer (value);
-      GST_D3D11_CLEAR_COM (priv->blend);
+      priv->blend = nullptr;
       priv->blend = blend;
-      if (priv->blend) {
-        priv->blend->AddRef ();
+      if (priv->blend)
         priv->blend->GetDesc (&priv->blend_desc);
-      }
       break;
     }
     case PROP_BLEND_FACTOR_RED:
@@ -1152,7 +638,7 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
       g_value_set_double (value, priv->alpha);
       break;
     case PROP_BLEND_STATE:
-      g_value_set_pointer (value, priv->blend);
+      g_value_set_pointer (value, priv->blend.Get ());
       break;
     case PROP_BLEND_FACTOR_RED:
       g_value_set_float (value, priv->blend_factor[0]);
@@ -1197,143 +683,6 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-get_packed_yuv_components (GstVideoFormat format, gchar * y, gchar * u,
-    gchar * v)
-{
-  switch (format) {
-    case GST_VIDEO_FORMAT_Y410:
-      *y = 'g';
-      *u = 'r';
-      *v = 'b';
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
-static void
-get_planar_component (GstVideoFormat format, gchar * x, gchar * y, gchar * z,
-    gchar * w, guint * scale)
-{
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBRA_10LE:
-      *scale = (1 << 6);
-      break;
-    case GST_VIDEO_FORMAT_I420_12LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBRA_12LE:
-      *scale = (1 << 4);
-      break;
-    default:
-      *scale = 1;
-      break;
-  }
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_RGBP:
-      *x = 'x';
-      *y = 'y';
-      *z = 'z';
-      break;
-    case GST_VIDEO_FORMAT_BGRP:
-      *x = 'z';
-      *y = 'y';
-      *z = 'x';
-      break;
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-      *x = 'y';
-      *y = 'z';
-      *z = 'x';
-      break;
-    case GST_VIDEO_FORMAT_GBRA:
-    case GST_VIDEO_FORMAT_GBRA_10LE:
-    case GST_VIDEO_FORMAT_GBRA_12LE:
-      *x = 'y';
-      *y = 'z';
-      *z = 'x';
-      *w = 'w';
-      break;
-    case GST_VIDEO_FORMAT_YV12:
-      *x = 'x';
-      *y = 'z';
-      *z = 'y';
-      break;
-    default:
-      *x = 'x';
-      *y = 'y';
-      *z = 'z';
-      break;
-  }
-}
-
-static void
-get_semi_planar_component (GstVideoFormat format, gchar * u, gchar * v,
-    gboolean is_sampling)
-{
-  if (format == GST_VIDEO_FORMAT_NV21) {
-    if (is_sampling) {
-      *u = 'y';
-      *v = 'x';
-    } else {
-      *u = 'z';
-      *v = 'y';
-    }
-  } else {
-    if (is_sampling) {
-      *u = 'x';
-      *v = 'y';
-    } else {
-      *u = 'y';
-      *v = 'z';
-    }
-  }
-}
-
-static void
-get_vuya_component (GstVideoFormat format, gchar * y, gchar * u,
-    gchar * v, gchar * a)
-{
-  switch (format) {
-    case GST_VIDEO_FORMAT_VUYA:
-      if (y)
-        *y = 'z';
-      if (u)
-        *u = 'y';
-      if (v)
-        *v = 'x';
-      if (a)
-        *a = 'w';
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_AYUV64:
-      if (y)
-        *y = 'g';
-      if (u)
-        *u = 'b';
-      if (v)
-        *v = 'a';
-      if (a)
-        *a = 'r';
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-}
-
-static gboolean
 gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info,
     D3D11_FILTER sampler_filter)
@@ -1341,7 +690,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   GstD3D11ConverterPrivate *priv = self->priv;
   GstD3D11Device *device = self->device;
   HRESULT hr;
-  D3D11_SAMPLER_DESC sampler_desc;
   D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -1349,78 +697,45 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   WORD *indices;
   ID3D11Device *device_handle;
   ID3D11DeviceContext *context_handle;
-  ConvertInfo *cinfo = &priv->convert_info;
-  ComPtr < ID3D11PixelShader > ps[CONVERTER_MAX_QUADS];
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
+  ComPtr < ID3D11SamplerState > sampler;
   ComPtr < ID3D11SamplerState > linear_sampler;
   ComPtr < ID3D11Buffer > const_buffer;
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
-  gint i;
 
-  memset (&sampler_desc, 0, sizeof (sampler_desc));
   memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
-  /* bilinear filtering */
-  sampler_desc.Filter = sampler_filter;
-  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-  sampler_desc.MinLOD = 0;
-  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-  hr = device_handle->CreateSamplerState (&sampler_desc, &linear_sampler);
+  hr = gst_d3d11_device_get_sampler (device, sampler_filter, &sampler);
   if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't create samplerState state, hr: 0x%x", (guint) hr);
+    GST_ERROR_OBJECT (self, "Couldn't create sampler, hr: 0x%x", (guint) hr);
     return FALSE;
   }
 
-  for (i = 0; i < CONVERTER_MAX_QUADS; i++) {
-    gchar *shader_code = nullptr;
-
-    if (cinfo->sample_texture_func[i]) {
-      g_assert (cinfo->ps_output[i] != nullptr);
-
-      shader_code = g_strdup_printf (templ_pixel_shader,
-          cinfo->ps_output[i]->output_template, cinfo->sample_texture_func[i],
-          cinfo->to_rgb_func[i], cinfo->to_yuv_func[i],
-          cinfo->build_output_func[i], cinfo->gamma_decode_func,
-          cinfo->gamma_encode_func, cinfo->XYZ_convert_func);
-
-      hr = gst_d3d11_create_pixel_shader_simple (device,
-          shader_code, "main", &ps[i]);
-      g_free (shader_code);
-      if (!gst_d3d11_result (hr, device)) {
-        return FALSE;
-      }
-    }
+  hr = gst_d3d11_device_get_sampler (device, D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+      &linear_sampler);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self,
+        "Couldn't create linear sampler, hr: 0x%x", (guint) hr);
+    return FALSE;
   }
 
-  input_desc[0].SemanticName = "POSITION";
-  input_desc[0].SemanticIndex = 0;
-  input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-  input_desc[0].InputSlot = 0;
-  input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[0].InstanceDataStepRate = 0;
+  auto ps_list = gst_d3d11_get_converter_pixel_shader (device,
+      GST_VIDEO_INFO_FORMAT (in_info), GST_VIDEO_INFO_FORMAT (out_info),
+      priv->src_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED,
+      priv->dst_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED,
+      priv->convert_type);
+  if (ps_list.empty ()) {
+    GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
+    return FALSE;
+  }
 
-  input_desc[1].SemanticName = "TEXCOORD";
-  input_desc[1].SemanticIndex = 0;
-  input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-  input_desc[1].InputSlot = 0;
-  input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-  input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-  input_desc[1].InstanceDataStepRate = 0;
-
-  hr = gst_d3d11_create_vertex_shader_simple (device, templ_vertex_shader,
-      "main", input_desc, G_N_ELEMENTS (input_desc), &vs, &layout);
+  hr = gst_d3d11_get_converter_vertex_shader (device, &vs, &layout);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't vertex pixel shader");
     return FALSE;
@@ -1536,15 +851,14 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   context_handle->Unmap (index_buffer.Get (), 0);
 
   /* holds vertex buffer for crop rect update */
-  priv->vertex_buffer = vertex_buffer.Detach ();
-  priv->index_buffer = index_buffer.Detach ();
-  priv->const_buffer = const_buffer.Detach ();
-  priv->vs = vs.Detach ();
-  priv->layout = layout.Detach ();
-  priv->linear_sampler = linear_sampler.Detach ();
-  priv->ps[0] = ps[0].Detach ();
-  if (ps[1])
-    priv->ps[1] = ps[1].Detach ();
+  priv->vertex_buffer = vertex_buffer;
+  priv->index_buffer = index_buffer;
+  priv->const_buffer = const_buffer;
+  priv->vs = vs;
+  priv->layout = layout;
+  priv->sampler = sampler;
+  priv->linear_sampler = linear_sampler;
+  priv->ps = ps_list;
 
   priv->input_texture_width = GST_VIDEO_INFO_WIDTH (in_info);
   priv->input_texture_height = GST_VIDEO_INFO_HEIGHT (in_info);
@@ -1802,8 +1116,8 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
 
   context_handle = gst_d3d11_device_get_device_context_handle (self->device);
 
-  hr = context_handle->Map (priv->vertex_buffer, 0, D3D11_MAP_WRITE_DISCARD,
-      0, &map);
+  hr = context_handle->Map (priv->vertex_buffer.Get (),
+      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
@@ -1863,7 +1177,7 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
 
   gst_d3d11_converter_apply_orientation (self, vertex_data, u0, u1, v0, v1);
 
-  context_handle->Unmap (priv->vertex_buffer, 0);
+  context_handle->Unmap (priv->vertex_buffer.Get (), 0);
 
   return TRUE;
 }
@@ -1961,338 +1275,6 @@ gst_d3d11_converter_update_dest_rect (GstD3D11Converter * self)
   return TRUE;
 }
 
-static gboolean
-gst_d3d11_converter_prepare_output (GstD3D11Converter * self,
-    const GstVideoInfo * info)
-{
-  GstD3D11ConverterPrivate *priv = self->priv;
-  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
-  ConvertInfo *cinfo = &priv->convert_info;
-
-  switch (format) {
-      /* RGB */
-    case GST_VIDEO_FORMAT_RGBA64_LE:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_RGBx:
-      cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
-      cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_DEFAULT);
-      break;
-      /* VUYA */
-    case GST_VIDEO_FORMAT_VUYA:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_AYUV64:{
-      gchar y, u, v, a;
-
-      get_vuya_component (format, &y, &u, &v, &a);
-      cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
-      cinfo->build_output_func[0] =
-          g_strdup_printf (templ_OUTPUT_VUYA, y, u, v, a);
-      break;
-    }
-      /* semi-planar */
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:{
-      gchar u, v;
-
-      get_semi_planar_component (format, &u, &v, FALSE);
-      cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
-      cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_LUMA);
-
-      cinfo->ps_output[1] = &output_types[OUTPUT_SINGLE_PLANE];
-      cinfo->build_output_func[1] =
-          g_strdup_printf (templ_OUTPUT_CHROMA_SEMI_PLANAR, u, v);
-      break;
-    }
-      /* planar */
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I420_12LE:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_I422_12LE:{
-      gchar y, u, v, w;
-      guint scale;
-
-      get_planar_component (format, &y, &u, &v, &w, &scale);
-
-      cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
-      cinfo->ps_output[1] = &output_types[OUTPUT_TWO_PLANES];
-
-      if (info->finfo->depth[0] == 8) {
-        cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_LUMA);
-        cinfo->build_output_func[1] =
-            g_strdup_printf (templ_OUTPUT_CHROMA_PLANAR, u, v);
-      } else {
-        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_LUMA_SCALED,
-            scale);
-        cinfo->build_output_func[1] =
-            g_strdup_printf (templ_OUTPUT_CHROMA_PLANAR_SCALED,
-            u, scale, v, scale);
-      }
-      break;
-    }
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-    case GST_VIDEO_FORMAT_RGBP:
-    case GST_VIDEO_FORMAT_BGRP:
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-    {
-      gchar x, y, z, w;
-      guint scale;
-
-      get_planar_component (format, &x, &y, &z, &w, &scale);
-
-      cinfo->ps_output[0] = &output_types[OUTPUT_THREE_PLANES];
-      if (info->finfo->depth[0] == 8) {
-        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR,
-            x, y, z);
-      } else {
-        cinfo->build_output_func[0] =
-            g_strdup_printf (templ_OUTPUT_PLANAR_SCALED, scale, x, y, z);
-      }
-      break;
-    }
-    case GST_VIDEO_FORMAT_GBRA:
-    case GST_VIDEO_FORMAT_GBRA_10LE:
-    case GST_VIDEO_FORMAT_GBRA_12LE:
-    {
-      gchar x, y, z, w;
-      guint scale;
-
-      get_planar_component (format, &x, &y, &z, &w, &scale);
-
-      cinfo->ps_output[0] = &output_types[OUTPUT_FOUR_PLANES];
-      if (info->finfo->depth[0] == 8) {
-        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR_4,
-            x, y, z, w);
-      } else {
-        cinfo->build_output_func[0] =
-            g_strdup_printf (templ_OUTPUT_PLANAR_4_SCALED, scale, x, y, z, w);
-      }
-      break;
-    }
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-      cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
-      cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_LUMA);
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
-static gboolean
-gst_d3d11_converter_prepare_sample_texture (GstD3D11Converter * self,
-    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
-{
-  GstD3D11ConverterPrivate *priv = self->priv;
-  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (in_info);
-  gboolean out_rgb = GST_VIDEO_INFO_IS_RGB (out_info);
-  gboolean out_yuv = GST_VIDEO_INFO_IS_YUV (out_info);
-  gboolean out_gray = GST_VIDEO_INFO_IS_GRAY (out_info);
-  ConvertInfo *cinfo = &priv->convert_info;
-
-  switch (format) {
-      /* RGB */
-    case GST_VIDEO_FORMAT_RGBA64_LE:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_RGBx:
-      cinfo->sample_texture_func[0] = g_strdup (templ_SAMPLE_DEFAULT);
-      if (cinfo->ps_output[1])
-        cinfo->sample_texture_func[1] =
-            g_strdup (cinfo->sample_texture_func[0]);
-      break;
-      /* VUYA */
-    case GST_VIDEO_FORMAT_VUYA:
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_AYUV64:{
-      gchar y, u, v, a;
-
-      get_vuya_component (format, &y, &u, &v, &a);
-      cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_VUYA,
-          y, u, v, a);
-      if (cinfo->ps_output[1]) {
-        cinfo->sample_texture_func[1] =
-            g_strdup (cinfo->sample_texture_func[0]);
-      }
-      break;
-    }
-      /* semi-planar */
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:{
-      gchar u, v;
-
-      get_semi_planar_component (format, &u, &v, TRUE);
-      if (out_rgb) {
-        cinfo->sample_texture_func[0] =
-            g_strdup_printf (templ_SAMPLE_SEMI_PLANAR, u, v);
-      } else if (out_gray) {
-        cinfo->sample_texture_func[0] = g_strdup (templ_SAMPLE_YUV_LUMA);
-      } else if (out_yuv) {
-        if (GST_VIDEO_INFO_N_PLANES (out_info) == 1 ||
-            cinfo->ps_output[0] == &output_types[OUTPUT_THREE_PLANES]) {
-          /* YUV packed or Y444 */
-          cinfo->sample_texture_func[0] =
-              g_strdup_printf (templ_SAMPLE_SEMI_PLANAR, u, v);
-        } else {
-          if (priv->fast_path) {
-            cinfo->sample_texture_func[0] = g_strdup (templ_SAMPLE_YUV_LUMA);
-            cinfo->sample_texture_func[1] =
-                g_strdup_printf (templ_SAMPLE_SEMI_PLANAR_CHROMA, u, v);
-          } else {
-            cinfo->sample_texture_func[0] =
-                g_strdup_printf (templ_SAMPLE_SEMI_PLANAR, u, v);
-            cinfo->sample_texture_func[1] =
-                g_strdup (cinfo->sample_texture_func[0]);
-          }
-        }
-      } else {
-        g_assert_not_reached ();
-        return FALSE;
-      }
-      break;
-    }
-      /* planar */
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I420_12LE:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-    {
-      gchar x, y, z, w;
-      guint scale;
-
-      get_planar_component (format, &x, &y, &z, &w, &scale);
-      if (out_rgb) {
-        cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR,
-            x, y, z, scale);
-      } else if (out_gray) {
-        cinfo->sample_texture_func[0] =
-            g_strdup_printf (templ_SAMPLE_YUV_LUMA_SCALED, scale);
-      } else if (out_yuv) {
-        if (GST_VIDEO_INFO_N_PLANES (out_info) == 1 ||
-            cinfo->ps_output[0] == &output_types[OUTPUT_THREE_PLANES]) {
-          /* YUV packed or Y444 */
-          cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR,
-              x, y, z, scale);
-        } else {
-          if (priv->fast_path) {
-            cinfo->sample_texture_func[0] =
-                g_strdup_printf (templ_SAMPLE_YUV_LUMA_SCALED, scale);
-            cinfo->sample_texture_func[1] =
-                g_strdup_printf (templ_SAMPLE_PLANAR_CHROMA, y, z, scale);
-          } else {
-            cinfo->sample_texture_func[0] =
-                g_strdup_printf (templ_SAMPLE_PLANAR, x, y, z, scale);
-            cinfo->sample_texture_func[1] =
-                g_strdup (cinfo->sample_texture_func[0]);
-          }
-        }
-      } else {
-        g_assert_not_reached ();
-        return FALSE;
-      }
-      break;
-    }
-      /* RGB planar */
-    case GST_VIDEO_FORMAT_RGBP:
-    case GST_VIDEO_FORMAT_BGRP:
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-    case GST_VIDEO_FORMAT_GBRA:
-    case GST_VIDEO_FORMAT_GBRA_10LE:
-    case GST_VIDEO_FORMAT_GBRA_12LE:
-    {
-      gchar x, y, z, w;
-      guint scale;
-
-      get_planar_component (format, &x, &y, &z, &w, &scale);
-
-      if (GST_VIDEO_INFO_N_PLANES (in_info) == 4) {
-        cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR_4,
-            x, y, z, w, scale);
-      } else {
-        cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_PLANAR,
-            x, y, z, scale);
-      }
-
-      if (cinfo->ps_output[1]) {
-        cinfo->sample_texture_func[1] =
-            g_strdup (cinfo->sample_texture_func[0]);
-      }
-      break;
-    }
-      /* yuv packed */
-    case GST_VIDEO_FORMAT_Y410:{
-      gchar y, u, v;
-
-      get_packed_yuv_components (format, &y, &u, &v);
-      cinfo->sample_texture_func[0] = g_strdup_printf (templ_SAMPLE_YUV_PACKED,
-          y, u, v);
-      if (cinfo->ps_output[1]) {
-        cinfo->sample_texture_func[1] =
-            g_strdup (cinfo->sample_texture_func[0]);
-      }
-      break;
-    }
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-      cinfo->sample_texture_func[0] = g_strdup (templ_SAMPLE_GRAY);
-      if (cinfo->ps_output[1])
-        cinfo->sample_texture_func[1] = g_strdup (templ_SAMPLE_GRAY_CHROMA);
-      break;
-    default:
-      g_assert_not_reached ();
-      return FALSE;
-  }
-
-  return TRUE;
-}
-
-static const gchar *
-get_color_range_name (GstVideoColorRange range)
-{
-  switch (range) {
-    case GST_VIDEO_COLOR_RANGE_0_255:
-      return "FULL";
-    case GST_VIDEO_COLOR_RANGE_16_235:
-      return "STUDIO";
-    default:
-      break;
-  }
-
-  return "UNKNOWN";
-}
-
 static void
 convert_info_gray_to_yuv (const GstVideoInfo * gray, GstVideoInfo * yuv)
 {
@@ -2330,424 +1312,108 @@ convert_info_gray_to_yuv (const GstVideoInfo * gray, GstVideoInfo * yuv)
   *yuv = tmp;
 }
 
-static void
-convert_info_gray_to_rgb (const GstVideoInfo * gray, GstVideoInfo * rgb)
-{
-  GstVideoInfo tmp;
-
-  if (GST_VIDEO_INFO_IS_RGB (gray)) {
-    *rgb = *gray;
-    return;
-  }
-
-  if (gray->finfo->depth[0] == 8) {
-    gst_video_info_set_format (&tmp,
-        GST_VIDEO_FORMAT_RGBA, gray->width, gray->height);
-  } else {
-    gst_video_info_set_format (&tmp,
-        GST_VIDEO_FORMAT_RGBA64_LE, gray->width, gray->height);
-  }
-
-  tmp.colorimetry.range = gray->colorimetry.range;
-  if (tmp.colorimetry.range == GST_VIDEO_COLOR_RANGE_UNKNOWN)
-    tmp.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-
-  tmp.colorimetry.primaries = gray->colorimetry.primaries;
-  if (tmp.colorimetry.primaries == GST_VIDEO_COLOR_PRIMARIES_UNKNOWN)
-    tmp.colorimetry.primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
-
-  tmp.colorimetry.transfer = gray->colorimetry.transfer;
-  if (tmp.colorimetry.transfer == GST_VIDEO_TRANSFER_UNKNOWN)
-    tmp.colorimetry.transfer = GST_VIDEO_TRANSFER_BT709;
-
-  *rgb = tmp;
-}
-
 static gboolean
-gst_d3d11_converter_prepare_colorspace_fast (GstD3D11Converter * self,
+gst_d3d11_converter_calculate_matrix (GstD3D11Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
   GstD3D11ConverterPrivate *priv = self->priv;
-  const GstVideoColorimetry *in_color = &in_info->colorimetry;
-  const GstVideoColorimetry *out_color = &out_info->colorimetry;
-  ConvertInfo *cinfo = &priv->convert_info;
-  PSColorSpace *to_rgb_buf = &priv->const_data.to_rgb_buf;
-  PSColorSpace *to_yuv_buf = &priv->const_data.to_yuv_buf;
-  GstD3D11ColorMatrix to_rgb_matrix;
-  GstD3D11ColorMatrix to_yuv_matrix;
-  gchar *matrix_dump;
+  GstD3D11ColorMatrix pre_coeff;
+  GstD3D11ColorMatrix post_coeff;
+  GstD3D11ColorMatrix primaries_coeff;
+  GstVideoInfo rgb_info;
 
-  memset (&to_rgb_matrix, 0, sizeof (GstD3D11ColorMatrix));
-  memset (&to_yuv_matrix, 0, sizeof (GstD3D11ColorMatrix));
+  gst_d3d11_color_matrix_init (&pre_coeff);
+  gst_d3d11_color_matrix_init (&post_coeff);
+  gst_d3d11_color_matrix_init (&primaries_coeff);
 
-  for (guint i = 0; i < 2; i++) {
-    cinfo->to_rgb_func[i] = templ_COLOR_SPACE_IDENTITY;
-    cinfo->to_yuv_func[i] = templ_COLOR_SPACE_IDENTITY;
-  }
-
-  cinfo->gamma_decode_func = templ_GAMMA_DECODE_IDENTITY;
-  cinfo->gamma_encode_func = templ_GAMMA_ENCODE_IDENTITY;
-  cinfo->XYZ_convert_func = templ_XYZ_CONVERT_IDENTITY;
-
-  if (GST_VIDEO_INFO_IS_RGB (in_info)) {
-    if (GST_VIDEO_INFO_IS_RGB (out_info)) {
-      if (in_color->range == out_color->range) {
-        GST_DEBUG_OBJECT (self, "RGB -> RGB without colorspace conversion");
+  switch (priv->convert_type) {
+    case CONVERT_TYPE::RANGE:
+      gst_d3d11_color_range_adjust_matrix_unorm (in_info, out_info,
+          &post_coeff);
+      break;
+    case CONVERT_TYPE::SIMPLE:
+      if (GST_VIDEO_INFO_IS_RGB (in_info)) {
+        gst_d3d11_rgb_to_yuv_matrix_unorm (in_info, out_info, &post_coeff);
       } else {
-        if (!gst_d3d11_color_range_adjust_matrix_unorm (in_info, out_info,
-                &to_rgb_matrix)) {
-          GST_ERROR_OBJECT (self, "Failed to get RGB range adjust matrix");
-          return FALSE;
+        gst_d3d11_yuv_to_rgb_matrix_unorm (in_info, out_info, &post_coeff);
+      }
+      break;
+    case CONVERT_TYPE::GAMMA:
+    case CONVERT_TYPE::PRIMARY:
+      if (GST_VIDEO_INFO_IS_RGB (in_info)) {
+        rgb_info = *in_info;
+        if (in_info->colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+          rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+
+          gst_d3d11_color_range_adjust_matrix_unorm (in_info,
+              &rgb_info, &pre_coeff);
         }
-
-        matrix_dump = gst_d3d11_dump_color_matrix (&to_rgb_matrix);
-        GST_DEBUG_OBJECT (self, "RGB range adjust %s -> %s\n%s",
-            get_color_range_name (in_color->range),
-            get_color_range_name (out_color->range), matrix_dump);
-        g_free (matrix_dump);
-
-        cinfo->to_rgb_func[0] = templ_COLOR_SPACE_CONVERT;
-      }
-    } else {
-      GstVideoInfo yuv_info;
-
-      convert_info_gray_to_yuv (out_info, &yuv_info);
-
-      if (yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
-          yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
-        GST_WARNING_OBJECT (self, "Invalid matrix is detected");
-        yuv_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
-      }
-
-      if (!gst_d3d11_rgb_to_yuv_matrix_unorm (in_info,
-              &yuv_info, &to_yuv_matrix)) {
-        GST_ERROR_OBJECT (self, "Failed to get RGB -> YUV transform matrix");
-        return FALSE;
-      }
-
-      matrix_dump = gst_d3d11_dump_color_matrix (&to_yuv_matrix);
-      GST_DEBUG_OBJECT (self, "RGB -> YUV matrix:\n%s", matrix_dump);
-      g_free (matrix_dump);
-
-      if (GST_VIDEO_INFO_IS_GRAY (out_info)) {
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT_LUMA;
-      } else if (GST_VIDEO_INFO_N_PLANES (out_info) == 1 ||
-          cinfo->ps_output[0] == &output_types[OUTPUT_THREE_PLANES]) {
-        /* YUV packed or Y444 */
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT;
       } else {
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT_LUMA;
-        cinfo->to_yuv_func[1] = templ_COLOR_SPACE_CONVERT_CHROMA;
+        gst_video_info_set_format (&rgb_info,
+            in_info->finfo->depth[0] == 8 ? GST_VIDEO_FORMAT_RGBA :
+            GST_VIDEO_FORMAT_RGBA64_LE, in_info->width, in_info->height);
+        rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+        rgb_info.colorimetry.transfer = in_info->colorimetry.transfer;
+        rgb_info.colorimetry.primaries = in_info->colorimetry.primaries;
+
+        gst_d3d11_yuv_to_rgb_matrix_unorm (in_info, &rgb_info, &pre_coeff);
       }
-    }
-  } else if (GST_VIDEO_INFO_IS_GRAY (in_info)) {
-    gboolean identity = TRUE;
-    GstD3D11ColorMatrix matrix;
 
-    memset (&matrix, 0, sizeof (GstD3D11ColorMatrix));
+      if (priv->convert_type == CONVERT_TYPE::PRIMARY) {
+        const GstVideoColorPrimariesInfo *in_pinfo;
+        const GstVideoColorPrimariesInfo *out_pinfo;
 
-    if (in_color->range != out_color->range) {
-      GstVideoInfo in_tmp, out_tmp;
+        in_pinfo =
+            gst_video_color_primaries_get_info (in_info->colorimetry.primaries);
+        out_pinfo =
+            gst_video_color_primaries_get_info (out_info->
+            colorimetry.primaries);
+
+        gst_d3d11_color_primaries_matrix_unorm (in_pinfo, out_pinfo,
+            &primaries_coeff);
+      }
 
       if (GST_VIDEO_INFO_IS_RGB (out_info)) {
-        convert_info_gray_to_rgb (in_info, &in_tmp);
-        out_tmp = *out_info;
+        if (out_info->colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+          rgb_info = *out_info;
+          rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
+
+          gst_d3d11_color_range_adjust_matrix_unorm (&rgb_info,
+              out_info, &post_coeff);
+        }
       } else {
-        convert_info_gray_to_yuv (in_info, &in_tmp);
-        convert_info_gray_to_yuv (out_info, &out_tmp);
+        gst_d3d11_rgb_to_yuv_matrix_unorm (&rgb_info, out_info, &post_coeff);
       }
-
-      identity = FALSE;
-      if (!gst_d3d11_color_range_adjust_matrix_unorm (&in_tmp, &out_tmp,
-              &matrix)) {
-        GST_ERROR_OBJECT (self, "Failed to get GRAY range adjust matrix");
-        return FALSE;
-      }
-
-      matrix_dump = gst_d3d11_dump_color_matrix (&matrix);
-      GST_DEBUG_OBJECT (self, "GRAY range adjust matrix:\n%s", matrix_dump);
-      g_free (matrix_dump);
-    }
-
-    if (GST_VIDEO_INFO_IS_GRAY (out_info)) {
-      if (identity) {
-        GST_DEBUG_OBJECT (self, "GRAY to GRAY without range adjust");
-      } else {
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT_LUMA;
-      }
-
-      to_yuv_matrix = matrix;
-    } else if (GST_VIDEO_INFO_IS_RGB (out_info)) {
-      if (identity) {
-        GST_DEBUG_OBJECT (self, "GRAY to RGB without range adjust");
-        cinfo->to_rgb_func[0] = templ_COLOR_SPACE_GRAY_TO_RGB;
-      } else {
-        cinfo->to_rgb_func[0] = templ_COLOR_SPACE_GRAY_TO_RGB_RANGE_ADJUST;
-      }
-
-      to_rgb_matrix = matrix;
-    } else if (GST_VIDEO_INFO_IS_YUV (out_info)) {
-      if (identity) {
-        GST_DEBUG_OBJECT (self, "GRAY to YUV without range adjust");
-      } else {
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT_LUMA;
-        cinfo->to_yuv_func[1] = templ_COLOR_SPACE_CONVERT_LUMA;
-      }
-
-      to_yuv_matrix = matrix;
-    } else {
-      g_assert_not_reached ();
-      return FALSE;
-    }
-  } else if (GST_VIDEO_INFO_IS_YUV (in_info)) {
-    if (GST_VIDEO_INFO_IS_RGB (out_info)) {
-      GstVideoInfo yuv_info = *in_info;
-
-      if (yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
-          yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
-        GST_WARNING_OBJECT (self, "Invalid matrix is detected");
-        yuv_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
-      }
-
-      if (!gst_d3d11_yuv_to_rgb_matrix_unorm (&yuv_info,
-              out_info, &to_rgb_matrix)) {
-        GST_ERROR_OBJECT (self, "Failed to get YUV -> RGB transform matrix");
-        return FALSE;
-      }
-
-      matrix_dump = gst_d3d11_dump_color_matrix (&to_rgb_matrix);
-      GST_DEBUG_OBJECT (self, "YUV -> RGB matrix:\n%s", matrix_dump);
-      g_free (matrix_dump);
-
-      cinfo->to_rgb_func[0] = templ_COLOR_SPACE_CONVERT;
-    } else if (in_color->range != out_color->range) {
-      if (!gst_d3d11_color_range_adjust_matrix_unorm (in_info, out_info,
-              &to_yuv_matrix)) {
-        GST_ERROR_OBJECT (self, "Failed to get GRAY range adjust matrix");
-        return FALSE;
-      }
-
-      matrix_dump = gst_d3d11_dump_color_matrix (&to_yuv_matrix);
-      GST_DEBUG_OBJECT (self, "YUV range adjust matrix:\n%s", matrix_dump);
-      g_free (matrix_dump);
-
-      if (GST_VIDEO_INFO_IS_GRAY (out_info)) {
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT_LUMA;
-      } else if (GST_VIDEO_INFO_N_PLANES (out_info) == 1 ||
-          cinfo->ps_output[0] == &output_types[OUTPUT_THREE_PLANES]) {
-        /* YUV packed or Y444 */
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT;
-      } else {
-        cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT_LUMA;
-        cinfo->to_yuv_func[1] = templ_COLOR_SPACE_CONVERT_CHROMA;
-      }
-    }
-  } else {
-    g_assert_not_reached ();
-    return FALSE;
+      break;
+    default:
+      break;
   }
+
+  PSColorSpace *preCoeff = &priv->const_data.preCoeff;
+  PSColorSpace *postCoeff = &priv->const_data.postCoeff;
+  PSColorSpace *primariesCoeff = &priv->const_data.primariesCoeff;
 
   for (guint i = 0; i < 3; i++) {
-    to_rgb_buf->coeffX[i] = to_rgb_matrix.matrix[0][i];
-    to_rgb_buf->coeffY[i] = to_rgb_matrix.matrix[1][i];
-    to_rgb_buf->coeffZ[i] = to_rgb_matrix.matrix[2][i];
-    to_rgb_buf->offset[i] = to_rgb_matrix.offset[i];
-    to_rgb_buf->min[i] = to_rgb_matrix.min[i];
-    to_rgb_buf->max[i] = to_rgb_matrix.max[i];
+    preCoeff->coeffX[i] = pre_coeff.matrix[0][i];
+    preCoeff->coeffY[i] = pre_coeff.matrix[1][i];
+    preCoeff->coeffZ[i] = pre_coeff.matrix[2][i];
+    preCoeff->offset[i] = pre_coeff.offset[i];
+    preCoeff->min[i] = pre_coeff.min[i];
+    preCoeff->max[i] = pre_coeff.max[i];
 
-    to_yuv_buf->coeffX[i] = to_yuv_matrix.matrix[0][i];
-    to_yuv_buf->coeffY[i] = to_yuv_matrix.matrix[1][i];
-    to_yuv_buf->coeffZ[i] = to_yuv_matrix.matrix[2][i];
-    to_yuv_buf->offset[i] = to_yuv_matrix.offset[i];
-    to_yuv_buf->min[i] = to_yuv_matrix.min[i];
-    to_yuv_buf->max[i] = to_yuv_matrix.max[i];
-  }
+    postCoeff->coeffX[i] = post_coeff.matrix[0][i];
+    postCoeff->coeffY[i] = post_coeff.matrix[1][i];
+    postCoeff->coeffZ[i] = post_coeff.matrix[2][i];
+    postCoeff->offset[i] = post_coeff.offset[i];
+    postCoeff->min[i] = post_coeff.min[i];
+    postCoeff->max[i] = post_coeff.max[i];
 
-  return TRUE;
-}
-
-static gboolean
-gst_d3d11_converter_prepare_colorspace (GstD3D11Converter * self,
-    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
-{
-  GstD3D11ConverterPrivate *priv = self->priv;
-  const GstVideoColorimetry *in_color = &in_info->colorimetry;
-  const GstVideoColorimetry *out_color = &out_info->colorimetry;
-  ConvertInfo *cinfo = &priv->convert_info;
-  PSColorSpace *to_rgb_buf = &priv->const_data.to_rgb_buf;
-  PSColorSpace *to_yuv_buf = &priv->const_data.to_yuv_buf;
-  PSColorSpace *XYZ_convert_buf = &priv->const_data.XYZ_convert_buf;
-  GstD3D11ColorMatrix to_rgb_matrix;
-  GstD3D11ColorMatrix to_yuv_matrix;
-  GstD3D11ColorMatrix XYZ_convert_matrix;
-  gchar *matrix_dump;
-  GstVideoInfo in_rgb_info = *in_info;
-  GstVideoInfo out_rgb_info = *out_info;
-
-  g_assert (GST_VIDEO_INFO_IS_RGB (in_info) || GST_VIDEO_INFO_IS_YUV (in_info));
-  g_assert (GST_VIDEO_INFO_IS_RGB (out_info)
-      || GST_VIDEO_INFO_IS_YUV (out_info));
-
-  memset (&to_rgb_matrix, 0, sizeof (GstD3D11ColorMatrix));
-  memset (&to_yuv_matrix, 0, sizeof (GstD3D11ColorMatrix));
-  memset (&XYZ_convert_matrix, 0, sizeof (GstD3D11ColorMatrix));
-
-  for (guint i = 0; i < 2; i++) {
-    cinfo->to_rgb_func[i] = templ_COLOR_SPACE_IDENTITY;
-    cinfo->to_yuv_func[i] = templ_COLOR_SPACE_IDENTITY;
-  }
-
-  cinfo->XYZ_convert_func = templ_XYZ_CONVERT_IDENTITY;
-  cinfo->gamma_decode_func = templ_GAMMA_DECODE;
-  cinfo->gamma_encode_func = templ_GAMMA_ENCODE;
-
-  /* 1) convert input to 0..255 range RGB */
-  if (GST_VIDEO_INFO_IS_RGB (in_info) &&
-      in_color->range == GST_VIDEO_COLOR_RANGE_16_235) {
-    in_rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-
-    if (!gst_d3d11_color_range_adjust_matrix_unorm (in_info, &in_rgb_info,
-            &to_rgb_matrix)) {
-      GST_ERROR_OBJECT (self, "Failed to get RGB range adjust matrix");
-      return FALSE;
-    }
-
-    matrix_dump = gst_d3d11_dump_color_matrix (&to_rgb_matrix);
-    GST_DEBUG_OBJECT (self, "Input RGB range adjust matrix\n%s", matrix_dump);
-    g_free (matrix_dump);
-
-    cinfo->to_rgb_func[0] = cinfo->to_rgb_func[1] = templ_COLOR_SPACE_CONVERT;
-  } else if (GST_VIDEO_INFO_IS_YUV (in_info)) {
-    GstVideoInfo yuv_info;
-    GstVideoFormat rgb_format;
-
-    yuv_info = *in_info;
-    if (yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
-        yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
-      GST_WARNING_OBJECT (self, "Invalid matrix is detected");
-      yuv_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
-    }
-
-    if (in_info->finfo->depth[0] == 8) {
-      rgb_format = GST_VIDEO_FORMAT_RGBA;
-    } else {
-      rgb_format = GST_VIDEO_FORMAT_RGBA64_LE;
-    }
-
-    gst_video_info_set_format (&in_rgb_info, rgb_format, in_info->width,
-        in_info->height);
-    in_rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-    in_rgb_info.colorimetry.transfer = in_color->transfer;
-    in_rgb_info.colorimetry.primaries = in_color->primaries;
-
-    if (!gst_d3d11_yuv_to_rgb_matrix_unorm (&yuv_info, &in_rgb_info,
-            &to_rgb_matrix)) {
-      GST_ERROR_OBJECT (self, "Failed to get YUV -> RGB transform matrix");
-      return FALSE;
-    }
-
-    matrix_dump = gst_d3d11_dump_color_matrix (&to_rgb_matrix);
-    GST_DEBUG_OBJECT (self, "YUV -> RGB matrix:\n%s", matrix_dump);
-    g_free (matrix_dump);
-
-    cinfo->to_rgb_func[0] = cinfo->to_rgb_func[1] = templ_COLOR_SPACE_CONVERT;
-  }
-
-  /* 2) convert gamma/XYZ converted 0..255 RGB to output format */
-  if (GST_VIDEO_INFO_IS_RGB (out_info) &&
-      out_color->range == GST_VIDEO_COLOR_RANGE_16_235) {
-    out_rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-
-    if (!gst_d3d11_color_range_adjust_matrix_unorm (&out_rgb_info, out_info,
-            &to_yuv_matrix)) {
-      GST_ERROR_OBJECT (self, "Failed to get RGB range adjust matrix");
-      return FALSE;
-    }
-
-    matrix_dump = gst_d3d11_dump_color_matrix (&to_yuv_matrix);
-    GST_DEBUG_OBJECT (self, "Output RGB range adjust matrix\n%s", matrix_dump);
-    g_free (matrix_dump);
-
-    cinfo->to_yuv_func[0] = cinfo->to_yuv_func[1] = templ_COLOR_SPACE_CONVERT;
-  } else if (GST_VIDEO_INFO_IS_YUV (out_info)) {
-    GstVideoInfo yuv_info;
-
-    yuv_info = *out_info;
-    if (yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
-        yuv_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
-      GST_WARNING_OBJECT (self, "Invalid matrix is detected");
-      yuv_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
-    }
-
-    gst_video_info_set_format (&out_rgb_info,
-        GST_VIDEO_INFO_FORMAT (&in_rgb_info), out_info->width,
-        out_info->height);
-    out_rgb_info.colorimetry.range = GST_VIDEO_COLOR_RANGE_0_255;
-    out_rgb_info.colorimetry.transfer = out_color->transfer;
-    out_rgb_info.colorimetry.primaries = out_color->primaries;
-
-    if (!gst_d3d11_rgb_to_yuv_matrix_unorm (&out_rgb_info,
-            &yuv_info, &to_yuv_matrix)) {
-      GST_ERROR_OBJECT (self, "Failed to get RGB -> YUV transform matrix");
-      return FALSE;
-    }
-
-    matrix_dump = gst_d3d11_dump_color_matrix (&to_yuv_matrix);
-    GST_DEBUG_OBJECT (self, "RGB -> YUV matrix:\n%s", matrix_dump);
-    g_free (matrix_dump);
-
-    if (GST_VIDEO_INFO_N_PLANES (out_info) == 1 ||
-        cinfo->ps_output[0] == &output_types[OUTPUT_THREE_PLANES]) {
-      /* YUV packed or Y444 */
-      cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT;
-    } else {
-      cinfo->to_yuv_func[0] = templ_COLOR_SPACE_CONVERT_LUMA;
-      cinfo->to_yuv_func[1] = templ_COLOR_SPACE_CONVERT_CHROMA;
-    }
-  }
-
-  /* TODO: handle HDR mastring display info */
-  if (priv->do_primaries) {
-    const GstVideoColorPrimariesInfo *in_pinfo;
-    const GstVideoColorPrimariesInfo *out_pinfo;
-
-    in_pinfo = gst_video_color_primaries_get_info (in_color->primaries);
-    out_pinfo = gst_video_color_primaries_get_info (out_color->primaries);
-
-    if (!gst_d3d11_color_primaries_matrix_unorm (in_pinfo, out_pinfo,
-            &XYZ_convert_matrix)) {
-      GST_ERROR_OBJECT (self, "Failed to get primaries conversion matrix");
-      return FALSE;
-    }
-
-    matrix_dump = gst_d3d11_dump_color_matrix (&XYZ_convert_matrix);
-    GST_DEBUG_OBJECT (self, "Primaries conversion matrix:\n%s", matrix_dump);
-    g_free (matrix_dump);
-
-    cinfo->XYZ_convert_func = templ_XYZ_CONVERT;
-  }
-
-  for (guint i = 0; i < 3; i++) {
-    to_rgb_buf->coeffX[i] = to_rgb_matrix.matrix[0][i];
-    to_rgb_buf->coeffY[i] = to_rgb_matrix.matrix[1][i];
-    to_rgb_buf->coeffZ[i] = to_rgb_matrix.matrix[2][i];
-    to_rgb_buf->offset[i] = to_rgb_matrix.offset[i];
-    to_rgb_buf->min[i] = to_rgb_matrix.min[i];
-    to_rgb_buf->max[i] = to_rgb_matrix.max[i];
-
-    to_yuv_buf->coeffX[i] = to_yuv_matrix.matrix[0][i];
-    to_yuv_buf->coeffY[i] = to_yuv_matrix.matrix[1][i];
-    to_yuv_buf->coeffZ[i] = to_yuv_matrix.matrix[2][i];
-    to_yuv_buf->offset[i] = to_yuv_matrix.offset[i];
-    to_yuv_buf->min[i] = to_yuv_matrix.min[i];
-    to_yuv_buf->max[i] = to_yuv_matrix.max[i];
-
-    XYZ_convert_buf->coeffX[i] = XYZ_convert_matrix.matrix[0][i];
-    XYZ_convert_buf->coeffY[i] = XYZ_convert_matrix.matrix[1][i];
-    XYZ_convert_buf->coeffZ[i] = XYZ_convert_matrix.matrix[2][i];
-    XYZ_convert_buf->offset[i] = XYZ_convert_matrix.offset[i];
-    XYZ_convert_buf->min[i] = XYZ_convert_matrix.min[i];
-    XYZ_convert_buf->max[i] = XYZ_convert_matrix.max[i];
+    primariesCoeff->coeffX[i] = primaries_coeff.matrix[0][i];
+    primariesCoeff->coeffY[i] = primaries_coeff.matrix[1][i];
+    primariesCoeff->coeffZ[i] = primaries_coeff.matrix[2][i];
+    primariesCoeff->offset[i] = primaries_coeff.offset[i];
+    primariesCoeff->min[i] = primaries_coeff.min[i];
+    primariesCoeff->max[i] = primaries_coeff.max[i];
   }
 
   return TRUE;
@@ -2831,10 +1497,10 @@ gst_d3d11_converter_setup_lut (GstD3D11Converter * self,
     return FALSE;
   }
 
-  priv->gamma_dec_lut = gamma_dec_lut.Detach ();
-  priv->gamma_enc_lut = gamma_enc_lut.Detach ();
-  priv->gamma_dec_srv = gamma_dec_srv.Detach ();
-  priv->gamma_enc_srv = gamma_enc_srv.Detach ();
+  priv->gamma_dec_lut = gamma_dec_lut;
+  priv->gamma_enc_lut = gamma_enc_lut;
+  priv->gamma_dec_srv = gamma_dec_srv;
+  priv->gamma_enc_srv = gamma_enc_srv;
 
   return TRUE;
 }
@@ -3136,13 +1802,12 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
       out_space);
 
   priv->video_device = video_device;
-  video_device->AddRef ();
-  priv->processor = processor.Detach ();
+  priv->processor = processor;
   hr = video_context1.As (&video_context2);
   if (SUCCEEDED (hr))
-    priv->video_context2 = video_context2.Detach ();
-  priv->video_context = video_context1.Detach ();
-  priv->enumerator = enumerator1.Detach ();
+    priv->video_context2 = video_context2;
+  priv->video_context = video_context1;
+  priv->enumerator = enumerator1;
 
   priv->src_rect.left = 0;
   priv->src_rect.top = 0;
@@ -3189,6 +1854,8 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   gboolean allow_primaries = FALSE;
   D3D11_FILTER sampler_filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
   gchar *backend_str;
+  GstVideoInfo matrix_in_info;
+  GstVideoInfo matrix_out_info;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
@@ -3226,12 +1893,6 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
     gst_structure_free (config);
   }
 
-  if (priv->src_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED)
-    priv->const_data.in_premul_alpha = TRUE;
-
-  if (priv->dst_alpha_mode == GST_D3D11_CONVERTER_ALPHA_MODE_PREMULTIPLIED)
-    priv->const_data.out_premul_alpha = TRUE;
-
   if (!wanted_backend) {
     wanted_backend =
         GST_D3D11_CONVERTER_BACKEND_SHADER |
@@ -3254,7 +1915,6 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
     GST_ERROR_OBJECT (self, "%s couldn't be converted to d3d11 format",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
     gst_object_unref (self);
-
     return nullptr;
   }
 
@@ -3263,12 +1923,10 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
     GST_ERROR_OBJECT (self, "%s couldn't be converted to d3d11 format",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
     gst_object_unref (self);
-
     return nullptr;
   }
 
   self->device = (GstD3D11Device *) gst_object_ref (device);
-  priv->fast_path = TRUE;
   priv->const_data.alpha = 1.0;
   priv->in_info = *in_info;
   priv->fallback_info = *in_info;
@@ -3323,43 +1981,36 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   if ((wanted_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0)
     goto out;
 
-  if (!GST_VIDEO_INFO_IS_GRAY (in_info) && !GST_VIDEO_INFO_IS_GRAY (out_info)) {
-    if (in_info->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN &&
-        out_info->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN &&
-        !gst_video_transfer_function_is_equivalent (in_info->
-            colorimetry.transfer, GST_VIDEO_INFO_COMP_DEPTH (in_info, 0),
-            out_info->colorimetry.transfer, GST_VIDEO_INFO_COMP_DEPTH (out_info,
-                0))) {
-      if (allow_gamma) {
-        GST_DEBUG_OBJECT (self, "Different transfer function %d -> %d",
-            in_info->colorimetry.transfer, out_info->colorimetry.transfer);
-        priv->fast_path = FALSE;
-      } else {
-        GST_DEBUG_OBJECT (self,
-            "Different transfer function %d -> %d but gamma remap is disabled",
-            in_info->colorimetry.transfer, out_info->colorimetry.transfer);
-      }
-    }
-
-    if (in_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
-        out_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
-        !gst_video_color_primaries_is_equivalent (in_info->
-            colorimetry.primaries, out_info->colorimetry.primaries)) {
-      if (allow_primaries) {
-        GST_DEBUG_OBJECT (self, "Different primaries %d -> %d",
-            in_info->colorimetry.primaries, out_info->colorimetry.primaries);
-        priv->fast_path = FALSE;
-        priv->do_primaries = TRUE;
-      } else {
-        GST_DEBUG_OBJECT (self,
-            "Different primaries %d -> %d but chromatic adaptation is disabled",
-            in_info->colorimetry.primaries, out_info->colorimetry.primaries);
-      }
-    }
+  priv->convert_type = CONVERT_TYPE::IDENTITY;
+  if (GST_VIDEO_INFO_IS_RGB (in_info) != GST_VIDEO_INFO_IS_RGB (out_info)) {
+    priv->convert_type = CONVERT_TYPE::SIMPLE;
+  } else if (in_info->colorimetry.range != GST_VIDEO_COLOR_RANGE_UNKNOWN &&
+      out_info->colorimetry.range != GST_VIDEO_COLOR_RANGE_UNKNOWN &&
+      in_info->colorimetry.range != out_info->colorimetry.range) {
+    priv->convert_type = CONVERT_TYPE::RANGE;
   }
 
-  if (!gst_d3d11_converter_prepare_output (self, out_info))
-    goto out;
+  if (allow_gamma &&
+      in_info->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN &&
+      out_info->colorimetry.transfer != GST_VIDEO_TRANSFER_UNKNOWN &&
+      !gst_video_transfer_function_is_equivalent (in_info->colorimetry.transfer,
+          GST_VIDEO_INFO_COMP_DEPTH (in_info, 0),
+          out_info->colorimetry.transfer, GST_VIDEO_INFO_COMP_DEPTH (out_info,
+              0))) {
+    GST_DEBUG_OBJECT (self, "Different transfer function %d -> %d",
+        in_info->colorimetry.transfer, out_info->colorimetry.transfer);
+    priv->convert_type = CONVERT_TYPE::GAMMA;
+  }
+
+  if (allow_primaries &&
+      in_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
+      out_info->colorimetry.primaries != GST_VIDEO_COLOR_PRIMARIES_UNKNOWN &&
+      !gst_video_color_primaries_is_equivalent (in_info->colorimetry.primaries,
+          out_info->colorimetry.primaries)) {
+    GST_DEBUG_OBJECT (self, "Different primaries %d -> %d",
+        in_info->colorimetry.primaries, out_info->colorimetry.primaries);
+    priv->convert_type = CONVERT_TYPE::PRIMARY;
+  }
 
   /* XXX: hard to make sampling of packed 4:2:2 format, use software
    * converter to convert YUV2 to Y42B */
@@ -3380,7 +2031,6 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
         gst_video_converter_new (in_info, &tmp_info, nullptr);
     if (!priv->unpack_convert) {
       GST_ERROR_OBJECT (self, "Couldn't create unpack convert");
-      priv->supported_backend = (GstD3D11ConverterBackend) 0;
       goto out;
     }
 
@@ -3388,18 +2038,35 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
     in_info = &priv->fallback_info;
   }
 
-  if (!gst_d3d11_converter_prepare_sample_texture (self, in_info, out_info))
-    goto out;
-
-  if (priv->fast_path) {
-    if (!gst_d3d11_converter_prepare_colorspace_fast (self, in_info, out_info))
-      goto out;
-  } else {
-    if (!gst_d3d11_converter_prepare_colorspace (self, in_info, out_info))
-      goto out;
-
+  if ((priv->convert_type == CONVERT_TYPE::GAMMA ||
+          priv->convert_type == CONVERT_TYPE::PRIMARY)) {
     if (!gst_d3d11_converter_setup_lut (self, in_info, out_info))
       goto out;
+  }
+
+  if (GST_VIDEO_INFO_IS_RGB (in_info)) {
+    matrix_in_info = *in_info;
+  } else {
+    convert_info_gray_to_yuv (in_info, &matrix_in_info);
+    if (matrix_in_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
+        matrix_in_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+      matrix_in_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+    }
+  }
+
+  if (GST_VIDEO_INFO_IS_RGB (out_info)) {
+    matrix_out_info = *out_info;
+  } else {
+    convert_info_gray_to_yuv (out_info, &matrix_out_info);
+    if (matrix_out_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_UNKNOWN ||
+        matrix_out_info.colorimetry.matrix == GST_VIDEO_COLOR_MATRIX_RGB) {
+      matrix_out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_BT709;
+    }
+  }
+
+  if (!gst_d3d11_converter_calculate_matrix (self,
+          &matrix_in_info, &matrix_out_info)) {
+    goto out;
   }
 
   if (!gst_d3d11_color_convert_setup_shader (self, in_info, out_info,
@@ -3430,14 +2097,12 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   ComPtr < ID3D11Resource > resource;
   ComPtr < ID3D11Texture2D > texture;
   D3D11_TEXTURE2D_DESC desc;
-  ConvertInfo *cinfo;
   ID3D11DeviceContext *context;
   UINT offsets = 0;
   UINT vertex_stride = sizeof (VertexData);
   ID3D11ShaderResourceView *clear_view[GST_VIDEO_MAX_PLANES] = { nullptr, };
 
   priv = self->priv;
-  cinfo = &priv->convert_info;
   context = gst_d3d11_device_get_device_context_handle (self->device);
 
   /* check texture resolution and update crop area */
@@ -3465,8 +2130,8 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
     PSConstBuffer *const_buffer;
     HRESULT hr;
 
-    hr = context->Map (priv->const_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
+    hr = context->Map (priv->const_buffer.Get (),
+        0, D3D11_MAP_WRITE_DISCARD, 0, &map);
     if (!gst_d3d11_result (hr, self->device)) {
       GST_ERROR_OBJECT (self,
           "Couldn't map constant buffer, hr: 0x%x", (guint) hr);
@@ -3476,7 +2141,7 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
     const_buffer = (PSConstBuffer *) map.pData;
     memcpy (const_buffer, &priv->const_data, sizeof (PSConstBuffer));
 
-    context->Unmap (priv->const_buffer, 0);
+    context->Unmap (priv->const_buffer.Get (), 0);
     priv->update_alpha = FALSE;
   }
 
@@ -3486,40 +2151,47 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   }
 
   context->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  context->IASetInputLayout (priv->layout);
-  context->IASetVertexBuffers (0, 1, &priv->vertex_buffer, &vertex_stride,
-      &offsets);
-  context->IASetIndexBuffer (priv->index_buffer, DXGI_FORMAT_R16_UINT, 0);
-  context->PSSetSamplers (0, 1, &priv->linear_sampler);
-  context->VSSetShader (priv->vs, nullptr, 0);
-  context->PSSetConstantBuffers (0, 1, &priv->const_buffer);
+  ID3D11Buffer *vertex[] = { priv->vertex_buffer.Get () };
+  context->IASetInputLayout (priv->layout.Get ());
+  context->IASetVertexBuffers (0, 1, vertex, &vertex_stride, &offsets);
+  context->IASetIndexBuffer (priv->index_buffer.Get (),
+      DXGI_FORMAT_R16_UINT, 0);
+
+  ID3D11SamplerState *samplers[] = { priv->sampler.Get (),
+    priv->linear_sampler.Get ()
+  };
+  context->PSSetSamplers (0, 2, samplers);
+  context->VSSetShader (priv->vs.Get (), nullptr, 0);
+
+  ID3D11Buffer *const_buffer[] = { priv->const_buffer.Get () };
+  context->PSSetConstantBuffers (0, 1, const_buffer);
   context->PSSetShaderResources (0, priv->num_input_view, srv);
-  if (!priv->fast_path) {
-    ID3D11ShaderResourceView *gamma_srv[2];
-    gamma_srv[0] = priv->gamma_dec_srv;
-    gamma_srv[1] = priv->gamma_enc_srv;
+  if (priv->gamma_enc_srv) {
+    ID3D11ShaderResourceView *gamma_srv[] = { priv->gamma_dec_srv.Get (),
+      priv->gamma_enc_srv.Get ()
+    };
     context->PSSetShaderResources (4, 2, gamma_srv);
   }
 
-  context->PSSetShader (priv->ps[0], nullptr, 0);
-  context->RSSetViewports (cinfo->ps_output[0]->num_rtv, priv->viewport);
-  context->OMSetRenderTargets (cinfo->ps_output[0]->num_rtv, rtv, nullptr);
+  auto ps = priv->ps[0];
+  context->PSSetShader (ps->shader.Get (), nullptr, 0);
+  context->RSSetViewports (ps->num_rtv, priv->viewport);
+  context->OMSetRenderTargets (ps->num_rtv, rtv, nullptr);
   if (priv->blend) {
-    context->OMSetBlendState (priv->blend,
+    context->OMSetBlendState (priv->blend.Get (),
         priv->blend_factor, priv->blend_sample_mask);
   } else {
     context->OMSetBlendState (nullptr, nullptr, 0xffffffff);
   }
   context->DrawIndexed (6, 0, 0);
 
-  if (priv->ps[1]) {
-    guint view_offset = cinfo->ps_output[0]->num_rtv;
+  if (priv->ps.size () == 2) {
+    guint view_offset = ps->num_rtv;
+    ps = priv->ps[1];
 
-    context->PSSetShader (priv->ps[1], nullptr, 0);
-    context->RSSetViewports (cinfo->ps_output[1]->num_rtv,
-        &priv->viewport[view_offset]);
-    context->OMSetRenderTargets (cinfo->ps_output[1]->num_rtv,
-        &rtv[view_offset], nullptr);
+    context->PSSetShader (ps->shader.Get (), nullptr, 0);
+    context->RSSetViewports (ps->num_rtv, &priv->viewport[view_offset]);
+    context->OMSetRenderTargets (ps->num_rtv, &rtv[view_offset], nullptr);
     context->DrawIndexed (6, 0, 0);
   }
 
@@ -4080,8 +2752,8 @@ gst_d3d11_converter_do_processor_blt (GstD3D11Converter * self,
   GstD3D11ConverterPrivate *priv = self->priv;
   ID3D11VideoProcessorInputView *piv = nullptr;
   ID3D11VideoProcessorOutputView *pov = nullptr;
-  ID3D11VideoContext1 *video_ctx = priv->video_context;
-  ID3D11VideoProcessor *proc = priv->processor;
+  ID3D11VideoContext1 *video_ctx = priv->video_context.Get ();
+  ID3D11VideoProcessor *proc = priv->processor.Get ();
   D3D11_VIDEO_PROCESSOR_STREAM stream = { 0, };
   HRESULT hr;
   GstMemory *in_mem, *out_mem;
@@ -4113,14 +2785,14 @@ gst_d3d11_converter_do_processor_blt (GstD3D11Converter * self,
   out_dmem = GST_D3D11_MEMORY_CAST (out_mem);
 
   piv = gst_d3d11_memory_get_processor_input_view (in_dmem,
-      priv->video_device, priv->enumerator);
+      priv->video_device.Get (), priv->enumerator.Get ());
   if (!piv) {
     GST_ERROR_OBJECT (self, "PIV is unavailable");
     goto out;
   }
 
   pov = gst_d3d11_memory_get_processor_output_view (out_dmem,
-      priv->video_device, priv->enumerator);
+      priv->video_device.Get (), priv->enumerator.Get ());
   if (!pov) {
     GST_ERROR_OBJECT (self, "POV is unavailable");
     goto out;
