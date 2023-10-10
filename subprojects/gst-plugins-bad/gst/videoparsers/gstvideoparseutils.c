@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_EXTERN (videoparseutils_debug);
 #define GST_CAT_DEFAULT videoparseutils_debug
 
 static gboolean gst_video_parse_utils_parse_bar (const guint8 * data,
-    gsize size, guint field, GstVideoBarData * bar);
+    gsize size, GstVideoParseUtilsField field, GstVideoBarData * bar);
 
 static gboolean gst_video_parse_utils_parse_afd (const guint8 data,
     GstVideoAFD * afd, GstVideoAFDSpec spec);
@@ -309,11 +309,11 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
   user_data->has_bar_data = FALSE;
 }
 
-
 /*
  * gst_video_parse_utils_parse_bar:
  * @data: bar data array
- * @size:size of bar data array
+ * @size: size of bar data array
+ * @field: #GstVideoParseUtilsField we're parsing for
  * @bar: #GstVideoBarData structure
  *
  * Parse bar data bytes into #GstVideoBarData structure
@@ -324,7 +324,7 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
  */
 static gboolean
 gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
-    guint field, GstVideoBarData * bar)
+    GstVideoParseUtilsField field, GstVideoBarData * bar)
 {
   guint8 temp;
   int i = 0;
@@ -332,12 +332,12 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
   guint16 bar_vals[4] = { 0, 0, 0, 0 };
   GstBitReader bar_tender;
 
-  /* there must be at least one byte, and not more than GST_VIDEO_BAR_MAX_BYTES bytes */
-  if (!bar || size == 0 || size > GST_VIDEO_BAR_MAX_BYTES)
+  g_return_val_if_fail (bar != NULL, FALSE);
+
+  if (size == 0 || size > GST_VIDEO_BAR_MAX_BYTES)
     return FALSE;
 
   gst_bit_reader_init (&bar_tender, data, size);
-
 
   /* parse bar flags */
   for (i = 0; i < 4; ++i) {
@@ -367,6 +367,7 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
   if (bar_flags[0] && bar_flags[2])
     return FALSE;
 
+  bar->field = field;
   bar->is_letterbox = bar_flags[0];
   if (bar->is_letterbox) {
     bar->bar_data[0] = bar_vals[0];
@@ -375,8 +376,6 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
     bar->bar_data[0] = bar_vals[2];
     bar->bar_data[1] = bar_vals[3];
   }
-  bar->field = field;
-
   return TRUE;
 }
 
