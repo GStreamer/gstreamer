@@ -169,7 +169,7 @@ typedef struct
 /*
  * GstVideoParseUserDataUnregistered
  *
- * Holds unparsed User Data Unregistered.
+ * Holds unparsed, unregistered user data.
  */
 typedef struct
 {
@@ -192,10 +192,19 @@ void gst_video_push_user_data (GstElement            * elt,
 
 void gst_video_clear_user_data (GstVideoParseUserData * user_data);
 
-void gst_video_user_data_unregistered_clear(GstVideoParseUserDataUnregistered * user_data);
 
-void gst_video_push_user_data_unregistered(GstElement * elt, GstVideoParseUserDataUnregistered * user_data,
-			 GstBuffer * buf);
+void gst_video_parse_user_data_unregistered (GstElement                        * elt,
+                                             GstVideoParseUserDataUnregistered * user_data,
+                                             GstByteReader                     * br,
+                                             guint8                              uuid[16]);
+
+void gst_video_push_user_data_unregistered (GstElement                        * elt,
+                                            GstVideoParseUserDataUnregistered * user_data,
+                                            GstBuffer                         * buf);
+
+void gst_video_clear_user_data_unregistered (GstVideoParseUserDataUnregistered * user_data,
+                                             gboolean                            free);
+
 
 G_END_DECLS
 #endif /* __VIDEO_PARSE_UTILS_H__ */

@@ -454,46 +454,35 @@ gst_video_clear_user_data (GstVideoParseUserData * user_data)
 /*
  * gst_video_parse_user_data_unregistered:
  * @elt: #GstElement that is parsing user data
- * @user_data: #GstVideoParseUserDataUnregistered struct to hold parsed data
+ * @user_data: #GstVideoParseUserDataUnregistered to hold SEI User Data Unregistered
  * @br: #GstByteReader attached to buffer of user data
  * @uuid: User Data Unregistered UUID
  *
- * Parse user data and store in @user_data
+ * Copy remaining bytes in @br and store in @user_data
  */
 void
 gst_video_parse_user_data_unregistered (GstElement * elt,
     GstVideoParseUserDataUnregistered * user_data,
     GstByteReader * br, guint8 uuid[16])
 {
-  gst_video_user_data_unregistered_clear (user_data);
+  gst_video_clear_user_data_unregistered (user_data);
 
   memcpy (&user_data->uuid, uuid, 16);
-  user_data->size = gst_byte_reader_get_size (br);
-  gst_byte_reader_dup_data (br, user_data->size, &user_data->data);
-}
 
-/*
- * gst_video_user_data_unregistered_clear:
- * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
- *
- * Clears the user data unregistered
- */
-void
-gst_video_user_data_unregistered_clear (GstVideoParseUserDataUnregistered *
-    user_data)
-{
-  g_free (user_data->data);
-  user_data->data = NULL;
-  user_data->size = 0;
+  user_data->size = gst_byte_reader_get_size (br);
+  if (!gst_byte_reader_dup_data (br, user_data->size, &user_data->data)) {
+    g_return_if_reached ();
+  }
 }
 
 /*
  * gst_video_push_user_data_unregistered:
  * @elt: #GstElement that is pushing user data
  * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
- * @buf: #GstBuffer that receives the parsed data
+ * @buf: (transfer none): #GstBuffer that receives the unregistered data
  *
- * After user data has been parsed, add the data to @buf
+ * Attach unregistered user data from @user_data to @buf as
+ * GstVideoSEIUserDataUnregisteredMeta
  */
 void
 gst_video_push_user_data_unregistered (GstElement * elt,
@@ -502,6 +491,19 @@ gst_video_push_user_data_unregistered (GstElement * elt,
   if (user_data->data != NULL) {
     gst_buffer_add_video_sei_user_data_unregistered_meta (buf, user_data->uuid,
         user_data->data, user_data->size);
-    gst_video_user_data_unregistered_clear (user_data);
   }
+}
+
+/*
+ * gst_video_clear_user_data_unregistered:
+ * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
+ *
+ * Clears the user data unregistered, resetting it for the next frame
+ */
+void gst_video_clear_user_data_unregistered
+    (GstVideoParseUserDataUnregistered * user_data)
+{
+  memset (&msg->uuid, 0, sizeof msg->uuid);
+  g_clear_pointer (&msg->data, g_free);
+  msg->size = 0;
 }
