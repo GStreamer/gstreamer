@@ -65,6 +65,7 @@
 #define __TSMUXSTREAM_H__
 
 #include <glib.h>
+#include <gst/mpegts/mpegts.h>
 
 #include "tsmuxcommon.h"
 
