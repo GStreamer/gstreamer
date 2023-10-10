@@ -37,7 +37,7 @@ static gboolean gst_video_parse_utils_parse_bar (const guint8 * data,
     gsize size, GstVideoParseUtilsField field, GstVideoBarData * bar);
 
 static gboolean gst_video_parse_utils_parse_afd (const guint8 data,
-    GstVideoAFD * afd, GstVideoAFDSpec spec);
+    GstVideoAFDSpec spec, GstVideoParseUtilsField field, GstVideoAFD * afd);
 
 
 /*
@@ -273,11 +273,8 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
   /* 2. handle AFD */
   if (user_data->has_afd) {
     GstVideoAFD afd;
-    afd.field = 0;
-    afd.aspect_ratio = GST_VIDEO_AFD_ASPECT_RATIO_UNDEFINED;
-    afd.spec = GST_VIDEO_AFD_SPEC_ATSC_A53;
-    afd.afd = GST_VIDEO_AFD_UNAVAILABLE;
-    if (gst_video_parse_utils_parse_afd (user_data->afd, &afd, afd.spec)) {
+    if (gst_video_parse_utils_parse_afd (user_data->afd, user_data->afd_spec,
+            user_data->field, &afd)) {
       gst_buffer_add_video_afd_meta (buf, afd.field, afd.spec, afd.afd);
     } else {
       GST_WARNING_OBJECT (elt, "Invalid AFD value %d", user_data->afd);
@@ -382,8 +379,9 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
 /*
  * gst_video_parse_utils_parse_afd:
  * @data: bar byte
+ * @spec: #GstVideoAFDSpec indicating specification that applies to AFD byte
+ * @field: #GstVideoParseUtilsField
  * @afd: pointer to #GstVideoAFD struct
- * @spec : #GstVideoAFDSpec indicating specification that applies to AFD byte
  *
  * Parse afd byte into #GstVideoAFD struct
  *
@@ -400,40 +398,61 @@ gst_video_parse_utils_parse_bar (const guint8 * data, gsize size,
  * Returns: TRUE if parsing was successful, otherwise FALSE
  */
 static gboolean
-gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFD * afd,
-    GstVideoAFDSpec spec)
+gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFDSpec spec,
+    GstVideoParseUtilsField field, GstVideoAFD * afd)
 {
-  guint8 afd_data;
+  GstVideoAFDAspectRatio aspect_ratio = GST_VIDEO_AFD_ASPECT_RATIO_UNDEFINED;
+  GstVideoAFDValue afd_data;
+
   g_return_val_if_fail (afd != NULL, FALSE);
-  g_return_val_if_fail ((guint8) spec <= 2, FALSE);
+
   switch (spec) {
     case GST_VIDEO_AFD_SPEC_DVB_ETSI:
     case GST_VIDEO_AFD_SPEC_ATSC_A53:
       if ((data & 0x40) == 0)
         return FALSE;
+
       afd_data = data & 0xF;
       break;
     case GST_VIDEO_AFD_SPEC_SMPTE_ST2016_1:
       if ((data & 0x80) || (data & 0x3))
         return FALSE;
-      afd_data = data >> 3;
-      afd->aspect_ratio = (GstVideoAFDAspectRatio) (((data >> 2) & 1) + 1);
+
+      afd_data = (data >> 3) & 0xF;
+      aspect_ratio = (GstVideoAFDAspectRatio) (((data >> 2) & 1) + 1);
       break;
+    default:
+      g_return_val_if_reached (FALSE);
+  }
+
+  switch (afd_data) {
+    case GST_VIDEO_AFD_UNAVAILABLE:
+      if (spec == GST_VIDEO_AFD_SPEC_DVB_ETSI) {
+        /* reserved for DVB/ETSI */
+        return FALSE;
+      }
+      break;
+
+    case GST_VIDEO_AFD_16_9_TOP_ALIGNED:
+    case GST_VIDEO_AFD_14_9_TOP_ALIGNED:
+    case GST_VIDEO_AFD_GREATER_THAN_16_9:
+    case GST_VIDEO_AFD_4_3_FULL_16_9_FULL:
+    case GST_VIDEO_AFD_4_3_FULL_4_3_PILLAR:
+    case GST_VIDEO_AFD_16_9_LETTER_16_9_FULL:
+    case GST_VIDEO_AFD_14_9_LETTER_14_9_PILLAR:
+    case GST_VIDEO_AFD_4_3_FULL_14_9_CENTER:
+    case GST_VIDEO_AFD_16_9_LETTER_14_9_CENTER:
+    case GST_VIDEO_AFD_16_9_LETTER_4_3_CENTER:
+      break;
+
     default:
       return FALSE;
   }
 
-  /* AFD is stored in a nybble */
-  g_return_val_if_fail (afd_data <= 0xF, FALSE);
-  /* reserved values for all specifications */
-  g_return_val_if_fail (afd_data != 1 && (afd_data < 5 || afd_data > 7)
-      && afd_data != 12, FALSE);
-  /* reserved for DVB/ETSI */
-  g_return_val_if_fail ((spec != GST_VIDEO_AFD_SPEC_DVB_ETSI)
-      || (afd_data != 0), FALSE);
-
+  afd->field = field;
+  afd->aspect_ratio = aspect_ratio;
   afd->spec = spec;
-  afd->afd = (GstVideoAFDValue) afd_data;
+  afd->afd = afd_data;
   return TRUE;
 }
 
