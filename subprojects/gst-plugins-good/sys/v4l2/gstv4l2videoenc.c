@@ -793,9 +793,22 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
 
       /* There is no reason to refuse this config */
       if (!gst_buffer_pool_set_config (opool, config)) {
-        if (opool)
-          gst_object_unref (opool);
-        goto activate_failed;
+        config = gst_buffer_pool_get_config (opool);
+
+        if (gst_buffer_pool_config_validate_params (config,
+                self->input_state->caps, self->v4l2output->info.size, min,
+                min)) {
+          gst_structure_free (config);
+          if (opool)
+            gst_object_unref (opool);
+          goto activate_failed;
+        }
+
+        if (!gst_buffer_pool_set_config (opool, config)) {
+          if (opool)
+            gst_object_unref (opool);
+          goto activate_failed;
+        }
       }
 
       if (!gst_buffer_pool_set_active (opool, TRUE)) {
