@@ -86,7 +86,7 @@ typedef struct TsMux TsMux;
 
 typedef gboolean (*TsMuxWriteFunc) (GstBuffer * buf, void *user_data, gint64 new_pcr);
 typedef void (*TsMuxAllocFunc) (GstBuffer ** buf, void *user_data);
-typedef TsMuxStream * (*TsMuxNewStreamFunc) (guint16 new_pid, guint stream_type, void *user_data);
+typedef TsMuxStream * (*TsMuxNewStreamFunc) (guint16 new_pid, guint stream_type, gpointer user_data);
 
 struct TsMuxSection {
   TsMuxPacketInfo pi;
