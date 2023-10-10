@@ -76,7 +76,7 @@ typedef enum TsMuxStreamState TsMuxStreamState;
 typedef struct TsMuxStreamBuffer TsMuxStreamBuffer;
 
 typedef void (*TsMuxStreamBufferReleaseFunc) (guint8 *data, void *user_data);
-typedef void (*TsMuxStreamGetESDescriptorsFunc) (TsMuxStream *stream, GstMpegtsPMTStream *pmt_stream, void *user_data);
+typedef void (*TsMuxStreamGetESDescriptorsFunc) (TsMuxStream *stream, GstMpegtsPMTStream *pmt_stream, gpointer user_data);
 
 /* Stream type assignments
  *
