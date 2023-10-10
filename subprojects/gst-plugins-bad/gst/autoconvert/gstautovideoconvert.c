@@ -79,14 +79,14 @@ gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert)
       .rank = GST_RANK_SECONDARY,
     },
     {
-      .first_elements = { NULL, },
+      .first_elements = { "capsfilter caps=\"video/x-raw\"", NULL, },
       .colorspace_converters = { "videoconvertscale", NULL },
       .last_elements = { "rgb2bayer", NULL },
       .filters = {  NULL },
       .rank = GST_RANK_SECONDARY,
     },
     {
-      .first_elements = { NULL, },
+      .first_elements = { "capsfilter caps=\"video/x-raw\"", NULL, },
       .colorspace_converters = { "videoconvertscale", NULL },
       .last_elements = { NULL, },
       .filters = { NULL },
@@ -107,7 +107,7 @@ gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert)
       .rank = GST_RANK_PRIMARY,
     },
     {
-      .first_elements = { "videoconvertscale", "glupload", NULL },
+      .first_elements = { "capsfilter caps=\"video/x-raw\"", "videoconvertscale", "glupload", NULL },
       .colorspace_converters = { NULL },
       .last_elements = { NULL },
       .filters = { NULL },
@@ -156,7 +156,7 @@ gst_auto_video_convert_init (GstAutoVideoConvert * autovideoconvert)
       .rank = GST_RANK_MARGINAL,
     },
     { /* System memory to cuda */
-      .first_elements = { NULL },
+      .first_elements = { "capsfilter caps=\"video/x-raw\"", NULL },
       .colorspace_converters = { "videoconvertscale", NULL },
       .last_elements = { "cudaupload", "capsfilter caps=video/x-raw(memory:CUDAMemory)", NULL },
       .filters = { NULL },
