@@ -641,19 +641,9 @@ private:
       return false;
     }
 
-    D3D11_SAMPLER_DESC sampler_desc;
-    memset (&sampler_desc, 0, sizeof (D3D11_SAMPLER_DESC));
-    sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-    sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampler_desc.ComparisonFunc = D3D11_COMPARISON_NEVER;
-    sampler_desc.MinLOD = 0;
-    sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-    ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
     ComPtr<ID3D11SamplerState> sampler;
-    hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
+    hr = gst_d3d11_device_get_sampler (device, D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+        &sampler);
     if (!gst_d3d11_result (hr, device)) {
       GST_ERROR ("Failed to create sampler state, hr 0x%x", (guint) hr);
       return false;

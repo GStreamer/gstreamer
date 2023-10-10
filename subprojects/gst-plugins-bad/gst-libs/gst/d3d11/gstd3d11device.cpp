@@ -39,6 +39,7 @@
 #include <utility>
 #include <atomic>
 #include <mutex>
+#include <string.h>
 
 /**
  * SECTION:gstd3d11device
@@ -130,6 +131,7 @@ struct _GstD3D11DevicePrivate
   std::map <gint64, ComPtr<ID3D11PixelShader>> ps_cache;
   std::map <gint64,
       std::pair<ComPtr<ID3D11VertexShader>, ComPtr<ID3D11InputLayout>>> vs_cache;
+  std::map <D3D11_FILTER, ComPtr<ID3D11SamplerState>> sampler_cache;
 
 #if HAVE_D3D11SDKLAYERS_H
   ID3D11Debug *d3d11_debug = nullptr;
@@ -745,6 +747,7 @@ gst_d3d11_device_dispose (GObject * object)
 
   priv->ps_cache.clear ();
   priv->vs_cache.clear ();
+  priv->sampler_cache.clear ();
 
   GST_D3D11_CLEAR_COM (priv->device5);
   GST_D3D11_CLEAR_COM (priv->device_context4);
@@ -1840,6 +1843,42 @@ gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
 
   *vs = shader.Detach ();
   *layout = input_layout.Detach ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_sampler (GstD3D11Device * device, D3D11_FILTER filter,
+    ID3D11SamplerState ** sampler)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  ComPtr < ID3D11SamplerState > state;
+  D3D11_SAMPLER_DESC desc;
+  HRESULT hr;
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  auto cached = priv->sampler_cache.find (filter);
+  if (cached != priv->sampler_cache.end ()) {
+    *sampler = cached->second.Get ();
+    (*sampler)->AddRef ();
+    return S_OK;
+  }
+
+  memset (&desc, 0, sizeof (D3D11_SAMPLER_DESC));
+
+  desc.Filter = filter;
+  desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+  desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+  desc.MaxLOD = D3D11_FLOAT32_MAX;
+
+  hr = priv->device->CreateSamplerState (&desc, &state);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  priv->sampler_cache[filter] = state;
+  *sampler = state.Detach ();
 
   return S_OK;
 }

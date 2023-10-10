@@ -327,7 +327,6 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   GstVideoInfo *info = &priv->info;
   GstD3D11Device *device = self->device;
   HRESULT hr;
-  D3D11_SAMPLER_DESC sampler_desc;
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_BLEND_DESC blend_desc;
   D3D11_MAPPED_SUBRESOURCE map;
@@ -342,23 +341,14 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   ComPtr < ID3D11BlendState > blend;
   ComPtr < ID3D11Buffer > index_buffer;
 
-  memset (&sampler_desc, 0, sizeof (sampler_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
   memset (&blend_desc, 0, sizeof (blend_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
-  /* bilinear filtering */
-  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
-  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-  sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-  sampler_desc.MinLOD = 0;
-  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-
-  hr = device_handle->CreateSamplerState (&sampler_desc, &sampler);
+  hr = gst_d3d11_device_get_sampler (device,
+      D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT, &sampler);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create sampler state, hr: 0x%x",
         (guint) hr);

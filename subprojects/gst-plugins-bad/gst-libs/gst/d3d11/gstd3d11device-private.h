@@ -53,5 +53,10 @@ HRESULT gst_d3d11_device_get_vertex_shader (GstD3D11Device * device,
                                             ID3D11VertexShader ** vs,
                                             ID3D11InputLayout ** layout);
 
+GST_D3D11_API
+HRESULT gst_d3d11_device_get_sampler       (GstD3D11Device * device,
+                                            D3D11_FILTER filter,
+                                            ID3D11SamplerState ** sampler);
+
 G_END_DECLS
 
