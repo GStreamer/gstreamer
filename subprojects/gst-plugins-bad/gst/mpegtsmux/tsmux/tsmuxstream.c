@@ -96,6 +96,13 @@ struct TsMuxStreamBuffer
   void *user_data;
 };
 
+static void
+tsmux_stream_get_es_descrs_default (TsMuxStream * stream,
+    GstMpegtsPMTStream * pmt_stream, gpointer user_data)
+{
+  tsmux_stream_default_get_es_descrs (stream, pmt_stream);
+}
+
 /**
  * tsmux_stream_new:
  * @pid: a PID
@@ -238,8 +245,7 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
   stream->pcr_ref = 0;
   stream->next_pcr = -1;
 
-  stream->get_es_descrs =
-      (TsMuxStreamGetESDescriptorsFunc) tsmux_stream_default_get_es_descrs;
+  stream->get_es_descrs = tsmux_stream_get_es_descrs_default;
   stream->get_es_descrs_data = NULL;
 
   return stream;

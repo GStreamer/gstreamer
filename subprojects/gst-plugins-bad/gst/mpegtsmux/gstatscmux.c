@@ -306,8 +306,7 @@ gst_atsc_mux_create_new_stream (guint16 new_pid, TsMuxStreamType stream_type,
   }
 
   tsmux_stream_set_get_es_descriptors_func (ret,
-      (TsMuxStreamGetESDescriptorsFunc) gst_atsc_mux_stream_get_es_descrs,
-      user_data);
+      gst_atsc_mux_stream_get_es_descrs, user_data);
 
   return ret;
 }
