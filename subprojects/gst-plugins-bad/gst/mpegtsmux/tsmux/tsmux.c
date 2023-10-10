@@ -116,6 +116,13 @@ tsmux_section_free (TsMuxSection * section)
   g_free (section);
 }
 
+static TsMuxStream *
+tsmux_new_stream_default (guint16 pid, guint stream_type, guint stream_number,
+    gpointer user_data)
+{
+  return tsmux_stream_new (pid, stream_type, stream_number);
+}
+
 /**
  * tsmux_new:
  *
@@ -150,7 +157,7 @@ tsmux_new (void)
   mux->si_sections = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) tsmux_section_free);
 
-  mux->new_stream_func = (TsMuxNewStreamFunc) tsmux_stream_new;
+  mux->new_stream_func = tsmux_new_stream_default;
   mux->new_stream_data = NULL;
 
   mux->first_pcr_ts = G_MININT64;
