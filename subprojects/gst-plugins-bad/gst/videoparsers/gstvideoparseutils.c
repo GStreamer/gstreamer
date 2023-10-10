@@ -39,6 +39,9 @@ static gboolean gst_video_parse_utils_parse_bar (const guint8 * data,
 static gboolean gst_video_parse_utils_parse_afd (const guint8 data,
     GstVideoAFDSpec spec, GstVideoParseUtilsField field, GstVideoAFD * afd);
 
+static void gst_video_clear_unregistered_message
+    (GstVideoUnregisteredMessage * msg);
+
 
 /*
  * gst_video_parse_user_data:
@@ -465,14 +468,23 @@ gst_video_parse_user_data_unregistered (GstElement * elt,
     GstVideoParseUserDataUnregistered * user_data,
     GstByteReader * br, guint8 uuid[16])
 {
-  gst_video_clear_user_data_unregistered (user_data);
+  GstVideoUnregisteredMessage msg;
 
-  memcpy (&user_data->uuid, uuid, 16);
+  memcpy (&msg.uuid, uuid, 16);
 
-  user_data->size = gst_byte_reader_get_size (br);
-  if (!gst_byte_reader_dup_data (br, user_data->size, &user_data->data)) {
+  msg.size = gst_byte_reader_get_size (br);
+  if (!gst_byte_reader_dup_data (br, msg.size, &msg.data)) {
     g_return_if_reached ();
   }
+
+  if (user_data->messages == NULL) {
+    user_data->messages = g_array_sized_new (FALSE, TRUE,
+        sizeof (GstVideoUnregisteredMessage), 3);
+    g_array_set_clear_func (user_data->messages,
+        (GDestroyNotify) gst_video_clear_unregistered_message);
+  }
+
+  g_array_append_val (user_data->messages, msg);
 }
 
 /*
@@ -481,27 +493,52 @@ gst_video_parse_user_data_unregistered (GstElement * elt,
  * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
  * @buf: (transfer none): #GstBuffer that receives the unregistered data
  *
- * Attach unregistered user data from @user_data to @buf as
+ * Attach unregistered messages from @user_data to @buf as
  * GstVideoSEIUserDataUnregisteredMeta
  */
 void
 gst_video_push_user_data_unregistered (GstElement * elt,
     GstVideoParseUserDataUnregistered * user_data, GstBuffer * buf)
 {
-  if (user_data->data != NULL) {
-    gst_buffer_add_video_sei_user_data_unregistered_meta (buf, user_data->uuid,
-        user_data->data, user_data->size);
+  GArray *messages = user_data->messages;
+  guint i;
+
+  if (messages == NULL)
+    return;
+
+  for (i = 0; i < messages->len; i++) {
+    GstVideoUnregisteredMessage *msg =
+        &g_array_index (messages, GstVideoUnregisteredMessage, i);
+
+    gst_buffer_add_video_sei_user_data_unregistered_meta (buf, msg->uuid,
+        msg->data, msg->size);
   }
 }
 
 /*
  * gst_video_clear_user_data_unregistered:
  * @user_data: #GstVideoParseUserDataUnregistered holding SEI User Data Unregistered
+ * @free: Whether to deallocate memory resources
  *
  * Clears the user data unregistered, resetting it for the next frame
  */
 void gst_video_clear_user_data_unregistered
-    (GstVideoParseUserDataUnregistered * user_data)
+    (GstVideoParseUserDataUnregistered * user_data, gboolean free)
+{
+  if (free)
+    g_clear_pointer (&user_data->messages, g_array_unref);
+  else if (user_data->messages != NULL)
+    g_array_set_size (user_data->messages, 0);
+}
+
+/*
+ * gst_video_clear_unregistered_message:
+ * @msg: #GstVideoUnregisteredMessage holding a single SEI User Data Unregistered
+ *
+ * Clears the message, freeing the data
+ */
+static void
+gst_video_clear_unregistered_message (GstVideoUnregisteredMessage * msg)
 {
   memset (&msg->uuid, 0, sizeof msg->uuid);
   g_clear_pointer (&msg->data, g_free);

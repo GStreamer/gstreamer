@@ -173,10 +173,20 @@ typedef struct
  */
 typedef struct
 {
+  /* item type: GstVideoUnregisteredMessage */
+  GArray *messages;
+} GstVideoParseUserDataUnregistered;
+
+/*
+ * GstVideoUnregisteredMessage
+ *
+ * Item type for the unregistered user data.
+ */
+typedef struct {
   guint8 uuid[16];
   guint8 *data;
   gsize size;
-} GstVideoParseUserDataUnregistered;
+} GstVideoUnregisteredMessage;
 
 G_BEGIN_DECLS
 
