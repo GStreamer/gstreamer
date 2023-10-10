@@ -56,6 +56,7 @@ typedef enum {
   GST_MSDK_FLAG_SCALING_MODE = 1 << 9,
   GST_MSDK_FLAG_FRC          = 1 << 10,
   GST_MSDK_FLAG_VIDEO_DIRECTION = 1 << 11,
+  GST_MSDK_FLAG_TONE_MAPPING = 1 << 12,
 } GstMsdkVppFlags;
 
 struct _GstMsdkVPP

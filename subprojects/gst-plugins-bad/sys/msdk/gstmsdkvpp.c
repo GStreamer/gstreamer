@@ -1709,6 +1709,7 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       break;
     case PROP_HDR_TONE_MAPPING:
       thiz->hdr_tone_mapping = g_value_get_boolean (value);
+      thiz->flags |= (thiz->hdr_tone_mapping ? GST_MSDK_FLAG_TONE_MAPPING : 0);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
