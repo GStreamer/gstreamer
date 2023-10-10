@@ -708,7 +708,8 @@ gst_d3d11_get_pixel_shader_checker_luma (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_checker_luma, sizeof (g_PSMain_checker_luma),
-      g_PSMain_checker_luma_str, "PSMain_checker_luma", ps);
+      g_PSMain_checker_luma_str, sizeof (g_PSMain_checker_luma_str),
+      "PSMain_checker_luma", ps);
 }
 
 HRESULT
@@ -723,7 +724,8 @@ gst_d3d11_get_pixel_shader_checker_rgb (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_checker_rgb, sizeof (g_PSMain_checker_rgb),
-      g_PSMain_checker_rgb_str, "PSMain_checker_rgb", ps);
+      g_PSMain_checker_rgb_str, sizeof (g_PSMain_checker_rgb_str),
+      "PSMain_checker_rgb", ps);
 }
 
 HRESULT
@@ -738,7 +740,8 @@ gst_d3d11_get_pixel_shader_checker_vuya (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_checker_vuya, sizeof (g_PSMain_checker_vuya),
-      g_PSMain_checker_vuya_str, "PSMain_checker_vuya", ps);
+      g_PSMain_checker_vuya_str, sizeof (g_PSMain_checker_vuya_str),
+      "PSMain_checker_vuya", ps);
 }
 
 HRESULT
@@ -753,7 +756,8 @@ gst_d3d11_get_pixel_shader_checker (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_checker, sizeof (g_PSMain_checker),
-      g_PSMain_checker_str, "PSMain_checker", ps);
+      g_PSMain_checker_str, sizeof (g_PSMain_checker_str),
+      "PSMain_checker", ps);
 }
 
 HRESULT
@@ -768,7 +772,7 @@ gst_d3d11_get_pixel_shader_color (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_color, sizeof (g_PSMain_color),
-      g_PSMain_color_str, "PSMain_color", ps);
+      g_PSMain_color_str, sizeof (g_PSMain_color_str), "PSMain_color", ps);
 }
 
 HRESULT
@@ -783,7 +787,8 @@ gst_d3d11_get_pixel_shader_sample_premul (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_sample_premul, sizeof (g_PSMain_sample_premul),
-      g_PSMain_sample_premul_str, "PSMain_sample_premul", ps);
+      g_PSMain_sample_premul_str, sizeof (g_PSMain_sample_premul_str),
+      "PSMain_sample_premul", ps);
 }
 
 HRESULT
@@ -798,7 +803,7 @@ gst_d3d11_get_pixel_shader_sample (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_sample, sizeof (g_PSMain_sample),
-      g_PSMain_sample_str, "PSMain_sample", ps);
+      g_PSMain_sample_str, sizeof (g_PSMain_sample_str), "PSMain_sample", ps);
 }
 
 HRESULT
@@ -813,7 +818,7 @@ gst_d3d11_get_pixel_shader_snow (GstD3D11Device * device,
 
   return gst_d3d11_device_get_pixel_shader (device, token,
       g_PSMain_snow, sizeof (g_PSMain_snow),
-      g_PSMain_snow_str, "PSMain_snow", ps);
+      g_PSMain_snow_str, sizeof (g_PSMain_snow_str), "PSMain_snow", ps);
 }
 
 HRESULT
@@ -846,8 +851,8 @@ gst_d3d11_get_vertex_shader_color (GstD3D11Device * device,
 
   return gst_d3d11_device_get_vertex_shader (device, token,
       g_VSMain_color, sizeof (g_VSMain_color),
-      g_VSMain_color_str, "VSMain_color", input_desc, G_N_ELEMENTS (input_desc),
-      vs, layout);
+      g_VSMain_color_str, sizeof (g_VSMain_color_str), "VSMain_color",
+      input_desc, G_N_ELEMENTS (input_desc), vs, layout);
 }
 
 HRESULT
@@ -880,8 +885,8 @@ gst_d3d11_get_vertex_shader_coord (GstD3D11Device * device,
 
   return gst_d3d11_device_get_vertex_shader (device, token,
       g_VSMain_coord, sizeof (g_VSMain_coord),
-      g_VSMain_coord_str, "VSMain_coord", input_desc, G_N_ELEMENTS (input_desc),
-      vs, layout);
+      g_VSMain_coord_str, sizeof (g_VSMain_coord_str), "VSMain_coord",
+      input_desc, G_N_ELEMENTS (input_desc), vs, layout);
 }
 
 HRESULT
@@ -906,5 +911,6 @@ gst_d3d11_get_vertex_shader_pos (GstD3D11Device * device,
 
   return gst_d3d11_device_get_vertex_shader (device, token,
       g_VSMain_pos, sizeof (g_VSMain_pos),
-      g_VSMain_pos_str, "VSMain_pos", &input_desc, 1, vs, layout);
+      g_VSMain_pos_str, sizeof (g_VSMain_pos_str), "VSMain_pos", &input_desc, 1,
+      vs, layout);
 }

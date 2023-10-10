@@ -26,11 +26,13 @@ G_BEGIN_DECLS
 
 HRESULT gst_d3d11_shader_cache_get_pixel_shader_blob (gint64 token,
                                                       const gchar * source,
+                                                      gsize source_size,
                                                       const gchar * entry_point,
                                                       ID3DBlob ** blob);
 
 HRESULT gst_d3d11_shader_cache_get_vertex_shader_blob (gint64 token,
                                                        const gchar * source,
+                                                       gsize source_size,
                                                        const gchar * entry_point,
                                                        ID3DBlob ** blob);
 

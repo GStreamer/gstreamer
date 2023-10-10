@@ -1704,7 +1704,7 @@ gst_d3d11_vertex_shader_token_new (void)
 HRESULT
 gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
     const void *bytecode, gsize bytecode_len, const gchar * source,
-    const gchar * entry_point, ID3D11PixelShader ** ps)
+    gsize source_size, const gchar * entry_point, ID3D11PixelShader ** ps)
 {
   GstD3D11DevicePrivate *priv = device->priv;
   HRESULT hr;
@@ -1740,7 +1740,7 @@ gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
           "Creating shader \"%s\" using precompiled bytecode", entry_point);
     } else {
       hr = gst_d3d11_shader_cache_get_pixel_shader_blob (token,
-          source, entry_point, &blob);
+          source, source_size, entry_point, &blob);
       if (!gst_d3d11_result (hr, device))
         return hr;
 
@@ -1770,8 +1770,9 @@ gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
 HRESULT
 gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
     const void *bytecode, gsize bytecode_len, const gchar * source,
-    const gchar * entry_point, const D3D11_INPUT_ELEMENT_DESC * input_desc,
-    guint desc_len, ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
+    gsize source_size, const gchar * entry_point,
+    const D3D11_INPUT_ELEMENT_DESC * input_desc, guint desc_len,
+    ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
 {
   GstD3D11DevicePrivate *priv = device->priv;
   HRESULT hr;
@@ -1810,7 +1811,7 @@ gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
           "Creating shader \"%s\" using precompiled bytecode", entry_point);
     } else {
       hr = gst_d3d11_shader_cache_get_vertex_shader_blob (token,
-          source, entry_point, &blob);
+          source, source_size, entry_point, &blob);
       if (!gst_d3d11_result (hr, device))
         return hr;
 
