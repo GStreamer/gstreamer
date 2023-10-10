@@ -123,10 +123,7 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
         user_data->afd_spec = GST_VIDEO_AFD_SPEC_ATSC_A53;
         user_data->afd = temp;
         user_data->active_format_flag = TRUE;
-      } else {
-        user_data->active_format_flag = FALSE;
       }
-      user_data->has_afd = TRUE;
       user_data->field = field;
       break;
     case USER_DATA_ID_DIRECTV_CC:
@@ -223,7 +220,6 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
             break;
           memcpy (user_data->bar_data, data, bar_size);
           user_data->bar_data_size = bar_size;
-          user_data->has_bar_data = TRUE;
           user_data->field = field;
           GST_DEBUG_OBJECT (elt, "Bar data, %u bytes", bar_size);
           break;
@@ -265,13 +261,10 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
       GST_DEBUG_OBJECT (elt, "Closed caption data already found on buffer, "
           "discarding to avoid duplication");
     }
-
-    user_data->closedcaptions_type = GST_VIDEO_CAPTION_TYPE_UNKNOWN;
-    user_data->closedcaptions_size = 0;
   }
 
   /* 2. handle AFD */
-  if (user_data->has_afd) {
+  if (user_data->active_format_flag) {
     GstVideoAFD afd;
     if (gst_video_parse_utils_parse_afd (user_data->afd, user_data->afd_spec,
             user_data->field, &afd)) {
@@ -279,16 +272,10 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
     } else {
       GST_WARNING_OBJECT (elt, "Invalid AFD value %d", user_data->afd);
     }
-  } else if (user_data->active_format_flag) {
-    /* AFD was present, but now it is no longer present */
-    GST_DEBUG_OBJECT (elt,
-        "AFD was present in previous frame, now no longer present");
-    user_data->active_format_flag = 0;
   }
-  user_data->has_afd = FALSE;
 
   /* 3. handle Bar data */
-  if (user_data->has_bar_data) {
+  if (user_data->bar_data_size) {
     GstVideoBarData data;
     if (gst_video_parse_utils_parse_bar (user_data->bar_data,
             user_data->bar_data_size, user_data->field, &data)) {
@@ -297,13 +284,7 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
     } else {
       GST_WARNING_OBJECT (elt, "Invalid Bar data");
     }
-  } else if (user_data->bar_data_size) {
-    /* bar data was present, but now it is no longer present */
-    GST_DEBUG_OBJECT (elt,
-        "Bar data was present in previous frame, now no longer present");
-    user_data->bar_data_size = 0;
   }
-  user_data->has_bar_data = FALSE;
 }
 
 /*
@@ -454,6 +435,20 @@ gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFDSpec spec,
   afd->spec = spec;
   afd->afd = afd_data;
   return TRUE;
+}
+
+/*
+ * gst_video_clear_user_data:
+ * @user_data: #GstVideoParseUserData struct to hold parsed closed caption, bar and AFD data
+ *
+ * Clears the user data, resetting it for the next frame
+ */
+void
+gst_video_clear_user_data (GstVideoParseUserData * user_data)
+{
+  user_data->closedcaptions_size = 0;
+  user_data->bar_data_size = 0;
+  user_data->active_format_flag = 0;
 }
 
 /*

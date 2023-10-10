@@ -196,6 +196,7 @@ gst_mpegv_parse_reset_frame (GstMpegvParse * mpvparse)
   mpvparse->ext_count = 0;
   mpvparse->slice_count = 0;
   mpvparse->slice_offset = 0;
+  gst_video_clear_user_data (&mpvparse->user_data);
 }
 
 static void
