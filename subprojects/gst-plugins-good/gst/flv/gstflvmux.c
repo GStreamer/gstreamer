@@ -1700,7 +1700,9 @@ gst_flv_mux_write_buffer (GstFlvMux * mux, GstFlvMuxPad * pad,
 {
   GstBuffer *tag;
   GstFlowReturn ret;
-  GstClockTime pts = GST_BUFFER_PTS (buffer);
+  GstClockTime pts =
+      gst_flv_mux_segment_to_running_time (&GST_AGGREGATOR_PAD (pad)->segment,
+      GST_BUFFER_PTS (buffer));
   GstClockTime duration = GST_BUFFER_DURATION (buffer);
   GstClockTime dts =
       gst_flv_mux_segment_to_running_time (&GST_AGGREGATOR_PAD (pad)->segment,
