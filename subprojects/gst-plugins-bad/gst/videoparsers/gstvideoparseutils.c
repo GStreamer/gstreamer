@@ -253,40 +253,40 @@ void
 gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
     GstBuffer * buf)
 {
+  GstVideoAFD afd;
+  GstVideoBarData bar;
 
-  /* 1. handle closed captions */
-  if (user_data->closedcaptions_size > 0) {
-    if (!gst_buffer_get_meta (buf, GST_VIDEO_CAPTION_META_API_TYPE)) {
-      gst_buffer_add_video_caption_meta (buf,
-          user_data->closedcaptions_type, user_data->closedcaptions,
-          user_data->closedcaptions_size);
-    } else {
-      GST_DEBUG_OBJECT (elt, "Closed caption data already found on buffer, "
-          "discarding to avoid duplication");
-    }
+  if (user_data->closedcaptions_size == 0) {
+    GST_TRACE_OBJECT (elt, "No closed caption data to attach");
+  } else if (gst_buffer_get_meta (buf, GST_VIDEO_CAPTION_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has closed caption meta");
+  } else {
+    gst_buffer_add_video_caption_meta (buf,
+        user_data->closedcaptions_type, user_data->closedcaptions,
+        user_data->closedcaptions_size);
   }
 
-  /* 2. handle AFD */
-  if (user_data->active_format_flag) {
-    GstVideoAFD afd;
-    if (gst_video_parse_utils_parse_afd (user_data->afd, user_data->afd_spec,
-            user_data->field, &afd)) {
-      gst_buffer_add_video_afd_meta (buf, afd.field, afd.spec, afd.afd);
-    } else {
-      GST_WARNING_OBJECT (elt, "Invalid AFD value %d", user_data->afd);
-    }
+  if (!user_data->active_format_flag) {
+    GST_TRACE_OBJECT (elt, "No AFD to attach");
+  } else if (gst_buffer_get_meta (buf, GST_VIDEO_AFD_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has AFD meta");
+  } else if (!gst_video_parse_utils_parse_afd (user_data->afd,
+          user_data->afd_spec, user_data->field, &afd)) {
+    GST_WARNING_OBJECT (elt, "Invalid AFD value %d", user_data->afd);
+  } else {
+    gst_buffer_add_video_afd_meta (buf, afd.field, afd.spec, afd.afd);
   }
 
-  /* 3. handle Bar data */
-  if (user_data->bar_data_size) {
-    GstVideoBarData data;
-    if (gst_video_parse_utils_parse_bar (user_data->bar_data,
-            user_data->bar_data_size, user_data->field, &data)) {
-      gst_buffer_add_video_bar_meta (buf, data.field, data.is_letterbox,
-          data.bar_data[0], data.bar_data[1]);
-    } else {
-      GST_WARNING_OBJECT (elt, "Invalid Bar data");
-    }
+  if (!user_data->bar_data_size) {
+    GST_TRACE_OBJECT (elt, "No Bar data to attach");
+  } else if (gst_buffer_get_meta (buf, GST_VIDEO_BAR_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has Bar meta");
+  } else if (!gst_video_parse_utils_parse_bar (user_data->bar_data,
+          user_data->bar_data_size, user_data->field, &bar)) {
+    GST_WARNING_OBJECT (elt, "Invalid Bar data");
+  } else {
+    gst_buffer_add_video_bar_meta (buf, bar.field, bar.is_letterbox,
+        bar.bar_data[0], bar.bar_data[1]);
   }
 }
 
@@ -503,8 +503,16 @@ gst_video_push_user_data_unregistered (GstElement * elt,
   GArray *messages = user_data->messages;
   guint i;
 
-  if (messages == NULL)
+  if (messages == NULL || messages->len == 0) {
+    GST_TRACE_OBJECT (elt, "No unregistered user data to attach");
     return;
+  }
+
+  if (gst_buffer_get_meta (buf,
+          GST_VIDEO_SEI_USER_DATA_UNREGISTERED_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (elt, "Buffer already has unregistered meta");
+    return;
+  }
 
   for (i = 0; i < messages->len; i++) {
     GstVideoUnregisteredMessage *msg =
