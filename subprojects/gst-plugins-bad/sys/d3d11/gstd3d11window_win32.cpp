@@ -1210,6 +1210,9 @@ gst_d3d11_window_win32_show (GstD3D11Window * window)
       PostMessageA (self->internal_hwnd, WM_GST_D3D11_SHOW_WINDOW, 0, 0);
     }
 
+    if (g_atomic_int_get (&self->pending_fullscreen_count) > 0)
+      PostMessageA (self->internal_hwnd, WM_GST_D3D11_FULLSCREEN, 0, 0);
+
     self->visible = TRUE;
   }
 }
@@ -1277,7 +1280,8 @@ gst_d3d11_window_win32_change_fullscreen_mode (GstD3D11Window * window)
 
   if (self->internal_hwnd) {
     g_atomic_int_add (&self->pending_fullscreen_count, 1);
-    PostMessageA (self->internal_hwnd, WM_GST_D3D11_FULLSCREEN, 0, 0);
+    if (self->visible)
+      PostMessageA (self->internal_hwnd, WM_GST_D3D11_FULLSCREEN, 0, 0);
   }
 }
 
