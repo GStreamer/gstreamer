@@ -89,8 +89,8 @@ struct _GstD3D11WindowWin32
   gint pending_move_window;
 
   /* fullscreen related */
-  RECT restore_rect;
   LONG restore_style;
+  WINDOWPLACEMENT restore_placement;
 
   /* Handle set_render_rectangle */
   GstVideoRectangle render_rect;
@@ -176,6 +176,7 @@ static void
 gst_d3d11_window_win32_init (GstD3D11WindowWin32 * self)
 {
   self->main_context = g_main_context_new ();
+  self->restore_placement.length = sizeof (WINDOWPLACEMENT);
 }
 
 static void
@@ -645,32 +646,25 @@ gst_d3d11_window_win32_change_fullscreen_mode_internal (GstD3D11WindowWin32 *
     /* Restore the window's attributes and size */
     SetWindowLongA (hwnd, GWL_STYLE, self->restore_style);
 
-    SetWindowPos (hwnd, HWND_NOTOPMOST,
-        self->restore_rect.left,
-        self->restore_rect.top,
-        self->restore_rect.right - self->restore_rect.left,
-        self->restore_rect.bottom - self->restore_rect.top,
-        SWP_FRAMECHANGED | SWP_NOACTIVATE);
-
-    ShowWindow (hwnd, SW_NORMAL);
+    SetWindowPlacement (hwnd, &self->restore_placement);
   } else {
     ComPtr < IDXGIOutput > output;
     DXGI_OUTPUT_DESC output_desc;
     IDXGISwapChain *swap_chain = window->swap_chain;
 
+    /* remember current placement to restore window later */
+    GetWindowPlacement (hwnd, &self->restore_placement);
+
     /* show window before change style */
     ShowWindow (hwnd, SW_SHOW);
 
-    /* Save the old window rect so we can restore it when exiting
-     * fullscreen mode */
-    GetWindowRect (hwnd, &self->restore_rect);
     self->restore_style = GetWindowLong (hwnd, GWL_STYLE);
 
     /* Make the window borderless so that the client area can fill the screen */
     SetWindowLongA (hwnd, GWL_STYLE,
         self->restore_style &
         ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU |
-            WS_THICKFRAME));
+            WS_THICKFRAME | WS_MAXIMIZE));
 
     swap_chain->GetContainingOutput (&output);
     output->GetDesc (&output_desc);
