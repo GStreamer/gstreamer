@@ -1,0 +1,399 @@
+{
+    "name": "JCT-VC-RExt",
+    "codec": "H.265",
+    "description": "JCT-VC HEVC Range Extension",
+    "test_vectors": [
+        {
+            "name": "ADJUST_IPRED_ANGLE_A_RExt_Mitsubishi_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/ADJUST_IPRED_ANGLE_A_RExt_Mitsubishi_2.zip",
+            "source_checksum": "8882ac4c7ab0d08db80fcb27efa7cedd",
+            "input_file": "ADJUST_IPRED_ANGLE_A_RExt_Mitsubishi_2/ADJUST_IPRED_ANGLE_A_RExt_Mitsubishi_2.bit",
+            "output_format": "yuv422p10le",
+            "result": "2f10f417074a922d58d09594e090f4c2"
+        },
+        {
+            "name": "Bitdepth_A_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/Bitdepth_A_RExt_Sony_1.zip",
+            "source_checksum": "948f7a2dcfd799e7fb36bc632f036b91",
+            "input_file": "Bitdepth_A_RExt_Sony_1/Bitdepth_A_RExt_Sony_1.bin",
+            "output_format": "yuv444p12le",
+            "result": "8e258127c1b39b6723ec2e92a9b6c5bf"
+        },
+        {
+            "name": "Bitdepth_B_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/Bitdepth_B_RExt_Sony_1.zip",
+            "source_checksum": "1d861458e1fc5b1adcfec37d8fa17681",
+            "input_file": "Bitdepth_B_RExt_Sony_1/Bitdepth_B_RExt_Sony_1.bin",
+            "output_format": "yuv444p12le",
+            "result": "595e370b4295705386baba51169b8c49"
+        },
+        {
+            "name": "CCP_10bit_RExt_QCOM_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/CCP_10bit_RExt_QCOM_1.zip",
+            "source_checksum": "53d04c4f639e91537fa8db8e2139cce7",
+            "input_file": "CCP_10bit_RExt_QCOM/CCP_10bit_RExt_QCOM.bin",
+            "output_format": "yuv444p10le",
+            "result": "d89d6f7fc1b5fb185dda82b5293f428e"
+        },
+        {
+            "name": "CCP_12bit_RExt_QCOM_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/CCP_12bit_RExt_QCOM_1.zip",
+            "source_checksum": "96cdc6be40b575fb7f740f09be788c8a",
+            "input_file": "CCP_12bit_RExt_QCOM/CCP_12bit_RExt_QCOM.bin",
+            "output_format": "yuv444p12le",
+            "result": "dee24a600c614d0b1274042df078b97b"
+        },
+        {
+            "name": "CCP_8bit_RExt_QCOM_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/CCP_8bit_RExt_QCOM_1.zip",
+            "source_checksum": "6cd3fdf4f0438e9e69ae05f64a37eb6e",
+            "input_file": "CCP_8bit_RExt_QCOM/CCP_8bit_RExt_QCOM.bin",
+            "output_format": "yuv444p",
+            "result": "ec15e05f254a29f4d0d424c433222a47"
+        },
+        {
+            "name": "ExplicitRdpcm_A_BBC_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/ExplicitRdpcm_A_BBC_1.zip",
+            "source_checksum": "3d74d6a74174920e90118016e5cbec7b",
+            "input_file": "ExplicitRdpcm_A_BBC_1/ExplicitRdpcm_A_BBC_1.bit",
+            "output_format": "yuv444p",
+            "result": "f5a0efab025cfc9e8f361f61af481a02"
+        },
+        {
+            "name": "ExplicitRdpcm_B_BBC_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/ExplicitRdpcm_B_BBC_2.zip",
+            "source_checksum": "0d33cf0448627a5cfa8021d58503b28b",
+            "input_file": "ExplicitRdpcm_B_BBC_2/ExplicitRdpcm_B_BBC_2/ExplicitRdpcm_B_BBC_2.bit",
+            "output_format": "yuv444p12le",
+            "result": "8469a2caf38f505004272da3972bbd1a"
+        },
+        {
+            "name": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_10BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_10BIT_RExt_Sony_1.zip",
+            "source_checksum": "204d86c6e362599afe6e7acabc346e02",
+            "input_file": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_10BIT_RExt_Sony_1/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_10BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p10le",
+            "result": "26d70ff7748a23350f2a0e250c9dd998"
+        },
+        {
+            "name": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_12BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_12BIT_RExt_Sony_1.zip",
+            "source_checksum": "afbc05a72887b38ddd0142f11d140cf9",
+            "input_file": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_12BIT_RExt_Sony_1/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_12BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p12le",
+            "result": "7a461a2ff3409096daf67b4267b5b8cc"
+        },
+        {
+            "name": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_16BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_16BIT_RExt_Sony_1.zip",
+            "source_checksum": "1b5045d6d530ed6dec35296223157545",
+            "input_file": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_16BIT_RExt_Sony_1/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_16BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p16le",
+            "result": "23d546b71e9bc7c8a636099ef9a3dfcd"
+        },
+        {
+            "name": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_8BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_8BIT_RExt_Sony_1.zip",
+            "source_checksum": "58f772d731790b64378f3ed1b5abb736",
+            "input_file": "EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_8BIT_RExt_Sony_1/EXTPREC_HIGHTHROUGHPUT_444_16_INTRA_8BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p",
+            "result": "7a13a6177eedc8fde5511b7f625e871e"
+        },
+        {
+            "name": "EXTPREC_MAIN_444_16_INTRA_10BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_MAIN_444_16_INTRA_10BIT_RExt_Sony_1.zip",
+            "source_checksum": "fd8bd3e3b41909125982865bd7815ef6",
+            "input_file": "EXTPREC_MAIN_444_16_INTRA_10BIT_RExt_Sony_1/EXTPREC_MAIN_444_16_INTRA_10BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p10le",
+            "result": "26d70ff7748a23350f2a0e250c9dd998"
+        },
+        {
+            "name": "EXTPREC_MAIN_444_16_INTRA_12BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_MAIN_444_16_INTRA_12BIT_RExt_Sony_1.zip",
+            "source_checksum": "b47819e462d67ffdd93ea0ab91360920",
+            "input_file": "EXTPREC_MAIN_444_16_INTRA_12BIT_RExt_Sony_1/EXTPREC_MAIN_444_16_INTRA_12BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p12le",
+            "result": "7a461a2ff3409096daf67b4267b5b8cc"
+        },
+        {
+            "name": "EXTPREC_MAIN_444_16_INTRA_16BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_MAIN_444_16_INTRA_16BIT_RExt_Sony_1.zip",
+            "source_checksum": "3d6664e004285247c78f01b97f4de3da",
+            "input_file": "EXTPREC_MAIN_444_16_INTRA_16BIT_RExt_Sony_1/EXTPREC_MAIN_444_16_INTRA_16BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p16le",
+            "result": "68d8956971e5b327e90391b18c0dc0eb"
+        },
+        {
+            "name": "EXTPREC_MAIN_444_16_INTRA_8BIT_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/EXTPREC_MAIN_444_16_INTRA_8BIT_RExt_Sony_1.zip",
+            "source_checksum": "81a014e009a7580418654d3c8ce950ec",
+            "input_file": "EXTPREC_MAIN_444_16_INTRA_8BIT_RExt_Sony_1/EXTPREC_MAIN_444_16_INTRA_8BIT_RExt_Sony_1.bit",
+            "output_format": "yuv444p",
+            "result": "7a13a6177eedc8fde5511b7f625e871e"
+        },
+        {
+            "name": "GENERAL_10b_420_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_10b_420_RExt_Sony_1.zip",
+            "source_checksum": "ef7d2e13f72056ed6f7f34ffa7f0bb2b",
+            "input_file": "GENERAL_10b_420_RExt_Sony_1/GENERAL_10b_420_RExt_Sony_1.bit",
+            "output_format": "yuv420p10le",
+            "result": "003024b39f559cefb72ea9383a8375c5"
+        },
+        {
+            "name": "GENERAL_10b_422_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_10b_422_RExt_Sony_1.zip",
+            "source_checksum": "3439a4e30c9ba28a417f64aa104b2afb",
+            "input_file": "GENERAL_10b_422_RExt_Sony_1/GENERAL_10b_422_RExt_Sony_1.bit",
+            "output_format": "yuv422p10le",
+            "result": "1c629fb6dcb69254c225ecfc4137d960"
+        },
+        {
+            "name": "GENERAL_10b_444_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_10b_444_RExt_Sony_2.zip",
+            "source_checksum": "504ca1a8afb46e929372f8742f297d6e",
+            "input_file": "GENERAL_10b_444_RExt_Sony_2/GENERAL_10b_444_RExt_Sony_2.bit",
+            "output_format": "yuv444p10le",
+            "result": "e021e80ac1e0f2bf85b5e053b7291481"
+        },
+        {
+            "name": "GENERAL_12b_400_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_12b_400_RExt_Sony_1.zip",
+            "source_checksum": "ff60114c3539df70cae67c96c9071e95",
+            "input_file": "GENERAL_12b_400_RExt_Sony_1/GENERAL_12b_400_RExt_Sony_1.bit",
+            "output_format": "gray12le",
+            "result": "549ff2b94ede8d83bfdc64a34440817d"
+        },
+        {
+            "name": "GENERAL_12b_420_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_12b_420_RExt_Sony_1.zip",
+            "source_checksum": "81dc8bf0a5948aeee3e8a4956e8c6bae",
+            "input_file": "GENERAL_12b_420_RExt_Sony_1/GENERAL_12b_420_RExt_Sony_1.bit",
+            "output_format": "yuv420p12le",
+            "result": "8441acd877425d589c2c3c146281373a"
+        },
+        {
+            "name": "GENERAL_12b_422_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_12b_422_RExt_Sony_1.zip",
+            "source_checksum": "b898eeb1dae36fa33febc4e66a93d861",
+            "input_file": "GENERAL_12b_422_RExt_Sony_1/GENERAL_12b_422_RExt_Sony_1.bit",
+            "output_format": "yuv422p12le",
+            "result": "75cda855288850a3803f10f29ec8bccc"
+        },
+        {
+            "name": "GENERAL_12b_444_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_12b_444_RExt_Sony_2.zip",
+            "source_checksum": "e4b1ce36f26012a003a1ea2a735c3894",
+            "input_file": "GENERAL_12b_444_RExt_Sony_2/GENERAL_12b_444_RExt_Sony_2.bit",
+            "output_format": "yuv444p12le",
+            "result": "5cca83e177f6f57ca7e4318951241999"
+        },
+        {
+            "name": "GENERAL_16b_400_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_16b_400_RExt_Sony_1.zip",
+            "source_checksum": "a8477a7a132d9a70c57d106d66612350",
+            "input_file": "GENERAL_16b_400_RExt_Sony_1/GENERAL_16b_400_RExt_Sony_1.bit",
+            "output_format": "gray16le",
+            "result": "eb432746ce6c66943613397da28526a7"
+        },
+        {
+            "name": "GENERAL_16b_444_highThroughput_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_16b_444_highThroughput_RExt_Sony_2.zip",
+            "source_checksum": "6cffcae987bbbbb08a1901b7afe2c12c",
+            "input_file": "GENERAL_16b_444_highThroughput_RExt_Sony_2/GENERAL_16b_444_highThroughput_RExt_Sony_2.bit",
+            "output_format": "yuv444p16le",
+            "result": "7422848e6a99897a8ade34814d396657"
+        },
+        {
+            "name": "GENERAL_16b_444_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_16b_444_RExt_Sony_2.zip",
+            "source_checksum": "c25ef549edc3f8dfc8fe921eeb1f4f11",
+            "input_file": "GENERAL_16b_444_RExt_Sony_2/GENERAL_16b_444_RExt_Sony_2.bit",
+            "output_format": "yuv444p16le",
+            "result": "41eb40070aae0bbedd584e1f73512840"
+        },
+        {
+            "name": "GENERAL_8b_400_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_8b_400_RExt_Sony_1.zip",
+            "source_checksum": "88c84f7f8a5883307da2b9f279567340",
+            "input_file": "GENERAL_8b_400_RExt_Sony_1/GENERAL_8b_400_RExt_Sony_1.bit",
+            "output_format": "gray",
+            "result": "e5223be3da805fb96440dbf2bd170db0"
+        },
+        {
+            "name": "GENERAL_8b_420_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_8b_420_RExt_Sony_1.zip",
+            "source_checksum": "ba857a7d8003825c850c665ddf5735a9",
+            "input_file": "GENERAL_8b_420_RExt_Sony_1/GENERAL_8b_420_RExt_Sony_1.bit",
+            "output_format": "yuv420p",
+            "result": "3975dafba3ec28e03e76cf3c84b85787"
+        },
+        {
+            "name": "GENERAL_8b_444_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/GENERAL_8b_444_RExt_Sony_2.zip",
+            "source_checksum": "e917523dc6ea0887945217858ea8f2d5",
+            "input_file": "GENERAL_8b_444_RExt_Sony_2/GENERAL_8b_444_RExt_Sony_2.bit",
+            "output_format": "yuv444p",
+            "result": "5638bc08fc397ab553b9c75aea6c8592"
+        },
+        {
+            "name": "IPCM_A_RExt_NEC_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/IPCM_A_RExt_NEC_2.zip",
+            "source_checksum": "4a17fbea5af41574ce4383560c52d88b",
+            "input_file": "IPCM_A_RExt_NEC_2/IPCM_A_RExt_NEC_2.bit",
+            "output_format": "yuv422p10le",
+            "result": "84789df9e2f7f86a773a25dee38c8ee7"
+        },
+        {
+            "name": "IPCM_B_RExt_NEC",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/IPCM_B_RExt_NEC.zip",
+            "source_checksum": "001a7e1de5066c2bd4b753c3f3bbb27e",
+            "input_file": "IPCM_B_RExt_NEC/IPCM_B_RExt_NEC.bit",
+            "output_format": "yuv444p12le",
+            "result": "1e8afac3cb9e225ad8937a8ed13e5acc"
+        },
+        {
+            "name": "Main_422_10_A_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/Main_422_10_A_RExt_Sony_2.zip",
+            "source_checksum": "fa324ed413f5a1cab239e8cf8a856ac8",
+            "input_file": "Main_422_10_A_RExt_Sony_2/Main_422_10_A_RExt_Sony_2.bin",
+            "output_format": "yuv422p10le",
+            "result": "afad767f089fe3f5fd4482b3cf56116d"
+        },
+        {
+            "name": "Main_422_10_B_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/Main_422_10_B_RExt_Sony_2.zip",
+            "source_checksum": "526b496564a10df1b9c2a239ad16d1de",
+            "input_file": "Main_422_10_B_RExt_Sony_2/Main_422_10_B_RExt_Sony_2.bin",
+            "output_format": "yuv422p10le",
+            "result": "2b7b75ffd9aa7c1fcea26f2694744105"
+        },
+        {
+            "name": "PERSIST_RPARAM_A_RExt_Sony_3",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/PERSIST_RPARAM_A_RExt_Sony_3.zip",
+            "source_checksum": "6e3f273d08659f891706305f861f04b5",
+            "input_file": "PERSIST_RPARAM_A_RExt_Sony_3/PERSIST_RPARAM_A_RExt_Sony_3.bit",
+            "output_format": "yuv444p12le",
+            "result": "7a461a2ff3409096daf67b4267b5b8cc"
+        },
+        {
+            "name": "QMATRIX_A_RExt_Sony_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/QMATRIX_A_RExt_Sony_1.zip",
+            "source_checksum": "5dac247be1d2ad3ea57fa86f4a23844c",
+            "input_file": "QMATRIX_A_RExt_Sony_1/QMATRIX_A_RExt_Sony_1.bit",
+            "output_format": "yuv444p",
+            "result": "713a97f129f95e39c279aaa23894d68f"
+        },
+        {
+            "name": "SAO_A_RExt_MediaTek_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/SAO_A_RExt_MediaTek_1.zip",
+            "source_checksum": "b2757a284c9a565cbe004fb3a02cc4a3",
+            "input_file": "SAO_A_RExt_MediaTek_1/SAO_A_RExt_MediaTek_1.bit",
+            "output_format": "yuv444p12le",
+            "result": "a17b4d879f8090b0afe0465e43264448"
+        },
+        {
+            "name": "TSCTX_10bit_I_RExt_SHARP_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/TSCTX_10bit_I_RExt_SHARP_1.zip",
+            "source_checksum": "a93d8a9a915884720e8b314e074920ac",
+            "input_file": "TSCTX_10bit_I_RExt_SHARP_1/TSCTX_10bit_I_RExt_SHARP_1.bin",
+            "output_format": "yuv444p10le",
+            "result": "5b59ad65e34b0bce5fb0954023d48c32"
+        },
+        {
+            "name": "TSCTX_10bit_RExt_SHARP_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/TSCTX_10bit_RExt_SHARP_1.zip",
+            "source_checksum": "b172728ae4c8084784893fdaaab8c275",
+            "input_file": "TSCTX_10bit_RExt_SHARP_1/TSCTX_10bit_RExt_SHARP_1.bin",
+            "output_format": "yuv444p10le",
+            "result": "5b59ad65e34b0bce5fb0954023d48c32"
+        },
+        {
+            "name": "TSCTX_12bit_I_RExt_SHARP_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/TSCTX_12bit_I_RExt_SHARP_1.zip",
+            "source_checksum": "8584f6fbe4a02d51814cda143155f31b",
+            "input_file": "TSCTX_12bit_I_RExt_SHARP_1/TSCTX_12bit_I_RExt_SHARP_1.bin",
+            "output_format": "yuv444p12le",
+            "result": "4843811dc6140ecce2a1b78313e73f70"
+        },
+        {
+            "name": "TSCTX_12bit_RExt_SHARP_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/TSCTX_12bit_RExt_SHARP_1.zip",
+            "source_checksum": "44499f300c74700383f5bdb1dea49759",
+            "input_file": "TSCTX_12bit_RExt_SHARP_1/TSCTX_12bit_RExt_SHARP_1.bin",
+            "output_format": "yuv444p12le",
+            "result": "4843811dc6140ecce2a1b78313e73f70"
+        },
+        {
+            "name": "TSCTX_8bit_I_RExt_SHARP_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/TSCTX_8bit_I_RExt_SHARP_1.zip",
+            "source_checksum": "2add6ed3de03aab54442479ffa20581d",
+            "input_file": "TSCTX_8bit_I_RExt_SHARP_1/TSCTX_8bit_I_RExt_SHARP_1.bin",
+            "output_format": "yuv444p",
+            "result": "c932c74795bd2204ce0a57ef9a018960"
+        },
+        {
+            "name": "TSCTX_8bit_RExt_SHARP_1",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/TSCTX_8bit_RExt_SHARP_1.zip",
+            "source_checksum": "ee2dd31e2fbef04396523ae388b2908c",
+            "input_file": "TSCTX_8bit_RExt_SHARP_1/TSCTX_8bit_RExt_SHARP_1.bin",
+            "output_format": "yuv444p",
+            "result": "c932c74795bd2204ce0a57ef9a018960"
+        },
+        {
+            "name": "WAVETILES_RExt_Sony_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/WAVETILES_RExt_Sony_2.zip",
+            "source_checksum": "595a0aa400e346711c25d25dfa21c920",
+            "input_file": "WAVETILES_RExt_Sony_2/WAVETILES_RExt_Sony_2.bit",
+            "output_format": "yuv444p16le",
+            "result": "d4809354218e6747c70aed951b80acc9"
+        },
+        {
+            "name": "WPP_AND_TILE_10Bit422Test_HIGH_TP_444_10BIT_RExt_Apple_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/WPP_AND_TILE_10Bit422Test_HIGH_TP_444_10BIT_RExt_Apple_2.zip",
+            "source_checksum": "f302181f11f049ec7f3091b160e9cb60",
+            "input_file": "WPP_AND_TILE_10Bit422Test_HIGH_TP_444_10BIT_RExt_Apple_2.bit",
+            "output_format": "yuv422p10le",
+            "result": "2f10f417074a922d58d09594e090f4c2"
+        },
+        {
+            "name": "WPP_AND_TILE_AND_CABAC_BYPASS_ALIGN_0_HIGH_TP_444_14BIT_RExt_Apple_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/WPP_AND_TILE_AND_CABAC_BYPASS_ALIGN_0_HIGH_TP_444_14BIT_RExt_Apple_2.zip",
+            "source_checksum": "55310a965ed8347510225e238ca5ed49",
+            "input_file": "WPP_AND_TILE_AND_CABAC_BYPASS_ALIGN_0_HIGH_TP_444_14BIT_RExt_Apple_2.bit",
+            "output_format": "yuv420p",
+            "result": "ca4ea49b5be3993ca87a4bebda8662ba"
+        },
+        {
+            "name": "WPP_AND_TILE_AND_CABAC_BYPASS_ALIGN_1_HIGH_TP_444_14BIT_RExt_Apple_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/WPP_AND_TILE_AND_CABAC_BYPASS_ALIGN_1_HIGH_TP_444_14BIT_RExt_Apple_2.zip",
+            "source_checksum": "5ae30a891db8ce98f4fdf42917006f04",
+            "input_file": "WPP_AND_TILE_AND_CABAC_BYPASS_ALIGN_1_HIGH_TP_444_14BIT_RExt_Apple_2.bit",
+            "output_format": "yuv420p",
+            "result": "ca4ea49b5be3993ca87a4bebda8662ba"
+        },
+        {
+            "name": "WPP_AND_TILE_AND_CABAC_EXT_PREC_1_HIGH_TP_444_14BIT_RExt_Apple_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/WPP_AND_TILE_AND_CABAC_EXT_PREC_1_HIGH_TP_444_14BIT_RExt_Apple_2.zip",
+            "source_checksum": "be970d9499c5e88914e73e9720da08b2",
+            "input_file": "WPP_AND_TILE_AND_CABAC_EXT_PREC_1_HIGH_TP_444_14BIT_RExt_Apple_2.bit",
+            "output_format": "yuv420p",
+            "result": "ca4ea49b5be3993ca87a4bebda8662ba"
+        },
+        {
+            "name": "WPP_AND_TILE_HIGH_TP_444_8BIT_RExt_Apple_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/WPP_AND_TILE_HIGH_TP_444_8BIT_RExt_Apple_2.zip",
+            "source_checksum": "4a4e14d790989ef857cd0c1aec469ccc",
+            "input_file": "WPP_AND_TILE_HIGH_TP_444_8BIT_RExt_Apple_2.bit",
+            "output_format": "yuv420p",
+            "result": "ca4ea49b5be3993ca87a4bebda8662ba"
+        },
+        {
+            "name": "WPP_HIGH_TP_444_8BIT_RExt_Apple_2",
+            "source": "https://www.itu.int/wftp3/av-arch/jctvc-site/bitstream_exchange/draft_conformance/RExt/WPP_HIGH_TP_444_8BIT_RExt_Apple_2.zip",
+            "source_checksum": "c824d9c676d5731e59c57a6eddd84479",
+            "input_file": "WPP_HIGH_TP_444_8BIT_RExt_Apple_2.bit",
+            "output_format": "yuv420p",
+            "result": "ca4ea49b5be3993ca87a4bebda8662ba"
+        }
+    ]
+}
