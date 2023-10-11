@@ -60,6 +60,11 @@ if not qt6qml_dep.found()
   subdir_done()
 endif
 
+qsb = find_program('qsb-qt6', 'qsb', required: qt6_option)
+if not qsb.found()
+  subdir_done()
+endif
+
 optional_deps = []
 qt_defines = []
 have_qpa_include = false
@@ -159,7 +164,6 @@ if qt6_option.require(have_qt_windowing).allowed()
   # Build it!
   moc_files = qt6_mod.preprocess(moc_headers : moc_headers, method: qt6_method)
   # TODO: dist backup qsb shaders?
-  qsb = find_program('qsb-qt6', 'qsb')
   shaders = []
   foreach shader: shader_sources
     qsb_shader = shader + '.qsb'
