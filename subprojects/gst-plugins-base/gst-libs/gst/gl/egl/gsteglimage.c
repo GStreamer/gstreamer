@@ -645,44 +645,8 @@ GstEGLImage *
 gst_egl_image_from_dmabuf (GstGLContext * context,
     gint dmabuf, const GstVideoInfo * in_info, gint plane, gsize offset)
 {
-  GstVideoInfoDmaDrm in_info_dma;
-
-  if (!gst_video_info_dma_drm_from_video_info (&in_info_dma, in_info,
-          DRM_FORMAT_MOD_LINEAR))
-    return FALSE;
-
-  return gst_egl_image_from_dmabuf_with_dma_drm (context, dmabuf,
-      &in_info_dma, plane, offset);
-}
-
-/**
- * gst_egl_image_from_dmabuf_with_dma_drm:
- * @context: a #GstGLContext (must be an EGL context)
- * @dmabuf: the DMA-Buf file descriptor
- * @in_info_dma: the #GstVideoInfoDmaDrm in @dmabuf
- * @plane: the plane in @in_info to create and #GstEGLImage for
- * @offset: the byte-offset in the data
- *
- * Creates an EGL image that imports the dmabuf FD. The dmabuf data
- * is passed as RGBA data. Shaders later take this "RGBA" data and
- * convert it from its true format (described by in_info) to actual
- * RGBA output. For example, with I420, three EGL images are created,
- * one for each @plane, each EGL image with a single-channel R format.
- * With NV12, two EGL images are created, one with R format, one
- * with RG format etc. User can specify the modifier in @in_info_dma
- * for non-linear dmabuf.
- *
- * Returns: (nullable): a #GstEGLImage wrapping @dmabuf or %NULL on failure
- *
- * Since: 1.24
- */
-GstEGLImage *
-gst_egl_image_from_dmabuf_with_dma_drm (GstGLContext * context, gint dmabuf,
-    const GstVideoInfoDmaDrm * in_info_dma, gint plane, gsize offset)
-{
   gint comp[GST_VIDEO_MAX_COMPONENTS];
   GstGLFormat format = 0;
-  const GstVideoInfo *in_info = &in_info_dma->vinfo;
   guintptr attribs[17];
   EGLImageKHR img;
   gint atti = 0;
@@ -713,11 +677,11 @@ gst_egl_image_from_dmabuf_with_dma_drm (GstGLContext * context, gint dmabuf,
   attribs[atti++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
   attribs[atti++] = get_egl_stride (in_info, plane);
 
-  if (with_modifiers && in_info_dma->drm_modifier != DRM_FORMAT_MOD_INVALID) {
+  if (with_modifiers) {
     attribs[atti++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
-    attribs[atti++] = in_info_dma->drm_modifier & 0xffffffff;
+    attribs[atti++] = DRM_FORMAT_MOD_LINEAR & 0xffffffff;
     attribs[atti++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
-    attribs[atti++] = (in_info_dma->drm_modifier >> 32) & 0xffffffff;
+    attribs[atti++] = (DRM_FORMAT_MOD_LINEAR >> 32) & 0xffffffff;
   }
 
   attribs[atti] = EGL_NONE;

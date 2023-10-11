@@ -1390,11 +1390,6 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     if (_filter_caps_with_features (in_caps, filter_features, NULL)) {
       in_info_drm->drm_fourcc = gst_video_dma_drm_fourcc_from_format
           (GST_VIDEO_INFO_FORMAT (in_info));
-      if (in_info_drm->drm_fourcc == DRM_FORMAT_INVALID) {
-        gst_caps_features_free (filter_features);
-        return FALSE;
-      }
-
       in_info_drm->drm_modifier = DRM_FORMAT_MOD_LINEAR;
     } else if (!gst_caps_features_contains (gst_caps_get_features (in_caps, 0),
             GST_CAPS_FEATURE_MEMORY_DMABUF)) {
@@ -1538,8 +1533,8 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
       dmabuf->eglimage[i] = gst_egl_image_from_dmabuf_direct_target_with_dma_drm
           (dmabuf->upload->context, fd, offset, in_info_drm, dmabuf->target);
     } else {
-      dmabuf->eglimage[i] = gst_egl_image_from_dmabuf_with_dma_drm
-          (dmabuf->upload->context, fd[i], in_info_drm, i, offset[i]);
+      dmabuf->eglimage[i] = gst_egl_image_from_dmabuf
+          (dmabuf->upload->context, fd[i], in_info, i, offset[i]);
     }
 
     if (!dmabuf->eglimage[i]) {
