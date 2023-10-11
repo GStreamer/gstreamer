@@ -3303,10 +3303,9 @@ gst_v4l2_object_set_stride (GstVideoInfo * info, GstVideoAlignment * align,
 
     padded_height = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
         info->height + align->padding_top + align->padding_bottom);
-    padded_height = (padded_height + tile_height - 1) / tile_height;
 
     x_tiles = stride / GST_VIDEO_FORMAT_INFO_TILE_STRIDE (finfo, plane);
-    y_tiles = padded_height / tile_height;
+    y_tiles = (padded_height + tile_height - 1) / tile_height;
     info->stride[plane] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
   } else {
     info->stride[plane] = stride;
