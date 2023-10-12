@@ -219,6 +219,21 @@ static GstDiscovererStreamInfo *_parse_discovery (GVariant * variant,
 static GstDiscovererInfo *load_serialized_info (GstDiscoverer * dc,
     gchar * uri);
 
+static gboolean
+_gst_discoverer_info_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  GstDiscovererInfo *info;
+
+  info = g_value_get_object (handler_return);
+  GST_DEBUG ("got discoverer info %" GST_PTR_FORMAT, info);
+
+  g_value_set_object (return_accu, info);
+
+  /* stop emission if we have a discoverer info */
+  return (info == NULL);
+}
+
 static void
 gst_discoverer_class_init (GstDiscovererClass * klass)
 {
@@ -346,7 +361,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
   gst_discoverer_signals[SIGNAL_LOAD_SERIALIZED_INFO] =
       g_signal_new ("load-serialized-info", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDiscovererClass,
-          load_serialize_info), g_signal_accumulator_first_wins, NULL, NULL,
+          load_serialize_info), _gst_discoverer_info_accumulator, NULL, NULL,
       GST_TYPE_DISCOVERER_INFO, 1, G_TYPE_STRING);
 }
 
