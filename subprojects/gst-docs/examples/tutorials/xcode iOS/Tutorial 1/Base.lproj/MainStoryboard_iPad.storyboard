@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="22154" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" colorMatched="YES" initialViewController="X2s-ia-pOf">
+    <device id="ipad10_9rounded" orientation="portrait" layout="fullscreen" appearance="light"/>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="22130"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="Nph-dO-iol">
+            <objects>
+                <viewController id="X2s-ia-pOf" customClass="ViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="cqq-Cf-y41"/>
+                        <viewControllerLayoutGuide type="bottom" id="3pp-C2-EHh"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="Sf8-eX-7fC">
+                        <rect key="frame" x="0.0" y="0.0" width="820" height="1180"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" text="Label" textAlignment="center" lineBreakMode="wordWrap" numberOfLines="0" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" preferredMaxLayoutWidth="280" translatesAutoresizingMaskIntoConstraints="NO" id="4w6-PN-gDi">
+                                <rect key="frame" x="20" y="575.5" width="780" height="29"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" priority="1" constant="21" id="rXT-2b-NQz"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="24"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+                        <constraints>
+                            <constraint firstAttribute="trailing" secondItem="4w6-PN-gDi" secondAttribute="trailing" constant="20" symbolic="YES" id="fLc-xX-Aec"/>
+                            <constraint firstItem="4w6-PN-gDi" firstAttribute="centerY" secondItem="Sf8-eX-7fC" secondAttribute="centerY" id="h5N-ej-3sj"/>
+                            <constraint firstItem="4w6-PN-gDi" firstAttribute="leading" secondItem="Sf8-eX-7fC" secondAttribute="leading" constant="20" symbolic="YES" id="yc7-ae-8a6"/>
+                        </constraints>
+                    </view>
+                    <connections>
+                        <outlet property="label" destination="4w6-PN-gDi" id="V3e-1H-KHL"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="bva-n2-euY" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-80" y="-77"/>
+        </scene>
+    </scenes>
+    <resources>
+        <systemColor name="systemBackgroundColor">
+            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+        </systemColor>
+    </resources>
+</document>

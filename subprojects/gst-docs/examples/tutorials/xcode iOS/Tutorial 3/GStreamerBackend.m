@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 
         GST_DEBUG_CATEGORY_INIT (debug_category, "tutorial-3", 0, "iOS tutorial 3");
         gst_debug_set_threshold_for_name("tutorial-3", GST_LEVEL_DEBUG);
+        gst_debug_set_colored(false);
 
         /* Start the bus monitoring task */
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{

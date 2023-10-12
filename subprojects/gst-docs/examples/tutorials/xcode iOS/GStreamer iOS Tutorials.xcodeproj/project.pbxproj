@@ -103,6 +103,16 @@
 		63A43C5A1DBEBEC40017F03D /* Images-3.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Images-3.xcassets"; sourceTree = "<group>"; };
 		63A43C5C1DBECF5B0017F03D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
 		63A43C5E1DBECF6C0017F03D /* ssl */ = {isa = PBXFileReference; lastKnownFileType = folder; path = ssl; sourceTree = "<group>"; };
+		8804C3F72AD844DC00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		8804C3F82AD844DC00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		8804C3F92AD844DC00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		8804C3FA2AD844DD00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		8804C3FB2AD844DD00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		8804C3FC2AD844DD00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		8804C3FD2AD844DE00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		8804C3FE2AD844DE00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
+		8804C3FF2AD844DE00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
+		8804C4002AD844DE00F02431 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		C67B40C9172EBEA3008359CC /* Tutorial 1.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Tutorial 1.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		C67B40CC172EBEA3008359CC /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		C67B40CE172EBEA3008359CC /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
@@ -114,8 +124,6 @@
 		C67B40DC172EBEA3008359CC /* Tutorial 1-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 1-Prefix.pch"; sourceTree = "<group>"; };
 		C67B40DD172EBEA3008359CC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C67B40DE172EBEA3008359CC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		C67B40E7172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		C67B40EA172EBEA3008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		C67B40EC172EBEA3008359CC /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C67B40ED172EBEA3008359CC /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		C67B40F1172EBEA3008359CC /* gst_ios_init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
@@ -128,8 +136,6 @@
 		C67B410C172FC7F5008359CC /* Tutorial 2-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 2-Prefix.pch"; sourceTree = "<group>"; };
 		C67B410D172FC7F5008359CC /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C67B410E172FC7F5008359CC /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		C67B4117172FC7F5008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		C67B411A172FC7F5008359CC /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		C67B411C172FC7F5008359CC /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C67B411D172FC7F5008359CC /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		C67B4129172FC85D008359CC /* gst_ios_init.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
@@ -143,8 +149,6 @@
 		C68B1D9517465EB7004FD7D0 /* Tutorial 5-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 5-Prefix.pch"; sourceTree = "<group>"; };
 		C68B1D9617465EB7004FD7D0 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C68B1D9717465EB7004FD7D0 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		C68B1DA017465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		C68B1DA317465EB7004FD7D0 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		C68B1DAA17465EB8004FD7D0 /* gst_ios_init.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = gst_ios_init.h; sourceTree = "<group>"; };
 		C68B1DAE17465F95004FD7D0 /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
 		C68B1DAF17465F95004FD7D0 /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
@@ -177,8 +181,6 @@
 		C6B6126C17395CF2003FC410 /* Tutorial 3-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 3-Prefix.pch"; sourceTree = "<group>"; };
 		C6B6126D17395CF2003FC410 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C6B6126E17395CF2003FC410 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		C6B6127717395CF2003FC410 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		C6B6127A17395CF2003FC410 /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		C6B6127C17395CF2003FC410 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
 		C6B6127D17395CF2003FC410 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		C6B6128817395D4F003FC410 /* GStreamerBackend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GStreamerBackend.h; sourceTree = "<group>"; };
@@ -194,8 +196,6 @@
 		C6EB858E173BEE5E00C3953D /* Tutorial 4-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Tutorial 4-Prefix.pch"; sourceTree = "<group>"; };
 		C6EB858F173BEE5E00C3953D /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C6EB8590173BEE5E00C3953D /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
-		C6EB8599173BEE5E00C3953D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPhone.storyboard; sourceTree = "<group>"; };
-		C6EB859C173BEE5E00C3953D /* en */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = en; path = en.lproj/MainStoryboard_iPad.storyboard; sourceTree = "<group>"; };
 		C6EB859E173BEE5E00C3953D /* VideoViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VideoViewController.h; sourceTree = "<group>"; };
 		C6EB859F173BEE5E00C3953D /* VideoViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VideoViewController.m; sourceTree = "<group>"; };
 		C6EB85AA173BEF2600C3953D /* EaglUIVIew.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EaglUIVIew.h; sourceTree = "<group>"; };
@@ -580,10 +580,11 @@
 			};
 			buildConfigurationList = C67B40C2172EBDF1008359CC /* Build configuration list for PBXProject "GStreamer iOS Tutorials" */;
 			compatibilityVersion = "Xcode 3.2";
-			developmentRegion = English;
+			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = C67B40BE172EBDF1008359CC;
 			productRefGroup = C67B40CA172EBEA3008359CC /* Products */;
@@ -748,7 +749,7 @@
 		C67B40E6172EBEA3008359CC /* MainStoryboard_iPhone.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C67B40E7172EBEA3008359CC /* en */,
+				8804C3F72AD844DC00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPhone.storyboard;
 			sourceTree = "<group>";
@@ -756,7 +757,7 @@
 		C67B40E9172EBEA3008359CC /* MainStoryboard_iPad.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C67B40EA172EBEA3008359CC /* en */,
+				8804C3F82AD844DC00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPad.storyboard;
 			sourceTree = "<group>";
@@ -772,7 +773,7 @@
 		C67B4116172FC7F5008359CC /* MainStoryboard_iPhone.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C67B4117172FC7F5008359CC /* en */,
+				8804C3F92AD844DC00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPhone.storyboard;
 			sourceTree = "<group>";
@@ -780,7 +781,7 @@
 		C67B4119172FC7F5008359CC /* MainStoryboard_iPad.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C67B411A172FC7F5008359CC /* en */,
+				8804C3FA2AD844DD00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPad.storyboard;
 			sourceTree = "<group>";
@@ -796,7 +797,7 @@
 		C68B1D9F17465EB7004FD7D0 /* MainStoryboard_iPhone.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C68B1DA017465EB7004FD7D0 /* en */,
+				8804C3FF2AD844DE00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPhone.storyboard;
 			sourceTree = "<group>";
@@ -804,7 +805,7 @@
 		C68B1DA217465EB7004FD7D0 /* MainStoryboard_iPad.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C68B1DA317465EB7004FD7D0 /* en */,
+				8804C4002AD844DE00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPad.storyboard;
 			sourceTree = "<group>";
@@ -820,7 +821,7 @@
 		C6B6127617395CF2003FC410 /* MainStoryboard_iPhone.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C6B6127717395CF2003FC410 /* en */,
+				8804C3FB2AD844DD00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPhone.storyboard;
 			sourceTree = "<group>";
@@ -828,7 +829,7 @@
 		C6B6127917395CF2003FC410 /* MainStoryboard_iPad.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C6B6127A17395CF2003FC410 /* en */,
+				8804C3FC2AD844DD00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPad.storyboard;
 			sourceTree = "<group>";
@@ -844,7 +845,7 @@
 		C6EB8598173BEE5E00C3953D /* MainStoryboard_iPhone.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C6EB8599173BEE5E00C3953D /* en */,
+				8804C3FD2AD844DE00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPhone.storyboard;
 			sourceTree = "<group>";
@@ -852,7 +853,7 @@
 		C6EB859B173BEE5E00C3953D /* MainStoryboard_iPad.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				C6EB859C173BEE5E00C3953D /* en */,
+				8804C3FE2AD844DE00F02431 /* Base */,
 			);
 			name = MainStoryboard_iPad.storyboard;
 			sourceTree = "<group>";
@@ -920,7 +921,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -988,7 +989,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 1/Tutorial 1-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1064,7 +1065,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 2/Tutorial 2-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1135,7 +1136,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 2/Tutorial 2-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1214,6 +1215,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1286,6 +1288,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 5/Tutorial 5-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1366,7 +1369,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 3/Tutorial 3-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1437,7 +1440,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 3/Tutorial 3-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1516,7 +1519,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 4/Tutorial 4-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-lresolv",
@@ -1589,7 +1592,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(HOME)/Library/Developer/GStreamer/iPhone.sdk/GStreamer.framework/Headers\"";
 				INFOPLIST_FILE = "Tutorial 4/Tutorial 4-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 12.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
 				OTHER_CFLAGS = "-DNS_BLOCK_ASSERTIONS=1";
 				OTHER_LDFLAGS = (
 					"-lresolv",
