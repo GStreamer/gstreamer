@@ -39,6 +39,9 @@
 #if GST_GL_HAVE_DMABUF
 #include <gst/allocators/gstdmabuf.h>
 #include <libdrm/drm_fourcc.h>
+#else
+/* to avoid ifdef in _gst_gl_upload_set_caps_unlocked() */
+#define DRM_FORMAT_MOD_LINEAR  0ULL
 #endif
 
 #if GST_GL_HAVE_VIV_DIRECTVIV
@@ -607,7 +610,6 @@ struct DmabufUpload
   GstGLTextureTarget target;
   GstVideoInfo out_info;
   /* only used for pointer comparison */
-  gpointer in_caps;
   gpointer out_caps;
 };
 
@@ -1381,44 +1383,23 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
   }
 
-  /* If caps changes from the last time, do more check. */
-  if (in_caps != dmabuf->in_caps) {
-    GstCapsFeatures *filter_features;
+  if (!gst_caps_features_contains (gst_caps_get_features (in_caps, 0),
+          GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) &&
+      !gst_caps_features_contains (gst_caps_get_features (in_caps, 0),
+          GST_CAPS_FEATURE_MEMORY_DMABUF)) {
+    GST_DEBUG_OBJECT (dmabuf->upload,
+        "Not a DMABuf or SystemMemory caps %" GST_PTR_FORMAT, in_caps);
+    return FALSE;
+  }
 
-    filter_features =
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
-    if (_filter_caps_with_features (in_caps, filter_features, NULL)) {
-      in_info_drm->drm_fourcc = gst_video_dma_drm_fourcc_from_format
-          (GST_VIDEO_INFO_FORMAT (in_info));
-      in_info_drm->drm_modifier = DRM_FORMAT_MOD_LINEAR;
-    } else if (!gst_caps_features_contains (gst_caps_get_features (in_caps, 0),
-            GST_CAPS_FEATURE_MEMORY_DMABUF)) {
-      gst_caps_features_free (filter_features);
-      GST_DEBUG_OBJECT (dmabuf->upload,
-          "Not a dma caps %" GST_PTR_FORMAT, in_caps);
-      return FALSE;
-    }
-    gst_caps_features_free (filter_features);
-
-    if (in_info_drm->drm_modifier == DRM_FORMAT_MOD_LINEAR) {
-      g_assert (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_UNKNOWN);
-      g_assert (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_ENCODED);
-    } else {
-      if (!gst_video_info_dma_drm_to_video_info (in_info_drm, in_info))
-        return FALSE;
-    }
-
-    if (dmabuf->direct && !gst_egl_image_check_dmabuf_direct_with_dma_drm
-        (dmabuf->upload->context, in_info_drm, dmabuf->target)) {
-      GST_DEBUG_OBJECT (dmabuf->upload,
-          "Direct mode does not support %" GST_FOURCC_FORMAT ":0x%016"
-          G_GINT64_MODIFIER "x with target: %s",
-          GST_FOURCC_ARGS (in_info_drm->drm_fourcc), in_info_drm->drm_modifier,
-          gst_gl_texture_target_to_string (dmabuf->target));
-      return FALSE;
-    }
-
-    dmabuf->in_caps = in_caps;
+  if (dmabuf->direct && !gst_egl_image_check_dmabuf_direct_with_dma_drm
+      (dmabuf->upload->context, in_info_drm, dmabuf->target)) {
+    GST_DEBUG_OBJECT (dmabuf->upload,
+        "Direct mode does not support %" GST_FOURCC_FORMAT ":0x%016"
+        G_GINT64_MODIFIER "x with target: %s",
+        GST_FOURCC_ARGS (in_info_drm->drm_fourcc), in_info_drm->drm_modifier,
+        gst_gl_texture_target_to_string (dmabuf->target));
+    return FALSE;
   }
 
   n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
@@ -3336,6 +3317,8 @@ _gst_gl_upload_set_caps_unlocked (GstGLUpload * upload, GstCaps * in_caps,
     gst_video_info_dma_drm_from_caps (&upload->priv->in_info_drm, in_caps);
   } else {
     gst_video_info_from_caps (&upload->priv->in_info, in_caps);
+    gst_video_info_dma_drm_from_video_info (&upload->priv->in_info_drm,
+        &upload->priv->in_info, DRM_FORMAT_MOD_LINEAR);
   }
   gst_video_info_from_caps (&upload->priv->out_info, out_caps);
 
