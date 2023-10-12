@@ -13721,7 +13721,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/ac3:\n",
+                        "caps": "audio/x-ac3:\n",
                         "direction": "src",
                         "presence": "always"
                     }
