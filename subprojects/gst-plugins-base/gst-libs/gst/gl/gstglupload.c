@@ -445,9 +445,11 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   GstBufferPool *pool = NULL;
   guint n_pools, i;
   GstCaps *caps;
-  GstCapsFeatures *features;
+  GstCapsFeatures *features_gl, *features_sys;
   GstAllocator *allocator;
   GstAllocationParams params;
+  gboolean use_sys_mem = FALSE;
+  const gchar *target_pool_option_str = NULL;
 
   gst_query_parse_allocation (query, &caps, NULL);
   if (caps == NULL)
@@ -455,14 +457,34 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
 
   g_assert (gst_caps_is_fixed (caps));
 
-  features = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
-      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
+  features_gl = gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, NULL);
+  features_sys =
+      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY, NULL);
   /* Only offer our custom allocator if that type of memory was negotiated. */
-  if (!_filter_caps_with_features (caps, features, NULL)) {
-    gst_caps_features_free (features);
+  if (_filter_caps_with_features (caps, features_sys, NULL)) {
+    use_sys_mem = TRUE;
+  } else if (!_filter_caps_with_features (caps, features_gl, NULL)) {
+    gst_caps_features_free (features_gl);
+    gst_caps_features_free (features_sys);
     return;
   }
-  gst_caps_features_free (features);
+  gst_caps_features_free (features_gl);
+  gst_caps_features_free (features_sys);
+
+  if (upload->upload->priv->out_caps) {
+    GstGLTextureTarget target;
+
+    target = _caps_get_texture_target (upload->upload->priv->out_caps,
+        GST_GL_TEXTURE_TARGET_2D);
+
+    /* Do not provide the allocator and pool for system memory caps
+       because the external oes kind GL memory can not be mapped. */
+    if (target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES && use_sys_mem)
+      return;
+
+    target_pool_option_str =
+        gst_gl_texture_target_to_buffer_pool_option (target);
+  }
 
   gst_allocation_params_init (&params);
 
@@ -510,17 +532,8 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     gst_buffer_pool_config_set_gl_min_free_queue_size (config, 1);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_GL_SYNC_META);
-    if (upload->upload->priv->out_caps) {
-      GstGLTextureTarget target;
-      const gchar *target_pool_option_str;
-
-      target =
-          _caps_get_texture_target (upload->upload->priv->out_caps,
-          GST_GL_TEXTURE_TARGET_2D);
-      target_pool_option_str =
-          gst_gl_texture_target_to_buffer_pool_option (target);
+    if (target_pool_option_str)
       gst_buffer_pool_config_add_option (config, target_pool_option_str);
-    }
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       gst_object_unref (pool);
