@@ -88,6 +88,7 @@ gboolean              va_ensure_image                     (GstVaDisplay * displa
 GST_VA_API
 gboolean              va_map_buffer                       (GstVaDisplay * display,
                                                            VABufferID buffer,
+                                                           GstMapFlags flags,
                                                            gpointer * data);
 GST_VA_API
 gboolean              va_unmap_buffer                     (GstVaDisplay * display,

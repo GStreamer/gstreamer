@@ -1430,7 +1430,7 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
       goto fail;
   }
 
-  if (!va_map_buffer (display, mem->image.buf, &mem->mapped_data))
+  if (!va_map_buffer (display, mem->image.buf, flags, &mem->mapped_data))
     goto fail;
 
 success:

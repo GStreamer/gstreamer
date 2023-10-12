@@ -242,12 +242,22 @@ va_sync_surface (GstVaDisplay * display, VASurfaceID surface)
 }
 
 gboolean
-va_map_buffer (GstVaDisplay * display, VABufferID buffer, gpointer * data)
+va_map_buffer (GstVaDisplay * display, VABufferID buffer, GstMapFlags flags,
+    gpointer * data)
 {
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
 
+#if VA_CHECK_VERSION(1, 21, 0)
+  uint32_t vaflags = 0;
+  if (flags & GST_MAP_READ)
+    vaflags |= VA_MAPBUFFER_FLAG_READ;
+  if (flags & GST_MAP_WRITE)
+    vaflags |= VA_MAPBUFFER_FLAG_WRITE;
+  status = vaMapBuffer2 (dpy, buffer, data, vaflags);
+#else
   status = vaMapBuffer (dpy, buffer, data);
+#endif
   if (status != VA_STATUS_SUCCESS) {
     GST_WARNING ("vaMapBuffer: %s", vaErrorStr (status));
     return FALSE;

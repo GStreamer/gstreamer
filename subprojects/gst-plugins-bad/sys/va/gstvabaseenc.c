@@ -288,7 +288,7 @@ gst_va_base_enc_create_output_buffer (GstVaBaseEnc * base,
 
   seg_list = NULL;
   if (!va_map_buffer (base->display, picture->coded_buffer,
-          (gpointer *) & seg_list))
+          GST_MAP_READ, (gpointer *) & seg_list))
     goto error;
 
   if (!seg_list) {
