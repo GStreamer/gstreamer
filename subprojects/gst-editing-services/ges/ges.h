@@ -84,6 +84,7 @@
 #include <ges/ges-video-track.h>
 #include <ges/ges-version.h>
 #include <ges/ges-marker-list.h>
+#include <ges/ges-discoverer-manager.h>
 
 G_BEGIN_DECLS
 
