@@ -45,8 +45,6 @@ static gboolean gst_d3d12_base_filter_start (GstBaseTransform * trans);
 static gboolean gst_d3d12_base_filter_stop (GstBaseTransform * trans);
 static gboolean gst_d3d12_base_filter_set_caps (GstBaseTransform * trans,
     GstCaps * incaps, GstCaps * outcaps);
-static gboolean gst_d3d12_base_filter_get_unit_size (GstBaseTransform * trans,
-    GstCaps * caps, gsize * size);
 static gboolean
 gst_d3d12_base_filter_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);

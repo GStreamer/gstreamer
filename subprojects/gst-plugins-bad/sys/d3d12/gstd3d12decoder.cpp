@@ -155,8 +155,8 @@ struct GstD3D12DecoderPicture : public GstMiniObject
   GstD3D12DecoderPicture (GstBuffer * dpb_buf, GstBuffer * out_buf,
       std::shared_ptr<GstD3D12Dpb> d3d12_dpb,
       ID3D12VideoDecoderHeap * decoder_heap, guint8 dxva_id)
-      : buffer(dpb_buf), output_buffer(out_buf), dpb(d3d12_dpb)
-      , heap(decoder_heap), view_id(dxva_id)
+      : buffer(dpb_buf), output_buffer(out_buf)
+      , heap(decoder_heap), dpb(d3d12_dpb), view_id(dxva_id)
   {
   }
 
@@ -180,6 +180,7 @@ struct GstD3D12DecoderPicture : public GstMiniObject
   guint8 view_id;
 };
 
+static GType gst_d3d12_decoder_picture_get_type (void);
 #define GST_TYPE_D3D12_DECODER_PICTURE (gst_d3d12_decoder_picture_get_type ())
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12DecoderPicture, gst_d3d12_decoder_picture);
 
@@ -1346,7 +1347,7 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
         gint width = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, i) *
             GST_VIDEO_FRAME_COMP_PSTRIDE (&vframe, i);
 
-        for (guint j = 0; j < GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i); j++) {
+        for (gint j = 0; j < GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i); j++) {
           memcpy (dst, src, width);
           dst += GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, i);
           src += priv->layout[i].Footprint.RowPitch;

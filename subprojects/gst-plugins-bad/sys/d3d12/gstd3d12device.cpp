@@ -211,6 +211,7 @@ gst_d3d12_device_enable_debug (void)
 
     GST_INFO ("D3D12 debug layer is enabled");
 
+#ifdef HAVE_D3D12DEBUG5
     ComPtr < ID3D12Debug5 > d3d12_debug5;
     hr = d3d12_debug.As (&d3d12_debug5);
     if (SUCCEEDED (hr))
@@ -231,6 +232,7 @@ gst_d3d12_device_enable_debug (void)
     d3d12_debug1->SetEnableGPUBasedValidation (TRUE);
 
     GST_INFO ("Enabled GPU based validation");
+#endif
   }
   GST_D3D12_CALL_ONCE_END;
 

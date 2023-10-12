@@ -180,8 +180,9 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gint width, height;
     GstVideoAlignment video_align;
 
-    GST_WARNING_OBJECT (self, "Resolution %dx%d is not mutiple of %d, fixing",
-        desc[0].Width, desc[0].Height, align);
+    GST_WARNING_OBJECT (self, "Resolution %" G_GUINT64_FORMAT
+        "x%d is not mutiple of %d, fixing", desc[0].Width, desc[0].Height,
+        align);
 
     width = GST_ROUND_UP_N ((guint) desc[0].Width, align);
     height = GST_ROUND_UP_N ((guint) desc[0].Height, align);

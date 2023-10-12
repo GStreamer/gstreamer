@@ -83,7 +83,7 @@ gst_d3d12_fence_new (GstD3D12Device * device)
   hr = device_handle->CreateFence (0,
       D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&fence));
   if (!gst_d3d12_result (hr, device)) {
-    GST_ERROR_OBJECT (device, "Failed to create fence, hr: 0x%x", hr);
+    GST_ERROR_OBJECT (device, "Failed to create fence, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 

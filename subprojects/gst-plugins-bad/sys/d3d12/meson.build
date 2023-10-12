@@ -56,6 +56,9 @@ endif
 
 if cc.has_header('d3d12sdklayers.h')
   extra_args += ['-DHAVE_D3D12_SDKLAYERS_H']
+  if cc.has_header_symbol('d3d12sdklayers.h', 'ID3D12Debug5')
+    extra_args += ['-DHAVE_D3D12DEBUG5']
+  endif
 endif
 
 # MinGW 32bits compiler seems to be complaining about redundant-decls

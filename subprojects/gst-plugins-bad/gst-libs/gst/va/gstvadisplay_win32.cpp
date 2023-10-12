@@ -308,7 +308,7 @@ gst_va_display_win32_new (const gchar * adapter_luid)
     goto error;
 
   entry_points.resize (max_entry_points);
-  for (guint i = 0; i < num_profiles; i++) {
+  for (gint i = 0; i < num_profiles; i++) {
     gint num_entry_poinits;
     status = vaQueryConfigEntrypoints (dpy, profiles[i], &entry_points[0],
         &num_entry_poinits);
