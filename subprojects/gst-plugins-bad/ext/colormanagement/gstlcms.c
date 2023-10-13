@@ -33,7 +33,7 @@
  * (write everything in one line, without the backslash characters)
  * |[
  * gst-launch-1.0 filesrc location=photo_camera.png ! pngdec ! \
- * videoconvert ! lcms input-profile=sRGB.icc dest-profile=printer.icc \
+ * videoconvert ! lcms input-profile=sRGB.icc dest-profile=printer.icc ! \
  * pngenc ! filesink location=photo_print.png
  * ]|
  */
