@@ -17,6 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * plugin-d3d12:
+ *
+ * Since: 1.24
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif

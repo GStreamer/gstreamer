@@ -321,6 +321,9 @@ gst_d3d12_h264_dec_register (GstPlugin * plugin, GstD3D12Device * device,
   if (rank > 0 && index != 0)
     rank--;
 
+  if (index != 0)
+    gst_element_type_set_skip_documentation (type);
+
   if (!gst_element_register (plugin, feature_name, rank, type))
     GST_WARNING ("Failed to register plugin '%s'", type_name);
 
