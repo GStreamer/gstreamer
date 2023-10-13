@@ -1463,7 +1463,10 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     guint mem_idx;
     gsize mem_skip;
 
-    plane_size = gst_gl_get_plane_data_size (in_info, NULL, i);
+    if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_DMA_DRM)
+      plane_size = 1;
+    else
+      plane_size = gst_gl_get_plane_data_size (in_info, NULL, i);
 
     if (!gst_buffer_find_memory (buffer, in_info->offset[i], plane_size,
             &mem_idx, &length, &mem_skip)) {
