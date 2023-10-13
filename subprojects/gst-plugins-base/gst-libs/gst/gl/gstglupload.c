@@ -1402,7 +1402,11 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
   }
 
-  n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
+  if (!dmabuf->direct && in_info_drm->drm_modifier != DRM_FORMAT_MOD_LINEAR) {
+    GST_DEBUG_OBJECT (dmabuf->upload,
+        "Indirect uploads are only support for linear formats.");
+    return FALSE;
+  }
 
   /* This will eliminate most non-dmabuf out there */
   if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (buffer, 0))) {
@@ -1410,22 +1414,25 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     return FALSE;
   }
 
-  /* We cannot have multiple dmabuf per plane */
-  if (n_mem > n_planes) {
-    GST_DEBUG_OBJECT (dmabuf->upload,
-        "number of memory (%u) != number of planes (%u)", n_mem, n_planes);
-    return FALSE;
-  }
+  n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
 
   /* Update video info based on video meta */
   if (meta) {
     in_info->width = meta->width;
     in_info->height = meta->height;
+    n_planes = meta->n_planes;
 
     for (i = 0; i < meta->n_planes; i++) {
       in_info->offset[i] = meta->offset[i];
       in_info->stride[i] = meta->stride[i];
     }
+  }
+
+  /* We cannot have multiple dmabuf per plane */
+  if (n_mem > n_planes) {
+    GST_DEBUG_OBJECT (dmabuf->upload,
+        "number of memory (%u) != number of planes (%u)", n_mem, n_planes);
+    return FALSE;
   }
 
   if (out_caps != dmabuf->out_caps) {
@@ -1515,7 +1522,8 @@ _dma_buf_upload_accept (gpointer impl, GstBuffer * buffer, GstCaps * in_caps,
     /* otherwise create one and cache it */
     if (dmabuf->direct) {
       dmabuf->eglimage[i] = gst_egl_image_from_dmabuf_direct_target_with_dma_drm
-          (dmabuf->upload->context, fd, offset, in_info_drm, dmabuf->target);
+          (dmabuf->upload->context, n_planes, fd, offset, in_info_drm,
+          dmabuf->target);
     } else {
       dmabuf->eglimage[i] = gst_egl_image_from_dmabuf
           (dmabuf->upload->context, fd[i], in_info, i, offset[i]);

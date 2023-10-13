@@ -823,13 +823,14 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
           DRM_FORMAT_MOD_LINEAR))
     return NULL;
 
-  return gst_egl_image_from_dmabuf_direct_target_with_dma_drm (context, fd,
-      offset, &in_info_dma, target);
+  return gst_egl_image_from_dmabuf_direct_target_with_dma_drm (context,
+      GST_VIDEO_INFO_N_PLANES (in_info), fd, offset, &in_info_dma, target);
 }
 
 /**
  * gst_egl_image_from_dmabuf_direct_target_with_dma_drm:
  * @context: a #GstGLContext (must be an EGL context)
+ * @n_planes: number of planes (obtained from a #GstVideoMeta)
  * @fd: Array of DMABuf file descriptors
  * @offset: Array of offsets, relative to the DMABuf
  * @in_info_dma: the #GstVideoInfoDmaDrm
@@ -848,12 +849,11 @@ gst_egl_image_from_dmabuf_direct_target (GstGLContext * context,
  */
 GstEGLImage *
 gst_egl_image_from_dmabuf_direct_target_with_dma_drm (GstGLContext * context,
-    gint * fd, const gsize * offset, const GstVideoInfoDmaDrm * in_info_dma,
-    GstGLTextureTarget target)
+    guint n_planes, gint * fd, const gsize * offset,
+    const GstVideoInfoDmaDrm * in_info_dma, GstGLTextureTarget target)
 {
   EGLImageKHR img;
   const GstVideoInfo *in_info = &in_info_dma->vinfo;
-  guint n_planes = GST_VIDEO_INFO_N_PLANES (in_info);
   guint32 fourcc;
   guint64 modifier;
   gint i;

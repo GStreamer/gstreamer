@@ -104,6 +104,7 @@ GstEGLImage *           gst_egl_image_from_dmabuf_direct_target (GstGLContext * 
 GST_GL_API
 GstEGLImage *           gst_egl_image_from_dmabuf_direct_target_with_dma_drm
                                                                 (GstGLContext * context,
+                                                                 guint n_planes,
                                                                  gint * fd,
                                                                  const gsize * offset,
                                                                  const GstVideoInfoDmaDrm * in_info_dma,
