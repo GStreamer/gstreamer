@@ -3526,3 +3526,74 @@ restart:
 
 #undef NEXT_METHOD
 }
+
+/**
+ * gst_gl_upload_fixate_caps:
+ * @upload: a #GstGLUpload
+ * @direction: the pad #GstPadDirection
+ * @caps: a #GstCaps as the reference
+ * @othercaps: (transfer full): a #GstCaps to fixate
+ *
+ * Fixate the @othercaps based on the information of the @caps.
+ *
+ * Returns: (transfer full): the fixated caps
+ *
+ * Since: 1.24
+ */
+GstCaps *
+gst_gl_upload_fixate_caps (GstGLUpload * upload, GstPadDirection direction,
+    GstCaps * caps, GstCaps * othercaps)
+{
+  guint n, i;
+  GstGLTextureTarget target;
+  GstCaps *ret_caps = NULL;
+
+  GST_DEBUG_OBJECT (upload, "Fixate caps %" GST_PTR_FORMAT ", using caps %"
+      GST_PTR_FORMAT ", direction is %s.", othercaps, caps,
+      direction == GST_PAD_SRC ? "src" : "sink");
+
+  if (direction == GST_PAD_SRC) {
+    ret_caps = gst_caps_fixate (othercaps);
+    goto out;
+  }
+
+  if (gst_caps_is_fixed (othercaps)) {
+    ret_caps = othercaps;
+    goto out;
+  }
+
+  /* Prefer target 2D->rectangle->oes */
+  for (target = GST_GL_TEXTURE_TARGET_2D;
+      target <= GST_GL_TEXTURE_TARGET_EXTERNAL_OES; target++) {
+    n = gst_caps_get_size (othercaps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s;
+
+      s = gst_caps_get_structure (othercaps, i);
+      if (_structure_check_target (s, 1 << target))
+        break;
+    }
+
+    /* If the target is found, fixate the other fields */
+    if (i < n) {
+      ret_caps = gst_caps_new_empty ();
+      gst_caps_append_structure_full (ret_caps,
+          gst_structure_copy (gst_caps_get_structure (othercaps, i)),
+          gst_caps_features_copy (gst_caps_get_features (othercaps, i)));
+
+      ret_caps = gst_caps_fixate (ret_caps);
+      gst_caps_set_simple (ret_caps, "texture-target", G_TYPE_STRING,
+          gst_gl_texture_target_to_string (target), NULL);
+
+      gst_caps_unref (othercaps);
+
+      goto out;
+    }
+  }
+
+  ret_caps = gst_caps_fixate (othercaps);
+
+out:
+  GST_DEBUG_OBJECT (upload, "Fixate return %" GST_PTR_FORMAT, ret_caps);
+  return ret_caps;
+}

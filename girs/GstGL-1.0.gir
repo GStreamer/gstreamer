@@ -7385,6 +7385,32 @@ A #GstGLUpload can be created with gst_gl_upload_new()</doc>
           <type name="Gst.Caps" c:type="GstCaps*"/>
         </return-value>
       </function>
+      <method name="fixate_caps" c:identifier="gst_gl_upload_fixate_caps" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">Fixate the @othercaps based on the information of the @caps.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">the fixated caps</doc>
+          <type name="Gst.Caps" c:type="GstCaps*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="upload" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">a #GstGLUpload</doc>
+            <type name="GLUpload" c:type="GstGLUpload*"/>
+          </instance-parameter>
+          <parameter name="direction" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">the pad #GstPadDirection</doc>
+            <type name="Gst.PadDirection" c:type="GstPadDirection"/>
+          </parameter>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">a #GstCaps as the reference</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+          <parameter name="othercaps" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.c">a #GstCaps to fixate</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_caps" c:identifier="gst_gl_upload_get_caps">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstglupload.h"/>
         <return-value transfer-ownership="none">
