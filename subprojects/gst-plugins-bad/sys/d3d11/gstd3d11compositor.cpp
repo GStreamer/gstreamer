@@ -134,7 +134,7 @@ gst_d3d11_compositor_sizing_policy_get_type (void)
           "padding or keeping the aspect ratio", "none"},
     {GST_D3D11_COMPOSITOR_SIZING_POLICY_KEEP_ASPECT_RATIO,
           "Keep Aspect Ratio: Image is scaled to fit destination rectangle "
-          "specified by GstCompositorPad:{xpos, ypos, width, height} "
+          "specified by GstD3D11CompositorPad:{xpos, ypos, width, height} "
           "with preserved aspect ratio. Resulting image will be centered in "
           "the destination rectangle with padding if necessary",
         "keep-aspect-ratio"},
