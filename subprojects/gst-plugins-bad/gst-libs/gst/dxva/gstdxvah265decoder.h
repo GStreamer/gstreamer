@@ -31,12 +31,16 @@ G_BEGIN_DECLS
 #define GST_DXVA_H265_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_DXVA_H265_DECODER,GstDxvaH265DecoderClass))
 #define GST_IS_DXVA_H265_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DXVA_H265_DECODER))
 #define GST_IS_DXVA_H265_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DXVA_H265_DECODER))
-#define GST_DXVA_H265_DECODER_CAST(obj)       ((GstDxvaH265Decoder*)obj)
 
 typedef struct _GstDxvaH265Decoder GstDxvaH265Decoder;
 typedef struct _GstDxvaH265DecoderClass GstDxvaH265DecoderClass;
 typedef struct _GstDxvaH265DecoderPrivate GstDxvaH265DecoderPrivate;
 
+/**
+ * GstDxvaH265Decoder:
+ *
+ * Since: 1.24
+ */
 struct _GstDxvaH265Decoder
 {
   GstH265Decoder parent;
@@ -45,6 +49,11 @@ struct _GstDxvaH265Decoder
   GstDxvaH265DecoderPrivate *priv;
 };
 
+/**
+ * GstDxvaH265DecoderClass:
+ *
+ * Since: 1.24
+ */
 struct _GstDxvaH265DecoderClass
 {
   GstH265DecoderClass parent_class;

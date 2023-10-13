@@ -112,7 +112,8 @@ foreach f: [
         'sys/winks/ksvideohelpers.h',
         'gst/videoparsers/gstjpeg2000parse.h',
         'gst-libs/gst/*/*-prelude.h',
-        'gst-libs/gst/vulkan/vulkan_fwd.h'
+        'gst-libs/gst/vulkan/vulkan_fwd.h',
+        'gst-libs/gst/dxva/gstdxvatypedef.h',
     ]
     excludes += [join_paths(meson.current_source_dir(), root_rel, f)]
 endforeach
@@ -132,6 +133,7 @@ if build_gir
         {'name': 'transcoder', 'gir': transcoder_gir, 'lib': gst_transcoder_dep},
         {'name': 'codecs', 'gir': codecs_gir, 'lib': gstcodecs_dep},
         {'name': 'cuda', 'gir': gst_cuda_gir, 'lib': gstcuda_dep, 'c_source_patterns': ['*.h', '*.cpp']},
+        {'name': 'dxva', 'gir': dxva_gir, 'lib': gstdxva_dep, 'c_source_patterns': ['*.h', '*.cpp']},
     ]
 
     if gstopencv_dep.found()

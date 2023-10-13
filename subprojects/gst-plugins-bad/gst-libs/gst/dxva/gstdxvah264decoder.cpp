@@ -25,13 +25,7 @@
 #include <string.h>
 #include <vector>
 
-/* HACK: to expose dxva data structure on UWP */
-#ifdef WINAPI_PARTITION_DESKTOP
-#undef WINAPI_PARTITION_DESKTOP
-#endif
-#define WINAPI_PARTITION_DESKTOP 1
-#include <d3d9.h>
-#include <dxva.h>
+#include "gstdxvatypedef.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_dxva_h264_decoder_debug);
 #define GST_CAT_DEFAULT gst_dxva_h264_decoder_debug

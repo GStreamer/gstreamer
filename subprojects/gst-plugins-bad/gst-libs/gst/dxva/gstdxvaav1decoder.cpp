@@ -22,9 +22,10 @@
 #endif
 
 #include "gstdxvaav1decoder.h"
-#include "gstdxvaav1.h"
 #include <string.h>
 #include <vector>
+
+#include "gstdxvatypedef.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_dxva_av1_decoder_debug);
 #define GST_CAT_DEFAULT gst_dxva_av1_decoder_debug
@@ -33,9 +34,9 @@ GST_DEBUG_CATEGORY_STATIC (gst_dxva_av1_decoder_debug);
 struct _GstDxvaAV1DecoderPrivate
 {
   GstAV1SequenceHeaderOBU seq_hdr;
-  GST_DXVA_PicParams_AV1 pic_params;
+  DXVA_PicParams_AV1 pic_params;
 
-  std::vector<GST_DXVA_Tile_AV1> tile_list;
+  std::vector<DXVA_Tile_AV1> tile_list;
   std::vector<guint8> bitstream_buffer;
   GPtrArray *ref_pics = nullptr;
 
@@ -259,7 +260,7 @@ gst_dxva_av1_decoder_start_picture (GstAV1Decoder * decoder,
   GstDxvaAV1DecoderClass *klass = GST_DXVA_AV1_DECODER_GET_CLASS (self);
   const GstAV1SequenceHeaderOBU *seq_hdr = &priv->seq_hdr;
   const GstAV1FrameHeaderOBU *frame_hdr = &picture->frame_hdr;
-  GST_DXVA_PicParams_AV1 *pic_params = &priv->pic_params;
+  DXVA_PicParams_AV1 *pic_params = &priv->pic_params;
   GstCodecPicture *codec_picture = GST_CODEC_PICTURE (picture);
   guint i, j;
   GstFlowReturn ret;
@@ -276,7 +277,7 @@ gst_dxva_av1_decoder_start_picture (GstAV1Decoder * decoder,
   priv->tile_list.resize (0);
   g_ptr_array_set_size (priv->ref_pics, 0);
 
-  memset (pic_params, 0, sizeof (GST_DXVA_PicParams_AV1));
+  memset (pic_params, 0, sizeof (DXVA_PicParams_AV1));
 
   pic_params->width = frame_hdr->frame_width;
   pic_params->height = frame_hdr->frame_height;
@@ -600,7 +601,7 @@ gst_dxva_av1_decoder_decode_tile (GstAV1Decoder * decoder,
       tile_group->num_tiles, tile_group->tg_start, tile_group->tg_end);
 
   for (guint i = tile_group->tg_start; i <= tile_group->tg_end; i++) {
-    GST_DXVA_Tile_AV1 *dxva_tile = &priv->tile_list[i];
+    DXVA_Tile_AV1 *dxva_tile = &priv->tile_list[i];
 
     GST_TRACE_OBJECT (self,
         "Tile offset %d, size %d, row %d, col %d",
@@ -655,15 +656,14 @@ gst_dxva_av1_decoder_end_picture (GstAV1Decoder * decoder,
      * the last slice data needs to be zero-padded */
     priv->bitstream_buffer.resize (bitstream_buffer_size, 0);
 
-    GST_DXVA_Tile_AV1 & tile = priv->tile_list.back ();
+    DXVA_Tile_AV1 & tile = priv->tile_list.back ();
     tile.DataSize += padding;
   }
 
   args.picture_params = &priv->pic_params;
-  args.picture_params_size = sizeof (GST_DXVA_PicParams_AV1);
+  args.picture_params_size = sizeof (DXVA_PicParams_AV1);
   args.slice_control = &priv->tile_list[0];
-  args.slice_control_size =
-      sizeof (GST_DXVA_Tile_AV1) * priv->tile_list.size ();
+  args.slice_control_size = sizeof (DXVA_Tile_AV1) * priv->tile_list.size ();
   args.bitstream = &priv->bitstream_buffer[0];
   args.bitstream_size = priv->bitstream_buffer.size ();
 

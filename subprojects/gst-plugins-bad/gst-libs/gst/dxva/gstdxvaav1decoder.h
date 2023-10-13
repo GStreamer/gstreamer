@@ -31,12 +31,16 @@ G_BEGIN_DECLS
 #define GST_DXVA_AV1_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj),GST_TYPE_DXVA_AV1_DECODER,GstDxvaAV1DecoderClass))
 #define GST_IS_DXVA_AV1_DECODER(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DXVA_AV1_DECODER))
 #define GST_IS_DXVA_AV1_DECODER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DXVA_AV1_DECODER))
-#define GST_DXVA_AV1_DECODER_CAST(obj)       ((GstDxvaAV1Decoder*)obj)
 
 typedef struct _GstDxvaAV1Decoder GstDxvaAV1Decoder;
 typedef struct _GstDxvaAV1DecoderClass GstDxvaAV1DecoderClass;
 typedef struct _GstDxvaAV1DecoderPrivate GstDxvaAV1DecoderPrivate;
 
+/**
+ * GstDxvaAV1Decoder:
+ *
+ * Since: 1.24
+ */
 struct _GstDxvaAV1Decoder
 {
   GstAV1Decoder parent;
@@ -45,6 +49,11 @@ struct _GstDxvaAV1Decoder
   GstDxvaAV1DecoderPrivate *priv;
 };
 
+/**
+ * GstDxvaAV1DecoderClass:
+ *
+ * Since: 1.24
+ */
 struct _GstDxvaAV1DecoderClass
 {
   GstAV1DecoderClass parent_class;
