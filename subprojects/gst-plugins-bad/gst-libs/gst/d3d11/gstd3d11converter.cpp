@@ -690,7 +690,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   GstD3D11ConverterPrivate *priv = self->priv;
   GstD3D11Device *device = self->device;
   HRESULT hr;
-  D3D11_INPUT_ELEMENT_DESC input_desc[2];
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_MAPPED_SUBRESOURCE map;
   VertexData *vertex_data;
@@ -705,7 +704,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
 
-  memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
