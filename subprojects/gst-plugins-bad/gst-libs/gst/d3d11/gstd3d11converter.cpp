@@ -35,6 +35,8 @@
 #include <wrl.h>
 #include <string.h>
 #include <math.h>
+#include <map>
+#include <memory>
 
 /**
  * SECTION:gstd3d11converter
@@ -164,6 +166,14 @@ struct VertexData
   } texture;
 };
 
+struct GammaLut
+{
+  guint16 lut[GAMMA_LUT_SIZE];
+};
+
+/* *INDENT-OFF* */
+typedef std::shared_ptr<GammaLut> GammaLutPtr;
+/* *INDENT-ON* */
 
 enum
 {
@@ -1417,6 +1427,54 @@ gst_d3d11_converter_calculate_matrix (GstD3D11Converter * self,
   return TRUE;
 }
 
+static GammaLutPtr
+gst_d3d11_converter_get_gamma_dec_table (GstVideoTransferFunction func)
+{
+  static std::mutex lut_lock;
+  static std::map < GstVideoTransferFunction, GammaLutPtr > g_gamma_dec_table;
+
+  std::lock_guard < std::mutex > lk (lut_lock);
+  auto lut = g_gamma_dec_table.find (func);
+  if (lut != g_gamma_dec_table.end ())
+    return lut->second;
+
+  const gdouble scale = (gdouble) 1 / (GAMMA_LUT_SIZE - 1);
+  auto table = std::make_shared < GammaLut > ();
+  for (guint i = 0; i < GAMMA_LUT_SIZE; i++) {
+    gdouble val = gst_video_transfer_function_decode (func, i * scale);
+    val = rint (val * 65535);
+    val = CLAMP (val, 0, 65535);
+    table->lut[i] = (guint16) val;
+  }
+
+  g_gamma_dec_table[func] = table;
+  return table;
+}
+
+static GammaLutPtr
+gst_d3d11_converter_get_gamma_enc_table (GstVideoTransferFunction func)
+{
+  static std::mutex lut_lock;
+  static std::map < GstVideoTransferFunction, GammaLutPtr > g_gamma_enc_table;
+
+  std::lock_guard < std::mutex > lk (lut_lock);
+  auto lut = g_gamma_enc_table.find (func);
+  if (lut != g_gamma_enc_table.end ())
+    return lut->second;
+
+  const gdouble scale = (gdouble) 1 / (GAMMA_LUT_SIZE - 1);
+  auto table = std::make_shared < GammaLut > ();
+  for (guint i = 0; i < GAMMA_LUT_SIZE; i++) {
+    gdouble val = gst_video_transfer_function_encode (func, i * scale);
+    val = rint (val * 65535);
+    val = CLAMP (val, 0, 65535);
+    table->lut[i] = (guint16) val;
+  }
+
+  g_gamma_enc_table[func] = table;
+  return table;
+}
+
 static gboolean
 gst_d3d11_converter_setup_lut (GstD3D11Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info)
@@ -1432,36 +1490,26 @@ gst_d3d11_converter_setup_lut (GstD3D11Converter * self,
   ComPtr < ID3D11Texture1D > gamma_enc_lut;
   ComPtr < ID3D11ShaderResourceView > gamma_dec_srv;
   ComPtr < ID3D11ShaderResourceView > gamma_enc_srv;
-  guint16 gamma_dec_table[GAMMA_LUT_SIZE];
-  guint16 gamma_enc_table[GAMMA_LUT_SIZE];
+  GammaLutPtr gamma_dec_table;
+  GammaLutPtr gamma_enc_table;
   GstVideoTransferFunction in_trc = in_info->colorimetry.transfer;
   GstVideoTransferFunction out_trc = out_info->colorimetry.transfer;
-  gdouble scale = (gdouble) 1 / (GAMMA_LUT_SIZE - 1);
 
   memset (&desc, 0, sizeof (D3D11_TEXTURE1D_DESC));
   memset (&subresource, 0, sizeof (D3D11_SUBRESOURCE_DATA));
   memset (&srv_desc, 0, sizeof (D3D11_SHADER_RESOURCE_VIEW_DESC));
 
-  for (guint i = 0; i < GAMMA_LUT_SIZE; i++) {
-    gdouble val = gst_video_transfer_function_decode (in_trc, i * scale);
-    val = rint (val * 65535);
-    val = CLAMP (val, 0, 65535);
-    gamma_dec_table[i] = (guint16) val;
-
-    val = gst_video_transfer_function_encode (out_trc, i * scale);
-    val = rint (val * 65535);
-    val = CLAMP (val, 0, 65535);
-    gamma_enc_table[i] = (guint16) val;
-  }
+  gamma_dec_table = gst_d3d11_converter_get_gamma_dec_table (in_trc);
+  gamma_enc_table = gst_d3d11_converter_get_gamma_enc_table (out_trc);
 
   desc.Width = GAMMA_LUT_SIZE;
   desc.MipLevels = 1;
   desc.ArraySize = 1;
   desc.Format = DXGI_FORMAT_R16_UNORM;
-  desc.Usage = D3D11_USAGE_DEFAULT;
+  desc.Usage = D3D11_USAGE_IMMUTABLE;
   desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
 
-  subresource.pSysMem = gamma_dec_table;
+  subresource.pSysMem = gamma_dec_table->lut;
   subresource.SysMemPitch = GAMMA_LUT_SIZE * sizeof (guint16);
 
   srv_desc.Format = DXGI_FORMAT_R16_UNORM;
@@ -1481,7 +1529,7 @@ gst_d3d11_converter_setup_lut (GstD3D11Converter * self,
     return FALSE;
   }
 
-  subresource.pSysMem = gamma_enc_table;
+  subresource.pSysMem = gamma_enc_table->lut;
   hr = device_handle->CreateTexture1D (&desc, &subresource, &gamma_enc_lut);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Failed to create gamma encode LUT");
