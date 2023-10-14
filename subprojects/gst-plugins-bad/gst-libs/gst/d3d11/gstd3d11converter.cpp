@@ -1397,6 +1397,21 @@ gst_d3d11_converter_calculate_matrix (GstD3D11Converter * self,
       break;
   }
 
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_DEBUG) {
+    gchar *matrix_dump;
+    matrix_dump = gst_d3d11_dump_color_matrix (&pre_coeff);
+    GST_DEBUG_OBJECT (self, "PreCoeff \n%s", matrix_dump);
+    g_free (matrix_dump);
+
+    matrix_dump = gst_d3d11_dump_color_matrix (&primaries_coeff);
+    GST_DEBUG_OBJECT (self, "PrimaryCoeff \n%s", matrix_dump);
+    g_free (matrix_dump);
+
+    matrix_dump = gst_d3d11_dump_color_matrix (&post_coeff);
+    GST_DEBUG_OBJECT (self, "PostCoeff \n%s", matrix_dump);
+    g_free (matrix_dump);
+  }
+
   PSColorSpace *preCoeff = &priv->const_data.preCoeff;
   PSColorSpace *postCoeff = &priv->const_data.postCoeff;
   PSColorSpace *primariesCoeff = &priv->const_data.primariesCoeff;
