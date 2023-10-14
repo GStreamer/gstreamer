@@ -499,6 +499,46 @@ class ConverterPrimary : IConverter
   }
 };
 
+float UnormTo10bit (float sample)
+{
+  return sample * 1023.0 / 65535.0;
+}
+
+float2 UnormTo10bit (float2 sample)
+{
+  return sample * 1023.0 / 65535.0;
+}
+
+float3 UnormTo10bit (float3 sample)
+{
+  return sample * 1023.0 / 65535.0;
+}
+
+float4 UnormTo10bit (float4 sample)
+{
+  return sample * 1023.0 / 65535.0;
+}
+
+float UnormTo12bit (float sample)
+{
+  return sample * 4095.0 / 65535.0;
+}
+
+float2 UnormTo12bit (float2 sample)
+{
+  return sample * 4095.0 / 65535.0;
+}
+
+float3 UnormTo12bit (float3 sample)
+{
+  return sample * 4095.0 / 65535.0;
+}
+
+float4 UnormTo12bit (float4 sample)
+{
+  return sample * 4095.0 / 65535.0;
+}
+
 interface IOutputLuma
 {
   PS_OUTPUT_LUMA Build (float4 sample);
@@ -519,7 +559,7 @@ class OutputLuma_10 : IOutputLuma
   PS_OUTPUT_LUMA Build (float4 sample)
   {
     PS_OUTPUT_LUMA output;
-    output.Plane0 = sample.x / 64.0;
+    output.Plane0 = UnormTo10bit (sample.x);
     return output;
   }
 };
@@ -529,7 +569,7 @@ class OutputLuma_12 : IOutputLuma
   PS_OUTPUT_LUMA Build (float4 sample)
   {
     PS_OUTPUT_LUMA output;
-    output.Plane0 = sample.x / 16.0;
+    output.Plane0 = UnormTo12bit (sample.x);
     return output;
   }
 };
@@ -590,7 +630,7 @@ class OutputChromaI420_10 : IOutputChromaPlanar
   PS_OUTPUT_CHROMA_PLANAR Build (float4 sample)
   {
     PS_OUTPUT_CHROMA_PLANAR output;
-    float2 scaled = sample.yz / 64.0;
+    float2 scaled = UnormTo10bit (sample.yz);
     output.Plane0 = scaled.x;
     output.Plane1 = scaled.y;
     return output;
@@ -602,7 +642,7 @@ class OutputChromaI420_12 : IOutputChromaPlanar
   PS_OUTPUT_CHROMA_PLANAR Build (float4 sample)
   {
     PS_OUTPUT_CHROMA_PLANAR output;
-    float2 scaled = sample.yz / 16.0;
+    float2 scaled = UnormTo12bit (sample.yz);
     output.Plane0 = scaled.x;
     output.Plane1 = scaled.y;
     return output;
@@ -631,7 +671,7 @@ class OutputY444_10 : IOutputPlanar
   PS_OUTPUT_PLANAR Build (float4 sample)
   {
     PS_OUTPUT_PLANAR output;
-    float3 scaled = sample.xyz / 64.0;
+    float3 scaled = UnormTo10bit (sample.xyz);
     output.Plane0 = scaled.x;
     output.Plane1 = scaled.y;
     output.Plane2 = scaled.z;
@@ -644,7 +684,7 @@ class OutputY444_12 : IOutputPlanar
   PS_OUTPUT_PLANAR Build (float4 sample)
   {
     PS_OUTPUT_PLANAR output;
-    float3 scaled = sample.xyz / 16.0;
+    float3 scaled = UnormTo12bit (sample.xyz);
     output.Plane0 = scaled.x;
     output.Plane1 = scaled.y;
     output.Plane2 = scaled.z;
@@ -669,7 +709,7 @@ class OutputGBR_10 : IOutputPlanar
   PS_OUTPUT_PLANAR Build (float4 sample)
   {
     PS_OUTPUT_PLANAR output;
-    float3 scaled = sample.rgb / 64.0;
+    float3 scaled = UnormTo10bit (sample.rgb);
     output.Plane0 = scaled.g;
     output.Plane1 = scaled.b;
     output.Plane2 = scaled.r;
@@ -682,7 +722,7 @@ class OutputGBR_12 : IOutputPlanar
   PS_OUTPUT_PLANAR Build (float4 sample)
   {
     PS_OUTPUT_PLANAR output;
-    float3 scaled = sample.rgb / 16.0;
+    float3 scaled = UnormTo12bit (sample.rgb);
     output.Plane0 = scaled.g;
     output.Plane1 = scaled.b;
     output.Plane2 = scaled.r;
@@ -755,7 +795,7 @@ class OutputGBRA_10 : IOutputPlanarFull
     PS_OUTPUT_PLANAR_FULL output;
     float4 scaled;
     sample.a *= alphaFactor;
-    scaled = sample / 64.0;
+    scaled = UnormTo10bit (sample);
     output.Plane0 = scaled.g;
     output.Plane1 = scaled.b;
     output.Plane2 = scaled.r;
@@ -771,7 +811,7 @@ class OutputGBRAPremul_10 : IOutputPlanarFull
     PS_OUTPUT_PLANAR_FULL output;
     float4 scaled;
     sample.a *= alphaFactor;
-    scaled = DoAlphaPremul (sample) / 64.0;
+    scaled = UnormTo10bit (DoAlphaPremul (sample));
     output.Plane0 = scaled.g;
     output.Plane1 = scaled.b;
     output.Plane2 = scaled.r;
@@ -787,7 +827,7 @@ class OutputGBRA_12 : IOutputPlanarFull
     PS_OUTPUT_PLANAR_FULL output;
     float4 scaled;
     sample.a *= alphaFactor;
-    scaled = sample / 16.0;
+    scaled = UnormTo12bit (sample);
     output.Plane0 = scaled.g;
     output.Plane1 = scaled.b;
     output.Plane2 = scaled.r;
@@ -803,7 +843,7 @@ class OutputGBRAPremul_12 : IOutputPlanarFull
     PS_OUTPUT_PLANAR_FULL output;
     float4 scaled;
     sample.a *= alphaFactor;
-    scaled = DoAlphaPremul (sample) / 16.0;
+    scaled = UnormTo12bit (DoAlphaPremul (sample));
     output.Plane0 = scaled.g;
     output.Plane1 = scaled.b;
     output.Plane2 = scaled.r;
@@ -1382,6 +1422,46 @@ static const char g_PSMain_converter_str[] =
 "  }\n"
 "};\n"
 "\n"
+"float UnormTo10bit (float sample)\n"
+"{\n"
+"  return sample * 1023.0 / 65535.0;\n"
+"}\n"
+"\n"
+"float2 UnormTo10bit (float2 sample)\n"
+"{\n"
+"  return sample * 1023.0 / 65535.0;\n"
+"}\n"
+"\n"
+"float3 UnormTo10bit (float3 sample)\n"
+"{\n"
+"  return sample * 1023.0 / 65535.0;\n"
+"}\n"
+"\n"
+"float4 UnormTo10bit (float4 sample)\n"
+"{\n"
+"  return sample * 1023.0 / 65535.0;\n"
+"}\n"
+"\n"
+"float UnormTo12bit (float sample)\n"
+"{\n"
+"  return sample * 4095.0 / 65535.0;\n"
+"}\n"
+"\n"
+"float2 UnormTo12bit (float2 sample)\n"
+"{\n"
+"  return sample * 4095.0 / 65535.0;\n"
+"}\n"
+"\n"
+"float3 UnormTo12bit (float3 sample)\n"
+"{\n"
+"  return sample * 4095.0 / 65535.0;\n"
+"}\n"
+"\n"
+"float4 UnormTo12bit (float4 sample)\n"
+"{\n"
+"  return sample * 4095.0 / 65535.0;\n"
+"}\n"
+"\n"
 "interface IOutputLuma\n"
 "{\n"
 "  PS_OUTPUT_LUMA Build (float4 sample);\n"
@@ -1402,7 +1482,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_LUMA Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_LUMA output;\n"
-"    output.Plane0 = sample.x / 64.0;\n"
+"    output.Plane0 = UnormTo10bit (sample.x);\n"
 "    return output;\n"
 "  }\n"
 "};\n"
@@ -1412,7 +1492,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_LUMA Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_LUMA output;\n"
-"    output.Plane0 = sample.x / 16.0;\n"
+"    output.Plane0 = UnormTo12bit (sample.x);\n"
 "    return output;\n"
 "  }\n"
 "};\n"
@@ -1473,7 +1553,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_CHROMA_PLANAR Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_CHROMA_PLANAR output;\n"
-"    float2 scaled = sample.yz / 64.0;\n"
+"    float2 scaled = UnormTo10bit (sample.yz);\n"
 "    output.Plane0 = scaled.x;\n"
 "    output.Plane1 = scaled.y;\n"
 "    return output;\n"
@@ -1485,7 +1565,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_CHROMA_PLANAR Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_CHROMA_PLANAR output;\n"
-"    float2 scaled = sample.yz / 16.0;\n"
+"    float2 scaled = UnormTo12bit (sample.yz);\n"
 "    output.Plane0 = scaled.x;\n"
 "    output.Plane1 = scaled.y;\n"
 "    return output;\n"
@@ -1514,7 +1594,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_PLANAR Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_PLANAR output;\n"
-"    float3 scaled = sample.xyz / 64.0;\n"
+"    float3 scaled = UnormTo10bit (sample.xyz);\n"
 "    output.Plane0 = scaled.x;\n"
 "    output.Plane1 = scaled.y;\n"
 "    output.Plane2 = scaled.z;\n"
@@ -1527,7 +1607,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_PLANAR Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_PLANAR output;\n"
-"    float3 scaled = sample.xyz / 16.0;\n"
+"    float3 scaled = UnormTo12bit (sample.xyz);\n"
 "    output.Plane0 = scaled.x;\n"
 "    output.Plane1 = scaled.y;\n"
 "    output.Plane2 = scaled.z;\n"
@@ -1552,7 +1632,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_PLANAR Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_PLANAR output;\n"
-"    float3 scaled = sample.rgb / 64.0;\n"
+"    float3 scaled = UnormTo10bit (sample.rgb);\n"
 "    output.Plane0 = scaled.g;\n"
 "    output.Plane1 = scaled.b;\n"
 "    output.Plane2 = scaled.r;\n"
@@ -1565,7 +1645,7 @@ static const char g_PSMain_converter_str[] =
 "  PS_OUTPUT_PLANAR Build (float4 sample)\n"
 "  {\n"
 "    PS_OUTPUT_PLANAR output;\n"
-"    float3 scaled = sample.rgb / 16.0;\n"
+"    float3 scaled = UnormTo12bit (sample.rgb);\n"
 "    output.Plane0 = scaled.g;\n"
 "    output.Plane1 = scaled.b;\n"
 "    output.Plane2 = scaled.r;\n"
@@ -1638,7 +1718,7 @@ static const char g_PSMain_converter_str[] =
 "    PS_OUTPUT_PLANAR_FULL output;\n"
 "    float4 scaled;\n"
 "    sample.a *= alphaFactor;\n"
-"    scaled = sample / 64.0;\n"
+"    scaled = UnormTo10bit (sample);\n"
 "    output.Plane0 = scaled.g;\n"
 "    output.Plane1 = scaled.b;\n"
 "    output.Plane2 = scaled.r;\n"
@@ -1654,7 +1734,7 @@ static const char g_PSMain_converter_str[] =
 "    PS_OUTPUT_PLANAR_FULL output;\n"
 "    float4 scaled;\n"
 "    sample.a *= alphaFactor;\n"
-"    scaled = DoAlphaPremul (sample) / 64.0;\n"
+"    scaled = UnormTo10bit (DoAlphaPremul (sample));\n"
 "    output.Plane0 = scaled.g;\n"
 "    output.Plane1 = scaled.b;\n"
 "    output.Plane2 = scaled.r;\n"
@@ -1670,7 +1750,7 @@ static const char g_PSMain_converter_str[] =
 "    PS_OUTPUT_PLANAR_FULL output;\n"
 "    float4 scaled;\n"
 "    sample.a *= alphaFactor;\n"
-"    scaled = sample / 16.0;\n"
+"    scaled = UnormTo12bit (sample);\n"
 "    output.Plane0 = scaled.g;\n"
 "    output.Plane1 = scaled.b;\n"
 "    output.Plane2 = scaled.r;\n"
@@ -1686,7 +1766,7 @@ static const char g_PSMain_converter_str[] =
 "    PS_OUTPUT_PLANAR_FULL output;\n"
 "    float4 scaled;\n"
 "    sample.a *= alphaFactor;\n"
-"    scaled = DoAlphaPremul (sample) / 16.0;\n"
+"    scaled = UnormTo12bit (DoAlphaPremul (sample));\n"
 "    output.Plane0 = scaled.g;\n"
 "    output.Plane1 = scaled.b;\n"
 "    output.Plane2 = scaled.r;\n"
