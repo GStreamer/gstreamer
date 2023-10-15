@@ -366,11 +366,19 @@ static const gchar templ_OUTPUT_CHROMA_SEMI_PLANAR[] =
     "  return output;\n"
     "}";
 
-static const gchar templ_OUTPUT_LUMA_SCALED[] =
+static const gchar templ_OUTPUT_LUMA_10[] =
     "PS_OUTPUT build_output (float4 sample)\n"
     "{\n"
     "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.x / %d, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_0 = float4 (sample.x * 1023.0 / 65535.0, 0.0, 0.0, 1.0);\n"
+    "  return output;\n"
+    "}";
+
+static const gchar templ_OUTPUT_LUMA_12[] =
+    "PS_OUTPUT build_output (float4 sample)\n"
+    "{\n"
+    "  PS_OUTPUT output;\n"
+    "  output.Plane_0 = float4 (sample.x * 4095.0 / 65535.0, 0.0, 0.0, 1.0);\n"
     "  return output;\n"
     "}";
 
@@ -383,12 +391,21 @@ static const gchar templ_OUTPUT_CHROMA_PLANAR[] =
     "  return output;\n"
     "}";
 
-static const gchar templ_OUTPUT_CHROMA_PLANAR_SCALED[] =
+static const gchar templ_OUTPUT_CHROMA_PLANAR_10[] =
     "PS_OUTPUT build_output (float4 sample)\n"
     "{\n"
     "  PS_OUTPUT output;\n"
-    "  output.Plane_0 = float4 (sample.%c / %d, 0.0, 0.0, 1.0);\n"
-    "  output.Plane_1 = float4 (sample.%c / %d, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_0 = float4 (sample.y * 1023.0 / 65535.0, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (sample.z * 1023.0 / 65535.0, 0.0, 0.0, 1.0);\n"
+    "  return output;\n"
+    "}";
+
+static const gchar templ_OUTPUT_CHROMA_PLANAR_12[] =
+    "PS_OUTPUT build_output (float4 sample)\n"
+    "{\n"
+    "  PS_OUTPUT output;\n"
+    "  output.Plane_0 = float4 (sample.y * 4095.0 / 65535.0, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (sample.z * 4095.0 / 65535.0, 0.0, 0.0, 1.0);\n"
     "  return output;\n"
     "}";
 
@@ -402,11 +419,22 @@ static const gchar templ_OUTPUT_PLANAR[] =
     "  return output;\n"
     "}";
 
-static const gchar templ_OUTPUT_PLANAR_SCALED[] =
+static const gchar templ_OUTPUT_PLANAR_10[] =
     "PS_OUTPUT build_output (float4 sample)\n"
     "{\n"
     "  PS_OUTPUT output;\n"
-    "  float3 scaled = sample.xyz / %d;\n"
+    "  float3 scaled = sample.xyz * 1023.0 / 65535.0;\n"
+    "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  return output;\n"
+    "}";
+
+static const gchar templ_OUTPUT_PLANAR_12[] =
+    "PS_OUTPUT build_output (float4 sample)\n"
+    "{\n"
+    "  PS_OUTPUT output;\n"
+    "  float3 scaled = sample.xyz * 4095.0 / 65535.0;\n"
     "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
     "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
     "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
@@ -424,11 +452,23 @@ static const gchar templ_OUTPUT_PLANAR_4[] =
     "  return output;\n"
     "}";
 
-static const gchar templ_OUTPUT_PLANAR_4_SCALED[] =
+static const gchar templ_OUTPUT_PLANAR_4_10[] =
     "PS_OUTPUT build_output (float4 sample)\n"
     "{\n"
     "  PS_OUTPUT output;\n"
-    "  float4 scaled = sample / %d;\n"
+    "  float4 scaled = sample * 1023.0 / 65535.0;\n"
+    "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  output.Plane_3 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
+    "  return output;\n"
+    "}";
+
+static const gchar templ_OUTPUT_PLANAR_4_12[] =
+    "PS_OUTPUT build_output (float4 sample)\n"
+    "{\n"
+    "  PS_OUTPUT output;\n"
+    "  float4 scaled = sample * 4095.0 / 65535.0;\n"
     "  output.Plane_0 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
     "  output.Plane_1 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
     "  output.Plane_2 = float4 (scaled.%c, 0.0, 0.0, 1.0);\n"
@@ -1143,24 +1183,26 @@ static void
 get_planar_component (GstVideoFormat format, gchar * x, gchar * y, gchar * z,
     gchar * w, guint * scale)
 {
-  switch (format) {
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_GBR_10LE:
-    case GST_VIDEO_FORMAT_GBRA_10LE:
-      *scale = (1 << 6);
-      break;
-    case GST_VIDEO_FORMAT_I420_12LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-    case GST_VIDEO_FORMAT_GBR_12LE:
-    case GST_VIDEO_FORMAT_GBRA_12LE:
-      *scale = (1 << 4);
-      break;
-    default:
-      *scale = 1;
-      break;
+  if (scale) {
+    switch (format) {
+      case GST_VIDEO_FORMAT_I420_10LE:
+      case GST_VIDEO_FORMAT_I422_10LE:
+      case GST_VIDEO_FORMAT_Y444_10LE:
+      case GST_VIDEO_FORMAT_GBR_10LE:
+      case GST_VIDEO_FORMAT_GBRA_10LE:
+        *scale = (1 << 6);
+        break;
+      case GST_VIDEO_FORMAT_I420_12LE:
+      case GST_VIDEO_FORMAT_I422_12LE:
+      case GST_VIDEO_FORMAT_Y444_12LE:
+      case GST_VIDEO_FORMAT_GBR_12LE:
+      case GST_VIDEO_FORMAT_GBRA_12LE:
+        *scale = (1 << 4);
+        break;
+      default:
+        *scale = 1;
+        break;
+    }
   }
 
   switch (format) {
@@ -1934,74 +1976,110 @@ gst_d3d11_converter_prepare_output (GstD3D11Converter * self,
       /* planar */
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I420_12LE:
     case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_I422_12LE:{
+    {
       gchar y, u, v, w;
-      guint scale;
 
-      get_planar_component (format, &y, &u, &v, &w, &scale);
+      get_planar_component (format, &y, &u, &v, &w, nullptr);
 
       cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
       cinfo->ps_output[1] = &output_types[OUTPUT_TWO_PLANES];
 
-      if (info->finfo->depth[0] == 8) {
-        cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_LUMA);
-        cinfo->build_output_func[1] =
-            g_strdup_printf (templ_OUTPUT_CHROMA_PLANAR, u, v);
-      } else {
-        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_LUMA_SCALED,
-            scale);
-        cinfo->build_output_func[1] =
-            g_strdup_printf (templ_OUTPUT_CHROMA_PLANAR_SCALED,
-            u, scale, v, scale);
-      }
+      cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_LUMA);
+      cinfo->build_output_func[1] =
+          g_strdup_printf (templ_OUTPUT_CHROMA_PLANAR, u, v);
+      break;
+    }
+    case GST_VIDEO_FORMAT_I420_10LE:
+    case GST_VIDEO_FORMAT_I422_10LE:
+    {
+      cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
+      cinfo->ps_output[1] = &output_types[OUTPUT_TWO_PLANES];
+
+      cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_LUMA_10);
+      cinfo->build_output_func[1] = g_strdup (templ_OUTPUT_CHROMA_PLANAR_10);
+      break;
+    }
+    case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_I422_12LE:
+    {
+      cinfo->ps_output[0] = &output_types[OUTPUT_SINGLE_PLANE];
+      cinfo->ps_output[1] = &output_types[OUTPUT_TWO_PLANES];
+
+      cinfo->build_output_func[0] = g_strdup (templ_OUTPUT_LUMA_12);
+      cinfo->build_output_func[1] = g_strdup (templ_OUTPUT_CHROMA_PLANAR_12);
       break;
     }
     case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
     case GST_VIDEO_FORMAT_Y444_16LE:
     case GST_VIDEO_FORMAT_RGBP:
     case GST_VIDEO_FORMAT_BGRP:
     case GST_VIDEO_FORMAT_GBR:
+    {
+      gchar x, y, z, w;
+
+      get_planar_component (format, &x, &y, &z, &w, nullptr);
+
+      cinfo->ps_output[0] = &output_types[OUTPUT_THREE_PLANES];
+      cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR,
+          x, y, z);
+      break;
+    }
+    case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_GBR_10LE:
+    {
+      gchar x, y, z, w;
+
+      get_planar_component (format, &x, &y, &z, &w, nullptr);
+
+      cinfo->ps_output[0] = &output_types[OUTPUT_THREE_PLANES];
+      cinfo->build_output_func[0] =
+          g_strdup_printf (templ_OUTPUT_PLANAR_10, x, y, z);
+      break;
+    }
+    case GST_VIDEO_FORMAT_Y444_12LE:
     case GST_VIDEO_FORMAT_GBR_12LE:
     {
       gchar x, y, z, w;
-      guint scale;
 
-      get_planar_component (format, &x, &y, &z, &w, &scale);
+      get_planar_component (format, &x, &y, &z, &w, nullptr);
 
       cinfo->ps_output[0] = &output_types[OUTPUT_THREE_PLANES];
-      if (info->finfo->depth[0] == 8) {
-        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR,
-            x, y, z);
-      } else {
-        cinfo->build_output_func[0] =
-            g_strdup_printf (templ_OUTPUT_PLANAR_SCALED, scale, x, y, z);
-      }
+      cinfo->build_output_func[0] =
+          g_strdup_printf (templ_OUTPUT_PLANAR_12, x, y, z);
       break;
     }
     case GST_VIDEO_FORMAT_GBRA:
+    {
+      gchar x, y, z, w;
+
+      get_planar_component (format, &x, &y, &z, &w, nullptr);
+
+      cinfo->ps_output[0] = &output_types[OUTPUT_FOUR_PLANES];
+      cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR_4,
+          x, y, z, w);
+      break;
+    }
     case GST_VIDEO_FORMAT_GBRA_10LE:
+    {
+      gchar x, y, z, w;
+
+      get_planar_component (format, &x, &y, &z, &w, nullptr);
+
+      cinfo->ps_output[0] = &output_types[OUTPUT_FOUR_PLANES];
+      cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR_4_10,
+          x, y, z, w);
+      break;
+    }
     case GST_VIDEO_FORMAT_GBRA_12LE:
     {
       gchar x, y, z, w;
-      guint scale;
 
-      get_planar_component (format, &x, &y, &z, &w, &scale);
+      get_planar_component (format, &x, &y, &z, &w, nullptr);
 
       cinfo->ps_output[0] = &output_types[OUTPUT_FOUR_PLANES];
-      if (info->finfo->depth[0] == 8) {
-        cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR_4,
-            x, y, z, w);
-      } else {
-        cinfo->build_output_func[0] =
-            g_strdup_printf (templ_OUTPUT_PLANAR_4_SCALED, scale, x, y, z, w);
-      }
+      cinfo->build_output_func[0] = g_strdup_printf (templ_OUTPUT_PLANAR_4_12,
+          x, y, z, w);
       break;
     }
     case GST_VIDEO_FORMAT_GRAY8:
