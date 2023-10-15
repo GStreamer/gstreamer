@@ -697,7 +697,7 @@ gst_d3d11_winrt_capture_thread_func (GstD3D11WinRTCapture * self)
 #endif
 
   winrt_vtable.SetThreadDpiAwarenessContext
-      (DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+      (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
 
   QueryPerformanceFrequency (&self->frequency);
 
@@ -997,7 +997,7 @@ again:
     BOOL ret;
 
     prev = winrt_vtable.SetThreadDpiAwarenessContext
-        (DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
+        (DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE);
     ret = GetClientRect (self->window_handle, &client_rect) &&
         DwmGetWindowAttribute (self->window_handle,
         DWMWA_EXTENDED_FRAME_BOUNDS, &bound_rect, sizeof (RECT)) == S_OK &&
