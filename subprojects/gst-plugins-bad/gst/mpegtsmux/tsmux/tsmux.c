@@ -1546,7 +1546,8 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
         goto done;
       }
 
-      gst_buffer_map (buf, &map, GST_MAP_READ);
+      gst_buffer_map (buf, &map, GST_MAP_WRITE);
+      memset (map.data, 0xFF, map.size);
 
       if ((new_pcr =
               write_new_pcr (mux, stream, get_current_pcr (mux,
