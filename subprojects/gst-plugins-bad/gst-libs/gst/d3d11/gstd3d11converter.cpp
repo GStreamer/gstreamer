@@ -250,9 +250,9 @@ struct _GstD3D11ConverterPrivate
 
   gint input_texture_width;
   gint input_texture_height;
-  gboolean update_src_rect;
-  gboolean update_dest_rect;
-  gboolean update_alpha;
+  gboolean update_src_rect = FALSE;
+  gboolean update_dest_rect = FALSE;
+  gboolean update_alpha = FALSE;
 
   PSConstBuffer const_data;
 
@@ -750,17 +750,20 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   }
 
   /* const buffer */
-  G_STATIC_ASSERT (sizeof (PSConstBuffer) % 16 == 0);
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (PSConstBuffer);
-  buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  if (priv->convert_type != CONVERT_TYPE::IDENTITY ||
+      GST_VIDEO_INFO_HAS_ALPHA (out_info)) {
+    G_STATIC_ASSERT (sizeof (PSConstBuffer) % 16 == 0);
+    buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+    buffer_desc.ByteWidth = sizeof (PSConstBuffer);
+    buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't create constant buffer, hr: 0x%x", (guint) hr);
-    return FALSE;
+    hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (self,
+          "Couldn't create constant buffer, hr: 0x%x", (guint) hr);
+      return FALSE;
+    }
   }
 
   /* setup vertext buffer and index buffer */
@@ -788,16 +791,18 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   }
 
   GstD3D11DeviceLockGuard lk (device);
-  hr = context_handle->Map (const_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't map constant buffer, hr: 0x%x", (guint) hr);
-    return FALSE;
-  }
+  if (const_buffer) {
+    hr = context_handle->Map (const_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD,
+        0, &map);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (self,
+          "Couldn't map constant buffer, hr: 0x%x", (guint) hr);
+      return FALSE;
+    }
 
-  memcpy (map.pData, &priv->const_data, sizeof (PSConstBuffer));
-  context_handle->Unmap (const_buffer.Get (), 0);
+    memcpy (map.pData, &priv->const_data, sizeof (PSConstBuffer));
+    context_handle->Unmap (const_buffer.Get (), 0);
+  }
 
   hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
       &map);
@@ -2186,7 +2191,7 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
     }
   }
 
-  if (priv->update_alpha) {
+  if (priv->const_buffer && priv->update_alpha) {
     D3D11_MAPPED_SUBRESOURCE map;
     PSConstBuffer *const_buffer;
     HRESULT hr;
@@ -2203,8 +2208,8 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
     memcpy (const_buffer, &priv->const_data, sizeof (PSConstBuffer));
 
     context->Unmap (priv->const_buffer.Get (), 0);
-    priv->update_alpha = FALSE;
   }
+  priv->update_alpha = FALSE;
 
   if (priv->clear_background) {
     for (guint i = 0; i < priv->num_output_view; i++)
@@ -2224,8 +2229,11 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   context->PSSetSamplers (0, 2, samplers);
   context->VSSetShader (priv->vs.Get (), nullptr, 0);
 
-  ID3D11Buffer *const_buffer[] = { priv->const_buffer.Get () };
-  context->PSSetConstantBuffers (0, 1, const_buffer);
+  if (priv->const_buffer) {
+    ID3D11Buffer *const_buffer[] = { priv->const_buffer.Get () };
+    context->PSSetConstantBuffers (0, 1, const_buffer);
+  }
+
   context->PSSetShaderResources (0, priv->num_input_view, srv);
   if (priv->gamma_enc_srv) {
     ID3D11ShaderResourceView *gamma_srv[] = { priv->gamma_dec_srv.Get (),
