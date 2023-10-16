@@ -1322,6 +1322,14 @@ _update_image_info (GstVaAllocator * va_allocator)
       GST_VIDEO_INFO_WIDTH (&va_allocator->info),
       GST_VIDEO_INFO_HEIGHT (&va_allocator->info));
 
+#ifdef G_OS_WIN32
+  /* XXX: Derived image is problematic for D3D backend */
+  if (va_allocator->feat_use_derived != GST_VA_FEATURE_DISABLED) {
+    GST_INFO_OBJECT (va_allocator, "Disable image derive on Windows.");
+    va_allocator->feat_use_derived = GST_VA_FEATURE_DISABLED;
+  }
+  va_allocator->use_derived = FALSE;
+#endif
   /* Try derived first, but different formats can never derive */
   if (va_allocator->feat_use_derived != GST_VA_FEATURE_DISABLED
       && va_allocator->surface_format == va_allocator->img_format) {
@@ -1391,10 +1399,7 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
     mem->mapped_data = &mem->surface;
     goto success;
   }
-#ifdef G_OS_WIN32
-  /* XXX: Derived image doesn't seem to work for D3D backend */
-  use_derived = FALSE;
-#else
+
   if (va_allocator->feat_use_derived == GST_VA_FEATURE_AUTO) {
     switch (gst_va_display_get_implementation (display)) {
       case GST_VA_IMPLEMENTATION_INTEL_I965:
@@ -1417,7 +1422,7 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
   } else {
     use_derived = va_allocator->use_derived;
   }
-#endif
+
   info = &va_allocator->info;
 
   if (!va_ensure_image (display, mem->surface, info, &mem->image, use_derived))
