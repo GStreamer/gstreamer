@@ -1546,18 +1546,25 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
         goto done;
       }
 
-      gst_buffer_map (buf, &map, GST_MAP_WRITE);
+      if (!gst_buffer_map (buf, &map, GST_MAP_WRITE)) {
+        gst_buffer_unref (buf);
+        ret = FALSE;
+        goto done;
+      }
+
       memset (map.data, 0xFF, map.size);
 
-      if ((new_pcr =
-              write_new_pcr (mux, stream, get_current_pcr (mux,
-                      cur_ts), get_next_pcr (mux, cur_ts)) != -1)) {
+      new_pcr = write_new_pcr (mux, stream, get_current_pcr (mux, cur_ts),
+          get_next_pcr (mux, cur_ts));
+      if (new_pcr != -1) {
         GST_LOG ("Writing PCR-only packet on PID 0x%04x", stream->pi.pid);
         tsmux_write_ts_header (mux, map.data, &stream->pi, &payload_len,
             &payload_offs, 0);
       } else {
         GST_LOG ("Writing null stuffing packet");
         if (!rewrite_si (mux, cur_ts)) {
+          gst_buffer_unmap (buf, &map);
+          gst_buffer_unref (buf);
           ret = FALSE;
           goto done;
         }
@@ -1567,9 +1574,11 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
       gst_buffer_unmap (buf, &map);
 
       stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-
-      if (!(ret = tsmux_packet_out (mux, buf, new_pcr)))
+      ret = tsmux_packet_out (mux, buf, new_pcr);
+      if (!ret) {
+        gst_buffer_unref (buf);
         goto done;
+      }
     }
   } while (bitrate < mux->bitrate);
 
