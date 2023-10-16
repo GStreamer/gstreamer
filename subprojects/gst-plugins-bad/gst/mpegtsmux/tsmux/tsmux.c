@@ -1549,8 +1549,6 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
         goto done;
       }
 
-      memset (map.data, 0xFF, map.size);
-
       new_pcr = write_new_pcr (mux, stream, get_current_pcr (mux, cur_ts),
           get_next_pcr (mux, cur_ts));
       if (new_pcr != -1) {
@@ -1565,6 +1563,7 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
           goto done;
         }
         tsmux_write_null_ts_header (map.data);
+        memset (map.data + TSMUX_HEADER_LENGTH, 0xFF, TSMUX_PAYLOAD_LENGTH);
       }
 
       gst_buffer_unmap (buf, &map);
