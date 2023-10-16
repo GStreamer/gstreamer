@@ -1280,7 +1280,7 @@ mpegts_packetizer_resync (MpegTSPCR * pcr, GstClockTime time,
  *
  * The idea is that the jitter is composed of:
  *
- *  J = N + n
+ *  J = D + n
  *
  *   D   : a constant network delay.
  *   n   : random added noise. The noise is concentrated around 0
