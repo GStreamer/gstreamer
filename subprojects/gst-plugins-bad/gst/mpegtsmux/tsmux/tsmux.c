@@ -1154,132 +1154,80 @@ tsmux_write_ts_header (TsMux * mux, guint8 * buf, TsMuxPacketInfo * pi,
   return TRUE;
 }
 
-/* The unused_arg is needed for g_hash_table_foreach() */
 static gboolean
-tsmux_section_write_packet (gpointer unused_arg,
-    TsMuxSection * section, TsMux * mux)
+tsmux_section_write_packet (TsMux * mux, TsMuxSection * section)
 {
-  GstBuffer *section_buffer;
-  GstBuffer *packet_buffer = NULL;
-  GstMemory *mem;
-  guint8 *packet;
   guint8 *data;
-  gsize data_size = 0;
-  gsize payload_written;
-  guint len = 0, offset = 0, payload_len = 0;
-  guint extra_alloc_bytes = 0;
+  gsize data_size;
+  guint payload_written = 0;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (section != NULL, FALSE);
   g_return_val_if_fail (mux != NULL, FALSE);
 
-  /* Mark the start of new PES unit */
-  section->pi.packet_start_unit_indicator = TRUE;
-
   data = gst_mpegts_section_packetize (section->section, &data_size);
-
   if (!data) {
-    TS_DEBUG ("Could not packetize section");
+    GST_WARNING ("Could not packetize section");
     return FALSE;
   }
 
+  /* Mark the start of new PES unit */
+  section->pi.packet_start_unit_indicator = TRUE;
+
   /* Mark payload data size */
   section->pi.stream_avail = data_size;
-  payload_written = 0;
-
-  /* Wrap section data in a buffer without free function.
-     The data will be freed when the GstMpegtsSection is destroyed. */
-  section_buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-      data, data_size, 0, data_size, NULL, NULL);
-
-  TS_DEBUG ("Section buffer with size %" G_GSIZE_FORMAT " created",
-      gst_buffer_get_size (section_buffer));
 
   while (section->pi.stream_avail > 0) {
+    GstBuffer *buf;
+    GstMapInfo map;
+    guint len, offset;
 
-    packet = g_malloc (TSMUX_PACKET_LENGTH);
+    if (!tsmux_get_buffer (mux, &buf))
+      goto done;
+
+    if (!gst_buffer_map (buf, &map, GST_MAP_WRITE)) {
+      gst_buffer_unref (buf);
+      goto done;
+    }
 
     if (section->pi.packet_start_unit_indicator) {
-      /* Wee need room for a pointer byte */
-      section->pi.stream_avail++;
-
-      if (!tsmux_write_ts_header (mux, packet, &section->pi,
-            section->pi.stream_avail, &len, &offset))
-        goto fail;
+      /* We need room for a pointer byte */
+      if (!tsmux_write_ts_header (mux, map.data, &section->pi,
+              section->pi.stream_avail + 1, &len, &offset)) {
+        gst_buffer_unmap (buf, &map);
+        gst_buffer_unref (buf);
+        goto done;
+      }
 
       /* Write the pointer byte */
-      packet[offset++] = 0x00;
-      payload_len = len - 1;
-
-    } else {
-      if (!tsmux_write_ts_header (mux, packet, &section->pi,
-            section->pi.stream_avail, &len, &offset))
-        goto fail;
-      payload_len = len;
+      map.data[offset++] = 0x00;
+      len--;
+    } else if (!tsmux_write_ts_header (mux, map.data, &section->pi,
+            section->pi.stream_avail, &len, &offset)) {
+      gst_buffer_unmap (buf, &map);
+      gst_buffer_unref (buf);
+      goto done;
     }
 
-    /* Wrap the TS header and adaption field in a GstMemory */
-    mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-        packet, TSMUX_PACKET_LENGTH, 0, offset, packet, g_free);
+    GST_DEBUG ("Creating section packet for offset %u with length %u; %u bytes"
+        " remaining", payload_written, len, section->pi.stream_avail - len);
 
-    TS_DEBUG ("Creating packet buffer at offset "
-        "%" G_GSIZE_FORMAT " with length %u", payload_written, payload_len);
-
-    /* If in M2TS mode, we will need to resize to 4 bytes after the end
-       of the buffer. For performance reasons, we will now try to include
-       4 extra bytes from the source buffer, then resize down, to avoid
-       having an extra 4 byte GstMemory appended. If the source buffer
-       does not have enough data for this, a new GstMemory will be used */
-    if (gst_buffer_get_size (section_buffer) - (payload_written +
-            payload_len) >= 4) {
-      /* enough space */
-      extra_alloc_bytes = 4;
-    } else {
-      extra_alloc_bytes = 0;
-    }
-    packet_buffer = gst_buffer_copy_region (section_buffer, GST_BUFFER_COPY_ALL,
-        payload_written, payload_len + extra_alloc_bytes);
-
-    /* Prepend the header to the section data */
-    gst_buffer_prepend_memory (packet_buffer, mem);
-
-    /* add an extra 4 bytes if it could not be reserved already */
-    if (extra_alloc_bytes == 4) {
-      /* we allocated those already, resize */
-      gst_buffer_set_size (packet_buffer,
-          gst_buffer_get_size (packet_buffer) - extra_alloc_bytes);
-    } else {
-      void *ptr = g_malloc (4);
-      GstMemory *extra =
-          gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY, ptr, 4, 0, 0, ptr,
-          g_free);
-      gst_buffer_append_memory (packet_buffer, extra);
-    }
-
-    TS_DEBUG ("Writing %d bytes to section. %d bytes remaining",
-        len, section->pi.stream_avail - len);
+    memcpy (map.data + offset, data + payload_written, len);
+    gst_buffer_unmap (buf, &map);
 
     /* Push the packet without PCR */
-    if (G_UNLIKELY (!tsmux_packet_out (mux, packet_buffer, -1))) {
-      /* Buffer given away */
-      packet_buffer = NULL;
-      goto fail;
-    }
+    if (G_UNLIKELY (!tsmux_packet_out (mux, buf, -1)))
+      goto done;
 
-    packet_buffer = NULL;
     section->pi.stream_avail -= len;
-    payload_written += payload_len;
+    payload_written += len;
     section->pi.packet_start_unit_indicator = FALSE;
   }
 
-  gst_buffer_unref (section_buffer);
+  ret = TRUE;
 
-  return TRUE;
-
-fail:
-  g_free (packet);
-  if (section_buffer)
-    gst_buffer_unref (section_buffer);
-  return FALSE;
+done:
+  return ret;
 }
 
 /**
@@ -1308,22 +1256,29 @@ tsmux_send_section (TsMux * mux, GstMpegtsSection * section)
   tsmux_section.section = section;
   tsmux_section.pi.pid = section->pid;
 
-  ret = tsmux_section_write_packet (NULL, &tsmux_section, mux);
+  ret = tsmux_section_write_packet (mux, &tsmux_section);
   gst_mpegts_section_unref (section);
 
   return ret;
 }
 
+static void
+tsmux_write_si_foreach (gpointer key, gpointer value, gpointer user_data)
+{
+  GstMpegtsSectionType section_type = GPOINTER_TO_INT (key);
+  TsMuxSection *section = value;
+  TsMux *mux = user_data;
+
+  if (!tsmux_section_write_packet (mux, section))
+    GST_WARNING ("Failed to send SI section (type %d)", section_type);
+}
+
 static gboolean
 tsmux_write_si (TsMux * mux)
 {
-  g_hash_table_foreach (mux->si_sections,
-      (GHFunc) tsmux_section_write_packet, mux);
-
+  g_hash_table_foreach (mux->si_sections, tsmux_write_si_foreach, mux);
   mux->si_changed = FALSE;
-
   return TRUE;
-
 }
 
 static void
@@ -1760,7 +1715,7 @@ tsmux_write_pat (TsMux * mux)
     mux->pat_changed = FALSE;
   }
 
-  return tsmux_section_write_packet (NULL, &mux->pat, mux);
+  return tsmux_section_write_packet (mux, &mux->pat);
 }
 
 static gboolean
@@ -1860,7 +1815,7 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     program->pmt.section->version_number = program->pmt_version++;
   }
 
-  return tsmux_section_write_packet (NULL, &program->pmt, mux);
+  return tsmux_section_write_packet (mux, &program->pmt);
 }
 
 static gboolean
@@ -1868,7 +1823,7 @@ tsmux_write_scte_null (TsMux * mux, TsMuxProgram * program)
 {
   /* SCTE-35 NULL section is created when PID is set */
   GST_LOG ("Writing SCTE NULL packet");
-  return tsmux_section_write_packet (NULL, program->scte35_null_section, mux);
+  return tsmux_section_write_packet (mux, program->scte35_null_section);
 }
 
 void
