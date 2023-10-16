@@ -878,7 +878,7 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
             goto error;
           }
 
-          gst_buffer_map (buf, &map, GST_MAP_READ);
+          gst_buffer_map (buf, &map, GST_MAP_WRITE);
           tsmux_write_ts_header (mux, map.data, &stream->pi, &payload_len,
               &payload_offs, 0);
           gst_buffer_unmap (buf, &map);
@@ -1644,7 +1644,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   if (!tsmux_get_buffer (mux, &buf))
     return FALSE;
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
+  gst_buffer_map (buf, &map, GST_MAP_WRITE);
 
   if (!tsmux_write_ts_header (mux, map.data, pi, &payload_len, &payload_offs,
           pi->stream_avail))
