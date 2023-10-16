@@ -841,9 +841,10 @@ tsmux_get_buffer (TsMux * mux, GstBuffer ** buf)
 static gboolean
 tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
 {
+  g_return_val_if_fail (buf, FALSE);
+
   if (G_UNLIKELY (mux->write_func == NULL)) {
-    if (buf)
-      gst_buffer_unref (buf);
+    gst_buffer_unref (buf);
     return TRUE;
   }
 
@@ -870,19 +871,19 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
         new_pcr = write_new_pcr (mux, stream, cur_pcr, next_pcr);
 
         if (new_pcr != -1) {
-          GstBuffer *buf = NULL;
+          GstBuffer *pcr_buf = NULL;
           GstMapInfo map;
 
-          if (!tsmux_get_buffer (mux, &buf)) {
+          if (!tsmux_get_buffer (mux, &pcr_buf)) {
             goto error;
           }
 
-          gst_buffer_map (buf, &map, GST_MAP_WRITE);
+          gst_buffer_map (pcr_buf, &map, GST_MAP_WRITE);
           tsmux_write_ts_header (mux, map.data, &stream->pi, 0, NULL, NULL);
-          gst_buffer_unmap (buf, &map);
+          gst_buffer_unmap (pcr_buf, &map);
 
           stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-          if (!tsmux_packet_out (mux, buf, new_pcr))
+          if (!tsmux_packet_out (mux, pcr_buf, new_pcr))
             goto error;
         }
       }
@@ -894,6 +895,7 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
   return mux->write_func (buf, mux->write_func_data, pcr);
 
 error:
+  gst_buffer_unref (buf);
   return FALSE;
 }
 
@@ -1530,6 +1532,7 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
   if (diff == 0)
     goto done;
 
+  ret = FALSE;
   start_n_bytes = mux->n_bytes;
   do {
     GST_LOG ("Transport stream bitrate: %" G_GUINT64_FORMAT " over %"
@@ -1545,14 +1548,11 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
     if (bitrate <= mux->bitrate) {
       gint64 new_pcr;
 
-      if (!tsmux_get_buffer (mux, &buf)) {
-        ret = FALSE;
+      if (!tsmux_get_buffer (mux, &buf))
         goto done;
-      }
 
       if (!gst_buffer_map (buf, &map, GST_MAP_WRITE)) {
         gst_buffer_unref (buf);
-        ret = FALSE;
         goto done;
       }
 
@@ -1566,7 +1566,6 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
         if (!rewrite_si (mux, cur_ts)) {
           gst_buffer_unmap (buf, &map);
           gst_buffer_unref (buf);
-          ret = FALSE;
           goto done;
         }
         tsmux_write_null_ts_header (map.data);
@@ -1576,17 +1575,16 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
       gst_buffer_unmap (buf, &map);
 
       stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-      ret = tsmux_packet_out (mux, buf, new_pcr);
-      if (!ret) {
-        gst_buffer_unref (buf);
+      if (!tsmux_packet_out (mux, buf, new_pcr))
         goto done;
-      }
     }
   } while (bitrate < mux->bitrate);
 
   if (mux->n_bytes != start_n_bytes) {
     GST_LOG ("Finished padding the mux");
   }
+
+  ret = TRUE;
 
 done:
   return ret;
