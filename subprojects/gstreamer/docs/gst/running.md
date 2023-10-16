@@ -343,3 +343,10 @@ Example: `GST_PLUGIN_FEATURE_RANK=foo:PRIMARY,bar:primary,foobar:128`
 As a result of the above example,
 the `foo` and` bar` plugin feature rank values are `PRIMARY`(256)
 and `SECONDARY`(128) rank value will be assigned to `foobar`.
+
+**`GST_XINITTHREADS`.**
+
+Set this variable when using components that rely on X11, such as ximagesrc, 
+from gst-launch-1.0 or other command line applications. However, applications 
+should not depend on this variable and should make their own `XInitThreads()`
+call as early as possible.

@@ -22,11 +22,18 @@
  * SECTION:element-ximagesrc
  * @title: ximagesrc
  *
- * This element captures your X Display and creates raw RGB video.  It uses
+ * This element captures your X Display and creates raw RGB video. It uses
  * the XDamage extension if available to only capture areas of the screen that
  * have changed since the last frame. It uses the XFixes extension if
  * available to also capture your mouse pointer. It supports handling of
  * mouse and keyboard events. By default it will fixate to 25 frames per second.
+ * 
+ * Applications are expected to call `XinitThreads()` before any other threads
+ * are started. For use in gst-launch-1.0 or other GStreamer command line 
+ * applications it is also possible to set the GST_XINITTHREADS=1 environment 
+ * variable so that `XInitThreads()` gets called when the plugin is loaded. This 
+ * may be too late in other use case scenarios though, so applications should 
+ * not rely on that.
  *
  * ## Example pipelines
  * |[
@@ -1398,10 +1405,7 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
   bc->stop = gst_ximage_src_stop;
   bc->unlock = gst_ximage_src_unlock;
   push_class->create = gst_ximage_src_create;
-#ifdef HAVE_NAVIGATION
-  XInitThreads ();
   bc->event = gst_ximage_src_event;
-#endif /* HAVE_NAVIGATION */
 }
 
 static void
@@ -1428,6 +1432,9 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean ret;
+
+  if (g_getenv ("GST_XINITTHREADS"))
+    XInitThreads ();
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_ximage_src, "ximagesrc", 0,
       "ximagesrc element debug");
