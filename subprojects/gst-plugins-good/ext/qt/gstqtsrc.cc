@@ -434,6 +434,8 @@ static GstFlowReturn
 gst_qt_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
 {
   GstQtSrc *qt_src = GST_QT_SRC (psrc);
+  GstGLContext* context = qt_src->context;
+  GstGLSyncMeta *sync_meta;
 
   GST_DEBUG_OBJECT (qt_src, "setting buffer %p", buffer);
 
@@ -441,6 +443,10 @@ gst_qt_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     GST_ERROR_OBJECT (qt_src, "failed to fill buffer %p", buffer);
     return GST_FLOW_ERROR;
   }
+
+  sync_meta = gst_buffer_get_gl_sync_meta(buffer);
+  if (sync_meta)
+      gst_gl_sync_meta_wait(sync_meta, context);
 
   if (!qt_src->downstream_supports_affine_meta) {
     if (qt_src->pending_image_orientation) {
