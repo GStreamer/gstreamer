@@ -18,6 +18,11 @@
  */
 
 #ifdef BUILDING_HLSL
+cbuffer VsConstBuffer : register(b0)
+{
+  matrix Transform;
+};
+
 struct VS_INPUT
 {
   float4 Position : POSITION;
@@ -32,10 +37,20 @@ struct VS_OUTPUT
 
 VS_OUTPUT VSMain_converter (VS_INPUT input)
 {
-  return input;
+  VS_OUTPUT output;
+
+  output.Position = mul (Transform, input.Position);
+  output.Texture = input.Texture;
+
+  return output;
 }
 #else
 static const char g_VSMain_converter_str[] =
+"cbuffer VsConstBuffer : register(b0)\n"
+"{\n"
+"  matrix Transform;\n"
+"};\n"
+"\n"
 "struct VS_INPUT\n"
 "{\n"
 "  float4 Position : POSITION;\n"
@@ -50,6 +65,11 @@ static const char g_VSMain_converter_str[] =
 "\n"
 "VS_OUTPUT VSMain_converter (VS_INPUT input)\n"
 "{\n"
-"  return input;\n"
+"  VS_OUTPUT output;\n"
+"\n"
+"  output.Position = mul (Transform, input.Position);\n"
+"  output.Texture = input.Texture;\n"
+"\n"
+"  return output;\n"
 "}\n";
 #endif
