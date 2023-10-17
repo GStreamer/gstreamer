@@ -1610,6 +1610,7 @@ gst_v4l2_codec_h265_dec_dispose (GObject * object)
 
   g_clear_object (&self->decoder);
   g_clear_pointer (&self->slice_params, g_array_unref);
+  g_clear_pointer (&self->entry_point_offsets, g_array_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
