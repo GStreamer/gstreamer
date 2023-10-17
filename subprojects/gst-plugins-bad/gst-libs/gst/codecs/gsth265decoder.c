@@ -829,11 +829,6 @@ gst_h265_decoder_parse_slice (GstH265Decoder * self, GstH265NalUnit * nalu)
   if (pres != GST_H265_PARSER_OK)
     return pres;
 
-  /* NOTE: gst_h265_parser_parse_slice_hdr() allocates array
-   * GstH265SliceHdr::entry_point_offset_minus1 but we don't use it
-   * in this h265decoder baseclass at the moment
-   */
-  gst_h265_slice_hdr_free (&slice.header);
   slice.nalu = *nalu;
 
   if (nalu->type >= GST_H265_NAL_SLICE_BLA_W_LP &&
@@ -2048,6 +2043,9 @@ gst_h265_decoder_clear_nalu (GstH265DecoderNalUnit * nalu)
 {
   if (!nalu)
     return;
+
+  if (nalu->is_slice)
+    gst_h265_slice_hdr_free (&nalu->unit.slice.header);
 
   memset (nalu, 0, sizeof (GstH265DecoderNalUnit));
 }
