@@ -304,7 +304,7 @@ struct _GstD3D11ConverterPrivate
 
   GstVideoOrientationMethod video_direction;
 
-  SRWLOCK prop_lock;
+  std::mutex prop_lock;
 
   /* properties */
   gint src_x = 0;
@@ -504,7 +504,7 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
   GstD3D11Converter *self = GST_D3D11_CONVERTER (object);
   GstD3D11ConverterPrivate *priv = self->priv;
 
-  GstD3D11SRWLockGuard (&priv->prop_lock);
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
   switch (prop_id) {
     case PROP_SRC_X:
       update_src_rect (self, &priv->src_x, value);
@@ -618,7 +618,7 @@ gst_d3d11_converter_get_property (GObject * object, guint prop_id,
   GstD3D11Converter *self = GST_D3D11_CONVERTER (object);
   GstD3D11ConverterPrivate *priv = self->priv;
 
-  GstD3D11SRWLockGuard (&priv->prop_lock);
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
   switch (prop_id) {
     case PROP_SRC_X:
       g_value_set_int (value, priv->src_x);
@@ -2912,7 +2912,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
   gboolean ret = FALSE;
   gboolean in_d3d11;
 
-  GstD3D11SRWLockGuard (&priv->prop_lock);
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
 
   /* Output buffer must be valid D3D11 buffer */
   if (!gst_d3d11_converter_is_d3d11_buffer (self, out_buf)) {
