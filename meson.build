@@ -180,7 +180,7 @@ foreach sp : subprojects
     subproj = subproject(project_name, required: is_required, default_options: default_options)
   endif
 
-  if project_name == 'gst-plugins-base'
+  if project_name == 'gst-plugins-base' and subproj.found()
     gst_base_orc_req = subproj.get_variable('orc_req', '')
     if gst_base_orc_req != orc_req
       error('orc_req is "@0@" but it should be "@1@" from subprojects/gst-plugins-base/meson.build'
