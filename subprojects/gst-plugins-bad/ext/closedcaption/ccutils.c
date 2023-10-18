@@ -382,10 +382,8 @@ cc_data_extract_cea608 (const guint8 * cc_data, guint cc_data_len,
           return CC_DATA_EXTRACT_TOO_MANY_FIELD1;
         }
 
-        if (byte1 != 0x80 || byte2 != 0x80) {
-          cea608_field1[(*cea608_field1_len)++] = byte1;
-          cea608_field1[(*cea608_field1_len)++] = byte2;
-        }
+        cea608_field1[(*cea608_field1_len)++] = byte1;
+        cea608_field1[(*cea608_field1_len)++] = byte2;
       }
     } else if (cc_type == 0x01) {
       if (!cc_valid)
@@ -397,10 +395,8 @@ cc_data_extract_cea608 (const guint8 * cc_data, guint cc_data_len,
               *cea608_field2_len + 2);
           return CC_DATA_EXTRACT_TOO_MANY_FIELD2;
         }
-        if (byte1 != 0x80 || byte2 != 0x80) {
-          cea608_field2[(*cea608_field2_len)++] = byte1;
-          cea608_field2[(*cea608_field2_len)++] = byte2;
-        }
+        cea608_field2[(*cea608_field2_len)++] = byte1;
+        cea608_field2[(*cea608_field2_len)++] = byte2;
       }
     } else {
       /* all cea608 packets must be at the beginning of a cc_data */
