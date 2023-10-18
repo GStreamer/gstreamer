@@ -925,7 +925,55 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 
   gst_gl_context_egl_dump_all_configs (egl);
 
-  if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
+  if (gl_api & GST_GL_API_GLES2) {
+    gint i;
+
+  try_gles2:
+    if (!eglBindAPI (EGL_OPENGL_ES_API)) {
+      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
+          "Failed to bind OpenGL|ES API: %s",
+          gst_egl_get_error_string (eglGetError ()));
+      goto failure;
+    }
+
+    GST_INFO ("Bound OpenGL|ES");
+
+    for (i = 0; i < G_N_ELEMENTS (gles2_versions); i++) {
+      gint profileMask = 0;
+      gint contextFlags = 0;
+      guint maj = gles2_versions[i].major;
+      guint min = gles2_versions[i].minor;
+
+      if (!gst_gl_context_egl_choose_config (egl, GST_GL_API_GLES2, maj, error)) {
+        GST_DEBUG_OBJECT (context, "Failed to choose a GLES%d config: %s",
+            maj, error && *error ? (*error)->message : "Unknown");
+        g_clear_error (error);
+        continue;
+      }
+#if defined(EGL_KHR_create_context)
+      /* try a debug context */
+      contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+
+      /* try without a debug context */
+      contextFlags &= ~EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
+#endif
+
+      egl->egl_context =
+          _create_context_with_flags (egl, (EGLContext) external_gl_context,
+          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
+
+      if (egl->egl_context)
+        break;
+    }
+    egl->gl_api = GST_GL_API_GLES2;
+  } else if (gl_api & (GST_GL_API_OPENGL | GST_GL_API_OPENGL3)) {
     GstGLAPI chosen_gl_api = 0;
     gint i;
 
@@ -1015,54 +1063,6 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     }
 
     egl->gl_api = chosen_gl_api;
-  } else if (gl_api & GST_GL_API_GLES2) {
-    gint i;
-
-  try_gles2:
-    if (!eglBindAPI (EGL_OPENGL_ES_API)) {
-      g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
-          "Failed to bind OpenGL|ES API: %s",
-          gst_egl_get_error_string (eglGetError ()));
-      goto failure;
-    }
-
-    GST_INFO ("Bound OpenGL|ES");
-
-    for (i = 0; i < G_N_ELEMENTS (gles2_versions); i++) {
-      gint profileMask = 0;
-      gint contextFlags = 0;
-      guint maj = gles2_versions[i].major;
-      guint min = gles2_versions[i].minor;
-
-      if (!gst_gl_context_egl_choose_config (egl, GST_GL_API_GLES2, maj, error)) {
-        GST_DEBUG_OBJECT (context, "Failed to choose a GLES%d config: %s",
-            maj, error && *error ? (*error)->message : "Unknown");
-        g_clear_error (error);
-        continue;
-      }
-#if defined(EGL_KHR_create_context)
-      /* try a debug context */
-      contextFlags |= EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
-
-      egl->egl_context =
-          _create_context_with_flags (egl, (EGLContext) external_gl_context,
-          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
-
-      if (egl->egl_context)
-        break;
-
-      /* try without a debug context */
-      contextFlags &= ~EGL_CONTEXT_OPENGL_DEBUG_BIT_KHR;
-#endif
-
-      egl->egl_context =
-          _create_context_with_flags (egl, (EGLContext) external_gl_context,
-          GST_GL_API_GLES2, maj, min, contextFlags, profileMask);
-
-      if (egl->egl_context)
-        break;
-    }
-    egl->gl_api = GST_GL_API_GLES2;
   }
 
   if (egl->egl_context != EGL_NO_CONTEXT) {
