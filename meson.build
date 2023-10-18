@@ -86,14 +86,14 @@ endif
 
 building_full = get_option('default_library') == 'static'
 building_full_static = get_option('gst-full-target-type') == 'static_library'
-buildind_full_options = []
+building_full_options = []
 if building_full
-buildind_full_options = ['gstreamer-full=enabled']
+building_full_options = ['gstreamer-full=enabled']
 endif
 
 # Ordered list of subprojects (dict has no ordering guarantees)
 subprojects = [
-  ['gstreamer', {'build-hotdoc': true, 'subproject_options': buildind_full_options}],
+  ['gstreamer', {'build-hotdoc': true, 'subproject_options': building_full_options}],
   ['gst-plugins-base', {'option': get_option('base'), 'build-hotdoc': true}],
   ['gst-plugins-good', {'option': get_option('good'), 'build-hotdoc': true}],
   ['libnice', { 'option': get_option('libnice'), 'match_gst_version': false}],
