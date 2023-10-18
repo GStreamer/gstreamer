@@ -254,6 +254,42 @@ _caps_intersect_texture_target (GstCaps * caps, GstGLTextureTarget target_mask)
   return ret;
 }
 
+static gboolean
+_structure_check_target (GstStructure * structure,
+    GstGLTextureTarget target_mask)
+{
+  const GValue *target_val;
+  const gchar *target_str;
+  GstGLTextureTarget target;
+  guint i;
+
+  target_val = gst_structure_get_value (structure, "texture-target");
+
+  /* If no texture-target set, it means a default of 2D. */
+  if (!target_val)
+    return (1 << GST_GL_TEXTURE_TARGET_2D) & target_mask;
+
+  if (G_VALUE_HOLDS_STRING (target_val)) {
+    target_str = g_value_get_string (target_val);
+    target = gst_gl_texture_target_from_string (target_str);
+
+    return (1 << target) & target_mask;
+  } else if (GST_VALUE_HOLDS_LIST (target_val)) {
+    guint num_values = gst_value_list_get_size (target_val);
+
+    for (i = 0; i < num_values; i++) {
+      const GValue *val = gst_value_list_get_value (target_val, i);
+
+      target_str = g_value_get_string (val);
+      target = gst_gl_texture_target_from_string (target_str);
+      if ((1 << target) & target_mask)
+        return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 typedef enum
 {
   METHOD_FLAG_CAN_SHARE_CONTEXT = 1,
@@ -1031,41 +1067,6 @@ _dma_buf_convert_format_field_in_structure (GstGLContext * context,
 }
 
 static gboolean
-_dma_buf_check_target (GstStructure * structure, GstGLTextureTarget target_mask)
-{
-  const GValue *target_val;
-  const gchar *target_str;
-  GstGLTextureTarget target;
-  guint i;
-
-  target_val = gst_structure_get_value (structure, "texture-target");
-
-  /* If no texture-target set, it means a default of 2D. */
-  if (!target_val)
-    return (1 << GST_GL_TEXTURE_TARGET_2D) & target_mask;
-
-  if (G_VALUE_HOLDS_STRING (target_val)) {
-    target_str = g_value_get_string (target_val);
-    target = gst_gl_texture_target_from_string (target_str);
-
-    return (1 << target) & target_mask;
-  } else if (GST_VALUE_HOLDS_LIST (target_val)) {
-    guint num_values = gst_value_list_get_size (target_val);
-
-    for (i = 0; i < num_values; i++) {
-      const GValue *val = gst_value_list_get_value (target_val, i);
-
-      target_str = g_value_get_string (val);
-      target = gst_gl_texture_target_from_string (target_str);
-      if ((1 << target) & target_mask)
-        return TRUE;
-    }
-  }
-
-  return FALSE;
-}
-
-static gboolean
 _dma_buf_check_formats_in_structure (GstGLContext * context,
     GstStructure * structure, gboolean include_external)
 {
@@ -1200,7 +1201,7 @@ _dma_buf_upload_transform_caps_common (GstCaps * caps,
 
     s = gst_caps_get_structure (caps_to_transform, i);
 
-    if (direction == GST_PAD_SRC && !_dma_buf_check_target (s, target_mask))
+    if (direction == GST_PAD_SRC && !_structure_check_target (s, target_mask))
       continue;
 
     s = gst_structure_copy (s);
