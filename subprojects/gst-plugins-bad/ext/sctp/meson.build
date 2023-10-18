@@ -5,7 +5,8 @@ sctp_sources = [
   'sctpassociation.c'
 ]
 
-if get_option('sctp').disabled()
+sctp_option = get_option('sctp').enable_if(get_option('webrtc').enabled(), error_message: 'webrtc option is enabled')
+if sctp_option.disabled()
   subdir_done()
 endif
 
@@ -23,7 +24,7 @@ if not get_option('sctp-internal-usrsctp').enabled()
   found_system_usrsctp = sctp_dep.found() and sctp_header
 
   if get_option('sctp-internal-usrsctp').disabled() and not found_system_usrsctp
-    if get_option('sctp').enabled()
+    if sctp_option.enabled()
       error('sctp plugin enabled but could not find libusrsctp or usrsctp.h, and internal libusrsctp disabled')
     else
       message('Could not find libusrsctp or usrsctp.h, and internal libusrsctp disabled - not building sctp plugin')
@@ -37,7 +38,7 @@ if not found_system_usrsctp
   subdir('usrsctp')
   sctp_dep = usrsctp_dep
   sctp_header = true
-  if get_option('sctp').enabled() and not sctp_dep.found()
+  if sctp_option.enabled() and not sctp_dep.found()
     error('sctp plugin enabled but could not find system libusrsctp or configure internal libusrsctp')
   endif
 endif

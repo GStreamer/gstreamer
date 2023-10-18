@@ -180,7 +180,7 @@ option('vulkan', type : 'feature', value : 'auto', description : 'Vulkan video s
 option('wasapi', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin')
 option('wasapi2', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin with WinRT API')
 option('webp', type : 'feature', value : 'auto', description : 'WebP image codec plugin')
-option('webrtc', type : 'feature', value : 'auto', description : 'WebRTC audio/video network bin plugin')
+option('webrtc', type : 'feature', value : 'auto', yield: true, description : 'WebRTC audio/video network bin plugin')
 option('webrtcdsp', type : 'feature', value : 'auto', description : 'Plugin with various audio filters provided by the WebRTC audio processing library')
 option('wildmidi', type : 'feature', value : 'auto', description : 'WildMidi midi soft synth plugin')
 option('wic', type : 'feature', value : 'auto', description : 'Windows Imaging Component plugin')

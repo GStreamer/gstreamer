@@ -7,7 +7,8 @@ srtp_sources = [
 ]
 
 srtp_cargs = []
-if get_option('srtp').disabled()
+srtp_option = get_option('srtp').enable_if(get_option('webrtc').enabled(), error_message: 'webrtc option is enabled')
+if srtp_option.disabled()
   srtp_dep = dependency('', required : false)
   subdir_done()
 endif
@@ -21,7 +22,7 @@ else
     srtp_dep = cc.find_library('srtp', required : false)
   endif
 endif
-if not srtp_dep.found() and get_option('srtp').enabled()
+if not srtp_dep.found() and srtp_option.enabled()
   error('srtp plugin enabled but libsrtp not found')
 endif
 
