@@ -2124,6 +2124,7 @@ gst_aggregator_release_pad (GstElement * element, GstPad * pad)
   gst_aggregator_pad_set_flushing (aggpad, GST_FLOW_FLUSHING, TRUE);
   PAD_LOCK (aggpad);
   gst_buffer_replace (&aggpad->priv->peeked_buffer, NULL);
+  gst_buffer_replace (&aggpad->priv->clipped_buffer, NULL);
   PAD_UNLOCK (aggpad);
   gst_element_remove_pad (element, pad);
 
