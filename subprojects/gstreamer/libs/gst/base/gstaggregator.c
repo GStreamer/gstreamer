@@ -3828,8 +3828,8 @@ gst_aggregator_pad_is_inactive (GstAggregatorPad * pad)
   gboolean inactive;
 
   self = GST_AGGREGATOR (gst_pad_get_parent_element (GST_PAD (pad)));
-
-  g_assert_nonnull (self);
+  if (!self)
+    return FALSE;
 
   PAD_LOCK (pad);
   inactive = self->priv->ignore_inactive_pads && is_live_unlocked (self)
