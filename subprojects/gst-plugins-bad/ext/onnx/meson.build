@@ -3,7 +3,7 @@ if get_option('onnx').disabled()
 endif
 
 
-onnxrt_dep = dependency('libonnxruntime', version : '>= 1.15.1', required : get_option('onnx'))
+onnxrt_dep = dependency('libonnxruntime', version : '>= 1.16.1', required : get_option('onnx'))
 
 extra_args = []
 extra_deps = []
@@ -13,8 +13,6 @@ if gstcuda_dep.found()
 endif
 
 if onnxrt_dep.found()
-	onnxrt_include_root = onnxrt_dep.get_variable('includedir')
-	onnxrt_includes = [onnxrt_include_root / 'core/session', onnxrt_include_root / 'core']
     gstonnx = library('gstonnx',
     'gstonnx.c',
     'decoders/gstobjectdetectorutils.cpp',
@@ -26,7 +24,7 @@ if onnxrt_dep.found()
     c_args : gst_plugins_bad_args + extra_args,
     cpp_args : gst_plugins_bad_args + extra_args,
     link_args : noseh_link_args,
-    include_directories : [configinc, libsinc, onnxrt_includes, cuda_stubinc],
+    include_directories : [configinc, libsinc, cuda_stubinc],
     dependencies : [gstbase_dep, gstvideo_dep, onnxrt_dep, libm] + extra_deps,
     install : true,
     install_dir : plugins_install_dir,

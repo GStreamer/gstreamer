@@ -1,6 +1,6 @@
 /*
  * GStreamer gstreamer-onnxclient
- * Copyright (C) 2021 Collabora Ltd
+ * Copyright (C) 2021-2023 Collabora Ltd
  *
  * gstonnxclient.cpp
  *
@@ -22,7 +22,7 @@
 
 #include "gstonnxclient.h"
 #include <tensor/gsttensorid.h>
-#include <providers/cpu/cpu_provider_factory.h>
+#include <cpu_provider_factory.h>
 #include <sstream>
 
 namespace GstOnnxNamespace
