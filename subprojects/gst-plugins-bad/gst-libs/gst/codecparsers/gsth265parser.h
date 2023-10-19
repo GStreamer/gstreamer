@@ -430,6 +430,31 @@ typedef enum
   GST_H265_QUANT_MATIX_32X32 = 3
 } GstH265QuantMatrixSize;
 
+
+/**
+ * GstH265Level:
+ *
+ * H.265 level
+ *
+ * Since: 1.24
+ */
+typedef enum
+{
+  GST_H265_LEVEL_L1 = 30,
+  GST_H265_LEVEL_L2 = 60,
+  GST_H265_LEVEL_L2_1 = 63,
+  GST_H265_LEVEL_L3 = 90,
+  GST_H265_LEVEL_L3_1 = 93,
+  GST_H265_LEVEL_L4 = 120,
+  GST_H265_LEVEL_L4_1 = 123,
+  GST_H265_LEVEL_L5 = 150,
+  GST_H265_LEVEL_L5_1 = 153,
+  GST_H265_LEVEL_L5_2 = 156,
+  GST_H265_LEVEL_L6 = 180,
+  GST_H265_LEVEL_L6_1 = 183,
+  GST_H265_LEVEL_L6_2 = 186,
+} GstH265Level;
+
 typedef struct _GstH265Parser                   GstH265Parser;
 
 typedef struct _GstH265NalUnit                  GstH265NalUnit;
