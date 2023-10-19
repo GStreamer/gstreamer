@@ -37,6 +37,30 @@
  * returns or it could be called later from another thread. The signature of
  * this callback GstInsertBinCallback().
  *
+ * Apart from the library API, since 1.24 insertbin can also be found in the
+ * registry:
+ *
+ * ``` C
+ *   GstElement *pipeline, *insertbin, *videoflip;
+ *
+ *   gst_init (NULL, NULL);
+ *   pipeline =
+ *       gst_parse_launch ("videotestsrc ! insertbin name=i ! autovideosink",
+ *       NULL);
+ *
+ *   ...
+ *
+ *   insertbin = gst_bin_get_by_name (GST_BIN (pipeline), "i");
+ *   videoflip = gst_element_factory_make ("videoflip", NULL);
+ *
+ *   ...
+ *
+ *   g_object_set (videoflip, "method", 1, NULL);
+ *   g_signal_emit_by_name (insertbin, "append", videoflip, NULL, NULL);
+ *
+ *   ...
+ * ```
+ *
  * Since: 1.2
  */
 
