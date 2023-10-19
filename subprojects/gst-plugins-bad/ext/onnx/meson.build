@@ -19,7 +19,6 @@ if onnxrt_dep.found()
     'decoders/gstssdobjectdetector.cpp',
     'gstonnxinference.cpp',
     'gstonnxclient.cpp',
-    'tensor/gsttensorid.cpp',
     'tensor/gsttensormeta.c',
     c_args : gst_plugins_bad_args + extra_args,
     cpp_args : gst_plugins_bad_args + extra_args,

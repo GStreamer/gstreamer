@@ -21,7 +21,6 @@
  */
 
 #include "gstonnxclient.h"
-#include <tensor/gsttensorid.h>
 #include <cpu_provider_factory.h>
 #include <sstream>
 
@@ -207,7 +206,7 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
         Ort::AllocatedStringPtr res =
             metaData.LookupCustomMetadataMapAllocated (name, ortAllocator);
         if (res) {
-          GQuark quark = gst_tensorid_get_quark (res.get ());
+          GQuark quark = g_quark_from_static_string (res.get ());
           outputIds.push_back (quark);
         } else {
           GST_ERROR ("Failed to look up id for key %s", name);

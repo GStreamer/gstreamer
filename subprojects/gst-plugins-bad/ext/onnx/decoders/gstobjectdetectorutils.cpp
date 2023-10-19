@@ -23,7 +23,6 @@
 #include "gstobjectdetectorutils.h"
 
 #include <fstream>
-#include "tensor/gsttensorid.h"
 
 GstMlBoundingBox::GstMlBoundingBox (std::string lbl, float score, float _x0,
     float _y0, float _width, float _height):
@@ -66,7 +65,7 @@ namespace GstObjectDetectorUtils
   {
 
     auto classIndex = gst_tensor_meta_get_index_from_id (tmeta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_CLASSES));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_CLASSES));
     if (classIndex == GST_TENSOR_MISSING_ID) {
       GST_ERROR ("Missing class tensor id");
       return std::vector < GstMlBoundingBox > ();
@@ -91,7 +90,7 @@ namespace GstObjectDetectorUtils
 
     // number of detections
     index = gst_tensor_meta_get_index_from_id (tmeta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS));
     if (index == GST_TENSOR_MISSING_ID) {
       GST_WARNING ("Missing tensor data for tensor index %d", index);
       goto cleanup;
@@ -110,7 +109,7 @@ namespace GstObjectDetectorUtils
     // bounding boxes
     index =
         gst_tensor_meta_get_index_from_id (tmeta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_BOXES));
+					   g_quark_from_static_string(GST_MODEL_OBJECT_DETECTOR_BOXES));
     if (index == GST_TENSOR_MISSING_ID) {
       GST_WARNING ("Missing tensor data for tensor index %d", index);
       goto cleanup;
@@ -129,7 +128,7 @@ namespace GstObjectDetectorUtils
     // scores
     index =
         gst_tensor_meta_get_index_from_id (tmeta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_SCORES));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_SCORES));
     if (index == GST_TENSOR_MISSING_ID) {
       GST_ERROR ("Missing scores tensor id");
       goto cleanup;
@@ -149,7 +148,7 @@ namespace GstObjectDetectorUtils
     labelIndex = nullptr;
     index =
         gst_tensor_meta_get_index_from_id (tmeta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_CLASSES));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_CLASSES));
     if (index != GST_TENSOR_MISSING_ID) {
       memory[index] = gst_buffer_peek_memory (tmeta->tensor[index].data, 0);
       if (!memory[index]) {

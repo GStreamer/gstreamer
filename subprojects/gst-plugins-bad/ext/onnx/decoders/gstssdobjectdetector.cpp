@@ -56,7 +56,6 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideometa.h>
 #include "tensor/gsttensormeta.h"
-#include "tensor/gsttensorid.h"
 
 GST_DEBUG_CATEGORY_STATIC (ssd_object_detector_debug);
 #define GST_CAT_DEFAULT ssd_object_detector_debug
@@ -248,13 +247,13 @@ gst_ssd_object_detector_get_tensor_meta (GstSsdObjectDetector * object_detector,
       continue;
 
     gint boxesIndex = gst_tensor_meta_get_index_from_id (tensor_meta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_BOXES));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_BOXES));
     gint scoresIndex = gst_tensor_meta_get_index_from_id (tensor_meta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_SCORES));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_SCORES));
     gint numDetectionsIndex = gst_tensor_meta_get_index_from_id (tensor_meta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_NUM_DETECTIONS));
     gint clasesIndex = gst_tensor_meta_get_index_from_id (tensor_meta,
-        gst_tensorid_get_quark (GST_MODEL_OBJECT_DETECTOR_CLASSES));
+        g_quark_from_static_string (GST_MODEL_OBJECT_DETECTOR_CLASSES));
 
     if (boxesIndex == GST_TENSOR_MISSING_ID || scoresIndex == GST_TENSOR_MISSING_ID
         || numDetectionsIndex == GST_TENSOR_MISSING_ID)
