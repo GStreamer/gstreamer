@@ -3016,7 +3016,7 @@ a #GstGLDisplay.
 There are a number of environment variables that influence the choice of
 platform and window system specific functionality.
 - GST_GL_WINDOW influences the window system to use.  Common values are
-  'x11', 'wayland', 'win32' or 'cocoa'.
+  'x11', 'wayland', 'surfaceless', 'win32' or 'cocoa'.
 - GST_GL_PLATFORM influences the OpenGL platform to use.  Common values are
   'egl', 'glx', 'wgl' or 'cgl'.
 - GST_GL_API influences the OpenGL API requested by the OpenGL platform.
@@ -3452,6 +3452,8 @@ display's object lock held.</doc>
       <member name="winrt" value="1024" c:identifier="GST_GL_DISPLAY_TYPE_WINRT" glib:nick="winrt">
       </member>
       <member name="android" value="2048" c:identifier="GST_GL_DISPLAY_TYPE_ANDROID" glib:nick="android">
+      </member>
+      <member name="egl_surfaceless" value="4096" c:identifier="GST_GL_DISPLAY_TYPE_EGL_SURFACELESS" glib:nick="egl-surfaceless">
       </member>
       <member name="any" value="4294967295" c:identifier="GST_GL_DISPLAY_TYPE_ANY" glib:nick="any">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/gl/gstgldisplay.h">any display type</doc>

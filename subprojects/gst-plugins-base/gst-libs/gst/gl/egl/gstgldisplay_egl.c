@@ -25,8 +25,8 @@
  * @see_also: #GstGLDisplay
  *
  * #GstGLDisplayEGL represents a connection to an EGL `EGLDisplay` handle created
- * internally (gst_gl_display_egl_new()) or wrapped by the application
- * (gst_gl_display_egl_new_with_egl_display())
+ * internally (gst_gl_display_egl_new() or gst_gl_display_egl_new_surfaceless())
+ * or wrapped by the application (gst_gl_display_egl_new_with_egl_display())
  */
 
 #ifdef HAVE_CONFIG_H
@@ -122,8 +122,8 @@ gst_gl_display_egl_finalize (GObject * object)
  * @display: pointer to a display (or 0)
  *
  * Attempts to create a new `EGLDisplay` from @display.  If @type is
- * %GST_GL_DISPLAY_TYPE_ANY, then @display must be 0. @type must not be
- * %GST_GL_DISPLAY_TYPE_NONE.
+ * %GST_GL_DISPLAY_TYPE_ANY or %GST_GL_DISPLAY_TYPE_EGL_SURFACELESS, then
+ * @display must be 0. @type must not be %GST_GL_DISPLAY_TYPE_NONE.
  *
  * Returns: (nullable): A `EGLDisplay` or `EGL_NO_DISPLAY`
  *
@@ -137,8 +137,11 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
   _gst_eglGetPlatformDisplay_type _gst_eglGetPlatformDisplay = NULL;
 
   g_return_val_if_fail (type != GST_GL_DISPLAY_TYPE_NONE, EGL_NO_DISPLAY);
-  g_return_val_if_fail ((type != GST_GL_DISPLAY_TYPE_ANY && display != 0)
-      || (type == GST_GL_DISPLAY_TYPE_ANY && display == 0), EGL_NO_DISPLAY);
+  g_return_val_if_fail ((type != GST_GL_DISPLAY_TYPE_ANY &&
+          type != GST_GL_DISPLAY_TYPE_EGL_SURFACELESS && display != 0)
+      || ((type == GST_GL_DISPLAY_TYPE_ANY ||
+              type == GST_GL_DISPLAY_TYPE_EGL_SURFACELESS) && display == 0),
+      EGL_NO_DISPLAY);
 
   init_debug ();
 
@@ -233,6 +236,11 @@ gst_gl_display_egl_get_from_native (GstGLDisplayType type, guintptr display)
         NULL);
   }
   /* android only has one winsys/display connection */
+  if (ret == EGL_NO_DISPLAY && (type & GST_GL_DISPLAY_TYPE_EGL_SURFACELESS) &&
+      gst_gl_check_extension ("EGL_MESA_platform_surfaceless", egl_exts)) {
+    ret = _gst_eglGetPlatformDisplay (EGL_PLATFORM_SURFACELESS_MESA,
+        (gpointer) display, NULL);
+  }
 
   if (ret != EGL_NO_DISPLAY)
     return ret;
@@ -262,6 +270,40 @@ gst_gl_display_egl_new (void)
 
   if (!display) {
     GST_INFO ("Failed to open EGL display connection");
+    return NULL;
+  }
+
+  ret = g_object_new (GST_TYPE_GL_DISPLAY_EGL, NULL);
+  gst_object_ref_sink (ret);
+  ret->display = display;
+
+  return ret;
+}
+
+/**
+ * gst_gl_display_egl_new_surfaceless:
+ *
+ * Create a new surfaceless #GstGLDisplayEGL using the Mesa3D
+ * EGL_PLATFORM_SURFACELESS_MESA extension.
+ *
+ * Returns: (transfer full) (nullable): a new #GstGLDisplayEGL or %NULL
+ *
+ * Since: 1.24
+ */
+GstGLDisplayEGL *
+gst_gl_display_egl_new_surfaceless (void)
+{
+  GstGLDisplayEGL *ret;
+  gpointer display;
+
+  init_debug ();
+
+  display =
+      gst_gl_display_egl_get_from_native (GST_GL_DISPLAY_TYPE_EGL_SURFACELESS,
+      0);
+
+  if (!display) {
+    GST_INFO ("Failed to create a surfaceless EGL display");
     return NULL;
   }
 

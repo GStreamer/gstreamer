@@ -12,7 +12,7 @@ option('gl_platform', type : 'array',
        choices : ['glx', 'egl', 'cgl', 'wgl', 'eagl', 'auto'], value : ['auto'],
        description : 'A comma separated list of opengl platforms to enable building against')
 option('gl_winsys', type : 'array',
-       choices : ['x11', 'wayland', 'win32', 'winrt', 'cocoa', 'dispmanx', 'egl', 'viv-fb', 'gbm', 'android', 'auto'], value : ['auto'],
+       choices : ['x11', 'wayland', 'win32', 'winrt', 'cocoa', 'dispmanx', 'egl', 'surfaceless', 'viv-fb', 'gbm', 'android', 'auto'], value : ['auto'],
        description : 'A comma separated list of opengl windows systems to enable building against. Supported values are x11, wayland, win32, winrt, cocoa, dispmanx, egl, viv-fb, gbm, and android')
 option('egl_module_name', type : 'string', value : '',
        description : 'The file to pass to g_module_open to open the libEGL library (default: libEGL)')
