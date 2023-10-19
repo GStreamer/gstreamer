@@ -18773,6 +18773,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "rfc7273-use-system-clock": {
+                        "blurb": "Use system clock as RFC7273 media clock (requires system clock to be synced externally)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "rtx-deadline": {
                         "blurb": "The deadline for a valid RTX request in milliseconds. (-1 automatic)",
                         "conditionally-available": false,

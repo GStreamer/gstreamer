@@ -158,6 +158,7 @@ enum
 #define DEFAULT_ADD_REFERENCE_TIMESTAMP_META FALSE
 #define DEFAULT_FASTSTART_MIN_PACKETS 0
 #define DEFAULT_SYNC_INTERVAL 0
+#define DEFAULT_RFC7273_USE_SYSTEM_CLOCK FALSE
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -193,6 +194,7 @@ enum
   PROP_ADD_REFERENCE_TIMESTAMP_META,
   PROP_FASTSTART_MIN_PACKETS,
   PROP_SYNC_INTERVAL,
+  PROP_RFC7273_USE_SYSTEM_CLOCK,
 };
 
 #define JBUF_LOCK(priv)   G_STMT_START {			\
@@ -337,6 +339,7 @@ struct _GstRtpJitterBufferPrivate
   guint faststart_min_packets;
   gboolean add_reference_timestamp_meta;
   guint sync_interval;
+  gboolean rfc7273_use_system_clock;
 
   /* Reference for GstReferenceTimestampMeta */
   GstCaps *reference_timestamp_caps;
@@ -998,6 +1001,33 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpJitterBuffer:rfc7273-use-system-clock:
+   *
+   * Uses the system clock as media clock in RFC7273 mode instead of
+   * instantiating an NTP or PTP clock.
+   *
+   * This will always provide the correct sender timestamps in the
+   * `GstReferenceTimestampMeta` as long as the system clock is synced to the
+   * actual media clock with at most a few seconds difference.
+   *
+   * PTS on outgoing buffers would be as accurate as the synchronization
+   * between the actual media clock and the system clock.
+   *
+   * This can be useful if only recovery of the original sender timestamps is
+   * needed and syncing to a PTP/NTP clock would be unnecessarily complex, or
+   * if the system clock already is synchronized to the correct clock and
+   * doing it another time inside GStreamer would be unnecessary.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_RFC7273_USE_SYSTEM_CLOCK,
+      g_param_spec_boolean ("rfc7273-use-system-clock",
+          "Use system clock as RFC7273 clock",
+          "Use system clock as RFC7273 media clock (requires system clock "
+          "to be synced externally)", DEFAULT_RFC7273_USE_SYSTEM_CLOCK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
@@ -1128,6 +1158,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->faststart_min_packets = DEFAULT_FASTSTART_MIN_PACKETS;
   priv->add_reference_timestamp_meta = DEFAULT_ADD_REFERENCE_TIMESTAMP_META;
   priv->sync_interval = DEFAULT_SYNC_INTERVAL;
+  priv->rfc7273_use_system_clock = DEFAULT_RFC7273_USE_SYSTEM_CLOCK;
 
   priv->ts_offset_remainder = 0;
   priv->last_dts = -1;
@@ -1594,11 +1625,15 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       GST_TIME_ARGS (priv->npt_start), GST_TIME_ARGS (priv->npt_stop));
 
   if ((ts_refclk = gst_structure_get_string (caps_struct, "a-ts-refclk"))) {
+    gboolean use_system_clock;
     GstClock *clock = NULL;
     guint64 clock_offset = -1;
+    gint64 clock_correction = 0;
 
     GST_DEBUG_OBJECT (jitterbuffer, "Have timestamp reference clock %s",
         ts_refclk);
+
+    use_system_clock = priv->rfc7273_use_system_clock;
 
     if (g_str_has_prefix (ts_refclk, "ntp=")) {
       if (g_str_has_prefix (ts_refclk, "ntp=/traceable/")) {
@@ -1629,7 +1664,15 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
         else
           hostname = g_strdup (host);
 
-        clock = gst_ntp_clock_new (NULL, hostname, port, 0);
+        if (use_system_clock) {
+          clock =
+              g_object_new (GST_TYPE_SYSTEM_CLOCK, "clock-type",
+              GST_CLOCK_TYPE_REALTIME, NULL);
+          /* difference between UNIX epoch and NTP epoch */
+          clock_correction = GST_RTP_NTP_UNIX_OFFSET * GST_SECOND;
+        } else {
+          clock = gst_ntp_clock_new (NULL, hostname, port, 0);
+        }
 
         ts_meta_ref = gst_caps_new_simple ("timestamp/x-ntp",
             "host", G_TYPE_STRING, hostname, "port", G_TYPE_INT, port, NULL);
@@ -1644,7 +1687,15 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       if (domainstr[0] != ':' || sscanf (domainstr, ":%u", &domain) != 1)
         domain = 0;
 
-      clock = gst_ptp_clock_new (NULL, domain);
+      if (use_system_clock) {
+        clock =
+            g_object_new (GST_TYPE_SYSTEM_CLOCK, "clock-type",
+            GST_CLOCK_TYPE_REALTIME, NULL);
+        /* difference between UNIX and PTP/TAI (37 leap seconds as of October 2023) */
+        clock_correction = 37 * GST_SECOND;
+      } else {
+        clock = gst_ptp_clock_new (NULL, domain);
+      }
 
       ts_meta_ref = gst_caps_new_simple ("timestamp/x-ptp",
           "version", G_TYPE_STRING, "IEEE1588-2008",
@@ -1652,7 +1703,14 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     } else if (!g_strcmp0 (ts_refclk, "local")) {
       ts_meta_ref = gst_caps_new_empty_simple ("timestamp/x-ntp");
     } else {
-      GST_FIXME_OBJECT (jitterbuffer, "Unsupported timestamp reference clock");
+      if (use_system_clock) {
+        clock =
+            g_object_new (GST_TYPE_SYSTEM_CLOCK, "clock-type",
+            GST_CLOCK_TYPE_REALTIME, NULL);
+      } else {
+        GST_FIXME_OBJECT (jitterbuffer,
+            "Unsupported timestamp reference clock");
+      }
     }
 
     if ((mediaclk = gst_structure_get_string (caps_struct, "a-mediaclk"))) {
@@ -1668,9 +1726,10 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
       }
     }
 
-    rtp_jitter_buffer_set_media_clock (priv->jbuf, clock, clock_offset);
+    rtp_jitter_buffer_set_media_clock (priv->jbuf, clock, clock_offset,
+        clock_correction);
   } else {
-    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1);
+    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1, 0);
     ts_meta_ref = gst_caps_new_empty_simple ("timestamp/x-ntp");
   }
 
@@ -5211,6 +5270,12 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->sync_interval = g_value_get_uint (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RFC7273_USE_SYSTEM_CLOCK:
+      JBUF_LOCK (priv);
+      priv->rfc7273_use_system_clock = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -5375,6 +5440,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_SYNC_INTERVAL:
       JBUF_LOCK (priv);
       g_value_set_uint (value, priv->sync_interval);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RFC7273_USE_SYSTEM_CLOCK:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->rfc7273_use_system_clock);
       JBUF_UNLOCK (priv);
       break;
     default:

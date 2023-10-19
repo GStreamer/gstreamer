@@ -288,7 +288,7 @@ media_clock_synced_cb (GstClock * clock, gboolean synced,
  */
 void
 rtp_jitter_buffer_set_media_clock (RTPJitterBuffer * jbuf, GstClock * clock,
-    guint64 clock_offset)
+    guint64 clock_offset, gint64 clock_correction)
 {
   g_mutex_lock (&jbuf->clock_lock);
   if (jbuf->media_clock) {
@@ -300,6 +300,7 @@ rtp_jitter_buffer_set_media_clock (RTPJitterBuffer * jbuf, GstClock * clock,
   }
   jbuf->media_clock = clock;
   jbuf->media_clock_offset = clock_offset;
+  jbuf->media_clock_correction = clock_correction;
 
   if (jbuf->pipeline_clock && jbuf->media_clock) {
     if (same_clock (jbuf->pipeline_clock, jbuf->media_clock)) {
@@ -763,6 +764,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
   GstClockTime gstrtptime, pts;
   GstClock *media_clock, *pipeline_clock;
   guint64 media_clock_offset;
+  gint64 media_clock_correction;
   gboolean rfc7273_mode;
 
   *p_ntp_time = GST_CLOCK_TIME_NONE;
@@ -809,6 +811,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
   pipeline_clock =
       jbuf->pipeline_clock ? gst_object_ref (jbuf->pipeline_clock) : NULL;
   media_clock_offset = jbuf->media_clock_offset;
+  media_clock_correction = jbuf->media_clock_correction;
   g_mutex_unlock (&jbuf->clock_lock);
 
   gstrtptime =
@@ -944,6 +947,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     /* Current NTP clock estimation */
     ntptime = gst_clock_get_internal_time (media_clock);
+    ntptime += media_clock_correction;
 
     /* Current RTP time based on the estimated NTP clock and the corresponding
      * RTP time period start */
@@ -1037,6 +1041,11 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
         G_GUINT64_FORMAT ")", GST_TIME_ARGS (ntptime), ntprtptime);
 
     *p_ntp_time = ntptime;
+
+    if (media_clock_correction < 0 || ntptime >= media_clock_correction)
+      ntptime -= media_clock_correction;
+    else
+      ntptime = 0;
 
     /* Packet timestamp converted to the pipeline clock.
      * Note that this includes again inaccuracy caused by the estimation of
