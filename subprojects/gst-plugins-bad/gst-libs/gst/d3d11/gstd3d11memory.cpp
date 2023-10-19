@@ -988,8 +988,12 @@ create_render_target_views (GstD3D11Memory * mem)
     return FALSE;
   }
 
-  render_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-  render_desc.Texture2D.MipSlice = 0;
+  if (priv->desc.SampleDesc.Count > 1) {
+    render_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
+  } else {
+    render_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+    render_desc.Texture2D.MipSlice = 0;
+  }
 
   for (i = 0; i < num_views; i++) {
     render_desc.Format = formats[i];

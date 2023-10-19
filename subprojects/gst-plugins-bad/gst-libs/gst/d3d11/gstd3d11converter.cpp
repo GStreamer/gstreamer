@@ -309,6 +309,7 @@ struct _GstD3D11ConverterPrivate
   ComPtr < ID3D11SamplerState > sampler;
   ComPtr < ID3D11SamplerState > linear_sampler;
   ComPtr < ID3D11RasterizerState > rasterizer;
+  ComPtr < ID3D11RasterizerState > msaa_rasterizer;
   PixelShaderList ps;
   D3D11_VIEWPORT viewport[GST_VIDEO_MAX_PLANES];
 
@@ -787,6 +788,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
   ComPtr < ID3D11RasterizerState > rasterizer;
+  ComPtr < ID3D11RasterizerState > msaa_rasterizer;
   D3D11_SUBRESOURCE_DATA subresource;
 
   memset (&rasterizer_desc, 0, sizeof (rasterizer_desc));
@@ -834,6 +836,15 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   hr = device_handle->CreateRasterizerState (&rasterizer_desc, &rasterizer);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create rasterizer state");
+    return FALSE;
+  }
+
+  rasterizer_desc.MultisampleEnable = TRUE;
+  rasterizer_desc.AntialiasedLineEnable = TRUE;
+  hr = device_handle->CreateRasterizerState (&rasterizer_desc,
+      &msaa_rasterizer);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Couldn't create MSAA rasterizer state");
     return FALSE;
   }
 
@@ -952,6 +963,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   priv->linear_sampler = linear_sampler;
   priv->ps = ps_list;
   priv->rasterizer = rasterizer;
+  priv->msaa_rasterizer = msaa_rasterizer;
 
   priv->input_texture_width = GST_VIDEO_INFO_WIDTH (in_info);
   priv->input_texture_height = GST_VIDEO_INFO_HEIGHT (in_info);
@@ -2153,7 +2165,7 @@ out:
 static gboolean
 gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
     ID3D11ShaderResourceView * srv[GST_VIDEO_MAX_PLANES],
-    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES])
+    ID3D11RenderTargetView * rtv[GST_VIDEO_MAX_PLANES], gboolean multisampled)
 {
   GstD3D11ConverterPrivate *priv;
   ComPtr < ID3D11Resource > resource;
@@ -2244,7 +2256,11 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   auto ps = priv->ps[0];
   context->PSSetShader (ps->shader.Get (), nullptr, 0);
   context->RSSetViewports (ps->num_rtv, priv->viewport);
-  context->RSSetState (priv->rasterizer.Get ());
+  if (multisampled)
+    context->RSSetState (priv->msaa_rasterizer.Get ());
+  else
+    context->RSSetState (priv->rasterizer.Get ());
+
   context->OMSetRenderTargets (ps->num_rtv, rtv, nullptr);
   if (priv->blend) {
     context->OMSetBlendState (priv->blend.Get (),
@@ -2941,6 +2957,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
   guint num_srv, num_rtv;
   gboolean ret = FALSE;
   gboolean in_d3d11;
+  gboolean multisampled = FALSE;
 
   std::lock_guard < std::mutex > lk (priv->prop_lock);
 
@@ -2966,6 +2983,9 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
     return FALSE;
   }
 
+  if (desc.SampleDesc.Count > 1)
+    multisampled = TRUE;
+
   gst_d3d11_converter_update_hdr10_meta (self);
   /* Update in/out rect */
   if (!gst_d3d11_converter_update_dest_rect (self)) {
@@ -2979,7 +2999,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
   }
 
   in_d3d11 = gst_d3d11_converter_is_d3d11_buffer (self, in_buf);
-  if (gst_d3d11_converter_processor_available (self)) {
+  if (!multisampled && gst_d3d11_converter_processor_available (self)) {
     gboolean use_processor = FALSE;
     gboolean piv_available = FALSE;
 
@@ -3092,7 +3112,7 @@ gst_d3d11_converter_convert_buffer_internal (GstD3D11Converter * self,
 
   GST_TRACE_OBJECT (self, "Converting using shader");
 
-  ret = gst_d3d11_converter_convert_internal (self, srv, rtv);
+  ret = gst_d3d11_converter_convert_internal (self, srv, rtv, multisampled);
 
 out:
   if (in_buf)
