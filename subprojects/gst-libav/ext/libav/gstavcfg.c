@@ -258,6 +258,48 @@ done:
   return res;
 }
 
+/** GstFFMpegTrilian:
+ *
+ * Since: 1.24
+ */
+
+/** GstFFMpegTrilian::auto
+ *
+ * Since: 1.24
+ */
+
+/** GstFFMpegTrilian::on
+ *
+ * Since: 1.24
+ */
+
+/** GstFFMpegTrilian::off
+ *
+ * Since: 1.24
+ */
+
+#define GST_TYPE_FFMPEG_TRILIAN (gst_ffmpeg_trilian_get_type ())
+static GType
+gst_ffmpeg_trilian_get_type (void)
+{
+  static const GEnumValue types[] = {
+    {-1, "Auto", "auto"},
+    {0, "Off", "off"},
+    {1, "On", "on"},
+    {0, NULL, NULL},
+  };
+  static gsize id = 0;
+
+  if (g_once_init_enter (&id)) {
+    GType gtype = g_enum_register_static ("GstFFMpegTrilian", types);
+
+    gst_type_mark_as_plugin_api (gtype, 0);
+    g_once_init_leave (&id, gtype);
+  }
+
+  return (GType) id;
+}
+
 static guint
 install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
     gint flags, const gchar * extra_help, GHashTable * overrides)
@@ -385,8 +427,17 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
         g_object_class_install_property (gobject_class, prop_id++, pspec);
         break;
       case AV_OPT_TYPE_BOOL:
-        pspec = g_param_spec_boolean (name, name, help,
-            opt->default_val.i64 ? TRUE : FALSE, G_PARAM_READWRITE);
+        /* Some ffmpeg options claims to be booleans but are actually 3-values enums
+         * with -1 as default instead of 1 or 0. Handle those using a custom enum
+         * so we keep the same defaults as ffmpeg and users can properly configure them.
+         */
+        if (opt->default_val.i64 == -1) {
+          pspec = g_param_spec_enum (name, name, help,
+              GST_TYPE_FFMPEG_TRILIAN, opt->default_val.i64, G_PARAM_READWRITE);
+        } else {
+          pspec = g_param_spec_boolean (name, name, help,
+              opt->default_val.i64 ? TRUE : FALSE, G_PARAM_READWRITE);
+        }
         g_object_class_install_property (gobject_class, prop_id++, pspec);
         break;
         /* TODO: didn't find options for the video encoders with
