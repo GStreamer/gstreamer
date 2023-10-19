@@ -308,7 +308,7 @@ gst_gl_display_type_from_environment (void)
       return GST_GL_DISPLAY_TYPE_EAGL;
     } else if (g_strstr_len (env, 7, "android")) {
       return GST_GL_DISPLAY_TYPE_EGL;
-    } else if (g_strstr_len (env, 4, "winrt")) {
+    } else if (g_strstr_len (env, 5, "winrt")) {
       return GST_GL_DISPLAY_TYPE_EGL;
     } else {
       return GST_GL_DISPLAY_TYPE_NONE;
