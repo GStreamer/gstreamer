@@ -26,8 +26,23 @@
 #include <onnxruntime_cxx_api.h>
 #include <gst/video/video.h>
 #include "gstml.h"
-#include "gstonnxenums.h"
 #include "tensor/gsttensormeta.h"
+
+
+typedef enum
+{
+  GST_ONNX_OPTIMIZATION_LEVEL_DISABLE_ALL,
+  GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_BASIC,
+  GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_EXTENDED,
+  GST_ONNX_OPTIMIZATION_LEVEL_ENABLE_ALL,
+} GstOnnxOptimizationLevel;
+
+typedef enum
+{
+  GST_ONNX_EXECUTION_PROVIDER_CPU,
+  GST_ONNX_EXECUTION_PROVIDER_CUDA,
+} GstOnnxExecutionProvider;
+
 
 namespace GstOnnxNamespace {
 

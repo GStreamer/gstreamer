@@ -26,36 +26,12 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/video/gstvideofilter.h>
-#include "gstonnxenums.h"
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_ONNX_INFERENCE            (gst_onnx_inference_get_type())
 G_DECLARE_FINAL_TYPE (GstOnnxInference, gst_onnx_inference, GST,
     ONNX_INFERENCE, GstBaseTransform)
-
-/**
- * GstOnnxInference:
- *
- * @model_file model file
- * @optimization_level: ONNX session optimization level
- * @execution_provider: ONNX execution provider
- * @onnx_client opaque pointer to ONNX client
- * @onnx_disabled true if inference is disabled
- * @video_info @ref GstVideoInfo of sink caps
- *
- * Since: 1.24
- */
- struct _GstOnnxInference
- {
-   GstBaseTransform basetransform;
-   gchar *model_file;
-   GstOnnxOptimizationLevel optimization_level;
-   GstOnnxExecutionProvider execution_provider;
-   gpointer onnx_client;
-   gboolean onnx_disabled;
-   GstVideoInfo video_info;
- };
 
 GST_ELEMENT_REGISTER_DECLARE (onnx_inference)
 

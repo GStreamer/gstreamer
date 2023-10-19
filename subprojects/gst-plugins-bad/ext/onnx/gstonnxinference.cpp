@@ -87,6 +87,28 @@
 #include "gstonnxinference.h"
 #include "gstonnxclient.h"
 
+
+/*
+ * GstOnnxInference:
+ *
+ * @model_file model file
+ * @optimization_level: ONNX session optimization level
+ * @execution_provider: ONNX execution provider
+ * @onnx_client opaque pointer to ONNX client
+ * @onnx_disabled true if inference is disabled
+ * @video_info @ref GstVideoInfo of sink caps
+ */
+struct _GstOnnxInference
+{
+  GstBaseTransform basetransform;
+  gchar *model_file;
+  GstOnnxOptimizationLevel optimization_level;
+  GstOnnxExecutionProvider execution_provider;
+  gpointer onnx_client;
+  gboolean onnx_disabled;
+  GstVideoInfo video_info;
+};
+
 GST_DEBUG_CATEGORY_STATIC (onnx_inference_debug);
 #define GST_CAT_DEFAULT onnx_inference_debug
 #define GST_ONNX_CLIENT_MEMBER( self ) ((GstOnnxNamespace::GstOnnxClient *) (self->onnx_client))
