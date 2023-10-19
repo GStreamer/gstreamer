@@ -260,7 +260,21 @@ enum
 
 struct _GstD3D11ConverterPrivate
 {
-  ~_GstD3D11ConverterPrivate ()
+  _GstD3D11ConverterPrivate ()
+  {
+    for (guint i = 0; i < 4; i++)
+    {
+      for (guint j = 0; j < 4; j++)
+      {
+        if (i == j)
+          custom_transform[i * 4 + j] = 1.0;
+        else
+          custom_transform[i * 4 + j] = 0.0;
+      }
+    }
+  }
+
+   ~_GstD3D11ConverterPrivate ()
   {
     g_free (in_mdcv_str);
     g_free (out_mdcv_str);
@@ -311,6 +325,7 @@ struct _GstD3D11ConverterPrivate
   gboolean update_src_rect = FALSE;
   gboolean update_dest_rect = FALSE;
   gboolean update_alpha = FALSE;
+  FLOAT custom_transform[16];
 
   PSConstBuffer const_data;
 
@@ -968,9 +983,11 @@ gst_d3d11_converter_apply_orientation (GstD3D11Converter * self)
   switch (priv->video_direction) {
     case GST_VIDEO_ORIENTATION_IDENTITY:
     case GST_VIDEO_ORIENTATION_AUTO:
-    case GST_VIDEO_ORIENTATION_CUSTOM:
     default:
       matrix = g_matrix_identity;
+      break;
+    case GST_VIDEO_ORIENTATION_CUSTOM:
+      matrix = priv->custom_transform;
       break;
     case GST_VIDEO_ORIENTATION_90R:
       matrix = g_matrix_90r;
@@ -1080,17 +1097,19 @@ gst_d3d11_converter_update_src_rect (GstD3D11Converter * self)
         break;
     }
 
-    if (priv->enable_rotation &&
-        (priv->processor_caps.FeatureCaps & FEATURE_CAPS_ROTATION) == 0) {
-      GST_WARNING_OBJECT (self, "Device does not support rotation");
-      priv->processor_direction_not_supported = TRUE;
-    }
+    if (priv->video_direction != GST_VIDEO_ORIENTATION_CUSTOM) {
+      if (priv->enable_rotation &&
+          (priv->processor_caps.FeatureCaps & FEATURE_CAPS_ROTATION) == 0) {
+        GST_WARNING_OBJECT (self, "Device does not support rotation");
+        priv->processor_direction_not_supported = TRUE;
+      }
 
-    if (priv->enable_mirror &&
-        (priv->processor_caps.FeatureCaps & PROCESSOR_FEATURE_CAPS_MIRROR) ==
-        0) {
-      GST_WARNING_OBJECT (self, "Device does not support mirror");
-      priv->processor_direction_not_supported = TRUE;
+      if (priv->enable_mirror &&
+          (priv->processor_caps.FeatureCaps & PROCESSOR_FEATURE_CAPS_MIRROR) ==
+          0) {
+        GST_WARNING_OBJECT (self, "Device does not support mirror");
+        priv->processor_direction_not_supported = TRUE;
+      }
     }
   }
 
@@ -1197,7 +1216,8 @@ gst_d3d11_converter_update_dest_rect (GstD3D11Converter * self)
 
   if (priv->fill_border && (priv->dest_x != 0 || priv->dest_y != 0 ||
           priv->dest_width != out_info->width ||
-          priv->dest_height != out_info->height)) {
+          priv->dest_height != out_info->height ||
+          priv->video_direction == GST_VIDEO_ORIENTATION_CUSTOM)) {
     GST_DEBUG_OBJECT (self, "Enable background color");
     priv->clear_background = TRUE;
   } else {
@@ -2686,9 +2706,11 @@ gst_d3d11_converter_processor_available (GstD3D11Converter * self)
   if (gst_d3d11_converter_need_blend (self))
     return FALSE;
 
-  /* flip/rotate is not supported by processor */
-  if (priv->processor_direction_not_supported)
+  /* flip/rotate or affine transform is not supported by processor */
+  if (priv->processor_direction_not_supported ||
+      priv->video_direction == GST_VIDEO_ORIENTATION_CUSTOM) {
     return FALSE;
+  }
 
   return TRUE;
 }
@@ -3120,7 +3142,6 @@ gst_d3d11_converter_convert_buffer (GstD3D11Converter * converter,
  *
  * Since: 1.22
  */
-
 gboolean
 gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf)
@@ -3131,4 +3152,37 @@ gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Converter * converter,
 
   return gst_d3d11_converter_convert_buffer_internal (converter,
       in_buf, out_buf);
+}
+
+/**
+ * gst_d3d11_converter_set_transform_matrix:
+ * @converter: a #GstD3D11Converter
+ * @matrix: the row-major 4x4 transform matrix
+ *
+ * Apply transform matrix
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_d3d11_converter_set_transform_matrix (GstD3D11Converter * converter,
+    gfloat matrix[16])
+{
+  GstD3D11ConverterPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_CONVERTER (converter), FALSE);
+  g_return_val_if_fail (matrix, FALSE);
+
+  priv = converter->priv;
+  if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0) {
+    GST_ERROR_OBJECT (converter, "Shader backend is disabled");
+    return FALSE;
+  }
+
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
+  memcpy (priv->custom_transform, matrix, sizeof (priv->custom_transform));
+  priv->update_src_rect = TRUE;
+  priv->update_dest_rect = TRUE;
+  return TRUE;
 }
