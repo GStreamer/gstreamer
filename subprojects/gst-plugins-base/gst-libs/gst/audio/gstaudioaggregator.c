@@ -2224,6 +2224,8 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   GstElement *element;
   GstAudioAggregator *aagg;
   GList *iter;
+  GstPad **sinkpads;
+  guint n_sinkpads, i;
   GstFlowReturn ret;
   GstBuffer *outbuf = NULL;
   gint64 next_offset;
@@ -2471,9 +2473,17 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
   }
 
   GST_OBJECT_LOCK (agg);
-  for (iter = element->sinkpads; iter; iter = iter->next) {
-    GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) iter->data;
-    GstAggregatorPad *aggpad = (GstAggregatorPad *) iter->data;
+
+  // mix_buffer() will shortly release the object lock so we need to
+  // ensure that the pad list stays valid.
+  n_sinkpads = element->numsinkpads;
+  sinkpads = g_newa (GstPad *, n_sinkpads + 1);
+  for (i = 0, iter = element->sinkpads; iter; i++, iter = iter->next)
+    sinkpads[i] = gst_object_ref (iter->data);
+
+  for (i = 0; i < n_sinkpads; i++) {
+    GstAudioAggregatorPad *pad = (GstAudioAggregatorPad *) sinkpads[i];
+    GstAggregatorPad *aggpad = (GstAggregatorPad *) sinkpads[i];
 
     if (gst_aggregator_pad_is_inactive (aggpad))
       continue;
@@ -2504,6 +2514,9 @@ gst_audio_aggregator_aggregate (GstAggregator * agg, gboolean timeout)
     GST_OBJECT_UNLOCK (pad);
   }
   GST_OBJECT_UNLOCK (agg);
+
+  for (i = 0; i < n_sinkpads; i++)
+    gst_object_unref (sinkpads[i]);
 
   if (dropped) {
     /* We dropped a buffer, retry */
