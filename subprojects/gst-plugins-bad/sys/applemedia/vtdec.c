@@ -812,7 +812,7 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   /* Negotiate now so that we know whether we need to use the GL upload meta or not. 
    * gst_vtenc_negotiate() will drain before attempting to negotiate. */
   if (gst_pad_check_reconfigure (decoder->srcpad)) {
-    if (!gst_video_decoder_negotiate (decoder)) {
+    if (!gst_vtdec_negotiate (decoder)) {
       gst_pad_mark_reconfigure (decoder->srcpad);
       if (GST_PAD_IS_FLUSHING (decoder->srcpad))
         ret = GST_FLOW_FLUSHING;
