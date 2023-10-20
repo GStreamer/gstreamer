@@ -84,6 +84,7 @@ class GstCheckTest(MesonTest):
     def get_valgrind_suppressions(self):
         result = super().get_valgrind_suppressions()
         result.extend(get_gst_build_valgrind_suppressions())
+        result.append("/usr/share/glib-2.0/valgrind/glib.supp")
 
         return result
 
