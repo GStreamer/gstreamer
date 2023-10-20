@@ -436,6 +436,8 @@ gst_qml6_gl_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
 {
   GstQml6GLSrc *qt_src = GST_QML6_GL_SRC (psrc);
   GstCaps *updated_caps = NULL;
+  GstGLContext* context = qt_src->context;
+  GstGLSyncMeta *sync_meta;
 
   *buffer = qt6_gl_window_take_buffer (qt_src->window, &updated_caps);
   GST_DEBUG_OBJECT (qt_src, "produced buffer %p", *buffer);
@@ -447,6 +449,10 @@ gst_qml6_gl_src_create (GstPushSrc * psrc, GstBuffer ** buffer)
     gst_base_src_set_caps (GST_BASE_SRC (qt_src), updated_caps);
   }
   gst_clear_caps (&updated_caps);
+
+  sync_meta = gst_buffer_get_gl_sync_meta(*buffer);
+  if (sync_meta)
+      gst_gl_sync_meta_wait(sync_meta, context);
 
   if (!qt_src->downstream_supports_affine_meta) {
     if (qt_src->pending_image_orientation) {
