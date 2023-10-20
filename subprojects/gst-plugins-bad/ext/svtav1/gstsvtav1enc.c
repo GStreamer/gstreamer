@@ -838,6 +838,8 @@ gst_svtav1enc_send_eos (GstSvtAv1Enc * svtav1enc)
   input_buffer.p_buffer = NULL;
   input_buffer.metadata = NULL;
 
+  GST_DEBUG_OBJECT (svtav1enc, "send eos");
+
   ret = svt_av1_enc_send_picture (svtav1enc->svt_encoder, &input_buffer);
 
   if (ret != EB_ErrorNone) {
@@ -866,6 +868,8 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
   GstFlowReturn ret = GST_FLOW_OK;
   EbErrorType res = EB_ErrorNone;
   gboolean encode_at_eos = FALSE;
+
+  GST_DEBUG_OBJECT (svtav1enc, "dequeue encoded frames");
 
   do {
     GstVideoCodecFrame *frame = NULL;
@@ -1049,13 +1053,17 @@ gst_svtav1enc_handle_frame (GstVideoEncoder * encoder,
 static GstFlowReturn
 gst_svtav1enc_finish (GstVideoEncoder * encoder)
 {
+  GstFlowReturn ret = GST_FLOW_OK;
   GstSvtAv1Enc *svtav1enc = GST_SVTAV1ENC (encoder);
 
   GST_DEBUG_OBJECT (svtav1enc, "finish");
 
-  gst_svtav1enc_send_eos (svtav1enc);
+  if (svtav1enc->state) {
+    gst_svtav1enc_send_eos (svtav1enc);
+    ret = gst_svtav1enc_dequeue_encoded_frames (svtav1enc, TRUE, TRUE);
+  }
 
-  return gst_svtav1enc_dequeue_encoded_frames (svtav1enc, TRUE, TRUE);
+  return ret;
 }
 
 static gboolean
