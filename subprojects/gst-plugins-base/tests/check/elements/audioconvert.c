@@ -46,7 +46,8 @@ static GstPad *mysrcpad, *mysinkpad;
 
 /* takes over reference for outcaps */
 static GstElement *
-setup_audioconvert (GstCaps * outcaps)
+setup_audioconvert (GstCaps * outcaps, gboolean use_mix_matrix,
+    GValue * mix_matrix)
 {
   GstPadTemplate *sinktemplate;
   static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
@@ -63,6 +64,9 @@ setup_audioconvert (GstCaps * outcaps)
   audioconvert = gst_check_setup_element ("audioconvert");
   g_object_set (G_OBJECT (audioconvert), "dithering", 0, NULL);
   g_object_set (G_OBJECT (audioconvert), "noise-shaping", 0, NULL);
+  if (use_mix_matrix) {
+    g_object_set_property (G_OBJECT (audioconvert), "mix-matrix", mix_matrix);
+  }
   mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate);
   mysinkpad =
       gst_check_setup_sink_pad_from_template (audioconvert, sinktemplate);
@@ -408,7 +412,8 @@ get_int_mc_caps (guint channels, gint endianness, guint width,
 static void
 verify_convert (const gchar * which, void *in, int inlength,
     GstCaps * incaps, void *out, int outlength, GstCaps * outcaps,
-    GstFlowReturn expected_flow, gboolean in_place_allowed)
+    GstFlowReturn expected_flow, gboolean in_place_allowed,
+    gboolean use_mix_matrix, GValue * mix_matrix)
 {
   GstBuffer *inbuffer, *outbuffer;
   GstElement *audioconvert;
@@ -419,7 +424,7 @@ verify_convert (const gchar * which, void *in, int inlength,
   GST_DEBUG ("outcaps: %" GST_PTR_FORMAT, outcaps);
   ASSERT_CAPS_REFCOUNT (incaps, "incaps", 1);
   ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 1);
-  audioconvert = setup_audioconvert (outcaps);
+  audioconvert = setup_audioconvert (outcaps, use_mix_matrix, mix_matrix);
   ASSERT_CAPS_REFCOUNT (outcaps, "outcaps", 2);
 
   fail_unless (gst_element_set_state (audioconvert,
@@ -505,17 +510,22 @@ done:
 #define RUN_CONVERSION(which, inarray, in_get_caps, outarray, out_get_caps)    \
   verify_convert (which, inarray, sizeof (inarray),                            \
         in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
-        TRUE)
+        TRUE, FALSE, &(GValue) G_VALUE_INIT);
+
+#define RUN_CONVERSION_WITH_MATRIX(which, inarray, in_get_caps, outarray, out_get_caps, mix_matrix)    \
+  verify_convert (which, inarray, sizeof (inarray),                            \
+        in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
+        TRUE, TRUE, mix_matrix);
 
 #define RUN_CONVERSION_TO_FAIL(which, inarray, in_caps, outarray, out_caps)    \
   verify_convert (which, inarray, sizeof (inarray),                            \
         in_caps, outarray, sizeof (outarray), out_caps,                        \
-        GST_FLOW_NOT_NEGOTIATED, TRUE)
+        GST_FLOW_NOT_NEGOTIATED, TRUE, FALSE, &(GValue) G_VALUE_INIT);
 
 #define RUN_CONVERSION_NOT_INPLACE(which, inarray, in_get_caps, outarray, out_get_caps)    \
   verify_convert (which, inarray, sizeof (inarray),                            \
         in_get_caps, outarray, sizeof (outarray), out_get_caps, GST_FLOW_OK,   \
-        FALSE)
+        FALSE, FALSE, &(GValue) G_VALUE_INIT);
 
 #define INTERLEAVED GST_AUDIO_LAYOUT_INTERLEAVED
 #define PLANAR GST_AUDIO_LAYOUT_NON_INTERLEAVED
@@ -1559,6 +1569,53 @@ GST_START_TEST (test_convert_undefined_multichannel)
     RUN_CONVERSION ("8 channels with layout => 2 channels",
         in, in_caps, out, out_caps);
   }
+
+  /* 9 channels, NONE positions => 2 channels, with empty mix-matrix */
+  {
+    guint16 in[] =
+        { 0, 0, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000 };
+    gfloat out[] = { -1.0, -1.0 };
+    GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[9 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (2, G_BYTE_ORDER, 32, INTERLEAVED,
+        NULL);
+    GValue empty_mix_matrix = G_VALUE_INIT;
+    g_value_init (&empty_mix_matrix, GST_TYPE_ARRAY);
+
+    RUN_CONVERSION_WITH_MATRIX ("9 channels, undefined layout => 2 channels",
+        in, in_caps, out, out_caps, &empty_mix_matrix);
+    g_value_unset (&empty_mix_matrix);
+  }
+
+  /* 9 channels, NONE positions => 2 channels, with specified mix-matrix */
+  {
+    guint16 in[] =
+        { 0, 0, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000, 0x8000 };
+    gfloat out[] = { -1.0, -1.0 };
+    GstCaps *in_caps = get_int_mc_caps (9, G_BYTE_ORDER, 16, 16, FALSE,
+        INTERLEAVED, undefined_positions[9 - 1]);
+    GstCaps *out_caps = get_float_mc_caps (2, G_BYTE_ORDER, 32, INTERLEAVED,
+        NULL);
+    GValue mix_matrix = G_VALUE_INIT;
+    GValue row = G_VALUE_INIT;
+    GValue value = G_VALUE_INIT;
+    g_value_init (&mix_matrix, GST_TYPE_ARRAY);
+    for (int j = 0; j < 2; j++) {
+      g_value_init (&row, GST_TYPE_ARRAY);
+      for (int i = 0; i < 9; i++) {
+        g_value_init (&value, G_TYPE_FLOAT);
+        g_value_set_float (&value, i == j && i < 2 ? 1 : 0);
+        gst_value_array_append_value (&row, &value);
+        g_value_unset (&value);
+      }
+      gst_value_array_append_value (&mix_matrix, &row);
+      g_value_unset (&row);
+    }
+
+    RUN_CONVERSION_WITH_MATRIX ("9 channels, undefined layout => 2 channels",
+        in, in_caps, out, out_caps, &mix_matrix);
+    g_value_unset (&mix_matrix);
+  }
 }
 
 GST_END_TEST;
@@ -1637,7 +1694,7 @@ GST_START_TEST (test_gap_buffers)
   gsize data_len = sizeof (data);
   gint i;
 
-  audioconvert = setup_audioconvert (caps);
+  audioconvert = setup_audioconvert (caps, FALSE, &(GValue) G_VALUE_INIT);
 
   fail_unless (gst_element_set_state (audioconvert,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
@@ -1797,7 +1854,7 @@ GST_START_TEST (test_layout_conv_fixate_caps)
       "layout = (string) non-interleaved, "
       "rate = (int) [ 1, MAX ], " "channels = (int) [1, 8]");
 
-  audioconvert = setup_audioconvert (outcaps);
+  audioconvert = setup_audioconvert (outcaps, FALSE, &(GValue) G_VALUE_INIT);
 
   fail_unless (gst_element_set_state (audioconvert,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,

@@ -866,7 +866,7 @@
                         "writable": true
                     },
                     "mix-matrix": {
-                        "blurb": "Transformation matrix for input/output channels",
+                        "blurb": "Transformation matrix for input/output channels.",
                         "conditionally-available": false,
                         "construct": false,
                         "construct-only": false,
