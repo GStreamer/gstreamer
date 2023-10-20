@@ -82,6 +82,7 @@ base_tests = [
   [['elements/wasapi2.c'], host_machine.system() != 'windows', ],
   [['libs/h264parser.c'], false, [gstcodecparsers_dep]],
   [['libs/h265parser.c'], false, [gstcodecparsers_dep]],
+  [['libs/h266parser.c'], false, [gstcodecparsers_dep]],
   [['libs/insertbin.c'], false, [gstinsertbin_dep]],
   [['libs/isoff.c'], false, [gstisoff_dep]],
   [['libs/nalutils.c', '../../gst-libs/gst/codecparsers/nalutils.c'], false, [nalutils_dep]],
