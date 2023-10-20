@@ -696,20 +696,17 @@ parse_ptp_message (PtpMessage * msg, const guint8 * data, gsize size)
 
 static gint
 compare_announce_message (const PtpAnnounceMessage * a,
-    const PtpAnnounceMessage * b)
+    const PtpAnnounceMessage * b, gboolean skip_tiebreakers)
 {
   /* IEEE 1588 Figure 27 */
   if (a->grandmaster_identity == b->grandmaster_identity) {
-    if (a->steps_removed + 1 < b->steps_removed)
-      return -1;
-    else if (a->steps_removed > b->steps_removed + 1)
-      return 1;
-
-    /* Error cases are filtered out earlier */
     if (a->steps_removed < b->steps_removed)
       return -1;
     else if (a->steps_removed > b->steps_removed)
       return 1;
+
+    if (skip_tiebreakers)
+      return 0;
 
     /* Error cases are filtered out earlier */
     if (a->master_clock_identity.clock_identity <
@@ -819,9 +816,56 @@ select_best_master_clock (PtpDomainData * domain, GstClockTime now)
   for (l = qualified_messages; l; l = l->next) {
     PtpAnnounceMessage *msg = l->data;
 
-    if (!best || compare_announce_message (msg, best) < 0)
+    if (!best || compare_announce_message (msg, best, FALSE) < 0)
       best = msg;
   }
+
+  GST_DEBUG ("Found master clock for domain %u: 0x%016" G_GINT64_MODIFIER
+      "x %u on interface %u with grandmaster clock 0x%016" G_GINT64_MODIFIER
+      "x", domain->domain, best->master_clock_identity.clock_identity,
+      best->master_clock_identity.port_number, best->iface_idx,
+      best->grandmaster_identity);
+
+  // Check if the newly selected best clock and the previous one are
+  // equivalent except for tiebreakers. In that case, don't actually switch
+  // to avoid switching regularly between clocks.
+  if (domain->have_master_clock &&
+      (compare_clock_identity (&domain->master_clock_identity,
+              &best->master_clock_identity) != 0
+          || domain->iface_idx != best->iface_idx)
+      ) {
+    // Find announce sender for the currently selected clock
+    for (l = domain->announce_senders; l; l = l->next) {
+      PtpAnnounceSender *sender = l->data;
+
+      if (compare_clock_identity (&domain->master_clock_identity,
+              &sender->master_clock_identity) == 0
+          && domain->iface_idx == sender->iface_idx) {
+
+        // Find qualified message for it (if there is none then it timed out)
+        for (m = qualified_messages; m; m = m->next) {
+          PtpAnnounceMessage *msg = m->data;
+
+          if (compare_clock_identity (&sender->master_clock_identity,
+                  &msg->master_clock_identity) == 0
+              && sender->iface_idx == msg->iface_idx) {
+
+            if (compare_announce_message (msg, best, TRUE) == 0) {
+              GST_DEBUG
+                  ("Currently selected master clock for domain %u is equivalent",
+                  domain->domain);
+              best = msg;
+            }
+
+            break;
+          }
+        }
+
+        break;
+      }
+    }
+  }
+
   g_clear_pointer (&qualified_messages, g_list_free);
 
   if (domain->have_master_clock
@@ -830,9 +874,10 @@ select_best_master_clock (PtpDomainData * domain, GstClockTime now)
       && domain->iface_idx == best->iface_idx) {
     GST_DEBUG ("Master clock in domain %u did not change", domain->domain);
   } else {
-    GST_DEBUG ("Selected master clock for domain %u: 0x%016" G_GINT64_MODIFIER
-        "x %u on interface %u with grandmaster clock 0x%016" G_GINT64_MODIFIER
-        "x", domain->domain, best->master_clock_identity.clock_identity,
+    GST_DEBUG ("Selected new master clock for domain %u: 0x%016"
+        G_GINT64_MODIFIER "x %u on interface %u with grandmaster clock 0x%016"
+        G_GINT64_MODIFIER "x", domain->domain,
+        best->master_clock_identity.clock_identity,
         best->master_clock_identity.port_number, best->iface_idx,
         best->grandmaster_identity);
 
