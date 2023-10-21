@@ -1,6 +1,6 @@
 project('gst-aja', 'cpp',
   version : '0.1.0',
-  meson_version : '>= 0.54.0',
+  meson_version : '>= 0.63.0',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized',
                       'cpp_std=c++11',
@@ -57,25 +57,38 @@ thread_dep = dependency('threads')
 rt_dep = cxx.find_library('rt', required : false)
 
 aja_sdk_dir = get_option('aja-sdk-dir')
-aja_includedirs = [
-  '-I@0@/ajalibraries'.format(aja_sdk_dir),
-  '-I@0@/ajalibraries/ajantv2/includes'.format(aja_sdk_dir),
-  '-I@0@/ajalibraries/ajantv2/src/lin'.format(aja_sdk_dir),
-]
+if aja_sdk_dir == ''
+  ajantv2_dep = dependency('libajantv2')
+  aja_includedirs = []
 
-message('Looking for AJA SDK in directory ' + aja_sdk_dir)
-if not cxx.has_header('ajabase/common/videotypes.h',
-                      args : aja_includedirs,
-                     )
-  error('Cannot find AJA SDK')
+  if not ajantv2_dep.found()
+    subdir_done()
+  endif
+else
+  aja_includedirs = include_directories(
+    f'@aja_sdk_dir@/ajalibraries',
+    f'@aja_sdk_dir@/ajalibraries/ajantv2/includes',
+    f'@aja_sdk_dir@/ajalibraries/ajantv2/src/lin',
+  )
+
+  message('Looking for AJA SDK in directory ' + aja_sdk_dir)
+  if not cxx.has_header('ajabase/common/videotypes.h',
+                        include_directories : aja_includedirs,
+                       )
+    error('Cannot find AJA SDK')
+  endif
+
+
+  ajantv2_lib = cxx.find_library('ajantv2',
+    # If the header is found, this should also be
+    required : true,
+    dirs : [f'@aja_sdk_dir@/lib'],
+  )
+  ajantv2_dep = declare_dependency(
+    dependencies: ajantv2_lib,
+    include_directories: aja_includedirs,
+  )
 endif
-
-aja_libdir = '@0@/lib'.format(aja_sdk_dir)
-
-ajantv2_dep = cxx.find_library('ajantv2',
-  required : true,
-  dirs : [aja_libdir],
-)
 
 gstaja = library('gstaja',
   ['plugin.cpp',
@@ -87,7 +100,6 @@ gstaja = library('gstaja',
    'gstajadeviceprovider.cpp',
   ],
   cpp_args : [
-            aja_includedirs,
             '-DPACKAGE="gst-aja"',
             '-DGST_PACKAGE_NAME="gstreamer-aja"',
             '-DGST_PACKAGE_ORIGIN="https://github.com/centricular/gstreamer-aja"',

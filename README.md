@@ -3,7 +3,12 @@
 [GStreamer](https://gstreamer.freedesktop.org/) plugin for
 [AJA](https://www.aja.com) capture and output cards.
 
-This plugin requires the NTV2 SDK version 16 or newer.
+This plugin requires the AJA NTV2 SDK version 16 or newer.
+
+The location of the SDK can be configured via the `aja-sdk-dir` meson option.
+If no location is given then the NTV2 SDK from
+[GitHub](https://github.com/aja-video/ntv2.git) is compiled as a meson
+subproject as part of the plugin.
 
 ## Example usage
 

@@ -1,0 +1,9 @@
+[wrap-file]
+directory = ntv2-16.2-bugfix5
+source_url = https://github.com/aja-video/ntv2/archive/refs/tags/v16.2-bugfix5.tar.gz
+source_filename = ntv2-16.2-bugfix5.tar.gz
+source_hash = 560c798c3a43aa0cef1cba6be5adb669ec72e648c28814158eb649275efc9f88
+diff_files = ntv2-16.2-bugfix5/ntv2-16.2-bugfix5.meson.patch
+
+[provide]
+libajantv2 = libajantv2_dep
