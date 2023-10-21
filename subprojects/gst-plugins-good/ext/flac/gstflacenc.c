@@ -102,7 +102,7 @@ static const GstAudioChannelPosition channel_positions[8][8] = {
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-flac")
+    GST_STATIC_CAPS ("audio/x-flac, framed=true")
     );
 
 enum
@@ -1158,6 +1158,7 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
       gst_audio_encoder_get_audio_info (GST_AUDIO_ENCODER (enc));
 
   caps = gst_caps_new_simple ("audio/x-flac",
+      "framed", G_TYPE_BOOLEAN, TRUE,
       "channels", G_TYPE_INT, GST_AUDIO_INFO_CHANNELS (info),
       "rate", G_TYPE_INT, GST_AUDIO_INFO_RATE (info), NULL);
 
