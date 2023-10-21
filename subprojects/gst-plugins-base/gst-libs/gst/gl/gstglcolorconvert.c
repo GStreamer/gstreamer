@@ -1666,6 +1666,18 @@ video_format_to_gl_reorder (GstVideoFormat v_format, gint * reorder,
       reorder[2] = 0;
       reorder[3] = input ? 3 : 2;
       break;
+    case GST_VIDEO_FORMAT_GBR:
+      if (input) {
+        reorder[0] = 2;
+        reorder[1] = 0;
+        reorder[2] = 1;
+      } else {
+        reorder[0] = 0;
+        reorder[1] = 1;
+        reorder[2] = 2;
+      }
+      reorder[3] = 3;
+      break;
     default:
       if (!gst_gl_video_format_swizzle (v_format, reorder))
         g_assert_not_reached ();
