@@ -16,6 +16,9 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Suite 500,
  * Boston, MA 02110-1335, USA.
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <ajabase/system/debug.h>
 #include <gst/gst.h>
@@ -47,4 +50,4 @@ static gboolean plugin_init(GstPlugin* plugin) {
 
 GST_PLUGIN_DEFINE(GST_VERSION_MAJOR, GST_VERSION_MINOR, aja,
                   "GStreamer AJA plugin", plugin_init, VERSION, "LGPL",
-                  GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+                  PACKAGE_NAME, GST_PACKAGE_ORIGIN)
