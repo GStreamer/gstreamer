@@ -109,11 +109,20 @@ struct _GstD3D11Window
   IDXGISwapChain *swap_chain;
   GstBuffer *backbuffer;
   DXGI_FORMAT dxgi_format;
+  GstBuffer *msaa_buffer;
 
   GstBuffer *cached_buffer;
   gboolean first_present;
 
   GstVideoOrientationMethod method;
+  gfloat fov;
+  gboolean ortho;
+  gfloat rotation_x;
+  gfloat rotation_y;
+  gfloat rotation_z;
+  gfloat scale_x;
+  gfloat scale_y;
+  GstD3D11MSAAMode msaa;
 };
 
 struct _GstD3D11WindowClass
@@ -178,7 +187,17 @@ void          gst_d3d11_window_set_title            (GstD3D11Window * window,
                                                      const gchar *title);
 
 void          gst_d3d11_window_set_orientation      (GstD3D11Window * window,
-                                                     GstVideoOrientationMethod method);
+                                                     GstVideoOrientationMethod method,
+                                                     gfloat fov,
+                                                     gboolean ortho,
+                                                     gfloat rotation_x,
+                                                     gfloat rotation_y,
+                                                     gfloat rotation_z,
+                                                     gfloat scale_x,
+                                                     gfloat scale_y);
+
+void          gst_d3d11_window_set_msaa_mode        (GstD3D11Window * window,
+                                                     GstD3D11MSAAMode mode);
 
 GstFlowReturn gst_d3d11_window_prepare              (GstD3D11Window * window,
                                                      guint display_width,

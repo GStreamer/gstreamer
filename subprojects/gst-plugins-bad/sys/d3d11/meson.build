@@ -130,6 +130,31 @@ if cc.get_id() == 'msvc' and fxc.found()
   extra_args += ['-DHLSL_PRECOMPILED']
 endif
 
+have_dx_math = cxx.compiles('''
+    #include <windows.h>
+    #include <DirectXMath.h>
+    using namespace DirectX;
+    int main(int argc, char ** argv) {
+      XMMATRIX matrix;
+      XMFLOAT4X4 dump;
+      matrix = XMMatrixIdentity ();
+      XMStoreFloat4x4 (&dump, matrix);
+      return 0;
+    }
+    ''',
+    name: 'DirectXMath suupport in Windows SDK')
+
+if not have_dx_math
+  directxmath_dep = dependency('directxmath',
+      fallback: ['directxmath', 'directxmath_dep'],
+      required: d3d11_option)
+  if not directxmath_dep.found()
+    subdir_done ()
+  endif
+
+  extra_dep += [directxmath_dep]
+endif
+
 gstd3d11 = library('gstd3d11',
   d3d11_sources + hlsl_precompiled,
   c_args : gst_plugins_bad_args + extra_c_args + extra_args,

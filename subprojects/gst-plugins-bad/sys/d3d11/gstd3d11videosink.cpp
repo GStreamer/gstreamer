@@ -65,6 +65,14 @@ enum
   PROP_PRIMARIES_MODE,
   PROP_DISPLAY_FORMAT,
   PROP_EMIT_PRESENT,
+  PROP_FOV,
+  PROP_ORTHO,
+  PROP_ROTATION_X,
+  PROP_ROTATION_Y,
+  PROP_ROTATION_Z,
+  PROP_SCALE_X,
+  PROP_SCALE_Y,
+  PROP_MSAA,
   PROP_RENDER_RECTANGE,
 };
 
@@ -78,6 +86,11 @@ enum
 #define DEFAULT_PRIMARIES_MODE            GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_DISPLAY_FORMAT            DXGI_FORMAT_UNKNOWN
 #define DEFAULT_EMIT_PRESENT              FALSE
+#define DEFAULT_ROTATION                  0.0f
+#define DEFAULT_SCALE                     1.0f
+#define DEFAULT_FOV                       90.0f
+#define DEFAULT_ORTHO                     FALSE
+#define DEFAULT_MSAA                      GST_D3D11_MSAA_DISABLED
 
 /**
  * GstD3D11VideoSinkDisplayFormat:
@@ -188,6 +201,14 @@ struct _GstD3D11VideoSink
   GstVideoPrimariesMode primaries_mode;
   DXGI_FORMAT display_format;
   gboolean emit_present;
+  gfloat fov;
+  gboolean ortho;
+  gfloat rotation_x;
+  gfloat rotation_y;
+  gfloat rotation_z;
+  gfloat scale_x;
+  gfloat scale_y;
+  GstD3D11MSAAMode msaa;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;
@@ -400,6 +421,110 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
               G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D11VideoSink:fov:
+   *
+   * Field of view angle in degrees
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_FOV,
+      g_param_spec_float ("fov", "Fov",
+          "Field of view angle in degrees",
+          0, G_MAXFLOAT, DEFAULT_FOV,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:ortho:
+   *
+   * Use orthographic projection
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ORTHO,
+      g_param_spec_boolean ("ortho", "Orthographic",
+          "Use orthographic projection", DEFAULT_ORTHO,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:rotation-x:
+   *
+   * x-axis rotation angle to be applied prior to "rotate-method"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATION_X,
+      g_param_spec_float ("rotation-x", "Rotation X",
+          "x-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:rotation-y:
+   *
+   * y-axis rotation angle to be applied prior to "rotate-method"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATION_Y,
+      g_param_spec_float ("rotation-y", "Rotation Y",
+          "y-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:rotation-z:
+   *
+   * z-axis rotation angle to be applied prior to "rotate-method"
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ROTATION_Z,
+      g_param_spec_float ("rotation-z", "Rotation Z",
+          "z-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:scale-x:
+   *
+   * Scale multiplier for x-axis
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_SCALE_X,
+      g_param_spec_float ("scale-x", "Scale X",
+          "Scale multiplier for x-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:scale-y:
+   *
+   * Scale multiplier for y-axis
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_SCALE_Y,
+      g_param_spec_float ("scale-y", "Scale Y",
+          "Scale multiplier for y-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D11VideoSink:msaa:
+   *
+   * MSAA (Multi-Sampling Anti-Aliasing) level
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_MSAA,
+      g_param_spec_enum ("msaa", "MSAA",
+          "MSAA (Multi-Sampling Anti-Aliasing) level",
+          GST_TYPE_D3D11_MSAA_MODE, DEFAULT_MSAA,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+
+  /**
    * GstD3D11VideoSink:render-rectangle:
    *
    * Since: 1.24
@@ -503,6 +628,7 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_D3D11_VIDEO_SINK_DISPLAY_FORMAT,
       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D11_MSAA_MODE, (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -518,6 +644,14 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->primaries_mode = DEFAULT_PRIMARIES_MODE;
   self->display_format = DEFAULT_DISPLAY_FORMAT;
   self->emit_present = DEFAULT_EMIT_PRESENT;
+  self->fov = DEFAULT_FOV;
+  self->ortho = DEFAULT_ORTHO;
+  self->rotation_x = DEFAULT_ROTATION;
+  self->rotation_y = DEFAULT_ROTATION;
+  self->rotation_z = DEFAULT_ROTATION;
+  self->scale_x = DEFAULT_SCALE;
+  self->scale_y = DEFAULT_SCALE;
+  self->msaa = DEFAULT_MSAA;
 
   InitializeCriticalSection (&self->lock);
 }
@@ -579,6 +713,39 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
     case PROP_EMIT_PRESENT:
       self->emit_present = g_value_get_boolean (value);
       break;
+    case PROP_FOV:
+      self->fov = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ORTHO:
+      self->ortho = g_value_get_boolean (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ROTATION_X:
+      self->rotation_x = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ROTATION_Y:
+      self->rotation_y = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_ROTATION_Z:
+      self->rotation_z = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_SCALE_X:
+      self->scale_x = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_SCALE_Y:
+      self->scale_y = g_value_get_float (value);
+      gst_d3d11_video_sink_set_orientation (self, self->method, FALSE);
+      break;
+    case PROP_MSAA:
+      self->msaa = (GstD3D11MSAAMode) g_value_get_enum (value);
+      if (self->window)
+        gst_d3d11_window_set_msaa_mode (self->window, self->msaa);
+      break;
     case PROP_RENDER_RECTANGE:
       gst_video_overlay_set_property (object, PROP_RENDER_RECTANGE,
           PROP_RENDER_RECTANGE, value);
@@ -633,6 +800,30 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EMIT_PRESENT:
       g_value_set_boolean (value, self->emit_present);
+      break;
+    case PROP_FOV:
+      g_value_set_float (value, self->fov);
+      break;
+    case PROP_ORTHO:
+      g_value_set_boolean (value, self->ortho);
+      break;
+    case PROP_ROTATION_X:
+      g_value_set_float (value, self->rotation_x);
+      break;
+    case PROP_ROTATION_Y:
+      g_value_set_float (value, self->rotation_x);
+      break;
+    case PROP_ROTATION_Z:
+      g_value_set_float (value, self->rotation_z);
+      break;
+    case PROP_SCALE_X:
+      g_value_set_float (value, self->scale_x);
+      break;
+    case PROP_SCALE_Y:
+      g_value_set_float (value, self->scale_y);
+      break;
+    case PROP_MSAA:
+      g_value_set_enum (value, self->msaa);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1056,7 +1247,10 @@ done:
       "enable-navigation-events", self->enable_navigation_events,
       "emit-present", self->emit_present, nullptr);
 
-  gst_d3d11_window_set_orientation (self->window, self->selected_method);
+  gst_d3d11_window_set_orientation (self->window, self->selected_method,
+      self->fov, self->ortho, self->rotation_x, self->rotation_y,
+      self->rotation_z, self->scale_x, self->scale_y);
+  gst_d3d11_window_set_msaa_mode (self->window, self->msaa);
 
   g_signal_connect (self->window, "key-event",
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
@@ -1320,8 +1514,11 @@ gst_d3d11_video_sink_set_orientation (GstD3D11VideoSink * self,
     self->selected_method = self->method;
   }
 
-  if (self->window)
-    gst_d3d11_window_set_orientation (self->window, self->selected_method);
+  if (self->window) {
+    gst_d3d11_window_set_orientation (self->window, self->selected_method,
+        self->fov, self->ortho, self->rotation_x, self->rotation_y,
+        self->rotation_z, self->scale_x, self->scale_y);
+  }
 }
 
 static void

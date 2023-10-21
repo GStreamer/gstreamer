@@ -77,6 +77,30 @@ gst_d3d11_alpha_mode_get_type (void)
   return type;
 }
 
+/**
+ * GstD3D11MSAAMode:
+ *
+ * Since: 1.24
+ */
+GType
+gst_d3d11_msaa_mode_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue msaa_mode[] = {
+    {GST_D3D11_MSAA_DISABLED, "Disabled", "disabled"},
+    {GST_D3D11_MSAA_2X, "2x MSAA", "2x"},
+    {GST_D3D11_MSAA_4X, "4x MSAA", "4x"},
+    {GST_D3D11_MSAA_8X, "8x MSAA", "8x"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D11MSAAMode", msaa_mode);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return type;
+}
+
 /* Max Texture Dimension for feature level 11_0 ~ 12_1 */
 static guint _gst_d3d11_texture_max_dimension = 16384;
 

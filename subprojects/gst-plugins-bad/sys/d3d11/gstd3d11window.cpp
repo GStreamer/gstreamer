@@ -36,8 +36,13 @@
 
 #include <wrl.h>
 
+/* Disable platform-specific intrinsics */
+#define _XM_NO_INTRINSICS_
+#include <DirectXMath.h>
+
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
+using namespace DirectX;
 /* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
@@ -105,7 +110,7 @@ static void gst_d3d11_window_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_d3d11_window_dispose (GObject * object);
 static GstFlowReturn gst_d3d11_window_present (GstD3D11Window * self,
-    GstBuffer * buffer, GstBuffer * render_target);
+    GstBuffer * buffer, GstBuffer * render_target, GstBuffer * multisample);
 static void gst_d3d11_window_on_resize_default (GstD3D11Window * window,
     guint width, guint height);
 static GstFlowReturn gst_d3d11_window_prepare_default (GstD3D11Window * window,
@@ -194,6 +199,14 @@ gst_d3d11_window_init (GstD3D11Window * self)
   self->fullscreen_toggle_mode = GST_D3D11_WINDOW_FULLSCREEN_TOGGLE_MODE_NONE;
   self->fullscreen = DEFAULT_FULLSCREEN;
   self->emit_present = DEFAULT_EMIT_PRESENT;
+  self->fov = 90.0f;
+  self->ortho = FALSE;
+  self->rotation_x = 0.0f;
+  self->rotation_y = 0.0f;
+  self->rotation_z = 0.0f;
+  self->scale_x = 1.0f;
+  self->scale_y = 1.0f;
+  self->msaa = GST_D3D11_MSAA_DISABLED;
 }
 
 static void
@@ -279,6 +292,7 @@ gst_d3d11_window_dispose (GObject * object)
   gst_clear_object (&self->compositor);
   gst_clear_object (&self->converter);
 
+  gst_clear_buffer (&self->msaa_buffer);
   gst_clear_buffer (&self->cached_buffer);
   gst_clear_object (&self->device);
 
@@ -297,14 +311,19 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   GstVideoRectangle src_rect, dst_rect, rst_rect;
   IDXGISwapChain *swap_chain;
   GstMemory *mem;
+  GstMemory *msaa_mem = nullptr;
   GstD3D11Memory *dmem;
   ID3D11RenderTargetView *rtv;
   ID3D11DeviceContext *context;
+  ID3D11Device *device_handle;
   gsize size;
   GstD3D11DeviceLockGuard lk (device);
   const FLOAT clear_color[] = { 0.0, 0.0, 0.0, 1.0 };
+  UINT quality_levels = 0;
+  UINT sample_count = 1;
 
   gst_clear_buffer (&self->backbuffer);
+  gst_clear_buffer (&self->msaa_buffer);
   if (!self->swap_chain)
     return;
 
@@ -350,11 +369,55 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
     return;
   }
 
+  switch (self->msaa) {
+    case GST_D3D11_MSAA_2X:
+      sample_count = 2;
+      break;
+    case GST_D3D11_MSAA_4X:
+      sample_count = 4;
+      break;
+    case GST_D3D11_MSAA_8X:
+      sample_count = 8;
+      break;
+    default:
+      break;
+  }
+
+  device_handle = gst_d3d11_device_get_device_handle (self->device);
+  while (sample_count > 1) {
+    hr = device_handle->CheckMultisampleQualityLevels (desc.Format,
+        sample_count, &quality_levels);
+    if (gst_d3d11_result (hr, device) && quality_levels > 0)
+      break;
+
+    sample_count = sample_count / 2;
+  };
+
+  if (sample_count > 1 && quality_levels > 0) {
+    ComPtr < ID3D11Texture2D > multisample_texture;
+    desc.SampleDesc.Count = sample_count;
+    desc.SampleDesc.Quality = quality_levels - 1;
+    device_handle->CreateTexture2D (&desc, nullptr, &multisample_texture);
+
+    if (multisample_texture) {
+      msaa_mem = gst_d3d11_allocator_alloc_wrapped (nullptr,
+          self->device, multisample_texture.Get (), size, nullptr, nullptr);
+
+      dmem = GST_D3D11_MEMORY_CAST (msaa_mem);
+      rtv = gst_d3d11_memory_get_render_target_view (dmem, 0);
+    }
+  }
+
   context = gst_d3d11_device_get_device_context_handle (self->device);
   context->ClearRenderTargetView (rtv, clear_color);
 
   self->backbuffer = gst_buffer_new ();
   gst_buffer_append_memory (self->backbuffer, mem);
+
+  if (msaa_mem) {
+    self->msaa_buffer = gst_buffer_new ();
+    gst_buffer_append_memory (self->msaa_buffer, msaa_mem);
+  }
 
   self->surface_width = desc.Width;
   self->surface_height = desc.Height;
@@ -399,8 +462,10 @@ gst_d3d11_window_on_resize_default (GstD3D11Window * self, guint width,
   self->first_present = TRUE;
 
   /* redraw the last scene if cached buffer exits */
-  if (self->cached_buffer)
-    gst_d3d11_window_present (self, self->cached_buffer, self->backbuffer);
+  if (self->cached_buffer) {
+    gst_d3d11_window_present (self, self->cached_buffer, self->backbuffer,
+        self->msaa_buffer);
+  }
 }
 
 void
@@ -847,9 +912,123 @@ gst_d3d11_window_set_title (GstD3D11Window * window, const gchar * title)
     klass->set_title (window, title);
 }
 
+static const XMFLOAT4X4 g_matrix_90r = XMFLOAT4X4 (0.0f, -1.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
+
+static const XMFLOAT4X4 g_matrix_180 = XMFLOAT4X4 (-1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, -1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
+
+static const XMFLOAT4X4 g_matrix_90l = XMFLOAT4X4 (0.0f, 1.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
+
+static const XMFLOAT4X4 g_matrix_horiz = XMFLOAT4X4 (-1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
+
+static const XMFLOAT4X4 g_matrix_vert = XMFLOAT4X4 (1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, -1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
+
+static const XMFLOAT4X4 g_matrix_ul_lr = XMFLOAT4X4 (0.0f, -1.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
+
+static const XMFLOAT4X4 g_matrix_ur_ll = XMFLOAT4X4 (0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
+
+static void
+gst_d3d11_window_calculate_matrix (GstD3D11Window * self,
+    gfloat viewport_width, gfloat viewport_height, gfloat transform_matrix[16])
+{
+  gfloat aspect_ratio;
+  gboolean rotated = FALSE;
+  XMMATRIX rotate_matrix = XMMatrixIdentity ();
+
+  switch (self->method) {
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+    case GST_VIDEO_ORIENTATION_AUTO:
+    case GST_VIDEO_ORIENTATION_CUSTOM:
+    default:
+      break;
+    case GST_VIDEO_ORIENTATION_90R:
+      rotate_matrix = XMLoadFloat4x4 (&g_matrix_90r);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      rotate_matrix = XMLoadFloat4x4 (&g_matrix_180);
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      rotate_matrix = XMLoadFloat4x4 (&g_matrix_90l);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      rotate_matrix = XMLoadFloat4x4 (&g_matrix_horiz);
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      rotate_matrix = XMLoadFloat4x4 (&g_matrix_vert);
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      rotate_matrix = XMLoadFloat4x4 (&g_matrix_ul_lr);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      rotate_matrix = XMLoadFloat4x4 (&g_matrix_ur_ll);
+      rotated = TRUE;
+      break;
+  }
+
+  if (rotated)
+    aspect_ratio = viewport_height / viewport_width;
+  else
+    aspect_ratio = viewport_width / viewport_height;
+
+  /* Apply user specified transform matrix first, then rotate-method */
+  XMMATRIX scale =
+      XMMatrixScaling (self->scale_x * aspect_ratio, self->scale_y, 1.0);
+
+  XMMATRIX rotate =
+      XMMatrixRotationX (XMConvertToRadians (self->rotation_x)) *
+      XMMatrixRotationY (XMConvertToRadians (-self->rotation_y)) *
+      XMMatrixRotationZ (XMConvertToRadians (-self->rotation_z));
+
+  XMMATRIX view = XMMatrixLookAtLH (XMVectorSet (0.0, 0.0, -1.0, 0.0),
+      XMVectorSet (0.0, 0.0, 0.0, 0.0), XMVectorSet (0.0, 1.0, 0.0, 0.0));
+
+  XMMATRIX proj;
+  if (self->ortho) {
+    proj = XMMatrixOrthographicOffCenterLH (-aspect_ratio,
+        aspect_ratio, -1.0, 1.0, 0.1, 100.0);
+  } else {
+    proj = XMMatrixPerspectiveFovLH (XMConvertToRadians (self->fov),
+        aspect_ratio, 0.1, 100.0);
+  }
+
+  XMMATRIX mvp = scale * rotate * view * proj * rotate_matrix;
+
+  XMFLOAT4X4 matrix;
+  XMStoreFloat4x4 (&matrix, mvp);
+
+  for (guint i = 0; i < 4; i++) {
+    for (guint j = 0; j < 4; j++) {
+      transform_matrix[i * 4 + j] = matrix.m[i][j];
+    }
+  }
+}
+
 static GstFlowReturn
 gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
-    GstBuffer * backbuffer)
+    GstBuffer * backbuffer, GstBuffer * multisample)
 {
   GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (self);
   GstFlowReturn ret = GST_FLOW_OK;
@@ -859,6 +1038,8 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
   ID3D11RenderTargetView *rtv;
   GstMemory *mem;
   GstD3D11Memory *dmem;
+  GstBuffer *target_buf;
+  ID3D11DeviceContext *context;
 
   if (!buffer)
     return GST_FLOW_OK;
@@ -868,7 +1049,12 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
-  mem = gst_buffer_peek_memory (backbuffer, 0);
+  if (multisample)
+    target_buf = multisample;
+  else
+    target_buf = backbuffer;
+
+  mem = gst_buffer_peek_memory (target_buf, 0);
   if (!gst_is_d3d11_memory (mem)) {
     GST_ERROR_OBJECT (self, "Invalid back buffer");
     return GST_FLOW_ERROR;
@@ -881,14 +1067,13 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
+  context = gst_d3d11_device_get_device_context_handle (self->device);
+
   /* We use flip mode swapchain and will not redraw borders.
    * So backbuffer should be cleared manually in order to remove artifact of
    * previous client's rendering on present signal */
   if (self->emit_present) {
     const FLOAT clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    ID3D11DeviceContext *context =
-        gst_d3d11_device_get_device_context_handle (self->device);
-
     context->ClearRenderTargetView (rtv, clear_color);
   }
 
@@ -913,6 +1098,7 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
 
   if (self->first_present) {
     D3D11_VIEWPORT viewport;
+    const gfloat min_diff = 0.00001f;
 
     viewport.TopLeftX = self->render_rect.left;
     viewport.TopLeftY = self->render_rect.top;
@@ -926,15 +1112,49 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
         "dest-width",
         (gint) (self->render_rect.right - self->render_rect.left),
         "dest-height",
-        (gint) (self->render_rect.bottom - self->render_rect.top),
-        "video-direction", self->method, nullptr);
+        (gint) (self->render_rect.bottom - self->render_rect.top), nullptr);
+
+    if (!XMScalarNearEqual (self->rotation_x, 0.0f, min_diff) &&
+        !XMScalarNearEqual (self->rotation_y, 0.0f, min_diff) &&
+        !XMScalarNearEqual (self->rotation_z, 0.0f, min_diff) &&
+        !XMScalarNearEqual (self->scale_x, 1.0f, min_diff) &&
+        !XMScalarNearEqual (self->scale_y, 1.0f, min_diff)) {
+      g_object_set (self->converter, "video-direction", self->method, nullptr);
+    } else {
+      gfloat transform_matrix[16];
+
+      GST_DEBUG_OBJECT (self, "Applying custom transform");
+
+      gst_d3d11_window_calculate_matrix (self,
+          viewport.Width, viewport.Height, transform_matrix);
+      g_object_set (self->converter,
+          "video-direction", GST_VIDEO_ORIENTATION_CUSTOM, nullptr);
+      gst_d3d11_converter_set_transform_matrix (self->converter,
+          transform_matrix);
+    }
+
     gst_d3d11_overlay_compositor_update_viewport (self->compositor, &viewport);
   }
 
   if (!gst_d3d11_converter_convert_buffer_unlocked (self->converter,
-          buffer, backbuffer)) {
+          buffer, target_buf)) {
     GST_ERROR_OBJECT (self, "Couldn't render buffer");
     return GST_FLOW_ERROR;
+  }
+
+  if (multisample) {
+    GstD3D11Memory *src_mem;
+    GstD3D11Memory *dst_mem;
+
+    src_mem = (GstD3D11Memory *) gst_buffer_peek_memory (multisample, 0);
+    dst_mem = (GstD3D11Memory *) gst_buffer_peek_memory (backbuffer, 0);
+
+    auto src_tex = gst_d3d11_memory_get_resource_handle (src_mem);
+    auto dst_tex = gst_d3d11_memory_get_resource_handle (dst_mem);
+
+    context->ResolveSubresource (dst_tex, 0, src_tex, 0, self->dxgi_format);
+
+    rtv = gst_d3d11_memory_get_render_target_view (dst_mem, 0);
   }
 
   gst_d3d11_overlay_compositor_upload (self->compositor, buffer);
@@ -963,7 +1183,7 @@ gst_d3d11_window_render (GstD3D11Window * window, GstBuffer * buffer)
     gst_buffer_replace (&window->cached_buffer, buffer);
 
   return gst_d3d11_window_present (window, window->cached_buffer,
-      window->backbuffer);
+      window->backbuffer, window->msaa_buffer);
 }
 
 GstFlowReturn
@@ -993,7 +1213,7 @@ gst_d3d11_window_render_on_shared_handle (GstD3D11Window * window,
     return GST_FLOW_OK;
   }
 
-  ret = gst_d3d11_window_present (window, buffer, data.render_target);
+  ret = gst_d3d11_window_present (window, buffer, data.render_target, nullptr);
 
   klass->release_shared_handle (window, &data);
 
@@ -1098,16 +1318,36 @@ gst_d3d11_window_get_native_type_to_string (GstD3D11WindowNativeType type)
 
 void
 gst_d3d11_window_set_orientation (GstD3D11Window * window,
-    GstVideoOrientationMethod method)
+    GstVideoOrientationMethod method, gfloat fov, gboolean ortho,
+    gfloat rotation_x, gfloat rotation_y, gfloat rotation_z,
+    gfloat scale_x, gfloat scale_y)
 {
-  if (method == GST_VIDEO_ORIENTATION_AUTO ||
-      method == GST_VIDEO_ORIENTATION_CUSTOM) {
-    return;
-  }
-
   GstD3D11DeviceLockGuard lk (window->device);
-  if (window->method != method) {
+  if (window->method != method || window->fov != fov || window->ortho != ortho
+      || window->rotation_x != rotation_x || window->rotation_y != rotation_y
+      || window->rotation_z != rotation_z || window->scale_x != scale_x
+      || window->scale_y != scale_y) {
     window->method = method;
+    window->fov = fov;
+    window->ortho = ortho;
+    window->rotation_x = rotation_x;
+    window->rotation_y = rotation_y;
+    window->rotation_z = rotation_z;
+    window->scale_x = scale_y;
+    if (window->swap_chain) {
+      GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (window);
+
+      klass->on_resize (window, window->surface_width, window->surface_height);
+    }
+  }
+}
+
+void
+gst_d3d11_window_set_msaa_mode (GstD3D11Window * window, GstD3D11MSAAMode mode)
+{
+  GstD3D11DeviceLockGuard lk (window->device);
+  if (window->msaa != mode) {
+    window->msaa = mode;
     if (window->swap_chain) {
       GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (window);
 

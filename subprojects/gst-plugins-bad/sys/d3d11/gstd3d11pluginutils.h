@@ -50,6 +50,17 @@ typedef enum
 #define GST_TYPE_D3D11_ALPHA_MODE (gst_d3d11_alpha_mode_get_type())
 GType gst_d3d11_alpha_mode_get_type (void);
 
+typedef enum
+{
+  GST_D3D11_MSAA_DISABLED,
+  GST_D3D11_MSAA_2X,
+  GST_D3D11_MSAA_4X,
+  GST_D3D11_MSAA_8X,
+} GstD3D11MSAAMode;
+
+#define GST_TYPE_D3D11_MSAA_MODE (gst_d3d11_msaa_mode_get_type())
+GType gst_d3d11_msaa_mode_get_type (void);
+
 void            gst_d3d11_plugin_utils_init         (D3D_FEATURE_LEVEL feature_level);
 
 GstCaps *       gst_d3d11_get_updated_template_caps (GstStaticCaps * template_caps);
