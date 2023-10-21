@@ -1,3 +1,4 @@
+subdir('aja')
 subdir('amfcodec')
 subdir('androidmedia')
 subdir('applemedia')
