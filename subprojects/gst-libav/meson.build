@@ -50,7 +50,7 @@ endforeach
 
 if dep.type_name() != 'internal'
   if not cc.compiles(check_ffmpeg_src, dependencies : libav_deps, name : 'libav is provided by FFmpeg')
-    error('Uncompatible libavcodec found')
+    error('Incompatible libavcodec found')
   endif
 endif
 
