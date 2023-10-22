@@ -1751,24 +1751,52 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         "notify::ready-for-capture",
         G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
 
-    if (!gst_element_link_pads (camera->src, "vfsrc",
-            camera->viewfinderbin_queue, "sink")) {
-      GST_ERROR_OBJECT (camera,
-          "Failed to link camera source's vfsrc pad to viewfinder queue");
-      goto fail;
+    if (camera->viewfinder_filter) {
+      if (!gst_element_link_pads (camera->src, "vfsrc",
+              camera->viewfinder_filter, NULL)) {
+        GST_ERROR_OBJECT (camera,
+            "Failed to link camera source's vfsrc pad to viewfinder filter");
+        goto fail;
+      }
+    } else {
+      if (!gst_element_link_pads (camera->src, "vfsrc",
+              camera->viewfinderbin_queue, "sink")) {
+        GST_ERROR_OBJECT (camera,
+            "Failed to link camera source's vfsrc pad to viewfinder queue");
+        goto fail;
+      }
     }
 
-    if (!gst_element_link_pads (camera->src, "imgsrc",
-            camera->imagebin_capsfilter, "sink")) {
-      GST_ERROR_OBJECT (camera,
-          "Failed to link camera source's imgsrc pad to image bin capsfilter");
-      goto fail;
+    if (camera->image_filter) {
+      if (!gst_element_link_pads (camera->src, "imgsrc",
+              camera->image_filter, NULL)) {
+        GST_ERROR_OBJECT (camera,
+            "Failed to link camera source's imgsrc pad to image filter");
+        goto fail;
+      }
+    } else {
+      if (!gst_element_link_pads (camera->src, "imgsrc",
+              camera->imagebin_capsfilter, "sink")) {
+        GST_ERROR_OBJECT (camera,
+            "Failed to link camera source's imgsrc pad to image bin capsfilter");
+        goto fail;
+      }
     }
-    if (!gst_element_link_pads (camera->src, "vidsrc",
-            camera->videobin_capsfilter, "sink")) {
-      GST_ERROR_OBJECT (camera,
-          "Failed to link camera source's vidsrc pad to video bin capsfilter");
-      goto fail;
+
+    if (camera->video_filter) {
+      if (!gst_element_link_pads (camera->src, "vidsrc",
+              camera->video_filter, NULL)) {
+        GST_ERROR_OBJECT (camera,
+            "Failed to link camera source's vidsrc pad to video filter");
+        goto fail;
+      }
+    } else {
+      if (!gst_element_link_pads (camera->src, "vidsrc",
+              camera->videobin_capsfilter, "sink")) {
+        GST_ERROR_OBJECT (camera,
+            "Failed to link camera source's vidsrc pad to video bin capsfilter");
+        goto fail;
+      }
     }
 
     gst_pad_add_probe (imgsrc, GST_PAD_PROBE_TYPE_BUFFER,
