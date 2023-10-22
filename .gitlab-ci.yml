@@ -900,12 +900,12 @@ valgrind ges:
 
   - ninja -C build/ update_girs
   # Ignore modifications to wrap files made by meson
-  - git checkout subprojects/*.wrap
+  - git checkout $(git ls-files 'subprojects/*.wrap')
   - ./ci/scripts/check-diff.py "gir files"
 
   - ./gst-env.py ninja -C build/ plugins_doc_caches
   # Ignore modifications to wrap files made by meson
-  - git checkout subprojects/*.wrap
+  - git checkout $(git ls-files 'subprojects/*.wrap')
   - ./ci/scripts/check-diff.py
 
   - export GI_TYPELIB_PATH=$PWD/girs
