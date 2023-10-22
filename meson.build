@@ -258,7 +258,7 @@ foreach pkgname_library : all_libraries
 endforeach
 
 custom_target('update_girs',
-  command: [find_program('scripts/update-girs.py'), meson.build_root()] + gir_files,
+  command: [find_program('scripts/update-girs.py'), meson.global_build_root()] + gir_files,
   output: 'update_girs',
   capture: true,
   depends: gir_targets
