@@ -1178,4 +1178,20 @@ GType gst_aja_closed_caption_capture_mode_get_type(void) {
 void gst_aja_common_init(void) {
   GST_DEBUG_CATEGORY_INIT(gst_aja_debug, "aja", 0,
                           "Debug category for AJA plugin");
+
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_AUDIO_SYSTEM, (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_OUTPUT_DESTINATION,
+                              (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_REFERENCE_SOURCE,
+                              (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_INPUT_SOURCE, (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_SDI_MODE, (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_VIDEO_FORMAT, (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_AUDIO_SOURCE, (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_EMBEDDED_AUDIO_INPUT,
+                              (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_TIMECODE_INDEX,
+                              (GstPluginAPIFlags)0);
+  gst_type_mark_as_plugin_api(GST_TYPE_AJA_CLOSED_CAPTION_CAPTURE_MODE,
+                              (GstPluginAPIFlags)0);
 }

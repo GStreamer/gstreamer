@@ -17,6 +17,34 @@
  * Boston, MA 02110-1335, USA.
  */
 
+/**
+ * SECTION:element-ajasrc
+ *
+ * Source element for [AJA](https://www.aja.com) output cards.
+ *
+ * ## Example usage
+ *
+ * Output a 1080p2997 test audio/video stream
+ *
+ * ```sh
+ * gst-launch-1.0 videotestsrc pattern=ball ! video/x-raw,format=v210,width=1920,height=1080,framerate=30000/1001,interlace-mode=progressive ! timeoverlay ! timecodestamper ! combiner.video \
+ *     audiotestsrc freq=440 ! audio/x-raw,format=S32LE,rate=48000,channels=16 ! audiobuffersplit output-buffer-duration=1/30 ! combiner.audio \
+ *     ajasinkcombiner name=combiner ! ajasink channel=0
+ * ```
+ *
+ * Capture 1080p30 audio/video and directly output it again on the same card
+ *
+ * ```sh
+ * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1 audio-system=2 ! ajasrcdemux name=d \
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.video \
+ *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.audio \
+ *     ajasinkcombiner name=c ! ajasink channel=0 reference-source=input-1
+ * ```
+ *
+ * Since: 1.24
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

@@ -16,6 +16,20 @@
  * Free Software Foundation, Inc., 51 Franklin Street, Suite 500,
  * Boston, MA 02110-1335, USA.
  */
+
+/**
+ * SECTION:plugin-aja
+ *
+ * Plugin for [AJA](https://www.aja.com) capture and output cards.
+ *
+ * This plugin requires the AJA NTV2 SDK version 16 or newer and works with
+ * both the [Open Source](https://github.com/aja-video/ntv2.git) and
+ * [proprietary](https://www.aja.com/family/developer) version.
+ *
+ * Since: 1.24
+ *
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
