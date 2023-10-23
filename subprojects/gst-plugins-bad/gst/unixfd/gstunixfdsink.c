@@ -78,6 +78,7 @@ struct _GstUnixFdSink
   GMainLoop *loop;
 
   gchar *socket_path;
+  GUnixSocketAddressType socket_type;
   GSocket *socket;
   GSource *source;
 
@@ -91,10 +92,13 @@ G_DEFINE_TYPE (GstUnixFdSink, gst_unix_fd_sink, GST_TYPE_BASE_SINK);
 GST_ELEMENT_REGISTER_DEFINE (unixfdsink, "unixfdsink", GST_RANK_NONE,
     GST_TYPE_UNIX_FD_SINK);
 
+#define DEFAULT_SOCKET_TYPE G_UNIX_SOCKET_ADDRESS_PATH
+
 enum
 {
   PROP_0,
   PROP_SOCKET_PATH,
+  PROP_SOCKET_TYPE,
 };
 
 
@@ -150,6 +154,14 @@ gst_unix_fd_sink_set_property (GObject * object, guint prop_id,
       g_free (self->socket_path);
       self->socket_path = g_value_dup_string (value);
       break;
+    case PROP_SOCKET_TYPE:
+      if (self->socket) {
+        GST_WARNING_OBJECT (self,
+            "Can only change socket type in NULL or READY state");
+        break;
+      }
+      self->socket_type = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -169,6 +181,9 @@ gst_unix_fd_sink_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_SOCKET_PATH:
       g_value_set_string (value, self->socket_path);
+      break;
+    case PROP_SOCKET_TYPE:
+      g_value_set_enum (value, self->socket_type);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -321,17 +336,9 @@ gst_unix_fd_sink_start (GstBaseSink * bsink)
 
   GST_OBJECT_LOCK (self);
 
-  if (self->socket_path == NULL) {
-    GST_ERROR_OBJECT (self, "Socket path is NULL");
-    ret = FALSE;
-    goto out;
-  }
-
-  addr = g_unix_socket_address_new (self->socket_path);
-
   self->socket =
-      g_socket_new (G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM,
-      G_SOCKET_PROTOCOL_DEFAULT, &error);
+      gst_unix_fd_socket_new (self->socket_path, self->socket_type, &addr,
+      &error);
   if (self->socket == NULL) {
     GST_ERROR_OBJECT (self, "Failed to create UNIX socket: %s", error->message);
     ret = FALSE;
@@ -378,7 +385,9 @@ gst_unix_fd_sink_stop (GstBaseSink * bsink)
   g_clear_object (&self->socket);
   gst_clear_caps (&self->caps);
   g_hash_table_remove_all (self->clients);
-  g_unlink (self->socket_path);
+
+  if (self->socket_type == G_UNIX_SOCKET_ADDRESS_PATH)
+    g_unlink (self->socket_path);
 
   return TRUE;
 }
@@ -606,5 +615,12 @@ gst_unix_fd_sink_class_init (GstUnixFdSinkClass * klass)
           "transport. This may be modified during the NULL->READY transition",
           NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  g_object_class_install_property (gobject_class, PROP_SOCKET_TYPE,
+      g_param_spec_enum ("socket-type", "Socket type",
+          "The type of underlying socket",
+          G_TYPE_UNIX_SOCKET_ADDRESS_TYPE, DEFAULT_SOCKET_TYPE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT |
           GST_PARAM_MUTABLE_READY));
 }

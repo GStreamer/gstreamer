@@ -79,6 +79,10 @@ gboolean gst_unix_fd_parse_release_buffer(gchar *payload, gsize payload_size,
 gboolean gst_unix_fd_parse_caps(gchar *payload, gsize payload_size,
     gchar **caps_str);
 
+GSocket *gst_unix_fd_socket_new(const gchar *socket_path,
+    GUnixSocketAddressType socket_type, GSocketAddress **address,
+    GError **error);
+
 GST_ELEMENT_REGISTER_DECLARE (unixfdsrc);
 GST_ELEMENT_REGISTER_DECLARE (unixfdsink);
 

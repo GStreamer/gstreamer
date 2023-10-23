@@ -32,6 +32,7 @@
 #include "gstunixfd.h"
 
 #include <gio/gunixfdmessage.h>
+#include <gio/gunixsocketaddress.h>
 
 typedef struct
 {
@@ -169,6 +170,42 @@ gst_unix_fd_parse_caps (gchar * payload, gsize payload_size, gchar ** caps_str)
   *caps_str = payload;
 
   return TRUE;
+}
+
+GSocket *
+gst_unix_fd_socket_new (const gchar * socket_path,
+    GUnixSocketAddressType socket_type, GSocketAddress ** address,
+    GError ** error)
+{
+  if (socket_path == NULL) {
+    g_set_error_literal (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+        "Socket path is NULL");
+    return NULL;
+  }
+
+  switch (socket_type) {
+    case G_UNIX_SOCKET_ADDRESS_PATH:
+    case G_UNIX_SOCKET_ADDRESS_ABSTRACT:
+    case G_UNIX_SOCKET_ADDRESS_ABSTRACT_PADDED:
+      *address =
+          g_unix_socket_address_new_with_type (socket_path, -1, socket_type);
+      break;
+    default:
+    {
+      gchar *str =
+          g_enum_to_string (G_TYPE_UNIX_SOCKET_ADDRESS_TYPE, socket_type);
+      g_set_error (error, GST_STREAM_ERROR, GST_STREAM_ERROR_FAILED,
+          "Unsupported UNIX socket type %s", str);
+      g_free (str);
+      return NULL;
+    }
+  }
+
+  GSocket *socket = g_socket_new (G_SOCKET_FAMILY_UNIX, G_SOCKET_TYPE_STREAM,
+      G_SOCKET_PROTOCOL_DEFAULT, error);
+  if (socket == NULL)
+    g_clear_object (address);
+  return socket;
 }
 
 static gboolean
