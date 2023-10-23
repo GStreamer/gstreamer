@@ -903,10 +903,12 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
 
   g_free (project_uri);
 
-  if (!self->priv->seenerrors && opts->needs_set_state &&
-      gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_error ("Failed to start the pipeline\n");
+  if (!self->priv->seenerrors && opts->needs_set_state) {
+    ges_timeline_commit (self->priv->timeline);
+    if (gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
+            GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+      g_error ("Failed to start the pipeline\n");
+    }
   }
 }
 
