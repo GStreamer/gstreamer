@@ -729,9 +729,9 @@ gst_validate_report_init (void)
   }
 
 #ifndef GST_DISABLE_GST_DEBUG
-  if (!newline_regex)
-    newline_regex =
-        g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
+  if (!newline_regex) {
+    newline_regex = g_regex_new ("\n", G_REGEX_MULTILINE, 0, NULL);
+  }
 #endif
 }
 
@@ -1234,8 +1234,7 @@ gst_validate_printf_valist (gpointer source, const gchar * format, va_list args)
   g_free (tmp);
 
   if (!newline_regex)
-    newline_regex =
-        g_regex_new ("\n", G_REGEX_OPTIMIZE | G_REGEX_MULTILINE, 0, NULL);
+    newline_regex = g_regex_new ("\n", G_REGEX_MULTILINE, 0, NULL);
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
