@@ -415,25 +415,9 @@ build fedora clang:
   parallel:
     matrix:
       - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
-        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true"]
+        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=true", "-Dgstreamer:gst_debug=false"]
         MESON_ARGS: >-
           ${SIMPLE_BUILD}
-          --force-fallback-for=glib
-
-      - BUILD_TYPE: [ "--default-library=shared", "--default-library=both"]
-        BUILD_GST_DEBUG: ["-Dgstreamer:gst_debug=false"]
-        # FIXME:
-        # clang complains about the gir files when gst_debug is false:
-        # We can merge the two parallel: matrix after
-        #
-        # [1352/5496] Generating subprojects/gstreamer/gst/Gst-1.0.gir with a custom command
-        # ../subprojects/gstreamer/gst/gstchildproxy.h:57: Error: Gst: identifier not found on the first line:
-        #   * GstChildProxyInterface.get_child_by_name:
-        #     ^
-        MESON_ARGS: >-
-          ${SIMPLE_BUILD}
-          -Dintrospection=disabled
-          -Dpython=disabled
           --force-fallback-for=glib
 
       - BUILD_TYPE: ["--default-library=static"]
