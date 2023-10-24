@@ -257,40 +257,6 @@ commitlint:
     # what commits to check
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
-#
-# build setup templates
-#
-# Expects:
-# BUILD_TYPE: Proxy of meson's --default-library arg
-#   must be 'shared' or 'static' or 'both'
-# BUILD_GST_DEBUG: Build with gst debug symbols or not
-#   must be a string like this: -Dgstreamer:gst_debug=true.
-# GST_WERROR: make warning fatal or not
-#   must be a string of a boolean, "true" or "false". Not yaml bool.
-# SUBPROJECTS_CACHE_DIR: The location in the image of the subprojects cache
-# HAVE_CCACHE: whether we have ccache available
-#   must be a string of a boolean, "true" or "false". Not yaml bool.
-.build_template: &build
-  - export RUSTUP_HOME="/usr/local/rustup"
-  - export CARGO_HOME="/usr/local/cargo"
-  - export PATH="/usr/local/cargo/bin:$PATH"
-  - date -R
-  - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
-  - date -R
-  - export ARGS="${BUILD_TYPE:---default-library=both} ${BUILD_GST_DEBUG:--Dgstreamer:gst_debug=true} ${MESON_ARGS}"
-  - echo $GST_WERROR
-  - |-
-    if [ "$GST_WERROR" = "true" ]; then
-      export ARGS="$ARGS --native-file ./ci/meson/gst-werror.ini"
-    fi
-  - echo $ARGS
-  - date -R
-  - meson setup build/ -Dc_args="${_CI_CFLAGS}" -Dcpp_args="${_CI_CFLAGS}" $(echo ${ARGS})
-  - date -R
-  - ninja -C build/
-  - date -R
-  - test "x$HAVE_CCACHE" = "xtrue" && ccache --show-stats
-
 .build_ccache_vars:
   variables:
     HAVE_CCACHE: 'true'
@@ -300,7 +266,6 @@ commitlint:
     CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache/'
     # shared across everything really
     CCACHE_MAXSIZE: '10G'
-    CARGO_HOME: '/cache/gstreamer/cargo'
 
 .base_modules_changes: &modules_changes
   - .gitlab-ci.yml
@@ -343,7 +308,7 @@ commitlint:
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
-    - *build
+    - $CI_PROJECT_DIR/ci/scripts/build.sh
     - ./gst-env.py gst-inspect-1.0 --version
     - ./gst-env.py gst-inspect-1.0
   after_script:
@@ -375,7 +340,7 @@ commitlint:
     SUBPROJECTS_CACHE_DIR: "/subprojects"
 
   script:
-    - *build
+    - $CI_PROJECT_DIR/ci/scripts/build.sh
     - ./gst-env.py gst-inspect-1.0 --version
     - ./gst-env.py gst-inspect-1.0
     - meson install --destdir $CI_PROJECT_DIR/destdir -C build
@@ -560,6 +525,7 @@ build macos:
    - '.macos image'
   variables:
     # gst-libav/ffmpeg throws Wundef errors
+    HAVE_CCACHE: 'false'
     GST_WERROR: "false"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"
@@ -605,7 +571,6 @@ build macos:
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/validate-logs/"
     GST_VALIDATE_LAUNCHER_FORCE_COLORS: "true"
     TIMEOUT_FACTOR: "2"
-    CARGO_HOME: "/cache/gstreamer/cargo"
     # Enable the fault handler so we get backtraces on segfaults.
     # any non-empty string will do
     PYTHONFAULTHANDLER: "enabled"
@@ -613,24 +578,8 @@ build macos:
     - changes:
         *modules_changes
   script:
-    - *build
-
-    - export XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)"
-    - echo "-> Running ${TEST_SUITE}"
-    - >
-      ./gst-env.py
-      gst-validate-launcher ${TEST_SUITE}
-      --check-bugs
-      --dump-on-failure
-      --mute
-      --shuffle
-      --no-display
-      --meson-no-rebuild
-      --timeout-factor "${TIMEOUT_FACTOR}"
-      --fail-on-testlist-change
-      -l "${CI_PROJECT_DIR}/validate-logs/"
-      --xunit-file "${CI_PROJECT_DIR}/validate-logs/xunit.xml"
-      ${EXTRA_VALIDATE_ARGS}
+    - $CI_PROJECT_DIR/ci/scripts/build.sh
+    - $CI_PROJECT_DIR/ci/scripts/test.sh
   after_script:
     - mv build/meson-logs/ meson-logs
   artifacts:
@@ -638,10 +587,10 @@ build macos:
     when: always
     paths:
       - 'meson-logs/'
-      - 'validate-logs'
+      - "$CI_PROJECT_DIR/validate-logs"
     reports:
       junit:
-        - "validate-logs/*.xml"
+        - "$CI_PROJECT_DIR/validate-logs/*.xml"
 
 .test fedora x86_64:
   extends:
@@ -702,9 +651,8 @@ check video formats:
     WL_TOKEN: "GST_WL_VIDEO_FORMATS"
     WL_HEADER: "subprojects/gst-plugins-bad/gst-libs/gst/wayland/gstwlvideoformat.h"
   script:
-    - *build
-    - meson devenv -C build -w . ./scripts/sort_video_formats.py ${VIDEO_TOKEN} ${VIDEO_HEADER}
-    - meson devenv -C build -w . ./scripts/sort_video_formats.py -b ${WL_TOKEN} ${WL_HEADER}
+    - $CI_PROJECT_DIR/ci/scripts/build.sh
+    - $CI_PROJECT_DIR/ci/scripts/check-video-formats.sh
   rules:
     - changes:
       - ${VIDEO_HEADER}
@@ -727,7 +675,7 @@ gstreamer-full static build:
       -Ddoc=disabled
     SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
-  - *build
+  - $CI_PROJECT_DIR/ci/scripts/build.sh
   - meson test -C build -v test-gst-full
 
 gstreamer-full-minimal static build:
@@ -752,7 +700,7 @@ gstreamer-full-minimal static build:
     SUBPROJECTS_CACHE_DIR: "/subprojects"
 
   script:
-  - *build
+  - $CI_PROJECT_DIR/ci/scripts/build.sh
   - meson test -C build -v test-gst-full
   - meson test -C build test-gst-full-features --test-args "-e filesrc,identity,fakesink -E filesink,capsfilter -t audio/x-wav -T video/vivo -d alsadeviceprovider -D v4l2deviceprovider -l GstVideoMultiviewFlagsSet"
   - strip build/libgstreamer-full-1.0.so
@@ -790,7 +738,7 @@ fluster v4l2-stateless on visl:
       -Dgst-plugins-good:matroska=enabled
     SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
-  - *build
+  - $CI_PROJECT_DIR/ci/scripts/build.sh
   - meson test -C build -v --suite v4l2-stateless-decoders
   artifacts:
     reports:
@@ -929,29 +877,7 @@ valgrind ges:
     SUBPROJECTS_CACHE_DIR: "/subprojects"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
-  - export PATH=/usr/local/cargo/bin/:/usr/local/bin/:$PATH
-  - export RUSTUP_HOME='/usr/local/rustup'
-
-  - ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
-  - echo $MESON_ARGS
-  - meson build/ $MESON_ARGS
-  - ccache --show-stats
-
-  - ninja -C build/ update_girs
-  # Ignore modifications to wrap files made by meson
-  - git checkout $(git ls-files 'subprojects/*.wrap')
-  - ./ci/scripts/check-diff.py "gir files"
-
-  - ./gst-env.py ninja -C build/ plugins_doc_caches
-  # Ignore modifications to wrap files made by meson
-  - git checkout $(git ls-files 'subprojects/*.wrap')
-  - ./ci/scripts/check-diff.py
-
-  - export GI_TYPELIB_PATH=$PWD/girs
-  - hotdoc run --conf-file build/subprojects/gst-docs/GStreamer-doc.json
-
-  - mv build/subprojects/gst-docs/GStreamer-doc/html documentation/
-
+    - $CI_PROJECT_DIR/ci/scripts/build-docs.sh
   artifacts:
     when: always
     expire_in: "7 days"
