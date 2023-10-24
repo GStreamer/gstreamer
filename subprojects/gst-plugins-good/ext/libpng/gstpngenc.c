@@ -86,6 +86,7 @@ static GstFlowReturn gst_pngenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_pngenc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
+static gboolean gst_pngenc_flush (GstVideoEncoder * encoder);
 static gboolean gst_pngenc_propose_allocation (GstVideoEncoder * encoder,
     GstQuery * query);
 
@@ -143,6 +144,7 @@ gst_pngenc_class_init (GstPngEncClass * klass)
   venc_class->set_format = gst_pngenc_set_format;
   venc_class->handle_frame = gst_pngenc_handle_frame;
   venc_class->propose_allocation = gst_pngenc_propose_allocation;
+  venc_class->flush = gst_pngenc_flush;
   gobject_class->finalize = gst_pngenc_finalize;
 
   GST_DEBUG_CATEGORY_INIT (pngenc_debug, "pngenc", 0, "PNG image encoder");
@@ -310,6 +312,16 @@ user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
   pngenc->output_mem_pos += length;
 }
 
+static gboolean
+gst_pngenc_flush (GstVideoEncoder * encoder)
+{
+  GstPngEnc *pngenc = GST_PNGENC (encoder);
+
+  pngenc->frame_count = 0;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 {
@@ -323,6 +335,10 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
   GstBuffer *outbuf;
 
   pngenc = GST_PNGENC (encoder);
+
+  if (pngenc->snapshot && pngenc->frame_count > 0)
+    return GST_FLOW_EOS;
+
   info = &pngenc->input_state->info;
 
   GST_DEBUG_OBJECT (pngenc, "BEGINNING");
@@ -407,6 +423,8 @@ gst_pngenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 
   if ((ret = gst_video_encoder_finish_frame (encoder, frame)) != GST_FLOW_OK)
     goto done;
+
+  ++pngenc->frame_count;
 
   if (pngenc->snapshot)
     ret = GST_FLOW_EOS;

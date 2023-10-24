@@ -50,7 +50,7 @@ struct _GstPngEnc
   guint compression_level;
 
   gboolean snapshot;
-  gboolean newmedia;
+  guint    frame_count;
 };
 
 GST_ELEMENT_REGISTER_DECLARE (pngenc);
