@@ -1285,6 +1285,13 @@ gst_d3d11_window_win32_change_fullscreen_mode (GstD3D11Window * window)
   }
 }
 
+HWND
+gst_d3d11_window_win32_get_internal_hwnd (GstD3D11Window * window)
+{
+  GstD3D11WindowWin32 *self = GST_D3D11_WINDOW_WIN32 (window);
+  return self->internal_hwnd;
+}
+
 GstD3D11Window *
 gst_d3d11_window_win32_new (GstD3D11Device * device, guintptr handle)
 {

@@ -34,6 +34,9 @@ G_DECLARE_FINAL_TYPE (GstD3D11WindowWin32,
 GstD3D11Window * gst_d3d11_window_win32_new (GstD3D11Device * device,
                                              guintptr handle);
 
+HWND gst_d3d11_window_win32_get_internal_hwnd (GstD3D11Window * window);
+
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_WINDOW_WIN32_H__ */

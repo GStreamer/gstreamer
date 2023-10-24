@@ -1019,6 +1019,14 @@ gst_d3d11_video_sink_prepare_window (GstD3D11VideoSink * self)
 #if (!GST_D3D11_WINAPI_ONLY_APP)
     case GST_D3D11_WINDOW_NATIVE_TYPE_HWND:
       self->window = gst_d3d11_window_win32_new (self->device, self->window_id);
+      if (!self->window_id) {
+        HWND internal_hwnd =
+            gst_d3d11_window_win32_get_internal_hwnd (self->window);
+        GST_DEBUG_OBJECT (self, "Have window handle %" G_GUINTPTR_FORMAT,
+            (guintptr) internal_hwnd);
+        gst_video_overlay_got_window_handle (GST_VIDEO_OVERLAY (self),
+            (guintptr) internal_hwnd);
+      }
       break;
 #endif
 #if GST_D3D11_WINAPI_APP
