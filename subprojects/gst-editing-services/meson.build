@@ -156,9 +156,11 @@ elif build_gir
   if python.found()
     # Workaround for https://github.com/mesonbuild/meson/issues/5629
     pythonver = python.language_version()
-    python_dep = dependency('python-@0@-embed'.format(pythonver), version: '>=3', required: false)
+    python_dep = dependency('python-@0@-embed'.format(pythonver), version: '>=3',
+                            required: false, include_type: 'system')
     if not python_dep.found()
-      python_dep = python.dependency(required : get_option('python'))
+      python_dep = python.dependency(required : get_option('python'),
+                                     include_type: 'system')
     endif
   else
     python_dep = dependency('', required: false)
