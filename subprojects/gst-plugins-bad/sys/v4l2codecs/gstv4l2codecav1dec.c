@@ -32,7 +32,7 @@
 #define KERNEL_VERSION(a,b,c) (((a) << 16) + ((b) << 8) + (c))
 
 #define V4L2_MIN_KERNEL_VER_MAJOR 6
-#define V4L2_MIN_KERNEL_VER_MINOR 7
+#define V4L2_MIN_KERNEL_VER_MINOR 5
 #define V4L2_MIN_KERNEL_VERSION KERNEL_VERSION(V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR, 0)
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_av1dec_debug);
@@ -1601,6 +1601,7 @@ gst_v4l2_codec_av1_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
     GstV4l2CodecDevice * device, guint rank)
 {
   GstCaps *src_caps = NULL;
+  guint version;
 
   GST_DEBUG_CATEGORY_INIT (v4l2_av1dec_debug, "v4l2codecs-av1dec", 0,
       "V4L2 stateless AV1 decoder");
@@ -1627,19 +1628,17 @@ gst_v4l2_codec_av1_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
   device->src_caps =
       gst_v4l2_decoder_enum_all_src_formats (decoder, &static_src_caps);
 
-  /* TODO uncomment this when AV1 get included in Linus tree */
-#if 0
   version = gst_v4l2_decoder_get_version (decoder);
   if (version < V4L2_MIN_KERNEL_VERSION)
     GST_WARNING ("V4L2 API v%u.%u too old, at least v%u.%u required",
         (version >> 16) & 0xff, (version >> 8) & 0xff,
         V4L2_MIN_KERNEL_VER_MAJOR, V4L2_MIN_KERNEL_VER_MINOR);
-#endif
 
   if (!gst_v4l2_decoder_av1_api_check (decoder)) {
     GST_WARNING ("Not registering AV1 decoder as it failed ABI check.");
     goto done;
   }
+
 register_element:
   gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_AV1_DEC,
       (GClassInitFunc) gst_v4l2_codec_av1_dec_subclass_init,
