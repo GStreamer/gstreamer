@@ -60,7 +60,7 @@ else
 fi
 
 # Apply visl patches until they are upstreamed
-for patch in /gstreamer/ci/docker/fedora/patches/*.patch; do
+for patch in ../ci/docker/fedora/patches/*.patch; do
 	patch -p1 < "${patch}"
 done
 
