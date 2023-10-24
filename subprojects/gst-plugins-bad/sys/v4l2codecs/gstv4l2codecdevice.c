@@ -313,6 +313,14 @@ gst_v4l2_codec_find_devices (void)
   GList *udev_devices, *d;
   GQueue devices = G_QUEUE_INIT;
 
+  /* Provide a fake device in documentation generation mode */
+  if (!g_strcmp0 (g_getenv ("GST_V4L2_CODEC_GEN_DOC"), "1")) {
+    GST_INFO ("Simulating V4L2 CODECS for doc generator.");
+    g_queue_push_tail (&devices, gst_v4l2_codec_device_new ("docdec-proc",
+            MEDIA_ENT_F_PROC_VIDEO_DECODER, "/dev/mediaX", "/dev/videoX"));
+    return devices.head;
+  }
+
   client = g_udev_client_new (NULL);
   udev_devices = g_udev_client_query_by_subsystem (client, "media");
 

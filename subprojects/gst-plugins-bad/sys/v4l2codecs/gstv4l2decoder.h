@@ -34,8 +34,8 @@
  *
  * Since: 1.24
  */
-#define GST_CODEC_PICTURE_TS_NS(picture)	\
-	gst_util_uint64_scale_int (GST_CODEC_PICTURE_FRAME_NUMBER(picture), 1000, 1)
+#define GST_CODEC_PICTURE_TS_NS(picture) \
+  gst_util_uint64_scale_int (GST_CODEC_PICTURE_FRAME_NUMBER(picture), 1000, 1)
 
 G_BEGIN_DECLS
 
@@ -89,12 +89,12 @@ gint              gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
 
 gint              gst_v4l2_decoder_create_buffers (GstV4l2Decoder * self,
                                                    GstPadDirection direction,
-						   guint num_buffers);
+                                                   guint num_buffers);
 
 gint              gst_v4l2_decoder_remove_buffers (GstV4l2Decoder * self,
-		                                   GstPadDirection direction,
+                                                   GstPadDirection direction,
                                                    guint index,
-						   guint num_buffers);
+                                                   guint num_buffers);
 
 gboolean          gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
                                                   GstPadDirection directon,
@@ -115,7 +115,7 @@ gboolean          gst_v4l2_decoder_get_controls (GstV4l2Decoder * self,
 
 gboolean          gst_v4l2_decoder_query_control_size (GstV4l2Decoder * self,
                                                  unsigned int control_id,
-						 unsigned int *control_size);
+                                                 unsigned int *control_size);
 
 void              gst_v4l2_decoder_install_properties (GObjectClass * gobject_class,
                                                        gint prop_offset,
@@ -151,7 +151,9 @@ void              gst_v4l2_decoder_set_render_delay (GstV4l2Decoder * self,
 
 guint             gst_v4l2_decoder_get_render_delay (GstV4l2Decoder * self);
 
-gboolean	  gst_v4l2_decoder_has_remove_bufs (GstV4l2Decoder * self);
+gboolean          gst_v4l2_decoder_has_remove_bufs (GstV4l2Decoder * self);
+
+gboolean          gst_v4l2_decoder_in_doc_mode (GstV4l2Decoder * self);
 
 GstV4l2Request *  gst_v4l2_request_ref (GstV4l2Request * request);
 
