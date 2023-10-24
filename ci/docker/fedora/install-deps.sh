@@ -148,76 +148,6 @@ dnf install -y \
     xorg-x11-server-utils \
     xorg-x11-server-Xvfb
 
-# Install common debug symbols
-dnf debuginfo-install -y gtk3 \
-    glib2 \
-    glibc \
-    gupnp \
-    gupnp-igd \
-    gssdp \
-    freetype \
-    openjpeg \
-    gobject-introspection \
-    python3 \
-    python3-libs \
-    python3-gobject \
-    libappstream-glib-devel \
-    libjpeg-turbo \
-    glib-networking \
-    libcurl \
-    libdrm \
-    libsoup \
-    libxcb \
-    libxkbcommon \
-    libxkbcommon-x11 \
-    nss \
-    nss-softokn \
-    nss-softokn-freebl \
-    nss-sysinit \
-    nss-util \
-    openssl \
-    openssl-libs \
-    openssl-pkcs11 \
-    brotli \
-    bzip2-libs \
-    gpm-libs \
-    harfbuzz \
-    harfbuzz-icu \
-    json-c \
-    json-glib \
-    libbabeltrace \
-    libffi \
-    libsrtp \
-    libunwind \
-    libdvdread \
-    mpg123-libs \
-    neon \
-    orc-compiler \
-    orc \
-    pixman \
-    pulseaudio-libs \
-    pulseaudio-libs-glib2 \
-    wavpack \
-    "libwayland-*" \
-    "wayland-*" \
-    webrtc-audio-processing \
-    ffmpeg \
-    ffmpeg-libs \
-    faad2-libs \
-    libavdevice \
-    libmpeg2 \
-    faac \
-    fdk-aac \
-    vulkan-loader \
-    x264 \
-    x264-libs \
-    x265 \
-    x265-libs \
-    xz \
-    xz-libs \
-    zip \
-    zlib
-
 # Install the dependencies of gstreamer
 dnf builddep -y gstreamer1 \
     gstreamer1-plugins-base \
@@ -241,6 +171,71 @@ pip3 install meson==1.2.3 hotdoc==0.16 python-gitlab tomli junitparser
 dnf remove -y "gstreamer1*devel"
 
 dnf install -y glib2-doc gdk-pixbuf2-devel gtk3-devel-docs gtk4-devel-docs libsoup-doc
+
+# Install most debug symbols, except the big ones from things we use
+debug_packages=$(rpm -qa | grep -v -i \
+    -e bash \
+    -e bat \
+    -e bluez \
+    -e boost \
+    -e ccache \
+    -e clang \
+    -e cmake \
+    -e colord \
+    -e compiler-rt \
+    -e cpp \
+    -e cups \
+    -e demos \
+    -e flexiblas \
+    -e flite \
+    -e gcc \
+    -e gcc-debuginfo \
+    -e gcc-debugsource \
+    -e gdal \
+    -e gdb \
+    -e geocode \
+    -e git \
+    -e glusterfs \
+    -e gpg \
+    -e GraphicsMagick \
+    -e groff \
+    -e gstreamer1 \
+    -e java \
+    -e leptonica \
+    -e libdap \
+    -e libdb \
+    -e libdnf \
+    -e libspatialite \
+    -e llvm \
+    -e lua \
+    -e MUMPS \
+    -e NetworkManager \
+    -e nodejs \
+    -e openblas \
+    -e opencv \
+    -e openexr \
+    -e perl \
+    -e poppler \
+    -e qemu \
+    -e qt5 \
+    -e qt6 \
+    -e spice \
+    -e sqlite \
+    -e suitesparse \
+    -e systemd \
+    -e tesseract \
+    -e tests \
+    -e tools \
+    -e tpm2 \
+    -e unbound \
+    -e valgrind \
+    -e vim \
+    -e vtk \
+    -e xen \
+    -e xerces \
+    -e xorg \
+)
+dnf debuginfo-install -y --best --allowerasing --skip-broken $debug_packages
 
 echo "Removing DNF cache"
 dnf clean all
