@@ -415,7 +415,7 @@ gst_plugin_loader_try_helper (GstPluginLoader * self, gchar * location)
   /* Do version check */
   loader->expected_pkt = PACKET_VERSION;
   win32_plugin_loader_write_packet_async (loader, PACKET_VERSION, 0, NULL, 0);
-  if (!win32_plugin_loader_run (loader, 5000)) {
+  if (!win32_plugin_loader_run (loader, 10000)) {
     GST_ERROR ("Version check failed");
     goto kill_child;
   }
@@ -965,7 +965,7 @@ gst_plugin_loader_server_load (GstPluginLoader * self,
     return FALSE;
   }
 
-  return win32_plugin_loader_run (loader, 10000);
+  return win32_plugin_loader_run (loader, 60000);
 }
 
 /* *INDENT-OFF* */
@@ -1192,7 +1192,7 @@ gst_plugin_loader_free (GstPluginLoader * self)
     GST_LOG ("Sending EXIT packet to client");
 
     win32_plugin_loader_write_packet_async (loader, PACKET_EXIT, 0, NULL, 0);
-    win32_plugin_loader_run (loader, 5000);
+    win32_plugin_loader_run (loader, 10000);
   }
 
   gst_plugin_loader_cleanup_child (self);
