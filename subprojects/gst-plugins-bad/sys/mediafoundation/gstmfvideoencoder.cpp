@@ -1703,9 +1703,9 @@ gst_mf_video_encoder_enum_internal (GstMFTransform * transform, GUID & subtype,
   gst_value_set_int_range_step (&res_val, 64, 8192, 2);
 
   gst_caps_set_value (sink_caps, "width", &res_val);
-  gst_caps_set_value (sink_caps, "heigh", &res_val);
+  gst_caps_set_value (sink_caps, "height", &res_val);
   gst_caps_set_value (src_caps, "width", &res_val);
-  gst_caps_set_value (src_caps, "heigh", &res_val);
+  gst_caps_set_value (src_caps, "height", &res_val);
 
   g_value_unset (&res_val);
 
