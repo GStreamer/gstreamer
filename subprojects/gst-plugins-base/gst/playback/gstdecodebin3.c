@@ -2831,7 +2831,9 @@ remove_decoder_link (DecodebinOutputStream * output, MultiQueueSlot * slot)
 {
   GstDecodebin3 *dbin = output->dbin;
 
-  gst_pad_unlink (slot->src_pad, output->decoder_sink);
+  if (gst_pad_is_linked (output->decoder_sink)) {
+    gst_pad_unlink (slot->src_pad, output->decoder_sink);
+  }
   if (output->drop_probe_id) {
     gst_pad_remove_probe (slot->src_pad, output->drop_probe_id);
     output->drop_probe_id = 0;
@@ -2979,6 +2981,7 @@ reconfigure_output_stream (DecodebinOutputStream * output,
               GST_PAD_LINK_CHECK_NOTHING) != GST_PAD_LINK_OK) {
         GST_WARNING_OBJECT (dbin, "could not link to %s:%s",
             GST_DEBUG_PAD_NAME (output->decoder_sink));
+        decoder_failed = TRUE;
         goto try_next;
       }
 
