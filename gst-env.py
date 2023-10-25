@@ -110,7 +110,7 @@ def get_target_install_filename(target, filename):
 
 def get_pkgconfig_variable_from_pcfile(pcfile, varname):
     variables = {}
-    substre = re.compile('\$\{[^${}]+\}')
+    substre = re.compile(r'\$\{[^${}]+\}')
     with pcfile.open('r', encoding='utf-8') as f:
         for line in f:
             if '=' not in line:
