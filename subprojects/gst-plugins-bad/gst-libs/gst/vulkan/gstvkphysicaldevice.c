@@ -565,7 +565,7 @@ dump_queue_properties (GstVulkanPhysicalDevice * device, GError ** error)
         " timestamp bits and a minimum image transfer granuality of %"
         GST_VULKAN_EXTENT3D_FORMAT, i, device->queue_family_props[i].queueCount,
         device->queue_family_props[i].queueFlags, queue_flags_str,
-        device->queue_family_ops[i].video,
+        device->queue_family_ops ? device->queue_family_ops[i].video : 0,
         device->queue_family_props[i].timestampValidBits,
         GST_VULKAN_EXTENT3D_ARGS (device->
             queue_family_props[i].minImageTransferGranularity));
