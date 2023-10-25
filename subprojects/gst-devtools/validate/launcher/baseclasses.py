@@ -2386,7 +2386,7 @@ class ScenarioManager(Loggable):
         mfile_bname = os.path.basename(mfile)
 
         for f in os.listdir(os.path.dirname(mfile)):
-            if re.findall("%s\..*\.%s$" % (re.escape(mfile_bname), self.FILE_EXTENSION), f):
+            if re.findall(r'%s\..*\.%s$' % (re.escape(mfile_bname), self.FILE_EXTENSION), f):
                 scenarios.append(os.path.join(os.path.dirname(mfile), f))
 
         if scenarios:

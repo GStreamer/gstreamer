@@ -1351,7 +1351,7 @@ not been tested and explicitly activated if you set use --wanted-tests ALL""")
             # MXF known issues"
             ("*reverse_playback.*mxf",
              "Reverse playback is not handled in MXF"),
-            ("file\.transcode.*mxf",
+            (r'file\.transcode.*mxf',
              "FIXME: Transcoding and mixing tests need to be tested"),
 
             # WMV known issues"
