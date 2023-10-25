@@ -712,10 +712,13 @@ void
 ges_uri_clip_asset_class_set_timeout (GESUriClipAssetClass * klass,
     GstClockTime timeout)
 {
+  GESDiscovererManager *manager;
+
   g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (klass));
 
-  ges_discoverer_manager_set_timeout (ges_discoverer_manager_get_default (),
-      timeout);
+  manager = ges_discoverer_manager_get_default ();
+  ges_discoverer_manager_set_timeout (manager, timeout);
+  gst_object_unref (manager);
 }
 
 /**
@@ -920,6 +923,8 @@ _ges_uri_asset_ensure_setup (gpointer uriasset_class)
     ges_discoverer_manager_set_timeout (manager, timeout);
     g_signal_connect (manager, "discovered",
         G_CALLBACK (discoverer_discovered_cb), NULL);
+
+    gst_object_unref (manager);
 
     discoverer = gst_discoverer_new (timeout, &err);
     if (!discoverer) {
