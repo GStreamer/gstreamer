@@ -252,7 +252,6 @@ commitlint:
 
 .build_ccache_vars:
   variables:
-    HAVE_CCACHE: 'true'
     CCACHE_COMPILERCHECK: 'content'
     CCACHE_COMPRESS: 'true'
     CCACHE_BASEDIR: '/cache/gstreamer/gstreamer'
@@ -518,7 +517,6 @@ build macos:
    - '.macos image'
   variables:
     # gst-libav/ffmpeg throws Wundef errors
-    HAVE_CCACHE: 'false'
     GST_WERROR: "false"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/Users/gst-ci/subprojects"

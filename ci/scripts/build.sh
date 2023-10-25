@@ -10,8 +10,6 @@ set -eux
 # GST_WERROR: make warning fatal or not
 #   must be a string of a boolean, "true" or "false". Not yaml bool.
 # SUBPROJECTS_CACHE_DIR: The location in the image of the subprojects cache
-# HAVE_CCACHE: whether we have ccache available
-#   must be a string of a boolean, "true" or "false". Not yaml bool.
 
 export RUSTUP_HOME="/usr/local/rustup"
 export CARGO_HOME="/usr/local/cargo"
@@ -30,7 +28,17 @@ fi
 date -R
 meson setup build/ --native-file ./ci/meson/gst-ci-cflags.ini  ${ARGS}
 date -R
+
+if command -v ccache
+then
+  ccache --show-stats
+fi
+
+date -R
 meson compile -C build/
 date -R
 
-test "$HAVE_CCACHE" = "true" && ccache --show-stats
+if command -v ccache
+then
+  ccache --show-stats
+fi
