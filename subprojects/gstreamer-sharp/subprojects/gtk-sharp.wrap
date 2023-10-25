@@ -1,4 +1,7 @@
 [wrap-git]
 directory=gtk-sharp
 url=https://github.com/GLibSharp/GtkSharp.git
-revision=4c85f1479cf2e0dc056c0d288785e5a1d7251cb1
+revision=4a7912d43de52e91795a06cba145386b26f113bd
+
+[provide]
+program_names = bindinate
