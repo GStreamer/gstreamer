@@ -1,6 +1,8 @@
 project('gstreamer-sharp', ['cs', 'c'], version: '1.23.0.1',
     meson_version : '>= 0.62', license: 'LGPL')
 
+fs = import ('fs')
+
 if host_machine.system() == 'osx'
   lib_prefix=''
   lib_suffix='.dylib'
@@ -159,9 +161,20 @@ subdir('samples')
 subdir('Tests')
 
 bindinate = find_program('bindinate', required: false)
-if bindinate.found()
+girs_dir = join_paths(meson.global_source_root(), 'girs')
+
+codegen_enabled = false
+if not bindinate.found()
+    warning('Bindinator not usable as some required dependencies are not avalaible.')
+elif not fs.is_dir(girs_dir)
+    message('Code generation disabled, gstreamer-sharp must be a GStreamer subproject.')
+else
+    codegen_enabled = true
+endif
+
+if codegen_enabled
     env = environment()
-    env.set('GI_TYPELIB_PATH', join_paths(meson.global_source_root(), 'girs'))
+    env.set('GI_TYPELIB_PATH', girs_dir)
     merge_with = '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0,GstWebRTC-1.0'
     run_target('bindinate_gstreamer',
         command: ['sh', '-c',
@@ -189,8 +202,6 @@ if bindinate.found()
     python3 = import('python3').find_python()
     run_target('update-code', command: [find_program('update_sources.py')])
     run_target('update-all', command: [find_program('update_sources.py'), 'bindinate'])
-else
-    warning('Bindinator not usable as some required dependencies are not avalaible.')
 endif
 
 meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
