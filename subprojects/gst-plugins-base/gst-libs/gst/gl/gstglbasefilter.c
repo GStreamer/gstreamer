@@ -278,11 +278,14 @@ gst_gl_base_filter_query (GstBaseTransform * trans, GstPadDirection direction,
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_ALLOCATION:
     {
-      if (direction == GST_PAD_SINK
-          && gst_base_transform_is_passthrough (trans)) {
+      if (direction == GST_PAD_SINK) {
+        /* Ensure we have a GL context before running the query either
+         * downstream or through subclasses */
         _find_local_gl_context (filter);
 
-        return gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), query);
+        if (gst_base_transform_is_passthrough (trans)) {
+          return gst_pad_peer_query (GST_BASE_TRANSFORM_SRC_PAD (trans), query);
+        }
       }
       break;
     }
