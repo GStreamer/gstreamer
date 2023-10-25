@@ -2399,9 +2399,11 @@ cleanup_cb (gpointer data)
             sync->delay_req_send_time_local) {
           clock_timed_out_delay_resp = TRUE;
         }
-      } else if ((domain->sync_interval != 0
-              && sync->sync_recv_time_local + 4 * domain->sync_interval < now)
-          || (sync->sync_recv_time_local + 10 * GST_SECOND < now)) {
+      } else if (sync->follow_up_recv_time_local == GST_CLOCK_TIME_NONE && (
+              (domain->sync_interval != 0
+                  && sync->sync_recv_time_local + 4 * domain->sync_interval <
+                  now)
+              || (sync->sync_recv_time_local + 10 * GST_SECOND < now))) {
         timed_out = TRUE;
 
         // If no newer sync/follow-up received in the meantime, downgrade the
