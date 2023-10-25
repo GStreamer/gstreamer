@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     not_generated = expected_files - generated
     if not_generated:
-        print("Following files were generated but not listed:\n    %s" %
+        print("Following files were listed but not generated:\n    %s" %
               '\n    '.join(["'%s/%s'," % (m.split(os.path.sep)[-2], m.split(os.path.sep)[-1])
                              for m in not_generated]))
         rcode = 1
