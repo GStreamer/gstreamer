@@ -1,0 +1,167 @@
+--- /dev/null				2023-10-13 08:29:31.027000134 +0300
++++ ntv2-16.2-bugfix5/meson.build	2023-10-21 09:58:37.680821179 +0300
+@@ -0,0 +1,164 @@
++project('ntv2', 'cpp',
++  version : '16.2-bugfix5',
++  meson_version : '>= 0.54.0',
++  default_options : [ 'warning_level=1',
++                      'buildtype=debugoptimized',
++                      'cpp_std=c++11',
++                      'cpp_eh=none',
++                      'cpp_rtti=false',
++                    ]
++)
++
++cxx = meson.get_compiler('cpp')
++test_cppflags = ['-Wno-non-virtual-dtor']
++
++common_flags = [
++  '-DAJALinux=1',
++  '-DAJA_LINUX=1',
++]
++foreach cxxflag: test_cppflags
++  if cxx.has_argument(cxxflag)
++    common_flags += [ cxxflag ]
++  endif
++endforeach
++
++thread_dep = dependency('threads')
++rt_dep = cxx.find_library('rt', required : false)
++
++ajantv2_sources = [
++  'ajalibraries/ajaanc/src/ancillarydata.cpp',
++  'ajalibraries/ajaanc/src/ancillarydatafactory.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_cea608.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_cea608_line21.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_cea608_vanc.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_cea708.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_framestatusinfo524D.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_framestatusinfo5251.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_hdr_hdr10.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_hdr_hlg.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_hdr_sdr.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_timecode.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_timecode_atc.cpp',
++  'ajalibraries/ajaanc/src/ancillarydata_timecode_vitc.cpp',
++  'ajalibraries/ajaanc/src/ancillarylist.cpp',
++  'ajalibraries/ajabase/system/atomic.cpp',
++  'ajalibraries/ajabase/common/audioutilities.cpp',
++  'ajalibraries/ajabase/common/buffer.cpp',
++  'ajalibraries/ajabase/common/common.cpp',
++  'ajalibraries/ajabase/system/debug.cpp',
++  'ajalibraries/ajabase/common/dpx_hdr.cpp',
++  'ajalibraries/ajabase/common/dpxfileio.cpp',
++  'ajalibraries/ajabase/system/event.cpp',
++  'ajalibraries/ajabase/system/linux/eventimpl.cpp',
++  'ajalibraries/ajabase/system/file_io.cpp',
++  'ajalibraries/ajabase/common/guid.cpp',
++  'ajalibraries/ajabase/system/info.cpp',
++  'ajalibraries/ajabase/system/linux/infoimpl.cpp',
++  'ajalibraries/ajabase/network/ip_socket.cpp',
++  'ajalibraries/ajabase/system/lock.cpp',
++  'ajalibraries/ajabase/system/linux/lockimpl.cpp',
++  'ajalibraries/ajabase/system/memory.cpp',
++  'ajalibraries/ajabase/common/options_popt.cpp',
++  'ajalibraries/ajabase/common/performance.cpp',
++  'ajalibraries/ajabase/common/pixelformat.cpp',
++  'ajalibraries/ajabase/pnp/pnp.cpp',
++  'ajalibraries/ajabase/pnp/linux/pnpimpl.cpp',
++  'ajalibraries/ajabase/system/process.cpp',
++  'ajalibraries/ajabase/system/linux/processimpl.cpp',
++  'ajalibraries/ajabase/system/system.cpp',
++  'ajalibraries/ajabase/system/systemtime.cpp',
++  'ajalibraries/ajabase/common/testpatterngen.cpp',
++  'ajalibraries/ajabase/system/thread.cpp',
++  'ajalibraries/ajabase/system/linux/threadimpl.cpp',
++  'ajalibraries/ajabase/common/timebase.cpp',
++  'ajalibraries/ajabase/common/timecode.cpp',
++  'ajalibraries/ajabase/common/timecodeburn.cpp',
++  'ajalibraries/ajabase/common/timer.cpp',
++  'ajalibraries/ajabase/network/udp_socket.cpp',
++  'ajalibraries/ajabase/common/videoutilities.cpp',
++  'ajalibraries/ajabase/common/wavewriter.cpp',
++  'ajalibraries/ajabase/persistence/persistence.cpp',
++  'ajalibraries/ajantv2/src/ntv2audio.cpp',
++  'ajalibraries/ajantv2/src/ntv2anc.cpp',
++  'ajalibraries/ajantv2/src/ntv2autocirculate.cpp',
++  'ajalibraries/ajantv2/src/ntv2bitfile.cpp',
++  'ajalibraries/ajantv2/src/ntv2bitfilemanager.cpp',
++  'ajalibraries/ajantv2/src/ntv2card.cpp',
++  'ajalibraries/ajantv2/src/ntv2config2022.cpp',
++  'ajalibraries/ajantv2/src/ntv2config2110.cpp',
++  'ajalibraries/ajantv2/src/ntv2configts2022.cpp',
++  'ajalibraries/ajantv2/src/ntv2csclut.cpp',
++  'ajalibraries/ajantv2/src/ntv2cscmatrix.cpp',
++  'ajalibraries/ajantv2/src/ntv2debug.cpp',
++  'ajalibraries/ajantv2/src/ntv2devicefeatures.cpp',
++  'ajalibraries/ajantv2/src/ntv2devicescanner.cpp',
++  'ajalibraries/ajantv2/src/ntv2discover.cpp',
++  'ajalibraries/ajantv2/src/ntv2dma.cpp',
++  'ajalibraries/ajantv2/src/ntv2dynamicdevice.cpp',
++  'ajalibraries/ajantv2/src/ntv2hdmi.cpp',
++  'ajalibraries/ajantv2/src/ntv2hevc.cpp',
++  'ajalibraries/ajantv2/src/ntv2driverinterface.cpp',
++  'ajalibraries/ajantv2/src/ntv2enhancedcsc.cpp',
++  'ajalibraries/ajantv2/src/ntv2formatdescriptor.cpp',
++  'ajalibraries/ajantv2/src/ntv2interrupts.cpp',
++  'ajalibraries/ajantv2/src/ntv2konaflashprogram.cpp',
++  'ajalibraries/ajantv2/src/lin/ntv2linuxdriverinterface.cpp',
++  'ajalibraries/ajantv2/src/ntv2mailbox.cpp',
++  'ajalibraries/ajantv2/src/ntv2mbcontroller.cpp',
++  'ajalibraries/ajantv2/src/ntv2mcsfile.cpp',
++  'ajalibraries/ajantv2/src/ntv2nubaccess.cpp',
++  'ajalibraries/ajantv2/src/ntv2nubpktcom.cpp',
++  'ajalibraries/ajantv2/src/ntv2publicinterface.cpp',
++  'ajalibraries/ajantv2/src/ntv2register.cpp',
++  'ajalibraries/ajantv2/src/ntv2registerexpert.cpp',
++  'ajalibraries/ajantv2/src/ntv2resample.cpp',
++  'ajalibraries/ajantv2/src/ntv2routingexpert.cpp',
++  'ajalibraries/ajantv2/src/ntv2rp188.cpp',
++  'ajalibraries/ajantv2/src/ntv2serialcontrol.cpp',
++  'ajalibraries/ajantv2/src/ntv2signalrouter.cpp',
++  'ajalibraries/ajantv2/src/ntv2spiinterface.cpp',
++  'ajalibraries/ajantv2/src/ntv2subscriptions.cpp',
++  'ajalibraries/ajantv2/src/ntv2supportlogger.cpp',
++  'ajalibraries/ajantv2/src/ntv2transcode.cpp',
++  'ajalibraries/ajantv2/src/ntv2utf8.cpp',
++  'ajalibraries/ajantv2/src/ntv2utils.cpp',
++  'ajalibraries/ajantv2/src/ntv2verticalfilter.cpp',
++  'ajalibraries/ajantv2/src/ntv2vpid.cpp',
++  'ajalibraries/ajantv2/src/ntv2vpidfromspec.cpp',
++  'ajalibraries/ajantv2/src/ntv2task.cpp',
++  'ajalibraries/ajantv2/src/ntv2testpatterngen.cpp',
++]
++
++ajantv2_args = [
++  '-D_REENTRANT',
++  '-DAJASTATIC',
++  '-DAJALinux',
++  '-DAJA_LINUX',
++  '-D_LARGEFILE_SOURCE',
++  '-D_LARGEFILE64_SOURCE',
++  '-D_FILE_OFFSET_BITS=64',
++]
++
++ajantv2_inc = include_directories(
++  'ajalibraries/ajaanc/includes',
++  'ajalibraries/ajantv2/includes',
++  'ajalibraries/ajantv2/src',
++  'ajalibraries/ajantv2/src/lin',
++  'ajalibraries',
++  'ajalibraries/ajabase',
++)
++
++libajantv2 = static_library(
++  'libajantv2',
++  sources: ajantv2_sources,
++  cpp_args: ajantv2_args,
++  include_directories: ajantv2_inc,
++  pic: true,
++  override_options: ['cpp_eh=default', 'werror=false'],
++  install: false
++)
++
++libajantv2_dep = declare_dependency(
++  link_with: libajantv2,
++  include_directories: ajantv2_inc,
++)
