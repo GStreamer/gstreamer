@@ -1,6 +1,10 @@
 ### Describe your issue
-<!-- a clear and concise summary of the bug. -->
-<!-- For any GStreamer usage question, please contact the community using the #gstreamer channel on IRC https://www.oftc.net/ or the mailing list on https://gstreamer.freedesktop.org/lists/ -->
+<!-- Please provide a clear and concise summary of the bug. -->
+
+<!-- For any GStreamer usage questions or application development support
+     please head over to our new GStreamer Discourse forum at
+     https://discourse.gstreamer.org/ instead, or find us on
+     the #gstreamer IRC channel on https://www.oftc.net -->
 
 #### Expected Behavior
 <!-- What did you expect to happen -->
