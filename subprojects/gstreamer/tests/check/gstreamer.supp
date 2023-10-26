@@ -2574,6 +2574,16 @@
    fun:getaddrinfo
 }
 
+## Fedora 34 getaddrinfo context tls leak (probably some thread teardown race)
+## https://codebrowser.dev/glibc/glibc/resolv/resolv_context.c.html#current
+{
+   <Context Leaked>
+   Memcheck:Leak
+   fun:maybe_init
+   fun:*
+   fun:getaddrinfo
+}
+
 ## Dynamic pad templates in mxfmux
 {
    <Dynamic pad templates in mxfmux>
