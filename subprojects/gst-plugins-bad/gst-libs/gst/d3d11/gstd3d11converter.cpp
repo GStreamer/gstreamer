@@ -774,7 +774,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   GstD3D11ConverterPrivate *priv = self->priv;
   GstD3D11Device *device = self->device;
   HRESULT hr;
-  D3D11_RASTERIZER_DESC rasterizer_desc;
   D3D11_BUFFER_DESC buffer_desc;
   VertexData vertex_data[4];
   WORD indices[6];
@@ -791,7 +790,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   ComPtr < ID3D11RasterizerState > msaa_rasterizer;
   D3D11_SUBRESOURCE_DATA subresource;
 
-  memset (&rasterizer_desc, 0, sizeof (rasterizer_desc));
   memset (&subresource, 0, sizeof (subresource));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
@@ -827,22 +825,18 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     return FALSE;
   }
 
-  /* Everything is the same as default but use D3D11_CULL_NONE to render
-   * back-facing objects too */
-  rasterizer_desc.FillMode = D3D11_FILL_SOLID;
-  rasterizer_desc.CullMode = D3D11_CULL_NONE;
-  rasterizer_desc.DepthClipEnable = TRUE;
-
-  hr = device_handle->CreateRasterizerState (&rasterizer_desc, &rasterizer);
+  hr = gst_d3d11_device_get_rasterizer (device, &rasterizer);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create rasterizer state");
     return FALSE;
   }
 
-  rasterizer_desc.MultisampleEnable = TRUE;
-  rasterizer_desc.AntialiasedLineEnable = TRUE;
-  hr = device_handle->CreateRasterizerState (&rasterizer_desc,
-      &msaa_rasterizer);
+  hr = gst_d3d11_device_get_rasterizer_msaa (device, &msaa_rasterizer);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Couldn't create rasterizer state");
+    return FALSE;
+  }
+
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create MSAA rasterizer state");
     return FALSE;

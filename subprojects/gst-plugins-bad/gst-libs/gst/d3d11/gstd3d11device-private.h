@@ -70,5 +70,13 @@ HRESULT gst_d3d11_device_get_sampler       (GstD3D11Device * device,
                                             D3D11_FILTER filter,
                                             ID3D11SamplerState ** sampler);
 
+GST_D3D11_API
+HRESULT gst_d3d11_device_get_rasterizer    (GstD3D11Device * device,
+                                            ID3D11RasterizerState ** rasterizer);
+
+GST_D3D11_API
+HRESULT gst_d3d11_device_get_rasterizer_msaa (GstD3D11Device * device,
+                                              ID3D11RasterizerState ** rasterizer);
+
 G_END_DECLS
 

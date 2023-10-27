@@ -133,6 +133,9 @@ struct _GstD3D11DevicePrivate
       std::pair<ComPtr<ID3D11VertexShader>, ComPtr<ID3D11InputLayout>>> vs_cache;
   std::map <D3D11_FILTER, ComPtr<ID3D11SamplerState>> sampler_cache;
 
+  ID3D11RasterizerState *rs = nullptr;
+  ID3D11RasterizerState *rs_msaa = nullptr;
+
 #if HAVE_D3D11SDKLAYERS_H
   ID3D11Debug *d3d11_debug = nullptr;
   ID3D11InfoQueue *d3d11_info_queue = nullptr;
@@ -749,6 +752,8 @@ gst_d3d11_device_dispose (GObject * object)
   priv->vs_cache.clear ();
   priv->sampler_cache.clear ();
 
+  GST_D3D11_CLEAR_COM (priv->rs);
+  GST_D3D11_CLEAR_COM (priv->rs_msaa);
   GST_D3D11_CLEAR_COM (priv->device5);
   GST_D3D11_CLEAR_COM (priv->device_context4);
   GST_D3D11_CLEAR_COM (priv->video_device);
@@ -1910,6 +1915,68 @@ gst_d3d11_device_get_sampler (GstD3D11Device * device, D3D11_FILTER filter,
 
   priv->sampler_cache[filter] = state;
   *sampler = state.Detach ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_rasterizer (GstD3D11Device * device,
+    ID3D11RasterizerState ** rasterizer)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  D3D11_RASTERIZER_DESC desc;
+  HRESULT hr;
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  if (priv->rs) {
+    *rasterizer = priv->rs;
+    priv->rs->AddRef ();
+    return S_OK;
+  }
+
+  memset (&desc, 0, sizeof (D3D11_RASTERIZER_DESC));
+  desc.FillMode = D3D11_FILL_SOLID;
+  desc.CullMode = D3D11_CULL_NONE;
+  desc.DepthClipEnable = TRUE;
+
+  hr = priv->device->CreateRasterizerState (&desc, rasterizer);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  priv->rs = *rasterizer;
+  priv->rs->AddRef ();
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_device_get_rasterizer_msaa (GstD3D11Device * device,
+    ID3D11RasterizerState ** rasterizer)
+{
+  GstD3D11DevicePrivate *priv = device->priv;
+  D3D11_RASTERIZER_DESC desc;
+  HRESULT hr;
+
+  std::lock_guard < std::mutex > lk (priv->resource_lock);
+  if (priv->rs_msaa) {
+    *rasterizer = priv->rs_msaa;
+    priv->rs_msaa->AddRef ();
+    return S_OK;
+  }
+
+  memset (&desc, 0, sizeof (D3D11_RASTERIZER_DESC));
+  desc.FillMode = D3D11_FILL_SOLID;
+  desc.CullMode = D3D11_CULL_NONE;
+  desc.DepthClipEnable = TRUE;
+  desc.MultisampleEnable = TRUE;
+  desc.AntialiasedLineEnable = TRUE;
+
+  hr = priv->device->CreateRasterizerState (&desc, rasterizer);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  priv->rs_msaa = *rasterizer;
+  priv->rs_msaa->AddRef ();
 
   return S_OK;
 }
