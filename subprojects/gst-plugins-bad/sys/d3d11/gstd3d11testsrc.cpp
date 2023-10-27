@@ -42,6 +42,8 @@
 #include <string.h>
 #include <d2d1.h>
 #include <math.h>
+#include <memory>
+#include <vector>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -187,49 +189,52 @@ enum
   COLOR_DARK_GREY,
 };
 
-typedef struct
+struct SnowConstBuffer
 {
-  FLOAT time;
-  FLOAT alpha;
+  FLOAT time = 0.0f;
+  FLOAT alpha = 1.0f;
   FLOAT padding[2];
-} SnowConstBuffer;
+};
 
-typedef struct
+struct CheckerConstBuffer
 {
   FLOAT width;
   FLOAT height;
   FLOAT checker_size;
-  FLOAT alpha;
-} CheckerConstBuffer;
+  FLOAT alpha = 1.0f;
+};
 
-typedef struct
+struct GstD3D11TestSrcQuad
 {
-  ID3D11PixelShader *ps;
-  ID3D11VertexShader *vs;
-  ID3D11InputLayout *layout;
-  ID3D11Buffer *vertex_buffer;
-  ID3D11Buffer *index_buffer;
-  ID3D11Buffer *const_buffer;
-  guint vertex_stride;
-  guint index_count;
-  gboolean is_checker;
-  gboolean is_snow;
+  ComPtr < ID3D11PixelShader > ps;
+  ComPtr < ID3D11VertexShader > vs;
+  ComPtr < ID3D11InputLayout > layout;
+  ComPtr < ID3D11Buffer > vertex_buffer;
+  ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11Buffer > const_buffer;
+  guint vertex_stride = 0;
+  guint index_count = 0;
+  gboolean is_checker = FALSE;
+  gboolean is_snow = FALSE;
   CheckerConstBuffer checker_const_buffer;
   SnowConstBuffer snow_const_buffer;
-} GstD3D11TestSrcQuad;
+};
 
-typedef struct
+struct StaticColor
 {
   ColorValue value;
-  gboolean is_valid;
-} StaticColor;
+  gboolean is_valid = FALSE;
+};
 
-typedef struct
+/* *INDENT-OFF* */
+struct GstD3D11TestSrcRender
 {
   StaticColor static_color[2];
-  GstD3D11TestSrcQuad *quad[2];
+  std::vector < std::shared_ptr < GstD3D11TestSrcQuad >> quad;
+  ComPtr <ID3D11RasterizerState> rs;
   GstD3D11TestSrcPattern pattern;
-} GstD3D11TestSrcRender;
+};
+/* *INDENT-ON* */
 
 struct _GstD3D11TestSrc
 {
@@ -259,7 +264,7 @@ struct _GstD3D11TestSrc
   GstClockTime running_time;
 };
 
-typedef struct
+struct UvVertexData
 {
   struct
   {
@@ -272,9 +277,9 @@ typedef struct
     FLOAT u;
     FLOAT v;
   } texture;
-} UvVertexData;
+};
 
-typedef struct
+struct ColorVertexData
 {
   struct
   {
@@ -289,7 +294,7 @@ typedef struct
     FLOAT b;
     FLOAT a;
   } color;
-} ColorVertexData;
+};
 
 static gboolean
 setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
@@ -310,7 +315,6 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
   ComPtr < ID3D11Buffer > const_buffer;
-  GstD3D11TestSrcQuad *quad;
 
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
@@ -458,23 +462,21 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
 
-  quad = g_new0 (GstD3D11TestSrcQuad, 1);
-  if (on_smpte)
-    render->quad[1] = quad;
-  else
-    render->quad[0] = quad;
+  auto quad = std::make_shared < GstD3D11TestSrcQuad > ();
 
-  quad->ps = ps.Detach ();
-  quad->vs = vs.Detach ();
-  quad->layout = layout.Detach ();
-  quad->vertex_buffer = vertex_buffer.Detach ();
-  quad->index_buffer = index_buffer.Detach ();
-  quad->const_buffer = const_buffer.Detach ();
+  quad->ps = ps;
+  quad->vs = vs;
+  quad->layout = layout;
+  quad->vertex_buffer = vertex_buffer;
+  quad->index_buffer = index_buffer;
+  quad->const_buffer = const_buffer;
   quad->vertex_stride = sizeof (UvVertexData);
   quad->index_count = 6;
   quad->is_snow = TRUE;
   quad->snow_const_buffer.time = 0;
   quad->snow_const_buffer.alpha = self->alpha;
+
+  render->quad.push_back (quad);
 
   return TRUE;
 }
@@ -496,7 +498,6 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
   ComPtr < ID3D11InputLayout > layout;
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
-  GstD3D11TestSrcQuad *quad;
   guint num_vertex = 0;
   guint num_index = 0;
 
@@ -794,15 +795,17 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
 
-  render->quad[0] = quad = g_new0 (GstD3D11TestSrcQuad, 1);
+  auto quad = std::make_shared < GstD3D11TestSrcQuad > ();
 
-  quad->ps = ps.Detach ();
-  quad->vs = vs.Detach ();
-  quad->layout = layout.Detach ();
-  quad->vertex_buffer = vertex_buffer.Detach ();
-  quad->index_buffer = index_buffer.Detach ();
+  quad->ps = ps;
+  quad->vs = vs;
+  quad->layout = layout;
+  quad->vertex_buffer = vertex_buffer;
+  quad->index_buffer = index_buffer;
   quad->vertex_stride = sizeof (ColorVertexData);
   quad->index_count = 6 * 20;
+
+  render->quad.push_back (quad);
 
   return setup_snow_render (self, render, TRUE);
 }
@@ -826,7 +829,6 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
   ComPtr < ID3D11Buffer > const_buffer;
-  GstD3D11TestSrcQuad *quad;
 
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
@@ -931,14 +933,14 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   context_handle->Unmap (vertex_buffer.Get (), 0);
   context_handle->Unmap (index_buffer.Get (), 0);
 
-  render->quad[0] = quad = g_new0 (GstD3D11TestSrcQuad, 1);
+  auto quad = std::make_shared < GstD3D11TestSrcQuad > ();
 
-  quad->ps = ps.Detach ();
-  quad->vs = vs.Detach ();
-  quad->layout = layout.Detach ();
-  quad->vertex_buffer = vertex_buffer.Detach ();
-  quad->index_buffer = index_buffer.Detach ();
-  quad->const_buffer = const_buffer.Detach ();
+  quad->ps = ps;
+  quad->vs = vs;
+  quad->layout = layout;
+  quad->vertex_buffer = vertex_buffer;
+  quad->index_buffer = index_buffer;
+  quad->const_buffer = const_buffer;
   quad->vertex_stride = sizeof (UvVertexData);
   quad->index_count = 6;
   quad->is_checker = TRUE;
@@ -946,6 +948,8 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   quad->checker_const_buffer.height = self->info.height;
   quad->checker_const_buffer.checker_size = checker_size;
   quad->checker_const_buffer.alpha = self->alpha;
+
+  render->quad.push_back (quad);
 
   return TRUE;
 }
@@ -1244,34 +1248,6 @@ gst_d3d11_test_src_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 }
 
 static void
-gst_d3d11_test_src_quad_free (GstD3D11TestSrcQuad * quad)
-{
-  if (!quad)
-    return;
-
-  GST_D3D11_CLEAR_COM (quad->ps);
-  GST_D3D11_CLEAR_COM (quad->vs);
-  GST_D3D11_CLEAR_COM (quad->layout);
-  GST_D3D11_CLEAR_COM (quad->vertex_buffer);
-  GST_D3D11_CLEAR_COM (quad->index_buffer);
-  GST_D3D11_CLEAR_COM (quad->const_buffer);
-
-  g_free (quad);
-}
-
-static void
-gst_d3d11_test_src_render_free (GstD3D11TestSrcRender * render)
-{
-  if (!render)
-    return;
-
-  for (guint i = 0; i < G_N_ELEMENTS (render->quad); i++)
-    g_clear_pointer (&render->quad[i], gst_d3d11_test_src_quad_free);
-
-  g_free (render);
-}
-
-static void
 gst_d3d11_test_src_clear_resource (GstD3D11TestSrc * self)
 {
   if (self->render_pool) {
@@ -1284,7 +1260,11 @@ gst_d3d11_test_src_clear_resource (GstD3D11TestSrc * self)
     gst_clear_object (&self->convert_pool);
   }
 
-  g_clear_pointer (&self->render, gst_d3d11_test_src_render_free);
+  if (self->render) {
+    delete self->render;
+    self->render = nullptr;
+  }
+
   gst_clear_object (&self->converter);
 }
 
@@ -1296,6 +1276,7 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
   GstD3D11AllocationParams *params;
   GstD3D11TestSrcRender *render;
   GstStructure *config;
+  HRESULT hr;
 
   config = gst_structure_new ("converter-config",
       GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
@@ -1357,8 +1338,14 @@ gst_d3d11_test_src_setup_resource (GstD3D11TestSrc * self, GstCaps * caps)
   self->viewport.MinDepth = 0.0f;
   self->viewport.MaxDepth = 1.0f;
 
-  self->render = render = g_new0 (GstD3D11TestSrcRender, 1);
+  self->render = render = new GstD3D11TestSrcRender ();
   render->pattern = self->pattern;
+
+  hr = gst_d3d11_device_get_rasterizer (self->device, &render->rs);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't get rasterizer state");
+    goto error;
+  }
 
   switch (self->pattern) {
     case GST_D3D11_TEST_SRC_SMPTE:
@@ -1895,18 +1882,15 @@ gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
 
   context->IASetPrimitiveTopology (D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
   context->RSSetViewports (1, &self->viewport);
+  context->RSSetState (render->rs.Get ());
   context->OMSetRenderTargets (1, &rtv, nullptr);
   context->OMSetBlendState (nullptr, nullptr, 0xffffffff);
 
-  for (guint i = 0; i < G_N_ELEMENTS (render->quad); i++) {
-    GstD3D11TestSrcQuad *quad = render->quad[i];
-
-    if (!quad)
-      break;
-
+  /* *INDENT-OFF* */
+  for (auto quad : render->quad) {
     if (quad->const_buffer) {
-      hr = context->Map (quad->const_buffer, 0, D3D11_MAP_WRITE_DISCARD, 0,
-          &map);
+      hr = context->Map (quad->const_buffer.Get (),
+          0, D3D11_MAP_WRITE_DISCARD, 0, &map);
       if (!gst_d3d11_result (hr, self->device)) {
         GST_ERROR_OBJECT (self, "Failed to map constant buffer");
         return FALSE;
@@ -1923,23 +1907,27 @@ gst_d3d11_test_src_draw_pattern (GstD3D11TestSrc * self,
             sizeof (CheckerConstBuffer));
       }
 
-      context->Unmap (quad->const_buffer, 0);
+      context->Unmap (quad->const_buffer.Get (), 0);
 
-      context->PSSetConstantBuffers (0, 1, &quad->const_buffer);
+      ID3D11Buffer *const_bufs[] = { quad->const_buffer.Get () };
+      context->PSSetConstantBuffers (0, 1, const_bufs);
     } else {
       context->PSSetConstantBuffers (0, 0, nullptr);
     }
 
-    context->IASetInputLayout (quad->layout);
-    context->IASetVertexBuffers (0, 1, &quad->vertex_buffer,
+    context->IASetInputLayout (quad->layout.Get ());
+    ID3D11Buffer *vertex_buf[] = { quad->vertex_buffer.Get () };
+    context->IASetVertexBuffers (0, 1, vertex_buf,
         &quad->vertex_stride, &offsets);
-    context->IASetIndexBuffer (quad->index_buffer, DXGI_FORMAT_R16_UINT, 0);
+    context->IASetIndexBuffer (quad->index_buffer.Get (), DXGI_FORMAT_R16_UINT,
+        0);
 
-    context->VSSetShader (quad->vs, nullptr, 0);
-    context->PSSetShader (quad->ps, nullptr, 0);
+    context->VSSetShader (quad->vs.Get (), nullptr, 0);
+    context->PSSetShader (quad->ps.Get (), nullptr, 0);
 
     context->DrawIndexed (quad->index_count, 0, 0);
   }
+  /* *INDENT-ON* */
 
   context->OMSetRenderTargets (0, nullptr, nullptr);
 
