@@ -30,7 +30,7 @@ G_PASTE(g_io_, G_PASTE(name, _load)) (NULL)
 //#define GST_IOS_PLUGINS_GES
 
 
-#define GST_IOS_GIO_MODULE_GNUTLS
+#define GST_IOS_GIO_MODULE_OPENSSL
 
 void gst_ios_init (void);
 
