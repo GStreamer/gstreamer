@@ -199,6 +199,7 @@ typedef struct
   ID3D11PixelShader *ps;
   ID3D11VertexShader *vs;
   ID3D11InputLayout *layout;
+  ID3D11RasterizerState *rs;
   ID3D11Buffer *vertex_buffer;
   ID3D11Buffer *index_buffer;
   D3D11_VIEWPORT viewport;
@@ -1837,6 +1838,7 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
+  ComPtr < ID3D11RasterizerState > rs;
   HRESULT hr;
 
   device_handle = gst_d3d11_device_get_device_handle (self->device);
@@ -1858,6 +1860,12 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   hr = gst_d3d11_get_vertex_shader_pos (self->device, &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't setup vertex shader");
+    return nullptr;
+  }
+
+  hr = gst_d3d11_device_get_rasterizer (self->device, &rs);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't setup rasterizer state");
     return nullptr;
   }
 
@@ -1948,7 +1956,9 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   quad = g_new0 (GstD3D11CompositorQuad, 1);
   quad->ps = ps.Detach ();
   quad->vs = vs.Detach ();
+  quad->rs = rs.Detach ();
   quad->layout = layout.Detach ();
+
   quad->vertex_buffer = vertex_buffer.Detach ();
   quad->index_buffer = index_buffer.Detach ();
 
@@ -1971,6 +1981,7 @@ gst_d3d11_compositor_quad_free (GstD3D11CompositorQuad * quad)
   GST_D3D11_CLEAR_COM (quad->ps);
   GST_D3D11_CLEAR_COM (quad->vs);
   GST_D3D11_CLEAR_COM (quad->layout);
+  GST_D3D11_CLEAR_COM (quad->rs);
   GST_D3D11_CLEAR_COM (quad->vertex_buffer);
   GST_D3D11_CLEAR_COM (quad->index_buffer);
 
@@ -2004,6 +2015,7 @@ gst_d3d11_compositor_draw_background_checker (GstD3D11Compositor * self,
   context->VSSetShader (quad->vs, nullptr, 0);
   context->PSSetShader (quad->ps, nullptr, 0);
   context->RSSetViewports (1, &quad->viewport);
+  context->RSSetState (quad->rs);
   context->OMSetRenderTargets (1, &rtv, nullptr);
   context->OMSetBlendState (nullptr, nullptr, 0xffffffff);
   context->DrawIndexed (6, 0, 0);
