@@ -2579,8 +2579,9 @@
 {
    <Context Leaked>
    Memcheck:Leak
+   ...
    fun:maybe_init
-   fun:*
+   ...
    fun:getaddrinfo
 }
 
