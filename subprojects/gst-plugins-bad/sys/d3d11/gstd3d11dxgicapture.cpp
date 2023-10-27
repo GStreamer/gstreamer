@@ -331,9 +331,7 @@ public:
 
   bool
   DrawMouse (GstD3D11Device * device, ID3D11RenderTargetView * rtv,
-      ID3D11VertexShader * vs, ID3D11PixelShader * ps,
-      ID3D11InputLayout * layout, ID3D11SamplerState * sampler,
-      ID3D11BlendState * blend, D3D11_BOX * cropBox)
+      ShaderResource * resource, D3D11_BOX * cropBox)
   {
     GST_TRACE ("Drawing mouse");
 
@@ -495,14 +493,14 @@ public:
     ID3D11Buffer *vert_buf = VertexBufferMouse.Get();
 
     context_handle->IASetVertexBuffers(0, 1, &vert_buf, &Stride, &Offset);
-    context_handle->OMSetBlendState(blend, BlendFactor, 0xFFFFFFFF);
+    context_handle->OMSetBlendState(resource->blend, BlendFactor, 0xFFFFFFFF);
     context_handle->OMSetRenderTargets(1, &rtv, nullptr);
-    context_handle->VSSetShader(vs, nullptr, 0);
-    context_handle->PSSetShader(ps, nullptr, 0);
+    context_handle->VSSetShader(resource->vs, nullptr, 0);
+    context_handle->PSSetShader(resource->ps, nullptr, 0);
     context_handle->PSSetShaderResources(0, 1, &srv);
-    context_handle->PSSetSamplers(0, 1, &sampler);
+    context_handle->PSSetSamplers(0, 1, &resource->sampler);
     context_handle->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    context_handle->IASetInputLayout(layout);
+    context_handle->IASetInputLayout(resource->layout);
 
     D3D11_VIEWPORT VP;
     VP.Width = static_cast<FLOAT>(FullDesc.Width);
@@ -512,6 +510,7 @@ public:
     VP.TopLeftX = 0.0f;
     VP.TopLeftY = 0.0f;
     context_handle->RSSetViewports(1, &VP);
+    context_handle->RSSetState (resource->rs);
 
     context_handle->Draw(NUMVERTICES, 0);
 
@@ -594,6 +593,7 @@ private:
     ComPtr<ID3D11VertexShader> vs;
     ComPtr<ID3D11PixelShader> ps;
     ComPtr<ID3D11InputLayout> layout;
+    ComPtr<ID3D11RasterizerState> rs;
     HRESULT hr;
 
     hr = gst_d3d11_get_vertex_shader_coord (device, &vs, &layout);
@@ -616,11 +616,18 @@ private:
       return false;
     }
 
+    hr = gst_d3d11_device_get_rasterizer (device, &rs);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR ("Couldn't get rasterizer state");
+      return false;
+    }
+
     /* Everything is prepared now */
     vs_ = vs;
     ps_ = ps;
     layout_ = layout;
     sampler_ = sampler;
+    rs_ = rs;
 
     return true;
   }
@@ -1200,6 +1207,7 @@ private:
     VP.TopLeftX = 0.0f;
     VP.TopLeftY = 0.0f;
     device_context->RSSetViewports(1, &VP);
+    device_context->RSSetState (rs_.Get ());
 
     device_context->Draw(NUMVERTICES * DirtyCount, 0);
 
@@ -1409,6 +1417,7 @@ private:
   ComPtr<ID3D11PixelShader> ps_;
   ComPtr<ID3D11InputLayout> layout_;
   ComPtr<ID3D11SamplerState> sampler_;
+  ComPtr<ID3D11RasterizerState> rs_;
   ComPtr<IDXGIOutputDuplication> dupl_;
 
   /* frame metadata */
@@ -1463,9 +1472,7 @@ gst_d3d11_dxgi_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
 static GstFlowReturn
 gst_d3d11_dxgi_capture_do_capture (GstD3D11ScreenCapture * capture,
     GstD3D11Device * device, ID3D11Texture2D * texture,
-    ID3D11RenderTargetView * rtv, ID3D11VertexShader * vs,
-    ID3D11PixelShader * ps, ID3D11InputLayout * layout,
-    ID3D11SamplerState * sampler, ID3D11BlendState * blend,
+    ID3D11RenderTargetView * rtv, ShaderResource * resource,
     D3D11_BOX * crop_box, gboolean draw_mouse);
 
 #define gst_d3d11_dxgi_capture_parent_class parent_class
@@ -1816,9 +1823,7 @@ gst_d3d11_dxgi_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
 static GstFlowReturn
 gst_d3d11_dxgi_capture_do_capture (GstD3D11ScreenCapture * capture,
     GstD3D11Device * device, ID3D11Texture2D * texture,
-    ID3D11RenderTargetView * rtv, ID3D11VertexShader * vs,
-    ID3D11PixelShader * ps, ID3D11InputLayout * layout,
-    ID3D11SamplerState * sampler, ID3D11BlendState * blend,
+    ID3D11RenderTargetView * rtv, ShaderResource * resource,
     D3D11_BOX * crop_box, gboolean draw_mouse)
 {
   GstD3D11DxgiCapture *self = GST_D3D11_DXGI_CAPTURE (capture);
@@ -1887,10 +1892,8 @@ gst_d3d11_dxgi_capture_do_capture (GstD3D11ScreenCapture * capture,
   if (ret != GST_FLOW_OK)
     goto out;
 
-  if (draw_mouse) {
-    self->dupl_obj->DrawMouse (device,
-        rtv, vs, ps, layout, sampler, blend, crop_box);
-  }
+  if (draw_mouse)
+    self->dupl_obj->DrawMouse (device, rtv, resource, crop_box);
 
 out:
   if (shared_device)

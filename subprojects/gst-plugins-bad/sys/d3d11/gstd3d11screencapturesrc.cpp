@@ -201,11 +201,7 @@ struct _GstD3D11ScreenCaptureSrc
 
   gboolean downstream_supports_d3d11;
 
-  ID3D11VertexShader *vs;
-  ID3D11PixelShader *ps;
-  ID3D11InputLayout *layout;
-  ID3D11SamplerState *sampler;
-  ID3D11BlendState *blend;
+  ShaderResource resource;
 
   CRITICAL_SECTION lock;
 };
@@ -875,9 +871,11 @@ gst_d3d11_screen_capture_prepare_shader (GstD3D11ScreenCaptureSrc * self)
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11SamplerState > sampler;
   ComPtr < ID3D11BlendState > blend;
+  ComPtr < ID3D11RasterizerState > rs;
   D3D11_BLEND_DESC blend_desc;
   ID3D11Device *device_handle;
   HRESULT hr;
+  ShaderResource *resource = &self->resource;
 
   device_handle = gst_d3d11_device_get_device_handle (self->device);
 
@@ -920,11 +918,18 @@ gst_d3d11_screen_capture_prepare_shader (GstD3D11ScreenCaptureSrc * self)
     return FALSE;
   }
 
-  self->vs = vs.Detach ();
-  self->ps = ps.Detach ();
-  self->layout = layout.Detach ();
-  self->sampler = sampler.Detach ();
-  self->blend = blend.Detach ();
+  hr = gst_d3d11_device_get_rasterizer (self->device, &rs);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't get rasterizer state");
+    return FALSE;
+  }
+
+  resource->vs = vs.Detach ();
+  resource->ps = ps.Detach ();
+  resource->layout = layout.Detach ();
+  resource->sampler = sampler.Detach ();
+  resource->blend = blend.Detach ();
+  resource->rs = rs.Detach ();
 
   return TRUE;
 }
@@ -1079,6 +1084,7 @@ static gboolean
 gst_d3d11_screen_capture_src_stop (GstBaseSrc * bsrc)
 {
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
+  ShaderResource *resource = &self->resource;
   GstD3D11CSLockGuard lk (&self->lock);
 
   if (self->pool) {
@@ -1086,11 +1092,12 @@ gst_d3d11_screen_capture_src_stop (GstBaseSrc * bsrc)
     gst_clear_object (&self->pool);
   }
 
-  GST_D3D11_CLEAR_COM (self->vs);
-  GST_D3D11_CLEAR_COM (self->ps);
-  GST_D3D11_CLEAR_COM (self->layout);
-  GST_D3D11_CLEAR_COM (self->sampler);
-  GST_D3D11_CLEAR_COM (self->blend);
+  GST_D3D11_CLEAR_COM (resource->vs);
+  GST_D3D11_CLEAR_COM (resource->ps);
+  GST_D3D11_CLEAR_COM (resource->layout);
+  GST_D3D11_CLEAR_COM (resource->sampler);
+  GST_D3D11_CLEAR_COM (resource->blend);
+  GST_D3D11_CLEAR_COM (resource->rs);
 
   gst_clear_object (&self->capture);
   gst_clear_object (&self->device);
@@ -1325,8 +1332,7 @@ again:
   texture = (ID3D11Texture2D *) info.data;
   before_capture = gst_clock_get_time (clock);
   ret = gst_d3d11_screen_capture_do_capture (self->capture, self->device,
-      texture, rtv, self->vs, self->ps, self->layout, self->sampler,
-      self->blend, &self->crop_box, draw_mouse);
+      texture, rtv, &self->resource, &self->crop_box, draw_mouse);
   gst_memory_unmap (mem, &info);
 
   switch (ret) {
