@@ -202,6 +202,63 @@ end:
 }
 
 static gint
+__exif_tag_capture_light_source_to_exif_value (const gchar * str)
+{
+  if (str == NULL) {
+    GST_WARNING ("Invalid light source: NULL");
+    return -1;
+  }
+
+  if (strcmp (str, "unknown") == 0)
+    return 0;
+  else if (strcmp (str, "daylight") == 0)
+    return 1;
+  else if (strcmp (str, "flourescent") == 0)
+    return 2;
+  else if (strcmp (str, "tungsten") == 0)
+    return 3;
+  else if (strcmp (str, "flash") == 0)
+    return 4;
+  else if (strcmp (str, "fine-weather") == 0)
+    return 9;
+  else if (strcmp (str, "cloudy-weather") == 0)
+    return 10;
+  else if (strcmp (str, "shade") == 0)
+    return 11;
+  else if (strcmp (str, "daylight-fluorescent") == 0)
+    return 12;
+  else if (strcmp (str, "day-white-fluorescent") == 0)
+    return 13;
+  else if (strcmp (str, "cool-white-fluorescent") == 0)
+    return 14;
+  else if (strcmp (str, "white-fluorescent") == 0)
+    return 15;
+  else if (strcmp (str, "warm-white-fluorescent") == 0)
+    return 16;
+  else if (strcmp (str, "standard-light-A") == 0)
+    return 17;
+  else if (strcmp (str, "standard-light-B") == 0)
+    return 18;
+  else if (strcmp (str, "standard-light-C") == 0)
+    return 19;
+  else if (strcmp (str, "D55") == 0)
+    return 20;
+  else if (strcmp (str, "D65") == 0)
+    return 21;
+  else if (strcmp (str, "D75") == 0)
+    return 22;
+  else if (strcmp (str, "D50") == 0)
+    return 23;
+  else if (strcmp (str, "iso-studio-tungsten") == 0)
+    return 24;
+  else if (strcmp (str, "other") == 0)
+    return 255;
+
+  GST_WARNING ("Invalid light source: %s", str);
+  return -1;
+}
+
+static gint
 __exif_tag_capture_contrast_to_exif_value (const gchar * str)
 {
   if (str == NULL)
@@ -347,6 +404,8 @@ GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC (GST_TAG_CAPTURING_EXPOSURE_MODE,
     capture_exposure_mode);
 GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC (GST_TAG_CAPTURING_WHITE_BALANCE,
     capture_white_balance);
+GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC (GST_TAG_CAPTURING_LIGHT_SOURCE,
+    capture_light_source);
 GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC (GST_TAG_CAPTURING_CONTRAST,
     capture_contrast);
 GST_COMPARE_GST_STRING_TAG_TO_EXIF_SHORT_FUNC
@@ -631,6 +690,8 @@ static const GstExifTagMatch tag_map[] = {
       compare_capture_exposure_mode},
   {GST_TAG_CAPTURING_WHITE_BALANCE, EXIF_TAG_WHITE_BALANCE, EXIF_TYPE_SHORT,
       compare_capture_white_balance},
+  {GST_TAG_CAPTURING_LIGHT_SOURCE, EXIF_TAG_LIGHT_SOURCE, EXIF_TYPE_SHORT,
+      compare_capture_light_source},
   {GST_TAG_CAPTURING_DIGITAL_ZOOM_RATIO, EXIF_TAG_DIGITAL_ZOOM_RATIO,
       EXIF_TYPE_RATIONAL, NULL},
   {GST_TAG_CAPTURING_SCENE_CAPTURE_TYPE, EXIF_TAG_SCENE_CAPTURE_TYPE,
@@ -1144,6 +1205,55 @@ GST_START_TEST (test_jifmux_tags)
   libexif_check_tags (WHITE_BALANCE_TAG ("auto"), tmpfile);
   generate_jif_file_with_tags (WHITE_BALANCE_TAG ("manual"), tmpfile);
   libexif_check_tags (WHITE_BALANCE_TAG ("manual"), tmpfile);
+
+#define LIGHT_SOURCE_TAG(t) "taglist," GST_TAG_CAPTURING_LIGHT_SOURCE "=" t
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("unknown"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("unknown"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("daylight"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("daylight"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("flourescent"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("flourescent"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("tungsten"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("tungsten"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("flash"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("flash"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("fine-weather"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("fine-weather"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("cloudy-weather"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("cloudy-weather"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("shade"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("shade"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("daylight-fluorescent"),
+      tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("daylight-fluorescent"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("day-white-fluorescent"),
+      tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("day-white-fluorescent"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("cool-white-fluorescent"),
+      tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("cool-white-fluorescent"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("white-fluorescent"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("white-fluorescent"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("warm-white-fluorescent"),
+      tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("warm-white-fluorescent"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("standard-light-A"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("standard-light-A"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("standard-light-B"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("standard-light-B"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("standard-light-C"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("standard-light-C"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("D55"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("D55"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("D65"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("D65"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("D75"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("D75"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("iso-studio-tungsten"),
+      tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("iso-studio-tungsten"), tmpfile);
+  generate_jif_file_with_tags (LIGHT_SOURCE_TAG ("other"), tmpfile);
+  libexif_check_tags (LIGHT_SOURCE_TAG ("other"), tmpfile);
 
 #define GAIN_ADJUSTMENT_TAG(t) "taglist," GST_TAG_CAPTURING_GAIN_ADJUSTMENT "=" t
   generate_jif_file_with_tags (GAIN_ADJUSTMENT_TAG ("none"), tmpfile);
