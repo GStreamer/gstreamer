@@ -48,76 +48,6 @@ static GstStaticCaps src_template_caps =
         GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION,
         GST_D3D11_SRC_FORMATS));
 
-/**
- * GstD3D11SamplingMethod:
- *
- * Texture sampling method
- *
- * Since: 1.24
- */
-typedef enum
-{
-  GST_D3D11_SAMPLING_METHOD_NEAREST,
-  GST_D3D11_SAMPLING_METHOD_BILINEAR,
-  GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
-} GstD3D11SamplingMethod;
-
-static const GEnumValue gst_d3d11_sampling_methods[] = {
-  /**
-   * GstD3D11SamplingMethod::nearest-neighbour:
-   *
-   * Since: 1.24
-   */
-  {GST_D3D11_SAMPLING_METHOD_NEAREST,
-      "Nearest Neighbour", "nearest-neighbour"},
-
-  /**
-   * GstD3D11SamplingMethod::bilinear:
-   *
-   * Since: 1.24
-   */
-  {GST_D3D11_SAMPLING_METHOD_BILINEAR,
-      "Bilinear", "bilinear"},
-
-  /**
-   * GstD3D11SamplingMethod::linear-minification:
-   *
-   * Since: 1.24
-   */
-  {GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
-      "Linear minification, point magnification", "linear-minification"},
-  {0, nullptr, nullptr},
-};
-
-#define GST_TYPE_D3D11_SAMPLING_METHOD gst_d3d11_sampling_method_get_type()
-static GType
-gst_d3d11_sampling_method_get_type (void)
-{
-  static GType type = 0;
-
-  GST_D3D11_CALL_ONCE_BEGIN {
-    type = g_enum_register_static ("GstD3D11SamplingMethod",
-        gst_d3d11_sampling_methods);
-  } GST_D3D11_CALL_ONCE_END;
-
-  return type;
-}
-
-static D3D11_FILTER
-gst_d3d11_base_convert_sampling_method_to_filter (GstD3D11SamplingMethod method)
-{
-  static const D3D11_FILTER filters[] = {
-    D3D11_FILTER_MIN_MAG_MIP_POINT,     // GST_D3D11_SAMPLING_METHOD_NEAREST
-    D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT,      // GST_D3D11_SAMPLING_METHOD_BILINEAR
-    D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT,      // GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION
-  };
-
-  G_STATIC_ASSERT_EXPR (G_N_ELEMENTS (filters) ==
-      G_N_ELEMENTS (gst_d3d11_sampling_methods) - 1);
-
-  return filters[method];
-}
-
 #define DEFAULT_ADD_BORDERS TRUE
 #define DEFAULT_BORDER_COLOR G_GUINT64_CONSTANT(0xffff000000000000)
 #define DEFAULT_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
@@ -1863,7 +1793,7 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       GST_TYPE_VIDEO_PRIMARIES_MODE, self->active_primaries_mode,
       GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
       GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER,
-      gst_d3d11_base_convert_sampling_method_to_filter
+      gst_d3d11_sampling_method_to_native
       (self->active_sampling_method),
       GST_D3D11_CONVERTER_OPT_SRC_ALPHA_MODE,
       GST_TYPE_D3D11_CONVERTER_ALPHA_MODE,
@@ -2451,9 +2381,8 @@ gst_d3d11_base_convert_set_sampling_method (GstD3D11BaseConvert * self,
 {
   GstD3D11SRWLockGuard lk (&self->lock);
 
-  GST_DEBUG_OBJECT (self, "Sampling method %s -> %s",
-      gst_d3d11_sampling_methods[self->sampling_method].value_nick,
-      gst_d3d11_sampling_methods[method].value_nick);
+  GST_DEBUG_OBJECT (self,
+      "Sampling method %d -> %d", self->sampling_method, method);
 
   self->sampling_method = method;
   if (self->sampling_method != self->active_sampling_method)

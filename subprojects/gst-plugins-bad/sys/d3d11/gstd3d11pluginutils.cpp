@@ -106,6 +106,58 @@ gst_d3d11_msaa_mode_get_type (void)
   return type;
 }
 
+/**
+ * GstD3D11SamplingMethod:
+ *
+ * Texture sampling method
+ *
+ * Since: 1.24
+ */
+GType
+gst_d3d11_sampling_method_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue methods[] = {
+    /**
+     * GstD3D11SamplingMethod::nearest-neighbour:
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_SAMPLING_METHOD_NEAREST,
+        "Nearest Neighbour", "nearest-neighbour"},
+
+    /**
+     * GstD3D11SamplingMethod::bilinear:
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_SAMPLING_METHOD_BILINEAR,
+        "Bilinear", "bilinear"},
+
+    /**
+     * GstD3D11SamplingMethod::linear-minification:
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
+        "Linear minification, point magnification", "linear-minification"},
+
+    /**
+     * GstD3D11SamplingMethod::anisotropic:
+     *
+     * Since: 1.24
+     */
+    {GST_D3D11_SAMPLING_METHOD_ANISOTROPIC, "Anisotropic", "anisotropic"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D11_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D11SamplingMethod", methods);
+  } GST_D3D11_CALL_ONCE_END;
+
+  return type;
+}
+
 /* Max Texture Dimension for feature level 11_0 ~ 12_1 */
 static guint _gst_d3d11_texture_max_dimension = 16384;
 
@@ -1077,4 +1129,29 @@ gst_d3d11_calculate_transform_matrix (GstVideoOrientationMethod method,
       transform_matrix[i * 4 + j] = matrix.m[i][j];
     }
   }
+}
+
+struct SamplingMethodMap
+{
+  GstD3D11SamplingMethod method;
+  D3D11_FILTER filter;
+};
+
+static const SamplingMethodMap sampling_method_map[] = {
+  {GST_D3D11_SAMPLING_METHOD_NEAREST, D3D11_FILTER_MIN_MAG_MIP_POINT},
+  {GST_D3D11_SAMPLING_METHOD_BILINEAR, D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT},
+  {GST_D3D11_SAMPLING_METHOD_LINEAR_MINIFICATION,
+      D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT},
+  {GST_D3D11_SAMPLING_METHOD_ANISOTROPIC, D3D11_FILTER_COMPARISON_ANISOTROPIC},
+};
+
+D3D11_FILTER
+gst_d3d11_sampling_method_to_native (GstD3D11SamplingMethod method)
+{
+  for (guint i = 0; i < G_N_ELEMENTS (sampling_method_map); i++) {
+    if (sampling_method_map[i].method == method)
+      return sampling_method_map[i].filter;
+  }
+
+  return D3D11_FILTER_MIN_MAG_MIP_POINT;
 }
