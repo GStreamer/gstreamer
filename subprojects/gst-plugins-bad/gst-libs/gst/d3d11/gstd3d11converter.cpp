@@ -799,8 +799,14 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
 
   hr = gst_d3d11_device_get_sampler (device, sampler_filter, &sampler);
   if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create sampler, hr: 0x%x", (guint) hr);
-    return FALSE;
+    GST_WARNING_OBJECT (self, "Trying again with linear sampler");
+
+    hr = gst_d3d11_device_get_sampler (device, D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+        &sampler);
+    if (!gst_d3d11_result (hr, device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create sampler, hr: 0x%x", (guint) hr);
+      return FALSE;
+    }
   }
 
   hr = gst_d3d11_device_get_sampler (device, D3D11_FILTER_MIN_MAG_MIP_LINEAR,
