@@ -36,13 +36,8 @@
 
 #include <wrl.h>
 
-/* Disable platform-specific intrinsics */
-#define _XM_NO_INTRINSICS_
-#include <DirectXMath.h>
-
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
-using namespace DirectX;
 /* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_window_debug);
@@ -912,120 +907,6 @@ gst_d3d11_window_set_title (GstD3D11Window * window, const gchar * title)
     klass->set_title (window, title);
 }
 
-static const XMFLOAT4X4 g_matrix_90r = XMFLOAT4X4 (0.0f, -1.0f, 0.0f, 0.0f,
-    1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
-
-static const XMFLOAT4X4 g_matrix_180 = XMFLOAT4X4 (-1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, -1.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
-
-static const XMFLOAT4X4 g_matrix_90l = XMFLOAT4X4 (0.0f, 1.0f, 0.0f, 0.0f,
-    -1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
-
-static const XMFLOAT4X4 g_matrix_horiz = XMFLOAT4X4 (-1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 1.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
-
-static const XMFLOAT4X4 g_matrix_vert = XMFLOAT4X4 (1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, -1.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
-
-static const XMFLOAT4X4 g_matrix_ul_lr = XMFLOAT4X4 (0.0f, -1.0f, 0.0f, 0.0f,
-    -1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
-
-static const XMFLOAT4X4 g_matrix_ur_ll = XMFLOAT4X4 (0.0f, 1.0f, 0.0f, 0.0f,
-    1.0f, 0.0f, 0.0f, 0.0f,
-    0.0f, 0.0f, 1.0f, 0.0f,
-    0.0f, 0.0f, 0.0f, 1.0f);
-
-static void
-gst_d3d11_window_calculate_matrix (GstD3D11Window * self,
-    gfloat viewport_width, gfloat viewport_height, gfloat transform_matrix[16])
-{
-  gfloat aspect_ratio;
-  gboolean rotated = FALSE;
-  XMMATRIX rotate_matrix = XMMatrixIdentity ();
-
-  switch (self->method) {
-    case GST_VIDEO_ORIENTATION_IDENTITY:
-    case GST_VIDEO_ORIENTATION_AUTO:
-    case GST_VIDEO_ORIENTATION_CUSTOM:
-    default:
-      break;
-    case GST_VIDEO_ORIENTATION_90R:
-      rotate_matrix = XMLoadFloat4x4 (&g_matrix_90r);
-      rotated = TRUE;
-      break;
-    case GST_VIDEO_ORIENTATION_180:
-      rotate_matrix = XMLoadFloat4x4 (&g_matrix_180);
-      break;
-    case GST_VIDEO_ORIENTATION_90L:
-      rotate_matrix = XMLoadFloat4x4 (&g_matrix_90l);
-      rotated = TRUE;
-      break;
-    case GST_VIDEO_ORIENTATION_HORIZ:
-      rotate_matrix = XMLoadFloat4x4 (&g_matrix_horiz);
-      break;
-    case GST_VIDEO_ORIENTATION_VERT:
-      rotate_matrix = XMLoadFloat4x4 (&g_matrix_vert);
-      break;
-    case GST_VIDEO_ORIENTATION_UL_LR:
-      rotate_matrix = XMLoadFloat4x4 (&g_matrix_ul_lr);
-      rotated = TRUE;
-      break;
-    case GST_VIDEO_ORIENTATION_UR_LL:
-      rotate_matrix = XMLoadFloat4x4 (&g_matrix_ur_ll);
-      rotated = TRUE;
-      break;
-  }
-
-  if (rotated)
-    aspect_ratio = viewport_height / viewport_width;
-  else
-    aspect_ratio = viewport_width / viewport_height;
-
-  /* Apply user specified transform matrix first, then rotate-method */
-  XMMATRIX scale =
-      XMMatrixScaling (self->scale_x * aspect_ratio, self->scale_y, 1.0);
-
-  XMMATRIX rotate =
-      XMMatrixRotationX (XMConvertToRadians (self->rotation_x)) *
-      XMMatrixRotationY (XMConvertToRadians (-self->rotation_y)) *
-      XMMatrixRotationZ (XMConvertToRadians (-self->rotation_z));
-
-  XMMATRIX view = XMMatrixLookAtLH (XMVectorSet (0.0, 0.0, -1.0, 0.0),
-      XMVectorSet (0.0, 0.0, 0.0, 0.0), XMVectorSet (0.0, 1.0, 0.0, 0.0));
-
-  XMMATRIX proj;
-  if (self->ortho) {
-    proj = XMMatrixOrthographicOffCenterLH (-aspect_ratio,
-        aspect_ratio, -1.0, 1.0, 0.1, 100.0);
-  } else {
-    proj = XMMatrixPerspectiveFovLH (XMConvertToRadians (self->fov),
-        aspect_ratio, 0.1, 100.0);
-  }
-
-  XMMATRIX mvp = scale * rotate * view * proj * rotate_matrix;
-
-  XMFLOAT4X4 matrix;
-  XMStoreFloat4x4 (&matrix, mvp);
-
-  for (guint i = 0; i < 4; i++) {
-    for (guint j = 0; j < 4; j++) {
-      transform_matrix[i * 4 + j] = matrix.m[i][j];
-    }
-  }
-}
-
 static GstFlowReturn
 gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
     GstBuffer * backbuffer, GstBuffer * multisample)
@@ -1098,7 +979,6 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
 
   if (self->first_present) {
     D3D11_VIEWPORT viewport;
-    const gfloat min_diff = 0.00001f;
 
     viewport.TopLeftX = self->render_rect.left;
     viewport.TopLeftY = self->render_rect.top;
@@ -1114,19 +994,18 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
         "dest-height",
         (gint) (self->render_rect.bottom - self->render_rect.top), nullptr);
 
-    if (!XMScalarNearEqual (self->rotation_x, 0.0f, min_diff) &&
-        !XMScalarNearEqual (self->rotation_y, 0.0f, min_diff) &&
-        !XMScalarNearEqual (self->rotation_z, 0.0f, min_diff) &&
-        !XMScalarNearEqual (self->scale_x, 1.0f, min_diff) &&
-        !XMScalarNearEqual (self->scale_y, 1.0f, min_diff)) {
+    if (!gst_d3d11_need_transform (self->rotation_x, self->rotation_y,
+            self->rotation_z, self->scale_x, self->scale_y)) {
       g_object_set (self->converter, "video-direction", self->method, nullptr);
     } else {
       gfloat transform_matrix[16];
 
       GST_DEBUG_OBJECT (self, "Applying custom transform");
 
-      gst_d3d11_window_calculate_matrix (self,
-          viewport.Width, viewport.Height, transform_matrix);
+      gst_d3d11_calculate_transform_matrix (self->method,
+          viewport.Width, viewport.Height, self->fov, self->ortho,
+          self->rotation_x, self->rotation_y, self->rotation_z,
+          self->scale_x, self->scale_y, transform_matrix);
       g_object_set (self->converter,
           "video-direction", GST_VIDEO_ORIENTATION_CUSTOM, nullptr);
       gst_d3d11_converter_set_transform_matrix (self->converter,

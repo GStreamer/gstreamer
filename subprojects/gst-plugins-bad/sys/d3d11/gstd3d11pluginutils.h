@@ -148,6 +148,24 @@ HRESULT         gst_d3d11_get_vertex_shader_pos   (GstD3D11Device * device,
                                                    ID3D11VertexShader ** vs,
                                                    ID3D11InputLayout ** layout);
 
+gboolean        gst_d3d11_need_transform          (gfloat rotation_x,
+                                                   gfloat rotation_y,
+                                                   gfloat rotation_z,
+                                                   gfloat scale_x,
+                                                   gfloat scale_y);
+
+void            gst_d3d11_calculate_transform_matrix (GstVideoOrientationMethod method,
+                                                      gfloat viewport_width,
+                                                      gfloat viewport_height,
+                                                      gfloat fov,
+                                                      gboolean ortho,
+                                                      gfloat rotation_x,
+                                                      gfloat rotation_y,
+                                                      gfloat rotation_z,
+                                                      gfloat scale_x,
+                                                      gfloat scale_y,
+                                                      gfloat transform_matrix[16]);
+
 G_END_DECLS
 
 #endif /* __GST_D3D11_PLUGIN_UTILS_H__ */
