@@ -73,6 +73,7 @@ enum
   PROP_SCALE_X,
   PROP_SCALE_Y,
   PROP_MSAA,
+  PROP_SAMPLING_METHOD,
   PROP_RENDER_RECTANGE,
 };
 
@@ -91,6 +92,7 @@ enum
 #define DEFAULT_FOV                       90.0f
 #define DEFAULT_ORTHO                     FALSE
 #define DEFAULT_MSAA                      GST_D3D11_MSAA_DISABLED
+#define DEFAULT_SAMPLING_METHOD           GST_D3D11_SAMPLING_METHOD_BILINEAR
 
 /**
  * GstD3D11VideoSinkDisplayFormat:
@@ -209,6 +211,7 @@ struct _GstD3D11VideoSink
   gfloat scale_x;
   gfloat scale_y;
   GstD3D11MSAAMode msaa;
+  GstD3D11SamplingMethod sampling_method;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;
@@ -523,6 +526,18 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
           GST_TYPE_D3D11_MSAA_MODE, DEFAULT_MSAA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D11VideoSink:sampling-method:
+   *
+   * Sampling method
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_SAMPLING_METHOD,
+      g_param_spec_enum ("sampling-method", "Sampling method",
+          "Sampler filter type to use", GST_TYPE_D3D11_SAMPLING_METHOD,
+          DEFAULT_SAMPLING_METHOD, (GParamFlags) (GST_PARAM_MUTABLE_READY |
+              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstD3D11VideoSink:render-rectangle:
@@ -652,6 +667,7 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->scale_x = DEFAULT_SCALE;
   self->scale_y = DEFAULT_SCALE;
   self->msaa = DEFAULT_MSAA;
+  self->sampling_method = DEFAULT_SAMPLING_METHOD;
 
   InitializeCriticalSection (&self->lock);
 }
@@ -746,6 +762,9 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
       if (self->window)
         gst_d3d11_window_set_msaa_mode (self->window, self->msaa);
       break;
+    case PROP_SAMPLING_METHOD:
+      self->sampling_method = (GstD3D11SamplingMethod) g_value_get_enum (value);
+      break;
     case PROP_RENDER_RECTANGE:
       gst_video_overlay_set_property (object, PROP_RENDER_RECTANGE,
           PROP_RENDER_RECTANGE, value);
@@ -824,6 +843,9 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MSAA:
       g_value_set_enum (value, self->msaa);
+      break;
+    case PROP_SAMPLING_METHOD:
+      g_value_set_enum (value, self->sampling_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1024,7 +1046,10 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
       GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
       GST_TYPE_VIDEO_GAMMA_MODE, self->gamma_mode,
       GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
-      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode, nullptr);
+      GST_TYPE_VIDEO_PRIMARIES_MODE, self->primaries_mode,
+      GST_D3D11_CONVERTER_OPT_SAMPLER_FILTER,
+      GST_TYPE_D3D11_CONVERTER_SAMPLER_FILTER,
+      gst_d3d11_sampling_method_to_native (self->sampling_method), nullptr);
 
   window = (GstD3D11Window *) gst_object_ref (self->window);
   LeaveCriticalSection (&self->lock);
