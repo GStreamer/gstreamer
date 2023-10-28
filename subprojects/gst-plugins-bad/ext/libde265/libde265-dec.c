@@ -55,7 +55,10 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS
     ("video/x-h265, stream-format=(string) { hvc1, hev1, byte-stream }, "
-        "alignment=(string) { au, nal }")
+        "alignment=(string) { au, nal }, "
+        /* TODO: Can support more profiles by adding the according
+           output formats in src caps. */
+        "profile=(string) main")
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
