@@ -927,17 +927,9 @@ print_clocking_info (GstElement * element)
     n_print ("%selement requires a clock%s\n", PROP_VALUE_COLOR, RESET_COLOR);
   }
 
-  if (provides_clock) {
-    GstClock *clock;
 
-    clock = gst_element_get_clock (element);
-    if (clock) {
-      n_print ("%selement provides a clock%s: %s%s%s\n", PROP_VALUE_COLOR,
-          RESET_COLOR, DATATYPE_COLOR, GST_OBJECT_NAME (clock), RESET_COLOR);
-      gst_object_unref (clock);
-    } else
-      n_print ("%selement is supposed to provide a clock but returned NULL%s\n",
-          PROP_VALUE_COLOR, RESET_COLOR);
+  if (provides_clock) {
+    n_print ("%selement provides a clock%s\n", PROP_VALUE_COLOR, RESET_COLOR);
   }
 
   pop_indent ();
