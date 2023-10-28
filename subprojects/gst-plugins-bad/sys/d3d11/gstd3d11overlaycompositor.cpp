@@ -80,6 +80,7 @@ struct _GstD3D11OverlayCompositorPrivate
   ComPtr<ID3D11SamplerState> sampler;
   ComPtr<ID3D11BlendState> blend;
   ComPtr<ID3D11Buffer> index_buffer;
+  ComPtr<ID3D11RasterizerState> rs;
 
   std::vector<GstD3D11CompositionOverlayPtr> overlays;
 };
@@ -340,6 +341,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   ComPtr < ID3D11SamplerState > sampler;
   ComPtr < ID3D11BlendState > blend;
   ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11RasterizerState > rs;
 
   memset (&buffer_desc, 0, sizeof (buffer_desc));
   memset (&blend_desc, 0, sizeof (blend_desc));
@@ -370,6 +372,12 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   hr = gst_d3d11_get_vertex_shader_coord (device, &vs, &layout);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self, "Couldn't create vertex pixel shader");
+    return FALSE;
+  }
+
+  hr = gst_d3d11_device_get_rasterizer (device, &rs);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self, "Couldn't get rasterizer state");
     return FALSE;
   }
 
@@ -433,6 +441,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   priv->sampler = sampler;
   priv->blend = blend;
   priv->index_buffer = index_buffer;
+  priv->rs = rs;
 
   priv->viewport.TopLeftX = 0;
   priv->viewport.TopLeftY = 0;
@@ -612,6 +621,7 @@ gst_d3d11_overlay_compositor_draw_unlocked (GstD3D11OverlayCompositor *
   context->PSSetSamplers (0, 1, samplers);
   context->VSSetShader (priv->vs.Get (), nullptr, 0);
   context->RSSetViewports (1, &priv->viewport);
+  context->RSSetState (priv->rs.Get ());
   context->OMSetRenderTargets (1, rtv, nullptr);
   context->OMSetBlendState (priv->blend.Get (), nullptr, 0xffffffff);
 
