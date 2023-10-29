@@ -74,6 +74,7 @@ enum
   PROP_SCALE_Y,
   PROP_MSAA,
   PROP_SAMPLING_METHOD,
+  PROP_REDRAW_ON_UPDATE,
   PROP_RENDER_RECTANGE,
 };
 
@@ -93,6 +94,7 @@ enum
 #define DEFAULT_ORTHO                     FALSE
 #define DEFAULT_MSAA                      GST_D3D11_MSAA_DISABLED
 #define DEFAULT_SAMPLING_METHOD           GST_D3D11_SAMPLING_METHOD_BILINEAR
+#define DEFAULT_REDROW_ON_UPDATE          TRUE
 
 /**
  * GstD3D11VideoSinkDisplayFormat:
@@ -212,6 +214,7 @@ struct _GstD3D11VideoSink
   gfloat scale_y;
   GstD3D11MSAAMode msaa;
   GstD3D11SamplingMethod sampling_method;
+  gboolean redraw_on_update;
 
   /* saved render rectangle until we have a window */
   GstVideoRectangle render_rect;
@@ -540,6 +543,21 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
               G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D11VideoSink:redraw-on-update:
+   *
+   * Immediately apply updated geometry related properties and redraw
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_REDRAW_ON_UPDATE,
+      g_param_spec_boolean ("redraw-on-update",
+          "redraw-on-update",
+          "Immediately apply updated geometry related properties and redraw. "
+          "If disabled, properties will be applied on the next frame or "
+          "window resize", DEFAULT_REDROW_ON_UPDATE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D11VideoSink:render-rectangle:
    *
    * Since: 1.24
@@ -668,6 +686,7 @@ gst_d3d11_video_sink_init (GstD3D11VideoSink * self)
   self->scale_y = DEFAULT_SCALE;
   self->msaa = DEFAULT_MSAA;
   self->sampling_method = DEFAULT_SAMPLING_METHOD;
+  self->redraw_on_update = DEFAULT_REDROW_ON_UPDATE;
 
   InitializeCriticalSection (&self->lock);
 }
@@ -765,6 +784,9 @@ gst_d3d11_videosink_set_property (GObject * object, guint prop_id,
     case PROP_SAMPLING_METHOD:
       self->sampling_method = (GstD3D11SamplingMethod) g_value_get_enum (value);
       break;
+    case PROP_REDRAW_ON_UPDATE:
+      self->redraw_on_update = g_value_get_boolean (value);
+      break;
     case PROP_RENDER_RECTANGE:
       gst_video_overlay_set_property (object, PROP_RENDER_RECTANGE,
           PROP_RENDER_RECTANGE, value);
@@ -846,6 +868,9 @@ gst_d3d11_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SAMPLING_METHOD:
       g_value_set_enum (value, self->sampling_method);
+      break;
+    case PROP_REDRAW_ON_UPDATE:
+      g_value_set_boolean (value, self->redraw_on_update);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1272,7 +1297,8 @@ done:
       "enable-navigation-events", self->enable_navigation_events,
       "emit-present", self->emit_present, nullptr);
 
-  gst_d3d11_window_set_orientation (self->window, self->selected_method,
+  gst_d3d11_window_set_orientation (self->window, self->redraw_on_update,
+      self->selected_method,
       self->fov, self->ortho, self->rotation_x, self->rotation_y,
       self->rotation_z, self->scale_x, self->scale_y);
   gst_d3d11_window_set_msaa_mode (self->window, self->msaa);
@@ -1540,7 +1566,8 @@ gst_d3d11_video_sink_set_orientation (GstD3D11VideoSink * self,
   }
 
   if (self->window) {
-    gst_d3d11_window_set_orientation (self->window, self->selected_method,
+    gst_d3d11_window_set_orientation (self->window, self->redraw_on_update,
+        self->selected_method,
         self->fov, self->ortho, self->rotation_x, self->rotation_y,
         self->rotation_z, self->scale_x, self->scale_y);
   }

@@ -953,7 +953,7 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
   /* We use flip mode swapchain and will not redraw borders.
    * So backbuffer should be cleared manually in order to remove artifact of
    * previous client's rendering on present signal */
-  if (self->emit_present) {
+  if (self->emit_present || self->first_present) {
     const FLOAT clear_color[] = { 0.0f, 0.0f, 0.0f, 1.0f };
     context->ClearRenderTargetView (rtv, clear_color);
   }
@@ -987,12 +987,10 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
     viewport.MinDepth = 0.0f;
     viewport.MaxDepth = 1.0f;
 
-    g_object_set (self->converter, "dest-x", (gint) self->render_rect.left,
-        "dest-y", (gint) self->render_rect.top,
-        "dest-width",
-        (gint) (self->render_rect.right - self->render_rect.left),
-        "dest-height",
-        (gint) (self->render_rect.bottom - self->render_rect.top), nullptr);
+    g_object_set (self->converter, "dest-x", (gint) viewport.TopLeftX,
+        "dest-y", (gint) viewport.TopLeftY,
+        "dest-width", (gint) viewport.Width,
+        "dest-height", (gint) viewport.Height, nullptr);
 
     if (!gst_d3d11_need_transform (self->rotation_x, self->rotation_y,
             self->rotation_z, self->scale_x, self->scale_y)) {
@@ -1196,7 +1194,7 @@ gst_d3d11_window_get_native_type_to_string (GstD3D11WindowNativeType type)
 }
 
 void
-gst_d3d11_window_set_orientation (GstD3D11Window * window,
+gst_d3d11_window_set_orientation (GstD3D11Window * window, gboolean immediate,
     GstVideoOrientationMethod method, gfloat fov, gboolean ortho,
     gfloat rotation_x, gfloat rotation_y, gfloat rotation_z,
     gfloat scale_x, gfloat scale_y)
@@ -1213,10 +1211,11 @@ gst_d3d11_window_set_orientation (GstD3D11Window * window,
     window->rotation_y = rotation_y;
     window->rotation_z = rotation_z;
     window->scale_x = scale_y;
-    if (window->swap_chain) {
-      GstD3D11WindowClass *klass = GST_D3D11_WINDOW_GET_CLASS (window);
-
-      klass->on_resize (window, window->surface_width, window->surface_height);
+    window->first_present = TRUE;
+    if (immediate && window->swap_chain && window->backbuffer
+        && window->cached_buffer) {
+      gst_d3d11_window_present (window, window->cached_buffer,
+          window->backbuffer, window->msaa_buffer);
     }
   }
 }

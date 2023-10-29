@@ -187,6 +187,7 @@ void          gst_d3d11_window_set_title            (GstD3D11Window * window,
                                                      const gchar *title);
 
 void          gst_d3d11_window_set_orientation      (GstD3D11Window * window,
+                                                     gboolean immediate,
                                                      GstVideoOrientationMethod method,
                                                      gfloat fov,
                                                      gboolean ortho,
