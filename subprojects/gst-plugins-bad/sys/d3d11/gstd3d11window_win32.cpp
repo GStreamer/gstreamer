@@ -669,7 +669,7 @@ gst_d3d11_window_win32_change_fullscreen_mode_internal (GstD3D11WindowWin32 *
     swap_chain->GetContainingOutput (&output);
     output->GetDesc (&output_desc);
 
-    SetWindowPos (hwnd, HWND_TOPMOST,
+    SetWindowPos (hwnd, HWND_TOP,
         output_desc.DesktopCoordinates.left,
         output_desc.DesktopCoordinates.top,
         output_desc.DesktopCoordinates.right,
