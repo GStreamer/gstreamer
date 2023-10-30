@@ -645,9 +645,10 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
       /* XXX: VkFormatFeatureFlagBits and VkFormatFeatureFlagBits2 are the same
        * values for basic_flags' symbols and they are defined in
        * VK_VERSION_1_0 */
-      basics_primary = basics_secondary = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
+      feats_primary = feats_secondary = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
           | VK_FORMAT_FEATURE_TRANSFER_SRC_BIT
           | VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+      basics_primary = basics_secondary = TRUE;
     }
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
