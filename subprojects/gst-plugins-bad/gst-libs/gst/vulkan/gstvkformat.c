@@ -581,10 +581,6 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
   int i;
 #if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
   VkPhysicalDevice gpu;
-  const VkFormatFeatureFlagBits2KHR basic_flags =
-      VK_FORMAT_FEATURE_2_SAMPLED_IMAGE_BIT |
-      VK_FORMAT_FEATURE_2_TRANSFER_SRC_BIT |
-      VK_FORMAT_FEATURE_2_TRANSFER_DST_BIT;
   VkFormatProperties2 prop = {
     .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2,
   };
@@ -603,7 +599,6 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
 #endif
 
   for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
-    gboolean basics_primary = FALSE, basics_secondary = FALSE;
     guint64 feats_primary = 0, feats_secondary = 0;
     VkImageUsageFlags usage = 0;
 
@@ -618,7 +613,6 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
       feats_primary = tiling == VK_IMAGE_TILING_LINEAR ?
           prop.formatProperties.linearTilingFeatures :
           prop.formatProperties.optimalTilingFeatures;
-      basics_primary = (feats_primary & basic_flags) == basic_flags;
 
       if (vk_formats_map[i].vkfrmt != vk_formats_map[i].vkfrmts[0]) {
         gst_vkGetPhysicalDeviceFormatProperties2 (gpu,
@@ -627,9 +621,6 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
         feats_secondary = tiling == VK_IMAGE_TILING_LINEAR ?
             prop.formatProperties.linearTilingFeatures :
             prop.formatProperties.optimalTilingFeatures;
-        basics_secondary = (feats_secondary & basic_flags) == basic_flags;
-      } else {
-        basics_secondary = basics_primary;
       }
     } else
 #endif
@@ -640,11 +631,10 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
       feats_primary = feats_secondary = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
           | VK_FORMAT_FEATURE_TRANSFER_SRC_BIT
           | VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
-      basics_primary = basics_secondary = TRUE;
     }
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
-      if (basics_primary && (GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
+      if ((GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
               GST_VIDEO_TRANSFER_SRGB
               || GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
               GST_VIDEO_TRANSFER_UNKNOWN)) {
@@ -660,9 +650,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
         }
       }
 
-      if (basics_secondary
-          && GST_VIDEO_INFO_COLORIMETRY (info).transfer !=
-          GST_VIDEO_TRANSFER_SRGB) {
+      if (GST_VIDEO_INFO_COLORIMETRY (info).transfer != GST_VIDEO_TRANSFER_SRGB) {
         usage = _get_usage (feats_secondary);
         if ((requested_usage & usage) == requested_usage) {
           if (fmts)
@@ -676,8 +664,7 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
       }
       return FALSE;
     } else {
-      if (basics_primary && !no_multiplane
-          && GST_VIDEO_INFO_N_PLANES (info) > 1) {
+      if (!no_multiplane && GST_VIDEO_INFO_N_PLANES (info) > 1) {
         usage = _get_usage (feats_primary);
         if ((requested_usage & usage) == requested_usage) {
           if (fmts)
@@ -690,20 +677,18 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
         }
       }
 
-      if (basics_secondary) {
-        usage = _get_usage (feats_secondary);
-        if ((requested_usage & usage) == requested_usage) {
-          if (fmts) {
-            memcpy (fmts, vk_formats_map[i].vkfrmts,
-                GST_VIDEO_MAX_PLANES * sizeof (VkFormat));
-          }
-          if (n_imgs)
-            *n_imgs = GST_VIDEO_INFO_N_PLANES (info);
-          if (usage_ret)
-            *usage_ret = usage;
-
-          return TRUE;
+      usage = _get_usage (feats_secondary);
+      if ((requested_usage & usage) == requested_usage) {
+        if (fmts) {
+          memcpy (fmts, vk_formats_map[i].vkfrmts,
+              GST_VIDEO_MAX_PLANES * sizeof (VkFormat));
         }
+        if (n_imgs)
+          *n_imgs = GST_VIDEO_INFO_N_PLANES (info);
+        if (usage_ret)
+          *usage_ret = usage;
+
+        return TRUE;
       }
       return FALSE;
     }
