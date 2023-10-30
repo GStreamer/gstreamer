@@ -540,7 +540,7 @@ gst_vulkan_video_profile_from_h264_sps (GstVulkanVideoProfile * profile,
       .lumaBitDepth = _get_component_bit_depth (sps->bit_depth_luma_minus8 + 8),
       .chromaBitDepth = _get_component_bit_depth (sps->bit_depth_chroma_minus8 + 8),
     },
-    .usage = {
+    .usage.decode = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR,
       .videoUsageHints = VK_VIDEO_DECODE_USAGE_DEFAULT_KHR,
       .pNext = &profile->codec,

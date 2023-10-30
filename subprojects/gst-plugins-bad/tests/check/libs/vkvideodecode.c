@@ -226,7 +226,7 @@ GST_START_TEST (test_decoder)
       .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
       .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
     },
-    .usage = {
+    .usage.decode = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR,
       .videoUsageHints = VK_VIDEO_DECODE_USAGE_DEFAULT_KHR,
       .pNext = &profile.codec,

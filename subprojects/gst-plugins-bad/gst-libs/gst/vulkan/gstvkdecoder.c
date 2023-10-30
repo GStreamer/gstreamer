@@ -183,8 +183,8 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   }
 
   self->profile = *profile;
-  self->profile.profile.pNext = &self->profile.usage;
-  self->profile.usage.pNext = &self->profile.codec;
+  self->profile.profile.pNext = &self->profile.usage.decode;
+  self->profile.usage.decode.pNext = &self->profile.codec;
 
   switch (self->codec) {
     case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
