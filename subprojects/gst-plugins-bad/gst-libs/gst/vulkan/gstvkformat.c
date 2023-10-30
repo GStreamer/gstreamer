@@ -579,15 +579,13 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
     int *n_imgs, VkImageUsageFlags * usage_ret)
 {
   int i;
-#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
   VkPhysicalDevice gpu;
+#if (defined(VK_VERSION_1_3) || defined(VK_VERSION_1_2) && VK_HEADER_VERSION >= 195)
   VkFormatProperties2 prop = {
     .sType = VK_STRUCTURE_TYPE_FORMAT_PROPERTIES_2,
   };
   PFN_vkGetPhysicalDeviceFormatProperties2
       gst_vkGetPhysicalDeviceFormatProperties2 = NULL;
-
-  gpu = gst_vulkan_physical_device_get_handle (physical_device);
 
   gst_vkGetPhysicalDeviceFormatProperties2 =
       gst_vulkan_instance_get_proc_address (physical_device->instance,
@@ -598,8 +596,12 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
         "vkGetPhysicalDeviceFormatProperties2KHR");
 #endif
 
+  gpu = gst_vulkan_physical_device_get_handle (physical_device);
+
   for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
     guint64 feats_primary = 0, feats_secondary = 0;
+    VkFormatProperties primary_format_props = { 0, };
+    VkFormatProperties secondary_format_props = { 0, };
     VkImageUsageFlags usage = 0;
 
     if (vk_formats_map[i].format != GST_VIDEO_INFO_FORMAT (info))
@@ -609,29 +611,32 @@ gst_vulkan_format_from_video_info_2 (GstVulkanPhysicalDevice * physical_device,
     if (gst_vkGetPhysicalDeviceFormatProperties2) {
       gst_vkGetPhysicalDeviceFormatProperties2 (gpu, vk_formats_map[i].vkfrmt,
           &prop);
-
-      feats_primary = tiling == VK_IMAGE_TILING_LINEAR ?
-          prop.formatProperties.linearTilingFeatures :
-          prop.formatProperties.optimalTilingFeatures;
+      primary_format_props = prop.formatProperties;
 
       if (vk_formats_map[i].vkfrmt != vk_formats_map[i].vkfrmts[0]) {
         gst_vkGetPhysicalDeviceFormatProperties2 (gpu,
             vk_formats_map[i].vkfrmts[0], &prop);
-
-        feats_secondary = tiling == VK_IMAGE_TILING_LINEAR ?
-            prop.formatProperties.linearTilingFeatures :
-            prop.formatProperties.optimalTilingFeatures;
+        secondary_format_props = prop.formatProperties;
       }
     } else
 #endif
     {
-      /* XXX: VkFormatFeatureFlagBits and VkFormatFeatureFlagBits2 are the same
-       * values for basic_flags' symbols and they are defined in
-       * VK_VERSION_1_0 */
-      feats_primary = feats_secondary = VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT
-          | VK_FORMAT_FEATURE_TRANSFER_SRC_BIT
-          | VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+      vkGetPhysicalDeviceFormatProperties (gpu, vk_formats_map[i].vkfrmt,
+          &primary_format_props);
+
+      if (vk_formats_map[i].vkfrmt != vk_formats_map[i].vkfrmts[0]) {
+        vkGetPhysicalDeviceFormatProperties (gpu, vk_formats_map[i].vkfrmts[0],
+            &secondary_format_props);
+      }
     }
+
+    feats_primary = tiling == VK_IMAGE_TILING_LINEAR ?
+        primary_format_props.linearTilingFeatures :
+        primary_format_props.optimalTilingFeatures;
+
+    feats_secondary = tiling == VK_IMAGE_TILING_LINEAR ?
+        secondary_format_props.linearTilingFeatures :
+        secondary_format_props.optimalTilingFeatures;
 
     if (GST_VIDEO_INFO_IS_RGB (info)) {
       if ((GST_VIDEO_INFO_COLORIMETRY (info).transfer ==
