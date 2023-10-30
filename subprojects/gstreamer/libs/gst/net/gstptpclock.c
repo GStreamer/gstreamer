@@ -2365,7 +2365,8 @@ cleanup_cb (gpointer data)
         GList *tmp = n->next;
 
         if (compare_clock_identity (&sender->master_clock_identity,
-                &domain->master_clock_identity) == 0)
+                &domain->master_clock_identity) == 0
+            && sender->iface_idx == domain->iface_idx)
           GST_WARNING ("currently selected master clock timed out");
         g_free (sender);
         domain->announce_senders =
