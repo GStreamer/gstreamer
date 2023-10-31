@@ -81,6 +81,7 @@ struct _GstD3D11OverlayCompositorPrivate
   ComPtr<ID3D11BlendState> blend;
   ComPtr<ID3D11Buffer> index_buffer;
   ComPtr<ID3D11RasterizerState> rs;
+  std::vector<GstVideoOverlayRectangle *> rects_to_upload;
 
   std::vector<GstD3D11CompositionOverlayPtr> overlays;
 };
@@ -481,8 +482,9 @@ gst_d3d11_overlay_compositor_new (GstD3D11Device * device,
 
 static gboolean
 gst_d3d11_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
-    std::vector < GstVideoOverlayRectangle * >*overlay_rect)
+    GstD3D11OverlayCompositor * self)
 {
+  GstD3D11OverlayCompositorPrivate *priv = self->priv;
   GstVideoOverlayCompositionMeta *cmeta;
   guint num_rect;
 
@@ -496,7 +498,7 @@ gst_d3d11_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
   num_rect = gst_video_overlay_composition_n_rectangles (cmeta->overlay);
   for (guint i = 0; i < num_rect; i++) {
     auto rect = gst_video_overlay_composition_get_rectangle (cmeta->overlay, i);
-    overlay_rect->push_back (rect);
+    priv->rects_to_upload.push_back (rect);
   }
 
   return TRUE;
@@ -507,28 +509,28 @@ gst_d3d11_overlay_compositor_upload (GstD3D11OverlayCompositor * compositor,
     GstBuffer * buf)
 {
   GstD3D11OverlayCompositorPrivate *priv;
-  std::vector < GstVideoOverlayRectangle * >new_overlay_rect;
 
   g_return_val_if_fail (compositor != nullptr, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buf), FALSE);
 
   priv = compositor->priv;
+  priv->rects_to_upload.clear ();
 
   gst_buffer_foreach_meta (buf,
       (GstBufferForeachMetaFunc) gst_d3d11_overlay_compositor_foreach_meta,
-      &new_overlay_rect);
+      compositor);
 
-  if (new_overlay_rect.empty ()) {
+  if (priv->rects_to_upload.empty ()) {
     priv->overlays.clear ();
     return TRUE;
   }
 
   GST_LOG_OBJECT (compositor, "Found %" G_GSIZE_FORMAT
       " overlay rectangles, %" G_GSIZE_FORMAT " in current queue",
-      new_overlay_rect.size (), priv->overlays.size ());
+      priv->rects_to_upload.size (), priv->overlays.size ());
 
   /* *INDENT-OFF* */
-  for (auto it : new_overlay_rect) {
+  for (auto it : priv->rects_to_upload) {
     if (std::find_if (priv->overlays.begin (), priv->overlays.end (),
           [&] (const auto & overlay) -> bool {
             return overlay->overlay_rect == it;
@@ -550,10 +552,10 @@ gst_d3d11_overlay_compositor_upload (GstD3D11OverlayCompositor * compositor,
   auto it = priv->overlays.begin ();
   while (it != priv->overlays.end ()) {
     auto old_overlay = *it;
-    if (std::find_if (new_overlay_rect.begin (), new_overlay_rect.end (),
-          [&] (const auto & overlay) -> bool {
+    if (std::find_if (priv->rects_to_upload.begin (),
+          priv->rects_to_upload.end (), [&] (const auto & overlay) -> bool {
             return overlay == old_overlay->overlay_rect;
-          }) == new_overlay_rect.end ()) {
+          }) == priv->rects_to_upload.end ()) {
       GST_LOG_OBJECT (compositor, "Removing %p from queue",
           old_overlay->overlay_rect);
       it = priv->overlays.erase (it);
