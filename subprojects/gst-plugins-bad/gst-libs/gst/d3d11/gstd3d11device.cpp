@@ -1897,6 +1897,13 @@ gst_d3d11_device_get_sampler (GstD3D11Device * device, D3D11_FILTER filter,
   desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
   desc.MaxLOD = D3D11_FLOAT32_MAX;
 
+  if (filter == D3D11_FILTER_ANISOTROPIC) {
+    if (priv->feature_level > D3D_FEATURE_LEVEL_9_1)
+      desc.MaxAnisotropy = 16;
+    else
+      desc.MaxAnisotropy = 2;
+  }
+
   hr = priv->device->CreateSamplerState (&desc, &state);
   if (!gst_d3d11_result (hr, device))
     return hr;

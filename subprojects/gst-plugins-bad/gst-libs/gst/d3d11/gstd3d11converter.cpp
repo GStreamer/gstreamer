@@ -84,8 +84,7 @@ gst_d3d11_converter_sampler_filter_get_type (void)
         "D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT", "min-linear-mag-mip-point"},
     {D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT,
         "D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT", "min-mag-linear-mip-point"},
-    {D3D11_FILTER_COMPARISON_ANISOTROPIC,
-        "D3D11_FILTER_COMPARISON_ANISOTROPIC", "anisotropic"},
+    {D3D11_FILTER_ANISOTROPIC, "D3D11_FILTER_ANISOTROPIC", "anisotropic"},
     {0, nullptr, nullptr},
   };
 
