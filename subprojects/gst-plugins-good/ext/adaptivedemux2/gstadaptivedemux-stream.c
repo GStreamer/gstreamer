@@ -151,7 +151,7 @@ gst_adaptive_demux2_stream_finalize (GObject * object)
     gst_caps_unref (stream->pending_caps);
 
   gst_clear_tag_list (&stream->pending_tags);
-  g_clear_pointer (&stream->stream_collection, gst_object_unref);
+  gst_clear_object (&stream->stream_collection);
 
   g_mutex_clear (&stream->prepare_lock);
   g_cond_clear (&stream->prepare_cond);
