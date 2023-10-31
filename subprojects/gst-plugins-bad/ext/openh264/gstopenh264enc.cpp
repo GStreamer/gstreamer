@@ -759,7 +759,13 @@ gst_openh264enc_set_format (GstVideoEncoder * encoder,
     WelsDestroySVCEncoder (openh264enc->encoder);
     openh264enc->encoder = NULL;
   }
-  WelsCreateSVCEncoder (&openh264enc->encoder);
+
+  if (WelsCreateSVCEncoder (&openh264enc->encoder) != 0) {
+    GST_ELEMENT_ERROR (openh264enc, LIBRARY, INIT, (NULL),
+        ("Failed to create OpenH264 encoder."));
+    return FALSE;
+  }
+
   unsigned int uiTraceLevel = WELS_LOG_ERROR;
   openh264enc->encoder->SetOption (ENCODER_OPTION_TRACE_LEVEL, &uiTraceLevel);
 

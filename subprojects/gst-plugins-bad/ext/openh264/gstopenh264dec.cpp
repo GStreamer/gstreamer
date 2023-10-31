@@ -159,7 +159,12 @@ gst_openh264dec_start (GstVideoDecoder * decoder)
     WelsDestroyDecoder (openh264dec->decoder);
     openh264dec->decoder = NULL;
   }
-  WelsCreateDecoder (&(openh264dec->decoder));
+
+  if (WelsCreateDecoder (&(openh264dec->decoder)) != 0) {
+    GST_ELEMENT_ERROR (openh264dec, LIBRARY, INIT, (NULL),
+        ("Failed to create OpenH264 decoder."));
+    return FALSE;
+  }
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
