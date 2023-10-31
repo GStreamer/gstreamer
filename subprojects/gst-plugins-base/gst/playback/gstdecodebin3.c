@@ -702,6 +702,7 @@ gst_decodebin3_dispose (GObject * object)
 
   gst_decodebin3_reset (dbin);
 
+  g_mutex_lock (&dbin->factories_lock);
   if (dbin->factories) {
     gst_plugin_feature_list_free (dbin->factories);
     dbin->factories = NULL;
@@ -714,8 +715,13 @@ gst_decodebin3_dispose (GObject * object)
     g_list_free (dbin->decodable_factories);
     dbin->decodable_factories = NULL;
   }
+  g_mutex_unlock (&dbin->factories_lock);
 
-  gst_clear_object (&dbin->collection);
+  SELECTION_LOCK (dbin);
+  if (dbin->collection) {
+    gst_clear_object (&dbin->collection);
+  }
+  SELECTION_UNLOCK (dbin);
 
   INPUT_LOCK (dbin);
   if (dbin->main_input) {
