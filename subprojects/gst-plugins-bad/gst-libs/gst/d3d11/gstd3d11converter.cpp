@@ -264,16 +264,8 @@ struct _GstD3D11ConverterPrivate
 {
   _GstD3D11ConverterPrivate ()
   {
-    for (guint i = 0; i < 4; i++)
-    {
-      for (guint j = 0; j < 4; j++)
-      {
-        if (i == j)
-          custom_transform[i * 4 + j] = 1.0;
-        else
-          custom_transform[i * 4 + j] = 0.0;
-      }
-    }
+    G_STATIC_ASSERT (sizeof (custom_transform) == sizeof (g_matrix_identity));
+    memcpy (custom_transform, g_matrix_identity, sizeof (g_matrix_identity));
   }
 
    ~_GstD3D11ConverterPrivate ()
