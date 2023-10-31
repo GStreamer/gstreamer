@@ -1142,8 +1142,7 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
 #endif /* synchronization2 */
 #endif /* timeline semaphore */
 
-  GST_INFO_OBJECT (self, "No dependencies added because of missing extensions");
-  return FALSE;
+  return TRUE;
 }
 
 /**
