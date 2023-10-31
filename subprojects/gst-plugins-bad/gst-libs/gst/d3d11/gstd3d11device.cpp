@@ -40,6 +40,7 @@
 #include <atomic>
 #include <mutex>
 #include <string.h>
+#include <unordered_map>
 
 /**
  * SECTION:gstd3d11device
@@ -120,7 +121,7 @@ struct _GstD3D11DevicePrivate
   ID3D11VideoContext *video_context = nullptr;
 
   IDXGIFactory1 *factory = nullptr;
-  GArray *format_table = nullptr;
+  std::unordered_map<GstVideoFormat, GstD3D11Format> format_table;
 
   std::recursive_mutex extern_lock;
   std::mutex resource_lock;
@@ -422,14 +423,7 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
 static void
 gst_d3d11_device_init (GstD3D11Device * self)
 {
-  GstD3D11DevicePrivate *priv;
-
-  priv = new GstD3D11DevicePrivate ();
-  priv->adapter = DEFAULT_ADAPTER;
-  priv->format_table = g_array_sized_new (FALSE, FALSE,
-      sizeof (GstD3D11Format), GST_D3D11_N_FORMATS);
-
-  self->priv = priv;
+  self->priv = new GstD3D11DevicePrivate ();
 }
 
 static gboolean
@@ -624,7 +618,7 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
     if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_LOG)
       dump_format (self, &format);
 
-    g_array_append_val (priv->format_table, format);
+    priv->format_table[format.format] = format;
   }
 
   /* FIXME: d3d11 sampler doesn't support packed-and-subsampled formats
@@ -784,7 +778,6 @@ gst_d3d11_device_finalize (GObject * object)
 
   GST_LOG_OBJECT (self, "finalize");
 
-  g_array_unref (priv->format_table);
   g_free (priv->description);
 
   delete priv;
@@ -1415,23 +1408,18 @@ gst_d3d11_device_get_format (GstD3D11Device * device, GstVideoFormat format,
 
   priv = device->priv;
 
-  for (guint i = 0; i < priv->format_table->len; i++) {
-    const GstD3D11Format *d3d11_fmt =
-        &g_array_index (priv->format_table, GstD3D11Format, i);
-
-    if (d3d11_fmt->format != format)
-      continue;
-
+  const auto & target = priv->format_table.find (format);
+  if (target == priv->format_table.end ()) {
     if (device_format)
-      *device_format = *d3d11_fmt;
+      gst_d3d11_format_init (device_format);
 
-    return TRUE;
+    return FALSE;
   }
 
   if (device_format)
-    gst_d3d11_format_init (device_format);
+    *device_format = target->second;
 
-  return FALSE;
+  return TRUE;
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D11Fence, gst_d3d11_fence);
