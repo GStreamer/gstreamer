@@ -3637,6 +3637,8 @@ retry:
     GST_WARNING_OBJECT (parsebin,
         "Currently, shutting down, aborting exposing");
     DYN_UNLOCK (parsebin);
+    if (fallback_collection)
+      gst_object_unref (fallback_collection);
     return FALSE;
   }
 
