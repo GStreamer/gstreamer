@@ -40466,6 +40466,7 @@ The caller should not modify the returned #GstStream</doc>
         </parameters>
       </method>
       <property name="upstream-id" writable="1" construct="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreamcollection.c">stream-id</doc>
         <type name="utf8" c:type="gchar*"/>
       </property>
       <field name="object" readable="0" private="1">
@@ -40483,14 +40484,18 @@ The caller should not modify the returned #GstStream</doc>
         </array>
       </field>
       <glib:signal name="stream-notify" when="first" no-recurse="1" detailed="1" no-hooks="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreamcollection.c">The stream notify signal is used to be notified of property changes to
+streams within the collection.</doc>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
         </return-value>
         <parameters>
-          <parameter name="object" transfer-ownership="none">
+          <parameter name="prop_stream" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreamcollection.c">the #GstStream that originated the signal</doc>
             <type name="Stream"/>
           </parameter>
-          <parameter name="p0" transfer-ownership="none">
+          <parameter name="prop" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gststreamcollection.c">the property that changed</doc>
             <type name="GObject.ParamSpec"/>
           </parameter>
         </parameters>

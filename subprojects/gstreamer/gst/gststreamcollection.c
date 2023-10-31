@@ -97,7 +97,7 @@ gst_stream_collection_class_init (GstStreamCollectionClass * klass)
   gobject_class->get_property = gst_stream_collection_get_property;
 
   /**
-   * GstStream:upstream-id:
+   * GstStreamCollection:upstream-id:
    *
    * stream-id
    */
@@ -108,7 +108,7 @@ gst_stream_collection_class_init (GstStreamCollectionClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstStream::stream-notify:
+   * GstStreamCollection::stream-notify:
    * @collection: a #GstStreamCollection
    * @prop_stream: the #GstStream that originated the signal
    * @prop: the property that changed
