@@ -2472,8 +2472,8 @@ ptp_helper_main (gpointer data)
       STDERR_MESSAGE_HEADER_SIZE, G_PRIORITY_DEFAULT, NULL,
       (GAsyncReadyCallback) have_stderr_header, NULL);
 
-  /* Check all 5 seconds, if we have to cleanup ANNOUNCE or pending syncs message */
-  cleanup_source = g_timeout_source_new_seconds (5);
+  /* Check every 1 seconds, if we have to cleanup ANNOUNCE or pending syncs message */
+  cleanup_source = g_timeout_source_new_seconds (1);
   g_source_set_priority (cleanup_source, G_PRIORITY_DEFAULT);
   g_source_set_callback (cleanup_source, (GSourceFunc) cleanup_cb, NULL, NULL);
   g_source_attach (cleanup_source, main_context);
