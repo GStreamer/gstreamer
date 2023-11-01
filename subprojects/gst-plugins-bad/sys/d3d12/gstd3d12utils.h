@@ -66,8 +66,13 @@ gboolean _gst_d3d12_result (HRESULT hr,
  *
  * Returns: %TRUE if D3D12 API call result is SUCCESS
  */
+#ifndef GST_DISABLE_GST_DEBUG
 #define gst_d3d12_result(result,device) \
     _gst_d3d12_result (result, device, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__, GST_LEVEL_ERROR)
+#else
+#define gst_d3d12_result(result,device) \
+    _gst_d3d12_result (result, device, NULL, __FILE__, GST_FUNCTION, __LINE__, GST_LEVEL_ERROR)
+#endif
 
 guint   gst_d3d12_calculate_subresource (guint mip_slice,
                                          guint array_slice,
