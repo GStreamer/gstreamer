@@ -575,7 +575,7 @@ add_templates (gpointer gclass, PyObject * templates)
             PyString_AsString (repr));
 #else
         PyErr_Format (PyExc_TypeError, "expected GObject but got %s",
-            _PyUnicode_AsString (repr));
+            PyUnicode_AsUTF8 (repr));
 #endif
         Py_DECREF (repr);
 

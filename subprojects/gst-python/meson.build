@@ -28,6 +28,10 @@ pythonver = python.language_version()
 if pythonver.version_compare('<3.0')
   error('Python2 is not supported anymore, please port your code to python3 (@0@ specified)'.format(python.language_version()))
 endif
+if pythonver.version_compare('<3.7')
+  error('Could not find a sufficient python version required: 3.7, found @0@'.format(python.language_version()))
+endif
+
 
 python_dep = python.dependency(embed:true, required : true)
 
