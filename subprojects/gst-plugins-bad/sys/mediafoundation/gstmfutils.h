@@ -60,8 +60,13 @@ gboolean       _gst_mf_result              (HRESULT hr,
                                             const gchar * function,
                                             gint line);
 
+#ifndef GST_DISABLE_GST_DEBUG
 #define gst_mf_result(result) \
     _gst_mf_result (result, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
+#else
+#define gst_mf_result(result) \
+    _gst_mf_result (result, NULL, __FILE__, GST_FUNCTION, __LINE__)
+#endif
 
 void           _gst_mf_dump_attributes (IMFAttributes * attr,
                                        const gchar * msg,
@@ -71,8 +76,13 @@ void           _gst_mf_dump_attributes (IMFAttributes * attr,
                                        const gchar * function,
                                        gint line);
 
+#ifndef GST_DISABLE_GST_DEBUG
 #define gst_mf_dump_attributes(attr,msg,level) \
     _gst_mf_dump_attributes (attr, msg, level, GST_CAT_DEFAULT, __FILE__, GST_FUNCTION, __LINE__)
+#else
+#define gst_mf_dump_attributes(attr,msg,level) \
+    do {} while (0)
+#endif
 
 G_END_DECLS
 
