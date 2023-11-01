@@ -57,8 +57,6 @@ if cc.get_id() == 'msvc'
 
       # Enable some warnings on MSVC to match GCC/Clang behaviour
       '/w14062', # enumerator 'identifier' in switch of enum 'enumeration' is not handled
-      '/w14101', # 'identifier' : unreferenced local variable
-      '/w14189', # 'identifier' : local variable is initialized but not referenced
   ]
   add_project_arguments(msvc_args, language: 'c')
 endif
@@ -233,8 +231,26 @@ else
   gst_debug_disabled = cc.has_header_symbol('gst/gstconfig.h', 'GST_DISABLE_GST_DEBUG', dependencies: gst_dep)
 endif
 
-if gst_debug_disabled and cc.has_argument('-Wno-unused')
-  add_project_arguments('-Wno-unused', language: 'c')
+if gst_debug_disabled
+  message('GStreamer debug system is disabled')
+  if cc.get_argument_syntax() == 'msvc'
+    msvc_args = cc.get_supported_arguments([
+      '/wd4101', # 'identifier' : unreferenced local variable
+      '/wd4189', # 'identifier' : local variable is initialized but not referenced
+    ])
+    add_project_arguments(msvc_args, language: 'c')
+  elif cc.has_argument('-Wno-unused')
+    add_project_arguments(['-Wno-unused'], language: 'c')
+  endif
+else
+  if cc.get_argument_syntax() == 'msvc' and gst_version_is_dev
+    msvc_args = cc.get_supported_arguments([
+      '/we4101', # 'identifier' : unreferenced local variable
+      '/we4189', # 'identifier' : local variable is initialized but not referenced
+    ])
+    add_project_arguments(msvc_args, language: 'c')
+  endif
+  message('GStreamer debug system is enabled')
 endif
 
 warning_flags = [
