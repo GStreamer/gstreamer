@@ -118,7 +118,7 @@ d3d11_conf.set10('GST_D3D11_WINAPI_APP', d3d11_winapi_app)
 # is mentioning that DXGIGetDebugInterface1 is desktop app only.
 #
 # PLEASE LET US KNOW A CORRECT WAY TO OBTAIN IDXGIDebug1 ON UWP, MICROSOFT
-if get_option('debug') and not (d3d11_winapi_only_app and get_option('b_vscrt') == 'md')
+if not gst_debug_disabled and get_option('debug') and not (d3d11_winapi_only_app and get_option('b_vscrt') == 'md')
   d3d11_debug_libs = [
     ['d3d11sdklayers.h', 'ID3D11Debug', 'ID3D11InfoQueue', 'have_d3d11sdk_h'],
     ['dxgidebug.h', 'IDXGIDebug', 'IDXGIInfoQueue', 'have_dxgidebug_h'],

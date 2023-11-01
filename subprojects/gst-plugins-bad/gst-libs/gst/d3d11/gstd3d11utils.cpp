@@ -550,6 +550,7 @@ gst_d3d11_luid_to_int64 (const LUID * luid)
   return val.QuadPart;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 static void
 gst_d3d11_log_gpu_remove_reason (HRESULT hr, GstD3D11Device * device,
     GstDebugCategory * cat, const gchar * file, const gchar * function,
@@ -564,6 +565,7 @@ gst_d3d11_log_gpu_remove_reason (HRESULT hr, GstD3D11Device * device,
 
   gst_d3d11_device_log_live_objects (device, file, function, line);
 }
+#endif
 
 /**
  * _gst_d3d11_result:

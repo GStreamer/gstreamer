@@ -615,8 +615,10 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
     for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++)
       format.format_support[j] = support[j];
 
+#ifndef GST_DISABLE_GST_DEBUG
     if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_LOG)
       dump_format (self, &format);
+#endif
 
     priv->format_table[format.format] = format;
   }
