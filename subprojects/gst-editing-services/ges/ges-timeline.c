@@ -447,12 +447,13 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_START) {
     GST_INFO_OBJECT (timeline, "Dropping %" GST_PTR_FORMAT, message);
+    gst_message_unref (message);
     return;
   }
 
   if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ASYNC_DONE) {
     GST_INFO_OBJECT (timeline, "Dropping %" GST_PTR_FORMAT, message);
-
+    gst_message_unref (message);
     return;
   }
 
@@ -502,15 +503,15 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
       GST_OBJECT_UNLOCK (timeline);
     }
 
+    gst_message_unref (message);
     if (amessage) {
-      gst_message_unref (message);
       gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
-      return;
     }
+    return;
   }
 
 forward:
-  gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
 static GstStateChangeReturn
