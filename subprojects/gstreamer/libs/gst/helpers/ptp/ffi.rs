@@ -99,6 +99,12 @@ pub mod unix {
     ))]
     pub const SOL_SOCKET: c_int = 1;
 
+    #[cfg(target_os = "linux")]
+    pub const SO_BINDTODEVICE: c_int = 25;
+
+    #[cfg(target_os = "linux")]
+    pub const SO_BINDTOIFINDEX: c_int = 62;
+
     #[cfg(target_os = "macos")]
     pub const FIOCLEX: c_ulong = 0x20006601;
 

@@ -266,7 +266,11 @@ mod imp {
     /// `SO_REUSEPORT` before doing so.
     ///
     /// `UdpSocket::bind()` does not allow setting custom options before binding.
-    pub fn create_udp_socket(addr: &Ipv4Addr, port: u16) -> Result<UdpSocket, io::Error> {
+    pub fn create_udp_socket(
+        addr: &Ipv4Addr,
+        port: u16,
+        iface: Option<&InterfaceInfo>,
+    ) -> Result<UdpSocket, io::Error> {
         use std::os::unix::io::FromRawFd;
 
         /// Helper struct to keep a raw fd and close it on drop
@@ -328,6 +332,9 @@ mod imp {
         // SAFETY: A valid socket fd is passed here.
         unsafe {
             set_reuse(fd.0);
+            if let Some(iface) = iface {
+                bind_to_interface(fd.0, iface);
+            }
         }
 
         // SAFETY: A valid socket fd is passed together with a valid sockaddr_in and its size.
@@ -488,6 +495,7 @@ mod imp {
 
             Ok(())
         }
+
         #[cfg(any(target_os = "solaris", target_os = "illumos"))]
         {
             use crate::error::Context;
@@ -572,6 +580,63 @@ mod imp {
 
                 if res < 0 {
                     warn!("Failed to set SO_REUSEPORT on socket");
+                }
+            }
+        }
+    }
+
+    /// Bind the socket to a specific interface.
+    ///
+    /// This is best-effort and might not actually do anything.
+    ///
+    /// SAFETY: Must be called with a valid socket fd.
+    #[cfg_attr(not(target_os = "linux"), allow(unused_variables))]
+    unsafe fn bind_to_interface(socket: i32, iface: &InterfaceInfo) {
+        // On Linux, go one step further and bind the socket completely to the socket if we
+        // can, i.e. have the relevant permissions.
+        #[cfg(target_os = "linux")]
+        {
+            // SAFETY: The socket passed in must be valid and the SO_BINDTOIFINDEX socket option
+            // takes an `i32` that represents the interface index as parameter.
+            let res = unsafe {
+                let v = iface.index as i32;
+                setsockopt(
+                    socket,
+                    SOL_SOCKET,
+                    SO_BINDTOIFINDEX,
+                    &v as *const _ as *const _,
+                    mem::size_of_val(&v) as u32,
+                )
+            };
+
+            if res < 0 {
+                warn!("Failed to set SO_BINDTOIFINDEX on socket, trying SO_BINDTODEVICE");
+
+                if iface.name.len() >= 16 {
+                    warn!(
+                        "Interface name '{}' too long for SO_BINDTODEVICE",
+                        iface.name
+                    );
+                } else {
+                    // SAFETY: The socket passed in must be valid and the SO_BINDTODEVICE socket option
+                    // takes a NUL-terminated byte array of up to 16 bytes as parameter.
+                    unsafe {
+                        let mut v = [0u8; 16];
+
+                        v[..iface.name.len()].copy_from_slice(iface.name.as_bytes());
+
+                        let res = setsockopt(
+                            socket,
+                            SOL_SOCKET,
+                            SO_BINDTODEVICE,
+                            &v as *const _ as *const _,
+                            (iface.name.len() + 1) as u32,
+                        );
+
+                        if res < 0 {
+                            warn!("Failed to set SO_BINDTODEVICE on socket");
+                        }
+                    }
                 }
             }
         }
@@ -850,7 +915,11 @@ mod imp {
     /// `SO_REUSEPORT` before doing so.
     ///
     /// `UdpSocket::bind()` does not allow setting custom options before binding.
-    pub fn create_udp_socket(addr: &Ipv4Addr, port: u16) -> Result<UdpSocket, io::Error> {
+    pub fn create_udp_socket(
+        addr: &Ipv4Addr,
+        port: u16,
+        _iface: Option<&InterfaceInfo>,
+    ) -> Result<UdpSocket, io::Error> {
         use std::os::windows::io::FromRawSocket;
 
         // XXX: Make sure Rust std is calling WSAStartup()
@@ -1026,7 +1095,7 @@ mod test {
             &ifaces[0]
         };
 
-        let socket = super::create_udp_socket(&std::net::Ipv4Addr::UNSPECIFIED, 0).unwrap();
+        let socket = super::create_udp_socket(&std::net::Ipv4Addr::UNSPECIFIED, 0, None).unwrap();
         super::join_multicast_v4(&socket, &std::net::Ipv4Addr::new(224, 0, 0, 1), iface).unwrap();
 
         let local_addr = socket.local_addr().unwrap();

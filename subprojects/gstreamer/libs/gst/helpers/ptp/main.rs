@@ -58,8 +58,8 @@ const MSG_TYPE_CLOCK_ID: u8 = 2;
 const MSG_TYPE_SEND_TIME_ACK: u8 = 3;
 
 /// Create a new `UdpSocket` for the given port and configure it for PTP.
-fn create_socket(port: u16) -> Result<UdpSocket, Error> {
-    let socket = net::create_udp_socket(&Ipv4Addr::UNSPECIFIED, port)
+fn create_socket(port: u16, iface: &net::InterfaceInfo) -> Result<UdpSocket, Error> {
+    let socket = net::create_udp_socket(&Ipv4Addr::UNSPECIFIED, port, Some(iface))
         .with_context(|| format!("Failed to bind socket to port {}", port))?;
 
     socket
@@ -123,9 +123,10 @@ fn run() -> Result<(), Error> {
     for iface in &ifaces {
         info!("Binding to interface {}", iface.name);
 
-        let event_socket = create_socket(PTP_EVENT_PORT).context("Failed creating event socket")?;
+        let event_socket =
+            create_socket(PTP_EVENT_PORT, iface).context("Failed creating event socket")?;
         let general_socket =
-            create_socket(PTP_GENERAL_PORT).context("Failed creating general socket")?;
+            create_socket(PTP_GENERAL_PORT, iface).context("Failed creating general socket")?;
 
         for socket in [&event_socket, &general_socket].iter() {
             net::join_multicast_v4(socket, &PTP_MULTICAST_ADDR, iface)
