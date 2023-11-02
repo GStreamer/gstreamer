@@ -1220,6 +1220,7 @@ static gboolean
 gst_ximage_src_event (GstBaseSrc * base_src, GstEvent * event)
 {
   gboolean ret = FALSE;
+#ifdef HAVE_XNAVIGATION
   gboolean is_press = FALSE;
   GstXImageSrc *src = GST_XIMAGE_SRC (base_src);
   if (src->enable_navigation_events
@@ -1272,6 +1273,7 @@ gst_ximage_src_event (GstBaseSrc * base_src, GstEvent * event)
         break;
     }
   }
+#endif
   if (!ret) {
     ret =
         GST_CALL_PARENT_WITH_DEFAULT (GST_BASE_SRC_CLASS, event, (base_src,

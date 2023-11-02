@@ -21,7 +21,7 @@ if x11_dep.found()
 
   xtst_dep = dependency('xtst', required : get_option('ximagesrc-navigation'))
   if xtst_dep.found()
-    x_args += ['-DHAVE_NAVIGATION']
+    x_args += ['-DHAVE_XNAVIGATION']
     x_sources += files(['gst-ximage-navigation.c'])
   endif
 
