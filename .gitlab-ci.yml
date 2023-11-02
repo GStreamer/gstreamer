@@ -67,6 +67,9 @@ variables:
 workflow:
   # https://docs.gitlab.com/ee/ci/yaml/index.html#switch-between-branch-pipelines-and-merge-request-pipelines
   rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+      variables:
+        GIT_FETCH_EXTRA_FLAGS: '--no-tags'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
       variables:
         GIT_FETCH_EXTRA_FLAGS: '--no-tags'
@@ -102,6 +105,8 @@ trigger:
   script:
     - echo "Trigger job done, now running the pipeline."
   rules:
+    # If this pipeline is triggered by a schedule, run automatically
+    - if: $CI_PIPELINE_SOURCE == "schedule"
     # If the MR is assigned to the Merge bot, trigger the pipeline automatically
     - if: '$CI_MERGE_REQUEST_ASSIGNEES == "gstreamer-merge-bot"'
     # Require explicit action to trigger tests post merge, but we want to
