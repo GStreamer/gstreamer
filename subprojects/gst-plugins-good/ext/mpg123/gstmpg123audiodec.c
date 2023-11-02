@@ -99,7 +99,7 @@ static guint gst_mpg123_audio_dec_get_info_queue_size (GstMpg123AudioDec *
 
 G_DEFINE_TYPE (GstMpg123AudioDec, gst_mpg123_audio_dec, GST_TYPE_AUDIO_DECODER);
 GST_ELEMENT_REGISTER_DEFINE (mpg123audiodec, "mpg123audiodec",
-    GST_RANK_MARGINAL, GST_TYPE_MPG123_AUDIO_DEC);
+    GST_RANK_PRIMARY, GST_TYPE_MPG123_AUDIO_DEC);
 
 static void
 gst_mpg123_audio_dec_class_init (GstMpg123AudioDecClass * klass)
