@@ -238,7 +238,7 @@ ges_discoverer_manager_class_init (GESDiscovererManagerClass * klass)
 void
 ges_discoverer_manager_init (GESDiscovererManager * self)
 {
-  self->discoverers = g_hash_table_new_full (g_direct_hash, g_str_equal,
+  self->discoverers = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) ges_discoverer_data_unref);
 }
 
