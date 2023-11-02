@@ -521,6 +521,8 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
 
   gst_vulkan_fence_unref (fence);
 
+  gst_vulkan_trash_list_gc (priv->trash_list);
+
   GST_OBJECT_LOCK (self);
 
   for (i = 0; priv->deps.frames && i < priv->deps.frames->len; i++) {
