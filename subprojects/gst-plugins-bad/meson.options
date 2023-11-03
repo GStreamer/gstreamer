@@ -108,6 +108,7 @@ option('d3d12', type : 'feature', value : 'auto', description : 'Direct3D12 plug
 option('dash', type : 'feature', value : 'auto', description : 'DASH demuxer plugin')
 option('dc1394', type : 'feature', value : 'auto', description : 'libdc1394 IIDC camera source plugin')
 option('decklink', type : 'feature', value : 'auto', description : 'DeckLink audio/video source/sink plugin')
+option('decklink2', type : 'feature', value : 'auto', description : 'DeckLink combined audio/video source/sink plugin')
 option('directfb', type : 'feature', value : 'auto', description : 'DirectFB video sink plugin')
 option('directsound', type : 'feature', value : 'auto', description : 'Directsound audio source plugin')
 option('directshow', type : 'feature', value : 'auto', description : 'Directshow audio/video plugins')
