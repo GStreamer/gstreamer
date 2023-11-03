@@ -274,7 +274,10 @@ bool DewarpPlugin::calibrateLens(std::string format, int width, int height, GstC
 		auto* fromSample = gst_sample_new(originalInputBuffer, caps, NULL, NULL);
 		auto* toSample = gst_video_convert_sample(fromSample, toCaps, GST_CLOCK_TIME_NONE, &errMsg);
 		inputBuffer = gst_sample_get_buffer(toSample);
-		colorFormat = IMV_Defs::E_RGBA_32_STD;
+    if (inputBuffer != nullptr)
+    {
+      colorFormat = IMV_Defs::E_RGBA_32_STD;
+    }
 	}
 
 	m_camera->SetLens((char*)m_lensName.c_str());
