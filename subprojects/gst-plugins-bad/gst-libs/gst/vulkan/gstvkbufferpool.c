@@ -44,6 +44,8 @@ struct _GstVulkanBufferPoolPrivate
   GstCaps *caps;
   GstVideoInfo v_info;
   gboolean add_videometa;
+  VkImageUsageFlags usage;
+  VkMemoryPropertyFlags mem_props;
   gsize alloc_sizes[GST_VIDEO_MAX_PLANES];
 };
 
@@ -68,6 +70,39 @@ gst_vulkan_buffer_pool_get_options (GstBufferPool * pool)
   };
 
   return options;
+}
+
+static inline gboolean
+gst_vulkan_buffer_pool_config_get_allocation_params (GstStructure *
+    config, VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props)
+{
+  if (!gst_structure_get_uint (config, "usage", usage)) {
+    *usage =
+        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+  }
+
+  if (!gst_structure_get_uint (config, "memory-properties", mem_props))
+    *mem_props = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+
+  return TRUE;
+}
+
+/**
+ * gst_vulkan_buffer_pool_config_set_allocation_params:
+ * @config: the #GstStructure with the pool's configuration.
+ * @usage: The Vulkan buffer usage flags.
+ *
+ * Sets the @usage of the buffers to setup.
+ *
+ * Since: 1.24
+ */
+void
+gst_vulkan_buffer_pool_config_set_allocation_params (GstStructure *
+    config, VkImageUsageFlags usage, VkMemoryPropertyFlags mem_properties)
+{
+  /* assumption: G_TYPE_UINT is compatible with uint32_t (VkFlags) */
+  gst_structure_set (config, "usage", G_TYPE_UINT, usage, "memory-properties",
+      G_TYPE_UINT, mem_properties, NULL);
 }
 
 static gboolean
@@ -96,6 +131,9 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   gst_caps_replace (&priv->caps, caps);
 
+  gst_vulkan_buffer_pool_config_get_allocation_params (config,
+      &priv->usage, &priv->mem_props);
+
   /* get the size of the buffer to allocate */
   priv->v_info.size = 0;
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
@@ -110,7 +148,6 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   gst_buffer_pool_config_set_params (config, caps,
       priv->v_info.size, min_buffers, max_buffers);
-
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 
   /* ERRORS */
@@ -150,10 +187,7 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     GstMemory *mem;
 
     mem = gst_vulkan_buffer_memory_alloc (vk_pool->device, priv->alloc_sizes[i],
-        /* FIXME: choose from outside */
-        VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
-        /* FIXME: choose from outside */
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+        priv->usage, priv->mem_props);
     if (!mem) {
       gst_buffer_unref (buf);
       goto mem_create_failed;
