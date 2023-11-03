@@ -7,7 +7,7 @@ wl_scanner = find_program('wayland-scanner', required: get_option('wayland'))
 use_wayland = wl_protocol_dep.found() and wl_client_dep.found() and wl_scanner.found() and libdrm_dep.found()
 
 if use_wayland
-  wl_sources = [
+  wl_sources = files([
       'gstwlbuffer.c',
       'gstwlcontext.c',
       'gstwldisplay.c',
@@ -16,9 +16,9 @@ if use_wayland
       'gstwlvideobufferpool.c',
       'gstwlvideoformat.c',
       'gstwlwindow.c',
-  ]
+  ])
 
-    wl_headers = [
+  wl_headers = files([
       'gstwl_fwd.h',
       'gstwlbuffer.h',
       'gstwlcontext.h',
@@ -30,32 +30,48 @@ if use_wayland
       'gstwlwindow.h',
       'wayland.h',
       'wayland-prelude.h',
-  ]
+  ])
 
   protocols_datadir = wl_protocol_dep.get_variable('pkgdatadir')
 
   protocol_defs = [
-      ['/stable/viewporter/viewporter.xml', 'viewporter-protocol.c', 'viewporter-client-protocol.h'],
-      ['/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml',
-       'linux-dmabuf-unstable-v1-protocol.c', 'linux-dmabuf-unstable-v1-client-protocol.h'],
-      ['/unstable/fullscreen-shell/fullscreen-shell-unstable-v1.xml',
-       'fullscreen-shell-unstable-v1-protocol.c', 'fullscreen-shell-unstable-v1-client-protocol.h'],
-      ['/stable/xdg-shell/xdg-shell.xml', 'xdg-shell-protocol.c', 'xdg-shell-client-protocol.h'],
+    ['viewporter', 'stable', ],
+    ['linux-dmabuf', 'unstable', 'v1', ],
+    ['fullscreen-shell', 'unstable', 'v1', ],
+    ['xdg-shell', 'stable', ]
   ]
   protocols_files = []
 
   foreach protodef: protocol_defs
-      xmlfile = protocols_datadir + protodef.get(0)
+    proto_name = protodef.get(0)
+    proto_stability = protodef.get(1)
+    if proto_stability == 'stable'
+      output_base = proto_name
+    else
+      proto_version = protodef.get(2)
+      output_base = f'@proto_name@-@proto_stability@-@proto_version@'
+    endif
+    input = protocols_datadir / proto_stability / proto_name / f'@output_base@.xml'
 
-      protocols_files += [custom_target(protodef.get(1),
-        output : protodef.get(1),
-        input : xmlfile,
-        command : [wl_scanner, 'code', '@INPUT@', '@OUTPUT@'])]
+    protocols_files += [custom_target(f'@output_base@ client header',
+      input: input,
+      output: f'@output_base@-client-protocol.h',
+      command: [
+        wl_scanner,
+        'client-header',
+        '@INPUT@', '@OUTPUT@',
+      ],
+    )]
 
-      protocols_files += [custom_target(protodef.get(2),
-        output : protodef.get(2),
-        input : xmlfile,
-        command : [wl_scanner, 'client-header', '@INPUT@', '@OUTPUT@'])]
+    protocols_files += [custom_target(f'@output_base@ source',
+      input: input,
+      output: f'@output_base@-protocol.c',
+      command: [
+        wl_scanner,
+        'code',
+        '@INPUT@', '@OUTPUT@',
+      ],
+    )]
   endforeach
 
   extra_c_args = [
