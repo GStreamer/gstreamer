@@ -47,6 +47,9 @@ if use_wayland
     proto_stability = protodef.get(1)
     if proto_stability == 'stable'
       output_base = proto_name
+    elif proto_stability == 'staging'
+      proto_version = protodef.get(2)
+      output_base = f'@proto_name@-@proto_version@'
     else
       proto_version = protodef.get(2)
       output_base = f'@proto_name@-@proto_stability@-@proto_version@'
