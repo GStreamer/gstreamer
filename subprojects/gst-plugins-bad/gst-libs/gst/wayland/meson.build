@@ -71,7 +71,7 @@ if use_wayland
       output: f'@output_base@-protocol.c',
       command: [
         wl_scanner,
-        'code',
+        'private-code',
         '@INPUT@', '@OUTPUT@',
       ],
     )]
