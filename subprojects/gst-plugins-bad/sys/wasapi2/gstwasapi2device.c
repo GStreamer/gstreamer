@@ -283,11 +283,15 @@ gst_wasapi2_device_provider_probe_internal (GstWasapi2DeviceProvider * self,
     GstCaps *caps = NULL;
     gchar *device_id = NULL;
     gchar *device_name = NULL;
+    GstWasapi2Result result;
 
-    client = gst_wasapi2_client_new (client_class, i, NULL, 0, NULL);
-
-    if (!client)
+    result = gst_wasapi2_client_enumerate (client_class, i, &client);
+    if (result == GST_WASAPI2_DEVICE_NOT_FOUND)
       return;
+    else if (result == GST_WASAPI2_ACTIVATION_FAILED)
+      continue;
+
+    g_assert (client);
 
     caps = gst_wasapi2_client_get_caps (client);
     if (!caps) {

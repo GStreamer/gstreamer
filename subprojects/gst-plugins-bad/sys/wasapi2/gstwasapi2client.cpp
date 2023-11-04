@@ -329,6 +329,7 @@ private:
 
 typedef enum
 {
+  GST_WASAPI2_CLIENT_ACTIVATE_NOT_FOUND = -2,
   GST_WASAPI2_CLIENT_ACTIVATE_FAILED = -1,
   GST_WASAPI2_CLIENT_ACTIVATE_INIT = 0,
   GST_WASAPI2_CLIENT_ACTIVATE_WAIT,
@@ -739,7 +740,7 @@ gst_wasapi2_client_get_default_device_id (GstWasapi2Client * self)
 }
 /* *INDENT-ON* */
 
-static gboolean
+static void
 gst_wasapi2_client_activate_async (GstWasapi2Client * self,
     GstWasapiDeviceActivator * activator,
     GstWasapiDeviceActivator * endpoint_volume_activator)
@@ -767,18 +768,20 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
   memset (&activation_params, 0, sizeof (GST_AUDIOCLIENT_ACTIVATION_PARAMS));
   activation_params.ActivationType = GST_AUDIOCLIENT_ACTIVATION_TYPE_DEFAULT;
 
+  self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_NOT_FOUND;
+
   if (self->device_class ==
       GST_WASAPI2_CLIENT_DEVICE_CLASS_INCLUDE_PROCESS_LOOPBACK_CAPTURE ||
       self->device_class ==
       GST_WASAPI2_CLIENT_DEVICE_CLASS_EXCLUDE_PROCESS_LOOPBACK_CAPTURE) {
     if (self->target_pid == 0) {
       GST_ERROR_OBJECT (self, "Process loopback mode without PID");
-      goto failed;
+      return;
     }
 
     if (!gst_wasapi2_can_process_loopback ()) {
       GST_ERROR_OBJECT (self, "Process loopback is not supported");
-      goto failed;
+      return;
     }
 
     process_loopback = TRUE;
@@ -817,7 +820,7 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
   default_device_id_wstring = gst_wasapi2_client_get_default_device_id (self);
   if (default_device_id_wstring.empty ()) {
     GST_WARNING_OBJECT (self, "Couldn't get default device id");
-    goto failed;
+    return;
   }
 
   default_device_id = convert_wstring_to_string (default_device_id_wstring);
@@ -862,31 +865,31 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
 
   hr = GetActivationFactory (hstr_device_info.Get (), &device_info_static);
   if (!gst_wasapi2_result (hr))
-    goto failed;
+    return;
 
   hr = device_info_static->FindAllAsyncDeviceClass (device_class, &async_op);
   device_info_static.Reset ();
   if (!gst_wasapi2_result (hr))
-    goto failed;
+    return;
 
   /* *INDENT-OFF* */
   hr = SyncWait<DeviceInformationCollection*>(async_op.Get ());
   /* *INDENT-ON* */
   if (!gst_wasapi2_result (hr))
-    goto failed;
+    return;
 
   hr = async_op->GetResults (&device_list);
   async_op.Reset ();
   if (!gst_wasapi2_result (hr))
-    goto failed;
+    return;
 
   hr = device_list->get_Size (&count);
   if (!gst_wasapi2_result (hr))
-    goto failed;
+    return;
 
   if (count == 0) {
     GST_WARNING_OBJECT (self, "No available device");
-    goto failed;
+    return;
   }
 
   /* device_index 0 will be assigned for default device
@@ -894,7 +897,7 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
   if (self->device_index >= 0 && self->device_index > (gint) count) {
     GST_WARNING_OBJECT (self, "Device index %d is unavailable",
         self->device_index);
-    goto failed;
+    return;
   }
 
   GST_DEBUG_OBJECT (self, "Available device count: %d", count);
@@ -1000,7 +1003,7 @@ gst_wasapi2_client_activate_async (GstWasapi2Client * self,
 
   if (target_device_id_wstring.empty ()) {
     GST_WARNING_OBJECT (self, "Couldn't find target device");
-    goto failed;
+    return;
   }
 
 activate:
@@ -1015,6 +1018,8 @@ activate:
   /* default device supports automatic stream routing */
   self->can_auto_routing = use_default_device;
 
+  self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_INIT;
+
   if (process_loopback) {
     hr = activator->ActivateDeviceAsync (target_device_id_wstring,
         &activation_params);
@@ -1024,7 +1029,8 @@ activate:
 
   if (!gst_wasapi2_result (hr)) {
     GST_WARNING_OBJECT (self, "Failed to activate device");
-    goto failed;
+    self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_FAILED;
+    return;
   }
 
   /* activate the endpoint volume interface */
@@ -1045,19 +1051,14 @@ activate:
   if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_INIT)
     self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_WAIT;
   g_mutex_unlock (&self->lock);
-
-  return TRUE;
-
-failed:
-  self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_FAILED;
-
-  return FALSE;
 }
 
 static const gchar *
 activate_state_to_string (GstWasapi2ClientActivateState state)
 {
   switch (state) {
+    case GST_WASAPI2_CLIENT_ACTIVATE_NOT_FOUND:
+      return "NOT-FOUND";
     case GST_WASAPI2_CLIENT_ACTIVATE_FAILED:
       return "FAILED";
     case GST_WASAPI2_CLIENT_ACTIVATE_INIT:
@@ -1089,7 +1090,7 @@ gst_wasapi2_client_thread_func (GstWasapi2Client * self)
 
   if (!gst_wasapi2_result (hr)) {
     GST_ERROR_OBJECT (self, "Could not create activator object");
-    self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_FAILED;
+    self->activate_state = GST_WASAPI2_CLIENT_ACTIVATE_NOT_FOUND;
     goto run_loop;
   }
 
@@ -1276,7 +1277,8 @@ gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
    * RoInitializeWrapper dtor is called */
   core_dispatcher.Reset ();
 
-  if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_FAILED) {
+  if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_FAILED ||
+      self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_NOT_FOUND) {
     gst_object_unref (self);
     return nullptr;
   }
@@ -1284,6 +1286,43 @@ gst_wasapi2_client_new (GstWasapi2ClientDeviceClass device_class,
   gst_object_ref_sink (self);
 
   return self;
+}
+
+GstWasapi2Result
+gst_wasapi2_client_enumerate (GstWasapi2ClientDeviceClass device_class,
+    gint device_index, GstWasapi2Client ** client)
+{
+  GstWasapi2Client *self;
+  /* *INDENT-OFF* */
+  ComPtr<ICoreDispatcher> core_dispatcher;
+  /* *INDENT-ON* */
+  /* Multiple COM init is allowed */
+  RoInitializeWrapper init_wrapper (RO_INIT_MULTITHREADED);
+
+  *client = nullptr;
+
+  find_dispatcher (&core_dispatcher);
+
+  self = (GstWasapi2Client *) g_object_new (GST_TYPE_WASAPI2_CLIENT,
+      "device-class", device_class, "device-index", device_index,
+      "dispatcher", core_dispatcher.Get (), nullptr);
+
+  /* Reset explicitly to ensure that it happens before
+   * RoInitializeWrapper dtor is called */
+  core_dispatcher.Reset ();
+
+  if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_NOT_FOUND) {
+    gst_object_unref (self);
+    return GST_WASAPI2_DEVICE_NOT_FOUND;
+  } else if (self->activate_state == GST_WASAPI2_CLIENT_ACTIVATE_FAILED) {
+    gst_object_unref (self);
+    return GST_WASAPI2_ACTIVATION_FAILED;
+  }
+
+  gst_object_ref_sink (self);
+
+  *client = self;
+  return GST_WASAPI2_OK;
 }
 
 IAudioClient *
