@@ -674,16 +674,18 @@ update_state:
    * upstream framerate might not be set but we still want to report a latency
    * if needed. */
   if (ffmpegdec->context->time_base.den && ffmpegdec->context->ticks_per_frame) {
-    gint fps_n =
-        ffmpegdec->context->time_base.den / ffmpegdec->context->ticks_per_frame;
-    gint fps_d = ffmpegdec->context->time_base.num;
-    latency = gst_util_uint64_scale_ceil (
-        (ffmpegdec->context->has_b_frames) * GST_SECOND, fps_d, fps_n);
+    gint fps_n = ffmpegdec->context->time_base.den;
+    gint fps_d =
+        ffmpegdec->context->time_base.num * ffmpegdec->context->ticks_per_frame;
+    if (fps_n) {
+      latency = gst_util_uint64_scale_ceil (
+          (ffmpegdec->context->has_b_frames) * GST_SECOND, fps_d, fps_n);
 
-    if (ffmpegdec->context->thread_type & FF_THREAD_FRAME) {
-      latency +=
-          gst_util_uint64_scale_ceil (ffmpegdec->context->thread_count *
-          GST_SECOND, fps_d, fps_n);
+      if (ffmpegdec->context->thread_type & FF_THREAD_FRAME) {
+        latency +=
+            gst_util_uint64_scale_ceil (ffmpegdec->context->thread_count *
+            GST_SECOND, fps_d, fps_n);
+      }
     }
   }
 
@@ -1466,8 +1468,8 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     fps_n = in_info->fps_n;
     fps_d = in_info->fps_d;
   } else {
-    fps_n = ffmpegdec->ctx_time_d / ffmpegdec->ctx_ticks;
-    fps_d = ffmpegdec->ctx_time_n;
+    fps_n = ffmpegdec->ctx_time_d;
+    fps_d = ffmpegdec->ctx_time_n * ffmpegdec->ctx_ticks;
 
     if (!fps_d) {
       GST_LOG_OBJECT (ffmpegdec, "invalid framerate: %d/0, -> %d/1", fps_n,
