@@ -1848,18 +1848,12 @@ gst_d3d11_base_convert_set_info (GstD3D11BaseFilter * filter,
       "dest-width", out_width, "dest-height", out_height, nullptr);
 
   if (need_transform) {
-    gfloat transform_matrix[16];
-
     GST_DEBUG_OBJECT (self, "Applying custom transform");
 
-    gst_d3d11_calculate_transform_matrix (self->active_method,
+    gst_d3d11_converter_apply_transform (self->converter, self->active_method,
         (gfloat) out_width, (gfloat) out_height, self->fov,
         self->ortho, self->rotation_x, self->rotation_y,
-        self->rotation_z, self->scale_x, self->scale_y, transform_matrix);
-    g_object_set (self->converter,
-        "video-direction", GST_VIDEO_ORIENTATION_CUSTOM, nullptr);
-    gst_d3d11_converter_set_transform_matrix (self->converter,
-        transform_matrix);
+        self->rotation_z, self->scale_x, self->scale_y);
   } else {
     g_object_set (self->converter,
         "video-direction", self->active_method, nullptr);

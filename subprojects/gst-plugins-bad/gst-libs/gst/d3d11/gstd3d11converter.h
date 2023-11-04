@@ -197,6 +197,6 @@ gboolean            gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Convert
 
 GST_D3D11_API
 gboolean            gst_d3d11_converter_set_transform_matrix (GstD3D11Converter * converter,
-                                                              gfloat matrix[16]);
+                                                              const gfloat matrix[16]);
 
 G_END_DECLS

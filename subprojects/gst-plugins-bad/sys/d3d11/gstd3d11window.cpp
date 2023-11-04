@@ -996,18 +996,12 @@ gst_d3d11_window_present (GstD3D11Window * self, GstBuffer * buffer,
             self->rotation_z, self->scale_x, self->scale_y)) {
       g_object_set (self->converter, "video-direction", self->method, nullptr);
     } else {
-      gfloat transform_matrix[16];
-
       GST_DEBUG_OBJECT (self, "Applying custom transform");
 
-      gst_d3d11_calculate_transform_matrix (self->method,
+      gst_d3d11_converter_apply_transform (self->converter, self->method,
           viewport.Width, viewport.Height, self->fov, self->ortho,
           self->rotation_x, self->rotation_y, self->rotation_z,
-          self->scale_x, self->scale_y, transform_matrix);
-      g_object_set (self->converter,
-          "video-direction", GST_VIDEO_ORIENTATION_CUSTOM, nullptr);
-      gst_d3d11_converter_set_transform_matrix (self->converter,
-          transform_matrix);
+          self->scale_x, self->scale_y);
     }
 
     gst_d3d11_overlay_compositor_update_viewport (self->compositor, &viewport);

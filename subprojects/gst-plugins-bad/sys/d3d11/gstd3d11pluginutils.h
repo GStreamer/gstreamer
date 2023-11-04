@@ -26,6 +26,7 @@
 #include <gst/d3d11/gstd3d11.h>
 #include <gst/d3d11/gstd3d11-private.h>
 #include <gst/d3d11/gstd3d11device-private.h>
+#include <gst/d3d11/gstd3d11converter-private.h>
 
 G_BEGIN_DECLS
 
@@ -164,18 +165,6 @@ gboolean        gst_d3d11_need_transform          (gfloat rotation_x,
                                                    gfloat rotation_z,
                                                    gfloat scale_x,
                                                    gfloat scale_y);
-
-void            gst_d3d11_calculate_transform_matrix (GstVideoOrientationMethod method,
-                                                      gfloat viewport_width,
-                                                      gfloat viewport_height,
-                                                      gfloat fov,
-                                                      gboolean ortho,
-                                                      gfloat rotation_x,
-                                                      gfloat rotation_y,
-                                                      gfloat rotation_z,
-                                                      gfloat scale_x,
-                                                      gfloat scale_y,
-                                                      gfloat transform_matrix[16]);
 
 D3D11_FILTER    gst_d3d11_sampling_method_to_native (GstD3D11SamplingMethod method);
 

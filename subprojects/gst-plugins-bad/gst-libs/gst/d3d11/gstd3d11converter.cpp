@@ -25,6 +25,7 @@
 
 #include "gstd3d11-private.h"
 #include "gstd3d11device-private.h"
+#include "gstd3d11converter-private.h"
 #include "gstd3d11converter.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
@@ -37,6 +38,11 @@
 #include <math.h>
 #include <map>
 #include <memory>
+
+#ifndef HAVE_DIRECTX_MATH_SIMD
+#define _XM_NO_INTRINSICS_
+#endif
+#include <DirectXMath.h>
 
 /**
  * SECTION:gstd3d11converter
@@ -119,6 +125,7 @@ gst_d3d11_converter_alpha_mode_get_type (void)
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
+using namespace DirectX;
 /* *INDENT-ON* */
 
 #define CONVERTER_MAX_QUADS 2
@@ -175,61 +182,53 @@ struct GammaLut
 /* *INDENT-OFF* */
 typedef std::shared_ptr<GammaLut> GammaLutPtr;
 
-static const FLOAT g_matrix_identity[] = {
-  1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 1.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_identity = XMFLOAT4X4A (
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-static const FLOAT g_matrix_90r[] = {
-  0.0f, -1.0f, 0.0f, 0.0f,
-  1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_90r = XMFLOAT4X4A (
+    0.0f, -1.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-static const FLOAT g_matrix_180[] = {
-  -1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, -1.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_180 = XMFLOAT4X4A (
+    -1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, -1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-static const FLOAT g_matrix_90l[] = {
-  0.0f, 1.0f, 0.0f, 0.0f,
-  -1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_90l = XMFLOAT4X4A (
+    0.0f, 1.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-static const FLOAT g_matrix_horiz[] = {
-  -1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 1.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_horiz = XMFLOAT4X4A (
+    -1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-static const FLOAT g_matrix_vert[] = {
-  1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, -1.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_vert = XMFLOAT4X4A (
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, -1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-static const FLOAT g_matrix_ul_lr[] = {
-  0.0f, -1.0f, 0.0f, 0.0f,
-  -1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_ul_lr = XMFLOAT4X4A (
+    0.0f, -1.0f, 0.0f, 0.0f,
+    -1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 
-static const FLOAT g_matrix_ur_ll[] = {
-  0.0f, 1.0f, 0.0f, 0.0f,
-  1.0f, 0.0f, 0.0f, 0.0f,
-  0.0f, 0.0f, 1.0f, 0.0f,
-  0.0f, 0.0f, 0.0f, 1.0f,
-};
+static const XMFLOAT4X4A g_matrix_ur_ll = XMFLOAT4X4A (
+    0.0f, 1.0f, 0.0f, 0.0f,
+    1.0f, 0.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f,
+    0.0f, 0.0f, 0.0f, 1.0f);
 /* *INDENT-ON* */
 
 enum
@@ -263,8 +262,7 @@ struct _GstD3D11ConverterPrivate
 {
   _GstD3D11ConverterPrivate ()
   {
-    G_STATIC_ASSERT (sizeof (custom_transform) == sizeof (g_matrix_identity));
-    memcpy (custom_transform, g_matrix_identity, sizeof (g_matrix_identity));
+    custom_transform = g_matrix_identity;
   }
 
    ~_GstD3D11ConverterPrivate ()
@@ -320,7 +318,7 @@ struct _GstD3D11ConverterPrivate
   gboolean update_dest_rect = FALSE;
   gboolean update_alpha = FALSE;
   gboolean update_transform = FALSE;
-  FLOAT custom_transform[16];
+  XMFLOAT4X4A custom_transform;
 
   PSConstBuffer const_data;
 
@@ -863,14 +861,13 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     }
   }
 
-  G_STATIC_ASSERT (sizeof (g_matrix_identity) % 16 == 0);
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
   buffer_desc.ByteWidth = sizeof (g_matrix_identity);
   buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  subresource.pSysMem = g_matrix_identity;
-  subresource.SysMemPitch = sizeof (g_matrix_identity);
+  subresource.pSysMem = g_matrix_identity.m;
+  subresource.SysMemPitch = sizeof (FLOAT) * 16;
 
   hr = device_handle->CreateBuffer (&buffer_desc, &subresource,
       &vs_const_buffer);
@@ -982,7 +979,7 @@ gst_d3d11_converter_apply_orientation (GstD3D11Converter * self)
 {
   GstD3D11ConverterPrivate *priv = self->priv;
   ID3D11DeviceContext *context_handle;
-  const FLOAT *matrix = nullptr;
+  const XMFLOAT4X4A *matrix = &g_matrix_identity;
   D3D11_MAPPED_SUBRESOURCE map;
   HRESULT hr;
 
@@ -990,31 +987,30 @@ gst_d3d11_converter_apply_orientation (GstD3D11Converter * self)
     case GST_VIDEO_ORIENTATION_IDENTITY:
     case GST_VIDEO_ORIENTATION_AUTO:
     default:
-      matrix = g_matrix_identity;
       break;
     case GST_VIDEO_ORIENTATION_CUSTOM:
-      matrix = priv->custom_transform;
+      matrix = &priv->custom_transform;
       break;
     case GST_VIDEO_ORIENTATION_90R:
-      matrix = g_matrix_90r;
+      matrix = &g_matrix_90r;
       break;
     case GST_VIDEO_ORIENTATION_180:
-      matrix = g_matrix_180;
+      matrix = &g_matrix_180;
       break;
     case GST_VIDEO_ORIENTATION_90L:
-      matrix = g_matrix_90l;
+      matrix = &g_matrix_90l;
       break;
     case GST_VIDEO_ORIENTATION_HORIZ:
-      matrix = g_matrix_horiz;
+      matrix = &g_matrix_horiz;
       break;
     case GST_VIDEO_ORIENTATION_VERT:
-      matrix = g_matrix_vert;
+      matrix = &g_matrix_vert;
       break;
     case GST_VIDEO_ORIENTATION_UL_LR:
-      matrix = g_matrix_ul_lr;
+      matrix = &g_matrix_ul_lr;
       break;
     case GST_VIDEO_ORIENTATION_UR_LL:
-      matrix = g_matrix_ur_ll;
+      matrix = &g_matrix_ur_ll;
       break;
   }
 
@@ -1025,7 +1021,7 @@ gst_d3d11_converter_apply_orientation (GstD3D11Converter * self)
   if (!gst_d3d11_result (hr, self->device))
     return FALSE;
 
-  memcpy (map.pData, matrix, sizeof (FLOAT) * 16);
+  memcpy (map.pData, matrix->m, sizeof (FLOAT) * 16);
 
   context_handle->Unmap (priv->vs_const_buffer.Get (), 0);
 
@@ -3212,7 +3208,7 @@ gst_d3d11_converter_convert_buffer_unlocked (GstD3D11Converter * converter,
  */
 gboolean
 gst_d3d11_converter_set_transform_matrix (GstD3D11Converter * converter,
-    gfloat matrix[16])
+    const gfloat matrix[16])
 {
   GstD3D11ConverterPrivate *priv;
 
@@ -3226,7 +3222,95 @@ gst_d3d11_converter_set_transform_matrix (GstD3D11Converter * converter,
   }
 
   std::lock_guard < std::mutex > lk (priv->prop_lock);
-  memcpy (priv->custom_transform, matrix, sizeof (priv->custom_transform));
+  priv->custom_transform = XMFLOAT4X4A (matrix);
   priv->update_transform = TRUE;
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d11_converter_apply_transform (GstD3D11Converter * converter,
+    GstVideoOrientationMethod method, gfloat viewport_width,
+    gfloat viewport_height, gfloat fov, gboolean ortho, gfloat rotation_x,
+    gfloat rotation_y, gfloat rotation_z, gfloat scale_x, gfloat scale_y)
+{
+  GstD3D11ConverterPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_D3D11_CONVERTER (converter), FALSE);
+
+  priv = converter->priv;
+  if ((priv->supported_backend & GST_D3D11_CONVERTER_BACKEND_SHADER) == 0) {
+    GST_ERROR_OBJECT (converter, "Shader backend is disabled");
+    return FALSE;
+  }
+
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
+  gfloat aspect_ratio;
+  gboolean rotated = FALSE;
+  XMMATRIX rotate_matrix = XMMatrixIdentity ();
+
+  switch (method) {
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+    case GST_VIDEO_ORIENTATION_AUTO:
+    case GST_VIDEO_ORIENTATION_CUSTOM:
+    default:
+      break;
+    case GST_VIDEO_ORIENTATION_90R:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_90r);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_180);
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_90l);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_horiz);
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_vert);
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_ul_lr);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_ur_ll);
+      rotated = TRUE;
+      break;
+  }
+
+  if (rotated)
+    aspect_ratio = viewport_height / viewport_width;
+  else
+    aspect_ratio = viewport_width / viewport_height;
+
+  /* Apply user specified transform matrix first, then rotate-method */
+  XMMATRIX scale = XMMatrixScaling (scale_x * aspect_ratio, scale_y, 1.0);
+
+  XMMATRIX rotate =
+      XMMatrixRotationX (XMConvertToRadians (rotation_x)) *
+      XMMatrixRotationY (XMConvertToRadians (-rotation_y)) *
+      XMMatrixRotationZ (XMConvertToRadians (-rotation_z));
+
+  XMMATRIX view = XMMatrixLookAtLH (XMVectorSet (0.0, 0.0, -1.0, 0.0),
+      XMVectorSet (0.0, 0.0, 0.0, 0.0), XMVectorSet (0.0, 1.0, 0.0, 0.0));
+
+  XMMATRIX proj;
+  if (ortho) {
+    proj = XMMatrixOrthographicOffCenterLH (-aspect_ratio,
+        aspect_ratio, -1.0, 1.0, 0.1, 100.0);
+  } else {
+    proj = XMMatrixPerspectiveFovLH (XMConvertToRadians (fov),
+        aspect_ratio, 0.1, 100.0);
+  }
+
+  XMMATRIX mvp = scale * rotate * view * proj * rotate_matrix;
+  XMStoreFloat4x4A (&priv->custom_transform, mvp);
+  priv->update_transform = TRUE;
+  priv->video_direction = GST_VIDEO_ORIENTATION_CUSTOM;
+
   return TRUE;
 }
