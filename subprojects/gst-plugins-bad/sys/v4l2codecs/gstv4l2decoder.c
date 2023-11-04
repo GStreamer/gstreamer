@@ -640,7 +640,8 @@ gst_v4l2_decoder_queue_sink_mem (GstV4l2Decoder * self,
     .type = self->sink_buf_type,
     .memory = V4L2_MEMORY_MMAP,
     .index = gst_v4l2_codec_memory_get_index (mem),
-    .timestamp.tv_usec = frame_num,
+    .timestamp.tv_sec = frame_num / 1000000,
+    .timestamp.tv_usec = frame_num % 1000000,
     .request_fd = request->fd,
     .flags = V4L2_BUF_FLAG_REQUEST_FD | flags,
   };
@@ -747,7 +748,7 @@ gst_v4l2_decoder_dequeue_src (GstV4l2Decoder * self, guint32 * out_frame_num)
     return FALSE;
   }
 
-  *out_frame_num = buf.timestamp.tv_usec;
+  *out_frame_num = buf.timestamp.tv_usec + buf.timestamp.tv_sec * 1000000;
 
   GST_TRACE_OBJECT (self, "Dequeued picture buffer %i", buf.index);
 
