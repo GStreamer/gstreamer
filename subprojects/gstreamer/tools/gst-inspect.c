@@ -997,7 +997,6 @@ print_pad_info (GstElement * element)
   pads = element->pads;
   while (pads) {
     gchar *name;
-    GstCaps *caps;
 
     pad = GST_PAD (pads->data);
     pads = g_list_next (pads);
@@ -1020,15 +1019,6 @@ print_pad_info (GstElement * element)
       n_print ("%sPad Template%s: %s'%s'%s\n", PROP_NAME_COLOR, RESET_COLOR,
           PROP_VALUE_COLOR, pad->padtemplate->name_template, RESET_COLOR);
       pop_indent ();
-    }
-
-    caps = gst_pad_get_current_caps (pad);
-    if (caps) {
-      n_print ("%sCapabilities:%s\n", PROP_NAME_COLOR, RESET_COLOR);
-      push_indent ();
-      print_caps (caps, "");    // FIXME
-      pop_indent ();
-      gst_caps_unref (caps);
     }
   }
 
