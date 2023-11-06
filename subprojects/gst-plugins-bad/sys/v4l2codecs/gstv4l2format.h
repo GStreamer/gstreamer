@@ -23,11 +23,13 @@
 #include <gst/video/video.h>
 #include "linux/videodev2.h"
 
-/* 
+/*
  * Ordered similar to what libgstvideo does, but keeping tiled formats first,
  * and prefering bandwidth over alignment (NV12_10LE40 over P010_LE).
  */
 #define GST_V4L2_DEFAULT_VIDEO_FORMATS "{ " \
+    "NV16_10LE40, " \
+    "NV16, " \
     "MT2110R, " \
     "MT2110T, " \
     "NV12_10LE40_4L4, " \

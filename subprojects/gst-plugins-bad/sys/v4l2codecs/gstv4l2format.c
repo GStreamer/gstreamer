@@ -30,10 +30,6 @@ GST_DEBUG_CATEGORY_EXTERN (gstv4l2codecs_debug);
 #define V4L2_PIX_FMT_NC12 v4l2_fourcc('N', 'C', '1', '2')       /* Y/CbCr 4:2:0 (128b cols) */
 #endif
 
-#ifndef V4L2_PIX_FMT_NV15
-#define V4L2_PIX_FMT_NV15    v4l2_fourcc('N', 'V', '1', '5')    /* 15  Y/CbCr 4:2:0 10-bit packed */
-#endif
-
 typedef struct
 {
   guint32 v4l2_pix_fmt;
@@ -46,6 +42,8 @@ typedef struct
 /* *INDENT-OFF* */
 /* Keep the same order as GST_V4L2_DEFAULT_VIDEO_FORMATS */
 static const GstV4l2FormatDesc gst_v4l2_descriptions[] = {
+  {V4L2_PIX_FMT_NV20,             GST_VIDEO_FORMAT_NV16_10LE40,     DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
+  {V4L2_PIX_FMT_NV16,             GST_VIDEO_FORMAT_NV16,            DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_MT2110R,          GST_VIDEO_FORMAT_MT2110R,         DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_MT2110T,          GST_VIDEO_FORMAT_MT2110T,         DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
   {V4L2_PIX_FMT_NV15_4L4,         GST_VIDEO_FORMAT_NV12_10LE40_4L4, DRM_FORMAT_INVALID, DRM_FORMAT_MOD_INVALID, 0},
