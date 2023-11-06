@@ -423,6 +423,8 @@ ges_get_compositor_factory                                (void);
 
 G_GNUC_INTERNAL void
 ges_idle_add (GSourceFunc func, gpointer udata, GDestroyNotify notify);
+G_GNUC_INTERNAL void
+ges_timeout_add (guint interval, GSourceFunc func, gpointer udata, GDestroyNotify notify);
 
 G_GNUC_INTERNAL gboolean
 ges_util_structure_get_clocktime (GstStructure *structure, const gchar *name,
