@@ -1656,7 +1656,7 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
   gint xpos, ypos;
   GstVideoOverlayRectangle *rectangle;
 
-  if (overlay->text_image && overlay->text_width != 1) {
+  if (overlay->text_image) {
     gint render_width, render_height;
 
     gst_base_text_overlay_get_pos (overlay, &xpos, &ypos);
