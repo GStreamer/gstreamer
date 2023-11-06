@@ -1204,7 +1204,8 @@ gst_d3d11_window_set_orientation (GstD3D11Window * window, gboolean immediate,
     window->rotation_x = rotation_x;
     window->rotation_y = rotation_y;
     window->rotation_z = rotation_z;
-    window->scale_x = scale_y;
+    window->scale_x = scale_x;
+    window->scale_y = scale_y;
     window->first_present = TRUE;
     if (immediate && window->swap_chain && window->backbuffer
         && window->cached_buffer) {
