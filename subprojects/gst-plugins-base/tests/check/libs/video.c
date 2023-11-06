@@ -3261,6 +3261,7 @@ GST_START_TEST (test_video_formats_pstrides)
         || fmt == GST_VIDEO_FORMAT_NV12_10LE32
         || fmt == GST_VIDEO_FORMAT_NV16_10LE32
         || fmt == GST_VIDEO_FORMAT_NV12_10LE40
+        || fmt == GST_VIDEO_FORMAT_NV16_10LE40
         || fmt == GST_VIDEO_FORMAT_Y410
         || fmt == GST_VIDEO_FORMAT_NV12_8L128
         || fmt == GST_VIDEO_FORMAT_NV12_10BE_8L128
