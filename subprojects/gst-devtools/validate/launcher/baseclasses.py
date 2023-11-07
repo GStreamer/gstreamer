@@ -2426,7 +2426,7 @@ class ScenarioManager(Loggable):
 
         config = configparser.RawConfigParser()
         f = open(scenario_defs)
-        config.readfp(f)
+        config.read_file(f)
 
         for section in config.sections():
             name = None
