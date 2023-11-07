@@ -58,7 +58,7 @@ static void
 plugin_add_dependencies (GstPlugin * plugin)
 {
 #ifndef G_OS_WIN32
-  const gchar *env_vars[] = { "LIBVA_DRIVER_NAME", NULL };
+  const gchar *env_vars[] = { "LIBVA_DRIVER_NAME", "GST_VA_ALL_DRIVERS", NULL };
   const gchar *kernel_paths[] = { "/dev/dri", NULL };
   const gchar *kernel_names[] = { "renderD", NULL };
 
@@ -66,7 +66,8 @@ plugin_add_dependencies (GstPlugin * plugin)
   gst_plugin_add_dependency (plugin, NULL, kernel_paths, kernel_names,
       GST_PLUGIN_DEPENDENCY_FLAG_FILE_NAME_IS_PREFIX);
 
-  /* features get updated upon changes on LIBVA_DRIVER_NAME envvar */
+  /* features get updated upon changes on LIBVA_DRIVER_NAME and
+   * GST_VA_ALL_DRIVERS envvar */
   gst_plugin_add_dependency (plugin, env_vars, NULL, NULL,
       GST_PLUGIN_DEPENDENCY_FLAG_NONE);
 

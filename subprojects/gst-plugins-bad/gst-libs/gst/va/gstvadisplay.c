@@ -128,6 +128,7 @@ _gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
   GstVaDisplayPrivate *priv = GET_PRIV (self);
   VADisplay dpy;
   const char *vendor;
+  GstVaImplementation impl;
 
   g_assert ((foreign_display != NULL) ^ (priv->display != NULL));
   dpy = foreign_display ? foreign_display : priv->display;
@@ -135,13 +136,19 @@ _gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
   vendor = vaQueryVendorString (dpy);
   GST_INFO ("VA-API driver vendor: %s", vendor);
 
-  /* XXX(victor): driver allow list */
+  impl = _get_implementation (vendor);
 
   if (foreign_display) {
     priv->display = foreign_display;
     priv->foreign = TRUE;
+  } else {
+    if (g_getenv ("GST_VA_ALL_DRIVERS") == NULL
+        && impl == GST_VA_IMPLEMENTATION_OTHER) {
+      GST_WARNING_OBJECT (self, "Unsupported driver: %s", vendor);
+      return FALSE;
+    }
   }
-  priv->impl = _get_implementation (vendor);
+  priv->impl = impl;
   priv->vendor_desc = _get_desc (vendor, priv->impl);
 
   return TRUE;
@@ -164,6 +171,7 @@ gst_va_display_set_display (GstVaDisplay * self, gpointer display)
   /* assume driver is already initialized */
   priv->init = TRUE;
 
+  /* assumed that user knows what's doing so all drivers are allowed */
   _gst_va_display_filter_driver (self, display);
 }
 
