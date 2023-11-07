@@ -125,7 +125,6 @@ ges_discoverer_manager_finalize (GObject * object)
   if (!context)
     context = g_main_context_default ();
 
-
   g_mutex_lock (&self->lock);
   g_hash_table_iter_init (&iter, self->discoverers);
   while (g_hash_table_iter_next (&iter, NULL, (gpointer *) & discoverer_data)) {
@@ -367,16 +366,23 @@ cleanup_discoverer_cb (GESDiscovererData * discoverer_data)
     return G_SOURCE_REMOVE;
   }
 
+  g_mutex_lock (&self->lock);
   if (discoverer_data->n_uri > 0) {
     GST_DEBUG_OBJECT (self, "Discoverer still has %d uris to discover",
         discoverer_data->n_uri);
     goto done;
   }
 
-  g_mutex_lock (&self->lock);
-  res = G_SOURCE_REMOVE;
   GST_DEBUG_OBJECT (self, "Removing unused discoverer");
-  g_hash_table_remove (self->discoverers, discoverer_data->thread);
+
+  // Remove the discoverer if the one is use for that thread is still the
+  // one we have been asked to free, otherwise this one will be destroyed anyway
+  // once this source is removed
+  res = G_SOURCE_REMOVE;
+  if (g_hash_table_lookup (self->discoverers,
+          discoverer_data->thread) == discoverer_data) {
+    g_hash_table_remove (self->discoverers, discoverer_data->thread);
+  }
 
 done:
   g_mutex_unlock (&self->lock);
