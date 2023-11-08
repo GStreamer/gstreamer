@@ -36,7 +36,10 @@ struct _GstVaBufferImporter
   GstVaDisplay *display;
   VAEntrypoint entrypoint;
 
-  GstVideoInfo *in_info;
+  union {
+    GstVideoInfo *in_info;
+    GstVideoInfoDmaDrm *in_drm_info;
+  };
   GstVideoInfo *sinkpad_info;
 
   gpointer pool_data;

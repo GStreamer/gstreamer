@@ -178,8 +178,16 @@ gst_va_base_transform_set_caps (GstBaseTransform * trans, GstCaps * incaps,
   gboolean res;
 
   /* input caps */
-  if (!gst_va_video_info_from_caps (&in_info, NULL, incaps))
-    goto invalid_caps;
+  if (!gst_video_is_dma_drm_caps (incaps)) {
+    gst_video_info_dma_drm_init (&self->in_drm_info);
+    if (!gst_video_info_from_caps (&in_info, incaps))
+      goto invalid_caps;
+  } else {
+    if (!gst_video_info_dma_drm_from_caps (&self->in_drm_info, incaps))
+      goto invalid_caps;
+    if (!gst_va_dma_drm_info_to_video_info (&self->in_drm_info, &in_info))
+      goto invalid_caps;
+  }
 
   /* output caps */
   if (!gst_va_video_info_from_caps (&out_info, NULL, outcaps))
@@ -864,7 +872,7 @@ gst_va_base_transform_import_buffer (GstVaBaseTransform * self,
 #endif
     .display = self->display,
     .entrypoint = VAEntrypointVideoProc,
-    .in_info = &self->in_info,
+    .in_drm_info = &self->in_drm_info,
     .sinkpad_info = &self->priv->sinkpad_info,
     .get_sinkpad_pool = _get_sinkpad_pool,
   };

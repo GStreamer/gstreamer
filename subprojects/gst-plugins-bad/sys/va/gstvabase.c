@@ -40,25 +40,19 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
 {
   GstVideoMeta *meta;
   GstVideoInfo in_info = *importer->in_info;
-  GstVideoInfoDmaDrm drm_info;
+  GstVideoInfoDmaDrm drm_info = *importer->in_drm_info;
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
-  guint i, n_mem, n_planes, usage_hint;
+  guint i, n_planes, usage_hint;
   gsize offset[GST_VIDEO_MAX_PLANES];
   uintptr_t fd[GST_VIDEO_MAX_PLANES];
   gsize plane_size[GST_VIDEO_MAX_PLANES];
   GstVideoAlignment align = { 0, };
-  GstVideoFormat format;
 
   /* This will eliminate most non-dmabuf out there */
   if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
     return FALSE;
 
-  n_mem = gst_buffer_n_memory (inbuf);
   n_planes = GST_VIDEO_INFO_N_PLANES (&in_info);
-
-  /* We cannot have multiple dmabuf per plane */
-  if (n_mem > n_planes)
-    return FALSE;
 
   meta = gst_buffer_get_video_meta (inbuf);
 
@@ -67,7 +61,9 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
     GST_VIDEO_INFO_WIDTH (&in_info) = meta->width;
     GST_VIDEO_INFO_HEIGHT (&in_info) = meta->height;
 
-    for (i = 0; i < meta->n_planes; i++) {
+    g_assert (n_planes == meta->n_planes);
+
+    for (i = 0; i < n_planes; i++) {
       GST_VIDEO_INFO_PLANE_OFFSET (&in_info, i) = meta->offset[i];
       GST_VIDEO_INFO_PLANE_STRIDE (&in_info, i) = meta->stride[i];
     }
@@ -103,12 +99,6 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
 
   usage_hint = va_get_surface_usage_hint (importer->display,
       importer->entrypoint, GST_PAD_SINK, TRUE);
-
-  /* FIXME(victor): don't assume the modifier   */
-  format = GST_VIDEO_INFO_FORMAT (&in_info);
-  drm_info.drm_fourcc = gst_va_drm_fourcc_from_video_format (format);
-  drm_info.drm_modifier = DRM_FORMAT_MOD_LINEAR;
-  drm_info.vinfo = in_info;
 
   /* Now create a VASurfaceID for the buffer */
   return gst_va_dmabuf_memories_setup (importer->display, &drm_info, mems, fd,

@@ -261,7 +261,7 @@ gst_va_base_enc_import_input_buffer (GstVaBaseEnc * base,
 #endif
     .display = base->display,
     .entrypoint = GST_VA_BASE_ENC_ENTRYPOINT (base),
-    .in_info = &base->in_info,
+    .in_drm_info = &base->in_drm_info,
     .sinkpad_info = &base->priv->sinkpad_info,
     .get_sinkpad_pool = _get_sinkpad_pool,
   };
@@ -679,8 +679,18 @@ gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
-  if (!gst_va_video_info_from_caps (&base->in_info, NULL, state->caps))
-    return FALSE;
+  if (!gst_video_is_dma_drm_caps (state->caps)) {
+    gst_video_info_dma_drm_init (&base->in_drm_info);
+    base->in_info = state->info;
+  } else {
+    GstVideoInfo info;
+
+    if (!gst_video_info_dma_drm_from_caps (&base->in_drm_info, state->caps))
+      return FALSE;
+    if (!gst_va_dma_drm_info_to_video_info (&base->in_drm_info, &info))
+      return FALSE;
+    base->in_info = info;
+  }
 
   if (base->input_state)
     gst_video_codec_state_unref (base->input_state);
