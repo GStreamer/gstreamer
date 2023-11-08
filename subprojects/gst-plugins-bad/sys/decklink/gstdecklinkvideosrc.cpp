@@ -33,7 +33,7 @@
  * Capturing 1080p25 video from the SDI-In of Card 0. Devices are numbered
  * starting with 0.
  *
- * # Duplex-Mode:
+ * ## Duplex-Mode
  * Certain DechLink Cards like the Duo2 or the Quad2 contain two or four
  * independent SDI units with two connectors each. These units can operate either
  * in half- or in full-duplex mode.
@@ -41,7 +41,7 @@
  * The Duplex-Mode of a Card can be configured using the `duplex-mode`-Property.
  * Cards that to not support Duplex-Modes are not influenced by the property.
  *
- * ## Half-Duplex-Mode (default):
+ * ### Half-Duplex-Mode (default)
  * By default decklinkvideosrc will configure them into half-duplex mode, so that
  * each connector acts as if it were an independent DeckLink Card which can either
  * be used as an Input or as an Output. In this mode the Duo2 can be used as as 4 SDI
@@ -75,7 +75,7 @@
  * Playout a Test-Screen with colored Snow on the first and fourth unit
  * (ie. the Connectors 1-4 of a Duo2 unit).
  *
- * ## Device-Number-Mapping in Half-Duplex-Mode
+ * ### Device-Number-Mapping in Half-Duplex-Mode
  * The device-number to connector-mapping in half-duplex-mode is as follows for the Duo2
  * - `device-number=0` SDI1
  * - `device-number=1` SDI3
@@ -92,7 +92,7 @@
  * - `device-number=6` SDI6
  * - `device-number=7` SDI8
  *
- * ## Full-Duplex-Mode:
+ * ### Full-Duplex-Mode
  * When operating in full-duplex mode, two connectors of a unit are combined to
  * a single device, performing extra processing with the second connection.
  *
@@ -119,7 +119,7 @@
  * Capturing Video on the primary port of device 0, output flipped version of the
  * video on secondary port of the same device.
  *
- * ## Device-Number-Mapping in Full-Duplex-Mode
+ * ### Device-Number-Mapping in Full-Duplex-Mode
  * The device-number to connector-mapping in full-duplex-mode is as follows for the Duo2
  * - `device-number=0` SDI1 primary, SDI2 secondary
  * - `device-number=1` SDI3 primaty, SDI4 secondary
