@@ -127,7 +127,8 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GstElement *sub_element;
   GPtrArray *elements;
   GESSourceClass *source_class = GES_SOURCE_GET_CLASS (trksrc);
-  const gchar *props[] = { "volume", "mute", NULL };
+  const gchar *volume_props[] = { "volume", "mute", NULL };
+  const gchar *audioconvert_props[] = { "mix-matrix", NULL };
   GESAudioSource *self = GES_AUDIO_SOURCE (trksrc);
 
   g_assert (source_class->create_source);
@@ -137,7 +138,7 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GST_DEBUG_OBJECT (trksrc, "Creating a bin sub_element ! volume");
   vbin =
       gst_parse_bin_from_description
-      ("audioconvert ! audioresample ! volume name=v ! capsfilter name=audio-track-caps-filter",
+      ("audioconvert name=convert ! audioresample ! volume name=v ! capsfilter name=audio-track-caps-filter",
       TRUE, NULL);
   elements = g_ptr_array_new ();
   g_ptr_array_add (elements, vbin);
@@ -152,7 +153,12 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
 
   _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
       "volume");
-  ges_track_element_add_children_props (trksrc, volume, NULL, NULL, props);
+  ges_track_element_add_children_props (trksrc, volume, NULL, NULL,
+      volume_props);
+  GstElement *audioconvert = gst_bin_get_by_name (GST_BIN (vbin), "convert");
+  ges_track_element_add_children_props (trksrc, audioconvert, NULL, NULL,
+      audioconvert_props);
+  gst_object_unref (audioconvert);
   gst_object_unref (volume);
 
   return topbin;
