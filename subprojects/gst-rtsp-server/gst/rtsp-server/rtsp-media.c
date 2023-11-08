@@ -5227,10 +5227,11 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
     gst_rtsp_media_get_status (media);
     g_rec_mutex_lock (&priv->state_lock);
   }
-  if (priv->status == GST_RTSP_MEDIA_STATUS_ERROR)
+  if (priv->status == GST_RTSP_MEDIA_STATUS_ERROR && state > GST_STATE_READY)
     goto error_status;
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
-      priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED)
+      priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED &&
+      priv->status != GST_RTSP_MEDIA_STATUS_ERROR)
     goto not_prepared;
 
   /* NULL and READY are the same */
@@ -5329,19 +5330,6 @@ error_status:
   {
     GST_WARNING ("media %p in error status while changing to state %d",
         media, state);
-    if (state == GST_STATE_NULL) {
-      for (i = 0; i < transports->len; i++) {
-        GstRTSPStreamTransport *trans;
-
-        /* we need a non-NULL entry in the array */
-        trans = g_ptr_array_index (transports, i);
-        if (trans == NULL)
-          continue;
-
-        gst_rtsp_stream_transport_set_active (trans, FALSE);
-      }
-      priv->n_active = 0;
-    }
     g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
