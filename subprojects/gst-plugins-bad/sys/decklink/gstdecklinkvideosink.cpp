@@ -33,7 +33,7 @@
  * starting with 0.
  *
  * ## Duplex-Mode
- * Certain DechLink Cards like the Duo2 or the Quad2 contain two or four
+ * Certain DeckLink Cards like the Duo2 or the Quad2 contain two or four
  * independent SDI units with two connectors each. These units can operate either
  * in half- or in full-duplex mode.
  *
