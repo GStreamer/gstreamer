@@ -61,6 +61,7 @@ struct _GstVulkanOperationPrivate
   gsize query_data_size;
   gsize query_data_stride;
   gpointer query_data;
+  gboolean op_submitted;
 
   gboolean has_sync2;
   gboolean has_video;
@@ -547,6 +548,8 @@ gst_vulkan_operation_end (GstVulkanOperation * self, GError ** error)
 
   g_clear_pointer (&priv->barriers, g_array_unref);
   self->cmd_buf = NULL;
+
+  priv->op_submitted = TRUE;
 
   GST_OBJECT_UNLOCK (self);
 
@@ -1281,7 +1284,7 @@ gst_vulkan_operation_get_query (GstVulkanOperation * self, gpointer * result,
   g_return_val_if_fail (GST_IS_VULKAN_OPERATION (self), FALSE);
 
   priv = GET_PRIV (self);
-  if (!priv->query_pool || !priv->query_data)
+  if (!priv->query_pool || !priv->query_data || !priv->op_submitted)
     return TRUE;
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
