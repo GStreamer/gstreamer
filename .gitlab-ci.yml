@@ -40,13 +40,6 @@ variables:
   WINDOWS_IMAGE: "$CI_REGISTRY_IMAGE/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
   WINDOWS_UPSTREAM_IMAGE: "$CI_REGISTRY/$FDO_UPSTREAM_REPO/$WINDOWS_AMD64_SUFFIX:$WINDOWS_TAG-$GST_UPSTREAM_BRANCH"
 
-  _CI_CFLAGS: >-
-    -Wno-error=deprecated-declarations
-    -ggdb
-    -fasynchronous-unwind-tables
-    -fno-omit-frame-pointer
-    -mno-omit-leaf-frame-pointer
-
   DEFAULT_MESON_ARGS: >-
     -Dlibnice:tests=disabled
     -Dlibnice:examples=disabled

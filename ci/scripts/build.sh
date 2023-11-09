@@ -28,7 +28,7 @@ if [ "$GST_WERROR" = "true" ]; then
 fi
 
 date -R
-meson setup build/ -Dc_args="${_CI_CFLAGS}" -Dcpp_args="${_CI_CFLAGS}" ${ARGS}
+meson setup build/ --native-file ./ci/meson/gst-ci-cflags.ini  ${ARGS}
 date -R
 meson compile -C build/
 date -R
