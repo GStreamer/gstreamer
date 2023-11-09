@@ -390,7 +390,13 @@ play_new (gchar ** uris, gdouble initial_volume)
 static void
 play_free (Player * play)
 {
+  GstBus *bus = NULL;
+
   play_reset (play);
+
+  bus = gst_play_get_message_bus (play->player);
+  gst_bus_set_flushing (bus, TRUE);
+  gst_object_unref (bus);
 
   g_clear_object (&play->signal_adapter);
   gst_object_unref (play->player);
