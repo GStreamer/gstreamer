@@ -239,7 +239,7 @@ dnf builddep -y gstreamer1 \
     python3-gstreamer1
 
 dnf remove -y meson -x ninja-build
-pip3 install meson==1.2.3 hotdoc==0.15 python-gitlab tomli junitparser
+pip3 install meson==1.2.3 hotdoc==0.16 python-gitlab tomli junitparser
 
 # Remove gst-devel packages installed by builddep above
 dnf remove -y "gstreamer1*devel"
