@@ -6,7 +6,6 @@ Copies current subproject git repository to create a cache
 
 import shutil
 import os
-import sys
 import argparse
 import subprocess
 
@@ -44,7 +43,7 @@ def create_cache_in_image(options):
 
 
 def copy_cache(options):
-    for path in [options.cache_dir, r"C:\gst-build\subprojects"]:
+    for path in [options.cache_dir]:
         if not os.path.exists(path):
             print("%s doesn't exist." % path)
             continue
