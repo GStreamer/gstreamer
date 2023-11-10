@@ -3899,13 +3899,43 @@ structure_get_uint64_permissive (const GstStructure * structure,
   return TRUE;
 }
 
+typedef enum
+{
+  APPSRC_PUSH_FILL_MODE_NOTHING,
+  APPSRC_PUSH_FILL_MODE_COUNTER,
+  APPSRC_PUSH_FILL_MODE_ZERO,
+  APPSRC_PUSH_FILL_MODE_FILE,
+} AppSrcPushFillMode;
+
+static AppSrcPushFillMode
+appsrc_fill_mode_from_action (GstValidateAction * action)
+{
+  const gchar *mode = gst_structure_get_string (action->structure, "fill-mode");
+  if (!mode)
+    return APPSRC_PUSH_FILL_MODE_FILE;
+
+  if (!g_strcmp0 (mode, "nothing"))
+    return APPSRC_PUSH_FILL_MODE_NOTHING;
+  else if (!g_strcmp0 (mode, "zero"))
+    return APPSRC_PUSH_FILL_MODE_ZERO;
+  else if (!g_strcmp0 (mode, "file"))
+    return APPSRC_PUSH_FILL_MODE_FILE;
+  else if (!g_strcmp0 (mode, "counter"))
+    return APPSRC_PUSH_FILL_MODE_COUNTER;
+  else
+    gst_validate_error_structure (action, "Invalid value for 'fill-mode': '%s'",
+        mode);
+
+  return APPSRC_PUSH_FILL_MODE_FILE;
+}
+
 static gint
 _execute_appsrc_push (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
   GstElement *target = NULL;
   gchar *file_name = NULL;
-  gchar *file_contents = NULL;
+  gchar *data = NULL;
   GError *error = NULL;
   GstBuffer *buffer;
   guint64 offset = 0;
@@ -3921,6 +3951,7 @@ _execute_appsrc_push (GstValidateScenario * scenario,
   GstSegment segment;
   GstCaps *caps = NULL;
   GstSample *sample;
+  static guint64 counter = 0;
 
   /* We will only wait for the the buffer to be pushed if we are in a state
    * that allows flow of buffers (>=PAUSED). Otherwise the buffer will just
@@ -3929,45 +3960,76 @@ _execute_appsrc_push (GstValidateScenario * scenario,
 
   target = _get_target_element (scenario, action);
   REPORT_UNLESS (target, err, "No element found.");
-  file_name =
-      g_strdup (gst_structure_get_string (action->structure, "file-name"));
-  REPORT_UNLESS (file_name, err, "Missing file-name property.");
 
   structure_get_uint64_permissive (action->structure, "offset", &offset);
   structure_get_uint64_permissive (action->structure, "size", &size);
 
-  f = g_file_new_for_path (file_name);
-  stream = G_INPUT_STREAM (g_file_read (f, NULL, &error));
-  REPORT_UNLESS (!error, err, "Could not open file for action. Error: %s",
-      error->message);
+  AppSrcPushFillMode fill_mode = appsrc_fill_mode_from_action (action);
 
-  if (offset > 0) {
-    read = g_input_stream_skip (stream, offset, NULL, &error);
-    REPORT_UNLESS (!error, err, "Could not skip to offset. Error: %s",
+  if (fill_mode == APPSRC_PUSH_FILL_MODE_FILE) {
+    file_name =
+        g_strdup (gst_structure_get_string (action->structure, "file-name"));
+    REPORT_UNLESS (file_name, err, "Missing file-name property.");
+    f = g_file_new_for_path (file_name);
+    stream = G_INPUT_STREAM (g_file_read (f, NULL, &error));
+    REPORT_UNLESS (!error, err, "Could not open file for action. Error: %s",
         error->message);
-    REPORT_UNLESS (read == offset, err,
-        "Could not skip to offset, only skipped: %" G_GUINT64_FORMAT, read);
+
+    if (offset > 0) {
+      read = g_input_stream_skip (stream, offset, NULL, &error);
+      REPORT_UNLESS (!error, err, "Could not skip to offset. Error: %s",
+          error->message);
+      REPORT_UNLESS (read == offset, err,
+          "Could not skip to offset, only skipped: %" G_GUINT64_FORMAT, read);
+    }
+
+    if (size <= 0) {
+      finfo =
+          g_file_query_info (f, G_FILE_ATTRIBUTE_STANDARD_SIZE,
+          G_FILE_QUERY_INFO_NONE, NULL, &error);
+
+      REPORT_UNLESS (!error, err, "Could not query file size. Error: %s",
+          error->message);
+      size = g_file_info_get_size (finfo);
+    }
+
+    data = g_malloc (size);
+    read = g_input_stream_read (stream, data, size, NULL, &error);
+    REPORT_UNLESS (!error, err, "Could not read input file. Error: %s",
+        error->message);
+    REPORT_UNLESS (read == size, err,
+        "Could read enough data, only read: %" G_GUINT64_FORMAT, read);
+  } else {
+    if (size == 0) {
+      size = 1000;
+    }
+
+    switch (fill_mode) {
+      case APPSRC_PUSH_FILL_MODE_NOTHING:
+        data = g_malloc (size);
+        break;
+      case APPSRC_PUSH_FILL_MODE_ZERO:
+        data = g_malloc0 (size);
+        break;
+      case APPSRC_PUSH_FILL_MODE_COUNTER:
+        if (size < sizeof (guint64)) {
+          gst_validate_error_structure (action,
+              "Can't fill with counter size > %" G_GSIZE_FORMAT
+              " required", sizeof (guint64));
+        }
+
+        data = g_malloc (size);
+        for (gsize i = 0; i + 8 <= size; i += 8) {
+          GST_WRITE_UINT64_LE (&data[i], counter++);
+        }
+        break;
+      default:
+        g_assert_not_reached ();
+    }
   }
 
-  if (size <= 0) {
-    finfo =
-        g_file_query_info (f, G_FILE_ATTRIBUTE_STANDARD_SIZE,
-        G_FILE_QUERY_INFO_NONE, NULL, &error);
-
-    REPORT_UNLESS (!error, err, "Could not query file size. Error: %s",
-        error->message);
-    size = g_file_info_get_size (finfo);
-  }
-
-  file_contents = g_malloc (size);
-  read = g_input_stream_read (stream, file_contents, size, NULL, &error);
-  REPORT_UNLESS (!error, err, "Could not read input file. Error: %s",
-      error->message);
-  REPORT_UNLESS (read == size, err,
-      "Could read enough data, only read: %" G_GUINT64_FORMAT, read);
-
-  buffer = gst_buffer_new_wrapped (file_contents, size);
-  file_contents = NULL;
+  buffer = gst_buffer_new_wrapped (data, size);
+  data = NULL;
   gst_validate_action_get_clocktime (scenario,
       action, "pts", &GST_BUFFER_PTS (buffer)
       );
@@ -4060,7 +4122,7 @@ done:
   gst_clear_object (&appsrc_pad);
   gst_clear_object (&peer_pad);
   g_clear_pointer (&file_name, g_free);
-  g_clear_pointer (&file_contents, g_free);
+  g_clear_pointer (&data, g_free);
   g_clear_error (&error);
   g_clear_object (&f);
   g_clear_object (&finfo);
@@ -7644,9 +7706,20 @@ register_action_types (void)
           .types = "string"
         },
         {
+          .name = "fill-mode",
+          .description = "How to fill the buffer, possible values:\n"
+              "   - `nothing`: Leave data as malloc)\n"
+              "   - `zero`: Fill buffers with zeros\n"
+              "   - `counter`: Buffers are filled with an ever increasing counter\n"
+              "   - `file`: Read data from file",
+          .mandatory = FALSE,
+          .def = "file",
+          .types = "string",
+        },
+        {
           .name = "file-name",
           .description = "Relative path to a file whose contents will be pushed as a buffer",
-          .mandatory = TRUE,
+          .mandatory = FALSE,
           .types = "string"
         },
         {
