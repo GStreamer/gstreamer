@@ -283,6 +283,7 @@ gst_vulkan_operation_reset (GstVulkanOperation * self)
 
   gst_vulkan_operation_discard_dependencies (self);
 
+  gst_vulkan_trash_list_wait (priv->trash_list, G_MAXUINT64);
   gst_vulkan_trash_list_gc (priv->trash_list);
 }
 
