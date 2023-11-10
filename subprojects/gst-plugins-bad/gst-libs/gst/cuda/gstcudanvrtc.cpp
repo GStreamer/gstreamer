@@ -27,6 +27,7 @@
 #include <nvrtc.h>
 #include <gmodule.h>
 #include "gstcuda-private.h"
+#include <string>
 
 GST_DEBUG_CATEGORY_STATIC (gst_cuda_nvrtc_debug);
 #define GST_CAT_DEFAULT gst_cuda_nvrtc_debug
@@ -60,6 +61,8 @@ typedef struct _GstCudaNvrtcVTable
   nvrtcResult (*NvrtcGetProgramLog) (nvrtcProgram prog, char *log);
   nvrtcResult (*NvrtcGetProgramLogSize) (nvrtcProgram prog,
       size_t * logSizeRet);
+  nvrtcResult (*NvrtcGetCUBINSize) (nvrtcProgram prog, size_t *cubinSizeRet);
+  nvrtcResult (*NvrtcGetCUBIN) (nvrtcProgram prog, char *cubin);
 } GstCudaNvrtcVTable;
 /* *INDENT-ON* */
 
@@ -159,6 +162,8 @@ gst_cuda_nvrtc_load_library_once (void)
   LOAD_SYMBOL (nvrtcGetPTXSize, NvrtcGetPTXSize);
   LOAD_SYMBOL (nvrtcGetProgramLog, NvrtcGetProgramLog);
   LOAD_SYMBOL (nvrtcGetProgramLogSize, NvrtcGetProgramLogSize);
+  LOAD_SYMBOL (nvrtcGetCUBINSize, NvrtcGetCUBINSize);
+  LOAD_SYMBOL (nvrtcGetCUBIN, NvrtcGetCUBIN);
 
   vtable->loaded = TRUE;
 
@@ -251,6 +256,22 @@ NvrtcGetProgramLogSize (nvrtcProgram prog, size_t *logSizeRet)
 
   return gst_cuda_nvrtc_vtable.NvrtcGetProgramLogSize (prog, logSizeRet);
 }
+
+static nvrtcResult
+NvrtcGetCUBINSize (nvrtcProgram prog, size_t *cubinSizeRet)
+{
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetCUBINSize != nullptr);
+
+  return gst_cuda_nvrtc_vtable.NvrtcGetCUBINSize (prog, cubinSizeRet);
+}
+
+static nvrtcResult
+NvrtcGetCUBIN (nvrtcProgram prog, char *cubin)
+{
+  g_assert (gst_cuda_nvrtc_vtable.NvrtcGetCUBIN != nullptr);
+
+  return gst_cuda_nvrtc_vtable.NvrtcGetCUBIN (prog, cubin);
+}
 /* *INDENT-ON* */
 
 /**
@@ -334,6 +355,98 @@ gst_cuda_nvrtc_compile (const gchar * source)
   GST_TRACE ("compiled CUDA PTX %s\n", ptx);
 
   return ptx;
+
+error:
+  NvrtcDestroyProgram (&prog);
+
+  return nullptr;
+}
+
+/**
+ * gst_cuda_nvrtc_compile_cubin:
+ * @source: Source code to compile
+ * @device: CUDA device
+ *
+ * Returns: (transfer full): Compiled CUDA assembly code if successful,
+ * otherwise %NULL
+ *
+ * Since: 1.24
+ */
+gchar *
+gst_cuda_nvrtc_compile_cubin (const gchar * source, gint device)
+{
+  nvrtcProgram prog;
+  nvrtcResult ret;
+  CUresult curet;
+  gsize cubin_size;
+  gchar *cubin = nullptr;
+  gint major, minor;
+
+  g_return_val_if_fail (source != nullptr, nullptr);
+
+  if (!gst_cuda_nvrtc_load_library ())
+    return nullptr;
+
+  GST_TRACE ("CUDA kernel source \n%s", source);
+
+  curet = CuDeviceGetAttribute (&major,
+      CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR, device);
+  if (curet != CUDA_SUCCESS) {
+    GST_ERROR ("Unknown major compute caps");
+    return nullptr;
+  }
+
+  curet = CuDeviceGetAttribute (&minor,
+      CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR, device);
+  if (curet != CUDA_SUCCESS) {
+    GST_ERROR ("Unknown minor compute caps");
+    return nullptr;
+  }
+
+  std::string opt_str = "--gpu-architecture=sm_" +
+      std::to_string (major) + std::to_string (minor);
+
+  ret = NvrtcCreateProgram (&prog, source, nullptr, 0, nullptr, nullptr);
+  if (ret != NVRTC_SUCCESS) {
+    GST_ERROR ("couldn't create nvrtc program, ret %d", ret);
+    return nullptr;
+  }
+
+  const char *opts[1] = { opt_str.c_str () };
+
+  ret = NvrtcCompileProgram (prog, 1, opts);
+  if (ret != NVRTC_SUCCESS) {
+    gsize log_size;
+
+    GST_ERROR ("couldn't compile nvrtc program, ret %d", ret);
+    if (NvrtcGetProgramLogSize (prog, &log_size) == NVRTC_SUCCESS &&
+        log_size > 0) {
+      gchar *compile_log = (gchar *) g_alloca (log_size);
+      if (NvrtcGetProgramLog (prog, compile_log) == NVRTC_SUCCESS) {
+        GST_ERROR ("nvrtc compile log %s", compile_log);
+      }
+    }
+
+    goto error;
+  }
+
+  ret = NvrtcGetCUBINSize (prog, &cubin_size);
+  if (ret != NVRTC_SUCCESS) {
+    GST_ERROR ("unknown ptx size, ret %d", ret);
+    goto error;
+  }
+
+  cubin = (gchar *) g_malloc0 (cubin_size);
+  ret = NvrtcGetCUBIN (prog, cubin);
+  if (ret != NVRTC_SUCCESS) {
+    GST_ERROR ("couldn't get ptx, ret %d", ret);
+    g_free (cubin);
+    goto error;
+  }
+
+  NvrtcDestroyProgram (&prog);
+
+  return cubin;
 
 error:
   NvrtcDestroyProgram (&prog);

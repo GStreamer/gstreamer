@@ -1708,7 +1708,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
   const GstVideoColorimetry *in_color;
   const GstVideoColorimetry *out_color;
   gchar *str;
-  gchar *ptx;
+  gchar *program = NULL;
   CUresult ret;
 
   in_info = &priv->in_info;
@@ -2071,10 +2071,16 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       write_func);
 
   GST_LOG_OBJECT (self, "kernel code:\n%s\n", str);
-  ptx = gst_cuda_nvrtc_compile (str);
+  gint cuda_device;
+  g_object_get (self->context, "cuda-device-id", &cuda_device, NULL);
+  program = gst_cuda_nvrtc_compile_cubin (str, cuda_device);
+  if (!program) {
+    GST_WARNING_OBJECT (self, "Couldn't compile to cubin, trying ptx");
+    program = gst_cuda_nvrtc_compile (str);
+  }
   g_free (str);
 
-  if (!ptx) {
+  if (!program) {
     GST_ERROR_OBJECT (self, "Could not compile code");
     return FALSE;
   }
@@ -2093,6 +2099,7 @@ gst_cuda_converter_setup (GstCudaConverter * self)
 
   if (!gst_cuda_context_push (self->context)) {
     GST_ERROR_OBJECT (self, "Couldn't push context");
+    g_free (program);
     return FALSE;
   }
 
@@ -2138,8 +2145,8 @@ gst_cuda_converter_setup (GstCudaConverter * self)
     priv->unpack_buffer.texture = texture;
   }
 
-  ret = CuModuleLoadData (&priv->module, ptx);
-  g_free (ptx);
+  ret = CuModuleLoadData (&priv->module, program);
+  g_clear_pointer (&program, g_free);
   if (!gst_cuda_result (ret)) {
     GST_ERROR_OBJECT (self, "Could not load module");
     priv->module = NULL;
@@ -2168,6 +2175,8 @@ gst_cuda_converter_setup (GstCudaConverter * self)
 
 error:
   gst_cuda_context_pop (NULL);
+  g_free (program);
+
   return FALSE;
 }
 
