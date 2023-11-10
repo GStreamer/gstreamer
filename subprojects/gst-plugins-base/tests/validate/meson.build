@@ -25,6 +25,8 @@ tests = [
     'giosrc/read-growing-file',
     'encodebin/set-encoder-properties',
     'uridecodebin/expose_raw_pad_caps',
+    'fakevideodec/encoded',
+    'fakevideodec/simple'
 ]
 
 env = environment()
