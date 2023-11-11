@@ -75,6 +75,19 @@ else
     'jni/gstamcsurface.c',
     'jni/gstamcsurfacetexture-jni.c',
   ]
+
+  # Build an Ndk support if its headers exists. We don't actually link into it
+  # but use only type definations (and then rely on dlopen and dlsym), so this
+  # doesn't affect compatibility with older Android versions.
+  if cc.check_header('media/NdkMediaCodec.h')
+    androidmedia_sources += [
+      'ndk/gstamc-codec-ndk.c',
+      'ndk/gstamc-format-ndk.c',
+    ]
+    extra_cargs += [ '-DHAVE_NDKMEDIA' ]
+    extra_deps += [ cc.find_library('android', required : true) ]
+  endif
+
   plugin_name = 'gstandroidmedia'
 endif
 
