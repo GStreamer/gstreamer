@@ -32,12 +32,6 @@ struct _GstAmcFormat
   MLHandle handle;
 };
 
-gboolean
-gst_amc_format_static_init (void)
-{
-  return TRUE;
-}
-
 GstAmcFormat *
 gst_amc_format_new_audio (const gchar * mime, gint sample_rate, gint channels,
     GError ** err)

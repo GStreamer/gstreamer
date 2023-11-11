@@ -28,8 +28,6 @@ G_BEGIN_DECLS
 typedef struct _GstAmcFormat GstAmcFormat;
 typedef struct _GstAmcColorFormatInfo GstAmcColorFormatInfo;
 
-gboolean gst_amc_format_static_init (void);
-
 GstAmcFormat * gst_amc_format_new_audio (const gchar *mime, gint sample_rate, gint channels, GError **err);
 GstAmcFormat * gst_amc_format_new_video (const gchar *mime, gint width, gint height, GError **err);
 void gst_amc_format_free (GstAmcFormat * format);

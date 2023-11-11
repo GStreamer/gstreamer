@@ -26,6 +26,7 @@
 #include "../gstjniutils.h"
 #include "../gstamc-codec.h"
 #include "../gstamc-constants.h"
+#include "gstamc-jni.h"
 #include "gstamc-internal-jni.h"
 #include "gstamcsurfacetexture-jni.h"
 #include "gstamcsurface.h"
@@ -90,7 +91,7 @@ static struct
 } java_nio_buffer;
 
 gboolean
-gst_amc_codec_static_init (void)
+gst_amc_codec_jni_static_init (void)
 {
   gboolean ret = TRUE;
   JNIEnv *env;

@@ -44,8 +44,6 @@ struct _GstAmcBufferInfo {
   gint size;
 };
 
-gboolean gst_amc_codec_static_init (void);
-
 void gst_amc_buffer_free (GstAmcBuffer * buffer);
 gboolean gst_amc_buffer_set_position_and_limit (GstAmcBuffer * buffer, GError ** err,
     gint position, gint limit);

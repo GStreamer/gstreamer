@@ -1840,16 +1840,7 @@ amc_init (GstPlugin * plugin)
 
   gst_amc_codec_info_quark = g_quark_from_static_string ("gst-amc-codec-info");
 
-  if (!gst_amc_codeclist_static_init ())
-    return FALSE;
-
-  if (!gst_amc_codec_static_init ())
-    return FALSE;
-
-  if (!gst_amc_format_static_init ())
-    return FALSE;
-
-  if (!gst_amc_surface_texture_static_init ())
+  if (!gst_amc_static_init ())
     return FALSE;
 
   /* Set this to TRUE to allow registering decoders that have

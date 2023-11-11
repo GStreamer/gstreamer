@@ -39,6 +39,7 @@ extra_deps = []
 extra_cargs = []
 if have_mlsdk
   androidmedia_sources += [
+    'magicleap/gstamc-ml.c',
     'magicleap/gstamc-codec-ml.c',
     'magicleap/gstamc-codeclist-ml.c',
     'magicleap/gstamc-format-ml.c',
@@ -65,6 +66,7 @@ else
     'gst-android-hardware-camera.c',
     'gst-android-hardware-sensor.c',
     'gstjniutils.c',
+    'jni/gstamc-jni.c',
     'jni/gstamc-codec-jni.c',
     'jni/gstamc-codeclist-jni.c',
     'jni/gstamc-format-jni.c',

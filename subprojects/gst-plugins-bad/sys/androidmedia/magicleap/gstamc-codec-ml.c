@@ -35,12 +35,6 @@ struct _GstAmcCodec
   GstAmcSurfaceTexture *surface_texture;
 };
 
-gboolean
-gst_amc_codec_static_init (void)
-{
-  return TRUE;
-}
-
 void
 gst_amc_buffer_free (GstAmcBuffer * buffer)
 {

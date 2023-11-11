@@ -25,6 +25,7 @@
 
 #include "../gstjniutils.h"
 #include "../gstamc-format.h"
+#include "gstamc-jni.h"
 #include "gstamc-internal-jni.h"
 
 static struct
@@ -44,7 +45,7 @@ static struct
 } media_format;
 
 gboolean
-gst_amc_format_static_init (void)
+gst_amc_format_jni_static_init (void)
 {
   gboolean ret = TRUE;
   JNIEnv *env;

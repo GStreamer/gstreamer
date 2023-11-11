@@ -65,8 +65,6 @@ struct _GstAmcSurfaceTextureClass
                                                 GError ** err);
 };
 
-gboolean gst_amc_surface_texture_static_init (void);
-
 gboolean gst_amc_surface_texture_update_tex_image        (GstAmcSurfaceTexture *texture,
                                                          GError ** err);
 

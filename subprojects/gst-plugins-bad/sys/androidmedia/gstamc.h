@@ -53,6 +53,8 @@ struct _GstAmcCodecInfo {
 
 extern GQuark gst_amc_codec_info_quark;
 
+gboolean gst_amc_static_init (void);
+
 GstVideoFormat gst_amc_color_format_to_video_format (const GstAmcCodecInfo * codec_info, const gchar * mime, gint color_format);
 gint gst_amc_video_format_to_color_format (const GstAmcCodecInfo * codec_info, const gchar * mime, GstVideoFormat video_format);
 
