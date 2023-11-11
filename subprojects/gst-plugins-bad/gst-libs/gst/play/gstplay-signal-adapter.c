@@ -356,6 +356,8 @@ gst_play_signal_adapter_dispose (GObject * object)
     self->source = NULL;
   }
 
+  if (self->bus)
+    gst_bus_set_flushing (self->bus, TRUE);
   gst_clear_object (&self->bus);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
