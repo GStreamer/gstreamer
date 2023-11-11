@@ -35,5 +35,8 @@ gst_amc_static_init (void)
   if (!gst_amc_surface_texture_jni_static_init ())
     return FALSE;
 
+  gst_amc_format_vtable = &gst_amc_format_jni_vtable;
+  gst_amc_codec_vtable = &gst_amc_codec_jni_vtable;
+
   return TRUE;
 }

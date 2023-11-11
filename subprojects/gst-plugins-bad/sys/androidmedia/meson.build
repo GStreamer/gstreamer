@@ -1,6 +1,8 @@
 androidmedia_sources = [
   'gstamcaudiodec.c',
   'gstamc.c',
+  'gstamc-codec.c',
+  'gstamc-format.c',
   'gstamcsurfacetexture.c',
   'gstamcvideodec.c',
   'gstamcvideoenc.c',

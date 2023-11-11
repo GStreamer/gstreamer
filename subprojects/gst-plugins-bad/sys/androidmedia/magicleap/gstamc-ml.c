@@ -18,6 +18,7 @@
  */
 
 #include "../gstamc.h"
+#include "gstamc-internal-ml.h"
 
 gboolean
 gst_amc_static_init (void)
@@ -26,5 +27,9 @@ gst_amc_static_init (void)
    * MagicLeap doesn't require any static initialization. All required
    * functions are in C and are linked into the plugin directly.
    */
+
+  gst_amc_codec_vtable = &gst_amc_codec_ml_vtable;
+  gst_amc_format_vtable = &gst_amc_format_ml_vtable;
+
   return TRUE;
 }
