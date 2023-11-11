@@ -89,6 +89,10 @@
 #define DRM_FORMAT_RGB565     fourcc_code('R', 'G', '1', '6')   /* [15:0] R:G:B 5:6:5 little endian */
 #define DRM_FORMAT_BGR565     fourcc_code('B', 'G', '1', '6')   /* [15:0] B:G:R 5:6:5 little endian */
 
+/* 24 bpp RGB */
+#define DRM_FORMAT_RGB888     fourcc_code('R', 'G', '2', '4')   /* [23:0] R:G:B little endian */
+#define DRM_FORMAT_BGR888     fourcc_code('B', 'G', '2', '4')   /* [23:0] B:G:R little endian */
+
 /* 32 bpp RGB */
 #define DRM_FORMAT_ARGB8888   fourcc_code('A', 'R', '2', '4')   /* [31:0] A:R:G:B 8:8:8:8 little endian */
 #define DRM_FORMAT_ABGR8888   fourcc_code('A', 'B', '2', '4')   /* [31:0] A:B:G:R 8:8:8:8 little endian */
@@ -647,6 +651,8 @@ static const struct FormatMap
   {GST_VIDEO_FORMAT_Y444, DRM_FORMAT_YUV444},
   {GST_VIDEO_FORMAT_RGB16, DRM_FORMAT_RGB565},
   {GST_VIDEO_FORMAT_BGR16, DRM_FORMAT_BGR565},
+  {GST_VIDEO_FORMAT_RGB, DRM_FORMAT_BGR888},
+  {GST_VIDEO_FORMAT_BGR, DRM_FORMAT_RGB888},
   {GST_VIDEO_FORMAT_RGBA, DRM_FORMAT_ABGR8888},
   {GST_VIDEO_FORMAT_RGBx, DRM_FORMAT_XBGR8888},
   {GST_VIDEO_FORMAT_BGRA, DRM_FORMAT_ARGB8888},
