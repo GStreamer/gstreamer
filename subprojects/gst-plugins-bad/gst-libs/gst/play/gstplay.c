@@ -37,9 +37,14 @@
  * Internally the GstPlay makes use of the `playbin` element. `playbin3` can be
  * selected if the `GST_PLAY_USE_PLAYBIN3=1` environment variable has been set.
  *
- * **Important note**: In order to prevent the GstPlay object from leaking, its
- * GstBus should be set to flushing state before any attempt to drop the last
- * reference of the GstPlay object. An example in C:
+ * **Important note**: If your application relies on the GstBus to get
+ * notifications from GstPlay, you need to add some explicit clean-up code in
+ * order to prevent the GstPlay object from leaking. See below for the details.
+ * If you use the GstPlaySignalAdapter, no special clean-up is required.
+ *
+ * When the GstPlaySignalAdapter is not used, the GstBus owned by GstPlay should
+ * be set to flushing state before any attempt to drop the last reference of the
+ * GstPlay object. An example in C:
  *
  * ```c
  * ...
