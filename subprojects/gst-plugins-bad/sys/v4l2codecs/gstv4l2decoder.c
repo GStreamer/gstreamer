@@ -564,7 +564,7 @@ gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
   gint i, ret;
   struct v4l2_plane planes[GST_VIDEO_MAX_PLANES] = { {0} };
   struct v4l2_buffer v4l2_buf = {
-    .index = 0,
+    .index = index,
     .type = direction_to_buffer_type (self, direction),
   };
 
