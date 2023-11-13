@@ -1,6 +1,7 @@
 ges_sources = files([
     'ges.c',
     'ges-enums.c',
+    'ges-frame-composition-meta.c',
     'ges-meta-container.c',
     'ges-timeline.c',
     'ges-layer.c',
@@ -73,6 +74,7 @@ ges_headers = files([
     'ges-types.h',
     'ges.h',
     'ges-prelude.h',
+    'ges-frame-composition-meta.h',
     'ges-enums.h',
     'ges-gerror.h',
     'ges-meta-container.h',

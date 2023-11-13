@@ -21,6 +21,7 @@
 #endif
 
 #include "gstframepositioner.h"
+#include "ges-frame-composition-meta.h"
 #include "ges-types.h"
 #include "ges-internal.h"
 #include "ges-smart-video-mixer.h"
@@ -204,19 +205,19 @@ ges_smart_mixer_get_mixer_pad (GESSmartMixer * self, GstPad ** mixerpad)
 }
 
 static void
-set_pad_properties_from_positioner_meta (GstPad * mixer_pad, GstSample * sample,
-    GESSmartMixerPad * ghost)
+set_pad_properties_from_composition_meta (GstPad * mixer_pad,
+    GstSample * sample, GESSmartMixerPad * ghost)
 {
-  GstFramePositionerMeta *meta;
+  GESFrameCompositionMeta *meta;
   GstBuffer *buf = gst_sample_get_buffer (sample);
   GESSmartMixer *self = GES_SMART_MIXER (GST_OBJECT_PARENT (ghost));
 
   meta =
-      (GstFramePositionerMeta *) gst_buffer_get_meta (buf,
-      gst_frame_positioner_meta_api_get_type ());
+      (GESFrameCompositionMeta *) gst_buffer_get_meta (buf,
+      GES_TYPE_META_FRAME_COMPOSITION);
 
   if (!meta) {
-    GST_WARNING ("The current source should use a framepositioner");
+    GST_WARNING ("The current source should use a framecomposition");
     return;
   }
 
@@ -373,7 +374,7 @@ compositor_sync_properties_with_meta (GstElement * compositor,
       GST_AGGREGATOR_PAD (sinkpad));
 
   if (sample) {
-    set_pad_properties_from_positioner_meta (sinkpad,
+    set_pad_properties_from_composition_meta (sinkpad,
         sample, GES_SMART_MIXER_PAD (info->ghostpad));
     gst_sample_unref (sample);
   } else {

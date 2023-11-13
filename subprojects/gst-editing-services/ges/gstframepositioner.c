@@ -26,6 +26,7 @@
 #include <gst/video/video.h>
 
 #include "gstframepositioner.h"
+#include "ges-frame-composition-meta.h"
 #include "ges-internal.h"
 
 GST_DEBUG_CATEGORY_STATIC (_framepositioner);
@@ -42,12 +43,6 @@ static void gst_frame_positioner_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
 static GstFlowReturn gst_frame_positioner_transform_ip (GstBaseTransform *
     trans, GstBuffer * buf);
-
-static gboolean
-gst_frame_positioner_meta_init (GstMeta * meta, gpointer params,
-    GstBuffer * buffer);
-static gboolean gst_frame_positioner_meta_transform (GstBuffer * dest,
-    GstMeta * meta, GstBuffer * buffer, GQuark type, gpointer data);
 
 enum
 {
@@ -693,84 +688,10 @@ gst_frame_positioner_get_property (GObject * object, guint property_id,
   }
 }
 
-GType
-gst_frame_positioner_meta_api_get_type (void)
-{
-  static GType type;
-  static const gchar *tags[] = { "video", NULL };
-
-  if (g_once_init_enter (&type)) {
-    GType _type = gst_meta_api_type_register ("GstFramePositionerApi", tags);
-    g_once_init_leave (&type, _type);
-  }
-  return type;
-}
-
-static const GstMetaInfo *
-gst_frame_positioner_get_info (void)
-{
-  static const GstMetaInfo *meta_info = NULL;
-
-  if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *meta =
-        gst_meta_register (gst_frame_positioner_meta_api_get_type (),
-        "GstFramePositionerMeta",
-        sizeof (GstFramePositionerMeta), gst_frame_positioner_meta_init,
-        NULL,
-        gst_frame_positioner_meta_transform);
-    g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
-  }
-  return meta_info;
-}
-
-static gboolean
-gst_frame_positioner_meta_init (GstMeta * meta, gpointer params,
-    GstBuffer * buffer)
-{
-  int default_operator_value = 0;
-  GstFramePositionerMeta *smeta;
-
-  smeta = (GstFramePositionerMeta *) meta;
-
-  gst_compositor_operator_get_type_and_default_value (&default_operator_value);
-
-  smeta->alpha = 0.0;
-  smeta->posx = smeta->posy = smeta->height = smeta->width = 0;
-  smeta->zorder = 0;
-  smeta->operator = default_operator_value;
-
-  return TRUE;
-}
-
-static gboolean
-gst_frame_positioner_meta_transform (GstBuffer * dest, GstMeta * meta,
-    GstBuffer * buffer, GQuark type, gpointer data)
-{
-  GstFramePositionerMeta *dmeta, *smeta;
-
-  smeta = (GstFramePositionerMeta *) meta;
-
-  if (GST_META_TRANSFORM_IS_COPY (type)) {
-    /* only copy if the complete data is copied as well */
-    dmeta =
-        (GstFramePositionerMeta *) gst_buffer_add_meta (dest,
-        gst_frame_positioner_get_info (), NULL);
-    dmeta->alpha = smeta->alpha;
-    dmeta->posx = smeta->posx;
-    dmeta->posy = smeta->posy;
-    dmeta->width = smeta->width;
-    dmeta->height = smeta->height;
-    dmeta->zorder = smeta->zorder;
-    dmeta->operator = smeta->operator;
-  }
-
-  return TRUE;
-}
-
 static GstFlowReturn
 gst_frame_positioner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
-  GstFramePositionerMeta *meta;
+  GESFrameCompositionMeta *meta;
   GstFramePositioner *framepositioner = GST_FRAME_POSITIONNER (trans);
   GstClockTime timestamp = GST_BUFFER_PTS (buf);
 
@@ -778,9 +699,7 @@ gst_frame_positioner_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
     gst_object_sync_values (GST_OBJECT (trans), timestamp);
   }
 
-  meta =
-      (GstFramePositionerMeta *) gst_buffer_add_meta (buf,
-      gst_frame_positioner_get_info (), NULL);
+  meta = ges_buffer_add_frame_composition_meta (buf);
 
   GST_OBJECT_LOCK (framepositioner);
   meta->alpha = framepositioner->alpha;

@@ -23,6 +23,7 @@ gi-index
 		ges-effect-asset.h
 		ges-track-element-asset.h
 		ges-source-clip-asset.h
+	ges-frame-composition-meta.h
 	ges-effect.h
 	ges-extractable.h
 	ges-group.h

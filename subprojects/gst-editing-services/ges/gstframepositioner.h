@@ -34,7 +34,6 @@ G_BEGIN_DECLS
 
 typedef struct _GstFramePositioner GstFramePositioner;
 typedef struct _GstFramePositionerClass GstFramePositionerClass;
-typedef struct _GstFramePositionerMeta GstFramePositionerMeta;
 
 struct _GstFramePositioner
 {
@@ -73,25 +72,11 @@ struct _GstFramePositionerClass
   GstBaseTransformClass base_framepositioner_class;
 };
 
-struct _GstFramePositionerMeta {
-  GstMeta meta;
-
-  gdouble alpha;
-  gint posx;
-  gint posy;
-  gint height;
-  gint width;
-  guint zorder;
-  gint operator;
-};
-
 G_GNUC_INTERNAL GType gst_compositor_operator_get_type_and_default_value (int *default_operator_value);
 G_GNUC_INTERNAL void ges_frame_positioner_set_source_and_filter (GstFramePositioner *pos,
 						  GESTrackElement *trksrc,
 						  GstElement *capsfilter);
 G_GNUC_INTERNAL GType gst_frame_positioner_get_type (void);
-G_GNUC_INTERNAL GType
-gst_frame_positioner_meta_api_get_type (void);
 
 G_END_DECLS
 
