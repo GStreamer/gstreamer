@@ -1267,6 +1267,10 @@ gst_validate_replace_variables_in_string (gpointer source,
       }
 
       if (!var_value) {
+        g_free (varname);
+        g_free (pvarname);
+        g_free (string);
+        g_clear_pointer (&match_info, g_match_info_free);
         if (!(flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_FAILURE)) {
           gst_validate_error_structure (source,
               "Trying to use undefined variable `%s`.\n"
@@ -1276,6 +1280,7 @@ gst_validate_replace_variables_in_string (gpointer source,
               varname, gst_structure_to_string (local_vars),
               (flags & GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY) ?
               ": unused" : gst_structure_to_string (global_vars));
+
         }
 
         return NULL;
