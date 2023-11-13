@@ -2667,31 +2667,37 @@ count_directories (const char *filepath)
 
 
 /**
- * gst_ptp_init:
- * @clock_id: PTP clock id of this process' clock or %GST_PTP_CLOCK_ID_NONE
- * @interfaces: (transfer none) (array zero-terminated=1) (allow-none): network interfaces to run the clock on
+ * gst_ptp_init_full:
+ * @config: Configuration for initializing the GStreamer PTP subsystem
  *
  * Initialize the GStreamer PTP subsystem and create a PTP ordinary clock in
- * slave-only mode for all domains on the given @interfaces with the
- * given @clock_id.
+ * slave-only mode according to the @config.
  *
- * If @clock_id is %GST_PTP_CLOCK_ID_NONE, a clock id is automatically
- * generated from the MAC address of the first network interface.
+ * @config is a #GstStructure with the following optional fields:
+ * * #guint64 `clock-id`: The clock ID to use for the local clock. If the
+ *     clock-id is not provided or %GST_PTP_CLOCK_ID_NONE is provided, a clock
+ *     id is automatically generated from the MAC address of the first network
+ *     interface.
+ * * #GStrv `interfaces`: The interface names to listen on for PTP packets. If
+ *     none are provided then all compatible interfaces will be used.
  *
  * This function is automatically called by gst_ptp_clock_new() with default
  * parameters if it wasn't called before.
  *
  * Returns: %TRUE if the GStreamer PTP clock subsystem could be initialized.
  *
- * Since: 1.6
+ * Since: 1.24
  */
 gboolean
-gst_ptp_init (guint64 clock_id, gchar ** interfaces)
+gst_ptp_init_full (const GstStructure * config)
 {
   gboolean ret;
   const gchar *env;
   gchar **argv = NULL;
   gint argc, argc_c;
+  guint64 clock_id = GST_CLOCK_TIME_NONE;
+  const GValue *v;
+  gchar **interfaces = NULL;
   GError *err = NULL;
 
   GST_DEBUG_CATEGORY_INIT (ptp_debug, "ptp", 0, "PTP clock");
@@ -2720,8 +2726,12 @@ gst_ptp_init (guint64 clock_id, gchar ** interfaces)
   }
 
   argc = 1;
+  gst_structure_get_uint64(config, "clock-id", &clock_id);
   if (clock_id != GST_PTP_CLOCK_ID_NONE)
     argc += 2;
+  v = gst_structure_get_value (config, "interfaces");
+  if (v && G_VALUE_HOLDS (v, G_TYPE_STRV))
+    interfaces = g_value_get_boxed (v);
   if (interfaces != NULL)
     argc += 2 * g_strv_length (interfaces);
 
@@ -2907,6 +2917,40 @@ done:
   }
 
   g_mutex_unlock (&ptp_lock);
+
+  return ret;
+}
+
+/**
+ * gst_ptp_init:
+ * @clock_id: PTP clock id of this process' clock or %GST_PTP_CLOCK_ID_NONE
+ * @interfaces: (transfer none) (array zero-terminated=1) (allow-none): network interfaces to run the clock on
+ *
+ * Initialize the GStreamer PTP subsystem and create a PTP ordinary clock in
+ * slave-only mode for all domains on the given @interfaces with the
+ * given @clock_id.
+ *
+ * If @clock_id is %GST_PTP_CLOCK_ID_NONE, a clock id is automatically
+ * generated from the MAC address of the first network interface.
+ *
+ * This function is automatically called by gst_ptp_clock_new() with default
+ * parameters if it wasn't called before.
+ *
+ * Returns: %TRUE if the GStreamer PTP clock subsystem could be initialized.
+ *
+ * Since: 1.6
+ */
+gboolean
+gst_ptp_init (guint64 clock_id, gchar ** interfaces)
+{
+  GstStructure *config;
+  gboolean ret;
+
+  config = gst_structure_new ("config/ptp",
+      "clock-id", G_TYPE_UINT64, clock_id,
+      "interfaces", G_TYPE_STRV, interfaces, NULL);
+  ret = gst_ptp_init_full (config);
+  gst_structure_free (config);
 
   return ret;
 }
