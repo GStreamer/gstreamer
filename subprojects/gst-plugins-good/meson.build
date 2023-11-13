@@ -1,5 +1,5 @@
 project('gst-plugins-good', 'c',
-  version : '1.22.7',
+  version : '1.22.7.1',
   meson_version : '>= 0.62',
   default_options : [ 'warning_level=1',
                       'buildtype=debugoptimized' ])
