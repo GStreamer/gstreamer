@@ -2,13 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
-The latest bug-fix release in the stable 1.22 series is 1.22.5 and was
-released on 20 July 2023.
+The latest bug-fix release in the stable 1.22 series is 1.22.7 and was
+released on 13 November 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Thursday 20 July 2023, 12:00 UTC (log)
+Last updated: Monday 13 November 2023, 10:00 UTC (log)
 
 Introduction
 
@@ -2365,6 +2365,222 @@ List of merge requests and issues fixed in 1.22.6
 
 -   List of Merge Requests applied in 1.22.6
 -   List of Issues fixed in 1.22.6
+
+1.22.7
+
+The seventh 1.22 bug-fix release (1.22.7) was released on 13 November
+2023.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.22.x.
+
+Highlighted bugfixes in 1.22.7
+
+-   Security fixes for the MXF demuxer and AV1 codec parser
+-   glfilter: Memory leak fix for OpenGL filter elements
+-   d3d11videosink: Fix toggling between fullscreen and maximized, and
+    window switching in fullscreen mode
+-   DASH / HLS adaptive streaming fixes
+-   Decklink card device provider device name string handling fixes
+-   interaudiosrc: handle non-interleaved audio properly
+-   openh264: Fail gracefully if openh264 encoder/decoder creation fails
+-   rtspsrc: improved whitespace handling in response headers by certain
+    cameras
+-   v4l2codecs: avoid wrap-around after 1000000 frames; tiled formats
+    handling fixes
+-   video-scaler, audio-resampler: downgraded “Can’t find exact taps”
+    debug log messages
+-   wasapi2: Don’t use global volume control object
+-   Rust plugins: various improvements in aws, fmp4mux, hlssink3,
+    livesync, ndisrc, rtpav1depay, rsfilesink, s3sink, sccparse
+-   WebRTC: various webrtchttp, webrtcsrc, and webrtcsink improvements
+    and fixes
+-   Cerbero build tools: recognise Windows 11; restrict parallelism of
+    gst-plugins-rs build on small systems
+-   Packages: ca-certificates update; fix gio module loading and TLS
+    support on macOS
+
+gstreamer
+
+-   debugutils: provide gst_debug_bin_to_dot_data() implementation even
+    if debug system is disabled
+
+gst-plugins-base
+
+-   audioaggregator, audiomixer: Make access to the pad list thread-safe
+    while mixing
+-   basetextoverlay: Fix overlay never rendering again if width reaches
+    1px
+-   glfiter: Protect GstGLContext access
+-   glfilter: Only add parent meta if inbuf != outbuf
+-   macOS: fix huge memory leak with glfilter-based elements
+-   rtspconnection: Ignore trailing whitespace in rtsp headers
+-   video-scaler, audio-resampler: downgrade ‘can’t find exact taps’ to
+    debug
+
+gst-plugins-good
+
+-   adaptivedemux2: Do not submit_transfer when cancelled
+-   adaptivedemux2: Call GTasks’s return functions for blocking tasks
+-   flacenc: Correctly handle up to 255 cue entries
+-   flvmux: set the src segment position as running time
+-   imagesequencesrc: fix deadlock when feeding the same image in a loop
+-   pngenc: output one frame only in snapshot mode and mark output
+    frames as I-frames
+-   qmlglsrc: sync on the streaming thread
+-   souphttpsrc: Chain up to finalize to fix memory leak
+-   wavparse: fix buffer leak with adtl tag
+-   v4l2codecs: Avoid QBUF/DQBUF struct timeval .tv_usec wrap-around at
+    frame 1000000
+-   v4l2codecs: Fix tiled formats stride conversion
+
+gst-plugins-bad
+
+-   audiobuffersplit: disable max-silence-time if set to 0
+-   libde265: Do not decode the non 4:2:0 8 bits format
+-   codecparsers: av1: Clip max tile rows and cols values
+-   codecs: h265: Do not free slice header before using it
+-   d3d11converter: Fix 10/12bits planar output
+-   d3d11decoder: Fix crash on negotiate() when decoder is not
+    configured
+-   d3d11videosink: Fix toggling between fullscreen and maximized
+-   d3d11videosink: Fix window switching in case of fullscreen mode
+-   d3d11screencapturesrc: Fix mouse cursor blending
+-   decklink: Fix broken COM string conversion
+-   decklink: Decklink Device Provider wrongly parses SDK strings
+-   gstwayland: Don’t depend on wayland-protocols
+-   interaudiosrc: Add audio meta to buffers containing non-interleaved
+    samples
+-   kmssink: Add TIDSS auto-detection
+-   mfvideoencoder: Fix typo in template caps
+-   mxfdemux: Store GstMXFDemuxEssenceTrack in their own fixed
+    allocation
+-   nvcodec: fix bounds for auto-select GPU enumeration
+-   openh264: Fail gracefully if openh264 encoder/decoder creation fails
+-   tsmux: More cleanups
+-   tsmux: Fill padding packets with stuffing bytes
+-   v4l2codecs: Fix tiled formats stride conversion
+-   v4l2videodec: Correctly free caps to avoid memory leak
+-   wasapi2: Don’t use global volume control object
+-   wasapi2device: Ignore activation failed device
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-plugins-rs
+
+-   aws: s3sink: Fix handling of special characters in key
+-   aws: s3: Properly percent-decode GstS3Url
+-   fmp4mux: Don’t overflow negative composition offset calculation
+-   fmp4mux: specify the fragment duration unit
+-   hlssink3: Use Path API for getting file name
+-   hlssink3: Use sprintf for segment name formatting
+-   hlssink3: Remove unused deps
+-   hlssink3: Don’t remove old files if max-files is zero
+-   hlssink3: Don’t remove uri from playlist if playlist-length is zero
+-   hlssink3: Various cleanup
+-   livesync: log new pending segments
+-   livesync: display jitter when waiting on clock
+-   livesync: Rename activatemode methods to *_activatemode
+-   livesync: Simplify start_src_task and src_loop
+-   livesync: Improve audio duration fixups
+-   livesync: Log a category error when we are missing the segment
+-   livesync: Clean up state handling
+-   livesync: Replace an if-let with match
+-   livesync: Move a notify closer to the interesting state change
+-   livesync: Move num_in counting to the src task
+-   livesync: Simplify num_duplicate counting
+-   livesync: Handle flags and late buffer patching after queueing
+-   livesync: Separate out_buffer duplicate status from GAP flag
+-   livesync: Use fallback_duration for audio repeat buffers as well
+-   livesync: example: Add identities single-segment=1
+-   livesync: Split fallback_duration into in_ and out_duration
+-   livesync: Keep existing buffer duration in some cases
+-   livesync: Remove the stop from outgoing segments
+-   ndisrc: Assume input with more than 8 raw audio channels is
+    unpositioned
+-   rtpav1depay: Skip unexpected leading fragments
+-   rtpav1depay: Don’t push stale temporal delimiters downstream
+-   rsfilesink: set sync=false
+-   s3sink: set sync=false
+-   sccparse: Fix leading spaces between the tab and caption data
+-   webrtchttp: Respect HTTP redirects
+-   webrtcsrc: use @watch instead of @to-owned
+-   webrtcsrc: add turn-servers property
+-   webrtc: Fix paths in README
+-   webrtcsink: don’t miss ice candidates
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   rtspclientsink: Don’t leak previous server_ip
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   No changes
+
+gst-validate + gst-integration-testsuites
+
+-   gst-validate: Fix compatibility with Python 3.12
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.22.7
+
+-   Add Windows 11 to the supported versions list
+-   ca-certificates: Update to version from 2023-08-22
+-   cargo: Restrict parallelism if a small system is detected (for
+    gst-plugins-rs build)
+-   Fix venv setup on Python 3.11+
+-   Fix unlinking of Android NDK directories if install fails midway
+-   glib: Work around AppleClang + -Werror test build failure
+-   glib: Re-add gio module loading patch for macOS, remove unused patch
+    files
+
+Contributors to 1.22.7
+
+Albert Sjölund, Arun Raghavan, Balló György, Benjamin Gaignard, Detlev
+Casanova, Doug Nazar, Eric, Florian Zwoch, François Laignel, Guillaume
+Desmottes, He Junyan, Hou Qi, James Oliver, Jan Alexander Steffens
+(heftig), Jan Schmidt, Johan Adam Nilsson, Jordan Yelloz, Kalev Lember,
+L. E. Segovia, Lieven Paulissen, Maksym Khomenko, Marek Vasut, Matthias
+Fuchs, Michiel Westerbeek, Nicolas Dufresne, Philippe Normand, Piotr
+Brzeziński, Rahul T R, Sean DuBois, Sebastian Dröge, Seungha Yang,
+Stéphane Cerveau, Thibault Saunier, Tim-Philipp Müller,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.7
+
+-   List of Merge Requests applied in 1.22.7
+-   List of Issues fixed in 1.22.7
 
 Schedule for 1.24
 
