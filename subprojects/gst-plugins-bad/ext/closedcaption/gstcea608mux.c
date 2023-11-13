@@ -295,6 +295,7 @@ gst_cea608_mux_aggregate (GstAggregator * aggregator, gboolean timeout)
       }
 
       gst_buffer_unmap (buffer, &map);
+      gst_buffer_unref (buffer);
     } else {
       /* We got flushed */
       flow_ret = GST_AGGREGATOR_FLOW_NEED_DATA;
