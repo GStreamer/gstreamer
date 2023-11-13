@@ -34,6 +34,7 @@ G_BEGIN_DECLS
  */
 struct _GstVulkanVideoProfile
 {
+  /*< private >*/
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   VkVideoProfileInfoKHR profile;
   union {
@@ -41,7 +42,6 @@ struct _GstVulkanVideoProfile
     VkVideoDecodeH265ProfileInfoKHR h265;
   } codec;
 #endif
-  /* <private> */
   gpointer _reserved[GST_PADDING];
 };
 
