@@ -18761,6 +18761,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "rfc7273-reference-timestamp-meta-only": {
+                        "blurb": "When enabled the PTS on the buffers are calculated normally and the RFC7273 clock is only used for the reference timestamp meta",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "rfc7273-sync": {
                         "blurb": "Synchronize received streams to the RFC7273 clock (requires clock and offset to be provided)",
                         "conditionally-available": false,

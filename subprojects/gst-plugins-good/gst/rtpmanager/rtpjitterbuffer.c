@@ -288,7 +288,8 @@ media_clock_synced_cb (GstClock * clock, gboolean synced,
  */
 void
 rtp_jitter_buffer_set_media_clock (RTPJitterBuffer * jbuf, GstClock * clock,
-    guint64 clock_offset, gint64 clock_correction)
+    guint64 clock_offset, gint64 clock_correction,
+    gboolean reference_timestamp_meta_only)
 {
   g_mutex_lock (&jbuf->clock_lock);
   if (jbuf->media_clock) {
@@ -301,6 +302,8 @@ rtp_jitter_buffer_set_media_clock (RTPJitterBuffer * jbuf, GstClock * clock,
   jbuf->media_clock = clock;
   jbuf->media_clock_offset = clock_offset;
   jbuf->media_clock_correction = clock_correction;
+  jbuf->media_clock_reference_timestamp_meta_only =
+      reference_timestamp_meta_only;
 
   if (jbuf->pipeline_clock && jbuf->media_clock) {
     if (same_clock (jbuf->pipeline_clock, jbuf->media_clock)) {
@@ -765,6 +768,7 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
   GstClock *media_clock, *pipeline_clock;
   guint64 media_clock_offset;
   gint64 media_clock_correction;
+  gboolean media_clock_reference_timestamp_meta_only;
   gboolean rfc7273_mode;
 
   *p_ntp_time = GST_CLOCK_TIME_NONE;
@@ -812,6 +816,8 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
       jbuf->pipeline_clock ? gst_object_ref (jbuf->pipeline_clock) : NULL;
   media_clock_offset = jbuf->media_clock_offset;
   media_clock_correction = jbuf->media_clock_correction;
+  media_clock_reference_timestamp_meta_only =
+      jbuf->media_clock_reference_timestamp_meta_only;
   g_mutex_unlock (&jbuf->clock_lock);
 
   gstrtptime =
@@ -1042,27 +1048,33 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     *p_ntp_time = ntptime;
 
-    if (media_clock_correction < 0 || ntptime >= media_clock_correction)
-      ntptime -= media_clock_correction;
-    else
-      ntptime = 0;
+    if (media_clock_reference_timestamp_meta_only) {
+      /* do skew calculation by measuring the difference between rtptime and the
+       * receive dts, this function will return the skew corrected rtptime. */
+      pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts, gap, is_rtx);
+    } else {
+      if (media_clock_correction < 0 || ntptime >= media_clock_correction)
+        ntptime -= media_clock_correction;
+      else
+        ntptime = 0;
 
-    /* Packet timestamp converted to the pipeline clock.
-     * Note that this includes again inaccuracy caused by the estimation of
-     * the NTP vs. pipeline clock. */
-    rtpsystime =
-        gst_clock_adjust_with_calibration (media_clock, ntptime, internal,
-        external, rate_num, rate_denom);
+      /* Packet timestamp converted to the pipeline clock.
+       * Note that this includes again inaccuracy caused by the estimation of
+       * the NTP vs. pipeline clock. */
+      rtpsystime =
+          gst_clock_adjust_with_calibration (media_clock, ntptime, internal,
+          external, rate_num, rate_denom);
 
-    /* All this assumes that the pipeline has enough additional
-     * latency to cover for the network delay */
-    if (rtpsystime > base_time)
-      pts = rtpsystime - base_time;
-    else
-      pts = 0;
+      /* All this assumes that the pipeline has enough additional
+       * latency to cover for the network delay */
+      if (rtpsystime > base_time)
+        pts = rtpsystime - base_time;
+      else
+        pts = 0;
 
-    GST_DEBUG ("Packet pipeline clock time %" GST_TIME_FORMAT ", PTS %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
+      GST_DEBUG ("Packet pipeline clock time %" GST_TIME_FORMAT ", PTS %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (rtpsystime), GST_TIME_ARGS (pts));
+    }
   } else {
     /* If we used the RFC7273 clock before and not anymore,
      * we need to resync it later again */

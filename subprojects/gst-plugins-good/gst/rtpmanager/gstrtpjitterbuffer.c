@@ -159,6 +159,7 @@ enum
 #define DEFAULT_FASTSTART_MIN_PACKETS 0
 #define DEFAULT_SYNC_INTERVAL 0
 #define DEFAULT_RFC7273_USE_SYSTEM_CLOCK FALSE
+#define DEFAULT_RFC7273_REFERENCE_TIMESTAMP_META_ONLY FALSE
 
 #define DEFAULT_AUTO_RTX_DELAY (20 * GST_MSECOND)
 #define DEFAULT_AUTO_RTX_TIMEOUT (40 * GST_MSECOND)
@@ -195,6 +196,7 @@ enum
   PROP_FASTSTART_MIN_PACKETS,
   PROP_SYNC_INTERVAL,
   PROP_RFC7273_USE_SYSTEM_CLOCK,
+  PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY,
 };
 
 #define JBUF_LOCK(priv)   G_STMT_START {			\
@@ -340,6 +342,7 @@ struct _GstRtpJitterBufferPrivate
   gboolean add_reference_timestamp_meta;
   guint sync_interval;
   gboolean rfc7273_use_system_clock;
+  gboolean rfc7273_reference_timestamp_meta_only;
 
   /* Reference for GstReferenceTimestampMeta */
   GstCaps *reference_timestamp_caps;
@@ -1028,6 +1031,32 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRtpJitterBuffer:rfc7273-reference-timestamp-meta-only:
+   *
+   * When enabled, the jitterbuffer calculates the PTS of the outgoing buffers
+   * according to the configured mode as if not RFC7273 mode is enabled.
+   *
+   * The timestamps calculated from the RFC7273 clock are only put into the
+   * reference timestamp meta, if enabled via the corresponding property.
+   *
+   * This is useful in combination with the `rfc7273-use-system-clock`, or
+   * generally if synchronization should not be affected by the original
+   * sender timestamps but the original sender timestamps should nonetheless
+   * be available as metadata.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY,
+      g_param_spec_boolean ("rfc7273-reference-timestamp-meta-only",
+          "Use RFC7273 clock only for reference timestamp meta",
+          "When enabled the PTS on the buffers are calculated normally and the "
+          "RFC7273 clock is only used for the reference timestamp meta",
+          DEFAULT_RFC7273_REFERENCE_TIMESTAMP_META_ONLY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+
+  /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
@@ -1159,6 +1188,8 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->add_reference_timestamp_meta = DEFAULT_ADD_REFERENCE_TIMESTAMP_META;
   priv->sync_interval = DEFAULT_SYNC_INTERVAL;
   priv->rfc7273_use_system_clock = DEFAULT_RFC7273_USE_SYSTEM_CLOCK;
+  priv->rfc7273_reference_timestamp_meta_only =
+      DEFAULT_RFC7273_REFERENCE_TIMESTAMP_META_ONLY;
 
   priv->ts_offset_remainder = 0;
   priv->last_dts = -1;
@@ -1626,6 +1657,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 
   if ((ts_refclk = gst_structure_get_string (caps_struct, "a-ts-refclk"))) {
     gboolean use_system_clock;
+    gboolean reference_timestamp_meta_only;
     GstClock *clock = NULL;
     guint64 clock_offset = -1;
     gint64 clock_correction = 0;
@@ -1634,6 +1666,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
         ts_refclk);
 
     use_system_clock = priv->rfc7273_use_system_clock;
+    reference_timestamp_meta_only = priv->rfc7273_reference_timestamp_meta_only;
 
     if (g_str_has_prefix (ts_refclk, "ntp=")) {
       if (g_str_has_prefix (ts_refclk, "ntp=/traceable/")) {
@@ -1727,9 +1760,9 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     }
 
     rtp_jitter_buffer_set_media_clock (priv->jbuf, clock, clock_offset,
-        clock_correction);
+        clock_correction, reference_timestamp_meta_only);
   } else {
-    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1, 0);
+    rtp_jitter_buffer_set_media_clock (priv->jbuf, NULL, -1, 0, FALSE);
     ts_meta_ref = gst_caps_new_empty_simple ("timestamp/x-ntp");
   }
 
@@ -5275,6 +5308,11 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->rfc7273_use_system_clock = g_value_get_boolean (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY:
+      JBUF_LOCK (priv);
+      priv->rfc7273_reference_timestamp_meta_only = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
+      break;
 
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5445,6 +5483,11 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_RFC7273_USE_SYSTEM_CLOCK:
       JBUF_LOCK (priv);
       g_value_set_boolean (value, priv->rfc7273_use_system_clock);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RFC7273_REFERENCE_TIMESTAMP_META_ONLY:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->rfc7273_reference_timestamp_meta_only);
       JBUF_UNLOCK (priv);
       break;
     default:
