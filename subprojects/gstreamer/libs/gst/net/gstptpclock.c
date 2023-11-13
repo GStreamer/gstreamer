@@ -2680,6 +2680,8 @@ count_directories (const char *filepath)
  *     interface.
  * * #GStrv `interfaces`: The interface names to listen on for PTP packets. If
  *     none are provided then all compatible interfaces will be used.
+ * * #guint `ttl`: The TTL to use for multicast packets sent out by GStreamer.
+ *     This defaults to 1, i.e. packets will not leave the local network.
  *
  * This function is automatically called by gst_ptp_clock_new() with default
  * parameters if it wasn't called before.
@@ -2698,6 +2700,7 @@ gst_ptp_init_full (const GstStructure * config)
   guint64 clock_id = GST_CLOCK_TIME_NONE;
   const GValue *v;
   gchar **interfaces = NULL;
+  guint ttl = 1;
   GError *err = NULL;
 
   GST_DEBUG_CATEGORY_INIT (ptp_debug, "ptp", 0, "PTP clock");
@@ -2726,7 +2729,7 @@ gst_ptp_init_full (const GstStructure * config)
   }
 
   argc = 1;
-  gst_structure_get_uint64(config, "clock-id", &clock_id);
+  gst_structure_get_uint64 (config, "clock-id", &clock_id);
   if (clock_id != GST_PTP_CLOCK_ID_NONE)
     argc += 2;
   v = gst_structure_get_value (config, "interfaces");
@@ -2734,7 +2737,10 @@ gst_ptp_init_full (const GstStructure * config)
     interfaces = g_value_get_boxed (v);
   if (interfaces != NULL)
     argc += 2 * g_strv_length (interfaces);
+  gst_structure_get_uint (config, "ttl", &ttl);
+  argc += 2;
 
+  // 3 for: executable, -v and NULL
   argv = g_new0 (gchar *, argc + 3);
   argc_c = 0;
 
@@ -2813,6 +2819,9 @@ gst_ptp_init_full (const GstStructure * config)
       ptr++;
     }
   }
+
+  argv[argc_c++] = g_strdup ("--ttl");
+  argv[argc_c++] = g_strdup_printf ("%u", ttl);
 
   /* Check if the helper process should be verbose */
   env = g_getenv ("GST_PTP_HELPER_VERBOSE");
