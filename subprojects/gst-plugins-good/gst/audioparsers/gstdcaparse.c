@@ -505,6 +505,8 @@ gst_dca_parse_chain_priv (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   size = gst_buffer_get_size (buffer);
   if (size >= 2) {
     newbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 2, size - 2);
+    GST_BUFFER_PTS (newbuf) = GST_BUFFER_PTS (buffer);
+    GST_BUFFER_DTS (newbuf) = GST_BUFFER_DTS (buffer);
     gst_buffer_unref (buffer);
     ret = dcaparse->baseparse_chainfunc (pad, parent, newbuf);
   } else {
