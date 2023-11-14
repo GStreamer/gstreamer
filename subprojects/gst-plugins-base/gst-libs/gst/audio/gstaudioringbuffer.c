@@ -2181,7 +2181,13 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
  * @readseg: the current data segment
  * @timestamp: The new timestamp of the buffer.
  *
- * Set a new timestamp on the buffer.
+ * Set a new timestamp on the buffer representing the time of the first sample
+ * in the ringbuffer segment. The timestamp is used by the #GstAudioSrc base
+ * class to set the timestamps on output buffers. Timestamps are
+ * expected to be taken directly from the pipeline clock and are
+ * actual clock timestamps. #GstAudioSrc will convert to running time
+ * by subtracting the base time, but otherwise does not adjust the
+ * outgoing timestamps if provided.
  *
  * MT safe.
  */
