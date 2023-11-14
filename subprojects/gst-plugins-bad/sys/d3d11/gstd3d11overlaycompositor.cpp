@@ -126,12 +126,11 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   GstD3D11OverlayCompositorPrivate *priv = self->priv;
   gint x, y;
   guint width, height;
-  D3D11_SUBRESOURCE_DATA subresource_data;
+  D3D11_SUBRESOURCE_DATA subresource;
   D3D11_TEXTURE2D_DESC texture_desc;
   D3D11_SHADER_RESOURCE_VIEW_DESC srv_desc;
   D3D11_BUFFER_DESC buffer_desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-  VertexData *vertex_data;
+  VertexData vertex_data[4];
   GstBuffer *buf;
   GstVideoMeta *vmeta;
   GstMapInfo info;
@@ -139,7 +138,6 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   gint stride;
   HRESULT hr;
   ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
   GstD3D11Device *device = self->device;
   FLOAT x1, y1, x2, y2;
   gdouble val;
@@ -151,13 +149,12 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   GstMemory *mem;
   gboolean is_d3d11 = FALSE;
 
-  memset (&subresource_data, 0, sizeof (subresource_data));
+  memset (&subresource, 0, sizeof (subresource));
   memset (&texture_desc, 0, sizeof (texture_desc));
   memset (&srv_desc, 0, sizeof (srv_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
-  context_handle = gst_d3d11_device_get_device_context_handle (device);
 
   if (!gst_video_overlay_rectangle_get_render_rectangle (overlay_rect, &x, &y,
           &width, &height)) {
@@ -207,9 +204,8 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     }
 
     /* Do create texture and upload data at once, for create immutable texture */
-    subresource_data.pSysMem = data;
-    subresource_data.SysMemPitch = stride;
-    subresource_data.SysMemSlicePitch = 0;
+    subresource.pSysMem = data;
+    subresource.SysMemPitch = stride;
 
     texture_desc.Width = vmeta->width;
     texture_desc.Height = vmeta->height;
@@ -222,8 +218,7 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     texture_desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     texture_desc.CPUAccessFlags = 0;
 
-    hr = device_handle->CreateTexture2D (&texture_desc,
-        &subresource_data, &texture);
+    hr = device_handle->CreateTexture2D (&texture_desc, &subresource, &texture);
     gst_video_meta_unmap (vmeta, 0, &info);
 
     if (!gst_d3d11_result (hr, device)) {
@@ -242,28 +237,6 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
     }
   }
 
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
-  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &vertex_buffer);
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  GstD3D11DeviceLockGuard lk (device);
-  hr = context_handle->Map (vertex_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  vertex_data = (VertexData *) map.pData;
   /* bottom left */
   gst_util_fraction_to_double (x, GST_VIDEO_INFO_WIDTH (&priv->info), &val);
   x1 = (val * 2.0f) - 1.0f;
@@ -308,7 +281,20 @@ gst_d3d11_composition_overlay_new (GstD3D11OverlayCompositor * self,
   vertex_data[3].texture.u = 1.0f;
   vertex_data[3].texture.v = 1.0f;
 
-  context_handle->Unmap (vertex_buffer.Get (), 0);
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
+  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = vertex_data;
+  subresource.SysMemPitch = sizeof (VertexData) * 4;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &vertex_buffer);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self,
+        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
+    return nullptr;
+  }
 
   auto overlay = std::make_shared < GstD3D11CompositionOverlay > ();
   overlay->overlay_rect = gst_video_overlay_rectangle_ref (overlay_rect);
@@ -331,10 +317,9 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   HRESULT hr;
   D3D11_BUFFER_DESC buffer_desc;
   D3D11_BLEND_DESC blend_desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-  WORD *indices;
+  D3D11_SUBRESOURCE_DATA subresource;
+  const WORD indices[6] = { 0, 1, 2, 3, 0, 2 };
   ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11PixelShader > premul_ps;
   ComPtr < ID3D11VertexShader > vs;
@@ -346,9 +331,9 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
 
   memset (&buffer_desc, 0, sizeof (buffer_desc));
   memset (&blend_desc, 0, sizeof (blend_desc));
+  memset (&subresource, 0, sizeof (subresource));
 
   device_handle = gst_d3d11_device_get_device_handle (device);
-  context_handle = gst_d3d11_device_get_device_context_handle (device);
 
   hr = gst_d3d11_device_get_sampler (device,
       D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT, &sampler);
@@ -406,34 +391,15 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
+  subresource.pSysMem = indices;
+  subresource.SysMemPitch = sizeof (WORD) * 6;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &index_buffer);
   if (!gst_d3d11_result (hr, device)) {
     GST_ERROR_OBJECT (self,
         "Couldn't create index buffer, hr: 0x%x", (guint) hr);
     return FALSE;
   }
-
-  GstD3D11DeviceLockGuard lk (device);
-  hr = context_handle->Map (index_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map index buffer, hr: 0x%x", (guint) hr);
-    return FALSE;
-  }
-
-  indices = (WORD *) map.pData;
-
-  /* clockwise indexing */
-  indices[0] = 0;               /* bottom left */
-  indices[1] = 1;               /* top left */
-  indices[2] = 2;               /* top right */
-
-  indices[3] = 3;               /* bottom right */
-  indices[4] = 0;               /* bottom left  */
-  indices[5] = 2;               /* top right */
-
-  context_handle->Unmap (index_buffer.Get (), 0);
 
   priv->ps = ps;
   priv->premul_ps = premul_ps;

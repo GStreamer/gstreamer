@@ -302,13 +302,11 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
 {
   HRESULT hr;
   D3D11_BUFFER_DESC buffer_desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-  UvVertexData *vertex_data;
-  WORD *indices;
+  D3D11_SUBRESOURCE_DATA subresource;
+  UvVertexData vertex_data[4];
+  const WORD indices[6] = { 0, 1, 2, 3, 0, 2 };
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (self->device);
-  ID3D11DeviceContext *context_handle =
-      gst_d3d11_device_get_device_context_handle (self->device);
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
@@ -317,6 +315,7 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11Buffer > const_buffer;
 
   memset (&buffer_desc, 0, sizeof (buffer_desc));
+  memset (&subresource, 0, sizeof (subresource));
 
   hr = gst_d3d11_get_vertex_shader_coord (self->device, &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
@@ -329,56 +328,6 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
   }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (UvVertexData) * 4;
-  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &vertex_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create vertex buffer");
-    return FALSE;
-  }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (WORD) * 6;
-  buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create index buffer");
-    return FALSE;
-  }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (SnowConstBuffer);
-  buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create constant buffer");
-    return FALSE;
-  }
-
-  GstD3D11DeviceLockGuard lk (self->device);
-  hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to map vertex buffer");
-    return FALSE;
-  }
-  vertex_data = (UvVertexData *) map.pData;
-
-  hr = context_handle->Map (index_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to map index buffer");
-    context_handle->Unmap (vertex_buffer.Get (), 0);
-    return FALSE;
-  }
-  indices = (WORD *) map.pData;
 
   if (on_smpte) {
     FLOAT left, right, top, bottom;
@@ -450,17 +399,43 @@ setup_snow_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     vertex_data[3].texture.v = 1.0f;
   }
 
-  /* clockwise indexing */
-  indices[0] = 0;               /* bottom left */
-  indices[1] = 1;               /* top left */
-  indices[2] = 2;               /* top right */
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (UvVertexData) * 4;
+  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  indices[3] = 3;               /* bottom right */
-  indices[4] = 0;               /* bottom left  */
-  indices[5] = 2;               /* top right */
+  subresource.pSysMem = vertex_data;
+  subresource.SysMemPitch = sizeof (UvVertexData) * 4;
 
-  context_handle->Unmap (vertex_buffer.Get (), 0);
-  context_handle->Unmap (index_buffer.Get (), 0);
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &vertex_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create vertex buffer");
+    return FALSE;
+  }
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (WORD) * 6;
+  buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = indices;
+  subresource.SysMemPitch = sizeof (WORD) * 6;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &index_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create index buffer");
+    return FALSE;
+  }
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (SnowConstBuffer);
+  buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create constant buffer");
+    return FALSE;
+  }
 
   auto quad = std::make_shared < GstD3D11TestSrcQuad > ();
 
@@ -486,13 +461,11 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
 {
   HRESULT hr;
   D3D11_BUFFER_DESC buffer_desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-  ColorVertexData *vertex_data;
-  WORD *indices;
+  D3D11_SUBRESOURCE_DATA subresource;
+  ColorVertexData vertex_data[4 * 20];
+  WORD indices[6 * 20];
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (self->device);
-  ID3D11DeviceContext *context_handle =
-      gst_d3d11_device_get_device_context_handle (self->device);
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
@@ -502,6 +475,7 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
   guint num_index = 0;
 
   memset (&buffer_desc, 0, sizeof (buffer_desc));
+  memset (&subresource, 0, sizeof (subresource));
 
   hr = gst_d3d11_get_vertex_shader_color (self->device, &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
@@ -514,46 +488,6 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
   }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (ColorVertexData) * 4 * 20;
-  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &vertex_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create vertex buffer");
-    return FALSE;
-  }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (WORD) * 6 * 20;
-  buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create index buffer");
-    return FALSE;
-  }
-
-  GstD3D11DeviceLockGuard lk (self->device);
-  hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to map vertex buffer");
-    return FALSE;
-  }
-  vertex_data = (ColorVertexData *) map.pData;
-
-  hr = context_handle->Map (index_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to map index buffer");
-    context_handle->Unmap (vertex_buffer.Get (), 0);
-    return FALSE;
-  }
-  indices = (WORD *) map.pData;
 
   /* top row */
   for (guint i = 0; i < 7; i++) {
@@ -792,8 +726,33 @@ setup_smpte_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render)
     indices[idx_base + 5] = base + 2;   /* top right */
   }
 
-  context_handle->Unmap (vertex_buffer.Get (), 0);
-  context_handle->Unmap (index_buffer.Get (), 0);
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (ColorVertexData) * 4 * 20;
+  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = vertex_data;
+  subresource.SysMemPitch = sizeof (ColorVertexData) * 4 * 20;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &vertex_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create vertex buffer");
+    return FALSE;
+  }
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (WORD) * 6 * 20;
+  buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = indices;
+  subresource.SysMemPitch = sizeof (WORD) * 6 * 20;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &index_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create index buffer");
+    return FALSE;
+  }
 
   auto quad = std::make_shared < GstD3D11TestSrcQuad > ();
 
@@ -816,13 +775,11 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
 {
   HRESULT hr;
   D3D11_BUFFER_DESC buffer_desc;
-  D3D11_MAPPED_SUBRESOURCE map;
-  UvVertexData *vertex_data;
-  WORD *indices;
+  D3D11_SUBRESOURCE_DATA subresource;
+  UvVertexData vertex_data[4];
+  const WORD indices[6] = { 0, 1, 2, 3, 0, 2 };
   ID3D11Device *device_handle =
       gst_d3d11_device_get_device_handle (self->device);
-  ID3D11DeviceContext *context_handle =
-      gst_d3d11_device_get_device_context_handle (self->device);
   ComPtr < ID3D11PixelShader > ps;
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
@@ -831,6 +788,7 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   ComPtr < ID3D11Buffer > const_buffer;
 
   memset (&buffer_desc, 0, sizeof (buffer_desc));
+  memset (&subresource, 0, sizeof (subresource));
 
   hr = gst_d3d11_get_vertex_shader_coord (self->device, &vs, &layout);
   if (!gst_d3d11_result (hr, self->device)) {
@@ -843,56 +801,6 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
     GST_ERROR_OBJECT (self, "Failed to compile pixel shader");
     return FALSE;
   }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (UvVertexData) * 4;
-  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &vertex_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create vertex buffer");
-    return FALSE;
-  }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (WORD) * 6;
-  buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create index buffer");
-    return FALSE;
-  }
-
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (CheckerConstBuffer);
-  buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to create constant buffer");
-    return FALSE;
-  }
-
-  GstD3D11DeviceLockGuard lk (self->device);
-  hr = context_handle->Map (vertex_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to map vertex buffer");
-    return FALSE;
-  }
-  vertex_data = (UvVertexData *) map.pData;
-
-  hr = context_handle->Map (index_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
-      &map);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Failed to map index buffer");
-    context_handle->Unmap (vertex_buffer.Get (), 0);
-    return FALSE;
-  }
-  indices = (WORD *) map.pData;
 
   /* bottom left */
   vertex_data[0].position.x = -1.0f;
@@ -921,17 +829,43 @@ setup_checker_render (GstD3D11TestSrc * self, GstD3D11TestSrcRender * render,
   vertex_data[3].texture.u = 1.0f;
   vertex_data[3].texture.v = 1.0f;
 
-  /* clockwise indexing */
-  indices[0] = 0;               /* bottom left */
-  indices[1] = 1;               /* top left */
-  indices[2] = 2;               /* top right */
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (UvVertexData) * 4;
+  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  indices[3] = 3;               /* bottom right */
-  indices[4] = 0;               /* bottom left  */
-  indices[5] = 2;               /* top right */
+  subresource.pSysMem = vertex_data;
+  subresource.SysMemPitch = sizeof (UvVertexData) * 4;
 
-  context_handle->Unmap (vertex_buffer.Get (), 0);
-  context_handle->Unmap (index_buffer.Get (), 0);
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &vertex_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create vertex buffer");
+    return FALSE;
+  }
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (WORD) * 6;
+  buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = indices;
+  subresource.SysMemPitch = sizeof (WORD) * 6;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &index_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create index buffer");
+    return FALSE;
+  }
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (CheckerConstBuffer);
+  buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &const_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Failed to create constant buffer");
+    return FALSE;
+  }
 
   auto quad = std::make_shared < GstD3D11TestSrcQuad > ();
 

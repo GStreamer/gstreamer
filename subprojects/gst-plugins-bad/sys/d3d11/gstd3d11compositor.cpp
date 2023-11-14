@@ -1827,12 +1827,11 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
     const GstVideoInfo * info)
 {
   GstD3D11CompositorQuad *quad = nullptr;
-  VertexData *vertex_data;
-  WORD *indices;
+  VertexData vertex_data[4];
+  const WORD indices[6] = { 0, 1, 2, 3, 0, 2 };
   ID3D11Device *device_handle;
-  ID3D11DeviceContext *context_handle;
-  D3D11_MAPPED_SUBRESOURCE map;
   D3D11_BUFFER_DESC buffer_desc;
+  D3D11_SUBRESOURCE_DATA subresource;
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
   ComPtr < ID3D11PixelShader > ps;
@@ -1842,7 +1841,6 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   HRESULT hr;
 
   device_handle = gst_d3d11_device_get_device_handle (self->device);
-  context_handle = gst_d3d11_device_get_device_context_handle (self->device);
 
   if (GST_VIDEO_INFO_IS_RGB (info)) {
     hr = gst_d3d11_get_pixel_shader_checker_rgb (self->device, &ps);
@@ -1869,28 +1867,6 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
     return nullptr;
   }
 
-  memset (&buffer_desc, 0, sizeof (D3D11_BUFFER_DESC));
-  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
-  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
-  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &vertex_buffer);
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self,
-        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  hr = context_handle->Map (vertex_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  vertex_data = (VertexData *) map.pData;
   /* bottom left */
   vertex_data[0].position.x = -1.0f;
   vertex_data[0].position.y = -1.0f;
@@ -1919,40 +1895,39 @@ gst_d3d11_compositor_create_checker_quad (GstD3D11Compositor * self,
   vertex_data[3].texture.u = 1.0f;
   vertex_data[3].texture.v = 1.0f;
 
-  context_handle->Unmap (vertex_buffer.Get (), 0);
+  memset (&subresource, 0, sizeof (D3D11_SUBRESOURCE_DATA));
+  memset (&buffer_desc, 0, sizeof (D3D11_BUFFER_DESC));
+
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (VertexData) * 4;
+  buffer_desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+
+  subresource.pSysMem = vertex_data;
+  subresource.SysMemPitch = sizeof (VertexData) * 4;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &vertex_buffer);
+  if (!gst_d3d11_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self,
+        "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
+    return nullptr;
+  }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
   buffer_desc.ByteWidth = sizeof (WORD) * 6;
   buffer_desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
   buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-  hr = device_handle->CreateBuffer (&buffer_desc, nullptr, &index_buffer);
+  subresource.pSysMem = indices;
+  subresource.SysMemPitch = sizeof (WORD) * 6;
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &index_buffer);
   if (!gst_d3d11_result (hr, self->device)) {
     GST_ERROR_OBJECT (self,
         "Couldn't create index buffer, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 
-  hr = context_handle->Map (index_buffer.Get (),
-      0, D3D11_MAP_WRITE_DISCARD, 0, &map);
-
-  if (!gst_d3d11_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map index buffer, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  indices = (WORD *) map.pData;
-
-  /* clockwise indexing */
-  indices[0] = 0;               /* bottom left */
-  indices[1] = 1;               /* top left */
-  indices[2] = 2;               /* top right */
-
-  indices[3] = 3;               /* bottom right */
-  indices[4] = 0;               /* bottom left  */
-  indices[5] = 2;               /* top right */
-
-  context_handle->Unmap (index_buffer.Get (), 0);
   quad = g_new0 (GstD3D11CompositorQuad, 1);
   quad->ps = ps.Detach ();
   quad->vs = vs.Detach ();

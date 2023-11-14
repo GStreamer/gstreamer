@@ -768,7 +768,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   HRESULT hr;
   D3D11_BUFFER_DESC buffer_desc;
   VertexData vertex_data[4];
-  WORD indices[6];
+  const WORD indices[6] = { 0, 1, 2, 3, 0, 2 };
   ID3D11Device *device_handle;
   ComPtr < ID3D11VertexShader > vs;
   ComPtr < ID3D11InputLayout > layout;
@@ -919,15 +919,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
         "Couldn't create vertex buffer, hr: 0x%x", (guint) hr);
     return FALSE;
   }
-
-  /* clockwise indexing */
-  indices[0] = 0;               /* bottom left */
-  indices[1] = 1;               /* top left */
-  indices[2] = 2;               /* top right */
-
-  indices[3] = 3;               /* bottom right */
-  indices[4] = 0;               /* bottom left  */
-  indices[5] = 2;               /* top right */
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
   buffer_desc.ByteWidth = sizeof (WORD) * 6;
