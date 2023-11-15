@@ -2378,21 +2378,17 @@ wrong_grandparents:
   }
 }
 
-/* FIXME leftover from an attempt at refactoring... */
-/* call with the two pads unlocked, when this function returns GST_PAD_LINK_OK,
- * the two pads will be locked in the srcpad, sinkpad order. */
+/* check that pads does not have any exisiting links
+ * and that hierarchy is valid for linking.
+ *
+ * The LOCK should be held on both pads
+ */
 static GstPadLinkReturn
-gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
+gst_pad_link_check_relations (GstPad * srcpad, GstPad * sinkpad,
+    GstPadLinkCheck flags)
 {
-  GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
-      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
-
-  GST_OBJECT_LOCK (srcpad);
-
   if (G_UNLIKELY (GST_PAD_PEER (srcpad) != NULL))
     goto src_was_linked;
-
-  GST_OBJECT_LOCK (sinkpad);
 
   if (G_UNLIKELY (GST_PAD_PEER (sinkpad) != NULL))
     goto sink_was_linked;
@@ -2403,12 +2399,6 @@ gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
       && !gst_pad_link_check_hierarchy (srcpad, sinkpad))
     goto wrong_hierarchy;
 
-  /* check pad caps for non-empty intersection */
-  if (!gst_pad_link_check_compatible_unlocked (srcpad, sinkpad, flags))
-    goto no_format;
-
-  /* FIXME check pad scheduling for non-empty intersection */
-
   return GST_PAD_LINK_OK;
 
 src_was_linked:
@@ -2418,7 +2408,6 @@ src_was_linked:
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (srcpad)));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
-    GST_OBJECT_UNLOCK (srcpad);
     return GST_PAD_LINK_WAS_LINKED;
   }
 sink_was_linked:
@@ -2428,23 +2417,57 @@ sink_was_linked:
         GST_DEBUG_PAD_NAME (GST_PAD_PEER (sinkpad)));
     /* we do not emit a warning in this case because unlinking cannot
      * be made MT safe.*/
-    GST_OBJECT_UNLOCK (sinkpad);
-    GST_OBJECT_UNLOCK (srcpad);
     return GST_PAD_LINK_WAS_LINKED;
   }
 wrong_hierarchy:
   {
     GST_CAT_INFO (GST_CAT_PADS, "pads have wrong hierarchy");
-    GST_OBJECT_UNLOCK (sinkpad);
-    GST_OBJECT_UNLOCK (srcpad);
     return GST_PAD_LINK_WRONG_HIERARCHY;
   }
-no_format:
-  {
+}
+
+/* FIXME leftover from an attempt at refactoring... */
+/* call with the two pads unlocked, when this function returns GST_PAD_LINK_OK,
+ * the two pads will be locked in the srcpad, sinkpad order. */
+static GstPadLinkReturn
+gst_pad_link_prepare (GstPad * srcpad, GstPad * sinkpad, GstPadLinkCheck flags)
+{
+  GstPadLinkReturn result;
+
+  GST_CAT_INFO (GST_CAT_PADS, "trying to link %s:%s and %s:%s",
+      GST_DEBUG_PAD_NAME (srcpad), GST_DEBUG_PAD_NAME (sinkpad));
+
+  GST_OBJECT_LOCK (srcpad);
+  GST_OBJECT_LOCK (sinkpad);
+
+  /* Check pads state, not already linked and correct hierachy. */
+  result = gst_pad_link_check_relations (srcpad, sinkpad, flags);
+  if (result != GST_PAD_LINK_OK)
+    goto unlock_and_return;
+
+  /* check pad caps for non-empty intersection */
+  if (!gst_pad_link_check_compatible_unlocked (srcpad, sinkpad, flags)) {
     GST_CAT_INFO (GST_CAT_PADS, "caps are incompatible");
+    result = GST_PAD_LINK_NOFORMAT;
+    goto unlock_and_return;
+  }
+
+  /* Need to recheck our pads since gst_pad_link_check_compatible_unlocked might have temporarily unlocked them.
+     Keeping the first check, because gst_pad_link_check_compatible_unlocked potentially is an expensive operation
+     which gst_pad_link_check_relations is not. */
+  result = gst_pad_link_check_relations (srcpad, sinkpad, flags);
+  if (result != GST_PAD_LINK_OK)
+    goto unlock_and_return;
+
+  /* FIXME check pad scheduling for non-empty intersection */
+
+  return GST_PAD_LINK_OK;
+
+unlock_and_return:
+  {
     GST_OBJECT_UNLOCK (sinkpad);
     GST_OBJECT_UNLOCK (srcpad);
-    return GST_PAD_LINK_NOFORMAT;
+    return result;
   }
 }
 
