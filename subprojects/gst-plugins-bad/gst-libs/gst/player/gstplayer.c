@@ -582,7 +582,7 @@ gst_player_constructed (GObject * object)
         gst_play_signal_adapter_new_with_main_context (self->play, context);
     g_main_context_unref (context);
   } else {
-    self->signal_adapter = gst_play_signal_adapter_new (self->play);
+    self->signal_adapter = gst_play_signal_adapter_new_sync_emit (self->play);
   }
 
   g_signal_connect (self->signal_adapter, "uri-loaded",
