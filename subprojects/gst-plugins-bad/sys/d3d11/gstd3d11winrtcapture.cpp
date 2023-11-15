@@ -241,9 +241,6 @@ static gboolean
 gst_d3d11_winrt_capture_get_size (GstD3D11ScreenCapture * capture,
     guint * width, guint * height);
 static gboolean
-gst_d3d11_winrt_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-    GstVideoColorimetry * colorimetry);
-static gboolean
 gst_d3d11_winrt_capture_unlock (GstD3D11ScreenCapture * capture);
 static gboolean
 gst_d3d11_winrt_capture_unlock_stop (GstD3D11ScreenCapture * capture);
@@ -296,8 +293,6 @@ gst_d3d11_winrt_capture_class_init (GstD3D11WinRTCaptureClass * klass)
   capture_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_winrt_capture_prepare);
   capture_class->get_size =
       GST_DEBUG_FUNCPTR (gst_d3d11_winrt_capture_get_size);
-  capture_class->get_colorimetry =
-      GST_DEBUG_FUNCPTR (gst_d3d11_winrt_capture_get_colorimetry);
   capture_class->unlock = GST_DEBUG_FUNCPTR (gst_d3d11_winrt_capture_unlock);
   capture_class->unlock_stop =
       GST_DEBUG_FUNCPTR (gst_d3d11_winrt_capture_unlock_stop);
@@ -748,13 +743,6 @@ gst_d3d11_winrt_capture_get_size (GstD3D11ScreenCapture * capture,
   *height = self->height;
 
   return TRUE;
-}
-
-static gboolean
-gst_d3d11_winrt_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-    GstVideoColorimetry * colorimetry)
-{
-  return FALSE;
 }
 
 static gboolean
