@@ -1466,9 +1466,6 @@ gst_d3d11_dxgi_capture_prepare (GstD3D11ScreenCapture * capture);
 static gboolean
 gst_d3d11_dxgi_capture_get_size (GstD3D11ScreenCapture * capture,
     guint * width, guint * height);
-static gboolean
-gst_d3d11_dxgi_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-    GstVideoColorimetry * colorimetry);
 static GstFlowReturn
 gst_d3d11_dxgi_capture_do_capture (GstD3D11ScreenCapture * capture,
     GstD3D11Device * device, ID3D11Texture2D * texture,
@@ -1505,8 +1502,6 @@ gst_d3d11_dxgi_capture_class_init (GstD3D11DxgiCaptureClass * klass)
 
   capture_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d11_dxgi_capture_prepare);
   capture_class->get_size = GST_DEBUG_FUNCPTR (gst_d3d11_dxgi_capture_get_size);
-  capture_class->get_colorimetry =
-      GST_DEBUG_FUNCPTR (gst_d3d11_dxgi_capture_get_colorimetry);
   capture_class->do_capture =
       GST_DEBUG_FUNCPTR (gst_d3d11_dxgi_capture_do_capture);
 }
@@ -1786,38 +1781,6 @@ gst_d3d11_dxgi_capture_get_size (GstD3D11ScreenCapture * capture,
   GstD3D11CSLockGuard lk (&self->lock);
 
   return gst_d3d11_dxgi_capture_get_size_unlocked (self, width, height);
-}
-
-static gboolean
-gst_d3d11_dxgi_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-    GstVideoColorimetry * colorimetry)
-{
-  GstD3D11DxgiCapture *self = GST_D3D11_DXGI_CAPTURE (capture);
-  DXGI_COLOR_SPACE_TYPE dxgi_cs;
-  GstVideoInfo info;
-
-  dxgi_cs = DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709;
-
-  if (self->output) {
-    ComPtr < IDXGIOutput6 > output;
-    HRESULT hr;
-    DXGI_OUTPUT_DESC1 desc;
-
-    hr = self->output->QueryInterface (IID_PPV_ARGS (&output));
-    if (SUCCEEDED (hr))
-      hr = output->GetDesc1 (&desc);
-
-    if (SUCCEEDED (hr))
-      dxgi_cs = desc.ColorSpace;
-  }
-
-  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_BGRA, 16, 16);
-  if (gst_video_info_apply_dxgi_color_space (dxgi_cs, &info)) {
-    *colorimetry = info.colorimetry;
-    return TRUE;
-  }
-
-  return FALSE;
 }
 
 static GstFlowReturn

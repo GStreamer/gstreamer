@@ -163,8 +163,10 @@ gst_d3d11_window_capture_mode_get_type (void)
 
 static GstStaticCaps template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "BGRA") ", pixel-aspect-ratio = 1/1;"
-    GST_VIDEO_CAPS_MAKE ("BGRA") ", pixel-aspect-ratio = 1/1");
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+        "BGRA") ", pixel-aspect-ratio = 1/1, colorimetry = (string) sRGB; "
+    GST_VIDEO_CAPS_MAKE ("BGRA") ", pixel-aspect-ratio = 1/1, "
+    "colorimetry = (string) sRGB");
 
 struct _GstD3D11ScreenCaptureSrc
 {
@@ -630,7 +632,6 @@ gst_d3d11_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   GstD3D11ScreenCaptureSrc *self = GST_D3D11_SCREEN_CAPTURE_SRC (bsrc);
   GstCaps *caps = NULL;
   guint width, height;
-  GstVideoColorimetry color;
 
   if (!self->capture) {
     GST_DEBUG_OBJECT (self, "capture object is not configured yet");
@@ -646,16 +647,6 @@ gst_d3d11_screen_capture_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
 
   gst_caps_set_simple (caps, "width", G_TYPE_INT, width, "height",
       G_TYPE_INT, height, nullptr);
-
-  if (gst_d3d11_screen_capture_get_colorimetry (self->capture, &color)) {
-    gchar *color_str = gst_video_colorimetry_to_string (&color);
-
-    if (color_str) {
-      gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, color_str,
-          nullptr);
-      g_free (color_str);
-    }
-  }
 
   if (filter) {
     GstCaps *tmp =

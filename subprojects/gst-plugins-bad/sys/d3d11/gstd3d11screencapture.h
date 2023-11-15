@@ -66,9 +66,6 @@ struct _GstD3D11ScreenCaptureClass
                              guint * width,
                              guint * height);
 
-  gboolean      (*get_colorimetry) (GstD3D11ScreenCapture * capture,
-                                    GstVideoColorimetry * colorimetry);
-
   gboolean      (*unlock)          (GstD3D11ScreenCapture * capture);
 
   gboolean      (*unlock_stop)     (GstD3D11ScreenCapture * capture);
@@ -92,9 +89,6 @@ GstFlowReturn   gst_d3d11_screen_capture_prepare (GstD3D11ScreenCapture * captur
 gboolean        gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
                                                    guint * width,
                                                    guint * height);
-
-gboolean        gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-                                                          GstVideoColorimetry * colorimetry);
 
 gboolean        gst_d3d11_screen_capture_unlock      (GstD3D11ScreenCapture * capture);
 

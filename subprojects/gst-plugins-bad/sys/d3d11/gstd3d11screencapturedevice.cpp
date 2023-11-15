@@ -39,8 +39,10 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_screen_capture_device_debug);
 
 static GstStaticCaps template_caps =
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY, "BGRA") ", pixel-aspect-ratio = 1/1;"
-    GST_VIDEO_CAPS_MAKE ("BGRA") ", pixel-aspect-ratio = 1/1");
+    (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
+        "BGRA") ", pixel-aspect-ratio = 1/1, colorimetry = (string) sRGB; "
+    GST_VIDEO_CAPS_MAKE ("BGRA") ", pixel-aspect-ratio = 1/1, "
+    "colorimetry = (string) sRGB");
 
 enum
 {

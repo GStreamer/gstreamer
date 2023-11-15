@@ -79,21 +79,6 @@ gst_d3d11_screen_capture_get_size (GstD3D11ScreenCapture * capture,
 }
 
 gboolean
-gst_d3d11_screen_capture_get_colorimetry (GstD3D11ScreenCapture * capture,
-    GstVideoColorimetry * colorimetry)
-{
-  GstD3D11ScreenCaptureClass *klass;
-
-  g_return_val_if_fail (GST_IS_D3D11_SCREEN_CAPTURE (capture), FALSE);
-  g_return_val_if_fail (colorimetry != nullptr, FALSE);
-
-  klass = GST_D3D11_SCREEN_CAPTURE_GET_CLASS (capture);
-  g_assert (klass->get_colorimetry);
-
-  return klass->get_colorimetry (capture, colorimetry);
-}
-
-gboolean
 gst_d3d11_screen_capture_unlock (GstD3D11ScreenCapture * capture)
 {
   GstD3D11ScreenCaptureClass *klass;
