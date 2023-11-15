@@ -51,7 +51,7 @@ static void
 plugin_add_dependencies (GstPlugin * plugin)
 {
   const gchar *envvars[] = { "GST_VAAPI_ALL_DRIVERS", "LIBVA_DRIVER_NAME",
-    "DISPLAY", "WAYLAND_DISPLAY", NULL
+    "DISPLAY", "WAYLAND_DISPLAY", "GST_VAAPI_DRM_DEVICE", NULL
   };
   const gchar *kernel_paths[] = { "/dev/dri", NULL };
   const gchar *kernel_names[] = { "card", "render", NULL };
