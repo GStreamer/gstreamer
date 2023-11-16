@@ -1010,6 +1010,9 @@ while in `PLAYING` state and without interrupting the data flow.
 There are some important things to consider when building dynamic
 pipelines:
 
+  - There are `insertbin` and `switchbin` elements, that target some
+    cases of dynamical pipeline changes, and might fulfill your needs.
+
   - When removing elements from the pipeline, make sure that there is no
     dataflow on unlinked pads because that will cause a fatal pipeline
     error. Always block source pads (in push mode) or sink pads (in pull
