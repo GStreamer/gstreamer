@@ -151,9 +151,7 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   gst_memory_unmap (mem, &info);
 
 #ifdef HAVE_MEMFD_CREATE
-  /* Now that it's kept mapped RW, seal it for any future mapping. This ensures
-   * that other processes receiving this memfd won't be able to modify it. */
-  fcntl (fd, F_ADD_SEALS, F_SEAL_SHRINK | F_SEAL_FUTURE_WRITE);
+  fcntl (fd, F_ADD_SEALS, F_SEAL_SHRINK);
 #endif
 
   return mem;
