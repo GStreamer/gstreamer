@@ -1779,7 +1779,11 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
    * else we might skip a reference frame */
   gst_ffmpegviddec_do_qos (ffmpegdec, frame, &mode_switch);
 
+  /* FFmpeg might request new buffer from other threads.
+   * Release lock here */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
   res = avcodec_receive_frame (ffmpegdec->context, ffmpegdec->picture);
+  GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   /* No frames available at this time */
   if (res == AVERROR (EAGAIN)) {
