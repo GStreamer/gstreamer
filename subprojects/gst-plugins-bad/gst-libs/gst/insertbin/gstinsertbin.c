@@ -176,6 +176,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * in the bin.
    *
    * Same as gst_insert_bin_prepend()
+   *
+   * Since: 1.2
    */
   signals[SIG_PREPEND] = g_signal_new_class_handler ("prepend",
       G_TYPE_FROM_CLASS (klass),
@@ -196,6 +198,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * in the bin.
    *
    * Same as gst_insert_bin_append()
+   *
+   * Since: 1.2
    */
   signals[SIG_APPEND] = g_signal_new_class_handler ("append",
       G_TYPE_FROM_CLASS (klass),
@@ -217,6 +221,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * element in the bin.
    *
    * Same as gst_insert_bin_insert_before()
+   *
+   * Since: 1.2
    */
   signals[SIG_INSERT_BEFORE] = g_signal_new_class_handler ("insert-before",
       G_TYPE_FROM_CLASS (klass),
@@ -240,6 +246,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * element in the bin.
    *
    * Same as gst_insert_bin_insert_after()
+   *
+   * Since: 1.2
    */
   signals[SIG_INSERT_AFTER] = g_signal_new_class_handler ("insert-after",
       G_TYPE_FROM_CLASS (klass),
@@ -248,7 +256,6 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
       NULL, NULL, NULL,
       G_TYPE_NONE, 4, GST_TYPE_ELEMENT, GST_TYPE_ELEMENT,
       G_TYPE_POINTER, G_TYPE_POINTER);
-
 
   /**
    * GstInsertBin::remove:
@@ -261,6 +268,8 @@ gst_insert_bin_class_init (GstInsertBinClass * klass)
    * This action signal removed the filter like element from the bin.
    *
    * Same as gst_insert_bin_remove()
+   *
+   * Since: 1.2
    */
   signals[SIG_REMOVE] = g_signal_new_class_handler ("remove",
       G_TYPE_FROM_CLASS (klass),
