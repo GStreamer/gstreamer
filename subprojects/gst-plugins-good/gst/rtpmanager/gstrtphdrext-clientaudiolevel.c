@@ -176,11 +176,11 @@ gst_rtp_header_extension_client_audio_level_write (GstRTPHeaderExtension * ext,
     level = 127;
   }
 
-  GST_LOG_OBJECT (ext, "writing ext (level: %d voice: %d)", meta->level,
+  GST_LOG_OBJECT (ext, "writing ext (level: %d voice: %d)", level,
       meta->voice_activity);
 
   /* Both one & two byte use the same format, the second byte being padding */
-  data[0] = (meta->level & 0x7F) | (meta->voice_activity << 7);
+  data[0] = (level & 0x7F) | (meta->voice_activity << 7);
   if (write_flags & GST_RTP_HEADER_EXTENSION_ONE_BYTE) {
     return 1;
   }
