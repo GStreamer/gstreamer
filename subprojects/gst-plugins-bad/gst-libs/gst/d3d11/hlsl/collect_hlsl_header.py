@@ -41,11 +41,12 @@ def main(args):
     parser = argparse.ArgumentParser(description='Read precompiled HLSL headers from directory and make single header')
     parser.add_argument("--input", help="the precompiled HLSL header directory")
     parser.add_argument("--output", help="output header file location")
+    parser.add_argument("--prefix", help="HLSL header filename prefix")
     args = parser.parse_args(args)
 
     # Scan precompiled PSMain_*.h headers in build directory
     # and generate single header
-    hlsl_headers = [os.path.basename(file) for file in os.listdir(args.input) if file.startswith("PSMain_") and file.endswith(".h") ]
+    hlsl_headers = [os.path.basename(file) for file in os.listdir(args.input) if file.startswith(args.prefix) and file.endswith(".h") ]
 
     with open(args.output, 'w', newline='\n', encoding='utf8') as f:
         f.write(start_header)

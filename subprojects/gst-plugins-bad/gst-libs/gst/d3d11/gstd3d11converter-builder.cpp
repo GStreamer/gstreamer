@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstd3d11converterbuilder.h"
+#include "gstd3d11converter-builder.h"
 #include "gstd3d11device-private.h"
 #include "gstd3d11-private.h"
 #include <map>

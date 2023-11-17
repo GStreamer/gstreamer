@@ -1699,6 +1699,16 @@ gst_d3d11_vertex_shader_token_new (void)
   return token_.fetch_add (1);
 }
 
+gint64
+gst_d3d11_compute_shader_token_new (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic < gint64 > token_ { 0 };
+  /* *INDENT-ON* */
+
+  return token_.fetch_add (1);
+}
+
 HRESULT
 gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
     gint64 token, const void *bytecode, gsize bytecode_size,

@@ -32,7 +32,7 @@
 #include "gstd3d11memory.h"
 #include "gstd3d11compile.h"
 #include "gstd3d11bufferpool.h"
-#include "gstd3d11converterbuilder.h"
+#include "gstd3d11converter-builder.h"
 #include <wrl.h>
 #include <string.h>
 #include <math.h>
@@ -55,7 +55,7 @@
  * Since: 1.22
  */
 
-GST_DEBUG_CATEGORY_STATIC (gst_d3d11_converter_debug);
+GST_DEBUG_CATEGORY (gst_d3d11_converter_debug);
 #define GST_CAT_DEFAULT gst_d3d11_converter_debug
 
 DEFINE_ENUM_FLAG_OPERATORS (GstD3D11ConverterBackend);

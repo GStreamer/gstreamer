@@ -31,6 +31,9 @@ GST_D3D11_API
 gint64  gst_d3d11_vertex_shader_token_new (void);
 
 GST_D3D11_API
+gint64  gst_d3d11_compute_shader_token_new (void);
+
+GST_D3D11_API
 HRESULT gst_d3d11_device_get_pixel_shader  (GstD3D11Device * device,
                                             gint64 token,
                                             const void * bytecode,

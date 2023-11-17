@@ -99,10 +99,9 @@ generated_collection = custom_target(header_collection,
     input : hlsl_precompiled,
     output : header_collection,
     command : [header_collector,
-        '--input',
-        meson.current_build_dir(),
-        '--output',
-        '@OUTPUT@'
+        '--input', meson.current_build_dir(),
+        '--prefix', 'PSMain_',
+        '--output', '@OUTPUT@'
     ])
 
 hlsl_precompiled += generated_collection
@@ -126,3 +125,39 @@ foreach shader : hlsl_vs_sources
                 '@INPUT@'])
   hlsl_precompiled += [compiled_shader]
 endforeach
+
+hlsl_cs_source = files('CSMain_converter.hlsl')
+hlsl_cs_entry_points = [
+  'CSMain_AYUV64_to_Y410',
+  'CSMain_VUYA_to_YUY2',
+  'CSMain_YUY2_to_VUYA',
+]
+
+foreach shader : hlsl_cs_entry_points
+  entry_point = shader
+  header = '@0@.h'.format(entry_point)
+  compiled_shader = custom_target(header,
+      input : hlsl_cs_source,
+      output : header,
+      command : [fxc, '/Fh', '@OUTPUT@',
+                '/E', entry_point,
+                '/T', 'cs_5_0',
+                '/D', 'BUILDING_HLSL=1',
+                '/D', 'ENTRY_POINT=@0@'.format(entry_point),
+                '/D', 'BUILDING_@0@=1'.format(entry_point),
+                '/nologo',
+                '@INPUT@'])
+  hlsl_precompiled += [compiled_shader]
+endforeach
+
+header_collection = 'CSMainConverter.h'
+generated_collection = custom_target(header_collection,
+    input : hlsl_precompiled,
+    output : header_collection,
+    command : [header_collector,
+        '--input', meson.current_build_dir(),
+        '--prefix', 'CSMain_',
+        '--output', '@OUTPUT@'
+    ])
+
+hlsl_precompiled += generated_collection

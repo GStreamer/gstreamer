@@ -31,6 +31,7 @@
 static std::mutex cache_lock_;
 static std::map <gint64, ID3DBlob *> ps_blob_;
 static std::map <gint64, ID3DBlob *> vs_blob_;
+static std::map <gint64, ID3DBlob *> cs_blob_;
 /* *INDENT-ON* */
 
 HRESULT
@@ -79,6 +80,31 @@ gst_d3d11_shader_cache_get_vertex_shader_blob (gint64 token,
 
   (*blob)->AddRef ();
   vs_blob_[token] = *blob;
+
+  return S_OK;
+}
+
+HRESULT
+gst_d3d11_shader_cache_get_compute_shader_blob (gint64 token,
+    const gchar * source, gsize source_size, const gchar * entry_point,
+    const D3D_SHADER_MACRO * defines, ID3DBlob ** blob)
+{
+  std::lock_guard < std::mutex > lk (cache_lock_);
+
+  auto cached = cs_blob_.find (token);
+  if (cached != cs_blob_.end ()) {
+    *blob = cached->second;
+    cached->second->AddRef ();
+    return S_OK;
+  }
+
+  HRESULT hr = gst_d3d11_compile (source, source_size, nullptr, defines,
+      nullptr, entry_point, "cs_5_0", 0, 0, blob, nullptr);
+  if (FAILED (hr))
+    return hr;
+
+  (*blob)->AddRef ();
+  cs_blob_[token] = *blob;
 
   return S_OK;
 }
