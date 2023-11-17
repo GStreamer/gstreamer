@@ -4085,3 +4085,13 @@
   fun:generate_unwind_trace
   fun:gst_debug_get_stack_trace
 }
+
+# since glib 2.65 https://gitlab.gnome.org/GNOME/glib/-/merge_requests/1400
+{
+  glib 2.65+: program may exit before all cancellable sources are freed
+  Memcheck:Leak
+  ...
+  fun:g_cancellable_source_new
+  ...
+  fun:g_socket_create_source
+}
