@@ -1658,7 +1658,6 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
         " after receiving caps");
     gst_video_rate_swap_prev (videorate, NULL, GST_CLOCK_TIME_NONE);
     gst_clear_caps (&videorate->prev_caps);
-    videorate->last_ts = GST_CLOCK_TIME_NONE;
     videorate->average = 0;
   }
 
