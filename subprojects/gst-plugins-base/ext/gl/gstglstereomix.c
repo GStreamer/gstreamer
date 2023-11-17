@@ -39,7 +39,7 @@
  * |[
  * gst-launch-1.0 -v videotestsrc pattern=ball name=left \
  *     videotestsrc name=right glstereomix name=mix \
- *     left. ! vid/x-raw,width=640,height=480! glupload ! mix.  \
+ *     left. ! video/x-raw,width=640,height=480! glupload ! mix.  \
  *     right. ! video/x-raw,width=640,height=480! glupload ! mix.  \
  *     mix. ! video/x-raw'(memory:GLMemory)',multiview-mode=side-by-side ! \
  *     queue ! glimagesink output-multiview-mode=side-by-side
