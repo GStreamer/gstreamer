@@ -1751,20 +1751,11 @@ gst_camera_bin_create_elements (GstCameraBin2 * camera)
         "notify::ready-for-capture",
         G_CALLBACK (gst_camera_bin_src_notify_readyforcapture), camera);
 
-    if (camera->viewfinder_filter) {
-      if (!gst_element_link_pads (camera->src, "vfsrc",
-              camera->viewfinder_filter, NULL)) {
-        GST_ERROR_OBJECT (camera,
-            "Failed to link camera source's vfsrc pad to viewfinder filter");
-        goto fail;
-      }
-    } else {
-      if (!gst_element_link_pads (camera->src, "vfsrc",
-              camera->viewfinderbin_queue, "sink")) {
-        GST_ERROR_OBJECT (camera,
-            "Failed to link camera source's vfsrc pad to viewfinder queue");
-        goto fail;
-      }
+    if (!gst_element_link_pads (camera->src, "vfsrc",
+            camera->viewfinderbin_queue, "sink")) {
+      GST_ERROR_OBJECT (camera,
+          "Failed to link camera source's vfsrc pad to viewfinder queue");
+      goto fail;
     }
 
     if (camera->image_filter) {
