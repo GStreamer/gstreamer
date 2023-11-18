@@ -1446,7 +1446,7 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
   GstVideoInfo info;
   guint i;
   GstD3D11Format d3d11_format;
-  guint bind_flags = D3D11_BIND_RENDER_TARGET;
+  guint bind_flags = 0;
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
   UINT supported = 0;
   HRESULT hr;
@@ -1481,11 +1481,25 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
 
   device_handle = gst_d3d11_device_get_device_handle (filter->device);
   hr = device_handle->CheckFormatSupport (dxgi_format, &supported);
-  if (gst_d3d11_result (hr, filter->device) &&
-      (supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
-      D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
-    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+  if (!gst_d3d11_result (hr, filter->device)) {
+    GST_ERROR_OBJECT (self, "CheckFormatSupport failed");
+    return FALSE;
   }
+
+  if ((supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
+    bind_flags |= D3D11_BIND_RENDER_TARGET;
+  } else {
+    if (d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
+        (supported & D3D11_FORMAT_SUPPORT_VIDEO_PROCESSOR_OUTPUT) != 0) {
+      bind_flags |= D3D11_BIND_RENDER_TARGET;
+    }
+
+    if ((supported & D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW) != 0)
+      bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
+  }
+
+  if ((supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0)
+    bind_flags |= D3D11_BIND_SHADER_RESOURCE;
 
   size = GST_VIDEO_INFO_SIZE (&info);
 
