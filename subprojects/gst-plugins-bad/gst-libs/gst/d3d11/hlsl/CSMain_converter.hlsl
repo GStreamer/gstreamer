@@ -63,6 +63,39 @@ void Execute (uint3 tid)
 }
 #endif
 
+#ifdef BUILDING_CSMain_AYUV64_to_Y210
+Texture2D<float4> inTex : register(t0);
+RWTexture2D<uint4> outTex : register(u0);
+
+void Execute (uint3 tid)
+{
+  float4 val = inTex.Load (uint3(tid.x * 2, tid.y, 0));
+  uint3 scaled = val.yzw * 65535;
+  uint Y0 = scaled.x;
+  uint U = scaled.y;
+  uint V = scaled.z;
+  uint Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).y * 65535;
+  outTex[tid.xy] = uint4(Y0, U, Y1, V);
+}
+#endif
+
+#ifdef BUILDING_CSMain_Y210_to_AYUV64
+Texture2D<uint4> inTex : register(t0);
+RWTexture2D<unorm float4> outTex : register(u0);
+
+void Execute (uint3 tid)
+{
+  float4 val = inTex.Load (tid) / 65535.0;
+  float Y0 = val.r;
+  float U = val.g;
+  float Y1 = val.b;
+  float V = val.a;
+
+  outTex[uint2(tid.x * 2, tid.y)] = float4 (1.0, Y0, U, V);
+  outTex[uint2(tid.x * 2 + 1, tid.y)] = float4 (1.0, Y1, U, V);
+}
+#endif
+
 [numthreads(8, 8, 1)]
 void ENTRY_POINT (uint3 tid : SV_DispatchThreadID)
 {
@@ -112,6 +145,39 @@ static const char g_CSMain_converter_str[] =
 "\n"
 "  outTex[uint2(tid.x * 2, tid.y)] = V | (U << 8) | (Y0 << 16) | (0xff << 24);\n"
 "  outTex[uint2(tid.x * 2 + 1, tid.y)] = V | (U << 8) | (Y1 << 16) | (0xff << 24);\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_AYUV64_to_Y210\n"
+"Texture2D<float4> inTex : register(t0);\n"
+"RWTexture2D<uint4> outTex : register(u0);\n"
+"\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  float4 val = inTex.Load (uint3(tid.x * 2, tid.y, 0));\n"
+"  uint3 scaled = val.yzw * 65535;\n"
+"  uint Y0 = scaled.x;\n"
+"  uint U = scaled.y;\n"
+"  uint V = scaled.z;\n"
+"  uint Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).y * 65535;\n"
+"  outTex[tid.xy] = uint4(Y0, U, Y1, V);\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_Y210_to_AYUV64\n"
+"Texture2D<uint4> inTex : register(t0);\n"
+"RWTexture2D<unorm float4> outTex : register(u0);\n"
+"\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  float4 val = inTex.Load (tid) / 65535.0;\n"
+"  float Y0 = val.r;\n"
+"  float U = val.g;\n"
+"  float Y1 = val.b;\n"
+"  float V = val.a;\n"
+"\n"
+"  outTex[uint2(tid.x * 2, tid.y)] = float4 (1.0, Y0, U, V);\n"
+"  outTex[uint2(tid.x * 2 + 1, tid.y)] = float4 (1.0, Y1, U, V);\n"
 "}\n"
 "#endif\n"
 "\n"

@@ -521,6 +521,8 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_P012_LE:
       case GST_VIDEO_FORMAT_P016_LE:
       case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_Y210:
+      case GST_VIDEO_FORMAT_Y212_LE:
       {
         gboolean supported = TRUE;
 

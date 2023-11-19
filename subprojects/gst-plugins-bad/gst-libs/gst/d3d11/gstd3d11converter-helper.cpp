@@ -128,6 +128,18 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
     srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
     uav_format = DXGI_FORMAT_R32_UINT;
     x_unit = 8;
+  } else if (in_format == GST_VIDEO_FORMAT_AYUV64 &&
+      (out_format == GST_VIDEO_FORMAT_Y210 ||
+      out_format == GST_VIDEO_FORMAT_Y212_LE)) {
+    entry_point = "CSMain_AYUV64_to_Y210";
+    srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+    uav_format = DXGI_FORMAT_R16G16B16A16_UINT;
+  } else if ((in_format == GST_VIDEO_FORMAT_Y210 ||
+      in_format == GST_VIDEO_FORMAT_Y212_LE) &&
+      out_format == GST_VIDEO_FORMAT_AYUV64) {
+    entry_point = "CSMain_Y210_to_AYUV64";
+    srv_format = DXGI_FORMAT_R16G16B16A16_UINT;
+    uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
   } else if (in_format != out_format) {
     g_assert_not_reached ();
     return nullptr;
@@ -146,8 +158,26 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
 
   if (!entry_point.empty ()) {
     auto handle = gst_d3d11_device_get_device_handle (device);
+    gboolean try_cs = TRUE;
     feature_level = handle->GetFeatureLevel ();
-    if (feature_level >= D3D_FEATURE_LEVEL_11_0) {
+    if (feature_level < D3D_FEATURE_LEVEL_11_0) {
+      try_cs = FALSE;
+      GST_DEBUG ("Device does not support typed UAV");
+    } else if (uav_format != DXGI_FORMAT_R32_UINT) {
+      D3D11_FEATURE_DATA_FORMAT_SUPPORT2 support2;
+      support2.InFormat = uav_format;
+      support2.OutFormatSupport2 = 0;
+      hr = handle->CheckFeatureSupport (D3D11_FEATURE_FORMAT_SUPPORT2,
+          &support2, sizeof (D3D11_FEATURE_DATA_FORMAT_SUPPORT2));
+      /* XXX: D3D11_FORMAT_SUPPORT2_UAV_TYPED_STORE (0x80)
+       * undefined in old MinGW toolchain */
+      if (FAILED (hr) || (support2.OutFormatSupport2 & 0x80) == 0) {
+        try_cs = FALSE;
+        GST_DEBUG ("Device does not support typed UAV store");
+      }
+    }
+
+    if (try_cs) {
       std::lock_guard<std::mutex> lk (cache_lock);
       std::shared_ptr<ConverterCSSource> source;
       auto cached = cs_source_cache.find (entry_point);
@@ -198,6 +228,8 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
     }
 
     if (cs) {
+      GST_DEBUG ("Compute shader \"%s\" available", entry_point.c_str ());
+
       self->cs = cs;
 
       self->x_unit = x_unit;
@@ -211,6 +243,9 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
         self->tg_y = (UINT) ceil (height / (float) y_unit);
       }
     } else {
+      GST_DEBUG ("Creating software converter for \"%s\"",
+          entry_point.c_str ());
+
       self->sw_conv =
           gst_video_converter_new (&self->in_info, &self->out_info, nullptr);
     }

@@ -2037,10 +2037,16 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   priv->border_color = 0xffff000000000000;
 
   /* Preprocess packed and subsampled texture */
-  if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2) {
+  if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2 ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y210 ||
+      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y212_LE) {
     GstVideoInfo tmp_info;
+    GstVideoFormat postproc_format = GST_VIDEO_FORMAT_VUYA;
 
-    gst_video_info_set_interlaced_format (&tmp_info, GST_VIDEO_FORMAT_VUYA,
+    if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_YUY2)
+      postproc_format = GST_VIDEO_FORMAT_AYUV64;
+
+    gst_video_info_set_interlaced_format (&tmp_info, postproc_format,
         GST_VIDEO_INFO_INTERLACE_MODE (in_info),
         GST_VIDEO_INFO_WIDTH (in_info), GST_VIDEO_INFO_HEIGHT (in_info));
     tmp_info.chroma_site = in_info->chroma_site;
@@ -2055,11 +2061,13 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   }
 
   if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_YUY2 ||
-      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y410) {
+      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y410 ||
+      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y210 ||
+      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y212_LE) {
     GstVideoInfo tmp_info;
     GstVideoFormat postproc_format = GST_VIDEO_FORMAT_VUYA;
 
-    if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y410)
+    if (GST_VIDEO_INFO_FORMAT (out_info) != GST_VIDEO_FORMAT_YUY2)
       postproc_format = GST_VIDEO_FORMAT_AYUV64;
 
     gst_video_info_set_interlaced_format (&tmp_info, postproc_format,
