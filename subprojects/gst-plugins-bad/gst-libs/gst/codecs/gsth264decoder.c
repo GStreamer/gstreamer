@@ -1878,8 +1878,16 @@ gst_h264_decoder_finish_current_picture (GstH264Decoder * self,
   GstH264DecoderClass *klass;
   GstFlowReturn flow_ret = GST_FLOW_OK;
 
-  if (!priv->current_picture)
+  if (!priv->current_picture) {
+    if (priv->current_frame) {
+      GST_DEBUG_OBJECT (self,
+          "AU buffer without slice data, releasing current frame %u",
+          priv->current_frame->system_frame_number);
+      gst_video_decoder_release_frame (GST_VIDEO_DECODER_CAST (self),
+          gst_video_codec_frame_ref (priv->current_frame));
+    }
     return;
+  }
 
   klass = GST_H264_DECODER_GET_CLASS (self);
 
