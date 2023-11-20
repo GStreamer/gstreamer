@@ -1,0 +1,43 @@
+From 77c86dfd0d5866c5d98980b2ec6b7ed9b0fd3b14 Mon Sep 17 00:00:00 2001
+From: Nirbheek Chauhan <nirbheek@centricular.com>
+Date: Mon, 20 Nov 2023 13:36:04 +0530
+Subject: [PATCH] Inc: Use two-argument cpuid when using recent MinGW
+
+Since 2021, when building with MinGW if `intrin.h` is included
+(directly or indirectly), it will redefine `__cpuid` to use the
+intrinsic version of it, instead of the macro defined by GCC's
+`cpuid.h`. Detect this case, and use the two-argument prototype
+instead.
+
+https://github.com/mingw-w64/mingw-w64/commit/d2374f898457b0f4ea8bd4084a94f2dafc87a99a
+
+Upstream PR: https://github.com/microsoft/DirectXMath/pull/172
+---
+ Inc/DirectXMathMisc.inl | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/Inc/DirectXMathMisc.inl b/Inc/DirectXMathMisc.inl
+index 5f88da6..5c68e8d 100644
+--- a/Inc/DirectXMathMisc.inl
++++ b/Inc/DirectXMathMisc.inl
+@@ -1973,7 +1973,7 @@ inline bool XMVerifyCPUSupport() noexcept
+ {
+ #if defined(_XM_SSE_INTRINSICS_) && !defined(_XM_NO_INTRINSICS_)
+     int CPUInfo[4] = { -1 };
+-#if defined(__clang__) || defined(__GNUC__)
++#if defined(__clang__) || (defined(__GNUC__) && defined(__cpuid))
+     __cpuid(0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+ #else
+     __cpuid(CPUInfo, 0);
+@@ -1987,7 +1987,7 @@ inline bool XMVerifyCPUSupport() noexcept
+         return false;
+ #endif
+ 
+-#if defined(__clang__) || defined(__GNUC__)
++#if defined(__clang__) || (defined(__GNUC__) && defined(__cpuid))
+     __cpuid(1, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
+ #else
+     __cpuid(CPUInfo, 1);
+-- 
+2.41.0
+

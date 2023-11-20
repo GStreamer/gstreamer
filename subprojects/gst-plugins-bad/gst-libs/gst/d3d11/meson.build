@@ -205,7 +205,6 @@ endif
 # https://learn.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-internals#windows-sse-versus-sse2
 # x86 with Windows 7 or older may not support SSE2
 if host_machine.cpu_family() != 'x86'
-  # XXX: __cpuid() mismatch in case of some mingw toolchain
   have_dx_math_simd = cxx.compiles('''
       #include <windows.h>
       #include <DirectXMath.h>

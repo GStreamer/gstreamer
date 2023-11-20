@@ -8,6 +8,7 @@ patch_url = https://wrapdb.mesonbuild.com/v2/directxmath_3.1.8-1/get_patch
 patch_hash = 854f9c065319885f3de5b381cc77454913377a84c8ae6756795fe3eaa99b81f7
 source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/directxmath_3.1.8-1/dec2022.tar.gz
 wrapdb_version = 3.1.8-1
+diff_files = DirectXMath-dec2022/0001-Inc-Use-two-argument-cpuid-when-using-recent-MinGW.patch
 
 [provide]
 directxmath = directxmath_dep
