@@ -12,6 +12,8 @@ hlsl_ps_input_formats = [
   ['Y410', false],
   ['AYUV', false],
   ['AYUVPremul', false],
+  ['Y412', false],
+  ['Y412Premul', false],
   ['RGBA', true],
   ['RGBAPremul', true],
   ['RGBx', true],
@@ -133,6 +135,7 @@ hlsl_cs_entry_points = [
   'CSMain_YUY2_to_VUYA',
   'CSMain_AYUV64_to_Y210',
   'CSMain_Y210_to_AYUV64',
+  'CSMain_AYUV64_to_Y412',
 ]
 
 foreach shader : hlsl_cs_entry_points

@@ -523,6 +523,7 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_YUY2:
       case GST_VIDEO_FORMAT_Y210:
       case GST_VIDEO_FORMAT_Y212_LE:
+      case GST_VIDEO_FORMAT_Y412_LE:
       {
         gboolean supported = TRUE;
 
@@ -1744,6 +1745,7 @@ gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
       size = blob->GetBufferSize ();
     }
   } else {
+    ComPtr < ID3DBlob > error_msg;
     const gchar *target;
     if (priv->feature_level >= D3D_FEATURE_LEVEL_10_0)
       target = "ps_4_0";
@@ -1753,9 +1755,19 @@ gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
       target = "ps_4_0_level_9_1";
 
     hr = gst_d3d11_compile (source, source_size, nullptr, defines,
-        nullptr, entry_point, target, 0, 0, &blob, nullptr);
-    if (!gst_d3d11_result (hr, device))
+        nullptr, entry_point, target, 0, 0, &blob, &error_msg);
+    if (!gst_d3d11_result (hr, device)) {
+      const gchar *err = nullptr;
+
+      if (error_msg)
+        err = (const gchar *) error_msg->GetBufferPointer ();
+
+      GST_ERROR_OBJECT (device,
+          "Couldn't compile code, hr: 0x%x, error detail: %s, source code: \n%s",
+          (guint) hr, GST_STR_NULL (err), source);
+
       return hr;
+    }
 
     data = blob->GetBufferPointer ();
     size = blob->GetBufferSize ();

@@ -24,11 +24,15 @@
 #include "gstd3d11converter-builder.h"
 #include "gstd3d11device-private.h"
 #include "gstd3d11-private.h"
+#include "gstd3d11utils.h"
 #include <map>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <memory>
+
+GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_converter_debug);
+#define GST_CAT_DEFAULT gst_d3d11_converter_debug
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -182,6 +186,10 @@ make_input (GstVideoFormat format, gboolean premul)
       if (premul)
         return "GBRAPremul_12";
       return "GBRA_12";
+    case GST_VIDEO_FORMAT_Y412_LE:
+      if (premul)
+        return "Y412Premul";
+      return "Y412";
     default:
       g_assert_not_reached ();
       break;
@@ -380,7 +388,7 @@ gst_d3d11_get_converter_pixel_shader (GstD3D11Device * device,
           source->bytecode, source->bytecode_size, g_PSMain_converter_str,
           sizeof (g_PSMain_converter_str), source->entry_point.c_str (),
           &macros[0], &shader);
-    if (FAILED (hr)) {
+    if (!gst_d3d11_result (hr, device)) {
       ret.clear ();
       return ret;
     }

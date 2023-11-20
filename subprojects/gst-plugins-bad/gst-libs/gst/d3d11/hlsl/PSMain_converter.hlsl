@@ -220,6 +220,22 @@ class SamplerY410 : ISampler
   }
 };
 
+class SamplerY412 : ISampler
+{
+  float4 Execute (float2 uv)
+  {
+    return shaderTexture[0].Sample(samplerState, uv).grba;
+  }
+};
+
+class SamplerY412Premul : ISampler
+{
+  float4 Execute (float2 uv)
+  {
+    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).grba);
+  }
+};
+
 class SamplerAYUV : ISampler
 {
   float4 Execute (float2 uv)
@@ -1140,6 +1156,22 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    return float4 (shaderTexture[0].Sample(samplerState, uv).yxz, 1.0);\n"
+"  }\n"
+"};\n"
+"\n"
+"class SamplerY412 : ISampler\n"
+"{\n"
+"  float4 Execute (float2 uv)\n"
+"  {\n"
+"    return shaderTexture[0].Sample(samplerState, uv).grba;\n"
+"  }\n"
+"};\n"
+"\n"
+"class SamplerY412Premul : ISampler\n"
+"{\n"
+"  float4 Execute (float2 uv)\n"
+"  {\n"
+"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).grba);\n"
 "  }\n"
 "};\n"
 "\n"

@@ -96,6 +96,17 @@ void Execute (uint3 tid)
 }
 #endif
 
+#ifdef BUILDING_CSMain_AYUV64_to_Y412
+Texture2D<float4> inTex : register(t0);
+RWTexture2D<uint4> outTex : register(u0);
+
+void Execute (uint3 tid)
+{
+  float4 val = inTex.Load (tid);
+  outTex[tid.xy] = uint4(val.zywx * 65535);
+}
+#endif
+
 [numthreads(8, 8, 1)]
 void ENTRY_POINT (uint3 tid : SV_DispatchThreadID)
 {
@@ -178,6 +189,17 @@ static const char g_CSMain_converter_str[] =
 "\n"
 "  outTex[uint2(tid.x * 2, tid.y)] = float4 (1.0, Y0, U, V);\n"
 "  outTex[uint2(tid.x * 2 + 1, tid.y)] = float4 (1.0, Y1, U, V);\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_AYUV64_to_Y412\n"
+"Texture2D<float4> inTex : register(t0);\n"
+"RWTexture2D<uint4> outTex : register(u0);\n"
+"\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  float4 val = inTex.Load (tid);\n"
+"  outTex[tid.xy] = uint4(val.zywx * 65535);\n"
 "}\n"
 "#endif\n"
 "\n"

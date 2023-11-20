@@ -140,6 +140,12 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
     entry_point = "CSMain_Y210_to_AYUV64";
     srv_format = DXGI_FORMAT_R16G16B16A16_UINT;
     uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+  } else if (in_format == GST_VIDEO_FORMAT_AYUV64 &&
+      out_format == GST_VIDEO_FORMAT_Y412_LE) {
+    entry_point = "CSMain_AYUV64_to_Y412";
+    srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+    uav_format = DXGI_FORMAT_R16G16B16A16_UINT;
+    x_unit = 8;
   } else if (in_format != out_format) {
     g_assert_not_reached ();
     return nullptr;

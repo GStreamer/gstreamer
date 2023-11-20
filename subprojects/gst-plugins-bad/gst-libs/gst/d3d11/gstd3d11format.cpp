@@ -154,6 +154,7 @@ gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
     case DXGI_FORMAT_Y410:
     case DXGI_FORMAT_Y216:
     case DXGI_FORMAT_R16G16B16A16_UNORM:
+    case DXGI_FORMAT_Y416:
       offset[0] = 0;
       stride[0] = pitch;
       *size = pitch * height;
@@ -214,6 +215,8 @@ gst_d3d11_dxgi_format_to_gst (DXGI_FORMAT format)
       return GST_VIDEO_FORMAT_P016_LE;
     case DXGI_FORMAT_Y216:
       return GST_VIDEO_FORMAT_Y212_LE;
+    case DXGI_FORMAT_Y416:
+      return GST_VIDEO_FORMAT_Y412_LE;
     default:
       break;
   }
