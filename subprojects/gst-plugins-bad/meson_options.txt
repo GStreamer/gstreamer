@@ -103,8 +103,6 @@ option('curl', type : 'feature', value : 'auto', description : 'cURL network sou
 option('curl-ssh2', type : 'feature', value : 'auto', description : 'cURL network source and sink plugin libssh2 support')
 option('d3dvideosink', type : 'feature', value : 'auto', description : 'Direct3D video sink plugin')
 option('d3d11', type : 'feature', value : 'auto', description : 'Direct3D11 plugin')
-option('d3d11-wgc', type : 'feature', value : 'auto', description : 'Windows Graphics Capture API support in d3d11 plugin')
-option('d3d11-hlsl-precompile', type : 'feature', value : 'auto', description : 'Enable buildtime HLSL compile for d3d11 library/plugin')
 option('d3d12', type : 'feature', value : 'auto', description : 'Direct3D12 plugin')
 option('dash', type : 'feature', value : 'auto', description : 'DASH demuxer plugin')
 option('dc1394', type : 'feature', value : 'auto', description : 'libdc1394 IIDC camera source plugin')
@@ -210,6 +208,11 @@ option('isac', type : 'feature', value : 'auto', description : 'iSAC plugin')
 # AJA plugin options
 option('aja-sdk-dir', type : 'string', value : '',
   description : 'Directory with AJA SDK, e.g. ntv2sdklinux_16.0.0.4')
+
+# D3D11 plugin options
+option('d3d11-math', type : 'feature', value : 'auto', description : 'Enable DirectX SIMD Math support')
+option('d3d11-hlsl-precompile', type : 'feature', value : 'auto', description : 'Enable buildtime HLSL compile for d3d11 library/plugin')
+option('d3d11-wgc', type : 'feature', value : 'auto', description : 'Windows Graphics Capture API support in d3d11 plugin')
 
 # HLS plugin options
 option('hls', type : 'feature', value : 'auto', description : 'HTTP Live Streaming plugin')
