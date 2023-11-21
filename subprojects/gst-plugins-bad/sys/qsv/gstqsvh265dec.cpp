@@ -514,8 +514,7 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   supported_profiles.push_back ("main");
   supported_formats.push_back ("NV12");
 
-  /* Check other profile/formats */
-  /* TODO: check other profiles too */
+  /* main-10 */
   gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_P010_10LE);
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN10;
   mfx->FrameInfo.Width = GST_ROUND_UP_16 (gst_qsv_resolutions[0].width);
@@ -525,6 +524,56 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
     supported_profiles.push_back ("main-10");
     supported_formats.push_back ("P010_10LE");
+  }
+
+  /* main-12 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_P012_LE);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-12");
+    supported_formats.push_back ("P012_LE");
+  }
+
+  /* main-422-{10,12} */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_YUY2);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y210);
+    if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+      supported_profiles.push_back ("main-422-10");
+      supported_formats.push_back ("YUY2");
+      supported_formats.push_back ("Y210");
+
+      gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y212_LE);
+      if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+        supported_profiles.push_back ("main-422-12");
+        supported_formats.push_back ("Y212_LE");
+      }
+    }
+  }
+
+  /* main-444 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_VUYA);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-444");
+    supported_formats.push_back ("VUYA");
+  }
+
+  /* main-444-10 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y410);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-444-10");
+    supported_formats.push_back ("Y410");
+  }
+
+  /* main-444-12 */
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_Y412_LE);
+  mfx->CodecProfile = MFX_PROFILE_HEVC_REXT;
+  if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
+    supported_profiles.push_back ("main-444-12");
+    supported_formats.push_back ("Y412_LE");
   }
 
   /* To cover both landscape and portrait,
