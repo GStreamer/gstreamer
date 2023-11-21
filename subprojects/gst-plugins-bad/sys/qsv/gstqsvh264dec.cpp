@@ -302,7 +302,7 @@ gst_qsv_h264_dec_set_format (GstQsvDecoder * decoder,
 
   s = gst_caps_get_structure (state->caps, 0);
   str = gst_structure_get_string (s, "stream-format");
-  if ((g_strcmp0 (str, "avc") == 0 || g_strcmp0 (str, "avc3")) &&
+  if ((g_strcmp0 (str, "avc") == 0 || g_strcmp0 (str, "avc3") == 0) &&
       state->codec_data) {
     self->packetized = TRUE;
     /* Will be updated */
