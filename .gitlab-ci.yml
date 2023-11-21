@@ -341,11 +341,11 @@ commitlint:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
     SUBPROJECTS_CACHE_DIR: "/subprojects"
-
   script:
     - $CI_PROJECT_DIR/ci/scripts/build.sh
     - ./gst-env.py gst-inspect-1.0 --version
     - ./gst-env.py gst-inspect-1.0
+    - G_DEBUG=fatal_criticals ./gst-env.py gst-inspect-1.0 --print-all --gst-disable-registry-fork > /dev/null
     - meson install --destdir $CI_PROJECT_DIR/destdir -C build
     - rm -rf $CI_PROJECT_DIR/destdir
 
