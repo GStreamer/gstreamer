@@ -200,7 +200,7 @@ gst_qsv_status_to_string (mfxStatus status)
 }
 
 GstVideoFormat
-gst_qsv_frame_info_format_to_gst (const mfxFrameInfo * info)
+gst_qsv_frame_info_format_to_gst (const mfxFrameInfo * info, gboolean is_gbr)
 {
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
@@ -228,13 +228,22 @@ gst_qsv_frame_info_format_to_gst (const mfxFrameInfo * info)
       break;
       break;
     case MFX_FOURCC_AYUV:
-      format = GST_VIDEO_FORMAT_VUYA;
+      if (is_gbr)
+        format = GST_VIDEO_FORMAT_RBGA;
+      else
+        format = GST_VIDEO_FORMAT_VUYA;
       break;
     case MFX_FOURCC_Y410:
-      format = GST_VIDEO_FORMAT_Y410;
+      if (is_gbr)
+        format = GST_VIDEO_FORMAT_BGR10A2_LE;
+      else
+        format = GST_VIDEO_FORMAT_Y410;
       break;
     case MFX_FOURCC_Y416:
-      format = GST_VIDEO_FORMAT_Y412_LE;
+      if (is_gbr)
+        format = GST_VIDEO_FORMAT_BGRA64_LE;
+      else
+        format = GST_VIDEO_FORMAT_Y412_LE;
       break;
     case MFX_FOURCC_RGB4:
       format = GST_VIDEO_FORMAT_BGRA;
@@ -300,6 +309,7 @@ gst_qsv_frame_info_set_format (mfxFrameInfo * info, GstVideoFormat format)
       info->Shift = 1;
       break;
     case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_RBGA:
       info->FourCC = MFX_FOURCC_AYUV;
       info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
       info->BitDepthLuma = 8;
@@ -307,6 +317,7 @@ gst_qsv_frame_info_set_format (mfxFrameInfo * info, GstVideoFormat format)
       info->Shift = 0;
       break;
     case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
       info->FourCC = MFX_FOURCC_Y410;
       info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
       info->BitDepthLuma = 10;
@@ -314,6 +325,7 @@ gst_qsv_frame_info_set_format (mfxFrameInfo * info, GstVideoFormat format)
       info->Shift = 0;
       break;
     case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_BGRA64_LE:
       info->FourCC = MFX_FOURCC_Y416;
       info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
       info->BitDepthLuma = 12;

@@ -81,6 +81,8 @@ struct _GstQsvDecoderPrivate
 
   mfxSession session;
   mfxVideoParam video_param;
+  mfxExtVideoSignalInfo signal_info;
+  mfxExtBuffer *video_param_ext[1];
 
   /* holding allocated GstQsvFrame, should be cleared via
    * mfxFrameAllocator::Free() */
@@ -888,6 +890,10 @@ gst_qsv_decoder_set_format (GstVideoDecoder * decoder,
 
   memset (&priv->video_param, 0, sizeof (mfxVideoParam));
   priv->video_param.mfx.CodecId = klass->codec_id;
+  priv->signal_info.Header.BufferId = MFX_EXTBUFF_VIDEO_SIGNAL_INFO;
+  priv->signal_info.Header.BufferSz = sizeof (mfxExtVideoSignalInfo);
+  priv->video_param_ext[0] = (mfxExtBuffer *) & priv->signal_info;
+  priv->video_param.ExtParam = priv->video_param_ext;
 
   /* If upstream is live, we will use single async-depth for low-latency
    * decoding */
@@ -1199,6 +1205,7 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
   mfxFrameInfo *frame_info = &param->mfx.FrameInfo;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   GstVideoInterlaceMode interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  gboolean is_gbr = FALSE;
 
   width = coded_width = frame_info->Width;
   height = coded_height = frame_info->Height;
@@ -1207,6 +1214,16 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
     width = frame_info->CropW;
     height = frame_info->CropH;
   }
+
+  if (klass->codec_id == MFX_CODEC_HEVC &&
+      priv->signal_info.ColourDescriptionPresent &&
+      gst_video_color_matrix_from_iso (priv->signal_info.MatrixCoefficients) ==
+      GST_VIDEO_COLOR_MATRIX_RGB) {
+    is_gbr = TRUE;
+  }
+
+  if (priv->allocator)
+    priv->allocator->is_gbr = is_gbr;
 
   if (klass->codec_id == MFX_CODEC_JPEG) {
     if (param->mfx.JPEGChromaFormat == MFX_CHROMAFORMAT_YUV422) {
@@ -1219,7 +1236,7 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
       frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
     }
   } else {
-    format = gst_qsv_frame_info_format_to_gst (frame_info);
+    format = gst_qsv_frame_info_format_to_gst (frame_info, is_gbr);
   }
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {
@@ -1452,8 +1469,11 @@ gst_qsv_decoder_handle_frame (GstVideoDecoder * decoder,
 
 new_sequence:
   if (!priv->decoder) {
+    if (klass->codec_id == MFX_CODEC_HEVC)
+      priv->video_param.NumExtParam = 1;
     status = MFXVideoDECODE_DecodeHeader (priv->session,
         &bs, &priv->video_param);
+    priv->video_param.NumExtParam = 0;
 
     if (status != MFX_ERR_NONE) {
       if (status == MFX_ERR_MORE_DATA) {

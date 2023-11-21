@@ -76,7 +76,8 @@ static const GstQsvResolution gst_qsv_resolutions[] = {
   {7680, 4320}, {8192, 4320}, {15360, 8640}, {16384, 8640}
 };
 
-GstVideoFormat gst_qsv_frame_info_format_to_gst (const mfxFrameInfo * info);
+GstVideoFormat gst_qsv_frame_info_format_to_gst (const mfxFrameInfo * info,
+                                                 gboolean is_gbr);
 
 gboolean       gst_qsv_frame_info_set_format (mfxFrameInfo * info,
                                               GstVideoFormat format);

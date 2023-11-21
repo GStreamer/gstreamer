@@ -149,6 +149,8 @@ gst_qsv_allocator_init (GstQsvAllocator * self)
 {
   GstQsvAllocatorPrivate *priv;
 
+  self->is_gbr = FALSE;
+
   priv = self->priv = (GstQsvAllocatorPrivate *)
       gst_qsv_allocator_get_instance_private (self);
 
@@ -199,7 +201,7 @@ gst_qsv_allocator_alloc_default (GstQsvAllocator * self, gboolean dummy_alloc,
     return MFX_ERR_UNSUPPORTED;
   }
 
-  format = gst_qsv_frame_info_format_to_gst (&request->Info);
+  format = gst_qsv_frame_info_format_to_gst (&request->Info, self->is_gbr);
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {
     GST_ERROR_OBJECT (self, "Unknown MFX format fourcc %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (request->Info.FourCC));
@@ -406,15 +408,18 @@ gst_qsv_allocator_lock (mfxHDL pthis, mfxMemId mid, mfxFrameData * ptr)
       ptr->V16 = ptr->Y16 + 3;
       break;
     case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_RBGA:
       ptr->V = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       ptr->U = ptr->V + 1;
       ptr->Y = ptr->V + 2;
       ptr->A = ptr->V + 3;
       break;
     case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
       ptr->Y410 = (mfxY410 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       break;
     case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_BGRA64_LE:
       ptr->U = (mfxU8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame->frame, 0);
       ptr->Y = ptr->Y + 2;
       ptr->V = ptr->Y + 4;

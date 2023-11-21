@@ -99,7 +99,7 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     return MFX_ERR_UNSUPPORTED;
   }
 
-  format = gst_qsv_frame_info_format_to_gst (&request->Info);
+  format = gst_qsv_frame_info_format_to_gst (&request->Info, allocator->is_gbr);
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN &&
       request->Info.FourCC != MFX_FOURCC_P8) {

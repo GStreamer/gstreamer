@@ -83,6 +83,7 @@ typedef enum
 struct _GstQsvAllocator
 {
   GstObject parent;
+  gboolean is_gbr;
 
   GstQsvAllocatorPrivate *priv;
 };

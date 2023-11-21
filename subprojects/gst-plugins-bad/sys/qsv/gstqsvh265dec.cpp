@@ -558,6 +558,7 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
     supported_profiles.push_back ("main-444");
     supported_formats.push_back ("VUYA");
+    supported_formats.push_back ("RBGA");
   }
 
   /* main-444-10 */
@@ -566,6 +567,7 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
     supported_profiles.push_back ("main-444-10");
     supported_formats.push_back ("Y410");
+    supported_formats.push_back ("BGR10A2_LE");
   }
 
   /* main-444-12 */
@@ -574,6 +576,7 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
     supported_profiles.push_back ("main-444-12");
     supported_formats.push_back ("Y412_LE");
+    supported_formats.push_back ("BGRA64_LE");
   }
 
   /* To cover both landscape and portrait,
