@@ -7303,6 +7303,38 @@ pack_MT2110R (const GstVideoFormatInfo * info,
   }
 }
 
+#define PACK_RBGA GST_VIDEO_FORMAT_ARGB, unpack_RBGA, 1, pack_RBGA
+static void
+unpack_RBGA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const guint8 *restrict s = GET_LINE (y);
+
+  s += x * 4;
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_unpack_RBGA_le (dest, s, width);
+#else
+  video_orc_unpack_RBGA_be (dest, s, width);
+#endif
+}
+
+static void
+pack_RBGA (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  guint8 *restrict d = GET_LINE (y);
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  video_orc_pack_RBGA_le (d, src, width);
+#else
+  video_orc_pack_RBGA_be (d, src, width);
+#endif
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -7755,6 +7787,8 @@ static const VideoFormat formats[] = {
       OFFS0, SUB444, PACK_GBR_16LE),
   MAKE_RGB_FORMAT (GBR_16BE, "raw video", DPTH16_16_16, PSTR222, PLANE201,
       OFFS0, SUB444, PACK_GBR_16BE),
+  MAKE_RGBA_FORMAT (RBGA, "raw video", DPTH8888, PSTR4444, PLANE0, OFFS0123,
+      SUB4444, PACK_RBGA),
 };
 
 G_GNUC_END_IGNORE_DEPRECATIONS;
