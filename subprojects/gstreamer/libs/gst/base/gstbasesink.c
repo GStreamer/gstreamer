@@ -2185,7 +2185,11 @@ again:
       }
       goto do_times;
     }
-    goto out_of_segment;
+    if (basesink->priv->drop_out_of_segment)
+      goto out_of_segment;
+
+    cstart = start;
+    cstop = stop;
   }
 
   if (G_UNLIKELY (start != cstart || stop != cstop)) {
