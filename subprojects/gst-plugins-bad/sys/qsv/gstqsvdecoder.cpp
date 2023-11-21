@@ -1208,23 +1208,6 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
     height = frame_info->CropH;
   }
 
-  switch (frame_info->FourCC) {
-    case MFX_FOURCC_NV12:
-      format = GST_VIDEO_FORMAT_NV12;
-      break;
-    case MFX_FOURCC_P010:
-      format = GST_VIDEO_FORMAT_P010_10LE;
-      break;
-    case MFX_FOURCC_P016:
-      format = GST_VIDEO_FORMAT_P016_LE;
-      break;
-    case MFX_FOURCC_RGB4:
-      format = GST_VIDEO_FORMAT_BGRA;
-      break;
-    default:
-      break;
-  }
-
   if (klass->codec_id == MFX_CODEC_JPEG) {
     if (param->mfx.JPEGChromaFormat == MFX_CHROMAFORMAT_YUV422) {
       format = GST_VIDEO_FORMAT_YUY2;
@@ -1235,6 +1218,8 @@ gst_qsv_decoder_negotiate (GstVideoDecoder * decoder)
       frame_info->FourCC = MFX_FOURCC_RGB4;
       frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
     }
+  } else {
+    format = gst_qsv_frame_info_format_to_gst (frame_info);
   }
 
   if (format == GST_VIDEO_FORMAT_UNKNOWN) {

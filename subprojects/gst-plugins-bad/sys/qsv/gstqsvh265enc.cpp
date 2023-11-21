@@ -1460,29 +1460,23 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   /* Check supported profiles */
   for (guint i = 0; i < G_N_ELEMENTS (profile_map); i++) {
+    GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
     mfx->CodecProfile = profile_map[i].profile;
     mfx->CodecLevel = MFX_LEVEL_UNKNOWN;
 
     switch (mfx->CodecProfile) {
       case MFX_PROFILE_HEVC_MAIN:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-        mfx->FrameInfo.BitDepthLuma = 8;
-        mfx->FrameInfo.BitDepthChroma = 8;
-        mfx->FrameInfo.Shift = 0;
+        format = GST_VIDEO_FORMAT_NV12;
         break;
       case MFX_PROFILE_HEVC_MAIN10:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_P010;
-        mfx->FrameInfo.BitDepthLuma = 10;
-        mfx->FrameInfo.BitDepthChroma = 10;
-        mfx->FrameInfo.Shift = 1;
+        format = GST_VIDEO_FORMAT_P010_10LE;
         break;
       default:
         g_assert_not_reached ();
         return;
     }
 
+    gst_qsv_frame_info_set_format (&mfx->FrameInfo, format);
     if (MFXVideoENCODE_Query (session, &param, &param) != MFX_ERR_NONE)
       continue;
 
@@ -1495,11 +1489,7 @@ gst_qsv_h265_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
     return;
   }
 
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
-  mfx->FrameInfo.Shift = 0;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
   /* check hdr10 metadata SEI support */

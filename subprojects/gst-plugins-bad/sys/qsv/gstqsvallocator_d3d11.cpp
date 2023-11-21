@@ -89,7 +89,7 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     mfxFrameAllocResponse * response)
 {
   GstQsvD3D11Allocator *self = GST_QSV_D3D11_ALLOCATOR (allocator);
-  DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   GstQsvFrame **mids = nullptr;
 
   /* Something unexpected and went wrong */
@@ -99,37 +99,9 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     return MFX_ERR_UNSUPPORTED;
   }
 
-  switch (request->Info.FourCC) {
-    case MFX_FOURCC_NV12:
-      dxgi_format = DXGI_FORMAT_NV12;
-      break;
-    case MFX_FOURCC_P010:
-      dxgi_format = DXGI_FORMAT_P010;
-      break;
-    case MFX_FOURCC_P016:
-      dxgi_format = DXGI_FORMAT_P016;
-      break;
-    case MFX_FOURCC_AYUV:
-      dxgi_format = DXGI_FORMAT_AYUV;
-      break;
-    case MFX_FOURCC_Y410:
-      dxgi_format = DXGI_FORMAT_Y410;
-      break;
-    case MFX_FOURCC_RGB4:
-      dxgi_format = DXGI_FORMAT_B8G8R8A8_UNORM;
-      break;
-    case MFX_FOURCC_BGR4:
-      dxgi_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-      break;
-    case MFX_FOURCC_YUY2:
-      dxgi_format = DXGI_FORMAT_YUY2;
-      break;
-    default:
-      /* TODO: add more formats */
-      break;
-  }
+  format = gst_qsv_frame_info_format_to_gst (&request->Info);
 
-  if (dxgi_format == DXGI_FORMAT_UNKNOWN &&
+  if (format == GST_VIDEO_FORMAT_UNKNOWN &&
       request->Info.FourCC != MFX_FOURCC_P8) {
     GST_ERROR_OBJECT (self, "Failed to convert %d to DXGI format",
         request->Info.FourCC);
@@ -175,7 +147,6 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
         nullptr);
   } else {
     GstBufferPool *pool;
-    GstVideoFormat format;
     GstVideoInfo info;
     GstCaps *caps;
     GstStructure *config;
@@ -207,7 +178,6 @@ gst_qsv_d3d11_allocator_alloc (GstQsvAllocator * allocator,
     mids = g_new0 (GstQsvFrame *, request->NumFrameSuggested);
     response->NumFrameActual = request->NumFrameSuggested;
 
-    format = gst_d3d11_dxgi_format_to_gst (dxgi_format);
     gst_video_info_set_format (&info,
         format, request->Info.CropW, request->Info.CropH);
 

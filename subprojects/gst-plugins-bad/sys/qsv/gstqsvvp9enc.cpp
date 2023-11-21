@@ -647,6 +647,7 @@ gst_qsv_vp9_enc_set_format (GstQsvEncoder * encoder,
   GstVideoInfo *info = &state->info;
   mfxExtVP9Param *vp9_param;
   mfxFrameInfo *frame_info;
+  GstVideoFormat format;
 
   frame_info = &param->mfx.FrameInfo;
 
@@ -669,44 +670,27 @@ gst_qsv_vp9_enc_set_format (GstQsvEncoder * encoder,
   frame_info->AspectRatioW = GST_VIDEO_INFO_PAR_N (info);
   frame_info->AspectRatioH = GST_VIDEO_INFO_PAR_D (info);
 
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
+  format = GST_VIDEO_INFO_FORMAT (info);
+  switch (format) {
     case GST_VIDEO_FORMAT_NV12:
       mfx_profile = MFX_PROFILE_VP9_0;
-      frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-      frame_info->FourCC = MFX_FOURCC_NV12;
-      frame_info->BitDepthLuma = 8;
-      frame_info->BitDepthChroma = 8;
-      frame_info->Shift = 0;
       break;
     case GST_VIDEO_FORMAT_VUYA:
       mfx_profile = MFX_PROFILE_VP9_1;
-      frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
-      frame_info->FourCC = MFX_FOURCC_AYUV;
-      frame_info->BitDepthLuma = 8;
-      frame_info->BitDepthChroma = 8;
-      frame_info->Shift = 0;
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
       mfx_profile = MFX_PROFILE_VP9_2;
-      frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-      frame_info->FourCC = MFX_FOURCC_P010;
-      frame_info->BitDepthLuma = 10;
-      frame_info->BitDepthChroma = 10;
-      frame_info->Shift = 1;
       break;
     case GST_VIDEO_FORMAT_Y410:
       mfx_profile = MFX_PROFILE_VP9_3;
-      frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV444;
-      frame_info->FourCC = MFX_FOURCC_Y410;
-      frame_info->BitDepthLuma = 10;
-      frame_info->BitDepthChroma = 10;
-      frame_info->Shift = 0;
       break;
     default:
       GST_ERROR_OBJECT (self, "Unexpected format %s",
-          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+          gst_video_format_to_string (format));
       return FALSE;
   }
+
+  gst_qsv_frame_info_set_format (frame_info, format);
 
   gst_qsv_vp9_enc_init_vp9_param (&self->vp9_param);
   vp9_param = &self->vp9_param;
@@ -872,6 +856,8 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   param.ExtParam = ext_bufs;
 
   for (guint i = 0; i < G_N_ELEMENTS (profile_map); i++) {
+    GstVideoFormat format;
+
     mfx->CodecProfile = profile_map[i].profile;
 
     gst_qsv_vp9_enc_init_vp9_param (&vp9_param);
@@ -882,37 +868,23 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
 
     switch (mfx->CodecProfile) {
       case MFX_PROFILE_VP9_0:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-        mfx->FrameInfo.BitDepthLuma = 8;
-        mfx->FrameInfo.BitDepthChroma = 8;
-        mfx->FrameInfo.Shift = 0;
+        format = GST_VIDEO_FORMAT_NV12;
         break;
       case MFX_PROFILE_VP9_1:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_AYUV;
-        mfx->FrameInfo.BitDepthLuma = 8;
-        mfx->FrameInfo.BitDepthChroma = 8;
-        mfx->FrameInfo.Shift = 0;
+        format = GST_VIDEO_FORMAT_VUYA;
         break;
       case MFX_PROFILE_VP9_2:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_P010;
-        mfx->FrameInfo.BitDepthLuma = 10;
-        mfx->FrameInfo.BitDepthChroma = 10;
-        mfx->FrameInfo.Shift = 1;
+        format = GST_VIDEO_FORMAT_P010_10LE;
         break;
       case MFX_PROFILE_VP9_3:
-        mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
-        mfx->FrameInfo.FourCC = MFX_FOURCC_Y410;
-        mfx->FrameInfo.BitDepthLuma = 10;
-        mfx->FrameInfo.BitDepthChroma = 10;
-        mfx->FrameInfo.Shift = 0;
+        format = GST_VIDEO_FORMAT_Y410;
         break;
       default:
         g_assert_not_reached ();
         return;
     }
+
+    gst_qsv_frame_info_set_format (&mfx->FrameInfo, format);
 
     if (MFXVideoENCODE_Query (session, &param, &param) != MFX_ERR_NONE)
       continue;
@@ -927,11 +899,7 @@ gst_qsv_vp9_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   }
 
   mfx->CodecProfile = MFX_PROFILE_VP9_0;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
-  mfx->FrameInfo.Shift = 0;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
 
   /* Check max-resolution */
   for (guint i = 0; i < G_N_ELEMENTS (gst_qsv_resolutions); i++) {

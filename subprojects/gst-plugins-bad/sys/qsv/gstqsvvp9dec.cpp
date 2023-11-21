@@ -54,7 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_qsv_vp9_dec_debug);
     "alignment = (string) frame, profile = (string) { 0, 2 }"
 
 #define DOC_SRC_CAPS_COMM \
-    "format = (string) { NV12, P010_10LE, P016_LE}, " \
+    "format = (string) { NV12, P010_10LE, P012_LE}, " \
     "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]"
 
 #define DOC_SRC_CAPS \
@@ -159,11 +159,8 @@ gst_qsv_vp9_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
   mfx->CodecProfile = MFX_PROFILE_VP9_0;
 
   /* Check max-resolution */
@@ -189,22 +186,16 @@ gst_qsv_vp9_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   supported_formats.push_back ("NV12");
 
   /* Check other profile/formats */
-  mfx->FrameInfo.FourCC = MFX_FOURCC_P010;
-  mfx->FrameInfo.BitDepthLuma = 10;
-  mfx->FrameInfo.BitDepthChroma = 10;
-  mfx->FrameInfo.Shift = 1;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_P010_10LE);
   mfx->CodecProfile = MFX_PROFILE_VP9_2;
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
     have_profile_2 = TRUE;
     supported_formats.push_back ("P010_10LE");
 
-    mfx->FrameInfo.FourCC = MFX_FOURCC_P016;
-    mfx->FrameInfo.BitDepthLuma = 12;
-    mfx->FrameInfo.BitDepthChroma = 12;
-
+    gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_P012_LE);
     if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE) {
       have_profile_2_12bits = TRUE;
-      supported_formats.push_back ("P016_LE");
+      supported_formats.push_back ("P012_LE");
     }
   }
 

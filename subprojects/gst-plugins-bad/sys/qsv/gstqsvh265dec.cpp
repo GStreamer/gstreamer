@@ -487,11 +487,8 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN;
 
   /* Check max-resolution */
@@ -519,12 +516,7 @@ gst_qsv_h265_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   /* Check other profile/formats */
   /* TODO: check other profiles too */
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_P010;
-  mfx->FrameInfo.BitDepthLuma = 10;
-  mfx->FrameInfo.BitDepthChroma = 10;
-  mfx->FrameInfo.Shift = 1;
-  mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_P010_10LE);
   mfx->CodecProfile = MFX_PROFILE_HEVC_MAIN10;
   mfx->FrameInfo.Width = GST_ROUND_UP_16 (gst_qsv_resolutions[0].width);
   mfx->FrameInfo.Height = GST_ROUND_UP_16 (gst_qsv_resolutions[0].height);

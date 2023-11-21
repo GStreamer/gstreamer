@@ -460,12 +460,9 @@ gst_qsv_h264_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
   mfx->CodecProfile = MFX_PROFILE_AVC_MAIN;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
 
   /* Check max-resolution */
   for (guint i = 0; i < G_N_ELEMENTS (gst_qsv_resolutions); i++) {

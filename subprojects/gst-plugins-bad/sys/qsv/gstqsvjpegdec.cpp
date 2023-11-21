@@ -157,11 +157,8 @@ gst_qsv_jpeg_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
   mfx->CodecProfile = MFX_PROFILE_JPEG_BASELINE;
   mfx->JPEGChromaFormat = MFX_CHROMAFORMAT_YUV420;
   mfx->JPEGColorFormat = MFX_JPEG_COLORFORMAT_YCbCr;
@@ -188,14 +185,12 @@ gst_qsv_jpeg_dec_register (GstPlugin * plugin, guint rank, guint impl_index,
 
   supported_formats.push_back ("NV12");
 
-  mfx->FrameInfo.FourCC = MFX_FOURCC_YUY2;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV422;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_YUY2);
   mfx->JPEGChromaFormat = MFX_CHROMAFORMAT_YUV422;
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE)
     supported_formats.push_back ("YUY2");
 
-  mfx->FrameInfo.FourCC = MFX_FOURCC_RGB4;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_BGRA);
   mfx->JPEGChromaFormat = MFX_CHROMAFORMAT_YUV444;
   mfx->JPEGColorFormat = MFX_JPEG_COLORFORMAT_RGB;
   if (MFXVideoDECODE_Query (session, &param, &param) == MFX_ERR_NONE)

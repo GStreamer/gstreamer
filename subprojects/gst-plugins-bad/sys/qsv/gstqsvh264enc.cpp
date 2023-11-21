@@ -1425,6 +1425,7 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   GstStructure *s;
   const gchar *stream_format;
   mfxFrameInfo *frame_info;
+  GstVideoFormat format;
 
   frame_info = &param->mfx.FrameInfo;
 
@@ -1472,16 +1473,14 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   frame_info->AspectRatioH = GST_VIDEO_INFO_PAR_D (info);
 
   /* TODO: update for non 4:2:0 formats. Currently NV12 only */
-  frame_info->ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  switch (GST_VIDEO_INFO_FORMAT (info)) {
+  format = GST_VIDEO_INFO_FORMAT (info);
+  switch (format) {
     case GST_VIDEO_FORMAT_NV12:
-      frame_info->FourCC = MFX_FOURCC_NV12;
-      frame_info->BitDepthLuma = 8;
-      frame_info->BitDepthChroma = 8;
+      gst_qsv_frame_info_set_format (frame_info, format);
       break;
     default:
       GST_ERROR_OBJECT (self, "Unexpected format %s",
-          gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
+          gst_video_format_to_string (format));
       return FALSE;
   }
 
@@ -2146,11 +2145,8 @@ gst_qsv_h264_enc_register (GstPlugin * plugin, guint rank, guint impl_index,
   mfx->FrameInfo.FrameRateExtD = 1;
   mfx->FrameInfo.AspectRatioW = 1;
   mfx->FrameInfo.AspectRatioH = 1;
-  mfx->FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV420;
-  mfx->FrameInfo.FourCC = MFX_FOURCC_NV12;
-  mfx->FrameInfo.BitDepthLuma = 8;
-  mfx->FrameInfo.BitDepthChroma = 8;
   mfx->FrameInfo.PicStruct = MFX_PICSTRUCT_PROGRESSIVE;
+  gst_qsv_frame_info_set_format (&mfx->FrameInfo, GST_VIDEO_FORMAT_NV12);
 
   /* Check supported profiles */
   for (guint i = 0; i < G_N_ELEMENTS (profile_map); i++) {
