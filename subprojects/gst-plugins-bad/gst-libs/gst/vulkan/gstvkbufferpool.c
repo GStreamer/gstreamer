@@ -110,12 +110,12 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
   GstVulkanBufferPool *vk_pool = GST_VULKAN_BUFFER_POOL_CAST (pool);
   GstVulkanBufferPoolPrivate *priv = GET_PRIV (vk_pool);
-  guint min_buffers, max_buffers;
+  guint min_buffers, max_buffers, size;
   GstCaps *caps = NULL;
   gboolean ret = TRUE;
   guint i;
 
-  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
+  if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers))
     goto wrong_config;
 
@@ -135,19 +135,24 @@ gst_vulkan_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       &priv->usage, &priv->mem_props);
 
   /* get the size of the buffer to allocate */
-  priv->v_info.size = 0;
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-    priv->alloc_sizes[i] = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i) *
-        GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
-    priv->v_info.offset[i] = priv->v_info.size;
-    priv->v_info.size += priv->alloc_sizes[i];
+  if (GST_VIDEO_INFO_FORMAT (&priv->v_info) != GST_VIDEO_FORMAT_ENCODED) {
+    priv->v_info.size = 0;
+    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
+      priv->alloc_sizes[i] = GST_VIDEO_INFO_COMP_HEIGHT (&priv->v_info, i) *
+          GST_VIDEO_INFO_PLANE_STRIDE (&priv->v_info, i);
+      priv->v_info.offset[i] = priv->v_info.size;
+      priv->v_info.size += priv->alloc_sizes[i];
+    }
+
+    priv->add_videometa = gst_buffer_pool_config_has_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+    gst_buffer_pool_config_set_params (config, caps,
+        priv->v_info.size, min_buffers, max_buffers);
+  } else {
+    priv->alloc_sizes[0] = size;
   }
 
-  priv->add_videometa = gst_buffer_pool_config_has_option (config,
-      GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  gst_buffer_pool_config_set_params (config, caps,
-      priv->v_info.size, min_buffers, max_buffers);
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 
   /* ERRORS */
@@ -176,32 +181,38 @@ gst_vulkan_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
 {
   GstVulkanBufferPool *vk_pool = GST_VULKAN_BUFFER_POOL_CAST (pool);
   GstVulkanBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  GstMemory *mem;
   GstBuffer *buf;
-  guint i;
+  guint i, num_planes;
 
   if (!(buf = gst_buffer_new ())) {
     goto no_buffer;
   }
 
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->v_info); i++) {
-    GstMemory *mem;
+  if (GST_VIDEO_INFO_FORMAT (&priv->v_info) != GST_VIDEO_FORMAT_ENCODED)
+    num_planes = GST_VIDEO_INFO_N_PLANES (&priv->v_info);
+  else
+    num_planes = 1;
 
-    mem = gst_vulkan_buffer_memory_alloc (vk_pool->device, priv->alloc_sizes[i],
+  for (i = 0; i < num_planes; i++) {
+    mem =
+        gst_vulkan_buffer_memory_alloc (vk_pool->device, priv->alloc_sizes[i],
         priv->usage, priv->mem_props);
     if (!mem) {
       gst_buffer_unref (buf);
       goto mem_create_failed;
     }
-
     gst_buffer_append_memory (buf, mem);
   }
 
-  gst_buffer_add_video_meta_full (buf, 0,
-      GST_VIDEO_INFO_FORMAT (&priv->v_info),
-      GST_VIDEO_INFO_WIDTH (&priv->v_info),
-      GST_VIDEO_INFO_HEIGHT (&priv->v_info),
-      GST_VIDEO_INFO_N_PLANES (&priv->v_info), priv->v_info.offset,
-      priv->v_info.stride);
+  if (GST_VIDEO_INFO_FORMAT (&priv->v_info) != GST_VIDEO_FORMAT_ENCODED) {
+    gst_buffer_add_video_meta_full (buf, 0,
+        GST_VIDEO_INFO_FORMAT (&priv->v_info),
+        GST_VIDEO_INFO_WIDTH (&priv->v_info),
+        GST_VIDEO_INFO_HEIGHT (&priv->v_info),
+        GST_VIDEO_INFO_N_PLANES (&priv->v_info), priv->v_info.offset,
+        priv->v_info.stride);
+  }
 
   *buffer = buf;
 
