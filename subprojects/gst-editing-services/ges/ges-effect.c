@@ -381,8 +381,16 @@ GESEffect *
 ges_effect_new (const gchar * bin_description)
 {
   GESEffect *effect;
+  GError *error = NULL;
   GESAsset *asset = ges_asset_request (GES_TYPE_EFFECT,
-      bin_description, NULL);
+      bin_description, &error);
+
+  if (error != NULL) {
+    GST_ERROR ("Error requesting asset with description \"%s\": %s",
+        bin_description, error->message);
+    g_error_free (error);
+    /* fall-through */
+  }
 
   g_return_val_if_fail (asset, NULL);
 
