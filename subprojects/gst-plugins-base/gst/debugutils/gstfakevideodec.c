@@ -53,7 +53,7 @@
  * ### False decoding encoded framers
  *
  * ```
- * $ GST_PLUGIN_FEATURE_RANK=fakevideodec:1000 gstdump gst-launch-1.0 playbin3 uri=file:///path/to/video
+ * $ GST_PLUGIN_FEATURE_RANK=fakevideodec:1000 gst-launch-1.0 playbin3 uri=file:///path/to/video
  *
  * ```
  * Since: 1.24
