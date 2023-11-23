@@ -214,17 +214,9 @@ plugin_init (GstPlugin * plugin)
     gst_object_unref (device);
   }
 
-  /* FIXME: Our shader code is not compatible with D3D_FEATURE_LEVEL_9_3
-   * or lower. So HLSL compiler cannot understand our shader code and
-   * therefore d3d11colorconverter cannot be configured.
-   *
-   * Known D3D_FEATURE_LEVEL_9_3 driver is
-   * "VirtualBox Graphics Adapter (WDDM)"
-   * ... and there might be some more old physical devices which don't support
-   * D3D_FEATURE_LEVEL_10_0.
-   */
+  /* We don't support legacy Direct9.x level GPU */
   if (max_feature_level < D3D_FEATURE_LEVEL_10_0)
-    video_sink_rank = GST_RANK_NONE;
+    return TRUE;
 
   gst_d3d11_plugin_utils_init (max_feature_level);
 

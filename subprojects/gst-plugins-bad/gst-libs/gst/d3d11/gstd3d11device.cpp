@@ -1000,9 +1000,6 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
     D3D_FEATURE_LEVEL_11_0,
     D3D_FEATURE_LEVEL_10_1,
     D3D_FEATURE_LEVEL_10_0,
-    D3D_FEATURE_LEVEL_9_3,
-    D3D_FEATURE_LEVEL_9_2,
-    D3D_FEATURE_LEVEL_9_1
   };
   D3D_FEATURE_LEVEL selected_level;
 
@@ -1040,6 +1037,12 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
     hr = external_device->QueryInterface (IID_PPV_ARGS (&device));
     if (FAILED (hr)) {
       GST_WARNING ("Not a valid external ID3D11Device handle");
+      return nullptr;
+    }
+
+    selected_level = device->GetFeatureLevel ();
+    if (selected_level < D3D_FEATURE_LEVEL_10_0) {
+      GST_ERROR ("Feature level 0x%x is not supported", (guint) selected_level);
       return nullptr;
     }
 
