@@ -1372,6 +1372,19 @@ _structure_set_variables (GQuark field_id, GValue * value, ReplaceData * data)
     return TRUE;
   }
 
+
+  if (GST_VALUE_HOLDS_STRUCTURE (value)) {
+    GstStructure *s = gst_structure_copy (gst_value_get_structure (value));
+
+    gst_validate_structure_resolve_variables (data->source,
+        s, data->local_vars, data->flags);
+
+    gst_value_set_structure (value, s);
+    gst_structure_free (s);
+
+    return TRUE;
+  }
+
   if (!G_VALUE_HOLDS_STRING (value))
     return TRUE;
 

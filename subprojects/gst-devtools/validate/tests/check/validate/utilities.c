@@ -1,17 +1,42 @@
 #include <gst/check/gstcheck.h>
 #include <gst/validate/validate.h>
 #include <gst/validate/gst-validate-utils.h>
+#include "gst/gststructure.h"
 
 GST_START_TEST (test_resolve_variables)
 {
-  GstStructure *s1 =
-      gst_structure_from_string ("vars, a=(string)1, b=(string)2", NULL);
-  GstStructure *s2 = gst_structure_from_string ("test, n=\"$(a)/$(b)\"", NULL);
+  GstStructure *expected, *variables =
+      gst_structure_from_string
+      ("vars, a=(string)1, b=(string)2, c=the_c_value", NULL);
+  GstStructure *struct_with_vars =
+      gst_structure_from_string ("test, n=\"$(a)/$(b)\"", NULL);
 
-  gst_validate_structure_resolve_variables (NULL, s2, s1, 0);
-  fail_unless_equals_string (gst_structure_get_string (s2, "n"), "1/2");
-  gst_structure_free (s1);
-  gst_structure_free (s2);
+  gst_validate_structure_resolve_variables (NULL, struct_with_vars, variables,
+      0);
+  fail_unless_equals_string (gst_structure_get_string (struct_with_vars, "n"),
+      "1/2");
+  gst_structure_free (struct_with_vars);
+
+  struct_with_vars =
+      gst_structure_from_string
+      ("test, sub_field=[sub, sub_field=\"$(a)\", subsub_field=[subsub, b_field=\"$(b)\", subsubsub_field=[subsubsub, subsubsubsub_field=\"$(c)\"]]]",
+      NULL);
+
+  gst_validate_structure_resolve_variables (NULL, struct_with_vars, variables,
+      0);
+
+  expected =
+      gst_structure_from_string
+      ("test, sub_field=[sub, sub_field=(string)1, subsub_field=[subsub, b_field=(string)2, subsubsub_field=[subsubsub, subsubsubsub_field=the_c_value]]]",
+      NULL);
+  fail_unless (gst_structure_is_equal (struct_with_vars, expected),
+      "\nReplaced: `%s`\n!=\nExpected: `%s`",
+      gst_structure_serialize (struct_with_vars, GST_SERIALIZE_FLAG_NONE),
+      gst_structure_serialize (expected, GST_SERIALIZE_FLAG_NONE));
+
+  gst_structure_free (variables);
+  gst_structure_free (struct_with_vars);
+  gst_structure_free (expected);
 }
 
 GST_END_TEST;
