@@ -71,9 +71,8 @@ G_BEGIN_DECLS
 #define GST_AV1_MAX_TILE_COUNT                 512
 #define GST_AV1_MAX_OPERATING_POINTS    \
   (GST_AV1_MAX_NUM_TEMPORAL_LAYERS * GST_AV1_MAX_NUM_SPATIAL_LAYERS)
-#define GST_AV1_MAX_SPATIAL_LAYERS             2  /* correct? */
-#define GST_AV1_MAX_TEMPORAL_GROUP_SIZE        8  /* correct? */
-#define GST_AV1_MAX_TEMPORAL_GROUP_REFERENCES  8  /* correct? */
+#define GST_AV1_MAX_TEMPORAL_GROUP_SIZE        255
+#define GST_AV1_MAX_TEMPORAL_GROUP_REFERENCES  7
 #define GST_AV1_MAX_NUM_Y_POINTS               16
 #define GST_AV1_MAX_NUM_CB_POINTS              16
 #define GST_AV1_MAX_NUM_CR_POINTS              16
@@ -968,9 +967,9 @@ struct _GstAV1MetadataScalability {
   gboolean spatial_layer_dimensions_present_flag;
   gboolean spatial_layer_description_present_flag;
   gboolean temporal_group_description_present_flag;
-  guint16 spatial_layer_max_width[GST_AV1_MAX_SPATIAL_LAYERS];
-  guint16 spatial_layer_max_height[GST_AV1_MAX_SPATIAL_LAYERS];
-  guint8 spatial_layer_ref_id[GST_AV1_MAX_SPATIAL_LAYERS];
+  guint16 spatial_layer_max_width[GST_AV1_MAX_NUM_SPATIAL_LAYERS];
+  guint16 spatial_layer_max_height[GST_AV1_MAX_NUM_SPATIAL_LAYERS];
+  guint8 spatial_layer_ref_id[GST_AV1_MAX_NUM_SPATIAL_LAYERS];
   guint8 temporal_group_size;
 
   guint8 temporal_group_temporal_id[GST_AV1_MAX_TEMPORAL_GROUP_SIZE];
