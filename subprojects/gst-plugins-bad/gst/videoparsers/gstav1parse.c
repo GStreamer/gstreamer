@@ -1321,7 +1321,7 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
   }
 
   val = (self->parser->state.operating_point_idc >> 8) & 0x0f;
-  for (i = 0; i < (1 << GST_AV1_MAX_SPATIAL_LAYERS); i++) {
+  for (i = 0; i < GST_AV1_MAX_NUM_SPATIAL_LAYERS; i++) {
     if (val & (1 << i))
       self->highest_spatial_id = i;
   }
