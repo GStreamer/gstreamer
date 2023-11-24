@@ -450,9 +450,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
     gst_clear_object (&self->internal_pool);
   }
 
-  if (!self->use_array_of_texture) {
-    alloc_flags = GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY;
-  } else {
+  if (self->use_array_of_texture) {
     /* array of texture can have shader resource view */
     bind_flags |= D3D11_BIND_SHADER_RESOURCE;
   }
@@ -472,7 +470,7 @@ gst_d3d11_decoder_prepare_output_view_pool (GstD3D11Decoder * self)
       self->downstream_min_buffers);
 
   if (!self->use_array_of_texture) {
-    alloc_params->desc[0].ArraySize = pool_size;
+    gst_d3d11_allocation_params_set_array_size (alloc_params, pool_size);
   } else {
     self->next_view_id = 0;
 
@@ -1877,7 +1875,8 @@ gst_d3d11_decoder_decide_allocation (GstD3D11Decoder * decoder,
      * output of shader pipeline if internal resizing is required.
      * Also, downstream can keep using video processor even if we copy
      * some decoded textures into downstream buffer */
-    d3d11_params->desc[0].BindFlags |= D3D11_BIND_RENDER_TARGET;
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params,
+        D3D11_BIND_RENDER_TARGET);
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);

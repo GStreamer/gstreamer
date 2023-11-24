@@ -24,6 +24,7 @@
 
 #include "gstd3d11bufferpool.h"
 #include "gstd3d11memory.h"
+#include "gstd3d11memory-private.h"
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11-private.h"
@@ -138,11 +139,10 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstCaps *caps = NULL;
   guint min_buffers, max_buffers;
   gboolean ret = TRUE;
-  D3D11_TEXTURE2D_DESC *desc;
+  D3D11_TEXTURE2D_DESC desc[GST_VIDEO_MAX_PLANES];
   const GstD3D11Format *format;
+  GstD3D11AllocationParams *params;
   gsize offset = 0;
-  guint align = 0;
-  gint i;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
           &max_buffers))
@@ -174,73 +174,55 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
   }
 
-  desc = priv->d3d11_params->desc;
-  align = gst_d3d11_dxgi_format_get_alignment (desc[0].Format);
+  params = priv->d3d11_params;
+  memset (desc, 0, sizeof (desc));
+  if (params->d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    desc[0].Width = GST_VIDEO_INFO_WIDTH (&params->aligned_info);
+    desc[0].Height = GST_VIDEO_INFO_HEIGHT (&params->aligned_info);
+    desc[0].Format = params->d3d11_format.dxgi_format;
+    desc[0].MipLevels = 1;
+    desc[0].ArraySize = params->array_size;
+    desc[0].SampleDesc.Count = params->sample_count;
+    desc[0].SampleDesc.Quality = params->sample_quality;
+    desc[0].BindFlags = params->bind_flags;
+    desc[0].MiscFlags = params->misc_flags;
 
-  /* resolution of semi-planar formats must be multiple of 2 */
-  if (align != 0 && (desc[0].Width % align || desc[0].Height % align)) {
-    gint width, height;
-    GstVideoAlignment video_align;
-
-    GST_WARNING_OBJECT (self, "Resolution %dx%d is not mutiple of %d, fixing",
-        desc[0].Width, desc[0].Height, align);
-
-    width = GST_ROUND_UP_N (desc[0].Width, align);
-    height = GST_ROUND_UP_N (desc[0].Height, align);
-
-    gst_video_alignment_reset (&video_align);
-    video_align.padding_right = width - desc[0].Width;
-    video_align.padding_bottom = height - desc[0].Height;
-
-    gst_d3d11_allocation_params_alignment (priv->d3d11_params, &video_align);
-  }
-#ifndef GST_DISABLE_GST_DEBUG
-  {
-    GST_LOG_OBJECT (self, "Direct3D11 Allocation params");
-    GST_LOG_OBJECT (self, "\tD3D11AllocationFlags: 0x%x",
-        priv->d3d11_params->flags);
-    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
+    switch (params->d3d11_format.dxgi_format) {
+      case DXGI_FORMAT_NV12:
+      case DXGI_FORMAT_P010:
+      case DXGI_FORMAT_P016:
+        desc[0].Width = GST_ROUND_UP_2 (desc[0].Width);
+        desc[0].Height = GST_ROUND_UP_2 (desc[0].Height);
         break;
-      GST_LOG_OBJECT (self, "\t[plane %d] %dx%d, DXGI format %d",
-          i, desc[i].Width, desc[i].Height, desc[i].Format);
-      GST_LOG_OBJECT (self, "\t[plane %d] MipLevel %d, ArraySize %d",
-          i, desc[i].MipLevels, desc[i].ArraySize);
-      GST_LOG_OBJECT (self,
-          "\t[plane %d] SampleDesc.Count %d, SampleDesc.Quality %d",
-          i, desc[i].SampleDesc.Count, desc[i].SampleDesc.Quality);
-      GST_LOG_OBJECT (self, "\t[plane %d] Usage %d", i, desc[i].Usage);
-      GST_LOG_OBJECT (self,
-          "\t[plane %d] BindFlags 0x%x", i, desc[i].BindFlags);
-      GST_LOG_OBJECT (self,
-          "\t[plane %d] CPUAccessFlags 0x%x", i, desc[i].CPUAccessFlags);
-      GST_LOG_OBJECT (self,
-          "\t[plane %d] MiscFlags 0x%x", i, desc[i].MiscFlags);
+      case DXGI_FORMAT_Y210:
+      case DXGI_FORMAT_Y216:
+        desc[0].Width = GST_ROUND_UP_2 (desc[0].Width);
+        break;
+      default:
+        break;
     }
-  }
-#endif
-
-  if ((priv->d3d11_params->flags & GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
-    guint max_array_size = 0;
-
-    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
+  } else {
+    for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+      if (params->d3d11_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
         break;
 
-      if (desc[i].ArraySize > max_array_size)
-        max_array_size = desc[i].ArraySize;
-    }
-
-    if (max_buffers == 0 || max_buffers > max_array_size) {
-      GST_WARNING_OBJECT (pool,
-          "Array pool is requested but allowed pool size %d > ArraySize %d",
-          max_buffers, max_array_size);
-      max_buffers = max_array_size;
+      desc[i].Width = GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, i);
+      desc[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, i);
+      desc[i].Format = params->d3d11_format.resource_format[i];
+      desc[i].MipLevels = 1;
+      desc[i].ArraySize = params->array_size;
+      desc[i].SampleDesc.Count = params->sample_count;
+      desc[i].SampleDesc.Quality = params->sample_quality;
+      desc[i].BindFlags = params->bind_flags;
+      desc[i].MiscFlags = params->misc_flags;
     }
   }
+
+  if (params->array_size > 1)
+    max_buffers = params->array_size;
 
   offset = 0;
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     GstD3D11Allocator *alloc;
     GstD3D11PoolAllocator *pool_alloc;
     GstFlowReturn flow_ret;
@@ -288,7 +270,7 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     gst_memory_unref (mem);
   }
 
-  format = &priv->d3d11_params->d3d11_format;
+  format = &params->d3d11_format;
   /* single texture semi-planar formats */
   if (format->dxgi_format != DXGI_FORMAT_UNKNOWN &&
       GST_VIDEO_INFO_N_PLANES (&info) == 2) {

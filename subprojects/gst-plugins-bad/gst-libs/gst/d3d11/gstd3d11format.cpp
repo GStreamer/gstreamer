@@ -281,31 +281,6 @@ gst_d3d11_dxgi_format_get_resource_format (DXGI_FORMAT format,
 }
 
 /**
- * gst_d3d11_dxgi_format_get_alignment:
- * @format: a DXGI_FORMAT
- *
- * Returns: Width and height Alignment requirement for given @format
- *
- * Since: 1.22
- */
-guint
-gst_d3d11_dxgi_format_get_alignment (DXGI_FORMAT format)
-{
-  switch (format) {
-    case DXGI_FORMAT_NV12:
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-    case DXGI_FORMAT_Y210:
-    case DXGI_FORMAT_Y216:
-      return 2;
-    default:
-      break;
-  }
-
-  return 0;
-}
-
-/**
  * gst_d3d11_dxgi_format_to_string:
  * @format: a DXGI_FORMAT
  *

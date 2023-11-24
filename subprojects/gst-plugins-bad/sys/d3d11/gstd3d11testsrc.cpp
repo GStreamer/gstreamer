@@ -1474,7 +1474,7 @@ gst_d3d11_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
       d3d11_params = gst_d3d11_allocation_params_new (self->device, &vinfo,
           GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
     } else {
-      d3d11_params->desc[0].BindFlags |= bind_flags;
+      gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
     }
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);

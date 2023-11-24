@@ -1390,10 +1390,7 @@ gst_d3d11_base_convert_propose_allocation (GstBaseTransform * trans,
     d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
-    /* Set bind flag */
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-      d3d11_params->desc[i].BindFlags |= bind_flags;
-    }
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
@@ -1444,7 +1441,6 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
   GstD3D11AllocationParams *d3d11_params;
   gboolean update_pool = FALSE;
   GstVideoInfo info;
-  guint i;
   GstD3D11Format d3d11_format;
   guint bind_flags = 0;
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
@@ -1529,10 +1525,7 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
     d3d11_params = gst_d3d11_allocation_params_new (filter->device, &info,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
-    /* Set bind flag */
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-      d3d11_params->desc[i].BindFlags |= bind_flags;
-    }
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
@@ -1651,10 +1644,8 @@ gst_d3d11_base_convert_setup_msaa_texture (GstD3D11BaseConvert * self,
 
   params = gst_d3d11_allocation_params_new (device, info,
       GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET, 0);
-  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-    params->desc[i].SampleDesc.Count = sample_count;
-    params->desc[i].SampleDesc.Quality = quality_levels - 1;
-  }
+  gst_d3d11_allocation_params_set_sample_desc (params,
+      sample_count, quality_levels - 1);
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);

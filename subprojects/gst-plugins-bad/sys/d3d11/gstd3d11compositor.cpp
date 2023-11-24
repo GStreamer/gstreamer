@@ -1776,14 +1776,11 @@ gst_d3d11_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     d3d11_params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
     if (!d3d11_params) {
       d3d11_params = gst_d3d11_allocation_params_new (self->device,
-          &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, D3D11_BIND_RENDER_TARGET,
-          0);
+          &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
     } else {
-      guint i;
-
-      for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++) {
-        d3d11_params->desc[i].BindFlags |= D3D11_BIND_RENDER_TARGET;
-      }
+      gst_d3d11_allocation_params_set_bind_flags (d3d11_params,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
     }
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);

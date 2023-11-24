@@ -1352,7 +1352,7 @@ gst_qsv_decoder_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) != 0)
       bind_flags |= D3D11_BIND_SHADER_RESOURCE;
 
-    d3d11_params->desc[0].BindFlags |= bind_flags;
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
   }

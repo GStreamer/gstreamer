@@ -75,9 +75,6 @@ guint           gst_d3d11_dxgi_format_get_resource_format (DXGI_FORMAT format,
                                                            DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES]);
 
 GST_D3D11_API
-guint           gst_d3d11_dxgi_format_get_alignment       (DXGI_FORMAT format);
-
-GST_D3D11_API
 const gchar *   gst_d3d11_dxgi_format_to_string           (DXGI_FORMAT format);
 
 GST_D3D11_API

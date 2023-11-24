@@ -629,8 +629,7 @@ gst_dwrite_overlay_object_decide_allocation (GstDWriteOverlayObject * object,
     params = gst_d3d11_allocation_params_new (priv->device, &info,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
-    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
-      params->desc[i].BindFlags |= bind_flags;
+    gst_d3d11_allocation_params_set_bind_flags (params, bind_flags);
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
@@ -723,8 +722,7 @@ gst_dwrite_overlay_object_propose_allocation (GstDWriteOverlayObject * object,
     params = gst_d3d11_allocation_params_new (dpool->device, &info,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
-    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
-      params->desc[i].BindFlags |= bind_flags;
+    gst_d3d11_allocation_params_set_bind_flags (params, bind_flags);
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);

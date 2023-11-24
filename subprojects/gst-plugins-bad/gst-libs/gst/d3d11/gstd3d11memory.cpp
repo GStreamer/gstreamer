@@ -27,6 +27,7 @@
 #include "gstd3d11device.h"
 #include "gstd3d11utils.h"
 #include "gstd3d11-private.h"
+#include "gstd3d11memory-private.h"
 #include <map>
 #include <memory>
 #include <queue>
@@ -57,8 +58,6 @@ gst_d3d11_allocation_flags_get_type (void)
   static const GFlagsValue values[] = {
     {GST_D3D11_ALLOCATION_FLAG_DEFAULT, "GST_D3D11_ALLOCATION_FLAG_DEFAULT",
         "default"},
-    {GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY,
-        "GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY", "texture-array"},
     {0, nullptr, nullptr}
   };
 
@@ -140,14 +139,14 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device,
 {
   GstD3D11AllocationParams *ret;
   GstD3D11Format d3d11_format;
-  guint i;
 
-  g_return_val_if_fail (info != NULL, NULL);
+  g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
+  g_return_val_if_fail (info, nullptr);
 
   if (!gst_d3d11_device_get_format (device, GST_VIDEO_INFO_FORMAT (info),
           &d3d11_format)) {
-    GST_WARNING ("Couldn't get d3d11 format");
-    return NULL;
+    GST_WARNING_OBJECT (device, "Couldn't get d3d11 format");
+    return nullptr;
   }
 
   ret = g_new0 (GstD3D11AllocationParams, 1);
@@ -155,49 +154,11 @@ gst_d3d11_allocation_params_new (GstD3D11Device * device,
   ret->info = *info;
   ret->aligned_info = *info;
   ret->d3d11_format = d3d11_format;
-
-  /* Usage Flag
-   * https://docs.microsoft.com/en-us/windows/win32/api/d3d11/ne-d3d11-d3d11_usage
-   *
-   * +----------------------------------------------------------+
-   * | Resource Usage | Default | Dynamic | Immutable | Staging |
-   * +----------------+---------+---------+-----------+---------+
-   * | GPU-Read       | Yes     | Yes     | Yes       | Yes     |
-   * | GPU-Write      | Yes     |         |           | Yes     |
-   * | CPU-Read       |         |         |           | Yes     |
-   * | CPU-Write      |         | Yes     |           | Yes     |
-   * +----------------------------------------------------------+
-   */
-
-  /* If corresponding dxgi format is undefined, use resource format instead */
-  if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-      g_assert (d3d11_format.resource_format[i] != DXGI_FORMAT_UNKNOWN);
-
-      ret->desc[i].Width = GST_VIDEO_INFO_COMP_WIDTH (info, i);
-      ret->desc[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (info, i);
-      ret->desc[i].MipLevels = 1;
-      ret->desc[i].ArraySize = 1;
-      ret->desc[i].Format = d3d11_format.resource_format[i];
-      ret->desc[i].SampleDesc.Count = 1;
-      ret->desc[i].SampleDesc.Quality = 0;
-      ret->desc[i].Usage = D3D11_USAGE_DEFAULT;
-      ret->desc[i].BindFlags = bind_flags;
-      ret->desc[i].MiscFlags = misc_flags;
-    }
-  } else {
-    ret->desc[0].Width = GST_VIDEO_INFO_WIDTH (info);
-    ret->desc[0].Height = GST_VIDEO_INFO_HEIGHT (info);
-    ret->desc[0].MipLevels = 1;
-    ret->desc[0].ArraySize = 1;
-    ret->desc[0].Format = d3d11_format.dxgi_format;
-    ret->desc[0].SampleDesc.Count = 1;
-    ret->desc[0].SampleDesc.Quality = 0;
-    ret->desc[0].Usage = D3D11_USAGE_DEFAULT;
-    ret->desc[0].BindFlags = bind_flags;
-    ret->desc[0].MiscFlags = misc_flags;
-  }
-
+  ret->array_size = 1;
+  ret->bind_flags = bind_flags;
+  ret->misc_flags = misc_flags;
+  ret->sample_count = 1;
+  ret->sample_quality = 0;
   ret->flags = flags;
 
   return ret;
@@ -219,13 +180,12 @@ gboolean
 gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
     const GstVideoAlignment * align)
 {
-  guint i;
   guint padding_width, padding_height;
   GstVideoInfo *info;
   GstVideoInfo new_info;
 
-  g_return_val_if_fail (params != NULL, FALSE);
-  g_return_val_if_fail (align != NULL, FALSE);
+  g_return_val_if_fail (params, FALSE);
+  g_return_val_if_fail (align, FALSE);
 
   /* d3d11 does not support stride align. Consider padding only */
   padding_width = align->padding_left + align->padding_right;
@@ -241,11 +201,6 @@ gst_d3d11_allocation_params_alignment (GstD3D11AllocationParams * params,
   }
 
   params->aligned_info = new_info;
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-    params->desc[i].Width = GST_VIDEO_INFO_COMP_WIDTH (&new_info, i);
-    params->desc[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (&new_info, i);
-  }
 
   return TRUE;
 }
@@ -283,6 +238,75 @@ void
 gst_d3d11_allocation_params_free (GstD3D11AllocationParams * params)
 {
   g_free (params);
+}
+
+/**
+ * gst_d3d11_allocation_params_set_bind_flags:
+ * @params: a #GstD3D11AllocationParams
+ * @bind_flags: D3D11_BIND_FLAG
+ *
+ * Appends @bind_flags
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_d3d11_allocation_params_set_bind_flags (GstD3D11AllocationParams * params,
+    guint bind_flags)
+{
+  g_return_val_if_fail (params, FALSE);
+
+  params->bind_flags |= bind_flags;
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d11_allocation_params_set_array_size:
+ * @params: a #GstD3D11AllocationParams
+ * @size: texture array size
+ *
+ * Set texture array size. @size must be non-zero value
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_d3d11_allocation_params_set_array_size (GstD3D11AllocationParams * params,
+    guint size)
+{
+  g_return_val_if_fail (params, FALSE);
+  g_return_val_if_fail (size > 0, FALSE);
+
+  params->array_size = size;
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d11_allocation_params_set_sample_desc:
+ * @params: a #GstD3D11AllocationParams
+ * @sample_count: sample count
+ * @sample_quality: sample quality
+ *
+ * Set sample description
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_d3d11_allocation_params_set_sample_desc (GstD3D11AllocationParams * params,
+    guint sample_count, guint sample_quality)
+{
+  g_return_val_if_fail (params, FALSE);
+
+  params->sample_count = sample_count;
+  params->sample_quality = sample_quality;
+
+  return TRUE;
 }
 
 static gint

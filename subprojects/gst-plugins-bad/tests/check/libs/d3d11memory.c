@@ -162,10 +162,10 @@ GST_START_TEST (test_unblock_on_stop)
   fail_unless (config);
 
   params = gst_d3d11_allocation_params_new (device,
-      &info, GST_D3D11_ALLOCATION_FLAG_TEXTURE_ARRAY, 0, 0);
+      &info, GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
   fail_unless (params);
 
-  params->desc[0].ArraySize = 2;
+  gst_d3d11_allocation_params_set_array_size (params, 2);
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);

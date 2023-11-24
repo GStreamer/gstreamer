@@ -308,7 +308,6 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   GstD3D11Format d3d11_format;
   GstD3D11AllocationParams *d3d11_params;
   guint bind_flags = 0;
-  guint i;
   DXGI_FORMAT dxgi_format = DXGI_FORMAT_UNKNOWN;
   UINT supported = 0;
   HRESULT hr;
@@ -380,10 +379,7 @@ gst_d3d11_upload_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     d3d11_params = gst_d3d11_allocation_params_new (filter->device, &vinfo,
         GST_D3D11_ALLOCATION_FLAG_DEFAULT, bind_flags, 0);
   } else {
-    /* Set bind flag */
-    for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&vinfo); i++) {
-      d3d11_params->desc[i].BindFlags |= bind_flags;
-    }
+    gst_d3d11_allocation_params_set_bind_flags (d3d11_params, bind_flags);
   }
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
