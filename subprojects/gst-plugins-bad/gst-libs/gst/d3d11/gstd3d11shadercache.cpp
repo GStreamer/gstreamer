@@ -49,7 +49,7 @@ gst_d3d11_shader_cache_get_pixel_shader_blob (gint64 token,
   }
 
   HRESULT hr = gst_d3d11_compile (source, source_size, nullptr, defines,
-      nullptr, entry_point, "ps_5_0", 0, 0, blob, nullptr);
+      nullptr, entry_point, "ps_4_0", 0, 0, blob, nullptr);
   if (FAILED (hr))
     return hr;
 
@@ -74,7 +74,7 @@ gst_d3d11_shader_cache_get_vertex_shader_blob (gint64 token,
   }
 
   HRESULT hr = gst_d3d11_compile (source, source_size, nullptr, nullptr,
-      nullptr, entry_point, "vs_5_0", 0, 0, blob, nullptr);
+      nullptr, entry_point, "vs_4_0", 0, 0, blob, nullptr);
   if (FAILED (hr))
     return hr;
 

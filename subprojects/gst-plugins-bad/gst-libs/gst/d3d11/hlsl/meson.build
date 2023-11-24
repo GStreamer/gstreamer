@@ -83,7 +83,7 @@ foreach input_format : hlsl_ps_input_formats
         output : header,
         command : [fxc, '/Fh', '@OUTPUT@',
                   '/E', entry_point,
-                  '/T', 'ps_5_0',
+                  '/T', 'ps_4_0',
                   '/D', 'BUILDING_HLSL=1',
                   '/D', 'OUTPUT_TYPE=@0@'.format(output_type),
                   '/D', 'ENTRY_POINT=@0@'.format(entry_point),
@@ -109,7 +109,7 @@ generated_collection = custom_target(header_collection,
 hlsl_precompiled += generated_collection
 
 hlsl_vs_sources = [
-  [files('VSMain_converter.hlsl'), 'VSMain_converter', 'vs_5_0'],
+  [files('VSMain_converter.hlsl'), 'VSMain_converter', 'vs_4_0'],
 ]
 
 foreach shader : hlsl_vs_sources

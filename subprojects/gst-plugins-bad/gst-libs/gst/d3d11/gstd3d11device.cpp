@@ -1677,45 +1677,16 @@ gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
       "Creating pixel shader for token %" G_GINT64_FORMAT ", source:\n%s",
       token, source);
 
-  if (priv->feature_level >= D3D_FEATURE_LEVEL_11_0) {
-    if (bytecode && bytecode_size > 1) {
-      data = bytecode;
-      size = bytecode_size;
-      GST_DEBUG_OBJECT (device,
-          "Creating shader \"%s\" using precompiled bytecode", entry_point);
-    } else {
-      hr = gst_d3d11_shader_cache_get_pixel_shader_blob (token,
-          source, source_size, entry_point, defines, &blob);
-      if (!gst_d3d11_result (hr, device))
-        return hr;
-
-      data = blob->GetBufferPointer ();
-      size = blob->GetBufferSize ();
-    }
+  if (bytecode && bytecode_size > 1) {
+    data = bytecode;
+    size = bytecode_size;
+    GST_DEBUG_OBJECT (device,
+        "Creating shader \"%s\" using precompiled bytecode", entry_point);
   } else {
-    ComPtr < ID3DBlob > error_msg;
-    const gchar *target;
-    if (priv->feature_level >= D3D_FEATURE_LEVEL_10_0)
-      target = "ps_4_0";
-    else if (priv->feature_level >= D3D_FEATURE_LEVEL_9_3)
-      target = "ps_4_0_level_9_3";
-    else
-      target = "ps_4_0_level_9_1";
-
-    hr = gst_d3d11_compile (source, source_size, nullptr, defines,
-        nullptr, entry_point, target, 0, 0, &blob, &error_msg);
-    if (!gst_d3d11_result (hr, device)) {
-      const gchar *err = nullptr;
-
-      if (error_msg)
-        err = (const gchar *) error_msg->GetBufferPointer ();
-
-      GST_ERROR_OBJECT (device,
-          "Couldn't compile code, hr: 0x%x, error detail: %s, source code: \n%s",
-          (guint) hr, GST_STR_NULL (err), source);
-
+    hr = gst_d3d11_shader_cache_get_pixel_shader_blob (token,
+        source, source_size, entry_point, defines, &blob);
+    if (!gst_d3d11_result (hr, device))
       return hr;
-    }
 
     data = blob->GetBufferPointer ();
     size = blob->GetBufferSize ();
@@ -1779,6 +1750,9 @@ gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
   HRESULT hr;
   ComPtr < ID3D11VertexShader > shader;
   ComPtr < ID3D11InputLayout > input_layout;
+  ComPtr < ID3DBlob > blob;
+  const void *data;
+  gsize size;
 
   GST_DEBUG_OBJECT (device, "Getting vertext shader \"%s\" for token %"
       G_GINT64_FORMAT, entry_point, token);
@@ -1800,40 +1774,29 @@ gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
       "Creating vertex shader for token %" G_GINT64_FORMAT ", shader: \n%s",
       token, source);
 
-  if (priv->feature_level >= D3D_FEATURE_LEVEL_11_0) {
-    ComPtr < ID3DBlob > blob;
-    const void *data;
-    gsize size;
-
-    if (bytecode && bytecode_size > 1) {
-      data = bytecode;
-      size = bytecode_size;
-      GST_DEBUG_OBJECT (device,
-          "Creating shader \"%s\" using precompiled bytecode", entry_point);
-    } else {
-      hr = gst_d3d11_shader_cache_get_vertex_shader_blob (token,
-          source, source_size, entry_point, &blob);
-      if (!gst_d3d11_result (hr, device))
-        return hr;
-
-      data = blob->GetBufferPointer ();
-      size = blob->GetBufferSize ();
-    }
-
-    hr = priv->device->CreateVertexShader (data, size, nullptr, &shader);
-    if (!gst_d3d11_result (hr, device))
-      return hr;
-
-    hr = priv->device->CreateInputLayout (input_desc, desc_len, data,
-        size, &input_layout);
-    if (!gst_d3d11_result (hr, device))
-      return hr;
+  if (bytecode && bytecode_size > 1) {
+    data = bytecode;
+    size = bytecode_size;
+    GST_DEBUG_OBJECT (device,
+        "Creating shader \"%s\" using precompiled bytecode", entry_point);
   } else {
-    hr = gst_d3d11_create_vertex_shader_simple (device, source, entry_point,
-        input_desc, desc_len, &shader, &input_layout);
+    hr = gst_d3d11_shader_cache_get_vertex_shader_blob (token,
+        source, source_size, entry_point, &blob);
     if (!gst_d3d11_result (hr, device))
       return hr;
+
+    data = blob->GetBufferPointer ();
+    size = blob->GetBufferSize ();
   }
+
+  hr = priv->device->CreateVertexShader (data, size, nullptr, &shader);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
+
+  hr = priv->device->CreateInputLayout (input_desc, desc_len, data,
+      size, &input_layout);
+  if (!gst_d3d11_result (hr, device))
+    return hr;
 
   GST_DEBUG_OBJECT (device, "Created vertex shader \"%s\" for token %"
       G_GINT64_FORMAT, entry_point, token);
