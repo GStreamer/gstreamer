@@ -970,11 +970,14 @@ gst_dash_demux_stream_create_tracks (GstAdaptiveDemux2Stream * stream)
         gst_stream_collection_get_stream (stream->stream_collection, i);
     GstStreamType stream_type = gst_stream_get_stream_type (gst_stream);
     GstAdaptiveDemuxTrack *track;
-    GstTagList *tags = gst_stream_get_tags (gst_stream);
-    GstCaps *caps = gst_stream_get_caps (gst_stream);
+    GstTagList *tags;
+    GstCaps *caps;
 
     if (stream_type == GST_STREAM_TYPE_UNKNOWN)
       continue;
+
+    caps = gst_stream_get_caps (gst_stream);
+    tags = gst_stream_get_tags (gst_stream);
 
     GST_DEBUG_OBJECT (stream, "create track type %d of the stream",
         stream_type);
@@ -990,9 +993,6 @@ gst_dash_demux_stream_create_tracks (GstAdaptiveDemux2Stream * stream)
         g_strdup (gst_stream_get_stream_id (gst_stream));
     gst_adaptive_demux2_stream_add_track (stream, track);
     gst_adaptive_demux_track_unref (track);
-
-    if (tags)
-      gst_tag_list_unref (tags);
   }
 }
 
