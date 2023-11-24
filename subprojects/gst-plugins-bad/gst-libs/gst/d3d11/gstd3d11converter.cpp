@@ -2041,7 +2041,7 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
       GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y210 ||
       GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y212_LE) {
     GstVideoInfo tmp_info;
-    GstVideoFormat postproc_format = GST_VIDEO_FORMAT_VUYA;
+    GstVideoFormat postproc_format = GST_VIDEO_FORMAT_AYUV;
 
     if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_YUY2)
       postproc_format = GST_VIDEO_FORMAT_AYUV64;
@@ -2066,7 +2066,7 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
       GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y212_LE ||
       GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y412_LE) {
     GstVideoInfo tmp_info;
-    GstVideoFormat postproc_format = GST_VIDEO_FORMAT_VUYA;
+    GstVideoFormat postproc_format = GST_VIDEO_FORMAT_AYUV;
 
     if (GST_VIDEO_INFO_FORMAT (out_info) != GST_VIDEO_FORMAT_YUY2)
       postproc_format = GST_VIDEO_FORMAT_AYUV64;

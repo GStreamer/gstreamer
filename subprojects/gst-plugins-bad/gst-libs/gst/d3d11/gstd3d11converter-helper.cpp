@@ -113,42 +113,67 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
   std::string entry_point;
   HRESULT hr;
 
-  if (in_format == GST_VIDEO_FORMAT_YUY2 && out_format == GST_VIDEO_FORMAT_VUYA) {
-    entry_point = "CSMain_YUY2_to_VUYA";
-    srv_format = DXGI_FORMAT_R8G8B8A8_UINT;
-    uav_format = DXGI_FORMAT_R32_UINT;
-  } else if (in_format == GST_VIDEO_FORMAT_VUYA &&
-      out_format == GST_VIDEO_FORMAT_YUY2) {
-    entry_point = "CSMain_VUYA_to_YUY2";
-    srv_format = DXGI_FORMAT_R8G8B8A8_UINT;
-    uav_format = DXGI_FORMAT_R32_UINT;
-  } else if (in_format == GST_VIDEO_FORMAT_AYUV64 &&
-      out_format == GST_VIDEO_FORMAT_Y410) {
-    entry_point = "CSMain_AYUV64_to_Y410";
-    srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-    uav_format = DXGI_FORMAT_R32_UINT;
-    x_unit = 8;
-  } else if (in_format == GST_VIDEO_FORMAT_AYUV64 &&
-      (out_format == GST_VIDEO_FORMAT_Y210 ||
-      out_format == GST_VIDEO_FORMAT_Y212_LE)) {
-    entry_point = "CSMain_AYUV64_to_Y210";
-    srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-    uav_format = DXGI_FORMAT_R16G16B16A16_UINT;
-  } else if ((in_format == GST_VIDEO_FORMAT_Y210 ||
-      in_format == GST_VIDEO_FORMAT_Y212_LE) &&
-      out_format == GST_VIDEO_FORMAT_AYUV64) {
-    entry_point = "CSMain_Y210_to_AYUV64";
-    srv_format = DXGI_FORMAT_R16G16B16A16_UINT;
-    uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-  } else if (in_format == GST_VIDEO_FORMAT_AYUV64 &&
-      out_format == GST_VIDEO_FORMAT_Y412_LE) {
-    entry_point = "CSMain_AYUV64_to_Y412";
-    srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-    uav_format = DXGI_FORMAT_R16G16B16A16_UINT;
-    x_unit = 8;
-  } else if (in_format != out_format) {
-    g_assert_not_reached ();
-    return nullptr;
+  if (in_format != out_format) {
+    std::string in_format_str;
+    std::string out_format_str;
+
+    switch (in_format) {
+      case GST_VIDEO_FORMAT_YUY2:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "YUY2";
+        break;
+      case GST_VIDEO_FORMAT_Y210:
+      case GST_VIDEO_FORMAT_Y212_LE:
+        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        in_format_str = "YUY2";
+        break;
+      case GST_VIDEO_FORMAT_AYUV:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "AYUV";
+        break;
+      case GST_VIDEO_FORMAT_AYUV64:
+        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        in_format_str = "AYUV";
+        break;
+      default:
+        g_assert_not_reached ();
+        return nullptr;
+    }
+
+    switch (out_format) {
+      case GST_VIDEO_FORMAT_YUY2:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "YUY2";
+        break;
+      case GST_VIDEO_FORMAT_Y210:
+      case GST_VIDEO_FORMAT_Y212_LE:
+        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        out_format_str = "YUY2";
+        break;
+      case GST_VIDEO_FORMAT_Y410:
+        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+        out_format_str = "Y410";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_Y412_LE:
+        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        out_format_str = "Y410";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_AYUV:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "AYUV";
+        break;
+      case GST_VIDEO_FORMAT_AYUV64:
+        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        out_format_str = "AYUV";
+        break;
+      default:
+        g_assert_not_reached ();
+        return nullptr;
+    }
+
+    entry_point = "CSMain_" + in_format_str + "_to_" + out_format_str;
   }
 
   self = new GstD3D11ConverterHelper ();

@@ -18,74 +18,13 @@
  */
 
 #ifdef BUILDING_HLSL
-#ifdef BUILDING_CSMain_AYUV64_to_Y410
 Texture2D<float4> inTex : register(t0);
-RWTexture2D<uint> outTex : register(u0);
+RWTexture2D<unorm float4> outTex : register(u0);
 
+#ifdef BUILDING_CSMain_YUY2_to_AYUV
 void Execute (uint3 tid)
 {
   float4 val = inTex.Load (tid);
-  uint3 scaled = val.yzw * 1023;
-  outTex[tid.xy] = (0xc0 << 24) | (scaled.z << 20) | (scaled.x << 10) | scaled.y;
-}
-#endif
-
-#ifdef BUILDING_CSMain_VUYA_to_YUY2
-Texture2D<uint4> inTex : register(t0);
-RWTexture2D<uint> outTex : register(u0);
-
-void Execute (uint3 tid)
-{
-  uint4 val = inTex.Load (uint3(tid.x * 2, tid.y, 0));
-  uint Y0 = val.b;
-  uint U = val.g;
-  uint V = val.r;
-  uint Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).b;
-
-  outTex[tid.xy] = Y0 | (U << 8) | (Y1 << 16) | (V << 24);
-}
-#endif
-
-#ifdef BUILDING_CSMain_YUY2_to_VUYA
-Texture2D<uint4> inTex : register(t0);
-RWTexture2D<uint> outTex : register(u0);
-
-void Execute (uint3 tid)
-{
-  uint4 val = inTex.Load (tid);
-  uint Y0 = val.r;
-  uint U = val.g;
-  uint Y1 = val.b;
-  uint V = val.a;
-
-  outTex[uint2(tid.x * 2, tid.y)] = V | (U << 8) | (Y0 << 16) | (0xff << 24);
-  outTex[uint2(tid.x * 2 + 1, tid.y)] = V | (U << 8) | (Y1 << 16) | (0xff << 24);
-}
-#endif
-
-#ifdef BUILDING_CSMain_AYUV64_to_Y210
-Texture2D<float4> inTex : register(t0);
-RWTexture2D<uint4> outTex : register(u0);
-
-void Execute (uint3 tid)
-{
-  float4 val = inTex.Load (uint3(tid.x * 2, tid.y, 0));
-  uint3 scaled = val.yzw * 65535;
-  uint Y0 = scaled.x;
-  uint U = scaled.y;
-  uint V = scaled.z;
-  uint Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).y * 65535;
-  outTex[tid.xy] = uint4(Y0, U, Y1, V);
-}
-#endif
-
-#ifdef BUILDING_CSMain_Y210_to_AYUV64
-Texture2D<uint4> inTex : register(t0);
-RWTexture2D<unorm float4> outTex : register(u0);
-
-void Execute (uint3 tid)
-{
-  float4 val = inTex.Load (tid) / 65535.0;
   float Y0 = val.r;
   float U = val.g;
   float Y1 = val.b;
@@ -96,14 +35,29 @@ void Execute (uint3 tid)
 }
 #endif
 
-#ifdef BUILDING_CSMain_AYUV64_to_Y412
-Texture2D<float4> inTex : register(t0);
-RWTexture2D<uint4> outTex : register(u0);
+#ifdef BUILDING_CSMain_AYUV_to_YUY2
+void Execute (uint3 tid)
+{
+  float3 val = inTex.Load (uint3(tid.x * 2, tid.y, 0)).yzw;
+  float Y0 = val.x;
+  float U = val.y;
+  float V = val.z;
+  float Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).y;
 
+  outTex[tid.xy] = float4 (Y0, U, Y1, V);
+}
+#endif
+
+#ifdef BUILDING_CSMain_AYUV_to_Y410
 void Execute (uint3 tid)
 {
   float4 val = inTex.Load (tid);
-  outTex[tid.xy] = uint4(val.zywx * 65535);
+  float Y = val.y;
+  float U = val.z;
+  float V = val.w;
+  float A = val.x;
+
+  outTex[tid.xy] = float4 (U, Y, V, A);
 }
 #endif
 
@@ -114,74 +68,13 @@ void ENTRY_POINT (uint3 tid : SV_DispatchThreadID)
 }
 #else
 static const char g_CSMain_converter_str[] =
-"#ifdef BUILDING_CSMain_AYUV64_to_Y410\n"
 "Texture2D<float4> inTex : register(t0);\n"
-"RWTexture2D<uint> outTex : register(u0);\n"
+"RWTexture2D<unorm float4> outTex : register(u0);\n"
 "\n"
+"#ifdef BUILDING_CSMain_YUY2_to_AYUV\n"
 "void Execute (uint3 tid)\n"
 "{\n"
 "  float4 val = inTex.Load (tid);\n"
-"  uint3 scaled = val.yzw * 1023;\n"
-"  outTex[tid.xy] = (0xc0 << 24) | (scaled.z << 20) | (scaled.x << 10) | scaled.y;\n"
-"}\n"
-"#endif\n"
-"\n"
-"#ifdef BUILDING_CSMain_VUYA_to_YUY2\n"
-"Texture2D<uint4> inTex : register(t0);\n"
-"RWTexture2D<uint> outTex : register(u0);\n"
-"\n"
-"void Execute (uint3 tid)\n"
-"{\n"
-"  uint4 val = inTex.Load (uint3(tid.x * 2, tid.y, 0));\n"
-"  uint Y0 = val.b;\n"
-"  uint U = val.g;\n"
-"  uint V = val.r;\n"
-"  uint Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).b;\n"
-"\n"
-"  outTex[tid.xy] = Y0 | (U << 8) | (Y1 << 16) | (V << 24);\n"
-"}\n"
-"#endif\n"
-"\n"
-"#ifdef BUILDING_CSMain_YUY2_to_VUYA\n"
-"Texture2D<uint4> inTex : register(t0);\n"
-"RWTexture2D<uint> outTex : register(u0);\n"
-"\n"
-"void Execute (uint3 tid)\n"
-"{\n"
-"  uint4 val = inTex.Load (tid);\n"
-"  uint Y0 = val.r;\n"
-"  uint U = val.g;\n"
-"  uint Y1 = val.b;\n"
-"  uint V = val.a;\n"
-"\n"
-"  outTex[uint2(tid.x * 2, tid.y)] = V | (U << 8) | (Y0 << 16) | (0xff << 24);\n"
-"  outTex[uint2(tid.x * 2 + 1, tid.y)] = V | (U << 8) | (Y1 << 16) | (0xff << 24);\n"
-"}\n"
-"#endif\n"
-"\n"
-"#ifdef BUILDING_CSMain_AYUV64_to_Y210\n"
-"Texture2D<float4> inTex : register(t0);\n"
-"RWTexture2D<uint4> outTex : register(u0);\n"
-"\n"
-"void Execute (uint3 tid)\n"
-"{\n"
-"  float4 val = inTex.Load (uint3(tid.x * 2, tid.y, 0));\n"
-"  uint3 scaled = val.yzw * 65535;\n"
-"  uint Y0 = scaled.x;\n"
-"  uint U = scaled.y;\n"
-"  uint V = scaled.z;\n"
-"  uint Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).y * 65535;\n"
-"  outTex[tid.xy] = uint4(Y0, U, Y1, V);\n"
-"}\n"
-"#endif\n"
-"\n"
-"#ifdef BUILDING_CSMain_Y210_to_AYUV64\n"
-"Texture2D<uint4> inTex : register(t0);\n"
-"RWTexture2D<unorm float4> outTex : register(u0);\n"
-"\n"
-"void Execute (uint3 tid)\n"
-"{\n"
-"  float4 val = inTex.Load (tid) / 65535.0;\n"
 "  float Y0 = val.r;\n"
 "  float U = val.g;\n"
 "  float Y1 = val.b;\n"
@@ -192,14 +85,29 @@ static const char g_CSMain_converter_str[] =
 "}\n"
 "#endif\n"
 "\n"
-"#ifdef BUILDING_CSMain_AYUV64_to_Y412\n"
-"Texture2D<float4> inTex : register(t0);\n"
-"RWTexture2D<uint4> outTex : register(u0);\n"
+"#ifdef BUILDING_CSMain_AYUV_to_YUY2\n"
+"void Execute (uint3 tid)\n"
+"{\n"
+"  float3 val = inTex.Load (uint3(tid.x * 2, tid.y, 0)).yzw;\n"
+"  float Y0 = val.x;\n"
+"  float U = val.y;\n"
+"  float V = val.z;\n"
+"  float Y1 = inTex.Load (uint3(tid.x * 2 + 1, tid.y, 0)).y;\n"
 "\n"
+"  outTex[tid.xy] = float4 (Y0, U, Y1, V);\n"
+"}\n"
+"#endif\n"
+"\n"
+"#ifdef BUILDING_CSMain_AYUV_to_Y410\n"
 "void Execute (uint3 tid)\n"
 "{\n"
 "  float4 val = inTex.Load (tid);\n"
-"  outTex[tid.xy] = uint4(val.zywx * 65535);\n"
+"  float Y = val.y;\n"
+"  float U = val.z;\n"
+"  float V = val.w;\n"
+"  float A = val.x;\n"
+"\n"
+"  outTex[tid.xy] = float4 (U, Y, V, A);\n"
 "}\n"
 "#endif\n"
 "\n"

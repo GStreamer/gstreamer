@@ -130,12 +130,9 @@ endforeach
 
 hlsl_cs_source = files('CSMain_converter.hlsl')
 hlsl_cs_entry_points = [
-  'CSMain_AYUV64_to_Y410',
-  'CSMain_VUYA_to_YUY2',
-  'CSMain_YUY2_to_VUYA',
-  'CSMain_AYUV64_to_Y210',
-  'CSMain_Y210_to_AYUV64',
-  'CSMain_AYUV64_to_Y412',
+  'CSMain_YUY2_to_AYUV',
+  'CSMain_AYUV_to_YUY2',
+  'CSMain_AYUV_to_Y410',
 ]
 
 foreach shader : hlsl_cs_entry_points
