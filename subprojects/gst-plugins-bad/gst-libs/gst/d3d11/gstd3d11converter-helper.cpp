@@ -108,7 +108,7 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
   D3D_FEATURE_LEVEL feature_level;
   DXGI_FORMAT srv_format = DXGI_FORMAT_UNKNOWN;
   DXGI_FORMAT uav_format = DXGI_FORMAT_UNKNOWN;
-  guint x_unit = 16;
+  guint x_unit = 8;
   guint y_unit = 8;
   std::string entry_point;
   HRESULT hr;
@@ -121,11 +121,83 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
       case GST_VIDEO_FORMAT_YUY2:
         srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
         in_format_str = "YUY2";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_UYVY:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "UYVY";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_VYUY:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "VYUY";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_YVYU:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "YVYU";
+        x_unit = 16;
         break;
       case GST_VIDEO_FORMAT_Y210:
       case GST_VIDEO_FORMAT_Y212_LE:
         srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
         in_format_str = "YUY2";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_v210:
+        srv_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+        in_format_str = "v210";
+        x_unit = 48;
+        break;
+      case GST_VIDEO_FORMAT_v216:
+        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        in_format_str = "UYVY";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_v308:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "v308";
+        x_unit = 32;
+        break;
+      case GST_VIDEO_FORMAT_IYU2:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "IYU2";
+        x_unit = 32;
+        break;
+      case GST_VIDEO_FORMAT_RGB:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "RGB";
+        x_unit = 32;
+        break;
+      case GST_VIDEO_FORMAT_BGR:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "BGR";
+        x_unit = 32;
+        break;
+      case GST_VIDEO_FORMAT_RGB16:
+        srv_format = DXGI_FORMAT_R16_UINT;
+        in_format_str = "RGB16";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_BGR16:
+        srv_format = DXGI_FORMAT_R16_UINT;
+        in_format_str = "BGR16";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_RGB15:
+        srv_format = DXGI_FORMAT_R16_UINT;
+        in_format_str = "RGB15";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_BGR15:
+        srv_format = DXGI_FORMAT_R16_UINT;
+        in_format_str = "BGR15";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_r210:
+        srv_format = DXGI_FORMAT_R32_UINT;
+        in_format_str = "r210";
+        x_unit = 8;
         break;
       case GST_VIDEO_FORMAT_AYUV:
         srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -134,6 +206,18 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
       case GST_VIDEO_FORMAT_AYUV64:
         srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
         in_format_str = "AYUV";
+        break;
+      case GST_VIDEO_FORMAT_RGBA:
+        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        in_format_str = "RGBA";
+        break;
+      case GST_VIDEO_FORMAT_RGB10A2_LE:
+        srv_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+        in_format_str = "RGBA";
+        break;
+      case GST_VIDEO_FORMAT_RGBA64_LE:
+        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        in_format_str = "RGBA";
         break;
       default:
         g_assert_not_reached ();
@@ -144,11 +228,48 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
       case GST_VIDEO_FORMAT_YUY2:
         uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
         out_format_str = "YUY2";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_UYVY:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "UYVY";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_VYUY:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "VYUY";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_YVYU:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "YVYU";
+        x_unit = 16;
         break;
       case GST_VIDEO_FORMAT_Y210:
       case GST_VIDEO_FORMAT_Y212_LE:
         uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
         out_format_str = "YUY2";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_v210:
+        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+        out_format_str = "v210";
+        x_unit = 48;
+        break;
+      case GST_VIDEO_FORMAT_v216:
+        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        out_format_str = "UYVY";
+        x_unit = 16;
+        break;
+      case GST_VIDEO_FORMAT_v308:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "v308";
+        x_unit = 32;
+        break;
+      case GST_VIDEO_FORMAT_IYU2:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "IYU2";
+        x_unit = 32;
         break;
       case GST_VIDEO_FORMAT_Y410:
         uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
@@ -160,6 +281,51 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
         out_format_str = "Y410";
         x_unit = 8;
         break;
+      case GST_VIDEO_FORMAT_RGB:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "RGB";
+        x_unit = 32;
+        break;
+      case GST_VIDEO_FORMAT_BGR:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "BGR";
+        x_unit = 32;
+        break;
+      case GST_VIDEO_FORMAT_RGB16:
+        uav_format = DXGI_FORMAT_R16_UINT;
+        out_format_str = "RGB16";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_BGR16:
+        uav_format = DXGI_FORMAT_R16_UINT;
+        out_format_str = "BGR16";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_RGB15:
+        uav_format = DXGI_FORMAT_R16_UINT;
+        out_format_str = "RGB15";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_BGR15:
+        uav_format = DXGI_FORMAT_R16_UINT;
+        out_format_str = "BGR15";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_r210:
+        uav_format = DXGI_FORMAT_R32_UINT;
+        out_format_str = "r210";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_BGRA64_LE:
+        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
+        out_format_str = "BGRA";
+        x_unit = 8;
+        break;
+      case GST_VIDEO_FORMAT_BGR10A2_LE:
+        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+        out_format_str = "BGRA";
+        x_unit = 8;
+        break;
       case GST_VIDEO_FORMAT_AYUV:
         uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
         out_format_str = "AYUV";
@@ -167,6 +333,14 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
       case GST_VIDEO_FORMAT_AYUV64:
         uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
         out_format_str = "AYUV";
+        break;
+      case GST_VIDEO_FORMAT_RGBA:
+        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        out_format_str = "RGBA";
+        break;
+      case GST_VIDEO_FORMAT_RGB10A2_LE:
+        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
+        out_format_str = "RGBA";
         break;
       default:
         g_assert_not_reached ();

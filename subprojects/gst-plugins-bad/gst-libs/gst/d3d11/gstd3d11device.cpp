@@ -524,6 +524,8 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_Y210:
       case GST_VIDEO_FORMAT_Y212_LE:
       case GST_VIDEO_FORMAT_Y412_LE:
+      case GST_VIDEO_FORMAT_BGRA64_LE:
+      case GST_VIDEO_FORMAT_BGR10A2_LE:
       {
         gboolean supported = TRUE;
 
@@ -573,6 +575,24 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_Y444_16LE:
       case GST_VIDEO_FORMAT_AYUV:
       case GST_VIDEO_FORMAT_AYUV64:
+      case GST_VIDEO_FORMAT_UYVY:
+      case GST_VIDEO_FORMAT_VYUY:
+      case GST_VIDEO_FORMAT_YVYU:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_RGB:
+      case GST_VIDEO_FORMAT_BGR:
+      case GST_VIDEO_FORMAT_v210:
+      case GST_VIDEO_FORMAT_v216:
+      case GST_VIDEO_FORMAT_v308:
+      case GST_VIDEO_FORMAT_IYU2:
+      case GST_VIDEO_FORMAT_RGB16:
+      case GST_VIDEO_FORMAT_BGR16:
+      case GST_VIDEO_FORMAT_RGB15:
+      case GST_VIDEO_FORMAT_BGR15:
+      case GST_VIDEO_FORMAT_r210:
         /* RGB planar formats */
       case GST_VIDEO_FORMAT_RGBP:
       case GST_VIDEO_FORMAT_BGRP:

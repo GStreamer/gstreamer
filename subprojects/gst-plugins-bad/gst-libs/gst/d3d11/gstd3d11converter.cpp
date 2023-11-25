@@ -1594,6 +1594,24 @@ gst_d3d11_converter_setup_lut (GstD3D11Converter * self,
   return TRUE;
 }
 
+static gboolean
+is_custom_format (GstVideoFormat format)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      return TRUE;
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
 static void
 gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self)
 {
@@ -1657,8 +1675,8 @@ gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self)
   }
 
   if ((GST_VIDEO_INFO_IS_RGB (out_info) &&
-          GST_VIDEO_INFO_N_PLANES (out_info) == 1) ||
-      GST_VIDEO_INFO_IS_GRAY (out_info)) {
+          GST_VIDEO_INFO_N_PLANES (out_info) == 1 &&
+          !is_custom_format (format)) || GST_VIDEO_INFO_IS_GRAY (out_info)) {
     for (guint i = 0; i < 3; i++)
       priv->clear_color[0][i] = converted[i];
     priv->clear_color[0][3] = a;
@@ -1676,6 +1694,20 @@ gst_d3d11_converter_calculate_border_color (GstD3D11Converter * self)
         priv->clear_color[0][1] = converted[0];
         priv->clear_color[0][2] = converted[1];
         priv->clear_color[0][3] = converted[2];
+        break;
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_xRGB:
+        priv->clear_color[0][0] = a;
+        priv->clear_color[0][1] = converted[0];
+        priv->clear_color[0][2] = converted[1];
+        priv->clear_color[0][3] = converted[2];
+        break;
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_xBGR:
+        priv->clear_color[0][0] = a;
+        priv->clear_color[0][1] = converted[2];
+        priv->clear_color[0][2] = converted[1];
+        priv->clear_color[0][3] = converted[0];
         break;
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_NV21:
@@ -1788,6 +1820,11 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
   /* Not a native DXGI format */
   if (in_dxgi_format == DXGI_FORMAT_UNKNOWN ||
       out_dxgi_format == DXGI_FORMAT_UNKNOWN) {
+    return FALSE;
+  }
+
+  if (is_custom_format (GST_VIDEO_INFO_FORMAT (&priv->in_info)) ||
+      is_custom_format (GST_VIDEO_INFO_FORMAT (&priv->out_info))) {
     return FALSE;
   }
 
@@ -1913,6 +1950,51 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
   return TRUE;
 }
 
+static GstVideoFormat
+get_shader_format (GstVideoFormat format, gboolean is_input)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_VYUY:
+    case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_IYU2:
+      return GST_VIDEO_FORMAT_AYUV;
+    case GST_VIDEO_FORMAT_Y210:
+    case GST_VIDEO_FORMAT_Y212_LE:
+    case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_v216:
+      return GST_VIDEO_FORMAT_AYUV64;
+    case GST_VIDEO_FORMAT_Y410:
+    case GST_VIDEO_FORMAT_Y412_LE:
+      if (!is_input)
+        return GST_VIDEO_FORMAT_AYUV64;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_BGR15:
+      return GST_VIDEO_FORMAT_RGBA;
+    case GST_VIDEO_FORMAT_r210:
+      return GST_VIDEO_FORMAT_RGB10A2_LE;
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+      if (!is_input)
+        return GST_VIDEO_FORMAT_RGBA64_LE;
+      break;
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      if (!is_input)
+        return GST_VIDEO_FORMAT_RGB10A2_LE;
+      break;
+    default:
+      break;
+  }
+
+  return format;
+}
+
 /**
  * gst_d3d11_converter_new:
  * @device: a #GstD3D11Device
@@ -1945,6 +2027,8 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   gchar *backend_str;
   GstVideoInfo matrix_in_info;
   GstVideoInfo matrix_out_info;
+  GstVideoFormat org_format;
+  GstVideoFormat shader_format;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
@@ -2037,16 +2121,12 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   priv->border_color = 0xffff000000000000;
 
   /* Preprocess packed and subsampled texture */
-  if (GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_YUY2 ||
-      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y210 ||
-      GST_VIDEO_INFO_FORMAT (in_info) == GST_VIDEO_FORMAT_Y212_LE) {
+  org_format = GST_VIDEO_INFO_FORMAT (in_info);
+  shader_format = get_shader_format (org_format, TRUE);
+  if (org_format != shader_format) {
     GstVideoInfo tmp_info;
-    GstVideoFormat postproc_format = GST_VIDEO_FORMAT_AYUV;
 
-    if (GST_VIDEO_INFO_FORMAT (in_info) != GST_VIDEO_FORMAT_YUY2)
-      postproc_format = GST_VIDEO_FORMAT_AYUV64;
-
-    gst_video_info_set_interlaced_format (&tmp_info, postproc_format,
+    gst_video_info_set_interlaced_format (&tmp_info, shader_format,
         GST_VIDEO_INFO_INTERLACE_MODE (in_info),
         GST_VIDEO_INFO_WIDTH (in_info), GST_VIDEO_INFO_HEIGHT (in_info));
     tmp_info.chroma_site = in_info->chroma_site;
@@ -2060,18 +2140,12 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
     priv->need_preproc = TRUE;
   }
 
-  if (GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_YUY2 ||
-      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y410 ||
-      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y210 ||
-      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y212_LE ||
-      GST_VIDEO_INFO_FORMAT (out_info) == GST_VIDEO_FORMAT_Y412_LE) {
+  org_format = GST_VIDEO_INFO_FORMAT (out_info);
+  shader_format = get_shader_format (org_format, FALSE);
+  if (org_format != shader_format) {
     GstVideoInfo tmp_info;
-    GstVideoFormat postproc_format = GST_VIDEO_FORMAT_AYUV;
 
-    if (GST_VIDEO_INFO_FORMAT (out_info) != GST_VIDEO_FORMAT_YUY2)
-      postproc_format = GST_VIDEO_FORMAT_AYUV64;
-
-    gst_video_info_set_interlaced_format (&tmp_info, postproc_format,
+    gst_video_info_set_interlaced_format (&tmp_info, shader_format,
         GST_VIDEO_INFO_INTERLACE_MODE (out_info),
         GST_VIDEO_INFO_WIDTH (out_info), GST_VIDEO_INFO_HEIGHT (out_info));
     tmp_info.chroma_site = out_info->chroma_site;

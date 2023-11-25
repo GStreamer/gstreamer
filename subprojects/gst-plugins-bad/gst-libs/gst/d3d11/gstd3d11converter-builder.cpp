@@ -129,6 +129,18 @@ make_input (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
       return "RGBx";
+    case GST_VIDEO_FORMAT_ARGB:
+      if (premul)
+        return "ARGBPremul";
+      return "ARGB";
+    case GST_VIDEO_FORMAT_xRGB:
+      return "xRGB";
+    case GST_VIDEO_FORMAT_ABGR:
+      if (premul)
+        return "ABGRPremul";
+      return "ABGR";
+    case GST_VIDEO_FORMAT_xBGR:
+      return "xBGR";
     case GST_VIDEO_FORMAT_VUYA:
       if (premul)
         return "VUYAPremul";
@@ -190,6 +202,12 @@ make_input (GstVideoFormat format, gboolean premul)
       if (premul)
         return "Y412Premul";
       return "Y412";
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      return "BGR10A2";
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+      if (premul)
+        return "BGRA64Premul";
+      return "BGRA64";
     default:
       g_assert_not_reached ();
       break;
@@ -216,6 +234,24 @@ make_output (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
       ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "RGBx"));
+      break;
+    case GST_VIDEO_FORMAT_ARGB:
+      if (premul)
+        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "ARGBPremul"));
+      else
+        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "ARGB"));
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "xRGB"));
+      break;
+    case GST_VIDEO_FORMAT_ABGR:
+      if (premul)
+        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "ABGRPremul"));
+      else
+        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "ABGR"));
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "xBGR"));
       break;
     case GST_VIDEO_FORMAT_VUYA:
       if (premul)

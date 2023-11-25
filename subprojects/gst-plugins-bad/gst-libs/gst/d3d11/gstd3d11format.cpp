@@ -155,6 +155,8 @@ gst_d3d11_dxgi_format_get_size (DXGI_FORMAT format, guint width, guint height,
     case DXGI_FORMAT_Y216:
     case DXGI_FORMAT_R16G16B16A16_UNORM:
     case DXGI_FORMAT_Y416:
+    case DXGI_FORMAT_R16_UINT:
+    case DXGI_FORMAT_R32_UINT:
       offset[0] = 0;
       stride[0] = pitch;
       *size = pitch * height;

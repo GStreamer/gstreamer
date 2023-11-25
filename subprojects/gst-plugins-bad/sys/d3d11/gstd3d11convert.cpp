@@ -1484,6 +1484,10 @@ gst_d3d11_base_convert_decide_allocation (GstBaseTransform * trans,
 
   if ((supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
     bind_flags |= D3D11_BIND_RENDER_TARGET;
+    if (d3d11_format.dxgi_format == DXGI_FORMAT_UNKNOWN &&
+        (supported & D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW) != 0) {
+      bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
+    }
   } else {
     if (d3d11_format.dxgi_format != DXGI_FORMAT_UNKNOWN &&
         (supported & D3D11_FORMAT_SUPPORT_VIDEO_PROCESSOR_OUTPUT) != 0) {

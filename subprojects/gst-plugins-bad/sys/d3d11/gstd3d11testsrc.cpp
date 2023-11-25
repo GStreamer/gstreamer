@@ -1461,7 +1461,9 @@ gst_d3d11_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     if ((device_format.format_support[0] &
             D3D11_FORMAT_SUPPORT_RENDER_TARGET) != 0) {
       bind_flags |= D3D11_BIND_RENDER_TARGET;
-    } else if ((device_format.format_support[0] &
+    }
+
+    if ((device_format.format_support[0] &
             D3D11_FORMAT_SUPPORT_TYPED_UNORDERED_ACCESS_VIEW) != 0) {
       bind_flags |= D3D11_BIND_UNORDERED_ACCESS;
     }
