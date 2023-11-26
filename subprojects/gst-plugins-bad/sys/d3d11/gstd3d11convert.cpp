@@ -1618,10 +1618,15 @@ gst_d3d11_base_convert_setup_msaa_texture (GstD3D11BaseConvert * self,
     return;
   }
 
-  if (device_format.dxgi_format != DXGI_FORMAT_UNKNOWN)
+  if (device_format.dxgi_format == DXGI_FORMAT_UNKNOWN ||
+      (device_format.format_support[0] &
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET) == 0) {
+    GST_DEBUG_OBJECT (self,
+        "MSAA supported only for native and RTV available formats");;
+    return;
+  } else {
     dxgi_format = device_format.dxgi_format;
-  else
-    dxgi_format = device_format.resource_format[0];
+  }
 
   device_handle = gst_d3d11_device_get_device_handle (device);
   while (sample_count > 1) {
