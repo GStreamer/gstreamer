@@ -2289,6 +2289,10 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
       outbuf = gst_buffer_make_writable (outbuf);
       GST_BUFFER_PTS (outbuf) = pts;
       GST_BUFFER_DTS (outbuf) = dts;
+      GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_OFFSET_END (outbuf) = GST_BUFFER_OFFSET_NONE;
+      GST_BUFFER_FLAGS (outbuf) = 0;
       parse->priv->buffers_head =
           g_slist_prepend (parse->priv->buffers_head, outbuf);
       outbuf = NULL;
@@ -2736,7 +2740,7 @@ gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
     GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
     GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
-    GST_MINI_OBJECT_FLAGS (dest) = GST_MINI_OBJECT_FLAGS (src);
+    GST_BUFFER_FLAGS (dest) = GST_BUFFER_FLAGS (src);
   } else {
     gst_adapter_flush (parse->priv->adapter, size);
   }
