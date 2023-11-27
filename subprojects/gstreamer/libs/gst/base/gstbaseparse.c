@@ -2728,6 +2728,7 @@ gst_base_parse_finish_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     GstBuffer *src, *dest;
 
     frame->out_buffer = gst_adapter_take_buffer (parse->priv->adapter, size);
+    frame->out_buffer = gst_buffer_make_writable (frame->out_buffer);
     dest = frame->out_buffer;
     src = frame->buffer;
     GST_BUFFER_PTS (dest) = GST_BUFFER_PTS (src);
