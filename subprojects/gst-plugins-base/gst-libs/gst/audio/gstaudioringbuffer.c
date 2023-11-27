@@ -2145,6 +2145,11 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
   if (memcmp (position, to, channels * sizeof (to[0])) == 0)
     return;
 
+  if (channels == 1) {
+    GST_LOG_OBJECT (buf, "single channel, no need to reorder");
+    return;
+  }
+
   if (position_less_channels (position, channels)) {
     GST_LOG_OBJECT (buf, "position-less channels, no need to reorder");
     return;
