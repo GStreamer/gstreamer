@@ -189,6 +189,7 @@ enum
 #define DEFAULT_BLOCKSIZE       4096
 #define DEFAULT_NUM_BUFFERS     -1
 #define DEFAULT_DO_TIMESTAMP    FALSE
+#define DEFAULT_AUTOMATIC_EOS   TRUE
 
 enum
 {
@@ -198,7 +199,8 @@ enum
 #ifndef GST_REMOVE_DEPRECATED
   PROP_TYPEFIND,
 #endif
-  PROP_DO_TIMESTAMP
+  PROP_DO_TIMESTAMP,
+  PROP_AUTOMATIC_EOS
 };
 
 /* The basesrc implementation need to respect the following locking order:
@@ -407,6 +409,18 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
           "Apply current stream time to buffers", DEFAULT_DO_TIMESTAMP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstBaseSrc:automatic-eos:
+   *
+   * See gst_base_src_set_automatic_eos()
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_AUTOMATIC_EOS,
+      g_param_spec_boolean ("automatic-eos", "Automatic EOS",
+          "Automatically EOS when the segment is done", DEFAULT_AUTOMATIC_EOS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
   gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_base_src_send_event);
@@ -445,7 +459,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   g_cond_init (&basesrc->live_cond);
   basesrc->num_buffers = DEFAULT_NUM_BUFFERS;
   basesrc->num_buffers_left = -1;
-  g_atomic_int_set (&basesrc->priv->automatic_eos, TRUE);
+  g_atomic_int_set (&basesrc->priv->automatic_eos, DEFAULT_AUTOMATIC_EOS);
 
   basesrc->can_activate_push = TRUE;
 
@@ -2207,6 +2221,9 @@ gst_base_src_set_property (GObject * object, guint prop_id,
     case PROP_DO_TIMESTAMP:
       gst_base_src_set_do_timestamp (src, g_value_get_boolean (value));
       break;
+    case PROP_AUTOMATIC_EOS:
+      gst_base_src_set_automatic_eos (src, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2235,6 +2252,9 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
 #endif
     case PROP_DO_TIMESTAMP:
       g_value_set_boolean (value, gst_base_src_get_do_timestamp (src));
+      break;
+    case PROP_AUTOMATIC_EOS:
+      g_value_set_boolean (value, g_atomic_int_get (&src->priv->automatic_eos));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

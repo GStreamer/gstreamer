@@ -6243,6 +6243,10 @@ continue. Any other return value should be returned from the create vmethod.</do
           </instance-parameter>
         </parameters>
       </method>
+      <property name="automatic-eos" version="1.24" writable="1" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">See gst_base_src_set_automatic_eos()</doc>
+        <type name="gboolean" c:type="gboolean"/>
+      </property>
       <property name="blocksize" writable="1" transfer-ownership="none">
         <type name="guint" c:type="guint"/>
       </property>
