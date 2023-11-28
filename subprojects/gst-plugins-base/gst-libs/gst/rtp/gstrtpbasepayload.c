@@ -137,8 +137,11 @@ enum
   PROP_ONVIF_NO_RATE_CONTROL,
   PROP_SCALE_RTPTIME,
   PROP_AUTO_HEADER_EXTENSION,
+  PROP_EXTENSIONS,
   PROP_LAST
 };
+
+static GParamSpec *gst_rtp_base_payload_extensions_pspec;
 
 static void gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass);
 static void gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload,
@@ -176,6 +179,8 @@ static gboolean gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload);
 static void gst_rtp_base_payload_add_extension (GstRTPBasePayload * payload,
     GstRTPHeaderExtension * ext);
 static void gst_rtp_base_payload_clear_extensions (GstRTPBasePayload * payload);
+static void gst_rtp_base_payload_get_extensions (GstRTPBasePayload * payload,
+    GValue * out_value);
 
 static GstElementClass *parent_class = NULL;
 static gint private_offset = 0;
@@ -441,6 +446,33 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
           "Whether RTP header extensions should be automatically enabled, if an implementation is available",
           DEFAULT_AUTO_HEADER_EXTENSION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  gst_rtp_base_payload_extensions_pspec = gst_param_spec_array ("extensions",
+      "RTP header extensions",
+      "A list of already enabled RTP header extensions",
+      g_param_spec_object ("extension", "RTP header extension",
+          "An already enabled RTP extension", GST_TYPE_RTP_HEADER_EXTENSION,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstRTPBasePayload:extensions:
+   *
+   * A list of already enabled RTP header extensions. This may be useful for finding
+   * out which extensions are already enabled (with add-extension signal) and picking a non-conflicting
+   * ID for a new extension that needs to be added on top of the existing ones.
+   *
+   * Note that the value returned by reading this property is not dynamically updated when the set of
+   * enabled extensions changes by any of existing action signals. Rather, it represents the current state
+   * at the time the property is read.
+   *
+   * Dynamic updates of this property can be received by subscribing to its corresponding "notify" signal, i.e.
+   * "notify::extensions".
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_EXTENSIONS, gst_rtp_base_payload_extensions_pspec);
 
   /**
    * GstRTPBasePayload::add-extension:
@@ -1589,6 +1621,9 @@ gst_rtp_base_payload_add_extension (GstRTPBasePayload * payload,
   g_ptr_array_add (payload->priv->header_exts, gst_object_ref (ext));
   gst_pad_mark_reconfigure (GST_RTP_BASE_PAYLOAD_SRCPAD (payload));
   GST_OBJECT_UNLOCK (payload);
+
+  g_object_notify_by_pspec (G_OBJECT (payload),
+      gst_rtp_base_payload_extensions_pspec);
 }
 
 static void
@@ -1596,6 +1631,32 @@ gst_rtp_base_payload_clear_extensions (GstRTPBasePayload * payload)
 {
   GST_OBJECT_LOCK (payload);
   g_ptr_array_set_size (payload->priv->header_exts, 0);
+  GST_OBJECT_UNLOCK (payload);
+
+  g_object_notify_by_pspec (G_OBJECT (payload),
+      gst_rtp_base_payload_extensions_pspec);
+}
+
+static void
+gst_rtp_base_payload_get_extensions (GstRTPBasePayload * payload,
+    GValue * out_value)
+{
+  GPtrArray *extensions;
+  guint i;
+
+  GST_OBJECT_LOCK (payload);
+  extensions = payload->priv->header_exts;
+
+  for (i = 0; i < extensions->len; ++i) {
+    GValue value = G_VALUE_INIT;
+    g_value_init (&value, GST_TYPE_RTP_HEADER_EXTENSION);
+
+    g_value_set_object (&value, g_ptr_array_index (extensions, i));
+
+    gst_value_array_append_value (out_value, &value);
+    g_value_unset (&value);
+  }
+
   GST_OBJECT_UNLOCK (payload);
 }
 
@@ -2247,6 +2308,9 @@ gst_rtp_base_payload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUTO_HEADER_EXTENSION:
       g_value_set_boolean (value, priv->auto_hdr_ext);
+      break;
+    case PROP_EXTENSIONS:
+      gst_rtp_base_payload_get_extensions (rtpbasepayload, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -2310,6 +2310,61 @@ GST_START_TEST (rtp_base_payload_extensions_shrink_ext_data)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (rtp_base_payload_extensions_get_enabled)
+{
+  GstElement *pay = GST_ELEMENT (rtp_dummy_pay_new ());
+  GstRTPHeaderExtension *ext = rtp_dummy_hdr_ext_new ();
+  GValue extensions = G_VALUE_INIT;
+  const GValue *returned_ext;
+
+  g_signal_emit_by_name (pay, "add-extension", ext, NULL);
+  g_object_get_property (G_OBJECT (pay), "extensions", &extensions);
+
+  fail_unless_equals_int (gst_value_array_get_size (&extensions), 1);
+
+  returned_ext = gst_value_array_get_value (&extensions, 0);
+
+  fail_unless (G_VALUE_HOLDS (returned_ext, GST_TYPE_RTP_HEADER_EXTENSION));
+  fail_unless (g_value_get_object (returned_ext) == ext);
+
+  g_value_unset (&extensions);
+  gst_object_unref (ext);
+  gst_object_unref (pay);
+}
+
+GST_END_TEST;
+
+static void
+on_extensions_changed (GObject * sender, GParamSpec * pspec,
+    guint * invocation_count)
+{
+  (void) sender;
+  (void) pspec;
+  (*invocation_count)++;
+}
+
+GST_START_TEST (rtp_base_payload_extensions_notify_on_change)
+{
+  GstElement *pay = GST_ELEMENT (rtp_dummy_pay_new ());
+  GstRTPHeaderExtension *ext = rtp_dummy_hdr_ext_new ();
+  guint invocation_count = 0;
+
+  g_signal_connect (pay, "notify::extensions",
+      G_CALLBACK (on_extensions_changed), &invocation_count);
+
+  g_signal_emit_by_name (pay, "add-extension", ext, NULL);
+  fail_unless_equals_int (invocation_count, 1);
+
+  g_signal_emit_by_name (pay, "clear-extensions", NULL);
+  fail_unless_equals_int (invocation_count, 2);
+
+  gst_object_unref (ext);
+  gst_object_unref (pay);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_basepayloading_suite (void)
 {
@@ -2358,6 +2413,8 @@ rtp_basepayloading_suite (void)
   tcase_add_test (tc_chain, rtp_base_payload_caps_request_ignored);
   tcase_add_test (tc_chain, rtp_base_payload_extensions_in_output_caps);
   tcase_add_test (tc_chain, rtp_base_payload_extensions_shrink_ext_data);
+  tcase_add_test (tc_chain, rtp_base_payload_extensions_get_enabled);
+  tcase_add_test (tc_chain, rtp_base_payload_extensions_notify_on_change);
 
   return s;
 }

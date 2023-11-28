@@ -3146,6 +3146,19 @@ the need to handle these extensions manually using the
 GstRTPBasePayload::request-extension: signal.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
+      <property name="extensions" version="1.24" transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">A list of already enabled RTP header extensions. This may be useful for finding
+out which extensions are already enabled (with add-extension signal) and picking a non-conflicting
+ID for a new extension that needs to be added on top of the existing ones.
+
+Note that the value returned by reading this property is not dynamically updated when the set of
+enabled extensions changes by any of existing action signals. Rather, it represents the current state
+at the time the property is read.
+
+Dynamic updates of this property can be received by subscribing to its corresponding "notify" signal, i.e.
+"notify::extensions".</doc>
+        <type name="Gst.ValueArray"/>
+      </property>
       <property name="max-ptime" writable="1" transfer-ownership="none">
         <type name="gint64" c:type="gint64"/>
       </property>
