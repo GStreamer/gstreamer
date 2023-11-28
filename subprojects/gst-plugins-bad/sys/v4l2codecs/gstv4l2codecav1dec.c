@@ -1567,7 +1567,7 @@ gst_v4l2_codec_av1_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
 #endif
 
   if (!gst_v4l2_decoder_av1_api_check (decoder)) {
-    GST_WARNING ("Not registering H264 decoder as it failed ABI check.");
+    GST_WARNING ("Not registering AV1 decoder as it failed ABI check.");
     goto done;
   }
 
