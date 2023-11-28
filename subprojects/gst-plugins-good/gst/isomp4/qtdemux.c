@@ -8461,7 +8461,6 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
 
             /* skip this data, stream is EOS */
             gst_adapter_flush (demux->adapter, demux->neededbytes);
-            demux->offset += demux->neededbytes;
 
             ret = GST_FLOW_EOS;
           } else {
