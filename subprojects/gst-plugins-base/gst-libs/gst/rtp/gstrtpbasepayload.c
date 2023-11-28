@@ -412,12 +412,12 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
    * Make the RTP packets' timestamps be scaled with the segment's rate
    * (corresponding to RTSP speed parameter). Disabling this property means
    * the timestamps will not be affected by the set delivery speed (RTSP speed).
-   * 
-   * Example: A server wants to allow streaming a recorded video in double 
-   * speed but still have the timestamps correspond to the position in the 
-   * video. This is achieved by the client setting RTSP Speed to 2 while the 
+   *
+   * Example: A server wants to allow streaming a recorded video in double
+   * speed but still have the timestamps correspond to the position in the
+   * video. This is achieved by the client setting RTSP Speed to 2 while the
    * server has this property disabled.
-   * 
+   *
    * Since: 1.18
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SCALE_RTPTIME,
