@@ -27,6 +27,7 @@ G_BEGIN_DECLS
 GST_API
 GType gst_promise_get_type(void);
 #define GST_TYPE_PROMISE            (gst_promise_get_type())
+#define GST_IS_PROMISE(obj)         (GST_IS_MINI_OBJECT_TYPE (obj, GST_TYPE_PROMISE))
 #define GST_PROMISE(obj)            ((GstPromise *) obj)
 
 typedef struct _GstPromise GstPromise;

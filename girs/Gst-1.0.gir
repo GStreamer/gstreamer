@@ -20747,6 +20747,13 @@ is unlinked and links to the new target are established. if @newtarget is
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="IS_PROMISE" c:identifier="GST_IS_PROMISE" introspectable="0">
+      <source-position filename="../subprojects/gstreamer/gst/gstpromise.h"/>
+      <parameters>
+        <parameter name="obj">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="IS_PROXY_PAD" c:identifier="GST_IS_PROXY_PAD" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstghostpad.h"/>
       <parameters>
