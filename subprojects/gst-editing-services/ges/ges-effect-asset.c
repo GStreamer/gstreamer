@@ -88,6 +88,8 @@ ges_effect_asset_init (GESEffectAsset * self)
 static void
 ges_effect_asset_constructed (GObject * object)
 {
+  G_OBJECT_CLASS (ges_effect_asset_parent_class)->constructed (object);
+
   _fill_track_type (GES_ASSET (object));
 }
 
