@@ -686,7 +686,7 @@ gst_vulkan_device_get_physical_device (GstVulkanDevice * device)
 /**
  * gst_context_set_vulkan_device:
  * @context: a #GstContext
- * @device: a #GstVulkanDevice
+ * @device: (transfer none) (nullable): a #GstVulkanDevice
  *
  * Sets @device on @context
  *
@@ -713,7 +713,7 @@ gst_context_set_vulkan_device (GstContext * context, GstVulkanDevice * device)
 /**
  * gst_context_get_vulkan_device:
  * @context: a #GstContext
- * @device: resulting #GstVulkanDevice
+ * @device: (out) (optional) (nullable) (transfer full): resulting #GstVulkanDevice
  *
  * Returns: Whether @device was in @context
  *

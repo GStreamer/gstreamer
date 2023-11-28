@@ -6649,7 +6649,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="device" transfer-ownership="none">
+        <parameter name="device" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">resulting #GstVulkanDevice</doc>
           <type name="VulkanDevice" c:type="GstVulkanDevice**"/>
         </parameter>
@@ -6666,7 +6666,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="display" transfer-ownership="none">
+        <parameter name="display" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">resulting #GstVulkanDisplay</doc>
           <type name="VulkanDisplay" c:type="GstVulkanDisplay**"/>
         </parameter>
@@ -6683,7 +6683,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="instance" transfer-ownership="none">
+        <parameter name="instance" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">resulting #GstVulkanInstance</doc>
           <type name="VulkanInstance" c:type="GstVulkanInstance**"/>
         </parameter>
@@ -6700,7 +6700,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="queue" transfer-ownership="none">
+        <parameter name="queue" direction="out" caller-allocates="0" transfer-ownership="full" nullable="1" optional="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">resulting #GstVulkanQueue</doc>
           <type name="VulkanQueue" c:type="GstVulkanQueue**"/>
         </parameter>
@@ -6717,7 +6717,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="device" transfer-ownership="none">
+        <parameter name="device" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanDevice</doc>
           <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
         </parameter>
@@ -6734,7 +6734,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="display" transfer-ownership="none">
+        <parameter name="display" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a #GstVulkanDisplay</doc>
           <type name="VulkanDisplay" c:type="GstVulkanDisplay*"/>
         </parameter>
@@ -6751,7 +6751,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="instance" transfer-ownership="none">
+        <parameter name="instance" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.c">a #GstVulkanInstance</doc>
           <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
         </parameter>
@@ -6768,7 +6768,7 @@ Currently intended for subclasses to update internal state.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstContext</doc>
           <type name="Gst.Context" c:type="GstContext*"/>
         </parameter>
-        <parameter name="queue" transfer-ownership="none">
+        <parameter name="queue" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstVulkanQueue</doc>
           <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
         </parameter>

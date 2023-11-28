@@ -461,7 +461,7 @@ gst_vulkan_display_remove_window (GstVulkanDisplay * display,
 /**
  * gst_context_set_vulkan_display:
  * @context: a #GstContext
- * @display: a #GstVulkanDisplay
+ * @display: (transfer none) (nullable): a #GstVulkanDisplay
  *
  * Sets @display on @context
  *
@@ -489,7 +489,7 @@ gst_context_set_vulkan_display (GstContext * context,
 /**
  * gst_context_get_vulkan_display:
  * @context: a #GstContext
- * @display: resulting #GstVulkanDisplay
+ * @display: (out) (optional) (nullable) (transfer full): resulting #GstVulkanDisplay
  *
  * Returns: Whether @display was in @context
  *

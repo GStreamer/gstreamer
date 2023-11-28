@@ -1137,7 +1137,7 @@ gst_vulkan_instance_create_device (GstVulkanInstance * instance,
 /**
  * gst_context_set_vulkan_instance:
  * @context: a #GstContext
- * @instance: a #GstVulkanInstance
+ * @instance: (transfer none) (nullable): a #GstVulkanInstance
  *
  * Sets @instance on @context
  *
@@ -1165,7 +1165,7 @@ gst_context_set_vulkan_instance (GstContext * context,
 /**
  * gst_context_get_vulkan_instance:
  * @context: a #GstContext
- * @instance: resulting #GstVulkanInstance
+ * @instance: (out) (optional) (nullable) (transfer full): resulting #GstVulkanInstance
  *
  * Returns: Whether @instance was in @context
  *
