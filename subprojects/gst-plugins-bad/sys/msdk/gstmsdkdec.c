@@ -1707,10 +1707,8 @@ gst_msdk_create_d3d11_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   pool = gst_d3d11_buffer_pool_new (device);
   config = gst_buffer_pool_get_config (pool);
   params = gst_d3d11_allocation_params_new (device, info,
-      GST_D3D11_ALLOCATION_FLAG_DEFAULT, 0, 0);
-
-  params->desc[0].BindFlags |=
-      (D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE);
+      GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+      D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE, 0);
 
   gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
   gst_d3d11_allocation_params_free (params);
