@@ -84,7 +84,9 @@ GST_VULKAN_API
 void            gst_vulkan_image_buffer_pool_config_set_allocation_params
                                                         (GstStructure * config,
                                                          VkImageUsageFlags usage,
-                                                         VkMemoryPropertyFlags mem_properties);
+                                                         VkMemoryPropertyFlags mem_properties,
+                                                         VkImageLayout initial_layout,
+                                                         guint64 initial_access);
 
 GST_VULKAN_API
 void            gst_vulkan_image_buffer_pool_config_set_decode_caps

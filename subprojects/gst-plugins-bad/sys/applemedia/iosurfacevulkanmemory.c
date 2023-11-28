@@ -195,7 +195,8 @@ _io_surface_vulkan_memory_new (GstVulkanDevice * device, IOSurfaceRef surface,
 
   gst_vulkan_image_memory_init (&mem->vulkan_mem,
       _io_surface_vulkan_memory_allocator, NULL, device, vk_format, usage,
-      &params, mem->vulkan_mem.requirements.size, user_data, notify);
+      VK_IMAGE_LAYOUT_UNDEFINED, &params, mem->vulkan_mem.requirements.size,
+      user_data, notify);
   mem->vulkan_mem.create_info = image_info;
   mem->vulkan_mem.image = image;
   mem->vulkan_mem.barrier.image_layout = VK_IMAGE_LAYOUT_GENERAL;

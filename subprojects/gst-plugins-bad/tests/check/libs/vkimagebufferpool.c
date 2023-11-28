@@ -60,7 +60,7 @@ setup_queue (guint expected_flags)
 
 static GstBufferPool *
 create_buffer_pool (const char *format, VkImageUsageFlags usage,
-    GstCaps * dec_caps)
+    VkImageLayout initial_layout, guint64 initial_access, GstCaps * dec_caps)
 {
   GstCaps *caps;
   GstBufferPool *pool;
@@ -79,7 +79,8 @@ create_buffer_pool (const char *format, VkImageUsageFlags usage,
   gst_caps_unref (caps);
 
   gst_vulkan_image_buffer_pool_config_set_allocation_params (config,
-      usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+      usage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, initial_layout,
+      initial_access);
 
   if (dec_caps)
     gst_vulkan_image_buffer_pool_config_set_decode_caps (config, dec_caps);
@@ -97,7 +98,7 @@ GST_START_TEST (test_image)
   GstBuffer *buffer = NULL;
 
   setup_queue (VK_QUEUE_COMPUTE_BIT);
-  pool = create_buffer_pool ("NV12", 0, NULL);
+  pool = create_buffer_pool ("NV12", 0, VK_IMAGE_LAYOUT_UNDEFINED, 0, NULL);
 
   ret = gst_buffer_pool_acquire_buffer (pool, &buffer, NULL);
   fail_unless (ret == GST_FLOW_OK);
@@ -191,6 +192,7 @@ GST_START_TEST (test_decoding_image)
   fail_unless (dec_caps);
 
   pool = create_buffer_pool ("NV12", VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR,
+      VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR, VK_ACCESS_TRANSFER_WRITE_BIT,
       dec_caps);
 
   gst_caps_unref (dec_caps);

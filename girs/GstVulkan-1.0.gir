@@ -3501,6 +3501,15 @@ inside @handle.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Vulkan memory property flags.</doc>
             <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>
           </parameter>
+          <parameter name="initial_layout" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Initial Vulkan image layout.</doc>
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout"/>
+          </parameter>
+          <parameter name="initial_access" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Access flags for the layout transition if @initial_layout is
+not VK_IMAGE_LAYOUT_UNDEFINED or VK_IMAGE_LAYOUT_PREINITIALIZED.</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
         </parameters>
       </function>
       <function name="config_set_decode_caps" c:identifier="gst_vulkan_image_buffer_pool_config_set_decode_caps" version="1.24">
@@ -3703,6 +3712,9 @@ dest or DPB images.</doc>
           </parameter>
           <parameter name="usage" transfer-ownership="none">
             <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+          </parameter>
+          <parameter name="initial_layout" transfer-ownership="none">
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout"/>
           </parameter>
           <parameter name="params" transfer-ownership="none">
             <type name="Gst.AllocationParams" c:type="GstAllocationParams*"/>

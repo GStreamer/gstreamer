@@ -172,6 +172,7 @@ gboolean        gst_vulkan_image_memory_init            (GstVulkanImageMemory * 
                                                          GstVulkanDevice * device,
                                                          VkFormat format,
                                                          VkImageUsageFlags usage,
+                                                         VkImageLayout initial_layout,
                                                          GstAllocationParams * params,
                                                          gsize size,
                                                          gpointer user_data,
