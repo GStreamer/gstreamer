@@ -129,7 +129,9 @@ struct _GstGLColorConvertClass
     "width = " GST_VIDEO_SIZE_RANGE ", "                                \
     "height = " GST_VIDEO_SIZE_RANGE ", "                               \
     "framerate = " GST_VIDEO_FPS_RANGE ", "                             \
-    "texture-target = (string) { 2D, rectangle, external-oes }"
+    "texture-target = (string) { 2D, rectangle, external-oes }"         \
+    " ; "                                                               \
+    GST_VIDEO_DMA_DRM_CAPS_MAKE
 
 GST_GL_API
 GstGLColorConvert * gst_gl_color_convert_new (GstGLContext * context);
