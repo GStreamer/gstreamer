@@ -4493,11 +4493,13 @@ composition.</doc>
         <type name="gint" c:type="gint"/>
       </field>
       <field name="height" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired height of the video.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired height of the video. -1 means that no scaling should be
+applied.</doc>
         <type name="gint" c:type="gint"/>
       </field>
       <field name="width" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired width of the video.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired width of the video. -1 means that no scaling should beapplied
+applied.</doc>
         <type name="gint" c:type="gint"/>
       </field>
       <field name="zorder" writable="1">
