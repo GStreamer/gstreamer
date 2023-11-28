@@ -101,6 +101,7 @@ enum
 #define DEFAULT_RATE            1.0
 #define DEFAULT_MAX_DUPLICATION_TIME      0
 #define DEFAULT_MAX_CLOSING_SEGMENT_DUPLICATION_DURATION   GST_SECOND
+#define DEFAULT_DROP_OUT_OF_SEGMENT       FALSE
 
 enum
 {
@@ -117,7 +118,8 @@ enum
   PROP_MAX_RATE,
   PROP_RATE,
   PROP_MAX_DUPLICATION_TIME,
-  PROP_MAX_CLOSING_SEGMENT_DUPLICATION_DURATION
+  PROP_MAX_CLOSING_SEGMENT_DUPLICATION_DURATION,
+  PROP_DROP_OUT_OF_SEGMENT
 };
 
 static GstStaticPadTemplate gst_video_rate_src_template =
@@ -316,6 +318,19 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
           "Maximum closing segment duplication duration",
           "Maximum duration of duplicated buffers to close current segment", 0,
           G_MAXUINT64, DEFAULT_MAX_CLOSING_SEGMENT_DUPLICATION_DURATION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoRate:drop-out-of-segment:
+   *
+   * Drop all frames that are out of segment
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (object_class, PROP_DROP_OUT_OF_SEGMENT,
+      g_param_spec_boolean ("drop-out-of-segment",
+          "Drop out of segment buffers", "Drop out of segment buffers",
+          DEFAULT_DROP_OUT_OF_SEGMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class,
@@ -660,6 +675,7 @@ gst_video_rate_init (GstVideoRate * videorate)
   videorate->silent = DEFAULT_SILENT;
   videorate->new_pref = DEFAULT_NEW_PREF;
   videorate->drop_only = DEFAULT_DROP_ONLY;
+  videorate->drop_out_of_segment = DEFAULT_DROP_OUT_OF_SEGMENT;
   videorate->average_period = DEFAULT_AVERAGE_PERIOD;
   videorate->average_period_set = DEFAULT_AVERAGE_PERIOD;
   videorate->max_rate = DEFAULT_MAX_RATE;
@@ -682,7 +698,7 @@ static GstFlowReturn
 gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
     gboolean duplicate, GstClockTime next_intime, gboolean invalid_duration)
 {
-  GstFlowReturn res;
+  GstFlowReturn res = GST_FLOW_OK;
   GstClockTime push_ts;
 
   GST_BUFFER_OFFSET (outbuf) = videorate->out;
@@ -759,6 +775,17 @@ gst_video_rate_push_buffer (GstVideoRate * videorate, GstBuffer * outbuf,
   GST_LOG_OBJECT (videorate,
       "old is best, dup, pushing buffer outgoing ts %" GST_TIME_FORMAT,
       GST_TIME_ARGS (push_ts));
+
+  if (videorate->drop_out_of_segment
+      && !gst_segment_clip (&videorate->segment, GST_FORMAT_TIME,
+          GST_BUFFER_PTS (outbuf),
+          GST_BUFFER_PTS (outbuf) + GST_BUFFER_DURATION (outbuf), NULL, NULL)) {
+    GST_INFO_OBJECT (videorate, "Buffer is out of segment, dropping");
+
+    gst_buffer_unref (outbuf);
+
+    return res;
+  }
 
   res = gst_pad_push (GST_BASE_TRANSFORM_SRC_PAD (videorate), outbuf);
 
@@ -2036,6 +2063,10 @@ gst_video_rate_set_property (GObject * object,
       videorate->max_closing_segment_duplication_duration =
           g_value_get_uint64 (value);
       break;
+    case PROP_DROP_OUT_OF_SEGMENT:{
+      videorate->drop_out_of_segment = g_value_get_boolean (value);
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2101,6 +2132,9 @@ gst_video_rate_get_property (GObject * object,
     case PROP_MAX_CLOSING_SEGMENT_DUPLICATION_DURATION:
       g_value_set_uint64 (value,
           videorate->max_closing_segment_duplication_duration);
+      break;
+    case PROP_DROP_OUT_OF_SEGMENT:
+      g_value_set_boolean (value, videorate->drop_out_of_segment);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

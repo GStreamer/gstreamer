@@ -15138,6 +15138,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "drop-out-of-segment": {
+                        "blurb": "Drop out of segment buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "duplicate": {
                         "blurb": "Number of duplicated frames",
                         "conditionally-available": false,
