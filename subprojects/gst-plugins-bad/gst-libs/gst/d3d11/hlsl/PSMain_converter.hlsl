@@ -489,6 +489,22 @@ class SamplerBGRP : ISampler
   }
 };
 
+class SamplerRBGA : ISampler
+{
+  float4 Execute (float2 uv)
+  {
+    return shaderTexture[0].Sample(samplerState, uv).rbga;
+  }
+};
+
+class SamplerRBGAPremul : ISampler
+{
+  float4 Execute (float2 uv)
+  {
+    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).rbga);
+  }
+};
+
 interface IConverter
 {
   float4 Execute (float4 sample);
@@ -1080,6 +1096,28 @@ class OutputAYUVPremul : IOutputPacked
   }
 };
 
+class OutputRBGA : IOutputPacked
+{
+  PS_OUTPUT_PACKED Build (float4 sample)
+  {
+    PS_OUTPUT_PACKED output;
+    sample.a *= alphaFactor;
+    output.Plane0 = sample.rbga;
+    return output;
+  }
+};
+
+class OutputRBGAPremul : IOutputPacked
+{
+  PS_OUTPUT_PACKED Build (float4 sample)
+  {
+    PS_OUTPUT_PACKED output;
+    sample.a *= alphaFactor;
+    output.Plane0 = DoAlphaPremul (sample).rbga;
+    return output;
+  }
+};
+
 OUTPUT_TYPE ENTRY_POINT (PS_INPUT input)
 {
   SAMPLER g_sampler;
@@ -1557,6 +1595,22 @@ static const char g_PSMain_converter_str[] =
 "    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
+"  }\n"
+"};\n"
+"\n"
+"class SamplerRBGA : ISampler\n"
+"{\n"
+"  float4 Execute (float2 uv)\n"
+"  {\n"
+"    return shaderTexture[0].Sample(samplerState, uv).rbga;\n"
+"  }\n"
+"};\n"
+"\n"
+"class SamplerRBGAPremul : ISampler\n"
+"{\n"
+"  float4 Execute (float2 uv)\n"
+"  {\n"
+"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).rbga);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -2147,6 +2201,28 @@ static const char g_PSMain_converter_str[] =
 "    PS_OUTPUT_PACKED output;\n"
 "    sample.a *= alphaFactor;\n"
 "    output.Plane0 = DoAlphaPremul (sample).wxyz;\n"
+"    return output;\n"
+"  }\n"
+"};\n"
+"\n"
+"class OutputRBGA : IOutputPacked\n"
+"{\n"
+"  PS_OUTPUT_PACKED Build (float4 sample)\n"
+"  {\n"
+"    PS_OUTPUT_PACKED output;\n"
+"    sample.a *= alphaFactor;\n"
+"    output.Plane0 = sample.rbga;\n"
+"    return output;\n"
+"  }\n"
+"};\n"
+"\n"
+"class OutputRBGAPremul : IOutputPacked\n"
+"{\n"
+"  PS_OUTPUT_PACKED Build (float4 sample)\n"
+"  {\n"
+"    PS_OUTPUT_PACKED output;\n"
+"    sample.a *= alphaFactor;\n"
+"    output.Plane0 = DoAlphaPremul (sample).rbga;\n"
 "    return output;\n"
 "  }\n"
 "};\n"

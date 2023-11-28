@@ -208,6 +208,10 @@ make_input (GstVideoFormat format, gboolean premul)
       if (premul)
         return "BGRA64Premul";
       return "BGRA64";
+    case GST_VIDEO_FORMAT_RBGA:
+      if (premul)
+        return "RBGAPremul";
+      return "RBGA";
     default:
       g_assert_not_reached ();
       break;
@@ -340,6 +344,12 @@ make_output (GstVideoFormat format, gboolean premul)
         ret.push_back(std::make_pair(PS_OUTPUT::PLANAR_FULL, "GBRAPremul_12"));
       else
         ret.push_back(std::make_pair(PS_OUTPUT::PLANAR_FULL, "GBRA_12"));
+      break;
+    case GST_VIDEO_FORMAT_RBGA:
+      if (premul)
+        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "RBGAPremul"));
+      else
+        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "RBGA"));
       break;
     default:
       g_assert_not_reached ();

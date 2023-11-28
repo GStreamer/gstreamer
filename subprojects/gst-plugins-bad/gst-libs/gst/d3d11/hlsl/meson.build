@@ -37,6 +37,8 @@ hlsl_ps_input_formats = [
   ['BGR10A2', true],
   ['BGRA64', true],
   ['BGRA64Premul', true],
+  ['RBGA', true],
+  ['RBGAPremul', true],
 ]
 
 hlsl_ps_output_formats = [
@@ -65,6 +67,8 @@ hlsl_ps_output_formats = [
   ['PS_OUTPUT_PLANAR_FULL', 'GBRAPremul_12', true],
   ['PS_OUTPUT_PACKED', 'RGBA', true],
   ['PS_OUTPUT_PACKED', 'RGBAPremul', true],
+  ['PS_OUTPUT_PACKED', 'RBGA', true],
+  ['PS_OUTPUT_PACKED', 'RBGAPremul', true],
   ['PS_OUTPUT_PACKED', 'RGBx', true],
   ['PS_OUTPUT_PACKED', 'VUYA', false],
   ['PS_OUTPUT_PACKED', 'VUYAPremul', false],
