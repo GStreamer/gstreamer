@@ -8463,14 +8463,7 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             gst_adapter_flush (demux->adapter, demux->neededbytes);
             demux->offset += demux->neededbytes;
 
-            /* check if all streams are eos */
             ret = GST_FLOW_EOS;
-            for (i = 0; i < QTDEMUX_N_STREAMS (demux); i++) {
-              if (!STREAM_IS_EOS (QTDEMUX_NTH_STREAM (demux, i))) {
-                ret = GST_FLOW_OK;
-                break;
-              }
-            }
           } else {
             GstBuffer *outbuf;
 
