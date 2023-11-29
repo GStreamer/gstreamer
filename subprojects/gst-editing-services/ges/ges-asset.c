@@ -1253,6 +1253,9 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
   if (lerr)
     g_error_free (lerr);
 
+  GST_DEBUG ("Requesting %s with real id %s and id %s",
+      g_type_name (extractable_type), real_id, id);
+
   /* asset owned by cache */
   LOCK_CACHE;
   asset = ges_asset_cache_lookup (extractable_type, real_id);
