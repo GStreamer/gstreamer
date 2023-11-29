@@ -294,7 +294,7 @@ _vk_mem_free (GstAllocator * allocator, GstMemory * memory)
  */
 gboolean
 gst_vulkan_memory_find_memory_type_index_with_requirements (GstVulkanDevice *
-    device, VkMemoryRequirements * req, VkMemoryPropertyFlags properties,
+    device, const VkMemoryRequirements * req, VkMemoryPropertyFlags properties,
     guint32 * type_index)
 {
   guint32 i;

@@ -1013,7 +1013,7 @@ and/or use gtk-doc annotations.  -->
           </parameter>
           <parameter name="buffer_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">the VkBufferCreateInfo structure</doc>
-            <type name="Vulkan.BufferCreateInfo" c:type="VkBufferCreateInfo*"/>
+            <type name="Vulkan.BufferCreateInfo" c:type="const VkBufferCreateInfo*"/>
           </parameter>
           <parameter name="mem_prop_flags" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">memory properties flags for the backing memory</doc>
@@ -4504,7 +4504,7 @@ It can be called from any thread.</doc>
           </parameter>
           <parameter name="req" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory requirements to look for</doc>
-            <type name="Vulkan.MemoryRequirements" c:type="VkMemoryRequirements*"/>
+            <type name="Vulkan.MemoryRequirements" c:type="const VkMemoryRequirements*"/>
           </parameter>
           <parameter name="properties" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory properties to search for</doc>
@@ -6936,7 +6936,7 @@ either be a user visible window (onscreen) or hidden (offscreen).</doc>
         </parameter>
         <parameter name="buffer_info" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">the VkBufferCreateInfo structure</doc>
-          <type name="Vulkan.BufferCreateInfo" c:type="VkBufferCreateInfo*"/>
+          <type name="Vulkan.BufferCreateInfo" c:type="const VkBufferCreateInfo*"/>
         </parameter>
         <parameter name="mem_prop_flags" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbuffermemory.c">memory properties flags for the backing memory</doc>
@@ -7253,7 +7253,7 @@ properties.</doc>
         </parameter>
         <parameter name="create_info" transfer-ownership="none" nullable="1" allow-none="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.c">a VkImageViewCreateInfo</doc>
-          <type name="Vulkan.ImageViewCreateInfo" c:type="VkImageViewCreateInfo*"/>
+          <type name="Vulkan.ImageViewCreateInfo" c:type="const VkImageViewCreateInfo*"/>
         </parameter>
       </parameters>
     </function>
@@ -7507,7 +7507,7 @@ other elements in the pipeline</doc>
         </parameter>
         <parameter name="req" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory requirements to look for</doc>
-          <type name="Vulkan.MemoryRequirements" c:type="VkMemoryRequirements*"/>
+          <type name="Vulkan.MemoryRequirements" c:type="const VkMemoryRequirements*"/>
         </parameter>
         <parameter name="properties" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.c">memory properties to search for</doc>

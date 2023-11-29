@@ -98,8 +98,9 @@ _vk_buffer_mem_init (GstVulkanBufferMemory * mem, GstAllocator * allocator,
 static GstVulkanBufferMemory *
 _vk_buffer_mem_new_alloc_with_buffer_info (GstAllocator * allocator,
     GstMemory * parent, GstVulkanDevice * device,
-    VkBufferCreateInfo * buffer_info, VkMemoryPropertyFlags mem_prop_flags,
-    gpointer user_data, GDestroyNotify notify)
+    const VkBufferCreateInfo * buffer_info,
+    VkMemoryPropertyFlags mem_prop_flags, gpointer user_data,
+    GDestroyNotify notify)
 {
   GstVulkanBufferMemory *mem = NULL;
   GstAllocationParams params = { 0, };
@@ -299,7 +300,8 @@ _vk_buffer_mem_free (GstAllocator * allocator, GstMemory * memory)
  */
 GstMemory *
 gst_vulkan_buffer_memory_alloc_with_buffer_info (GstVulkanDevice * device,
-    VkBufferCreateInfo * buffer_info, VkMemoryPropertyFlags mem_prop_flags)
+    const VkBufferCreateInfo * buffer_info,
+    VkMemoryPropertyFlags mem_prop_flags)
 {
   GstVulkanBufferMemory *mem;
 
