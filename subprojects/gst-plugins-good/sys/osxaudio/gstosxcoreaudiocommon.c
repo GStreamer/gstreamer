@@ -421,6 +421,12 @@ gst_audio_channel_position_to_core_audio (GstAudioChannelPosition
       return kAudioChannelLabel_VerticalHeightRight;
     case GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER:
       return kAudioChannelLabel_VerticalHeightCenter;
+    case GST_AUDIO_CHANNEL_POSITION_TOP_CENTER:
+      return kAudioChannelLabel_TopCenterSurround;
+    case GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT:
+      return kAudioChannelLabel_LeftSurround;
+    case GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT:
+      return kAudioChannelLabel_RightSurround;
 
       /* Special position values */
     case GST_AUDIO_CHANNEL_POSITION_NONE:
@@ -430,14 +436,11 @@ gst_audio_channel_position_to_core_audio (GstAudioChannelPosition
 
       /* Following positions are unmapped --
        * i.e. mapped to kAudioChannelLabel_Unknown: */
-    case GST_AUDIO_CHANNEL_POSITION_TOP_CENTER:
     case GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_LEFT:
     case GST_AUDIO_CHANNEL_POSITION_TOP_SIDE_RIGHT:
     case GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_CENTER:
     case GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_LEFT:
     case GST_AUDIO_CHANNEL_POSITION_BOTTOM_FRONT_RIGHT:
-    case GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT:
-    case GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT:
     default:
       return kAudioChannelLabel_Unknown;
   }
@@ -489,6 +492,12 @@ gst_core_audio_channel_label_to_gst (AudioChannelLabel label,
       return GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_RIGHT;
     case kAudioChannelLabel_VerticalHeightCenter:
       return GST_AUDIO_CHANNEL_POSITION_TOP_FRONT_CENTER;
+    case kAudioChannelLabel_RearSurroundLeft:
+      return GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+    case kAudioChannelLabel_RearSurroundRight:
+      return GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+    case kAudioChannelLabel_TopCenterSurround:
+      return GST_AUDIO_CHANNEL_POSITION_TOP_CENTER;
 
       /* Special position values */
 
@@ -502,9 +511,6 @@ gst_core_audio_channel_label_to_gst (AudioChannelLabel label,
          Following labels are unmapped --
          i.e. mapped to GST_AUDIO_CHANNEL_POSITION_INVALID:
        */
-    case kAudioChannelLabel_RearSurroundLeft:
-    case kAudioChannelLabel_RearSurroundRight:
-    case kAudioChannelLabel_TopCenterSurround:
     case kAudioChannelLabel_LeftTotal:
     case kAudioChannelLabel_RightTotal:
     case kAudioChannelLabel_HearingImpaired:
