@@ -1404,6 +1404,8 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
 
+  gst_object_unref (pool);
+
   return TRUE;
 }
 
