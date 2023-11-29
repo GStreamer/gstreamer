@@ -530,7 +530,7 @@ gst_va_vpp_set_info (GstVaBaseTransform * btrans, GstCaps * incaps,
           GST_WARNING_OBJECT (self, "Can't calculate borders");
         }
       } else {
-        GST_WARNING_OBJECT (self, "Can't keep DAR!");
+        GST_DEBUG_OBJECT (self, "Can't keep DAR!");
       }
     }
   }

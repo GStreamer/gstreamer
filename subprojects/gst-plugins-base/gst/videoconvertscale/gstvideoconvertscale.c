@@ -803,7 +803,7 @@ gst_video_convert_scale_set_info (GstVideoFilter * filter, GstCaps * in,
         GST_WARNING_OBJECT (self, "Can't calculate borders");
       }
     } else {
-      GST_WARNING_OBJECT (self, "Can't keep DAR!");
+      GST_DEBUG_OBJECT (self, "Can't keep DAR!");
     }
   }
 
