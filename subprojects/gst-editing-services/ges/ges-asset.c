@@ -1308,10 +1308,8 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     iface = g_type_interface_peek (klass, G_TYPE_INITABLE);
 
     if (iface->init) {
-      /* FIXME: allow the error to be set, which GInitable is designed
-       * for! */
       asset = g_initable_new (asset_type,
-          NULL, NULL, "id", real_id, "extractable-type",
+          NULL, error, "id", real_id, "extractable-type",
           extractable_type, NULL);
     } else {
       GST_INFO ("Tried to create an Asset for type %s but no ->init method",
