@@ -837,7 +837,7 @@ gst_vulkan_decoder_caps (GstVulkanDecoder * self,
 /**
  * gst_vulkan_decoder_out_format: (skip)
  * @self: a #GstVulkanDecoder
- * @format: the Vulkan output format properties
+ * @format: (out): the Vulkan output format properties
  *
  * Gets the Vulkan format properties of the output frames.
  *
