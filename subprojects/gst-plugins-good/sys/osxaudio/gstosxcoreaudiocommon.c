@@ -388,9 +388,9 @@ gst_audio_channel_position_to_core_audio (GstAudioChannelPosition
     case GST_AUDIO_CHANNEL_POSITION_REAR_CENTER:
       return kAudioChannelLabel_CenterSurround;
     case GST_AUDIO_CHANNEL_POSITION_REAR_LEFT:
-      return kAudioChannelLabel_LeftSurround;
+      return kAudioChannelLabel_RearSurroundLeft;
     case GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT:
-      return kAudioChannelLabel_RightSurround;
+      return kAudioChannelLabel_RearSurroundRight;
     case GST_AUDIO_CHANNEL_POSITION_LFE1:
       return kAudioChannelLabel_LFEScreen;
     case GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER:
@@ -458,9 +458,9 @@ gst_core_audio_channel_label_to_gst (AudioChannelLabel label,
     case kAudioChannelLabel_LFEScreen:
       return GST_AUDIO_CHANNEL_POSITION_LFE1;
     case kAudioChannelLabel_LeftSurround:
-      return GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+      return GST_AUDIO_CHANNEL_POSITION_SURROUND_LEFT;
     case kAudioChannelLabel_RightSurround:
-      return GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      return GST_AUDIO_CHANNEL_POSITION_SURROUND_RIGHT;
     case kAudioChannelLabel_LeftSurroundDirect:
       return GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
     case kAudioChannelLabel_RightSurroundDirect:
