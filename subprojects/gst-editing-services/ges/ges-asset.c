@@ -1116,7 +1116,7 @@ ges_asset_set_id (GESAsset * asset, const gchar * id)
   priv = asset->priv;
 
   if (priv->state != ASSET_INITIALIZED) {
-    GST_WARNING_OBJECT (asset, "Trying to rest ID on an object that is"
+    GST_WARNING_OBJECT (asset, "Trying to set ID on an object that is"
         " not properly loaded");
     return;
   }
