@@ -1874,9 +1874,9 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
       <method name="select_queue" c:identifier="gst_vulkan_device_select_queue" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">Select a compatible queue from the @device supporting the @expected_flags.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.h"/>
-        <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanQueue for @queue matching the
-                          @expected_flags</doc>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">a #GstVulkanQueue for @queue matching
+                                     the @expected_flags</doc>
           <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
         </return-value>
         <parameters>

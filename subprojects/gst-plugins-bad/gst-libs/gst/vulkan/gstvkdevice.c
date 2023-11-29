@@ -1091,12 +1091,12 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
 /**
  * gst_vulkan_device_select_queue
  * @device: a #GstVulkanDevice
- * @expected_flags:  a VkQueueFlagBits
+ * @expected_flags: a VkQueueFlagBits
  *
  * Select a compatible queue from the @device supporting the @expected_flags.
  *
- * Returns: (transfer full): a #GstVulkanQueue for @queue matching the
- *                           @expected_flags
+ * Returns: (transfer full) (nullable): a #GstVulkanQueue for @queue matching
+ *                                      the @expected_flags
  *
  * Since: 1.24
  */
