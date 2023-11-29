@@ -106,12 +106,21 @@ gst_promise_unref (GstPromise * promise)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (promise));
 }
+
+static inline void
+gst_clear_promise (GstPromise ** promise_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) promise_ptr);
+}
 #else /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 GST_API
 GstPromise *  gst_promise_ref (GstPromise * promise);
 
 GST_API
 void          gst_promise_unref (GstPromise * promise);
+
+GST_API
+void          gst_clear_promise (GstPromise ** promise_ptr);
 #endif /* GST_DISABLE_MINIOBJECT_INLINE_FUNCTIONS */
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstPromise, gst_promise_unref)

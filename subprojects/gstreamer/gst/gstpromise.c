@@ -440,3 +440,22 @@ gst_promise_unref (GstPromise * promise)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (promise));
 }
+
+/**
+ * gst_clear_promise: (skip)
+ * @promise_ptr: a pointer to a #GstPromise reference
+ *
+ * Clears a reference to a #GstPromise.
+ *
+ * @promise_ptr must not be `NULL`.
+ *
+ * If the reference is `NULL` then this function does nothing. Otherwise, the
+ * reference count of the promise is decreased and the pointer is set to `NULL`.
+ *
+ * Since: 1.24
+ */
+void
+gst_clear_promise (GstPromise ** promise_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) promise_ptr);
+}
