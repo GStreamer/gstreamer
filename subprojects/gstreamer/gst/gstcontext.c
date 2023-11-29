@@ -317,6 +317,25 @@ gst_context_unref (GstContext * context)
 }
 
 /**
+ * gst_clear_context: (skip)
+ * @context_ptr: a pointer to a #GstContext reference
+ *
+ * Clears a reference to a #GstContext.
+ *
+ * @context_ptr must not be `NULL`.
+ *
+ * If the reference is `NULL` then this function does nothing. Otherwise, the
+ * reference count of the context is decreased and the pointer is set to `NULL`.
+ *
+ * Since: 1.24
+ */
+void
+gst_clear_context (GstContext ** context_ptr)
+{
+  gst_clear_mini_object ((GstMiniObject **) context_ptr);
+}
+
+/**
  * gst_context_copy:
  * @context: the context to copy
  *
