@@ -1304,7 +1304,7 @@ _clean_mem (GstVaMemory * mem)
   mem->image.image_id = VA_INVALID_ID;
   mem->image.buf = VA_INVALID_ID;
 
-  mem->is_derived = TRUE;
+  mem->is_derived = FALSE;
   mem->is_dirty = FALSE;
   mem->prev_mapflags = 0;
   mem->mapped_data = NULL;
@@ -1406,10 +1406,8 @@ static gpointer
 _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
 {
   GstAllocator *allocator = GST_MEMORY_CAST (mem)->allocator;
-  GstVideoInfo *info;
   GstVaAllocator *va_allocator;
   GstVaDisplay *display;
-  gboolean use_derived;
 
   g_return_val_if_fail (mem->surface != VA_INVALID_ID, NULL);
   g_return_val_if_fail (GST_IS_VA_ALLOCATOR (allocator), NULL);
@@ -1435,35 +1433,11 @@ _va_map_unlocked (GstVaMemory * mem, GstMapFlags flags)
     goto success;
   }
 
-  if (va_allocator->feat_use_derived == GST_VA_FEATURE_AUTO) {
-    switch (gst_va_display_get_implementation (display)) {
-      case GST_VA_IMPLEMENTATION_INTEL_I965:
-        /* YUV derived images are tiled, so writing them is also
-         * problematic */
-        use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
-            || ((flags & GST_MAP_WRITE)
-                && GST_VIDEO_INFO_IS_YUV (&va_allocator->info)));
-        break;
-      case GST_VA_IMPLEMENTATION_MESA_GALLIUM:
-        /* Reading RGB derived images, with non-standard resolutions,
-         * looks like tiled too. TODO(victor): fill a bug in Mesa. */
-        use_derived = va_allocator->use_derived && !((flags & GST_MAP_READ)
-            && GST_VIDEO_INFO_IS_RGB (&va_allocator->info));
-        break;
-      default:
-        use_derived = va_allocator->use_derived;
-        break;
-    }
-  } else {
-    use_derived = va_allocator->use_derived;
-  }
+  mem->is_derived = va_allocator->use_derived;
 
-  info = &va_allocator->info;
-
-  if (!va_ensure_image (display, mem->surface, info, &mem->image, use_derived))
+  if (!va_ensure_image (display, mem->surface, &va_allocator->info, &mem->image,
+          va_allocator->use_derived))
     return NULL;
-
-  mem->is_derived = use_derived;
 
   if (!mem->is_derived) {
     if (!va_get_image (display, mem->surface, &mem->image))
