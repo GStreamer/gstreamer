@@ -212,6 +212,21 @@ va_get_derive_image (GstVaDisplay * display, VASurfaceID surface,
 {
   VADisplay dpy = gst_va_display_get_va_dpy (display);
   VAStatus status;
+  VASurfaceStatus state;
+
+  /* When directly accessing a surface special care must be taken to insure sync
+   * proper synchronization with the graphics hardware. Clients should call
+   * vaQuerySurfaceStatus to insure that a surface is not the target of
+   * concurrent rendering or currently being displayed by an overlay. */
+  status = vaQuerySurfaceStatus (dpy, surface, &state);
+  if (status != VA_STATUS_SUCCESS) {
+    GST_WARNING ("vaQuerySurfaceStatus: %s", vaErrorStr (status));
+    return FALSE;
+  }
+  if (state != VASurfaceReady) {
+    GST_INFO ("Surface not ready");
+    return FALSE;
+  }
 
   status = vaDeriveImage (dpy, surface, image);
   if (status != VA_STATUS_SUCCESS) {
