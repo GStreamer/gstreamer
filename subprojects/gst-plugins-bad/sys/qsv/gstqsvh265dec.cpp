@@ -53,10 +53,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_qsv_h265_dec_debug);
 #define DOC_SINK_CAPS \
     "video/x-h265, width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ], " \
     "stream-format = (string) { byte-stream, hev1, hvc1 }, " \
-    "alignment = (string) au, profile = (string) { main, main-10 }"
+    "alignment = (string) au, profile = (string) { main, main-10, main-12, " \
+    "main-422-10, main-422-12, main-444, main-444-10, main-444-12 }"
 
 #define DOC_SRC_CAPS_COMM \
-    "format = (string) NV12, " \
+    "format = (string) { NV12, P010_10LE, P012_LE, YUY2, Y210, Y212_LE, " \
+    "VUYA, RBGA, Y410, BGR10A2_LE, Y412_LE, BGRA64_LE }, " \
     "width = (int) [ 1, 16384 ], height = (int) [ 1, 16384 ]"
 
 #define DOC_SRC_CAPS \
