@@ -586,10 +586,13 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
   if (GST_VIDEO_INFO_N_PLANES (info) != desc.num_layers)
     goto failed;
 
+  /* YUY2 and YUYV are the same. radeonsi returns always YUYV.
+   * There's no reason to fail if the different fourcc if there're dups.
+   * https://fourcc.org/pixel-format/yuv-yuy2/ */
   if (fourcc != desc.fourcc) {
-    GST_ERROR ("Unsupported fourcc: %" GST_FOURCC_FORMAT,
+    GST_INFO ("Different fourcc: requested %" GST_FOURCC_FORMAT " - returned %"
+        GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc),
         GST_FOURCC_ARGS (desc.fourcc));
-    goto failed;
   }
 
   if (desc.num_objects == 0) {
