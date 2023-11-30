@@ -7404,6 +7404,7 @@ typedef struct
 #define OFFS123           { 1, 2, 3, 0 }
 #define OFFS321           { 3, 2, 1, 0 }
 #define OFFS0123          { 0, 1, 2, 3 }
+#define OFFS0213          { 0, 2, 1, 3 }
 #define OFFS2103          { 2, 1, 0, 3 }
 #define OFFS3210          { 3, 2, 1, 0 }
 #define OFFS031           { 0, 3, 1, 0 }
@@ -7787,7 +7788,7 @@ static const VideoFormat formats[] = {
       OFFS0, SUB444, PACK_GBR_16LE),
   MAKE_RGB_FORMAT (GBR_16BE, "raw video", DPTH16_16_16, PSTR222, PLANE201,
       OFFS0, SUB444, PACK_GBR_16BE),
-  MAKE_RGBA_FORMAT (RBGA, "raw video", DPTH8888, PSTR4444, PLANE0, OFFS0123,
+  MAKE_RGBA_FORMAT (RBGA, "raw video", DPTH8888, PSTR4444, PLANE0, OFFS0213,
       SUB4444, PACK_RBGA),
 };
 
