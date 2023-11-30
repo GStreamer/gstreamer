@@ -107,7 +107,7 @@ struct _GstGLColorConvertClass
                                "xBGR, ARGB, ABGR, GBRA, GBR, RGBP, BGRP, Y444, I420, YV12, Y42B, " \
                                "Y41B, NV12, NV21, NV16, NV61, YUY2, UYVY, Y210, AYUV, " \
                                "VUYA, Y410, A444, A422, GRAY8, GRAY16_LE, GRAY16_BE, " \
-                               "RGB16, BGR16, ARGB64, A420, AV12, NV12_16L32S, NV12_4L4" \
+                               "RGB16, BGR16, ARGB64, A420, AV12, NV12_16L32S, NV12_4L4, RBGA" \
                                GST_GL_COLOR_CONVERT_EXT_FORMATS "}"
 
 /**

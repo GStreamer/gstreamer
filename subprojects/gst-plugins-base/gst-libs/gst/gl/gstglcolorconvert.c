@@ -1080,7 +1080,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   /* Always supported input and output formats */
   _init_value_string_list (supported_formats, "RGBA", "RGB", "RGBx", "BGR",
       "BGRx", "BGRA", "xRGB", "xBGR", "ARGB", "ABGR", "GRAY8", "GRAY16_LE",
-      "GRAY16_BE", "AYUV", "VUYA", "YUY2", "UYVY", NULL);
+      "GRAY16_BE", "AYUV", "VUYA", "YUY2", "UYVY", "RBGA", NULL);
 
   /* Always supported input formats or output with multiple draw buffers */
   if (!output || (!context || context->gl_vtable->DrawBuffers))
@@ -1182,7 +1182,7 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
 
   _init_value_string_list (&rgb_formats, "RGBA", "ARGB", "BGRA", "ABGR", "RGBx",
       "xRGB", "BGRx", "xBGR", "RGB", "BGR", "ARGB64", "BGR10A2_LE",
-      "RGB10A2_LE", "RGBA64_LE", "RGBA64_BE", NULL);
+      "RGB10A2_LE", "RGBA64_LE", "RGBA64_BE", "RBGA", NULL);
   _init_supported_formats (context, output, &supported_formats);
   gst_value_intersect (&supported_rgb_formats, &rgb_formats,
       &supported_formats);
