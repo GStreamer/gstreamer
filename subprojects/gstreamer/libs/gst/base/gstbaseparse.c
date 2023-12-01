@@ -2682,10 +2682,13 @@ no_caps:
  * @frame: a #GstBaseParseFrame
  * @size: consumed input data represented by frame
  *
- * Collects parsed data and pushes this downstream.
+ * Collects parsed data and pushes it downstream.
  * Source pad caps must be set when this is called.
  *
- * If @frame's out_buffer is set, that will be used as subsequent frame data.
+ * If @frame's out_buffer is set, that will be used as subsequent frame data,
+ * and @size amount will be flushed from the input data. The output_buffer size
+ * can differ from the consumed size indicated by @size.
+ *
  * Otherwise, @size samples will be taken from the input and used for output,
  * and the output's metadata (timestamps etc) will be taken as (optionally)
  * set by the subclass on @frame's (input) buffer (which is otherwise
