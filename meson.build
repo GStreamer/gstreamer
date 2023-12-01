@@ -340,6 +340,7 @@ devenv.set('GST_VERSION', meson.project_version())
 devenv.set('GST_ENV', 'gst-' + meson.project_version())
 devenv.set('GST_REGISTRY', meson.current_build_dir() / 'registry.dat')
 devenv.set('GST_PLUGIN_SYSTEM_PATH', '')
+devenv.set('GST_PLUGIN_LOADING_WHITELIST', '*')
 meson.add_devenv(devenv)
 
 generate_plugins_paths = find_program('scripts/generate_plugins_path.py')

@@ -345,7 +345,8 @@ _priv_gst_plugin_initialize (void)
  *   plugin1,plugin2 or
  *   source-package@pathprefix or
  *   source-package@* or just
- *   source-package
+ *   source-package or
+ *   *
  *
  * ie. the bit before the path will be checked against both the plugin
  * name and the plugin's source package name, to keep the format simple.
@@ -360,6 +361,9 @@ gst_plugin_desc_matches_whitelist_entry (const GstPluginDesc * desc,
 
   GST_LOG ("Whitelist pattern '%s', plugin: %s of %s@%s", pattern, desc->name,
       desc->source, GST_STR_NULL (filename));
+
+  if (strcmp (pattern, "*") == 0)
+    return TRUE;
 
   /* do we have a path prefix? */
   sep = strchr (pattern, '@');
