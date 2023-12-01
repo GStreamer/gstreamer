@@ -4675,6 +4675,7 @@ retry:
   if (G_UNLIKELY (dbin->shutdown)) {
     GST_WARNING_OBJECT (dbin, "Currently, shutting down, aborting exposing");
     DYN_UNLOCK (dbin);
+    g_string_free (missing_plugin_details, TRUE);
     return FALSE;
   }
   DYN_UNLOCK (dbin);
