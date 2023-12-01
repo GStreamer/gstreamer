@@ -150,6 +150,8 @@ struct GstCudaIpcServerConn : public OVERLAPPED
     gst_clear_caps (&caps);
   }
 
+  virtual void CloseConn () = 0;
+
   GstCudaIpcServer *server;
 
   GstCudaContext *context = nullptr;

@@ -42,14 +42,20 @@ struct GstCudaIpcServerConnWin32 : public GstCudaIpcServerConn
 
   virtual ~GstCudaIpcServerConnWin32 ()
   {
+    CloseConn ();
+  }
+
+  void CloseConn ()
+  {
     if (pipe != INVALID_HANDLE_VALUE) {
       CancelIo (pipe);
       DisconnectNamedPipe (pipe);
       CloseHandle (pipe);
+      pipe = INVALID_HANDLE_VALUE;
     }
   }
 
-  HANDLE pipe;
+  HANDLE pipe = INVALID_HANDLE_VALUE;
 };
 
 struct GstCudaIpcServerWin32Private

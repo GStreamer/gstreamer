@@ -47,8 +47,14 @@ struct GstCudaIpcServerConnUnix : public GstCudaIpcServerConn
     g_clear_object (&socket_conn);
   }
 
+  void CloseConn ()
+  {
+    if (socket_conn)
+      g_io_stream_close (G_IO_STREAM (socket_conn), nullptr, nullptr);
+  }
+
   /* Holds ref */
-  GSocketConnection *socket_conn;
+  GSocketConnection *socket_conn = nullptr;
 
   /* Owned by socket_conn */
   GInputStream *istream;

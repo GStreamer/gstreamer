@@ -630,13 +630,27 @@ gst_cuda_ipc_server_on_idle (GstCudaIpcServer * server)
 
     GST_DEBUG_OBJECT (server, "Have %" G_GSIZE_FORMAT " alive connections",
         priv->conn_map.size());
+
+    size_t num_closed = 0;
     for (auto it : priv->conn_map) {
       auto conn = it.second;
       GST_DEBUG_OBJECT (server, "conn-id %u"
           " peer handle size %" G_GSIZE_FORMAT, conn->id,
           conn->peer_handles.size ());
+
+      /* Cannot erase conn since it's still referenced.
+       * Manually close connection */
+      if (conn->peer_handles.empty ()) {
+        conn->CloseConn ();
+        num_closed++;
+      }
     }
     /* *INDENT-ON* */
+
+    if (priv->conn_map.size () == num_closed) {
+      GST_DEBUG_OBJECT (server, "All connections were closed");
+      klass->terminate (server);
+    }
 
     return;
   }
