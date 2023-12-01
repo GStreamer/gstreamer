@@ -5020,7 +5020,12 @@ gst_qtdemux_seek_to_previous_keyframe (GstQTDemux * qtdemux)
     }
 
     /* Remember until where we want to go */
-    str->to_sample = str->from_sample - 1;
+    if (str->from_sample == 0) {
+      GST_LOG_OBJECT (qtdemux, "already at sample 0");
+      str->to_sample = 0;
+    } else {
+      str->to_sample = str->from_sample - 1;
+    }
     /* Define our time position */
     target_ts =
         str->samples[k_index].timestamp + str->samples[k_index].pts_offset;
