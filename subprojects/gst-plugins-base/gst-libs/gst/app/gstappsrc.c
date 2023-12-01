@@ -2584,7 +2584,7 @@ dropped:
         gst_buffer_unref (buffer);
     }
     g_mutex_unlock (&priv->mutex);
-    return GST_FLOW_EOS;
+    return GST_FLOW_OK;
   }
 }
 
