@@ -521,13 +521,33 @@ gst_d3d11_ipc_server_on_idle (GstD3D11IpcServer * self)
 
     GST_DEBUG_OBJECT (self, "Have %" G_GSIZE_FORMAT " alive connections",
         priv->conn_map.size());
+
+    size_t num_closed = 0;
     for (auto it : priv->conn_map) {
       auto conn = it.second;
       GST_DEBUG_OBJECT (self, "conn-id %u"
           " peer handle size %" G_GSIZE_FORMAT, conn->id,
           conn->peer_handles.size ());
+
+      /* Cannot erase conn since it's still referenced.
+       * Manually close connection */
+      if (conn->peer_handles.empty ()) {
+        if (conn->pipe != INVALID_HANDLE_VALUE) {
+          CancelIo (conn->pipe);
+          DisconnectNamedPipe (conn->pipe);
+          CloseHandle (conn->pipe);
+          conn->pipe = INVALID_HANDLE_VALUE;
+        }
+
+        num_closed++;
+      }
     }
     /* *INDENT-ON* */
+
+    if (priv->conn_map.size () == num_closed) {
+      GST_DEBUG_OBJECT (self, "All connections were closed");
+      SetEvent (priv->cancellable);
+    }
 
     return;
   }
