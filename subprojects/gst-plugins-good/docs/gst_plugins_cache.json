@@ -4293,6 +4293,18 @@
                     }
                 },
                 "properties": {
+                    "audio-level-meta": {
+                        "blurb": "Set GstAudioLevelMeta on buffers",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "leaky": {
                         "blurb": "do we leak buffers when below threshold ?",
                         "conditionally-available": false,

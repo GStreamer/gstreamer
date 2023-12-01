@@ -62,6 +62,7 @@ struct _GstCutter
   double pre_run_length;        /* how long is it currently ? */
   GList *pre_buffer;            /* list of GstBuffers in pre-record buffer */
   gboolean leaky;               /* do we leak an overflowing prebuffer ? */
+  gboolean audio_level_meta;    /* whether or not generate GstAudioLevelMeta */
 
   GstAudioInfo info;
   GstSegment segment;
