@@ -1554,6 +1554,7 @@ gst_validate_abort (const gchar * format, ...)
   va_end (var_args);
 
   g_print ("Bail out! %s\n", tmp);
+  g_free (tmp);
   exit (-18);
 }
 
