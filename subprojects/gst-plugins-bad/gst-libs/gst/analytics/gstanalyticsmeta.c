@@ -29,7 +29,7 @@ GST_DEBUG_CATEGORY_STATIC (an_relation_meta_debug);
 
 static char invalid_type_name[] = "_invalid";
 
-static gint
+static guint
 gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta);
 
 /**
@@ -410,7 +410,7 @@ gst_analytics_relation_meta_get_info (void)
  * usage exemple can be found in @gst_analytics_relation_meta_exist.
  */
 static void
-gst_analytics_relation_meta_bfs (gint start, const guint8 ** adj_mat,
+gst_analytics_relation_meta_bfs (guint start, const guint8 ** adj_mat,
     gsize adj_mat_order, guint8 edge_mask, gsize max_span, gint * level,
     gint * parent)
 {
@@ -464,7 +464,7 @@ gst_analytics_relation_meta_bfs (gint start, const guint8 ** adj_mat,
  * Returns: next id
  *
  */
-static gint
+static guint
 gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta)
 {
   g_return_val_if_fail (meta != NULL, -1);
@@ -487,29 +487,29 @@ gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta)
  */
 GstAnalyticsRelTypes
 gst_analytics_relation_meta_get_relation (GstAnalyticsRelationMeta * meta,
-    gint an_meta_first, gint an_meta_second)
+    guint an_meta_first_id, guint an_meta_second_id)
 {
   GstAnalyticsRelTypes types = GST_ANALYTICS_REL_TYPE_NONE;
   g_return_val_if_fail (meta, GST_ANALYTICS_REL_TYPE_NONE);
 
   g_return_val_if_fail (meta->adj_mat != NULL, GST_ANALYTICS_REL_TYPE_NONE);
-  if (meta->rel_order > an_meta_first && meta->rel_order > an_meta_second) {
-    types = meta->adj_mat[an_meta_first][an_meta_second];
+  if (meta->rel_order > an_meta_first_id && meta->rel_order > an_meta_second_id) {
+    types = meta->adj_mat[an_meta_first_id][an_meta_second_id];
   } else {
     GST_CAT_DEBUG (GST_CAT_AN_RELATION,
-        "an_meta_first(%i) and an_meta_second(%i) must be inferior to %"
-        G_GSIZE_FORMAT, an_meta_first, an_meta_second, meta->rel_order);
+        "an_meta_first(%u) and an_meta_second(%u) must be inferior to %"
+        G_GSIZE_FORMAT, an_meta_first_id, an_meta_second_id, meta->rel_order);
 
-    if (an_meta_first >= meta->rel_order) {
+    if (an_meta_first_id >= meta->rel_order) {
       GST_CAT_ERROR (GST_CAT_AN_RELATION,
-          "an_meta_first(%i) must be from a call to "
-          "gst_analytics_mtd_get_id(...)", an_meta_first);
+          "an_meta_first(%u) must be from a call to "
+          "gst_analytics_mtd_get_id(...)", an_meta_first_id);
     }
 
-    if (an_meta_second >= meta->rel_order) {
+    if (an_meta_second_id >= meta->rel_order) {
       GST_CAT_ERROR (GST_CAT_AN_RELATION,
-          "an_meta_second(%i) must be from a call to "
-          "gst_analytics_mtd_get_id(...)", an_meta_second);
+          "an_meta_second(%u) must be from a call to "
+          "gst_analytics_mtd_get_id(...)", an_meta_second_id);
     }
   }
   return types;
@@ -534,7 +534,7 @@ gst_analytics_relation_meta_get_relation (GstAnalyticsRelationMeta * meta,
  */
 gboolean
 gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
-    GstAnalyticsRelTypes type, gint an_meta_first_id, gint an_meta_second_id)
+    GstAnalyticsRelTypes type, guint an_meta_first_id, guint an_meta_second_id)
 {
   g_return_val_if_fail (type < GST_ANALYTICS_REL_TYPE_LAST, FALSE);
   g_return_val_if_fail (meta, FALSE);
@@ -545,7 +545,7 @@ gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
   }
   meta->adj_mat[an_meta_first_id][an_meta_second_id] = type;
   GST_CAT_TRACE (GST_CAT_AN_RELATION,
-      "Relation %x set between %d and %d",
+      "Relation %x set between %u and %u",
       type, an_meta_first_id, an_meta_second_id);
   return TRUE;
 }
@@ -581,8 +581,8 @@ gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
  */
 gboolean
 gst_analytics_relation_meta_exist (GstAnalyticsRelationMeta * rmeta,
-    gint an_meta_first_id,
-    gint an_meta_second_id,
+    guint an_meta_first_id,
+    guint an_meta_second_id,
     gint max_relation_span,
     GstAnalyticsRelTypes cond_types, GArray ** relations_path)
 {
@@ -860,7 +860,7 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
  */
 gboolean
 gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
-    gint an_meta_id, GstAnalyticsMtdType type, GstAnalyticsMtd * rlt)
+    guint an_meta_id, GstAnalyticsMtdType type, GstAnalyticsMtd * rlt)
 {
   GstAnalyticsRelatableMtdData *d;
 
@@ -869,7 +869,7 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
 
   rlt->meta = NULL;
 
-  if (an_meta_id < 0 || an_meta_id >= meta->length) {
+  if (an_meta_id >= meta->length) {
     GST_CAT_ERROR (GST_CAT_AN_RELATION, "Invalid parameter");
     return FALSE;
   }
@@ -903,11 +903,11 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
  */
 GstAnalyticsRelatableMtdData *
 gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta *
-    meta, gint an_meta_id)
+    meta, guint an_meta_id)
 {
   GstAnalyticsRelatableMtdData *rv;
   g_return_val_if_fail (meta, NULL);
-  if (an_meta_id < 0 || an_meta_id >= meta->rel_order) {
+  if (an_meta_id >= meta->rel_order) {
     GST_CAT_ERROR (GST_CAT_AN_RELATION, "Invalid parameter");
     return NULL;
   }
@@ -935,7 +935,7 @@ gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta *
  */
 gboolean
 gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
-    gint an_meta_id, GstAnalyticsRelTypes relation_type,
+    guint an_meta_id, GstAnalyticsRelTypes relation_type,
     GstAnalyticsMtdType type, gpointer * state, GstAnalyticsMtd * rlt_mtd)
 {
   guint8 **adj_mat;
@@ -945,7 +945,7 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
   gsize i;
 
   GST_CAT_TRACE (GST_CAT_AN_RELATION,
-      "Looking for %s related to %d by %d", g_quark_to_string (type),
+      "Looking for %s related to %u by %d", g_quark_to_string (type),
       an_meta_id, relation_type);
 
   g_return_val_if_fail (rmeta != NULL, FALSE);

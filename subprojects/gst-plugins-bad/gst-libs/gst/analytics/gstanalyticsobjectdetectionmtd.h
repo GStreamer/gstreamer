@@ -65,8 +65,8 @@ gboolean gst_analytics_relation_meta_add_od_mtd (
 
 GST_ANALYTICS_META_API
 gboolean
-gst_analytics_relation_meta_get_od_mtd (GstAnalyticsRelationMeta * xbmeta,
-    gint an_meta_id, GstAnalyticsODMtd * rlt);
+gst_analytics_relation_meta_get_od_mtd (GstAnalyticsRelationMeta * meta,
+    guint an_meta_id, GstAnalyticsODMtd * rlt);
 
 
 G_END_DECLS

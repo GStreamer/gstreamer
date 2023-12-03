@@ -419,10 +419,10 @@ GST_START_TEST (test_path_relation_meta)
   if (exist) {
     fail_unless (path != NULL);
     gint i;
-    gint path_check_ids[] = { 0, 2 };
+    guint path_check_ids[] = { 0, 2 };
     fail_unless (path->len == 2);
     for (i = 0; i < path->len; i++) {
-      fail_unless (path_check_ids[i] == g_array_index (path, gint, i));
+      fail_unless (path_check_ids[i] == g_array_index (path, guint, i));
     }
     g_array_free (g_steal_pointer (&path), TRUE);
     fail_unless (i == 2);
@@ -433,11 +433,11 @@ GST_START_TEST (test_path_relation_meta)
       cls_mtd[2].id, GST_INF_RELATION_SPAN, cond, &path);
   if (exist) {
     gint i;
-    gint path_check_ids[] = { 1, 0, 2 };
+    guint path_check_ids[] = { 1, 0, 2 };
     fail_unless (path != NULL);
     fail_unless (path->len == 3);
     for (i = 0; i < path->len; i++) {
-      fail_unless (path_check_ids[i] == g_array_index (path, gint, i));
+      fail_unless (path_check_ids[i] == g_array_index (path, guint, i));
     }
     g_array_free (g_steal_pointer (&path), TRUE);
     fail_unless (i == 3);
@@ -501,10 +501,10 @@ GST_START_TEST (test_cyclic_relation_meta)
   fail_unless (exist == TRUE);
   if (exist) {
     gint i;
-    gint path_ids[] = { 0, 1, 2 };
+    guint path_ids[] = { 0, 1, 2 };
     fail_unless (path->len == 3);
     for (i = 0; i < path->len; i++) {
-      fail_unless (path_ids[i] == g_array_index (path, gint, i));
+      fail_unless (path_ids[i] == g_array_index (path, guint, i));
     }
     g_array_free (g_steal_pointer (&path), TRUE);
     fail_unless (i == 3);
@@ -639,11 +639,11 @@ GST_START_TEST (test_od_cls_relation)
   fail_unless (exist == TRUE);
 
   /* Query the relation path and verify it is correct */
-  gint ids[2];
+  guint ids[2];
   gint i;
   fail_unless (path->len == 2);
   for (i = 0; i < path->len; i++) {
-    ids[i] = g_array_index (path, gint, i);
+    ids[i] = g_array_index (path, guint, i);
     GST_LOG ("id=%u", ids[i]);
   }
   g_array_free (g_steal_pointer (&path), TRUE);
@@ -706,7 +706,7 @@ GST_START_TEST (test_multi_od_cls_relation)
   GstAnalyticsODMtd od_mtd[2];
   GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
   GstAnalyticsRelationMeta *rmeta;
-  gint cls_id, ids[2], i;
+  guint cls_id, ids[2], i;
   gboolean ret;
   const gint dog_cls_index = 0;
   const gint cat_cls_index = 1;
@@ -798,7 +798,7 @@ GST_START_TEST (test_multi_od_cls_relation)
    */
   fail_unless (path->len == 2);
   for (i = 0; i < path->len; i++) {
-    ids[i] = g_array_index (path, gint, i);
+    ids[i] = g_array_index (path, guint, i);
     GST_LOG ("id=%u", ids[i]);
   }
   g_array_free (g_steal_pointer (&path), TRUE);

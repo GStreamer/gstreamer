@@ -70,8 +70,8 @@ gboolean gst_analytics_relation_meta_add_tracking_mtd (
 
 GST_ANALYTICS_META_API
 gboolean
-gst_analytics_relation_meta_get_tracking_mtd (GstAnalyticsRelationMeta * xbmeta,
-    gint an_meta_id, GstAnalyticsTrackingMtd * rlt);
+gst_analytics_relation_meta_get_tracking_mtd (GstAnalyticsRelationMeta * meta,
+    guint an_meta_id, GstAnalyticsTrackingMtd * rlt);
 
 
 G_END_DECLS

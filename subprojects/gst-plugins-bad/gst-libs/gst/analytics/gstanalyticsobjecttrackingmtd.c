@@ -220,7 +220,7 @@ gst_analytics_relation_meta_add_tracking_mtd (GstAnalyticsRelationMeta *
  */
 gboolean
 gst_analytics_relation_meta_get_tracking_mtd (GstAnalyticsRelationMeta * meta,
-    gint an_meta_id, GstAnalyticsTrackingMtd * rlt)
+    guint an_meta_id, GstAnalyticsTrackingMtd * rlt)
 {
   return gst_analytics_relation_meta_get_mtd (meta, an_meta_id,
       gst_analytics_tracking_mtd_get_type_quark (),

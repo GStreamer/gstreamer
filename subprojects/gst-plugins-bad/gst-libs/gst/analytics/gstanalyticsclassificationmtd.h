@@ -76,7 +76,7 @@ gst_analytics_relation_meta_add_one_cls_mtd (GstAnalyticsRelationMeta *
 GST_ANALYTICS_META_API
 gboolean
 gst_analytics_relation_meta_get_cls_mtd (GstAnalyticsRelationMeta * meta,
-    gint an_meta_id, GstAnalyticsClsMtd * rlt);
+    guint an_meta_id, GstAnalyticsClsMtd * rlt);
 
 G_END_DECLS
 #endif // __GST_ANALYTICS_CLASSIFICATION_H__

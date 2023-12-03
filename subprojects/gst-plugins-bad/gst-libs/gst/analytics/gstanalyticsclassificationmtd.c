@@ -264,7 +264,7 @@ gst_analytics_relation_meta_add_one_cls_mtd (GstAnalyticsRelationMeta *
  */
 gboolean
 gst_analytics_relation_meta_get_cls_mtd (GstAnalyticsRelationMeta * meta,
-    gint an_meta_id, GstAnalyticsClsMtd * rlt)
+    guint an_meta_id, GstAnalyticsClsMtd * rlt)
 {
   return gst_analytics_relation_meta_get_mtd (meta, an_meta_id,
       gst_analytics_cls_mtd_get_type_quark (), (GstAnalyticsClsMtd *) rlt);

@@ -31,7 +31,7 @@ static char type[] = GST_RELATABLE_MTD_OD_TYPE_NAME;
 typedef struct _GstAnalyticsODMtdData GstAnalyticsODMtdData;
 
 /**
- * GstAnalyticsODMtd:
+ * GstAnalyticsODMtdData:
  * @parent: parent #GstAnalyticsMtd
  * @object_type: Type of object
  * @x: x component of upper-left corner
@@ -207,7 +207,7 @@ gst_analytics_relation_meta_add_od_mtd (GstAnalyticsRelationMeta *
  */
 gboolean
 gst_analytics_relation_meta_get_od_mtd (GstAnalyticsRelationMeta * meta,
-    gint an_meta_id, GstAnalyticsODMtd * rlt)
+    guint an_meta_id, GstAnalyticsODMtd * rlt)
 {
   return gst_analytics_relation_meta_get_mtd (meta, an_meta_id,
       gst_analytics_od_mtd_get_type_quark (), (GstAnalyticsODMtd *) rlt);
