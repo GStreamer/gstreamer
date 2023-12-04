@@ -876,6 +876,8 @@ _enc_get_supported_formats_and_profiles (mfxSession * session,
     g_strfreev (profs);
   }
 
+  g_value_unset (&fmts);
+
   if (gst_value_list_get_size (supported_fmts) == 0 ||
       gst_value_list_get_size (supported_profs) == 0)
     return FALSE;
@@ -2017,6 +2019,8 @@ gst_msdkcaps_set_strings (GstCaps * caps,
         break;
       }
     }
+
+    gst_caps_features_free (f);
 
     if (!s)
       return FALSE;

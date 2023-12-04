@@ -1186,6 +1186,8 @@ gst_msdk_create_va_pool (GstMsdkEnc * thiz, GstVideoInfo * info,
     allocator = gst_va_allocator_new (display, formats);
   }
 
+  gst_object_unref (display);
+
   if (!allocator) {
     GST_ERROR_OBJECT (thiz, "failed to create allocator");
     if (formats)

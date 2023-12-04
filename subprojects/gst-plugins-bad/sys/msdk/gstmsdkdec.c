@@ -536,6 +536,7 @@ pad_accept_memory (GstMsdkDec * thiz, const gchar * mem_type, GstCaps ** filter)
           gst_video_dma_drm_fourcc_to_string (fourcc, thiz->modifier);
       gst_msdkcaps_set_strings (caps, mem_type, "drm-format", drm_str);
       gst_caps_set_simple (caps, "format", G_TYPE_STRING, "DMA_DRM", NULL);
+      g_free (drm_str);
     }
   }
 #endif
@@ -598,6 +599,7 @@ gst_msdkdec_fixate_format (GstMsdkDec * thiz, GstCaps * caps,
       gchar *drm_str =
           gst_video_dma_drm_fourcc_to_string (fourcc, thiz->modifier);
       g_value_set_string (&gfmt, drm_str);
+      g_free (drm_str);
       if (!gst_value_can_intersect (&gfmt, drm_fmts))
         goto failed;
       gst_structure_set_value (s, "drm-format", &gfmt);
@@ -667,6 +669,7 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
       (GstVaDisplay *) gst_msdk_context_get_va_display (thiz->context);
   thiz->modifier = gst_va_dmabuf_get_modifier_for_format (display, format,
       VA_SURFACE_ATTRIB_USAGE_HINT_DECODER);
+  gst_object_unref (display);
 #endif
 
 #if (MFX_VERSION >= 1022)
@@ -693,6 +696,9 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
 
     gst_caps_set_value (temp_caps, "width", &v_width);
     gst_caps_set_value (temp_caps, "height", &v_height);
+
+    g_value_unset (&v_width);
+    g_value_unset (&v_height);
 
     if (gst_caps_is_empty (gst_pad_peer_query_caps (GST_VIDEO_DECODER
                 (thiz)->srcpad, temp_caps))) {
@@ -1173,6 +1179,8 @@ gst_msdkdec_stop (GstVideoDecoder * decoder)
     gst_object_unref (thiz->other_pool);
     thiz->other_pool = NULL;
   }
+  gst_object_replace ((GstObject **) & thiz->alloc_pool, NULL);
+
   gst_video_info_init (&thiz->non_msdk_pool_info);
 
   gst_msdkdec_close_decoder (thiz, TRUE);
@@ -1757,6 +1765,8 @@ gst_msdk_create_va_pool (GstMsdkDec * thiz, GstVideoInfo * info,
     allocator = gst_va_allocator_new (display, formats);
   }
 
+  gst_object_unref (display);
+
   if (!allocator) {
     GST_ERROR_OBJECT (thiz, "Failed to create allocator");
     if (formats)
@@ -1851,6 +1861,8 @@ gst_msdkdec_create_buffer_pool (GstMsdkDec * thiz, GstVideoInfo * info,
   gst_buffer_pool_config_add_option (config,
       GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   gst_buffer_pool_config_set_video_alignment (config, &align);
+
+  gst_caps_unref (caps);
 
   if (!gst_buffer_pool_set_config (pool, config))
     goto error_pool_config;
@@ -2075,25 +2087,21 @@ gst_msdkdec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   gst_query_set_nth_allocation_pool (query, 0, pool, size, min_buffers,
       max_buffers);
 
-  gst_caps_unref (pool_caps);
   gst_object_unref (pool);
 
   return TRUE;
 
 failed_to_parse_caps:
   GST_ERROR_OBJECT (decoder, "failed to set buffer pool config");
-  gst_caps_unref (pool_caps);
   return FALSE;
 
 failed_to_create_pool:
   GST_ERROR_OBJECT (decoder, "failed to set buffer pool config");
-  gst_caps_unref (pool_caps);
   gst_object_unref (pool);
   return FALSE;
 
 error_set_config:
   GST_ERROR_OBJECT (decoder, "failed to set buffer pool config");
-  gst_caps_unref (pool_caps);
   gst_object_unref (pool);
   return FALSE;
 }

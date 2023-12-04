@@ -178,11 +178,12 @@ gst_msdk_context_use_vaapi (GstMsdkContext * context)
   }
 
   display_drm = gst_va_display_drm_new_from_path (path);
+  g_free (path);
+
   if (!display_drm) {
     GST_ERROR ("Couldn't create a VA DRM display");
     return FALSE;
   }
-  g_free (path);
 
   priv->display = display_drm;
 
