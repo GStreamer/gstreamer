@@ -1005,17 +1005,17 @@ GST_START_TEST (test_stream_align)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     if (i == 0)
       fail_unless (discont);
     else
       fail_unless (!discont);
+    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
   }
 
   /* Drift forwards by 1ms per 10ms buffer for the first 40 buffers.
    * - after 40 buffers we're above alignment threshold
-   * - after 40 + 100 buffers we're at discont wait
+   * - after 40 + 96 buffers we're at discont wait
    */
   for (i = 0; i < 500; i++) {
     timestamp = 10 * GST_MSECOND * i;
@@ -1027,15 +1027,15 @@ GST_START_TEST (test_stream_align)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i < 140) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i < 136) {
       if (i == 0)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     } else {
-      if (i == 140)
+      if (i == 136)
         fail_unless (discont);
       else
         fail_unless (!discont);
@@ -1047,7 +1047,7 @@ GST_START_TEST (test_stream_align)
 
   /* Drift backwards by 1ms per 10ms buffer for the first 40 buffers.
    * - after 40 buffers we're above alignment threshold
-   * - after 40 + 100 buffers we're at discont wait
+   * - after 40 + 104 buffers we're at discont wait
    */
   for (i = 0; i < 500; i++) {
     timestamp = 10 * GST_MSECOND * i;
@@ -1059,15 +1059,15 @@ GST_START_TEST (test_stream_align)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i < 140) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i < 144) {
       if (i == 0)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     } else {
-      if (i == 140)
+      if (i == 144)
         fail_unless (discont);
       else
         fail_unless (!discont);
@@ -1080,7 +1080,7 @@ GST_START_TEST (test_stream_align)
 
   /* Shift all buffers but the first by 40ms
    * - after 1 buffers we're above alignment threshold
-   * - after 101 buffers we're at discont wait
+   * - after 97 buffers we're at discont wait
    */
   for (i = 0; i < 500; i++) {
     timestamp = 10 * GST_MSECOND * i;
@@ -1092,15 +1092,15 @@ GST_START_TEST (test_stream_align)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i < 101) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i < 97) {
       if (i == 0)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     } else {
-      if (i == 101)
+      if (i == 97)
         fail_unless (discont);
       else
         fail_unless (!discont);
@@ -1124,15 +1124,15 @@ GST_START_TEST (test_stream_align)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     if (i == 0)
       fail_unless (discont);
     else
       fail_unless (!discont);
+    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
   }
 
-  /* Shift every buffer 100 by 2: discont at buffer 200
+  /* Shift every buffer after 100 by 2s: discont at buffer 100
    */
   for (i = 0; i < 500; i++) {
     timestamp = 10 * GST_MSECOND * i;
@@ -1144,21 +1144,21 @@ GST_START_TEST (test_stream_align)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i < 200) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i < 100) {
       if (i == 0)
         fail_unless (discont);
       else
         fail_unless (!discont);
-    } else {
-      fail_unless_equals_uint64 (out_timestamp,
-          10 * GST_MSECOND * i + 2 * GST_SECOND);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
       fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
-      if (i == 200)
+    } else {
+      if (i == 100)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp,
+          10 * GST_MSECOND * i + 2 * GST_SECOND);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     }
   }
 
@@ -1185,12 +1185,12 @@ GST_START_TEST (test_stream_align_reverse)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     if (i == 499)
       fail_unless (discont);
     else
       fail_unless (!discont);
+    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
   }
 
   /* Drift forwards by 1ms per 10ms buffer for the first 40 buffers.
@@ -1207,15 +1207,15 @@ GST_START_TEST (test_stream_align_reverse)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i >= 500 - 140) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i >= 500 - 144) {
       if (i == 499)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     } else {
-      if (i == 499 - 140)
+      if (i == 499 - 144)
         fail_unless (discont);
       else
         fail_unless (!discont);
@@ -1239,15 +1239,15 @@ GST_START_TEST (test_stream_align_reverse)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i >= 500 - 140) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i >= 500 - 136) {
       if (i == 499)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     } else {
-      if (i == 499 - 140)
+      if (i == 499 - 136)
         fail_unless (discont);
       else
         fail_unless (!discont);
@@ -1260,7 +1260,7 @@ GST_START_TEST (test_stream_align_reverse)
 
   /* Shift all buffers but the first by 40ms
    * - after 1 buffers we're above alignment threshold
-   * - after 101 buffers we're at discont wait
+   * - after 106 buffers we're at discont wait
    */
   for (i = 499; i >= 0; i--) {
     timestamp = 10 * GST_MSECOND * i;
@@ -1272,15 +1272,15 @@ GST_START_TEST (test_stream_align_reverse)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i >= 500 - 101) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i >= 500 - 105) {
       if (i == 499)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     } else {
-      if (i == 499 - 101)
+      if (i == 499 - 105)
         fail_unless (discont);
       else
         fail_unless (!discont);
@@ -1304,15 +1304,15 @@ GST_START_TEST (test_stream_align_reverse)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     if (i == 499)
       fail_unless (discont);
     else
       fail_unless (!discont);
+    fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
+    fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
   }
 
-  /* Shift buffer 100 by 2: discont at buffer 200
+  /* Shift every buffer after 100 by 2s: discont at buffer 100
    */
   for (i = 499; i >= 0; i--) {
     timestamp = 10 * GST_MSECOND * i;
@@ -1324,21 +1324,21 @@ GST_START_TEST (test_stream_align_reverse)
         gst_audio_stream_align_process (align, discont, timestamp, 10,
         &out_timestamp, &out_duration, NULL);
 
-    if (i >= 500 - 200) {
-      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
-      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
+    if (i >= 500 - 100) {
       if (i == 499)
         fail_unless (discont);
       else
         fail_unless (!discont);
-    } else {
-      fail_unless_equals_uint64 (out_timestamp,
-          10 * GST_MSECOND * i + 2 * GST_SECOND);
+      fail_unless_equals_uint64 (out_timestamp, 10 * GST_MSECOND * i);
       fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
-      if (i == 499 - 200)
+    } else {
+      if (i == 499 - 100)
         fail_unless (discont);
       else
         fail_unless (!discont);
+      fail_unless_equals_uint64 (out_timestamp,
+          10 * GST_MSECOND * i + 2 * GST_SECOND);
+      fail_unless_equals_uint64 (out_duration, 10 * GST_MSECOND);
     }
   }
 

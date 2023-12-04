@@ -1806,6 +1806,7 @@ gst_audio_aggregator_post_messages (GstAudioAggregator * aagg)
  * Replace the current buffer with input and update GstAudioAggregatorPadPrivate
  * values.
  */
+#define ABSDIFF(a, b) ((a) > (b) ? (a) - (b) : (b) - (a))
 static gboolean
 gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     GstAudioAggregatorPad * pad)
@@ -1873,12 +1874,13 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     pad->priv->new_segment = FALSE;
   } else {
     guint64 diff, max_sample_diff;
+    GstClockTime expected_time;
 
     /* Check discont, based on audiobasesink */
-    if (start_offset <= pad->priv->next_offset)
-      diff = pad->priv->next_offset - start_offset;
-    else
-      diff = start_offset - pad->priv->next_offset;
+    diff = ABSDIFF (pad->priv->next_offset, start_offset);
+
+    expected_time =
+        gst_util_uint64_scale (pad->priv->next_offset, GST_SECOND, rate);
 
     max_sample_diff =
         gst_util_uint64_scale_int (aagg->priv->alignment_threshold, rate,
@@ -1888,8 +1890,11 @@ gst_audio_aggregator_fill_buffer (GstAudioAggregator * aagg,
     if (G_UNLIKELY (diff >= max_sample_diff)) {
       if (aagg->priv->discont_wait > 0) {
         if (pad->priv->discont_time == GST_CLOCK_TIME_NONE) {
-          pad->priv->discont_time = start_time;
-        } else if (start_time - pad->priv->discont_time >=
+          if (ABSDIFF (expected_time, start_time) >= aagg->priv->discont_wait)
+            discont = TRUE;
+          else
+            pad->priv->discont_time = expected_time;
+        } else if (ABSDIFF (start_time, pad->priv->discont_time) >=
             aagg->priv->discont_wait) {
           discont = TRUE;
           pad->priv->discont_time = GST_CLOCK_TIME_NONE;
@@ -2045,6 +2050,8 @@ done:
 
   return TRUE;
 }
+
+#undef ABSDIFF
 
 /* Called with pad object lock held */
 
