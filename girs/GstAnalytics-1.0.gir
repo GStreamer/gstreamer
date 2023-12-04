@@ -504,11 +504,11 @@ Since 1.24</doc>
           </instance-parameter>
           <parameter name="an_meta_first_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">First analysis-meta</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="an_meta_second_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Second analysis-meta</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="max_relation_span" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Maximum number of relation between @an_meta_first_id and
@@ -551,7 +551,7 @@ Since 1.24</doc>
           </instance-parameter>
           <parameter name="an_meta_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Id of #GstAnalyticsClsMtd instance to retrieve</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Will be filled with relatable
@@ -576,7 +576,7 @@ Since 1.24</doc>
           </instance-parameter>
           <parameter name="an_meta_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of GstAnalyticsMtd involved in relation to query</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="relation_type" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Type of relation to filter on.</doc>
@@ -615,7 +615,7 @@ Since 1.24</doc>
           </instance-parameter>
           <parameter name="an_meta_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of GstAnalyticsMtd instance to retrieve</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="type" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Filter on a specific type of analysis, use
@@ -644,7 +644,7 @@ Since 1.24</doc>
           </instance-parameter>
           <parameter name="an_meta_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of GstAnalyticsMtd instance to retrieve</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
       </method>
@@ -659,12 +659,13 @@ Since 1.24</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
-          <instance-parameter name="xbmeta" transfer-ownership="none">
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Instance of #GstAnalyticsRelationMeta</doc>
             <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
           </instance-parameter>
           <parameter name="an_meta_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Id of #GstAnalyticsOdMtd instance to retrieve</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Will be filled with relatable
@@ -690,11 +691,11 @@ Ids (@an_meta_first_id and @an_meta_second_id) must be from a call to
           </instance-parameter>
           <parameter name="an_meta_first_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of first analysis-meta</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="an_meta_second_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of second  analysis-meta</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
       </method>
@@ -709,12 +710,13 @@ Since 1.24</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
-          <instance-parameter name="xbmeta" transfer-ownership="none">
+          <instance-parameter name="meta" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Instance of GstAnalyticsRelationMeta</doc>
             <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
           </instance-parameter>
           <parameter name="an_meta_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Id of GstAnalyticsMtd instance to retrieve</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="rlt" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Will be filled with relatable
@@ -774,11 +776,11 @@ Ids must have been obtained a call to
           </parameter>
           <parameter name="an_meta_first_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">first meta id</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
           <parameter name="an_meta_second_id" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">second meta id</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="guint" c:type="guint"/>
           </parameter>
         </parameters>
       </method>
