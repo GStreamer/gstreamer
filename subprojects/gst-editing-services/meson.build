@@ -84,7 +84,7 @@ endif
 cdata.set('VERSION', '"@0@"'.format(gst_version))
 cdata.set('PACKAGE', '"gst-editing-services"')
 cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE_BUGREPORT', '"https://gitlab.freedesktop.org/gstreamer/gst-editing-services/issues/new"')
+cdata.set('PACKAGE_BUGREPORT', '"https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/new"')
 cdata.set('PACKAGE_NAME', '"GStreamer Editing Services"')
 cdata.set('GST_PACKAGE_NAME', '"GStreamer Editing Services"')
 cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
