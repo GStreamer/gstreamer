@@ -532,7 +532,12 @@ gst_vulkan_trash_fence_list_init (GstVulkanTrashFenceList * trash_list)
 GstVulkanTrashList *
 gst_vulkan_trash_fence_list_new (void)
 {
-  return g_object_new (gst_vulkan_trash_fence_list_get_type (), NULL);
+  GstVulkanTrashList *ret;
+
+  ret = g_object_new (gst_vulkan_trash_fence_list_get_type (), NULL);
+  gst_object_ref_sink (ret);
+
+  return ret;
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstVulkanTrash, gst_vulkan_trash);
