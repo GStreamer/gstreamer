@@ -229,6 +229,7 @@ cdata.set_quoted('GST_LICENSE', 'LGPL')
 cdata.set_quoted('PACKAGE', 'gst-plugins-good')
 cdata.set_quoted('GETTEXT_PACKAGE', 'gst-plugins-good-1.0')
 cdata.set_quoted('LOCALEDIR', join_paths(get_option('prefix'), get_option('localedir')))
+cdata.set_quoted('PACKAGE_BUGREPORT', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/new')
 
 warning_flags = [
   '-Wmissing-declarations',
