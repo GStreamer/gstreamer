@@ -52,7 +52,9 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
       inputImageFormat (GST_ML_INPUT_IMAGE_FORMAT_HWC),
       inputDatatype (GST_TENSOR_TYPE_INT8),
       inputDatatypeSize (sizeof (uint8_t)),
-      fixedInputImageSize (false) {
+      fixedInputImageSize (false),
+      inputTensorOffset (0.0),
+      inputTensorScale (1.0) {
   }
 
   GstOnnxClient::~GstOnnxClient () {
@@ -105,6 +107,26 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
         inputDatatypeSize = sizeof (float);
         break;
     };
+  }
+
+  void GstOnnxClient::setInputImageOffset (float offset)
+  {
+    inputTensorOffset = offset;
+  }
+
+  float GstOnnxClient::getInputImageOffset ()
+  {
+    return inputTensorOffset;
+  }
+
+  void GstOnnxClient::setInputImageScale (float scale)
+  {
+    inputTensorScale = scale;
+  }
+
+  float GstOnnxClient::getInputImageScale ()
+  {
+    return inputTensorScale;
   }
 
   GstTensorType GstOnnxClient::getInputImageDatatype(void)
@@ -422,14 +444,16 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
     switch (inputDatatype) {
       case GST_TENSOR_TYPE_INT8:
         convert_image_remove_alpha (dest, inputImageFormat , srcPtr,
-        srcSamplesPerPixel, stride);
+        srcSamplesPerPixel, stride, (uint8_t)inputTensorOffset,
+        (uint8_t)inputTensorScale);
         inputTensors.push_back (Ort::Value::CreateTensor < uint8_t > (
               memoryInfo, dest, inputTensorSize, inputDims.data (),
               inputDims.size ()));
         break;
       case GST_TENSOR_TYPE_FLOAT32: {
         convert_image_remove_alpha ((float*)dest, inputImageFormat , srcPtr,
-        srcSamplesPerPixel, stride);
+        srcSamplesPerPixel, stride, (float)inputTensorOffset, (float)
+        inputTensorScale);
         inputTensors.push_back (Ort::Value::CreateTensor < float > (
               memoryInfo, (float*)dest, inputTensorSize, inputDims.data (),
               inputDims.size ()));
@@ -451,14 +475,17 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
   template < typename T>
   void GstOnnxClient::convert_image_remove_alpha (T *dst,
       GstMlInputImageFormat hwc, uint8_t **srcPtr, uint32_t srcSamplesPerPixel,
-      uint32_t stride) {
+      uint32_t stride, T offset, T div) {
     size_t destIndex = 0;
+    T tmp;
 
     if (inputImageFormat == GST_ML_INPUT_IMAGE_FORMAT_HWC) {
       for (int32_t j = 0; j < height; ++j) {
         for (int32_t i = 0; i < width; ++i) {
           for (int32_t k = 0; k < channels; ++k) {
-            dst[destIndex++] = (T)*srcPtr[k];
+            tmp = *srcPtr[k];
+            tmp += offset;
+            dst[destIndex++] = (T)(tmp / div);
             srcPtr[k] += srcSamplesPerPixel;
           }
         }
@@ -472,7 +499,9 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
       for (int32_t j = 0; j < height; ++j) {
         for (int32_t i = 0; i < width; ++i) {
           for (int32_t k = 0; k < channels; ++k) {
-            destPtr[k][destIndex] = (T)*srcPtr[k];
+            tmp = *srcPtr[k];
+            tmp += offset;
+            destPtr[k][destIndex] = (T)(tmp / div);
             srcPtr[k] += srcSamplesPerPixel;
           }
           destIndex++;

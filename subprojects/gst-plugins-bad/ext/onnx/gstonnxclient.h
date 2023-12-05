@@ -57,6 +57,10 @@ namespace GstOnnxNamespace {
     GstMlInputImageFormat getInputImageFormat(void);
     void setInputImageDatatype(GstTensorType datatype);
     GstTensorType getInputImageDatatype(void);
+    void setInputImageOffset (float offset);
+    float getInputImageOffset ();
+    void setInputImageScale (float offset);
+    float getInputImageScale ();
     std::vector < Ort::Value > run (uint8_t * img_data, GstVideoInfo vinfo);
     std::vector < const char *> genOutputNamesRaw(void);
     bool isFixedInputImageSize(void);
@@ -68,7 +72,7 @@ namespace GstOnnxNamespace {
 
     template < typename T>
     void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
-        uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride);
+        uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride, T offset, T div);
     bool doRun(uint8_t * img_data, GstVideoInfo vinfo, std::vector < Ort::Value > &modelOutput);
     Ort::Env env;
     Ort::Session * session;
@@ -86,6 +90,8 @@ namespace GstOnnxNamespace {
     GstTensorType inputDatatype;
     size_t inputDatatypeSize;
     bool fixedInputImageSize;
+    float inputTensorOffset;
+    float inputTensorScale;
   };
 }
 

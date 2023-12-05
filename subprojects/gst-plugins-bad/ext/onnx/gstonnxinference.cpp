@@ -123,7 +123,9 @@ enum
   PROP_INPUT_IMAGE_FORMAT,
   PROP_OPTIMIZATION_LEVEL,
   PROP_EXECUTION_PROVIDER,
-  PROP_INPUT_IMAGE_DATATYPE
+  PROP_INPUT_IMAGE_DATATYPE,
+  PROP_INPUT_OFFSET,
+  PROP_INPUT_SCALE
 };
 
 #define GST_ONNX_INFERENCE_DEFAULT_EXECUTION_PROVIDER    GST_ONNX_EXECUTION_PROVIDER_CPU
@@ -362,6 +364,23 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
           GST_TENSOR_TYPE_INT8,
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_INPUT_OFFSET,
+      g_param_spec_float ("input-tensor-offset",
+          "Input tensor offset",
+          "offset each tensor value by this value",
+          -G_MAXFLOAT, G_MAXFLOAT, 0.0,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_INPUT_SCALE,
+      g_param_spec_float ("input-tensor-scale",
+          "Input tensor scale",
+          "Divide each tensor value by this value",
+          G_MINFLOAT, G_MAXFLOAT, 1.0,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+
   gst_element_class_set_static_metadata (element_class, "onnxinference",
       "Filter/Effect/Video",
       "Apply neural network to video frames and create tensor output",
@@ -433,6 +452,12 @@ gst_onnx_inference_set_property (GObject * object, guint prop_id,
       onnxClient->setInputImageDatatype ((GstTensorType)
           g_value_get_enum (value));
       break;
+    case PROP_INPUT_OFFSET:
+      onnxClient->setInputImageOffset (g_value_get_float (value));
+      break;
+    case PROP_INPUT_SCALE:
+      onnxClient->setInputImageScale (g_value_get_float (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -461,6 +486,12 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       break;
     case PROP_INPUT_IMAGE_DATATYPE:
       g_value_set_enum (value, onnxClient->getInputImageDatatype ());
+      break;
+    case PROP_INPUT_OFFSET:
+      g_value_set_float (value, onnxClient->getInputImageOffset ());
+      break;
+    case PROP_INPUT_SCALE:
+      g_value_set_float (value, onnxClient->getInputImageScale ());
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
