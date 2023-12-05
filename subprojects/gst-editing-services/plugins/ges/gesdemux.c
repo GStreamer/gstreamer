@@ -381,8 +381,9 @@ ges_demux_adapt_timeline_duration (GESDemux * self, GESTimeline * timeline)
               if (caps) {
                 gchar *caps_str = gst_caps_to_string (caps);
                 effect_str = effect_str_full =
-                    g_strdup_printf ("capsfilter caps=\"%s\" ! %s", caps_str,
-                    effect_str);
+                    g_strdup_printf
+                    ("videoconvertscale ! capsfilter caps=\"%s\" ! %s",
+                    caps_str, effect_str);
                 g_free (caps_str);
                 gst_caps_unref (caps);
               }
