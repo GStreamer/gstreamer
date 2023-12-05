@@ -1437,8 +1437,14 @@ gst_vulkan_operation_pipeline_barrier2 (GstVulkanOperation * self,
 GstVulkanOperation *
 gst_vulkan_operation_new (GstVulkanCommandPool * cmd_pool)
 {
+  GstVulkanOperation *self;
+
   g_return_val_if_fail (GST_IS_VULKAN_COMMAND_POOL (cmd_pool), NULL);
 
-  return g_object_new (GST_TYPE_VULKAN_OPERATION, "command-pool", cmd_pool,
+  self = g_object_new (GST_TYPE_VULKAN_OPERATION, "command-pool", cmd_pool,
       NULL);
+
+  gst_object_ref_sink (self);
+
+  return self;
 }
