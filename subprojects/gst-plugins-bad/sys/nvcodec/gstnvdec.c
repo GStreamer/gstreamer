@@ -805,10 +805,14 @@ parser_display_callback (GstNvDec * nvdec, CUVIDPARSERDISPINFO * dispinfo)
     GST_BUFFER_PTS (output_buffer) = dispinfo->timestamp;
     GST_BUFFER_DTS (output_buffer) = GST_CLOCK_TIME_NONE;
     /* assume buffer duration from framerate */
-    GST_BUFFER_DURATION (output_buffer) =
-        gst_util_uint64_scale (GST_SECOND,
-        GST_VIDEO_INFO_FPS_D (&nvdec->out_info),
-        GST_VIDEO_INFO_FPS_N (&nvdec->out_info));
+    if (nvdec->out_info.fps_n > 0 && nvdec->out_info.fps_d > 0) {
+      GST_BUFFER_DURATION (output_buffer) =
+          gst_util_uint64_scale (GST_SECOND,
+          GST_VIDEO_INFO_FPS_D (&nvdec->out_info),
+          GST_VIDEO_INFO_FPS_N (&nvdec->out_info));
+    } else {
+      GST_BUFFER_DURATION (output_buffer) = GST_CLOCK_TIME_NONE;
+    }
   } else {
     ret = gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (nvdec),
         frame);
