@@ -446,7 +446,7 @@ build vs2022 amd64:
   script:
     - !reference [".build windows", "script"]
     - meson setup --vsenv build $env:MESON_ARGS
-    - meson compile -C build
+    - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
     - .\gst-env.py gst-inspect-1.0.exe --version
     - .\gst-env.py gst-inspect-1.0.exe
     - mkdir destdir
@@ -462,7 +462,7 @@ build vs2022 amd64 full-static:
     - !reference [".build windows", "script"]
     - echo $env:MESON_ARGS
     - cmd.exe /C "meson setup --vsenv build --default-library=static $env:MESON_ARGS"
-    - meson compile -C build
+    - meson compile -C build --jobs $env:FDO_CI_CONCURRENT
     - .\gst-env.py gst-inspect-1.0.exe --version
     - .\gst-env.py gst-inspect-1.0.exe
   variables:
@@ -482,7 +482,7 @@ build vs2022 amd64 full-static:
     - echo $env:MESON_CROSS_ARGS
     - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
         meson setup build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
-        meson compile -C build "
+        meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
 
 build vs2022 x86:
   extends: '.build windows cross'
@@ -526,7 +526,7 @@ build msys2:
     - $env:MESON_ARGS = $env:MESON_ARGS.replace('-Dgst-plugins-bad:d3d11-wgc=enabled','') + ' -Dpython=disabled -Dintrospection=disabled'
     # Configure MSYS2 to use the UCRT64 environment, start in the same directory
     # and inherit PATH
-    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS && meson compile -C build"
+    - C:\msys64\msys2_shell.cmd -ucrt64 -defterm -no-start -here -use-full-path -lc "meson setup build $env:MESON_ARGS && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
 
 build macos:
   extends:

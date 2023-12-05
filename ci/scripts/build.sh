@@ -15,6 +15,11 @@ export RUSTUP_HOME="/usr/local/rustup"
 export CARGO_HOME="/usr/local/cargo"
 export PATH="/usr/local/cargo/bin:$PATH"
 
+# nproc works on linux
+# sysctl for macos
+_jobs=$(nproc || sysctl -n hw.ncpu)
+jobs="${FDO_CI_CONCURRENT:-$_jobs}"
+
 date -R
 ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
 
@@ -35,7 +40,7 @@ then
 fi
 
 date -R
-meson compile -C build/
+meson compile -C build/ --jobs "$jobs"
 date -R
 
 if command -v ccache
