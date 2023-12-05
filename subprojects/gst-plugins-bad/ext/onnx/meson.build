@@ -24,7 +24,8 @@ if onnxrt_dep.found()
     cpp_args : gst_plugins_bad_args + extra_args,
     link_args : noseh_link_args,
     include_directories : [configinc, libsinc, cuda_stubinc],
-    dependencies : [gstbase_dep, gstvideo_dep, onnxrt_dep, libm] + extra_deps,
+    dependencies : [gstbase_dep, gstvideo_dep, gstanalytics_dep, onnxrt_dep,
+        libm] + extra_deps,
     install : true,
     install_dir : plugins_install_dir,
   )

@@ -3,7 +3,7 @@
  * Copyright (C) 2021 Collabora Ltd.
  *
  * gstssdobjectdetector.cpp
- * 
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -54,7 +54,8 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/video/gstvideometa.h>
+
+#include <gst/analytics/analytics.h>
 #include "tensor/gsttensormeta.h"
 
 GST_DEBUG_CATEGORY_STATIC (ssd_object_detector_debug);
@@ -304,6 +305,8 @@ static gboolean
 gst_ssd_object_detector_process (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstTensorMeta *tmeta = NULL;
+  GstAnalyticsODMtd odmtd;
+  GstAnalyticsRelationMeta *rmeta;
   GstSsdObjectDetector *self = GST_SSD_OBJECT_DETECTOR (trans);
 
   // get all tensor metas
@@ -311,6 +314,9 @@ gst_ssd_object_detector_process (GstBaseTransform * trans, GstBuffer * buf)
   if (!tmeta) {
     GST_WARNING_OBJECT (trans, "missing tensor meta");
     return TRUE;
+  } else {
+    rmeta = gst_buffer_add_analytics_relation_meta (buf);
+    g_return_val_if_fail (rmeta != NULL, FALSE);
   }
 
   std::vector < GstMlBoundingBox > boxes =
@@ -319,28 +325,15 @@ gst_ssd_object_detector_process (GstBaseTransform * trans, GstBuffer * buf)
       self->score_threshold);
 
   for (auto & b:boxes) {
-    auto vroi_meta = gst_buffer_add_video_region_of_interest_meta (buf,
-        GST_SSD_OBJECT_DETECTOR_META_NAME,
-        b.x0, b.y0,
-        b.width,
-        b.height);
-    if (!vroi_meta) {
-      GST_WARNING_OBJECT (trans,
-          "Unable to attach GstVideoRegionOfInterestMeta to buffer");
-      return FALSE;
-    }
-    auto s = gst_structure_new (GST_SSD_OBJECT_DETECTOR_META_PARAM_NAME,
-        GST_SSD_OBJECT_DETECTOR_META_FIELD_LABEL,
-        G_TYPE_STRING,
-        b.label.c_str (),
-        GST_SSD_OBJECT_DETECTOR_META_FIELD_SCORE,
-        G_TYPE_DOUBLE,
-        b.score,
-        NULL);
-    gst_video_region_of_interest_meta_add_param (vroi_meta, s);
-    GST_DEBUG_OBJECT (self,
-        "Object detected with label : %s, score: %f, bound box: (%f,%f,%f,%f) \n",
+    if (gst_analytics_relation_meta_add_od_mtd (rmeta,
+        g_quark_from_string(b.label.c_str ()), b.x0, b.y0, b.width, b.height,
+        b.score, &odmtd)) {
+      GST_DEBUG_OBJECT (self,
+        "Object detected with label : %s, score: %f, bound box: (%f,%f,%f,%f)",
         b.label.c_str (), b.score, b.x0, b.y0, b.x0 + b.width, b.y0 + b.height);
+    } else {
+      GST_ERROR_OBJECT (self, "Failed to add object detection analytics-meta");
+    }
   }
 
   return TRUE;
