@@ -613,12 +613,6 @@ static gboolean
 gst_onnx_inference_process (GstBaseTransform * trans, GstBuffer * buf)
 {
   GstMapInfo info;
-  GstVideoMeta *vmeta = gst_buffer_get_video_meta (buf);
-
-  if (!vmeta) {
-    GST_WARNING_OBJECT (trans, "missing video meta");
-    return FALSE;
-  }
   if (gst_buffer_map (buf, &info, GST_MAP_READ)) {
     GstOnnxInference *self = GST_ONNX_INFERENCE (trans);
     try {
@@ -632,6 +626,7 @@ gst_onnx_inference_process (GstBaseTransform * trans, GstBuffer * buf)
     }
     catch (Ort::Exception & ortex) {
       GST_ERROR_OBJECT (self, "%s", ortex.what ());
+      gst_buffer_unmap (buf, &info);
       return FALSE;
     }
 
