@@ -235,7 +235,7 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
         Ort::AllocatedStringPtr res =
             metaData.LookupCustomMetadataMapAllocated (name, ortAllocator);
         if (res) {
-          GQuark quark = g_quark_from_static_string (res.get ());
+          GQuark quark = g_quark_from_string (res.get ());
           outputIds.push_back (quark);
         } else {
           GST_ERROR ("Failed to look up id for key %s", name);
@@ -449,7 +449,7 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
   }
 
   template < typename T>
-  void GstOnnxClient::convert_image_remove_alpha (T *dst, 
+  void GstOnnxClient::convert_image_remove_alpha (T *dst,
       GstMlInputImageFormat hwc, uint8_t **srcPtr, uint32_t srcSamplesPerPixel,
       uint32_t stride) {
     size_t destIndex = 0;
