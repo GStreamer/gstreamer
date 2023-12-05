@@ -2394,11 +2394,9 @@ next:
     /* pretend we have not seen EOS yet for upstream's sake */
     result = sq->srcresult;
   } else if (dropping && gst_data_queue_is_empty (sq->queue)) {
-    /* queue empty, so stop dropping
-     * we can commit the result we have now,
+    /* queue empty. we can commit the result we have now,
      * which is either OK after a segment, or EOS */
     GST_DEBUG_ID (sq->debug_id, "committed EOS drop");
-    dropping = FALSE;
     result = GST_FLOW_EOS;
   }
   sq->srcresult = result;
