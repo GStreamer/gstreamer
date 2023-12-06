@@ -878,6 +878,203 @@ GST_START_TEST (test_h264_parse_partial_nal_header)
 
 GST_END_TEST;
 
+GST_START_TEST (test_h264_split_avc)
+{
+  GstH264NalParser *parser;
+  GArray *array;
+  GstH264NalUnit *nal;
+  static const guint8 aud[] = { 0x09, 0xf0 };
+  static const guint8 seq_end[] = { 0x0a };
+  static const guint8 sc_3bytes[] = { 0x00, 0x00, 0x01 };
+  static const guint8 sc_4bytes[] = { 0x00, 0x00, 0x00, 0x01 };
+  const guint8 nal_length_size = 4;
+  guint8 data[128];
+  gsize size;
+  GstH264ParserResult ret;
+  gsize consumed;
+  guint off;
+
+  parser = gst_h264_nal_parser_new ();
+  array = g_array_new (FALSE, FALSE, sizeof (GstH264NalUnit));
+
+#define BUILD_NAL(arr) G_STMT_START { \
+  memcpy (data + off, arr, sizeof (arr)); \
+  off += sizeof (arr); \
+} G_STMT_END
+
+  /* 1) Complete packetized nalu */
+  size = nal_length_size + sizeof (aud);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud));
+  BUILD_NAL (aud);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 2-1) SC (3 bytes) + nalu */
+  size = nal_length_size + sizeof (sc_3bytes) + sizeof (aud);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_3bytes) + sizeof (aud));
+  BUILD_NAL (sc_3bytes);
+  BUILD_NAL (aud);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 2-2) SC (4 bytes) + nalu */
+  size = nal_length_size + sizeof (sc_4bytes) + sizeof (aud);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_4bytes) + sizeof (aud));
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (aud);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 3-1) nalu + trailing SC (3 bytes) */
+  size = nal_length_size + sizeof (aud) + sizeof (sc_3bytes);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud) + sizeof (sc_3bytes));
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_3bytes);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 3-2) nalu + trailing SC (4 bytes) */
+  size = nal_length_size + sizeof (aud) + sizeof (sc_4bytes);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud) + sizeof (sc_4bytes));
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 1);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+
+  /* 4-1) SC + nalu + SC + nalu */
+  size = nal_length_size + sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (seq_end);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (seq_end));
+  BUILD_NAL (sc_3bytes);
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (seq_end);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 2);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+  nal = &g_array_index (array, GstH264NalUnit, 1);
+  assert_equals_int (nal->type, GST_H264_NAL_SEQ_END);
+  assert_equals_int (nal->sc_offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud));
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud) + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (seq_end));
+
+  /* 4-2) SC + nalu + SC + nalu + trailing SC */
+  size = nal_length_size + sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (seq_end) + sizeof (sc_3bytes);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (sc_3bytes) + sizeof (aud) +
+      sizeof (sc_4bytes) + sizeof (seq_end) + sizeof (sc_3bytes));
+  BUILD_NAL (sc_3bytes);
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (seq_end);
+  BUILD_NAL (sc_3bytes);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 2);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, nal_length_size);
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes));
+  assert_equals_int (nal->size, sizeof (aud));
+  nal = &g_array_index (array, GstH264NalUnit, 1);
+  assert_equals_int (nal->type, GST_H264_NAL_SEQ_END);
+  assert_equals_int (nal->sc_offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud));
+  assert_equals_int (nal->offset, nal_length_size + sizeof (sc_3bytes)
+      + sizeof (aud) + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (seq_end));
+
+  /* 4-3) nalu + SC + nalu */
+  size = nal_length_size + sizeof (aud) + sizeof (sc_4bytes) + sizeof (seq_end);
+  off = nal_length_size;
+  GST_WRITE_UINT32_BE (data, sizeof (aud) + sizeof (sc_4bytes) +
+      sizeof (seq_end));
+  BUILD_NAL (aud);
+  BUILD_NAL (sc_4bytes);
+  BUILD_NAL (seq_end);
+  ret = gst_h264_parser_identify_and_split_nalu_avc (parser, data,
+      0, size, nal_length_size, array, &consumed);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  assert_equals_int (array->len, 2);
+  assert_equals_int (consumed, size);
+  nal = &g_array_index (array, GstH264NalUnit, 0);
+  assert_equals_int (nal->type, GST_H264_NAL_AU_DELIMITER);
+  assert_equals_int (nal->sc_offset, 0);
+  assert_equals_int (nal->offset, nal_length_size);
+  assert_equals_int (nal->size, sizeof (aud));
+  nal = &g_array_index (array, GstH264NalUnit, 1);
+  assert_equals_int (nal->type, GST_H264_NAL_SEQ_END);
+  assert_equals_int (nal->sc_offset, nal_length_size + sizeof (aud));
+  assert_equals_int (nal->offset,
+      nal_length_size + sizeof (aud) + sizeof (sc_4bytes));
+  assert_equals_int (nal->size, sizeof (seq_end));
+
+#undef BUILD_NAL
+
+  gst_h264_nal_parser_free (parser);
+  g_array_unref (array);
+}
+
+GST_END_TEST;
 
 static Suite *
 h264parser_suite (void)
@@ -895,6 +1092,7 @@ h264parser_suite (void)
   tcase_add_test (tc_chain, test_h264_create_sei);
   tcase_add_test (tc_chain, test_h264_decoder_config_record);
   tcase_add_test (tc_chain, test_h264_parse_partial_nal_header);
+  tcase_add_test (tc_chain, test_h264_split_avc);
 
   return s;
 }

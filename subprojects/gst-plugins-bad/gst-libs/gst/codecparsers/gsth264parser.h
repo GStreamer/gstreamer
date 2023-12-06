@@ -1441,6 +1441,15 @@ GstH264ParserResult gst_h264_parser_identify_nalu_avc (GstH264NalParser *nalpars
                                                        GstH264NalUnit *nalu);
 
 GST_CODEC_PARSERS_API
+GstH264ParserResult gst_h264_parser_identify_and_split_nalu_avc (GstH264NalParser *nalparser,
+                                                                 const guint8 *data,
+                                                                 guint offset,
+                                                                 gsize size,
+                                                                 guint8 nal_length_size,
+                                                                 GArray * nalus,
+                                                                 gsize * consumed);
+
+GST_CODEC_PARSERS_API
 GstH264ParserResult gst_h264_parser_parse_nal         (GstH264NalParser *nalparser,
                                                        GstH264NalUnit *nalu);
 
