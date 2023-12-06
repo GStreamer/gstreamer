@@ -39,6 +39,7 @@
 #endif
 
 #ifdef G_OS_WIN32
+#define _WINSOCKAPI_
 #include <windows.h>
 #ifdef X509_NAME
 #undef X509_NAME
