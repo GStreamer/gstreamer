@@ -137,6 +137,10 @@ typedef struct _GstSoupVTable
     GAsyncResult * result, GError ** error);
   GInputStream *(*_soup_session_send) (SoupSession * session, SoupMessage * msg,
     GCancellable * cancellable, GError ** error);
+  SoupCookie* (*_soup_cookie_parse) (const char* header, GUri* origin);
+  void (*_soup_cookies_to_request) (GSList* cookies, SoupMessage* msg);
+  void (*_soup_cookies_free) (GSList *cookies);
+
   /* *INDENT-ON* */
 } GstSoupVTable;
 
@@ -291,6 +295,9 @@ gst_soup_load_library (void)
       LOAD_SYMBOL (soup_session_get_type);
       LOAD_SYMBOL (soup_session_send);
       LOAD_SYMBOL (soup_session_send_finish);
+      LOAD_SYMBOL (soup_cookie_parse);
+      LOAD_SYMBOL (soup_cookies_to_request);
+      LOAD_SYMBOL (soup_cookies_free);
 
       vtable->loaded = TRUE;
       goto beach;
@@ -935,5 +942,39 @@ gst_soup_session_cancel_message (SoupSession * session, SoupMessage * msg,
     gst_soup_vtable._soup_session_cancel_message_2 (session, msg,
         SOUP_STATUS_CANCELLED);
   }
+#endif
+}
+
+SoupCookie *
+_soup_cookie_parse (const char *header)
+{
+#ifdef STATIC_SOUP
+  return soup_cookie_parse (header, NULL);
+#else
+  g_assert (gst_soup_vtable._soup_cookie_parse != NULL);
+  return gst_soup_vtable._soup_cookie_parse (header, NULL);
+#endif
+}
+
+
+void
+_soup_cookies_to_request (GSList * cookies, SoupMessage * msg)
+{
+#ifdef STATIC_SOUP
+  soup_cookies_to_request (cookies, msg);
+#else
+  g_assert (gst_soup_vtable._soup_cookies_to_request != NULL);
+  gst_soup_vtable._soup_cookies_to_request (cookies, msg);
+#endif
+}
+
+void
+_soup_cookies_free (GSList * cookies)
+{
+#ifdef STATIC_SOUP
+  soup_cookies_free (cookies);
+#else
+  g_assert (gst_soup_vtable._soup_cookies_free != NULL);
+  gst_soup_vtable._soup_cookies_free (cookies);
 #endif
 }
