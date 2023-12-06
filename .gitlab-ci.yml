@@ -586,6 +586,11 @@ build macos:
     - changes:
         *modules_changes
   script:
+    # Disable gdb debugdir safeload
+    # The CI will execute any code submitted to it anyway
+    - mkdir -p ~/.config/gdb
+    - echo "set auto-load safe-path /" >> ~/.config/gdb/gdbinit
+
     - $CI_PROJECT_DIR/ci/scripts/build.sh
     - $CI_PROJECT_DIR/ci/scripts/test.sh
   after_script:
