@@ -102,6 +102,7 @@ if gstvalidate_dep.found() and not get_option('tools').disabled()
     'check_keyframes_in_compositor_two_sources': true,
     'check-clip-positioning': true,
     'set-layer-on-command-line': true,
+    'check-zorder': true,
   }
 
   foreach scenario, is_validatetest: scenarios

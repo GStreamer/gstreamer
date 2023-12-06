@@ -1,0 +1,61 @@
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    args = {
+        --track-types, video,
+        --videosink, "fakevideosink name=videosink sync=true",
+        --video-caps, "video/x-raw,format=I420,width=320,height=240,framerate=10/1",
+    }
+
+remove-feature, name=queue
+
+# Add two overlapping clips on different layers
+add-clip, name=c0, asset-id="pattern=red", layer-priority=0, type=GESTestClip, start=0, duration=2.0
+add-clip, name=c1, asset-id="pattern=blue", layer-priority=1, type=GESTestClip, start=0, duration=2.0
+
+# Set initial properties for both clips
+set-child-properties, element-name=c0, width=200, height=150, posx=0, posy=0, pattern=red
+set-child-properties, element-name=c1, width=200, height=150, posx=120, posy=90, pattern=blue
+
+play
+crank-clock
+wait, on-clock=true
+
+# Now manually set zorder to reverse the stacking
+# Make c0 appear on top by giving it a lower zorder value
+set-child-properties, element-name=c0, zorder=1
+set-child-properties, element-name=c1, zorder=2
+
+# Verify the zorder values were set
+check-child-properties, element-name=c0, zorder=1
+check-child-properties, element-name=c1, zorder=2
+
+# Test controllable aspect - set up keyframes for zorder
+set-control-source, element-name=c0, property-name=zorder, binding-type=direct-absolute
+set-control-source, element-name=c1, property-name=zorder, binding-type=direct-absolute
+
+# At 1 second, swap the zorder values
+add-keyframe, element-name=c0, timestamp=0.0, property-name=zorder, value=1
+add-keyframe, element-name=c0, timestamp=1.0, property-name=zorder, value=2
+add-keyframe, element-name=c1, timestamp=0.0, property-name=zorder, value=2
+add-keyframe, element-name=c1, timestamp=1.0, property-name=zorder, value=1
+
+crank-clock, repeat=8
+wait, on-clock=true
+
+# Should now be at 0.8 seconds
+check-position, expected-position=0.8
+check-properties,
+    gessmartmixer0-compositor.sink_0::zorder=2,
+    gessmartmixer0-compositor.sink_1::zorder=1
+
+# Crank 3 more times to reach 1.1 seconds (past the 1.0s keyframe)
+crank-clock, repeat=3
+wait, on-clock=true
+
+# Should now be at 1.1 seconds, verify the zorder values swapped after 1 second animation
+check-properties,
+    gessmartmixer0-compositor.sink_0::zorder=2,
+    gessmartmixer0-compositor.sink_1::zorder=1
+
+stop
