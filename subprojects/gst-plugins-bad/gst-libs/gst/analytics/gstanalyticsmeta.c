@@ -320,8 +320,8 @@ gst_analytics_relation_meta_transform (GstBuffer * transbuf,
       }
 
       if (rmeta->rel_order == new->rel_order) {
-        memcpy (new->adj_mat + new->rel_order, rmeta->adj_mat,
-            rmeta->rel_order * rmeta->rel_order);
+        memcpy (new->adj_mat + new->rel_order, rmeta->adj_mat +
+            rmeta->rel_order, rmeta->rel_order * rmeta->rel_order);
       } else {
         /* When destination adj_mat has a higher order than source we need
          * to copy by row to have the correct alignment */
