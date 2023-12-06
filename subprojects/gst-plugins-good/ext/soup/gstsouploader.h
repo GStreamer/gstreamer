@@ -66,6 +66,9 @@
 #define _soup_session_send_async _ad2_soup_session_send_async
 #define _soup_session_send_finish _ad2_soup_session_send_finish
 #define _soup_session_send _ad2_soup_session_send
+#define _soup_cookie_parse _ad2_soup_cookie_parse
+#define _soup_cookies_to_request _ad2_soup_cookies_to_request
+#define _soup_cookies_free _ad2_soup_cookies_free
 #define gst_soup_session_cancel_message ad2_gst_soup_session_cancel_message
 #endif
 
@@ -166,6 +169,11 @@ GInputStream *_soup_session_send (SoupSession *session, SoupMessage *msg,
                                   GError **error) G_GNUC_WARN_UNUSED_RESULT;
 
 void gst_soup_session_cancel_message (SoupSession *session, SoupMessage *msg, GCancellable *cancellable);
+
+SoupCookie *_soup_cookie_parse (const char *header);
+void _soup_cookies_to_request (GSList *cookies, SoupMessage *msg);
+void _soup_cookies_free (GSList *cookies);
+
 
 G_END_DECLS
 

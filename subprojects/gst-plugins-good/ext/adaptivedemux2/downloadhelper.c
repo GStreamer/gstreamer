@@ -49,7 +49,7 @@ struct DownloadHelper
 
   gchar *referer;
   gchar *user_agent;
-  gchar **cookies;
+  GSList *cookies;
 };
 
 struct DownloadHelperTransfer
@@ -654,7 +654,7 @@ downloadhelper_free (DownloadHelper * dh)
 
   g_free (dh->referer);
   g_free (dh->user_agent);
-  g_strfreev (dh->cookies);
+  _soup_cookies_free (dh->cookies);
 
   g_free (dh);
 }
@@ -681,10 +681,25 @@ downloadhelper_set_user_agent (DownloadHelper * dh, const gchar * user_agent)
 void
 downloadhelper_set_cookies (DownloadHelper * dh, gchar ** cookies)
 {
+  guint i;
   g_mutex_lock (&dh->transfer_lock);
-  g_strfreev (dh->cookies);
-  dh->cookies = cookies;
+  _soup_cookies_free (dh->cookies);
+  dh->cookies = NULL;
+
+  for (i = 0; cookies[i]; i++) {
+    SoupCookie *cookie = _soup_cookie_parse (cookies[i]);
+
+    if (cookie == NULL) {
+      GST_WARNING ("Couldn't parse cookie, ignoring: %s", cookies[i]);
+      continue;
+    }
+
+    dh->cookies = g_slist_append (dh->cookies, cookie);
+  }
+
   g_mutex_unlock (&dh->transfer_lock);
+
+  g_strfreev (cookies);
 }
 
 /* Called with the transfer lock held */
@@ -902,11 +917,7 @@ downloadhelper_submit_request (DownloadHelper * dh,
   }
 
   if (dh->cookies != NULL) {
-    gchar **cookie;
-
-    for (cookie = dh->cookies; *cookie != NULL; cookie++) {
-      _soup_message_headers_append (msg_headers, "Cookie", *cookie);
-    }
+    _soup_cookies_to_request (dh->cookies, msg);
   }
 
   transfer_task = transfer_task_new (dh, request, msg, blocking);

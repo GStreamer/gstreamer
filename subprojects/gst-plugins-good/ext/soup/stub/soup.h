@@ -209,6 +209,8 @@ static gpointer _SOUP_METHOD_POST;
 #define SOUP_METHOD_HEAD _SOUP_INTERN_METHOD(HEAD)
 #define SOUP_METHOD_POST _SOUP_INTERN_METHOD(POST)
 
+typedef struct _SoupCookie SoupCookie;
+
 G_END_DECLS
 
 #endif /* __GST_SOUP_STUB_H__ */
