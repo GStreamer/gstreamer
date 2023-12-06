@@ -1,4 +1,5 @@
 subdir('aes')
+subdir('analyticsoverlay')
 subdir('assrender')
 subdir('aom')
 subdir('avtp')
