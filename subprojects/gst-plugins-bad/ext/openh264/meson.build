@@ -1,7 +1,6 @@
 openh264_sources = [
   'gstopenh264dec.cpp',
   'gstopenh264enc.cpp',
-  'gstopenh264element.c',
   'gstopenh264plugin.c',
 ]
 

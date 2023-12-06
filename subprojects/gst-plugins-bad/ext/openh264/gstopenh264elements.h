@@ -27,8 +27,6 @@
 
 G_BEGIN_DECLS
 
-gboolean openh264_element_init (GstPlugin * plugin);
-
 GST_ELEMENT_REGISTER_DECLARE (openh264dec);
 GST_ELEMENT_REGISTER_DECLARE (openh264enc);
 

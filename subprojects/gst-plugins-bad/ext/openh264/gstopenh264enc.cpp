@@ -1066,10 +1066,7 @@ openh264enc_element_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_openh264enc_debug_category, "openh264enc", 0,
       "debug category for openh264enc element");
-  if (openh264_element_init (plugin))
-    return gst_element_register (plugin, "openh264enc", GST_RANK_MARGINAL,
-        GST_TYPE_OPENH264ENC);
 
-  GST_ERROR ("Incorrect library version loaded, expecting %s", g_strCodecVer);
-  return FALSE;
+  return gst_element_register (plugin, "openh264enc", GST_RANK_MARGINAL,
+      GST_TYPE_OPENH264ENC);
 }
