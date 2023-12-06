@@ -87,6 +87,7 @@ gstmse_private_test_dep = declare_dependency(
   compile_args : [gstmse_c_args, '-DBUILDING_GST_MSE_TEST'],
   link_with : [gstmse_private_test],
   include_directories : [libsinc],
+  sources: gstmse_headers_public + [gstmse_enums_h],
 )
 
 gstmse = library('gstmse-' + api_version,
@@ -143,7 +144,7 @@ gstmse_dep = declare_dependency(
   link_with : [gstmse],
   include_directories : [libsinc],
   dependencies : gstmse_deps,
-  sources: [gstmse_enums_h],
+  sources: gstmse_headers_public + [gstmse_enums_h],
 )
 install_headers(gstmse_headers_public, subdir: gstmse_header_dir)
 meson.override_dependency(pkg_name, gstmse_dep)
