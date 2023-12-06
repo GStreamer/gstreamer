@@ -146,6 +146,9 @@ struct _GstH264DecoderPrivate
   GArray *ref_pic_list0;
   GArray *ref_pic_list1;
 
+  /* Split packetized data into actual nal chunks (for malformed stream) */
+  GArray *split_nalu;
+
   /* For delayed output */
   GstQueueArray *output_queue;
 
@@ -386,6 +389,8 @@ gst_h264_decoder_init (GstH264Decoder * self)
   priv->ref_pic_list1 = g_array_sized_new (FALSE, TRUE,
       sizeof (GstH264Picture *), 32);
 
+  priv->split_nalu = g_array_new (FALSE, FALSE, sizeof (GstH264NalUnit));
+
   priv->output_queue =
       gst_queue_array_new_for_struct (sizeof (GstH264DecoderOutputFrame), 1);
   gst_queue_array_set_clear_func (priv->output_queue,
@@ -406,6 +411,7 @@ gst_h264_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_frame_list_long_term);
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
+  g_array_unref (priv->split_nalu);
   gst_queue_array_free (priv->output_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -539,7 +545,7 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
   GstH264DecoderPrivate *priv = self->priv;
   GstBuffer *in_buf = frame->input_buffer;
   GstH264NalUnit nalu;
-  GstH264ParserResult pres;
+  GstH264ParserResult pres = GST_H264_PARSER_OK;
   GstMapInfo map;
   GstFlowReturn decode_ret = GST_FLOW_OK;
 
@@ -553,16 +559,27 @@ gst_h264_decoder_handle_frame (GstVideoDecoder * decoder,
 
   gst_buffer_map (in_buf, &map, GST_MAP_READ);
   if (priv->in_format == GST_H264_DECODER_FORMAT_AVC) {
-    pres = gst_h264_parser_identify_nalu_avc (priv->parser,
-        map.data, 0, map.size, priv->nal_length_size, &nalu);
+    guint offset = 0;
+    gsize consumed = 0;
+    guint i;
 
-    while (pres == GST_H264_PARSER_OK && decode_ret == GST_FLOW_OK) {
-      decode_ret = gst_h264_decoder_decode_nal (self, &nalu);
+    do {
+      pres = gst_h264_parser_identify_and_split_nalu_avc (priv->parser,
+          map.data, offset, map.size, priv->nal_length_size, priv->split_nalu,
+          &consumed);
+      if (pres != GST_H264_PARSER_OK)
+        break;
 
-      pres = gst_h264_parser_identify_nalu_avc (priv->parser,
-          map.data, nalu.offset + nalu.size, map.size, priv->nal_length_size,
-          &nalu);
-    }
+      for (i = 0; i < priv->split_nalu->len; i++) {
+        GstH264NalUnit *nl =
+            &g_array_index (priv->split_nalu, GstH264NalUnit, i);
+        decode_ret = gst_h264_decoder_decode_nal (self, nl);
+        if (decode_ret != GST_FLOW_OK)
+          break;
+      }
+
+      offset += consumed;
+    } while (pres == GST_H264_PARSER_OK && decode_ret == GST_FLOW_OK);
   } else {
     pres = gst_h264_parser_identify_nalu (priv->parser,
         map.data, 0, map.size, &nalu);
