@@ -907,6 +907,9 @@ gst_v4l2_transform_prepare_output_buffer (GstBaseTransform * trans,
         self->v4l2output->mode == GST_V4L2_IO_DMABUF_IMPORT) {
       if (!gst_v4l2_object_try_import (self->v4l2output, inbuf)) {
         GST_ERROR_OBJECT (self, "cannot import buffers from upstream");
+        if (pool)
+            g_object_unref (pool);
+
         return GST_FLOW_ERROR;
       }
 

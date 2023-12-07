@@ -790,9 +790,9 @@ gst_v4l2_video_enc_handle_frame (GstVideoEncoder * encoder,
           gst_object_unref (pool);
         goto activate_failed;
       }
-      if (pool)
-        gst_object_unref (pool);
     }
+    if (pool)
+        gst_object_unref (pool);
 
     {
       GstBufferPool *cpool =
