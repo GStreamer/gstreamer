@@ -1,0 +1,67 @@
+set-globals,
+  appsrc_props="handle-segment-change=true \
+                automatic-eos=false \
+                min-latency=0 \
+                max-latency=-1 \
+                format=time \
+                is-live=true \
+                max-buffers=0 \
+                max-bytes=0 \
+                max-time=5000000000 \
+                leaky-type=downstream"
+
+meta,
+    args = {
+      "appsrc name=src $(appsrc_props) ! videoconvert ! $(videosink) name=sink",
+    },
+    handles-states=true
+
+# Start a new pipeline with an `appsink`
+create-sub-pipeline,
+  name=subpipeline,
+  desc="videotestsrc ! timeoverlay ! appsink name=appsink sync=true max-buffers=10 drop=true",
+  scenario={
+      [meta, ignore-eos=true],
+    }
+
+# Pull sample from the sub pipeline and push it into the main pipeline appsrc
+# as soon as the pipeline will start
+appsrc-push, target-element-name=src, from-appsink="subpipeline/appsink"
+# And preroll the pipeline
+play
+
+# Seek on the sub pipeline
+run-on-sub-pipeline,
+  pipeline-name=subpipeline,
+  action=[seek, flags=accurate+flush, start=5.0, stop=15.0]
+
+# Then forward 10 buffers from sub pipeline to main pipeline
+foreach,
+  i=[0, 10],
+  actions = {
+    [
+      appsrc-push, target-element-name=src, from-appsink="subpipeline/appsink",
+    ],
+  }
+
+# And seek the sub pipeline again
+run-on-sub-pipeline,
+  pipeline-name=subpipeline,
+  action=[seek, flags=accurate+flush, start=1.0, stop=5.0]
+
+# And forward 10 more buffers from sub pipeline to main pipeline
+foreach,
+  i=[0, 10],
+  actions = {
+    [
+      appsrc-push, target-element-name=src, from-appsink="subpipeline/appsink",
+    ],
+  }
+
+# Stop the sub pipeline
+run-on-sub-pipeline,
+  pipeline-name=subpipeline,
+  action=[stop]
+
+# And finish everything by marking main pipeline as EOS
+appsrc-eos, target-element-name=src

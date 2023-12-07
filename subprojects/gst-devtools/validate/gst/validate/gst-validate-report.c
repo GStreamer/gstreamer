@@ -1005,11 +1005,14 @@ gst_validate_print_action (GstValidateAction * action, const gchar * message)
   if (message == NULL) {
     gint indent = (gst_validate_action_get_level (action) * 2);
     PrintActionFieldData d = { NULL, indent, 0 };
+    GstValidateScenario *scenario = gst_validate_action_get_scenario (action);
     d.str = string = g_string_new (NULL);
 
-    g_string_append_printf (string, "`%s` at %s:%d", action->type,
+    g_string_append_printf (string, "`%s` at %s:%d(%s)", action->type,
         GST_VALIDATE_ACTION_FILENAME (action),
-        GST_VALIDATE_ACTION_LINENO (action));
+        GST_VALIDATE_ACTION_LINENO (action),
+        scenario ? GST_OBJECT_NAME (scenario) : "no scenario");
+    gst_object_unref (scenario);
 
     if (GST_VALIDATE_ACTION_N_REPEATS (action))
       g_string_append_printf (string, " [%s=%d/%d]",

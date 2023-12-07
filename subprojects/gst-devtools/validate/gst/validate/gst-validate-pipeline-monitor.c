@@ -759,10 +759,11 @@ _bus_handler (GstBus * bus, GstMessage * message,
 }
 
 static void
-gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
+gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor,
+    const gchar * scenario_name, GList * actions, gboolean find_scenario)
 {
   /* scenarios currently only make sense for pipelines */
-  const gchar *scenarios_names, *scenario_name = NULL;
+  const gchar *scenarios_names, *testfile_scenario_name = NULL;
   gchar **scenarios = NULL, *testfile = NULL;
   GstObject *target =
       gst_validate_monitor_get_target (GST_VALIDATE_MONITOR (monitor));
@@ -770,18 +771,24 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor)
       gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
   GList *scenario_structs = NULL;
 
-  if (gst_validate_get_test_file_scenario (&scenario_structs, &scenario_name,
-          &testfile)) {
-    if (scenario_name) {
+  if (!find_scenario
+      || gst_validate_get_test_file_scenario (&scenario_structs,
+          &testfile_scenario_name, &testfile)) {
+    if (testfile_scenario_name || scenario_name) {
       monitor->scenario =
           gst_validate_scenario_factory_create (runner,
-          GST_ELEMENT_CAST (target), scenario_name);
+          GST_ELEMENT_CAST (target),
+          scenario_name ? scenario_name : testfile_scenario_name);
       goto done;
     }
 
-    monitor->scenario =
-        gst_validate_scenario_from_structs (runner,
-        GST_ELEMENT_CAST (target), scenario_structs, testfile);
+    if (actions || scenario_structs) {
+      monitor->scenario =
+          gst_validate_scenario_from_structs (runner,
+          GST_ELEMENT_CAST (target),
+          scenario_structs ? scenario_structs : actions,
+          find_scenario ? testfile : "subscenario");
+    }
 
     goto done;
   }
@@ -820,17 +827,10 @@ done:
     gst_object_unref (runner);
 }
 
-/**
- * gst_validate_pipeline_monitor_new:
- * @pipeline: (transfer none): a #GstPipeline to run Validate on
- * @runner: (transfer none): a #GstValidateRunner
- * @parent: (nullable): The parent of the new monitor
- *
- * Returns: (transfer full): A #GstValidatePipelineMonitor
- */
 GstValidatePipelineMonitor *
-gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
-    GstValidateRunner * runner, GstValidateMonitor * parent)
+gst_validate_pipeline_monitor_new_full (GstPipeline * pipeline,
+    GstValidateRunner * runner, GstValidateMonitor * parent,
+    const gchar * scenario_name, GList * actions, gboolean find_scenario)
 {
   GstBus *bus;
   GstValidatePipelineMonitor *monitor;
@@ -844,7 +844,7 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
       "pipeline", pipeline, NULL);
 
   gst_validate_pipeline_monitor_create_scenarios (GST_VALIDATE_BIN_MONITOR
-      (monitor));
+      (monitor), scenario_name, actions, find_scenario);
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   gst_bus_enable_sync_message_emission (bus);
@@ -865,4 +865,21 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
     monitor->is_playbin3 = TRUE;
 
   return monitor;
+}
+
+
+/**
+ * gst_validate_pipeline_monitor_new:
+ * @pipeline: (transfer none): a #GstPipeline to run Validate on
+ * @runner: (transfer none): a #GstValidateRunner
+ * @parent: (nullable): The parent of the new monitor
+ *
+ * Returns: (transfer full): A #GstValidatePipelineMonitor
+ */
+GstValidatePipelineMonitor *
+gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
+    GstValidateRunner * runner, GstValidateMonitor * parent)
+{
+  return gst_validate_pipeline_monitor_new_full (pipeline,
+      runner, parent, NULL, NULL, TRUE);
 }
