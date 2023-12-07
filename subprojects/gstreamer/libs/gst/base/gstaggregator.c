@@ -952,6 +952,13 @@ typedef struct
 } DoHandleEventsAndQueriesData;
 
 static gboolean
+gst_aggregator_merge_structure (GQuark id, const GValue * value, gpointer target)
+{
+  gst_structure_id_set_value (GST_STRUCTURE (target), id, value);
+  return TRUE;
+}
+
+static gboolean
 gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
     gpointer user_data)
 {
@@ -959,6 +966,7 @@ gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
   GstAggregator *aggregator = GST_AGGREGATOR_CAST (self);
   GstEvent *event = NULL;
   GstQuery *query = NULL;
+  GstQuery *qcopy = NULL;
   GstAggregatorClass *klass = NULL;
   DoHandleEventsAndQueriesData *data = user_data;
 
@@ -971,8 +979,10 @@ gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
         !GST_IS_BUFFER (g_queue_peek_tail (&pad->priv->data))) {
       if (GST_IS_EVENT (g_queue_peek_tail (&pad->priv->data)))
         event = gst_event_ref (g_queue_peek_tail (&pad->priv->data));
-      if (GST_IS_QUERY (g_queue_peek_tail (&pad->priv->data)))
+      if (GST_IS_QUERY (g_queue_peek_tail (&pad->priv->data))) {
         query = g_queue_peek_tail (&pad->priv->data);
+	qcopy = gst_query_copy (query);
+      }
     }
     PAD_UNLOCK (pad);
     if (event || query) {
@@ -995,18 +1005,36 @@ gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
           gst_event_unref (g_queue_pop_tail (&pad->priv->data));
         gst_event_unref (event);
       } else if (query) {
-        GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, query);
-        ret = klass->sink_query (aggregator, pad, query);
+        g_warn_if_fail (qcopy);
+        GST_LOG_OBJECT (pad, "Processing %" GST_PTR_FORMAT, qcopy);
+        ret = klass->sink_query (aggregator, pad, qcopy);
 
         PAD_LOCK (pad);
         if (g_queue_peek_tail (&pad->priv->data) == query) {
           GstStructure *s;
-
+          GstStructure *cs;
           s = gst_query_writable_structure (query);
-          gst_structure_set (s, "gst-aggregator-retval", G_TYPE_BOOLEAN, ret,
-              NULL);
+          cs = gst_query_writable_structure (qcopy);
+
+          // Now copy everything from qcopy to query, and free the copy.
+          // The reason of all this overhead, or in other words the reason
+          // of why we have to copy the query is that we must garantee that
+          // it remains alive while we call klass->sink_query() with no locks.
+          // At the same time while klass->sink_query() is executed, the original
+          // query might be destroyed, such as in case of flushing.
+          // The reason why we can't just hold one more reference on the query,
+          // instead of copying it, is that it has to be writable, and for the
+          // GstQueries the only criteria is the refcount. If only GstQueries had
+          // GST_MINI_OBJECT_FLAG_LOCKABLE flag, we could make it writable with
+          // any refcount and there would be no problem.
+          gst_structure_remove_all_fields (s);
+          gst_structure_foreach (cs, gst_aggregator_merge_structure, s);
+          // And set the return value
+          gst_structure_set (s, "gst-aggregator-retval", G_TYPE_BOOLEAN, ret, NULL);
           g_queue_pop_tail (&pad->priv->data);
         }
+
+        g_clear_pointer (&qcopy, gst_query_unref);
       }
 
       PAD_BROADCAST_EVENT (pad);
