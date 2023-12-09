@@ -547,7 +547,7 @@ gst_v4l2_codec_av1_fill_refs (GstV4l2CodecAV1Dec * self,
 
     /* the decoder might not have filled all slots in the first few frames */
     self->v4l2_frame.reference_frame_ts[i] =
-        ref_pic ? GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * 1000 : 0;
+        ref_pic ? GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * G_GUINT64_CONSTANT (1000) : 0;
   }
 
   memcpy (self->v4l2_frame.ref_frame_idx, frame_hdr->ref_frame_idx,
