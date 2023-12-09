@@ -33,7 +33,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
 #include "gstrtpelements.h"
-#include "dboolhuff.h"
 #include "gstrtpvp9pay.h"
 #include "gstrtputils.h"
 
