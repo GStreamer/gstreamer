@@ -814,7 +814,7 @@ lookup_dpb_index (struct v4l2_hevc_dpb_entry dpb[16], GstH265Picture * ref_pic)
   if (!ref_pic)
     return 0xff;
 
-  ref_ts = (guint64) GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * 1000;
+  ref_ts = GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * G_GUINT64_CONSTANT (1000);
   for (i = 0; i < 16; i++) {
     if (dpb[i].timestamp == ref_ts)
       return i;
