@@ -446,17 +446,17 @@ gst_v4l2_codec_vp8_dec_fill_references (GstV4l2CodecVp8Dec * self)
 
   if (decoder->last_picture) {
     self->frame_header.last_frame_ts =
-        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->last_picture) * 1000;
+        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->last_picture) * G_GUINT64_CONSTANT (1000);
   }
 
   if (decoder->golden_ref_picture) {
     self->frame_header.golden_frame_ts =
-        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->golden_ref_picture) * 1000;
+        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->golden_ref_picture) * G_GUINT64_CONSTANT (1000);
   }
 
   if (decoder->alt_ref_picture) {
     self->frame_header.alt_frame_ts =
-        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->alt_ref_picture) * 1000;
+        GST_CODEC_PICTURE_FRAME_NUMBER (decoder->alt_ref_picture) * G_GUINT64_CONSTANT (1000);
   }
 
   GST_DEBUG_OBJECT (self, "Passing references: last %u, golden %u, alt %u",
