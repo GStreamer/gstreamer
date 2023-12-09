@@ -628,7 +628,7 @@ gst_v4l2_codec_h264_dec_fill_decoder_params (GstV4l2CodecH264Dec * self,
        * The reference is multiplied by 1000 because it's was set as micro
        * seconds and this TS is nanosecond.
        */
-      .reference_ts = (guint64) GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * 1000,
+      .reference_ts = GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * G_GUINT64_CONSTANT (1000),
       .frame_num = frame_num,
       .pic_num = pic_num,
       .flags = V4L2_H264_DPB_ENTRY_FLAG_VALID
