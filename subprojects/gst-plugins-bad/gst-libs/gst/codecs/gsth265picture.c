@@ -280,7 +280,7 @@ gst_h265_dpb_get_ref_by_poc (GstH265Dpb * dpb, gint poc)
       return gst_h265_picture_ref (picture);
   }
 
-  GST_DEBUG ("No short term reference picture for %d", poc);
+  GST_DEBUG ("No reference picture for poc %d", poc);
 
   return NULL;
 }
@@ -309,7 +309,7 @@ gst_h265_dpb_get_ref_by_poc_lsb (GstH265Dpb * dpb, gint poc_lsb)
       return gst_h265_picture_ref (picture);
   }
 
-  GST_DEBUG ("No short term reference picture for %d", poc_lsb);
+  GST_DEBUG ("No reference picture for poc lsb %d", poc_lsb);
 
   return NULL;
 }
@@ -338,7 +338,7 @@ gst_h265_dpb_get_short_ref_by_poc (GstH265Dpb * dpb, gint poc)
       return gst_h265_picture_ref (picture);
   }
 
-  GST_DEBUG ("No short term reference picture for %d", poc);
+  GST_DEBUG ("No short term reference picture for poc %d", poc);
 
   return NULL;
 }
@@ -367,7 +367,7 @@ gst_h265_dpb_get_long_ref_by_poc (GstH265Dpb * dpb, gint poc)
       return gst_h265_picture_ref (picture);
   }
 
-  GST_DEBUG ("No long term reference picture for %d", poc);
+  GST_DEBUG ("No long term reference picture for poc %d", poc);
 
   return NULL;
 }
