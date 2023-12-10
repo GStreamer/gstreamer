@@ -129,6 +129,7 @@ option('ipcpipeline', type : 'feature', value : 'auto', description : 'Inter-pro
 option('iqa', type : 'feature', value : 'auto', description : 'Image quality assessment plugin (AGPL - only built if gpl option is also enabled!)')
 option('kms', type : 'feature', value : 'auto', description : 'KMS video sink plugin')
 option('ladspa', type : 'feature', value : 'auto', description : 'LADSPA plugin bridge')
+option('ladspa-rdf', type : 'feature', value : 'auto', description : 'LADSPA plugin bridge RDF support')
 option('lc3', type : 'feature', value : 'auto', description : 'LC3 (Bluetooth) LE audio codec plugin')
 option('ldac', type : 'feature', value : 'auto', description : 'LDAC bluetooth audio codec plugin')
 option('libde265', type : 'feature', value : 'auto', description : 'HEVC/H.265 video decoder plugin')
