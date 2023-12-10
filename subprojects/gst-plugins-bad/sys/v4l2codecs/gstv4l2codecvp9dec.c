@@ -276,20 +276,17 @@ gst_v4l2_codecs_vp9_dec_fill_refs (GstV4l2CodecVp9Dec * self,
 
   if (reference_frames->pic_list[h->ref_frame_idx[0]]) {
     ref_pic = reference_frames->pic_list[h->ref_frame_idx[0]];
-    self->v4l2_vp9_frame.last_frame_ts =
-        GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * G_GUINT64_CONSTANT (1000);
+    self->v4l2_vp9_frame.last_frame_ts = GST_CODEC_PICTURE_TS_NS (ref_pic);
   }
 
   if (reference_frames->pic_list[h->ref_frame_idx[1]]) {
     ref_pic = reference_frames->pic_list[h->ref_frame_idx[1]];
-    self->v4l2_vp9_frame.golden_frame_ts =
-        GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * G_GUINT64_CONSTANT (1000);
+    self->v4l2_vp9_frame.golden_frame_ts = GST_CODEC_PICTURE_TS_NS (ref_pic);
   }
 
   if (reference_frames->pic_list[h->ref_frame_idx[2]]) {
     ref_pic = reference_frames->pic_list[h->ref_frame_idx[2]];
-    self->v4l2_vp9_frame.alt_frame_ts =
-        GST_CODEC_PICTURE_FRAME_NUMBER (ref_pic) * G_GUINT64_CONSTANT (1000);
+    self->v4l2_vp9_frame.alt_frame_ts = GST_CODEC_PICTURE_TS_NS (ref_pic);
   }
 }
 

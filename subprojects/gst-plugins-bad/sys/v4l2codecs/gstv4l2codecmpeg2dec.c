@@ -578,9 +578,9 @@ gst_v4l2_codec_mpeg2_dec_start_picture (GstMpeg2Decoder * decoder,
   /* *INDENT-OFF* */
   self->v4l2_picture = (struct v4l2_ctrl_mpeg2_picture) {
     .backward_ref_ts = next_picture ?
-        GST_CODEC_PICTURE_FRAME_NUMBER (next_picture) * G_GUINT64_CONSTANT (1000) : GST_CLOCK_TIME_NONE,
+        GST_CODEC_PICTURE_TS_NS (next_picture) : GST_CLOCK_TIME_NONE,
     .forward_ref_ts = prev_picture ?
-        GST_CODEC_PICTURE_FRAME_NUMBER (prev_picture) * G_GUINT64_CONSTANT (1000) : GST_CLOCK_TIME_NONE,
+        GST_CODEC_PICTURE_TS_NS (prev_picture) : GST_CLOCK_TIME_NONE,
     .intra_dc_precision = slice->pic_ext ? slice->pic_ext->intra_dc_precision : 0,
     .flags = (slice->pic_ext && slice->pic_ext->top_field_first ? V4L2_MPEG2_PIC_FLAG_TOP_FIELD_FIRST : 0) |
              (slice->pic_ext && slice->pic_ext->frame_pred_frame_dct ? V4L2_MPEG2_PIC_FLAG_FRAME_PRED_DCT : 0 ) |

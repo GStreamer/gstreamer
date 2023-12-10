@@ -26,6 +26,17 @@
 #include "gstv4l2codecdevice.h"
 #include "linux/videodev2.h"
 
+/**
+ * GST_CODEC_PICTURE_TS_NS:
+ * @picture: a #GstCodecPicture
+ *
+ * Returns system_frame_number field of @picture converted to nanosecond.
+ *
+ * Since: 1.24
+ */
+#define GST_CODEC_PICTURE_TS_NS(picture)	\
+	(GST_CODEC_PICTURE_FRAME_NUMBER(picture) * G_GUINT64_CONSTANT (1000))
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_V4L2_DECODER gst_v4l2_decoder_get_type ()
