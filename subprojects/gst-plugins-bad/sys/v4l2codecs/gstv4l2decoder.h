@@ -35,7 +35,7 @@
  * Since: 1.24
  */
 #define GST_CODEC_PICTURE_TS_NS(picture)	\
-	(GST_CODEC_PICTURE_FRAME_NUMBER(picture) * G_GUINT64_CONSTANT (1000))
+	gst_util_uint64_scale_int (GST_CODEC_PICTURE_FRAME_NUMBER(picture), 1000, 1)
 
 G_BEGIN_DECLS
 
