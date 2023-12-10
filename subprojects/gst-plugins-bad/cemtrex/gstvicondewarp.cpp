@@ -520,6 +520,7 @@ gst_vicondewarp_finalize(GObject* object)
 	if (thiz->properties != NULL) {
 		gst_structure_free(thiz->properties);
 	}
+  gst_caps_replace(&thiz->inputCaps, NULL);
 	G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -603,10 +604,7 @@ gst_vicondewarp_sink_event(GstPad* pad, GstObject* parent,
 	{
 		GstCaps* caps;
 		gst_event_parse_caps(event, &caps);
-		if (thiz->inputCaps != nullptr) {
-			gst_caps_unref(thiz->inputCaps);
-		}
-		thiz->inputCaps = gst_caps_copy(caps);
+    gst_caps_replace(&thiz->inputCaps, caps);
 		ret = gst_pad_event_default(pad, parent, event);
 		break;
 	}
