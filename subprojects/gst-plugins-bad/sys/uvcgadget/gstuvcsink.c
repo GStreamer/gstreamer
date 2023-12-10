@@ -95,30 +95,152 @@ gst_uvc_sink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static GstVideoFormat
+gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
+{
+  GstVideoFormat format;
+
+  switch (fourcc) {
+    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
+      format = GST_VIDEO_FORMAT_GRAY8;
+      break;
+    case V4L2_PIX_FMT_Y16:
+      format = GST_VIDEO_FORMAT_GRAY16_LE;
+      break;
+    case V4L2_PIX_FMT_Y16_BE:
+      format = GST_VIDEO_FORMAT_GRAY16_BE;
+      break;
+    case V4L2_PIX_FMT_XRGB555:
+    case V4L2_PIX_FMT_RGB555:
+      format = GST_VIDEO_FORMAT_RGB15;
+      break;
+    case V4L2_PIX_FMT_XRGB555X:
+    case V4L2_PIX_FMT_RGB555X:
+      format = GST_VIDEO_FORMAT_BGR15;
+      break;
+    case V4L2_PIX_FMT_RGB565:
+      format = GST_VIDEO_FORMAT_RGB16;
+      break;
+    case V4L2_PIX_FMT_RGB24:
+      format = GST_VIDEO_FORMAT_RGB;
+      break;
+    case V4L2_PIX_FMT_BGR24:
+      format = GST_VIDEO_FORMAT_BGR;
+      break;
+    case V4L2_PIX_FMT_XRGB32:
+    case V4L2_PIX_FMT_RGB32:
+      format = GST_VIDEO_FORMAT_xRGB;
+      break;
+    case V4L2_PIX_FMT_RGBX32:
+      format = GST_VIDEO_FORMAT_RGBx;
+      break;
+    case V4L2_PIX_FMT_XBGR32:
+    case V4L2_PIX_FMT_BGR32:
+      format = GST_VIDEO_FORMAT_BGRx;
+      break;
+    case V4L2_PIX_FMT_BGRX32:
+      format = GST_VIDEO_FORMAT_xBGR;
+      break;
+    case V4L2_PIX_FMT_ABGR32:
+      format = GST_VIDEO_FORMAT_BGRA;
+      break;
+    case V4L2_PIX_FMT_BGRA32:
+      format = GST_VIDEO_FORMAT_ABGR;
+      break;
+    case V4L2_PIX_FMT_RGBA32:
+      format = GST_VIDEO_FORMAT_RGBA;
+      break;
+    case V4L2_PIX_FMT_ARGB32:
+      format = GST_VIDEO_FORMAT_ARGB;
+      break;
+    case V4L2_PIX_FMT_NV12:
+    case V4L2_PIX_FMT_NV12M:
+      format = GST_VIDEO_FORMAT_NV12;
+      break;
+    case V4L2_PIX_FMT_NV12MT:
+      format = GST_VIDEO_FORMAT_NV12_64Z32;
+      break;
+    case V4L2_PIX_FMT_MM21:
+      format = GST_VIDEO_FORMAT_NV12_16L32S;
+      break;
+    case V4L2_PIX_FMT_NV12M_8L128:
+      format = GST_VIDEO_FORMAT_NV12_8L128;
+      break;
+    case V4L2_PIX_FMT_NV12M_10BE_8L128:
+      format = GST_VIDEO_FORMAT_NV12_10BE_8L128;
+      break;
+    case V4L2_PIX_FMT_NV21:
+    case V4L2_PIX_FMT_NV21M:
+      format = GST_VIDEO_FORMAT_NV21;
+      break;
+    case V4L2_PIX_FMT_YVU410:
+      format = GST_VIDEO_FORMAT_YVU9;
+      break;
+    case V4L2_PIX_FMT_YUV410:
+      format = GST_VIDEO_FORMAT_YUV9;
+      break;
+    case V4L2_PIX_FMT_YUV420:
+    case V4L2_PIX_FMT_YUV420M:
+      format = GST_VIDEO_FORMAT_I420;
+      break;
+    case V4L2_PIX_FMT_YUYV:
+      format = GST_VIDEO_FORMAT_YUY2;
+      break;
+    case V4L2_PIX_FMT_YVU420:
+    case V4L2_PIX_FMT_YVU420M:
+      format = GST_VIDEO_FORMAT_YV12;
+      break;
+    case V4L2_PIX_FMT_UYVY:
+      format = GST_VIDEO_FORMAT_UYVY;
+      break;
+    case V4L2_PIX_FMT_YUV411P:
+      format = GST_VIDEO_FORMAT_Y41B;
+      break;
+    case V4L2_PIX_FMT_YUV422P:
+      format = GST_VIDEO_FORMAT_Y42B;
+      break;
+    case V4L2_PIX_FMT_YVYU:
+      format = GST_VIDEO_FORMAT_YVYU;
+      break;
+    case V4L2_PIX_FMT_NV16:
+    case V4L2_PIX_FMT_NV16M:
+      format = GST_VIDEO_FORMAT_NV16;
+      break;
+    case V4L2_PIX_FMT_NV61:
+    case V4L2_PIX_FMT_NV61M:
+      format = GST_VIDEO_FORMAT_NV61;
+      break;
+    case V4L2_PIX_FMT_NV24:
+      format = GST_VIDEO_FORMAT_NV24;
+      break;
+    default:
+      format = GST_VIDEO_FORMAT_UNKNOWN;
+      break;
+  }
+
+  return format;
+}
+
 static GstStructure *
 gst_v4l2uvc_fourcc_to_bare_struct (guint32 fourcc)
 {
   GstStructure *structure = NULL;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
-  /* Since MJPEG and YUY2 are currently the only one supported
-   * we limit the function to parse only these fourccs
-   */
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
       structure = gst_structure_new_empty ("image/jpeg");
       break;
-    case V4L2_PIX_FMT_YUYV:{
-      GstVideoFormat format = GST_VIDEO_FORMAT_YUY2;
-      if (format != GST_VIDEO_FORMAT_UNKNOWN)
-        structure = gst_structure_new ("video/x-raw",
-            "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
-      break;
-    }
-      break;
     default:
-      GST_DEBUG ("Unsupported fourcc 0x%08x %" GST_FOURCC_FORMAT,
-          fourcc, GST_FOURCC_ARGS (fourcc));
+      format = gst_v4l2_object_v4l2fourcc_to_video_format (fourcc);
+      if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+        GST_DEBUG ("Unsupported fourcc 0x%08x %" GST_FOURCC_FORMAT,
+            fourcc, GST_FOURCC_ARGS (fourcc));
+        break;
+      }
+      structure = gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
       break;
   }
 
@@ -155,6 +277,8 @@ gst_uvc_sink_get_configured_caps (GstUvcSink * self)
   }
 
   s = gst_v4l2uvc_fourcc_to_bare_struct (format.pixelformat);
+  if (!s)
+    return NULL;
 
   memset (&size, 0, sizeof (struct v4l2_frmsizeenum));
   size.index = self->cur.bFrameIndex - 1;
@@ -631,6 +755,15 @@ gst_uvc_sink_task (gpointer data)
            * from the probed caps that match the configured caps.
            */
           configured_caps = gst_uvc_sink_get_configured_caps (self);
+          if (!configured_caps) {
+            GST_ELEMENT_ERROR (self, RESOURCE, WRITE,
+                ("gst_uvc_sink_get_configured_caps failed"),
+                ("gst_uvc_sink_get_configured_caps on current format failed"));
+            gst_uvc_sink_unwatch (self);
+            gst_element_set_state (GST_ELEMENT (self), GST_STATE_NULL);
+            return;
+          }
+
           gst_clear_caps (&self->cur_caps);
           self->cur_caps =
               gst_caps_intersect_full (self->probed_caps, configured_caps,
