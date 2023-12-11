@@ -82,6 +82,12 @@ if d3d11_winapi_app
   d3d11_sources += ['gstd3d11window_corewindow.cpp',
                     'gstd3d11window_swapchainpanel.cpp']
   extra_dep += [runtimeobject_lib]
+
+  if cc.get_id() == 'msvc' and get_option('b_sanitize') == 'address'
+     # When building with sanitizer it gives next error:
+     # gstd3d11window_corewindow.cpp : fatal error C1128: number of sections exceeded object file format limit: compile with /bigobj
+     extra_args += ['/bigobj']
+  endif
 endif
 
 if d3d11_winapi_desktop
