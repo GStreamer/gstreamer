@@ -322,9 +322,9 @@ otherwise.</doc>
             <type name="guint" c:type="guint*"/>
           </parameter>
           <parameter name="use_derived" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaFeature if derived images
-    are used for buffer mapping.</doc>
-            <type name="VaFeature" c:type="GstVaFeature*"/>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">whether derived images are used for buffer
+    mapping.</doc>
+            <type name="gboolean" c:type="gboolean*"/>
           </parameter>
         </parameters>
       </function>
@@ -389,7 +389,7 @@ configuration is not valid or not updated.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">VA usage hint</doc>
             <type name="guint" c:type="guint"/>
           </parameter>
-          <parameter name="use_derived" transfer-ownership="none">
+          <parameter name="feat_use_derived" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">a #GstVaFeature</doc>
             <type name="VaFeature" c:type="GstVaFeature"/>
           </parameter>

@@ -113,12 +113,12 @@ GST_VA_API
 gboolean              gst_va_allocator_set_format         (GstAllocator * allocator,
                                                            GstVideoInfo * info,
                                                            guint usage_hint,
-                                                           GstVaFeature use_derived);
+                                                           GstVaFeature feat_use_derived);
 GST_VA_API
 gboolean              gst_va_allocator_get_format         (GstAllocator * allocator,
                                                            GstVideoInfo * info,
                                                            guint * usage_hint,
-                                                           GstVaFeature * use_derived);
+                                                           gboolean * use_derived);
 GST_VA_API
 void                  gst_va_allocator_set_hacks          (GstAllocator * allocator,
                                                            guint32 hacks);
