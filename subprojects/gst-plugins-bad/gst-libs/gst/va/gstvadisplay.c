@@ -43,6 +43,7 @@
 
 #include "gstvadisplay.h"
 
+#include <stdio.h>              /* sscanf */
 #include <va/va.h>
 
 GST_DEBUG_CATEGORY (gst_va_display_debug);
@@ -57,6 +58,9 @@ struct _GstVaDisplayPrivate
   gboolean init;
   GstVaImplementation impl;
   gchar *vendor_desc;
+
+  guint driver_major;
+  guint driver_minor;
 };
 
 #define gst_va_display_parent_class parent_class
@@ -123,12 +127,47 @@ _get_desc (const char *vendor, GstVaImplementation impl)
 }
 
 static gboolean
+_get_driver_version (const char *vendor, GstVaImplementation impl,
+    guint * major, guint * minor)
+{
+  guint maj, min;
+
+  if (!vendor)
+    return FALSE;
+
+  switch (impl) {
+    case GST_VA_IMPLEMENTATION_MESA_GALLIUM:
+      if (sscanf (vendor, "Mesa Gallium driver %d.%d.", &maj, &min) == 2) {
+        *major = maj;
+        *minor = min;
+        return TRUE;
+      }
+      break;
+    case GST_VA_IMPLEMENTATION_INTEL_IHD:
+    case GST_VA_IMPLEMENTATION_INTEL_I965:{
+      char *end = strstr (vendor, " - ");
+      if (end && sscanf (end, " - %d.%d.", &maj, &min) == 2) {
+        *major = maj;
+        *minor = min;
+        return TRUE;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 _gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
 {
   GstVaDisplayPrivate *priv = GET_PRIV (self);
   VADisplay dpy;
   const char *vendor;
   GstVaImplementation impl;
+  guint major, minor;
 
   g_assert ((foreign_display != NULL) ^ (priv->display != NULL));
   dpy = foreign_display ? foreign_display : priv->display;
@@ -150,6 +189,10 @@ _gst_va_display_filter_driver (GstVaDisplay * self, gpointer foreign_display)
   }
   priv->impl = impl;
   priv->vendor_desc = _get_desc (vendor, priv->impl);
+  if (_get_driver_version (vendor, priv->impl, &major, &minor)) {
+    priv->driver_major = major;
+    priv->driver_minor = minor;
+  }
 
   return TRUE;
 }
@@ -410,4 +453,35 @@ gst_va_display_get_implementation (GstVaDisplay * self)
 
   priv = GET_PRIV (self);
   return priv->impl;
+}
+
+/**
+ * gst_va_display_check_version:
+ * @self: a #GstVaDisplay
+ * @major: major version to check
+ * @minor: minor version to check
+ *
+ * Returns: whether driver version is equal or greater than @major.@minor
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_va_display_check_version (GstVaDisplay * self, guint major, guint minor)
+{
+  GstVaDisplayPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_VA_DISPLAY (self), FALSE);
+
+  priv = GET_PRIV (self);
+
+  /* if cannot parse the version, all it's valid */
+  if (priv->driver_major == 0 && priv->driver_minor == 0)
+    return TRUE;
+
+  if (priv->driver_major < major)
+    return FALSE;
+  if (priv->driver_minor < minor)
+    return FALSE;
+
+  return TRUE;
 }

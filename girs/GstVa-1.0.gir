@@ -457,6 +457,27 @@ VADisplay.</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
+      <method name="check_version" c:identifier="gst_va_display_check_version" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">whether driver version is equal or greater than @major.@minor</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">a #GstVaDisplay</doc>
+            <type name="VaDisplay" c:type="GstVaDisplay*"/>
+          </instance-parameter>
+          <parameter name="major" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">major version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+          <parameter name="minor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">minor version to check</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="get_implementation" c:identifier="gst_va_display_get_implementation" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.c">Get the the #GstVaImplementation type of @self.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvadisplay.h"/>
