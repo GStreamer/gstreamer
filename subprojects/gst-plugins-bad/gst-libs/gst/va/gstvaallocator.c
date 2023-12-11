@@ -42,8 +42,6 @@
 #include <unistd.h>
 #endif
 
-#include <stdio.h>              /* sscanf */
-
 #include "gstvasurfacecopy.h"
 #include "gstvavideoformat.h"
 #include "vasurfaceimage.h"
@@ -1322,49 +1320,14 @@ _reset_mem (GstVaMemory * mem, GstAllocator * allocator, gsize size)
       0 /* align */ , 0 /* offset */ , size);
 }
 
-/*
- * HACK:
- *
- * This method should be defined as a public method of GstVaDisplay. But in
- * order to backport this fix, it's kept locally.
- */
-static gboolean
-_gst_va_display_get_vendor_version (GstVaDisplay * display, guint * major,
-    guint * minor)
-{
-  VADisplay dpy;
-  guint maj, min;
-  const char *vendor;
-
-  dpy = gst_va_display_get_va_dpy (display);
-  vendor = vaQueryVendorString (dpy);
-  if (vendor && sscanf (vendor, "Mesa Gallium driver %d.%d.", &maj, &min) == 2) {
-    *major = maj;
-    *minor = min;
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
+#ifndef G_OS_WIN32
+static inline gboolean
 _is_old_mesa (GstVaAllocator * va_allocator)
 {
-  guint major, minor;
-
-  if (!GST_VA_DISPLAY_IS_IMPLEMENTATION (va_allocator->display, MESA_GALLIUM))
-    return FALSE;
-  if (!_gst_va_display_get_vendor_version (va_allocator->display, &major,
-          &minor)) {
-    GST_WARNING ("Could not parse version from Mesa vendor string");
-    return FALSE;
-  }
-  if (major > 23)
-    return FALSE;
-  if (major == 23 && minor > 2)
-    return FALSE;
-  return TRUE;
+  return GST_VA_DISPLAY_IS_IMPLEMENTATION (va_allocator->display, MESA_GALLIUM)
+      && !gst_va_display_check_version (va_allocator->display, 23, 2);
 }
+#endif /* G_OS_WIN32 */
 
 static inline void
 _update_info (GstVideoInfo * info, const VAImage * image)
