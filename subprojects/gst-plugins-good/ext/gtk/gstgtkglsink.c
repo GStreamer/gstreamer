@@ -57,10 +57,12 @@ static GstStaticPadTemplate gst_gtk_gl_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA") "; "
+        (GST_CAPS_FEATURE_MEMORY_GL_MEMORY, "RGBA")
+        ", texture-target = { 2D, rectangle }; "
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_GL_MEMORY ", "
-            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, "RGBA")));
+            GST_CAPS_FEATURE_META_GST_VIDEO_OVERLAY_COMPOSITION, "RGBA")
+        ", texture-target = { 2D, rectangle }"));
 
 #define gst_gtk_gl_sink_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstGtkGLSink, gst_gtk_gl_sink,
