@@ -646,7 +646,7 @@ gst_va_create_coded_caps (GstVaDisplay * display, VAProfile profile,
   if (rt_formats_ptr)
     *rt_formats_ptr = rt_formats;
 
-  caps = gst_va_profile_caps (profile);
+  caps = gst_va_profile_caps (profile, entrypoint);
   if (!caps)
     return NULL;
 

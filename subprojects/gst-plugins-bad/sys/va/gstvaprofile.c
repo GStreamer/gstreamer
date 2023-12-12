@@ -157,7 +157,7 @@ gst_va_profile_from_name (GstVaCodecs codec, const gchar * name)
 }
 
 GstCaps *
-gst_va_profile_caps (VAProfile profile)
+gst_va_profile_caps (VAProfile profile, VAEntrypoint entrypoint)
 {
   const struct ProfileMap *map = get_profile_map (profile);
   GstCaps *caps;

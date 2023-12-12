@@ -4400,6 +4400,7 @@ done:
 static gboolean
 gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
 {
+  GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
   GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
   GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstCaps *out_caps, *reconf_caps = NULL;;
@@ -4545,7 +4546,7 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   /* Add some tags */
   gst_va_base_enc_add_codec_tag (base, "H265");
 
-  out_caps = gst_va_profile_caps (base->profile);
+  out_caps = gst_va_profile_caps (base->profile, klass->entrypoint);
   g_assert (out_caps);
   out_caps = gst_caps_fixate (out_caps);
 
