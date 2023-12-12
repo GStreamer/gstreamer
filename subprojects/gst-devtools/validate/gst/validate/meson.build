@@ -56,7 +56,7 @@ gst_validate_enums = gnome.mkenums('gstvalidateenumtypes',
   install_header : true,
   install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/validate'))
 
-validate_deps = [gst_check_dep, gst_dep, gst_controller_dep, gstbase_dep,
+validate_deps = [gst_check_dep, gst_dep, gst_controller_dep, gstbase_dep, gstapp_dep,
                  gio_dep, gmodule_dep, gst_pbutils_dep, mathlib, json_dep]
 gstvalidate = library('gstvalidate-@0@'.format(apiversion),
     sources: gstvalidate_sources + gst_validate_enums + runner_file,

@@ -59,6 +59,7 @@
 #include "gst-validate-internal.h"
 #include "validate.h"
 #include <gst/controller/controller.h>
+#include <gst/app/app.h>
 #include <gst/validate/gst-validate-override.h>
 #include <gst/validate/gst-validate-override-registry.h>
 #include <gst/validate/gst-validate-pipeline-monitor.h>
@@ -7043,7 +7044,8 @@ subscenario_done_cb (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 static GstValidateExecuteActionReturn
-_create_sub_pipeline (GstValidateScenario * scenario, GstValidateAction * action)
+_create_sub_pipeline (GstValidateScenario * scenario,
+    GstValidateAction * action)
 {
   const gchar *pipeline_desc = NULL, *scenario_name = NULL, *name = NULL;
   GError *error = NULL;
@@ -7112,6 +7114,102 @@ _create_sub_pipeline (GstValidateScenario * scenario, GstValidateAction * action
 done:
   g_clear_error (&error);
   g_clear_object (&runner);
+
+  return res;
+}
+
+static GstFlowReturn
+forward_appsink_to_appsrc_new_sample (GstAppSink * appsink, gpointer user_data)
+{
+  GstAppSrc *appsrc = GST_APP_SRC (user_data);
+
+  GstSample *sample = gst_app_sink_pull_sample (appsink);
+  if (!sample) {
+    return GST_FLOW_ERROR;
+  }
+
+  GstFlowReturn ret = gst_app_src_push_sample (appsrc, sample);
+  gst_sample_unref (sample);
+
+  return ret;
+}
+
+static void
+forward_appsink_to_appsrc_eos (GstAppSink * appsink, gpointer user_data)
+{
+  GstAppSrc *appsrc = GST_APP_SRC (user_data);
+
+  gst_app_src_end_of_stream (GST_APP_SRC (appsrc));
+}
+
+static GstValidateExecuteActionReturn
+_execute_forward_appsink_to_appsrc (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstElement *sink = NULL, *src = NULL;
+  GstElement *sink_pipeline = NULL, *src_pipeline = NULL;
+  gchar **src_pipeline_element = NULL, **sink_pipeline_element = NULL;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
+
+  const gchar *sink_name = gst_structure_get_string (action->structure, "sink");
+  const gchar *src_name = gst_structure_get_string (action->structure, "src");
+
+  sink_pipeline_element = g_strsplit (sink_name, "/", 2);
+  if (sink_pipeline_element[1]) {
+    sink_pipeline =
+        gst_validate_scenario_get_sub_pipeline (scenario,
+        sink_pipeline_element[0]);
+
+    REPORT_UNLESS (sink_pipeline, done, "Could not find subpipeline `%s`",
+        sink_pipeline_element[0]);
+  } else {
+    sink_pipeline = gst_validate_scenario_get_pipeline (scenario);
+  }
+
+  src_pipeline_element = g_strsplit (src_name, "/", 2);
+  if (src_pipeline_element[1]) {
+    src_pipeline =
+        gst_validate_scenario_get_sub_pipeline (scenario,
+        src_pipeline_element[0]);
+
+    REPORT_UNLESS (sink_pipeline, done, "Could not find subpipeline `%s`",
+        src_pipeline_element[0]);
+  } else {
+    src_pipeline = gst_validate_scenario_get_pipeline (scenario);
+  }
+
+  REPORT_UNLESS (((sink =
+              gst_bin_get_by_name (GST_BIN (sink_pipeline),
+                  sink_pipeline_element[1] ? sink_pipeline_element[1] :
+                  sink_name))
+          && GST_IS_APP_SINK (sink)), done,
+      "Could not find appsink '%s' (%" GST_PTR_FORMAT ") in %" GST_PTR_FORMAT,
+      sink_name, sink, sink_pipeline);
+  REPORT_UNLESS (((src =
+              gst_bin_get_by_name (GST_BIN (src_pipeline),
+                  src_pipeline_element[1] ? src_pipeline_element[1] : src_name))
+          && GST_IS_APP_SRC (src)), done,
+      "Could not find appsrc '%s' (%" GST_PTR_FORMAT ") in %" GST_PTR_FORMAT,
+      src_name, src, src_pipeline);
+
+  GstAppSinkCallbacks callbacks = {
+    .eos = forward_appsink_to_appsrc_eos,
+    .new_preroll = NULL,
+    .new_sample = forward_appsink_to_appsrc_new_sample
+  };
+
+  gst_app_sink_set_callbacks (GST_APP_SINK (sink), &callbacks,
+      gst_object_ref (src), gst_object_unref);
+
+done:
+  if (src_pipeline_element)
+    g_strfreev (src_pipeline_element);
+  if (sink_pipeline_element)
+    g_strfreev (sink_pipeline_element);
+  gst_clear_object (&src_pipeline);
+  gst_clear_object (&sink_pipeline);
+  gst_clear_object (&src);
+  gst_clear_object (&sink);
 
   return res;
 }
@@ -8185,6 +8283,26 @@ register_action_types (void)
         {
           .name = "target-element-name",
           .description = "the name of the appsrc to emit eos on",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {NULL}
+      }),
+      "queues a eos event in an appsrc.",
+      GST_VALIDATE_ACTION_TYPE_NONE);
+
+  REGISTER_ACTION_TYPE ("appsink-forward-to-appsrc", _execute_forward_appsink_to_appsrc,
+      ((GstValidateActionParameter [])
+      {
+        {
+          .name = "sink",
+          .description = "the name of the appsink to forward samples/events from",
+          .mandatory = TRUE,
+          .types = "string"
+        },
+        {
+          .name = "src",
+          .description = "the name of the appsrc to forward samples/events to",
           .mandatory = TRUE,
           .types = "string"
         },
