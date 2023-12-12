@@ -1798,7 +1798,7 @@ execute_switch_track_default (GstValidateScenario * scenario,
   gboolean relative = FALSE;
   const gchar *type, *str_index;
   GstElement *input_selector;
-  GstValidateExecuteActionReturn ret = GST_VALIDATE_EXECUTE_ACTION_ERROR;
+  GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_OK;
 
   DECLARE_AND_GET_PIPELINE (scenario, action);
 
@@ -1807,62 +1807,59 @@ execute_switch_track_default (GstValidateScenario * scenario,
 
   /* First find an input selector that has the right type */
   input_selector = find_input_selector_with_type (GST_BIN (pipeline), type);
-  if (input_selector) {
-    GstState state, next;
-    GstPad *pad, *cpad, *srcpad;
+  REPORT_UNLESS (input_selector, done,
+      "Could not find input selector for type %s", type);
+  GstState state, next;
+  GstPad *pad, *cpad, *srcpad;
 
-    ret = GST_VALIDATE_EXECUTE_ACTION_OK;
-    str_index = gst_structure_get_string (action->structure, "index");
+  str_index = gst_structure_get_string (action->structure, "index");
 
-    if (str_index == NULL) {
-      if (!gst_structure_get_uint (action->structure, "index", &index)) {
-        GST_WARNING ("No index given, defaulting to +1");
-        index = 1;
-        relative = TRUE;
-      }
-    } else {
-      relative = strchr ("+-", str_index[0]) != NULL;
-      index = g_ascii_strtoll (str_index, NULL, 10);
+  if (str_index == NULL) {
+    if (!gst_structure_get_uint (action->structure, "index", &index)) {
+      GST_WARNING ("No index given, defaulting to +1");
+      index = 1;
+      relative = TRUE;
     }
-
-    if (relative) {             /* We are changing track relatively to current track */
-      int npads;
-
-      g_object_get (input_selector, "active-pad", &pad, "n-pads", &npads, NULL);
-      if (pad) {
-        int current_index = find_sink_pad_index (input_selector, pad);
-
-        index = (current_index + index) % npads;
-        gst_object_unref (pad);
-      }
-    }
-
-    pad = find_nth_sink_pad (input_selector, index);
-    g_object_get (input_selector, "active-pad", &cpad, NULL);
-    if (gst_element_get_state (pipeline, &state, &next, 0) &&
-        state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
-      srcpad = gst_element_get_static_pad (input_selector, "src");
-
-      gst_pad_add_probe (srcpad,
-          GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
-          (GstPadProbeCallback) _check_select_pad_done, action, NULL);
-      ret = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
-      gst_object_unref (srcpad);
-    }
-
-    g_object_set (input_selector, "active-pad", pad, NULL);
-    gst_object_unref (pad);
-    gst_object_unref (cpad);
-    gst_object_unref (input_selector);
-
-    goto done;
+  } else {
+    relative = strchr ("+-", str_index[0]) != NULL;
+    index = g_ascii_strtoll (str_index, NULL, 10);
   }
+
+  if (relative) {               /* We are changing track relatively to current track */
+    int npads;
+
+    g_object_get (input_selector, "active-pad", &pad, "n-pads", &npads, NULL);
+    if (pad) {
+      int current_index = find_sink_pad_index (input_selector, pad);
+
+      index = (current_index + index) % npads;
+      gst_object_unref (pad);
+    }
+  }
+
+  pad = find_nth_sink_pad (input_selector, index);
+  g_object_get (input_selector, "active-pad", &cpad, NULL);
+  if (gst_element_get_state (pipeline, &state, &next, 0) &&
+      state == GST_STATE_PLAYING && next == GST_STATE_VOID_PENDING) {
+    srcpad = gst_element_get_static_pad (input_selector, "src");
+
+    gst_pad_add_probe (srcpad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_BUFFER_LIST,
+        (GstPadProbeCallback) _check_select_pad_done, action, NULL);
+    res = GST_VALIDATE_EXECUTE_ACTION_ASYNC;
+    gst_object_unref (srcpad);
+  }
+
+  g_object_set (input_selector, "active-pad", pad, NULL);
+  gst_object_unref (pad);
+  gst_object_unref (cpad);
+  gst_object_unref (input_selector);
 
   /* No selector found -> Failed */
 done:
   gst_object_unref (pipeline);
 
-  return ret;
+  return res;
 }
 
 static GstPadProbeReturn
@@ -1925,16 +1922,10 @@ execute_switch_track_pb (GstValidateScenario * scenario,
   }
 
   if (relative) {               /* We are changing track relatively to current track */
-    if (n == 0) {
-      GST_VALIDATE_REPORT_ACTION (scenario, action,
-          SCENARIO_ACTION_EXECUTION_ERROR,
-          "Trying to execute a relative %s for %s track when there"
-          " is no track of this type available on current stream.",
-          action->type, type);
-
-      res = GST_VALIDATE_EXECUTE_ACTION_ERROR;
-      goto done;
-    }
+    REPORT_UNLESS (n != 0, done,
+        "Trying to execute a relative %s for %s track when there"
+        " is no track of this type available on current stream.",
+        action->type, type);
 
     index = (current + index) % n;
   }
