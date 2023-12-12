@@ -58,6 +58,7 @@
 #include "gst-validate-utils.h"
 #include "gst-validate-internal.h"
 #include "validate.h"
+#include "validate-resources.h"
 #include <gst/controller/controller.h>
 #include <gst/app/app.h>
 #include <gst/validate/gst-validate-override.h>
@@ -7574,12 +7575,21 @@ register_action_types (void)
   _gst_validate_action_type = gst_validate_action_get_type ();
   _gst_validate_action_type_type = gst_validate_action_type_get_type ();
 
+  GResource *resource = validate_get_resource ();
+  g_assert (resource);
+  GBytes *meta_config_doc =
+      g_resource_lookup_data (resource, "/validate/doc/meta-configs.md",
+      G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+  GBytes *meta_expected_issues_doc =
+      g_resource_lookup_data (resource, "/validate/doc/meta-expected-issues.md",
+      G_RESOURCE_LOOKUP_FLAGS_NONE, NULL);
+
   /*  *INDENT-OFF* */
   REGISTER_ACTION_TYPE ("meta", NULL,
       ((GstValidateActionParameter [])  {
       {
         .name = "summary",
-        .description = "Whether the scenario is a config only scenario (ie. explain what it does)",
+        .description = "A human readable summary of what the test/scenario does",
         .mandatory = FALSE,
         .types = "string",
         .possible_variables = NULL,
@@ -7708,10 +7718,53 @@ register_action_types (void)
         .possible_variables = NULL,
         .def = "false"
       },
+      {
+        .name = "base-time",
+        .description = "The `base-time` fields lets you set the Pipeline base-time as defined in [gst_element_set_base_time](gst_element_set_base_time).\n",
+        .mandatory = FALSE,
+        .types = "double or string (GstClockTime)",
+        .possible_variables = NULL,
+        .def = "None"
+      },
+      {
+        .name = "start-time",
+        .description = "The `start-time` fields lets you set the Pipeline start-time as defined in [gst_element_set_start_time](gst_element_set_start_time).\n",
+        .mandatory = FALSE,
+        .types = "double or string (GstClockTime)",
+        .possible_variables = NULL,
+        .def = "None"
+      },
+      {
+        .name = "use-system-clock",
+        .description = "The `use-system-clock` fields lets you force the Pipeline to use the\n"
+              "[`GstSystemClock`](GstSystemClock)",
+        .mandatory = FALSE,
+        .types = "bool",
+        .possible_variables = NULL,
+        .def = "false"
+      },
+      {
+        .name="configs",
+        .description=g_bytes_get_data (meta_config_doc, NULL),
+        .mandatory = FALSE,
+        .types = "{GstStructure as string}",
+        .possible_variables = NULL,
+        .def = "{}"
+      },
+      {
+        .name="expected-issues",
+        .description=g_bytes_get_data (meta_expected_issues_doc, NULL),
+        .mandatory = FALSE,
+        .types = "{GstStructure as string}",
+        .possible_variables = NULL,
+        .def = "{}"
+      },
       {NULL}
       }),
-      "Scenario metadata.\nNOTE: it used to be called \"description\"",
+      "Scenario metadata.\n\nNOTE: it used to be called \"description\"",
       GST_VALIDATE_ACTION_TYPE_CONFIG);
+  g_bytes_unref (meta_config_doc);
+  g_bytes_unref (meta_expected_issues_doc);
 
   REGISTER_ACTION_TYPE ("seek", _execute_seek,
       ((GstValidateActionParameter [])  {

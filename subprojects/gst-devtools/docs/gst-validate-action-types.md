@@ -5,7 +5,10 @@
 ``` validate-scenario
 meta,
     [allow-errors=(boolean)],
+    [base-time=(double or string (GstClockTime))],
+    [configs=({GstStructure as string})],
     [duration=(double, int)],
+    [expected-issues=({GstStructure as string})],
     [handles-states=(boolean)],
     [ignore-eos=(boolean)],
     [is-config=(boolean)],
@@ -18,10 +21,13 @@ meta,
     [pipeline-name=(string)],
     [reverse-playback=(boolean)],
     [seek=(boolean)],
-    [summary=(string)];
+    [start-time=(double or string (GstClockTime))],
+    [summary=(string)],
+    [use-system-clock=(bool)];
 ```
 
 Scenario metadata.
+
 NOTE: it used to be called "description"
  * Implementer namespace: core
  * Is config action (meaning it will be executing right at the beginning of the execution of the pipeline)
@@ -35,11 +41,75 @@ scenario when it happens. By default a 'stop' action is generated on ERROR messa
 
   Default: false
 
+* `base-time`:(optional): The `base-time` fields lets you set the Pipeline base-time as defined in [gst_element_set_base_time](gst_element_set_base_time).
+
+
+  Possible types: `double or string (GstClockTime)`
+
+  Default: None
+
+* `configs`:(optional): The `configs` field is an array of structures containing the same content as
+usual [configs](gst-validate-config.md) files.
+
+For example:
+
+``` yaml
+configs = {
+    # Set videotestsrc0 pattern value to `blue`
+    "core, action=set-property, target-element-name=videotestsrc0, property-name=pattern, property-value=blue",
+    "$(validateflow), pad=sink1:sink, caps-properties={ width, height };",
+}
+```
+
+Note: Since this is GstStructure syntax, we need to have the structures in the
+array as strings/within quotes.
+
+
+
+  Possible types: `{GstStructure as string}`
+
+  Default: {}
+
 * `duration`:(optional): Lets the user know the time the scenario needs to be fully executed
 
   Possible types: `double, int`
 
   Default: infinite (GST_CLOCK_TIME_NONE)
+
+* `expected-issues`:(optional): The `expected-issues` field is an array of `expected-issue` structures containing
+information about issues to expect (which can be known bugs or not).
+
+Use `gst-validate-1.0 --print-issue-types` to print information about all issue types.
+
+For example:
+
+``` yaml
+expected-issues = {
+    "expected-issue, issue-id=scenario::not-ended",
+}
+```
+Note: Since this is GstStructure syntax, we need to have the structures in the
+array as strings/within quotes.
+
+**Each issue has the following fields**:
+
+* `issue-id`: (string): Issue ID - Mandatory if `summary` is not provided.
+* `summary`: (string): Summary - Mandatory if `issue-id` is not provided.
+* `details`: Regex string to match the issue details `detected-on`: (string):
+             The name of the element the issue happened on `level`: (string):
+             Issue level
+* `sometimes`: (boolean): Default: `false` -  Wheteher the issue happens only
+               sometimes if `false` and the issue doesn't happen, an error will
+               be issued.
+* `issue-url`: (string): The url of the issue in the bug tracker if the issue is
+               a bug.
+
+
+
+
+  Possible types: `{GstStructure as string}`
+
+  Default: {}
 
 * `handles-states`:(optional): Whether the scenario handles pipeline state changes from the beginning
 in that case the application should not set the state of the pipeline to anything
@@ -123,11 +193,25 @@ It has the same effect as setting the pipeline using pipeline_name->scenario_nam
 
   Default: false
 
-* `summary`:(optional): Whether the scenario is a config only scenario (ie. explain what it does)
+* `start-time`:(optional): The `start-time` fields lets you set the Pipeline start-time as defined in [gst_element_set_start_time](gst_element_set_start_time).
+
+
+  Possible types: `double or string (GstClockTime)`
+
+  Default: None
+
+* `summary`:(optional): A human readable summary of what the test/scenario does
 
   Possible types: `string`
 
   Default: 'Nothing'
+
+* `use-system-clock`:(optional): The `use-system-clock` fields lets you force the Pipeline to use the
+[`GstSystemClock`](GstSystemClock)
+
+  Possible types: `bool`
+
+  Default: false
 
 ## seek
 
