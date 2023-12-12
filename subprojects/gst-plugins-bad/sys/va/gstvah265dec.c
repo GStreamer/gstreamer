@@ -932,8 +932,8 @@ static const struct
 #define P(idc, va) { G_PASTE (GST_H265_PROFILE_, idc), G_PASTE (VAProfileHEVC, va) }
   P (MAIN, Main),
   P (MAIN_10, Main10),
-  /*P (MAIN_STILL_PICTURE, ),
-  P (MONOCHROME, ),
+  P (MAIN_STILL_PICTURE, Main),
+  /*P (MONOCHROME, ),
   P (MONOCHROME_12, ),
   P (MONOCHROME_16, ),*/
   P (MAIN_12, Main12),
@@ -942,9 +942,9 @@ static const struct
   P (MAIN_444, Main444),
   P (MAIN_444_10, Main444_10),
   P (MAIN_444_12, Main444_12),
-  /*P (MAIN_INTRA, ),
-  P (MAIN_10_INTRA, ),
-  P (MAIN_12_INTRA, ),
+  P (MAIN_INTRA, Main),
+  P (MAIN_10_INTRA, Main10),
+  /*P (MAIN_12_INTRA, ),
   P (MAIN_422_10_INTRA, ),
   P (MAIN_422_12_INTRA, ),
   P (MAIN_444_INTRA, ),
