@@ -264,6 +264,12 @@ struct _GstAggregatorPadPrivate
   guint num_buffers;
   GstBuffer *peeked_buffer;
 
+  /* TRUE if the serialized query is in the proccess of handling at some
+   * exact moment. This will obligate the sinkpad streaming thread wait
+   * until the handling finishes.
+   * Always protected by the PAD_LOCK. */
+  gboolean query_in_proccess;
+
   /* used to track fill state of queues, only used with live-src and when
    * latency property is set to > 0 */
   GstClockTime head_position;
@@ -975,8 +981,10 @@ gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
         !GST_IS_BUFFER (g_queue_peek_tail (&pad->priv->data))) {
       if (GST_IS_EVENT (g_queue_peek_tail (&pad->priv->data)))
         event = gst_event_ref (g_queue_peek_tail (&pad->priv->data));
-      if (GST_IS_QUERY (g_queue_peek_tail (&pad->priv->data)))
+      if (GST_IS_QUERY (g_queue_peek_tail (&pad->priv->data))) {
         query = g_queue_peek_tail (&pad->priv->data);
+        pad->priv->query_in_proccess = TRUE;
+      }
     }
     PAD_UNLOCK (pad);
     if (event || query) {
@@ -1011,6 +1019,8 @@ gst_aggregator_do_events_and_queries (GstElement * self, GstPad * epad,
               NULL);
           g_queue_pop_tail (&pad->priv->data);
         }
+
+        pad->priv->query_in_proccess = FALSE;
       }
 
       PAD_BROADCAST_EVENT (pad);
@@ -2762,9 +2772,14 @@ gst_aggregator_default_sink_query_pre_queue (GstAggregator * self,
     SRC_BROADCAST (self);
     SRC_UNLOCK (self);
 
-    while (!gst_aggregator_pad_queue_is_empty (aggpad)
-        && aggpad->priv->flow_return == GST_FLOW_OK) {
-      GST_DEBUG_OBJECT (aggpad, "Waiting for buffer to be consumed");
+    /* Sanity check: aggregator's sink pad can only proccess one serialized
+     * query at a time. */
+    g_warn_if_fail (!aggpad->priv->query_in_proccess);
+
+    while ((!gst_aggregator_pad_queue_is_empty (aggpad)
+            && aggpad->priv->flow_return == GST_FLOW_OK) ||
+        aggpad->priv->query_in_proccess) {
+      GST_DEBUG_OBJECT (aggpad, "Waiting for query to be consumed");
       PAD_WAIT_EVENT (aggpad);
     }
 
