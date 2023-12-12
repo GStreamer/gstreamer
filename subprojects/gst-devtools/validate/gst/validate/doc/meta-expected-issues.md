@@ -10,7 +10,7 @@ expected-issues = {
     "expected-issue, issue-id=scenario::not-ended",
 }
 ```
-Note: Since this is GstStructure syntax, we need to have the structures in the
+Note: Since this is [`GstStructure`](GstStructure) syntax, we need to have the structures in the
 array as strings/within quotes.
 
 **Each issue has the following fields**:
@@ -20,10 +20,10 @@ array as strings/within quotes.
 * `details`: Regex string to match the issue details `detected-on`: (string):
              The name of the element the issue happened on `level`: (string):
              Issue level
-* `sometimes`: (boolean): Default: `false` -  Wheteher the issue happens only
+* `sometimes`: (boolean): Default: `false` -  Whether the issue happens only
                sometimes if `false` and the issue doesn't happen, an error will
                be issued.
 * `issue-url`: (string): The url of the issue in the bug tracker if the issue is
                a bug.
 
-**Warning**: This field is validate only for [`.validatetest`](gst-validate-test.md) files, and not `.scenario`.
+**Warning**: This field is validate only for [`.validatetest`](gst-validate-test-file.md) files, and not `.scenario`.

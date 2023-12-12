@@ -14,4 +14,4 @@ configs = {
 Note: Since this is GstStructure syntax, we need to have the structures in the
 array as strings/within quotes.
 
-**Warning**: This field is validate only for [`.validatetest`](gst-validate-test.md) files, and not `.scenario`.
+**Warning**: This field is validate only for [`.validatetest`](gst-validate-test-file.md) files, and not `.scenario`.

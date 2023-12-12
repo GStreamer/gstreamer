@@ -7826,7 +7826,9 @@ register_action_types (void)
       }),
       "Seeks into the stream. This is an example of a seek happening when the stream reaches 5 seconds\n"
       "or 1 eighth of its duration and seeks to 10s or 2 eighths of its duration:\n"
-      "  seek, playback-time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush",
+      "\n\n```\n"
+      "  seek, playback-time=\"min(5.0, (duration/8))\", start=\"min(10, 2*(duration/8))\", flags=accurate+flush"
+      "\n```\n",
       GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK
   );
 
