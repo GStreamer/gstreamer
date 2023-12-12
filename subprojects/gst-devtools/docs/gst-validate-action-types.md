@@ -357,6 +357,44 @@ Sends an EOS event to the pipeline
 
   Default: (null)
 
+## select-streams
+
+
+``` validate-scenario
+select-streams,
+    indexes=([int]),
+    [playback-time=(double,string)];
+```
+
+Select the stream on next `GST_STREAM_COLLECTION` message on the bus.
+ * Implementer namespace: core
+
+### Parameters
+
+* `indexes`:(mandatory): Indexes of the streams in the StreamCollection to select
+
+  Possible types: `[int]`
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
 ## switch-track
 
 
@@ -420,7 +458,10 @@ wait,
     [message-type=(string)],
     [non-blocking=(string)],
     [on-clock=(boolean)],
+    [property-name=(string)],
+    [property-value=(string)],
     [signal-name=(string)],
+    [subpipeline-done=(string)],
     [target-element-factory-name=(string)],
     [target-element-name=(string)],
     [playback-time=(double,string)];
@@ -469,7 +510,27 @@ See #gst_test_clock_wait_for_next_pending_id.
 
   Default: (null)
 
+* `property-name`:(optional): The name of the property to wait for value to be set to what is specified by @property-value.
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `property-value`:(optional): The value of the property to be waiting.
+ Example: 
+ `wait, property-name=current-uri, property-value=file:///some/value.mp4, target-element-name=uridecodebin`
+
+  Possible types: `string`
+
+  Default: (null)
+
 * `signal-name`:(optional): The name of the signal to wait for on @target-element-name. To ensure that the signal is executed without blocking while waiting for it you can set the field 'non-blocking=true'.
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `subpipeline-done`:(optional): Waits that the subpipeline with that name is done
 
   Possible types: `string`
 
@@ -1077,11 +1138,13 @@ Emits a signal to an element in the pipeline
 
 ``` validate-scenario
 appsrc-push,
-    file-name=(string),
     target-element-name=(string),
     [caps=(caps)],
     [dts=(GstClockTime)],
     [duration=(GstClockTime)],
+    [file-name=(string)],
+    [fill-mode=(string)],
+    [from-appsink=(string)],
     [offset=(uint64)],
     [pts=(GstClockTime)],
     [segment=((GstStructure)segment,[start=(GstClockTime)][stop=(GstClockTime)][base=(GstClockTime)][offset=(GstClockTime)][time=(GstClockTime)][postion=(GstClockTime)][duration=(GstClockTime)])],
@@ -1093,10 +1156,6 @@ Queues a sample in an appsrc. If the pipeline state allows flow of buffers,  the
  * Implementer namespace: core
 
 ### Parameters
-
-* `file-name`:(mandatory): Relative path to a file whose contents will be pushed as a buffer
-
-  Possible types: `string`
 
 * `target-element-name`:(mandatory): The name of the appsrc to push data on
 
@@ -1117,6 +1176,28 @@ Queues a sample in an appsrc. If the pipeline state allows flow of buffers,  the
 * `duration`:(optional): Buffer duration
 
   Possible types: `GstClockTime`
+
+  Default: (null)
+
+* `file-name`:(optional): Relative path to a file whose contents will be pushed as a buffer
+
+  Possible types: `string`
+
+  Default: (null)
+
+* `fill-mode`:(optional): How to fill the buffer, possible values:
+   - `nothing`: Leave data as malloc)
+   - `zero`: Fill buffers with zeros
+   - `counter`: Buffers are filled with an ever increasing counter
+   - `file`: Read data from file
+
+  Possible types: `string`
+
+  Default: file
+
+* `from-appsink`:(optional): Pull sample from another appsink, if appsink is in another pipeline, use the `other-pipeline-name/target-element-name` synthax
+
+  Possible types: `string`
 
   Default: (null)
 
@@ -1173,12 +1254,55 @@ appsrc-eos,
     [playback-time=(double,string)];
 ```
 
-Queues a EOS event in an appsrc.
+queues a eos event in an appsrc.
  * Implementer namespace: core
 
 ### Parameters
 
-* `target-element-name`:(mandatory): The name of the appsrc to emit EOS on
+* `target-element-name`:(mandatory): the name of the appsrc to emit eos on
+
+  Possible types: `string`
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## appsink-forward-to-appsrc
+
+
+``` validate-scenario
+appsink-forward-to-appsrc,
+    sink=(string),
+    src=(string),
+    [playback-time=(double,string)];
+```
+
+queues a eos event in an appsrc.
+ * Implementer namespace: core
+
+### Parameters
+
+* `sink`:(mandatory): the name of the appsink to forward samples/events from
+
+  Possible types: `string`
+
+* `src`:(mandatory): the name of the appsrc to forward samples/events to
 
   Possible types: `string`
 
@@ -1695,6 +1819,107 @@ One and only one iterator field is supported as parameter.
 * `actions`:(mandatory): The array of actions to repeat
 
   Possible types: `{array of [structures]}`
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## on-sub-scenario
+
+
+``` validate-scenario
+on-sub-scenario,
+    pipeline-name=((string)),
+    [action=([structures])],
+    [playback-time=(double,string)];
+```
+
+Execute @action on a sub scenario/pipeline.
+
+ * Implementer namespace: core
+
+### Parameters
+
+* `pipeline-name`:(mandatory): The name of the sub scenario pipeline
+
+  Possible types: `(string)`
+
+* `action`:(optional): The action to execute on @pipeline-name
+
+  Possible types: `[structures]`
+
+  Default: (null)
+
+* `playback-time`:(optional): The playback time at which the action will be executed
+
+  Possible variables:
+
+  * `position`: The current position in the stream
+
+  * `duration`: The duration of the stream
+
+  Possible types: `double,string`
+
+  Default: 0.0
+
+* `on-message`:(optional): Specify on what message type the action will be executed.
+ If both 'playback-time' and 'on-message' is specified, the action will be executed
+ on whatever happens first.
+
+  Possible types: `string`
+
+  Default: (null)
+
+## create-sub-pipeline
+
+
+``` validate-scenario
+create-sub-pipeline,
+    desc=(string),
+    [name=((string))],
+    [scenario=({array of [structures]})],
+    [playback-time=(double,string)];
+```
+
+Start another pipeline potentially running a scenario on it. 
+When a scenario is specified, and while the sub pipeline is running
+ it will be possible to execute actions from the main scenario on that pipeline
+ using the `on-sub-scenario` action type.
+ * Implementer namespace: core
+
+### Parameters
+
+* `desc`:(mandatory): Pipeline description as passed to gst_parse_launch()
+
+  Possible types: `string`
+
+* `name`:(optional): The name of the new pipeline
+
+  Possible types: `(string)`
+
+  Default: (null)
+
+* `scenario`:(optional): Array of action and metadatas to run on the new pipeline
+
+  Possible types: `{array of [structures]}`
+
+  Default: (null)
 
 * `playback-time`:(optional): The playback time at which the action will be executed
 
