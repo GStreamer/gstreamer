@@ -3072,6 +3072,7 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
     case GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING:
       break;
     case GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
+    case GST_VALIDATE_EXECUTE_ACTION_OK:
       return G_SOURCE_CONTINUE;
     case GST_VALIDATE_EXECUTE_ACTION_ASYNC:
       if (GST_CLOCK_TIME_IS_VALID (act->priv->timeout)) {
@@ -3094,7 +3095,9 @@ execute_next_action_full (GstValidateScenario * scenario, GstMessage * message)
 
       return G_SOURCE_CONTINUE;
     default:
-      GST_ERROR ("State is %d", act->priv->state);
+      GST_ERROR_OBJECT (scenario, "State is %s(%d)",
+          gst_validate_action_return_get_name (act->priv->state),
+          act->priv->state);
       g_assert_not_reached ();
   }
 
