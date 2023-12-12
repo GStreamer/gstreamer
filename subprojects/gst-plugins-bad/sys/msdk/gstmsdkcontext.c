@@ -180,19 +180,13 @@ gst_msdk_context_use_vaapi (GstMsdkContext * context)
   display_drm = gst_va_display_drm_new_from_path (path);
   if (!display_drm) {
     GST_ERROR ("Couldn't create a VA DRM display");
-    goto failed;
+    return FALSE;
   }
   g_free (path);
 
   priv->display = display_drm;
 
   return TRUE;
-
-failed:
-  if (display_drm)
-    gst_object_unref (display_drm);
-
-  return FALSE;
 }
 #else
 static GstD3D11Device *
