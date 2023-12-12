@@ -7125,8 +7125,9 @@ _create_sub_pipeline (GstValidateScenario * scenario,
   SubPipelineData *data = g_atomic_rc_box_alloc0 (sizeof (SubPipelineData));
   data->monitor =
       GST_VALIDATE_MONITOR (gst_validate_pipeline_monitor_new_full (pipeline,
-          runner, NULL, scenario_name ? scenario_name : NULL,
-          scenario_structures, FALSE));
+          runner, NULL,
+          scenario_name ? scenario_name : (name ? name : "unnamed-subscenario"),
+          scenario_structures, TRUE));
   data->action = gst_validate_action_ref (action);
 
   gboolean monitor_handles_state;

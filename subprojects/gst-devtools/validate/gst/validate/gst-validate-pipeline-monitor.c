@@ -66,9 +66,15 @@ enum
   PROP_LAST
 };
 
+typedef struct
+{
+  gboolean print_position;
+} GstValidatePipelineMonitorPrivate;
+
 #define gst_validate_pipeline_monitor_parent_class parent_class
-G_DEFINE_TYPE (GstValidatePipelineMonitor, gst_validate_pipeline_monitor,
-    GST_TYPE_VALIDATE_BIN_MONITOR);
+G_DEFINE_TYPE_WITH_PRIVATE (GstValidatePipelineMonitor,
+    gst_validate_pipeline_monitor, GST_TYPE_VALIDATE_BIN_MONITOR);
+#define PRIV(self) ((GstValidatePipelineMonitorPrivate*)gst_validate_pipeline_monitor_get_instance_private (self))
 
 static void
 gst_validate_pipeline_monitor_dispose (GObject * object)
@@ -149,6 +155,7 @@ static void
 gst_validate_pipeline_monitor_init (GstValidatePipelineMonitor *
     pipeline_monitor)
 {
+  PRIV (pipeline_monitor)->print_position = TRUE;
 }
 
 static gboolean
@@ -625,7 +632,8 @@ _bus_handler (GstBus * bus, GstMessage * message,
         gst_message_parse_state_changed (message, &oldstate, &newstate,
             &pending);
 
-        if (oldstate == GST_STATE_READY && newstate == GST_STATE_PAUSED) {
+        if (oldstate == GST_STATE_READY && newstate == GST_STATE_PAUSED
+            && PRIV (monitor)->print_position) {
           monitor->print_pos_srcid =
               g_timeout_add (PRINT_POSITION_TIMEOUT,
               (GSourceFunc) print_position, monitor);
@@ -760,7 +768,7 @@ _bus_handler (GstBus * bus, GstMessage * message,
 
 static void
 gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor,
-    const gchar * scenario_name, GList * actions, gboolean find_scenario)
+    const gchar * scenario_name, GList * actions, gboolean is_sub_pipeline)
 {
   /* scenarios currently only make sense for pipelines */
   const gchar *scenarios_names, *testfile_scenario_name = NULL;
@@ -771,10 +779,12 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor,
       gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (monitor));
   GList *scenario_structs = NULL;
 
-  if (!find_scenario
+  if (is_sub_pipeline
       || gst_validate_get_test_file_scenario (&scenario_structs,
           &testfile_scenario_name, &testfile)) {
-    if (testfile_scenario_name || scenario_name) {
+    PRIV (GST_VALIDATE_PIPELINE_MONITOR (monitor))->print_position =
+        !is_sub_pipeline;
+    if (testfile_scenario_name || (scenario_name && !actions)) {
       monitor->scenario =
           gst_validate_scenario_factory_create (runner,
           GST_ELEMENT_CAST (target),
@@ -787,7 +797,7 @@ gst_validate_pipeline_monitor_create_scenarios (GstValidateBinMonitor * monitor,
           gst_validate_scenario_from_structs (runner,
           GST_ELEMENT_CAST (target),
           scenario_structs ? scenario_structs : actions,
-          find_scenario ? testfile : "subscenario");
+          is_sub_pipeline ? scenario_name : testfile);
     }
 
     goto done;
@@ -830,7 +840,7 @@ done:
 GstValidatePipelineMonitor *
 gst_validate_pipeline_monitor_new_full (GstPipeline * pipeline,
     GstValidateRunner * runner, GstValidateMonitor * parent,
-    const gchar * scenario_name, GList * actions, gboolean find_scenario)
+    const gchar * scenario_name, GList * actions, gboolean is_sub_pipeline)
 {
   GstBus *bus;
   GstValidatePipelineMonitor *monitor;
@@ -844,7 +854,7 @@ gst_validate_pipeline_monitor_new_full (GstPipeline * pipeline,
       "pipeline", pipeline, NULL);
 
   gst_validate_pipeline_monitor_create_scenarios (GST_VALIDATE_BIN_MONITOR
-      (monitor), scenario_name, actions, find_scenario);
+      (monitor), scenario_name, actions, is_sub_pipeline);
 
   bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   gst_bus_enable_sync_message_emission (bus);
@@ -881,5 +891,5 @@ gst_validate_pipeline_monitor_new (GstPipeline * pipeline,
     GstValidateRunner * runner, GstValidateMonitor * parent)
 {
   return gst_validate_pipeline_monitor_new_full (pipeline,
-      runner, parent, NULL, NULL, TRUE);
+      runner, parent, NULL, NULL, FALSE);
 }
