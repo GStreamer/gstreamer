@@ -7195,6 +7195,8 @@ static GstValidateExecuteActionReturn
 _execute_forward_appsink_to_appsrc (GstValidateScenario * scenario,
     GstValidateAction * action)
 {
+  gboolean forward_eos = TRUE;
+  gpointer forward_eos_func = forward_appsink_to_appsrc_eos;
   GstElement *sink = NULL, *src = NULL;
   GstElement *sink_pipeline = NULL, *src_pipeline = NULL;
   gchar **src_pipeline_element = NULL, **sink_pipeline_element = NULL;
@@ -7241,8 +7243,13 @@ _execute_forward_appsink_to_appsrc (GstValidateScenario * scenario,
       "Could not find appsrc '%s' (%" GST_PTR_FORMAT ") in %" GST_PTR_FORMAT,
       src_name, src, src_pipeline);
 
+  if (gst_structure_get_boolean (action->structure, "forward-eos",
+          &forward_eos) && !forward_eos) {
+    forward_eos_func = NULL;
+  }
+
   GstAppSinkCallbacks callbacks = {
-    .eos = forward_appsink_to_appsrc_eos,
+    .eos = forward_eos_func,
     .new_preroll = NULL,
     .new_sample = forward_appsink_to_appsrc_new_sample
   };
@@ -8408,6 +8415,13 @@ register_action_types (void)
           .description = "the name of the appsrc to forward samples/events to",
           .mandatory = TRUE,
           .types = "string"
+        },
+        {
+          .name = "forward-eos",
+          .description = "Wether to forward EOS or not",
+          .mandatory = FALSE,
+          .def = "true",
+          .types = "bool"
         },
         {NULL}
       }),
