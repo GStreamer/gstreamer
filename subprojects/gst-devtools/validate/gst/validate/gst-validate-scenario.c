@@ -5924,11 +5924,46 @@ gst_validate_scenario_new (GstValidateRunner *
       GST_OBJECT_NAME (pipeline));
 
   g_weak_ref_init (&scenario->priv->ref_pipeline, pipeline);
+
+  GstClockTime base_time, start_time;
+  gboolean use_system_clock = FALSE;
+
+  if (gst_validate_utils_get_clocktime (scenario->description, "base-time",
+          &base_time)) {
+    gst_validate_printf (NULL,
+        "**-> Setting %" GST_PTR_FORMAT " base time to %" GST_TIMEP_FORMAT
+        "**\n", pipeline, &base_time);
+    gst_element_set_base_time (GST_ELEMENT (pipeline), base_time);
+  }
+
+  if (gst_validate_utils_get_clocktime (scenario->description, "start-time",
+          &start_time)) {
+    gst_validate_printf (NULL,
+        "**-> Setting %" GST_PTR_FORMAT " start time to %" GST_TIMEP_FORMAT
+        "**\n", pipeline, &base_time);
+    gst_element_set_start_time (GST_ELEMENT (pipeline), start_time);
+  }
+
+  gst_structure_get_boolean (scenario->description, "use-system-clock",
+      &use_system_clock);
   if (scenario->priv->clock) {
+    if (use_system_clock)
+      gst_validate_abort
+          ("Requested to use system clock and test clock at the same time");
     gst_element_set_clock (pipeline, GST_CLOCK_CAST (scenario->priv->clock));
     gst_pipeline_use_clock (GST_PIPELINE (pipeline),
         GST_CLOCK_CAST (scenario->priv->clock));
   }
+  if (use_system_clock) {
+    GstClock *system_clock = gst_system_clock_obtain ();
+    gst_element_set_clock (pipeline, system_clock);
+    gst_pipeline_use_clock (GST_PIPELINE (pipeline), system_clock);
+
+    gst_validate_printf (NULL,
+        "**-> Using clock %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT "**\n",
+        system_clock, pipeline);
+  }
+
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),
       g_filename_display_basename (scenario_name));
 

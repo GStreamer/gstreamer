@@ -58,6 +58,19 @@ configs = {
 Note: Since this is GstStructure synthax, we need to have the structures in the
 array as strings/within quotes.
 
+## `base-time`
+
+The `base-time` fields lets you set the Pipeline base-time as defined in [gst_element_set_base_time](gst_element_set_base_time).
+
+## `use-system-clock`
+
+The `use-system-clock` fields lets you set force the Pipeline to use the
+[`GstSystemClock`](GstSystemClock)
+
+## `start-time`
+
+The `start-time` fields lets you set the Pipeline start-time as defined in [gst_element_set_start_time](gst_element_set_start_time).
+
 ## expected-issues
 
 The `expected-issues` field is an array of `expected-issue` structures containing
