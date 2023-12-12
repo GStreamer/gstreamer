@@ -5238,6 +5238,17 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
       (GSourceFunc) handle_bus_message, d, (GDestroyNotify) message_data_free);
 }
 
+static void
+runner_stopping (GstValidateRunner * runner, GstValidateScenario * scenario)
+{
+  GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
+
+  if (pipeline) {
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+    gst_object_unref (pipeline);
+  }
+}
+
 static gboolean
 _action_type_has_parameter (GstValidateActionType * atype,
     const gchar * paramname)
@@ -5540,7 +5551,6 @@ one_actions_scenario_max:
   }
 }
 
-
 static void
 gst_validate_scenario_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -5549,11 +5559,15 @@ gst_validate_scenario_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_RUNNER:
+    {
+      GstValidateRunner *runner = g_value_get_object (value);
       /* we assume the runner is valid as long as this scenario is,
        * no ref taken */
-      gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (object),
-          g_value_get_object (value));
+      gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (object), runner);
+
+      g_signal_connect (runner, "stopping", G_CALLBACK (runner_stopping), self);
       break;
+    }
     case PROP_HANDLES_STATE:
       g_assert_not_reached ();
       break;
@@ -5674,11 +5688,15 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   g_main_context_ref (scenario->priv->context);
 }
 
+
 static void
 gst_validate_scenario_dispose (GObject * object)
 {
   GstValidateScenarioPrivate *priv = GST_VALIDATE_SCENARIO (object)->priv;
+  GstValidateRunner *runner =
+      gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (object));
 
+  g_signal_handlers_disconnect_by_func (runner, runner_stopping, object);
   g_weak_ref_clear (&priv->ref_pipeline);
 
   if (priv->bus) {
