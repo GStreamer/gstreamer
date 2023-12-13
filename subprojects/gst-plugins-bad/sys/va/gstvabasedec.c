@@ -239,30 +239,6 @@ _create_allocator (GstVaBaseDec * base, GstCaps * caps)
   return allocator;
 }
 
-static void
-_create_other_pool (GstVaBaseDec * base, GstAllocator * allocator,
-    GstAllocationParams * params, GstCaps * caps, guint size)
-{
-  GstBufferPool *pool;
-  GstStructure *config;
-
-  gst_clear_object (&base->other_pool);
-
-  GST_DEBUG_OBJECT (base, "making new other pool for copy");
-
-  pool = gst_video_buffer_pool_new ();
-  config = gst_buffer_pool_get_config (pool);
-
-  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-  gst_buffer_pool_config_set_allocator (config, allocator, params);
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    GST_ERROR_OBJECT (base, "Couldn't configure other pool for copy.");
-    gst_clear_object (&pool);
-  }
-
-  base->other_pool = pool;
-}
-
 static gboolean
 _need_video_crop (GstVaBaseDec * base)
 {
@@ -278,7 +254,7 @@ _need_video_crop (GstVaBaseDec * base)
    used. We deliberately separate it from the main path of pool setting. */
 static gboolean
 _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
-    GstQuery * query, GstCaps * caps, const GstVideoInfo * info)
+    GstQuery * query, GstCaps * caps)
 {
   GstAllocator *allocator = NULL, *other_allocator = NULL;
   GstAllocationParams other_params, params;
@@ -286,7 +262,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
   GstBufferPool *pool = NULL, *other_pool = NULL;
   guint size = 0, min, max, usage_hint;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
   gboolean dont_use_other_pool = FALSE;
   GstCaps *va_caps = NULL;
 
@@ -316,28 +292,34 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
       gst_clear_object (&other_pool);
 
     min += base->min_buffers;
-    size = MAX (size, GST_VIDEO_INFO_SIZE (info));
     update_pool = TRUE;
   } else {
-    size = GST_VIDEO_INFO_SIZE (info);
     min = base->min_buffers;
     max = 0;
   }
 
   /* Ensure that the other pool is ready */
   if (gst_caps_is_raw (caps)) {
-    if (GST_IS_VA_POOL (other_pool))
+    if (GST_IS_VA_POOL (other_pool)) {
       gst_clear_object (&other_pool);
+      size = 0;
+    }
 
     if (!other_pool) {
       if (other_allocator && (GST_IS_VA_DMABUF_ALLOCATOR (other_allocator)
               || GST_IS_VA_ALLOCATOR (other_allocator)))
         gst_clear_object (&other_allocator);
 
-      _create_other_pool (base, other_allocator, &other_params, caps, size);
+      GST_DEBUG_OBJECT (base, "making new other pool for copy");
+      base->other_pool =
+          gst_va_create_other_pool (other_allocator, &other_params, caps, size);
     } else {
       gst_object_replace ((GstObject **) & base->other_pool,
           (GstObject *) other_pool);
+    }
+    if (!base->other_pool) {
+      GST_ERROR_OBJECT (base, "Couldn't configure other pool for copy");
+      goto cleanup;
     }
   } else {
     GstStructure *other_config;
@@ -354,51 +336,45 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
 
     if (!other_allocator) {
       other_allocator = _create_allocator (base, caps);
-      if (!other_allocator) {
-        ret = FALSE;
+      if (!other_allocator)
         goto cleanup;
-      }
     }
 
     other_config = gst_buffer_pool_get_config (other_pool);
 
-    gst_buffer_pool_config_set_params (other_config, caps, size, min, max);
+    gst_buffer_pool_config_set_params (other_config, caps, 0, min, max);
     gst_buffer_pool_config_set_allocator (other_config, other_allocator,
         &other_params);
     /* Always support VideoMeta but no VideoCropMeta here. */
     gst_buffer_pool_config_add_option (other_config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
 
-    gst_buffer_pool_config_set_va_allocation_params (other_config, 0,
-        GST_VA_FEATURE_AUTO);
+    gst_buffer_pool_config_set_va_allocation_params (other_config,
+        VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC, GST_VA_FEATURE_AUTO);
 
-    if (!gst_buffer_pool_set_config (other_pool, other_config)) {
-      ret = FALSE;
+    if (!gst_buffer_pool_set_config (other_pool, other_config))
       goto cleanup;
-    }
 
     gst_object_replace ((GstObject **) & base->other_pool,
         (GstObject *) other_pool);
   }
 
   /* Now setup the buffer pool for decoder */
-  pool = gst_va_pool_new ();
 
   va_caps = gst_caps_copy (caps);
   gst_caps_set_features_simple (va_caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
 
-  if (!(allocator = _create_allocator (base, va_caps))) {
-    ret = FALSE;
+  if (!(allocator = _create_allocator (base, va_caps)))
     goto cleanup;
-  }
 
   gst_allocation_params_init (&params);
 
+  pool = gst_va_pool_new ();
   {
     GstStructure *config = gst_buffer_pool_get_config (pool);
 
-    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_set_params (config, caps, 0, min, max);
     gst_buffer_pool_config_set_allocator (config, allocator, &params);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -412,10 +388,10 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
     gst_buffer_pool_config_set_va_allocation_params (config,
         usage_hint, GST_VA_FEATURE_AUTO);
 
-    if (!gst_buffer_pool_set_config (pool, config)) {
-      ret = FALSE;
+    if (!gst_buffer_pool_set_config (pool, config))
       goto cleanup;
-    }
+    if (!gst_va_pool_get_buffer_size (pool, &size))
+      goto cleanup;
   }
 
   if (update_allocator)
@@ -435,9 +411,9 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
   base->copy_frames = TRUE;
   base->apply_video_crop = TRUE;
 
+  ret = TRUE;
+
 cleanup:
-  if (ret != TRUE)
-    gst_clear_object (&base->other_pool);
   gst_clear_object (&allocator);
   gst_clear_object (&other_allocator);
   gst_clear_object (&pool);
@@ -493,22 +469,17 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstAllocationParams other_params, params;
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *caps = NULL;
-  GstVideoInfo info;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
-  guint size = 0, min, max, usage_hint;
+  guint other_size = 0, size = 0, min, max, usage_hint;
   gboolean update_pool = FALSE, update_allocator = FALSE;
   gboolean has_videometa, has_video_crop_meta;
-  gboolean dont_use_other_pool = FALSE;
-  gboolean ret = TRUE;
+  gboolean dont_use_other_pool = FALSE, ret = FALSE;
 
   g_assert (base->min_buffers > 0);
 
   gst_query_parse_allocation (query, &caps, NULL);
 
   if (!caps)
-    goto wrong_caps;
-
-  if (!gst_va_video_info_from_caps (&info, NULL, caps))
     goto wrong_caps;
 
   has_videometa = gst_query_find_allocation_meta (query,
@@ -528,7 +499,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   if (!gst_video_is_dma_drm_caps (caps) &&
       ((_need_video_crop (base) && !has_video_crop_meta) ||
           base->apply_video_crop)) {
-    return _decide_allocation_for_video_crop (decoder, query, caps, &info);
+    return _decide_allocation_for_video_crop (decoder, query, caps);
   }
 
   if (gst_query_get_n_allocation_params (query) > 0) {
@@ -561,26 +532,22 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
             "may need other pool for copy frames %" GST_PTR_FORMAT, pool);
         other_pool = pool;
         pool = NULL;
+        other_size = size;
       } else if (dont_use_other_pool) {
         gst_clear_object (&pool);
       }
     }
 
     min += base->min_buffers;
-    size = MAX (size, GST_VIDEO_INFO_SIZE (&info));
-
     update_pool = TRUE;
   } else {
-    size = GST_VIDEO_INFO_SIZE (&info);
     min = base->min_buffers;
     max = 0;
   }
 
   if (!allocator) {
-    if (!(allocator = _create_allocator (base, caps))) {
-      ret = FALSE;
+    if (!(allocator = _create_allocator (base, caps)))
       goto cleanup;
-    }
   }
 
   if (!pool)
@@ -589,7 +556,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   {
     GstStructure *config = gst_buffer_pool_get_config (pool);
 
-    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+    gst_buffer_pool_config_set_params (config, caps, 0, min, max);
     gst_buffer_pool_config_set_allocator (config, allocator, &params);
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -603,10 +570,10 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     gst_buffer_pool_config_set_va_allocation_params (config,
         usage_hint, GST_VA_FEATURE_AUTO);
 
-    if (!gst_buffer_pool_set_config (pool, config)) {
-      ret = FALSE;
+    if (!gst_buffer_pool_set_config (pool, config))
       goto cleanup;
-    }
+    if (!gst_va_pool_get_buffer_size (pool, &size))
+      goto cleanup;
   }
 
   if (update_allocator)
@@ -626,13 +593,22 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       gst_object_replace ((GstObject **) & base->other_pool,
           (GstObject *) other_pool);
     } else {
-      _create_other_pool (base, other_allocator, &other_params, caps, size);
+      gst_clear_object (&base->other_pool);
+      base->other_pool =
+          gst_va_create_other_pool (other_allocator, &other_params, caps,
+          other_size);
+    }
+    if (!base->other_pool) {
+      GST_ERROR_OBJECT (base, "Couldn't configure other pool for copy");
+      goto cleanup;
     }
     GST_DEBUG_OBJECT (base, "Use the other pool for copy %" GST_PTR_FORMAT,
         base->other_pool);
   } else {
     gst_clear_object (&base->other_pool);
   }
+
+  ret = TRUE;
 
 cleanup:
   gst_clear_object (&allocator);
