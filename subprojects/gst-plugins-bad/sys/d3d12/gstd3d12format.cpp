@@ -29,24 +29,6 @@
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_format_debug);
 #define GST_CAT_DEFAULT gst_d3d12_format_debug
 
-guint
-gst_d3d12_get_format_plane_count (GstD3D12Device * device, DXGI_FORMAT format)
-{
-  ID3D12Device *device_handle;
-  HRESULT hr;
-  D3D12_FEATURE_DATA_FORMAT_INFO format_info = { format, 0 };
-
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), 0);
-
-  device_handle = gst_d3d12_device_get_device_handle (device);
-  hr = device_handle->CheckFeatureSupport (D3D12_FEATURE_FORMAT_INFO,
-      &format_info, sizeof (D3D12_FEATURE_DATA_FORMAT_INFO));
-  if (!gst_d3d12_result (hr, device))
-    return 0;
-
-  return format_info.PlaneCount;
-}
-
 GstVideoFormat
 gst_d3d12_dxgi_format_to_gst (DXGI_FORMAT format)
 {

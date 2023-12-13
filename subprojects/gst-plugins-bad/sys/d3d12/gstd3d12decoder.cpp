@@ -21,6 +21,7 @@
 #include <config.h>
 #endif
 
+#include <directx/d3dx12.h>
 #include "gstd3d12decoder.h"
 #include "gstd3d12device.h"
 #include "gstd3d12utils.h"
@@ -784,8 +785,8 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
     size_t alloc_size = GST_ROUND_UP_128 (size) + 1024;
 
     D3D12_HEAP_PROPERTIES heap_prop =
-        CD3D12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-    D3D12_RESOURCE_DESC desc = CD3D12_RESOURCE_DESC::Buffer (alloc_size);
+        CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (alloc_size);
     hr = device_handle->CreateCommittedResource (&heap_prop,
         D3D12_HEAP_FLAG_NONE, &desc,
         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&bitstream));
@@ -892,17 +893,17 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     gst_d3d12_memory_get_subresource_index (dmem, 0, &subresource[0]);
     gst_d3d12_memory_get_subresource_index (dmem, 1, &subresource[1]);
 
-    pre_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+    pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
             D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
             subresource[0]));
-    pre_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+    pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
             D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
             subresource[1]));
 
-    post_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+    post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
             D3D12_RESOURCE_STATE_VIDEO_DECODE_READ, D3D12_RESOURCE_STATE_COMMON,
             subresource[0]));
-    post_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+    post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
             D3D12_RESOURCE_STATE_VIDEO_DECODE_READ, D3D12_RESOURCE_STATE_COMMON,
             subresource[1]));
   }
@@ -912,10 +913,10 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
         gst_buffer_peek_memory (decoder_pic->output_buffer, 0);
     out_resource = gst_d3d12_memory_get_resource_handle (dmem);
 
-    pre_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (out_resource,
+    pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (out_resource,
             D3D12_RESOURCE_STATE_COMMON,
             D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE));
-    post_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (out_resource,
+    post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (out_resource,
             D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
             D3D12_RESOURCE_STATE_COMMON));
   }
@@ -927,17 +928,17 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   gst_d3d12_memory_get_subresource_index (GST_D3D12_MEMORY_CAST (dmem), 1,
       &subresource[1]);
 
-  pre_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+  pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
           D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
           subresource[0]));
-  pre_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+  pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
           D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
           subresource[1]));
 
-  post_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+  post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
           D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE, D3D12_RESOURCE_STATE_COMMON,
           subresource[0]));
-  post_barriers.push_back (CD3D12_RESOURCE_BARRIER::Transition (resource,
+  post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
           D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE, D3D12_RESOURCE_STATE_COMMON,
           subresource[1]));
 
@@ -1034,15 +1035,15 @@ gst_d3d12_decoder_ensure_staging_texture (GstD3D12Decoder * self)
   UINT64 size;
   ID3D12Device *device = gst_d3d12_device_get_device_handle (self->device);
   D3D12_RESOURCE_DESC tex_desc =
-      CD3D12_RESOURCE_DESC::Tex2D (priv->decoder_format,
-      priv->aligned_width, priv->aligned_height);
+      CD3DX12_RESOURCE_DESC::Tex2D (priv->decoder_format,
+      priv->aligned_width, priv->aligned_height, 1, 1);
 
   device->GetCopyableFootprints (&tex_desc, 0, 2, 0, priv->layout, nullptr,
       nullptr, &size);
 
-  D3D12_HEAP_PROPERTIES heap_prop = CD3D12_HEAP_PROPERTIES
+  D3D12_HEAP_PROPERTIES heap_prop = CD3DX12_HEAP_PROPERTIES
       (D3D12_HEAP_TYPE_READBACK);
-  D3D12_RESOURCE_DESC desc = CD3D12_RESOURCE_DESC::Buffer (size);
+  D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (size);
 
   hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
       &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS (&staging));
@@ -1271,15 +1272,15 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
     /* simultaneous access must be enabled already, so,barrier is not needed */
     for (guint i = 0; i < 2; i++) {
       D3D12_TEXTURE_COPY_LOCATION src =
-          CD3D12_TEXTURE_COPY_LOCATION (resource, subresource[i]);
+          CD3DX12_TEXTURE_COPY_LOCATION (resource, subresource[i]);
       D3D12_TEXTURE_COPY_LOCATION dst;
       D3D12_BOX src_box = { 0, };
 
       if (out_resource) {
-        dst = CD3D12_TEXTURE_COPY_LOCATION (out_resource, out_subresource[i]);
+        dst = CD3DX12_TEXTURE_COPY_LOCATION (out_resource, out_subresource[i]);
       } else {
         dst =
-            CD3D12_TEXTURE_COPY_LOCATION (priv->staging.Get (),
+            CD3DX12_TEXTURE_COPY_LOCATION (priv->staging.Get (),
             priv->layout[i]);
       }
 

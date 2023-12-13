@@ -24,6 +24,7 @@
 #include "gstd3d12device.h"
 #include "gstd3d12bufferpool.h"
 #include "gstd3d12utils.h"
+#include <directx/d3dx12.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_buffer_pool_debug);
 #define GST_CAT_DEFAULT gst_d3d12_buffer_pool_debug
@@ -125,7 +126,7 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   guint align = 0;
   D3D12_RESOURCE_DESC *desc;
   D3D12_HEAP_PROPERTIES heap_props =
-      CD3D12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
+      CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
   guint plane_index = 0;
   gsize mem_size = 0;
 

@@ -432,11 +432,3 @@ _gst_d3d12_result (HRESULT hr, GstD3D12Device * device, GstDebugCategory * cat,
   return SUCCEEDED (hr);
 #endif
 }
-
-guint
-gst_d3d12_calculate_subresource (guint mip_slice, guint array_slice,
-    guint plane_slice, guint mip_level, guint array_size)
-{
-  return mip_slice + array_slice * mip_level +
-      plane_slice * mip_level * array_size;
-}

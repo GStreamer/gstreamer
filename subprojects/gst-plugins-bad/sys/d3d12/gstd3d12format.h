@@ -60,9 +60,6 @@ struct _GstD3D12Format
   guint padding[GST_PADDING_LARGE];
 };
 
-guint           gst_d3d12_get_format_plane_count    (GstD3D12Device * device,
-                                                     DXGI_FORMAT format);
-
 GstVideoFormat  gst_d3d12_dxgi_format_to_gst        (DXGI_FORMAT format);
 
 gboolean        gst_d3d12_dxgi_format_to_resource_formats (DXGI_FORMAT format,

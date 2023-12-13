@@ -15,8 +15,11 @@ d3d12_sources = [
   'plugin.cpp',
 ]
 
-extra_args = ['-DGST_USE_UNSTABLE_API']
-extra_dep = []
+extra_args = [
+  '-DGST_USE_UNSTABLE_API',
+  # Disable this warning error. Otherwise d3dx12.h will break build
+  '/wd4062',
+]
 
 d3d12_option = get_option('d3d12')
 if host_system != 'windows' or d3d12_option.disabled()
