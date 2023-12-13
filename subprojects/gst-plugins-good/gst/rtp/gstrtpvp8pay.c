@@ -32,7 +32,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/video/video.h>
 #include "gstrtpelements.h"
-#include "dboolhuff.h"
 #include "gstrtpvp8pay.h"
 #include "gstrtputils.h"
 
@@ -283,7 +282,6 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer,
   guint8 tmp8 = 0;
   guint8 partitions;
   guint offset;
-  BOOL_DECODER bc;
   guint8 *pdata;
 
   if (G_UNLIKELY (buffer_size < 3))
@@ -332,35 +330,57 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer,
   }
 
   offset = keyframe ? 10 : 3;
-  vp8dx_start_decode (&bc, data + offset, size - offset);
+
+  /* Everything below is actually using some form of arithmetic coding, but as
+   * all the bits we're interested in are encoded with 50:50 probability
+   * they're written out as they are and we can just continue using the bit
+   * reader here */
 
   if (keyframe) {
     /* color space (1 bit) and clamping type (1 bit) */
-    vp8dx_decode_bool (&bc, 0x80);
-    vp8dx_decode_bool (&bc, 0x80);
+    if (!gst_bit_reader_skip (&reader, 2))
+      goto error;
   }
 
   /* segmentation_enabled */
-  if (vp8dx_decode_bool (&bc, 0x80)) {
-    guint8 update_mb_segmentation_map = vp8dx_decode_bool (&bc, 0x80);
-    guint8 update_segment_feature_data = vp8dx_decode_bool (&bc, 0x80);
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+    goto error;
+
+  if (tmp8) {
+    guint8 update_mb_segmentation_map;
+    guint8 update_segment_feature_data;
+
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &update_mb_segmentation_map,
+            1))
+      goto error;
+
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &update_segment_feature_data,
+            1))
+      goto error;
 
     if (update_segment_feature_data) {
       /* skip segment feature mode */
-      vp8dx_decode_bool (&bc, 0x80);
+      if (!gst_bit_reader_skip (&reader, 1))
+        goto error;
 
       /* quantizer update */
       for (i = 0; i < 4; i++) {
         /* skip flagged quantizer value (7 bits) and sign (1 bit) */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 8);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (tmp8)
+          if (!gst_bit_reader_skip (&reader, 8))
+            goto error;
       }
 
       /* loop filter update */
       for (i = 0; i < 4; i++) {
         /* skip flagged lf update value (6 bits) and sign (1 bit) */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 7);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (tmp8)
+          if (!gst_bit_reader_skip (&reader, 7))
+            goto error;
       }
     }
 
@@ -368,37 +388,43 @@ gst_rtp_vp8_pay_parse_frame (GstRtpVP8Pay * self, GstBuffer * buffer,
       /* segment prob update */
       for (i = 0; i < 3; i++) {
         /* skip flagged segment prob */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 8);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (!gst_bit_reader_skip (&reader, 8))
+          goto error;
       }
     }
   }
 
   /* skip filter type (1 bit), loop filter level (6 bits) and
    * sharpness level (3 bits) */
-  vp8_decode_value (&bc, 1);
-  vp8_decode_value (&bc, 6);
-  vp8_decode_value (&bc, 3);
+  if (!gst_bit_reader_skip (&reader, 1 + 6 + 3))
+    goto error;
 
   /* loop_filter_adj_enabled */
-  if (vp8dx_decode_bool (&bc, 0x80)) {
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+    goto error;
+  if (tmp8) {
 
     /* delta update */
-    if (vp8dx_decode_bool (&bc, 0x80)) {
+    if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+      goto error;
+    if (tmp8) {
 
       for (i = 0; i < 8; i++) {
         /* 8 updates, 1 bit indicate whether there is one and if follow by a
          * 7 bit update */
-        if (vp8dx_decode_bool (&bc, 0x80))
-          vp8_decode_value (&bc, 7);
+        if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 1))
+          goto error;
+        if (tmp8)
+          if (!gst_bit_reader_skip (&reader, 7))
+            goto error;
       }
     }
   }
 
-  if (vp8dx_bool_error (&bc))
+  if (!gst_bit_reader_get_bits_uint8 (&reader, &tmp8, 2))
     goto error;
-
-  tmp8 = vp8_decode_value (&bc, 2);
 
   partitions = 1 << tmp8;
 

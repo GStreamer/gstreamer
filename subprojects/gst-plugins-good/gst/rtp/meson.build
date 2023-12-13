@@ -1,5 +1,4 @@
 rtp_sources = [
-  'dboolhuff.c',
   'fnv1hash.c',
   'gstbuffermemory.c',
   'gstrtpelement.c',
