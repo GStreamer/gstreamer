@@ -23,10 +23,21 @@ if host_system != 'windows' or d3d12_option.disabled()
   subdir_done()
 endif
 
+if cc.get_id() != 'msvc'
+  if d3d12_option.enabled()
+    error('d3d12 plugin supports only MSVC build')
+  endif
+  subdir_done()
+endif
+
 d3d12_lib = cc.find_library('d3d12', required : d3d12_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d12_option)
+dx_headers_dep = dependency('DirectX-Headers',
+    version: '>= 1.611',
+    allow_fallback: true,
+    required: d3d12_option)
 
-if not gstdxva_dep.found() or not gstd3d11_dep.found() or not d3d12_lib.found() or not dxgi_lib.found()
+if not gstdxva_dep.found() or not gstd3d11_dep.found() or not d3d12_lib.found() or not dxgi_lib.found() or not dx_headers_dep.found()
   if d3d12_option.enabled()
     error('The d3d12 was enabled explicitly, but required GstD3D11 dependencies were not found.')
   endif
@@ -34,10 +45,7 @@ if not gstdxva_dep.found() or not gstd3d11_dep.found() or not d3d12_lib.found() 
 endif
 
 d3d12_headers = [
-  'd3d12.h',
-  'd3d12video.h',
   'dxgi1_6.h',
-  'wrl.h',
 ]
 
 have_d3d12_headers = true
@@ -54,30 +62,14 @@ if not have_d3d12_headers
   subdir_done()
 endif
 
-if not gst_debug_disabled and cc.has_header('d3d12sdklayers.h')
-  extra_args += ['-DHAVE_D3D12_SDKLAYERS_H']
-  if cc.has_header_symbol('d3d12sdklayers.h', 'ID3D12Debug5')
-    extra_args += ['-DHAVE_D3D12DEBUG5']
-  endif
-endif
-
-# MinGW 32bits compiler seems to be complaining about redundant-decls
-# when ComPtr is in use. Let's just disable the warning
-if cc.get_id() != 'msvc'
-  extra_mingw_args = cc.get_supported_arguments([
-    '-Wno-redundant-decls',
-  ])
-
-  extra_args += extra_mingw_args
-endif
-
 gstd3d12 = library('gstd3d12',
   d3d12_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep,
-                  gstdxva_dep, gstd3d11_dep, d3d12_lib, dxgi_lib],
+                  gstdxva_dep, gstd3d11_dep, d3d12_lib, dxgi_lib,
+                  dx_headers_dep],
   install : true,
   install_dir : plugins_install_dir,
 )
