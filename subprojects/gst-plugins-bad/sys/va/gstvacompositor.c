@@ -580,8 +580,6 @@ gst_va_compositor_propose_allocation (GstAggregator * agg,
   usage_hint = va_get_surface_usage_hint (self->display,
       VAEntrypointVideoProc, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
 
-  size = GST_VIDEO_INFO_SIZE (&info);
-
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
     if (!GST_IS_VA_DMABUF_ALLOCATOR (allocator)
@@ -599,12 +597,15 @@ gst_va_compositor_propose_allocation (GstAggregator * agg,
 
   /* Now we have a VA-based allocator */
 
-  pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint,
+  pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
     goto config_failed;
   }
+
+  if (!gst_va_pool_get_buffer_size (pool, &size))
+    goto config_failed;
 
   if (update_allocator)
     gst_query_set_nth_allocation_param (query, 0, allocator, &params);
@@ -803,7 +804,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   GstAllocationParams params = { 0, };
   GstCaps *caps;
   GstVideoInfo info;
-  guint size, usage_hint;
+  guint usage_hint;
 
   if (pad->pool)
     return pad->pool;
@@ -822,10 +823,8 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   usage_hint = va_get_surface_usage_hint (self->display,
       VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
 
-  size = GST_VIDEO_INFO_SIZE (&info);
-
   allocator = gst_va_compositor_allocator_from_caps (self, caps);
-  pad->pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint,
+  pad->pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
   gst_caps_unref (caps);
 

@@ -465,7 +465,6 @@ gst_buffer_pool_config_set_va_alignment (GstStructure * config,
 gboolean
 gst_va_pool_requires_video_meta (GstBufferPool * pool)
 {
-
   g_return_val_if_fail (GST_IS_VA_POOL (pool), FALSE);
 
   return GST_VA_POOL (pool)->force_videometa;
@@ -474,7 +473,6 @@ gst_va_pool_requires_video_meta (GstBufferPool * pool)
 /**
  * gst_va_pool_new_with_config:
  * @caps: the #GstCaps of the buffers handled by the new pool.
- * @size: the size of the frames to hold.
  * @min_buffers: minimum number of frames to create.
  * @max_buffers: maximum number of frames to create.
  * @usage_hint: VA usage hint
@@ -490,7 +488,7 @@ gst_va_pool_requires_video_meta (GstBufferPool * pool)
  * Since: 1.22
  */
 GstBufferPool *
-gst_va_pool_new_with_config (GstCaps * caps, guint size, guint min_buffers,
+gst_va_pool_new_with_config (GstCaps * caps, guint min_buffers,
     guint max_buffers, guint usage_hint, GstVaFeature use_derived,
     GstAllocator * allocator, GstAllocationParams * alloc_params)
 {
@@ -500,8 +498,8 @@ gst_va_pool_new_with_config (GstCaps * caps, guint size, guint min_buffers,
   pool = gst_va_pool_new ();
 
   config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
-      max_buffers);
+  /* ignore the size since it's calculated by the driver */
+  gst_buffer_pool_config_set_params (config, caps, 0, min_buffers, max_buffers);
   gst_buffer_pool_config_set_va_allocation_params (config, usage_hint,
       use_derived);
   gst_buffer_pool_config_set_allocator (config, allocator, alloc_params);
@@ -511,4 +509,29 @@ gst_va_pool_new_with_config (GstCaps * caps, guint size, guint min_buffers,
     gst_clear_object (&pool);
 
   return pool;
+}
+
+/**
+ * gst_va_pool_get_buffer_size:
+ * @pool: a #GstBufferPool
+ * @size: (out) (allow-null-none): the declared surface size
+ *
+ * Helper function to retrieve the VA surface size provided by @pool.
+ *
+ * Returns: whether the surface size was retrieved.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_va_pool_get_buffer_size (GstBufferPool * pool, guint * size)
+{
+  gboolean ret;
+  GstStructure *config;
+
+  g_return_val_if_fail (GST_IS_VA_POOL (pool), FALSE);
+
+  config = gst_buffer_pool_get_config (pool);
+  ret = gst_buffer_pool_config_get_params (config, NULL, size, NULL, NULL);
+  gst_structure_free (config);
+  return ret && *size > 0;
 }

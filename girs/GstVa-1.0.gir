@@ -794,10 +794,6 @@ the most widely used VA drivers.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the #GstCaps of the buffers handled by the new pool.</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
-          <parameter name="size" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the size of the frames to hold.</doc>
-            <type name="guint" c:type="guint"/>
-          </parameter>
           <parameter name="min_buffers" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">minimum number of frames to create.</doc>
             <type name="guint" c:type="guint"/>
@@ -825,6 +821,24 @@ the most widely used VA drivers.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="get_buffer_size" c:identifier="gst_va_pool_get_buffer_size" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">Helper function to retrieve the VA surface size provided by @pool.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">whether the surface size was retrieved.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="pool" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">a #GstBufferPool</doc>
+            <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
+          </parameter>
+          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the declared surface size</doc>
+            <type name="guint" c:type="guint*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="requires_video_meta" c:identifier="gst_va_pool_requires_video_meta" version="1.22">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">Retuns: %TRUE if @pool always add #GstVideoMeta to its
     buffers. Otherwise, %FALSE.</doc>

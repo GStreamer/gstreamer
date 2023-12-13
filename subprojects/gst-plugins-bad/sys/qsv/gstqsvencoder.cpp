@@ -981,8 +981,7 @@ gst_qsv_encoder_prepare_va_pool (GstQsvEncoder * self,
 
   gst_allocation_params_init (&params);
 
-  priv->internal_pool = gst_va_pool_new_with_config (caps,
-      GST_VIDEO_INFO_SIZE (aligned_info), 0, 0,
+  priv->internal_pool = gst_va_pool_new_with_config (caps, 0, 0,
       VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC, GST_VA_FEATURE_AUTO,
       allocator, &params);
   gst_object_unref (allocator);
@@ -1592,8 +1591,7 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
     return FALSE;
   }
 
-  pool = gst_va_pool_new_with_config (caps,
-      GST_VIDEO_INFO_SIZE (&info), priv->surface_pool->len, 0,
+  pool = gst_va_pool_new_with_config (caps, priv->surface_pool->len, 0,
       VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC, GST_VA_FEATURE_AUTO,
       allocator, &params);
 

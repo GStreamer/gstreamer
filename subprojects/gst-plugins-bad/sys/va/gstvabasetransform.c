@@ -240,7 +240,6 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   GstAllocationParams params = { 0, };
   GstBufferPool *pool;
   GstCaps *caps;
-  GstVideoInfo info;
   gboolean update_allocator = FALSE;
   guint size, usage_hint;
 
@@ -261,15 +260,8 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
   if (!caps)
     return FALSE;
 
-  if (!gst_va_video_info_from_caps (&info, NULL, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
   usage_hint = va_get_surface_usage_hint (self->display,
       VAEntrypointVideoProc, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
-
-  size = GST_VIDEO_INFO_SIZE (&info);
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     gst_query_parse_nth_allocation_param (query, 0, &allocator, &params);
@@ -286,8 +278,8 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
       return FALSE;
   }
 
-  pool = gst_va_pool_new_with_config (caps, size, 1 + self->extra_min_buffers,
-      0, usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
+  pool = gst_va_pool_new_with_config (caps, 1 + self->extra_min_buffers, 0,
+      usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
     goto config_failed;
@@ -297,6 +289,9 @@ gst_va_base_transform_propose_allocation (GstBaseTransform * trans,
     gst_query_set_nth_allocation_param (query, 0, allocator, &params);
   else
     gst_query_add_allocation_param (query, allocator, &params);
+
+  if (!gst_va_pool_get_buffer_size (pool, &size))
+    goto config_failed;
 
   gst_query_add_allocation_pool (query, pool, size, 1 + self->extra_min_buffers,
       0);
@@ -760,8 +755,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
   GstCaps *caps;
-  GstVideoInfo in_info;
-  guint size, usage_hint;
+  guint usage_hint;
 
   if (self->priv->sinkpad_pool)
     return self->priv->sinkpad_pool;
@@ -787,21 +781,13 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
     gst_caps_set_simple (caps, "height", G_TYPE_INT,
         self->priv->uncropped_height, NULL);
 
-  if (!gst_video_info_from_caps (&in_info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-    gst_caps_unref (caps);
-    return NULL;
-  }
-
   usage_hint = va_get_surface_usage_hint (self->display,
       VAEntrypointVideoProc, GST_PAD_SINK, FALSE);
-
-  size = GST_VIDEO_INFO_SIZE (&in_info);
 
   allocator = gst_va_base_transform_allocator_from_caps (self, caps);
   g_assert (GST_IS_VA_ALLOCATOR (allocator));
 
-  self->priv->sinkpad_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
+  self->priv->sinkpad_pool = gst_va_pool_new_with_config (caps, 1, 0,
       usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
   if (!self->priv->sinkpad_pool) {
     gst_caps_unref (caps);

@@ -429,10 +429,8 @@ gst_msdk_create_va_pool (GstMsdkVPP * thiz, GstVideoInfo * info,
   } else
     aligned_caps = gst_video_info_to_caps (info);
 
-  pool =
-      gst_va_pool_new_with_config (aligned_caps,
-      GST_VIDEO_INFO_SIZE (info), min_buffers, 0,
-      usage_hint, GST_VA_FEATURE_AUTO, allocator, &alloc_params);
+  pool = gst_va_pool_new_with_config (aligned_caps, min_buffers, 0, usage_hint,
+      GST_VA_FEATURE_AUTO, allocator, &alloc_params);
 
   gst_object_unref (allocator);
   gst_caps_unref (aligned_caps);

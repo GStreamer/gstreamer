@@ -201,7 +201,7 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   GstVaBaseEnc *base = GST_VA_BASE_ENC (element);
   GstAllocator *allocator;
   GstAllocationParams params = { 0, };
-  guint size, usage_hint;
+  guint usage_hint;
   GArray *surface_formats = NULL;
   GstCaps *caps = NULL;
 
@@ -219,8 +219,6 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
 
   gst_allocation_params_init (&params);
 
-  size = GST_VIDEO_INFO_SIZE (&base->in_info);
-
   surface_formats = gst_va_encoder_get_surface_formats (base->encoder);
 
   allocator = gst_va_allocator_new (base->display, surface_formats);
@@ -228,8 +226,8 @@ _get_sinkpad_pool (GstElement * element, gpointer data)
   usage_hint = va_get_surface_usage_hint (base->display,
       VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
 
-  base->priv->raw_pool = gst_va_pool_new_with_config (caps, size, 1, 0,
-      usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
+  base->priv->raw_pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
+      GST_VA_FEATURE_AUTO, allocator, &params);
   gst_clear_caps (&caps);
 
   if (!base->priv->raw_pool) {
@@ -356,38 +354,33 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   GstAllocationParams params = { 0, };
   GstBufferPool *pool;
   GstCaps *caps;
-  GstVideoInfo info;
   gboolean need_pool = FALSE;
-  guint size, usage_hint;
+  guint size = 0, usage_hint;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps)
     return FALSE;
 
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (base, "Cannot parse caps %" GST_PTR_FORMAT, caps);
-    return FALSE;
-  }
-
   usage_hint = va_get_surface_usage_hint (base->display,
       VAEntrypointEncSlice, GST_PAD_SINK, gst_video_is_dma_drm_caps (caps));
-
-  size = GST_VIDEO_INFO_SIZE (&info);
 
   gst_allocation_params_init (&params);
 
   if (!(allocator = _allocator_from_caps (base, caps)))
     return FALSE;
 
-  pool = gst_va_pool_new_with_config (caps, size, 1, 0, usage_hint,
+  pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
     goto config_failed;
   }
 
+  if (!gst_va_pool_get_buffer_size (pool, &size))
+    goto config_failed;
+
   gst_query_add_allocation_param (query, allocator, &params);
-  gst_query_add_allocation_pool (query, pool, size, 0, 0);
+  gst_query_add_allocation_pool (query, pool, size, 1, 0);
 
   GST_DEBUG_OBJECT (base,
       "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,

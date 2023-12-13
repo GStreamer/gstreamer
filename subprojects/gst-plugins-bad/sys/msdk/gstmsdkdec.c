@@ -1772,9 +1772,7 @@ gst_msdk_create_va_pool (GstMsdkDec * thiz, GstVideoInfo * info,
     caps = gst_video_info_to_caps (info);
   }
 
-  pool =
-      gst_va_pool_new_with_config (caps,
-      GST_VIDEO_INFO_SIZE (info), num_buffers, num_buffers,
+  pool = gst_va_pool_new_with_config (caps, num_buffers, num_buffers,
       VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO,
       allocator, &alloc_params);
 

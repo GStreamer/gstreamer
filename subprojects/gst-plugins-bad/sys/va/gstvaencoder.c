@@ -310,7 +310,6 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
   GstVideoInfo info;
   GstAllocationParams params = { 0, };
   GstBufferPool *pool;
-  guint size;
   GstCaps *caps = NULL;
 
   gst_video_info_set_format (&info, format, coded_width, coded_height);
@@ -318,17 +317,13 @@ _create_reconstruct_pool (GstVaDisplay * display, GArray * surface_formats,
   usage_hint = va_get_surface_usage_hint (display,
       VAEntrypointEncSlice, GST_PAD_SINK, FALSE);
 
-  size = GST_VIDEO_INFO_SIZE (&info);
-
   caps = gst_video_info_to_caps (&info);
   gst_caps_set_features_simple (caps,
       gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
 
   allocator = gst_va_allocator_new (display, surface_formats);
 
-  gst_allocation_params_init (&params);
-
-  pool = gst_va_pool_new_with_config (caps, size, 0, max_buffers, usage_hint,
+  pool = gst_va_pool_new_with_config (caps, 0, max_buffers, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
 
   gst_clear_object (&allocator);

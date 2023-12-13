@@ -293,8 +293,8 @@ _create_internal_pool (GstVaAV1Dec * self, gint width, gint height)
   usage_hint = va_get_surface_usage_hint (base->display,
       VAEntrypointVLD, GST_PAD_SRC, FALSE);
 
-  pool = gst_va_pool_new_with_config (caps, GST_VIDEO_INFO_SIZE (&info),
-      1, 0, usage_hint, GST_VA_FEATURE_AUTO, allocator, &params);
+  pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
+      GST_VA_FEATURE_AUTO, allocator, &params);
 
   gst_clear_caps (&caps);
   gst_object_unref (allocator);
