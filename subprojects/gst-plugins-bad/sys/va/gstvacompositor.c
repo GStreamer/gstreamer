@@ -632,25 +632,6 @@ config_failed:
   }
 }
 
-static GstBufferPool *
-_create_other_pool (GstAllocator * allocator, GstAllocationParams * params,
-    GstCaps * caps, guint size)
-{
-  GstBufferPool *pool = NULL;
-  GstStructure *config;
-
-  pool = gst_video_buffer_pool_new ();
-  config = gst_buffer_pool_get_config (pool);
-
-  gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
-  gst_buffer_pool_config_set_allocator (config, allocator, params);
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    gst_clear_object (&pool);
-  }
-
-  return pool;
-}
-
 /* configure the allocation query that was answered downstream */
 static gboolean
 gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
@@ -663,20 +644,13 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *caps = NULL;
   GstStructure *config;
-  GstVideoInfo info;
-  guint min, max, size = 0, usage_hint;
+  guint min, max, other_size = 0, size = 0, usage_hint;
   gboolean update_pool, update_allocator, has_videometa, copy_frames;
-  gboolean dont_use_other_pool = FALSE;
+  gboolean dont_use_other_pool = FALSE, ret = FALSE;;
 
   gst_query_parse_allocation (query, &caps, NULL);
-
-  gst_allocation_params_init (&other_params);
-  gst_allocation_params_init (&params);
-
-  if (!gst_video_info_from_caps (&info, caps)) {
-    GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+  if (!caps)
     return FALSE;
-  }
 
   if (gst_query_get_n_allocation_params (query) > 0) {
     GstVaDisplay *display;
@@ -707,6 +681,7 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
             "may need other pool for copy frames %" GST_PTR_FORMAT, pool);
         other_pool = pool;
         pool = NULL;
+        other_size = size;
       } else if (dont_use_other_pool) {
         gst_clear_object (&pool);
       }
@@ -714,36 +689,45 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
 
     update_pool = TRUE;
   } else {
-    size = GST_VIDEO_INFO_SIZE (&info);
     min = 1;
     max = 0;
     update_pool = FALSE;
   }
 
   if (!allocator) {
-    if (gst_caps_is_dmabuf (caps) && GST_VIDEO_INFO_IS_RGB (&info))
-      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
     if (!(allocator = gst_va_compositor_allocator_from_caps (self, caps)))
-      return FALSE;
+      goto bail;
   }
 
   if (!pool)
     pool = gst_va_pool_new ();
 
-  usage_hint = va_get_surface_usage_hint (self->display,
-      VAEntrypointVideoProc, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+  {
+    GstVideoInfo info;
+
+    if (!gst_va_video_info_from_caps (&info, NULL, caps)) {
+      GST_ERROR_OBJECT (self, "Cannot parse caps %" GST_PTR_FORMAT, caps);
+      goto bail;
+    }
+
+    if (gst_caps_is_dmabuf (caps) && GST_VIDEO_INFO_IS_RGB (&info)) {
+      usage_hint = VA_SURFACE_ATTRIB_USAGE_HINT_GENERIC;
+    } else {
+      usage_hint = va_get_surface_usage_hint (self->display,
+          VAEntrypointVideoProc, GST_PAD_SRC, gst_video_is_dma_drm_caps (caps));
+    }
+  }
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_allocator (config, allocator, &params);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_set_params (config, caps, 0, min, max);
   gst_buffer_pool_config_set_va_allocation_params (config, usage_hint,
       GST_VA_FEATURE_AUTO);
-  if (!gst_buffer_pool_set_config (pool, config)) {
-    gst_object_unref (allocator);
-    gst_object_unref (pool);
-    return FALSE;
-  }
+  if (!gst_buffer_pool_set_config (pool, config))
+    goto bail;
+  if (!gst_va_pool_get_buffer_size (pool, &size))
+    goto bail;
 
   if (GST_IS_VA_DMABUF_ALLOCATOR (allocator)) {
     GstVideoInfoDmaDrm dma_info;
@@ -774,25 +758,32 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
       gst_object_replace ((GstObject **) & self->other_pool,
           (GstObject *) other_pool);
     } else {
+      gst_clear_object (&self->other_pool);
       self->other_pool =
-          _create_other_pool (other_allocator, &other_params, caps, size);
+          gst_va_create_other_pool (other_allocator, &other_params, caps,
+          other_size);
     }
+    if (!self->other_pool)
+      goto bail;
     GST_DEBUG_OBJECT (self, "Use the other pool for copy %" GST_PTR_FORMAT,
         self->other_pool);
   } else {
     gst_clear_object (&self->other_pool);
   }
 
+  ret = TRUE;
+
   GST_DEBUG_OBJECT (self,
       "decided pool %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
       pool, allocator);
 
+bail:
   gst_object_unref (allocator);
   gst_object_unref (pool);
   gst_clear_object (&other_allocator);
   gst_clear_object (&other_pool);
 
-  return TRUE;
+  return ret;
 }
 
 static GstBufferPool *
