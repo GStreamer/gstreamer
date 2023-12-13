@@ -1,12 +1,10 @@
 [wrap-file]
-directory = pango-1.50.14
-source_url = https://download.gnome.org/sources/pango/1.50/pango-1.50.14.tar.xz
-source_filename = pango-1.50.14.tar.xz
-source_hash = 1d67f205bfc318c27a29cfdfb6828568df566795df0cb51d2189cde7f2d581e8
+directory = pango-1.51.0
+source_url = https://download.gnome.org/sources/pango/1.51/pango-1.51.0.tar.xz
+source_filename = pango-1.51.0.tar.xz
+source_hash = 74efc109ae6f903bbe6af77eaa2ac6094b8ee245a2e23f132a7a8f0862d1a9f5
+source_fallback_url = https://github.com/mesonbuild/wrapdb/releases/download/pango_1.51.0-1/pango-1.51.0.tar.xz
+wrapdb_version = 1.51.0-1
 
 [provide]
-pango = libpango_dep
-pangoft2 = libpangoft2_dep
-pangoxft = libpangoxft_dep
-pangowin32 = libpangowin32_dep
-pangocairo = libpangocairo_dep
+dependency_names = pango
