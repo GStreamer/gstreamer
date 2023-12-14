@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_V4L2_CODEC_ALPHA_DECODE_BIN_H__
-#define __GST_V4L2_CODEC_ALPHA_DECODE_BIN_H__
+#pragma once
 
 #include <gst/gst.h>
 #include <gstv4l2decoder.h>
@@ -47,11 +46,10 @@ struct _GstV4l2CodecAlphaDecodeBinClass
 void gst_v4l2_codec_alpha_decode_bin_register (GstPlugin * plugin,
                                                GClassInitFunc class_init,
                                                gconstpointer class_data,
-                                               const gchar * element_name_tmpl, 
+                                               const gchar * element_name_tmpl,
                                                GstV4l2CodecDevice * device,
                                                guint rank);
 
 
 
 G_END_DECLS
-#endif /* __GST_V4L2_CODEC_ALPHA_DECODE_BIN_H__ */

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GST_V4L2_CODEC_ALLOCATOR_H_
-#define _GST_V4L2_CODEC_ALLOCATOR_H_
+#pragma once
 
 #include <gst/allocators/allocators.h>
 #include <gst/gst.h>
@@ -55,5 +54,3 @@ void                    gst_v4l2_codec_allocator_set_flushing (GstV4l2CodecAlloc
                                                                gboolean flushing);
 
 guint32                 gst_v4l2_codec_memory_get_index (GstMemory * mem);
-
-#endif /* _GST_V4L2_CODECS_ALLOCATOR_H_ */

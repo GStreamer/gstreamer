@@ -17,8 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_V4L2_CODEC_AV1_DEC_H__
-#define __GST_V4L2_CODEC_AV1_DEC_H__
+#pragma once
 
 #define GST_USE_UNSTABLE_API
 #include <gst/codecs/gstav1decoder.h>
@@ -50,5 +49,3 @@ void  gst_v4l2_codec_av1_dec_register (GstPlugin * plugin,
                                        guint rank);
 
 G_END_DECLS
-
-#endif /* __GST_D3D11_AV1_DEC_H__ */

@@ -18,8 +18,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GST_V4L2_CODEC_DEVICE_H_
-#define _GST_V4L2_CODEC_DEVICE_H_
+#pragma once
 
 #include <gst/gst.h>
 
@@ -40,5 +39,3 @@ typedef struct {
 GType  gst_v4l2_codec_device_get_type (void);
 GList *gst_v4l2_codec_find_devices (void);
 void   gst_v4l2_codec_device_list_free (GList *devices);
-
-#endif /* _GST_V4L2_CODECS_DEVICE_H_ */
