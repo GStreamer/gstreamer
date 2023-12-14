@@ -27,6 +27,14 @@
 #include "gstv4l2codecalphadecodebin.h"
 #include "gstv4l2decoder.h"
 
+/* When wrapping, use the original rank plus this offset. The ad-hoc rules is
+ * that hardware implementation will use PRIMARY+1 or +2 to override the
+ * software decoder, so the offset must be large enough to jump over those.
+ * This should also be small enough so that a marginal (64) or secondary
+ * wrapper does not cross the PRIMARY line.
+ */
+#define GST_V4L2_CODEC_ALPHA_DECODE_BIN_RANK_OFFSET 10
+
 GST_DEBUG_CATEGORY_STATIC (v4l2_codecalphadecodebin_debug);
 #define GST_CAT_DEFAULT (v4l2_codecalphadecodebin_debug)
 
