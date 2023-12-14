@@ -21,6 +21,9 @@
 #include <config.h>
 #endif
 
+#define GST_USE_UNSTABLE_API
+#include <gst/codecs/gsth264decoder.h>
+
 #include "gstv4l2codecallocator.h"
 #include "gstv4l2codech264dec.h"
 #include "gstv4l2codecpool.h"
@@ -35,6 +38,11 @@
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_h264dec_debug);
 #define GST_CAT_DEFAULT v4l2_h264dec_debug
+
+#define GST_TYPE_V4L2_CODEC_H264_DEC \
+  (gst_v4l2_codec_h264_dec_get_type())
+#define GST_V4L2_CODEC_H264_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2_CODEC_H264_DEC,GstV4l2CodecH264Dec))
 
 enum
 {
@@ -59,6 +67,15 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
 
 static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
 static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
+
+typedef struct _GstV4l2CodecH264Dec GstV4l2CodecH264Dec;
+typedef struct _GstV4l2CodecH264DecClass GstV4l2CodecH264DecClass;
+
+struct _GstV4l2CodecH264DecClass
+{
+  GstH264DecoderClass parent_class;
+  GstV4l2CodecDevice *device;
+};
 
 struct _GstV4l2CodecH264Dec
 {
@@ -99,6 +116,8 @@ struct _GstV4l2CodecH264Dec
   GstMemory *bitstream;
   GstMapInfo bitstream_map;
 };
+
+static GType gst_v4l2_codec_h264_dec_get_type (void);
 
 G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecH264Dec, gst_v4l2_codec_h264_dec,
     GST_TYPE_H264_DECODER);

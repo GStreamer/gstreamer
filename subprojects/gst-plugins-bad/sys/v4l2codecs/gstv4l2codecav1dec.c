@@ -23,6 +23,9 @@
 #include "config.h"
 #endif
 
+#define GST_USE_UNSTABLE_API
+#include <gst/codecs/gstav1decoder.h>
+
 #include "gstv4l2codecallocator.h"
 #include "gstv4l2codecav1dec.h"
 #include "gstv4l2codecpool.h"
@@ -37,6 +40,11 @@
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_av1dec_debug);
 #define GST_CAT_DEFAULT v4l2_av1dec_debug
+
+#define GST_TYPE_V4L2_CODEC_AV1_DEC \
+  (gst_v4l2_codec_av1_dec_get_type())
+#define GST_V4L2_CODEC_AV1_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2_CODEC_AV1_DEC,GstV4l2CodecAV1Dec))
 
 /* Used to mark picture that have been outputted */
 #define FLAG_PICTURE_HOLDS_BUFFER GST_MINI_OBJECT_FLAG_LAST
@@ -61,6 +69,15 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
 
 static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
 static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
+
+typedef struct _GstV4l2CodecAV1Dec GstV4l2CodecAV1Dec;
+typedef struct _GstV4l2CodecAV1DecClass GstV4l2CodecAV1DecClass;
+
+struct _GstV4l2CodecAV1DecClass
+{
+  GstAV1DecoderClass parent_class;
+  GstV4l2CodecDevice *device;
+};
 
 struct _GstV4l2CodecAV1Dec
 {
@@ -99,6 +116,8 @@ struct _GstV4l2CodecAV1Dec
   GstMemory *bitstream;
   GstMapInfo bitstream_map;
 };
+
+static GType gst_v4l2_codec_av1_dec_get_type (void);
 
 G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecAV1Dec, gst_v4l2_codec_av1_dec,
     GST_TYPE_AV1_DECODER);

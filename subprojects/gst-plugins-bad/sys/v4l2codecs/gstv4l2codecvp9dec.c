@@ -22,6 +22,9 @@
 #include <config.h>
 #endif
 
+#define GST_USE_UNSTABLE_API
+#include <gst/codecs/gstvp9decoder.h>
+
 #include "gstv4l2codecallocator.h"
 #include "gstv4l2codecalphadecodebin.h"
 #include "gstv4l2codecpool.h"
@@ -32,6 +35,11 @@
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_vp9dec_debug);
 #define GST_CAT_DEFAULT v4l2_vp9dec_debug
+
+#define GST_TYPE_V4L2_CODEC_VP9_DEC \
+  (gst_v4l2_codec_vp9_dec_get_type())
+#define GST_V4L2_CODEC_VP9_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2_CODEC_VP9_DEC,GstV4l2CodecVp9Dec))
 
 /* Used to mark picture that have been outputed */
 #define FLAG_PICTURE_HOLDS_BUFFER GST_MINI_OBJECT_FLAG_LAST
@@ -65,6 +73,15 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
 static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
 static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
 
+typedef struct _GstV4l2CodecVp9Dec GstV4l2CodecVp9Dec;
+typedef struct _GstV4l2CodecVp9DecClass GstV4l2CodecVp9DecClass;
+
+struct _GstV4l2CodecVp9DecClass
+{
+  GstVp9DecoderClass parent_class;
+  GstV4l2CodecDevice *device;
+};
+
 struct _GstV4l2CodecVp9Dec
 {
   GstVp9Decoder parent;
@@ -97,6 +114,8 @@ struct _GstV4l2CodecVp9Dec
   guint subsampling_x;
   guint subsampling_y;
 };
+
+static GType gst_v4l2_codec_vp9_dec_get_type (void);
 
 G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecVp9Dec, gst_v4l2_codec_vp9_dec,
     GST_TYPE_VP9_DECODER);

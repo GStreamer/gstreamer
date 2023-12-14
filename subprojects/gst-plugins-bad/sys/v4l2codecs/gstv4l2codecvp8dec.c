@@ -21,6 +21,9 @@
 #include <config.h>
 #endif
 
+#define GST_USE_UNSTABLE_API
+#include <gst/codecs/gstvp8decoder.h>
+
 #include "gstv4l2codecallocator.h"
 #include "gstv4l2codecalphadecodebin.h"
 #include "gstv4l2codecpool.h"
@@ -35,6 +38,11 @@
 
 GST_DEBUG_CATEGORY_STATIC (v4l2_vp8dec_debug);
 #define GST_CAT_DEFAULT v4l2_vp8dec_debug
+
+#define GST_TYPE_V4L2_CODEC_VP8_DEC \
+  (gst_v4l2_codec_vp8_dec_get_type())
+#define GST_V4L2_CODEC_VP8_DEC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_V4L2_CODEC_VP8_DEC,GstV4l2CodecVp8Dec))
 
 enum
 {
@@ -64,6 +72,15 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
 static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
 static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
 
+typedef struct _GstV4l2CodecVp8Dec GstV4l2CodecVp8Dec;
+typedef struct _GstV4l2CodecVp8DecClass GstV4l2CodecVp8DecClass;
+
+struct _GstV4l2CodecVp8DecClass
+{
+  GstVp8DecoderClass parent_class;
+  GstV4l2CodecDevice *device;
+};
+
 struct _GstV4l2CodecVp8Dec
 {
   GstVp8Decoder parent;
@@ -86,6 +103,8 @@ struct _GstV4l2CodecVp8Dec
   GstMemory *bitstream;
   GstMapInfo bitstream_map;
 };
+
+static GType gst_v4l2_codec_vp8_dec_get_type (void);
 
 G_DEFINE_ABSTRACT_TYPE (GstV4l2CodecVp8Dec, gst_v4l2_codec_vp8_dec,
     GST_TYPE_VP8_DECODER);
