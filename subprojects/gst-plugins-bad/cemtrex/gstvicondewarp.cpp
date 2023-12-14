@@ -282,15 +282,30 @@ bool DewarpPlugin::calibrateLens(std::string format, int width, int height, GstC
   }
   else
 	{
-    bool ok;
+    bool ok = false;
+    GstCaps* toCaps = nullptr;
+    GstSample* toSample = nullptr;
+    GstSample* fromSample = nullptr;
+
 		// Calibration using a different format is not as efficient as RGBA
-		GstCaps* toCaps = gst_caps_from_string("video/x-raw(memory:D3D11Memory), format = (string)RGBA");
-		GstSample* fromSample = gst_sample_new(originalInputBuffer, caps, NULL, NULL);
-    GstSample* toSample = gst_video_convert_sample(fromSample, toCaps, GST_CLOCK_TIME_NONE, NULL);
-    ok = m_buffers.setInputBuffer(gst_sample_get_buffer(toSample), width, height);
-    gst_sample_unref(toSample);
-    gst_sample_unref(fromSample);
-    gst_caps_unref(toCaps);
+    do {
+      toCaps = gst_caps_from_string("video/x-raw(memory:D3D11Memory), format = (string)RGBA");
+      fromSample = gst_sample_new(originalInputBuffer, caps, NULL, NULL);
+      if (fromSample == nullptr)
+        break;
+      toSample = gst_video_convert_sample(fromSample, toCaps, GST_CLOCK_TIME_NONE, NULL);
+      if (toSample == nullptr)
+        break;
+
+      ok = m_buffers.setInputBuffer(gst_sample_get_buffer(toSample), width, height);
+    } while (0);
+
+    if (toSample)
+      gst_sample_unref(toSample);
+    if (fromSample)
+      gst_sample_unref(fromSample);
+    if (toCaps)
+      gst_caps_unref(toCaps);
     if (!ok)
       return false;
 
