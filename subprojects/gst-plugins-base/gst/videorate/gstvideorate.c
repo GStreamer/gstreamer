@@ -1407,7 +1407,7 @@ gst_video_rate_propose_allocation (GstBaseTransform * trans,
 
       gst_query_parse_nth_allocation_pool (query, i, &pool, &size, &min, &max);
 
-      if (min == max) {
+      if (max != 0 && min == max) {
         if (pool)
           gst_object_unref (pool);
         gst_query_remove_nth_allocation_pool (query, i);
