@@ -82,17 +82,7 @@ typedef enum
 typedef enum
 {
   GST_D3D12_ALLOCATION_FLAG_DEFAULT = 0,
-  GST_D3D12_ALLOCATION_FLAG_TEXTURE_ARRAY = (1 << 0),
 } GstD3D12AllocationFlags;
-
-struct _GstD3D12AllocationParams
-{
-  D3D12_RESOURCE_DESC desc[GST_VIDEO_MAX_PLANES];
-  GstVideoInfo info;
-  GstVideoInfo aligned_info;
-  GstD3D12Format d3d12_format;
-  GstD3D12AllocationFlags flags;
-};
 
 GType                      gst_d3d12_allocation_params_get_type (void);
 
@@ -107,6 +97,12 @@ void                       gst_d3d12_allocation_params_free     (GstD3D12Allocat
 
 gboolean                   gst_d3d12_allocation_params_alignment (GstD3D12AllocationParams * parms,
                                                                   const GstVideoAlignment * align);
+
+gboolean                   gst_d3d12_allocation_params_set_resource_flags (GstD3D12AllocationParams * params,
+                                                                           D3D12_RESOURCE_FLAGS resource_flags);
+
+gboolean                   gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
+                                                                       guint size);
 
 struct _GstD3D12Memory
 {

@@ -23,6 +23,7 @@
 
 #include "gstd3d12device.h"
 #include "gstd3d12bufferpool.h"
+#include "gstd3d12memory-private.h"
 #include "gstd3d12utils.h"
 #include <directx/d3dx12.h>
 
@@ -123,12 +124,12 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstCaps *caps = nullptr;
   guint min_buffers, max_buffers;
   gboolean ret = TRUE;
-  guint align = 0;
-  D3D12_RESOURCE_DESC *desc;
+  D3D12_RESOURCE_DESC desc[GST_VIDEO_MAX_PLANES];
   D3D12_HEAP_PROPERTIES heap_props =
       CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
   guint plane_index = 0;
   gsize mem_size = 0;
+  gsize total_offset = 0;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, nullptr, &min_buffers,
           &max_buffers)) {
@@ -165,54 +166,40 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
   }
 
-  desc = priv->d3d12_params->desc;
-  switch (desc[0].Format) {
-    case DXGI_FORMAT_NV12:
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-      align = 2;
-      break;
-    default:
-      break;
-  }
-
-  /* resolution of semi-planar formats must be multiple of 2 */
-  if (align != 0 && (desc[0].Width % align || desc[0].Height % align)) {
-    gint width, height;
-    GstVideoAlignment video_align;
-
-    GST_WARNING_OBJECT (self, "Resolution %" G_GUINT64_FORMAT
-        "x%d is not mutiple of %d, fixing", desc[0].Width, desc[0].Height,
-        align);
-
-    width = GST_ROUND_UP_N ((guint) desc[0].Width, align);
-    height = GST_ROUND_UP_N ((guint) desc[0].Height, align);
-
-    gst_video_alignment_reset (&video_align);
-    video_align.padding_right = width - desc[0].Width;
-    video_align.padding_bottom = height - desc[0].Height;
-
-    gst_d3d12_allocation_params_alignment (priv->d3d12_params, &video_align);
-  }
-
-  if ((priv->d3d12_params->flags & GST_D3D12_ALLOCATION_FLAG_TEXTURE_ARRAY)) {
-    guint max_array_size = 0;
-
+  const auto params = priv->d3d12_params;
+  memset (desc, 0, sizeof (desc));
+  if (params->d3d12_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
+    desc[0] = CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.dxgi_format,
+        params->aligned_info.width, params->aligned_info.height,
+        params->array_size, 1, 1, 0, params->resource_flags);
+    switch (params->d3d12_format.dxgi_format) {
+      case DXGI_FORMAT_NV12:
+      case DXGI_FORMAT_P010:
+      case DXGI_FORMAT_P016:
+        desc[0].Width = GST_ROUND_UP_2 (desc[0].Width);
+        desc[0].Height = GST_ROUND_UP_2 (desc[0].Height);
+        break;
+      case DXGI_FORMAT_Y210:
+      case DXGI_FORMAT_Y216:
+        desc[0].Width = GST_ROUND_UP_2 (desc[0].Width);
+        break;
+      default:
+        break;
+    }
+  } else {
     for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
+      if (params->d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
         break;
 
-      if (desc[i].DepthOrArraySize > max_array_size)
-        max_array_size = desc[i].DepthOrArraySize;
-    }
-
-    if (max_buffers == 0 || max_buffers > max_array_size) {
-      GST_WARNING_OBJECT (self,
-          "Array pool is requested but allowed pool size %d > ArraySize %d",
-          max_buffers, max_array_size);
-      max_buffers = max_array_size;
+      desc[i] =
+          CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.resource_format[i],
+          params->aligned_info.width, params->aligned_info.height,
+          params->array_size, 1, 1, 0, params->resource_flags);
     }
   }
+
+  if (params->array_size > 1)
+    max_buffers = params->array_size;
 
   for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     GstD3D12Allocator *alloc;
@@ -221,8 +208,8 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     GstMemory *mem = nullptr;
     GstD3D12Memory *dmem;
     gint stride = 0;
-    gsize offset = 0;
     guint plane_count = 0;
+    gsize offset;
 
     if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
       break;
@@ -261,9 +248,10 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         return FALSE;
       }
 
+      total_offset += offset;
       g_assert (plane_index < GST_VIDEO_MAX_PLANES);
       priv->stride[plane_index] = stride;
-      priv->offset[plane_index] = offset;
+      priv->offset[plane_index] = total_offset;
       plane_index++;
     }
 

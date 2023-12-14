@@ -564,7 +564,6 @@ gst_d3d12_decoder_prepare_pool (GstD3D12Decoder * self)
   /* Tier 1 decoder requires array */
   if (priv->support.DecodeTier == D3D12_VIDEO_DECODE_TIER_1) {
     priv->use_array_of_texture = FALSE;
-    alloc_flags = GST_D3D12_ALLOCATION_FLAG_TEXTURE_ARRAY;
   } else {
     priv->use_array_of_texture = TRUE;
     max_buffers = 0;
@@ -579,7 +578,7 @@ gst_d3d12_decoder_prepare_pool (GstD3D12Decoder * self)
   gst_d3d12_allocation_params_alignment (params, &align);
 
   if (!priv->use_array_of_texture)
-    params->desc[0].DepthOrArraySize = (UINT16) max_buffers;
+    gst_d3d12_allocation_params_set_array_size (params, max_buffers);
 
   priv->dpb_pool = gst_d3d12_buffer_pool_new (self->device);
   config = gst_buffer_pool_get_config (priv->dpb_pool);
@@ -1710,7 +1709,8 @@ gst_d3d12_decoder_decide_allocation (GstD3D12Decoder * decoder,
           GST_D3D12_ALLOCATION_FLAG_DEFAULT,
           D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
     } else {
-      params->desc[0].Flags |= D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
+      gst_d3d12_allocation_params_set_resource_flags (params,
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
     }
 
     width = GST_VIDEO_INFO_WIDTH (&vinfo);

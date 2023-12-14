@@ -23,6 +23,7 @@
 
 #include <directx/d3dx12.h>
 #include "gstd3d12memory.h"
+#include "gstd3d12memory-private.h"
 #include "gstd3d12device.h"
 #include "gstd3d12utils.h"
 #include "gstd3d12format.h"
@@ -97,22 +98,9 @@ gst_d3d12_allocation_params_new (GstD3D12Device * device,
   ret->info = *info;
   ret->aligned_info = *info;
   ret->d3d12_format = d3d12_format;
-
-  if (d3d12_format.dxgi_format == DXGI_FORMAT_UNKNOWN) {
-    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-      g_assert (d3d12_format.resource_format[i] != DXGI_FORMAT_UNKNOWN);
-
-      ret->desc[i] =
-          CD3DX12_RESOURCE_DESC::Tex2D (d3d12_format.resource_format[i],
-          GST_VIDEO_INFO_COMP_WIDTH (info, i),
-          GST_VIDEO_INFO_COMP_HEIGHT (info, i), 1, 1, 1, 0, resource_flags);
-    }
-  } else {
-    ret->desc[0] = CD3DX12_RESOURCE_DESC::Tex2D (d3d12_format.dxgi_format,
-        info->width, info->height, 1, 1, 1, 0, resource_flags);
-  }
-
+  ret->array_size = 1;
   ret->flags = flags;
+  ret->resource_flags = resource_flags;
 
   return ret;
 }
@@ -162,13 +150,33 @@ gst_d3d12_allocation_params_alignment (GstD3D12AllocationParams * params,
 
   params->aligned_info = new_info;
 
-  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (info); i++) {
-    params->desc[i].Width = GST_VIDEO_INFO_COMP_WIDTH (&new_info, i);
-    params->desc[i].Height = GST_VIDEO_INFO_COMP_HEIGHT (&new_info, i);
-  }
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_allocation_params_set_resource_flags (GstD3D12AllocationParams *
+    params, D3D12_RESOURCE_FLAGS resource_flags)
+{
+  g_return_val_if_fail (params, FALSE);
+
+  params->resource_flags |= resource_flags;
 
   return TRUE;
 }
+
+gboolean
+gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
+    guint size)
+{
+  g_return_val_if_fail (params, FALSE);
+  g_return_val_if_fail (size > 0, FALSE);
+  g_return_val_if_fail (size <= G_MAXUINT16, FALSE);
+
+  params->array_size = size;
+
+  return TRUE;
+}
+
 
 /* *INDENT-OFF* */
 struct _GstD3D12MemoryPrivate
