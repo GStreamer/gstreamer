@@ -10,7 +10,7 @@ async-std = "1"
 clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 rand = "0.8"
-async-tungstenite = { version = "0.23", features = ["async-std-runtime", "async-native-tls"] }
+async-tungstenite = { version = "0.24", features = ["async-std-runtime", "async-native-tls"] }
 gst = { package = "gstreamer", version = "0.21" }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.21" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.21" }
