@@ -64,6 +64,7 @@ struct GstD3D12DecoderSubClassData
   static void module_obj_name##_set_context (GstElement * element, \
       GstContext * context); \
   static gboolean module_obj_name##_open (GstVideoDecoder * decoder); \
+  static gboolean module_obj_name##_stop (GstVideoDecoder * decoder); \
   static gboolean module_obj_name##_close (GstVideoDecoder * decoder); \
   static gboolean module_obj_name##_negotiate (GstVideoDecoder * decoder); \
   static gboolean module_obj_name##_decide_allocation (GstVideoDecoder * decoder, \
@@ -74,6 +75,9 @@ struct GstD3D12DecoderSubClassData
       GstQuery * query); \
   static gboolean module_obj_name##_sink_event (GstVideoDecoder * decoder, \
       GstEvent * event); \
+  static GstFlowReturn module_obj_name##_drain (GstVideoDecoder * decoder); \
+  static GstFlowReturn module_obj_name##_finish (GstVideoDecoder * decoder); \
+  static gboolean module_obj_name##_flush (GstVideoDecoder * decoder); \
   static GstFlowReturn module_obj_name##_configure (ParentName * decoder, \
       GstVideoCodecState * input_state, const GstVideoInfo * info, \
       gint crop_x, gint crop_y, \
@@ -106,6 +110,7 @@ gboolean          gst_d3d12_decoder_open              (GstD3D12Decoder * decoder
 gboolean          gst_d3d12_decoder_close             (GstD3D12Decoder * decoder);
 
 GstFlowReturn     gst_d3d12_decoder_configure         (GstD3D12Decoder * decoder,
+                                                       GstVideoDecoder * videodec,
                                                        GstVideoCodecState * input_state,
                                                        const GstVideoInfo * info,
                                                        gint crop_x,
@@ -113,6 +118,14 @@ GstFlowReturn     gst_d3d12_decoder_configure         (GstD3D12Decoder * decoder
                                                        gint coded_width,
                                                        gint coded_height,
                                                        guint dpb_size);
+
+GstFlowReturn     gst_d3d12_decoder_drain             (GstD3D12Decoder * decoder,
+                                                       GstVideoDecoder * videodec);
+
+gboolean          gst_d3d12_decoder_flush             (GstD3D12Decoder * decoder,
+                                                       GstVideoDecoder * videodec);
+
+gboolean          gst_d3d12_decoder_stop              (GstD3D12Decoder * decoder);
 
 GstFlowReturn     gst_d3d12_decoder_new_picture   (GstD3D12Decoder * decoder,
                                                    GstVideoDecoder * videodec,
