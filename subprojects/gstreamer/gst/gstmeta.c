@@ -454,13 +454,13 @@ gst_meta_register_internal (GType api, const gchar * impl, gsize size,
 }
 
 /**
- * gst_meta_register:
+ * gst_meta_register: (skip):
  * @api: the type of the #GstMeta API
  * @impl: the name of the #GstMeta implementation
  * @size: the size of the #GstMeta structure
- * @init_func: (scope async): a #GstMetaInitFunction
- * @free_func: (scope async): a #GstMetaFreeFunction
- * @transform_func: (scope async): a #GstMetaTransformFunction
+ * @init_func: a #GstMetaInitFunction
+ * @free_func: a #GstMetaFreeFunction
+ * @transform_func: a #GstMetaTransformFunction
  *
  * Register a new #GstMeta implementation.
  *
@@ -480,15 +480,15 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
 }
 
 /**
- * gst_meta_register_serializable:
+ * gst_meta_register_serializable: (skip):
  * @api: the type of the #GstMeta API
  * @impl: the name of the #GstMeta implementation
  * @size: the size of the #GstMeta structure
- * @init_func: (scope async): a #GstMetaInitFunction
- * @free_func: (scope async): a #GstMetaFreeFunction
- * @transform_func: (scope async): a #GstMetaTransformFunction
- * @serialize_func: (scope async): a #GstMetaSerializeFunction
- * @deserialize_func: (scope async): a #GstMetaDeserializeFunction
+ * @init_func: a #GstMetaInitFunction
+ * @free_func: a #GstMetaFreeFunction
+ * @transform_func: a #GstMetaTransformFunction
+ * @serialize_func: a #GstMetaSerializeFunction
+ * @deserialize_func: a #GstMetaDeserializeFunction
  *
  * Same as gst_meta_register() but also set serialize/deserialize functions.
  *
