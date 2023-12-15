@@ -27,49 +27,50 @@
  * This element can apply an ONNX model to video buffers. It attaches
  * the tensor output to the buffer as a @ref GstTensorMeta.
  *
- * To install ONNX on your system, recursively clone this repository
- * https://github.com/microsoft/onnxruntime.git
- *
+ * To install ONNX on your system, recursively clone the repository
+ * https://github.com/microsoft/onnxruntime.git, check out tag 1.15.1
  * and build and install with cmake:
  *
  * CPU:
  *
- *  cmake -Donnxruntime_BUILD_SHARED_LIB:ON -DBUILD_TESTING:OFF \
- *  $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
+ * cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF \
+ * -Donnxruntime_BUILD_UNIT_TESTS=OFF $SRC_DIR/onnxruntime/cmake \
+ * && make -j$(nproc) && sudo make install
  *
  *
  * CUDA :
  *
- * cmake -Donnxruntime_BUILD_SHARED_LIB:ON -DBUILD_TESTING:OFF -Donnxruntime_USE_CUDA:ON \
- * -Donnxruntime_CUDA_HOME=$CUDA_PATH -Donnxruntime_CUDNN_HOME=$CUDA_PATH \
- *  $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
+ * cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF \
+ * -Donnxruntime_BUILD_UNIT_TESTS=OFF -Donnxruntime_USE_CUDA=ON \
+ * -Donnxruntime_CUDA_HOME=/usr/local/cuda \
+ * -Donnxruntime_CUDNN_HOME=/usr/local/cuda -DCMAKE_CUDA_ARCHITECTURES=native \
+ * -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
+ * $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
  *
  *
  * where :
  *
  * 1. $SRC_DIR and $BUILD_DIR are local source and build directories
  * 2. To run with CUDA, both CUDA and cuDNN libraries must be installed.
- *    $CUDA_PATH is an environment variable set to the CUDA root path.
- *    On Linux, it would be /usr/local/cuda
  *
  *
  * ## Example launch command:
  *
- * GST_DEBUG=onnxinference:5 gst-launch-1.0 multifilesrc location=bus.jpg ! \
- * jpegdec ! videoconvert ! \
- * onnxinference execution-provider=cpu model-file=model.onnx \
- * videoconvert ! autovideosink
+ * Test image file, model file (SSD) and label file can be found here :
+ * https://gitlab.collabora.com/gstreamer/onnx-models
+ *
+ * GST_DEBUG=ssdobjectdetector:5 \
+ * gst-launch-1.0 multifilesrc location=onnx-models/images/bus.jpg ! \
+ * jpegdec ! videoconvert ! onnxinference execution-provider=cpu model-file=onnx-models/models/ssd_mobilenet_v1_coco.onnx !  \
+ * ssdobjectdetector label-file=onnx-models/labels/COCO_classes.txt  ! videoconvert ! autovideosink
  *
  *
  * Note: in order for downstream tensor decoders to correctly parse the tensor
  * data in the GstTensorMeta, meta data must be attached to the ONNX model
  * assigning a unique string id to each output layer. These unique string ids
- * and corresponding GQuark ids are currently stored in the ONNX plugin source
- * in the file 'gsttensorid.h'. For an output layer with name Foo and with context
- * unique string id Gst.Model.Bar, a meta data key/value pair must be added
- * to the ONNX model with "Foo" mapped to "Gst.Model.Bar" in order for a downstream
- * decoder to make use of this model. If the meta data is absent, the pipeline will
- * fail.
+ * and corresponding GQuark ids are currently stored in the tensor decoder's
+ * header file, in this case gstssdobjectdetector.h. If the meta data is absent,
+ * the pipeline will fail.
  *
  * As a convenience, there is a python script
  * currently stored at

@@ -30,17 +30,13 @@
  *
  * ## Example launch command:
  *
- * note: image resolution may need to be adapted to the model, if the model expects
- * a certain input resolution. The `videoscale` element in the pipeline below will scale
- * the image, using padding if required, to 640x383 resolution required by model
+ * Test image file, model file (SSD) and label file can be found here :
+ * https://gitlab.collabora.com/gstreamer/onnx-models
  *
- *
- * GST_DEBUG=objectdetector:5 gst-launch-1.0 multifilesrc \
- * location=bus.jpg ! jpegdec ! videoconvert ! \
- * videoscale ! 'video/x-raw,width=640,height=383' ! \
- * onnxinference execution-provider=cpu model-file=model.onnx \
- * ssdobjectdetector label-file=COCO_classes.txt  !  \
- * videoconvert ! autovideosink
+ * GST_DEBUG=ssdobjectdetector:5 \
+ * gst-launch-1.0 multifilesrc location=onnx-models/images/bus.jpg ! \
+ * jpegdec ! videoconvert ! onnxinference execution-provider=cpu model-file=onnx-models/models/ssd_mobilenet_v1_coco.onnx !  \
+ * ssdobjectdetector label-file=onnx-models/labels/COCO_classes.txt  ! videoconvert ! autovideosink
  *
  */
 
