@@ -250,7 +250,7 @@ gst_rtp_channels_get_by_order (gint channels, const gchar * order)
     }
 
     /* compare names */
-    if (g_ascii_strcasecmp (channel_orders[i].name, order)) {
+    if (!g_ascii_strcasecmp (channel_orders[i].name, order)) {
       res = &channel_orders[i];
       break;
     }
