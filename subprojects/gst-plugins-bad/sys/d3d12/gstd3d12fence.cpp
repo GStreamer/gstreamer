@@ -157,6 +157,9 @@ gst_d3d12_fence_wait_for (GstD3D12Fence * fence, guint timeout_ms)
     GST_TRACE ("target %" G_GUINT64_FORMAT " <= target: %" G_GUINT64_FORMAT,
         priv->value, current);
   }
+
+  priv->value = 0;
+  priv->fence->Signal (0);
 }
 
 void
