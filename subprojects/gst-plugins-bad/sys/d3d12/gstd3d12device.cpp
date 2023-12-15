@@ -33,10 +33,7 @@
 #include <locale>
 #include <codecvt>
 #include <algorithm>
-
-#ifdef HAVE_D3D12_SDKLAYERS_H
 #include <d3d12sdklayers.h>
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_device_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
@@ -172,9 +169,7 @@ struct _GstD3D12DevicePrivate
 
   ComPtr<ID3D12CommandQueue> copy_queue;
 
-#ifdef HAVE_D3D12_SDKLAYERS_H
   ComPtr<ID3D12InfoQueue> info_queue;
-#endif
 
   guint adapter_index = 0;
   guint device_id = 0;
@@ -184,7 +179,6 @@ struct _GstD3D12DevicePrivate
 };
 /* *INDENT-ON* */
 
-#ifdef HAVE_D3D12_SDKLAYERS_H
 static gboolean
 gst_d3d12_device_enable_debug (void)
 {
@@ -211,7 +205,6 @@ gst_d3d12_device_enable_debug (void)
 
     GST_INFO ("D3D12 debug layer is enabled");
 
-#ifdef HAVE_D3D12DEBUG5
     ComPtr < ID3D12Debug5 > d3d12_debug5;
     hr = d3d12_debug.As (&d3d12_debug5);
     if (SUCCEEDED (hr))
@@ -232,13 +225,11 @@ gst_d3d12_device_enable_debug (void)
     d3d12_debug1->SetEnableGPUBasedValidation (TRUE);
 
     GST_INFO ("Enabled GPU based validation");
-#endif
   }
   GST_D3D12_CALL_ONCE_END;
 
   return enabled;
 }
-#endif
 
 #define gst_d3d12_device_parent_class parent_class
 G_DEFINE_TYPE (GstD3D12Device, gst_d3d12_device, GST_TYPE_OBJECT);
@@ -490,10 +481,8 @@ gst_d3d12_device_find_adapter (const GstD3D12DeviceConstructData * data,
   HRESULT hr;
   UINT factory_flags = 0;
 
-#ifdef HAVE_D3D12_SDKLAYERS_H
   if (gst_d3d12_device_enable_debug ())
     factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
-#endif
 
   hr = CreateDXGIFactory2 (factory_flags, IID_PPV_ARGS (&factory));
   if (FAILED (hr)) {
@@ -555,10 +544,8 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_device_debug,
       "d3d12device", 0, "d3d12 device object");
 
-#ifdef HAVE_D3D12_SDKLAYERS_H
   if (gst_d3d12_device_enable_debug ())
     factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
-#endif
 
   hr = CreateDXGIFactory2 (factory_flags, IID_PPV_ARGS (&factory));
   if (FAILED (hr)) {
@@ -608,13 +595,11 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 
   gst_d3d12_device_setup_format_table (self);
 
-#ifdef HAVE_D3D12_SDKLAYERS_H
   if (gst_d3d12_device_enable_debug ()) {
     ComPtr < ID3D12InfoQueue > info_queue;
     device.As (&info_queue);
     priv->info_queue = info_queue;
   }
-#endif
 
   return self;
 }
@@ -786,7 +771,6 @@ d3d12_message_severity_to_gst (D3D12_MESSAGE_SEVERITY level)
   return GST_LEVEL_LOG;
 }
 
-#ifdef HAVE_D3D12_SDKLAYERS_H
 void
 gst_d3d12_device_d3d12_debug (GstD3D12Device * device, const gchar * file,
     const gchar * function, gint line)
@@ -836,10 +820,3 @@ gst_d3d12_device_d3d12_debug (GstD3D12Device * device, const gchar * file,
 
   info_queue->ClearStoredMessages ();
 }
-#else
-void
-gst_d3d12_device_d3d12_debug (GstD3D12Device * device, const gchar * file,
-    const gchar * function, gint line)
-{
-}
-#endif
