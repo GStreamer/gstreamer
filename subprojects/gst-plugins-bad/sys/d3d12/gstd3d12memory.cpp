@@ -190,23 +190,21 @@ struct _GstD3D12MemoryPrivate
   ComPtr<ID3D12CommandAllocator> copy_ca;
   ComPtr<ID3D12GraphicsCommandList> copy_cl;
 
-  guint srv_increment_size = 0;
-  guint rtv_increment_size = 0;
-
-  guint num_srv = 0;
-  guint num_rtv = 0;
-
   guint cpu_map_count = 0;
   gpointer staging_ptr = nullptr;
 
   D3D12_RESOURCE_DESC desc;
-  D3D12_RESOURCE_STATES state;
+
+  HANDLE event_handle = nullptr;
 
   /* Queryied via ID3D12Device::GetCopyableFootprints */
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES];
   guint64 size;
   guint num_subresources;
   guint subresource_index[GST_VIDEO_MAX_PLANES];
+  DXGI_FORMAT resource_formats[GST_VIDEO_MAX_PLANES];
+  guint srv_inc_size;
+  guint rtv_inc_size;
 
   std::mutex lock;
 };
@@ -482,45 +480,6 @@ gst_d3d12_memory_get_resource_handle (GstD3D12Memory * mem)
 }
 
 gboolean
-gst_d3d12_memory_get_state (GstD3D12Memory * mem, D3D12_RESOURCE_STATES * state)
-{
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
-
-  if (!mem->priv->lock.try_lock ()) {
-    GST_WARNING ("Resource %p is owned by other thread, try map first", mem);
-    return FALSE;
-  }
-
-  if (state)
-    *state = mem->priv->state;
-
-  mem->priv->lock.unlock ();
-
-  return TRUE;
-}
-
-gboolean
-gst_d3d12_memory_set_state (GstD3D12Memory * mem, D3D12_RESOURCE_STATES state)
-{
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
-
-  if (!mem->priv->lock.try_lock ()) {
-    GST_WARNING ("Resource %p is owned by other thread, try map first", mem);
-    return FALSE;
-  }
-
-  mem->priv->state = state;
-  mem->priv->lock.unlock ();
-
-  /* XXX: This might not be sufficient. We should know the type of command list
-   * (queue) where the resource was used in for the later use.
-   * Probably we can infer it by using state though.
-   */
-
-  return TRUE;
-}
-
-gboolean
 gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem, guint plane,
     guint * index)
 {
@@ -574,241 +533,178 @@ gst_d3d12_memory_get_plane_size (GstD3D12Memory * mem, guint plane,
   return TRUE;
 }
 
-static gboolean
-create_shader_resource_views (GstD3D12Memory * mem)
+gboolean
+gst_d3d12_memory_create_shader_resource_view (GstD3D12Memory * mem,
+    guint plane, guint heap_offset, ID3D12DescriptorHeap * heap)
 {
-  GstD3D12MemoryPrivate *priv = mem->priv;
-  HRESULT hr;
-  guint num_formats = 0;
-  ID3D12Device *device;
-  DXGI_FORMAT formats[GST_VIDEO_MAX_PLANES];
-
-  if (!gst_d3d12_dxgi_format_to_resource_formats (priv->desc.Format, formats)) {
-    GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-        "Failed to get resource formats for DXGI format %d", priv->desc.Format);
+  auto priv = mem->priv;
+  auto allocator = GST_MEMORY_CAST (mem)->allocator;
+  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) != 0) {
+    GST_LOG_OBJECT (allocator,
+        "Shader resource was denied, configured flags 0x%x",
+        (guint) priv->desc.Flags);
     return FALSE;
   }
 
-  for (guint i = 0; i < G_N_ELEMENTS (formats); i++) {
-    if (formats[i] == DXGI_FORMAT_UNKNOWN)
-      break;
-
-    num_formats++;
-  }
-
-  g_assert (priv->srv_heap == nullptr);
-  device = gst_d3d12_device_get_device_handle (mem->device);
-
-  priv->srv_increment_size =
-      device->GetDescriptorHandleIncrementSize
-      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-  D3D12_DESCRIPTOR_HEAP_DESC heap_desc = { };
-  heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-  heap_desc.NumDescriptors = num_formats;
-  heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-  heap_desc.NodeMask = 0;
-
-  ComPtr < ID3D12DescriptorHeap > srv_heap;
-  hr = device->CreateDescriptorHeap (&heap_desc, IID_PPV_ARGS (&srv_heap));
-  if (!gst_d3d12_result (hr, mem->device)) {
-    GST_ERROR_OBJECT (mem->device, "Failed to create SRV descriptor heap");
+  if (priv->num_subresources <= plane) {
+    GST_ERROR_OBJECT (allocator, "Out of bound request");
     return FALSE;
   }
 
-  auto srv_handle = srv_heap->GetCPUDescriptorHandleForHeapStart ();
-  for (guint i = 0; i < num_formats; i++) {
+  auto cpu_handle =
+      CD3DX12_CPU_DESCRIPTOR_HANDLE (heap->GetCPUDescriptorHandleForHeapStart
+      (), heap_offset, priv->srv_inc_size);
+
+  D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
+  srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+  srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+  srv_desc.Texture2D.MipLevels = 1;
+  srv_desc.Format = priv->resource_formats[plane];
+  srv_desc.Texture2D.PlaneSlice = plane;
+
+  auto device = gst_d3d12_device_get_device_handle (mem->device);
+  device->CreateShaderResourceView (priv->resource.Get (),
+      &srv_desc, cpu_handle);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
+    ID3D12DescriptorHeap ** heap)
+{
+  auto priv = mem->priv;
+  auto allocator = GST_MEMORY_CAST (mem)->allocator;
+  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) != 0) {
+    GST_LOG_OBJECT (allocator,
+        "Shader resource was denied, configured flags 0x%x",
+        (guint) priv->desc.Flags);
+    return FALSE;
+  }
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->srv_heap) {
+    D3D12_DESCRIPTOR_HEAP_DESC desc = { };
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.NumDescriptors = priv->num_subresources;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    auto device = gst_d3d12_device_get_device_handle (mem->device);
+
+    ComPtr < ID3D12DescriptorHeap > srv_heap;
+    auto hr = device->CreateDescriptorHeap (&desc, IID_PPV_ARGS (&srv_heap));
+    if (!gst_d3d12_result (hr, mem->device)) {
+      GST_ERROR_OBJECT (allocator, "Couldn't create descriptor heap");
+      return FALSE;
+    }
+
+    priv->srv_heap = srv_heap;
+
     D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
-    srv_desc.Format = formats[i];
     srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Texture2D.MostDetailedMip = 0;
     srv_desc.Texture2D.MipLevels = 1;
-    srv_desc.Texture2D.PlaneSlice = i;
-    srv_desc.Texture2D.ResourceMinLODClamp = 0xf;
 
-    device->CreateShaderResourceView (priv->resource.Get (), &srv_desc,
-        srv_handle);
-    srv_handle.ptr += priv->srv_increment_size;
+    auto cpu_handle =
+        CD3DX12_CPU_DESCRIPTOR_HANDLE
+        (srv_heap->GetCPUDescriptorHandleForHeapStart ());
+
+    for (guint i = 0; i < priv->num_subresources; i++) {
+      srv_desc.Format = priv->resource_formats[i];
+      srv_desc.Texture2D.PlaneSlice = i;
+      device->CreateShaderResourceView (priv->resource.Get (), &srv_desc,
+          cpu_handle);
+      cpu_handle.Offset (priv->srv_inc_size);
+    }
   }
 
-  priv->srv_heap = srv_heap;
-  priv->num_srv = num_formats;
+  *heap = priv->srv_heap.Get ();
+  (*heap)->AddRef ();
 
   return TRUE;
-}
-
-static gboolean
-gst_d3d12_memory_ensure_shader_resource_view (GstD3D12Memory * mem)
-{
-  GstD3D12MemoryPrivate *priv = mem->priv;
-
-  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) != 0) {
-    GST_LOG_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-        "Shader resource was denied");
-    return FALSE;
-  }
-
-  std::lock_guard < std::mutex > lk (priv->lock);
-  if (priv->num_srv)
-    return TRUE;
-
-  return create_shader_resource_views (mem);
-}
-
-guint
-gst_d3d12_memory_get_shader_resource_view_size (GstD3D12Memory * mem)
-{
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), 0);
-
-  if (!gst_d3d12_memory_ensure_shader_resource_view (mem))
-    return 0;
-
-  return mem->priv->num_srv;
 }
 
 gboolean
-gst_d3d12_memory_get_shader_resource_view (GstD3D12Memory * mem, guint index,
-    D3D12_CPU_DESCRIPTOR_HANDLE * srv)
+gst_d3d12_memory_create_render_target_view (GstD3D12Memory * mem,
+    guint plane, guint heap_offset, ID3D12DescriptorHeap * heap)
 {
-  GstD3D12MemoryPrivate *priv;
-
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (srv != nullptr, FALSE);
-
-  if (!gst_d3d12_memory_ensure_shader_resource_view (mem))
-    return FALSE;
-
-  priv = mem->priv;
-
-  if (index >= priv->num_srv) {
-    GST_ERROR ("Invalid SRV index %d", index);
-    return FALSE;
-  }
-
-  g_assert (priv->srv_heap != nullptr);
-
-  auto srv_handle = priv->srv_heap->GetCPUDescriptorHandleForHeapStart ();
-  srv_handle.ptr += ((gsize) index * priv->srv_increment_size);
-
-  *srv = srv_handle;
-  return TRUE;
-}
-
-static gboolean
-create_render_target_views (GstD3D12Memory * mem)
-{
-  GstD3D12MemoryPrivate *priv = mem->priv;
-  HRESULT hr;
-  guint num_formats = 0;
-  ID3D12Device *device;
-  DXGI_FORMAT formats[GST_VIDEO_MAX_PLANES];
-
-  if (!gst_d3d12_dxgi_format_to_resource_formats (priv->desc.Format, formats)) {
-    GST_ERROR_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-        "Failed to get resource formats for DXGI format %d", priv->desc.Format);
-    return FALSE;
-  }
-
-  for (guint i = 0; i < G_N_ELEMENTS (formats); i++) {
-    if (formats[i] == DXGI_FORMAT_UNKNOWN)
-      break;
-
-    num_formats++;
-  }
-
-  g_assert (priv->rtv_heap == nullptr);
-  device = gst_d3d12_device_get_device_handle (mem->device);
-
-  priv->rtv_increment_size =
-      device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-  D3D12_DESCRIPTOR_HEAP_DESC heap_desc = { };
-  heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-  heap_desc.NumDescriptors = num_formats;
-  heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-  heap_desc.NodeMask = 0;
-
-  ComPtr < ID3D12DescriptorHeap > rtv_heap;
-  hr = device->CreateDescriptorHeap (&heap_desc, IID_PPV_ARGS (&rtv_heap));
-  if (!gst_d3d12_result (hr, mem->device)) {
-    GST_ERROR_OBJECT (mem->device, "Failed to create SRV descriptor heap");
-    return FALSE;
-  }
-
-  auto rtv_handle = rtv_heap->GetCPUDescriptorHandleForHeapStart ();
-  for (guint i = 0; i < num_formats; i++) {
-    D3D12_RENDER_TARGET_VIEW_DESC rtv_desc = { };
-    rtv_desc.Format = formats[i];
-    rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-    rtv_desc.Texture2D.MipSlice = 0;
-    rtv_desc.Texture2D.PlaneSlice = i;
-
-    device->CreateRenderTargetView (priv->resource.Get (), &rtv_desc,
-        rtv_handle);
-    rtv_handle.ptr += priv->rtv_increment_size;
-  }
-
-  priv->rtv_heap = rtv_heap;
-  priv->num_rtv = num_formats;
-
-  return TRUE;
-}
-
-static gboolean
-gst_d3d12_memory_ensure_render_target_view (GstD3D12Memory * mem)
-{
-  GstD3D12MemoryPrivate *priv = mem->priv;
-
+  auto priv = mem->priv;
+  auto allocator = GST_MEMORY_CAST (mem)->allocator;
   if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) == 0) {
-    GST_LOG_OBJECT (GST_MEMORY_CAST (mem)->allocator,
-        "Render target is not allowed");
+    GST_LOG_OBJECT (allocator,
+        "Render target is not allowed, configured flags 0x%x",
+        (guint) priv->desc.Flags);
+    return FALSE;
+  }
+
+  if (priv->num_subresources <= plane) {
+    GST_ERROR_OBJECT (allocator, "Out of bound request");
+    return FALSE;
+  }
+
+  auto device = gst_d3d12_device_get_device_handle (mem->device);
+  auto cpu_handle =
+      CD3DX12_CPU_DESCRIPTOR_HANDLE (heap->GetCPUDescriptorHandleForHeapStart
+      (), heap_offset, priv->rtv_inc_size);
+
+  D3D12_RENDER_TARGET_VIEW_DESC rtv_desc = { };
+  rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+  rtv_desc.Format = priv->resource_formats[plane];
+  rtv_desc.Texture2D.PlaneSlice = plane;
+  device->CreateRenderTargetView (priv->resource.Get (), &rtv_desc, cpu_handle);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
+    ID3D12DescriptorHeap ** heap)
+{
+  auto priv = mem->priv;
+  auto allocator = GST_MEMORY_CAST (mem)->allocator;
+  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) == 0) {
+    GST_LOG_OBJECT (allocator,
+        "Render target is not allowed, configured flags 0x%x",
+        (guint) priv->desc.Flags);
     return FALSE;
   }
 
   std::lock_guard < std::mutex > lk (priv->lock);
-  if (priv->num_rtv)
-    return TRUE;
+  if (!priv->rtv_heap) {
+    D3D12_DESCRIPTOR_HEAP_DESC desc = { };
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    desc.NumDescriptors = priv->num_subresources;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-  return create_render_target_views (mem);
-}
+    auto device = gst_d3d12_device_get_device_handle (mem->device);
 
-guint
-gst_d3d12_memory_get_render_target_view_size (GstD3D12Memory * mem)
-{
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), 0);
+    ComPtr < ID3D12DescriptorHeap > rtv_heap;
+    auto hr = device->CreateDescriptorHeap (&desc, IID_PPV_ARGS (&rtv_heap));
+    if (!gst_d3d12_result (hr, mem->device)) {
+      GST_ERROR_OBJECT (allocator, "Couldn't create descriptor heap");
+      return FALSE;
+    }
 
-  if (!gst_d3d12_memory_ensure_render_target_view (mem))
-    return 0;
+    priv->rtv_heap = rtv_heap;
 
-  return mem->priv->num_rtv;
-}
+    D3D12_RENDER_TARGET_VIEW_DESC rtv_desc = { };
+    rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
 
-gboolean
-gst_d3d12_memory_get_render_target_view (GstD3D12Memory * mem, guint index,
-    D3D12_CPU_DESCRIPTOR_HANDLE * rtv)
-{
-  GstD3D12MemoryPrivate *priv;
+    auto cpu_handle =
+        CD3DX12_CPU_DESCRIPTOR_HANDLE
+        (rtv_heap->GetCPUDescriptorHandleForHeapStart ());
 
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
-  g_return_val_if_fail (rtv != nullptr, FALSE);
-
-  if (!gst_d3d12_memory_ensure_render_target_view (mem))
-    return FALSE;
-
-  priv = mem->priv;
-
-  if (index >= priv->num_rtv) {
-    GST_ERROR ("Invalid RTV index %d", index);
-    return FALSE;
+    for (guint i = 0; i < priv->num_subresources; i++) {
+      rtv_desc.Format = priv->resource_formats[i];
+      rtv_desc.Texture2D.PlaneSlice = i;
+      device->CreateRenderTargetView (priv->resource.Get (), &rtv_desc,
+          cpu_handle);
+      cpu_handle.Offset (priv->rtv_inc_size);
+    }
   }
 
-  g_assert (priv->rtv_heap != nullptr);
-
-  auto rtv_handle = priv->rtv_heap->GetCPUDescriptorHandleForHeapStart ();
-  rtv_handle.ptr += ((gsize) index * priv->rtv_increment_size);
-
-  *rtv = rtv_handle;
+  *heap = priv->rtv_heap.Get ();
+  (*heap)->AddRef ();
 
   return TRUE;
 }
@@ -898,7 +794,14 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * self,
   priv->desc = *desc;
   priv->num_subresources = num_subresources;
   priv->resource = resource;
-  priv->state = initial_state;
+  gst_d3d12_dxgi_format_to_resource_formats (priv->desc.Format,
+      priv->resource_formats);
+  priv->srv_inc_size =
+      device_handle->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+  priv->rtv_inc_size =
+      device_handle->GetDescriptorHandleIncrementSize
+      (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
   mem->device = (GstD3D12Device *) gst_object_ref (device);
   mem->fence = gst_d3d12_fence_new (device);

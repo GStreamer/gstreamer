@@ -125,12 +125,6 @@ gboolean          gst_is_d3d12_memory        (GstMemory * mem);
 
 ID3D12Resource *  gst_d3d12_memory_get_resource_handle (GstD3D12Memory * mem);
 
-gboolean          gst_d3d12_memory_get_state         (GstD3D12Memory * mem,
-                                                      D3D12_RESOURCE_STATES * state);
-
-gboolean          gst_d3d12_memory_set_state         (GstD3D12Memory * mem,
-                                                      D3D12_RESOURCE_STATES state);
-
 gboolean          gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem,
                                                           guint plane,
                                                           guint * index);
@@ -144,17 +138,22 @@ gboolean          gst_d3d12_memory_get_plane_size        (GstD3D12Memory * mem,
                                                           gint * stride,
                                                           gsize * offset);
 
-guint             gst_d3d12_memory_get_shader_resource_view_size (GstD3D12Memory * mem);
+gboolean          gst_d3d12_memory_create_shader_resource_view (GstD3D12Memory * mem,
+                                                                guint plane,
+                                                                guint heap_offset,
+                                                                ID3D12DescriptorHeap * heap);
 
-gboolean          gst_d3d12_memory_get_shader_resource_view      (GstD3D12Memory * mem,
-                                                                  guint index,
-                                                                  D3D12_CPU_DESCRIPTOR_HANDLE * srv);
+gboolean          gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
+                                                                  ID3D12DescriptorHeap ** heap);
 
-guint             gst_d3d12_memory_get_render_target_view_size   (GstD3D12Memory * mem);
+gboolean          gst_d3d12_memory_create_render_target_view   (GstD3D12Memory * mem,
+                                                                guint plane,
+                                                                guint heap_offset,
+                                                                ID3D12DescriptorHeap * heap);
 
-gboolean          gst_d3d12_memory_get_render_target_view        (GstD3D12Memory * mem,
-                                                                  guint index,
-                                                                  D3D12_CPU_DESCRIPTOR_HANDLE * rtv);
+gboolean          gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
+                                                                ID3D12DescriptorHeap ** heap);
+
 
 struct _GstD3D12Allocator
 {
