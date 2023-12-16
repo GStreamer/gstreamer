@@ -23,7 +23,6 @@
 #include <gst/video/video.h>
 #include <gst/codecs/gstcodecpicture.h>
 #include <gst/dxva/gstdxva.h>
-#include <gst/d3d11/gstd3d11.h>
 #include "gstd3d12_fwd.h"
 
 G_BEGIN_DECLS
@@ -176,8 +175,7 @@ gboolean          gst_d3d12_decoder_handle_query      (GstD3D12Decoder * decoder
 /* Utils for element registration */
 GstD3D12DecoderClassData * gst_d3d12_decoder_check_feature_support   (GstD3D12Device * device,
                                                                       ID3D12VideoDevice * video_device,
-                                                                      GstDxvaCodec codec,
-                                                                      gboolean d3d11_interop);
+                                                                      GstDxvaCodec codec);
 
 void  gst_d3d12_decoder_class_data_fill_subclass_data (GstD3D12DecoderClassData * data,
                                                        GstD3D12DecoderSubClassData * subclass_data);

@@ -26,8 +26,7 @@ G_BEGIN_DECLS
 void  gst_d3d12_h264_dec_register (GstPlugin * plugin,
                                    GstD3D12Device * device,
                                    ID3D12VideoDevice * video_device,
-                                   guint rank,
-                                   gboolean d3d11_interop);
+                                   guint rank);
 
 G_END_DECLS
 

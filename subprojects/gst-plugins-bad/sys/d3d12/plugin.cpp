@@ -36,7 +36,6 @@
 #include "gstd3d12av1dec.h"
 
 #include <wrl.h>
-#include <d3d11_4.h>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -75,7 +74,6 @@ plugin_init (GstPlugin * plugin)
     ComPtr < ID3D12Device4 > device4;
     ComPtr < ID3D12VideoDevice > video_device;
     HRESULT hr;
-    gboolean d3d11_interop = FALSE;
 
     device = gst_d3d12_device_new (i);
     if (!device)
@@ -95,13 +93,13 @@ plugin_init (GstPlugin * plugin)
     }
 
     gst_d3d12_h264_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE, d3d11_interop);
+        GST_RANK_NONE);
     gst_d3d12_h265_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE, d3d11_interop);
+        GST_RANK_NONE);
     gst_d3d12_vp9_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE, d3d11_interop);
+        GST_RANK_NONE);
     gst_d3d12_av1_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE, d3d11_interop);
+        GST_RANK_NONE);
 
     gst_object_unref (device);
   }
