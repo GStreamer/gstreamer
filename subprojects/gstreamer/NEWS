@@ -2,13 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
-The latest bug-fix release in the stable 1.22 series is 1.22.7 and was
-released on 13 November 2023.
+The latest bug-fix release in the stable 1.22 series is 1.22.8 and was
+released on 18 December 2023.
 
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Monday 13 November 2023, 10:00 UTC (log)
+Last updated: Monday 18 December 2023, 11:00 UTC (log)
 
 Introduction
 
@@ -2581,6 +2581,160 @@ List of merge requests and issues fixed in 1.22.7
 
 -   List of Merge Requests applied in 1.22.7
 -   List of Issues fixed in 1.22.7
+
+1.22.8
+
+The eight 1.22 bug-fix release (1.22.8) was released on 18 December
+2023.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.22.x.
+
+Highlighted bugfixes in 1.22.8
+
+-   Security fixes for the AV1 video codec parser
+-   avdec video decoder: fix another possible deadlock with FFmpeg 6.1
+-   qtdemux: reverse playback and seeking fixes for files with raw audio
+    streams
+-   v4l2: fix “newly allocated buffer … is not free” warning log flood
+-   GstPlay + GstPlayer library fixes
+-   dtls: Fix build failure on Windows when compiling against OpenSSL
+    3.2.0
+-   d3d11screencapturesrc: Fix wrong color with HDR enabled
+-   Cerbero build tool: More python 3.12 string escape warning fixes;
+    make sure to bundle build tools as well
+-   various bug fixes, build fixes, memory leak fixes, and other
+    stability and reliability improvements
+
+gstreamer
+
+-   buffer: Unref memories before metas
+-   pad: Recheck pads when linking after temporary unlock
+-   baseparse: Fixes to buffers extracted from adapter
+
+gst-plugins-base
+
+-   appsrc: Fix flow return when buffer is dropped
+-   audioringbuffer: Don’t try to map MONO channel
+-   encoding-target: Properly free when missing type field in
+    parse_encoding_profile
+-   pbutils: Don’t include default vp9 parameters in resulting codec
+    mime string
+-   videorate: Don’t forget last_ts on caps changes
+
+gst-plugins-good
+
+-   dcaparse: keep upstream buffer meta
+-   rtpklvdepay: Recover after invalid fragmented KLV unit
+-   matroska-demux: fix accumulated base offset in segment seeks
+-   qtdemux: fix bug report URL
+-   qtdemux: Don’t overflow sample index
+-   qtdemux: Fix reverse playback for pcm audio stream
+-   qtdemux: Ignore raw audio streams when adjusting seek
+-   qtdemux: Under-seeking to a key unit in certain (encoded by Adobe
+    products) ProRes movies (macOS x86_64 & arm64, Windows x86_64, …)
+-   rtpac3depay: should output audio/x-ac3 not audio/ac3
+-   rtp: Fix incorrect RTP channel order lookup by name
+-   v4l2bufferpool: add lock as atomic operation for seek
+
+gst-plugins-bad
+
+-   aesenc: Fix IV length addition to output buffer length
+-   av1parser: Fix array sizes in scalability structure
+-   camerabin: Fix source updates with user filters
+-   codecparsers: av1: Clip max tile rows and cols values
+-   dtlscertificate: Define WINSOCKAPI before including windows.h
+-   d3d11: fix building with address sanitizer
+-   d3d11screencapturesrc: Fix wrong color with HDR enabled
+-   h264decoder: Fix GstVideoCodecFrame leak
+-   ladspa: Make RDF parsing truly optional
+-   rtponviftimestamp: Fix drop-out-of-segment=false mode
+-   qsvdecoder: Fix stream format detection
+-   webrtcsdp: Remove fingerprint validation that doesn’t make sense
+-   GstPlay: Automatically flush the bus when disposing the signal
+    adapter
+-   GstPlayer: Without dispatcher emit signals directly instead of via
+    the default main context
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-plugins-rs
+
+-   threadshare: Fix a deadlock in used-socket notification
+-   threadshare: Fix a typo while logging
+-   webrtcsink: don’t panic on failure to request pad from webrtcbin
+-   ndi: Remove wrong Clone impl on RecvInstance
+-   ndi: Don’t mark private type as public
+-   fallbacksrc: Fix timeout scheduling
+
+gst-libav
+
+-   avviddec: Unlock stream lock while waiting for decoded frame. Fixes
+    potential deadlock
+-   avviddec: Calculate latency only for fixed framerate
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   No changes
+
+gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.22.8
+
+-   cerbero: Fix some more python 3.12 string escape warnings
+-   cerbero: Fix bundle-source not including build-tools recipes, fix
+    CalledProcessError handling
+-   pango: Add Perl interpreter consistency check
+
+Contributors to 1.22.8
+
+Alessandro Bono, Alexander Slobodeniuk, Arun Raghavan, Benjamin
+Gaignard, Daniel Moberg, Dongyun Seo, Doug Nazar, Guillaume Desmottes,
+Hosang Lee, Jan Alexander Steffens (heftig), jeri.li, Jimmy Ohn, L. E.
+Segovia, Mathieu Duponchelle, Nicolas Dufresne, Nirbheek Chauhan,
+Olivier Crête, Philippe Normand, Piotr Brzeziński, Rabindra Harlalka,
+Robert Mader, Robin Gustavsson, Sebastian Dröge, Seungha Yang, Stefan
+Brüns, Tim-Philipp Müller, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.8
+
+-   List of Merge Requests applied in 1.22.8
+-   List of Issues fixed in 1.22.8
 
 Schedule for 1.24
 
