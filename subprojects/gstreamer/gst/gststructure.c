@@ -127,7 +127,7 @@
  * ```
  *
  * > *note*: gst_structure_to_string() won't use that syntax for backward
- * > compatibility reason, gst_structure_serialize() has been added for
+ * > compatibility reason, gst_structure_serialize_full() has been added for
  * > that purpose.
  */
 
@@ -2197,7 +2197,7 @@ structure_serialize (const GstStructure * structure, GstSerializeFlags flags)
  *
  * This function will lead to unexpected results when there are nested #GstCaps
  * / #GstStructure deeper than one level, you should user
- * gst_structure_serialize() instead for those cases.
+ * gst_structure_serialize_full() instead for those cases.
  *
  * Free-function: g_free
  *
@@ -2222,15 +2222,41 @@ gst_structure_to_string (const GstStructure * structure)
  * GStreamer prior to 1.20 unless #GST_SERIALIZE_FLAG_BACKWARD_COMPAT is passed
  * as @flag.
  *
+ * %GST_SERIALIZE_FLAG_STRICT flags is not allowed because it would make this
+ * function nullable which is an API break for bindings.
+ * Use gst_structure_serialize_full() instead.
+ *
  * Free-function: g_free
  *
  * Returns: (transfer full): a pointer to string allocated by g_malloc().
  *     g_free() after usage.
  *
  * Since: 1.20
+ * Deprecated: Use gst_structure_serialize_full() instead.
  */
 gchar *
 gst_structure_serialize (const GstStructure * structure,
+    GstSerializeFlags flags)
+{
+  g_return_val_if_fail ((flags & GST_SERIALIZE_FLAG_STRICT) == 0, NULL);
+  return structure_serialize (structure, flags);
+}
+
+/**
+ * gst_structure_serialize_full:
+ * @structure: a #GstStructure
+ * @flags: The flags to use to serialize structure
+ *
+ * Alias for gst_structure_serialize() but with nullable annotation because it
+ * can return %NULL when %GST_SERIALIZE_FLAG_STRICT flag is set.
+ *
+ * Returns: (transfer full) (nullable): a pointer to string allocated by g_malloc().
+ *     g_free() after usage.
+ *
+ * Since: 1.24
+ */
+gchar *
+gst_structure_serialize_full (const GstStructure * structure,
     GstSerializeFlags flags)
 {
   return structure_serialize (structure, flags);

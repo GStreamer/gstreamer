@@ -792,7 +792,7 @@ GST_START_TEST (test_serialize_nested_structures)
   fail_unless (gst_structure_has_field_typed (s, "main-sub1",
           GST_TYPE_STRUCTURE));
 
-  str2 = gst_structure_serialize (s, GST_SERIALIZE_FLAG_NONE);
+  str2 = gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_NONE);
   fail_unless (str2 != NULL);
 
   fail_unless_equals_string (str1, str2);
@@ -1041,13 +1041,13 @@ GST_START_TEST (test_strict)
   GstElement *bin = gst_bin_new ("mybin");
   s = gst_structure_new ("test-struct", "obj", GST_TYPE_BIN, bin, NULL);
   fail_unless (s);
-  fail_if (gst_structure_serialize (s, GST_SERIALIZE_FLAG_STRICT));
+  fail_if (gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_STRICT));
   gst_structure_free (s);
   gst_object_unref (bin);
 
   s = gst_structure_new ("test-struct", "ptr", G_TYPE_POINTER, NULL, NULL);
   fail_unless (s);
-  fail_if (gst_structure_serialize (s, GST_SERIALIZE_FLAG_STRICT));
+  fail_if (gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_STRICT));
   gst_structure_free (s);
 }
 

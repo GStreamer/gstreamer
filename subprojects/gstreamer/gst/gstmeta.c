@@ -196,8 +196,8 @@ custom_serialize_func (const GstMeta * meta, GstByteArrayInterface * data,
     guint8 * version)
 {
   const GstCustomMeta *cmeta = (const GstCustomMeta *) meta;
-  gchar *str =
-      gst_structure_serialize (cmeta->structure, GST_SERIALIZE_FLAG_STRICT);
+  gchar *str = gst_structure_serialize_full (cmeta->structure,
+      GST_SERIALIZE_FLAG_STRICT);
   if (str == NULL)
     return FALSE;
 

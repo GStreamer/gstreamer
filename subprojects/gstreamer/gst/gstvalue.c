@@ -369,7 +369,8 @@ _priv_gst_value_serialize_any_list (const GValue * value, const gchar * begin,
       s_val = gst_value_serialize (v);
     } else {
       if (GST_VALUE_HOLDS_STRUCTURE (v))
-        s_val = gst_structure_serialize (gst_value_get_structure (v), flags);
+        s_val =
+            gst_structure_serialize_full (gst_value_get_structure (v), flags);
       else if (GST_VALUE_HOLDS_CAPS (v))
         s_val = gst_caps_serialize (gst_value_get_caps (v), flags);
     }

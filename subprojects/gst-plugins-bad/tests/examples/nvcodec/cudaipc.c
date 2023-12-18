@@ -39,7 +39,7 @@ server_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   s = gst_custom_meta_get_structure (meta);
   gst_structure_set (s, "foo", G_TYPE_STRING, "bar", "timestamp",
       G_TYPE_UINT64, GST_BUFFER_PTS (buf), NULL);
-  str = gst_structure_serialize (s, GST_SERIALIZE_FLAG_NONE);
+  str = gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_NONE);
 
   gst_println ("Added custom meta %s", str);
 
@@ -93,7 +93,7 @@ client_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     gchar *str;
 
     s = gst_custom_meta_get_structure (meta);
-    str = gst_structure_serialize (s, GST_SERIALIZE_FLAG_NONE);
+    str = gst_structure_serialize_full (s, GST_SERIALIZE_FLAG_NONE);
     gst_println ("Found custom meta \"%s\"", str);
     g_free (str);
   }

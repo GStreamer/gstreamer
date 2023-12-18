@@ -416,7 +416,7 @@ _cleanup_fields (const Property * field_names, GstStructure * structure,
       exists = TRUE;
 
       if (gst_structure_has_field (structure, field_names[i].long_name)) {
-        gchar *str_info = gst_structure_serialize (structure, 0);
+        gchar *str_info = gst_structure_serialize_full (structure, 0);
 
         *error =
             g_error_new (GES_ERROR, 0,

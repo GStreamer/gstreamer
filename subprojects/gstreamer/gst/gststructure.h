@@ -364,8 +364,11 @@ gboolean              gst_structure_get_flags            (const GstStructure  * 
 
 GST_API
 gchar *               gst_structure_to_string            (const GstStructure * structure) G_GNUC_MALLOC;
-GST_API
+GST_DEPRECATED_FOR(gst_structure_serialize_full)
 gchar *               gst_structure_serialize            (const GstStructure * structure,
+                                                          GstSerializeFlags flags) G_GNUC_MALLOC;
+GST_API
+gchar *               gst_structure_serialize_full       (const GstStructure * structure,
                                                           GstSerializeFlags flags) G_GNUC_MALLOC;
 
 GST_API

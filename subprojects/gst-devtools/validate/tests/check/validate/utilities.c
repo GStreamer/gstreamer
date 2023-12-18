@@ -31,8 +31,8 @@ GST_START_TEST (test_resolve_variables)
       NULL);
   fail_unless (gst_structure_is_equal (struct_with_vars, expected),
       "\nReplaced: `%s`\n!=\nExpected: `%s`",
-      gst_structure_serialize (struct_with_vars, GST_SERIALIZE_FLAG_NONE),
-      gst_structure_serialize (expected, GST_SERIALIZE_FLAG_NONE));
+      gst_structure_serialize_full (struct_with_vars, GST_SERIALIZE_FLAG_NONE),
+      gst_structure_serialize_full (expected, GST_SERIALIZE_FLAG_NONE));
 
   gst_structure_free (variables);
   gst_structure_free (struct_with_vars);
