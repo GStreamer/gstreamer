@@ -4716,8 +4716,8 @@ gst_play_message_parse_error (GstMessage * msg, GError ** error,
     GstStructure ** details)
 {
   PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR, G_TYPE_ERROR, error);
-  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR, GST_TYPE_STRUCTURE,
-      details);
+  PARSE_MESSAGE_FIELD (msg, GST_PLAY_MESSAGE_DATA_ERROR_DETAILS,
+      GST_TYPE_STRUCTURE, details);
 }
 
 /**
