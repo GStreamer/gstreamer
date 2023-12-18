@@ -319,13 +319,13 @@ gst_audio_convert_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     goto parse_error;
 
   *size = info.bpf;
-  GST_INFO_OBJECT (base, "unit_size = %" G_GSIZE_FORMAT, *size);
+  GST_DEBUG_OBJECT (base, "unit_size = %" G_GSIZE_FORMAT, *size);
 
   return TRUE;
 
 parse_error:
   {
-    GST_INFO_OBJECT (base, "failed to parse caps to get unit_size");
+    GST_WARNING_OBJECT (base, "failed to parse caps to get unit_size");
     return FALSE;
   }
 }
