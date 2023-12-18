@@ -26040,48 +26040,6 @@ transform function.</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="register_serializable" c:identifier="gst_meta_register_serializable" version="1.24" introspectable="0">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Same as gst_meta_register() but also set serialize/deserialize functions.</doc>
-        <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaInfo that can be used to access metadata.</doc>
-          <type name="MetaInfo" c:type="const GstMetaInfo*"/>
-        </return-value>
-        <parameters>
-          <parameter name="api" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the type of the #GstMeta API</doc>
-            <type name="GType" c:type="GType"/>
-          </parameter>
-          <parameter name="impl" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the name of the #GstMeta implementation</doc>
-            <type name="utf8" c:type="const gchar*"/>
-          </parameter>
-          <parameter name="size" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the size of the #GstMeta structure</doc>
-            <type name="gsize" c:type="gsize"/>
-          </parameter>
-          <parameter name="init_func" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaInitFunction</doc>
-            <type name="MetaInitFunction" c:type="GstMetaInitFunction"/>
-          </parameter>
-          <parameter name="free_func" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaFreeFunction</doc>
-            <type name="MetaFreeFunction" c:type="GstMetaFreeFunction"/>
-          </parameter>
-          <parameter name="transform_func" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaTransformFunction</doc>
-            <type name="MetaTransformFunction" c:type="GstMetaTransformFunction"/>
-          </parameter>
-          <parameter name="serialize_func" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaSerializeFunction</doc>
-            <type name="MetaSerializeFunction" c:type="GstMetaSerializeFunction"/>
-          </parameter>
-          <parameter name="deserialize_func" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaDeserializeFunction</doc>
-            <type name="MetaDeserializeFunction" c:type="GstMetaDeserializeFunction"/>
-          </parameter>
-        </parameters>
-      </function>
     </record>
     <callback name="MetaClearFunction" c:type="GstMetaClearFunction" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Clears the content of the meta. This will be called by the GstBufferPool
@@ -26223,6 +26181,75 @@ pooled metas.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="register" c:identifier="gst_meta_info_register" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Registers a new meta.
+
+Use the structure returned by gst_meta_info_new(), it consumes it and the
+structure shouldnt be used after. The one returned by the function can be
+kept.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the registered meta</doc>
+          <type name="MetaInfo" c:type="const GstMetaInfo*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="info" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a new #GstMetaInfo created by gst_meta_info_new()</doc>
+            <type name="MetaInfo" c:type="GstMetaInfo*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <function name="new" c:identifier="gst_meta_info_new" version="1.24" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Creates a new structure that needs to be filled before being
+registered.  This structure should filled and then registered with
+gst_meta_info_register().
+
+Example:
+```c
+const GstMetaInfo *
+gst_my_meta_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (g_once_init_enter ((GstMetaInfo **) &amp; meta_info)) {
+    GstMetaInfo *info = gst_meta_info_new (
+      gst_my_meta_api_get_type (),
+        "GstMyMeta",
+       sizeof (GstMyMeta));
+    const GstMetaInfo *meta = NULL;
+
+    info-&gt;init_func = my_meta_init;
+    info-&gt;free_func = my_meta_free;
+    info-&gt;transform_func = my_meta_transform;
+    info-&gt;serialize_func = my_meta_serialize;
+    info-&gt;deserialize_func = my_meta_deserialize;
+    meta = gst_meta_info_register (info);
+    g_once_init_leave ((GstMetaInfo **) &amp; meta_info, (GstMetaInfo *) meta);
+  }
+
+  return meta_info;
+}
+```</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+        <return-value>
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a new #GstMetaInfo that needs to be filled</doc>
+          <type name="MetaInfo" c:type="GstMetaInfo*"/>
+        </return-value>
+        <parameters>
+          <parameter name="api" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the type of the #GstMeta API</doc>
+            <type name="GType" c:type="GType"/>
+          </parameter>
+          <parameter name="impl" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the name of the #GstMeta implementation</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+          <parameter name="size" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the size of the #GstMeta structure</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </function>
     </record>
     <callback name="MetaInitFunction" c:type="GstMetaInitFunction">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Function called when @meta is initialized in @buffer.</doc>
@@ -52324,48 +52351,6 @@ transform function.</doc>
         <parameter name="name" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the name of the #GstMeta implementation</doc>
           <type name="utf8" c:type="const gchar*"/>
-        </parameter>
-      </parameters>
-    </function>
-    <function name="meta_register_serializable" c:identifier="gst_meta_register_serializable" moved-to="Meta.register_serializable" version="1.24" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Same as gst_meta_register() but also set serialize/deserialize functions.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaInfo that can be used to access metadata.</doc>
-        <type name="MetaInfo" c:type="const GstMetaInfo*"/>
-      </return-value>
-      <parameters>
-        <parameter name="api" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the type of the #GstMeta API</doc>
-          <type name="GType" c:type="GType"/>
-        </parameter>
-        <parameter name="impl" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the name of the #GstMeta implementation</doc>
-          <type name="utf8" c:type="const gchar*"/>
-        </parameter>
-        <parameter name="size" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the size of the #GstMeta structure</doc>
-          <type name="gsize" c:type="gsize"/>
-        </parameter>
-        <parameter name="init_func" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaInitFunction</doc>
-          <type name="MetaInitFunction" c:type="GstMetaInitFunction"/>
-        </parameter>
-        <parameter name="free_func" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaFreeFunction</doc>
-          <type name="MetaFreeFunction" c:type="GstMetaFreeFunction"/>
-        </parameter>
-        <parameter name="transform_func" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaTransformFunction</doc>
-          <type name="MetaTransformFunction" c:type="GstMetaTransformFunction"/>
-        </parameter>
-        <parameter name="serialize_func" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaSerializeFunction</doc>
-          <type name="MetaSerializeFunction" c:type="GstMetaSerializeFunction"/>
-        </parameter>
-        <parameter name="deserialize_func" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a #GstMetaDeserializeFunction</doc>
-          <type name="MetaDeserializeFunction" c:type="GstMetaDeserializeFunction"/>
         </parameter>
       </parameters>
     </function>

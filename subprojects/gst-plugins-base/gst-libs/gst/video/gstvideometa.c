@@ -252,11 +252,14 @@ gst_video_meta_get_info (void)
   static const GstMetaInfo *video_meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & video_meta_info)) {
-    const GstMetaInfo *meta =
-        gst_meta_register_serializable (GST_VIDEO_META_API_TYPE, "GstVideoMeta",
-        sizeof (GstVideoMeta), (GstMetaInitFunction) gst_video_meta_init,
-        (GstMetaFreeFunction) NULL, gst_video_meta_transform,
-        video_meta_serialize, video_meta_deserialize);
+    GstMetaInfo *info = gst_meta_info_new (GST_VIDEO_META_API_TYPE,
+        "GstVideoMeta",
+        sizeof (GstVideoMeta));
+    info->init_func = gst_video_meta_init;
+    info->transform_func = gst_video_meta_transform;
+    info->serialize_func = video_meta_serialize;
+    info->deserialize_func = video_meta_deserialize;
+    const GstMetaInfo *meta = gst_meta_info_register (info);
     g_once_init_leave ((GstMetaInfo **) & video_meta_info,
         (GstMetaInfo *) meta);
   }

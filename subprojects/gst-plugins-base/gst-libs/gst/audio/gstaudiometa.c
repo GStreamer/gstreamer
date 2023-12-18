@@ -588,14 +588,16 @@ gst_audio_meta_get_info (void)
   static const GstMetaInfo *audio_meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & audio_meta_info)) {
-    const GstMetaInfo *meta =
-        gst_meta_register_serializable (GST_AUDIO_META_API_TYPE,
-        "GstAudioMeta", sizeof (GstAudioMeta),
-        gst_audio_meta_init,
-        gst_audio_meta_free,
-        gst_audio_meta_transform,
-        gst_audio_meta_serialize,
-        gst_audio_meta_deserialize);
+    GstMetaInfo *info = gst_meta_info_new (GST_AUDIO_META_API_TYPE,
+        "GstAudioMeta", sizeof (GstAudioMeta));
+
+    info->init_func = gst_audio_meta_init;
+    info->free_func = gst_audio_meta_free;
+    info->transform_func = gst_audio_meta_transform;
+    info->serialize_func = gst_audio_meta_serialize;
+    info->deserialize_func = gst_audio_meta_deserialize;
+    const GstMetaInfo *meta = gst_meta_info_register (info);
+
     g_once_init_leave ((GstMetaInfo **) & audio_meta_info,
         (GstMetaInfo *) meta);
   }

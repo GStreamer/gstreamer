@@ -371,14 +371,14 @@ gst_analytics_relation_meta_get_info (void)
 {
   static const GstMetaInfo *info = NULL;
   if (g_once_init_enter ((GstMetaInfo **) & info)) {
-    GstMetaInfo *meta = (GstMetaInfo *)
-        gst_meta_register (GST_ANALYTICS_RELATION_META_API_TYPE,
+    GstMetaInfo *meta = gst_meta_info_new (GST_ANALYTICS_RELATION_META_API_TYPE,
         "GstAnalyticsRelationMeta",
-        sizeof (GstAnalyticsRelationMeta),
-        gst_analytics_relation_meta_init,
-        gst_analytics_relation_meta_free,
-        gst_analytics_relation_meta_transform);
+        sizeof (GstAnalyticsRelationMeta));
+    meta->init_func = gst_analytics_relation_meta_init;
+    meta->free_func = gst_analytics_relation_meta_free;
+    meta->transform_func = gst_analytics_relation_meta_transform;
     meta->clear_func = gst_analytics_relation_meta_clear;
+    meta = (GstMetaInfo *) gst_meta_info_register (meta);
     g_once_init_leave ((GstMetaInfo **) & info, (GstMetaInfo *) meta);
   }
   return info;

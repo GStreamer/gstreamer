@@ -2918,16 +2918,17 @@ gst_reference_timestamp_meta_get_info (void)
   static const GstMetaInfo *meta_info = NULL;
 
   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
-    const GstMetaInfo *meta =
-        gst_meta_register_serializable
-        (gst_reference_timestamp_meta_api_get_type (),
+    const GstMetaInfo *meta = NULL;
+    GstMetaInfo *info =
+        gst_meta_info_new (gst_reference_timestamp_meta_api_get_type (),
         "GstReferenceTimestampMeta",
-        sizeof (GstReferenceTimestampMeta),
-        (GstMetaInitFunction) _gst_reference_timestamp_meta_init,
-        (GstMetaFreeFunction) _gst_reference_timestamp_meta_free,
-        _gst_reference_timestamp_meta_transform,
-        timestamp_meta_serialize,
-        timestamp_meta_deserialize);
+        sizeof (GstReferenceTimestampMeta));
+    info->init_func = (GstMetaInitFunction) _gst_reference_timestamp_meta_init;
+    info->free_func = (GstMetaFreeFunction) _gst_reference_timestamp_meta_free;
+    info->transform_func = _gst_reference_timestamp_meta_transform;
+    info->serialize_func = timestamp_meta_serialize;
+    info->deserialize_func = timestamp_meta_deserialize;
+    meta = gst_meta_info_register (info);
     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
   }
 

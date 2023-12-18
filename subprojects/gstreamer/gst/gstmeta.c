@@ -301,8 +301,9 @@ gst_meta_register_custom (const gchar * name, const gchar ** tags,
 {
   gchar *api_name = g_strdup_printf ("%s-api", name);
   GType api;
-  GstMetaInfoImpl *info;
-  GstMetaInfo *ret = NULL;
+  GstMetaInfo *info;
+  GstMetaInfoImpl *impl;
+  const GstMetaInfo *ret = NULL;
 
   g_return_val_if_fail (tags != NULL, NULL);
   g_return_val_if_fail (name != NULL, NULL);
@@ -312,20 +313,24 @@ gst_meta_register_custom (const gchar * name, const gchar ** tags,
   if (api == G_TYPE_INVALID)
     goto done;
 
-  info = (GstMetaInfoImpl *) gst_meta_register_serializable (api, name,
-      sizeof (GstCustomMeta),
-      custom_init_func, custom_free_func, custom_transform_func,
-      custom_serialize_func, custom_deserialize_func);
-
-  if (!info)
+  info = gst_meta_info_new (api, name, sizeof (GstCustomMeta));
+  if (info == NULL)
     goto done;
 
-  info->is_custom = TRUE;
-  info->custom_transform_func = transform_func;
-  info->custom_transform_user_data = user_data;
-  info->custom_transform_destroy_notify = destroy_data;
+  impl = (GstMetaInfoImpl *) info;
 
-  ret = (GstMetaInfo *) info;
+  info->init_func = custom_init_func;
+  info->free_func = custom_free_func;
+  info->transform_func = custom_transform_func;
+  info->serialize_func = custom_serialize_func;
+  info->deserialize_func = custom_deserialize_func;
+
+  impl->is_custom = TRUE;
+  impl->custom_transform_func = transform_func;
+  impl->custom_transform_user_data = user_data;
+  impl->custom_transform_destroy_notify = destroy_data;
+
+  ret = gst_meta_info_register (info);
 
 done:
   return ret;
@@ -411,27 +416,14 @@ gst_meta_register_internal (GType api, const gchar * impl, gsize size,
     GstMetaDeserializeFunction deserialize_func)
 {
   GstMetaInfo *info;
-  GType type;
-
-  g_return_val_if_fail (api != 0, NULL);
-  g_return_val_if_fail (impl != NULL, NULL);
-  g_return_val_if_fail (size != 0, NULL);
-
   if (init_func == NULL)
     g_critical ("Registering meta implementation '%s' without init function",
         impl);
 
-  /* first try to register the implementation name. It's possible
-   * that this fails because it was already registered. Don't warn,
-   * glib did this for us already. */
-  type = g_pointer_type_register_static (impl);
-  if (type == G_TYPE_INVALID)
+  info = gst_meta_info_new (api, impl, size);
+  if (info == NULL)
     return NULL;
 
-  info = (GstMetaInfo *) g_new0 (GstMetaInfoImpl, 1);
-  info->api = api;
-  info->type = type;
-  info->size = size;
   info->init_func = init_func;
   info->free_func = free_func;
   info->transform_func = transform_func;
@@ -439,16 +431,7 @@ gst_meta_register_internal (GType api, const gchar * impl, gsize size,
   info->deserialize_func = deserialize_func;
   ((GstMetaInfoImpl *) info)->is_custom = FALSE;
 
-  GST_CAT_DEBUG (GST_CAT_META,
-      "register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT, impl,
-      g_type_name (api), size);
-
-  g_rw_lock_writer_lock (&lock);
-  g_hash_table_insert (metainfo, (gpointer) g_intern_string (impl),
-      (gpointer) info);
-  g_rw_lock_writer_unlock (&lock);
-
-  return info;
+  return gst_meta_info_register (info);
 }
 
 /**
@@ -478,33 +461,103 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
 }
 
 /**
- * gst_meta_register_serializable: (skip):
- * @api: the type of the #GstMeta API
+ * gst_meta_info_new:
+ * @api:  the type of the #GstMeta API
  * @impl: the name of the #GstMeta implementation
  * @size: the size of the #GstMeta structure
- * @init_func: a #GstMetaInitFunction
- * @free_func: a #GstMetaFreeFunction
- * @transform_func: a #GstMetaTransformFunction
- * @serialize_func: a #GstMetaSerializeFunction
- * @deserialize_func: a #GstMetaDeserializeFunction
  *
- * Same as gst_meta_register() but also set serialize/deserialize functions.
+ * Creates a new structure that needs to be filled before being
+ * registered.  This structure should filled and then registered with
+ * gst_meta_info_register().
  *
- * Returns: (transfer none): a #GstMetaInfo that can be used to access metadata.
+ * Example:
+ * ```c
+ * const GstMetaInfo *
+ * gst_my_meta_get_info (void)
+ * {
+ *   static const GstMetaInfo *meta_info = NULL;
+ *
+ *   if (g_once_init_enter ((GstMetaInfo **) & meta_info)) {
+ *     GstMetaInfo *info = gst_meta_info_new (
+ *       gst_my_meta_api_get_type (),
+ *         "GstMyMeta",
+ *        sizeof (GstMyMeta));
+ *     const GstMetaInfo *meta = NULL;
+ *
+ *     info->init_func = my_meta_init;
+ *     info->free_func = my_meta_free;
+ *     info->transform_func = my_meta_transform;
+ *     info->serialize_func = my_meta_serialize;
+ *     info->deserialize_func = my_meta_deserialize;
+ *     meta = gst_meta_info_register (info);
+ *     g_once_init_leave ((GstMetaInfo **) & meta_info, (GstMetaInfo *) meta);
+ *   }
+ *
+ *   return meta_info;
+ * }
+ * ```
+ *
+ * Returns: a new #GstMetaInfo that needs to be filled
  *
  * Since: 1.24
  */
-const GstMetaInfo *
-gst_meta_register_serializable (GType api, const gchar * impl, gsize size,
-    GstMetaInitFunction init_func, GstMetaFreeFunction free_func,
-    GstMetaTransformFunction transform_func,
-    GstMetaSerializeFunction serialize_func,
-    GstMetaDeserializeFunction deserialize_func)
+
+GstMetaInfo *
+gst_meta_info_new (GType api, const gchar * impl, gsize size)
 {
-  g_return_val_if_fail (serialize_func != NULL, NULL);
-  g_return_val_if_fail (deserialize_func != NULL, NULL);
-  return gst_meta_register_internal (api, impl, size, init_func, free_func,
-      transform_func, serialize_func, deserialize_func);
+  GType type;
+  GstMetaInfo *info;
+
+  g_return_val_if_fail (api != 0, NULL);
+  g_return_val_if_fail (impl != NULL, NULL);
+  g_return_val_if_fail (size != 0, NULL);
+
+  /* first try to register the implementation name. It's possible
+   * that this fails because it was already registered. Don't warn,
+   * glib did this for us already. */
+  type = g_pointer_type_register_static (impl);
+
+  info = (GstMetaInfo *) g_new0 (GstMetaInfoImpl, 1);
+  info->api = api;
+  info->type = type;
+  info->size = size;
+
+  return info;
+}
+
+/**
+ * gst_meta_info_register:
+ * @info: (transfer full): a new #GstMetaInfo created by gst_meta_info_new()
+ *
+ * Registers a new meta.
+ *
+ * Use the structure returned by gst_meta_info_new(), it consumes it and the
+ * structure shouldnt be used after. The one returned by the function can be
+ * kept.
+ *
+ * Returns: (transfer none): the registered meta
+ *
+ * Since: 1.24
+ */
+
+const GstMetaInfo *
+gst_meta_info_register (GstMetaInfo * info)
+{
+  if (info->type == G_TYPE_INVALID) {
+    g_free (info);
+    return NULL;
+  }
+
+  GST_CAT_DEBUG (GST_CAT_META,
+      "register \"%s\" implementing \"%s\" of size %" G_GSIZE_FORMAT,
+      g_type_name (info->type), g_type_name (info->api), info->size);
+
+  g_rw_lock_writer_lock (&lock);
+  g_hash_table_insert (metainfo,
+      (gpointer) g_intern_string (g_type_name (info->type)), (gpointer) info);
+  g_rw_lock_writer_unlock (&lock);
+
+  return info;
 }
 
 /**

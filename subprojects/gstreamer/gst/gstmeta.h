@@ -367,13 +367,11 @@ const GstMetaInfo *  gst_meta_register          (GType api, const gchar *impl,
                                                  GstMetaTransformFunction transform_func);
 
 GST_API
-const GstMetaInfo *  gst_meta_register_serializable (GType api, const gchar *impl,
-                                                     gsize size,
-                                                     GstMetaInitFunction init_func,
-                                                     GstMetaFreeFunction free_func,
-                                                     GstMetaTransformFunction transform_func,
-                                                     GstMetaSerializeFunction serialize_func,
-                                                     GstMetaDeserializeFunction deserialize_func);
+GstMetaInfo *        gst_meta_info_new (GType api,
+                                        const gchar *impl,
+                                        gsize size);
+GST_API
+const GstMetaInfo *  gst_meta_info_register (GstMetaInfo *info);
 
 GST_API
 const GstMetaInfo *  gst_meta_register_custom   (const gchar *name, const gchar **tags,
