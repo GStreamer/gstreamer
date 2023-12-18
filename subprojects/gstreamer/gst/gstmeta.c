@@ -56,7 +56,6 @@ static GHashTable *metainfo = NULL;
 static GRWLock lock;
 
 GQuark _gst_meta_transform_copy;
-GQuark _gst_meta_transform_clear;
 GQuark _gst_meta_tag_memory;
 GQuark _gst_meta_tag_memory_reference;
 
@@ -82,7 +81,6 @@ _priv_gst_meta_initialize (void)
   metainfo = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, free_info);
 
   _gst_meta_transform_copy = g_quark_from_static_string ("gst-copy");
-  _gst_meta_transform_clear = g_quark_from_static_string ("gst-clear");
   _gst_meta_tag_memory = g_quark_from_static_string ("memory");
   _gst_meta_tag_memory_reference =
       g_quark_from_static_string ("memory-reference");
@@ -430,7 +428,7 @@ gst_meta_register_internal (GType api, const gchar * impl, gsize size,
   if (type == G_TYPE_INVALID)
     return NULL;
 
-  info = (GstMetaInfo *) g_new (GstMetaInfoImpl, 1);
+  info = (GstMetaInfo *) g_new0 (GstMetaInfoImpl, 1);
   info->api = api;
   info->type = type;
   info->size = size;

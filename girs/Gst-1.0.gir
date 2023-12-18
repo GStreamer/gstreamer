@@ -22164,16 +22164,6 @@ In hindsight, this tag should have been called "memory-layout".</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
-    <function-macro name="META_TRANSFORM_IS_CLEAR" c:identifier="GST_META_TRANSFORM_IS_CLEAR" version="1.24" introspectable="0">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Check if the transform type is clearing the content of the meta without
-freeing it.</doc>
-      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
-      <parameters>
-        <parameter name="type">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a transform type</doc>
-        </parameter>
-      </parameters>
-    </function-macro>
     <function-macro name="META_TRANSFORM_IS_COPY" c:identifier="GST_META_TRANSFORM_IS_COPY" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Check if the transform type is a copy transform</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
@@ -26093,6 +26083,24 @@ transform function.</doc>
         </parameters>
       </function>
     </record>
+    <callback name="MetaClearFunction" c:type="GstMetaClearFunction" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Clears the content of the meta. This will be called by the GstBufferPool
+when a pooled buffer is returned.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="buffer" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a #GstBuffer</doc>
+          <type name="Buffer" c:type="GstBuffer*"/>
+        </parameter>
+        <parameter name="meta" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">a #GstMeta</doc>
+          <type name="Meta" c:type="GstMeta*"/>
+        </parameter>
+      </parameters>
+    </callback>
     <callback name="MetaDeserializeFunction" c:type="GstMetaDeserializeFunction" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Recreate a #GstMeta from serialized data returned by
 #GstMetaSerializeFunction and add it to @buffer.</doc>
@@ -26195,6 +26203,12 @@ meta.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Function for deserializing the metadata, or %NULL if not supported by this
 meta.</doc>
         <type name="MetaDeserializeFunction" c:type="GstMetaDeserializeFunction"/>
+      </field>
+      <field name="clear_func" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.h">Function for clearing the metadata, or %NULL if not supported by this
+meta. This is called by the buffer pool when a buffer is returned for
+pooled metas.</doc>
+        <type name="MetaClearFunction" c:type="GstMetaClearFunction"/>
       </field>
       <method name="is_custom" c:identifier="gst_meta_info_is_custom" version="1.20">
         <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>

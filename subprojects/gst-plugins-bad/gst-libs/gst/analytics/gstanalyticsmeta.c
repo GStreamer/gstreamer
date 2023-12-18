@@ -344,39 +344,41 @@ gst_analytics_relation_meta_transform (GstBuffer * transbuf,
 
       return FALSE;
     }
-  } else if (GST_META_TRANSFORM_IS_CLEAR (type)) {
-    GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *) meta;
-    gsize adj_mat_data_size =
-        (sizeof (guint8) * rmeta->rel_order * rmeta->rel_order);
-
-    rmeta->next_id = 0;
-    rmeta->offset = 0;
-    rmeta->length = 0;
-    if (adj_mat_data_size) {
-      /* Only clear data and not lines addresses occupying begining of this
-       * array. */
-      memset (rmeta->adj_mat + rmeta->rel_order, 0, adj_mat_data_size);
-    }
-
-    return TRUE;
   }
 
   return FALSE;
 }
 
+static void
+gst_analytics_relation_meta_clear (GstBuffer * buffer, GstMeta * meta)
+{
+  GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *) meta;
+  gsize adj_mat_data_size =
+      (sizeof (guint8) * rmeta->rel_order * rmeta->rel_order);
+
+  rmeta->next_id = 0;
+  rmeta->offset = 0;
+  rmeta->length = 0;
+  if (adj_mat_data_size) {
+    /* Only clear data and not lines addresses occupying begining of this
+     * array. */
+    memset (rmeta->adj_mat + rmeta->rel_order, 0, adj_mat_data_size);
+  }
+}
 
 const GstMetaInfo *
 gst_analytics_relation_meta_get_info (void)
 {
   static const GstMetaInfo *info = NULL;
   if (g_once_init_enter ((GstMetaInfo **) & info)) {
-    const GstMetaInfo *meta =
+    GstMetaInfo *meta = (GstMetaInfo *)
         gst_meta_register (GST_ANALYTICS_RELATION_META_API_TYPE,
         "GstAnalyticsRelationMeta",
         sizeof (GstAnalyticsRelationMeta),
         gst_analytics_relation_meta_init,
         gst_analytics_relation_meta_free,
         gst_analytics_relation_meta_transform);
+    meta->clear_func = gst_analytics_relation_meta_clear;
     g_once_init_leave ((GstMetaInfo **) & info, (GstMetaInfo *) meta);
   }
   return info;

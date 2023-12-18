@@ -1221,10 +1221,8 @@ remove_meta_unpooled (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
     const GstMetaInfo *info = (*meta)->info;
 
     /* If we can clear it, don't free it */
-    if (info->transform_func) {
-      info->transform_func (NULL, *meta, buffer, _gst_meta_transform_clear,
-          NULL);
-    }
+    if (info->clear_func)
+      info->clear_func (buffer, *meta);
   }
   return TRUE;
 }

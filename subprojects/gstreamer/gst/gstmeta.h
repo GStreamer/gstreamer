@@ -198,27 +198,6 @@ typedef struct {
 } GstMetaTransformCopy;
 
 /**
- * gst_meta_transform_clear:
- *
- * GQuark for the "gst-clear" transform.
- *
- * Since: 1.24
- */
-
-GST_API GQuark _gst_meta_transform_clear;
-
-/**
- * GST_META_TRANSFORM_IS_CLEAR:
- * @type: a transform type
- *
- * Check if the transform type is clearing the content of the meta without
- * freeing it.
- *
- * Since: 1.24
- */
-#define GST_META_TRANSFORM_IS_CLEAR(type) ((type) == _gst_meta_transform_clear)
-
-/**
  * GstMetaTransformFunction:
  * @transbuf: a #GstBuffer
  * @meta: a #GstMeta
@@ -302,6 +281,18 @@ typedef GstMeta *(*GstMetaDeserializeFunction) (const GstMetaInfo *info,
     GstBuffer *buffer, const guint8 *data, gsize size, guint8 version);
 
 /**
+ * GstMetaClearFunction:
+ * @buffer: a #GstBuffer
+ * @meta: a #GstMeta
+ *
+ * Clears the content of the meta. This will be called by the GstBufferPool
+ * when a pooled buffer is returned.
+ *
+ * Since: 1.24
+ */
+typedef void (*GstMetaClearFunction) (GstBuffer *buffer, GstMeta *meta);
+
+/**
  * GstMetaInfo.serialize_func:
  *
  * Function for serializing the metadata, or %NULL if not supported by this
@@ -315,6 +306,16 @@ typedef GstMeta *(*GstMetaDeserializeFunction) (const GstMetaInfo *info,
  *
  * Function for deserializing the metadata, or %NULL if not supported by this
  * meta.
+ *
+ * Since: 1.24
+ */
+
+/**
+ * GstMetaInfo.clear_func:
+ *
+ * Function for clearing the metadata, or %NULL if not supported by this
+ * meta. This is called by the buffer pool when a buffer is returned for
+ * pooled metas.
  *
  * Since: 1.24
  */
@@ -345,6 +346,7 @@ struct _GstMetaInfo {
   GstMetaTransformFunction   transform_func;
   GstMetaSerializeFunction   serialize_func;
   GstMetaDeserializeFunction deserialize_func;
+  GstMetaClearFunction       clear_func;
 
   /* No padding needed, GstMetaInfo is always allocated by GStreamer and is
    * not subclassable or stack-allocatable, so we can extend it as we please
