@@ -357,6 +357,20 @@ performed.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="config_get_pipeline_dump_in_error_details" c:identifier="gst_play_config_get_pipeline_dump_in_error_details" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">%TRUE if pipeline dumps are included in #GstPlay error message
+details.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="config_get_position_update_interval" c:identifier="gst_play_config_get_position_update_interval" version="1.20">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
         <return-value transfer-ownership="none">
@@ -395,6 +409,27 @@ gst_play_config_set_user_agent() if any.</doc>
           <parameter name="config" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
             <type name="Gst.Structure" c:type="const GstStructure*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_pipeline_dump_in_error_details" c:identifier="gst_play_config_set_pipeline_dump_in_error_details" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">When enabled, the error message emitted by #GstPlay will include a pipeline
+dump (in Graphviz DOT format) in the error details #GstStructure. The field
+name is `pipeline-dump`.
+
+This option is disabled by default.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">a #GstPlay configuration</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="value" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/play/gstplay.c">Include pipeline dumps in error details, or not.</doc>
+            <type name="gboolean" c:type="gboolean"/>
           </parameter>
         </parameters>
       </function>
