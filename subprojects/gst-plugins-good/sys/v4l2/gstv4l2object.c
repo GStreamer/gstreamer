@@ -985,6 +985,10 @@ gst_v4l2_object_close (GstV4l2Object * v4l2object)
     v4l2object->channel = NULL;
   }
 
+  /* remove old fd from poll */
+  if (v4l2object->poll)
+    gst_poll_remove_fd (v4l2object->poll, &v4l2object->pollfd);
+
   return TRUE;
 }
 
