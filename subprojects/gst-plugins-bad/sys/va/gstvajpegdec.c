@@ -535,6 +535,10 @@ _fixup_sink_caps (GstVaDisplay * display, GstCaps * caps)
     g_value_unset (&sampling);
     return ret;
   }
+
+  /* TODO: support interleaved mjpeg */
+  gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING, "progressive",
+      NULL);
   return gst_caps_ref (caps);
 }
 
