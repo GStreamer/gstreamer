@@ -641,8 +641,13 @@ get_utf8_from_data (const guint8 * data, guint16 size)
     "GST_TAG_ENCODING", NULL
   };
   const char *str = (gchar *) data;
+  char *ret;
 
-  return gst_tag_freeform_string_to_utf8 (str, size, env_vars);
+  ret = gst_tag_freeform_string_to_utf8 (str, size, env_vars);
+  if (!ret)
+    GST_MEMDUMP ("non-parsed marker data", data, size);
+
+  return ret;
 }
 
 /* read comment and post as tag */
@@ -905,10 +910,8 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
         parse->state |= GST_JPEG_PARSER_STATE_GOT_SOS;
         break;
       case GST_JPEG_MARKER_COM:
-        if (!gst_jpeg_parse_com (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse com segment"));
-        }
+        if (!gst_jpeg_parse_com (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse com segment");
         break;
       case GST_JPEG_MARKER_APP0:
         if (!gst_jpeg_parse_app0 (parse, &seg)) {
