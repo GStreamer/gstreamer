@@ -1483,8 +1483,6 @@ gst_h264_parse_received_first_vcl_nal (GstH264Parse * h264parse)
       default:
         return FALSE;
     }
-    return gst_h264_parse_received_first_vcl_nal_base (h264parse,
-        slice_hdr_prev);
   }
   return FALSE;
 }
