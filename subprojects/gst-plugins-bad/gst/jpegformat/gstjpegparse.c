@@ -244,6 +244,9 @@ gst_jpeg_parse_set_sink_caps (GstBaseParse * bparse, GstCaps * caps)
       parse->field_order = gst_video_field_order_from_string (field_order);
   }
 
+  g_clear_pointer (&parse->colorimetry, g_free);
+  parse->colorimetry = g_strdup (gst_structure_get_string (s, "colorimetry"));
+
   return TRUE;
 }
 
@@ -723,6 +726,11 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
         sampling_to_string (parse->sampling), NULL);
   }
 
+  if (parse->colorimetry) {
+    gst_caps_set_simple (caps, "colorimetry", G_TYPE_STRING, parse->colorimetry,
+        NULL);
+  }
+
   gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
       gst_video_interlace_mode_to_string (parse->interlace_mode), NULL);
 
@@ -994,6 +1002,7 @@ gst_jpeg_parse_stop (GstBaseParse * bparse)
   }
   gst_clear_buffer (&parse->codec_data);
   gst_clear_caps (&parse->prev_caps);
+  g_clear_pointer (&parse->colorimetry, g_free);
 
   return TRUE;
 }

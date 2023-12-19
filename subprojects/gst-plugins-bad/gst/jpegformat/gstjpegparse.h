@@ -63,6 +63,7 @@ struct _GstJpegParse {
   gint orig_width, orig_height;
 
   GstBuffer *codec_data;
+  char *colorimetry;
   GstVideoInterlaceMode interlace_mode;
   GstVideoFieldOrder field_order;
   guint field;
