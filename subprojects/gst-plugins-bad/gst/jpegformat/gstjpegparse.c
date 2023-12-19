@@ -61,7 +61,6 @@
 #include <gst/base/gstbytereader.h>
 #include <gst/codecparsers/gstjpegparser.h>
 #include <gst/tag/tag.h>
-#include <gst/video/video.h>
 
 #include "gstjpegparse.h"
 
@@ -191,16 +190,59 @@ gst_jpeg_parse_init (GstJpegParse * parse)
   parse->sof = -1;
 }
 
+static void
+parse_avid (GstJpegParse * parse, const guint8 * data, guint16 len)
+{
+  parse->avid = 1;
+  if (len > 14 && data[12] == 1)        /* 1 - NTSC */
+    parse->field_order = GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST;
+  if (len > 14 && data[12] == 2)        /* 2 - PAL */
+    parse->field_order = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+  GST_INFO_OBJECT (parse, "AVID: %s",
+      gst_video_field_order_to_string (parse->field_order));
+}
+
 static gboolean
 gst_jpeg_parse_set_sink_caps (GstBaseParse * bparse, GstCaps * caps)
 {
   GstJpegParse *parse = GST_JPEG_PARSE_CAST (bparse);
   GstStructure *s = gst_caps_get_structure (caps, 0);
+  const GValue *codec_data;
+  const char *interlace_mode, *field_order;
 
   GST_DEBUG_OBJECT (parse, "get sink caps %" GST_PTR_FORMAT, caps);
 
   gst_structure_get_fraction (s, "framerate",
       &parse->framerate_numerator, &parse->framerate_denominator);
+
+  gst_structure_get_int (s, "height", &parse->orig_height);
+  gst_structure_get_int (s, "width", &parse->orig_width);
+
+  codec_data = gst_structure_get_value (s, "codec_data");
+  if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
+    GstMapInfo map;
+
+    gst_clear_buffer (&parse->codec_data);
+
+    parse->codec_data = GST_BUFFER (g_value_dup_boxed (codec_data));
+    if (gst_buffer_map (parse->codec_data, &map, GST_MAP_READ)) {
+      if (map.size > 8 && map.data[0] == 0x2c && map.data[4] == 0x18)
+        parse_avid (parse, map.data, map.size);
+      gst_buffer_unmap (parse->codec_data, &map);
+    }
+  }
+
+  interlace_mode = gst_structure_get_string (s, "interlace-mode");
+  if (interlace_mode) {
+    parse->interlace_mode =
+        gst_video_interlace_mode_from_string (interlace_mode);
+  }
+
+  if (parse->interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE) {
+    field_order = gst_structure_get_string (s, "field-order");
+    if (field_order)
+      parse->field_order = gst_video_field_order_from_string (field_order);
+  }
 
   return TRUE;
 }
@@ -278,9 +320,6 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
     return FALSE;
   }
 
-  parse->width = hdr.width;
-  parse->height = hdr.height;
-
   parse->colorspace = GST_JPEG_COLORSPACE_NONE;
   parse->sampling = GST_JPEG_SAMPLING_NONE;
 
@@ -344,6 +383,24 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
     default:
       GST_WARNING_OBJECT (parse, "Unknown color space");
       break;
+  }
+
+  if (hdr.width != parse->width || hdr.height != parse->height) {
+    parse->width = hdr.width;
+    parse->height = hdr.height;
+
+    if (parse->first_picture && !parse->multiscope) {
+      if (parse->orig_height > 0
+          && parse->height < ((parse->orig_height * 3) / 4)) {
+        parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      } else if (parse->avid) {
+        if (parse->orig_height == 0)
+          parse->orig_height = 2 * hdr.height;
+        parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      }
+    }
+
+    parse->first_picture = FALSE;
   }
 
   GST_INFO_OBJECT (parse, "SOF [%dx%d] %d comp - %s", parse->width,
@@ -442,6 +499,9 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
     /* polarity */
     if (!gst_byte_reader_get_uint8 (&reader, &unit))
       return FALSE;
+
+    parse->avid = TRUE;
+    parse->field = unit == 1 ? 0 : 1;
 
     /* TODO: update caps for interlaced MJPEG */
     GST_DEBUG_OBJECT (parse, "MJPEG interleaved field: %d", unit);
@@ -580,39 +640,50 @@ gst_jpeg_parse_com (GstJpegParse * parse, GstJpegSegment * seg)
   GstByteReader reader;
   const guint8 *data = NULL;
   guint16 size;
-  gchar *comment;
+  const gchar *buf;
 
   gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
   gst_byte_reader_skip_unchecked (&reader, 2);
 
   size = gst_byte_reader_get_remaining (&reader);
-
   if (!gst_byte_reader_get_data (&reader, size, &data))
     return FALSE;
 
-  comment = get_utf8_from_data (data, size);
-  if (!comment)
-    return FALSE;
+  buf = (const gchar *) data;
+  /* buggy avid, it puts EOI only at every 10th frame */
+  if (g_str_has_prefix (buf, "AVID")) {
+    parse_avid (parse, data, size);
+  } else if (g_str_has_prefix (buf, "MULTISCOPE II")) {
+    parse->x_density = 1;
+    parse->y_density = 2;
+    parse->multiscope = TRUE;
+  } else {
+    gchar *comment;
 
-  GST_INFO_OBJECT (parse, "comment found: %s", comment);
-  gst_tag_list_add (get_tag_list (parse), GST_TAG_MERGE_REPLACE,
-      GST_TAG_COMMENT, comment, NULL);
-  g_free (comment);
+    comment = get_utf8_from_data (data, size);
+    if (!comment)
+      return FALSE;
+
+    GST_INFO_OBJECT (parse, "comment found: %s", comment);
+    gst_tag_list_add (get_tag_list (parse), GST_TAG_MERGE_REPLACE,
+        GST_TAG_COMMENT, comment, NULL);
+    g_free (comment);
+  }
 
   return TRUE;
 }
 
+/* reset per image */
 static void
 gst_jpeg_parse_reset (GstJpegParse * parse)
 {
-  parse->width = 0;
-  parse->height = 0;
   parse->last_offset = 0;
   parse->state = 0;
   parse->sof = -1;
   parse->adobe_transform = 0;
   parse->x_density = 0;
   parse->y_density = 0;
+  parse->field = 0;
 
   if (parse->tags) {
     gst_tag_list_unref (parse->tags);
@@ -637,7 +708,9 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
 
   if (parse->width > 0)
     gst_caps_set_simple (caps, "width", G_TYPE_INT, parse->width, NULL);
-  if (parse->width > 0)
+  if (parse->orig_height > 0 && parse->orig_height > parse->height)
+    gst_caps_set_simple (caps, "height", G_TYPE_INT, parse->orig_height, NULL);
+  else if (parse->height > 0)
     gst_caps_set_simple (caps, "height", G_TYPE_INT, parse->height, NULL);
   if (parse->sof >= 0)
     gst_caps_set_simple (caps, "sof-marker", G_TYPE_INT, parse->sof, NULL);
@@ -650,12 +723,25 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
         sampling_to_string (parse->sampling), NULL);
   }
 
+  gst_caps_set_simple (caps, "interlace-mode", G_TYPE_STRING,
+      gst_video_interlace_mode_to_string (parse->interlace_mode), NULL);
+
+  if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED) {
+    gst_caps_set_simple (caps, "field-order", G_TYPE_STRING,
+        gst_video_field_order_to_string (parse->field_order), NULL);
+  }
+
   gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
       parse->framerate_numerator, parse->framerate_denominator, NULL);
 
   if (parse->x_density > 0 && parse->y_density > 0) {
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
         parse->x_density, parse->y_density, NULL);
+  }
+
+  if (parse->codec_data) {
+    gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, parse->codec_data,
+        NULL);
   }
 
   if (parse->prev_caps && gst_caps_is_equal_fixed (caps, parse->prev_caps)) {
@@ -711,6 +797,8 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
   GstJpegSegment seg;
   guint offset;
 
+  GST_TRACE_OBJECT (parse, "frame %" GST_PTR_FORMAT, frame->buffer);
+
   if (!gst_buffer_map (frame->buffer, &mapinfo, GST_MAP_READ))
     return GST_FLOW_ERROR;
 
@@ -754,7 +842,9 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
     switch (marker) {
       case GST_JPEG_MARKER_SOI:
         /* This means that new SOI comes without an previous EOI. */
-        if (offset > 2) {
+        if (offset > 2
+            && (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+                || parse->field == 0)) {
           /* If already some data segment parsed, push it as a frame. */
           if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOS)) {
             gst_buffer_unmap (frame->buffer, &mapinfo);
@@ -785,8 +875,15 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
         parse->state |= GST_JPEG_PARSER_STATE_GOT_SOI;
         break;
       case GST_JPEG_MARKER_EOI:
-        gst_buffer_unmap (frame->buffer, &mapinfo);
-        return gst_jpeg_parse_finish_frame (parse, frame, seg.offset);
+        if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_PROGRESSIVE
+            || parse->field == 1) {
+          gst_buffer_unmap (frame->buffer, &mapinfo);
+          return gst_jpeg_parse_finish_frame (parse, frame, seg.offset);
+        } else if (parse->interlace_mode == GST_VIDEO_INTERLACE_MODE_INTERLEAVED
+            && parse->field == 0) {
+          parse->field = 1;
+          parse->state = 0;
+        }
         break;
       case GST_JPEG_MARKER_SOS:
         if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOF))
@@ -874,6 +971,11 @@ gst_jpeg_parse_start (GstBaseParse * bparse)
   parse->framerate_numerator = 0;
   parse->framerate_denominator = 1;
 
+  parse->first_picture = TRUE;
+
+  parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+  parse->field_order = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+
   gst_jpeg_parse_reset (parse);
 
   gst_base_parse_set_min_frame_size (bparse, 2);
@@ -890,6 +992,7 @@ gst_jpeg_parse_stop (GstBaseParse * bparse)
     gst_tag_list_unref (parse->tags);
     parse->tags = NULL;
   }
+  gst_clear_buffer (&parse->codec_data);
   gst_clear_caps (&parse->prev_caps);
 
   return TRUE;

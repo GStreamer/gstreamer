@@ -26,6 +26,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstbaseparse.h>
+#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 
@@ -50,11 +51,21 @@ struct _GstJpegParse {
   guint last_offset;
   gint state;
 
+  gboolean first_picture;
+  gboolean multiscope;
+  gboolean avid;
+
   gint8 sof;
   gint8 adobe_transform;
 
   /* the parsed frame size */
   guint16 width, height;
+  gint orig_width, orig_height;
+
+  GstBuffer *codec_data;
+  GstVideoInterlaceMode interlace_mode;
+  GstVideoFieldOrder field_order;
+  guint field;
 
   /* format color space */
   guint colorspace;
