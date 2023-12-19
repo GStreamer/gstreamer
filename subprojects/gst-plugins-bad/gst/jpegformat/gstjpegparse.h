@@ -54,6 +54,7 @@ struct _GstJpegParse {
   gboolean first_picture;
   gboolean multiscope;
   gboolean avid;
+  gboolean renegotiate;
 
   gint8 sof;
   gint8 adobe_transform;

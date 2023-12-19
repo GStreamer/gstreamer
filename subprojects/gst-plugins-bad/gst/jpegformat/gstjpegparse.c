@@ -318,35 +318,37 @@ static gboolean
 gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
 {
   GstJpegFrameHdr hdr = { 0, };
+  guint colorspace;
+  guint sampling;
 
   if (!gst_jpeg_segment_parse_frame_header (seg, &hdr)) {
     return FALSE;
   }
 
-  parse->colorspace = GST_JPEG_COLORSPACE_NONE;
-  parse->sampling = GST_JPEG_SAMPLING_NONE;
+  colorspace = GST_JPEG_COLORSPACE_NONE;
+  sampling = GST_JPEG_SAMPLING_NONE;
 
   switch (hdr.num_components) {
     case 1:
-      parse->colorspace = GST_JPEG_COLORSPACE_GRAY;
-      parse->sampling = GST_JPEG_SAMPLING_GRAYSCALE;
+      colorspace = GST_JPEG_COLORSPACE_GRAY;
+      sampling = GST_JPEG_SAMPLING_GRAYSCALE;
       break;
     case 3:
       if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF)) {
-        parse->colorspace = GST_JPEG_COLORSPACE_YUV;
-        parse->sampling = yuv_sampling (&hdr);
+        colorspace = GST_JPEG_COLORSPACE_YUV;
+        sampling = yuv_sampling (&hdr);
       } else {
         if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_ADOBE)) {
           if (parse->adobe_transform == 0) {
-            parse->colorspace = GST_JPEG_COLORSPACE_RGB;
-            parse->sampling = GST_JPEG_SAMPLING_RGB;
+            colorspace = GST_JPEG_COLORSPACE_RGB;
+            sampling = GST_JPEG_SAMPLING_RGB;
           } else if (parse->adobe_transform == 1) {
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;;
+            sampling = yuv_sampling (&hdr);
           } else {
             GST_DEBUG_OBJECT (parse, "Unknown Adobe color transform code");
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;;
+            sampling = yuv_sampling (&hdr);
           }
         } else {
           int cid0, cid1, cid2;
@@ -356,15 +358,15 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
           cid2 = hdr.components[2].identifier;
 
           if (cid0 == 1 && cid1 == 2 && cid2 == 3) {
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;
+            sampling = yuv_sampling (&hdr);
           } else if (cid0 == 'R' && cid1 == 'G' && cid2 == 'B') {
-            parse->colorspace = GST_JPEG_COLORSPACE_RGB;
-            parse->sampling = GST_JPEG_SAMPLING_RGB;
+            colorspace = GST_JPEG_COLORSPACE_RGB;
+            sampling = GST_JPEG_SAMPLING_RGB;
           } else {
             GST_DEBUG_OBJECT (parse, "Unrecognized component IDs");
-            parse->colorspace = GST_JPEG_COLORSPACE_YUV;
-            parse->sampling = yuv_sampling (&hdr);
+            colorspace = GST_JPEG_COLORSPACE_YUV;
+            sampling = yuv_sampling (&hdr);
           }
         }
       }
@@ -372,15 +374,15 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
     case 4:
       if (valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_ADOBE)) {
         if (parse->adobe_transform == 0) {
-          parse->colorspace = GST_JPEG_COLORSPACE_CMYK;
+          colorspace = GST_JPEG_COLORSPACE_CMYK;
         } else if (parse->adobe_transform == 2) {
-          parse->colorspace = GST_JPEG_COLORSPACE_YCCK;
+          colorspace = GST_JPEG_COLORSPACE_YCCK;
         } else {
           GST_DEBUG_OBJECT (parse, "Unknown Adobe color transform code");
-          parse->colorspace = GST_JPEG_COLORSPACE_YCCK;
+          colorspace = GST_JPEG_COLORSPACE_YCCK;
         }
       } else {
-        parse->colorspace = GST_JPEG_COLORSPACE_CMYK;
+        colorspace = GST_JPEG_COLORSPACE_CMYK;
       }
       break;
     default:
@@ -388,9 +390,12 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
       break;
   }
 
-  if (hdr.width != parse->width || hdr.height != parse->height) {
+  if (hdr.width != parse->width || hdr.height != parse->height
+      || colorspace != parse->colorspace || sampling != parse->sampling) {
     parse->width = hdr.width;
     parse->height = hdr.height;
+    parse->colorspace = colorspace;
+    parse->sampling = sampling;
 
     if (parse->first_picture && !parse->multiscope) {
       if (parse->orig_height > 0
@@ -404,6 +409,7 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
     }
 
     parse->first_picture = FALSE;
+    parse->renegotiate = TRUE;
   }
 
   GST_INFO_OBJECT (parse, "SOF [%dx%d] %d comp - %s", parse->width,
@@ -465,8 +471,11 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
 
     if (unit == 0) {
       /* no units, X and Y specify the pixel aspect ratio */
-      parse->x_density = xd;
-      parse->y_density = yd;
+      if (parse->x_density != xd || parse->y_density != yd) {
+        parse->renegotiate = TRUE;
+        parse->x_density = xd;
+        parse->y_density = yd;
+      }
     } else if (unit == 1 || unit == 2) {
       /* tag pixel per inches */
       double hppi = xd, vppi = yd;
@@ -682,10 +691,7 @@ gst_jpeg_parse_reset (GstJpegParse * parse)
 {
   parse->last_offset = 0;
   parse->state = 0;
-  parse->sof = -1;
   parse->adobe_transform = 0;
-  parse->x_density = 0;
-  parse->y_density = 0;
   parse->field = 0;
 
   if (parse->tags) {
@@ -704,7 +710,11 @@ static gboolean
 gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
 {
   GstCaps *caps;
+  GstEvent *event;
   gboolean res;
+
+  if (!parse->renegotiate)
+    return TRUE;
 
   caps = gst_caps_new_simple ("image/jpeg", "parsed", G_TYPE_BOOLEAN, TRUE,
       NULL);
@@ -752,21 +762,17 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
         NULL);
   }
 
-  if (parse->prev_caps && gst_caps_is_equal_fixed (caps, parse->prev_caps)) {
-    gst_caps_unref (caps);
-    return TRUE;
-  }
+  parse->renegotiate = FALSE;
 
   GST_DEBUG_OBJECT (parse,
       "setting downstream caps on %s:%s to %" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (GST_BASE_PARSE_SRC_PAD (parse)), caps);
-  res = gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps);
 
-  gst_caps_replace (&parse->prev_caps, caps);
+  event = gst_event_new_caps (caps);
+  res = gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (parse), event);
   gst_caps_unref (caps);
 
   return res;
-
 }
 
 static GstFlowReturn
@@ -932,8 +938,14 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
             marker <= GST_JPEG_MARKER_SOF_MAX) {
           if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_SOF)
               && gst_jpeg_parse_sof (parse, &seg)) {
+            gint8 sof;
+
             parse->state |= GST_JPEG_PARSER_STATE_GOT_SOF;
-            parse->sof = marker - 0xc0;
+            sof = marker - 0xc0;
+            if (parse->sof != sof) {
+              parse->sof = sof;
+              parse->renegotiate = TRUE;
+            }
           } else {
             GST_ELEMENT_ERROR (parse, STREAM, FORMAT,
                 ("Invalid data"), ("Duplicated or bad SOF marker"));
@@ -980,6 +992,7 @@ gst_jpeg_parse_start (GstBaseParse * bparse)
   parse->framerate_denominator = 1;
 
   parse->first_picture = TRUE;
+  parse->renegotiate = TRUE;
 
   parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
   parse->field_order = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
