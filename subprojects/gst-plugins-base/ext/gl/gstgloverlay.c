@@ -497,6 +497,8 @@ gst_gl_overlay_callback (GstGLFilter * filter, GstGLMemory * in_tex,
     gl->BindVertexArray (overlay->overlay_vao);
   }
 
+  _bind_buffer (overlay, overlay->overlay_vbo);
+
   if (overlay->geometry_change) {
     gint render_width, render_height;
     gfloat x, y, image_width, image_height;
@@ -535,8 +537,6 @@ gst_gl_overlay_callback (GstGLFilter * filter, GstGLMemory * in_tex,
     gl->BufferData (GL_ARRAY_BUFFER, 4 * 5 * sizeof (GLfloat), vertices,
         GL_STATIC_DRAW);
   }
-
-  _bind_buffer (overlay, overlay->overlay_vbo);
 
   gl->BindTexture (GL_TEXTURE_2D, image_tex);
   gst_gl_shader_set_uniform_1f (overlay->shader, "alpha", overlay->alpha);
