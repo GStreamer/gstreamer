@@ -9477,7 +9477,7 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "stopping");
 
   /* also cancels pending task */
-  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, (CMD_ALL & (~CMD_CLOSE)));
+  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_ALL);
 
   GST_OBJECT_LOCK (src);
   if ((task = src->task)) {
