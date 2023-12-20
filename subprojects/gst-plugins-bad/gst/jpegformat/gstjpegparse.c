@@ -464,11 +464,19 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
       return FALSE;
 
     /* x density */
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+    if (!gst_byte_reader_get_uint16_le (&reader, &xd))
+      return FALSE;
+    /* y density */
+    if (!gst_byte_reader_get_uint16_le (&reader, &yd))
+      return FALSE;
+#else
     if (!gst_byte_reader_get_uint16_be (&reader, &xd))
       return FALSE;
     /* y density */
     if (!gst_byte_reader_get_uint16_be (&reader, &yd))
       return FALSE;
+#endif
 
     /* x thumbnail */
     if (!gst_byte_reader_get_uint8 (&reader, &xt))
