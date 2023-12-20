@@ -430,9 +430,9 @@ static gboolean
 gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
 {
   GstByteReader reader;
-  const gchar *id_str;
   guint16 xd, yd;
   guint8 unit, xt, yt;
+  guint32 id;
 
   if (seg->size < 6)            /* less than 6 means no id string */
     return FALSE;
@@ -440,13 +440,21 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
   gst_byte_reader_skip_unchecked (&reader, 2);
 
-  if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  if (!gst_byte_reader_get_uint32_le (&reader, &id))
     return FALSE;
+#else
+  if (!gst_byte_reader_get_uint32_be (&reader, &id))
+    return FALSE;
+#endif
 
   if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF)
-      && g_strcmp0 (id_str, "JFIF") == 0) {
+      && GST_MAKE_FOURCC ('J', 'F', 'I', 'F') == id) {
 
     parse->state |= GST_JPEG_PARSER_STATE_GOT_JFIF;
+
+    /* trailing zero-byte */
+    gst_byte_reader_skip_unchecked (&reader, 1);
 
     /* version */
     gst_byte_reader_skip_unchecked (&reader, 2);
@@ -499,7 +507,7 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   }
 
   /* JFIF  Extension  */
-  if (g_strcmp0 (id_str, "JFXX") == 0) {
+  if (GST_MAKE_FOURCC ('J', 'F', 'X', 'X') == id) {
     if (!valid_state (parse->state, GST_JPEG_PARSER_STATE_GOT_JFIF))
       return FALSE;
 
@@ -507,7 +515,7 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
   }
 
   /* https://exiftool.org/TagNames/JPEG.html#AVI1 */
-  if (g_strcmp0 (id_str, "AVI1") == 0) {
+  if (GST_MAKE_FOURCC ('A', 'V', 'I', '1') == id) {
     /* polarity */
     if (!gst_byte_reader_get_uint8 (&reader, &unit))
       return FALSE;
