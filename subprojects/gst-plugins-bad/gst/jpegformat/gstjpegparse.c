@@ -521,7 +521,8 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
     return TRUE;
   }
 
-  GST_DEBUG_OBJECT (parse, "Unhandled app0: %s", id_str);
+  GST_MEMDUMP_OBJECT (parse, "Unhandled app0", seg->data + seg->offset,
+      seg->size);
 
   return TRUE;
 }
@@ -594,7 +595,8 @@ gst_jpeg_parse_app1 (GstJpegParse * parse, GstJpegSegment * seg)
     return TRUE;
   }
 
-  GST_DEBUG_OBJECT (parse, "Unhandled app1: %s", id_str);
+  GST_MEMDUMP_OBJECT (parse, "Unhandled app1", seg->data + seg->offset,
+      seg->size);
 
   return TRUE;
 }
