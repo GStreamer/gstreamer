@@ -218,6 +218,9 @@ gst_jpeg_parse_set_sink_caps (GstBaseParse * bparse, GstCaps * caps)
   gst_structure_get_int (s, "height", &parse->orig_height);
   gst_structure_get_int (s, "width", &parse->orig_width);
 
+  gst_structure_get_fraction (s, "pixel-aspect-ration", &parse->par_num,
+      &parse->par_den);
+
   codec_data = gst_structure_get_value (s, "codec_data");
   if (codec_data && G_VALUE_TYPE (codec_data) == GST_TYPE_BUFFER) {
     GstMapInfo map;
@@ -487,10 +490,10 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
 
     if (unit == 0) {
       /* no units, X and Y specify the pixel aspect ratio */
-      if (parse->x_density != xd || parse->y_density != yd) {
+      if (parse->par_num != xd || parse->par_den != yd) {
         parse->renegotiate = TRUE;
-        parse->x_density = xd;
-        parse->y_density = yd;
+        parse->par_num = xd;
+        parse->par_den = yd;
       }
     } else if (unit == 1 || unit == 2) {
       /* tag pixel per inches */
@@ -689,8 +692,8 @@ gst_jpeg_parse_com (GstJpegParse * parse, GstJpegSegment * seg)
   if (g_str_has_prefix (buf, "AVID")) {
     parse_avid (parse, data, size);
   } else if (g_str_has_prefix (buf, "MULTISCOPE II")) {
-    parse->x_density = 1;
-    parse->y_density = 2;
+    parse->par_num = 1;
+    parse->par_den = 2;
     parse->multiscope = TRUE;
   } else {
     gchar *comment;
@@ -775,9 +778,9 @@ gst_jpeg_parse_set_new_caps (GstJpegParse * parse)
   gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION,
       parse->framerate_numerator, parse->framerate_denominator, NULL);
 
-  if (parse->x_density > 0 && parse->y_density > 0) {
+  if (parse->par_num > 0 && parse->par_den > 0) {
     gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-        parse->x_density, parse->y_density, NULL);
+        parse->par_num, parse->par_den, NULL);
   }
 
   if (parse->codec_data) {
@@ -1014,6 +1017,8 @@ gst_jpeg_parse_start (GstBaseParse * bparse)
 
   parse->first_picture = TRUE;
   parse->renegotiate = TRUE;
+
+  parse->par_num = parse->par_den = 1;
 
   parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
   parse->field_order = GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;

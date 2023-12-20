@@ -72,8 +72,8 @@ struct _GstJpegParse {
   /* format color space */
   guint colorspace;
   guint sampling;
-  guint16 x_density;
-  guint16 y_density;
+  gint par_num;
+  gint par_den;
   GstCaps *prev_caps;
 
   /* fps */
