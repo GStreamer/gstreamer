@@ -3718,3 +3718,81 @@ error:
 #undef READ_CONFIG_UINT8
 #undef SKIP_CONFIG_BITS
 }
+
+typedef struct
+{
+  const gchar *name;
+  GstH264Profile profile;
+} H264ProfileMapping;
+
+
+static const H264ProfileMapping h264_profiles[] = {
+  {"baseline", GST_H264_PROFILE_BASELINE},
+  {"main", GST_H264_PROFILE_MAIN},
+  {"high", GST_H264_PROFILE_HIGH},
+  {"high-10", GST_H264_PROFILE_HIGH10},
+  {"high-4:2:2", GST_H264_PROFILE_HIGH_422},
+  {"high-4:4:4", GST_H264_PROFILE_HIGH_444},
+  {"multiview-high", GST_H264_PROFILE_MULTIVIEW_HIGH},
+  {"stereo-high", GST_H264_PROFILE_STEREO_HIGH},
+  {"scalable-baseline", GST_H264_PROFILE_SCALABLE_BASELINE},
+  {"scalable-high", GST_H264_PROFILE_SCALABLE_HIGH},
+};
+
+/**
+ * gst_h264_profile_from_string:
+ * @string: the descriptive name for #GstH264Profile
+ *
+ * Returns a #GstH264Profile for the @string.
+ *
+ * Returns: the #GstH264Profile of @string or %GST_H265_PROFILE_INVALID on error
+ *
+ * Since: 1.24
+ */
+GstH264Profile
+gst_h264_profile_from_string (const gchar * string)
+{
+  guint i;
+
+  if (string == NULL)
+    return GST_H264_PROFILE_INVALID;
+
+  for (i = 0; i < G_N_ELEMENTS (h264_profiles); i++) {
+    if (g_strcmp0 (string, h264_profiles[i].name) == 0) {
+      return h264_profiles[i].profile;
+    }
+  }
+
+  return GST_H264_PROFILE_INVALID;
+}
+
+/**
+ * gst_h264_slice_type_to_string:
+ * @slice_type: a #GstH264SliceType
+ *
+ * Returns the descriptive name for the #GstH264SliceType.
+ *
+ * Returns: (nullable): the name for @slice_type or %NULL on error
+ *
+ * Since: 1.24
+ */
+const gchar *
+gst_h264_slice_type_to_string (GstH264SliceType slice_type)
+{
+  switch (slice_type) {
+    case GST_H264_P_SLICE:
+      return "P";
+    case GST_H264_B_SLICE:
+      return "B";
+    case GST_H264_I_SLICE:
+      return "I";
+    case GST_H264_SP_SLICE:
+      return "SP";
+    case GST_H264_SI_SLICE:
+      return "SI";
+    default:
+      GST_ERROR ("unknown %d slice type", slice_type);
+  }
+
+  return NULL;
+}

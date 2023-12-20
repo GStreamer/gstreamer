@@ -111,7 +111,15 @@ typedef enum {
   GST_H264_PROFILE_MULTIVIEW_HIGH       = 118,
   GST_H264_PROFILE_STEREO_HIGH          = 128,
   GST_H264_PROFILE_SCALABLE_BASELINE    = 83,
-  GST_H264_PROFILE_SCALABLE_HIGH        = 86
+  GST_H264_PROFILE_SCALABLE_HIGH        = 86,
+  /**
+   * GST_H264_PROFILE_INVALID:
+   *
+   * Invalid H264 profile
+   *
+   * Since: 1.24
+   */
+  GST_H264_PROFILE_INVALID              = -1
 } GstH264Profile;
 
 /**
@@ -1536,6 +1544,11 @@ GstH264ParserResult gst_h264_parser_parse_decoder_config_record (GstH264NalParse
                                                                  const guint8 * data,
                                                                  gsize size,
                                                                  GstH264DecoderConfigRecord ** config);
+GST_CODEC_PARSERS_API
+GstH264Profile gst_h264_profile_from_string (const gchar * profile);
+
+GST_CODEC_PARSERS_API
+const gchar *   gst_h264_slice_type_to_string      (GstH264SliceType slice_type);
 
 G_END_DECLS
 
