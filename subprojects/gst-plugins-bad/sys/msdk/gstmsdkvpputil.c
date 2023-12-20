@@ -32,6 +32,8 @@
 #ifndef _WIN32
 #include <libdrm/drm_fourcc.h>
 #include <gst/va/gstvavideoformat.h>
+#else
+#include <gst/d3d11/gstd3d11.h>
 #endif
 
 #define SWAP_GINT(a, b) do {      \
@@ -72,7 +74,7 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
   GstCapsFeatures *features;
   GstCaps *ret;
   const GValue *format;
-  gboolean is_dma = FALSE;
+  gboolean is_va = FALSE, is_dma = FALSE, is_d3d = FALSE;
   gboolean fixate = FALSE;
 #ifndef _WIN32
   guint64 modifier = DRM_FORMAT_MOD_INVALID;
@@ -86,13 +88,21 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
   for (i = 0; i < size; i++) {
     s = gst_caps_get_structure (caps, i);
     features = gst_caps_get_features (caps, i);
+    is_va = is_dma = is_d3d = FALSE;
 
     if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF)) {
       format = gst_structure_get_value (s, "drm-format");
       is_dma = TRUE;
     } else {
       format = gst_structure_get_value (s, "format");
-      is_dma = FALSE;
+#ifndef _WIN32
+      if (gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_VA))
+        is_va = TRUE;
+#else
+      if (gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY))
+        is_d3d = TRUE;
+#endif
     }
 
     if (format == NULL)
@@ -142,12 +152,21 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
 #endif
       if (fmt == GST_VIDEO_FORMAT_UNKNOWN)
         continue;
+
+      /* size > 1 means downstream doesn't specify the caps directly, so we
+       * still need to compare fmt with the one in vpp sinkcaps */
+      if (size > 1 && fmt != GST_VIDEO_INFO_FORMAT (vinfo))
+        continue;
+
       fixate = TRUE;
       break;
     }
     if (fixate)
       break;
   }
+
+  if (!fixate)
+    fmt = GST_VIDEO_FORMAT_NV12;
 
   out = gst_structure_copy (gst_caps_get_structure (caps, fixated_idx));
   features = gst_caps_features_copy (gst_caps_get_features (caps, fixated_idx));
@@ -174,6 +193,18 @@ fixate_output_format (GstMsdkVPP * thiz, GstVideoInfo * vinfo, GstCaps * caps)
 
   ret = gst_caps_new_full (out, NULL);
   gst_caps_set_features_simple (ret, features);
+#ifndef _WIN32
+  if (is_va)
+    gst_caps_set_features (ret, 0,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_VA));
+#else
+  if (is_d3d)
+    gst_caps_set_features (ret, 0,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY));
+#endif
+  else if (is_dma)
+    gst_caps_set_features (ret, 0,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
 
   return ret;
 }
@@ -657,6 +688,7 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
 {
   GstStructure *structure = NULL;
   GstCaps *outcaps, *fixate_caps;
+  GstCapsFeatures *features;
 
   /* Fixate the format */
   fixate_caps = fixate_output_format (thiz, vinfo, srccaps);
@@ -664,8 +696,11 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
     goto fixate_failed;
 
   structure = gst_caps_get_structure (fixate_caps, 0);
+  features = gst_caps_get_features (fixate_caps, 0);
   /* make a copy */
   structure = gst_structure_copy (structure);
+  features = gst_caps_features_copy (features);
+
   gst_caps_unref (fixate_caps);
 
   if (thiz->keep_aspect)
@@ -692,6 +727,7 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
 
   outcaps = gst_caps_new_empty ();
   gst_caps_append_structure (outcaps, structure);
+  gst_caps_set_features (outcaps, 0, features);
 
   return outcaps;
 
