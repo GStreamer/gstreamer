@@ -404,6 +404,18 @@ gst_is_d3d12_memory (GstMemory * mem)
       GST_IS_D3D12_POOL_ALLOCATOR (mem->allocator));
 }
 
+gboolean
+gst_d3d12_memory_sync (GstD3D12Memory * mem)
+{
+  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
+
+  gst_d3d12_memory_upload (mem);
+  gst_d3d12_memory_wait_gpu (mem,
+      D3D12_COMMAND_LIST_TYPE_DIRECT, mem->fence_value);
+
+  return TRUE;
+}
+
 void
 gst_d3d12_memory_init_once (void)
 {

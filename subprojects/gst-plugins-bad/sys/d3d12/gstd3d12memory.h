@@ -123,6 +123,8 @@ void              gst_d3d12_memory_init_once (void);
 
 gboolean          gst_is_d3d12_memory        (GstMemory * mem);
 
+gboolean          gst_d3d12_memory_sync      (GstD3D12Memory * mem);
+
 ID3D12Resource *  gst_d3d12_memory_get_resource_handle (GstD3D12Memory * mem);
 
 gboolean          gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem,

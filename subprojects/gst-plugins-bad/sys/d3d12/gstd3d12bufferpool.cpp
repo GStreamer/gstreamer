@@ -50,22 +50,25 @@ static gboolean gst_d3d12_buffer_pool_set_config (GstBufferPool * pool,
     GstStructure * config);
 static GstFlowReturn gst_d3d12_buffer_pool_alloc_buffer (GstBufferPool * pool,
     GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
+static GstFlowReturn gst_d3d12_buffer_pool_acquire_buffer (GstBufferPool * pool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params);
 static gboolean gst_d3d12_buffer_pool_start (GstBufferPool * pool);
 static gboolean gst_d3d12_buffer_pool_stop (GstBufferPool * pool);
 
 static void
 gst_d3d12_buffer_pool_class_init (GstD3D12BufferPoolClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBufferPoolClass *bufferpool_class = GST_BUFFER_POOL_CLASS (klass);
+  auto object_class = G_OBJECT_CLASS (klass);
+  auto pool_class = GST_BUFFER_POOL_CLASS (klass);
 
-  gobject_class->dispose = gst_d3d12_buffer_pool_dispose;
+  object_class->dispose = gst_d3d12_buffer_pool_dispose;
 
-  bufferpool_class->get_options = gst_d3d12_buffer_pool_get_options;
-  bufferpool_class->set_config = gst_d3d12_buffer_pool_set_config;
-  bufferpool_class->alloc_buffer = gst_d3d12_buffer_pool_alloc_buffer;
-  bufferpool_class->start = gst_d3d12_buffer_pool_start;
-  bufferpool_class->stop = gst_d3d12_buffer_pool_stop;
+  pool_class->get_options = gst_d3d12_buffer_pool_get_options;
+  pool_class->set_config = gst_d3d12_buffer_pool_set_config;
+  pool_class->alloc_buffer = gst_d3d12_buffer_pool_alloc_buffer;
+  pool_class->acquire_buffer = gst_d3d12_buffer_pool_acquire_buffer;
+  pool_class->start = gst_d3d12_buffer_pool_start;
+  pool_class->stop = gst_d3d12_buffer_pool_stop;
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_buffer_pool_debug, "d3d12bufferpool", 0,
       "d3d12bufferpool");
@@ -81,7 +84,7 @@ gst_d3d12_buffer_pool_init (GstD3D12BufferPool * self)
 static void
 gst_d3d12_buffer_pool_clear_allocator (GstD3D12BufferPool * self)
 {
-  GstD3D12BufferPoolPrivate *priv = self->priv;
+  auto priv = self->priv;
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (priv->alloc); i++) {
@@ -95,8 +98,8 @@ gst_d3d12_buffer_pool_clear_allocator (GstD3D12BufferPool * self)
 static void
 gst_d3d12_buffer_pool_dispose (GObject * object)
 {
-  GstD3D12BufferPool *self = GST_D3D12_BUFFER_POOL (object);
-  GstD3D12BufferPoolPrivate *priv = self->priv;
+  auto self = GST_D3D12_BUFFER_POOL (object);
+  auto priv = self->priv;
 
   g_clear_pointer (&priv->d3d12_params, gst_d3d12_allocation_params_free);
   gst_clear_object (&self->device);
@@ -118,8 +121,8 @@ gst_d3d12_buffer_pool_get_options (GstBufferPool * pool)
 static gboolean
 gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
-  GstD3D12BufferPool *self = GST_D3D12_BUFFER_POOL (pool);
-  GstD3D12BufferPoolPrivate *priv = self->priv;
+  auto self = GST_D3D12_BUFFER_POOL (pool);
+  auto priv = self->priv;
   GstVideoInfo info;
   GstCaps *caps = nullptr;
   guint min_buffers, max_buffers;
@@ -269,13 +272,13 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 static GstFlowReturn
 gst_d3d12_buffer_pool_fill_buffer (GstD3D12BufferPool * self, GstBuffer * buf)
 {
-  GstD3D12BufferPoolPrivate *priv = self->priv;
+  auto priv = self->priv;
   GstFlowReturn ret = GST_FLOW_OK;
   guint i;
 
   for (i = 0; i < G_N_ELEMENTS (priv->alloc); i++) {
     GstMemory *mem = nullptr;
-    GstD3D12PoolAllocator *alloc = GST_D3D12_POOL_ALLOCATOR (priv->alloc[i]);
+    auto alloc = (GstD3D12PoolAllocator *) priv->alloc[i];
 
     if (!alloc)
       break;
@@ -287,6 +290,9 @@ gst_d3d12_buffer_pool_fill_buffer (GstD3D12BufferPool * self, GstBuffer * buf)
       return ret;
     }
 
+    auto dmem = (GstD3D12Memory *) mem;
+    GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+    gst_d3d12_memory_sync (dmem);
     gst_buffer_append_memory (buf, mem);
   }
 
@@ -297,8 +303,8 @@ static GstFlowReturn
 gst_d3d12_buffer_pool_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
     GstBufferPoolAcquireParams * params)
 {
-  GstD3D12BufferPool *self = GST_D3D12_BUFFER_POOL (pool);
-  GstD3D12BufferPoolPrivate *priv = self->priv;
+  auto self = GST_D3D12_BUFFER_POOL (pool);
+  auto priv = self->priv;
   GstD3D12AllocationParams *d3d12_params = priv->d3d12_params;
   GstVideoInfo *info = &d3d12_params->info;
   GstBuffer *buf;
@@ -321,11 +327,29 @@ gst_d3d12_buffer_pool_alloc_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   return GST_FLOW_OK;
 }
 
+static GstFlowReturn
+gst_d3d12_buffer_pool_acquire_buffer (GstBufferPool * pool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
+{
+  GstFlowReturn ret;
+
+  ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool,
+      buffer, params);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (*buffer, 0);
+  GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+  gst_d3d12_memory_sync (mem);
+
+  return ret;
+}
+
 static gboolean
 gst_d3d12_buffer_pool_start (GstBufferPool * pool)
 {
-  GstD3D12BufferPool *self = GST_D3D12_BUFFER_POOL (pool);
-  GstD3D12BufferPoolPrivate *priv = self->priv;
+  auto self = GST_D3D12_BUFFER_POOL (pool);
+  auto priv = self->priv;
   guint i;
   gboolean ret;
 
@@ -365,8 +389,8 @@ gst_d3d12_buffer_pool_start (GstBufferPool * pool)
 static gboolean
 gst_d3d12_buffer_pool_stop (GstBufferPool * pool)
 {
-  GstD3D12BufferPool *self = GST_D3D12_BUFFER_POOL (pool);
-  GstD3D12BufferPoolPrivate *priv = self->priv;
+  auto self = GST_D3D12_BUFFER_POOL (pool);
+  auto priv = self->priv;
   guint i;
 
   GST_DEBUG_OBJECT (self, "Stop");
@@ -389,11 +413,9 @@ gst_d3d12_buffer_pool_stop (GstBufferPool * pool)
 GstBufferPool *
 gst_d3d12_buffer_pool_new (GstD3D12Device * device)
 {
-  GstD3D12BufferPool *self;
-
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
 
-  self = (GstD3D12BufferPool *)
+  auto self = (GstD3D12BufferPool *)
       g_object_new (GST_TYPE_D3D12_BUFFER_POOL, nullptr);
   gst_object_ref_sink (self);
 
