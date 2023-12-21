@@ -585,16 +585,29 @@ gst_vulkan_download_change_state (GstElement * element,
         }
       }
 
-      if (!gst_vulkan_queue_run_context_query (GST_ELEMENT (vk_download),
+      if (gst_vulkan_queue_run_context_query (GST_ELEMENT (vk_download),
               &vk_download->queue)) {
-        GST_DEBUG_OBJECT (vk_download, "No queue retrieved from peer elements");
+        guint32 flags, idx;
+
+        GST_DEBUG_OBJECT (vk_download, "Queue retrieved from peer elements");
+        idx = vk_download->queue->family;
+        flags = vk_download->device->physical_device->queue_family_props[idx]
+            .queueFlags;
+        if ((flags & (VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_TRANSFER_BIT)) == 0) {
+          GST_DEBUG_OBJECT (vk_download,
+              "Queue does not support VK_QUEUE_GRAPHICS_BIT with VK_QUEUE_TRANSFER_BIT");
+          gst_clear_object (&vk_download->queue);
+        }
+      }
+
+      if (!vk_download->queue) {
         vk_download->queue =
             gst_vulkan_device_select_queue (vk_download->device,
             VK_QUEUE_GRAPHICS_BIT);
       }
       if (!vk_download->queue) {
         GST_ELEMENT_ERROR (vk_download, RESOURCE, NOT_FOUND,
-            ("Failed to create/retrieve vulkan queue"), (NULL));
+            ("Failed to create/retrieve a valid vulkan queue"), (NULL));
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
