@@ -1191,6 +1191,8 @@ nle_composition_init (NleComposition * comp)
   priv->segment = gst_segment_new ();
   priv->seek_segment = gst_segment_new ();
 
+  priv->send_stream_start = TRUE;
+
   g_rec_mutex_init (&comp->task_rec_lock);
 
   priv->objects_hash = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -1346,6 +1348,7 @@ nle_composition_reset (NleComposition * comp)
   priv->current_stack_start = GST_CLOCK_TIME_NONE;
   priv->current_stack_stop = GST_CLOCK_TIME_NONE;
   priv->next_base_time = 0;
+  priv->send_stream_start = TRUE;
 
   gst_segment_init (priv->segment, GST_FORMAT_TIME);
   gst_segment_init (priv->seek_segment, GST_FORMAT_TIME);
@@ -1390,9 +1393,6 @@ ghost_event_probe_handler (GstPad * ghostpad G_GNUC_UNUSED,
         if (comp->task)
           gst_task_start (comp->task);
         GST_OBJECT_UNLOCK (comp);
-
-        priv->send_stream_start =
-            priv->updating_reason == COMP_UPDATE_STACK_INITIALIZE;
       }
 
       GST_DEBUG_OBJECT (comp,
@@ -3135,7 +3135,6 @@ _activate_new_stack (NleComposition * comp, GstEvent * toplevel_seek)
   if (!toplevel_seek) {
     GST_INFO_OBJECT (comp,
         "This is a sub composition, not seeking to initialize stack");
-    g_atomic_int_set (&priv->send_stream_start, TRUE);
   } else {
     GST_INFO_OBJECT (comp, "Needs seeking to initialize stack");
     comp->priv->stack_initialization_seek = toplevel_seek;
