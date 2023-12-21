@@ -2197,6 +2197,9 @@ GST_CODEC_PARSERS_API
 GstH265Profile gst_h265_profile_from_string (const gchar * string);
 
 GST_CODEC_PARSERS_API
+const gchar * gst_h265_slice_type_to_string (GstH265SliceType slice_type);
+
+GST_CODEC_PARSERS_API
 GstMemory * gst_h265_create_sei_memory (guint8 layer_id,
                                         guint8 temporal_id_plus1,
                                         guint8 start_code_prefix_length,

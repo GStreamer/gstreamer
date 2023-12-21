@@ -4131,6 +4131,33 @@ gst_h265_profile_from_string (const gchar * string)
   return GST_H265_PROFILE_INVALID;
 }
 
+/**
+ * gst_h265_slice_type_to_string:
+ * @slice_type: a #GstH265SliceType
+ *
+ * Returns the descriptive name for the #GstH265SliceType.
+ *
+ * Returns: (nullable): the name for @slice_type or %NULL on error
+ *
+ * Since: 1.24
+ */
+const gchar *
+gst_h265_slice_type_to_string (GstH265SliceType slice_type)
+{
+  switch (slice_type) {
+    case GST_H265_P_SLICE:
+      return "P";
+    case GST_H265_B_SLICE:
+      return "B";
+    case GST_H265_I_SLICE:
+      return "I";
+    default:
+      GST_ERROR ("unknown %d slice type", slice_type);
+  }
+
+  return NULL;
+}
+
 static gboolean
 gst_h265_write_sei_registered_user_data (NalWriter * nw,
     GstH265RegisteredUserData * rud)
