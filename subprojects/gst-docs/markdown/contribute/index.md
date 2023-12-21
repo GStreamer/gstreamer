@@ -591,6 +591,71 @@ may not receive e-mail notifications when you update the commits in your branch.
 
 # Workflows for GStreamer developers
 
+## Merging merge requests
+
+Merge requests should be merged either by assigning the merge request to Marge,
+our merge bot, or by adding the `Merge in X hours` or `Merge in X days` labels.
+
+### Marge merge bot
+
+Marge will rebase the merge request on top of the target branch and will
+also automatically add `Part-of: <url>` footers to each commit that point
+back to the merge request in gitlab.
+
+When Marge rebases, the continuous integration (CI) pipeline will start
+automatically and the merge request will get merged once it passes. Since
+the CI pipeline is triggered by Marge in this case, it will also have the
+right permissions to trigger the Cerbero sub-pipeline, which won't run for
+monorepo pipelines triggered by external contributors.
+
+Sidenote: Our CI pipelines don't start automatically usually, but are gated
+by a manual trigger in order not to waste CI resources. However, pipelines
+will start running automatically if Marge triggers them which will happen
+when Marge rebases commits. This means that when pushing updates to a
+merge request branch (especially if Marge touched it once already) it's
+usually a good idea to either remove the `Part-of` footers from the top
+commit message, or to not be entirely on top of the target branch, so that
+Marge is forced to rebase again when being re-assigned the merge request.
+Otherwise Marge will not rebase and wait for the pipeline to complete, but
+the pipeline won't actually run because it's not been triggered.
+
+If Marge is assigned a merge request but nothing happens, it usually means
+she's busy with another merge request in the same project and target branch.
+Check GitLab for a [list of merge requests assigned to Marge][marge-list]. If
+no other merge requests are being processed, you may be encountering the above
+pipeline trigger problem and may have to trigger the merge request pipeline
+manually.
+
+[marge-list]: https://gitlab.freedesktop.org/groups/gstreamer/-/merge_requests?scope=all&state=opened&assignee_username=gstreamer-merge-bot
+
+### "Merge in X days" and "Merge in X hours" labels
+
+We have a range of `Merge in X hours` or `Merge in X days` labels available.
+
+When these labels are added to a merge request, Marge will assign the merge
+request to herself after the specified amount of time has passed (roughly).
+
+They can be useful for multiple purposes:
+
+- Schedule merge requests for later in the day or night, when the
+  CI farm is less busy
+
+- Provide a heads-up to other developers that you intend to merge
+  something, whilst still allowing some time for others to review or
+  comment.
+
+It's possible to subscribe to specific labels in GitLab and receive
+notifications when they are added to a merge request.
+
+When Marge picks up the label and assigns merge requests to itself, a
+notification will be generated. When merging fails, a notification will
+also be generated, which helps make sure things don't fall through the
+cracks once they've been scheduled for merging.
+
+It's of course fine for another developer to assign a merge request with
+a `Merge in X` label to Marge immediately if they think it's fine to go in
+now and don't expect further comments or review being needed by others.
+
 ## Backporting to a stable branch
 
 Before backporting any changes to a stable branch, they should first be
