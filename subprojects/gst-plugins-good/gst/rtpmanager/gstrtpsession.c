@@ -276,6 +276,9 @@ struct _GstRtpSessionPrivate
   GHashTable *ptmap;
 
   GstClockTime send_latency;
+  /* Set if we warned once already that no latency is configured yet but we
+   * need it to calculate correct send running time of the packets */
+  gboolean warned_latency_once;
 
   gboolean use_pipeline_clock;
   GstRtpNtpTimeSource ntp_time_source;
@@ -1367,6 +1370,7 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
       GST_RTP_SESSION_LOCK (rtpsession);
       rtpsession->priv->wait_send = TRUE;
       rtpsession->priv->send_latency = GST_CLOCK_TIME_NONE;
+      rtpsession->priv->warned_latency_once = FALSE;
       GST_RTP_SESSION_UNLOCK (rtpsession);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -2475,8 +2479,14 @@ gst_rtp_session_chain_send_rtp_common (GstRtpSession * rtpsession,
       if (priv->send_latency != GST_CLOCK_TIME_NONE) {
         running_time += priv->send_latency;
       } else {
-        GST_WARNING_OBJECT (rtpsession,
-            "Can't determine running time for this packet without knowing configured latency");
+        if (!priv->warned_latency_once) {
+          priv->warned_latency_once = TRUE;
+          GST_WARNING_OBJECT (rtpsession,
+              "Can't determine running time for this packet without knowing configured latency");
+        } else {
+          GST_LOG_OBJECT (rtpsession,
+              "Can't determine running time for this packet without knowing configured latency");
+        }
         running_time = -1;
       }
     }
