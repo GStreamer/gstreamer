@@ -3,13 +3,13 @@ ONNX Build Instructions
 
 ### Build
 
- 1. do a recursive checkout of [onnxruntime tag 1.15.1](https://github.com/microsoft/onnxruntime)
+ 1. do a recursive checkout of [onnxruntime tag 1.16.3](https://github.com/microsoft/onnxruntime)
  1. `$SRC_DIR` and `$BUILD_DIR` are local source and build directories
  1. To run with CUDA, both [CUDA](https://developer.nvidia.com/cuda-downloads) and [cuDNN](https://docs.nvidia.com/deeplearning/cudnn/archives/cudnn_762/cudnn-install/index.html) libraries must be installed.
 
 ```
 $ cd $SRC_DIR
-$ git clone --recursive https://github.com/microsoft/onnxruntime.git && cd onnxruntime && git checkout -b v1.15.1 refs/tags/v1.15.1
+$ git clone --recursive https://github.com/microsoft/onnxruntime.git && cd onnxruntime && git checkout -b v1.16.3 refs/tags/v1.16.3
 $ mkdir $BUILD_DIR/onnxruntime && cd $BUILD_DIR/onnxruntime
 
 ```
@@ -34,5 +34,3 @@ cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF -Donnxruntime_BUILD_
 ```
 cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF -Donnxruntime_BUILD_UNIT_TESTS=OFF -Donnxruntime_USE_DNNL=ON -Donnxruntime_DNNL_GPU_RUNTIME=ocl -Donnxruntime_DNNL_OPENCL_ROOT=$SRC_DIR/OpenCL-SDK/install  $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
 ```
-
-Note: for Fedora build, you must add the following to `CMAKE_CXX_FLAGS` : `-Wno-stringop-overflow  -Wno-array-bounds`

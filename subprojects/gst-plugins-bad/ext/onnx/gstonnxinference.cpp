@@ -27,32 +27,8 @@
  * This element can apply an ONNX model to video buffers. It attaches
  * the tensor output to the buffer as a @ref GstTensorMeta.
  *
- * To install ONNX on your system, recursively clone the repository
- * https://github.com/microsoft/onnxruntime.git, check out tag 1.15.1
- * and build and install with cmake:
- *
- * CPU:
- *
- * cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF \
- * -Donnxruntime_BUILD_UNIT_TESTS=OFF $SRC_DIR/onnxruntime/cmake \
- * && make -j$(nproc) && sudo make install
- *
- *
- * CUDA :
- *
- * cmake -Donnxruntime_BUILD_SHARED_LIB=ON -DBUILD_TESTING=OFF \
- * -Donnxruntime_BUILD_UNIT_TESTS=OFF -Donnxruntime_USE_CUDA=ON \
- * -Donnxruntime_CUDA_HOME=/usr/local/cuda \
- * -Donnxruntime_CUDNN_HOME=/usr/local/cuda -DCMAKE_CUDA_ARCHITECTURES=native \
- * -DCMAKE_CUDA_COMPILER=/usr/local/cuda/bin/nvcc \
- * $SRC_DIR/onnxruntime/cmake && make -j$(nproc) && sudo make install
- *
- *
- * where :
- *
- * 1. $SRC_DIR and $BUILD_DIR are local source and build directories
- * 2. To run with CUDA, both CUDA and cuDNN libraries must be installed.
- *
+ * To install ONNX on your system, follow the instructions in the
+ * README.md in with this plugin.
  *
  * ## Example launch command:
  *
