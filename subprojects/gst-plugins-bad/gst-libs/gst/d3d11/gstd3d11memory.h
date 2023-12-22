@@ -363,5 +363,9 @@ gboolean                gst_d3d11_pool_allocator_get_pool_size (GstD3D11PoolAllo
                                                                 guint * max_size,
                                                                 guint * outstanding_size);
 
+GST_D3D11_API
+void                    gst_d3d11_pool_allocator_set_blocked (GstD3D11Allocator* allocator,
+                                                                gboolean blocked);
+
 G_END_DECLS
 
