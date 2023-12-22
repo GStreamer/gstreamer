@@ -1798,6 +1798,7 @@ gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator, gboolean active)
 #define GST_D3D11_POOL_ALLOCATOR_GET_LOCK(alloc) \
   (&(GST_D3D11_POOL_ALLOCATOR_CAST(alloc)->priv->lock))
 #define GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(alloc)  (g_atomic_int_get (&alloc->priv->flushing))
+#define GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(alloc)  (g_atomic_int_get (&alloc->priv->blocked))
 
 struct _GstD3D11PoolAllocatorPrivate
 {
@@ -1820,6 +1821,7 @@ struct _GstD3D11PoolAllocatorPrivate
   guint max_mems;
   guint cur_mems;
   gboolean flushing;
+  gboolean blocked;
 
   /* Calculated memory size, based on Direct3D11 staging texture map.
    * Note that, we cannot know the actually staging texture memory size prior
@@ -1865,6 +1867,7 @@ gst_d3d11_pool_allocator_init (GstD3D11PoolAllocator * allocator)
   priv->poll = gst_poll_new_timer ();
   priv->queue = gst_atomic_queue_new (16);
   priv->flushing = 1;
+  priv->blocked = FALSE;
   priv->active = FALSE;
   priv->started = FALSE;
 
@@ -2203,7 +2206,8 @@ gst_d3d11_pool_allocator_acquire_memory_internal (GstD3D11PoolAllocator * self,
   GstD3D11PoolAllocatorPrivate *priv = self->priv;
 
   while (TRUE) {
-    if (G_UNLIKELY (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)))
+    if (G_UNLIKELY (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self) ||
+          GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(self)))
       goto flushing;
 
     /* try to get a memory from the queue */
@@ -2259,11 +2263,15 @@ gst_d3d11_pool_allocator_acquire_memory_internal (GstD3D11PoolAllocator * self,
        * We're a second thread and just consumed the flush token and block all
        * other threads, in which case we must not wait and give it back
        * immediately */
-      if (!GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)) {
+      if (!GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)
+          && !GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(self)) {
         GST_LOG_OBJECT (self, "waiting for free memory or flushing");
         gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE);
       }
       gst_poll_write_control (priv->poll);
+      if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(self)
+        || GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(self))
+        goto flushing;
     }
   }
 
@@ -2384,4 +2392,23 @@ gst_d3d11_pool_allocator_get_pool_size (GstD3D11PoolAllocator * allocator,
     *outstanding_size = g_atomic_int_get (&priv->outstanding);
 
   return TRUE;
+}
+
+void
+gst_d3d11_pool_allocator_set_blocked (GstD3D11Allocator* allocator,
+  gboolean blocked)
+{
+  GstD3D11PoolAllocatorPrivate* priv;
+  GstD3D11PoolAllocator* self;
+
+  g_return_if_fail (GST_IS_D3D11_POOL_ALLOCATOR (allocator));
+  self = GST_D3D11_POOL_ALLOCATOR_CAST (allocator);
+  priv = self->priv;
+
+  g_atomic_int_set (&priv->blocked, blocked);
+  GST_LOG_OBJECT (self, "Set blocked: %d", blocked);
+  if (!blocked) {
+    GST_LOG_OBJECT (self, "Unblocking possible waits");
+    gst_poll_write_control (priv->poll);
+  }
 }
