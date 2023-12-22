@@ -224,6 +224,7 @@ gst_h264_parse_init (GstH264Parse * h264parse)
   h264parse->bl_next_au_first_vcl = 1;
   h264parse->bl_next_au_first_nal = 1;
   h264parse->bl_next_nal = 0;
+  h264parse->bl_last_aud_nal = -1;
 
   h264parse->history_slice[HIST_IDX_CURR].valid = FALSE;
   h264parse->history_slice[HIST_IDX_PREV].valid = FALSE;
@@ -1546,6 +1547,7 @@ gst_h264_parse_update_backlog (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         h264parse->bl_next_au_first_vcl = 1;
         h264parse->bl_next_au_first_nal = 1;
         h264parse->bl_next_nal = 0;
+        h264parse->bl_last_aud_nal = -1;
         g_array_set_size (h264parse->nal_backlog, 0);
 
         GST_DEBUG_OBJECT (h264parse, "Failed to parse slice header");
@@ -1561,6 +1563,12 @@ gst_h264_parse_update_backlog (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         h264parse->bl_next_au_first_nal = h264parse->bl_next_au_first_vcl;
       } else {
 
+        if (!is_first_vcl_nal) {
+          is_first_vcl_nal =
+              h264parse->bl_last_aud_nal > h264parse->bl_curr_au_last_vcl;
+        }
+
+        h264parse->bl_last_aud_nal = -1;
         if (is_first_vcl_nal) {
           h264parse->bl_next_au_first_vcl = LAST_IDX;
 
@@ -1585,6 +1593,8 @@ gst_h264_parse_update_backlog (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       }
 
       break;
+    case GST_H264_NAL_AU_DELIMITER:
+      h264parse->bl_last_aud_nal = LAST_IDX;
     default:
       if (h264parse->bl_curr_au_last_vcl == -1) {
         /* if we didn't receive any vcl, any nal from next au hasn't been
@@ -1642,6 +1652,7 @@ gst_h264_parse_trim_backlog (GstH264Parse * h264parse)
   h264parse->bl_next_nal = 0;
   h264parse->bl_curr_au_last_vcl =
       h264parse->bl_next_au_first_vcl - h264parse->bl_next_au_first_nal;
+  h264parse->bl_last_aud_nal -= h264parse->bl_curr_au_last_vcl;
   h264parse->bl_next_au_first_nal = h264parse->bl_curr_au_last_vcl + 1;
   h264parse->bl_next_au_first_vcl = h264parse->bl_next_au_first_nal;
 }
@@ -1654,6 +1665,8 @@ gst_h264_parse_clear_backlog (GstH264Parse * h264parse)
   h264parse->bl_curr_au_last_vcl = -1;
   h264parse->bl_next_au_first_nal = 1;
   h264parse->bl_next_au_first_vcl = 1;
+  h264parse->bl_last_aud_nal = -1;
+
 }
 
 static gboolean
@@ -1996,8 +2009,8 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
 
     blstatus = gst_h264_parse_update_backlog (h264parse, &nalu);
     if (blstatus == GST_H264_PARSE_BACKLOG_STATUS_UPD_FAILED) {
-      *skipsize = current_off;
-      GST_ERROR_OBJECT (h264parse, "Failed to update backlog");
+      *skipsize = nalu.size + nalu.offset;
+      GST_WARNING_OBJECT (h264parse, "Failed to update backlog");
       goto skip;
     } else if (blstatus == GST_H264_PARSE_BACKLOG_STATUS_NOT_SUPPORTED) {
       /* SVC is not supported */
@@ -2087,8 +2100,10 @@ skip:
    * slice NAL was received. This means that broken pictures are discarded */
   if (h264parse->align != GST_H264_PARSE_ALIGN_AU ||
       !(h264parse->state & GST_H264_PARSE_STATE_VALID_PICTURE_HEADERS) ||
-      (h264parse->state & GST_H264_PARSE_STATE_GOT_SLICE))
+      (h264parse->state & GST_H264_PARSE_STATE_GOT_SLICE)) {
     gst_h264_parse_reset_frame (h264parse);
+    h264parse->current_off = -1;
+  }
   goto out;
 
 invalid_stream:
