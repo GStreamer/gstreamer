@@ -726,18 +726,30 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
   g_free (dmem);
 }
 
-static GstMemory *
-gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * self,
-    GstD3D12Device * device, const D3D12_RESOURCE_DESC * desc,
-    D3D12_RESOURCE_STATES initial_state, ID3D12Resource * resource,
-    guint array_slice)
+GstMemory *
+gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
+    GstD3D12Device * device, ID3D12Resource * resource, guint array_slice)
 {
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  g_return_val_if_fail (resource, nullptr);
+
+  if (!allocator) {
+    gst_d3d12_memory_init_once ();
+    allocator = _d3d12_memory_allocator;
+  }
+
   auto device_handle = gst_d3d12_device_get_device_handle (device);
+  auto desc = resource->GetDesc ();
   guint8 num_subresources =
-      D3D12GetFormatPlaneCount (device_handle, desc->Format);
+      D3D12GetFormatPlaneCount (device_handle, desc.Format);
 
   if (num_subresources == 0) {
-    GST_ERROR_OBJECT (self, "Couldn't get format info");
+    GST_ERROR_OBJECT (allocator, "Couldn't get format info");
+    return nullptr;
+  }
+
+  if (array_slice >= desc.DepthOrArraySize) {
+    GST_ERROR_OBJECT (allocator, "Invalid array slice");
     return nullptr;
   }
 
@@ -745,8 +757,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * self,
   mem->priv = new GstD3D12MemoryPrivate ();
 
   auto priv = mem->priv;
-
-  priv->desc = *desc;
+  priv->desc = desc;
   priv->num_subresources = num_subresources;
   priv->resource = resource;
   gst_d3d12_dxgi_format_to_resource_formats (priv->desc.Format,
@@ -779,11 +790,10 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * self,
      * +-------------+-------------+-------------+
      */
     mem->priv->subresource_index[i] = D3D12CalcSubresource (0,
-        array_slice, i, 1, desc->DepthOrArraySize);
+        array_slice, i, 1, desc.DepthOrArraySize);
 
-    device_handle->GetCopyableFootprints (&priv->desc,
-        priv->subresource_index[i], 1, 0, &priv->layout[i], nullptr, nullptr,
-        &size);
+    device_handle->GetCopyableFootprints (&desc, priv->subresource_index[i],
+        1, 0, &priv->layout[i], nullptr, nullptr, &size);
 
     /* Update offset manually */
     priv->layout[i].Offset = priv->size;
@@ -791,11 +801,11 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * self,
   }
 
   gst_memory_init (GST_MEMORY_CAST (mem),
-      (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (self), nullptr,
+      (GstMemoryFlags) 0, GST_ALLOCATOR_CAST (allocator), nullptr,
       mem->priv->size, 0, 0, mem->priv->size);
 
-  GST_LOG_OBJECT (self, "Allocated new memory %p with size %" G_GUINT64_FORMAT,
-      mem, priv->size);
+  GST_LOG_OBJECT (allocator,
+      "Allocated new memory %p with size %" G_GUINT64_FORMAT, mem, priv->size);
 
   return GST_MEMORY_CAST (mem);
 }
@@ -819,8 +829,7 @@ gst_d3d12_allocator_alloc_internal (GstD3D12Allocator * self,
     return nullptr;
   }
 
-  return gst_d3d12_allocator_alloc_wrapped (self, device, desc,
-      initial_state, resource.Get (), 0);
+  return gst_d3d12_allocator_alloc_wrapped (self, device, resource.Get (), 0);
 }
 
 GstMemory *
@@ -973,8 +982,7 @@ gst_d3d12_pool_allocator_start (GstD3D12PoolAllocator * self)
     GstMemory *mem;
 
     mem = gst_d3d12_allocator_alloc_wrapped (_d3d12_memory_allocator,
-        self->device, &priv->desc,
-        priv->initial_state, priv->resource.Get (), i);
+        self->device, priv->resource.Get (), i);
 
     priv->cur_mems++;
     priv->queue.push (mem);

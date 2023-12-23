@@ -188,6 +188,11 @@ GstMemory * gst_d3d12_allocator_alloc     (GstD3D12Allocator * allocator,
                                            D3D12_RESOURCE_STATES initial_state,
                                            const D3D12_CLEAR_VALUE * optimized_clear_value);
 
+GstMemory * gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
+                                               GstD3D12Device * device,
+                                               ID3D12Resource * resource,
+                                               guint array_slice);
+
 gboolean    gst_d3d12_allocator_set_active (GstD3D12Allocator * allocator,
                                             gboolean active);
 
