@@ -32,7 +32,6 @@ typedef struct _GstAnalyticsODMtdData GstAnalyticsODMtdData;
 
 /**
  * GstAnalyticsODMtdData:
- * @parent: parent #GstAnalyticsMtd
  * @object_type: Type of object
  * @x: x component of upper-left corner
  * @y: y component of upper-left corner
@@ -46,7 +45,6 @@ typedef struct _GstAnalyticsODMtdData GstAnalyticsODMtdData;
  */
 struct _GstAnalyticsODMtdData
 {
-  GstAnalyticsRelatableMtdData parent;
   GQuark object_type;
   gint x;
   gint y;
@@ -84,19 +82,6 @@ gst_analytics_od_mtd_get_type_name (void)
   return GST_RELATABLE_MTD_OD_TYPE_NAME;
 }
 
-static GstAnalyticsODMtdData *
-gst_analytics_od_mtd_get_data (GstAnalyticsODMtd * instance)
-{
-  GstAnalyticsRelatableMtdData *rlt_data =
-      gst_analytics_relation_meta_get_mtd_data (instance->meta,
-      instance->id);
-  g_return_val_if_fail (rlt_data, NULL);
-  g_return_val_if_fail (rlt_data->analysis_type ==
-      gst_analytics_od_mtd_get_type_quark (), NULL);
-
-  return (GstAnalyticsODMtdData *) rlt_data;
-}
-
 /**
  * gst_analytics_od_mtd_get_location:
  * @instance: instance
@@ -117,21 +102,20 @@ gboolean
 gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
     gint * x, gint * y, gint * w, gint * h, gfloat * loc_conf_lvl)
 {
-  g_return_val_if_fail (instance && x && y && w && h, FALSE);
   GstAnalyticsODMtdData *data;
-  data = gst_analytics_od_mtd_get_data (instance);
+
+  g_return_val_if_fail (instance && x && y && w && h, FALSE);
+  data = gst_analytics_relation_meta_get_mtd_data (instance->meta,
+      instance->id);
   g_return_val_if_fail (data != NULL, FALSE);
 
-  if (data) {
-    *x = data->x;
-    *y = data->y;
-    *w = data->w;
-    *h = data->h;
+  *x = data->x;
+  *y = data->y;
+  *w = data->w;
+  *h = data->h;
 
-    if (loc_conf_lvl) {
-      *loc_conf_lvl = data->location_confidence_lvl;
-    }
-  }
+  if (loc_conf_lvl)
+    *loc_conf_lvl = data->location_confidence_lvl;
 
   return TRUE;
 }
@@ -149,7 +133,8 @@ gst_analytics_od_mtd_get_type (GstAnalyticsODMtd * handle)
 {
   GstAnalyticsODMtdData *data;
   g_return_val_if_fail (handle != NULL, 0);
-  data = gst_analytics_od_mtd_get_data (handle);
+  data = gst_analytics_relation_meta_get_mtd_data (handle->meta,
+      handle->id);
   g_return_val_if_fail (data != NULL, 0);
   return data->object_type;
 }

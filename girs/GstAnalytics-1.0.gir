@@ -284,42 +284,6 @@ Quark of the class of object associated with this location.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Only use for criteria.</doc>
       </member>
     </bitfield>
-    <record name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Base structure for analysis-metadata that can be placed in relation. Only
-other analysis-metadata based on GstAnalyticsRelatableMtdData should
-directly use this structure.</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
-      <field name="analysis_type" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Identify the type of analysis-metadata</doc>
-        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
-      </field>
-      <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Instance identifier.</doc>
-        <type name="guint" c:type="guint"/>
-      </field>
-      <field name="size" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Size in bytes of the instance</doc>
-        <type name="gsize" c:type="gsize"/>
-      </field>
-      <field name="free">
-        <callback name="free">
-          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
-          <return-value transfer-ownership="none">
-            <type name="none" c:type="void"/>
-          </return-value>
-          <parameters>
-            <parameter name="mtd_data" transfer-ownership="none">
-              <type name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData*"/>
-            </parameter>
-          </parameters>
-        </callback>
-      </field>
-      <field name="_gst_reserved" writable="1">
-        <array zero-terminated="0" fixed-size="4">
-          <type name="gpointer" c:type="gpointer"/>
-        </array>
-      </field>
-    </record>
     <record name="RelationMeta" c:type="GstAnalyticsRelationMeta" disguised="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <method name="add_cls_mtd" c:identifier="gst_analytics_relation_meta_add_cls_mtd" version="1.24">
@@ -362,11 +326,11 @@ directly use this structure.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Add a relatable metadata to @meta. This method is meant to be used by
 new struct sub-classing GstAnalyticsRelatableMtd.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
-        <return-value>
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">New GstAnalyticsRelatableMtdData instance.
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">A pointer to a memory area of size @size where to put the data
 
 Since 1.24</doc>
-          <type name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData*"/>
+          <type name="gpointer" c:type="gpointer"/>
         </return-value>
         <parameters>
           <instance-parameter name="meta" transfer-ownership="none">
@@ -631,11 +595,11 @@ Since 1.24</doc>
       </method>
       <method name="get_mtd_data" c:identifier="gst_analytics_relation_meta_get_mtd_data" introspectable="0">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
-        <return-value nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of GstAnalyticsRelatableMtdData
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Analytics data pointer
 
 Since 1.24</doc>
-          <type name="RelatableMtdData" c:type="GstAnalyticsRelatableMtdData*"/>
+          <type name="gpointer" c:type="gpointer"/>
         </return-value>
         <parameters>
           <instance-parameter name="meta" transfer-ownership="none">

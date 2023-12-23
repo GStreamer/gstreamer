@@ -39,7 +39,6 @@ struct _GstAnalyticsClsConfLvlAndClass
 
 /*
  * GstAnalyticsClsMtd:
- * @parent: parent
  * @length: classes and confidence levels count
  * @class_quarks: (array length=length): Array of quark representing a class
  * @confidence_levels: (array length=length): Array of confidence levels for
@@ -49,24 +48,9 @@ struct _GstAnalyticsClsConfLvlAndClass
  */
 struct _GstAnalyticsClsMtdData
 {
-  GstAnalyticsRelatableMtdData parent;
   gsize length;
   GstAnalyticsClsConfLvlAndClass confidence_levels_and_classes[];       // Must be last
 };
-
-
-static GstAnalyticsClsMtdData *
-gst_analytics_cls_mtd_get_data (GstAnalyticsClsMtd * instance)
-{
-  GstAnalyticsRelatableMtdData *rlt_data =
-      gst_analytics_relation_meta_get_mtd_data (instance->meta,
-      instance->id);
-  g_return_val_if_fail (rlt_data, NULL);
-  g_return_val_if_fail (rlt_data->analysis_type ==
-      gst_analytics_cls_mtd_get_type_quark (), NULL);
-
-  return (GstAnalyticsClsMtdData *) rlt_data;
-}
 
 /**
  * gst_analytics_cls_mtd_get_type_quark:
@@ -113,7 +97,8 @@ gst_analytics_cls_mtd_get_level (GstAnalyticsClsMtd * handle, gint index)
   g_return_val_if_fail (index >= 0, -1.0);
   g_return_val_if_fail (handle->meta != NULL, -1.0);
   GstAnalyticsClsMtdData *cls_mtd_data;
-  cls_mtd_data = gst_analytics_cls_mtd_get_data (handle);
+  cls_mtd_data = gst_analytics_relation_meta_get_mtd_data (handle->meta,
+      handle->id);
   g_return_val_if_fail (cls_mtd_data != NULL, -1.0);
   g_return_val_if_fail (cls_mtd_data->length > index, -1.0);
   return cls_mtd_data->confidence_levels_and_classes[index].confidence_levels;
@@ -136,7 +121,8 @@ gst_analytics_cls_mtd_get_index_by_quark (GstAnalyticsClsMtd * handle,
   g_return_val_if_fail (handle, -1);
 
   GstAnalyticsClsMtdData *cls_mtd_data;
-  cls_mtd_data = gst_analytics_cls_mtd_get_data (handle);
+  cls_mtd_data = gst_analytics_relation_meta_get_mtd_data (handle->meta,
+      handle->id);
   g_return_val_if_fail (cls_mtd_data != NULL, -1);
 
   for (gint i = 0; i < cls_mtd_data->length; i++) {
@@ -159,7 +145,8 @@ gsize
 gst_analytics_cls_mtd_get_length (GstAnalyticsClsMtd * handle)
 {
   GstAnalyticsClsMtdData *cls_mtd_data;
-  cls_mtd_data = gst_analytics_cls_mtd_get_data (handle);
+  cls_mtd_data = gst_analytics_relation_meta_get_mtd_data (handle->meta,
+      handle->id);
   g_return_val_if_fail (cls_mtd_data != NULL, 0);
   return cls_mtd_data->length;
 }
@@ -178,7 +165,8 @@ gst_analytics_cls_mtd_get_quark (GstAnalyticsClsMtd * handle, gint index)
 {
   GstAnalyticsClsMtdData *cls_mtd_data;
   g_return_val_if_fail (handle, 0);
-  cls_mtd_data = gst_analytics_cls_mtd_get_data (handle);
+  cls_mtd_data = gst_analytics_relation_meta_get_mtd_data (handle->meta,
+      handle->id);
   g_return_val_if_fail (cls_mtd_data != NULL, 0);
   return cls_mtd_data->confidence_levels_and_classes[index].class;
 }

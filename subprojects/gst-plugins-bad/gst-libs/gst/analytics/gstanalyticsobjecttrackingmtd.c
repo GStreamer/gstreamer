@@ -30,7 +30,6 @@ typedef struct _GstAnalyticsTrackingMtdData GstAnalyticsTrackingMtdData;
 
 /**
  * GstAnalyticsTrackingMtd:
- * @parent: parent #GstAnalyticsMtd
  * @tracking_id: Tracking identifier
  * @tracking_first_seen: Tracking creation time
  * @tracking_last_seen: Tracking last observation
@@ -42,7 +41,6 @@ typedef struct _GstAnalyticsTrackingMtdData GstAnalyticsTrackingMtdData;
  */
 struct _GstAnalyticsTrackingMtdData
 {
-  GstAnalyticsRelatableMtdData parent;
   guint64 tracking_id;
   GstClockTime tracking_first_seen;
   GstClockTime tracking_last_seen;
@@ -51,20 +49,6 @@ struct _GstAnalyticsTrackingMtdData
 
 
 static char type[] = GST_RELATABLE_MTD_TRACKING_TYPE_NAME;
-
-static GstAnalyticsTrackingMtdData *
-gst_analytics_tracking_mtd_get_data (GstAnalyticsTrackingMtd * instance)
-{
-  GstAnalyticsRelatableMtdData *rlt_data =
-      gst_analytics_relation_meta_get_mtd_data (instance->meta,
-      instance->id);
-  g_return_val_if_fail (rlt_data, NULL);
-
-  g_return_val_if_fail (rlt_data->analysis_type ==
-      gst_analytics_tracking_mtd_get_type_quark (), NULL);
-
-  return (GstAnalyticsTrackingMtdData *) rlt_data;
-}
 
 /**
  * gst_analytics_tracking_mtd_get_type_quark:
@@ -107,7 +91,8 @@ gst_analytics_tracking_mtd_update_last_seen (GstAnalyticsTrackingMtd * instance,
 {
   GstAnalyticsTrackingMtdData *trk_mtd_data;
   g_return_val_if_fail (instance, FALSE);
-  trk_mtd_data = gst_analytics_tracking_mtd_get_data (instance);
+  trk_mtd_data = gst_analytics_relation_meta_get_mtd_data (instance->meta,
+      instance->id);
   g_return_val_if_fail (trk_mtd_data != NULL, FALSE);
 
   trk_mtd_data->tracking_last_seen = last_seen;
@@ -128,7 +113,8 @@ gst_analytics_tracking_mtd_set_lost (GstAnalyticsTrackingMtd * instance)
 {
   GstAnalyticsTrackingMtdData *trk_mtd_data;
   g_return_val_if_fail (instance, FALSE);
-  trk_mtd_data = gst_analytics_tracking_mtd_get_data (instance);
+  trk_mtd_data = gst_analytics_relation_meta_get_mtd_data (instance->meta,
+      instance->id);
   g_return_val_if_fail (trk_mtd_data != NULL, FALSE);
   trk_mtd_data->tracking_lost = TRUE;
   return TRUE;
@@ -154,7 +140,8 @@ gst_analytics_tracking_mtd_get_info (GstAnalyticsTrackingMtd * instance,
 {
   GstAnalyticsTrackingMtdData *trk_mtd_data;
   g_return_val_if_fail (instance, FALSE);
-  trk_mtd_data = gst_analytics_tracking_mtd_get_data (instance);
+  trk_mtd_data = gst_analytics_relation_meta_get_mtd_data (instance->meta,
+      instance->id);
 
   g_return_val_if_fail (trk_mtd_data != NULL, FALSE);
 

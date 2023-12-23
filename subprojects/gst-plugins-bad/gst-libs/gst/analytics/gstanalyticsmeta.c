@@ -27,68 +27,24 @@
 GST_DEBUG_CATEGORY_STATIC (an_relation_meta_debug);
 #define GST_CAT_AN_RELATION an_relation_meta_debug
 
-static char invalid_type_name[] = "_invalid";
-
-static guint
-gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta);
-
-/**
- * gst_analytics_mtd_get_type_quark:
- * @instance: Instance of #GstAnalyticsMtd
- * Get analysis result type.
+/*
+ * GstAnalyticsRelatableMtdData:
+ * @analysis_type: Identify the type of analysis-metadata
+ * @id: Instance identifier.
+ * @size: Size in bytes of the instance
  *
- * Returns: quark associated with type.
- *
- * Since: 1.24
+ * Base structure for analysis-metadata that can be placed in relation. Only
+ * other analysis-metadata based on GstAnalyticsRelatableMtdDatax should
+ * directly use this structure.
  */
-GstAnalyticsMtdType
-gst_analytics_mtd_get_type_quark (GstAnalyticsMtd * handle)
+typedef struct
 {
-  GstAnalyticsRelatableMtdData *rlt;
-  rlt = gst_analytics_relation_meta_get_mtd_data (handle->meta, handle->id);
+  GstAnalyticsMtdType analysis_type;
+  guint id;
+  gsize size;
+  gpointer data[];
+} GstAnalyticsRelatableMtdData;
 
-  g_return_val_if_fail (rlt != NULL,
-      g_quark_from_static_string (invalid_type_name));
-
-  return rlt->analysis_type;
-}
-
-/**
- * gst_analytics_mtd_get_id:
- * @instance: Instance of #GstAnalyticsMtd
- * Get instance id
- *
- * Returns: Id of @instance
- *
- * Since: 1.24
- */
-guint
-gst_analytics_mtd_get_id (GstAnalyticsMtd * handle)
-{
-  return handle->id;
-}
-
-/**
- * gst_analytics_mtd_get_size:
- * @instance Instance of #GstAnalyticsRelatableMtd
- * Get instance size
- *
- * Returns: Size (in bytes) of this instance or 0 on failure.
- *
- * Since: 1.24
- */
-gsize
-gst_analytics_mtd_get_size (GstAnalyticsMtd * handle)
-{
-  GstAnalyticsRelatableMtdData *rlt;
-  rlt = gst_analytics_relation_meta_get_mtd_data (handle->meta, handle->id);
-  if (rlt == NULL) {
-    GST_CAT_ERROR (GST_CAT_AN_RELATION, "Invalid parameter");
-    return 0;
-  }
-
-  return rlt->size;
-}
 
 /*
  * GstAnalyticsRelationMeta:
@@ -131,6 +87,89 @@ typedef struct _GstAnalyticsRelationMeta
   gsize length;
 
 } GstAnalyticsRelationMeta;
+
+static char invalid_type_name[] = "_invalid";
+
+static guint
+gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta);
+
+
+static GstAnalyticsRelatableMtdData *
+gst_analytics_relation_meta_get_mtd_data_internal (GstAnalyticsRelationMeta *
+    meta, guint an_meta_id)
+{
+  GstAnalyticsRelatableMtdData *rv;
+  g_return_val_if_fail (meta, NULL);
+  if (an_meta_id >= meta->rel_order) {
+    GST_CAT_ERROR (GST_CAT_AN_RELATION, "Invalid parameter");
+    return NULL;
+  }
+  rv = (GstAnalyticsRelatableMtdData *)
+      (meta->mtd_data_lookup[an_meta_id] + meta->analysis_results);
+
+  return rv;
+}
+
+/**
+ * gst_analytics_mtd_get_type_quark:
+ * @instance: Instance of #GstAnalyticsMtd
+ * Get analysis result type.
+ *
+ * Returns: quark associated with type.
+ *
+ * Since: 1.24
+ */
+GstAnalyticsMtdType
+gst_analytics_mtd_get_type_quark (GstAnalyticsMtd * handle)
+{
+  GstAnalyticsRelatableMtdData *rlt;
+  rlt = gst_analytics_relation_meta_get_mtd_data_internal (handle->meta,
+      handle->id);
+
+  g_return_val_if_fail (rlt != NULL,
+      g_quark_from_static_string (invalid_type_name));
+
+  return rlt->analysis_type;
+}
+
+/**
+ * gst_analytics_mtd_get_id:
+ * @instance: Instance of #GstAnalyticsMtd
+ * Get instance id
+ *
+ * Returns: Id of @instance
+ *
+ * Since: 1.24
+ */
+guint
+gst_analytics_mtd_get_id (GstAnalyticsMtd * handle)
+{
+  return handle->id;
+}
+
+/**
+ * gst_analytics_mtd_get_size:
+ * @instance Instance of #GstAnalyticsRelatableMtd
+ * Get instance size
+ *
+ * Returns: Size (in bytes) of this instance or 0 on failure.
+ *
+ * Since: 1.24
+ */
+gsize
+gst_analytics_mtd_get_size (GstAnalyticsMtd * handle)
+{
+  GstAnalyticsRelatableMtdData *rlt;
+  rlt = gst_analytics_relation_meta_get_mtd_data_internal (handle->meta,
+      handle->id);
+  if (rlt == NULL) {
+    GST_CAT_ERROR (GST_CAT_AN_RELATION, "Invalid parameter");
+    return 0;
+  }
+
+  return rlt->size;
+}
+
 
 /**
  * gst_analytics_relation_get_length:
@@ -256,20 +295,10 @@ static void
 gst_analytics_relation_meta_free (GstMeta * meta, GstBuffer * buffer)
 {
   GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *) meta;
-  gpointer state = NULL;
-  GstAnalyticsMtd mtd;
-  GstAnalyticsRelatableMtdData *data;
+
   GST_CAT_TRACE (GST_CAT_AN_RELATION,
       "Content analysis meta-data(%p) freed for buffer(%p)",
       (gpointer) rmeta, (gpointer) buffer);
-
-  /* call custom free function if set */
-  while (gst_analytics_relation_meta_iterate (rmeta, &state, 0, &mtd)) {
-    data = gst_analytics_relation_meta_get_mtd_data (mtd.meta, mtd.id);
-    if (data->free != NULL) {
-      data->free (data);
-    }
-  }
 
   g_free (rmeta->analysis_results);
   g_free (rmeta->adj_mat);
@@ -779,21 +808,28 @@ gst_buffer_get_analytics_relation_meta (GstBuffer * buffer)
  * Add a relatable metadata to @meta. This method is meant to be used by
  * new struct sub-classing GstAnalyticsRelatableMtd.
  *
- * Returns: New GstAnalyticsRelatableMtdData instance.
+ * Returns: A pointer to a memory area of size @size where to put the data
  *
  * Since 1.24
  */
-GstAnalyticsRelatableMtdData *
+gpointer
 gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
     GstAnalyticsMtdType type, gsize size, GstAnalyticsMtd * rlt_mtd)
 {
-  gsize new_size = size + meta->offset;
+  gsize object_size;
+  gsize new_size;
   GstAnalyticsRelatableMtdData *dest = NULL;
   gpointer mem;
   guint8 **new_adj_mat;
   gsize new_mem_cap, new_rel_order;
   GST_CAT_TRACE (GST_CAT_AN_RELATION, "Adding relatable metadata to rmeta %p",
       meta);
+
+  object_size = sizeof (GstAnalyticsRelatableMtdData);
+  object_size += sizeof (gpointer) * (size / sizeof (gpointer));
+  if (size % sizeof (gpointer))
+    object_size += sizeof (gpointer);
+  new_size = meta->offset + object_size;
 
   if (new_size > meta->max_size) {
 
@@ -827,9 +863,8 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
     dest->analysis_type = type;
     dest->id = gst_analytics_relation_meta_get_next_id (meta);
     dest->size = size;
-    dest->free = NULL;
     meta->mtd_data_lookup[dest->id] = meta->offset;
-    meta->offset += dest->size;
+    meta->offset += object_size;
     meta->length++;
     rlt_mtd->id = dest->id;
     rlt_mtd->meta = meta;
@@ -841,7 +876,7 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
         "Failed to add relatable, out-of-space (%" G_GSIZE_FORMAT " / %"
         G_GSIZE_FORMAT ").", new_size, meta->max_size);
   }
-  return dest;
+  return &dest->data[0];
 }
 
 /**
@@ -876,7 +911,7 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
     return FALSE;
   }
 
-  d = gst_analytics_relation_meta_get_mtd_data (meta, an_meta_id);
+  d = gst_analytics_relation_meta_get_mtd_data_internal (meta, an_meta_id);
   if (d == NULL)
     return FALSE;
 
@@ -899,23 +934,17 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
  * @meta: Instance of GstAnalyticsRelationMeta
  * @an_meta_id: Id of GstAnalyticsMtd instance to retrieve
  *
- * Returns:(nullable): Instance of GstAnalyticsRelatableMtdData
+ * Returns:(nullable): Analytics data pointer
  *
  * Since 1.24
  */
-GstAnalyticsRelatableMtdData *
+gpointer
 gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta *
     meta, guint an_meta_id)
 {
-  GstAnalyticsRelatableMtdData *rv;
-  g_return_val_if_fail (meta, NULL);
-  if (an_meta_id >= meta->rel_order) {
-    GST_CAT_ERROR (GST_CAT_AN_RELATION, "Invalid parameter");
-    return NULL;
-  }
-  rv = (GstAnalyticsRelatableMtdData *)
-      (meta->mtd_data_lookup[an_meta_id] + meta->analysis_results);
-  return rv;
+  GstAnalyticsRelatableMtdData *rv =
+      gst_analytics_relation_meta_get_mtd_data_internal (meta, an_meta_id);
+  return &rv->data[0];
 }
 
 

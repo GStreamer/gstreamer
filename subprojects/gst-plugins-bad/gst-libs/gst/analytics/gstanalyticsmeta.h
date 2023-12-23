@@ -56,7 +56,6 @@ typedef guint32 GstAnalyticsMtdType;
 #define GST_ANALYTICS_MTD_CAST(mtd) \
     ((GstAnalyticsMtd *)(mtd))
 
-typedef struct _GstAnalyticsRelatableMtdData GstAnalyticsRelatableMtdData;
 typedef struct _GstAnalyticsRelationMeta GstAnalyticsRelationMeta;
 
 /**
@@ -74,29 +73,6 @@ struct _GstAnalyticsMtd
 {
   guint id;
   GstAnalyticsRelationMeta *meta;
-};
-
-/**
- * GstAnalyticsRelatableMtdData:
- * @analysis_type: Identify the type of analysis-metadata
- * @id: Instance identifier.
- * @size: Size in bytes of the instance
- *
- * Base structure for analysis-metadata that can be placed in relation. Only
- * other analysis-metadata based on GstAnalyticsRelatableMtdData should
- * directly use this structure.
- *
- * Since: 1.24
- */
-struct _GstAnalyticsRelatableMtdData
-{
-  GstAnalyticsMtdType analysis_type;
-  guint id;
-  gsize size;
-
-  void (*free) (GstAnalyticsRelatableMtdData * mtd_data);
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GST_ANALYTICS_META_API
@@ -196,7 +172,7 @@ GstAnalyticsRelationMeta *
 gst_buffer_get_analytics_relation_meta (GstBuffer * buffer);
 
 GST_ANALYTICS_META_API
-GstAnalyticsRelatableMtdData *
+gpointer
 gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
     GstAnalyticsMtdType type, gsize size, GstAnalyticsMtd * rlt_mtd);
 
@@ -206,7 +182,7 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta *
     meta, guint an_meta_id, GstAnalyticsMtdType type, GstAnalyticsMtd * rlt);
 
 GST_ANALYTICS_META_API
-GstAnalyticsRelatableMtdData *
+gpointer
 gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta * meta,
     guint an_meta_id);
 
