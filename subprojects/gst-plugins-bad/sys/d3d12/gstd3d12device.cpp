@@ -573,6 +573,13 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     return nullptr;
   }
 
+  ComPtr < ID3D12Device4 > device4;
+  hr = device.As (&device4);
+  if (FAILED (hr)) {
+    GST_WARNING ("ID3D12Device4 interface unavailable");
+    return nullptr;
+  }
+
   GstD3D12Device *self = (GstD3D12Device *)
       g_object_new (GST_TYPE_D3D12_DEVICE, nullptr);
   GstD3D12DevicePrivate *priv = self->priv;
