@@ -167,6 +167,15 @@ private:
   bool flushing = false;
 };
 
+struct DecoderTaskData
+{
+  ComPtr <ID3D12CommandAllocator> ca;
+  ComPtr <ID3D12Resource> bitstream;
+  gsize bitstream_size;
+};
+
+typedef std::shared_ptr<DecoderTaskData> DecoderTaskDataPtr;
+
 struct GstD3D12DecoderPicture : public GstMiniObject
 {
   GstD3D12DecoderPicture (GstBuffer * dpb_buf, GstBuffer * out_buf,
@@ -192,6 +201,7 @@ struct GstD3D12DecoderPicture : public GstMiniObject
   ComPtr<ID3D12VideoDecoderHeap> heap;
   std::weak_ptr<GstD3D12Dpb> dpb;
   guint64 fence_val = 0;
+  DecoderTaskDataPtr task_data;
 
   guint8 view_id;
 };
@@ -210,13 +220,6 @@ enum GstD3D12DecoderOutputType
 DEFINE_ENUM_FLAG_OPERATORS (GstD3D12DecoderOutputType);
 
 constexpr UINT64 ASYNC_DEPTH = 4;
-
-struct DecoderTaskData
-{
-  ComPtr <ID3D12CommandAllocator> ca;
-  ComPtr <ID3D12Resource> bitstream;
-  gsize bitstream_size;
-};
 
 struct DecoderCmdData
 {
@@ -249,7 +252,9 @@ struct DecoderCmdData
   HANDLE event_handle;
   UINT64 fence_val = 0;
 
-  std::vector<DecoderTaskData> task_data;
+  std::mutex task_data_queue_lock;
+  std::queue<DecoderTaskDataPtr> task_data_queue;
+  guint num_allocated_tasks = 0;
 };
 
 struct DecoderOutputData
@@ -471,8 +476,9 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
     return FALSE;
   }
 
-  cmd->task_data.resize (ASYNC_DEPTH);
-  for (size_t i = 0; i < cmd->task_data.size (); i++) {
+  /* Preallocate command allocators, but we can allocate additional command
+   * allocators later */
+  for (size_t i = 0; i < ASYNC_DEPTH; i++) {
     ComPtr < ID3D12CommandAllocator > ca;
     hr = cmd->device->CreateCommandAllocator
         (D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, IID_PPV_ARGS (&ca));
@@ -481,7 +487,10 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
       return FALSE;
     }
 
-    cmd->task_data[i].ca = ca;
+    auto task_data = std::make_shared < DecoderTaskData > ();
+    task_data->ca = ca;
+    cmd->task_data_queue.push (task_data);
+    cmd->num_allocated_tasks++;
   }
 
   priv->cmd = std::move (cmd);
@@ -1021,16 +1030,15 @@ gst_d3d12_decoder_start_picture (GstD3D12Decoder * decoder,
 
 static gboolean
 gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
-    gsize size, DecoderTaskData & task)
+    gsize size, DecoderTaskDataPtr task)
 {
   auto priv = self->priv;
   HRESULT hr;
-  D3D12_RANGE range = { 0, size };
 
-  if (task.bitstream && task.bitstream_size < size)
-    task.bitstream = nullptr;
+  if (task->bitstream && task->bitstream_size < size)
+    task->bitstream = nullptr;
 
-  if (!task.bitstream) {
+  if (!task->bitstream) {
     ComPtr < ID3D12Resource > bitstream;
     size_t alloc_size = GST_ROUND_UP_128 (size) + 1024;
 
@@ -1048,19 +1056,22 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
     GST_LOG_OBJECT (self, "Allocated new bitstream buffer with size %"
         G_GSIZE_FORMAT, size);
 
-    task.bitstream = bitstream;
-    task.bitstream_size = alloc_size;
+    task->bitstream = bitstream;
+    task->bitstream_size = alloc_size;
   }
 
   gpointer map_data;
-  hr = task.bitstream->Map (0, &range, &map_data);
+  D3D12_RANGE zero_range = { 0, 0 };
+  hr = task->bitstream->Map (0, &zero_range, &map_data);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't map bitstream buffer");
     return FALSE;
   }
 
   memcpy (map_data, data, size);
-  task.bitstream->Unmap (0, &range);
+
+  D3D12_RANGE range = { 0, size };
+  task->bitstream->Unmap (0, &range);
 
   return TRUE;
 }
@@ -1102,25 +1113,49 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
         (GThreadFunc) gst_d3d12_decoder_output_loop, decoder);
   }
 
-  auto task_slot_idx = priv->cmd->fence_val % ASYNC_DEPTH;
-  GST_LOG_OBJECT (decoder, "Using task slot %" G_GUINT64_FORMAT, task_slot_idx);
+  DecoderTaskDataPtr task_data;
+  size_t free_tasks_in_queue = 0;
+  {
+    std::lock_guard < std::mutex > lk (priv->cmd->task_data_queue_lock);
+    if (priv->cmd->task_data_queue.empty ()) {
+      ComPtr < ID3D12CommandAllocator > ca;
+      hr = priv->cmd->device->CreateCommandAllocator
+          (D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, IID_PPV_ARGS (&ca));
+      if (!gst_d3d12_result (hr, decoder->device)) {
+        GST_ERROR_OBJECT (decoder, "Couldn't create command allocator");
+        return GST_FLOW_ERROR;
+      }
 
-  auto & task_slot = priv->cmd->task_data[task_slot_idx];
+      task_data = std::make_shared < DecoderTaskData > ();
+      task_data->ca = ca;
+      priv->cmd->num_allocated_tasks++;
+      GST_TRACE_OBJECT (decoder,
+          "Allocating new task, total allocated tasks %u",
+          priv->cmd->num_allocated_tasks);
+    } else {
+      free_tasks_in_queue = priv->cmd->task_data_queue.size ();
+      task_data = priv->cmd->task_data_queue.front ();
+      priv->cmd->task_data_queue.pop ();
+      GST_TRACE_OBJECT (decoder, "Reusing task, total allocated tasks %u",
+          priv->cmd->num_allocated_tasks);
+    }
+  }
+
   if (!gst_d3d12_decoder_upload_bitstream (decoder, args->bitstream,
-          args->bitstream_size, task_slot)) {
+          args->bitstream_size, task_data)) {
     return GST_FLOW_ERROR;
   }
 
   memset (&in_args, 0, sizeof (D3D12_VIDEO_DECODE_INPUT_STREAM_ARGUMENTS));
   memset (&out_args, 0, sizeof (D3D12_VIDEO_DECODE_OUTPUT_STREAM_ARGUMENTS));
 
-  hr = task_slot.ca->Reset ();
+  hr = task_data->ca->Reset ();
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't reset command allocator");
     return GST_FLOW_ERROR;
   }
 
-  hr = priv->cmd->cl->Reset (task_slot.ca.Get ());
+  hr = priv->cmd->cl->Reset (task_data->ca.Get ());
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't reset command list");
     return GST_FLOW_ERROR;
@@ -1239,7 +1274,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     in_args.NumFrameArguments++;
   }
 
-  in_args.CompressedBitstream.pBuffer = task_slot.bitstream.Get ();
+  in_args.CompressedBitstream.pBuffer = task_data->bitstream.Get ();
   in_args.CompressedBitstream.Offset = 0;
   in_args.CompressedBitstream.Size = args->bitstream_size;
   in_args.pHeap = decoder_pic->heap.Get ();
@@ -1268,6 +1303,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   }
 
   decoder_pic->fence_val = priv->cmd->fence_val;
+  decoder_pic->task_data = task_data;
 
   return GST_FLOW_OK;
 }
@@ -1577,6 +1613,12 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
       WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
     }
 
+    {
+      std::lock_guard < std::mutex > lk (priv->cmd->task_data_queue_lock);
+      priv->cmd->task_data_queue.push (decoder_pic->task_data);
+      decoder_pic->task_data = nullptr;
+    }
+
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "Drop framem, we are flushing");
       gst_codec_picture_unref (output_data.picture);
@@ -1639,7 +1681,7 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
   gst_queue_array_push_tail_struct (priv->session->output_queue, &output_data);
   priv->session->queue_cond.notify_one ();
 
-  return GST_FLOW_OK;
+  return priv->last_flow;
 }
 
 gboolean
