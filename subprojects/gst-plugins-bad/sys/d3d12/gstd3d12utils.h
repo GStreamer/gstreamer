@@ -74,36 +74,9 @@ gboolean _gst_d3d12_result (HRESULT hr,
     _gst_d3d12_result (result, device, NULL, __FILE__, GST_FUNCTION, __LINE__, GST_LEVEL_ERROR)
 #endif
 
-#define GST_D3D12_CLEAR_COM(obj) G_STMT_START { \
-    if (obj) { \
-      (obj)->Release (); \
-      (obj) = NULL; \
-    } \
-  } G_STMT_END
-
 G_END_DECLS
 
 #include <mutex>
-
-class GstD3D12CSLockGuard
-{
-public:
-  explicit GstD3D12CSLockGuard(CRITICAL_SECTION * cs) : cs_ (cs)
-  {
-    EnterCriticalSection (cs_);
-  }
-
-  ~GstD3D12CSLockGuard()
-  {
-    LeaveCriticalSection (cs_);
-  }
-
-  GstD3D12CSLockGuard(const GstD3D12CSLockGuard&) = delete;
-  GstD3D12CSLockGuard& operator=(const GstD3D12CSLockGuard&) = delete;
-
-private:
-  CRITICAL_SECTION *cs_;
-};
 
 #define GST_D3D12_CALL_ONCE_BEGIN \
     static std::once_flag __once_flag; \
