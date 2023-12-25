@@ -110,7 +110,7 @@ struct _GstD3D12Memory
 
   /*< public >*/
   GstD3D12Device *device;
-  GstD3D12Fence *fence;
+  guint64 fence_value;
 
   /*< private >*/
   GstD3D12MemoryPrivate *priv;

@@ -24,16 +24,21 @@
 #include "gstd3d12device.h"
 #include "gstd3d12utils.h"
 #include "gstd3d12format.h"
+#include "gstd3d12commandlistpool.h"
+#include "gstd3d12commandallocatorpool.h"
+#include "gstd3d12commandqueue.h"
 #include <wrl.h>
 #include <vector>
 #include <string.h>
 #include <mutex>
-#include <atomic>
+#include <condition_variable>
 #include <string>
 #include <locale>
 #include <codecvt>
 #include <algorithm>
 #include <d3d12sdklayers.h>
+#include <memory>
+#include <queue>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_device_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
@@ -154,22 +159,44 @@ using namespace Microsoft::WRL;
 
 struct _GstD3D12DevicePrivate
 {
-  _GstD3D12DevicePrivate ()
+  ~_GstD3D12DevicePrivate ()
   {
-    fence_value = 1;
+    auto hr = device->GetDeviceRemovedReason ();
+    /* If device were not removed, make sure no pending command in queue */
+    if (hr == S_OK) {
+      if (direct_queue)
+        gst_d3d12_command_queue_fence_wait (direct_queue, G_MAXUINT64, nullptr);
+
+      if (copy_queue)
+        gst_d3d12_command_queue_fence_wait (copy_queue, G_MAXUINT64, nullptr);
+    }
+
+    gst_clear_object (&direct_queue);
+    gst_clear_object (&copy_queue);
+
+    gst_clear_object (&direct_ca_pool);
+    gst_clear_object (&direct_cl_pool);
+
+    gst_clear_object (&copy_ca_pool);
+    gst_clear_object (&copy_cl_pool);
   }
 
   ComPtr<ID3D12Device> device;
   ComPtr<IDXGIAdapter1> adapter;
   ComPtr<IDXGIFactory2> factory;
   std::vector < GstD3D12Format> formats;
-  std::mutex lock;
   std::recursive_mutex extern_lock;
-  std::atomic<guint64> fence_value;
-
-  ComPtr<ID3D12CommandQueue> copy_queue;
 
   ComPtr<ID3D12InfoQueue> info_queue;
+
+  GstD3D12CommandQueue *direct_queue = nullptr;
+  GstD3D12CommandQueue *copy_queue = nullptr;
+
+  GstD3D12CommandListPool *direct_cl_pool = nullptr;
+  GstD3D12CommandAllocatorPool *direct_ca_pool = nullptr;
+
+  GstD3D12CommandListPool *copy_cl_pool = nullptr;
+  GstD3D12CommandAllocatorPool *copy_ca_pool = nullptr;
 
   guint adapter_index = 0;
   guint device_id = 0;
@@ -281,7 +308,7 @@ gst_d3d12_device_init (GstD3D12Device * self)
 static void
 gst_d3d12_device_finalize (GObject * object)
 {
-  GstD3D12Device *self = GST_D3D12_DEVICE (object);
+  auto self = GST_D3D12_DEVICE (object);
 
   GST_DEBUG_OBJECT (self, "Finalize");
 
@@ -580,6 +607,22 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     return nullptr;
   }
 
+  ComPtr < ID3D12Fence > copy_fence;
+  hr = device->CreateFence (0,
+      D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&copy_fence));
+  if (FAILED (hr)) {
+    GST_ERROR ("Couldn't create copy fence");
+    return nullptr;
+  }
+
+  ComPtr < ID3D12Fence > direct_fence;
+  hr = device->CreateFence (0,
+      D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&direct_fence));
+  if (FAILED (hr)) {
+    GST_ERROR ("Couldn't create fence");
+    return nullptr;
+  }
+
   GstD3D12Device *self = (GstD3D12Device *)
       g_object_new (GST_TYPE_D3D12_DEVICE, nullptr);
   GstD3D12DevicePrivate *priv = self->priv;
@@ -608,7 +651,45 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     priv->info_queue = info_queue;
   }
 
+
+  D3D12_COMMAND_QUEUE_DESC queue_desc = { };
+  queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+  queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+
+  priv->direct_queue = gst_d3d12_command_queue_new (self, &queue_desc, 0);
+  if (!priv->direct_queue)
+    goto error;
+
+  priv->direct_cl_pool = gst_d3d12_command_list_pool_new (self,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  if (!priv->direct_cl_pool)
+    goto error;
+
+  priv->direct_ca_pool = gst_d3d12_command_allocator_pool_new (self,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  if (!priv->direct_ca_pool)
+    goto error;
+
+  queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
+  priv->copy_queue = gst_d3d12_command_queue_new (self, &queue_desc, 0);
+  if (!priv->copy_queue)
+    goto error;
+
+  priv->copy_cl_pool = gst_d3d12_command_list_pool_new (self,
+      D3D12_COMMAND_LIST_TYPE_COPY);
+  if (!priv->copy_cl_pool)
+    goto error;
+
+  priv->copy_ca_pool = gst_d3d12_command_allocator_pool_new (self,
+      D3D12_COMMAND_LIST_TYPE_COPY);
+  if (!priv->copy_ca_pool)
+    goto error;
+
   return self;
+
+error:
+  gst_object_unref (self);
+  return nullptr;
 }
 
 GstD3D12Device *
@@ -725,37 +806,226 @@ gst_d3d12_device_get_format (GstD3D12Device * device,
   return FALSE;
 }
 
-guint64
-gst_d3d12_device_get_fence_value (GstD3D12Device * device)
-{
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), G_MAXUINT64);
-
-  return device->priv->fence_value.fetch_add (1);
-}
-
-ID3D12CommandQueue *
-gst_d3d12_device_get_copy_queue (GstD3D12Device * device)
+GstD3D12CommandQueue *
+gst_d3d12_device_get_command_queue (GstD3D12Device * device,
+    D3D12_COMMAND_LIST_TYPE queue_type)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
 
   auto priv = device->priv;
-  std::lock_guard < std::mutex > lk (priv->lock);
-  if (!priv->copy_queue) {
-    HRESULT hr;
-    D3D12_COMMAND_QUEUE_DESC desc = { };
-    ComPtr < ID3D12CommandQueue > queue;
 
-    desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-    desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-
-    hr = priv->device->CreateCommandQueue (&desc, IID_PPV_ARGS (&queue));
-    if (!gst_d3d12_result (hr, device))
-      return nullptr;
-
-    priv->copy_queue = queue;
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      return priv->direct_queue;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      return priv->copy_queue;
+    default:
+      break;
   }
 
-  return priv->copy_queue.Get ();
+  GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
+
+  return nullptr;
+}
+
+gboolean
+gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
+    D3D12_COMMAND_LIST_TYPE queue_type, guint num_command_lists,
+    ID3D12CommandList ** command_lists, guint64 * fence_value)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+
+  auto priv = device->priv;
+  GstD3D12CommandQueue *queue;
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      queue = priv->copy_queue;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
+      return FALSE;
+  }
+
+  auto hr = gst_d3d12_command_queue_execute_command_lists (queue,
+      num_command_lists, command_lists, fence_value);
+
+  return gst_d3d12_result (hr, device);
+}
+
+guint64
+gst_d3d12_device_get_completed_value (GstD3D12Device * device,
+    D3D12_COMMAND_LIST_TYPE queue_type)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), G_MAXUINT64);
+
+  auto priv = device->priv;
+  GstD3D12CommandQueue *queue;
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      queue = priv->copy_queue;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
+      return G_MAXUINT64;
+  }
+
+  return gst_d3d12_command_queue_get_completed_value (queue);
+}
+
+gboolean
+gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
+    D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value,
+    gpointer fence_data, GDestroyNotify notify)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+
+  auto priv = device->priv;
+  GstD3D12CommandQueue *queue;
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      queue = priv->copy_queue;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
+      return FALSE;
+  }
+
+  gst_d3d12_command_queue_set_notify (queue, fence_value, fence_data, notify);
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_device_fence_wait (GstD3D12Device * device,
+    D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value,
+    HANDLE event_handle)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+
+  auto priv = device->priv;
+  GstD3D12CommandQueue *queue;
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      queue = priv->copy_queue;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
+      return FALSE;
+  }
+
+  auto hr = gst_d3d12_command_queue_fence_wait (queue,
+      fence_value, event_handle);
+
+  return gst_d3d12_result (hr, device);
+}
+
+gboolean
+gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
+    guint num_args, const GstD3D12CopyTextureRegionArgs * args,
+    D3D12_COMMAND_LIST_TYPE command_type, guint64 * fence_value)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (num_args > 0, FALSE);
+  g_return_val_if_fail (args, FALSE);
+
+  HRESULT hr;
+  auto priv = device->priv;
+  GstD3D12CommandAllocatorPool *ca_pool;
+  GstD3D12CommandAllocator *gst_ca = nullptr;
+  GstD3D12CommandListPool *cl_pool;
+  GstD3D12CommandList *gst_cl = nullptr;
+  GstD3D12CommandQueue *queue = nullptr;
+  guint64 fence_val = 0;
+
+  switch (command_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      ca_pool = priv->direct_ca_pool;
+      cl_pool = priv->direct_cl_pool;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      queue = priv->copy_queue;
+      ca_pool = priv->copy_ca_pool;
+      cl_pool = priv->copy_cl_pool;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported command list type %d",
+          command_type);
+      return FALSE;
+  }
+
+  gst_d3d12_command_allocator_pool_acquire (ca_pool, &gst_ca);
+  if (!gst_ca) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command allocator");
+    return FALSE;
+  }
+
+  ComPtr < ID3D12CommandAllocator > ca;
+  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+
+  gst_d3d12_command_list_pool_acquire (cl_pool, ca.Get (), &gst_cl);
+
+  if (!gst_cl) {
+    GST_ERROR_OBJECT (device, "Couldn't acquire command list");
+    gst_clear_d3d12_command_allocator (&gst_ca);
+    return FALSE;
+  }
+
+  ComPtr < ID3D12CommandList > cl_base;
+  ComPtr < ID3D12GraphicsCommandList > cl;
+
+  gst_d3d12_command_list_get_handle (gst_cl, &cl_base);
+  cl_base.As (&cl);
+
+  for (guint i = 0; i < num_args; i++) {
+    const auto arg = args[i];
+    cl->CopyTextureRegion (&arg.dst, arg.dst_x, arg.dst_y, arg.dst_z,
+        &arg.src, arg.src_box);
+  }
+
+  hr = cl->Close ();
+  if (!gst_d3d12_result (hr, device)) {
+    GST_ERROR_OBJECT (device, "Couldn't close command list");
+    gst_clear_d3d12_command_list (&gst_cl);
+    gst_clear_d3d12_command_allocator (&gst_ca);
+    return FALSE;
+  }
+
+  ID3D12CommandList *cmd_list[] = { cl.Get () };
+  hr = gst_d3d12_command_queue_execute_command_lists (queue,
+      1, cmd_list, &fence_val);
+  auto ret = gst_d3d12_result (hr, device);
+
+  /* We can release command list since command list pool will hold it */
+  gst_d3d12_command_list_unref (gst_cl);
+
+  if (ret) {
+    gst_d3d12_command_queue_set_notify (queue, fence_val, gst_ca,
+        (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  } else {
+    gst_d3d12_command_allocator_unref (gst_ca);
+  }
+
+  if (fence_value)
+    *fence_value = fence_val;
+
+  return ret;
 }
 
 static inline GstDebugLevel

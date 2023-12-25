@@ -28,7 +28,6 @@
 #include "gstd3d12format.h"
 #include "gstd3d12memory.h"
 #include "gstd3d12bufferpool.h"
-#include "gstd3d12fence.h"
 #include <gst/base/gstqueuearray.h>
 #include <wrl.h>
 #include <string.h>
@@ -174,14 +173,7 @@ struct GstD3D12DecoderPicture : public GstMiniObject
       std::shared_ptr<GstD3D12Dpb> d3d12_dpb,
       ID3D12VideoDecoderHeap * decoder_heap, guint8 dxva_id)
       : buffer(dpb_buf), output_buffer(out_buf)
-      , heap(decoder_heap), dpb(d3d12_dpb), view_id(dxva_id)
-  {
-    GstBuffer *fence_buf = output_buffer ? output_buffer : buffer;
-    if (fence_buf) {
-      auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (fence_buf, 0);
-      fence = gst_d3d12_fence_ref (dmem->fence);
-    }
-  }
+      , heap(decoder_heap), dpb(d3d12_dpb), view_id(dxva_id) {}
 
   ~GstD3D12DecoderPicture ()
   {
@@ -189,8 +181,6 @@ struct GstD3D12DecoderPicture : public GstMiniObject
     if (d3d12_dpb)
       d3d12_dpb->Release (view_id);
 
-    if (fence)
-      gst_d3d12_fence_unref (fence);
     if (buffer)
       gst_buffer_unref (buffer);
     if (output_buffer)
@@ -201,7 +191,7 @@ struct GstD3D12DecoderPicture : public GstMiniObject
   GstBuffer *output_buffer;
   ComPtr<ID3D12VideoDecoderHeap> heap;
   std::weak_ptr<GstD3D12Dpb> dpb;
-  GstD3D12Fence *fence = nullptr;
+  guint64 fence_val = 0;
 
   guint8 view_id;
 };
@@ -246,9 +236,6 @@ struct DecoderCmdData
     }
 
     CloseHandle (event_handle);
-
-    if (copy_fence)
-      gst_d3d12_fence_unref (copy_fence);
   }
 
   ComPtr<ID3D12Device4> device;
@@ -261,13 +248,6 @@ struct DecoderCmdData
   ComPtr<ID3D12Fence> fence;
   HANDLE event_handle;
   UINT64 fence_val = 0;
-
-  /* Used for download decoded picture to staging */
-  ComPtr<ID3D12CommandAllocator> copy_ca;
-  ComPtr<ID3D12GraphicsCommandList> copy_cl;
-
-  /* Fence to wait texture copy */
-  GstD3D12Fence *copy_fence = nullptr;
 
   std::vector<DecoderTaskData> task_data;
 };
@@ -361,6 +341,16 @@ struct DecoderSessionData
 
 struct GstD3D12DecoderPrivate
 {
+  GstD3D12DecoderPrivate ()
+  {
+    copy_event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+  }
+
+  ~GstD3D12DecoderPrivate ()
+  {
+    CloseHandle (copy_event_handle);
+  }
+
   std::mutex lock;
   std::recursive_mutex context_lock;
 
@@ -369,6 +359,8 @@ struct GstD3D12DecoderPrivate
   GThread *output_thread = nullptr;
   std::atomic<bool> flushing;
   std::atomic<GstFlowReturn> last_flow;
+
+  HANDLE copy_event_handle;
 };
 
 /* *INDENT-ON* */
@@ -456,20 +448,6 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
     return FALSE;
   }
 
-  hr = cmd->device->CreateCommandAllocator (D3D12_COMMAND_LIST_TYPE_COPY,
-      IID_PPV_ARGS (&cmd->copy_ca));
-  if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (element, "Couldn't create copy command allocator");
-    return FALSE;
-  }
-
-  hr = cmd->device->CreateCommandList1 (0, D3D12_COMMAND_LIST_TYPE_COPY,
-      D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS (&cmd->copy_cl));
-  if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (element, "Couldn't create copy command list");
-    return FALSE;
-  }
-
   hr = cmd->device->CreateCommandList1 (0, D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE,
       D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS (&cmd->cl));
   if (!gst_d3d12_result (hr, decoder->device)) {
@@ -489,12 +467,6 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
   hr = cmd->device->CreateFence (0,
       D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&cmd->fence));
   if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (element, "Couldn't create fence");
-    return FALSE;
-  }
-
-  cmd->copy_fence = gst_d3d12_fence_new (decoder->device);
-  if (!cmd->copy_fence) {
     GST_ERROR_OBJECT (element, "Couldn't create fence");
     return FALSE;
   }
@@ -1295,16 +1267,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  /* And signal to session fence */
-  hr = priv->cmd->cq->Signal (gst_d3d12_fence_get_handle (decoder_pic->fence),
-      priv->cmd->fence_val);
-  if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (decoder, "Signal failed");
-    return GST_FLOW_ERROR;
-  }
-
-  gst_d3d12_fence_set_event_on_completion_value (decoder_pic->fence,
-      priv->cmd->fence_val);
+  decoder_pic->fence_val = priv->cmd->fence_val;
 
   return GST_FLOW_OK;
 }
@@ -1380,7 +1343,6 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     gint display_width, gint display_height)
 {
   GstFlowReturn ret = GST_FLOW_ERROR;
-  UINT64 fence_value;
   GstBuffer *buffer;
   GstD3D12Memory *dmem;
   ID3D12Resource *resource;
@@ -1388,9 +1350,6 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
   HRESULT hr;
 
   auto priv = self->priv;
-
-  auto copy_queue = gst_d3d12_device_get_copy_queue (self->device);
-  g_assert (copy_queue);
 
   auto decoder_pic = get_decoder_picture (picture);
   g_assert (decoder_pic);
@@ -1455,7 +1414,6 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     GstMemory *mem;
     ID3D12Resource *out_resource = nullptr;
     UINT out_subresource[2];
-    GstD3D12Fence *out_fence = priv->cmd->copy_fence;
 
     ret = gst_video_decoder_allocate_output_frame (videodec, frame);
     if (ret != GST_FLOW_OK) {
@@ -1470,7 +1428,6 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
         out_resource = gst_d3d12_memory_get_resource_handle (dmem);
         gst_d3d12_memory_get_subresource_index (dmem, 0, &out_subresource[0]);
         gst_d3d12_memory_get_subresource_index (dmem, 1, &out_subresource[1]);
-        out_fence = dmem->fence;
 
         GST_MINI_OBJECT_FLAG_SET (dmem,
             GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
@@ -1491,81 +1448,58 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     gst_d3d12_memory_get_subresource_index (dmem, 1, &subresource[1]);
 
     /* Copy texture to staging */
-    hr = priv->cmd->copy_ca->Reset ();
-    if (!gst_d3d12_result (hr, self->device)) {
-      ret = GST_FLOW_ERROR;
-      goto error;
-    }
+    D3D12_BOX src_box[2];
+    std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
 
-    hr = priv->cmd->copy_cl->Reset (priv->cmd->copy_ca.Get (), nullptr);
-    if (!gst_d3d12_result (hr, self->device)) {
-      ret = GST_FLOW_ERROR;
-      goto error;
-    }
-
-    /* simultaneous access must be enabled already, so,barrier is not needed */
     for (guint i = 0; i < 2; i++) {
-      D3D12_TEXTURE_COPY_LOCATION src =
-          CD3DX12_TEXTURE_COPY_LOCATION (resource, subresource[i]);
-      D3D12_TEXTURE_COPY_LOCATION dst;
-      D3D12_BOX src_box = { 0, };
+      GstD3D12CopyTextureRegionArgs args;
+      memset (&args, 0, sizeof (args));
+
+      args.src = CD3DX12_TEXTURE_COPY_LOCATION (resource, subresource[i]);
 
       if (out_resource) {
-        dst = CD3DX12_TEXTURE_COPY_LOCATION (out_resource, out_subresource[i]);
+        args.dst =
+            CD3DX12_TEXTURE_COPY_LOCATION (out_resource, out_subresource[i]);
       } else {
-        dst =
+        args.dst =
             CD3DX12_TEXTURE_COPY_LOCATION (priv->session->staging.Get (),
             priv->session->layout[i]);
       }
 
       /* FIXME: only 4:2:0 */
       if (i == 0) {
-        src_box.left = GST_ROUND_UP_2 (priv->session->crop_x);
-        src_box.top = GST_ROUND_UP_2 (priv->session->crop_y);
-        src_box.right = GST_ROUND_UP_2 (priv->session->crop_x +
+        src_box[i].left = GST_ROUND_UP_2 (priv->session->crop_x);
+        src_box[i].top = GST_ROUND_UP_2 (priv->session->crop_y);
+        src_box[i].right = GST_ROUND_UP_2 (priv->session->crop_x +
             priv->session->output_info.width);
-        src_box.bottom =
+        src_box[i].bottom =
             GST_ROUND_UP_2 (priv->session->crop_y +
             priv->session->output_info.height);
       } else {
-        src_box.left = GST_ROUND_UP_2 (priv->session->crop_x) / 2;
-        src_box.top = GST_ROUND_UP_2 (priv->session->crop_y) / 2;
-        src_box.right =
+        src_box[i].left = GST_ROUND_UP_2 (priv->session->crop_x) / 2;
+        src_box[i].top = GST_ROUND_UP_2 (priv->session->crop_y) / 2;
+        src_box[i].right =
             GST_ROUND_UP_2 (priv->session->crop_x +
             priv->session->output_info.width) / 2;
-        src_box.bottom =
+        src_box[i].bottom =
             GST_ROUND_UP_2 (priv->session->crop_y +
             priv->session->output_info.height) / 2;
       }
 
-      src_box.front = 0;
-      src_box.back = 1;
+      src_box[i].front = 0;
+      src_box[i].back = 1;
 
-      priv->cmd->copy_cl->CopyTextureRegion (&dst, 0, 0, 0, &src, &src_box);
+      args.src_box = &src_box[i];
+      copy_args.push_back (args);
     }
 
-    hr = priv->cmd->copy_cl->Close ();
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (videodec, "Couldn't record copy command");
-      ret = GST_FLOW_ERROR;
-      goto error;
-    }
-
-    ID3D12CommandList *copy_cl[] = { priv->cmd->copy_cl.Get () };
-    copy_queue->ExecuteCommandLists (1, copy_cl);
-
-    fence_value = gst_d3d12_device_get_fence_value (self->device);
-    hr = copy_queue->Signal (gst_d3d12_fence_get_handle (out_fence),
-        fence_value);
-    if (!gst_d3d12_result (hr, self->device)) {
-      ret = GST_FLOW_ERROR;
-      goto error;
-    }
-
-    gst_d3d12_fence_set_event_on_completion_value (out_fence, fence_value);
+    guint64 copy_fence_val = 0;
+    gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
+        copy_args.data (), D3D12_COMMAND_LIST_TYPE_COPY, &copy_fence_val);
+    gst_d3d12_device_fence_wait (self->device, D3D12_COMMAND_LIST_TYPE_COPY,
+        copy_fence_val, priv->copy_event_handle);
 
     if (!out_resource) {
-      gst_d3d12_fence_wait (out_fence);
       guint8 *map_data;
       GstVideoFrame vframe;
 
@@ -1615,6 +1549,8 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
 
   GST_DEBUG_OBJECT (self, "Entering output thread");
 
+  HANDLE event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+
   while (true) {
     DecoderOutputData output_data;
     {
@@ -1634,7 +1570,12 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
 
     auto decoder_pic = get_decoder_picture (output_data.picture);
     g_assert (decoder_pic);
-    gst_d3d12_fence_wait (decoder_pic->fence);
+    auto completed = priv->cmd->fence->GetCompletedValue ();
+    if (completed < decoder_pic->fence_val) {
+      priv->cmd->fence->SetEventOnCompletion (decoder_pic->fence_val,
+          event_handle);
+      WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
+    }
 
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "Drop framem, we are flushing");
@@ -1658,6 +1599,8 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
   }
 
   GST_DEBUG_OBJECT (self, "Leaving output thread");
+
+  CloseHandle (event_handle);
 
   return nullptr;
 }

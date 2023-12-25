@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "gstd3d12_fwd.h"
+#include "gstd3d12commandqueue.h"
 
 G_BEGIN_DECLS
 
@@ -52,6 +53,16 @@ struct _GstD3D12DeviceClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+typedef struct _GstD3D12CopyTextureRegionArgs
+{
+  D3D12_TEXTURE_COPY_LOCATION dst;
+  guint dst_x;
+  guint dst_y;
+  guint dst_z;
+  D3D12_TEXTURE_COPY_LOCATION src;
+  const D3D12_BOX * src_box;
+} GstD3D12CopyTextureRegionArgs;
+
 GType                   gst_d3d12_device_get_type                 (void);
 
 GstD3D12Device *        gst_d3d12_device_new                      (guint adapter_index);
@@ -68,9 +79,34 @@ gboolean                gst_d3d12_device_get_format               (GstD3D12Devic
                                                                    GstVideoFormat format,
                                                                    GstD3D12Format * device_format);
 
-guint64                 gst_d3d12_device_get_fence_value          (GstD3D12Device * device);
+GstD3D12CommandQueue *  gst_d3d12_device_get_command_queue        (GstD3D12Device * device,
+                                                                   D3D12_COMMAND_LIST_TYPE queue_type);
 
-ID3D12CommandQueue *    gst_d3d12_device_get_copy_queue           (GstD3D12Device * device);
+gboolean                gst_d3d12_device_execute_command_lists    (GstD3D12Device * device,
+                                                                   D3D12_COMMAND_LIST_TYPE queue_type,
+                                                                   guint num_command_lists,
+                                                                   ID3D12CommandList ** command_lists,
+                                                                   guint64 * fence_value);
+
+guint64                 gst_d3d12_device_get_completed_value      (GstD3D12Device * device,
+                                                                   D3D12_COMMAND_LIST_TYPE queue_type);
+
+gboolean                gst_d3d12_device_set_fence_notify         (GstD3D12Device * device,
+                                                                   D3D12_COMMAND_LIST_TYPE queue_type,
+                                                                   guint64 fence_value,
+                                                                   gpointer fence_data,
+                                                                   GDestroyNotify notify);
+
+gboolean                gst_d3d12_device_fence_wait               (GstD3D12Device * device,
+                                                                   D3D12_COMMAND_LIST_TYPE queue_type,
+                                                                   guint64 fence_value,
+                                                                   HANDLE event_handle);
+
+gboolean                gst_d3d12_device_copy_texture_region      (GstD3D12Device * device,
+                                                                   guint num_args,
+                                                                   const GstD3D12CopyTextureRegionArgs * args,
+                                                                   D3D12_COMMAND_LIST_TYPE command_type,
+                                                                   guint64 * fence_value);
 
 void                    gst_d3d12_device_d3d12_debug              (GstD3D12Device * device,
                                                                    const gchar * file,

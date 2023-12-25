@@ -35,9 +35,6 @@ typedef struct _GstD3D12Device GstD3D12Device;
 typedef struct _GstD3D12DeviceClass GstD3D12DeviceClass;
 typedef struct _GstD3D12DevicePrivate GstD3D12DevicePrivate;
 
-typedef struct _GstD3D12Fence GstD3D12Fence;
-typedef struct _GstD3D12FencePrivate GstD3D12FencePrivate;
-
 typedef struct _GstD3D12Memory GstD3D12Memory;
 typedef struct _GstD3D12MemoryPrivate GstD3D12MemoryPrivate;
 

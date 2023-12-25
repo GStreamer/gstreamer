@@ -44,7 +44,6 @@ using namespace Microsoft::WRL;
 GST_DEBUG_CATEGORY (gst_d3d12_debug);
 GST_DEBUG_CATEGORY (gst_d3d12_allocator_debug);
 GST_DEBUG_CATEGORY (gst_d3d12_decoder_debug);
-GST_DEBUG_CATEGORY (gst_d3d12_fence_debug);
 GST_DEBUG_CATEGORY (gst_d3d12_format_debug);
 GST_DEBUG_CATEGORY (gst_d3d12_utils_debug);
 
@@ -58,8 +57,6 @@ plugin_init (GstPlugin * plugin)
       "d3d12allocator");
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_decoder_debug, "d3d12decoder", 0,
       "d3d12decoder");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_fence_debug, "d3d12fence", 0,
-      "d3d12fence");
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_format_debug, "d3d12format", 0,
       "d3d12format");
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_utils_debug,
