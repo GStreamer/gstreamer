@@ -17227,7 +17227,7 @@
                 "long-name": "RTP Raw Video depayloader",
                 "pad-templates": {
                     "sink": {
-                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: RAW\n       sampling: { (string)RGB, (string)RGBA, (string)BGR, (string)BGRA, (string)YCbCr-4:4:4, (string)YCbCr-4:2:2, (string)YCbCr-4:2:0, (string)YCbCr-4:1:1 }\n          depth: { (string)8, (string)10, (string)12, (string)16 }\n",
+                        "caps": "application/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: RAW\n       sampling: { (string)RGB, (string)RGBA, (string)BGR, (string)BGRA, (string)YCbCr-4:4:4, (string)YCbCr-4:2:2, (string)YCbCr-4:2:0, (string)YCbCr-4:1:1 }\n          depth: 8\napplication/x-rtp:\n          media: video\n     clock-rate: 90000\n  encoding-name: RAW\n       sampling: YCbCr-4:2:2\n          depth: 10\n",
                         "direction": "sink",
                         "presence": "always"
                     },

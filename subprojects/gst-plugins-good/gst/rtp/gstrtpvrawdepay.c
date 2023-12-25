@@ -41,7 +41,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate gst_rtp_vraw_depay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
@@ -55,7 +55,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
          * "width = (string) [1 32767],"
          * "height = (string) [1 32767],"
          */
-        "depth = (string) { \"8\", \"10\", \"12\", \"16\" }")
+        "depth = (string) 8; "
+        "application/x-rtp, "
+        "media = (string) video, "
+        "clock-rate = (int) 90000, "
+        "encoding-name = (string) RAW, sampling = (string) YCbCr-4:2:2,"
+        /* we cannot express these as strings
+         * "width = (string) [1 32767],"
+         * "height = (string) [1 32767],"
+         */
+        "depth = (string) 10")
     );
 
 #define gst_rtp_vraw_depay_parent_class parent_class
