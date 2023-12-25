@@ -126,13 +126,9 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstVideoInfo info;
   GstCaps *caps = nullptr;
   guint min_buffers, max_buffers;
-  gboolean ret = TRUE;
   D3D12_RESOURCE_DESC desc[GST_VIDEO_MAX_PLANES];
   D3D12_HEAP_PROPERTIES heap_props =
       CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
-  guint plane_index = 0;
-  gsize mem_size = 0;
-  gsize total_offset = 0;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, nullptr, &min_buffers,
           &max_buffers)) {
@@ -169,8 +165,12 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
   }
 
+  auto device = gst_d3d12_device_get_device_handle (self->device);
   const auto params = priv->d3d12_params;
   memset (desc, 0, sizeof (desc));
+
+  gsize total_mem_size = 0;
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES];
   if (params->d3d12_format.dxgi_format != DXGI_FORMAT_UNKNOWN) {
     desc[0] = CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.dxgi_format,
         params->aligned_info.width, params->aligned_info.height,
@@ -189,6 +189,24 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       default:
         break;
     }
+
+    auto alloc = (GstD3D12Allocator *)
+        gst_d3d12_pool_allocator_new (self->device,
+        &heap_props, D3D12_HEAP_FLAG_NONE, &desc[0],
+        D3D12_RESOURCE_STATE_COMMON, nullptr);
+    auto num_planes = D3D12GetFormatPlaneCount (device,
+        params->d3d12_format.dxgi_format);
+    for (guint i = 0; i < num_planes; i++) {
+      UINT64 mem_size;
+      device->GetCopyableFootprints (&desc[0], i, 1, 0,
+          &layout[i], nullptr, nullptr, &mem_size);
+
+      priv->stride[i] = layout[i].Footprint.RowPitch;
+      priv->offset[i] = total_mem_size;
+      total_mem_size += mem_size;
+    }
+
+    priv->alloc[0] = alloc;
   } else {
     for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
       if (params->d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
@@ -196,77 +214,34 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
       desc[i] =
           CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.resource_format[i],
-          params->aligned_info.width, params->aligned_info.height,
+          GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, i),
+          GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, i),
           params->array_size, 1, 1, 0, params->resource_flags);
+
+      auto alloc = (GstD3D12Allocator *)
+          gst_d3d12_pool_allocator_new (self->device,
+          &heap_props, D3D12_HEAP_FLAG_NONE, &desc[i],
+          D3D12_RESOURCE_STATE_COMMON, nullptr);
+
+      UINT64 mem_size;
+      device->GetCopyableFootprints (&desc[i], 0, 1, 0,
+          &layout[i], nullptr, nullptr, &mem_size);
+
+      priv->stride[i] = layout[i].Footprint.RowPitch;
+      priv->offset[i] = total_mem_size;
+      total_mem_size += mem_size;
+
+      priv->alloc[i] = alloc;
     }
   }
 
   if (params->array_size > 1)
     max_buffers = params->array_size;
 
-  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    GstD3D12Allocator *alloc;
-    GstD3D12PoolAllocator *pool_alloc;
-    GstFlowReturn flow_ret;
-    GstMemory *mem = nullptr;
-    GstD3D12Memory *dmem;
-    gint stride = 0;
-    guint plane_count = 0;
-    gsize offset;
-
-    if (desc[i].Format == DXGI_FORMAT_UNKNOWN)
-      break;
-
-    alloc =
-        (GstD3D12Allocator *) gst_d3d12_pool_allocator_new (self->device,
-        &heap_props, D3D12_HEAP_FLAG_NONE, &desc[i],
-        D3D12_RESOURCE_STATE_COMMON, nullptr);
-    if (!gst_d3d12_allocator_set_active (alloc, TRUE)) {
-      GST_ERROR_OBJECT (self, "Failed to activate allocator");
-      gst_object_unref (alloc);
-      return FALSE;
-    }
-
-    pool_alloc = GST_D3D12_POOL_ALLOCATOR (alloc);
-    flow_ret = gst_d3d12_pool_allocator_acquire_memory (pool_alloc, &mem);
-    if (flow_ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (self, "Failed to allocate initial memory");
-      gst_d3d12_allocator_set_active (alloc, FALSE);
-      gst_object_unref (alloc);
-      return FALSE;
-    }
-
-    dmem = GST_D3D12_MEMORY_CAST (mem);
-
-    plane_count = gst_d3d12_memory_get_plane_count (dmem);
-    for (guint j = 0; j < plane_count; j++) {
-      if (!gst_d3d12_memory_get_plane_size (dmem, j,
-              nullptr, nullptr, &stride, &offset)) {
-        GST_ERROR_OBJECT (self, "Failed to calculate stride");
-
-        gst_d3d12_allocator_set_active (alloc, FALSE);
-        gst_object_unref (alloc);
-        gst_memory_unref (mem);
-
-        return FALSE;
-      }
-
-      total_offset += offset;
-      g_assert (plane_index < GST_VIDEO_MAX_PLANES);
-      priv->stride[plane_index] = stride;
-      priv->offset[plane_index] = total_offset;
-      plane_index++;
-    }
-
-    priv->alloc[i] = alloc;
-    mem_size += mem->size;
-    gst_memory_unref (mem);
-  }
-
   gst_buffer_pool_config_set_params (config,
-      caps, mem_size, min_buffers, max_buffers);
+      caps, total_mem_size, min_buffers, max_buffers);
 
-  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config);
 }
 
 static GstFlowReturn

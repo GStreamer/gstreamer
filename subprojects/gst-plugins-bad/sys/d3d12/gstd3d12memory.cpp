@@ -465,32 +465,6 @@ gst_d3d12_memory_get_plane_count (GstD3D12Memory * mem)
 }
 
 gboolean
-gst_d3d12_memory_get_plane_size (GstD3D12Memory * mem, guint plane,
-    gint * width, gint * height, gint * stride, gsize * offset)
-{
-  g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
-
-  auto priv = mem->priv;
-
-  if (plane >= priv->num_subresources) {
-    GST_WARNING_OBJECT (GST_MEMORY_CAST (mem)->allocator, "Invalid plane %d",
-        plane);
-    return FALSE;
-  }
-
-  if (width)
-    *width = (gint) priv->layout[plane].Footprint.Width;
-  if (height)
-    *height = (gint) priv->layout[plane].Footprint.Height;
-  if (stride)
-    *stride = (gint) priv->layout[plane].Footprint.RowPitch;
-  if (offset)
-    *offset = (gsize) priv->layout[plane].Offset;
-
-  return TRUE;
-}
-
-gboolean
 gst_d3d12_memory_create_shader_resource_view (GstD3D12Memory * mem,
     guint plane, guint heap_offset, ID3D12DescriptorHeap * heap)
 {

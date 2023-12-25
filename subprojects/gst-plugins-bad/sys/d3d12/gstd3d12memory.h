@@ -133,13 +133,6 @@ gboolean          gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem,
 
 guint             gst_d3d12_memory_get_plane_count       (GstD3D12Memory * mem);
 
-gboolean          gst_d3d12_memory_get_plane_size        (GstD3D12Memory * mem,
-                                                          guint plane,
-                                                          gint * width,
-                                                          gint * height,
-                                                          gint * stride,
-                                                          gsize * offset);
-
 gboolean          gst_d3d12_memory_create_shader_resource_view (GstD3D12Memory * mem,
                                                                 guint plane,
                                                                 guint heap_offset,
