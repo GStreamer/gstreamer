@@ -68,7 +68,6 @@ plugin_init (GstPlugin * plugin)
   for (guint i = 0; i < 12; i++) {
     GstD3D12Device *device = nullptr;
     ID3D12Device *device_handle;
-    ComPtr < ID3D12Device4 > device4;
     ComPtr < ID3D12VideoDevice > video_device;
     HRESULT hr;
 
@@ -77,11 +76,6 @@ plugin_init (GstPlugin * plugin)
       break;
 
     device_handle = gst_d3d12_device_get_device_handle (device);
-    hr = device_handle->QueryInterface (IID_PPV_ARGS (&device4));
-    if (FAILED (hr)) {
-      gst_object_unref (device);
-      continue;
-    }
 
     hr = device_handle->QueryInterface (IID_PPV_ARGS (&video_device));
     if (FAILED (hr)) {

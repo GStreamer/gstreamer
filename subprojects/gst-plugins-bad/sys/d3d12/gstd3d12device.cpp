@@ -593,17 +593,10 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     return nullptr;
   }
 
-  hr = D3D12CreateDevice (adapter.Get (), D3D_FEATURE_LEVEL_12_0,
+  hr = D3D12CreateDevice (adapter.Get (), D3D_FEATURE_LEVEL_11_0,
       IID_PPV_ARGS (&device));
   if (FAILED (hr)) {
     GST_WARNING ("Could not create device, hr: 0x%x", (guint) hr);
-    return nullptr;
-  }
-
-  ComPtr < ID3D12Device4 > device4;
-  hr = device.As (&device4);
-  if (FAILED (hr)) {
-    GST_WARNING ("ID3D12Device4 interface unavailable");
     return nullptr;
   }
 

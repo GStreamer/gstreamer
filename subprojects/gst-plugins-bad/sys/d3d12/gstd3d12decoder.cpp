@@ -241,7 +241,7 @@ struct DecoderCmdData
     CloseHandle (event_handle);
   }
 
-  ComPtr<ID3D12Device4> device;
+  ComPtr<ID3D12Device> device;
 
   ComPtr<ID3D12VideoDevice> video_device;
   ComPtr<ID3D12VideoDecodeCommandList> cl;
@@ -443,24 +443,13 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
 
   auto priv = decoder->priv;
   auto cmd = std::make_unique < DecoderCmdData > ();
-  auto device_handle = gst_d3d12_device_get_device_handle (decoder->device);
+  HRESULT hr;
 
-  auto hr = device_handle->QueryInterface (IID_PPV_ARGS (&cmd->device));
-  if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (element, "ID3D12Device4 interface is unavailable");
-    return FALSE;
-  }
+  cmd->device = gst_d3d12_device_get_device_handle (decoder->device);
 
   hr = cmd->device.As (&cmd->video_device);
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (element, "ID3D12VideoDevice interface is unavailable");
-    return FALSE;
-  }
-
-  hr = cmd->device->CreateCommandList1 (0, D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE,
-      D3D12_COMMAND_LIST_FLAG_NONE, IID_PPV_ARGS (&cmd->cl));
-  if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (element, "Couldn't create command list");
     return FALSE;
   }
 
@@ -1166,9 +1155,16 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
-  hr = priv->cmd->cl->Reset (task_data->ca.Get ());
+  if (!priv->cmd->cl) {
+    hr = priv->cmd->device->CreateCommandList (0,
+        D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE,
+        task_data->ca.Get (), nullptr, IID_PPV_ARGS (&priv->cmd->cl));
+  } else {
+    hr = priv->cmd->cl->Reset (task_data->ca.Get ());
+  }
+
   if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (decoder, "Couldn't reset command list");
+    GST_ERROR_OBJECT (decoder, "Couldn't configure command list");
     return GST_FLOW_ERROR;
   }
 
