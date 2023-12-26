@@ -141,6 +141,9 @@ hlsl_precompiled += generated_collection
 
 hlsl_sources = [
   ['VSMain_converter', 'vs_6_0'],
+  ['PSMain_sample', 'ps_6_0'],
+  ['PSMain_sample_premul', 'ps_6_0'],
+  ['VSMain_coord', 'vs_6_0'],
 ]
 
 foreach shader : hlsl_sources
@@ -157,3 +160,5 @@ foreach shader : hlsl_sources
                 '@INPUT@'])
   hlsl_precompiled += [compiled_shader]
 endforeach
+
+
