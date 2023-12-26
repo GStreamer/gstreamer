@@ -28,7 +28,7 @@
 #endif
 
 #include <gst/gst.h>
-#include "gstd3d12device.h"
+#include "gstd3d12.h"
 #include "gstd3d12download.h"
 #include "gstd3d12upload.h"
 #include "gstd3d12h264dec.h"

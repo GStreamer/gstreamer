@@ -21,9 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstd3d12format.h"
-#include "gstd3d12utils.h"
-#include "gstd3d12device.h"
+#include "gstd3d12.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_format_debug);

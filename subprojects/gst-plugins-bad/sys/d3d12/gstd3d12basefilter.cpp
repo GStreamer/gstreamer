@@ -22,9 +22,6 @@
 #endif
 
 #include "gstd3d12basefilter.h"
-#include "gstd3d12device.h"
-#include "gstd3d12utils.h"
-#include "gstd3d12memory.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_base_filter_debug);
 #define GST_CAT_DEFAULT gst_d3d12_base_filter_debug

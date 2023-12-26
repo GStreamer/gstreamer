@@ -21,12 +21,9 @@
 #include "config.h"
 #endif
 
-#include <directx/d3dx12.h>
-#include "gstd3d12memory.h"
+#include "gstd3d12.h"
 #include "gstd3d12memory-private.h"
-#include "gstd3d12device.h"
-#include "gstd3d12utils.h"
-#include "gstd3d12format.h"
+#include <directx/d3dx12.h>
 #include <string.h>
 #include <wrl.h>
 #include <mutex>

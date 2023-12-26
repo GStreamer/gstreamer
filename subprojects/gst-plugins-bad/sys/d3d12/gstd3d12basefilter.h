@@ -22,7 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/base/gstbasetransform.h>
-#include "gstd3d12_fwd.h"
+#include "gstd3d12.h"
 
 G_BEGIN_DECLS
 

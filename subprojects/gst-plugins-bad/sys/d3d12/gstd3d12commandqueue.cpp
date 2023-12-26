@@ -21,9 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstd3d12commandqueue.h"
-#include "gstd3d12device.h"
-#include "gstd3d12utils.h"
+#include "gstd3d12.h"
 #include <wrl.h>
 #include <queue>
 #include <mutex>

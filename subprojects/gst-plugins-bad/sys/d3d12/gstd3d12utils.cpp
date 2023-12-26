@@ -21,8 +21,7 @@
 #include "config.h"
 #endif
 
-#include "gstd3d12utils.h"
-#include "gstd3d12device.h"
+#include "gstd3d12.h"
 #include <mutex>
 
 /* *INDENT-OFF* */

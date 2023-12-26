@@ -37,8 +37,6 @@
 #endif
 
 #include "gstd3d12vp9dec.h"
-#include "gstd3d12device.h"
-#include "gstd3d12utils.h"
 #include <gst/dxva/gstdxvavp9decoder.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_vp9_dec_debug);

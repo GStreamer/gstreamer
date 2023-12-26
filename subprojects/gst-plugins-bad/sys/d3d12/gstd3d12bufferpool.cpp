@@ -21,10 +21,8 @@
 #include "config.h"
 #endif
 
-#include "gstd3d12device.h"
-#include "gstd3d12bufferpool.h"
+#include "gstd3d12.h"
 #include "gstd3d12memory-private.h"
-#include "gstd3d12utils.h"
 #include <directx/d3dx12.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_buffer_pool_debug);

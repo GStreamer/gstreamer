@@ -37,8 +37,6 @@
 #endif
 
 #include "gstd3d12h264dec.h"
-#include "gstd3d12device.h"
-#include "gstd3d12utils.h"
 #include <gst/dxva/gstdxvah264decoder.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_h264_dec_debug);

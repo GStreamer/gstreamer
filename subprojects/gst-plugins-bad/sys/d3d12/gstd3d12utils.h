@@ -21,7 +21,6 @@
 
 #include <gst/gst.h>
 #include "gstd3d12_fwd.h"
-#include "gstd3d12device.h"
 
 G_BEGIN_DECLS
 

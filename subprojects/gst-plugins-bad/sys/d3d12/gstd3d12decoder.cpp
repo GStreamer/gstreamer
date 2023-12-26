@@ -23,11 +23,6 @@
 
 #include <directx/d3dx12.h>
 #include "gstd3d12decoder.h"
-#include "gstd3d12device.h"
-#include "gstd3d12utils.h"
-#include "gstd3d12format.h"
-#include "gstd3d12memory.h"
-#include "gstd3d12bufferpool.h"
 #include <gst/base/gstqueuearray.h>
 #include <wrl.h>
 #include <string.h>
