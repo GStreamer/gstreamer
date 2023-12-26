@@ -35,7 +35,8 @@
 #include "gstd3d12h265dec.h"
 #include "gstd3d12vp9dec.h"
 #include "gstd3d12av1dec.h"
-
+#include <windows.h>
+#include <versionhelpers.h>
 #include <wrl.h>
 
 /* *INDENT-OFF* */
@@ -54,6 +55,12 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_debug, "d3d12", 0, "d3d12");
+
+  if (!IsWindows8OrGreater ()) {
+    GST_WARNING ("Not supported OS");
+    return TRUE;
+  }
+
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_allocator_debug, "d3d12allocator", 0,
       "d3d12allocator");
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_decoder_debug, "d3d12decoder", 0,
