@@ -39,7 +39,7 @@ You can find [instructions for Windows below](#windows-prerequisites-setup).
 
 ### Install meson and ninja
 
-Meson 0.62 or newer is required.
+Meson 1.1 or newer is required.
 
 On Linux and macOS you can get meson through your package manager or using:
 
