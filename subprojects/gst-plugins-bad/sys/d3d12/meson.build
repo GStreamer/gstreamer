@@ -9,6 +9,7 @@ d3d12_sources = [
   'gstd3d12descriptorpool.cpp',
   'gstd3d12device.cpp',
   'gstd3d12download.cpp',
+  'gstd3d12fencedatapool.cpp',
   'gstd3d12format.cpp',
   'gstd3d12h264dec.cpp',
   'gstd3d12h265dec.cpp',

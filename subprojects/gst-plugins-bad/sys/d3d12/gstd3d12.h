@@ -27,6 +27,7 @@
 #include "gstd3d12commandqueue.h"
 #include "gstd3d12descriptorpool.h"
 #include "gstd3d12device.h"
+#include "gstd3d12fencedatapool.h"
 #include "gstd3d12format.h"
 #include "gstd3d12memory.h"
 #include "gstd3d12utils.h"
