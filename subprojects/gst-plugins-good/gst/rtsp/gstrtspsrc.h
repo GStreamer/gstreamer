@@ -80,6 +80,9 @@ typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 #define GST_RTSP_STREAMS_LIST_LOCK(x) (g_mutex_lock (&(x)->streams_lock))
 #define GST_RTSP_STREAMS_LIST_UNLOCK(x) (g_mutex_unlock (&(x)->streams_lock))
 
+#define GST_RTSP_CMD_LOCK(x) (g_mutex_lock (&(x)->cmd_lock))
+#define GST_RTSP_CMD_UNLOCK(x) (g_mutex_unlock (&(x)->cmd_lock))
+
 typedef struct _GstRTSPConnInfo GstRTSPConnInfo;
 
 struct _GstRTSPConnInfo {
@@ -224,6 +227,7 @@ struct _GstRTSPSrc {
   gint             pending_cmd;
   gint             busy_cmd;
   GCond            cmd_cond;
+  GMutex           cmd_lock;
   gboolean         ignore_timeout;
   gboolean         open_error;
 
