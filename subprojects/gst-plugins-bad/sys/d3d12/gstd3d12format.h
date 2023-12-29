@@ -25,18 +25,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_D3D12_COMMON_FORMATS \
-    "NV12, P010_10LE, P016_LE "
-
-#define GST_D3D12_SINK_FORMATS \
-    "{ " GST_D3D12_COMMON_FORMATS " }"
-
-#define GST_D3D12_SRC_FORMATS \
-    "{ " GST_D3D12_COMMON_FORMATS " }"
-
-#define GST_D3D12_ALL_FORMATS \
-    "{ " GST_D3D12_COMMON_FORMATS " }"
-
 struct _GstD3D12Format
 {
   GstVideoFormat format;

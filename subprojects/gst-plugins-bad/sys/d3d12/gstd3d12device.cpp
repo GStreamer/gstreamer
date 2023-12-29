@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12.h"
+#include "gstd3d12-private.h"
 #include <wrl.h>
 #include <vector>
 #include <string.h>
@@ -34,104 +35,11 @@
 #include <d3d12sdklayers.h>
 #include <memory>
 #include <queue>
+#include <unordered_map>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_device_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
 #define GST_CAT_DEFAULT gst_d3d12_device_debug
-
-#define MAKE_FORMAT_MAP_YUV(g,d,r0,r1,r2,r3) \
-  { GST_VIDEO_FORMAT_ ##g, DXGI_FORMAT_ ##d, \
-    { DXGI_FORMAT_ ##r0, DXGI_FORMAT_ ##r1, DXGI_FORMAT_ ##r2, DXGI_FORMAT_ ##r3 }, \
-    { DXGI_FORMAT_ ##r0, DXGI_FORMAT_ ##r1, DXGI_FORMAT_ ##r2, DXGI_FORMAT_ ##r3 }, \
-    (D3D12_FORMAT_SUPPORT1) (D3D12_FORMAT_SUPPORT1_TEXTURE2D | \
-      D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE | D3D12_FORMAT_SUPPORT1_RENDER_TARGET) }
-
-#define MAKE_FORMAT_MAP_YUV_FULL(g,d,r0,r1,r2,r3,f) \
-  { GST_VIDEO_FORMAT_ ##g, DXGI_FORMAT_ ##d, \
-    { DXGI_FORMAT_ ##r0, DXGI_FORMAT_ ##r1, DXGI_FORMAT_ ##r2, DXGI_FORMAT_ ##r3 }, \
-    { DXGI_FORMAT_ ##r0, DXGI_FORMAT_ ##r1, DXGI_FORMAT_ ##r2, DXGI_FORMAT_ ##r3 }, \
-    (D3D12_FORMAT_SUPPORT1) (f) }
-
-#define MAKE_FORMAT_MAP_RGB(g,d) \
-  { GST_VIDEO_FORMAT_ ##g, DXGI_FORMAT_ ##d, \
-    { DXGI_FORMAT_ ##d, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN }, \
-    { DXGI_FORMAT_ ##d, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN }, \
-    (D3D12_FORMAT_SUPPORT1) (D3D12_FORMAT_SUPPORT1_TEXTURE2D | \
-      D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE | D3D12_FORMAT_SUPPORT1_RENDER_TARGET) }
-
-#define MAKE_FORMAT_MAP_RGBP(g,d,a) \
-  { GST_VIDEO_FORMAT_ ##g, DXGI_FORMAT_UNKNOWN, \
-    { DXGI_FORMAT_ ##d, DXGI_FORMAT_ ##d, DXGI_FORMAT_ ##d, DXGI_FORMAT_ ##a }, \
-    { DXGI_FORMAT_ ##d, DXGI_FORMAT_ ##d, DXGI_FORMAT_ ##d, DXGI_FORMAT_ ##a }, \
-    (D3D12_FORMAT_SUPPORT1) (D3D12_FORMAT_SUPPORT1_TEXTURE2D | \
-      D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE | D3D12_FORMAT_SUPPORT1_RENDER_TARGET) }
-
-static const GstD3D12Format _gst_d3d12_default_format_map[] = {
-  MAKE_FORMAT_MAP_RGB (BGRA, B8G8R8A8_UNORM),
-  MAKE_FORMAT_MAP_RGB (RGBA, R8G8B8A8_UNORM),
-  MAKE_FORMAT_MAP_RGB (BGRx, B8G8R8A8_UNORM),
-  MAKE_FORMAT_MAP_RGB (RGBx, R8G8B8A8_UNORM),
-  MAKE_FORMAT_MAP_RGB (RGB10A2_LE, R10G10B10A2_UNORM),
-  MAKE_FORMAT_MAP_RGB (RGBA64_LE, R16G16B16A16_UNORM),
-  MAKE_FORMAT_MAP_YUV (AYUV, UNKNOWN, R8G8B8A8_UNORM, UNKNOWN, UNKNOWN,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (AYUV64, UNKNOWN, R16G16B16A16_UNORM, UNKNOWN, UNKNOWN,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (VUYA, AYUV, R8G8B8A8_UNORM, UNKNOWN, UNKNOWN, UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (NV12, NV12, R8_UNORM, R8G8_UNORM, UNKNOWN, UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (NV21, UNKNOWN, R8_UNORM, R8G8_UNORM, UNKNOWN, UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (P010_10LE, P010, R16_UNORM, R16G16_UNORM, UNKNOWN,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (P012_LE, P016, R16_UNORM, R16G16_UNORM, UNKNOWN,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (P016_LE, P016, R16_UNORM, R16G16_UNORM, UNKNOWN,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (I420, UNKNOWN, R8_UNORM, R8_UNORM, R8_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (YV12, UNKNOWN, R8_UNORM, R8_UNORM, R8_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (I420_10LE, UNKNOWN, R16_UNORM, R16_UNORM, R16_UNORM,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (I420_12LE, UNKNOWN, R16_UNORM, R16_UNORM, R16_UNORM,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (Y42B, UNKNOWN, R8_UNORM, R8_UNORM, R8_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (I422_10LE, UNKNOWN, R16_UNORM, R16_UNORM, R16_UNORM,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (I422_12LE, UNKNOWN, R16_UNORM, R16_UNORM, R16_UNORM,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (Y444, UNKNOWN, R8_UNORM, R8_UNORM, R8_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (Y444_10LE, UNKNOWN, R16_UNORM, R16_UNORM, R16_UNORM,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (Y444_12LE, UNKNOWN, R16_UNORM, R16_UNORM, R16_UNORM,
-      UNKNOWN),
-  MAKE_FORMAT_MAP_YUV (Y444_16LE, UNKNOWN, R16_UNORM, R16_UNORM, R16_UNORM,
-      UNKNOWN),
-  /* GRAY */
-  /* NOTE: To support conversion by using video processor,
-   * mark DXGI_FORMAT_{R8,R16}_UNORM formats as known dxgi_format.
-   * Otherwise, d3d12 elements will not try to use video processor for
-   * those formats */
-  MAKE_FORMAT_MAP_RGB (GRAY8, R8_UNORM),
-  MAKE_FORMAT_MAP_RGB (GRAY16_LE, R16_UNORM),
-  MAKE_FORMAT_MAP_YUV_FULL (Y410, Y410, R10G10B10A2_UNORM, UNKNOWN, UNKNOWN,
-      UNKNOWN,
-      D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE),
-  MAKE_FORMAT_MAP_YUV_FULL (YUY2, YUY2, R8G8B8A8_UNORM, UNKNOWN, UNKNOWN,
-      UNKNOWN,
-      D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE),
-  MAKE_FORMAT_MAP_RGBP (RGBP, R8_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_RGBP (BGRP, R8_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_RGBP (GBR, R8_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_RGBP (GBR_10LE, R16_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_RGBP (GBR_12LE, R16_UNORM, UNKNOWN),
-  MAKE_FORMAT_MAP_RGBP (GBRA, R8_UNORM, R8_UNORM),
-  MAKE_FORMAT_MAP_RGBP (GBRA_10LE, R16_UNORM, R16_UNORM),
-  MAKE_FORMAT_MAP_RGBP (GBRA_12LE, R16_UNORM, R16_UNORM),
-};
-
-#undef MAKE_FORMAT_MAP_YUV
-#undef MAKE_FORMAT_MAP_YUV_FULL
-#undef MAKE_FORMAT_MAP_RGB
-
-#define GST_D3D12_N_FORMATS G_N_ELEMENTS(_gst_d3d12_default_format_map)
 
 enum
 {
@@ -179,7 +87,7 @@ struct _GstD3D12DevicePrivate
   ComPtr<ID3D12Device> device;
   ComPtr<IDXGIAdapter1> adapter;
   ComPtr<IDXGIFactory2> factory;
-  std::vector < GstD3D12Format> formats;
+  std::unordered_map<GstVideoFormat, GstD3D12Format> format_table;
   std::recursive_mutex extern_lock;
 
   ComPtr<ID3D12InfoQueue> info_queue;
@@ -371,14 +279,12 @@ check_format_support (GstD3D12Device * self, DXGI_FORMAT format,
 static void
 gst_d3d12_device_setup_format_table (GstD3D12Device * self)
 {
-  GstD3D12DevicePrivate *priv = self->priv;
+  auto priv = self->priv;
 
-  for (guint i = 0; i < G_N_ELEMENTS (_gst_d3d12_default_format_map); i++) {
-    const GstD3D12Format *iter = &_gst_d3d12_default_format_map[i];
-    GstD3D12Format format;
+  for (guint i = 0; i < GST_D3D12_N_FORMATS; i++) {
+    const auto iter = &g_gst_d3d12_default_format_map[i];
     D3D12_FEATURE_DATA_FORMAT_SUPPORT support[GST_VIDEO_MAX_PLANES];
-
-    memset (support, 0, sizeof (support));
+    gboolean native = true;
 
     switch (iter->format) {
         /* RGB/GRAY */
@@ -403,11 +309,34 @@ gst_d3d12_device_setup_format_table (GstD3D12Device * self)
       case GST_VIDEO_FORMAT_P012_LE:
       case GST_VIDEO_FORMAT_P016_LE:
       case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_Y210:
+      case GST_VIDEO_FORMAT_Y212_LE:
+      case GST_VIDEO_FORMAT_Y412_LE:
+      case GST_VIDEO_FORMAT_BGRA64_LE:
+      case GST_VIDEO_FORMAT_BGR10A2_LE:
+      case GST_VIDEO_FORMAT_RBGA:
+      {
         if (!check_format_support (self, iter->dxgi_format,
                 iter->format_support1[0], &support[0])) {
-          continue;
+          bool supported = true;
+          for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
+            if (iter->resource_format[j] == DXGI_FORMAT_UNKNOWN)
+              break;
+
+            if (!check_format_support (self, iter->resource_format[j],
+                    iter->format_support1[0], &support[j])) {
+              supported = false;
+              break;
+            }
+          }
+
+          if (!supported)
+            continue;
+
+          native = false;
         }
         break;
+      }
         /* non-DXGI native formats */
       case GST_VIDEO_FORMAT_NV21:
       case GST_VIDEO_FORMAT_I420:
@@ -423,17 +352,38 @@ gst_d3d12_device_setup_format_table (GstD3D12Device * self)
       case GST_VIDEO_FORMAT_Y444_16LE:
       case GST_VIDEO_FORMAT_AYUV:
       case GST_VIDEO_FORMAT_AYUV64:
+      case GST_VIDEO_FORMAT_UYVY:
+      case GST_VIDEO_FORMAT_VYUY:
+      case GST_VIDEO_FORMAT_YVYU:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_RGB:
+      case GST_VIDEO_FORMAT_BGR:
+      case GST_VIDEO_FORMAT_v210:
+      case GST_VIDEO_FORMAT_v216:
+      case GST_VIDEO_FORMAT_v308:
+      case GST_VIDEO_FORMAT_IYU2:
+      case GST_VIDEO_FORMAT_RGB16:
+      case GST_VIDEO_FORMAT_BGR16:
+      case GST_VIDEO_FORMAT_RGB15:
+      case GST_VIDEO_FORMAT_BGR15:
+      case GST_VIDEO_FORMAT_r210:
         /* RGB planar formats */
       case GST_VIDEO_FORMAT_RGBP:
       case GST_VIDEO_FORMAT_BGRP:
       case GST_VIDEO_FORMAT_GBR:
       case GST_VIDEO_FORMAT_GBR_10LE:
       case GST_VIDEO_FORMAT_GBR_12LE:
+      case GST_VIDEO_FORMAT_GBR_16LE:
       case GST_VIDEO_FORMAT_GBRA:
       case GST_VIDEO_FORMAT_GBRA_10LE:
       case GST_VIDEO_FORMAT_GBRA_12LE:
       {
         bool supported = true;
+        native = false;
+
         for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
           if (iter->resource_format[j] == DXGI_FORMAT_UNKNOWN)
             break;
@@ -445,12 +395,8 @@ gst_d3d12_device_setup_format_table (GstD3D12Device * self)
           }
         }
 
-        if (!supported) {
-          GST_INFO_OBJECT (self, "%s is not supported",
-              gst_video_format_to_string (iter->format));
+        if (!supported)
           continue;
-        }
-
         break;
       }
       default:
@@ -458,14 +404,17 @@ gst_d3d12_device_setup_format_table (GstD3D12Device * self)
         return;
     }
 
-    format = *iter;
+    auto format = *iter;
+
+    if (!native)
+      format.dxgi_format = DXGI_FORMAT_UNKNOWN;
 
     for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
       format.format_support1[j] = support[j].Support1;
       format.format_support2[j] = support[j].Support2;
     }
 
-    priv->formats.push_back (format);
+    priv->format_table[format.format] = format;
   }
 }
 
@@ -782,16 +731,15 @@ gst_d3d12_device_get_format (GstD3D12Device * device,
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
   g_return_val_if_fail (device_format != nullptr, FALSE);
 
-  /* *INDENT-OFF* */
-  for (const auto &iter : device->priv->formats) {
-    if (iter.format == format) {
-      *device_format = iter;
-      return TRUE;
-    }
-  }
-  /* *INDENT-ON* */
+  auto priv = device->priv;
+  const auto & target = priv->format_table.find (format);
+  if (target == priv->format_table.end ())
+    return FALSE;
 
-  return FALSE;
+  if (device_format)
+    *device_format = target->second;
+
+  return TRUE;
 }
 
 GstD3D12CommandQueue *

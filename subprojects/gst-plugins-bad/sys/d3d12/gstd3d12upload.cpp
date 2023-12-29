@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12upload.h"
+#include "gstd3d12pluginutils.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_upload_debug);
 #define GST_CAT_DEFAULT gst_d3d12_upload_debug

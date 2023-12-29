@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12.h"
+#include "gstd3d12-private.h"
 #include <string.h>
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_format_debug);
