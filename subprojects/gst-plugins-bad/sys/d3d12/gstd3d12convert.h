@@ -20,15 +20,13 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gstd3d12_fwd.h"
-#include "gstd3d12bufferpool.h"
-#include "gstd3d12commandallocatorpool.h"
-#include "gstd3d12commandlistpool.h"
-#include "gstd3d12commandqueue.h"
-#include "gstd3d12converter.h"
-#include "gstd3d12descriptorpool.h"
-#include "gstd3d12device.h"
-#include "gstd3d12fencedatapool.h"
-#include "gstd3d12format.h"
-#include "gstd3d12memory.h"
-#include "gstd3d12utils.h"
+#include "gstd3d12basefilter.h"
+
+G_BEGIN_DECLS
+
+#define GST_TYPE_D3D12_CONVERT (gst_d3d12_convert_get_type())
+G_DECLARE_FINAL_TYPE (GstD3D12Convert, gst_d3d12_convert,
+    GST, D3D12_CONVERT, GstD3D12BaseFilter)
+
+G_END_DECLS
+

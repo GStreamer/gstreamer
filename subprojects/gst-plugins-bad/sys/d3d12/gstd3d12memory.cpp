@@ -162,6 +162,17 @@ gst_d3d12_allocation_params_set_resource_flags (GstD3D12AllocationParams *
 }
 
 gboolean
+gst_d3d12_allocation_params_unset_resource_flags (GstD3D12AllocationParams *
+    params, D3D12_RESOURCE_FLAGS resource_flags)
+{
+  g_return_val_if_fail (params, FALSE);
+
+  params->resource_flags &= ~resource_flags;
+
+  return TRUE;
+}
+
+gboolean
 gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
     guint size)
 {

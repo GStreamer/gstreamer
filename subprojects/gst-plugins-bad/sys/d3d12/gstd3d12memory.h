@@ -101,6 +101,9 @@ gboolean                   gst_d3d12_allocation_params_alignment (GstD3D12Alloca
 gboolean                   gst_d3d12_allocation_params_set_resource_flags (GstD3D12AllocationParams * params,
                                                                            D3D12_RESOURCE_FLAGS resource_flags);
 
+gboolean                   gst_d3d12_allocation_params_unset_resource_flags (GstD3D12AllocationParams * params,
+                                                                             D3D12_RESOURCE_FLAGS resource_flags);
+
 gboolean                   gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
                                                                        guint size);
 

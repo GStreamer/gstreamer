@@ -17,18 +17,29 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#pragma once
+cbuffer VsConstBuffer : register(b0, space1)
+{
+  matrix Transform;
+};
 
-#include <gst/gst.h>
-#include "gstd3d12_fwd.h"
-#include "gstd3d12bufferpool.h"
-#include "gstd3d12commandallocatorpool.h"
-#include "gstd3d12commandlistpool.h"
-#include "gstd3d12commandqueue.h"
-#include "gstd3d12converter.h"
-#include "gstd3d12descriptorpool.h"
-#include "gstd3d12device.h"
-#include "gstd3d12fencedatapool.h"
-#include "gstd3d12format.h"
-#include "gstd3d12memory.h"
-#include "gstd3d12utils.h"
+struct VS_INPUT
+{
+  float4 Position : POSITION;
+  float2 Texture : TEXCOORD;
+};
+
+struct VS_OUTPUT
+{
+  float4 Position : SV_POSITION;
+  float2 Texture : TEXCOORD;
+};
+
+VS_OUTPUT VSMain_converter (VS_INPUT input)
+{
+  VS_OUTPUT output;
+
+  output.Position = mul (Transform, input.Position);
+  output.Texture = input.Texture;
+
+  return output;
+}

@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 #include "gstd3d12.h"
+#include "gstd3d12convert.h"
 #include "gstd3d12download.h"
 #include "gstd3d12upload.h"
 #include "gstd3d12h264dec.h"
@@ -103,6 +104,8 @@ plugin_init (GstPlugin * plugin)
     gst_object_unref (device);
   }
 
+  gst_element_register (plugin,
+      "d3d12convert", GST_RANK_NONE, GST_TYPE_D3D12_CONVERT);
   gst_element_register (plugin,
       "d3d12download", GST_RANK_NONE, GST_TYPE_D3D12_DOWNLOAD);
   gst_element_register (plugin,

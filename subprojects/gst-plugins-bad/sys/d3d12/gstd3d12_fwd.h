@@ -54,5 +54,9 @@ typedef struct _GstD3D12BufferPool GstD3D12BufferPool;
 typedef struct _GstD3D12BufferPoolClass GstD3D12BufferPoolClass;
 typedef struct _GstD3D12BufferPoolPrivate GstD3D12BufferPoolPrivate;
 
+typedef struct _GstD3D12Converter GstD3D12Converter;
+typedef struct _GstD3D12ConverterClass GstD3D12ConverterClass;
+typedef struct _GstD3D12ConverterPrivate GstD3D12ConverterPrivate;
+
 G_END_DECLS
 

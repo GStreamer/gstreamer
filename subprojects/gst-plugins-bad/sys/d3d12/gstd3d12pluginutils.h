@@ -22,3 +22,20 @@
 #include <gst/gst.h>
 #include "gstd3d12.h"
 #include "gstd3d12-private.h"
+
+G_BEGIN_DECLS
+
+typedef enum
+{
+  GST_D3D12_SAMPLING_METHOD_NEAREST,
+  GST_D3D12_SAMPLING_METHOD_BILINEAR,
+  GST_D3D12_SAMPLING_METHOD_LINEAR_MINIFICATION,
+  GST_D3D12_SAMPLING_METHOD_ANISOTROPIC,
+} GstD3D12SamplingMethod;
+
+#define GST_TYPE_D3D12_SAMPLING_METHOD (gst_d3d12_sampling_method_get_type())
+GType gst_d3d12_sampling_method_get_type (void);
+
+D3D12_FILTER  gst_d3d12_sampling_method_to_native (GstD3D12SamplingMethod method);
+
+G_END_DECLS
