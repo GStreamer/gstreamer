@@ -1420,9 +1420,9 @@ get_parameters (GstRTSPSrc * src, gchar ** parameters,
   if (content_type)
     req->content_type = g_strdup (content_type);
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   g_queue_push_tail (&src->set_get_param_q, req);
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   gst_rtspsrc_loop_send_cmd (src, CMD_GET_PARAMETER, CMD_LOOP);
 
@@ -1461,9 +1461,9 @@ set_parameter (GstRTSPSrc * src, const gchar * name, const gchar * value,
   if (content_type)
     req->content_type = g_strdup (content_type);
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   g_queue_push_tail (&src->set_get_param_q, req);
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   gst_rtspsrc_loop_send_cmd (src, CMD_SET_PARAMETER, CMD_LOOP);
 
@@ -1542,6 +1542,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   g_mutex_init (&src->conninfo.send_lock);
   g_mutex_init (&src->conninfo.recv_lock);
   g_cond_init (&src->cmd_cond);
+  g_mutex_init (&src->cmd_lock);
 
   g_mutex_init (&src->group_lock);
   g_mutex_init (&src->streams_lock);
@@ -1603,6 +1604,7 @@ gst_rtspsrc_finalize (GObject * object)
   g_mutex_clear (&rtspsrc->conninfo.send_lock);
   g_mutex_clear (&rtspsrc->conninfo.recv_lock);
   g_cond_clear (&rtspsrc->cmd_cond);
+  g_mutex_clear (&rtspsrc->cmd_lock);
 
   g_mutex_clear (&rtspsrc->group_lock);
   g_mutex_clear (&rtspsrc->streams_lock);
@@ -2615,14 +2617,13 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
     src->provided_clock = NULL;
   }
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   /* free parameter requests queue */
   while ((req = g_queue_pop_head (&src->set_get_param_q))) {
     gst_promise_expire (req->promise);
     free_param_data (req);
   }
-  GST_OBJECT_UNLOCK (src);
-
+  GST_RTSP_CMD_UNLOCK (src);
 }
 
 /* Returns: transfer full */
@@ -3072,13 +3073,13 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
 
   /* and continue playing if needed. If we are not acting as a live source,
    * then only the RTSP PLAYING state, set earlier, matters. */
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   if (src->is_live) {
     playing = (GST_STATE_PENDING (src) == GST_STATE_VOID_PENDING
         && GST_STATE (src) == GST_STATE_PLAYING)
         || (GST_STATE_PENDING (src) == GST_STATE_PLAYING);
   }
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   if (src->version >= GST_RTSP_VERSION_2_0) {
     if (flags & GST_SEEK_FLAG_ACCURATE)
@@ -3509,12 +3510,12 @@ pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
       GST_DEBUG_PAD_NAME (pad));
 
   /* activate the streams */
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   if (!src->need_activate)
     goto was_ok;
 
   src->need_activate = FALSE;
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   gst_rtspsrc_activate_streams (src);
 
@@ -3522,7 +3523,7 @@ pad_blocked (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 
 was_ok:
   {
-    GST_OBJECT_UNLOCK (src);
+    GST_RTSP_CMD_UNLOCK (src);
     return GST_PAD_PROBE_OK;
   }
 }
@@ -5884,7 +5885,7 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
      * typically bursts data, for which we don't want to compensate by speeding
      * up the media. The other timestamps will be interpollated from this one
      * using the RTP timestamps. */
-    GST_OBJECT_LOCK (src);
+    GST_RTSP_CMD_LOCK (src);
     if (GST_ELEMENT_CLOCK (src)) {
       GstClockTime now;
       GstClockTime base_time;
@@ -5897,7 +5898,7 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
       GST_DEBUG_OBJECT (src, "first buffer at time %" GST_TIME_FORMAT ", base %"
           GST_TIME_FORMAT, GST_TIME_ARGS (now), GST_TIME_ARGS (base_time));
     }
-    GST_OBJECT_UNLOCK (src);
+    GST_RTSP_CMD_UNLOCK (src);
   }
 
   /* If needed send a new segment, don't forget we are live and buffer are
@@ -6258,11 +6259,11 @@ gst_rtspsrc_reconnect (GstRTSPSrc * src, gboolean async)
 
   GST_DEBUG_OBJECT (src, "doing reconnect");
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   /* only restart when the pads were not yet activated, else we were
    * streaming over UDP */
   restart = src->need_activate;
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   /* no need to restart, we're done */
   if (!restart)
@@ -6457,7 +6458,7 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
 
   GST_DEBUG_OBJECT (src, "sending cmd %s", cmd_to_string (cmd));
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   old = src->pending_cmd;
 
   if (old == CMD_RECONNECT) {
@@ -6478,11 +6479,11 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
     cmd = CMD_GET_PARAMETER;
   } else if (old != CMD_WAIT) {
     src->pending_cmd = CMD_WAIT;
-    GST_OBJECT_UNLOCK (src);
+    GST_RTSP_CMD_UNLOCK (src);
     /* cancel previous request */
     GST_DEBUG_OBJECT (src, "cancel previous request %s", cmd_to_string (old));
     gst_rtspsrc_loop_cancel_cmd (src, old);
-    GST_OBJECT_LOCK (src);
+    GST_RTSP_CMD_LOCK (src);
   }
   src->pending_cmd = cmd;
   /* interrupt if allowed */
@@ -6497,7 +6498,7 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
   }
   if (src->task)
     gst_task_start (src->task);
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   return flushed;
 }
@@ -6510,16 +6511,15 @@ gst_rtspsrc_loop_send_cmd_and_wait (GstRTSPSrc * src, gint cmd, gint mask,
 
   if (timeout > 0) {
     gint64 end_time = g_get_monotonic_time () + (timeout / 1000);
-    GST_OBJECT_LOCK (src);
+    GST_RTSP_CMD_LOCK (src);
     while (src->pending_cmd == cmd || src->busy_cmd == cmd) {
-      if (!g_cond_wait_until (&src->cmd_cond, GST_OBJECT_GET_LOCK (src),
-              end_time)) {
+      if (!g_cond_wait_until (&src->cmd_cond, &src->cmd_lock, end_time)) {
         GST_WARNING_OBJECT (src,
             "Timed out waiting for TEARDOWN to be processed.");
         break;                  /* timeout passed */
       }
     }
-    GST_OBJECT_UNLOCK (src);
+    GST_RTSP_CMD_UNLOCK (src);
   }
   return flushed;
 }
@@ -9618,10 +9618,10 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
 
         GST_DEBUG_OBJECT (bin, "timeout on UDP port");
 
-        GST_OBJECT_LOCK (rtspsrc);
+        GST_RTSP_CMD_LOCK (rtspsrc);
         ignore_timeout = rtspsrc->ignore_timeout;
         rtspsrc->ignore_timeout = TRUE;
-        GST_OBJECT_UNLOCK (rtspsrc);
+        GST_RTSP_CMD_UNLOCK (rtspsrc);
 
         /* we only act on the first udp timeout message, others are irrelevant
          * and can be ignored. */
@@ -9687,7 +9687,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
   gint cmd;
   ParameterRequest *req = NULL;
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   cmd = src->pending_cmd;
 
   switch (cmd) {
@@ -9722,7 +9722,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
   gst_rtspsrc_connection_flush (src, FALSE);
 
   src->busy_cmd = cmd;
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   switch (cmd) {
     case CMD_OPEN:
@@ -9753,7 +9753,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
       break;
   }
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   /* No more cmds, wake any waiters */
   g_cond_broadcast (&src->cmd_cond);
   /* and go back to sleep */
@@ -9763,7 +9763,7 @@ gst_rtspsrc_thread (GstRTSPSrc * src)
   }
   /* reset waiting */
   src->busy_cmd = CMD_WAIT;
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 }
 
 static gboolean
@@ -9771,7 +9771,7 @@ gst_rtspsrc_start (GstRTSPSrc * src)
 {
   GST_DEBUG_OBJECT (src, "starting");
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
 
   src->pending_cmd = CMD_WAIT;
 
@@ -9782,14 +9782,14 @@ gst_rtspsrc_start (GstRTSPSrc * src)
 
     gst_task_set_lock (src->task, GST_RTSP_STREAM_GET_LOCK (src));
   }
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   return TRUE;
 
   /* ERRORS */
 task_error:
   {
-    GST_OBJECT_UNLOCK (src);
+    GST_RTSP_CMD_UNLOCK (src);
     GST_ERROR_OBJECT (src, "failed to create task");
     return FALSE;
   }
@@ -9805,10 +9805,10 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
   /* also cancels pending task */
   gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, CMD_ALL);
 
-  GST_OBJECT_LOCK (src);
+  GST_RTSP_CMD_LOCK (src);
   if ((task = src->task)) {
     src->task = NULL;
-    GST_OBJECT_UNLOCK (src);
+    GST_RTSP_CMD_UNLOCK (src);
 
     gst_task_stop (task);
 
@@ -9822,9 +9822,9 @@ gst_rtspsrc_stop (GstRTSPSrc * src)
     /* and free the task */
     gst_object_unref (GST_OBJECT (task));
 
-    GST_OBJECT_LOCK (src);
+    GST_RTSP_CMD_LOCK (src);
   }
-  GST_OBJECT_UNLOCK (src);
+  GST_RTSP_CMD_UNLOCK (src);
 
   /* ensure synchronously all is closed and clean */
   gst_rtspsrc_close (src, FALSE, TRUE);
