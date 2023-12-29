@@ -1500,8 +1500,8 @@ gst_h265_2_json_chain (GstPad * sinkpad, GstObject * object, GstBuffer * in_buf)
       for (i = 0; i < self->split_nalu->len; i++) {
         GstH265NalUnit *nl =
             &g_array_index (self->split_nalu, GstH265NalUnit, i);
-        pres = gst_h265_2_json_decode_nal (self, nl);
-        if (pres != GST_H265_PARSER_OK)
+        ret = gst_h265_2_json_decode_nal (self, nl);
+        if (ret != GST_FLOW_OK)
           break;
       }
 
@@ -1518,8 +1518,8 @@ gst_h265_2_json_chain (GstPad * sinkpad, GstObject * object, GstBuffer * in_buf)
       pres = GST_H265_PARSER_OK;
 
     while (pres == GST_H265_PARSER_OK) {
-      pres = gst_h265_2_json_decode_nal (self, &nalu);
-      if (pres != GST_H265_PARSER_OK)
+      ret = gst_h265_2_json_decode_nal (self, &nalu);
+      if (ret != GST_FLOW_OK)
         break;
 
       pres = gst_h265_parser_identify_nalu (self->parser,
@@ -1528,6 +1528,9 @@ gst_h265_2_json_chain (GstPad * sinkpad, GstObject * object, GstBuffer * in_buf)
         pres = GST_H265_PARSER_OK;
     }
   }
+
+  if (ret != GST_FLOW_OK)
+    goto err;
 
   json_string = get_string_from_json_object (json);
   length = strlen (json_string);
@@ -1544,6 +1547,7 @@ gst_h265_2_json_chain (GstPad * sinkpad, GstObject * object, GstBuffer * in_buf)
       GST_BUFFER_COPY_METADATA, 0, -1);
   ret = gst_pad_push (self->srcpad, out_buf);
 
+err:
   gst_buffer_unmap (in_buf, &in_map);
   gst_buffer_unref (in_buf);
 
