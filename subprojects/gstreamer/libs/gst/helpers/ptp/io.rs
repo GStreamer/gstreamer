@@ -1327,7 +1327,10 @@ mod imp {
     }
 }
 
-pub use self::imp::{Poll, Stderr, Stdin, Stdout};
+// `Stderr` is not used when tests are enabled as no logging is performed to stderr.
+#[cfg_attr(test, allow(unused_imports))]
+pub use self::imp::Stderr;
+pub use self::imp::{Poll, Stdin, Stdout};
 
 #[cfg(test)]
 mod test {
