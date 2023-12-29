@@ -144,6 +144,10 @@ hlsl_sources = [
   ['PSMain_sample', 'ps_6_0'],
   ['PSMain_sample_premul', 'ps_6_0'],
   ['VSMain_coord', 'vs_6_0'],
+  ['PSMain_color', 'ps_6_0'],
+  ['VSMain_color', 'vs_6_0'],
+  ['PSMain_snow', 'ps_6_0'],
+  ['PSMain_checker', 'ps_6_0'],
 ]
 
 foreach shader : hlsl_sources

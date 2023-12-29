@@ -33,6 +33,7 @@
 #include "gstd3d12download.h"
 #include "gstd3d12upload.h"
 #include "gstd3d12videosink.h"
+#include "gstd3d12testsrc.h"
 #include "gstd3d12h264dec.h"
 #include "gstd3d12h265dec.h"
 #include "gstd3d12vp9dec.h"
@@ -113,6 +114,8 @@ plugin_init (GstPlugin * plugin)
       "d3d12upload", GST_RANK_NONE, GST_TYPE_D3D12_UPLOAD);
   gst_element_register (plugin,
       "d3d12videosink", GST_RANK_NONE, GST_TYPE_D3D12_VIDEO_SINK);
+  gst_element_register (plugin,
+      "d3d12testsrc", GST_RANK_NONE, GST_TYPE_D3D12_TEST_SRC);
 
   return TRUE;
 }

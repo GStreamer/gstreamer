@@ -75,6 +75,13 @@ IDXGIAdapter1 *         gst_d3d12_device_get_adapter_handle       (GstD3D12Devic
 
 IDXGIFactory2 *         gst_d3d12_device_get_factory_handle       (GstD3D12Device * device);
 
+gboolean                gst_d3d12_device_get_d3d11on12_device     (GstD3D12Device * device,
+                                                                   IUnknown ** d3d11on12);
+
+void                    gst_d3d12_device_lock                     (GstD3D12Device * device);
+
+void                    gst_d3d12_device_unlock                   (GstD3D12Device * device);
+
 gboolean                gst_d3d12_device_get_format               (GstD3D12Device * device,
                                                                    GstVideoFormat format,
                                                                    GstD3D12Format * device_format);
