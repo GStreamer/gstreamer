@@ -203,6 +203,7 @@ enum
 /* *INDENT-OFF* */
 struct QuadData
 {
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC desc;
   ComPtr<ID3D12PipelineState> pso;
   guint num_rtv;
 };
@@ -231,6 +232,9 @@ struct _GstD3D12ConverterPrivate
   {
     transform = g_matrix_identity;
     custom_transform = g_matrix_identity;
+    blend_desc = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
+    for (guint i = 0; i < 4; i++)
+      blend_factor[i] = 1.0f;
   }
 
   ~_GstD3D12ConverterPrivate ()
@@ -251,6 +255,8 @@ struct _GstD3D12ConverterPrivate
   D3D12_RECT scissor_rect[GST_VIDEO_MAX_PLANES];
 
   D3D12_BLEND_DESC blend_desc;
+  FLOAT blend_factor[4];
+  gboolean update_pso = FALSE;
 
   ConverterRootSignaturePtr crs;
   ComPtr<ID3D12RootSignature> rs;
@@ -663,7 +669,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     pso_desc.pRootSignature = priv->rs.Get ();
     pso_desc.VS = vs_blob;
     pso_desc.PS = psblob_list[i].bytecode;
-    pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
+    pso_desc.BlendState = priv->blend_desc;
     pso_desc.SampleMask = UINT_MAX;
     pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);
     pso_desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
@@ -686,6 +692,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
       return FALSE;
     }
 
+    priv->quad_data[i].desc = pso_desc;
     priv->quad_data[i].pso = pso;
     priv->quad_data[i].num_rtv = psblob_list[i].num_rtv;
   }
@@ -1532,7 +1539,8 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
 
 GstD3D12Converter *
 gst_d3d12_converter_new (GstD3D12Device * device, const GstVideoInfo * in_info,
-    const GstVideoInfo * out_info, GstStructure * config)
+    const GstVideoInfo * out_info, const D3D12_BLEND_DESC * blend_desc,
+    const gfloat blend_factor[4], GstStructure * config)
 {
   GstD3D12Converter *self;
   GstD3D12Format in_d3d12_format;
@@ -1550,6 +1558,14 @@ gst_d3d12_converter_new (GstD3D12Device * device, const GstVideoInfo * in_info,
   self = (GstD3D12Converter *) g_object_new (GST_TYPE_D3D12_CONVERTER, nullptr);
   gst_object_ref_sink (self);
   auto priv = self->priv;
+
+  if (blend_desc)
+    priv->blend_desc = *blend_desc;
+
+  if (blend_factor) {
+    for (guint i = 0; i < 4; i++)
+      priv->blend_factor[i] = blend_factor[i];
+  }
 
   if (config) {
     gint value;
@@ -1707,6 +1723,48 @@ gst_d3d12_converter_new (GstD3D12Device * device, const GstVideoInfo * in_info,
 }
 
 static gboolean
+gst_d3d12_converter_update_pso (GstD3D12Converter * self)
+{
+  auto priv = self->priv;
+  if (!priv->update_pso)
+    return TRUE;
+
+  std::vector < QuadData > quad_data;
+  quad_data.resize (priv->quad_data.size ());
+
+  auto device = gst_d3d12_device_get_device_handle (self->device);
+
+  for (size_t i = 0; i < quad_data.size (); i++) {
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = priv->quad_data[i].desc;
+    pso_desc.BlendState = priv->blend_desc;
+
+    ComPtr < ID3D12PipelineState > pso;
+    auto hr =
+        device->CreateGraphicsPipelineState (&pso_desc, IID_PPV_ARGS (&pso));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create pso");
+      return FALSE;
+    }
+
+    quad_data[i].desc = pso_desc;
+    quad_data[i].pso = pso;
+    quad_data[i].num_rtv = priv->quad_data[i].num_rtv;
+  }
+
+  priv->update_pso = FALSE;
+  priv->quad_data = quad_data;
+
+  return TRUE;
+}
+
+static void
+pso_free_func (ID3D12PipelineState * pso)
+{
+  if (pso)
+    pso->Release ();
+}
+
+static gboolean
 gst_d3d12_converter_execute (GstD3D12Converter * self,
     GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
     ID3D12GraphicsCommandList * cl)
@@ -1761,6 +1819,11 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
 
   if (!gst_d3d12_converter_update_transform (self)) {
     GST_ERROR_OBJECT (self, "Failed to update transform matrix");
+    return FALSE;
+  }
+
+  if (!gst_d3d12_converter_update_pso (self)) {
+    GST_ERROR_OBJECT (self, "Failed to update pso");
     return FALSE;
   }
 
@@ -1913,8 +1976,10 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
     }
   }
 
+  auto pso = priv->quad_data[0].pso.Get ();
+
   cl->SetGraphicsRootSignature (priv->rs.Get ());
-  cl->SetPipelineState (priv->quad_data[0].pso.Get ());
+  cl->SetPipelineState (pso);
 
   ID3D12DescriptorHeap *heaps[] = { srv_heap.Get () };
   cl->SetDescriptorHeaps (1, heaps);
@@ -1934,17 +1999,28 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   cl->RSSetScissorRects (priv->quad_data[0].num_rtv, priv->scissor_rect);
   cl->OMSetRenderTargets (priv->quad_data[0].num_rtv,
       rtv_handles.data (), FALSE, nullptr);
+  cl->OMSetBlendFactor (priv->blend_factor);
   cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
+
+  pso->AddRef ();
+  gst_d3d12_fence_data_add_notify (fence_data, pso,
+      (GDestroyNotify) pso_free_func);
 
   auto offset = priv->quad_data[0].num_rtv;
   if (priv->quad_data.size () == 2) {
-    cl->SetPipelineState (priv->quad_data[1].pso.Get ());
+    pso = priv->quad_data[1].pso.Get ();
+
+    cl->SetPipelineState (pso);
     cl->RSSetViewports (priv->quad_data[1].num_rtv, &priv->viewport[offset]);
     cl->RSSetScissorRects (priv->quad_data[1].num_rtv,
         &priv->scissor_rect[offset]);
     cl->OMSetRenderTargets (priv->quad_data[1].num_rtv,
         rtv_handles.data () + offset, FALSE, nullptr);
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
+
+    pso->AddRef ();
+    gst_d3d12_fence_data_add_notify (fence_data, pso,
+        (GDestroyNotify) pso_free_func);
   }
 
   gst_d3d12_fence_data_add_notify (fence_data,
@@ -2027,4 +2103,31 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   gst_d3d12_converter_unmap_buffer (in_buf, in_info);
 
   return ret;
+}
+
+gboolean
+gst_d3d12_converter_update_blend_state (GstD3D12Converter * converter,
+    const D3D12_BLEND_DESC * blend_desc, const gfloat blend_factor[4])
+{
+  g_return_val_if_fail (GST_IS_D3D12_CONVERTER (converter), FALSE);
+
+  auto priv = converter->priv;
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
+  D3D12_BLEND_DESC new_blend = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
+
+  if (blend_desc)
+    new_blend = *blend_desc;
+
+  if (memcmp (&priv->blend_desc, &new_blend, sizeof (D3D12_BLEND_DESC)) != 0)
+    priv->update_pso = TRUE;
+
+  if (blend_factor) {
+    for (guint i = 0; i < 4; i++)
+      priv->blend_factor[i] = blend_factor[i];
+  } else {
+    for (guint i = 0; i < 4; i++)
+      priv->blend_factor[i] = 1.0f;
+  }
+
+  return TRUE;
 }

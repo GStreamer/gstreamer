@@ -1523,7 +1523,7 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
   gst_video_info_set_format (&draw_info, GST_VIDEO_FORMAT_BGRA,
       priv->info.width, priv->info.height);
   ctx->conv = gst_d3d12_converter_new (self->device,
-      &draw_info, &priv->info, config);
+      &draw_info, &priv->info, nullptr, nullptr, config);
 
   if (!ctx->conv) {
     GST_ERROR_OBJECT (self, "Failed to create converter");

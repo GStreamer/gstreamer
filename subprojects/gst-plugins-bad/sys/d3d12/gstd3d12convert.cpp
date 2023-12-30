@@ -1833,7 +1833,7 @@ gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
   auto ctx = std::make_unique < ConvertContext > (filter->device);
 
   ctx->conv = gst_d3d12_converter_new (filter->device, in_info,
-      out_info, config);
+      out_info, nullptr, nullptr, config);
   if (!ctx->conv) {
     GST_ERROR_OBJECT (self, "Couldn't create converter");
     return FALSE;

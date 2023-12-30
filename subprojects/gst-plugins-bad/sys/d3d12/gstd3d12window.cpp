@@ -1074,7 +1074,7 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
   }
 
   priv->ctx->conv = gst_d3d12_converter_new (window->device,
-      &priv->input_info, &priv->display_info, config);
+      &priv->input_info, &priv->display_info, nullptr, nullptr, config);
   if (!priv->ctx->conv) {
     GST_ERROR_OBJECT (window, "Couldn't create converter");
     priv->ctx = nullptr;
