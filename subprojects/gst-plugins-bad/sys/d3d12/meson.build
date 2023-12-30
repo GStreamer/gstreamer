@@ -6,6 +6,7 @@ d3d12_sources = [
   'gstd3d12commandallocatorpool.cpp',
   'gstd3d12commandlistpool.cpp',
   'gstd3d12commandqueue.cpp',
+  'gstd3d12compositor.cpp',
   'gstd3d12converter-builder.cpp',
   'gstd3d12converter.cpp',
   'gstd3d12convert.cpp',
