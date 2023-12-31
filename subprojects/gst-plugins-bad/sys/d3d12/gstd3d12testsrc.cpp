@@ -2184,15 +2184,11 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
     return GST_FLOW_ERROR;
   }
 
+  gst_d3d12_buffer_after_write (convert_buffer, priv->ctx->fence_val);
+
   gst_d3d12_device_set_fence_notify (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val, fence_data,
       (GDestroyNotify) gst_d3d12_fence_data_unref);
-
-  auto num_mem = gst_buffer_n_memory (convert_buffer);
-  for (guint i = 0; i < num_mem; i++) {
-    auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (convert_buffer, i);
-    mem->fence_value = priv->ctx->fence_val;
-  }
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);
 

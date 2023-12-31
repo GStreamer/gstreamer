@@ -38,4 +38,7 @@ GType gst_d3d12_sampling_method_get_type (void);
 
 D3D12_FILTER  gst_d3d12_sampling_method_to_native (GstD3D12SamplingMethod method);
 
+void          gst_d3d12_buffer_after_write (GstBuffer * buffer,
+                                            guint64 fence_value);
+
 G_END_DECLS

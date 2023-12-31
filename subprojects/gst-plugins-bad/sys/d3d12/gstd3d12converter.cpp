@@ -2188,7 +2188,6 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   g_return_val_if_fail (cl, FALSE);
 
   GstMapInfo in_info[GST_VIDEO_MAX_PLANES];
-  GstMapInfo out_info[GST_VIDEO_MAX_PLANES];
 
   gboolean need_upload = gst_d3d12_converter_check_needs_upload (converter,
       in_buf);
@@ -2205,21 +2204,10 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
       gst_buffer_unref (in_buf);
     return FALSE;
   }
-
-  if (!gst_d3d12_converter_map_buffer (out_buf, out_info, GST_MAP_WRITE)) {
-    GST_ERROR_OBJECT (converter, "Couldn't map output buffer");
-    gst_d3d12_converter_unmap_buffer (in_buf, in_info);
-    if (need_upload)
-      gst_buffer_unref (in_buf);
-
-    return FALSE;
-  }
+  gst_d3d12_converter_unmap_buffer (in_buf, in_info);
 
   auto ret = gst_d3d12_converter_execute (converter,
       in_buf, out_buf, fence_data, cl);
-
-  gst_d3d12_converter_unmap_buffer (out_buf, out_info);
-  gst_d3d12_converter_unmap_buffer (in_buf, in_info);
 
   /* fence data will hold this buffer */
   if (need_upload)

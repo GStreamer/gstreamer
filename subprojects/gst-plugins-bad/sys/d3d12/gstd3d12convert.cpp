@@ -23,8 +23,6 @@
 
 #include "gstd3d12convert.h"
 #include "gstd3d12pluginutils.h"
-#include "gstd3d12fencedatapool.h"
-#include "gstd3d12commandallocatorpool.h"
 #include <directx/d3dx12.h>
 #include <mutex>
 #include <memory>
@@ -2117,15 +2115,11 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
+  gst_d3d12_buffer_after_write (outbuf, priv->ctx->fence_val);
+
   gst_d3d12_device_set_fence_notify (priv->ctx->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val, fence_data,
       (GDestroyNotify) gst_d3d12_fence_data_unref);
-
-  auto num_mem = gst_buffer_n_memory (outbuf);
-  for (guint i = 0; i < num_mem; i++) {
-    auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (outbuf, i);
-    mem->fence_value = priv->ctx->fence_val;
-  }
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);
 
