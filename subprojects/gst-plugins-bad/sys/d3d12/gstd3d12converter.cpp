@@ -239,6 +239,10 @@ struct _GstD3D12ConverterPrivate
 
   ~_GstD3D12ConverterPrivate ()
   {
+    if (fallback_pool) {
+      gst_buffer_pool_set_active (fallback_pool, FALSE);
+      gst_clear_object (&fallback_pool);
+    }
     converter_upload_data_free (upload_data);
     gst_clear_object (&srv_heap_pool);
   }
@@ -257,6 +261,9 @@ struct _GstD3D12ConverterPrivate
   D3D12_BLEND_DESC blend_desc;
   FLOAT blend_factor[4];
   gboolean update_pso = FALSE;
+
+  GstVideoInfo fallback_pool_info;
+  GstBufferPool *fallback_pool = nullptr;
 
   ConverterRootSignaturePtr crs;
   ComPtr<ID3D12RootSignature> rs;
@@ -2071,6 +2078,104 @@ gst_d3d12_converter_unmap_buffer (GstBuffer * buffer,
   }
 }
 
+static GstBuffer *
+gst_d3d12_converter_upload_buffer (GstD3D12Converter * self, GstBuffer * in_buf)
+{
+  GstVideoFrame in_frame, out_frame;
+  auto priv = self->priv;
+  GstBuffer *fallback_buf = nullptr;
+
+  if (!gst_video_frame_map (&in_frame, &priv->in_info, in_buf, GST_MAP_READ)) {
+    GST_ERROR_OBJECT (self, "Couldn't map video frame");
+    return nullptr;
+  }
+
+  if (priv->fallback_pool) {
+    if (priv->fallback_pool_info.width != in_frame.info.width ||
+        priv->fallback_pool_info.height != in_frame.info.height) {
+      gst_buffer_pool_set_active (priv->fallback_pool, FALSE);
+      gst_clear_object (&priv->fallback_pool);
+    }
+  }
+
+  if (!priv->fallback_pool) {
+    priv->fallback_pool = gst_d3d12_buffer_pool_new (self->device);
+    priv->fallback_pool_info = in_frame.info;
+    auto caps = gst_video_info_to_caps (&in_frame.info);
+    auto config = gst_buffer_pool_get_config (priv->fallback_pool);
+    auto params = gst_d3d12_allocation_params_new (self->device, &in_frame.info,
+        GST_D3D12_ALLOCATION_FLAG_DEFAULT,
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+    gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
+    gst_d3d12_allocation_params_free (params);
+    gst_buffer_pool_config_set_params (config, caps, in_frame.info.size, 0, 0);
+    gst_caps_unref (caps);
+
+    if (!gst_buffer_pool_set_config (priv->fallback_pool, config)) {
+      GST_ERROR_OBJECT (self, "Couldn't set pool config");
+      gst_video_frame_unmap (&in_frame);
+      gst_clear_object (&priv->fallback_pool);
+      return nullptr;
+    }
+
+    if (!gst_buffer_pool_set_active (priv->fallback_pool, TRUE)) {
+      GST_ERROR_OBJECT (self, "Failed to set active");
+      gst_video_frame_unmap (&in_frame);
+      gst_clear_object (&priv->fallback_pool);
+      return nullptr;
+    }
+  }
+
+  gst_buffer_pool_acquire_buffer (priv->fallback_pool, &fallback_buf, nullptr);
+  if (!fallback_buf) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire fallback buf");
+    gst_video_frame_unmap (&in_frame);
+    return nullptr;
+  }
+
+  if (!gst_video_frame_map (&out_frame, &priv->fallback_pool_info, fallback_buf,
+          GST_MAP_WRITE)) {
+    GST_ERROR_OBJECT (self, "Couldn't map output frame");
+    gst_video_frame_unmap (&in_frame);
+    gst_buffer_unref (fallback_buf);
+    return nullptr;
+  }
+
+  auto copy_ret = gst_video_frame_copy (&out_frame, &in_frame);
+  gst_video_frame_unmap (&out_frame);
+  gst_video_frame_unmap (&in_frame);
+
+  if (!copy_ret) {
+    GST_ERROR_OBJECT (self, "Couldn't copy to fallback buffer");
+    gst_buffer_unref (fallback_buf);
+    return nullptr;
+  }
+
+  return fallback_buf;
+}
+
+static gboolean
+gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
+    GstBuffer * buf)
+{
+  auto mem = gst_buffer_peek_memory (buf, 0);
+  if (!gst_is_d3d12_memory (mem))
+    return TRUE;
+
+  auto dmem = GST_D3D12_MEMORY_CAST (mem);
+  if (dmem->device != self->device)
+    return TRUE;
+
+  auto resource = gst_d3d12_memory_get_resource_handle (dmem);
+  auto desc = resource->GetDesc ();
+  if ((desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) ==
+      D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 gboolean
 gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
@@ -2085,14 +2190,28 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   GstMapInfo in_info[GST_VIDEO_MAX_PLANES];
   GstMapInfo out_info[GST_VIDEO_MAX_PLANES];
 
+  gboolean need_upload = gst_d3d12_converter_check_needs_upload (converter,
+      in_buf);
+
+  if (need_upload) {
+    in_buf = gst_d3d12_converter_upload_buffer (converter, in_buf);
+    if (!in_buf)
+      return FALSE;
+  }
+
   if (!gst_d3d12_converter_map_buffer (in_buf, in_info, GST_MAP_READ)) {
     GST_ERROR_OBJECT (converter, "Couldn't map input buffer");
+    if (need_upload)
+      gst_buffer_unref (in_buf);
     return FALSE;
   }
 
   if (!gst_d3d12_converter_map_buffer (out_buf, out_info, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (converter, "Couldn't map output buffer");
     gst_d3d12_converter_unmap_buffer (in_buf, in_info);
+    if (need_upload)
+      gst_buffer_unref (in_buf);
+
     return FALSE;
   }
 
@@ -2101,6 +2220,10 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
 
   gst_d3d12_converter_unmap_buffer (out_buf, out_info);
   gst_d3d12_converter_unmap_buffer (in_buf, in_info);
+
+  /* fence data will hold this buffer */
+  if (need_upload)
+    gst_buffer_unref (in_buf);
 
   return ret;
 }
