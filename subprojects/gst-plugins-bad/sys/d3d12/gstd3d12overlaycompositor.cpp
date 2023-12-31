@@ -203,7 +203,8 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
       vmeta->height, 1, 1);
 
   ComPtr < ID3D12Resource > texture;
-  auto hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+  auto hr = device->CreateCommittedResource (&heap_prop,
+      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
       &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS (&texture));
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create texture");
@@ -218,7 +219,8 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
   ComPtr < ID3D12Resource > staging;
   heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
   desc = CD3DX12_RESOURCE_DESC::Buffer (size);
-  hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+  hr = device->CreateCommittedResource (&heap_prop,
+      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
       &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&staging));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -303,7 +305,8 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
   ComPtr < ID3D12Resource > vertex_buf;
   heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
   desc = CD3DX12_RESOURCE_DESC::Buffer (sizeof (VertexData) * 4);
-  hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+  hr = device->CreateCommittedResource (&heap_prop,
+      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
       &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&vertex_buf));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -491,7 +494,8 @@ gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
   D3D12_RESOURCE_DESC buffer_desc =
       CD3DX12_RESOURCE_DESC::Buffer (sizeof (indices));
   ComPtr < ID3D12Resource > index_buf;
-  hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+  hr = device->CreateCommittedResource (&heap_prop,
+      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
       &buffer_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&index_buf));
   if (!gst_d3d12_result (hr, self->device)) {

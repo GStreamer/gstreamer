@@ -1037,7 +1037,7 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
         CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (alloc_size);
     hr = priv->cmd->device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_NONE, &desc,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED, &desc,
         D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&bitstream));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Failed to create bitstream buffer");
@@ -1363,7 +1363,8 @@ gst_d3d12_decoder_ensure_staging_texture (GstD3D12Decoder * self)
       (D3D12_HEAP_TYPE_READBACK);
   D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (size);
 
-  hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+  hr = device->CreateCommittedResource (&heap_prop,
+      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
       &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS (&staging));
   if (!gst_d3d12_result (hr, self->device))
     return FALSE;

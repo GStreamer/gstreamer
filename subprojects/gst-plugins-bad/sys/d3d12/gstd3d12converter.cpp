@@ -756,7 +756,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     resource_desc =
         CD3DX12_RESOURCE_DESC::Buffer (sizeof (VertexData) * 4 +
         sizeof (g_indices));
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
         IID_PPV_ARGS (&priv->vertex_index_buf));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -773,7 +774,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     priv->idv.Format = DXGI_FORMAT_R16_UINT;
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&upload_data->vertex_index_upload));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -796,7 +798,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   {
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
     resource_desc = CD3DX12_RESOURCE_DESC::Buffer (sizeof (PSConstBuffer));
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
         IID_PPV_ARGS (&priv->ps_const_buf));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -805,7 +808,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     }
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&upload_data->ps_const_upload));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -828,7 +832,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     resource_desc = CD3DX12_RESOURCE_DESC::Tex1D (DXGI_FORMAT_R16_UNORM,
         GAMMA_LUT_SIZE, 1, 1);
 
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
         IID_PPV_ARGS (&priv->gamma_dec_lut));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -836,7 +841,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
       return FALSE;
     }
 
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
         IID_PPV_ARGS (&priv->gamma_enc_lut));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -851,7 +857,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     resource_desc = CD3DX12_RESOURCE_DESC::Buffer (gamma_lut_size);
 
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&upload_data->gamma_dec_lut_upload));
     if (!gst_d3d12_result (hr, self->device)) {
@@ -859,7 +866,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
       return FALSE;
     }
 
-    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
         IID_PPV_ARGS (&upload_data->gamma_enc_lut_upload));
     if (!gst_d3d12_result (hr, self->device)) {
