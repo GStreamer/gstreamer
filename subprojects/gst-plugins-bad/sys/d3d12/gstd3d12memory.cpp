@@ -474,42 +474,6 @@ gst_d3d12_memory_get_plane_count (GstD3D12Memory * mem)
 }
 
 gboolean
-gst_d3d12_memory_create_shader_resource_view (GstD3D12Memory * mem,
-    guint plane, guint heap_offset, ID3D12DescriptorHeap * heap)
-{
-  auto priv = mem->priv;
-  auto allocator = GST_MEMORY_CAST (mem)->allocator;
-  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) != 0) {
-    GST_LOG_OBJECT (allocator,
-        "Shader resource was denied, configured flags 0x%x",
-        (guint) priv->desc.Flags);
-    return FALSE;
-  }
-
-  if (priv->num_subresources <= plane) {
-    GST_ERROR_OBJECT (allocator, "Out of bound request");
-    return FALSE;
-  }
-
-  auto cpu_handle =
-      CD3DX12_CPU_DESCRIPTOR_HANDLE (heap->GetCPUDescriptorHandleForHeapStart
-      (), heap_offset, priv->srv_inc_size);
-
-  D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
-  srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-  srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-  srv_desc.Texture2D.MipLevels = 1;
-  srv_desc.Format = priv->resource_formats[plane];
-  srv_desc.Texture2D.PlaneSlice = plane;
-
-  auto device = gst_d3d12_device_get_device_handle (mem->device);
-  device->CreateShaderResourceView (priv->resource.Get (),
-      &srv_desc, cpu_handle);
-
-  return TRUE;
-}
-
-gboolean
 gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
     ID3D12DescriptorHeap ** heap)
 {
@@ -527,7 +491,7 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
     D3D12_DESCRIPTOR_HEAP_DESC desc = { };
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     desc.NumDescriptors = priv->num_subresources;
-    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
     auto device = gst_d3d12_device_get_device_handle (mem->device);
 
@@ -560,38 +524,6 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
 
   *heap = priv->srv_heap.Get ();
   (*heap)->AddRef ();
-
-  return TRUE;
-}
-
-gboolean
-gst_d3d12_memory_create_render_target_view (GstD3D12Memory * mem,
-    guint plane, guint heap_offset, ID3D12DescriptorHeap * heap)
-{
-  auto priv = mem->priv;
-  auto allocator = GST_MEMORY_CAST (mem)->allocator;
-  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) == 0) {
-    GST_LOG_OBJECT (allocator,
-        "Render target is not allowed, configured flags 0x%x",
-        (guint) priv->desc.Flags);
-    return FALSE;
-  }
-
-  if (priv->num_subresources <= plane) {
-    GST_ERROR_OBJECT (allocator, "Out of bound request");
-    return FALSE;
-  }
-
-  auto device = gst_d3d12_device_get_device_handle (mem->device);
-  auto cpu_handle =
-      CD3DX12_CPU_DESCRIPTOR_HANDLE (heap->GetCPUDescriptorHandleForHeapStart
-      (), heap_offset, priv->rtv_inc_size);
-
-  D3D12_RENDER_TARGET_VIEW_DESC rtv_desc = { };
-  rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-  rtv_desc.Format = priv->resource_formats[plane];
-  rtv_desc.Texture2D.PlaneSlice = plane;
-  device->CreateRenderTargetView (priv->resource.Get (), &rtv_desc, cpu_handle);
 
   return TRUE;
 }

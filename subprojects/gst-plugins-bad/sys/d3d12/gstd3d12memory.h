@@ -136,18 +136,8 @@ gboolean          gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem,
 
 guint             gst_d3d12_memory_get_plane_count       (GstD3D12Memory * mem);
 
-gboolean          gst_d3d12_memory_create_shader_resource_view (GstD3D12Memory * mem,
-                                                                guint plane,
-                                                                guint heap_offset,
-                                                                ID3D12DescriptorHeap * heap);
-
 gboolean          gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
                                                                   ID3D12DescriptorHeap ** heap);
-
-gboolean          gst_d3d12_memory_create_render_target_view   (GstD3D12Memory * mem,
-                                                                guint plane,
-                                                                guint heap_offset,
-                                                                ID3D12DescriptorHeap * heap);
 
 gboolean          gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
                                                                 ID3D12DescriptorHeap ** heap);

@@ -275,6 +275,7 @@ struct _GstD3D12ConverterPrivate
   ComPtr<ID3D12Resource> gamma_dec_lut;
   ComPtr<ID3D12Resource> gamma_enc_lut;
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT gamma_lut_layout;
+  ComPtr<ID3D12DescriptorHeap> gamma_lut_heap;
 
   std::vector<QuadData> quad_data;
 
@@ -898,6 +899,34 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
     memcpy (data, gamma_enc_table->lut, GAMMA_LUT_SIZE * sizeof (guint16));
     upload_data->gamma_enc_lut_upload->Unmap (0, nullptr);
+
+    D3D12_DESCRIPTOR_HEAP_DESC desc = { };
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.NumDescriptors = 2;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+    auto hr = device->CreateDescriptorHeap (&desc,
+        IID_PPV_ARGS (&priv->gamma_lut_heap));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't map gamma lut upload buffer");
+      return FALSE;
+    }
+
+    auto cpu_handle =
+        CD3DX12_CPU_DESCRIPTOR_HANDLE
+        (priv->gamma_lut_heap->GetCPUDescriptorHandleForHeapStart ());
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
+    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srv_desc.Texture1D.MipLevels = 1;
+
+    device->CreateShaderResourceView (priv->gamma_dec_lut.Get (), &srv_desc,
+        cpu_handle);
+    cpu_handle.Offset (priv->srv_inc_size);
+
+    device->CreateShaderResourceView (priv->gamma_enc_lut.Get (), &srv_desc,
+        cpu_handle);
   }
 
   priv->input_texture_width = GST_VIDEO_INFO_WIDTH (in_info);
@@ -1786,28 +1815,6 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
 {
   auto priv = self->priv;
 
-  ComPtr < ID3D12DescriptorHeap > srv_heap;
-  bool create_srv = true;
-  if (!priv->crs->HaveLut () && gst_buffer_n_memory (in_buf) == 1) {
-    auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, 0);
-    if (!gst_d3d12_memory_get_shader_resource_view_heap (mem, &srv_heap)) {
-      GST_ERROR_OBJECT (self, "Couldn't get srv heap from memory");
-      return FALSE;
-    }
-
-    create_srv = false;
-  } else {
-    GstD3D12Descriptor *descriptor;
-    if (!gst_d3d12_descriptor_pool_acquire (priv->srv_heap_pool, &descriptor)) {
-      GST_ERROR_OBJECT (self, "Couldn't acquire srv heap");
-      return FALSE;
-    }
-
-    gst_d3d12_descriptor_get_handle (descriptor, &srv_heap);
-    gst_d3d12_fence_data_add_notify (fence_data, descriptor,
-        (GDestroyNotify) gst_d3d12_descriptor_unref);
-  }
-
   std::lock_guard < std::mutex > lk (priv->prop_lock);
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, 0);
   auto resource = gst_d3d12_memory_get_resource_handle (mem);
@@ -1922,43 +1929,44 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
           upload_data->vertex_index_upload.Get ());
     }
   }
-  priv->is_first = false;
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
 
-  guint srv_offset = 0;
+  ComPtr < ID3D12DescriptorHeap > srv_heap;
+  GstD3D12Descriptor *descriptor;
+  if (!gst_d3d12_descriptor_pool_acquire (priv->srv_heap_pool, &descriptor)) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire srv heap");
+    return FALSE;
+  }
+
+  gst_d3d12_descriptor_get_handle (descriptor, &srv_heap);
+  gst_d3d12_fence_data_add_notify (fence_data, descriptor,
+      (GDestroyNotify) gst_d3d12_descriptor_unref);
+
+  auto cpu_handle =
+      CD3DX12_CPU_DESCRIPTOR_HANDLE
+      (srv_heap->GetCPUDescriptorHandleForHeapStart ());
+
   for (guint i = 0; i < gst_buffer_n_memory (in_buf); i++) {
     auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, i);
     auto num_planes = gst_d3d12_memory_get_plane_count (mem);
+    ComPtr < ID3D12DescriptorHeap > mem_srv_heap;
 
-    for (guint plane = 0; plane < num_planes; plane++) {
-      if (create_srv &&
-          !gst_d3d12_memory_create_shader_resource_view (mem, plane, srv_offset,
-              srv_heap.Get ())) {
-        GST_ERROR_OBJECT (self, "Couldn't create SRV");
-        return FALSE;
-      }
-      srv_offset++;
+    if (!gst_d3d12_memory_get_shader_resource_view_heap (mem, &mem_srv_heap)) {
+      GST_ERROR_OBJECT (self, "Couldn't get SRV");
+      return FALSE;
     }
+
+    device->CopyDescriptorsSimple (num_planes, cpu_handle,
+        mem_srv_heap->GetCPUDescriptorHandleForHeapStart (),
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+    cpu_handle.Offset (num_planes, priv->srv_inc_size);
   }
 
   if (priv->crs->HaveLut ()) {
-    auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (srv_heap->GetCPUDescriptorHandleForHeapStart (),
-        srv_offset, priv->srv_inc_size);
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
-    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
-    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Texture1D.MipLevels = 1;
-
-    device->CreateShaderResourceView (priv->gamma_dec_lut.Get (), &srv_desc,
-        cpu_handle);
-    cpu_handle.Offset (priv->srv_inc_size);
-
-    device->CreateShaderResourceView (priv->gamma_enc_lut.Get (), &srv_desc,
-        cpu_handle);
+    device->CopyDescriptorsSimple (2, cpu_handle,
+        priv->gamma_lut_heap->GetCPUDescriptorHandleForHeapStart (),
+        D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   }
 
   for (guint i = 0; i < gst_buffer_n_memory (out_buf); i++) {
@@ -2045,6 +2053,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
         priv->upload_data, (GDestroyNotify) converter_upload_data_free);
   }
   priv->upload_data = nullptr;
+  priv->is_first = false;
 
   return TRUE;
 }
