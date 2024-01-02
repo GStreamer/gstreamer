@@ -548,22 +548,6 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     return nullptr;
   }
 
-  ComPtr < ID3D12Fence > copy_fence;
-  hr = device->CreateFence (0,
-      D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&copy_fence));
-  if (FAILED (hr)) {
-    GST_ERROR ("Couldn't create copy fence");
-    return nullptr;
-  }
-
-  ComPtr < ID3D12Fence > direct_fence;
-  hr = device->CreateFence (0,
-      D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&direct_fence));
-  if (FAILED (hr)) {
-    GST_ERROR ("Couldn't create fence");
-    return nullptr;
-  }
-
   GstD3D12Device *self = (GstD3D12Device *)
       g_object_new (GST_TYPE_D3D12_DEVICE, nullptr);
   GstD3D12DevicePrivate *priv = self->priv;
@@ -574,6 +558,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   priv->adapter_luid = gst_d3d12_luid_to_int64 (&desc.AdapterLuid);
   priv->vendor_id = desc.VendorId;
   priv->device_id = desc.DeviceId;
+  priv->adapter_index = index;
 
   std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t >converter;
   priv->description = converter.to_bytes (desc.Description);
