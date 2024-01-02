@@ -162,22 +162,13 @@ private:
   bool flushing = false;
 };
 
-struct DecoderTaskData
-{
-  ComPtr <ID3D12CommandAllocator> ca;
-  ComPtr <ID3D12Resource> bitstream;
-  gsize bitstream_size;
-};
-
-typedef std::shared_ptr<DecoderTaskData> DecoderTaskDataPtr;
-
 struct GstD3D12DecoderPicture : public GstMiniObject
 {
   GstD3D12DecoderPicture (GstBuffer * dpb_buf, GstBuffer * out_buf,
-      std::shared_ptr<GstD3D12Dpb> d3d12_dpb,
+      std::shared_ptr<GstD3D12Dpb> d3d12_dpb, ID3D12VideoDecoder * dec,
       ID3D12VideoDecoderHeap * decoder_heap, guint8 dxva_id)
       : buffer(dpb_buf), output_buffer(out_buf)
-      , heap(decoder_heap), dpb(d3d12_dpb), view_id(dxva_id) {}
+      , decoder(dec), heap(decoder_heap), dpb(d3d12_dpb), view_id(dxva_id) {}
 
   ~GstD3D12DecoderPicture ()
   {
@@ -193,10 +184,10 @@ struct GstD3D12DecoderPicture : public GstMiniObject
 
   GstBuffer *buffer;
   GstBuffer *output_buffer;
+  ComPtr<ID3D12VideoDecoder> decoder;
   ComPtr<ID3D12VideoDecoderHeap> heap;
   std::weak_ptr<GstD3D12Dpb> dpb;
   guint64 fence_val = 0;
-  DecoderTaskDataPtr task_data;
 
   guint8 view_id;
 };
@@ -225,31 +216,24 @@ struct DecoderCmdData
 
   ~DecoderCmdData ()
   {
-    if (fence) {
-      if (fence->GetCompletedValue () < fence_val) {
-        auto hr = fence->SetEventOnCompletion (fence_val, event_handle);
-        if (SUCCEEDED (hr))
-          WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
-      }
-    }
+    if (queue)
+      gst_d3d12_command_queue_fence_wait (queue, G_MAXUINT64, event_handle);
 
     CloseHandle (event_handle);
+    gst_clear_object (&ca_pool);
+    gst_clear_object (&queue);
   }
 
   ComPtr<ID3D12Device> device;
 
   ComPtr<ID3D12VideoDevice> video_device;
   ComPtr<ID3D12VideoDecodeCommandList> cl;
-  ComPtr<ID3D12CommandQueue> cq;
+  GstD3D12CommandQueue *queue = nullptr;
+  GstD3D12CommandAllocatorPool *ca_pool = nullptr;
 
   /* Fence to wait at command record thread */
-  ComPtr<ID3D12Fence> fence;
   HANDLE event_handle;
   UINT64 fence_val = 0;
-
-  std::mutex task_data_queue_lock;
-  std::queue<DecoderTaskDataPtr> task_data_queue;
-  guint num_allocated_tasks = 0;
 };
 
 struct DecoderOutputData
@@ -344,11 +328,13 @@ struct GstD3D12DecoderPrivate
   GstD3D12DecoderPrivate ()
   {
     copy_event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+    fence_data_pool = gst_d3d12_fence_data_pool_new ();
   }
 
   ~GstD3D12DecoderPrivate ()
   {
     CloseHandle (copy_event_handle);
+    gst_clear_object (&fence_data_pool);
   }
 
   std::mutex lock;
@@ -361,6 +347,8 @@ struct GstD3D12DecoderPrivate
   std::atomic<GstFlowReturn> last_flow;
 
   HANDLE copy_event_handle;
+
+  GstD3D12FenceDataPool *fence_data_pool;
 
   std::vector<D3D12_RESOURCE_BARRIER> pre_barriers;
   std::vector<D3D12_RESOURCE_BARRIER> post_barriers;
@@ -451,35 +439,14 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
   D3D12_COMMAND_QUEUE_DESC desc = { };
   desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
   desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-  hr = cmd->device->CreateCommandQueue (&desc, IID_PPV_ARGS (&cmd->cq));
-  if (!gst_d3d12_result (hr, decoder->device)) {
+  cmd->queue = gst_d3d12_command_queue_new (decoder->device, &desc, 4);
+  if (!cmd->queue) {
     GST_ERROR_OBJECT (element, "Couldn't create command queue");
     return FALSE;
   }
 
-  hr = cmd->device->CreateFence (0,
-      D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&cmd->fence));
-  if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (element, "Couldn't create fence");
-    return FALSE;
-  }
-
-  /* Preallocate command allocators, but we can allocate additional command
-   * allocators later */
-  for (size_t i = 0; i < ASYNC_DEPTH; i++) {
-    ComPtr < ID3D12CommandAllocator > ca;
-    hr = cmd->device->CreateCommandAllocator
-        (D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, IID_PPV_ARGS (&ca));
-    if (!gst_d3d12_result (hr, decoder->device)) {
-      GST_ERROR_OBJECT (element, "Couldn't create command allocator");
-      return FALSE;
-    }
-
-    auto task_data = std::make_shared < DecoderTaskData > ();
-    task_data->ca = ca;
-    cmd->task_data_queue.push (task_data);
-    cmd->num_allocated_tasks++;
-  }
+  cmd->ca_pool = gst_d3d12_command_allocator_pool_new (decoder->device,
+      D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE);
 
   priv->cmd = std::move (cmd);
   priv->flushing = false;
@@ -493,24 +460,9 @@ gst_d3d12_decoder_drain (GstD3D12Decoder * decoder, GstVideoDecoder * videodec)
   auto priv = decoder->priv;
 
   GST_DEBUG_OBJECT (decoder, "Draining");
-  auto completed = priv->cmd->fence->GetCompletedValue ();
-  if (completed < priv->cmd->fence_val) {
-    GST_LOG_OBJECT (decoder, "Waiting for fence value %" G_GUINT64_FORMAT,
-        priv->cmd->fence_val);
-
-    HRESULT hr = priv->cmd->fence->SetEventOnCompletion (priv->cmd->fence_val,
+  if (priv->cmd) {
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
         priv->cmd->event_handle);
-    if (!gst_d3d12_result (hr, decoder->device)) {
-      GST_ERROR_OBJECT (decoder, "SetEventOnCompletion failed");
-      return GST_FLOW_ERROR;
-    }
-
-    auto wait_ret = WaitForSingleObjectEx (priv->cmd->event_handle,
-        INFINITE, FALSE);
-    if (wait_ret != WAIT_OBJECT_0) {
-      GST_ERROR_OBJECT (decoder, "Wait failed with 0x%x", (guint) wait_ret);
-      return GST_FLOW_ERROR;
-    }
   }
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
@@ -824,24 +776,9 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
   auto priv = decoder->priv;
 
   priv->flushing = true;
-  auto completed = priv->cmd->fence->GetCompletedValue ();
-  if (completed < priv->cmd->fence_val) {
-    GST_LOG_OBJECT (decoder, "Waiting for fence value %" G_GUINT64_FORMAT,
-        priv->cmd->fence_val);
-
-    HRESULT hr = priv->cmd->fence->SetEventOnCompletion (priv->cmd->fence_val,
+  if (priv->cmd) {
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
         priv->cmd->event_handle);
-    if (!gst_d3d12_result (hr, decoder->device)) {
-      GST_ERROR_OBJECT (decoder, "SetEventOnCompletion failed");
-      return FALSE;
-    }
-
-    auto wait_ret = WaitForSingleObjectEx (priv->cmd->event_handle,
-        INFINITE, FALSE);
-    if (wait_ret != WAIT_OBJECT_0) {
-      GST_ERROR_OBJECT (decoder, "Wait failed with 0x%x", (guint) wait_ret);
-      return FALSE;
-    }
   }
 
   if (priv->output_thread && priv->session) {
@@ -865,7 +802,8 @@ gst_d3d12_decoder_picture_free (GstD3D12DecoderPicture * self)
 
 static GstD3D12DecoderPicture *
 gst_d3d12_decoder_picture_new (GstD3D12Decoder * self, GstBuffer * buffer,
-    GstBuffer * output_buffer, ID3D12VideoDecoderHeap * heap)
+    GstBuffer * output_buffer, ID3D12VideoDecoder * dec,
+    ID3D12VideoDecoderHeap * heap)
 {
   auto priv = self->priv;
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (buffer, 0);
@@ -880,7 +818,7 @@ gst_d3d12_decoder_picture_new (GstD3D12Decoder * self, GstBuffer * buffer,
   }
 
   auto picture = new GstD3D12DecoderPicture (buffer, output_buffer,
-      priv->session->dpb, heap, view_id);
+      priv->session->dpb, dec, heap, view_id);
 
   gst_mini_object_init (picture, 0, GST_TYPE_D3D12_DECODER_PICTURE,
       nullptr, nullptr,
@@ -898,34 +836,9 @@ gst_d3d12_decoder_new_picture (GstD3D12Decoder * decoder,
   g_return_val_if_fail (picture != nullptr, GST_FLOW_ERROR);
 
   auto priv = decoder->priv;
-  HRESULT hr;
-
   if (!priv->session) {
     GST_ERROR_OBJECT (decoder, "No session configured");
     return GST_FLOW_ERROR;
-  }
-
-  if (priv->cmd->fence_val >= ASYNC_DEPTH) {
-    UINT64 fence_to_wait = priv->cmd->fence_val - ASYNC_DEPTH;
-    auto completed = priv->cmd->fence->GetCompletedValue ();
-    if (completed < fence_to_wait) {
-      GST_LOG_OBJECT (decoder, "Waiting for fence value %" G_GUINT64_FORMAT,
-          fence_to_wait);
-
-      hr = priv->cmd->fence->SetEventOnCompletion (fence_to_wait,
-          priv->cmd->event_handle);
-      if (!gst_d3d12_result (hr, decoder->device)) {
-        GST_ERROR_OBJECT (decoder, "SetEventOnCompletion failed");
-        return GST_FLOW_ERROR;
-      }
-
-      auto wait_ret = WaitForSingleObjectEx (priv->cmd->event_handle,
-          INFINITE, FALSE);
-      if (wait_ret != WAIT_OBJECT_0) {
-        GST_ERROR_OBJECT (decoder, "Wait failed with 0x%x", (guint) wait_ret);
-        return GST_FLOW_ERROR;
-      }
-    }
   }
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
@@ -953,7 +866,7 @@ gst_d3d12_decoder_new_picture (GstD3D12Decoder * decoder,
   /* unlock so that output thread can output picture and return
    * back to dpb */
   auto decoder_pic = gst_d3d12_decoder_picture_new (decoder, buffer,
-      output_buffer, priv->session->heap.Get ());
+      output_buffer, priv->session->decoder.Get (), priv->session->heap.Get ());
   GST_VIDEO_DECODER_STREAM_LOCK (videodec);
   if (!decoder_pic) {
     GST_ERROR_OBJECT (videodec, "Couldn't create new picture");
@@ -1019,17 +932,36 @@ gst_d3d12_decoder_start_picture (GstD3D12Decoder * decoder,
   return GST_FLOW_OK;
 }
 
+struct DecoderBitstream
+{
+  ComPtr < ID3D12Resource > bitstream;
+  gsize bitstream_size = 0;
+};
+
+static void
+bitstream_free_func (DecoderBitstream * buffer)
+{
+  if (buffer)
+    delete buffer;
+}
+
 static gboolean
 gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
-    gsize size, DecoderTaskDataPtr task)
+    gsize size, GstD3D12CommandAllocator * cmd)
 {
   auto priv = self->priv;
   HRESULT hr;
 
-  if (task->bitstream && task->bitstream_size < size)
-    task->bitstream = nullptr;
+  auto buffer = (DecoderBitstream *)
+      gst_d3d12_command_allocator_get_user_data (cmd);
 
-  if (!task->bitstream) {
+  if (!buffer || buffer->bitstream_size < size) {
+    buffer = new DecoderBitstream ();
+    gst_d3d12_command_allocator_set_user_data (cmd, buffer,
+        (GDestroyNotify) bitstream_free_func);
+  }
+
+  if (!buffer->bitstream) {
     ComPtr < ID3D12Resource > bitstream;
     size_t alloc_size = GST_ROUND_UP_128 (size) + 1024;
 
@@ -1047,13 +979,13 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
     GST_LOG_OBJECT (self, "Allocated new bitstream buffer with size %"
         G_GSIZE_FORMAT, size);
 
-    task->bitstream = bitstream;
-    task->bitstream_size = alloc_size;
+    buffer->bitstream = bitstream;
+    buffer->bitstream_size = alloc_size;
   }
 
   gpointer map_data;
   D3D12_RANGE zero_range = { 0, 0 };
-  hr = task->bitstream->Map (0, &zero_range, &map_data);
+  hr = buffer->bitstream->Map (0, &zero_range, &map_data);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't map bitstream buffer");
     return FALSE;
@@ -1062,7 +994,7 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
   memcpy (map_data, data, size);
 
   D3D12_RANGE range = { 0, size };
-  task->bitstream->Unmap (0, &range);
+  buffer->bitstream->Unmap (0, &range);
 
   return TRUE;
 }
@@ -1108,58 +1040,46 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
         (GThreadFunc) gst_d3d12_decoder_output_loop, decoder);
   }
 
-  DecoderTaskDataPtr task_data;
-  size_t free_tasks_in_queue = 0;
-  {
-    std::lock_guard < std::mutex > lk (priv->cmd->task_data_queue_lock);
-    if (priv->cmd->task_data_queue.empty ()) {
-      ComPtr < ID3D12CommandAllocator > ca;
-      hr = priv->cmd->device->CreateCommandAllocator
-          (D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE, IID_PPV_ARGS (&ca));
-      if (!gst_d3d12_result (hr, decoder->device)) {
-        GST_ERROR_OBJECT (decoder, "Couldn't create command allocator");
-        return GST_FLOW_ERROR;
-      }
-
-      task_data = std::make_shared < DecoderTaskData > ();
-      task_data->ca = ca;
-      priv->cmd->num_allocated_tasks++;
-      GST_TRACE_OBJECT (decoder,
-          "Allocating new task, total allocated tasks %u",
-          priv->cmd->num_allocated_tasks);
-    } else {
-      free_tasks_in_queue = priv->cmd->task_data_queue.size ();
-      task_data = priv->cmd->task_data_queue.front ();
-      priv->cmd->task_data_queue.pop ();
-      GST_TRACE_OBJECT (decoder, "Reusing task, total allocated tasks %u",
-          priv->cmd->num_allocated_tasks);
-    }
+  GstD3D12CommandAllocator *gst_ca;
+  if (!gst_d3d12_command_allocator_pool_acquire (priv->cmd->ca_pool, &gst_ca)) {
+    GST_ERROR_OBJECT (decoder, "Couldn't acquire command allocator");
+    return GST_FLOW_ERROR;
   }
 
   if (!gst_d3d12_decoder_upload_bitstream (decoder, args->bitstream,
-          args->bitstream_size, task_data)) {
+          args->bitstream_size, gst_ca)) {
+    gst_d3d12_command_allocator_unref (gst_ca);
     return GST_FLOW_ERROR;
   }
+
+  auto bitstream = (DecoderBitstream *)
+      gst_d3d12_command_allocator_get_user_data (gst_ca);
+  g_assert (bitstream);
 
   memset (&in_args, 0, sizeof (D3D12_VIDEO_DECODE_INPUT_STREAM_ARGUMENTS));
   memset (&out_args, 0, sizeof (D3D12_VIDEO_DECODE_OUTPUT_STREAM_ARGUMENTS));
 
-  hr = task_data->ca->Reset ();
+  ComPtr < ID3D12CommandAllocator > ca;
+  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+
+  hr = ca->Reset ();
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't reset command allocator");
+    gst_d3d12_command_allocator_unref (gst_ca);
     return GST_FLOW_ERROR;
   }
 
   if (!priv->cmd->cl) {
     hr = priv->cmd->device->CreateCommandList (0,
         D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE,
-        task_data->ca.Get (), nullptr, IID_PPV_ARGS (&priv->cmd->cl));
+        ca.Get (), nullptr, IID_PPV_ARGS (&priv->cmd->cl));
   } else {
-    hr = priv->cmd->cl->Reset (task_data->ca.Get ());
+    hr = priv->cmd->cl->Reset (ca.Get ());
   }
 
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't configure command list");
+    gst_d3d12_command_allocator_unref (gst_ca);
     return GST_FLOW_ERROR;
   }
 
@@ -1293,7 +1213,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     in_args.NumFrameArguments++;
   }
 
-  in_args.CompressedBitstream.pBuffer = task_data->bitstream.Get ();
+  in_args.CompressedBitstream.pBuffer = bitstream->bitstream.Get ();
   in_args.CompressedBitstream.Offset = 0;
   in_args.CompressedBitstream.Size = args->bitstream_size;
   in_args.pHeap = decoder_pic->heap.Get ();
@@ -1309,22 +1229,32 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   hr = priv->cmd->cl->Close ();
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't record decoding command");
+    gst_d3d12_command_allocator_unref (gst_ca);
     return GST_FLOW_ERROR;
   }
 
   ID3D12CommandList *cl[] = { priv->cmd->cl.Get () };
-  priv->cmd->cq->ExecuteCommandLists (1, cl);
 
-  priv->cmd->fence_val++;
-  hr = priv->cmd->cq->Signal (priv->cmd->fence.Get (), priv->cmd->fence_val);
+  hr = gst_d3d12_command_queue_execute_command_lists (priv->cmd->queue,
+      1, cl, &priv->cmd->fence_val);
   if (!gst_d3d12_result (hr, decoder->device)) {
-    GST_ERROR_OBJECT (decoder, "Signal failed");
-    priv->cmd->fence_val--;
+    GST_ERROR_OBJECT (decoder, "Couldn't execute command list");
+    gst_d3d12_command_allocator_unref (gst_ca);
     return GST_FLOW_ERROR;
   }
 
   decoder_pic->fence_val = priv->cmd->fence_val;
-  decoder_pic->task_data = task_data;
+
+  GstD3D12FenceData *fence_data;
+  gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
+  gst_d3d12_fence_data_add_notify (fence_data,
+      gst_mini_object_ref (decoder_pic),
+      (GDestroyNotify) gst_mini_object_unref);
+  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
+      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+
+  gst_d3d12_command_queue_set_notify (priv->cmd->queue, priv->cmd->fence_val,
+      fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
 
   return GST_FLOW_OK;
 }
@@ -1628,18 +1558,8 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
 
     auto decoder_pic = get_decoder_picture (output_data.picture);
     g_assert (decoder_pic);
-    auto completed = priv->cmd->fence->GetCompletedValue ();
-    if (completed < decoder_pic->fence_val) {
-      priv->cmd->fence->SetEventOnCompletion (decoder_pic->fence_val,
-          event_handle);
-      WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
-    }
-
-    {
-      std::lock_guard < std::mutex > lk (priv->cmd->task_data_queue_lock);
-      priv->cmd->task_data_queue.push (decoder_pic->task_data);
-      decoder_pic->task_data = nullptr;
-    }
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
+        decoder_pic->fence_val, event_handle);
 
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "Drop framem, we are flushing");
