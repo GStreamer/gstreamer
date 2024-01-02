@@ -34,9 +34,17 @@ using namespace Microsoft::WRL;
 
 struct _GstD3D12CommandAllocator : public GstMiniObject
 {
+  ~_GstD3D12CommandAllocator ()
+  {
+    if (notify)
+      notify (user_data);
+  }
+
   GstD3D12CommandAllocatorPool *pool = nullptr;
   D3D12_COMMAND_LIST_TYPE type;
   ComPtr < ID3D12CommandAllocator > ca;
+  gpointer user_data = nullptr;
+  GDestroyNotify notify = nullptr;
 };
 
 struct GstD3D12CommandAllocatorPoolPrivate
@@ -247,4 +255,25 @@ gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd,
   (*ca)->AddRef ();
 
   return TRUE;
+}
+
+void
+gst_d3d12_command_allocator_set_user_data (GstD3D12CommandAllocator * cmd,
+    gpointer user_data, GDestroyNotify notify)
+{
+  g_return_if_fail (cmd);
+
+  if (cmd->notify)
+    cmd->notify (cmd->user_data);
+
+  cmd->user_data = user_data;
+  cmd->notify = notify;
+}
+
+gpointer
+gst_d3d12_command_allocator_get_user_data (GstD3D12CommandAllocator * cmd)
+{
+  g_return_val_if_fail (cmd, nullptr);
+
+  return cmd->user_data;
 }

@@ -48,5 +48,11 @@ D3D12_COMMAND_LIST_TYPE        gst_d3d12_command_allocator_get_command_type (Gst
 gboolean                       gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd,
                                                                        ID3D12CommandAllocator ** ca);
 
+void                           gst_d3d12_command_allocator_set_user_data (GstD3D12CommandAllocator * cmd,
+                                                                          gpointer user_data,
+                                                                          GDestroyNotify notify);
+
+gpointer                       gst_d3d12_command_allocator_get_user_data (GstD3D12CommandAllocator * cmd);
+
 G_END_DECLS
 
