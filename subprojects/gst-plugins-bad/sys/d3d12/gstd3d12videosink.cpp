@@ -115,8 +115,6 @@ static void gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
 static void gst_d3d12_video_sink_finalize (GObject * object);
 static void gst_d3d12_video_sink_set_context (GstElement * element,
     GstContext * context);
-static gboolean gst_d3d12_video_sink_set_caps (GstBaseSink * sink,
-    GstCaps * caps);
 static gboolean gst_d3d12_video_sink_start (GstBaseSink * sink);
 static gboolean gst_d3d12_video_sink_stop (GstBaseSink * sink);
 static gboolean gst_d3d12_video_sink_unlock (GstBaseSink * sink);
@@ -798,8 +796,6 @@ gst_d3d12_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
   GstBuffer *upload = nullptr;
   auto mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_d3d12_memory (mem)) {
-    GstBuffer *upload = nullptr;
-
     gst_buffer_pool_acquire_buffer (priv->pool, &upload, nullptr);
     if (!upload) {
       GST_ERROR_OBJECT (self, "Couldn't allocate upload buffer");
@@ -815,7 +811,7 @@ gst_d3d12_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
 
     if (!gst_video_frame_map (&out_frame, &priv->info, upload, GST_MAP_WRITE)) {
       GST_ERROR_OBJECT (self, "Couldn't map upload frame");
-      gst_video_frame_unmap (&out_frame);
+      gst_video_frame_unmap (&in_frame);
       gst_buffer_unref (upload);
       return GST_FLOW_ERROR;
     }
