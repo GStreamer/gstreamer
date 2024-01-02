@@ -1743,10 +1743,10 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
     vpx_codec_destroy (&encoder->encoder);
     encoder->inited = FALSE;
     encoder->multipass_cache_idx++;
-    encoder->last_pts = GST_CLOCK_TIME_NONE;
-    encoder->last_input_duration = GST_CLOCK_TIME_NONE;
   } else {
     g_mutex_lock (&encoder->encoder_lock);
+    encoder->last_pts = GST_CLOCK_TIME_NONE;
+    encoder->last_input_duration = GST_CLOCK_TIME_NONE;
   }
 
   encoder->cfg.g_bit_depth = encoder->cfg.g_input_bit_depth = info->finfo->bits;
