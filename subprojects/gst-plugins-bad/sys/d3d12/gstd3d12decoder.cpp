@@ -1184,12 +1184,9 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
       pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
               D3D12_RESOURCE_STATE_COMMON,
               D3D12_RESOURCE_STATE_VIDEO_DECODE_READ));
-
-      if (priv->session->reference_only) {
-        post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
-                D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
-                D3D12_RESOURCE_STATE_COMMON));
-      }
+      post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
+              D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
+              D3D12_RESOURCE_STATE_COMMON));
     } else {
       gst_d3d12_memory_get_subresource_index (dmem, 0, &subresource[0]);
       gst_d3d12_memory_get_subresource_index (dmem, 1, &subresource[1]);
@@ -1200,15 +1197,12 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
       pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
               D3D12_RESOURCE_STATE_COMMON,
               D3D12_RESOURCE_STATE_VIDEO_DECODE_READ, subresource[1]));
-
-      if (priv->session->reference_only) {
-        post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
-                D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
-                D3D12_RESOURCE_STATE_COMMON, subresource[0]));
-        post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
-                D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
-                D3D12_RESOURCE_STATE_COMMON, subresource[1]));
-      }
+      post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
+              D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
+              D3D12_RESOURCE_STATE_COMMON, subresource[0]));
+      post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
+              D3D12_RESOURCE_STATE_VIDEO_DECODE_READ,
+              D3D12_RESOURCE_STATE_COMMON, subresource[1]));
     }
   }
 
@@ -1220,8 +1214,9 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (out_resource,
             D3D12_RESOURCE_STATE_COMMON,
             D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE));
-    /* output resource is allocated with simultaneous-access flag.
-     * resource barrier to common state is not needed */
+    post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (out_resource,
+            D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
+            D3D12_RESOURCE_STATE_COMMON));
   }
 
   dmem = (GstD3D12Memory *) gst_buffer_peek_memory (decoder_pic->buffer, 0);
@@ -1233,12 +1228,9 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
             D3D12_RESOURCE_STATE_COMMON,
             D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE));
-
-    if (priv->session->reference_only) {
-      post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
-              D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
-              D3D12_RESOURCE_STATE_COMMON));
-    }
+    post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
+            D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
+            D3D12_RESOURCE_STATE_COMMON));
   } else {
     gst_d3d12_memory_get_subresource_index (GST_D3D12_MEMORY_CAST (dmem), 1,
         &subresource[1]);
@@ -1249,15 +1241,12 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     pre_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
             D3D12_RESOURCE_STATE_COMMON,
             D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE, subresource[1]));
-
-    if (priv->session->reference_only) {
-      post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
-              D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
-              D3D12_RESOURCE_STATE_COMMON, subresource[0]));
-      post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
-              D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
-              D3D12_RESOURCE_STATE_COMMON, subresource[1]));
-    }
+    post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
+            D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
+            D3D12_RESOURCE_STATE_COMMON, subresource[0]));
+    post_barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (resource,
+            D3D12_RESOURCE_STATE_VIDEO_DECODE_WRITE,
+            D3D12_RESOURCE_STATE_COMMON, subresource[1]));
   }
 
   priv->cmd->cl->ResourceBarrier (pre_barriers.size (), &pre_barriers[0]);
@@ -1267,7 +1256,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     out_args.OutputSubresource = 0;
     out_args.ConversionArguments.Enable = TRUE;
     out_args.ConversionArguments.pReferenceTexture2D = resource;
-    out_args.ConversionArguments.ReferenceSubresource = 0;
+    out_args.ConversionArguments.ReferenceSubresource = subresource[0];
   } else {
     out_args.pOutputTexture2D = resource;
     out_args.OutputSubresource = subresource[0];
