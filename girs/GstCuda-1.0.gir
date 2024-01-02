@@ -1356,6 +1356,24 @@ Retrieves the #GstCudaContext in @context and places the result in @cuda_ctx.</d
         </parameter>
       </parameters>
     </function>
+    <function name="cuda_nvrtc_compile_cubin" c:identifier="gst_cuda_nvrtc_compile_cubin" version="1.24">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudanvrtc.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudanvrtc.cpp">Compiled CUDA assembly code if successful,
+otherwise %NULL</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="source" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudanvrtc.cpp">Source code to compile</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="device" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudanvrtc.cpp">CUDA device</doc>
+          <type name="gint" c:type="gint"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="cuda_nvrtc_load_library" c:identifier="gst_cuda_nvrtc_load_library" version="1.22">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudanvrtc.cpp">Loads the nvrtc library.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudanvrtc.h"/>
