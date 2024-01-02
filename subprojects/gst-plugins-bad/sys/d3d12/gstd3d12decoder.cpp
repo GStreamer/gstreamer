@@ -680,10 +680,18 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
     return GST_FLOW_ERROR;
   }
 
+  guint max_buffers = session->dpb_size;
+  if (support.DecodeTier == D3D12_VIDEO_DECODE_TIER_1) {
+    session->array_of_textures = false;
+  } else {
+    session->array_of_textures = true;
+    max_buffers = 0;
+  }
+
   D3D12_RESOURCE_FLAGS resource_flags;
   if ((support.ConfigurationFlags &
           D3D12_VIDEO_DECODE_CONFIGURATION_FLAG_REFERENCE_ONLY_ALLOCATIONS_REQUIRED)
-      != 0) {
+      != 0 || !session->array_of_textures) {
     resource_flags =
         D3D12_RESOURCE_FLAG_VIDEO_DECODE_REFERENCE_ONLY |
         D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
@@ -691,14 +699,6 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   } else {
     resource_flags = D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
     session->reference_only = false;
-  }
-
-  guint max_buffers = session->dpb_size;
-  if (support.DecodeTier == D3D12_VIDEO_DECODE_TIER_1) {
-    session->array_of_textures = false;
-  } else {
-    session->array_of_textures = true;
-    max_buffers = 0;
   }
 
   GST_DEBUG_OBJECT (decoder, "reference only: %d, array-of-textures: %d",
@@ -1300,10 +1300,6 @@ gst_d3d12_decoder_can_direct_render (GstD3D12Decoder * self,
 {
   auto priv = self->priv;
 
-  /* We don't support direct render for reverse playback */
-  if (videodec->input_segment.rate < 0)
-    return FALSE;
-
   if (priv->session->output_type != GST_D3D12_DECODER_OUTPUT_D3D12)
     return FALSE;
 
@@ -1482,9 +1478,12 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     }
 
     guint64 copy_fence_val = 0;
+    D3D12_COMMAND_LIST_TYPE queue_type = D3D12_COMMAND_LIST_TYPE_COPY;
+    if (out_resource)
+      queue_type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), D3D12_COMMAND_LIST_TYPE_COPY, &copy_fence_val);
-    gst_d3d12_device_fence_wait (self->device, D3D12_COMMAND_LIST_TYPE_COPY,
+        copy_args.data (), queue_type, &copy_fence_val);
+    gst_d3d12_device_fence_wait (self->device, queue_type,
         copy_fence_val, priv->copy_event_handle);
 
     if (!out_resource) {
