@@ -670,9 +670,6 @@ gst_msdkvpp_propose_allocation (GstBaseTransform * trans,
   guint size;
   guint min_buffers = thiz->async_depth + 1;
 
-  if (gst_base_transform_is_passthrough (trans))
-    return TRUE;
-
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps) {
     GST_ERROR_OBJECT (thiz, "Failed to parse the allocation caps");
