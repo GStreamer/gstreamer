@@ -312,55 +312,38 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
       GstTensor *tensor = &tmeta->tensor[i];
       if (hasIds)
         tensor->id = outputIds[i];
-      tensor->data = gst_buffer_new ();
+      else
+	tensor->id = 0;
       auto tensorShape = outputTensor.GetTensorTypeAndShapeInfo ().GetShape ();
       tensor->num_dims = tensorShape.size ();
       tensor->dims = g_new (int64_t, tensor->num_dims);
 
-      for (size_t j = 0; j < tensorShape.size (); ++j) {
+      for (size_t j = 0; j < tensorShape.size (); ++j)
         tensor->dims[j] = tensorShape[j];
-      }
 
       size_t numElements =
           outputTensor.GetTensorTypeAndShapeInfo ().GetElementCount ();
 
-      size_t buffer_size = 0;
-      guint8 *buffer_data = NULL;
       if (tensorType == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-        buffer_size = numElements * sizeof (float);
+	size_t buffer_size = 0;
 
-        // Allocate memory for the buffer data
-        buffer_data = (guint8 *) malloc (buffer_size);
-        if (buffer_data == NULL) {
-          GST_ERROR ("Failed to allocate memory");
-          return NULL;
-        }
-        // Copy the data from the source buffer to the allocated memory
-        memcpy (buffer_data, outputTensor.GetTensorData < float >(),
+        buffer_size = numElements * sizeof (float);
+	tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
+	gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
             buffer_size);
         tensor->type = GST_TENSOR_TYPE_FLOAT32;
       } else if (tensorType == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
-        buffer_size = numElements * sizeof (int);
+	size_t buffer_size = 0;
 
-        // Allocate memory for the buffer data
-        guint8 *buffer_data = (guint8 *) malloc (buffer_size);
-        if (buffer_data == NULL) {
-          GST_ERROR ("Failed to allocate memory");
-          return NULL;
-        }
-        // Copy the data from the source buffer to the allocated memory
-        memcpy (buffer_data, outputTensor.GetTensorData < int >(),
+        buffer_size = numElements * sizeof (int);
+	tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
+	gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
             buffer_size);
         tensor->type = GST_TENSOR_TYPE_INT32;
-      }
-      if (buffer_data) {
-
-        // Create a GstMemory object from the allocated memory
-        GstMemory *memory = gst_memory_new_wrapped ((GstMemoryFlags) 0,
-            buffer_data, buffer_size, 0, buffer_size, NULL, NULL);
-
-        // Append the GstMemory object to the GstBuffer
-        gst_buffer_append_memory (tmeta->tensor[i].data, memory);
+      } else {
+	GST_ERROR ("Output tensor is not FLOAT32 or INT32, not supported");
+	gst_buffer_remove_meta (buffer, (GstMeta*) tmeta);
+	return NULL;
       }
     }
 
