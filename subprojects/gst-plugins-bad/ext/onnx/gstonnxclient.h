@@ -28,6 +28,7 @@
 #include "gstml.h"
 #include "tensor/gsttensormeta.h"
 
+GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
 
 typedef enum
 {
@@ -48,7 +49,7 @@ namespace GstOnnxNamespace {
 
   class GstOnnxClient {
   public:
-    GstOnnxClient(void);
+    GstOnnxClient(GstElement *debug_parent);
     ~GstOnnxClient(void);
     bool createSession(std::string modelFile, GstOnnxOptimizationLevel optim,
                        GstOnnxExecutionProvider provider);
@@ -69,7 +70,8 @@ namespace GstOnnxNamespace {
     void parseDimensions(GstVideoInfo vinfo);
   private:
 
-    void setInputImageDatatype(GstTensorType datatype);
+    GstElement *debug_parent;
+    void setInputImageDatatype (GstTensorType datatype);
     template < typename T>
     void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
         uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride, T offset, T div);

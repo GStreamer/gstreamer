@@ -86,7 +86,8 @@ struct _GstOnnxInference
   GstVideoInfo video_info;
 };
 
-GST_DEBUG_CATEGORY_STATIC (onnx_inference_debug);
+GST_DEBUG_CATEGORY (onnx_inference_debug);
+
 #define GST_CAT_DEFAULT onnx_inference_debug
 #define GST_ONNX_CLIENT_MEMBER( self ) ((GstOnnxNamespace::GstOnnxClient *) (self->onnx_client))
 GST_ELEMENT_REGISTER_DEFINE (onnx_inference, "onnxinference",
@@ -335,7 +336,7 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
 static void
 gst_onnx_inference_init (GstOnnxInference * self)
 {
-  self->onnx_client = new GstOnnxNamespace::GstOnnxClient ();
+  self->onnx_client = new GstOnnxNamespace::GstOnnxClient (GST_ELEMENT(self));
   self->onnx_disabled = TRUE;
 }
 
