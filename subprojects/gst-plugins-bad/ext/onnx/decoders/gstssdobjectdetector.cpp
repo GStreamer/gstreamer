@@ -163,7 +163,9 @@ gst_ssd_object_detector_finalize (GObject * object)
 {
   GstSsdObjectDetector *self = GST_SSD_OBJECT_DETECTOR (object);
 
+  g_free (self->label_file);
   delete GST_ODUTILS_MEMBER (self);
+
   G_OBJECT_CLASS (gst_ssd_object_detector_parent_class)->finalize (object);
 }
 
