@@ -76,6 +76,11 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
     return height;
   }
 
+  int32_t GstOnnxClient::getChannels (void)
+  {
+    return channels;
+  }
+
   bool GstOnnxClient::isFixedInputImageSize (void)
   {
     return fixedInputImageSize;
@@ -446,11 +451,18 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
 
     switch (inputDatatype) {
       case GST_TENSOR_TYPE_INT8:
-        convert_image_remove_alpha (dest, inputImageFormat , srcPtr,
-        srcSamplesPerPixel, stride, (uint8_t)inputTensorOffset,
-        (uint8_t)inputTensorScale);
+        uint8_t *src_data;
+        if (inputTensorOffset == 00 && inputTensorScale == 1.0) {
+          src_data = img_data;
+        } else {
+          convert_image_remove_alpha (
+            dest, inputImageFormat, srcPtr, srcSamplesPerPixel, stride,
+            (uint8_t)inputTensorOffset, (uint8_t)inputTensorScale);
+          src_data = dest;
+        }
+
         inputTensors.push_back (Ort::Value::CreateTensor < uint8_t > (
-              memoryInfo, dest, inputTensorSize, inputDims.data (),
+              memoryInfo, src_data, inputTensorSize, inputDims.data (),
               inputDims.size ()));
         break;
       case GST_TENSOR_TYPE_FLOAT32: {

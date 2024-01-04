@@ -66,7 +66,9 @@ namespace GstOnnxNamespace {
     bool isFixedInputImageSize(void);
     int32_t getWidth(void);
     int32_t getHeight(void);
-    GstTensorMeta* copy_tensors_to_meta(std::vector < Ort::Value > &outputs,GstBuffer* buffer);
+    int32_t getChannels (void);
+    GstTensorMeta *copy_tensors_to_meta (std::vector<Ort::Value> &outputs,
+                                         GstBuffer *buffer);
     void parseDimensions(GstVideoInfo vinfo);
   private:
 
