@@ -1,9 +1,9 @@
 include:
   - project: 'freedesktop/ci-templates'
-    ref: 185ede0e9b9b1924b92306ab8b882a6294e92613
+    ref: "801093be0b88f23c8dbabe9cfce7134548f7ccdc"
     file: '/templates/fedora.yml'
   - project: 'freedesktop/ci-templates'
-    ref: 185ede0e9b9b1924b92306ab8b882a6294e92613
+    ref: "801093be0b88f23c8dbabe9cfce7134548f7ccdc"
     file: '/templates/debian.yml'
   ###
   # IMPORTANT
@@ -161,6 +161,7 @@ gst-indent amd64 docker:
     FDO_DISTRIBUTION_TAG: "$LINT_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_PACKAGES: 'python3-pip git'
     FDO_DISTRIBUTION_EXEC: 'ci/docker/lint/prepare.sh'
+    FDO_USER: "ciuser"
 
 commitlint docker:
   extends:
@@ -242,6 +243,8 @@ commitlint:
   needs:
     - job: 'commitlint docker'
       artifacts: false
+  before_script:
+    - git config --global --add safe.directory $CI_PROJECT_DIR
   script:
     - echo $CI_MERGE_REQUEST_DIFF_BASE_SHA
     - gitlint --commits $CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD

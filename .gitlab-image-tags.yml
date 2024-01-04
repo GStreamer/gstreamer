@@ -9,6 +9,6 @@ variables:
 
   INDENT_TAG: '2023-08-24.3'
 
-  LINT_TAG: '2023-02-16.5'
+  LINT_TAG: '2024-02-20.0'
 
   WINDOWS_TAG: '2024-02-08.0'
