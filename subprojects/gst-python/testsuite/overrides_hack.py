@@ -2,6 +2,7 @@ import os
 import sys
 import imp
 
+
 class GstOverrideImport:
     def find_module(self, fullname, path=None):
         if fullname in ('gi.overrides.Gst', 'gi.overrides._gi_gst'):
@@ -25,10 +26,5 @@ class GstOverrideImport:
         sys.modules[name] = module
         return module
 
-if sys.version_info.major >= 3:
-    sys.meta_path.insert(0, GstOverrideImport())
-else:
-    import gi.overrides
 
-    gi.overrides.__path__.append(os.environ.get('GST_OVERRIDE_SRC_PATH'))
-    gi.overrides.__path__.append(os.environ.get('GST_OVERRIDE_BUILD_PATH'))
+sys.meta_path.insert(0, GstOverrideImport())
