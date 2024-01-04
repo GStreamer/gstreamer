@@ -37,7 +37,7 @@ def load(paths=()):
 
 def _load_plugins(path):
 
-    import imp
+    import importlib
     import glob
 
     files = glob.glob(os.path.join(path, "*.py"))
@@ -47,8 +47,16 @@ def _load_plugins(path):
         name = os.path.basename(os.path.splitext(filename)[0])
         if name == "__init__":
             continue
-        fp, pathname, description = imp.find_module(name, [path])
-        module = imp.load_module(name, fp, pathname, description)
+
+        finder = importlib.machinery.PathFinder()
+        spec = finder.find_spec(
+            name,
+            os.environ.get('_GI_OVERRIDES_PATH', '').split(os.pathsep)
+        )
+        if spec is None:
+            raise ModuleNotFoundError(name)
+        module = importlib.util.module_from_spec(spec)
+
         yield module
 
 
