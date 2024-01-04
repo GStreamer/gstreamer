@@ -227,6 +227,21 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
       GST_DEBUG ("Number of Output Nodes: %d",
           (gint) session->GetOutputCount ());
 
+      ONNXTensorElementDataType elementType =
+          inputTypeInfo.GetTensorTypeAndShapeInfo ().GetElementType ();
+
+      switch (elementType) {
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_UINT8:
+          setInputImageDatatype(GST_TENSOR_TYPE_INT8);
+          break;
+        case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
+          setInputImageDatatype(GST_TENSOR_TYPE_FLOAT32);
+          break;
+        default:
+          GST_ERROR ("Only input tensors of type int8 and float are supported");
+          return false;
+        }
+
       Ort::AllocatorWithDefaultOptions allocator;
       auto input_name = session->GetInputNameAllocated (0, allocator);
       GST_DEBUG ("Input name: %s", input_name.get ());
@@ -252,19 +267,19 @@ GstOnnxClient::GstOnnxClient ():session (nullptr),
         Ort::GetApi ().ReleaseStatus (status);
 
         return false;
-      } else {
+      }
       for (auto & name:outputNamesRaw) {
-        Ort::AllocatedStringPtr res =
-            metaData.LookupCustomMetadataMapAllocated (name, ortAllocator);
-        if (res) {
-          GQuark quark = g_quark_from_string (res.get ());
-          outputIds.push_back (quark);
-        } else {
+          Ort::AllocatedStringPtr res =
+              metaData.LookupCustomMetadataMapAllocated (name, ortAllocator);
+          if (res)
+            {
+              GQuark quark = g_quark_from_string (res.get ());
+              outputIds.push_back (quark);
+            } else {
           GST_ERROR ("Failed to look up id for key %s", name);
 
           return false;
         }
-      }
       }
     }
     catch (Ort::Exception & ortex) {

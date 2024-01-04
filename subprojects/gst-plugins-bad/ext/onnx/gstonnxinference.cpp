@@ -36,9 +36,9 @@
  * https://gitlab.collabora.com/gstreamer/onnx-models
  *
  * GST_DEBUG=ssdobjectdetector:5 \
- * gst-launch-1.0 multifilesrc location=onnx-models/images/bus.jpg ! \
+ * gst-launch-1.0 filesrc location=onnx-models/images/bus.jpg ! \
  * jpegdec ! videoconvert ! onnxinference execution-provider=cpu model-file=onnx-models/models/ssd_mobilenet_v1_coco.onnx !  \
- * ssdobjectdetector label-file=onnx-models/labels/COCO_classes.txt  ! videoconvert ! autovideosink
+ * ssdobjectdetector label-file=onnx-models/labels/COCO_classes.txt  ! videoconvert ! imagefreeze ! autovideosink
  *
  *
  * Note: in order for downstream tensor decoders to correctly parse the tensor
@@ -100,7 +100,6 @@ enum
   PROP_INPUT_IMAGE_FORMAT,
   PROP_OPTIMIZATION_LEVEL,
   PROP_EXECUTION_PROVIDER,
-  PROP_INPUT_IMAGE_DATATYPE,
   PROP_INPUT_OFFSET,
   PROP_INPUT_SCALE
 };
@@ -148,9 +147,6 @@ GType gst_onnx_execution_provider_get_type (void);
 
 GType gst_ml_model_input_image_format_get_type (void);
 #define GST_TYPE_ML_MODEL_INPUT_IMAGE_FORMAT (gst_ml_model_input_image_format_get_type ())
-
-GType gst_onnx_model_input_image_datatype_get_type (void);
-#define GST_TYPE_ONNX_MODEL_INPUT_IMAGE_DATATYPE (gst_onnx_model_input_image_datatype_get_type ())
 
 GType
 gst_onnx_optimization_level_get_type (void)
@@ -230,28 +226,6 @@ gst_ml_model_input_image_format_get_type (void)
   return ml_model_input_image_format;
 }
 
-GType
-gst_onnx_model_input_image_datatype_get_type (void)
-{
-  static GType model_input_image_datatype = 0;
-
-  if (g_once_init_enter (&model_input_image_datatype)) {
-    static GEnumValue model_input_image_datatype_types[] = {
-      {GST_TENSOR_TYPE_INT8, "8 Bits integer", "int8"},
-      {GST_TENSOR_TYPE_FLOAT32, "32 Bits floating points", "float"},
-      {0, NULL, NULL},
-    };
-
-    GType temp = g_enum_register_static ("GstTensorType",
-        model_input_image_datatype_types);
-
-    g_once_init_leave (&model_input_image_datatype, temp);
-  }
-
-  return model_input_image_datatype;
-
-}
-
 static void
 gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
 {
@@ -324,22 +298,6 @@ gst_onnx_inference_class_init (GstOnnxInferenceClass * klass)
           GST_TYPE_ONNX_EXECUTION_PROVIDER,
           GST_ONNX_EXECUTION_PROVIDER_CPU, (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
-
-  /**
-   * GstOnnxInference:input-image-datatype
-   *
-   * Temporary hack, this should be discovered from the model and exposed
-   * on sinkpad caps based on model contrains.
-   */
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_INPUT_IMAGE_DATATYPE,
-      g_param_spec_enum ("input-image-datatype",
-          "Inference input image datatype",
-          "Datatype that will be used as an input for the inference",
-          GST_TYPE_ONNX_MODEL_INPUT_IMAGE_DATATYPE,
-          GST_TENSOR_TYPE_INT8,
-          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_INPUT_OFFSET,
@@ -425,10 +383,6 @@ gst_onnx_inference_set_property (GObject * object, guint prop_id,
       onnxClient->setInputImageFormat ((GstMlInputImageFormat)
           g_value_get_enum (value));
       break;
-    case PROP_INPUT_IMAGE_DATATYPE:
-      onnxClient->setInputImageDatatype ((GstTensorType)
-          g_value_get_enum (value));
-      break;
     case PROP_INPUT_OFFSET:
       onnxClient->setInputImageOffset (g_value_get_float (value));
       break;
@@ -460,9 +414,6 @@ gst_onnx_inference_get_property (GObject * object, guint prop_id,
       break;
     case PROP_INPUT_IMAGE_FORMAT:
       g_value_set_enum (value, onnxClient->getInputImageFormat ());
-      break;
-    case PROP_INPUT_IMAGE_DATATYPE:
-      g_value_set_enum (value, onnxClient->getInputImageDatatype ());
       break;
     case PROP_INPUT_OFFSET:
       g_value_set_float (value, onnxClient->getInputImageOffset ());

@@ -55,7 +55,6 @@ namespace GstOnnxNamespace {
     bool hasSession(void);
     void setInputImageFormat(GstMlInputImageFormat format);
     GstMlInputImageFormat getInputImageFormat(void);
-    void setInputImageDatatype(GstTensorType datatype);
     GstTensorType getInputImageDatatype(void);
     void setInputImageOffset (float offset);
     float getInputImageOffset ();
@@ -70,6 +69,7 @@ namespace GstOnnxNamespace {
     void parseDimensions(GstVideoInfo vinfo);
   private:
 
+    void setInputImageDatatype(GstTensorType datatype);
     template < typename T>
     void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
         uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride, T offset, T div);
