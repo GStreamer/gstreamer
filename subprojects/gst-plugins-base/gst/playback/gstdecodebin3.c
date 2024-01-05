@@ -1233,9 +1233,15 @@ reset_input (GstDecodebin3 * dbin, DecodebinInput * input)
   }
   if (input->identity) {
     GstPad *idpad = gst_element_get_static_pad (input->identity, "src");
-    DecodebinInputStream *stream = find_input_stream_for_pad (dbin, idpad);
-    gst_object_unref (idpad);
+    DecodebinInputStream *stream;
+
+    SELECTION_LOCK (dbin);
+    stream = find_input_stream_for_pad (dbin, idpad);
     remove_input_stream (dbin, stream);
+    SELECTION_UNLOCK (dbin);
+
+    gst_object_unref (idpad);
+
     gst_element_set_state (input->identity, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (dbin), input->identity);
     gst_clear_object (&input->identity);
