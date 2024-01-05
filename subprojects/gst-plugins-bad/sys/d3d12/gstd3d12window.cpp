@@ -23,7 +23,6 @@
 
 #include "gstd3d12window.h"
 #include "gstd3d12overlaycompositor.h"
-#include "gstd3d12pluginutils.h"
 #include <directx/d3dx12.h>
 #include <mutex>
 #include <condition_variable>
@@ -118,6 +117,7 @@ struct DeviceContext
     gst_clear_buffer (&cached_buf);
     gst_clear_object (&conv);
     gst_clear_object (&comp);
+    gst_clear_buffer (&msaa_buf);
     gst_clear_object (&device);
   }
 
@@ -131,6 +131,7 @@ struct DeviceContext
 
   ComPtr<ID3D12GraphicsCommandList> cl;
   ComPtr<IDXGISwapChain4> swapchain;
+  GstBuffer *msaa_buf = nullptr;
   std::vector<std::shared_ptr<SwapBuffer>> swap_buffers;
   D3D12_RESOURCE_DESC buffer_desc;
   GstD3D12Converter *conv = nullptr;
@@ -201,6 +202,8 @@ struct GstD3D12WindowPrivate
 
   std::wstring title;
   gboolean update_title = FALSE;
+
+  GstD3D12MSAAMode msaa = GST_D3D12_MSAA_DISABLED;
 
   /* Win32 window handles */
   std::mutex hwnd_lock;
@@ -693,7 +696,7 @@ gst_d3d12_window_create_hwnd (GstD3D12Window * self)
   int h = 0;
   DWORD style = WS_GST_D3D12;
 
-  std::wstring title = L"Direct3D12 renderer";
+  std::wstring title = L"Direct3D12 Renderer";
   if (!priv->title.empty ())
     title = priv->title;
 
@@ -1072,6 +1075,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
   if (priv->ctx->fence_val != 0)
     priv->ctx->WaitGpu ();
   priv->ctx->swap_buffers.clear ();
+  gst_clear_buffer (&priv->ctx->msaa_buf);
 
   DXGI_SWAP_CHAIN_DESC desc = { };
   priv->ctx->swapchain->GetDesc (&desc);
@@ -1098,6 +1102,67 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
     auto buf = gst_buffer_new ();
     gst_buffer_append_memory (buf, mem);
     priv->ctx->swap_buffers.push_back (std::make_shared < SwapBuffer > (buf));
+  }
+
+  guint sample_count = 1;
+  switch (priv->msaa) {
+    case GST_D3D12_MSAA_2X:
+      sample_count = 2;
+      break;
+    case GST_D3D12_MSAA_4X:
+      sample_count = 4;
+      break;
+    case GST_D3D12_MSAA_8X:
+      sample_count = 8;
+      break;
+    default:
+      break;
+  }
+
+  auto device = gst_d3d12_device_get_device_handle (self->device);
+  D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS feature_data = { };
+  feature_data.Format = priv->ctx->buffer_desc.Format;
+  feature_data.SampleCount = sample_count;
+
+  while (feature_data.SampleCount > 1) {
+    hr = device->CheckFeatureSupport (D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+        &feature_data, sizeof (feature_data));
+    if (SUCCEEDED (hr) && feature_data.NumQualityLevels > 0)
+      break;
+
+    feature_data.SampleCount /= 2;
+  }
+
+  if (feature_data.SampleCount > 1 && feature_data.NumQualityLevels > 0) {
+    GST_DEBUG_OBJECT (self, "Enable MSAA x%d with quality level %d",
+        feature_data.SampleCount, feature_data.NumQualityLevels - 1);
+    D3D12_HEAP_PROPERTIES heap_prop =
+        CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
+    D3D12_RESOURCE_DESC resource_desc =
+        CD3DX12_RESOURCE_DESC::Tex2D (priv->ctx->buffer_desc.Format,
+        priv->ctx->buffer_desc.Width, priv->ctx->buffer_desc.Height,
+        1, 1, feature_data.SampleCount, feature_data.NumQualityLevels - 1,
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+    D3D12_CLEAR_VALUE clear_value = { };
+    clear_value.Format = priv->ctx->buffer_desc.Format;
+    clear_value.Color[0] = 0.0f;
+    clear_value.Color[1] = 0.0f;
+    clear_value.Color[2] = 0.0f;
+    clear_value.Color[3] = 1.0f;
+
+    ComPtr < ID3D12Resource > msaa_texture;
+    hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
+        &resource_desc, D3D12_RESOURCE_STATE_RENDER_TARGET, &clear_value,
+        IID_PPV_ARGS (&msaa_texture));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create MSAA texture");
+      return GST_FLOW_ERROR;
+    }
+
+    auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, self->device,
+        msaa_texture.Get (), 0);
+    priv->ctx->msaa_buf = gst_buffer_new ();
+    gst_buffer_append_memory (priv->ctx->msaa_buf, mem);
   }
 
   priv->first_present = TRUE;
@@ -1396,32 +1461,62 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
       (GDestroyNotify) gst_d3d12_command_allocator_unref);
 
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (swapbuf->backbuf, 0);
-  auto resource = gst_d3d12_memory_get_resource_handle (mem);
+  auto backbuf_texture = gst_d3d12_memory_get_resource_handle (mem);
+  ID3D12Resource *msaa_resource = nullptr;
+  GstBuffer *conv_outbuf = swapbuf->backbuf;
+  if (priv->ctx->msaa_buf) {
+    conv_outbuf = priv->ctx->msaa_buf;
+    mem = (GstD3D12Memory *) gst_buffer_peek_memory (priv->ctx->msaa_buf, 0);
+    msaa_resource = gst_d3d12_memory_get_resource_handle (mem);
+    /* MSAA resource must be render target state here already */
+  } else {
+    D3D12_RESOURCE_BARRIER barrier =
+        CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,
+        D3D12_RESOURCE_STATE_COMMON,
+        D3D12_RESOURCE_STATE_RENDER_TARGET);
+    cl->ResourceBarrier (1, &barrier);
+  }
 
-  D3D12_RESOURCE_BARRIER barrier =
-      CD3DX12_RESOURCE_BARRIER::Transition (resource,
-      D3D12_RESOURCE_STATE_COMMON,
-      D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-  cl->ResourceBarrier (1, &barrier);
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
-          priv->ctx->cached_buf, swapbuf->backbuf, fence_data, cl.Get ())) {
+          priv->ctx->cached_buf, conv_outbuf, fence_data, cl.Get ())) {
     GST_ERROR_OBJECT (window, "Couldn't build convert command");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;
   }
 
   if (!gst_d3d12_overlay_compositor_draw (priv->ctx->comp,
-          swapbuf->backbuf, fence_data, cl.Get ())) {
+          conv_outbuf, fence_data, cl.Get ())) {
     GST_ERROR_OBJECT (window, "Couldn't build overlay command");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;
   }
 
-  barrier = CD3DX12_RESOURCE_BARRIER::Transition (resource,
-      D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+  if (msaa_resource) {
+    std::vector < D3D12_RESOURCE_BARRIER > barriers;
+    barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (msaa_resource,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_RESOLVE_SOURCE));
+    barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,
+            D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_RESOLVE_DEST));
+    cl->ResourceBarrier (barriers.size (), barriers.data ());
 
-  cl->ResourceBarrier (1, &barrier);
+    cl->ResolveSubresource (backbuf_texture, 0, msaa_resource, 0,
+        priv->display_format);
+
+    barriers.clear ();
+    barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (msaa_resource,
+            D3D12_RESOURCE_STATE_RESOLVE_SOURCE,
+            D3D12_RESOURCE_STATE_RENDER_TARGET));
+    barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,
+            D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
+    cl->ResourceBarrier (barriers.size (), barriers.data ());
+  } else {
+    D3D12_RESOURCE_BARRIER barrier =
+        CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+
+    cl->ResourceBarrier (1, &barrier);
+  }
 
   hr = cl->Close ();
   if (!gst_d3d12_result (hr, priv->ctx->device)) {
@@ -1618,4 +1713,15 @@ gst_d3d12_window_set_fullscreen (GstD3D12Window * window, gboolean enable)
   priv->requested_fullscreen = enable;
   if (priv->hwnd && priv->applied_fullscreen != priv->requested_fullscreen)
     PostMessageW (priv->hwnd, WM_GST_D3D12_FULLSCREEN, 0, 0);
+}
+
+void
+gst_d3d12_window_set_msaa (GstD3D12Window * window, GstD3D12MSAAMode msaa)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  if (priv->msaa != msaa) {
+    priv->msaa = msaa;
+    gst_d3d12_window_on_resize (window);
+  }
 }

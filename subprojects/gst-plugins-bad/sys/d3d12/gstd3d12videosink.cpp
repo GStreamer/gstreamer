@@ -37,6 +37,7 @@ enum
   PROP_ROTATE_METHOD,
   PROP_FULLSCREEN_ON_ALT_ENTER,
   PROP_FULLSCREEN,
+  PROP_MSAA,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -45,6 +46,7 @@ enum
 #define DEFAULT_ROTATE_METHOD GST_VIDEO_ORIENTATION_IDENTITY
 #define DEFAULT_FULLSCREEN_ON_ALT_ENTER FALSE
 #define DEFAULT_FULLSCREEN FALSE
+#define DEFAULT_MSAA GST_D3D12_MSAA_DISABLED
 
 static GstStaticPadTemplate sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -102,6 +104,7 @@ struct GstD3D12VideoSinkPrivate
   GstVideoOrientationMethod orientation_selected = DEFAULT_ROTATE_METHOD;
   gboolean fullscreen_on_alt_enter = DEFAULT_FULLSCREEN_ON_ALT_ENTER;
   gboolean fullscreen = DEFAULT_FULLSCREEN;
+  GstD3D12MSAAMode msaa = DEFAULT_MSAA;
 };
 /* *INDENT-ON* */
 
@@ -214,6 +217,12 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           "Fullscreen mode", DEFAULT_FULLSCREEN,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (object_class, PROP_MSAA,
+      g_param_spec_enum ("msaa", "MSAA",
+          "MSAA (Multi-Sampling Anti-Aliasing) level",
+          GST_TYPE_D3D12_MSAA_MODE, DEFAULT_MSAA,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_set_context);
 
@@ -237,6 +246,8 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
   videosink_class->set_info = GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_set_info);
   videosink_class->show_frame =
       GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_show_frame);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_MSAA_MODE, (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -299,6 +310,10 @@ gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
       priv->fullscreen = g_value_get_boolean (value);
       gst_d3d12_window_set_fullscreen (priv->window, priv->fullscreen);
       break;
+    case PROP_MSAA:
+      priv->msaa = (GstD3D12MSAAMode) g_value_get_enum (value);
+      gst_d3d12_window_set_msaa (priv->window, priv->msaa);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -331,6 +346,9 @@ gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_FULLSCREEN:
       g_value_set_boolean (value, priv->fullscreen);
+      break;
+    case PROP_MSAA:
+      g_value_set_enum (value, priv->msaa);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

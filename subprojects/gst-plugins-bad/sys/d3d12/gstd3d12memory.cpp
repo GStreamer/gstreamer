@@ -561,6 +561,8 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
 
     D3D12_RENDER_TARGET_VIEW_DESC rtv_desc = { };
     rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+    if (priv->desc.SampleDesc.Count > 1)
+      rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
 
     auto cpu_handle =
         CD3DX12_CPU_DESCRIPTOR_HANDLE
@@ -568,7 +570,8 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
 
     for (guint i = 0; i < priv->num_subresources; i++) {
       rtv_desc.Format = priv->resource_formats[i];
-      rtv_desc.Texture2D.PlaneSlice = i;
+      if (priv->desc.SampleDesc.Count == 1)
+        rtv_desc.Texture2D.PlaneSlice = i;
       device->CreateRenderTargetView (priv->resource.Get (), &rtv_desc,
           cpu_handle);
       cpu_handle.Offset (priv->rtv_inc_size);

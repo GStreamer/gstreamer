@@ -70,6 +70,25 @@ gst_d3d12_sampling_method_to_native (GstD3D12SamplingMethod method)
   return D3D12_FILTER_MIN_MAG_MIP_POINT;
 }
 
+GType
+gst_d3d12_msaa_mode_get_type (void)
+{
+  static GType type = 0;
+  static const GEnumValue msaa_mode[] = {
+    {GST_D3D12_MSAA_DISABLED, "Disabled", "disabled"},
+    {GST_D3D12_MSAA_2X, "2x MSAA", "2x"},
+    {GST_D3D12_MSAA_4X, "4x MSAA", "4x"},
+    {GST_D3D12_MSAA_8X, "8x MSAA", "8x"},
+    {0, nullptr, nullptr},
+  };
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    type = g_enum_register_static ("GstD3D12MSAAMode", msaa_mode);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return type;
+}
+
 void
 gst_d3d12_buffer_after_write (GstBuffer * buffer, guint64 fence_value)
 {

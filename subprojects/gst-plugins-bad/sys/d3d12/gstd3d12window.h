@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include "gstd3d12.h"
+#include "gstd3d12pluginutils.h"
 
 G_BEGIN_DECLS
 
@@ -82,6 +83,9 @@ void             gst_d3d12_window_enable_fullscreen_on_alt_enter (GstD3D12Window
 
 void             gst_d3d12_window_set_fullscreen (GstD3D12Window * window,
                                                   gboolean enable);
+
+void             gst_d3d12_window_set_msaa (GstD3D12Window * window,
+                                            GstD3D12MSAAMode msaa);
 
 G_END_DECLS
 

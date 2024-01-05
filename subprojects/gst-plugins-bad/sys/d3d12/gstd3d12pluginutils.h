@@ -25,18 +25,29 @@
 
 G_BEGIN_DECLS
 
-typedef enum
+enum GstD3D12SamplingMethod
 {
   GST_D3D12_SAMPLING_METHOD_NEAREST,
   GST_D3D12_SAMPLING_METHOD_BILINEAR,
   GST_D3D12_SAMPLING_METHOD_LINEAR_MINIFICATION,
   GST_D3D12_SAMPLING_METHOD_ANISOTROPIC,
-} GstD3D12SamplingMethod;
+};
 
 #define GST_TYPE_D3D12_SAMPLING_METHOD (gst_d3d12_sampling_method_get_type())
 GType gst_d3d12_sampling_method_get_type (void);
 
 D3D12_FILTER  gst_d3d12_sampling_method_to_native (GstD3D12SamplingMethod method);
+
+enum GstD3D12MSAAMode
+{
+  GST_D3D12_MSAA_DISABLED,
+  GST_D3D12_MSAA_2X,
+  GST_D3D12_MSAA_4X,
+  GST_D3D12_MSAA_8X,
+};
+
+#define GST_TYPE_D3D12_MSAA_MODE (gst_d3d12_msaa_mode_get_type())
+GType gst_d3d12_msaa_mode_get_type (void);
 
 void          gst_d3d12_buffer_after_write (GstBuffer * buffer,
                                             guint64 fence_value);

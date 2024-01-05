@@ -203,7 +203,8 @@ enum
 /* *INDENT-OFF* */
 struct QuadData
 {
-  D3D12_GRAPHICS_PIPELINE_STATE_DESC desc;
+  D3D12_INPUT_ELEMENT_DESC input_desc[2];
+  D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = { };
   ComPtr<ID3D12PipelineState> pso;
   guint num_rtv;
 };
@@ -235,6 +236,9 @@ struct _GstD3D12ConverterPrivate
     blend_desc = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
     for (guint i = 0; i < 4; i++)
       blend_factor[i] = 1.0f;
+
+    sample_desc.Count = 1;
+    sample_desc.Quality = 0;
   }
 
   ~_GstD3D12ConverterPrivate ()
@@ -260,6 +264,7 @@ struct _GstD3D12ConverterPrivate
 
   D3D12_BLEND_DESC blend_desc;
   FLOAT blend_factor[4];
+  DXGI_SAMPLE_DESC sample_desc;
   gboolean update_pso = FALSE;
 
   GstVideoInfo fallback_pool_info;
@@ -673,7 +678,10 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   priv->quad_data.resize (psblob_list.size ());
 
   for (size_t i = 0; i < psblob_list.size (); i++) {
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = { };
+    priv->quad_data[i].input_desc[0] = input_desc[0];
+    priv->quad_data[i].input_desc[1] = input_desc[1];
+
+    auto & pso_desc = priv->quad_data[i].desc;
     pso_desc.pRootSignature = priv->rs.Get ();
     pso_desc.VS = vs_blob;
     pso_desc.PS = psblob_list[i].bytecode;
@@ -683,8 +691,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     pso_desc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     pso_desc.DepthStencilState.DepthEnable = FALSE;
     pso_desc.DepthStencilState.StencilEnable = FALSE;
-    pso_desc.InputLayout.pInputElementDescs = input_desc;
-    pso_desc.InputLayout.NumElements = G_N_ELEMENTS (input_desc);
+    pso_desc.InputLayout.pInputElementDescs = priv->quad_data[i].input_desc;
+    pso_desc.InputLayout.NumElements = 2;
     pso_desc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     pso_desc.NumRenderTargets = psblob_list[i].num_rtv;
     for (UINT j = 0; j < pso_desc.NumRenderTargets; j++) {
@@ -700,7 +708,6 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
       return FALSE;
     }
 
-    priv->quad_data[i].desc = pso_desc;
     priv->quad_data[i].pso = pso;
     priv->quad_data[i].num_rtv = psblob_list[i].num_rtv;
   }
@@ -1781,6 +1788,7 @@ gst_d3d12_converter_update_pso (GstD3D12Converter * self)
   for (size_t i = 0; i < quad_data.size (); i++) {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = priv->quad_data[i].desc;
     pso_desc.BlendState = priv->blend_desc;
+    pso_desc.SampleDesc = priv->sample_desc;
 
     ComPtr < ID3D12PipelineState > pso;
     auto hr =
@@ -1827,6 +1835,16 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
     priv->input_texture_width = desc.Width;
     priv->input_texture_height = desc.Height;
     priv->update_src_rect = TRUE;
+  }
+
+  mem = (GstD3D12Memory *) gst_buffer_peek_memory (out_buf, 0);
+  resource = gst_d3d12_memory_get_resource_handle (mem);
+  desc = resource->GetDesc ();
+  if (desc.SampleDesc.Count != priv->sample_desc.Count ||
+      desc.SampleDesc.Quality != priv->sample_desc.Quality) {
+    GST_DEBUG_OBJECT (self, "Sample desc updated");
+    priv->sample_desc = desc.SampleDesc;
+    priv->update_pso = TRUE;
   }
 
   if (!gst_d3d12_converter_update_dest_rect (self)) {
