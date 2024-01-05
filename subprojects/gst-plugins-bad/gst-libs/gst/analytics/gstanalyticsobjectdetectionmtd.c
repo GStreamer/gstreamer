@@ -24,6 +24,8 @@
 
 #include "gstanalyticsobjectdetectionmtd.h"
 
+#include <gst/video/video.h>
+
 typedef struct _GstAnalyticsODMtdData GstAnalyticsODMtdData;
 
 /**
@@ -49,9 +51,42 @@ struct _GstAnalyticsODMtdData
   gfloat location_confidence_lvl;
 };
 
+static gboolean
+gst_analytics_od_mtd_meta_transform (GstBuffer * transbuf,
+    GstAnalyticsMtd * transmtd, GstBuffer * buffer, GQuark type, gpointer data)
+{
+  if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
+    GstVideoMetaTransform *trans = data;
+    gint ow, oh, nw, nh;
+    GstAnalyticsODMtdData *oddata;
+
+    ow = GST_VIDEO_INFO_WIDTH (trans->in_info);
+    nw = GST_VIDEO_INFO_WIDTH (trans->out_info);
+    oh = GST_VIDEO_INFO_HEIGHT (trans->in_info);
+    nh = GST_VIDEO_INFO_HEIGHT (trans->out_info);
+
+    oddata = gst_analytics_relation_meta_get_mtd_data (transmtd->meta,
+        transmtd->id);
+
+    oddata->x *= nw;
+    oddata->x /= ow;
+
+    oddata->w *= nw;
+    oddata->w /= ow;
+
+    oddata->y *= nh;
+    oddata->y /= oh;
+
+    oddata->h *= nh;
+    oddata->h /= oh;
+  }
+
+  return TRUE;
+}
+
 static const GstAnalyticsMtdImpl od_impl = {
   "object-detection",
-  NULL
+  gst_analytics_od_mtd_meta_transform
 };
 
 /**

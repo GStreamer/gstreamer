@@ -204,7 +204,7 @@ Get instance size</doc>
             <parameter name="transbuf" transfer-ownership="none">
               <type name="Gst.Buffer" c:type="GstBuffer*"/>
             </parameter>
-            <parameter name="mtd" transfer-ownership="none">
+            <parameter name="transmtd" transfer-ownership="none">
               <type name="Mtd" c:type="GstAnalyticsMtd*"/>
             </parameter>
             <parameter name="buffer" transfer-ownership="none">

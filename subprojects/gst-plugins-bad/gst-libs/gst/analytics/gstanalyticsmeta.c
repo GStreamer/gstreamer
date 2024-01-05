@@ -24,6 +24,8 @@
 
 #include "gstanalyticsmeta.h"
 
+#include <gst/video/video.h>
+
 GST_DEBUG_CATEGORY_STATIC (an_relation_meta_debug);
 #define GST_CAT_AN_RELATION an_relation_meta_debug
 
@@ -252,7 +254,12 @@ GType
 gst_analytics_relation_meta_api_get_type (void)
 {
   static GType type = 0;
-  static const gchar *tags[] = { NULL };
+  static const gchar *tags[] = {
+    GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_STR,
+    NULL
+  };
   if (g_once_init_enter (&type)) {
     GType newType =
         gst_meta_api_type_register ("GstAnalyticsRelationMetaAPI", tags);
@@ -319,7 +326,8 @@ gst_analytics_relation_meta_transform (GstBuffer * transbuf,
   GST_CAT_TRACE (GST_CAT_AN_RELATION, "meta transform %s",
       g_quark_to_string (type));
 
-  if (GST_META_TRANSFORM_IS_COPY (type)) {
+  if (GST_META_TRANSFORM_IS_COPY (type) ||
+      GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
     GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *) meta;
     GstAnalyticsRelationMeta *new = (GstAnalyticsRelationMeta *)
         gst_buffer_get_meta (transbuf, GST_ANALYTICS_RELATION_META_API_TYPE);
@@ -339,6 +347,7 @@ gst_analytics_relation_meta_transform (GstBuffer * transbuf,
     }
 
     if (new->offset == 0) {
+      guint i;
 
       if (new->rel_order < rmeta->rel_order) {
         g_free (new->adj_mat);
@@ -372,6 +381,18 @@ gst_analytics_relation_meta_transform (GstBuffer * transbuf,
       new->next_id = rmeta->next_id;
       new->offset = rmeta->offset;
 
+      for (i = 0; i < new->length; i++) {
+        GstAnalyticsRelatableMtdData *rlt_mtd_data =
+            (GstAnalyticsRelatableMtdData *) (new->mtd_data_lookup[i] +
+            new->analysis_results);
+        if (rlt_mtd_data->impl && rlt_mtd_data->impl->mtd_meta_transform) {
+          GstAnalyticsMtd transmtd;
+          transmtd.id = rlt_mtd_data->id;
+          transmtd.meta = new;
+          rlt_mtd_data->impl->mtd_meta_transform (transbuf, &transmtd, buffer,
+              type, data);
+        }
+      }
       return TRUE;
     } else {
       g_warning ("Trying to copy GstAnalyticsRelationMeta into non-empty meta");

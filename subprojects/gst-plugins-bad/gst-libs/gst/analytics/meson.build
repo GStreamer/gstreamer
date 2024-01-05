@@ -20,7 +20,7 @@ gstanalytics = library('gstanalytics-' + api_version,
   soversion : soversion,
   darwin_versions : osxversion,
   install : true,
-  dependencies : [gstbase_dep])
+  dependencies : [gstbase_dep, gstvideo_dep])
 
 gst_libraries += [[pkg_name, {'lib': gstanalytics}]]
 pkgconfig.generate(gstanalytics,
@@ -43,7 +43,7 @@ if build_gir
     'includes' : ['Gst-1.0', 'GstBase-1.0'],
     'install' : true,
     'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
-    'dependencies' : [gstbase_dep]
+    'dependencies' : [gstbase_dep, gstvideo_dep]
   }
   library_def += {'gir': [gir]}
   if not static_build
@@ -59,6 +59,6 @@ gst_libraries += [[pkg_name, library_def]]
 gstanalytics_dep = declare_dependency(link_with : gstanalytics,
   include_directories : [libsinc],
   sources: gen_sources,
-  dependencies : [gstbase_dep])
+  dependencies : [gstbase_dep, gstvideo_dep])
 
 meson.override_dependency(pkg_name, gstanalytics_dep)

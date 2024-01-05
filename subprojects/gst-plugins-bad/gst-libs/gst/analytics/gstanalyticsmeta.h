@@ -78,7 +78,7 @@ struct _GstAnalyticsMtd
 typedef struct {
   const char *name;
 
-  gboolean (*mtd_meta_transform) (GstBuffer *transbuf, GstAnalyticsMtd *mtd,
+  gboolean (*mtd_meta_transform) (GstBuffer *transbuf, GstAnalyticsMtd *transmtd,
                                   GstBuffer *buffer, GQuark type,
                                   gpointer data);
 
