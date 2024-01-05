@@ -81,7 +81,7 @@ struct VERTEX
 
 /* List of expected error cases */
 /* These are the errors we expect from general Dxgi API due to a transition */
-HRESULT SystemTransitionsExpectedErrors[] = {
+static HRESULT SystemTransitionsExpectedErrors[] = {
   DXGI_ERROR_DEVICE_REMOVED,
   DXGI_ERROR_ACCESS_LOST,
   static_cast<HRESULT>(WAIT_ABANDONED),
@@ -90,7 +90,7 @@ HRESULT SystemTransitionsExpectedErrors[] = {
 
 /* These are the errors we expect from IDXGIOutput1::DuplicateOutput
  * due to a transition */
-HRESULT CreateDuplicationExpectedErrors[] = {
+static HRESULT CreateDuplicationExpectedErrors[] = {
   DXGI_ERROR_DEVICE_REMOVED,
   static_cast<HRESULT>(E_ACCESSDENIED),
   DXGI_ERROR_SESSION_DISCONNECTED,
@@ -99,16 +99,9 @@ HRESULT CreateDuplicationExpectedErrors[] = {
 
 /* These are the errors we expect from IDXGIOutputDuplication methods
  * due to a transition */
-HRESULT FrameInfoExpectedErrors[] = {
+static HRESULT FrameInfoExpectedErrors[] = {
   DXGI_ERROR_DEVICE_REMOVED,
   DXGI_ERROR_ACCESS_LOST,
-  S_OK
-};
-
-/* These are the errors we expect from IDXGIAdapter::EnumOutputs methods
- * due to outputs becoming stale during a transition */
-HRESULT EnumOutputsExpectedErrors[] = {
-  DXGI_ERROR_NOT_FOUND,
   S_OK
 };
 
