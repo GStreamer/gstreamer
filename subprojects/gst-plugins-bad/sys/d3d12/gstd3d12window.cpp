@@ -44,6 +44,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d12_window_debug);
 #define WS_GST_D3D12 (WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW)
 #define EXTERNAL_PROC_PROP_NAME L"gst-d3d12-hwnd-external-proc"
 #define D3D12_WINDOW_PROP_NAME L"gst-d3d12-hwnd-obj"
+#define WM_GST_D3D12_FULLSCREEN (WM_USER + 1)
 #define WM_GST_D3D12_CONSTRUCT_INTERNAL_WINDOW (WM_USER + 2)
 #define WM_GST_D3D12_DESTROY_INTERNAL_WINDOW (WM_USER + 3)
 #define WM_GST_D3D12_UPDATE_RENDER_RECT (WM_USER + 4)
@@ -54,17 +55,11 @@ enum
 {
   SIGNAL_KEY_EVENT,
   SIGNAL_MOUSE_EVENT,
+  SIGNAL_FULLSCREEN,
   SIGNAL_LAST
 };
 
 static guint d3d12_window_signals[SIGNAL_LAST] = { 0, };
-
-enum HwndState
-{
-  HWND_STATE_INIT,
-  HWND_STATE_OPENED,
-  HWND_STATE_CLOSED,
-};
 
 /* *INDENT-OFF* */
 struct SwapBuffer
@@ -177,6 +172,13 @@ struct GstD3D12WindowPrivate
 
   GstVideoOrientationMethod orientation = GST_VIDEO_ORIENTATION_IDENTITY;
 
+  /* fullscreen related variables */
+  gboolean fullscreen_on_alt_enter = TRUE;
+  gboolean requested_fullscreen = FALSE;
+  gboolean applied_fullscreen = FALSE;
+  LONG restore_style;
+  WINDOWPLACEMENT restore_placement;
+
   GstD3D12FenceDataPool *fence_data_pool;
 
   /* User specified rect */
@@ -248,6 +250,11 @@ gst_d3d12_window_class_init (GstD3D12WindowClass * klass)
       g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
       G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+
+  d3d12_window_signals[SIGNAL_FULLSCREEN] =
+      g_signal_new ("fullscreen", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_window_debug,
       "d3d12window", 0, "d3d12window");
@@ -417,6 +424,83 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * self, UINT msg, WPARAM wparam,
       event, button, final_x, final_y);
 }
 
+static void
+gst_d3d12_window_toggle_fullscreen_mode (GstD3D12Window * self,
+    gboolean emit_signal)
+{
+  auto priv = self->priv;
+  HWND hwnd = nullptr;
+  gboolean is_fullscreen;
+  ComPtr < IDXGISwapChain > swapchain;
+
+  {
+    std::lock_guard < std::mutex > hlk (priv->hwnd_lock);
+    hwnd = priv->external_hwnd ? priv->external_hwnd : priv->hwnd;
+
+    if (!hwnd)
+      return;
+
+    if (priv->requested_fullscreen == priv->applied_fullscreen)
+      return;
+
+    {
+      std::lock_guard < std::recursive_mutex > lk (priv->lock);
+      if (priv->ctx)
+        swapchain = priv->ctx->swapchain;
+    }
+
+    if (!swapchain)
+      return;
+
+    GST_DEBUG_OBJECT (self, "Change mode to %s",
+        priv->requested_fullscreen ? "fullscreen" : "windowed");
+
+    priv->applied_fullscreen = priv->requested_fullscreen;
+    is_fullscreen = priv->applied_fullscreen;
+  }
+
+  if (!is_fullscreen) {
+    SetWindowLongW (hwnd, GWL_STYLE, priv->restore_style);
+    SetWindowPlacement (hwnd, &priv->restore_placement);
+  } else {
+    ComPtr < IDXGIOutput > output;
+    DXGI_OUTPUT_DESC output_desc;
+
+    /* remember current placement to restore window later */
+    GetWindowPlacement (hwnd, &priv->restore_placement);
+
+    /* show window before change style */
+    ShowWindow (hwnd, SW_SHOW);
+
+    priv->restore_style = GetWindowLong (hwnd, GWL_STYLE);
+
+    /* Make the window borderless so that the client area can fill the screen */
+    SetWindowLongA (hwnd, GWL_STYLE,
+        priv->restore_style &
+        ~(WS_CAPTION | WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_SYSMENU |
+            WS_THICKFRAME | WS_MAXIMIZE));
+
+    swapchain->GetContainingOutput (&output);
+    output->GetDesc (&output_desc);
+
+    SetWindowPos (hwnd, HWND_TOP,
+        output_desc.DesktopCoordinates.left,
+        output_desc.DesktopCoordinates.top,
+        output_desc.DesktopCoordinates.right,
+        output_desc.DesktopCoordinates.bottom,
+        SWP_FRAMECHANGED | SWP_NOACTIVATE);
+
+    ShowWindow (hwnd, SW_MAXIMIZE);
+  }
+
+  GST_DEBUG_OBJECT (self, "Fullscreen mode change done");
+
+  if (emit_signal) {
+    g_signal_emit (self, d3d12_window_signals[SIGNAL_FULLSCREEN],
+        0, is_fullscreen);
+  }
+}
+
 static GstD3D12Window *
 gst_d3d12_window_from_hwnd (HWND hwnd)
 {
@@ -463,6 +547,42 @@ gst_d3d12_window_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
         gst_object_unref (self);
       }
       return 0;
+    }
+    case WM_GST_D3D12_FULLSCREEN:
+    {
+      auto self = gst_d3d12_window_from_hwnd (hwnd);
+      if (self) {
+        gst_d3d12_window_toggle_fullscreen_mode (self, FALSE);
+        gst_object_unref (self);
+      }
+
+      return 0;
+    }
+    case WM_SYSKEYDOWN:
+    {
+      WORD state = GetKeyState (VK_RETURN);
+      BYTE high = HIBYTE (state);
+
+      if (high & 0x1) {
+        auto self = gst_d3d12_window_from_hwnd (hwnd);
+        if (self) {
+          auto priv = self->priv;
+          bool do_toggle = false;
+          {
+            std::lock_guard < std::mutex > lk (priv->hwnd_lock);
+            if (priv->fullscreen_on_alt_enter) {
+              priv->requested_fullscreen = !priv->applied_fullscreen;
+              do_toggle = true;
+            }
+          }
+
+          if (do_toggle)
+            gst_d3d12_window_toggle_fullscreen_mode (self, TRUE);
+
+          gst_object_unref (self);
+        }
+      }
+      break;
     }
     case WM_SIZE:
     {
@@ -611,7 +731,7 @@ gst_d3d12_window_create_hwnd (GstD3D12Window * self)
 
   priv->hwnd = CreateWindowExW (0, L"GstD3D12Hwnd", title.c_str (),
       style, x, y, w, h, (HWND) nullptr, (HMENU) nullptr, inst, self);
-
+  priv->applied_fullscreen = FALSE;
   priv->internal_hwnd_thread = g_thread_self ();
 }
 
@@ -696,6 +816,26 @@ sub_class_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
        * as this is our custom message */
       gst_object_unref (self);
       return 0;
+    }
+    case WM_SYSKEYDOWN:
+    {
+      WORD state = GetKeyState (VK_RETURN);
+      BYTE high = HIBYTE (state);
+
+      if (high & 0x1) {
+        bool do_toggle = false;
+        {
+          std::lock_guard < std::mutex > lk (priv->hwnd_lock);
+          if (priv->fullscreen_on_alt_enter) {
+            priv->requested_fullscreen = !priv->applied_fullscreen;
+            do_toggle = true;
+          }
+        }
+
+        if (do_toggle)
+          gst_d3d12_window_toggle_fullscreen_mode (self, TRUE);
+      }
+      break;
     }
     case WM_SIZE:
       if (priv->render_rect.w > 0 || priv->render_rect.h > 0) {
@@ -834,7 +974,7 @@ gst_d3d12_window_prepare_hwnd (GstD3D12Window * self, guintptr window_handle)
     priv->hwnd_cond.wait (lk);
   }
 
-  if (priv->state != HWND_STATE_OPENED) {
+  if (priv->state != GST_D3D12_WINDOW_STATE_OPENED) {
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "We are flushing");
       return GST_FLOW_FLUSHING;
@@ -889,10 +1029,12 @@ gst_d3d12_window_unprepare (GstD3D12Window * window)
   g_main_loop_quit (priv->loop);
   g_clear_pointer (&priv->main_loop_thread, g_thread_join);
 
+  std::lock_guard < std::mutex > lk (priv->hwnd_lock);
   priv->hwnd = nullptr;
   priv->external_hwnd = nullptr;
   priv->internal_hwnd_thread = nullptr;
   priv->state = GST_D3D12_WINDOW_STATE_INIT;
+  priv->applied_fullscreen = FALSE;
 }
 
 void
@@ -927,7 +1069,8 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
   if (!priv->ctx)
     return GST_FLOW_OK;
 
-  priv->ctx->WaitGpu ();
+  if (priv->ctx->fence_val != 0)
+    priv->ctx->WaitGpu ();
   priv->ctx->swap_buffers.clear ();
 
   DXGI_SWAP_CHAIN_DESC desc = { };
@@ -1010,7 +1153,7 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     return ret;
   }
 
-  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  std::unique_lock < std::recursive_mutex > lk (priv->lock);
   HRESULT hr;
 
   if (window->device != device) {
@@ -1044,6 +1187,19 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     if (!gst_d3d12_result (hr, window->device)) {
       GST_ERROR_OBJECT (window, "Couldn't create swapchain");
       return GST_FLOW_ERROR;
+    }
+
+    ComPtr < IDXGIFactory1 > parent_factory;
+    hr = swapchain->GetParent (IID_PPV_ARGS (&parent_factory));
+    if (!gst_d3d12_result (hr, window->device)) {
+      GST_WARNING_OBJECT (window, "Couldn't get parent factory");
+    } else {
+      hr = parent_factory->MakeWindowAssociation (priv->hwnd,
+          DXGI_MWA_NO_ALT_ENTER);
+      if (!gst_d3d12_result (hr, window->device)) {
+        GST_WARNING_OBJECT (window, "MakeWindowAssociation failed, hr: 0x%x",
+            (guint) hr);
+      }
     }
 
     hr = swapchain.As (&ctx->swapchain);
@@ -1089,7 +1245,17 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     return GST_FLOW_ERROR;
   }
 
-  return gst_d3d12_window_on_resize (window);
+  ret = gst_d3d12_window_on_resize (window);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  lk.unlock ();
+
+  std::lock_guard < std::mutex > hlk (priv->hwnd_lock);
+  if (priv->requested_fullscreen != priv->applied_fullscreen)
+    PostMessageW (priv->hwnd, WM_GST_D3D12_FULLSCREEN, 0, 0);
+
+  return GST_FLOW_OK;
 }
 
 GstFlowReturn
@@ -1433,4 +1599,23 @@ gst_d3d12_window_get_state (GstD3D12Window * window)
   auto priv = window->priv;
 
   return priv->state;
+}
+
+void
+gst_d3d12_window_enable_fullscreen_on_alt_enter (GstD3D12Window * window,
+    gboolean enable)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::mutex > lk (priv->hwnd_lock);
+  priv->fullscreen_on_alt_enter = enable;
+}
+
+void
+gst_d3d12_window_set_fullscreen (GstD3D12Window * window, gboolean enable)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::mutex > lk (priv->hwnd_lock);
+  priv->requested_fullscreen = enable;
+  if (priv->hwnd && priv->applied_fullscreen != priv->requested_fullscreen)
+    PostMessageW (priv->hwnd, WM_GST_D3D12_FULLSCREEN, 0, 0);
 }

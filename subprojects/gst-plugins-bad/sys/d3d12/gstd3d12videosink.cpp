@@ -35,12 +35,16 @@ enum
   PROP_FORCE_ASPECT_RATIO,
   PROP_ENABLE_NAVIGATION_EVENTS,
   PROP_ROTATE_METHOD,
+  PROP_FULLSCREEN_ON_ALT_ENTER,
+  PROP_FULLSCREEN,
 };
 
 #define DEFAULT_ADAPTER -1
 #define DEFAULT_FORCE_ASPECT_RATIO TRUE
 #define DEFAULT_ENABLE_NAVIGATION_EVENTS TRUE
 #define DEFAULT_ROTATE_METHOD GST_VIDEO_ORIENTATION_IDENTITY
+#define DEFAULT_FULLSCREEN_ON_ALT_ENTER FALSE
+#define DEFAULT_FULLSCREEN FALSE
 
 static GstStaticPadTemplate sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -96,6 +100,8 @@ struct GstD3D12VideoSinkPrivate
   GstVideoOrientationMethod orientation = DEFAULT_ROTATE_METHOD;
   GstVideoOrientationMethod orientation_from_tag = DEFAULT_ROTATE_METHOD;
   GstVideoOrientationMethod orientation_selected = DEFAULT_ROTATE_METHOD;
+  gboolean fullscreen_on_alt_enter = DEFAULT_FULLSCREEN_ON_ALT_ENTER;
+  gboolean fullscreen = DEFAULT_FULLSCREEN;
 };
 /* *INDENT-ON* */
 
@@ -138,6 +144,8 @@ static void gst_d3d12_video_sink_key_event (GstD3D12Window * window,
 static void gst_d3d12_video_sink_mouse_event (GstD3D12Window * window,
     const gchar * event, gint button, gdouble x, gdouble y,
     GstD3D12VideoSink * self);
+static void gst_d3d12_video_sink_on_fullscreen (GstD3D12Window * window,
+    gboolean is_fullscreen, GstD3D12VideoSink * self);
 
 static void
 gst_d3d12_video_sink_video_overlay_init (GstVideoOverlayInterface * iface);
@@ -193,6 +201,19 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (object_class,
+      PROP_FULLSCREEN_ON_ALT_ENTER,
+      g_param_spec_boolean ("fullscreen-on-alt-enter",
+          "Fullscreen on Alt Enter",
+          "Enable fullscreen toggle on alt+enter key input",
+          DEFAULT_FULLSCREEN_ON_ALT_ENTER,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen", "Fullscreen",
+          "Fullscreen mode", DEFAULT_FULLSCREEN,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_set_context);
 
@@ -228,6 +249,8 @@ gst_d3d12_video_sink_init (GstD3D12VideoSink * self)
       G_CALLBACK (gst_d3d12_video_sink_key_event), self);
   g_signal_connect (priv->window, "mouse-event",
       G_CALLBACK (gst_d3d12_video_sink_mouse_event), self);
+  g_signal_connect (priv->window, "fullscreen",
+      G_CALLBACK (gst_d3d12_video_sink_on_fullscreen), self);
 }
 
 static void
@@ -267,6 +290,15 @@ gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
       gst_d3d12_video_sink_set_orientation (self,
           (GstVideoOrientationMethod) g_value_get_enum (value), FALSE);
       break;
+    case PROP_FULLSCREEN_ON_ALT_ENTER:
+      priv->fullscreen_on_alt_enter = g_value_get_boolean (value);
+      gst_d3d12_window_enable_fullscreen_on_alt_enter (priv->window,
+          priv->fullscreen_on_alt_enter);
+      break;
+    case PROP_FULLSCREEN:
+      priv->fullscreen = g_value_get_boolean (value);
+      gst_d3d12_window_set_fullscreen (priv->window, priv->fullscreen);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -293,6 +325,12 @@ gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ROTATE_METHOD:
       g_value_set_enum (value, priv->orientation);
+      break;
+    case PROP_FULLSCREEN_ON_ALT_ENTER:
+      g_value_set_boolean (value, priv->fullscreen_on_alt_enter);
+      break;
+    case PROP_FULLSCREEN:
+      g_value_set_boolean (value, priv->fullscreen);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -440,6 +478,25 @@ gst_d3d12_video_sink_mouse_event (GstD3D12Window * window, const gchar * event,
   }
 
   gst_navigation_send_event_simple (GST_NAVIGATION (self), mouse_event);
+}
+
+static void
+gst_d3d12_video_sink_on_fullscreen (GstD3D12Window * window,
+    gboolean is_fullscreen, GstD3D12VideoSink * self)
+{
+  auto priv = self->priv;
+  gboolean notify = FALSE;
+
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (priv->fullscreen != is_fullscreen) {
+      priv->fullscreen = is_fullscreen;
+      notify = TRUE;
+    }
+  }
+
+  if (notify)
+    g_object_notify (G_OBJECT (self), "fullscreen");
 }
 
 static GstFlowReturn

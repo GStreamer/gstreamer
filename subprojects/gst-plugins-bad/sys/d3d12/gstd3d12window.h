@@ -77,5 +77,11 @@ void             gst_d3d12_window_set_orientation (GstD3D12Window * window,
 void             gst_d3d12_window_set_title (GstD3D12Window * window,
                                              const gchar * title);
 
+void             gst_d3d12_window_enable_fullscreen_on_alt_enter (GstD3D12Window * window,
+                                                                  gboolean enable);
+
+void             gst_d3d12_window_set_fullscreen (GstD3D12Window * window,
+                                                  gboolean enable);
+
 G_END_DECLS
 
