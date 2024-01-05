@@ -4474,6 +4474,40 @@ gst_log2 (GstClockTime in)
 }
 
 /**
+ * gst_util_ceil_log2:
+ * @v: a #guint32 value.
+ *
+ * Return a max num of log2.
+ *
+ * Returns: a computed #guint val.
+ *
+ * Since: 1.24
+ */
+guint
+gst_util_ceil_log2 (guint32 v)
+{
+  /* Compute Ceil(Log2(v)) */
+  /* Derived from branchless code for integer log2(v) from:
+     <http://graphics.stanford.edu/~seander/bithacks.html#IntegerLog> */
+  guint r, shift;
+
+  v--;
+  r = (v > 0xFFFF) << 4;
+  v >>= r;
+  shift = (v > 0xFF) << 3;
+  v >>= shift;
+  r |= shift;
+  shift = (v > 0xF) << 2;
+  v >>= shift;
+  r |= shift;
+  shift = (v > 0x3) << 1;
+  v >>= shift;
+  r |= shift;
+  r |= (v >> 1);
+  return r + 1;
+}
+
+/**
  * gst_calculate_linear_regression: (skip)
  * @xy: Pairs of (x,y) values
  * @temp: Temporary scratch space used by the function

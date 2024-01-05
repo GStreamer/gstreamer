@@ -2432,7 +2432,8 @@ gst_h264_parser_parse_slice_hdr (GstH264NalParser * nalparser,
     guint32 PicHeightInMapUnits = sps->pic_height_in_map_units_minus1 + 1;
     guint32 PicSizeInMapUnits = PicWidthInMbs * PicHeightInMapUnits;
     guint32 SliceGroupChangeRate = pps->slice_group_change_rate_minus1 + 1;
-    const guint n = ceil_log2 (PicSizeInMapUnits / SliceGroupChangeRate + 1);
+    const guint n =
+        gst_util_ceil_log2 (PicSizeInMapUnits / SliceGroupChangeRate + 1);
     READ_UINT16 (&nr, slice->slice_group_change_cycle, n);
   }
 

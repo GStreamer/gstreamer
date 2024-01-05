@@ -1240,6 +1240,9 @@ void          gst_type_mark_as_plugin_api       (GType type, GstPluginAPIFlags f
 GST_API
 gboolean      gst_type_is_plugin_api            (GType type, GstPluginAPIFlags *flags);
 
+GST_API
+guint         gst_util_ceil_log2                (guint32 v);
+
 G_END_DECLS
 
 #endif /* __GST_UTILS_H__ */

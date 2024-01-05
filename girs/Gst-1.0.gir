@@ -54222,6 +54222,20 @@ element or %NULL if nothing was found</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="util_ceil_log2" c:identifier="gst_util_ceil_log2" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Return a max num of log2.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a computed #guint val.</doc>
+        <type name="guint" c:type="guint"/>
+      </return-value>
+      <parameters>
+        <parameter name="v" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a #guint32 value.</doc>
+          <type name="guint32" c:type="guint32"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="util_double_to_fraction" c:identifier="gst_util_double_to_fraction">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Transforms a #gdouble to a fraction and simplifies
 the result.</doc>
