@@ -42,10 +42,7 @@ G_BEGIN_DECLS
 typedef struct _GstAnalyticsMtd GstAnalyticsClsMtd;
 
 GST_ANALYTICS_META_API
-GstAnalyticsMtdType gst_analytics_cls_mtd_get_type_quark (void);
-
-GST_ANALYTICS_META_API
-const gchar *gst_analytics_cls_mtd_get_type_name (void);
+GstAnalyticsMtdType gst_analytics_cls_mtd_get_mtd_type (void);
 
 GST_ANALYTICS_META_API
 gfloat gst_analytics_cls_mtd_get_level (GstAnalyticsClsMtd * handle,

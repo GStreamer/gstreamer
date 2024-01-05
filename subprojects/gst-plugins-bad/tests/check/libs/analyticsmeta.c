@@ -654,10 +654,10 @@ GST_START_TEST (test_od_cls_relation)
   exist = gst_analytics_relation_meta_get_mtd (rmeta, ids[0], 0, &rlt_mtd);
   fail_unless (exist == TRUE);
 
-  GQuark mtd_type = gst_analytics_mtd_get_type_quark (&rlt_mtd);
+  GstAnalyticsMtdType mtd_type = gst_analytics_mtd_get_mtd_type (&rlt_mtd);
 
   /* Verify relatable meta with id == 1 is of type Object Detection */
-  fail_unless (mtd_type == gst_analytics_od_mtd_get_type_quark ());
+  fail_unless (mtd_type == gst_analytics_od_mtd_get_mtd_type ());
 
   gst_analytics_od_mtd_get_location ((GstAnalyticsODMtd *) & rlt_mtd, &_x, &_y,
       &_w, &_h, &_loc_conf_lvl);
@@ -667,14 +667,14 @@ GST_START_TEST (test_od_cls_relation)
   fail_unless (_h == h);
   fail_unless (_loc_conf_lvl == loc_conf_lvl);
 
-  GST_LOG ("mtd_type:%s", g_quark_to_string (mtd_type));
+  GST_LOG ("mtd_type:%s", gst_analytics_mtd_type_get_name (mtd_type));
 
   exist = gst_analytics_relation_meta_get_mtd (rmeta, ids[1], 0, &rlt_mtd);
   fail_unless (exist == TRUE);
-  mtd_type = gst_analytics_mtd_get_type_quark (&rlt_mtd);
+  mtd_type = gst_analytics_mtd_get_mtd_type (&rlt_mtd);
 
   /* Verify relatable meta with id == 0 is of type classification */
-  fail_unless (mtd_type == gst_analytics_cls_mtd_get_type_quark ());
+  fail_unless (mtd_type == gst_analytics_cls_mtd_get_mtd_type ());
   gint index =
       gst_analytics_cls_mtd_get_index_by_quark ((GstAnalyticsClsMtd *) &
       rlt_mtd,
@@ -691,7 +691,7 @@ GST_START_TEST (test_od_cls_relation)
       gst_analytics_cls_mtd_get_level ((GstAnalyticsClsMtd *) & rlt_mtd, index);
   fail_unless (lvl == 0.3f);
 
-  GST_LOG ("mtd_type:%s", g_quark_to_string (mtd_type));
+  GST_LOG ("mtd_type:%s", gst_analytics_mtd_type_get_name (mtd_type));
   GST_LOG ("cat %f [%d, %d %d, %d", lvl, _x, _y, _w, _h);
 
   gst_buffer_unref (buf);
@@ -714,7 +714,8 @@ GST_START_TEST (test_multi_od_cls_relation)
   GArray *path = NULL;
   gfloat _loc_conf_lvl;
   gint x, _x, y, _y, w, _w, h, _h;
-  GQuark mtd_type, cls_type;
+  GstAnalyticsMtdType mtd_type;
+  GQuark cls_type;
   GstAnalyticsMtd mtd;
   gpointer state = NULL;
   GQuark class_quarks[2];
@@ -810,8 +811,8 @@ GST_START_TEST (test_multi_od_cls_relation)
    * the correct data.
    */
   gst_analytics_relation_meta_get_mtd (rmeta, ids[0], 0, &mtd);
-  mtd_type = gst_analytics_mtd_get_type_quark (&mtd);
-  fail_unless (mtd_type == gst_analytics_od_mtd_get_type_quark ());
+  mtd_type = gst_analytics_mtd_get_mtd_type (&mtd);
+  fail_unless (mtd_type == gst_analytics_od_mtd_get_mtd_type ());
 
   gst_analytics_od_mtd_get_location ((GstAnalyticsODMtd *) & mtd, &_x, &_y, &_w,
       &_h, &_loc_conf_lvl);
@@ -821,14 +822,14 @@ GST_START_TEST (test_multi_od_cls_relation)
   fail_unless (_h == 16);
   fail_unless (_loc_conf_lvl == 0.7f);
 
-  GST_LOG ("mtd_type:%s", g_quark_to_string (mtd_type));
+  GST_LOG ("mtd_type:%s", gst_analytics_mtd_type_get_name (mtd_type));
 
   /* Verify the relatable metadata 2 is of correct type
    * (ObjectDetection).
    */
   gst_analytics_relation_meta_get_mtd (rmeta, ids[1], 0, &mtd);
-  mtd_type = gst_analytics_mtd_get_type_quark (&mtd);
-  fail_unless (mtd_type == gst_analytics_cls_mtd_get_type_quark ());
+  mtd_type = gst_analytics_mtd_get_mtd_type (&mtd);
+  fail_unless (mtd_type == gst_analytics_cls_mtd_get_mtd_type ());
 
   /* Verify data of the CLASSIFICATION retrieved */
   gint index =
@@ -843,7 +844,7 @@ GST_START_TEST (test_multi_od_cls_relation)
       gst_analytics_cls_mtd_get_index_by_quark ((GstAnalyticsClsMtd *) & mtd,
       g_quark_from_string ("cat"));
   lvl = gst_analytics_cls_mtd_get_level ((GstAnalyticsClsMtd *) & mtd, index);
-  GST_LOG ("mtd_type:%s", g_quark_to_string (mtd_type));
+  GST_LOG ("mtd_type:%s", gst_analytics_mtd_type_get_name (mtd_type));
   GST_LOG ("cat %f [%d, %d %d, %d", lvl, _x, _y, _w, _h);
   fail_unless (lvl == 0.9f);
 
@@ -852,7 +853,7 @@ GST_START_TEST (test_multi_od_cls_relation)
    * Verify it's the first classification metadata
    */
   gst_analytics_relation_meta_get_direct_related (rmeta, od_mtd[0].id,
-      GST_ANALYTICS_REL_TYPE_CONTAIN, gst_analytics_cls_mtd_get_type_quark (),
+      GST_ANALYTICS_REL_TYPE_CONTAIN, gst_analytics_cls_mtd_get_mtd_type (),
       &state, &mtd);
 
   cls_id = gst_analytics_mtd_get_id (&mtd);
@@ -865,7 +866,7 @@ GST_START_TEST (test_multi_od_cls_relation)
    * Verify it's the first classification metadata
    */
   gst_analytics_relation_meta_get_direct_related (rmeta, od_mtd[1].id,
-      GST_ANALYTICS_REL_TYPE_CONTAIN, gst_analytics_cls_mtd_get_type_quark (),
+      GST_ANALYTICS_REL_TYPE_CONTAIN, gst_analytics_cls_mtd_get_mtd_type (),
       &state, &mtd);
   cls_id = gst_analytics_mtd_get_id (&mtd);
 
@@ -884,7 +885,7 @@ GST_START_TEST (test_multi_od_cls_relation)
 
   state = NULL;
   ret = gst_analytics_relation_meta_get_direct_related (rmeta, od_mtd[1].id,
-      GST_ANALYTICS_REL_TYPE_CONTAIN, gst_analytics_od_mtd_get_type_quark (),
+      GST_ANALYTICS_REL_TYPE_CONTAIN, gst_analytics_od_mtd_get_mtd_type (),
       &state, &mtd);
 
   fail_unless (ret == FALSE);

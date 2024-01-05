@@ -24,8 +24,6 @@
 
 #include "gstanalyticsobjecttrackingmtd.h"
 
-#define GST_RELATABLE_MTD_TRACKING_TYPE_NAME "object-tracking"
-
 typedef struct _GstAnalyticsTrackingMtdData GstAnalyticsTrackingMtdData;
 
 /**
@@ -48,34 +46,23 @@ struct _GstAnalyticsTrackingMtdData
 };
 
 
-static char type[] = GST_RELATABLE_MTD_TRACKING_TYPE_NAME;
+static const GstAnalyticsMtdImpl tracking_impl = {
+  "object-tracking",
+  NULL
+};
 
 /**
- * gst_analytics_tracking_mtd_get_type_quark:
- * Returns: Quark representing the type of GstAnalyticsRelatableMtd
+ * gst_analytics_tracking_mtd_get_mtd_type:
+ * Returns: id representing the type of GstAnalyticsRelatableMtd
  *
- * Get the quark identifying the relatable type
+ * Get the opaque id identifying the relatable type
  *
  * Since: 1.24
  */
 GstAnalyticsMtdType
-gst_analytics_tracking_mtd_get_type_quark (void)
+gst_analytics_tracking_mtd_get_mtd_type (void)
 {
-  return g_quark_from_static_string (type);
-}
-
-/**
- * gst_an_od_mtd_get_type_name:
- * Returns: #GstAnalyticsMtd type name.
- *
- * Get the name identifying relatable type name
- *
- * Since: 1.24
- */
-const gchar *
-gst_analytics_tracking_mtd_get_type_name (void)
-{
-  return GST_RELATABLE_MTD_TRACKING_TYPE_NAME;
+  return (GstAnalyticsMtdType) & tracking_impl;
 }
 
 /**
@@ -176,11 +163,10 @@ gst_analytics_relation_meta_add_tracking_mtd (GstAnalyticsRelationMeta *
 {
   g_return_val_if_fail (instance, FALSE);
 
-  GstAnalyticsMtdType type = gst_analytics_tracking_mtd_get_type_quark ();
   gsize size = sizeof (GstAnalyticsTrackingMtdData);
   GstAnalyticsTrackingMtdData *trk_mtd_data = (GstAnalyticsTrackingMtdData *)
-      gst_analytics_relation_meta_add_mtd (instance,
-      type, size, trk_mtd);
+      gst_analytics_relation_meta_add_mtd (instance, &tracking_impl, size,
+      trk_mtd);
 
   if (trk_mtd_data) {
     trk_mtd_data->tracking_id = tracking_id;
@@ -210,6 +196,6 @@ gst_analytics_relation_meta_get_tracking_mtd (GstAnalyticsRelationMeta * meta,
     guint an_meta_id, GstAnalyticsTrackingMtd * rlt)
 {
   return gst_analytics_relation_meta_get_mtd (meta, an_meta_id,
-      gst_analytics_tracking_mtd_get_type_quark (),
+      gst_analytics_tracking_mtd_get_mtd_type (),
       (GstAnalyticsTrackingMtd *) rlt);
 }

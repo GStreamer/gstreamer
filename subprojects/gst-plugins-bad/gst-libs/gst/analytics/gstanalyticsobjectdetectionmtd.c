@@ -24,10 +24,6 @@
 
 #include "gstanalyticsobjectdetectionmtd.h"
 
-#define GST_RELATABLE_MTD_OD_TYPE_NAME "object-detection"
-
-static char type[] = GST_RELATABLE_MTD_OD_TYPE_NAME;
-
 typedef struct _GstAnalyticsODMtdData GstAnalyticsODMtdData;
 
 /**
@@ -53,33 +49,23 @@ struct _GstAnalyticsODMtdData
   gfloat location_confidence_lvl;
 };
 
+static const GstAnalyticsMtdImpl od_impl = {
+  "object-detection",
+  NULL
+};
 
 /**
- * gst_analytics_od_mtd_get_type_quark:
- * Get a quark that represent object-detection metadata type
+ * gst_analytics_od_mtd_get_mtd_type:
+ * Get an id that represent object-detection metadata type
  *
- * Returns: Quark of #GstAnalyticsMtd type
+ * Returns: Opaqu id of the #GstAnalyticsMtd type
  *
  * Since: 1.24
  */
 GstAnalyticsMtdType
-gst_analytics_od_mtd_get_type_quark (void)
+gst_analytics_od_mtd_get_mtd_type (void)
 {
-  return g_quark_from_static_string (type);
-}
-
-/**
- * gst_analytics_od_mtd_get_type_name:
- * Get a text representing object-detection metadata type.
- *
- * Returns: #GstAnalyticsMtd type name.
- *
- * Since: 1.24
- */
-const gchar *
-gst_analytics_od_mtd_get_type_name (void)
-{
-  return GST_RELATABLE_MTD_OD_TYPE_NAME;
+  return (GstAnalyticsMtdType) & od_impl;
 }
 
 /**
@@ -121,20 +107,21 @@ gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
 }
 
 /**
- * gst_analytics_od_mtd_get_type:
+ * gst_analytics_od_mtd_get_obj_type:
  * @handle: Instance handle
+ *
  * Quark of the class of object associated with this location.
+ *
  * Returns: Quark different from on success and 0 on failure.
  *
  * Since: 1.24
  */
 GQuark
-gst_analytics_od_mtd_get_type (GstAnalyticsODMtd * handle)
+gst_analytics_od_mtd_get_obj_type (GstAnalyticsODMtd * handle)
 {
   GstAnalyticsODMtdData *data;
   g_return_val_if_fail (handle != NULL, 0);
-  data = gst_analytics_relation_meta_get_mtd_data (handle->meta,
-      handle->id);
+  data = gst_analytics_relation_meta_get_mtd_data (handle->meta, handle->id);
   g_return_val_if_fail (data != NULL, 0);
   return data->object_type;
 }
@@ -161,10 +148,9 @@ gst_analytics_relation_meta_add_od_mtd (GstAnalyticsRelationMeta *
     gfloat loc_conf_lvl, GstAnalyticsODMtd * od_mtd)
 {
   g_return_val_if_fail (instance != NULL, FALSE);
-  GstAnalyticsMtdType mtd_type = gst_analytics_od_mtd_get_type_quark ();
   gsize size = sizeof (GstAnalyticsODMtdData);
   GstAnalyticsODMtdData *od_mtd_data = (GstAnalyticsODMtdData *)
-      gst_analytics_relation_meta_add_mtd (instance, mtd_type, size, od_mtd);
+      gst_analytics_relation_meta_add_mtd (instance, &od_impl, size, od_mtd);
   if (od_mtd_data) {
     od_mtd_data->x = x;
     od_mtd_data->y = y;
@@ -195,5 +181,5 @@ gst_analytics_relation_meta_get_od_mtd (GstAnalyticsRelationMeta * meta,
     guint an_meta_id, GstAnalyticsODMtd * rlt)
 {
   return gst_analytics_relation_meta_get_mtd (meta, an_meta_id,
-      gst_analytics_od_mtd_get_type_quark (), (GstAnalyticsODMtd *) rlt);
+      gst_analytics_od_mtd_get_mtd_type (), (GstAnalyticsODMtd *) rlt);
 }

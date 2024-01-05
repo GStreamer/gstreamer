@@ -46,10 +46,7 @@ G_BEGIN_DECLS
 typedef struct _GstAnalyticsMtd GstAnalyticsTrackingMtd;
 
 GST_ANALYTICS_META_API
-GQuark gst_analytics_tracking_mtd_get_type_quark (void);
-
-GST_ANALYTICS_META_API
-const gchar *gst_analytics_tracking_mtd_get_type_name (void);
+GstAnalyticsMtdType gst_analytics_tracking_mtd_get_mtd_type (void);
 
 GST_ANALYTICS_META_API
 gboolean gst_analytics_tracking_mtd_update_last_seen (GstAnalyticsTrackingMtd * instance,

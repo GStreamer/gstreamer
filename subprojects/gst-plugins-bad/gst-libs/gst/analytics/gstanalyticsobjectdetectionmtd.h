@@ -46,17 +46,14 @@ G_BEGIN_DECLS
 typedef struct _GstAnalyticsMtd GstAnalyticsODMtd;
 
 GST_ANALYTICS_META_API
-GstAnalyticsMtdType gst_analytics_od_mtd_get_type_quark (void);
-
-GST_ANALYTICS_META_API
-const gchar *gst_analytics_od_mtd_get_type_name (void);
+GstAnalyticsMtdType gst_analytics_od_mtd_get_mtd_type (void);
 
 GST_ANALYTICS_META_API
 gboolean gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
     gint * x, gint * y, gint * w, gint * h, gfloat * loc_conf_lvl);
 
 GST_ANALYTICS_META_API
-GQuark gst_analytics_od_mtd_get_type (GstAnalyticsODMtd * handle);
+GQuark gst_analytics_od_mtd_get_obj_type (GstAnalyticsODMtd * handle);
 
 GST_ANALYTICS_META_API
 gboolean gst_analytics_relation_meta_add_od_mtd (

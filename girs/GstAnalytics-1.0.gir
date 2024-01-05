@@ -9,7 +9,7 @@ and/or use gtk-doc annotations.  -->
     <alias name="MtdType" c:type="GstAnalyticsMtdType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Type of analytics meta data</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
-      <type name="guint32" c:type="guint32"/>
+      <type name="guintptr" c:type="guintptr"/>
     </alias>
     <constant name="AN_RELATION_META_TAG" value="GST-ANALYSIS-RELATION-META-TAG" c:type="GST_AN_RELATION_META_TAG">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
@@ -97,19 +97,11 @@ Get quark of the class at @index</doc>
           </parameter>
         </parameters>
       </method>
-      <function name="get_type_name" c:identifier="gst_analytics_cls_mtd_get_type_name" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get the static string representing #GstAnalyticsMtd type.</doc>
+      <function name="get_mtd_type" c:identifier="gst_analytics_cls_mtd_get_mtd_type" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get a id identifying #GstAnalyticsMtd type.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">#GstAnalyticsMtd type name.</doc>
-          <type name="utf8" c:type="const gchar*"/>
-        </return-value>
-      </function>
-      <function name="get_type_quark" c:identifier="gst_analytics_cls_mtd_get_type_quark" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get a quark identifying #GstAnalyticsMtd type.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Quark of #GstAnalyticsMtd type</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">opaque id of #GstAnalyticsMtd type</doc>
           <type name="MtdType" c:type="GstAnalyticsMtdType"/>
         </return-value>
       </function>
@@ -157,6 +149,20 @@ Get instance id</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_mtd_type" c:identifier="gst_analytics_mtd_get_mtd_type" version="1.24">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">opaque id of the type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd
+Get analysis result type.</doc>
+            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_size" c:identifier="gst_analytics_mtd_get_size" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">@instance Instance of #GstAnalyticsRelatableMtd
 Get instance size</doc>
@@ -171,20 +177,53 @@ Get instance size</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_type_quark" c:identifier="gst_analytics_mtd_get_type_quark" version="1.24">
+      <function name="type_get_name" c:identifier="gst_analytics_mtd_type_get_name">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">quark associated with type.</doc>
-          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+          <type name="utf8" c:type="const gchar*"/>
         </return-value>
         <parameters>
-          <instance-parameter name="instance" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd
-Get analysis result type.</doc>
-            <type name="Mtd" c:type="GstAnalyticsMtd*"/>
-          </instance-parameter>
+          <parameter name="type" transfer-ownership="none">
+            <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+          </parameter>
         </parameters>
-      </method>
+      </function>
+    </record>
+    <record name="MtdImpl" c:type="GstAnalyticsMtdImpl">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+      <field name="name" writable="1">
+        <type name="utf8" c:type="const char*"/>
+      </field>
+      <field name="mtd_meta_transform">
+        <callback name="mtd_meta_transform">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+          <return-value transfer-ownership="none">
+            <type name="gboolean" c:type="gboolean"/>
+          </return-value>
+          <parameters>
+            <parameter name="transbuf" transfer-ownership="none">
+              <type name="Gst.Buffer" c:type="GstBuffer*"/>
+            </parameter>
+            <parameter name="mtd" transfer-ownership="none">
+              <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+            </parameter>
+            <parameter name="buffer" transfer-ownership="none">
+              <type name="Gst.Buffer" c:type="GstBuffer*"/>
+            </parameter>
+            <parameter name="type" transfer-ownership="none">
+              <type name="GLib.Quark" c:type="GQuark"/>
+            </parameter>
+            <parameter name="data" transfer-ownership="none">
+              <type name="gpointer" c:type="gpointer"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
+      <field name="_reserved" writable="1">
+        <array zero-terminated="0" fixed-size="20">
+          <type name="gpointer" c:type="gpointer"/>
+        </array>
+      </field>
     </record>
     <record name="ODMtd" c:type="GstAnalyticsODMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Handle containing data required to use gst_analytics_od_mtd APIs. This type
@@ -233,7 +272,8 @@ identified by @id is stored.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_type" c:identifier="gst_analytics_od_mtd_get_type" version="1.24">
+      <method name="get_obj_type" c:identifier="gst_analytics_od_mtd_get_obj_type" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark of the class of object associated with this location.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark different from on success and 0 on failure.</doc>
@@ -241,25 +281,16 @@ identified by @id is stored.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="handle" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Instance handle
-Quark of the class of object associated with this location.</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Instance handle</doc>
             <type name="ODMtd" c:type="GstAnalyticsODMtd*"/>
           </instance-parameter>
         </parameters>
       </method>
-      <function name="get_type_name" c:identifier="gst_analytics_od_mtd_get_type_name" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a text representing object-detection metadata type.</doc>
+      <function name="get_mtd_type" c:identifier="gst_analytics_od_mtd_get_mtd_type" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get an id that represent object-detection metadata type</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">#GstAnalyticsMtd type name.</doc>
-          <type name="utf8" c:type="const gchar*"/>
-        </return-value>
-      </function>
-      <function name="get_type_quark" c:identifier="gst_analytics_od_mtd_get_type_quark" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a quark that represent object-detection metadata type</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark of #GstAnalyticsMtd type</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Opaqu id of the #GstAnalyticsMtd type</doc>
           <type name="MtdType" c:type="GstAnalyticsMtdType"/>
         </return-value>
       </function>
@@ -337,9 +368,9 @@ Since 1.24</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance</doc>
             <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
           </instance-parameter>
-          <parameter name="type" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Type of relatable (#GstAnalyticsRelatableMtd)</doc>
-            <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+          <parameter name="impl" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Implementation of relatable (#GstAnalyticsRelatableMtd)</doc>
+            <type name="MtdImpl" c:type="const GstAnalyticsMtdImpl*"/>
           </parameter>
           <parameter name="size" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Size required</doc>
@@ -839,19 +870,13 @@ Set tracking to lost</doc>
           </parameter>
         </parameters>
       </method>
-      <function name="get_type_name" c:identifier="gst_analytics_tracking_mtd_get_type_name">
+      <function name="get_mtd_type" c:identifier="gst_analytics_tracking_mtd_get_mtd_type" version="1.24">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
         <return-value transfer-ownership="none">
-          <type name="utf8" c:type="const gchar*"/>
-        </return-value>
-      </function>
-      <function name="get_type_quark" c:identifier="gst_analytics_tracking_mtd_get_type_quark" version="1.24">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Quark representing the type of GstAnalyticsRelatableMtd
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">id representing the type of GstAnalyticsRelatableMtd
 
-Get the quark identifying the relatable type</doc>
-          <type name="GLib.Quark" c:type="GQuark"/>
+Get the opaque id identifying the relatable type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
         </return-value>
       </function>
     </record>
@@ -912,35 +937,30 @@ Since 1.24</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="cls_mtd_get_type_name" c:identifier="gst_analytics_cls_mtd_get_type_name" moved-to="ClsMtd.get_type_name" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get the static string representing #GstAnalyticsMtd type.</doc>
+    <function name="cls_mtd_get_mtd_type" c:identifier="gst_analytics_cls_mtd_get_mtd_type" moved-to="ClsMtd.get_mtd_type" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get a id identifying #GstAnalyticsMtd type.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">#GstAnalyticsMtd type name.</doc>
-        <type name="utf8" c:type="const gchar*"/>
-      </return-value>
-    </function>
-    <function name="cls_mtd_get_type_quark" c:identifier="gst_analytics_cls_mtd_get_type_quark" moved-to="ClsMtd.get_type_quark" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Get a quark identifying #GstAnalyticsMtd type.</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Quark of #GstAnalyticsMtd type</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">opaque id of #GstAnalyticsMtd type</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
-    <function name="od_mtd_get_type_name" c:identifier="gst_analytics_od_mtd_get_type_name" moved-to="ODMtd.get_type_name" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a text representing object-detection metadata type.</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
+    <function name="mtd_type_get_name" c:identifier="gst_analytics_mtd_type_get_name" moved-to="Mtd.type_get_name">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">#GstAnalyticsMtd type name.</doc>
         <type name="utf8" c:type="const gchar*"/>
       </return-value>
+      <parameters>
+        <parameter name="type" transfer-ownership="none">
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </parameter>
+      </parameters>
     </function>
-    <function name="od_mtd_get_type_quark" c:identifier="gst_analytics_od_mtd_get_type_quark" moved-to="ODMtd.get_type_quark" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get a quark that represent object-detection metadata type</doc>
+    <function name="od_mtd_get_mtd_type" c:identifier="gst_analytics_od_mtd_get_mtd_type" moved-to="ODMtd.get_mtd_type" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Get an id that represent object-detection metadata type</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Quark of #GstAnalyticsMtd type</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.c">Opaqu id of the #GstAnalyticsMtd type</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
@@ -972,19 +992,13 @@ instance.</doc>
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
       </return-value>
     </function>
-    <function name="tracking_mtd_get_type_name" c:identifier="gst_analytics_tracking_mtd_get_type_name" moved-to="TrackingMtd.get_type_name">
+    <function name="tracking_mtd_get_mtd_type" c:identifier="gst_analytics_tracking_mtd_get_mtd_type" moved-to="TrackingMtd.get_mtd_type" version="1.24">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
       <return-value transfer-ownership="none">
-        <type name="utf8" c:type="const gchar*"/>
-      </return-value>
-    </function>
-    <function name="tracking_mtd_get_type_quark" c:identifier="gst_analytics_tracking_mtd_get_type_quark" moved-to="TrackingMtd.get_type_quark" version="1.24">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
-      <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Quark representing the type of GstAnalyticsRelatableMtd
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">id representing the type of GstAnalyticsRelatableMtd
 
-Get the quark identifying the relatable type</doc>
-        <type name="GLib.Quark" c:type="GQuark"/>
+Get the opaque id identifying the relatable type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
   </namespace>

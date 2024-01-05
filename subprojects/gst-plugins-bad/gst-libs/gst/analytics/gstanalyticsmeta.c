@@ -39,7 +39,7 @@ GST_DEBUG_CATEGORY_STATIC (an_relation_meta_debug);
  */
 typedef struct
 {
-  GstAnalyticsMtdType analysis_type;
+  const GstAnalyticsMtdImpl *impl;
   guint id;
   gsize size;
   gpointer data[];
@@ -88,8 +88,6 @@ typedef struct _GstAnalyticsRelationMeta
 
 } GstAnalyticsRelationMeta;
 
-static char invalid_type_name[] = "_invalid";
-
 static guint
 gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta);
 
@@ -111,25 +109,24 @@ gst_analytics_relation_meta_get_mtd_data_internal (GstAnalyticsRelationMeta *
 }
 
 /**
- * gst_analytics_mtd_get_type_quark:
+ * gst_analytics_mtd_get_mtd_type:
  * @instance: Instance of #GstAnalyticsMtd
  * Get analysis result type.
  *
- * Returns: quark associated with type.
+ * Returns: opaque id of the type
  *
  * Since: 1.24
  */
 GstAnalyticsMtdType
-gst_analytics_mtd_get_type_quark (GstAnalyticsMtd * handle)
+gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * handle)
 {
   GstAnalyticsRelatableMtdData *rlt;
   rlt = gst_analytics_relation_meta_get_mtd_data_internal (handle->meta,
       handle->id);
 
-  g_return_val_if_fail (rlt != NULL,
-      g_quark_from_static_string (invalid_type_name));
+  g_return_val_if_fail (rlt != NULL, 0);
 
-  return rlt->analysis_type;
+  return (GstAnalyticsMtdType) rlt->impl;
 }
 
 /**
@@ -170,6 +167,15 @@ gst_analytics_mtd_get_size (GstAnalyticsMtd * handle)
   return rlt->size;
 }
 
+const gchar *
+gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type)
+{
+  GstAnalyticsMtdImpl *impl = (GstAnalyticsMtdImpl *) type;
+
+  g_return_val_if_fail (impl != NULL, NULL);
+
+  return impl->name;
+}
 
 /**
  * gst_analytics_relation_get_length:
@@ -801,7 +807,7 @@ gst_buffer_get_analytics_relation_meta (GstBuffer * buffer)
 /**
  * gst_analytics_relation_meta_add_mtd: (skip)
  * @meta: Instance
- * @type: Type of relatable (#GstAnalyticsRelatableMtd)
+ * @impl: Implementation of relatable (#GstAnalyticsRelatableMtd)
  * @size: Size required
  * @rlt_mtd: Updated handle
  *
@@ -814,7 +820,7 @@ gst_buffer_get_analytics_relation_meta (GstBuffer * buffer)
  */
 gpointer
 gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
-    GstAnalyticsMtdType type, gsize size, GstAnalyticsMtd * rlt_mtd)
+    const GstAnalyticsMtdImpl * impl, gsize size, GstAnalyticsMtd * rlt_mtd)
 {
   gsize object_size;
   gsize new_size;
@@ -860,7 +866,7 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
     dest =
         (GstAnalyticsRelatableMtdData *) (meta->analysis_results +
         meta->offset);
-    dest->analysis_type = type;
+    dest->impl = impl;
     dest->id = gst_analytics_relation_meta_get_next_id (meta);
     dest->size = size;
     meta->mtd_data_lookup[dest->id] = meta->offset;
@@ -870,7 +876,7 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
     rlt_mtd->meta = meta;
     GST_CAT_TRACE (GST_CAT_AN_RELATION, "Add %p relatable type=%s (%"
         G_GSIZE_FORMAT " / %" G_GSIZE_FORMAT ").", dest,
-        g_quark_to_string (type), new_size, meta->max_size);
+        impl->name, new_size, meta->max_size);
   } else {
     GST_CAT_ERROR (GST_CAT_AN_RELATION,
         "Failed to add relatable, out-of-space (%" G_GSIZE_FORMAT " / %"
@@ -915,11 +921,12 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
   if (d == NULL)
     return FALSE;
 
-  if (d->analysis_type == 0) {
+  if (d->impl == NULL) {
     return FALSE;
   }
 
-  if (type != GST_ANALYTICS_MTD_TYPE_ANY && d->analysis_type != type) {
+  if (type != GST_ANALYTICS_MTD_TYPE_ANY &&
+      d->impl != (GstAnalyticsMtdImpl *) type) {
     return FALSE;
   }
 
@@ -976,8 +983,8 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
   gsize i;
 
   GST_CAT_TRACE (GST_CAT_AN_RELATION,
-      "Looking for %s related to %u by %d", g_quark_to_string (type),
-      an_meta_id, relation_type);
+      "Looking for %s related to %u by %d",
+      gst_analytics_mtd_type_get_name (type), an_meta_id, relation_type);
 
   g_return_val_if_fail (rmeta != NULL, FALSE);
   g_return_val_if_fail (type != 0, FALSE);
@@ -1009,7 +1016,7 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
       rlt_mtd_data = (GstAnalyticsRelatableMtdData *)
           (meta->mtd_data_lookup[i] + meta->analysis_results);
       rlt_mtd->id = rlt_mtd_data->id;
-      if (gst_analytics_mtd_get_type_quark (rlt_mtd) == type) {
+      if (gst_analytics_mtd_get_mtd_type (rlt_mtd) == type) {
         if (state) {
           *state = GSIZE_TO_POINTER (G_MINSSIZE | i);
         }
@@ -1059,7 +1066,7 @@ gst_analytics_relation_meta_iterate (GstAnalyticsRelationMeta * meta,
     rlt_mtd->id = rlt_mtd_data->id;
     rlt_mtd->meta = meta;
     if (type == GST_ANALYTICS_MTD_TYPE_ANY ||
-        gst_analytics_mtd_get_type_quark (rlt_mtd) == type) {
+        gst_analytics_mtd_get_mtd_type (rlt_mtd) == type) {
       *state = GSIZE_TO_POINTER (G_MINSSIZE | index);
       return TRUE;
     }

@@ -24,9 +24,10 @@
 
 #include "gstanalyticsclassificationmtd.h"
 
-#define GST_RELATABLE_MTD_CLASSIFICATION_TYPE_NAME "classification"
-
-static char type[] = GST_RELATABLE_MTD_CLASSIFICATION_TYPE_NAME;
+static const GstAnalyticsMtdImpl cls_impl = {
+  "classification",
+  NULL
+};
 
 typedef struct _GstAnalyticsClsConfLvlAndClass GstAnalyticsClsConfLvlAndClass;
 typedef struct _GstAnalyticsClsMtdData GstAnalyticsClsMtdData;
@@ -53,31 +54,17 @@ struct _GstAnalyticsClsMtdData
 };
 
 /**
- * gst_analytics_cls_mtd_get_type_quark:
- * Get a quark identifying #GstAnalyticsMtd type.
+ * gst_analytics_cls_mtd_get_mtd_type:
+ * Get a id identifying #GstAnalyticsMtd type.
  *
- * Returns: Quark of #GstAnalyticsMtd type
+ * Returns: opaque id of #GstAnalyticsMtd type
  *
  * Since: 1.24
  */
 GstAnalyticsMtdType
-gst_analytics_cls_mtd_get_type_quark (void)
+gst_analytics_cls_mtd_get_mtd_type (void)
 {
-  return g_quark_from_static_string (type);
-}
-
-/**
- * gst_analytics_cls_mtd_get_type_name:
- * Get the static string representing #GstAnalyticsMtd type.
- *
- * Returns: #GstAnalyticsMtd type name.
- *
- * Since: 1.24
- */
-const gchar *
-gst_analytics_cls_mtd_get_type_name (void)
-{
-  return GST_RELATABLE_MTD_CLASSIFICATION_TYPE_NAME;
+  return (GstAnalyticsMtdType) & cls_impl;
 }
 
 /**
@@ -191,7 +178,6 @@ gst_analytics_relation_meta_add_cls_mtd (GstAnalyticsRelationMeta *
     instance, gsize length, gfloat * confidence_levels, GQuark * class_quarks,
     GstAnalyticsClsMtd * cls_mtd)
 {
-  GQuark type = gst_analytics_cls_mtd_get_type_quark ();
   g_return_val_if_fail (instance, FALSE);
   gsize confidence_levels_size =
       (sizeof (GstAnalyticsClsConfLvlAndClass) * length);
@@ -199,7 +185,7 @@ gst_analytics_relation_meta_add_cls_mtd (GstAnalyticsRelationMeta *
   GstAnalyticsClsConfLvlAndClass *conf_lvls_and_classes;
 
   GstAnalyticsClsMtdData *cls_mtd_data = (GstAnalyticsClsMtdData *)
-      gst_analytics_relation_meta_add_mtd (instance, type, size, cls_mtd);
+      gst_analytics_relation_meta_add_mtd (instance, &cls_impl, size, cls_mtd);
   if (cls_mtd_data) {
     cls_mtd_data->length = length;
     for (gsize i = 0; i < length; i++) {
@@ -255,5 +241,5 @@ gst_analytics_relation_meta_get_cls_mtd (GstAnalyticsRelationMeta * meta,
     guint an_meta_id, GstAnalyticsClsMtd * rlt)
 {
   return gst_analytics_relation_meta_get_mtd (meta, an_meta_id,
-      gst_analytics_cls_mtd_get_type_quark (), (GstAnalyticsClsMtd *) rlt);
+      gst_analytics_cls_mtd_get_mtd_type (), (GstAnalyticsClsMtd *) rlt);
 }
