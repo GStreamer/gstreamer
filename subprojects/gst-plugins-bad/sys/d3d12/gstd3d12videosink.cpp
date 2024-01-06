@@ -46,6 +46,9 @@ enum
   PROP_ROTATION_Z,
   PROP_SCALE_X,
   PROP_SCALE_Y,
+  PROP_SAMPLING_METHOD,
+  PROP_GAMMA_MODE,
+  PROP_PRIMARIES_MODE,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -60,6 +63,9 @@ enum
 #define DEFAULT_SCALE 1.0f
 #define DEFAULT_FOV 90.0f
 #define DEFAULT_ORTHO FALSE
+#define DEFAULT_SAMPLING_METHOD GST_D3D12_SAMPLING_METHOD_BILINEAR
+#define DEFAULT_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
+#define DEFAULT_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 
 static GstStaticPadTemplate sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -126,6 +132,9 @@ struct GstD3D12VideoSinkPrivate
   gfloat rotation_z = DEFAULT_ROTATION;
   gfloat scale_x = DEFAULT_SCALE;
   gfloat scale_y = DEFAULT_SCALE;
+  GstVideoGammaMode gamma_mode = DEFAULT_GAMMA_MODE;
+  GstVideoPrimariesMode primaries_mode = DEFAULT_PRIMARIES_MODE;
+  GstD3D12SamplingMethod sampling_method = DEFAULT_SAMPLING_METHOD;
 };
 /* *INDENT-ON* */
 
@@ -293,6 +302,24 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (object_class, PROP_GAMMA_MODE,
+      g_param_spec_enum ("gamma-mode", "Gamma mode",
+          "Gamma conversion mode", GST_TYPE_VIDEO_GAMMA_MODE,
+          DEFAULT_GAMMA_MODE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_PRIMARIES_MODE,
+      g_param_spec_enum ("primaries-mode", "Primaries Mode",
+          "Primaries conversion mode", GST_TYPE_VIDEO_PRIMARIES_MODE,
+          DEFAULT_PRIMARIES_MODE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_SAMPLING_METHOD,
+      g_param_spec_enum ("sampling-method", "Sampling method",
+          "Sampler filter type to use", GST_TYPE_D3D12_SAMPLING_METHOD,
+          DEFAULT_SAMPLING_METHOD,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_set_context);
 
@@ -318,6 +345,8 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_show_frame);
 
   gst_type_mark_as_plugin_api (GST_TYPE_D3D12_MSAA_MODE, (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_D3D12_SAMPLING_METHOD,
+      (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -416,6 +445,33 @@ gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
       priv->scale_y = g_value_get_float (value);
       gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
       break;
+    case PROP_GAMMA_MODE:
+    {
+      auto gamma_mode = (GstVideoGammaMode) g_value_get_enum (value);
+      if (priv->gamma_mode != gamma_mode) {
+        priv->gamma_mode = gamma_mode;
+        priv->update_window = TRUE;
+      }
+      break;
+    }
+    case PROP_PRIMARIES_MODE:
+    {
+      auto primaries_mode = (GstVideoPrimariesMode) g_value_get_enum (value);
+      if (priv->primaries_mode != primaries_mode) {
+        priv->primaries_mode = primaries_mode;
+        priv->update_window = TRUE;
+      }
+      break;
+    }
+    case PROP_SAMPLING_METHOD:
+    {
+      auto sampling_method = (GstD3D12SamplingMethod) g_value_get_enum (value);
+      if (priv->sampling_method != sampling_method) {
+        priv->sampling_method = sampling_method;
+        priv->update_window = TRUE;
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -475,6 +531,15 @@ gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SCALE_Y:
       g_value_set_float (value, priv->scale_y);
+      break;
+    case PROP_GAMMA_MODE:
+      g_value_set_enum (value, priv->gamma_mode);
+      break;
+    case PROP_PRIMARIES_MODE:
+      g_value_set_enum (value, priv->primaries_mode);
+      break;
+    case PROP_SAMPLING_METHOD:
+      g_value_set_enum (value, priv->sampling_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -737,9 +802,18 @@ gst_d3d12_video_sink_update_window (GstD3D12VideoSink * self)
     return GST_FLOW_ERROR;
   }
 
+  auto config = gst_structure_new ("convert-config",
+      GST_D3D12_CONVERTER_OPT_GAMMA_MODE,
+      GST_TYPE_VIDEO_GAMMA_MODE, priv->gamma_mode,
+      GST_D3D12_CONVERTER_OPT_PRIMARIES_MODE,
+      GST_TYPE_VIDEO_PRIMARIES_MODE, priv->primaries_mode,
+      GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
+      GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
+      gst_d3d12_sampling_method_to_native (priv->sampling_method), nullptr);
+
   auto ret = gst_d3d12_window_prepare (priv->window, self->device,
       window_handle, GST_VIDEO_SINK_WIDTH (self),
-      GST_VIDEO_SINK_HEIGHT (self), priv->caps);
+      GST_VIDEO_SINK_HEIGHT (self), priv->caps, config);
   if (ret != GST_FLOW_OK) {
     if (ret == GST_FLOW_FLUSHING) {
       GST_WARNING_OBJECT (self, "We are flushing");
@@ -759,7 +833,7 @@ gst_d3d12_video_sink_update_window (GstD3D12VideoSink * self)
   }
 
   priv->pool = gst_d3d12_buffer_pool_new (self->device);
-  auto config = gst_buffer_pool_get_config (priv->pool);
+  config = gst_buffer_pool_get_config (priv->pool);
 
   gst_buffer_pool_config_set_params (config, priv->caps, priv->info.size, 0, 0);
   if (!gst_buffer_pool_set_config (priv->pool, config) ||

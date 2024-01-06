@@ -50,7 +50,8 @@ GstFlowReturn    gst_d3d12_window_prepare (GstD3D12Window * window,
                                            guintptr window_handle,
                                            guint display_width,
                                            guint display_height,
-                                           GstCaps * caps);
+                                           GstCaps * caps,
+                                           GstStructure * config);
 
 void             gst_d3d12_window_unprepare (GstD3D12Window * window);
 

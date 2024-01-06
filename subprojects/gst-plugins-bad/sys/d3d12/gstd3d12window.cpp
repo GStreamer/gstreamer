@@ -1189,7 +1189,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
 GstFlowReturn
 gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     guintptr window_handle, guint display_width, guint display_height,
-    GstCaps * caps)
+    GstCaps * caps, GstStructure * config)
 {
   auto priv = window->priv;
   GstVideoInfo in_info;
@@ -1222,6 +1222,9 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
   auto ret = gst_d3d12_window_prepare_hwnd (window, window_handle);
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (window, "Couldn't setup window handle");
+    if (config)
+      gst_structure_free (config);
+
     return ret;
   }
 
@@ -1238,6 +1241,9 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     auto ctx = std::make_unique < DeviceContext > (device);
     if (!ctx->initialized) {
       GST_ERROR_OBJECT (window, "Couldn't initialize device context");
+      if (config)
+        gst_structure_free (config);
+
       return GST_FLOW_ERROR;
     }
 
@@ -1258,6 +1264,9 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
         &desc, nullptr, nullptr, &swapchain);
     if (!gst_d3d12_result (hr, window->device)) {
       GST_ERROR_OBJECT (window, "Couldn't create swapchain");
+      if (config)
+        gst_structure_free (config);
+
       return GST_FLOW_ERROR;
     }
 
@@ -1277,6 +1286,8 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     hr = swapchain.As (&ctx->swapchain);
     if (!gst_d3d12_result (hr, window->device)) {
       GST_ERROR_OBJECT (window, "IDXGISwapChain4 interface is unavailable");
+      if (config)
+        gst_structure_free (config);
       return GST_FLOW_ERROR;
     }
 
@@ -1293,10 +1304,8 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
   gst_clear_object (&priv->ctx->comp);
   gst_clear_buffer (&priv->ctx->cached_buf);
 
-  GstStructure *config = nullptr;
   if (GST_VIDEO_INFO_HAS_ALPHA (&in_info)) {
-    config = gst_structure_new ("converter-config",
-        GST_D3D12_CONVERTER_OPT_DEST_ALPHA_MODE,
+    gst_structure_set (config, GST_D3D12_CONVERTER_OPT_DEST_ALPHA_MODE,
         GST_TYPE_D3D12_CONVERTER_ALPHA_MODE,
         GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
   }
