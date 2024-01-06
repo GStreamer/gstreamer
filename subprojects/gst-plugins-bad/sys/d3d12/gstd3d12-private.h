@@ -188,3 +188,7 @@ static const GstD3D12Format g_gst_d3d12_default_format_map[] = {
 #undef MAKE_FORMAT_MAP_RGBP
 
 #define GST_D3D12_N_FORMATS G_N_ELEMENTS(g_gst_d3d12_default_format_map)
+
+void gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device,
+                                         GstMemory * mem);
+

@@ -24,6 +24,7 @@
 #include "gstd3d12.h"
 #include "gstd3d12-private.h"
 #include "gstd3d11on12.h"
+#include <directx/d3dx12.h>
 #include <wrl.h>
 #include <vector>
 #include <string.h>
@@ -142,6 +143,8 @@ struct _GstD3D12DevicePrivate
 
   GstD3D12CommandListPool *copy_cl_pool = nullptr;
   GstD3D12CommandAllocatorPool *copy_ca_pool = nullptr;
+
+  guint rtv_inc_size;
 
   guint adapter_index = 0;
   guint device_id = 0;
@@ -649,6 +652,9 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   if (!priv->copy_ca_pool)
     goto error;
 
+  priv->rtv_inc_size =
+      device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
   return self;
 
 error:
@@ -1106,4 +1112,76 @@ gst_d3d12_device_d3d12_debug (GstD3D12Device * device, const gchar * file,
   }
 
   info_queue->ClearStoredMessages ();
+}
+
+void
+gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
+{
+  auto priv = device->priv;
+  auto dmem = GST_D3D12_MEMORY_CAST (mem);
+  ComPtr < ID3D12DescriptorHeap > heap;
+
+  auto resource = gst_d3d12_memory_get_resource_handle (dmem);
+  auto desc = resource->GetDesc ();
+
+  if (desc.Format != DXGI_FORMAT_NV12 && desc.Format != DXGI_FORMAT_P010 &&
+      desc.Format != DXGI_FORMAT_P016) {
+    return;
+  }
+
+  gst_d3d12_memory_get_render_target_view_heap (dmem, &heap);
+  if (!heap)
+    return;
+
+  GstD3D12CommandAllocator *gst_ca = nullptr;
+  gst_d3d12_command_allocator_pool_acquire (priv->direct_ca_pool, &gst_ca);
+  if (!gst_ca)
+    return;
+
+  ComPtr < ID3D12CommandAllocator > ca;
+  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+
+  GstD3D12CommandList *gst_cl = nullptr;
+  gst_d3d12_command_list_pool_acquire (priv->direct_cl_pool,
+      ca.Get (), &gst_cl);
+  if (!gst_cl) {
+    gst_d3d12_command_allocator_unref (gst_ca);
+    return;
+  }
+
+  ComPtr < ID3D12CommandList > cl_base;
+  ComPtr < ID3D12GraphicsCommandList > cl;
+
+  gst_d3d12_command_list_get_handle (gst_cl, &cl_base);
+  cl_base.As (&cl);
+
+  auto rtv_handle =
+      CD3DX12_CPU_DESCRIPTOR_HANDLE (heap->GetCPUDescriptorHandleForHeapStart
+      (),
+      priv->rtv_inc_size);
+
+  const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
+  cl->ClearRenderTargetView (rtv_handle, clear_color, 0, nullptr);
+
+  auto hr = cl->Close ();
+  if (!gst_d3d12_result (hr, device)) {
+    gst_clear_d3d12_command_list (&gst_cl);
+    gst_clear_d3d12_command_allocator (&gst_ca);
+    return;
+  }
+
+  ID3D12CommandList *cmd_list[] = { cl.Get () };
+  guint64 fence_val = 0;
+  hr = gst_d3d12_command_queue_execute_command_lists (priv->direct_queue,
+      1, cmd_list, &fence_val);
+  auto ret = gst_d3d12_result (hr, device);
+  gst_d3d12_command_list_unref (gst_cl);
+
+  if (ret) {
+    gst_d3d12_command_queue_set_notify (priv->direct_queue, fence_val,
+        gst_ca, (GDestroyNotify) gst_d3d12_command_allocator_unref);
+    dmem->fence_value = fence_val;
+  } else {
+    gst_d3d12_command_allocator_unref (gst_ca);
+  }
 }

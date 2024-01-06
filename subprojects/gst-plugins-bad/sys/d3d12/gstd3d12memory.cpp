@@ -23,6 +23,7 @@
 
 #include "gstd3d12.h"
 #include "gstd3d12memory-private.h"
+#include "gstd3d12-private.h"
 #include <directx/d3dx12.h>
 #include <string.h>
 #include <wrl.h>
@@ -774,7 +775,20 @@ gst_d3d12_allocator_alloc_internal (GstD3D12Allocator * self,
     return nullptr;
   }
 
-  return gst_d3d12_allocator_alloc_wrapped (self, device, resource.Get (), 0);
+  auto mem =
+      gst_d3d12_allocator_alloc_wrapped (self, device, resource.Get (), 0);
+  if (!mem)
+    return nullptr;
+
+  /* Initialize YUV texture with black color */
+  if (desc->Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D &&
+      (desc->Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) != 0 &&
+      (heap_flags & D3D12_HEAP_FLAG_CREATE_NOT_ZEROED) == 0 &&
+      desc->DepthOrArraySize == 1) {
+    gst_d3d12_device_clear_yuv_texture (device, mem);
+  }
+
+  return mem;
 }
 
 GstMemory *
