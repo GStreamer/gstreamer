@@ -982,7 +982,6 @@ gst_d3d12_converter_apply_orientation (GstD3D12Converter * self)
   switch (priv->video_direction) {
     case GST_VIDEO_ORIENTATION_IDENTITY:
     case GST_VIDEO_ORIENTATION_AUTO:
-    case GST_VIDEO_ORIENTATION_CUSTOM:
     default:
       priv->transform = g_matrix_identity;
       break;
@@ -1007,6 +1006,8 @@ gst_d3d12_converter_apply_orientation (GstD3D12Converter * self)
     case GST_VIDEO_ORIENTATION_UR_LL:
       priv->transform = g_matrix_ur_ll;
       break;
+    case GST_VIDEO_ORIENTATION_CUSTOM:
+      priv->transform = priv->custom_transform;
   }
 
   return TRUE;
@@ -2274,6 +2275,87 @@ gst_d3d12_converter_update_blend_state (GstD3D12Converter * converter,
     for (guint i = 0; i < 4; i++)
       priv->blend_factor[i] = 1.0f;
   }
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_converter_apply_transform (GstD3D12Converter * converter,
+    GstVideoOrientationMethod orientation, gfloat viewport_width,
+    gfloat viewport_height, gfloat fov, gboolean ortho, gfloat rotation_x,
+    gfloat rotation_y, gfloat rotation_z, gfloat scale_x, gfloat scale_y)
+{
+  g_return_val_if_fail (GST_IS_D3D12_CONVERTER (converter), FALSE);
+
+  auto priv = converter->priv;
+  std::lock_guard < std::mutex > lk (priv->prop_lock);
+
+  gfloat aspect_ratio;
+  gboolean rotated = FALSE;
+  XMMATRIX rotate_matrix = XMMatrixIdentity ();
+
+  switch (orientation) {
+    case GST_VIDEO_ORIENTATION_IDENTITY:
+    case GST_VIDEO_ORIENTATION_AUTO:
+    case GST_VIDEO_ORIENTATION_CUSTOM:
+    default:
+      break;
+    case GST_VIDEO_ORIENTATION_90R:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_90r);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_180:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_180);
+      break;
+    case GST_VIDEO_ORIENTATION_90L:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_90l);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_HORIZ:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_horiz);
+      break;
+    case GST_VIDEO_ORIENTATION_VERT:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_vert);
+      break;
+    case GST_VIDEO_ORIENTATION_UL_LR:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_ul_lr);
+      rotated = TRUE;
+      break;
+    case GST_VIDEO_ORIENTATION_UR_LL:
+      rotate_matrix = XMLoadFloat4x4A (&g_matrix_ur_ll);
+      rotated = TRUE;
+      break;
+  }
+
+  if (rotated)
+    aspect_ratio = viewport_height / viewport_width;
+  else
+    aspect_ratio = viewport_width / viewport_height;
+
+  /* Apply user specified transform matrix first, then rotate-method */
+  XMMATRIX scale = XMMatrixScaling (scale_x * aspect_ratio, scale_y, 1.0);
+
+  XMMATRIX rotate =
+      XMMatrixRotationX (XMConvertToRadians (rotation_x)) *
+      XMMatrixRotationY (XMConvertToRadians (-rotation_y)) *
+      XMMatrixRotationZ (XMConvertToRadians (-rotation_z));
+
+  XMMATRIX view = XMMatrixLookAtLH (XMVectorSet (0.0, 0.0, -1.0, 0.0),
+      XMVectorSet (0.0, 0.0, 0.0, 0.0), XMVectorSet (0.0, 1.0, 0.0, 0.0));
+
+  XMMATRIX proj;
+  if (ortho) {
+    proj = XMMatrixOrthographicOffCenterLH (-aspect_ratio,
+        aspect_ratio, -1.0, 1.0, 0.1, 100.0);
+  } else {
+    proj = XMMatrixPerspectiveFovLH (XMConvertToRadians (fov),
+        aspect_ratio, 0.1, 100.0);
+  }
+
+  XMMATRIX mvp = scale * rotate * view * proj * rotate_matrix;
+  XMStoreFloat4x4A (&priv->custom_transform, mvp);
+  priv->update_transform = TRUE;
+  priv->video_direction = GST_VIDEO_ORIENTATION_CUSTOM;
 
   return TRUE;
 }

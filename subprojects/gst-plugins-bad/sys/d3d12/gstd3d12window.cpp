@@ -172,6 +172,13 @@ struct GstD3D12WindowPrivate
   DXGI_FORMAT display_format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
   GstVideoOrientationMethod orientation = GST_VIDEO_ORIENTATION_IDENTITY;
+  gfloat fov = 90.0f;
+  gboolean ortho = FALSE;
+  gfloat rotation_x = 0;
+  gfloat rotation_y = 0;
+  gfloat rotation_z = 0;
+  gfloat scale_x = 1.0f;
+  gfloat scale_y = 1.0f;
 
   /* fullscreen related variables */
   gboolean fullscreen_on_alt_enter = TRUE;
@@ -1407,8 +1414,19 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
 
     g_object_set (priv->ctx->conv, "dest-x", priv->output_rect.x,
         "dest-y", priv->output_rect.y, "dest-width", priv->output_rect.w,
-        "dest-height", priv->output_rect.h,
-        "video-direction", priv->orientation, nullptr);
+        "dest-height", priv->output_rect.h, nullptr);
+
+    if (gst_d3d12_need_transform (priv->rotation_x, priv->rotation_y,
+            priv->rotation_z, priv->scale_x, priv->scale_y)) {
+      gst_d3d12_converter_apply_transform (priv->ctx->conv, priv->orientation,
+          priv->output_rect.w, priv->output_rect.h, priv->fov, priv->ortho,
+          priv->rotation_x, priv->rotation_y, priv->rotation_z,
+          priv->scale_x, priv->scale_y);
+    } else {
+      g_object_set (priv->ctx->conv,
+          "video-direction", priv->orientation, nullptr);
+    }
+
     gst_d3d12_overlay_compositor_update_viewport (priv->ctx->comp,
         &priv->output_rect);
   }
@@ -1648,16 +1666,30 @@ gst_d3d12_window_set_enable_navigation_events (GstD3D12Window * window,
 }
 
 void
-gst_d3d12_window_set_orientation (GstD3D12Window * window,
-    GstVideoOrientationMethod orientation)
+gst_d3d12_window_set_orientation (GstD3D12Window * window, gboolean immediate,
+    GstVideoOrientationMethod orientation, gfloat fov, gboolean ortho,
+    gfloat rotation_x, gfloat rotation_y, gfloat rotation_z,
+    gfloat scale_x, gfloat scale_y)
 {
   auto priv = window->priv;
 
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
-  if (priv->orientation != orientation) {
+  if (priv->orientation != orientation || priv->fov != fov
+      || priv->ortho != ortho
+      || priv->rotation_x != rotation_x || priv->rotation_y != rotation_y
+      || priv->rotation_z != rotation_z || priv->scale_x != scale_x
+      || priv->scale_y != scale_y) {
     priv->orientation = orientation;
+    priv->fov = fov;
+    priv->ortho = ortho;
+    priv->rotation_x = rotation_x;
+    priv->rotation_y = rotation_y;
+    priv->rotation_z = rotation_z;
+    priv->scale_x = scale_x;
+    priv->scale_y = scale_y;
     priv->first_present = TRUE;
-    gst_d3d12_window_set_buffer (window, nullptr);
+    if (immediate)
+      gst_d3d12_window_set_buffer (window, nullptr);
   }
 }
 

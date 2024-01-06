@@ -38,6 +38,14 @@ enum
   PROP_FULLSCREEN_ON_ALT_ENTER,
   PROP_FULLSCREEN,
   PROP_MSAA,
+  PROP_REDRAW_ON_UPDATE,
+  PROP_FOV,
+  PROP_ORTHO,
+  PROP_ROTATION_X,
+  PROP_ROTATION_Y,
+  PROP_ROTATION_Z,
+  PROP_SCALE_X,
+  PROP_SCALE_Y,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -47,6 +55,11 @@ enum
 #define DEFAULT_FULLSCREEN_ON_ALT_ENTER FALSE
 #define DEFAULT_FULLSCREEN FALSE
 #define DEFAULT_MSAA GST_D3D12_MSAA_DISABLED
+#define DEFAULT_REDROW_ON_UPDATE TRUE
+#define DEFAULT_ROTATION 0.0f
+#define DEFAULT_SCALE 1.0f
+#define DEFAULT_FOV 90.0f
+#define DEFAULT_ORTHO FALSE
 
 static GstStaticPadTemplate sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -105,6 +118,14 @@ struct GstD3D12VideoSinkPrivate
   gboolean fullscreen_on_alt_enter = DEFAULT_FULLSCREEN_ON_ALT_ENTER;
   gboolean fullscreen = DEFAULT_FULLSCREEN;
   GstD3D12MSAAMode msaa = DEFAULT_MSAA;
+  gboolean redraw_on_update = DEFAULT_REDROW_ON_UPDATE;
+  gfloat fov = DEFAULT_FOV;
+  gboolean ortho = DEFAULT_ORTHO;
+  gfloat rotation_x = DEFAULT_ROTATION;
+  gfloat rotation_y = DEFAULT_ROTATION;
+  gfloat rotation_z = DEFAULT_ROTATION;
+  gfloat scale_x = DEFAULT_SCALE;
+  gfloat scale_y = DEFAULT_SCALE;
 };
 /* *INDENT-ON* */
 
@@ -223,6 +244,55 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           GST_TYPE_D3D12_MSAA_MODE, DEFAULT_MSAA,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  g_object_class_install_property (object_class, PROP_REDRAW_ON_UPDATE,
+      g_param_spec_boolean ("redraw-on-update",
+          "redraw-on-update",
+          "Immediately apply updated geometry related properties and redraw. "
+          "If disabled, properties will be applied on the next frame or "
+          "window resize", DEFAULT_REDROW_ON_UPDATE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_FOV,
+      g_param_spec_float ("fov", "Fov",
+          "Field of view angle in degrees",
+          0, G_MAXFLOAT, DEFAULT_FOV,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_ORTHO,
+      g_param_spec_boolean ("ortho", "Orthographic",
+          "Use orthographic projection", DEFAULT_ORTHO,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_ROTATION_X,
+      g_param_spec_float ("rotation-x", "Rotation X",
+          "x-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_ROTATION_Y,
+      g_param_spec_float ("rotation-y", "Rotation Y",
+          "y-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_ROTATION_Z,
+      g_param_spec_float ("rotation-z", "Rotation Z",
+          "z-axis rotation angle in degrees",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_ROTATION,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_SCALE_X,
+      g_param_spec_float ("scale-x", "Scale X",
+          "Scale multiplier for x-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_SCALE_Y,
+      g_param_spec_float ("scale-y", "Scale Y",
+          "Scale multiplier for y-axis",
+          -G_MAXFLOAT, G_MAXFLOAT, DEFAULT_SCALE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_set_context);
 
@@ -314,6 +384,38 @@ gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
       priv->msaa = (GstD3D12MSAAMode) g_value_get_enum (value);
       gst_d3d12_window_set_msaa (priv->window, priv->msaa);
       break;
+    case PROP_REDRAW_ON_UPDATE:
+      priv->redraw_on_update = g_value_get_boolean (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
+    case PROP_FOV:
+      priv->fov = g_value_get_float (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
+    case PROP_ORTHO:
+      priv->ortho = g_value_get_boolean (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
+    case PROP_ROTATION_X:
+      priv->rotation_x = g_value_get_float (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
+    case PROP_ROTATION_Y:
+      priv->rotation_y = g_value_get_float (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
+    case PROP_ROTATION_Z:
+      priv->rotation_z = g_value_get_float (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
+    case PROP_SCALE_X:
+      priv->scale_x = g_value_get_float (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
+    case PROP_SCALE_Y:
+      priv->scale_y = g_value_get_float (value);
+      gst_d3d12_video_sink_set_orientation (self, priv->orientation, FALSE);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -350,6 +452,30 @@ gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
     case PROP_MSAA:
       g_value_set_enum (value, priv->msaa);
       break;
+    case PROP_REDRAW_ON_UPDATE:
+      g_value_set_boolean (value, priv->redraw_on_update);
+      break;
+    case PROP_FOV:
+      g_value_set_float (value, priv->fov);
+      break;
+    case PROP_ORTHO:
+      g_value_set_boolean (value, priv->ortho);
+      break;
+    case PROP_ROTATION_X:
+      g_value_set_float (value, priv->rotation_x);
+      break;
+    case PROP_ROTATION_Y:
+      g_value_set_float (value, priv->rotation_x);
+      break;
+    case PROP_ROTATION_Z:
+      g_value_set_float (value, priv->rotation_z);
+      break;
+    case PROP_SCALE_X:
+      g_value_set_float (value, priv->scale_x);
+      break;
+    case PROP_SCALE_Y:
+      g_value_set_float (value, priv->scale_y);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -377,7 +503,10 @@ gst_d3d12_video_sink_set_orientation (GstD3D12VideoSink * self,
   else
     priv->orientation_selected = priv->orientation;
 
-  gst_d3d12_window_set_orientation (priv->window, priv->orientation_selected);
+  gst_d3d12_window_set_orientation (priv->window,
+      priv->redraw_on_update, priv->orientation_selected, priv->fov,
+      priv->ortho, priv->rotation_x, priv->rotation_y, priv->rotation_z,
+      priv->scale_x, priv->scale_y);
 }
 
 static void

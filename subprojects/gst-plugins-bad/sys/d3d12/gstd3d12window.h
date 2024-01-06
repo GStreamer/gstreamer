@@ -73,7 +73,15 @@ void             gst_d3d12_window_set_enable_navigation_events (GstD3D12Window *
                                                                 gboolean enable);
 
 void             gst_d3d12_window_set_orientation (GstD3D12Window * window,
-                                                   GstVideoOrientationMethod orientation);
+                                                   gboolean immediate,
+                                                   GstVideoOrientationMethod orientation,
+                                                   gfloat fov,
+                                                   gboolean ortho,
+                                                   gfloat rotation_x,
+                                                   gfloat rotation_y,
+                                                   gfloat rotation_z,
+                                                   gfloat scale_x,
+                                                   gfloat scale_y);
 
 void             gst_d3d12_window_set_title (GstD3D12Window * window,
                                              const gchar * title);

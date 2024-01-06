@@ -52,4 +52,10 @@ GType gst_d3d12_msaa_mode_get_type (void);
 void          gst_d3d12_buffer_after_write (GstBuffer * buffer,
                                             guint64 fence_value);
 
+gboolean      gst_d3d12_need_transform (gfloat rotation_x,
+                                        gfloat rotation_y,
+                                        gfloat rotation_z,
+                                        gfloat scale_x,
+                                        gfloat scale_y);
+
 G_END_DECLS

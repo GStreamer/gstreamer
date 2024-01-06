@@ -150,4 +150,16 @@ gboolean            gst_d3d12_converter_update_blend_state (GstD3D12Converter * 
                                                             const D3D12_BLEND_DESC * blend_desc,
                                                             const gfloat blend_factor[4]);
 
+gboolean            gst_d3d12_converter_apply_transform (GstD3D12Converter * converter,
+                                                         GstVideoOrientationMethod orientation,
+                                                         gfloat viewport_width,
+                                                         gfloat viewport_height,
+                                                         gfloat fov,
+                                                         gboolean ortho,
+                                                         gfloat rotation_x,
+                                                         gfloat rotation_y,
+                                                         gfloat rotation_z,
+                                                         gfloat scale_x,
+                                                         gfloat scale_y);
+
 G_END_DECLS

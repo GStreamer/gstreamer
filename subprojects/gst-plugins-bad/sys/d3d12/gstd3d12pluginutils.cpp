@@ -23,6 +23,13 @@
 
 #include "gstd3d12pluginutils.h"
 
+#define _XM_NO_INTRINSICS_
+#include <DirectXMath.h>
+
+/* *INDENT-OFF* */
+using namespace DirectX;
+/* *INDENT-ON* */
+
 GType
 gst_d3d12_sampling_method_get_type (void)
 {
@@ -101,4 +108,21 @@ gst_d3d12_buffer_after_write (GstBuffer * buffer, guint64 fence_value)
     GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
     GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
   }
+}
+
+gboolean
+gst_d3d12_need_transform (gfloat rotation_x, gfloat rotation_y,
+    gfloat rotation_z, gfloat scale_x, gfloat scale_y)
+{
+  const gfloat min_diff = 0.00001f;
+
+  if (!XMScalarNearEqual (rotation_x, 0.0f, min_diff) ||
+      !XMScalarNearEqual (rotation_y, 0.0f, min_diff) ||
+      !XMScalarNearEqual (rotation_z, 0.0f, min_diff) ||
+      !XMScalarNearEqual (scale_x, 1.0f, min_diff) ||
+      !XMScalarNearEqual (scale_y, 1.0f, min_diff)) {
+    return TRUE;
+  }
+
+  return FALSE;
 }
