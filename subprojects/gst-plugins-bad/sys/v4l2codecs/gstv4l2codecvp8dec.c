@@ -55,9 +55,14 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
     );
 
 #define SRC_CAPS \
+    GST_VIDEO_DMA_DRM_CAPS_MAKE " ; " \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+#define SRC_CAPS_NO_DRM \
     GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
 
 static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
+static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
 
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
@@ -70,6 +75,7 @@ struct _GstV4l2CodecVp8Dec
   GstV4l2Decoder *decoder;
   GstVideoCodecState *output_state;
   GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm vinfo_drm;
   gint width;
   gint height;
 
@@ -195,7 +201,8 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
     },
   };
   /* *INDENT-ON* */
-  GstCaps *filter, *caps;
+  GstCaps *peer_caps, *filter, *caps;
+  GstStaticCaps *static_filter;
 
   /* Ignore downstream renegotiation request. */
   if (self->streaming)
@@ -221,7 +228,13 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  filter = gst_v4l2_decoder_enum_src_formats (self->decoder, &static_src_caps);
+  /* If the peer has ANY caps only advertise system memory caps */
+  peer_caps = gst_pad_peer_query_caps (decoder->srcpad, NULL);
+  static_filter =
+      gst_caps_is_any (peer_caps) ? &static_src_caps_no_drm : &static_src_caps;
+  gst_caps_unref (peer_caps);
+
+  filter = gst_v4l2_decoder_enum_src_formats (self->decoder, static_filter);
   if (!filter) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("No supported decoder output formats"), (NULL));
@@ -233,7 +246,8 @@ gst_v4l2_codec_vp8_dec_negotiate (GstVideoDecoder * decoder)
   gst_caps_unref (filter);
   GST_DEBUG_OBJECT (self, "Peer supported formats: %" GST_PTR_FORMAT, caps);
 
-  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo)) {
+  if (!gst_v4l2_decoder_select_src_format (self->decoder, caps, &self->vinfo,
+          &self->vinfo_drm)) {
     GST_ELEMENT_ERROR (self, CORE, NEGOTIATION,
         ("Unsupported pixel format"),
         ("No support for %ux%u format %s", self->width, self->height,
@@ -249,7 +263,7 @@ done:
 
   self->output_state =
       gst_v4l2_decoder_set_output_state (GST_VIDEO_DECODER (self), &self->vinfo,
-      self->width, self->height, vp8dec->input_state);
+      &self->vinfo_drm, self->width, self->height, vp8dec->input_state);
 
   if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
     if (self->streaming)
@@ -282,17 +296,31 @@ gst_v4l2_codec_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstV4l2CodecVp8Dec *self = GST_V4L2_CODEC_VP8_DEC (decoder);
+  GstCaps *caps = NULL;
   guint min = 0;
   guint num_bitstream;
 
   if (self->streaming)
     goto no_internal_changes;
 
+  g_clear_object (&self->src_pool);
+  g_clear_object (&self->src_allocator);
+
   self->has_videometa = gst_query_find_allocation_meta (query,
       GST_VIDEO_META_API_TYPE, NULL);
 
-  g_clear_object (&self->src_pool);
-  g_clear_object (&self->src_allocator);
+  gst_query_parse_allocation (query, &caps, NULL);
+  if (!caps) {
+    GST_ERROR_OBJECT (self, "No valid caps");
+    return FALSE;
+  }
+
+  if (gst_video_is_dma_drm_caps (caps) && !self->has_videometa) {
+    GST_ERROR_OBJECT (self,
+        "DMABuf caps negotiated without the mandatory support of VideoMeta");
+    return FALSE;
+  }
+  gst_caps_unref (caps);
 
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
@@ -869,6 +897,7 @@ gst_v4l2_codec_vp8_dec_subinit (GstV4l2CodecVp8Dec * self,
 {
   self->decoder = gst_v4l2_decoder_new (klass->device);
   gst_video_info_init (&self->vinfo);
+  gst_video_info_dma_drm_init (&self->vinfo_drm);
 }
 
 static void

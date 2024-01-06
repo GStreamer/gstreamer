@@ -410,6 +410,7 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   gint index = 0;
   GstCaps *caps, *tmp, *size_caps;
   GstVideoFormat format;
+  guint32 drm_fourcc;
 
   GST_DEBUG_OBJECT (self, "enumerate size for %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (pixelformat));
@@ -430,6 +431,31 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
     tmp = caps;
     caps = gst_caps_intersect_full (tmp, size_caps, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp);
+  }
+
+  /* TODO: Add a V4L2 to DRM fourcc translator for formats that we don't support
+   * in software.
+   */
+  drm_fourcc = gst_video_dma_drm_fourcc_from_format (format);
+  if (drm_fourcc /* != DRM_FORMAT_INVALID */ ) {
+    GstCaps *drm_caps;
+
+    drm_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+        "DMA_DRM", "drm-format", G_TYPE_STRING,
+        gst_video_dma_drm_fourcc_to_string (drm_fourcc, 0), NULL);
+    gst_caps_set_features_simple (drm_caps,
+        gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+
+    if (!gst_caps_is_empty (size_caps)) {
+      gst_caps_set_features_simple (size_caps,
+          gst_caps_features_from_string (GST_CAPS_FEATURE_MEMORY_DMABUF));
+      tmp = drm_caps;
+      drm_caps =
+          gst_caps_intersect_full (tmp, size_caps, GST_CAPS_INTERSECT_FIRST);
+      gst_caps_unref (tmp);
+    }
+
+    caps = gst_caps_merge (drm_caps, caps);
   }
 
   gst_caps_unref (size_caps);
@@ -491,7 +517,7 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
 
 gboolean
 gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
-    GstVideoInfo * vinfo)
+    GstVideoInfo * vinfo, GstVideoInfoDmaDrm * vinfo_drm)
 {
   gint ret;
   struct v4l2_format fmt = {
@@ -500,6 +526,7 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
   GstVideoFormat format;
   guint32 pix_fmt;
   GstVideoInfo tmp_vinfo;
+  GstVideoInfoDmaDrm tmp_vinfo_drm;
 
   if (gst_caps_is_empty (caps))
     return FALSE;
@@ -511,12 +538,15 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
   }
 
   gst_video_info_init (&tmp_vinfo);
+  gst_video_info_dma_drm_init (&tmp_vinfo_drm);
 
   GST_DEBUG_OBJECT (self, "Original caps: %" GST_PTR_FORMAT, caps);
   caps = gst_caps_fixate (caps);
   GST_DEBUG_OBJECT (self, "Fixated caps: %" GST_PTR_FORMAT, caps);
 
-  if (gst_video_info_from_caps (&tmp_vinfo, caps)) {
+  if (gst_video_info_dma_drm_from_caps (&tmp_vinfo_drm, caps)) {
+    format = tmp_vinfo_drm.vinfo.finfo->format;
+  } else if (gst_video_info_from_caps (&tmp_vinfo, caps)) {
     format = tmp_vinfo.finfo->format;
   } else {
     GST_WARNING_OBJECT (self, "Can't transform caps into video info!");
@@ -547,6 +577,17 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
     return FALSE;
   }
 
+  if (tmp_vinfo_drm.drm_fourcc) {
+    if (!gst_video_info_dma_drm_from_video_info (vinfo_drm, vinfo, 0)) {
+      GST_ERROR_OBJECT (self,
+          "Unsupported V4L2 pixelformat for DRM %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (fmt.fmt.pix_mp.pixelformat));
+      return FALSE;
+    }
+  } else {
+    gst_video_info_dma_drm_init (vinfo_drm);
+  }
+
   GST_INFO_OBJECT (self, "Selected format %s %ix%i",
       gst_video_format_to_string (vinfo->finfo->format),
       vinfo->width, vinfo->height);
@@ -556,15 +597,22 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
 
 GstVideoCodecState *
 gst_v4l2_decoder_set_output_state (GstVideoDecoder * decoder,
-    GstVideoInfo * vinfo, guint width, guint height,
-    GstVideoCodecState * reference)
+    GstVideoInfo * vinfo, GstVideoInfoDmaDrm * vinfo_drm, guint width,
+    guint height, GstVideoCodecState * reference)
 {
   GstVideoCodecState *state;
 
   state = gst_video_decoder_set_output_state (decoder, vinfo->finfo->format,
       width, height, reference);
 
-  state->caps = gst_video_info_to_caps (&state->info);
+  if (vinfo_drm->drm_fourcc /* != DRM_FORMAT_INVALID */ ) {
+    GstVideoInfoDmaDrm tmp_vinfo_drm;
+
+    gst_video_info_dma_drm_from_video_info (&tmp_vinfo_drm, &state->info, 0);
+    state->caps = gst_video_info_dma_drm_to_caps (&tmp_vinfo_drm);
+  } else {
+    state->caps = gst_video_info_to_caps (&state->info);
+  }
 
   GST_DEBUG_OBJECT (decoder, "Setting caps: %" GST_PTR_FORMAT, state->caps);
 
