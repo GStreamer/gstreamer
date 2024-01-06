@@ -72,10 +72,12 @@ GstCaps *         gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
 
 gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
                                                       GstCaps * caps,
-                                                      GstVideoInfo * vinfo);
+                                                      GstVideoInfo * vinfo,
+                                                      GstVideoInfoDmaDrm * vinfo_drm);
 
 GstVideoCodecState * gst_v4l2_decoder_set_output_state (GstVideoDecoder * decoder,
                                                         GstVideoInfo * vinfo,
+                                                        GstVideoInfoDmaDrm * drm_info,
                                                         guint width,
                                                         guint height,
                                                         GstVideoCodecState * reference);
