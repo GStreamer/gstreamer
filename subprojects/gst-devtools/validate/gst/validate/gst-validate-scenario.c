@@ -5941,24 +5941,27 @@ gst_validate_scenario_new (GstValidateRunner *
   GstClockTime base_time, start_time;
   gboolean use_system_clock = FALSE;
 
-  if (gst_validate_utils_get_clocktime (scenario->description, "base-time",
-          &base_time)) {
-    gst_validate_printf (NULL,
-        "**-> Setting %" GST_PTR_FORMAT " base time to %" GST_TIMEP_FORMAT
-        "**\n", pipeline, &base_time);
-    gst_element_set_base_time (GST_ELEMENT (pipeline), base_time);
+  if (scenario->description) {
+    if (gst_validate_utils_get_clocktime (scenario->description, "base-time",
+            &base_time)) {
+      gst_validate_printf (NULL,
+          "**-> Setting %" GST_PTR_FORMAT " base time to %" GST_TIMEP_FORMAT
+          "**\n", pipeline, &base_time);
+      gst_element_set_base_time (GST_ELEMENT (pipeline), base_time);
+    }
+
+    if (gst_validate_utils_get_clocktime (scenario->description, "start-time",
+            &start_time)) {
+      gst_validate_printf (NULL,
+          "**-> Setting %" GST_PTR_FORMAT " start time to %" GST_TIMEP_FORMAT
+          "**\n", pipeline, &base_time);
+      gst_element_set_start_time (GST_ELEMENT (pipeline), start_time);
+    }
+
+    gst_structure_get_boolean (scenario->description, "use-system-clock",
+        &use_system_clock);
   }
 
-  if (gst_validate_utils_get_clocktime (scenario->description, "start-time",
-          &start_time)) {
-    gst_validate_printf (NULL,
-        "**-> Setting %" GST_PTR_FORMAT " start time to %" GST_TIMEP_FORMAT
-        "**\n", pipeline, &base_time);
-    gst_element_set_start_time (GST_ELEMENT (pipeline), start_time);
-  }
-
-  gst_structure_get_boolean (scenario->description, "use-system-clock",
-      &use_system_clock);
   if (scenario->priv->clock) {
     if (use_system_clock)
       gst_validate_abort
