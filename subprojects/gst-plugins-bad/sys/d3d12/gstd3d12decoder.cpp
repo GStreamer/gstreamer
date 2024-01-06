@@ -1312,12 +1312,7 @@ gst_d3d12_decoder_can_direct_render (GstD3D12Decoder * self,
   if (priv->session->need_crop && !priv->session->use_crop_meta)
     return FALSE;
 
-  /* we can do direct render in this case, since there is no DPB pool size
-   * limit, or output picture does not use texture array */
-  if (priv->session->array_of_textures || priv->session->reference_only)
-    return TRUE;
-
-  return FALSE;
+  return TRUE;
 }
 
 static GstFlowReturn
@@ -1518,7 +1513,10 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
   }
 
   priv->session->lock.unlock ();
+
+  GST_BUFFER_FLAG_SET (frame->output_buffer, buffer_flags);
   gst_codec_picture_unref (picture);
+
   return gst_video_decoder_finish_frame (videodec, frame);
 
 error:
