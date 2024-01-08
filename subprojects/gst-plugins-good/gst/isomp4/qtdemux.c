@@ -8463,6 +8463,13 @@ gst_qtdemux_process_adapter (GstQTDemux * demux, gboolean force)
             gst_adapter_flush (demux->adapter, demux->neededbytes);
 
             ret = GST_FLOW_EOS;
+          } else if ((demux->segment.flags &
+                  GST_SEGMENT_FLAG_TRICKMODE_KEY_UNITS) != 0 &&
+              stream->subtype == FOURCC_vide && !keyframe) {
+            GST_LOG_OBJECT (demux, "Skipping non-keyframe on track-id %u",
+                stream->track_id);
+            gst_adapter_flush (demux->adapter, demux->neededbytes);
+            ret = GST_FLOW_OK;
           } else {
             GstBuffer *outbuf;
 
