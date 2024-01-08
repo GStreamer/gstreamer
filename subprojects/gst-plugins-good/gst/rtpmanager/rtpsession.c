@@ -3814,7 +3814,6 @@ typedef struct
   GstRTCPPacket packet;
   gboolean has_sdes;
   gboolean is_early;
-  gboolean may_suppress;
   GQueue output;
   guint nacked_seqnums;
   gboolean timeout_inactive_sources;
@@ -3978,8 +3977,6 @@ session_fir (RTPSession * sess, ReportData * data)
 
   if (gst_rtcp_packet_fb_get_fci_length (packet) == 0)
     gst_rtcp_packet_remove (packet);
-  else
-    data->may_suppress = FALSE;
 }
 
 static gboolean
@@ -4025,7 +4022,6 @@ session_pli (const gchar * key, RTPSource * source, ReportData * data)
   gst_rtcp_packet_fb_set_media_ssrc (packet, source->ssrc);
 
   source->send_pli = FALSE;
-  data->may_suppress = FALSE;
 
   source->stats.sent_pli_count++;
 }
@@ -4141,7 +4137,6 @@ session_nack (const gchar * key, RTPSource * source, ReportData * data)
 done:
   data->nacked_seqnums += nacked_seqnums;
   rtp_source_clear_nacks (source, nacked_seqnums);
-  data->may_suppress = FALSE;
 }
 
 /* perform cleanup of sources that timed out */
@@ -4685,7 +4680,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.ntpnstime = ntpnstime;
   data.running_time = running_time;
   data.num_to_report = 0;
-  data.may_suppress = FALSE;
   data.nacked_seqnums = 0;
   data.timeout_inactive_sources = sess->timeout_inactive_sources;
   g_queue_init (&data.output);
@@ -4748,8 +4742,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
       (GHFunc) clone_ssrcs_hashtable, table_copy);
 
   GST_DEBUG
-      ("doing RTCP generation %u for %u sources, early %d, may suppress %d",
-      sess->generation, data.num_to_report, data.is_early, data.may_suppress);
+      ("doing RTCP generation %u for %u sources, early %d",
+      sess->generation, data.num_to_report, data.is_early);
 
   /* generate RTCP for all internal sources, this might release the
    * session lock. */
@@ -4798,13 +4792,16 @@ done:
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDING_RTCP], 0,
         buffer, data.is_early, &do_not_suppress);
 
+    /* do_not_suppress is ignored because we never ever suppress RTCP packets
+     * here. Suppression of regular RTCP happens by simply not scheduling this
+     * function unless needed */
+
     empty_buffer = gst_buffer_get_size (buffer) == 0;
 
     if (!empty_buffer)
       all_empty = FALSE;
 
-    if (sess->callbacks.send_rtcp &&
-        !empty_buffer && (do_not_suppress || !data.may_suppress)) {
+    if (sess->callbacks.send_rtcp && !empty_buffer) {
       guint packet_size;
 
       packet_size = gst_buffer_get_size (buffer) + sess->header_len;
@@ -4822,9 +4819,7 @@ done:
       RTP_SESSION_UNLOCK (sess);
     } else {
       GST_DEBUG ("freeing packet callback: %p"
-          " empty_buffer: %d, "
-          " do_not_suppress: %d may_suppress: %d", sess->callbacks.send_rtcp,
-          empty_buffer, do_not_suppress, data.may_suppress);
+          " empty_buffer: %d", sess->callbacks.send_rtcp, empty_buffer);
       if (!empty_buffer) {
         RTP_SESSION_LOCK (sess);
         sess->stats.nacks_dropped += data.nacked_seqnums;

@@ -276,7 +276,6 @@ struct _RTPSession {
   GstClockTime  last_rtcp_interval;   /* T_rr */
   GstClockTime  start_time;
   gboolean      first_rtcp;
-  gboolean      allow_early;
 
   GstClockTime  next_early_rtcp_time;
 
