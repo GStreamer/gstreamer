@@ -254,6 +254,7 @@ _timeline_track_removed_cb (GESTimeline * timeline, GESTrack * track,
   _unlink_track (pipeline, track);
 }
 
+
 static void
 ges_pipeline_constructed (GObject * object)
 {
@@ -409,7 +410,8 @@ ges_pipeline_init (GESPipeline * self)
   self->priv->playsink =
       gst_element_factory_make ("playsink", "internal-sinks");
   self->priv->encodebin =
-      gst_element_factory_make ("encodebin", "internal-encodebin");
+      gst_element_factory_make ("encodebin2", "internal-encodebin");
+
   g_object_set (self->priv->encodebin, "avoid-reencoding", TRUE, NULL);
 
   if (G_UNLIKELY (self->priv->playsink == NULL))
@@ -626,8 +628,8 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
 
       for (tmp = self->priv->not_rendered_tracks; tmp; tmp = tmp->next)
         gst_element_set_locked_state (tmp->data, FALSE);
-    }
       break;
+    }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
       GstElement *queue = gst_bin_get_by_name (GST_BIN (self->priv->playsink),
@@ -1266,19 +1268,33 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
       GST_ERROR_OBJECT (pipeline, "Output URI not set !");
       return FALSE;
     }
+
     if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->encodebin)) {
       GST_ERROR_OBJECT (pipeline, "Couldn't add encodebin");
       return FALSE;
     }
-    if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->urisink)) {
-      GST_ERROR_OBJECT (pipeline, "Couldn't add URI sink");
-      return FALSE;
+
+    /* We know that encodebin2 will add its src pads as soon as the profile is
+     * set, so link the sink to it if it has a pad */
+    if (pipeline->priv->encodebin->numsrcpads > 0) {
+      if (pipeline->priv->encodebin->numsrcpads > 1) {
+        GST_WARNING_OBJECT (pipeline,
+            "Encodebin has more than one srcpad, this is not supported yet");
+      }
+
+      if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->urisink)) {
+        GST_ERROR_OBJECT (pipeline, "Couldn't add URI sink");
+        return FALSE;
+      }
+
+      gst_element_link_pads_full (pipeline->priv->encodebin, "src_0",
+          pipeline->priv->urisink, "sink", GST_PAD_LINK_CHECK_NOTHING);
+    } else {
+      GST_INFO_OBJECT (pipeline,
+          "Using an muxing sink, not adding any sink element");
     }
     g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
         !(!(mode & GES_PIPELINE_MODE_SMART_RENDER)), NULL);
-
-    gst_element_link_pads_full (pipeline->priv->encodebin, "src",
-        pipeline->priv->urisink, "sink", GST_PAD_LINK_CHECK_NOTHING);
   }
 
   if (pipeline->priv->timeline) {
