@@ -1163,20 +1163,43 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
   GList *l;
   gint best_width = -1, best_height = -1;
   gint best_fps_n = -1, best_fps_d = -1;
-  gint par_n, par_d;
+  gint par_n = 1, par_d = 1;
+  gint first_par_n = -1, first_par_d = -1;
   gdouble best_fps = 0.;
-  GstCaps *ret = NULL;
-  GstStructure *s;
+  GstCaps *ret;
+  gint i, caps_size;
+  GstCaps *preferred_caps;
+  GstCompositor *compositor = GST_COMPOSITOR (agg);
 
-  ret = gst_caps_make_writable (caps);
+  caps_size = gst_caps_get_size (caps);
+  /* pixel-aspect-ratio is taken from the output caps */
+  /* first try seeing if we can use square pixels */
+  for (i = 0; i < caps_size; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+    if (!gst_structure_has_field (s, "pixel-aspect-ratio")) {
+      par_n = par_d = 1;
+      break;
+    }
 
-  /* we need this to calculate how large to make the output frame */
-  s = gst_caps_get_structure (ret, 0);
-  if (gst_structure_has_field (s, "pixel-aspect-ratio")) {
+    s = gst_structure_copy (s);
     gst_structure_fixate_field_nearest_fraction (s, "pixel-aspect-ratio", 1, 1);
     gst_structure_get_fraction (s, "pixel-aspect-ratio", &par_n, &par_d);
-  } else {
-    par_n = par_d = 1;
+    gst_structure_free (s);
+
+    if (first_par_n == -1 || first_par_d == -1) {
+      first_par_n = par_n;
+      first_par_d = par_d;
+    }
+
+    if (par_n == 1 && par_d == 1)
+      break;
+  }
+  /* if not, we don't have a preferred PAR, so let's pick the first one we
+   * found, default caps negotiation shouldn't have fed us something
+   * impossible */
+  if (par_n != 1 || par_d != 1) {
+    par_n = first_par_n;
+    par_d = first_par_d;
   }
 
   GST_OBJECT_LOCK (vagg);
@@ -1195,7 +1218,7 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
 
     fps_n = GST_VIDEO_INFO_FPS_N (&vaggpad->info);
     fps_d = GST_VIDEO_INFO_FPS_D (&vaggpad->info);
-    _mixer_pad_get_output_size (GST_COMPOSITOR (vagg), compositor_pad, par_n,
+    _mixer_pad_get_output_size (compositor, compositor_pad, par_n,
         par_d, &width, &height, &x_offset, &y_offset);
 
     if (width == 0 || height == 0)
@@ -1226,16 +1249,56 @@ _fixate_caps (GstAggregator * agg, GstCaps * caps)
   GST_OBJECT_UNLOCK (vagg);
 
   if (best_fps_n <= 0 || best_fps_d <= 0 || best_fps == 0.0) {
-    best_fps_n = 25;
-    best_fps_d = 1;
-    best_fps = 25.0;
+    gint caps_size = gst_caps_get_size (caps);
+    /* First try to negotiate something useful from downstream */
+    for (i = 0; i < caps_size; i++) {
+      gint fps_n, fps_d;
+      gdouble cur_fps;
+      GstStructure *s2 = gst_caps_get_structure (caps, i);
+      if (!gst_structure_get_fraction (s2, "framerate", &fps_n, &fps_d)) {
+        fps_n = 0;
+        fps_d = 0;
+      }
+      if (fps_d == 0)
+        cur_fps = 0.0;
+      else
+        gst_util_fraction_to_double (fps_n, fps_d, &cur_fps);
+      if (best_fps < cur_fps) {
+        best_fps = cur_fps;
+        best_fps_n = fps_n;
+        best_fps_d = fps_d;
+      }
+    }
+    /* Otherwise, just go for 25 FPS */
+    if (best_fps_n <= 0 || best_fps_d <= 0 || best_fps == 0.0) {
+      best_fps_n = 25;
+      best_fps_d = 1;
+      best_fps = 25.0;
+    }
   }
 
-  gst_structure_fixate_field_nearest_int (s, "width", best_width);
-  gst_structure_fixate_field_nearest_int (s, "height", best_height);
-  gst_structure_fixate_field_nearest_fraction (s, "framerate", best_fps_n,
-      best_fps_d);
+  GST_DEBUG_OBJECT (compositor, "found best dimensions %dx%d best_fps %d/%d",
+      best_width, best_height, best_fps_n, best_fps_d);
+
+  preferred_caps =
+      gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, best_width,
+      "height", G_TYPE_INT, best_height, "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, par_n, par_d, "framerate", GST_TYPE_FRACTION,
+      best_fps_n, best_fps_d, NULL);
+  /* if we can't negotiate our preferred dimensions and framerate, prefer
+   * dimensions first */
+  gst_caps_append (preferred_caps, gst_caps_new_simple ("video/x-raw", "width",
+          G_TYPE_INT, best_width, "height", G_TYPE_INT, best_height,
+          "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d, NULL));
+  gst_caps_append (preferred_caps, gst_caps_new_simple ("video/x-raw",
+          "framerate", GST_TYPE_FRACTION, best_fps_n, best_fps_d, NULL));
+  /* otherwise, just let downstream negotiate something for us */
+  gst_caps_append (preferred_caps, gst_caps_new_empty_simple ("video/x-raw"));
+  ret =
+      gst_caps_intersect_full (preferred_caps, caps, GST_CAPS_INTERSECT_FIRST);
   ret = gst_caps_fixate (ret);
+  gst_caps_unref (caps);
+  gst_caps_unref (preferred_caps);
 
   return ret;
 }

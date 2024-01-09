@@ -6,8 +6,8 @@ meta,
     tool="ges-launch-$(gst_api_version)",
     args={
         --track-types, video, --video-caps,
-        "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1", --videosink,
-        "$(videosink) name=videosink",
+        "video/x-raw, format=(string)I420, width=(int)1080, height=(int)720, framerate=(fraction)1/1, pixel-aspect-ratio=(fraction)1/1",
+        --videosink, "$(videosink) name=videosink",
     },
     configs={
         [validateflow, pad=videosink:sink, buffers-checksum=true, ignored-fields="stream-start={stream-id,group-id,stream}"],

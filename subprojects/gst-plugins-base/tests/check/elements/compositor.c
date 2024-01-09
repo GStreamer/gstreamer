@@ -280,6 +280,114 @@ GST_START_TEST (test_event)
 
 GST_END_TEST;
 
+GST_START_TEST (test_downstream_negotiation)
+{
+  GstElement *bin, *compositor;
+  GstStateChangeReturn state_res;
+  GstPad *srcpad;
+  GError *err = NULL;
+  GstCaps *caps;
+  GstVideoInfo info;
+  gint fps_n, fps_d;
+
+  GST_INFO ("preparing first pipeline");
+
+  /* build pipeline */
+  bin =
+      gst_parse_launch
+      ("compositor name=compositor force-live=true ! identity ! tee name=t ! "
+      "queue ! videorate ! video/x-raw,framerate=60/1 ! fakesink "
+      "t. ! queue ! videorate ! video/x-raw,framerate=30/1 ! fakesink", &err);
+  fail_unless (bin != NULL, "Error parsing pipeline: %s",
+      err ? err->message : "(invalid error)");
+
+  compositor = gst_bin_get_by_name (GST_BIN (bin), "compositor");
+  g_assert_nonnull (compositor);
+
+  srcpad = gst_element_get_static_pad (compositor, "src");
+
+  GST_INFO ("starting test");
+
+  /* prepare playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* wait for completion */
+  state_res = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  GST_INFO ("checking caps");
+
+  caps = gst_pad_get_current_caps (srcpad);
+  gst_object_unref (srcpad);
+  g_assert_nonnull (caps);
+  g_assert (gst_caps_is_fixed (caps));
+  g_assert (gst_video_info_from_caps (&info, caps));
+  gst_caps_unref (caps);
+  fps_n = GST_VIDEO_INFO_FPS_N (&info);
+  fps_d = GST_VIDEO_INFO_FPS_D (&info);
+  g_assert (fps_n == 60);
+  g_assert (fps_d == 1);
+
+  GST_INFO ("teardown first pipeline");
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  gst_object_unref (compositor);
+
+  /* cleanup */
+  gst_object_unref (bin);
+  GST_INFO ("preparing second pipeline");
+
+  /* build pipeline */
+  bin =
+      gst_parse_launch
+      ("compositor name=compositor force-live=true ! identity ! tee name=t ! "
+      "queue ! videorate ! video/x-raw,framerate=30/1 ! fakesink "
+      "t. ! queue ! videorate ! video/x-raw,framerate=60/1 ! fakesink", &err);
+  fail_unless (bin != NULL, "Error parsing pipeline: %s",
+      err ? err->message : "(invalid error)");
+
+  compositor = gst_bin_get_by_name (GST_BIN (bin), "compositor");
+  g_assert_nonnull (compositor);
+
+  srcpad = gst_element_get_static_pad (compositor, "src");
+
+  GST_INFO ("starting test");
+
+  /* prepare playing */
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* wait for completion */
+  state_res = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  GST_INFO ("checking caps");
+
+  caps = gst_pad_get_current_caps (srcpad);
+  gst_object_unref (srcpad);
+  g_assert_nonnull (caps);
+  g_assert (gst_caps_is_fixed (caps));
+  g_assert (gst_video_info_from_caps (&info, caps));
+  gst_caps_unref (caps);
+  fps_n = GST_VIDEO_INFO_FPS_N (&info);
+  fps_d = GST_VIDEO_INFO_FPS_D (&info);
+  g_assert (fps_n == 60);
+  g_assert (fps_d == 1);
+
+  GST_INFO ("teardown second pipeline");
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* cleanup */
+  gst_object_unref (compositor);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 typedef struct _ProbeEvent
 {
   gboolean received;
@@ -2829,6 +2937,7 @@ compositor_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_caps);
   tcase_add_test (tc_chain, test_event);
+  tcase_add_test (tc_chain, test_downstream_negotiation);
   tcase_add_test (tc_chain, test_navigation_events);
   tcase_add_test (tc_chain, test_caps_query);
   tcase_add_test (tc_chain, test_caps_query_interlaced);
