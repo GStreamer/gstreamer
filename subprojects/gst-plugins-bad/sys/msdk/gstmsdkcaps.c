@@ -2045,26 +2045,6 @@ gst_msdkcaps_set_strings (GstCaps * caps,
 }
 
 gboolean
-gst_msdkcaps_remove_structure (GstCaps * caps, const gchar * features)
-{
-  guint size;
-  GstCapsFeatures *f;
-
-  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
-  g_return_val_if_fail (features != NULL, FALSE);
-
-  size = gst_caps_get_size (caps);
-  f = gst_caps_features_from_string (features);
-
-  for (guint i = 0; i < size; i++) {
-    if (gst_caps_features_is_equal (f, gst_caps_get_features (caps, i)))
-      gst_caps_remove_structure (caps, i);
-  }
-
-  return TRUE;
-}
-
-gboolean
 gst_msdkcaps_video_info_from_caps (const GstCaps * caps,
     GstVideoInfo * info, guint64 * modifier)
 {

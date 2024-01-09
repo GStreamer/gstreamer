@@ -243,12 +243,7 @@ gst_msdkvc1dec_register (GstPlugin * plugin,
 
   cdata = g_new (MsdkDecCData, 1);
   cdata->sink_caps = gst_caps_ref (sink_caps);
-#ifndef _WIN32
   cdata->src_caps = gst_caps_ref (src_caps);
-#else
-  cdata->src_caps = gst_caps_copy (src_caps);
-  gst_msdkcaps_remove_structure (cdata->src_caps, "memory:D3D11Memory");
-#endif
 
   GST_MINI_OBJECT_FLAG_SET (cdata->sink_caps,
       GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
