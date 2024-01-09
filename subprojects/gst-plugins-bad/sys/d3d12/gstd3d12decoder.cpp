@@ -216,9 +216,6 @@ struct DecoderCmdData
 
   ~DecoderCmdData ()
   {
-    if (queue)
-      gst_d3d12_command_queue_fence_wait (queue, G_MAXUINT64, event_handle);
-
     CloseHandle (event_handle);
     gst_clear_object (&ca_pool);
     gst_clear_object (&queue);
@@ -503,6 +500,14 @@ gst_d3d12_decoder_close (GstD3D12Decoder * decoder)
 {
   auto priv = decoder->priv;
 
+  GST_DEBUG_OBJECT (decoder, "Close");
+
+  if (priv->cmd) {
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
+        priv->cmd->event_handle);
+  }
+
+  priv->session = nullptr;
   priv->cmd = nullptr;
 
   gst_clear_object (&decoder->device);
@@ -775,6 +780,8 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
 {
   auto priv = decoder->priv;
 
+  GST_DEBUG_OBJECT (decoder, "Stop");
+
   priv->flushing = true;
   if (priv->cmd) {
     gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
@@ -790,6 +797,8 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
 
   g_clear_pointer (&priv->output_thread, g_thread_join);
   priv->flushing = false;
+
+  priv->session = nullptr;
 
   return TRUE;
 }
@@ -1565,7 +1574,8 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
           output_data.decoder, output_data.frame, output_data.picture,
           output_data.buffer_flags, output_data.width, output_data.height);
 
-      if (priv->last_flow != GST_FLOW_OK) {
+      if (priv->last_flow != GST_FLOW_FLUSHING &&
+          priv->last_flow != GST_FLOW_OK) {
         GST_WARNING_OBJECT (self, "Last flow was %s",
             gst_flow_get_name (priv->last_flow));
       }
