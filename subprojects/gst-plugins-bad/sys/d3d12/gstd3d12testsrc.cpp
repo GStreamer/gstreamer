@@ -560,7 +560,7 @@ setup_snow_render (GstD3D12TestSrc * self, RenderContext * ctx,
   ComPtr < ID3D12Resource > vertex_index_buf;
   hr = device->CreateCommittedResource (&heap_prop,
       D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-      &buffer_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+      &buffer_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
       IID_PPV_ARGS (&vertex_index_buf));
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create index buffer");
@@ -938,7 +938,7 @@ setup_smpte_render (GstD3D12TestSrc * self, RenderContext * ctx)
   ComPtr < ID3D12Resource > vertex_index_buf;
   hr = device->CreateCommittedResource (&heap_prop,
       D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-      &buffer_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+      &buffer_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
       IID_PPV_ARGS (&vertex_index_buf));
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create index buffer");
@@ -1104,7 +1104,7 @@ setup_checker_render (GstD3D12TestSrc * self, RenderContext * ctx,
   ComPtr < ID3D12Resource > vertex_index_buf;
   hr = device->CreateCommittedResource (&heap_prop,
       D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-      &buffer_desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+      &buffer_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
       IID_PPV_ARGS (&vertex_index_buf));
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create index buffer");
