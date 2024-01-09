@@ -1370,7 +1370,7 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
   auto swapbuf = priv->ctx->swap_buffers[cur_idx];
 
   auto crop_rect = priv->crop_rect;
-  auto crop_meta = gst_buffer_get_video_crop_meta (buffer);
+  auto crop_meta = gst_buffer_get_video_crop_meta (priv->ctx->cached_buf);
   if (crop_meta) {
     crop_rect = CD3DX12_BOX (crop_meta->x, crop_meta->y,
         crop_meta->x + crop_meta->width, crop_meta->y + crop_meta->height);
