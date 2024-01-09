@@ -299,6 +299,9 @@ commitlint:
     GST_WERROR: "true"
     MESON_ARGS: "${DEFAULT_MESON_ARGS}"
     SUBPROJECTS_CACHE_DIR: "/subprojects"
+    # Avoid weird issue about cross-device links
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
+    GI_SCANNER_DISABLE_CACHE: "1"
   script:
     - $CI_PROJECT_DIR/ci/scripts/build.sh
     - ./gst-env.py gst-inspect-1.0 --version
@@ -573,6 +576,10 @@ build macos:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
     SUBPROJECTS_CACHE_DIR: "/subprojects"
+
+    # Avoid weird issue about cross-device links
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
+    GI_SCANNER_DISABLE_CACHE: "1"
 
     # Disable colored output to avoid weird rendering issues
     GST_DEBUG_NO_COLOR: "true"
