@@ -267,6 +267,9 @@ gst indent:
   timeout: '45min'
   variables:
     MESON_ARGS: "${DEFAULT_MESON_ARGS} ${MESON_BUILDTYPE_ARGS} ${MESON_GST_WERROR}"
+    # Avoid weird issue about cross-device links
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
+    GI_SCANNER_DISABLE_CACHE: "1"
   script:
     - *build
     - ./gst-env.py gst-inspect-1.0 --version
@@ -458,6 +461,10 @@ build msys2 :
     - "trigger"
   variables:
     MESON_ARGS: *simple_build
+
+    # Avoid weird issue about cross-device links
+    # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
+    GI_SCANNER_DISABLE_CACHE: "1"
 
     # Disable colored output to avoid weird rendering issues
     GST_DEBUG_NO_COLOR: "true"
