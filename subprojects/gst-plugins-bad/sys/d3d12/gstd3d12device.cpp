@@ -83,6 +83,44 @@ struct _GstD3D12DevicePrivate
 
     gst_clear_object (&copy_ca_pool);
     gst_clear_object (&copy_cl_pool);
+
+    factory = nullptr;
+    adapter = nullptr;
+    d3d11on12 = nullptr;
+
+    if (info_queue && device) {
+      ComPtr <ID3D12DebugDevice> debug_dev;
+      device.As (&debug_dev);
+      if (debug_dev) {
+        debug_dev->ReportLiveDeviceObjects (D3D12_RLDO_DETAIL |
+            D3D12_RLDO_IGNORE_INTERNAL);
+
+        UINT64 num_msg = info_queue->GetNumStoredMessages ();
+        for (UINT64 i = 0; i < num_msg; i++) {
+          HRESULT hr;
+          SIZE_T msg_len;
+          D3D12_MESSAGE *msg;
+
+          hr = info_queue->GetMessage (i, nullptr, &msg_len);
+          if (FAILED (hr) || msg_len == 0)
+            continue;
+
+          msg = (D3D12_MESSAGE *) g_malloc0 (msg_len);
+          hr = info_queue->GetMessage (i, msg, &msg_len);
+          if (FAILED (hr) || msg_len == 0) {
+            g_free (msg);
+            continue;
+          }
+
+          gst_debug_log (gst_d3d12_sdk_debug, GST_LEVEL_INFO,
+              __FILE__, GST_FUNCTION, __LINE__, nullptr,
+              "D3D12InfoQueue: %s", msg->pDescription);
+          g_free (msg);
+        }
+
+        info_queue->ClearStoredMessages ();
+      }
+    }
   }
 
   ComPtr<ID3D12Device> device;
