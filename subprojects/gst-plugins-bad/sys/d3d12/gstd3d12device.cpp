@@ -891,9 +891,10 @@ gst_d3d12_device_get_completed_value (GstD3D12Device * device,
 gboolean
 gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value,
-    gpointer fence_data, GDestroyNotify notify)
+    GstD3D12FenceData * fence_data)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (fence_data, FALSE);
 
   auto priv = device->priv;
   GstD3D12CommandQueue *queue;
@@ -910,7 +911,8 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
       return FALSE;
   }
 
-  gst_d3d12_command_queue_set_notify (queue, fence_value, fence_data, notify);
+  gst_d3d12_command_queue_set_notify (queue, fence_value, fence_data,
+      (GDestroyNotify) gst_d3d12_fence_data_unref);
 
   return TRUE;
 }

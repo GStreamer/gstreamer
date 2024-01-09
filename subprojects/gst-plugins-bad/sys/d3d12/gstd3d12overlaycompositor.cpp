@@ -692,13 +692,6 @@ gst_d3d12_overlay_compositor_update_viewport (GstD3D12OverlayCompositor *
   return TRUE;
 }
 
-static void
-pso_free_func (ID3D12PipelineState * pso)
-{
-  if (pso)
-    pso->Release ();
-}
-
 static gboolean
 gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
     GstBuffer * buf, GstD3D12FenceData * fence_data,
@@ -764,20 +757,18 @@ gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
 
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
-    gst_d3d12_fence_data_add_notify (fence_data, gst_mini_object_ref (rect),
-        (GDestroyNotify) gst_mini_object_unref);
+    gst_d3d12_fence_data_add_notify_mini_object (fence_data,
+        gst_mini_object_ref (rect));
 
     prev_pso = nullptr;
     prev_pso = pso;
   }
 
   priv->pso->AddRef ();
-  gst_d3d12_fence_data_add_notify (fence_data, priv->pso.Get (),
-      (GDestroyNotify) pso_free_func);
+  gst_d3d12_fence_data_add_notify_com (fence_data, priv->pso.Get ());
 
   priv->pso_premul->AddRef ();
-  gst_d3d12_fence_data_add_notify (fence_data, priv->pso_premul.Get (),
-      (GDestroyNotify) pso_free_func);
+  gst_d3d12_fence_data_add_notify_com (fence_data, priv->pso_premul.Get ());
 
   return TRUE;
 }

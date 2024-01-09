@@ -2089,8 +2089,7 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
-      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
           inbuf, outbuf, fence_data, priv->ctx->cl.Get ())) {
@@ -2118,8 +2117,7 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   gst_d3d12_buffer_after_write (outbuf, priv->ctx->fence_val);
 
   gst_d3d12_device_set_fence_notify (priv->ctx->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val, fence_data,
-      (GDestroyNotify) gst_d3d12_fence_data_unref);
+      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val, fence_data);
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);
 

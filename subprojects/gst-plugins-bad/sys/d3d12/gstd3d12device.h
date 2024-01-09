@@ -101,8 +101,7 @@ guint64                 gst_d3d12_device_get_completed_value      (GstD3D12Devic
 gboolean                gst_d3d12_device_set_fence_notify         (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
                                                                    guint64 fence_value,
-                                                                   gpointer fence_data,
-                                                                   GDestroyNotify notify);
+                                                                   GstD3D12FenceData * fence_data);
 
 gboolean                gst_d3d12_device_fence_wait               (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,

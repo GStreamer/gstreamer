@@ -1484,8 +1484,7 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
-      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (swapbuf->backbuf, 0);
   auto backbuf_texture = gst_d3d12_memory_get_resource_handle (mem);

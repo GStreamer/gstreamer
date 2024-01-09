@@ -29,8 +29,6 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstD3D12FenceDataPool,
     gst_d3d12_fence_data_pool, GST, D3D12_FENCE_DATA_POOL, GstObject);
 
-typedef struct _GstD3D12FenceData GstD3D12FenceData;
-
 GstD3D12FenceDataPool * gst_d3d12_fence_data_pool_new (void);
 
 gboolean                gst_d3d12_fence_data_pool_acquire (GstD3D12FenceDataPool * pool,
@@ -39,6 +37,12 @@ gboolean                gst_d3d12_fence_data_pool_acquire (GstD3D12FenceDataPool
 void                    gst_d3d12_fence_data_add_notify (GstD3D12FenceData * data,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
+
+void                    gst_d3d12_fence_data_add_notify_com (GstD3D12FenceData * data,
+                                                             gpointer unknown);
+
+void                    gst_d3d12_fence_data_add_notify_mini_object (GstD3D12FenceData * data,
+                                                                     gpointer object);
 
 GstD3D12FenceData *     gst_d3d12_fence_data_ref (GstD3D12FenceData * data);
 

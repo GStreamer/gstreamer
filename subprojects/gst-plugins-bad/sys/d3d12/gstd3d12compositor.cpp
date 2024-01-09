@@ -1110,8 +1110,7 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (self->priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
-      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   ComPtr < ID3D12CommandAllocator > ca;
   gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
@@ -1203,7 +1202,7 @@ gst_d3d12_compositor_pad_clean_frame (GstVideoAggregatorPad * pad,
   if (priv->ctx && priv->ctx->fence_data) {
     gst_d3d12_device_set_fence_notify (priv->ctx->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val,
-        priv->ctx->fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
+        priv->ctx->fence_data);
     priv->ctx->fence_data = nullptr;
   }
 }
@@ -2173,13 +2172,6 @@ gst_d3d12_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   return TRUE;
 }
 
-static void
-resource_free_func (ID3D12Resource * resource)
-{
-  if (resource)
-    resource->Release ();
-}
-
 static gboolean
 gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
 {
@@ -2218,8 +2210,7 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
-      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   ComPtr < ID3D12CommandAllocator > ca;
   gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
@@ -2318,14 +2309,12 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
       bg_render->fence_val);
 
   if (bg_render->vertex_index_upload) {
-    gst_d3d12_fence_data_add_notify (fence_data,
-        bg_render->vertex_index_upload.Detach (),
-        (GDestroyNotify) resource_free_func);
+    gst_d3d12_fence_data_add_notify_com (fence_data,
+        bg_render->vertex_index_upload.Detach ());
   }
 
   gst_d3d12_device_set_fence_notify (self->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->bg_render->fence_val,
-      fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
+      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->bg_render->fence_val, fence_data);
 
   return TRUE;
 }

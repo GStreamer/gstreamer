@@ -58,5 +58,7 @@ typedef struct _GstD3D12Converter GstD3D12Converter;
 typedef struct _GstD3D12ConverterClass GstD3D12ConverterClass;
 typedef struct _GstD3D12ConverterPrivate GstD3D12ConverterPrivate;
 
+typedef struct _GstD3D12FenceData GstD3D12FenceData;
+
 G_END_DECLS
 

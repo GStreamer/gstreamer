@@ -1500,8 +1500,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
     return FALSE;
   }
 
-  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
-      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
   hr = ca->Reset ();
@@ -1634,8 +1633,7 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
   }
 
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
-      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
 
@@ -1701,8 +1699,7 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
   }
 
   gst_d3d12_device_set_fence_notify (self->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->fence_val, fence_data,
-      (GDestroyNotify) gst_d3d12_fence_data_unref);
+      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->fence_val, fence_data);
 
   gst_d3d12_buffer_after_write (buffer, priv->fence_val);
 
@@ -1725,7 +1722,7 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
 
       gst_d3d12_device_set_fence_notify (self->device,
           D3D12_COMMAND_LIST_TYPE_DIRECT, priv->mouse_fence_val,
-          priv->mouse_fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
+          priv->mouse_fence_data);
       priv->mouse_fence_data = nullptr;
 
       gst_d3d12_buffer_after_write (buffer, priv->mouse_fence_val);

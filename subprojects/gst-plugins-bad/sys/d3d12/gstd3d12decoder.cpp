@@ -1247,11 +1247,9 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify (fence_data,
-      gst_mini_object_ref (decoder_pic),
-      (GDestroyNotify) gst_mini_object_unref);
-  gst_d3d12_fence_data_add_notify (fence_data, gst_ca,
-      (GDestroyNotify) gst_d3d12_command_allocator_unref);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data,
+      gst_mini_object_ref (decoder_pic));
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   gst_d3d12_command_queue_set_notify (priv->cmd->queue, priv->cmd->fence_val,
       fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
