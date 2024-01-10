@@ -1134,7 +1134,7 @@ gst_va_base_dec_process_output (GstVaBaseDec * base, GstVideoCodecFrame * frame,
     base->need_negotiation = TRUE;
     if (!gst_video_decoder_negotiate (vdec)) {
       GST_ERROR_OBJECT (base, "Could not re-negotiate with updated state");
-      return GST_FLOW_ERROR;
+      return FALSE;
     }
   }
 
