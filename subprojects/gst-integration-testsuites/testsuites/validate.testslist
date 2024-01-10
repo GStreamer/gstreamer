@@ -929,6 +929,7 @@ validate.test.clock_sync.video_1fps
 validate.test.clock_sync.video_30fps
 validate.test.dash.seek_with_stop_between_fragments
 validate.test.decryptor.cenc_audio_esds_property_overrides
+validate.test.encodebin.encode_no_muxer
 validate.test.flow.simple_test
 validate.test.flvdemux.audio_only.play_15s
 validate.test.flvdemux.seek_with_stop

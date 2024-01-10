@@ -1452,6 +1452,29 @@ err:
   goto done;
 }
 
+static gboolean
+gst_encode_base_bin_create_src_pad (GstEncodeBaseBin * ebin, GstPad * target)
+{
+  GstPadTemplate *template =
+      gst_element_get_pad_template (GST_ELEMENT (ebin), "src_%u");
+  gchar *name;
+  GstPad *pad;
+
+  GST_OBJECT_LOCK (ebin);
+  name = g_strdup_printf ("src_%u", GST_ELEMENT (ebin)->numsrcpads);
+  GST_OBJECT_UNLOCK (ebin);
+
+  pad = gst_ghost_pad_new_from_template (name, target, template);
+  g_free (name);
+  if (!pad)
+    return FALSE;
+
+  gst_element_add_pad (GST_ELEMENT (ebin), pad);
+
+  return TRUE;
+}
+
+
 /* FIXME : Add handling of streams that don't require conversion elements */
 /*
  * Create the elements, StreamGroup, add the sink pad, link it to the muxer
@@ -1538,7 +1561,15 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
     }
     gst_object_unref (muxerpad);
   } else {
-    gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
+    if (ebin->srcpad) {
+      gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
+    } else {
+      if (!gst_encode_base_bin_create_src_pad (ebin, srcpad)) {
+        gst_object_unref (srcpad);
+
+        goto cant_add_src_pad;
+      }
+    }
   }
   gst_object_unref (srcpad);
   srcpad = NULL;
@@ -1915,6 +1946,10 @@ splitter_encoding_failure:
   GST_ERROR_OBJECT (ebin, "Error linking splitter to encoding stream");
   goto cleanup;
 
+cant_add_src_pad:
+  GST_ERROR_OBJECT (ebin, "Couldn't add srcpad to encodebin");
+  goto cleanup;
+
 no_muxer_pad:
   GST_ERROR_OBJECT (ebin,
       "Couldn't find a compatible muxer pad to link encoder to");
@@ -2243,22 +2278,10 @@ create_elements_and_pads (GstEncodeBaseBin * ebin)
 
       gst_object_unref (muxerpad);
     } else if (muxerpad) {
-      GstPadTemplate *template =
-          gst_element_get_pad_template (GST_ELEMENT (ebin), "src_%u");
-      gchar *name;
-      GstPad *pad;
-
-      GST_OBJECT_LOCK (ebin);
-      name = g_strdup_printf ("src_%u", GST_ELEMENT (ebin)->numsrcpads);
-      GST_OBJECT_UNLOCK (ebin);
-
-      pad = gst_ghost_pad_new_from_template (name, muxerpad, template);
-      g_free (name);
-      if (!pad)
+      if (!gst_encode_base_bin_create_src_pad (ebin, muxerpad)) {
         goto no_muxer_ghost_pad;
-
+      }
       gst_object_unref (muxerpad);
-      gst_element_add_pad (GST_ELEMENT (ebin), pad);
     }
 
     /* Activate fixed presence streams */
