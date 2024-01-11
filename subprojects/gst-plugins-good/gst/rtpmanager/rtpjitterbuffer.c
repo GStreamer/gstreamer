@@ -1312,7 +1312,7 @@ rtp_jitter_buffer_append_query (RTPJitterBuffer * jbuf, GstQuery * query)
   RTPJitterBufferItem *item =
       rtp_jitter_buffer_alloc_item (query, ITEM_TYPE_QUERY, -1, -1, -1, 0, -1,
       NULL);
-  gboolean head;
+  gboolean head = FALSE;
   rtp_jitter_buffer_insert (jbuf, item, &head, NULL);
   return head;
 }
