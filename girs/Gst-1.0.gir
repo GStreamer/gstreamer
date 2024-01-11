@@ -26903,6 +26903,35 @@ last ref and @obj is about to be freed.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <function-macro name="OBJECT_AUTO_LOCK" c:identifier="GST_OBJECT_AUTO_LOCK" version="1.24.0" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.h">Declare a #GMutexLocker variable with g_autoptr() and lock the object. The
+mutex will be unlocked automatically when leaving the scope.
+
+``` c
+{
+  GST_OBJECT_AUTO_LOCK (obj, locker);
+
+  obj-&gt;stuff_with_lock();
+  if (cond) {
+    // No need to unlock
+    return;
+  }
+
+  // Unlock before end of scope
+  g_clear_pointer (&amp;locker, g_mutex_locker_free);
+  obj-&gt;stuff_without_lock();
+}
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstobject.h"/>
+      <parameters>
+        <parameter name="obj">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.h">a #GstObject to lock</doc>
+        </parameter>
+        <parameter name="var">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstobject.h">a variable name to be declared</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="OBJECT_CAST" c:identifier="GST_OBJECT_CAST" introspectable="0">
       <source-position filename="../subprojects/gstreamer/gst/gstobject.h"/>
       <parameters>
@@ -28479,6 +28508,35 @@ queries explicitly if your element supports multiple scheduling modes.</doc>
       <parameters>
         <parameter name="pad">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.h">a #GstPad</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="PAD_STREAM_AUTO_LOCK" c:identifier="GST_PAD_STREAM_AUTO_LOCK" version="1.24.0" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.h">Declare a #GRecMutexLocker variable with g_autoptr() and lock the pad. The
+recursive mutex will be unlocked automatically when leaving the scope.
+
+``` c
+{
+  GST_PAD_STREAM_AUTO_LOCK (pad, locker);
+
+  gst_pad_push_event(pad, event1);
+  if (cond) {
+    // No need to unlock
+    return;
+  }
+
+  // Unlock before end of scope
+  g_clear_pointer (&amp;locker, g_rec_mutex_locker_free);
+  gst_pad_push_event(pad, event2);
+}
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
+      <parameters>
+        <parameter name="pad">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.h">a #GstPad</doc>
+        </parameter>
+        <parameter name="var">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.h">a variable name to be declared</doc>
         </parameter>
       </parameters>
     </function-macro>
