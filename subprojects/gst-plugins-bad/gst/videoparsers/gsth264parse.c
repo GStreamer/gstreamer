@@ -1671,8 +1671,8 @@ gst_h264_parse_clear_backlog (GstH264Parse * h264parse)
 
 static gboolean
 gst_h264_parse_process_backlog_loop (GstH264Parse * h264parse,
-    gint curr_next_thresh, gboolean * aud_insert, guint8 * data,
-    gint * framesize)
+    gint curr_next_thresh, gboolean adjust_offset_for_next,
+    gboolean * aud_insert, guint8 * data, gint * framesize)
 {
   GstH264NalUnit *bnalu;
   gint i, size = 0;
@@ -1690,7 +1690,7 @@ gst_h264_parse_process_backlog_loop (GstH264Parse * h264parse,
 
       size = bnalu->offset + bnalu->size;
       h264parse->bl_next_nal = i + 1;
-    } else {
+    } else if (adjust_offset_for_next) {
       /* section of backlog that belong to next AU */
       bnalu->offset -= size;
       bnalu->sc_offset -= size;
@@ -1726,10 +1726,11 @@ gst_h264_parse_process_backlog_nal (GstH264Parse * h264parse, gint * proc_size,
    * insert a AUD. If the first nal from next AU is a AUD we don't need to wait
    * the completion the first vcl from next AU, AUD is the start of next AU.
    */
-  if (gst_h264_parse_process_backlog_loop (h264parse,
-          h264parse->bl_next_au_first_nal, aud_insert, data,
-          &framesize) == FALSE)
+  if (!gst_h264_parse_process_backlog_loop (h264parse,
+          h264parse->bl_next_au_first_nal, FALSE, aud_insert, data,
+          &framesize)) {
     goto fail;
+  }
 
   /* We've processed a complete AU */
   if (au_completed) {
@@ -1737,9 +1738,10 @@ gst_h264_parse_process_backlog_nal (GstH264Parse * h264parse, gint * proc_size,
   }
 
   /* Process all backlog. Used when draining or output in NAL mode. */
-  if (gst_h264_parse_process_backlog_loop (h264parse,
-          h264parse->nal_backlog->len, aud_insert, data, &framesize) == FALSE)
+  if (!gst_h264_parse_process_backlog_loop (h264parse,
+          h264parse->nal_backlog->len, TRUE, aud_insert, data, &framesize)) {
     goto fail;
+  }
 
   if (clear_bl) {
     gst_h264_parse_clear_backlog (h264parse);
@@ -1772,10 +1774,11 @@ gst_h264_parse_process_backlog (GstH264Parse * h264parse, gint * proc_size,
       h264parse->nal_backlog->len - 1);
   h264parse->current_off = bnalu->offset + bnalu->size;
 
-  if (gst_h264_parse_process_backlog_loop (h264parse,
-          h264parse->bl_next_au_first_nal, aud_insert, data,
-          &framesize) == FALSE)
+  if (!gst_h264_parse_process_backlog_loop (h264parse,
+          h264parse->bl_next_au_first_nal, !proc_nau, aud_insert, data,
+          &framesize)) {
     goto fail;
+  }
 
   /* We've processed a complete AU */
   if (h264parse->bl_next_au_first_nal < h264parse->nal_backlog->len) {
@@ -1784,9 +1787,16 @@ gst_h264_parse_process_backlog (GstH264Parse * h264parse, gint * proc_size,
 
   /* Process all backlog. Used when draining or output in NAL mode. */
   if (proc_nau) {
-    if (gst_h264_parse_process_backlog_loop (h264parse,
-            h264parse->nal_backlog->len, aud_insert, data, &framesize) == FALSE)
+    gint drain_size = 0;
+    if (!gst_h264_parse_process_backlog_loop (h264parse,
+            h264parse->nal_backlog->len, TRUE, aud_insert, data, &drain_size)) {
       goto fail;
+    }
+
+    /* returned size is pointing the byte position of the last nalu end.
+     * do not accumulate but replace with last nalu position */
+    if (drain_size > 0)
+      framesize = drain_size;
   }
 
   if (clear_bl) {
