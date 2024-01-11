@@ -137,7 +137,7 @@ typedef struct _GstSoupVTable
     GAsyncResult * result, GError ** error);
   GInputStream *(*_soup_session_send) (SoupSession * session, SoupMessage * msg,
     GCancellable * cancellable, GError ** error);
-  SoupCookie* (*_soup_cookie_parse) (const char* header, GUri* origin);
+  SoupCookie* (*_soup_cookie_parse) (const char* header, gpointer origin_uri);
   void (*_soup_cookies_to_request) (GSList* cookies, SoupMessage* msg);
   void (*_soup_cookies_free) (GSList *cookies);
 
