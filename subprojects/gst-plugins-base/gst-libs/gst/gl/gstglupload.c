@@ -2569,7 +2569,8 @@ _directviv_upload_perform_gl_thread (GstGLContext * context,
 
   gl->BindTexture (GL_TEXTURE_2D, out_gl_mem->tex_id);
   directviv->TexDirectVIVMap (GL_TEXTURE_2D, width, height,
-      gl_format, (void **) &unmap_data->map.data, &unmap_data->phys_addr);
+      gl_format, (void **) &unmap_data->map.data,
+      (GLuint *) & unmap_data->phys_addr);
   directviv->TexDirectInvalidateVIV (GL_TEXTURE_2D);
 }
 
