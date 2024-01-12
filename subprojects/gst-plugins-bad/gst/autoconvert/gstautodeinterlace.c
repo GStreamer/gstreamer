@@ -91,6 +91,15 @@ gst_auto_deinterlace_field_layout_get_type (void)
   return auto_deinterlace_field_layout_type;
 }
 
+/**
+ * GstAutoDeinterlaceFields:
+ * @GST_AUTO_DEINTERLACE_FIELDS_ALL: All fields (missing data is interpolated)
+ * @GST_AUTO_DEINTERLACE_FIELDS_TOP: Top Fields only
+ * @GST_AUTO_DEINTERLACE_FIELDS_BOTTOM: Bottom Fields Only
+ * @GST_AUTO_DEINTERLACE_FIELDS_AUTO: Automatically detect
+ *
+ * Since: 1.24
+ */
 typedef enum
 {
   GST_AUTO_DEINTERLACE_FIELDS_ALL,      /* All (missing data is interp.) */
@@ -767,6 +776,8 @@ gst_auto_deinterlace_class_init (GstAutoDeinterlaceClass * klass)
           DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
+  gst_type_mark_as_plugin_api (GST_TYPE_AUTO_DEINTERLACE_FIELDS, 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_AUTO_DEINTERLACE_MODES, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_AUTO_DEINTERLACE_FIELD_LAYOUT, 0);
 
   gst_element_class_set_static_metadata (gstelement_class,

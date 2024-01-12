@@ -36,6 +36,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (autovideoconvert, plugin);
   ret |= GST_ELEMENT_REGISTER (autodeinterlace, plugin);
   ret |= GST_ELEMENT_REGISTER (autovideoflip, plugin);
+  gst_type_mark_as_plugin_api (GST_TYPE_BASE_AUTO_CONVERT, 0);
 
   return ret;
 }
