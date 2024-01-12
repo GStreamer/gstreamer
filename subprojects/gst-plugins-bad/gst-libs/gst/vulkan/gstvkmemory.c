@@ -77,6 +77,8 @@ _vk_mem_init (GstVulkanMemory * mem, GstAllocator * allocator,
   mem->notify = notify;
   mem->user_data = user_data;
   mem->vk_offset = 0;
+  mem->map_count = 0;
+  mem->mapping = NULL;
 
   g_mutex_init (&mem->lock);
 
@@ -122,19 +124,29 @@ _vk_mem_map_full (GstVulkanMemory * mem, GstMapInfo * info, gsize size)
   VkResult err;
   GError *error = NULL;
 
-  if ((mem->properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY, "Cannot map host-invisible memory");
-    return NULL;
+  g_mutex_lock (&mem->lock);
+
+  if (mem->map_count == 0) {
+    if ((mem->properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0) {
+      GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY, "Cannot map host-invisible memory");
+      g_mutex_unlock (&mem->lock);
+      return NULL;
+    }
+
+    err = vkMapMemory (mem->device->device, mem->mem_ptr, mem->vk_offset,
+        size, 0, &mem->mapping);
+    if (gst_vulkan_error_to_g_error (err, &error, "vkMapMemory") < 0) {
+      GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY, "Failed to map device memory %s",
+          error->message);
+      g_clear_error (&error);
+      g_mutex_unlock (&mem->lock);
+      return NULL;
+    }
   }
 
-  err = vkMapMemory (mem->device->device, mem->mem_ptr, mem->vk_offset,
-      size, 0, &data);
-  if (gst_vulkan_error_to_g_error (err, &error, "vkMapMemory") < 0) {
-    GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY, "Failed to map device memory %s",
-        error->message);
-    g_clear_error (&error);
-    return NULL;
-  }
+  mem->map_count++;
+  data = mem->mapping;
+  g_mutex_unlock (&mem->lock);
 
   return data;
 }
@@ -163,7 +175,16 @@ _vk_mem_unmap_full (GstVulkanMemory * mem, GstMapInfo * info)
     }
   }
 
-  vkUnmapMemory (mem->device->device, mem->mem_ptr);
+  g_mutex_lock (&mem->lock);
+
+  g_assert (mem->map_count != 0);
+  mem->map_count--;
+  if (mem->map_count == 0) {
+    vkUnmapMemory (mem->device->device, mem->mem_ptr);
+    mem->mapping = NULL;
+  }
+
+  g_mutex_unlock (&mem->lock);
 }
 
 static GstMemory *

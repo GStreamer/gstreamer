@@ -4353,6 +4353,10 @@ It can be called from any thread.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.h">number of times this memory is mapped</doc>
         <type name="guint" c:type="guint"/>
       </field>
+      <field name="mapping" version="1.24" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkmemory.h">internal pointer to already mapped memory</doc>
+        <type name="gpointer" c:type="gpointer"/>
+      </field>
       <field name="notify" readable="0" private="1">
         <type name="GLib.DestroyNotify" c:type="GDestroyNotify"/>
       </field>
