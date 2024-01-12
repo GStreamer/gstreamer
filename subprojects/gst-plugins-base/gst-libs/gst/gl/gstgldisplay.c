@@ -368,7 +368,7 @@ gst_gl_display_new_with_type (GstGLDisplayType type)
 #endif
   custom_new_types |= GST_GL_DISPLAY_TYPE_X11;
 #if GST_GL_HAVE_WINDOW_VIV_FB
-  if (!display && (GST_GL_DISPLAY_TYPE_VIV_FB)) {
+  if (!display && (type & GST_GL_DISPLAY_TYPE_VIV_FB)) {
     const gchar *disp_idx_str = NULL;
     gint disp_idx = 0;
     disp_idx_str = g_getenv ("GST_GL_VIV_FB");
