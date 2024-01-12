@@ -725,7 +725,7 @@ gst_vpx_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (status) {
     GstVideoDecoderRequestSyncPointFlags flags = 0;
 
-    GST_VIDEO_DECODER_ERROR (decoder, 1, LIBRARY, ENCODE,
+    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
         ("Failed to decode frame"), ("%s", gst_vpx_error_name (status)), ret);
 
     if (gst_video_decoder_get_needs_sync_point (decoder))
@@ -740,7 +740,7 @@ gst_vpx_dec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (img) {
     if (vpxclass->get_frame_format (dec, img, &fmt) == FALSE) {
       vpx_img_free (img);
-      GST_ELEMENT_ERROR (decoder, LIBRARY, ENCODE,
+      GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
           ("Failed to decode frame"), ("Unsupported color format %d",
               img->fmt));
       gst_video_codec_frame_unref (frame);
