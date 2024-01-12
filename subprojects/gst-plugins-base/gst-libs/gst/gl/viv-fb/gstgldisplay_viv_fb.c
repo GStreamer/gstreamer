@@ -57,8 +57,6 @@ gst_gl_display_viv_fb_init (GstGLDisplayVivFB * display_viv_fb)
 static void
 gst_gl_display_viv_fb_finalize (GObject * object)
 {
-  GstGLDisplayVivFB *display_viv_fb = GST_GL_DISPLAY_VIV_FB (object);
-
   // We don't destroy the FB Display - it causes crashes in applications
   // because Vivante doesn't seem to do any refcounting
 
