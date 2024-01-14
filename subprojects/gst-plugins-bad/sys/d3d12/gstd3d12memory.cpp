@@ -97,6 +97,7 @@ gst_d3d12_allocation_params_new (GstD3D12Device * device,
   ret->d3d12_format = d3d12_format;
   ret->array_size = 1;
   ret->flags = flags;
+  ret->heap_flags = D3D12_HEAP_FLAG_NONE;
   ret->resource_flags = resource_flags;
 
   return ret;
@@ -168,6 +169,17 @@ gst_d3d12_allocation_params_unset_resource_flags (GstD3D12AllocationParams *
   g_return_val_if_fail (params, FALSE);
 
   params->resource_flags &= ~resource_flags;
+
+  return TRUE;
+}
+
+gboolean
+gst_d3d12_allocation_params_set_heap_flags (GstD3D12AllocationParams *
+    params, D3D12_HEAP_FLAGS heap_flags)
+{
+  g_return_val_if_fail (params, FALSE);
+
+  params->heap_flags |= heap_flags;
 
   return TRUE;
 }

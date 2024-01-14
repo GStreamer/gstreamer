@@ -190,7 +190,7 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     auto alloc = (GstD3D12Allocator *)
         gst_d3d12_pool_allocator_new (self->device,
-        &heap_props, D3D12_HEAP_FLAG_NONE, &desc[0],
+        &heap_props, params->heap_flags, &desc[0],
         D3D12_RESOURCE_STATE_COMMON, nullptr);
     auto num_planes = D3D12GetFormatPlaneCount (device,
         params->d3d12_format.dxgi_format);
@@ -218,7 +218,7 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
       auto alloc = (GstD3D12Allocator *)
           gst_d3d12_pool_allocator_new (self->device,
-          &heap_props, D3D12_HEAP_FLAG_NONE, &desc[i],
+          &heap_props, params->heap_flags, &desc[i],
           D3D12_RESOURCE_STATE_COMMON, nullptr);
 
       UINT64 mem_size;

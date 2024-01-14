@@ -33,6 +33,7 @@ struct _GstD3D12AllocationParams
   GstVideoInfo aligned_info;
   GstD3D12Format d3d12_format;
   GstD3D12AllocationFlags flags;
+  D3D12_HEAP_FLAGS heap_flags;
   D3D12_RESOURCE_FLAGS resource_flags;
   guint array_size;
 };

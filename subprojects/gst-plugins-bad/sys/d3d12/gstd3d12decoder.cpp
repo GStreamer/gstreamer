@@ -717,6 +717,8 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   auto params = gst_d3d12_allocation_params_new (decoder->device, info,
       GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags);
   gst_d3d12_allocation_params_alignment (params, &align);
+  gst_d3d12_allocation_params_set_heap_flags (params,
+      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED);
   if (!session->array_of_textures)
     gst_d3d12_allocation_params_set_array_size (params, session->dpb_size);
 
@@ -748,6 +750,8 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
         D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
     gst_d3d12_allocation_params_alignment (params, &align);
+    gst_d3d12_allocation_params_set_heap_flags (params,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
     gst_buffer_pool_config_set_params (config, caps, info->size, 0, 0);
