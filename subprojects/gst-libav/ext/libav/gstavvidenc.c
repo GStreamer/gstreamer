@@ -569,11 +569,19 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   gst_ffmpegvidenc_add_cc (frame->input_buffer, picture);
 
   if (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegenc->input_state->info)) {
-    picture->interlaced_frame = TRUE;
-    picture->top_field_first =
+    const gboolean top_field_first =
         GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_TFF)
         || GST_VIDEO_INFO_FIELD_ORDER (&ffmpegenc->input_state->info) ==
         GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    picture->flags |= AV_FRAME_FLAG_INTERLACED;
+    if (top_field_first) {
+      picture->flags |= AV_FRAME_FLAG_TOP_FIELD_FIRST;
+    }
+#else
+    picture->interlaced_frame = TRUE;
+    picture->top_field_first = top_field_first;
+#endif
     picture->repeat_pict =
         GST_BUFFER_FLAG_IS_SET (frame->input_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
   }

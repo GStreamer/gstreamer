@@ -1128,11 +1128,19 @@ picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
 
   if (one_field) {
     pic_field_order = ffmpegdec->pic_field_order;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  } else if (picture->flags & AV_FRAME_FLAG_INTERLACED) {
+#else
   } else if (picture->interlaced_frame) {
+#endif
     if (picture->repeat_pict)
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
-    if (picture->top_field_first)
-      pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  } else if (picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST) {
+#else
+  } else if (picture->top_field_first) {
+#endif
+    pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
   }
 
   return !(ffmpegdec->pic_width == picture->width
@@ -1140,7 +1148,12 @@ picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
       && ffmpegdec->pic_pix_fmt == picture->format
       && ffmpegdec->pic_par_n == picture->sample_aspect_ratio.num
       && ffmpegdec->pic_par_d == picture->sample_aspect_ratio.den
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+      && ffmpegdec->pic_interlaced ==
+      (picture->flags & AV_FRAME_FLAG_INTERLACED)
+#else
       && ffmpegdec->pic_interlaced == picture->interlaced_frame
+#endif
       && ffmpegdec->pic_field_order == pic_field_order
       && ffmpegdec->cur_multiview_mode == ffmpegdec->picture_multiview_mode
       && ffmpegdec->cur_multiview_flags == ffmpegdec->picture_multiview_flags);
@@ -1166,10 +1179,18 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
 {
   gint pic_field_order = 0;
 
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  if (picture->flags & AV_FRAME_FLAG_INTERLACED) {
+#else
   if (picture->interlaced_frame) {
+#endif
     if (picture->repeat_pict)
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    if (picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)
+#else
     if (picture->top_field_first)
+#endif
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
   }
 
@@ -1205,7 +1226,11 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
     ffmpegdec->pic_field_order_changed = TRUE;
 
   ffmpegdec->pic_field_order = pic_field_order;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  ffmpegdec->pic_interlaced = picture->flags & AV_FRAME_FLAG_INTERLACED;
+#else
   ffmpegdec->pic_interlaced = picture->interlaced_frame;
+#endif
 
   if (!ffmpegdec->pic_interlaced)
     ffmpegdec->pic_field_order_changed = FALSE;
@@ -1946,9 +1971,17 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     /* set interlaced flags */
     if (ffmpegdec->picture->repeat_pict)
       GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    if (ffmpegdec->picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)
+#else
     if (ffmpegdec->picture->top_field_first)
+#endif
       GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    if (ffmpegdec->picture->flags & AV_FRAME_FLAG_INTERLACED)
+#else
     if (ffmpegdec->picture->interlaced_frame)
+#endif
       GST_BUFFER_FLAG_SET (out_frame->output_buffer,
           GST_VIDEO_BUFFER_FLAG_INTERLACED);
   }
