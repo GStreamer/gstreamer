@@ -256,7 +256,9 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   if (!ffmpegaudenc->context->time_base.den) {
     ffmpegaudenc->context->time_base.den = GST_AUDIO_INFO_RATE (info);
     ffmpegaudenc->context->time_base.num = 1;
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 31, 100)
     ffmpegaudenc->context->ticks_per_frame = 1;
+#endif
   }
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
   if (ffmpegaudenc->context->ch_layout.order != AV_CHANNEL_ORDER_UNSPEC) {

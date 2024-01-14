@@ -2872,7 +2872,9 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
       /* they're fine, this is because it does period=1/frequency */
       context->time_base.den = gst_value_get_fraction_numerator (fps);
       context->time_base.num = gst_value_get_fraction_denominator (fps);
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 31, 100)
       context->ticks_per_frame = 1;
+#endif
 
       GST_DEBUG ("setting framerate %d/%d = %lf",
           context->time_base.den, context->time_base.num,
@@ -3159,8 +3161,9 @@ gst_ffmpeg_videoinfo_to_context (GstVideoInfo * info, AVCodecContext * context)
   for (i = 0; i < GST_VIDEO_INFO_N_COMPONENTS (info); i++)
     bpp += GST_VIDEO_INFO_COMP_DEPTH (info, i);
   context->bits_per_coded_sample = bpp;
-
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT(60, 31, 100)
   context->ticks_per_frame = 1;
+#endif
   if (GST_VIDEO_INFO_FPS_N (info) == 0) {
     GST_DEBUG ("Using 25/1 framerate");
     context->time_base.den = 25;

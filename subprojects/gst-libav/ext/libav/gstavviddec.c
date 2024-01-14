@@ -677,10 +677,21 @@ update_state:
   /* Use the framerate values stored in the decoder for calculating latency. The
    * upstream framerate might not be set but we still want to report a latency
    * if needed. */
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  if (ffmpegdec->context->time_base.den && ffmpegdec->context->codec_descriptor
+      && ffmpegdec->context->codec_descriptor->props) {
+#else
   if (ffmpegdec->context->time_base.den && ffmpegdec->context->ticks_per_frame) {
-    gint fps_n = ffmpegdec->context->time_base.den;
-    gint fps_d =
-        ffmpegdec->context->time_base.num * ffmpegdec->context->ticks_per_frame;
+#endif
+    const gint fps_n = ffmpegdec->context->time_base.den;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    const gint ticks_per_frame =
+        (ffmpegdec->context->
+        codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+#else
+    const gint ticks_per_frame = ffmpegdec->context->ticks_per_frame;
+#endif
+    const gint fps_d = ffmpegdec->context->time_base.num * ticks_per_frame;
     if (fps_n) {
       latency = gst_util_uint64_scale_ceil (
           (ffmpegdec->context->has_b_frames) * GST_SECOND, fps_d, fps_n);
@@ -1138,7 +1149,13 @@ picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
 static gboolean
 context_changed (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context)
 {
-  return !(ffmpegdec->ctx_ticks == context->ticks_per_frame
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  const gint ticks_per_frame = (context->codec_descriptor
+      && context->codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+#else
+  const gint ticks_per_frame = context->ticks_per_frame;
+#endif
+  return !(ffmpegdec->ctx_ticks == ticks_per_frame
       && ffmpegdec->ctx_time_n == context->time_base.num
       && ffmpegdec->ctx_time_d == context->time_base.den);
 }
@@ -1193,7 +1210,13 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
   if (!ffmpegdec->pic_interlaced)
     ffmpegdec->pic_field_order_changed = FALSE;
 
-  ffmpegdec->ctx_ticks = context->ticks_per_frame;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+  const gint ticks_per_frame = (context->codec_descriptor
+      && context->codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+#else
+  const gint ticks_per_frame = context->ticks_per_frame;
+#endif
+  ffmpegdec->ctx_ticks = ticks_per_frame;
   ffmpegdec->ctx_time_n = context->time_base.num;
   ffmpegdec->ctx_time_d = context->time_base.den;
 

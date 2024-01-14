@@ -631,9 +631,16 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
     GST_ERROR_OBJECT (ffmpegenc, "PTS is going backwards");
     picture->pts = AV_NOPTS_VALUE;
   } else {
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
+    const gint ticks_per_frame = (ffmpegenc->context->codec_descriptor
+        && ffmpegenc->context->
+        codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+#else
+    const gint ticks_per_frame = ffmpegenc->context->ticks_per_frame;
+#endif
     picture->pts =
         gst_ffmpeg_time_gst_to_ff ((frame->pts - ffmpegenc->pts_offset) /
-        ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
+        ticks_per_frame, ffmpegenc->context->time_base);
   }
 
 send_frame:
