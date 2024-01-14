@@ -227,6 +227,7 @@ struct _GstD3D12MemoryPrivate
   DXGI_FORMAT resource_formats[GST_VIDEO_MAX_PLANES];
   guint srv_inc_size;
   guint rtv_inc_size;
+  guint64 cpu_map_count = 0;
 
   std::mutex lock;
 };
@@ -259,13 +260,6 @@ gst_d3d12_memory_ensure_staging_resource (GstD3D12Memory * dmem)
       &desc, D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&staging));
   if (!gst_d3d12_result (hr, dmem->device)) {
     GST_ERROR_OBJECT (dmem->device, "Couldn't create staging resource");
-    return FALSE;
-  }
-
-  /* And map persistently */
-  hr = staging->Map (0, nullptr, &priv->staging_ptr);
-  if (!gst_d3d12_result (hr, dmem->device)) {
-    GST_ERROR_OBJECT (dmem->device, "Couldn't map readback resource");
     return FALSE;
   }
 
@@ -387,19 +381,29 @@ gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
     return priv->resource.Get ();
   }
 
-  if (!gst_d3d12_memory_ensure_staging_resource (dmem)) {
-    GST_ERROR_OBJECT (mem->allocator,
-        "Couldn't create readback_staging resource");
-    return nullptr;
-  }
+  if (priv->cpu_map_count == 0) {
+    if (!gst_d3d12_memory_ensure_staging_resource (dmem)) {
+      GST_ERROR_OBJECT (mem->allocator,
+          "Couldn't create readback_staging resource");
+      return nullptr;
+    }
 
-  if (!gst_d3d12_memory_download (dmem)) {
-    GST_ERROR_OBJECT (mem->allocator, "Couldn't download resource");
-    return nullptr;
+    if (!gst_d3d12_memory_download (dmem)) {
+      GST_ERROR_OBJECT (mem->allocator, "Couldn't download resource");
+      return nullptr;
+    }
+
+    auto hr = priv->staging->Map (0, nullptr, &priv->staging_ptr);
+    if (!gst_d3d12_result (hr, dmem->device)) {
+      GST_ERROR_OBJECT (dmem->device, "Couldn't map readback resource");
+      return nullptr;
+    }
   }
 
   if ((flags & GST_MAP_WRITE) != 0)
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+
+  priv->cpu_map_count++;
 
   return priv->staging_ptr;
 }
@@ -407,7 +411,18 @@ gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
 static void
 gst_d3d12_memory_unmap_full (GstMemory * mem, GstMapInfo * info)
 {
-  /* Nothing to do here */
+  auto dmem = GST_D3D12_MEMORY_CAST (mem);
+  auto priv = dmem->priv;
+  GstMapFlags flags = info->flags;
+
+  if ((flags & GST_MAP_D3D12) == 0) {
+    std::lock_guard < std::mutex > lk (priv->lock);
+
+    g_assert (priv->cpu_map_count != 0);
+    priv->cpu_map_count--;
+    if (priv->cpu_map_count == 0)
+      priv->staging->Unmap (0, nullptr);
+  }
 }
 
 static GstMemory *
