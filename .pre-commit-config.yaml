@@ -1,0 +1,27 @@
+fail_fast: false
+repos:
+-   repo: https://github.com/jorisroovers/gitlint
+    rev: v0.19.1
+    hooks:
+    -   id: gitlint-ci
+-   repo: local
+    hooks:
+    # Use dotnet format installed on your machine
+    -   id: dotnet-format
+        name: dotnet-format
+        language: system
+        files: ^subprojects/gstreamer-sharp/.*
+        entry: dotnet format subprojects/gstreamer-sharp/gstreamer-sharp.sln -v normal --include
+        types_or: ["c#", "vb"]
+    -   id: gst-indent
+        name: gst-indent
+        language: python
+        entry: ./scripts/gst-indent.py
+        types_or: ["c"]
+    # The rust hook uses cargo fmt, which requires a Cargo.toml
+    # We use a local hook to run rustfmt directly
+    -   id: rustfmt
+        name: rustfmt
+        language: system
+        entry: rustfmt --verbose --edition 2021
+        types_or: ["rust"]

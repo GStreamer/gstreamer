@@ -31,15 +31,21 @@ if cmdres.returncode() != 0
   error('Do not run `ninja reconfigure` or `meson` for gst-build inside the development environment, you will run into problems')
 endif
 
-# Install gst-indent pre-commit hook
-run_command(python3, '-c', 'import shutil; shutil.copy("scripts/git-hooks/multi-pre-commit.hook", ".git/hooks/pre-commit")', check: false)
-
+# pre-commit hooks are not interactive so we use gitlint's hook to check commit messages
 gitlint_req = '>= 0.18'
 gitlint = find_program('gitlint', version: gitlint_req, required: false)
 if gitlint.found()
   run_command(gitlint, 'install-hook', check: false)
 else
   message('gitlint not found or too old, please install it with your package manager or `python3 -m pip install gitlint` to enable the commit message hook')
+endif
+
+pre_commit_req = '>= 3.6.0'
+pre_commit = find_program('pre-commit', version: pre_commit_req, required: false)
+if pre_commit.found()
+  run_command(pre_commit, 'install', '-f', check: true)
+else
+  warning('pre-commit not found or too old, please install it with your package manager or `python3 -m pip install pre-commit`')
 endif
 
 # On macOS, you have to run "Install Certificates.command" otherwise Python

@@ -1,2 +1,4 @@
 GStreamer Docker images
 
+* `fedora`: main image used to build GStreamer
+* `checks`: image with pre-commit and gitlint used in the check stage

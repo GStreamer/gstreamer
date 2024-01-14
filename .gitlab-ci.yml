@@ -15,6 +15,7 @@ include:
 
 stages:
   - 'preparation'
+  - 'check'
   - 'build'
   - 'test'
   # Use the resulting binaries
@@ -34,8 +35,7 @@ variables:
 
   FEDORA_AMD64_SUFFIX: 'amd64/fedora'
   DEBIAN_AMD64_SUFFIX: 'amd64/debian'
-  INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
-  COMMITLINT_AMD64_SUFFIX: 'amd64/commitlint'
+  CHECKS_AMD64_SUFFIX: 'amd64/checks'
   WINDOWS_AMD64_SUFFIX: 'amd64/windows'
   ABI_CHECK_AMD64_SUFFIX: 'amd64/abi-check'
 
@@ -200,37 +200,19 @@ debian amd64 docker:
   # (which has faster network connectivity to the registry).
   tags: [ 'placeholder-job' ]
 
-.gst-indent image:
+.checks image:
   tags: [ 'placeholder-job' ]
   variables:
     FDO_DISTRIBUTION_VERSION: 'bookworm'
-    FDO_REPO_SUFFIX: "$INDENT_AMD64_SUFFIX"
-    FDO_DISTRIBUTION_TAG: "$INDENT_TAG-$GST_UPSTREAM_BRANCH"
-    FDO_DISTRIBUTION_PACKAGES: 'curl indent git findutils ca-certificates'
-    FDO_DISTRIBUTION_EXEC: 'ci/docker/indent/prepare.sh'
+    FDO_REPO_SUFFIX: "$CHECKS_AMD64_SUFFIX"
+    FDO_DISTRIBUTION_TAG: "$CHECKS_TAG-$GST_UPSTREAM_BRANCH"
+    FDO_DISTRIBUTION_PACKAGES: 'curl git findutils ca-certificates python3-pip'
+    FDO_DISTRIBUTION_EXEC: 'bash ci/docker/checks/prepare.sh'
 
-gst-indent amd64 docker:
+checks amd64 docker:
   extends:
-    - '.gst-indent image'
+    - '.checks image'
     - '.fdo.container-build@debian'
-  stage: 'preparation'
-  # Do not depend on the trigger, as we want to run indent always
-  needs: []
-
-.commitlint image:
-  tags: [ 'placeholder-job' ]
-  variables:
-    FDO_DISTRIBUTION_VERSION: '37'
-    FDO_REPO_SUFFIX: "$COMMITLINT_AMD64_SUFFIX"
-    FDO_DISTRIBUTION_TAG: "$LINT_TAG-$GST_UPSTREAM_BRANCH"
-    FDO_DISTRIBUTION_PACKAGES: 'python3-pip git'
-    FDO_DISTRIBUTION_EXEC: 'ci/docker/lint/prepare.sh'
-    FDO_USER: "ciuser"
-
-commitlint docker:
-  extends:
-    - '.commitlint image'
-    - '.fdo.container-build@fedora'
   stage: 'preparation'
   # Do not depend on the trigger, as we want to run indent always
   needs: []
@@ -287,66 +269,26 @@ abi-check docker:
     - 'fedora amd64 docker'
 
 # ---- Preparation ----- #
-#
-# gst-indent!!
-#
-gst indent:
+pre-commit checks:
   extends:
-    - '.gst-indent image'
-    - '.fdo.suffixed-image@debian'
-  stage: 'preparation'
+    - '.checks image'
+    - '.fdo.suffixed-image@fedora'
+  stage: 'check'
   needs:
-    - job: 'gst-indent amd64 docker'
+    - job: 'checks amd64 docker'
       artifacts: false
-  script:
-    - ./scripts/check-format-c
-    - ./scripts/format-csharp --check
-    # We want both wraps to use the same version, overkill to create a separate job for this
-    - cmp subprojects/gtk-sharp.wrap subprojects/gstreamer-sharp/subprojects/gtk-sharp.wrap
-  rules:
-    - !reference [.upstream-branch-rules, rules]
-    - if: '$CI_PROJECT_NAMESPACE != "gstreamer" || $CI_COMMIT_BRANCH != $GST_UPSTREAM_BRANCH'
-      when: 'always'
-
-rustfmt:
-  extends:
-    - '.fedora image'
-    - '.fdo.suffixed-image@fedora'
-  stage: 'preparation'
-  needs:
-    - "fedora amd64 docker"
-  tags: [ 'placeholder-job' ]
-  script:
-    - export RUSTUP_HOME="/usr/local/rustup"
-    - export PATH="/usr/local/cargo/bin:$PATH"
-    - ./scripts/format-rust --check
-  rules:
-    - changes:
-        compare_to: "$GST_UPSTREAM_BRANCH"
-        paths:
-          - .gitlab-ci.yml
-          - .gitlab-image-tags.yml
-          - subprojects/gstreamer/**/*.rs
-          - subprojects/gst-examples/**/*.rs
-          - ci/**/*
-          - ./scripts/format-rust
-
-commitlint:
-  extends:
-    - '.commitlint image'
-    - '.fdo.suffixed-image@fedora'
-  stage: 'preparation'
   variables:
     GIT_STRATEGY: fetch
     GIT_DEPTH: 100
-  needs:
-    - job: 'commitlint docker'
-      artifacts: false
-  before_script:
-    - git config --global --add safe.directory $CI_PROJECT_DIR
+    PRE_COMMIT_HOME: '/cache/${CI_PROJECT_NAMESPACE}/pre-commit'
+    RUSTUP_HOME: '/usr/local/rustup'
+    before_script:
+      git config --global --add safe.directory $CI_PROJECT_DIR
   script:
+    - export PATH="/usr/local/cargo/bin:$PATH"
     - echo $CI_MERGE_REQUEST_DIFF_BASE_SHA
     - gitlint --commits $CI_MERGE_REQUEST_DIFF_BASE_SHA..HEAD
+    - pre-commit run --show-diff-on-failure --from-ref $CI_MERGE_REQUEST_DIFF_BASE_SHA --to-ref HEAD
   rules:
     # Only run on MR as we need CI_MERGE_REQUEST_DIFF_BASE_SHA to know
     # what commits to check
