@@ -544,11 +544,13 @@ pad_accept_memory (GstMsdkDec * thiz, const gchar * mem_type, GstCaps ** filter)
     goto done;
 
   if (gst_msdkcaps_has_feature (out_caps, mem_type)) {
-    *filter = caps;
+    gst_caps_replace (filter, caps);
     ret = TRUE;
   }
 
 done:
+  if (caps)
+    gst_caps_unref (caps);
   if (out_caps)
     gst_caps_unref (out_caps);
   return ret;
@@ -654,11 +656,6 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
     GST_WARNING_OBJECT (thiz, "Failed to find a valid video format");
     return FALSE;
   }
-
-  src_caps = gst_pad_query_caps (GST_VIDEO_DECODER (thiz)->srcpad, NULL);
-  temp_caps = gst_caps_make_writable (src_caps);
-
-
 #ifndef _WIN32
   /* Get possible modifier before negotiation really happens */
   GstVaDisplay *display =
@@ -679,6 +676,9 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
    * and let SFC work. */
   if (thiz->param.mfx.CodecId == MFX_CODEC_AVC ||
       thiz->param.mfx.CodecId == MFX_CODEC_HEVC) {
+    temp_caps = gst_pad_query_caps (GST_VIDEO_DECODER (thiz)->srcpad, NULL);
+    temp_caps = gst_caps_make_writable (temp_caps);
+
     if (!gst_msdkdec_fixate_format (thiz, temp_caps, format)) {
       GST_ERROR_OBJECT (thiz, "Format is not negotiable");
       gst_caps_unref (temp_caps);
@@ -696,14 +696,17 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
     g_value_unset (&v_width);
     g_value_unset (&v_height);
 
-    if (gst_caps_is_empty (gst_pad_peer_query_caps (GST_VIDEO_DECODER
-                (thiz)->srcpad, temp_caps))) {
+    src_caps = gst_pad_peer_query_caps (GST_VIDEO_DECODER
+        (thiz)->srcpad, temp_caps);
+    gst_caps_unref (temp_caps);
+
+    if (gst_caps_is_empty (src_caps)) {
       if (!gst_util_fraction_multiply (width, height,
               GST_VIDEO_INFO_PAR_N (&thiz->input_state->info),
               GST_VIDEO_INFO_PAR_D (&thiz->input_state->info),
               &dar_n, &dar_d)) {
         GST_ERROR_OBJECT (thiz, "Error to calculate the output scaled size");
-        gst_caps_unref (temp_caps);
+        gst_caps_unref (src_caps);
         return FALSE;
       }
 
@@ -755,9 +758,9 @@ gst_msdkdec_set_src_caps (GstMsdkDec * thiz, gboolean need_allocation)
       }
       gst_caps_unref (allowed_caps);
     }
+    gst_caps_unref (src_caps);
   }
 #endif
-  gst_caps_unref (temp_caps);
 
   thiz->output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (thiz),
