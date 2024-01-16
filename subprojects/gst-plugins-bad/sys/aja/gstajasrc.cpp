@@ -78,6 +78,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_src_debug);
 #define DEFAULT_START_FRAME (8)
 #define DEFAULT_END_FRAME (8)
 #define DEFAULT_CAPTURE_CPU_CORE (G_MAXUINT)
+#define DEFAULT_ATTACH_ANCILLARY_META (FALSE)
 
 enum {
   PROP_0,
@@ -98,6 +99,7 @@ enum {
   PROP_QUEUE_SIZE,
   PROP_CAPTURE_CPU_CORE,
   PROP_SIGNAL,
+  PROP_ATTACH_ANCILLARY_META,
 };
 
 // Make these plain C structs for usage in GstQueueArray
@@ -352,6 +354,22 @@ static void gst_aja_src_class_init(GstAjaSrcClass *klass) {
           "True if there is a valid input signal available", FALSE,
           (GParamFlags)(G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstAjaSrc:attach-ancillary-meta:
+   *
+   * If set to %TRUE attach any ancillary data as #GstAncillaryMeta on buffers
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_ATTACH_ANCILLARY_META,
+      g_param_spec_boolean(
+          "attach-ancillary-meta", "Attach Ancillary Meta",
+          "Attach ancillary meta to video frames",
+          DEFAULT_ATTACH_ANCILLARY_META,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
   element_class->change_state = GST_DEBUG_FUNCPTR(gst_aja_src_change_state);
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR(gst_aja_src_get_caps);
@@ -394,6 +412,7 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
   self->closed_caption_capture_mode = DEFAULT_CLOSED_CAPTION_CAPTURE_MODE;
   self->capture_cpu_core = DEFAULT_CAPTURE_CPU_CORE;
+  self->attach_ancillary_meta = DEFAULT_ATTACH_ANCILLARY_META;
 
   self->queue =
       gst_queue_array_new_for_struct(sizeof(QueueItem), self->queue_size);
@@ -459,6 +478,9 @@ void gst_aja_src_set_property(GObject *object, guint property_id,
     case PROP_CAPTURE_CPU_CORE:
       self->capture_cpu_core = g_value_get_uint(value);
       break;
+    case PROP_ATTACH_ANCILLARY_META:
+      self->attach_ancillary_meta = g_value_get_boolean(value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
@@ -520,6 +542,9 @@ void gst_aja_src_get_property(GObject *object, guint property_id, GValue *value,
       break;
     case PROP_SIGNAL:
       g_value_set_boolean(value, self->signal);
+      break;
+    case PROP_ATTACH_ANCILLARY_META:
+      g_value_set_boolean(value, self->attach_ancillary_meta);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -2014,6 +2039,50 @@ next_item:
       gst_buffer_add_video_bar_meta(*buffer, field2 ? 1 : 0, is_letterbox, bar1,
                                     bar2);
     }
+
+    // Don't attach other ANC as ancillary meta if not requested to do so.
+    if (!self->attach_ancillary_meta) continue;
+
+    // Skip non-SMPTE 291M ancillary data
+    if (packet->GetDataCoding() != AJAAncillaryDataCoding_Digital) continue;
+
+    const guint8 *in_data = packet->GetPayloadData();
+    guint data_count = packet->GetDC();
+
+    guint16 line_number = packet->GetLocationLineNumber();
+    guint16 horiz_offset = packet->GetLocationHorizOffset();
+
+    if (!in_data || data_count == 0) {
+      GST_TRACE_OBJECT(self, "ANC %s (%04x) at (%u,%u) has no payload data",
+                       packet->IDAsString().c_str(), packet->GetDIDSID(),
+                       line_number, horiz_offset);
+      continue;
+    }
+
+    GST_TRACE_OBJECT(self,
+                     "Adding ANC meta for %s (%04x) at (%u,%u) of size %u",
+                     packet->IDAsString().c_str(), packet->GetDIDSID(),
+                     line_number, horiz_offset, data_count);
+    GstAncillaryMeta *anc_meta = gst_buffer_add_ancillary_meta(*buffer);
+
+    anc_meta->c_not_y_channel = packet->IsChromaChannel();
+    anc_meta->line = line_number;
+    anc_meta->offset = horiz_offset;
+
+    packet->GeneratePayloadData();
+    anc_meta->DID = AJAAncillaryData::AddEvenParity(packet->GetDID());
+    anc_meta->SDID_block_number =
+        AJAAncillaryData::AddEvenParity(packet->GetSID());
+
+    anc_meta->data_count = AJAAncillaryData::AddEvenParity(data_count);
+
+    guint16 *data = g_new(guint16, packet->GetDC());
+    for (guint i = 0; i < data_count; i++) {
+      data[i] = AJAAncillaryData::AddEvenParity(in_data[i]);
+    }
+    anc_meta->data = data;
+
+    anc_meta->checksum = packet->Calculate9BitChecksum();
   }
 
   bool caps_changed = false;
@@ -2716,7 +2785,7 @@ restart:
     }
   }
 
-out : {
+out: {
   // Make sure to globally lock here as the routing settings and others are
   // global shared state
   ShmMutexLocker locker;

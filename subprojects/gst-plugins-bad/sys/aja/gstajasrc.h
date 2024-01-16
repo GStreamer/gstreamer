@@ -77,6 +77,7 @@ struct _GstAjaSrc {
   guint start_frame, end_frame;
   guint capture_cpu_core;
   gboolean signal;
+  gboolean attach_ancillary_meta;
 
   NTV2AudioSystem audio_system;
   NTV2VideoFormat video_format;
