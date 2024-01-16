@@ -74,6 +74,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_aja_sink_debug);
 #define DEFAULT_START_FRAME (0)
 #define DEFAULT_END_FRAME (0)
 #define DEFAULT_OUTPUT_CPU_CORE (G_MAXUINT)
+#define DEFAULT_HANDLE_ANCILLARY_META (FALSE)
 
 enum {
   PROP_0,
@@ -91,6 +92,7 @@ enum {
   PROP_START_FRAME,
   PROP_END_FRAME,
   PROP_OUTPUT_CPU_CORE,
+  PROP_HANDLE_ANCILLARY_META,
 };
 
 typedef enum {
@@ -271,6 +273,22 @@ static void gst_aja_sink_class_init(GstAjaSinkClass *klass) {
           (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
                         G_PARAM_CONSTRUCT)));
 
+  /**
+   * GstAjaSink:handle-ancillary-meta:
+   *
+   * If set to %TRUE handle any #GstAncillaryMeta present on buffers
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property(
+      gobject_class, PROP_HANDLE_ANCILLARY_META,
+      g_param_spec_boolean(
+          "handle-ancillary-meta", "Handle Ancillary Meta",
+          "Handle ancillary meta on video frames",
+          DEFAULT_HANDLE_ANCILLARY_META,
+          (GParamFlags)(G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+                        G_PARAM_CONSTRUCT)));
+
   element_class->change_state = GST_DEBUG_FUNCPTR(gst_aja_sink_change_state);
 
   basesink_class->set_caps = GST_DEBUG_FUNCPTR(gst_aja_sink_set_caps);
@@ -309,6 +327,7 @@ static void gst_aja_sink_init(GstAjaSink *self) {
   self->timecode_index = DEFAULT_TIMECODE_INDEX;
   self->reference_source = DEFAULT_REFERENCE_SOURCE;
   self->output_cpu_core = DEFAULT_OUTPUT_CPU_CORE;
+  self->handle_ancillary_meta = DEFAULT_HANDLE_ANCILLARY_META;
 
   self->queue =
       gst_queue_array_new_for_struct(sizeof(QueueItem), self->queue_size);
@@ -363,6 +382,9 @@ void gst_aja_sink_set_property(GObject *object, guint property_id,
     case PROP_OUTPUT_CPU_CORE:
       self->output_cpu_core = g_value_get_uint(value);
       break;
+    case PROP_HANDLE_ANCILLARY_META:
+      self->handle_ancillary_meta = g_value_get_boolean(value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
       break;
@@ -415,6 +437,9 @@ void gst_aja_sink_get_property(GObject *object, guint property_id,
       break;
     case PROP_OUTPUT_CPU_CORE:
       g_value_set_uint(value, self->output_cpu_core);
+      break;
+    case PROP_HANDLE_ANCILLARY_META:
+      g_value_set_boolean(value, self->handle_ancillary_meta);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID(object, property_id, pspec);
@@ -1709,6 +1734,39 @@ static GstFlowReturn gst_aja_sink_render(GstBaseSink *bsink,
     }
   }
 
+  if (self->handle_ancillary_meta) {
+    GstAncillaryMeta *anc_meta;
+    iter = NULL;
+    while ((anc_meta = (GstAncillaryMeta *)gst_buffer_iterate_meta_filtered(
+                buffer, &iter, GST_ANCILLARY_META_API_TYPE))) {
+      const AJAAncillaryDataLocation loc(
+          AJAAncillaryDataLink_A,
+          anc_meta->c_not_y_channel ? AJAAncillaryDataChannel_C
+                                    : AJAAncillaryDataVideoStream_Y,
+          AJAAncillaryDataSpace_VANC, anc_meta->line, anc_meta->offset);
+
+      AJAAncillaryData pkt;
+      guint8 data[256];
+
+      pkt.SetDID(anc_meta->DID);
+      pkt.SetSID(anc_meta->SDID_block_number);
+      pkt.SetDataLocation(loc);
+      pkt.SetDataCoding(AJAAncillaryDataCoding_Digital);
+
+      for (gsize i = 0; i < (anc_meta->data_count & 0xff); i++) {
+        data[i] = anc_meta->data[i] & 0xff;
+      }
+      pkt.SetPayloadData(data, anc_meta->data_count & 0xff);
+
+      GST_TRACE_OBJECT(self,
+                       "Adding ANC of %" G_GSIZE_FORMAT " bytes at (%u,%u)",
+                       pkt.GetPayloadByteCount(), pkt.GetLocationLineNumber(),
+                       pkt.GetLocationHorizOffset());
+
+      anc_packet_list.AddAncillaryData(pkt);
+    }
+  }
+
   if (!anc_packet_list.IsEmpty()) {
     if (self->vanc_mode == ::NTV2_VANCMODE_OFF &&
         ::NTV2DeviceCanDoCustomAnc(self->device_id)) {
@@ -2177,7 +2235,7 @@ restart:
     }
   }
 
-out : {
+out: {
   // Make sure to globally lock here as the routing settings and others are
   // global shared state
   ShmMutexLocker locker;

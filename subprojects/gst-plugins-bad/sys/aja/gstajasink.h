@@ -78,6 +78,7 @@ struct _GstAjaSink {
   GstAjaTimecodeIndex timecode_index;
   gboolean rp188;
   GstAjaReferenceSource reference_source;
+  gboolean handle_ancillary_meta;
 
   gint cea608_line_number;
   gint cea708_line_number;
