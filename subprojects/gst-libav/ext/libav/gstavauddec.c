@@ -590,7 +590,7 @@ gst_ffmpegauddec_frame (GstFFMpegAudDec * ffmpegdec, GstFlowReturn * ret,
     goto no_codec;
 
   *ret = GST_FLOW_OK;
-#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(60, 2, 100)
+#if LIBAVCODEC_VERSION_MAJOR >= 60
   ffmpegdec->context->frame_num++;
 #else
   ffmpegdec->context->frame_number++;
