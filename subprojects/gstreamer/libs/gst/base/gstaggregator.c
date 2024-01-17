@@ -1726,6 +1726,9 @@ gst_aggregator_default_sink_event (GstAggregator * self,
         SRC_LOCK (self);
         priv->send_eos = TRUE;
         priv->got_eos_event = FALSE;
+        if (self->priv->start_time_selection ==
+            GST_AGGREGATOR_START_TIME_SELECTION_FIRST)
+          priv->first_buffer = TRUE;
         SRC_BROADCAST (self);
         SRC_UNLOCK (self);
 
