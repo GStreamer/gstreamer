@@ -156,6 +156,8 @@ static gboolean gst_vtenc_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * input_state);
 static GstFlowReturn gst_vtenc_handle_frame (GstVideoEncoder * enc,
     GstVideoCodecFrame * frame);
+static GstStateChangeReturn gst_vtenc_change_state (GstElement * element,
+    GstStateChange transition);
 static GstFlowReturn gst_vtenc_finish (GstVideoEncoder * enc);
 static gboolean gst_vtenc_flush (GstVideoEncoder * enc);
 static gboolean gst_vtenc_sink_event (GstVideoEncoder * enc, GstEvent * event);
@@ -342,9 +344,11 @@ static void
 gst_vtenc_class_init (GstVTEncClass * klass)
 {
   GObjectClass *gobject_class;
+  GstElementClass *element_class;
   GstVideoEncoderClass *gstvideoencoder_class;
 
   gobject_class = (GObjectClass *) klass;
+  element_class = (GstElementClass *) klass;
   gstvideoencoder_class = (GstVideoEncoderClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
@@ -352,6 +356,8 @@ gst_vtenc_class_init (GstVTEncClass * klass)
   gobject_class->get_property = gst_vtenc_get_property;
   gobject_class->set_property = gst_vtenc_set_property;
   gobject_class->finalize = gst_vtenc_finalize;
+
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_vtenc_change_state);
 
   gstvideoencoder_class->start = gst_vtenc_start;
   gstvideoencoder_class->stop = gst_vtenc_stop;
@@ -1189,6 +1195,19 @@ gst_vtenc_sink_event (GstVideoEncoder * enc, GstEvent * event)
   }
 
   return ret;
+}
+
+static GstStateChangeReturn
+gst_vtenc_change_state (GstElement * element, GstStateChange transition)
+{
+  GstVTEnc *self = GST_VTENC_CAST (element);
+
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
+    GST_DEBUG_OBJECT (self, "pausing output loop on PAUSED->READY");
+    gst_vtenc_pause_output_loop (self);
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 static GstFlowReturn
