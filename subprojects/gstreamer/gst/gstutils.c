@@ -4801,3 +4801,39 @@ gst_type_is_plugin_api (GType type, GstPluginAPIFlags * flags)
 
   return ret;
 }
+
+/**
+ * gst_util_filename_compare:
+ * @a: a filename to compare with @b
+ * @b: a filename to compare with @a
+ *
+ * Compares the given filenames using natural ordering.
+ *
+ * Since: 1.24
+ */
+gint
+gst_util_filename_compare (const gchar * a, const gchar * b)
+{
+  gchar *a_utf8, *b_utf8;
+  gchar *a1, *b1;
+  gint ret;
+
+  /* Filenames in GLib are only guaranteed to be UTF-8 on Windows */
+  a_utf8 = g_filename_to_utf8 ((gchar *) a, -1, NULL, NULL, NULL);
+  b_utf8 = g_filename_to_utf8 ((gchar *) b, -1, NULL, NULL, NULL);
+
+  if (a_utf8 == NULL || b_utf8 == NULL) {
+    return strcmp (a, b);
+  }
+
+  a1 = g_utf8_collate_key_for_filename (a_utf8, -1);
+  b1 = g_utf8_collate_key_for_filename (b_utf8, -1);
+  ret = strcmp (a1, b1);
+  g_free (a1);
+  g_free (b1);
+
+  g_free (a_utf8);
+  g_free (b_utf8);
+
+  return ret;
+}
