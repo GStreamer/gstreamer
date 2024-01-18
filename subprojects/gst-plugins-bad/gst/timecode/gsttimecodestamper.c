@@ -1119,10 +1119,19 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstVideoTimeCodeFlags tc_flags = 0;
 
-  if (timecodestamper->fps_n == 0 || timecodestamper->fps_d == 0
-      || !GST_BUFFER_PTS_IS_VALID (buffer)) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_NOT_NEGOTIATED;
+  if (timecodestamper->fps_n == 0 || timecodestamper->fps_d == 0) {
+    /* This can't actually happen I think - the caps template requires a framerate,
+     * so we'd have to receive a buffer without prior caps */
+    GST_ELEMENT_ERROR (timecodestamper, STREAM, FAILED,
+        ("Can't process without a framerate"),
+        ("Received a video buffer without framerate"));
+    return GST_FLOW_ERROR;
+  }
+  if (!GST_BUFFER_PTS_IS_VALID (buffer)) {
+    GST_ELEMENT_ERROR (timecodestamper, STREAM, FAILED,
+        ("Input video buffer has no timestamp"),
+        ("Video buffers must have timestamps"));
+    return GST_FLOW_ERROR;
   }
 #if HAVE_LTC
   if (timecodestamper->video_latency == -1
