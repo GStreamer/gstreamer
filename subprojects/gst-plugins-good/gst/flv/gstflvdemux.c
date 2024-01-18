@@ -1125,6 +1125,23 @@ gst_flv_demux_sync_streams (GstFlvDemux * demux)
   }
 }
 
+static void
+ensure_new_segment (GstFlvDemux * demux, GstPad * pad)
+{
+  if (!demux->new_seg_event) {
+    GST_DEBUG_OBJECT (pad, "pushing newsegment from %"
+        GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (demux->segment.position),
+        GST_TIME_ARGS (demux->segment.stop));
+    demux->segment.start = demux->segment.time = demux->segment.position;
+    demux->new_seg_event = gst_event_new_segment (&demux->segment);
+    if (demux->segment_seqnum != GST_SEQNUM_INVALID)
+      gst_event_set_seqnum (demux->new_seg_event, demux->segment_seqnum);
+  } else {
+    GST_DEBUG_OBJECT (pad, "pushing pre-generated newsegment event");
+  }
+}
+
 static GstFlowReturn
 gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 {
@@ -1365,18 +1382,7 @@ gst_flv_demux_parse_tag_audio (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Do we need a newsegment event ? */
   if (G_UNLIKELY (demux->audio_need_segment)) {
-    if (!demux->new_seg_event) {
-      GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
-          GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->segment.position),
-          GST_TIME_ARGS (demux->segment.stop));
-      demux->segment.start = demux->segment.time = demux->segment.position;
-      demux->new_seg_event = gst_event_new_segment (&demux->segment);
-      gst_event_set_seqnum (demux->new_seg_event, demux->segment_seqnum);
-    } else {
-      GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
-    }
-
+    ensure_new_segment (demux, demux->audio_pad);
     gst_pad_push_event (demux->audio_pad, gst_event_ref (demux->new_seg_event));
 
     demux->audio_need_segment = FALSE;
@@ -1841,19 +1847,7 @@ gst_flv_demux_parse_tag_video (GstFlvDemux * demux, GstBuffer * buffer)
 
   /* Do we need a newsegment event ? */
   if (G_UNLIKELY (demux->video_need_segment)) {
-    if (!demux->new_seg_event) {
-      GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
-          GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->segment.position),
-          GST_TIME_ARGS (demux->segment.stop));
-      demux->segment.start = demux->segment.time = demux->segment.position;
-      demux->new_seg_event = gst_event_new_segment (&demux->segment);
-      if (demux->segment_seqnum != GST_SEQNUM_INVALID)
-        gst_event_set_seqnum (demux->new_seg_event, demux->segment_seqnum);
-    } else {
-      GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
-    }
-
+    ensure_new_segment (demux, demux->video_pad);
     gst_pad_push_event (demux->video_pad, gst_event_ref (demux->new_seg_event));
 
     demux->video_need_segment = FALSE;
