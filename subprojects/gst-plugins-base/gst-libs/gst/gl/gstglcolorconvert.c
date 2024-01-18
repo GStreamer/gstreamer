@@ -1280,7 +1280,7 @@ gst_gl_color_convert_transform_caps (GstGLContext * context,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter)
 {
   caps = gst_gl_color_convert_caps_transform_format_info (context,
-      direction == GST_PAD_SRC, caps);
+      direction == GST_PAD_SINK, caps);
 
   if (filter) {
     GstCaps *tmp;
