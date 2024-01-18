@@ -72,7 +72,7 @@
  * No special opengl extension is used in this pipeline, that's why it should work
  * with OpenGL >= 1.1. That's the case if you are using the MESA3D driver v1.3.
  * |[
- * gst-plugins-bas/tests/examples/gl/generic/cube
+ * gst-plugins-base/tests/examples/gl/generic/cube
  * ]| The graphic FPS scene can be greater than the input video FPS.
  * The graphic scene can be written from a client code through the
  * two glfilterapp properties.
