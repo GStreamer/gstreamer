@@ -248,7 +248,10 @@ gst_vulkan_video_filter_decide_allocation (GstBaseTransform * bt,
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
-  gst_buffer_pool_set_config (pool, config);
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    gst_object_unref (pool);
+    return FALSE;
+  }
 
   if (update_pool)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);

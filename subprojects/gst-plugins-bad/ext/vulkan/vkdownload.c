@@ -169,7 +169,10 @@ _image_to_raw_perform (gpointer impl, GstBuffer * inbuf, GstBuffer ** outbuf)
     config = gst_buffer_pool_get_config (raw->pool);
     gst_buffer_pool_config_set_params (config, raw->download->out_caps, size,
         min, max);
-    gst_buffer_pool_set_config (raw->pool, config);
+    if (!gst_buffer_pool_set_config (raw->pool, config)) {
+      gst_clear_object (&raw->pool);
+      return GST_FLOW_ERROR;
+    }
   }
   if (!raw->pool_active) {
     gst_buffer_pool_set_active (raw->pool, TRUE);
