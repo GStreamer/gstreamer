@@ -2062,6 +2062,14 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
        *
        */
 
+      if (comp->priv->stack_initialization_seek
+          || comp->priv->waiting_serialized_query_or_buffer) {
+        GST_INFO_OBJECT (comp,
+            "QoS event while setting up new stack... discarding");
+
+        goto beach;
+      }
+
       if (GST_CLOCK_TIME_IS_VALID (priv->seek_segment->start)) {
         GstClockTimeDiff curdiff;
 
@@ -2084,10 +2092,11 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
 
         /* Substract the amount of running time we've already outputted
          * until the currently configured pipeline from the QoS timestamp.*/
+        GstClockTime oldtimestamp = timestamp;
         timestamp -= curdiff;
         GST_DEBUG_OBJECT (comp,
-            "Creating new QoS event with timestamp %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (timestamp));
+            "Creating new QoS event with timestamp %" GST_TIMEP_FORMAT " new: %"
+            GST_TIME_FORMAT, &oldtimestamp, GST_TIME_ARGS (timestamp));
         event = gst_event_new_qos (qostype, prop, diff, timestamp);
       }
       break;
