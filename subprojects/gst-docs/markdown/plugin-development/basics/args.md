@@ -96,8 +96,8 @@ applications will use these properties and will display a
 user-controllable widget with which these properties can be changed.
 This means that - for the property to be as user-friendly as possible -
 you should be as exact as possible in the definition of the property.
-Not only in defining ranges in between which valid properties can be
-located (for integers, floats, etc.), but also in using very descriptive
+Not only in defining ranges of valid property values (for integers,
+floats, etc.), but also in using very descriptive
 (better yet: internationalized) strings in the definition of the
 property, and if possible using enums and flags instead of integers. The
 GObject documentation describes these in a very complete way, but below,

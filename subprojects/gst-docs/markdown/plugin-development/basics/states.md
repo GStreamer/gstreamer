@@ -38,8 +38,8 @@ should *not* be allocated in this state.
 
 `GST_STATE_PAUSED` is the state in which an element is ready to accept
 and handle data. For most elements this state is the same as PLAYING.
-The only exception to this rule are sink elements. Sink elements only
-accept one single buffer of data and then block. At this point the
+The only exception to this rule are sink elements. Paused sink elements
+only accept one buffer of data and then block. At this point the
 pipeline is 'prerolled' and ready to render data immediately.
 
 `GST_STATE_PLAYING` is the highest state that an element can be in. For
@@ -51,9 +51,9 @@ card or render video pictures to an image sink.
 
 ## Managing filter state
 
-If at all possible, your element should derive from one of the new base
-classes ([Pre-made base classes](plugin-development/element-types/base-classes.md)). There are
-ready-made general purpose base classes for different types of sources,
+If at all possible, your element should derive from one of the
+[pre-made base classes](plugin-development/element-types/base-classes.md).
+These are ready-made general purpose base classes for different types of sources,
 sinks and filter/transformation elements. In addition to those,
 specialised base classes exist for audio and video elements and others.
 

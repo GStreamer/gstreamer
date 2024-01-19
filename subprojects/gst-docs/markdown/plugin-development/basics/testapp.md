@@ -4,8 +4,8 @@ title: Building a Test Application
 
 # Building a Test Application
 
-Often, you will want to test your newly written plugin in an as small
-setting as possible. Usually, `gst-launch-1.0` is a good first step at
+Often, you will want to test your newly written plugin in as small
+a setting as possible. Usually, `gst-launch-1.0` is a good first step at
 testing a plugin. If you have not installed your plugin in a directory
 that GStreamer searches, then you will need to set the plugin path.
 Either set GST\_PLUGIN\_PATH to the directory containing your plugin, or
@@ -38,7 +38,7 @@ a `fakesink` element at the end of the pipeline to dump your data to the
 stdout (in order to do this, set the `dump` property to TRUE). Lastly,
 you can use valgrind to check for memory errors.
 
-During linking, your test application can use filtered caps as a way to
+During pipeline linking, your test application can use filtered caps as a way to
 drive a specific type of data to or from your element. This is a very
 simple and effective way of checking multiple types of input and output
 in your element.
