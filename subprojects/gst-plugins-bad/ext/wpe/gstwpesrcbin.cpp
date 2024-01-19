@@ -92,7 +92,7 @@
 #include "gstwpesrcbin.h"
 #include "gstwpevideosrc.h"
 #include "gstwpe.h"
-#include "WPEThreadedView.h"
+#include "gstwpethreadedview.h"
 
 #include <gst/allocators/allocators.h>
 #include <gst/base/gstflowcombiner.h>

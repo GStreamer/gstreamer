@@ -32,10 +32,10 @@ typedef struct _GstGLContext GstGLContext;
 typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstEGLImage GstEGLImage;
 
-class WPEView {
+class GstWPEThreadedView {
 public:
-    WPEView(WebKitWebContext*, GstWpeVideoSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
-    ~WPEView();
+    GstWPEThreadedView(WebKitWebContext*, GstWpeVideoSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+    ~GstWPEThreadedView();
 
     bool operator!() const { return m_isValid; }
 
@@ -54,7 +54,7 @@ public:
     void dispatchAxisEvent(struct wpe_input_axis_event&);
     void dispatchTouchEvent(struct wpe_input_touch_event&);
 
-    /*  Used by WPEContextThread */
+    /*  Used by GstWPEContextThread */
     bool hasUri() const { return webkit.uri; }
     void disconnectLoadFailedSignal();
     void waitLoadCompletion();
@@ -123,14 +123,14 @@ private:
 
 };
 
-class WPEContextThread {
+class GstWPEContextThread {
 public:
-    static WPEContextThread& singleton();
+    static GstWPEContextThread& singleton();
 
-    WPEContextThread();
-    ~WPEContextThread();
+    GstWPEContextThread();
+    ~GstWPEContextThread();
 
-    WPEView* createWPEView(GstWpeVideoSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
+    GstWPEThreadedView* createWPEView(GstWpeVideoSrc*, GstGLContext*, GstGLDisplay*, int width, int height);
 
     template<typename Function>
     void dispatch(Function);
