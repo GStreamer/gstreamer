@@ -98,7 +98,7 @@
 #include <gst/video/video.h>
 #include <xkbcommon/xkbcommon.h>
 
-#include "WPEThreadedView.h"
+#include "gstwpethreadedview.h"
 
 #define DEFAULT_WIDTH 1920
 #define DEFAULT_HEIGHT 1080
@@ -135,7 +135,7 @@ struct _GstWpeVideoSrc
 
   gint64 n_frames;              /* total frames sent */
 
-  WPEView *view;
+  GstWPEThreadedView *view;
 
   GArray *touch_points;
   struct wpe_input_touch_event_raw *last_touch;
@@ -295,7 +295,7 @@ gst_wpe_video_src_start (GstWpeVideoSrc * src)
   GST_DEBUG_OBJECT (src, "Will %sfill GLMemories",
       src->gl_enabled ? "" : "NOT ");
 
-  auto & thread = WPEContextThread::singleton ();
+  auto & thread = GstWPEContextThread::singleton ();
 
   if (!src->view) {
     src->view = thread.createWPEView (src, context, display,

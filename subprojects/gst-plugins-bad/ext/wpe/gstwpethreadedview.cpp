@@ -21,9 +21,9 @@
 #include <config.h>
 #endif
 
-#include "WPEThreadedView.h"
 #include "gstwpe.h"
 #include "gstwpesrcbin.h"
+#include "gstwpethreadedview.h"
 
 #include <gst/gl/gl.h>
 #include <gst/gl/egl/gsteglimage.h>
@@ -54,14 +54,14 @@ private:
     GMutex& m;
 };
 
-static WPEContextThread *s_view = NULL;
+static GstWPEContextThread *s_view = NULL;
 
-WPEContextThread& WPEContextThread::singleton()
+GstWPEContextThread& GstWPEContextThread::singleton()
 {
     static gsize initialized = 0;
 
     if (g_once_init_enter (&initialized)) {
-        s_view = new WPEContextThread;
+        s_view = new GstWPEContextThread;
 
         g_once_init_leave (&initialized, 1);
     }
@@ -69,14 +69,14 @@ WPEContextThread& WPEContextThread::singleton()
     return *s_view;
 }
 
-WPEContextThread::WPEContextThread()
+GstWPEContextThread::GstWPEContextThread()
 {
     g_mutex_init(&threading.mutex);
     g_cond_init(&threading.cond);
 
     {
         GMutexHolder lock(threading.mutex);
-        threading.thread = g_thread_new("WPEContextThread", s_viewThread, this);
+        threading.thread = g_thread_new("GstWPEContextThread", s_viewThread, this);
         while (!threading.ready) {
             g_cond_wait(&threading.cond, &threading.mutex);
         }
@@ -84,7 +84,7 @@ WPEContextThread::WPEContextThread()
     }
 }
 
-WPEContextThread::~WPEContextThread()
+GstWPEContextThread::~GstWPEContextThread()
 {
     if (threading.thread) {
         g_thread_unref(threading.thread);
@@ -96,7 +96,7 @@ WPEContextThread::~WPEContextThread()
 }
 
 template<typename Function>
-void WPEContextThread::dispatch(Function func)
+void GstWPEContextThread::dispatch(Function func)
 {
     struct Job {
         Job(Function& f)
@@ -144,9 +144,9 @@ void WPEContextThread::dispatch(Function func)
     g_source_unref(source);
 }
 
-gpointer WPEContextThread::s_viewThread(gpointer data)
+gpointer GstWPEContextThread::s_viewThread(gpointer data)
 {
-    auto& view = *static_cast<WPEContextThread*>(data);
+    auto& view = *static_cast<GstWPEContextThread*>(data);
 
     view.glib.context = g_main_context_new();
     view.glib.loop = g_main_loop_new(view.glib.context, FALSE);
@@ -157,7 +157,7 @@ gpointer WPEContextThread::s_viewThread(gpointer data)
         GSource* source = g_idle_source_new();
         g_source_set_callback(source,
             [](gpointer data) -> gboolean {
-                auto& view = *static_cast<WPEContextThread*>(data);
+                auto& view = *static_cast<GstWPEContextThread*>(data);
                 GMutexHolder lock(view.threading.mutex);
                 view.threading.ready = TRUE;
                 g_cond_signal(&view.threading.cond);
@@ -347,7 +347,7 @@ webkit_extension_msg_received (WebKitWebContext  *context,
 }
 #endif
 
-WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
+GstWPEThreadedView* GstWPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
 {
     GST_DEBUG("context %p display %p, size (%d,%d)", context, display, width, height);
 
@@ -357,7 +357,7 @@ WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* cont
             wpe_loader_init("libWPEBackend-fdo-1.0.so");
         });
 
-    WPEView* view = nullptr;
+    GstWPEThreadedView* view = nullptr;
     dispatch([&]() mutable {
         if (!glib.web_context) {
 #if USE_WPE2
@@ -369,7 +369,7 @@ WPEView* WPEContextThread::createWPEView(GstWpeVideoSrc* src, GstGLContext* cont
             g_object_unref(manager);
 #endif
         }
-        view = new WPEView(glib.web_context, src, context, display, width, height);
+        view = new GstWPEThreadedView(glib.web_context, src, context, display, width, height);
     });
 
     if (view && view->hasUri()) {
@@ -417,7 +417,7 @@ static void s_loadProgressChanged(GObject* object, GParamSpec*, gpointer data)
 
 static void s_webProcessCrashed(WebKitWebView*, WebKitWebProcessTerminationReason reason, gpointer data)
 {
-    auto &view = *static_cast<WPEView *>(data);
+    auto &view = *static_cast<GstWPEThreadedView *>(data);
     auto *src = view.src();
     gchar *reason_str =
         g_enum_to_string (WEBKIT_TYPE_WEB_PROCESS_TERMINATION_REASON, reason);
@@ -433,7 +433,7 @@ static void s_webProcessCrashed(WebKitWebView*, WebKitWebProcessTerminationReaso
     g_free (reason_str);
 }
 
-WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
+GstWPEThreadedView::GstWPEThreadedView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContext* context, GstGLDisplay* display, int width, int height)
   : m_src(src)
 {
 #ifdef G_OS_UNIX
@@ -530,7 +530,7 @@ WPEView::WPEView(WebKitWebContext* web_context, GstWpeVideoSrc* src, GstGLContex
     }
 }
 
-WPEView::~WPEView()
+GstWPEThreadedView::~GstWPEThreadedView()
 {
     GstEGLImage *egl_pending = NULL;
     GstEGLImage *egl_committed = NULL;
@@ -582,7 +582,7 @@ WPEView::~WPEView()
         audio.extension_msg_sigid = 0;
     }
 
-    WPEContextThread::singleton().dispatch([&]() {
+    GstWPEContextThread::singleton().dispatch([&]() {
         if (webkit.view) {
             g_object_unref(webkit.view);
             webkit.view = nullptr;
@@ -612,7 +612,7 @@ WPEView::~WPEView()
     GST_TRACE ("%p destroyed", this);
 }
 
-void WPEView::notifyLoadFinished()
+void GstWPEThreadedView::notifyLoadFinished()
 {
     GMutexHolder lock(threading.ready_mutex);
     if (!threading.ready) {
@@ -621,14 +621,14 @@ void WPEView::notifyLoadFinished()
     }
 }
 
-void WPEView::waitLoadCompletion()
+void GstWPEThreadedView::waitLoadCompletion()
 {
     GMutexHolder lock(threading.ready_mutex);
     while (!threading.ready)
         g_cond_wait(&threading.ready_cond, &threading.ready_mutex);
 }
 
-GstEGLImage* WPEView::image()
+GstEGLImage* GstWPEThreadedView::image()
 {
     GstEGLImage* ret = nullptr;
     bool dispatchFrameComplete = false;
@@ -663,7 +663,7 @@ GstEGLImage* WPEView::image()
     return ret;
 }
 
-GstBuffer* WPEView::buffer()
+GstBuffer* GstWPEThreadedView::buffer()
 {
     GstBuffer* ret = nullptr;
     bool dispatchFrameComplete = false;
@@ -698,7 +698,7 @@ GstBuffer* WPEView::buffer()
     return ret;
 }
 
-void WPEView::resize(int width, int height)
+void GstWPEThreadedView::resize(int width, int height)
 {
     GST_DEBUG("resize to %dx%d", width, height);
     wpe.width = width;
@@ -710,7 +710,7 @@ void WPEView::resize(int width, int height)
     });
 }
 
-void WPEView::frameComplete()
+void GstWPEThreadedView::frameComplete()
 {
     GST_TRACE("frame complete");
     s_view->dispatch([&]() {
@@ -719,7 +719,7 @@ void WPEView::frameComplete()
     });
 }
 
-void WPEView::loadUriUnlocked(const gchar* uri)
+void GstWPEThreadedView::loadUriUnlocked(const gchar* uri)
 {
     if (webkit.uri)
         g_free(webkit.uri);
@@ -729,7 +729,7 @@ void WPEView::loadUriUnlocked(const gchar* uri)
     webkit_web_view_load_uri(webkit.view, webkit.uri);
 }
 
-void WPEView::loadUri(const gchar* uri)
+void GstWPEThreadedView::loadUri(const gchar* uri)
 {
     s_view->dispatch([&]() {
         loadUriUnlocked(uri);
@@ -755,7 +755,7 @@ static void s_runJavascriptFinished(GObject* object, GAsyncResult* result, gpoin
     }
 }
 
-void WPEView::runJavascript(const char* script)
+void GstWPEThreadedView::runJavascript(const char* script)
 {
     s_view->dispatch([&]() {
 #if USE_WPE2
@@ -767,7 +767,7 @@ void WPEView::runJavascript(const char* script)
     });
 }
 
-void WPEView::loadData(GBytes* bytes)
+void GstWPEThreadedView::loadData(GBytes* bytes)
 {
     s_view->dispatch([this, bytes = g_bytes_ref(bytes)]() {
         webkit_web_view_load_bytes(webkit.view, bytes, nullptr, nullptr, nullptr);
@@ -775,7 +775,7 @@ void WPEView::loadData(GBytes* bytes)
     });
 }
 
-void WPEView::setDrawBackground(gboolean drawsBackground)
+void GstWPEThreadedView::setDrawBackground(gboolean drawsBackground)
 {
     GST_DEBUG("%s background rendering", drawsBackground ? "Enabling" : "Disabling");
     WebKitColor color;
@@ -783,7 +783,7 @@ void WPEView::setDrawBackground(gboolean drawsBackground)
     webkit_web_view_set_background_color(webkit.view, &color);
 }
 
-void WPEView::releaseImage(gpointer imagePointer)
+void GstWPEThreadedView::releaseImage(gpointer imagePointer)
 {
     s_view->dispatch([&]() {
         GST_TRACE("Dispatch release exported image %p", imagePointer);
@@ -793,11 +793,11 @@ void WPEView::releaseImage(gpointer imagePointer)
 }
 
 struct ImageContext {
-    WPEView* view;
+    GstWPEThreadedView* view;
     gpointer image;
 };
 
-void WPEView::handleExportedImage(gpointer image)
+void GstWPEThreadedView::handleExportedImage(gpointer image)
 {
     ImageContext* imageContext = g_new (ImageContext, 1);
     imageContext->view = this;
@@ -817,11 +817,11 @@ void WPEView::handleExportedImage(gpointer image)
 }
 
 struct SHMBufferContext {
-    WPEView* view;
+    GstWPEThreadedView* view;
     struct wpe_fdo_shm_exported_buffer* buffer;
 };
 
-void WPEView::releaseSHMBuffer(gpointer data)
+void GstWPEThreadedView::releaseSHMBuffer(gpointer data)
 {
     SHMBufferContext* context = static_cast<SHMBufferContext*>(data);
     s_view->dispatch([&]() {
@@ -831,14 +831,14 @@ void WPEView::releaseSHMBuffer(gpointer data)
     });
 }
 
-void WPEView::s_releaseSHMBuffer(gpointer data)
+void GstWPEThreadedView::s_releaseSHMBuffer(gpointer data)
 {
     SHMBufferContext* context = static_cast<SHMBufferContext*>(data);
     context->view->releaseSHMBuffer(data);
     g_free (context);
 }
 
-void WPEView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* buffer)
+void GstWPEThreadedView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* buffer)
 {
     struct wl_shm_buffer* shmBuffer = wpe_fdo_shm_exported_buffer_get_shm_buffer(buffer);
     auto format = wl_shm_buffer_get_format(shmBuffer);
@@ -873,11 +873,11 @@ void WPEView::handleExportedBuffer(struct wpe_fdo_shm_exported_buffer* buffer)
     }
 }
 
-struct wpe_view_backend_exportable_fdo_egl_client WPEView::s_exportableEGLClient = {
+struct wpe_view_backend_exportable_fdo_egl_client GstWPEThreadedView::s_exportableEGLClient = {
     // export_egl_image
     nullptr,
     [](void* data, struct wpe_fdo_egl_exported_image* image) {
-        auto& view = *static_cast<WPEView*>(data);
+        auto& view = *static_cast<GstWPEThreadedView*>(data);
         view.handleExportedImage(static_cast<gpointer>(image));
     },
     nullptr,
@@ -885,52 +885,52 @@ struct wpe_view_backend_exportable_fdo_egl_client WPEView::s_exportableEGLClient
     nullptr, nullptr
 };
 
-struct wpe_view_backend_exportable_fdo_client WPEView::s_exportableClient = {
+struct wpe_view_backend_exportable_fdo_client GstWPEThreadedView::s_exportableClient = {
     nullptr,
     nullptr,
     // export_shm_buffer
     [](void* data, struct wpe_fdo_shm_exported_buffer* buffer) {
-        auto& view = *static_cast<WPEView*>(data);
+        auto& view = *static_cast<GstWPEThreadedView*>(data);
         view.handleExportedBuffer(buffer);
     },
     nullptr,
     nullptr,
 };
 
-void WPEView::s_releaseImage(GstEGLImage* image, gpointer data)
+void GstWPEThreadedView::s_releaseImage(GstEGLImage* image, gpointer data)
 {
     ImageContext* context = static_cast<ImageContext*>(data);
     context->view->releaseImage(context->image);
     g_free (context);
 }
 
-struct wpe_view_backend* WPEView::backend() const
+struct wpe_view_backend* GstWPEThreadedView::backend() const
 {
     return wpe.exportable ? wpe_view_backend_exportable_fdo_get_view_backend(wpe.exportable) : nullptr;
 }
 
-void WPEView::dispatchKeyboardEvent(struct wpe_input_keyboard_event& wpe_event)
+void GstWPEThreadedView::dispatchKeyboardEvent(struct wpe_input_keyboard_event& wpe_event)
 {
     s_view->dispatch([&]() {
         wpe_view_backend_dispatch_keyboard_event(backend(), &wpe_event);
     });
 }
 
-void WPEView::dispatchPointerEvent(struct wpe_input_pointer_event& wpe_event)
+void GstWPEThreadedView::dispatchPointerEvent(struct wpe_input_pointer_event& wpe_event)
 {
     s_view->dispatch([&]() {
         wpe_view_backend_dispatch_pointer_event(backend(), &wpe_event);
     });
 }
 
-void WPEView::dispatchAxisEvent(struct wpe_input_axis_event& wpe_event)
+void GstWPEThreadedView::dispatchAxisEvent(struct wpe_input_axis_event& wpe_event)
 {
     s_view->dispatch([&]() {
         wpe_view_backend_dispatch_axis_event(backend(), &wpe_event);
     });
 }
 
-void WPEView::dispatchTouchEvent(struct wpe_input_touch_event& wpe_event)
+void GstWPEThreadedView::dispatchTouchEvent(struct wpe_input_touch_event& wpe_event)
 {
     s_view->dispatch([&]() {
         wpe_view_backend_dispatch_touch_event(backend(), &wpe_event);
