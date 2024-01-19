@@ -1467,14 +1467,13 @@ gst_d3d11_allocator_free (GstAllocator * allocator, GstMemory * mem)
   GST_D3D11_CLEAR_COM (dmem_priv->decoder_output_view);
   GST_D3D11_CLEAR_COM (dmem_priv->processor_input_view);
   GST_D3D11_CLEAR_COM (dmem_priv->processor_output_view);
+  GST_D3D11_CLEAR_COM (dmem_priv->dxgi_surface);
+  GST_D3D11_CLEAR_COM (dmem_priv->d2d1_render_target);
   GST_D3D11_CLEAR_COM (dmem_priv->texture);
   GST_D3D11_CLEAR_COM (dmem_priv->staging);
   GST_D3D11_CLEAR_COM (dmem_priv->buffer);
 
   GST_D3D11_CLEAR_COM (dmem_priv->decoder_handle);
-
-  GST_D3D11_CLEAR_COM (dmem_priv->dxgi_surface);
-  GST_D3D11_CLEAR_COM (dmem_priv->d2d1_render_target);
 
   gst_clear_object (&dmem->device);
 
