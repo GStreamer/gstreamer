@@ -138,7 +138,8 @@ if ges_dep.found()
           '--builddir', meson.current_build_dir(),
           '--dependency', 'GstSharp:' + meson.project_version(),
       ],
-      output: 'GESSharp.' + meson.project_version() + '.nupkg'
+      output: 'GESSharp.' + meson.project_version() + '.nupkg',
+      depends: [ges_sharp]
   )
 endif
 
@@ -155,6 +156,7 @@ custom_target('GstSharp-nuget',
         '--builddir', meson.current_build_dir(),
     ],
     output: 'GstSharp.' + meson.project_version() + '.nupkg',
+    depends: [gst_sharp]
 )
 
 subdir('samples')
