@@ -373,6 +373,7 @@ validate_flow_format_buffer (GstBuffer * buffer, gint checksum_type,
       buffer_parts_index > 0 ? g_strjoinv (", ",
       buffer_parts) : g_strdup ("(empty)");
 
+  g_strfreev (ignored_fields);
   g_free (meta_str);
   g_free (flags_str);
   while (buffer_parts_index > 0)
