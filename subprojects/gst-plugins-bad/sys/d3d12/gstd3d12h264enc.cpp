@@ -95,7 +95,6 @@ struct GstD3D12H264EncClassData
   GstCaps *src_caps;
   guint rc_support;
   guint slice_mode_support;
-  D3D12_VIDEO_ENCODER_CODEC_PICTURE_CONTROL_SUPPORT_H264 picture_ctrl;
 };
 
 /* *INDENT-OFF* */
@@ -2211,16 +2210,13 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
       level_h264_min, level_h264_max);
 
   profile_h264 = D3D12_VIDEO_ENCODER_PROFILE_H264_HIGH;
+  hr = video_device->CheckFeatureSupport
+      (D3D12_FEATURE_VIDEO_ENCODER_PROFILE_LEVEL, &feature_profile_level,
+      sizeof (feature_profile_level));
   if (gst_d3d12_result (hr, device) && feature_profile_level.IsSupported) {
-    feature_input_format.Format = DXGI_FORMAT_NV12;
-    hr = video_device->CheckFeatureSupport
-        (D3D12_FEATURE_VIDEO_ENCODER_INPUT_FORMAT, &feature_input_format,
-        sizeof (feature_input_format));
-    if (gst_d3d12_result (hr, device) && feature_input_format.IsSupported) {
-      profiles.push_back ("high");
-      GST_INFO_OBJECT (device, "High profile is supported, level [%d, %d]",
-          level_h264_min, level_h264_max);
-    }
+    profiles.push_back ("high");
+    GST_INFO_OBJECT (device, "High profile is supported, level [%d, %d]",
+        level_h264_min, level_h264_max);
   }
 
   if (profiles.empty ()) {
@@ -2435,7 +2431,6 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   cdata->src_caps = src_caps;
   cdata->rc_support = rc_support;
   cdata->slice_mode_support = slice_mode_support;
-  cdata->picture_ctrl = picture_ctrl_h264;
 
   GType type;
   gchar *type_name;
