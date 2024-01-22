@@ -1866,6 +1866,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
 
   barriers.clear ();
   rtv_handles.clear ();
+  std::vector < D3D12_RECT > rtv_rects;
 
   auto upload_data = priv->upload_data;
 
@@ -1995,6 +1996,9 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
         (rtv_heap->GetCPUDescriptorHandleForHeapStart ());
 
     for (guint plane = 0; plane < num_planes; plane++) {
+      D3D12_RECT rect = { };
+      gst_d3d12_memory_get_plane_rectangle (mem, plane, &rect);
+      rtv_rects.push_back (rect);
       rtv_handles.push_back (cpu_handle);
       cpu_handle.Offset (priv->rtv_inc_size);
     }
@@ -2006,7 +2010,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   if (priv->clear_background) {
     for (size_t i = 0; i < rtv_handles.size (); i++) {
       cl->ClearRenderTargetView (rtv_handles[i],
-          priv->clear_color[i], 0, nullptr);
+          priv->clear_color[i], 1, &rtv_rects[i]);
     }
   }
 

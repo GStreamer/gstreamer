@@ -2178,6 +2178,7 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
   ClearColor *color = &priv->clear_color[0];
   auto bg_render = priv->bg_render.get ();
   auto & rtv_handles = priv->rtv_handles;
+  std::vector < D3D12_RECT > rtv_rects;
 
   rtv_handles.clear ();
   for (guint i = 0; i < gst_buffer_n_memory (priv->generated_output_buf); i++) {
@@ -2196,6 +2197,9 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
         (rtv_heap->GetCPUDescriptorHandleForHeapStart ());
 
     for (guint plane = 0; plane < num_planes; plane++) {
+      D3D12_RECT rect = { };
+      gst_d3d12_memory_get_plane_rectangle (mem, plane, &rect);
+      rtv_rects.push_back (rect);
       rtv_handles.push_back (cpu_handle);
       cpu_handle.Offset (bg_render->rtv_inc_size);
     }
@@ -2263,8 +2267,10 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
     /* clear U and V components if needed */
-    for (size_t i = 1; i < rtv_handles.size (); i++)
-      cl->ClearRenderTargetView (rtv_handles[i], color->color[i], 0, nullptr);
+    for (size_t i = 1; i < rtv_handles.size (); i++) {
+      cl->ClearRenderTargetView (rtv_handles[i], color->color[i], 1,
+          &rtv_rects[i]);
+    }
   } else {
     switch (priv->background) {
       case GST_D3D12_COMPOSITOR_BACKGROUND_BLACK:
@@ -2282,8 +2288,8 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
     }
 
     for (size_t i = 0; i < priv->rtv_handles.size (); i++) {
-      cl->ClearRenderTargetView (priv->rtv_handles[i], color->color[i],
-          0, nullptr);
+      cl->ClearRenderTargetView (rtv_handles[i], color->color[i], 1,
+          &rtv_rects[i]);
     }
   }
 

@@ -1133,6 +1133,10 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   if (!heap)
     return;
 
+  D3D12_RECT rect = { };
+  if (!gst_d3d12_memory_get_plane_rectangle (dmem, 1, &rect))
+    return;
+
   GstD3D12CommandAllocator *gst_ca = nullptr;
   gst_d3d12_command_allocator_pool_acquire (priv->direct_ca_pool, &gst_ca);
   if (!gst_ca)
@@ -1161,7 +1165,7 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
       priv->rtv_inc_size);
 
   const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.5f, 1.0f };
-  cl->ClearRenderTargetView (rtv_handle, clear_color, 0, nullptr);
+  cl->ClearRenderTargetView (rtv_handle, clear_color, 1, &rect);
 
   auto hr = cl->Close ();
   if (!gst_d3d12_result (hr, device)) {

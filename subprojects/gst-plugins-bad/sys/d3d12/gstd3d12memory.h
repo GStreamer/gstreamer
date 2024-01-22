@@ -139,6 +139,10 @@ gboolean          gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem,
 
 guint             gst_d3d12_memory_get_plane_count       (GstD3D12Memory * mem);
 
+gboolean          gst_d3d12_memory_get_plane_rectangle   (GstD3D12Memory * mem,
+                                                          guint plane,
+                                                          D3D12_RECT * rect);
+
 gboolean          gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
                                                                   ID3D12DescriptorHeap ** heap);
 
