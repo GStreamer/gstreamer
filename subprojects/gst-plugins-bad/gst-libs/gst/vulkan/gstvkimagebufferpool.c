@@ -35,6 +35,11 @@
  * A #GstVulkanImageBufferPool is created with gst_vulkan_image_buffer_pool_new()
  */
 
+const static VkImageUsageFlags default_usage =
+    VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+    | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT
+    | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
 /* bufferpool */
 struct _GstVulkanImageBufferPoolPrivate
 {
@@ -134,11 +139,8 @@ gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
     VkImageLayout * initial_layout, guint64 * initial_access,
     guint32 * n_layers, GstCaps ** decode_caps, GstCaps ** encode_caps)
 {
-  if (!gst_structure_get_uint (config, "usage", usage)) {
-    *usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
-        | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
-        | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
-  }
+  if (!gst_structure_get_uint (config, "usage", usage))
+    *usage = default_usage;
 
   if (!gst_structure_get_uint (config, "memory-properties", mem_props))
     *mem_props = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
@@ -248,9 +250,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     goto no_vk_format;
 
   if (priv->usage == 0) {
-    priv->usage = supported_usage & (VK_BUFFER_USAGE_TRANSFER_DST_BIT
-        | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_STORAGE_BIT
-        | VK_IMAGE_USAGE_SAMPLED_BIT);
+    priv->usage = supported_usage & default_usage;
   }
 
   /* get the size of the buffer to allocate */
