@@ -1,7 +1,7 @@
 raw_api_fname = join_paths(meson.current_source_dir(), meson.project_name() + '-api.raw')
 metadata = files(meson.project_name() + '.metadata')
 
-abi_includes = 'glib.h,gst/gst.h,gst/video/video.h,gst/audio/audio.h,gst/rtsp/rtsp.h,gst/app/app.h,gst/audio/audio.h,gst/base/base.h,gst/controller/controller.h,gst/fft/fft.h,gst/net/net.h,gst/pbutils/gstaudiovisualizer.h,gst/pbutils/pbutils.h,gst/rtp/rtp.h,gst/rtsp/rtsp.h,gst/sdp/sdp.h,gst/tag/tag.h,gst/video/video.h,gst/video/gstvideoaffinetransformationmeta.h,gst/net/gstnetcontrolmessagemeta.h,gst/webrtc/webrtc.h'
+abi_includes = 'glib.h,gst/gst.h,gst/video/video.h,gst/audio/audio.h,gst/rtsp/rtsp.h,gst/app/app.h,gst/audio/audio.h,gst/base/base.h,gst/controller/controller.h,gst/fft/fft.h,gst/net/net.h,gst/pbutils/gstaudiovisualizer.h,gst/pbutils/pbutils.h,gst/rtp/rtp.h,gst/rtsp/rtsp.h,gst/sdp/sdp.h,gst/tag/tag.h,gst/video/video.h,gst/video/gstvideoaffinetransformationmeta.h,gst/net/gstnetcontrolmessagemeta.h,gst/webrtc/webrtc.h,gst/rtsp-server/rtsp-server.h'
 
 sources = [
     'custom/Adapter.cs',

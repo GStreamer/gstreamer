@@ -77,6 +77,7 @@ gst_deps_defs = [
   ['gstreamer-tag', ['gst-plugins-base', 'tag_dep'], 'gsttag'],
   ['gstreamer-video', ['gst-plugins-base', 'video_dep'], 'gstvideo'],
   ['gstreamer-webrtc', ['gst-plugins-bad', 'gstwebrtc_dep'], 'gstwebrtc'],
+  ['gstreamer-rtsp-server', ['gst-rtsp-server', 'gst_rtsp_server_dep'], 'gst_rtsp_server'],
 ]
 
 foreach dep: gst_deps_defs
@@ -177,7 +178,7 @@ endif
 if codegen_enabled
     env = environment()
     env.set('GI_TYPELIB_PATH', girs_dir)
-    merge_with = '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0,GstWebRTC-1.0'
+    merge_with = '--merge-with=GstApp-1.0,GstAudio-1.0,GstBase-1.0,GstController-1.0,GstNet-1.0,GstPbutils-1.0,GstRtp-1.0,GstRtsp-1.0,GstSdp-1.0,GstTag-1.0,GstVideo-1.0,GstWebRTC-1.0,GstRtspServer-1.0'
     run_target('bindinate_gstreamer',
         command: ['sh', '-c',
             '''@0@ --name=gstreamer --regenerate=true @3@ --gir=Gst-1.0 --out=@1@ && mv @1@/sources/gstreamer-sharp-api.raw @2@/sources/gstreamer-sharp-api.raw '''.format(

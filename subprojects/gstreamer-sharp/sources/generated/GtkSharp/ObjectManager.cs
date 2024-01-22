@@ -83,6 +83,24 @@ namespace GtkSharp.GstreamerSharp {
 			GLib.GType.Register (Gst.WebRTC.WebRTCRTPSender.GType, typeof (Gst.WebRTC.WebRTCRTPSender));
 			GLib.GType.Register (Gst.WebRTC.WebRTCRTPTransceiver.GType, typeof (Gst.WebRTC.WebRTCRTPTransceiver));
 			GLib.GType.Register (Gst.WebRTC.WebRTCSCTPTransport.GType, typeof (Gst.WebRTC.WebRTCSCTPTransport));
+			GLib.GType.Register (Gst.RtspServer.RTSPAddressPool.GType, typeof (Gst.RtspServer.RTSPAddressPool));
+			GLib.GType.Register (Gst.RtspServer.RTSPAuth.GType, typeof (Gst.RtspServer.RTSPAuth));
+			GLib.GType.Register (Gst.RtspServer.RTSPClient.GType, typeof (Gst.RtspServer.RTSPClient));
+			GLib.GType.Register (Gst.RtspServer.RTSPMedia.GType, typeof (Gst.RtspServer.RTSPMedia));
+			GLib.GType.Register (Gst.RtspServer.RTSPMediaFactory.GType, typeof (Gst.RtspServer.RTSPMediaFactory));
+			GLib.GType.Register (Gst.RtspServer.RTSPMediaFactoryURI.GType, typeof (Gst.RtspServer.RTSPMediaFactoryURI));
+			GLib.GType.Register (Gst.RtspServer.RTSPMountPoints.GType, typeof (Gst.RtspServer.RTSPMountPoints));
+			GLib.GType.Register (Gst.RtspServer.RTSPOnvifClient.GType, typeof (Gst.RtspServer.RTSPOnvifClient));
+			GLib.GType.Register (Gst.RtspServer.RTSPOnvifMedia.GType, typeof (Gst.RtspServer.RTSPOnvifMedia));
+			GLib.GType.Register (Gst.RtspServer.RTSPOnvifMediaFactory.GType, typeof (Gst.RtspServer.RTSPOnvifMediaFactory));
+			GLib.GType.Register (Gst.RtspServer.RTSPOnvifServer.GType, typeof (Gst.RtspServer.RTSPOnvifServer));
+			GLib.GType.Register (Gst.RtspServer.RTSPServer.GType, typeof (Gst.RtspServer.RTSPServer));
+			GLib.GType.Register (Gst.RtspServer.RTSPSession.GType, typeof (Gst.RtspServer.RTSPSession));
+			GLib.GType.Register (Gst.RtspServer.RTSPSessionMedia.GType, typeof (Gst.RtspServer.RTSPSessionMedia));
+			GLib.GType.Register (Gst.RtspServer.RTSPSessionPool.GType, typeof (Gst.RtspServer.RTSPSessionPool));
+			GLib.GType.Register (Gst.RtspServer.RTSPStream.GType, typeof (Gst.RtspServer.RTSPStream));
+			GLib.GType.Register (Gst.RtspServer.RTSPStreamTransport.GType, typeof (Gst.RtspServer.RTSPStreamTransport));
+			GLib.GType.Register (Gst.RtspServer.RTSPThreadPool.GType, typeof (Gst.RtspServer.RTSPThreadPool));
 		}
 	}
 }

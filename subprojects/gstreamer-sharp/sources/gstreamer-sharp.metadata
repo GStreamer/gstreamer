@@ -32,6 +32,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace[@name='GstRtsp']" name="name">Gst.Rtsp</attr>
 	<attr path="/api/namespace[@name='GstSdp']" name="name">Gst.Sdp</attr>
 	<attr path="/api/namespace[@name='GstWebRTC']" name="name">Gst.WebRTC</attr>
+	<attr path="/api/namespace[@name='GstRtspServer']" name="name">Gst.RtspServer</attr>
 
 	<attr path="/api/namespace" name="library">gstreamer-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Base']" name="library">gstbase-1.0-0.dll</attr>
@@ -46,6 +47,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 	<attr path="/api/namespace[@name='Gst.Rtsp']" name="library">gstrtsp-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Sdp']" name="library">gstsdp-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.WebRTC']" name="library">gstwebrtc-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.RtspServer']" name="library">gstrtspserver-1.0-0.dll</attr>
 
 	<!-- MiniObject issues -->
 	<attr path="/api/namespace/boxed[@cname='GstMiniObject']" name="opaque">true</attr>
@@ -353,6 +355,11 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 
 	<!-- Hide because it is basically an alias to NetClock -->
 	<attr path="/api/namespace/object[@cname='GstNtpClock']" name="hidden">true</attr>
+
+	<!-- GstRtspServer fixes -->
+	<attr path="/api/namespace/object/method[@cname='gst_rtsp_stream_transport_set_callbacks']" name="hidden">true</attr>
+	<attr path="/api/namespace/object/method[@cname='gst_rtsp_stream_transport_set_list_callbacks']" name="hidden">true</attr>
+	<attr path="/api/namespace/object/method[@cname='gst_rtsp_stream_transport_message_sent']" name="hidden">true</attr>
 
 	<!-- Mark reserved fields as padding -->
 	<attr path="//*[contains(@cname, 'gst_reserved')]" name="padding">true</attr>

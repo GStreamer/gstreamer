@@ -34428,4 +34428,3557 @@
     </object>
     <object name="Constants" cname="GstWebRTCConstants" opaque="true"/>
   </namespace>
+  <namespace name="GstRtspServer" library="gstrtspserver-1.0">
+    <enum name="RTSPAddressPoolResult" cname="GstRTSPAddressPoolResult" type="enum">
+      <member cname="GST_RTSP_ADDRESS_POOL_ELAST" name="Elast" value="-4"/>
+      <member cname="GST_RTSP_ADDRESS_POOL_ERANGE" name="Erange" value="-3"/>
+      <member cname="GST_RTSP_ADDRESS_POOL_ERESERVED" name="Ereserved" value="-2"/>
+      <member cname="GST_RTSP_ADDRESS_POOL_EINVAL" name="Einval" value="-1"/>
+      <member cname="GST_RTSP_ADDRESS_POOL_OK" name="Ok" value="0"/>
+    </enum>
+    <enum name="RTSPFilterResult" cname="GstRTSPFilterResult" type="enum">
+      <member cname="GST_RTSP_FILTER_REMOVE" name="Remove" value="0"/>
+      <member cname="GST_RTSP_FILTER_KEEP" name="Keep" value="1"/>
+      <member cname="GST_RTSP_FILTER_REF" name="Ref" value="2"/>
+    </enum>
+    <enum name="RTSPMediaStatus" cname="GstRTSPMediaStatus" type="enum">
+      <member cname="GST_RTSP_MEDIA_STATUS_UNPREPARED" name="Unprepared" value="0"/>
+      <member cname="GST_RTSP_MEDIA_STATUS_UNPREPARING" name="Unpreparing" value="1"/>
+      <member cname="GST_RTSP_MEDIA_STATUS_PREPARING" name="Preparing" value="2"/>
+      <member cname="GST_RTSP_MEDIA_STATUS_PREPARED" name="Prepared" value="3"/>
+      <member cname="GST_RTSP_MEDIA_STATUS_SUSPENDED" name="Suspended" value="4"/>
+      <member cname="GST_RTSP_MEDIA_STATUS_ERROR" name="Error" value="5"/>
+    </enum>
+    <enum name="RTSPPublishClockMode" cname="GstRTSPPublishClockMode" type="enum" gtype="gst_rtsp_publish_clock_mode_get_type">
+      <member cname="GST_RTSP_PUBLISH_CLOCK_MODE_NONE" name="None" value="0"/>
+      <member cname="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK" name="Clock" value="1"/>
+      <member cname="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET" name="ClockAndOffset" value="2"/>
+    </enum>
+    <enum name="RTSPSuspendMode" cname="GstRTSPSuspendMode" type="enum" gtype="gst_rtsp_suspend_mode_get_type">
+      <member cname="GST_RTSP_SUSPEND_MODE_NONE" name="None" value="0"/>
+      <member cname="GST_RTSP_SUSPEND_MODE_PAUSE" name="Pause" value="1"/>
+      <member cname="GST_RTSP_SUSPEND_MODE_RESET" name="Reset" value="2"/>
+    </enum>
+    <enum name="RTSPThreadType" cname="GstRTSPThreadType" type="enum">
+      <member cname="GST_RTSP_THREAD_TYPE_CLIENT" name="Client" value="0"/>
+      <member cname="GST_RTSP_THREAD_TYPE_MEDIA" name="Media" value="1"/>
+    </enum>
+    <enum name="RTSPAddressFlags" cname="GstRTSPAddressFlags" type="flags">
+      <member cname="GST_RTSP_ADDRESS_FLAG_NONE" name="None" value="0"/>
+      <member cname="GST_RTSP_ADDRESS_FLAG_IPV4" name="Ipv4" value="1"/>
+      <member cname="GST_RTSP_ADDRESS_FLAG_IPV6" name="Ipv6" value="2"/>
+      <member cname="GST_RTSP_ADDRESS_FLAG_EVEN_PORT" name="EvenPort" value="4"/>
+      <member cname="GST_RTSP_ADDRESS_FLAG_MULTICAST" name="Multicast" value="8"/>
+      <member cname="GST_RTSP_ADDRESS_FLAG_UNICAST" name="Unicast" value="16"/>
+    </enum>
+    <enum name="RTSPTransportMode" cname="GstRTSPTransportMode" type="flags" gtype="gst_rtsp_transport_mode_get_type">
+      <member cname="GST_RTSP_TRANSPORT_MODE_PLAY" name="Play" value="1"/>
+      <member cname="GST_RTSP_TRANSPORT_MODE_RECORD" name="Record" value="2"/>
+    </enum>
+    <callback name="RTSPClientSendFunc" cname="GstRTSPClientSendFunc">
+      <return-type type="gboolean"/>
+      <parameters>
+        <parameter name="client" type="GstRTSPClient*"/>
+        <parameter name="message" type="GstRTSPMessage*">
+          <warning>missing glib:type-name</warning>
+        </parameter>
+        <parameter name="close" type="gboolean"/>
+        <parameter allow-none="1" closure="3" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPClientSendMessagesFunc" cname="GstRTSPClientSendMessagesFunc" version="1.16">
+      <return-type type="gboolean"/>
+      <parameters>
+        <parameter name="client" type="GstRTSPClient*"/>
+        <parameter name="messages" type="GstRTSPMessage*">
+          <warning>missing glib:type-name</warning>
+        </parameter>
+        <parameter name="n_messages" type="guint"/>
+        <parameter name="close" type="gboolean"/>
+        <parameter allow-none="1" closure="4" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPClientSessionFilterFunc" cname="GstRTSPClientSessionFilterFunc">
+      <return-type type="GstRTSPFilterResult"/>
+      <parameters>
+        <parameter name="client" type="GstRTSPClient*"/>
+        <parameter name="sess" type="GstRTSPSession*"/>
+        <parameter allow-none="1" closure="2" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPKeepAliveFunc" cname="GstRTSPKeepAliveFunc">
+      <return-type type="void"/>
+      <parameters>
+        <parameter allow-none="1" closure="0" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPMessageSentFunc" cname="GstRTSPMessageSentFunc">
+      <return-type type="void"/>
+      <parameters>
+        <parameter allow-none="1" closure="0" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPMessageSentFuncFull" cname="GstRTSPMessageSentFuncFull" version="1.18">
+      <return-type type="void"/>
+      <parameters>
+        <parameter name="trans" type="GstRTSPStreamTransport*"/>
+        <parameter allow-none="1" closure="1" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPSendFunc" cname="GstRTSPSendFunc">
+      <return-type type="gboolean"/>
+      <parameters>
+        <parameter name="buffer" type="GstBuffer*">
+          <warning>missing glib:type-name</warning>
+        </parameter>
+        <parameter name="channel" type="guint8"/>
+        <parameter allow-none="1" closure="2" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPSendListFunc" cname="GstRTSPSendListFunc" version="1.16">
+      <return-type type="gboolean"/>
+      <parameters>
+        <parameter name="buffer_list" type="GstBufferList*">
+          <warning>missing glib:type-name</warning>
+        </parameter>
+        <parameter name="channel" type="guint8"/>
+        <parameter allow-none="1" closure="2" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPServerClientFilterFunc" cname="GstRTSPServerClientFilterFunc">
+      <return-type type="GstRTSPFilterResult"/>
+      <parameters>
+        <parameter name="server" type="GstRTSPServer*"/>
+        <parameter name="client" type="GstRTSPClient*"/>
+        <parameter allow-none="1" closure="2" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPSessionFilterFunc" cname="GstRTSPSessionFilterFunc">
+      <return-type type="GstRTSPFilterResult"/>
+      <parameters>
+        <parameter name="sess" type="GstRTSPSession*"/>
+        <parameter name="media" type="GstRTSPSessionMedia*"/>
+        <parameter allow-none="1" closure="2" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPSessionPoolFilterFunc" cname="GstRTSPSessionPoolFilterFunc">
+      <return-type type="GstRTSPFilterResult"/>
+      <parameters>
+        <parameter name="pool" type="GstRTSPSessionPool*"/>
+        <parameter name="session" type="GstRTSPSession*"/>
+        <parameter allow-none="1" closure="2" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPSessionPoolFunc" cname="GstRTSPSessionPoolFunc">
+      <return-type type="gboolean"/>
+      <parameters>
+        <parameter name="pool" type="GstRTSPSessionPool*"/>
+        <parameter allow-none="1" closure="1" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <callback name="RTSPStreamTransportFilterFunc" cname="GstRTSPStreamTransportFilterFunc">
+      <return-type type="GstRTSPFilterResult"/>
+      <parameters>
+        <parameter name="stream" type="GstRTSPStream*"/>
+        <parameter name="trans" type="GstRTSPStreamTransport*"/>
+        <parameter allow-none="1" closure="2" name="user_data" type="gpointer"/>
+      </parameters>
+    </callback>
+    <object name="RTSPAddressPool" cname="GstRTSPAddressPool" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPAddressPoolClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_address_pool_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_address_pool_new" disable_void_ctor=""/>
+      <method name="AcquireAddress" cname="gst_rtsp_address_pool_acquire_address">
+        <return-type type="GstRTSPAddress*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="flags" type="GstRTSPAddressFlags"/>
+          <parameter name="n_ports" type="gint"/>
+        </parameters>
+      </method>
+      <method name="AddRange" cname="gst_rtsp_address_pool_add_range">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="min_address" type="const-gchar*"/>
+          <parameter name="max_address" type="const-gchar*"/>
+          <parameter name="min_port" type="guint16"/>
+          <parameter name="max_port" type="guint16"/>
+          <parameter name="ttl" type="guint8"/>
+        </parameters>
+      </method>
+      <method name="Clear" cname="gst_rtsp_address_pool_clear">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="Dump" cname="gst_rtsp_address_pool_dump">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="HasUnicastAddresses" cname="gst_rtsp_address_pool_has_unicast_addresses">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="ReserveAddress" cname="gst_rtsp_address_pool_reserve_address">
+        <return-type type="GstRTSPAddressPoolResult"/>
+        <parameters>
+          <parameter name="ip_address" type="const-gchar*"/>
+          <parameter name="port" type="guint"/>
+          <parameter name="n_ports" type="guint"/>
+          <parameter name="ttl" type="guint"/>
+          <parameter name="address" type="GstRTSPAddress**" owned="true" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPAddressPoolPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPAuth" cname="GstRTSPAuth" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPAuthClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="authenticate"/>
+        <method vm="check"/>
+        <method vm="generate_authenticate_header"/>
+        <method signal_vm="accept_certificate"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="3" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_auth_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_auth_new" disable_void_ctor=""/>
+      <method name="Check" cname="gst_rtsp_auth_check" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="check" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="MakeBasic" cname="gst_rtsp_auth_make_basic" shared="true">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="user" type="const-gchar*"/>
+          <parameter name="pass" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <virtual_method name="Authenticate" cname="authenticate">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Check" cname="check">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="check" type="const-gchar*"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GenerateAuthenticateHeader" cname="generate_authenticate_header">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <method name="AddBasic" cname="gst_rtsp_auth_add_basic">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="basic" type="const-gchar*"/>
+          <parameter name="token" type="GstRTSPToken*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="AddDigest" cname="gst_rtsp_auth_add_digest" version="1.12">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="user" type="const-gchar*"/>
+          <parameter name="pass" type="const-gchar*"/>
+          <parameter name="token" type="GstRTSPToken*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="GetDefaultToken" cname="gst_rtsp_auth_get_default_token">
+        <return-type type="GstRTSPToken*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="GetRealm" cname="gst_rtsp_auth_get_realm" version="1.16">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetSupportedMethods" cname="gst_rtsp_auth_get_supported_methods" version="1.12">
+        <return-type type="GstRTSPAuthMethod"/>
+        <parameters/>
+      </method>
+      <method name="GetTlsAuthenticationMode" cname="gst_rtsp_auth_get_tls_authentication_mode">
+        <return-type type="GTlsAuthenticationMode" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetTlsCertificate" cname="gst_rtsp_auth_get_tls_certificate">
+        <return-type type="GTlsCertificate*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetTlsDatabase" cname="gst_rtsp_auth_get_tls_database" version="1.6">
+        <return-type type="GTlsDatabase*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="ParseHtdigest" cname="gst_rtsp_auth_parse_htdigest" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="path" type="const-gfilename*"/>
+          <parameter name="token" type="GstRTSPToken*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="RemoveBasic" cname="gst_rtsp_auth_remove_basic">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="basic" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="RemoveDigest" cname="gst_rtsp_auth_remove_digest" version="1.12">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="user" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetDefaultToken" cname="gst_rtsp_auth_set_default_token">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="token" type="GstRTSPToken*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetRealm" cname="gst_rtsp_auth_set_realm" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="realm" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetSupportedMethods" cname="gst_rtsp_auth_set_supported_methods" version="1.12">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="methods" type="GstRTSPAuthMethod"/>
+        </parameters>
+      </method>
+      <method name="SetTlsAuthenticationMode" cname="gst_rtsp_auth_set_tls_authentication_mode" version="1.6">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GTlsAuthenticationMode"/>
+        </parameters>
+      </method>
+      <method name="SetTlsCertificate" cname="gst_rtsp_auth_set_tls_certificate">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="cert" type="GTlsCertificate*"/>
+        </parameters>
+      </method>
+      <method name="SetTlsDatabase" cname="gst_rtsp_auth_set_tls_database" version="1.6">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="database" type="GTlsDatabase*"/>
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPAuthPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      <signal name="AcceptCertificate" cname="accept-certificate" when="last" field_name="accept_certificate" version="1.6">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="connection" type="GTlsConnection*"/>
+          <parameter name="peer_cert" type="GTlsCertificate*"/>
+          <parameter name="errors" type="GTlsCertificateFlags"/>
+        </parameters>
+      </signal>
+    </object>
+    <object name="RTSPClient" cname="GstRTSPClient" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPClientClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="create_sdp"/>
+        <method vm="configure_client_media"/>
+        <method vm="configure_client_transport"/>
+        <method vm="params_set"/>
+        <method vm="params_get"/>
+        <method vm="make_path_from_uri"/>
+        <method vm="adjust_play_mode"/>
+        <method vm="adjust_play_response"/>
+        <method signal_vm="closed"/>
+        <method signal_vm="new_session"/>
+        <method signal_vm="options_request"/>
+        <method signal_vm="describe_request"/>
+        <method signal_vm="setup_request"/>
+        <method signal_vm="play_request"/>
+        <method signal_vm="pause_request"/>
+        <method signal_vm="teardown_request"/>
+        <method signal_vm="set_parameter_request"/>
+        <method signal_vm="get_parameter_request"/>
+        <method signal_vm="handle_response"/>
+        <method vm="tunnel_http_response"/>
+        <method signal_vm="send_message"/>
+        <method vm="handle_sdp"/>
+        <method signal_vm="announce_request"/>
+        <method signal_vm="record_request"/>
+        <method signal_vm="check_requirements"/>
+        <method signal_vm="pre_options_request"/>
+        <method signal_vm="pre_describe_request"/>
+        <method signal_vm="pre_setup_request"/>
+        <method signal_vm="pre_play_request"/>
+        <method signal_vm="pre_pause_request"/>
+        <method signal_vm="pre_teardown_request"/>
+        <method signal_vm="pre_set_parameter_request"/>
+        <method signal_vm="pre_get_parameter_request"/>
+        <method signal_vm="pre_announce_request"/>
+        <method signal_vm="pre_record_request"/>
+        <method vm="adjust_error_code"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="1" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_client_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_client_new" disable_void_ctor=""/>
+      <virtual_method name="AdjustErrorCode" cname="adjust_error_code" version="1.22">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="code" type="GstRTSPStatusCode"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="AdjustPlayMode" cname="adjust_play_mode">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="context" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="range" type="GstRTSPTimeRange**">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="flags" type="GstSeekFlags"/>
+          <parameter name="rate" type="gdouble"/>
+          <parameter name="trickmode_interval" type="guint64"/>
+          <parameter name="enable_rate_control" type="gboolean"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="AdjustPlayResponse" cname="adjust_play_response">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="context" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ConfigureClientMedia" cname="configure_client_media">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="media" type="GstRTSPMedia*"/>
+          <parameter name="stream" type="GstRTSPStream*"/>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ConfigureClientTransport" cname="configure_client_transport">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="ct" type="GstRTSPTransport*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="CreateSdp" cname="create_sdp">
+        <return-type type="GstSDPMessage*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="media" type="GstRTSPMedia*"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="HandleSdp" cname="handle_sdp">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="media" type="GstRTSPMedia*"/>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="MakePathFromUri" cname="make_path_from_uri">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="uri" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ParamsGet" cname="params_get">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ParamsSet" cname="params_set">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="TunnelHttpResponse" cname="tunnel_http_response">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="request" type="GstRTSPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="response" type="GstRTSPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <method name="Attach" cname="gst_rtsp_client_attach">
+        <return-type type="guint"/>
+        <parameters>
+          <parameter allow-none="1" name="context" type="GMainContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="Close" cname="gst_rtsp_client_close" version="1.4">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="GetAuth" cname="gst_rtsp_client_get_auth">
+        <return-type type="GstRTSPAuth*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetConnection" cname="gst_rtsp_client_get_connection">
+        <return-type type="GstRTSPConnection*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="GetContentLengthLimit" cname="gst_rtsp_client_get_content_length_limit" version="1.18">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetMountPoints" cname="gst_rtsp_client_get_mount_points">
+        <return-type type="GstRTSPMountPoints*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetSessionPool" cname="gst_rtsp_client_get_session_pool">
+        <return-type type="GstRTSPSessionPool*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetStreamTransport" cname="gst_rtsp_client_get_stream_transport" version="1.18">
+        <return-type type="GstRTSPStreamTransport*"/>
+        <parameters>
+          <parameter name="channel" type="guint8"/>
+        </parameters>
+      </method>
+      <method name="GetThreadPool" cname="gst_rtsp_client_get_thread_pool">
+        <return-type type="GstRTSPThreadPool*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="HandleMessage" cname="gst_rtsp_client_handle_message">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="message" type="GstRTSPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SendMessage" cname="gst_rtsp_client_send_message">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter allow-none="1" name="session" type="GstRTSPSession*"/>
+          <parameter name="message" type="GstRTSPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SessionFilter" cname="gst_rtsp_client_session_filter">
+        <return-type type="GList*" element_type="GstRTSPSession*" elements_owned="true" owned="true"/>
+        <parameters>
+          <parameter closure="1" scope="call" allow-none="1" name="func" type="GstRTSPClientSessionFilterFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+        </parameters>
+      </method>
+      <method name="SetAuth" cname="gst_rtsp_client_set_auth">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="auth" type="GstRTSPAuth*"/>
+        </parameters>
+      </method>
+      <method name="SetConnection" cname="gst_rtsp_client_set_connection">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="conn" type="GstRTSPConnection*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetContentLengthLimit" cname="gst_rtsp_client_set_content_length_limit" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="limit" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetMountPoints" cname="gst_rtsp_client_set_mount_points">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="mounts" type="GstRTSPMountPoints*"/>
+        </parameters>
+      </method>
+      <method name="SetSendFunc" cname="gst_rtsp_client_set_send_func">
+        <return-type type="void"/>
+        <parameters>
+          <parameter closure="1" destroy="2" scope="notified" name="func" type="GstRTSPClientSendFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+          <parameter scope="async" allow-none="1" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="SetSendMessagesFunc" cname="gst_rtsp_client_set_send_messages_func" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter closure="1" destroy="2" scope="notified" name="func" type="GstRTSPClientSendMessagesFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+          <parameter scope="async" allow-none="1" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="SetSessionPool" cname="gst_rtsp_client_set_session_pool">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="pool" type="GstRTSPSessionPool*"/>
+        </parameters>
+      </method>
+      <method name="SetThreadPool" cname="gst_rtsp_client_set_thread_pool">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="pool" type="GstRTSPThreadPool*"/>
+        </parameters>
+      </method>
+      <property name="DropBacklog" cname="drop-backlog" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="MountPoints" cname="mount-points" type="GstRTSPMountPoints*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="PostSessionTimeout" cname="post-session-timeout" type="gint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="SessionPool" cname="session-pool" type="GstRTSPSessionPool*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPClientPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      <signal name="AnnounceRequest" cname="announce-request" when="last" field_name="announce_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="CheckRequirements" cname="check-requirements" when="last" field_name="check_requirements" version="1.6">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="arr" type="" array="true" null_term_array="true" element_type="gchar*"/>
+        </parameters>
+      </signal>
+      <signal name="Closed" cname="closed" when="last" field_name="closed">
+        <return-type type="void"/>
+        <parameters/>
+      </signal>
+      <signal name="DescribeRequest" cname="describe-request" when="last" field_name="describe_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="GetParameterRequest" cname="get-parameter-request" when="last" field_name="get_parameter_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="HandleResponse" cname="handle-response" when="last" field_name="handle_response">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="NewSession" cname="new-session" when="last" field_name="new_session">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstRTSPSession*"/>
+        </parameters>
+      </signal>
+      <signal name="OptionsRequest" cname="options-request" when="last" field_name="options_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PauseRequest" cname="pause-request" when="last" field_name="pause_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PlayRequest" cname="play-request" when="last" field_name="play_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreAnnounceRequest" cname="pre-announce-request" when="last" field_name="pre_announce_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreDescribeRequest" cname="pre-describe-request" when="last" field_name="pre_describe_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreGetParameterRequest" cname="pre-get-parameter-request" when="last" field_name="pre_get_parameter_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreOptionsRequest" cname="pre-options-request" when="last" field_name="pre_options_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PrePauseRequest" cname="pre-pause-request" when="last" field_name="pre_pause_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PrePlayRequest" cname="pre-play-request" when="last" field_name="pre_play_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreRecordRequest" cname="pre-record-request" when="last" field_name="pre_record_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreSetParameterRequest" cname="pre-set-parameter-request" when="last" field_name="pre_set_parameter_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreSetupRequest" cname="pre-setup-request" when="last" field_name="pre_setup_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="PreTeardownRequest" cname="pre-teardown-request" when="last" field_name="pre_teardown_request" version="1.12">
+        <return-type type="GstRTSPStatusCode"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="RecordRequest" cname="record-request" when="last" field_name="record_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="SendMessageEvent" cname="send-message" when="last" field_name="send_message">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="session" type="GstRTSPSession*"/>
+          <parameter name="message" type="gpointer">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+        <warning>Signal renamed because of existing method with same name</warning>
+      </signal>
+      <signal name="SetParameterRequest" cname="set-parameter-request" when="last" field_name="set_parameter_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="SetupRequest" cname="setup-request" when="last" field_name="setup_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="TeardownRequest" cname="teardown-request" when="last" field_name="teardown_request">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+    </object>
+    <object name="RTSPMedia" cname="GstRTSPMedia" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPMediaClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method signal_vm="handle_message"/>
+        <method vm="prepare"/>
+        <method vm="unprepare"/>
+        <method vm="suspend"/>
+        <method vm="unsuspend"/>
+        <method vm="convert_range"/>
+        <method vm="query_position"/>
+        <method vm="query_stop"/>
+        <method vm="create_rtpbin"/>
+        <method vm="setup_rtpbin"/>
+        <method vm="setup_sdp"/>
+        <method signal_vm="new_stream"/>
+        <method signal_vm="removed_stream"/>
+        <method signal_vm="prepared"/>
+        <method signal_vm="unprepared"/>
+        <method signal_vm="target_state"/>
+        <method signal_vm="new_state"/>
+        <method vm="handle_sdp"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="19" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_media_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_media_new">
+        <parameters>
+          <parameter name="element" type="GstElement*" owned="true"/>
+        </parameters>
+      </constructor>
+      <virtual_method name="ConvertRange" cname="convert_range">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="range" type="GstRTSPTimeRange*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="unit" type="GstRTSPRangeUnit"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="CreateRtpbin" cname="create_rtpbin" hidden="true">
+        <return-type type="GstElement*"/>
+        <parameters/>
+      </virtual_method>
+      <virtual_method name="HandleSdp" cname="handle_sdp">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Prepare" cname="prepare">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter allow-none="1" name="thread" type="GstRTSPThread*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="QueryPosition" cname="query_position">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="position" type="gint64"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="QueryStop" cname="query_stop">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="stop" type="gint64"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetupRtpbin" cname="setup_rtpbin">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="rtpbin" type="GstElement*"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="SetupSdp" cname="setup_sdp">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="info" type="GstSDPInfo*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Suspend" cname="suspend">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </virtual_method>
+      <virtual_method name="Unprepare" cname="unprepare">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </virtual_method>
+      <virtual_method name="Unsuspend" cname="unsuspend">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </virtual_method>
+      <method name="CanBeShared" cname="gst_rtsp_media_can_be_shared" version="1.24">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="CollectStreams" cname="gst_rtsp_media_collect_streams">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="CompletePipeline" cname="gst_rtsp_media_complete_pipeline" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="transports" type="GPtrArray" array="true" null_term_array="true" element_type="GstRtsp.RTSPTransport"/>
+        </parameters>
+      </method>
+      <method name="CreateStream" cname="gst_rtsp_media_create_stream">
+        <return-type type="GstRTSPStream*"/>
+        <parameters>
+          <parameter name="payloader" type="GstElement*"/>
+          <parameter name="pad" type="GstPad*"/>
+        </parameters>
+      </method>
+      <method name="FindStream" cname="gst_rtsp_media_find_stream">
+        <return-type type="GstRTSPStream*"/>
+        <parameters>
+          <parameter name="control" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="GetAddressPool" cname="gst_rtsp_media_get_address_pool">
+        <return-type type="GstRTSPAddressPool*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetBaseTime" cname="gst_rtsp_media_get_base_time">
+        <return-type type="guint64"/>
+        <parameters/>
+      </method>
+      <method name="GetBufferSize" cname="gst_rtsp_media_get_buffer_size">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetClock" cname="gst_rtsp_media_get_clock">
+        <return-type type="GstClock*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetDoRetransmission" cname="gst_rtsp_media_get_do_retransmission" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetDscpQos" cname="gst_rtsp_media_get_dscp_qos" version="1.18">
+        <return-type type="gint"/>
+        <parameters/>
+      </method>
+      <method name="GetElement" cname="gst_rtsp_media_get_element">
+        <return-type type="GstElement*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetEnsureKeyunitOnStart" cname="gst_rtsp_media_get_ensure_keyunit_on_start" version="1.24">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetEnsureKeyunitOnStartTimeout" cname="gst_rtsp_media_get_ensure_keyunit_on_start_timeout" version="1.24">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetLatency" cname="gst_rtsp_media_get_latency">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetMaxMcastTtl" cname="gst_rtsp_media_get_max_mcast_ttl" version="1.16">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetMulticastIface" cname="gst_rtsp_media_get_multicast_iface">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetPermissions" cname="gst_rtsp_media_get_permissions">
+        <return-type type="GstRTSPPermissions*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="GetProfiles" cname="gst_rtsp_media_get_profiles">
+        <return-type type="GstRTSPProfile"/>
+        <parameters/>
+      </method>
+      <method name="GetProtocols" cname="gst_rtsp_media_get_protocols">
+        <return-type type="GstRTSPLowerTrans"/>
+        <parameters/>
+      </method>
+      <method name="GetPublishClockMode" cname="gst_rtsp_media_get_publish_clock_mode" version="1.8">
+        <return-type type="GstRTSPPublishClockMode"/>
+        <parameters/>
+      </method>
+      <method name="GetRangeString" cname="gst_rtsp_media_get_range_string">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="play" type="gboolean"/>
+          <parameter name="unit" type="GstRTSPRangeUnit"/>
+        </parameters>
+      </method>
+      <method name="GetRateControl" cname="gst_rtsp_media_get_rate_control" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetRates" cname="gst_rtsp_media_get_rates" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter allow-none="1" name="rate" type="gdouble" pass_as="out"/>
+          <parameter allow-none="1" name="applied_rate" type="gdouble" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="GetRetransmissionTime" cname="gst_rtsp_media_get_retransmission_time">
+        <return-type type="guint64"/>
+        <parameters/>
+      </method>
+      <method name="GetStatus" cname="gst_rtsp_media_get_status">
+        <return-type type="GstRTSPMediaStatus"/>
+        <parameters/>
+      </method>
+      <method name="GetStream" cname="gst_rtsp_media_get_stream">
+        <return-type type="GstRTSPStream*"/>
+        <parameters>
+          <parameter name="idx" type="guint"/>
+        </parameters>
+      </method>
+      <method name="GetSuspendMode" cname="gst_rtsp_media_get_suspend_mode">
+        <return-type type="GstRTSPSuspendMode"/>
+        <parameters/>
+      </method>
+      <method name="GetTimeProvider" cname="gst_rtsp_media_get_time_provider">
+        <return-type type="GstNetTimeProvider*" owned="true"/>
+        <parameters>
+          <parameter allow-none="1" name="address" type="const-gchar*"/>
+          <parameter name="port" type="guint16"/>
+        </parameters>
+      </method>
+      <method name="GetTransportMode" cname="gst_rtsp_media_get_transport_mode">
+        <return-type type="GstRTSPTransportMode"/>
+        <parameters/>
+      </method>
+      <method name="HandleSdp" cname="gst_rtsp_media_handle_sdp">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="HasCompletedSender" cname="gst_rtsp_media_has_completed_sender" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsBindMcastAddress" cname="gst_rtsp_media_is_bind_mcast_address" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsEosShutdown" cname="gst_rtsp_media_is_eos_shutdown">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsReceiveOnly" cname="gst_rtsp_media_is_receive_only" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsReusable" cname="gst_rtsp_media_is_reusable">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsShared" cname="gst_rtsp_media_is_shared">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsStopOnDisconnect" cname="gst_rtsp_media_is_stop_on_disconnect">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsTimeProvider" cname="gst_rtsp_media_is_time_provider">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="Lock" cname="gst_rtsp_media_lock" version="1.18">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="NStreams" cname="gst_rtsp_media_n_streams">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="Prepare" cname="gst_rtsp_media_prepare">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter allow-none="1" name="thread" type="GstRTSPThread*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="Seek" cname="gst_rtsp_media_seek">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="range" type="GstRTSPTimeRange*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SeekFull" cname="gst_rtsp_media_seek_full" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="range" type="GstRTSPTimeRange*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="flags" type="GstSeekFlags"/>
+        </parameters>
+      </method>
+      <method name="SeekTrickmode" cname="gst_rtsp_media_seek_trickmode" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="range" type="GstRTSPTimeRange*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="flags" type="GstSeekFlags"/>
+          <parameter name="rate" type="gdouble"/>
+          <parameter name="trickmode_interval" type="guint64"/>
+        </parameters>
+      </method>
+      <method name="Seekable" cname="gst_rtsp_media_seekable" version="1.14">
+        <return-type type="gint64"/>
+        <parameters/>
+      </method>
+      <method name="SetAddressPool" cname="gst_rtsp_media_set_address_pool">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="pool" type="GstRTSPAddressPool*"/>
+        </parameters>
+      </method>
+      <method name="SetBindMcastAddress" cname="gst_rtsp_media_set_bind_mcast_address" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="bind_mcast_addr" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetBufferSize" cname="gst_rtsp_media_set_buffer_size">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="size" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetClock" cname="gst_rtsp_media_set_clock">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="clock" type="GstClock*"/>
+        </parameters>
+      </method>
+      <method name="SetDoRetransmission" cname="gst_rtsp_media_set_do_retransmission" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="do_retransmission" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetDscpQos" cname="gst_rtsp_media_set_dscp_qos" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="dscp_qos" type="gint"/>
+        </parameters>
+      </method>
+      <method name="SetEnsureKeyunitOnStart" cname="gst_rtsp_media_set_ensure_keyunit_on_start" version="1.24">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ensure_keyunit_on_start" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetEnsureKeyunitOnStartTimeout" cname="gst_rtsp_media_set_ensure_keyunit_on_start_timeout" version="1.24">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="timeout" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetEosShutdown" cname="gst_rtsp_media_set_eos_shutdown">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="eos_shutdown" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetLatency" cname="gst_rtsp_media_set_latency">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="latency" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetMaxMcastTtl" cname="gst_rtsp_media_set_max_mcast_ttl" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ttl" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetMulticastIface" cname="gst_rtsp_media_set_multicast_iface">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="multicast_iface" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetPermissions" cname="gst_rtsp_media_set_permissions">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="permissions" type="GstRTSPPermissions*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetPipelineState" cname="gst_rtsp_media_set_pipeline_state">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="state" type="GstState"/>
+        </parameters>
+      </method>
+      <method name="SetProfiles" cname="gst_rtsp_media_set_profiles">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="profiles" type="GstRTSPProfile"/>
+        </parameters>
+      </method>
+      <method name="SetProtocols" cname="gst_rtsp_media_set_protocols">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="protocols" type="GstRTSPLowerTrans"/>
+        </parameters>
+      </method>
+      <method name="SetPublishClockMode" cname="gst_rtsp_media_set_publish_clock_mode" version="1.8">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GstRTSPPublishClockMode"/>
+        </parameters>
+      </method>
+      <method name="SetRateControl" cname="gst_rtsp_media_set_rate_control" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="enabled" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetRetransmissionTime" cname="gst_rtsp_media_set_retransmission_time">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="time" type="guint64"/>
+        </parameters>
+      </method>
+      <method name="SetReusable" cname="gst_rtsp_media_set_reusable">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="reusable" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetShared" cname="gst_rtsp_media_set_shared">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="shared" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetState" cname="gst_rtsp_media_set_state">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="state" type="GstState"/>
+          <parameter name="transports" type="GPtrArray" array="true" null_term_array="true" element_type="RTSPStreamTransport"/>
+        </parameters>
+      </method>
+      <method name="SetStopOnDisconnect" cname="gst_rtsp_media_set_stop_on_disconnect">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="stop_on_disconnect" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetSuspendMode" cname="gst_rtsp_media_set_suspend_mode">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GstRTSPSuspendMode"/>
+        </parameters>
+      </method>
+      <method name="SetTransportMode" cname="gst_rtsp_media_set_transport_mode">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GstRTSPTransportMode"/>
+        </parameters>
+      </method>
+      <method name="SetupSdp" cname="gst_rtsp_media_setup_sdp">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="info" type="GstSDPInfo*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="Suspend" cname="gst_rtsp_media_suspend">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="TakePipeline" cname="gst_rtsp_media_take_pipeline">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="pipeline" type="GstPipeline*"/>
+        </parameters>
+      </method>
+      <method name="Unlock" cname="gst_rtsp_media_unlock" version="1.18">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="Unprepare" cname="gst_rtsp_media_unprepare">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="Unsuspend" cname="gst_rtsp_media_unsuspend">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="UseTimeProvider" cname="gst_rtsp_media_use_time_provider">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="time_provider" type="gboolean"/>
+        </parameters>
+      </method>
+      <property name="BindMcastAddress" cname="bind-mcast-address" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="BufferSize" cname="buffer-size" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Clock" cname="clock" type="GstClock*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="DscpQos" cname="dscp-qos" type="gint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Element" cname="element" type="GstElement*" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="EnsureKeyunitOnStart" cname="ensure-keyunit-on-start" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.24"/>
+      <property name="EnsureKeyunitOnStartTimeout" cname="ensure-keyunit-on-start-timeout" type="guint" readable="true" writeable="true" construct="false" construct-only="false" version="1.24"/>
+      <property name="EosShutdown" cname="eos-shutdown" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Latency" cname="latency" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="MaxMcastTtl" cname="max-mcast-ttl" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Profiles" cname="profiles" type="GstRTSPProfile" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Protocols" cname="protocols" type="GstRTSPLowerTrans" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Reusable" cname="reusable" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Shared" cname="shared" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="StopOnDisconnect" cname="stop-on-disconnect" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="SuspendMode" cname="suspend-mode" type="GstRTSPSuspendMode" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="TimeProvider" cname="time-provider" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="TransportMode" cname="transport-mode" type="GstRTSPTransportMode" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPMediaPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      <signal name="HandleMessage" cname="handle-message" when="last" field_name="handle_message" version="1.22">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="message" type="GstMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </signal>
+      <signal name="NewState" cname="new-state" when="last" field_name="new_state">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="gint"/>
+        </parameters>
+      </signal>
+      <signal name="NewStream" cname="new-stream" when="last" field_name="new_stream">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstRTSPStream*"/>
+        </parameters>
+      </signal>
+      <signal name="Prepared" cname="prepared" when="last" field_name="prepared">
+        <return-type type="void"/>
+        <parameters/>
+      </signal>
+      <signal name="RemovedStream" cname="removed-stream" when="last" field_name="removed_stream">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstRTSPStream*"/>
+        </parameters>
+      </signal>
+      <signal name="TargetState" cname="target-state" when="last" field_name="target_state">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="gint"/>
+        </parameters>
+      </signal>
+      <signal name="Unprepared" cname="unprepared" when="last" field_name="unprepared">
+        <return-type type="void"/>
+        <parameters/>
+      </signal>
+    </object>
+    <object name="RTSPMediaFactory" cname="GstRTSPMediaFactory" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPMediaFactoryClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="gen_key"/>
+        <method vm="create_element"/>
+        <method vm="construct"/>
+        <method vm="create_pipeline"/>
+        <method vm="configure"/>
+        <method signal_vm="media_constructed"/>
+        <method signal_vm="media_configure"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_media_factory_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_media_factory_new" disable_void_ctor=""/>
+      <virtual_method name="Configure" cname="configure">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="media" type="GstRTSPMedia*"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="Construct" cname="construct">
+        <return-type type="GstRTSPMedia*" owned="true"/>
+        <parameters>
+          <parameter name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="CreateElement" cname="create_element">
+        <return-type type="GstElement*"/>
+        <parameters>
+          <parameter name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="CreatePipeline" cname="create_pipeline" hidden="true">
+        <return-type type="GstElement*"/>
+        <parameters>
+          <parameter name="media" type="GstRTSPMedia*"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GenKey" cname="gen_key">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <method name="AddRoleFromStructure" cname="gst_rtsp_media_factory_add_role_from_structure" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="structure" type="GstStructure*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="Construct" cname="gst_rtsp_media_factory_construct">
+        <return-type type="GstRTSPMedia*" owned="true"/>
+        <parameters>
+          <parameter name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="CreateElement" cname="gst_rtsp_media_factory_create_element">
+        <return-type type="GstElement*"/>
+        <parameters>
+          <parameter name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="GetAddressPool" cname="gst_rtsp_media_factory_get_address_pool">
+        <return-type type="GstRTSPAddressPool*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetBufferSize" cname="gst_rtsp_media_factory_get_buffer_size">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetClock" cname="gst_rtsp_media_factory_get_clock" version="1.8">
+        <return-type type="GstClock*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetDoRetransmission" cname="gst_rtsp_media_factory_get_do_retransmission" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetDscpQos" cname="gst_rtsp_media_factory_get_dscp_qos" version="1.18">
+        <return-type type="gint"/>
+        <parameters/>
+      </method>
+      <method name="GetEnsureKeyunitOnStart" cname="gst_rtsp_media_factory_get_ensure_keyunit_on_start" version="1.24">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetEnsureKeyunitOnStartTimeout" cname="gst_rtsp_media_factory_get_ensure_keyunit_on_start_timeout" version="1.24">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetLatency" cname="gst_rtsp_media_factory_get_latency">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetLaunch" cname="gst_rtsp_media_factory_get_launch">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetMaxMcastTtl" cname="gst_rtsp_media_factory_get_max_mcast_ttl" version="1.16">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetMediaGtype" cname="gst_rtsp_media_factory_get_media_gtype" version="1.6">
+        <return-type type="GType"/>
+        <parameters/>
+      </method>
+      <method name="GetMulticastIface" cname="gst_rtsp_media_factory_get_multicast_iface">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetPermissions" cname="gst_rtsp_media_factory_get_permissions">
+        <return-type type="GstRTSPPermissions*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="GetProfiles" cname="gst_rtsp_media_factory_get_profiles">
+        <return-type type="GstRTSPProfile"/>
+        <parameters/>
+      </method>
+      <method name="GetProtocols" cname="gst_rtsp_media_factory_get_protocols">
+        <return-type type="GstRTSPLowerTrans"/>
+        <parameters/>
+      </method>
+      <method name="GetPublishClockMode" cname="gst_rtsp_media_factory_get_publish_clock_mode" version="1.8">
+        <return-type type="GstRTSPPublishClockMode"/>
+        <parameters/>
+      </method>
+      <method name="GetRetransmissionTime" cname="gst_rtsp_media_factory_get_retransmission_time">
+        <return-type type="guint64"/>
+        <parameters/>
+      </method>
+      <method name="GetSuspendMode" cname="gst_rtsp_media_factory_get_suspend_mode">
+        <return-type type="GstRTSPSuspendMode"/>
+        <parameters/>
+      </method>
+      <method name="GetTransportMode" cname="gst_rtsp_media_factory_get_transport_mode">
+        <return-type type="GstRTSPTransportMode"/>
+        <parameters/>
+      </method>
+      <method name="IsBindMcastAddress" cname="gst_rtsp_media_factory_is_bind_mcast_address" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsEnableRtcp" cname="gst_rtsp_media_factory_is_enable_rtcp" version="1.20">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsEosShutdown" cname="gst_rtsp_media_factory_is_eos_shutdown">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsShared" cname="gst_rtsp_media_factory_is_shared">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsStopOnDisonnect" cname="gst_rtsp_media_factory_is_stop_on_disonnect">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="SetAddressPool" cname="gst_rtsp_media_factory_set_address_pool">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="pool" type="GstRTSPAddressPool*"/>
+        </parameters>
+      </method>
+      <method name="SetBindMcastAddress" cname="gst_rtsp_media_factory_set_bind_mcast_address" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="bind_mcast_addr" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetBufferSize" cname="gst_rtsp_media_factory_set_buffer_size">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="size" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetClock" cname="gst_rtsp_media_factory_set_clock" version="1.8">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="clock" type="GstClock*"/>
+        </parameters>
+      </method>
+      <method name="SetDoRetransmission" cname="gst_rtsp_media_factory_set_do_retransmission" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="do_retransmission" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetDscpQos" cname="gst_rtsp_media_factory_set_dscp_qos" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="dscp_qos" type="gint"/>
+        </parameters>
+      </method>
+      <method name="SetEnableRtcp" cname="gst_rtsp_media_factory_set_enable_rtcp" version="1.20">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="enable" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetEnsureKeyunitOnStart" cname="gst_rtsp_media_factory_set_ensure_keyunit_on_start" version="1.24">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ensure_keyunit_on_start" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetEnsureKeyunitOnStartTimeout" cname="gst_rtsp_media_factory_set_ensure_keyunit_on_start_timeout" version="1.24">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="timeout" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetEosShutdown" cname="gst_rtsp_media_factory_set_eos_shutdown">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="eos_shutdown" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetLatency" cname="gst_rtsp_media_factory_set_latency">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="latency" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetLaunch" cname="gst_rtsp_media_factory_set_launch">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="launch" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetMaxMcastTtl" cname="gst_rtsp_media_factory_set_max_mcast_ttl" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ttl" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetMediaGtype" cname="gst_rtsp_media_factory_set_media_gtype" version="1.6">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="media_gtype" type="GType"/>
+        </parameters>
+      </method>
+      <method name="SetMulticastIface" cname="gst_rtsp_media_factory_set_multicast_iface">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="multicast_iface" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetPermissions" cname="gst_rtsp_media_factory_set_permissions">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="permissions" type="GstRTSPPermissions*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetProfiles" cname="gst_rtsp_media_factory_set_profiles">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="profiles" type="GstRTSPProfile"/>
+        </parameters>
+      </method>
+      <method name="SetProtocols" cname="gst_rtsp_media_factory_set_protocols">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="protocols" type="GstRTSPLowerTrans"/>
+        </parameters>
+      </method>
+      <method name="SetPublishClockMode" cname="gst_rtsp_media_factory_set_publish_clock_mode" version="1.8">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GstRTSPPublishClockMode"/>
+        </parameters>
+      </method>
+      <method name="SetRetransmissionTime" cname="gst_rtsp_media_factory_set_retransmission_time">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="time" type="guint64"/>
+        </parameters>
+      </method>
+      <method name="SetShared" cname="gst_rtsp_media_factory_set_shared">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="shared" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetStopOnDisconnect" cname="gst_rtsp_media_factory_set_stop_on_disconnect">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="stop_on_disconnect" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetSuspendMode" cname="gst_rtsp_media_factory_set_suspend_mode">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GstRTSPSuspendMode"/>
+        </parameters>
+      </method>
+      <method name="SetTransportMode" cname="gst_rtsp_media_factory_set_transport_mode">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GstRTSPTransportMode"/>
+        </parameters>
+      </method>
+      <property name="BindMcastAddress" cname="bind-mcast-address" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="BufferSize" cname="buffer-size" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Clock" cname="clock" type="GstClock*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="DscpQos" cname="dscp-qos" type="gint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="EnableRtcp" cname="enable-rtcp" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.20"/>
+      <property name="EnsureKeyunitOnStart" cname="ensure-keyunit-on-start" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false" version="1.24"/>
+      <property name="EnsureKeyunitOnStartTimeout" cname="ensure-keyunit-on-start-timeout" type="guint" readable="true" writeable="true" construct="false" construct-only="false" version="1.24"/>
+      <property name="EosShutdown" cname="eos-shutdown" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Latency" cname="latency" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Launch" cname="launch" type="gchar*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="MaxMcastTtl" cname="max-mcast-ttl" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Profiles" cname="profiles" type="GstRTSPProfile" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Protocols" cname="protocols" type="GstRTSPLowerTrans" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Shared" cname="shared" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="StopOnDisconnect" cname="stop-on-disconnect" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="SuspendMode" cname="suspend-mode" type="GstRTSPSuspendMode" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="TransportMode" cname="transport-mode" type="GstRTSPTransportMode" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPMediaFactoryPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      <signal name="MediaConfigure" cname="media-configure" when="last" field_name="media_configure">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstRTSPMedia*"/>
+        </parameters>
+      </signal>
+      <signal name="MediaConstructed" cname="media-constructed" when="last" field_name="media_constructed">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstRTSPMedia*"/>
+        </parameters>
+      </signal>
+    </object>
+    <object name="RTSPMediaFactoryURI" cname="GstRTSPMediaFactoryURI" opaque="false" hidden="false" parent="GstRTSPMediaFactory">
+      <class_struct cname="GstRTSPMediaFactoryURIClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GstRTSPMediaFactoryClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_media_factory_uri_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_media_factory_uri_new" disable_void_ctor=""/>
+      <method name="GetUri" cname="gst_rtsp_media_factory_uri_get_uri">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="SetUri" cname="gst_rtsp_media_factory_uri_set_uri">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="uri" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <property name="Uri" cname="uri" type="gchar*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="UseGstpay" cname="use-gstpay" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPMediaFactory*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPMediaFactoryURIPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPMountPoints" cname="GstRTSPMountPoints" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPMountPointsClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="make_path"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_mount_points_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_mount_points_new" disable_void_ctor=""/>
+      <virtual_method name="MakePath" cname="make_path">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <method name="AddFactory" cname="gst_rtsp_mount_points_add_factory">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+          <parameter name="factory" type="GstRTSPMediaFactory*" owned="true"/>
+        </parameters>
+      </method>
+      <method name="MakePath" cname="gst_rtsp_mount_points_make_path">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="Match" cname="gst_rtsp_mount_points_match">
+        <return-type type="GstRTSPMediaFactory*" owned="true"/>
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+          <parameter allow-none="1" name="matched" type="gint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="RemoveFactory" cname="gst_rtsp_mount_points_remove_factory">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPMountPointsPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPOnvifClient" cname="GstRTSPOnvifClient" opaque="false" hidden="false" parent="GstRTSPClient" version="1.14">
+      <class_struct cname="GstRTSPOnvifClientClass">
+        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPClientClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_onvif_client_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_onvif_client_new" disable_void_ctor="" version="1.18"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPClient*"/>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPOnvifMedia" cname="GstRTSPOnvifMedia" opaque="false" hidden="false" parent="GstRTSPMedia" version="1.14">
+      <class_struct cname="GstRTSPOnvifMediaClass">
+        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPMediaClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_onvif_media_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <method name="CollectBackchannel" cname="gst_rtsp_onvif_media_collect_backchannel" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetBackchannelBandwidth" cname="gst_rtsp_onvif_media_get_backchannel_bandwidth" version="1.14">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="SetBackchannelBandwidth" cname="gst_rtsp_onvif_media_set_backchannel_bandwidth" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="bandwidth" type="guint"/>
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPMedia*"/>
+      <field cname="priv" access="public" writeable="false" readable="true" is_callback="false" name="Priv" type="GstRTSPOnvifMediaPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPOnvifMediaFactory" cname="GstRTSPOnvifMediaFactory" opaque="false" hidden="false" parent="GstRTSPMediaFactory" version="1.14">
+      <class_struct cname="GstRTSPOnvifMediaFactoryClass">
+        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPMediaFactoryClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="has_backchannel_support"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_onvif_media_factory_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_onvif_media_factory_new" disable_void_ctor="" version="1.14"/>
+      <method name="RequiresBackchannel" cname="gst_rtsp_onvif_media_factory_requires_backchannel" shared="true" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="factory" type="GstRTSPMediaFactory*"/>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <virtual_method name="HasBackchannelSupport" cname="has_backchannel_support" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </virtual_method>
+      <method name="GetBackchannelBandwidth" cname="gst_rtsp_onvif_media_factory_get_backchannel_bandwidth" version="1.14">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetBackchannelLaunch" cname="gst_rtsp_onvif_media_factory_get_backchannel_launch" version="1.14">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="HasBackchannelSupport" cname="gst_rtsp_onvif_media_factory_has_backchannel_support" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="HasReplaySupport" cname="gst_rtsp_onvif_media_factory_has_replay_support" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="SetBackchannelBandwidth" cname="gst_rtsp_onvif_media_factory_set_backchannel_bandwidth" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="bandwidth" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetBackchannelLaunch" cname="gst_rtsp_onvif_media_factory_set_backchannel_launch" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="launch" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetReplaySupport" cname="gst_rtsp_onvif_media_factory_set_replay_support" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="has_replay_support" type="gboolean"/>
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPMediaFactory*"/>
+      <field cname="priv" access="public" writeable="false" readable="true" is_callback="false" name="Priv" type="GstRTSPOnvifMediaFactoryPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPOnvifServer" cname="GstRTSPOnvifServer" opaque="false" hidden="false" parent="GstRTSPServer" version="1.14">
+      <class_struct cname="GstRTSPOnvifServerClass">
+        <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPServerClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_onvif_server_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_onvif_server_new" disable_void_ctor=""/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GstRTSPServer*"/>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPServer" cname="GstRTSPServer" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPServerClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="create_client"/>
+        <method signal_vm="client_connected"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="20" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_server_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_server_new" disable_void_ctor=""/>
+      <method name="IoFunc" cname="gst_rtsp_server_io_func" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="socket" type="GSocket*"/>
+          <parameter name="condition" type="GIOCondition"/>
+          <parameter name="server" type="GstRTSPServer*"/>
+        </parameters>
+      </method>
+      <virtual_method name="CreateClient" cname="create_client" hidden="true">
+        <return-type type="GstRTSPClient*"/>
+        <parameters/>
+      </virtual_method>
+      <method name="Attach" cname="gst_rtsp_server_attach">
+        <return-type type="guint"/>
+        <parameters>
+          <parameter allow-none="1" name="context" type="GMainContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="ClientFilter" cname="gst_rtsp_server_client_filter">
+        <return-type type="GList*" element_type="GstRTSPClient*" elements_owned="true" owned="true"/>
+        <parameters>
+          <parameter closure="1" scope="call" allow-none="1" name="func" type="GstRTSPServerClientFilterFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+        </parameters>
+      </method>
+      <method name="CreateSocket" cname="gst_rtsp_server_create_socket">
+        <return-type type="GSocket*" owned="true"/>
+        <parameters throws="1">
+          <parameter allow-none="1" name="cancellable" type="GCancellable*"/>
+          <parameter name="error" type="GError**"/>
+        </parameters>
+      </method>
+      <method name="CreateSource" cname="gst_rtsp_server_create_source">
+        <return-type type="GSource*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters throws="1">
+          <parameter allow-none="1" name="cancellable" type="GCancellable*"/>
+          <parameter name="error" type="GError**"/>
+        </parameters>
+      </method>
+      <method name="GetAddress" cname="gst_rtsp_server_get_address">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetAuth" cname="gst_rtsp_server_get_auth">
+        <return-type type="GstRTSPAuth*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetBacklog" cname="gst_rtsp_server_get_backlog">
+        <return-type type="gint"/>
+        <parameters/>
+      </method>
+      <method name="GetBoundPort" cname="gst_rtsp_server_get_bound_port">
+        <return-type type="gint"/>
+        <parameters/>
+      </method>
+      <method name="GetContentLengthLimit" cname="gst_rtsp_server_get_content_length_limit" version="1.18">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetMountPoints" cname="gst_rtsp_server_get_mount_points">
+        <return-type type="GstRTSPMountPoints*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetService" cname="gst_rtsp_server_get_service">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetSessionPool" cname="gst_rtsp_server_get_session_pool">
+        <return-type type="GstRTSPSessionPool*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetThreadPool" cname="gst_rtsp_server_get_thread_pool">
+        <return-type type="GstRTSPThreadPool*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="SetAddress" cname="gst_rtsp_server_set_address">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="address" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetAuth" cname="gst_rtsp_server_set_auth">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="auth" type="GstRTSPAuth*"/>
+        </parameters>
+      </method>
+      <method name="SetBacklog" cname="gst_rtsp_server_set_backlog">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="backlog" type="gint"/>
+        </parameters>
+      </method>
+      <method name="SetContentLengthLimit" cname="gst_rtsp_server_set_content_length_limit" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="limit" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetMountPoints" cname="gst_rtsp_server_set_mount_points">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="mounts" type="GstRTSPMountPoints*"/>
+        </parameters>
+      </method>
+      <method name="SetService" cname="gst_rtsp_server_set_service">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="service" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetSessionPool" cname="gst_rtsp_server_set_session_pool">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="pool" type="GstRTSPSessionPool*"/>
+        </parameters>
+      </method>
+      <method name="SetThreadPool" cname="gst_rtsp_server_set_thread_pool">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="pool" type="GstRTSPThreadPool*"/>
+        </parameters>
+      </method>
+      <method name="TransferConnection" cname="gst_rtsp_server_transfer_connection">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="socket" type="GSocket*" owned="true"/>
+          <parameter name="ip" type="const-gchar*"/>
+          <parameter name="port" type="gint"/>
+          <parameter allow-none="1" name="initial_buffer" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <property name="Address" cname="address" type="gchar*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Backlog" cname="backlog" type="gint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="BoundPort" cname="bound-port" type="gint" readable="true" writeable="false" construct="false" construct-only="false"/>
+      <property name="ContentLengthLimit" cname="content-length-limit" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="MountPoints" cname="mount-points" type="GstRTSPMountPoints*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Service" cname="service" type="gchar*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="SessionPool" cname="session-pool" type="GstRTSPSessionPool*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPServerPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      <signal name="ClientConnected" cname="client-connected" when="last" field_name="client_connected">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstRTSPClient*"/>
+        </parameters>
+      </signal>
+    </object>
+    <object name="RTSPSession" cname="GstRTSPSession" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPSessionClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_session_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_session_new">
+        <parameters>
+          <parameter name="sessionid" type="const-gchar*"/>
+        </parameters>
+      </constructor>
+      <method name="AllowExpire" cname="gst_rtsp_session_allow_expire">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="DupMedia" cname="gst_rtsp_session_dup_media" version="1.20">
+        <return-type type="GstRTSPSessionMedia*" owned="true"/>
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+          <parameter name="matched" type="gint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="Filter" cname="gst_rtsp_session_filter">
+        <return-type type="GList*" element_type="GstRTSPSessionMedia*" elements_owned="true" owned="true"/>
+        <parameters>
+          <parameter closure="1" scope="call" allow-none="1" name="func" type="GstRTSPSessionFilterFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+        </parameters>
+      </method>
+      <method name="GetHeader" cname="gst_rtsp_session_get_header">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetMedia" cname="gst_rtsp_session_get_media">
+        <return-type type="GstRTSPSessionMedia*"/>
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+          <parameter name="matched" type="gint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="GetSessionid" cname="gst_rtsp_session_get_sessionid">
+        <return-type type="const-gchar*"/>
+        <parameters/>
+      </method>
+      <method name="GetTimeout" cname="gst_rtsp_session_get_timeout">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="IsExpired" cname="gst_rtsp_session_is_expired" deprecated="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="now" type="GTimeVal*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="IsExpiredUsec" cname="gst_rtsp_session_is_expired_usec">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="now" type="gint64"/>
+        </parameters>
+      </method>
+      <method name="ManageMedia" cname="gst_rtsp_session_manage_media">
+        <return-type type="GstRTSPSessionMedia*"/>
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+          <parameter name="media" type="GstRTSPMedia*" owned="true"/>
+        </parameters>
+      </method>
+      <method name="NextTimeout" cname="gst_rtsp_session_next_timeout" deprecated="true">
+        <return-type type="gint"/>
+        <parameters>
+          <parameter name="now" type="GTimeVal*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="NextTimeoutUsec" cname="gst_rtsp_session_next_timeout_usec">
+        <return-type type="gint"/>
+        <parameters>
+          <parameter name="now" type="gint64"/>
+        </parameters>
+      </method>
+      <method name="PreventExpire" cname="gst_rtsp_session_prevent_expire">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="ReleaseMedia" cname="gst_rtsp_session_release_media">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="media" type="GstRTSPSessionMedia*"/>
+        </parameters>
+      </method>
+      <method name="SetTimeout" cname="gst_rtsp_session_set_timeout">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="timeout" type="guint"/>
+        </parameters>
+      </method>
+      <method name="Touch" cname="gst_rtsp_session_touch">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <property name="ExtraTimeout" cname="extra-timeout" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Sessionid" cname="sessionid" type="gchar*" readable="true" writeable="true" construct="false" construct-only="true"/>
+      <property name="Timeout" cname="timeout" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="TimeoutAlwaysVisible" cname="timeout-always-visible" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPSessionPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPSessionMedia" cname="GstRTSPSessionMedia" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPSessionMediaClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_session_media_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_session_media_new">
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+          <parameter name="media" type="GstRTSPMedia*" owned="true"/>
+        </parameters>
+      </constructor>
+      <method name="AllocChannels" cname="gst_rtsp_session_media_alloc_channels">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="range" type="GstRTSPRange*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="GetBaseTime" cname="gst_rtsp_session_media_get_base_time">
+        <return-type type="guint64"/>
+        <parameters/>
+      </method>
+      <method name="GetMedia" cname="gst_rtsp_session_media_get_media">
+        <return-type type="GstRTSPMedia*"/>
+        <parameters/>
+      </method>
+      <method name="GetRtpinfo" cname="gst_rtsp_session_media_get_rtpinfo">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetRtspState" cname="gst_rtsp_session_media_get_rtsp_state">
+        <return-type type="GstRTSPState"/>
+        <parameters/>
+      </method>
+      <method name="GetTransport" cname="gst_rtsp_session_media_get_transport">
+        <return-type type="GstRTSPStreamTransport*"/>
+        <parameters>
+          <parameter name="idx" type="guint"/>
+        </parameters>
+      </method>
+      <method name="GetTransports" cname="gst_rtsp_session_media_get_transports" version="1.14">
+        <return-type type="GPtrArray" owned="true" array="true" null_term_array="true" element_type="RTSPStreamTransport"/>
+        <parameters/>
+      </method>
+      <method name="Matches" cname="gst_rtsp_session_media_matches">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="path" type="const-gchar*"/>
+          <parameter name="matched" type="gint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="SetRtspState" cname="gst_rtsp_session_media_set_rtsp_state">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="state" type="GstRTSPState"/>
+        </parameters>
+      </method>
+      <method name="SetState" cname="gst_rtsp_session_media_set_state">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="state" type="GstState"/>
+        </parameters>
+      </method>
+      <method name="SetTransport" cname="gst_rtsp_session_media_set_transport">
+        <return-type type="GstRTSPStreamTransport*"/>
+        <parameters>
+          <parameter name="stream" type="GstRTSPStream*"/>
+          <parameter name="tr" type="GstRTSPTransport*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPSessionMediaPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPSessionPool" cname="GstRTSPSessionPool" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPSessionPoolClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="create_session_id"/>
+        <method vm="create_session"/>
+        <method signal_vm="session_removed"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="19" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_session_pool_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_session_pool_new" disable_void_ctor=""/>
+      <virtual_method name="CreateSession" cname="create_session" hidden="true">
+        <return-type type="GstRTSPSession*"/>
+        <parameters>
+          <parameter name="id" type="const-gchar*"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="CreateSessionId" cname="create_session_id">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </virtual_method>
+      <method name="Cleanup" cname="gst_rtsp_session_pool_cleanup">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="Create" cname="gst_rtsp_session_pool_create">
+        <return-type type="GstRTSPSession*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="CreateWatch" cname="gst_rtsp_session_pool_create_watch">
+        <return-type type="GSource*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="Filter" cname="gst_rtsp_session_pool_filter">
+        <return-type type="GList*" element_type="GstRTSPSession*" elements_owned="true" owned="true"/>
+        <parameters>
+          <parameter closure="1" scope="call" allow-none="1" name="func" type="GstRTSPSessionPoolFilterFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+        </parameters>
+      </method>
+      <method name="Find" cname="gst_rtsp_session_pool_find">
+        <return-type type="GstRTSPSession*" owned="true"/>
+        <parameters>
+          <parameter name="sessionid" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="GetMaxSessions" cname="gst_rtsp_session_pool_get_max_sessions">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetNSessions" cname="gst_rtsp_session_pool_get_n_sessions">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="Remove" cname="gst_rtsp_session_pool_remove">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sess" type="GstRTSPSession*"/>
+        </parameters>
+      </method>
+      <method name="SetMaxSessions" cname="gst_rtsp_session_pool_set_max_sessions">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="max" type="guint"/>
+        </parameters>
+      </method>
+      <property name="MaxSessions" cname="max-sessions" type="guint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPSessionPoolPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      <signal name="SessionRemoved" cname="session-removed" when="last" field_name="session_removed">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstRTSPSession*"/>
+        </parameters>
+      </signal>
+    </object>
+    <object name="RTSPStream" cname="GstRTSPStream" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPStreamClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_stream_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_stream_new">
+        <parameters>
+          <parameter name="idx" type="guint"/>
+          <parameter name="payloader" type="GstElement*"/>
+          <parameter name="pad" type="GstPad*"/>
+        </parameters>
+      </constructor>
+      <method name="AddMulticastClientAddress" cname="gst_rtsp_stream_add_multicast_client_address" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="destination" type="const-gchar*"/>
+          <parameter name="rtp_port" type="guint"/>
+          <parameter name="rtcp_port" type="guint"/>
+          <parameter name="family" type="GSocketFamily"/>
+        </parameters>
+      </method>
+      <method name="AddTransport" cname="gst_rtsp_stream_add_transport">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="trans" type="GstRTSPStreamTransport*"/>
+        </parameters>
+      </method>
+      <method name="AllocateUdpSockets" cname="gst_rtsp_stream_allocate_udp_sockets">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="family" type="GSocketFamily"/>
+          <parameter name="transport" type="GstRTSPTransport*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="use_client_settings" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="CompleteStream" cname="gst_rtsp_stream_complete_stream" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="transport" type="GstRTSPTransport*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="GetAddressPool" cname="gst_rtsp_stream_get_address_pool">
+        <return-type type="GstRTSPAddressPool*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetBufferSize" cname="gst_rtsp_stream_get_buffer_size" version="1.6">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetCaps" cname="gst_rtsp_stream_get_caps">
+        <return-type type="GstCaps*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="GetControl" cname="gst_rtsp_stream_get_control">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetCurrentSeqnum" cname="gst_rtsp_stream_get_current_seqnum">
+        <return-type type="guint16"/>
+        <parameters/>
+      </method>
+      <method name="GetDscpQos" cname="gst_rtsp_stream_get_dscp_qos">
+        <return-type type="gint"/>
+        <parameters/>
+      </method>
+      <method name="GetIndex" cname="gst_rtsp_stream_get_index">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetJoinedBin" cname="gst_rtsp_stream_get_joined_bin">
+        <return-type type="GstBin*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetMaxMcastTtl" cname="gst_rtsp_stream_get_max_mcast_ttl" version="1.16">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetMtu" cname="gst_rtsp_stream_get_mtu">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetMulticastAddress" cname="gst_rtsp_stream_get_multicast_address">
+        <return-type type="GstRTSPAddress*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="family" type="GSocketFamily"/>
+        </parameters>
+      </method>
+      <method name="GetMulticastClientAddresses" cname="gst_rtsp_stream_get_multicast_client_addresses" version="1.16">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetMulticastIface" cname="gst_rtsp_stream_get_multicast_iface">
+        <return-type type="gchar*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetProfiles" cname="gst_rtsp_stream_get_profiles">
+        <return-type type="GstRTSPProfile"/>
+        <parameters/>
+      </method>
+      <method name="GetProtocols" cname="gst_rtsp_stream_get_protocols">
+        <return-type type="GstRTSPLowerTrans"/>
+        <parameters/>
+      </method>
+      <method name="GetPt" cname="gst_rtsp_stream_get_pt">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetPublishClockMode" cname="gst_rtsp_stream_get_publish_clock_mode" version="1.8">
+        <return-type type="GstRTSPPublishClockMode"/>
+        <parameters/>
+      </method>
+      <method name="GetRateControl" cname="gst_rtsp_stream_get_rate_control" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetRates" cname="gst_rtsp_stream_get_rates" version="1.18">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter allow-none="1" name="rate" type="gdouble" pass_as="out"/>
+          <parameter allow-none="1" name="applied_rate" type="gdouble" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="GetRetransmissionPt" cname="gst_rtsp_stream_get_retransmission_pt">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetRetransmissionTime" cname="gst_rtsp_stream_get_retransmission_time">
+        <return-type type="guint64"/>
+        <parameters/>
+      </method>
+      <method name="GetRtcpMulticastSocket" cname="gst_rtsp_stream_get_rtcp_multicast_socket" version="1.14">
+        <return-type type="GSocket*" owned="true"/>
+        <parameters>
+          <parameter name="family" type="GSocketFamily"/>
+        </parameters>
+      </method>
+      <method name="GetRtcpSocket" cname="gst_rtsp_stream_get_rtcp_socket">
+        <return-type type="GSocket*" owned="true"/>
+        <parameters>
+          <parameter name="family" type="GSocketFamily"/>
+        </parameters>
+      </method>
+      <method name="GetRtpMulticastSocket" cname="gst_rtsp_stream_get_rtp_multicast_socket">
+        <return-type type="GSocket*" owned="true"/>
+        <parameters>
+          <parameter name="family" type="GSocketFamily"/>
+        </parameters>
+      </method>
+      <method name="GetRtpSocket" cname="gst_rtsp_stream_get_rtp_socket">
+        <return-type type="GSocket*" owned="true"/>
+        <parameters>
+          <parameter name="family" type="GSocketFamily"/>
+        </parameters>
+      </method>
+      <method name="GetRtpinfo" cname="gst_rtsp_stream_get_rtpinfo">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter allow-none="1" name="rtptime" type="guint" pass_as="out"/>
+          <parameter allow-none="1" name="seq" type="guint" pass_as="out"/>
+          <parameter allow-none="1" name="clock_rate" type="guint" pass_as="out"/>
+          <parameter name="running_time" type="guint64" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="GetRtpsession" cname="gst_rtsp_stream_get_rtpsession">
+        <return-type type="GObject*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetServerPort" cname="gst_rtsp_stream_get_server_port">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="server_port" type="GstRTSPRange*" pass_as="out">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="family" type="GSocketFamily"/>
+        </parameters>
+      </method>
+      <method name="GetSinkpad" cname="gst_rtsp_stream_get_sinkpad">
+        <return-type type="GstPad*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetSrcpad" cname="gst_rtsp_stream_get_srcpad">
+        <return-type type="GstPad*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetSrtpEncoder" cname="gst_rtsp_stream_get_srtp_encoder">
+        <return-type type="GstElement*" owned="true"/>
+        <parameters/>
+      </method>
+      <method name="GetSsrc" cname="gst_rtsp_stream_get_ssrc">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="ssrc" type="guint*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="GetUlpfecEnabled" cname="gst_rtsp_stream_get_ulpfec_enabled">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="GetUlpfecPercentage" cname="gst_rtsp_stream_get_ulpfec_percentage" version="1.16">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="GetUlpfecPt" cname="gst_rtsp_stream_get_ulpfec_pt" version="1.16">
+        <return-type type="guint"/>
+        <parameters/>
+      </method>
+      <method name="HandleKeymgmt" cname="gst_rtsp_stream_handle_keymgmt" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="keymgmt" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="HasControl" cname="gst_rtsp_stream_has_control">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter allow-none="1" name="control" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="IsBindMcastAddress" cname="gst_rtsp_stream_is_bind_mcast_address" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsBlocking" cname="gst_rtsp_stream_is_blocking">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsClientSide" cname="gst_rtsp_stream_is_client_side">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsComplete" cname="gst_rtsp_stream_is_complete" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsReceiver" cname="gst_rtsp_stream_is_receiver" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsSender" cname="gst_rtsp_stream_is_sender" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="IsTransportSupported" cname="gst_rtsp_stream_is_transport_supported">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="transport" type="GstRTSPTransport*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="JoinBin" cname="gst_rtsp_stream_join_bin">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="bin" type="GstBin*"/>
+          <parameter name="rtpbin" type="GstElement*"/>
+          <parameter name="state" type="GstState"/>
+        </parameters>
+      </method>
+      <method name="LeaveBin" cname="gst_rtsp_stream_leave_bin">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="bin" type="GstBin*"/>
+          <parameter name="rtpbin" type="GstElement*"/>
+        </parameters>
+      </method>
+      <method name="QueryPosition" cname="gst_rtsp_stream_query_position">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="position" type="gint64*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="QueryStop" cname="gst_rtsp_stream_query_stop">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="stop" type="gint64*" owned="true" pass_as="out"/>
+        </parameters>
+      </method>
+      <method name="RecvRtcp" cname="gst_rtsp_stream_recv_rtcp">
+        <return-type type="GstFlowReturn"/>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="RecvRtp" cname="gst_rtsp_stream_recv_rtp">
+        <return-type type="GstFlowReturn"/>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="RemoveTransport" cname="gst_rtsp_stream_remove_transport">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="trans" type="GstRTSPStreamTransport*"/>
+        </parameters>
+      </method>
+      <method name="RequestAuxReceiver" cname="gst_rtsp_stream_request_aux_receiver" version="1.16">
+        <return-type type="GstElement*" owned="true"/>
+        <parameters>
+          <parameter name="sessid" type="guint"/>
+        </parameters>
+      </method>
+      <method name="RequestAuxSender" cname="gst_rtsp_stream_request_aux_sender" version="1.6">
+        <return-type type="GstElement*" owned="true"/>
+        <parameters>
+          <parameter name="sessid" type="guint"/>
+        </parameters>
+      </method>
+      <method name="RequestUlpfecDecoder" cname="gst_rtsp_stream_request_ulpfec_decoder" version="1.16">
+        <return-type type="GstElement*" owned="true"/>
+        <parameters>
+          <parameter name="rtpbin" type="GstElement*"/>
+          <parameter name="sessid" type="guint"/>
+        </parameters>
+      </method>
+      <method name="RequestUlpfecEncoder" cname="gst_rtsp_stream_request_ulpfec_encoder" version="1.16">
+        <return-type type="GstElement*" owned="true"/>
+        <parameters>
+          <parameter name="sessid" type="guint"/>
+        </parameters>
+      </method>
+      <method name="ReserveAddress" cname="gst_rtsp_stream_reserve_address">
+        <return-type type="GstRTSPAddress*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="address" type="const-gchar*"/>
+          <parameter name="port" type="guint"/>
+          <parameter name="n_ports" type="guint"/>
+          <parameter name="ttl" type="guint"/>
+        </parameters>
+      </method>
+      <method name="Seekable" cname="gst_rtsp_stream_seekable" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="SetAddressPool" cname="gst_rtsp_stream_set_address_pool">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="pool" type="GstRTSPAddressPool*"/>
+        </parameters>
+      </method>
+      <method name="SetBindMcastAddress" cname="gst_rtsp_stream_set_bind_mcast_address" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="bind_mcast_addr" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetBlocked" cname="gst_rtsp_stream_set_blocked">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="blocked" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetBufferSize" cname="gst_rtsp_stream_set_buffer_size" version="1.6">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="size" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetClientSide" cname="gst_rtsp_stream_set_client_side">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="client_side" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetControl" cname="gst_rtsp_stream_set_control">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="control" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetDscpQos" cname="gst_rtsp_stream_set_dscp_qos">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="dscp_qos" type="gint"/>
+        </parameters>
+      </method>
+      <method name="SetMaxMcastTtl" cname="gst_rtsp_stream_set_max_mcast_ttl" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ttl" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetMtu" cname="gst_rtsp_stream_set_mtu">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mtu" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetMulticastIface" cname="gst_rtsp_stream_set_multicast_iface">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="multicast_iface" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetProfiles" cname="gst_rtsp_stream_set_profiles">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="profiles" type="GstRTSPProfile"/>
+        </parameters>
+      </method>
+      <method name="SetProtocols" cname="gst_rtsp_stream_set_protocols">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="protocols" type="GstRTSPLowerTrans"/>
+        </parameters>
+      </method>
+      <method name="SetPtMap" cname="gst_rtsp_stream_set_pt_map">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="pt" type="guint"/>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetPublishClockMode" cname="gst_rtsp_stream_set_publish_clock_mode" version="1.8">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="mode" type="GstRTSPPublishClockMode"/>
+        </parameters>
+      </method>
+      <method name="SetRateControl" cname="gst_rtsp_stream_set_rate_control" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="enabled" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetRetransmissionPt" cname="gst_rtsp_stream_set_retransmission_pt">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="rtx_pt" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetRetransmissionTime" cname="gst_rtsp_stream_set_retransmission_time">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="time" type="guint64"/>
+        </parameters>
+      </method>
+      <method name="SetSeqnumOffset" cname="gst_rtsp_stream_set_seqnum_offset">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="seqnum" type="guint16"/>
+        </parameters>
+      </method>
+      <method name="SetUlpfecPercentage" cname="gst_rtsp_stream_set_ulpfec_percentage" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="percentage" type="guint"/>
+        </parameters>
+      </method>
+      <method name="SetUlpfecPt" cname="gst_rtsp_stream_set_ulpfec_pt" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="pt" type="guint"/>
+        </parameters>
+      </method>
+      <method name="TransportFilter" cname="gst_rtsp_stream_transport_filter">
+        <return-type type="GList*" element_type="GstRTSPStreamTransport*" elements_owned="true" owned="true"/>
+        <parameters>
+          <parameter closure="1" scope="call" allow-none="1" name="func" type="GstRTSPStreamTransportFilterFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+        </parameters>
+      </method>
+      <method name="UnblockLinked" cname="gst_rtsp_stream_unblock_linked">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="UnblockRtcp" cname="gst_rtsp_stream_unblock_rtcp" version="1.20">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="UpdateCrypto" cname="gst_rtsp_stream_update_crypto">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ssrc" type="guint"/>
+          <parameter allow-none="1" name="crypto" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="VerifyMcastTtl" cname="gst_rtsp_stream_verify_mcast_ttl" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ttl" type="guint"/>
+        </parameters>
+      </method>
+      <property name="Control" cname="control" type="gchar*" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Profiles" cname="profiles" type="GstRTSPProfile" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <property name="Protocols" cname="protocols" type="GstRTSPLowerTrans" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPStreamPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      <signal name="NewRtcpEncoder" cname="new-rtcp-encoder" when="last">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstElement*"/>
+        </parameters>
+      </signal>
+      <signal name="NewRtpEncoder" cname="new-rtp-encoder" when="last">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstElement*"/>
+        </parameters>
+      </signal>
+      <signal name="NewRtpRtcpDecoder" cname="new-rtp-rtcp-decoder" when="last">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="_object" type="GstElement*"/>
+        </parameters>
+      </signal>
+    </object>
+    <object name="RTSPStreamTransport" cname="GstRTSPStreamTransport" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPStreamTransportClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_stream_transport_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_stream_transport_new">
+        <parameters>
+          <parameter name="stream" type="GstRTSPStream*"/>
+          <parameter name="tr" type="GstRTSPTransport*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </constructor>
+      <method name="GetRtpinfo" cname="gst_rtsp_stream_transport_get_rtpinfo">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="start_time" type="guint64"/>
+        </parameters>
+      </method>
+      <method name="GetStream" cname="gst_rtsp_stream_transport_get_stream">
+        <return-type type="GstRTSPStream*"/>
+        <parameters/>
+      </method>
+      <method name="GetTransport" cname="gst_rtsp_stream_transport_get_transport">
+        <return-type type="GstRTSPTransport*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="GetUrl" cname="gst_rtsp_stream_transport_get_url">
+        <return-type type="GstRTSPUrl*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="IsTimedOut" cname="gst_rtsp_stream_transport_is_timed_out">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="KeepAlive" cname="gst_rtsp_stream_transport_keep_alive">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="MessageSent" cname="gst_rtsp_stream_transport_message_sent" version="1.16">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="RecvData" cname="gst_rtsp_stream_transport_recv_data">
+        <return-type type="GstFlowReturn"/>
+        <parameters>
+          <parameter name="channel" type="guint"/>
+          <parameter name="buffer" type="GstBuffer*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SendRtcp" cname="gst_rtsp_stream_transport_send_rtcp">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SendRtcpList" cname="gst_rtsp_stream_transport_send_rtcp_list" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="buffer_list" type="GstBufferList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SendRtp" cname="gst_rtsp_stream_transport_send_rtp">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SendRtpList" cname="gst_rtsp_stream_transport_send_rtp_list" version="1.16">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="buffer_list" type="GstBufferList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetActive" cname="gst_rtsp_stream_transport_set_active">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="active" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetCallbacks" cname="gst_rtsp_stream_transport_set_callbacks">
+        <return-type type="void"/>
+        <parameters>
+          <parameter scope="notified" name="send_rtp" type="GstRTSPSendFunc"/>
+          <parameter closure="2" destroy="3" scope="notified" name="send_rtcp" type="GstRTSPSendFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+          <parameter scope="async" allow-none="1" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="SetKeepalive" cname="gst_rtsp_stream_transport_set_keepalive">
+        <return-type type="void"/>
+        <parameters>
+          <parameter closure="1" destroy="2" scope="notified" name="keep_alive" type="GstRTSPKeepAliveFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+          <parameter scope="async" allow-none="1" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="SetListCallbacks" cname="gst_rtsp_stream_transport_set_list_callbacks" version="1.16">
+        <return-type type="void"/>
+        <parameters>
+          <parameter scope="notified" name="send_rtp_list" type="GstRTSPSendListFunc"/>
+          <parameter closure="2" destroy="3" scope="notified" name="send_rtcp_list" type="GstRTSPSendListFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+          <parameter scope="async" allow-none="1" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="SetMessageSent" cname="gst_rtsp_stream_transport_set_message_sent">
+        <return-type type="void"/>
+        <parameters>
+          <parameter closure="1" destroy="2" scope="notified" name="message_sent" type="GstRTSPMessageSentFunc"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+          <parameter scope="async" allow-none="1" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="SetMessageSentFull" cname="gst_rtsp_stream_transport_set_message_sent_full" version="1.18">
+        <return-type type="void"/>
+        <parameters>
+          <parameter closure="1" destroy="2" scope="notified" name="message_sent" type="GstRTSPMessageSentFuncFull"/>
+          <parameter allow-none="1" name="user_data" type="gpointer"/>
+          <parameter scope="async" allow-none="1" name="notify" type="GDestroyNotify"/>
+        </parameters>
+      </method>
+      <method name="SetTimedOut" cname="gst_rtsp_stream_transport_set_timed_out">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="timedout" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetTransport" cname="gst_rtsp_stream_transport_set_transport">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="tr" type="GstRTSPTransport*" owned="true">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetUrl" cname="gst_rtsp_stream_transport_set_url">
+        <return-type type="void"/>
+        <parameters>
+          <parameter allow-none="1" name="url" type="GstRTSPUrl*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPStreamTransportPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <object name="RTSPThreadPool" cname="GstRTSPThreadPool" opaque="false" hidden="false" parent="GObject">
+      <class_struct cname="GstRTSPThreadPoolClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" is_callback="false" name="ParentClass" type="GObjectClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="pool" access="public" writeable="false" readable="true" is_callback="false" name="Pool" type="GThreadPool*">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="get_thread"/>
+        <method vm="configure_thread"/>
+        <method vm="thread_enter"/>
+        <method vm="thread_leave"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+      </class_struct>
+      <method name="GetType" cname="gst_rtsp_thread_pool_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <constructor cname="gst_rtsp_thread_pool_new" disable_void_ctor=""/>
+      <method name="Cleanup" cname="gst_rtsp_thread_pool_cleanup" shared="true">
+        <return-type type="void"/>
+      </method>
+      <virtual_method name="ConfigureThread" cname="configure_thread">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="thread" type="GstRTSPThread*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="GetThread" cname="get_thread">
+        <return-type type="GstRTSPThread*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="type" type="GstRTSPThreadType"/>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ThreadEnter" cname="thread_enter">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="thread" type="GstRTSPThread*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ThreadLeave" cname="thread_leave">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="thread" type="GstRTSPThread*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <method name="GetMaxThreads" cname="gst_rtsp_thread_pool_get_max_threads">
+        <return-type type="gint"/>
+        <parameters/>
+      </method>
+      <method name="GetThread" cname="gst_rtsp_thread_pool_get_thread">
+        <return-type type="GstRTSPThread*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="type" type="GstRTSPThreadType"/>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="SetMaxThreads" cname="gst_rtsp_thread_pool_set_max_threads">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="max_threads" type="gint"/>
+        </parameters>
+      </method>
+      <property name="MaxThreads" cname="max-threads" type="gint" readable="true" writeable="true" construct="false" construct-only="false"/>
+      <field cname="parent" access="public" writeable="false" readable="true" is_callback="false" name="Parent" type="GObject*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="GstRTSPThreadPoolPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4" element_type="gpointer"/>
+    </object>
+    <boxed name="RTSPAddress" cname="GstRTSPAddress" opaque="false" hidden="false">
+      <method name="GetType" cname="gst_rtsp_address_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <field cname="pool" access="public" writeable="true" readable="true" is_callback="false" name="Pool" type="GstRTSPAddressPool*"/>
+      <field cname="address" access="public" writeable="true" readable="true" is_callback="false" name="Address" type="gchar*"/>
+      <field cname="port" access="public" writeable="true" readable="true" is_callback="false" name="Port" type="guint16"/>
+      <field cname="n_ports" access="public" writeable="true" readable="true" is_callback="false" name="NPorts" type="gint"/>
+      <field cname="ttl" access="public" writeable="true" readable="true" is_callback="false" name="Ttl" type="guint8"/>
+      <field cname="priv" access="private" writeable="false" readable="false" is_callback="false" name="Priv" type="gpointer"/>
+      <method name="Copy" cname="gst_rtsp_address_copy">
+        <return-type type="GstRTSPAddress*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="Free" cname="gst_rtsp_address_free">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+    </boxed>
+    <struct name="RTSPAddressPoolPrivate" cname="GstRTSPAddressPoolPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPAuthPrivate" cname="GstRTSPAuthPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPClientPrivate" cname="GstRTSPClientPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPContext" cname="GstRTSPContext" opaque="false" hidden="false">
+      <field cname="server" access="public" writeable="true" readable="true" is_callback="false" name="Server" type="GstRTSPServer*"/>
+      <field cname="conn" access="public" writeable="true" readable="true" is_callback="false" name="Conn" type="GstRTSPConnection*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="client" access="public" writeable="true" readable="true" is_callback="false" name="Client" type="GstRTSPClient*"/>
+      <field cname="request" access="public" writeable="true" readable="true" is_callback="false" name="Request" type="GstRTSPMessage*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="uri" access="public" writeable="true" readable="true" is_callback="false" name="Uri" type="GstRTSPUrl*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="method" access="public" writeable="true" readable="true" is_callback="false" name="Method" type="GstRTSPMethod"/>
+      <field cname="auth" access="public" writeable="true" readable="true" is_callback="false" name="Auth" type="GstRTSPAuth*"/>
+      <field cname="token" access="public" writeable="true" readable="true" is_callback="false" name="Token" type="GstRTSPToken*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="session" access="public" writeable="true" readable="true" is_callback="false" name="Session" type="GstRTSPSession*"/>
+      <field cname="sessmedia" access="public" writeable="true" readable="true" is_callback="false" name="Sessmedia" type="GstRTSPSessionMedia*"/>
+      <field cname="factory" access="public" writeable="true" readable="true" is_callback="false" name="Factory" type="GstRTSPMediaFactory*"/>
+      <field cname="media" access="public" writeable="true" readable="true" is_callback="false" name="Media" type="GstRTSPMedia*"/>
+      <field cname="stream" access="public" writeable="true" readable="true" is_callback="false" name="Stream" type="GstRTSPStream*"/>
+      <field cname="response" access="public" writeable="true" readable="true" is_callback="false" name="Response" type="GstRTSPMessage*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="trans" access="public" writeable="true" readable="true" is_callback="false" name="Trans" type="GstRTSPStreamTransport*"/>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" is_callback="false" name="_gstGstReserved" type="gpointer" array="true" array_len="3" element_type="gpointer"/>
+      <method name="PopCurrent" cname="gst_rtsp_context_pop_current">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="PushCurrent" cname="gst_rtsp_context_push_current">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="SetToken" cname="gst_rtsp_context_set_token" version="1.22">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="token" type="GstRTSPToken*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+    </struct>
+    <struct name="RTSPMediaFactoryPrivate" cname="GstRTSPMediaFactoryPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPMediaFactoryURIPrivate" cname="GstRTSPMediaFactoryURIPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPMediaPrivate" cname="GstRTSPMediaPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPMountPointsPrivate" cname="GstRTSPMountPointsPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPOnvifMediaFactoryPrivate" cname="GstRTSPOnvifMediaFactoryPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPOnvifMediaPrivate" cname="GstRTSPOnvifMediaPrivate" opaque="true" hidden="true"/>
+    <boxed name="RTSPPermissions" cname="GstRTSPPermissions" opaque="true" hidden="false">
+      <method name="GetType" cname="gst_rtsp_permissions_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <field cname="mini_object" access="public" writeable="true" readable="true" is_callback="false" name="MiniObject" type="GstMiniObject">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <constructor cname="gst_rtsp_permissions_new" disable_void_ctor=""/>
+      <method name="AddPermissionForRole" cname="gst_rtsp_permissions_add_permission_for_role" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="role" type="const-gchar*"/>
+          <parameter name="permission" type="const-gchar*"/>
+          <parameter name="allowed" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="AddRoleEmpty" cname="gst_rtsp_permissions_add_role_empty" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="role" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="AddRoleFromStructure" cname="gst_rtsp_permissions_add_role_from_structure" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="structure" type="GstStructure*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="GetRole" cname="gst_rtsp_permissions_get_role">
+        <return-type type="GstStructure*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="role" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="IsAllowed" cname="gst_rtsp_permissions_is_allowed">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="role" type="const-gchar*"/>
+          <parameter name="permission" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="RemoveRole" cname="gst_rtsp_permissions_remove_role">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="role" type="const-gchar*"/>
+        </parameters>
+      </method>
+    </boxed>
+    <struct name="RTSPServerPrivate" cname="GstRTSPServerPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPSessionMediaPrivate" cname="GstRTSPSessionMediaPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPSessionPoolPrivate" cname="GstRTSPSessionPoolPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPSessionPrivate" cname="GstRTSPSessionPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPStreamPrivate" cname="GstRTSPStreamPrivate" opaque="true" hidden="true"/>
+    <struct name="RTSPStreamTransportPrivate" cname="GstRTSPStreamTransportPrivate" opaque="true" hidden="true"/>
+    <boxed name="RTSPThread" cname="GstRTSPThread" opaque="false" hidden="false">
+      <method name="GetType" cname="gst_rtsp_thread_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <field cname="mini_object" access="public" writeable="true" readable="true" is_callback="false" name="MiniObject" type="GstMiniObject">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="type" access="public" writeable="true" readable="true" is_callback="false" name="Type" type="GstRTSPThreadType"/>
+      <field cname="context" access="public" writeable="true" readable="true" is_callback="false" name="Context" type="GMainContext*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="loop" access="public" writeable="true" readable="true" is_callback="false" name="Loop" type="GMainLoop*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <constructor cname="gst_rtsp_thread_new">
+        <parameters>
+          <parameter name="type" type="GstRTSPThreadType"/>
+        </parameters>
+      </constructor>
+      <method name="Reuse" cname="gst_rtsp_thread_reuse">
+        <return-type type="gboolean"/>
+        <parameters/>
+      </method>
+      <method name="Stop" cname="gst_rtsp_thread_stop">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+    </boxed>
+    <struct name="RTSPThreadPoolPrivate" cname="GstRTSPThreadPoolPrivate" opaque="true" hidden="true"/>
+    <boxed name="RTSPToken" cname="GstRTSPToken" opaque="true" hidden="false">
+      <method name="GetType" cname="gst_rtsp_token_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <field cname="mini_object" access="public" writeable="true" readable="true" is_callback="false" name="MiniObject" type="GstMiniObject">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <constructor cname="gst_rtsp_token_new_empty" disable_void_ctor=""/>
+      <method name="GetString" cname="gst_rtsp_token_get_string">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="field" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="GetStructure" cname="gst_rtsp_token_get_structure">
+        <return-type type="GstStructure*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+      <method name="IsAllowed" cname="gst_rtsp_token_is_allowed">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="field" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="SetBool" cname="gst_rtsp_token_set_bool" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="field" type="const-gchar*"/>
+          <parameter name="bool_value" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="SetString" cname="gst_rtsp_token_set_string" version="1.14">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="field" type="const-gchar*"/>
+          <parameter name="string_value" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="WritableStructure" cname="gst_rtsp_token_writable_structure">
+        <return-type type="GstStructure*">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters/>
+      </method>
+    </boxed>
+    <struct name="SDPInfo" cname="GstSDPInfo" opaque="false" hidden="false">
+      <field cname="is_ipv6" access="public" writeable="true" readable="true" is_callback="false" name="IsIpv6" type="gboolean"/>
+      <field cname="server_ip" access="public" writeable="true" readable="true" is_callback="false" name="ServerIp" type="gchar*"/>
+    </struct>
+    <object name="Global" cname="GstRtspServerGlobal" opaque="true">
+      <method name="RtspContextGetType" cname="gst_rtsp_context_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <method name="RtspParamsGet" cname="gst_rtsp_params_get" shared="true">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="client" type="GstRTSPClient*"/>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="RtspParamsSet" cname="gst_rtsp_params_set" shared="true">
+        <return-type type="GstRTSPResult"/>
+        <parameters>
+          <parameter name="client" type="GstRTSPClient*"/>
+          <parameter name="ctx" type="GstRTSPContext*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="RtspSdpFromMedia" cname="gst_rtsp_sdp_from_media" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="info" type="GstSDPInfo*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="media" type="GstRTSPMedia*"/>
+        </parameters>
+      </method>
+      <method name="RtspSdpFromStream" cname="gst_rtsp_sdp_from_stream" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="info" type="GstSDPInfo*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="stream" type="GstRTSPStream*"/>
+        </parameters>
+      </method>
+      <method name="RtspSdpMakeMedia" cname="gst_rtsp_sdp_make_media" shared="true" version="1.14">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="sdp" type="GstSDPMessage*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="info" type="GstSDPInfo*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="stream" type="GstRTSPStream*"/>
+          <parameter name="caps" type="GstCaps*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="profile" type="GstRTSPProfile"/>
+        </parameters>
+      </method>
+    </object>
+    <object name="Constants" cname="GstRtspServerConstants" opaque="true">
+      <constant value="0.0.0.0" ctype="gchar*" gtype="gchar*" name="RTSP_ADDRESS_POOL_ANY_IPV4"/>
+      <constant value="::" ctype="gchar*" gtype="gchar*" name="RTSP_ADDRESS_POOL_ANY_IPV6"/>
+      <constant value="auth.check.connect" ctype="gchar*" gtype="gchar*" name="RTSP_AUTH_CHECK_CONNECT"/>
+      <constant value="auth.check.media.factory.access" ctype="gchar*" gtype="gchar*" name="RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS"/>
+      <constant value="auth.check.media.factory.construct" ctype="gchar*" gtype="gchar*" name="RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT"/>
+      <constant value="auth.check.transport.client-settings" ctype="gchar*" gtype="gchar*" name="RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS"/>
+      <constant value="auth.check.url" ctype="gchar*" gtype="gchar*" name="RTSP_AUTH_CHECK_URL"/>
+      <constant value="www.onvif.org/ver20/backchannel" ctype="gchar*" gtype="gchar*" name="RTSP_ONVIF_BACKCHANNEL_REQUIREMENT"/>
+      <constant value="onvif-replay" ctype="gchar*" gtype="gchar*" name="RTSP_ONVIF_REPLAY_REQUIREMENT"/>
+      <constant value="media.factory.access" ctype="gchar*" gtype="gchar*" name="RTSP_PERM_MEDIA_FACTORY_ACCESS"/>
+      <constant value="media.factory.construct" ctype="gchar*" gtype="gchar*" name="RTSP_PERM_MEDIA_FACTORY_CONSTRUCT"/>
+      <constant value="media.factory.role" ctype="gchar*" gtype="gchar*" name="RTSP_TOKEN_MEDIA_FACTORY_ROLE"/>
+      <constant value="transport.client-settings" ctype="gchar*" gtype="gchar*" name="RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS"/>
+    </object>
+  </namespace>
 </api>
