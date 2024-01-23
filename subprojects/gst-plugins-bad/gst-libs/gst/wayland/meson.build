@@ -2,7 +2,7 @@ wl_req = '>= 1.15'
 wl_client_dep = dependency('wayland-client', version: wl_req, required: get_option('wayland'))
 libdrm_dep = dependency('libdrm', version: '>= 2.4.98', required: get_option('wayland'))
 wl_proto_req = '>= 1.26'
-wl_protocol_dep = dependency('wayland-protocols', version: wl_req, required: get_option('wayland'))
+wl_protocol_dep = dependency('wayland-protocols', version: wl_proto_req, required: get_option('wayland'))
 wl_scanner = find_program('wayland-scanner', required: get_option('wayland'))
 # Also used in ext/wayland
 use_wayland = wl_protocol_dep.found() and wl_client_dep.found() and wl_scanner.found() and libdrm_dep.found()
