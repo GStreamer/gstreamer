@@ -391,15 +391,17 @@ gst_va_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
   GstVaDmabufAllocator *self = GST_VA_DMABUF_ALLOCATOR (gmem->allocator);
   VASurfaceID surface = gst_va_memory_get_surface (gmem);
 
-  if (self->info.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
-    GST_ERROR_OBJECT (self, "Failed to map the dmabuf because the modifier "
-        "is: %#" G_GINT64_MODIFIER "x, which is not linear.",
-        self->info.drm_modifier);
-    return NULL;
-  }
+  if (flags & GST_MAP_READWRITE) {
+    if (self->info.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
+      GST_ERROR_OBJECT (self, "Failed to map the dmabuf because the modifier "
+          "is: %#" G_GINT64_MODIFIER "x, which is not linear.",
+          self->info.drm_modifier);
+      return NULL;
+    }
 
-  if (!va_sync_surface (self->display, surface))
-    return NULL;
+    if (!va_sync_surface (self->display, surface))
+      return NULL;
+  }
 
   return self->parent_map (gmem, maxsize, flags);
 }
