@@ -358,7 +358,7 @@ gst_d3d12_av1_dec_register (GstPlugin * plugin, GstD3D12Device * device,
     index++;
     g_free (type_name);
     g_free (feature_name);
-    type_name = g_strdup_printf ("GstD3D12Vp9Device%dDec", index);
+    type_name = g_strdup_printf ("GstD3D12AV1Device%dDec", index);
     feature_name = g_strdup_printf ("d3d12av1device%ddec", index);
   }
 
