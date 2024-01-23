@@ -6618,7 +6618,7 @@
                     "method": {
                         "blurb": "method (deprecated, use video-direction instead)",
                         "conditionally-available": false,
-                        "construct": true,
+                        "construct": false,
                         "construct-only": false,
                         "controllable": true,
                         "default": "none (0)",
