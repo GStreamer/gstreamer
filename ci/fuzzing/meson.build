@@ -4,7 +4,7 @@ endif
 
 fuzz_targets = [
   ['gst-discoverer.c', false, ['gstreamer-pbutils-1.0']],
-  ['typefind.c'],
+  ['typefind.c']
 ]
 
 extra_sources = []

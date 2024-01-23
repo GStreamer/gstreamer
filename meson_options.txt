@@ -21,6 +21,9 @@ option('libnice', type : 'feature', value : 'auto', description: 'ICE support us
 option('oss_fuzz', type : 'feature', value : 'disabled',
        description: 'Use fuzzing build environment')
 
+# Build harnesses
+option('harnesses', type : 'feature', value : 'auto', yield : true, description : 'Build harnesses')
+
 # Other options
 option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
 option('gst-full-libraries', type : 'array', value : [],
