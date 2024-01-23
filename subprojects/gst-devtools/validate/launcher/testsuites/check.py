@@ -98,6 +98,7 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-plugins-good.elements_rtpjitterbuffer.test_push_backward_seq', 'flaky in valgrind'),
     (r'check.gst-plugins-good.elements_rtpjitterbuffer.test_push_unordered', 'flaky in valgrind'),
     (r'check.gst-plugins-bad.elements_assrender', '?'),
+    (r'check.gst-plugins-bad.elements_autovideoconvert.test_autovideoconvert_videoconvert', 'Leak with GLX, https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3216'),
     (r'check.gst-plugins-bad.elements_camerabin', '?'),
     (r'check.gst-plugins-bad.elements_line21', '?'),
     (r'check.gst-plugins-bad.elements_mpeg2enc', '?'),
