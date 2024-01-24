@@ -1,0 +1,18 @@
+project: gstreamer
+target: jpegdec
+image: ghcr.io/xansec/gstreamer:latest
+
+tasks:
+  - name: exploitability_factors
+  - name: regression_testing
+  - name: behavior_testing
+  - name: coverage_analysis
+
+testsuite:
+  - file://testsuite
+
+cmds:
+  - cmd: /harnesses/test_jpegdec
+    libfuzzer: true
+    sanitizer: true
+

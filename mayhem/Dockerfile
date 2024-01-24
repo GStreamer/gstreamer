@@ -13,6 +13,7 @@ RUN CC=clang CXX=clang++ meson \
     --libdir=lib \
     --default-library=shared \
     --force-fallback-for=zlib \
+    -Dauto_features=disabled \
     -Db_lundef=false \
     -Dharnesses=enabled \
     -Dglib:libmount=disabled \
@@ -20,7 +21,7 @@ RUN CC=clang CXX=clang++ meson \
     -Ddoc=disabled \
     -Dexamples=disabled \
     -Dintrospection=disabled \
-    -Dgood=disabled \
+    -Dgood=enabled \
     -Dugly=disabled \
     -Dbad=disabled \
     -Dlibav=disabled \
@@ -34,12 +35,15 @@ RUN CC=clang CXX=clang++ meson \
     -Drtsp_server=disabled \
     -Dgst-examples=disabled \
     -Dqt5=disabled \
-    -Dorc=enabled \
+    -Dorc=disabled \
     -Dgtk_doc=disabled \
     -Dgstreamer:tracer_hooks=false \
     -Dgst-plugins-base:opus=disabled \
     -Dgst-plugins-base:pango=disabled \
+    -Dgst-plugins-good:jpeg=enabled \
     builddir \
     .
 RUN CC=clang CXX=clang++ ninja -C builddir
-#RUN ninja -C builddir install
+
+FROM ubuntu
+COPY --from=builder /work/builddir/ /
