@@ -3,15 +3,17 @@ if get_option('harnesses').disabled()
 endif
 
 harnesses = [
-  ['test_smokedec.cc']
+  ['test_smokedec.c']
 ]
+
+incdir = include_directories('../subprojects/gst-plugins-good/ext/jpeg')
 
 extra_sources = []
 gst_dep = dependency('gstreamer-1.0')
 common_deps = [gst_dep]
 
-cxx = meson.get_compiler('cpp')
-fuzzing_engine = cxx.find_library('FuzzingEngine', required: true)
+#cxx = meson.get_compiler('cpp')
+#fuzzing_engine = cxx.find_library('FuzzingEngine', required: true)
 
 foreach harness : harnesses
   file_name = harness.get(0)
@@ -23,6 +25,9 @@ foreach harness : harnesses
   endif
 
   exe = executable(test_name, [extra_sources, file_name],
+    include_directories: incdir,
     dependencies: common_deps + extra_deps,
+    c_args: ['-fsanitize=fuzzer,address'],
+    link_args: ['-fsanitize=fuzzer,address']
   )
 endforeach

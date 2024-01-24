@@ -5,13 +5,12 @@ RUN pip3 install meson
 
 WORKDIR /work
 COPY . .
-RUN meson setup builddir
-RUN meson compile -C builddir
+#RUN meson setup builddir
+#RUN meson compile -C builddir
 #RUN meson subprojects update
-ENV CC=clang
-ENV CXX=clang++
 
-RUN meson \
+RUN CC=clang CXX=clang++ meson \
+    --libdir=lib \
     --default-library=shared \
     --force-fallback-for=zlib \
     -Db_lundef=false \
@@ -35,12 +34,12 @@ RUN meson \
     -Drtsp_server=disabled \
     -Dgst-examples=disabled \
     -Dqt5=disabled \
-    -Dorc=disabled \
+    -Dorc=enabled \
     -Dgtk_doc=disabled \
     -Dgstreamer:tracer_hooks=false \
     -Dgst-plugins-base:opus=disabled \
     -Dgst-plugins-base:pango=disabled \
     builddir \
     .
-RUN ninja -C builddir
+RUN CC=clang CXX=clang++ ninja -C builddir
 #RUN ninja -C builddir install
