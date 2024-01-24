@@ -12,6 +12,12 @@ Value type: #guint
 
 See #videotestsrc:background-color
 
+#### `fheight`
+
+height of the source in float
+
+Value type: #gfloat
+
 #### `foreground-color`
 
 Foreground color to use (big-endian ARGB)
@@ -20,11 +26,38 @@ Value type: #guint
 
 See #videotestsrc:foreground-color
 
+#### `fposx`
+
+x position of the stream in float
+
+Value type: #gfloat
+
+#### `fposy`
+
+y position of the stream in float
+
+Value type: #gfloat
+
+#### `fwidth`
+
+width of the source in float
+
+Value type: #gfloat
+
 #### `height`
 
 height of the source
 
 Value type: #gint
+
+#### `operator`
+
+Blending operator to use for blending this pad over the previous ones
+
+Valid values:
+  - **Source** (0) – source
+  - **Over** (1) – over
+  - **Add** (2) – add
 
 #### `pattern`
 
@@ -56,6 +89,7 @@ Valid values:
   - **Spokes** (22) – spokes
   - **Gradient** (23) – gradient
   - **Colors** (24) – colors
+  - **SMPTE test pattern, RP 219 conformant** (25) – smpte-rp-219
 
 See #videotestsrc:pattern
 
@@ -70,6 +104,14 @@ Value type: #gint
 y position of the stream
 
 Value type: #gint
+
+#### `reverse`
+
+Whether to playback the source reverse or not
+
+Value type: #gboolean
+
+See #nlesource:reverse
 
 #### `video-direction`
 
@@ -94,4 +136,12 @@ See #GstVideoDirection:video-direction
 width of the source
 
 Value type: #gint
+
+#### `zorder`
+
+z order of the stream.
+**WARNING**: Setting it manually overrides the #GESLayer:priority and should be
+used very carefully
+
+Value type: #guint
 

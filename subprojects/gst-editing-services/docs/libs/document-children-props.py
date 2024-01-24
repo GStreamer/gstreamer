@@ -9,6 +9,7 @@ import gi
 import os
 import sys
 import textwrap
+from itertools import chain
 
 gi.require_version("Gst", "1.0")
 gi.require_version("GObject", "2.0")
@@ -18,8 +19,8 @@ from gi.repository import Gst, GES, GObject
 
 overrides = {
     "GstFramePositioner": False,
-    "GstBaseTextOverlay": "timeoverlay",
-    "GstVideoDirection": "videoflip",
+    "GstBaseTextOverlay": "GstBaseTextOverlay",  # Use the actual class name for proper linking
+    "GstVideoDirection": "GstVideoDirection",     # Use the actual interface name for proper linking
     "GESVideoTestSource": "GESVideoTestSource",
     "GESVideoTransition": "GESVideoTransition",
 }
@@ -33,6 +34,7 @@ if __name__ == "__main__":
     layer = tl.append_layer()
 
     elements = []
+
     def add_clip(c, add=True, override_name=None):
         c.props.duration = Gst.SECOND
         c.props.start = layer.get_duration()
@@ -63,13 +65,13 @@ if __name__ == "__main__":
                 prefix = '#### `%s`\n\n' % (prop.name)
 
                 prefix_len = len(prefix)
-                lines = textwrap.wrap(prop.blurb, width=80)
+                lines = [i for i in chain.from_iterable([textwrap.wrap(t, width=80) for t in prop.blurb.split('\n')])]
 
                 doc = prefix + lines[0]
 
                 if GObject.type_is_a(prop, GObject.ParamSpecEnum.__gtype__):
                     lines += ["", "Valid values:"]
-                    for value  in prop.enum_class.__enum_values__.values():
+                    for value in prop.enum_class.__enum_values__.values():
                         lines.append("  - **%s** (%d) – %s" % (value.value_name,
                             int(value), value.value_nick))
                 else:
@@ -85,6 +87,5 @@ if __name__ == "__main__":
                 if len(lines) > 1:
                     doc += '\n'
                     doc += '\n'.join(lines[1:])
-
 
                 print(doc + "\n", file=f)

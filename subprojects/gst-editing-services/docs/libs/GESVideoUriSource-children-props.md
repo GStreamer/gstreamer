@@ -4,17 +4,29 @@ alpha of the stream
 
 Value type: #gdouble
 
-#### `fields`
+#### `fheight`
 
-Fields to use for deinterlacing
+height of the source in float
 
-Valid values:
-  - **All fields** (0) – all
-  - **Top fields only** (1) – top
-  - **Bottom fields only** (2) – bottom
-  - **Automatically detect** (3) – auto
+Value type: #gfloat
 
-See #deinterlace:fields
+#### `fposx`
+
+x position of the stream in float
+
+Value type: #gfloat
+
+#### `fposy`
+
+y position of the stream in float
+
+Value type: #gfloat
+
+#### `fwidth`
+
+width of the source in float
+
+Value type: #gfloat
 
 #### `height`
 
@@ -22,17 +34,14 @@ height of the source
 
 Value type: #gint
 
-#### `mode`
+#### `operator`
 
-Deinterlace Mode
+Blending operator to use for blending this pad over the previous ones
 
 Valid values:
-  - **Auto detection (best effort)** (0) – auto
-  - **Force deinterlacing** (1) – interlaced
-  - **Run in passthrough mode** (2) – disabled
-  - **Auto detection (strict)** (3) – auto-strict
-
-See #deinterlace:mode
+  - **Source** (0) – source
+  - **Over** (1) – over
+  - **Add** (2) – add
 
 #### `posx`
 
@@ -46,16 +55,13 @@ y position of the stream
 
 Value type: #gint
 
-#### `tff`
+#### `reverse`
 
-Deinterlace top field first
+Whether to playback the source reverse or not
 
-Valid values:
-  - **Auto detection** (0) – auto
-  - **Top field first** (1) – tff
-  - **Bottom field first** (2) – bff
+Value type: #gboolean
 
-See #deinterlace:tff
+See #nlesource:reverse
 
 #### `video-direction`
 
@@ -80,4 +86,12 @@ See #GstVideoDirection:video-direction
 width of the source
 
 Value type: #gint
+
+#### `zorder`
+
+z order of the stream.
+**WARNING**: Setting it manually overrides the #GESLayer:priority and should be
+used very carefully
+
+Value type: #guint
 

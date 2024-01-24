@@ -4,21 +4,13 @@ alpha of the stream
 
 Value type: #gdouble
 
-#### `color`
+#### `background-color`
 
-Color to use for text (big-endian ARGB).
+Background color to use (big-endian ARGB)
 
 Value type: #guint
 
-See #GstBaseTextOverlay:color
-
-#### `draw-shadow`
-
-Whether to draw shadow
-
-Value type: #gboolean
-
-See #GstBaseTextOverlay:draw-shadow
+See #videotestsrc:background-color
 
 #### `fheight`
 
@@ -55,6 +47,14 @@ y position of the stream in float
 
 Value type: #gfloat
 
+#### `freq`
+
+Frequency of test signal. The sample rate needs to be at least 2 times higher.
+
+Value type: #gdouble
+
+See #audiotestsrc:freq
+
 #### `fwidth`
 
 width of the source in float
@@ -80,6 +80,50 @@ height of the source
 
 Value type: #gint
 
+#### `input-channels-reorder`
+
+The positions configuration to use to reorder the input channels consecutively
+according to their index.
+
+Valid values:
+  - **Reorder the input channels using the default GStreamer order** (0) – gst
+  - **Reorder the input channels using the SMPTE order** (1) – smpte
+  - **Reorder the input channels using the CINE order** (2) – cine
+  - **Reorder the input channels using the AC3 order** (3) – ac3
+  - **Reorder the input channels using the AAC order** (4) – aac
+  - **Reorder and mix all input channels to a single mono channel** (5) – mono
+  - **Reorder and mix all input channels to a single left and a single right stereo channels alternately** (6) – alternate
+
+See #audioconvert:input-channels-reorder
+
+#### `input-channels-reorder-mode`
+
+The input channels reordering mode used to apply the selected positions
+configuration.
+
+Valid values:
+  - **Never reorder the input channels** (0) – none
+  - **Reorder the input channels only if they are unpositioned** (1) – unpositioned
+  - **Always reorder the input channels according to the selected configuration** (2) – force
+
+See #audioconvert:input-channels-reorder-mode
+
+#### `mix-matrix`
+
+Transformation matrix for input/output channels.
+
+Value type: #GstValueArray
+
+See #audioconvert:mix-matrix
+
+#### `mute`
+
+mute channel
+
+Value type: #gboolean
+
+See #volume:mute
+
 #### `operator`
 
 Blending operator to use for blending this pad over the previous ones
@@ -88,14 +132,6 @@ Valid values:
   - **Source** (0) – source
   - **Over** (1) – over
   - **Add** (2) – add
-
-#### `outline-color`
-
-Color to use for outline the text (big-endian ARGB).
-
-Value type: #guint
-
-See #GstBaseTextOverlay:outline-color
 
 #### `pattern`
 
@@ -151,29 +187,13 @@ Value type: #gboolean
 
 See #nlesource:reverse
 
-#### `shaded-background`
+#### `reverse`
 
-Whether to shade the background under the text area
+Whether to playback the source reverse or not
 
 Value type: #gboolean
 
-See #GstBaseTextOverlay:shaded-background
-
-#### `text`
-
-Text to be display.
-
-Value type: #gchararray
-
-See #GstBaseTextOverlay:text
-
-#### `text-height`
-
-Resulting height of font rendering
-
-Value type: #guint
-
-See #GstBaseTextOverlay:text-height
+See #nlesource:reverse
 
 #### `text-width`
 
@@ -198,6 +218,22 @@ Resulting Y position of font rendering.
 Value type: #gint
 
 See #GstBaseTextOverlay:text-y
+
+#### `time-mode`
+
+What time to show
+
+Valid values:
+  - **buffer-time** (0) – buffer-time
+  - **stream-time** (1) – stream-time
+  - **running-time** (2) – running-time
+  - **time-code** (3) – time-code
+  - **elapsed-running-time** (4) – elapsed-running-time
+  - **reference-timestamp** (5) – reference-timestamp
+  - **buffer-count** (6) – buffer-count
+  - **buffer-offset** (7) – buffer-offset
+
+See #timeoverlay:time-mode
 
 #### `valignment`
 
@@ -231,43 +267,27 @@ Valid values:
 
 See #GstVideoDirection:video-direction
 
+#### `volume`
+
+Volume of test signal
+
+Value type: #gdouble
+
+See #audiotestsrc:volume
+
+#### `volume`
+
+volume factor, 1.0=100%
+
+Value type: #gdouble
+
+See #volume:volume
+
 #### `width`
 
 width of the source
 
 Value type: #gint
-
-#### `x-absolute`
-
-Horizontal position when using absolute alignment
-
-Value type: #gdouble
-
-See #GstBaseTextOverlay:x-absolute
-
-#### `xpos`
-
-Horizontal position when using clamped position alignment
-
-Value type: #gdouble
-
-See #GstBaseTextOverlay:xpos
-
-#### `y-absolute`
-
-Vertical position when using absolute alignment
-
-Value type: #gdouble
-
-See #GstBaseTextOverlay:y-absolute
-
-#### `ypos`
-
-Vertical position when using clamped position alignment
-
-Value type: #gdouble
-
-See #GstBaseTextOverlay:ypos
 
 #### `zorder`
 
