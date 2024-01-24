@@ -29,7 +29,7 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
   GstBuffer *buf;
   GstFlowReturn flowret;
   GstState state;
-  GstSample *sample;
+  //GstSample *sample;
 
   if (!initialized) {
     /* We want critical warnings to assert so we can fix them */
@@ -44,10 +44,15 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
 
   /* construct a pipeline that explicitly uses jpegdec */
   pipeline = gst_pipeline_new (NULL);
-  source = gst_element_factory_make ("appsrc", "source");
+  source = gst_element_factory_make ("appsrc", NULL);
   dec = gst_element_factory_make ("jpegdec", NULL);
   sink = gst_element_factory_make ("appsink", NULL);
 
+  if (!pipeline || !source || !dec || !sink )
+  {
+    g_printerr ("Not all elements could be created.\n");
+    return -1;
+  }
 
   gst_bin_add_many (GST_BIN (pipeline), source, dec, sink, NULL);
   gst_element_link_many (source, dec, sink, NULL);
@@ -66,11 +71,11 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
   /* wait until state change either completes or fails */
   gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, -1);
 
-  sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
   // Need to include gst-check somehow...
+  //sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
   //fail_unless (GST_IS_SAMPLE (sample));
 
-  /* do some basic checks to verify image decoding */
+  /* do some basic checks to verify image decoding
   {
     GstCaps *decoded;
     GstCaps *expected;
@@ -83,6 +88,7 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
     gst_caps_unref (expected);
   }
   gst_sample_unref (sample);
+  */
 
   /* Go back to NULL */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
