@@ -47,6 +47,10 @@ struct DecoderFormat
 };
 
 static const DecoderFormat format_list[] = {
+  {GST_DXVA_CODEC_MPEG2, D3D12_VIDEO_DECODE_PROFILE_MPEG2,
+      {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
+  {GST_DXVA_CODEC_MPEG2, D3D12_VIDEO_DECODE_PROFILE_MPEG1_AND_MPEG2,
+      {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
   {GST_DXVA_CODEC_H264, D3D12_VIDEO_DECODE_PROFILE_H264,
       {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
   {GST_DXVA_CODEC_H265, D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN,
@@ -1908,7 +1912,11 @@ static void
 gst_d3d12_decoder_get_profiles (const GUID & profile,
     std::vector < std::string > &list)
 {
-  if (profile == D3D12_VIDEO_DECODE_PROFILE_H264) {
+  if (profile == D3D12_VIDEO_DECODE_PROFILE_MPEG2 ||
+      profile == D3D12_VIDEO_DECODE_PROFILE_MPEG1_AND_MPEG2) {
+    list.push_back ("main");
+    list.push_back ("simple");
+  } else if (profile == D3D12_VIDEO_DECODE_PROFILE_H264) {
     list.push_back ("high");
     list.push_back ("progressive-high");
     list.push_back ("constrained-high");
@@ -2034,6 +2042,10 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
   std::string profile_string;
 
   switch (codec) {
+    case GST_DXVA_CODEC_MPEG2:
+      sink_caps_string = "video/mpeg, "
+          "mpegversion = (int) 2, systemstream = (boolean) false";
+      break;
     case GST_DXVA_CODEC_H264:
       sink_caps_string = "video/x-h264, "
           "stream-format=(string) { avc, avc3, byte-stream }, "

@@ -37,6 +37,7 @@
 #include "gstd3d12compositor.h"
 #include "gstd3d12screencapturedevice.h"
 #include "gstd3d12screencapturesrc.h"
+#include "gstd3d12mpeg2dec.h"
 #include "gstd3d12h264dec.h"
 #include "gstd3d12h264enc.h"
 #include "gstd3d12h265dec.h"
@@ -98,6 +99,8 @@ plugin_init (GstPlugin * plugin)
       continue;
     }
 
+    gst_d3d12_mpeg2_dec_register (plugin, device, video_device.Get (),
+        GST_RANK_NONE);
     gst_d3d12_h264_dec_register (plugin, device, video_device.Get (),
         GST_RANK_NONE);
     gst_d3d12_h265_dec_register (plugin, device, video_device.Get (),

@@ -97,6 +97,9 @@ struct _GstDxvaMpeg2DecoderClass
 GST_DXVA_API
 GType gst_dxva_mpeg2_decoder_get_type (void);
 
+GST_DXVA_API
+void  gst_dxva_mpeg2_decoder_disable_postproc (GstDxvaMpeg2Decoder * decoder);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstDxvaMpeg2Decoder, gst_object_unref)
 
 G_END_DECLS
