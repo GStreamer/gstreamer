@@ -290,6 +290,7 @@ gst_vp9_parse_negotiate (GstVp9Parse * self, GstVp9ParseAligment in_align,
   /* concentrate on leading structure, since decodebin parser
    * capsfilter always includes parser template caps */
   if (caps) {
+    caps = gst_caps_make_writable (caps);
     while (gst_caps_get_size (caps) > 0) {
       GstStructure *s = gst_caps_get_structure (caps, 0);
 
