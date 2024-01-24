@@ -1,6 +1,6 @@
 FROM ubuntu AS builder
 
-RUN apt update -y && apt install -y python3 python3-pip build-essential clang ninja-build git flex bison
+RUN apt update -y && apt install -y python3 python3-pip build-essential clang ninja-build git flex bison cmake pkg-config
 RUN pip3 install meson
 
 WORKDIR /work
