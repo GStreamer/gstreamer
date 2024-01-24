@@ -2054,15 +2054,13 @@ gst_msdkcaps_video_info_from_caps (const GstCaps * caps,
     if (!drm_info)
       goto failed;
 
-    *info = drm_info->vinfo;
+    if (!gst_video_info_dma_drm_to_video_info (drm_info, info)) {
+      gst_video_info_dma_drm_free (drm_info);
+      goto failed;
+    }
     if (modifier)
       *modifier = drm_info->drm_modifier;
 
-    /* We need to update the offset/stride in info */
-    GstVideoFormat drm_video_format =
-        gst_va_video_format_from_drm_fourcc (drm_info->drm_fourcc);
-    gst_video_info_set_format
-        (info, drm_video_format, drm_info->vinfo.width, drm_info->vinfo.height);
     gst_video_info_dma_drm_free (drm_info);
   } else
 #endif
