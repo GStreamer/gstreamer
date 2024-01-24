@@ -1750,11 +1750,30 @@ error:
   {
     GST_DEBUG_OBJECT (base, "Pausing task, reason %s", gst_flow_get_name (ret));
     if (ret == GST_FLOW_EOS) {
-      if (!GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
-              gst_event_new_eos ()))
+      GstEvent *e;
+      if (base->out_segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        gint64 stop;
+        if ((stop = base->out_segment.stop) == -1) {
+          stop = base->out_segment.position;
+        }
+        e = gst_event_new_segment_done (GST_FORMAT_TIME, stop);
+
+        GstMessage *msg = gst_message_new_segment_done (GST_OBJECT (base),
+            GST_FORMAT_TIME, stop);
+
+        if (base->last_seek_seqnum != GST_SEQNUM_INVALID) {
+          gst_message_set_seqnum (msg, base->last_seek_seqnum);
+        }
+        gst_element_post_message (GST_ELEMENT (base), msg);
+      } else {
+        e = gst_event_new_eos ();
+      }
+      GST_DEBUG_OBJECT (base, "Pushing event %" GST_PTR_FORMAT, e);
+      if (!GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, e)) {
         GST_ELEMENT_ERROR (base, STREAM, FAILED,
             (_("Internal data stream error.")),
             ("No program activated before EOS"));
+      }
     } else if (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS) {
       GST_ELEMENT_FLOW_ERROR (base, ret);
       GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, gst_event_new_eos ());
@@ -1887,17 +1906,12 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
 
     /* ref for it to be reused later */
     gst_pad_push_event (base->sinkpad, gst_event_ref (flush_event));
-    /* And actually flush our pending data but allow to preserve some info
-     * to perform the seek */
-    mpegts_base_flush (base, FALSE);
-    mpegts_packetizer_flush (base->packetizer, FALSE);
   }
 
-  if (flags & (GST_SEEK_FLAG_SEGMENT)) {
-    GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
-    goto done;
-  }
-
+  /* And actually flush our pending data but allow to preserve some info
+   * to perform the seek */
+  mpegts_base_flush (base, FALSE);
+  mpegts_packetizer_flush (base->packetizer, FALSE);
 
   /* If the subclass can seek, do that */
   ret = klass->seek (base, event);
@@ -1912,7 +1926,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, flush_event);
     flush_event = NULL;
   }
-done:
+
   if (flush_event)
     gst_event_unref (flush_event);
   gst_pad_start_task (base->sinkpad, (GstTaskFunction) mpegts_base_loop, base,

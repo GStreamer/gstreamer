@@ -943,12 +943,6 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
     goto done;
   }
 
-  if (flags & (GST_SEEK_FLAG_SEGMENT)) {
-    GST_WARNING_OBJECT (demux, "seek flags 0x%x are not supported",
-        (int) flags);
-    goto done;
-  }
-
   /* configure the segment with the seek variables */
   memcpy (&seeksegment, &base->out_segment, sizeof (GstSegment));
   GST_LOG_OBJECT (demux, "Before seek, output segment %" GST_SEGMENT_FORMAT,
@@ -1020,6 +1014,8 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
 
   /* Commit the new segment */
   memcpy (&base->out_segment, &seeksegment, sizeof (GstSegment));
+  /* And prepare to restart */
+  gst_flow_combiner_reset (demux->flowcombiner);
   res = GST_FLOW_OK;
 
 done:
