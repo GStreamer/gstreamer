@@ -15,4 +15,3 @@ cmds:
   - cmd: /harnesses/test_jpegdec
     libfuzzer: true
     sanitizer: true
-

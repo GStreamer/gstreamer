@@ -5,9 +5,6 @@ RUN pip3 install meson
 
 WORKDIR /work
 COPY . .
-#RUN meson setup builddir
-#RUN meson compile -C builddir
-#RUN meson subprojects update
 
 RUN CC=clang CXX=clang++ meson \
     --libdir=lib \
