@@ -489,7 +489,7 @@ gst_onnx_inference_transform_caps (GstBaseTransform *
       onnxClient->getWidth (), "height", G_TYPE_INT,
       onnxClient->getHeight (), NULL);
 
-  if (onnxClient->getInputImageDatatype() == GST_TENSOR_TYPE_INT8 &&
+  if (onnxClient->getInputImageDatatype() == GST_TENSOR_TYPE_UINT8 &&
       onnxClient->getInputImageScale() == 1.0 &&
       onnxClient->getInputImageOffset() == 0.0) {
     switch (onnxClient->getChannels()) {
