@@ -51,7 +51,6 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/analytics/analytics.h>
-#include "tensor/gsttensormeta.h"
 
 /* Object detection tensor id strings */
 #define GST_MODEL_OBJECT_DETECTOR_BOXES "Gst.Model.ObjectDetector.Boxes"

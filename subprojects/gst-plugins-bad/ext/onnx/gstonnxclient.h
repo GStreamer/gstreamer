@@ -23,10 +23,10 @@
 #define __GST_ONNX_CLIENT_H__
 
 #include <gst/gst.h>
+#include <gst/analytics/analytics.h>
 #include <onnxruntime_cxx_api.h>
 #include <gst/video/video.h>
 #include "gstml.h"
-#include "tensor/gsttensormeta.h"
 
 GST_DEBUG_CATEGORY_EXTERN (onnx_inference_debug);
 

@@ -19,10 +19,16 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #ifndef __GST_TENSOR_META_H__
 #define __GST_TENSOR_META_H__
 
 #include <gst/gst.h>
+#include <gst/analytics/analytics-meta-prelude.h>
 
 /**
  * GstTensorDataType:
@@ -114,9 +120,13 @@ G_BEGIN_DECLS
 #define GST_TENSOR_META_INFO \
   (gst_tensor_meta_get_info())
 
-
+GST_ANALYTICS_META_API
 GType gst_tensor_meta_api_get_type (void);
+
+GST_ANALYTICS_META_API
 const GstMetaInfo *gst_tensor_meta_get_info (void);
+
+GST_ANALYTICS_META_API
 gint gst_tensor_meta_get_index_from_id(GstTensorMeta *meta, GQuark id);
 
 G_END_DECLS

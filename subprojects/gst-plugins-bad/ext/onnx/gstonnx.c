@@ -26,7 +26,6 @@
 
 #include "decoders/gstssdobjectdetector.h"
 #include "gstonnxinference.h"
-#include "tensor/gsttensormeta.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
