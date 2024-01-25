@@ -4542,6 +4542,8 @@ _create_answer_task (GstWebRTCBin * webrtc, const GstStructure * options,
       gst_sdp_media_set_proto (media, "UDP/TLS/RTP/SAVPF");
       offer_caps = _rtp_caps_from_media (offer_media);
 
+      _remove_optional_offer_fields (offer_caps);
+
       if (last_answer && i < gst_sdp_message_medias_len (last_answer)
           && (rtp_trans = _find_transceiver_for_mid (webrtc, mid))) {
         const GstSDPMedia *last_media =
