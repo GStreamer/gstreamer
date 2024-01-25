@@ -88,9 +88,15 @@ typedef struct _GstTensorMeta
 
 G_BEGIN_DECLS
 
+#define GST_TENSOR_META_API_TYPE \
+  (gst_tensor_meta_api_get_type())
+
+#define GST_TENSOR_META_INFO \
+  (gst_tensor_meta_get_info())
+
+
 GType gst_tensor_meta_api_get_type (void);
 const GstMetaInfo *gst_tensor_meta_get_info (void);
-GList *gst_tensor_meta_get_all_from_buffer (GstBuffer * buffer);
 gint gst_tensor_meta_get_index_from_id(GstTensorMeta *meta, GQuark id);
 
 G_END_DECLS

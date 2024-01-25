@@ -224,25 +224,23 @@ static GstTensorMeta *
 gst_ssd_object_detector_get_tensor_meta (GstSsdObjectDetector * object_detector,
     GstBuffer * buf)
 {
-  GstTensorMeta *tmeta = NULL;
-  GList *tensor_metas;
-  GList *iter;
+  GstMeta *meta = NULL;
+  gpointer iter_state = NULL;
 
-  // get all tensor metas
-  tensor_metas = gst_tensor_meta_get_all_from_buffer (buf);
-  if (!tensor_metas) {
-    GST_TRACE_OBJECT (object_detector,
+  if (!gst_buffer_get_meta (buf, GST_TENSOR_META_API_TYPE)) {
+    GST_DEBUG_OBJECT (object_detector,
         "missing tensor meta from buffer %" GST_PTR_FORMAT, buf);
-    goto cleanup;
+    return NULL;
   }
 
   // find object detector meta
-  for (iter = tensor_metas; iter != NULL; iter = g_list_next (iter)) {
-    GstTensorMeta *tensor_meta = (GstTensorMeta *) iter->data;
-    gint numTensors = tensor_meta->num_tensors;
+
+  while ((meta = gst_buffer_iterate_meta_filtered (buf, &iter_state,
+              GST_TENSOR_META_API_TYPE))) {
+    GstTensorMeta *tensor_meta = (GstTensorMeta *) meta;
     /* SSD model must have either 3 or 4 output tensor nodes: 4 if there is a label node,
      * and only 3 if there is no label  */
-    if (numTensors != 3 && numTensors != 4)
+    if (tensor_meta->num_tensors != 3 && tensor_meta->num_tensors != 4)
       continue;
 
     gint boxesIndex = gst_tensor_meta_get_index_from_id (tensor_meta,
@@ -258,17 +256,13 @@ gst_ssd_object_detector_get_tensor_meta (GstSsdObjectDetector * object_detector,
         || numDetectionsIndex == GST_TENSOR_MISSING_ID)
       continue;
 
-    if (numTensors == 4 && clasesIndex == GST_TENSOR_MISSING_ID)
+    if (tensor_meta->num_tensors == 4 && clasesIndex == GST_TENSOR_MISSING_ID)
       continue;
 
-    tmeta = tensor_meta;
-    break;
+    return tensor_meta;
   }
 
-cleanup:
-  g_list_free (tensor_metas);
-
-  return tmeta;
+  return NULL;
 }
 
 static gboolean

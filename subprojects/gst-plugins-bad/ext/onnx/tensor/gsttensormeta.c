@@ -52,7 +52,8 @@ gst_tensor_meta_api_get_type (void)
   static const gchar *tags[] = { NULL };
 
   if (g_once_init_enter (&type)) {
-    type = gst_meta_api_type_register ("GstTensorMetaAPI", tags);
+    GType _type = gst_meta_api_type_register ("GstTensorMetaAPI", tags);
+    g_once_init_leave (&type, _type);
   }
   return type;
 }
@@ -74,23 +75,6 @@ gst_tensor_meta_get_info (void)
     g_once_init_leave (&tmeta_info, meta);
   }
   return tmeta_info;
-}
-
-GList *
-gst_tensor_meta_get_all_from_buffer (GstBuffer * buffer)
-{
-  GType tensor_meta_api_type = gst_tensor_meta_api_get_type ();
-  GList *tensor_metas = NULL;
-  gpointer state = NULL;
-  GstMeta *meta;
-
-  while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
-    if (meta->info->api == tensor_meta_api_type) {
-      tensor_metas = g_list_append (tensor_metas, meta);
-    }
-  }
-
-  return tensor_metas;
 }
 
 gint
