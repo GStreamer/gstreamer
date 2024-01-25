@@ -56,6 +56,8 @@ struct _GstWebpEnc
   guint speed;
   gint preset;
   gboolean animated;
+  guint animation_loops;
+  guint32 animation_background_color;
 
   gboolean use_argb;
   GstVideoFormat rgb_format;

@@ -38,6 +38,8 @@ enum
   PROP_SPEED,
   PROP_PRESET,
   PROP_ANIMATED,
+  PROP_ANIMATION_LOOPS,
+  PROP_ANIMATION_BACKGROUND_COLOR
 };
 
 #define DEFAULT_LOSSLESS FALSE
@@ -45,6 +47,8 @@ enum
 #define DEFAULT_SPEED 4
 #define DEFAULT_PRESET WEBP_PRESET_PHOTO
 #define DEFAULT_ANIMATED FALSE
+#define DEFAULT_ANIMATION_LOOPS 0
+#define DEFAULT_ANIMATION_BACKGROUND_COLOR 0
 
 static void gst_webp_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -159,10 +163,47 @@ gst_webp_enc_class_init (GstWebpEncClass * klass)
           "Preset name for visual tuning",
           GST_WEBP_ENC_PRESET_TYPE, DEFAULT_PRESET,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebpEnc:animated:
+   *
+   * Encode an animated webp, instead of several pictures.
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (gobject_class, PROP_ANIMATED,
       g_param_spec_boolean ("animated", "Animated",
           "Encode an animated webp, instead of several pictures",
           DEFAULT_ANIMATED, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebpEnc:animation-loops:
+   *
+   * The number of animation loops for the animated mode.
+   * If set to 0, the animation will loop forever.
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class, PROP_ANIMATION_LOOPS,
+      g_param_spec_uint ("animation-loops", "Animation Loops",
+          "The number of animation loops for the animated mode. "
+          "If set to 0, the animation will loop forever.", 0, G_MAXUINT,
+          DEFAULT_ANIMATION_LOOPS, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebpEnc:animation-background-color:
+   *
+   * The animation background color in ARGB order (1 byte per component).
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_ANIMATION_BACKGROUND_COLOR,
+      g_param_spec_uint ("animation-background-color",
+          "Animation Background Color",
+          "The animation background color in ARGB order (1 byte per component).",
+          0, G_MAXUINT32, DEFAULT_ANIMATION_BACKGROUND_COLOR,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_DEBUG_CATEGORY_INIT (webpenc_debug, "webpenc", 0,
       "WEBP encoding element");
@@ -180,6 +221,8 @@ gst_webp_enc_init (GstWebpEnc * webpenc)
   webpenc->speed = DEFAULT_SPEED;
   webpenc->preset = DEFAULT_PRESET;
   webpenc->animated = DEFAULT_ANIMATED;
+  webpenc->animation_loops = DEFAULT_ANIMATION_LOOPS;
+  webpenc->animation_background_color = DEFAULT_ANIMATION_BACKGROUND_COLOR;
 
   webpenc->use_argb = FALSE;
   webpenc->rgb_format = GST_VIDEO_FORMAT_UNKNOWN;
@@ -239,6 +282,9 @@ gst_webp_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
       GST_ERROR_OBJECT (enc, "Failed to initialize animation encoder options");
       return FALSE;
     }
+
+    enc_options.anim_params.bgcolor = enc->animation_background_color;
+    enc_options.anim_params.loop_count = enc->animation_loops;
 
     enc->anim_enc = WebPAnimEncoderNew (width, height, &enc_options);
     if (!enc->anim_enc) {
@@ -396,6 +442,12 @@ gst_webp_enc_set_property (GObject * object, guint prop_id,
     case PROP_ANIMATED:
       webpenc->animated = g_value_get_boolean (value);
       break;
+    case PROP_ANIMATION_LOOPS:
+      webpenc->animation_loops = g_value_get_uint (value);
+      break;
+    case PROP_ANIMATION_BACKGROUND_COLOR:
+      webpenc->animation_background_color = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -423,6 +475,12 @@ gst_webp_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ANIMATED:
       g_value_set_boolean (value, webpenc->animated);
+      break;
+    case PROP_ANIMATION_LOOPS:
+      g_value_set_uint (value, webpenc->animation_loops);
+      break;
+    case PROP_ANIMATION_BACKGROUND_COLOR:
+      g_value_set_uint (value, webpenc->animation_background_color);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
