@@ -63,6 +63,8 @@ const gchar *                 _enum_value_to_string       (GType type, guint val
 G_GNUC_INTERNAL
 const gchar *           _g_checksum_to_webrtc_string (GChecksumType type);
 G_GNUC_INTERNAL
+void                    _remove_optional_offer_fields (GstCaps *offer_caps);
+G_GNUC_INTERNAL
 GstCaps *               _rtp_caps_from_media        (const GstSDPMedia * media);
 G_GNUC_INTERNAL
 GstWebRTCKind           webrtc_kind_from_caps       (const GstCaps * caps);
