@@ -24,16 +24,12 @@
 #include "config.h"
 #endif
 
-#include "decoders/gstssdobjectdetector.h"
 #include "gstonnxinference.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  gboolean success = GST_ELEMENT_REGISTER (ssd_object_detector, plugin);
-  success |= GST_ELEMENT_REGISTER (onnx_inference, plugin);
-
-  return success;
+  return GST_ELEMENT_REGISTER (onnx_inference, plugin);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
