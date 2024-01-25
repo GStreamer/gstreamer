@@ -457,8 +457,7 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
   g_strfreev (params);
 
   if (width > MAX_SIZE || height > MAX_SIZE) {
-    GST_WARNING_OBJECT (y4mdec, "Dimensions %lux%lu out of range", width,
-        height);
+    GST_ERROR_OBJECT (y4mdec, "Dimensions %lux%lu out of range", width, height);
     return FALSE;
   }
 
@@ -517,7 +516,7 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
       y4mdec->info.interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
       break;
     default:
-      GST_WARNING_OBJECT (y4mdec, "Unknown interlaced char '%c'",
+      GST_ERROR_OBJECT (y4mdec, "Unknown interlaced char '%c'",
           interlaced_char);
       return FALSE;
       break;
@@ -718,7 +717,7 @@ gst_y4m_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     len = strlen (header);
     if (n_avail < y4mdec->info.size + len + 1) {
       /* not enough data */
-      GST_DEBUG ("not enough data for frame %d < %" G_GSIZE_FORMAT,
+      GST_TRACE ("not enough data for frame %d < %" G_GSIZE_FORMAT,
           n_avail, y4mdec->info.size + len + 1);
       break;
     }
