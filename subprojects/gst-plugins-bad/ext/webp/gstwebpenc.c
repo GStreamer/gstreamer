@@ -190,11 +190,10 @@ gst_webp_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 {
   GstWebpEnc *enc = GST_WEBP_ENC (encoder);
   GstVideoCodecState *output_state;
-  GstVideoInfo *info;
-  GstVideoFormat format;
-
-  info = &state->info;
-  format = GST_VIDEO_INFO_FORMAT (info);
+  GstVideoInfo *info = &state->info;
+  GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
+  gint width = GST_VIDEO_INFO_WIDTH (info);
+  gint height = GST_VIDEO_INFO_HEIGHT (info);
 
   if (GST_VIDEO_INFO_IS_YUV (info)) {
     switch (format) {
@@ -203,35 +202,50 @@ gst_webp_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
         enc->webp_color_space = WEBP_YUV420;
         break;
       default:
-        break;
+        GST_ERROR_OBJECT (enc, "Invalid color format");
+        return FALSE;
     }
+  } else if (GST_VIDEO_INFO_IS_RGB (info)) {
+    enc->rgb_format = format;
+    enc->use_argb = 1;
   } else {
-    if (GST_VIDEO_INFO_IS_RGB (info)) {
-      enc->rgb_format = format;
-      enc->use_argb = 1;
+    GST_ERROR_OBJECT (enc, "Invalid color format");
+    return FALSE;
+  }
+
+  if (enc->input_state) {
+    if (enc->anim_enc) {
+      gint prev_width = GST_VIDEO_INFO_WIDTH (&enc->input_state->info);
+      gint prev_height = GST_VIDEO_INFO_HEIGHT (&enc->input_state->info);
+
+      if (prev_width != width || prev_height != height) {
+        GST_ERROR_OBJECT (enc, "Image size is changing in animation mode");
+        return FALSE;
+      }
     }
-  }
 
-  if (enc->input_state)
     gst_video_codec_state_unref (enc->input_state);
+  }
   enc->input_state = gst_video_codec_state_ref (state);
-
-  if (enc->anim_enc) {
-    WebPAnimEncoderDelete (enc->anim_enc);
-    enc->anim_enc = NULL;
-  }
-
-  if (enc->animated) {
-    WebPAnimEncoderOptions enc_options = { 0 };
-    WebPAnimEncoderOptionsInit (&enc_options);
-    enc->anim_enc =
-        WebPAnimEncoderNew (info->width, info->height, &enc_options);
-  }
 
   output_state =
       gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (enc),
       gst_caps_new_empty_simple ("image/webp"), enc->input_state);
   gst_video_codec_state_unref (output_state);
+
+  if (enc->animated && !enc->anim_enc) {
+    WebPAnimEncoderOptions enc_options = { 0 };
+    if (!WebPAnimEncoderOptionsInit (&enc_options)) {
+      GST_ERROR_OBJECT (enc, "Failed to initialize animation encoder options");
+      return FALSE;
+    }
+
+    enc->anim_enc = WebPAnimEncoderNew (width, height, &enc_options);
+    if (!enc->anim_enc) {
+      GST_ERROR_OBJECT (enc, "Failed to create the animation encoder");
+      return FALSE;
+    }
+  }
 
   return TRUE;
 }
