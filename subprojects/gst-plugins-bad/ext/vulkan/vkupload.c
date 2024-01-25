@@ -1339,6 +1339,9 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
+  const VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+      | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
+      | VK_IMAGE_USAGE_STORAGE_BIT;
 
   gst_query_parse_allocation (query, &caps, NULL);
   if (!caps)
@@ -1367,6 +1370,8 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_LAYOUT_UNDEFINED, 0);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     gst_object_unref (pool);
