@@ -287,117 +287,124 @@ gst_y4m_dec_bytes_to_timestamp (GstY4mDec * y4mdec, gint64 bytes)
       gst_y4m_dec_bytes_to_frames (y4mdec, bytes));
 }
 
+static gboolean
+parse_colorspace (const char *param, GstVideoFormat * format)
+{
+  gulong iformat = strtoul (param, NULL, 10);
+  switch (iformat) {
+    case 420:
+      *format = GST_VIDEO_FORMAT_I420;
+      break;
+    case 422:
+      *format = GST_VIDEO_FORMAT_Y42B;
+      break;
+    case 444:
+      *format = GST_VIDEO_FORMAT_Y444;
+      break;
+    default:
+      return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
+parse_ratio (const char *param, gulong * n, gulong * d)
+{
+  char *end;
+  *n = strtoul (param, &end, 10);
+  if (end == param)
+    return FALSE;
+  param = end;
+  if (param[0] != ':')
+    return FALSE;
+  param++;
+  *d = strtoul (param, &end, 10);
+  if (end == param)
+    return FALSE;
+  return TRUE;
+}
 
 static gboolean
 gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
 {
-  char *end;
-  int iformat = 420;
-  int interlaced_char = 0;
-  gint fps_n = 0, fps_d = 0;
-  gint par_n = 0, par_d = 0;
-  gint width = 0, height = 0;
-  GstVideoFormat format;
+  guint len;
+  char *valid;
+  char **params;
+  const char *end;
+  guint interlaced_char = 0;
+  gulong fps_n = 0, fps_d = 0;
+  gulong par_n = 0, par_d = 0;
+  gulong width = 0, height = 0;
+  GstVideoFormat format = GST_VIDEO_FORMAT_I420;
 
   if (memcmp (header, "YUV4MPEG2 ", 10) != 0) {
+    GST_ERROR_OBJECT (y4mdec, "y4m start code not found");
     return FALSE;
   }
 
   header += 10;
-  while (*header) {
-    GST_DEBUG_OBJECT (y4mdec, "parsing at '%s'", header);
-    switch (*header) {
-      case ' ':
-        header++;
-        break;
+  g_utf8_validate (header, -1, &end);
+  if (header == end) {
+    GST_ERROR_OBJECT (y4mdec, "Empty y4m header");
+    return FALSE;
+  }
+
+  valid = g_strndup (header, end - header);
+  GST_INFO_OBJECT (y4mdec, "Found header: %s", valid);
+  params = g_strsplit (valid, " ", -1);
+  g_free (valid);
+  len = g_strv_length (params);
+
+  for (int i = 0; i < len; i++) {
+    const char *param = params[i];
+    char param_type = *param;
+    const char *param_value = param + 1;
+    switch (param_type) {
       case 'C':
-        header++;
-        iformat = strtoul (header, &end, 10);
-        if (end == header)
-          goto error;
-        header = end;
-        break;
+        if (!parse_colorspace (param_value, &format)) {
+          GST_ERROR_OBJECT (y4mdec, "Failed to parse colorspace: %s", param);
+          return FALSE;
+        }
+        continue;
       case 'W':
-        header++;
-        width = strtoul (header, &end, 10);
-        if (end == header)
-          goto error;
-        header = end;
-        break;
+        if ((width = strtoul (param_value, NULL, 10)) == 0) {
+          GST_ERROR_OBJECT (y4mdec, "Failed to parse width: %s", param);
+          return FALSE;
+        }
+        continue;
       case 'H':
-        header++;
-        height = strtoul (header, &end, 10);
-        if (end == header)
-          goto error;
-        header = end;
-        break;
+        if ((height = strtoul (param_value, NULL, 10)) == 0) {
+          GST_ERROR_OBJECT (y4mdec, "Failed to parse height: %s", param);
+          return FALSE;
+        }
+        continue;
       case 'I':
-        header++;
-        if (header[0] == 0) {
-          GST_WARNING_OBJECT (y4mdec, "Expecting interlaced flag");
+        if ((interlaced_char = param_value[0]) == 0) {
+          GST_ERROR_OBJECT (y4mdec, "Expecting interlaced flag: %s", param);
           return FALSE;
         }
-        interlaced_char = header[0];
-        header++;
-        break;
+        continue;
       case 'F':
-        header++;
-        fps_n = strtoul (header, &end, 10);
-        if (end == header)
-          goto error;
-        header = end;
-        if (header[0] != ':') {
-          GST_WARNING_OBJECT (y4mdec, "Expecting :");
+        if (!parse_ratio (param_value, &fps_n, &fps_d)) {
+          GST_ERROR_OBJECT (y4mdec, "Failed to parse framerate: %s", param);
           return FALSE;
         }
-        header++;
-        fps_d = strtoul (header, &end, 10);
-        if (end == header)
-          goto error;
-        header = end;
-        break;
+        continue;
       case 'A':
-        header++;
-        par_n = strtoul (header, &end, 10);
-        if (end == header)
-          goto error;
-        header = end;
-        if (header[0] != ':') {
-          GST_WARNING_OBJECT (y4mdec, "Expecting :");
+        if (!parse_ratio (param_value, &par_n, &par_d)) {
+          GST_ERROR_OBJECT (y4mdec, "Failed to parse PAR: %s", param);
           return FALSE;
         }
-        header++;
-        par_d = strtoul (header, &end, 10);
-        if (end == header)
-          goto error;
-        header = end;
-        break;
-      default:
-        GST_WARNING_OBJECT (y4mdec, "Unknown y4m header field '%c', ignoring",
-            *header);
-        while (*header && *header != ' ')
-          header++;
-        break;
+        continue;
     }
+    GST_WARNING_OBJECT (y4mdec, "Unknown y4m param field '%s', ignoring",
+        param);
   }
+  g_strfreev (params);
 
-  switch (iformat) {
-    case 420:
-      format = GST_VIDEO_FORMAT_I420;
-      break;
-    case 422:
-      format = GST_VIDEO_FORMAT_Y42B;
-      break;
-    case 444:
-      format = GST_VIDEO_FORMAT_Y444;
-      break;
-    default:
-      GST_WARNING_OBJECT (y4mdec, "unknown y4m format %d", iformat);
-      return FALSE;
-  }
-
-  if (width <= 0 || width > MAX_SIZE || height <= 0 || height > MAX_SIZE) {
-    GST_WARNING_OBJECT (y4mdec, "Dimensions %dx%d out of range", width, height);
+  if (width > MAX_SIZE || height > MAX_SIZE) {
+    GST_WARNING_OBJECT (y4mdec, "Dimensions %lux%lu out of range", width,
+        height);
     return FALSE;
   }
 
@@ -478,9 +485,6 @@ gst_y4m_dec_parse_header (GstY4mDec * y4mdec, char *header)
   y4mdec->info.par_d = par_d;
 
   return TRUE;
-error:
-  GST_WARNING_OBJECT (y4mdec, "Expecting number y4m header at '%s'", header);
-  return FALSE;
 }
 
 static GstFlowReturn
