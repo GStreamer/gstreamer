@@ -22,8 +22,6 @@
 
 #include "gsttensormeta.h"
 
-#include "gsttensor.h"
-
 static gboolean
 gst_tensor_meta_init (GstMeta * meta, gpointer params, GstBuffer * buffer)
 {
