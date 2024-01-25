@@ -96,7 +96,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
     return inputImageFormat;
   }
 
-  void GstOnnxClient::setInputImageDatatype(GstTensorType datatype)
+  void GstOnnxClient::setInputImageDatatype(GstTensorDataType datatype)
   {
     inputDatatype = datatype;
     switch (inputDatatype) {
@@ -144,7 +144,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
     return inputTensorScale;
   }
 
-  GstTensorType GstOnnxClient::getInputImageDatatype(void)
+  GstTensorDataType GstOnnxClient::getInputImageDatatype(void)
   {
     return inputDatatype;
   }

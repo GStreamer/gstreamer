@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 
 /**
- * GstTensorType:
+ * GstTensorDataType:
  *
  * @GST_TENSOR_TYPE_INT4 signed 4 bit integer tensor data
  * @GST_TENSOR_TYPE_INT8 signed 8 bit integer tensor data
@@ -42,9 +42,11 @@
  * @GST_TENSOR_TYPE_FLOAT64 64 bit floating point tensor data
  * @GST_TENSOR_TYPE_BFLOAT16 "brain" 16 bit floating point tensor data
  *
+ * Describe the type of data contain in the tensor.
+ *
  * Since: 1.24
  */
-typedef enum _GstTensorType
+typedef enum _GstTensorDataType
 {
   GST_TENSOR_TYPE_INT4,
   GST_TENSOR_TYPE_INT8,
@@ -60,17 +62,17 @@ typedef enum _GstTensorType
   GST_TENSOR_TYPE_FLOAT32,
   GST_TENSOR_TYPE_FLOAT64,
   GST_TENSOR_TYPE_BFLOAT16,
-} GstTensorType;
+} GstTensorDataType;
 
 
 /**
  * GstTensor:
  *
- * @id unique tensor identifier
- * @num_dims number of tensor dimensions
- * @dims tensor dimensions
- * @type @ref GstTensorType of tensor data
- * @data @ref GstBuffer holding tensor data
+ * @id: semantically identify the contents of the tensor
+ * @num_dims: number of tensor dimensions
+ * @dims: tensor dimensions
+ * @type: #GstTensorDataType of tensor data
+ * @data: #GstBuffer holding tensor data
  *
  * Since: 1.24
  */
@@ -79,7 +81,7 @@ typedef struct _GstTensor
   GQuark id;
   gint num_dims;
   int64_t *dims;
-  GstTensorType type;
+  GstTensorDataType data_type;
   GstBuffer *data;
 } GstTensor;
 

@@ -56,7 +56,7 @@ namespace GstOnnxNamespace {
     bool hasSession(void);
     void setInputImageFormat(GstMlInputImageFormat format);
     GstMlInputImageFormat getInputImageFormat(void);
-    GstTensorType getInputImageDatatype(void);
+    GstTensorDataType getInputImageDatatype(void);
     void setInputImageOffset (float offset);
     float getInputImageOffset ();
     void setInputImageScale (float offset);
@@ -73,7 +73,7 @@ namespace GstOnnxNamespace {
   private:
 
     GstElement *debug_parent;
-    void setInputImageDatatype (GstTensorType datatype);
+    void setInputImageDatatype (GstTensorDataType datatype);
     template < typename T>
     void convert_image_remove_alpha (T *dest, GstMlInputImageFormat hwc,
         uint8_t **srcPtr, uint32_t srcSamplesPerPixel, uint32_t stride, T offset, T div);
@@ -91,7 +91,7 @@ namespace GstOnnxNamespace {
     std::vector < Ort::AllocatedStringPtr > outputNames;
     std::vector < GQuark > outputIds;
     GstMlInputImageFormat inputImageFormat;
-    GstTensorType inputDatatype;
+    GstTensorDataType inputDatatype;
     size_t inputDatatypeSize;
     bool fixedInputImageSize;
     float inputTensorOffset;

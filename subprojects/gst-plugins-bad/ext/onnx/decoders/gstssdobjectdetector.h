@@ -37,14 +37,11 @@ G_DECLARE_FINAL_TYPE (GstSsdObjectDetector, gst_ssd_object_detector, GST, SSD_OB
 #define GST_SSD_OBJECT_DETECTOR_META_FIELD_LABEL "label"
 #define GST_SSD_OBJECT_DETECTOR_META_FIELD_SCORE "score"
 
-/**
+/*
  * GstSsdObjectDetector:
  *
  * @label_file label file
  * @score_threshold score threshold
- * @confidence_threshold confidence threshold
- * @iou_threhsold iou threshold
- * @od_ptr opaque pointer to GstOd object detection implementation
  *
  * Since: 1.20
  */
@@ -52,11 +49,8 @@ struct _GstSsdObjectDetector
 {
   GstBaseTransform basetransform;
   gchar *label_file;
-  gchar **labels;
+  GArray *labels;
   gfloat score_threshold;
-  gfloat confidence_threshold;
-  gfloat iou_threshold;
-  gpointer odutils;
   GstVideoInfo video_info;
 };
 
