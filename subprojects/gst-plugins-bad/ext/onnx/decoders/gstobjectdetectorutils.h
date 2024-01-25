@@ -29,6 +29,8 @@
 #include "gstml.h"
 #include "tensor/gsttensormeta.h"
 
+char ** read_labels (const char * labels_file);
+
 /* Object detection tensor id strings */
 #define GST_MODEL_OBJECT_DETECTOR_BOXES "Gst.Model.ObjectDetector.Boxes"
 #define GST_MODEL_OBJECT_DETECTOR_SCORES "Gst.Model.ObjectDetector.Scores"
@@ -68,14 +70,13 @@ namespace GstObjectDetectorUtils {
     ~GstObjectDetectorUtils(void) = default;
     std::vector < GstMlBoundingBox > run(int32_t w, int32_t h,
     									GstTensorMeta *tmeta,
-                                          std::string labelPath,
+                                          char **labels,
                                           float scoreThreshold);
   private:
     template < typename T > std::vector < GstMlBoundingBox >
     doRun(int32_t w, int32_t h,
-    		GstTensorMeta *tmeta, std::string labelPath,
+    		GstTensorMeta *tmeta, char **labels,
             float scoreThreshold);
-    std::vector < std::string > ReadLabels(const std::string & labelsFile);
   };
 }
 

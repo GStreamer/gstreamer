@@ -52,6 +52,7 @@ struct _GstSsdObjectDetector
 {
   GstBaseTransform basetransform;
   gchar *label_file;
+  gchar **labels;
   gfloat score_threshold;
   gfloat confidence_threshold;
   gfloat iou_threshold;

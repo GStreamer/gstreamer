@@ -22,7 +22,56 @@
 
 #include "gstobjectdetectorutils.h"
 
-#include <fstream>
+#include <gio/gio.h>
+
+
+char **
+read_labels (const char * labels_file)
+{
+  GPtrArray *array;
+  GFile *file = g_file_new_for_path (labels_file);
+  GFileInputStream *file_stream;
+  GDataInputStream *data_stream;
+  GError *error = NULL;
+  gchar *line;
+
+  file_stream = g_file_read (file, NULL, &error);
+  g_object_unref (file);
+  if (!file_stream) {
+    GST_WARNING ("Could not open file %s: %s\n", labels_file,
+		 error->message);
+    g_clear_error (&error);
+    return NULL;
+  }
+
+  data_stream = g_data_input_stream_new (G_INPUT_STREAM (file_stream));
+  g_object_unref (file_stream);
+
+  array = g_ptr_array_new();
+
+  while ((line = g_data_input_stream_read_line (data_stream, NULL, NULL,
+						&error)))
+    g_ptr_array_add (array, line);
+
+  g_object_unref (data_stream);
+
+  if (error) {
+    GST_WARNING ("Could not open file %s: %s", labels_file, error->message);
+    g_ptr_array_free (array, TRUE);
+    g_clear_error (&error);
+    return NULL;
+  }
+
+  if (array->len == 0) {
+    g_ptr_array_free (array, TRUE);
+    return NULL;
+  }
+
+  g_ptr_array_add (array, NULL);
+
+  return (char **) g_ptr_array_free (array, FALSE);
+}
+
 
 GstMlBoundingBox::GstMlBoundingBox (std::string lbl, float score, float _x0,
     float _y0, float _width, float _height):
@@ -47,20 +96,9 @@ namespace GstObjectDetectorUtils
   {
   }
 
-  std::vector < std::string >
-      GstObjectDetectorUtils::ReadLabels (const std::string & labelsFile)
-  {
-    std::vector < std::string > labels;
-    std::string line;
-    std::ifstream fp (labelsFile);
-    while (std::getline (fp, line))
-      labels.push_back (line);
-
-    return labels;
-  }
 
   std::vector < GstMlBoundingBox > GstObjectDetectorUtils::run (int32_t w,
-      int32_t h, GstTensorMeta * tmeta, std::string labelPath,
+      int32_t h, GstTensorMeta * tmeta, gchar **labels,
       float scoreThreshold)
   {
 
@@ -72,18 +110,17 @@ namespace GstObjectDetectorUtils
     }
     auto type = tmeta->tensor[classIndex].type;
     return (type == GST_TENSOR_TYPE_FLOAT32) ?
-        doRun < float >(w, h, tmeta, labelPath, scoreThreshold)
-    : doRun < int >(w, h, tmeta, labelPath, scoreThreshold);
+        doRun < float >(w, h, tmeta, labels, scoreThreshold)
+    : doRun < int >(w, h, tmeta, labels, scoreThreshold);
   }
 
   template < typename T > std::vector < GstMlBoundingBox >
       GstObjectDetectorUtils::doRun (int32_t w, int32_t h,
-      GstTensorMeta * tmeta, std::string labelPath, float scoreThreshold)
+      GstTensorMeta * tmeta, char **labels, float scoreThreshold)
   {
     std::vector < GstMlBoundingBox > boundingBoxes;
     GstMapInfo map_info[GstObjectDetectorMaxNodes];
     GstMemory *memory[GstObjectDetectorMaxNodes] = { NULL };
-    std::vector < std::string > labels;
     gint index;
     T *numDetections = nullptr, *bboxes = nullptr, *scores =
         nullptr, *labelIndex = nullptr;
@@ -162,15 +199,12 @@ namespace GstObjectDetectorUtils
       labelIndex = (T *) map_info[index].data;
     }
 
-    if (!labelPath.empty ())
-      labels = ReadLabels (labelPath);
-
     for (int i = 0; i < numDetections[0]; ++i) {
       if (scores[i] > scoreThreshold) {
         std::string label = "";
 
-        if (labelIndex && !labels.empty ())
-          label = labels[labelIndex[i] - 1];
+        if (labels && labelIndex)
+          label = labels[(int)labelIndex[i] - 1];
         auto score = scores[i];
         auto y0 = bboxes[i * 4] * h;
         auto x0 = bboxes[i * 4 + 1] * w;

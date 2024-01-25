@@ -164,6 +164,7 @@ gst_ssd_object_detector_finalize (GObject * object)
   GstSsdObjectDetector *self = GST_SSD_OBJECT_DETECTOR (object);
 
   g_free (self->label_file);
+  g_strfreev (self->labels);
   delete GST_ODUTILS_MEMBER (self);
 
   G_OBJECT_CLASS (gst_ssd_object_detector_parent_class)->finalize (object);
@@ -178,14 +179,20 @@ gst_ssd_object_detector_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LABEL_FILE:
-      filename = g_value_get_string (value);
-      if (filename
-          && g_file_test (filename,
-              (GFileTest) (G_FILE_TEST_EXISTS | G_FILE_TEST_IS_REGULAR))) {
-        g_free (self->label_file);
-        self->label_file = g_strdup (filename);
-      } else {
-        GST_WARNING_OBJECT (self, "Label file '%s' not found!", filename);
+      {
+	gchar **labels;
+
+	filename = g_value_get_string (value);
+	labels = read_labels (filename);
+
+	if (labels) {
+	  g_free (self->label_file);
+	  self->label_file = g_strdup (filename);
+	  g_strfreev (self->labels);
+	  self->labels = labels;
+	} else {
+	  GST_WARNING_OBJECT (self, "Label file '%s' not found!", filename);
+	}
       }
       break;
     case PROP_SCORE_THRESHOLD:
@@ -313,7 +320,7 @@ gst_ssd_object_detector_process (GstBaseTransform * trans, GstBuffer * buf)
 
   std::vector < GstMlBoundingBox > boxes =
       GST_ODUTILS_MEMBER (self)->run (self->video_info.width,
-      self->video_info.height, tmeta, self->label_file ? self->label_file : "",
+      self->video_info.height, tmeta, self->labels,
       self->score_threshold);
 
   for (auto & b:boxes) {
