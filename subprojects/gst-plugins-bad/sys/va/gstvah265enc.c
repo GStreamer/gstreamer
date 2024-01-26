@@ -715,9 +715,7 @@ static gboolean
 _h265_fill_vps (GstVaH265Enc * self,
     const VAEncSequenceParameterBufferHEVC * seq_param)
 {
-  guint max_dec_pic_buffering =
-      self->gop.num_ref_frames + 1 < self->gop.max_dpb_size ?
-      self->gop.num_ref_frames + 1 : self->gop.max_dpb_size;
+  guint max_dec_pic_buffering = self->gop.max_dpb_size;
 
   /* *INDENT-OFF* */
   self->vps_hdr = (GstH265VPS) {
@@ -749,9 +747,7 @@ static gboolean
 _h265_fill_sps (GstVaH265Enc * self,
     const VAEncSequenceParameterBufferHEVC * seq_param)
 {
-  guint max_dec_pic_buffering =
-      self->gop.num_ref_frames + 1 < self->gop.max_dpb_size ?
-      self->gop.num_ref_frames + 1 : self->gop.max_dpb_size;
+  guint max_dec_pic_buffering = self->gop.max_dpb_size;
 
   g_assert (self->gop.log2_max_pic_order_cnt >= 4);
   /* *INDENT-OFF* */
@@ -1474,6 +1470,8 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
     if (frame->type == GST_H265_B_SLICE) {
       hierarchical_level_plus1 += 1;
       hierarchical_level_plus1 += frame->pyramid_level;
+      /* So far only 3 level hint is supported in driver. */
+      hierarchical_level_plus1 = MIN (hierarchical_level_plus1, 4);
     }
   }
 
@@ -1555,7 +1553,7 @@ _h265_fill_picture_parameter (GstVaH265Enc * self, GstVaH265EncFrame * frame,
       return FALSE;
     }
 
-    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.num_ref_frames);
+    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.max_dpb_size);
 
     /* ref frames in queue are already sorted by poc. */
     for (; i < g_queue_get_length (&base->ref_list); i++) {
@@ -1931,6 +1929,7 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
       if (vaf->poc > frame->poc)
         continue;
 
+      g_assert (vaf->is_ref);
       list_forward[list_forward_num] = vaf;
       list_forward_num++;
     }
@@ -1968,6 +1967,7 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
       if (vaf->poc < frame->poc)
         continue;
 
+      g_assert (vaf->is_ref);
       list_backward[list_backward_num] = vaf;
       list_backward_num++;
     }
@@ -1995,7 +1995,7 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
     }
   }
 
-  g_assert (list_forward_num + list_backward_num <= self->gop.num_ref_frames);
+  g_assert (list_forward_num + list_backward_num <= self->gop.max_dpb_size);
 
   if (!_h265_fill_picture_parameter (self, frame, &pic_param, collocated_poc))
     return FALSE;
@@ -2309,7 +2309,7 @@ _h265_find_unused_reference_frame (GstVaH265Enc * self,
   guint i;
 
   /* We still have more space. */
-  if (g_queue_get_length (&base->ref_list) < self->gop.num_ref_frames)
+  if (g_queue_get_length (&base->ref_list) < self->gop.max_dpb_size - 1)
     return NULL;
 
   /* Not b_pyramid, sliding window is enough. */
@@ -2413,7 +2413,7 @@ gst_va_h265_enc_encode_frame (GstVaBaseEnc * base,
     g_queue_push_tail (&base->ref_list, gst_video_codec_frame_ref (gst_frame));
     g_queue_sort (&base->ref_list, _sort_by_poc, NULL);
 
-    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.num_ref_frames);
+    g_assert (g_queue_get_length (&base->ref_list) <= self->gop.max_dpb_size);
   }
 
   return GST_FLOW_OK;
@@ -3838,7 +3838,7 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
   }
 
   /* b_pyramid needs at least 1 ref for B, besides the I/P */
-  if (self->gop.b_pyramid && self->gop.num_ref_frames <= 2) {
+  if (self->gop.b_pyramid && self->gop.num_ref_frames <= 1) {
     GST_INFO_OBJECT (self, "The number of reference frames is only %d,"
         " not enough for b_pyramid", self->gop.num_ref_frames);
     self->gop.b_pyramid = FALSE;
@@ -3882,7 +3882,6 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
     self->gop.backward_ref_num = 0;
   } else if (self->gop.b_pyramid) {
     guint b_frames = self->gop.num_bframes;
-    guint b_refs;
 
     /* set b pyramid one backward ref. */
     self->gop.backward_ref_num = 1;
@@ -3902,12 +3901,13 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
         self->gop.forward_ref_num = forward_num;
     }
 
+    self->gop.highest_pyramid_level = 0;
     b_frames = b_frames / 2;
-    b_refs = 0;
     while (b_frames) {
-      /* At least 1 B ref for each level, plus begin and end 2 P/I */
-      b_refs += 1;
-      if (b_refs + 2 > self->gop.num_ref_frames)
+      /* All the ref pictures and the current picture should be in the
+         DPB. So each B level as ref, plus the IDR or P in both ends
+         and the current picture should not exceed the max_dpb_size. */
+      if (self->gop.highest_pyramid_level + 2 + 1 == 16)
         break;
 
       self->gop.highest_pyramid_level++;
@@ -3971,13 +3971,12 @@ create_poc:
   self->gop.log2_max_pic_order_cnt = log2_max_frame_num;
   self->gop.max_pic_order_cnt = 1 << self->gop.log2_max_pic_order_cnt;
   self->gop.num_reorder_frames = self->gop.b_pyramid ?
-      self->gop.highest_pyramid_level * 2 + 1 /* the last P frame. */ :
+      self->gop.highest_pyramid_level + 1 /* the last P frame. */ :
       self->gop.backward_ref_num;
-  /* Should not exceed the max ref num. */
-  self->gop.num_reorder_frames =
-      MIN (self->gop.num_reorder_frames, self->gop.num_ref_frames);
   self->gop.num_reorder_frames = MIN (self->gop.num_reorder_frames, 16);
-  self->gop.max_dpb_size = self->gop.num_ref_frames + 1;
+  self->gop.max_dpb_size = self->gop.b_pyramid ?
+      self->gop.highest_pyramid_level + 2 + 1 : self->gop.num_ref_frames + 1;
+  g_assert (self->gop.max_dpb_size <= 16);
 
   _h265_create_gop_frame_types (self);
   _h265_print_gop_structure (self);
@@ -4534,7 +4533,9 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   self->aud = self->aud && self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA;
   update_property_bool (base, &self->prop.aud, self->aud, PROP_AUD);
 
-  max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
+  max_ref_frames = self->gop.b_pyramid ?
+      self->gop.highest_pyramid_level + 2 : self->gop.num_ref_frames;
+  max_ref_frames += 3 /* scratch frames */ ;
 
   /* second check after calculations */
   do_reopen |=
