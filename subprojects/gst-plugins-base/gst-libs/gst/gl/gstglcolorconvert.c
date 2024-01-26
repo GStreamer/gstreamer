@@ -2291,7 +2291,7 @@ _RGB_to_YUV (GstGLColorConvert * convert)
       break;
   }
 
-  if (gst_video_colorimetry_matches (&convert->in_info.colorimetry,
+  if (gst_video_colorimetry_matches (&convert->out_info.colorimetry,
           GST_VIDEO_COLORIMETRY_BT709)) {
     info->cms_offset = (gfloat *) from_rgb_bt709_offset;
     info->cms_coeff1 = (gfloat *) from_rgb_bt709_ycoeff;
