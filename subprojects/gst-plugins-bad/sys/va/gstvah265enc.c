@@ -3960,6 +3960,14 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
 create_poc:
   /* init max_frame_num, max_poc */
   log2_max_frame_num = _get_log2_max_num (self->gop.idr_period);
+  /* b_pyramid makes B frames as ref and prevPicOrderCntLsb can
+     be the B frame POC which is smaller than the P frame. This
+     can cause POC diff bigger than MaxPicOrderCntLsb/2 and
+     generate wrong POC value. */
+  if (self->gop.b_pyramid &&
+      3 * (self->gop.ip_period >> 1) > 1 << (log2_max_frame_num - 1))
+    log2_max_frame_num++;
+
   self->gop.log2_max_pic_order_cnt = log2_max_frame_num;
   self->gop.max_pic_order_cnt = 1 << self->gop.log2_max_pic_order_cnt;
   self->gop.num_reorder_frames = self->gop.b_pyramid ?
