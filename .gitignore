@@ -5,9 +5,6 @@ __pycache__
 prefix/
 .gdbinit
 
-#hacking
-mayhem2/
-
 # Editor/IDE spcific
 .vscode/
 .vscode-server/

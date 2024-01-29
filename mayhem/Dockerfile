@@ -43,4 +43,5 @@ RUN CC=clang CXX=clang++ meson \
 RUN CC=clang CXX=clang++ ninja -C builddir
 
 FROM ubuntu
-COPY --from=builder /work/builddir/ /
+RUN apt update -y && apt install -y strace gdb libgstreamer1.0-dev 
+COPY --from=builder /work/builddir/harnesses/test_jpegdec /

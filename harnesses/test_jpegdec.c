@@ -8,7 +8,7 @@
  #include <glib.h>
  #include <gst/gst.h>
  #include <gio/gio.h>
- //#include <gst/check/gstcheck.h>
+ #include <gst/check/gstcheck.h>
  #include <gst/app/gstappsink.h>
  //#include <gst/pbutils/gstdiscoverer.h>
 
@@ -44,15 +44,13 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
 
   /* construct a pipeline that explicitly uses jpegdec */
   pipeline = gst_pipeline_new (NULL);
+  g_assert (pipeline);
   source = gst_element_factory_make ("appsrc", NULL);
+  g_assert (source);
   dec = gst_element_factory_make ("jpegdec", NULL);
+  g_assert (dec);
   sink = gst_element_factory_make ("appsink", NULL);
-
-  if (!pipeline || !source || !dec || !sink )
-  {
-    g_printerr ("Not all elements could be created.\n");
-    return -1;
-  }
+  g_assert (sink);
 
   gst_bin_add_many (GST_BIN (pipeline), source, dec, sink, NULL);
   gst_element_link_many (source, dec, sink, NULL);
@@ -72,10 +70,10 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
   gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, -1);
 
   // Need to include gst-check somehow...
-  //sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
-  //fail_unless (GST_IS_SAMPLE (sample));
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
+  fail_unless (GST_IS_SAMPLE (sample));
 
-  /* do some basic checks to verify image decoding
+  /* do some basic checks to verify image decoding */
   {
     GstCaps *decoded;
     GstCaps *expected;
@@ -83,12 +81,11 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
     decoded = gst_sample_get_caps (sample);
     expected = gst_caps_from_string ("video/x-raw, width=120, height=160");
 
-    //fail_unless (gst_caps_is_always_compatible (decoded, expected));
+    fail_unless (gst_caps_is_always_compatible (decoded, expected));
 
     gst_caps_unref (expected);
   }
   gst_sample_unref (sample);
-  */
 
   /* Go back to NULL */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
