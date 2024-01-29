@@ -306,6 +306,8 @@ typedef struct
 #define cuGraphicsResourceGetMappedPointer cuGraphicsResourceGetMappedPointer_v2
 #define cuGraphicsResourceSetMapFlags cuGraphicsResourceSetMapFlags_v2
 
+#define cuStreamDestroy cuStreamDestroy_v2
+
 #define cuMemAlloc cuMemAlloc_v2
 #define cuMemAllocPitch cuMemAllocPitch_v2
 #define cuMemAllocHost  cuMemAllocHost_v2
