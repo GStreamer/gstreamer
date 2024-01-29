@@ -23,6 +23,7 @@ nvcodec_sources = [
   'gstnvh265dec.cpp',
   'gstnvh265enc.c',
   'gstnvh265encoder.cpp',
+  'gstnvjpegenc.cpp',
   'gstnvvp8dec.cpp',
   'gstnvvp9dec.cpp',
   'plugin.c',

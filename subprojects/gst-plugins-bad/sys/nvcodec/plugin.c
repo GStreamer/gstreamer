@@ -52,6 +52,7 @@
 #include "gstcudaipcsink.h"
 #include "gstcudaipcsrc.h"
 #include "gstnvcodecutils.h"
+#include "gstnvjpegenc.h"
 
 GST_DEBUG_CATEGORY (gst_nvcodec_debug);
 GST_DEBUG_CATEGORY (gst_nvdec_debug);
@@ -271,6 +272,8 @@ plugin_init (GstPlugin * plugin)
 
       gst_nvenc_plugin_init (plugin, i, cuda_ctx);
     }
+
+    gst_nv_jpeg_enc_register (plugin, context, GST_RANK_NONE, have_nvrtc);
 
     gst_object_unref (context);
   }
