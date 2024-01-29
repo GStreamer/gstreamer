@@ -1129,10 +1129,6 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       h264parse->header = TRUE;
       break;
     case GST_H264_NAL_SEI:
-      /* expected state: got-sps */
-      if (!GST_H264_PARSE_STATE_VALID (h264parse, GST_H264_PARSE_STATE_GOT_SPS))
-        return FALSE;
-
       h264parse->header = TRUE;
       gst_h264_parse_process_sei (h264parse, nalu);
       /* mark SEI pos */
