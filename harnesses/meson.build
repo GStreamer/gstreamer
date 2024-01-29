@@ -18,8 +18,8 @@ gstnet_dep = dependency('gstreamer-net-1.0', version : gst_req,
   fallback : ['gstreamer', 'gst_net_dep'])
 #gstcontroller_dep = dependency('gstreamer-controller-1.0', version : gst_req,
 #  fallback : ['gstreamer', 'gst_controller_dep'])
-gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
-  fallback : ['gstreamer', 'gst_check_dep'])
+#gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
+#  fallback : ['gstreamer', 'gst_check_dep'])
 gstpbutils_dep = dependency('gstreamer-pbutils-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'pbutils_dep'])
 #gstallocators_dep = dependency('gstreamer-allocators-1.0', version : gst_req,
@@ -44,7 +44,7 @@ gstvideo_dep = dependency('gstreamer-video-1.0', version : gst_req,
     fallback : ['gst-plugins-base', 'video_dep'])
 gio_dep = dependency('gio-2.0', version: glib_req)
 
-common_deps = [gst_dep, gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep,
+common_deps = [gst_dep, gst_dep, gstbase_dep, gstnet_dep, #gstcheck_dep,
   gstvideo_dep, gstpbutils_dep, gstrtp_dep, gstrtsp_dep, gsttag_dep,
   gstapp_dep, gio_dep]
 
