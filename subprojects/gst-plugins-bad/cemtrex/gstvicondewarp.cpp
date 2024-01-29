@@ -79,21 +79,27 @@ InputOutputBuffers::~InputOutputBuffers()
 
 void InputOutputBuffers::reset()
 {
-	if (m_outputBuffer == nullptr)
+	if (m_outputBuffer != nullptr)
 	{
-		return;
+    gst_buffer_unmap(m_outputBuffer, &m_outputMap);
+    gst_buffer_unref(m_outputBuffer);
+    m_outputBuffer = nullptr;
 	}
-	gst_buffer_unmap(m_outputBuffer, &m_outputMap);
-	gst_buffer_unmap(m_inputBuffer, &m_inputMap);
-	gst_buffer_unref(m_outputBuffer);
-	m_outputBuffer = nullptr;
+
+  if (m_inputBuffer != nullptr)
+  {
+    gst_buffer_unmap(m_inputBuffer, &m_inputMap);
+    gst_buffer_unref(m_inputBuffer);
+    m_inputBuffer = nullptr;
+  }
 }
 
 bool InputOutputBuffers::setInputBuffer(GstBuffer* inputBuffer, int width, int height)
 {
 	m_width = width;
 	m_height = height;
-	m_inputBuffer = inputBuffer;
+  reset();
+	m_inputBuffer = gst_buffer_ref (inputBuffer);
 
 	if (gst_buffer_map(inputBuffer, &m_inputMap, (GstMapFlags)(GST_MAP_READ)) == FALSE)
 	{
@@ -157,7 +163,7 @@ int InputOutputBuffers::height()
 
 GstBuffer* InputOutputBuffers::outputTransferFull()
 {
-	auto* outputBuffer = m_outputBuffer;
+  GstBuffer* outputBuffer = m_outputBuffer;
 	gst_buffer_unmap(m_outputBuffer, &m_outputMap);
 	gst_buffer_unmap(m_inputBuffer, &m_inputMap);
 	gst_buffer_unref(m_inputBuffer);
@@ -262,32 +268,48 @@ std::string DewarpPlugin::getLensName()
 bool DewarpPlugin::calibrateLens(std::string format, int width, int height, GstCaps* caps, GstBuffer* originalInputBuffer)
 {
 	auto colorFormat = string2ColorFormat(format);
-	GstBuffer* inputBuffer = nullptr;
 	m_acsInfo = "";
 	m_camera->SetACS(nullptr);
 
-	if (colorFormat != IMV_Defs::E_RGBA_32_STD)
+  m_camera->SetLens((char*)m_lensName.c_str());
+  m_camera->SetZoomLimits(23.f, 180.f);
+  m_camera->SetNavigationType(IMV_Defs::E_NAV_360xFOV_LOCKED);
+
+  if (colorFormat == IMV_Defs::E_RGBA_32_STD)
+  {
+    if (!m_buffers.setInputBuffer(originalInputBuffer, width, height))
+      return false;
+  }
+  else
 	{
-		GError* errMsg;
+    bool ok = false;
+    GstCaps* toCaps = nullptr;
+    GstSample* toSample = nullptr;
+    GstSample* fromSample = nullptr;
+
 		// Calibration using a different format is not as efficient as RGBA
-		GstCaps* toCaps = gst_caps_from_string("video/x-raw(memory:D3D11Memory), format = (string)RGBA");
-		auto* fromSample = gst_sample_new(originalInputBuffer, caps, NULL, NULL);
-		auto* toSample = gst_video_convert_sample(fromSample, toCaps, GST_CLOCK_TIME_NONE, &errMsg);
-		inputBuffer = gst_sample_get_buffer(toSample);
-		colorFormat = IMV_Defs::E_RGBA_32_STD;
-	}
+    do {
+      toCaps = gst_caps_from_string("video/x-raw(memory:D3D11Memory), format = (string)RGBA");
+      fromSample = gst_sample_new(originalInputBuffer, caps, NULL, NULL);
+      if (fromSample == nullptr)
+        break;
+      toSample = gst_video_convert_sample(fromSample, toCaps, GST_CLOCK_TIME_NONE, NULL);
+      if (toSample == nullptr)
+        break;
 
-	m_camera->SetLens((char*)m_lensName.c_str());
-	m_camera->SetZoomLimits(23.f, 180.f);
-	m_camera->SetNavigationType(IMV_Defs::E_NAV_360xFOV_LOCKED);
+      ok = m_buffers.setInputBuffer(gst_sample_get_buffer(toSample), width, height);
+    } while (0);
 
-	if (!m_buffers.setInputBuffer(inputBuffer == nullptr ? originalInputBuffer : inputBuffer, width, height))
-	{
-		if (inputBuffer == nullptr)
-		{
-			gst_buffer_unref(inputBuffer);
-		}
-		return false;
+    if (toSample)
+      gst_sample_unref(toSample);
+    if (fromSample)
+      gst_sample_unref(fromSample);
+    if (toCaps)
+      gst_caps_unref(toCaps);
+    if (!ok)
+      return false;
+
+    colorFormat = IMV_Defs::E_RGBA_32_STD;
 	}
 
 	auto result = m_camera->SetVideoParams(m_buffers.in(), m_buffers.out(), colorFormat, m_viewType, m_mountPos);
@@ -517,6 +539,7 @@ gst_vicondewarp_finalize(GObject* object)
 	if (thiz->properties != NULL) {
 		gst_structure_free(thiz->properties);
 	}
+  gst_caps_replace(&thiz->inputCaps, NULL);
 	G_OBJECT_CLASS(parent_class)->finalize(object);
 }
 
@@ -600,10 +623,7 @@ gst_vicondewarp_sink_event(GstPad* pad, GstObject* parent,
 	{
 		GstCaps* caps;
 		gst_event_parse_caps(event, &caps);
-		if (thiz->inputCaps != nullptr) {
-			gst_caps_unref(thiz->inputCaps);
-		}
-		thiz->inputCaps = gst_caps_copy(caps);
+    gst_caps_replace(&thiz->inputCaps, caps);
 		ret = gst_pad_event_default(pad, parent, event);
 		break;
 	}
@@ -620,28 +640,26 @@ gst_vicondewarp_sink_event(GstPad* pad, GstObject* parent,
 static GstFlowReturn
 gst_vicondewarp_chain(GstPad* pad, GstObject* parent, GstBuffer* buffer)
 {
-  GstFlowReturn flow_return;
-
 	auto* thiz = GST_VICONDEWARP(parent);
 	if (thiz == nullptr)
 	{
-		flow_return = gst_pad_push(pad, buffer);
+		return gst_pad_push(pad, buffer);
 	}
 	else
 	{
 		if (thiz != nullptr && thiz->plugin != nullptr)
 		{
-      flow_return = thiz->plugin->chain(thiz->srcpad, thiz->inputCaps, buffer);
-      if (flow_return != GST_FLOW_CUSTOM_ERROR_2) return flow_return;
+      GstFlowReturn flow_return;
 
-			/*{
-				return GST_FLOW_OK;
-			}*/
+      flow_return = thiz->plugin->chain(thiz->srcpad, thiz->inputCaps, buffer);
+      if (flow_return != GST_FLOW_CUSTOM_ERROR_2) {
+        gst_buffer_unref(buffer);
+        return flow_return;
+      }
 		}
-    flow_return = gst_pad_push(thiz->srcpad, buffer);
 	}
 
-	return flow_return;
+	return gst_pad_push(thiz->srcpad, buffer);
 }
 
 /* entry point to initialize the plug-in

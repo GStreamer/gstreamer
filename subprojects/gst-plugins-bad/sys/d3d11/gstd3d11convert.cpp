@@ -2237,9 +2237,9 @@ gst_d3d11_base_convert_set_bilinear_filtering(GstD3D11BaseConvert* self,
   GstD3D11SRWLockGuard lk (&self->lock);
 
   self->bilinear_filtering = bilinear_filtering;
-  if (self->bilinear_filtering != self->active_add_borders)
+  if (self->bilinear_filtering != self->active_bilinear_filtering)
     gst_base_transform_reconfigure_src(GST_BASE_TRANSFORM_CAST(self));
-   self->active_add_borders =  self->bilinear_filtering; 
+   self->active_bilinear_filtering =  self->bilinear_filtering; 
 }
 
 static void

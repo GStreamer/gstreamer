@@ -568,6 +568,11 @@ gboolean
 _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line)
 {
+  if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
+  {
+    gst_d3d11_device_mark_suspended (device);
+  }
+
 #ifndef GST_DISABLE_GST_DEBUG
   gboolean ret = TRUE;
 

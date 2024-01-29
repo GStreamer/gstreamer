@@ -1085,6 +1085,7 @@ gst_d3d11_video_sink_propose_allocation (GstBaseSink * sink, GstQuery * query)
   guint size;
   gboolean need_pool;
 
+  GstD3D11CSLockGuard lk (&self->lock);
   if (!self->device)
     return FALSE;
 
@@ -1195,11 +1196,14 @@ gst_d3d11_video_sink_query (GstBaseSink * sink, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
+    {
+      GstD3D11CSLockGuard lk (&self->lock);
       if (gst_d3d11_handle_context_query (GST_ELEMENT (self), query,
               self->device)) {
         return TRUE;
       }
       break;
+    }
     default:
       break;
   }

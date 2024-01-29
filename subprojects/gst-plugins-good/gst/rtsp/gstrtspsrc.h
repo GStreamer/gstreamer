@@ -77,6 +77,12 @@ typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 #define GST_RTSP_STREAM_LOCK(rtsp)       (g_rec_mutex_lock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
 #define GST_RTSP_STREAM_UNLOCK(rtsp)     (g_rec_mutex_unlock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
 
+#define GST_RTSP_STREAMS_LIST_LOCK(x) (g_mutex_lock (&(x)->streams_lock))
+#define GST_RTSP_STREAMS_LIST_UNLOCK(x) (g_mutex_unlock (&(x)->streams_lock))
+
+#define GST_RTSP_CMD_LOCK(x) (g_mutex_lock (&(x)->cmd_lock))
+#define GST_RTSP_CMD_UNLOCK(x) (g_mutex_unlock (&(x)->cmd_lock))
+
 typedef struct _GstRTSPConnInfo GstRTSPConnInfo;
 
 struct _GstRTSPConnInfo {
@@ -94,9 +100,8 @@ struct _GstRTSPConnInfo {
 typedef struct _GstRTSPStream GstRTSPStream;
 
 struct _GstRTSPStream {
+  GstObject     object;
   gint          id;
-
-  GstRTSPSrc   *parent; /* parent, no extra ref to parent is taken */
 
   /* pad we expose or NULL when it does not have an actual pad */
   GstPad       *srcpad;
@@ -171,6 +176,10 @@ struct _GstRTSPStream {
   guint32       segment_seqnum[2];
 };
 
+typedef struct _GstRTSPStreamClass {
+  GstObjectClass derivable;
+} GstRTSPStreamClass;
+
 /**
  * GstRTSPSrcTimeoutCause:
  * @GST_RTSP_SRC_TIMEOUT_CAUSE_RTCP: timeout triggered by RTCP
@@ -196,7 +205,6 @@ typedef enum
   GST_RTSP_NAT_DUMMY
 } GstRTSPNatMethod;
 
-
 struct _GstRTSPSrc {
   GstBin           parent;
 
@@ -219,6 +227,7 @@ struct _GstRTSPSrc {
   gint             pending_cmd;
   gint             busy_cmd;
   GCond            cmd_cond;
+  GMutex           cmd_lock;
   gboolean         ignore_timeout;
   gboolean         open_error;
 
@@ -228,6 +237,8 @@ struct _GstRTSPSrc {
   GstSDPMessage   *sdp;
   gboolean         from_sdp;
   GList           *streams;
+  guint32          streams_cookie;
+  GMutex           streams_lock;
   GstStructure    *props;
   gboolean         need_activate;
 
@@ -343,6 +354,10 @@ struct _GstRTSPSrcClass {
 };
 
 GType gst_rtspsrc_get_type(void);
+GType gst_rtsp_stream_get_type (void);
+
+#define GST_TYPE_RTSP_STREAM \
+  (gst_rtsp_stream_get_type())
 
 G_END_DECLS
 
