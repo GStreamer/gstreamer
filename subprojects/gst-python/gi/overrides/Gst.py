@@ -661,7 +661,7 @@ class TagList(Gst.TagList):
         return map(lambda k: (k, Gst.TagList.copy_value(self, k)[1]), self.keys())
 
     def __len__(self):
-        return len(self.n_tags())
+        return self.n_tags()
 
     def __str__(self):
         return self.to_string()
