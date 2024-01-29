@@ -759,7 +759,7 @@ gst_matroska_read_common_parse_skip (GstMatroskaReadCommon * common,
   } else if (id == GST_EBML_ID_CRC32) {
     GST_DEBUG_OBJECT (common->sinkpad, "Skipping EBML CRC32 element");
   } else {
-    GST_WARNING_OBJECT (common->sinkpad,
+    GST_FIXME_OBJECT (common->sinkpad,
         "Unknown %s subelement 0x%x - ignoring", parent_name, id);
   }
 
