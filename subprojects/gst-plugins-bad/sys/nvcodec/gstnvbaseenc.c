@@ -460,7 +460,13 @@ gst_nv_base_enc_open_encode_session (GstNvBaseEnc * nvenc)
   params.deviceType = NV_ENC_DEVICE_TYPE_CUDA;
   nv_ret = NvEncOpenEncodeSessionEx (&params, &nvenc->encoder);
 
-  return nv_ret == NV_ENC_SUCCESS;
+  if (nv_ret != NV_ENC_SUCCESS) {
+    /* Report error to abort if GST_CUDA_CRITICAL_ERRORS is configured */
+    gst_cuda_result (CUDA_ERROR_NO_DEVICE);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static gboolean

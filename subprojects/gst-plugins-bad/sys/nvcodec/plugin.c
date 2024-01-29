@@ -121,6 +121,9 @@ plugin_init (GstPlugin * plugin)
     CuGetErrorString (cuda_ret, &err_desc);
     GST_ERROR ("Failed to init cuda, cuInit ret: 0x%x: %s: %s",
         (int) cuda_ret, err_name, err_desc);
+
+    /* to abort if GST_CUDA_CRITICAL_ERRORS is configured */
+    gst_cuda_result (CUDA_ERROR_NO_DEVICE);
     return TRUE;
   }
 

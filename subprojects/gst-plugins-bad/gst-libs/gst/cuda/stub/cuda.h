@@ -39,6 +39,7 @@ typedef gint CUdevice;
 typedef enum
 {
   CUDA_SUCCESS = 0,
+  CUDA_ERROR_NO_DEVICE = 100,
   CUDA_ERROR_ALREADY_MAPPED = 208,
   CUDA_ERROR_NOT_SUPPORTED = 801,
 } CUresult;

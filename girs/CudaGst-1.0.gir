@@ -489,6 +489,8 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/stub/cuda.h"/>
       <member name="success" value="0" c:identifier="CUDA_SUCCESS">
       </member>
+      <member name="error_no_device" value="100" c:identifier="CUDA_ERROR_NO_DEVICE">
+      </member>
       <member name="error_already_mapped" value="208" c:identifier="CUDA_ERROR_ALREADY_MAPPED">
       </member>
       <member name="error_not_supported" value="801" c:identifier="CUDA_ERROR_NOT_SUPPORTED">
