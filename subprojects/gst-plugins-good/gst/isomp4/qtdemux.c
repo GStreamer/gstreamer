@@ -3267,7 +3267,7 @@ qtdemux_parse_trex (GstQTDemux * qtdemux, QtDemuxStream * stream,
 
   /* even then, above values are better than random ... */
   if (G_UNLIKELY (!stream->parsed_trex)) {
-    GST_WARNING_OBJECT (qtdemux,
+    GST_INFO_OBJECT (qtdemux,
         "failed to find fragment defaults for stream %d", stream->track_id);
     return FALSE;
   }
