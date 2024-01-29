@@ -111,7 +111,8 @@ void              gst_cuda_ipc_client_have_mmap_data  (GstCudaIpcClient * client
                                                        const GstCudaIpcMemLayout & layout,
                                                        GstCaps * caps,
                                                        GstCudaSharableHandle server_handle,
-                                                       GstCudaSharableHandle client_handle);
+                                                       GstCudaSharableHandle client_handle,
+                                                       std::vector <guint8> & meta);
 
 void              gst_cuda_ipc_client_on_idle         (GstCudaIpcClient * client);
 

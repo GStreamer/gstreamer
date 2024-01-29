@@ -195,6 +195,7 @@ gst_cuda_ipc_client_win32_finish_have_mmap_data (GstCudaIpcClient * client,
   GstCudaSharableHandle server_handle = nullptr;
   GstCudaSharableHandle client_handle = nullptr;
   GstCaps *caps = nullptr;
+  std::vector < guint8 > meta;
 
   if (!priv->server_process) {
     GST_ERROR_OBJECT (self, "Server process handle is not available");
@@ -202,7 +203,7 @@ gst_cuda_ipc_client_win32_finish_have_mmap_data (GstCudaIpcClient * client,
   }
 
   if (!gst_cuda_ipc_pkt_parse_have_mmap_data (win32_conn->server_msg, pts,
-          layout, &server_handle, &caps)) {
+          layout, &server_handle, &caps, meta)) {
     GST_ERROR_OBJECT (self, "Couldn't parse MMAP-DATA");
     goto error;
   }
@@ -218,7 +219,7 @@ gst_cuda_ipc_client_win32_finish_have_mmap_data (GstCudaIpcClient * client,
   }
 
   gst_cuda_ipc_client_have_mmap_data (client, pts, layout, caps,
-      server_handle, client_handle);
+      server_handle, client_handle, meta);
   return;
 
 error:

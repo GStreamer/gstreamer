@@ -86,13 +86,15 @@ GstFlowReturn gst_cuda_ipc_server_send_data (GstCudaIpcServer * server,
                                              GstSample * sample,
                                              const GstVideoInfo & info,
                                              const CUipcMemHandle & handle,
-                                             GstClockTime pts);
+                                             GstClockTime pts,
+                                             GByteArray * meta);
 
 GstFlowReturn gst_cuda_ipc_server_send_mmap_data (GstCudaIpcServer * server,
                                                   GstSample * sample,
                                                   const GstVideoInfo & info,
                                                   GstCudaSharableHandle handle,
-                                                  GstClockTime pts);
+                                                  GstClockTime pts,
+                                                  GByteArray * meta);
 
 
 void          gst_cuda_ipc_server_stop      (GstCudaIpcServer * server);
@@ -133,6 +135,7 @@ struct GstCudaIpcServerData
   CUipcMemHandle handle;
   GstCudaSharableHandle os_handle;
   GstClockTime pts;
+  std::vector<guint8> meta;
   guint64 seq_num;
 };
 

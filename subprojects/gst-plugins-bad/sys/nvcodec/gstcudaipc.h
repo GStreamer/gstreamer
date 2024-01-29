@@ -134,26 +134,30 @@ bool gst_cuda_ipc_pkt_build_have_data (std::vector<guint8> & buf,
                                        GstClockTime pts,
                                        const GstVideoInfo & info,
                                        const CUipcMemHandle & handle,
-                                       GstCaps * caps);
+                                       GstCaps * caps,
+                                       const std::vector<guint8> & meta);
 
 bool gst_cuda_ipc_pkt_parse_have_data (const std::vector<guint8> & buf,
                                        GstClockTime & pts,
                                        GstCudaIpcMemLayout & layout,
                                        CUipcMemHandle & handle,
-                                       GstCaps ** caps);
+                                       GstCaps ** caps,
+                                       std::vector<guint8> & meta);
 
 bool gst_cuda_ipc_pkt_build_have_mmap_data (std::vector<guint8> & buf,
                                             GstClockTime pts,
                                             const GstVideoInfo & info,
                                             guint32 max_size,
                                             GstCudaSharableHandle handle,
-                                            GstCaps * caps);
+                                            GstCaps * caps,
+                                            const std::vector<guint8> & meta);
 
 bool gst_cuda_ipc_pkt_parse_have_mmap_data (const std::vector<guint8> & buf,
                                             GstClockTime & pts,
                                             GstCudaIpcMemLayout & layout,
                                             GstCudaSharableHandle * handle,
-                                            GstCaps ** caps);
+                                            GstCaps ** caps,
+                                            std::vector<guint8> & meta);
 
 void gst_cuda_ipc_pkt_build_read_done (std::vector<guint8> & buf);
 

@@ -38,7 +38,10 @@
 
 constexpr guint GST_CUDA_IPC_PKT_HAVE_DATA_PAYLOAD_MIN_SIZE =
     sizeof (GstClockTime) + sizeof (CUipcMemHandle) +
-    sizeof (GstCudaIpcMemLayout) + sizeof (guint8);
+    sizeof (GstCudaIpcMemLayout) + sizeof (guint) + sizeof (guint);
+constexpr guint GST_CUDA_IPC_PKT_HAVE_MMAP_DATA_PAYLOAD_MIN_SIZE =
+    sizeof (GstClockTime) + sizeof (GstCudaSharableHandle) +
+    sizeof (GstCudaIpcMemLayout) + sizeof (guint) + sizeof (guint);
 constexpr guint GST_CUDA_IPC_PKT_RELEASE_DATA_PAYLOAD_SIZE =
     sizeof (CUipcMemHandle);
 
@@ -150,26 +153,28 @@ gst_cuda_ipc_pkt_build_need_data (std::vector < guint8 > &buf)
 /* *INDENT-OFF* */
 bool
 gst_cuda_ipc_pkt_build_have_data (std::vector < guint8 > &buf, GstClockTime pts,
-    const GstVideoInfo & info, const CUipcMemHandle & handle, GstCaps * caps)
+    const GstVideoInfo & info, const CUipcMemHandle & handle, GstCaps * caps,
+    const std::vector<guint8> & meta)
 {
   GstCudaIpcPacketHeader header;
   GstCudaIpcMemLayout layout;
   guint8 *ptr;
+  guint caps_len = 0;
   gchar *caps_str = nullptr;
-  guint caps_size = 1;
 
   if (caps) {
     caps_str = gst_caps_serialize (caps, GST_SERIALIZE_FLAG_NONE);
     if (!caps_str)
       return false;
 
-    caps_size += strlen (caps_str) + 1;
+    caps_len = strlen (caps_str) + 1;
   }
 
   header.type = GstCudaIpcPktType::HAVE_DATA;
   header.magic = GST_CUDA_IPC_MAGIC_NUMBER;
   header.payload_size = sizeof (GstClockTime) + sizeof (CUipcMemHandle) +
-    sizeof (GstCudaIpcMemLayout) + caps_size;
+    sizeof (GstCudaIpcMemLayout) + sizeof (guint) + caps_len +
+    sizeof (guint) + meta.size ();
 
   layout.size = layout.max_size = info.size;
   layout.pitch = info.stride[0];
@@ -191,14 +196,17 @@ gst_cuda_ipc_pkt_build_have_data (std::vector < guint8 > &buf, GstClockTime pts,
   memcpy (ptr, &handle, sizeof (CUipcMemHandle));
   ptr += sizeof (CUipcMemHandle);
 
-  if (caps) {
-    *ptr = 1;
-    ptr++;
-
+  *((guint *) ptr) = caps_len;
+  ptr += sizeof (guint);
+  if (caps_len > 0) {
     strcpy ((char *) ptr, caps_str);
-  } else {
-    *ptr = 0;
+    ptr += caps_len;
   }
+
+  *((guint *) ptr) = meta.size ();
+  ptr += sizeof (guint);
+  if (!meta.empty ())
+    memcpy (ptr, meta.data (), meta.size ());
 
   g_free (caps_str);
 
@@ -206,19 +214,27 @@ gst_cuda_ipc_pkt_build_have_data (std::vector < guint8 > &buf, GstClockTime pts,
 }
 /* *INDENT-ON* */
 
+#define DO_OFFSET(p,r,s) G_STMT_START { \
+  (p) += s; \
+  (r) -= s; \
+} G_STMT_END
+
 bool
 gst_cuda_ipc_pkt_parse_have_data (const std::vector < guint8 > &buf,
     GstClockTime & pts, GstCudaIpcMemLayout & layout, CUipcMemHandle & handle,
-    GstCaps ** caps)
+    GstCaps ** caps, std::vector < guint8 > &meta)
 {
   GstCudaIpcPacketHeader header;
   const guint8 *ptr;
-  std::string str;
+  size_t remaining;
 
   g_return_val_if_fail (buf.size () >=
       GST_CUDA_IPC_PKT_HEADER_SIZE +
       GST_CUDA_IPC_PKT_HAVE_DATA_PAYLOAD_MIN_SIZE, false);
   g_return_val_if_fail (caps, false);
+
+  meta.clear ();
+  remaining = buf.size ();
 
   ptr = &buf[0];
   memcpy (&header, ptr, GST_CUDA_IPC_PKT_HEADER_SIZE);
@@ -228,23 +244,41 @@ gst_cuda_ipc_pkt_parse_have_data (const std::vector < guint8 > &buf,
       header.payload_size < GST_CUDA_IPC_PKT_HAVE_DATA_PAYLOAD_MIN_SIZE) {
     return false;
   }
-  ptr += GST_CUDA_IPC_PKT_HEADER_SIZE;
+
+  DO_OFFSET (ptr, remaining, GST_CUDA_IPC_PKT_HEADER_SIZE);
 
   memcpy (&pts, ptr, sizeof (GstClockTime));
-  ptr += sizeof (GstClockTime);
+  DO_OFFSET (ptr, remaining, sizeof (GstClockTime));
 
   memcpy (&layout, ptr, sizeof (GstCudaIpcMemLayout));
-  ptr += sizeof (GstCudaIpcMemLayout);
+  DO_OFFSET (ptr, remaining, sizeof (GstCudaIpcMemLayout));
 
   memcpy (&handle, ptr, sizeof (CUipcMemHandle));
-  ptr += sizeof (CUipcMemHandle);
+  DO_OFFSET (ptr, remaining, sizeof (CUipcMemHandle));
 
-  if (*ptr) {
-    ptr++;
+  auto caps_len = *((guint *) ptr);
+  DO_OFFSET (ptr, remaining, sizeof (guint));
+  if (caps_len > 0) {
+    if (remaining < caps_len + sizeof (guint))
+      return false;
 
     *caps = gst_caps_from_string ((const gchar *) ptr);
     if (*caps == nullptr)
       return false;
+  }
+
+  DO_OFFSET (ptr, remaining, caps_len);
+  if (remaining < sizeof (guint))
+    return false;
+
+  auto meta_len = *((guint *) ptr);
+  DO_OFFSET (ptr, remaining, sizeof (guint));
+  if (meta_len > 0) {
+    if (remaining < meta_len)
+      return false;
+
+    meta.resize (meta_len);
+    memcpy (meta.data (), ptr, meta_len);
   }
 
   return true;
@@ -254,26 +288,28 @@ gst_cuda_ipc_pkt_parse_have_data (const std::vector < guint8 > &buf,
 bool
 gst_cuda_ipc_pkt_build_have_mmap_data (std::vector<guint8> & buf,
     GstClockTime pts, const GstVideoInfo & info, guint32 max_size,
-    GstCudaSharableHandle handle, GstCaps * caps)
+    GstCudaSharableHandle handle, GstCaps * caps,
+    const std::vector<guint8> & meta)
 {
   GstCudaIpcPacketHeader header;
   GstCudaIpcMemLayout layout;
   guint8 *ptr;
+  guint caps_len = 0;
   gchar *caps_str = nullptr;
-  guint caps_size = 1;
 
   if (caps) {
     caps_str = gst_caps_serialize (caps, GST_SERIALIZE_FLAG_NONE);
     if (!caps_str)
       return false;
 
-    caps_size = strlen (caps_str) + 1;
+    caps_len = strlen (caps_str) + 1;
   }
 
   header.type = GstCudaIpcPktType::HAVE_MMAP_DATA;
   header.magic = GST_CUDA_IPC_MAGIC_NUMBER;
   header.payload_size = sizeof (GstClockTime) + sizeof (GstCudaIpcMemLayout) +
-      sizeof (GstCudaSharableHandle) + caps_size;
+      sizeof (GstCudaSharableHandle) + sizeof (guint) + caps_len +
+      sizeof (guint) + meta.size ();
 
   layout.size = info.size;
   layout.max_size = max_size;
@@ -296,14 +332,17 @@ gst_cuda_ipc_pkt_build_have_mmap_data (std::vector<guint8> & buf,
   *((GstCudaSharableHandle *) ptr) = handle;
   ptr += sizeof (GstCudaSharableHandle);
 
-  if (caps) {
-    *ptr = 1;
-    ptr++;
-
+  *((guint *) ptr) = caps_len;
+  ptr += sizeof (guint);
+  if (caps_len > 0) {
     strcpy ((char *) ptr, caps_str);
-  } else {
-    *ptr = 0;
+    ptr += caps_len;
   }
+
+  *((guint *) ptr) = meta.size ();
+  ptr += sizeof (guint);
+  if (!meta.empty ())
+    memcpy (ptr, meta.data (), meta.size ());
 
   g_free (caps_str);
 
@@ -314,45 +353,64 @@ gst_cuda_ipc_pkt_build_have_mmap_data (std::vector<guint8> & buf,
 bool
 gst_cuda_ipc_pkt_parse_have_mmap_data (const std::vector < guint8 > &buf,
     GstClockTime & pts, GstCudaIpcMemLayout & layout,
-    GstCudaSharableHandle * handle, GstCaps ** caps)
+    GstCudaSharableHandle * handle, GstCaps ** caps,
+    std::vector < guint8 > &meta)
 {
   GstCudaIpcPacketHeader header;
   const guint8 *ptr;
-  std::string str;
+  size_t remaining;
 
-  g_return_val_if_fail (buf.size () >
+  g_return_val_if_fail (buf.size () >=
       GST_CUDA_IPC_PKT_HEADER_SIZE +
-      sizeof (GstClockTime) + sizeof (GstCudaIpcMemLayout) +
-      sizeof (GstCudaSharableHandle), false);
+      GST_CUDA_IPC_PKT_HAVE_MMAP_DATA_PAYLOAD_MIN_SIZE, false);
   g_return_val_if_fail (caps, false);
+
+  meta.clear ();
+  remaining = buf.size ();
 
   ptr = &buf[0];
   memcpy (&header, ptr, GST_CUDA_IPC_PKT_HEADER_SIZE);
 
   if (header.type != GstCudaIpcPktType::HAVE_MMAP_DATA ||
       header.magic != GST_CUDA_IPC_MAGIC_NUMBER ||
-      header.payload_size <=
-      sizeof (GstClockTime) + sizeof (GstCudaIpcMemLayout) +
-      sizeof (GstCudaSharableHandle)) {
+      header.payload_size < GST_CUDA_IPC_PKT_HAVE_MMAP_DATA_PAYLOAD_MIN_SIZE) {
     return false;
   }
-  ptr += GST_CUDA_IPC_PKT_HEADER_SIZE;
+
+  DO_OFFSET (ptr, remaining, GST_CUDA_IPC_PKT_HEADER_SIZE);
 
   memcpy (&pts, ptr, sizeof (GstClockTime));
-  ptr += sizeof (GstClockTime);
+  DO_OFFSET (ptr, remaining, sizeof (GstClockTime));
 
   memcpy (&layout, ptr, sizeof (GstCudaIpcMemLayout));
-  ptr += sizeof (GstCudaIpcMemLayout);
+  DO_OFFSET (ptr, remaining, sizeof (GstCudaIpcMemLayout));
 
   *handle = *((GstCudaSharableHandle *) ptr);
-  ptr += sizeof (GstCudaSharableHandle);
+  DO_OFFSET (ptr, remaining, sizeof (GstCudaSharableHandle));
 
-  if (*ptr) {
-    ptr++;
+  auto caps_len = *((guint *) ptr);
+  DO_OFFSET (ptr, remaining, sizeof (guint));
+  if (caps_len > 0) {
+    if (remaining < caps_len + sizeof (guint))
+      return false;
 
     *caps = gst_caps_from_string ((const gchar *) ptr);
     if (*caps == nullptr)
       return false;
+  }
+
+  DO_OFFSET (ptr, remaining, caps_len);
+  if (remaining < sizeof (guint))
+    return false;
+
+  auto meta_len = *((guint *) ptr);
+  DO_OFFSET (ptr, remaining, sizeof (guint));
+  if (meta_len > 0) {
+    if (remaining < meta_len)
+      return false;
+
+    meta.resize (meta_len);
+    memcpy (meta.data (), ptr, meta_len);
   }
 
   return true;

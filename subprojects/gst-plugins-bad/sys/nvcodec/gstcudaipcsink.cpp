@@ -79,6 +79,16 @@ enum
 /* *INDENT-OFF* */
 struct GstCudaIpcSinkPrivate
 {
+  GstCudaIpcSinkPrivate ()
+  {
+    meta = g_byte_array_new ();
+  }
+
+  ~GstCudaIpcSinkPrivate ()
+  {
+    g_byte_array_unref (meta);
+  }
+
   GstCudaContext *context = nullptr;
   GstCudaStream *stream = nullptr;
 
@@ -91,6 +101,7 @@ struct GstCudaIpcSinkPrivate
   GstVideoInfo mem_info;
   CUipcMemHandle prepared_handle;
   GstCudaSharableHandle prepared_os_handle;
+  GByteArray *meta;
 
   std::mutex lock;
 
@@ -542,6 +553,20 @@ gst_cuda_ipc_sink_query (GstBaseSink * sink, GstQuery * query)
   return GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
 }
 
+static gboolean
+gst_cuda_ipc_sink_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
+    GstCudaIpcSink * self)
+{
+  auto priv = self->priv;
+
+  if (!gst_meta_info_is_custom ((*meta)->info))
+    return TRUE;
+
+  gst_meta_serialize_simple (*meta, priv->meta);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_cuda_ipc_sink_prepare (GstBaseSink * sink, GstBuffer * buf)
 {
@@ -642,6 +667,10 @@ gst_cuda_ipc_sink_prepare (GstBaseSink * sink, GstBuffer * buf)
   priv->prepared_sample = gst_sample_new (cuda_buf,
       priv->caps, nullptr, nullptr);
 
+  g_byte_array_set_size (priv->meta, 0);
+  gst_buffer_foreach_meta (buf,
+      (GstBufferForeachMetaFunc) gst_cuda_ipc_sink_foreach_meta, self);
+
   if (cuda_buf != buf)
     gst_buffer_unref (cuda_buf);
 
@@ -706,10 +735,11 @@ gst_cuda_ipc_sink_render (GstBaseSink * sink, GstBuffer * buf)
 
   if (priv->ipc_mode == GST_CUDA_IPC_LEGACY) {
     ret = gst_cuda_ipc_server_send_data (priv->server, priv->prepared_sample,
-        priv->mem_info, priv->prepared_handle, pts);
+        priv->mem_info, priv->prepared_handle, pts, priv->meta);
   } else {
     ret = gst_cuda_ipc_server_send_mmap_data (priv->server,
-        priv->prepared_sample, priv->mem_info, priv->prepared_os_handle, pts);
+        priv->prepared_sample, priv->mem_info, priv->prepared_os_handle, pts,
+        priv->meta);
   }
 
   return ret;

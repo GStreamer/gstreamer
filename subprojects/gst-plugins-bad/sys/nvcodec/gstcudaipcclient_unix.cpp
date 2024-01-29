@@ -188,9 +188,10 @@ gst_cuda_ipc_client_unix_finish_have_mmap_data (GstCudaIpcClient * client,
   GstCudaSharableHandle client_handle = 0;
   GstCaps *caps = nullptr;
   GError *err = nullptr;
+  std::vector < guint8 > meta;
 
   if (!gst_cuda_ipc_pkt_parse_have_mmap_data (conn->server_msg, pts,
-          layout, &server_handle, &caps)) {
+          layout, &server_handle, &caps, meta)) {
     GST_ERROR_OBJECT (client, "Couldn't parse MMAP-DATA");
     goto error;
   }
@@ -204,7 +205,7 @@ gst_cuda_ipc_client_unix_finish_have_mmap_data (GstCudaIpcClient * client,
   }
 
   gst_cuda_ipc_client_have_mmap_data (client, pts, layout, caps,
-      server_handle, client_handle);
+      server_handle, client_handle, meta);
   return;
 
 error:

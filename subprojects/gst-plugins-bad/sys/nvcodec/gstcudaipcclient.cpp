@@ -659,9 +659,10 @@ gst_cuda_ipc_client_have_data (GstCudaIpcClient * self)
   std::shared_ptr < GstCudaIpcImportData > import_data;
   std::unique_lock < std::mutex > lk (priv->lock);
   auto conn = priv->conn;
+  std::vector < guint8 > meta;
 
   if (!gst_cuda_ipc_pkt_parse_have_data (conn->server_msg,
-          pts, layout, handle, &caps)) {
+          pts, layout, handle, &caps, meta)) {
     GST_ERROR_OBJECT (self, "Couldn't parse HAVE-DATA packet");
     return false;
   }
@@ -773,6 +774,16 @@ gst_cuda_ipc_client_have_data (GstCudaIpcClient * self)
   GST_BUFFER_PTS (buffer) = pts;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+
+  while (!meta.empty ()) {
+    guint32 consumed = 0;
+    if (!gst_meta_deserialize (buffer, meta.data (), meta.size (),
+            &consumed) || consumed == 0) {
+      break;
+    }
+
+    meta.erase (meta.begin (), meta.begin () + consumed);
+  }
 
   sample = gst_sample_new (buffer, priv->caps, nullptr, nullptr);
   gst_buffer_unref (buffer);
@@ -1008,7 +1019,8 @@ gst_cuda_ipc_client_wait_msg_finish (GstCudaIpcClient * client, bool result)
 void
 gst_cuda_ipc_client_have_mmap_data (GstCudaIpcClient * client,
     GstClockTime pts, const GstCudaIpcMemLayout & layout, GstCaps * caps,
-    GstCudaSharableHandle server_handle, GstCudaSharableHandle client_handle)
+    GstCudaSharableHandle server_handle, GstCudaSharableHandle client_handle,
+    std::vector < guint8 > &meta)
 {
   GstCudaIpcClientPrivate *priv = client->priv;
   std::unique_lock < std::mutex > lk (priv->lock);
@@ -1135,6 +1147,16 @@ gst_cuda_ipc_client_have_mmap_data (GstCudaIpcClient * client,
   GST_BUFFER_PTS (buffer) = pts;
   GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
+
+  while (!meta.empty ()) {
+    guint32 consumed = 0;
+    if (!gst_meta_deserialize (buffer, meta.data (), meta.size (),
+            &consumed) || consumed == 0) {
+      break;
+    }
+
+    meta.erase (meta.begin (), meta.begin () + consumed);
+  }
 
   sample = gst_sample_new (buffer, priv->caps, nullptr, nullptr);
   gst_buffer_unref (buffer);

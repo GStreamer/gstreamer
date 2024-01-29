@@ -123,7 +123,8 @@ gst_cuda_ipc_server_finalize (GObject * object)
 
 GstFlowReturn
 gst_cuda_ipc_server_send_data (GstCudaIpcServer * server, GstSample * sample,
-    const GstVideoInfo & info, const CUipcMemHandle & handle, GstClockTime pts)
+    const GstVideoInfo & info, const CUipcMemHandle & handle, GstClockTime pts,
+    GByteArray * meta)
 {
   GstCudaIpcServerPrivate *priv;
   GstCudaIpcServerClass *klass;
@@ -153,6 +154,10 @@ gst_cuda_ipc_server_send_data (GstCudaIpcServer * server, GstSample * sample,
   data->handle = handle;
   data->pts = pts;
   data->seq_num = priv->seq_num;
+  if (meta && meta->len) {
+    data->meta.resize (meta->len);
+    memcpy (data->meta.data (), meta->data, meta->len);
+  }
 
   priv->seq_num++;
   priv->data = data;
@@ -166,7 +171,7 @@ gst_cuda_ipc_server_send_data (GstCudaIpcServer * server, GstSample * sample,
 GstFlowReturn
 gst_cuda_ipc_server_send_mmap_data (GstCudaIpcServer * server,
     GstSample * sample, const GstVideoInfo & info, GstCudaSharableHandle handle,
-    GstClockTime pts)
+    GstClockTime pts, GByteArray * meta)
 {
   GstCudaIpcServerPrivate *priv;
   GstCudaIpcServerClass *klass;
@@ -196,6 +201,10 @@ gst_cuda_ipc_server_send_mmap_data (GstCudaIpcServer * server,
   data->os_handle = handle;
   data->pts = pts;
   data->seq_num = priv->seq_num;
+  if (meta && meta->len) {
+    data->meta.resize (meta->len);
+    memcpy (data->meta.data (), meta->data, meta->len);
+  }
 
   priv->seq_num++;
   priv->data = data;
@@ -373,7 +382,7 @@ gst_cuda_ipc_server_have_data (GstCudaIpcServer * self,
         handle_dump.c_str (), conn->id);
 
     if (!gst_cuda_ipc_pkt_build_have_data (conn->server_msg, conn->data->pts,
-            conn->data->info, conn->data->handle, caps)) {
+            conn->data->info, conn->data->handle, caps, conn->data->meta)) {
       GST_ERROR_OBJECT (self, "Couldn't build HAVE-DATA pkt, conn-id: %u",
           conn->id);
       gst_cuda_ipc_server_close_connection (self, conn);
@@ -388,7 +397,7 @@ gst_cuda_ipc_server_have_data (GstCudaIpcServer * self,
         conn->id);
     if (!gst_cuda_ipc_pkt_build_have_mmap_data (conn->server_msg,
             conn->data->pts, conn->data->info, max_size, conn->data->os_handle,
-            caps)) {
+            caps, conn->data->meta)) {
       GST_ERROR_OBJECT (self, "Couldn't build HAVE-MMAP-DATA pkt, conn-id: %u",
           conn->id);
       gst_cuda_ipc_server_close_connection (self, conn);
