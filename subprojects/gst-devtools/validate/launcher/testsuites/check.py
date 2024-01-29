@@ -180,6 +180,23 @@ CI_BLACKLIST = [
 
 
 KNOWN_ISSUES = {
+    "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/2973": {
+        "tests": [
+            "check.gst-editing-services.complex_effect_bin_desc"
+        ],
+        "issues": [
+            {
+                'returncode': 238,
+                'sometimes': True,
+            },
+            {
+                "issue-id": "validateflow::mismatch",
+                "summary": "The recorded log does not match the expectation file.",
+                "level": "critical",
+                # "details": "Mismatch error in pad videosink:sink, line 4. Expected:\nbuffer: checksum=369888c2612267760fcfaa74e52fc53bd73e4d15, pts=0:00:00.000000000, dur=0:00:00.033333333, meta=GstVideoMeta\nActual:\nbuffer: checksum=b7764dce84f311119c4c36b511ba5adb66de76af, pts=0:00:00.000000000, dur=0:00:00.033333333, meta=GstVideoMeta\n",
+            },
+        ],
+    },
     "https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/773": {
         "tests": [
             r"check.gst-plugins-bad.elements_webrtcbin.*",
