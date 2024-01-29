@@ -1146,7 +1146,7 @@ fill_planes (GstVideoInfo * info, gsize plane_size[GST_VIDEO_MAX_PLANES])
       const gsize y_tile_size =
           GST_VIDEO_FORMAT_INFO_TILE_SIZE (info->finfo, 0);
       const gsize uv_tile_size =
-          GST_VIDEO_FORMAT_INFO_TILE_SIZE (info->finfo, 0);
+          GST_VIDEO_FORMAT_INFO_TILE_SIZE (info->finfo, 1);
       gint tile_width = GST_VIDEO_FORMAT_INFO_TILE_WIDTH (info->finfo, 0);
       gint tile_height = GST_VIDEO_FORMAT_INFO_TILE_HEIGHT (info->finfo, 0);
       gint n_tile_x = GST_ROUND_UP_N (info->width, tile_width) / tile_width;
