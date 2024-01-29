@@ -40,10 +40,29 @@ G_BEGIN_DECLS
 #define GST_OBJECT_CLASS_CAST(klass)    ((GstObjectClass*)(klass))
 
 /**
+ * GST_OBJECT_FLAG_CONSTRUCTED:
+ *
+ * Flag that's set when the object has been constructed. This can be used by
+ * API such as base class setters to differentiate between the case where
+ * they're called from a subclass's instance init function (and where the
+ * object isn't fully constructed yet, and so one shouldn't do anything but
+ * set values in the instance structure), and the case where the object is
+ * constructed.
+ *
+ * Since: 1.24
+ */
+
+/**
  * GstObjectFlags:
  * @GST_OBJECT_FLAG_MAY_BE_LEAKED: the object is expected to stay alive even
  * after gst_deinit() has been called and so should be ignored by leak
  * detection tools. (Since: 1.10)
+ * @GST_OBJECT_FLAG_CONSTRUCTED: flag that's set when the object has been
+ * constructed. This can be used by API such as base class setters to
+ * differentiate between the case where they're called from a subclass's
+ * instance init function (and where the object isn't fully constructed yet,
+ * and so one shouldn't do anything but set values in the instance structure),
+ * and the case where the object is constructed. (Since: 1.24)
  * @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag
  *
  * The standard flags that an gstobject may have.
@@ -51,6 +70,7 @@ G_BEGIN_DECLS
 typedef enum
 {
   GST_OBJECT_FLAG_MAY_BE_LEAKED = (1 << 0),
+  GST_OBJECT_FLAG_CONSTRUCTED = (1 << 1),
   /* padding */
   GST_OBJECT_FLAG_LAST = (1<<4)
 } GstObjectFlags;
