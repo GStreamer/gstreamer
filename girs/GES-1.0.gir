@@ -1664,7 +1664,8 @@ would not be able to adapt itself once the effect is added.</doc>
             <type name="BaseEffect" c:type="GESBaseEffect*"/>
           </parameter>
           <parameter name="index" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The index to add @effect at, or -1 to add at the highest</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-clip.c">The index to add @effect at, or -1 to add at the highest,
+        see #ges_clip_get_top_effect_index for more information</doc>
             <type name="gint" c:type="gint"/>
           </parameter>
         </parameters>

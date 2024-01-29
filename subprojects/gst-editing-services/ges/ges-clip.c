@@ -3034,7 +3034,8 @@ _cmp_children_by_priority (gconstpointer a_p, gconstpointer b_p)
  * ges_clip_add_top_effect:
  * @clip: A #GESClip
  * @effect: A top effect to add
- * @index: The index to add @effect at, or -1 to add at the highest
+ * @index: The index to add @effect at, or -1 to add at the highest,
+ *         see #ges_clip_get_top_effect_index for more information
  * @error: (nullable): Return location for an error
  *
  * Add a top effect to a clip at the given index.
