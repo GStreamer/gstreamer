@@ -1084,11 +1084,10 @@ ges_track_element_add_child_props (GESTrackElement * self,
   guint i;
 
   factory = gst_element_get_factory (child);
-  /* FIXME: handle NULL factory */
-  klass = gst_element_factory_get_metadata (factory,
+  klass = gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (child),
       GST_ELEMENT_METADATA_KLASS);
 
-  if (strv_find_str (blacklist, GST_OBJECT_NAME (factory))) {
+  if (factory && strv_find_str (blacklist, GST_OBJECT_NAME (factory))) {
     GST_DEBUG_OBJECT (self, "%s blacklisted", GST_OBJECT_NAME (factory));
     return;
   }

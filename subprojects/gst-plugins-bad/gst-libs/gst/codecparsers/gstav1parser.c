@@ -4344,6 +4344,13 @@ gst_av1_parser_parse_tile_list_obu (GstAV1Parser * parser,
   tile_list->output_frame_width_in_tiles_minus_1 = AV1_READ_BITS (br, 8);
   tile_list->output_frame_height_in_tiles_minus_1 = AV1_READ_BITS (br, 8);
   tile_list->tile_count_minus_1 = AV1_READ_BITS (br, 16);
+  if (tile_list->tile_count_minus_1 + 1 > GST_AV1_MAX_TILE_COUNT) {
+    GST_WARNING ("Invalid tile_count_minus_1 %d",
+        tile_list->tile_count_minus_1);
+    retval = GST_AV1_PARSER_BITSTREAM_ERROR;
+    goto error;
+  }
+
   for (tile = 0; tile <= tile_list->tile_count_minus_1; tile++) {
     if (AV1_REMAINING_BITS (br) < 8 + 8 + 8 + 16) {
       retval = GST_AV1_PARSER_NO_MORE_DATA;

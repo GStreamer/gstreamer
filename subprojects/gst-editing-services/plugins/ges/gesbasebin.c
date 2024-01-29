@@ -321,7 +321,12 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
     /* Add queues the same way as in GESPipeline */
     g_object_set (G_OBJECT (queue), "max-size-buffers", 0,
         "max-size-bytes", 0, "max-size-time", (gint64) 2 * GST_SECOND, NULL);
-    gst_bin_add (sbin, queue);
+    if (!gst_bin_add (sbin, queue)) {
+      g_free (name);
+      gst_object_unref (queue);
+      continue;
+    }
+
     gst_element_sync_state_with_parent (GST_ELEMENT (queue));
 
     tmppad = gst_element_get_static_pad (queue, "sink");
@@ -329,14 +334,18 @@ ges_base_bin_set_timeline (GESBaseBin * self, GESTimeline * timeline)
       GST_ERROR_OBJECT (sbin, "Could not link %s:%s and %s:%s",
           GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (tmppad));
 
+      g_free (name);
       gst_object_unref (tmppad);
-      gst_object_unref (queue);
+      gst_bin_remove (sbin, queue);
       continue;
     }
 
+    gst_object_unref (tmppad);
     tmppad = gst_element_get_static_pad (queue, "src");
     gpad = gst_ghost_pad_new_from_template (name, tmppad,
         gst_static_pad_template_get (template));
+    gst_object_unref (tmppad);
+    g_free (name);
 
     gst_pad_set_active (gpad, TRUE);
     gst_element_add_pad (GST_ELEMENT (sbin), gpad);

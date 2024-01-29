@@ -24,6 +24,7 @@ d3d12_sources = [
   'gstd3d12h264enc.cpp',
   'gstd3d12h265dec.cpp',
   'gstd3d12memory.cpp',
+  'gstd3d12mpeg2dec.cpp',
   'gstd3d12overlaycompositor.cpp',
   'gstd3d12pluginutils.cpp',
   'gstd3d12screencapture.cpp',

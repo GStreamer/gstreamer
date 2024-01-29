@@ -193,7 +193,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
           .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_CAPABILITIES_KHR,
       };
       /* *INDENT-ON* */
-      codec_idx = 0;
+      codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_H264;
       break;
     case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
       /* *INDENT-OFF* */
@@ -201,7 +201,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
           .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_CAPABILITIES_KHR,
       };
       /* *INDENT-ON* */
-      codec_idx = 1;
+      codec_idx = GST_VK_VIDEO_EXTENSION_DECODE_H265;
       break;
     default:
       g_assert_not_reached ();

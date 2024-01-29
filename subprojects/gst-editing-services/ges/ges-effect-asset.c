@@ -88,6 +88,8 @@ ges_effect_asset_init (GESEffectAsset * self)
 static void
 ges_effect_asset_constructed (GObject * object)
 {
+  G_OBJECT_CLASS (ges_effect_asset_parent_class)->constructed (object);
+
   _fill_track_type (GES_ASSET (object));
 }
 
@@ -396,10 +398,9 @@ ges_effect_asset_id_get_type_and_bindesc (const char *id,
   }
 
   for (tmp = GST_BIN_CHILDREN (effect); tmp; tmp = tmp->next) {
-    GstElementFactory *factory =
-        gst_element_get_factory (GST_ELEMENT (tmp->data));
     const gchar *klass =
-        gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
+        gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (tmp->data),
+        GST_ELEMENT_METADATA_KLASS);
 
     if (g_strrstr (klass, "Effect") || g_strrstr (klass, "Filter")) {
       if (g_strrstr (klass, "Audio")) {

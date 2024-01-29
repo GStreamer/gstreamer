@@ -899,16 +899,25 @@ _project_loaded_cb (GESProject * project, GESTimeline * timeline,
       g_error ("Failed to setup rendering details\n");
   }
 
-  print_timeline (self->priv->timeline);
 
   g_free (project_uri);
 
   if (!self->priv->seenerrors && opts->needs_set_state) {
     ges_timeline_commit (self->priv->timeline);
     if (gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
+            GST_STATE_READY) == GST_STATE_CHANGE_FAILURE) {
+      g_error ("Failed to start the pipeline\n");
+    }
+
+    /* Printing the pipeline only in READY state as there might be elements
+     * tweaking it in while going to READY */
+    print_timeline (self->priv->timeline);
+    if (gst_element_set_state (GST_ELEMENT (self->priv->pipeline),
             GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
       g_error ("Failed to start the pipeline\n");
     }
+  } else {
+    print_timeline (self->priv->timeline);
   }
 }
 

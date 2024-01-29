@@ -39,6 +39,31 @@ static GOptionEntry entries[] = {
   {NULL}
 };
 
+static gboolean
+dump_debug (gpointer user_data)
+{
+  GstObject *pipe;
+  GWeakRef *ref = user_data;
+  GstElement *e = g_weak_ref_get (ref);
+  if (!e)
+    return G_SOURCE_REMOVE;
+  pipe = gst_element_get_parent (GST_ELEMENT (e));
+  GST_DEBUG_BIN_TO_DOT_FILE (GST_BIN (pipe), GST_DEBUG_GRAPH_SHOW_ALL,
+      "rtsp-server-test-launch");
+  return G_SOURCE_CONTINUE;
+}
+
+static void
+constructed (GstRTSPMediaFactory * self G_GNUC_UNUSED, GstRTSPMedia * m,
+    gpointer user_data G_GNUC_UNUSED)
+{
+  GstElement *e = gst_rtsp_media_get_element (m);
+  GWeakRef *ref = g_new0 (GWeakRef, 1);
+  g_weak_ref_set (ref, e);
+  dump_debug (ref);
+  g_timeout_add_seconds (5, dump_debug, ref);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -79,6 +104,9 @@ main (int argc, char *argv[])
   gst_rtsp_media_factory_set_launch (factory, argv[1]);
   gst_rtsp_media_factory_set_shared (factory, TRUE);
   gst_rtsp_media_factory_set_enable_rtcp (factory, !disable_rtcp);
+
+  g_signal_connect (factory, "media-constructed", G_CALLBACK (constructed),
+      NULL);
 
   /* attach the test factory to the mount url */
   gst_rtsp_mount_points_add_factory (mounts, mount, factory);

@@ -1435,16 +1435,11 @@ gst_qsv_h264_enc_set_format (GstQsvEncoder * encoder,
   frame_info->Width = GST_ROUND_UP_16 (info->width);
   if (GST_VIDEO_INFO_IS_INTERLACED (info)) {
     frame_info->Height = GST_ROUND_UP_32 (info->height);
-    switch (GST_VIDEO_INFO_FIELD_ORDER (info)) {
-      case GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST:
-        frame_info->PicStruct = MFX_PICSTRUCT_FIELD_TFF;
-        break;
-      case GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST:
-        frame_info->PicStruct = MFX_PICSTRUCT_FIELD_BFF;
-        break;
-      default:
-        frame_info->PicStruct = MFX_PICSTRUCT_UNKNOWN;
-        break;
+    if (GST_VIDEO_INFO_FIELD_ORDER (info) ==
+        GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+      frame_info->PicStruct = MFX_PICSTRUCT_FIELD_TFF;
+    } else {
+      frame_info->PicStruct = MFX_PICSTRUCT_FIELD_BFF;
     }
   } else {
     frame_info->Height = GST_ROUND_UP_16 (info->height);

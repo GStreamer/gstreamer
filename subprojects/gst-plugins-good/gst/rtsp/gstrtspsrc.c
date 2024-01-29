@@ -4776,6 +4776,9 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     /* no sync or async state changes needed */
     g_object_set (G_OBJECT (stream->udpsink[0]), "auto-multicast", FALSE,
         "loop", FALSE, "sync", FALSE, "async", FALSE, NULL);
+    if (src->multi_iface != NULL)
+      g_object_set (G_OBJECT (stream->udpsink[0]), "multicast-iface",
+          src->multi_iface, NULL);
     if (ttl > 0)
       g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
 
@@ -4839,8 +4842,11 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     /* no sync or async state changes needed */
     g_object_set (G_OBJECT (stream->udpsink[1]), "auto-multicast", FALSE,
         "loop", FALSE, "sync", FALSE, "async", FALSE, NULL);
+    if (src->multi_iface != NULL)
+      g_object_set (G_OBJECT (stream->udpsink[1]), "multicast-iface",
+          src->multi_iface, NULL);
     if (ttl > 0)
-      g_object_set (G_OBJECT (stream->udpsink[0]), "ttl", ttl, NULL);
+      g_object_set (G_OBJECT (stream->udpsink[1]), "ttl", ttl, NULL);
 
     if (stream->udpsrc[1]) {
       /* configure socket, we give it the same UDP socket as the udpsrc for RTCP

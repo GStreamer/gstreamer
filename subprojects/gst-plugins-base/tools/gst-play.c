@@ -855,21 +855,6 @@ do_play (GstPlay * play)
   g_main_loop_run (play->loop);
 }
 
-static gint
-compare (gconstpointer a, gconstpointer b)
-{
-  gchar *a1, *b1;
-  gint ret;
-
-  a1 = g_utf8_collate_key_for_filename ((gchar *) a, -1);
-  b1 = g_utf8_collate_key_for_filename ((gchar *) b, -1);
-  ret = strcmp (a1, b1);
-  g_free (a1);
-  g_free (b1);
-
-  return ret;
-}
-
 static void
 add_to_playlist (GPtrArray * playlist, const gchar * filename)
 {
@@ -889,7 +874,9 @@ add_to_playlist (GPtrArray * playlist, const gchar * filename)
       gchar *path;
 
       path = g_build_filename (filename, entry, NULL);
-      files = g_list_insert_sorted (files, path, compare);
+      files =
+          g_list_insert_sorted (files, path,
+          (GCompareFunc) gst_util_filename_compare);
     }
 
     g_dir_close (dir);

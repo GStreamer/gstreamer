@@ -2516,7 +2516,7 @@ ges_timeline_add_track (GESTimeline * timeline, GESTrack * track)
   g_return_val_if_fail (GES_IS_TRACK (track), FALSE);
   CHECK_THREAD (timeline);
 
-  GST_DEBUG ("timeline:%p, track:%p", timeline, track);
+  GST_DEBUG_OBJECT (timeline, "Adding %" GST_PTR_FORMAT, track);
 
   /* make sure we don't already control it */
   LOCK_DYN (timeline);

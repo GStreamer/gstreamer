@@ -68,6 +68,18 @@ static TestFrame test_rgba_reorder[] = {
   {1, 1, GST_VIDEO_FORMAT_BGR, {(gchar *) & bgr_reorder_data}},
 };
 
+#ifndef GST_CAPS_FEATURE_MEMORY_DMABUF
+#define GST_CAPS_FEATURE_MEMORY_DMABUF "memory:DMABuf"
+#endif
+
+static GstVideoFormat test_passthrough_formats[] = {
+  GST_VIDEO_FORMAT_DMA_DRM,
+};
+
+static const gchar *test_passthrough_features[] = {
+  GST_CAPS_FEATURE_MEMORY_DMABUF,
+};
+
 static void
 setup (void)
 {
@@ -252,6 +264,65 @@ GST_START_TEST (test_reorder_buffer)
 
 GST_END_TEST;
 
+GST_START_TEST (test_passthrough)
+{
+  guint formats_size = G_N_ELEMENTS (test_passthrough_formats);
+  guint features_size = G_N_ELEMENTS (test_passthrough_features);
+  gint i, j, k, l;
+
+  for (i = 0; i < formats_size; i++) {
+    GstVideoFormat in_format = test_passthrough_formats[i];
+
+    for (j = 0; j < formats_size; j++) {
+      GstVideoFormat out_format = test_passthrough_formats[j];
+
+      for (k = 0; k < features_size; k++) {
+        const gchar *in_feature = test_passthrough_features[k];
+        GstCaps *in_caps;
+
+        in_caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
+            gst_video_format_to_string (in_format), NULL);
+        gst_caps_set_features_simple (in_caps,
+            gst_caps_features_from_string (in_feature));
+
+
+        for (l = 0; l < features_size; l++) {
+          const gchar *out_feature = test_passthrough_features[l];
+          GstCaps *out_caps;
+
+          out_caps = gst_caps_new_simple ("video/x-raw", "format",
+              G_TYPE_STRING, gst_video_format_to_string (out_format), NULL);
+          gst_caps_set_features_simple (out_caps,
+              gst_caps_features_from_string (out_feature));
+
+          if (gst_caps_is_equal (in_caps, out_caps)) {
+            GstCaps *tmp_caps, *tmp_caps2, *tmp_caps3;
+
+            tmp_caps = gst_gl_color_convert_transform_caps (context,
+                GST_PAD_SINK, in_caps, NULL);
+            tmp_caps2 = gst_gl_color_convert_transform_caps (context,
+                GST_PAD_SRC, out_caps, NULL);
+
+            tmp_caps3 = gst_caps_intersect (tmp_caps, tmp_caps2);
+
+            fail_unless (!gst_caps_is_empty (tmp_caps3));
+
+            gst_caps_unref (tmp_caps);
+            gst_caps_unref (tmp_caps2);
+            gst_caps_unref (tmp_caps3);
+          }
+
+          gst_caps_unref (out_caps);
+        }
+
+        gst_caps_unref (in_caps);
+      }
+    }
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_gl_color_convert_suite (void)
 {
@@ -261,6 +332,7 @@ gst_gl_color_convert_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_checked_fixture (tc_chain, setup, teardown);
   tcase_add_test (tc_chain, test_reorder_buffer);
+  tcase_add_test (tc_chain, test_passthrough);
   /* FIXME add YUV <--> RGB conversion tests */
 
   return s;

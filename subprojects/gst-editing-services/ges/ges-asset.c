@@ -1116,7 +1116,7 @@ ges_asset_set_id (GESAsset * asset, const gchar * id)
   priv = asset->priv;
 
   if (priv->state != ASSET_INITIALIZED) {
-    GST_WARNING_OBJECT (asset, "Trying to rest ID on an object that is"
+    GST_WARNING_OBJECT (asset, "Trying to set ID on an object that is"
         " not properly loaded");
     return;
   }
@@ -1253,6 +1253,9 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
   if (lerr)
     g_error_free (lerr);
 
+  GST_DEBUG ("Requesting %s with real id %s and id %s",
+      g_type_name (extractable_type), real_id, id);
+
   /* asset owned by cache */
   LOCK_CACHE;
   asset = ges_asset_cache_lookup (extractable_type, real_id);
@@ -1308,10 +1311,8 @@ ges_asset_request (GType extractable_type, const gchar * id, GError ** error)
     iface = g_type_interface_peek (klass, G_TYPE_INITABLE);
 
     if (iface->init) {
-      /* FIXME: allow the error to be set, which GInitable is designed
-       * for! */
       asset = g_initable_new (asset_type,
-          NULL, NULL, "id", real_id, "extractable-type",
+          NULL, error, "id", real_id, "extractable-type",
           extractable_type, NULL);
     } else {
       GST_INFO ("Tried to create an Asset for type %s but no ->init method",

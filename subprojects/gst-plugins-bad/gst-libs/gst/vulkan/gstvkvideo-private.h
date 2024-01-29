@@ -40,6 +40,11 @@ struct _GstVulkanVideoSession
   GstBuffer *buffer;
 };
 
+typedef enum {
+  GST_VK_VIDEO_EXTENSION_DECODE_H264,
+  GST_VK_VIDEO_EXTENSION_DECODE_H265,
+} GST_VK_VIDEO_EXTENSIONS;
+
 #define GST_VULKAN_VIDEO_FN_LIST(V)                                            \
   V(GetPhysicalDeviceVideoFormatProperties)                                    \
   V(GetPhysicalDeviceVideoCapabilities)                                        \

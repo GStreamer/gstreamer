@@ -116,6 +116,7 @@ GST_STATIC_PAD_TEMPLATE ("ltc_sink",
     GST_STATIC_CAPS ("audio/x-raw,format=U8,rate=[1,max],channels=1")
     );
 
+static void gst_timecodestamper_finalize (GObject * object);
 static void gst_timecodestamper_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_timecodestamper_get_property (GObject * object, guint prop_id,
@@ -232,6 +233,7 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
 
   gobject_class->set_property = gst_timecodestamper_set_property;
   gobject_class->get_property = gst_timecodestamper_get_property;
+  gobject_class->finalize = gst_timecodestamper_finalize;
   gobject_class->dispose = gst_timecodestamper_dispose;
 
   g_object_class_install_property (gobject_class, PROP_SOURCE,
@@ -403,6 +405,20 @@ gst_timecodestamper_init (GstTimeCodeStamper * timecodestamper)
 }
 
 static void
+gst_timecodestamper_finalize (GObject * object)
+{
+#if HAVE_LTC
+  GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (object);
+
+  g_cond_clear (&timecodestamper->ltc_cond_video);
+  g_cond_clear (&timecodestamper->ltc_cond_audio);
+  g_mutex_clear (&timecodestamper->mutex);
+#endif
+
+  G_OBJECT_CLASS (gst_timecodestamper_parent_class)->finalize (object);
+}
+
+static void
 gst_timecodestamper_dispose (GObject * object)
 {
   GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (object);
@@ -433,9 +449,7 @@ gst_timecodestamper_dispose (GObject * object)
     timecodestamper->rtc_tc = NULL;
   }
 #if HAVE_LTC
-  g_cond_clear (&timecodestamper->ltc_cond_video);
-  g_cond_clear (&timecodestamper->ltc_cond_audio);
-  g_mutex_clear (&timecodestamper->mutex);
+  g_mutex_lock (&timecodestamper->mutex);
   {
     TimestampedTimecode *tc;
     while ((tc = g_queue_pop_tail (&timecodestamper->ltc_current_tcs))) {
@@ -458,6 +472,7 @@ gst_timecodestamper_dispose (GObject * object)
     gst_audio_stream_align_free (timecodestamper->stream_align);
     timecodestamper->stream_align = NULL;
   }
+  g_mutex_unlock (&timecodestamper->mutex);
 #endif
 
   G_OBJECT_CLASS (gst_timecodestamper_parent_class)->dispose (object);
@@ -1104,10 +1119,19 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstVideoTimeCodeFlags tc_flags = 0;
 
-  if (timecodestamper->fps_n == 0 || timecodestamper->fps_d == 0
-      || !GST_BUFFER_PTS_IS_VALID (buffer)) {
-    gst_buffer_unref (buffer);
-    return GST_FLOW_NOT_NEGOTIATED;
+  if (timecodestamper->fps_n == 0 || timecodestamper->fps_d == 0) {
+    /* This can't actually happen I think - the caps template requires a framerate,
+     * so we'd have to receive a buffer without prior caps */
+    GST_ELEMENT_ERROR (timecodestamper, STREAM, FAILED,
+        ("Can't process without a framerate"),
+        ("Received a video buffer without framerate"));
+    return GST_FLOW_ERROR;
+  }
+  if (!GST_BUFFER_PTS_IS_VALID (buffer)) {
+    GST_ELEMENT_ERROR (timecodestamper, STREAM, FAILED,
+        ("Input video buffer has no timestamp"),
+        ("Video buffers must have timestamps"));
+    return GST_FLOW_ERROR;
   }
 #if HAVE_LTC
   if (timecodestamper->video_latency == -1

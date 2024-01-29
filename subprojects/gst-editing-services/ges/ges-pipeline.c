@@ -517,7 +517,8 @@ _link_tracks (GESPipeline * pipeline)
 {
   GList *tmp;
 
-  GST_DEBUG_OBJECT (pipeline, "Linking tracks");
+  GST_DEBUG_OBJECT (pipeline, "Linking %d tracks",
+      g_list_length (pipeline->priv->timeline->tracks));
 
   if (!pipeline->priv->timeline) {
     GST_INFO_OBJECT (pipeline, "Not timeline set yet, doing nothing");

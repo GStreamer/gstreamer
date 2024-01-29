@@ -176,7 +176,7 @@
  *   children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
  *
  *   for (tmp = children; tmp; tmp = tmp->next)
- *     ges_track_element_set_auto_clamp_control_source (tmp->data, FALSE);
+ *     ges_track_element_set_auto_clamp_control_sources (tmp->data, FALSE);
  *
  *   // add time effect, or set their children properties, or move them around
  *   ...
@@ -197,7 +197,7 @@
  *     // handle error
  *
  *   for (tmp = children; tmp; tmp = tmp->next)
- *     ges_track_element_set_auto_clamp_control_source (tmp->data, TRUE);
+ *     ges_track_element_set_auto_clamp_control_sources (tmp->data, TRUE);
  *
  *   g_list_free_full (children, gst_object_unref);
  *   gst_object_unref (source);

@@ -54381,6 +54381,23 @@ the result.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="util_filename_compare" c:identifier="gst_util_filename_compare" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Compares the given filenames using natural ordering.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstutils.h"/>
+      <return-value transfer-ownership="none">
+        <type name="gint" c:type="gint"/>
+      </return-value>
+      <parameters>
+        <parameter name="a" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a filename to compare with @b</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="b" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a filename to compare with @a</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="util_fraction_add" c:identifier="gst_util_fraction_add">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">Adds the fractions @a_n/@a_d and @b_n/@b_d and stores
 the result in @res_n and @res_d.</doc>

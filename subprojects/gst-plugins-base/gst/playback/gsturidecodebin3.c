@@ -1579,7 +1579,9 @@ gst_uri_decode_bin3_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_URI:
+      PLAY_ITEMS_LOCK (dec);
       gst_uri_decode_bin3_set_uri (dec, g_value_get_string (value));
+      PLAY_ITEMS_UNLOCK (dec);
       break;
     case PROP_SUBURI:
       gst_uri_decode_bin3_set_suburi (dec, g_value_get_string (value));
@@ -1911,6 +1913,7 @@ uri_src_ignore_block_probe (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_OK;
 }
 
+/* PLAY_ITEMS_LOCK held */
 static void
 gst_uri_decode_bin3_set_uri (GstURIDecodeBin3 * dec, const gchar * uri)
 {
