@@ -29,6 +29,7 @@
 #include "config.h"
 #endif
 
+#include <gst/cuda/gstcuda.h>
 #include "gstnvdec.h"
 #include "gstnvenc.h"
 #include "gstnvav1dec.h"
@@ -38,8 +39,7 @@
 #include "gstnvvp9dec.h"
 #include "gstnvdecoder.h"
 #include "gstcudamemorycopy.h"
-#include "gstcudafilter.h"
-#include <gst/cuda/gstcudamemory.h>
+#include "gstcudaconvertscale.h"
 #ifdef HAVE_NVCODEC_NVMM
 #include "gstcudanvmm.h"
 #endif
@@ -71,6 +71,29 @@ plugin_deinit (gpointer data)
 }
 
 static gboolean
+check_runtime_compiler (void)
+{
+  /* *INDENT-OFF* */
+  const gchar *nvrtc_test_source =
+    "__global__ void\n"
+    "my_kernel (void) {}";
+  /* *INDENT-ON* */
+
+  gchar *test_ptx;
+
+  if (!gst_cuda_nvrtc_load_library ())
+    return FALSE;
+
+  test_ptx = gst_cuda_nvrtc_compile (nvrtc_test_source);
+  if (!test_ptx)
+    return FALSE;
+
+  g_free (test_ptx);
+
+  return TRUE;
+}
+
+static gboolean
 plugin_init (GstPlugin * plugin)
 {
   CUresult cuda_ret;
@@ -84,6 +107,7 @@ plugin_init (GstPlugin * plugin)
   guint api_minor_ver = 1;
   GList *h264_enc_cdata = NULL;
   GList *h265_enc_cdata = NULL;
+  gboolean have_nvrtc = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
@@ -135,6 +159,8 @@ plugin_init (GstPlugin * plugin)
         (int) cuda_ret, err_name, err_desc);
     return TRUE;
   }
+
+  have_nvrtc = check_runtime_compiler ();
 
   for (i = 0; i < dev_count; i++) {
     GstCudaContext *context = gst_cuda_context_new (i);
@@ -259,7 +285,15 @@ plugin_init (GstPlugin * plugin)
   }
 
   gst_cuda_memory_copy_register (plugin, GST_RANK_NONE);
-  gst_cuda_filter_plugin_init (plugin);
+
+  if (have_nvrtc) {
+    gst_element_register (plugin, "cudaconvert", GST_RANK_NONE,
+        GST_TYPE_CUDA_CONVERT);
+    gst_element_register (plugin, "cudascale", GST_RANK_NONE,
+        GST_TYPE_CUDA_SCALE);
+    gst_element_register (plugin, "cudaconvertscale", GST_RANK_NONE,
+        GST_TYPE_CUDA_CONVERT_SCALE);
+  }
   gst_element_register (plugin,
       "cudaipcsink", GST_RANK_NONE, GST_TYPE_CUDA_IPC_SINK);
   gst_element_register (plugin,
