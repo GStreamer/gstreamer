@@ -20,6 +20,7 @@ codecparser_sources = files([
   'gsth265bitwriter.c',
   'gstav1bitwriter.c',
   'gstvp9bitwriter.c',
+  'gstjpegbitwriter.c',
 ])
 codecparser_headers = [
   'codecparsers-prelude.h',
