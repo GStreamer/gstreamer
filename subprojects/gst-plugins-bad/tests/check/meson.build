@@ -99,6 +99,7 @@ base_tests = [
   [['libs/vkformat.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/av1bitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/vp9bitwriter.c'], false, [gstcodecparsers_dep]],
+  [['libs/jpegbitwriter.c'], false, [gstcodecparsers_dep]],
   [['libs/vkmemory.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
   [['libs/analyticsmeta.c'], false, [gstanalytics_dep]],
   [['elements/vkcolorconvert.c'], not gstvulkan_dep.found(), [gstvulkan_dep]],
