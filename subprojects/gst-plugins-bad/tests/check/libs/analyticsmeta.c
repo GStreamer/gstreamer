@@ -576,6 +576,11 @@ GST_START_TEST (test_od_meta_fields)
   fail_unless (_h == h);
   fail_unless (_loc_conf_lvl == loc_conf_lvl);
 
+  _loc_conf_lvl = -200.0;       // dirty this var by setting invalid value.
+  gst_analytics_od_mtd_get_confidence_lvl (&od_mtd, &_loc_conf_lvl);
+
+  fail_unless (_loc_conf_lvl == loc_conf_lvl);
+
   gst_buffer_unref (buf);
 }
 
