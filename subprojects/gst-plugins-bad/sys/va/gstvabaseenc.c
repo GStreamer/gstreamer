@@ -353,8 +353,8 @@ gst_va_base_enc_copy_output_data (GstVaBaseEnc * base,
     goto out;
 
   seg_list = NULL;
-  if (!va_map_buffer (base->display, GST_MAP_READ, picture->coded_buffer,
-          (gpointer *) & seg_list))
+  if (!va_map_buffer (base->display, picture->coded_buffer,
+          GST_MAP_READ, (gpointer *) & seg_list))
     goto out;
 
   if (!seg_list) {
