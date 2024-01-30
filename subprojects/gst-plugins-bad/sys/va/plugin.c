@@ -39,6 +39,7 @@
 #include "gstvah265dec.h"
 #include "gstvah265enc.h"
 #include "gstvajpegdec.h"
+#include "gstvajpegenc.h"
 #include "gstvampeg2dec.h"
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
@@ -220,6 +221,13 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
         if (!gst_va_vp9_enc_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE, entrypoint)) {
           GST_WARNING ("Failed to register VP9 encoder: %s",
+              device->render_device_path);
+        }
+        break;
+      case JPEG:
+        if (!gst_va_jpeg_enc_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE, entrypoint)) {
+          GST_WARNING ("Failed to register JPEG encoder: %s",
               device->render_device_path);
         }
         break;
