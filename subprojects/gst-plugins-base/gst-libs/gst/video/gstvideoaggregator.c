@@ -2852,6 +2852,7 @@ gst_video_aggregator_create_output_buffer (GstVideoAggregator * videoaggregator,
         GST_ELEMENT_ERROR (videoaggregator, RESOURCE, SETTINGS,
             ("failed to activate bufferpool"),
             ("failed to activate bufferpool"));
+        gst_object_unref (pool);
         return GST_FLOW_ERROR;
       }
     }
