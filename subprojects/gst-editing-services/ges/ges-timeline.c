@@ -501,6 +501,8 @@ ges_timeline_handle_message (GstBin * bin, GstMessage * message)
             gst_structure_get_string (mstructure, "reason"));
       }
       GST_OBJECT_UNLOCK (timeline);
+    } else {
+      goto forward;
     }
 
     gst_message_unref (message);
