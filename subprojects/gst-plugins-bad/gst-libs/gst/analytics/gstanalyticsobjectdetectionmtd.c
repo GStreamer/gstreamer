@@ -142,6 +142,33 @@ gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
 }
 
 /**
+ * gst_analytics_od_mtd_get_confidence_lvl:
+ * @instance: instance
+ * @loc_conf_lvl: (out): Confidence on object location
+ *
+ * Retrieve location confidence level.
+ *
+ * Returns: TRUE on success, otherwise FALSE.
+ *
+ * Since: 1.24
+ */
+gboolean
+gst_analytics_od_mtd_get_confidence_lvl (GstAnalyticsODMtd * instance,
+    gfloat * loc_conf_lvl)
+{
+  GstAnalyticsODMtdData *data;
+
+  g_return_val_if_fail (instance && loc_conf_lvl, FALSE);
+  data = gst_analytics_relation_meta_get_mtd_data (instance->meta,
+      instance->id);
+  g_return_val_if_fail (data != NULL, FALSE);
+
+  *loc_conf_lvl = data->location_confidence_lvl;
+
+  return TRUE;
+}
+
+/**
  * gst_analytics_od_mtd_get_obj_type:
  * @handle: Instance handle
  *

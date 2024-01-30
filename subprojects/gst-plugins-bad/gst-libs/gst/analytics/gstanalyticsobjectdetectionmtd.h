@@ -53,6 +53,10 @@ gboolean gst_analytics_od_mtd_get_location (GstAnalyticsODMtd * instance,
     gint * x, gint * y, gint * w, gint * h, gfloat * loc_conf_lvl);
 
 GST_ANALYTICS_META_API
+gboolean gst_analytics_od_mtd_get_confidence_lvl (GstAnalyticsODMtd * instance,
+    gfloat * loc_conf_lvl);
+
+GST_ANALYTICS_META_API
 GQuark gst_analytics_od_mtd_get_obj_type (GstAnalyticsODMtd * handle);
 
 GST_ANALYTICS_META_API
