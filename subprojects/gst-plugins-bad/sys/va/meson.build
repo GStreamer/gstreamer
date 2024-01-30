@@ -23,6 +23,7 @@ va_sources = [
   'gstvaprofile.c',
   'gstvavp8dec.c',
   'gstvavp9dec.c',
+  'gstvavp9enc.c',
   'gstvavpp.c',
 ]
 
@@ -80,7 +81,7 @@ gstva = library('gstva',
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstcodecs_dep, gstva_dep, libgudev_dep] + extra_dep,
+  dependencies : [gstcodecs_dep, gstva_dep, libgudev_dep, libm] + extra_dep,
   override_options : c_std_arg,
   install : true,
   install_dir : plugins_install_dir,

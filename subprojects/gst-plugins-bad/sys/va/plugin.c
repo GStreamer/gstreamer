@@ -43,6 +43,7 @@
 #include "gstvaprofile.h"
 #include "gstvavp8dec.h"
 #include "gstvavp9dec.h"
+#include "gstvavp9enc.h"
 #include "gstvavpp.h"
 
 #define GST_CAT_DEFAULT gstva_debug
@@ -205,6 +206,13 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
         if (!gst_va_h265_enc_register (plugin, device, sinkcaps, srccaps,
                 GST_RANK_NONE, entrypoint)) {
           GST_WARNING ("Failed to register H265 encoder: %s",
+              device->render_device_path);
+        }
+        break;
+      case VP9:
+        if (!gst_va_vp9_enc_register (plugin, device, sinkcaps, srccaps,
+                GST_RANK_NONE, entrypoint)) {
+          GST_WARNING ("Failed to register VP9 encoder: %s",
               device->render_device_path);
         }
         break;
