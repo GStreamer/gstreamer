@@ -75,7 +75,7 @@ Get number of classes</doc>
           </instance-parameter>
           <parameter name="index" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Object class index</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="gsize" c:type="gsize"/>
           </parameter>
         </parameters>
       </method>
@@ -93,7 +93,7 @@ Get number of classes</doc>
           <parameter name="index" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">index of the class
 Get quark of the class at @index</doc>
-            <type name="gint" c:type="gint"/>
+            <type name="gsize" c:type="gsize"/>
           </parameter>
         </parameters>
       </method>
