@@ -564,7 +564,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
           drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
                   GST_SECOND, rate)));
       self->drop_samples = drop_samples;
-      discont = FALSE;
+      return ret;
     } else if (new_offset > self->current_offset + avail_samples) {
       guint64 silence_samples =
           new_offset - (self->current_offset + avail_samples);
@@ -604,7 +604,7 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
 
           silence_samples -= n_samples;
         }
-        discont = FALSE;
+        return ret;
       }
     } else if (new_offset < self->current_offset + avail_samples) {
       guint64 drop_samples = self->current_offset + avail_samples - new_offset;
@@ -614,47 +614,31 @@ gst_audio_buffer_split_handle_discont (GstAudioBufferSplit * self,
           drop_samples, GST_TIME_ARGS (gst_util_uint64_scale (drop_samples,
                   GST_SECOND, rate)));
       self->drop_samples = drop_samples;
-      discont = FALSE;
+      return ret;
     }
   }
 
-  if (discont) {
-    /* We might end up in here also in gapless mode, if the above code decided
-     * that no silence is to be inserted, because e.g. the gap is too big */
-    GST_DEBUG_OBJECT (self,
-        "Got %s: Current running time %" GST_TIME_FORMAT
-        ", current end running time %" GST_TIME_FORMAT
-        ", running time after discont %" GST_TIME_FORMAT,
-        self->current_offset == -1 ? "first buffer" : "discont",
-        GST_TIME_ARGS (current_rt),
-        GST_TIME_ARGS (current_rt_end), GST_TIME_ARGS (input_rt));
+  /* We might end up in here also in gapless mode, if the above code decided
+   * that no silence is to be inserted, because e.g. the gap is too big */
+  GST_DEBUG_OBJECT (self, "Got %s: Current running time %" GST_TIME_FORMAT
+      ", current end running time %" GST_TIME_FORMAT
+      ", running time after discont %" GST_TIME_FORMAT,
+      self->current_offset == -1 ? "first buffer" : "discont",
+      GST_TIME_ARGS (current_rt), GST_TIME_ARGS (current_rt_end),
+      GST_TIME_ARGS (input_rt));
 
-    if (self->strict_buffer_size) {
-      gst_adapter_clear (self->adapter);
-      ret = GST_FLOW_OK;
-    } else {
-      ret =
-          gst_audio_buffer_split_output (self, TRUE, rate, bpf,
-          samples_per_buffer);
-    }
-
-    self->current_offset = 0;
-    self->accumulated_error = 0;
-    self->resync_pts = GST_BUFFER_PTS (buffer);
-    self->resync_rt = input_rt;
-
-    if (self->segment_pending) {
-      GstEvent *event;
-
-      self->out_segment = self->in_segment;
-      GST_DEBUG_OBJECT (self, "Updating output segment %" GST_SEGMENT_FORMAT,
-          &self->out_segment);
-      event = gst_event_new_segment (&self->out_segment);
-      gst_event_set_seqnum (event, self->segment_seqnum);
-      gst_pad_push_event (self->srcpad, event);
-      self->segment_pending = FALSE;
-    }
+  if (self->strict_buffer_size) {
+    gst_adapter_clear (self->adapter);
+    ret = GST_FLOW_OK;
+  } else {
+    ret = gst_audio_buffer_split_output (self, TRUE, rate, bpf,
+        samples_per_buffer);
   }
+
+  self->current_offset = 0;
+  self->accumulated_error = 0;
+  self->resync_pts = GST_BUFFER_PTS (buffer);
+  self->resync_rt = input_rt;
 
   return ret;
 }
@@ -737,6 +721,18 @@ gst_audio_buffer_split_sink_chain (GstPad * pad, GstObject * parent,
   if (ret != GST_FLOW_OK) {
     gst_buffer_unref (buffer);
     return ret;
+  }
+
+  if (self->segment_pending) {
+    GstEvent *event;
+
+    self->out_segment = self->in_segment;
+    GST_DEBUG_OBJECT (self, "Updating output segment %" GST_SEGMENT_FORMAT,
+        &self->out_segment);
+    event = gst_event_new_segment (&self->out_segment);
+    gst_event_set_seqnum (event, self->segment_seqnum);
+    gst_pad_push_event (self->srcpad, event);
+    self->segment_pending = FALSE;
   }
 
   buffer =
