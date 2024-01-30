@@ -1108,10 +1108,12 @@ push_event (MpegTSBase * base, GstEvent * event)
   for (tmp = demux->program->stream_list; tmp; tmp = tmp->next) {
     TSDemuxStream *stream = (TSDemuxStream *) tmp->data;
     if (stream->pad) {
-      /* If we are pushing out EOS, flush out pending data first */
-      if (GST_EVENT_TYPE (event) == GST_EVENT_EOS &&
-          gst_pad_is_active (stream->pad))
+      /* If we are pushing out EOS or segment-done, flush out pending data first */
+      if ((GST_EVENT_TYPE (event) == GST_EVENT_EOS ||
+              GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT_DONE) &&
+          gst_pad_is_active (stream->pad)) {
         gst_ts_demux_push_pending_data (demux, stream, NULL);
+      }
 
       gst_event_ref (event);
       gst_pad_push_event (stream->pad, event);
@@ -3006,6 +3008,13 @@ gst_ts_demux_check_and_sync_streams (GstTSDemux * demux, GstClockTime time)
 
       /* Now send gap event */
       gst_pad_push_event (ps->pad, gst_event_new_gap (time, 0));
+
+      /* And do an EOS check */
+      MpegTSBase *base = GST_MPEGTS_BASE (demux);
+      if (base->out_segment.stop != -1 && time >= base->out_segment.stop) {
+        gst_flow_combiner_update_pad_flow (demux->flowcombiner, ps->pad,
+            GST_FLOW_EOS);
+      }
     }
 
     /* Update GAP tracking vars so we don't re-check this stream for a while */
@@ -3642,8 +3651,26 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     /* Record that a buffer was pushed */
     stream->nb_out_buffers += n;
   }
+
+  /* If this proceeded past the end of the configured segment, mark it as EOS */
+  if (res == GST_FLOW_OK) {
+    /* If the pad returned anything other than GST_FLOW_OK, the flow combiner
+     * will already handle that, we only need to check for EOS */
+    GstClockTime ts = stream->dts;
+    if (!GST_CLOCK_TIME_IS_VALID (ts))
+      ts = stream->pts;
+
+    if (base->out_segment.stop != -1 &&
+        GST_CLOCK_TIME_IS_VALID (ts) && ts >= base->out_segment.stop) {
+      GST_DEBUG_OBJECT (stream->pad, "DTS %" GST_TIMEP_FORMAT
+          " is past the segment stop %" GST_TIMEP_FORMAT ". Marking pad as EOS",
+          &ts, &base->out_segment.stop);
+      res = GST_FLOW_EOS;
+    }
+  }
   GST_DEBUG_OBJECT (stream->pad, "Returned %s", gst_flow_get_name (res));
-  res = gst_flow_combiner_update_flow (demux->flowcombiner, res);
+  res =
+      gst_flow_combiner_update_pad_flow (demux->flowcombiner, stream->pad, res);
   GST_DEBUG_OBJECT (stream->pad, "combined %s", gst_flow_get_name (res));
 
   /* GAP / sparse stream tracking */
