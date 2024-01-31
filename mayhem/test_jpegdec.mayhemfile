@@ -12,6 +12,7 @@ testsuite:
   - file://testsuite
 
 cmds:
-  - cmd: /harnesses/test_jpegdec
+  - cmd: /test_jpegdec
     libfuzzer: true
     sanitizer: true
+    max_length: 32768

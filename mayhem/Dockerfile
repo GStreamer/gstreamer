@@ -1,47 +1,74 @@
 FROM ubuntu AS builder
 
-RUN apt update -y && apt install -y python3 python3-pip build-essential clang ninja-build git flex bison cmake pkg-config libglib2.0-dev libjpeg-dev
+RUN apt update -y && DEBIAN_FRONTEND=noninteractive apt install -y \
+  python3 \
+  python3-pip \
+  clang \
+  ninja-build \
+  git \
+  flex \
+  bison \
+  cmake \
+  pkg-config \
+  libglib2.0-dev \
+  libjpeg-dev \
+  libunwind-dev \
+  libdw-dev
 RUN pip3 install meson
 
 WORKDIR /work
 COPY . .
 
-RUN CC=clang CXX=clang++ meson \
-    --libdir=lib \
-    --default-library=shared \
-    #--force-fallback-for=zlib \
-    -Dauto_features=disabled \
-    -Db_lundef=false \
-    -Dharnesses=enabled \
-    -Dglib:libmount=disabled \
-    -Dglib:tests=false \
-    -Ddoc=disabled \
-    -Dexamples=disabled \
-    -Dintrospection=disabled \
-    -Dgood=enabled \
-    -Dugly=disabled \
-    -Dbad=disabled \
-    -Dlibav=disabled \
-    -Dges=disabled \
-    -Dvaapi=disabled \
-    -Dsharp=disabled \
-    -Drs=disabled \
-    -Dpython=disabled \
-    -Dlibnice=disabled \
-    -Ddevtools=disabled \
-    -Drtsp_server=disabled \
-    -Dgst-examples=disabled \
-    -Dqt5=disabled \
-    -Dorc=disabled \
-    -Dgtk_doc=disabled \
-    -Dgstreamer:tracer_hooks=false \
-    -Dgst-plugins-base:opus=disabled \
-    -Dgst-plugins-base:pango=disabled \
-    -Dgst-plugins-good:jpeg=enabled \
-    builddir \
+RUN CC=clang CXX=clang++ meson setup \
+  --libdir=lib \
+  --default-library=shared \
+  #--force-fallback-for=zlib \
+  -Dharnesses=enabled \
+  -Dauto_features=disabled \
+  -Db_lundef=false \
+  -Dglib:libmount=disabled \
+  -Dglib:tests=false \
+  -Ddoc=disabled \
+  -Dexamples=disabled \
+  -Dintrospection=disabled \
+  -Dgood=enabled \
+  -Dugly=disabled \
+  -Dbad=disabled \
+  -Dlibav=disabled \
+  -Dges=disabled \
+  -Dvaapi=disabled \
+  -Dsharp=disabled \
+  -Drs=disabled \
+  -Dpython=disabled \
+  -Dlibnice=disabled \
+  -Dtls=disabled \
+  -Ddevtools=disabled \
+  -Dtools=disabled \
+  -Drtsp_server=disabled \
+  -Dgst-examples=disabled \
+  -Dqt5=disabled \
+  -Dqt6=disabled \
+  -Dorc=disabled \
+  -Dnls=disabled \
+  -Dwebrtc=disabled \
+  -Dgtk_doc=disabled \
+  -Dgstreamer:tracer_hooks=false \
+  -Dgst-plugins-base:opus=disabled \
+  -Dgst-plugins-base:pango=disabled \
+  -Dgst-plugins-good:jpeg=enabled \
+  -Dgstreamer:check=enabled \
+  builddir \
     .
 RUN CC=clang CXX=clang++ ninja -C builddir
 
 FROM ubuntu
-RUN apt update -y && apt install -y strace gdb libgstreamer1.0-dev
-COPY --from=builder /work/builddir/harnesses/test_jpegdec /
+RUN apt update -y && DEBIAN_FRONTEND=noninteractive apt install -y \
+  llvm \
+  gstreamer1.0-x \
+  gstreamer1.0-tools \
+  gstreamer1.0-plugins-base \
+  gstreamer1.0-plugins-good \
+  gstreamer1.0-plugins-bad \
+  gstreamer1.0-plugins-ugly
+COPY --from=builder /work/builddir/harnesses/test_jpegdec /test_jpegdec
+#COPY --from=builder /work/harnesses /work/harnesses
