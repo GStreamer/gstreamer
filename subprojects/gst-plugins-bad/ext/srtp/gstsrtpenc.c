@@ -1149,6 +1149,7 @@ gst_srtp_enc_process_buffer (GstSrtpEnc * filter, GstPad * pad,
   if (filter->session == NULL) {
     /* The rtcp session disappeared (element shutting down) */
     GST_OBJECT_UNLOCK (filter);
+    gst_buffer_unmap (bufout, &mapout);
     ret = GST_FLOW_FLUSHING;
     goto fail;
   }
