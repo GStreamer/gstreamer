@@ -1608,6 +1608,416 @@ GST_START_TEST (test_nopts_in_middle)
 
 GST_END_TEST;
 
+/* test segment update with start/time update */
+GST_START_TEST (test_segment_base_nonzero)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  /*
+     GList *l;
+     GstClockTime next_ts = 0;
+     guint n = 1;
+   */
+
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  g_object_set (videorate, "skip-to-first", TRUE, NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string ("video/x-raw, "
+      "width = (int) 320, "
+      "height = (int) 240, "
+      "framerate = (fraction) 30000/1001 , " "format = (string) I420");
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* Send first closed segment [0, -1] */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = ((1000 * 60 + 2) * 60 + 20) * GST_SECOND + 560636518;
+  segment.time = (2 * 60 + 20) * GST_SECOND + 560636518;
+  segment.position = segment.start;
+  segment.base = segment.time;
+  segment.stop = GST_CLOCK_TIME_NONE;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* first buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) =
+      ((1000 * 60 + 2) * 60 + 20) * GST_SECOND + 543953185;
+  gst_buffer_memset (buf, 0, 1, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "first", 1);
+  gst_buffer_ref (buf);
+
+  GST_DEBUG ("pushing first buffer");
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (buf, "first", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
+
+  /* second buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) =
+      ((1000 * 60 + 2) * 60 + 20) * GST_SECOND + 577319851;
+  gst_buffer_memset (buf, 0, 2, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  assert_videorate_stats (videorate, "second", 2, 1, 0, 0);
+
+  /* push EOS to drain out all buffers */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless_equals_int (g_list_length (buffers), 2);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* test segment update with start/time update */
+GST_START_TEST (test_segment_update_start_advance)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GList *l;
+  GstClockTime next_ts = 0;
+  guint n = 1;
+
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* Send first closed segment [0, -1] */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 0 * GST_SECOND;
+  segment.time = 0 * GST_SECOND;
+  segment.position = 0 * GST_SECOND;
+  segment.stop = GST_CLOCK_TIME_NONE;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* first buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 0;
+  gst_buffer_memset (buf, 0, 1, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "first", 1);
+  gst_buffer_ref (buf);
+
+  GST_DEBUG ("pushing first buffer");
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (buf, "first", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
+
+  /* second buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 2, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  assert_videorate_stats (videorate, "second", 2, 1, 0, 0);
+
+  /* third buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 2 * 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 3, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "third", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "third", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  assert_videorate_stats (videorate, "second", 3, 2, 0, 0);
+
+  /* should have the first 2 buffers here */
+  for (l = buffers; l; l = l->next) {
+    buf = l->data;
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+    fail_unless_equals_int (buffer_get_byte (buf, 0), n);
+
+    next_ts += GST_SECOND / 25;
+    n += 1;
+  }
+  gst_check_drop_buffers ();
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* Send a new segment [30, -1] that does intersect with the first */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 30 * GST_SECOND;
+  segment.time = 30 * GST_SECOND;
+  segment.position = 30 * GST_SECOND;
+  segment.stop = GST_CLOCK_TIME_NONE;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* fourth buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 30 * GST_SECOND + 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 4, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "fourth", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "fourth", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  assert_videorate_stats (videorate, "fourth", 4, 3, 0, 0);
+
+  /* Should have the last buffer of the previous segment here */
+  for (l = buffers; l; l = l->next) {
+    buf = l->data;
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+    fail_unless_equals_int (buffer_get_byte (buf, 0), 3);
+
+    next_ts += GST_SECOND / 25;
+    n += 1;
+  }
+  gst_check_drop_buffers ();
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* fifth buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 30 * GST_SECOND + 2 * 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 5, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "fifth", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "fifth", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  assert_videorate_stats (videorate, "fifth", 5, 5, 0, 1);
+
+  /* push EOS to drain out all buffers */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless_equals_int (g_list_length (buffers), 3);
+
+  assert_videorate_stats (videorate, "fifth", 5, 6, 0, 1);
+
+  /* Should start with the new buffers of the new segment now */
+  next_ts = 30 * GST_SECOND;
+  for (l = buffers; l; l = l->next) {
+    buf = l->data;
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+
+    if (n < 6) {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 4);
+    } else {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 5);
+    }
+
+    next_ts += GST_SECOND / 25;
+    n += 1;
+  }
+  fail_unless_equals_int (n, 7);
+  gst_check_drop_buffers ();
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* test segment update with same segment */
+GST_START_TEST (test_segment_update_same)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+  GList *l;
+  GstClockTime next_ts = 0;
+  guint n = 1;
+
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* Send first closed segment [30, -1] */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 30 * GST_SECOND;
+  segment.time = 30 * GST_SECOND;
+  segment.position = 30 * GST_SECOND;
+  segment.stop = GST_CLOCK_TIME_NONE;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* first buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 32 * GST_SECOND;
+  gst_buffer_memset (buf, 0, 1, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "first", 1);
+  gst_buffer_ref (buf);
+
+  GST_DEBUG ("pushing first buffer");
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  /* ... and a copy is now stuck inside videorate */
+  ASSERT_BUFFER_REFCOUNT (buf, "first", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 0);
+  assert_videorate_stats (videorate, "first", 1, 0, 0, 0);
+
+  /* second buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 32 * GST_SECOND + 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 2, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "second", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 51);
+  assert_videorate_stats (videorate, "second", 2, 51, 0, 50);
+
+  /* third buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 32 * GST_SECOND + 2 * 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 3, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "third", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "third", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 52);
+  assert_videorate_stats (videorate, "second", 3, 52, 0, 50);
+
+  /* should have the first 2 buffers here */
+  next_ts = 30 * GST_SECOND;
+  for (l = buffers; l; l = l->next) {
+    buf = l->data;
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+
+    if (n < 52) {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 1);
+    } else {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 2);
+    }
+
+    next_ts += GST_SECOND / 25;
+    n += 1;
+  }
+  gst_check_drop_buffers ();
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* Send a new segment [30, -1] that is exactly the same as before */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.start = 30 * GST_SECOND;
+  segment.time = 30 * GST_SECOND;
+  segment.position = 30 * GST_SECOND;
+  segment.stop = GST_CLOCK_TIME_NONE;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* fourth buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 35 * GST_SECOND + 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 4, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "fourth", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "fourth", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 38);
+  assert_videorate_stats (videorate, "fourth", 4, 90, 0, 87);
+
+  /* Should have the last buffer of the previous segment here */
+  for (l = buffers; l; l = l->next) {
+    buf = l->data;
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+    fail_unless_equals_int (buffer_get_byte (buf, 0), 3);
+
+    next_ts += GST_SECOND / 25;
+    n += 1;
+  }
+  gst_check_drop_buffers ();
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* fifth buffer */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buf) = 35 * GST_SECOND + 2 * 40 * GST_MSECOND;
+  gst_buffer_memset (buf, 0, 5, 4);
+  ASSERT_BUFFER_REFCOUNT (buf, "fifth", 1);
+  gst_buffer_ref (buf);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (buf, "fifth", 1);
+  gst_buffer_unref (buf);
+  fail_unless_equals_int (g_list_length (buffers), 37);
+
+  /* push EOS to drain out all buffers */
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  fail_unless_equals_int (g_list_length (buffers), 38);
+
+  assert_videorate_stats (videorate, "fourth", 5, 128, 0, 123);
+
+  for (l = buffers; l; l = l->next) {
+    buf = l->data;
+    fail_unless_equals_uint64 (GST_BUFFER_PTS (buf), next_ts);
+    fail_unless_equals_uint64 (GST_BUFFER_DURATION (buf), 40 * GST_MSECOND);
+
+    if (n < 128) {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 4);
+    } else {
+      fail_unless_equals_int (buffer_get_byte (buf, 0), 5);
+    }
+
+    next_ts += GST_SECOND / 25;
+    n += 1;
+  }
+  gst_check_drop_buffers ();
+  fail_unless_equals_int (g_list_length (buffers), 0);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
 static Suite *
 videorate_suite (void)
 {
@@ -1634,6 +2044,9 @@ videorate_suite (void)
   tcase_add_loop_test (tc_chain, test_query_position, 0,
       G_N_ELEMENTS (position_tests));
   tcase_add_test (tc_chain, test_nopts_in_middle);
+  tcase_add_test (tc_chain, test_segment_base_nonzero);
+  tcase_add_test (tc_chain, test_segment_update_start_advance);
+  tcase_add_test (tc_chain, test_segment_update_same);
 
   return s;
 }
