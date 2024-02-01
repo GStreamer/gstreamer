@@ -169,6 +169,16 @@ gst_analytics_mtd_get_size (GstAnalyticsMtd * handle)
   return rlt->size;
 }
 
+/**
+ * gst_analytics_mtd_type_get_name:
+ * @type: The type of analytics data
+ *
+ * Gets the string version of the name of this type of analytics data
+ *
+ * Returns: the name
+ *
+ * Since: 1.24
+ */
 const gchar *
 gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type)
 {
@@ -176,7 +186,10 @@ gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type)
 
   g_return_val_if_fail (impl != NULL, NULL);
 
-  return impl->name;
+  if (type == GST_ANALYTICS_MTD_TYPE_ANY)
+    return "ANY";
+  else
+    return impl->name;
 }
 
 /**

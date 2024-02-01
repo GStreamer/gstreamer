@@ -177,13 +177,16 @@ Get instance size</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <function name="type_get_name" c:identifier="gst_analytics_mtd_type_get_name">
+      <function name="type_get_name" c:identifier="gst_analytics_mtd_type_get_name" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Gets the string version of the name of this type of analytics data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
         <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">the name</doc>
           <type name="utf8" c:type="const gchar*"/>
         </return-value>
         <parameters>
           <parameter name="type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">The type of analytics data</doc>
             <type name="MtdType" c:type="GstAnalyticsMtdType"/>
           </parameter>
         </parameters>
@@ -963,13 +966,16 @@ Since 1.24</doc>
         <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
-    <function name="mtd_type_get_name" c:identifier="gst_analytics_mtd_type_get_name" moved-to="Mtd.type_get_name">
+    <function name="mtd_type_get_name" c:identifier="gst_analytics_mtd_type_get_name" moved-to="Mtd.type_get_name" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Gets the string version of the name of this type of analytics data</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">the name</doc>
         <type name="utf8" c:type="const gchar*"/>
       </return-value>
       <parameters>
         <parameter name="type" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">The type of analytics data</doc>
           <type name="MtdType" c:type="GstAnalyticsMtdType"/>
         </parameter>
       </parameters>
