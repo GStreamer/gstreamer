@@ -113,6 +113,7 @@ remove_sample (GSequence * sequence, GCompareDataFunc compare,
 GstMediaSourceSampleMap *
 gst_media_source_sample_map_new (void)
 {
+  gst_mse_init_logging ();
   return gst_object_ref_sink (g_object_new (GST_TYPE_MEDIA_SOURCE_SAMPLE_MAP,
           NULL));
 }
