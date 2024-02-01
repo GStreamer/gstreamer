@@ -724,17 +724,30 @@ _file_get_structures (GFile * file, gchar ** err,
           GList *tmpstructures;
           gchar **include_dirs = NULL;
 
-          if (!get_include_paths_func
-              && g_str_has_suffix (location, GST_VALIDATE_SCENARIO_SUFFIX)) {
+          if (get_include_paths_func)
+            include_dirs = get_include_paths_func (filename);
+
+          if (g_str_has_suffix (location, GST_VALIDATE_SCENARIO_SUFFIX)) {
             GST_INFO
                 ("Trying to include a scenario, take into account scenario include dir");
 
-            get_include_paths_func = (GstValidateGetIncludePathsFunc)
-                gst_validate_scenario_get_include_paths;
+            gchar **extra_includes =
+                gst_validate_scenario_get_include_paths (filename);
+            if (extra_includes) {
+              gint i = 0;
+              gint existing_len =
+                  include_dirs ? g_strv_length (include_dirs) : 0;
+              gint extra_len = g_strv_length (extra_includes);
+              include_dirs =
+                  g_realloc_n (include_dirs, existing_len + extra_len + 1,
+                  sizeof (gchar *));
+              for (i = 0; extra_includes[i] != NULL; i++) {
+                include_dirs[existing_len + i] = extra_includes[i];
+              }
+              include_dirs[existing_len + i] = NULL;
+              g_free (extra_includes);
+            }
           }
-
-          if (get_include_paths_func)
-            include_dirs = get_include_paths_func (filename);
 
           if (!include_dirs) {
             GFile *dir = g_file_get_parent (file);

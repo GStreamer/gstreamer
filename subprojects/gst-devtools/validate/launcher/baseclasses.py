@@ -43,6 +43,7 @@ import shutil
 import uuid
 from itertools import cycle
 from fractions import Fraction
+from pathlib import Path
 
 from .utils import GstCaps, which
 from . import reporters
@@ -1030,6 +1031,12 @@ class GstValidateTest(Test):
         self.add_env_variable('GST_GL_XINITTHREADS', '1')
         subproc_env['GST_XINITTHREADS'] = '1'
         self.add_env_variable('GST_XINITTHREADS', '1')
+
+        vaildateconfigs_path = os.environ.get('GST_VALIDATE_TEST_CONFIG_PATH', "")
+        extra_configs = os.path.join(self.options.logsdir, "_validate_test_extra_configs")
+        vaildateconfigs_path = f"{extra_configs}{os.pathsep}{vaildateconfigs_path}"
+        subproc_env['GST_VALIDATE_TEST_CONFIG_PATH'] = vaildateconfigs_path
+        self.add_env_variable('GST_VALIDATE_TEST_CONFIG_PATH', vaildateconfigs_path)
 
         if self.scenario is not None:
             scenario = self.scenario.get_execution_name()
@@ -2023,6 +2030,10 @@ class _TestsLauncher(Loggable):
         if self.needs_http_server() or options.httponly is True:
             self.httpsrv = HTTPServer(options)
             self.httpsrv.start()
+            configsdir = Path(options.logsdir) / "_validate_test_extra_configs"
+            os.makedirs(configsdir, exist_ok=True)
+            with open(configsdir / "http_server_port.var", "w") as f:
+                f.write(f"set-globals,http_server_port={self.options.http_server_port}")
 
         if options.no_display:
             self.vfb_server = get_virual_frame_buffer_server(options)

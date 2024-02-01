@@ -587,6 +587,31 @@ gst_validate_get_test_file_scenario (GList ** structs,
   return TRUE;
 }
 
+static gchar **
+validate_test_include_paths (const gchar * includer_file)
+{
+  gchar **env_configdir;
+  gchar *configs_path = g_strdup (g_getenv ("GST_VALIDATE_TEST_CONFIG_PATH"));
+
+  if (includer_file) {
+    gchar *relative_dir = g_path_get_dirname (includer_file);
+    gchar *tmp_configs_path = configs_path ?
+        g_strdup_printf ("%s" G_SEARCHPATH_SEPARATOR_S "%s", configs_path,
+        relative_dir) : g_strdup (relative_dir);
+    g_free (relative_dir);
+
+    g_free (configs_path);
+    configs_path = tmp_configs_path;
+  }
+
+  env_configdir =
+      configs_path ? g_strsplit (configs_path, G_SEARCHPATH_SEPARATOR_S,
+      0) : NULL;
+  g_free (configs_path);
+
+  return env_configdir;
+}
+
 /* Only the first monitor pipeline will be used */
 GstStructure *
 gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
@@ -603,8 +628,8 @@ gst_validate_setup_test_file (const gchar * testfile, gboolean use_fakesinks)
   gst_validate_set_globals (NULL);
   gst_validate_structure_set_variables_from_struct_file (NULL, global_testfile);
   testfile_structs =
-      gst_validate_utils_structs_parse_from_filename (global_testfile, NULL,
-      NULL);
+      gst_validate_utils_structs_parse_from_filename (global_testfile,
+      validate_test_include_paths, NULL);
 
   if (!testfile_structs)
     gst_validate_abort ("Could not load test file: %s", global_testfile);
