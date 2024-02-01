@@ -222,8 +222,5 @@ GstD3D12PoolAllocator * gst_d3d12_pool_allocator_new (GstD3D12Device * device,
 GstFlowReturn           gst_d3d12_pool_allocator_acquire_memory (GstD3D12PoolAllocator * allocator,
                                                                  GstMemory ** memory);
 
-gboolean                gst_d3d12_pool_allocator_get_pool_size  (GstD3D12PoolAllocator * allocator,
-                                                                 guint * max_size, guint * outstanding_size);
-
 G_END_DECLS
 

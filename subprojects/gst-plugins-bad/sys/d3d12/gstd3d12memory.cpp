@@ -1267,26 +1267,3 @@ gst_d3d12_pool_allocator_acquire_memory (GstD3D12PoolAllocator * allocator,
 
   return ret;
 }
-
-gboolean
-gst_d3d12_pool_allocator_get_pool_size (GstD3D12PoolAllocator * allocator,
-    guint * max_size, guint * outstanding_size)
-{
-  GstD3D12PoolAllocatorPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_D3D12_POOL_ALLOCATOR (allocator), FALSE);
-
-  priv = allocator->priv;
-
-  if (max_size) {
-    if (priv->desc.DepthOrArraySize > 1)
-      *max_size = (guint) priv->desc.DepthOrArraySize;
-    else
-      *max_size = 0;
-  }
-
-  if (outstanding_size)
-    *outstanding_size = priv->outstanding;
-
-  return TRUE;
-}
