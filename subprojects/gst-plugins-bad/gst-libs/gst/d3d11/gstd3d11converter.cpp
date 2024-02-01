@@ -1313,9 +1313,9 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   memset (input_desc, 0, sizeof (input_desc));
   memset (&buffer_desc, 0, sizeof (buffer_desc));
 
+  GstD3D11DeviceLockGuard lk(device);
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
-
 
   if(priv->bilinear_filtering) {
     sampler_desc.Filter = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT;
@@ -1418,7 +1418,6 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
     return FALSE;
   }
 
-  GstD3D11DeviceLockGuard lk (device);
   hr = context_handle->Map (const_buffer.Get (), 0, D3D11_MAP_WRITE_DISCARD, 0,
       &map);
   if (!gst_d3d11_result (hr, device)) {
@@ -3001,7 +3000,7 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
     GST_WARNING_OBJECT (self, "Unknown output DXGI colorspace");
     return FALSE;
   }
-
+  GstD3D11DeviceLockGuard lkd(self->device);
   video_device = gst_d3d11_device_get_video_device_handle (self->device);
   if (!video_device) {
     GST_DEBUG_OBJECT (self, "video device interface is not available");
@@ -3076,7 +3075,6 @@ gst_d3d11_converter_setup_processor (GstD3D11Converter * self)
     return FALSE;
   }
 
-  GstD3D11DeviceLockGuard lk (device);
   /* We don't want auto processing by driver */
   video_context1->VideoProcessorSetStreamAutoProcessingMode
       (processor.Get (), 0, FALSE);
