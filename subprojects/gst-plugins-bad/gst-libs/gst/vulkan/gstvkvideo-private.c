@@ -37,6 +37,12 @@ const VkExtensionProperties _vk_codec_extensions[] = {
     .extensionName = VK_STD_VULKAN_VIDEO_CODEC_H265_DECODE_EXTENSION_NAME,
     .specVersion = VK_STD_VULKAN_VIDEO_CODEC_H265_DECODE_SPEC_VERSION,
   },
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
+  [GST_VK_VIDEO_EXTENSION_ENCODE_H264] = {
+    .extensionName = VK_STD_VULKAN_VIDEO_CODEC_H264_ENCODE_EXTENSION_NAME,
+    .specVersion = VK_STD_VULKAN_VIDEO_CODEC_H264_ENCODE_SPEC_VERSION,
+  },
+#endif
 };
 
 const VkComponentMapping _vk_identity_component_map = {
@@ -66,6 +72,9 @@ gst_vulkan_video_get_vk_functions (GstVulkanInstance * instance,
     }                                                                   \
   } G_STMT_END;
   GST_VULKAN_VIDEO_FN_LIST (GET_PROC_ADDRESS_REQUIRED)
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
+      GST_VULKAN_VIDEO_ENCODING_FN_LIST (GET_PROC_ADDRESS_REQUIRED)
+#endif
 #undef GET_PROC_ADDRESS_REQUIRED
       ret = TRUE;
 

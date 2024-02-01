@@ -48,8 +48,8 @@ struct _GstVulkanImageBufferPoolPrivate
   VkFormat vk_fmts[GST_VIDEO_MAX_PLANES];
   int n_imgs;
   guint32 n_layers;
-  gboolean has_profile;
-  GstVulkanVideoProfile profile;
+  guint32 n_profiles;
+  GstVulkanVideoProfile profiles[2];
   GstVulkanOperation *exec;
 };
 
@@ -109,11 +109,30 @@ gst_vulkan_image_buffer_pool_config_set_decode_caps (GstStructure * config,
   gst_structure_set (config, "decode-caps", GST_TYPE_CAPS, caps, NULL);
 }
 
+/**
+ * gst_vulkan_image_buffer_pool_config_set_encode_caps:
+ * @config: the #GstStructure with the pool's configuration.
+ * @caps: Upstream encode caps.
+ *
+ * Encode @caps are used when the buffers are going to be used either as encoded
+ * src or DPB images.
+ *
+ * Since: 1.26
+ */
+void
+gst_vulkan_image_buffer_pool_config_set_encode_caps (GstStructure * config,
+    GstCaps * caps)
+{
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  gst_structure_set (config, "encode-caps", GST_TYPE_CAPS, caps, NULL);
+}
+
 static inline gboolean
 gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
     config, VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props,
     VkImageLayout * initial_layout, guint64 * initial_access,
-    guint32 * n_layers, GstCaps ** decode_caps)
+    guint32 * n_layers, GstCaps ** decode_caps, GstCaps ** encode_caps)
 {
   if (!gst_structure_get_uint (config, "usage", usage)) {
     *usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT
@@ -136,6 +155,9 @@ gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
   if (decode_caps)
     gst_structure_get (config, "decode-caps", GST_TYPE_CAPS, decode_caps, NULL);
 
+  if (encode_caps)
+    gst_structure_get (config, "encode-caps", GST_TYPE_CAPS, encode_caps, NULL);
+
   return TRUE;
 }
 
@@ -149,7 +171,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   VkImageUsageFlags requested_usage, supported_usage;
   VkImageCreateInfo image_info;
   guint min_buffers, max_buffers;
-  GstCaps *caps = NULL, *decode_caps = NULL;
+  GstCaps *caps = NULL, *decode_caps = NULL, *encode_caps = NULL;
+
   GstCapsFeatures *features;
   gboolean found, no_multiplane, ret = TRUE;
   guint i;
@@ -176,27 +199,37 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
   gst_vulkan_image_buffer_pool_config_get_allocation_params (config,
       &priv->usage, &priv->mem_props, &priv->initial_layout,
-      &priv->initial_access, &priv->n_layers, &decode_caps);
+      &priv->initial_access, &priv->n_layers, &decode_caps, &encode_caps);
 
-  priv->has_profile = FALSE;
+
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  if (decode_caps && ((priv->usage
-              & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
-                  | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
-    priv->has_profile =
-        gst_vulkan_video_profile_from_caps (&priv->profile, decode_caps,
-        GST_VULKAN_VIDEO_OPERATION_DECODE);
-  }
+  {
+    guint n = 0;
+    if (decode_caps && ((priv->usage
+                & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+                    | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
+      n++;
+      if (gst_vulkan_video_profile_from_caps (&priv->profiles[priv->n_profiles],
+              decode_caps, GST_VULKAN_VIDEO_OPERATION_DECODE))
+        priv->n_profiles++;
+    }
+    gst_clear_caps (&decode_caps);
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
+    if (encode_caps && ((priv->usage
+                & (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+                    | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR)) != 0)) {
+      n++;
+      if (gst_vulkan_video_profile_from_caps (&priv->profiles[priv->n_profiles],
+              encode_caps, GST_VULKAN_VIDEO_OPERATION_ENCODE))
+        priv->n_profiles++;
+    }
+    gst_clear_caps (&encode_caps);
 #endif
-  gst_clear_caps (&decode_caps);
 
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-  if (((priv->usage & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
-                  | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)
-      && !priv->has_profile)
-    goto missing_profile;
-
-  if (priv->has_profile) {
+    if (priv->n_profiles != n)
+      goto missing_profile;
+  }
+  if (priv->n_profiles > 0) {
     no_multiplane = FALSE;
 
     /* HACK(victor): NVIDIA & RADV drivers don't report decoding features for
@@ -249,10 +282,12 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     GstVulkanImageMemory *img_mem;
     guint width, height;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    VkVideoProfileInfoKHR profiles[] =
+        { priv->profiles[0].profile, priv->profiles[1].profile };
     VkVideoProfileListInfoKHR profile_list = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
-      .profileCount = 1,
-      .pProfiles = &priv->profile.profile,
+      .profileCount = priv->n_profiles,
+      .pProfiles = profiles,
     };
 #endif
 
@@ -269,7 +304,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     image_info.extent = (VkExtent3D) { width, height, 1 };
     /* *INDENT-ON* */
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-    if (priv->has_profile)
+    if (priv->n_profiles > 0)
       image_info.pNext = &profile_list;
 #endif
 
@@ -456,10 +491,12 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     GstMemory *mem;
     guint width, height;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    VkVideoProfileInfoKHR profiles[] =
+        { priv->profiles[0].profile, priv->profiles[1].profile };
     VkVideoProfileListInfoKHR profile_list = {
       .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_LIST_INFO_KHR,
-      .profileCount = 1,
-      .pProfiles = &priv->profile.profile,
+      .profileCount = priv->n_profiles,
+      .pProfiles = profiles,
     };
 #endif
 
@@ -476,7 +513,7 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     image_info.extent = (VkExtent3D) { width, height, 1 };
     /* *INDENT-ON* */
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-    if (priv->has_profile)
+    if (priv->n_profiles > 0)
       image_info.pNext = &profile_list;
 #endif
 

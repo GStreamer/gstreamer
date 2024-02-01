@@ -63,6 +63,23 @@ struct _GstVulkanOperationClass
 
 };
 
+/**
+ * GstVulkanEncodeQueryResult:
+ * @offset: buffer offset
+ * @data_size: data size
+ * @status: status
+ *
+ * Encoder query result. Expected to be used in gst_vulkan_operation_get_query()
+ *
+ * Since: 1.26
+ */
+struct _GstVulkanEncodeQueryResult
+{
+  guint32 offset;
+  guint32 data_size;
+  guint32 status;
+};
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanOperation, gst_object_unref)
 
 GST_VULKAN_API

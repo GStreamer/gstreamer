@@ -43,6 +43,8 @@ struct _GstVulkanVideoSession
 typedef enum {
   GST_VK_VIDEO_EXTENSION_DECODE_H264,
   GST_VK_VIDEO_EXTENSION_DECODE_H265,
+  GST_VK_VIDEO_EXTENSION_ENCODE_H264,
+  GST_VK_VIDEO_EXTENSION_ENCODE_H265,
 } GST_VK_VIDEO_EXTENSIONS;
 
 #define GST_VULKAN_VIDEO_FN_LIST(V)                                            \
@@ -61,14 +63,23 @@ typedef enum {
   V(CmdEndVideoCoding)                                                         \
   V(CmdDecodeVideo)
 
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
+#define GST_VULKAN_VIDEO_ENCODING_FN_LIST(V) \
+  V(CmdEncodeVideo)                          \
+  V(GetEncodedVideoSessionParameters)
+#endif
+
 struct _GstVulkanVideoFunctions
 {
 #define DEFINE_FUNCTION(name) G_PASTE(G_PASTE(PFN_vk, name), KHR) name;
     GST_VULKAN_VIDEO_FN_LIST (DEFINE_FUNCTION)
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
+    GST_VULKAN_VIDEO_ENCODING_FN_LIST (DEFINE_FUNCTION)
+#endif
 #undef DEFINE_FUNCTION
 };
 
-extern const VkExtensionProperties _vk_codec_extensions[2];
+extern const VkExtensionProperties _vk_codec_extensions[3];
 extern const VkComponentMapping _vk_identity_component_map;
 
 gboolean                gst_vulkan_video_get_vk_functions       (GstVulkanInstance * instance,

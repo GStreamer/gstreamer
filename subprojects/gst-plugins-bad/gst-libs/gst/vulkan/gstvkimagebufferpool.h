@@ -93,6 +93,11 @@ void            gst_vulkan_image_buffer_pool_config_set_decode_caps
                                                         (GstStructure * config,
                                                          GstCaps * caps);
 
+GST_VULKAN_API
+void            gst_vulkan_image_buffer_pool_config_set_encode_caps
+                                                        (GstStructure * config,
+                                                         GstCaps * caps);
+
 G_END_DECLS
 
 #endif /* __GST_VULKAN_IMAGE_BUFFER_POOL_H__ */

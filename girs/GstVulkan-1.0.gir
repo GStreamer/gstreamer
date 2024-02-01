@@ -2269,6 +2269,22 @@ second argument is @data.</doc>
         </parameters>
       </function>
     </bitfield>
+    <record name="VulkanEncodeQueryResult" c:type="GstVulkanEncodeQueryResult" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">Encoder query result. Expected to be used in gst_vulkan_operation_get_query()</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
+      <field name="offset" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">buffer offset</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="data_size" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">data size</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="status" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h">status</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+    </record>
     <enumeration name="VulkanError" version="1.18" glib:type-name="GstVulkanError" glib:get-type="gst_vulkan_error_get_type" c:type="GstVulkanError" glib:error-domain="gst-vulkan-error">
       <member name="failed" value="0" c:identifier="GST_VULKAN_FAILED" glib:nick="failed">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkerror.h">undetermined error</doc>
@@ -3511,6 +3527,24 @@ dest or DPB images.</doc>
           </parameter>
           <parameter name="caps" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Upstream decode caps.</doc>
+            <type name="Gst.Caps" c:type="GstCaps*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="config_set_encode_caps" c:identifier="gst_vulkan_image_buffer_pool_config_set_encode_caps" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Encode @caps are used when the buffers are going to be used either as encoded
+src or DPB images.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the #GstStructure with the pool's configuration.</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="caps" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Upstream encode caps.</doc>
             <type name="Gst.Caps" c:type="GstCaps*"/>
           </parameter>
         </parameters>

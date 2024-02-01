@@ -191,10 +191,10 @@ gst_vulkan_device_constructed (GObject * object)
     VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME,
     VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME,
     VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME,
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
     VK_KHR_VIDEO_ENCODE_QUEUE_EXTENSION_NAME,
-    VK_EXT_VIDEO_ENCODE_H264_EXTENSION_NAME,
-    VK_EXT_VIDEO_ENCODE_H265_EXTENSION_NAME,
+    VK_KHR_VIDEO_ENCODE_H264_EXTENSION_NAME,
+    VK_KHR_VIDEO_ENCODE_H265_EXTENSION_NAME,
 #endif
 #endif
   };
@@ -375,7 +375,7 @@ gst_vulkan_device_choose_queues (GstVulkanDevice * device)
   int graph_index, comp_index, tx_index;
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   int dec_index = -1;
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
   int enc_index = -1;
 #endif
 #endif
@@ -401,7 +401,7 @@ gst_vulkan_device_choose_queues (GstVulkanDevice * device)
   dec_index = _pick_queue_family (queue_family_props, n_queue_families,
       VK_QUEUE_VIDEO_DECODE_BIT_KHR, family_scores);
   array = _append_queue_create_info (array, dec_index, queue_family_props);
-#ifdef VK_ENABLE_BETA_EXTENSIONS
+#if GST_VULKAN_HAVE_VIDEO_ENCODERS
   enc_index = _pick_queue_family (queue_family_props, n_queue_families,
       VK_QUEUE_VIDEO_ENCODE_BIT_KHR, family_scores);
   array = _append_queue_create_info (array, enc_index, queue_family_props);

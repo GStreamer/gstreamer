@@ -100,6 +100,7 @@ vulkan_conf_options = [
     'GST_VULKAN_HAVE_WINDOW_WIN32',
     'GST_VULKAN_HAVE_WINDOW_ANDROID',
     'GST_VULKAN_HAVE_VIDEO_EXTENSIONS',
+    'GST_VULKAN_HAVE_VIDEO_ENCODERS',
 ]
 
 foreach option : vulkan_conf_options
@@ -337,6 +338,29 @@ static StdVideoH265PictureParameterSet h265_pps;
       'gstvkvideo-private.c',
       'gstvkdecoder-private.c',
     )
+
+    encoder_test = '''
+#include <vulkan/vulkan.h>
+
+#if !(defined(VERSION_1_4) || (defined(VK_VERSION_1_3) && VK_HEADER_VERSION >= 275))
+#error "Need at least Vulkan 1.3.275"
+#endif
+
+static VkVideoEncodeH264ProfileInfoKHR h264_profile;
+static VkVideoEncodeH265ProfileInfoKHR h265_profile;
+'''
+    if vulkan_inc_dir != ''
+      have_vk_encoder = cc.compiles(encoder_test, dependencies : vulkan_dep,  args: '-I' + vulkan_inc_dir)
+    else
+      have_vk_encoder = cc.compiles(encoder_test, dependencies : vulkan_dep)
+    endif
+    if have_vk_encoder
+      vulkan_conf.set('GST_VULKAN_HAVE_VIDEO_ENCODERS', 1)
+      vulkan_sources += files(
+        'gstvkencoder-private.c',
+      )
+    endif
+
   elif get_option('vulkan-video').enabled()
     error('Vulkan Video extensions headers not found')
   endif

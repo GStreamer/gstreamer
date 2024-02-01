@@ -118,6 +118,7 @@ typedef struct _GstVulkanVideoCapabilities GstVulkanVideoCapabilities;
 typedef struct _GstVulkanOperation GstVulkanOperation;
 typedef struct _GstVulkanOperationClass GstVulkanOperationClass;
 typedef struct _GstVulkanOperationPrivate GstVulkanOperationPrivate;
+typedef struct _GstVulkanEncodeQueryResult GstVulkanEncodeQueryResult;
 
 G_END_DECLS
 
