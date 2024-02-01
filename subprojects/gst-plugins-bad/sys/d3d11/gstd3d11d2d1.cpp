@@ -180,6 +180,7 @@ gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
     g_return_val_if_fail(gst_buffer_n_memory(inbuf) == 1, GST_FLOW_ERROR);
     g_return_val_if_fail(gst_buffer_n_memory(outbuf) == 1, GST_FLOW_ERROR);
 
+    gst_d3d11_device_lock(device);
     device_handle = gst_d3d11_device_get_device_handle(device);
     context_handle = gst_d3d11_device_get_device_context_handle(device);
     if (!gst_d3d11_buffer_map(inbuf, device_handle, &in_map, GST_MAP_READ)) {
@@ -191,7 +192,6 @@ gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
         goto invalid_memory;
     }
 
-    gst_d3d11_device_lock(device);
     {
         GstD3D11Memory* mem = (GstD3D11Memory*)gst_buffer_peek_memory(outbuf, 0);
         GstD3D11Memory* src_dmem = (GstD3D11Memory*)gst_buffer_peek_memory(inbuf, 0);
@@ -250,6 +250,7 @@ cleanup:
     return ret;
 
 invalid_memory:
+    gst_d3d11_device_unlock(device);
     GST_ERROR_OBJECT(d2d1, "invalid memory");
     return GST_FLOW_ERROR;
 }
@@ -299,9 +300,12 @@ gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query)
         dxgi_format = d3d11_format.dxgi_format;
     }
 
-    device_handle = gst_d3d11_device_get_device_handle(filter->device);
+    {
+      GstD3D11DeviceLockGuard lk(filter->device);
+      device_handle = gst_d3d11_device_get_device_handle(filter->device);
 
-    hr = device_handle->CheckFormatSupport(dxgi_format, &supported);
+      hr = device_handle->CheckFormatSupport(dxgi_format, &supported);
+    }
     if (gst_d3d11_result(hr, filter->device)) {
         if ((supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) !=
             D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
