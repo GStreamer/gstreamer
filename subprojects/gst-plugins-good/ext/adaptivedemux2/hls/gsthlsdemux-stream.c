@@ -721,9 +721,12 @@ gst_hls_demux_handle_buffer_content (GstHLSDemux * demux,
   if (parser_ret == GST_HLS_PARSER_RESULT_NEED_MORE_DATA) {
     if (stream->downloading_index || stream->downloading_header)
       goto out_need_more;
-    /* Else if we're draining, it's an error */
-    if (draining)
-      goto out_error;
+    if (draining) {
+      /* Else if we're draining, move to next fragment */
+      return gst_hlsdemux_stream_handle_internal_time (hls_stream,
+          hls_stream->current_segment->stream_time);
+    }
+
     /* Else we just need more data */
     goto out_need_more;
   }

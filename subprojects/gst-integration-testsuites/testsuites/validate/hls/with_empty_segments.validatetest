@@ -1,0 +1,13 @@
+include, location="http_server_port.var"
+meta,
+  needs_http_server=true,
+  args = {
+    "playbin3 uri=http://127.0.0.1:$(http_server_port)/defaults/hls/with_empty_segments/output.m3u8 video-sink=\"fakesink\"",
+  },
+  configs = {
+    "$(validateflow),
+      pad=hlsdemux2-0:video_00,
+      buffers-checksum=as-id,
+      ignored-event-types={\"tag\"},
+      ignored-fields=\"stream-start={urisourcebin-parsed-data,stream-id,stream}, caps={lcevc}\"",
+  }

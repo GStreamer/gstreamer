@@ -1,0 +1,191 @@
+event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_SELECT, group-id=(uint)1;
+event stream-collection: stream-collection, collection=(GstStreamCollection)"\(GstStreamCollection\)\ adaptivedemux";
+event caps: video/x-h264, alignment=(string)au, bit-depth-chroma=(uint)8, bit-depth-luma=(uint)8, chroma-format=(string)4:2:0, codec_data=(buffer)01640033ffe1001027640033ac56700d8010fa6a0202020401000428ee3cb0, coded-picture-structure=(string)frame, colorimetry=(string)bt709, framerate=(fraction)0/1, height=(int)2160, interlace-mode=(string)progressive, level=(string)5.1, parsed=(boolean)true, pixel-aspect-ratio=(fraction)1/1, profile=(string)high, stream-format=(string)avc, width=(int)3456;
+event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)0;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)100000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)200000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)300000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)400000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)500000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)600000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)700000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)800000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)900000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1000000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1100000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1200000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1300000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1400000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1500000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1600000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1700000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1800000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)1900000000;
+event gap: GstEventGap, duration=(guint64)21666666, timestamp=(guint64)2000000000;
+buffer: content-id=0, dts=0:00:02.021666666, pts=0:00:02.051666666, flags=discont marker header tag-memory
+buffer: content-id=1, dts=0:00:02.078333333, pts=0:00:02.216666666, flags=marker delta-unit
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)2078333333;
+event gap: GstEventGap, duration=(guint64)8333333, timestamp=(guint64)2178333333;
+buffer: content-id=2, dts=0:00:02.186666666, pts=0:00:02.186666666, flags=marker delta-unit
+buffer: content-id=3, dts=0:00:02.205000000, pts=0:00:02.258333333, flags=marker delta-unit
+buffer: content-id=4, dts=0:00:02.228333333, pts=0:00:02.235000000, flags=marker delta-unit
+buffer: content-id=5, dts=0:00:02.290000000, pts=0:00:02.346666666, flags=marker delta-unit
+buffer: content-id=6, dts=0:00:02.316666666, pts=0:00:02.320000000, flags=marker delta-unit
+buffer: content-id=7, dts=0:00:02.390000000, pts=0:00:02.530000000, flags=marker delta-unit
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)2390000000;
+event gap: GstEventGap, duration=(guint64)10000000, timestamp=(guint64)2490000000;
+buffer: content-id=8, dts=0:00:02.500000000, pts=0:00:02.500000000, flags=marker delta-unit
+buffer: content-id=9, dts=0:00:02.516666666, pts=0:00:02.636666666, flags=marker delta-unit
+buffer: content-id=10, dts=0:00:02.606666666, pts=0:00:02.606666666, flags=marker delta-unit
+buffer: content-id=11, dts=0:00:02.706666666, pts=0:00:02.845000000, flags=marker delta-unit
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)2706666666;
+event gap: GstEventGap, duration=(guint64)8333334, timestamp=(guint64)2806666666;
+buffer: content-id=12, dts=0:00:02.815000000, pts=0:00:02.815000000, flags=marker delta-unit
+buffer: content-id=13, dts=0:00:02.915000000, pts=0:00:03.051666666, flags=marker delta-unit
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)2915000000;
+event gap: GstEventGap, duration=(guint64)6666666, timestamp=(guint64)3015000000;
+buffer: content-id=14, dts=0:00:03.021666666, pts=0:00:03.021666666, flags=marker delta-unit
+buffer: content-id=15, dts=0:00:03.040000000, pts=0:00:03.086666666, flags=marker delta-unit
+buffer: content-id=16, dts=0:00:03.056666666, pts=0:00:03.070000000, flags=marker delta-unit
+buffer: content-id=17, dts=0:00:03.073333333, pts=0:00:03.121666666, flags=marker delta-unit
+buffer: content-id=18, dts=0:00:03.091666666, pts=0:00:03.103333333, flags=marker delta-unit
+buffer: content-id=19, dts=0:00:03.108333333, pts=0:00:03.155000000, flags=marker delta-unit
+buffer: content-id=20, dts=0:00:03.125000000, pts=0:00:03.138333333, flags=marker delta-unit
+buffer: content-id=21, dts=0:00:03.141666666, pts=0:00:03.188333333, flags=marker delta-unit
+buffer: content-id=22, dts=0:00:03.158333333, pts=0:00:03.171666666, flags=marker delta-unit
+buffer: content-id=23, dts=0:00:03.175000000, pts=0:00:03.221666666, flags=marker delta-unit
+buffer: content-id=24, dts=0:00:03.191666666, pts=0:00:03.205000000, flags=marker delta-unit
+buffer: content-id=25, dts=0:00:03.211666666, pts=0:00:03.265000000, flags=marker delta-unit
+buffer: content-id=26, dts=0:00:03.235000000, pts=0:00:03.241666666, flags=marker delta-unit
+buffer: content-id=27, dts=0:00:03.253333333, pts=0:00:03.315000000, flags=marker delta-unit
+buffer: content-id=28, dts=0:00:03.285000000, pts=0:00:03.285000000, flags=marker delta-unit
+buffer: content-id=29, dts=0:00:03.301666666, pts=0:00:03.331666666, flags=marker delta-unit
+buffer: content-id=30, dts=0:00:03.343333333, pts=0:00:03.373333333, flags=marker
+buffer: content-id=31, dts=0:00:03.360000000, pts=0:00:03.423333333, flags=marker delta-unit
+buffer: content-id=32, dts=0:00:03.393333333, pts=0:00:03.393333333, flags=marker delta-unit
+buffer: content-id=33, dts=0:00:03.411666666, pts=0:00:03.473333333, flags=marker delta-unit
+buffer: content-id=34, dts=0:00:03.443333333, pts=0:00:03.443333333, flags=marker delta-unit
+buffer: content-id=35, dts=0:00:03.460000000, pts=0:00:03.508333333, flags=marker delta-unit
+buffer: content-id=36, dts=0:00:03.478333333, pts=0:00:03.490000000, flags=marker delta-unit
+buffer: content-id=37, dts=0:00:03.493333333, pts=0:00:03.541666666, flags=marker delta-unit
+buffer: content-id=38, dts=0:00:03.511666666, pts=0:00:03.523333333, flags=marker delta-unit
+buffer: content-id=39, dts=0:00:03.528333333, pts=0:00:03.575000000, flags=marker delta-unit
+buffer: content-id=40, dts=0:00:03.545000000, pts=0:00:03.558333333, flags=marker delta-unit
+buffer: content-id=41, dts=0:00:03.563333333, pts=0:00:03.610000000, flags=marker delta-unit
+buffer: content-id=42, dts=0:00:03.580000000, pts=0:00:03.593333333, flags=marker delta-unit
+buffer: content-id=43, dts=0:00:03.598333333, pts=0:00:03.646666666, flags=marker delta-unit
+buffer: content-id=44, dts=0:00:03.616666666, pts=0:00:03.628333333, flags=marker delta-unit
+buffer: content-id=45, dts=0:00:03.633333333, pts=0:00:03.683333333, flags=marker delta-unit
+buffer: content-id=46, dts=0:00:03.653333333, pts=0:00:03.663333333, flags=marker delta-unit
+buffer: content-id=47, dts=0:00:03.670000000, pts=0:00:03.716666666, flags=marker delta-unit
+buffer: content-id=48, dts=0:00:03.686666666, pts=0:00:03.700000000, flags=marker delta-unit
+buffer: content-id=49, dts=0:00:03.705000000, pts=0:00:03.751666666, flags=marker delta-unit
+buffer: content-id=50, dts=0:00:03.721666666, pts=0:00:03.735000000, flags=marker delta-unit
+buffer: content-id=51, dts=0:00:03.738333333, pts=0:00:03.785000000, flags=marker delta-unit
+buffer: content-id=52, dts=0:00:03.755000000, pts=0:00:03.768333333, flags=marker delta-unit
+buffer: content-id=53, dts=0:00:03.771666666, pts=0:00:03.818333333, flags=marker delta-unit
+buffer: content-id=54, dts=0:00:03.788333333, pts=0:00:03.801666666, flags=marker delta-unit
+buffer: content-id=55, dts=0:00:03.806666666, pts=0:00:03.853333333, flags=marker delta-unit
+buffer: content-id=56, dts=0:00:03.823333333, pts=0:00:03.836666666, flags=marker delta-unit
+buffer: content-id=57, dts=0:00:03.840000000, pts=0:00:03.888333333, flags=marker delta-unit
+buffer: content-id=58, dts=0:00:03.858333333, pts=0:00:03.870000000, flags=marker delta-unit
+buffer: content-id=59, dts=0:00:03.875000000, pts=0:00:03.905000000, flags=marker delta-unit
+buffer: content-id=60, dts=0:00:03.891666666, pts=0:00:03.921666666, flags=marker
+buffer: content-id=61, dts=0:00:03.908333333, pts=0:00:03.955000000, flags=marker delta-unit
+buffer: content-id=62, dts=0:00:03.925000000, pts=0:00:03.938333333, flags=marker delta-unit
+buffer: content-id=63, dts=0:00:03.943333333, pts=0:00:04.003333333, flags=marker delta-unit
+buffer: content-id=64, dts=0:00:03.973333333, pts=0:00:03.973333333, flags=marker delta-unit
+buffer: content-id=65, dts=0:00:03.990000000, pts=0:00:04.020000000, flags=marker delta-unit
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)3990000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4090000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4190000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4290000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4390000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4490000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4590000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4690000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4790000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4890000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)4990000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5090000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5190000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5290000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5390000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5490000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5590000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5690000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5790000000;
+event gap: GstEventGap, duration=(guint64)100000000, timestamp=(guint64)5890000000;
+event gap: GstEventGap, duration=(guint64)36666666, timestamp=(guint64)5990000000;
+buffer: content-id=66, dts=0:00:06.026666666, pts=0:00:06.073333333, flags=marker
+buffer: content-id=67, dts=0:00:06.043333333, pts=0:00:06.121666666, flags=marker delta-unit
+buffer: content-id=68, dts=0:00:06.075000000, pts=0:00:06.090000000, flags=marker delta-unit
+buffer: content-id=69, dts=0:00:06.093333333, pts=0:00:06.173333333, flags=marker delta-unit
+buffer: content-id=70, dts=0:00:06.126666666, pts=0:00:06.140000000, flags=marker delta-unit
+buffer: content-id=71, dts=0:00:06.143333333, pts=0:00:06.221666666, flags=marker delta-unit
+buffer: content-id=72, dts=0:00:06.175000000, pts=0:00:06.190000000, flags=marker delta-unit
+buffer: content-id=73, dts=0:00:06.193333333, pts=0:00:06.280000000, flags=marker delta-unit
+buffer: content-id=74, dts=0:00:06.233333333, pts=0:00:06.240000000, flags=marker delta-unit
+buffer: content-id=75, dts=0:00:06.293333333, pts=0:00:06.398333333, flags=marker delta-unit
+buffer: content-id=76, dts=0:00:06.351666666, pts=0:00:06.351666666, flags=marker delta-unit
+buffer: content-id=77, dts=0:00:06.385000000, pts=0:00:06.441666666, flags=marker delta-unit
+buffer: content-id=78, dts=0:00:06.395000000, pts=0:00:06.431666666, flags=marker delta-unit
+buffer: content-id=79, dts=0:00:06.411666666, pts=0:00:06.491666666, flags=marker delta-unit
+buffer: content-id=80, dts=0:00:06.445000000, pts=0:00:06.458333333, flags=marker delta-unit
+buffer: content-id=81, dts=0:00:06.461666666, pts=0:00:06.548333333, flags=marker delta-unit
+buffer: content-id=82, dts=0:00:06.501666666, pts=0:00:06.508333333, flags=marker delta-unit
+buffer: content-id=83, dts=0:00:06.518333333, pts=0:00:06.598333333, flags=marker delta-unit
+buffer: content-id=84, dts=0:00:06.551666666, pts=0:00:06.565000000, flags=marker delta-unit
+buffer: content-id=85, dts=0:00:06.568333333, pts=0:00:06.646666666, flags=marker delta-unit
+buffer: content-id=86, dts=0:00:06.600000000, pts=0:00:06.615000000, flags=marker delta-unit
+buffer: content-id=87, dts=0:00:06.618333333, pts=0:00:06.698333333, flags=marker delta-unit
+buffer: content-id=88, dts=0:00:06.651666666, pts=0:00:06.665000000, flags=marker delta-unit
+buffer: content-id=89, dts=0:00:06.668333333, pts=0:00:06.755000000, flags=marker delta-unit
+buffer: content-id=90, dts=0:00:06.708333333, pts=0:00:06.715000000, flags=marker delta-unit
+buffer: content-id=91, dts=0:00:06.725000000, pts=0:00:06.805000000, flags=marker delta-unit
+buffer: content-id=92, dts=0:00:06.758333333, pts=0:00:06.771666666, flags=marker delta-unit
+buffer: content-id=93, dts=0:00:06.776666666, pts=0:00:06.858333333, flags=marker delta-unit
+buffer: content-id=94, dts=0:00:06.811666666, pts=0:00:06.823333333, flags=marker delta-unit
+buffer: content-id=95, dts=0:00:06.828333333, pts=0:00:06.875000000, flags=marker delta-unit
+buffer: content-id=96, dts=0:00:06.868333333, pts=0:00:06.915000000, flags=marker
+buffer: content-id=97, dts=0:00:06.885000000, pts=0:00:06.961666666, flags=marker delta-unit
+buffer: content-id=98, dts=0:00:06.915000000, pts=0:00:06.931666666, flags=marker delta-unit
+buffer: content-id=99, dts=0:00:06.933333333, pts=0:00:07.015000000, flags=marker delta-unit
+buffer: content-id=100, dts=0:00:06.968333333, pts=0:00:06.980000000, flags=marker delta-unit
+buffer: content-id=101, dts=0:00:06.985000000, pts=0:00:07.073333333, flags=marker delta-unit
+buffer: content-id=102, dts=0:00:07.026666666, pts=0:00:07.031666666, flags=marker delta-unit
+buffer: content-id=103, dts=0:00:07.043333333, pts=0:00:07.123333333, flags=marker delta-unit
+buffer: content-id=104, dts=0:00:07.076666666, pts=0:00:07.090000000, flags=marker delta-unit
+buffer: content-id=105, dts=0:00:07.126666666, pts=0:00:07.221666666, flags=marker delta-unit
+buffer: content-id=106, dts=0:00:07.175000000, pts=0:00:07.175000000, flags=marker delta-unit
+buffer: content-id=107, dts=0:00:07.193333333, pts=0:00:07.296666666, flags=marker delta-unit
+buffer: content-id=108, dts=0:00:07.250000000, pts=0:00:07.250000000, flags=marker delta-unit
+buffer: content-id=109, dts=0:00:07.268333333, pts=0:00:07.333333333, flags=marker delta-unit
+buffer: content-id=110, dts=0:00:07.286666666, pts=0:00:07.315000000, flags=marker delta-unit
+buffer: content-id=111, dts=0:00:07.303333333, pts=0:00:07.393333333, flags=marker delta-unit
+buffer: content-id=112, dts=0:00:07.346666666, pts=0:00:07.350000000, flags=marker delta-unit
+buffer: content-id=113, dts=0:00:07.365000000, pts=0:00:07.428333333, flags=marker delta-unit
+buffer: content-id=114, dts=0:00:07.381666666, pts=0:00:07.411666666, flags=marker delta-unit
+buffer: content-id=115, dts=0:00:07.398333333, pts=0:00:07.498333333, flags=marker delta-unit
+buffer: content-id=116, dts=0:00:07.451666666, pts=0:00:07.451666666, flags=marker delta-unit
+buffer: content-id=117, dts=0:00:07.468333333, pts=0:00:07.548333333, flags=marker delta-unit
+buffer: content-id=118, dts=0:00:07.501666666, pts=0:00:07.515000000, flags=marker delta-unit
+buffer: content-id=119, dts=0:00:07.520000000, pts=0:00:07.590000000, flags=marker delta-unit
+buffer: content-id=120, dts=0:00:07.543333333, pts=0:00:07.566666666, flags=marker delta-unit
+buffer: content-id=121, dts=0:00:07.561666666, pts=0:00:07.638333333, flags=marker delta-unit
+buffer: content-id=122, dts=0:00:07.591666666, pts=0:00:07.608333333, flags=marker delta-unit
+buffer: content-id=123, dts=0:00:07.608333333, pts=0:00:07.696666666, flags=marker delta-unit
+buffer: content-id=124, dts=0:00:07.650000000, pts=0:00:07.655000000, flags=marker delta-unit
+buffer: content-id=125, dts=0:00:07.666666666, pts=0:00:07.713333333, flags=marker delta-unit
+buffer: content-id=126, dts=0:00:07.701666666, pts=0:00:07.748333333, flags=marker
+buffer: content-id=127, dts=0:00:07.718333333, pts=0:00:07.796666666, flags=marker delta-unit
+buffer: content-id=128, dts=0:00:07.750000000, pts=0:00:07.765000000, flags=marker delta-unit
+buffer: content-id=129, dts=0:00:07.766666666, pts=0:00:07.860000000, flags=marker delta-unit
+buffer: content-id=130, dts=0:00:07.813333333, pts=0:00:07.813333333, flags=marker delta-unit
+buffer: content-id=131, dts=0:00:07.833333333, pts=0:00:07.901666666, flags=marker delta-unit
+buffer: content-id=132, dts=0:00:07.855000000, pts=0:00:07.880000000, flags=marker delta-unit
+buffer: content-id=133, dts=0:00:07.871666666, pts=0:00:07.956666666, flags=marker delta-unit
+buffer: content-id=134, dts=0:00:07.910000000, pts=0:00:07.918333333, flags=marker delta-unit
+buffer: content-id=135, dts=0:00:07.958333333, pts=0:00:08.005000000, flags=marker delta-unit
+event eos: (no structure)
