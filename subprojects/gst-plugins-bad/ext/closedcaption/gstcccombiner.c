@@ -66,6 +66,7 @@ enum
   PROP_CEA608_PADDING_STRATEGY,
   PROP_CEA608_VALID_PADDING_TIMEOUT,
   PROP_SCHEDULE_TIMEOUT,
+  PROP_INPUT_META_PROCESSING,
 };
 
 #define DEFAULT_MAX_SCHEDULED 30
@@ -74,6 +75,31 @@ enum
 #define DEFAULT_CEA608_PADDING_STRATEGY CC_BUFFER_CEA608_PADDING_STRATEGY_VALID
 #define DEFAULT_CEA608_VALID_PADDING_TIMEOUT GST_CLOCK_TIME_NONE
 #define DEFAULT_SCHEDULE_TIMEOUT GST_CLOCK_TIME_NONE
+#define DEFAULT_INPUT_META_PROCESSING CCCOMBINER_INPUT_PROCESSING_APPEND
+
+#define GST_TYPE_CCCOMBINER_INPUT_META_PROCESSING (gst_cccombiner_input_meta_processing_get_type())
+static GType
+gst_cccombiner_input_meta_processing_get_type (void)
+{
+  static GType cccombiner_input_meta_processing_type = 0;
+  static const GEnumValue cccombiner_input_meta_processing[] = {
+    {CCCOMBINER_INPUT_PROCESSING_APPEND,
+        "append aggregated CC to existing metas on video buffer", "append"},
+    {CCCOMBINER_INPUT_PROCESSING_DROP,
+        "drop existing CC metas on input video buffer", "drop"},
+    {CCCOMBINER_INPUT_PROCESSING_FAVOR,
+          "discard aggregated CC when input video buffers hold CC metas already",
+        "favor"},
+    {0, NULL, NULL},
+  };
+
+  if (!cccombiner_input_meta_processing_type) {
+    cccombiner_input_meta_processing_type =
+        g_enum_register_static ("GstCCCombinerInputProcessing",
+        cccombiner_input_meta_processing);
+  }
+  return cccombiner_input_meta_processing_type;
+}
 
 typedef struct
 {
@@ -470,6 +496,15 @@ dequeue_caption (GstCCCombiner * self, GstVideoTimeCode * tc, gboolean drain)
   }
 }
 
+static gboolean
+remove_caption_meta (GstBuffer * buffer, GstMeta ** meta, gpointer user_data)
+{
+  if ((*meta)->info->api == GST_VIDEO_CAPTION_META_API_TYPE)
+    *meta = NULL;
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
 {
@@ -626,8 +661,28 @@ gst_cc_combiner_collect_captions (GstCCCombiner * self, gboolean timeout)
       GST_BUFFER_DTS (self->current_video_buffer),
       GST_BUFFER_DURATION (self->current_video_buffer), NULL);
 
-  GST_LOG_OBJECT (self, "Attaching %u captions to buffer %p",
+  GST_LOG_OBJECT (self, "Collected %u captions for buffer %p",
       self->current_frame_captions->len, self->current_video_buffer);
+
+  switch (self->prop_input_meta_processing) {
+    case CCCOMBINER_INPUT_PROCESSING_APPEND:
+      break;
+    case CCCOMBINER_INPUT_PROCESSING_DROP:
+      self->current_video_buffer =
+          gst_buffer_make_writable (self->current_video_buffer);
+      gst_buffer_foreach_meta (self->current_video_buffer, remove_caption_meta,
+          NULL);
+      break;
+    case CCCOMBINER_INPUT_PROCESSING_FAVOR:
+      if (gst_buffer_get_meta (self->current_video_buffer,
+              GST_VIDEO_CAPTION_META_API_TYPE)) {
+        GST_LOG_OBJECT (self,
+            "Video buffer already has captions, dropping %d dequeued captions",
+            self->current_frame_captions->len);
+        g_array_set_size (self->current_frame_captions, 0);
+      }
+      break;
+  }
 
   if (self->current_frame_captions->len > 0) {
     guint i;
@@ -1167,6 +1222,9 @@ gst_cc_combiner_set_property (GObject * object, guint prop_id,
     case PROP_SCHEDULE_TIMEOUT:
       self->prop_schedule_timeout = g_value_get_uint64 (value);
       break;
+    case PROP_INPUT_META_PROCESSING:
+      self->prop_input_meta_processing = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1197,6 +1255,9 @@ gst_cc_combiner_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SCHEDULE_TIMEOUT:
       g_value_set_uint64 (value, self->prop_schedule_timeout);
+      break;
+    case PROP_INPUT_META_PROCESSING:
+      g_value_set_enum (value, self->prop_input_meta_processing);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1344,6 +1405,21 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 
+  /**
+   * GstCCCombiner:input-meta-processing
+   *
+   * Controls how input closed caption meta is processed.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_INPUT_META_PROCESSING, g_param_spec_enum ("input-meta-processing",
+          "Input Meta Processing",
+          "Controls how input closed caption meta is processed",
+          GST_TYPE_CCCOMBINER_INPUT_META_PROCESSING,
+          DEFAULT_INPUT_META_PROCESSING,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &sinktemplate, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
@@ -1367,6 +1443,8 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_cc_combiner_debug, "cccombiner",
       0, "Closed Caption combiner");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CCCOMBINER_INPUT_META_PROCESSING, 0);
 }
 
 static void
@@ -1398,6 +1476,7 @@ gst_cc_combiner_init (GstCCCombiner * self)
   self->prop_cea608_valid_padding_timeout =
       DEFAULT_CEA608_VALID_PADDING_TIMEOUT;
   self->prop_schedule_timeout = DEFAULT_SCHEDULE_TIMEOUT;
+  self->prop_input_meta_processing = DEFAULT_INPUT_META_PROCESSING;
   self->cdp_hdr_sequence_cntr = 0;
   self->cdp_fps_entry = &null_fps_entry;
   self->last_caption_ts = GST_CLOCK_TIME_NONE;

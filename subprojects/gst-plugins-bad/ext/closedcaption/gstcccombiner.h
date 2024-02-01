@@ -42,6 +42,22 @@ G_BEGIN_DECLS
 typedef struct _GstCCCombiner GstCCCombiner;
 typedef struct _GstCCCombinerClass GstCCCombinerClass;
 
+/**
+ * GstCCCombinerInputProcessing:
+ * @CCCOMBINER_INPUT_PROCESSING_APPEND: append aggregated CC to existing metas on video buffers
+ * @CCCOMBINER_INPUT_PROCESSING_DROP: drop existing CC metas on input video buffers
+ * @CCCOMBINER_INPUT_PROCESSING_FAVOR: discard aggregated CC when input video buffers hold CC metas already
+ *
+ * Possible processing types for the input-meta-processing property.
+ *
+ * Since: 1.26
+ */
+typedef enum {
+  CCCOMBINER_INPUT_PROCESSING_APPEND = 0,
+  CCCOMBINER_INPUT_PROCESSING_DROP,
+  CCCOMBINER_INPUT_PROCESSING_FAVOR,
+} GstCCCombinerInputProcessing;
+
 struct _GstCCCombiner
 {
   GstAggregator parent;
@@ -62,6 +78,7 @@ struct _GstCCCombiner
   CCBufferCea608PaddingStrategy prop_cea608_padding_strategy;
   GstClockTime prop_cea608_valid_padding_timeout;
   GstClockTime prop_schedule_timeout;
+  GstCCCombinerInputProcessing prop_input_meta_processing;
 
   gboolean schedule;
   guint max_scheduled;
