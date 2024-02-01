@@ -363,6 +363,7 @@ gst_d3d11_allocate_staging_texture (GstD3D11Device * device,
 {
   D3D11_TEXTURE2D_DESC desc = { 0, };
   ID3D11Texture2D *texture = NULL;
+  GstD3D11DeviceLockGuard lk(device);
   ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
   HRESULT hr;
 
@@ -390,6 +391,7 @@ gst_d3d11_memory_map_cpu_access (GstD3D11Memory * dmem, D3D11_MAP map_type)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
   HRESULT hr;
+  GstD3D11DeviceLockGuard lk(dmem->device);
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
@@ -415,6 +417,7 @@ gst_d3d11_memory_upload (GstD3D11Memory * dmem)
       !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD))
     return;
 
+  GstD3D11DeviceLockGuard lk(dmem->device);
   device_context = gst_d3d11_device_get_device_context_handle (dmem->device);
   device_context->CopySubresourceRegion (priv->texture, priv->subresource_index,
       0, 0, 0, priv->staging, 0, NULL);
@@ -431,6 +434,7 @@ gst_d3d11_memory_download (GstD3D11Memory * dmem)
       !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD))
     return;
 
+  GstD3D11DeviceLockGuard lk(dmem->device);
   device_context = gst_d3d11_device_get_device_context_handle (dmem->device);
   device_context->CopySubresourceRegion (priv->staging, 0, 0, 0, 0,
       priv->texture, priv->subresource_index, NULL);
@@ -508,6 +512,7 @@ static void
 gst_d3d11_memory_unmap_cpu_access (GstD3D11Memory * dmem)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
+  GstD3D11DeviceLockGuard lk(dmem->device);
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
@@ -774,6 +779,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
 
   memset (&resource_desc, 0, sizeof (D3D11_SHADER_RESOURCE_VIEW_DESC));
 
+  GstD3D11DeviceLockGuard lk(mem->device);
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
   num_views = gst_d3d11_dxgi_format_get_resource_format (priv->desc.Format,
@@ -904,6 +910,7 @@ create_render_target_views (GstD3D11Memory * mem)
 
   memset (&render_desc, 0, sizeof (D3D11_RENDER_TARGET_VIEW_DESC));
 
+  GstD3D11DeviceLockGuard lk(mem->device);
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
   num_views = gst_d3d11_dxgi_format_get_resource_format (priv->desc.Format,
@@ -1363,6 +1370,7 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
   GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
   GstD3D11Memory *copy_dmem;
   GstD3D11Device *device = dmem->device;
+  GstD3D11DeviceLockGuard lk(device);
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (device);
   D3D11_TEXTURE2D_DESC dst_desc = { 0, };
@@ -1378,8 +1386,6 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
     GST_DEBUG_OBJECT (alloc, "Different size/offset, try fallback copy");
     return priv->fallback_copy (mem, offset, size);
   }
-
-  GstD3D11DeviceLockGuard lk (device);
 
   if (!gst_memory_map (mem, &info,
           (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
@@ -1541,6 +1547,7 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
   GstD3D11ClearRTVFunc clear_func = nullptr;
   gboolean is_new_texture = TRUE;
 
+  GstD3D11DeviceLockGuard lk(device);
   device_handle = gst_d3d11_device_get_device_handle (device);
 
   if (!texture) {
@@ -1588,7 +1595,6 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
     return mem;
 
   context_handle = gst_d3d11_device_get_device_context_handle (device);
-  GstD3D11DeviceLockGuard lk (device);
   clear_func (context_handle, rtv);
 
   return mem;
@@ -1665,6 +1671,7 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
     return nullptr;
   }
 
+  GstD3D11DeviceLockGuard lk(device);
   device_handle = gst_d3d11_device_get_device_handle (device);
 
   hr = device_handle->CreateBuffer (desc, nullptr, &buffer);
@@ -1914,7 +1921,7 @@ gst_d3d11_pool_allocator_start (GstD3D11PoolAllocator * self)
     priv->started = TRUE;
     return TRUE;
   }
-
+  GstD3D11DeviceLockGuard lk(self->device);
   device_handle = gst_d3d11_device_get_device_handle (self->device);
 
   if (!priv->texture) {
