@@ -219,7 +219,6 @@ typedef struct
 {
   GMutex lock;
   gboolean needs_initialization_seek;
-  gboolean answered;
 } NleCompositionQueryNeedsInitializationSeek;
 
 /* *INDENT-OFF* */
@@ -1063,13 +1062,15 @@ nle_composition_handle_message (GstBin * bin, GstMessage * message)
         && GST_MESSAGE_SRC (message) != GST_OBJECT_CAST (comp)) {
       NleCompositionQueryNeedsInitializationSeek *q;
 
+      /* First let parents answer */
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+
       gst_structure_get (structure, "query",
           NLE_TYPE_COMPOSITION_QUERY_NEEDS_INITIALIZATION_SEEK, &q, NULL);
       g_assert (q);
 
       g_mutex_lock (&q->lock);
-      if (!q->answered || q->needs_initialization_seek) {
-        q->answered = TRUE;
+      if (q->needs_initialization_seek) {
         q->needs_initialization_seek = priv->stack_initialization_seek == NULL;
       }
       g_mutex_unlock (&q->lock);
@@ -1781,6 +1782,7 @@ nle_composition_query_needs_topelevel_initializing_seek (NleComposition * comp)
 {
   NleCompositionQueryNeedsInitializationSeek *q =
       g_atomic_rc_box_new0 (NleCompositionQueryNeedsInitializationSeek);
+  q->needs_initialization_seek = TRUE;
 
   GstMessage *m = gst_message_new_element (GST_OBJECT_CAST (comp),
       gst_structure_new (QUERY_NEEDS_INITIALIZATION_SEEK_MESSAGE_STRUCT_NAME,
@@ -1794,12 +1796,7 @@ nle_composition_query_needs_topelevel_initializing_seek (NleComposition * comp)
 
   gboolean res = TRUE;
   g_mutex_lock (&q->lock);
-  if (q->answered) {
-    res = q->needs_initialization_seek;
-    if (!res) {
-      GST_INFO_OBJECT (comp, "Parent composition is going to seek us");
-    }
-  }
+  res = q->needs_initialization_seek;
   g_mutex_unlock (&q->lock);
   g_atomic_rc_box_release (q);
 
