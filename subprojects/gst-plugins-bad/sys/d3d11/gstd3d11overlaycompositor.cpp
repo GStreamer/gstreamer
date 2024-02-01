@@ -361,6 +361,7 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
   memset (&buffer_desc, 0, sizeof (buffer_desc));
   memset (&blend_desc, 0, sizeof (blend_desc));
 
+  GstD3D11DeviceLockGuard lk(device);
   device_handle = gst_d3d11_device_get_device_handle (device);
   context_handle = gst_d3d11_device_get_device_context_handle (device);
 
@@ -441,7 +442,6 @@ gst_d3d11_overlay_compositor_setup_shader (GstD3D11OverlayCompositor * self)
     return FALSE;
   }
 
-  GstD3D11DeviceLockGuard lk (device);
   hr = context_handle->Map (index_buffer.Get (),
       0, D3D11_MAP_WRITE_DISCARD, 0, &map);
 
