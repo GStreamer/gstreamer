@@ -497,10 +497,6 @@ subdir('ext')
 subdir('tests')
 subdir('docs')
 
-#if get_option('harnesses').enabled()
-#  subdir('harnesses') #wrap with some if option
-#endif
-
 if have_orcc and orc_targets.length() > 0
   update_orc_dist_files = find_program('scripts/update-orc-dist-files.py')
 
