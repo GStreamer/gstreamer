@@ -22,7 +22,6 @@ COPY . .
 RUN CC=afl-gcc CXX=afl-g++ meson setup \
   --libdir=lib \
   --default-library=shared \
-  #--force-fallback-for=zlib \
   -Dharnesses=enabled \
   -Dauto_features=disabled \
   -Db_lundef=false \
@@ -35,21 +34,21 @@ RUN CC=afl-gcc CXX=afl-g++ meson setup \
   -Dugly=disabled \
   -Dbad=disabled \
   -Dlibav=disabled \
-  #-Dges=disabled \
+  -Dges=disabled \
   -Dvaapi=disabled \
   -Dsharp=disabled \
   -Drs=disabled \
   -Dpython=disabled \
   -Dlibnice=disabled \
-  #-Dtls=disabled \
+  -Dtls=disabled \
   -Ddevtools=disabled \
   -Dtools=disabled \
-  #-Drtsp_server=disabled \
+  -Drtsp_server=disabled \
   -Dgst-examples=disabled \
   -Dqt5=disabled \
   -Dqt6=disabled \
   -Dorc=disabled \
-  #-Dnls=disabled \
+  -Dnls=disabled \
   -Dwebrtc=disabled \
   -Dgtk_doc=disabled \
   -Dgstreamer:tracer_hooks=false \
