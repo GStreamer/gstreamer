@@ -49,15 +49,6 @@ common_deps = [gst_dep, gst_dep, gstbase_dep, gstnet_dep, gstcheck_dep,
   gstvideo_dep, gstpbutils_dep, gstrtp_dep, gstrtsp_dep, gsttag_dep,
   gstapp_dep, gio_dep]
 
-#cxx = meson.get_compiler('cpp')
-#fuzzing_engine = cxx.find_library('FuzzingEngine', required: true)
-
-#libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48',
-#                          required : false, fallback : ['libsoup', 'libsoup_dep'],
-#                          default_options: ['sysprof=disabled'])
-#libsoup3_dep = dependency('libsoup-3.0', required : false,
-#                           fallback : ['libsoup3', 'libsoup_dep'])
-
 pluginsdirs = []
 if gst_dep.type_name() == 'pkgconfig'
   pbase = dependency('gstreamer-plugins-base-' + api_version, required: true)
@@ -89,7 +80,7 @@ foreach harness : harnesses
 
   exe = executable(test_name, [extra_sources, file_name],
     dependencies: common_deps + extra_deps,
-    c_args: ['-g', '-fsanitize=fuzzer,address'],
-    link_args: ['-fsanitize=fuzzer,address']
+    c_args: ['-g']
+    #link_args: ['-fsanitize=address']
   )
 endforeach

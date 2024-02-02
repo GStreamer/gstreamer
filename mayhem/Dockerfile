@@ -3,7 +3,7 @@ FROM ubuntu AS builder
 RUN apt update -y && DEBIAN_FRONTEND=noninteractive apt install -y \
   python3 \
   python3-pip \
-  clang \
+  afl++ \
   ninja-build \
   git \
   flex \
@@ -19,7 +19,7 @@ RUN pip3 install meson
 WORKDIR /work
 COPY . .
 
-RUN CC=clang CXX=clang++ meson setup \
+RUN CC=afl-gcc CXX=afl-g++ meson setup \
   --libdir=lib \
   --default-library=shared \
   #--force-fallback-for=zlib \
@@ -35,21 +35,21 @@ RUN CC=clang CXX=clang++ meson setup \
   -Dugly=disabled \
   -Dbad=disabled \
   -Dlibav=disabled \
-  -Dges=disabled \
+  #-Dges=disabled \
   -Dvaapi=disabled \
   -Dsharp=disabled \
   -Drs=disabled \
   -Dpython=disabled \
   -Dlibnice=disabled \
-  -Dtls=disabled \
+  #-Dtls=disabled \
   -Ddevtools=disabled \
   -Dtools=disabled \
-  -Drtsp_server=disabled \
+  #-Drtsp_server=disabled \
   -Dgst-examples=disabled \
   -Dqt5=disabled \
   -Dqt6=disabled \
   -Dorc=disabled \
-  -Dnls=disabled \
+  #-Dnls=disabled \
   -Dwebrtc=disabled \
   -Dgtk_doc=disabled \
   -Dgstreamer:tracer_hooks=false \
@@ -59,16 +59,16 @@ RUN CC=clang CXX=clang++ meson setup \
   -Dgstreamer:check=enabled \
   builddir \
     .
-RUN CC=clang CXX=clang++ ninja -C builddir
+RUN CC=afl-gcc CXX=afl-g++ ninja -C builddir
 
 FROM ubuntu
 RUN apt update -y && DEBIAN_FRONTEND=noninteractive apt install -y \
-  llvm \
+  libasan6 \
   gstreamer1.0-x \
   gstreamer1.0-tools \
   gstreamer1.0-plugins-base \
   gstreamer1.0-plugins-good \
   gstreamer1.0-plugins-bad \
   gstreamer1.0-plugins-ugly
-COPY --from=builder /work/builddir/harnesses/test_jpegdec /test_jpegdec
-#COPY --from=builder /work/harnesses /work/harnesses
+COPY --from=builder /work/builddir/harnesses /work/builddir/harnesses
+COPY --from=builder /work/harnesses /work/harnesses

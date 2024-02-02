@@ -12,7 +12,8 @@ testsuite:
   - file://testsuite
 
 cmds:
-  - cmd: /test_jpegdec
-    libfuzzer: true
+  - cmd: /work/builddir/harnesses/test_jpegdec @@
+    afl: true
     sanitizer: true
     max_length: 32768
+    timeout: 5 

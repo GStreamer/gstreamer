@@ -4,6 +4,7 @@
 
 
  #include <unistd.h>
+ #include <stdio.h>
 
  #include <glib.h>
  #include <gst/gst.h>
@@ -26,14 +27,19 @@ static void harness_logger (const gchar * log_domain, GLogLevelFlags log_level, 
 {
 }
 
-int LLVMFuzzerTestOneInput(const char *data, size_t size)
+int main(int argc, char **argv)
 {
   static gboolean initialized = FALSE;
   GstElement *pipeline, *source, *dec, *sink;
   GstBuffer *buf;
   GstFlowReturn flowret;
   GstState state;
-  GstSample *sample;
+  //GstSample *sample;
+
+  if(argc != 2){
+    fprintf(stderr, "Missing input file\n");
+    return -1;
+  }
 
   if (!initialized) {
     /* We want critical warnings to assert so we can fix them */
@@ -49,7 +55,7 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
   /* construct a pipeline that explicitly uses jpegdec */
   pipeline = gst_pipeline_new (NULL);
   g_assert (pipeline);
-  source = gst_element_factory_make ("appsrc", NULL);
+  source = gst_element_factory_make ("filesrc", NULL);
   g_assert (source);
   dec = gst_element_factory_make ("jpegdec", NULL);
   g_assert (dec);
@@ -59,24 +65,29 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
   gst_bin_add_many (GST_BIN (pipeline), source, dec, sink, NULL);
   gst_element_link_many (source, dec, sink, NULL);
 
-  /* Set pipeline to READY so we can provide data to appsrc */
+  /* Set pipeline to READY so we can provide data to appsrc - commented
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
   buf = gst_buffer_new_wrapped_full (0, (gpointer) data, size,
       0, size, NULL, NULL);
   g_object_set (G_OBJECT (source), "size", size, NULL);
   g_signal_emit_by_name (G_OBJECT (source), "push-buffer", buf, &flowret);
   gst_buffer_unref (buf);
+  */
 
-  /* Set pipeline to PAUSED and wait */
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+  /* point pipeline to our test image */
+  {
+    char *filename = g_build_filename (argv[1], NULL);
+    g_object_set (G_OBJECT (source), "location", filename, NULL);
+    g_free (filename);
+  }
 
-  /* wait until state change either completes or fails */
-  gst_element_get_state (GST_ELEMENT (pipeline), &state, NULL, -1);
+  /* Start pipeline */
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
-  fail_unless (GST_IS_SAMPLE (sample));
+  //sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
+  //fail_unless (GST_IS_SAMPLE (sample));
 
-  /* do some basic checks to verify image decoding */
+  /* do some basic checks to verify image decoding
   {
     GstCaps *decoded;
     GstCaps *expected;
@@ -89,11 +100,15 @@ int LLVMFuzzerTestOneInput(const char *data, size_t size)
     gst_caps_unref (expected);
   }
   gst_sample_unref (sample);
+  */
 
   /* wait for EOS */
-  sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
-  fail_unless (sample == NULL);
-  fail_unless (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+  //sample = gst_app_sink_pull_sample (GST_APP_SINK (sink));
+  //fail_unless (sample == NULL);
+  //fail_unless (gst_app_sink_is_eos (GST_APP_SINK (sink)));
+  //while (!gst_app_sink_is_eos (GST_APP_SINK (sink)));
+  //gst_sample_unref(sample);
+
 
   /* Go back to NULL */
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
