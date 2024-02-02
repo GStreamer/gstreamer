@@ -69,35 +69,6 @@ static gboolean gst_d3d11_buffer_pool_start (GstBufferPool * pool);
 static gboolean gst_d3d11_buffer_pool_stop (GstBufferPool * pool);
 
 static void
-gst_d3d11_buffer_pool_set_allocators_blocked (GstD3D11BufferPool *self, gboolean active)
-{
-  GstD3D11BufferPoolPrivate *priv = self->priv;
-  guint i;
-
-  for (i = 0; i < G_N_ELEMENTS (priv->alloc); i++) {
-    if (priv->alloc[i]) {
-      gst_d3d11_pool_allocator_set_blocked(priv->alloc[i], active);
-    }
-  }  
-}
-
-static void
-gst_d3d11_buffer_pool_flush_start (GstBufferPool * bpool)
-{
-  GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (bpool);
-
-  gst_d3d11_buffer_pool_set_allocators_blocked (self, TRUE);
-}
-
-static void
-gst_d3d11_buffer_pool_flush_stop (GstBufferPool * bpool)
-{
-  GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (bpool);
-
-  gst_d3d11_buffer_pool_set_allocators_blocked(self, FALSE);
-}
-
-static void
 gst_d3d11_buffer_pool_class_init (GstD3D11BufferPoolClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -110,8 +81,6 @@ gst_d3d11_buffer_pool_class_init (GstD3D11BufferPoolClass * klass)
   bufferpool_class->alloc_buffer = gst_d3d11_buffer_pool_alloc_buffer;
   bufferpool_class->start = gst_d3d11_buffer_pool_start;
   bufferpool_class->stop = gst_d3d11_buffer_pool_stop;
-  bufferpool_class->flush_start = gst_d3d11_buffer_pool_flush_start;
-  bufferpool_class->flush_stop = gst_d3d11_buffer_pool_flush_stop;
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d11_buffer_pool_debug, "d3d11bufferpool", 0,
       "d3d11bufferpool object");
