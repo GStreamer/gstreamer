@@ -179,7 +179,7 @@ if host_system == 'ios'
   endif
 endif
 
-if qt5_option.require(have_qt_windowing).allowed()
+if qt5_option.require(have_qt_windowing, error_message: 'No windowing, enable one of the qt-* windowing options').allowed()
   # rpath is needed to be able to load the plugin on macOS inside the devenv
   qmlgl_kwargs = {}
   if host_system == 'darwin'

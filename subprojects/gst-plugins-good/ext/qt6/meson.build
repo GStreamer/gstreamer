@@ -160,7 +160,7 @@ if host_system == 'ios'
   endif
 endif
 
-if qt6_option.require(have_qt_windowing).allowed()
+if qt6_option.require(have_qt_windowing, error_message: 'No windowing, enable one of the qt-* windowing options').allowed()
   # Build it!
   moc_files = qt6_mod.preprocess(moc_headers : moc_headers, method: qt6_method)
   # TODO: dist backup qsb shaders?
