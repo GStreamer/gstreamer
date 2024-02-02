@@ -518,20 +518,22 @@ gst_d3d11_crop_transform(GstBaseTransform* trans, GstBuffer* inbuf,
 
     }
 
-    device_handle = gst_d3d11_device_get_device_handle(device);
-    context_handle = gst_d3d11_device_get_device_context_handle(device);
-    if (!gst_d3d11_buffer_map(inbuf, device_handle, in_map, GST_MAP_READ)) {
+    {
+      GstD3D11DeviceLockGuard lk(device);
+      device_handle = gst_d3d11_device_get_device_handle(device);
+      context_handle = gst_d3d11_device_get_device_context_handle(device);
+      if (!gst_d3d11_buffer_map(inbuf, device_handle, in_map, GST_MAP_READ)) {
         goto invalid_memory;
-    }
+      }
 
-    if (!gst_d3d11_buffer_map(outbuf, device_handle, out_map, GST_MAP_WRITE)) {
+      if (!gst_d3d11_buffer_map(outbuf, device_handle, out_map, GST_MAP_WRITE)) {
         gst_d3d11_buffer_unmap(inbuf, in_map);
         goto invalid_memory;
-    }
-    gst_d3d11_device_lock(device);
-    for (int i = 0; i < gst_buffer_n_memory(inbuf); i++) {
+      }
+      //gst_d3d11_device_lock(device);
+      for (int i = 0; i < gst_buffer_n_memory(inbuf); i++) {
         GstD3D11Memory* mem = (GstD3D11Memory*)gst_buffer_peek_memory(outbuf, i);
-        GstD3D11Memory* src_dmem = (GstD3D11Memory*) gst_buffer_peek_memory(inbuf, i);
+        GstD3D11Memory* src_dmem = (GstD3D11Memory*)gst_buffer_peek_memory(inbuf, i);
 
         guint subidx;
         D3D11_BOX src_box = { 0, };
@@ -548,33 +550,34 @@ gst_d3d11_crop_transform(GstBaseTransform* trans, GstBuffer* inbuf,
 
         if (i == 0)
         {
-            src_box.left = x;
-            src_box.top  = y;
-            src_box.front = 0;
-            src_box.back = 1;
-            src_box.right  = (x+w);//MIN(src_desc.Width, dst_desc.Width);
-            src_box.bottom = (y+h);//MIN(src_desc.Height, dst_desc.Height);
+          src_box.left = x;
+          src_box.top = y;
+          src_box.front = 0;
+          src_box.back = 1;
+          src_box.right = (x + w);//MIN(src_desc.Width, dst_desc.Width);
+          src_box.bottom = (y + h);//MIN(src_desc.Height, dst_desc.Height);
         }
         else
         {
-            src_box.left = (x/2);
-            src_box.top  = (y/2);
-            src_box.front = 0;
-            src_box.back = 1;
-            src_box.right  = ((x+w)/2);//MIN(src_desc.Width, dst_desc.Width);
-            src_box.bottom = ((y+h)/2);//MIN(src_desc.Height, dst_desc.Height);
+          src_box.left = (x / 2);
+          src_box.top = (y / 2);
+          src_box.front = 0;
+          src_box.back = 1;
+          src_box.right = ((x + w) / 2);//MIN(src_desc.Width, dst_desc.Width);
+          src_box.bottom = ((y + h) / 2);//MIN(src_desc.Height, dst_desc.Height);
 
         }
 
         guint src_subidx = gst_d3d11_memory_get_subresource_index(src_dmem);
 
         context_handle->CopySubresourceRegion((ID3D11Resource*)out_map[i].data,
-            subidx, 0, 0, 0, (ID3D11Resource*)in_map[i].data, src_subidx, &src_box);
-    }
-    gst_d3d11_device_unlock(device);
+          subidx, 0, 0, 0, (ID3D11Resource*)in_map[i].data, src_subidx, &src_box);
+      }
+      //gst_d3d11_device_unlock(device);
 
-    gst_d3d11_buffer_unmap(inbuf, in_map);
-    gst_d3d11_buffer_unmap(outbuf, out_map);
+      gst_d3d11_buffer_unmap(inbuf, in_map);
+      gst_d3d11_buffer_unmap(outbuf, out_map);
+    }
 
     return GST_FLOW_OK;
 
@@ -637,18 +640,21 @@ gst_d3d11_crop_decide_allocation(GstBaseTransform* trans, GstQuery* query)
         dxgi_format = d3d11_format.dxgi_format;
     }
 
-    device_handle = gst_d3d11_device_get_device_handle(filter->device);
-    hr = device_handle->CheckFormatSupport(dxgi_format, &supported);
-    if (gst_d3d11_result(hr, filter->device)) {
+    {
+      GstD3D11DeviceLockGuard lk(filter->device);
+      device_handle = gst_d3d11_device_get_device_handle(filter->device);
+      hr = device_handle->CheckFormatSupport(dxgi_format, &supported);
+      if (gst_d3d11_result(hr, filter->device)) {
         if ((supported & D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) ==
-            D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
-            bind_flags |= D3D11_BIND_SHADER_RESOURCE;
+          D3D11_FORMAT_SUPPORT_SHADER_SAMPLE) {
+          bind_flags |= D3D11_BIND_SHADER_RESOURCE;
         }
 
         if ((supported & D3D11_FORMAT_SUPPORT_RENDER_TARGET) ==
-            D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
-            bind_flags |= D3D11_BIND_RENDER_TARGET;
+          D3D11_FORMAT_SUPPORT_RENDER_TARGET) {
+          bind_flags |= D3D11_BIND_RENDER_TARGET;
         }
+      }
     }
 
     if (gst_query_get_n_allocation_pools(query) > 0) {

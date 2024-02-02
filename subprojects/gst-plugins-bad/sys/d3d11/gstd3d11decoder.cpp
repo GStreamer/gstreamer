@@ -321,6 +321,7 @@ gst_d3d11_decoder_constructed (GObject * object)
     return;
   }
 
+  GstD3D11DeviceLockGuard lk(self->device);
   video_device = gst_d3d11_device_get_video_device_handle (self->device);
   if (!video_device) {
     GST_WARNING_OBJECT (self, "ID3D11VideoDevice is not available");
@@ -1513,6 +1514,7 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
     GstBuffer * src, GstBuffer * dst)
 {
   GstD3D11Device *device = self->device;
+  GstD3D11DeviceLockGuard lk(device);
   ID3D11DeviceContext *context =
       gst_d3d11_device_get_device_context_handle (device);
   GstD3D11Memory *src_dmem;
@@ -1551,7 +1553,6 @@ gst_d3d11_decoder_crop_and_copy_buffer (GstD3D11Decoder * self,
   if (!gst_d3d11_decoder_ensure_staging_texture (self))
     return FALSE;
 
-  GstD3D11DeviceLockGuard lk (device);
   if (!gst_video_frame_map (&frame, &self->output_info, dst, GST_MAP_WRITE)) {
     GST_ERROR_OBJECT (self, "Failed to map output buffer");
     return FALSE;

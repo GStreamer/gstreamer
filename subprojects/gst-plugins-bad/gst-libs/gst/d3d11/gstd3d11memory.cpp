@@ -363,6 +363,7 @@ gst_d3d11_allocate_staging_texture (GstD3D11Device * device,
 {
   D3D11_TEXTURE2D_DESC desc = { 0, };
   ID3D11Texture2D *texture = NULL;
+  GstD3D11DeviceLockGuard lk(device);
   ID3D11Device *device_handle = gst_d3d11_device_get_device_handle (device);
   HRESULT hr;
 
@@ -390,6 +391,7 @@ gst_d3d11_memory_map_cpu_access (GstD3D11Memory * dmem, D3D11_MAP map_type)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
   HRESULT hr;
+  GstD3D11DeviceLockGuard lk(dmem->device);
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
@@ -415,6 +417,7 @@ gst_d3d11_memory_upload (GstD3D11Memory * dmem)
       !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_UPLOAD))
     return;
 
+  GstD3D11DeviceLockGuard lk(dmem->device);
   device_context = gst_d3d11_device_get_device_context_handle (dmem->device);
   device_context->CopySubresourceRegion (priv->texture, priv->subresource_index,
       0, 0, 0, priv->staging, 0, NULL);
@@ -431,6 +434,7 @@ gst_d3d11_memory_download (GstD3D11Memory * dmem)
       !GST_MEMORY_FLAG_IS_SET (dmem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD))
     return;
 
+  GstD3D11DeviceLockGuard lk(dmem->device);
   device_context = gst_d3d11_device_get_device_context_handle (dmem->device);
   device_context->CopySubresourceRegion (priv->staging, 0, 0, 0, 0,
       priv->texture, priv->subresource_index, NULL);
@@ -508,6 +512,7 @@ static void
 gst_d3d11_memory_unmap_cpu_access (GstD3D11Memory * dmem)
 {
   GstD3D11MemoryPrivate *priv = dmem->priv;
+  GstD3D11DeviceLockGuard lk(dmem->device);
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (dmem->device);
 
@@ -774,6 +779,7 @@ create_shader_resource_views (GstD3D11Memory * mem)
 
   memset (&resource_desc, 0, sizeof (D3D11_SHADER_RESOURCE_VIEW_DESC));
 
+  GstD3D11DeviceLockGuard lk(mem->device);
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
   num_views = gst_d3d11_dxgi_format_get_resource_format (priv->desc.Format,
@@ -904,6 +910,7 @@ create_render_target_views (GstD3D11Memory * mem)
 
   memset (&render_desc, 0, sizeof (D3D11_RENDER_TARGET_VIEW_DESC));
 
+  GstD3D11DeviceLockGuard lk(mem->device);
   device_handle = gst_d3d11_device_get_device_handle (mem->device);
 
   num_views = gst_d3d11_dxgi_format_get_resource_format (priv->desc.Format,
@@ -1363,6 +1370,7 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
   GstD3D11Memory *dmem = GST_D3D11_MEMORY_CAST (mem);
   GstD3D11Memory *copy_dmem;
   GstD3D11Device *device = dmem->device;
+  GstD3D11DeviceLockGuard lk(device);
   ID3D11DeviceContext *device_context =
       gst_d3d11_device_get_device_context_handle (device);
   D3D11_TEXTURE2D_DESC dst_desc = { 0, };
@@ -1378,8 +1386,6 @@ gst_d3d11_memory_copy (GstMemory * mem, gssize offset, gssize size)
     GST_DEBUG_OBJECT (alloc, "Different size/offset, try fallback copy");
     return priv->fallback_copy (mem, offset, size);
   }
-
-  GstD3D11DeviceLockGuard lk (device);
 
   if (!gst_memory_map (mem, &info,
           (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D11))) {
@@ -1541,6 +1547,7 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
   GstD3D11ClearRTVFunc clear_func = nullptr;
   gboolean is_new_texture = TRUE;
 
+  GstD3D11DeviceLockGuard lk(device);
   device_handle = gst_d3d11_device_get_device_handle (device);
 
   if (!texture) {
@@ -1588,7 +1595,6 @@ gst_d3d11_allocator_alloc_internal (GstD3D11Allocator * self,
     return mem;
 
   context_handle = gst_d3d11_device_get_device_context_handle (device);
-  GstD3D11DeviceLockGuard lk (device);
   clear_func (context_handle, rtv);
 
   return mem;
@@ -1665,6 +1671,7 @@ gst_d3d11_allocator_alloc_buffer (GstD3D11Allocator * allocator,
     return nullptr;
   }
 
+  GstD3D11DeviceLockGuard lk(device);
   device_handle = gst_d3d11_device_get_device_handle (device);
 
   hr = device_handle->CreateBuffer (desc, nullptr, &buffer);
@@ -1799,7 +1806,8 @@ gst_d3d11_allocator_set_active (GstD3D11Allocator * allocator, gboolean active)
 #define GST_D3D11_POOL_ALLOCATOR_GET_LOCK(alloc) \
   (&(GST_D3D11_POOL_ALLOCATOR_CAST(alloc)->priv->lock))
 #define GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(alloc)  (g_atomic_int_get (&alloc->priv->flushing))
-#define GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(alloc)  (g_atomic_int_get (&alloc->priv->blocked))
+
+const gpointer FLUSH_TOKEN = (gpointer)0x1;
 
 struct _GstD3D11PoolAllocatorPrivate
 {
@@ -1807,9 +1815,7 @@ struct _GstD3D11PoolAllocatorPrivate
   ID3D11Texture2D *texture;
   D3D11_TEXTURE2D_DESC desc;
 
-  /* All below member variables are analogous to that of GstBufferPool */
-  GstAtomicQueue *queue;
-  GstPoll *poll;
+  GAsyncQueue* memories;
 
   /* This lock will protect all below variables apart from atomic ones
    * (identical to GstBufferPool::priv::rec_lock) */
@@ -1865,17 +1871,10 @@ gst_d3d11_pool_allocator_init (GstD3D11PoolAllocator * allocator)
 
   InitializeCriticalSection (&priv->lock);
 
-  priv->poll = gst_poll_new_timer ();
-  priv->queue = gst_atomic_queue_new (16);
+  priv->memories = g_async_queue_new ();
   priv->flushing = 1;
-  priv->blocked = FALSE;
   priv->active = FALSE;
   priv->started = FALSE;
-
-  /* 1 control write for flushing - the flush token */
-  gst_poll_write_control (priv->poll);
-  /* 1 control write for marking that we are not waiting for poll - the wait token */
-  gst_poll_write_control (priv->poll);
 }
 
 static void
@@ -1887,8 +1886,7 @@ gst_d3d11_pool_allocator_finalize (GObject * object)
   GST_DEBUG_OBJECT (self, "Finalize");
 
   gst_d3d11_pool_allocator_stop (self);
-  gst_atomic_queue_unref (priv->queue);
-  gst_poll_free (priv->poll);
+  g_async_queue_unref(priv->memories);
   DeleteCriticalSection (&priv->lock);
 
   GST_D3D11_CLEAR_COM (priv->texture);
@@ -1914,7 +1912,7 @@ gst_d3d11_pool_allocator_start (GstD3D11PoolAllocator * self)
     priv->started = TRUE;
     return TRUE;
   }
-
+  GstD3D11DeviceLockGuard lk(self->device);
   device_handle = gst_d3d11_device_get_device_handle (self->device);
 
   if (!priv->texture) {
@@ -1948,8 +1946,7 @@ gst_d3d11_pool_allocator_start (GstD3D11PoolAllocator * self)
     GST_D3D11_MEMORY_CAST (mem)->priv->subresource_index = i;
 
     g_atomic_int_add (&priv->cur_mems, 1);
-    gst_atomic_queue_push (priv->queue, mem);
-    gst_poll_write_control (priv->poll);
+    g_async_queue_push(priv->memories, mem);
   }
 
   priv->started = TRUE;
@@ -1968,22 +1965,8 @@ gst_d3d11_pool_allocator_do_set_flushing (GstD3D11PoolAllocator * self,
 
   if (flushing) {
     g_atomic_int_set (&priv->flushing, 1);
-    /* Write the flush token to wake up any waiters */
-    gst_poll_write_control (priv->poll);
+    g_async_queue_push(priv->memories, FLUSH_TOKEN);
   } else {
-    while (!gst_poll_read_control (priv->poll)) {
-      if (errno == EWOULDBLOCK) {
-        /* This should not really happen unless flushing and unflushing
-         * happens on different threads. Let's wait a bit to get back flush
-         * token from the thread that was setting it to flushing */
-        g_thread_yield ();
-        continue;
-      } else {
-        /* Critical error but GstPoll already complained */
-        break;
-      }
-    }
-
     g_atomic_int_set (&priv->flushing, 0);
   }
 }
@@ -2023,7 +2006,7 @@ gst_d3d11_pool_allocator_set_active (GstD3D11Allocator * allocator,
      * freed when they are released */
     outstanding = g_atomic_int_get (&priv->outstanding);
     GST_LOG_OBJECT (self, "outstanding memories %d, (in queue %d)",
-        outstanding, gst_atomic_queue_length (priv->queue));
+        outstanding, g_async_queue_length (priv->memories));
     if (outstanding == 0) {
       if (!gst_d3d11_pool_allocator_stop (self)) {
         GST_ERROR_OBJECT (self, "stop failed");
@@ -2060,23 +2043,17 @@ gst_d3d11_pool_allocator_clear_queue (GstD3D11PoolAllocator * self)
   GST_LOG_OBJECT (self, "Clearing queue");
 
   /* clear the pool */
-  while ((memory = (GstMemory *) gst_atomic_queue_pop (priv->queue))) {
-    while (!gst_poll_read_control (priv->poll)) {
-      if (errno == EWOULDBLOCK) {
-        /* We put the memory into the queue but did not finish writing control
-         * yet, let's wait a bit and retry */
-        g_thread_yield ();
-        continue;
-      } else {
-        /* Critical error but GstPoll already complained */
+  for (;;)
+  {
+    memory = (GstMemory*)g_async_queue_try_pop(priv->memories);
+    if (memory == nullptr)
         break;
-      }
-    }
+    if (memory == FLUSH_TOKEN)
+      continue;
     gst_d3d11_pool_allocator_free_memory (self, memory);
   }
 
   GST_LOG_OBJECT (self, "Clear done");
-
   return priv->cur_mems == 0;
 }
 
@@ -2126,8 +2103,7 @@ gst_d3d11_pool_allocator_release_memory (GstD3D11PoolAllocator * self,
   mem->allocator = (GstAllocator *) gst_object_ref (_d3d11_memory_allocator);
 
   /* keep it around in our queue */
-  gst_atomic_queue_push (self->priv->queue, mem);
-  gst_poll_write_control (self->priv->poll);
+  g_async_queue_push (self->priv->memories, mem);
   dec_outstanding (self);
 
   gst_object_unref (self);
@@ -2206,84 +2182,48 @@ gst_d3d11_pool_allocator_acquire_memory_internal (GstD3D11PoolAllocator * self,
   GstFlowReturn result;
   GstD3D11PoolAllocatorPrivate *priv = self->priv;
 
-  while (TRUE) {
-    if (G_UNLIKELY (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self) ||
-          GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(self)))
-      goto flushing;
+  if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(self))
+    goto flushing;
 
-    /* try to get a memory from the queue */
-    *memory = (GstMemory *) gst_atomic_queue_pop (priv->queue);
-    if (G_LIKELY (*memory)) {
-      while (!gst_poll_read_control (priv->poll)) {
-        if (errno == EWOULDBLOCK) {
-          /* We put the memory into the queue but did not finish writing control
-           * yet, let's wait a bit and retry */
-          g_thread_yield ();
-          continue;
-        } else {
-          /* Critical error but GstPoll already complained */
-          break;
-        }
-      }
-      result = GST_FLOW_OK;
-      GST_LOG_OBJECT (self, "acquired memory %p", *memory);
-      break;
-    }
+  *memory = (GstMemory*)g_async_queue_try_pop (priv->memories);
+  if (*memory == FLUSH_TOKEN)
+    *memory = nullptr;
+  if (*memory != nullptr)
+    return GST_FLOW_OK;
 
-    /* no memory, try to allocate some more */
-    GST_LOG_OBJECT (self, "no memory, trying to allocate");
-    result = gst_d3d11_pool_allocator_alloc (self, memory);
-    if (G_LIKELY (result == GST_FLOW_OK))
-      /* we have a memory, return it */
-      break;
+  if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(self))
+    goto flushing;
 
-    if (G_UNLIKELY (result != GST_FLOW_EOS))
-      /* something went wrong, return error */
-      break;
+  /* no memory, try to allocate some more */
+  GST_LOG_OBJECT(self, "no memory, trying to allocate");
+  result = gst_d3d11_pool_allocator_alloc(self, memory);
+  if (result != GST_FLOW_EOS)
+    return result;
 
-    /* now we release the control socket, we wait for a memory release or
-     * flushing */
-    if (!gst_poll_read_control (priv->poll)) {
-      if (errno == EWOULDBLOCK) {
-        /* This means that we have two threads trying to allocate memory
-         * already, and the other one already got the wait token. This
-         * means that we only have to wait for the poll now and not write the
-         * token afterwards: we will be woken up once the other thread is
-         * woken up and that one will write the wait token it removed */
-        GST_LOG_OBJECT (self, "waiting for free memory or flushing");
-        gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE);
-      } else {
-        /* This is a critical error, GstPoll already gave a warning */
-        result = GST_FLOW_ERROR;
-        break;
-      }
-    } else {
-      /* We're the first thread waiting, we got the wait token and have to
-       * write it again later
-       * OR
-       * We're a second thread and just consumed the flush token and block all
-       * other threads, in which case we must not wait and give it back
-       * immediately */
-      if (!GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING (self)
-          && !GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(self)) {
-        GST_LOG_OBJECT (self, "waiting for free memory or flushing");
-        gst_poll_wait (priv->poll, GST_CLOCK_TIME_NONE);
-      }
-      gst_poll_write_control (priv->poll);
-      if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(self)
-        || GST_D3D11_POOL_ALLOCATOR_IS_BLOCKED(self))
-        goto flushing;
-    }
-  }
-
-  return result;
-
-  /* ERRORS */
-flushing:
+  g_assert(*memory == nullptr);
+  for (;;)
   {
-    GST_DEBUG_OBJECT (self, "we are flushing");
-    return GST_FLOW_FLUSHING;
+    GST_LOG_OBJECT(self, "waiting for free memory or flushing");
+    *memory = (GstMemory*)g_async_queue_pop(priv->memories);
+    g_assert(*memory != nullptr);
+    GST_LOG_OBJECT(self, "unblocked with %p", *memory);
+    if (*memory == FLUSH_TOKEN) {
+      *memory = nullptr;
+    }
+    if (GST_D3D11_POOL_ALLOCATOR_IS_FLUSHING(self))
+      goto flushing;
+    if (*memory == nullptr)
+      continue;
+    break;
   }
+
+  g_assert(*memory != nullptr);
+  return GST_FLOW_OK;
+
+flushing:
+  g_clear_pointer(memory, gst_memory_unref);
+  GST_DEBUG_OBJECT (self, "we are flushing");
+  return GST_FLOW_FLUSHING;
 }
 
 /**
@@ -2393,23 +2333,4 @@ gst_d3d11_pool_allocator_get_pool_size (GstD3D11PoolAllocator * allocator,
     *outstanding_size = g_atomic_int_get (&priv->outstanding);
 
   return TRUE;
-}
-
-void
-gst_d3d11_pool_allocator_set_blocked (GstD3D11Allocator* allocator,
-  gboolean blocked)
-{
-  GstD3D11PoolAllocatorPrivate* priv;
-  GstD3D11PoolAllocator* self;
-
-  g_return_if_fail (GST_IS_D3D11_POOL_ALLOCATOR (allocator));
-  self = GST_D3D11_POOL_ALLOCATOR_CAST (allocator);
-  priv = self->priv;
-
-  g_atomic_int_set (&priv->blocked, blocked);
-  GST_LOG_OBJECT (self, "Set blocked: %d", blocked);
-  if (!blocked) {
-    GST_LOG_OBJECT (self, "Unblocking possible waits");
-    gst_poll_write_control (priv->poll);
-  }
 }

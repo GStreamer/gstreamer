@@ -577,6 +577,7 @@ gst_d3d11_window_prepare_default (GstD3D11Window * window, guint display_width,
    * Otherwise, use DXGI_FORMAT_B8G8R8A8_UNORM or DXGI_FORMAT_B8G8R8A8_UNORM
    */
   gst_video_info_from_caps (&window->info, caps);
+  GstD3D11DeviceLockGuard lkd(device);
   device_handle = gst_d3d11_device_get_device_handle (device);
   for (guint i = 0; i < G_N_ELEMENTS (formats); i++) {
     hr = device_handle->CheckFormatSupport (formats[i].dxgi_format,
