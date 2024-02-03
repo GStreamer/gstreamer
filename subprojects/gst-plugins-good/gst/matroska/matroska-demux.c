@@ -1596,6 +1596,15 @@ gst_matroska_demux_parse_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml,
     context->tags_changed = TRUE;
   }
 
+  /* https://dev.w3.org/html5/html-sourcing-inband-tracks/#webm  */
+  if (context->num) {
+    gchar *track_id_str = g_strdup_printf ("%" G_GUINT64_FORMAT, context->num);
+    gst_tag_list_add (context->tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CONTAINER_SPECIFIC_TRACK_ID, track_id_str, NULL);
+    g_free (track_id_str);
+    context->tags_changed = TRUE;
+  }
+
   if (caps == NULL) {
     GST_WARNING_OBJECT (demux, "could not determine caps for stream with "
         "codec_id='%s'", context->codec_id);
