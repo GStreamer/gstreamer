@@ -833,7 +833,7 @@ the most widely used VA drivers.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">a #GstBufferPool</doc>
             <type name="Gst.BufferPool" c:type="GstBufferPool*"/>
           </parameter>
-          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full">
+          <parameter name="size" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvapool.c">the declared surface size</doc>
             <type name="guint" c:type="guint*"/>
           </parameter>

@@ -514,7 +514,7 @@ gst_va_pool_new_with_config (GstCaps * caps, guint min_buffers,
 /**
  * gst_va_pool_get_buffer_size:
  * @pool: a #GstBufferPool
- * @size: (out) (allow-null-none): the declared surface size
+ * @size: (out) (allow-none): the declared surface size
  *
  * Helper function to retrieve the VA surface size provided by @pool.
  *
