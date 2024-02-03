@@ -43197,6 +43197,14 @@ attachment)</doc>
       <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
+    <constant name="TAG_CONTAINER_SPECIFIC_TRACK_ID" value="container-specific-track-id" c:type="GST_TAG_CONTAINER_SPECIFIC_TRACK_ID" version="1.24">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">Unique identifier for the audio, video or text track this tag is associated
+with. The mappings for several container formats are defined in the [Sourcing
+In-band Media Resource Tracks from Media Containers into HTML
+specification](https://dev.w3.org/html5/html-sourcing-inband-tracks/).</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
     <constant name="TAG_COPYRIGHT" value="copyright" c:type="GST_TAG_COPYRIGHT">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">copyright notice of the data (string)</doc>
       <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>

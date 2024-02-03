@@ -410,7 +410,9 @@ _priv_gst_tag_initialize (void)
   gst_tag_register_static (GST_TAG_PRIVATE_DATA, GST_TAG_FLAG_META,
       GST_TYPE_SAMPLE,
       _("private-data"), _("Private data"), gst_tag_merge_use_first);
-
+  gst_tag_register_static (GST_TAG_CONTAINER_SPECIFIC_TRACK_ID,
+      GST_TAG_FLAG_META, G_TYPE_STRING,
+      _("container-specific-track-id"), _("Container-specific Track ID"), NULL);
 }
 
 /**
