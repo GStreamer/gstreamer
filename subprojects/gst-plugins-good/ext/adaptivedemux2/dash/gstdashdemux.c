@@ -846,6 +846,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
     GstStructure *s;
     gchar *lang = NULL;
     GstTagList *tags = NULL;
+    gchar *track_id = NULL;
 
     active_stream =
         gst_mpd_client2_get_active_stream_by_index (demux->client, i);
@@ -865,6 +866,46 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
     streamtype = gst_dash_demux_get_stream_type (demux, active_stream);
     if (streamtype == GST_STREAM_TYPE_UNKNOWN)
       continue;
+
+    /* Fill container-specific track-id string */
+    if (active_stream->cur_adapt_set) {
+      /* FIXME: For CEA 608 and CEA 708 tracks we should check the Accessibility descriptor:
+       * https://dev.w3.org/html5/html-sourcing-inband-tracks/#mpegdash
+       * * An ISOBMFF CEA 608 caption service: the string "cc" concatenated with
+       * the value of the 'channel-number' field in the Accessibility descriptor
+       * in the ContentComponent or AdaptationSet.
+       * * An ISOBMFF CEA 708 caption service: the string "sn" concatenated with
+       * the value of the 'service-number' field in the Accessibility descriptor
+       * in the ContentComponent or AdaptationSet.
+       * * Otherwise:
+       */
+
+      /* Content of the id attribute in the ContentComponent or AdaptationSet
+       * element. */
+      if (active_stream->cur_adapt_set->id) {
+        track_id = g_strdup_printf ("%d", active_stream->cur_adapt_set->id);
+      } else {
+        GList *it;
+
+        for (it = active_stream->cur_adapt_set->ContentComponents; it;
+            it = it->next) {
+          GstMPDContentComponentNode *cc_node = it->data;
+          if (cc_node->id) {
+            track_id = g_strdup_printf ("%u", cc_node->id);
+            break;
+          }
+        }
+        /* Empty string if the id attribute is not present on either
+         * element. */
+        if (!track_id)
+          track_id = g_strdup ("");
+      }
+    }
+    if (track_id) {
+      tags = gst_tag_list_new (GST_TAG_CONTAINER_SPECIFIC_TRACK_ID, track_id,
+          NULL);
+      g_free (track_id);
+    }
 
     stream_id =
         g_strdup_printf ("%s-%d", gst_stream_type_get_name (streamtype), i);
@@ -894,10 +935,15 @@ gst_dash_demux_setup_all_streams (GstDashDemux2 * demux)
     }
 
     if (lang) {
+      if (!tags)
+        tags = gst_tag_list_new_empty ();
+
       if (gst_tag_check_language_code (lang))
-        tags = gst_tag_list_new (GST_TAG_LANGUAGE_CODE, lang, NULL);
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_LANGUAGE_CODE,
+            lang, NULL);
       else
-        tags = gst_tag_list_new (GST_TAG_LANGUAGE_NAME, lang, NULL);
+        gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_LANGUAGE_NAME,
+            lang, NULL);
     }
 
     stream = gst_dash_demux_stream_new (demux->client->period_idx, stream_id);
