@@ -1,9 +1,9 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
 event caps: video/x-h264, alignment=(string)au, codec_data=(buffer)01640014ffe1001867640014acd94141fb0110000003001773594000f142996001000568ebecb22c, framerate=(fraction)30/1, height=(int)240, level=(string)2, pixel-aspect-ratio=(fraction)1/1, profile=(string)high, stream-format=(string)avc, width=(int)320;
 event segment: format=TIME, start=0:00:00.066666666, offset=0:00:00.000000000, stop=0:00:10.066666666, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.066666666
-event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\,\ container-specific-track-id\=\(string\)1\;";
 event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2013-09-03T16:21:35Z\,\ description\=\(string\)\"audiotest\\\ wave\"\,\ encoder\=\(string\)x264\,\ container-format\=\(string\)Quicktime\;";
-event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ bitrate\=\(uint\)99582\,\ language-code\=\(string\)en\,\ container-specific-track-id\=\(string\)1\;";
 buffer: dts=0:00:00.000000000, pts=0:00:00.066666666, dur=0:00:00.033333333, flags=discont tag-memory
 buffer: dts=0:00:00.033333333, pts=0:00:00.100000000, dur=0:00:00.033333333, flags=delta-unit tag-memory
 buffer: dts=0:00:00.066666666, pts=0:00:00.233333333, dur=0:00:00.033333334, flags=delta-unit tag-memory

@@ -14135,6 +14135,18 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         GST_TAG_LANGUAGE_CODE, (lang_code) ? lang_code : stream->lang_id, NULL);
   }
 
+  /* https://dev.w3.org/html5/html-sourcing-inband-tracks/#mpeg4
+   * FIXME: For CEA 608 and CEA 708 we should use the channel_number and
+   * service_number respectively.
+   */
+  if (stream->track_id) {
+    gchar *track_id_str =
+        g_strdup_printf ("%" G_GUINT32_FORMAT, stream->track_id);
+    gst_tag_list_add (stream->stream_tags, GST_TAG_MERGE_REPLACE,
+        GST_TAG_CONTAINER_SPECIFIC_TRACK_ID, track_id_str, NULL);
+    g_free (track_id_str);
+  }
+
   /* Check for UDTA tags */
   if ((udta = qtdemux_tree_get_child_by_type (trak, FOURCC_udta))) {
     qtdemux_parse_udta (qtdemux, stream->stream_tags, udta);

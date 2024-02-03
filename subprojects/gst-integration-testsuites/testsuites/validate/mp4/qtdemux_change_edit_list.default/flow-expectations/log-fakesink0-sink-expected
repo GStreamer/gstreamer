@@ -1,15 +1,15 @@
 event stream-start: GstEventStreamStart, flags=(GstStreamFlags)GST_STREAM_FLAG_NONE, group-id=(uint)1;
 event caps: video/x-h264, alignment=(string)au, codec_data=(buffer)014d4015ffe10016674d4015d901b1fe4e1000003e90000bb800f162e48001000468eb8f20, height=(int)240, level=(string)2.1, pixel-aspect-ratio=(fraction)1/1, profile=(string)main, stream-format=(string)avc, width=(int)426;
 event segment: format=TIME, start=0:00:00.000000000, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.000000000
-event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ container-specific-track-id\=\(string\)1\;";
 event tag: GstTagList-global, taglist=(taglist)"taglist\,\ datetime\=\(datetime\)2012-08-27T01:00:50Z\,\ container-format\=\(string\)\"ISO\\\ fMP4\"\;";
-event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ container-specific-track-id\=\(string\)1\;";
 event caps: video/x-h264, alignment=(string)au, codec_data=(buffer)014d4015ffe10016674d4015d901b1fe4e1000003e90000bb800f162e48001000468eb8f20, framerate=(fraction)24000/1001, height=(int)240, level=(string)2.1, pixel-aspect-ratio=(fraction)1/1, profile=(string)main, stream-format=(string)avc, width=(int)426;
 
 CHECKPOINT: A moov with a different edit list is now pushed
 
 event caps: video/x-h264, alignment=(string)au, codec_data=(buffer)014d401effe10016674d401ee8805017fcb0800001f480005dc0078b168901000468ebaf20, height=(int)360, level=(string)3, pixel-aspect-ratio=(fraction)1/1, profile=(string)main, stream-format=(string)avc, width=(int)640;
 event segment: format=TIME, start=0:00:00.041711111, offset=0:00:00.000000000, stop=none, time=0:00:00.000000000, base=0:00:00.000000000, position=0:00:00.041711111
-event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\;";
-event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ container-specific-track-id\=\(string\)1\;";
+event tag: GstTagList-stream, taglist=(taglist)"taglist\,\ video-codec\=\(string\)\"H.264\\\ /\\\ AVC\"\,\ container-specific-track-id\=\(string\)1\;";
 event caps: video/x-h264, alignment=(string)au, codec_data=(buffer)014d401effe10016674d401ee8805017fcb0800001f480005dc0078b168901000468ebaf20, framerate=(fraction)24000/1001, height=(int)360, level=(string)3, pixel-aspect-ratio=(fraction)1/1, profile=(string)main, stream-format=(string)avc, width=(int)640;
