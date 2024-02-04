@@ -156,9 +156,6 @@ gst_drm_dumb_memory_export_dmabuf (GstMemory * mem)
   if (ret)
     goto export_fd_failed;
 
-  if (G_UNLIKELY (alloc->dmabuf_alloc == NULL))
-    alloc->dmabuf_alloc = gst_dmabuf_allocator_new ();
-
   dmamem = gst_dmabuf_allocator_alloc (alloc->dmabuf_alloc, prime_fd,
       gst_memory_get_sizes (mem, NULL, NULL));
 
@@ -452,8 +449,7 @@ gst_drm_dumb_allocator_finalize (GObject * obj)
 {
   GstDRMDumbAllocator *alloc = GST_DRM_DUMB_ALLOCATOR (obj);
 
-  if (alloc->dmabuf_alloc)
-    gst_object_unref (alloc->dmabuf_alloc);
+  gst_object_unref (alloc->dmabuf_alloc);
 
   g_free (alloc->drm_device_path);
   alloc->drm_device_path = NULL;
@@ -581,6 +577,7 @@ gst_drm_dumb_allocator_init (GstDRMDumbAllocator * alloc)
 
   alloc->drm_fd = -1;
   alloc->drm_device_path = NULL;
+  alloc->dmabuf_alloc = gst_dmabuf_allocator_new ();
 
   base_alloc->mem_type = GST_DRM_DUMB_MEMORY_TYPE;
   base_alloc->mem_map = gst_drm_dumb_memory_map;
