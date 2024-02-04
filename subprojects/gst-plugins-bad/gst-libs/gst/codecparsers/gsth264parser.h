@@ -382,6 +382,26 @@ typedef enum
 
 /**
  * GstH264Level:
+ * @GST_H264_LEVEL_L1: Level 1
+ * @GST_H264_LEVEL_L1B: Level 1b
+ * @GST_H264_LEVEL_L1_1: Level 1.1
+ * @GST_H264_LEVEL_L1_2: Level 1.2
+ * @GST_H264_LEVEL_L1_3: Level 1.3
+ * @GST_H264_LEVEL_L2: Level 2
+ * @GST_H264_LEVEL_L2_1: Level 2.1
+ * @GST_H264_LEVEL_L2_2: Level 2.2
+ * @GST_H264_LEVEL_L3: Level 3
+ * @GST_H264_LEVEL_L3_1: Level 3.1
+ * @GST_H264_LEVEL_L3_2: Level 3.2
+ * @GST_H264_LEVEL_L4: Level 4
+ * @GST_H264_LEVEL_L4_1: Level 4.1
+ * @GST_H264_LEVEL_L4_2: Level 4.2
+ * @GST_H264_LEVEL_L5: Level 5
+ * @GST_H264_LEVEL_L5_1: Level 5.1
+ * @GST_H264_LEVEL_L5_2: Level 5.2
+ * @GST_H264_LEVEL_L6: Level 6
+ * @GST_H264_LEVEL_L6_1: Level 6.1
+ * @GST_H264_LEVEL_L6_2: Level 6.2
  *
  * H.264 level
  *
