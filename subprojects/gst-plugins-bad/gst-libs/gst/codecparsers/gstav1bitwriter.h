@@ -35,7 +35,7 @@ G_BEGIN_DECLS
  *
  * The result of writing AV1 data into bit stream.
  *
- * Since: 1.22
+ * Since: 1.24
  */
 typedef enum
 {
