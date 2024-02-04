@@ -1110,10 +1110,9 @@ _gst_pc_thread (GstWebRTCBin * webrtc)
   g_main_context_invoke (webrtc->priv->main_context,
       (GSourceFunc) _unlock_pc_thread, PC_GET_LOCK (webrtc));
 
-  /* Having the thread be the thread default GMainContext will break the
-   * required queue-like ordering (from W3's peerconnection spec) of re-entrant
-   * tasks */
+  g_main_context_push_thread_default (webrtc->priv->main_context);
   g_main_loop_run (webrtc->priv->loop);
+  g_main_context_pop_thread_default (webrtc->priv->main_context);
 
   GST_OBJECT_LOCK (webrtc);
   g_main_context_unref (webrtc->priv->main_context);
