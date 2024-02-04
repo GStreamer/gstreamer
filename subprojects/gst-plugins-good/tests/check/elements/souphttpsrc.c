@@ -443,7 +443,7 @@ GST_START_TEST (test_icy_stream)
 
   /* Radionomy Hot40Music shoutcast stream */
   g_object_set (src, "location",
-      "http://streaming.radionomy.com:80/Hot40Music", NULL);
+      "https://streaming.brol.tech/jamendolounge", NULL);
 
   /* EOS after the first buffer */
   g_object_set (src, "num-buffers", 1, NULL);
