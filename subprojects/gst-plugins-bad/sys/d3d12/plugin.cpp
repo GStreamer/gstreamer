@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 #include "gstd3d12.h"
+#include "gstd3d12-private.h"
 #include "gstd3d12convert.h"
 #include "gstd3d12download.h"
 #include "gstd3d12upload.h"
@@ -58,6 +59,12 @@ GST_DEBUG_CATEGORY (gst_d3d12_format_debug);
 GST_DEBUG_CATEGORY (gst_d3d12_utils_debug);
 
 #define GST_CAT_DEFAULT gst_d3d12_debug
+
+static void
+plugin_deinit (gpointer data)
+{
+  gst_d3d12_sync_background_thread ();
+}
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -133,6 +140,10 @@ plugin_init (GstPlugin * plugin)
   gst_device_provider_register (plugin,
       "d3d12screencapturedeviceprovider", GST_RANK_PRIMARY,
       GST_TYPE_D3D12_SCREEN_CAPTURE_DEVICE_PROVIDER);
+
+  g_object_set_data_full (G_OBJECT (plugin),
+      "plugin-d3d12-shutdown", (gpointer) "shutdown-data",
+      (GDestroyNotify) plugin_deinit);
 
   return TRUE;
 }

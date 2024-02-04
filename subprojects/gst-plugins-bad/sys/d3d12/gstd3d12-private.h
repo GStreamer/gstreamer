@@ -192,3 +192,6 @@ static const GstD3D12Format g_gst_d3d12_default_format_map[] = {
 void gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device,
                                          GstMemory * mem);
 
+void gst_d3d12_init_background_thread (void);
+
+void gst_d3d12_sync_background_thread (void);

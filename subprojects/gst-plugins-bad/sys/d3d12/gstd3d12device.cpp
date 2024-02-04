@@ -38,6 +38,7 @@
 #include <memory>
 #include <queue>
 #include <unordered_map>
+#include <thread>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_device_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
@@ -54,12 +55,7 @@ enum
   PROP_DESCRIPTION,
 };
 
-/* d3d12 devices are singtones per adapter. Keep track of live objects and
- * reuse already created object if possible */
 /* *INDENT-OFF* */
-std::mutex device_list_lock_;
-std::vector<GstD3D12Device*> live_devices_;
-
 using namespace Microsoft::WRL;
 
 struct _GstD3D12DevicePrivate
@@ -152,7 +148,213 @@ struct _GstD3D12DevicePrivate
   std::string description;
   gint64 adapter_luid = 0;
 };
+
+enum GstD3D12DeviceConstructType
+{
+  GST_D3D12_DEVICE_CONSTRUCT_FOR_INDEX,
+  GST_D3D12_DEVICE_CONSTRUCT_FOR_LUID,
+};
+
+struct GstD3D12DeviceConstructData
+{
+  union
+  {
+    guint index;
+    gint64 luid;
+  } data;
+  GstD3D12DeviceConstructType type;
+};
+
+static GstD3D12Device *
+gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data);
+
+struct DeviceCache
+{
+  ~DeviceCache()
+  {
+    if (priv)
+      delete priv;
+  }
+
+  GstD3D12Device *device = nullptr;
+  GstD3D12DevicePrivate *priv = nullptr;
+  guint64 token = 0;
+};
+
+/* Because ID3D12Device instance is a singleton per adapter,
+ * this DeviceCacheManager object will cache GstD3D12Device object and
+ * will return the same GstD3D12Device object for create request
+ * if instanted object exists already.
+ *
+ * Another role of this object dtor thread management.
+ * GstD3D12CommandQueue object held by GstD3D12Device will run background
+ * garbage collection thread and releasing garbage collection data
+ * could result in releasing GstD3D12Device object, which can cause self-thread
+ * joining. This manager will run one background thread to avoid it
+ */
+class DeviceCacheManager
+{
+public:
+  DeviceCacheManager (const DeviceCacheManager &) = delete;
+  DeviceCacheManager& operator= (const DeviceCacheManager &) = delete;
+  static DeviceCacheManager * GetInstance()
+  {
+    static DeviceCacheManager *inst = nullptr;
+    GST_D3D12_CALL_ONCE_BEGIN {
+      inst = new DeviceCacheManager ();
+    } GST_D3D12_CALL_ONCE_END;
+
+    return inst;
+  }
+
+  void InitThread ()
+  {
+    std::lock_guard <std::mutex> lk (lock_);
+    if (!thread_)
+      thread_ = new std::thread (&DeviceCacheManager::threadFunc, this);
+  }
+
+  void Sync ()
+  {
+    guint64 to_wait = 0;
+
+    {
+      std::lock_guard <std::mutex> lk (lock_);
+      if (!thread_)
+        return;
+
+      token_++;
+      to_wait = token_;
+
+      auto empty_item = std::make_shared <DeviceCache> ();
+      empty_item->token = to_wait;
+
+      std::lock_guard <std::mutex> olk (thread_lock_);
+      to_remove_.push (std::move (empty_item));
+      thread_cond_.notify_one ();
+    }
+
+    std::unique_lock <std::mutex> olk (token_lock_);
+    while (token_synced_ < to_wait)
+      token_cond_.wait (olk);
+  }
+
+  GstD3D12Device * Create (const GstD3D12DeviceConstructData * data)
+  {
+    std::lock_guard <std::mutex> lk (lock_);
+    auto it = std::find_if (list_.begin (), list_.end (),
+        [&] (const auto & cache) {
+          const auto priv = cache->priv;
+          if (data->type == GST_D3D12_DEVICE_CONSTRUCT_FOR_INDEX)
+            return priv->adapter_index == data->data.index;
+
+          return priv->adapter_luid == data->data.luid;
+        });
+
+    if (it != list_.end ())
+      return (GstD3D12Device *) gst_object_ref ((*it)->device);
+
+    auto device = gst_d3d12_device_new_internal (data);
+    if (!device)
+      return nullptr;
+
+    gst_object_ref_sink (device);
+
+    auto item = std::make_shared <DeviceCache> ();
+    item->device = device;
+    item->priv = device->priv;
+
+    g_object_weak_ref (G_OBJECT (device), DeviceCacheManager::NotifyCb, this);
+    list_.push_back (item);
+
+    return device;
+  }
+
+  static void NotifyCb (gpointer data, GObject * device)
+  {
+    auto self = (DeviceCacheManager *) data;
+    self->remove ((GstD3D12Device *) device);
+  }
+
+private:
+  DeviceCacheManager () {}
+  ~DeviceCacheManager () {}
+
+  void threadFunc ()
+  {
+    while (true) {
+      std::unique_lock <std::mutex> lk (thread_lock_);
+      while (to_remove_.empty ())
+        thread_cond_.wait (lk);
+
+      while (!to_remove_.empty ()) {
+        guint64 token;
+
+        {
+          auto item = to_remove_.front ();
+          to_remove_.pop ();
+          token = item->token;
+        }
+
+        std::lock_guard <std::mutex> olk (token_lock_);
+        token_synced_ = token;
+        token_cond_.notify_all ();
+      }
+    }
+  }
+
+  void remove (GstD3D12Device * device)
+  {
+    std::lock_guard <std::mutex> lk (lock_);
+    auto it = std::find_if (list_.begin (), list_.end (),
+        [&] (const auto & cache) {
+          return cache->device == device;
+        });
+
+    std::shared_ptr<DeviceCache> cached;
+    if (it != list_.end ()) {
+      cached = *it;
+      list_.erase (it);
+    } else {
+      GST_WARNING ("Couldn't find device from cache");
+    }
+
+    if (cached && thread_) {
+      std::lock_guard <std::mutex> tlk (thread_lock_);
+      token_++;
+      cached->token = token_;
+      to_remove_.push (std::move (cached));
+      thread_cond_.notify_one ();
+    }
+  }
+
+private:
+  std::mutex lock_;
+  std::vector<std::shared_ptr<DeviceCache>> list_;
+  std::mutex thread_lock_;
+  std::condition_variable thread_cond_;
+  std::thread *thread_ = nullptr;
+  std::queue<std::shared_ptr<DeviceCache>> to_remove_;
+  std::mutex token_lock_;
+  std::condition_variable token_cond_;
+  guint64 token_ = 0;
+  guint64 token_synced_ = 0;
+};
 /* *INDENT-ON* */
+
+void
+gst_d3d12_init_background_thread (void)
+{
+  auto manager = DeviceCacheManager::GetInstance ();
+  manager->InitThread ();
+}
+
+void
+gst_d3d12_sync_background_thread (void)
+{
+  auto manager = DeviceCacheManager::GetInstance ();
+  manager->Sync ();
+}
 
 static gboolean
 gst_d3d12_device_enable_debug (void)
@@ -260,7 +462,7 @@ gst_d3d12_device_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (self, "Finalize");
 
-  delete self->priv;
+  /* Don't delete private struct. DeviceCacheManager will destroy it */
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -463,33 +665,6 @@ gst_d3d12_device_setup_format_table (GstD3D12Device * self)
   }
 }
 
-static void
-gst_d3d12_device_weak_ref_notify (gpointer data, GstD3D12Device * device)
-{
-  std::lock_guard < std::mutex > lk (device_list_lock_);
-  auto it = std::find (live_devices_.begin (), live_devices_.end (), device);
-  if (it != live_devices_.end ())
-    live_devices_.erase (it);
-  else
-    GST_WARNING ("Could not find %p from list", device);
-}
-
-typedef enum
-{
-  GST_D3D12_DEVICE_CONSTRUCT_FOR_INDEX,
-  GST_D3D12_DEVICE_CONSTRUCT_FOR_LUID,
-} GstD3D12DeviceConstructType;
-
-typedef struct
-{
-  union
-  {
-    guint index;
-    gint64 luid;
-  } data;
-  GstD3D12DeviceConstructType type;
-} GstD3D12DeviceConstructData;
-
 static HRESULT
 gst_d3d12_device_find_adapter (const GstD3D12DeviceConstructData * data,
     IDXGIFactory2 * factory, guint * index, IDXGIAdapter1 ** rst)
@@ -665,72 +840,23 @@ error:
 GstD3D12Device *
 gst_d3d12_device_new (guint adapter_index)
 {
-  GstD3D12Device *self = nullptr;
-  std::lock_guard < std::mutex > lk (device_list_lock_);
+  auto manager = DeviceCacheManager::GetInstance ();
+  GstD3D12DeviceConstructData data;
+  data.data.index = adapter_index;
+  data.type = GST_D3D12_DEVICE_CONSTRUCT_FOR_INDEX;
 
-  /* *INDENT-OFF* */
-  for (auto iter: live_devices_) {
-    if (iter->priv->adapter_index == adapter_index) {
-      self = (GstD3D12Device *) gst_object_ref (iter);
-      break;
-    }
-  }
-  /* *INDENT-ON* */
-
-  if (!self) {
-    GstD3D12DeviceConstructData data;
-    data.data.index = adapter_index;
-    data.type = GST_D3D12_DEVICE_CONSTRUCT_FOR_INDEX;
-
-    self = gst_d3d12_device_new_internal (&data);
-    if (!self) {
-      GST_INFO ("Could not create device for index %d", adapter_index);
-      return nullptr;
-    }
-
-    gst_object_ref_sink (self);
-    g_object_weak_ref (G_OBJECT (self),
-        (GWeakNotify) gst_d3d12_device_weak_ref_notify, nullptr);
-    live_devices_.push_back (self);
-  }
-
-  return self;
+  return manager->Create (&data);
 }
 
 GstD3D12Device *
 gst_d3d12_device_new_for_adapter_luid (gint64 adapter_luid)
 {
-  GstD3D12Device *self = nullptr;
-  std::lock_guard < std::mutex > lk (device_list_lock_);
+  auto manager = DeviceCacheManager::GetInstance ();
+  GstD3D12DeviceConstructData data;
+  data.data.luid = adapter_luid;
+  data.type = GST_D3D12_DEVICE_CONSTRUCT_FOR_LUID;
 
-  /* *INDENT-OFF* */
-  for (auto iter: live_devices_) {
-    if (iter->priv->adapter_luid == adapter_luid) {
-      self = (GstD3D12Device *) gst_object_ref (iter);
-      break;
-    }
-  }
-  /* *INDENT-ON* */
-
-  if (!self) {
-    GstD3D12DeviceConstructData data;
-    data.data.luid = adapter_luid;
-    data.type = GST_D3D12_DEVICE_CONSTRUCT_FOR_LUID;
-
-    self = gst_d3d12_device_new_internal (&data);
-    if (!self) {
-      GST_INFO ("Could not create device for LUID %" G_GINT64_FORMAT,
-          adapter_luid);
-      return nullptr;
-    }
-
-    gst_object_ref_sink (self);
-    g_object_weak_ref (G_OBJECT (self),
-        (GWeakNotify) gst_d3d12_device_weak_ref_notify, nullptr);
-    live_devices_.push_back (self);
-  }
-
-  return self;
+  return manager->Create (&data);
 }
 
 ID3D12Device *

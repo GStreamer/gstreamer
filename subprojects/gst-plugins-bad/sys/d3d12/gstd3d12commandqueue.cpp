@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12.h"
+#include "gstd3d12-private.h"
 #include <wrl.h>
 #include <queue>
 #include <mutex>
@@ -396,12 +397,13 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
 
   std::lock_guard < std::mutex > lk (priv->lock);
   if (!priv->gc_thread) {
+    gst_d3d12_init_background_thread ();
     priv->gc_thread = g_thread_new ("GstD3D12Gc",
         (GThreadFunc) gst_d3d12_command_queue_gc_thread, queue);
   }
 
   GST_LOG_OBJECT (queue, "Pushing GC data %" G_GUINT64_FORMAT, fence_value);
 
-  priv->gc_list.push (gc_data);
+  priv->gc_list.push (std::move (gc_data));
   priv->cond.notify_one ();
 }
