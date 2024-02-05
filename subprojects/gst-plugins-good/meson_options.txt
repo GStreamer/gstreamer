@@ -87,7 +87,7 @@ option('rpi-lib-dir', type : 'string', value : '/opt/vc/lib', description : 'Dir
 
 # soup plugin options
 option('soup', type : 'feature', value : 'auto', description : 'libsoup HTTP client source/sink plugin')
-option('soup-lookup-dep', type : 'boolean', value : 'false',
+option('soup-lookup-dep', type : 'boolean', value : false,
        description : 'Lookup libsoup dep at build time even when building a shared plugin')
 
 # Qt plugin options
