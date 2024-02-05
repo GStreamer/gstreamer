@@ -659,15 +659,18 @@ _apply_pad_offset (GstPad * pad, GstEvent * event, gboolean upstream,
 
   if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
     GstSegment segment;
+    guint32 seqnum;
 
     g_assert (!upstream);
 
     /* copy segment values */
     gst_event_copy_segment (event, &segment);
+    seqnum = gst_event_get_seqnum (event);
     gst_event_unref (event);
 
     gst_segment_offset_running_time (&segment, segment.format, pad_offset);
     event = gst_event_new_segment (&segment);
+    gst_event_set_seqnum (event, seqnum);
   }
 
   event = gst_event_make_writable (event);
