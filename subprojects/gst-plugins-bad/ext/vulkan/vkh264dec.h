@@ -19,9 +19,7 @@
 
 #pragma once
 
-#define GST_USE_UNSTABLE_API
 #include <gst/codecs/gsth264decoder.h>
-#undef GST_USE_UNSTABLE_API
 
 G_BEGIN_DECLS
 
