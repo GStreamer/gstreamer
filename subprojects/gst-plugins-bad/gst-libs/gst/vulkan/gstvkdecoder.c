@@ -918,7 +918,7 @@ gst_vulkan_decoder_new_video_session_parameters (GstVulkanDecoder * self,
 /**
  * gst_vulkan_decoder_update_video_session_parameters:
  * @self: a #GstVulkanDecoder
- * @params: a #GstVulkanDecoderParameters
+ * @params: a GstVulkanDecoderParameters union
  * @error: a #GError
  *
  * Update the internal codec parameters for the current video session.
