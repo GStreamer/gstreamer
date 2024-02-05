@@ -1,8 +1,3 @@
-if get_option('analyticsoverlay').disabled()
-  gstanalyticsoverlay_ext_dep = disabler()
-  subdir_done()
-endif
-
 analyticsoverlay_sources = [
   'gstanalyticsoverlay.c',
   'gstobjectdetectionoverlay.c',
@@ -25,6 +20,4 @@ if gstanalyticsoverlay_ext_dep.found()
     install_dir : plugins_install_dir,
   )
   plugins += [gstanalyticsoverlay]
-else
-  error('analyticsoverlay plugin is enabled, but dependency is missing')
 endif
