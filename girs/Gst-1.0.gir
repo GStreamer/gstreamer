@@ -54390,11 +54390,11 @@ the result.</doc>
       <parameters>
         <parameter name="a" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a filename to compare with @b</doc>
-          <type name="utf8" c:type="const gchar*"/>
+          <type name="filename" c:type="const gchar*"/>
         </parameter>
         <parameter name="b" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstutils.c">a filename to compare with @a</doc>
-          <type name="utf8" c:type="const gchar*"/>
+          <type name="filename" c:type="const gchar*"/>
         </parameter>
       </parameters>
     </function>

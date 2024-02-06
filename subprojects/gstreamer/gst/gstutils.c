@@ -4804,8 +4804,8 @@ gst_type_is_plugin_api (GType type, GstPluginAPIFlags * flags)
 
 /**
  * gst_util_filename_compare:
- * @a: a filename to compare with @b
- * @b: a filename to compare with @a
+ * @a: (type filename): a filename to compare with @b
+ * @b: (type filename): a filename to compare with @a
  *
  * Compares the given filenames using natural ordering.
  *
