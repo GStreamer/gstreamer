@@ -362,7 +362,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
 	tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
 	gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
             buffer_size);
-        tensor->type = GST_TENSOR_TYPE_FLOAT32;
+        tensor->data_type = GST_TENSOR_TYPE_FLOAT32;
       } else if (tensorType == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
 	size_t buffer_size = 0;
 
@@ -370,7 +370,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
 	tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
 	gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
             buffer_size);
-        tensor->type = GST_TENSOR_TYPE_INT32;
+        tensor->data_type = GST_TENSOR_TYPE_INT32;
       } else {
 	GST_ERROR_OBJECT (debug_parent, "Output tensor is not FLOAT32 or INT32, not supported");
 	gst_buffer_remove_meta (buffer, (GstMeta*) tmeta);

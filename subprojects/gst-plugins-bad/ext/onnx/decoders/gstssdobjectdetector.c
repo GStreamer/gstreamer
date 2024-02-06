@@ -357,7 +357,7 @@ gst_ssd_object_detector_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   get_ ## TYPE ## _at_index (GstTensor *tensor, GstMapInfo *map,        \
       guint index, TYPE * out)                                          \
   {									\
-    switch (tensor->type) {                                             \
+    switch (tensor->data_type) {                                        \
   case GST_TENSOR_TYPE_FLOAT32: {					\
     float *f = (float *) map->data;                                     \
     if (sizeof(*f) * (index + 1) > map->size)				\
