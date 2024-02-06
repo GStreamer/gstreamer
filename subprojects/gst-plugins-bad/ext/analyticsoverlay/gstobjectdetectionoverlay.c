@@ -37,7 +37,7 @@
  *
  * ## Example launch line
  * |[
- * gst-launch-1.0 v4l2src device=/dev/video0 ! videoconvertscale add-borders=1 ! 'video/x-raw,width=640,height=383,framerate=2/1' ! onnxobjectdetector execution-provider=cpu model-file=ssd_mobilenet_v1_coco.onnx ! objectdetectionoverlay label-file=COCO_classes.txt ! videoconvertscale ! autovideosink
+ * gst-launch-1.0 multifilesrc location=/onnx-models/images/bus.jpg ! jpegdec ! videoconvert ! onnxinference execution-provider=cpu model-file=/onnx-models/models/ssd_mobilenet_v1_coco.onnx ! ssdobjectdetector label-file=/onnx-models/labels/COCO_classes.txt ! objectdetectionoverlay object-detection-outline-color=0xFF0000FF draw-labels=true ! videoconvertscale ! imagefreeze ! autovideosink
  * ]| This pipeline create an overlay representing results of an object detetion
  * analysis.
  *
