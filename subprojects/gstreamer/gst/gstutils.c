@@ -4819,8 +4819,8 @@ gst_util_filename_compare (const gchar * a, const gchar * b)
   gint ret;
 
   /* Filenames in GLib are only guaranteed to be UTF-8 on Windows */
-  a_utf8 = g_filename_to_utf8 ((gchar *) a, -1, NULL, NULL, NULL);
-  b_utf8 = g_filename_to_utf8 ((gchar *) b, -1, NULL, NULL, NULL);
+  a_utf8 = g_filename_to_utf8 (a, -1, NULL, NULL, NULL);
+  b_utf8 = g_filename_to_utf8 (b, -1, NULL, NULL, NULL);
 
   if (a_utf8 == NULL || b_utf8 == NULL) {
     return strcmp (a, b);
