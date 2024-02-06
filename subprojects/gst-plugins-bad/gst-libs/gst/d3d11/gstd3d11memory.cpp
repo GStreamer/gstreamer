@@ -1889,8 +1889,10 @@ gst_d3d11_pool_allocator_finalize (GObject * object)
   g_async_queue_unref(priv->memories);
   DeleteCriticalSection (&priv->lock);
 
-  GST_D3D11_CLEAR_COM (priv->texture);
-
+  {
+    GstD3D11DeviceLockGuard lk(self->device);
+    GST_D3D11_CLEAR_COM(priv->texture);
+  }
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (pool_alloc_parent_class)->finalize (object);
