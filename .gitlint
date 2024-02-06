@@ -20,4 +20,4 @@ regex=^[\w]+[\w, -\\/]*[\w]+: .*
 regex=^ \#\d(.*):\d+$
 
 [ignore-by-title]
-regex=^Release(.*)
+regex=^(Release|Back to development)
