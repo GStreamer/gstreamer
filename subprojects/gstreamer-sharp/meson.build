@@ -1,4 +1,4 @@
-project('gstreamer-sharp', ['cs', 'c'], version: '1.23.0.1',
+project('gstreamer-sharp', ['cs', 'c'], version: '1.23.1',
     meson_version : '>= 1.1', license: 'LGPL')
 
 fs = import ('fs')
@@ -204,4 +204,4 @@ if codegen_enabled
     run_target('update-all', command: [find_program('update_sources.py'), 'bindinate'])
 endif
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())

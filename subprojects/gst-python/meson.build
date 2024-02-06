@@ -1,5 +1,5 @@
 project('gst-python', 'c',
-  version : '1.23.0.1',
+  version : '1.23.1',
   meson_version : '>= 1.1',
   default_options : [ 'warning_level=1',
                       'c_std=gnu99',
@@ -92,7 +92,7 @@ cdata.set('PYTHON_VERSION', '"@0@"'.format(python_dep.version()))
 configure_file(output : 'config.h', configuration : cdata)
 configinc = include_directories('.')
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())
 
 pkgconfig = import('pkgconfig')
 plugins_install_dir = join_paths(libdir, 'gstreamer-1.0')

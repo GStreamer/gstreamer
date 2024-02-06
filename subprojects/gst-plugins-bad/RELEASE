@@ -1,17 +1,15 @@
-This is GStreamer gst-plugins-bad 1.22.0.
+This is GStreamer gst-plugins-bad 1.23.1.
 
-The GStreamer team is thrilled to announce a new major feature release
-of your favourite cross-platform multimedia framework!
+GStreamer 1.23 is the unstable development branch leading up to the next major
+stable version which will be 1.24.
+ 
+The 1.23 development series adds new features on top of the 1.22 series and is
+part of the API and ABI-stable 1.x release series of the GStreamer multimedia
+framework.
 
-As always, this release is again packed with new features, bug fixes and
-other improvements.
+Full release notes will one day be found at:
 
-The 1.22 release series adds new features on top of the 1.20 series and is
-part of the API and ABI-stable 1.x release series.
-
-Full release notes can be found at:
-
-  https://gstreamer.freedesktop.org/releases/1.22/
+  https://gstreamer.freedesktop.org/releases/1.24/
 
 Binaries for Android, iOS, Mac OS X and Windows will usually be provided
 shortly after the release.
@@ -44,10 +42,7 @@ with other GStreamer modules for a complete multimedia experience.
 
  - gstreamer-vaapi: hardware-accelerated video decoding and encoding using
                     VA-API on Linux. Primarily for Intel graphics hardware.
-
- - gst-omx: hardware-accelerated video decoding and encoding, primarily for
-                    embedded Linux systems that provide an OpenMax
-                    implementation layer such as the Raspberry Pi.
+                    (Deprecated, use the new "va" plugin instead)
 
  - gst-rtsp-server: library to serve files or streaming pipelines via RTSP
 
@@ -80,14 +75,21 @@ Please submit patches via GitLab as well, in form of Merge Requests. See
 
 for more details.
 
-For help and support, please subscribe to and send questions to the
-gstreamer-devel mailing list (see below for details).
+For help and support, please head over to our Discourse forum at
 
-There is also a #gstreamer IRC channel on the OFTC IRC network, which is
-also bridged into the Matrix network.
+  https://discourse.gstreamer.org/
 
-Please do not submit support requests in GitLab, we only use it
-for bug tracking and merge requests review.
+or pop into one of our Matrix chat channels, see
+
+  https://discourse.gstreamer.org/t/new-gstreamer-matrix-chat-space/675
+
+for more details.
+
+There is also a legacy IRC channel, #gstreamer on the OFTC IRC network,
+which is also bridged into the Matrix network.
+
+Please do not submit support requests in GitLab, we only use it for
+bug tracking and merge requests review. Use the Discourse forum instead.
 
 ==== Developers ====
 
@@ -99,6 +101,9 @@ and can also be cloned from there and this is also where you can submit
 Merge Requests or file issues for bugs or feature requests.
 
 Interested developers of the core library, plugins, and applications should
-subscribe to the gstreamer-devel list:
+join us on Matrix for chat and the Discourse forum for announcements, help
+and discussions.
+
+There is also a gstreamer-devel mailing list, but Discourse is preferred:
 
   https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel

@@ -1,5 +1,5 @@
 project('GStreamer manuals and tutorials', 'c',
-  version: '1.23.0.1',
+  version: '1.23.1',
   meson_version : '>= 1.1')
 
 hotdoc_p = find_program('hotdoc')
@@ -150,4 +150,4 @@ run_target('release',
   depends: [gstreamer_doc]
 )
 
-meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.20.0', meson.project_version())
+meson.add_dist_script('scripts/gen-changelog.py', meson.project_name(), '1.22.0', meson.project_version())
