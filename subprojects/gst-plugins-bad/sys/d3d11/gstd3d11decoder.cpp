@@ -378,6 +378,7 @@ gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
   }
 }
 
+// Needs device lock
 static void
 gst_d3d11_decoder_clear_resource (GstD3D11Decoder * self)
 {
@@ -415,11 +416,13 @@ gst_d3d11_decoder_dispose (GObject * obj)
 {
   GstD3D11Decoder *self = GST_D3D11_DECODER (obj);
 
-  gst_d3d11_decoder_reset (self);
+  {
+    GstD3D11DeviceLockGuard lk(self->device);
+    gst_d3d11_decoder_reset(self);
 
-  GST_D3D11_CLEAR_COM (self->video_device);
-  GST_D3D11_CLEAR_COM (self->video_context);
-
+    GST_D3D11_CLEAR_COM(self->video_device);
+    GST_D3D11_CLEAR_COM(self->video_context);
+  }
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
@@ -1401,9 +1404,12 @@ gst_d3d11_decoder_get_output_view_buffer (GstD3D11Decoder * decoder,
      * headers */
     gst_video_decoder_negotiate (videodec);
 
-    if (!gst_d3d11_decoder_prepare_output_view_pool (decoder)) {
-      GST_ERROR_OBJECT (videodec, "Failed to setup internal pool");
-      return NULL;
+    {
+      GstD3D11DeviceLockGuard lk(decoder->device);
+      if (!gst_d3d11_decoder_prepare_output_view_pool(decoder)) {
+        GST_ERROR_OBJECT(videodec, "Failed to setup internal pool");
+        return NULL;
+      }
     }
   } else if (!gst_buffer_pool_set_active (decoder->internal_pool, TRUE)) {
     GST_ERROR_OBJECT (videodec, "Couldn't set active internal pool");
