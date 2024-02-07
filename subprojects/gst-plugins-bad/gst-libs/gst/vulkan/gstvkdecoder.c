@@ -53,6 +53,8 @@ struct _GstVulkanDecoderPrivate
   GstVulkanVideoSession session;
   GstVulkanVideoCapabilities caps;
   VkVideoFormatPropertiesKHR format;
+
+  gboolean vk_populated;
   GstVulkanVideoFunctions vk;
 
   gboolean started;
@@ -71,24 +73,25 @@ static GstVulkanHandle *gst_vulkan_decoder_new_video_session_parameters
     (GstVulkanDecoder * self, GstVulkanDecoderParameters * params,
     GError ** error);
 
-static gpointer
-_populate_function_table (gpointer data)
+static gboolean
+_populate_function_table (GstVulkanDecoder * self)
 {
-  GstVulkanDecoder *self = GST_VULKAN_DECODER (data);
   GstVulkanDecoderPrivate *priv =
       gst_vulkan_decoder_get_instance_private (self);
   GstVulkanInstance *instance;
-  gboolean ret = FALSE;
+
+  if (priv->vk_populated)
+    return TRUE;
 
   instance = gst_vulkan_device_get_instance (self->queue->device);
   if (!instance) {
     GST_ERROR_OBJECT (self, "Failed to get instance from the device");
-    return GINT_TO_POINTER (FALSE);
+    return FALSE;
   }
 
-  ret = gst_vulkan_video_get_vk_functions (instance, &priv->vk);
+  priv->vk_populated = gst_vulkan_video_get_vk_functions (instance, &priv->vk);
   gst_object_unref (instance);
-  return GINT_TO_POINTER (ret);
+  return priv->vk_populated;
 }
 
 static void
@@ -144,7 +147,6 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   };
   VkVideoSessionCreateInfoKHR session_create;
   GstVulkanDecoderParameters empty_params;
-  static GOnce once = G_ONCE_INIT;
   guint i, maxlevel, n_fmts, codec_idx;
   GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
   VkFormat vk_format = VK_FORMAT_UNDEFINED;
@@ -160,8 +162,7 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
 
   g_assert (self->codec == profile->profile.videoCodecOperation);
 
-  g_once (&once, _populate_function_table, self);
-  if (GPOINTER_TO_INT (once.retval) == FALSE) {
+  if (!_populate_function_table (self)) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Couldn't load Vulkan Video functions");
     return FALSE;
