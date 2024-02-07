@@ -4235,6 +4235,13 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
     gst_rtsp_address_free (priv->server_addr_v6);
   priv->server_addr_v6 = NULL;
 
+  for (i = 0; i < 2; i++) {
+    g_clear_object (&priv->socket_v4[i]);
+    g_clear_object (&priv->socket_v6[i]);
+    g_clear_object (&priv->mcast_socket_v4[i]);
+    g_clear_object (&priv->mcast_socket_v6[i]);
+  }
+
   g_mutex_unlock (&priv->lock);
 
   return TRUE;
