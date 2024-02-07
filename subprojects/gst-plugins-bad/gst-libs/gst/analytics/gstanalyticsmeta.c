@@ -1021,7 +1021,6 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
       gst_analytics_mtd_type_get_name (type), an_meta_id, relation_type);
 
   g_return_val_if_fail (rmeta != NULL, FALSE);
-  g_return_val_if_fail (type != 0, FALSE);
 
   if (state) {
     if (*state) {
@@ -1050,7 +1049,8 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
       rlt_mtd_data = (GstAnalyticsRelatableMtdData *)
           (meta->mtd_data_lookup[i] + meta->analysis_results);
       rlt_mtd->id = rlt_mtd_data->id;
-      if (gst_analytics_mtd_get_mtd_type (rlt_mtd) == type) {
+      if (type == GST_ANALYTICS_MTD_TYPE_ANY
+          || gst_analytics_mtd_get_mtd_type (rlt_mtd) == type) {
         if (state) {
           *state = GSIZE_TO_POINTER (G_MINSSIZE | i);
         }
