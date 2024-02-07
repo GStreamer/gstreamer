@@ -304,10 +304,46 @@ gst_nv_h264_encoder_class_init (GstNvH264EncoderClass * klass, gpointer data)
       g_param_spec_enum ("preset", "Encoding Preset",
           "Encoding Preset", GST_TYPE_NV_ENCODER_PRESET,
           DEFAULT_PRESET, param_flags));
+
+  /**
+   * GstNvCudaH264Enc:tune:
+   *
+   * Since: 1.24
+   */
+
+  /**
+   * GstNvD3D11H264Enc:tune:
+   *
+   * Since: 1.24
+   */
+
+  /**
+   * GstNvAutoGpuH264Enc:tune:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (object_class, PROP_TUNE,
       g_param_spec_enum ("tune", "Tune",
           "Encoding tune", GST_TYPE_NV_ENCODER_TUNE,
           DEFAULT_TUNE, param_flags));
+
+  /**
+   * GstNvCudaH264Enc:multi-pass:
+   *
+   * Since: 1.24
+   */
+
+  /**
+   * GstNvD3D11H264Enc:multi-pass:
+   *
+   * Since: 1.24
+   */
+
+  /**
+   * GstNvAutoGpuH264Enc:multi-pass:
+   *
+   * Since: 1.24
+   */
   g_object_class_install_property (object_class, PROP_MULTI_PASS,
       g_param_spec_enum ("multi-pass", "Multi Pass",
           "Multi pass encoding", GST_TYPE_NV_ENCODER_MULTI_PASS,

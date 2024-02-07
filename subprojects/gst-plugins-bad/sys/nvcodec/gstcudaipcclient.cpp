@@ -49,6 +49,11 @@ gst_cuda_ipc_client_deinit (void)
   }
 }
 
+/**
+ * GstCudaIpcIOMode:
+ *
+ * Since: 1.24
+ */
 GType
 gst_cuda_ipc_io_mode_get_type (void)
 {

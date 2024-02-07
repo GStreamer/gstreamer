@@ -137,7 +137,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
   object_class->get_property = gst_nv_vp9_dec_get_property;
 
   /**
-   * GstNvVp9SLDec:cuda-device-id:
+   * GstNvVp9Dec:cuda-device-id:
    *
    * Assigned CUDA device id
    *
@@ -149,7 +149,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvVp9SLDec:num-output-surfaces:
+   * GstNvVp9Dec:num-output-surfaces:
    *
    * The number of output surfaces (0 = auto). This property will be used to
    * calculate the CUVIDDECODECREATEINFO.ulNumOutputSurfaces parameter
@@ -166,7 +166,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
               G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvVp9SLDec:init-max-width:
+   * GstNvVp9Dec:init-max-width:
    *
    * Initial CUVIDDECODECREATEINFO.ulMaxWidth value
    *
@@ -182,7 +182,7 @@ gst_nv_vp9_dec_class_init (GstNvVp9DecClass * klass,
               G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvVp9SLDec:init-max-height:
+   * GstNvVp9Dec:init-max-height:
    *
    * Initial CUVIDDECODECREATEINFO.ulMaxHeight value
    *

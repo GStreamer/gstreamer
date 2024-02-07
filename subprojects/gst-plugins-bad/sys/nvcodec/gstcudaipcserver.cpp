@@ -30,6 +30,11 @@
 GST_DEBUG_CATEGORY (cuda_ipc_server_debug);
 #define GST_CAT_DEFAULT cuda_ipc_server_debug
 
+/**
+ * GstCudaIpcMode:
+ *
+ * Since: 1.24
+ */
 GType
 gst_cuda_ipc_mode_get_type (void)
 {

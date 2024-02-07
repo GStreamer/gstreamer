@@ -28,6 +28,21 @@
 #include <string>
 #include <mutex>
 
+/**
+ * SECTION:element-nvjpegenc
+ * @title: nvjpegenc
+ *
+ * A nvJPEG library based JPEG encoder
+ *
+ * ## Example launch line
+ * ```
+ * gst-launch-1.0 videotestsrc num-buffers=1 ! nvjpegenc ! filesink location=myjpeg.jpg
+ * ```
+ *
+ * Since: 1.24
+ *
+ */
+
 GST_DEBUG_CATEGORY_STATIC (gst_nv_jpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_nv_jpeg_enc_debug
 

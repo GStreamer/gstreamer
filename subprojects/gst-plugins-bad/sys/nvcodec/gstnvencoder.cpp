@@ -202,6 +202,9 @@ gst_nv_encoder_class_init (GstNvEncoderClass * klass)
       (GstPluginAPIFlags) 0);
   gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_SEI_INSERT_MODE,
       (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_MULTI_PASS,
+      (GstPluginAPIFlags) 0);
+  gst_type_mark_as_plugin_api (GST_TYPE_NV_ENCODER_TUNE, (GstPluginAPIFlags) 0);
 }
 
 static void
@@ -2063,31 +2066,120 @@ gst_nv_encoder_preset_get_type (void)
 {
   static GType preset_type = 0;
   static const GEnumValue presets[] = {
+    /**
+     * GstNvEncoderPreset::default:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_DEFAULT, "Default (deprecated, use p1~7 with tune)",
         "default"},
+
+    /**
+     * GstNvEncoderPreset::hp:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_HP,
         "High Performance (deprecated, use p1~7 with tune)", "hp"},
+
+    /**
+     * GstNvEncoderPreset::hq:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_HQ, "High Quality (deprecated, use p1~7 with tune)",
         "hq"},
+
+    /**
+     * GstNvEncoderPreset::low-latency:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_LOW_LATENCY_DEFAULT,
         "Low Latency (deprecated, use p1~7 with tune)", "low-latency"},
+
+    /**
+     * GstNvEncoderPreset::low-latency-hq:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_LOW_LATENCY_HQ,
           "Low Latency (deprecated, use p1~7 with tune), High Quality",
         "low-latency-hq"},
+
+    /**
+     * GstNvEncoderPreset::low-latency-hq:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_LOW_LATENCY_HP,
           "Low Latency (deprecated, use p1~7 with tune), High Performance",
         "low-latency-hp"},
+
+    /**
+     * GstNvEncoderPreset::lossless:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_LOSSLESS_DEFAULT,
         "Lossless (deprecated, use p1~7 with tune)", "lossless"},
+
+    /**
+     * GstNvEncoderPreset::lossless-hp:
+     *
+     * Since: 1.22
+     */
     {GST_NV_ENCODER_PRESET_LOSSLESS_HP,
           "Lossless (deprecated, use p1~7 with tune), High Performance",
         "lossless-hp"},
+
+    /**
+     * GstNvEncoderPreset::p1:
+     *
+     * Since: 1.24
+     */
     {GST_NV_ENCODER_PRESET_P1, "P1, fastest", "p1"},
+
+    /**
+     * GstNvEncoderPreset::p2:
+     *
+     * Since: 1.24
+     */
     {GST_NV_ENCODER_PRESET_P2, "P2, faster", "p2"},
+
+    /**
+     * GstNvEncoderPreset::p3:
+     *
+     * Since: 1.24
+     */
     {GST_NV_ENCODER_PRESET_P3, "P3, fast", "p3"},
+
+    /**
+     * GstNvEncoderPreset::p4:
+     *
+     * Since: 1.24
+     */
     {GST_NV_ENCODER_PRESET_P4, "P4, medium", "p4"},
+
+    /**
+     * GstNvEncoderPreset::p5:
+     *
+     * Since: 1.24
+     */
     {GST_NV_ENCODER_PRESET_P5, "P5, slow", "p5"},
+
+    /**
+     * GstNvEncoderPreset::p6:
+     *
+     * Since: 1.24
+     */
     {GST_NV_ENCODER_PRESET_P6, "P6, slower", "p6"},
+
+    /**
+     * GstNvEncoderPreset::p7:
+     *
+     * Since: 1.24
+     */
     {GST_NV_ENCODER_PRESET_P7, "P7, slowest", "p7"},
     {0, NULL, NULL},
   };

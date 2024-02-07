@@ -199,6 +199,8 @@ gst_cuda_ipc_sink_class_init (GstCudaIpcSinkClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (cuda_ipc_sink_debug, "cudaipcsink",
       0, "cudaipcsink");
+
+  gst_type_mark_as_plugin_api (GST_TYPE_CUDA_IPC_MODE, (GstPluginAPIFlags) 0);
 }
 
 static void

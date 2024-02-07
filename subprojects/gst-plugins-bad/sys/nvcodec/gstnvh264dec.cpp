@@ -215,7 +215,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
   object_class->get_property = gst_nv_h264_dec_get_property;
 
   /**
-   * GstNvH264SLDec:cuda-device-id:
+   * GstNvH264Dec:cuda-device-id:
    *
    * Assigned CUDA device id
    *
@@ -227,7 +227,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
           (GParamFlags) (G_PARAM_READABLE | G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvH264SLDec:num-output-surfaces:
+   * GstNvH264Dec:num-output-surfaces:
    *
    * The number of output surfaces (0 = auto). This property will be used to
    * calculate the CUVIDDECODECREATEINFO.ulNumOutputSurfaces parameter
@@ -244,7 +244,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
               G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvH264SLDec:init-max-width:
+   * GstNvH264Dec:init-max-width:
    *
    * Initial CUVIDDECODECREATEINFO.ulMaxWidth value
    *
@@ -260,7 +260,7 @@ gst_nv_h264_dec_class_init (GstNvH264DecClass * klass,
               G_PARAM_STATIC_STRINGS)));
 
   /**
-   * GstNvH264SLDec:init-max-height:
+   * GstNvH264Dec:init-max-height:
    *
    * Initial CUVIDDECODECREATEINFO.ulMaxHeight value
    *
