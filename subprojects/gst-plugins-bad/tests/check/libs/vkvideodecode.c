@@ -47,6 +47,12 @@ teardown (void)
   gst_object_unref (instance);
 }
 
+struct QueueProps
+{
+  guint expected_flags;
+  guint codec;
+};
+
 static gboolean
 _choose_queue (GstVulkanDevice * device, GstVulkanQueue * _queue, gpointer data)
 {
@@ -54,17 +60,15 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * _queue, gpointer data)
       device->physical_device->queue_family_props[_queue->family].queueFlags;
   guint32 codec =
       device->physical_device->queue_family_ops[_queue->family].video;
-
-  guint expected_flags = GPOINTER_TO_UINT (data);
+  struct QueueProps *qprops = data;
 
   if ((flags & VK_QUEUE_TRANSFER_BIT) == VK_QUEUE_TRANSFER_BIT) {
     gst_object_replace ((GstObject **) & graphics_queue,
         GST_OBJECT_CAST (_queue));
   }
 
-  if (((flags & expected_flags) == expected_flags)
-      && ((codec & VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR)
-          == VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR))
+  if (((flags & qprops->expected_flags) == qprops->expected_flags)
+      && ((codec & qprops->codec) == qprops->codec))
     gst_object_replace ((GstObject **) & video_queue, GST_OBJECT_CAST (_queue));
 
 
@@ -72,15 +76,15 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * _queue, gpointer data)
 }
 
 static void
-setup_queue (guint expected_flags)
+setup_queue (guint expected_flags, guint codec)
 {
   int i;
+  struct QueueProps qprops = { expected_flags, codec };
 
   for (i = 0; i < instance->n_physical_devices; i++) {
     device = gst_vulkan_device_new_with_index (instance, i);
     fail_unless (gst_vulkan_device_open (device, NULL));
-    gst_vulkan_device_foreach_queue (device, _choose_queue,
-        GUINT_TO_POINTER (expected_flags));
+    gst_vulkan_device_foreach_queue (device, _choose_queue, &qprops);
     if (video_queue && GST_IS_VULKAN_QUEUE (video_queue)
         && graphics_queue && GST_IS_VULKAN_QUEUE (graphics_queue))
       break;
@@ -427,7 +431,8 @@ GST_START_TEST (test_h264_decoder)
   GstVulkanVideoCapabilities video_caps;
   GstVulkanDecoderPicture pic = { NULL, };
 
-  setup_queue (VK_QUEUE_VIDEO_DECODE_BIT_KHR);
+  setup_queue (VK_QUEUE_VIDEO_DECODE_BIT_KHR,
+      VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR);
   if (!video_queue) {
     GST_WARNING ("Unable to find decoding queue");
     return;
