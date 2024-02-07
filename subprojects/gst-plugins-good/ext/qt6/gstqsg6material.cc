@@ -222,6 +222,10 @@ GstQSGTexture::GstQSGTexture(QRhiTexture * texture)
 
 GstQSGTexture::~GstQSGTexture()
 {
+  if (m_texture) {
+    delete m_texture;
+    m_texture = nullptr;
+  }
 }
 
 qint64
@@ -291,6 +295,12 @@ GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format)
 
 GstQSGMaterialShader::~GstQSGMaterialShader()
 {
+  for (int i = 0; i < 4; i++) {
+    if (m_textures[i]) {
+      delete m_textures[i];
+      m_textures[i] = nullptr;
+    }
+  }
 }
 
 bool
