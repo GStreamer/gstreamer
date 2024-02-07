@@ -42,6 +42,7 @@
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 #include "vkh264dec.h"
+#include "vkh265dec.h"
 #endif
 
 static gboolean
@@ -69,6 +70,7 @@ plugin_init (GstPlugin * plugin)
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   GST_ELEMENT_REGISTER (vulkanh264dec, plugin);
+  GST_ELEMENT_REGISTER (vulkanh265dec, plugin);
 #endif
 
   return ret;
