@@ -271,7 +271,7 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
 
 
 /* DECODER: 1 frame 320x240 blue box  */
-StdVideoH264HrdParameters std_hrd = {
+StdVideoH264HrdParameters h264_std_hrd = {
   .cpb_cnt_minus1 = 0,
   .bit_rate_scale = 4,
   .cpb_size_scale = 0,
@@ -285,7 +285,7 @@ StdVideoH264HrdParameters std_hrd = {
   .time_offset_length = 24,
 };
 
-StdVideoH264SequenceParameterSetVui std_vui = {
+StdVideoH264SequenceParameterSetVui h264_std_vui = {
   .flags = {
         .aspect_ratio_info_present_flag = 1,
         .overscan_info_present_flag = 0,
@@ -313,10 +313,10 @@ StdVideoH264SequenceParameterSetVui std_vui = {
   .max_dec_frame_buffering = 2,
   .chroma_sample_loc_type_top_field = 0,
   .chroma_sample_loc_type_bottom_field = 0,
-  .pHrdParameters = &std_hrd,
+  .pHrdParameters = &h264_std_hrd,
 };
 
-StdVideoH264SequenceParameterSet std_sps = {
+StdVideoH264SequenceParameterSet h264_std_sps = {
   .flags = {
         .constraint_set0_flag = 0,
         .constraint_set1_flag = 0,
@@ -356,10 +356,10 @@ StdVideoH264SequenceParameterSet std_sps = {
   .frame_crop_bottom_offset = 0,
   .pOffsetForRefFrame = NULL,
   .pScalingLists = NULL,
-  .pSequenceParameterSetVui = &std_vui,
+  .pSequenceParameterSetVui = &h264_std_vui,
 };
 
-StdVideoH264PictureParameterSet std_pps = {
+StdVideoH264PictureParameterSet h264_std_pps = {
   .flags = {
         .transform_8x8_mode_flag = 0,
         .redundant_pic_cnt_present_flag = 0,
@@ -382,15 +382,15 @@ StdVideoH264PictureParameterSet std_pps = {
   .pScalingLists = NULL,
 };
 
-VkVideoDecodeH264SessionParametersAddInfoKHR params = {
+VkVideoDecodeH264SessionParametersAddInfoKHR h264_params = {
   .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_SESSION_PARAMETERS_ADD_INFO_KHR,
   .stdSPSCount = 1,
-  .pStdSPSs = &std_sps,
+  .pStdSPSs = &h264_std_sps,
   .stdPPSCount = 1,
-  .pStdPPSs = &std_pps,
+  .pStdPPSs = &h264_std_pps,
 };
 
-GST_START_TEST (test_decoder)
+GST_START_TEST (test_h264_decoder)
 {
   GstVulkanDecoder *dec;
   GError *err = NULL;
@@ -419,9 +419,9 @@ GST_START_TEST (test_decoder)
   GstVulkanDecoderParameters create_params = { {
     .sType =
         VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_SESSION_PARAMETERS_CREATE_INFO_KHR,
-    .maxStdSPSCount = params.stdSPSCount,
-    .maxStdPPSCount = params.stdPPSCount,
-    .pParametersAddInfo = &params,
+    .maxStdSPSCount = h264_params.stdSPSCount,
+    .maxStdPPSCount = h264_params.stdPPSCount,
+    .pParametersAddInfo = &h264_params,
     } };
   /* *INDENT-ON* */
   GstVulkanVideoCapabilities video_caps;
@@ -573,9 +573,7 @@ vkvideo_suite (void)
   have_instance = gst_vulkan_instance_open (instance, NULL);
   gst_object_unref (instance);
   if (have_instance) {
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-    tcase_add_test (tc_basic, test_decoder);
-#endif
+    tcase_add_test (tc_basic, test_h264_decoder);
   }
 
   return s;
