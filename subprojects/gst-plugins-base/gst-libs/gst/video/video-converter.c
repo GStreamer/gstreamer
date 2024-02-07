@@ -2292,60 +2292,16 @@ convert_get_alpha_mode (GstVideoConverter * convert)
   return ALPHA_MODE_SET;
 }
 
-/**
- * gst_video_converter_new_with_pool: (skip)
- * @in_info: a #GstVideoInfo
- * @out_info: a #GstVideoInfo
- * @config: (transfer full): a #GstStructure with configuration options
- * @pool: (nullable): a #GstTaskPool to spawn threads from
- *
- * Create a new converter object to convert between @in_info and @out_info
- * with @config.
- *
- * The optional @pool can be used to spawn threads, this is useful when
- * creating new converters rapidly, for example when updating cropping.
- *
- * Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.
- *
- * Since: 1.20
- */
-GstVideoConverter *
-gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
-    const GstVideoInfo * out_info, GstStructure * config, GstTaskPool * pool)
+static void
+gst_video_converter_init_from_config (GstVideoConverter * convert)
 {
-  GstVideoConverter *convert;
-  GstLineCache *prev;
   const GstVideoFormatInfo *fin, *fout, *finfo;
+  GstVideoInfo *in_info = &convert->in_info;
+  GstVideoInfo *out_info = &convert->out_info;
   gdouble alpha_value;
-  gint n_threads, i;
-  gboolean async_tasks;
-
-  g_return_val_if_fail (in_info != NULL, NULL);
-  g_return_val_if_fail (out_info != NULL, NULL);
-  /* we won't ever do framerate conversion */
-  g_return_val_if_fail (in_info->fps_n == out_info->fps_n, NULL);
-  g_return_val_if_fail (in_info->fps_d == out_info->fps_d, NULL);
-  /* we won't ever do deinterlace */
-  g_return_val_if_fail (in_info->interlace_mode == out_info->interlace_mode,
-      NULL);
-
-  convert = g_new0 (GstVideoConverter, 1);
 
   fin = in_info->finfo;
   fout = out_info->finfo;
-
-  convert->in_info = *in_info;
-  convert->out_info = *out_info;
-
-  /* default config */
-  convert->config = gst_structure_new_empty ("GstVideoConverter");
-  if (config)
-    gst_video_converter_set_config (convert, config);
-
-  convert->in_maxwidth = GST_VIDEO_INFO_WIDTH (in_info);
-  convert->in_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (in_info);
-  convert->out_maxwidth = GST_VIDEO_INFO_WIDTH (out_info);
-  convert->out_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (out_info);
 
   convert->in_x = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_SRC_X, 0);
   convert->in_y = get_opt_int (convert, GST_VIDEO_CONVERTER_OPT_SRC_Y, 0);
@@ -2438,6 +2394,58 @@ gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
         out_info->colorimetry.matrix);
     convert->out_info.colorimetry.matrix = GST_VIDEO_COLOR_MATRIX_RGB;
   }
+}
+
+/**
+ * gst_video_converter_new_with_pool: (skip)
+ * @in_info: a #GstVideoInfo
+ * @out_info: a #GstVideoInfo
+ * @config: (transfer full): a #GstStructure with configuration options
+ * @pool: (nullable): a #GstTaskPool to spawn threads from
+ *
+ * Create a new converter object to convert between @in_info and @out_info
+ * with @config.
+ *
+ * The optional @pool can be used to spawn threads, this is useful when
+ * creating new converters rapidly, for example when updating cropping.
+ *
+ * Returns (nullable): a #GstVideoConverter or %NULL if conversion is not possible.
+ *
+ * Since: 1.20
+ */
+GstVideoConverter *
+gst_video_converter_new_with_pool (const GstVideoInfo * in_info,
+    const GstVideoInfo * out_info, GstStructure * config, GstTaskPool * pool)
+{
+  GstVideoConverter *convert;
+  GstLineCache *prev;
+  gint n_threads, i;
+  gboolean async_tasks;
+
+  g_return_val_if_fail (in_info != NULL, NULL);
+  g_return_val_if_fail (out_info != NULL, NULL);
+  /* we won't ever do framerate conversion */
+  g_return_val_if_fail (in_info->fps_n == out_info->fps_n, NULL);
+  g_return_val_if_fail (in_info->fps_d == out_info->fps_d, NULL);
+  /* we won't ever do deinterlace */
+  g_return_val_if_fail (in_info->interlace_mode == out_info->interlace_mode,
+      NULL);
+
+  convert = g_new0 (GstVideoConverter, 1);
+
+  convert->in_info = *in_info;
+  convert->out_info = *out_info;
+
+  convert->in_maxwidth = GST_VIDEO_INFO_WIDTH (in_info);
+  convert->in_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (in_info);
+  convert->out_maxwidth = GST_VIDEO_INFO_WIDTH (out_info);
+  convert->out_maxheight = GST_VIDEO_INFO_FIELD_HEIGHT (out_info);
+
+  convert->config = gst_structure_new_empty ("GstVideoConverter");
+  if (config)
+    gst_video_converter_set_config (convert, config);
+  else
+    gst_video_converter_init_from_config (convert);
 
   n_threads = get_opt_uint (convert, GST_VIDEO_CONVERTER_OPT_THREADS, 1);
   if (n_threads == 0 || n_threads > g_get_num_processors ())
@@ -2717,6 +2725,8 @@ gst_video_converter_set_config (GstVideoConverter * convert,
 
   gst_structure_foreach (config, copy_config, convert);
   gst_structure_free (config);
+
+  gst_video_converter_init_from_config (convert);
 
   return TRUE;
 }
