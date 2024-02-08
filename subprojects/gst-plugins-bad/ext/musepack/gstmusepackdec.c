@@ -79,7 +79,7 @@ G_DEFINE_TYPE_WITH_CODE (GstMusepackDec, gst_musepackdec, GST_TYPE_ELEMENT,
         "mpc decoder");
     );
 GST_ELEMENT_REGISTER_DEFINE (musepackdec, "musepackdec",
-    GST_RANK_PRIMARY, GST_TYPE_MUSEPACK_DEC);
+    GST_RANK_MARGINAL, GST_TYPE_MUSEPACK_DEC);
 static void
 gst_musepackdec_class_init (GstMusepackDecClass * klass)
 {
