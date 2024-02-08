@@ -563,6 +563,264 @@ GST_START_TEST (test_h264_decoder)
 
 GST_END_TEST;
 
+StdVideoH265HrdParameters h265_std_hrd = { 0, };
+
+StdVideoH265ProfileTierLevel h265_std_ptl = {
+  .flags = {
+        .general_progressive_source_flag = 1,
+        .general_frame_only_constraint_flag = 1,
+      },
+  .general_profile_idc = STD_VIDEO_H265_PROFILE_IDC_MAIN,
+  .general_level_idc = STD_VIDEO_H265_LEVEL_IDC_6_0,
+};
+
+StdVideoH265DecPicBufMgr h265_std_pbm = {
+  .max_latency_increase_plus1 = {5, 0,},
+  .max_dec_pic_buffering_minus1 = {4, 0,},
+  .max_num_reorder_pics = {2, 0,},
+};
+
+StdVideoH265VideoParameterSet h265_std_vps = {
+  .flags = {
+        .vps_temporal_id_nesting_flag = 1,
+        .vps_sub_layer_ordering_info_present_flag = 1,
+      },
+  .vps_video_parameter_set_id = 0,
+  .pDecPicBufMgr = &h265_std_pbm,
+  .pHrdParameters = &h265_std_hrd,
+  .pProfileTierLevel = &h265_std_ptl,
+};
+
+StdVideoH265SequenceParameterSetVui h265_std_sps_vui = {
+  .flags = {
+        .video_signal_type_present_flag = 1,
+        .vui_timing_info_present_flag = 1,
+      },
+  .aspect_ratio_idc = STD_VIDEO_H265_ASPECT_RATIO_IDC_UNSPECIFIED,
+  .video_format = 5,
+  .colour_primaries = 2,
+  .transfer_characteristics = 2,
+  .matrix_coeffs = 2,
+  .vui_num_units_in_tick = 1,
+  .vui_time_scale = 25,
+  .pHrdParameters = &h265_std_hrd,
+};
+
+StdVideoH265SequenceParameterSet h265_std_sps = {
+  .flags = {
+        .sps_temporal_id_nesting_flag = 1,
+        .sps_sub_layer_ordering_info_present_flag = 1,
+        .sample_adaptive_offset_enabled_flag = 1,
+        .sps_temporal_mvp_enabled_flag = 1,
+        .strong_intra_smoothing_enabled_flag = 1,
+        .vui_parameters_present_flag = 1,
+        .sps_extension_present_flag = 1,
+      },
+  .chroma_format_idc = STD_VIDEO_H265_CHROMA_FORMAT_IDC_420,
+  .pic_width_in_luma_samples = 320,
+  .pic_height_in_luma_samples = 240,
+  .sps_video_parameter_set_id = 0,
+  .sps_seq_parameter_set_id = 0,
+  .log2_max_pic_order_cnt_lsb_minus4 = 4,
+  .log2_diff_max_min_luma_coding_block_size = 3,
+  .log2_diff_max_min_luma_transform_block_size = 3,
+  .pProfileTierLevel = &h265_std_ptl,
+  .pDecPicBufMgr = &h265_std_pbm,
+  .pSequenceParameterSetVui = &h265_std_sps_vui,
+};
+
+StdVideoH265PictureParameterSet h265_std_pps = {
+  .flags = {
+        .sign_data_hiding_enabled_flag = 1,
+        .cu_qp_delta_enabled_flag = 1,
+        .weighted_pred_flag = 1,
+        .entropy_coding_sync_enabled_flag = 1,
+        .uniform_spacing_flag = 1,
+        .loop_filter_across_tiles_enabled_flag = 1,
+        .pps_loop_filter_across_slices_enabled_flag = 1,
+      },
+  .pps_pic_parameter_set_id = 0,
+  .pps_seq_parameter_set_id = 0,
+  .sps_video_parameter_set_id = 0,
+  .diff_cu_qp_delta_depth = 1,
+};
+
+VkVideoDecodeH265SessionParametersAddInfoKHR h265_params = {
+  .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_SESSION_PARAMETERS_ADD_INFO_KHR,
+  .stdVPSCount = 1,
+  .pStdVPSs = &h265_std_vps,
+  .stdSPSCount = 1,
+  .pStdSPSs = &h265_std_sps,
+  .stdPPSCount = 1,
+  .pStdPPSs = &h265_std_pps,
+};
+
+GST_START_TEST (test_h265_decoder)
+{
+  GstVulkanDecoder *dec;
+  GError *err = NULL;
+  VkVideoFormatPropertiesKHR format_prop;
+  /* *INDENT-OFF* */
+  GstVulkanVideoProfile profile = {
+    .profile = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PROFILE_INFO_KHR,
+      .pNext = &profile.usage,
+      .videoCodecOperation = VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR,
+      .chromaSubsampling = VK_VIDEO_CHROMA_SUBSAMPLING_420_BIT_KHR,
+      .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+      .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
+    },
+    .usage.decode = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_USAGE_INFO_KHR,
+      .videoUsageHints = VK_VIDEO_DECODE_USAGE_DEFAULT_KHR,
+      .pNext = &profile.codec,
+    },
+    .codec.h265dec = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_KHR,
+      .stdProfileIdc = STD_VIDEO_H265_PROFILE_IDC_MAIN,
+    }
+  };
+  GstVulkanDecoderParameters create_params = {
+    .h265 = {
+      .sType =
+          VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_SESSION_PARAMETERS_CREATE_INFO_KHR,
+      .maxStdVPSCount = h265_params.stdVPSCount,
+      .maxStdSPSCount = h265_params.stdSPSCount,
+      .maxStdPPSCount = h265_params.stdPPSCount,
+      .pParametersAddInfo = &h265_params,
+    }
+  };
+  /* *INDENT-ON* */
+  GstVulkanVideoCapabilities video_caps;
+  GstVulkanDecoderPicture pic = { NULL, };
+
+  setup_queue (VK_QUEUE_VIDEO_DECODE_BIT_KHR,
+      VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR);
+  if (!video_queue) {
+    GST_WARNING ("Unable to find decoding queue");
+    return;
+  }
+
+  dec = gst_vulkan_queue_create_decoder (video_queue,
+      VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR);
+  if (!dec) {
+    GST_WARNING ("Unable to create a vulkan decoder");
+    return;
+  }
+
+  fail_unless (gst_vulkan_decoder_start (dec, &profile, &err));
+
+  fail_unless (gst_vulkan_decoder_update_ycbcr_sampler (dec,
+          VK_SAMPLER_YCBCR_RANGE_ITU_FULL, VK_CHROMA_LOCATION_COSITED_EVEN,
+          VK_CHROMA_LOCATION_MIDPOINT, &err));
+
+  fail_unless (gst_vulkan_decoder_update_video_session_parameters (dec,
+          &create_params, &err));
+
+  fail_unless (gst_vulkan_decoder_out_format (dec, &format_prop));
+  fail_unless (gst_vulkan_decoder_caps (dec, &video_caps));
+
+  get_output_buffer (dec, format_prop.format, &pic);
+
+  /* get input buffer */
+  {
+    static const guint8 slice[] = {
+      0x28, 0x01, 0xaf, 0x1d, 0x21, 0x6a, 0x83, 0x40, 0xf7, 0xcf, 0x80, 0xff,
+      0xf8, 0x90, 0xfa, 0x3b, 0x77, 0x87, 0x96, 0x96, 0xba, 0xfa, 0xcd, 0x61,
+      0xb5, 0xe3, 0xc1, 0x02, 0x2d, 0xe0, 0xa8, 0x17, 0x96, 0x03, 0x4c, 0x4e,
+      0x1a, 0x9e, 0xd0, 0x93, 0x0b, 0x93, 0x40, 0x00, 0x05, 0xec, 0x87, 0x00,
+      0x00, 0x03, 0x00, 0x00, 0x03, 0x00, 0x56, 0x40
+    };
+
+    fail_unless (gst_vulkan_decoder_append_slice (dec, &pic, slice,
+            sizeof (slice), TRUE));
+  }
+
+  /* decode */
+  {
+    StdVideoDecodeH265PictureInfo std_pic = {
+      .flags = {
+            .IrapPicFlag = 1,
+            .IdrPicFlag = 1,
+            .IsReference = 1,
+            .short_term_ref_pic_set_sps_flag = 0,
+          },
+      .sps_video_parameter_set_id = 0,
+      .pps_seq_parameter_set_id = 0,
+      .pps_pic_parameter_set_id = 0,
+      .NumDeltaPocsOfRefRpsIdx = 0,
+      .PicOrderCntVal = 0,
+      .NumBitsForSTRefPicSetInSlice = 0,
+      .RefPicSetStCurrBefore =
+          {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,},
+      .RefPicSetStCurrAfter = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,},
+      .RefPicSetLtCurr = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,},
+    };
+    StdVideoDecodeH265ReferenceInfo std_h265_ref = {
+      .flags = {
+            .used_for_long_term_reference = 0,
+            .unused_for_reference = 0,
+          },
+      .PicOrderCntVal = 0,
+    };
+    VkVideoDecodeH265DpbSlotInfoKHR h265_dpb_slot = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_DPB_SLOT_INFO_KHR,
+      .pStdReferenceInfo = &std_h265_ref,
+    };
+    VkVideoDecodeH265PictureInfoKHR vk_pic = {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PICTURE_INFO_KHR,
+      .pStdPictureInfo = &std_pic,
+      .sliceSegmentCount = pic.slice_offs->len - 1,
+      .pSliceSegmentOffsets = (guint32 *) pic.slice_offs->data,
+    };
+
+    /* *INDENT-OFF* */
+    pic.pic_res = (VkVideoPictureResourceInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
+      .codedOffset = (VkOffset2D) {0, 0},
+      .codedExtent = (VkExtent2D) {320, 240},
+      .baseArrayLayer = 0,
+      .imageViewBinding = pic.img_view_ref->view,
+    };
+    pic.slot = (VkVideoReferenceSlotInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_REFERENCE_SLOT_INFO_KHR,
+      .pNext = &h265_dpb_slot,
+      .slotIndex = 0,
+      .pPictureResource = &pic.pic_res,
+    };
+    pic.decode_info = (VkVideoDecodeInfoKHR) {
+      .sType = VK_STRUCTURE_TYPE_VIDEO_DECODE_INFO_KHR,
+      .pNext = &vk_pic,
+      .flags = 0,
+      .srcBufferOffset = 0,
+      .dstPictureResource = {
+        .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
+        .codedOffset = (VkOffset2D) {0, 0},
+        .codedExtent = (VkExtent2D) {320, 240},
+        .baseArrayLayer = 0,
+        .imageViewBinding = pic.img_view_out->view,
+      },
+      .pSetupReferenceSlot = &pic.slot,
+      .referenceSlotCount = 0,
+      .pReferenceSlots = pic.slots,
+    };
+    /* *INDENT-ON* */
+
+    fail_unless (gst_vulkan_decoder_decode (dec, &pic, &err));
+  }
+
+  download_and_check_output_buffer (dec, format_prop.format, &pic);
+
+  fail_unless (gst_vulkan_decoder_stop (dec));
+
+  gst_vulkan_decoder_picture_release (&pic);
+
+  gst_object_unref (dec);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 vkvideo_suite (void)
 {
@@ -579,6 +837,7 @@ vkvideo_suite (void)
   gst_object_unref (instance);
   if (have_instance) {
     tcase_add_test (tc_basic, test_h264_decoder);
+    tcase_add_test (tc_basic, test_h265_decoder);
   }
 
   return s;
