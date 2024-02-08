@@ -959,6 +959,8 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
       case AV_CODEC_ID_RA_288:
       case AV_CODEC_ID_COOK:
       case AV_CODEC_ID_AAC:
+      case AV_CODEC_ID_MUSEPACK7:
+      case AV_CODEC_ID_MUSEPACK8:
         rank = GST_RANK_PRIMARY;
         break;
         /* SIPR: decoder should have a higher rank than realaudiodec.

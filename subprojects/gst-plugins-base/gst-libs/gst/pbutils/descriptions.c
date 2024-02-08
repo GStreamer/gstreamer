@@ -153,6 +153,7 @@ static const FormatInfo formats[] = {
   {"audio/x-mod", "Module Music Format (MOD)", FLAG_AUDIO, "mod"},
   {"audio/x-mulaw", "Mu-Law", FLAG_AUDIO, ""},
   {"audio/x-musepack", "Musepack (MPC)", FLAG_AUDIO, "mpc"},
+  {"audio/x-ffmpeg-parsed-musepack", "Musepack (MPC)", FLAG_AUDIO, "mpc"},
   {"audio/x-nellymoser", "Nellymoser Asao", FLAG_AUDIO, ""},
   {"audio/x-nist", "Sphere NIST", FLAG_AUDIO, ""},
   {"audio/x-nsf", "Nintendo NSF", FLAG_AUDIO, ""},

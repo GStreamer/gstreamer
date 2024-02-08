@@ -2177,15 +2177,16 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "4xm") ||
         !strcmp (in_plugin->name, "yuv4mpegpipe") ||
         !strcmp (in_plugin->name, "pva") ||
-        !strcmp (in_plugin->name, "mpc") ||
-        !strcmp (in_plugin->name, "mpc8") ||
         !strcmp (in_plugin->name, "ivf") ||
         !strcmp (in_plugin->name, "brstm") ||
         !strcmp (in_plugin->name, "bfstm") ||
         !strcmp (in_plugin->name, "gif") ||
-        !strcmp (in_plugin->name, "dsf") || !strcmp (in_plugin->name, "iff"))
+        !strcmp (in_plugin->name, "dsf") || !strcmp (in_plugin->name, "iff")) {
       rank = GST_RANK_MARGINAL;
-    else {
+    } else if (!strcmp (in_plugin->name, "mpc") ||
+        !strcmp (in_plugin->name, "mpc8")) {
+      rank = GST_RANK_SECONDARY;
+    } else {
       GST_DEBUG ("ignoring %s", in_plugin->name);
       rank = GST_RANK_NONE;
       continue;
