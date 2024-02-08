@@ -764,3 +764,4 @@ ges.test.videoscale_effect
 ges.test.backward_playback_with_start
 ges.test.check_reverse_source
 ges.test.timelineelement.set_child_prop_on_all_instances
+ges.test.input_audio_channels_reorder

@@ -128,7 +128,10 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   GPtrArray *elements;
   GESSourceClass *source_class = GES_SOURCE_GET_CLASS (trksrc);
   const gchar *volume_props[] = { "volume", "mute", NULL };
-  const gchar *audioconvert_props[] = { "mix-matrix", NULL };
+  const gchar *audioconvert_props[] = {
+    "mix-matrix", "input-channels-reorder",
+    "input-channels-reorder-mode", NULL
+  };
   GESAudioSource *self = GES_AUDIO_SOURCE (trksrc);
 
   g_assert (source_class->create_source);

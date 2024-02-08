@@ -1,0 +1,58 @@
+set-globals, media_file="$(test_dir)/../../medias/defaults/ogg/audio_5.1_separated_frequencies.ogg"
+meta,
+    tool = "ges-launch-$(gst_api_version)",
+    handles-states=true,
+    seek=true,
+    needs_preroll=true,
+    args = {
+        --track-types, audio,
+        --audio-caps, "audio/x-raw, channels=2",
+        --audiosink, "$(audiosink) name=audiosink",
+    },
+    configs = {
+        "$(validateflow), pad=audiosink:sink, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\"",
+    }
+
+# Add a 5.1 audio clip with forced default order (gst)
+add-clip, name=clip, asset-id="file://$(media_file)", layer-priority=0, type=GESUriClip
+set-child-properties, element-name=clip, input-channels-reorder-mode=force
+checkpoint, text="Checking default GST order."
+pause
+
+# Change order to smpte
+checkpoint, text="Checking SMPTE order."
+set-state, state=null
+set-child-properties, element-name=clip, input-channels-reorder=smpte
+pause
+
+# Change order to cine
+checkpoint, text="Checking CINE order."
+set-state, state=null
+set-child-properties, element-name=clip, input-channels-reorder=cine
+pause
+
+# Change order to ac3
+checkpoint, text="Checking AC3 order."
+set-state, state=null
+set-child-properties, element-name=clip, input-channels-reorder=ac3
+pause
+
+# Change order to aac
+checkpoint, text="Checking AAC order."
+set-state, state=null
+set-child-properties, element-name=clip, input-channels-reorder=aac
+pause
+
+# Change order to mono
+checkpoint, text="Checking MONO order."
+set-state, state=null
+set-child-properties, element-name=clip, input-channels-reorder=mono
+pause
+
+# Change order to alternate
+checkpoint, text="Checking ALTERNATE order."
+set-state, state=null
+set-child-properties, element-name=clip, input-channels-reorder=alternate
+pause
+
+stop
