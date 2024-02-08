@@ -1703,6 +1703,25 @@ gst_cc_converter_generate_output (GstBaseTransform * base, GstBuffer ** outbuf)
     if (gst_buffer_get_size (*outbuf) <= 0) {
       gst_buffer_unref (*outbuf);
       *outbuf = NULL;
+
+      if (inbuf && GST_BUFFER_PTS_IS_VALID (inbuf)) {
+        GstClockTime dur = 0;
+        GstEvent *gap;
+
+        GST_TRACE_OBJECT (self, "Empty generated output for input %"
+            GST_PTR_FORMAT, inbuf);
+
+        if (GST_BUFFER_DURATION_IS_VALID (inbuf)) {
+          dur = GST_BUFFER_DURATION (inbuf);
+        } else if (self->in_fps_n > 0 && self->in_fps_d > 0) {
+          dur = gst_util_uint64_scale (GST_SECOND,
+              self->in_fps_d, self->in_fps_n);
+        }
+
+        gap = gst_event_new_gap (GST_BUFFER_PTS (inbuf), dur);
+        gst_pad_push_event (GST_BASE_TRANSFORM_SRC_PAD (self), gap);
+      }
+
       ret = GST_FLOW_OK;
     }
 
