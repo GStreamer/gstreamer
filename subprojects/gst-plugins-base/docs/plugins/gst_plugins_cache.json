@@ -865,6 +865,30 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "input-channels-reorder": {
+                        "blurb": "The positions configuration to use to reorder the input channels consecutively according to their index.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "gst (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioConvertInputChannelsReorder",
+                        "writable": true
+                    },
+                    "input-channels-reorder-mode": {
+                        "blurb": "The input channels reordering mode used to apply the selected positions configuration.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "none (0)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstAudioConvertInputChannelsReorderMode",
+                        "writable": true
+                    },
                     "mix-matrix": {
                         "blurb": "Transformation matrix for input/output channels.",
                         "conditionally-available": false,
@@ -894,7 +918,68 @@
         },
         "filename": "gstaudioconvert",
         "license": "LGPL",
-        "other-types": {},
+        "other-types": {
+            "GstAudioConvertInputChannelsReorder": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Reorder the input channels using the default GStreamer order",
+                        "name": "gst",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Reorder the input channels using the SMPTE order",
+                        "name": "smpte",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Reorder the input channels using the CINE order",
+                        "name": "cine",
+                        "value": "2"
+                    },
+                    {
+                        "desc": "Reorder the input channels using the AC3 order",
+                        "name": "ac3",
+                        "value": "3"
+                    },
+                    {
+                        "desc": "Reorder the input channels using the AAC order",
+                        "name": "aac",
+                        "value": "4"
+                    },
+                    {
+                        "desc": "Reorder and mix all input channels to a single mono channel",
+                        "name": "mono",
+                        "value": "5"
+                    },
+                    {
+                        "desc": "Reorder and mix all input channels to a single left and a single right stereo channels alternately",
+                        "name": "alternate",
+                        "value": "6"
+                    }
+                ]
+            },
+            "GstAudioConvertInputChannelsReorderMode": {
+                "kind": "enum",
+                "values": [
+                    {
+                        "desc": "Never reorder the input channels",
+                        "name": "none",
+                        "value": "0"
+                    },
+                    {
+                        "desc": "Reorder the input channels only if they are unpositioned",
+                        "name": "unpositioned",
+                        "value": "1"
+                    },
+                    {
+                        "desc": "Always reorder the input channels according to the selected configuration",
+                        "name": "force",
+                        "value": "2"
+                    }
+                ]
+            }
+        },
         "package": "GStreamer Base Plug-ins",
         "source": "gst-plugins-base",
         "tracers": {},
