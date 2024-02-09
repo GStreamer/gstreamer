@@ -62,7 +62,7 @@ impl App {
     }
 
     fn new() -> Result<Self, anyhow::Error> {
-        let pipeline = gst::parse_launch(
+        let pipeline = gst::parse::launch(
             "webrtcbin name=webrtcbin stun-server=stun://stun.l.google.com:19302 \
              videotestsrc pattern=ball ! videoconvert ! queue name=vqueue",
         )?;

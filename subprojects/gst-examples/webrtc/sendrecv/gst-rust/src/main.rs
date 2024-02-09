@@ -124,7 +124,7 @@ impl App {
         anyhow::Error,
     > {
         // Create the GStreamer pipeline
-        let pipeline = gst::parse_launch(
+        let pipeline = gst::parse::launch(
         "videotestsrc pattern=ball is-live=true ! vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay name=vpay pt=96 picture-id-mode=15-bit ! webrtcbin. \
          audiotestsrc is-live=true ! opusenc perfect-timestamp=true ! rtpopuspay name=apay pt=97 ! application/x-rtp,encoding-name=OPUS ! webrtcbin. \
          webrtcbin name=webrtcbin"
@@ -623,12 +623,12 @@ impl App {
         let name = caps.structure(0).unwrap().name();
 
         let sink = if name.starts_with("video/") {
-            gst::parse_bin_from_description(
+            gst::parse::bin_from_description(
                 "queue ! videoconvert ! videoscale ! autovideosink",
                 true,
             )?
         } else if name.starts_with("audio/") {
-            gst::parse_bin_from_description(
+            gst::parse::bin_from_description(
                 "queue ! audioconvert ! audioresample ! autoaudiosink",
                 true,
             )?

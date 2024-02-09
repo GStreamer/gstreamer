@@ -489,7 +489,7 @@ impl JanusGateway {
         );
 
         let encode_bin =
-            gst::parse_bin_from_description_with_name(bin_description, false, "encode-bin")?;
+            gst::parse::bin_from_description_with_name(bin_description, false, "encode-bin")?;
 
         pipeline.add(&encode_bin).expect("Failed to add encode bin");
 

@@ -153,7 +153,7 @@ impl App {
         anyhow::Error,
     > {
         // Create the GStreamer pipeline
-        let pipeline = gst::parse_launch(
+        let pipeline = gst::parse::launch(
             &format!(
                 "videotestsrc is-live=true ! vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay pt=96 picture-id-mode=15-bit ! tee name=video-tee ! \
                  queue ! fakesink sync=true \
@@ -302,7 +302,7 @@ impl App {
             bail!("Peer {peer_id} already called");
         }
 
-        let peer_bin = gst::parse_bin_from_description(
+        let peer_bin = gst::parse::bin_from_description(
             "queue name=video-queue ! webrtcbin. \
              queue name=audio-queue ! webrtcbin. \
              webrtcbin name=webrtcbin",
@@ -819,14 +819,14 @@ impl Peer {
             .ok_or_else(|| anyhow!("no media type in caps {caps:?}"))?;
 
         let conv = if media_type == "video" {
-            gst::parse_bin_from_description(
+            gst::parse::bin_from_description(
                 &format!(
                     "decodebin name=dbin ! queue ! videoconvert ! videoscale ! capsfilter name=src caps=video/x-raw,width={VIDEO_WIDTH},height={VIDEO_HEIGHT},pixel-aspect-ratio=1/1"
                 ),
                 false,
             )?
         } else if media_type == "audio" {
-            gst::parse_bin_from_description(
+            gst::parse::bin_from_description(
                 "decodebin name=dbin ! queue ! audioconvert ! audioresample name=src",
                 false,
             )?
