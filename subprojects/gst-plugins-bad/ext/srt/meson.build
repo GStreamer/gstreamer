@@ -8,6 +8,7 @@ srt_sources = [
 ]
 srt_option = get_option('srt')
 if srt_option.disabled()
+  srt_dep = dependency('', required : false)
   subdir_done()
 endif
 
