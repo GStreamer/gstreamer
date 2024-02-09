@@ -90,6 +90,186 @@ setup_queue (guint expected_flags)
   }
 }
 
+static void
+get_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
+    GstVulkanDecoderPicture * pic)
+{
+  GstBuffer *outbuf;
+  VkImageUsageFlags usage =
+      VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+      | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  GstVideoFormat format = gst_vulkan_format_to_video_format (vk_format);
+  GstCaps *profile_caps, *caps = gst_caps_new_simple ("video/x-raw", "format",
+      G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
+      320, "height", G_TYPE_INT, 240, NULL);
+  GstBufferPool *pool;
+  GstStructure *config;
+
+  gst_caps_set_features_simple (caps,
+      gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
+
+  profile_caps = gst_vulkan_decoder_profile_caps (dec);
+  fail_unless (profile_caps);
+  fail_unless (gst_vulkan_decoder_create_dpb_pool (dec, caps));
+
+  if (!dec->dedicated_dpb)
+    usage |= VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
+
+  pool = gst_vulkan_image_buffer_pool_new (device);
+
+  config = gst_buffer_pool_get_config (pool);
+
+  gst_buffer_pool_config_set_params (config, caps, 1024, 1, 0);
+
+  gst_caps_unref (caps);
+
+  gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+      VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR, VK_ACCESS_TRANSFER_WRITE_BIT);
+  gst_vulkan_image_buffer_pool_config_set_decode_caps (config, profile_caps);
+
+  gst_caps_unref (profile_caps);
+
+  fail_unless (gst_buffer_pool_set_config (pool, config));
+  fail_unless (gst_buffer_pool_set_active (pool, TRUE));
+
+  fail_unless (gst_buffer_pool_acquire_buffer (pool, &outbuf, NULL) ==
+      GST_FLOW_OK);
+
+  fail_unless (gst_vulkan_decoder_picture_init (dec, pic, outbuf));
+
+  gst_buffer_unref (outbuf);
+  fail_unless (gst_buffer_pool_set_active (pool, FALSE));
+  gst_object_unref (pool);
+}
+
+static void
+download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
+    GstVulkanDecoderPicture * pic)
+{
+  GstVulkanOperation *exec;
+  GstVulkanCommandPool *cmd_pool;
+  GstBufferPool *out_pool = gst_vulkan_buffer_pool_new (dec->queue->device);
+  GstStructure *config = gst_buffer_pool_get_config (out_pool);
+  GstVideoFormat format = gst_vulkan_format_to_video_format (vk_format);
+  GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format",
+      G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
+      320, "height", G_TYPE_INT, 240, NULL);
+  GstBuffer *rawbuf;
+  GError *error = NULL;
+  GArray *barriers;
+  GstVideoInfo info;
+  GstMapInfo mapinfo;
+  guint i, n_mems, n_planes;
+
+  gst_buffer_pool_config_set_params (config, caps, 1, 0, 0);
+  gst_buffer_pool_set_config (out_pool, config);
+
+  gst_video_info_from_caps (&info, caps);
+  gst_caps_unref (caps);
+
+  gst_buffer_pool_set_active (out_pool, TRUE);
+  fail_unless (gst_buffer_pool_acquire_buffer (out_pool, &rawbuf, NULL)
+      == GST_FLOW_OK);
+
+  cmd_pool = gst_vulkan_queue_create_command_pool (graphics_queue, &error);
+  fail_unless (cmd_pool);
+  exec = gst_vulkan_operation_new (cmd_pool);
+  gst_object_unref (cmd_pool);
+
+  fail_unless (gst_vulkan_operation_begin (exec, &error));
+  gst_vulkan_operation_add_dependency_frame (exec, pic->out,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
+
+  gst_vulkan_operation_add_frame_barrier (exec, pic->out,
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, NULL);
+
+  barriers = gst_vulkan_operation_retrieve_image_barriers (exec);
+  /* *INDENT-OFF* */
+  vkCmdPipelineBarrier2 (exec->cmd_buf->cmd, &(VkDependencyInfo) {
+      .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+      .pImageMemoryBarriers = (gpointer) barriers->data,
+      .imageMemoryBarrierCount = barriers->len,
+    });
+  /* *INDENT-ON* */
+
+  n_planes = GST_VIDEO_INFO_N_PLANES (&info);
+  n_mems = gst_buffer_n_memory (pic->out);
+
+  for (i = 0; i < n_planes; i++) {
+    VkBufferImageCopy region;
+    GstMemory *out_mem;
+    GstVulkanBufferMemory *buf_mem;
+    GstVulkanImageMemory *img_mem;
+    gint idx;
+    const VkImageAspectFlags aspects[] = { VK_IMAGE_ASPECT_PLANE_0_BIT,
+      VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
+    };
+    VkImageAspectFlags plane_aspect;
+
+    idx = MIN (i, n_mems - 1);
+    img_mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (pic->out, idx);
+
+    out_mem = gst_buffer_peek_memory (rawbuf, i);
+    buf_mem = (GstVulkanBufferMemory *) out_mem;
+
+    if (n_planes == n_mems)
+      plane_aspect = VK_IMAGE_ASPECT_COLOR_BIT;
+    else
+      plane_aspect = aspects[i];
+
+    /* *INDENT-OFF* */
+    region = (VkBufferImageCopy) {
+      .bufferOffset = 0,
+      .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&info, i),
+      .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&info, i),
+      .imageSubresource = {
+        /* XXX: each plane is a buffer */
+        .aspectMask = plane_aspect,
+        .mipLevel = 0,
+        .baseArrayLayer = 0,
+        .layerCount = 1,
+      },
+      .imageOffset = { .x = 0, .y = 0, .z = 0, },
+      .imageExtent = {
+        .width = GST_VIDEO_INFO_COMP_WIDTH (&info, i),
+        .height = GST_VIDEO_INFO_COMP_HEIGHT (&info, i),
+        .depth = 1,
+      }
+    };
+    /* *INDENT-ON* */
+
+    vkCmdCopyImageToBuffer (exec->cmd_buf->cmd, img_mem->image,
+        g_array_index (barriers, VkImageMemoryBarrier2, 0).newLayout,
+        buf_mem->buffer, 1, &region);
+  }
+
+  g_array_unref (barriers);
+
+  fail_unless (gst_vulkan_operation_end (exec, &error));
+
+  gst_vulkan_operation_wait (exec);
+  gst_object_unref (exec);
+
+  fail_unless (gst_buffer_map (rawbuf, &mapinfo, GST_MAP_READ));
+
+  /* Check for a blue square */
+  /* Y */
+  for (i = 0; i < 0x12c00; i++)
+    fail_unless (mapinfo.data[i] == 0x29);
+  /* UV */
+  for (i = 0x12c00; i < 0x1c1f0; i++)
+    fail_unless (mapinfo.data[i] == 0xf0 && mapinfo.data[++i] == 0x6e);
+  gst_buffer_unmap (rawbuf, &mapinfo);
+
+  gst_buffer_unref (rawbuf);
+  fail_unless (gst_buffer_pool_set_active (out_pool, FALSE));
+  gst_object_unref (out_pool);
+}
+
+
 /* DECODER: 1 frame 320x240 blue box  */
 StdVideoH264HrdParameters std_hrd = {
   .cpb_cnt_minus1 = 0,
@@ -214,7 +394,6 @@ GST_START_TEST (test_decoder)
 {
   GstVulkanDecoder *dec;
   GError *err = NULL;
-  GstBufferPool *pool;
   VkVideoFormatPropertiesKHR format_prop;
   /* *INDENT-OFF* */
   GstVulkanVideoProfile profile = {
@@ -273,52 +452,7 @@ GST_START_TEST (test_decoder)
   fail_unless (gst_vulkan_decoder_out_format (dec, &format_prop));
   fail_unless (gst_vulkan_decoder_caps (dec, &video_caps));
 
-  /* get output buffer */
-  {
-    GstBuffer *outbuf;
-    VkImageUsageFlags usage =
-        VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
-        | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-    GstVideoFormat format =
-        gst_vulkan_format_to_video_format (format_prop.format);
-    GstCaps *profile_caps, *caps = gst_caps_new_simple ("video/x-raw", "format",
-        G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
-        320, "height", G_TYPE_INT, 240, NULL);
-    GstStructure *config;
-
-    gst_caps_set_features_simple (caps,
-        gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, NULL));
-
-    profile_caps = gst_vulkan_decoder_profile_caps (dec);
-    fail_unless (profile_caps);
-    fail_unless (gst_vulkan_decoder_create_dpb_pool (dec, caps));
-
-    if (!dec->dedicated_dpb)
-      usage |= VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR;
-
-    pool = gst_vulkan_image_buffer_pool_new (device);
-
-    config = gst_buffer_pool_get_config (pool);
-
-    gst_buffer_pool_config_set_params (config, caps, 1024, 1, 0);
-
-    gst_caps_unref (caps);
-
-    gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR, VK_ACCESS_TRANSFER_WRITE_BIT);
-    gst_vulkan_image_buffer_pool_config_set_decode_caps (config, profile_caps);
-
-    gst_caps_unref (profile_caps);
-
-    fail_unless (gst_buffer_pool_set_config (pool, config));
-    fail_unless (gst_buffer_pool_set_active (pool, TRUE));
-
-    fail_unless (gst_buffer_pool_acquire_buffer (pool, &outbuf,
-            NULL) == GST_FLOW_OK);
-
-    fail_unless (gst_vulkan_decoder_picture_init (dec, &pic, outbuf));
-  }
+  get_output_buffer (dec, format_prop.format, &pic);
 
   /* get input buffer */
   {
@@ -413,136 +547,11 @@ GST_START_TEST (test_decoder)
     fail_unless (gst_vulkan_decoder_decode (dec, &pic, &err));
   }
 
-  /* download image */
-  {
-    GstVulkanOperation *exec;
-    GstVulkanCommandPool *cmd_pool;
-    GstBufferPool *out_pool = gst_vulkan_buffer_pool_new (device);
-    GstStructure *config = gst_buffer_pool_get_config (out_pool);
-    GstVideoFormat format =
-        gst_vulkan_format_to_video_format (format_prop.format);
-    GstCaps *caps = gst_caps_new_simple ("video/x-raw", "format",
-        G_TYPE_STRING, gst_video_format_to_string (format), "width", G_TYPE_INT,
-        320, "height", G_TYPE_INT, 240, NULL);
-    GstBuffer *rawbuf;
-    GError *error = NULL;
-    GArray *barriers;
-    GstVideoInfo info;
-    GstMapInfo mapinfo;
-    guint i, n_mems, n_planes;
-
-    gst_buffer_pool_config_set_params (config, caps, 1, 0, 0);
-    gst_buffer_pool_set_config (out_pool, config);
-
-    gst_video_info_from_caps (&info, caps);
-    gst_caps_unref (caps);
-
-    gst_buffer_pool_set_active (out_pool, TRUE);
-    fail_unless (gst_buffer_pool_acquire_buffer (out_pool, &rawbuf, NULL)
-        == GST_FLOW_OK);
-
-    cmd_pool = gst_vulkan_queue_create_command_pool (graphics_queue, &error);
-    fail_unless (cmd_pool);
-    exec = gst_vulkan_operation_new (cmd_pool);
-    gst_object_unref (cmd_pool);
-
-    fail_unless (gst_vulkan_operation_begin (exec, &error));
-    gst_vulkan_operation_add_dependency_frame (exec, pic.out,
-        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
-
-    gst_vulkan_operation_add_frame_barrier (exec, pic.out,
-        VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
-        VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
-        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, NULL);
-
-    barriers = gst_vulkan_operation_retrieve_image_barriers (exec);
-    /* *INDENT-OFF* */
-    vkCmdPipelineBarrier2 (exec->cmd_buf->cmd, &(VkDependencyInfo) {
-        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-        .pImageMemoryBarriers = (gpointer) barriers->data,
-        .imageMemoryBarrierCount = barriers->len,
-      });
-    /* *INDENT-ON* */
-
-    n_planes = GST_VIDEO_INFO_N_PLANES (&info);
-    n_mems = gst_buffer_n_memory (pic.out);
-
-    for (i = 0; i < n_planes; i++) {
-      VkBufferImageCopy region;
-      GstMemory *out_mem;
-      GstVulkanBufferMemory *buf_mem;
-      GstVulkanImageMemory *img_mem;
-      gint idx;
-      const VkImageAspectFlags aspects[] = { VK_IMAGE_ASPECT_PLANE_0_BIT,
-        VK_IMAGE_ASPECT_PLANE_1_BIT, VK_IMAGE_ASPECT_PLANE_2_BIT,
-      };
-      VkImageAspectFlags plane_aspect;
-
-      idx = MIN (i, n_mems - 1);
-      img_mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (pic.out, idx);
-
-      out_mem = gst_buffer_peek_memory (rawbuf, i);
-      buf_mem = (GstVulkanBufferMemory *) out_mem;
-
-      if (n_planes == n_mems)
-        plane_aspect = VK_IMAGE_ASPECT_COLOR_BIT;
-      else
-        plane_aspect = aspects[i];
-
-      /* *INDENT-OFF* */
-      region = (VkBufferImageCopy) {
-        .bufferOffset = 0,
-        .bufferRowLength = GST_VIDEO_INFO_COMP_WIDTH (&info, i),
-        .bufferImageHeight = GST_VIDEO_INFO_COMP_HEIGHT (&info, i),
-        .imageSubresource = {
-          /* XXX: each plane is a buffer */
-          .aspectMask = plane_aspect,
-          .mipLevel = 0,
-          .baseArrayLayer = 0,
-          .layerCount = 1,
-        },
-        .imageOffset = { .x = 0, .y = 0, .z = 0, },
-        .imageExtent = {
-          .width = GST_VIDEO_INFO_COMP_WIDTH (&info, i),
-          .height = GST_VIDEO_INFO_COMP_HEIGHT (&info, i),
-          .depth = 1,
-        }
-      };
-      /* *INDENT-ON* */
-
-      vkCmdCopyImageToBuffer (exec->cmd_buf->cmd, img_mem->image,
-          g_array_index (barriers, VkImageMemoryBarrier2, 0).newLayout,
-          buf_mem->buffer, 1, &region);
-    }
-
-    g_array_unref (barriers);
-
-    fail_unless (gst_vulkan_operation_end (exec, &error));
-
-    gst_vulkan_operation_wait (exec);
-    gst_object_unref (exec);
-
-    fail_unless (gst_buffer_map (rawbuf, &mapinfo, GST_MAP_READ));
-
-    /* Check for a blue square */
-    /* Y */
-    for (i = 0; i < 0x12c00; i++)
-      fail_unless (mapinfo.data[i] == 0x29);
-    /* UV */
-    for (i = 0x12c00; i < 0x1c1f0; i++)
-      fail_unless (mapinfo.data[i] == 0xf0 && mapinfo.data[++i] == 0x6e);
-    gst_buffer_unmap (rawbuf, &mapinfo);
-
-    gst_buffer_unref (rawbuf);
-    gst_object_unref (out_pool);
-  }
+  download_and_check_output_buffer (dec, format_prop.format, &pic);
 
   fail_unless (gst_vulkan_decoder_stop (dec));
 
   gst_vulkan_decoder_picture_release (&pic);
-
-  fail_unless (gst_buffer_pool_set_active (pool, FALSE));
-  gst_object_unref (pool);
 
   gst_object_unref (dec);
 }
