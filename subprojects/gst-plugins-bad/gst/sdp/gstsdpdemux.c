@@ -672,6 +672,7 @@ gst_sdp_demux_create_stream (GstSDPDemux * demux, GstSDPMessage * sdp, gint idx)
     s = gst_caps_get_structure (stream->caps, 0);
     gst_structure_set_name (s, "application/x-rtp");
 
+    gst_sdp_message_attributes_to_caps (sdp, stream->caps);
     gst_sdp_media_attributes_to_caps (media, stream->caps);
 
     if (stream->pt >= 96) {
