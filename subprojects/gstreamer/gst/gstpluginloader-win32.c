@@ -163,6 +163,8 @@ struct _GstPluginLoader
 {
   Win32PluginLoader parent;
 
+  gchar *helper_bin;
+
   GstRegistry *registry;
   gchar *pipe_prefix;
 
@@ -451,15 +453,11 @@ error:
   return FALSE;
 }
 
-static gboolean
-gst_plugin_loader_spawn (GstPluginLoader * loader)
+static gchar *
+find_helper_bin_location (void)
 {
   const gchar *env;
-  char *helper_bin;
-  gboolean res = FALSE;
-
-  if (loader->client_running)
-    return TRUE;
+  char *relocated_libgstreamer;
 
   /* Find the gst-plugin-scanner */
   env = g_getenv ("GST_PLUGIN_SCANNER_1_0");
@@ -469,61 +467,62 @@ gst_plugin_loader_spawn (GstPluginLoader * loader)
   if (env && *env != '\0') {
     /* use the env-var if it is set */
     GST_LOG ("Trying GST_PLUGIN_SCANNER env var: %s", env);
-    helper_bin = g_strdup (env);
-    res = gst_plugin_loader_try_helper (loader, helper_bin);
-    g_free (helper_bin);
-  } else {
-    char *relocated_libgstreamer;
+    return g_strdup (env);
+  }
 
-    /* use the installed version */
-    GST_LOG ("Trying installed plugin scanner");
+  /* use the installed version */
+  GST_LOG ("Trying installed plugin scanner");
 
 #define MAX_PATH_DEPTH 64
 
-    relocated_libgstreamer = priv_gst_get_relocated_libgstreamer ();
-    if (relocated_libgstreamer) {
-      int plugin_subdir_depth = priv_gst_count_directories (GST_PLUGIN_SUBDIR);
+  relocated_libgstreamer = priv_gst_get_relocated_libgstreamer ();
+  if (relocated_libgstreamer) {
+    int plugin_subdir_depth = priv_gst_count_directories (GST_PLUGIN_SUBDIR);
 
-      GST_DEBUG ("found libgstreamer-" GST_API_VERSION " library "
-          "at %s", relocated_libgstreamer);
+    GST_DEBUG ("found libgstreamer-" GST_API_VERSION " library "
+        "at %s", relocated_libgstreamer);
 
-      if (plugin_subdir_depth < MAX_PATH_DEPTH) {
-        const char *filenamev[MAX_PATH_DEPTH + 5];
-        int i = 0, j;
+    if (plugin_subdir_depth < MAX_PATH_DEPTH) {
+      const char *filenamev[MAX_PATH_DEPTH + 5];
+      int i = 0, j;
 
-        filenamev[i++] = relocated_libgstreamer;
-        for (j = 0; j < plugin_subdir_depth; j++)
-          filenamev[i++] = "..";
-        filenamev[i++] = GST_PLUGIN_SCANNER_SUBDIR;
-        filenamev[i++] = "gstreamer-" GST_API_VERSION;
-        filenamev[i++] = "gst-plugin-scanner.exe";
-        filenamev[i++] = NULL;
-        g_assert (i <= MAX_PATH_DEPTH + 5);
+      filenamev[i++] = relocated_libgstreamer;
+      for (j = 0; j < plugin_subdir_depth; j++)
+        filenamev[i++] = "..";
+      filenamev[i++] = GST_PLUGIN_SCANNER_SUBDIR;
+      filenamev[i++] = "gstreamer-" GST_API_VERSION;
+      filenamev[i++] = "gst-plugin-scanner.exe";
+      filenamev[i++] = NULL;
+      g_assert (i <= MAX_PATH_DEPTH + 5);
 
-        GST_DEBUG ("constructing path to system plugin scanner using "
-            "plugin dir: \'%s\', plugin scanner dir: \'%s\'",
-            GST_PLUGIN_SUBDIR, GST_PLUGIN_SCANNER_SUBDIR);
-
-        helper_bin = g_build_filenamev ((char **) filenamev);
-      } else {
-        GST_WARNING ("GST_PLUGIN_SUBDIR: \'%s\' has too many path segments",
-            GST_PLUGIN_SUBDIR);
-        helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
-      }
+      GST_DEBUG ("constructing path to system plugin scanner using "
+          "plugin dir: \'%s\', plugin scanner dir: \'%s\'",
+          GST_PLUGIN_SUBDIR, GST_PLUGIN_SCANNER_SUBDIR);
+      g_free (relocated_libgstreamer);
+      return g_build_filenamev ((char **) filenamev);
     } else {
-      helper_bin = g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
+      GST_WARNING ("GST_PLUGIN_SUBDIR: \'%s\' has too many path segments",
+          GST_PLUGIN_SUBDIR);
     }
-
+  }
 #undef MAX_PATH_DEPTH
 
-    GST_DEBUG ("using system plugin scanner at %s", helper_bin);
+  g_free (relocated_libgstreamer);
+  return g_strdup (GST_PLUGIN_SCANNER_INSTALLED);
+}
 
-    res = gst_plugin_loader_try_helper (loader, helper_bin);
-    g_free (helper_bin);
-    g_free (relocated_libgstreamer);
+static gboolean
+gst_plugin_loader_spawn (GstPluginLoader * loader)
+{
+  if (loader->client_running)
+    return TRUE;
+
+  if (!loader->helper_bin) {
+    GST_ERROR ("Unknown helper bin location");
+    return FALSE;
   }
 
-  if (!res)
+  if (!gst_plugin_loader_try_helper (loader, loader->helper_bin))
     GST_INFO ("No gst-plugin-scanner available, or not working");
 
   return loader->client_running;
@@ -987,32 +986,15 @@ is_path_env_string (wchar_t *str)
 }
 /* *INDENT-ON* */
 
-static GstPluginLoader *
-gst_plugin_loader_new (GstRegistry * registry)
+static wchar_t *
+generate_env_string (void)
 {
-  GstPluginLoader *self;
-  Win32PluginLoader *loader;
   wchar_t *env_str;
+  wchar_t *new_env_string = NULL;
   size_t origin_len;
-  guint i;
   wchar_t lib_dir[MAX_PATH];
   wchar_t *origin_path = NULL;
-  BOOL ret;
-
-  if (!registry)
-    return NULL;
-
-  self = g_new0 (GstPluginLoader, 1);
-  loader = (Win32PluginLoader *) self;
-
-  win32_plugin_loader_init (loader, FALSE);
-
-  loader->overlap.hEvent = CreateEventA (NULL, TRUE, TRUE, NULL);
-  self->pipe_prefix = g_strdup_printf ("\\\\.\\pipe\\gst.plugin.loader.%u",
-      (guint) GetCurrentProcessId ());
-
-  g_queue_init (&self->pending_plugins);
-  self->registry = gst_object_ref (registry);
+  guint i;
 
   env_str = GetEnvironmentStringsW ();
   /* Count original env string length */
@@ -1029,7 +1011,7 @@ gst_plugin_loader_new (GstRegistry * registry)
   origin_len++;
 
   if (GetModuleFileNameW (_priv_gst_dll_handle, lib_dir, MAX_PATH)) {
-    wchar_t *new_env_string, *pos;
+    wchar_t *pos;
     size_t new_len;
     size_t lib_dir_len;
     wchar_t *sep = wcsrchr (lib_dir, L'\\');
@@ -1063,12 +1045,96 @@ gst_plugin_loader_new (GstRegistry * registry)
     *pos = L';';
     if (origin_path)
       wcscpy (pos + 1, origin_path + wcslen (L"PATH="));
-
-    self->env_string = new_env_string;
   }
 
   free (origin_path);
   FreeEnvironmentStringsW (env_str);
+
+  return new_env_string;
+}
+
+static GstPluginLoader *
+gst_plugin_loader_new (GstRegistry * registry)
+{
+  GstPluginLoader *self;
+  Win32PluginLoader *loader;
+  BOOL ret;
+  gchar *helper_bin_location;
+  wchar_t *helper_bin_location_wide;
+  wchar_t *env_string;
+  STARTUPINFOW si;
+  PROCESS_INFORMATION pi;
+  DWORD wait_ret;
+  DWORD exit_code = 0;
+
+  if (!registry)
+    return NULL;
+
+  helper_bin_location = find_helper_bin_location ();
+  if (!helper_bin_location)
+    return NULL;
+
+  helper_bin_location_wide = g_utf8_to_utf16 (helper_bin_location, -1, NULL,
+      NULL, NULL);
+  if (!helper_bin_location_wide) {
+    g_free (helper_bin_location);
+    return NULL;
+  }
+
+  env_string = generate_env_string ();
+
+  memset (&si, 0, sizeof (STARTUPINFOW));
+  memset (&pi, 0, sizeof (PROCESS_INFORMATION));
+
+  /* Checks whether helper bin is installed or not. Expected exit code is 1 */
+  ret = CreateProcessW (NULL, helper_bin_location_wide, NULL, NULL, FALSE,
+      CREATE_UNICODE_ENVIRONMENT, env_string, NULL, &si, &pi);
+  g_free (helper_bin_location_wide);
+
+  if (!ret) {
+    GST_WARNING ("Couldn't create helper process");
+    g_free (helper_bin_location);
+    free (env_string);
+    return NULL;
+  }
+
+  wait_ret = WaitForSingleObject (pi.hProcess, 5000);
+  if (wait_ret != WAIT_OBJECT_0) {
+    GST_WARNING ("Child process is not terminated");
+    TerminateProcess (pi.hProcess, 0);
+    CloseHandle (pi.hProcess);
+    CloseHandle (pi.hThread);
+    g_free (helper_bin_location);
+    free (env_string);
+
+    return NULL;
+  }
+
+  ret = GetExitCodeProcess (pi.hProcess, &exit_code);
+  CloseHandle (pi.hProcess);
+  CloseHandle (pi.hThread);
+
+  if (!ret || exit_code != 1) {
+    GST_WARNING ("Unexpected child process exit state, GetExitCodeProcess() "
+        "return: %d, exit code: %d", ret, (gint) exit_code);
+    g_free (helper_bin_location);
+    free (env_string);
+    return NULL;
+  }
+
+  self = g_new0 (GstPluginLoader, 1);
+  loader = (Win32PluginLoader *) self;
+
+  win32_plugin_loader_init (loader, FALSE);
+  self->env_string = env_string;
+  self->helper_bin = helper_bin_location;
+
+  loader->overlap.hEvent = CreateEventA (NULL, TRUE, TRUE, NULL);
+  self->pipe_prefix = g_strdup_printf ("\\\\.\\pipe\\gst.plugin.loader.%u",
+      (guint) GetCurrentProcessId ());
+
+  g_queue_init (&self->pending_plugins);
+  self->registry = gst_object_ref (registry);
 
   ret = QueryPerformanceFrequency (&self->frequency);
   /* Must not return zero */
@@ -1205,6 +1271,7 @@ gst_plugin_loader_free (GstPluginLoader * self)
       (GDestroyNotify) pending_plugin_entry_free);
 
   free (self->env_string);
+  g_free (self->helper_bin);
   g_free (self);
 
   return got_plugin_detail;
