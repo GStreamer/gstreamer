@@ -111,7 +111,6 @@ _find_queues (GstVulkanDevice * device, GstVulkanQueue * queue, gpointer data)
       device->physical_device->queue_family_props[queue->family].queueFlags;
   guint32 codec =
       device->physical_device->queue_family_ops[queue->family].video;
-  gboolean ret;
 
   if (!self->graphic_queue
       && ((flags & VK_QUEUE_GRAPHICS_BIT) == VK_QUEUE_GRAPHICS_BIT)) {
@@ -126,13 +125,7 @@ _find_queues (GstVulkanDevice * device, GstVulkanQueue * queue, gpointer data)
     self->decode_queue = gst_object_ref (queue);
   }
 
-  ret = self->decode_queue && self->graphic_queue;
-
-  /* if graphic and decoder queues are the same, just keep one */
-  if (ret && (self->decode_queue == self->graphic_queue))
-    gst_clear_object (&self->graphic_queue);
-
-  return !ret;
+  return !(self->decode_queue && self->graphic_queue);
 }
 
 static gboolean
