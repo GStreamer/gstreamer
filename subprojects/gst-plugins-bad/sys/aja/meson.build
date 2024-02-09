@@ -15,8 +15,11 @@ rt_dep = cxx.find_library('rt', required : false)
 
 aja_sdk_dir = get_option('aja-sdk-dir')
 if aja_sdk_dir == ''
-  ajantv2_dep = dependency('libajantv2', include_type: 'system',
-                           required: aja_option, allow_fallback: true)
+  ajantv2_dep = dependency('libajantv2',
+                           include_type: 'system',
+                           required: aja_option,
+                           allow_fallback: true,
+                           default_options: ['warning_level=0'])
   if not ajantv2_dep.found()
     subdir_done()
   endif

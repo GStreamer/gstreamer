@@ -22,6 +22,13 @@ foreach cxxflag: test_cppflags
   endif
 endforeach
 
+if get_option('warning_level') == '0'
+  add_project_arguments(
+    cxx.get_supported_arguments(['-Wno-deprecated-declarations']),
+    language: 'cpp',
+  )
+endif
+
 thread_dep = dependency('threads')
 rt_dep = cxx.find_library('rt', required : false)
 
