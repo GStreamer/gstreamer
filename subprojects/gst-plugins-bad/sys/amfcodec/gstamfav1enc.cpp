@@ -437,13 +437,29 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
   g_object_class_install_property (object_class, PROP_REF_FRAMES,
       g_param_spec_uint ("ref-frames", "Reference Frames",
           "Number of reference frames", 0, 8, DEFAULT_REF_FRAMES, param_flags));
+
   if (cdata->dev_caps.pre_encode_supported) {
+    /**
+     * GstAmfAv1Enc:pre-encode:
+     *
+     * Enable pre-encode assisted rate control
+     *
+     * Since: 1.24
+     */
     g_object_class_install_property (object_class, PROP_PRE_ENCODE,
         g_param_spec_boolean ("pre-encode", "Pre-encode",
             "Enable pre-encode", DEFAULT_PRE_ENCODE,
             (GParamFlags) (param_flags | GST_PARAM_CONDITIONALLY_AVAILABLE)));
   }
+
   if (cdata->dev_caps.smart_access_supported) {
+    /**
+     * GstAmfAv1Enc:smart-access-video:
+     *
+     * Enable AMF SmartAccess Video feature
+     *
+     * Since: 1.24
+     */
     g_object_class_install_property (object_class, PROP_SMART_ACCESS,
         g_param_spec_boolean ("smart-access-video", "Smart Access Video",
             "Enable AMF SmartAccess Video feature for optimal distribution"
@@ -454,17 +470,40 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
   }
 
   if (dev_caps->pre_analysis) {
+    /**
+     * GstAmfAv1Enc:pre-analysis:
+     *
+     * Enable the pre-analysis module
+     *
+     * Since: 1.24
+     */
     g_object_class_install_property (object_class, PROP_PRE_ANALYSIS,
         g_param_spec_boolean ("pre-analysis", "Pre-analysis",
             "Enable pre-analysis", DEFAULT_PRE_ANALYSIS, param_flags));
+
     if (pa_supported->activity_type) {
+      /**
+       * GstAmfAv1Enc:pa-activity-type:
+       *
+       * Set the type of activity analysis for pre-analysis
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_ACTIVITY_TYPE,
           g_param_spec_enum ("pa-activity-type", "Pre-analysis activity type",
               "Set the type of activity analysis for pre-analysis",
               GST_TYPE_AMF_ENC_PA_ACTIVITY_TYPE, DEFAULT_PA_ACTIVITY_TYPE,
               pa_param_flags));
     }
+
     if (pa_supported->scene_change_detection) {
+      /**
+       * GstAmfAv1Enc:pa-scene-change-detection:
+       *
+       * Enable scene change detection for pre-analysis
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class,
           PROP_PA_SCENE_CHANGE_DETECTION,
           g_param_spec_boolean ("pa-scene-change-detection",
@@ -472,7 +511,15 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
               "Enable scene change detection for pre-analysis",
               DEFAULT_PA_SCENE_CHANGE_DETECTION, pa_param_flags));
     }
+
     if (pa_supported->scene_change_detection_sensitivity) {
+      /**
+       * GstAmfAv1Enc:pa-scene-change-detection-sensitivity:
+       *
+       * Pre-analysis scene change detection sensitivity
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class,
           PROP_PA_SCENE_CHANGE_DETECTION_SENSITIVITY,
           g_param_spec_enum ("pa-scene-change-detection-sensitivity",
@@ -481,7 +528,15 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
               GST_TYPE_AMF_ENC_PA_SCENE_CHANGE_DETECTION_SENSITIVITY,
               DEFAULT_PA_SCENE_CHANGE_DETECTION_SENSITIVITY, pa_param_flags));
     }
+
     if (pa_supported->static_scene_detection) {
+      /**
+       * GstAmfAv1Enc:pa-static-scene-detection:
+       *
+       * Enable static scene detection for pre-analysis
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class,
           PROP_PA_STATIC_SCENE_DETECTION,
           g_param_spec_boolean ("pa-static-scene-detection",
@@ -489,7 +544,15 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
               "Enable static scene detection for pre-analysis",
               DEFAULT_PA_STATIC_SCENE_DETECTION, pa_param_flags));
     }
+
     if (pa_supported->static_scene_detection_sensitivity) {
+      /**
+       * GstAmfAv1Enc:pa-static-scene-detection-sensitivity:
+       *
+       * Pre-analysis static scene detection sensitivity
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class,
           PROP_PA_STATIC_SCENE_DETECTION_SENSITIVITY,
           g_param_spec_enum ("pa-static-scene-detection-sensitivity",
@@ -498,38 +561,86 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
               GST_TYPE_AMF_ENC_PA_STATIC_SCENE_DETECTION_SENSITIVITY,
               DEFAULT_PA_STATIC_SCENE_DETECTION_SENSITIVITY, pa_param_flags));
     }
+
     if (pa_supported->initial_qp) {
+      /**
+       * GstAmfAv1Enc:pa-initial-qp:
+       *
+       * Pre-analysis initial QP
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_INITIAL_QP,
           g_param_spec_uint ("pa-initial-qp", "Pre-analysis initial QP",
               "The QP value that is used immediately after a scene change", 0,
               51, DEFAULT_PA_INITIAL_QP, pa_param_flags));
     }
+
     if (pa_supported->max_qp) {
+      /**
+       * GstAmfAv1Enc:pa-max-qp:
+       *
+       * Pre-analysis max QP
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_MAX_QP,
           g_param_spec_uint ("pa-max-qp", "Pre-analysis max QP",
               "The QP threshold to allow a skip frame", 0, 51,
               DEFAULT_PA_MAX_QP, pa_param_flags));
     }
+
     if (pa_supported->caq_strength) {
+      /**
+       * GstAmfAv1Enc:pa-caq-strength:
+       *
+       * Content Adaptive Quantization strength for pre-analysis
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_CAQ_STRENGTH,
           g_param_spec_enum ("pa-caq-strength", "Pre-analysis CAQ strength",
               "Content Adaptive Quantization strength for pre-analysis",
               GST_TYPE_AMF_ENC_PA_CAQ_STRENGTH, DEFAULT_PA_CAQ_STRENGTH,
               pa_param_flags));
     }
+
     if (pa_supported->frame_sad) {
+      /**
+       * GstAmfAv1Enc:pa-frame-sad:
+       *
+       * Enable Frame SAD algorithm
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_FRAME_SAD,
           g_param_spec_boolean ("pa-frame-sad", "Pre-analysis SAD algorithm",
               "Enable Frame SAD algorithm", DEFAULT_PA_FRAME_SAD,
               pa_param_flags));
     }
+
     if (pa_supported->ltr) {
+      /**
+       * GstAmfAv1Enc:pa-ltr:
+       *
+       * Enable long term reference frame management
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_LTR,
           g_param_spec_boolean ("pa-ltr", "Pre-analysis LTR",
               "Enable long term reference frame management", DEFAULT_PA_LTR,
               pa_param_flags));
     }
+
     if (pa_supported->lookahead_buffer_depth) {
+      /**
+       * GstAmfAv1Enc:pa-lookahead-buffer-depth:
+       *
+       * Pre-analysis lookahead buffer depth
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class,
           PROP_PA_LOOKAHEAD_BUFFER_DEPTH,
           g_param_spec_uint ("pa-lookahead-buffer-depth",
@@ -537,21 +648,45 @@ gst_amf_av1_enc_class_init (GstAmfAv1EncClass * klass, gpointer data)
               "Set the PA lookahead buffer size", 0, 41,
               DEFAULT_PA_LOOKAHEAD_BUFFER_DEPTH, pa_param_flags));
     }
+
     if (pa_supported->paq_mode) {
+      /**
+       * GstAmfAv1Enc:pa-paq-mode:
+       *
+       * Set the perceptual adaptive quantization mode
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_PAQ_MODE,
           g_param_spec_enum ("pa-paq-mode", "Pre-analysis PAQ mode",
               "Set the perceptual adaptive quantization mode",
               GST_TYPE_AMF_ENC_PA_PAQ_MODE, DEFAULT_PA_PAQ_MODE,
               pa_param_flags));
     }
+
     if (pa_supported->taq_mode) {
+      /**
+       * GstAmfAv1Enc:pa-taq-mode:
+       *
+       * Set the temporal adaptive quantization mode
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_TAQ_MODE,
           g_param_spec_enum ("pa-taq-mode", "Pre-analysis TAQ mode",
               "Set the temporal adaptive quantization mode",
               GST_TYPE_AMF_ENC_PA_TAQ_MODE, DEFAULT_PA_TAQ_MODE,
               pa_param_flags));
     }
+
     if (pa_supported->hmqb_mode) {
+      /**
+       * GstAmfAv1Enc:pa-hqmb-mode:
+       *
+       * Set the PA high motion quality boost mode
+       *
+       * Since: 1.24
+       */
       g_object_class_install_property (object_class, PROP_PA_HQMB_MODE,
           g_param_spec_enum ("pa-hqmb-mode", "Pre-analysis HQMB mode",
               "Set the PA high motion quality boost mode",
