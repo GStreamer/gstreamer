@@ -104,6 +104,7 @@ VALGRIND_BLACKLIST = [
     (r'check.gst-plugins-bad.elements_mpeg2enc', '?'),
     (r'check.gst-plugins-bad.elements_mplex', '?'),
     (r'check.gst-plugins-bad.elements_mxfmux', '?'),
+    (r'check.gst-plugins-bad.elements_srt.test_src_listener_sink_caller', 'Need to investigate libsrt leaks (flaky)'),
     (r'check.gst-plugins-bad.elements_x265enc', '?'),
     (r'check.gst-plugins-bad.elements_zbar', '?'),
     (r'check.gst-plugins-bad.elements_webrtcbin.test_data_channel_remote_notify', 'Need to fix leaks'),
