@@ -531,9 +531,20 @@ ks_video_probe_filter_for_caps (HANDLE filter_handle)
               entry = NULL;
             }
 
-            if (entry != NULL) {
-              g_assert (entry->sample_size != 0);
+            /* XXX: We've been doing g_assert (entry->sample_size != 0)
+             * since more than 10 years ago, but it's quite questionable.
+             * According to MS documentation,
+             * SampleSize field in KSDATARANGE struct is ignored,
+             * and biSizeImage in KS_BITMAPINFOHEADER is required only if
+             * compression is used. (driver maybe set zero for raw image).
+             * But since we've expected the value shouldn't be zero,
+             * let's ignore a media type with entry->sample_size == 0 for now.
+             * Actually people should not use this plugin in newly written code
+             * anymore */
+            if (entry && entry->sample_size == 0)
+              g_clear_pointer (&entry, ks_video_media_type_free);
 
+            if (entry != NULL) {
               if (src_vscc != NULL) {
                 memcpy ((gpointer) & entry->vscc, src_vscc,
                     sizeof (entry->vscc));
