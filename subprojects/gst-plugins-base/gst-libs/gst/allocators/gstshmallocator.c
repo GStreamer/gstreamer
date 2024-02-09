@@ -113,7 +113,7 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
     return NULL;
   }
 
-  mem = gst_fd_allocator_alloc (allocator, fd, size,
+  mem = gst_fd_allocator_alloc (allocator, fd, maxsize,
       GST_FD_MEMORY_FLAG_KEEP_MAPPED);
   if (G_UNLIKELY (!mem)) {
     GST_ERROR_OBJECT (self, "GstFdMemory allocation failed");
@@ -131,21 +131,22 @@ gst_shm_allocator_alloc (GstAllocator * allocator, gsize size,
   /* See _sysmem_new_block() for details */
   guint8 *data = info.data;
   gsize aoffset;
+  gsize asize = maxsize;
   if ((aoffset = ((guintptr) data & align))) {
     aoffset = (align + 1) - aoffset;
     data += aoffset;
-    maxsize -= aoffset;
+    asize = maxsize - aoffset;
   }
 
   if (params->prefix && (params->flags & GST_MEMORY_FLAG_ZERO_PREFIXED))
     memset (data, 0, params->prefix);
 
-  gsize padding = maxsize - (params->prefix + size);
+  gsize padding = asize - (params->prefix + size);
   if (padding && (params->flags & GST_MEMORY_FLAG_ZERO_PADDED))
     memset (data + params->prefix + size, 0, padding);
 
   mem->align = align;
-  mem->maxsize = maxsize;
+  mem->size = size;
   mem->offset = params->prefix + aoffset;
 
   gst_memory_unmap (mem, &info);
