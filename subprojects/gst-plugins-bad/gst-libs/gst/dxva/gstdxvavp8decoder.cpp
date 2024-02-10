@@ -261,7 +261,7 @@ gst_dxva_vp8_decoder_copy_reference_frames (GstDxvaVp8Decoder * self,
         GST_CODEC_PICTURE (decoder->last_picture));
 
     if (id != 0xff) {
-      params->gld_fb_idx.Index7Bits = id;
+      params->lst_fb_idx.Index7Bits = id;
       g_ptr_array_add (priv->ref_pics, decoder->last_picture);
     }
   }
