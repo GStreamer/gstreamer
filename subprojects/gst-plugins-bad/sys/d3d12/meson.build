@@ -34,6 +34,7 @@ d3d12_sources = [
   'gstd3d12upload.cpp',
   'gstd3d12utils.cpp',
   'gstd3d12videosink.cpp',
+  'gstd3d12vp8dec.cpp',
   'gstd3d12vp9dec.cpp',
   'gstd3d12window.cpp',
   'plugin.cpp',

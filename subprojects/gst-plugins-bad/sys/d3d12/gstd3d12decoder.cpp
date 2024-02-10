@@ -57,6 +57,8 @@ static const DecoderFormat format_list[] = {
       {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
   {GST_DXVA_CODEC_H265, D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN10,
       DXGI_FORMAT_P010},
+  {GST_DXVA_CODEC_VP8, D3D12_VIDEO_DECODE_PROFILE_VP8,
+      {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
   {GST_DXVA_CODEC_VP9, D3D12_VIDEO_DECODE_PROFILE_VP9,
       {DXGI_FORMAT_NV12, DXGI_FORMAT_UNKNOWN,}},
   {GST_DXVA_CODEC_VP9, D3D12_VIDEO_DECODE_PROFILE_VP9_10BIT_PROFILE2,
@@ -1927,6 +1929,8 @@ gst_d3d12_decoder_get_profiles (const GUID & profile,
     list.push_back ("main");
   } else if (profile == D3D12_VIDEO_DECODE_PROFILE_HEVC_MAIN10) {
     list.push_back ("main-10");
+  } else if (profile == D3D12_VIDEO_DECODE_PROFILE_VP8) {
+    /* skip profile field */
   } else if (profile == D3D12_VIDEO_DECODE_PROFILE_VP9) {
     list.push_back ("0");
   } else if (profile == D3D12_VIDEO_DECODE_PROFILE_VP9_10BIT_PROFILE2) {
@@ -2056,6 +2060,9 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
           "stream-format=(string) { hev1, hvc1, byte-stream }, "
           "alignment=(string) au";
       break;
+    case GST_DXVA_CODEC_VP8:
+      sink_caps_string = "video/x-vp8";
+      break;
     case GST_DXVA_CODEC_VP9:
       if (profiles.size () > 1) {
         sink_caps_string =
@@ -2080,7 +2087,7 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
   }
 
   /* *INDENT-OFF* */
-  if (codec != GST_DXVA_CODEC_VP9) {
+  if (codec != GST_DXVA_CODEC_VP9 && codec != GST_DXVA_CODEC_VP8) {
     if (profiles.size () > 1) {
       profile_string = "{ ";
       bool first = true;
