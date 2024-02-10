@@ -987,7 +987,7 @@ gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
     D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (alloc_size);
     hr = priv->cmd->device->CreateCommittedResource (&heap_prop,
         D3D12_HEAP_FLAG_CREATE_NOT_ZEROED, &desc,
-        D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS (&bitstream));
+        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS (&bitstream));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Failed to create bitstream buffer");
       return FALSE;
