@@ -507,46 +507,6 @@
     "realmedia": {
         "description": "RealMedia support plugins",
         "elements": {
-            "pnmsrc": {
-                "author": "Wim Taymans <wim.taymans@gmail.com>",
-                "description": "Receive data over the network via PNM",
-                "hierarchy": [
-                    "GstPNMSrc",
-                    "GstPushSrc",
-                    "GstBaseSrc",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "interfaces": [
-                    "GstURIHandler"
-                ],
-                "klass": "Source/Network",
-                "long-name": "PNM packet receiver",
-                "pad-templates": {
-                    "src": {
-                        "caps": "application/vnd.rn-realmedia:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "properties": {
-                    "location": {
-                        "blurb": "Location of the PNM url to read",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "NULL",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "gchararray",
-                        "writable": true
-                    }
-                },
-                "rank": "marginal"
-            },
             "rademux": {
                 "author": "Tim-Philipp Müller <tim centricular net>",
                 "description": "Demultiplex a RealAudio file",
@@ -558,7 +518,6 @@
                     "GObject"
                 ],
                 "klass": "Codec/Demuxer",
-                "long-name": "RealAudio Demuxer",
                 "pad-templates": {
                     "sink": {
                         "caps": "application/x-pn-realaudio:\n",
@@ -571,163 +530,7 @@
                         "presence": "sometimes"
                     }
                 },
-                "rank": "secondary",
-                "signals": {}
-            },
-            "rdtdepay": {
-                "author": "Lutz Mueller <lutz at topfrose dot de>, Wim Taymans <wim@fluendo.com>",
-                "description": "Extracts RealMedia from RDT packets",
-                "hierarchy": [
-                    "GstRDTDepay",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Depayloader/Network",
-                "long-name": "RDT packet parser",
-                "pad-templates": {
-                    "sink": {
-                        "caps": "application/x-rdt:\n          media: application\n     clock-rate: [ 1, 2147483647 ]\n  encoding-name: X-REAL-RDT\n",
-                        "direction": "sink",
-                        "presence": "always"
-                    },
-                    "src": {
-                        "caps": "application/vnd.rn-realmedia:\n",
-                        "direction": "src",
-                        "presence": "always"
-                    }
-                },
-                "rank": "marginal"
-            },
-            "rdtmanager": {
-                "author": "Wim Taymans <wim.taymans@gmail.com>",
-                "description": "Accepts raw RTP and RTCP packets and sends them forward",
-                "hierarchy": [
-                    "GstRDTManager",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "klass": "Codec/Parser/Network",
-                "long-name": "RTP Decoder",
-                "pad-templates": {
-                    "recv_rtcp_sink_%%u": {
-                        "caps": "application/x-rtcp:\n",
-                        "direction": "sink",
-                        "presence": "request"
-                    },
-                    "recv_rtp_sink_%%u": {
-                        "caps": "application/x-rdt:\n",
-                        "direction": "sink",
-                        "presence": "request"
-                    },
-                    "recv_rtp_src_%%u_%%u_%%u": {
-                        "caps": "application/x-rdt:\n",
-                        "direction": "src",
-                        "presence": "sometimes"
-                    },
-                    "rtcp_src_%%u": {
-                        "caps": "application/x-rtcp:\n",
-                        "direction": "src",
-                        "presence": "request"
-                    }
-                },
-                "properties": {
-                    "latency": {
-                        "blurb": "Amount of ms to buffer",
-                        "conditionally-available": false,
-                        "construct": false,
-                        "construct-only": false,
-                        "controllable": false,
-                        "default": "200",
-                        "max": "-1",
-                        "min": "0",
-                        "mutable": "null",
-                        "readable": true,
-                        "type": "guint",
-                        "writable": true
-                    }
-                },
-                "rank": "none",
-                "signals": {
-                    "clear-pt-map": {
-                        "args": [],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "on-bye-ssrc": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "guint"
-                            },
-                            {
-                                "name": "arg1",
-                                "type": "guint"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "on-bye-timeout": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "guint"
-                            },
-                            {
-                                "name": "arg1",
-                                "type": "guint"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "on-npt-stop": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "guint"
-                            },
-                            {
-                                "name": "arg1",
-                                "type": "guint"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "on-timeout": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "guint"
-                            },
-                            {
-                                "name": "arg1",
-                                "type": "guint"
-                            }
-                        ],
-                        "return-type": "void",
-                        "when": "last"
-                    },
-                    "request-pt-map": {
-                        "args": [
-                            {
-                                "name": "arg0",
-                                "type": "guint"
-                            },
-                            {
-                                "name": "arg1",
-                                "type": "guint"
-                            }
-                        ],
-                        "return-type": "GstCaps",
-                        "when": "last"
-                    }
-                }
+                "rank": "secondary"
             },
             "rmdemux": {
                 "author": "David Schleef <ds@schleef.org>",
@@ -740,7 +543,6 @@
                     "GObject"
                 ],
                 "klass": "Codec/Demuxer",
-                "long-name": "RealMedia Demuxer",
                 "pad-templates": {
                     "audio_%%u": {
                         "caps": "ANY",
@@ -758,25 +560,7 @@
                         "presence": "sometimes"
                     }
                 },
-                "rank": "primary",
-                "signals": {}
-            },
-            "rtspreal": {
-                "author": "Wim Taymans <wim.taymans@gmail.com>",
-                "description": "Extends RTSP so that it can handle RealMedia setup",
-                "hierarchy": [
-                    "GstRTSPReal",
-                    "GstElement",
-                    "GstObject",
-                    "GInitiallyUnowned",
-                    "GObject"
-                ],
-                "interfaces": [
-                    "GstRTSPExtension"
-                ],
-                "klass": "Network/Extension/Protocol",
-                "long-name": "RealMedia RTSP Extension",
-                "rank": "marginal"
+                "rank": "primary"
             }
         },
         "filename": "gstrealmedia",

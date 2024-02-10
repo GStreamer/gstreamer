@@ -2,14 +2,6 @@ real_sources = [
   'rademux.c',
   'rmdemux.c',
   'rmutils.c',
-  'rdtdepay.c',
-  'rdtmanager.c',
-  'rtspreal.c',
-  'realhash.c',
-  'asmrules.c',
-  'rdtjitterbuffer.c',
-  'gstrdtbuffer.c',
-  'pnmsrc.c',
   'realmedia.c'
 ]
 
