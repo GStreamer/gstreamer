@@ -3206,24 +3206,26 @@ gst_aggregator_pad_chain_internal (GstAggregator * self,
         break;
       case GST_AGGREGATOR_START_TIME_SELECTION_FIRST:
         GST_OBJECT_LOCK (aggpad);
-        if (aggpad->priv->head_segment.format == GST_FORMAT_TIME) {
-          start_time = buf_pts;
-          if (start_time != -1) {
-            //GstClockTime buf_duration = GST_BUFFER_DURATION (buffer);
-            if (aggpad->priv->head_segment.rate < 0.0 && buf_duration != -1) {
-              start_time += buf_duration;
-            }
-            start_time = MAX (start_time, aggpad->priv->head_segment.start);
-            start_time =
-                gst_segment_to_running_time (&aggpad->priv->head_segment,
-                GST_FORMAT_TIME, start_time);
-          }
-        } else {
-          start_time = 0;
+        if (aggpad->priv->head_segment.format != GST_FORMAT_TIME) {
+          gst_segment_init (&aggpad->priv->head_segment, GST_FORMAT_TIME);
+          gst_segment_do_seek (&aggpad->priv->head_segment, 1.0, GST_FORMAT_TIME,
+            GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, buf_pts,
+            GST_SEEK_TYPE_SET, GST_CLOCK_TIME_NONE, NULL);
           GST_WARNING_OBJECT (aggpad,
-              "Ignoring request of selecting the first start time "
-              "as the segment is a %s segment instead of a time segment",
-              gst_format_get_name (aggpad->priv->head_segment.format));
+            "No valid segment received before the first buffer. Assuming a segment "
+            "from the buffer pts: %" GST_SEGMENT_FORMAT, &aggpad->priv->head_segment);
+        }
+
+        start_time = buf_pts;
+        if (start_time != -1) {
+          //GstClockTime buf_duration = GST_BUFFER_DURATION (buffer);
+          if (aggpad->priv->head_segment.rate < 0.0 && buf_duration != -1) {
+            start_time += buf_duration;
+          }
+          start_time = MAX(start_time, aggpad->priv->head_segment.start);
+          start_time =
+            gst_segment_to_running_time(&aggpad->priv->head_segment,
+              GST_FORMAT_TIME, start_time);
         }
         GST_OBJECT_UNLOCK (aggpad);
         break;
