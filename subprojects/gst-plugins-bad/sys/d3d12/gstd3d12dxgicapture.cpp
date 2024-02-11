@@ -362,6 +362,14 @@ public:
     return GST_FLOW_OK;
   }
 
+  void ReleaseFrame ()
+  {
+    if (acquired_frame_) {
+      acquired_frame_ = nullptr;
+      dupl_->ReleaseFrame ();
+    }
+  }
+
   GstFlowReturn AcquireNextFrame (IDXGIResource ** resource)
   {
     HRESULT hr;
@@ -702,6 +710,7 @@ struct GstD3D12DxgiCapturePrivate
 
   std::unique_ptr<DesktopDupCtx> ctx;
   ComPtr<IDXGIOutput1> output;
+  ComPtr<IDXGIResource> last_resource;
   ComPtr<ID3D12Resource> shared_resource;
   ComPtr<ID3D12Resource> move_frame;
   ComPtr<ID3D12Resource> processed_frame;
@@ -1224,18 +1233,12 @@ gst_d3d12_dxgi_capture_copy_move_rects (GstD3D12DxgiCapture * self,
   }
 
   priv->resource_state = D3D12_RESOURCE_STATE_COPY_DEST;
-  if (priv->ctx->GetDirtyCount () > 0) {
-    auto desc = priv->ctx->GetDesc ();
-    if (desc.Rotation != DXGI_MODE_ROTATION_UNSPECIFIED &&
-        desc.Rotation != DXGI_MODE_ROTATION_IDENTITY) {
-      priv->resource_state |= D3D12_RESOURCE_STATE_RENDER_TARGET;
-    }
-  }
 
   barriers.clear ();
   barriers.
       push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->processed_frame.
-          Get (), D3D12_RESOURCE_STATE_COPY_SOURCE, priv->resource_state));
+          Get (), D3D12_RESOURCE_STATE_COPY_SOURCE,
+          D3D12_RESOURCE_STATE_COPY_DEST));
   barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->
           move_frame.Get (), D3D12_RESOURCE_STATE_COPY_DEST,
           D3D12_RESOURCE_STATE_COPY_SOURCE));
@@ -1266,27 +1269,39 @@ gst_d3d12_dxgi_capture_copy_dirty_rects (GstD3D12DxgiCapture * self,
 
   GST_LOG_OBJECT (self, "Rendering dirty rects");
 
-  ComPtr < IDXGIResource1 > resource1;
-  hr = resource->QueryInterface (IID_PPV_ARGS (&resource1));
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "IDXGIResource1 interface unavailable");
-    return FALSE;
-  }
+  if (!priv->shared_resource) {
+    ComPtr < IDXGIResource1 > resource1;
+    hr = resource->QueryInterface (IID_PPV_ARGS (&resource1));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "IDXGIResource1 interface unavailable");
+      return FALSE;
+    }
 
-  HANDLE shared_handle;
-  hr = resource1->CreateSharedHandle (nullptr, DXGI_SHARED_RESOURCE_READ,
-      nullptr, &shared_handle);
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create shared handle");
-    return FALSE;
-  }
+    HANDLE shared_handle;
+    hr = resource1->CreateSharedHandle (nullptr, DXGI_SHARED_RESOURCE_READ,
+        nullptr, &shared_handle);
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create shared handle");
+      return FALSE;
+    }
 
-  hr = device->OpenSharedHandle (shared_handle,
-      IID_PPV_ARGS (&priv->shared_resource));
-  CloseHandle (shared_handle);
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't open shared resource");
-    return FALSE;
+    hr = device->OpenSharedHandle (shared_handle,
+        IID_PPV_ARGS (&priv->shared_resource));
+    CloseHandle (shared_handle);
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't open shared resource");
+      return FALSE;
+    }
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
+    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srv_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    srv_desc.Texture2D.PlaneSlice = 0;
+    srv_desc.Texture2D.MipLevels = 1;
+
+    device->CreateShaderResourceView (priv->shared_resource.Get (), &srv_desc,
+        priv->srv_heap->GetCPUDescriptorHandleForHeapStart ());
   }
 
   auto desc = priv->ctx->GetDesc ();
@@ -1318,6 +1333,13 @@ gst_d3d12_dxgi_capture_copy_dirty_rects (GstD3D12DxgiCapture * self,
   } else {
     GST_LOG_OBJECT (self, "Perform draw");
 
+    if (priv->resource_state != D3D12_RESOURCE_STATE_COMMON) {
+      D3D12_RESOURCE_BARRIER barrier =
+          CD3DX12_RESOURCE_BARRIER::Transition (priv->processed_frame.Get (),
+          priv->resource_state, D3D12_RESOURCE_STATE_RENDER_TARGET);
+      priv->cl->ResourceBarrier (1, &barrier);
+    }
+
     cl->SetGraphicsRootSignature (priv->rs.Get ());
     cl->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cl->RSSetViewports (1, &priv->viewport);
@@ -1327,16 +1349,6 @@ gst_d3d12_dxgi_capture_copy_dirty_rects (GstD3D12DxgiCapture * self,
     };
 
     cl->OMSetRenderTargets (1, rtv_heaps, FALSE, nullptr);
-
-    D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
-    srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srv_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    srv_desc.Texture2D.PlaneSlice = 0;
-    srv_desc.Texture2D.MipLevels = 1;
-
-    device->CreateShaderResourceView (priv->shared_resource.Get (), &srv_desc,
-        priv->srv_heap->GetCPUDescriptorHandleForHeapStart ());
 
     const auto & vertex = priv->ctx->GetDirtyVertex ();
     UINT buf_size = vertex.size () * sizeof (VERTEX);
@@ -1595,13 +1607,6 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
     return GST_D3D12_SCREEN_CAPTURE_FLOW_SIZE_CHANGED;
   }
 
-  /* Wait for previous command if dirty rect drawing happend */
-  if (priv->shared_resource) {
-    gst_d3d12_device_fence_wait (self->device, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        priv->fence_val, priv->event_handle);
-  }
-  priv->shared_resource = nullptr;
-
   ComPtr < IDXGIResource > resource;
   ret = priv->ctx->AcquireNextFrame (&resource);
   if (ret != GST_FLOW_OK) {
@@ -1617,7 +1622,21 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
     return ret;
   }
 
+  if (resource) {
+    if (resource != priv->last_resource)
+      priv->shared_resource = nullptr;
+
+    priv->last_resource = resource;
+  }
+
   GST_LOG_OBJECT (self, "Capture done");
+
+  bool have_move_rect = false;
+  if (priv->ctx->GetMoveCount () > 0)
+    have_move_rect = true;
+  bool have_dirty_rect = false;
+  if ((priv->ctx->GetDirtyCount () > 0) && resource)
+    have_dirty_rect = true;
 
   std::future < gboolean > mouse_blend_ret;
   if (draw_mouse) {
@@ -1656,13 +1675,13 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
   }
 
   priv->resource_state = D3D12_RESOURCE_STATE_COMMON;
-  if (priv->ctx->GetMoveCount () > 0 &&
+  if (have_move_rect &&
       !gst_d3d12_dxgi_capture_copy_move_rects (self, priv->cl.Get ())) {
     GST_ERROR_OBJECT (self, "Couldn't copy move rects");
     goto error;
   }
 
-  if (priv->ctx->GetDirtyCount () > 0 &&
+  if (have_dirty_rect &&
       !gst_d3d12_dxgi_capture_copy_dirty_rects (self, resource.Get (),
           priv->cl.Get ())) {
     GST_ERROR_OBJECT (self, "Couldn't copy dirty rects");
@@ -1729,6 +1748,13 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
     }
   }
 
+  if (have_dirty_rect) {
+    gst_d3d12_device_fence_wait (self->device, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        priv->fence_val, priv->event_handle);
+  }
+
+  priv->ctx->ReleaseFrame ();
+
   return GST_FLOW_OK;
 
 error:
@@ -1740,6 +1766,7 @@ error:
   gst_clear_buffer (&priv->mouse_buf);
   gst_clear_buffer (&priv->mouse_xor_buf);
   resource = nullptr;
+  priv->last_resource = nullptr;
   priv->shared_resource = nullptr;
   priv->processed_frame = nullptr;
   priv->move_frame = nullptr;
