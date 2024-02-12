@@ -632,9 +632,11 @@ gst_nv_h265_dec_new_sequence (GstH265Decoder * decoder, const GstH265SPS * sps,
   }
 
   if (self->out_format != out_format) {
-    GST_INFO_OBJECT (self, "Output format changed %s -> %s",
-        gst_video_format_to_string (self->out_format),
-        gst_video_format_to_string (out_format));
+    if (self->out_format != GST_VIDEO_FORMAT_UNKNOWN) {
+      GST_INFO_OBJECT (self, "Output format changed %s -> %s",
+          gst_video_format_to_string (self->out_format),
+          gst_video_format_to_string (out_format));
+    }
     self->out_format = out_format;
     modified = TRUE;
   }
