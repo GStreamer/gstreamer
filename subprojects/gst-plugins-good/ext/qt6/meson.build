@@ -60,7 +60,8 @@ if not qt6qml_dep.found()
   subdir_done()
 endif
 
-qsb = find_program('qsb-qt6', 'qsb', required: qt6_option)
+qt6_bindir = qt6qml_dep.get_variable('bindir', configtool: 'QT_HOST_BINS')
+qsb = find_program('qsb-qt6', 'qsb', dirs: [qt6_bindir], required: qt6_option)
 if not qsb.found()
   subdir_done()
 endif
