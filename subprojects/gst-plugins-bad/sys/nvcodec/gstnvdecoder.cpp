@@ -411,9 +411,8 @@ gst_nv_decoder_new_picture (GstNvDecoder * decoder, GstCodecPicture * picture)
 
   if (!decoder->object) {
     if (decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA) {
-      if (decoder->num_output_surfaces == 0 ||
-          decoder->num_output_surfaces < decoder->downstream_min_buffers) {
-        /* Auto mode or user specified num-output-surfaces value is too small */
+      if (decoder->num_output_surfaces == 0) {
+        /* Auto mode */
         decoder->create_info.ulNumOutputSurfaces =
             decoder->downstream_min_buffers + 2;
       } else {
@@ -877,7 +876,7 @@ gst_nv_decoder_output_picture (GstNvDecoder * decoder,
     goto error;
   }
 
-  if (videodec->input_segment.rate > 0 &&
+  if (decoder->num_output_surfaces != 1 && videodec->input_segment.rate > 0 &&
       decoder->output_type == GST_NV_DECODER_OUTPUT_TYPE_CUDA &&
       (guint) decoder->create_info.ulNumOutputSurfaces >=
       decoder->downstream_min_buffers) {
