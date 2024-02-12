@@ -427,7 +427,7 @@ gst_v4l2_device_provider_start (GstDeviceProvider * provider)
   self->context = g_main_context_new ();
   self->loop = g_main_loop_new (self->context, FALSE);
 
-  self->thread = g_thread_new ("v4l2-device-provider", provider_thread,
+  self->thread = g_thread_new ("v4l2-dev-prvdr", provider_thread,
       g_object_ref (self));
 
   while (self->started == FALSE)
