@@ -402,7 +402,7 @@ gst_mdns_device_provider_start (GstDeviceProvider * provider)
   ctx->last_seen_devices = g_sequence_new (NULL);
   self->current_ctx = ctx;
 
-  g_thread_new (NULL, (GThreadFunc) _listen, ctx);
+  g_thread_new ("MDNS listener", (GThreadFunc) _listen, ctx);
 
   return TRUE;
 }
