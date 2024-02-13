@@ -1967,8 +1967,8 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_object_set_data (G_OBJECT (buffer), "GstRTPBin.stream", stream);
 
   /* configure latency and packet lost */
-  g_object_set (buffer, "latency", rtpbin->latency_ms, NULL);
-
+  if (g_object_class_find_property (jb_class, "latency"))
+    g_object_set (buffer, "latency", rtpbin->latency_ms, NULL);
   if (g_object_class_find_property (jb_class, "drop-on-latency"))
     g_object_set (buffer, "drop-on-latency", rtpbin->drop_on_latency, NULL);
   if (g_object_class_find_property (jb_class, "do-lost"))
