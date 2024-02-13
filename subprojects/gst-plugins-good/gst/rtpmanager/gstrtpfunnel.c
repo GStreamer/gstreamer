@@ -259,6 +259,22 @@ map_failed:
   }
 }
 
+typedef struct
+{
+  GstRtpFunnel *funnel;
+  GstPad *pad;
+} SetTwccSeqnumData;
+
+static gboolean
+set_twcc_seqnum (GstBuffer ** buf, guint idx, gpointer user_data)
+{
+  SetTwccSeqnumData *data = user_data;
+
+  gst_rtp_funnel_set_twcc_seqnum (data->funnel, data->pad, buf);
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_rtp_funnel_sink_chain_object (GstPad * pad, GstRtpFunnel * funnel,
     gboolean is_list, GstMiniObject * obj)
@@ -273,7 +289,12 @@ gst_rtp_funnel_sink_chain_object (GstPad * pad, GstRtpFunnel * funnel,
   gst_rtp_funnel_forward_segment (funnel, pad);
 
   if (is_list) {
-    res = gst_pad_push_list (funnel->srcpad, GST_BUFFER_LIST_CAST (obj));
+    GstBufferList *list = GST_BUFFER_LIST_CAST (obj);
+    SetTwccSeqnumData data = { funnel, pad };
+
+    list = gst_buffer_list_make_writable (list);
+    gst_buffer_list_foreach (list, set_twcc_seqnum, &data);
+    res = gst_pad_push_list (funnel->srcpad, list);
   } else {
     GstBuffer *buf = GST_BUFFER_CAST (obj);
     gst_rtp_funnel_set_twcc_seqnum (funnel, pad, &buf);
