@@ -132,6 +132,8 @@ struct _GstRtpFunnel
   guint twcc_pads;              /* numer of sinkpads with negotiated twcc */
   GstRTPHeaderExtension *twcc_ext;
 
+  guint8 current_ntp64_ext_id;
+
   /* properties */
   gint common_ts_offset;
 };
@@ -324,6 +326,9 @@ gst_rtp_funnel_sink_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
       GST_MINI_OBJECT_CAST (buffer));
 }
 
+#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+#define NTP64_EXTMAP_STR "urn:ietf:params:rtp-hdrext:ntp-64"
+
 static void
 gst_rtp_funnel_set_twcc_ext_id (GstRtpFunnel * funnel, guint8 twcc_ext_id)
 {
@@ -336,6 +341,7 @@ gst_rtp_funnel_set_twcc_ext_id (GstRtpFunnel * funnel, guint8 twcc_ext_id)
   if (current_ext_id == twcc_ext_id)
     return;
 
+  GST_DEBUG_OBJECT (funnel, "Got TWCC RTP header extension id %u", twcc_ext_id);
   name = g_strdup_printf ("extmap-%u", twcc_ext_id);
 
   gst_caps_set_simple (funnel->srccaps, name, G_TYPE_STRING,
@@ -349,7 +355,28 @@ gst_rtp_funnel_set_twcc_ext_id (GstRtpFunnel * funnel, guint8 twcc_ext_id)
   gst_rtp_header_extension_set_id (funnel->twcc_ext, twcc_ext_id);
 }
 
-#define TWCC_EXTMAP_STR "http://www.ietf.org/id/draft-holmer-rmcat-transport-wide-cc-extensions-01"
+static void
+gst_rtp_funnel_set_ntp64_ext_id (GstRtpFunnel * funnel, guint8 ntp64_ext_id)
+{
+  gchar *name;
+
+  if (funnel->current_ntp64_ext_id == ntp64_ext_id)
+    return;
+
+  GST_DEBUG_OBJECT (funnel, "Got NTP-64 RTP header extension id %u",
+      ntp64_ext_id);
+  funnel->current_ntp64_ext_id = ntp64_ext_id;
+
+  name = g_strdup_printf ("extmap-%u", ntp64_ext_id);
+
+  gst_caps_set_simple (funnel->srccaps, name, G_TYPE_STRING,
+      NTP64_EXTMAP_STR, NULL);
+
+  g_free (name);
+
+  /* make sure we update the sticky with the new caps */
+  funnel->send_sticky_events = TRUE;
+}
 
 static gboolean
 gst_rtp_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
@@ -402,6 +429,11 @@ gst_rtp_funnel_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         fpad->has_twcc = TRUE;
         funnel->twcc_pads++;
         gst_rtp_funnel_set_twcc_ext_id (funnel, ext_id);
+      }
+
+      ext_id = gst_rtp_get_extmap_id_for_attribute (s, NTP64_EXTMAP_STR);
+      if (ext_id > 0) {
+        gst_rtp_funnel_set_ntp64_ext_id (funnel, ext_id);
       }
       GST_OBJECT_UNLOCK (funnel);
 
