@@ -2,13 +2,13 @@ GStreamer 1.22 Release Notes
 
 GStreamer 1.22.0 was originally released on 23 January 2023.
 
-The latest bug-fix release in the stable 1.22 series is 1.22.8 and was
-released on 18 December 2023.
+The latest bug-fix release in the stable 1.22 series is 1.22.10 and was
+released on 13 February 2024.
 
 See https://gstreamer.freedesktop.org/releases/1.22/ for the latest
 version of this document.
 
-Last updated: Monday 18 December 2023, 11:00 UTC (log)
+Last updated: Tuesday 13 January 2024, 11:00 UTC (log)
 
 Introduction
 
@@ -2860,6 +2860,153 @@ List of merge requests and issues fixed in 1.22.9
 
 -   List of Merge Requests applied in 1.22.9
 -   List of Issues fixed in 1.22.9
+
+1.22.10
+
+The tenth 1.22 bug-fix release (1.22.10) was released on 13 February
+2024.
+
+This release only contains bugfixes and security fixes and it should be
+safe to update from 1.22.x.
+
+Highlighted bugfixes in 1.22.10
+
+-   gst-python: fix bindings overrides for Python >= 3.12
+-   glcolorconvert: fix wrong RGB to YUV matrix with bt709
+-   glvideoflip: fix “method” property setting at construction time
+-   gtk4paintablesink: Always draw a black background behind the video
+    frame, and other fixes
+-   pad: keep segment event seqnums the same when applying a pad offset
+-   basesink: Preroll on out of segment buffers when not dropping them
+-   Prefer FFmpeg musepack decoder/demuxer, fixing musepack playback in
+    decodebin3/playbin3
+-   livesync: add support for image formats such as JPEG or PNG
+-   sdpdemux: Add SDP message (aka session) attributes to the caps too
+-   textwrap: add support for gaps
+-   macos: Fix gst_macos_main() terminating whole process, and set
+    activation policy
+-   webrtcbin: Improve SDP intersection for Opus
+-   various bug fixes, build fixes, memory leak fixes, and other
+    stability and reliability improvements
+
+gstreamer
+
+-   pad: Copy over seqnum when creating a new segment event for applying
+    pad offset
+-   basesink: Preroll on out of segment buffers when not dropping them
+-   macos: Fix gst_macos_main() terminating whole process before
+    returning a value
+-   macos: Set activation policy in gst_macos_main()
+
+gst-plugins-base
+
+-   glcolorconvert: fix wrong RGB to YUV matrix with bt709
+-   glvideoflip: fix setting of method property at construction time
+-   glvideoflip: “method”` property is broken if set during element
+    construction
+-   macos: Set activation policy in glimagesink
+-   videoaggregator: fix bufferpool leak
+
+gst-plugins-good
+
+-   taglib: Set cpp_std to c++17 to fix compilation with TagLib >= 2.0
+-   macos: Set activation policy in osxvideosink
+
+gst-plugins-bad
+
+-   neon: Allow building against neon 0.33.x
+-   sdpdemux: Add SDP message (aka session) attributes to the caps too
+-   srtpenc: Fix potential leak
+-   webrtcbin: Improve SDP intersection for Opus
+-   wpe: Rename WPEView to WPEThreadedView to avoid clash with newer wpe
+    version
+
+gst-plugins-ugly
+
+-   No changes
+
+gst-plugins-rs
+
+-   gtk4: Fix segfault running gst-inspect -a when GTK4 and GTK3 is
+    installed
+-   gtk4: Always draw a black background behind the video frame
+-   livesync: add support for image formats
+-   livesync: properly format jitter in debug logs
+-   textwrap: add support for gaps
+-   webrtc: only use close() to close websockets
+-   webrtc: signallers: attempt to close the ws when an error occurs
+-   webrtc/signalling: Fix potential hang and FD leak
+-   webrtc/signalling: We get the address when accepting
+-   meson: Fix build on Windows with MSVC
+-   meson: pkg-config is required at build time
+-   meson: Add nasm to PATH if meson can find it
+-   meson: allow building plugins with GTK 4 examples
+-   Update GStreamer bindings in Cargo.lock
+
+gst-libav
+
+-   Prefer using FFmpeg musepack decoder/demuxer
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   Some Python 3.12 fixes
+-   python: Port from deprecated imp to importlib
+
+gst-editing-services
+
+-   No changes
+
+gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.22.10
+
+-   gst-plugins-bad: build soundtouch plugin on MSVC
+-   cerbero: Fix GNU tar –checkpoint compatibility with macOS
+-   cerbero: Fix bootstrap venv error after upgrading Python
+-   gst-plugins-good: build taglib plugin on MSVC
+
+Contributors to 1.22.10
+
+Alexander Slobodeniuk, Christian Curtis Veng, Edward Hervey, François
+Laignel, Guillaume Desmottes, Heiko Becker, Jan Schmidt, Jonas Kvinge,
+Jordan Petridis, L. E. Segovia, Lukas Geiger, Marvin Schmidt, Mathieu
+Duponchelle, Michael Tretter, Nirbheek Chauhan, Philippe Normand, Piotr
+Brzeziński, Ruben Gonzalez, Sebastian Dröge, Thibault Saunier,
+Tim-Philipp Müller,
+
+… and many others who have contributed bug reports, translations, sent
+suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.22.10
+
+-   List of Merge Requests applied in 1.22.10
+-   List of Issues fixed in 1.22.10
 
 Schedule for 1.24
 
