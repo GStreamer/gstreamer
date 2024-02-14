@@ -4,584 +4,130 @@
 # Arvis Lācis <arvis.lacis@inbox.lv>, 2009.
 # Rihards Priedītis <rprieditis@gmail.com>, 2011.
 # Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2014.
+# Rihards Priedītis <rprieditis@gmail.com>, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 1.2.1\n"
+"Project-Id-Version: gst-plugins-bad 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-10-25 01:02+0100\n"
-"PO-Revision-Date: 2014-04-20 15:52+0300\n"
-"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
+"POT-Creation-Date: 2023-01-13 19:12+0000\n"
+"PO-Revision-Date: 2023-12-24 18:28+0000\n"
+"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Poedit-Language: Latvian\n"
-"X-Poedit-Country: LATVIA\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
 "2);\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "No URL set."
-msgstr ""
+msgstr "URL nav iestatīts."
 
 msgid "OpenCV failed to load template image"
-msgstr ""
+msgstr "OpenCV neizdevās ielādēt veidnes attēlu"
 
 msgid "Could not read title information for DVD."
-msgstr "Nevarēja nolasīt virsrakstu informāciju no DVD."
+msgstr "Nevar nolasīt DVD sadaļas informāciju."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Neizdevās atvērt DVD ierīci “%s”."
+msgstr "Neizdevās atvērt DVD ierīci '%s'."
 
 msgid "Failed to set PGC based seeking."
-msgstr "Neizdevās iestatīt uz PGC balstīto meklēšanu."
+msgstr "Neizdevās iestatīt PGC balstītu meklēšanu."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
-"Nevarēja nolasīt DVD. Iespējams, ka DVD ir šifrēts un DVD atšifrēšanas "
-"bibliotēka nav uzinstalēta."
+"Nevar nolasīt DVD. Tas var būt tāpēc, ka DVD ir šifrēts un nav instalēta DVD "
+"atšifrēšanas bibliotēka."
 
 msgid "Could not read DVD."
-msgstr "Nevarēja nolasīt DVD."
+msgstr "Nevar nolasīt DVD."
 
 msgid "This file contains no playable streams."
-msgstr "Šī datne nesatur atskaņojamas straumes."
+msgstr "Šajā failā nav atskaņojamu plūsmu."
 
-#, fuzzy
 msgid "Could not open sndfile stream for reading."
-msgstr "Nevarēja atvērt datni “%s” lasīšanai."
+msgstr "Nevarēja atvērt sndfile plūsmu lasīšanai."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
-"Izveidotajai datnei ir lielāks pirms-atskaņojuma laiks, kā straumes garums"
+"Izveidotā faila priekšatvēršanas laiks ir lielāks nekā tā plūsmas ilgums"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Trūkst elementa “%s” — pārbaudiet savu GStreamer instalāciju."
+msgstr "Trūkst elements '%s' - pārbaudiet GStreamer instalāciju."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
-"Datnes vieta ir iestatīta uz NULL, lūdzu, iestatiet derīgu datnes nosaukumu"
+"Faila atrašanās vieta ir iestatīta uz NULL, lūdzu, iestatiet to uz derīgu "
+"faila nosaukumu"
 
 msgid "Digitalzoom element couldn't be created"
-msgstr ""
+msgstr "Nebija iespējams izveidot Digitalzoom elementu"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr "Apakšattēla formāts netika konfigurēts pirms datu plūsmas"
+msgstr "Pirms datu plūsmas netika konfigurēts apakšattēla formāts"
 
 msgid "Failed to get fragment URL."
-msgstr "Neizdevās saņemt fragmenta URL."
+msgstr "Neizdevās iegūt fragmenta URL."
 
 #, c-format
 msgid "Couldn't download fragments"
 msgstr "Nevarēja lejupielādēt fragmentus"
 
 msgid "Internal data stream error."
-msgstr "Iekšējās datu plūsmas kļūda."
+msgstr "Iekšējā datu plūsmas kļūda."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Ierīce “%s” neeksistē."
+msgstr "Ierīce \"%s\" neeksistē."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Nevarēja atvērt priekšējo ierīci “%s”."
+msgstr "Nevar atvērt priekšējo ierīci \"%s\"."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Nevarēja saņemt iestatījumus no priekšējās ierīces “%s”."
+msgstr "Nevar iegūt iestatījumus no priekšējās ierīces \"%s\"."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot enumerate delivery systems from frontend device \"%s\"."
-msgstr "Nevarēja saņemt iestatījumus no priekšējās ierīces “%s”."
+msgstr ""
+"Nav iespējams uzskaitīt piegādes sistēmas no priekšējās ierīces \"%s\"."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Nevarēja atvērt datni “%s” lasīšanai."
+msgstr "Nevar atvērt failu \"%s\" lasīšanai."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find channel configuration file"
-msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
+msgstr "Nevar atrast kanāla konfigurācijas failu"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load channel configuration file: '%s'"
-msgstr "Nevarēja ielādēt DVB kanāla konfigurācijas datni: %s"
+msgstr "Nevar ielādēt kanāla konfigurācijas failu: '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find details for channel '%s'"
-msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
+msgstr "Nebija iespējams atrast informāciju par kanālu '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "No properties for channel '%s'"
-msgstr "Nevarēja atrast sīkāku informāciju par DVB kanālu %s"
+msgstr "Kanālam '%s' nav īpašības"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set properties for channel '%s'"
-msgstr "Neizdevās atvērt DVD ierīci “%s”."
+msgstr "Neizdevās iestatīt īpašības kanālam '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't find channel configuration file: '%s'"
-msgstr "Nevarēja atrast DVB kanāla konfigurācijas datni"
+msgstr "Nevar atrast kanāla konfigurācijas failu: '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Channel configuration file doesn't contain any channels"
-msgstr "DVB kanāla konfigurācijas datne nesatur nevienu kanālu"
-
-#~ msgid "Couldn't get the Manifest's URI"
-#~ msgstr "Nevarēja saņemt manifesta URI"
-
-#~ msgid "No file name specified for writing."
-#~ msgstr "Ierakstīšanai nav norādīts neviens datnes nosaukums."
-
-#, c-format
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Nav iespējams atvērt datni “%s” ierakstīšanai."
-
-#, c-format
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Nevarēja ierakstīt datnē “%s”."
-
-#~ msgid "Could not establish connection to sndio"
-#~ msgstr "Nevarēja izveidot savienojumu ar sndio"
-
-#~ msgid "Failed to query sndio capabilities"
-#~ msgstr "Neizdevās apvaicāt sndio iespējas"
-
-#~ msgid "Could not configure sndio"
-#~ msgstr "Nevarēja konfigurēt sndio"
-
-#~ msgid "Could not start sndio"
-#~ msgstr "Nevarēja palaist sndio"
-
-#~ msgid "Internal data flow error."
-#~ msgstr "Iekšēja datu plūsmas kļūda."
-
-#, c-format
-#~ msgid ""
-#~ "Given file name \"%s\" can't be converted to local file name encoding."
-#~ msgstr ""
-#~ "Doto datnes nosaukumu “%s” nevar pārveidot uz lokālo datnes nosaukuma "
-#~ "kodējumu."
-
-#~ msgid "Internal clock error."
-#~ msgstr "Iekšējā pulksteņa kļūda."
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci jaucēja kontroles vadīšanai. Šis "
-#~ "elements neatbalsta šo Open Sound System versiju."
-
-#~ msgid "Volume"
-#~ msgstr "Skaļums"
-
-#~ msgid "Master"
-#~ msgstr "Galvenais"
-
-#~ msgid "Front"
-#~ msgstr "Priekšpuse"
-
-#~ msgid "Rear"
-#~ msgstr "Aizmugure"
-
-#~ msgid "Headphones"
-#~ msgstr "Austiņas"
-
-#~ msgid "Center"
-#~ msgstr "Centrāls"
-
-#~ msgid "LFE"
-#~ msgstr "LFE"
-
-#~ msgid "Surround"
-#~ msgstr "Ieskaujošs"
-
-#~ msgid "Side"
-#~ msgstr "Puse"
-
-#~ msgid "Built-in Speaker"
-#~ msgstr "Iebūvētais skaļrunis"
-
-#~ msgid "AUX 1 Out"
-#~ msgstr "AUX 1 izeja"
-
-#~ msgid "AUX 2 Out"
-#~ msgstr "AUX 2 izeja"
-
-#~ msgid "AUX Out"
-#~ msgstr "AUX izeja"
-
-#~ msgid "Bass"
-#~ msgstr "Basi"
-
-#~ msgid "Treble"
-#~ msgstr "Diskants"
-
-#~ msgid "3D Depth"
-#~ msgstr "3D dziļums"
-
-#~ msgid "3D Center"
-#~ msgstr "3D centrēts"
-
-#~ msgid "3D Enhance"
-#~ msgstr "3D aptverošs"
-
-#~ msgid "Telephone"
-#~ msgstr "Telefons"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofons"
-
-#~ msgid "Line Out"
-#~ msgstr "Skaņas izeja"
-
-#~ msgid "Line In"
-#~ msgstr "Skaņas ieeja"
-
-#~ msgid "Internal CD"
-#~ msgstr "Iekšējais CD"
-
-#~ msgid "Video In"
-#~ msgstr "Video ieeja"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 ieeja"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 ieeja"
-
-#~ msgid "AUX In"
-#~ msgstr "AUX ieeja"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Record Gain"
-#~ msgstr "Ierakstīšanas pieaugums"
-
-#~ msgid "Output Gain"
-#~ msgstr "Izvades pieaugums"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Mikrofona pastiprinājums"
-
-#~ msgid "Loopback"
-#~ msgstr "Atkārtošana"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Diagnostika"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Basu pastiprinājums"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Atskaņošanas porti"
-
-#~ msgid "Input"
-#~ msgstr "Ievade"
-
-#~ msgid "Record Source"
-#~ msgstr "Ierakstīšanas avots"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Monitora avots"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Klaviatūras pīkstiens"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitors"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Simulēt stereo"
-
-#~ msgid "Stereo"
-#~ msgstr "Stereo"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Ieskaujoša skaņa"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Mikrofona pieaugums"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Skaļruņa avots"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Mikrofona avots"
-
-#~ msgid "Jack"
-#~ msgstr "Ligzda"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Centrālais / LFE"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Stereo jaukšana"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Mono jaukšana"
-
-#~ msgid "Input Mix"
-#~ msgstr "Ievades jaukšana"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF ieeja"
-
-#~ msgid "SPDIF Out"
-#~ msgstr "SPDIF izeja"
-
-#~ msgid "Microphone 1"
-#~ msgstr "Mikrofons 1"
-
-#~ msgid "Microphone 2"
-#~ msgstr "Mikrofons 2"
-
-#~ msgid "Digital Out"
-#~ msgstr "Digitālā izeja"
-
-#~ msgid "Digital In"
-#~ msgstr "Digitālā ieeja"
-
-#~ msgid "HDMI"
-#~ msgstr "HDMI"
-
-#~ msgid "Modem"
-#~ msgstr "Modems"
-
-#~ msgid "Handset"
-#~ msgstr "Papildierīce"
-
-#~ msgid "Other"
-#~ msgstr "Cits"
-
-#~ msgid "None"
-#~ msgstr "Nav"
-
-#~ msgid "On"
-#~ msgstr "Ieslēgts"
-
-#~ msgid "Off"
-#~ msgstr "Izslēgts"
-
-#~ msgid "Mute"
-#~ msgstr "Klusums"
-
-#~ msgid "Fast"
-#~ msgstr "Ātrs"
-
-#~ msgid "Very Low"
-#~ msgstr "Ļoti zems"
-
-#~ msgid "Low"
-#~ msgstr "Zems"
-
-#~ msgid "Medium"
-#~ msgstr "Vidējs"
-
-#~ msgid "High"
-#~ msgstr "Augsts"
-
-#~ msgid "Very High"
-#~ msgstr "Ļoti augsts"
-
-#~ msgid "Production"
-#~ msgstr "Izstrāde"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Priekšējā paneļa nikrofons"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Priekšējā paneļa skaņas ieeja"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Priekšējā paneļa austiņas"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Priekšējā paneļa skaņas izeja"
-
-#~ msgid "Green Connector"
-#~ msgstr "Zaļais savienotājs"
-
-#~ msgid "Pink Connector"
-#~ msgstr "Rozā savienotājs"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Zilais savienotājs"
-
-#~ msgid "White Connector"
-#~ msgstr "Baltais savienotājs"
-
-#~ msgid "Black Connector"
-#~ msgstr "Melnais savienotājs"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Pelēkais savienotājs"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Oranžais savienotājs"
-
-#~ msgid "Red Connector"
-#~ msgstr "Sarkanais savienotājs"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Dzeltenais savienotājs"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Zaļais priekšējā paneļa savienotājs"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Rozā priekšējā paneļa savienotājs"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Zilais priekšējā paneļa savienotājs"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Baltais priekšējā paneļa savienotājs"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Melnais priekšējā paneļa savienotājs"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Pelēkais priekšējā paneļa savienotājs"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Oranžais priekšējā paneļa savienotājs"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Sarkanais priekšējā paneļa savienotājs"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Dzeltenais priekšējā paneļa savienotājs"
-
-#~ msgid "Spread Output"
-#~ msgstr "Sadalīt izvadi"
-
-#~ msgid "Downmix"
-#~ msgstr "Pazeminātā jaukšana"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Virtuālā jaucēja ievads"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Virtuālā jaucēja izvads"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Virtuālā jaucēja kanāli"
-
-#~ msgid "%s Function"
-#~ msgstr "%s funkcija"
-
-#~ msgid "%s %d"
-#~ msgstr "%s %d"
-
-#~ msgid ""
-#~ "Could not open audio device for playback. Device is being used by another "
-#~ "application."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto "
-#~ "cita programma."
-
-#~ msgid ""
-#~ "Could not open audio device for playback. You don't have permission to "
-#~ "open the device."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci atskaņošanai. Jums nav nepieciešamās "
-#~ "atļaujas, lai atvērtu ierīci."
-
-#~ msgid "Could not open audio device for playback."
-#~ msgstr "Nav iespējams atvērt audio ierīci atskaņošanai."
-
-#~ msgid ""
-#~ "Could not open audio device for playback. This version of the Open Sound "
-#~ "System is not supported by this element."
-#~ msgstr ""
-#~ "Nav iespējams atvērt audio ierīci atskaņošanai. Šis elements neatbalsta "
-#~ "šo Open Sound System versiju."
-
-#~ msgid "Playback is not supported by this audio device."
-#~ msgstr "Šī audio ierīce neatbalsta atskaņošanu."
-
-#~ msgid "Audio playback error."
-#~ msgstr "Audio atskaņošanas kļūda."
-
-#~ msgid "Recording is not supported by this audio device."
-#~ msgstr "Šī audio ierīce neatbalsta ierakstīšanu."
-
-#~ msgid "Error recording from audio device."
-#~ msgstr "Radās kļūda ierakstot no audio ierīces."
-
-#~ msgid "PCM 1"
-#~ msgstr "PCM 1"
-
-#~ msgid "PCM 2"
-#~ msgstr "PCM 2"
-
-#~ msgid "PCM 3"
-#~ msgstr "PCM 3"
-
-#~ msgid "PCM 4"
-#~ msgstr "PCM 4"
-
-#~ msgid "Green connector function"
-#~ msgstr "Zaļā savienotāja funkcija"
-
-#~ msgid "Green front panel connector function"
-#~ msgstr "Zaļā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Pink connector function"
-#~ msgstr "Rozā savienotāja funkcija"
-
-#~ msgid "Pink front panel connector function"
-#~ msgstr "Rozā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Blue connector function"
-#~ msgstr "Zilā savienotāja funkcija"
-
-#~ msgid "Blue front panel connector function"
-#~ msgstr "Zilā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Orange connector function"
-#~ msgstr "Oranžā savienotāja funkcija"
-
-#~ msgid "Orange front panel connector function"
-#~ msgstr "Oranžā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Black connector function"
-#~ msgstr "Melnā savienotāja funkcija"
-
-#~ msgid "Black front panel connector function"
-#~ msgstr "Melnā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Gray connector function"
-#~ msgstr "Pelēkā savienotāja funkcija"
-
-#~ msgid "Gray front panel connector function"
-#~ msgstr "Pelēkā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "White connector function"
-#~ msgstr "Baltā savienotāja funkcija"
-
-#~ msgid "White front panel connector function"
-#~ msgstr "Baltā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Red connector function"
-#~ msgstr "Sarkanā savienotāja funkcija"
-
-#~ msgid "Red front panel connector function"
-#~ msgstr "Sarkanā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Yellow connector function"
-#~ msgstr "Dzeltenā savienotāja funkcija"
-
-#~ msgid "Yellow front panel connector function"
-#~ msgstr "Dzeltenā priekšējā paneļa savienotāja funkcija"
+msgstr "Kanālu konfigurācijas failā nav neviena kanāla"
