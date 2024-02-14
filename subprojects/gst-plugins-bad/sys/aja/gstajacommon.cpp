@@ -22,7 +22,7 @@
 #endif
 
 #include <fcntl.h>
-#include <semaphore.h>
+#include <sys/file.h>
 
 #include "gstajacommon.h"
 
@@ -713,8 +713,20 @@ GstAjaNtv2Device *gst_aja_ntv2_device_obtain(const gchar *device_identifier) {
     return NULL;
   }
 
+  gchar *path = g_strdup_printf("/dev/ajantv2%d", device->GetIndexNumber());
+  int fd = open(path, O_RDONLY);
+  if (fd < 0) {
+    GST_ERROR("Failed to open device node %s: %s", path, g_strerror(errno));
+    delete device;
+    g_free(path);
+    return NULL;
+  }
+
   GstAjaNtv2Device *dev = g_atomic_rc_box_new0(GstAjaNtv2Device);
   dev->device = device;
+  dev->fd = fd;
+
+  g_free(path);
 
   return dev;
 }
@@ -728,35 +740,18 @@ void gst_aja_ntv2_device_unref(GstAjaNtv2Device *device) {
     GstAjaNtv2Device *dev = (GstAjaNtv2Device *)data;
 
     delete dev->device;
+    close(dev->fd);
   });
 }
 
-static gpointer init_setup_mutex(gpointer data) {
-  sem_t *s = SEM_FAILED;
-  s = sem_open("/gstreamer-aja-sem", O_CREAT, S_IRUSR | S_IWUSR, 1);
-  if (s == SEM_FAILED) {
-    g_critical("Failed to create SHM semaphore for GStreamer AJA plugin: %s",
-               g_strerror(errno));
-  }
-  return s;
+GstAjaNtv2DeviceLocker::GstAjaNtv2DeviceLocker(GstAjaNtv2Device *device) {
+  _device = gst_aja_ntv2_device_ref(device);
+  flock(_device->fd, LOCK_EX);
 }
 
-static sem_t *get_setup_mutex(void) {
-  static GOnce once = G_ONCE_INIT;
-
-  g_once(&once, init_setup_mutex, NULL);
-
-  return (sem_t *)once.retval;
-}
-
-ShmMutexLocker::ShmMutexLocker() {
-  sem_t *s = get_setup_mutex();
-  if (s != SEM_FAILED) sem_wait(s);
-}
-
-ShmMutexLocker::~ShmMutexLocker() {
-  sem_t *s = get_setup_mutex();
-  if (s != SEM_FAILED) sem_post(s);
+GstAjaNtv2DeviceLocker::~GstAjaNtv2DeviceLocker() {
+  flock(_device->fd, LOCK_UN);
+  gst_aja_ntv2_device_unref(_device);
 }
 
 static guint gst_aja_device_get_frame_multiplier(GstAjaNtv2Device *device,

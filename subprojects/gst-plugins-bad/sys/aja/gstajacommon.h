@@ -56,6 +56,7 @@ GstAjaAudioMeta *gst_buffer_add_aja_audio_meta(GstBuffer *buffer,
 
 typedef struct {
   CNTV2Card *device;
+  int fd;
 } GstAjaNtv2Device;
 
 G_GNUC_INTERNAL
@@ -319,10 +320,12 @@ void gst_aja_common_init(void);
 
 G_END_DECLS
 
-class ShmMutexLocker {
+class GstAjaNtv2DeviceLocker {
  public:
-  ShmMutexLocker();
-  ~ShmMutexLocker();
+  GstAjaNtv2DeviceLocker(GstAjaNtv2Device *device);
+  ~GstAjaNtv2DeviceLocker();
+ private:
+  GstAjaNtv2Device *_device;
 };
 
 G_GNUC_INTERNAL

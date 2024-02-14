@@ -623,7 +623,7 @@ static gboolean gst_aja_src_close(GstAjaSrc *self) {
   return TRUE;
 }
 
-// Must be called with ShmMutexLocker
+// Must be called with GstAjaNtv2DeviceLocker
 static gboolean gst_aja_src_configure(GstAjaSrc *self) {
   GST_DEBUG_OBJECT(self, "Starting");
 
@@ -2301,7 +2301,7 @@ restart:
 
       // Make sure to globally lock here as the routing settings and others are
       // global shared state
-      ShmMutexLocker locker;
+      GstAjaNtv2DeviceLocker locker(self->device);
 
       if (!gst_aja_src_configure(self)) {
         g_mutex_lock(&self->queue_lock);
@@ -2788,7 +2788,7 @@ restart:
 out: {
   // Make sure to globally lock here as the routing settings and others are
   // global shared state
-  ShmMutexLocker locker;
+  GstAjaNtv2DeviceLocker locker(self->device);
 
   self->device->device->AutoCirculateStop(self->channel);
   self->device->device->UnsubscribeInputVerticalEvent(self->channel);

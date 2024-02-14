@@ -724,7 +724,7 @@ static gboolean gst_aja_sink_set_caps(GstBaseSink *bsink, GstCaps *caps) {
 
   // Make sure to globally lock here as the routing settings and others are
   // global shared state
-  ShmMutexLocker locker;
+  GstAjaNtv2DeviceLocker locker(self->device);
 
   if (!::NTV2DeviceCanDoVideoFormat(self->device_id, video_format)) {
     GST_ERROR_OBJECT(self, "Device does not support mode %d",
@@ -1931,7 +1931,7 @@ restart:
   {
     // Make sure to globally lock here as the routing settings and others are
     // global shared state
-    ShmMutexLocker locker;
+    GstAjaNtv2DeviceLocker locker(self->device);
 
     self->device->device->AutoCirculateStop(self->channel);
 
@@ -2238,7 +2238,7 @@ restart:
 out: {
   // Make sure to globally lock here as the routing settings and others are
   // global shared state
-  ShmMutexLocker locker;
+  GstAjaNtv2DeviceLocker locker(self->device);
 
   self->device->device->AutoCirculateStop(self->channel);
   self->device->device->UnsubscribeOutputVerticalEvent(self->channel);
