@@ -1,16 +1,16 @@
 # Swedish messages for gst-plugins-base.
-# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019, 2022 Free Software Foundation, Inc.
+# Copyright © 2004, 2005, 2007, 2008, 2009, 2014, 2015, 2016, 2017, 2019, 2022, 2023 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 # Daniel Nylander <po@danielnylander.se>, 2007, 2008, 2009.
-# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022.
+# Sebastian Rasmussen <sebras@gmail.com>, 2014, 2015, 2016, 2017, 2019, 2022, 2023.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2022-10-24 18:28+0200\n"
+"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"PO-Revision-Date: 2023-05-23 00:10+0200\n"
 "Last-Translator: Sebastian Rasmussen <sebras@gmail.com>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "Language: sv\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Poedit 3.1.1\n"
+"X-Generator: Poedit 3.2.2\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna enheten för uppspelning i monoläge."
@@ -151,16 +151,11 @@ msgstr "Den här strömtypen kan inte spelas upp än."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Ingen URI-hanterare implementerad för ”%s”."
 
-#, fuzzy
-msgid "Source element can't be prepared"
-msgstr "Källelementet är ogiltigt."
-
 msgid "Source element is invalid."
 msgstr "Källelementet är ogiltigt."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Källelementet är ogiltigt."
+msgstr "Källelementet har inga kontakter."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -663,17 +658,14 @@ msgstr "ändra uppspelningsriktning"
 msgid "enable/disable trick modes"
 msgstr "aktivera/inaktivera tricklägen"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "byt ljudspår"
+msgstr "byt till föregående/nästa ljudspår"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "byt videospår"
+msgstr "byt till föregående/nästa videospår"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "byt undertextspår"
+msgstr "byt till föregående/nästa undertextspår"
 
 msgid "seek to beginning"
 msgstr "sök till början"
@@ -705,7 +697,7 @@ msgid "Enable gapless playback"
 msgstr "Aktivera mellanrumslös uppspelning"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Aktivera omedelbara uri-ändringar (endast med playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Blanda spellista"
@@ -719,9 +711,6 @@ msgstr "Volym"
 msgid "Start position in seconds."
 msgstr "Startposition i sekunder."
 
-msgid "Enable accurate seeking"
-msgstr ""
-
 msgid "Playlist file containing input media files"
 msgstr "Fil med spellista innehållandes inkommande mediafiler"
 
@@ -733,11 +722,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Mata inte ut någonting (bortsett från fel)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(standardvärdet beror på miljövariabeln ”USE_PLAYBIN”)"
+msgstr ""
+"Använd playbin3-rörledning (standardvärdet beror på miljövariabeln "
+"”USE_PLAYBIN”)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -745,9 +735,6 @@ msgid ""
 msgstr ""
 "Fortsätt visa den sista ramen vid EOS tills avslutning eller "
 "ändringskommando för spellista (mellanrumslös hoppas över)"
-
-msgid "Do not print current position of pipeline"
-msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

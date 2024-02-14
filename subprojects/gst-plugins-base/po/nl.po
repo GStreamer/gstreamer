@@ -1,13 +1,13 @@
 # translation of gst-plugins-base.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2022.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2022, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.20.0\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2022-02-08 14:01+0100\n"
+"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"PO-Revision-Date: 2023-04-28 12:36+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -15,7 +15,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Generator: Lokalize 21.12.2\n"
+"X-Generator: Lokalize 23.04.0\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -151,16 +151,11 @@ msgstr "Deze stroom kan nog niet afgespeeld worden."
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Geen URI-handler geïmplementeerd voor \"%s\"."
 
-#, fuzzy
-msgid "Source element can't be prepared"
-msgstr "Bronelement is ongeldig."
-
 msgid "Source element is invalid."
 msgstr "Bronelement is ongeldig."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Bronelement is ongeldig."
+msgstr "Bronelement heeft geen opvullingen."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
@@ -673,17 +668,14 @@ msgstr "afspeelrichting wijzigen"
 msgid "enable/disable trick modes"
 msgstr "truc-modi in-/uitschakelen"
 
-#, fuzzy
 msgid "change to previous/next audio track"
-msgstr "audiotrack wijzigen"
+msgstr "naar vorige/volgende audiotrack wijzigen"
 
-#, fuzzy
 msgid "change to previous/next video track"
-msgstr "videotrack wijzigen"
+msgstr "naar vorige/volgende videotrack wijzigen"
 
-#, fuzzy
 msgid "change to previous/next subtitle track"
-msgstr "ondertiteltrack wijzigen"
+msgstr "naar vorige/volgende ondertitel wijzigen"
 
 msgid "seek to beginning"
 msgstr "naar begin zoeken"
@@ -715,7 +707,7 @@ msgid "Enable gapless playback"
 msgstr "Afspelen activeren zonder gaten"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Onmiddellijke wijzigingen in uri inschakelen (alleen met playbin3)"
 
 msgid "Shuffle playlist"
 msgstr "Afspeellijst in willekeurige volgorde"
@@ -729,9 +721,6 @@ msgstr "Volume"
 msgid "Start position in seconds."
 msgstr "Startpositie in seconden."
 
-msgid "Enable accurate seeking"
-msgstr ""
-
 msgid "Playlist file containing input media files"
 msgstr "Afspeellijstbestand met mediabestanden voor invoer"
 
@@ -742,11 +731,12 @@ msgstr ""
 msgid "Do not print any output (apart from errors)"
 msgstr "Geen uitvoer afdrukken (los van fouten)"
 
-#, fuzzy
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
-msgstr "(standaard varieert afhankelijk van omgevingsvariabele 'USE_PLAYBIN')"
+msgstr ""
+"Pijplijn playbin3 gebruiken (standaard varieert afhankelijk van "
+"omgevingsvariabele 'USE_PLAYBIN')"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
@@ -754,9 +744,6 @@ msgid ""
 msgstr ""
 "Het laatste frame bij EOS blijven tonen tot commando afsluiten of "
 "afspeellijst wijzigen (zonder gat wordt genegeerd)"
-
-msgid "Do not print current position of pipeline"
-msgstr ""
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."

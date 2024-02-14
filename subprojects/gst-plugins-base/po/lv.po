@@ -5,116 +5,115 @@
 # Rihards Priedītis <rprieditis@gmail.com>, 2010.
 # Rihards Priedītis <rprieditis@gmail.com>, 2011.
 # Rūdolfs Mazurs <rudolfs.mazurs@gmail.com>, 2014.
+# Rihards Priedītis <rprieditis@gmail.com>, 2023.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.2.1\n"
+"Project-Id-Version: gst-plugins-base 1.21.90\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-02-22 11:52+0000\n"
-"PO-Revision-Date: 2014-04-20 16:15+0300\n"
-"Last-Translator: Rihards Prieditis <rprieditis@gmail.com>\n"
+"POT-Creation-Date: 2023-01-13 19:10+0000\n"
+"PO-Revision-Date: 2023-12-24 19:32+0000\n"
+"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
 "Language: lv\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==0 || (n%100>=11 && n%100<=19) ? 0 : "
+"n%10==1 && n%100!=11 ? 1 : 2);\n"
 "X-Bugs: Report translation errors to the Language-Team address.\n"
-"X-Poedit-Language: Latvian\n"
-"X-Poedit-Country: LATVIA\n"
-"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n != 0 ? 1 : "
-"2);\n"
-"X-Generator: Lokalize 1.5\n"
+"X-Generator: Poedit 3.4.2\n"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "Nevarēja atvērt ierīci atskaņošanai mono režīmā."
+msgstr "Nevar atvērt ierīci atskaņošanai mono režīmā."
 
 msgid "Could not open device for playback in stereo mode."
-msgstr "Nevarēja atvērt ierīci atskaņošanai stereo režīmā."
+msgstr "Nevar atvērt ierīci atskaņošanai stereo režīmā."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Nevarēja atvērt ierīci atskaņošanai %d-kanālu režīmā."
+msgstr "Nevar atvērt ierīci atskaņošanai %d-kanāla režīmā."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Nevarēja atvērt audio ierīci atskaņošanai. Ierīci pašlaik izmanto cita "
-"lietotne."
+"Nevar atvērt audio ierīci atskaņošanai. Ierīci izmanto cita "
+"lietojumprogramma."
 
 msgid "Could not open audio device for playback."
-msgstr "Nevarēja atvērt audio ierīci atskaņošanai."
+msgstr "Nevar atvērt audio ierīci atskaņošanai."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr "Kļūda, izvadot audio ierīcē. Ierīce tika atvienota."
+msgstr "Kļūda izvadot uz audio ierīci. Ierīce ir atvienota."
 
 msgid "Could not open device for recording in mono mode."
-msgstr "Nevarēja atvērt ierīci ierakstīšanai mono režīmā."
+msgstr "Nevar atvērt ierīci ierakstīšanai mono režīmā."
 
 msgid "Could not open device for recording in stereo mode."
-msgstr "Nevarēja atvērt ierīci ierakstīšanai stereo režīmā."
+msgstr "Nevar atvērt ierīci ierakstīšanai stereo režīmā."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Nevarēja atvērt ierīci ierakstīšanai %d-kanālu režīmā"
+msgstr "Nevar atvērt ierīci ierakstīšanai %d-kanāla režīmā"
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
 "application."
 msgstr ""
-"Nevarēja atvērt audio ierīci ierakstīšanai. Ierīci pašlaik izmanto cita "
-"lietotne."
+"Nevar atvērt audio ierīci ierakstīšanai. Ierīci izmanto cita "
+"lietojumprogramma."
 
 msgid "Could not open audio device for recording."
-msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
+msgstr "Nevar atvērt audio ierīci ierakstīšanai."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr "Kļūda, rakstot audio ierīcē. Ierīce tika atvienota."
+msgstr "Kļūda ierakstīšanā no audio ierīces. Ierīce ir atvienota."
 
 msgid "Could not open CD device for reading."
-msgstr "Nevarēja atvērt CD ierīci lasīšanai."
+msgstr "Nevar atvērt CD ierīci lasīšanai."
 
 msgid "Could not seek CD."
-msgstr "Nevarēja meklēt pa CD."
+msgstr "Nevar meklēt CD."
 
 msgid "Could not read CD."
-msgstr "Nevarēja nolasīt CD."
+msgstr "Nevar nolasīt CD."
 
 msgid "Could not determine type of stream"
-msgstr "Nevarēja noteikt straumes tipu"
+msgstr "Nevar noteikt straumes veidu"
 
 msgid "This appears to be a text file"
-msgstr "Tiek atpazīts kā teksta datne"
+msgstr "Šķiet, ka tas ir teksta fails"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Trūkst elements “%s” - pārbaudiet savu GStreamer instalāciju."
+msgstr "Trūkst elements '%s' - pārbaudiet GStreamer instalāciju."
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Nevarēja izveidot “uridecodebin” elementu."
+msgstr "Nevar izveidot elementu \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
 msgstr "Trūkst gan autovideosink, gan %s elementi."
 
 msgid "The autovideosink element is missing."
-msgstr "Trūkst autovideosink elements."
+msgstr "Trūkst autovideosink elementi."
 
 #, c-format
 msgid "Configured videosink %s is not working."
-msgstr "Konfigurētais videosink %s nestrādā."
+msgstr "Konfigurētais videosink %s nedarbojas."
 
 #, c-format
 msgid "Both autovideosink and %s elements are not working."
 msgstr "Gan autovideosink, gan %s elementi nedarbojas."
 
 msgid "The autovideosink element is not working."
-msgstr "autovideosink elements nedarbojas."
+msgstr "Autovideosink elements nedarbojas."
 
 msgid "Custom text sink element is not usable."
-msgstr "Pielāgots teksta uztveršanas elements nav lietojams."
+msgstr "Pielāgotā teksta izlietnes elements nav izmantojams."
 
 msgid "No volume control found"
-msgstr "Netika atrasta neviena skaļuma vadīkla"
+msgstr "Skaļuma regulēšanas funkcija nav atrasta"
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are missing."
@@ -125,71 +124,66 @@ msgstr "Trūkst autoaudiosink elements."
 
 #, c-format
 msgid "Configured audiosink %s is not working."
-msgstr "Konfigurētais audiosink %s nestrādā."
+msgstr "Konfigurētais audiosink %s nedarbojas."
 
 #, c-format
 msgid "Both autoaudiosink and %s elements are not working."
-msgstr "Nedarbojas autoaudiosink un %s elementi."
+msgstr "Gan autoaudiosink, gan %s elementi nedarbojas."
 
 msgid "The autoaudiosink element is not working."
-msgstr "autoaudiosink elements nedarbojas."
+msgstr "Elements autoaudiosink nedarbojas."
 
 msgid "Can't play a text file without video or visualizations."
-msgstr "Nevar atskaņot teksta datni bez video vai vizualizācijas."
+msgstr "Nevar atskaņot teksta failu bez video vai vizualizācijām."
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Nav pieejams neviens atkodētājs datnes veidam “%s”."
+msgstr "Tipam \"%s\" nav pieejams dekodētājs."
 
 msgid "No URI specified to play from."
-msgstr "Nav norādīts neviens URI, no kā varētu atskaņot. "
+msgstr "Nav norādīts URI, no kura atskaņot."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "Nederīgs URI “%s”."
+msgstr "Nederīgs URI \"%s\"."
 
 msgid "This stream type cannot be played yet."
-msgstr "Šo plūsmu pagaidām nevar atskaņot."
+msgstr "Šo straumes veidu vēl nevar atskaņot."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Nav izstrādāts neviens “%s” URI apstrādātājs."
-
-#, fuzzy
-msgid "Source element can't be prepared"
-msgstr "Avota elements ir nederīgs."
+msgstr "URI apstrādātājs priekš \"%s\" nav ieviests."
 
 msgid "Source element is invalid."
 msgstr "Avota elements ir nederīgs."
 
-#, fuzzy
 msgid "Source element has no pads."
-msgstr "Avota elements ir nederīgs."
+msgstr "Avota elementam nav paliktņu."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Radās kļūda, nosūtot datus uz “%s:%d”."
+msgstr "Kļūda, nosūtot datus uz \"%s:%d\"."
 
 msgid "Can't record audio fast enough"
 msgstr "Nevar ierakstīt audio pietiekami ātri"
 
 msgid "This CD has no audio tracks"
-msgstr "Šajā CD nav neviena audio celiņa"
+msgstr "Šajā CD nav audio celiņu"
 
 msgid "failed to draw pattern"
-msgstr ""
+msgstr "neizdevās uzzīmēt šablonu"
 
 msgid "A GL error occurred"
-msgstr ""
+msgstr "Radās GL kļūda"
 
 msgid "format wasn't negotiated before get function"
-msgstr ""
+msgstr "formāts netika apspriests pirms get funkcijas"
 
 msgid "ID3 tag"
-msgstr "ID3 iezīme"
+msgstr "ID3 birka"
 
 msgid "APE tag"
-msgstr "APE iezīme"
+msgstr "APE birka"
 
 msgid "ICY internet radio"
 msgstr "ICY interneta radio"
@@ -198,29 +192,29 @@ msgid "Apple Lossless Audio (ALAC)"
 msgstr "Apple Lossless Audio (ALAC)"
 
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Free Lossless Audio Codec (FLAC)"
+msgstr "Bezmaksas bez zaudējumu audio kodekss (FLAC)"
 
 msgid "Lossless True Audio (TTA)"
-msgstr "Bezzudumu True Audio (TTA)"
+msgstr "True Audio bez zaudējumu audio (TTA)"
 
 msgid "Windows Media Speech"
-msgstr "Windows mediju runa"
+msgstr "Windows Media Runas"
 
 msgid "CYUV Lossless"
-msgstr "CYUV bezzudumu"
+msgstr "CYUV bez zaudējumu audio"
 
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
 
 msgid "Lossless MSZH"
-msgstr "Bezzudumu MSZH"
+msgstr "MSZH bez zaudējumu audio"
 
 msgid "Run-length encoding"
-msgstr "Secīgo atkārtojumu kodēšana"
+msgstr "Pakārtojuma garuma kodēšana"
 
 #. subtitle formats with static descriptions
 msgid "Timed Text"
-msgstr "Teksts laikā"
+msgstr "Laika Teksts"
 
 #. FIXME: add variant field to typefinder?
 msgid "Subtitle"
@@ -242,43 +236,42 @@ msgid "TMPlayer subtitle format"
 msgstr "TMPlayer subtitru formāts"
 
 msgid "CEA 608 Closed Caption"
-msgstr ""
+msgstr "CEA 608 Slēgtie Titri"
 
 msgid "CEA 708 Closed Caption"
-msgstr ""
+msgstr "CEA 708 Slēgtie Titri"
 
 msgid "Kate subtitle format"
 msgstr "Kate subtitru formāts"
 
-#, fuzzy
 msgid "WebVTT subtitle format"
-msgstr "Kate subtitru formāts"
+msgstr "WebVTT subtitru formāts"
 
 msgid "Uncompressed video"
 msgstr "Nesaspiests video"
 
 msgid "Uncompressed gray"
-msgstr "Neatspiests pelēks"
+msgstr "Nesaspiests pelēks"
 
 #, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Nesaspiests pakots YUV %s"
+msgstr "Nesaspiests iepakots YUV %s"
 
 #, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Nesaspiests pus-plaknes YUV %s"
+msgstr "Nesaspiests pusplanārs YUV %s"
 
 #, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Nesaspiests plaknes YUV %s"
+msgstr "Nesaspiests planārais YUV %s"
 
 #, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Nesaspiests paletizēts %d-bitu %s"
+msgstr "Nesaspiests %d-bit %s"
 
 #, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Nesaspiests %d-bitu %s"
+msgstr "Nesaspiests %d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -289,7 +282,7 @@ msgstr "Nesaspiests audio"
 
 #, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Jēls %d-bitu %s audio"
+msgstr "Neapstrādāts %d-bit %s audio"
 
 msgid "Audio CD source"
 msgstr "Audio CD avots"
@@ -301,7 +294,7 @@ msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Reālā laika straumēšanas protokola (RTSP) avots"
 
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Microsoft mediju servera (MMS) protokola avots"
+msgstr "Microsoft Media Server (MMS) protokola avots"
 
 #. TODO: find out how to add a comment for translators to the source code
 #. * (and tell them to make the first letter uppercase below if they move
@@ -358,7 +351,7 @@ msgid "Unknown source element"
 msgstr "Nezināms avota elements"
 
 msgid "Unknown sink element"
-msgstr "Nezināms uztveršanas elements"
+msgstr "Nezināms izlietnes elements"
 
 msgid "Unknown element"
 msgstr "Nezināms elements"
@@ -372,10 +365,10 @@ msgstr "Nezināms kodētāja elements"
 #. we should really never get here, but we better still return
 #. * something if we do
 msgid "Plugin or element of unknown type"
-msgstr "Nezināma veida spraudnis vai elements"
+msgstr "Nezināma tipa spraudnis vai elements"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Neizdevās nolasīt iezīmi: nepietiek datu"
+msgstr "Neizdevās nolasīt birku: nav pietiekami daudz datu"
 
 msgid "track ID"
 msgstr "celiņa ID"
@@ -402,19 +395,16 @@ msgid "MusicBrainz album artist ID"
 msgstr "MusicBrainz albuma izpildītāja ID"
 
 msgid "release group ID"
-msgstr ""
+msgstr "izlaiduma grupas ID"
 
-#, fuzzy
 msgid "MusicBrainz release group ID"
-msgstr "MusicBrainz celiņa ID"
+msgstr "MusicBrainz izlaiduma grupas ID"
 
-#, fuzzy
 msgid "release track ID"
-msgstr "celiņa ID"
+msgstr "izlaiduma celiņa ID"
 
-#, fuzzy
 msgid "MusicBrainz release track ID"
-msgstr "MusicBrainz celiņa ID"
+msgstr "MusicBrainz izlaiduma celiņa ID"
 
 msgid "track TRM ID"
 msgstr "celiņa TRM ID"
@@ -423,43 +413,41 @@ msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM ID"
 
 msgid "AcoustID ID"
-msgstr ""
+msgstr "AcoustID ID"
 
 msgid "AcoustID fingerprint (chromaprint)"
-msgstr ""
+msgstr "AcoustID pirkstu nospiedums (hromatogrāfija)"
 
 msgid "capturing shutter speed"
 msgstr "tveršanas slēdža ātrums"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Attēla tveršanā izmantotais slēdža ātrums sekundēs"
+msgstr "Attēla uzņemšanas laikā izmantotais slēdža ātrums sekundēs"
 
 msgid "capturing focal ratio"
-msgstr "tveršanas fokusa attiecība"
+msgstr "tveršanas fokusa koeficients"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Attēla tveršanā izmantotā fokusa attiecība (f-skaitlis)"
+msgstr "Attēla tveršanā izmantotā fokusa koeficients (f-skaitlis)"
 
 msgid "capturing focal length"
 msgstr "tveršanas fokusa attālums"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
+msgstr "Attēla uzņemšanai izmantotā objektīva fokusa attālums, mm"
 
-#, fuzzy
 msgid "capturing 35 mm equivalent focal length"
-msgstr "tveršanas fokusa attālums"
+msgstr "35 mm fokusa attāluma ekvivalenta uzņemšana"
 
-#, fuzzy
 msgid ""
 "35 mm equivalent focal length of the lens used capturing the image, in mm"
-msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
+msgstr "attēla uzņemšanai izmantotā objektīva 35 mm fokusa attālums (mm)"
 
 msgid "capturing digital zoom ratio"
-msgstr "tveršanas digitālais mērogs"
+msgstr "tveršanas digitālās tālummaiņas koeficients"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr "Attēla tveršanā izmantotais digitālais mērogs"
+msgstr "Attēla tveršanā izmantotais digitālais tālummaiņas koeficients"
 
 msgid "capturing iso speed"
 msgstr "tveršanas iso ātrums"
@@ -468,16 +456,16 @@ msgid "The ISO speed used when capturing an image"
 msgstr "Attēla tveršanā izmantotais ISO ātrums"
 
 msgid "capturing exposure program"
-msgstr "tveršanas eksponēšanas programma"
+msgstr "tveršanas ekspozīcijas programma"
 
 msgid "The exposure program used when capturing an image"
-msgstr "Attēla tveršanā izmantotā eksponēšanas programma"
+msgstr "Attēla tveršanā izmantotā ekspozīcijas programma"
 
 msgid "capturing exposure mode"
-msgstr "tveršanas eksponēšanas režīms"
+msgstr "tveršanas ekspozīcijas režīms"
 
 msgid "The exposure mode used when capturing an image"
-msgstr "Attēla tveršanā izmantotais eksponēšanas režīms"
+msgstr "Attēla tveršanā izmantotais ekspozīcijas režīms"
 
 msgid "capturing exposure compensation"
 msgstr "tveršanas ekspozīcijas kompensācija"
@@ -550,13 +538,13 @@ msgid "image horizontal ppi"
 msgstr "attēla horizontālais ppi"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Medija (attēls/video) domātā horizontālā pikseļu blīvums ppi"
+msgstr "Medija (attēls/video) paredzētais horizontālā pikseļu blīvums ppi"
 
 msgid "image vertical ppi"
 msgstr "attēla vertikālais ppi"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Medija (attēls/video) domātā vertikālā pikseļu blīvums ppi"
+msgstr "Medija (attēls/video) paredzētais vertikālā pikseļu blīvums ppi"
 
 msgid "ID3v2 frame"
 msgstr "ID3v2 kadrs"
@@ -571,132 +559,135 @@ msgid "Initial key in which the sound starts"
 msgstr "Sākotnējais kadrs, kurā sākas mūzika"
 
 msgid "Print version information and exit"
-msgstr "Parādīt informāciju par versiju un iziet"
+msgstr "Izdrukāt versijas informāciju un iziet"
 
 msgid ""
 "Don't exit after showing the initial device list, but wait for devices to "
 "added/removed."
 msgstr ""
+"Pēc sākotnējā ierīču saraksta parādīšanas neiziet, bet pagaidiet, kamēr "
+"ierīces tiks pievienotas/noņemtas."
 
 msgid "Include devices from hidden device providers."
-msgstr ""
+msgstr "Iekļaut ierīces no slēpto ierīču nodrošinātājiem."
 
 #, c-format
 msgid "Volume: %.0f%%"
-msgstr ""
+msgstr "Skaļums: %.0f%%"
 
 msgid "Mute: on"
-msgstr ""
+msgstr "Skaņa: izslēgta"
 
 msgid "Mute: off"
-msgstr ""
+msgstr "Skaņa: ieslēgta"
 
 msgid "Buffering..."
-msgstr "Buferē..."
+msgstr "Buferēšana..."
 
 msgid "Clock lost, selecting a new one\n"
-msgstr ""
+msgstr "Zudis pulkstenis, jauna pulksteņa izvēle\n"
 
 msgid "Reached end of play list."
-msgstr ""
+msgstr "Sasniegts atskaņošanas saraksta beigas."
 
 msgid "Paused"
-msgstr ""
+msgstr "Apturēts"
 
 #, c-format
 msgid "Now playing %s\n"
-msgstr ""
+msgstr "Tagad atskaņo %s\n"
 
 #, c-format
 msgid "About to finish, preparing next title: %s"
-msgstr ""
+msgstr "Tuvojas nobeigumam, gatavo nākamo sadaļu: %s"
 
 #, c-format
 msgid "Playback rate: %.2f"
-msgstr ""
+msgstr "Atskaņošanas ātrums: %.2f"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not change playback rate to %.2f"
-msgstr "Nevarēja atvērt ierīci atskaņošanai stereo režīmā."
+msgstr "Nevar mainīt atskaņošanas ātrumu uz %.2f"
 
 msgid "space"
-msgstr ""
+msgstr "attālums"
 
 msgid "pause/unpause"
-msgstr ""
+msgstr "pauze/pauzes pārtraukšana"
 
 msgid "q or ESC"
-msgstr ""
+msgstr "q vai ESC"
 
 msgid "quit"
-msgstr ""
+msgstr "iziet"
 
 msgid "> or n"
-msgstr ""
+msgstr "> vai n"
 
 msgid "play next"
-msgstr ""
+msgstr "atskaņot nākamo"
 
 msgid "< or b"
-msgstr ""
+msgstr "< vai b"
 
 msgid "play previous"
-msgstr ""
+msgstr "atskaņot iepriekšējo"
 
 msgid "seek forward"
-msgstr ""
+msgstr "virzīties uz priekšu"
 
 msgid "seek backward"
-msgstr ""
+msgstr "virzīties atpakaļ"
 
 msgid "volume up"
-msgstr ""
+msgstr "palielināt skaļumu"
 
 msgid "volume down"
-msgstr ""
+msgstr "samazināt skaļumu"
 
 msgid "toggle audio mute on/off"
-msgstr ""
+msgstr "ieslēgt/izslēgt skaņas izslēgšanu"
 
 msgid "increase playback rate"
-msgstr ""
+msgstr "palielināt atskaņošanas ātrumu"
 
 msgid "decrease playback rate"
-msgstr ""
+msgstr "samazināt atskaņošanas ātrumu"
 
 msgid "change playback direction"
-msgstr ""
+msgstr "mainīt atskaņošanas virzienu"
 
 msgid "enable/disable trick modes"
-msgstr ""
+msgstr "iespējot/izslēgt triku režīmus"
 
 msgid "change to previous/next audio track"
-msgstr ""
+msgstr "pāreja uz iepriekšējo/nākamo audio celiņu"
 
 msgid "change to previous/next video track"
-msgstr ""
+msgstr "pāreja uz iepriekšējo/nākamo video celiņu"
 
 msgid "change to previous/next subtitle track"
-msgstr ""
+msgstr "pārslēgties uz iepriekšējo/nākamo subtitru celiņu"
 
 msgid "seek to beginning"
-msgstr ""
+msgstr "doties uz sākumu"
 
 msgid "show keyboard shortcuts"
-msgstr ""
+msgstr "rādīt tastatūras īsceļus"
 
 msgid "Interactive mode - keyboard controls:"
-msgstr ""
+msgstr "Interaktīvais režīms - tastatūras vadība:"
 
 #, c-format
 msgid "Use Windows high-resolution clock, precision: %u ms\n"
 msgstr ""
+"Izmantojiet Windows augstas izšķirtspējas pulksteni, precizitāte: %u ms\n"
 
 msgid "Output status information and property notifications"
-msgstr ""
+msgstr "Izvades statusa informācija un īpašību paziņojumi"
 
 msgid "Control playback behaviour setting playbin 'flags' property"
-msgstr ""
+msgstr "Atskaņošanas režīma kontrole, iestatot playbin 'flags' īpašību"
 
 msgid "Video sink to use (default is autovideosink)"
 msgstr "Izmantojamais video uztvērējs (pēc noklusējuma autovideosink)"
@@ -705,213 +696,53 @@ msgid "Audio sink to use (default is autoaudiosink)"
 msgstr "Izmantojamais audio uztvērējs (pēc noklusējuma autoaudiosink)"
 
 msgid "Enable gapless playback"
-msgstr "Aktivēt atskaņošanu bez pauzēm"
+msgstr "Iespējot atskaņošanu bez atstarpēm"
 
 msgid "Enable instantaneous uri changes (only with playbin3)"
-msgstr ""
+msgstr "Ieslēgt tūlītējas uri izmaiņas (tikai ar playbin3)"
 
 msgid "Shuffle playlist"
-msgstr ""
+msgstr "Jaukt atskaņošanas sarakstu"
 
 msgid "Disable interactive control via the keyboard"
-msgstr ""
+msgstr "Interaktīvās vadības atspējošana, izmantojot tastatūru"
 
 msgid "Volume"
-msgstr ""
+msgstr "Skaļums"
 
 msgid "Start position in seconds."
-msgstr ""
-
-msgid "Enable accurate seeking"
-msgstr ""
+msgstr "Sākuma pozīcija sekundēs."
 
 msgid "Playlist file containing input media files"
-msgstr ""
+msgstr "Atskaņošanas saraksta fails, kas satur ievades multivides failus"
 
 msgid "Use the experimental instant-rate-change flag when changing rate"
 msgstr ""
+"Izmantojot eksperimentālo tūlītējas ātruma maiņas karodziņu, mainot ātrumu"
 
 msgid "Do not print any output (apart from errors)"
-msgstr ""
+msgstr "Nedrukāt nekādu izvades failu (izņemot kļūdas)"
 
 msgid ""
 "Use playbin3 pipeline (default varies depending on 'USE_PLAYBIN' env "
 "variable)"
 msgstr ""
+"Izmantot playbin3 cauruļvadu (noklusējuma iestatījumi mainās atkarībā no "
+"'USE_PLAYBIN' env mainīgā)"
 
 msgid ""
 "Keep showing the last frame on EOS until quit or playlist change command "
 "(gapless is ignored)"
 msgstr ""
-
-msgid "Do not print current position of pipeline"
-msgstr ""
+"Turpināt rādīt pēdējo kadru uz EOS, līdz tiek iziets vai mainīts "
+"atskaņošanas saraksta komanda (atskaņošana bez atstarpēm tiek ignorēts)"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr "Lietojums: %s DATNE1|URI1 [DATNE2|URI2] [DATNE3|URI3] ..."
+msgstr "Lietošana: %s FAILS1|URI1 [FAILS2|URI2] [FAILS3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
-msgstr "Jums jānorāda vismaz viens datnes nosaukums vai atskaņojamais URI."
+msgstr "Lai atskaņotu, ir jānorāda vismaz viens faila nosaukums vai URI."
 
 msgid "Press 'k' to see a list of keyboard shortcuts.\n"
-msgstr ""
-
-#~ msgid "Internal data stream error."
-#~ msgstr "Iekšējās datu plūsmas kļūda."
-
-#, c-format
-#~ msgid "A %s plugin is required to play this stream, but not installed."
-#~ msgstr ""
-#~ "Nepieciešamas %s spraudnis, lai atskaņotu šo plūsmu, bet tas nav "
-#~ "instalēts."
-
-#~ msgid "Master"
-#~ msgstr "Galvenais"
-
-#~ msgid "Bass"
-#~ msgstr "Bass"
-
-#~ msgid "Treble"
-#~ msgstr "Diskants"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Synth"
-#~ msgstr "Sintēze"
-
-#~ msgid "Line-in"
-#~ msgstr "Line-in"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofons"
-
-#~ msgid "PC Speaker"
-#~ msgstr "Datora skaļrunis"
-
-#~ msgid "Playback"
-#~ msgstr "Atskaņošana"
-
-#~ msgid "Capture"
-#~ msgstr "Tveršana"
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Nevarēja atvērt vfs failu \"%s\" rakstīšanai: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Nav norādīts faila nosaukums"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Nevarēja aizvērt vfs failu \"%s\"."
-
-#~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "Kļūda rakstot failā \"%s\"."
-
-#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-#~ msgstr "Nederīgs subtitru URI \"%s\", subtitri izslēgti."
-
-#~ msgid "RTSP streams cannot be played yet."
-#~ msgstr "RTSP plūsmas pagaidām nevar tikt atskaņotas."
-
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "Tika pamanīta tikai subtitru plūsma. Vai nu jūs ielādējat subtitru failu "
-#~ "vai cita veida teksta failu, vai arī mediju fails netika atpazīts."
-
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Jums nav instalēta atkodētāja, lai apietos ar šo failu. Jums iespējams "
-#~ "vajadzētu instalēt nepieciešamos spraudņus."
-
-#~ msgid "This is not a media file"
-#~ msgstr "Šis nav mediju fails"
-
-#~ msgid "A subtitle stream was detected, but no video stream."
-#~ msgstr "Tika pamanīta subtitru plūsma, bet ne video plūsma."
-
-#~ msgid "Both autovideosink and xvimagesink elements are missing."
-#~ msgstr "Trūkst gan autovideosink, gan xvimagesink elementi."
-
-#~ msgid "Both autoaudiosink and alsasink elements are missing."
-#~ msgstr "Trūkst gan autoaudiosink, gan alsasink elementi."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Radās kļūda nosūtot gdb galvenas datus uz \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Savienojums ar %s:%d noraidīts."
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Nesaspiesta plakne YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Nesaspiests pakots YUP 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Nesaspiests pakots YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Nesaspiests pakots YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Nesaspiests pakots YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Nesaspiesta plakne YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Nesaspiesta plakne YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Nesaspiests melnbaltais Y-plakne"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Jēls PCM audio"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Jēls %d-bitu plūstošā punkta audio"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Jēls plūstošā punkta audio"
-
-#~ msgid "No device specified."
-#~ msgstr "Nav norādīta ierīce."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Ierīce \"%s\" neeksistē."
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "Ierīce \"%s\" jau tiek izmantota."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Nevarēja atvērt ierīci \"%s\" lasīšanai vai rakstīšanai."
-
-#~ msgid "Could not create \"decodebin2\" element."
-#~ msgstr "Nav iespējams izveidot \"decodebin2\" elementu."
-
-#~ msgid "Could not create \"queue2\" element."
-#~ msgstr "Nav iespējams izveidot  \"queue2\" elementu."
-
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "Nav iespējams izveidot \"typefind\" elementu."
-
-#~ msgid "Can't play a text subtitles and subpictures."
-#~ msgstr "Nevar atskaņot teksta subtitrus un subattēlus."
-
-#~ msgid "No file name specified."
-#~ msgstr "Nav norādīts faila nosaukums."
-
-#~ msgid "Could not open file \"%s\" for reading."
-#~ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
+msgstr "Nospiediet \"k\", lai skatītu tastatūras īsceļu sarakstu.\n"
