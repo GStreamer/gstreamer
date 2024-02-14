@@ -200,10 +200,6 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
 
   if (use_playbin3) {
     play->is_playbin3 = TRUE;
-  } else {
-    const gchar *env = g_getenv ("USE_PLAYBIN3");
-    if (env && g_str_has_prefix (env, "1"))
-      play->is_playbin3 = TRUE;
   }
 
   g_mutex_init (&play->selection_lock);
@@ -1613,7 +1609,8 @@ real_main (int argc, char **argv)
   GError *err = NULL;
   GOptionContext *ctx;
   gchar *playlist_file = NULL;
-  gboolean use_playbin3 = FALSE;
+  gboolean use_playbin3 = TRUE;
+  gboolean use_playbin2 = FALSE;
   gboolean no_position = FALSE;
 #ifdef HAVE_WINMM
   guint winmm_timer_resolution = 0;
@@ -1653,9 +1650,11 @@ real_main (int argc, char **argv)
         NULL},
     {"quiet", 'q', 0, G_OPTION_ARG_NONE, &quiet,
         N_("Do not print any output (apart from errors)"), NULL},
-    {"use-playbin3", 0, 0, G_OPTION_ARG_NONE, &use_playbin3,
-          N_("Use playbin3 pipeline "
-              "(default varies depending on 'USE_PLAYBIN' env variable)"),
+    {"use-playbin3", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &use_playbin3,
+          N_("Use playbin3 pipeline (default)"),
+        NULL},
+    {"use-playbin2", 0, 0, G_OPTION_ARG_NONE, &use_playbin2,
+          N_("Use playbin2 pipeline"),
         NULL},
     {"wait-on-eos", 0, 0, G_OPTION_ARG_NONE, &wait_on_eos,
           N_
@@ -1701,6 +1700,9 @@ real_main (int argc, char **argv)
 #ifdef G_OS_WIN32
   argc = g_strv_length (argv);
 #endif
+
+  if (use_playbin2)
+    use_playbin3 = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (play_debug, "play", 0, "gst-play");
 
