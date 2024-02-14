@@ -500,13 +500,12 @@ gst_base_auto_convert_add_element (GstBaseAutoConvert * self,
 
   g_assert (filter_info->subbin);
 
-
-  element = filter_info->subbin;
+  element = gst_object_ref (filter_info->subbin);
   GST_DEBUG_OBJECT (self, "Adding element %s to the baseautoconvert bin",
       filter_info->name);
 
   pads = internal_pads_new (self, GST_OBJECT_NAME (element));
-  g_hash_table_insert (self->elements, element, pads);
+  g_hash_table_insert (self->elements, element, internal_pads_ref (pads));
 
   gst_pad_set_chain_function (pads->sink,
       GST_DEBUG_FUNCPTR (gst_base_auto_convert_internal_sink_chain));
@@ -522,7 +521,9 @@ gst_base_auto_convert_add_element (GstBaseAutoConvert * self,
   gst_pad_set_query_function (pads->src,
       GST_DEBUG_FUNCPTR (gst_base_auto_convert_internal_src_query));
 
-  return gst_object_ref (element);
+  internal_pads_unref (pads);
+
+  return element;
 }
 
 static GstElement *
