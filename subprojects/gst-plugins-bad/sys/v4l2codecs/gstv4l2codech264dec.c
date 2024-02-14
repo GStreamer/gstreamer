@@ -367,10 +367,10 @@ gst_v4l2_codec_h264_dec_negotiate (GstVideoDecoder * decoder)
   }
   gst_caps_unref (caps);
 
+done:
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
 
-done:
   self->output_state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
       self->vinfo.finfo->format, self->display_width,
