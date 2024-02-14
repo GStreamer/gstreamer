@@ -1,0 +1,1404 @@
+# Translation for gstreamer messages to Latvian
+# This file is distributed under the same license as the gstreamer package.
+# Rihards Priedītis <rprieditis@gmail>, 2023.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: gstreamer-1.21.90\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2023-01-13 19:09+0000\n"
+"PO-Revision-Date: 2023-12-25 17:53+0000\n"
+"Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
+"Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
+"Language: lv\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==0 || (n%100>=11 && n%100<=19) ? 0 : "
+"n%10==1 && n%100!=11 ? 1 : 2);\n"
+"X-Bugs: Report translation errors to the Language-Team address.\n"
+"X-Generator: Poedit 3.4.2\n"
+
+msgid "Print the GStreamer version"
+msgstr "Izdrukāt GStreamer versiju"
+
+msgid "Make all warnings fatal"
+msgstr "Padarīt visus brīdinājumus fatālus"
+
+msgid "Print available debug categories and exit"
+msgstr "Izdrukāt pieejamās atkļūdošanas kategorijas un iziet"
+
+msgid ""
+"Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
+msgstr ""
+"Atkļūdošanas līmenis pēc noklusējuma no 1 (tikai kļūdas) līdz 9 (jebkas) vai "
+"0, bez izvades"
+
+msgid "LEVEL"
+msgstr "LĪMENIS"
+
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Ar komatu atdalīts kategoriju_nosaukums:līmenis pāru saraksts, lai iestatītu "
+"konkrētus līmeņus atsevišķām kategorijām. Piemērs: GST_AUTOPLUG:5,"
+"GST_ELEMENT_*:3"
+
+msgid "LIST"
+msgstr "SARAKSTS"
+
+msgid "Disable colored debugging output"
+msgstr "Atslēgt krāsaino atkļūdošanas izvadi"
+
+msgid ""
+"Changes coloring mode of the debug log. Possible modes: off, on, disable, "
+"auto, unix"
+msgstr ""
+"Maina atkļūdošanas žurnāla krāsošanas režīmu. Iespējamie režīmi: off, on, "
+"disable, auto, unix"
+
+msgid "Disable debugging"
+msgstr "Deaktivizēt atkļūdošanu"
+
+msgid "Enable verbose plugin loading diagnostics"
+msgstr "Ieslēgt detalizētu spraudņa ielādes diagnostiku"
+
+msgid "Colon-separated paths containing plugins"
+msgstr "Ar kolu atdalīti spraudņu atrašanās direktoriju ceļi"
+
+msgid "PATHS"
+msgstr "CEĻI"
+
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Ar komatu atdalīts to spraudņu saraksts, kurus paredzēts ielādēt papildus "
+"vides mainīgajā GST_PLUGIN_PATH saglabātajam sarakstam"
+
+msgid "PLUGINS"
+msgstr "SPRAUDŅI"
+
+msgid "Disable trapping of segmentation faults during plugin loading"
+msgstr "Segmentācijas kļūdu izķeršanas atspējošana spraudņa ielādēšanas laikā"
+
+msgid "Disable updating the registry"
+msgstr "Atslēgt reģistra atjaunināšanu"
+
+msgid "Disable spawning a helper process while scanning the registry"
+msgstr "Atspējot palīgprocesa palaišanu, kamēr tiek skenēts reģistrs"
+
+msgid "GStreamer Options"
+msgstr "GStreamer Opcijas"
+
+msgid "Show GStreamer Options"
+msgstr "Rādīt GStreamer Opcijas"
+
+#, c-format
+msgid "Unknown option"
+msgstr "Nezināma opcija"
+
+msgid "GStreamer encountered a general core library error."
+msgstr "GStreamer sastapās ar vispārēju kodola bibliotēkas kļūdu."
+
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"GStreamer izstrādātāji bija pārāk slinki, lai šai kļūdai piešķirtu kļūdas "
+"kodu."
+
+msgid "Internal GStreamer error: code not implemented."
+msgstr "GStreamer iekšējā kļūda: kods nav ieviests."
+
+msgid ""
+"GStreamer error: state change failed and some element failed to post a "
+"proper error message with the reason for the failure."
+msgstr ""
+"GStreamer kļūda: stāvokļa maiņa neizdevās, un kāds elements nespēja nosūtīt "
+"pienācīgu kļūdas ziņojumu ar kļūdas iemeslu."
+
+msgid "Internal GStreamer error: pad problem."
+msgstr "Iekšējā GStreamer kļūda: savienotnes problēma."
+
+msgid "Internal GStreamer error: thread problem."
+msgstr "Iekšējā GStreamer kļūda: pavediena problēma."
+
+msgid "GStreamer error: negotiation problem."
+msgstr "GStreamer kļūda: pārrunu problēma."
+
+msgid "Internal GStreamer error: event problem."
+msgstr "GStreamer iekšējā kļūda: notikuma problēma."
+
+msgid "Internal GStreamer error: seek problem."
+msgstr "GStreamer iekšējā kļūda: meklēšanas problēma."
+
+msgid "Internal GStreamer error: caps problem."
+msgstr "GStreamer iekšējā kļūda: spēju problēma."
+
+msgid "Internal GStreamer error: tag problem."
+msgstr "GStreamer iekšējā kļūda: birku problēma."
+
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr "Jūsu GStreamer instalācijai trūkst spraudnis."
+
+msgid "GStreamer error: clock problem."
+msgstr "GStreamer kļūda: pulksteņa problēma."
+
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Šī programma mēģina izmantot GStreamer funkcionalitāti, kas ir atspējota."
+
+msgid "GStreamer encountered a general supporting library error."
+msgstr "GStreamer sastapās ar vispārēju atbalsta bibliotēkas kļūdu."
+
+msgid "Could not initialize supporting library."
+msgstr "Nevarēja inicializēt atbalsta bibliotēku."
+
+msgid "Could not close supporting library."
+msgstr "Nevarēja aizvērt atbalsta bibliotēku."
+
+msgid "Could not configure supporting library."
+msgstr "Nav izdevies konfigurēt atbalsta bibliotēku."
+
+msgid "Encoding error."
+msgstr "Kodēšanas kļūda."
+
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer saskārās ar vispārēju resursu kļūdu."
+
+msgid "Resource not found."
+msgstr "Resurss nav atrasts."
+
+msgid "Resource busy or not available."
+msgstr "Resurss ir aizņemts vai nav pieejams."
+
+msgid "Could not open resource for reading."
+msgstr "Nevar atvērt resursu lasīšanai."
+
+msgid "Could not open resource for writing."
+msgstr "Nevar atvērt resursu rakstīšanai."
+
+msgid "Could not open resource for reading and writing."
+msgstr "Nevarēja atvērt resursu lasīšanai un rakstīšanai."
+
+msgid "Could not close resource."
+msgstr "Nevarēja aizvērt resursu."
+
+msgid "Could not read from resource."
+msgstr "Nevar nolasīt no resursa."
+
+msgid "Could not write to resource."
+msgstr "Nevar rakstīt uz resursu."
+
+msgid "Could not perform seek on resource."
+msgstr "Nevarēja veikt meklēšanu uz resursa."
+
+msgid "Could not synchronize on resource."
+msgstr "Nebija iespējams sinhronizēt resursu."
+
+msgid "Could not get/set settings from/on resource."
+msgstr "Nebija iespējams iegūt/uzstādīt iestatījumus no/uz resursa."
+
+msgid "No space left on the resource."
+msgstr "Resursā vairs nav vietas."
+
+msgid "Not authorized to access resource."
+msgstr "Nav atļauts piekļūt resursam."
+
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer sastapās ar vispārēju plūsmas kļūdu."
+
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr "Elements neimplementē šīs plūsmas apstrādi. Lūdzu, ziņojiet par kļūdu."
+
+msgid "Could not determine type of stream."
+msgstr "Nevar noteikt straumes veidu."
+
+msgid "The stream is of a different type than handled by this element."
+msgstr "Elements nevar strādāt ar straumi, jo tā ir cita tipa."
+
+msgid "There is no codec present that can handle the stream's type."
+msgstr "Nav neviena kodeka, kas varētu apstrādāt plūsmas tipu."
+
+msgid "Could not decode stream."
+msgstr "Nevar dekodēt plūsmu."
+
+msgid "Could not encode stream."
+msgstr "Nevarēja kodēt straumi."
+
+msgid "Could not demultiplex stream."
+msgstr "Nevarēja demultipleksēt plūsmu."
+
+msgid "Could not multiplex stream."
+msgstr "Nevarēja multipleksēt straumi."
+
+msgid "The stream is in the wrong format."
+msgstr "Straume ir nepareizā formātā."
+
+msgid "The stream is encrypted and decryption is not supported."
+msgstr "Straume ir šifrēta, un atšifrēšana netiek atbalstīta."
+
+msgid ""
+"The stream is encrypted and can't be decrypted because no suitable key has "
+"been supplied."
+msgstr ""
+"Straume ir šifrēta, un to nevar atšifrēt, jo nav izsniegta piemērota atslēga."
+
+#, c-format
+msgid "No error message for domain %s."
+msgstr "Domēnam %s nav kļūdas ziņojuma."
+
+#, c-format
+msgid "No standard error message for domain %s and code %d."
+msgstr "Domēnam %s un kodam %d nav standarta kļūdas ziņojuma."
+
+msgid "Selected clock cannot be used in pipeline."
+msgstr "Izvēlēto pulksteni nevar izmantot cauruļvadā."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Kļūda reģistra kešatmiņas ierakstīšanā %s: %s"
+
+msgid "title"
+msgstr "virsraksts"
+
+msgid "commonly used title"
+msgstr "bieži lietots nosaukums"
+
+msgid "title sortname"
+msgstr "virsraksts šķirotājvārds"
+
+msgid "commonly used title for sorting purposes"
+msgstr "bieži lietots nosaukums šķirošanas nolūkos"
+
+msgid "artist"
+msgstr "mākslinieks"
+
+msgid "person(s) responsible for the recording"
+msgstr "par ierakstu atbildīgā(-ās) persona(-as)"
+
+msgid "artist sortname"
+msgstr "mākslinieka šķirotājvārds"
+
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr ""
+"persona(-as), kas atbildīga(-as) par ieraksta veikšanu šķirošanas nolūkos"
+
+msgid "album"
+msgstr "albums"
+
+msgid "album containing this data"
+msgstr "albums, kurā atrodas šie dati"
+
+msgid "album sortname"
+msgstr "albuma šķirotājvārds"
+
+msgid "album containing this data for sorting purposes"
+msgstr "albums, kurā ir šie dati šķirošanas vajadzībām"
+
+msgid "album artist"
+msgstr "albuma mākslinieks"
+
+msgid "The artist of the entire album, as it should be displayed"
+msgstr "Visa albuma izpildītājs, kā tas būtu jāattēlo"
+
+msgid "album artist sortname"
+msgstr "albuma mākslinieka šķirotājvārds"
+
+msgid "The artist of the entire album, as it should be sorted"
+msgstr "Visa albuma mākslinieks, kā tas būtu jāšķiro"
+
+msgid "date"
+msgstr "datums"
+
+msgid "date the data was created (as a GDate structure)"
+msgstr "datu izveides datums (kā GDate struktūra)"
+
+msgid "datetime"
+msgstr "datuma un laiks"
+
+msgid "date and time the data was created (as a GstDateTime structure)"
+msgstr "datu izveidošanas datums un laiks (kā GstDateTime struktūra)"
+
+msgid "genre"
+msgstr "žanrs"
+
+msgid "genre this data belongs to"
+msgstr "žanrs šie dati pieder"
+
+msgid "comment"
+msgstr "komentārs"
+
+msgid "free text commenting the data"
+msgstr "brīvā teksta komentāri par datiem"
+
+msgid "extended comment"
+msgstr "paplašināts komentārs"
+
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr ""
+"brīvā teksta komentārs par datiem atslēga=vērtība vai atslēga[lv]=komentārs "
+"formā"
+
+msgid "track number"
+msgstr "celiņa numurs"
+
+msgid "track number inside a collection"
+msgstr "celiņa numurs kolekcijā"
+
+msgid "track count"
+msgstr "celiņu skaits"
+
+msgid "count of tracks inside collection this track belongs to"
+msgstr "celiņu skaits kolekcijā, kurai pieder šis celiņš"
+
+msgid "disc number"
+msgstr "diska numurs"
+
+msgid "disc number inside a collection"
+msgstr "diska numurs kolekcijā"
+
+msgid "disc count"
+msgstr "disku skaits"
+
+msgid "count of discs inside collection this disc belongs to"
+msgstr "disku skaits kolekcijā, kurai pieder šis disks"
+
+msgid "location"
+msgstr "atrašanās vieta"
+
+msgid ""
+"Origin of media as a URI (location, where the original of the file or stream "
+"is hosted)"
+msgstr ""
+"Multivides izcelsme kā URI (atrašanās vieta, kur ir izvietots faila vai "
+"plūsmas oriģināls)"
+
+msgid "homepage"
+msgstr "mājas lapa"
+
+msgid "Homepage for this media (i.e. artist or movie homepage)"
+msgstr ""
+"Šī multivides līdzekļa mājaslapa (t. i., mākslinieka vai filmas mājaslapa)"
+
+msgid "description"
+msgstr "apraksts"
+
+msgid "short text describing the content of the data"
+msgstr "īss teksts, kas apraksta datu saturu"
+
+msgid "version"
+msgstr "versija"
+
+msgid "version of this data"
+msgstr "šo datu versija"
+
+msgid "ISRC"
+msgstr "ISRC"
+
+msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
+msgstr ""
+"Starptautiskais standarta ieraksta kods - skatīt http://www.ifpi.org/isrc/"
+
+msgid "organization"
+msgstr "organizācija"
+
+msgid "copyright"
+msgstr "autortiesības"
+
+msgid "copyright notice of the data"
+msgstr "paziņojums par datu autortiesībām"
+
+msgid "copyright uri"
+msgstr "autortiesības uri"
+
+msgid "URI to the copyright notice of the data"
+msgstr "URI uz datu autortiesību paziņojumu"
+
+msgid "encoded by"
+msgstr "kodēja"
+
+msgid "name of the encoding person or organization"
+msgstr "personas vai organizācijas nosaukums, kas kodēja"
+
+msgid "contact"
+msgstr "kontaktpersona"
+
+msgid "contact information"
+msgstr "kontaktinformācija"
+
+msgid "license"
+msgstr "licence"
+
+msgid "license of data"
+msgstr "datu licence"
+
+msgid "license uri"
+msgstr "licences uri"
+
+msgid "URI to the license of the data"
+msgstr "URI uz datu licenci"
+
+msgid "performer"
+msgstr "izpildītājs"
+
+msgid "person(s) performing"
+msgstr "persona(-as), kas izpildīja"
+
+msgid "composer"
+msgstr "komponistu"
+
+msgid "person(s) who composed the recording"
+msgstr "persona(-as), kura(-as) ir ieraksta autors(-es)"
+
+msgid "conductor"
+msgstr "diriģents"
+
+msgid "conductor/performer refinement"
+msgstr "diriģenta/izpildītāja pilnveidošana"
+
+msgid "duration"
+msgstr "ilgums"
+
+msgid "length in GStreamer time units (nanoseconds)"
+msgstr "garums GStreamer laika vienībās (nanosekundēs)"
+
+msgid "codec"
+msgstr "kodekss"
+
+msgid "codec the data is stored in"
+msgstr "kodekss, kurā dati tiek glabāti"
+
+msgid "video codec"
+msgstr "video kodekss"
+
+msgid "codec the video data is stored in"
+msgstr "kodekss, kurā tiek glabāti video dati"
+
+msgid "audio codec"
+msgstr "audio kodekss"
+
+msgid "codec the audio data is stored in"
+msgstr "kodekss, kurā tiek glabāti audio dati"
+
+msgid "subtitle codec"
+msgstr "subtitru kodekss"
+
+msgid "codec the subtitle data is stored in"
+msgstr "kodekss, kurā tiek saglabāti subtitru dati"
+
+msgid "container format"
+msgstr "konteinera formāts"
+
+msgid "container format the data is stored in"
+msgstr "konteinera formāts, kurā tiek glabāti dati"
+
+msgid "bitrate"
+msgstr "bitu pārraides ātrums"
+
+msgid "exact or average bitrate in bits/s"
+msgstr "precīzs vai vidējais bitu pārraides ātrums bitos/s"
+
+msgid "nominal bitrate"
+msgstr "nominālais bitu pārraides ātrums"
+
+msgid "nominal bitrate in bits/s"
+msgstr "nominālais bitu pārraides ātrums bitos/s"
+
+msgid "minimum bitrate"
+msgstr "minimālais bitu pārraides ātrums"
+
+msgid "minimum bitrate in bits/s"
+msgstr "minimālais bitu pārraides ātrums bitos/s"
+
+msgid "maximum bitrate"
+msgstr "maksimālais bitu pārraides ātrums"
+
+msgid "maximum bitrate in bits/s"
+msgstr "maksimālais bitu pārraides ātrums bitos/s"
+
+msgid "encoder"
+msgstr "kodētājs"
+
+msgid "encoder used to encode this stream"
+msgstr "kodētājs, kas izmantots šīs plūsmas kodēšanai"
+
+msgid "encoder version"
+msgstr "kodētāja versija"
+
+msgid "version of the encoder used to encode this stream"
+msgstr "šīs plūsmas kodēšanai izmantotā kodētāja versija"
+
+msgid "serial"
+msgstr "sērijas"
+
+msgid "serial number of track"
+msgstr "celiņa sērijas numurs"
+
+msgid "replaygain track gain"
+msgstr "replaygain celiņa pastiprinājums"
+
+msgid "track gain in db"
+msgstr "celiņa pastiprinājums db"
+
+msgid "replaygain track peak"
+msgstr "replaygain celiņa virsotne"
+
+msgid "peak of the track"
+msgstr "celiņa virsotne"
+
+msgid "replaygain album gain"
+msgstr "replaygain albuma pastiprinājums"
+
+msgid "album gain in db"
+msgstr "albuma pastiprinājums db"
+
+msgid "replaygain album peak"
+msgstr "replaygain albuma virsotne"
+
+msgid "peak of the album"
+msgstr "albuma virsotne"
+
+msgid "replaygain reference level"
+msgstr "replaygain atskaites līmenis"
+
+msgid "reference level of track and album gain values"
+msgstr "celiņa un albuma pastiprinājuma atskaites līmenis"
+
+msgid "language code"
+msgstr "valodas kods"
+
+msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
+msgstr "šīs plūsmas valodas kods, kas atbilst ISO-639-1 vai ISO-639-2"
+
+msgid "language name"
+msgstr "valodas nosaukums"
+
+msgid "freeform name of the language this stream is in"
+msgstr "valodas, kurā ir šī plūsma, nosaukums brīvā formā"
+
+msgid "image"
+msgstr "attēls"
+
+msgid "image related to this stream"
+msgstr "attēls, kas saistīts ar šo straumi"
+
+#. TRANSLATORS: 'preview image' = image that shows a preview of the full image
+msgid "preview image"
+msgstr "priekšskatījuma attēls"
+
+msgid "preview image related to this stream"
+msgstr "ar šo straumi saistītais priekšskatījuma attēls"
+
+msgid "attachment"
+msgstr "pielikums"
+
+msgid "file attached to this stream"
+msgstr "šai straumei pievienotais fails"
+
+msgid "beats per minute"
+msgstr "sitieni minūtē"
+
+msgid "number of beats per minute in audio"
+msgstr "sitienu skaits minūtē audio ierakstā"
+
+msgid "keywords"
+msgstr "atslēgas vārdi"
+
+msgid "comma separated keywords describing the content"
+msgstr "ar komatu atdalīti saturu raksturojoši atslēgvārdi"
+
+msgid "geo location name"
+msgstr "ģeogrāfiskās atrašanās vietas nosaukums"
+
+msgid ""
+"human readable descriptive location of where the media has been recorded or "
+"produced"
+msgstr ""
+"cilvēka lasāma aprakstoša atrašanās vieta, kur medijs ir ierakstīts vai "
+"izgatavots"
+
+msgid "geo location latitude"
+msgstr "ģeogrāfiskās atrašanās vietas platums"
+
+msgid ""
+"geo latitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the equator, negative values for "
+"southern latitudes)"
+msgstr ""
+"ģeogrāfiskais platuma grāds, kur ir ierakstīts vai radīts informācijas "
+"nesējs, saskaņā ar WGS84 (nulle pie ekvatora, negatīvas vērtības dienvidu "
+"platuma grādos)"
+
+msgid "geo location longitude"
+msgstr "ģeogrāfiskā atrašanās vietas garums"
+
+msgid ""
+"geo longitude location of where the media has been recorded or produced in "
+"degrees according to WGS84 (zero at the prime meridian in Greenwich/UK,  "
+"negative values for western longitudes)"
+msgstr ""
+"ģeogrāfiskais garums vietas, kur ir ierakstīts vai radīts informācijas "
+"nesējs, atrašanās vieta grādos saskaņā ar WGS84 (nulle pie Griničas "
+"meridiāna Lielbritānijā, negatīvas vērtības rietumu garuma grādiem)"
+
+msgid "geo location elevation"
+msgstr "ģeogrāfiskās atrašanās vietas augstums"
+
+msgid ""
+"geo elevation of where the media has been recorded or produced in meters "
+"according to WGS84 (zero is average sea level)"
+msgstr ""
+"ģeogrāfiskais augstums metros vietā, kur medijs ir ierakstīts vai radīts, "
+"saskaņā ar WGS84 (nulle ir vidējais jūras līmenis)"
+
+msgid "geo location country"
+msgstr "ģeogrāfiskā atrašanās vieta valsts"
+
+msgid "country (english name) where the media has been recorded or produced"
+msgstr ""
+"valsts (angliskais nosaukums), kurā plašsaziņas līdzeklis ir ierakstīts vai "
+"producēts"
+
+msgid "geo location city"
+msgstr "ģeogrāfiskā atrašanās vieta pilsēta"
+
+msgid "city (english name) where the media has been recorded or produced"
+msgstr ""
+"pilsēta (angliskais nosaukums), kurā plašsaziņas līdzeklis ir ierakstīts vai "
+"sagatavots"
+
+msgid "geo location sublocation"
+msgstr "ģeogrāfiskās atrašanās vietas apakšvieta"
+
+msgid ""
+"a location within a city where the media has been produced or created (e.g. "
+"the neighborhood)"
+msgstr "vieta pilsētā, kur medijs ir radīts vai veidots (piemēram, apkaime)"
+
+msgid "geo location horizontal error"
+msgstr "ģeogrāfiskās atrašanās vietas horizontālā kļūda"
+
+msgid "expected error of the horizontal positioning measures (in meters)"
+msgstr "horizontālās pozicionēšanas mērījumu paredzamā kļūda (metros)"
+
+msgid "geo location movement speed"
+msgstr "ģeogrāfiskās atrašanās vietas pārvietošanās ātrums"
+
+msgid ""
+"movement speed of the capturing device while performing the capture in m/s"
+msgstr "uztveršanas ierīces kustības ātrums uztveršanas laikā m/s"
+
+msgid "geo location movement direction"
+msgstr "ģeogrāfiskās atrašanās vietas kustības virziens"
+
+msgid ""
+"indicates the movement direction of the device performing the capture of a "
+"media. It is represented as degrees in floating point representation, 0 "
+"means the geographic north, and increases clockwise"
+msgstr ""
+"norāda tās ierīces kustības virzienu, kas veic datu nesēja uzņemšanu. Tas "
+"tiek attēlots grādos peldošā komata izteiksmē, 0 nozīmē ģeogrāfiskos "
+"ziemeļus un palielinās pulksteņrādītāja virzienā"
+
+msgid "geo location capture direction"
+msgstr "ģeogrāfiskās atrašanās vietas uzņemšanas virziens"
+
+msgid ""
+"indicates the direction the device is pointing to when capturing  a media. "
+"It is represented as degrees in floating point  representation, 0 means the "
+"geographic north, and increases clockwise"
+msgstr ""
+"norāda virzienu, uz kuru ierīce ir vērsta, kad tiek uztverts multivides "
+"nesējs. Tas tiek attēlots grādos peldošā komata izteiksmē, 0 nozīmē "
+"ģeogrāfiskos ziemeļus un palielinās pulksteņrādītāja rādītāja virzienā"
+
+#. TRANSLATORS: 'show name' = 'TV/radio/podcast show name' here
+msgid "show name"
+msgstr "parādīt nosaukumu"
+
+msgid "Name of the tv/podcast/series show the media is from"
+msgstr "Televīzijas/podkāsta/seriāla raidījuma nosaukums, no kura ir medijs"
+
+#. TRANSLATORS: 'show sortname' = 'TV/radio/podcast show name as used for sorting purposes' here
+msgid "show sortname"
+msgstr "parādīt šķiroto nosaukumu"
+
+msgid ""
+"Name of the tv/podcast/series show the media is from, for sorting purposes"
+msgstr ""
+"Televīzijas/podkāsta/seriāla raidījuma nosaukums, no kura ir medijs, "
+"šķirošanas nolūkos"
+
+msgid "episode number"
+msgstr "epizodes numurs"
+
+msgid "The episode number in the season the media is part of"
+msgstr "Epizodes numurs sezonā, kurā ir plašsaziņas līdzeklis"
+
+msgid "season number"
+msgstr "sezonas numurs"
+
+msgid "The season number of the show the media is part of"
+msgstr "Raidījuma sezonas numurs, kurā medijs piedalās"
+
+msgid "lyrics"
+msgstr "dziesmu vārdi"
+
+msgid "The lyrics of the media, commonly used for songs"
+msgstr "Medija vārdi, parasti izmanto dziesmām"
+
+msgid "composer sortname"
+msgstr "komponista šķirotājvārds"
+
+msgid "person(s) who composed the recording, for sorting purposes"
+msgstr ""
+"persona(-as), kura(-as) ir ieraksta komponists(-es), šķirošanas nolūkos"
+
+msgid "grouping"
+msgstr "grupēšana"
+
+msgid ""
+"Groups related media that spans multiple tracks, like the different pieces "
+"of a concerto. It is a higher level than a track, but lower than an album"
+msgstr ""
+"Grupē saistītus multivides materiālus, kas aptver vairākus skaņdarbus, "
+"piemēram, dažādus koncerta skaņdarbus. Tas ir augstāks līmenis nekā dziesma, "
+"bet zemāks nekā albums"
+
+msgid "user rating"
+msgstr "lietotāja vērtējums"
+
+msgid ""
+"Rating attributed by a user. The higher the rank, the more the user likes "
+"this media"
+msgstr ""
+"Lietotāja piešķirtais vērtējums. Jo augstāks rangs, jo vairāk lietotājam "
+"patīk šis medijs"
+
+msgid "device manufacturer"
+msgstr "ierīces ražotājs"
+
+msgid "Manufacturer of the device used to create this media"
+msgstr ""
+"Tā ierīces ražotājs, kas izmantota, lai izveidotu šo multivides līdzekli"
+
+msgid "device model"
+msgstr "ierīces modelis"
+
+msgid "Model of the device used to create this media"
+msgstr "Ierīces modelis, kas izmantots, lai izveidotu šo multivides kopiju"
+
+msgid "application name"
+msgstr "lietojumprogrammas nosaukums"
+
+msgid "Application used to create the media"
+msgstr "Multivides izveidei izmantotā lietojumprogramma"
+
+msgid "application data"
+msgstr "lietojumprogrammas dati"
+
+msgid "Arbitrary application data to be serialized into the media"
+msgstr "Multivides nesējā serializējamie patvaļīgi lietojumprogrammas dati"
+
+msgid "image orientation"
+msgstr "attēla orientācija"
+
+msgid "How the image should be rotated or flipped before display"
+msgstr "Kā attēls pirms rādīšanas ir jāpagriež vai jāapvērš"
+
+msgid "publisher"
+msgstr "izdevējs"
+
+msgid "Name of the label or publisher"
+msgstr "Marķējuma vai izdevniecības nosaukums"
+
+msgid "interpreted-by"
+msgstr "interpretēts"
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
+"Informācija par cilvēkiem, kas radījuši remiksu, un līdzīgas interpretācijas"
+
+msgid "midi-base-note"
+msgstr "midi-bāzes-nots"
+
+msgid "Midi note number of the audio track."
+msgstr "Audio celiņa Midi nots numurs."
+
+msgid "private-data"
+msgstr "privātie dati"
+
+msgid "Private data"
+msgstr "Privātie dati"
+
+#. separator between two strings
+msgid ", "
+msgstr ", "
+
+#, c-format
+msgid "Invalid URI: %s"
+msgstr "Nederīgs URI: %s"
+
+#, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr "Nav atrasts URI apstrādātājs %s protokolam"
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr "URI shēma '%s' netiek atbalstīta"
+
+#, c-format
+msgid "ERROR: from element %s: %s\n"
+msgstr "Kļūda: no elementa %s: %s\n"
+
+#, c-format
+msgid ""
+"Additional debug info:\n"
+"%s\n"
+msgstr ""
+"Papildu atkļūdošanas informācija:\n"
+"%s\n"
+
+#. ******************************************************************************************
+#. *** helpers for pipeline-setup
+#. ******************************************************************************************
+#, c-format
+msgid "link has no source [sink=%s@%p]"
+msgstr "saitei nav avota [izlietne=%s@%p]"
+
+#, c-format
+msgid "link has no sink [source=%s@%p]"
+msgstr "saitei nav izlietnes [avots=%s@%p]"
+
+msgid "No such property."
+msgstr "Šādas īpašības nav."
+
+#, c-format
+msgid "no property \"%s\" in element \"%s\""
+msgstr "nav īpašības \"%s\" elementā \"%s\""
+
+#, c-format
+msgid "Element \"%s\" is not a GstPreset"
+msgstr "Elements \"%s\" nav GstPreset"
+
+#, c-format
+msgid "could not set preset \"%s\" in element \"%s\""
+msgstr "nevarēja iestatīt iepriekš-noteikto \"%s\" elementā \"%s\""
+
+#, c-format
+msgid "no element \"%s\""
+msgstr "nav elementa \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
+msgstr "nevarēja iestatīt īpašību \"%s\" elementā \"%s\" uz \"%s\""
+
+#, c-format
+msgid "could not set property \"%s\" in child of element \"%s\" to \"%s\""
+msgstr "nevarēja iestatīt īpašību \"%s\" bērna elementā \"%s\" uz \"%s\""
+
+msgid "Delayed linking failed."
+msgstr "Aizkavēta savienošana neizdevās."
+
+#, c-format
+msgid "could not link %s to %s, %s can't handle caps %s"
+msgstr "nevarēja savienot %s ar %s, %s nevar apstrādāt iespējas %s"
+
+#, c-format
+msgid "could not link %s to %s, neither element can handle caps %s"
+msgstr ""
+"nevarēja savienot %s ar %s, neviens no elementiem nevar apstrādāt iespējas %s"
+
+#, c-format
+msgid "could not link %s to %s with caps %s"
+msgstr "nevarēja savienot %s ar %s ar iespējām %s"
+
+#, c-format
+msgid "could not link %s to %s"
+msgstr "nevarēja savienot %s ar %s"
+
+#, c-format
+msgid "unexpected reference \"%s\" - ignoring"
+msgstr "negaidīta atsauce \"%s\" - tiks ignorēts"
+
+#, c-format
+msgid "unexpected pad-reference \"%s\" - ignoring"
+msgstr "negaidīta pad-reference \"%s\" - tiks ignorēts"
+
+#, c-format
+msgid "could not parse caps \"%s\""
+msgstr "nevarēja analizēt iespējas \"%s\""
+
+#, c-format
+msgid "no sink element for URI \"%s\""
+msgstr "nav izlietnes elementa priekš URI \"%s\""
+
+#, c-format
+msgid "no source element for URI \"%s\""
+msgstr "nav avota elementa priekš URI \"%s\""
+
+msgid "syntax error"
+msgstr "sintakses kļūda"
+
+#, c-format
+msgid "specified empty bin \"%s\", not allowed"
+msgstr "norādīta tukša tvertne \"%s\", nav atļauts"
+
+#, c-format
+msgid "no bin \"%s\", unpacking elements"
+msgstr "nav tvertne \"%s\", elementu izpakošana"
+
+msgid "empty pipeline not allowed"
+msgstr "tukšs cauruļvads nav atļauts"
+
+msgid "Pipeline construction is invalid, please add queues."
+msgstr "Cauruļvada konstrukcija ir nederīga, lūdzu, pievienojiet rindas."
+
+msgid "A lot of buffers are being dropped."
+msgstr "Daudzi buferi tiek izmesti."
+
+msgid "Internal data flow problem."
+msgstr "Iekšējās datu plūsmas problēma."
+
+msgid "Internal data flow error."
+msgstr "Iekšējā datu plūsmas kļūda."
+
+msgid "Internal clock error."
+msgstr "Iekšējā pulksteņa kļūda."
+
+msgid "Failed to map buffer."
+msgstr "Neizdevās kartēt buferi."
+
+msgid "Filter caps"
+msgstr "Filtra iespējas"
+
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Ierobežojiet iespējamās atļautās iespējas (NULL nozīmē jebkuras). Nosakot šo "
+"īpašību, tiek iegūta atsauce uz norādīto GstCaps objektu."
+
+msgid "Caps Change Mode"
+msgstr "Iespējas Maiņas Režīms"
+
+msgid "Filter caps change behaviour"
+msgstr "Filtra iespēju maiņas uzvedība"
+
+msgid "No Temp directory specified."
+msgstr "Nav norādīta Temp direktorija."
+
+#, c-format
+msgid "Could not create temp file \"%s\"."
+msgstr "Nevar izveidot pagaidu failu \"%s\"."
+
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nevar atvērt failu \"%s\" lasīšanai."
+
+msgid "Error while writing to download file."
+msgstr "Kļūda, rakstot uz lejupielādes failu."
+
+msgid "No file name specified for writing."
+msgstr "Ierakstīšanai nav norādīts faila nosaukums."
+
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "Nevar atvērt failu \"%s\" rakstīšanai."
+
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Kļūda, aizverot failu \"%s\"."
+
+#, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "Kļūda, meklējot failā \"%s\"."
+
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Kļūda, rakstot uz failu \"%s\"."
+
+msgid "No file name specified for reading."
+msgstr "Nav norādīts lasīšanai paredzētā faila nosaukums."
+
+#, c-format
+msgid "Could not get info on \"%s\"."
+msgstr "Nevar iegūt informāciju par \"%s\"."
+
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "\"%s\" ir direktorija."
+
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "Fails \"%s\" ir kontaktligzda."
+
+msgid "Failed after iterations as requested."
+msgstr "Neizdevās pēc iterācijām, kā pieprasīts."
+
+msgid "eos-after and error-after can't both be defined."
+msgstr "eos-after un error-after nevar abi būt definēti."
+
+msgid "caps"
+msgstr "iespējas"
+
+msgid "detected capabilities in stream"
+msgstr "atrastās iespējas straumē"
+
+msgid "minimum"
+msgstr "minimālais"
+
+msgid "force caps"
+msgstr "piespiedu iespējas"
+
+msgid "force caps without doing a typefind"
+msgstr "piespiedu iespējas, neveicot tipa meklēšanu"
+
+msgid "Stream doesn't contain enough data."
+msgstr "Straumē nav pietiekami daudz datu."
+
+msgid "Stream contains no data."
+msgstr "Straumē nav datu."
+
+#, c-format
+msgid "%sImplemented Interfaces%s:\n"
+msgstr "%sĪstenotās Saskarnes%s:\n"
+
+msgid "readable"
+msgstr "lasāms"
+
+msgid "writable"
+msgstr "rakstāms"
+
+msgid "deprecated"
+msgstr "novecojis"
+
+msgid "controllable"
+msgstr "kontrolējams"
+
+msgid "conditionally available"
+msgstr "nosacīti pieejams"
+
+msgid "changeable in NULL, READY, PAUSED or PLAYING state"
+msgstr "maināms NULL, READY, PAUSED vai PLAYING stāvoklī"
+
+msgid "changeable only in NULL, READY or PAUSED state"
+msgstr "maināms tikai NULL, READY vai PAUSED stāvoklī"
+
+msgid "changeable only in NULL or READY state"
+msgstr "maināms tikai NULL vai READY stāvoklī"
+
+msgid "Blacklisted files:"
+msgstr "Melnajā sarakstā iekļautie faili:"
+
+#, c-format
+msgid "%sTotal count%s: %s"
+msgstr "%sKopējais Skaits%s: %s"
+
+#, c-format
+msgid "%d blacklisted file"
+msgid_plural "%d blacklisted files"
+msgstr[0] "%d melnajā sarakstā iekļauti faili"
+msgstr[1] "%d melnajā sarakstā iekļauts fails"
+msgstr[2] "%d melnajā sarakstā iekļauti faili"
+
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] "%d spraudņu"
+msgstr[1] "%d spraudnis"
+msgstr[2] "%d spraudņi"
+
+#, c-format
+msgid "%d blacklist entry"
+msgid_plural "%d blacklist entries"
+msgstr[0] "%d melnā saraksta ierakstu"
+msgstr[1] "%d melnā saraksta ieraksts"
+msgstr[2] "%d melnā saraksta ieraksti"
+
+#, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "%d funkciju"
+msgstr[1] "%d funkcija"
+msgstr[2] "%d funkcijas"
+
+msgid "Print all elements"
+msgstr "Drukāt visus elementus"
+
+msgid "Print list of blacklisted files"
+msgstr "Izdrukāt melnajā sarakstā iekļauto failu sarakstu"
+
+msgid ""
+"Print a machine-parsable list of features the specified plugin or all "
+"plugins provide.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
+"Izdrukāt mašīnlasāmu norādītā spraudņa vai visu spraudņu funkciju sarakstu.\n"
+"                                       Lietderīgi saistībā ar ārējiem "
+"automātiskās spraudņu instalēšanas mehānismiem"
+
+msgid "List the plugin contents"
+msgstr "Uzskaitīt spraudņa saturu"
+
+msgid ""
+"A slashes ('/') separated list of types of elements (also known as klass) to "
+"list. (unordered)"
+msgstr ""
+"Ar slīpsvītrām ('/') atdalīts saraksts ar elementu tipiem (pazīstams arī kā "
+"klass), ko uzskaitīt. (nesakārtots)"
+
+msgid "Check if the specified element or plugin exists"
+msgstr "Pārbaudiet, vai norādītais elements vai spraudnis pastāv"
+
+msgid ""
+"When checking if an element or plugin exists, also check that its version is "
+"at least the version specified"
+msgstr ""
+"Pārbaudot, vai elements vai spraudnis eksistē, pārbaudiet arī, vai tā "
+"versija ir vismaz norādītā versija"
+
+msgid "Print supported URI schemes, with the elements that implement them"
+msgstr "Drukāt atbalstītās URI shēmas ar elementiem, kas tās īsteno"
+
+msgid ""
+"Disable colors in output. You can also achieve the same by setting "
+"'GST_INSPECT_NO_COLORS' environment variable to any value."
+msgstr ""
+"Atslēgt krāsas izvadē. To pašu var panākt, iestatot vides mainīgajam "
+"'GST_INSPECT_NO_COLORS' jebkuru vērtību."
+
+msgid "Color output, even when not sending to a tty."
+msgstr "Krāsu izvade, pat ja netiek sūtīta uz tty."
+
+#, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "Nevar ielādēt spraudņa failu: %s\n"
+
+#, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "Nav šāda elementa vai spraudņa '%s'\n"
+
+msgid "Index statistics"
+msgstr "Indeksa statistika"
+
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr "Cauruļvada iestatīšana uz PLAYING ...\n"
+
+msgid "ERROR: pipeline doesn't want to play.\n"
+msgstr "Kļūda: cauruļvads nevēlas spēlēt.\n"
+
+#, c-format
+msgid "Got message #%u from element \"%s\" (%s): "
+msgstr "Saņemts ziņojums #%u no elementa \"%s\" (%s): "
+
+#, c-format
+msgid "Got message #%u from pad \"%s:%s\" (%s): "
+msgstr "Saņemts ziņojums #%u no savienotnes \"%s:%s\" (%s): "
+
+#, c-format
+msgid "Got message #%u from object \"%s\" (%s): "
+msgstr "Saņemts ziņojums #%u no objekta \"%s\" (%s): "
+
+#, c-format
+msgid "Got message #%u (%s): "
+msgstr "Saņemts ziņojums #%u (%s): "
+
+#, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "Iegūts EOS no elementa \"%s\".\n"
+
+msgid "EOS received - stopping pipeline...\n"
+msgstr "EOS saņemts - cauruļvada apstādināšana...\n"
+
+#, c-format
+msgid "FOUND TAG      : found by element \"%s\".\n"
+msgstr "ATRASTA BIRKA      : atrasta ar elementu \"%s\".\n"
+
+#, c-format
+msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
+msgstr "ATRASTA BIRKA      : atrasta ar savienotni \"%s:%s\".\n"
+
+#, c-format
+msgid "FOUND TAG      : found by object \"%s\".\n"
+msgstr "ATRASTA BIRKA      : atrasta ar objektu \"%s\".\n"
+
+msgid "FOUND TAG\n"
+msgstr "ATRASTA BIRKA\n"
+
+#, c-format
+msgid "FOUND TOC      : found by element \"%s\".\n"
+msgstr "ATRASTS SATURS      : atrasts ar elementu \"%s\".\n"
+
+#, c-format
+msgid "FOUND TOC      : found by object \"%s\".\n"
+msgstr "ATRASTS SATURS      : atrasts ar objektu \"%s\".\n"
+
+msgid "FOUND TOC\n"
+msgstr "ATRASTS SATURS\n"
+
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+"INFO:\n"
+"%s\n"
+
+#, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "BRĪDINĀJUMS: no elementa %s: %s\n"
+
+msgid "Pipeline is PREROLLED ...\n"
+msgstr "Cauruļvads ir PRIEKŠLĀDĒTS...\n"
+
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr "Priekšielādēts, gaida, kad beigsies buferēšana...\n"
+
+msgid "Prerolled, waiting for progress to finish...\n"
+msgstr "Priekšielādēts, gaida, lai progress pabeigtu...\n"
+
+msgid "buffering..."
+msgstr "buferēšana..."
+
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr "Pabeigta buferizēšana, iestata cauruļvadu uz PLAYING ...\n"
+
+#. we were not buffering but PLAYING, PAUSE  the pipeline.
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr "Buferēšana, iestata cauruļvadu uz PAUSED ...\n"
+
+msgid "Redistribute latency...\n"
+msgstr "Pārdalīt aizturi...\n"
+
+#, c-format
+msgid "Setting state to %s as requested by %s...\n"
+msgstr "Iestata stāvokli uz %s pēc %s pieprasījuma...\n"
+
+#. this application message is posted when we caught an interrupt and
+#. * we need to stop the pipeline.
+msgid "Interrupt: Stopping pipeline ...\n"
+msgstr "Pārtraukums: Cauruļvada apturēšana ...\n"
+
+msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
+msgstr "Pārtraukums, gaidot EOS - cauruļvada apturēšana ...\n"
+
+msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
+msgstr "Ieslēgta izslēgšana uz EOS -- EOS tiek uzspiests uz cauruļvada\n"
+
+msgid "Waiting for EOS...\n"
+msgstr "Gaida EOS...\n"
+
+#, c-format
+msgid "Progress: (%s) %s\n"
+msgstr "Progress: (%s) %s\n"
+
+#, c-format
+msgid "Missing element: %s\n"
+msgstr "Trūkstošais elements: %s\n"
+
+#, c-format
+msgid "Got context from element '%s': %s=%s\n"
+msgstr "Iegūt kontekstu no elementa '%s': %s=%s\n"
+
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "Kļūda: cauruļvads nevēlas veikt priekšielādi.\n"
+
+msgid "An error happened while waiting for EOS\n"
+msgstr "Gaidot EOS, notika kļūda\n"
+
+#, c-format
+msgid "Use Windows high-resolution clock, precision: %u ms\n"
+msgstr ""
+"Izmantojiet Windows augstas izšķirtspējas pulksteni, precizitāte: %u ms\n"
+
+msgid "Output tags (also known as metadata)"
+msgstr "Izvades birkas (zināmi arī kā metadati)"
+
+msgid "Output TOC (chapters and editions)"
+msgstr "Izvadīt Saturu (nodaļas un izdevumi)"
+
+msgid "Output status information and property notifications"
+msgstr "Izvadīt statusa informāciju un īpašības paziņojumus"
+
+msgid "Do not print any progress information"
+msgstr "Nedrukāt nekādu progresa informāciju"
+
+msgid "Output messages"
+msgstr "Izvada paziņojumi"
+
+msgid ""
+"Do not output status information for the specified property if verbose "
+"output is enabled (can be used multiple times)"
+msgstr ""
+"Neizvadīt norādītās īpašības statusa informāciju, ja ir iespējota detalizētā "
+"izvade (var izmantot vairākas reizes)"
+
+msgid "PROPERTY-NAME"
+msgstr "ĪPAŠĪBAS-NOSAUKUMS"
+
+msgid "Do not install a fault handler"
+msgstr "Neuzstādīt defektu apstrādātāju"
+
+msgid "Force EOS on sources before shutting the pipeline down"
+msgstr "Pirms avotu cauruļvada izslēgšanas uzspiest EOS"
+
+msgid "Gather and print index statistics"
+msgstr "Vākt un izdrukāt indeksa statistiku"
+
+msgid ""
+"Do not print current position of pipeline. If this option is unspecified, "
+"the position will be printed when stdout is a TTY. To enable printing "
+"position when stdout is not a TTY, use \"force-position\" option"
+msgstr ""
+"Nedrukāt cauruļvada pašreizējo pozīciju. Ja šī opcija nav norādīta, pozīcija "
+"tiks drukāta, ja stdout ir TTY. Lai ieslēgtu pozīcijas drukāšanu, ja stdout "
+"nav TTY, izmantojiet opciju \"force-position\""
+
+msgid ""
+"Allow printing current position of pipeline even if stdout is not a TTY. "
+"This option has no effect if the \"no-position\" option is specified"
+msgstr ""
+"Ļauj drukāt cauruļvada pašreizējo pozīciju pat tad, ja stdout nav TTY. Šai "
+"opcijai nav ietekmes, ja ir norādīta opcija \"no-position\""
+
+#, c-format
+msgid "ERROR: pipeline could not be constructed: %s.\n"
+msgstr "KĻŪDA: cauruļvadu nav iespējams izveidot: %s.\n"
+
+msgid "ERROR: pipeline could not be constructed.\n"
+msgstr "KĻŪDA: cauruļvadu nav iespējams izveidot.\n"
+
+#, c-format
+msgid "WARNING: erroneous pipeline: %s\n"
+msgstr "BRĪDINĀJUMS: kļūdains cauruļvads: %s\n"
+
+msgid "ERROR: the 'pipeline' element wasn't found.\n"
+msgstr "KĻŪDA: elements 'pipeline' nav atrasts.\n"
+
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr "Cauruļvada iestatīšana uz PAUSED ...\n"
+
+msgid "Failed to set pipeline to PAUSED.\n"
+msgstr "Neizdevās iestatīt cauruļvadu uz PAUSED.\n"
+
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr "Cauruļvads ir dzīvs, un tam nav nepieciešams PREROLL ...\n"
+
+msgid "Pipeline is PREROLLING ...\n"
+msgstr "Cauruļvads ir PREROLLING ...\n"
+
+msgid "Execution ended after %"
+msgstr "Izpilde beidzās pēc %"
+
+msgid "Setting pipeline to NULL ...\n"
+msgstr "Cauruļvada iestatīšana uz NULL ...\n"
+
+msgid "Freeing pipeline ...\n"
+msgstr "Cauruļvada atbrīvošana ...\n"
