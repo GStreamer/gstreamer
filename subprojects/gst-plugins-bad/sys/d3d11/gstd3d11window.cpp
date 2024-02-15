@@ -273,13 +273,16 @@ gst_d3d11_window_dispose (GObject * object)
 {
   GstD3D11Window *self = GST_D3D11_WINDOW (object);
 
-  gst_clear_buffer (&self->backbuffer);
-  GST_D3D11_CLEAR_COM (self->swap_chain);
+  {
+    GstD3D11DeviceLockGuard lk (self->device);
+    gst_clear_buffer (&self->backbuffer);
+    GST_D3D11_CLEAR_COM (self->swap_chain);
 
-  gst_clear_object (&self->compositor);
-  gst_clear_object (&self->converter);
+    gst_clear_object (&self->compositor);
+    gst_clear_object (&self->converter);
 
-  gst_clear_buffer (&self->cached_buffer);
+    gst_clear_buffer (&self->cached_buffer);
+  }
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
