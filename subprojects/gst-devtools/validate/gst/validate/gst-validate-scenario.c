@@ -139,6 +139,7 @@ enum
 {
   DONE,
   ACTION_DONE,
+  STOPPING,
   LAST_SIGNAL
 };
 
@@ -2161,17 +2162,32 @@ typedef struct
 {
   GstValidateAction *action;
   GRecMutex m;
-  gulong sid;
+  gulong message_sid;
+  gulong stopping_sid;
 
   GList *wanted_streams;
+
+
+  gint wanted_n_calls;
+  gint n_calls;
+
 } SelectStreamData;
 
 static SelectStreamData *
 select_stream_data_new (GstValidateAction * action)
 {
-  SelectStreamData *d = g_new0 (SelectStreamData, 1);
+  SelectStreamData *d = g_atomic_rc_box_new0 (SelectStreamData);
 
-  d->action = action;
+  d->action = gst_validate_action_ref (action);
+  if (!gst_structure_get_int (action->structure, "n-calls", &d->wanted_n_calls)) {
+    d->wanted_n_calls = 1;
+  }
+
+  if (d->wanted_n_calls < -1) {
+    gst_validate_error_structure (action,
+        "`n-calls` in %" GST_PTR_FORMAT " can not be < -1, got %d",
+        action->structure, d->wanted_n_calls);
+  }
 
   return d;
 }
@@ -2181,9 +2197,13 @@ select_stream_data_free (SelectStreamData * d)
 {
   gst_validate_action_unref (d->action);
   g_list_free_full (d->wanted_streams, g_free);
-  g_free (d);
 }
 
+static void
+select_stream_data_unref (SelectStreamData * d)
+{
+  g_atomic_rc_box_release_full (d, (GDestroyNotify) select_stream_data_free);
+}
 
 static void
 stream_selection_cb (GstBus * bus, GstMessage * message, SelectStreamData * d)
@@ -2203,6 +2223,7 @@ stream_selection_cb (GstBus * bus, GstMessage * message, SelectStreamData * d)
       break;
     case GST_MESSAGE_STREAMS_SELECTED:
       g_rec_mutex_lock (&d->m);
+      scenario = gst_validate_action_get_scenario (d->action);
       gst_message_parse_streams_selected (message, &selected_streams);
       g_assert (selected_streams);
       goto done;
@@ -2274,19 +2295,60 @@ stream_selection_cb (GstBus * bus, GstMessage * message, SelectStreamData * d)
 
   g_list_free_full (d->wanted_streams, g_free);
   d->wanted_streams = streams;
+  d->n_calls += 1;
 
 done:
-  if (selected_streams && d->sid) {
+  if (selected_streams && d->message_sid &&
+      d->wanted_n_calls >= 1 && d->n_calls == d->wanted_n_calls) {
     /* Consider action done once we get the STREAM_SELECTED signal */
     gst_validate_action_set_done (gst_validate_action_ref (d->action));
     gst_bus_disable_sync_message_emission (bus);
-    g_signal_handler_disconnect (bus, d->sid);
-    d->sid = 0;
+    g_signal_handler_disconnect (bus, d->message_sid);
+    d->message_sid = 0;
+
+    if (d->stopping_sid) {
+      g_signal_handler_disconnect (scenario, d->stopping_sid);
+      d->stopping_sid = 0;
+    }
   }
 
   gst_clear_object (&scenario);
   gst_clear_object (&collection);
 
+  g_rec_mutex_unlock (&d->m);
+}
+
+static void
+stream_selection_scenario_stopping_cb (GstValidateScenario * scenario,
+    SelectStreamData * d)
+{
+  g_rec_mutex_lock (&d->m);
+  GstElement *pipeline = gst_validate_scenario_get_pipeline (scenario);
+  GstBus *bus = NULL;
+
+  if (pipeline) {
+    bus = gst_element_get_bus (pipeline);
+  }
+
+  if (!((d->wanted_n_calls == 0 && d->n_calls > 0) || d->wanted_n_calls == -1)) {
+    gst_validate_report_action (GST_VALIDATE_REPORTER (scenario), d->action,
+        SCENARIO_ACTION_EXECUTION_ERROR,
+        "Wrong number of calls: wanted %d got: %d",
+        d->wanted_n_calls, d->n_calls);
+  }
+
+  gst_validate_action_set_done (gst_validate_action_ref (d->action));
+
+  if (bus && d->message_sid) {
+    gst_bus_disable_sync_message_emission (bus);
+    g_signal_handler_disconnect (bus, d->message_sid);
+    d->message_sid = 0;
+  }
+
+  if (d->stopping_sid) {
+    g_signal_handler_disconnect (scenario, d->stopping_sid);
+    d->stopping_sid = 0;
+  }
   g_rec_mutex_unlock (&d->m);
 }
 
@@ -2302,10 +2364,15 @@ _execute_select_streams (GstValidateScenario * scenario,
   SelectStreamData *d = select_stream_data_new (action);
   /* Ensure that the data signal ID is set before the callback is called */
   g_rec_mutex_lock (&d->m);
-  d->sid = g_signal_connect_data (bus,
+  d->message_sid = g_signal_connect_data (bus,
       "sync-message",
       G_CALLBACK (stream_selection_cb),
-      d, (GClosureNotify) select_stream_data_free, 0);
+      d, (GClosureNotify) select_stream_data_unref, 0);
+  d->stopping_sid = g_signal_connect_data (scenario,
+      "stopping",
+      G_CALLBACK (stream_selection_scenario_stopping_cb),
+      g_atomic_rc_box_acquire (d),
+      (GClosureNotify) select_stream_data_unref, 0);
   g_rec_mutex_unlock (&d->m);
 
   gst_object_unref (bus);
@@ -5680,6 +5747,19 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
       g_signal_new ("action-done", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1,
       GST_TYPE_VALIDATE_ACTION);
+
+  /**
+   * GstValidateScenario::stopping:
+   * @scenario: The scenario that is being stopped
+   *
+   * Emitted when the 'stop' action is fired
+   *
+   * Since: 1.26
+   */
+  scenario_signals[STOPPING] =
+      g_signal_new ("stopping", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
+
 }
 
 static void
@@ -6861,6 +6941,9 @@ _execute_stop (GstValidateScenario * scenario, GstValidateAction * action)
   DECLARE_AND_GET_PIPELINE (scenario, action);
 
   bus = gst_element_get_bus (pipeline);
+
+  g_signal_emit (scenario, scenario_signals[STOPPING], 0);
+
   SCENARIO_LOCK (scenario);
   if (priv->execute_actions_source_id) {
     g_source_remove (priv->execute_actions_source_id);
@@ -7901,6 +7984,17 @@ register_action_types (void)
           .description = "Indexes of the streams in the StreamCollection to select",
           .mandatory = TRUE,
           .types = "[int]",
+          .possible_variables = NULL,
+        },
+        {
+          .name = "n-calls",
+          .description = "Number of times the `select-stream` event should be sent to the pipeline\n"
+                        " - `0` means 0 or more"
+                        " - `-1` means at least once"
+                        " - Other numbers are exact number of calls",
+          .mandatory = FALSE,
+          .types = "int",
+          .def = "1",
           .possible_variables = NULL,
         },
         {NULL}

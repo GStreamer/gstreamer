@@ -3839,6 +3839,12 @@ against</doc>
           <type name="none" c:type="void"/>
         </return-value>
       </glib:signal>
+      <glib:signal name="stopping" when="last" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.c">Emitted when the 'stop' action is fired</doc>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+      </glib:signal>
     </class>
     <record name="ScenarioClass" c:type="GstValidateScenarioClass" glib:is-gtype-struct-for="Scenario">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h"/>
