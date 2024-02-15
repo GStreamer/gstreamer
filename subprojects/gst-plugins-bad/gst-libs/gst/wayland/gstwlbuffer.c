@@ -282,6 +282,20 @@ gst_wl_buffer_attach (GstWlBuffer * self, struct wl_surface *surface)
   priv->used_by_compositor = TRUE;
 }
 
+void
+gst_wl_buffer_ref_gst_buffer (GstWlBuffer * self)
+{
+  GstWlBufferPrivate *priv = gst_wl_buffer_get_instance_private (self);
+  gst_buffer_ref (priv->current_gstbuffer);
+}
+
+void
+gst_wl_buffer_unref_buffer (GstWlBuffer * self)
+{
+  GstWlBufferPrivate *priv = gst_wl_buffer_get_instance_private (self);
+  gst_buffer_unref (priv->current_gstbuffer);
+}
+
 GstWlDisplay *
 gst_wl_buffer_get_display (GstWlBuffer * self)
 {

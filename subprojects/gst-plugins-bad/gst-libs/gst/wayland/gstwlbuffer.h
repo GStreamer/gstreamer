@@ -48,6 +48,12 @@ GST_WL_API
 void gst_wl_buffer_attach (GstWlBuffer * self, struct wl_surface *surface);
 
 GST_WL_API
+void gst_wl_buffer_ref_gst_buffer(GstWlBuffer * self);
+
+GST_WL_API
+void gst_wl_buffer_unref_buffer(GstWlBuffer * self);
+
+GST_WL_API
 GstWlDisplay *gst_wl_buffer_get_display (GstWlBuffer * self);
 
 G_END_DECLS
