@@ -312,8 +312,9 @@ from the ground-up, GstPlay provides the features you will most likely need.
 
 An example player is available in gst-examples/playback/player/gst-play/.
 
-Internally the GstPlay makes use of the `playbin` element. `playbin3` can be
-selected if the `GST_PLAY_USE_PLAYBIN3=1` environment variable has been set.
+Internally the GstPlay makes use of the `playbin3` element. The legacy
+`playbin2` can be selected if the `GST_PLAY_USE_PLAYBIN3=0` environment
+variable has been set.
 
 **Important note**: If your application relies on the GstBus to get
 notifications from GstPlay, you need to add some explicit clean-up code in

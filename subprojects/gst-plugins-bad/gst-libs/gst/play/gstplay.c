@@ -34,8 +34,9 @@
  *
  * An example player is available in gst-examples/playback/player/gst-play/.
  *
- * Internally the GstPlay makes use of the `playbin` element. `playbin3` can be
- * selected if the `GST_PLAY_USE_PLAYBIN3=1` environment variable has been set.
+ * Internally the GstPlay makes use of the `playbin3` element. The legacy
+ * `playbin2` can be selected if the `GST_PLAY_USE_PLAYBIN3=0` environment
+ * variable has been set.
  *
  * **Important note**: If your application relies on the GstBus to get
  * notifications from GstPlay, you need to add some explicit clean-up code in
@@ -2578,7 +2579,9 @@ gst_play_main (gpointer data)
   g_source_unref (source);
 
   env = g_getenv ("GST_PLAY_USE_PLAYBIN3");
-  if (env && g_str_has_prefix (env, "1"))
+  if (env && g_str_has_prefix (env, "0"))
+    self->use_playbin3 = FALSE;
+  else
     self->use_playbin3 = TRUE;
 
   if (self->use_playbin3) {
