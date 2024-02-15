@@ -436,6 +436,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
     }
     default:
       g_warning ("invalid return from bus sync handler");
+      gst_message_unref (message);
       break;
   }
   return TRUE;
