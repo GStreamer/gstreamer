@@ -366,10 +366,13 @@ gst_bus_post (GstBus * bus, GstMessage * message)
 
   g_clear_pointer (&sync_handler, sync_handler_unref);
 
-  /* If this is a bus without async message delivery
-   * always drop the message */
-  if (!bus->priv->poll)
+  /* If this is a bus without async message delivery always drop the message.
+   * If the sync handler returned GST_BUS_DROP it is responsible of unreffing
+   * the message, otherwise do it ourself. */
+  if (!bus->priv->poll && reply != GST_BUS_DROP) {
     reply = GST_BUS_DROP;
+    gst_message_unref (message);
+  }
 
   /* now see what we should do with the message */
   switch (reply) {
