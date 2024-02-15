@@ -60,7 +60,7 @@ GST_WL_API
 gboolean gst_wl_window_is_toplevel (GstWlWindow * self);
 
 GST_WL_API
-void gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
+gboolean gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
         const GstVideoInfo * info);
 
 GST_WL_API

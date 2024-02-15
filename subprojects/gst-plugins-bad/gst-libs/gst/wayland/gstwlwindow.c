@@ -72,6 +72,14 @@ typedef struct _GstWlWindowPrivate
   /* when this is not set both the area_surface and the video_surface are not
    * visible and certain steps should be skipped */
   gboolean is_area_surface_mapped;
+
+  GMutex window_lock;
+  GstWlBuffer *next_buffer;
+  GstVideoInfo *next_video_info;
+  GstWlBuffer *staged_buffer;
+  gboolean clear_window;
+  struct wl_callback *frame_callback;
+  struct wl_callback *commit_callback;
 } GstWlWindowPrivate;
 
 G_DEFINE_TYPE_WITH_CODE (GstWlWindow, gst_wl_window, G_TYPE_OBJECT,
@@ -92,6 +100,9 @@ static guint signals[LAST_SIGNAL] = { 0 };
 static void gst_wl_window_finalize (GObject * gobject);
 
 static void gst_wl_window_update_borders (GstWlWindow * self);
+
+static void gst_wl_window_commit_buffer (GstWlWindow * self,
+    GstWlBuffer * buffer);
 
 static void
 handle_xdg_toplevel_close (void *data, struct xdg_toplevel *xdg_toplevel)
@@ -173,6 +184,7 @@ gst_wl_window_init (GstWlWindow * self)
   priv->configured = TRUE;
   g_cond_init (&priv->configure_cond);
   g_mutex_init (&priv->configure_mutex);
+  g_mutex_init (&priv->window_lock);
 }
 
 static void
@@ -180,6 +192,9 @@ gst_wl_window_finalize (GObject * gobject)
 {
   GstWlWindow *self = GST_WL_WINDOW (gobject);
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+
+  gst_wl_display_callback_destroy (priv->display, &priv->frame_callback);
+  gst_wl_display_callback_destroy (priv->display, &priv->commit_callback);
 
   if (priv->xdg_toplevel)
     xdg_toplevel_destroy (priv->xdg_toplevel);
@@ -499,11 +514,40 @@ gst_wl_window_set_opaque (GstWlWindow * self, const GstVideoInfo * info)
   }
 }
 
-void
-gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
-    const GstVideoInfo * info)
+static void
+frame_redraw_callback (void *data, struct wl_callback *callback, uint32_t time)
+{
+  GstWlWindow *self = data;
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  GstWlBuffer *next_buffer;
+
+  GST_INFO ("frame_redraw_cb ");
+
+  wl_callback_destroy (callback);
+  priv->frame_callback = NULL;
+
+  g_mutex_lock (&priv->window_lock);
+  next_buffer = priv->next_buffer = priv->staged_buffer;
+  priv->staged_buffer = NULL;
+  g_mutex_unlock (&priv->window_lock);
+
+  if (next_buffer || priv->clear_window)
+    gst_wl_window_commit_buffer (self, next_buffer);
+
+  if (next_buffer)
+    gst_wl_buffer_unref_buffer (next_buffer);
+}
+
+static const struct wl_callback_listener frame_callback_listener = {
+  frame_redraw_callback
+};
+
+static void
+gst_wl_window_commit_buffer (GstWlWindow * self, GstWlBuffer * buffer)
 {
   GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  GstVideoInfo *info = priv->next_video_info;
+  struct wl_callback *callback;
 
   if (G_UNLIKELY (info)) {
     priv->scaled_width =
@@ -517,6 +561,9 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
   }
 
   if (G_LIKELY (buffer)) {
+    callback = wl_surface_frame (priv->video_surface_wrapper);
+    priv->frame_callback = callback;
+    wl_callback_add_listener (callback, &frame_callback_listener, self);
     gst_wl_buffer_attach (buffer, priv->video_surface_wrapper);
     wl_surface_damage_buffer (priv->video_surface_wrapper, 0, 0, G_MAXINT32,
         G_MAXINT32);
@@ -535,6 +582,7 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
     wl_surface_attach (priv->area_surface_wrapper, NULL, 0, 0);
     wl_surface_commit (priv->area_surface_wrapper);
     priv->is_area_surface_mapped = FALSE;
+    priv->clear_window = FALSE;
   }
 
   if (G_UNLIKELY (info)) {
@@ -542,9 +590,70 @@ gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
      * the position of the video_subsurface */
     wl_surface_commit (priv->area_surface_wrapper);
     wl_subsurface_set_desync (priv->video_subsurface);
+    gst_video_info_free (priv->next_video_info);
+    priv->next_video_info = NULL;
   }
 
-  wl_display_flush (gst_wl_display_get_display (priv->display));
+}
+
+static void
+commit_callback (void *data, struct wl_callback *callback, uint32_t serial)
+{
+  GstWlWindow *self = data;
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  GstWlBuffer *next_buffer;
+
+  wl_callback_destroy (callback);
+  priv->commit_callback = NULL;
+
+  g_mutex_lock (&priv->window_lock);
+  next_buffer = priv->next_buffer;
+  g_mutex_unlock (&priv->window_lock);
+
+  gst_wl_window_commit_buffer (self, next_buffer);
+
+  if (next_buffer)
+    gst_wl_buffer_unref_buffer (next_buffer);
+}
+
+static const struct wl_callback_listener commit_listener = {
+  commit_callback
+};
+
+gboolean
+gst_wl_window_render (GstWlWindow * self, GstWlBuffer * buffer,
+    const GstVideoInfo * info)
+{
+  GstWlWindowPrivate *priv = gst_wl_window_get_instance_private (self);
+  gboolean ret = TRUE;
+
+  if (G_LIKELY (buffer))
+    gst_wl_buffer_ref_gst_buffer (buffer);
+
+  g_mutex_lock (&priv->window_lock);
+  if (G_UNLIKELY (info))
+    priv->next_video_info = gst_video_info_copy (info);
+
+  if (priv->next_buffer && priv->staged_buffer) {
+    GST_LOG_OBJECT (self, "buffer %p dropped (replaced)", priv->staged_buffer);
+    gst_wl_buffer_unref_buffer (priv->staged_buffer);
+    ret = FALSE;
+  }
+
+  if (!priv->next_buffer) {
+    priv->next_buffer = buffer;
+    priv->commit_callback =
+        gst_wl_display_sync (priv->display, &commit_listener, self);
+    wl_display_flush (gst_wl_display_get_display (priv->display));
+  } else {
+    priv->staged_buffer = buffer;
+  }
+  if (!buffer)
+    priv->clear_window = TRUE;
+
+  g_mutex_unlock (&priv->window_lock);
+
+  return ret;
 }
 
 /* Update the buffer used to draw black borders. When we have viewporter
