@@ -214,7 +214,7 @@ gst_d3d11_window_win32_finalize (GObject * object)
   GST_DEBUG_OBJECT (object, "dispose");
   gst_d3d11_window_win32_unprepare (GST_D3D11_WINDOW (object));
   g_rec_mutex_clear (&self->hwnds_lock);
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstFlowReturn
