@@ -62,6 +62,8 @@ typedef struct _GstWlDisplayPrivate
   GThread *thread;
   GstPoll *wl_fd_poll;
 
+  GRecMutex sync_mutex;
+
   GMutex buffers_mutex;
   GHashTable *buffers;
   gboolean shutting_down;
@@ -93,6 +95,7 @@ gst_wl_display_init (GstWlDisplay * self)
   priv->wl_fd_poll = gst_poll_new (TRUE);
   priv->buffers = g_hash_table_new (g_direct_hash, g_direct_equal);
   g_mutex_init (&priv->buffers_mutex);
+  g_rec_mutex_init (&priv->sync_mutex);
 
   gst_wl_linux_dmabuf_init_once ();
   gst_shm_allocator_init_once ();
@@ -132,6 +135,7 @@ gst_wl_display_finalize (GObject * gobject)
   gst_poll_free (priv->wl_fd_poll);
   g_hash_table_unref (priv->buffers);
   g_mutex_clear (&priv->buffers_mutex);
+  g_rec_mutex_clear (&priv->sync_mutex);
 
   if (priv->viewporter)
     wp_viewporter_destroy (priv->viewporter);
@@ -360,8 +364,10 @@ gst_wl_display_thread_run (gpointer data)
 
   /* main loop */
   while (1) {
+    g_rec_mutex_lock (&priv->sync_mutex);
     while (wl_display_prepare_read_queue (priv->display, priv->queue) != 0)
       wl_display_dispatch_queue_pending (priv->display, priv->queue);
+    g_rec_mutex_unlock (&priv->sync_mutex);
     wl_display_flush (priv->display);
 
     if (gst_poll_wait (priv->wl_fd_poll, GST_CLOCK_TIME_NONE) < 0) {
@@ -374,7 +380,10 @@ gst_wl_display_thread_run (gpointer data)
     }
     if (wl_display_read_events (priv->display) == -1)
       goto error;
+
+    g_rec_mutex_lock (&priv->sync_mutex);
     wl_display_dispatch_queue_pending (priv->display, priv->queue);
+    g_rec_mutex_unlock (&priv->sync_mutex);
   }
 
   return NULL;
@@ -521,6 +530,51 @@ gst_wl_display_unregister_buffer (GstWlDisplay * self, gpointer gstmem)
   if (G_LIKELY (!priv->shutting_down))
     g_hash_table_remove (priv->buffers, gstmem);
   g_mutex_unlock (&priv->buffers_mutex);
+}
+
+/* gst_wl_display_sync
+ *
+ * A syncronized version of `wl_display_sink` that ensures that the
+ * callback will not be dispatched before the listener has been attached.
+ */
+struct wl_callback *
+gst_wl_display_sync (GstWlDisplay * self,
+    const struct wl_callback_listener *listener, gpointer data)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+  struct wl_callback *callback;
+
+  g_rec_mutex_lock (&priv->sync_mutex);
+
+  callback = wl_display_sync (priv->display_wrapper);
+  if (callback && listener)
+    wl_callback_add_listener (callback, listener, data);
+
+  g_rec_mutex_unlock (&priv->sync_mutex);
+
+  return callback;
+}
+
+/* gst_wl_display_callback_destroy
+ *
+ * A syncronized version of `wl_callback_destroy` that ensures that the
+ * once this function returns, the callback will either have already completed,
+ * or will never be called.
+ */
+void
+gst_wl_display_callback_destroy (GstWlDisplay * self,
+    struct wl_callback **callback)
+{
+  GstWlDisplayPrivate *priv = gst_wl_display_get_instance_private (self);
+
+  g_rec_mutex_lock (&priv->sync_mutex);
+
+  if (*callback) {
+    wl_callback_destroy (*callback);
+    *callback = NULL;
+  }
+
+  g_rec_mutex_unlock (&priv->sync_mutex);
 }
 
 struct wl_display *
