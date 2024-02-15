@@ -97,6 +97,7 @@ enum
 };
 
 #define DEFAULT_ENABLE_ASYNC (TRUE)
+#define WARN_QUEUE_SIZE 1024
 
 enum
 {
@@ -376,7 +377,14 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       /* drop the message */
       GST_DEBUG_OBJECT (bus, "[msg %p] dropped", message);
       break;
-    case GST_BUS_PASS:
+    case GST_BUS_PASS:{
+      guint length = gst_atomic_queue_length (bus->priv->queue);
+      if (G_UNLIKELY (length > 0 && length % WARN_QUEUE_SIZE == 0)) {
+        GST_WARNING_OBJECT (bus, "queue overflows with %d messages. "
+            "Application is too slow or is not handling messages. "
+            "Please add a message handler, otherwise the queue will grow "
+            "infinitely.", length);
+      }
       /* pass the message to the async queue, refcount passed in the queue */
       GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
       gst_atomic_queue_push (bus->priv->queue, message);
@@ -384,6 +392,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
       break;
+    }
     case GST_BUS_ASYNC:
     {
       /* async delivery, we need a mutex and a cond to block
