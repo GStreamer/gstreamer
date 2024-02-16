@@ -67,13 +67,12 @@ such as timing metadata, will have this structure as the first field.
 For example:
 
 ``` c
-struct _GstMetaTiming {
+struct _GstReferenceTimestampMeta {
   GstMeta        meta;        /* common meta header */
 
-  GstClockTime   dts;         /* decoding timestamp */
-  GstClockTime   pts;         /* presentation timestamp */
-  GstClockTime   duration;    /* duration of the data */
-  GstClockTime   clock_rate;  /* clock rate for the above values */
+  /*< public >*/
+  GstCaps *reference;               /* caps describing the time reference */
+  GstClockTime timestamp, duration; /* timestamp and duration in that new reference frame */
 };
 ```
 
@@ -103,6 +102,8 @@ struct GstVideoMeta {
   gpointer (*map)    (GstVideoMeta *meta, guint plane, gpointer * data, gint *stride,
                       GstMapFlags flags);
   gboolean (*unmap)  (GstVideoMeta *meta, guint plane, gpointer data);
+
+  GstVideoAlignment  alignment;
 };
 
 gpointer gst_meta_video_map   (GstVideoMeta *meta, guint plane, gpointer * data,
@@ -129,6 +130,9 @@ struct _GstMetaInfo {
   GstMetaInitFunction        init_func;
   GstMetaFreeFunction        free_func;
   GstMetaTransformFunction   transform_func;
+  GstMetaSerializeFunction   serialize_func;
+  GstMetaDeserializeFunction deserialize_func;
+  GstMetaClearFunction       clear_func;
 };
 ```
 
@@ -202,6 +206,9 @@ GstVideoMetaImpl      |  |  ...                             | |
                          .                                    .
 ```
 
+The current implementation just includes a linked list of GstMeta structures,
+each GstMeta results in a separate allocation.
+
 ## API examples
 
 Buffers are created using the normal `gst_buffer_new()` functions. The
@@ -223,8 +230,8 @@ public `_get_info()` method from a shared library (for shared metadata).
 The following defines can usually be found in the shared .h file.
 
 ``` c
-GstMetaInfo * gst_meta_timing_get_info();
-#define GST_META_TIMING_INFO  (gst_meta_timing_get_info())
+GstMetaInfo * gst_reference_timestamp_meta_get_info ();
+#define GST_REFERENCE_TIMESTAMP_META_INFO  (gst_reference_timestamp_meta_get_info ())
 ```
 
 Adding metadata to a buffer can be done with the
@@ -239,58 +246,61 @@ metadata conforming to the API specified in the given info. When no such
 metadata exists, the function will return NULL.
 
 ``` c
-GstMetaTiming *timing;
+GstReferenceTimestampMeta *referencets;
 
-timing = gst_buffer_get_meta (buffer, GST_META_TIMING_INFO);
+referencets = gst_buffer_get_meta (buffer, GST_REFERENCE_TIMESTAMP_META_INFO);
 ```
 
 Once a reference to the info has been obtained, the associated metadata
 can be added or modified on a buffer.
 
 ``` c
-timing->timestamp = 0;
-timing->duration = 20 * GST_MSECOND;
+referencets->reference = refcaps;
+referencets->timestamp = 0;
+referencets->duration = 20 * GST_MSECOND;
 ```
 
 Other convenience macros can be made to simplify the above code:
 
 ``` c
-#define gst_buffer_get_meta_timing(b) \
-   ((GstMetaTiming *) gst_buffer_get_meta ((b), GST_META_TIMING_INFO)
+GstVideoMeta * gst_buffer_get_video_meta (GstBuffer *buffer);
 ```
 
 This makes the code look like this:
 
 ``` c
-GstMetaTiming *timing;
+GstVideoMeta *vmeta;
 
-timing = gst_buffer_get_meta_timing (buffer);
-timing->timestamp = 0;
-timing->duration = 20 * GST_MSECOND;
+vmeta = gst_buffer_get_video_meta (buffer);
+vmeta->width = 640;
+vmeta->height = 480;
 ```
 
 To iterate the different metainfo structures, one can use the
-`gst_buffer_meta_get_next()` methods.
+`gst_buffer_iterate_meta()` methods.
 
 ``` c
+gpointer state = NULL;
 GstMeta *current = NULL;
 
 /* passing NULL gives the first entry */
-current = gst_buffer_meta_get_next (buffer, current);
+current = gst_buffer_iterate_meta (buffer, &state);
 
-/* passing a GstMeta returns the next */
-current = gst_buffer_meta_get_next (buffer, current);
+/* passing the state returns the next */
+current = gst_buffer_iterate_meta (buffer, &state);
 ```
 
 ## Memory management
 
 ### allocation
 
+<!--
 We initially allocate a reasonable sized `GstBuffer` structure (say 512 bytes).
 
 Since the complete buffer structure, including a large area for metadata, is
 allocated in one go, we can reduce the number of memory allocations while still
 providing dynamic metadata.
+-->
 
 When adding metadata, we need to call the init function of the associated
 metadata info structure. Since adding the metadata requires the caller to pass
@@ -303,10 +313,12 @@ NONE in the MetaTiming structures.
 The init/free functions can also be used to implement refcounting for a metadata
 structure. This can be useful when a structure is shared between buffers.
 
+<!--
 When the `free_size` of the `GstBuffer` is exhausted, we will allocate new
 memory for each newly added Meta and use the next pointers to point to this. It
 is expected that this does not occur often and we might be able to optimize
 this transparently in the future.
+-->
 
 ### free
 
@@ -324,7 +336,7 @@ When a buffer should be sent over the wire or be serialized in GDP, we
 need a way to perform custom serialization and deserialization on the
 metadata. For this we can use the `GValue` transform functions.
 
-## Transformations
+## Transformations and tags
 
 After certain transformations, the metadata on a buffer might not be
 relevant anymore.
@@ -339,12 +351,12 @@ adjust or remove in an intelligent way. Since we allow arbitrary
 metadata, we can’t do this for all metadata and thus we need some other
 way.
 
-One proposition is to tag the metadata type with keywords that specify
-what it functionally refers too. We could, for example, tag the metadata
-for the regions of interest with a tag that notes that the metadata
-refers to absolute pixel positions. A transform could then know that the
-metadata is not valid anymore when the position of the pixels changed
-(due to rotation, flipping, scaling and so on).
+Each type of GstMeta has an array of tags. They describe what
+transformation the GstMeta is sensitive to. For example, the
+"video-size" tag indicate that the meta needs to be transform if the
+frame is resized.A transform could then know that the metadata is not
+valid anymore when the position of the pixels changed (due to
+rotation, flipping, scaling and so on).
 
 ## Subbuffers
 
@@ -374,6 +386,16 @@ A scheme like this would still allow us to functionally specify the
 desired video resolution while the implementation details would be
 inside the metadata.
 
+Some formats require each buffer to have a specific GstMeta
+attached. For example, `audio/x-raw, layout=(string)non-interleaved`
+requires the presence of GstAudioMeta.
+
+Some GstMeta can only be used if a specific GstCapsFeature is present
+in the caps. For example, in the case of
+`video/x-raw(meta:GstVideoOverlayComposition)`, the
+GstVideoOverlayCompositonMeta must be present, but also, it can only
+be used if the caps feature is present.
+
 ## Relationship with GstMiniObject qdata
 
 qdata on a miniobject is element private and is not visible to other
@@ -386,8 +408,12 @@ We need to make sure that elements exchange metadata that they both
 understand, This is particularly important when the metadata describes
 the data layout in memory (such as strides).
 
-The `ALLOCATION` query is used to let upstream know what metadata we can
-support.
+The `ALLOCATION` query is used to let upstream know what metadata we
+can support. This is appropriate for cases when the absence of the
+GstMeta yields acceptable default values. The case of `GstVideoMeta`
+is typical for this. In this case, in the absence of the meta, the
+strides/planes/etc are in well-known locations defined by the
+GstVideoInfo system.
 
 It is also possible to have a bufferpool add certain metadata to the
 buffers from the pool. This feature is activated by enabling a buffer
