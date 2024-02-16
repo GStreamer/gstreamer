@@ -177,7 +177,7 @@ _serialize_enum (GString * json, GType gtype, GstPluginAPIFlags api_flags)
       "\"kind\": \"enum\"", json->len ? "," : "", g_type_name (gtype));
 
   if (api_flags & GST_PLUGIN_API_FLAG_IGNORE_ENUM_MEMBERS) {
-    g_string_append (json, ",\"ignore-enum-members\": true}");
+    g_string_append (json, ",\"ignore-enum-members\": true, \"values\": []}");
   } else {
     g_string_append (json, ",\"values\": [");
 
