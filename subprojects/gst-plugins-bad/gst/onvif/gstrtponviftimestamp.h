@@ -73,6 +73,7 @@ struct _GstRtpOnvifTimestamp {
   GQueue *event_queue;
   GstBuffer *buffer;
   GstBufferList *list;
+  guint current_list_size;
 };
 
 struct _GstRtpOnvifTimestampClass {
