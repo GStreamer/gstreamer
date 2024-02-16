@@ -430,13 +430,14 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
 }
 
 GstCaps *
-gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self)
+gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
+    GstStaticCaps * static_filter)
 {
   gint ret;
   struct v4l2_format fmt = {
     .type = self->src_buf_type,
   };
-  GstCaps *caps;
+  GstCaps *caps, *filter, *tmp;
   gint i;
 
   g_return_val_if_fail (self->opened, FALSE);
@@ -455,7 +456,6 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self)
    * structure in the caps */
   for (i = 0; ret >= 0; i++) {
     struct v4l2_fmtdesc fmtdesc = { i, self->src_buf_type, };
-    GstCaps *tmp;
 
     ret = ioctl (self->video_fd, VIDIOC_ENUM_FMT, &fmtdesc);
     if (ret < 0) {
@@ -469,6 +469,14 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self)
         fmt.fmt.pix_mp.width, fmt.fmt.pix_mp.height);
     caps = gst_caps_merge (caps, tmp);
   }
+
+  filter = gst_static_caps_get (static_filter);
+  tmp = caps;
+  caps = gst_caps_intersect_full (tmp, filter, GST_CAPS_INTERSECT_FIRST);
+  gst_caps_unref (tmp);
+  gst_caps_unref (filter);
+
+  GST_DEBUG_OBJECT (self, "Probed caps: %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
