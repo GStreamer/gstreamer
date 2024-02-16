@@ -539,6 +539,11 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
     g_atomic_int_set (&rtpgstpay->force_config, TRUE);
   }
 
+  if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
+    // We must flush at this point, as no next input frame is expected
+    gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
+  }
+
   ret =
       GST_RTP_BASE_PAYLOAD_CLASS (parent_class)->sink_event (payload,
       gst_event_ref (event));
