@@ -1016,6 +1016,7 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
   ComPtr < IAudioStreamVolume > audio_volume;
   GstAudioChannelPosition *position = nullptr;
   guint period = 0;
+  gint segtotal = 2;
 
   GST_DEBUG_OBJECT (buf, "Acquire");
 
@@ -1110,18 +1111,13 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
 
   g_assert (period > 0);
 
-  if (self->buffer_size > period) {
-    GST_INFO_OBJECT (self, "Updating buffer size %d -> %d", self->buffer_size,
-        period);
-    self->buffer_size = period;
-  }
-
   spec->segsize = period * GST_AUDIO_INFO_BPF (&buf->spec.info);
-  spec->segtotal = 2;
+  segtotal = (self->buffer_size / period);
+  spec->segtotal = MAX (segtotal, 2);
 
   GST_INFO_OBJECT (self,
-      "Buffer size: %d frames, period: %d frames, segsize: %d bytes",
-      self->buffer_size, period, spec->segsize);
+      "Buffer size: %d frames, period: %d frames, segsize: %d bytes, "
+      "segtotal: %d", self->buffer_size, period, spec->segsize, spec->segtotal);
 
   if (self->device_class == GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER) {
     ComPtr < IAudioRenderClient > render_client;
