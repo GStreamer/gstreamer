@@ -1,6 +1,8 @@
 #include "ges-internal.h"
 #include "ges-discoverer-manager.h"
 
+G_LOCK_DEFINE_STATIC (singleton_lock);
+static GESDiscovererManager *self = NULL;
 
 typedef struct
 {
@@ -17,7 +19,7 @@ static void
 ges_discoverer_data_free (GESDiscovererData * data)
 {
   GST_LOG ("Freeing discoverer %" GST_PTR_FORMAT, data->discoverer);
-  g_assert (data->n_uri == 0);
+  g_assert (data->n_uri == 0 || !self);
   gst_discoverer_stop (data->discoverer);
   g_signal_handler_disconnect (data->discoverer, data->load_serialized_info_id);
   g_signal_handler_disconnect (data->discoverer, data->source_setup_id);
@@ -73,8 +75,6 @@ enum
 static GParamSpec *properties[N_PROPERTIES] = { NULL, };
 static guint signals[N_SIGNALS] = { 0, };
 
-G_LOCK_DEFINE_STATIC (singleton_lock);
-static GESDiscovererManager *self = NULL;
 
 static void
 ges_discoverer_manager_get_property (GObject * object,
@@ -485,6 +485,10 @@ void
 ges_discoverer_manager_cleanup (void)
 {
   G_LOCK (singleton_lock);
-  gst_clear_object (&self);
+  GESDiscovererManager *manager = self;
+
+  self = NULL;
+  if (manager)
+    gst_object_unref (manager);
   G_UNLOCK (singleton_lock);
 }
