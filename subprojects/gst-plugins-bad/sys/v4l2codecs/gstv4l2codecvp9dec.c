@@ -518,11 +518,8 @@ done:
     gst_video_codec_state_unref (self->output_state);
 
   self->output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      self->vinfo.finfo->format, self->width,
-      self->height, vp9dec->input_state);
-
-  self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
+      gst_v4l2_decoder_set_output_state (GST_VIDEO_DECODER (self), &self->vinfo,
+      self->width, self->height, vp9dec->input_state);
 
   if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
     if (self->streaming)

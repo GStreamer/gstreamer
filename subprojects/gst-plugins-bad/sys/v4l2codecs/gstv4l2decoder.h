@@ -74,6 +74,12 @@ gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
                                                       GstCaps * caps,
                                                       GstVideoInfo * vinfo);
 
+GstVideoCodecState * gst_v4l2_decoder_set_output_state (GstVideoDecoder * decoder,
+                                                        GstVideoInfo * vinfo,
+                                                        guint width,
+                                                        guint height,
+                                                        GstVideoCodecState * reference);
+
 gint              gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
                                                     GstPadDirection direction,
                                                     guint num_buffers);
