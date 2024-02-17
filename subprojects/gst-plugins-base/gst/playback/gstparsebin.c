@@ -3978,6 +3978,11 @@ guess_stream_type_from_caps (GstCaps * caps)
   s = gst_caps_get_structure (caps, 0);
   name = gst_structure_get_name (s);
 
+  if (gst_structure_has_field (s, "original-media-type")) {
+    /* Caps describe an encrypted payload, use original-media-type to determine stream type. */
+    name = gst_structure_get_string (s, "original-media-type");
+  }
+
   if (g_str_has_prefix (name, "video/") || g_str_has_prefix (name, "image/"))
     return GST_STREAM_TYPE_VIDEO;
   if (g_str_has_prefix (name, "audio/"))
