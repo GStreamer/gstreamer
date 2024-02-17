@@ -398,8 +398,7 @@ gst_v4l2_decoder_enum_size_for_format (GstV4l2Decoder * self,
       size.discrete.width, size.discrete.height, index,
       GST_FOURCC_ARGS (pixelformat));
 
-  return gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
-      gst_video_format_to_string (format),
+  return gst_caps_new_simple ("video/x-raw",
       "width", G_TYPE_INT, size.discrete.width,
       "height", G_TYPE_INT, size.discrete.height, NULL);
 }
@@ -409,7 +408,7 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
     guint32 pixelformat, gint unscaled_width, gint unscaled_height)
 {
   gint index = 0;
-  GstCaps *caps, *tmp;
+  GstCaps *caps, *tmp, *size_caps;
   GstVideoFormat format;
 
   GST_DEBUG_OBJECT (self, "enumerate size for %" GST_FOURCC_FORMAT,
@@ -421,10 +420,19 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
       gst_video_format_to_string (format), NULL);
 
+  size_caps = gst_caps_new_empty ();
   while ((tmp = gst_v4l2_decoder_enum_size_for_format (self, pixelformat,
               index++, unscaled_width, unscaled_height))) {
-    caps = gst_caps_merge (caps, tmp);
+    size_caps = gst_caps_merge (size_caps, tmp);
   }
+
+  if (!gst_caps_is_empty (size_caps)) {
+    tmp = caps;
+    caps = gst_caps_intersect_full (tmp, size_caps, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (tmp);
+  }
+
+  gst_caps_unref (size_caps);
 
   return caps;
 }
