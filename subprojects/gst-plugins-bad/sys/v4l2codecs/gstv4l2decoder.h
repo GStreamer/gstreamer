@@ -72,7 +72,7 @@ GstCaps *         gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
 
 gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
                                                       GstCaps * caps,
-                                                      GstVideoInfo * info);
+                                                      GstVideoInfo * vinfo);
 
 gint              gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
                                                     GstPadDirection direction,
