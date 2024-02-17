@@ -491,16 +491,15 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
 
 gboolean
 gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
-    GstVideoInfo * info)
+    GstVideoInfo * vinfo)
 {
   gint ret;
   struct v4l2_format fmt = {
     .type = self->src_buf_type,
   };
-  GstStructure *str;
-  const gchar *format_str;
   GstVideoFormat format;
   guint32 pix_fmt;
+  GstVideoInfo tmp_vinfo;
 
   if (gst_caps_is_empty (caps))
     return FALSE;
@@ -511,16 +510,28 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
     return FALSE;
   }
 
-  caps = gst_caps_make_writable (caps);
-  str = gst_caps_get_structure (caps, 0);
-  gst_structure_fixate_field (str, "format");
+  gst_video_info_init (&tmp_vinfo);
 
-  format_str = gst_structure_get_string (str, "format");
-  format = gst_video_format_from_string (format_str);
+  GST_DEBUG_OBJECT (self, "Original caps: %" GST_PTR_FORMAT, caps);
+  caps = gst_caps_fixate (caps);
+  GST_DEBUG_OBJECT (self, "Fixated caps: %" GST_PTR_FORMAT, caps);
 
-  if (gst_v4l2_format_from_video_format (format, &pix_fmt) &&
-      pix_fmt != fmt.fmt.pix_mp.pixelformat) {
-    GST_DEBUG_OBJECT (self, "Trying to use peer format: %s ", format_str);
+  if (gst_video_info_from_caps (&tmp_vinfo, caps)) {
+    format = tmp_vinfo.finfo->format;
+  } else {
+    GST_WARNING_OBJECT (self, "Can't transform caps into video info!");
+    return FALSE;
+  }
+
+  if (!gst_v4l2_format_from_video_format (format, &pix_fmt)) {
+    GST_ERROR_OBJECT (self, "Unsupported V4L2 pixelformat %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fmt.fmt.pix_mp.pixelformat));
+    return FALSE;
+  }
+
+  if (pix_fmt != fmt.fmt.pix_mp.pixelformat) {
+    GST_WARNING_OBJECT (self, "Trying to use peer format: %s",
+        gst_video_format_to_string (format));
     fmt.fmt.pix_mp.pixelformat = pix_fmt;
 
     ret = ioctl (self->video_fd, VIDIOC_S_FMT, &fmt);
@@ -530,15 +541,15 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
     }
   }
 
-  if (!gst_v4l2_format_to_video_info (&fmt, info)) {
+  if (!gst_v4l2_format_to_video_info (&fmt, vinfo)) {
     GST_ERROR_OBJECT (self, "Unsupported V4L2 pixelformat %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (fmt.fmt.pix_mp.pixelformat));
     return FALSE;
   }
 
   GST_INFO_OBJECT (self, "Selected format %s %ix%i",
-      gst_video_format_to_string (info->finfo->format),
-      info->width, info->height);
+      gst_video_format_to_string (vinfo->finfo->format),
+      vinfo->width, vinfo->height);
 
   return TRUE;
 }
