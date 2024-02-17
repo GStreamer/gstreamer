@@ -299,15 +299,12 @@ done:
     gst_video_codec_state_unref (self->output_state);
 
   self->output_state =
-      gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self),
-      self->vinfo.finfo->format, self->width,
-      self->height, mpeg2dec->input_state);
+      gst_v4l2_decoder_set_output_state (GST_VIDEO_DECODER (self), &self->vinfo,
+      self->width, self->height, mpeg2dec->input_state);
 
   if (self->interlaced)
     self->output_state->info.interlace_mode =
         GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
-
-  self->output_state->caps = gst_video_info_to_caps (&self->output_state->info);
 
   if (GST_VIDEO_DECODER_CLASS (parent_class)->negotiate (decoder)) {
     if (self->streaming)

@@ -554,6 +554,23 @@ gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self, GstCaps * caps,
   return TRUE;
 }
 
+GstVideoCodecState *
+gst_v4l2_decoder_set_output_state (GstVideoDecoder * decoder,
+    GstVideoInfo * vinfo, guint width, guint height,
+    GstVideoCodecState * reference)
+{
+  GstVideoCodecState *state;
+
+  state = gst_video_decoder_set_output_state (decoder, vinfo->finfo->format,
+      width, height, reference);
+
+  state->caps = gst_video_info_to_caps (&state->info);
+
+  GST_DEBUG_OBJECT (decoder, "Setting caps: %" GST_PTR_FORMAT, state->caps);
+
+  return state;
+}
+
 gint
 gst_v4l2_decoder_request_buffers (GstV4l2Decoder * self,
     GstPadDirection direction, guint num_buffers)
