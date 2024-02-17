@@ -474,6 +474,8 @@ static GstFlowReturn gst_rtspsrc_push_backchannel_buffer (GstRTSPSrc * src,
 static GstFlowReturn gst_rtspsrc_push_backchannel_sample (GstRTSPSrc * src,
     guint id, GstSample * sample);
 
+static void gst_rtspsrc_reset_flows (GstRTSPSrc * src);
+
 typedef struct
 {
   guint8 pt;
@@ -2852,6 +2854,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush, gboolean playing)
       state = GST_STATE_PAUSED;
   }
   gst_rtspsrc_push_event (src, event);
+  gst_rtspsrc_reset_flows (src);
   gst_rtspsrc_loop_send_cmd (src, cmd, CMD_LOOP);
   gst_rtspsrc_set_state (src, state);
 }
@@ -5227,6 +5230,15 @@ gst_rtspsrc_combine_flows (GstRTSPSrc * src, GstRTSPStream * stream,
    * NOT_LINKED then */
 done:
   return ret;
+}
+
+static void
+gst_rtspsrc_reset_flows (GstRTSPSrc * src)
+{
+  for (GList * streams = src->streams; streams; streams = g_list_next (streams)) {
+    GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
+    ostream->last_ret = GST_FLOW_OK;
+  }
 }
 
 static gboolean
