@@ -898,13 +898,15 @@ gst_wasapi2_ring_buffer_initialize_audio_client3 (GstWasapi2RingBuffer * self,
 static HRESULT
 gst_wasapi2_ring_buffer_initialize_audio_client (GstWasapi2RingBuffer * self,
     IAudioClient * client_handle, WAVEFORMATEX * mix_format, guint * period,
-    DWORD extra_flags, GstWasapi2ClientDeviceClass device_class)
+    DWORD extra_flags, GstWasapi2ClientDeviceClass device_class,
+    GstAudioRingBufferSpec * spec, gboolean low_latency)
 {
   GstAudioRingBuffer *ringbuffer = GST_AUDIO_RING_BUFFER_CAST (self);
   REFERENCE_TIME default_period, min_period;
   DWORD stream_flags =
       AUDCLNT_STREAMFLAGS_EVENTCALLBACK | AUDCLNT_STREAMFLAGS_NOPERSIST;
   HRESULT hr;
+  REFERENCE_TIME buf_dur = 0;
 
   stream_flags |= extra_flags;
 
@@ -918,12 +920,29 @@ gst_wasapi2_ring_buffer_initialize_audio_client (GstWasapi2RingBuffer * self,
     GST_INFO_OBJECT (self, "wasapi2 default period: %" G_GINT64_FORMAT
         ", min period: %" G_GINT64_FORMAT, default_period, min_period);
 
+    /* https://learn.microsoft.com/en-us/windows/win32/api/audioclient/nf-audioclient-iaudioclient-initialize
+     * For a shared-mode stream that uses event-driven buffering,
+     * the caller must set both hnsPeriodicity and hnsBufferDuration to 0
+     *
+     * The above MS documentation does not seem to correct. By setting
+     * zero hnsBufferDuration, we can use audio engine determined buffer size
+     * but it seems to cause glitch depending on device. Calculate buffer size
+     * like wasapi plugin does. Note that MS example code uses non-zero
+     * buffer duration for event-driven shared-mode case as well.
+     */
+    if (spec && !low_latency) {
+      /* Ensure that the period (latency_time) used is an integral multiple of
+       * either the default period or the minimum period */
+      guint64 factor = (spec->latency_time * 10) / default_period;
+      REFERENCE_TIME period = default_period * MAX (factor, 1);
+
+      buf_dur = spec->buffer_time * 10;
+      if (buf_dur < 2 * period)
+        buf_dur = 2 * period;
+    }
+
     hr = client_handle->Initialize (AUDCLNT_SHAREMODE_SHARED, stream_flags,
-        /* hnsBufferDuration should be same as hnsPeriodicity
-         * when AUDCLNT_STREAMFLAGS_EVENTCALLBACK is used.
-         * And in case of shared mode, hnsPeriodicity should be zero, so
-         * this value should be zero as well */
-        0,
+        buf_dur,
         /* This must always be 0 in shared mode */
         0, mix_format, nullptr);
   } else {
@@ -981,7 +1000,8 @@ gst_wasapi2_ring_buffer_prepare_loopback_client (GstWasapi2RingBuffer * self)
   }
 
   hr = gst_wasapi2_ring_buffer_initialize_audio_client (self, client_handle,
-      mix_format, &period, 0, GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER);
+      mix_format, &period, 0, GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
+      nullptr, FALSE);
 
   if (!gst_wasapi2_result (hr)) {
     GST_ERROR_OBJECT (self, "Failed to initialize audio client");
@@ -1106,7 +1126,8 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
       extra_flags = AUDCLNT_STREAMFLAGS_LOOPBACK;
 
     hr = gst_wasapi2_ring_buffer_initialize_audio_client (self, client_handle,
-        mix_format, &period, extra_flags, self->device_class);
+        mix_format, &period, extra_flags, self->device_class, spec,
+        self->low_latency);
   }
 
   if (!gst_wasapi2_result (hr)) {
