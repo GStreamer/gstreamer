@@ -39,7 +39,6 @@ setup (void)
   device = gst_vulkan_device_new_with_index (instance, 0);
   fail_unless (gst_vulkan_device_open (device, NULL));
 
-  queue = gst_vulkan_device_select_queue (device, VK_QUEUE_COMPUTE_BIT);
 }
 
 static void
