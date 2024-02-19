@@ -177,6 +177,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 
     if (input.type == V4L2_INPUT_TYPE_TUNER) {
       struct v4l2_tuner vtun;
+      memset (&vtun, 0, sizeof (vtun));
 
       v4l2channel->tuner = input.tuner;
       channel->flags |= GST_TUNER_CHANNEL_FREQUENCY;
