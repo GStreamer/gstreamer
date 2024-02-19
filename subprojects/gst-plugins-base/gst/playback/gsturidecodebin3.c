@@ -1281,7 +1281,10 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
   }
 
   PLAY_ITEMS_LOCK (handler->uridecodebin);
-  if (play_item_is_eos (handler->uridecodebin->input_item)) {
+  if (srcpad->block_probe_id == 0) {
+    GST_DEBUG_OBJECT (pad, "pad has already been unblocked");
+    ret = GST_PAD_PROBE_REMOVE;
+  } else if (play_item_is_eos (handler->uridecodebin->input_item)) {
     GST_DEBUG_OBJECT (handler->uridecodebin,
         "We can switch over to the next input item");
     switch_and_activate_input_locked (handler->uridecodebin,
