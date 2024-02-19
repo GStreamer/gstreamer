@@ -865,12 +865,13 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     in_surface->surface->Data.TimeStamp =
         gst_util_uint64_scale_round (inbuf->pts, 90000, GST_SECOND);
 
-  out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
-      &thiz->srcpad_info, GST_MAP_WRITE);
-
-  if (!thiz->use_video_memory)
+  if (thiz->use_video_memory) {
+    out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
+        &thiz->srcpad_info, GST_MAP_WRITE);
+  } else {
     out_surface =
         gst_msdk_import_sys_mem_to_msdk_surface (outbuf, &thiz->srcpad_info);
+  }
 
   if (out_surface) {
     out_surface->buf = gst_buffer_ref (outbuf);
@@ -951,14 +952,15 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
       GST_BUFFER_DURATION (outbuf_new) = thiz->buffer_duration;
 
       release_out_surface (thiz, out_surface);
-      out_surface =
-          gst_msdk_import_to_msdk_surface (outbuf_new, thiz->context,
-          &thiz->srcpad_buffer_pool_info, GST_MAP_WRITE);
-
-      if (!thiz->use_video_memory)
+      if (thiz->use_video_memory) {
+        out_surface =
+            gst_msdk_import_to_msdk_surface (outbuf_new, thiz->context,
+            &thiz->srcpad_buffer_pool_info, GST_MAP_WRITE);
+      } else {
         out_surface =
             gst_msdk_import_sys_mem_to_msdk_surface (outbuf_new,
             &thiz->srcpad_buffer_pool_info);
+      }
 
       if (out_surface) {
         out_surface->buf = gst_buffer_ref (outbuf_new);

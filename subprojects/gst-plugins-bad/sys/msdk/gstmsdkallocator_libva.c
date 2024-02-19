@@ -118,13 +118,16 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
 
     pool = gst_msdk_context_get_alloc_pool (context);
     if (!pool) {
+      status = MFX_ERR_MEMORY_ALLOC;
       goto error_alloc;
     }
 
     config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
     if (!gst_buffer_pool_config_get_params (config, &caps, NULL, &min_buffers,
-            &max_buffers))
+            &max_buffers)) {
+      status = MFX_ERR_MEMORY_ALLOC;
       goto error_alloc;
+    }
 
     max_buffers = MAX (max_buffers, surfaces_num);
     gst_buffer_pool_config_set_params (config, caps,
@@ -138,12 +141,14 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
     if (!gst_buffer_pool_set_config (pool, config)) {
       GST_ERROR ("Failed to set pool config");
       gst_object_unref (pool);
+      status = MFX_ERR_MEMORY_ALLOC;
       goto error_alloc;
     }
 
     if (!gst_buffer_pool_set_active (pool, TRUE)) {
       GST_ERROR ("Failed to activate pool");
       gst_object_unref (pool);
+      status = MFX_ERR_MEMORY_ALLOC;
       goto error_alloc;
     }
 
@@ -154,6 +159,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         GST_ERROR ("Failed to allocate buffer");
         gst_buffer_pool_set_active (pool, FALSE);
         gst_object_unref (pool);
+        status = MFX_ERR_MEMORY_ALLOC;
         goto error_alloc;
       }
 
@@ -163,6 +169,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
         GST_ERROR ("Failed to get GstMsdkSurface");
         gst_buffer_pool_set_active (pool, FALSE);
         gst_object_unref (pool);
+        status = MFX_ERR_MEMORY_ALLOC;
         goto error_alloc;
       }
 
@@ -192,7 +199,7 @@ gst_msdk_frame_alloc (mfxHDL pthis, mfxFrameAllocRequest * req,
       status = gst_msdk_get_mfx_status_from_va_status (va_status);
       if (status < MFX_ERR_NONE) {
         GST_ERROR ("failed to create buffer");
-        return status;
+        goto error_alloc;
       }
 
       msdk_mid.surface = coded_buf;
@@ -224,7 +231,7 @@ error_alloc:
   g_slice_free (GstMsdkAllocResponse, msdk_resp);
   if (tmp_list)
     g_list_free_full (tmp_list, (GDestroyNotify) gst_msdk_surface_list_free);
-  return MFX_ERR_MEMORY_ALLOC;
+  return status;
 }
 
 mfxStatus
