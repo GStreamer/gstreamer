@@ -461,7 +461,7 @@ gst_meta_register (GType api, const gchar * impl, gsize size,
 }
 
 /**
- * gst_meta_info_new:
+ * gst_meta_info_new: (skip):
  * @api:  the type of the #GstMeta API
  * @impl: the name of the #GstMeta implementation
  * @size: the size of the #GstMeta structure

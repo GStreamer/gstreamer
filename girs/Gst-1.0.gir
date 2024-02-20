@@ -52389,6 +52389,57 @@ not allow to determine that size, @consumed is set to 0.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="meta_info_new" c:identifier="gst_meta_info_new" moved-to="MetaInfo.new" version="1.24" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Creates a new structure that needs to be filled before being
+registered.  This structure should filled and then registered with
+gst_meta_info_register().
+
+Example:
+```c
+const GstMetaInfo *
+gst_my_meta_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (g_once_init_enter ((GstMetaInfo **) &amp; meta_info)) {
+    GstMetaInfo *info = gst_meta_info_new (
+      gst_my_meta_api_get_type (),
+        "GstMyMeta",
+       sizeof (GstMyMeta));
+    const GstMetaInfo *meta = NULL;
+
+    info-&gt;init_func = my_meta_init;
+    info-&gt;free_func = my_meta_free;
+    info-&gt;transform_func = my_meta_transform;
+    info-&gt;serialize_func = my_meta_serialize;
+    info-&gt;deserialize_func = my_meta_deserialize;
+    meta = gst_meta_info_register (info);
+    g_once_init_leave ((GstMetaInfo **) &amp; meta_info, (GstMetaInfo *) meta);
+  }
+
+  return meta_info;
+}
+```</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstmeta.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">a new #GstMetaInfo that needs to be filled</doc>
+        <type name="MetaInfo" c:type="GstMetaInfo*"/>
+      </return-value>
+      <parameters>
+        <parameter name="api" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the type of the #GstMeta API</doc>
+          <type name="GType" c:type="GType"/>
+        </parameter>
+        <parameter name="impl" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the name of the #GstMeta implementation</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+        <parameter name="size" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">the size of the #GstMeta structure</doc>
+          <type name="gsize" c:type="gsize"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="meta_register" c:identifier="gst_meta_register" moved-to="Meta.register" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmeta.c">Register a new #GstMeta implementation.
 
