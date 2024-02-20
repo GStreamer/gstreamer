@@ -1058,6 +1058,8 @@ colorbalance_value_changed_cb (GstColorBalance * balance,
 static void
 gst_play_bin3_init (GstPlayBin3 * playbin)
 {
+  GstCaps *uridecodebin_caps, *subtitle_caps;
+
   g_rec_mutex_init (&playbin->lock);
 
   /* assume we can create an input-selector */
@@ -1072,6 +1074,14 @@ gst_play_bin3_init (GstPlayBin3 * playbin)
   g_object_set (playbin->uridecodebin, "use-buffering", TRUE, NULL);
   gst_bin_add (GST_BIN_CAST (playbin),
       GST_ELEMENT_CAST (playbin->uridecodebin));
+
+  /* Make sure uridecodebin3 knows of all the subtitle formats that playsink can
+   * handle as-is */
+  subtitle_caps = gst_subtitle_overlay_create_factory_caps ();
+  g_object_get (playbin->uridecodebin, "caps", &uridecodebin_caps, NULL);
+  uridecodebin_caps = gst_caps_merge (uridecodebin_caps, subtitle_caps);
+  g_object_set (playbin->uridecodebin, "caps", uridecodebin_caps, NULL);
+  gst_caps_unref (uridecodebin_caps);
 
   g_signal_connect (playbin->uridecodebin, "pad-added",
       G_CALLBACK (pad_added_cb), playbin);
