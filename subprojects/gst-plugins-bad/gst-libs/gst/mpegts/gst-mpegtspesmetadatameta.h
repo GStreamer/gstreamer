@@ -95,7 +95,7 @@ struct _GstMpegtsPESMetadataMeta {
  *
  * Creates and adds a #GstMpegtsPESMetadataMeta to a @buffer.
  *
- * Returns: (transfer full): a newly created #GstMpegtsPESMetadataMeta
+ * Returns: (transfer none): a newly created #GstMpegtsPESMetadataMeta
  *
  * Since: 1.24
  */
