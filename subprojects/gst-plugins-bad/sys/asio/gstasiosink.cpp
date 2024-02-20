@@ -27,6 +27,7 @@
 #include <atlconv.h>
 #include <string.h>
 #include <set>
+#include <vector>
 
 GST_DEBUG_CATEGORY_STATIC (gst_asio_sink_debug);
 #define GST_CAT_DEFAULT gst_asio_sink_debug
@@ -234,9 +235,8 @@ gst_asio_sink_create_ringbuffer (GstAudioBaseSink * sink)
   GstAsioObject *asio_object = nullptr;
   glong max_input_ch = 0;
   glong max_output_ch = 0;
-  guint *channel_indices = nullptr;
-  guint num_capture_channels = 0;
   std::set < guint > channel_list;
+  std::vector < guint > channel_indices;
   guint i;
   gchar *ringbuffer_name;
 
@@ -286,27 +286,27 @@ gst_asio_sink_create_ringbuffer (GstAudioBaseSink * sink)
 
   /* Configure channels to use */
   if (!gst_asio_object_get_max_num_channels (asio_object, &max_input_ch,
-          &max_output_ch) || max_input_ch <= 0) {
-    GST_WARNING_OBJECT (self, "No available input channels");
+          &max_output_ch) || max_output_ch <= 0) {
+    GST_WARNING_OBJECT (self, "No available output channels");
     goto out;
   }
 
-  /* Check if user requested specific channle(s) */
+  /* Check if user requested specific channel(s) */
   if (self->output_channels) {
     gchar **ch;
 
     ch = g_strsplit (self->output_channels, ",", 0);
 
-    num_capture_channels = g_strv_length (ch);
-    if (num_capture_channels > max_input_ch) {
+    auto num_channels = g_strv_length (ch);
+    if (num_channels > max_output_ch) {
       GST_WARNING_OBJECT (self, "To many channels %d were requested",
-          num_capture_channels);
+          num_channels);
     } else {
-      for (i = 0; i < num_capture_channels; i++) {
+      for (i = 0; i < num_channels; i++) {
         guint64 c = g_ascii_strtoull (ch[i], nullptr, 0);
-        if (c >= (guint64) max_input_ch) {
+        if (c >= (guint64) max_output_ch) {
           GST_WARNING_OBJECT (self, "Invalid channel index");
-          num_capture_channels = 0;
+          channel_list.clear ();
           break;
         }
 
@@ -317,18 +317,12 @@ gst_asio_sink_create_ringbuffer (GstAudioBaseSink * sink)
     g_strfreev (ch);
   }
 
-  channel_indices = (guint *) g_alloca (sizeof (guint) * max_input_ch);
   if (channel_list.size () == 0) {
-    for (i = 0; i < max_input_ch; i++)
-      channel_indices[i] = i;
-
-    num_capture_channels = max_input_ch;
+    for (i = 0; i < max_output_ch; i++)
+      channel_indices.push_back (i);
   } else {
-    num_capture_channels = (guint) channel_list.size ();
-    i = 0;
-  for (auto iter:channel_list) {
-      channel_indices[i++] = iter;
-    }
+    for (auto iter : channel_indices)
+      channel_indices.push_back (iter);
   }
 
   ringbuffer_name = g_strdup_printf ("%s-asioringbuffer",
@@ -344,8 +338,8 @@ gst_asio_sink_create_ringbuffer (GstAudioBaseSink * sink)
     goto out;
   }
 
-  if (!gst_asio_ring_buffer_configure (ringbuffer, channel_indices,
-          num_capture_channels, self->buffer_size)) {
+  if (!gst_asio_ring_buffer_configure (ringbuffer, channel_indices.data (),
+          channel_indices.size (), self->buffer_size)) {
     GST_WARNING_OBJECT (self, "Failed to configure ringbuffer");
     gst_clear_object (&ringbuffer);
     goto out;
