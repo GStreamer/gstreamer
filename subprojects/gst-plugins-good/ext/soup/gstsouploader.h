@@ -15,7 +15,7 @@
 #ifndef __GST_SOUP_LOADER_H__
 #define __GST_SOUP_LOADER_H__
 
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
 #include <libsoup/soup.h>
 #else
 #include "stub/soup.h"
@@ -89,10 +89,10 @@ void _soup_session_add_feature (SoupSession *session,
 void _soup_session_add_feature_by_type (SoupSession *session, GType feature_type);
 
 typedef struct _GstSoupUri {
-#if (defined(STATIC_SOUP) && STATIC_SOUP == 3) || (!defined(STATIC_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
+#if (defined(LINK_SOUP) && LINK_SOUP == 3) || (!defined(LINK_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
   GUri *uri;
 #endif
-#if (defined(STATIC_SOUP) && STATIC_SOUP == 2) || !defined(STATIC_SOUP)
+#if (defined(LINK_SOUP) && LINK_SOUP == 2) || !defined(LINK_SOUP)
   SoupURI *soup_uri;
 #endif
 } GstSoupUri;

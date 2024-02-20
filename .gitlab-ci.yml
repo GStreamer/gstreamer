@@ -348,7 +348,6 @@ build clang fedora x86_64:
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
       -Dgst-plugins-good:soup=enabled
-      -Dgst-plugins-good:soup-lookup-dep=true
     # Needs to not be empty otherwise the newline -> space replace command in
     # `script:` will fail
     MESON_CROSS_ARGS: ' '
@@ -415,7 +414,6 @@ build vs2019 arm64 uwp:
     MESON_CROSS_ARGS: >
       -Dgst-plugins-base:pango=disabled
       -Dgst-plugins-good:cairo=disabled
-      -Dgst-plugins-good:soup-lookup-dep=false
       -Dgst-devtools:cairo=disabled
       --cross-file ci/meson/vs2019-arm64-cross-file.txt
       --native-file ci/meson/vs2019-x64-native-file.txt

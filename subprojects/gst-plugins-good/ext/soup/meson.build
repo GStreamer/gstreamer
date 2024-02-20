@@ -8,35 +8,42 @@ soup_sources = [
 ]
 
 soup_opt = get_option('soup')
+soup_ver_opt = get_option('soup-version')
 if soup_opt.disabled()
   subdir_done()
 endif
 
 libdl_dep = cc.find_library('dl', required: false)
 
-static_args = []
-static_deps = []
+soup_link_args = []
+soup_link_deps = []
+libsoup2_dep = disabler()
+libsoup3_dep = disabler()
 default_library = get_option('default_library')
-if default_library in ['static', 'both'] or get_option('soup-lookup-dep')
-  libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48',
-                            required : false, fallback : ['libsoup', 'libsoup_dep'],
-                            default_options: ['sysprof=disabled'])
-  libsoup3_dep = dependency('libsoup-3.0', required : false,
-                            fallback : ['libsoup3', 'libsoup_dep'])
-  if not libsoup2_dep.found() and not libsoup3_dep.found()
+if host_system != 'linux' or default_library in ['static', 'both']
+  if soup_ver_opt in ['auto', '3']
+    libsoup3_dep = dependency('libsoup-3.0', allow_fallback: true,
+                              required: soup_ver_opt == '3' and soup_opt.enabled())
+  endif
+  if soup_ver_opt in ['auto', '2']
+    libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48', allow_fallback: true,
+                              default_options: ['sysprof=disabled'],
+                              required: soup_ver_opt == '2' and soup_opt.enabled())
+  endif
+
+  if libsoup3_dep.found()
+    soup_link_deps += libsoup3_dep
+    soup_link_args += '-DLINK_SOUP=3'
+    message('soup plugin: linking to libsoup-3.0')
+  elif libsoup2_dep.found()
+    soup_link_deps += libsoup2_dep
+    soup_link_args += '-DLINK_SOUP=2'
+    message('soup plugin: linking to libsoup-2.4')
+  else
     if soup_opt.enabled()
       error('Either libsoup2 or libsoup3 is needed')
     endif
     subdir_done()
-  endif
-  if libsoup3_dep.found()
-    static_deps += libsoup3_dep
-    static_args += '-DSTATIC_SOUP=3'
-    message('soup plugin: using libsoup-3.0 for static build')
-  elif libsoup2_dep.found()
-    static_deps += libsoup2_dep
-    static_args += '-DSTATIC_SOUP=2'
-    message('soup plugin: using libsoup-2.4 for static build')
   endif
 endif
 
@@ -50,25 +57,35 @@ soup_library_kwargs = {
 soup_library_deps = [gst_dep, gstbase_dep, gsttag_dep, gmodule_dep, gio_dep, libdl_dep]
 soup_library_c_args = gst_plugins_good_args
 
-if default_library in ['shared', 'both']
-  gstsouphttpsrc_shared = shared_library('gstsoup',
-    c_args : soup_library_c_args,
-    dependencies : soup_library_deps,
+if host_system != 'linux'
+  gstsouphttpsrc = library('gstsoup',
+    c_args : soup_library_c_args + soup_link_args,
+    dependencies : soup_library_deps + soup_link_deps,
     kwargs: soup_library_kwargs,
   )
+  gstsouphttpsrc_shared = gstsouphttpsrc
+  gstsouphttpsrc_static = gstsouphttpsrc
+else
+  if default_library in ['static', 'both']
+    gstsouphttpsrc_static = static_library('gstsoup',
+      c_args : soup_library_c_args + soup_link_args,
+      dependencies : soup_library_deps + soup_link_deps,
+      kwargs: soup_library_kwargs,
+    )
+  endif
+  if default_library in ['shared', 'both']
+    gstsouphttpsrc_shared = shared_library('gstsoup',
+      c_args : soup_library_c_args,
+      dependencies : soup_library_deps,
+      kwargs: soup_library_kwargs,
+    )
+  endif
 endif
 
-if default_library in ['static', 'both']
-  gstsouphttpsrc_static = static_library('gstsoup',
-    c_args : soup_library_c_args + static_args,
-    dependencies : soup_library_deps + static_deps,
-    kwargs: soup_library_kwargs,
-  )
-endif
-
-# Use the static library to generate the .pc file if it's available. The shared
-# library .pc file does not have a Requires: on libsoup-2.4, and we use plugin
-# .pc files to generate dependencies for linking plugins statically.
+# Use the static library to generate the .pc file on Linux if it's available.
+# In that case, the shared library .pc file does not have a Requires: on
+# libsoup-2.4, and we use plugin .pc files to generate dependencies for linking
+# plugins statically.
 if default_library == 'shared'
   pkgconfig.generate(gstsouphttpsrc_shared, install_dir : plugins_pkgconfig_install_dir)
 else

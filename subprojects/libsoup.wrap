@@ -4,3 +4,7 @@ source_url = https://download.gnome.org/sources/libsoup/2.74/libsoup-2.74.3.tar.
 source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/libsoup/2.74/libsoup-2.74.3.tar.xz
 source_filename = libsoup-2.74.3.tar.xz
 source_hash = e4b77c41cfc4c8c5a035fcdc320c7bc6cfb75ef7c5a034153df1413fa1d92f13
+
+[provide]
+libsoup-2.4 = libsoup_dep
+libsoup-gnome-2.4 = libsoup_gnome_dep

@@ -23,13 +23,6 @@
 #include <dlfcn.h>
 #endif
 
-#ifdef G_OS_WIN32
-#include <windows.h>
-#if WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_APP) && !WINAPI_FAMILY_PARTITION(WINAPI_PARTITION_DESKTOP)
-#define GST_WINAPI_ONLY_APP
-#endif
-#endif /* G_OS_WIN32 */
-
 #ifdef BUILDING_ADAPTIVEDEMUX2
 GST_DEBUG_CATEGORY (gst_adaptivedemux_soup_debug);
 #define GST_CAT_DEFAULT gst_adaptivedemux_soup_debug
@@ -39,17 +32,14 @@ GST_DEBUG_CATEGORY (gst_soup_debug);
 #endif
 
 
-#ifndef STATIC_SOUP
+#ifndef LINK_SOUP
 
-/* G_OS_WIN32 is handled separately below */
-#ifdef __APPLE__
-#define LIBSOUP_3_SONAME "libsoup-3.0.0.dylib"
-#define LIBSOUP_2_SONAME "libsoup-2.4.1.dylib"
-#else
-#define LIBSOUP_3_SONAME "libsoup-3.0.so.0"
-#define LIBSOUP_2_SONAME "libsoup-2.4.so.1"
+#if defined(__APPLE__) || defined(G_OS_WIN32)
+#error "dlopen of libsoup is only supported on Linux"
 #endif
 
+#define LIBSOUP_3_SONAME "libsoup-3.0.so.0"
+#define LIBSOUP_2_SONAME "libsoup-2.4.so.1"
 
 #define LOAD_SYMBOL(name) G_STMT_START {                                \
     if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &G_PASTE (vtable->_, name))) { \
@@ -187,52 +177,9 @@ gst_soup_load_library (void)
 
     g_clear_pointer (&handle, dlclose);
   }
-#else /* !HAVE_RTLD_NOLOAD */
-
-#ifdef G_OS_WIN32
-
-#define LIBSOUP2_MSVC_DLL "soup-2.4-1.dll"
-#define LIBSOUP3_MSVC_DLL "soup-3.0-0.dll"
-#define LIBSOUP2_MINGW_DLL "libsoup-2.4-1.dll"
-#define LIBSOUP3_MINGW_DLL "libsoup-3.0-0.dll"
-
-  {
-#ifdef _MSC_VER
-    const char *candidates[5] = { LIBSOUP3_MSVC_DLL, LIBSOUP2_MSVC_DLL,
-      LIBSOUP3_MINGW_DLL, LIBSOUP2_MINGW_DLL, 0
-    };
 #else
-    const char *candidates[5] = { LIBSOUP3_MINGW_DLL, LIBSOUP2_MINGW_DLL,
-      LIBSOUP3_MSVC_DLL, LIBSOUP2_MSVC_DLL, 0
-    };
-#endif /* _MSC_VER */
-
-    guint len = g_strv_length ((gchar **) candidates);
-#if !GST_WINAPI_ONLY_APP
-    for (guint i = 0; i < len; i++) {
-      HMODULE phModule;
-      BOOL loaded =
-          GetModuleHandleExA (GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-          candidates[i], &phModule);
-      if (loaded) {
-        GST_DEBUG ("%s is resident. Using it.", candidates[i]);
-        libsoup_sonames[0] = candidates[i];
-        break;
-      }
-    }
-#endif
-    if (libsoup_sonames[0] == NULL) {
-      GST_DEBUG ("No resident libsoup, trying them all");
-      for (guint i = 0; i < len; i++) {
-        libsoup_sonames[i] = candidates[i];
-      }
-    }
-  }
-#else /* !G_OS_WIN32 */
   libsoup_sonames[0] = LIBSOUP_3_SONAME;
   libsoup_sonames[1] = LIBSOUP_2_SONAME;
-#endif /* G_OS_WIN32 */
-
 #endif /* HAVE_RTLD_NOLOAD */
 
   vtable = &gst_soup_vtable;
@@ -317,13 +264,13 @@ gst_soup_load_library (void)
   return vtable->loaded;
 }
 
-#endif /* !STATIC_SOUP */
+#endif /* !LINK_SOUP */
 
 guint
 gst_soup_loader_get_api_version (void)
 {
-#ifdef STATIC_SOUP
-  return STATIC_SOUP;
+#ifdef LINK_SOUP
+  return LINK_SOUP;
 #else
   return gst_soup_vtable.lib_version;
 #endif
@@ -346,10 +293,10 @@ _soup_session_new_with_options (const char *optname1, ...)
 SoupLogger *
 _soup_logger_new (SoupLoggerLogLevel level)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   return soup_logger_new (level, -1);
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   return soup_logger_new (level);
 #endif
 #else
@@ -366,7 +313,7 @@ void
 _soup_logger_set_printer (SoupLogger * logger, SoupLoggerPrinter printer,
     gpointer printer_data, GDestroyNotify destroy)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_logger_set_printer (logger, printer, printer_data, destroy);
 #else
   g_assert (gst_soup_vtable._soup_logger_set_printer != NULL);
@@ -378,7 +325,7 @@ _soup_logger_set_printer (SoupLogger * logger, SoupLoggerPrinter printer,
 void
 _soup_session_add_feature (SoupSession * session, SoupSessionFeature * feature)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_session_add_feature (session, feature);
 #else
   g_assert (gst_soup_vtable._soup_session_add_feature != NULL);
@@ -390,8 +337,8 @@ GstSoupUri *
 gst_soup_uri_new (const char *uri_string)
 {
   GstSoupUri *uri = g_new0 (GstSoupUri, 1);
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   uri->soup_uri = soup_uri_new (uri_string);
 #else
   uri->uri = g_uri_parse (uri_string, SOUP_HTTP_URI_FLAGS, NULL);
@@ -412,48 +359,48 @@ gst_soup_uri_new (const char *uri_string)
 void
 gst_soup_uri_free (GstSoupUri * uri)
 {
-#if (defined(STATIC_SOUP) && STATIC_SOUP == 3) || (!defined(STATIC_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
+#if (defined(LINK_SOUP) && LINK_SOUP == 3) || (!defined(LINK_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
   if (uri->uri) {
     g_uri_unref (uri->uri);
   }
 #endif
 
-#if defined(STATIC_SOUP)
-#if STATIC_SOUP == 2
+#if defined(LINK_SOUP)
+#if LINK_SOUP == 2
   if (uri->soup_uri) {
     soup_uri_free (uri->soup_uri);
   }
 #endif
-#else /* !STATIC_SOUP */
+#else /* !LINK_SOUP */
   if (uri->soup_uri) {
     g_assert (gst_soup_vtable._soup_uri_free_2 != NULL);
     gst_soup_vtable._soup_uri_free_2 (uri->soup_uri);
   }
-#endif /* STATIC_SOUP */
+#endif /* LINK_SOUP */
   g_free (uri);
 }
 
 char *
 gst_soup_uri_to_string (GstSoupUri * uri)
 {
-#if (defined(STATIC_SOUP) && STATIC_SOUP == 3) || (!defined(STATIC_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
+#if (defined(LINK_SOUP) && LINK_SOUP == 3) || (!defined(LINK_SOUP) && GLIB_CHECK_VERSION(2, 66, 0))
   if (uri->uri) {
     return g_uri_to_string_partial (uri->uri, G_URI_HIDE_PASSWORD);
   }
 #endif
 
-#if defined(STATIC_SOUP)
-#if STATIC_SOUP == 2
+#if defined(LINK_SOUP)
+#if LINK_SOUP == 2
   if (uri->soup_uri) {
     return soup_uri_to_string (uri->soup_uri, FALSE);
   }
 #endif
-#else /* !STATIC_SOUP */
+#else /* !LINK_SOUP */
   if (uri->soup_uri) {
     g_assert (gst_soup_vtable._soup_uri_to_string_2 != NULL);
     return gst_soup_vtable._soup_uri_to_string_2 (uri->soup_uri, FALSE);
   }
-#endif /* STATIC_SOUP */
+#endif /* LINK_SOUP */
 
   g_assert_not_reached ();
   return NULL;
@@ -462,12 +409,12 @@ gst_soup_uri_to_string (GstSoupUri * uri)
 char *
 gst_soup_message_uri_to_string (SoupMessage * msg)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   SoupURI *uri = NULL;
   uri = soup_message_get_uri (msg);
   return soup_uri_to_string (uri, FALSE);
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   GUri *uri = NULL;
   uri = soup_message_get_uri (msg);
   return g_uri_to_string_partial (uri, G_URI_HIDE_PASSWORD);
@@ -499,7 +446,7 @@ gst_soup_message_uri_to_string (SoupMessage * msg)
 guint
 _soup_get_major_version (void)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_get_major_version ();
 #else
   g_assert (gst_soup_vtable._soup_get_major_version != NULL);
@@ -510,7 +457,7 @@ _soup_get_major_version (void)
 guint
 _soup_get_minor_version (void)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_get_minor_version ();
 #else
   g_assert (gst_soup_vtable._soup_get_minor_version != NULL);
@@ -521,7 +468,7 @@ _soup_get_minor_version (void)
 guint
 _soup_get_micro_version (void)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_get_micro_version ();
 #else
   g_assert (gst_soup_vtable._soup_get_micro_version != NULL);
@@ -533,12 +480,12 @@ void
 _soup_message_set_request_body_from_bytes (SoupMessage * msg,
     const char *content_type, GBytes * bytes)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   gsize size;
   gconstpointer data = g_bytes_get_data (bytes, &size);
   soup_message_body_append (msg->request_body, SOUP_MEMORY_COPY, data, size);
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   soup_message_set_request_body_from_bytes (msg, content_type, bytes);
 #endif
 #else
@@ -561,7 +508,7 @@ _soup_message_set_request_body_from_bytes (SoupMessage * msg,
 GType
 _soup_session_get_type (void)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_session_get_type ();
 #else
   g_assert (gst_soup_vtable._soup_session_get_type != NULL);
@@ -572,7 +519,7 @@ _soup_session_get_type (void)
 GType
 _soup_logger_log_level_get_type (void)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_logger_log_level_get_type ();
 #else
   g_assert (gst_soup_vtable._soup_logger_log_level_get_type != NULL);
@@ -583,7 +530,7 @@ _soup_logger_log_level_get_type (void)
 GType
 _soup_content_decoder_get_type (void)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_content_decoder_get_type ();
 #else
   g_assert (gst_soup_vtable._soup_content_decoder_get_type != NULL);
@@ -594,7 +541,7 @@ _soup_content_decoder_get_type (void)
 GType
 _soup_cookie_jar_get_type (void)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_cookie_jar_get_type ();
 #else
   g_assert (gst_soup_vtable._soup_cookie_jar_get_type != NULL);
@@ -605,7 +552,7 @@ _soup_cookie_jar_get_type (void)
 void
 _soup_session_abort (SoupSession * session)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_session_abort (session);
 #else
   g_assert (gst_soup_vtable._soup_session_abort != NULL);
@@ -616,7 +563,7 @@ _soup_session_abort (SoupSession * session)
 SoupMessage *
 _soup_message_new (const char *method, const char *uri_string)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_message_new (method, uri_string);
 #else
   g_assert (gst_soup_vtable._soup_message_new != NULL);
@@ -627,10 +574,10 @@ _soup_message_new (const char *method, const char *uri_string)
 SoupMessageHeaders *
 _soup_message_get_request_headers (SoupMessage * msg)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   return msg->request_headers;
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   return soup_message_get_request_headers (msg);
 #endif
 #else
@@ -647,10 +594,10 @@ _soup_message_get_request_headers (SoupMessage * msg)
 SoupMessageHeaders *
 _soup_message_get_response_headers (SoupMessage * msg)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   return msg->response_headers;
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   return soup_message_get_response_headers (msg);
 #endif
 #else
@@ -667,7 +614,7 @@ _soup_message_get_response_headers (SoupMessage * msg)
 void
 _soup_message_headers_remove (SoupMessageHeaders * hdrs, const char *name)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_message_headers_remove (hdrs, name);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_remove != NULL);
@@ -679,7 +626,7 @@ void
 _soup_message_headers_append (SoupMessageHeaders * hdrs, const char *name,
     const char *value)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_message_headers_append (hdrs, name, value);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_append != NULL);
@@ -690,7 +637,7 @@ _soup_message_headers_append (SoupMessageHeaders * hdrs, const char *name,
 void
 _soup_message_set_flags (SoupMessage * msg, SoupMessageFlags flags)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_message_set_flags (msg, flags);
 #else
   g_assert (gst_soup_vtable._soup_message_set_flags != NULL);
@@ -701,7 +648,7 @@ _soup_message_set_flags (SoupMessage * msg, SoupMessageFlags flags)
 void
 _soup_session_add_feature_by_type (SoupSession * session, GType feature_type)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_session_add_feature_by_type (session, feature_type);
 #else
   g_assert (gst_soup_vtable._soup_session_add_feature_by_type != NULL);
@@ -713,7 +660,7 @@ void
 _soup_message_headers_foreach (SoupMessageHeaders * hdrs,
     SoupMessageHeadersForeachFunc func, gpointer user_data)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_message_headers_foreach (hdrs, func, user_data);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_foreach != NULL);
@@ -724,7 +671,7 @@ _soup_message_headers_foreach (SoupMessageHeaders * hdrs,
 SoupEncoding
 _soup_message_headers_get_encoding (SoupMessageHeaders * hdrs)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_message_headers_get_encoding (hdrs);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_get_encoding != NULL);
@@ -735,7 +682,7 @@ _soup_message_headers_get_encoding (SoupMessageHeaders * hdrs)
 goffset
 _soup_message_headers_get_content_length (SoupMessageHeaders * hdrs)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_message_headers_get_content_length (hdrs);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_get_content_length != NULL);
@@ -746,10 +693,10 @@ _soup_message_headers_get_content_length (SoupMessageHeaders * hdrs)
 SoupStatus
 _soup_message_get_status (SoupMessage * msg)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   return msg->status_code;
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   return soup_message_get_status (msg);
 #endif
 #else
@@ -766,10 +713,10 @@ _soup_message_get_status (SoupMessage * msg)
 const char *
 _soup_message_get_reason_phrase (SoupMessage * msg)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   return msg->reason_phrase;
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   return soup_message_get_reason_phrase (msg);
 #endif
 #else
@@ -786,7 +733,7 @@ _soup_message_get_reason_phrase (SoupMessage * msg)
 const char *
 _soup_message_headers_get_one (SoupMessageHeaders * hdrs, const char *name)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_message_headers_get_one (hdrs, name);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_get_one != NULL);
@@ -797,7 +744,7 @@ _soup_message_headers_get_one (SoupMessageHeaders * hdrs, const char *name)
 void
 _soup_message_disable_feature (SoupMessage * msg, GType feature_type)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_message_disable_feature (msg, feature_type);
 #else
   g_assert (gst_soup_vtable._soup_message_disable_feature != NULL);
@@ -809,7 +756,7 @@ const char *
 _soup_message_headers_get_content_type (SoupMessageHeaders * hdrs,
     GHashTable ** params)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_message_headers_get_content_type (hdrs, params);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_get_content_type != NULL);
@@ -821,7 +768,7 @@ gboolean
 _soup_message_headers_get_content_range (SoupMessageHeaders * hdrs,
     goffset * start, goffset * end, goffset * total_length)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_message_headers_get_content_range (hdrs, start, end,
       total_length);
 #else
@@ -835,7 +782,7 @@ void
 _soup_message_headers_set_range (SoupMessageHeaders * hdrs, goffset start,
     goffset end)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_message_headers_set_range (hdrs, start, end);
 #else
   g_assert (gst_soup_vtable._soup_message_headers_set_range != NULL);
@@ -847,7 +794,7 @@ void
 _soup_auth_authenticate (SoupAuth * auth, const char *username,
     const char *password)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_auth_authenticate (auth, username, password);
 #else
   g_assert (gst_soup_vtable._soup_auth_authenticate != NULL);
@@ -858,10 +805,10 @@ _soup_auth_authenticate (SoupAuth * auth, const char *username,
 const char *
 _soup_message_get_method (SoupMessage * msg)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   return msg->method;
-#elif STATIC_SOUP == 3
+#elif LINK_SOUP == 3
   return soup_message_get_method (msg);
 #endif
 #else
@@ -880,8 +827,8 @@ _soup_session_send_async (SoupSession * session, SoupMessage * msg,
     GCancellable * cancellable, GAsyncReadyCallback callback,
     gpointer user_data)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 2
+#ifdef LINK_SOUP
+#if LINK_SOUP == 2
   soup_session_send_async (session, msg, cancellable, callback, user_data);
 #else
   soup_session_send_async (session, msg, G_PRIORITY_DEFAULT, cancellable,
@@ -904,7 +851,7 @@ GInputStream *
 _soup_session_send_finish (SoupSession * session,
     GAsyncResult * result, GError ** error)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_session_send_finish (session, result, error);
 #else
   g_assert (gst_soup_vtable._soup_session_send_finish != NULL);
@@ -916,7 +863,7 @@ GInputStream *
 _soup_session_send (SoupSession * session, SoupMessage * msg,
     GCancellable * cancellable, GError ** error)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_session_send (session, msg, cancellable, error);
 #else
   g_assert (gst_soup_vtable._soup_session_send != NULL);
@@ -928,8 +875,8 @@ void
 gst_soup_session_cancel_message (SoupSession * session, SoupMessage * msg,
     GCancellable * cancellable)
 {
-#ifdef STATIC_SOUP
-#if STATIC_SOUP == 3
+#ifdef LINK_SOUP
+#if LINK_SOUP == 3
   g_cancellable_cancel (cancellable);
 #else
   soup_session_cancel_message (session, msg, SOUP_STATUS_CANCELLED);
@@ -948,7 +895,7 @@ gst_soup_session_cancel_message (SoupSession * session, SoupMessage * msg,
 SoupCookie *
 _soup_cookie_parse (const char *header)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   return soup_cookie_parse (header, NULL);
 #else
   g_assert (gst_soup_vtable._soup_cookie_parse != NULL);
@@ -960,7 +907,7 @@ _soup_cookie_parse (const char *header)
 void
 _soup_cookies_to_request (GSList * cookies, SoupMessage * msg)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_cookies_to_request (cookies, msg);
 #else
   g_assert (gst_soup_vtable._soup_cookies_to_request != NULL);
@@ -971,7 +918,7 @@ _soup_cookies_to_request (GSList * cookies, SoupMessage * msg)
 void
 _soup_cookies_free (GSList * cookies)
 {
-#ifdef STATIC_SOUP
+#ifdef LINK_SOUP
   soup_cookies_free (cookies);
 #else
   g_assert (gst_soup_vtable._soup_cookies_free != NULL);
