@@ -734,7 +734,7 @@ gst_asio_object_thread_func (GstAsioObject * self)
     }
 
     self->output_channel_requested =
-        g_new0 (gboolean, self->max_num_input_channels);
+        g_new0 (gboolean, self->max_num_output_channels);
   }
 
   asio_rst = asio_handle->getSampleRate (&self->sample_rate);
