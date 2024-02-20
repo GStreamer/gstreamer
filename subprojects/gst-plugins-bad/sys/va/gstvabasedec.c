@@ -487,6 +487,12 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   has_video_crop_meta = has_videometa && gst_query_find_allocation_meta (query,
       GST_VIDEO_CROP_META_API_TYPE, NULL);
 
+  if (gst_video_is_dma_drm_caps (caps) && !has_videometa) {
+    GST_ERROR_OBJECT (base,
+        "DMABuf caps negotiated without the mandatory support of VideoMeta ");
+    return FALSE;
+  }
+
   /* 1. The output picture locates in the middle of the decoded buffer,
      but the downstream element does not support VideoCropMeta, we
      definitely need a copy.

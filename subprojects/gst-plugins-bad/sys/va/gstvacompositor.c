@@ -666,6 +666,14 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   if (!caps)
     return FALSE;
 
+  has_videometa = gst_query_find_allocation_meta (query,
+      GST_VIDEO_META_API_TYPE, NULL);
+  if (gst_video_is_dma_drm_caps (caps) && !has_videometa) {
+    GST_ERROR_OBJECT (self,
+        "DMABuf caps negotiated without the mandatory support of VideoMeta ");
+    return FALSE;
+  }
+
   if (gst_query_get_n_allocation_params (query) > 0) {
     GstVaDisplay *display;
 
@@ -761,9 +769,6 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
     gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
   else
     gst_query_add_allocation_pool (query, pool, size, min, max);
-
-  has_videometa = gst_query_find_allocation_meta (query,
-      GST_VIDEO_META_API_TYPE, NULL);
 
   copy_frames = (!has_videometa && gst_va_pool_requires_video_meta (pool)
       && gst_caps_is_raw (caps));
