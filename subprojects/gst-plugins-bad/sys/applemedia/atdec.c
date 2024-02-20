@@ -325,11 +325,7 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
   /* set the format we want to negotiate downstream */
   gst_audio_info_from_caps (&output_info, output_caps);
-  gst_audio_info_set_format (&output_info,
-      output_format.mFormatFlags & kLinearPCMFormatFlagIsSignedInteger ?
-      GST_AUDIO_FORMAT_S16LE : GST_AUDIO_FORMAT_F32LE,
-      output_format.mSampleRate, output_format.mChannelsPerFrame, NULL);
-  gst_audio_decoder_set_output_format (decoder, &output_info);
+  gst_audio_decoder_set_output_caps (decoder, output_caps);
   gst_caps_unref (output_caps);
 
   status = AudioQueueNewOutput (&input_format, gst_atdec_buffer_emptied,
