@@ -452,8 +452,12 @@ gst_rtp_passthrough_pay_create_stats (GstRtpPassthroughPay * self)
 {
   GstClockTime running_time;
 
-  running_time = gst_segment_to_running_time (&self->segment, GST_FORMAT_TIME,
-      self->pts_or_dts);
+  if (self->segment.format == GST_FORMAT_UNDEFINED) {
+    running_time = 0;
+  } else {
+    running_time = gst_segment_to_running_time (&self->segment, GST_FORMAT_TIME,
+        self->pts_or_dts);
+  }
 
   return gst_structure_new ("application/x-rtp-payload-stats", "clock-rate",
       G_TYPE_UINT, (guint) self->clock_rate, "running-time", G_TYPE_UINT64,
