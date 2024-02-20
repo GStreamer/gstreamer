@@ -129,7 +129,7 @@ gst_ttml_parse_class_init (GstTtmlParseClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
   gst_element_class_set_static_metadata (element_class,
-      "TTML subtitle parser", "Codec/Parser/Subtitle",
+      "TTML subtitle parser", "Codec/Decoder/Subtitle",
       "Parses TTML subtitle files",
       "GStreamer maintainers <gstreamer-devel@lists.sourceforge.net>, "
       "Chris Bass <dash@rd.bbc.co.uk>");

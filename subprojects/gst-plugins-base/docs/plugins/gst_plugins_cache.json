@@ -13010,7 +13010,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Parser/Subtitle",
+                "klass": "Codec/Decoder/Subtitle",
                 "long-name": "SSA Subtitle Parser",
                 "pad-templates": {
                     "sink": {
@@ -13036,7 +13036,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Codec/Parser/Subtitle",
+                "klass": "Codec/Decoder/Subtitle",
                 "long-name": "Subtitle parser",
                 "pad-templates": {
                     "sink": {
