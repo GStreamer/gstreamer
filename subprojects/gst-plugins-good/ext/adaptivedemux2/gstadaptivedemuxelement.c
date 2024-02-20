@@ -36,7 +36,7 @@ adaptivedemux2_base_element_init (GstPlugin * plugin)
         "adaptivedemux2");
     g_once_init_leave (&res, TRUE);
   }
-#ifndef STATIC_SOUP
+#ifndef LINK_SOUP
   if (!gst_soup_load_library ()) {
     GST_WARNING ("Failed to load libsoup library");
     return FALSE;

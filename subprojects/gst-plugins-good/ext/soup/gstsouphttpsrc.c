@@ -1049,11 +1049,11 @@ thread_func (gpointer user_data)
           NULL);
       g_object_unref (proxy_resolver);
     }
-#if !defined(STATIC_SOUP) || STATIC_SOUP == 2
+#if !defined(LINK_SOUP) || LINK_SOUP == 2
   } else {
     g_object_set (session->session, "ssl-strict", src->ssl_strict, NULL);
     if (src->proxy != NULL) {
-      /* Need #if because there's no proxy->soup_uri when STATIC_SOUP == 3 */
+      /* Need #if because there's no proxy->soup_uri when LINK_SOUP == 3 */
       g_object_set (session->session, "proxy-uri", src->proxy->soup_uri, NULL);
     }
 #endif
@@ -1655,7 +1655,7 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
   }
 
   /* SOUP_STATUS_IS_TRANSPORT_ERROR was replaced with GError in libsoup-3.0 */
-#if !defined(STATIC_SOUP) || STATIC_SOUP == 2
+#if !defined(LINK_SOUP) || LINK_SOUP == 2
   if (SOUP_STATUS_IS_TRANSPORT_ERROR (status_code)) {
     switch (status_code) {
       case SOUP_STATUS_CANT_RESOLVE:
@@ -1816,7 +1816,7 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
     /* SOUP_MESSAGE_OVERWRITE_CHUNKS is gone in libsoup-3.0, and
      * soup_message_body_set_accumulate() requires SoupMessageBody, which
      * can only be fetched from SoupServerMessage, not SoupMessage */
-#if !defined(STATIC_SOUP) || STATIC_SOUP == 2
+#if !defined(LINK_SOUP) || LINK_SOUP == 2
     if (gst_soup_loader_get_api_version () == 2)
       flags |= SOUP_MESSAGE_OVERWRITE_CHUNKS;
 #endif

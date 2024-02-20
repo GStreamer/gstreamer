@@ -418,7 +418,6 @@ build fedora clang:
       -Dgst-plugins-base:pango=enabled
       -Dgst-plugins-good:cairo=enabled
       -Dgst-plugins-good:soup=enabled
-      -Dgst-plugins-good:soup-lookup-dep=true
       -Dgst-plugins-bad:d3d11-wgc=enabled
   rules:
     - !reference [.upstream-branch-rules, rules]
@@ -513,7 +512,6 @@ build vs2022 arm64:
     MESON_CROSS_ARGS: >-
       -Dgst-plugins-base:pango=disabled
       -Dgst-plugins-good:cairo=disabled
-      -Dgst-plugins-good:soup-lookup-dep=false
       -Dgst-devtools:cairo=disabled
       -Dpython=disabled
       -Dintrospection=disabled
@@ -565,7 +563,6 @@ build macos:
           -Dgst-plugins-base:pango=enabled
           -Dgst-plugins-good:cairo=enabled
           -Dgst-plugins-good:soup=enabled
-          -Dgst-plugins-good:soup-lookup-dep=true
 
 # ---- Tests ----- #
 

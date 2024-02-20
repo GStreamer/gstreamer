@@ -152,12 +152,6 @@ if host_machine.system() != 'windows'
 endif
 
 if get_option('soup').allowed()
-  libsoup3_dep = dependency('libsoup-3.0', required : false,
-                             fallback : ['libsoup3', 'libsoup_dep'])
-  libsoup2_dep = dependency('libsoup-2.4', version : '>=2.48',
-                            required : false, fallback : ['libsoup', 'libsoup_dep'],
-                            default_options: ['sysprof=disabled'])
-
   if libsoup3_dep.found()
     good_tests += [['elements/souphttpsrc', false, [libsoup3_dep], []]]
   elif libsoup2_dep.found()
