@@ -140,8 +140,11 @@ enum
   PROP_SOURCE_INFO,
   PROP_MAX_REORDER,
   PROP_AUTO_HEADER_EXTENSION,
+  PROP_EXTENSIONS,
   PROP_LAST
 };
+
+static GParamSpec *gst_rtp_base_depayload_extensions_pspec;
 
 static void gst_rtp_base_depayload_finalize (GObject * object);
 static void gst_rtp_base_depayload_set_property (GObject * object,
@@ -395,6 +398,33 @@ gst_rtp_base_depayload_class_init (GstRTPBaseDepayloadClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_rtp_base_depayload_clear_extensions), NULL, NULL, NULL,
       G_TYPE_NONE, 0);
+
+  gst_rtp_base_depayload_extensions_pspec = gst_param_spec_array ("extensions",
+      "RTP header extensions",
+      "A list of already enabled RTP header extensions",
+      g_param_spec_object ("extension", "RTP header extension",
+          "An already enabled RTP extension", GST_TYPE_RTP_HEADER_EXTENSION,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS),
+      G_PARAM_READABLE | G_PARAM_STATIC_STRINGS);
+
+  /**
+   * GstRTPBaseDepayload:extensions:
+   *
+   * A list of already enabled RTP header extensions. This may be useful for finding
+   * out which extensions are already enabled (with add-extension signal) and picking a non-conflicting
+   * ID for a new extension that needs to be added on top of the existing ones.
+   *
+   * Note that the value returned by reading this property is not dynamically updated when the set of
+   * enabled extensions changes by any of existing action signals. Rather, it represents the current state
+   * at the time the property is read.
+   *
+   * Dynamic updates of this property can be received by subscribing to its corresponding "notify" signal, i.e.
+   * "notify::extensions".
+   *
+   * Since: 1.24
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_EXTENSIONS, gst_rtp_base_depayload_extensions_pspec);
 
   gstelement_class->change_state = gst_rtp_base_depayload_change_state;
 
@@ -686,6 +716,9 @@ gst_rtp_base_depayload_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
     g_ptr_array_foreach (to_add, (GFunc) add_item_to,
         filter->priv->header_exts);
     GST_OBJECT_UNLOCK (filter);
+
+    g_object_notify_by_pspec (G_OBJECT (filter),
+        gst_rtp_base_depayload_extensions_pspec);
 
   ext_out:
     g_ptr_array_unref (to_add);
@@ -1238,6 +1271,9 @@ gst_rtp_base_depayload_add_extension (GstRTPBaseDepayload * rtpbasepayload,
   GST_OBJECT_LOCK (rtpbasepayload);
   g_ptr_array_add (rtpbasepayload->priv->header_exts, gst_object_ref (ext));
   GST_OBJECT_UNLOCK (rtpbasepayload);
+
+  g_object_notify_by_pspec (G_OBJECT (rtpbasepayload),
+      gst_rtp_base_depayload_extensions_pspec);
 }
 
 static void
@@ -1246,6 +1282,31 @@ gst_rtp_base_depayload_clear_extensions (GstRTPBaseDepayload * rtpbasepayload)
   GST_OBJECT_LOCK (rtpbasepayload);
   g_ptr_array_set_size (rtpbasepayload->priv->header_exts, 0);
   GST_OBJECT_UNLOCK (rtpbasepayload);
+
+  g_object_notify_by_pspec (G_OBJECT (rtpbasepayload),
+      gst_rtp_base_depayload_extensions_pspec);
+}
+
+static void
+gst_rtp_base_depayload_get_extensions (GstRTPBaseDepayload * depayload,
+    GValue * out_value)
+{
+  GPtrArray *extensions;
+  guint i;
+
+  GST_OBJECT_LOCK (depayload);
+  extensions = depayload->priv->header_exts;
+
+  for (i = 0; i < extensions->len; ++i) {
+    GValue value = G_VALUE_INIT;
+    g_value_init (&value, GST_TYPE_RTP_HEADER_EXTENSION);
+
+    g_value_set_object (&value, g_ptr_array_index (extensions, i));
+
+    gst_value_array_append_and_take_value (out_value, &value);
+  }
+
+  GST_OBJECT_UNLOCK (depayload);
 }
 
 static gboolean
@@ -1808,6 +1869,9 @@ gst_rtp_base_depayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AUTO_HEADER_EXTENSION:
       g_value_set_boolean (value, priv->auto_hdr_ext);
+      break;
+    case PROP_EXTENSIONS:
+      gst_rtp_base_depayload_get_extensions (depayload, value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
