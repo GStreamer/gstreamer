@@ -2249,37 +2249,12 @@ gst_queue2_create_write (GstQueue2 * queue, GstBuffer * buffer)
     update_cur_level (queue, queue->current);
 
     /* update the buffering status */
-    if (queue->use_buffering) {
-      GstMessage *msg;
-      gint percent = -1;
+    if (queue->use_buffering)
       update_buffering (queue);
-      msg = gst_queue2_get_buffering_message (queue, &percent);
-      if (msg) {
-        gboolean post_ok;
 
-        GST_QUEUE2_MUTEX_UNLOCK (queue);
-
-        g_mutex_lock (&queue->buffering_post_lock);
-        post_ok = gst_element_post_message (GST_ELEMENT_CAST (queue), msg);
-
-        GST_QUEUE2_MUTEX_LOCK (queue);
-
-        if (post_ok) {
-          /* Set these states only if posting the message succeeded. Otherwise,
-           * this post attempt failed, and the next one won't be done, because
-           * gst_queue2_get_buffering_message() checks these states and decides
-           * based on their values that it won't produce a message. */
-          queue->last_posted_buffering_percent = percent;
-          if (percent == queue->buffering_percent)
-            queue->percent_changed = FALSE;
-          GST_DEBUG_OBJECT (queue, "successfully posted %d%% buffering message",
-              percent);
-        } else {
-          GST_DEBUG_OBJECT (queue, "could not post buffering message");
-        }
-        g_mutex_unlock (&queue->buffering_post_lock);
-      }
-    }
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
+    gst_queue2_post_buffering (queue);
+    GST_QUEUE2_MUTEX_LOCK (queue);
 
     GST_INFO_OBJECT (queue, "cur_level.bytes %u (max %" G_GUINT64_FORMAT ")",
         queue->cur_level.bytes, QUEUE_MAX_BYTES (queue));
