@@ -9,27 +9,33 @@ main (int argc, char *argv[])
 {
   gst_init (&argc, &argv);
 
-  QGuiApplication app (argc, argv);
-  QQmlApplicationEngine engine;
+  int ret;
+  {
+    QGuiApplication app (argc, argv);
+    QQmlApplicationEngine engine;
 
-  /* make sure that plugin was loaded */
-  GstElement *qmlglsink = gst_element_factory_make ("qmlglsink", NULL);
-  g_assert (qmlglsink);
+    /* make sure that plugin was loaded */
+    GstElement *qmlglsink = gst_element_factory_make ("qmlglsink", NULL);
+    g_assert (qmlglsink);
+    gst_clear_object (&qmlglsink);
 
-  /* anything supported by videotestsrc */
-  QStringList patterns (
-      {
-      "smpte", "ball", "spokes", "gamut"});
+    /* anything supported by videotestsrc */
+    QStringList patterns (
+        {
+        "smpte", "ball", "spokes", "gamut"});
 
-  engine.rootContext ()->setContextProperty ("patterns",
-      QVariant::fromValue (patterns));
+    engine.rootContext ()->setContextProperty ("patterns",
+        QVariant::fromValue (patterns));
 
-  QObject::connect (&engine, &QQmlEngine::quit, [&] {
-        gst_object_unref (qmlglsink);
-        qApp->quit ();
-      });
+    QObject::connect (&engine, &QQmlEngine::quit, [&] {
+          qApp->quit ();
+        });
 
-  engine.load (QUrl (QStringLiteral ("qrc:///main.qml")));
+    engine.load (QUrl (QStringLiteral ("qrc:///main.qml")));
 
-  return app.exec ();
+    ret = app.exec();
+  }
+  gst_deinit();
+
+  return ret;
 }
