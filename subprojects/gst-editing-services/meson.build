@@ -82,14 +82,14 @@ if cc.has_argument('-fno-strict-aliasing')
   add_project_arguments('-fno-strict-aliasing', language: 'c')
 endif
 
-cdata.set('VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE', '"gst-editing-services"')
-cdata.set('PACKAGE_VERSION', '"@0@"'.format(gst_version))
-cdata.set('PACKAGE_BUGREPORT', '"https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/new"')
-cdata.set('PACKAGE_NAME', '"GStreamer Editing Services"')
-cdata.set('GST_PACKAGE_NAME', '"GStreamer Editing Services"')
-cdata.set('GST_PACKAGE_ORIGIN', '"Unknown package origin"')
-cdata.set('GST_LICENSE', '"LGPL"')
+cdata.set_quoted('VERSION', gst_version)
+cdata.set_quoted('PACKAGE', 'gst-editing-services')
+cdata.set_quoted('PACKAGE_VERSION', gst_version)
+cdata.set_quoted('PACKAGE_BUGREPORT', 'https://gitlab.freedesktop.org/gstreamer/gstreamer/issues/new')
+cdata.set_quoted('PACKAGE_NAME', 'GStreamer Editing Services')
+cdata.set_quoted('GST_PACKAGE_NAME', 'GStreamer Editing Services')
+cdata.set_quoted('GST_PACKAGE_ORIGIN', 'Unknown package origin')
+cdata.set_quoted('GST_LICENSE', 'LGPL')
 
 # Mandatory GST deps
 gst_dep = dependency('gstreamer-' + apiversion, version : gst_req,
