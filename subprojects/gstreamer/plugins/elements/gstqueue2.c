@@ -319,8 +319,6 @@ static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
 static void update_in_rates (GstQueue2 * queue, gboolean force);
-static GstMessage *gst_queue2_get_buffering_message (GstQueue2 * queue,
-    gint * percent);
 static void update_buffering (GstQueue2 * queue);
 static void gst_queue2_post_buffering (GstQueue2 * queue);
 
@@ -1175,12 +1173,15 @@ get_buffering_stats (GstQueue2 * queue, gint percent, GstBufferingMode * mode,
   }
 }
 
-/* Called with the lock taken */
-static GstMessage *
-gst_queue2_get_buffering_message (GstQueue2 * queue, gint * percent)
+static void
+gst_queue2_post_buffering (GstQueue2 * queue)
 {
   GstMessage *msg = NULL;
+  gint percent = -1;
 
+  g_mutex_lock (&queue->buffering_post_lock);
+
+  GST_QUEUE2_MUTEX_LOCK (queue);
   /* Don't change the buffering level if the sinkpad is waiting for
    * space to become available.  This prevents the situation where,
    * upstream is pushing buffers larger than our limits so only 1 buffer
@@ -1194,27 +1195,14 @@ gst_queue2_get_buffering_message (GstQueue2 * queue, gint * percent)
    * the queue becomes empty for a short period of time. */
   if (!queue->waiting_del
       && queue->last_posted_buffering_percent != queue->buffering_percent) {
-    *percent = queue->buffering_percent;
+    percent = queue->buffering_percent;
 
-    GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", *percent);
-    msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), *percent);
+    GST_DEBUG_OBJECT (queue, "Going to post buffering: %d%%", percent);
+    msg = gst_message_new_buffering (GST_OBJECT_CAST (queue), percent);
 
     gst_message_set_buffering_stats (msg, queue->mode, queue->avg_in,
         queue->avg_out, queue->buffering_left);
   }
-
-  return msg;
-}
-
-static void
-gst_queue2_post_buffering (GstQueue2 * queue)
-{
-  GstMessage *msg = NULL;
-  gint percent = -1;
-
-  g_mutex_lock (&queue->buffering_post_lock);
-  GST_QUEUE2_MUTEX_LOCK (queue);
-  msg = gst_queue2_get_buffering_message (queue, &percent);
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   if (msg != NULL) {
