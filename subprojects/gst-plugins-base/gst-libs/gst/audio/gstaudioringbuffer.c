@@ -805,8 +805,10 @@ gst_audio_ring_buffer_release (GstAudioRingBuffer * buf)
     res = rclass->release (buf);
 
   /* signal any waiters */
-  GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
+    GST_DEBUG_OBJECT (buf, "signal waiter");
+    GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  }
 
   if (G_UNLIKELY (!res))
     goto release_failed;
@@ -1145,8 +1147,10 @@ gst_audio_ring_buffer_pause_unlocked (GstAudioRingBuffer * buf)
     goto not_started;
 
   /* signal any waiters */
-  GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
+    GST_DEBUG_OBJECT (buf, "signal waiter");
+    GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  }
 
   rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->pause))
@@ -1262,8 +1266,10 @@ gst_audio_ring_buffer_stop (GstAudioRingBuffer * buf)
   }
 
   /* signal any waiters */
-  GST_DEBUG_OBJECT (buf, "signal waiter");
-  GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  if (g_atomic_int_compare_and_exchange (&buf->waiting, 1, 0)) {
+    GST_DEBUG_OBJECT (buf, "signal waiter");
+    GST_AUDIO_RING_BUFFER_SIGNAL (buf);
+  }
 
   rclass = GST_AUDIO_RING_BUFFER_GET_CLASS (buf);
   if (G_LIKELY (rclass->stop))
