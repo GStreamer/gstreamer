@@ -56,6 +56,7 @@ hls_dep = dependency('', required : false)
 adaptivedemux2_dep = dependency('', required : false)
 
 adaptivedemux2_opt = get_option('adaptivedemux2')
+soup_opt = get_option('soup')
 soup_ver_opt = get_option('soup-version')
 if adaptivedemux2_opt.disabled()
   message('Not building adaptivedemux2 plugin because it was disabled')
