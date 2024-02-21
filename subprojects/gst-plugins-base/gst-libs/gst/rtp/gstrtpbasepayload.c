@@ -1656,8 +1656,7 @@ gst_rtp_base_payload_get_extensions (GstRTPBasePayload * payload,
 
     g_value_set_object (&value, g_ptr_array_index (extensions, i));
 
-    gst_value_array_append_value (out_value, &value);
-    g_value_unset (&value);
+    gst_value_array_append_and_take_value (out_value, &value);
   }
 
   GST_OBJECT_UNLOCK (payload);
