@@ -10,6 +10,8 @@ version_arr = gst_version.split('.')
 gst_version_major = version_arr[0]
 gst_version_minor = version_arr[1]
 api_version = '@0@.0'.format(gst_version_major)
+host_system = host_machine.system()
+cc = meson.get_compiler('c')
 
 add_project_arguments('-DHAVE_CONFIG_H', language: 'c')
 
@@ -33,29 +35,57 @@ if pythonver.version_compare('<3.7')
 endif
 
 
-python_dep = python.dependency(embed:true, required : true)
+python_dep = python.dependency(embed: true, required: true)
 
 python_abi_flags = python.get_variable('ABIFLAGS', '')
+message(f'python_abi_flags = @python_abi_flags@')
 pylib_loc = get_option('libpython-dir')
-if pylib_loc == ''
-  fsmod = import('fs')
-  pylib_loc = python.get_variable('LIBPL', '')
-  if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
-    pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
-    if not fsmod.exists(pylib_loc / pylib_ldlibrary)
-      # Workaround for Fedora
-      pylib_loc = python.get_variable('LIBDIR', '')
-      message('pylib_loc = @0@'.format(pylib_loc))
+fsmod = import('fs')
+pylib_prefix = 'lib'
+pylib_suffix = 'so'
+if host_system == 'windows'
+  if cc.get_argument_syntax() == 'msvc'
+    pylib_prefix = ''
+  endif
+  pylib_suffix = 'dll'
+elif host_system == 'darwin'
+  pylib_suffix = 'dylib'
+endif
+pylib_fnames = []
+# Library name with soversion, non-devel package
+pylib_fnames += python.get_variable('INSTSONAME', [])
+# Library name without soversion, devel package, framework, etc.
+pylib_fnames += python.get_variable('LDLIBRARY', [])
+# Manually construct name as a fallback
+pylib_fnames += [
+  pylib_prefix + 'python' + python_dep.version() + python_abi_flags + '.' + pylib_suffix
+]
+if pylib_loc != ''
+  pylib_locs = [pylib_loc]
+else
+  pylib_locs = [
+    python.get_variable('LIBDIR', ''),
+    python.get_variable('LIBPL', ''),
+  ]
+endif
+pylib_fname = ''
+foreach loc: pylib_locs
+  foreach fname: pylib_fnames
+    if fsmod.exists(loc / fname)
+      pylib_fname = fname
+      message(f'PY_LIB_FNAME = @fname@ (@loc@)')
+      break
     endif
-
-    if not fsmod.exists(pylib_loc / pylib_ldlibrary)
-      error('Python dynamic library path could not be determined')
-    endif
+  endforeach
+endforeach
+if pylib_fname == ''
+  error_msg = 'Could not find python library to load'
+  if python_opt.enabled()
+    error(error_msg)
+  else
+    message(error_msg)
   endif
 endif
-
-message('python_abi_flags = @0@'.format(python_abi_flags))
-message('pylib_loc = @0@'.format(pylib_loc))
 
 pygi_override_dir = get_option('pygi-overrides-dir')
 
@@ -71,13 +101,6 @@ message('pygobject overrides directory = @0@'.format(pygi_override_dir))
 # libdir has to be built from pieces.
 libdir = get_option('prefix')+'/'+get_option('libdir')
 
-
-pylib_suffix = 'so'
-if host_machine.system() == 'windows'
-  pylib_suffix = 'dll'
-elif host_machine.system() == 'darwin'
-  pylib_suffix = 'dylib'
-endif
 cdata = configuration_data()
 cdata.set('PACKAGE', '"gst-python"')
 cdata.set('VERSION', '"@0@"'.format(gst_version))
@@ -85,10 +108,7 @@ cdata.set('GST_PACKAGE_NAME', '"GStreamer Python"')
 cdata.set('PACKAGE_NAME', '"GStreamer Python"')
 cdata.set('GST_API_VERSION', '"@0@"'.format(api_version))
 cdata.set('PLUGINDIR', '"@0@/gstreamer-1.0"'.format(libdir))
-cdata.set('PY_LIB_LOC', '"@0@"'.format(pylib_loc))
-cdata.set('PY_ABI_FLAGS', '"@0@"'.format(python_abi_flags))
-cdata.set('PY_LIB_SUFFIX', '"@0@"'.format(pylib_suffix))
-cdata.set('PYTHON_VERSION', '"@0@"'.format(python_dep.version()))
+cdata.set_quoted('PY_LIB_FNAME', pylib_fname)
 configure_file(output : 'config.h', configuration : cdata)
 configinc = include_directories('.')
 

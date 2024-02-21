@@ -144,73 +144,79 @@ gir_init_section = [ '--add-init-section=' + \
     'ges_init();', '--quiet']
 
 pymod = import('python')
-python = pymod.find_installation(required: get_option('python'))
+python_opt = get_option('python')
+python = pymod.find_installation(required: python_opt)
 has_python = false
 static_build = get_option('default_library') == 'static'
 if static_build
-  if get_option('python').enabled()
+  if python_opt.enabled()
     error('Want to build python based modules but it is not supported while static building')
   else
     message('Disabling python support as it is not supported on static builds')
   endif
-elif build_gir
-  if python.found()
-    # Workaround for https://github.com/mesonbuild/meson/issues/5629
-    pythonver = python.language_version()
-    python_dep = dependency('python-@0@-embed'.format(pythonver), version: '>=3',
-                            required: false, include_type: 'system')
-    if not python_dep.found()
-      python_dep = python.dependency(required : get_option('python'),
-                                     include_type: 'system')
-    endif
-  else
-    python_dep = dependency('', required: false)
-  endif
+elif build_gir and python.found()
+  python_dep = python.dependency(required : python_opt, embed: true,
+                                 include_type: 'system')
   if python_dep.found()
     python_abi_flags = python.get_variable('ABIFLAGS', '')
+    message(f'python_abi_flags = @python_abi_flags@')
     pylib_loc = get_option('libpython-dir')
 
     error_msg = ''
     if not cc.compiles('#include <Python.h>', dependencies: [python_dep])
       error_msg = 'Could not compile a simple program against python'
-    elif pylib_loc == ''
-      fsmod = import('fs')
-      pylib_loc = python.get_variable('LIBPL', '')
-      if host_system != 'windows' and host_system != 'darwin'
-        pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
-        if not fsmod.exists(pylib_loc / pylib_ldlibrary)
-          # Workaround for Fedora
-          pylib_loc = python.get_variable('LIBDIR', '')
-          message('pylib_loc = @0@'.format(pylib_loc))
-        endif
-
-        if not fsmod.exists(pylib_loc / pylib_ldlibrary)
-          error_msg = '@0@ doesn\' exist, can\'t use python'.format(join_paths(pylib_loc, pylib_ldlibrary))
-        endif
-      endif
-      if error_msg == ''
-        pylib_suffix = 'so'
-        if host_system == 'windows'
-          pylib_suffix = 'dll'
-        elif host_system == 'darwin'
-          pylib_suffix = 'dylib'
-        endif
-
-        libges_deps = libges_deps + [python_dep, gmodule_dep]
-        has_python = true
-        message('python_abi_flags = @0@'.format(python_abi_flags))
-        message('pylib_loc = @0@'.format(pylib_loc))
-        cdata.set('HAS_PYTHON', true)
-        cdata.set('PY_LIB_LOC', '"@0@"'.format(pylib_loc))
-        cdata.set('PY_ABI_FLAGS', '"@0@"'.format(python_abi_flags))
-        cdata.set('PY_LIB_SUFFIX', '"@0@"'.format(pylib_suffix))
-        cdata.set('PYTHON_VERSION', '"@0@"'.format(python_dep.version()))
+      if python_opt.enabled()
+        error(error_msg)
       else
-          if get_option('python').enabled()
-            error(error_msg)
-          else
-            message(error_msg)
-          endif
+        message(error_msg)
+      endif
+    endif
+    fsmod = import('fs')
+    pylib_prefix = 'lib'
+    pylib_suffix = 'so'
+    if host_system == 'windows'
+      if cc.get_argument_syntax() == 'msvc'
+        pylib_prefix = ''
+      endif
+      pylib_suffix = 'dll'
+    elif host_system == 'darwin'
+      pylib_suffix = 'dylib'
+    endif
+    pylib_fnames = []
+    # Library name with soversion, non-devel package
+    pylib_fnames += python.get_variable('INSTSONAME', [])
+    # Library name without soversion, devel package, framework, etc.
+    pylib_fnames += python.get_variable('LDLIBRARY', [])
+    # Manually construct name as a fallback
+    pylib_fnames += [
+      pylib_prefix + 'python' + python_dep.version() + python_abi_flags + '.' + pylib_suffix
+    ]
+    if pylib_loc != ''
+      pylib_locs = [pylib_loc]
+    else
+      pylib_locs = [
+        python.get_variable('LIBDIR', ''),
+        python.get_variable('LIBPL', ''),
+      ]
+    endif
+    foreach loc: pylib_locs
+      foreach fname: pylib_fnames
+        if fsmod.exists(loc / fname)
+          libges_deps = libges_deps + [python_dep, gmodule_dep]
+          has_python = true
+          cdata.set('HAS_PYTHON', true)
+          cdata.set_quoted('PY_LIB_FNAME', fname)
+          message(f'PY_LIB_FNAME = @fname@ (@loc@)')
+          break
+        endif
+      endforeach
+    endforeach
+    if not has_python
+      error_msg = 'Could not find python library to load'
+      if python_opt.enabled()
+        error(error_msg)
+      else
+        message(error_msg)
       endif
     endif
   endif
