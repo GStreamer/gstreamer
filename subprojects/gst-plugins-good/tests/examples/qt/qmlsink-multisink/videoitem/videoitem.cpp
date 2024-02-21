@@ -230,6 +230,7 @@ void VideoItem::componentComplete()
         if (window) {
             GstElement *glsink = gst_element_factory_make("qmlglsink", nullptr);
             Q_ASSERT(glsink);
+            gst_object_ref_sink (glsink);
 
             GstState current {GST_STATE_NULL}, pending {GST_STATE_NULL}, target {GST_STATE_NULL};
             auto status = gst_element_get_state(_priv->pipeline, &current, &pending, 0);
@@ -253,13 +254,12 @@ void VideoItem::componentComplete()
 
             gst_element_set_state(_priv->pipeline, GST_STATE_NULL);
 
-            glsink = GST_ELEMENT(gst_object_ref(glsink));
-
             window->scheduleRenderJob(new RenderJob([=] {
                 g_object_set(glsink, "widget", videoItem, nullptr);
                 _priv->renderPad = gst_element_get_static_pad(glsink, "sink");
                 g_object_set(_priv->sink, "sink", glsink, nullptr);
                 gst_element_set_state(_priv->pipeline, target);
+                gst_object_unref (glsink);
                 }),
                 QQuickWindow::BeforeSynchronizingStage);
         }
@@ -272,20 +272,16 @@ void VideoItem::componentComplete()
 void VideoItem::releaseResources()
 {
     GstElement *sink { nullptr };
-    QQuickWindow *win { window() };
 
     gst_element_set_state(_priv->pipeline, GST_STATE_NULL);
     g_object_get(_priv->sink, "sink", &sink, nullptr);
 
-    if (_priv->renderPad) {
+    if (sink && _priv->renderPad) {
         g_object_set(sink, "widget", nullptr, nullptr);
-        _priv->renderPad = nullptr;
     }
 
-    connect(this, &VideoItem::destroyed, this, [sink, win] {
-        auto job = new RenderJob(std::bind(&gst_object_unref, sink));
-        win->scheduleRenderJob(job, QQuickWindow::AfterSwapStage);
-    });
+    gst_clear_object (&_priv->renderPad);
+    gst_clear_object (&sink);
 }
 
 void VideoItem::updateRect()
@@ -318,6 +314,7 @@ void VideoItem::updateRect()
         setRect(QRect(span / 2, 0, winWidth - span, winHeight));
     }
     setResolution(QSize(picWidth, picHeight));
+    gst_clear_caps(&caps);
 }
 
 VideoItem::State VideoItem::state() const
