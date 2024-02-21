@@ -125,6 +125,8 @@ struct _GstVaVpp
   gboolean has_hdr_meta;
   VAHdrMetaDataHDR10 hdr_meta;
 
+  gboolean pseudo_passthrough;
+
   GList *channels;
 };
 
@@ -819,6 +821,26 @@ gst_va_vpp_before_transform (GstBaseTransform * trans, GstBuffer * inbuf)
 }
 
 static GstFlowReturn
+gst_va_vpp_prepare_output_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstBuffer ** outbuf)
+{
+  GstVaVpp *self = GST_VA_VPP (trans);
+  GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (self);
+
+  if (((self->op_flags & VPP_CONVERT_FEATURE) == self->op_flags)
+      && gst_caps_is_vamemory (btrans->in_caps)
+      && gst_caps_is_raw (btrans->out_caps)) {
+    self->pseudo_passthrough = TRUE;
+    *outbuf = inbuf;
+    return GST_FLOW_OK;
+  }
+
+  self->pseudo_passthrough = FALSE;
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
+      inbuf, outbuf);
+}
+
+static GstFlowReturn
 gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
@@ -834,6 +856,9 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   res = gst_va_base_transform_import_buffer (btrans, inbuf, &buf);
   if (res != GST_FLOW_OK)
     return res;
+
+  if (self->pseudo_passthrough && (inbuf == buf))
+    goto bail;
 
   /* *INDENT-OFF* */
   src = (GstVaSample) {
@@ -854,6 +879,7 @@ gst_va_vpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     res = GST_BASE_TRANSFORM_FLOW_DROPPED;
   }
 
+bail:
   gst_buffer_unref (buf);
 
   return res;
@@ -2257,6 +2283,8 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   trans_class->transform_meta = GST_DEBUG_FUNCPTR (gst_va_vpp_transform_meta);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_va_vpp_src_event);
   trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_va_vpp_sink_event);
+  trans_class->prepare_output_buffer =
+      GST_DEBUG_FUNCPTR (gst_va_vpp_prepare_output_buffer);
 
   trans_class->transform_ip_on_passthrough = FALSE;
 
