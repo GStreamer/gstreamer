@@ -485,9 +485,8 @@ build vs2022 amd64 full-static:
       # Setting up a cross build with MSVC is still non-trivial because
       # the --vsenv argument cannot be used to set it up
     - echo $env:MESON_CROSS_ARGS
-    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH &&
-        meson setup build $env:MESON_ARGS $env:MESON_CROSS_ARGS &&
-        meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson setup build $env:MESON_ARGS $env:MESON_CROSS_ARGS"
+    - cmd.exe /C "C:\BuildTools\Common7\Tools\VsDevCmd.bat -host_arch=amd64 -arch=$env:ARCH && meson compile -C build --jobs $env:FDO_CI_CONCURRENT"
 
 build vs2022 x86:
   extends: '.build windows cross'
