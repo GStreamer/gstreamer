@@ -415,6 +415,7 @@ gst_wasapi_util_get_devices (GstMMDeviceEnumerator * self,
     GstDevice *device;
     GstStructure *props;
     GstCaps *caps;
+    gboolean parse_ret;
 
     hr = IMMDeviceCollection_Item (device_collection, ii, &item);
     if (hr != S_OK)
@@ -477,8 +478,12 @@ gst_wasapi_util_get_devices (GstMMDeviceEnumerator * self,
       goto next;
     }
 
-    if (!gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
-            gst_static_caps_get (&scaps), &caps, NULL))
+    parse_ret =
+        gst_wasapi_util_parse_waveformatex ((WAVEFORMATEXTENSIBLE *) format,
+        gst_static_caps_get (&scaps), &caps, NULL);
+    CoTaskMemFree (format);
+
+    if (!parse_ret)
       goto next;
 
     /* Set some useful properties */
@@ -564,7 +569,7 @@ gst_wasapi_util_get_device_format (GstElement * self,
       return FALSE;
     }
 
-    format = malloc (var.blob.cbSize);
+    format = CoTaskMemAlloc (var.blob.cbSize);
     memcpy (format, var.blob.pBlobData, var.blob.cbSize);
 
     PropVariantClear (&var);
@@ -578,7 +583,7 @@ gst_wasapi_util_get_device_format (GstElement * self,
     goto out;
 
   GST_ERROR_OBJECT (self, "AudioEngine DeviceFormat not supported");
-  free (format);
+  CoTaskMemFree (format);
   return FALSE;
 
 out:
