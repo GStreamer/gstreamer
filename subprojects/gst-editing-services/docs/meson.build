@@ -111,7 +111,7 @@ libs_doc = [hotdoc.generate_doc('gst-editing-services',
     depends: ges_gir[0],
 )]
 
-if host_machine.system() == 'windows'
+if host_system == 'windows'
   pathsep = ';'
 else
   pathsep = ':'

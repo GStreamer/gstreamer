@@ -35,6 +35,7 @@ else
   gst_req = '>= ' + gst_version
 endif
 
+host_system = host_machine.system()
 cc = meson.get_compiler('c')
 mathlib = cc.find_library('m', required : false)
 
@@ -101,7 +102,7 @@ gstaudio_dep = dependency('gstreamer-audio-' + apiversion, version : gst_req,
     fallback : ['gst-plugins-base', 'audio_dep'])
 gstbase_dep = dependency('gstreamer-base-1.0', version : gst_req,
     fallback : ['gstreamer', 'gst_base_dep'])
-if host_machine.system() != 'windows'
+if host_system != 'windows'
   gstcheck_dep = dependency('gstreamer-check-1.0', version : gst_req,
     required : get_option('tests'),
     fallback : ['gstreamer', 'gst_check_dep'])
@@ -175,7 +176,7 @@ elif build_gir
     elif pylib_loc == ''
       fsmod = import('fs')
       pylib_loc = python.get_variable('LIBPL', '')
-      if host_machine.system() != 'windows' and host_machine.system() != 'darwin'
+      if host_system != 'windows' and host_system != 'darwin'
         pylib_ldlibrary = python.get_variable('LDLIBRARY', '')
         if not fsmod.exists(pylib_loc / pylib_ldlibrary)
           # Workaround for Fedora
@@ -189,9 +190,9 @@ elif build_gir
       endif
       if error_msg == ''
         pylib_suffix = 'so'
-        if host_machine.system() == 'windows'
+        if host_system == 'windows'
           pylib_suffix = 'dll'
-        elif host_machine.system() == 'darwin'
+        elif host_system == 'darwin'
           pylib_suffix = 'dylib'
         endif
 
