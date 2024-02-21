@@ -80,6 +80,15 @@ enum _GstV4l2BufferState
   BUFFER_STATE_QUEUED = 2,
 };
 
+enum
+{
+  OUTPUT_ERROR_DEQUEUED,
+  CAPTURE_ERROR_DEQUEUED,
+  LAST_SIGNAL
+};
+
+static guint gst_v4l2_buffer_pool_signals[LAST_SIGNAL] = { 0 };
+
 static void gst_v4l2_buffer_pool_complete_release_buffer (GstBufferPool * bpool,
     GstBuffer * buffer, gboolean queued);
 
@@ -1279,6 +1288,16 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
   GST_LOG_OBJECT (pool, "dequeueing a buffer");
 
   res = gst_v4l2_allocator_dqbuf (pool->vallocator, &group);
+
+  if (group->buffer.flags & V4L2_BUF_FLAG_ERROR) {
+    if (V4L2_TYPE_IS_OUTPUT (obj->type))
+      g_signal_emit (pool, gst_v4l2_buffer_pool_signals[OUTPUT_ERROR_DEQUEUED],
+          0, (guint) group->buffer.timestamp.tv_sec);
+    else
+      g_signal_emit (pool, gst_v4l2_buffer_pool_signals[CAPTURE_ERROR_DEQUEUED],
+          0, (guint) group->buffer.timestamp.tv_sec);
+  }
+
   if (res == GST_V4L2_FLOW_LAST_BUFFER)
     goto eos;
   if (res != GST_FLOW_OK)
@@ -1764,6 +1783,14 @@ gst_v4l2_buffer_pool_class_init (GstV4l2BufferPoolClass * klass)
   bufferpool_class->release_buffer = gst_v4l2_buffer_pool_release_buffer;
   bufferpool_class->flush_start = gst_v4l2_buffer_pool_flush_start;
   bufferpool_class->flush_stop = gst_v4l2_buffer_pool_flush_stop;
+
+  gst_v4l2_buffer_pool_signals[OUTPUT_ERROR_DEQUEUED] =
+      g_signal_new ("output-error-dequeued", G_TYPE_FROM_CLASS (object_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
+
+  gst_v4l2_buffer_pool_signals[CAPTURE_ERROR_DEQUEUED] =
+      g_signal_new ("capture-error-dequeued", G_TYPE_FROM_CLASS (object_class),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   GST_DEBUG_CATEGORY_INIT (v4l2bufferpool_debug, "v4l2bufferpool", 0,
       "V4L2 Buffer Pool");

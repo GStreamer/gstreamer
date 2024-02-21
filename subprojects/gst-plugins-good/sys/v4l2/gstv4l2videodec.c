@@ -180,6 +180,16 @@ gst_v4l2_video_dec_close (GstVideoDecoder * decoder)
   return TRUE;
 }
 
+static void
+gst_v4l2_video_dec_drop_frame (GstVideoDecoder * decoder, guint frame_number)
+{
+  GstVideoCodecFrame *frame =
+      gst_video_decoder_get_frame (decoder, frame_number);
+
+  if (frame)
+    gst_video_decoder_drop_frame (decoder, frame);
+}
+
 static gboolean
 gst_v4l2_video_dec_start (GstVideoDecoder * decoder)
 {
@@ -537,6 +547,9 @@ use_acquired_caps:
     gst_object_unref (cpool);
   if (!active)
     goto activate_failed;
+
+  g_signal_connect_swapped (self->v4l2capture->pool, "capture-error-dequeued",
+      G_CALLBACK (gst_v4l2_video_dec_drop_frame), decoder);
 
   return TRUE;
 
@@ -1003,6 +1016,9 @@ gst_v4l2_video_dec_handle_frame (GstVideoDecoder * decoder,
 
     if (!gst_buffer_pool_set_active (pool, TRUE))
       goto activate_failed;
+
+    g_signal_connect_swapped (self->v4l2output->pool, "output-error-dequeued",
+        G_CALLBACK (gst_v4l2_video_dec_drop_frame), decoder);
 
     GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
     GST_LOG_OBJECT (decoder, "Passing buffer with system frame number %u",
