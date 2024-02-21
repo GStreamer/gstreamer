@@ -1534,6 +1534,9 @@ gst_rtp_base_payload_negotiate (GstRTPBasePayload * payload)
         (GFunc) add_header_ext_to_caps, srccaps);
     GST_OBJECT_UNLOCK (payload);
 
+    g_object_notify_by_pspec (G_OBJECT (payload),
+        gst_rtp_base_payload_extensions_pspec);
+
   ext_out:
     g_ptr_array_unref (to_add);
     g_ptr_array_unref (to_remove);
