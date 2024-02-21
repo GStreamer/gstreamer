@@ -1002,6 +1002,7 @@ gst_wasapi2_ring_buffer_prepare_loopback_client (GstWasapi2RingBuffer * self)
   hr = gst_wasapi2_ring_buffer_initialize_audio_client (self, client_handle,
       mix_format, &period, 0, GST_WASAPI2_CLIENT_DEVICE_CLASS_RENDER,
       nullptr, FALSE);
+  CoTaskMemFree (mix_format);
 
   if (!gst_wasapi2_result (hr)) {
     GST_ERROR_OBJECT (self, "Failed to initialize audio client");
@@ -1146,8 +1147,6 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
     gst_audio_ring_buffer_set_channel_positions (buf, position);
   g_free (position);
 
-  CoTaskMemFree (mix_format);
-
   if (!gst_wasapi2_result (hr)) {
     GST_ERROR_OBJECT (self, "Failed to init audio client");
     goto error;
@@ -1213,12 +1212,15 @@ gst_wasapi2_ring_buffer_acquire (GstAudioRingBuffer * buf,
   gst_audio_format_info_fill_silence (buf->spec.info.finfo,
       buf->memory, buf->size);
 
+  CoTaskMemFree (mix_format);
+
   return TRUE;
 
 error:
   GST_WASAPI2_CLEAR_COM (self->render_client);
   GST_WASAPI2_CLEAR_COM (self->capture_client);
   GST_WASAPI2_CLEAR_COM (self->volume_object);
+  CoTaskMemFree (mix_format);
 
   gst_wasapi2_ring_buffer_post_open_error (self);
 
