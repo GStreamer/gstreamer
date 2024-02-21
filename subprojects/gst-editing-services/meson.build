@@ -114,6 +114,7 @@ gstvalidate_dep = dependency('gstreamer-validate-1.0', version : gst_req, requir
 
 gio_dep = dependency('gio-2.0', version: glib_req)
 gmodule_dep = dependency('gmodule-no-export-2.0')
+libdl = cc.find_library('dl', required: false)
 libxml_dep = dependency('libxml-2.0', required: get_option('xptv'))
 cdata.set('DISABLE_XPTV', not libxml_dep.found())
 
@@ -202,7 +203,7 @@ elif build_gir and python.found()
     foreach loc: pylib_locs
       foreach fname: pylib_fnames
         if fsmod.exists(loc / fname)
-          libges_deps = libges_deps + [python_dep, gmodule_dep]
+          libges_deps = libges_deps + [python_dep, gmodule_dep, libdl]
           has_python = true
           cdata.set('HAS_PYTHON', true)
           cdata.set_quoted('PY_LIB_FNAME', fname)
