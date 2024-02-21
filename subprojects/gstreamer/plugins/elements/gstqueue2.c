@@ -878,14 +878,15 @@ query_downstream_bitrate (GstQueue2 * queue)
 
   GST_QUEUE2_MUTEX_LOCK (queue);
   changed = queue->downstream_bitrate != downstream_bitrate;
-  queue->downstream_bitrate = downstream_bitrate;
+  if (changed) {
+    queue->downstream_bitrate = downstream_bitrate;
+    if (queue->use_buffering)
+      update_buffering (queue);
+  }
   GST_QUEUE2_MUTEX_UNLOCK (queue);
 
   if (changed) {
-    if (queue->use_buffering)
-      update_buffering (queue);
     gst_queue2_post_buffering (queue);
-
     g_object_notify_by_pspec (G_OBJECT (queue), obj_props[PROP_BITRATE]);
   }
 }
@@ -3285,15 +3286,15 @@ out_flushing:
       queue->last_query = FALSE;
       g_cond_signal (&queue->query_handled);
     }
-    GST_QUEUE2_MUTEX_UNLOCK (queue);
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-        "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
     /* Recalculate buffering levels before stopping since the source flow
      * might cause a different buffering level (like NOT_LINKED making
      * the queue appear as full) */
     if (queue->use_buffering)
       update_buffering (queue);
+    GST_QUEUE2_MUTEX_UNLOCK (queue);
     gst_queue2_post_buffering (queue);
+    GST_CAT_LOG_OBJECT (queue_dataflow, queue,
+        "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
     /* let app know about us giving up if upstream is not expected to do so */
     /* EOS is already taken care of elsewhere */
     if (eos && (ret == GST_FLOW_NOT_LINKED || ret < GST_FLOW_EOS)) {
