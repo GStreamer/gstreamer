@@ -25,7 +25,7 @@
  *
  * ## Example pipeline
  * |[
- * gst-launch-1.0 pulsesrc ! level audio-level-meta=true ! audiconvert !
+ * gst-launch-1.0 pulsesrc ! level audio-level-meta=true ! audioconvert !
  *   rtpL16pay ! application/x-rtp,
  *     extmap-1=(string)\< \"\", urn:ietf:params:rtp-hdrext:ssrc-audio-level,
  *     \"vad=on\" \> ! udpsink
