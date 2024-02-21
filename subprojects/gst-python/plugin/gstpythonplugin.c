@@ -294,7 +294,20 @@ plugin_init (GstPlugin * plugin)
 
   GST_LOG ("initializing pygobject");
   if (!pygobject_init (3, 0, 0)) {
-    g_critical ("pygobject initialization failed");
+    if (PyErr_Occurred ()) {
+      PyObject *type, *value, *traceback;
+      PyErr_Fetch (&type, &value, &traceback);
+      PyObject *str = PyObject_Str (value);
+      if (str) {
+        g_critical ("pygobject initialization failed: %s\n",
+            PyUnicode_AsUTF8 (str));
+        Py_DECREF (str);
+      }
+      Py_XDECREF (type);
+      Py_XDECREF (value);
+      Py_XDECREF (traceback);
+      PyErr_Clear ();
+    }
     return FALSE;
   }
 
