@@ -309,10 +309,12 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     texNode = new QSGGeometryNode();
     geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
     texNode->setGeometry(geometry);
+    texNode->setFlag(QSGGeometryNode::OwnsGeometry);
     tex = GstQSGMaterial::new_for_format(GST_VIDEO_INFO_FORMAT (&this->priv->v_info));
     tex->setFiltering(is_smooth ? QSGTexture::Filtering::Linear :
         QSGTexture::Filtering::Nearest);
     texNode->setMaterial(tex);
+    texNode->setFlag(QSGGeometryNode::OwnsMaterial);
   }
 
   if ((old_buffer = tex->getBuffer(&was_bound))) {
