@@ -1193,7 +1193,7 @@ gst_queue2_post_buffering (GstQueue2 * queue)
   /* FIXME: This situation above can still occur later if
    * the sink pad is waiting to push a serialized event into the queue and
    * the queue becomes empty for a short period of time. */
-  if (!queue->waiting_del
+  if ((!queue->waiting_del || queue->buffering_percent == 100)
       && queue->last_posted_buffering_percent != queue->buffering_percent) {
     percent = queue->buffering_percent;
 
