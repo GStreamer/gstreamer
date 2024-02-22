@@ -81,5 +81,8 @@ GST_D3D11_API
 HRESULT gst_d3d11_device_get_rasterizer_msaa (GstD3D11Device * device,
                                               ID3D11RasterizerState ** rasterizer);
 
+/* Used internally by gstd3d11utils.cpp */
+void gst_d3d11_device_mark_removed         (GstD3D11Device * device, HRESULT reason);
+
 G_END_DECLS
 

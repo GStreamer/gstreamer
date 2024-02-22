@@ -24,6 +24,7 @@
 #include "gstd3d11utils.h"
 #include "gstd3d11device.h"
 #include "gstd3d11-private.h"
+#include "gstd3d11device-private.h"
 
 #include <windows.h>
 #include <versionhelpers.h>
@@ -561,6 +562,9 @@ gst_d3d11_log_gpu_remove_reason (HRESULT hr, GstD3D11Device * device,
   gst_debug_log (cat, GST_LEVEL_ERROR, file, function, line,
       NULL, "DeviceRemovedReason: 0x%x, %s", (guint) hr,
       GST_STR_NULL (error_text));
+  if (hr != DXGI_ERROR_DEVICE_REMOVED)
+    g_critical ("D3D11Device have been removed. Reason (0x%x): %s",
+        (guint) hr, GST_STR_NULL (error_text));
   g_free (error_text);
 
   gst_d3d11_device_log_live_objects (device, file, function, line);
@@ -606,6 +610,7 @@ _gst_d3d11_result (HRESULT hr, GstD3D11Device * device, GstDebugCategory * cat,
       hr = device_handle->GetDeviceRemovedReason ();
       if (hr != S_OK) {
         gst_d3d11_log_gpu_remove_reason (hr, device, cat, file, function, line);
+        gst_d3d11_device_mark_removed (device, hr);
       }
     }
 
