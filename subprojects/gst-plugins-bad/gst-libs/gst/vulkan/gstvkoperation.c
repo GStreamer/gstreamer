@@ -1146,6 +1146,8 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
     return TRUE;
   }
 #endif /* synchronization2 */
+
+  GST_OBJECT_UNLOCK (self);
 #endif /* timeline semaphore */
 
   return TRUE;
