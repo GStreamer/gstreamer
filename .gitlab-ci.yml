@@ -215,6 +215,8 @@ gst indent:
   script:
     - ./scripts/check-format-c
     - ./scripts/format-csharp --check
+    # We want both wraps to use the same version, overkill to create a separate job for this
+    - cmp subprojects/gtk-sharp.wrap subprojects/gstreamer-sharp/subprojects/gtk-sharp.wrap
   rules:
     - !reference [.upstream-branch-rules, rules]
     - if: '$CI_PROJECT_NAMESPACE != "gstreamer" || $CI_COMMIT_BRANCH != $GST_UPSTREAM_BRANCH'
