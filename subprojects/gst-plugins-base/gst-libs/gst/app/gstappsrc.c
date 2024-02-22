@@ -1025,6 +1025,7 @@ gst_app_src_send_event (GstElement * element, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       g_mutex_lock (&priv->mutex);
       gst_app_src_flush_queued (appsrc, TRUE);
+      priv->is_eos = FALSE;
       g_mutex_unlock (&priv->mutex);
       break;
     default:
