@@ -78,6 +78,7 @@ struct _GstD3D11WindowWin32
 
   GThread *internal_hwnd_thread;
 
+  GRecMutex hwnds_lock;
   HWND internal_hwnd;
   HWND external_hwnd;
   GstD3D11WindowWin32OverlayState overlay_state;
@@ -104,7 +105,7 @@ G_DEFINE_TYPE (GstD3D11WindowWin32, gst_d3d11_window_win32,
     GST_TYPE_D3D11_WINDOW);
 
 static void gst_d3d11_window_win32_constructed (GObject * object);
-static void gst_d3d11_window_win32_dispose (GObject * object);
+static void gst_d3d11_window_win32_finalize (GObject * object);
 
 static void gst_d3d11_window_win32_show (GstD3D11Window * window);
 static void gst_d3d11_window_win32_update_swap_chain (GstD3D11Window * window);
@@ -148,7 +149,7 @@ gst_d3d11_window_win32_class_init (GstD3D11WindowWin32Class * klass)
   GstD3D11WindowClass *window_class = GST_D3D11_WINDOW_CLASS (klass);
 
   gobject_class->constructed = gst_d3d11_window_win32_constructed;
-  gobject_class->dispose = gst_d3d11_window_win32_dispose;
+  gobject_class->finalize = gst_d3d11_window_win32_finalize;
 
   window_class->show = GST_DEBUG_FUNCPTR (gst_d3d11_window_win32_show);
   window_class->update_swap_chain =
@@ -177,6 +178,7 @@ gst_d3d11_window_win32_init (GstD3D11WindowWin32 * self)
 {
   self->main_context = g_main_context_new ();
   self->restore_placement.length = sizeof (WINDOWPLACEMENT);
+  g_rec_mutex_init (&self->hwnds_lock);
 }
 
 static void
@@ -205,11 +207,14 @@ done:
 }
 
 static void
-gst_d3d11_window_win32_dispose (GObject * object)
+gst_d3d11_window_win32_finalize (GObject * object)
 {
-  GST_DEBUG_OBJECT (object, "dispose");
+  GstD3D11WindowWin32 *self = (GstD3D11WindowWin32 *) object;
+
+  GST_DEBUG_OBJECT (object, "finalize");
   gst_d3d11_window_win32_unprepare (GST_D3D11_WINDOW (object));
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  g_rec_mutex_clear (&self->hwnds_lock);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstFlowReturn
@@ -287,9 +292,13 @@ gst_d3d11_window_win32_unprepare (GstD3D11Window * window)
           0, 0);
     }
 
+    /* Hold hwnds lock to allow the window thread finish processing what it could
+     * already have in the queue at this moment, before we reset the handlers to null */
+    g_rec_mutex_lock (&self->hwnds_lock);
     self->external_hwnd = NULL;
     self->internal_hwnd = NULL;
     self->internal_hwnd_thread = NULL;
+    g_rec_mutex_unlock (&self->hwnds_lock);
   }
 
   if (self->loop) {
@@ -859,10 +868,19 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     SetPropA (hWnd, D3D11_WINDOW_PROP_NAME, self);
   } else if ((self = gst_d3d11_window_win32_hwnd_get_instance (hWnd))) {
-    g_assert (self->internal_hwnd == hWnd);
+    g_rec_mutex_lock (&self->hwnds_lock);
+    if (self->internal_hwnd != hWnd) {
+      g_warn_if_fail (self->internal_hwnd == NULL);
+      /* Most likely the instance is already in the destruction proccess,
+       * just let it process WM_GST_D3D11_DESTROY_INTERNAL_WINDOW */
+      g_rec_mutex_unlock (&self->hwnds_lock);
+      gst_object_unref (self);
+      return DefWindowProcA (hWnd, uMsg, wParam, lParam);
+    }
 
     gst_d3d11_window_win32_handle_window_proc (self, hWnd, uMsg, wParam,
         lParam);
+    g_rec_mutex_unlock (&self->hwnds_lock);
 
     switch (uMsg) {
       case WM_SIZE:
