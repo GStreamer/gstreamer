@@ -1086,7 +1086,7 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
     GST_OBJECT_UNLOCK (self);
     return TRUE;
   }
-#else
+#endif /* synchronization2 */
   if (priv->has_timeline && wait_stage <= G_MAXUINT32) {
     if (!priv->deps.signal_semaphores) {
       priv->deps.signal_semaphores =
@@ -1145,7 +1145,6 @@ gst_vulkan_operation_add_dependency_frame (GstVulkanOperation * self,
     GST_OBJECT_UNLOCK (self);
     return TRUE;
   }
-#endif /* synchronization2 */
 
   GST_OBJECT_UNLOCK (self);
 #endif /* timeline semaphore */
