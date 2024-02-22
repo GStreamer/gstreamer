@@ -1115,7 +1115,7 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
       new_spad->db3_pad_is_request = old_spad->db3_pad_is_request;
       old_spad->db3_sink_pad = NULL;
 
-      gst_pad_link (new_spad->src_pad, new_spad->db3_sink_pad);
+      /* NOTE : Pad will be linked further down */
       old_pads = g_list_remove (old_pads, old_spad);
     } else {
       GST_DEBUG_OBJECT (new_spad->src_pad, "Needs a new pad");
@@ -1142,7 +1142,7 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
         new_spad->db3_pad_is_request = old_spad->db3_pad_is_request;
         old_spad->db3_sink_pad = NULL;
 
-        gst_pad_link (new_spad->src_pad, new_spad->db3_sink_pad);
+        /* NOTE : Pad will be linked further down */
         old_pads = g_list_remove (old_pads, old_spad);
         to_activate = g_list_remove (to_activate, new_spad);
         break;
@@ -1161,7 +1161,14 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
     }
   }
 
-  /* Link new source pads */
+  /* Link existing pads */
+  for (iternew = new_pads; iternew; iternew = iternew->next) {
+    GstSourcePad *new_spad = iternew->data;
+    if (new_spad->db3_sink_pad)
+      gst_pad_link (new_spad->src_pad, new_spad->db3_sink_pad);
+  }
+
+  /* Request (and link) new pads */
   for (iternew = to_activate; iternew; iternew = iternew->next) {
     GstSourcePad *new_spad = iternew->data;
     link_src_pad_to_db3 (uridecodebin, new_spad);
