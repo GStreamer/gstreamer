@@ -160,7 +160,7 @@ struct _GstURISourceBin
   guint64 connection_speed;
 
   gboolean activated;           /* TRUE if the switch to PAUSED has been completed */
-  gboolean flushing;            /* TRUE if switching from PAUSED to READY */
+  gint flushing;                /* TRUE if switching from PAUSED to READY (atomic int) */
   GCond activation_cond;        /* Uses the urisourcebin lock */
 
   gboolean is_stream;
@@ -1367,15 +1367,15 @@ expose_block_probe (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
   GST_DEBUG_OBJECT (pad, "blocking");
 
   GST_URI_SOURCE_BIN_LOCK (urisrc);
-  while (!urisrc->activated && !urisrc->flushing) {
+  while (!urisrc->activated && !g_atomic_int_get (&urisrc->flushing)) {
     GST_DEBUG_OBJECT (urisrc, "activated:%d flushing:%d", urisrc->activated,
-        urisrc->flushing);
+        g_atomic_int_get (&urisrc->flushing));
     g_cond_wait (&urisrc->activation_cond, &urisrc->lock);
   }
   GST_DEBUG_OBJECT (urisrc, "activated:%d flushing:%d", urisrc->activated,
-      urisrc->flushing);
+      g_atomic_int_get (&urisrc->flushing));
 
-  if (!urisrc->flushing)
+  if (!g_atomic_int_get (&urisrc->flushing))
     expose = TRUE;
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
   if (expose)
@@ -1943,13 +1943,17 @@ setup_parsebin_for_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
   GST_DEBUG_OBJECT (urisrc, "Setting up parsebin for %" GST_PTR_FORMAT,
       originating_pad);
 
-  GST_URI_SOURCE_BIN_LOCK (urisrc);
-  if (urisrc->flushing) {
+  if (g_atomic_int_get (&urisrc->flushing)) {
     GST_DEBUG_OBJECT (urisrc, "Shutting down, returning early");
-    GST_URI_SOURCE_BIN_UNLOCK (urisrc);
     return FALSE;
   }
   GST_STATE_LOCK (urisrc);
+  if (g_atomic_int_get (&urisrc->flushing)) {
+    GST_DEBUG_OBJECT (urisrc, "Shutting down, returning early");
+    GST_STATE_UNLOCK (urisrc);
+    return FALSE;
+  }
+  GST_URI_SOURCE_BIN_LOCK (urisrc);
 
   /* Set up optional pre-parsebin download/ringbuffer elements */
   if (info->use_downloadbuffer || urisrc->ring_buffer_max_size) {
@@ -2019,8 +2023,8 @@ setup_parsebin_for_slot (ChildSrcPadInfo * info, GstPad * originating_pad)
   }
   gst_element_set_locked_state (info->demuxer, FALSE);
   gst_element_sync_state_with_parent (info->demuxer);
-  GST_STATE_UNLOCK (urisrc);
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+  GST_STATE_UNLOCK (urisrc);
   return TRUE;
 
 could_not_link:
@@ -2029,8 +2033,8 @@ could_not_link:
       gst_element_set_locked_state (info->pre_parse_queue, FALSE);
     if (info->demuxer)
       gst_element_set_locked_state (info->demuxer, FALSE);
-    GST_STATE_UNLOCK (urisrc);
     GST_URI_SOURCE_BIN_UNLOCK (urisrc);
+    GST_STATE_UNLOCK (urisrc);
     GST_ELEMENT_ERROR (urisrc, CORE, NEGOTIATION,
         (NULL), ("Can't link to (pre-)parsebin element"));
     return FALSE;
@@ -3068,8 +3072,8 @@ gst_uri_source_bin_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      g_atomic_int_set (&urisrc->flushing, 0);
       GST_URI_SOURCE_BIN_LOCK (element);
-      urisrc->flushing = FALSE;
       urisrc->activated = FALSE;
       GST_URI_SOURCE_BIN_UNLOCK (element);
       GST_DEBUG ("ready to paused");
@@ -3077,8 +3081,8 @@ gst_uri_source_bin_change_state (GstElement * element,
         goto source_failed;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      g_atomic_int_set (&urisrc->flushing, 1);
       GST_URI_SOURCE_BIN_LOCK (element);
-      urisrc->flushing = TRUE;
       g_cond_broadcast (&urisrc->activation_cond);
       GST_URI_SOURCE_BIN_UNLOCK (element);
     default:
