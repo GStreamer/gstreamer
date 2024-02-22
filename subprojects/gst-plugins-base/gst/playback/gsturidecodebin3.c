@@ -1260,10 +1260,12 @@ uri_src_probe (GstPad * pad, GstPadProbeInfo * info, GstSourcePad * srcpad)
     case GST_EVENT_STREAM_START:
     {
       GstStream *stream = NULL;
+      GstQuery *q = gst_query_new_selectable ();
       guint group_id = GST_GROUP_ID_INVALID;
 
       srcpad->saw_eos = FALSE;
       gst_event_parse_group_id (event, &group_id);
+
       /* Unify group id */
       if (handler->play_item->group_id == GST_GROUP_ID_INVALID) {
         GST_DEBUG_OBJECT (pad,
@@ -1276,14 +1278,45 @@ uri_src_probe (GstPad * pad, GstPadProbeInfo * info, GstSourcePad * srcpad)
         GST_PAD_PROBE_INFO_DATA (info) = event;
         gst_event_set_group_id (event, handler->play_item->group_id);
       }
+
       gst_event_parse_stream (event, &stream);
       if (stream) {
         GST_DEBUG_OBJECT (srcpad->src_pad, "Got GstStream %" GST_PTR_FORMAT,
             stream);
-        if (srcpad->stream)
-          gst_object_unref (srcpad->stream);
-        srcpad->stream = stream;
+        gst_object_replace ((GstObject **) & srcpad->stream,
+            (GstObject *) stream);
       }
+
+      /* Remember whether upstream is selectable or not */
+      if (gst_pad_query (pad, q)) {
+        PLAY_ITEMS_LOCK (handler->uridecodebin);
+        gst_query_parse_selectable (q, &handler->upstream_selected);
+        GST_DEBUG_OBJECT (srcpad->src_pad, "Upstream is selectable : %d",
+            handler->upstream_selected);
+        PLAY_ITEMS_UNLOCK (handler->uridecodebin);
+      }
+      gst_query_unref (q);
+
+      break;
+    }
+    case GST_EVENT_STREAM_COLLECTION:
+    {
+      GstStreamCollection *collection = NULL;
+      PLAY_ITEMS_LOCK (handler->uridecodebin);
+      if (!handler->upstream_selected) {
+        gst_event_parse_stream_collection (event, &collection);
+        if (collection) {
+          GST_DEBUG_OBJECT (srcpad->src_pad, "Seen collection with %d streams",
+              gst_stream_collection_get_size (collection));
+          if (handler->expected_pads == 1) {
+            handler->expected_pads =
+                gst_stream_collection_get_size (collection);
+          }
+          gst_object_unref (collection);
+        }
+      }
+      PLAY_ITEMS_UNLOCK (handler->uridecodebin);
+
       break;
     }
     case GST_EVENT_SEGMENT:
@@ -1304,56 +1337,15 @@ uri_src_block_probe (GstPad * pad, GstPadProbeInfo * info,
 {
   GstPadProbeReturn ret = GST_PAD_PROBE_OK;
   GstSourceHandler *handler = srcpad->handler;
-  GST_DEBUG_OBJECT (pad, "blocked");
 
   /* We only block on buffers, buffer list and gap events. Everything else is
-   * dropped (sticky events will be propagated later) */
+   * passed to the regular (non-blocking) probe */
   if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info)) &&
       GST_EVENT_TYPE (GST_PAD_PROBE_INFO_EVENT (info)) != GST_EVENT_GAP) {
-    GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
-    if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
-      GstStream *stream = NULL;
-      GstQuery *q = gst_query_new_selectable ();
-      gst_event_parse_stream (event, &stream);
-      if (stream) {
-        GST_DEBUG_OBJECT (srcpad->src_pad, "Got GstStream %" GST_PTR_FORMAT,
-            stream);
-        if (srcpad->stream)
-          gst_object_unref (srcpad->stream);
-        srcpad->stream = stream;
-      }
-      if (gst_pad_query (pad, q)) {
-        PLAY_ITEMS_LOCK (handler->uridecodebin);
-        gst_query_parse_selectable (q, &handler->upstream_selected);
-        GST_DEBUG_OBJECT (srcpad->src_pad, "Upstream is selectable : %d",
-            handler->upstream_selected);
-        PLAY_ITEMS_UNLOCK (handler->uridecodebin);
-      }
-      gst_query_unref (q);
-    } else if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_COLLECTION) {
-      GstStreamCollection *collection = NULL;
-      PLAY_ITEMS_LOCK (handler->uridecodebin);
-      if (!handler->upstream_selected) {
-        gst_event_parse_stream_collection (event, &collection);
-        if (collection) {
-          GST_DEBUG_OBJECT (srcpad->src_pad, "Seen collection with %d streams",
-              gst_stream_collection_get_size (collection));
-          if (handler->expected_pads == 1) {
-            handler->expected_pads =
-                gst_stream_collection_get_size (collection);
-          }
-          gst_object_unref (collection);
-        }
-      }
-      PLAY_ITEMS_UNLOCK (handler->uridecodebin);
-    }
-
-    GST_LOG_OBJECT (pad, "Skiping %" GST_PTR_FORMAT, event);
-    /* We don't want to be repeatedly called for the same event when unlinked,
-     * so we mark the event as handled */
-    gst_mini_object_unref (GST_PAD_PROBE_INFO_DATA (info));
-    return GST_PAD_PROBE_HANDLED;
+    return GST_PAD_PROBE_PASS;
   }
+
+  GST_DEBUG_OBJECT (pad, "blocking on buffer or gap");
 
   PLAY_ITEMS_LOCK (handler->uridecodebin);
   if (srcpad->block_probe_id == 0) {
