@@ -269,6 +269,15 @@ _need_video_crop (GstVaBaseDec * base)
   return FALSE;
 }
 
+static GstVaFeature
+_use_derived (GstVaBaseDec * base)
+{
+  /* i965 driver has a very poor performance reading derived images */
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (base->display, INTEL_I965))
+    return GST_VA_FEATURE_DISABLED;
+  return GST_VA_FEATURE_AUTO;
+}
+
 /* This path for pool setting is a little complicated but not commonly
    used. We deliberately separate it from the main path of pool setting. */
 static gboolean
@@ -365,7 +374,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
 
     gst_buffer_pool_config_set_va_allocation_params (other_config, 0,
-        GST_VA_FEATURE_AUTO);
+        _use_derived (base));
 
     if (!gst_buffer_pool_set_config (other_pool, other_config)) {
       ret = FALSE;
@@ -402,7 +411,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
       gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
     gst_buffer_pool_config_set_va_allocation_params (config,
-        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO);
+        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, _use_derived (base));
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       ret = FALSE;
@@ -584,7 +593,7 @@ gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
       gst_buffer_pool_config_set_va_alignment (config, &base->valign);
 
     gst_buffer_pool_config_set_va_allocation_params (config,
-        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, GST_VA_FEATURE_AUTO);
+        VA_SURFACE_ATTRIB_USAGE_HINT_DECODER, _use_derived (base));
 
     if (!gst_buffer_pool_set_config (pool, config)) {
       ret = FALSE;
