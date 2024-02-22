@@ -230,15 +230,19 @@ _is_renderer (GstElementFactory * factory)
   return FALSE;
 }
 
+/* Note : Historically subtitle "decoders" (which convert subtitle formats to
+ * raw text) were classified as "Parser/Subtitle". Most were fixed in February
+ * 2024 to use the proper classification of "Decoder/Subtitle" */
 static gboolean
-_is_parser (GstElementFactory * factory)
+_is_parser_decoder (GstElementFactory * factory)
 {
   const gchar *klass;
 
   klass =
       gst_element_factory_get_metadata (factory, GST_ELEMENT_METADATA_KLASS);
 
-  if (klass != NULL && strstr (klass, "Parser/Subtitle") != NULL)
+  if (klass != NULL && (strstr (klass, "Parser/Subtitle") != NULL ||
+          strstr (klass, "Decoder/Subtitle") != NULL))
     return TRUE;
   return FALSE;
 }
@@ -296,7 +300,7 @@ _get_sub_caps (GstElementFactory * factory)
 {
   const GList *templates;
   GList *walk;
-  gboolean is_parser = _is_parser (factory);
+  gboolean is_parser_decoder = _is_parser_decoder (factory);
 
   templates = gst_element_factory_get_static_pad_templates (factory);
   for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
@@ -305,7 +309,7 @@ _get_sub_caps (GstElementFactory * factory)
     if (templ->direction == GST_PAD_SINK && templ->presence == GST_PAD_ALWAYS) {
       gboolean found = FALSE;
 
-      if (is_parser) {
+      if (is_parser_decoder) {
         found = TRUE;
       } else {
         guint i;
@@ -348,10 +352,10 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
   if (strcmp ("textoverlay", name) != 0 && rank < GST_RANK_MARGINAL)
     return FALSE;
 
-  /* Check if it's a renderer or a parser */
+  /* Check if it's a renderer or a parser/decoder */
   if (_is_renderer (factory)) {
     is_renderer = TRUE;
-  } else if (_is_parser (factory)) {
+  } else if (_is_parser_decoder (factory)) {
     is_renderer = FALSE;
   } else {
     return FALSE;
@@ -382,8 +386,8 @@ _factory_filter (GstPluginFeature * feature, GstCaps ** subcaps)
     *subcaps = gst_caps_merge (*subcaps, templ_caps);
     return TRUE;
   } else if (!is_renderer && !have_video_sink && templ_caps) {
-    GST_DEBUG ("Found parser element %s (%s) with caps %" GST_PTR_FORMAT,
-        gst_element_factory_get_metadata (factory,
+    GST_DEBUG ("Found parser/decoder element %s (%s) with caps %"
+        GST_PTR_FORMAT, gst_element_factory_get_metadata (factory,
             GST_ELEMENT_METADATA_LONGNAME),
         gst_plugin_feature_get_name (feature), templ_caps);
     *subcaps = gst_caps_merge (*subcaps, templ_caps);
