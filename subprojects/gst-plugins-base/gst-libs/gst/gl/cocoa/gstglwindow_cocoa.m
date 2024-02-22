@@ -54,6 +54,7 @@
     backing: (NSBackingStoreType) bufferingType
     defer: (BOOL) flag screen: (NSScreen *) aScreen
     gstWin: (GstGLWindowCocoa *) window;
+- (void) resize: (int) width height: (int) height;
 - (void) setClosed;
 - (BOOL) isClosed;
 - (BOOL) canBecomeMainWindow;
@@ -325,6 +326,10 @@ _show_window (gpointer data)
   GstGLNSWindow *internal_win_id = (__bridge GstGLNSWindow *)priv->internal_win_id;
 
   GST_DEBUG_OBJECT (window_cocoa, "make the window available\n");
+
+  /* Preferred size might not yet be set when create_window is called,
+   * so we need to resize the window here to be sure. */
+  [internal_win_id resize: priv->preferred_width height: priv->preferred_height];
   [internal_win_id makeMainWindow];
   [internal_win_id orderFrontRegardless];
   [internal_win_id setViewsNeedDisplay:YES];
@@ -628,6 +633,15 @@ gst_gl_window_cocoa_controls_viewport (GstGLWindow * window)
   [self orderOut:internal_win_id];
 
   return self;
+}
+
+- (void) resize: (gint) width height: (gint) height {
+  NSRect frame = [super frame];
+  if (frame.size.width == width && frame.size.height == height)
+    return;
+
+  frame.size = NSMakeSize (width, height);
+  [super setFrame:frame display:YES];
 }
 
 - (void) setClosed {
