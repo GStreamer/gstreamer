@@ -450,7 +450,7 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
 
   gst_ffmpegviddec_context_set_flags (ffmpegdec->context,
       AV_CODEC_FLAG_OUTPUT_CORRUPT, ffmpegdec->output_corrupt);
-#if LIBAVCODEC_VERSION_MAJOR >= 60
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT (60, 31, 100)
   gst_ffmpegviddec_context_set_flags (ffmpegdec->context,
       AV_CODEC_FLAG_COPY_OPAQUE, TRUE);
 #endif
@@ -925,7 +925,7 @@ gst_ffmpegviddec_can_direct_render (GstFFMpegVidDec * ffmpegdec)
       AV_CODEC_CAP_DR1);
 }
 
-#if LIBAVCODEC_VERSION_MAJOR >= 60
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT (60, 31, 100)
 static void
 gst_ffmpeg_opaque_free (void *opaque, guint8 * data)
 {
@@ -959,7 +959,7 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
   /* apply the last info we have seen to this picture, when we get the
    * picture back from ffmpeg we can use this to correctly timestamp the output
    * buffer */
-#if LIBAVCODEC_VERSION_MAJOR >= 60
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT (60, 31, 100)
   {
     GstVideoCodecFrame *input_frame =
         av_buffer_get_opaque (picture->opaque_ref);
@@ -1803,7 +1803,7 @@ get_output_buffer (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame)
 
   gst_video_frame_unmap (&vframe);
 
-#if LIBAVCODEC_VERSION_MAJOR < 60
+#if LIBAVCODEC_VERSION_INT < AV_VERSION_INT (60, 31, 100)
   ffmpegdec->picture->reordered_opaque = -1;
 #endif
 
@@ -1921,7 +1921,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   GST_DEBUG_OBJECT (ffmpegdec, "picture: display %d",
       ffmpegdec->picture->display_picture_number);
 #endif
-#if LIBAVCODEC_VERSION_MAJOR >= 60
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT (60, 31, 100)
   GST_DEBUG_OBJECT (ffmpegdec, "picture: opaque_ref %p",
       ffmpegdec->picture->opaque_ref);
 #else
@@ -2234,7 +2234,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
 
   /* Store a reference to the input frame. This will be carried along by FFmpeg
    * to the resulting AVPicture */
-#if LIBAVCODEC_VERSION_MAJOR >= 60
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT (60, 31, 100)
   {
     packet->opaque_ref =
         av_buffer_create (NULL, 0, gst_ffmpeg_opaque_free,
