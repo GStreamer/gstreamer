@@ -107,6 +107,37 @@ GST_START_TEST (test_glcolorconvert_display_replace)
 
 GST_END_TEST;
 
+GST_START_TEST (test_glcolorconvert_meta_copy)
+{
+  GstHarness *h;
+  GstBuffer *buf;
+  GstCustomMeta *m;
+  const gchar *tags[] = { NULL };
+  const GstMetaInfo *minfo =
+      gst_meta_register_custom ("testmeta", tags, NULL, NULL, NULL);
+
+  h = gst_harness_new_parse ("glupload ! glcolorconvert ! gldownload");
+  gst_harness_set_caps_str (h,
+      "video/x-raw, format=RGBA,width=10,height=10,texture-target=2D",
+      "video/x-raw, format=BGRA,width=10,height=10,texture-target=2D");
+
+  buf = gst_harness_create_buffer (h, 4 * 10 * 10);
+  fail_unless_equals_int (gst_buffer_get_n_meta (buf, minfo->api), 0);
+  m = gst_buffer_add_custom_meta (buf, "testmeta");
+  fail_unless (m);
+  fail_unless_equals_int (gst_buffer_get_n_meta (buf, minfo->api), 1);
+  buf = gst_harness_push_and_pull (h, buf);
+
+  fail_unless_equals_int (gst_buffer_get_n_meta (buf, minfo->api), 1);
+  m = gst_buffer_get_custom_meta (buf, "testmeta");
+  fail_unless (m);
+
+  gst_clear_buffer (&buf);
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 glfilter_suite (void)
 {
@@ -115,6 +146,7 @@ glfilter_suite (void)
 
   tcase_add_test (tc, test_glupload_display_replace);
   tcase_add_test (tc, test_glcolorconvert_display_replace);
+  tcase_add_test (tc, test_glcolorconvert_meta_copy);
   suite_add_tcase (s, tc);
 
   return s;
