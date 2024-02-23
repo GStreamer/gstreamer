@@ -76,7 +76,6 @@ struct _GstTheoraDec
   gint telemetry_qi;
   gint telemetry_bits;
 
-  gboolean can_crop;
   GstVideoInfo uncropped_info;
 };
 
