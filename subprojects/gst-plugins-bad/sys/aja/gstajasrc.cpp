@@ -2497,21 +2497,23 @@ restart:
 
     self->device->device->AutoCirculateGetStatus(self->channel, status);
 
-    GST_TRACE_OBJECT(self,
-                     "Start frame %d "
-                     "end frame %d "
-                     "active frame %d "
-                     "start time %" G_GUINT64_FORMAT
-                     " "
-                     "current time %" G_GUINT64_FORMAT
-                     " "
-                     "frames processed %u "
-                     "frames dropped %u "
-                     "buffer level %u",
-                     status.acStartFrame, status.acEndFrame,
-                     status.acActiveFrame, status.acRDTSCStartTime,
-                     status.acRDTSCCurrentTime, status.acFramesProcessed,
-                     status.acFramesDropped, status.acBufferLevel);
+    GST_TRACE_OBJECT(
+        self,
+        "State %d "
+        "start frame %d "
+        "end frame %d "
+        "active frame %d "
+        "start time %" GST_TIME_FORMAT
+        " "
+        "current time %" GST_TIME_FORMAT
+        " "
+        "frames processed %u "
+        "frames dropped %u "
+        "buffer level %u",
+        status.acState, status.acStartFrame, status.acEndFrame,
+        status.acActiveFrame, GST_TIME_ARGS(status.acRDTSCStartTime * 100),
+        GST_TIME_ARGS(status.acRDTSCCurrentTime * 100),
+        status.acFramesProcessed, status.acFramesDropped, status.acBufferLevel);
 
     if (frames_dropped_last == G_MAXUINT64) {
       frames_dropped_last = status.acFramesDropped;
@@ -2639,6 +2641,36 @@ restart:
         continue;
       }
 
+      const AUTOCIRCULATE_TRANSFER_STATUS &transfer_status =
+          transfer.GetTransferStatus();
+      const FRAME_STAMP &frame_stamp = transfer_status.GetFrameStamp();
+
+      GstClockTime frame_time = frame_stamp.acFrameTime * 100;
+      GstClockTime now_sys = g_get_real_time() * 1000;
+      GstClockTime now_gst = gst_clock_get_time(clock);
+
+      GST_TRACE_OBJECT(self,
+                       "State %d "
+                       "transfer frame %d "
+                       "current frame %u "
+                       "frame time %" GST_TIME_FORMAT
+                       " "
+                       "current frame time %" GST_TIME_FORMAT
+                       " "
+                       "current time %" GST_TIME_FORMAT
+                       " "
+                       "frames processed %u "
+                       "frames dropped %u "
+                       "buffer level %u",
+                       transfer_status.acState, transfer_status.acTransferFrame,
+                       frame_stamp.acCurrentFrame,
+                       GST_TIME_ARGS(frame_stamp.acFrameTime * 100),
+                       GST_TIME_ARGS(frame_stamp.acCurrentFrameTime * 100),
+                       GST_TIME_ARGS(frame_stamp.acCurrentTime * 100),
+                       transfer_status.acFramesProcessed,
+                       transfer_status.acFramesDropped,
+                       transfer_status.acBufferLevel);
+
       gst_buffer_set_size(audio_buffer, transfer.GetCapturedAudioByteCount());
       if (anc_buffer)
         gst_buffer_set_size(anc_buffer,
@@ -2669,22 +2701,17 @@ restart:
       }
 
       NTV2_RP188 time_code;
-      transfer.acTransferStatus.acFrameStamp.GetInputTimeCode(time_code,
-                                                              tc_index);
+      frame_stamp.GetInputTimeCode(time_code, tc_index);
 
-      gint64 frame_time = transfer.acTransferStatus.acFrameStamp.acFrameTime;
-      gint64 now_sys = g_get_real_time();
-      GstClockTime now_gst = gst_clock_get_time(clock);
-      if (now_sys * 10 > frame_time) {
-        GstClockTime diff = now_sys * 1000 - frame_time * 100;
+      if (now_sys > frame_time) {
+        GstClockTime diff = now_sys - frame_time;
         if (now_gst > diff)
           now_gst -= diff;
         else
           now_gst = 0;
       }
 
-      GstClockTime base_time =
-          gst_element_get_base_time(GST_ELEMENT_CAST(self));
+      GstClockTime base_time = GST_ELEMENT_CAST(self)->base_time;
       if (now_gst > base_time)
         now_gst -= base_time;
       else
