@@ -2515,32 +2515,6 @@ restart:
         GST_TIME_ARGS(status.acRDTSCCurrentTime * 100),
         status.acFramesProcessed, status.acFramesDropped, status.acBufferLevel);
 
-    if (frames_dropped_last == G_MAXUINT64) {
-      frames_dropped_last = status.acFramesDropped;
-    } else if (frames_dropped_last < status.acFramesDropped) {
-      GST_WARNING_OBJECT(self, "Dropped %" G_GUINT64_FORMAT " frames",
-                         status.acFramesDropped - frames_dropped_last);
-
-      GstClockTime timestamp =
-          gst_util_uint64_scale(status.acFramesProcessed + frames_dropped_last,
-                                self->configured_info.fps_n,
-                                self->configured_info.fps_d * GST_SECOND);
-      GstClockTime timestamp_end = gst_util_uint64_scale(
-          status.acFramesProcessed + status.acFramesDropped,
-          self->configured_info.fps_n,
-          self->configured_info.fps_d * GST_SECOND);
-
-      QueueItem item = {.type = QUEUE_ITEM_TYPE_FRAMES_DROPPED,
-                        .frames_dropped = {.driver_side = TRUE,
-                                           .timestamp_start = timestamp,
-                                           .timestamp_end = timestamp_end}};
-      gst_queue_array_push_tail_struct(self->queue, &item);
-      g_cond_signal(&self->queue_cond);
-
-      frames_dropped_last = status.acFramesDropped;
-      discont = TRUE;
-    }
-
     if (status.IsRunning() && status.acBufferLevel > 1) {
       GstBuffer *video_buffer = NULL;
       GstBuffer *audio_buffer = NULL;
@@ -2670,6 +2644,33 @@ restart:
                        transfer_status.acFramesProcessed,
                        transfer_status.acFramesDropped,
                        transfer_status.acBufferLevel);
+
+      if (frames_dropped_last == G_MAXUINT64) {
+        frames_dropped_last = transfer_status.acFramesDropped;
+      } else if (frames_dropped_last < transfer_status.acFramesDropped) {
+        GST_WARNING_OBJECT(
+            self, "Dropped %" G_GUINT64_FORMAT " frames",
+            transfer_status.acFramesDropped - frames_dropped_last);
+
+        GstClockTime timestamp = gst_util_uint64_scale(
+            transfer_status.acFramesProcessed + frames_dropped_last,
+            self->configured_info.fps_n,
+            self->configured_info.fps_d * GST_SECOND);
+        GstClockTime timestamp_end = gst_util_uint64_scale(
+            transfer_status.acFramesProcessed + transfer_status.acFramesDropped,
+            self->configured_info.fps_n,
+            self->configured_info.fps_d * GST_SECOND);
+
+        QueueItem item = {.type = QUEUE_ITEM_TYPE_FRAMES_DROPPED,
+                          .frames_dropped = {.driver_side = TRUE,
+                                             .timestamp_start = timestamp,
+                                             .timestamp_end = timestamp_end}};
+        gst_queue_array_push_tail_struct(self->queue, &item);
+        g_cond_signal(&self->queue_cond);
+
+        frames_dropped_last = transfer_status.acFramesDropped;
+        discont = TRUE;
+      }
 
       gst_buffer_set_size(audio_buffer, transfer.GetCapturedAudioByteCount());
       if (anc_buffer)
