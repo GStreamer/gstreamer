@@ -2899,7 +2899,7 @@ in debugging.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstpluginsbaseversion.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="PLUGINS_BASE_VERSION_MICRO" value="2" c:type="GST_PLUGINS_BASE_VERSION_MICRO">
+    <constant name="PLUGINS_BASE_VERSION_MICRO" value="90" c:type="GST_PLUGINS_BASE_VERSION_MICRO">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstpluginsbaseversion.h">The micro version of GStreamer's gst-plugins-base libraries at compile time.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstpluginsbaseversion.h"/>
       <type name="gint" c:type="gint"/>
@@ -2909,7 +2909,7 @@ in debugging.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstpluginsbaseversion.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="PLUGINS_BASE_VERSION_NANO" value="1" c:type="GST_PLUGINS_BASE_VERSION_NANO">
+    <constant name="PLUGINS_BASE_VERSION_NANO" value="0" c:type="GST_PLUGINS_BASE_VERSION_NANO">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstpluginsbaseversion.h">The nano version of GStreamer's gst-plugins-base libraries at compile time.
 Actual releases have 0, GIT versions have 1, prerelease versions have 2-...</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstpluginsbaseversion.h"/>

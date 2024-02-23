@@ -15458,7 +15458,7 @@ contains one frame)</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_MICRO" value="2" c:type="GES_VERSION_MICRO">
+    <constant name="VERSION_MICRO" value="90" c:type="GES_VERSION_MICRO">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
@@ -15466,7 +15466,7 @@ contains one frame)</doc>
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_NANO" value="1" c:type="GES_VERSION_NANO">
+    <constant name="VERSION_NANO" value="0" c:type="GES_VERSION_NANO">
       <source-position filename="../subprojects/gst-editing-services/ges/ges-version.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
