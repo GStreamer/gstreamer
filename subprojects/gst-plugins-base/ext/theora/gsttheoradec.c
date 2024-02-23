@@ -398,9 +398,7 @@ theora_handle_type_packet (GstTheoraDec * dec)
   GstFlowReturn ret = GST_FLOW_OK;
   GstVideoCodecState *state;
   GstVideoFormat fmt;
-  GstVideoInfo *info;
-
-  info = &dec->input_state->info;
+  gint width, height;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
@@ -410,8 +408,8 @@ theora_handle_type_packet (GstTheoraDec * dec)
    * the info.aspect_* values reflect PAR;
    * 0:x and x:0 are allowed and can be interpreted as 1:1.
    */
-  par_num = GST_VIDEO_INFO_PAR_N (info);
-  par_den = GST_VIDEO_INFO_PAR_D (info);
+  par_num = GST_VIDEO_INFO_PAR_N (&dec->input_state->info);
+  par_den = GST_VIDEO_INFO_PAR_D (&dec->input_state->info);
 
   /* If we have a default PAR, see if the decoder specified a different one */
   if (par_num == 1 && par_den == 1 &&
@@ -445,23 +443,23 @@ theora_handle_type_packet (GstTheoraDec * dec)
       goto unsupported_format;
   }
 
-  GST_VIDEO_INFO_WIDTH (info) = dec->info.pic_width;
-  GST_VIDEO_INFO_HEIGHT (info) = dec->info.pic_height;
+  width = dec->info.pic_width;
+  height = dec->info.pic_height;
 
   /* Ensure correct offsets in chroma for formats that need it
    * by rounding the offset. libtheora will add proper pixels,
    * so no need to handle them ourselves. */
   if (dec->info.pic_x & 1 && dec->info.pixel_fmt != TH_PF_444) {
-    GST_VIDEO_INFO_WIDTH (info)++;
+    width++;
   }
   if (dec->info.pic_y & 1 && dec->info.pixel_fmt == TH_PF_420) {
-    GST_VIDEO_INFO_HEIGHT (info)++;
+    height++;
   }
 
   GST_DEBUG_OBJECT (dec, "after fixup frame dimension %dx%d, offset %d:%d",
-      info->width, info->height, dec->info.pic_x, dec->info.pic_y);
+      width, height, dec->info.pic_x, dec->info.pic_y);
 
-  if (info->width == 0 || info->height == 0)
+  if (width == 0 || height == 0)
     goto invalid_dimensions;
 
   /* done */
@@ -491,7 +489,7 @@ theora_handle_type_packet (GstTheoraDec * dec)
   /* Create the output state */
   dec->output_state = state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), fmt,
-      info->width, info->height, dec->input_state);
+      width, height, dec->input_state);
 
   /* FIXME : Do we still need to set fps/par now that we pass the reference input stream ? */
   state->info.fps_n = dec->info.fps_numerator;
@@ -542,7 +540,7 @@ not_negotiated:
 invalid_dimensions:
   {
     GST_ERROR_OBJECT (dec, "Invalid dimensions (width:%d, height:%d)",
-        info->width, info->height);
+        width, height);
     return GST_FLOW_ERROR;
   }
 }
