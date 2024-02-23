@@ -517,8 +517,6 @@ theora_handle_type_packet (GstTheoraDec * dec)
       break;
   }
 
-  dec->uncropped_info = state->info;
-
   if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec)))
     goto not_negotiated;
 
@@ -680,7 +678,7 @@ theora_handle_image (GstTheoraDec * dec, th_ycbcr_buffer buf,
   GST_CAT_TRACE_OBJECT (CAT_PERFORMANCE, dec,
       "doing unavoidable video frame copy");
 
-  if (G_UNLIKELY (!gst_video_frame_map (&vframe, &dec->uncropped_info,
+  if (G_UNLIKELY (!gst_video_frame_map (&vframe, &dec->output_state->info,
               frame->output_buffer, GST_MAP_WRITE)))
     goto invalid_frame;
 

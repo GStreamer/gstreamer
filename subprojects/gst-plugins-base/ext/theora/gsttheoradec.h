@@ -75,8 +75,6 @@ struct _GstTheoraDec
   gint telemetry_mbmode;
   gint telemetry_qi;
   gint telemetry_bits;
-
-  GstVideoInfo uncropped_info;
 };
 
 struct _GstTheoraDecClass
