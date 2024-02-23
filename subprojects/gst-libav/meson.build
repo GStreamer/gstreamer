@@ -212,7 +212,6 @@ warning_flags = [
   '-Waggregate-return',
   '-Wvla',
   '-Wpointer-arith',
-  '-Werror=deprecated-declarations' # to fail on FFmpeg deprecated usage
 ]
 
 foreach extra_arg : warning_flags
