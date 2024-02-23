@@ -876,10 +876,13 @@ gst_va_base_dec_get_preferred_format_and_caps_features (GstVaBaseDec * base,
    * if downstream doesn't support system memory negotiation will fail later.
    */
   if (is_any) {
+    GstVideoFormat fmt =
+        _caps_video_format_from_chroma (allowed_caps, base->rt_format);
     features = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
+
     if (format)
-      *format = _caps_video_format_from_chroma (allowed_caps, base->rt_format);
-    if (capsfeatures && *format != GST_VIDEO_FORMAT_UNKNOWN)
+      *format = fmt;
+    if (capsfeatures && fmt != GST_VIDEO_FORMAT_UNKNOWN)
       *capsfeatures = gst_caps_features_copy (features);
     goto bail;
   }
