@@ -487,6 +487,8 @@ theora_handle_type_packet (GstTheoraDec * dec)
   }
 
   /* Create the output state */
+  if (dec->output_state)
+    gst_video_codec_state_unref (dec->output_state);
   dec->output_state = state =
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), fmt,
       width, height, dec->input_state);
