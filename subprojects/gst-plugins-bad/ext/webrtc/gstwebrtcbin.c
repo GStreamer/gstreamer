@@ -5620,6 +5620,9 @@ _update_transport_ptmap_from_media (GstWebRTCBin * webrtc,
   guint i, len;
   const gchar *proto;
   const GstSDPMedia *media = gst_sdp_message_get_media (sdp, media_idx);
+  const GstSDPMedia *remote_media =
+      gst_sdp_message_get_media (webrtc->current_remote_description->sdp,
+      media_idx);
 
   /* get proto */
   proto = gst_sdp_media_get_proto (media);
@@ -5671,6 +5674,11 @@ _update_transport_ptmap_from_media (GstWebRTCBin * webrtc,
             (GstStructureForeachFunc) _filter_sdp_fields, filtered);
         gst_caps_append_structure (item.caps, filtered);
       }
+
+      /* Get attributes from the remote media,
+       * such as ssrc-...-cname, ...
+       */
+      gst_sdp_media_attributes_to_caps (remote_media, item.caps);
 
       item.pt = pt;
       item.media_idx = media_idx;
