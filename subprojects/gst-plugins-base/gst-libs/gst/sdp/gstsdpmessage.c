@@ -4257,7 +4257,7 @@ sdp_add_attributes_to_caps (GArray * attributes, GstCaps * caps)
         continue;
 
       /* string must be valid UTF8 */
-      if (!g_utf8_validate (attr->value, -1, NULL))
+      if (attr->value != NULL && !g_utf8_validate (attr->value, -1, NULL))
         continue;
 
       if (!g_str_has_prefix (key, "x-"))
