@@ -85,6 +85,8 @@ option('rpi-lib-dir', type : 'string', value : '/opt/vc/lib', description : 'Dir
 
 # soup plugin options
 option('soup', type : 'feature', value : 'auto', description : 'libsoup HTTP client source/sink plugin')
+option('soup-lookup-dep', type : 'boolean', value : false,
+       description : 'Lookup libsoup dep at build time even when building a shared plugin')
 option('soup-version', type : 'combo', value : 'auto', choices : ['auto', '2', '3'],
        description: 'Force a specific libsoup version if linking to it (N/A for shared builds on Linux)')
 

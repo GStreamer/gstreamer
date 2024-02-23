@@ -40,6 +40,7 @@ variables:
     -Dlibnice:tests=disabled
     -Dlibnice:examples=disabled
     -Dopenh264:tests=disabled
+    -Dgst-plugins-good:soup-lookup-dep=true
     -Dpygobject:tests=false
     -Dpython=enabled
     -Dlibav=enabled
@@ -414,6 +415,7 @@ build vs2019 arm64 uwp:
     MESON_CROSS_ARGS: >
       -Dgst-plugins-base:pango=disabled
       -Dgst-plugins-good:cairo=disabled
+      -Dgst-plugins-good:soup=disabled
       -Dgst-devtools:cairo=disabled
       --cross-file ci/meson/vs2019-arm64-cross-file.txt
       --native-file ci/meson/vs2019-x64-native-file.txt

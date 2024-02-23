@@ -20,7 +20,8 @@ soup_link_deps = []
 libsoup2_dep = disabler()
 libsoup3_dep = disabler()
 default_library = get_option('default_library')
-if host_system != 'linux' or default_library in ['static', 'both']
+soup_lookup_dep = get_option('soup-lookup-dep') and host_system == 'linux'
+if host_system != 'linux' or default_library in ['static', 'both'] or soup_lookup_dep
   if soup_ver_opt in ['auto', '3']
     libsoup3_dep = dependency('libsoup-3.0', allow_fallback: true,
                               required: soup_ver_opt == '3' and soup_opt.enabled())
