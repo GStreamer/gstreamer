@@ -378,10 +378,10 @@ gst_d3d11_decoder_get_property (GObject * object, guint prop_id,
   }
 }
 
-// Needs device lock
 static void
 gst_d3d11_decoder_clear_resource (GstD3D11Decoder * self)
 {
+  GstD3D11DeviceLockGuard lkd (self->device);
   GstD3D11SRWLockGuard lk (&self->lock);
   if (self->internal_pool) {
     gst_buffer_pool_set_active (self->internal_pool, FALSE);

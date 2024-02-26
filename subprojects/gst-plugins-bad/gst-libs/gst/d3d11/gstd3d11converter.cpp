@@ -837,29 +837,34 @@ gst_d3d11_converter_dispose (GObject * object)
 {
   GstD3D11Converter *self = GST_D3D11_CONVERTER (object);
   GstD3D11ConverterPrivate *priv = self->priv;
+  
+  {
+    GstD3D11DeviceLockGuard lk (self->device);
 
-  GST_D3D11_CLEAR_COM (priv->vertex_buffer);
-  GST_D3D11_CLEAR_COM (priv->index_buffer);
-  GST_D3D11_CLEAR_COM (priv->const_buffer);
-  GST_D3D11_CLEAR_COM (priv->vs);
-  GST_D3D11_CLEAR_COM (priv->layout);
-  GST_D3D11_CLEAR_COM (priv->linear_sampler);
-  GST_D3D11_CLEAR_COM (priv->gamma_dec_lut);
-  GST_D3D11_CLEAR_COM (priv->gamma_dec_srv);
-  GST_D3D11_CLEAR_COM (priv->gamma_enc_lut);
-  GST_D3D11_CLEAR_COM (priv->gamma_enc_srv);
-  GST_D3D11_CLEAR_COM (priv->video_device);
-  GST_D3D11_CLEAR_COM (priv->video_context2);
-  GST_D3D11_CLEAR_COM (priv->video_context);
-  GST_D3D11_CLEAR_COM (priv->enumerator);
-  GST_D3D11_CLEAR_COM (priv->processor);
-  GST_D3D11_CLEAR_COM (priv->blend);
+    GST_D3D11_CLEAR_COM (priv->vertex_buffer);
+    GST_D3D11_CLEAR_COM (priv->index_buffer);
+    GST_D3D11_CLEAR_COM (priv->const_buffer);
+    GST_D3D11_CLEAR_COM (priv->vs);
+    GST_D3D11_CLEAR_COM (priv->layout);
+    GST_D3D11_CLEAR_COM (priv->linear_sampler);
+    GST_D3D11_CLEAR_COM (priv->gamma_dec_lut);
+    GST_D3D11_CLEAR_COM (priv->gamma_dec_srv);
+    GST_D3D11_CLEAR_COM (priv->gamma_enc_lut);
+    GST_D3D11_CLEAR_COM (priv->gamma_enc_srv);
+    GST_D3D11_CLEAR_COM (priv->video_device);
+    GST_D3D11_CLEAR_COM (priv->video_context2);
+    GST_D3D11_CLEAR_COM (priv->video_context);
+    GST_D3D11_CLEAR_COM (priv->enumerator);
+    GST_D3D11_CLEAR_COM (priv->processor);
+    GST_D3D11_CLEAR_COM (priv->blend);
 
-  for (guint i = 0; i < CONVERTER_MAX_QUADS; i++)
-    GST_D3D11_CLEAR_COM (priv->ps[i]);
+    for (guint i = 0; i < CONVERTER_MAX_QUADS; i++)
+      GST_D3D11_CLEAR_COM (priv->ps[i]);
 
-  gst_clear_buffer (&priv->fallback_inbuf);
-  gst_clear_buffer (&priv->piv_inbuf);
+    gst_clear_buffer (&priv->fallback_inbuf);
+    gst_clear_buffer (&priv->piv_inbuf);
+  }
+  
   gst_clear_object (&self->device);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
