@@ -1301,7 +1301,7 @@ gst_jpeg_dec_decode (GstJpegDec * dec, GstVideoFrame * vframe, guint width,
     GST_LOG_OBJECT (dec, "decompressing (required scanline buffer height = %u)",
         dec->cinfo.rec_outbuf_height);
 
-    /* For some widths jpeglib requires more horizontal padding than I420 
+    /* For some widths jpeglib requires more horizontal padding than I420
      * provides. In those cases we need to decode into separate buffers and then
      * copy over the data into our final picture buffer, otherwise jpeglib might
      * write over the end of a line into the beginning of the next line,
