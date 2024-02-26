@@ -385,7 +385,7 @@ GST_START_TEST (test_fifteen_s8)
 
   volume = setup_volume ();
   // Maximal volume that is supported by the fixed point multiplication.
-  g_object_set (G_OBJECT (volume), "volume", 15.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 15.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -436,7 +436,7 @@ GST_START_TEST (test_sixteen_s8)
 
   volume = setup_volume ();
   // No longer using fixed point multiplication.
-  g_object_set (G_OBJECT (volume), "volume", 16.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 16.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -487,7 +487,7 @@ GST_START_TEST (test_max_s8)
 
   volume = setup_volume ();
   // No longer using fixed point multiplication.
-  g_object_set (G_OBJECT (volume), "volume", G_MAXDOUBLE, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", G_MAXDOUBLE, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -771,7 +771,7 @@ GST_START_TEST (test_fifteen_s16)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 15.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 15.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -821,7 +821,7 @@ GST_START_TEST (test_sixteen_s16)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 16.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 16.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -871,7 +871,7 @@ GST_START_TEST (test_max_s16)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", G_MAXDOUBLE, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", G_MAXDOUBLE, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1200,7 +1200,7 @@ GST_START_TEST (test_fifteen_s24)
   write_unaligned_u24 (in + 9, in_32[3]);
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 15.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 15.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1262,7 +1262,7 @@ GST_START_TEST (test_sixteen_s24)
   write_unaligned_u24 (in + 9, in_32[3]);
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 16.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 16.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1324,7 +1324,7 @@ GST_START_TEST (test_4095_s24)
   write_unaligned_u24 (in + 9, in_32[3]);
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 4095.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 4095.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1386,7 +1386,7 @@ GST_START_TEST (test_4096_s24)
   write_unaligned_u24 (in + 9, in_32[3]);
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 4096.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 4096.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1448,7 +1448,7 @@ GST_START_TEST (test_max_s24)
   write_unaligned_u24 (in + 9, in_32[3]);
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", G_MAXDOUBLE, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", G_MAXDOUBLE, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1746,7 +1746,7 @@ GST_START_TEST (test_fifteen_s32)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 15.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 15.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1796,7 +1796,7 @@ GST_START_TEST (test_sixteen_s32)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 16.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 16.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -1846,7 +1846,7 @@ GST_START_TEST (test_max_s32)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", G_MAXDOUBLE, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", G_MAXDOUBLE, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -2135,7 +2135,7 @@ GST_START_TEST (test_fifteen_f32)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 15.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 15.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -2188,7 +2188,7 @@ GST_START_TEST (test_sixteen_f32)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 16.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 16.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -2243,7 +2243,7 @@ GST_START_TEST (test_max_f32)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", G_MAXDOUBLE, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", G_MAXDOUBLE, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -2536,7 +2536,7 @@ GST_START_TEST (test_fifteen_f64)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 15.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 15.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -2589,7 +2589,7 @@ GST_START_TEST (test_sixteen_f64)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", 16.0, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", 16.0, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 
@@ -2644,7 +2644,7 @@ GST_START_TEST (test_max_f64)
   GstMapInfo map;
 
   volume = setup_volume ();
-  g_object_set (G_OBJECT (volume), "volume", G_MAXDOUBLE, NULL);
+  g_object_set (G_OBJECT (volume), "volume-full-range", G_MAXDOUBLE, NULL);
   fail_unless (gst_element_set_state (volume, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_SUCCESS, "could not set to playing");
 

@@ -96,7 +96,8 @@ enum
 {
   PROP_0,
   PROP_MUTE,
-  PROP_VOLUME
+  PROP_VOLUME,
+  PROP_VOLUME_FULL_RANGE
 };
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -380,13 +381,26 @@ gst_volume_class_init (GstVolumeClass * klass)
           DEFAULT_PROP_MUTE,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
-  /* The volume factor is a range from 0.0 to G_MAXDOUBLE.
-   * The choice of G_MAXDOUBLE is somewhat arbitrary,
-   * but it should be *very* inclusive, e.g. gain of +48 dB is very reasonable.
+  /**
+   * GstVolume:volume-full-range:
+   *
+   * The volume-full-range factor is a range from 0.0 to G_MAXDOUBLE so
+   * it is *very* inclusive, e.g. gain of +48 dB is very reasonable. This
+   * property allows setting higher value than the #GstVolume:volume property.
+   *
+   * Since: 1.24
    */
+  /* This property has been exposed as another property to keep the backward compatibility
+   * when using #GstDirectControlBinding with GstDirectControlBinding:absolute set to FALSE. */
+  g_object_class_install_property (gobject_class, PROP_VOLUME_FULL_RANGE,
+      g_param_spec_double ("volume-full-range", "Volume",
+          "volume factor with a full range of values, 1.0=100%", 0.0,
+          G_MAXDOUBLE, DEFAULT_PROP_VOLUME,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_VOLUME,
       g_param_spec_double ("volume", "Volume", "volume factor, 1.0=100%",
-          0.0, G_MAXDOUBLE, DEFAULT_PROP_VOLUME,
+          0.0, 10.0, DEFAULT_PROP_VOLUME,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (element_class, "Volume",
@@ -981,6 +995,11 @@ volume_set_property (GObject * object, guint prop_id, const GValue * value,
       self->volume = g_value_get_double (value);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_VOLUME_FULL_RANGE:
+      GST_OBJECT_LOCK (self);
+      self->volume = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1000,6 +1019,17 @@ volume_get_property (GObject * object, guint prop_id, GValue * value,
       GST_OBJECT_UNLOCK (self);
       break;
     case PROP_VOLUME:
+      GST_OBJECT_LOCK (self);
+      if (self->volume > 10.0) {
+        GST_WARNING_OBJECT (object,
+            "Volume is greater than its max value 10.0, reporting as 10.0");
+        g_value_set_double (value, 10.0);
+      } else {
+        g_value_set_double (value, self->volume);
+      }
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_VOLUME_FULL_RANGE:
       GST_OBJECT_LOCK (self);
       g_value_set_double (value, self->volume);
       GST_OBJECT_UNLOCK (self);
