@@ -95,7 +95,7 @@ distributions we support with binaries are the distributions that we
 have people who have volunteered to make binaries for. If you are
 interested in maintaining GStreamer binaries for other distributions or
 Unices we would be happy to hear from you. Contact us through the
-GStreamer-devel mailing list.
+GStreamer [Discourse][discourse] or [Matrix][matrix].
 
 ## I am having trouble compiling GStreamer on my LFS installation, why?
 
@@ -104,11 +104,13 @@ knowledgeable enough to solve any build issues you get on your own.
 Being volunteered based we can't promise support to anyone of course,
 but are you using LFS consider yourself extra unsupported. We neither
 can or want to know enough, about how your unique system is configured,
-to be able to help you. That said, if you come to the \#gstreamer
-channel on irc.openprojects.net we might of course be able to give you
-some general hints and pointers.
+to be able to help you. That said, if you come to the [Matrix rooms][matrix]
+we might of course be able to give you some general hints and pointers.
 
 ## How do I get GStreamer through git?
 
 See this page : <http://gstreamer.freedesktop.org/dev/> for git
 access (anonymous and developer).
+
+[matrix]: https://matrix.to/#/#gstreamer:gstreamer.org
+[discourse]: https://discourse.gstreamer.org/

@@ -12,17 +12,17 @@ Our documentation, including tutorials, API reference and FAQ can be found at
 
   https://gstreamer.freedesktop.org/documentation/
 
-You can subscribe to our mailing lists:
+You can ask questions on the GStreamer Discourse at
 
-  https://lists.freedesktop.org/mailman/listinfo/gstreamer-announce
-
-  https://lists.freedesktop.org/mailman/listinfo/gstreamer-devel
+  https://discourse.gstreamer.org/
 
 We track bugs, feature requests and merge requests (patches) in GitLab at
 
   https://gitlab.freedesktop.org/gstreamer/
 
-You can join us on IRC - #gstreamer on irc.oftc.net
+You can join us on our Matrix room at
+
+  https://matrix.to/#/#gstreamer:gstreamer.org
 
 This repository contains all official modules supported by the GStreamer
 community which can be found in the `subprojects/` directory.

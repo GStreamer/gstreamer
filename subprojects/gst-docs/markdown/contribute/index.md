@@ -63,11 +63,9 @@ these operations:
 
 - If you don't know which component to file the issue against, just pick the one
   that seems the most likely to you, or file it against the gstreamer-project
-  component. If in doubt just pop into our IRC channel `#gstreamer` on the
-  [OFTC IRC network](https://www.oftc.net/), which you can connect to using
-  any IRC client application or the [OFTC IRC webchat](https://webchat.oftc.net/?channels=%23gstreamer).
-  In any case, if it's not the right component someone will move the issue
-  once they have a better idea what the problem is and where it belongs.
+  component. If in doubt just pop into our [Matrix Discussion channel][matrix].
+  In any case, if it's not the right component someone will move the issue once
+  they have a better idea what the problem is and where it belongs.
 
 - Please mention:
 
@@ -424,6 +422,7 @@ In the simplest case, you might be able to get away with just doing a `git pull
 [special-md-references]: https://docs.gitlab.com/ee/user/markdown.html#special-gitlab-references
 [bugs]: https://gstreamer.freedesktop.org/bugs/
 [gitlab]: https://gitlab.freedesktop.org/gstreamer
+[matrix]: https://matrix.to/#/#gstreamer:gstreamer.org
 
 #### Coding Style
 
@@ -530,7 +529,7 @@ code repositories in commit messages.
 Whenever you submit a new Merge Request, add a comment to an existing issue or
 Merge Request, GitLab will send a notification e-mail to GStreamer
 developers. This means that there is usually no need to advertise the fact that
-you have done so in other forums such as on IRC or on the mailing list, unless
+you have done so in other forums such as on Matrix or Discourse, unless
 you have been asked to file an issue there, in which case it's nice to follow up
 with the link to the issue.
 

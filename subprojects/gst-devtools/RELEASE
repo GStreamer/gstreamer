@@ -79,14 +79,11 @@ For help and support, please head over to our Discourse forum at
 
   https://discourse.gstreamer.org/
 
-or pop into one of our Matrix chat channels, see
+or pop into one of our Matrix chat rooms, see
 
   https://discourse.gstreamer.org/t/new-gstreamer-matrix-chat-space/675
 
 for more details.
-
-There is also a legacy IRC channel, #gstreamer on the OFTC IRC network,
-which is also bridged into the Matrix network.
 
 Please do not submit support requests in GitLab, we only use it for
 bug tracking and merge requests review. Use the Discourse forum instead.

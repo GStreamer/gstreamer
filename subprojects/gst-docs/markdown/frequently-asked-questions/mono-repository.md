@@ -200,9 +200,12 @@ $ git cherry-pick <commit> ... --strategy=subtree
 
 ## I have another question related to the mono repository - where is the best place to ask or get help?
 
-Best to just pop into our IRC channel `#gstreamer` on the OFTC network (also accessible via Matrix) or send a mail to the gstreamer-devel mailing list.
+Best to just pop into our [Matrix room][matrix] or start a discussion on [Discourse][discourse].
 
 You can also file an issue in GitLab if you have a question that you think might be worth adding to this FAQ.
+
+[matrix]: https://matrix.to/#/#gstreamer:gstreamer.org
+[discourse]: https://discourse.gstreamer.org/
 
 - - -
 
