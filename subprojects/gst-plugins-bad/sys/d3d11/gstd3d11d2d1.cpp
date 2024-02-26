@@ -106,9 +106,9 @@ static void gst_d3d11_d2d1_get_property (GObject * object,
 
 static gboolean
 gst_d3d11_d2d1_decide_allocation(GstBaseTransform* trans, GstQuery* query);
+
 static GstFlowReturn
-gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
-    GstBuffer* outbuf);
+gst_d3d11_d2d1_transform_ip (GstBaseTransform * trans, GstBuffer * buf);
 
 /* GObject vmethod implementations */
 
@@ -150,7 +150,7 @@ gst_d3d11_d2d1_class_init (Gstd3d11d2d1Class * klass)
 
   trans_class->decide_allocation =
       GST_DEBUG_FUNCPTR(gst_d3d11_d2d1_decide_allocation);
-  trans_class->transform = GST_DEBUG_FUNCPTR(gst_d3d11_d2d1_transform);
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR(gst_d3d11_d2d1_transform_ip);
   trans_class->passthrough_on_same_caps = FALSE;
 
   gst_d3d11_d2d1_signals[SIGNAL_DRAW] =
@@ -160,99 +160,45 @@ gst_d3d11_d2d1_class_init (Gstd3d11d2d1Class * klass)
 }
 
 static GstFlowReturn
-gst_d3d11_d2d1_transform(GstBaseTransform* trans, GstBuffer* inbuf,
-    GstBuffer* outbuf)
+gst_d3d11_d2d1_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
 {
-    GstD3D11BaseFilter* filter = GST_D3D11_BASE_FILTER(trans);
-    Gstd3d11d2d1* d2d1 = GST_D3D11D2D1(trans);
-    ID3D11Device* device_handle;
-    ID3D11DeviceContext* context_handle;
-    GstMapInfo in_map;
-    GstMapInfo out_map;
-    GstD3D11Device* device = filter->device;
-    guint subidx;
-    D3D11_BOX src_box = { 0, };
-    D3D11_TEXTURE2D_DESC dst_desc;
-    D3D11_TEXTURE2D_DESC src_desc;
-    GstFlowReturn ret = GST_FLOW_ERROR;
-    HRESULT hr;
+  GstD3D11BaseFilter* filter = GST_D3D11_BASE_FILTER(trans);
+  GstD3D11Memory *dmem;
+  GstMemory *mem;
+  HRESULT hr;
+  ID2D1RenderTarget* render_target;
 
-    g_return_val_if_fail(gst_buffer_n_memory(inbuf) == 1, GST_FLOW_ERROR);
-    g_return_val_if_fail(gst_buffer_n_memory(outbuf) == 1, GST_FLOW_ERROR);
-
-    gst_d3d11_device_lock(device);
-    device_handle = gst_d3d11_device_get_device_handle(device);
-    context_handle = gst_d3d11_device_get_device_context_handle(device);
-    if (!gst_d3d11_buffer_map(inbuf, device_handle, &in_map, GST_MAP_READ)) {
-        goto invalid_memory;
-    }
-
-    if (!gst_d3d11_buffer_map(outbuf, device_handle, &out_map, GST_MAP_WRITE)) {
-        gst_d3d11_buffer_unmap(inbuf, &in_map);
-        goto invalid_memory;
-    }
-
-    {
-        GstD3D11Memory* mem = (GstD3D11Memory*)gst_buffer_peek_memory(outbuf, 0);
-        GstD3D11Memory* src_dmem = (GstD3D11Memory*)gst_buffer_peek_memory(inbuf, 0);
-
-        subidx = gst_d3d11_memory_get_subresource_index(mem);
-        gst_d3d11_memory_get_texture_desc(mem, &dst_desc);
-        gst_d3d11_memory_get_texture_desc(src_dmem, &src_desc);
-
-        if (dst_desc.Width != src_desc.Width ||
-            dst_desc.Height != src_desc.Height) {
-            GST_ERROR_OBJECT(filter, "Src and dest dimensions do not match (%dx%d) -> (%dx%d)",
-                src_desc.Width, src_desc.Height, dst_desc.Width, dst_desc.Height);
-            goto cleanup;
-        }
-
-        src_box.left = 0;
-        src_box.top = 0;
-        src_box.front = 0;
-        src_box.back = 1;
-        src_box.right = dst_desc.Width;
-        src_box.bottom = dst_desc.Height;
-
-        guint src_subidx = gst_d3d11_memory_get_subresource_index(src_dmem);
-
-        context_handle->CopySubresourceRegion((ID3D11Resource*)out_map.data,
-            subidx, 0, 0, 0, (ID3D11Resource*)in_map.data, src_subidx, &src_box);
-
-        static ID2D1Factory* direct2DFactory;
-        if (!direct2DFactory)
-        {
-            hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED,
-                &direct2DFactory);
-
-            if (!gst_d3d11_result(hr, device)) {
-                GST_ERROR("Could not create ID2D1Factory, hr: 0x%x", (guint)hr);
-                goto cleanup;
-            }
-        }
-
-        ID2D1RenderTarget* render_target = gst_d3d11_memory_get_d2d1_render_target(mem, direct2DFactory);
-        if (render_target == NULL) {
-            GST_ERROR("Could not get ID2D1RenderTarget from d3d11memory");
-            goto cleanup;
-        }
-
-        GST_DEBUG_OBJECT(d2d1, "Emit signal to the user");
-        g_signal_emit(d2d1, gst_d3d11_d2d1_signals[SIGNAL_DRAW], 0, render_target, GST_BUFFER_PTS (inbuf));
-    }
-
-    ret = GST_FLOW_OK;
-cleanup:
-    gst_d3d11_buffer_unmap(inbuf, &in_map);
-    gst_d3d11_buffer_unmap(outbuf, &out_map);
-    gst_d3d11_device_unlock(device);
-
-    return ret;
-
-invalid_memory:
-    gst_d3d11_device_unlock(device);
-    GST_ERROR_OBJECT(d2d1, "invalid memory");
+  mem = gst_buffer_peek_memory (buf, 0);
+  if (!gst_is_d3d11_memory (mem)) {
+    GST_ERROR_OBJECT (filter, "Not a d3d11 memory");
     return GST_FLOW_ERROR;
+  }
+
+  dmem = GST_D3D11_MEMORY_CAST (mem);
+  GstD3D11DeviceLockGuard lk (filter->device);
+  static ID2D1Factory* direct2DFactory;
+  if (!direct2DFactory) {
+    hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_MULTI_THREADED,
+			   &direct2DFactory);
+    
+    if (!gst_d3d11_result(hr, filter->device)) {
+      GST_ERROR_OBJECT (filter,
+	  "Could not create ID2D1Factory, hr: 0x%x", (guint)hr);
+      return GST_FLOW_ERROR;
+    }
+  }
+
+  render_target = gst_d3d11_memory_get_d2d1_render_target(dmem, direct2DFactory);
+  if (render_target == NULL) {
+    GST_ERROR_OBJECT(filter,
+	"Could not get ID2D1RenderTarget from d3d11memory");
+    return GST_FLOW_ERROR;
+  }
+
+  GST_DEBUG_OBJECT(filter, "Emit signal to the user");
+  g_signal_emit(filter, gst_d3d11_d2d1_signals[SIGNAL_DRAW], 0, render_target, GST_BUFFER_PTS (buf));
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
@@ -395,7 +341,7 @@ gst_d3d11_d2d1_init (Gstd3d11d2d1 * d2d1)
 {
     d2d1->enabled = FALSE;
     gst_base_transform_set_passthrough(GST_BASE_TRANSFORM(d2d1), !d2d1->enabled);
-    gst_base_transform_set_in_place(GST_BASE_TRANSFORM(d2d1), FALSE);
+    gst_base_transform_set_in_place(GST_BASE_TRANSFORM(d2d1), TRUE);
 }
 
 static void
