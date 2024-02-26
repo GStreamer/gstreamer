@@ -41,7 +41,6 @@
 #else
 #define AV_RANK GST_RANK_PRIMARY
 #endif
-#include "atdec.h"
 
 #ifdef HAVE_VIDEOTOOLBOX
 void gst_vtenc_register_elements (GstPlugin * plugin);
@@ -84,8 +83,6 @@ plugin_init (GstPlugin * plugin)
   res &= gst_device_provider_register (plugin, "avfdeviceprovider",
     GST_RANK_PRIMARY, GST_TYPE_AVF_DEVICE_PROVIDER);
 #endif
-
-  res &= gst_element_register (plugin, "atdec", GST_RANK_MARGINAL, GST_TYPE_ATDEC);
 
 #ifdef HAVE_VIDEOTOOLBOX
   /* Check if the framework actually exists at runtime */

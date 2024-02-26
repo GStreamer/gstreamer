@@ -6,7 +6,6 @@ applemedia_sources = [
     'coremediabuffer.c',
     'videotexturecache.m',
     'videotexturecache-gl.m',
-    'atdec.c',
     'glcontexthelper.c',
     'helpers.c',
 ]
@@ -42,8 +41,7 @@ applemedia_frameworks = []
 corefoundation_dep = dependency('CoreFoundation', required : applemedia_option)
 coremedia_dep = dependency('CoreMedia', required : applemedia_option)
 corevideo_dep = dependency('CoreVideo', required : applemedia_option)
-audiotoolbox_dep = dependency('AudioToolbox', required : applemedia_option)
-applemedia_frameworks += [corefoundation_dep, coremedia_dep, corevideo_dep, audiotoolbox_dep]
+applemedia_frameworks += [corefoundation_dep, coremedia_dep, corevideo_dep]
 
 avfoundation_dep = dependency('AVFoundation', required : applemedia_option)
 if avfoundation_dep.found()
@@ -118,7 +116,7 @@ if applemedia_found_deps
         objcpp_args : gst_plugins_bad_args + applemedia_args + applemedia_objc_args + applemedia_objcpp_args,
         link_args : noseh_link_args,
         include_directories : [configinc, libsinc],
-        dependencies : [gstvideo_dep, gstaudio_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep, gstglproto_dep, gstcodecparsers_dep] + applemedia_frameworks,
+        dependencies : [gstvideo_dep, gstpbutils_dep, gst_dep, gstbase_dep, gstgl_dep, gstglproto_dep, gstcodecparsers_dep] + applemedia_frameworks,
         override_options : ['cpp_std=c++11'],
         install : true,
         install_dir : plugins_install_dir,
