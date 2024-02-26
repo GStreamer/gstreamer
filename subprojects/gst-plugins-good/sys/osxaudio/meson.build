@@ -5,7 +5,8 @@ osxaudio_sources = [
   'gstosxaudiosrc.c',
   'gstosxcoreaudiocommon.c',
   'gstosxcoreaudio.c',
-  'gstosxaudio.c'
+  'gstosxaudio.c',
+  'gstatdec.c',
 ]
 
 have_osxaudio = false

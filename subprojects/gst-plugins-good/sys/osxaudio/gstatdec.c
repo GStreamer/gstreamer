@@ -36,7 +36,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiodecoder.h>
-#include "atdec.h"
+#include "gstatdec.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_atdec_debug_category);
 #define GST_CAT_DEFAULT gst_atdec_debug_category
@@ -81,6 +81,7 @@ static GstStaticPadTemplate gst_atdec_sink_template =
 G_DEFINE_TYPE_WITH_CODE (GstATDec, gst_atdec, GST_TYPE_AUDIO_DECODER,
     GST_DEBUG_CATEGORY_INIT (gst_atdec_debug_category, "atdec", 0,
         "debug category for atdec element"));
+GST_ELEMENT_REGISTER_DEFINE (atdec, "atdec", GST_RANK_MARGINAL, GST_TYPE_ATDEC);
 
 static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, mpegversion=4");
 static GstStaticCaps mp3_caps =

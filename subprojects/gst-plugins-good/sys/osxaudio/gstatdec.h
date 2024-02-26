@@ -51,6 +51,8 @@ struct _GstATDecClass
 
 GType gst_atdec_get_type (void);
 
+GST_ELEMENT_REGISTER_DECLARE (atdec);
+
 G_END_DECLS
 
 #endif
