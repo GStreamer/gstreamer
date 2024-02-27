@@ -538,11 +538,15 @@ get_utc_from_offset (GstRtpOnvifTimestamp * self, GstBuffer * buf)
   guint64 time = GST_CLOCK_TIME_NONE;
 
   if (GST_BUFFER_PTS_IS_VALID (buf)) {
-    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
-        GST_BUFFER_PTS (buf));
+    if (gst_segment_to_stream_time_full (&self->segment, GST_FORMAT_TIME,
+            GST_BUFFER_PTS (buf), &time) < 0) {
+      time = GST_CLOCK_TIME_NONE;
+    }
   } else if (GST_BUFFER_DTS_IS_VALID (buf)) {
-    time = gst_segment_to_stream_time (&self->segment, GST_FORMAT_TIME,
-        GST_BUFFER_DTS (buf));
+    if (gst_segment_to_stream_time_full (&self->segment, GST_FORMAT_TIME,
+            GST_BUFFER_DTS (buf), &time) < 0) {
+      time = GST_CLOCK_TIME_NONE;
+    }
   } else {
     g_assert_not_reached ();
   }
