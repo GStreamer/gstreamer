@@ -564,8 +564,12 @@ search_by_entry (GstPluginFeature * feature, gpointer search_entry)
 static gint
 sort_by_rank (GstPluginFeature * first, GstPluginFeature * second)
 {
-  return gst_plugin_feature_get_rank (second) -
+  int diff = gst_plugin_feature_get_rank (second) -
       gst_plugin_feature_get_rank (first);
+  if (diff == 0)
+    diff = g_strcmp0 (gst_plugin_feature_get_name (first),
+        gst_plugin_feature_get_name (second));
+  return diff;
 }
 
 static GList *
