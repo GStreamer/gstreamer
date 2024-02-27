@@ -21288,7 +21288,7 @@
                         "writable": true
                     }
                 },
-                "rank": "none",
+                "rank": "primary",
                 "signals": {
                     "accept-certificate": {
                         "args": [
