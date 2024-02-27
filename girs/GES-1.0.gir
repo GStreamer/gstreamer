@@ -4487,21 +4487,21 @@ composition.</doc>
       </field>
       <field name="posx" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired x position.</doc>
-        <type name="gint" c:type="gint"/>
+        <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="posy" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired y position.</doc>
-        <type name="gint" c:type="gint"/>
+        <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="height" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired height of the video. -1 means that no scaling should be
 applied.</doc>
-        <type name="gint" c:type="gint"/>
+        <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="width" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired width of the video. -1 means that no scaling should beapplied
 applied.</doc>
-        <type name="gint" c:type="gint"/>
+        <type name="gdouble" c:type="gdouble"/>
       </field>
       <field name="zorder" writable="1">
         <doc xml:space="preserve" filename="../subprojects/gst-editing-services/ges/ges-frame-composition-meta.h">The desired z order.</doc>

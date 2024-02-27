@@ -192,6 +192,47 @@ find_compositor (GstPluginFeature * feature, gpointer udata)
             (loaded_feature)), GST_TYPE_AGGREGATOR);
   }
 
+  if (res) {
+    const gchar *needed_props[] = { "width", "height", "xpos", "ypos" };
+    GObjectClass *klass =
+        g_type_class_ref (gst_element_factory_get_element_type
+        (GST_ELEMENT_FACTORY (loaded_feature)));
+    GstPadTemplate *templ =
+        gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass),
+        "sink_%u");
+
+    g_type_class_unref (klass);
+    if (!templ) {
+      GST_INFO_OBJECT (loaded_feature, "No sink template found, ignoring");
+      res = FALSE;
+      goto done;
+    }
+
+    GType pad_type;
+    g_object_get (templ, "gtype", &pad_type, NULL);
+    klass = g_type_class_ref (pad_type);
+    for (gint i = 0; i < G_N_ELEMENTS (needed_props); i++) {
+      GParamSpec *pspec;
+
+      if (!(pspec = g_object_class_find_property (klass, needed_props[i]))) {
+        GST_INFO_OBJECT (loaded_feature, "No property %s found, ignoring",
+            needed_props[i]);
+        res = FALSE;
+        break;
+      }
+
+      if (pspec->value_type != G_TYPE_INT && pspec->value_type != G_TYPE_FLOAT
+          && pspec->value_type != G_TYPE_DOUBLE) {
+        GST_INFO_OBJECT (loaded_feature,
+            "Property %s is not of type int or float, or double, ignoring",
+            needed_props[i]);
+        res = FALSE;
+        break;
+      }
+    }
+    g_type_class_unref (klass);
+  }
+
 done:
   gst_clear_object (&elem);
   gst_object_unref (loaded_feature);

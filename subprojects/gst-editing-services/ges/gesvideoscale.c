@@ -22,6 +22,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <math.h>
 
 #include "ges-frame-composition-meta.h"
 
@@ -96,7 +97,8 @@ chain (GstPad * pad, GESVideoScale * self, GstBuffer * buffer)
     if (meta->height != self->height || meta->width != self->width) {
       GST_OBJECT_UNLOCK (self);
 
-      set_dimension (self, meta->width, meta->height);
+      set_dimension (self, (gint) round (meta->width),
+          (gint) round (meta->height));
     } else {
       GST_OBJECT_UNLOCK (self);
     }

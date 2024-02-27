@@ -72,6 +72,7 @@ struct _GstFramePositionerClass
   GstBaseTransformClass base_framepositioner_class;
 };
 
+G_GNUC_INTERNAL gboolean gst_frame_positioner_check_can_add_binding (GstFramePositioner *self, const gchar *property_name);
 G_GNUC_INTERNAL GType gst_compositor_operator_get_type_and_default_value (int *default_operator_value);
 G_GNUC_INTERNAL void ges_frame_positioner_set_source_and_filter (GstFramePositioner *pos,
 						  GESTrackElement *trksrc,

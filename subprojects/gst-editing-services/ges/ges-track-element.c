@@ -56,6 +56,7 @@
 #endif
 
 #include "ges-internal.h"
+#include "gstframepositioner.h"
 #include "ges-extractable.h"
 #include "ges-track-element.h"
 #include "ges-clip.h"
@@ -1913,10 +1914,12 @@ ges_track_element_set_control_source (GESTrackElement * object,
     goto done;
   }
 
-  /* First remove existing binding */
-  if (ges_track_element_remove_control_binding (object, property_name))
-    GST_LOG_OBJECT (object, "Removed old binding for property %s",
-        property_name);
+  if (GST_IS_FRAME_POSITIONNER (element)) {
+    if (!gst_frame_positioner_check_can_add_binding (GST_FRAME_POSITIONNER
+            (element), property_name)) {
+      goto done;
+    }
+  }
 
   if (direct_absolute)
     binding = gst_direct_control_binding_new_absolute (GST_OBJECT (element),

@@ -61,10 +61,10 @@ struct _GESFrameCompositionMeta {
   GstMeta meta;
 
   gdouble alpha;
-  gint posx;
-  gint posy;
-  gint height;
-  gint width;
+  gdouble posx;
+  gdouble posy;
+  gdouble height;
+  gdouble width;
   guint zorder;
   gint operator;
 };
