@@ -9583,13 +9583,8 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       if (CUR_STREAM (stream)->n_channels > 0)
         gst_caps_set_simple (CUR_STREAM (stream)->caps,
             "channels", G_TYPE_INT, CUR_STREAM (stream)->n_channels, NULL);
-      if (CUR_STREAM (stream)->n_channels > 2) {
-        /* FIXME: Need to parse the 'chan' atom to get channel layouts
-         * correctly; this is just the minimum we can do - assume
-         * we don't actually have any channel positions. */
-        gst_caps_set_simple (CUR_STREAM (stream)->caps,
-            "channel-mask", GST_TYPE_BITMASK, G_GUINT64_CONSTANT (0), NULL);
-      }
+      /* FIXME: Need to parse the 'chan' atom to get channel layouts
+       * correctly. */
     }
   }
 
