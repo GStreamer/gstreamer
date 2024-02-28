@@ -73,7 +73,7 @@ struct _GstPitch
   /* stream tracking */
   gfloat segment_applied_rate;  /* Rate applied from input segment */
   GstClockTime next_buffer_time;
-  gint64 next_buffer_offset;
+  guint64 next_buffer_offset;
 
   GstClockTimeDiff min_latency, max_latency;
 
