@@ -5002,10 +5002,24 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
     cropcap.type = v4l2object->type;
     if (v4l2object->ioctl (v4l2object->video_fd, VIDIOC_CROPCAP, &cropcap) < 0) {
-      if (errno != ENOTTY)
-        GST_WARNING_OBJECT (v4l2object->dbg_obj,
-            "Failed to probe pixel aspect ratio with VIDIOC_CROPCAP: %s",
-            g_strerror (errno));
+
+      switch (errno) {
+        case ENODATA:
+        case ENOTTY:
+          GST_INFO_OBJECT (v4l2object->dbg_obj,
+              "Driver does not support VIDIOC_CROPCAP (%s), assuming pixel aspect ratio 1/1",
+              g_strerror (errno));
+          break;
+
+        default:
+          GST_WARNING_OBJECT (v4l2object->dbg_obj,
+              "Failed to probe pixel aspect ratio with VIDIOC_CROPCAP: %s",
+              g_strerror (errno));
+      }
+      v4l2object->par = g_new0 (GValue, 1);
+      g_value_init (v4l2object->par, GST_TYPE_FRACTION);
+      gst_value_set_fraction (v4l2object->par, 1, 1);
+
     } else if (cropcap.pixelaspect.numerator && cropcap.pixelaspect.denominator) {
       v4l2object->par = g_new0 (GValue, 1);
       g_value_init (v4l2object->par, GST_TYPE_FRACTION);
