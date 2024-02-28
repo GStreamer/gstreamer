@@ -243,9 +243,9 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     pool_alloc = GST_D3D11_POOL_ALLOCATOR (alloc);
     flow_ret = gst_d3d11_pool_allocator_acquire_memory (pool_alloc, &mem);
+    gst_d3d11_allocator_set_active (alloc, FALSE);
     if (flow_ret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (self, "Failed to allocate initial memory");
-      gst_d3d11_allocator_set_active (alloc, FALSE);
       gst_object_unref (alloc);
       return FALSE;
     }
@@ -254,7 +254,6 @@ gst_d3d11_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
             &stride) || stride < desc[i].Width) {
       GST_ERROR_OBJECT (self, "Failed to calculate stride");
 
-      gst_d3d11_allocator_set_active (alloc, FALSE);
       gst_object_unref (alloc);
       gst_memory_unref (mem);
 

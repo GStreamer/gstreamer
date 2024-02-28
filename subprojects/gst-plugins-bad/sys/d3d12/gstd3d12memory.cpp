@@ -1100,6 +1100,8 @@ gst_d3d12_pool_allocator_release_memory (GstD3D12PoolAllocator * self,
   /* keep it around in our queue */
   priv->queue.push (mem);
   priv->outstanding--;
+  if (priv->outstanding == 0 && priv->flushing)
+    gst_d3d12_pool_allocator_stop (self);
   priv->cond.notify_all ();
   priv->lock.unlock ();
 
@@ -1124,13 +1126,6 @@ gst_d3d12_memory_release (GstMiniObject * mini_object)
   priv = alloc->priv;
 
   priv->lock.lock ();
-  /* if flushing, free this memory */
-  if (alloc->priv->flushing) {
-    priv->lock.unlock ();
-    GST_LOG_OBJECT (alloc, "allocator is flushing, free %p", mem);
-    return TRUE;
-  }
-
   /* return the memory to the allocator */
   gst_memory_ref (mem);
   gst_d3d12_pool_allocator_release_memory (alloc, mem);

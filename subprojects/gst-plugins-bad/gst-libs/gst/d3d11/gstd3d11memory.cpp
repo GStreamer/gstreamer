@@ -2208,6 +2208,8 @@ gst_d3d11_pool_allocator_release_memory (GstD3D11PoolAllocator * self,
   /* keep it around in our queue */
   priv->queue.push (mem);
   priv->outstanding--;
+  if (priv->outstanding == 0 && priv->flushing)
+    gst_d3d11_pool_allocator_stop (self);
   WakeAllConditionVariable (&priv->cond);
   ReleaseSRWLockExclusive (&priv->lock);
 
@@ -2232,13 +2234,6 @@ gst_d3d11_memory_release (GstMiniObject * object)
   priv = alloc->priv;
 
   AcquireSRWLockExclusive (&priv->lock);
-  /* if flushing, free this memory */
-  if (alloc->priv->flushing) {
-    ReleaseSRWLockExclusive (&priv->lock);
-    GST_LOG_OBJECT (alloc, "allocator is flushing, free %p", mem);
-    return TRUE;
-  }
-
   /* return the memory to the allocator */
   gst_memory_ref (mem);
   gst_d3d11_pool_allocator_release_memory (alloc, mem);
