@@ -2016,21 +2016,23 @@ restart:
 
     self->device->device->AutoCirculateGetStatus(self->channel, status);
 
-    GST_TRACE_OBJECT(self,
-                     "Start frame %d "
-                     "end frame %d "
-                     "active frame %d "
-                     "start time %" G_GUINT64_FORMAT
-                     " "
-                     "current time %" G_GUINT64_FORMAT
-                     " "
-                     "frames processed %u "
-                     "frames dropped %u "
-                     "buffer level %u",
-                     status.acStartFrame, status.acEndFrame,
-                     status.acActiveFrame, status.acRDTSCStartTime,
-                     status.acRDTSCCurrentTime, status.acFramesProcessed,
-                     status.acFramesDropped, status.acBufferLevel);
+    GST_TRACE_OBJECT(
+        self,
+        "State %d "
+        "start frame %d "
+        "end frame %d "
+        "active frame %d "
+        "start time %" GST_TIME_FORMAT
+        " "
+        "current time %" GST_TIME_FORMAT
+        " "
+        "frames processed %u "
+        "frames dropped %u "
+        "buffer level %u",
+        status.acState, status.acStartFrame, status.acEndFrame,
+        status.acActiveFrame, GST_TIME_ARGS(status.acRDTSCStartTime * 100),
+        GST_TIME_ARGS(status.acRDTSCCurrentTime * 100),
+        status.acFramesProcessed, status.acFramesDropped, status.acBufferLevel);
 
     // Detect if we were too slow with providing frames and report if that was
     // the case together with the amount of frames dropped
@@ -2149,25 +2151,31 @@ restart:
         gst_buffer_unref(item.anc_buffer2);
       }
 
-      GST_TRACE_OBJECT(
-          self,
-          "Transferred frame. "
-          "frame time %" GST_TIME_FORMAT
-          " "
-          "current frame %u "
-          "current frame time %" GST_TIME_FORMAT
-          " "
-          "frames processed %u "
-          "frames dropped %u "
-          "buffer level %u",
-          GST_TIME_ARGS(transfer.acTransferStatus.acFrameStamp.acFrameTime *
-                        100),
-          transfer.acTransferStatus.acFrameStamp.acCurrentFrame,
-          GST_TIME_ARGS(
-              transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime * 100),
-          transfer.acTransferStatus.acFramesProcessed,
-          transfer.acTransferStatus.acFramesDropped,
-          transfer.acTransferStatus.acBufferLevel);
+      const AUTOCIRCULATE_TRANSFER_STATUS &transfer_status =
+          transfer.GetTransferStatus();
+      const FRAME_STAMP &frame_stamp = transfer_status.GetFrameStamp();
+
+      GST_TRACE_OBJECT(self,
+                       "State %d "
+                       "transfer frame %d "
+                       "current frame %u "
+                       "frame time %" GST_TIME_FORMAT
+                       " "
+                       "current frame time %" GST_TIME_FORMAT
+                       " "
+                       "current time %" GST_TIME_FORMAT
+                       " "
+                       "frames processed %u "
+                       "frames dropped %u "
+                       "buffer level %u",
+                       transfer_status.acState, transfer_status.acTransferFrame,
+                       frame_stamp.acCurrentFrame,
+                       GST_TIME_ARGS(frame_stamp.acFrameTime * 100),
+                       GST_TIME_ARGS(frame_stamp.acCurrentFrameTime * 100),
+                       GST_TIME_ARGS(frame_stamp.acCurrentTime * 100),
+                       transfer_status.acFramesProcessed,
+                       transfer_status.acFramesDropped,
+                       transfer_status.acBufferLevel);
 
       // Trivial drift calculation
       //
@@ -2176,18 +2184,16 @@ restart:
       // FIXME: Add some compensation by dropping/duplicating frames as needed
       // but make this configurable
       if (frames_rendered_start_time == GST_CLOCK_TIME_NONE &&
-          transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime != 0 &&
-          transfer.acTransferStatus.acFramesProcessed +
-                  transfer.acTransferStatus.acFramesDropped >
+          frame_stamp.acCurrentFrameTime != 0 &&
+          transfer_status.acFramesProcessed + transfer_status.acFramesDropped >
               self->queue_size &&
           clock) {
-        frames_rendered_start = transfer.acTransferStatus.acFramesProcessed +
-                                transfer.acTransferStatus.acFramesDropped;
+        frames_rendered_start =
+            transfer_status.acFramesProcessed + transfer_status.acFramesDropped;
 
         GstClockTime now_gst = gst_clock_get_time(clock);
         GstClockTime now_sys = g_get_real_time() * 1000;
-        GstClockTime render_time =
-            transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime * 100;
+        GstClockTime render_time = frame_stamp.acCurrentFrameTime * 100;
 
         if (render_time < now_sys) {
           frames_rendered_start_time = now_gst - (now_sys - render_time);
@@ -2197,8 +2203,7 @@ restart:
       if (clock && frames_rendered_start_time != GST_CLOCK_TIME_NONE) {
         GstClockTime now_gst = gst_clock_get_time(clock);
         GstClockTime now_sys = g_get_real_time() * 1000;
-        GstClockTime render_time =
-            transfer.acTransferStatus.acFrameStamp.acCurrentFrameTime * 100;
+        GstClockTime render_time = frame_stamp.acCurrentFrameTime * 100;
 
         GstClockTime sys_diff;
         if (now_sys > render_time) {
@@ -2210,8 +2215,8 @@ restart:
         GstClockTime diff = now_gst - frames_rendered_start_time;
         if (sys_diff < diff) diff -= sys_diff;
 
-        guint64 frames_rendered = (transfer.acTransferStatus.acFramesProcessed +
-                                   transfer.acTransferStatus.acFramesDropped) -
+        guint64 frames_rendered = (transfer_status.acFramesProcessed +
+                                   transfer_status.acFramesDropped) -
                                   frames_rendered_start;
         guint64 frames_produced =
             gst_util_uint64_scale(diff, self->configured_info.fps_n,
