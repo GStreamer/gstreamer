@@ -32,6 +32,10 @@
 gboolean
 gst_ffmpeg_codecid_is_image (enum AVCodecID codec_id);
 
+/* Returns TRUE if codec_id has a known mapping */
+gboolean
+gst_ffmpeg_codecid_is_known(enum AVCodecID codec_id);
+
 /*
  * _codecid_to_caps () gets the GstCaps that belongs to
  * a certain CodecID for a pad with compressed data.

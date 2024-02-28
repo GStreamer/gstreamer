@@ -864,6 +864,11 @@ gst_ffmpegauddec_register (GstPlugin * plugin)
       continue;
     }
 
+    /* Skip formats we don't handle */
+    if (!gst_ffmpeg_codecid_is_known (in_plugin->id)) {
+      continue;
+    }
+
     /* no quasi codecs, please */
     if (in_plugin->id == AV_CODEC_ID_PCM_S16LE_PLANAR ||
         (in_plugin->id >= AV_CODEC_ID_PCM_S16LE &&

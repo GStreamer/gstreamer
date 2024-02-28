@@ -920,6 +920,233 @@ gst_ffmpeg_codecid_is_image (enum AVCodecID codec_id)
   }
 }
 
+/* List of AVCodecID for which we have known mappings. */
+
+gboolean
+gst_ffmpeg_codecid_is_known (enum AVCodecID codec_id)
+{
+  switch (codec_id) {
+    case AV_CODEC_ID_MPEG1VIDEO:
+    case AV_CODEC_ID_MPEG2VIDEO:
+    case AV_CODEC_ID_H263:
+    case AV_CODEC_ID_H263P:
+    case AV_CODEC_ID_H263I:
+    case AV_CODEC_ID_H261:
+    case AV_CODEC_ID_RV10:
+    case AV_CODEC_ID_RV20:
+    case AV_CODEC_ID_RV30:
+    case AV_CODEC_ID_RV40:
+    case AV_CODEC_ID_MP1:
+    case AV_CODEC_ID_MP2:
+    case AV_CODEC_ID_MP3:
+    case AV_CODEC_ID_MUSEPACK7:
+    case AV_CODEC_ID_MUSEPACK8:
+    case AV_CODEC_ID_AC3:
+    case AV_CODEC_ID_EAC3:
+    case AV_CODEC_ID_TRUEHD:
+    case AV_CODEC_ID_ATRAC1:
+    case AV_CODEC_ID_ATRAC3:
+    case AV_CODEC_ID_DTS:
+    case AV_CODEC_ID_APE:
+    case AV_CODEC_ID_MLP:
+    case AV_CODEC_ID_METASOUND:
+    case AV_CODEC_ID_IMC:
+    case AV_CODEC_ID_MJPEG:
+    case AV_CODEC_ID_LJPEG:
+    case AV_CODEC_ID_MXPEG:
+    case AV_CODEC_ID_JPEG2000:
+    case AV_CODEC_ID_SP5X:
+    case AV_CODEC_ID_MJPEGB:
+    case AV_CODEC_ID_MPEG4:
+    case AV_CODEC_ID_RAWVIDEO:
+    case AV_CODEC_ID_MSMPEG4V1:
+    case AV_CODEC_ID_MSMPEG4V2:
+    case AV_CODEC_ID_MSMPEG4V3:
+    case AV_CODEC_ID_WMV1:
+    case AV_CODEC_ID_WMV2:
+    case AV_CODEC_ID_FLV1:
+    case AV_CODEC_ID_SVQ1:
+    case AV_CODEC_ID_SVQ3:
+    case AV_CODEC_ID_DVAUDIO:
+    case AV_CODEC_ID_DVVIDEO:
+    case AV_CODEC_ID_WMAV1:
+    case AV_CODEC_ID_WMAV2:
+    case AV_CODEC_ID_WMAPRO:
+    case AV_CODEC_ID_WMALOSSLESS:
+    case AV_CODEC_ID_WMAVOICE:
+    case AV_CODEC_ID_XMA1:
+    case AV_CODEC_ID_XMA2:
+    case AV_CODEC_ID_MACE3:
+    case AV_CODEC_ID_MACE6:
+    case AV_CODEC_ID_HUFFYUV:
+    case AV_CODEC_ID_FFVHUFF:
+    case AV_CODEC_ID_CYUV:
+    case AV_CODEC_ID_H264:
+    case AV_CODEC_ID_HEVC:
+    case AV_CODEC_ID_INDEO5:
+    case AV_CODEC_ID_INDEO4:
+    case AV_CODEC_ID_INDEO3:
+    case AV_CODEC_ID_INDEO2:
+    case AV_CODEC_ID_FLASHSV:
+    case AV_CODEC_ID_FLASHSV2:
+    case AV_CODEC_ID_VP3:
+    case AV_CODEC_ID_VP5:
+    case AV_CODEC_ID_VP6:
+    case AV_CODEC_ID_VP6F:
+    case AV_CODEC_ID_VP6A:
+    case AV_CODEC_ID_VP8:
+    case AV_CODEC_ID_VP9:
+    case AV_CODEC_ID_THEORA:
+    case AV_CODEC_ID_CFHD:
+    case AV_CODEC_ID_SPEEDHQ:
+    case AV_CODEC_ID_AAC:
+    case AV_CODEC_ID_AAC_LATM: /* LATM/LOAS AAC syntax */
+    case AV_CODEC_ID_ASV1:
+    case AV_CODEC_ID_ASV2:
+    case AV_CODEC_ID_FFV1:
+    case AV_CODEC_ID_4XM:
+    case AV_CODEC_ID_XAN_WC3:
+    case AV_CODEC_ID_XAN_WC4:
+    case AV_CODEC_ID_CLJR:
+    case AV_CODEC_ID_FRAPS:
+    case AV_CODEC_ID_MDEC:
+    case AV_CODEC_ID_ROQ:
+    case AV_CODEC_ID_INTERPLAY_VIDEO:
+    case AV_CODEC_ID_VCR1:
+    case AV_CODEC_ID_RPZA:
+    case AV_CODEC_ID_CINEPAK:
+    case AV_CODEC_ID_MSRLE:
+    case AV_CODEC_ID_QTRLE:
+    case AV_CODEC_ID_MSVIDEO1:
+    case AV_CODEC_ID_MSS1:
+    case AV_CODEC_ID_MSS2:
+    case AV_CODEC_ID_WMV3:
+    case AV_CODEC_ID_VC1:
+    case AV_CODEC_ID_QDM2:
+    case AV_CODEC_ID_MSZH:
+    case AV_CODEC_ID_ZLIB:
+    case AV_CODEC_ID_TRUEMOTION1:
+    case AV_CODEC_ID_TRUEMOTION2:
+    case AV_CODEC_ID_ULTI:
+    case AV_CODEC_ID_TSCC:
+    case AV_CODEC_ID_TSCC2:
+    case AV_CODEC_ID_KMVC:
+    case AV_CODEC_ID_NUV:
+    case AV_CODEC_ID_GIF:
+    case AV_CODEC_ID_PNG:
+    case AV_CODEC_ID_PPM:
+    case AV_CODEC_ID_PBM:
+    case AV_CODEC_ID_PAM:
+    case AV_CODEC_ID_PGM:
+    case AV_CODEC_ID_PCX:
+    case AV_CODEC_ID_SGI:
+    case AV_CODEC_ID_TARGA:
+    case AV_CODEC_ID_TIFF:
+    case AV_CODEC_ID_SUNRAST:
+    case AV_CODEC_ID_SMC:
+    case AV_CODEC_ID_QDRAW:
+    case AV_CODEC_ID_DNXHD:
+    case AV_CODEC_ID_PRORES:
+    case AV_CODEC_ID_MIMIC:
+    case AV_CODEC_ID_VMNC:
+    case AV_CODEC_ID_TRUESPEECH:
+    case AV_CODEC_ID_QCELP:
+    case AV_CODEC_ID_AMV:
+    case AV_CODEC_ID_AASC:
+    case AV_CODEC_ID_LOCO:
+    case AV_CODEC_ID_ZMBV:
+    case AV_CODEC_ID_LAGARITH:
+    case AV_CODEC_ID_CSCD:
+    case AV_CODEC_ID_AIC:
+    case AV_CODEC_ID_CAVS:
+    case AV_CODEC_ID_WS_VQA:
+    case AV_CODEC_ID_IDCIN:
+    case AV_CODEC_ID_8BPS:
+    case AV_CODEC_ID_FLIC:
+    case AV_CODEC_ID_VMDVIDEO:
+    case AV_CODEC_ID_VMDAUDIO:
+    case AV_CODEC_ID_VIXL:
+    case AV_CODEC_ID_QPEG:
+    case AV_CODEC_ID_PGMYUV:
+    case AV_CODEC_ID_WNV1:
+    case AV_CODEC_ID_MP3ADU:
+    case AV_CODEC_ID_MP3ON4:
+    case AV_CODEC_ID_WESTWOOD_SND1:
+    case AV_CODEC_ID_MMVIDEO:
+    case AV_CODEC_ID_AVS:
+    case AV_CODEC_ID_PCM_S16LE:
+    case AV_CODEC_ID_PCM_S16BE:
+    case AV_CODEC_ID_PCM_U16LE:
+    case AV_CODEC_ID_PCM_U16BE:
+    case AV_CODEC_ID_PCM_S8:
+    case AV_CODEC_ID_PCM_U8:
+    case AV_CODEC_ID_PCM_MULAW:
+    case AV_CODEC_ID_PCM_ALAW:
+    case AV_CODEC_ID_ADPCM_G722:
+    case AV_CODEC_ID_ADPCM_G726:
+    case AV_CODEC_ID_ADPCM_IMA_QT:
+    case AV_CODEC_ID_ADPCM_IMA_WAV:
+    case AV_CODEC_ID_ADPCM_IMA_DK3:
+    case AV_CODEC_ID_ADPCM_IMA_DK4:
+    case AV_CODEC_ID_ADPCM_IMA_OKI:
+    case AV_CODEC_ID_ADPCM_IMA_WS:
+    case AV_CODEC_ID_ADPCM_IMA_SMJPEG:
+    case AV_CODEC_ID_ADPCM_IMA_AMV:
+    case AV_CODEC_ID_ADPCM_IMA_ISS:
+    case AV_CODEC_ID_ADPCM_IMA_EA_EACS:
+    case AV_CODEC_ID_ADPCM_IMA_EA_SEAD:
+    case AV_CODEC_ID_ADPCM_MS:
+    case AV_CODEC_ID_ADPCM_4XM:
+    case AV_CODEC_ID_ADPCM_XA:
+    case AV_CODEC_ID_ADPCM_ADX:
+    case AV_CODEC_ID_ADPCM_EA:
+    case AV_CODEC_ID_ADPCM_CT:
+    case AV_CODEC_ID_ADPCM_SWF:
+    case AV_CODEC_ID_ADPCM_YAMAHA:
+    case AV_CODEC_ID_ADPCM_SBPRO_2:
+    case AV_CODEC_ID_ADPCM_SBPRO_3:
+    case AV_CODEC_ID_ADPCM_SBPRO_4:
+    case AV_CODEC_ID_ADPCM_EA_R1:
+    case AV_CODEC_ID_ADPCM_EA_R2:
+    case AV_CODEC_ID_ADPCM_EA_R3:
+    case AV_CODEC_ID_ADPCM_EA_MAXIS_XA:
+    case AV_CODEC_ID_ADPCM_EA_XAS:
+    case AV_CODEC_ID_ADPCM_THP:
+    case AV_CODEC_ID_AMR_NB:
+    case AV_CODEC_ID_AMR_WB:
+    case AV_CODEC_ID_GSM:
+    case AV_CODEC_ID_GSM_MS:
+    case AV_CODEC_ID_NELLYMOSER:
+    case AV_CODEC_ID_SIPR:
+    case AV_CODEC_ID_RA_144:
+    case AV_CODEC_ID_RA_288:
+    case AV_CODEC_ID_COOK:
+    case AV_CODEC_ID_ROQ_DPCM:
+    case AV_CODEC_ID_INTERPLAY_DPCM:
+    case AV_CODEC_ID_XAN_DPCM:
+    case AV_CODEC_ID_SOL_DPCM:
+    case AV_CODEC_ID_SHORTEN:
+    case AV_CODEC_ID_ALAC:
+    case AV_CODEC_ID_FLAC:
+    case AV_CODEC_ID_OPUS:
+    case AV_CODEC_ID_S302M:
+    case AV_CODEC_ID_BMP:
+    case AV_CODEC_ID_TTA:
+    case AV_CODEC_ID_TWINVQ:
+    case AV_CODEC_ID_G729:
+    case AV_CODEC_ID_DSD_LSBF:
+    case AV_CODEC_ID_DSD_MSBF:
+    case AV_CODEC_ID_DSD_LSBF_PLANAR:
+    case AV_CODEC_ID_DSD_MSBF_PLANAR:
+    case AV_CODEC_ID_APTX:
+    case AV_CODEC_ID_APTX_HD:
+    case AV_CODEC_ID_AV1:
+      return TRUE;
+    default:
+      return FALSE;
+  }
+}
+
 /* Convert a FFMPEG codec ID and optional AVCodecContext
  * to a GstCaps. If the context is ommitted, no fixed values
  * for video/audio size will be included in the GstCaps
@@ -944,6 +1171,14 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
   gboolean buildcaps = FALSE;
 
   GST_LOG ("codec_id:%d, context:%p, encode:%d", codec_id, context, encode);
+
+  /* Check if we know the codec id or not */
+  if (!gst_ffmpeg_codecid_is_known (codec_id)) {
+    /* NOTE : To add a Codec ID mapping, add it to the
+     * gst_ffmpeg_codecid_is_known and in the following function */
+    GST_DEBUG ("Unknown codec ID %d, please add mapping", codec_id);
+    return caps;
+  }
 
   switch (codec_id) {
     case AV_CODEC_ID_MPEG1VIDEO:

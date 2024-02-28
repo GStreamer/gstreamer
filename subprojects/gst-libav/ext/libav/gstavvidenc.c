@@ -1024,6 +1024,11 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
     if (in_plugin->type != AVMEDIA_TYPE_VIDEO)
       continue;
 
+    /* Skip formats we don't handle */
+    if (!gst_ffmpeg_codecid_is_known (in_plugin->id)) {
+      continue;
+    }
+
     /* no quasi codecs, please */
     if (in_plugin->id == AV_CODEC_ID_RAWVIDEO ||
         in_plugin->id == AV_CODEC_ID_V210 ||
