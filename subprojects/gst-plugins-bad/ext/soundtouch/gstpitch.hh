@@ -24,7 +24,6 @@
 #include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_PITCH \
   (gst_pitch_get_type())
 #define GST_PITCH(obj) \
@@ -35,55 +34,53 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_PITCH))
 #define GST_IS_PITCH_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PITCH))
-
-typedef struct _GstPitch            GstPitch;
-typedef struct _GstPitchClass       GstPitchClass;
-typedef struct _GstPitchPrivate     GstPitchPrivate;
+typedef struct _GstPitch GstPitch;
+typedef struct _GstPitchClass GstPitchClass;
+typedef struct _GstPitchPrivate GstPitchPrivate;
 
 
 struct _GstPitch
 {
   GstElement element;
 
-  GstPad  *srcpad;
-  GstPad  *sinkpad;
+  GstPad *srcpad;
+  GstPad *sinkpad;
 
   /* parameter values */
-  gfloat   tempo;               /* time stretch 
+  gfloat tempo;                 /* time stretch
                                  * change the duration, without affecting the pitch
                                  * > 1 makes the stream shorter
                                  */
 
-  gfloat   rate;                /* change playback rate 
+  gfloat rate;                  /* change playback rate
                                  * resample
                                  * > 1 makes the stream shorter
                                  */
 
-  gfloat   out_seg_rate;        /* change output segment rate 
+  gfloat output_rate;           /* change output segment rate
                                  * Affects playback when input
-                                 * segments have rate != out_rate
+                                 * segments have rate != output_rate
                                  */
 
-  gfloat   pitch;               /* change pitch 
+  gfloat pitch;                 /* change pitch
                                  * change the pitch without affecting the
                                  * duration, stream length doesn't change
                                  */
 
-  gfloat  seg_arate;            /* Rate to apply from input segment */
-
   /* values extracted from caps */
-  GstAudioInfo  info;
+  GstAudioInfo info;
 
   /* stream tracking */
-  GstClockTime  next_buffer_time;
-  gint64        next_buffer_offset;
+  gfloat segment_applied_rate;  /* Rate applied from input segment */
+  GstClockTime next_buffer_time;
+  gint64 next_buffer_offset;
 
-  GstClockTimeDiff  min_latency, max_latency;
+  GstClockTimeDiff min_latency, max_latency;
 
   GstPitchPrivate *priv;
 };
 
-struct _GstPitchClass 
+struct _GstPitchClass
 {
   GstElementClass parent_class;
 };
@@ -92,5 +89,4 @@ GType gst_pitch_get_type (void);
 GST_ELEMENT_REGISTER_DECLARE (pitch);
 
 G_END_DECLS
-
 #endif /* __GST_PITCH_H__ */
