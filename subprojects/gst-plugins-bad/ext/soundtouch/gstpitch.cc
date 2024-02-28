@@ -711,7 +711,7 @@ gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
 
   GST_LOG_OBJECT (pitch->sinkpad, "in segment %" GST_SEGMENT_FORMAT, &seg);
 
-  stream_time_ratio = pitch->tempo * pitch->rate * pitch->seg_arate;
+  stream_time_ratio = pitch->tempo * pitch->rate * our_arate;
 
   if (stream_time_ratio == 0) {
     GST_LOG_OBJECT (pitch->sinkpad, "stream_time_ratio is zero");
