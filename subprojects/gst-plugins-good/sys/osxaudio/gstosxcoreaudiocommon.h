@@ -21,6 +21,8 @@
  *
  */
 
+#pragma once
+
 #include "gstosxcoreaudio.h"
 #include <gst/audio/audio-channels.h>
 
