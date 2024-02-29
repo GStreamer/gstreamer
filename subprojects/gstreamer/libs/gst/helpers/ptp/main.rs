@@ -243,14 +243,11 @@ fn run() -> Result<(), Error> {
                 // The delay request is the only message that is sent
                 // from PTP clock implementation, if others are added
                 // additional match arms should be added.
-                match ptp_message.message_type {
-                    PtpMessageType::DELAY_REQ => {
-                        if args.verbose {
-                            trace!("Ignoring our own PTP message");
-                        }
-                        continue 'next_packet;
+                if [PtpMessageType::DELAY_REQ].contains(&ptp_message.message_type) {
+                    if args.verbose {
+                        trace!("Ignoring our own PTP message");
                     }
-                    _ => (),
+                    continue 'next_packet;
                 }
 
                 if let PtpMessagePayload::DelayResp {
