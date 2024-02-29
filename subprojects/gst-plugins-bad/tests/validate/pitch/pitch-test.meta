@@ -1,0 +1,15 @@
+# Common metadatas to check the pitch element behavior.
+# Add `include, location="pitch-test.meta" to setup a test with this file.
+set-globals, media_dir="$(test_dir)/../../files"
+meta,
+    handles-states=true,
+    ignore-eos=true,
+    seek=true,
+    args = {
+      "filesrc location=\"$(media_dir)/audio-8s-then-reverse.ogg\" ! decodebin ! audioconvert ! queue ! pitch name=pitch ! fakesink sync=true",
+    },
+    configs = {
+      "$(validateflow), pad=pitch:src, buffers-checksum=true, ignored-fields=\"stream-start={stream-id,group-id,stream}\", ignored-event-types={tag,stream-group-done,flush-start,flush-stop}",
+    }
+
+checkpoint, text="If the libSoundTouch version or compilation optimization change, buffers checksums may differ. Tests done with libSoundTouch version: 2.3.2 in debugoptimized. Configure meson with `--force-fallback-for=soundtouch` and the default debugoptimized build type to use the same version."

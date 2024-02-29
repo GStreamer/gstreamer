@@ -31,7 +31,7 @@
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
 
-#include <soundtouch/SoundTouch.h>
+#include <SoundTouch.h>
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>

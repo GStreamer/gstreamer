@@ -13,6 +13,10 @@ tests = [
     {'path': 'vtenc/vtenc_h265', 'skip': not applemedia_found_deps},
     {'path': 'vtenc/vtenc_h265_b_frames', 'skip': not applemedia_found_deps},
     {'path': 'autovideoconvert/renegotiate'},
+    {'path': 'pitch/maintain_pitch_with_variable_playback_rates', 'skip': not soundtouch_dep.found()},
+    {'path': 'pitch/reverse.maintain_pitch_with_variable_playback_rates', 'skip': not soundtouch_dep.found()},
+    {'path': 'pitch/change_pitch_properties', 'skip': not soundtouch_dep.found()},
+    {'path': 'pitch/reverse.change_pitch_properties', 'skip': not soundtouch_dep.found()},
 ]
 
 env = environment()

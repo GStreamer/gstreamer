@@ -1,0 +1,20 @@
+include, location="pitch-test.meta"
+pause
+
+# The pitch element modifies the segment downstream, as the seek is done on
+# the pipeline sink it takes this transformed segment as reference
+
+checkpoint, text="Playback speed 1.0"
+seek, start=0.0, stop=1.0, flags=accurate+flush, rate=1.0
+play
+wait, message-type=eos
+
+checkpoint, text="Playback speed 2.0"
+seek, start=0.0, stop=2.0, flags=accurate+flush, rate=2.0
+wait, message-type=eos
+
+checkpoint, text="Playback speed 0.5"
+seek, start=0.0, stop=0.25, flags=accurate+flush, rate=0.5
+wait, message-type=eos
+
+stop

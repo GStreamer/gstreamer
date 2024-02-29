@@ -9,7 +9,8 @@ if get_option('soundtouch').disabled()
   subdir_done()
 endif
 
-soundtouch_dep = dependency('soundtouch', required : false)
+soundtouch_dep = dependency('soundtouch', required : false,
+                                          fallback : ['soundtouch', 'soundtouch_dep'])
 if soundtouch_dep.found()
   soundtouch_cargs += ['-DHAVE_SOUNDTOUCH_1_4']
 else
@@ -24,6 +25,22 @@ else
 endif
 if not soundtouch_dep.found() and get_option('soundtouch').enabled()
   error('soundtouch plugin enabled but soundtouch library not found')
+endif
+
+# GCC, by default, handles exceptions in C++ sources as /EHsc, allowing
+# exceptions intra C++ code, and terminating the app on hitting a C function's
+# stack.
+# Grep ST_NO_EXCEPTION_HANDLING and see:
+# https://learn.microsoft.com/en-us/cpp/build/reference/eh-exception-handling-model?view=msvc-170
+# https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html#index-fexceptions
+#
+# However, -fexceptions in Application.mk must be manually injected, as
+# their toolchain does not add it for historical reasons.
+# https://developer.android.com/ndk/guides/cpp-support?hl=es-419
+if get_option('cpp_eh') in ['none']
+  soundtouch_cargs += ['-DST_NO_EXCEPTION_HANDLING']
+elif host_system == 'android'
+  soundtouch_cargs += cxx.get_supported_arguments('-fexceptions')
 endif
 
 if soundtouch_dep.found()

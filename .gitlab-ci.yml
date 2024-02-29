@@ -62,6 +62,7 @@ variables:
     -Drs=disabled
     -Dgpl=enabled
     -Dintrospection=enabled
+    --force-fallback-for=soundtouch
 
   SIMPLE_BUILD: >-
     ${DEFAULT_MESON_ARGS}
