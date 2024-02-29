@@ -4362,7 +4362,13 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     /* create a new pad we will use to stream to */
     name = g_strdup_printf ("stream_%u", stream->id);
     template = gst_static_pad_template_get (&rtptemplate);
-    stream->channelpad[0] = gst_pad_new_from_template (template, name);
+    pad0 = gst_pad_new_from_template (template, name);
+    stream->channelpad[0] = pad0;
+
+    gst_pad_set_event_function (pad0, gst_rtspsrc_handle_internal_src_event);
+    gst_pad_set_query_function (pad0, gst_rtspsrc_handle_internal_src_query);
+    gst_pad_set_element_private (pad0, src);
+
     gst_object_unref (template);
     g_free (name);
 
