@@ -3805,6 +3805,22 @@ _h265_generate_gop_structure (GstVaH265Enc * self)
       }
       GST_INFO_OBJECT (self, "Enable low-delay-b mode");
       self->gop.low_delay_b_mode = TRUE;
+
+      /* FIXME: In low delay B mode, the P frame is converted as B frame
+         with forward references. For example, One P frame may refers to
+         P-1, P-2 and P-3 in list0 and refers to P-3, P-2 and P-1 in list1.
+         So the num in list0 and list1 does not reflect the forward_num
+         and backward_num. The vaapi does not provide ref num for forward
+         or backward so far. In this case, we just consider the backward_num
+         to be 1 conservatively. */
+      if (list0 == list1) {
+        backward_num =
+            (prediction_direction & VA_PREDICTION_DIRECTION_FUTURE) ? 1 : 0;
+        forward_num = list0 - backward_num;
+
+        GST_INFO_OBJECT (self, "Set forward_num to %d, backward_num to %d in "
+            "low-delay-b mode.", forward_num, backward_num);
+      }
     }
   }
 
