@@ -9022,12 +9022,6 @@ restart:
 
     gst_rtsp_message_unset (&request);
 
-    /* parse RTP npt field. This is the current position in the stream (Normal
-     * Play Time) and should be put in the NEWSEGMENT position field. */
-    if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
-            0) == GST_RTSP_OK)
-      gst_rtspsrc_parse_range (src, hval, segment, FALSE);
-
     /* assume 1.0 rate now, overwrite when the SCALE or SPEED headers are present. */
     segment->rate = 1.0;
 
@@ -9040,6 +9034,12 @@ restart:
             &hval, 0) == GST_RTSP_OK) {
       segment->rate = gst_rtspsrc_get_float (hval);
     }
+
+    /* parse RTP npt field. This is the current position in the stream (Normal
+     * Play Time) and should be put in the NEWSEGMENT position field. */
+    if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
+            0) == GST_RTSP_OK)
+      gst_rtspsrc_parse_range (src, hval, segment, FALSE);
 
     /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
      * for the RTP packets. If this is not present, we assume all starts from 0...
