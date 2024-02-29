@@ -9570,8 +9570,10 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       if (rtspsrc->is_live) {
         /* send pause request and keep the idle task around */
         gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_PAUSE, CMD_LOOP);
+        ret = GST_STATE_CHANGE_NO_PREROLL;
+      } else {
+        ret = GST_STATE_CHANGE_SUCCESS;
       }
-      ret = GST_STATE_CHANGE_SUCCESS;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       rtspsrc->seek_seqnum = GST_SEQNUM_INVALID;
