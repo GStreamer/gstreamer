@@ -1016,6 +1016,7 @@ gst_audio_convert_set_property (GObject * object, guint prop_id,
       break;
     case PROP_MIX_MATRIX:
       if (!gst_value_array_get_size (value)) {
+        g_value_copy (value, &this->mix_matrix);
         this->mix_matrix_is_set = TRUE;
       } else {
         const GValue *first_row = gst_value_array_get_value (value, 0);
