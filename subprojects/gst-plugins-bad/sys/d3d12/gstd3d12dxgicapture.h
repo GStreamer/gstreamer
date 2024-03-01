@@ -32,5 +32,10 @@ G_DECLARE_FINAL_TYPE (GstD3D12DxgiCapture, gst_d3d12_dxgi_capture,
 GstD3D12ScreenCapture * gst_d3d12_dxgi_capture_new (GstD3D12Device * device,
                                                     HMONITOR monitor_handle);
 
+GstFlowReturn gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
+                                                 GstBuffer * buffer,
+                                                 const D3D12_BOX * crop_box,
+                                                 gboolean draw_mouse);
+
 G_END_DECLS
 

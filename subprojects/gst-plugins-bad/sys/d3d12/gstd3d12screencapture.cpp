@@ -99,31 +99,6 @@ gst_d3d12_screen_capture_unlock_stop (GstD3D12ScreenCapture * capture)
   return TRUE;
 }
 
-void
-gst_d3d12_screen_capture_show_border (GstD3D12ScreenCapture * capture,
-    gboolean show)
-{
-  g_return_if_fail (GST_IS_D3D12_SCREEN_CAPTURE (capture));
-
-  auto klass = GST_D3D12_SCREEN_CAPTURE_GET_CLASS (capture);
-
-  if (klass->show_border)
-    klass->show_border (capture, show);
-}
-
-GstFlowReturn
-gst_d3d12_screen_capture_do_capture (GstD3D12ScreenCapture * capture,
-    GstBuffer * buffer, const D3D12_BOX * crop_box, gboolean draw_mouse)
-{
-  g_return_val_if_fail (GST_IS_D3D12_SCREEN_CAPTURE (capture), GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
-
-  auto klass = GST_D3D12_SCREEN_CAPTURE_GET_CLASS (capture);
-  g_assert (klass->do_capture);
-
-  return klass->do_capture (capture, buffer, crop_box, draw_mouse);
-}
-
 HRESULT
 gst_d3d12_screen_capture_find_output_for_monitor (HMONITOR monitor,
     IDXGIAdapter1 ** adapter, IDXGIOutput ** output)

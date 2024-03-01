@@ -40,6 +40,14 @@ typedef struct _GstD3D12ScreenCaptureClass GstD3D12ScreenCaptureClass;
 #define GST_D3D12_SCREEN_CAPTURE_FLOW_SIZE_CHANGED GST_FLOW_CUSTOM_SUCCESS_1
 #define GST_D3D12_SCREEN_CAPTURE_FLOW_UNSUPPORTED GST_FLOW_CUSTOM_ERROR
 
+struct CaptureCropRect
+{
+  guint crop_x;
+  guint crop_y;
+  guint crop_w;
+  guint crop_h;
+};
+
 struct _GstD3D12ScreenCapture
 {
   GstObject parent;
@@ -58,14 +66,6 @@ struct _GstD3D12ScreenCaptureClass
   gboolean      (*unlock)          (GstD3D12ScreenCapture * capture);
 
   gboolean      (*unlock_stop)     (GstD3D12ScreenCapture * capture);
-
-  void          (*show_border)     (GstD3D12ScreenCapture * capture,
-                                    gboolean show);
-
-  GstFlowReturn (*do_capture)      (GstD3D12ScreenCapture * capture,
-                                    GstBuffer * buffer,
-                                    const D3D12_BOX * crop_box,
-                                    gboolean draw_mouse);
 };
 
 GType           gst_d3d12_screen_capture_get_type (void);
@@ -79,14 +79,6 @@ gboolean        gst_d3d12_screen_capture_get_size (GstD3D12ScreenCapture * captu
 gboolean        gst_d3d12_screen_capture_unlock      (GstD3D12ScreenCapture * capture);
 
 gboolean        gst_d3d12_screen_capture_unlock_stop (GstD3D12ScreenCapture * capture);
-
-void            gst_d3d12_screen_capture_show_border (GstD3D12ScreenCapture * capture,
-                                                      gboolean show);
-
-GstFlowReturn   gst_d3d12_screen_capture_do_capture  (GstD3D12ScreenCapture * capture,
-                                                      GstBuffer * buffer,
-                                                      const D3D12_BOX * crop_box,
-                                                      gboolean draw_mouse);
 
 HRESULT         gst_d3d12_screen_capture_find_output_for_monitor (HMONITOR monitor,
                                                                   IDXGIAdapter1 ** adapter,

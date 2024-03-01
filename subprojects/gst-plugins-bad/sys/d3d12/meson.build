@@ -20,6 +20,7 @@ d3d12_sources = [
   'gstd3d12encoderbufferpool.cpp',
   'gstd3d12fencedatapool.cpp',
   'gstd3d12format.cpp',
+  'gstd3d12graphicscapture.cpp',
   'gstd3d12h264dec.cpp',
   'gstd3d12h264enc.cpp',
   'gstd3d12h265dec.cpp',
@@ -64,6 +65,7 @@ d3d12_lib = cc.find_library('d3d12', required : d3d12_option)
 d3d11_lib = cc.find_library('d3d11', required : d3d12_option)
 d2d_dep = cc.find_library('d2d1', required: d3d12_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d12_option)
+dwmapi_lib = cc.find_library('dwmapi', required: d3d12_option)
 dx_headers_dep = dependency('DirectX-Headers',
     version: '>= 1.611',
     allow_fallback: true,
@@ -71,9 +73,36 @@ dx_headers_dep = dependency('DirectX-Headers',
 dxc = find_program('dxc', required : d3d12_option)
 
 if not gstdxva_dep.found() or not d3d12_lib.found() or not dxgi_lib.found() \
-  or not dx_headers_dep.found() or not dxc.found() or not d2d_dep.found()
+  or not dx_headers_dep.found() or not dxc.found() or not d2d_dep.found() \
+  or not dwmapi_lib.found()
   if d3d12_option.enabled()
     error('The d3d12 was enabled explicitly, but required dependencies were not found.')
+  endif
+  subdir_done()
+endif
+
+have_wgc = cxx.compiles('''
+    #include<windows.h>
+    #include<winstring.h>
+    #include<roapi.h>
+    #include<windows.graphics.capture.h>,
+    #include<windows.graphics.capture.interop.h>
+    #include<windows.graphics.directx.direct3d11.h>
+    #include<windows.graphics.directx.direct3d11.interop.h>
+    #include<wrl.h>
+    using namespace Microsoft::WRL;
+    using namespace ABI::Windows::Graphics::Capture;
+    ComPtr<IDirect3D11CaptureFramePoolStatics> pool_statics;
+    ComPtr<IDirect3D11CaptureFramePool> pool;
+    ComPtr<IGraphicsCaptureSession> session;
+    ComPtr<IGraphicsCaptureSession2> session2;
+    ComPtr<IGraphicsCaptureSession3> session3;
+    ''',
+    name: 'Windows Graphics Capture support in Windows SDK')
+
+if not have_wgc
+  if d3d12_option.enabled()
+    error('Windows SDK does not support Windows Graphics Capture')
   endif
   subdir_done()
 endif
@@ -114,9 +143,9 @@ gstd3d12 = library('gstd3d12',
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep,
+  dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep, gmodule_dep,
                   gstdxva_dep, d3d12_lib, d3d11_lib, d2d_dep, dxgi_lib,
-                  dx_headers_dep],
+                  dx_headers_dep, dwmapi_lib],
   install : true,
   install_dir : plugins_install_dir,
 )

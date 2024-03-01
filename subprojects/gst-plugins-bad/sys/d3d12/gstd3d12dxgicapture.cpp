@@ -768,9 +768,6 @@ gst_d3d12_dxgi_capture_prepare (GstD3D12ScreenCapture * capture);
 static gboolean
 gst_d3d12_dxgi_capture_get_size (GstD3D12ScreenCapture * capture,
     guint * width, guint * height);
-static GstFlowReturn
-gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
-    GstBuffer * buffer, const D3D12_BOX * crop_box, gboolean draw_mouse);
 
 #define gst_d3d12_dxgi_capture_parent_class parent_class
 G_DEFINE_TYPE (GstD3D12DxgiCapture, gst_d3d12_dxgi_capture,
@@ -786,8 +783,6 @@ gst_d3d12_dxgi_capture_class_init (GstD3D12DxgiCaptureClass * klass)
 
   capture_class->prepare = GST_DEBUG_FUNCPTR (gst_d3d12_dxgi_capture_prepare);
   capture_class->get_size = GST_DEBUG_FUNCPTR (gst_d3d12_dxgi_capture_get_size);
-  capture_class->do_capture =
-      GST_DEBUG_FUNCPTR (gst_d3d12_dxgi_capture_do_capture);
 }
 
 static void
@@ -1570,8 +1565,8 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
   return TRUE;
 }
 
-static GstFlowReturn
-gst_d3d12_dxgi_capture_do_capture (GstD3D12ScreenCapture * capture,
+GstFlowReturn
+gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
     GstBuffer * buffer, const D3D12_BOX * crop_box, gboolean draw_mouse)
 {
   auto self = GST_D3D12_DXGI_CAPTURE (capture);
