@@ -376,6 +376,10 @@ gst_msdk_context_finalize (GObject * obj)
 
   /* child sessions will be closed when the parent session is closed */
   if (priv->parent_context) {
+    /* A context with parent_context can also be a parent to others,
+     * and we need to check its child_session_list */
+    if (priv->child_session_list)
+      g_list_free_full (priv->child_session_list, release_child_session);
     gst_object_unref (priv->parent_context);
     goto done;
   } else
