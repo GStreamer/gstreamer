@@ -679,6 +679,10 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
   dbin->upstream_selected = FALSE;
 
+  if (dbin->collection) {
+    gst_clear_object (&dbin->collection);
+  }
+
   g_list_free_full (dbin->requested_selection, g_free);
   dbin->requested_selection = NULL;
 
