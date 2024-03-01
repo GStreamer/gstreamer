@@ -486,7 +486,7 @@ gst_decodebin3_select_stream (GstDecodebin3 * dbin,
 static GstPad *gst_decodebin3_request_new_pad (GstElement * element,
     GstPadTemplate * temp, const gchar * name, const GstCaps * caps);
 static void gst_decodebin3_release_pad (GstElement * element, GstPad * pad);
-static void handle_stream_collection (GstDecodebin3 * dbin,
+static gboolean handle_stream_collection (GstDecodebin3 * dbin,
     GstStreamCollection * collection, DecodebinInput * input);
 static void gst_decodebin3_handle_message (GstBin * bin, GstMessage * message);
 static GstStateChangeReturn gst_decodebin3_change_state (GstElement * element,
@@ -1416,22 +1416,25 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
 
       gst_event_parse_stream_collection (event, &collection);
       if (collection) {
+        gboolean post_collection;
         INPUT_LOCK (dbin);
-        handle_stream_collection (dbin, collection, input);
+        post_collection = handle_stream_collection (dbin, collection, input);
         gst_object_unref (collection);
         INPUT_UNLOCK (dbin);
         SELECTION_LOCK (dbin);
         /* Post the (potentially) updated collection */
-        if (dbin->collection) {
+        if (post_collection) {
           GstMessage *msg;
           msg =
               gst_message_new_stream_collection ((GstObject *) dbin,
               dbin->collection);
           SELECTION_UNLOCK (dbin);
           gst_element_post_message (GST_ELEMENT_CAST (dbin), msg);
-          update_requested_selection (dbin);
         } else
           SELECTION_UNLOCK (dbin);
+
+        /* In all cases we want to make sure the selection is valid */
+        update_requested_selection (dbin);
       }
 
       /* If we are waiting to create an identity passthrough, do it now */
@@ -1950,11 +1953,14 @@ stream_in_collection (GstDecodebin3 * dbin, gchar * sid)
   return NULL;
 }
 
-/* Call with INPUT_LOCK taken */
-static void
+/* Call with INPUT_LOCK taken.
+ * Returns TRUE if the dbin collection changed
+ */
+static gboolean
 handle_stream_collection (GstDecodebin3 * dbin,
     GstStreamCollection * collection, DecodebinInput * input)
 {
+  gboolean ret = TRUE;
 #ifndef GST_DISABLE_GST_DEBUG
   const gchar *upstream_id;
   guint i;
@@ -1962,7 +1968,7 @@ handle_stream_collection (GstDecodebin3 * dbin,
   if (!input) {
     GST_DEBUG_OBJECT (dbin,
         "Couldn't find corresponding input, most likely shutting down");
-    return;
+    return FALSE;
   }
 
   /* Replace collection in input */
@@ -2004,7 +2010,12 @@ handle_stream_collection (GstDecodebin3 * dbin,
   /* Store collection for later usage */
   SELECTION_LOCK (dbin);
   if (dbin->collection == NULL) {
+    GST_DEBUG_OBJECT (dbin, "Storing updated global collection");
     dbin->collection = collection;
+  } else if (dbin->collection == collection) {
+    GST_DEBUG_OBJECT (dbin, "Collection didn't change");
+    gst_object_unref (collection);
+    ret = FALSE;
   } else {
     /* We need to check who emitted this collection (the owner).
      * If we already had a collection from that user, this one is an update,
@@ -2016,8 +2027,11 @@ handle_stream_collection (GstDecodebin3 * dbin,
     gst_object_unref (dbin->collection);
     dbin->collection = collection;
   }
-  dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
+  if (ret)
+    dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
   SELECTION_UNLOCK (dbin);
+
+  return ret;
 }
 
 /* Must be called with the selection lock taken */
@@ -2111,13 +2125,12 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
       }
       gst_message_parse_stream_collection (message, &collection);
       if (collection) {
-        handle_stream_collection (dbin, collection, input);
-        posting_collection = TRUE;
+        posting_collection = handle_stream_collection (dbin, collection, input);
       }
       INPUT_UNLOCK (dbin);
 
       SELECTION_LOCK (dbin);
-      if (dbin->collection) {
+      if (posting_collection) {
         /* Replace collection message, we most likely aggregated it */
         GstMessage *new_msg;
         new_msg =
