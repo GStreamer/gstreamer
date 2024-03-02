@@ -88,17 +88,21 @@ else
   endif
 endif
 pylib_fname = ''
-foreach loc: pylib_locs
-  foreach fname: pylib_fnames
-    fpath = loc / fname
-    debug(f'Looking for Python library at: @fpath@')
-    if fsmod.exists(fpath)
-      pylib_fname = fname
-      message(f'PY_LIB_FNAME = @fname@ (@loc@)')
-      break
-    endif
+if meson.is_cross_build()
+  pylib_fname = pylib_locs[0] / pylib_fnames[0]
+else
+  foreach loc: pylib_locs
+    foreach fname: pylib_fnames
+      fpath = loc / fname
+      debug(f'Looking for Python library at: @fpath@')
+      if fsmod.exists(fpath)
+        pylib_fname = fname
+        message(f'PY_LIB_FNAME = @fname@ (@loc@)')
+        break
+      endif
+    endforeach
   endforeach
-endforeach
+endif
 if pylib_fname == ''
   message('Could not find python library to load, will try loading at runtime')
 endif
