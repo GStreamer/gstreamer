@@ -135,6 +135,7 @@ if build_gir
         {'name': 'cuda', 'gir': gst_cuda_gir, 'lib': gstcuda_dep, 'c_source_patterns': ['*.h', '*.cpp']},
         {'name': 'dxva', 'gir': dxva_gir, 'lib': gstdxva_dep, 'c_source_patterns': ['*.h', '*.cpp']},
         {'name': 'mse', 'gir': mse_gir, 'lib': gstmse_dep, 'suffix': 'lib'},
+        {'name': 'analytics', 'gir': analytics_gir, 'lib': gstanalytics_dep},
     ]
 
     if gstopencv_dep.found()
