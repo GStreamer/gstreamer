@@ -189,7 +189,7 @@ gst_analytics_relation_meta_add_tracking_mtd (GstAnalyticsRelationMeta *
  *
  * Returns: TRUE if successful.
  *
- * Since 1.24
+ * Since: 1.24
  */
 gboolean
 gst_analytics_relation_meta_get_tracking_mtd (GstAnalyticsRelationMeta * meta,

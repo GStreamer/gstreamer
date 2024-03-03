@@ -55,7 +55,7 @@ struct _GstAnalyticsClsMtdData
 
 /**
  * gst_analytics_cls_mtd_get_mtd_type:
- * Get a id identifying #GstAnalyticsMtd type.
+ * Get an id identifying #GstAnalyticsMtd type.
  *
  * Returns: opaque id of #GstAnalyticsMtd type
  *
@@ -235,7 +235,7 @@ gst_analytics_relation_meta_add_one_cls_mtd (GstAnalyticsRelationMeta *
  *
  * Returns: TRUE if successful.
  *
- * Since 1.24
+ * Since: 1.24
  */
 gboolean
 gst_analytics_relation_meta_get_cls_mtd (GstAnalyticsRelationMeta * meta,

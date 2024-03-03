@@ -100,9 +100,23 @@ const gchar *gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type);
 typedef struct _GstAnalyticsRelationMetaInitParams
     GstAnalyticsRelationMetaInitParams;
 
+/**
+ * GST_ANALYTICS_RELATION_META_API_TYPE:
+ *
+ * The Analyics Relation Meta API type
+ *
+ * Since: 1.24
+ */
 #define GST_ANALYTICS_RELATION_META_API_TYPE \
   (gst_analytics_relation_meta_api_get_type())
 
+/**
+ * GST_ANALYTICS_RELATION_META_INFO: (skip)
+ *
+ * Get the meta info
+ *
+ * Since: 1.24
+ */
 #define GST_ANALYTICS_RELATION_META_INFO \
   (gst_analytics_relation_meta_get_info())
 

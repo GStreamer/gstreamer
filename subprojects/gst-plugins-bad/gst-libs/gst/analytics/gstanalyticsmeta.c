@@ -148,7 +148,8 @@ gst_analytics_mtd_get_id (GstAnalyticsMtd * handle)
 
 /**
  * gst_analytics_mtd_get_size:
- * @instance Instance of #GstAnalyticsRelatableMtd
+ * @instance: Instance of #GstAnalyticsMtd
+ *
  * Get instance size
  *
  * Returns: Size (in bytes) of this instance or 0 on failure.
@@ -194,7 +195,8 @@ gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type)
 
 /**
  * gst_analytics_relation_get_length:
- * @instance Instance of #GstAnalyticsRelationMeta
+ * @instance: Instance of #GstAnalyticsRelationMeta
+ *
  * Get number of relatable meta attached to instance
  *
  * Returns: Number of analysis-meta attached to this
@@ -435,6 +437,13 @@ gst_analytics_relation_meta_clear (GstBuffer * buffer, GstMeta * meta)
   }
 }
 
+/**
+ * gst_analytics_relation_meta_get_info: (skip)
+ *
+ * Get the meta info
+ *
+ * Since: 1.24
+ */
 const GstMetaInfo *
 gst_analytics_relation_meta_get_info (void)
 {
@@ -648,7 +657,7 @@ gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
  * Returns: TRUE if a relation between exit between @an_meta_first_id and
  *  @an_meta_second_id, otherwise FALSE.
  *
- * Since 1.24
+ * Since: 1.24
  */
 gboolean
 gst_analytics_relation_meta_exist (GstAnalyticsRelationMeta * rmeta,
@@ -777,7 +786,7 @@ gst_analytics_relation_meta_exist (GstAnalyticsRelationMeta * rmeta,
  *
  * Returns: (transfer none) (nullable) : Newly attached #GstAnalyticsRelationMeta
  *
- * Since 1.24
+ * Since: 1.24
  */
 GstAnalyticsRelationMeta *
 gst_buffer_add_analytics_relation_meta (GstBuffer * buffer)
@@ -798,7 +807,7 @@ gst_buffer_add_analytics_relation_meta (GstBuffer * buffer)
  *
  * Returns: (transfer none) (nullable) : Newly attached #GstAnalyticsRelationMeta
  *
- * Since 1.24
+ * Since: 1.24
  */
 GstAnalyticsRelationMeta *
 gst_buffer_add_analytics_relation_meta_full (GstBuffer * buffer,
@@ -850,7 +859,7 @@ gst_buffer_get_analytics_relation_meta (GstBuffer * buffer)
  *
  * Returns: A pointer to a memory area of size @size where to put the data
  *
- * Since 1.24
+ * Since: 1.24
  */
 gpointer
 gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
@@ -933,7 +942,7 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
  *
  * Returns: TRUE if successful.
  *
- * Since 1.24
+ * Since: 1.24
  */
 gboolean
 gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
@@ -977,7 +986,7 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
  *
  * Returns:(nullable): Analytics data pointer
  *
- * Since 1.24
+ * Since: 1.24
  */
 gpointer
 gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta *
@@ -1003,7 +1012,7 @@ gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta *
  *
  * Returns: TRUE if @rlt_mtd was updated, other wise FALSE
  *
- * Since 1.24
+ * Since: 1.24
  */
 gboolean
 gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
@@ -1076,7 +1085,7 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
  *
  * Returns: FALSE if end was reached and iteration is completed.
  *
- * Since 1.24
+ * Since: 1.24
  */
 gboolean
 gst_analytics_relation_meta_iterate (GstAnalyticsRelationMeta * meta,

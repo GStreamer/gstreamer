@@ -93,7 +93,7 @@ static const GstAnalyticsMtdImpl od_impl = {
  * gst_analytics_od_mtd_get_mtd_type:
  * Get an id that represent object-detection metadata type
  *
- * Returns: Opaqu id of the #GstAnalyticsMtd type
+ * Returns: Opaque id of the #GstAnalyticsMtd type
  *
  * Since: 1.24
  */
@@ -227,7 +227,7 @@ gst_analytics_relation_meta_add_od_mtd (GstAnalyticsRelationMeta *
 /**
  * gst_analytics_relation_meta_get_od_mtd:
  * @meta: Instance of #GstAnalyticsRelationMeta
- * @an_meta_id: Id of #GstAnalyticsOdMtd instance to retrieve
+ * @an_meta_id: Id of #GstAnalyticsODMtd instance to retrieve
  * @rlt: (out caller-allocates)(not nullable): Will be filled with relatable
  *    meta
  *
@@ -236,7 +236,7 @@ gst_analytics_relation_meta_add_od_mtd (GstAnalyticsRelationMeta *
  *
  * Returns: TRUE if successful.
  *
- * Since 1.24
+ * Since: 1.24
  */
 gboolean
 gst_analytics_relation_meta_get_od_mtd (GstAnalyticsRelationMeta * meta,
