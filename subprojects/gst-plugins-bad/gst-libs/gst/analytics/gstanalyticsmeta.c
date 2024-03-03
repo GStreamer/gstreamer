@@ -26,6 +26,24 @@
 
 #include <gst/video/video.h>
 
+/**
+ * SECTION:gstanalyticsmeta
+ * @title: GstAnalyticsRelationMeta
+ * @short_description: A GstMeta for analytics metadata
+ * @symbols:
+ * - GstAnalyticsRelationMeta
+ * - GstAnalyticsMtd
+ * @see_also: #GstAnalyticsODMtd, #GstAnalyticsClsMtd, #GstAnalyticsTrackingMtd
+ *
+ * The #GstAnalyticsRelationMeta is a #GstMeta that can contain a large number
+ * of results from the analysis of a meta. Each result can be accessed by
+ * using its id, or more conviently, by using a #GstAnalyticsMtd. A matrix
+ * of relationships between the various metadata is also defined and can be
+ * filled by the analysis processes.
+ *
+ * Since: 1.24
+ */
+
 GST_DEBUG_CATEGORY_STATIC (an_relation_meta_debug);
 #define GST_CAT_AN_RELATION an_relation_meta_debug
 

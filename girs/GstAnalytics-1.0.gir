@@ -134,6 +134,7 @@ identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
       <method name="get_id" c:identifier="gst_analytics_mtd_get_id" version="1.24">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Get instance id</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Id of @instance</doc>
@@ -141,8 +142,7 @@ identified by @id is stored.</doc>
         </return-value>
         <parameters>
           <instance-parameter name="instance" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd
-Get instance id</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Instance of #GstAnalyticsMtd</doc>
             <type name="Mtd" c:type="GstAnalyticsMtd*"/>
           </instance-parameter>
         </parameters>
@@ -682,13 +682,12 @@ otherwise this method return FALSE and @rlt is invalid.</doc>
         </parameters>
       </method>
       <method name="get_relation" c:identifier="gst_analytics_relation_meta_get_relation" version="1.24">
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
-        <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">relation description between first and second analysis-meta.
-
-Get relations between first and second analysis-meta.
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Get relations between first and second analysis-meta.
 Ids (@an_meta_first_id and @an_meta_second_id) must be from a call to
 @gst_analytics_mtd_get_id (handle).</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">relation description between first and second analysis-meta.</doc>
           <type name="RelTypes" c:type="GstAnalyticsRelTypes"/>
         </return-value>
         <parameters>
@@ -1000,7 +999,7 @@ information about the tracking, for example, it can be used alongside a
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.c">Number of analysis-meta attached to this
-instance.</doc>
+ instance.</doc>
         <type name="gsize" c:type="gsize"/>
       </return-value>
       <parameters>

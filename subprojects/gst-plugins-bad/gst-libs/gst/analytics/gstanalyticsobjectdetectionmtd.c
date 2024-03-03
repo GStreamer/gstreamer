@@ -26,6 +26,20 @@
 
 #include <gst/video/video.h>
 
+/**
+ * SECTION:gstanalyticsobjectdetectionmtd
+ * @title: GstAnalyticsODMtd
+ * @short_description: An analytics metadata for object dection inside a #GstAnalyticsRelationMeta
+ * @symbols:
+ * - GstAnalyticsODMtd
+ * @see_also: #GstAnalyticsMtd, #GstAnalyticsRelationMeta
+ *
+ * This type of metadata holds the position of detected object inside the
+ * image, along with the probabily of each detection.
+ *
+ * Since: 1.24
+ */
+
 typedef struct _GstAnalyticsODMtdData GstAnalyticsODMtdData;
 
 /**

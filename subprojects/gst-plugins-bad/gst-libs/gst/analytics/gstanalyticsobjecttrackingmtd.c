@@ -24,6 +24,22 @@
 
 #include "gstanalyticsobjecttrackingmtd.h"
 
+/**
+ * SECTION:gstanalyticsobjecttrackingmtd
+ * @title: GstAnalyticsTrackingMtd
+ * @short_description: An analytics metadata for tracking inside a #GstAnalyticsRelationMeta
+ * @symbols:
+ * - GstAnalyticsTrackingMtd
+ * @see_also: #GstAnalyticsMtd, #GstAnalyticsRelationMeta
+ *
+ * This type of metadata holds tracking information. In many cases, it is
+ * desired to track an object across many frames. This type of metadata holds
+ * information about the tracking, for example, it can be used alongside a
+ * #GstAnalyticsODMtd to track an object.
+ *
+ * Since: 1.24
+ */
+
 typedef struct _GstAnalyticsTrackingMtdData GstAnalyticsTrackingMtdData;
 
 /**

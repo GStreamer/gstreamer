@@ -30,8 +30,15 @@
 #include <gst/analytics/analytics-meta-prelude.h>
 
 G_BEGIN_DECLS
+
+/**
+ * GST_INF_RELATION_SPAN:
+ * Passes to functions asking for a relation span when the span is
+ * infinite.
+ *
+ * Since: 1.24
+ */
 #define GST_INF_RELATION_SPAN -1
-#define GST_AN_RELATION_META_TAG "GST-ANALYSIS-RELATION-META-TAG"
 typedef struct _GstAnalyticsMtd GstAnalyticsMtd;
 
 /**
@@ -53,8 +60,24 @@ typedef guintptr GstAnalyticsMtdType;
 
 #define GST_ANALYTICS_MTD_TYPE_ANY (0)
 
+/**
+ * GST_ANALYTICS_MTD_CAST: (skip)
+ *
+ * Since: 1.24
+ */
 #define GST_ANALYTICS_MTD_CAST(mtd) \
     ((GstAnalyticsMtd *)(mtd))
+
+/**
+ * GstAnalyticsRelationMeta:
+ *
+ * An opaque #GstMeta that can be used to hold various types of results
+ * from analysis processes.
+ *
+ * The content should be accessed through the API.
+ *
+ * Since: 1.24
+ */
 
 typedef struct _GstAnalyticsRelationMeta GstAnalyticsRelationMeta;
 
@@ -75,6 +98,19 @@ struct _GstAnalyticsMtd
   GstAnalyticsRelationMeta *meta;
 };
 
+/**
+ * GstAnalyticsMtdImpl:
+ * @name: The name of the metadata type
+ * @mtd_meta_transform: A pointer to a function that will be called
+ * when the containing meta is transform to potentially copy the data
+ * into a new Mtd into the new meta.
+ *
+ * This structure must be provided when registering a new type of Mtd. It must
+ * have a static lifetime (never be freed).
+ *
+ * Since: 1.24
+ */
+
 typedef struct {
   const char *name;
 
@@ -82,6 +118,7 @@ typedef struct {
                                   GstBuffer *buffer, GQuark type,
                                   gpointer data);
 
+  /*< private >*/
   gpointer _reserved[GST_PADDING_LARGE];
 } GstAnalyticsMtdImpl;
 

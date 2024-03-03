@@ -24,6 +24,22 @@
 
 #include "gstanalyticsclassificationmtd.h"
 
+/**
+ * SECTION:gstanalyticsclassificationtd
+ * @title: GstAnalyticsClsMtd
+ * @short_description: An analytics metadata for classification inside a #GstAnalyticsRelationMeta
+ * @symbols:
+ * - GstAnalyticsClsMtd
+ * @see_also: #GstAnalyticsMtd, #GstAnalyticsRelationMeta
+ *
+ * This type of metadata holds classification, it is generally used in
+ * relationship with another metadata type to enhance its content. For example,
+ * it can enhance the classifcation of an object detection held by the
+ * #GstAnalyticsODMtd metadata type.
+ *
+ * Since: 1.24
+ */
+
 static const GstAnalyticsMtdImpl cls_impl = {
   "classification",
   NULL
