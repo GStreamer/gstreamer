@@ -49386,12 +49386,12 @@ determine a order for the two provided values.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstversion.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_MICRO" value="90" c:type="GST_VERSION_MICRO">
+    <constant name="VERSION_MICRO" value="0" c:type="GST_VERSION_MICRO">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstversion.h">The micro version of GStreamer at compile time:</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstversion.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="VERSION_MINOR" value="23" c:type="GST_VERSION_MINOR">
+    <constant name="VERSION_MINOR" value="24" c:type="GST_VERSION_MINOR">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstversion.h">The minor version of GStreamer at compile time:</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstversion.h"/>
       <type name="gint" c:type="gint"/>

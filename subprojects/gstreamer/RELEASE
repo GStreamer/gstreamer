@@ -1,13 +1,15 @@
-This is GStreamer core 1.23.90.
+This is GStreamer core 1.24.0.
 
-GStreamer 1.23 is the unstable development branch leading up to the next major
-stable version which will be 1.24.
+The GStreamer team is thrilled to announce a new major feature release
+of your favourite cross-platform multimedia framework!
+
+As always, this release is again packed with new features, bug fixes and
+other improvements.
  
-The 1.23 development series adds new features on top of the 1.22 series and is
-part of the API and ABI-stable 1.x release series of the GStreamer multimedia
-framework.
+The 1.24 release series adds new features on top of the 1.22 series and is
+part of the API and ABI-stable 1.x release series.
 
-Full release notes will one day be found at:
+Full release notes can be found at:
 
   https://gstreamer.freedesktop.org/releases/1.24/
 
@@ -84,9 +86,6 @@ or pop into one of our Matrix chat rooms, see
   https://discourse.gstreamer.org/t/new-gstreamer-matrix-chat-space/675
 
 for more details.
-
-There is also a legacy IRC channel, #gstreamer on the OFTC IRC network,
-which is also bridged into the Matrix network.
 
 Please do not submit support requests in GitLab, we only use it for
 bug tracking and merge requests review. Use the Discourse forum instead.
