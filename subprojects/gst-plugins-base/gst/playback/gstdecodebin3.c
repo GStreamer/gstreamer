@@ -692,6 +692,8 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   g_list_free (dbin->to_activate);
   dbin->to_activate = NULL;
 
+  dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
+
   g_list_free (dbin->pending_select_streams);
   dbin->pending_select_streams = NULL;
 
