@@ -2898,11 +2898,6 @@ gst_play_bin3_custom_element_init (GstPlugin * plugin)
 
   playback_element_init (plugin);
 
-  if (g_getenv ("USE_PLAYBIN3")) {
-    ret &= gst_element_register (plugin, "playbin", GST_RANK_NONE,
-        GST_TYPE_PLAY_BIN);
-  }
-
   ret &= gst_element_register (plugin, "playbin3", GST_RANK_NONE,
       GST_TYPE_PLAY_BIN);
 
