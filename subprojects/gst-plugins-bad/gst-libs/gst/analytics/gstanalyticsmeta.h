@@ -33,6 +33,7 @@ G_BEGIN_DECLS
 
 /**
  * GST_INF_RELATION_SPAN:
+ *
  * Passes to functions asking for a relation span when the span is
  * infinite.
  *

@@ -69,6 +69,7 @@ static const GstAnalyticsMtdImpl tracking_impl = {
 
 /**
  * gst_analytics_tracking_mtd_get_mtd_type:
+ *
  * Returns: id representing the type of GstAnalyticsRelatableMtd
  *
  * Get the opaque id identifying the relatable type

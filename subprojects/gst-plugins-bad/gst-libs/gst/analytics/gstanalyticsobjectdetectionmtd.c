@@ -105,6 +105,7 @@ static const GstAnalyticsMtdImpl od_impl = {
 
 /**
  * gst_analytics_od_mtd_get_mtd_type:
+ *
  * Get an id that represent object-detection metadata type
  *
  * Returns: Opaque id of the #GstAnalyticsMtd type

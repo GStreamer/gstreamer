@@ -130,11 +130,11 @@ gst_analytics_relation_meta_get_mtd_data_internal (GstAnalyticsRelationMeta *
 
 /**
  * gst_analytics_mtd_get_mtd_type:
+ *
  * @instance: Instance of #GstAnalyticsMtd
  * Get analysis result type.
  *
  * Returns: opaque id of the type
- *
  * Since: 1.24
  */
 GstAnalyticsMtdType
@@ -152,10 +152,10 @@ gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * handle)
 /**
  * gst_analytics_mtd_get_id:
  * @instance: Instance of #GstAnalyticsMtd
+ *
  * Get instance id
  *
  * Returns: Id of @instance
- *
  * Since: 1.24
  */
 guint
@@ -171,7 +171,6 @@ gst_analytics_mtd_get_id (GstAnalyticsMtd * handle)
  * Get instance size
  *
  * Returns: Size (in bytes) of this instance or 0 on failure.
- *
  * Since: 1.24
  */
 gsize
@@ -195,7 +194,6 @@ gst_analytics_mtd_get_size (GstAnalyticsMtd * handle)
  * Gets the string version of the name of this type of analytics data
  *
  * Returns: the name
- *
  * Since: 1.24
  */
 const gchar *
@@ -218,7 +216,7 @@ gst_analytics_mtd_type_get_name (GstAnalyticsMtdType type)
  * Get number of relatable meta attached to instance
  *
  * Returns: Number of analysis-meta attached to this
- * instance.
+ *  instance.
  * Since: 1.24
  */
 gsize
@@ -259,11 +257,11 @@ gst_analytics_relation_adj_mat_create (gsize order)
  * @adj_mat: Adjcency-matrix (array or MxN)
  * @order: Order of the existing matrix
  * @new_order: Order of the matrix to create
+ *
  * Duplicate adj_mat to a newly allocated array new_order x new_order dimension
  * while keep values of adj_mat at the same indexes in the new array.
  *
  * Returns: New adjacency matrix with maintained values.
- *
  * Since: 1.24
  */
 static guint8 **
@@ -279,8 +277,8 @@ gst_analytics_relation_adj_mat_dup (guint8 ** adj_mat, gsize order,
 
 /**
  * gst_analytics_relation_meta_api_get_type:
- * Returns: GType of GstAnalyticsRelationMeta
  *
+ * Returns: GType of GstAnalyticsRelationMeta
  * Since: 1.24
  */
 GType
@@ -575,12 +573,11 @@ gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta)
  * @an_meta_first_id: Id of first analysis-meta
  * @an_meta_second_id: Id of second  analysis-meta
  *
- * Returns: relation description between first and second analysis-meta.
- *
  * Get relations between first and second analysis-meta.
  * Ids (@an_meta_first_id and @an_meta_second_id) must be from a call to
  * @gst_analytics_mtd_get_id (handle).
  *
+ * Returns: relation description between first and second analysis-meta.
  * Since: 1.24
  */
 GstAnalyticsRelTypes
@@ -627,7 +624,6 @@ gst_analytics_relation_meta_get_relation (GstAnalyticsRelationMeta * meta,
  *    @gst_analytics_mtd_get_id(handle).
  *
  * Returns: TRUE on success and FALSE on failure.
- *
  * Since: 1.24
  */
 gboolean
@@ -674,7 +670,6 @@ gst_analytics_relation_meta_set_relation (GstAnalyticsRelationMeta * meta,
  *
  * Returns: TRUE if a relation between exit between @an_meta_first_id and
  *  @an_meta_second_id, otherwise FALSE.
- *
  * Since: 1.24
  */
 gboolean
@@ -803,7 +798,6 @@ gst_analytics_relation_meta_exist (GstAnalyticsRelationMeta * rmeta,
  * and providing the maximum number of analysis meta that will attached to a buffer.
  *
  * Returns: (transfer none) (nullable) : Newly attached #GstAnalyticsRelationMeta
- *
  * Since: 1.24
  */
 GstAnalyticsRelationMeta *
@@ -824,7 +818,6 @@ gst_buffer_add_analytics_relation_meta (GstBuffer * buffer)
  * analysis meta.
  *
  * Returns: (transfer none) (nullable) : Newly attached #GstAnalyticsRelationMeta
- *
  * Since: 1.24
  */
 GstAnalyticsRelationMeta *
@@ -876,7 +869,6 @@ gst_buffer_get_analytics_relation_meta (GstBuffer * buffer)
  * new struct sub-classing GstAnalyticsRelatableMtd.
  *
  * Returns: A pointer to a memory area of size @size where to put the data
- *
  * Since: 1.24
  */
 gpointer
@@ -959,7 +951,6 @@ gst_analytics_relation_meta_add_mtd (GstAnalyticsRelationMeta * meta,
  * otherwise this method return FALSE and @rlt is invalid.
  *
  * Returns: TRUE if successful.
- *
  * Since: 1.24
  */
 gboolean
@@ -1003,7 +994,6 @@ gst_analytics_relation_meta_get_mtd (GstAnalyticsRelationMeta * meta,
  * @an_meta_id: Id of GstAnalyticsMtd instance to retrieve
  *
  * Returns:(nullable): Analytics data pointer
- *
  * Since: 1.24
  */
 gpointer
@@ -1029,7 +1019,6 @@ gst_analytics_relation_meta_get_mtd_data (GstAnalyticsRelationMeta *
  * @rlt_mtd: Handle updated to directly related relatable meta.
  *
  * Returns: TRUE if @rlt_mtd was updated, other wise FALSE
- *
  * Since: 1.24
  */
 gboolean
@@ -1102,7 +1091,6 @@ gst_analytics_relation_meta_get_direct_related (GstAnalyticsRelationMeta * meta,
  * @rlt_mtd: Handle updated to iterated GstAnalyticsRelatableMtd.
  *
  * Returns: FALSE if end was reached and iteration is completed.
- *
  * Since: 1.24
  */
 gboolean

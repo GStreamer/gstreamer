@@ -71,6 +71,7 @@ struct _GstAnalyticsClsMtdData
 
 /**
  * gst_analytics_cls_mtd_get_mtd_type:
+ *
  * Get an id identifying #GstAnalyticsMtd type.
  *
  * Returns: opaque id of #GstAnalyticsMtd type
