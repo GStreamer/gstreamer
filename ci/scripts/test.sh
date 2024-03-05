@@ -11,7 +11,6 @@ echo "-> Running ${TEST_SUITE}"
 
 ./gst-env.py \
     gst-validate-launcher ${TEST_SUITE} \
-    --check-bugs \
     --dump-on-failure \
     --mute \
     --shuffle \
