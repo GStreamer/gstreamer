@@ -23,6 +23,7 @@
 
 #include "gstd3d12.h"
 #include <mutex>
+#include <atomic>
 
 /* *INDENT-OFF* */
 static std::recursive_mutex context_lock_;
@@ -398,7 +399,16 @@ gst_d3d12_context_new (GstD3D12Device * device)
   context_set_d3d12_device (context, device);
 
   return context;
+}
 
+gint64
+gst_d3d12_create_user_token (void)
+{
+  /* *INDENT-OFF* */
+  static std::atomic<gint64> user_token { 0 };
+  /* *INDENT-ON* */
+
+  return user_token.fetch_add (1);
 }
 
 gboolean

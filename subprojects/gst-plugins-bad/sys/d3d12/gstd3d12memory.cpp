@@ -32,6 +32,8 @@
 #include <atomic>
 #include <queue>
 #include <vector>
+#include <map>
+#include <memory>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -198,14 +200,35 @@ gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
   return TRUE;
 }
 
-
 /* *INDENT-OFF* */
+struct GstD3D12MemoryTokenData
+{
+  GstD3D12MemoryTokenData (gpointer data, GDestroyNotify notify_func)
+    : user_data (data), notify (notify_func)
+  {
+  }
+
+  ~GstD3D12MemoryTokenData ()
+  {
+    if (notify)
+      notify (user_data);
+  }
+
+  gpointer user_data;
+  GDestroyNotify notify;
+};
+
 struct _GstD3D12MemoryPrivate
 {
   ~_GstD3D12MemoryPrivate ()
   {
     if (event_handle)
       CloseHandle (event_handle);
+
+    if (nt_handle)
+      CloseHandle (nt_handle);
+
+    token_map.clear ();
   }
 
   ComPtr<ID3D12Resource> resource;
@@ -219,6 +242,8 @@ struct _GstD3D12MemoryPrivate
   D3D12_RESOURCE_DESC desc;
 
   HANDLE event_handle = nullptr;
+  HANDLE nt_handle = nullptr;
+  std::map<gint64, std::unique_ptr<GstD3D12MemoryTokenData>> token_map;
 
   /* Queryied via ID3D12Device::GetCopyableFootprints */
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES];
@@ -626,6 +651,60 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
   (*heap)->AddRef ();
 
   return TRUE;
+}
+
+gboolean
+gst_d3d12_memory_get_nt_handle (GstD3D12Memory * mem, HANDLE * handle)
+{
+  auto priv = mem->priv;
+
+  *handle = nullptr;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->nt_handle) {
+    *handle = priv->nt_handle;
+    return TRUE;
+  }
+
+  auto device = gst_d3d12_device_get_device_handle (mem->device);
+  auto hr = device->CreateSharedHandle (priv->resource.Get (), nullptr,
+      GENERIC_ALL, nullptr, &priv->nt_handle);
+  if (!gst_d3d12_result (hr, mem->device))
+    return FALSE;
+
+  *handle = priv->nt_handle;
+  return TRUE;
+}
+
+void
+gst_d3d12_memory_set_token_data (GstD3D12Memory * mem, gint64 token,
+    gpointer data, GDestroyNotify notify)
+{
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  auto old_token = priv->token_map.find (token);
+  if (old_token != priv->token_map.end ())
+    priv->token_map.erase (old_token);
+
+  if (data) {
+    priv->token_map[token] = std::unique_ptr < GstD3D12MemoryTokenData >
+        (new GstD3D12MemoryTokenData (data, notify));
+  }
+}
+
+gpointer
+gst_d3d12_memory_get_token_data (GstD3D12Memory * mem, gint64 token)
+{
+  auto priv = mem->priv;
+  gpointer ret = nullptr;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  auto old_token = priv->token_map.find (token);
+  if (old_token != priv->token_map.end ())
+    ret = old_token->second->user_data;
+
+  return ret;
 }
 
 /* GstD3D12Allocator */

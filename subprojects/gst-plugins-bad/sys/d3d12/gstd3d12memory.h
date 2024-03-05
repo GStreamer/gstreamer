@@ -149,6 +149,16 @@ gboolean          gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory
 gboolean          gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
                                                                 ID3D12DescriptorHeap ** heap);
 
+gboolean          gst_d3d12_memory_get_nt_handle (GstD3D12Memory * mem,
+                                                  HANDLE * handle);
+
+void              gst_d3d12_memory_set_token_data (GstD3D12Memory * mem,
+                                                   gint64 token,
+                                                   gpointer data,
+                                                   GDestroyNotify notify);
+
+gpointer          gst_d3d12_memory_get_token_data (GstD3D12Memory * mem,
+                                                   gint64 token);
 
 struct _GstD3D12Allocator
 {

@@ -50,6 +50,8 @@ gint64    gst_d3d12_luid_to_int64 (const LUID * luid);
 
 GstContext * gst_d3d12_context_new (GstD3D12Device * device);
 
+gint64    gst_d3d12_create_user_token (void);
+
 gboolean _gst_d3d12_result (HRESULT hr,
                             GstD3D12Device * device,
                             GstDebugCategory * cat,
