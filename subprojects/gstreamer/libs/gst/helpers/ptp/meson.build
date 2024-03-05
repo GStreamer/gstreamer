@@ -112,9 +112,7 @@ exe_test = executable('gst-ptp-helper-test', 'main.rs',
   override_options : ['rust_std=2018'],
   rust_args : ['--test', rust_args],
   dependencies : [cap_dep],
-  link_with : conf,
-  install_dir : helpers_install_dir,
-  install : true)
+  link_with : conf)
 
 test('gst-ptp-helper-test', exe_test, protocol : 'rust')
 
