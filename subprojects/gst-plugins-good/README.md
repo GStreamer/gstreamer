@@ -1,4 +1,4 @@
-GStreamer 1.24.x stable series
+GStreamer 1.25.x development series
 
 WHAT IT IS
 ----------
