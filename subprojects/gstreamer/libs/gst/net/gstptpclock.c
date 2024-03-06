@@ -3266,7 +3266,7 @@ gst_ptp_clock_get_internal_time (GstClock * clock)
 
 /**
  * gst_ptp_clock_new:
- * @name: Name of the clock
+ * @name: (nullable): Name of the clock
  * @domain: PTP domain
  *
  * Creates a new PTP clock instance that exports the PTP time of the master
@@ -3281,7 +3281,7 @@ gst_ptp_clock_get_internal_time (GstClock * clock)
  * check this with gst_clock_wait_for_sync(), the GstClock::synced signal and
  * gst_clock_is_synced().
  *
- * Returns: (transfer full): A new #GstClock
+ * Returns: (transfer full) (nullable): A new #GstClock
  *
  * Since: 1.6
  */

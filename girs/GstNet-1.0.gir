@@ -587,12 +587,12 @@ GstPtpClock::internal-clock property will become non-NULL. You can
 check this with gst_clock_wait_for_sync(), the GstClock::synced signal and
 gst_clock_is_synced().</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.h"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.c">A new #GstClock</doc>
           <type name="Gst.Clock" c:type="GstClock*"/>
         </return-value>
         <parameters>
-          <parameter name="name" transfer-ownership="none">
+          <parameter name="name" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.c">Name of the clock</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
