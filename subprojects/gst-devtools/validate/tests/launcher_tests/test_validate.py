@@ -36,7 +36,7 @@ def get_pipelines(test_manager):
                  {'level': 'critical', 'summary': 'a NOT NEGOTIATED message has been posted on the bus.',
                   'details': r'.*Caps negotiation failed at pad.*capsfilter:sink.*as it refused caps:.*'}]}),
             ("not_negotiated.caps_query_failure",
-             "\( \( audiotestsrc \) ! input-selector name=i \) ! capsfilter name=capsfilter caps=video/x-raw ! fakesink",
+             r"\( \( audiotestsrc \) ! input-selector name=i \) ! capsfilter name=capsfilter caps=video/x-raw ! fakesink",
              {"expected-issues": [
                  {'returncode': 18},
                  {'level': 'critical', 'summary': 'a NOT NEGOTIATED message has been posted on the bus.',

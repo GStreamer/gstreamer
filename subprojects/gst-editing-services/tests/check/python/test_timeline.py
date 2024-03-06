@@ -3699,7 +3699,7 @@ class TestTransitions(common.GESSimpleTimelineTest):
 
     def create_xges(self):
         uri = common.get_asset_uri("png.png")
-        return """<ges version='0.4'>
+        return r"""<ges version='0.4'>
   <project properties='properties;' metadatas='metadatas, author=(string)&quot;&quot;, render-scale=(double)100, format-version=(string)0.4;'>
     <ressources>
       <asset id='GESTitleClip' extractable-type-name='GESTitleClip' properties='properties;' metadatas='metadatas;' />
