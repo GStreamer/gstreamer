@@ -3303,19 +3303,25 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   for (tmp = select_streams; tmp; tmp = tmp->next) {
     const gchar *sid = (const gchar *) tmp->data;
     MultiQueueSlot *slot;
-    GST_DEBUG_OBJECT (dbin, "Checking stream '%s'", sid);
+    GST_DEBUG_OBJECT (dbin, "Checking for requested stream '%s'", sid);
     slot = find_slot_for_stream_id (dbin, sid);
-    /* Find the corresponding slot */
-    if (slot == NULL) {
+
+    /* Find the multiqueue slot which is outputting, or will output, this stream
+     * id */
+    if (slot == NULL || slot->active_stream == NULL) {
+      /* There is no slot on which this stream is active */
       if (stream_in_collection (dbin, (gchar *) sid)) {
+        GST_DEBUG_OBJECT (dbin, "Adding to pending streams '%s'", sid);
         pending_streams = g_list_append (pending_streams, (gchar *) sid);
       } else {
         GST_DEBUG_OBJECT (dbin, "We don't have a slot for stream '%s'", sid);
         unknown = g_list_append (unknown, (gchar *) sid);
       }
     } else if (slot->output == NULL) {
-      GST_DEBUG_OBJECT (dbin, "We need to activate slot %p for stream '%s')",
-          slot, sid);
+      /* There is a slot on which this stream is active or pending */
+      GST_DEBUG_OBJECT (dbin,
+          "We need to activate slot %p %s:%s for stream '%s')", slot,
+          GST_DEBUG_PAD_NAME (slot->src_pad), sid);
       to_activate = g_list_append (to_activate, slot);
     } else {
       GST_DEBUG_OBJECT (dbin,
