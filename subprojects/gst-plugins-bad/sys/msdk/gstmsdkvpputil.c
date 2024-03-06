@@ -689,6 +689,7 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
   GstStructure *structure = NULL;
   GstCaps *outcaps, *fixate_caps;
   GstCapsFeatures *features;
+  gchar *colorimetry = NULL;
 
   /* Fixate the format */
   fixate_caps = fixate_output_format (thiz, vinfo, srccaps);
@@ -719,7 +720,12 @@ _get_preferred_src_caps (GstMsdkVPP * thiz, GstVideoInfo * vinfo,
   if (!set_multiview_mode (thiz, vinfo, structure))
     goto fixate_failed;
 
-  /*Fixme: Set colorimetry */
+  /* set colorimetry based on input info */
+  if ((colorimetry = gst_video_colorimetry_to_string (&vinfo->colorimetry))) {
+    gst_structure_set (structure, "colorimetry", G_TYPE_STRING, colorimetry,
+        NULL);
+    g_free (colorimetry);
+  }
 
   /* set interlace mode */
   if (!set_interlace_mode (thiz, vinfo, structure))
