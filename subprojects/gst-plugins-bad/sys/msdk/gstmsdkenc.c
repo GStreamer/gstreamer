@@ -664,6 +664,8 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
         gst_video_transfer_function_to_iso (info.colorimetry.transfer);
     ext_vsi.MatrixCoefficients =
         gst_video_color_matrix_to_iso (info.colorimetry.matrix);
+    ext_vsi.VideoFullRange =
+        (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255);
     gst_msdkenc_add_extra_param (thiz, (mfxExtBuffer *) & ext_vsi);
   }
 
