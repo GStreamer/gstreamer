@@ -4410,6 +4410,7 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   gboolean do_renegotiation = TRUE, do_reopen, need_negotiation;
   guint max_ref_frames, max_surfaces = 0, rt_format = 0, codedbuf_size;
   gint width, height;
+  guint alignment;
 
   width = GST_VIDEO_INFO_WIDTH (&base->in_info);
   height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
@@ -4444,11 +4445,19 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
   base->width = width;
   base->height = height;
 
-  self->luma_width = GST_ROUND_UP_16 (base->width);
-  self->luma_height = GST_ROUND_UP_16 (base->height);
+  alignment = gst_va_encoder_get_surface_alignment (base->display,
+      profile, klass->entrypoint);
+  if (alignment) {
+    self->luma_width = GST_ROUND_UP_N (base->width, 1 << (alignment & 0xf));
+    self->luma_height =
+        GST_ROUND_UP_N (base->height, 1 << ((alignment & 0xf0) >> 4));
+  } else {
+    self->luma_width = GST_ROUND_UP_16 (base->width);
+    self->luma_height = GST_ROUND_UP_16 (base->height);
+  }
 
   /* Frame Cropping */
-  if ((base->width & 15) || (base->height & 15)) {
+  if (self->luma_width != base->width || self->luma_height != base->height) {
     /* 6.1, Table 6-1 */
     static const guint SubWidthC[] = { 1, 2, 2, 1 };
     static const guint SubHeightC[] = { 1, 2, 1, 1 };
