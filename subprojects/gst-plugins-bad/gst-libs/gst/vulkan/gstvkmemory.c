@@ -144,6 +144,31 @@ _vk_mem_map_full (GstVulkanMemory * mem, GstMapInfo * info, gsize size)
     }
   }
 
+  if ((info->flags & GST_MAP_READ)
+      && !(mem->properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)) {
+    VkMappedMemoryRange range = {
+      .sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE,
+      /* .pNext = */
+      .memory = mem->mem_ptr,
+      .offset = mem->vk_offset,
+      .size = VK_WHOLE_SIZE,
+    };
+
+    err = vkInvalidateMappedMemoryRanges (mem->device->device, 1u, &range);
+    if (gst_vulkan_error_to_g_error (err, &error,
+            "vkInvalidateMappedMemoryRanges") < 0) {
+      GST_CAT_ERROR (GST_CAT_VULKAN_MEMORY,
+          "Failed to invalidate mapped memory: %s", error->message);
+      g_clear_error (&error);
+      if (mem->map_count == 0) {
+        vkUnmapMemory (mem->device->device, mem->mem_ptr);
+        mem->mapping = NULL;
+      }
+      g_mutex_unlock (&mem->lock);
+      return NULL;
+    }
+  }
+
   mem->map_count++;
   data = mem->mapping;
   g_mutex_unlock (&mem->lock);
