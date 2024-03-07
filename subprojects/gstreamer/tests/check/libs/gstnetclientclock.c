@@ -58,9 +58,9 @@ GST_START_TEST (test_functioning)
   GstNetTimeProvider *ntp;
   GstClock *client, *server;
   GstClockTime basex, basey, rate_num, rate_denom;
-  GstClockTime servtime, clienttime, diff;
+  GstClockTime servtime, clienttime;
+  GstClockTimeDiff diff;
   gint port;
-  gchar sign;
 
   server = gst_system_clock_obtain ();
   fail_unless (server != NULL, "failed to get system clock");
@@ -86,24 +86,17 @@ GST_START_TEST (test_functioning)
 
   servtime = gst_clock_get_time (server);
   clienttime = gst_clock_get_time (client);
-
-  if (servtime > clienttime) {
-    sign = '-';
-    diff = servtime - clienttime;
-  } else {
-    sign = '+';
-    diff = clienttime - servtime;
-  }
+  diff = GST_CLOCK_DIFF (servtime, clienttime);
 
   GST_LOG ("server time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (servtime));
   GST_LOG ("client time:  %" GST_TIME_FORMAT, GST_TIME_ARGS (clienttime));
-  GST_LOG ("diff       : %c%" GST_TIME_FORMAT, sign, GST_TIME_ARGS (diff));
+  GST_LOG ("diff       : %" GST_STIME_FORMAT, GST_STIME_ARGS (diff));
 
   /* can't in general make a precise assertion here, because this depends on
    * system load and a lot of things. however within half a second they should
    * at least be within 1/10 of a second of each other... */
-  if (diff > 100 * GST_MSECOND)
-    fail ("clocks not in sync (%" GST_TIME_FORMAT ")", GST_TIME_ARGS (diff));
+  if (ABS (diff) > 100 * GST_MSECOND)
+    fail ("clocks not in sync (%" GST_STIME_FORMAT ")", GST_STIME_ARGS (diff));
 
   /*
      g_print ("diff: %" GST_TIME_FORMAT,
