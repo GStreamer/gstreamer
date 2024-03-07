@@ -1460,7 +1460,7 @@ rewrite_si (TsMux * mux, gint64 cur_ts)
       next_pcr = get_current_pcr (mux, cur_ts);
     }
 
-    if (program->scte35_pid != 0) {
+    if (program->scte35_pid != 0 && program->scte35_null_interval != 0) {
       gboolean write_scte_null = FALSE;
       if (program->next_scte35_pcr == -1)
         write_scte_null = TRUE;

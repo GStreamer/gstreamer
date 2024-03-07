@@ -2860,8 +2860,8 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_SCTE_35_NULL_INTERVAL, g_param_spec_uint ("scte-35-null-interval",
           "SCTE-35 NULL packet interval",
-          "Set the interval (in ticks of the 90kHz clock) for writing SCTE-35 NULL (heartbeat) packets."
-          " (only valid if scte-35-pid is different from 0)", 1, G_MAXUINT,
+          "Set the interval (in ticks of the 90kHz clock) for writing SCTE-35 NULL (heartbeat) packets. 0=disable"
+          " (only valid if scte-35-pid is different from 0)", 0, G_MAXUINT,
           TSMUX_DEFAULT_SCTE_35_NULL_INTERVAL,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
