@@ -1136,11 +1136,11 @@ picture_changed (GstFFMpegVidDec * ffmpegdec, AVFrame * picture,
     if (picture->repeat_pict)
       pic_field_order |= GST_VIDEO_BUFFER_FLAG_RFF;
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-  } else if (picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST) {
+    if (picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)
 #else
-  } else if (picture->top_field_first) {
+    if (picture->top_field_first)
 #endif
-    pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
+      pic_field_order |= GST_VIDEO_BUFFER_FLAG_TFF;
   }
 
   return !(ffmpegdec->pic_width == picture->width
