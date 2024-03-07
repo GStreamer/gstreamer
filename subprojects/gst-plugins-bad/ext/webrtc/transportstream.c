@@ -47,15 +47,37 @@ enum
 GstCaps *
 transport_stream_get_caps_for_pt (TransportStream * stream, guint pt)
 {
-  guint i, len;
+  GstCaps *ret = NULL;
+  GstStructure *ret_s, *item_s;
+  guint i, len, si, slen;
+  const gchar *field_name;
 
   len = stream->ptmap->len;
   for (i = 0; i < len; i++) {
     PtMapItem *item = &g_array_index (stream->ptmap, PtMapItem, i);
-    if (item->pt == pt)
-      return item->caps;
+    if (item->pt == pt) {
+      if (item->caps) {
+        if (ret == NULL) {
+          ret = gst_caps_copy (item->caps);
+          ret_s = gst_caps_get_structure (ret, 0);
+        } else {
+          /* Append the "ssrc-*" fields for current PT entry to ret */
+          item_s = gst_caps_get_structure (item->caps, 0);
+          slen = gst_structure_n_fields (item_s);
+          for (si = 0; si < slen; ++si) {
+            field_name = gst_structure_nth_field_name (item_s, si);
+            if (!g_str_has_prefix (field_name, "ssrc-"))
+              continue;
+
+            gst_structure_set (ret_s, field_name, G_TYPE_STRING,
+                gst_structure_get_string (item_s, field_name), NULL);
+          }
+        }
+      }
+    }
   }
-  return NULL;
+
+  return ret;
 }
 
 int

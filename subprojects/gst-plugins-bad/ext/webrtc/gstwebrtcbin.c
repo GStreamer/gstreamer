@@ -5122,6 +5122,8 @@ _set_internal_rtpbin_element_props_from_stream (GstWebRTCBin * webrtc,
 
     GST_LOG_OBJECT (stream, "setting rtx mapping: %s -> %u", apt, rtx_pt[i]);
     gst_structure_set (pt_map, apt, G_TYPE_UINT, rtx_pt[i], NULL);
+
+    gst_caps_unref (rtx_caps);
   }
 
   GST_DEBUG_OBJECT (stream, "setting payload map on %" GST_PTR_FORMAT " : %"
@@ -7446,8 +7448,7 @@ on_rtpbin_request_pt_map (GstElement * rtpbin, guint session_id, guint pt,
   if (!stream)
     goto unknown_session;
 
-  if ((ret = transport_stream_get_caps_for_pt (stream, pt)))
-    gst_caps_ref (ret);
+  ret = transport_stream_get_caps_for_pt (stream, pt);
 
   GST_DEBUG_OBJECT (webrtc, "Found caps %" GST_PTR_FORMAT " for pt %d in "
       "session %d", ret, pt, session_id);

@@ -312,6 +312,29 @@ gst_rtp_pt_demux_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/* Removes "ssrc-*" attributes matching other SSRCs. */
+static gboolean
+_filter_ssrc (GQuark field_id, GValue * value, gpointer ssrc)
+{
+  const gchar *field_name = g_quark_to_string (field_id);
+
+  if (!g_str_has_prefix (field_name, "ssrc-"))
+    return TRUE;
+
+  gchar *endptr;
+  guint32 field_ssrc = g_ascii_strtoll (field_name + 5, &endptr, 10);
+
+  if (!endptr || *endptr != '-')
+    return TRUE;
+
+  /* Found a valid "ssrc-*" */
+  if (field_ssrc != *(guint32 *) ssrc)
+    /* Not the expected SSRC => remove this field */
+    return FALSE;
+
+  return TRUE;
+}
+
 static GstCaps *
 gst_rtp_pt_demux_get_caps (GstRtpPtDemux * rtpdemux, guint pt)
 {
@@ -349,7 +372,12 @@ gst_rtp_pt_demux_get_caps (GstRtpPtDemux * rtpdemux, guint pt)
   }
 
   if (caps != NULL) {
+    GstStructure *s;
+
     caps = gst_caps_make_writable (caps);
+    s = gst_caps_get_structure (caps, 0);
+    gst_structure_filter_and_map_in_place (s, _filter_ssrc, &ssrc);
+
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     if (have_ssrc)
       gst_caps_set_simple (caps, "ssrc", G_TYPE_UINT, ssrc, NULL);
