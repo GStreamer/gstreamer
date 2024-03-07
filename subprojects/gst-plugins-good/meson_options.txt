@@ -97,7 +97,7 @@ option('qt-method', type: 'combo', value: 'auto', choices: ['auto', 'pkg-config'
        description: 'Method to use to find Qt')
 option('qt-egl', type: 'feature', value: 'auto', description: 'EGLFS support in the Qt plugins')
 option('qt-wayland', type: 'feature', value: 'auto', description: 'Wayland support in the Qt plugins')
-option('qt-x11', type: 'feature', value: 'auto', description: 'Wayland support in the Qt plugins')
+option('qt-x11', type: 'feature', value: 'auto', description: 'X11 support in the Qt plugins')
 option('qt5', type : 'feature', value : 'auto', yield : true, description : 'Qt5 QML video sink plugin')
 option('qt6', type : 'feature', value : 'auto', yield : true, description : 'Qt6 QML video sink plugin')
 
