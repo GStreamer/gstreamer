@@ -748,7 +748,8 @@ gst_ffmpegviddec_video_frame_new (GstFFMpegVidDec * ffmpegdec,
   dframe->ffmpegdec = ffmpegdec;
   dframe->frame = frame;
 
-  GST_DEBUG_OBJECT (ffmpegdec, "new video frame %p", dframe);
+  GST_DEBUG_OBJECT (ffmpegdec, "new video frame %p for sfn # %d", dframe,
+      frame->system_frame_number);
 
   return dframe;
 }
@@ -757,7 +758,8 @@ static void
 gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
     GstFFMpegVidDecVideoFrame * frame)
 {
-  GST_DEBUG_OBJECT (ffmpegdec, "free video frame %p", frame);
+  GST_DEBUG_OBJECT (ffmpegdec, "free video frame %p for sfn # %d", frame,
+      frame->frame->system_frame_number);
 
   if (frame->mapped)
     gst_video_frame_unmap (&frame->vframe);
@@ -994,14 +996,14 @@ gst_ffmpegviddec_get_buffer2 (AVCodecContext * context, AVFrame * picture,
 
   /* GstFFMpegVidDecVideoFrame receives the frame ref */
   if (picture->opaque) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Re-using opaque %p", picture->opaque);
     dframe = picture->opaque;
     dframe->frame = frame;
   } else {
     picture->opaque = dframe =
         gst_ffmpegviddec_video_frame_new (ffmpegdec, frame);
+    GST_DEBUG_OBJECT (ffmpegdec, "storing opaque %p", dframe);
   }
-
-  GST_DEBUG_OBJECT (ffmpegdec, "storing opaque %p", dframe);
 
   if (!gst_ffmpegviddec_can_direct_render (ffmpegdec))
     goto no_dr;
@@ -2239,8 +2241,9 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     packet->opaque_ref =
         av_buffer_create (NULL, 0, gst_ffmpeg_opaque_free,
         gst_video_codec_frame_ref (frame), 0);
-    GST_DEBUG_OBJECT (ffmpegdec, "Store incoming frame %u on AVPacket opaque",
-        frame->system_frame_number);
+    GST_DEBUG_OBJECT (ffmpegdec,
+        "Store incoming frame # %u (%p) on AVPacket opaque",
+        frame->system_frame_number, frame);
   }
 #else
   ffmpegdec->context->reordered_opaque = (gint64) frame->system_frame_number;
