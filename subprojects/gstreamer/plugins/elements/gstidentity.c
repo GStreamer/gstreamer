@@ -569,14 +569,16 @@ gst_identity_src_event (GstBaseTransform * trans, GstEvent * event)
           &start, &stop_type, &stop);
 
       GST_OBJECT_LOCK (identity);
-      gst_segment_init (&identity->seek_segment, fmt);
-      if (!gst_segment_do_seek (&identity->seek_segment, rate, fmt,
-              flags, start_type, start, stop_type, stop, NULL)) {
-        GST_WARNING_OBJECT (identity, "Could not run seek %" GST_PTR_FORMAT,
-            event);
-        GST_OBJECT_UNLOCK (identity);
+      if (identity->single_segment) {
+        gst_segment_init (&identity->seek_segment, fmt);
+        if (!gst_segment_do_seek (&identity->seek_segment, rate, fmt,
+                flags, start_type, start, stop_type, stop, NULL)) {
+          GST_WARNING_OBJECT (identity, "Could not handle %" GST_PTR_FORMAT,
+              event);
+          GST_OBJECT_UNLOCK (identity);
 
-        return FALSE;
+          return FALSE;
+        }
       }
       GST_OBJECT_UNLOCK (identity);
 
