@@ -210,6 +210,8 @@ GST_START_TEST (captions_no_output_padding_60fps_608_field1_only)
   int i = 0;
 
   h = gst_harness_new_with_padnames ("cccombiner", "sink", "src");
+  gst_util_set_object_arg ((GObject *) h->element, "cea608-padding-strategy",
+      "0");
   h2 = gst_harness_new_with_element (h->element, NULL, NULL);
   caption_pad = gst_element_request_pad_simple (h->element, "caption");
   gst_harness_add_element_sink_pad (h2, caption_pad);

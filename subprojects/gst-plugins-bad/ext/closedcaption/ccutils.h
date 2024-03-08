@@ -75,6 +75,31 @@ gint           drop_ccp_from_cc_data           (guint8 * cc_data,
 #define MAX_CDP_PACKET_LEN 256
 #define MAX_CEA608_LEN 32
 
+/**
+ * GstCCBufferCea608PaddingStrategy:
+ * @CC_BUFFER_CEA608_PADDING_STRATEGY_INPUT_REMOVE: Keep whatever padding was provided on the input.
+ *     Do not add, remove, or modify, any padding bytes.
+ * @CC_BUFFER_CEA608_PADDING_STRATEGY_VALID: Always modify any padding data to become valid.
+ *     This may cause a stream to show as a CEA-608 caption stream with no contents.
+ *
+ * Since: 1.26
+ */
+/**
+ * @CC_BUFFER_CEA608_PADDING_STRATEGY_INPUT_REMOVE:
+ * Since: 1.26
+ */
+/**
+ * @CC_BUFFER_CEA608_PADDING_STRATEGY_VALID:
+ * Since: 1.26
+ */
+typedef enum {
+   CC_BUFFER_CEA608_PADDING_STRATEGY_INPUT_REMOVE = (1 << 0),
+   CC_BUFFER_CEA608_PADDING_STRATEGY_VALID        = (1 << 1),
+} CCBufferCea608PaddingStrategy;
+
+#define GST_TYPE_CC_BUFFER_CEA608_PADDING_STRATEGY (gst_cc_buffer_cea608_padding_strategy_get_type())
+GType gst_cc_buffer_cea608_padding_strategy_get_type (void);
+
 G_DECLARE_FINAL_TYPE (CCBuffer, cc_buffer, GST, CC_BUFFER, GObject);
 
 G_GNUC_INTERNAL
@@ -99,7 +124,6 @@ gboolean        cc_buffer_push_cc_data          (CCBuffer * buf,
 G_GNUC_INTERNAL
 void            cc_buffer_take_cc_data          (CCBuffer * buf,
                                                  const struct cdp_fps_entry * fps_entry,
-                                                 gboolean nul_padding,
                                                  guint8 * cc_data,
                                                  guint * cc_data_len);
 G_GNUC_INTERNAL
@@ -132,6 +156,11 @@ G_GNUC_INTERNAL
 void            cc_buffer_set_output_padding    (CCBuffer * buf,
                                                  gboolean output_padding,
                                                  gboolean output_ccp_padding);
+G_GNUC_INTERNAL
+void            cc_buffer_set_cea608_padding_strategy(CCBuffer * buf,
+                                                 CCBufferCea608PaddingStrategy padding_strategy);
+G_GNUC_INTERNAL
+void           cc_buffer_set_cea608_valid_timeout (CCBuffer * buf, GstClockTime valid_timeout);
 
 G_END_DECLS
 

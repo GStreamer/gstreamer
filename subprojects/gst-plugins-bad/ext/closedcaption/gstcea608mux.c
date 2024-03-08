@@ -190,7 +190,7 @@ take_s334_both_fields (GstCea608Mux * self, GstBuffer * buffer)
   gst_buffer_map (buffer, &out, GST_MAP_READWRITE);
 
   cc_data_len = out.size;
-  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, FALSE, out.data,
+  cc_buffer_take_cc_data (self->cc_buffer, self->cdp_fps_entry, out.data,
       &cc_data_len);
   s334_len = drop_ccp_from_cc_data (out.data, cc_data_len);
   if (s334_len < 0) {
@@ -438,6 +438,9 @@ gst_cea608_mux_init (GstCea608Mux * self)
   self->cc_buffer = cc_buffer_new ();
   cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);
   cc_buffer_set_output_padding (self->cc_buffer, TRUE, FALSE);
+  cc_buffer_set_cea608_padding_strategy (self->cc_buffer,
+      CC_BUFFER_CEA608_PADDING_STRATEGY_VALID |
+      CC_BUFFER_CEA608_PADDING_STRATEGY_INPUT_REMOVE);
   self->cdp_fps_entry = &null_fps_entry;
   self->start_time = GST_CLOCK_TIME_NONE;
 }

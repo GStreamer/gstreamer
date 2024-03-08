@@ -342,7 +342,8 @@ convert_cea708_cdp_to_cc_data (GstObject * dbg_obj,
 static gint
 cc_data_extract_cea608 (const guint8 * cc_data, guint cc_data_len,
     guint8 * cea608_field1, guint * cea608_field1_len,
-    guint8 * cea608_field2, guint * cea608_field2_len)
+    guint8 * cea608_field2, guint * cea608_field2_len,
+    gboolean remove_cea608_padding)
 {
   guint i, field_1_len = 0, field_2_len = 0;
 
@@ -382,8 +383,10 @@ cc_data_extract_cea608 (const guint8 * cc_data, guint cc_data_len,
           return CC_DATA_EXTRACT_TOO_MANY_FIELD1;
         }
 
-        cea608_field1[(*cea608_field1_len)++] = byte1;
-        cea608_field1[(*cea608_field1_len)++] = byte2;
+        if (!remove_cea608_padding || byte1 != 0x80 || byte2 != 0x80) {
+          cea608_field1[(*cea608_field1_len)++] = byte1;
+          cea608_field1[(*cea608_field1_len)++] = byte2;
+        }
       }
     } else if (cc_type == 0x01) {
       if (!cc_valid)
@@ -395,8 +398,10 @@ cc_data_extract_cea608 (const guint8 * cc_data, guint cc_data_len,
               *cea608_field2_len + 2);
           return CC_DATA_EXTRACT_TOO_MANY_FIELD2;
         }
-        cea608_field2[(*cea608_field2_len)++] = byte1;
-        cea608_field2[(*cea608_field2_len)++] = byte2;
+        if (!remove_cea608_padding || byte1 != 0x80 || byte2 != 0x80) {
+          cea608_field2[(*cea608_field2_len)++] = byte1;
+          cea608_field2[(*cea608_field2_len)++] = byte2;
+        }
       }
     } else {
       /* all cea608 packets must be at the beginning of a cc_data */
@@ -416,10 +421,35 @@ cc_data_extract_cea608 (const guint8 * cc_data, guint cc_data_len,
 gint
 drop_ccp_from_cc_data (guint8 * cc_data, guint cc_data_len)
 {
-  return cc_data_extract_cea608 (cc_data, cc_data_len, NULL, NULL, NULL, NULL);
+  return cc_data_extract_cea608 (cc_data, cc_data_len, NULL, NULL, NULL, NULL,
+      FALSE);
+}
+
+GType
+gst_cc_buffer_cea608_padding_strategy_get_type (void)
+{
+  static const GFlagsValue values[] = {
+    {CC_BUFFER_CEA608_PADDING_STRATEGY_INPUT_REMOVE,
+        "Remove padding from input data", "input-remove"},
+    {CC_BUFFER_CEA608_PADDING_STRATEGY_VALID, "Write 608 padding as valid",
+        "valid"},
+    {0, NULL, NULL}
+  };
+  static GType id = 0;
+
+  if (g_once_init_enter ((gsize *) & id)) {
+    GType _id;
+
+    _id = g_flags_register_static ("GstCCBufferCea608PaddingStrategy", values);
+
+    g_once_init_leave ((gsize *) & id, _id);
+  }
+
+  return id;
 }
 
 #define DEFAULT_MAX_BUFFER_TIME (100 * GST_MSECOND)
+#define DEFAULT_VALID_TIMEOUT GST_CLOCK_TIME_NONE
 
 struct _CCBuffer
 {
@@ -429,11 +459,18 @@ struct _CCBuffer
   GArray *cc_data;
   /* used for tracking which field to write across output buffer boundaries */
   gboolean last_cea608_written_was_field1;
+  /* tracks the timeout for valid_timeout */
+  guint64 field1_padding_written_count;
+  guint64 field2_padding_written_count;
+  gboolean cea608_1_any_valid;
+  gboolean cea608_2_any_valid;
 
   /* properties */
   GstClockTime max_buffer_time;
   gboolean output_padding;
   gboolean output_ccp_padding;
+  CCBufferCea608PaddingStrategy cea608_padding_strategy;
+  GstClockTime valid_timeout;
 };
 
 G_DEFINE_TYPE (CCBuffer, cc_buffer, G_TYPE_OBJECT);
@@ -454,6 +491,12 @@ cc_buffer_init (CCBuffer * buf)
   buf->max_buffer_time = DEFAULT_MAX_BUFFER_TIME;
   buf->output_padding = TRUE;
   buf->output_ccp_padding = FALSE;
+  buf->cea608_padding_strategy = 0;
+  buf->valid_timeout = DEFAULT_VALID_TIMEOUT;
+  buf->field1_padding_written_count = 0;
+  buf->field2_padding_written_count = 0;
+  buf->cea608_1_any_valid = FALSE;
+  buf->cea608_2_any_valid = FALSE;
 }
 
 static void
@@ -529,7 +572,7 @@ compact_cc_data (guint8 * cc_data, guint cc_data_len)
 }
 
 static guint
-calculate_n_cea608_doubles_from_time_ceil (CCBuffer * buf, GstClockTime ns)
+calculate_n_cea608_doubles_from_time_ceil (GstClockTime ns)
 {
   /* cea608 has a maximum bitrate of 60000/1001 * 2 bytes/s */
   guint ret = gst_util_uint64_scale_ceil (ns, 120000, 1001 * GST_SECOND);
@@ -538,7 +581,7 @@ calculate_n_cea608_doubles_from_time_ceil (CCBuffer * buf, GstClockTime ns)
 }
 
 static guint
-calculate_n_cea708_doubles_from_time_ceil (CCBuffer * buf, GstClockTime ns)
+calculate_n_cea708_doubles_from_time_ceil (GstClockTime ns)
 {
   /* ccp has a maximum bitrate of 9600000/1001 bits/s */
   guint ret = gst_util_uint64_scale_ceil (ns, 9600000 / 8, 1001 * GST_SECOND);
@@ -556,7 +599,7 @@ push_internal (CCBuffer * buf, const guint8 * cea608_1,
   GST_DEBUG_OBJECT (buf, "pushing cea608-1: %u cea608-2: %u ccp: %u",
       cea608_1_len, cea608_2_len, cc_data_len);
   max_cea608_bytes =
-      calculate_n_cea608_doubles_from_time_ceil (buf, buf->max_buffer_time);
+      calculate_n_cea608_doubles_from_time_ceil (buf->max_buffer_time);
 
   if (cea608_1_len > 0) {
     if (cea608_1_len + buf->cea608_1->len > max_cea608_bytes) {
@@ -578,7 +621,7 @@ push_internal (CCBuffer * buf, const guint8 * cea608_1,
   }
   if (cc_data_len > 0) {
     guint max_cea708_bytes =
-        calculate_n_cea708_doubles_from_time_ceil (buf, buf->max_buffer_time);
+        calculate_n_cea708_doubles_from_time_ceil (buf->max_buffer_time);
     if (cc_data_len + buf->cc_data->len > max_cea708_bytes) {
       GST_WARNING_OBJECT (buf, "ccp data overflow, dropping all "
           "previous data, max %u, attempted to hold %u", max_cea708_bytes,
@@ -597,12 +640,17 @@ cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
   guint8 cea608_1_copy[MAX_CEA608_LEN];
   guint8 cea608_2_copy[MAX_CEA608_LEN];
   guint8 cc_data_copy[MAX_CDP_PACKET_LEN];
+  gboolean remove_cea608_padding =
+      (buf->cea608_padding_strategy &
+      CC_BUFFER_CEA608_PADDING_STRATEGY_INPUT_REMOVE)
+      != 0;
   guint i;
 
   if (cea608_1 && cea608_1_len > 0) {
     guint out_i = 0;
     for (i = 0; i < cea608_1_len / 2; i++) {
-      if (cea608_1[i] != 0x80 || cea608_1[i + 1] != 0x80) {
+      if (!remove_cea608_padding || cea608_1[i] != 0x80
+          || cea608_1[i + 1] != 0x80) {
         cea608_1_copy[out_i++] = cea608_1[i];
         cea608_1_copy[out_i++] = cea608_1[i + 1];
       }
@@ -615,7 +663,8 @@ cc_buffer_push_separated (CCBuffer * buf, const guint8 * cea608_1,
   if (cea608_2 && cea608_2_len > 0) {
     guint out_i = 0;
     for (i = 0; i < cea608_2_len / 2; i++) {
-      if (cea608_2[i] != 0x80 || cea608_2[i + 1] != 0x80) {
+      if (!remove_cea608_padding || cea608_2[i] != 0x80
+          || cea608_2[i + 1] != 0x80) {
         cea608_2_copy[out_i++] = cea608_2[i];
         cea608_2_copy[out_i++] = cea608_2[i + 1];
       }
@@ -654,7 +703,9 @@ cc_buffer_push_cc_data (CCBuffer * buf, const guint8 * cc_data,
   cc_data_len = compact_cc_data (cc_data_copy, cc_data_len);
 
   ccp_offset = cc_data_extract_cea608 (cc_data_copy, cc_data_len, cea608_1,
-      &cea608_1_len, cea608_2, &cea608_2_len);
+      &cea608_1_len, cea608_2, &cea608_2_len,
+      (buf->cea608_padding_strategy &
+          CC_BUFFER_CEA608_PADDING_STRATEGY_INPUT_REMOVE) != 0);
 
   if (ccp_offset < 0) {
     GST_WARNING_OBJECT (buf, "Failed to extract cea608 from cc_data");
@@ -816,6 +867,11 @@ cc_buffer_take_separated (CCBuffer * buf,
     } else if (cea608_1) {
       memcpy (cea608_1, buf->cea608_1->data, write_cea608_1_size);
       memset (&cea608_1[write_cea608_1_size], 0x80, field1_padding);
+      if (write_cea608_1_size == 0) {
+        buf->field1_padding_written_count += write_cea608_1_size / 2;
+      } else {
+        buf->field1_padding_written_count = 0;
+      }
       *cea608_1_len = write_cea608_1_size + field1_padding;
     } else {
       *cea608_1_len = 0;
@@ -829,6 +885,11 @@ cc_buffer_take_separated (CCBuffer * buf,
     } else if (cea608_2) {
       memcpy (cea608_2, buf->cea608_2->data, write_cea608_2_size);
       memset (&cea608_2[write_cea608_2_size], 0x80, field2_padding);
+      if (write_cea608_2_size == 0) {
+        buf->field2_padding_written_count += write_cea608_2_size / 2;
+      } else {
+        buf->field2_padding_written_count = 0;
+      }
       *cea608_2_len = write_cea608_2_size + field2_padding;
     } else {
       *cea608_2_len = 0;
@@ -881,13 +942,15 @@ cc_buffer_take_separated (CCBuffer * buf,
 
 void
 cc_buffer_take_cc_data (CCBuffer * buf,
-    const struct cdp_fps_entry *fps_entry, gboolean nul_padding,
+    const struct cdp_fps_entry *fps_entry,
     guint8 * cc_data, guint * cc_data_len)
 {
   guint write_cea608_1_size, write_cea608_2_size, write_ccp_size;
   guint field1_padding, field2_padding;
   gboolean wrote_first;
-  guint8 padding_byte = nul_padding ? 0x00 : 0x80;
+  gboolean nul_padding =
+      (buf->cea608_padding_strategy & CC_BUFFER_CEA608_PADDING_STRATEGY_VALID)
+      == 0;
 
   cc_buffer_get_out_sizes (buf, fps_entry, &write_cea608_1_size,
       &field1_padding, &write_cea608_2_size, &field2_padding, &write_ccp_size);
@@ -911,6 +974,8 @@ cc_buffer_take_cc_data (CCBuffer * buf,
           cc_data[out_i++] = cea608_1[cea608_1_i + 1];
           cea608_1_i += 2;
           buf->last_cea608_written_was_field1 = TRUE;
+          buf->field1_padding_written_count = 0;
+          buf->cea608_1_any_valid = TRUE;
         } else if (cea608_1_i < write_cea608_1_size + field1_padding) {
           GST_TRACE_OBJECT (buf,
               "write field2:%u field2_i:%u, cea608-2 buf len:%u",
@@ -923,10 +988,16 @@ cc_buffer_take_cc_data (CCBuffer * buf,
             cc_data[out_i++] = 0xfc;
             cc_data[out_i++] = 0x80;
             cc_data[out_i++] = 0x80;
+            buf->field1_padding_written_count = 0;
           } else {
-            cc_data[out_i++] = 0xf8;
+            gboolean write_invalid = nul_padding || (buf->cea608_1_any_valid &&
+                calculate_n_cea608_doubles_from_time_ceil (buf->valid_timeout) /
+                2 < buf->field1_padding_written_count);
+            guint8 padding_byte = write_invalid ? 0x00 : 0x80;
+            cc_data[out_i++] = write_invalid ? 0xf8 : 0xfc;
             cc_data[out_i++] = padding_byte;
             cc_data[out_i++] = padding_byte;
+            buf->field1_padding_written_count += 1;
           }
           cea608_1_i += 2;
           buf->last_cea608_written_was_field1 = TRUE;
@@ -939,12 +1010,19 @@ cc_buffer_take_cc_data (CCBuffer * buf,
         cc_data[out_i++] = cea608_2[cea608_2_i + 1];
         cea608_2_i += 2;
         buf->last_cea608_written_was_field1 = FALSE;
+        buf->field2_padding_written_count = 0;
+        buf->cea608_2_any_valid = TRUE;
       } else if (cea608_2_i < write_cea608_2_size + field2_padding) {
-        cc_data[out_i++] = 0xf9;
+        gboolean write_invalid = nul_padding || (buf->cea608_2_any_valid &&
+            calculate_n_cea608_doubles_from_time_ceil (buf->valid_timeout) / 2 <
+            buf->field2_padding_written_count);
+        guint8 padding_byte = write_invalid ? 0x00 : 0x80;
+        cc_data[out_i++] = write_invalid ? 0xf9 : 0xfd;
         cc_data[out_i++] = padding_byte;
         cc_data[out_i++] = padding_byte;
         cea608_2_i += 2;
         buf->last_cea608_written_was_field1 = FALSE;
+        buf->field2_padding_written_count += 1;
       }
 
       wrote_first = TRUE;
@@ -1057,4 +1135,17 @@ cc_buffer_set_output_padding (CCBuffer * buf, gboolean output_padding,
 {
   buf->output_padding = output_padding;
   buf->output_ccp_padding = output_ccp_padding;
+}
+
+void
+cc_buffer_set_cea608_padding_strategy (CCBuffer * buf,
+    CCBufferCea608PaddingStrategy padding_strategy)
+{
+  buf->cea608_padding_strategy = padding_strategy;
+}
+
+void
+cc_buffer_set_cea608_valid_timeout (CCBuffer * buf, GstClockTime valid_timeout)
+{
+  buf->valid_timeout = valid_timeout;
 }

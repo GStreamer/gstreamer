@@ -59,6 +59,8 @@ struct _GstCCCombiner
   gboolean prop_schedule;
   guint prop_max_scheduled;
   gboolean prop_output_padding;
+  CCBufferCea608PaddingStrategy prop_cea608_padding_strategy;
+  GstClockTime prop_cea608_valid_padding_timeout;
 
   gboolean schedule;
   guint max_scheduled;
