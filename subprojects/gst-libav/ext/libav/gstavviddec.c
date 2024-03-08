@@ -1881,11 +1881,20 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* get the output picture timing info again */
   out_dframe = ffmpegdec->picture->opaque;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT (60, 31, 100)
+  out_frame =
+      gst_video_codec_frame_ref (av_buffer_get_opaque (ffmpegdec->
+          picture->opaque_ref));
+#else
+  g_assert (out_dframe);
   out_frame = gst_video_codec_frame_ref (out_dframe->frame);
+#endif
 
   /* also give back a buffer allocated by the frame, if any */
-  gst_buffer_replace (&out_frame->output_buffer, out_dframe->buffer);
-  gst_buffer_replace (&out_dframe->buffer, NULL);
+  if (out_dframe) {
+    gst_buffer_replace (&out_frame->output_buffer, out_dframe->buffer);
+    gst_buffer_replace (&out_dframe->buffer, NULL);
+  }
 
   /* Extract auxilliary info not stored in the main AVframe */
   {
