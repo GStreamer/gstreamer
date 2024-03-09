@@ -855,6 +855,7 @@ _av1_init_gf_group (GstVaAV1GFGroup * gf_group, GQueue * reorder_list)
   gf_group->use_alt = FALSE;
   gf_group->intra_only = FALSE;
   gf_group->last_poped_index = -1;
+  gf_group->output_frame_num = 0;
 
   for (i = 0; i < MAX_GF_GROUP_SIZE * 2; i++) {
     gf_group->frame_types[i] = FRAME_TYPE_INVALID;
