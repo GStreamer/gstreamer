@@ -176,6 +176,7 @@ option('svtav1', type : 'feature', value : 'auto', description : 'Scalable Video
 option('svthevcenc', type : 'feature', value : 'auto', description : 'Scalable Video Technology for HEVC encoder plugin')
 option('svtjpegxs', type : 'feature', value : 'auto', description : 'Scalable Video Technology for JPEG-XS plugin')
 option('teletext', type : 'feature', value : 'auto', description : 'Teletext plugin')
+option('tflite', type : 'feature', value : 'auto', description : 'TensorFlow Lite (LiteRT) plugin')
 option('tinyalsa', type : 'feature', value : 'auto', description : 'TinyALSA plugin')
 option('transcode', type : 'feature', value : 'auto', description : 'Transcode plugin')
 option('ttml', type : 'feature', value : 'auto', description : 'TTML subtitle parser and renderer plugin')
