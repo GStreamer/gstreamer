@@ -2,17 +2,10 @@ if get_option('tinyalsa').disabled()
   subdir_done()
 endif
 
-have_tinyalsa = cc.has_header ('tinyalsa/asoundlib.h')
-if have_tinyalsa
-  tinyalsa_dep = cc.find_library('tinyalsa', required: false)
-  have_tinyalsa = tinyalsa_dep.found()
-endif
-
-if not have_tinyalsa
-  tinyalsa_dep = dependency('tinyalsa', required: get_option('tinyalsa'),
-                            fallback: ['tinyalsa', 'tinyalsa_dep'])
-  have_tinyalsa = tinyalsa_dep.found()
-endif
+tinyalsa_dep = dependency('tinyalsa', required: get_option('tinyalsa'),
+                          version: '>= 1.1.0',
+                          fallback: ['tinyalsa', 'tinyalsa_dep'])
+have_tinyalsa = tinyalsa_dep.found()
 
 if have_tinyalsa
   gsttinyalsa = library('gsttinyalsa',
