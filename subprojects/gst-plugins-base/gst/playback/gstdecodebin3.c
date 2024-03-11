@@ -2424,15 +2424,20 @@ check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   }
 
   if (!reconfigure_output_stream (output, slot, &msg)) {
+    gboolean no_more_streams;
     GST_DEBUG_OBJECT (dbin, "Removing failing stream from selection: %s ",
         gst_stream_get_stream_id (slot->active_stream));
     slot->dbin->requested_selection =
         remove_from_list (slot->dbin->requested_selection,
         gst_stream_get_stream_id (slot->active_stream));
+    no_more_streams = slot->dbin->requested_selection == NULL;
     dbin->selection_updated = TRUE;
     SELECTION_UNLOCK (dbin);
     if (msg)
       gst_element_post_message ((GstElement *) slot->dbin, msg);
+    if (no_more_streams)
+      GST_ELEMENT_ERROR (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
+          ("no suitable plugins found"));
     reassign_slot (dbin, slot);
   } else {
     GstMessage *selection_msg = is_selection_done (dbin);
@@ -3062,7 +3067,10 @@ reconfigure_output_stream (DecodebinOutputStream * output,
 missing_decoder:
   {
     GstCaps *caps;
+
     caps = gst_stream_get_caps (slot->active_stream);
+    GST_DEBUG_OBJECT (slot->src_pad,
+        "We are missing a decoder for %" GST_PTR_FORMAT, caps);
     *msg = gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps);
     gst_caps_unref (caps);
   }
