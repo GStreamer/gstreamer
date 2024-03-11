@@ -525,7 +525,7 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
   guint n_pools, i;
   GstCaps *caps;
   GstCapsFeatures *features_gl, *features_sys;
-  GstAllocator *allocator;
+  GstAllocator *allocator = NULL;
   GstAllocationParams params;
   gboolean use_sys_mem = FALSE;
   const gchar *target_pool_option_str = NULL;
@@ -567,20 +567,26 @@ _gl_memory_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
 
   gst_allocation_params_init (&params);
 
-  allocator =
-      GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
-          upload->context));
+
+  if (!use_sys_mem) {
+    allocator =
+        GST_ALLOCATOR (gst_gl_memory_allocator_get_default (upload->
+            upload->context));
+  }
+
   gst_query_add_allocation_param (query, allocator, &params);
-  gst_object_unref (allocator);
+  gst_clear_object (&allocator);
 
 #if GST_GL_HAVE_PLATFORM_EGL
   if (upload->upload->context
       && gst_gl_context_get_gl_platform (upload->upload->context) ==
       GST_GL_PLATFORM_EGL) {
-    allocator =
-        GST_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_EGL_ALLOCATOR_NAME));
+    if (!use_sys_mem) {
+      allocator =
+          GST_ALLOCATOR (gst_allocator_find (GST_GL_MEMORY_EGL_ALLOCATOR_NAME));
+    }
     gst_query_add_allocation_param (query, allocator, &params);
-    gst_object_unref (allocator);
+    gst_clear_object (&allocator);
   }
 #endif
 
