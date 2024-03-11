@@ -321,6 +321,7 @@ gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
 {
   GstBuffer *output_buffer;
   GstAudioDecoder *dec;
+  GstMapInfo info;
 
   output_buffer = NULL;
   dec = GST_AUDIO_DECODER (mpg123_decoder);
@@ -336,7 +337,7 @@ gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
     return GST_FLOW_OK;
   }
 
-  if (G_UNLIKELY (clip_end >= num_decoded_bytes)) {
+  if (G_UNLIKELY (clip_start + clip_end >= num_decoded_bytes)) {
     /* Fully-clipped frames still need to be finished, since they got
      * decoded properly, they are just made of padding samples. */
     GST_LOG_OBJECT (mpg123_decoder, "frame is fully clipped; "
@@ -351,24 +352,16 @@ gst_mpg123_audio_dec_push_decoded_bytes (GstMpg123AudioDec * mpg123_decoder,
   output_buffer = gst_audio_decoder_allocate_output_buffer (dec,
       num_decoded_bytes);
 
-  if (output_buffer == NULL) {
-    /* This is necessary to advance playback in time,
-     * even when nothing was decoded. */
-    return gst_audio_decoder_finish_frame (dec, NULL, 1);
+  if (gst_buffer_map (output_buffer, &info, GST_MAP_WRITE)) {
+    memcpy (info.data, decoded_bytes, num_decoded_bytes);
+    gst_buffer_unmap (output_buffer, &info);
   } else {
-    GstMapInfo info;
-
-    if (gst_buffer_map (output_buffer, &info, GST_MAP_WRITE)) {
-      memcpy (info.data, decoded_bytes, num_decoded_bytes);
-      gst_buffer_unmap (output_buffer, &info);
-    } else {
-      GST_ERROR_OBJECT (mpg123_decoder, "gst_buffer_map() returned NULL");
-      gst_buffer_unref (output_buffer);
-      output_buffer = NULL;
-    }
-
-    return gst_audio_decoder_finish_frame (dec, output_buffer, 1);
+    GST_ERROR_OBJECT (mpg123_decoder, "gst_buffer_map() returned NULL");
+    gst_buffer_unref (output_buffer);
+    output_buffer = NULL;
   }
+
+  return gst_audio_decoder_finish_frame (dec, output_buffer, 1);
 }
 
 
