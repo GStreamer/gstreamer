@@ -362,7 +362,6 @@ gst_d3d11_buffer_pool_start (GstBufferPool * pool)
   GstD3D11BufferPool *self = GST_D3D11_BUFFER_POOL (pool);
   GstD3D11BufferPoolPrivate *priv = self->priv;
   guint i;
-  gboolean ret;
 
   GST_DEBUG_OBJECT (self, "Start");
 
@@ -376,22 +375,6 @@ gst_d3d11_buffer_pool_start (GstBufferPool * pool)
       GST_ERROR_OBJECT (self, "Failed to activate allocator");
       return FALSE;
     }
-  }
-
-  ret = GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
-  if (!ret) {
-    GST_ERROR_OBJECT (self, "Failed to start");
-
-    for (i = 0; i < G_N_ELEMENTS (priv->alloc); i++) {
-      GstD3D11Allocator *alloc = priv->alloc[i];
-
-      if (!alloc)
-        break;
-
-      gst_d3d11_allocator_set_active (alloc, FALSE);
-    }
-
-    return FALSE;
   }
 
   return TRUE;
