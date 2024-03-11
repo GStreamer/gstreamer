@@ -1200,11 +1200,6 @@ invalid:
 static void
 gst_play_bin3_set_uri (GstPlayBin3 * playbin, const gchar * uri)
 {
-  if (uri == NULL) {
-    g_warning ("cannot set NULL uri");
-    return;
-  }
-
   if (!gst_playbin_uri_is_valid (playbin, uri)) {
     if (g_str_has_prefix (uri, "file:")) {
       GST_WARNING_OBJECT (playbin, "not entirely correct file URI '%s' - make "
