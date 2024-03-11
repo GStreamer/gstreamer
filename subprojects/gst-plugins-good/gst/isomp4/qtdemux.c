@@ -4033,7 +4033,7 @@ qtdemux_parse_sgpd (GstQTDemux * qtdemux, QtDemuxStream * stream,
       skip_byte_block = possible_pattern_info & 0x0f;
     }
 
-    kid_buf = _gst_buffer_new_wrapped ((guint8 *) kid, 16, NULL);
+    kid_buf = gst_buffer_new_memdup (kid, 16);
 
     props = gst_structure_new ("application/x-cenc",
         "iv_size", G_TYPE_UINT, iv_size,
@@ -4050,8 +4050,8 @@ qtdemux_parse_sgpd (GstQTDemux * qtdemux, QtDemuxStream * stream,
       }
 
       if (constant_iv != NULL) {
-        GstBuffer *constant_iv_buf = _gst_buffer_new_wrapped (
-            (guint8 *) constant_iv, constant_iv_size, NULL);
+        GstBuffer *constant_iv_buf = gst_buffer_new_memdup (
+            (guint8 *) constant_iv, constant_iv_size);
         gst_structure_set (props,
             "constant_iv_size", G_TYPE_UINT, constant_iv_size,
             "iv", GST_TYPE_BUFFER, constant_iv_buf, NULL);
