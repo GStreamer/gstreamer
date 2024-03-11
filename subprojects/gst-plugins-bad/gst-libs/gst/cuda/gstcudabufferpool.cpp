@@ -211,7 +211,7 @@ gst_cuda_buffer_pool_start (GstBufferPool * pool)
     return FALSE;
   }
 
-  return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
+  return TRUE;
 }
 
 static gboolean
