@@ -1599,6 +1599,8 @@ priv_gst_get_relocated_libgstreamer (void)
 #elif defined(HAVE_DLADDR)
   {
     Dl_info info;
+    char *real_fname = NULL;
+    long path_max = 0;
 
     GST_DEBUG ("attempting to retrieve libgstreamer-1.0 location using "
         "dladdr()");
@@ -1609,8 +1611,25 @@ priv_gst_get_relocated_libgstreamer (void)
       if (!info.dli_fname) {
         return NULL;
       }
+#ifdef PATH_MAX
+      path_max = PATH_MAX;
+#else
+      path_max = pathconf (info.dli_fname, _PC_PATH_MAX);
+      if (path_max <= 0)
+        path_max = 4096;
+#endif
 
-      dir = g_path_get_dirname (info.dli_fname);
+      real_fname = g_malloc (path_max);
+      if (realpath (info.dli_fname, real_fname)) {
+        dir = g_path_get_dirname (real_fname);
+        GST_DEBUG ("real directory location: %s", dir);
+      } else {
+        GST_ERROR ("could not canonicalize path %s: %s", info.dli_fname,
+            g_strerror (errno));
+        dir = g_path_get_dirname (info.dli_fname);
+      }
+      g_free (real_fname);
+
     } else {
       GST_LOG ("dladdr() failed");
       return NULL;
