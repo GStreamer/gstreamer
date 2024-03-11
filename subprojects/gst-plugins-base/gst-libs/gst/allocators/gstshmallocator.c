@@ -44,6 +44,7 @@
 #include "config.h"
 #endif
 
+#include <sys/stat.h>
 #include "gstshmallocator.h"
 
 #ifdef HAVE_MMAP
