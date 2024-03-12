@@ -161,13 +161,13 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
           a53_process_708_cc_data =
               (cc_count & CEA_708_PROCESS_CC_DATA_FLAG) != 0;
           if (!a53_process_708_cc_data) {
-            GST_WARNING_OBJECT (elt,
+            GST_DEBUG_OBJECT (elt,
                 "ignoring closed captions as CEA_708_PROCESS_CC_DATA_FLAG is not set");
           }
 
           process_708_em_data = (cc_count & CEA_708_PROCESS_EM_DATA_FLAG) != 0;
           if (!process_708_em_data) {
-            GST_WARNING_OBJECT (elt,
+            GST_DEBUG_OBJECT (elt,
                 "CEA_708_PROCESS_EM_DATA_FLAG flag is not set");
           }
           if (!gst_byte_reader_get_uint8 (br, &temp)) {
