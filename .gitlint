@@ -13,7 +13,7 @@ min-length=10
 
 # Ensure every title starts with a prefix
 [title-match-regex]
-regex=^[\w]+[\w, -\\/]*[\w]+: .*
+regex=^[\w]+[\w, -\\/{}]*[\w]+: .*
 
 # Ignore GDB backtraces
 [ignore-body-lines]
