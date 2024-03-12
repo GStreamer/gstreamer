@@ -65,6 +65,7 @@ enum
   PROP_MAX_SCHEDULED,
   PROP_CEA608_PADDING_STRATEGY,
   PROP_CEA608_VALID_PADDING_TIMEOUT,
+  PROP_SCHEDULE_TIMEOUT,
 };
 
 #define DEFAULT_MAX_SCHEDULED 30
@@ -72,6 +73,7 @@ enum
 #define DEFAULT_OUTPUT_PADDING TRUE
 #define DEFAULT_CEA608_PADDING_STRATEGY CC_BUFFER_CEA608_PADDING_STRATEGY_VALID
 #define DEFAULT_CEA608_VALID_PADDING_TIMEOUT GST_CLOCK_TIME_NONE
+#define DEFAULT_SCHEDULE_TIMEOUT GST_CLOCK_TIME_NONE
 
 typedef struct
 {
@@ -277,25 +279,24 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
     const GstVideoTimeCode * tc)
 {
   GstMapInfo map;
-  GstClockTime pts, duration;
+  GstClockTime pts, duration, running_time;
+  GstAggregatorPad *caption_pad;
 
   pts = GST_BUFFER_PTS (caption_buf);
   duration = GST_BUFFER_DURATION (caption_buf);
 
-  if (self->current_scheduled + 1 >= self->max_scheduled) {
-    GstClockTime stream_time, running_time;
-    GstAggregatorPad *caption_pad;
+  caption_pad =
+      GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
+          (self), "caption"));
+  running_time =
+      gst_segment_to_running_time (&caption_pad->segment, GST_FORMAT_TIME, pts);
 
-    caption_pad =
-        GST_AGGREGATOR_PAD_CAST (gst_element_get_static_pad (GST_ELEMENT_CAST
-            (self), "caption"));
+  if (self->current_scheduled + 1 >= self->max_scheduled) {
+    GstClockTime stream_time;
 
     GST_WARNING_OBJECT (self,
         "scheduled queue runs too long, discarding stored");
 
-    running_time =
-        gst_segment_to_running_time (&caption_pad->segment, GST_FORMAT_TIME,
-        pts);
     stream_time =
         gst_segment_to_stream_time (&caption_pad->segment, GST_FORMAT_TIME,
         pts);
@@ -306,9 +307,11 @@ schedule_caption (GstCCCombiner * self, GstBuffer * caption_buf,
 
     cc_buffer_discard (self->cc_buffer);
     self->current_scheduled = 0;
-
-    gst_clear_object (&caption_pad);
   }
+
+  self->last_caption_ts = running_time;
+
+  gst_clear_object (&caption_pad);
 
   gst_buffer_map (caption_buf, &map, GST_MAP_READ);
 
@@ -345,6 +348,24 @@ dequeue_caption (GstCCCombiner * self, GstVideoTimeCode * tc, gboolean drain)
 
   if (drain && cc_buffer_is_empty (self->cc_buffer))
     return;
+
+  if (self->prop_schedule_timeout != GST_CLOCK_TIME_NONE) {
+    if (self->last_caption_ts == GST_CLOCK_TIME_NONE) {
+      return;
+    }
+
+    if (self->current_video_running_time > self->last_caption_ts
+        && self->current_video_running_time - self->last_caption_ts
+        > self->prop_schedule_timeout) {
+      GST_LOG_OBJECT (self, "Not outputting caption as last caption buffer ts %"
+          GST_TIME_FORMAT " is more than the schedule timeout %" GST_TIME_FORMAT
+          " from the current output time %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (self->last_caption_ts),
+          GST_TIME_ARGS (self->prop_schedule_timeout),
+          GST_TIME_ARGS (self->current_video_running_time));
+      return;
+    }
+  }
 
   caption_data.caption_type = self->caption_type;
   switch (self->caption_type) {
@@ -859,6 +880,11 @@ gst_cc_combiner_sink_event (GstAggregator * aggregator,
       }
       break;
     }
+    case GST_EVENT_STREAM_START:{
+      if (strcmp (GST_OBJECT_NAME (agg_pad), "caption") == 0) {
+        self->last_caption_ts = GST_CLOCK_TIME_NONE;
+      }
+    }
     default:
       break;
   }
@@ -1138,6 +1164,9 @@ gst_cc_combiner_set_property (GObject * object, guint prop_id,
       cc_buffer_set_cea608_valid_timeout (self->cc_buffer,
           self->prop_cea608_valid_padding_timeout);
       break;
+    case PROP_SCHEDULE_TIMEOUT:
+      self->prop_schedule_timeout = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1165,6 +1194,9 @@ gst_cc_combiner_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CEA608_VALID_PADDING_TIMEOUT:
       g_value_set_uint64 (value, self->prop_cea608_valid_padding_timeout);
+      break;
+    case PROP_SCHEDULE_TIMEOUT:
+      g_value_set_uint64 (value, self->prop_schedule_timeout);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1294,6 +1326,24 @@ gst_cc_combiner_class_init (GstCCCombinerClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
 
+  /**
+   * GstCCCombiner:schedule-timeout:
+   *
+   * Timeout to apply when the caption pad is EOS and schedule=true.  On
+   * reaching the timeout, no caption data will be placed on the outgoing
+   * buffers until receiving a new stream.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_SCHEDULE_TIMEOUT,
+      g_param_spec_uint64 ("schedule-timeout",
+          "Schedule Timeout",
+          "How long after not receiving caption data on the caption pad to continue adding (padding) caption data on output buffers",
+          0, G_MAXUINT64, DEFAULT_SCHEDULE_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_PLAYING));
+
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
       &sinktemplate, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (gstelement_class,
@@ -1347,8 +1397,10 @@ gst_cc_combiner_init (GstCCCombiner * self)
   self->prop_cea608_padding_strategy = DEFAULT_CEA608_PADDING_STRATEGY;
   self->prop_cea608_valid_padding_timeout =
       DEFAULT_CEA608_VALID_PADDING_TIMEOUT;
+  self->prop_schedule_timeout = DEFAULT_SCHEDULE_TIMEOUT;
   self->cdp_hdr_sequence_cntr = 0;
   self->cdp_fps_entry = &null_fps_entry;
+  self->last_caption_ts = GST_CLOCK_TIME_NONE;
 
   self->cc_buffer = cc_buffer_new ();
   cc_buffer_set_max_buffer_time (self->cc_buffer, GST_CLOCK_TIME_NONE);

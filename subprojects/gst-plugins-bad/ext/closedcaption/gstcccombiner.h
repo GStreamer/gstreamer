@@ -61,11 +61,13 @@ struct _GstCCCombiner
   gboolean prop_output_padding;
   CCBufferCea608PaddingStrategy prop_cea608_padding_strategy;
   GstClockTime prop_cea608_valid_padding_timeout;
+  GstClockTime prop_schedule_timeout;
 
   gboolean schedule;
   guint max_scheduled;
   gboolean output_padding;
   guint current_scheduled;
+  GstClockTime last_caption_ts;
 
   CCBuffer *cc_buffer;
   guint16 cdp_hdr_sequence_cntr;
