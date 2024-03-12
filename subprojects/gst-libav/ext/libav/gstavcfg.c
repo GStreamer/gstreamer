@@ -442,7 +442,9 @@ install_opts (GObjectClass * gobject_class, const AVClass ** obj, guint prop_id,
         break;
         /* TODO: didn't find options for the video encoders with
          * the following type, add support if needed */
+#if LIBAVUTIL_VERSION_MAJOR < 59
       case AV_OPT_TYPE_CHANNEL_LAYOUT:
+#endif
       case AV_OPT_TYPE_COLOR:
       case AV_OPT_TYPE_VIDEO_RATE:
       case AV_OPT_TYPE_SAMPLE_FMT:
