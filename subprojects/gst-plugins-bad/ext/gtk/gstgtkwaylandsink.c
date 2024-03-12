@@ -77,6 +77,8 @@ static gboolean gst_gtk_wayland_sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
 static GstFlowReturn gst_gtk_wayland_sink_show_frame (GstVideoSink * bsink,
     GstBuffer * buffer);
+static void gst_gtk_wayland_sink_set_fullscreen (GstGtkWaylandSink * self,
+    gboolean fullscreen);
 static void gst_gtk_wayland_sink_set_rotate_method (GstGtkWaylandSink * self,
     GstVideoOrientationMethod method, gboolean from_tag);
 
@@ -91,7 +93,8 @@ enum
   PROP_0,
   PROP_WIDGET,
   PROP_DISPLAY,
-  PROP_ROTATE_METHOD
+  PROP_ROTATE_METHOD,
+  PROP_FULLSCREEN,
 };
 
 typedef struct _GstGtkWaylandSinkPrivate
@@ -113,6 +116,7 @@ typedef struct _GstGtkWaylandSinkPrivate
 
   gboolean video_info_changed;
   GstVideoInfo video_info;
+  gboolean fullscreen;
 
   gboolean redraw_pending;
   GMutex render_lock;
@@ -162,6 +166,11 @@ gst_gtk_wayland_sink_class_init (GstGtkWaylandSinkClass * klass)
           "rotate method",
           "rotate method",
           GST_TYPE_VIDEO_ORIENTATION_METHOD, GST_VIDEO_ORIENTATION_IDENTITY,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen", "Fullscreen",
+          "Whether the surface should be made fullscreen ", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->change_state =
@@ -377,6 +386,11 @@ gst_gtk_wayland_sink_get_property (GObject * object, guint prop_id,
     case PROP_ROTATE_METHOD:
       g_value_set_enum (value, priv->current_rotate_method);
       break;
+    case PROP_FULLSCREEN:
+      GST_OBJECT_LOCK (self);
+      g_value_set_boolean (value, priv->fullscreen);
+      GST_OBJECT_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -393,6 +407,11 @@ gst_gtk_wayland_sink_set_property (GObject * object, guint prop_id,
     case PROP_ROTATE_METHOD:
       gst_gtk_wayland_sink_set_rotate_method (self, g_value_get_enum (value),
           FALSE);
+      break;
+    case PROP_FULLSCREEN:
+      GST_OBJECT_LOCK (self);
+      gst_gtk_wayland_sink_set_fullscreen (self, g_value_get_boolean (value));
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -592,6 +611,11 @@ gst_gtk_wayland_sink_start_on_main (GstGtkWaylandSink * self)
     gtk_window_set_default_size (GTK_WINDOW (priv->gtk_window), 640, 480);
     gtk_window_set_title (GTK_WINDOW (priv->gtk_window),
         "Gst GTK Wayland Sink");
+    if (priv->fullscreen) {
+      gtk_window_fullscreen (GTK_WINDOW (priv->gtk_window));
+    } else {
+      gtk_window_unfullscreen (GTK_WINDOW (priv->gtk_window));
+    }
     gtk_container_add (GTK_CONTAINER (priv->gtk_window), toplevel);
     priv->gtk_window_destroy_id = g_signal_connect (priv->gtk_window, "destroy",
         G_CALLBACK (window_destroy_cb), self);
@@ -1205,6 +1229,28 @@ done:
     g_mutex_unlock (&priv->render_lock);
     return ret;
   }
+}
+
+static void
+gst_gtk_wayland_sink_set_fullscreen (GstGtkWaylandSink * self,
+    gboolean fullscreen)
+{
+  GstGtkWaylandSinkPrivate *priv =
+      gst_gtk_wayland_sink_get_instance_private (self);
+
+  if (fullscreen == priv->fullscreen)
+    return;
+
+  g_mutex_lock (&priv->render_lock);
+  priv->fullscreen = fullscreen;
+  if (priv->gtk_window) {
+    if (fullscreen) {
+      gtk_window_fullscreen (GTK_WINDOW (priv->gtk_window));
+    } else {
+      gtk_window_unfullscreen (GTK_WINDOW (priv->gtk_window));
+    }
+  }
+  g_mutex_unlock (&priv->render_lock);
 }
 
 static void
