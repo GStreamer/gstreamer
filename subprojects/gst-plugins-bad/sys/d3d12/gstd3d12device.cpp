@@ -670,16 +670,6 @@ gst_d3d12_device_find_adapter (const GstD3D12DeviceConstructData * data,
     IDXGIFactory2 * factory, guint * index, IDXGIAdapter1 ** rst)
 {
   HRESULT hr;
-  UINT factory_flags = 0;
-
-  if (gst_d3d12_device_enable_debug ())
-    factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
-
-  hr = CreateDXGIFactory2 (factory_flags, IID_PPV_ARGS (&factory));
-  if (FAILED (hr)) {
-    GST_WARNING ("cannot create dxgi factory, hr: 0x%x", (guint) hr);
-    return hr;
-  }
 
   switch (data->type) {
     case GST_D3D12_DEVICE_CONSTRUCT_FOR_INDEX:{
@@ -734,9 +724,6 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_device_debug,
       "d3d12device", 0, "d3d12 device object");
-
-  if (gst_d3d12_device_enable_debug ())
-    factory_flags |= DXGI_CREATE_FACTORY_DEBUG;
 
   hr = CreateDXGIFactory2 (factory_flags, IID_PPV_ARGS (&factory));
   if (FAILED (hr)) {
