@@ -1011,9 +1011,10 @@ gst_ffmpegvidenc_register (GstPlugin * plugin)
         in_plugin->id == AV_CODEC_ID_V210X ||
         in_plugin->id == AV_CODEC_ID_V308 ||
         in_plugin->id == AV_CODEC_ID_V408 ||
-        in_plugin->id == AV_CODEC_ID_V410 ||
-        in_plugin->id == AV_CODEC_ID_R210
+        in_plugin->id == AV_CODEC_ID_V410 || in_plugin->id == AV_CODEC_ID_R210
+#if LIBAVCODEC_VERSION_MAJOR < 61
         || in_plugin->id == AV_CODEC_ID_AYUV
+#endif
         || in_plugin->id == AV_CODEC_ID_Y41P
         || in_plugin->id == AV_CODEC_ID_012V
         || in_plugin->id == AV_CODEC_ID_YUV4
