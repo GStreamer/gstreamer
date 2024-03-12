@@ -1,8 +1,8 @@
 name: Trigger Jenkins
 on:
   push:
-    tags:
-      - 'v*.*'
+    branches:
+      - 'vicon_main_1.22'
 
 jobs:
   Jenkins_Job:
@@ -10,4 +10,4 @@ jobs:
     runs-on: self-hosted
     steps:
       - name: Step 1 - Post to jenkins
-        run: curl.exe -X POST "http://build:11ae983652068d3bdd54dfb6a552a193eb@192.168.1.156:8080/job/GStreamer_1.22/build"
+        run: curl.exe -X POST "http://build:11ae983652068d3bdd54dfb6a552a193eb@192.168.1.156:8080/job/GStreamer/build"
