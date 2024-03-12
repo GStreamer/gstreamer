@@ -65,7 +65,9 @@ static const struct
       AV_CH_TOP_BACK_CENTER, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_CENTER}, {
       AV_CH_TOP_BACK_RIGHT, GST_AUDIO_CHANNEL_POSITION_TOP_REAR_RIGHT}, {
       AV_CH_STEREO_LEFT, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT}, {
-      AV_CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}
+      AV_CH_STEREO_RIGHT, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT}, {
+      AV_CH_WIDE_LEFT, GST_AUDIO_CHANNEL_POSITION_WIDE_LEFT}, {
+      AV_CH_WIDE_RIGHT, GST_AUDIO_CHANNEL_POSITION_WIDE_RIGHT},
 };
 
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 28, 100)
@@ -673,10 +675,12 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
 
     /* so we must be after restricted caps in this case */
     switch (codec_id) {
-      case AV_CODEC_ID_AAC:
-      case AV_CODEC_ID_AAC_LATM:
       case AV_CODEC_ID_DTS:
         maxchannels = 6;
+        break;
+      case AV_CODEC_ID_AAC:
+      case AV_CODEC_ID_AAC_LATM:
+        maxchannels = 16;
         break;
       case AV_CODEC_ID_MP2:
       {
