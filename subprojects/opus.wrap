@@ -1,7 +1,9 @@
-[wrap-git]
-directory=opus
-url=https://gitlab.xiph.org/xiph/opus.git
-revision=6b6035ae4a29abbd237463d84a45fbeb0d92bc18
+[wrap-file]
+directory = opus-1.5.1
+source_url = https://downloads.xiph.org/releases/opus/opus-1.5.1.tar.gz
+source_fallback_url = https://gstreamer.freedesktop.org/data/src/mirror/opus-1.5.1.tar.gz
+source_filename = opus-1.5.1.tar.gz
+source_hash = b84610959b8d417b611aa12a22565e0a3732097c6389d19098d844543e340f85
 
 [provide]
-opus=opus_dep
+opus = opus_dep

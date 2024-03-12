@@ -3,3 +3,4 @@ directory=FFmpeg
 url=https://gitlab.freedesktop.org/gstreamer/meson-ports/ffmpeg.git
 push-url=git@gitlab.freedesktop.org:gstreamer/meson-ports/ffmpeg.git
 revision=meson-6.1
+depth=1
