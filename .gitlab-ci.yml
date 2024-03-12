@@ -45,7 +45,9 @@ variables:
     -Dlibnice:examples=disabled
     -Dlibnice:gupnp=disabled
     -Dopenh264:tests=disabled
+    -Dgst-plugins-base:opus=enabled
     -Dgst-plugins-good:soup-lookup-dep=true
+    -Dgst-plugins-good:vpx=enabled
     -Dpygobject:tests=false
     -Dpython=enabled
     -Dlibav=enabled
