@@ -834,7 +834,6 @@ _gst_d3d11_device_get_adapter (const GstD3D11DeviceConstructData * data,
       ComPtr < IDXGIDevice > dxgi_device;
       ComPtr < IDXGIAdapter > adapter;
       ID3D11Device *device = data->data.device;
-      guint luid;
 
       hr = device->QueryInterface (IID_PPV_ARGS (&dxgi_device));
       if (FAILED (hr))
@@ -852,7 +851,7 @@ _gst_d3d11_device_get_adapter (const GstD3D11DeviceConstructData * data,
       if (FAILED (hr))
         return hr;
 
-      luid = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
+      auto luid = gst_d3d11_luid_to_int64 (&desc.AdapterLuid);
 
       for (guint i = 0;; i++) {
         DXGI_ADAPTER_DESC tmp_desc;
