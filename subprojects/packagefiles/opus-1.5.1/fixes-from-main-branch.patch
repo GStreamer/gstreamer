@@ -1,0 +1,303 @@
+From 84a85e9e63ea687544375fbed3100051249a033b Mon Sep 17 00:00:00 2001
+From: Jean-Marc Valin <jmvalin@jmvalin.ca>
+Date: Tue, 12 Mar 2024 02:03:22 -0400
+Subject: [PATCH 1/8] Fix meson AVX2 fixed-point
+
+---
+ silk/meson.build | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
+
+diff --git a/silk/meson.build b/silk/meson.build
+index 80a59b05..35d95578 100644
+--- a/silk/meson.build
++++ b/silk/meson.build
+@@ -44,9 +44,7 @@ foreach intr_name : ['sse4_1', 'avx2', 'neon_intr']
+   endif
+ 
+   intr_sources = get_variable('silk_sources_' + intr_name)
+-  if opt_fixed_point
+-    intr_sources += get_variable('silk_sources_fixed_' + intr_name)
+-  else
++  if not opt_fixed_point
+     intr_sources += get_variable('silk_sources_float_' + intr_name)
+   endif
+ 
+-- 
+2.44.0
+
+From 556c2d446b396cff11987ac1b74ed7bbf0297d78 Mon Sep 17 00:00:00 2001
+From: Jean-Marc Valin <jmvalin@jmvalin.ca>
+Date: Wed, 13 Mar 2024 15:11:08 -0400
+Subject: [PATCH 3/8] Adding MSVC AVX2 support for meson build
+
+Extracted from this MR from Marcus Asteborg:
+https://gitlab.xiph.org/xiph/opus/-/merge_requests/82/
+---
+ meson.build | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 8624f0c3..2bb85d6f 100644
+--- a/meson.build
++++ b/meson.build
+@@ -490,10 +490,10 @@ if not opt_intrinsics.disabled()
+   elif host_cpu_family in ['x86', 'x86_64']
+     # XXX: allow external override/specification of the flags
+     x86_intrinsics = [
+-      [ 'SSE', 'xmmintrin.h', '__m128', '_mm_setzero_ps()', ['-msse'] ],
+-      [ 'SSE2', 'emmintrin.h', '__m128i', '_mm_setzero_si128()', ['-msse2'] ],
+-      [ 'SSE4.1', 'smmintrin.h', '__m128i', '_mm_setzero_si128(); mtest = _mm_cmpeq_epi64(mtest, mtest)', ['-msse4.1'] ],
+-      [ 'AVX2', 'immintrin.h', '__m256i', '_mm256_abs_epi32(_mm256_setzero_si256())', ['-mavx', '-mfma', '-mavx2'] ],
++      [ 'SSE', 'xmmintrin.h', '__m128', '_mm_setzero_ps()', ['-msse'], [] ],
++      [ 'SSE2', 'emmintrin.h', '__m128i', '_mm_setzero_si128()', ['-msse2'], [] ],
++      [ 'SSE4.1', 'smmintrin.h', '__m128i', '_mm_setzero_si128(); mtest = _mm_cmpeq_epi64(mtest, mtest)', ['-msse4.1'], [] ],
++      [ 'AVX2', 'immintrin.h', '__m256i', '_mm256_abs_epi32(_mm256_setzero_si256())', ['-mavx', '-mfma', '-mavx2'], ['/arch:AVX2'] ],
+     ]
+ 
+     foreach intrin : x86_intrinsics
+@@ -504,9 +504,11 @@ if not opt_intrinsics.disabled()
+                           return *((unsigned char *) &mtest) != 0;
+                         }'''.format(intrin[1],intrin[2],intrin[3])
+       intrin_name = intrin[0]
+-      # Intrinsics arguments are not available with MSVC-like compilers
+-      intrin_args = cc.get_argument_syntax() == 'msvc' ? [] : intrin[4]
+-      if cc.links(intrin_check, name : 'compiler supports @0@ intrinsics'.format(intrin_name))
++      intrin_args = cc.get_argument_syntax() == 'msvc' ? intrin[5] : intrin[4]
++      if cc.get_argument_syntax() == 'msvc' and intrin_args.length() == 0 and cc.links(intrin_check, name : 'compiler supports @0@ intrinsics'.format(intrin_name))
++        may_have_intrin = true
++        presume_intrin = opus_can_presume_simd
++      elif cc.get_argument_syntax() != 'msvc' and cc.links(intrin_check, name : 'compiler supports @0@ intrinsics'.format(intrin_name))
+         may_have_intrin = true
+         presume_intrin = opus_can_presume_simd
+       elif intrin_args.length() > 0
+-- 
+2.44.0
+
+From e7d4e82bc065747d94829d93cc9d8a9d1eab7951 Mon Sep 17 00:00:00 2001
+From: "Timothy B. Terriberry" <tterribe@xiph.org>
+Date: Thu, 14 Mar 2024 08:00:53 -0700
+Subject: [PATCH 4/8] Fix _mm_loadu_si32 detection for vendored Clang.
+
+Apple uses different __clang_major__ version numbers than upstream,
+ so our test did not work.
+This caused compilation failures with, e.g., XCode 10.1, which
+ reports __clang_major__ as 10 despite being forked from upstream's
+ 7.0 branch.
+
+Fixes #2369
+
+Signed-off-by: Jean-Marc Valin <jmvalin@jmvalin.ca>
+---
+ celt/x86/x86cpu.h | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/celt/x86/x86cpu.h b/celt/x86/x86cpu.h
+index 8ae9be8d..1e5b6a4c 100644
+--- a/celt/x86/x86cpu.h
++++ b/celt/x86/x86cpu.h
+@@ -68,8 +68,22 @@ int opus_select_arch(void);
+   Use this to work around those restrictions (which should hopefully all get
+    optimized to a single MOVD instruction).
+   GCC implemented _mm_loadu_si32() since GCC 11; HOWEVER, there is a bug!
+-  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99754 */
+-#  if !defined(_MSC_VER) && !OPUS_GNUC_PREREQ(11,3) && !(defined(__clang__) && (__clang_major__ >= 8))
++  https://gcc.gnu.org/bugzilla/show_bug.cgi?id=99754
++  LLVM implemented _mm_loadu_si32() since Clang 8.0, however the
++   __clang_major__ version number macro is unreliable, as vendors
++   (specifically, Apple) will use different numbering schemes than upstream.
++  Clang's advice is "use feature detection", but they do not provide feature
++   detection support for specific SIMD functions.
++  We follow the approach from the SIMDe project and instead detect unrelated
++   features that should be available in the version we want (see
++   <https://github.com/simd-everywhere/simde/blob/master/simde/simde-detect-clang.h>).*/
++#  if defined(__clang__)
++#   if __has_warning("-Wextra-semi-stmt") || \
++ __has_builtin(__builtin_rotateleft32)
++#    define OPUS_CLANG_8 (1)
++#   endif
++#  endif
++#  if !defined(_MSC_VER) && !OPUS_GNUC_PREREQ(11,3) && !defined(OPUS_CLANG_8)
+ #   include <string.h>
+ #   include <emmintrin.h>
+ 
+-- 
+2.44.0
+
+From ca901e65aab8d4b5b85d2cb2649819c24e0b1602 Mon Sep 17 00:00:00 2001
+From: Xavier Claessens <xavier.claessens@collabora.com>
+Date: Tue, 20 Jun 2023 08:18:00 -0400
+Subject: [PATCH 5/8] meson: Use pkgconfig generator
+
+It is much less error prone because Meson can detect dependencies
+automatically. As bonus Meson will also generate the opus-uninstalled.pc
+file.
+
+Signed-off-by: Jean-Marc Valin <jmvalin@jmvalin.ca>
+---
+ meson.build | 28 +++++-----------------------
+ 1 file changed, 5 insertions(+), 23 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index 2bb85d6f..5638dd1d 100644
+--- a/meson.build
++++ b/meson.build
+@@ -662,29 +662,11 @@ if not opt_tests.disabled()
+   subdir('tests')
+ endif
+ 
+-# pkg-config files (not using pkg module so we can use the existing .pc.in file)
+-pkgconf = configuration_data()
+-
+-pkgconf.set('prefix', join_paths(get_option('prefix')))
+-pkgconf.set('exec_prefix', '${prefix}')
+-pkgconf.set('libdir', '${prefix}/@0@'.format(get_option('libdir')))
+-pkgconf.set('includedir', '${prefix}/@0@'.format(get_option('includedir')))
+-pkgconf.set('VERSION', opus_version)
+-pkgconf.set('PC_BUILD', pc_build)
+-pkgconf.set('LIBM', libm.found() ? '-lm' : '')
+-
+-pkg_install_dir = '@0@/pkgconfig'.format(get_option('libdir'))
+-
+-configure_file(input : 'opus.pc.in',
+-  output : 'opus.pc',
+-  configuration : pkgconf,
+-  install_dir : pkg_install_dir)
+-
+-# The uninstalled one has hardcoded libtool + static lib stuff, skip it for now
+-#configure_file(input : 'opus-uninstalled.pc.in',
+-#  output : 'opus-uninstalled.pc',
+-#  configuration : pkgconf,
+-#  install : false)
++pkg = import('pkgconfig')
++pkg.generate(opus_lib,
++  description: 'Opus IETF audio codec (floating-point build)',
++  subdirs: 'opus',
++)
+ 
+ doxygen = find_program('doxygen', required: get_option('docs'))
+ if doxygen.found()
+-- 
+2.44.0
+
+From 12239ced101ffee481781a2eb3b8c88bea523085 Mon Sep 17 00:00:00 2001
+From: Jean-Marc Valin <jmvalin@jmvalin.ca>
+Date: Thu, 14 Mar 2024 15:17:33 -0400
+Subject: [PATCH 6/8] renaming DNN options in meson
+
+---
+ dnn/meson.build   |  6 +++---
+ meson.build       | 20 ++++++++++++++++----
+ meson_options.txt |  8 ++++----
+ tests/meson.build |  4 ++++
+ 5 files changed, 28 insertions(+), 12 deletions(-)
+
+diff --git a/dnn/meson.build b/dnn/meson.build
+index 737d4a02..7b324016 100644
+--- a/dnn/meson.build
++++ b/dnn/meson.build
+@@ -1,12 +1,12 @@
+ dnn_sources = sources['DEEP_PLC_SOURCES']
+ 
+ dred_sources = sources['DRED_SOURCES']
+-if opt_enable_dred
++if opt_dred.enabled()
+   dnn_sources += dred_sources
+ endif
+ 
+ osce_sources = sources['OSCE_SOURCES']
+-if opt_enable_osce
++if opt_osce.enabled()
+   dnn_sources += osce_sources
+ endif
+ 
+@@ -51,7 +51,7 @@ if host_machine.system() == 'windows'
+ endif
+ 
+ 
+-if opt_enable_deep_plc
++if opt_deep_plc.enabled()
+  dnn_lib = static_library('opus-dnn',
+   dnn_sources,
+   c_args: dnn_c_args,
+diff --git a/meson.build b/meson.build
+index 5638dd1d..d040ddfd 100644
+--- a/meson.build
++++ b/meson.build
+@@ -146,9 +146,6 @@ opts = [
+   [ 'fixed-point-debug', 'FIXED_DEBUG' ],
+   [ 'custom-modes', 'CUSTOM_MODES' ],
+   [ 'float-approx', 'FLOAT_APPROX' ],
+-  [ 'enable-deep-plc', 'ENABLE_DEEP_PLC' ],
+-  [ 'enable-dred', 'ENABLE_DRED' ],
+-  [ 'enable-osce', 'ENABLE_OSCE' ],
+   [ 'assertions', 'ENABLE_ASSERTIONS' ],
+   [ 'hardening', 'ENABLE_HARDENING' ],
+   [ 'fuzzing', 'FUZZING' ],
+@@ -164,6 +161,21 @@ foreach opt : opts
+   set_variable('opt_' + opt[0].underscorify(), opt_foo)
+ endforeach
+ 
++feat = [
++  [ 'deep-plc', 'ENABLE_DEEP_PLC' ],
++  [ 'dred', 'ENABLE_DRED' ],
++  [ 'osce', 'ENABLE_OSCE' ],
++]
++
++foreach opt : feat
++  # we assume these are all boolean options
++  opt_foo = get_option(opt[0])
++  if opt_foo.enabled()
++    opus_conf.set(opt[1], 1)
++  endif
++  set_variable('opt_' + opt[0].underscorify(), opt_foo)
++endforeach
++
+ opt_asm = get_option('asm')
+ opt_rtcd = get_option('rtcd')
+ opt_intrinsics = get_option('intrinsics')
+@@ -175,7 +187,7 @@ if disable_float_api
+   opus_conf.set('DISABLE_FLOAT_API', 1)
+ endif
+ 
+-if not get_option('enable-dnn-debug-float')
++if not get_option('dnn-debug-float').enabled()
+   opus_conf.set('DISABLE_DEBUG_FLOAT', 1)
+ endif
+ 
+diff --git a/meson_options.txt b/meson_options.txt
+index 46099276..a2981d0b 100644
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -7,10 +7,10 @@ option('rtcd', type : 'feature', value : 'auto', description : 'Run-time CPU cap
+ option('asm', type : 'feature', value : 'auto', description : 'Assembly optimizations for ARM (fixed-point)')
+ option('intrinsics', type : 'feature', value : 'auto', description : 'Intrinsics optimizations for ARM NEON or x86')
+ 
+-option('enable-deep-plc', type : 'boolean', value : false, description : 'Enable Deep Packet Loss Concealment (PLC)')
+-option('enable-dred', type : 'boolean', value : false, description : 'Enable Deep Redundancy (DRED)')
+-option('enable-osce', type : 'boolean', value : false, description : 'Enable Opus Speech Coding Enhancement (OSCE)')
+-option('enable-dnn-debug-float', type : 'boolean', value : false, description : 'Compute DNN using float weights')
++option('deep-plc', type : 'feature', value : 'disabled', description : 'Enable Deep Packet Loss Concealment (PLC)')
++option('dred', type : 'feature', value : 'disabled', description : 'Enable Deep Redundancy (DRED)')
++option('osce', type : 'feature', value : 'disabled', description : 'Enable Opus Speech Coding Enhancement (OSCE)')
++option('dnn-debug-float', type : 'feature', value : 'disabled', description : 'Compute DNN using float weights')
+ 
+ option('custom-modes', type : 'boolean', value : false, description : 'Enable non-Opus modes, e.g. 44.1 kHz & 2^n frames')
+ option('extra-programs', type : 'feature', value : 'auto', description : 'Extra programs (demo and tests)')
+diff --git a/tests/meson.build b/tests/meson.build
+index 1c1ddf07..1a4040b5 100644
+--- a/tests/meson.build
++++ b/tests/meson.build
+@@ -8,6 +8,10 @@ opus_tests = [
+   ['test_opus_projection'],
+ ]
+ 
++if opt_dred.enabled()
++  opus_tests += [['test_opus_dred', [], 60 * 20]]
++endif
++
+ foreach t : opus_tests
+   test_name = t.get(0)
+   extra_srcs = t.get(1, [])
+-- 
+2.44.0
+
