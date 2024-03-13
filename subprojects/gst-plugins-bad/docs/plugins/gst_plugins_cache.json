@@ -247187,6 +247187,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "connection-key": {
+                        "blurb": "Identifier for sharing SRT connection when listening, elements with the same connection-key will listen on the same UDP socket",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "latency": {
                         "blurb": "Minimum latency (milliseconds)",
                         "conditionally-available": false,
@@ -247433,6 +247445,18 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
+                        "writable": true
+                    },
+                    "connection-key": {
+                        "blurb": "Identifier for sharing SRT connection when listening, elements with the same connection-key will listen on the same UDP socket",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "keep-listening": {
@@ -247743,6 +247767,18 @@
                         "type": "gboolean",
                         "writable": true
                     },
+                    "connection-key": {
+                        "blurb": "Identifier for sharing SRT connection when listening, elements with the same connection-key will listen on the same UDP socket",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
                     "latency": {
                         "blurb": "Minimum latency (milliseconds)",
                         "conditionally-available": false,
@@ -247978,6 +248014,18 @@
                         "mutable": "null",
                         "readable": true,
                         "type": "gboolean",
+                        "writable": true
+                    },
+                    "connection-key": {
+                        "blurb": "Identifier for sharing SRT connection when listening, elements with the same connection-key will listen on the same UDP socket",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gchararray",
                         "writable": true
                     },
                     "keep-listening": {

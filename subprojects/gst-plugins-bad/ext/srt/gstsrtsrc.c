@@ -39,6 +39,30 @@
  * gst-launch-1.0 -v srtclientsrc uri="srt://192.168.1.10:7001?mode=rendez-vous" ! fakesink
  * ]| This pipeline shows how to connect SRT server by setting #GstSRTSrc:uri property and using the rendez-vous mode.
  *
+ * Additionally, in listener mode, this element supports sharing the underlying
+ * SRT connection in order to receive multiple SRT stream using a single UDP
+ * port.
+ *
+ * Connection sharing is acheived using the `connection-key` property, two
+ * receivers, in the same application, with the same `connection-key` value
+ * will share their SRT connection. The demultiplexing of the streams will
+ * be performed using the `streamid` property.
+ *
+ * ## Example sender- and receiver for SRT connection sharing
+ * |[
+ *  gst-launch-1.0 -v \
+ *    srtsrc connection-key=multiplex uri="srt://127.0.0.1:5000?mode=listener&streamid=one" ! tsparse ! queue ! filesink location=one.ts \
+ *    srtsrc connection-key=multiplex uri="srt://127.0.0.1:5000?mode=listener&streamid=two" ! tsparse ! queue ! filesink location=two.ts
+ * |] This pipeline shows two SRT listeners sharing one UDP port
+ *
+ * |[
+ *  gst-launch-1.0 -v mpegtsmux name=muxone alignment=7 mpegtsmux name=muxtwo alignment=7 \
+ *    videotestsrc pattern=ball ! queue ! x264enc ! muxone. \
+ *    videotestsrc ! queue ! x264enc ! muxtwo. \
+ *    muxone. ! queue ! srtsink uri="srt://127.0.0.1:5000?mode=caller&streamid=one" \
+ *    muxtwo. ! queue ! srtsink uri="srt://127.0.0.1:5000?mode=caller&streamid=two"
+ * |] This pipeline shows two SRT callers sending to the same port with different `streamid`
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -120,9 +144,11 @@ gst_srt_src_start (GstBaseSrc * bsrc)
 
   if (!ret) {
     /* ensure error is posted since state change will fail */
-    GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
-        ("Failed to open SRT: %s", error->message));
-    g_clear_error (&error);
+    if (error != NULL) {
+      GST_ELEMENT_ERROR (self, RESOURCE, OPEN_READ, (NULL),
+          ("Failed to open SRT: %s", error->message));
+      g_clear_error (&error);
+    }
   }
 
   /* Reset expected pktseq */
@@ -290,6 +316,10 @@ static void
 gst_srt_src_finalize (GObject * object)
 {
   GstSRTSrc *self = GST_SRT_SRC (object);
+  GstSRTConnectionMode connection_mode = GST_SRT_CONNECTION_MODE_NONE;
+
+  gst_structure_get_enum (self->srtobject->parameters, "mode",
+      GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
 
   gst_srt_object_destroy (self->srtobject);
 

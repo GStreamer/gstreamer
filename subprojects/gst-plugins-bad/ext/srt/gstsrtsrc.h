@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
+#include "gstsrtlistenerconnection.h"
 #include "gstsrtobject.h"
 
 G_BEGIN_DECLS

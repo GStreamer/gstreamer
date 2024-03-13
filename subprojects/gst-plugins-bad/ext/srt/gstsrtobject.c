@@ -27,6 +27,8 @@
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
 #include "gstsrtobject.h"
+#include "gstsrtcaller.h"
+#include "gstsrtlistenerconnection.h"
 
 #include <gst/base/gstbasesink.h>
 #include <gio/gnetworking.h>
@@ -81,49 +83,13 @@ enum
   PROP_STREAMID,
   PROP_AUTHENTICATION,
   PROP_AUTO_RECONNECT,
+  PROP_CONNECTION_KEY,
   PROP_LAST
 };
 
-typedef struct
-{
-  SRTSOCKET sock;
-  gint poll_id;
-  GSocketAddress *sockaddr;
-  gboolean sent_headers;
-} SRTCaller;
-
-static SRTCaller *
-srt_caller_new (void)
-{
-  SRTCaller *caller = g_new0 (SRTCaller, 1);
-  caller->sock = SRT_INVALID_SOCK;
-  caller->poll_id = SRT_ERROR;
-  caller->sent_headers = FALSE;
-
-  return caller;
-}
-
-static void
-srt_caller_free (SRTCaller * caller)
-{
-  g_return_if_fail (caller != NULL);
-
-  g_clear_object (&caller->sockaddr);
-
-  if (caller->sock != SRT_INVALID_SOCK) {
-    srt_close (caller->sock);
-  }
-
-  if (caller->poll_id != SRT_ERROR) {
-    srt_epoll_release (caller->poll_id);
-  }
-
-  g_free (caller);
-}
-
 /* called with sock_lock */
 static void
-srt_caller_signal_removed (SRTCaller * caller, GstSRTObject * srtobject)
+srt_caller_signal_removed (GstSRTCaller * caller, GstSRTObject * srtobject)
 {
   g_signal_emit_by_name (srtobject->element, "caller-removed", 0,
       caller->sockaddr);
@@ -203,7 +169,7 @@ SrtOption srt_options[] = {
 
 static gint srt_init_refcount = 0;
 
-static GSocketAddress *
+GSocketAddress *
 gst_srt_object_resolve (GstSRTObject * srtobject, const gchar * address,
     guint port, GError ** err_out)
 {
@@ -253,6 +219,21 @@ name_resolve:
     g_object_unref (resolver);
     return NULL;
   }
+}
+
+static GstSRTConnectionMode
+gst_srt_object_get_connection_mode (GstSRTObject * srtobject)
+{
+  GstSRTConnectionMode connection_mode;
+
+  if (!gst_structure_get_enum (srtobject->parameters,
+          "mode", GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode)) {
+    GST_WARNING_OBJECT (srtobject->element,
+        "Cannot get connection mode information: using default mode");
+    connection_mode = GST_SRT_DEFAULT_MODE;
+  }
+
+  return connection_mode;
 }
 
 static gboolean
@@ -312,7 +293,7 @@ bad_type:
   return FALSE;
 }
 
-static gboolean
+gboolean
 gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject,
     GError ** error)
 {
@@ -383,11 +364,16 @@ gst_srt_object_new (GstElement * element)
 void
 gst_srt_object_destroy (GstSRTObject * srtobject)
 {
+  gint fd = -1;
+
   g_return_if_fail (srtobject != NULL);
 
   if (srtobject->sock != SRT_INVALID_SOCK) {
     srt_close (srtobject->sock);
   }
+
+  if ((fd = g_cancellable_get_fd (srtobject->cancellable)) != -1)
+    srt_epoll_remove_ssock (srtobject->poll_id, fd);
 
   srt_epoll_release (srtobject->poll_id);
 
@@ -401,6 +387,7 @@ gst_srt_object_destroy (GstSRTObject * srtobject)
     GST_DEBUG_OBJECT (srtobject->element, "Cleaning up SRT");
   }
 
+  g_free (srtobject->connection_key);
   g_clear_pointer (&srtobject->uri, gst_uri_unref);
   g_clear_object (&srtobject->cancellable);
 
@@ -451,6 +438,10 @@ gst_srt_object_set_property_helper (GstSRTObject * srtobject,
     case PROP_AUTO_RECONNECT:
       srtobject->auto_reconnect = g_value_get_boolean (value);
       break;
+    case PROP_CONNECTION_KEY:
+      g_free (srtobject->connection_key);
+      srtobject->connection_key = g_value_dup_string (value);
+      break;
     default:
       goto err;
   }
@@ -477,11 +468,7 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
       GstSRTConnectionMode v;
 
       GST_OBJECT_LOCK (srtobject->element);
-      if (!gst_structure_get_enum (srtobject->parameters, "mode",
-              GST_TYPE_SRT_CONNECTION_MODE, (gint *) & v)) {
-        GST_WARNING_OBJECT (srtobject->element, "Failed to get 'mode'");
-        v = GST_SRT_CONNECTION_MODE_NONE;
-      }
+      v = gst_srt_object_get_connection_mode (srtobject);
       g_value_set_enum (value, v);
       GST_OBJECT_UNLOCK (srtobject->element);
       break;
@@ -563,6 +550,11 @@ gst_srt_object_get_property_helper (GstSRTObject * srtobject,
     case PROP_AUTO_RECONNECT:
       GST_OBJECT_LOCK (srtobject->element);
       g_value_set_boolean (value, srtobject->auto_reconnect);
+      GST_OBJECT_UNLOCK (srtobject->element);
+      break;
+    case PROP_CONNECTION_KEY:
+      GST_OBJECT_LOCK (srtobject->element);
+      g_value_set_string (value, srtobject->connection_key);
       GST_OBJECT_UNLOCK (srtobject->element);
       break;
     default:
@@ -743,6 +735,32 @@ gst_srt_object_install_properties_helper (GObjectClass * gobject_class)
           "Automatically reconnect when connection fails",
           GST_SRT_DEFAULT_AUTO_RECONNECT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSRTSrc:connection-key:
+   *
+   * Identifier for sharing SRT connection when listening, elements with the
+   * same connection-key will use on the same UDP socket.
+   *
+   * Since: 1.30
+   *
+   */
+  /**
+   * GstSRTSink:connection-key:
+   *
+   * Identifier for sharing SRT connection when listening, elements with the
+   * same connection-key will use on the same UDP socket.
+   *
+   * Since: 1.30
+   *
+   */
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_KEY,
+      g_param_spec_string ("connection-key", "Connection key",
+          "Identifier for sharing SRT connection when listening, elements "
+          "with the same connection-key will listen on the same UDP socket",
+          NULL,
+          G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+          G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -947,302 +965,11 @@ gst_srt_object_set_uri (GstSRTObject * srtobject, const gchar * uri,
   return TRUE;
 }
 
-static gpointer
-thread_func (gpointer data)
-{
-  GstSRTObject *srtobject = data;
-  gint poll_timeout;
-
-  GST_OBJECT_LOCK (srtobject->element);
-  if (!gst_structure_get_int (srtobject->parameters, "poll-timeout",
-          &poll_timeout)) {
-    poll_timeout = GST_SRT_DEFAULT_POLL_TIMEOUT;
-  }
-  GST_OBJECT_UNLOCK (srtobject->element);
-
-  for (;;) {
-    SRTSOCKET rsock;
-    gint rsocklen = 1;
-    SYSSOCKET rsys, wsys;
-    gint rsyslen = 1, wsyslen = 1;
-    gint ret;
-    SRTSOCKET caller_sock;
-    union
-    {
-      struct sockaddr_storage ss;
-      struct sockaddr sa;
-    } caller_sa;
-    int caller_sa_len = sizeof (caller_sa);
-    SRTCaller *caller;
-    gint flag = SRT_EPOLL_ERR;
-    gint fd, fd_flags = SRT_EPOLL_ERR | SRT_EPOLL_IN;
-
-    GST_OBJECT_LOCK (srtobject->element);
-    if (!srtobject->opened) {
-      GST_OBJECT_UNLOCK (srtobject->element);
-      break;
-    }
-    GST_OBJECT_UNLOCK (srtobject->element);
-
-    switch (srt_getsockstate (srtobject->sock)) {
-      case SRTS_BROKEN:
-      case SRTS_CLOSING:
-      case SRTS_CLOSED:
-      case SRTS_NONEXIST:
-        GST_ELEMENT_ERROR (srtobject->element, RESOURCE, FAILED,
-            ("Socket is broken or closed"), (NULL));
-        return NULL;
-
-      default:
-        break;
-    }
-
-    GST_TRACE_OBJECT (srtobject->element, "Waiting on listening socket");
-    ret =
-        srt_epoll_wait (srtobject->poll_id, &rsock, &rsocklen, NULL, 0,
-        poll_timeout, &rsys, &rsyslen, &wsys, &wsyslen);
-
-    GST_OBJECT_LOCK (srtobject->element);
-    if (!srtobject->opened) {
-      GST_OBJECT_UNLOCK (srtobject->element);
-      break;
-    }
-    GST_OBJECT_UNLOCK (srtobject->element);
-
-    if (ret < 0) {
-      gint srt_errno = srt_getlasterror (NULL);
-      if (srt_errno == SRT_ETIMEOUT)
-        continue;
-
-      GST_ELEMENT_ERROR (srtobject->element, RESOURCE, FAILED,
-          ("Failed to poll socket: %s", srt_getlasterror_str ()), (NULL));
-      return NULL;
-    }
-
-    if (rsocklen != 1)
-      continue;
-
-    caller_sock = srt_accept (rsock, &caller_sa.sa, &caller_sa_len);
-
-    if (caller_sock == SRT_INVALID_SOCK) {
-      GST_ELEMENT_ERROR (srtobject->element, RESOURCE, FAILED,
-          ("Failed to accept connection: %s", srt_getlasterror_str ()), (NULL));
-      return NULL;
-    }
-
-    caller = srt_caller_new ();
-    caller->sockaddr =
-        g_socket_address_new_from_native (&caller_sa.sa, caller_sa_len);
-    caller->poll_id = srt_epoll_create ();
-    caller->sock = caller_sock;
-
-    fd = g_cancellable_get_fd (srtobject->cancellable);
-    if (fd >= 0)
-      srt_epoll_add_ssock (srtobject->poll_id, fd, &fd_flags);
-
-    if (gst_uri_handler_get_uri_type (GST_URI_HANDLER
-            (srtobject->element)) == GST_URI_SRC) {
-      flag |= SRT_EPOLL_IN;
-    } else {
-      flag |= SRT_EPOLL_OUT;
-    }
-
-    if (srt_epoll_add_usock (caller->poll_id, caller_sock, &flag) < 0) {
-      GST_ELEMENT_WARNING (srtobject->element, LIBRARY, SETTINGS,
-          ("%s", srt_getlasterror_str ()), (NULL));
-
-      srt_caller_free (caller);
-
-      /* try-again */
-      continue;
-    }
-
-    GST_DEBUG_OBJECT (srtobject->element, "Accept to connect %d", caller->sock);
-
-    g_mutex_lock (&srtobject->sock_lock);
-    srtobject->callers = g_list_prepend (srtobject->callers, caller);
-    g_cond_signal (&srtobject->sock_cond);
-    g_mutex_unlock (&srtobject->sock_lock);
-
-    /* notifying caller-added */
-    g_signal_emit_by_name (srtobject->element, "caller-added", 0,
-        caller->sockaddr);
-
-    if (gst_uri_handler_get_uri_type (GST_URI_HANDLER (srtobject->element)) ==
-        GST_URI_SRC)
-      break;
-  }
-
-  return NULL;
-}
-
-static GSocketAddress *
-peeraddr_to_g_socket_address (const struct sockaddr *peeraddr)
-{
-  gsize peeraddr_len;
-
-  switch (peeraddr->sa_family) {
-    case AF_INET:
-      peeraddr_len = sizeof (struct sockaddr_in);
-      break;
-    case AF_INET6:
-      peeraddr_len = sizeof (struct sockaddr_in6);
-      break;
-    default:
-      g_warning ("Unsupported address family %d", peeraddr->sa_family);
-      return NULL;
-  }
-  return g_socket_address_new_from_native ((gpointer) peeraddr, peeraddr_len);
-}
-
-static gint
-srt_listen_callback_func (GstSRTObject * self, SRTSOCKET sock, int hs_version,
-    const struct sockaddr *peeraddr, const char *stream_id)
-{
-  GSocketAddress *addr = peeraddr_to_g_socket_address (peeraddr);
-
-  if (!addr) {
-    GST_WARNING_OBJECT (self->element,
-        "Invalid peer address. Rejecting sink %d streamid: %s", sock,
-        stream_id);
-    return -1;
-  }
-
-  if (self->authentication) {
-    gboolean authenticated = FALSE;
-
-    /* notifying caller-connecting */
-    g_signal_emit_by_name (self->element, "caller-connecting", addr,
-        stream_id, &authenticated);
-
-    if (!authenticated)
-      goto reject;
-  }
-
-  GST_DEBUG_OBJECT (self->element,
-      "Accepting sink %d streamid: %s", sock, stream_id);
-  g_object_unref (addr);
-  return 0;
-reject:
-  /* notifying caller-rejected */
-  GST_WARNING_OBJECT (self->element,
-      "Rejecting sink %d streamid: %s", sock, stream_id);
-  g_signal_emit_by_name (self->element, "caller-rejected", addr, stream_id);
-  g_object_unref (addr);
-  return -1;
-}
-
 static gboolean
 gst_srt_object_wait_connect (GstSRTObject * srtobject, gpointer sa,
     size_t sa_len, GError ** error)
 {
-  SRTSOCKET sock = SRT_INVALID_SOCK;
-  const gchar *local_address = NULL;
-  guint local_port = 0;
-  gint sock_flags = SRT_EPOLL_ERR | SRT_EPOLL_IN;
-  gboolean poll_added = FALSE;
-
-  gpointer bind_sa;
-  gsize bind_sa_len;
-  GSocketAddress *bind_addr = NULL;
-
-  GST_OBJECT_LOCK (srtobject->element);
-
-  gst_structure_get_uint (srtobject->parameters, "localport", &local_port);
-
-  local_address =
-      gst_structure_get_string (srtobject->parameters, "localaddress");
-  if (local_address == NULL)
-    local_address = GST_SRT_DEFAULT_LOCALADDRESS;
-
-  GST_OBJECT_UNLOCK (srtobject->element);
-
-  bind_addr =
-      gst_srt_object_resolve (srtobject, local_address, local_port, error);
-  if (!bind_addr) {
-    goto failed;
-  }
-
-  bind_sa_len = g_socket_address_get_native_size (bind_addr);
-  bind_sa = g_alloca (bind_sa_len);
-
-  if (!g_socket_address_to_native (bind_addr, bind_sa, bind_sa_len, error)) {
-    goto failed;
-  }
-
-  g_clear_object (&bind_addr);
-
-  sock = srt_create_socket ();
-  if (sock == SRT_INVALID_SOCK) {
-    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_INIT, "%s",
-        srt_getlasterror_str ());
-    goto failed;
-  }
-
-  if (!gst_srt_object_set_common_params (sock, srtobject, error)) {
-    goto failed;
-  }
-
-  GST_DEBUG_OBJECT (srtobject->element, "Binding to %s (port: %d)",
-      local_address, local_port);
-
-  if (srt_bind (sock, bind_sa, bind_sa_len) == SRT_ERROR) {
-    g_set_error (error, GST_RESOURCE_ERROR,
-        GST_RESOURCE_ERROR_OPEN_READ_WRITE, "Cannot bind to %s:%d - %s",
-        local_address, local_port, srt_getlasterror_str ());
-    goto failed;
-  }
-
-  if (srt_epoll_add_usock (srtobject->poll_id, sock, &sock_flags) < 0) {
-    g_set_error (error, GST_LIBRARY_ERROR, GST_LIBRARY_ERROR_SETTINGS, "%s",
-        srt_getlasterror_str ());
-    goto failed;
-  }
-  poll_added = TRUE;
-
-  srtobject->sock = sock;
-
-  /* Register the SRT listen callback */
-  if (srt_listen_callback (srtobject->sock,
-          (srt_listen_callback_fn *) srt_listen_callback_func, srtobject)) {
-    g_set_error (error, GST_RESOURCE_ERROR,
-        GST_RESOURCE_ERROR_OPEN_READ_WRITE,
-        "Failed to register SRT listen callback: %s", srt_getlasterror_str ());
-    goto failed;
-  }
-
-  GST_DEBUG_OBJECT (srtobject->element, "Starting to listen on bind socket");
-  if (srt_listen (sock, 1) == SRT_ERROR) {
-    g_set_error (error, GST_RESOURCE_ERROR,
-        GST_RESOURCE_ERROR_OPEN_READ_WRITE, "Cannot listen on bind socket: %s",
-        srt_getlasterror_str ());
-    goto failed;
-  }
-
-  srtobject->thread =
-      g_thread_try_new ("GstSRTObjectListener", thread_func, srtobject, error);
-  if (srtobject->thread == NULL) {
-    GST_ERROR_OBJECT (srtobject->element, "Failed to start thread");
-    goto failed;
-  }
-
-  return TRUE;
-
-
-failed:
-  if (poll_added) {
-    srt_epoll_remove_usock (srtobject->poll_id, sock);
-  }
-
-  if (sock != SRT_INVALID_SOCK) {
-    srt_close (sock);
-  }
-
-  g_clear_object (&bind_addr);
-
-  srtobject->sock = SRT_INVALID_SOCK;
-
-  return FALSE;
+  return gst_srt_listener_connection_add_object (srtobject, error);
 }
 
 static gboolean
@@ -1308,7 +1035,8 @@ gst_srt_object_connect (GstSRTObject * srtobject,
     gsize bind_sa_len;
 
     GSocketAddress *bind_addr =
-        gst_srt_object_resolve (srtobject, local_address, local_port, error);
+        gst_srt_object_resolve (srtobject, local_address, local_port,
+        error);
 
     if (!bind_addr) {
       goto failed;
@@ -1342,8 +1070,8 @@ gst_srt_object_connect (GstSRTObject * srtobject,
   }
 
   if (srt_connect (sock, sa, sa_len) == SRT_ERROR) {
-    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ, "%s",
-        srt_getlasterror_str ());
+    g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_OPEN_READ,
+        "%s", srt_getlasterror_str ());
     srt_epoll_remove_usock (srtobject->poll_id, sock);
     goto failed;
   }
@@ -1371,12 +1099,7 @@ gst_srt_object_open_internal (GstSRTObject * srtobject, GError ** error)
 
   GST_OBJECT_LOCK (srtobject->element);
 
-  if (!gst_structure_get_enum (srtobject->parameters,
-          "mode", GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode)) {
-    GST_WARNING_OBJECT (srtobject->element,
-        "Cannot get connection mode information." " Use default mode");
-    connection_mode = GST_SRT_DEFAULT_MODE;
-  }
+  connection_mode = gst_srt_object_get_connection_mode (srtobject);
 
   addr_str = gst_uri_get_host (srtobject->uri);
   if (addr_str == NULL) {
@@ -1436,29 +1159,28 @@ gst_srt_object_open (GstSRTObject * srtobject, GError ** error)
 static void
 gst_srt_object_close_internal (GstSRTObject * srtobject)
 {
+  GstSRTConnectionMode mode = gst_srt_object_get_connection_mode (srtobject);
+
   g_mutex_lock (&srtobject->sock_lock);
 
-  if (srtobject->sock != SRT_INVALID_SOCK) {
-    srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
+  if (mode == GST_SRT_CONNECTION_MODE_LISTENER) {
+    gst_srt_listener_connection_remove_object (srtobject, NULL);
+  } else {
+    if (srtobject->sock != SRT_INVALID_SOCK) {
+      srt_epoll_remove_usock (srtobject->poll_id, srtobject->sock);
 
-    GST_DEBUG_OBJECT (srtobject->element, "Closing SRT socket (0x%x)",
-        srtobject->sock);
+      GST_DEBUG_OBJECT (srtobject->element, "Closing SRT socket (0x%x)",
+          srtobject->sock);
 
-    srt_close (srtobject->sock);
-    srtobject->sock = SRT_INVALID_SOCK;
-  }
-
-  if (srtobject->thread) {
-    GThread *thread = g_steal_pointer (&srtobject->thread);
-    g_mutex_unlock (&srtobject->sock_lock);
-    g_thread_join (thread);
-    g_mutex_lock (&srtobject->sock_lock);
+      srt_close (srtobject->sock);
+      srtobject->sock = SRT_INVALID_SOCK;
+    }
   }
 
   if (srtobject->callers) {
     GList *callers = g_steal_pointer (&srtobject->callers);
     g_list_foreach (callers, (GFunc) srt_caller_signal_removed, srtobject);
-    g_list_free_full (callers, (GDestroyNotify) srt_caller_free);
+    g_list_free_full (callers, (GDestroyNotify) gst_srt_caller_close);
   }
 
   srtobject->sent_headers = FALSE;
@@ -1504,8 +1226,8 @@ gst_srt_object_wait_caller (GstSRTObject * srtobject)
 }
 
 gssize
-gst_srt_object_read (GstSRTObject * srtobject, guint8 * data, gsize size,
-    GError ** error, SRT_MSGCTRL * mctrl)
+gst_srt_object_read (GstSRTObject * srtobject, guint8 * data,
+    gsize size, GError ** error, SRT_MSGCTRL * mctrl)
 {
   gssize len = 0;
   gint poll_timeout;
@@ -1521,8 +1243,7 @@ gst_srt_object_read (GstSRTObject * srtobject, guint8 * data, gsize size,
 
   GST_OBJECT_LOCK (srtobject->element);
 
-  gst_structure_get_enum (srtobject->parameters, "mode",
-      GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
+  connection_mode = gst_srt_object_get_connection_mode (srtobject);
 
   if (!gst_structure_get_int (srtobject->parameters, "poll-timeout",
           &poll_timeout)) {
@@ -1540,7 +1261,7 @@ retry:
 
     g_mutex_lock (&srtobject->sock_lock);
     if (srtobject->callers) {
-      SRTCaller *caller = srtobject->callers->data;
+      GstSRTCaller *caller = srtobject->callers->data;
       poll_id = caller->poll_id;
       sock = caller->sock;
     }
@@ -1586,8 +1307,9 @@ retry:
       if (srt_errno == SRT_ETIMEOUT)
         continue;
 
-      g_set_error (&internal_error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-          "Failed to poll socket: %s", srt_getlasterror_str ());
+      g_set_error (&internal_error, GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_READ, "Failed to poll socket: %s",
+          srt_getlasterror_str ());
       goto err;
     }
 
@@ -1621,8 +1343,9 @@ retry:
       if (srt_errno == SRT_EASYNCRCV)
         continue;
 
-      g_set_error (&internal_error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_READ,
-          "Failed to receive from SRT socket: %s", srt_getlasterror_str ());
+      g_set_error (&internal_error, GST_RESOURCE_ERROR,
+          GST_RESOURCE_ERROR_READ, "Failed to receive from SRT socket: %s",
+          srt_getlasterror_str ());
       goto err;
     }
 
@@ -1743,8 +1466,8 @@ gst_srt_object_send_headers (GstSRTObject * srtobject, SRTSOCKET sock,
     if (wsocklen != 1)
       continue;
 
-    GST_TRACE_OBJECT (srtobject->element, "sending header %u %" GST_PTR_FORMAT,
-        i, buffer);
+    GST_TRACE_OBJECT (srtobject->element,
+        "sending header %u %" GST_PTR_FORMAT, i, buffer);
 
     if (!gst_buffer_map (buffer, &mapinfo, GST_MAP_READ)) {
       g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE,
@@ -1754,8 +1477,8 @@ gst_srt_object_send_headers (GstSRTObject * srtobject, SRTSOCKET sock,
 
     sent = srt_sendmsg2 (wsock, (char *) mapinfo.data, mapinfo.size, 0);
     if (sent == SRT_ERROR) {
-      g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE, "%s",
-          srt_getlasterror_str ());
+      g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_WRITE,
+          "%s", srt_getlasterror_str ());
       gst_buffer_unmap (buffer, &mapinfo);
       return FALSE;
     }
@@ -1776,7 +1499,7 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
 
   g_mutex_lock (&srtobject->sock_lock);
   for (item = srtobject->callers, next = NULL; item; item = next) {
-    SRTCaller *caller = item->data;
+    GstSRTCaller *caller = item->data;
     gssize len = 0;
     const guint8 *msg = mapinfo->data;
     gint sent;
@@ -1791,8 +1514,8 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
     if (!caller->sent_headers) {
       GError *error = NULL;
 
-      if (!gst_srt_object_send_headers (srtobject, caller->sock, -1, 0, headers,
-              &error)) {
+      if (!gst_srt_object_send_headers (srtobject, caller->sock, -1, 0,
+              headers, &error)) {
         GST_WARNING_OBJECT (srtobject->element,
             "Failed to send headers to caller %d: %s", caller->sock,
             error->message);
@@ -1826,7 +1549,7 @@ gst_srt_object_write_to_callers (GstSRTObject * srtobject,
   err:
     srtobject->callers = g_list_delete_link (srtobject->callers, item);
     srt_caller_signal_removed (caller, srtobject);
-    srt_caller_free (caller);
+    gst_srt_caller_close (caller);
   }
 
   g_mutex_unlock (&srtobject->sock_lock);
@@ -1838,8 +1561,8 @@ cancelled:
 }
 
 static gssize
-gst_srt_object_write_one (GstSRTObject * srtobject, GstBufferList * headers,
-    const GstMapInfo * mapinfo, GError ** error)
+gst_srt_object_write_one (GstSRTObject * srtobject,
+    GstBufferList * headers, const GstMapInfo * mapinfo, GError ** error)
 {
   gssize len = 0;
   gint poll_timeout;
@@ -2000,8 +1723,7 @@ gst_srt_object_write (GstSRTObject * srtobject, GstBufferList * headers,
           (srtobject->element)) == GST_URI_SINK, -1);
 
   GST_OBJECT_LOCK (srtobject->element);
-  gst_structure_get_enum (srtobject->parameters, "mode",
-      GST_TYPE_SRT_CONNECTION_MODE, (gint *) & connection_mode);
+  connection_mode = gst_srt_object_get_connection_mode (srtobject);
   wait_for_connection = srtobject->wait_for_connection;
   GST_OBJECT_UNLOCK (srtobject->element);
 
@@ -2087,10 +1809,15 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
 {
   GstStructure *s = NULL;
   gboolean is_sender = GST_IS_BASE_SINK (srtobject->element);
+  GstSRTConnectionMode connection_mode = GST_SRT_DEFAULT_MODE;
+
+  GST_OBJECT_LOCK (srtobject->element);
+  connection_mode = gst_srt_object_get_connection_mode (srtobject);
+  GST_OBJECT_UNLOCK (srtobject->element);
 
   g_mutex_lock (&srtobject->sock_lock);
 
-  if (srtobject->thread == NULL) {
+  if (connection_mode != GST_SRT_CONNECTION_MODE_LISTENER) {
     /* Not a listening socket */
     s = get_stats_for_srtsock (srtobject, srtobject->sock);
   }
@@ -2105,7 +1832,7 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
     GList *item, *next;
 
     for (item = srtobject->callers, next = NULL; item; item = next) {
-      SRTCaller *caller = item->data;
+      GstSRTCaller *caller = item->data;
       GstStructure *tmp;
       GValue *v;
 
@@ -2115,7 +1842,7 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
       if (tmp == NULL) {
         srtobject->callers = g_list_delete_link (srtobject->callers, item);
         srt_caller_signal_removed (caller, srtobject);
-        srt_caller_free (caller);
+        gst_srt_caller_close (caller);
         continue;
       }
 
@@ -2133,7 +1860,8 @@ gst_srt_object_get_stats (GstSRTObject * srtobject)
     gst_structure_take_value (s, "callers", &callers_stats_v);
   }
 
-  gst_structure_set (s, is_sender ? "bytes-sent-total" : "bytes-received-total",
+  gst_structure_set (s,
+      is_sender ? "bytes-sent-total" : "bytes-received-total",
       G_TYPE_UINT64, srtobject->bytes, NULL);
 
   g_mutex_unlock (&srtobject->sock_lock);

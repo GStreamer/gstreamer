@@ -60,8 +60,6 @@ struct _GstSRTObject
 
   GTask                        *listener_task;
 
-  GThread                      *thread;
-
   /* Protects the list of callers */
   GMutex                        sock_lock;
   GCond                         sock_cond;
@@ -74,6 +72,8 @@ struct _GstSRTObject
   gboolean                     authentication;
 
   guint64                      bytes;
+
+  gchar                        *connection_key;
 };
 
 GstSRTObject   *gst_srt_object_new              (GstElement *element);
@@ -111,6 +111,10 @@ void            gst_srt_object_unlock       (GstSRTObject * srtobject);
 void            gst_srt_object_unlock_stop  (GstSRTObject * srtobject);
 
 GstStructure   *gst_srt_object_get_stats        (GstSRTObject * srtobject);
+
+GSocketAddress *gst_srt_object_resolve (GstSRTObject * srtobject, const gchar * address, guint port, GError ** err_out);
+
+gboolean        gst_srt_object_set_common_params (SRTSOCKET sock, GstSRTObject * srtobject, GError ** error);
 
 G_END_DECLS
 

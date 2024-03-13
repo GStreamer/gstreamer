@@ -26,6 +26,7 @@
 #include <gst/base/gstbasesink.h>
 #include <gio/gio.h>
 
+#include "gstsrtlistenerconnection.h"
 #include "gstsrtobject.h"
 
 G_BEGIN_DECLS
