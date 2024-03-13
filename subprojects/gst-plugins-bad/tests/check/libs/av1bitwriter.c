@@ -279,7 +279,7 @@ static const GstAV1MetadataOBU hdr_cll = {
 GST_START_TEST (test_av1_bitwriter_sequence_and_frame_hdr)
 {
   GstAV1ParserResult res;
-  gboolean ret;
+  GstAV1BitWriterResult ret;
   guint size;
   guint i;
   GstAV1Parser *const parser = gst_av1_parser_new ();
@@ -445,7 +445,7 @@ GST_START_TEST (test_av1_bitwriter_sequence_and_frame_hdr)
   res = gst_av1_parser_parse_temporal_delimiter_obu (parser, &obu);
   assert_equals_int (res, GST_AV1_PARSER_OK);
 
-  ret = gst_av1_parser_reference_frame_update (parser, &frame_header);
+  res = gst_av1_parser_reference_frame_update (parser, &frame_header);
   assert_equals_int (res, GST_AV1_PARSER_OK);
 
   /* Inter frame */
@@ -538,7 +538,7 @@ GST_START_TEST (test_av1_bitwriter_sequence_and_frame_hdr)
     CHECK_FIELD (global_motion_params.gm_type[i]);
 #undef CHECK_FIELD
 
-  ret = gst_av1_parser_reference_frame_update (parser, &frame_header);
+  res = gst_av1_parser_reference_frame_update (parser, &frame_header);
   assert_equals_int (res, GST_AV1_PARSER_OK);
 
   /* Append a TD */
@@ -583,7 +583,7 @@ GST_END_TEST;
 GST_START_TEST (test_av1_bitwriter_metadata)
 {
   GstAV1ParserResult res;
-  gboolean ret;
+  GstAV1BitWriterResult ret;
   guint size;
   guint i;
   GstAV1Parser *const parser = gst_av1_parser_new ();

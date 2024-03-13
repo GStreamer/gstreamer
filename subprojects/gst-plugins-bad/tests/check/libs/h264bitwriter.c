@@ -163,7 +163,7 @@ static const GstH264SliceHdr slice_hdr = {
 GST_START_TEST (test_h264_bitwriter_sps_pps_slice_hdr)
 {
   GstH264ParserResult res;
-  gboolean ret;
+  GstH264BitWriterResult ret;
   GstH264NalUnit nalu;
   GstH264NalParser *const parser = gst_h264_nal_parser_new ();
   GstH264SPS sps_parsed;
@@ -383,7 +383,7 @@ GST_START_TEST (test_h264_bitwriter_sei)
   GstH264ParserResult res;
   GstH264NalUnit nalu;
   GstH264SEIMessage sei_msg = { 0, };
-  gboolean ret;
+  GstH264BitWriterResult ret;
   GstH264SPS sps_parsed;
   GstH264HRDParams *hrd_param = &sps_parsed.vui_parameters.nal_hrd_parameters;
   GstH264NalParser *const parser = gst_h264_nal_parser_new ();
