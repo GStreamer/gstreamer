@@ -279,13 +279,13 @@ typedef struct
   guint domain;
   PtpClockIdentity master_clock_identity;
 
-  guint16 sync_seqnum;
+  guint32 sync_seqnum;
   GstClockTime sync_recv_time_local;    /* t2 */
   GstClockTime sync_send_time_remote;   /* t1, might be -1 if FOLLOW_UP pending */
   GstClockTime follow_up_recv_time_local;
 
   GSource *timeout_source;
-  guint16 delay_req_seqnum;
+  guint32 delay_req_seqnum;
   GstClockTime delay_req_send_time_local;       /* t3, -1 if we wait for FOLLOW_UP */
   GstClockTime delay_req_recv_time_remote;      /* t4, -1 if we wait */
   GstClockTime delay_resp_recv_time_local;
@@ -1564,6 +1564,7 @@ handle_sync_message (PtpMessage * msg, GstClockTime receive_time)
   sync->delay_req_send_time_local = GST_CLOCK_TIME_NONE;
   sync->delay_req_recv_time_remote = GST_CLOCK_TIME_NONE;
   sync->delay_resp_recv_time_local = GST_CLOCK_TIME_NONE;
+  sync->delay_req_seqnum = G_MAXUINT32;
 
   /* 0.5 correction factor for division later */
   sync->correction_field_sync = msg->correction_field;
