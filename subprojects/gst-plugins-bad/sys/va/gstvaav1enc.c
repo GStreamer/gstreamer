@@ -1419,6 +1419,7 @@ _av1_assign_ref_index (GstVaAV1Enc * self, GstVideoCodecFrame * frame)
   gint forward_ref_num, backward_ref_num;;
   GstVaAV1EncFrame *va_frame = _enc_frame (frame);
   gint i, num;
+  gboolean gf_assigned;
 
   memset (va_frame->ref_frame_idx, -1, sizeof (va_frame->ref_frame_idx));
 
@@ -1482,36 +1483,53 @@ _av1_assign_ref_index (GstVaAV1Enc * self, GstVideoCodecFrame * frame)
   g_qsort_with_data (all_refs, ref_num, sizeof (GstVaAV1Ref),
       _av1_sort_by_frame_num, NULL);
 
-  /* Setting the forward refs. GOLDEN is always set first.
-     LAST is set to the nearest frame in the past if forward_ref_num
-     is enough. LAST2 and LAST3 are set to next nearest frames in the
-     past if forward_ref_num is enough.
-     If forward_ref_num is not enough, they are just set to GOLDEN. */
+  /* Assign the forward references in order of:
+   * 1. The last frame which has the smallest diff.
+   * 2. The golden frame which can be a key frame with better quality.
+   * 3. The other frames by inverse frame number order.
+   */
   va_frame->bidir_ref = FALSE;
+  gf_assigned = FALSE;
 
   num = forward_num - 1;
-  if (backward_num > 0) {
-    forward_ref_num = self->gop.forward_ref_num - 1 /* already assign gf */ ;
-  } else {
-    /* if forward only, should use forward_only_ref_num */
-    forward_ref_num =
-        self->gop.forward_only_ref_num - 1 /* already assign gf */ ;
-  }
+  g_assert (num >= 0);
+  /* if forward only, should use forward_only_ref_num */
+  forward_ref_num = backward_num > 0 ?
+      self->gop.forward_ref_num : self->gop.forward_only_ref_num;
+  g_assert (forward_ref_num > 0);
 
-  if (num >= 0 && all_refs[num].index_in_dpb ==
-      va_frame->ref_frame_idx[GST_AV1_REF_GOLDEN_FRAME])
+  /* The golden frame happens to be the last frame. */
+  if (all_refs[num].index_in_dpb ==
+      va_frame->ref_frame_idx[GST_AV1_REF_GOLDEN_FRAME]) {
     num--;
+    forward_ref_num--;
+    gf_assigned = TRUE;
+  }
 
   if (num >= 0 && forward_ref_num > 0) {
     va_frame->ref_frame_idx[GST_AV1_REF_LAST_FRAME] =
         all_refs[num].index_in_dpb;
   } else {
+    /* At least one forward reference.
+       Just let the last frame be the same as the golden frame. */
+    g_assert (gf_assigned);
     va_frame->ref_frame_idx[GST_AV1_REF_LAST_FRAME] =
         va_frame->ref_frame_idx[GST_AV1_REF_GOLDEN_FRAME];
   }
 
   num--;
   forward_ref_num--;
+
+  if (!gf_assigned) {
+    if (forward_ref_num <= 0) {
+      va_frame->ref_frame_idx[GST_AV1_REF_GOLDEN_FRAME] =
+          va_frame->ref_frame_idx[GST_AV1_REF_LAST_FRAME];
+    } else {
+      /* The golden frame index is already found. */
+      forward_ref_num--;
+    }
+  }
+
   if (num >= 0 && all_refs[num].index_in_dpb ==
       va_frame->ref_frame_idx[GST_AV1_REF_GOLDEN_FRAME])
     num--;
@@ -1521,7 +1539,7 @@ _av1_assign_ref_index (GstVaAV1Enc * self, GstVideoCodecFrame * frame)
         all_refs[num].index_in_dpb;
   } else {
     va_frame->ref_frame_idx[GST_AV1_REF_LAST2_FRAME] =
-        va_frame->ref_frame_idx[GST_AV1_REF_GOLDEN_FRAME];
+        va_frame->ref_frame_idx[GST_AV1_REF_LAST_FRAME];
   }
 
   num--;
@@ -1535,7 +1553,7 @@ _av1_assign_ref_index (GstVaAV1Enc * self, GstVideoCodecFrame * frame)
         all_refs[num].index_in_dpb;
   } else {
     va_frame->ref_frame_idx[GST_AV1_REF_LAST3_FRAME] =
-        va_frame->ref_frame_idx[GST_AV1_REF_GOLDEN_FRAME];
+        va_frame->ref_frame_idx[GST_AV1_REF_LAST_FRAME];
   }
 
   /* Setting the backward refs */
