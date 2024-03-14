@@ -111,6 +111,41 @@ GST_START_TEST (test_audioenc_drain)
 
 GST_END_TEST;
 
+GST_START_TEST (test_audioenc_16_channels)
+{
+  /* avaudenc used to have a bug for >8ch where a double-free attempt would occur,
+   * crashing the whole process. Since >8ch encoding is quite rarely used, this test
+   * is meant to detect any crashes that would indicate somebody broke that again */
+  GstHarness *h;
+  GstAudioInfo info;
+  GstBuffer *in_buf;
+  GstCaps *caps;
+  gint size;
+  GstAudioChannelPosition position[16];
+  /* 16ch hexadecagonal layout */
+  guint64 channel_mask = 0x3137D37;
+
+  h = gst_harness_new ("avenc_aac");
+  fail_unless (h != NULL);
+
+  gst_audio_channel_positions_from_mask (16, channel_mask, position);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_F32, 44100, 16, position);
+
+  caps = gst_audio_info_to_caps (&info);
+  gst_harness_set_src_caps (h, caps);
+
+  size = 1024 * GST_AUDIO_INFO_BPF (&info);
+  in_buf = gst_buffer_new_and_alloc (size);
+  gst_buffer_memset (in_buf, 0, 0, size);
+
+  GstFlowReturn ret = gst_harness_push (h, in_buf);
+  fail_if (ret != GST_FLOW_OK);
+
+  gst_harness_teardown (h);
+}
+
+GST_END_TEST;
+
 static Suite *
 avaudenc_suite (void)
 {
@@ -119,6 +154,7 @@ avaudenc_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_audioenc_drain);
+  tcase_add_test (tc_chain, test_audioenc_16_channels);
 
   return s;
 }
