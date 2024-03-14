@@ -248,8 +248,8 @@ struct _GstDecodebin3
   GList *to_activate;
   /* Pending select streams event */
   guint32 select_streams_seqnum;
-  /* pending list of streams to select (from downstream) */
-  GList *pending_select_streams;
+  /* There is a pending GST_EVENT_SELECT_STREAMS being handled */
+  gboolean pending_select_streams;
   /* TRUE if requested_selection was updated, will become FALSE once
    * it has fully transitioned to active */
   gboolean selection_updated;
@@ -694,8 +694,7 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
 
   dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
 
-  g_list_free (dbin->pending_select_streams);
-  dbin->pending_select_streams = NULL;
+  dbin->pending_select_streams = FALSE;
 
   dbin->selection_updated = FALSE;
 }
@@ -3324,8 +3323,7 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
     return TRUE;
   }
   /* Remove pending select_streams */
-  g_list_free (dbin->pending_select_streams);
-  dbin->pending_select_streams = NULL;
+  dbin->pending_select_streams = FALSE;
 
   /* COMPARE the requested streams to the active and requested streams
    * on multiqueue. */
@@ -3515,6 +3513,51 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   return ret;
 }
 
+/*
+ * * event : (transfer full): The select streams event
+ *
+ * Handles a GST_EVENT_SELECT_STREAMS (from application or downstream)
+ *
+ * Returns: TRUE if the event was handled, or FALSE if it should be forwarded to
+ * the default handler.
+ */
+static gboolean
+handle_select_streams (GstDecodebin3 * dbin, GstEvent * event)
+{
+  GList *streams = NULL;
+  guint32 seqnum = gst_event_get_seqnum (event);
+
+  if (dbin->upstream_selected) {
+    GST_DEBUG_OBJECT (dbin, "Letting select-streams event flow upstream");
+    return FALSE;
+  }
+
+  SELECTION_LOCK (dbin);
+  if (seqnum == dbin->select_streams_seqnum) {
+    SELECTION_UNLOCK (dbin);
+    GST_DEBUG_OBJECT (dbin,
+        "Already handled/handling that SELECT_STREAMS event");
+    gst_event_unref (event);
+    return TRUE;
+  }
+
+  dbin->select_streams_seqnum = seqnum;
+  if (dbin->pending_select_streams)
+    GST_LOG_OBJECT (dbin, "Replacing pending select streams");
+  dbin->pending_select_streams = TRUE;
+  gst_event_parse_select_streams (event, &streams);
+  SELECTION_UNLOCK (dbin);
+
+  /* Finally handle the switch */
+  if (streams) {
+    handle_stream_switch (dbin, streams, seqnum);
+    g_list_free_full (streams, g_free);
+  }
+
+  gst_event_unref (event);
+  return TRUE;
+}
+
 static GstPadProbeReturn
 ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
     DecodebinOutputStream * output)
@@ -3528,41 +3571,8 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SELECT_STREAMS:
     {
-      GList *streams = NULL;
-      guint32 seqnum = gst_event_get_seqnum (event);
-
-      if (dbin->upstream_selected) {
-        GST_DEBUG_OBJECT (pad, "Letting select-streams event flow upstream");
-        break;
-      }
-
-      SELECTION_LOCK (dbin);
-      if (seqnum == dbin->select_streams_seqnum) {
-        SELECTION_UNLOCK (dbin);
-        GST_DEBUG_OBJECT (pad,
-            "Already handled/handling that SELECT_STREAMS event");
-        gst_event_unref (event);
+      if (handle_select_streams (dbin, event))
         ret = GST_PAD_PROBE_HANDLED;
-        break;
-      }
-      dbin->select_streams_seqnum = seqnum;
-      if (dbin->pending_select_streams != NULL) {
-        GST_LOG_OBJECT (dbin, "Replacing pending select streams");
-        g_list_free (dbin->pending_select_streams);
-        dbin->pending_select_streams = NULL;
-      }
-      gst_event_parse_select_streams (event, &streams);
-      dbin->pending_select_streams = g_list_copy (streams);
-      SELECTION_UNLOCK (dbin);
-
-      /* Finally handle the switch */
-      if (streams) {
-        handle_stream_switch (dbin, streams, seqnum);
-        g_list_free_full (streams, g_free);
-      }
-
-      gst_event_unref (event);
-      ret = GST_PAD_PROBE_HANDLED;
     }
       break;
     default:
@@ -3578,37 +3588,12 @@ gst_decodebin3_send_event (GstElement * element, GstEvent * event)
   GstDecodebin3 *dbin = (GstDecodebin3 *) element;
 
   GST_DEBUG_OBJECT (element, "event %s", GST_EVENT_TYPE_NAME (event));
-  if (!dbin->upstream_selected
-      && GST_EVENT_TYPE (event) == GST_EVENT_SELECT_STREAMS) {
-    GList *streams = NULL;
-    guint32 seqnum = gst_event_get_seqnum (event);
 
-    SELECTION_LOCK (dbin);
-    if (seqnum == dbin->select_streams_seqnum) {
-      SELECTION_UNLOCK (dbin);
-      GST_DEBUG_OBJECT (dbin,
-          "Already handled/handling that SELECT_STREAMS event");
-      return TRUE;
-    }
-    dbin->select_streams_seqnum = seqnum;
-    if (dbin->pending_select_streams != NULL) {
-      GST_LOG_OBJECT (dbin, "Replacing pending select streams");
-      g_list_free (dbin->pending_select_streams);
-      dbin->pending_select_streams = NULL;
-    }
-    gst_event_parse_select_streams (event, &streams);
-    dbin->pending_select_streams = g_list_copy (streams);
-    SELECTION_UNLOCK (dbin);
-
-    /* Finally handle the switch */
-    if (streams) {
-      handle_stream_switch (dbin, streams, seqnum);
-      g_list_free_full (streams, g_free);
-    }
-
-    gst_event_unref (event);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_SELECT_STREAMS
+      && handle_select_streams (dbin, event)) {
     return TRUE;
   }
+
   return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 }
 
