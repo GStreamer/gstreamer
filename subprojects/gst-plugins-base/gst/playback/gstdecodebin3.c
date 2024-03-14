@@ -3528,7 +3528,6 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SELECT_STREAMS:
     {
-      GstPad *peer;
       GList *streams = NULL;
       guint32 seqnum = gst_event_get_seqnum (event);
 
@@ -3556,18 +3555,13 @@ ghost_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
       dbin->pending_select_streams = g_list_copy (streams);
       SELECTION_UNLOCK (dbin);
 
-      /* Send event upstream */
-      if ((peer = gst_pad_get_peer (pad))) {
-        gst_pad_send_event (peer, event);
-        gst_object_unref (peer);
-      } else {
-        gst_event_unref (event);
-      }
       /* Finally handle the switch */
       if (streams) {
         handle_stream_switch (dbin, streams, seqnum);
         g_list_free_full (streams, g_free);
       }
+
+      gst_event_unref (event);
       ret = GST_PAD_PROBE_HANDLED;
     }
       break;
