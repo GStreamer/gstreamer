@@ -2429,21 +2429,36 @@ check_inputs_and_slots_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
   }
 }
 
+/*
+ * Returns TRUE if there are no more streams to output and an ERROR message
+ * should be posted
+ */
+static inline gboolean
+no_more_streams_locked (GstDecodebin3 * dbin)
+{
+  return (!dbin->requested_selection && !dbin->active_selection
+      && !dbin->to_activate);
+}
+
 static void
 check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
 {
   DecodebinOutputStream *output;
   GstMessage *msg = NULL;
+  gboolean no_more_streams;
 
   SELECTION_LOCK (dbin);
   output = get_output_for_slot (slot);
   if (!output) {
+    no_more_streams = no_more_streams_locked (dbin);
     SELECTION_UNLOCK (dbin);
+    if (no_more_streams)
+      GST_ELEMENT_ERROR (slot->dbin, STREAM, FAILED, (NULL),
+          ("No streams to output"));
     return;
   }
 
   if (!reconfigure_output_stream (output, slot, &msg)) {
-    gboolean no_more_streams;
     GST_DEBUG_OBJECT (dbin, "Removing failing stream from selection: %s ",
         gst_stream_get_stream_id (slot->active_stream));
     slot->dbin->requested_selection =
@@ -2452,14 +2467,17 @@ check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     slot->dbin->active_selection =
         remove_from_list (slot->dbin->active_selection,
         gst_stream_get_stream_id (slot->active_stream));
-    no_more_streams = slot->dbin->requested_selection == NULL;
+    no_more_streams = no_more_streams_locked (dbin);
     dbin->selection_updated = TRUE;
     SELECTION_UNLOCK (dbin);
     if (msg)
       gst_element_post_message ((GstElement *) slot->dbin, msg);
     if (no_more_streams)
       GST_ELEMENT_ERROR (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
-          ("no suitable plugins found"));
+          ("No suitable plugins found"));
+    else
+      GST_ELEMENT_WARNING (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
+          ("Some plugins were missing"));
     reassign_slot (dbin, slot);
   } else {
     GstMessage *selection_msg = is_selection_done (dbin);
