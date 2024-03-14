@@ -254,7 +254,9 @@ struct _GstDecodebin3
    * it has fully transitioned to active */
   gboolean selection_updated;
   /* End of variables protected by selection_lock */
-  gboolean upstream_selected;
+
+  /* Upstream handles stream selection */
+  gboolean upstream_handles_selection;
 
   /* Factories */
   GMutex factories_lock;
@@ -677,7 +679,7 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   g_object_set (dbin->multiqueue, "min-interleave-time",
       dbin->default_mq_min_interleave, NULL);
   dbin->current_mq_min_interleave = dbin->default_mq_min_interleave;
-  dbin->upstream_selected = FALSE;
+  dbin->upstream_handles_selection = FALSE;
 
   if (dbin->collection) {
     gst_clear_object (&dbin->collection);
@@ -1401,7 +1403,7 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       /* FIXME : We force `decodebin3` to upstream selection mode if *any* of the
          inputs is. This means things might break if there's a mix */
       if (input->upstream_selected)
-        dbin->upstream_selected = TRUE;
+        dbin->upstream_handles_selection = TRUE;
 
       input->input_is_parsed = s
           && gst_structure_has_field (s, "urisourcebin-parsed-data");
@@ -2286,7 +2288,7 @@ get_output_for_slot (MultiQueueSlot * slot)
 
   /* 3. In default mode check if we should expose */
   id_in_list = (gchar *) stream_in_list (dbin->requested_selection, stream_id);
-  if (id_in_list || dbin->upstream_selected) {
+  if (id_in_list || dbin->upstream_handles_selection) {
     /* Check if we can steal an existing output stream we could re-use.
      * that is:
      * * an output stream whose slot->stream is not in requested
@@ -2334,7 +2336,7 @@ is_selection_done (GstDecodebin3 * dbin)
 
   GST_LOG_OBJECT (dbin, "Checking");
 
-  if (dbin->upstream_selected) {
+  if (dbin->upstream_handles_selection) {
     GST_DEBUG ("Upstream handles stream selection, returning");
     return NULL;
   }
@@ -3527,7 +3529,7 @@ handle_select_streams (GstDecodebin3 * dbin, GstEvent * event)
   GList *streams = NULL;
   guint32 seqnum = gst_event_get_seqnum (event);
 
-  if (dbin->upstream_selected) {
+  if (dbin->upstream_handles_selection) {
     GST_DEBUG_OBJECT (dbin, "Letting select-streams event flow upstream");
     return FALSE;
   }
