@@ -403,7 +403,7 @@ typedef struct
   GstBuffer *buffer;
   GstMapInfo map;
 
-  guint8 **ext_data_array, *ext_data;
+  guint8 *ext_data;
 } BufferInfo;
 
 static void
@@ -416,7 +416,6 @@ buffer_info_free (void *opaque, guint8 * data)
     gst_buffer_unref (info->buffer);
   } else {
     av_freep (&info->ext_data);
-    av_freep (&info->ext_data_array);
   }
   g_free (info);
 }
@@ -473,7 +472,7 @@ gst_ffmpegaudenc_send_frame (GstFFMpegAudEnc * ffmpegaudenc, GstBuffer * buffer)
           av_buffer_create (NULL, 0, buffer_info_free, buffer_info, 0);
 
       if (info->channels > AV_NUM_DATA_POINTERS) {
-        buffer_info->ext_data_array = frame->extended_data =
+        frame->extended_data =
             av_malloc_array (info->channels, sizeof (uint8_t *));
       } else {
         frame->extended_data = frame->data;
