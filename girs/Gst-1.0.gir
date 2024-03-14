@@ -47281,7 +47281,12 @@ The album name as it should be displayed, e.g. 'The Jazz Guitar'</doc>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="TAG_ALBUM_GAIN" value="replaygain-album-gain" c:type="GST_TAG_ALBUM_GAIN">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">album gain in db (double)</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">album gain in dB (double)</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="TAG_ALBUM_GAIN_R128" value="r128-album-gain" c:type="GST_TAG_ALBUM_GAIN_R128" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">track gain in dB (double)</doc>
       <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>
@@ -47797,7 +47802,12 @@ The title as it should be sorted, e.g. 'Doll House, The'</doc>
       <type name="utf8" c:type="gchar*"/>
     </constant>
     <constant name="TAG_TRACK_GAIN" value="replaygain-track-gain" c:type="GST_TAG_TRACK_GAIN">
-      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">track gain in db (double)</doc>
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">track gain in dB (double)</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
+      <type name="utf8" c:type="gchar*"/>
+    </constant>
+    <constant name="TAG_TRACK_GAIN_R128" value="r128-track-gain" c:type="GST_TAG_TRACK_GAIN_R128" version="1.28">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gsttaglist.h">track gain in dB (double)</doc>
       <source-position filename="../subprojects/gstreamer/gst/gsttaglist.h"/>
       <type name="utf8" c:type="gchar*"/>
     </constant>

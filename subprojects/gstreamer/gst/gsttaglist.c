@@ -265,10 +265,14 @@ _priv_gst_tag_initialize (void)
       G_TYPE_UINT, _("serial"), _("serial number of track"), NULL);
   gst_tag_register_static (GST_TAG_TRACK_GAIN, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("replaygain track gain"), _("track gain in db"), NULL);
+  gst_tag_register_static (GST_TAG_TRACK_GAIN_R128, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("r128 track gain"), _("track gain in dB (r128)"), NULL);
   gst_tag_register_static (GST_TAG_TRACK_PEAK, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("replaygain track peak"), _("peak of the track"), NULL);
   gst_tag_register_static (GST_TAG_ALBUM_GAIN, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("replaygain album gain"), _("album gain in db"), NULL);
+  gst_tag_register_static (GST_TAG_ALBUM_GAIN_R128, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("r128 album gain"), _("album gain in dB (r128)"), NULL);
   gst_tag_register_static (GST_TAG_ALBUM_PEAK, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("replaygain album peak"), _("peak of the album"), NULL);
   gst_tag_register_static (GST_TAG_REFERENCE_LEVEL, GST_TAG_FLAG_META,

@@ -785,6 +785,14 @@ gboolean     gst_tag_list_is_writable   (const GstTagList * taglist);
  */
 #define GST_TAG_TRACK_GAIN             "replaygain-track-gain"
 /**
+ * GST_TAG_TRACK_GAIN_R128:
+ *
+ * track gain in dB (double)
+ *
+ * Since: 1.28
+ */
+#define GST_TAG_TRACK_GAIN_R128        "r128-track-gain"
+/**
  * GST_TAG_TRACK_PEAK:
  *
  * peak of the track (double)
@@ -796,6 +804,14 @@ gboolean     gst_tag_list_is_writable   (const GstTagList * taglist);
  * album gain in db (double)
  */
 #define GST_TAG_ALBUM_GAIN             "replaygain-album-gain"
+/**
+ * GST_TAG_ALBUM_GAIN_R128:
+ *
+ * track gain in dB (double)
+ *
+ * Since: 1.28
+ */
+#define GST_TAG_ALBUM_GAIN_R128        "r128-album-gain"
 /**
  * GST_TAG_ALBUM_PEAK:
  *
