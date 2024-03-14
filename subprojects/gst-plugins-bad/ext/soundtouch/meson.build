@@ -33,6 +33,7 @@ if soundtouch_dep.found()
     cpp_args : gst_plugins_bad_args + soundtouch_cargs,
     include_directories : [configinc],
     dependencies : [gstaudio_dep, soundtouch_dep],
+    override_options: ['cpp_std=c++14'],
     install : true,
     install_dir : plugins_install_dir)
   plugins += [gstsoundtouch]
