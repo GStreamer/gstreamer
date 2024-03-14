@@ -334,7 +334,7 @@ gst_asio_src_create_ringbuffer (GstAudioBaseSrc * src)
     for (i = 0; i < max_input_ch; i++)
       channel_indices.push_back (i);
   } else {
-    for (auto iter : channel_indices)
+    for (auto iter : channel_list)
       channel_indices.push_back (iter);
   }
 

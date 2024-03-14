@@ -321,7 +321,7 @@ gst_asio_sink_create_ringbuffer (GstAudioBaseSink * sink)
     for (i = 0; i < max_output_ch; i++)
       channel_indices.push_back (i);
   } else {
-    for (auto iter : channel_indices)
+    for (auto iter : channel_list)
       channel_indices.push_back (iter);
   }
 
