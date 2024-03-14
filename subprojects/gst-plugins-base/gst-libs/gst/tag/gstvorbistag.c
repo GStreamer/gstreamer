@@ -69,8 +69,10 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_ISRC, "ISRC"},
   {GST_TAG_COMMENT, "COMMENT"},
   {GST_TAG_TRACK_GAIN, "REPLAYGAIN_TRACK_GAIN"},
+  {GST_TAG_TRACK_GAIN_R128, "R128_TRACK_GAIN"},
   {GST_TAG_TRACK_PEAK, "REPLAYGAIN_TRACK_PEAK"},
   {GST_TAG_ALBUM_GAIN, "REPLAYGAIN_ALBUM_GAIN"},
+  {GST_TAG_ALBUM_GAIN_R128, "R128_ALBUM_GAIN"},
   {GST_TAG_ALBUM_PEAK, "REPLAYGAIN_ALBUM_PEAK"},
   {GST_TAG_REFERENCE_LEVEL, "REPLAYGAIN_REFERENCE_LOUDNESS"},
   {GST_TAG_ACOUSTID_ID, "ACOUSTID_ID"},
@@ -268,6 +270,19 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       break;
     }
     case G_TYPE_DOUBLE:{
+      if (strcmp (tag, "R128_TRACK_GAIN") == 0 ||
+          strcmp (tag, "R128_ALBUM_GAIN") == 0) {
+        gint tmp;
+        gchar *check;
+
+        tmp = g_ascii_strtoll (value, &check, 10);
+        if (*check != '\0' || tmp < -32768 || tmp > 32767)
+          break;
+        gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag,
+            (gdouble) tmp / 256., NULL);
+        break;
+      }
+
       gchar *c;
 
       c = g_strdup (value);
@@ -727,8 +742,13 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
 
         if (!gst_tag_list_get_double_index (list, tag, i, &value))
           g_return_val_if_reached (NULL);
-        g_ascii_formatd (buf, G_ASCII_DTOSTR_BUF_SIZE, "%f", value);
-        result = g_strconcat (vorbis_tag, "=", buf, NULL);
+        if (strcmp (tag, GST_TAG_TRACK_GAIN_R128) == 0 ||
+            strcmp (tag, GST_TAG_ALBUM_GAIN_R128) == 0) {
+          result = g_strdup_printf ("%s=%u", vorbis_tag, (gint) (value * 256.));
+        } else {
+          g_ascii_formatd (buf, G_ASCII_DTOSTR_BUF_SIZE, "%f", value);
+          result = g_strconcat (vorbis_tag, "=", buf, NULL);
+        }
         break;
       }
       default:{
