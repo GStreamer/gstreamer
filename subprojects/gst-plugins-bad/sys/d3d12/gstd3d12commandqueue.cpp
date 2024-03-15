@@ -224,7 +224,8 @@ gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
 
   std::lock_guard < std::mutex > lk (priv->execute_lock);
   priv->fence_val++;
-  priv->cq->ExecuteCommandLists (num_command_lists, command_lists);
+  if (num_command_lists)
+    priv->cq->ExecuteCommandLists (num_command_lists, command_lists);
   hr = priv->cq->Signal (priv->fence.Get (), priv->fence_val);
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (queue, "Signal failed");
