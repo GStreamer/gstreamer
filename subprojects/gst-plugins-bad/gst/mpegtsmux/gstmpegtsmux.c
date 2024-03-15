@@ -124,6 +124,7 @@ static GstStaticPadTemplate gst_mpeg_ts_mux_sink_factory =
         "audio/x-dts, framed = (boolean) TRUE;"
         "audio/x-opus, "
         "channels = (int) [1, 255];"
+        "audio/x-smpte-302m;"
         "subpicture/x-dvb; application/x-teletext; meta/x-klv, parsed=true;"
         "meta/x-id3, parsed=true;"
         "meta/x-st-2038, alignment = (string) line;"

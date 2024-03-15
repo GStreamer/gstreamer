@@ -245,6 +245,13 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       break;
+    case TSMUX_ST_PS_S302M:
+      /* FIXME: assign sequential extended IDs? */
+      stream->id = 0xBD;
+      stream->gst_stream_type = GST_STREAM_TYPE_AUDIO;
+      stream->stream_type = TSMUX_ST_PRIVATE_DATA;
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      break;
     default:
       /* Might be a custom stream type implemented by a subclass */
       break;
@@ -1020,6 +1027,11 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
         GST_DEBUG ("adding VANC registration descriptor");
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
         descriptor = gst_mpegts_descriptor_from_custom (0xc4, NULL, 0);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+      }
+      if (stream->internal_stream_type == TSMUX_ST_PS_S302M) {
+        descriptor = gst_mpegts_descriptor_from_registration ("BSSD", NULL, 0);
+        GST_DEBUG ("adding SMPTE 302M registration descriptor");
         g_ptr_array_add (pmt_stream->descriptors, descriptor);
       }
     default:
