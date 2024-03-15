@@ -2058,7 +2058,7 @@ _av1_generate_gop_structure (GstVaAV1Enc * self)
           l0++;
           list0--;
         }
-        if (l0 + l1 > self->gop.num_ref_frames)
+        if (l0 + l1 >= self->gop.num_ref_frames)
           break;
 
         if (list1 > 0) {
@@ -2066,7 +2066,7 @@ _av1_generate_gop_structure (GstVaAV1Enc * self)
           list1--;
         }
 
-        if (l0 + l1 > self->gop.num_ref_frames)
+        if (l0 + l1 >= self->gop.num_ref_frames)
           break;
       }
 
