@@ -870,7 +870,8 @@ tsmux_get_buffer (TsMux * mux, GstBuffer ** buf)
 }
 
 static gboolean
-tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
+tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr,
+    gboolean do_pcr_checks)
 {
   g_return_val_if_fail (buf, FALSE);
 
@@ -879,7 +880,7 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
     return TRUE;
   }
 
-  if (mux->bitrate) {
+  if (mux->bitrate && do_pcr_checks) {
     GST_BUFFER_PTS (buf) =
         gst_util_uint64_scale (mux->n_bytes * 8, GST_SECOND, mux->bitrate);
 
@@ -914,7 +915,7 @@ tsmux_packet_out (TsMux * mux, GstBuffer * buf, gint64 pcr)
           gst_buffer_unmap (pcr_buf, &map);
 
           stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-          if (!tsmux_packet_out (mux, pcr_buf, new_pcr))
+          if (!tsmux_packet_out (mux, pcr_buf, new_pcr, FALSE))
             goto error;
         }
       }
@@ -1247,7 +1248,7 @@ tsmux_section_write_packet (TsMux * mux, TsMuxSection * section)
     gst_buffer_unmap (buf, &map);
 
     /* Push the packet without PCR */
-    if (G_UNLIKELY (!tsmux_packet_out (mux, buf, -1)))
+    if (G_UNLIKELY (!tsmux_packet_out (mux, buf, -1, TRUE)))
       goto done;
 
     section->pi.stream_avail -= len;
@@ -1544,9 +1545,12 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
 
       new_pcr = write_new_pcr (mux, stream, get_current_pcr (mux, cur_ts),
           get_next_pcr (mux, cur_ts));
+
+      gboolean pcr_checks = TRUE;
       if (new_pcr != -1) {
         GST_LOG ("Writing PCR-only packet on PID 0x%04x", stream->pi.pid);
         tsmux_write_ts_header (mux, map.data, &stream->pi, 0, NULL, NULL);
+        pcr_checks = FALSE;
       } else {
         GST_LOG ("Writing null stuffing packet");
         if (!rewrite_si (mux, cur_ts)) {
@@ -1561,7 +1565,7 @@ pad_stream (TsMux * mux, TsMuxStream * stream, gint64 cur_ts)
       gst_buffer_unmap (buf, &map);
 
       stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-      if (!tsmux_packet_out (mux, buf, new_pcr))
+      if (!tsmux_packet_out (mux, buf, new_pcr, pcr_checks))
         goto done;
     }
   } while (bitrate < mux->bitrate);
@@ -1652,7 +1656,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
         gst_buffer_unmap (buf, &map);
         stream->program->pi.pid = stream->program->pcr_pid;
         stream->program->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
-        if (!tsmux_packet_out (mux, buf, new_pcr))
+        if (!tsmux_packet_out (mux, buf, new_pcr, FALSE))
           return FALSE;
       }
     }
@@ -1685,7 +1689,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   gst_buffer_unmap (buf, &map);
 
   GST_DEBUG ("Writing PES of size %d", (int) gst_buffer_get_size (buf));
-  res = tsmux_packet_out (mux, buf, new_pcr);
+  res = tsmux_packet_out (mux, buf, new_pcr, TRUE);
 
   /* Reset all dynamic flags */
   stream->pi.flags &= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
