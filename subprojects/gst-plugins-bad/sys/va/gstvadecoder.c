@@ -197,6 +197,8 @@ gst_va_decoder_new (GstVaDisplay * display, guint32 codec)
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), NULL);
 
   self = g_object_new (GST_TYPE_VA_DECODER, "display", display, NULL);
+  gst_object_ref_sink (self);
+
   if (!gst_va_decoder_initialize (self, codec))
     gst_clear_object (&self);
 

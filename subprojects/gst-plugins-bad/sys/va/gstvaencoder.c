@@ -576,6 +576,8 @@ gst_va_encoder_new (GstVaDisplay * display, guint32 codec,
 
   self = g_object_new (GST_TYPE_VA_ENCODER, "display", display,
       "va-entrypoint", entrypoint, NULL);
+  gst_object_ref_sink (self);
+
   if (!gst_va_encoder_initialize (self, codec))
     gst_clear_object (&self);
 

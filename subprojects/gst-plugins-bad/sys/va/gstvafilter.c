@@ -171,9 +171,14 @@ gst_va_filter_init (GstVaFilter * self)
 GstVaFilter *
 gst_va_filter_new (GstVaDisplay * display)
 {
+  GstVaFilter *self;
+
   g_return_val_if_fail (GST_IS_VA_DISPLAY (display), NULL);
 
-  return g_object_new (GST_TYPE_VA_FILTER, "display", display, NULL);
+  self = g_object_new (GST_TYPE_VA_FILTER, "display", display, NULL);
+  gst_object_ref_sink (self);
+
+  return self;
 }
 
 gboolean
