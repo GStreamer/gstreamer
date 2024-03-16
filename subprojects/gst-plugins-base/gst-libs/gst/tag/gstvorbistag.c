@@ -218,13 +218,15 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
 
       is_track_number_tag = (strcmp (gst_tag, GST_TAG_TRACK_NUMBER) == 0);
       is_disc_number_tag = (strcmp (gst_tag, GST_TAG_ALBUM_VOLUME_NUMBER) == 0);
-      tmp = strtoul (value, &check, 10);
+      tmp = g_ascii_strtoull (value, &check, 10);
+      if (tmp > G_MAXUINT32)
+        break;
       if (*check == '/' && (is_track_number_tag || is_disc_number_tag)) {
         guint count;
 
         check++;
-        count = strtoul (check, &check, 10);
-        if (*check != '\0' || count == 0)
+        count = g_ascii_strtoull (check, &check, 10);
+        if (*check != '\0' || count == 0 || count > G_MAXUINT32)
           break;
         if (is_track_number_tag) {
           gst_tag_list_add (list, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_COUNT,
@@ -288,7 +290,7 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       c = g_strdup (value);
       g_strdelimit (c, ",", '.');
       gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag,
-          g_strtod (c, NULL), NULL);
+          g_ascii_strtod (c, NULL), NULL);
       g_free (c);
       break;
     }
