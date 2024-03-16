@@ -29,7 +29,7 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstD3D12CommandQueue,
     gst_d3d12_command_queue, GST, D3D12_COMMAND_QUEUE, GstObject);
 
-GstD3D12CommandQueue * gst_d3d12_command_queue_new (GstD3D12Device * device,
+GstD3D12CommandQueue * gst_d3d12_command_queue_new (ID3D12Device * device,
                                                     const D3D12_COMMAND_QUEUE_DESC * desc,
                                                     guint queue_size);
 

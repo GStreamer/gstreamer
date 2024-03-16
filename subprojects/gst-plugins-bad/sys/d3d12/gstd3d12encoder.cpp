@@ -304,14 +304,13 @@ gst_d3d12_encoder_open (GstVideoEncoder * encoder)
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_ENCODE;
 
   auto cmd = std::make_unique < EncoderCmdData > ();
-  cmd->queue = gst_d3d12_command_queue_new (self->device,
-      &queue_desc, ASYNC_DEPTH);
+  cmd->queue = gst_d3d12_command_queue_new (device, &queue_desc, ASYNC_DEPTH);
   if (!cmd->queue) {
     GST_ERROR_OBJECT (self, "Couldn't create command queue");
     return FALSE;
   }
 
-  cmd->ca_pool = gst_d3d12_command_allocator_pool_new (self->device,
+  cmd->ca_pool = gst_d3d12_command_allocator_pool_new (device,
       D3D12_COMMAND_LIST_TYPE_VIDEO_ENCODE);
   cmd->video_device = video_device;
 

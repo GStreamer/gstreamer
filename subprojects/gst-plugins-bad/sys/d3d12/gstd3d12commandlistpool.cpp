@@ -101,14 +101,14 @@ gst_d3d12_command_list_pool_finalize (GObject * object)
 }
 
 GstD3D12CommandListPool *
-gst_d3d12_command_list_pool_new (GstD3D12Device * device,
+gst_d3d12_command_list_pool_new (ID3D12Device * device,
     D3D12_COMMAND_LIST_TYPE type)
 {
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  g_return_val_if_fail (device, nullptr);
 
   if (type != D3D12_COMMAND_LIST_TYPE_DIRECT &&
       type != D3D12_COMMAND_LIST_TYPE_COPY) {
-    GST_ERROR_OBJECT (device, "Not supported command list type");
+    GST_ERROR ("Not supported command list type");
     return nullptr;
   }
 
@@ -117,7 +117,7 @@ gst_d3d12_command_list_pool_new (GstD3D12Device * device,
   gst_object_ref_sink (self);
 
   auto priv = self->priv;
-  priv->device = gst_d3d12_device_get_device_handle (device);;
+  priv->device = device;
   priv->cmd_type = type;
 
   return self;

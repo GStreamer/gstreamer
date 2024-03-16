@@ -100,10 +100,10 @@ gst_d3d12_descriptor_pool_finalize (GObject * object)
 }
 
 GstD3D12DescriptorPool *
-gst_d3d12_descriptor_pool_new (GstD3D12Device * device,
+gst_d3d12_descriptor_pool_new (ID3D12Device * device,
     const D3D12_DESCRIPTOR_HEAP_DESC * desc)
 {
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  g_return_val_if_fail (device, nullptr);
   g_return_val_if_fail (desc, nullptr);
 
   auto self = (GstD3D12DescriptorPool *)
@@ -111,7 +111,7 @@ gst_d3d12_descriptor_pool_new (GstD3D12Device * device,
   gst_object_ref_sink (self);
 
   auto priv = self->priv;
-  priv->device = gst_d3d12_device_get_device_handle (device);
+  priv->device = device;
   priv->heap_desc = *desc;
 
   return self;

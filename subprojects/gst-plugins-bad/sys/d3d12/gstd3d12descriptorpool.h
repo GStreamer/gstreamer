@@ -31,7 +31,7 @@ G_DECLARE_FINAL_TYPE (GstD3D12DescriptorPool,
 
 typedef struct _GstD3D12Descriptor GstD3D12Descriptor;
 
-GstD3D12DescriptorPool *  gst_d3d12_descriptor_pool_new (GstD3D12Device * device,
+GstD3D12DescriptorPool *  gst_d3d12_descriptor_pool_new (ID3D12Device * device,
                                                          const D3D12_DESCRIPTOR_HEAP_DESC * desc);
 
 gboolean                  gst_d3d12_descriptor_pool_acquire (GstD3D12DescriptorPool * pool,

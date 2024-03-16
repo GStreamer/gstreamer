@@ -124,9 +124,6 @@ gst_d3d12_command_queue_class_init (GstD3D12CommandQueueClass * klass)
   auto object_class = G_OBJECT_CLASS (klass);
 
   object_class->finalize = gst_d3d12_command_queue_finalize;
-
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_command_queue_debug,
-      "d3d12commandqueue", 0, "d3d12commandqueue");
 }
 
 static void
@@ -146,26 +143,28 @@ gst_d3d12_command_queue_finalize (GObject * object)
 }
 
 GstD3D12CommandQueue *
-gst_d3d12_command_queue_new (GstD3D12Device * device,
+gst_d3d12_command_queue_new (ID3D12Device * device,
     const D3D12_COMMAND_QUEUE_DESC * desc, guint queue_size)
 {
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  g_return_val_if_fail (device, nullptr);
   g_return_val_if_fail (desc, nullptr);
 
-  auto device_handle = gst_d3d12_device_get_device_handle (device);
+  GST_D3D12_CALL_ONCE_BEGIN {
+    GST_DEBUG_CATEGORY_INIT (gst_d3d12_command_queue_debug,
+        "d3d12commandqueue", 0, "d3d12commandqueue");
+  } GST_D3D12_CALL_ONCE_END;
 
   ComPtr < ID3D12CommandQueue > cq;
-  auto hr = device_handle->CreateCommandQueue (desc, IID_PPV_ARGS (&cq));
-  if (!gst_d3d12_result (hr, device)) {
-    GST_ERROR_OBJECT (device, "Couldn't create command queue");
+  auto hr = device->CreateCommandQueue (desc, IID_PPV_ARGS (&cq));
+  if (FAILED (hr)) {
+    GST_ERROR ("Couldn't create command queue, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 
   ComPtr < ID3D12Fence > fence;
-  hr = device_handle->CreateFence (0,
-      D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&fence));
-  if (!gst_d3d12_result (hr, device)) {
-    GST_ERROR_OBJECT (device, "Couldn't create fence");
+  hr = device->CreateFence (0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&fence));
+  if (FAILED (hr)) {
+    GST_ERROR ("Couldn't create fence, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 
@@ -174,7 +173,7 @@ gst_d3d12_command_queue_new (GstD3D12Device * device,
   gst_object_ref_sink (self);
 
   auto priv = self->priv;
-  priv->device = gst_d3d12_device_get_device_handle (device);
+  priv->device = device;
   priv->cq = cq;
   priv->fence = fence;
   priv->queue_size = queue_size;

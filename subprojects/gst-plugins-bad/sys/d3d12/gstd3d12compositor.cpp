@@ -227,20 +227,23 @@ static const D3D12_ROOT_SIGNATURE_FLAGS g_rs_flags =
     D3D12_ROOT_SIGNATURE_FLAG_DENY_AMPLIFICATION_SHADER_ROOT_ACCESS |
     D3D12_ROOT_SIGNATURE_FLAG_DENY_MESH_SHADER_ROOT_ACCESS;
 
+/* *INDENT-OFF* */
 struct PadContext
 {
   PadContext (GstD3D12Device * dev)
   {
     event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     device = (GstD3D12Device *) gst_object_ref (dev);
-    ca_pool = gst_d3d12_command_allocator_pool_new (device,
+    auto device_handle = gst_d3d12_device_get_device_handle (device);
+    ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
     gst_video_info_init (&info);
   }
 
   PadContext () = delete;
 
-  ~PadContext () {
+  ~PadContext ()
+  {
     gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
         fence_val, event_handle);
 
@@ -261,6 +264,7 @@ struct PadContext
   HANDLE event_handle;
   guint64 fence_val = 0;
 };
+/* *INDENT-ON* */
 
 struct GstD3D12CompositorPadPrivate
 {
@@ -315,13 +319,15 @@ struct VertexData
   } texture;
 };
 
+/* *INDENT-OFF* */
 struct BackgroundRender
 {
   BackgroundRender (GstD3D12Device * dev, const GstVideoInfo & info)
   {
     event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     device = (GstD3D12Device *) gst_object_ref (dev);
-    ca_pool = gst_d3d12_command_allocator_pool_new (device,
+    auto device_handle = gst_d3d12_device_get_device_handle (device);
+    ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
 
     D3D12_VERSIONED_ROOT_SIGNATURE_DESC rs_desc = { };
@@ -342,7 +348,6 @@ struct BackgroundRender
       return;
     }
 
-    auto device_handle = gst_d3d12_device_get_device_handle (device);
     hr = device_handle->CreateRootSignature (0, rs_blob->GetBufferPointer (),
         rs_blob->GetBufferSize (), IID_PPV_ARGS (&rs));
     if (!gst_d3d12_result (hr, device)) {
@@ -491,7 +496,8 @@ struct BackgroundRender
   }
   BackgroundRender () = delete;
 
-  ~BackgroundRender () {
+  ~BackgroundRender ()
+  {
     gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
         fence_val, event_handle);
 
@@ -518,6 +524,7 @@ struct BackgroundRender
   HANDLE event_handle;
   guint64 fence_val = 0;
 };
+/* *INDENT-ON* */
 
 struct ClearColor
 {

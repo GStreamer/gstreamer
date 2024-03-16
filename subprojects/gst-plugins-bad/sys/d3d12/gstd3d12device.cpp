@@ -782,36 +782,37 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
     priv->info_queue = info_queue;
   }
 
-
   D3D12_COMMAND_QUEUE_DESC queue_desc = { };
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
   queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-  priv->direct_queue = gst_d3d12_command_queue_new (self, &queue_desc, 0);
+  priv->direct_queue = gst_d3d12_command_queue_new (device.Get (),
+      &queue_desc, 0);
   if (!priv->direct_queue)
     goto error;
 
-  priv->direct_cl_pool = gst_d3d12_command_list_pool_new (self,
+  priv->direct_cl_pool = gst_d3d12_command_list_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!priv->direct_cl_pool)
     goto error;
 
-  priv->direct_ca_pool = gst_d3d12_command_allocator_pool_new (self,
+  priv->direct_ca_pool = gst_d3d12_command_allocator_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!priv->direct_ca_pool)
     goto error;
 
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
-  priv->copy_queue = gst_d3d12_command_queue_new (self, &queue_desc, 0);
+  priv->copy_queue = gst_d3d12_command_queue_new (device.Get (),
+      &queue_desc, 0);
   if (!priv->copy_queue)
     goto error;
 
-  priv->copy_cl_pool = gst_d3d12_command_list_pool_new (self,
+  priv->copy_cl_pool = gst_d3d12_command_list_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_COPY);
   if (!priv->copy_cl_pool)
     goto error;
 
-  priv->copy_ca_pool = gst_d3d12_command_allocator_pool_new (self,
+  priv->copy_ca_pool = gst_d3d12_command_allocator_pool_new (device.Get (),
       D3D12_COMMAND_LIST_TYPE_COPY);
   if (!priv->copy_ca_pool)
     goto error;

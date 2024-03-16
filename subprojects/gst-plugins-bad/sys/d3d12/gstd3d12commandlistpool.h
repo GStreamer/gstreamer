@@ -31,7 +31,7 @@ G_DECLARE_FINAL_TYPE (GstD3D12CommandListPool,
 
 typedef struct _GstD3D12CommandList GstD3D12CommandList;
 
-GstD3D12CommandListPool * gst_d3d12_command_list_pool_new (GstD3D12Device * device,
+GstD3D12CommandListPool * gst_d3d12_command_list_pool_new (ID3D12Device * device,
                                                            D3D12_COMMAND_LIST_TYPE type);
 
 gboolean                  gst_d3d12_command_list_pool_acquire (GstD3D12CommandListPool * pool,

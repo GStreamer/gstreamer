@@ -539,9 +539,8 @@ gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
   priv->idv.SizeInBytes = sizeof (indices);
   priv->idv.Format = DXGI_FORMAT_R16_UINT;
   priv->index_buf = index_buf;
-  priv->srv_heap_pool = gst_d3d12_descriptor_pool_new (self->device,
-      &heap_desc);
-  priv->ca_pool = gst_d3d12_command_allocator_pool_new (self->device,
+  priv->srv_heap_pool = gst_d3d12_descriptor_pool_new (device, &heap_desc);
+  priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   priv->viewport.TopLeftX = 0;

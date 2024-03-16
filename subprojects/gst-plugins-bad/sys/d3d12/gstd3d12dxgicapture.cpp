@@ -1025,7 +1025,7 @@ gst_d3d12_dxgi_capture_open (GstD3D12DxgiCapture * self,
     return FALSE;
   }
 
-  priv->ca_pool = gst_d3d12_command_allocator_pool_new (self->device,
+  priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   priv->device = (GstD3D12Device *) gst_object_ref (self->device);

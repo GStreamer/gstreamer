@@ -89,14 +89,15 @@ struct DeviceContext
     queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
-    queue = gst_d3d12_command_queue_new (device,
+    auto device_handle = gst_d3d12_device_get_device_handle (device);
+    queue = gst_d3d12_command_queue_new (device_handle,
         &queue_desc, BACK_BUFFER_COUNT * 2);
     if (!queue) {
       GST_ERROR_OBJECT (device, "Couldn't create command queue");
       return;
     }
 
-    ca_pool = gst_d3d12_command_allocator_pool_new (device,
+    ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
     if (!ca_pool) {
       GST_ERROR_OBJECT (device, "Couldn't create command allocator pool");

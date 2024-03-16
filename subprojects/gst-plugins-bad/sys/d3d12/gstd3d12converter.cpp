@@ -720,8 +720,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
   srv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 
-  priv->srv_heap_pool = gst_d3d12_descriptor_pool_new (self->device,
-      &srv_heap_desc);
+  priv->srv_heap_pool = gst_d3d12_descriptor_pool_new (device, &srv_heap_desc);
 
   priv->upload_data = new ConverterUploadData ();
   auto upload_data = priv->upload_data;

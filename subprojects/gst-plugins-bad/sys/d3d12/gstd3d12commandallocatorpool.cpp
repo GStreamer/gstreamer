@@ -111,17 +111,17 @@ gst_d3d12_command_allocator_pool_finalize (GObject * object)
 }
 
 GstD3D12CommandAllocatorPool *
-gst_d3d12_command_allocator_pool_new (GstD3D12Device * device,
+gst_d3d12_command_allocator_pool_new (ID3D12Device * device,
     D3D12_COMMAND_LIST_TYPE type)
 {
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  g_return_val_if_fail (device, nullptr);
 
   auto self = (GstD3D12CommandAllocatorPool *)
       g_object_new (GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL, nullptr);
   gst_object_ref_sink (self);
 
   auto priv = self->priv;
-  priv->device = gst_d3d12_device_get_device_handle (device);
+  priv->device = device;
   priv->cmd_type = type;
 
   return self;

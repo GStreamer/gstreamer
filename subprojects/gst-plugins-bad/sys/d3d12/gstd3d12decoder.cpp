@@ -442,13 +442,13 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
   D3D12_COMMAND_QUEUE_DESC desc = { };
   desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
   desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-  cmd->queue = gst_d3d12_command_queue_new (decoder->device, &desc, 4);
+  cmd->queue = gst_d3d12_command_queue_new (cmd->device.Get (), &desc, 4);
   if (!cmd->queue) {
     GST_ERROR_OBJECT (element, "Couldn't create command queue");
     return FALSE;
   }
 
-  cmd->ca_pool = gst_d3d12_command_allocator_pool_new (decoder->device,
+  cmd->ca_pool = gst_d3d12_command_allocator_pool_new (cmd->device.Get (),
       D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE);
 
   priv->cmd = std::move (cmd);
