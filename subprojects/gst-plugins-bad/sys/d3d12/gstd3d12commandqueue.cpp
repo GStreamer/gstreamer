@@ -53,6 +53,13 @@ struct GCData
 
 typedef std::shared_ptr<GCData> GCDataPtr;
 
+struct gc_cmp {
+  bool operator()(const GCDataPtr &a, const GCDataPtr &b)
+  {
+    return a->fence_val > b->fence_val;
+  }
+};
+
 struct GstD3D12CommandQueuePrivate
 {
   GstD3D12CommandQueuePrivate ()
@@ -79,13 +86,6 @@ struct GstD3D12CommandQueuePrivate
 
     CloseHandle (event_handle);
   }
-
-  struct gc_cmp {
-    bool operator()(const GCDataPtr &a, const GCDataPtr &b)
-    {
-      return a->fence_val > b->fence_val;
-    }
-  };
 
   D3D12_COMMAND_QUEUE_DESC desc;
 
@@ -393,9 +393,8 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
     return;
   }
 
+  std::lock_guard < std::mutex > elk (priv->execute_lock);
   auto gc_data = std::make_shared < GCData > (fence_data, notify, fence_value);
-
-  std::lock_guard < std::mutex > lk (priv->lock);
   if (!priv->gc_thread) {
     gst_d3d12_init_background_thread ();
     priv->gc_thread = g_thread_new ("GstD3D12Gc",
@@ -404,6 +403,50 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
 
   GST_LOG_OBJECT (queue, "Pushing GC data %" G_GUINT64_FORMAT, fence_value);
 
+  std::lock_guard < std::mutex > lk (priv->lock);
   priv->gc_list.push (std::move (gc_data));
   priv->cond.notify_one ();
+}
+
+HRESULT
+gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
+{
+  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+
+  auto priv = queue->priv;
+
+  std::priority_queue < GCDataPtr, std::vector < GCDataPtr >, gc_cmp > gc_list;
+
+  {
+    std::lock_guard < std::mutex > elk (priv->execute_lock);
+    priv->fence_val++;
+    auto hr = priv->cq->Signal (priv->fence.Get (), priv->fence_val);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (queue, "Signal failed");
+      priv->fence_val--;
+      return hr;
+    }
+
+    auto completed = priv->fence->GetCompletedValue ();
+    if (completed < priv->fence_val) {
+      auto event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+      hr = priv->fence->SetEventOnCompletion (priv->fence_val, event_handle);
+      if (FAILED (hr)) {
+        GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
+        CloseHandle (event_handle);
+        return hr;
+      }
+
+      WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
+      CloseHandle (event_handle);
+    }
+
+    {
+      std::lock_guard < std::mutex > lk (priv->lock);
+      gc_list = priv->gc_list;
+      priv->gc_list = { };
+    }
+  }
+
+  return S_OK;
 }

@@ -60,4 +60,6 @@ void                   gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue 
                                                            gpointer fence_data,
                                                            GDestroyNotify notify);
 
+HRESULT                gst_d3d12_command_queue_drain      (GstD3D12CommandQueue * queue);
+
 G_END_DECLS
