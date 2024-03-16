@@ -625,6 +625,11 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
 
   PGS_DUMP ("Object ID %d ver %u flags 0x%02x\n", obj_id, obj_ver, flags);
 
+  if (!obj) {
+    GST_ERROR ("unknown Object ID %d", obj_id);
+    return 0;
+  }
+
   if (flags & PGS_OBJECT_UPDATE_FLAG_START_RLE) {
     obj->rle_data_ver = obj_ver;
 
