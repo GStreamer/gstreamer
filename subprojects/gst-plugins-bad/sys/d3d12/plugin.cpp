@@ -64,7 +64,6 @@ GST_DEBUG_CATEGORY (gst_d3d12_utils_debug);
 static void
 plugin_deinit (gpointer data)
 {
-  gst_d3d12_sync_background_thread ();
 }
 
 static gboolean

@@ -396,7 +396,6 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
   std::lock_guard < std::mutex > elk (priv->execute_lock);
   auto gc_data = std::make_shared < GCData > (fence_data, notify, fence_value);
   if (!priv->gc_thread) {
-    gst_d3d12_init_background_thread ();
     priv->gc_thread = g_thread_new ("GstD3D12Gc",
         (GThreadFunc) gst_d3d12_command_queue_gc_thread, queue);
   }
