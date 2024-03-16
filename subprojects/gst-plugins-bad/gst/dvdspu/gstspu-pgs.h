@@ -82,6 +82,9 @@ struct PgsCompositionObject
 
   /* Only valid if PGS_COMPOSITION_OBJECT_FLAG_CROPPED is set */
   guint16 crop_x, crop_y, crop_w, crop_h;
+
+  /* Parsed width and height from Object Data */
+  guint16 width, height;
 };
 
 struct SpuPgsState {
@@ -102,7 +105,8 @@ gboolean gstspu_pgs_execute_event (GstDVDSpu *dvdspu);
 void gstspu_pgs_render (GstDVDSpu *dvdspu, GstVideoFrame *window);
 gboolean gstspu_pgs_handle_dvd_event (GstDVDSpu *dvdspu, GstEvent *event);
 void gstspu_pgs_get_render_geometry (GstDVDSpu *dvdspu,
-    gint *display_width, gint *display_height,
+    gint *display_width, gint *display_height, gint *count);
+void gstspu_pgs_get_render_geometry_n (GstDVDSpu *dvdspu, gint index,
     GstVideoRectangle *window_rect);
 void gstspu_pgs_flush (GstDVDSpu *dvdspu);
 

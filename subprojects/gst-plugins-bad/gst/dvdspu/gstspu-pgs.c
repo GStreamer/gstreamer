@@ -204,9 +204,11 @@ pgs_composition_object_render (PgsCompositionObject * obj, SpuState * state,
   obj_h = GST_READ_UINT16_BE (data + 2);
   data += 4;
 
-  /* Calculate object coordinates relative to the window */
-  min_x = obj_x = (gint) obj->x - (gint) state->pgs.win_x;
-  min_y = obj_y = (gint) obj->y - (gint) state->pgs.win_y;
+  /* window frame is located at (obj_x, obj_y) with size (obj_w, obj_h) */
+  g_assert (obj_w <= win_w);
+  g_assert (obj_h <= win_h);
+  min_x = obj_x = 0;
+  min_y = obj_y = 0;
 
   if (obj->flags & PGS_COMPOSITION_OBJECT_FLAG_CROPPED) {
     obj_x -= obj->crop_x;
@@ -337,7 +339,8 @@ pgs_composition_object_clear (PgsCompositionObject * obj)
     g_free (obj->rle_data);
     obj->rle_data = NULL;
   }
-  obj->rle_data_size = obj->rle_data_used = 0;
+  /* restore to cleared allocated state */
+  memset ((char *) obj, 0, sizeof (*obj));
 }
 
 static void
@@ -662,8 +665,15 @@ parse_set_object_data (GstDVDSpu * dvdspu, guint8 type, guint8 * payload,
     }
   }
 
-  if (obj->rle_data_size == obj->rle_data_used)
+  if (obj->rle_data_size == obj->rle_data_used) {
     dump_rle_data (dvdspu, obj->rle_data, obj->rle_data_size);
+    if (obj->rle_data_size >= 4) {
+      guint8 *data = obj->rle_data;
+
+      obj->width = GST_READ_UINT16_BE (data);
+      obj->height = GST_READ_UINT16_BE (data + 2);
+    }
+  }
 
   if (payload != end) {
     GST_ERROR ("PGS Set Object Data: %" G_GSSIZE_FORMAT " bytes not consumed",
@@ -838,23 +848,35 @@ gstspu_pgs_handle_dvd_event (GstDVDSpu * dvdspu, GstEvent * event)
 
 void
 gstspu_pgs_get_render_geometry (GstDVDSpu * dvdspu,
-    gint * display_width, gint * display_height,
-    GstVideoRectangle * window_rect)
+    gint * display_width, gint * display_height, gint * count)
 {
-  SpuPgsState *pgs_state = &dvdspu->spu_state.pgs;
+  PgsPresentationSegment *ps = &dvdspu->spu_state.pgs.pres_seg;
 
-  if (window_rect) {
-    window_rect->x = pgs_state->win_x;
-    window_rect->y = pgs_state->win_y;
-    window_rect->w = pgs_state->win_w;
-    window_rect->h = pgs_state->win_h;
-  }
+  if (count)
+    *count = ps->objects->len;
 
   if (display_width)
-    *display_width = pgs_state->pres_seg.vid_w;
+    *display_width = ps->vid_w;
 
   if (display_height)
-    *display_height = pgs_state->pres_seg.vid_h;
+    *display_height = ps->vid_h;
+}
+
+void
+gstspu_pgs_get_render_geometry_n (GstDVDSpu * dvdspu, gint index,
+    GstVideoRectangle * window_rect)
+{
+  PgsPresentationSegment *ps = &dvdspu->spu_state.pgs.pres_seg;
+
+  if (window_rect && index < ps->objects->len) {
+    PgsCompositionObject *cur =
+        &g_array_index (ps->objects, PgsCompositionObject, index);
+
+    window_rect->x = cur->x;
+    window_rect->y = cur->y;
+    window_rect->w = cur->width;
+    window_rect->h = cur->height;
+  }
 }
 
 void

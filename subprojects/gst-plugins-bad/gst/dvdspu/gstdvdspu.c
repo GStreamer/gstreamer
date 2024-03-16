@@ -951,8 +951,9 @@ gstspu_render_composition (GstDVDSpu * dvdspu)
   GstVideoFormat format;
   GstVideoFrame frame;
   GstVideoOverlayRectangle *rectangle;
-  GstVideoOverlayComposition *composition;
+  GstVideoOverlayComposition *composition = NULL;
   GstVideoRectangle win;
+  gint rect_count, rect_index;
   gint spu_w, spu_h;
   gsize size;
 
@@ -960,78 +961,88 @@ gstspu_render_composition (GstDVDSpu * dvdspu)
 
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_PGS:
-      gstspu_pgs_get_render_geometry (dvdspu, &spu_w, &spu_h, &win);
+      gstspu_pgs_get_render_geometry (dvdspu, &spu_w, &spu_h, &rect_count);
       break;
     case SPU_INPUT_TYPE_VOBSUB:
       gstspu_vobsub_get_render_geometry (dvdspu, &spu_w, &spu_h, &win);
+      rect_count = 1;
       break;
     default:
       return NULL;
   }
 
-  if (win.w <= 0 || win.h <= 0 || spu_w <= 0 || spu_h <= 0) {
-    GST_DEBUG_OBJECT (dvdspu, "skip render of empty window");
-    return NULL;
+  for (rect_index = 0; rect_index < rect_count; ++rect_index) {
+    if (dvdspu->spu_input_type == SPU_INPUT_TYPE_PGS)
+      gstspu_pgs_get_render_geometry_n (dvdspu, rect_index, &win);
+
+    if (win.w <= 0 || win.h <= 0 || spu_w <= 0 || spu_h <= 0) {
+      GST_DEBUG_OBJECT (dvdspu, "skip render of empty window");
+      continue;
+    }
+
+    gst_video_info_init (&overlay_info);
+    gst_video_info_set_format (&overlay_info, format, win.w, win.h);
+    size = GST_VIDEO_INFO_SIZE (&overlay_info);
+
+    buffer = gst_buffer_new_and_alloc (size);
+    if (!buffer) {
+      GST_WARNING_OBJECT (dvdspu, "failed to allocate overlay buffer");
+      continue;
+    }
+
+    gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
+        format, win.w, win.h);
+
+    if (!gst_video_frame_map (&frame, &overlay_info, buffer, GST_MAP_READWRITE))
+      goto map_failed;
+
+    memset (GST_VIDEO_FRAME_PLANE_DATA (&frame, 0), 0,
+        GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0) *
+        GST_VIDEO_FRAME_HEIGHT (&frame));
+
+    switch (dvdspu->spu_input_type) {
+      case SPU_INPUT_TYPE_VOBSUB:
+        gstspu_vobsub_render (dvdspu, &frame);
+        break;
+      case SPU_INPUT_TYPE_PGS:
+        gstspu_pgs_render (dvdspu, &frame);
+        break;
+      default:
+        break;
+    }
+
+    gst_video_frame_unmap (&frame);
+
+    GST_DEBUG_OBJECT (dvdspu, "Overlay rendered for video size %dx%d, "
+        "spu display size %dx%d, window geometry %dx%d+%d%+d",
+        GST_VIDEO_INFO_WIDTH (&dvdspu->spu_state.info),
+        GST_VIDEO_INFO_HEIGHT (&dvdspu->spu_state.info),
+        spu_w, spu_h, win.w, win.h, win.x, win.y);
+
+    if (gstspu_fit_overlay_rectangle (dvdspu, &win, spu_w, spu_h,
+            dvdspu->spu_input_type == SPU_INPUT_TYPE_PGS))
+      GST_DEBUG_OBJECT (dvdspu, "Adjusted window to fit video: %dx%d%+d%+d",
+          win.w, win.h, win.x, win.y);
+
+    rectangle = gst_video_overlay_rectangle_new_raw (buffer, win.x, win.y,
+        win.w, win.h, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+
+    gst_buffer_unref (buffer);
+
+    if (!composition) {
+      composition = gst_video_overlay_composition_new (rectangle);
+    } else {
+      gst_video_overlay_composition_add_rectangle (composition, rectangle);
+    }
+    gst_video_overlay_rectangle_unref (rectangle);
   }
-
-  gst_video_info_init (&overlay_info);
-  gst_video_info_set_format (&overlay_info, format, win.w, win.h);
-  size = GST_VIDEO_INFO_SIZE (&overlay_info);
-
-  buffer = gst_buffer_new_and_alloc (size);
-  if (!buffer) {
-    GST_WARNING_OBJECT (dvdspu, "failed to allocate overlay buffer");
-    return NULL;
-  }
-
-  gst_buffer_add_video_meta (buffer, GST_VIDEO_FRAME_FLAG_NONE,
-      format, win.w, win.h);
-
-  if (!gst_video_frame_map (&frame, &overlay_info, buffer, GST_MAP_READWRITE))
-    goto map_failed;
-
-  memset (GST_VIDEO_FRAME_PLANE_DATA (&frame, 0), 0,
-      GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0) *
-      GST_VIDEO_FRAME_HEIGHT (&frame));
-
-  switch (dvdspu->spu_input_type) {
-    case SPU_INPUT_TYPE_VOBSUB:
-      gstspu_vobsub_render (dvdspu, &frame);
-      break;
-    case SPU_INPUT_TYPE_PGS:
-      gstspu_pgs_render (dvdspu, &frame);
-      break;
-    default:
-      break;
-  }
-
-  gst_video_frame_unmap (&frame);
-
-  GST_DEBUG_OBJECT (dvdspu, "Overlay rendered for video size %dx%d, "
-      "spu display size %dx%d, window geometry %dx%d+%d%+d",
-      GST_VIDEO_INFO_WIDTH (&dvdspu->spu_state.info),
-      GST_VIDEO_INFO_HEIGHT (&dvdspu->spu_state.info),
-      spu_w, spu_h, win.w, win.h, win.x, win.y);
-
-  if (gstspu_fit_overlay_rectangle (dvdspu, &win, spu_w, spu_h,
-          dvdspu->spu_input_type == SPU_INPUT_TYPE_PGS))
-    GST_DEBUG_OBJECT (dvdspu, "Adjusted window to fit video: %dx%d%+d%+d",
-        win.w, win.h, win.x, win.y);
-
-  rectangle = gst_video_overlay_rectangle_new_raw (buffer, win.x, win.y,
-      win.w, win.h, GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
-
-  gst_buffer_unref (buffer);
-
-  composition = gst_video_overlay_composition_new (rectangle);
-  gst_video_overlay_rectangle_unref (rectangle);
 
   return composition;
 
 map_failed:
   GST_ERROR_OBJECT (dvdspu, "failed to map buffer");
   gst_buffer_unref (buffer);
-  return NULL;
+  return composition;
 }
 
 static void
