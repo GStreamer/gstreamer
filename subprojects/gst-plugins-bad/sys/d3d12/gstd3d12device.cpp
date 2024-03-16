@@ -725,6 +725,8 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_device_debug,
       "d3d12device", 0, "d3d12 device object");
 
+  gst_d3d12_device_enable_debug ();
+
   hr = CreateDXGIFactory2 (factory_flags, IID_PPV_ARGS (&factory));
   if (FAILED (hr)) {
     GST_WARNING ("Could create dxgi factory, hr: 0x%x", (guint) hr);
