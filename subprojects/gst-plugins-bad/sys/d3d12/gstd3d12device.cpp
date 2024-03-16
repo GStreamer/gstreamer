@@ -738,6 +738,14 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   priv->rtv_inc_size =
       device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+  GST_OBJECT_FLAG_SET (priv->direct_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (priv->direct_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (priv->direct_ca_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  GST_OBJECT_FLAG_SET (priv->copy_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (priv->copy_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+  GST_OBJECT_FLAG_SET (priv->copy_ca_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
   return self;
 
 error:

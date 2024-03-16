@@ -207,6 +207,8 @@ gst_d3d12_command_allocator_pool_acquire (GstD3D12CommandAllocatorPool * pool,
     }
 
     new_cmd = gst_d3d12_command_allocator_new (ca.Get (), priv->cmd_type);
+    if (GST_OBJECT_FLAG_IS_SET (pool, GST_OBJECT_FLAG_MAY_BE_LEAKED))
+      GST_MINI_OBJECT_FLAG_SET (new_cmd, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   }
 
   new_cmd->pool = (GstD3D12CommandAllocatorPool *) gst_object_ref (pool);

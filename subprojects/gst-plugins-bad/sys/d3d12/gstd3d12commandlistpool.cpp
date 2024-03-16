@@ -210,6 +210,8 @@ gst_d3d12_command_list_pool_acquire (GstD3D12CommandListPool * pool,
     }
 
     new_cmd = gst_d3d12_command_list_new (cl.Get (), priv->cmd_type);
+    if (GST_OBJECT_FLAG_IS_SET (pool, GST_OBJECT_FLAG_MAY_BE_LEAKED))
+      GST_MINI_OBJECT_FLAG_SET (new_cmd, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
   } else {
     new_cmd->cl->QueryInterface (IID_PPV_ARGS (&cl));
     hr = cl->Reset (ca, nullptr);
