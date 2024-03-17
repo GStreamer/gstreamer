@@ -981,7 +981,11 @@ on_error (GstPlay * self, GError * err, const GstStructure * details)
       g_quark_to_string (err->domain), err->code);
 
 #ifndef GST_DISABLE_GST_DEBUG
-  extra_details = gst_structure_copy (details);
+  if (details != NULL) {
+    extra_details = gst_structure_copy (details);
+  } else {
+    extra_details = gst_structure_new_empty ("error-details");
+  }
   if (gst_play_config_get_pipeline_dump_in_error_details (self->config)) {
     dot_data = gst_debug_bin_to_dot_data (GST_BIN_CAST (self->playbin),
         GST_DEBUG_GRAPH_SHOW_ALL);
