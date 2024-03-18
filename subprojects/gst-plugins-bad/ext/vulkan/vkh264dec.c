@@ -177,17 +177,25 @@ gst_vulkan_h264_decoder_close (GstVideoDecoder * decoder)
 {
   GstVulkanH264Decoder *self = GST_VULKAN_H264_DECODER (decoder);
 
-  if (self->decoder)
-    gst_vulkan_decoder_stop (self->decoder);
-
-  if (self->output_state)
-    gst_video_codec_state_unref (self->output_state);
-
   gst_clear_object (&self->decoder);
   gst_clear_object (&self->decode_queue);
   gst_clear_object (&self->graphic_queue);
   gst_clear_object (&self->device);
   gst_clear_object (&self->instance);
+
+  return TRUE;
+}
+
+static gboolean
+gst_vulkan_h264_decoder_stop (GstVideoDecoder * decoder)
+{
+  GstVulkanH264Decoder *self = GST_VULKAN_H264_DECODER (decoder);
+
+  if (self->decoder)
+    gst_vulkan_decoder_stop (self->decoder);
+
+  if (self->output_state)
+    gst_video_codec_state_unref (self->output_state);
 
   return TRUE;
 }
@@ -1312,6 +1320,7 @@ gst_vulkan_h264_decoder_class_init (GstVulkanH264DecoderClass * klass)
 
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_vulkan_h264_decoder_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_vulkan_h264_decoder_close);
+  decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vulkan_h264_decoder_stop);
   decoder_class->src_query =
       GST_DEBUG_FUNCPTR (gst_vulkan_h264_decoder_src_query);
   decoder_class->sink_query =

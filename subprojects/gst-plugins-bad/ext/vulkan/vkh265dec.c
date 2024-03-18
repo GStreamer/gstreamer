@@ -235,17 +235,25 @@ gst_vulkan_h265_decoder_close (GstVideoDecoder * decoder)
 {
   GstVulkanH265Decoder *self = GST_VULKAN_H265_DECODER (decoder);
 
-  if (self->decoder)
-    gst_vulkan_decoder_stop (self->decoder);
-
-  if (self->output_state)
-    gst_video_codec_state_unref (self->output_state);
-
   gst_clear_object (&self->decoder);
   gst_clear_object (&self->decode_queue);
   gst_clear_object (&self->graphic_queue);
   gst_clear_object (&self->device);
   gst_clear_object (&self->instance);
+
+  return TRUE;
+}
+
+static gboolean
+gst_vulkan_h265_decoder_stop (GstVideoDecoder * decoder)
+{
+  GstVulkanH265Decoder *self = GST_VULKAN_H265_DECODER (decoder);
+
+  if (self->decoder)
+    gst_vulkan_decoder_stop (self->decoder);
+
+  if (self->output_state)
+    gst_video_codec_state_unref (self->output_state);
 
   return TRUE;
 }
@@ -1657,6 +1665,7 @@ gst_vulkan_h265_decoder_class_init (GstVulkanH265DecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_vulkan_h265_decoder_sink_query);
   decoder_class->open = GST_DEBUG_FUNCPTR (gst_vulkan_h265_decoder_open);
   decoder_class->close = GST_DEBUG_FUNCPTR (gst_vulkan_h265_decoder_close);
+  decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vulkan_h265_decoder_stop);
   decoder_class->negotiate =
       GST_DEBUG_FUNCPTR (gst_vulkan_h265_decoder_negotiate);
   decoder_class->decide_allocation =
