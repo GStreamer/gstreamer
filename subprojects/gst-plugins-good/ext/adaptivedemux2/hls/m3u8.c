@@ -174,7 +174,7 @@ gst_m3u8_preload_hint_equal (GstM3U8PreloadHint * hint1,
   if (hint1->hint_type != hint2->hint_type)
     return FALSE;
 
-  if (!g_str_equal (hint1->uri, hint2->uri))
+  if (g_strcmp0 (hint1->uri, hint2->uri))
     return FALSE;
 
   if (hint1->offset != hint2->offset)
@@ -235,7 +235,7 @@ gst_m3u8_init_file_equal (const GstM3U8InitFile * ifile1,
   if (ifile1 != NULL && ifile2 == NULL)
     return FALSE;
 
-  if (!g_str_equal (ifile1->uri, ifile2->uri))
+  if (g_strcmp0 (ifile1->uri, ifile2->uri))
     return FALSE;
   if (ifile1->offset != ifile2->offset)
     return FALSE;
