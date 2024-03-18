@@ -726,7 +726,9 @@ start_playlist_download (GstHLSDemuxPlaylistLoader * pl,
   } else {
     /* This is the first time loading this playlist URI, clear the error counter
      * and redirect URI */
-    priv->download_error_count = 0;
+    if (!priv->loading_playlist_uri
+        || g_strcmp0 (orig_uri, priv->loading_playlist_uri))
+      priv->download_error_count = 0;
     g_free (priv->current_playlist_redirect_uri);
     priv->current_playlist_redirect_uri = NULL;
   }
