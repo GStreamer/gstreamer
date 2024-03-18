@@ -149,6 +149,9 @@ struct _GstSourceHandler
 
   /* List of GstSourcePad */
   GList *sourcepads;
+
+  /* If we saw a redirection message from this source. */
+  gboolean saw_redirection;
 };
 
 /* Structure wrapping everything related to a urisourcebin pad */
@@ -2167,11 +2170,15 @@ gst_uri_decode_bin3_handle_redirection (GstURIDecodeBin3 * uridecodebin,
 
   if (g_strcmp0 (current_uri, uri)) {
     gboolean was_instant = uridecodebin->instant_uri;
-    GST_DEBUG_OBJECT (uridecodebin, "Doing instant switch to '%s'", uri);
-    uridecodebin->instant_uri = TRUE;
-    /* Force instant switch */
-    gst_uri_decode_bin3_set_uri (uridecodebin, uri);
-    uridecodebin->instant_uri = was_instant;
+    /* We only want to handle the redirection once */
+    if (!handler->saw_redirection) {
+      handler->saw_redirection = TRUE;
+      GST_DEBUG_OBJECT (uridecodebin, "Doing instant switch to '%s'", uri);
+      uridecodebin->instant_uri = TRUE;
+      /* Force instant switch */
+      gst_uri_decode_bin3_set_uri (uridecodebin, uri);
+      uridecodebin->instant_uri = was_instant;
+    }
     gst_message_unref (message);
     message = NULL;
   }
