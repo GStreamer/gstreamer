@@ -1181,6 +1181,7 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
   GstVtdec *vtdec = (GstVtdec *) decompression_output_ref_con;
   GstVideoCodecFrame *frame = (GstVideoCodecFrame *) source_frame_ref_con;
   GstVideoCodecState *state;
+  gboolean push_anyway = FALSE;
 
   GST_LOG_OBJECT (vtdec, "got output frame %p %d and VT buffer %p", frame,
       frame->decode_frame_number, image_buffer);
@@ -1224,9 +1225,15 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
    * to avoid processing too many frames ahead.
    * The DPB * 2 size limit is completely arbitrary. */
   g_mutex_lock (&vtdec->queue_mutex);
-  while (gst_queue_array_get_length (vtdec->reorder_queue) >
+  /* If negotiate() gets called from the output loop (via finish_frame()),
+   * it can attempt to drain and call VTDecompressionSessionWaitForAsynchronousFrames,
+   * which will lock up if we decide to wait in this callback, creating a deadlock. */
+  push_anyway = vtdec->is_flushing || vtdec->is_draining;
+  while (!push_anyway
+      && gst_queue_array_get_length (vtdec->reorder_queue) >
       vtdec->dbp_size * 2) {
     g_cond_wait (&vtdec->queue_cond, &vtdec->queue_mutex);
+    push_anyway = vtdec->is_flushing || vtdec->is_draining;
   }
 
   gst_queue_array_push_sorted (vtdec->reorder_queue, frame, sort_frames_by_pts,
