@@ -310,6 +310,9 @@ gst_adaptive_demux_loop_pause_and_lock (GstAdaptiveDemuxLoop * loop)
 
     g_rec_mutex_lock (&loop->context_lock);
   }
+
+  if (!loop->context)
+    return FALSE;
   g_main_context_push_thread_default (loop->context);
 
   return TRUE;
@@ -320,7 +323,8 @@ gst_adaptive_demux_loop_unlock_and_unpause (GstAdaptiveDemuxLoop * loop)
 {
   gboolean stopped;
 
-  g_main_context_pop_thread_default (loop->context);
+  if (loop->context)
+    g_main_context_pop_thread_default (loop->context);
   g_rec_mutex_unlock (&loop->context_lock);
 
   g_mutex_lock (&loop->lock);
