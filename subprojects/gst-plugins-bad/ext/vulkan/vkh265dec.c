@@ -1397,7 +1397,7 @@ _fill_ref_slot (GstVulkanH265Decoder * self, GstH265Picture * picture,
     .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
     .codedOffset = { self->x, self->y },
     .codedExtent = { self->width, self->height },
-    .baseArrayLayer = self->layered_dpb ? pic->slot_idx : 0,
+    .baseArrayLayer = self->decoder->layered_dpb ? pic->slot_idx : 0,
     .imageViewBinding = pic->base.img_view_ref->view,
   };
 
