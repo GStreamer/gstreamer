@@ -1791,21 +1791,34 @@ next_item:
     case QUEUE_ITEM_TYPE_SIGNAL_CHANGE:
       // These are already only produced when signal status is changing
       if (item.signal_change.have_signal) {
-        GST_ELEMENT_INFO(GST_ELEMENT(self), RESOURCE, READ,
-                         ("Signal recovered"), ("Input source detected"));
+        GstAjaVideoFormat fmt = gst_aja_video_format_from_ntv2_format(
+            item.signal_change.detected_format);
+        gchar *format_str = g_enum_to_string(GST_TYPE_AJA_VIDEO_FORMAT, fmt);
+        std::string format_string =
+            NTV2VideoFormatToString(item.signal_change.detected_format);
+        GST_ELEMENT_INFO_WITH_DETAILS(
+            GST_ELEMENT(self), RESOURCE, READ, ("Signal recovered"),
+            ("Input source detected"),
+            ("detected-format", G_TYPE_STRING, format_string.c_str(),
+             "gst-aja-format", G_TYPE_STRING, format_str, "vpid", G_TYPE_UINT,
+             item.signal_change.vpid, NULL));
         self->signal = TRUE;
         g_object_notify(G_OBJECT(self), "signal");
+        g_free(format_str);
       } else if (!item.signal_change.have_signal) {
         if (item.signal_change.detected_format != ::NTV2_FORMAT_UNKNOWN) {
+          GstAjaVideoFormat fmt = gst_aja_video_format_from_ntv2_format(
+              item.signal_change.detected_format);
+          gchar *format_str = g_enum_to_string(GST_TYPE_AJA_VIDEO_FORMAT, fmt);
           std::string format_string =
               NTV2VideoFormatToString(item.signal_change.detected_format);
-
           GST_ELEMENT_WARNING_WITH_DETAILS(
               GST_ELEMENT(self), RESOURCE, READ, ("Signal lost"),
-              ("Input source with different mode %s was detected",
-               format_string.c_str()),
-              ("detected-format", G_TYPE_STRING, format_string.c_str(), "vpid",
-               G_TYPE_UINT, item.signal_change.vpid, NULL));
+              ("Input source with different mode %s was detected", format_str),
+              ("detected-format", G_TYPE_STRING, format_string.c_str(),
+               "gst-aja-format", G_TYPE_STRING, format_str, "vpid", G_TYPE_UINT,
+               item.signal_change.vpid, NULL));
+          g_free(format_str);
         } else {
           GST_ELEMENT_WARNING(GST_ELEMENT(self), RESOURCE, READ,
                               ("Signal lost"),
@@ -2491,7 +2504,7 @@ restart:
       GST_DEBUG_OBJECT(self, "No signal, waiting");
       g_mutex_unlock(&self->queue_lock);
       frames_dropped_last = G_MAXUINT64;
-      if (have_signal) {
+      if (have_signal || current_video_format != last_detected_video_format) {
         QueueItem item = {
             .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
             .signal_change = {.have_signal = FALSE,
@@ -2543,6 +2556,16 @@ restart:
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
       continue;
+    } else if (have_signal &&
+               current_video_format != last_detected_video_format) {
+      QueueItem item = {
+          .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
+          .signal_change = {.have_signal = TRUE,
+                            .detected_format = current_video_format,
+                            .vpid = vpid_a}};
+      last_detected_video_format = current_video_format;
+      gst_queue_array_push_tail_struct(self->queue, &item);
+      g_cond_signal(&self->queue_cond);
     }
 
     AUTOCIRCULATE_STATUS status;
