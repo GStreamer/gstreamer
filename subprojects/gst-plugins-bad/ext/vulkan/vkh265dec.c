@@ -1307,6 +1307,7 @@ _update_parameters (GstVulkanH265Decoder * self, const GstH265PPS * pps)
       /* .pNext =  */
       .maxStdSPSCount = params.stdSPSCount,
       .maxStdPPSCount = params.stdPPSCount,
+      .maxStdVPSCount = params.stdVPSCount,
       .pParametersAddInfo = &params,
     }
   };
@@ -1387,7 +1388,7 @@ _fill_ref_slot (GstVulkanH265Decoder * self, GstH265Picture * picture,
   *res = (VkVideoPictureResourceInfoKHR) {
     .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
     .codedOffset = { self->x, self->y },
-    .codedExtent = { self->width, self->height },
+    .codedExtent = { self->coded_width, self->coded_height },
     .baseArrayLayer = self->decoder->layered_dpb ? pic->slot_idx : 0,
     .imageViewBinding = pic->base.img_view_ref->view,
   };
