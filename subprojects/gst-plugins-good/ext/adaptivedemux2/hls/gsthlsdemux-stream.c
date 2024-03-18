@@ -1396,7 +1396,7 @@ gst_hls_demux_stream_handle_playlist_update (GstHLSDemuxStream * stream,
   } else if (stream->pending_rendition) {
     /* Switching rendition configures a new playlist on the loader,
      * and we should never get a callback for a stale download URI */
-    g_assert (g_str_equal (stream->pending_rendition->uri, new_playlist_uri));
+    g_assert (!g_strcmp0 (stream->pending_rendition->uri, new_playlist_uri));
 
     gst_hls_rendition_stream_unref (stream->current_rendition);
     /* Stealing ref */

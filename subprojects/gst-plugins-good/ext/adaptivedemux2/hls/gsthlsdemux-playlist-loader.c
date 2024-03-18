@@ -309,7 +309,7 @@ gst_hls_demux_playlist_loader_has_current_uri (GstHLSDemuxPlaylistLoader * pl,
     target_playlist_uri = priv->target_playlist_uri;
 
   if (priv->current_playlist == NULL
-      || !g_str_equal (target_playlist_uri, priv->current_playlist_uri))
+      || g_strcmp0 (target_playlist_uri, priv->current_playlist_uri))
     return FALSE;
 
   return TRUE;
@@ -496,7 +496,7 @@ on_download_complete (DownloadRequest * download, DownloadRequestState state,
     return;
   }
 
-  if (!g_str_equal (priv->target_playlist_uri, priv->loading_playlist_uri)) {
+  if (g_strcmp0 (priv->target_playlist_uri, priv->loading_playlist_uri)) {
     /* This callback happened just as the playlist URI was updated. There should be
      * a pending state update scheduled, but we can just kick off the new download
      * immediately */
@@ -796,7 +796,7 @@ gst_hls_demux_playlist_loader_update (GstHLSDemuxPlaylistLoader * pl)
       /* A download is in progress, but if we reach here it's
        * because the target playlist URI got updated, so check
        * for cancelling the current download. */
-      if (g_str_equal (priv->target_playlist_uri, priv->current_playlist_uri))
+      if (!g_strcmp0 (priv->target_playlist_uri, priv->current_playlist_uri))
         break;
 
       /* A download is in progress. Cancel it and trigger a new one */

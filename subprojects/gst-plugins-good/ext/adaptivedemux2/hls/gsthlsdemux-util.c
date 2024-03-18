@@ -539,7 +539,7 @@ gst_hlsdemux_handle_content_id3 (GstHLSDemux * demux,
   if (!gst_tag_list_get_sample (taglist, GST_TAG_PRIVATE_DATA, &priv_data))
     goto out;
 
-  if (!g_str_equal ("com.apple.streaming.transportStreamTimestamp",
+  if (g_strcmp0 ("com.apple.streaming.transportStreamTimestamp",
           gst_structure_get_string (gst_sample_get_info (priv_data), "owner")))
     goto out;
 

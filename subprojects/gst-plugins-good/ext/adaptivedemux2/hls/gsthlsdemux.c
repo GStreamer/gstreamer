@@ -1085,7 +1085,7 @@ gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
   if (demux->pending_variant) {
     /* The pending variant must always match the one that just got updated:
      * The loader should only do a callback for the most recently set URI */
-    g_assert (g_str_equal (demux->pending_variant->uri, playlist_uri));
+    g_assert (!g_strcmp0 (demux->pending_variant->uri, playlist_uri));
 
     gboolean changed = (demux->pending_variant != demux->current_variant);
 
@@ -1162,7 +1162,7 @@ gst_hls_demux_handle_variant_playlist_update_error (GstHLSDemux * demux,
 
   /* The variant must always match the one that just got updated:
    * The loader should only do a callback for the most recently set URI */
-  g_assert (g_str_equal (variant->uri, playlist_uri));
+  g_assert (!g_strcmp0 (variant->uri, playlist_uri));
 
   /* If we didn't already add this playlist to the failed variants list
    * do so now. It's possible we get an update error again if we failed
