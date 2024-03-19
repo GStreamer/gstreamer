@@ -92,7 +92,6 @@ option('amfcodec', type : 'feature', value : 'auto', description : 'AMD AMF code
 option('androidmedia', type : 'feature', value : 'auto', description : 'Video capture and codec plugins for Android')
 option('applemedia', type : 'feature', value : 'auto', description : 'Video capture and codec access plugins for macOS and iOS')
 option('asio', type : 'feature', value : 'auto', description : 'Steinberg Audio Streaming Input Output (ASIO) plugin')
-option('asio-sdk-path', type : 'string', value : '', description : 'Full path to Steinberg Audio Streaming Input Output (ASIO) SDK')
 option('assrender', type : 'feature', value : 'auto', description : 'ASS/SSA subtitle renderer plugin')
 option('bluez', type : 'feature', value : 'auto', description : 'Bluetooth audio A2DP/AVDTP sink, AVDTP source plugin')
 option('bs2b', type : 'feature', value : 'auto', description : 'Bauer stereophonic-to-binaural audio plugin')

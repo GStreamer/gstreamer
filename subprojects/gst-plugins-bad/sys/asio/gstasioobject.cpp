@@ -28,7 +28,6 @@
 #include <functional>
 #include <vector>
 #include <mutex>
-#include <iasiodrv.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_asio_object_debug);
 #define GST_CAT_DEFAULT gst_asio_object_debug
@@ -43,6 +42,38 @@ std::mutex global_lock;
 /* Protect callback slots */
 std::mutex slot_lock;
 /* *INDENT-ON* */
+
+/* ASIO COM interface */
+struct IASIO : public IUnknown
+{
+  virtual ASIOBool init (gpointer sysHandle) = 0;
+  virtual void getDriverName (gchar *name) = 0;
+  virtual glong getDriverVersion () = 0;
+  virtual void getErrorMessage (gchar * string) = 0;
+  virtual ASIOError start () = 0;
+  virtual ASIOError stop () = 0;
+  virtual ASIOError getChannels (glong * numInputChannels,
+      glong * numOutputChannels) = 0;
+  virtual ASIOError getLatencies (glong * inputLatency,
+      glong * outputLatency) = 0;
+  virtual ASIOError getBufferSize (glong *minSize, glong *maxSize,
+      glong * preferredSize, glong *granularity) = 0;
+  virtual ASIOError canSampleRate (ASIOSampleRate sampleRate) = 0;
+  virtual ASIOError getSampleRate (ASIOSampleRate * sampleRate) = 0;
+  virtual ASIOError setSampleRate (ASIOSampleRate sampleRate) = 0;
+  virtual ASIOError getClockSources (ASIOClockSource *clocks,
+      glong *numSources) = 0;
+  virtual ASIOError setClockSource (glong reference) = 0;
+  virtual ASIOError getSamplePosition (ASIOSamples * sPos,
+      ASIOTimeStamp *tStamp) = 0;
+  virtual ASIOError getChannelInfo (ASIOChannelInfo * info) = 0;
+  virtual ASIOError createBuffers (ASIOBufferInfo * bufferInfos,
+      glong numChannels, glong bufferSize, ASIOCallbacks * callbacks) = 0;
+  virtual ASIOError disposeBuffers () = 0;
+  virtual ASIOError controlPanel () = 0;
+  virtual ASIOError future (glong selector,gpointer opt) = 0;
+  virtual ASIOError outputReady () = 0;
+};
 
 static void gst_asio_object_buffer_switch (GstAsioObject * self,
     glong index, ASIOBool process_now);
