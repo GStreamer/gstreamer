@@ -1099,6 +1099,8 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
   GList *to_activate = NULL;
   GList *iternew, *iterold;
   gboolean inactive_previous_item = old_pads == NULL;
+  GstMessage *pending_buffering_msg = NULL;
+  gboolean pending_about_to_finish = FALSE;
 
   /* Deactivate old urisourcebins first ? Problem is they might remove the pads */
 
@@ -1214,19 +1216,30 @@ switch_and_activate_input_locked (GstURIDecodeBin3 * uridecodebin,
   /* and set new one as input item */
   uridecodebin->input_item = new_item;
 
-  /* If the new source is already drained, propagate about-to-finish */
-  if (new_item->pending_about_to_finish) {
-    emit_and_handle_about_to_finish (uridecodebin, new_item);
+  pending_about_to_finish = new_item->pending_about_to_finish;
+  if (new_item->main_item->handler->pending_buffering_msg) {
+    pending_buffering_msg = new_item->main_item->handler->pending_buffering_msg;
+    new_item->main_item->handler->pending_buffering_msg = NULL;
   }
 
-  /* Finally propagate pending buffering message */
-  if (new_item->main_item->handler->pending_buffering_msg) {
-    GstMessage *msg = new_item->main_item->handler->pending_buffering_msg;
-    new_item->main_item->handler->pending_buffering_msg = NULL;
-    GST_DEBUG_OBJECT (uridecodebin,
-        "Posting pending buffering message %" GST_PTR_FORMAT, msg);
+  /* If we have to post message or emit signals, it might trigger some
+   * re-entring actions (like setting the next URI). Make sure we release the
+   * lock when posting/emitting */
+  if (pending_buffering_msg || pending_about_to_finish) {
     PLAY_ITEMS_UNLOCK (uridecodebin);
-    GST_BIN_CLASS (parent_class)->handle_message ((GstBin *) uridecodebin, msg);
+    /* If the new source is already drained, propagate about-to-finish */
+    if (pending_about_to_finish) {
+      emit_and_handle_about_to_finish (uridecodebin, new_item);
+    }
+
+    /* Finally propagate pending buffering message */
+    if (pending_buffering_msg) {
+      GST_DEBUG_OBJECT (uridecodebin,
+          "Posting pending buffering message %" GST_PTR_FORMAT,
+          pending_buffering_msg);
+      GST_BIN_CLASS (parent_class)->handle_message ((GstBin *) uridecodebin,
+          pending_buffering_msg);
+    }
     PLAY_ITEMS_LOCK (uridecodebin);
   }
 }
