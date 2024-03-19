@@ -2171,6 +2171,7 @@ real_main (int argc, char *argv[])
   gboolean print_aii = FALSE;
   gboolean uri_handlers = FALSE;
   gboolean check_exists = FALSE;
+  gboolean check_version = FALSE;
   gboolean color_always = FALSE;
   gchar *min_version = NULL;
   guint minver_maj = GST_VERSION_MAJOR;
@@ -2285,6 +2286,7 @@ real_main (int argc, char *argv[])
     }
     g_free (min_version);
     check_exists = TRUE;
+    check_version = TRUE;
   }
 
   if (check_exists) {
@@ -2296,9 +2298,13 @@ real_main (int argc, char *argv[])
         GstPluginFeature *feature;
 
         feature = gst_registry_lookup_feature (gst_registry_get (), argv[1]);
-        if (feature != NULL && gst_plugin_feature_check_version (feature,
-                minver_maj, minver_min, minver_micro)) {
-          exit_code = 0;
+        if (feature != NULL) {
+          if (check_version && !gst_plugin_feature_check_version (feature,
+                  minver_maj, minver_min, minver_micro)) {
+            exit_code = 2;
+          } else {
+            exit_code = 0;
+          }
         } else {
           exit_code = 1;
         }
