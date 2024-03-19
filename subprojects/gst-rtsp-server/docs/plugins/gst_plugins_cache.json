@@ -333,7 +333,7 @@
                         "construct": false,
                         "construct-only": false,
                         "controllable": false,
-                        "default": "GStreamer/1.22.10.1",
+                        "default": "GStreamer/1.22.11",
                         "mutable": "null",
                         "readable": true,
                         "type": "gchararray",
