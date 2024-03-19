@@ -70,12 +70,6 @@ static gboolean gst_asio_ring_buffer_start (GstAudioRingBuffer * buf);
 static gboolean gst_asio_ring_buffer_stop (GstAudioRingBuffer * buf);
 static guint gst_asio_ring_buffer_delay (GstAudioRingBuffer * buf);
 
-static gboolean gst_asio_buffer_switch_cb (GstAsioObject * obj,
-    glong index, ASIOBufferInfo * infos, guint num_infos,
-    ASIOChannelInfo * input_channel_infos,
-    ASIOChannelInfo * output_channel_infos,
-    ASIOSampleRate sample_rate, glong buffer_size, gpointer user_data);
-
 #define gst_asio_ring_buffer_parent_class parent_class
 G_DEFINE_TYPE (GstAsioRingBuffer, gst_asio_ring_buffer,
     GST_TYPE_AUDIO_RING_BUFFER);
@@ -196,7 +190,8 @@ gst_asio_buffer_switch_cb (GstAsioObject * obj, glong index,
           guint64 gap_frames = sample_position - self->expected_sample_position;
           gint gap_size = gap_frames * bps;
 
-          GST_WARNING_OBJECT (self, "%" G_GUINT64_FORMAT " frames are missing");
+          GST_WARNING_OBJECT (self, "%" G_GUINT64_FORMAT " frames are missing",
+              gap_frames);
 
           while (gap_size >= len) {
             gst_audio_format_info_fill_silence (ringbuffer->spec.info.finfo,
@@ -232,7 +227,7 @@ gst_asio_buffer_switch_cb (GstAsioObject * obj, glong index,
     }
 
     for (j = 0; j < self->num_channels; j++) {
-      if (self->channel_indices[j] != info->channelNum)
+      if (self->channel_indices[j] != (guint) info->channelNum)
         continue;
 
       g_assert (num_channels < self->num_channels);
@@ -253,7 +248,7 @@ gst_asio_buffer_switch_cb (GstAsioObject * obj, glong index,
         guint gst_offset = 0, asio_offset = 0;
 
         /* Interleaves audio */
-        while (gst_offset < len) {
+        while (gst_offset < (guint) len) {
           for (i = 0; i < num_channels; i++) {
             ASIOBufferInfo *info = self->infos[i];
 
@@ -272,7 +267,7 @@ gst_asio_buffer_switch_cb (GstAsioObject * obj, glong index,
         guint gst_offset = 0, asio_offset = 0;
 
         /* Interleaves audio */
-        while (gst_offset < len) {
+        while (gst_offset < (guint) len) {
           for (i = 0; i < num_channels; i++) {
             ASIOBufferInfo *info = self->infos[i];
 

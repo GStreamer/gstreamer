@@ -24,7 +24,6 @@
 #include "gstasiosrc.h"
 #include "gstasioobject.h"
 #include "gstasioringbuffer.h"
-#include <atlconv.h>
 #include <string.h>
 #include <set>
 #include <vector>
@@ -253,7 +252,6 @@ gst_asio_src_create_ringbuffer (GstAudioBaseSrc * src)
   guint i;
   gchar *ringbuffer_name;
 
-  USES_CONVERSION;
 
   GST_DEBUG_OBJECT (self, "Create ringbuffer");
 
@@ -263,7 +261,11 @@ gst_asio_src_create_ringbuffer (GstAudioBaseSrc * src)
   }
 
   if (self->device_clsid) {
-    hr = CLSIDFromString (A2COLE (self->device_clsid), &clsid);
+    auto clsid_utf16 = g_utf8_to_utf16 (self->device_clsid,
+        -1, nullptr, nullptr, nullptr);
+    hr = CLSIDFromString ((const wchar_t *) clsid_utf16, &clsid);
+    g_free (clsid_utf16);
+
     if (FAILED (hr)) {
       GST_WARNING_OBJECT (self, "Failed to convert %s to CLSID",
           self->device_clsid);
@@ -311,7 +313,7 @@ gst_asio_src_create_ringbuffer (GstAudioBaseSrc * src)
     ch = g_strsplit (self->capture_channles, ",", 0);
 
     auto num_channels = g_strv_length (ch);
-    if (num_channels > max_input_ch) {
+    if (num_channels > (guint) max_input_ch) {
       GST_WARNING_OBJECT (self, "To many channels %d were requested",
           num_channels);
     } else {
@@ -331,7 +333,7 @@ gst_asio_src_create_ringbuffer (GstAudioBaseSrc * src)
   }
 
   if (channel_list.size () == 0) {
-    for (i = 0; i < max_input_ch; i++)
+    for (i = 0; i < (guint) max_input_ch; i++)
       channel_indices.push_back (i);
   } else {
     for (auto iter : channel_list)
