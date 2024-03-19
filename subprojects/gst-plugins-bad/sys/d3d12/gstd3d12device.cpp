@@ -226,11 +226,16 @@ public:
         });
 
     if (it != list_.end ()) {
-      GST_DEBUG ("Reusing created device");
       auto device = (GstD3D12Device *)
           g_object_new (GST_TYPE_D3D12_DEVICE, nullptr);
       gst_object_ref_sink (device);
       device->priv->inner = *it;
+
+      auto name = buildObjectName ((*it)->adapter_index);
+      gst_object_set_name (GST_OBJECT (device), name.c_str ());
+
+      GST_DEBUG_OBJECT (device, "Reusing created device");
+
       return device;
     }
 
@@ -238,7 +243,10 @@ public:
     if (!device)
       return nullptr;
 
-    GST_DEBUG ("Created new device");
+    auto name = buildObjectName (device->priv->inner->adapter_index);
+    gst_object_set_name (GST_OBJECT (device), name.c_str ());
+
+    GST_DEBUG_OBJECT (device, "Created new device");
 
     list_.push_back (device->priv->inner);
 
@@ -263,9 +271,25 @@ private:
   DeviceCacheManager () {}
   ~DeviceCacheManager () {}
 
+  std::string buildObjectName (UINT adapter_index)
+  {
+    auto name_it = name_map_.find (adapter_index);
+    UINT idx = 0;
+    if (name_it == name_map_.end ()) {
+      name_map_.insert ({adapter_index, 0});
+    } else {
+      name_it->second++;
+      idx = name_it->second;
+    }
+
+    return std::string ("d3d11device") + std::to_string (adapter_index) + "-" +
+        std::to_string (idx);
+  }
+
 private:
   std::mutex lock_;
   std::vector<DeviceInnerPtr> list_;
+  std::unordered_map<UINT,UINT> name_map_;
 };
 /* *INDENT-ON* */
 
