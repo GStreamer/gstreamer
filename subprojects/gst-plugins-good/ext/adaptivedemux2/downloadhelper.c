@@ -603,6 +603,44 @@ finish_transfer_error:
   g_object_unref (in);
 }
 
+static inline gchar
+gst_soup_util_log_make_level_tag (SoupLoggerLogLevel level)
+{
+  gchar c;
+
+  if (G_UNLIKELY ((gint) level > 9))
+    return '?';
+
+  switch (level) {
+    case SOUP_LOGGER_LOG_MINIMAL:
+      c = 'M';
+      break;
+    case SOUP_LOGGER_LOG_HEADERS:
+      c = 'H';
+      break;
+    case SOUP_LOGGER_LOG_BODY:
+      c = 'B';
+      break;
+    default:
+      /* Unknown level. If this is hit libsoup likely added a new
+       * log level to SoupLoggerLogLevel and it should be added
+       * as a case */
+      c = level + '0';
+      break;
+  }
+  return c;
+}
+
+static void
+gst_soup_util_log_printer_cb (SoupLogger G_GNUC_UNUSED * logger,
+    SoupLoggerLogLevel level, char direction, const char *data,
+    gpointer user_data)
+{
+  gchar c;
+  c = gst_soup_util_log_make_level_tag (level);
+  GST_TRACE ("HTTP_SESSION(%c): %c %s", c, direction, data);
+}
+
 DownloadHelper *
 downloadhelper_new (GstAdaptiveDemuxClock * clock)
 {
@@ -631,6 +669,17 @@ downloadhelper_new (GstAdaptiveDemuxClock * clock)
    * an attempt to reuse an already closed connection */
   dh->session = _soup_session_new_with_options ("timeout", 10, NULL);
 
+  /* Setup soup header debugging if we are at GST_LEVEL_TRACE */
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_TRACE) {
+    /* Create a new logger and set body_size_limit to -1 (no limit) */
+    SoupLogger *logger = _soup_logger_new (SOUP_LOGGER_LOG_HEADERS);
+
+    _soup_logger_set_printer (logger, gst_soup_util_log_printer_cb, NULL, NULL);
+
+    /* Attach logger to session */
+    _soup_session_add_feature (dh->session, (SoupSessionFeature *) logger);
+    g_object_unref (logger);
+  }
   g_main_context_pop_thread_default (dh->transfer_context);
 
   return dh;
