@@ -40,6 +40,8 @@ struct _GstATDec
   AudioQueueRef queue;
   gint spf;
   guint64 input_position, output_position;
+
+  GstAudioChannelPosition at_channel_positions[64];
 };
 
 struct _GstATDecClass
