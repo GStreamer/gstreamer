@@ -48,6 +48,7 @@ typedef struct _GstValidateReporterPrivate
 } GstValidateReporterPrivate;
 
 static GstValidateReporterPrivate *g_log_handler = NULL;
+static GWeakRef log_reporter;
 
 G_DEFINE_INTERFACE (GstValidateReporter, gst_validate_reporter, G_TYPE_OBJECT);
 
@@ -285,27 +286,24 @@ gst_validate_default_log_hanlder (const gchar * log_domain,
 }
 
 static void
-gst_validate_reporter_destroyed (gpointer udata, GObject * freed_reporter)
-{
-  g_log_set_handler ("GStreamer",
-      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_default_log_hanlder, NULL);
-  g_log_set_handler ("GLib",
-      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_default_log_hanlder, NULL);
-  g_log_set_handler ("GLib-GObject",
-      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_default_log_hanlder, NULL);
-}
-
-static void
 gst_validate_reporter_g_log_func (const gchar * log_domain,
-    GLogLevelFlags log_level, const gchar * message,
-    GstValidateReporter * reporter)
+    GLogLevelFlags log_level, const gchar * message, gpointer udata)
 {
+  GstValidateReporter *reporter = g_weak_ref_get (&log_reporter);
+
+  g_printerr ("G_LOG: %s\n", message);
+  if (!reporter) {
+    gst_validate_default_log_hanlder (log_domain, log_level, message, NULL);
+    return;
+  }
   if (log_level & G_LOG_LEVEL_ERROR)
     gst_validate_default_log_hanlder (log_domain, log_level, message, reporter);
   else if (log_level & G_LOG_LEVEL_CRITICAL)
     GST_VALIDATE_REPORT (reporter, G_LOG_CRITICAL, "%s", message);
   else if (log_level & G_LOG_LEVEL_WARNING)
     GST_VALIDATE_REPORT (reporter, G_LOG_WARNING, "%s", message);
+
+  gst_object_unref (reporter);
 }
 
 /**
@@ -487,23 +485,21 @@ gst_validate_reporter_set_runner (GstValidateReporter * reporter,
 void
 gst_validate_reporter_set_handle_g_logs (GstValidateReporter * reporter)
 {
-  g_log_set_default_handler ((GLogFunc) gst_validate_reporter_g_log_func,
-      reporter);
+  g_weak_ref_set (&log_reporter, reporter);
+
+  g_log_set_default_handler ((GLogFunc) gst_validate_reporter_g_log_func, NULL);
 
   g_log_set_handler ("GStreamer",
-      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, reporter);
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, NULL);
 
   g_log_set_handler ("GLib",
-      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, reporter);
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, NULL);
 
 
   g_log_set_handler ("GLib-GObject",
-      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, reporter);
+      G_LOG_LEVEL_MASK, (GLogFunc) gst_validate_reporter_g_log_func, NULL);
 
   g_log_handler = gst_validate_reporter_get_priv (reporter);
-  g_object_weak_ref (G_OBJECT (reporter), gst_validate_reporter_destroyed,
-      NULL);
-
 }
 
 /**
