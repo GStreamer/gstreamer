@@ -286,6 +286,74 @@ gst_caps_to_at_format (GstCaps * caps, AudioStreamBasicDescription * format)
   return TRUE;
 }
 
+/* These are the position orders that AudioToolbox outputs,
+ * derived experimentally.
+ */
+/* *INDENT-OFF* */
+static const struct
+{
+  gint channels;
+  GstAudioChannelPosition positions[8];
+}
+channel_layouts[] = {
+  {3, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+  }},
+  {4, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+  }},
+  {5, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+  }},
+  {6, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_LFE1,
+  }},
+  {8, {
+    GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT_OF_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT_OF_CENTER,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+    GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+    GST_AUDIO_CHANNEL_POSITION_LFE1,
+  }},
+};
+/* *INDENT-ON* */
+
+static void
+gst_atdec_get_channel_positions (GstATDec * atdec, gint channels,
+    GstAudioChannelPosition * positions)
+{
+  guint64 mask;
+
+  for (guint i = 0; i < G_N_ELEMENTS (channel_layouts); ++i) {
+    if (channel_layouts[i].channels == channels) {
+      memcpy (positions, channel_layouts[i].positions,
+          channels * sizeof (*positions));
+      return;
+    }
+  }
+
+  GST_WARNING_OBJECT (atdec, "Unknown channel count %u", channels);
+  mask = gst_audio_channel_get_fallback_mask (channels);
+  gst_audio_channel_positions_from_mask (channels, mask, positions);
+}
+
 static gboolean
 gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 {
@@ -320,6 +388,26 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
       "rate", G_TYPE_INT, (int) input_format.mSampleRate,
       "channels", G_TYPE_INT, input_format.mChannelsPerFrame, NULL);
 
+  /* The layout passed to AudioQueueSetOfflineRenderFormat() is ignored, and
+   * setting kAudioQueueProperty_ChannelLayout has no effect either.
+   * The actual layout is derived experimentally here.
+   * It's not in a valid order for GStreamer, so we have to reorder in
+   * gst_atdec_handle_frame().
+   */
+
+  if (input_format.mChannelsPerFrame > 2) {
+    guint64 mask;
+
+    gst_atdec_get_channel_positions (atdec, input_format.mChannelsPerFrame,
+        atdec->at_channel_positions);
+    gst_audio_channel_positions_to_mask (atdec->at_channel_positions,
+        input_format.mChannelsPerFrame, FALSE, &mask);
+    /* gst_audio_info_from_caps() below will convert the mask back into a
+     * valid order, which we will use when reordering. */
+    gst_caps_set_simple (output_caps, "channel-mask", GST_TYPE_BITMASK, mask,
+        NULL);
+  }
+
   /* configure output_format from caps */
   gst_caps_to_at_format (output_caps, &output_format);
 
@@ -333,12 +421,7 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   if (status)
     goto create_queue_error;
 
-  /* FIXME: figure out how to map this properly */
-  if (output_format.mChannelsPerFrame == 1)
-    output_layout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;
-  else
-    output_layout.mChannelLayoutTag = kAudioChannelLayoutTag_Stereo;
-
+  output_layout.mChannelLayoutTag = kAudioChannelLayoutTag_Unknown;
   status = AudioQueueSetOfflineRenderFormat (atdec->queue,
       &output_format, &output_layout);
   if (status)
@@ -447,6 +530,12 @@ gst_atdec_offline_render (GstATDec * atdec, GstAudioInfo * audio_info)
 
     gst_buffer_fill (out, 0, output_buffer->mAudioData,
         output_buffer->mAudioDataByteSize);
+
+    if (GST_AUDIO_INFO_CHANNELS (audio_info) > 2)
+      gst_audio_buffer_reorder_channels (out,
+          GST_AUDIO_INFO_FORMAT (audio_info),
+          GST_AUDIO_INFO_CHANNELS (audio_info),
+          atdec->at_channel_positions, audio_info->position);
 
     flow_ret =
         gst_audio_decoder_finish_frame (GST_AUDIO_DECODER (atdec), out, 1);
