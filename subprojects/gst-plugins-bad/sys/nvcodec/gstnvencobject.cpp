@@ -313,6 +313,20 @@ GstNvEncObject::InitSession (NV_ENC_INITIALIZE_PARAMS * params,
     case GST_VIDEO_FORMAT_GBR_16LE:
       buffer_format_ = NV_ENC_BUFFER_FORMAT_YUV444_10BIT;
       break;
+    case GST_VIDEO_FORMAT_VUYA:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_AYUV;
+      break;
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_ABGR;
+      break;
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_ARGB;
+      break;
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
+      buffer_format_ = NV_ENC_BUFFER_FORMAT_ABGR10;
+      break;
     default:
       GST_ERROR_ID (id_.c_str (), "Unexpected format %s",
           gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));

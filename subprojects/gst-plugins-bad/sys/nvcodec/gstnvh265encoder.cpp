@@ -1062,8 +1062,14 @@ gst_nv_h265_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
   for (const auto &iter: downstream_profiles) {
     if (iter == "main") {
       allowed_formats.insert("NV12");
+      allowed_formats.insert("VUYA");
+      allowed_formats.insert("RGBA");
+      allowed_formats.insert("RGBx");
+      allowed_formats.insert("BGRA");
+      allowed_formats.insert("BGRx");
     } else if (iter == "main-10") {
       allowed_formats.insert("P010_10LE");
+      allowed_formats.insert("RGB10A2_LE");
     } else if (iter == "main-444") {
       allowed_formats.insert("Y444");
       allowed_formats.insert("GBR");
@@ -1155,6 +1161,9 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
   /* XXX: we may need to relax condition a little */
   switch (GST_VIDEO_INFO_FORMAT (info)) {
     case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_VUYA:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
       if (downstream_profiles.find ("main") == downstream_profiles.end ()) {
         GST_ERROR_OBJECT (self, "Downstream does not support main profile");
         return FALSE;
@@ -1163,6 +1172,7 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
       }
       break;
     case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_RGB10A2_LE:
       if (downstream_profiles.find ("main-10") == downstream_profiles.end ()) {
         GST_ERROR_OBJECT (self, "Downstream does not support main profile");
         return FALSE;
@@ -1410,10 +1420,26 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
     hevc_config->repeatSPSPPS = 0;
   }
 
+  GstVideoColorimetry cinfo;
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
+      cinfo = info->colorimetry;
+      break;
+    default:
+      /* Other formats will be converted 4:2:0 YUV by runtime */
+      gst_video_colorimetry_from_string (&cinfo, GST_VIDEO_COLORIMETRY_BT709);
+      break;
+  }
+
   vui->videoSignalTypePresentFlag = 1;
   /* Unspecified */
   vui->videoFormat = 5;
-  if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
+  if (cinfo.range == GST_VIDEO_COLOR_RANGE_0_255) {
     vui->videoFullRangeFlag = 1;
   } else {
     vui->videoFullRangeFlag = 0;
@@ -1428,15 +1454,13 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
           gst_video_color_matrix_to_iso (GST_VIDEO_COLOR_MATRIX_RGB);
       break;
     default:
-      vui->colourMatrix =
-          gst_video_color_matrix_to_iso (info->colorimetry.matrix);
+      vui->colourMatrix = gst_video_color_matrix_to_iso (cinfo.matrix);
       break;
   }
 
-  vui->colourPrimaries =
-      gst_video_color_primaries_to_iso (info->colorimetry.primaries);
+  vui->colourPrimaries = gst_video_color_primaries_to_iso (cinfo.primaries);
   vui->transferCharacteristics =
-      gst_video_transfer_function_to_iso (info->colorimetry.transfer);
+      gst_video_transfer_function_to_iso (cinfo.transfer);
 
   g_mutex_unlock (&self->prop_lock);
 
@@ -1733,6 +1757,23 @@ gst_nv_h265_encoder_set_output_state (GstNvEncoder * encoder,
 
   output_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       caps, state);
+
+  switch (GST_VIDEO_INFO_FORMAT (&state->info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_P010_10LE:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_GBR:
+    case GST_VIDEO_FORMAT_Y444_16LE:
+    case GST_VIDEO_FORMAT_GBR_16LE:
+      /* Native formats */
+      break;
+    default:
+      /* Format converted by runtime */
+      gst_video_colorimetry_from_string (&output_state->info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT709);
+      output_state->info.chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
+      break;
+  }
 
   GST_INFO_OBJECT (self, "Output caps: %" GST_PTR_FORMAT, output_state->caps);
   gst_video_codec_state_unref (output_state);
@@ -2043,6 +2084,21 @@ gst_nv_h265_encoder_create_class_data (GstObject * device, gpointer session,
           formats.insert ("GBR_16LE");
         }
         break;
+      case NV_ENC_BUFFER_FORMAT_AYUV:
+        formats.insert ("VUYA");
+        break;
+      case NV_ENC_BUFFER_FORMAT_ABGR:
+        formats.insert ("RGBA");
+        formats.insert ("RGBx");
+        break;
+      case NV_ENC_BUFFER_FORMAT_ARGB:
+        formats.insert ("BGRA");
+        formats.insert ("BGRx");
+        break;
+      case NV_ENC_BUFFER_FORMAT_ABGR10:
+        if (dev_caps.supports_10bit_encode)
+          formats.insert ("RGB10A2_LE");
+        break;
       default:
         break;
     }
@@ -2073,6 +2129,12 @@ gst_nv_h265_encoder_create_class_data (GstObject * device, gpointer session,
     APPEND_STRING (format_str, formats, "Y444_16LE");
     APPEND_STRING (format_str, formats, "GBR");
     APPEND_STRING (format_str, formats, "GBR_16LE");
+    APPEND_STRING (format_str, formats, "VUYA");
+    APPEND_STRING (format_str, formats, "RGBA");
+    APPEND_STRING (format_str, formats, "RGBx");
+    APPEND_STRING (format_str, formats, "BGRA");
+    APPEND_STRING (format_str, formats, "BGRx");
+    APPEND_STRING (format_str, formats, "RGB10A2_LE");
     format_str += " }";
   }
 
@@ -2411,6 +2473,12 @@ gst_nv_h265_encoder_register_auto_select (GstPlugin * plugin,
     APPEND_STRING (format_str, formats, "Y444_16LE");
     APPEND_STRING (format_str, formats, "GBR");
     APPEND_STRING (format_str, formats, "GBR_16LE");
+    APPEND_STRING (format_str, formats, "VUYA");
+    APPEND_STRING (format_str, formats, "RGBA");
+    APPEND_STRING (format_str, formats, "RGBx");
+    APPEND_STRING (format_str, formats, "BGRA");
+    APPEND_STRING (format_str, formats, "BGRx");
+    APPEND_STRING (format_str, formats, "RGB10A2_LE");
     format_str += " }";
   }
 

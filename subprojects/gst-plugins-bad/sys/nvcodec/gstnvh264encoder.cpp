@@ -1067,15 +1067,19 @@ gst_nv_h264_encoder_getcaps (GstVideoEncoder * encoder, GstCaps * filter)
 
   /* *INDENT-OFF* */
   for (const auto &iter: downstream_profiles) {
-    if (iter == "high" || iter == "main") {
+    if (iter == "high" || iter == "main")
       profile_support_interlaced = TRUE;
-    }
 
     if (iter == "high-4:4:4") {
       profile_support_interlaced = TRUE;
       allowed_formats.insert("Y444");
     } else {
       allowed_formats.insert("NV12");
+      allowed_formats.insert("VUYA");
+      allowed_formats.insert("RGBA");
+      allowed_formats.insert("RGBx");
+      allowed_formats.insert("BGRA");
+      allowed_formats.insert("BGRx");
     }
   }
   /* *INDENT-ON* */
@@ -1466,21 +1470,32 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
     h264_config->entropyCodingMode = NV_ENC_H264_ENTROPY_CODING_MODE_AUTOSELECT;
   }
 
+  GstVideoColorimetry cinfo;
+  switch (GST_VIDEO_INFO_FORMAT (info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_Y444:
+      cinfo = info->colorimetry;
+      break;
+    default:
+      /* Other formats will be converted 4:2:0 YUV by runtime */
+      gst_video_colorimetry_from_string (&cinfo, GST_VIDEO_COLORIMETRY_BT709);
+      break;
+  }
+
   vui->videoSignalTypePresentFlag = 1;
   /* Unspecified */
   vui->videoFormat = 5;
-  if (info->colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255) {
+  if (cinfo.range == GST_VIDEO_COLOR_RANGE_0_255) {
     vui->videoFullRangeFlag = 1;
   } else {
     vui->videoFullRangeFlag = 0;
   }
 
   vui->colourDescriptionPresentFlag = 1;
-  vui->colourMatrix = gst_video_color_matrix_to_iso (info->colorimetry.matrix);
-  vui->colourPrimaries =
-      gst_video_color_primaries_to_iso (info->colorimetry.primaries);
+  vui->colourMatrix = gst_video_color_matrix_to_iso (cinfo.matrix);
+  vui->colourPrimaries = gst_video_color_primaries_to_iso (cinfo.primaries);
   vui->transferCharacteristics =
-      gst_video_transfer_function_to_iso (info->colorimetry.transfer);
+      gst_video_transfer_function_to_iso (cinfo.transfer);
 
   g_mutex_unlock (&self->prop_lock);
 
@@ -1698,6 +1713,19 @@ gst_nv_h264_encoder_set_output_state (GstNvEncoder * encoder,
 
   output_state = gst_video_encoder_set_output_state (GST_VIDEO_ENCODER (self),
       caps, state);
+
+  switch (GST_VIDEO_INFO_FORMAT (&state->info)) {
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_Y444:
+      /* Native formats */
+      break;
+    default:
+      /* Format converted by runtime */
+      gst_video_colorimetry_from_string (&output_state->info.colorimetry,
+          GST_VIDEO_COLORIMETRY_BT709);
+      output_state->info.chroma_site = GST_VIDEO_CHROMA_SITE_H_COSITED;
+      break;
+  }
 
   GST_INFO_OBJECT (self, "Output caps: %" GST_PTR_FORMAT, output_state->caps);
   gst_video_codec_state_unref (output_state);
@@ -1997,6 +2025,17 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
         if (dev_caps.yuv444_encode)
           formats.insert ("Y444");
         break;
+      case NV_ENC_BUFFER_FORMAT_AYUV:
+        formats.insert ("VUYA");
+        break;
+      case NV_ENC_BUFFER_FORMAT_ABGR:
+        formats.insert ("RGBA");
+        formats.insert ("RGBx");
+        break;
+      case NV_ENC_BUFFER_FORMAT_ARGB:
+        formats.insert ("BGRA");
+        formats.insert ("BGRx");
+        break;
       default:
         break;
     }
@@ -2023,6 +2062,11 @@ gst_nv_h264_encoder_create_class_data (GstObject * device, gpointer session,
     format_str = "format = (string) { ";
     APPEND_STRING (format_str, formats, "NV12");
     APPEND_STRING (format_str, formats, "Y444");
+    APPEND_STRING (format_str, formats, "VUYA");
+    APPEND_STRING (format_str, formats, "RGBA");
+    APPEND_STRING (format_str, formats, "RGBx");
+    APPEND_STRING (format_str, formats, "BGRA");
+    APPEND_STRING (format_str, formats, "BGRx");
     format_str += " }";
   }
 
@@ -2369,6 +2413,11 @@ gst_nv_h264_encoder_register_auto_select (GstPlugin * plugin,
     format_str = "format = (string) { ";
     APPEND_STRING (format_str, formats, "NV12");
     APPEND_STRING (format_str, formats, "Y444");
+    APPEND_STRING (format_str, formats, "VUYA");
+    APPEND_STRING (format_str, formats, "RGBA");
+    APPEND_STRING (format_str, formats, "RGBx");
+    APPEND_STRING (format_str, formats, "BGRA");
+    APPEND_STRING (format_str, formats, "BGRx");
     format_str += " }";
   }
 
