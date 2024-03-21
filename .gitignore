@@ -67,3 +67,6 @@ subprojects/*/
 
 # clangd integration
 .cache/*
+
+# apk files from CI (or following its commands)
+*.apk
