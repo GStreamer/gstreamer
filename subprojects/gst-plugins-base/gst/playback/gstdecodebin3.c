@@ -841,7 +841,7 @@ gst_decodebin3_get_property (GObject * object, guint prop_id, GValue * value,
 
 /* WITH SELECTION_LOCK TAKEN! */
 static gboolean
-all_inputs_are_eos (GstDecodebin3 * dbin)
+all_input_streams_are_eos (GstDecodebin3 * dbin)
 {
   GList *tmp;
 
@@ -856,15 +856,27 @@ all_inputs_are_eos (GstDecodebin3 * dbin)
   return TRUE;
 }
 
-/* WITH SELECTION_LOCK TAKEN! */
-static void
-check_all_input_streams_for_eos (GstDecodebin3 * dbin, GstEvent * event)
+/** check_all_input_streams_for_eos:
+ * @dbin: A #GstDecodebin3
+ * @eos_event: (transfer none): The GST_EVENT_EOS that triggered this check
+ *
+ * Check if all inputs streams are EOS. If they are propagates the @eos_event to all
+ * #DecodebinInputstream pads.
+ *
+ * Returns: #TRUE if all pads are EOS and the event was propagated, else #FALSE.
+ */
+static gboolean
+check_all_input_streams_for_eos (GstDecodebin3 * dbin, GstEvent * eos_event)
 {
   GList *tmp;
   GList *outputpads = NULL;
 
-  if (!all_inputs_are_eos (dbin))
-    return;
+  SELECTION_LOCK (dbin);
+
+  if (!all_input_streams_are_eos (dbin)) {
+    SELECTION_UNLOCK (dbin);
+    return FALSE;
+  }
 
   /* We know all streams are EOS, properly clean up everything */
 
@@ -885,13 +897,14 @@ check_all_input_streams_for_eos (GstDecodebin3 * dbin, GstEvent * event)
     GstPad *peer = (GstPad *) tmp->data;
 
     /* Send EOS and then remove elements */
-    gst_pad_send_event (peer, gst_event_ref (event));
+    gst_pad_send_event (peer, gst_event_ref (eos_event));
     GST_FIXME_OBJECT (peer, "Remove input stream");
     gst_object_unref (peer);
   }
-  SELECTION_LOCK (dbin);
 
   g_list_free (outputpads);
+
+  return TRUE;
 }
 
 /* Get the intersection of parser caps and available (sorted) decoders */
@@ -1049,13 +1062,13 @@ gst_decodebin_input_stream_src_probe (GstPad * pad, GstPadProbeInfo * info,
       }
         break;
       case GST_EVENT_EOS:
+      {
+        GST_DEBUG_OBJECT (pad, "Marking input as EOS");
         input->saw_eos = TRUE;
-        if (all_inputs_are_eos (input->dbin)) {
-          GST_DEBUG_OBJECT (pad, "real input pad, marking as EOS");
-          SELECTION_LOCK (input->dbin);
-          check_all_input_streams_for_eos (input->dbin, ev);
-          SELECTION_UNLOCK (input->dbin);
-        } else {
+
+        /* If not all pads are EOS yet, we send our custom EOS (which will be
+         * handled/dropped downstream of multiqueue) */
+        if (!check_all_input_streams_for_eos (input->dbin, ev)) {
           GstPad *peer = gst_pad_get_peer (input->srcpad);
           if (peer) {
             /* Send custom-eos event to multiqueue slot */
@@ -1074,6 +1087,7 @@ gst_decodebin_input_stream_src_probe (GstPad * pad, GstPadProbeInfo * info,
           }
         }
         ret = GST_PAD_PROBE_DROP;
+      }
         break;
       case GST_EVENT_FLUSH_STOP:
         GST_DEBUG_OBJECT (pad, "Clear saw_eos flag");
@@ -3016,13 +3030,16 @@ is_selection_done (GstDecodebin3 * dbin)
   return msg;
 }
 
-/* Must be called with SELECTION_LOCK taken
+/** check_and_drain_multiqueue_locked:
+ * @dbin: A #GstDecodebin3
+ * @eos_event: The GST_EVENT_EOS that triggered this check.
  *
- * This code is used to propagate the final EOS if all slots and inputs are
- * drained.
- **/
+ * Check if all #DecodebinInputstream and #MultiqueueSlot are
+ * emptied/drained. If that is the case, send the final sequence of final EOS
+ * events based on the provided @eos_event.
+ */
 static void
-check_inputs_and_slots_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
+check_and_drain_multiqueue_locked (GstDecodebin3 * dbin, GstEvent * eos_event)
 {
   GList *iter;
 
@@ -3038,43 +3055,42 @@ check_inputs_and_slots_for_eos (GstDecodebin3 * dbin, GstEvent * ev)
   }
 
   /* Also check with the inputs, data might be pending */
-  if (!all_inputs_are_eos (dbin))
+  if (!all_input_streams_are_eos (dbin))
     return;
 
   GST_DEBUG_OBJECT (dbin,
       "All active slots are drained, and no pending input, push EOS");
 
   for (iter = dbin->input_streams; iter; iter = iter->next) {
+    GstEvent *stream_start, *eos;
     DecodebinInputStream *input = (DecodebinInputStream *) iter->data;
     GstPad *peer = gst_pad_get_peer (input->srcpad);
 
+    if (!peer) {
+      GST_DEBUG_OBJECT (input->srcpad, "Not linked to multiqueue");
+      continue;
+    }
+
+    /* First forward a custom STREAM_START event to reset the EOS status (if
+     * any) */
+    stream_start =
+        gst_pad_get_sticky_event (input->srcpad, GST_EVENT_STREAM_START, 0);
+    if (stream_start) {
+      GstStructure *s;
+      GstEvent *custom_stream_start = gst_event_copy (stream_start);
+      gst_event_unref (stream_start);
+      s = (GstStructure *) gst_event_get_structure (custom_stream_start);
+      gst_structure_set (s, "decodebin3-flushing-stream-start",
+          G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_pad_send_event (peer, custom_stream_start);
+    }
     /* Send EOS to all slots */
-    if (peer) {
-      GstEvent *stream_start, *eos;
-
-      stream_start =
-          gst_pad_get_sticky_event (input->srcpad, GST_EVENT_STREAM_START, 0);
-
-      /* First forward a custom STREAM_START event to reset the EOS status (if
-       * any) */
-      if (stream_start) {
-        GstStructure *s;
-        GstEvent *custom_stream_start = gst_event_copy (stream_start);
-        gst_event_unref (stream_start);
-        s = (GstStructure *) gst_event_get_structure (custom_stream_start);
-        gst_structure_set (s, "decodebin3-flushing-stream-start",
-            G_TYPE_BOOLEAN, TRUE, NULL);
-        gst_pad_send_event (peer, custom_stream_start);
-      }
-
-      eos = gst_event_new_eos ();
-      gst_event_set_seqnum (eos, gst_event_get_seqnum (ev));
-      gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (eos),
-          CUSTOM_FINAL_EOS_QUARK, (gchar *) CUSTOM_FINAL_EOS_QUARK_DATA, NULL);
-      gst_pad_send_event (peer, eos);
-      gst_object_unref (peer);
-    } else
-      GST_DEBUG_OBJECT (dbin, "no output");
+    eos = gst_event_new_eos ();
+    gst_event_set_seqnum (eos, gst_event_get_seqnum (eos_event));
+    gst_mini_object_set_qdata (GST_MINI_OBJECT_CAST (eos),
+        CUSTOM_FINAL_EOS_QUARK, (gchar *) CUSTOM_FINAL_EOS_QUARK_DATA, NULL);
+    gst_pad_send_event (peer, eos);
+    gst_object_unref (peer);
   }
 }
 
@@ -3243,7 +3259,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
             free_multiqueue_slot_async (dbin, slot);
             ret = GST_PAD_PROBE_REMOVE;
           } else if (!was_drained) {
-            check_inputs_and_slots_for_eos (dbin, ev);
+            check_and_drain_multiqueue_locked (dbin, ev);
           }
           if (ret == GST_PAD_PROBE_HANDLED)
             gst_event_unref (ev);
@@ -3290,7 +3306,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
            * when all output streams are also eos */
           ret = GST_PAD_PROBE_DROP;
           SELECTION_LOCK (dbin);
-          check_inputs_and_slots_for_eos (dbin, ev);
+          check_and_drain_multiqueue_locked (dbin, ev);
           SELECTION_UNLOCK (dbin);
         }
       }
