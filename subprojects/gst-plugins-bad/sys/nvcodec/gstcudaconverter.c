@@ -638,6 +638,7 @@ typedef struct
 #define SAMPLE_GBR_10 "sample_gbr_10"
 #define SAMPLE_GBR_12 "sample_gbr_12"
 #define SAMPLE_GBRA "sample_gbra"
+#define SAMPLE_VUYA "sample_vuya"
 
 #define WRITE_I420 "write_i420"
 #define WRITE_YV12 "write_yv12"
@@ -670,6 +671,7 @@ typedef struct
 #define WRITE_GBR_12 "write_gbr_12"
 #define WRITE_GBR_16 "write_gbr_16"
 #define WRITE_GBRA "write_gbra"
+#define WRITE_VUYA "write_vuya"
 #define ROTATE_IDENTITY "rotate_identity"
 #define ROTATE_90R "rotate_90r"
 #define ROTATE_180 "rotate_180"
@@ -929,6 +931,14 @@ SAMPLE_GBRA "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
 "  float r = tex2D<float>(tex2, x, y);\n"
 "  float a = tex2D<float>(tex3, x, y);\n"
 "  return make_float4 (r, g, b, a);\n"
+"}\n"
+"\n"
+"__device__ inline float4\n"
+SAMPLE_VUYA "(cudaTextureObject_t tex0, cudaTextureObject_t tex1,\n"
+"    cudaTextureObject_t tex2, cudaTextureObject_t tex3, float x, float y)\n"
+"{\n"
+"  float4 vuya = tex2D<float4>(tex0, x, y);\n"
+"  return make_float4 (vuya.z, vuya.y, vuya.x, vuya.w);\n"
 "}\n"
 "\n"
 "__device__ inline void\n"
@@ -1271,6 +1281,18 @@ WRITE_GBRA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n
 "  dst2[pos] = scale_to_uchar (sample.x);\n"
 "  dst3[pos] = scale_to_uchar (sample.w);\n"
 "}\n"
+"\n"
+"__device__ inline void\n"
+WRITE_VUYA "(unsigned char * dst0, unsigned char * dst1, unsigned char * dst2,\n"
+"    unsigned char * dst3, float4 sample, int x, int y, int stride0, int stride1)\n"
+"{\n"
+"  int pos = x * 4 + y * stride0;\n"
+"  dst0[pos] = scale_to_uchar (sample.z);\n"
+"  dst0[pos + 1] = scale_to_uchar (sample.y);\n"
+"  dst0[pos + 2] = scale_to_uchar (sample.x);\n"
+"  dst0[pos + 3] = scale_to_uchar (sample.w);\n"
+"}\n"
+"\n"
 "__device__ inline float2\n"
 ROTATE_IDENTITY "(float x, float y)\n"
 "{\n"
@@ -1520,6 +1542,7 @@ static const TextureFormat format_map[] = {
   MAKE_FORMAT_RGBP (GBR_12LE, UNSIGNED_INT16, SAMPLE_GBR_12),
   MAKE_FORMAT_RGBP (GBR_16LE, UNSIGNED_INT16, SAMPLE_GBR),
   MAKE_FORMAT_RGBAP (GBRA, UNSIGNED_INT8, SAMPLE_GBRA),
+  MAKE_FORMAT_RGB (VUYA, UNSIGNED_INT8, SAMPLE_VUYA),
 };
 
 typedef struct _TextureBuffer
@@ -1818,6 +1841,9 @@ gst_cuda_converter_setup (GstCudaConverter * self)
       break;
     case GST_VIDEO_FORMAT_GBRA:
       write_func = WRITE_GBRA;
+      break;
+    case GST_VIDEO_FORMAT_VUYA:
+      write_func = WRITE_VUYA;
       break;
     default:
       break;
