@@ -5,10 +5,10 @@ variables:
   # If you are hacking on them or need a them to rebuild, its enough
   # to change any part of the string of the image you want.
   ###
-  FEDORA_TAG:  '2024-02-13.0'
+  FEDORA_TAG:  '2024-03-22.0'
 
   INDENT_TAG: '2023-08-24.3'
 
   LINT_TAG: '2024-02-20.0'
 
-  WINDOWS_TAG: '2024-02-08.0'
+  WINDOWS_TAG: '2024-03-22.0'
