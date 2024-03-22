@@ -455,7 +455,7 @@ gst_d3d12_encoder_create_upload_pool (GstD3D12Encoder * self)
   auto params = gst_d3d12_allocation_params_new (self->device, &info,
       GST_D3D12_ALLOCATION_FLAG_DEFAULT,
       D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
-      D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+      D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_HEAP_FLAG_NONE);
   gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
   gst_d3d12_allocation_params_free (params);
   gst_buffer_pool_config_set_params (config, caps, info.size, 0, 0);
@@ -524,7 +524,7 @@ gst_d3d12_encoder_propose_allocation (GstVideoEncoder * encoder,
     auto params = gst_d3d12_allocation_params_new (self->device, &info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
         D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
-        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_HEAP_FLAG_NONE);
     gst_d3d12_allocation_params_alignment (params, &align);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);

@@ -78,7 +78,7 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D12AllocationParams,
 GstD3D12AllocationParams *
 gst_d3d12_allocation_params_new (GstD3D12Device * device,
     const GstVideoInfo * info, GstD3D12AllocationFlags flags,
-    D3D12_RESOURCE_FLAGS resource_flags)
+    D3D12_RESOURCE_FLAGS resource_flags, D3D12_HEAP_FLAGS heap_flags)
 {
   GstD3D12AllocationParams *ret;
   GstD3D12Format d3d12_format;
@@ -100,7 +100,7 @@ gst_d3d12_allocation_params_new (GstD3D12Device * device,
   ret->d3d12_format = d3d12_format;
   ret->array_size = 1;
   ret->flags = flags;
-  ret->heap_flags = D3D12_HEAP_FLAG_NONE;
+  ret->heap_flags = heap_flags;
   ret->resource_flags = resource_flags;
 
   return ret;
@@ -220,10 +220,14 @@ struct GstD3D12MemoryTokenData
 
 struct _GstD3D12MemoryPrivate
 {
+  _GstD3D12MemoryPrivate ()
+  {
+    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+  }
+
   ~_GstD3D12MemoryPrivate ()
   {
-    if (event_handle)
-      CloseHandle (event_handle);
+    CloseHandle (event_handle);
 
     if (nt_handle)
       CloseHandle (nt_handle);
@@ -257,6 +261,12 @@ struct _GstD3D12MemoryPrivate
   guint64 cpu_map_count = 0;
 
   std::mutex lock;
+
+  gpointer user_data = nullptr;
+  GDestroyNotify notify = nullptr;
+
+  ComPtr<ID3D12Fence> external_fence;
+  UINT64 external_fence_val = 0;
 };
 /* *INDENT-ON* */
 
@@ -298,18 +308,42 @@ gst_d3d12_memory_ensure_staging_resource (GstD3D12Memory * dmem)
 }
 
 static void
+gst_d3d12_memory_set_external_fence_unlocked (GstD3D12Memory * dmem,
+    ID3D12Fence * fence, guint64 fence_val)
+{
+  auto priv = dmem->priv;
+  HRESULT hr;
+
+  if (priv->external_fence) {
+    auto completed = priv->external_fence->GetCompletedValue ();
+    if (completed < priv->external_fence_val) {
+      hr = priv->external_fence->SetEventOnCompletion (priv->external_fence_val,
+          priv->event_handle);
+      if (SUCCEEDED (hr))
+        WaitForSingleObjectEx (priv->event_handle, INFINITE, FALSE);
+    }
+
+    priv->external_fence = nullptr;
+    priv->external_fence_val;
+  }
+
+  if (fence) {
+    priv->external_fence = fence;
+    priv->external_fence_val = fence_val;
+  }
+}
+
+static void
 gst_d3d12_memory_wait_gpu (GstD3D12Memory * dmem,
     D3D12_COMMAND_LIST_TYPE command_type, guint64 fence_value)
 {
   auto priv = dmem->priv;
+
+  gst_d3d12_memory_set_external_fence_unlocked (dmem, nullptr, 0);
+
   auto completed = gst_d3d12_device_get_completed_value (dmem->device,
       command_type);
   if (completed < fence_value) {
-    if (!priv->event_handle) {
-      priv->event_handle =
-          CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-    }
-
     gst_d3d12_device_fence_wait (dmem->device, command_type,
         fence_value, priv->event_handle);
   }
@@ -398,6 +432,8 @@ gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   auto priv = dmem->priv;
   GstMapFlags flags = info->flags;
   std::lock_guard < std::mutex > lk (priv->lock);
+
+  gst_d3d12_memory_set_external_fence_unlocked (dmem, nullptr, 0);
 
   if ((flags & GST_MAP_D3D12) != 0) {
     gst_d3d12_memory_upload (dmem);
@@ -707,6 +743,16 @@ gst_d3d12_memory_get_token_data (GstD3D12Memory * mem, gint64 token)
   return ret;
 }
 
+void
+gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
+    guint64 fence_val)
+{
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  gst_d3d12_memory_set_external_fence_unlocked (mem, fence, fence_val);
+}
+
 /* GstD3D12Allocator */
 #define gst_d3d12_allocator_parent_class alloc_parent_class
 G_DEFINE_TYPE (GstD3D12Allocator, gst_d3d12_allocator, GST_TYPE_ALLOCATOR);
@@ -760,6 +806,9 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
   gst_d3d12_memory_wait_gpu (dmem, D3D12_COMMAND_LIST_TYPE_DIRECT,
       dmem->fence_value);
 
+  if (dmem->priv->notify)
+    dmem->priv->notify (dmem->priv->user_data);
+
   delete dmem->priv;
 
   gst_clear_object (&dmem->device);
@@ -769,7 +818,8 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
 
 GstMemory *
 gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
-    GstD3D12Device * device, ID3D12Resource * resource, guint array_slice)
+    GstD3D12Device * device, ID3D12Resource * resource, guint array_slice,
+    gpointer user_data, GDestroyNotify notify)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (resource, nullptr);
@@ -809,6 +859,8 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
   priv->rtv_inc_size =
       device_handle->GetDescriptorHandleIncrementSize
       (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+  priv->user_data = user_data;
+  priv->notify = notify;
 
   mem->device = (GstD3D12Device *) gst_object_ref (device);
 
@@ -895,7 +947,8 @@ gst_d3d12_allocator_alloc_internal (GstD3D12Allocator * self,
   }
 
   auto mem =
-      gst_d3d12_allocator_alloc_wrapped (self, device, resource.Get (), 0);
+      gst_d3d12_allocator_alloc_wrapped (self, device, resource.Get (), 0,
+      nullptr, nullptr);
   if (!mem)
     return nullptr;
 
@@ -1060,7 +1113,7 @@ gst_d3d12_pool_allocator_start (GstD3D12PoolAllocator * self)
     GstMemory *mem;
 
     mem = gst_d3d12_allocator_alloc_wrapped (_d3d12_memory_allocator,
-        self->device, priv->resource.Get (), i);
+        self->device, priv->resource.Get (), i, nullptr, nullptr);
 
     priv->cur_mems++;
     priv->queue.push (mem);

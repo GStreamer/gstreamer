@@ -1970,7 +1970,7 @@ gst_d3d12_compositor_negotiated_src_caps (GstAggregator * agg, GstCaps * caps)
     auto params = gst_d3d12_allocation_params_new (self->device, &info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
         D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
     gst_buffer_pool_config_set_params (config, caps, info.size, 0, 0);
@@ -2046,7 +2046,7 @@ gst_d3d12_compositor_propose_allocation (GstAggregator * agg,
       auto params = gst_d3d12_allocation_params_new (self->device,
           &info, GST_D3D12_ALLOCATION_FLAG_DEFAULT,
           D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
 
       gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
       gst_d3d12_allocation_params_free (params);
@@ -2150,7 +2150,7 @@ gst_d3d12_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
       params = gst_d3d12_allocation_params_new (self->device, &info,
           GST_D3D12_ALLOCATION_FLAG_DEFAULT,
           D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
     } else {
       gst_d3d12_allocation_params_set_resource_flags (params,
           D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |

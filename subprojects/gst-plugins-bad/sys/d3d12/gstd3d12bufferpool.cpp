@@ -160,7 +160,7 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     priv->d3d12_params =
         gst_d3d12_allocation_params_new (self->device,
         &info, GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
   }
 
   auto device = gst_d3d12_device_get_device_handle (self->device);

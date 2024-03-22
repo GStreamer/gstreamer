@@ -89,7 +89,8 @@ GType                      gst_d3d12_allocation_params_get_type (void);
 GstD3D12AllocationParams * gst_d3d12_allocation_params_new      (GstD3D12Device * device,
                                                                  const GstVideoInfo * info,
                                                                  GstD3D12AllocationFlags flags,
-                                                                 D3D12_RESOURCE_FLAGS resource_flags);
+                                                                 D3D12_RESOURCE_FLAGS resource_flags,
+                                                                 D3D12_HEAP_FLAGS heap_flags);
 
 GstD3D12AllocationParams * gst_d3d12_allocation_params_copy     (GstD3D12AllocationParams * src);
 
@@ -160,6 +161,10 @@ void              gst_d3d12_memory_set_token_data (GstD3D12Memory * mem,
 gpointer          gst_d3d12_memory_get_token_data (GstD3D12Memory * mem,
                                                    gint64 token);
 
+void              gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem,
+                                                       ID3D12Fence * fence,
+                                                       guint64 fence_val);
+
 struct _GstD3D12Allocator
 {
   GstAllocator allocator;
@@ -194,7 +199,9 @@ GstMemory * gst_d3d12_allocator_alloc     (GstD3D12Allocator * allocator,
 GstMemory * gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
                                                GstD3D12Device * device,
                                                ID3D12Resource * resource,
-                                               guint array_slice);
+                                               guint array_slice,
+                                               gpointer user_data,
+                                               GDestroyNotify notify);
 
 gboolean    gst_d3d12_allocator_set_active (GstD3D12Allocator * allocator,
                                             gboolean active);

@@ -1455,13 +1455,13 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
     priv->mouse_buf = gst_buffer_new ();
     auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, self->device,
-        mouse_texture.Get (), 0);
+        mouse_texture.Get (), 0, nullptr, nullptr);
     gst_buffer_append_memory (priv->mouse_buf, mem);
 
     if (mouse_xor_texture) {
       priv->mouse_xor_buf = gst_buffer_new ();
       auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, self->device,
-          mouse_xor_texture.Get (), 0);
+          mouse_xor_texture.Get (), 0, nullptr, nullptr);
       gst_buffer_append_memory (priv->mouse_xor_buf, mem);
     }
 

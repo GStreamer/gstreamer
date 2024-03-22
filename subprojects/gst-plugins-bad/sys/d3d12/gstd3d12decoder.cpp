@@ -722,10 +722,9 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   align.padding_bottom = session->aligned_height - info->height;
 
   auto params = gst_d3d12_allocation_params_new (decoder->device, info,
-      GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags);
-  gst_d3d12_allocation_params_alignment (params, &align);
-  gst_d3d12_allocation_params_set_heap_flags (params,
+      GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
       D3D12_HEAP_FLAG_CREATE_NOT_ZEROED);
+  gst_d3d12_allocation_params_alignment (params, &align);
   if (!session->array_of_textures)
     gst_d3d12_allocation_params_set_array_size (params, session->dpb_size);
 
@@ -755,10 +754,9 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
 
     params = gst_d3d12_allocation_params_new (decoder->device, info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
-    gst_d3d12_allocation_params_alignment (params, &align);
-    gst_d3d12_allocation_params_set_heap_flags (params,
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS,
         D3D12_HEAP_FLAG_CREATE_NOT_ZEROED);
+    gst_d3d12_allocation_params_alignment (params, &align);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
     gst_buffer_pool_config_set_params (config, caps, info->size, 0, 0);
@@ -1828,7 +1826,7 @@ gst_d3d12_decoder_decide_allocation (GstD3D12Decoder * decoder,
     if (!params) {
       params = gst_d3d12_allocation_params_new (decoder->device, &vinfo,
           GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
     } else {
       gst_d3d12_allocation_params_set_resource_flags (params,
           D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);

@@ -1587,7 +1587,7 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
   }
 
   auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, self->device,
-      ctx->texture.Get (), 0);
+      ctx->texture.Get (), 0, nullptr, nullptr);
   if (!mem) {
     GST_ERROR_OBJECT (self, "Couldn't wrap texture");
     return FALSE;
@@ -1610,7 +1610,7 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
     auto params = gst_d3d12_allocation_params_new (self->device, &priv->info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
         D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
 
@@ -1801,7 +1801,8 @@ gst_d3d12_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     auto params = gst_buffer_pool_config_get_d3d12_allocation_params (config);
     if (!params) {
       params = gst_d3d12_allocation_params_new (self->device, &vinfo,
-          GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags);
+          GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
+          D3D12_HEAP_FLAG_NONE);
     } else {
       gst_d3d12_allocation_params_set_resource_flags (params, resource_flags);
       gst_d3d12_allocation_params_unset_resource_flags (params,

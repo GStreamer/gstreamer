@@ -766,7 +766,8 @@ gst_d3d12_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
     auto params = gst_buffer_pool_config_get_d3d12_allocation_params (config);
     if (!params) {
       params = gst_d3d12_allocation_params_new (self->device, &vinfo,
-          GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags);
+          GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
+          D3D12_HEAP_FLAG_NONE);
     } else {
       gst_d3d12_allocation_params_set_resource_flags (params, resource_flags);
       gst_d3d12_allocation_params_unset_resource_flags (params,
@@ -803,7 +804,8 @@ gst_d3d12_screen_capture_src_decide_allocation (GstBaseSrc * bsrc,
         D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
     auto params = gst_d3d12_allocation_params_new (self->device, &vinfo,
-        GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags);
+        GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
+        D3D12_HEAP_FLAG_NONE);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
 

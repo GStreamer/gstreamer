@@ -1555,7 +1555,7 @@ gst_d3d12_convert_propose_allocation (GstBaseTransform * trans,
   if (!d3d12_params) {
     d3d12_params = gst_d3d12_allocation_params_new (filter->device, &info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
   } else {
     gst_d3d12_allocation_params_set_resource_flags (d3d12_params,
         D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
@@ -1649,7 +1649,7 @@ gst_d3d12_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     d3d12_params = gst_d3d12_allocation_params_new (filter->device, &info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
         D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
   } else {
     gst_d3d12_allocation_params_set_resource_flags (d3d12_params,
         D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |

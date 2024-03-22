@@ -2134,7 +2134,7 @@ gst_d3d12_converter_upload_buffer (GstD3D12Converter * self, GstBuffer * in_buf)
     auto config = gst_buffer_pool_get_config (priv->fallback_pool);
     auto params = gst_d3d12_allocation_params_new (self->device, &in_frame.info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
     gst_buffer_pool_config_set_params (config, caps, in_frame.info.size, 0, 0);

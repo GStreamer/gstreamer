@@ -1106,7 +1106,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
       priv->ctx->buffer_desc = backbuf->GetDesc ();
 
     auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, self->device,
-        backbuf.Get (), 0);
+        backbuf.Get (), 0, nullptr, nullptr);
     auto buf = gst_buffer_new ();
     gst_buffer_append_memory (buf, mem);
     priv->ctx->swap_buffers.push_back (std::make_shared < SwapBuffer > (buf));
@@ -1168,7 +1168,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
     }
 
     auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, self->device,
-        msaa_texture.Get (), 0);
+        msaa_texture.Get (), 0, nullptr, nullptr);
     priv->ctx->msaa_buf = gst_buffer_new ();
     gst_buffer_append_memory (priv->ctx->msaa_buf, mem);
   }
