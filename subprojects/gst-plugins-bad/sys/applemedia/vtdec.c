@@ -482,7 +482,22 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     gst_video_codec_state_unref (output_state);
   }
 
-  peercaps = gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (vtdec), NULL);
+  templcaps =
+      gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
+  peercaps =
+      gst_pad_peer_query_caps (GST_VIDEO_DECODER_SRC_PAD (vtdec), templcaps);
+  gst_caps_unref (templcaps);
+
+  if (gst_caps_is_empty (peercaps)) {
+    GST_INFO_OBJECT (vtdec, "empty peer caps, can't negotiate");
+
+    gst_caps_unref (peercaps);
+    if (prevcaps)
+      gst_caps_unref (prevcaps);
+
+    return FALSE;
+  }
+
   if (prevcaps && gst_caps_can_intersect (prevcaps, peercaps)) {
     /* The hardware decoder can become (temporarily) unavailable across
      * VTDecompressionSessionCreate/Destroy calls. So if the currently configured
@@ -492,14 +507,10 @@ gst_vtdec_negotiate (GstVideoDecoder * decoder)
     GST_INFO_OBJECT (vtdec,
         "current and peer caps are compatible, keeping current caps");
     caps = gst_caps_ref (prevcaps);
+    gst_caps_unref (peercaps);
   } else {
-    templcaps =
-        gst_pad_get_pad_template_caps (GST_VIDEO_DECODER_SRC_PAD (decoder));
-    caps =
-        gst_caps_intersect_full (peercaps, templcaps, GST_CAPS_INTERSECT_FIRST);
-    gst_caps_unref (templcaps);
+    caps = peercaps;
   }
-  gst_caps_unref (peercaps);
 
   caps = gst_caps_truncate (gst_caps_make_writable (caps));
 
