@@ -1286,11 +1286,11 @@ static const GEnumValue rate_control_map[] = {
   {VA_RC_CQP, "Constant Quantizer", "cqp"},
   /* {VA_RC_VBR_CONSTRAINED, "VBR with peak rate higher than average bitrate", */
   /*  "vbr-constrained"}, */
-  /* {VA_RC_ICQ, "Intelligent Constant Quality", "icq"}, */
+  {VA_RC_ICQ, "Intelligent Constant Quality", "icq"},
   /* {VA_RC_MB, "Macroblock based rate control", "mb"}, */
   /* {VA_RC_CFS, "Constant Frame Size", "cfs"}, */
   /* {VA_RC_PARALLEL, "Parallel BRC", "parallel"}, */
-  /* {VA_RC_QVBR, "Quality defined VBR", "qvbr"}, */
+  {VA_RC_QVBR, "Quality defined VBR", "qvbr"},
   /* {VA_RC_AVBR, "Average VBR", "avbr"}, */
 };
 
