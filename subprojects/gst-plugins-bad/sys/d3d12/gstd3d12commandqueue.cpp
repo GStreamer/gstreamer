@@ -144,7 +144,8 @@ gst_d3d12_command_queue_finalize (GObject * object)
 
 GstD3D12CommandQueue *
 gst_d3d12_command_queue_new (ID3D12Device * device,
-    const D3D12_COMMAND_QUEUE_DESC * desc, guint queue_size)
+    const D3D12_COMMAND_QUEUE_DESC * desc, D3D12_FENCE_FLAGS fence_flags,
+    guint queue_size)
 {
   g_return_val_if_fail (device, nullptr);
   g_return_val_if_fail (desc, nullptr);
@@ -162,7 +163,7 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
   }
 
   ComPtr < ID3D12Fence > fence;
-  hr = device->CreateFence (0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&fence));
+  hr = device->CreateFence (0, fence_flags, IID_PPV_ARGS (&fence));
   if (FAILED (hr)) {
     GST_ERROR ("Couldn't create fence, hr: 0x%x", (guint) hr);
     return nullptr;

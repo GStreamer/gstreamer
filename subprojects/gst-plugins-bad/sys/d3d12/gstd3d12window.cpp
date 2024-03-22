@@ -91,7 +91,7 @@ struct DeviceContext
 
     auto device_handle = gst_d3d12_device_get_device_handle (device);
     queue = gst_d3d12_command_queue_new (device_handle,
-        &queue_desc, BACK_BUFFER_COUNT * 2);
+        &queue_desc, D3D12_FENCE_FLAG_NONE, BACK_BUFFER_COUNT * 2);
     if (!queue) {
       GST_ERROR_OBJECT (device, "Couldn't create command queue");
       return;

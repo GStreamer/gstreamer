@@ -31,6 +31,7 @@ G_DECLARE_FINAL_TYPE (GstD3D12CommandQueue,
 
 GstD3D12CommandQueue * gst_d3d12_command_queue_new (ID3D12Device * device,
                                                     const D3D12_COMMAND_QUEUE_DESC * desc,
+                                                    D3D12_FENCE_FLAGS fence_flags,
                                                     guint queue_size);
 
 gboolean               gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue,

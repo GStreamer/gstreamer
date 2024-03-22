@@ -729,7 +729,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
   priv->direct_queue = gst_d3d12_command_queue_new (device.Get (),
-      &queue_desc, 0);
+      &queue_desc, D3D12_FENCE_FLAG_SHARED, 0);
   if (!priv->direct_queue)
     goto error;
 
@@ -745,7 +745,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 
   queue_desc.Type = D3D12_COMMAND_LIST_TYPE_COPY;
   priv->copy_queue = gst_d3d12_command_queue_new (device.Get (),
-      &queue_desc, 0);
+      &queue_desc, D3D12_FENCE_FLAG_NONE, 0);
   if (!priv->copy_queue)
     goto error;
 

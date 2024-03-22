@@ -442,7 +442,8 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
   D3D12_COMMAND_QUEUE_DESC desc = { };
   desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
   desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-  cmd->queue = gst_d3d12_command_queue_new (cmd->device.Get (), &desc, 4);
+  cmd->queue = gst_d3d12_command_queue_new (cmd->device.Get (), &desc,
+      D3D12_FENCE_FLAG_NONE, 4);
   if (!cmd->queue) {
     GST_ERROR_OBJECT (element, "Couldn't create command queue");
     return FALSE;
