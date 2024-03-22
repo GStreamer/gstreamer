@@ -1285,6 +1285,34 @@ GST_START_TEST (convert_cea608_raw_field1_cea708_cdp_60fps)
 
 GST_END_TEST;
 
+GST_START_TEST (convert_cea708_cdp_cea608_raw_field_one_60fps)
+{
+  const guint8 in1[] =
+      { 0x96, 0x69, 0x2b, 0x8f, 0x43, 0x00, 0x00, 0x72, 0xea, 0xfc, 0x80, 0x80,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0x74, 0x00, 0x00, 0x6e,
+  };
+  const guint8 in2[] =
+      { 0x96, 0x69, 0x2b, 0x8f, 0x43, 0x00, 0x01, 0x72, 0xea, 0xfd, 0x81, 0x82,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00, 0xfa, 0x00, 0x00,
+    0xfa, 0x00, 0x00, 0x74, 0x00, 0x01, 0x68,
+  };
+  const guint8 *in[] = { in1, in2 };
+  guint in_len[] = { sizeof (in1), sizeof (in2) };
+  const guint8 out1[] = { 0x81, 0x82 };
+  const guint8 *out[] = { out1 };
+  guint out_len[] = { sizeof (out1) };
+  check_conversion_multiple (G_N_ELEMENTS (in_len), in, in_len,
+      G_N_ELEMENTS (out_len), out, out_len,
+      "closedcaption/x-cea-708,format=(string)cdp,framerate=60/1",
+      "closedcaption/x-cea-608,format=(string)raw,framerate=60/1,field=1", NULL,
+      NULL, 0);
+}
+
+GST_END_TEST;
+
 static Suite *
 ccextractor_suite (void)
 {
@@ -1330,6 +1358,7 @@ ccextractor_suite (void)
   tcase_add_test (tc, convert_cea608_s334_1a_cea608_raw_field_one);
   tcase_add_test (tc, convert_cea708_cc_data_cea608_raw_field_one);
   tcase_add_test (tc, convert_cea708_cdp_cea608_raw_field_one);
+  tcase_add_test (tc, convert_cea708_cdp_cea608_raw_field_one_60fps);
   tcase_add_test (tc, convert_cea608_raw_cea608_raw_field_one);
   tcase_add_test (tc, convert_cea608_raw_field1_cea708_cdp_60fps);
 

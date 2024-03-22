@@ -1255,11 +1255,15 @@ convert_cea708_cdp_cea608_raw (GstCCConverter * self, GstBuffer * inbuf,
   gst_buffer_map (outbuf, &out, GST_MAP_WRITE);
   cea608_len = out.size;
   if (self->out_field == 0) {
+    guint8 unused_field[MAX_CEA608_LEN];
+    guint unused_len = MAX_CEA608_LEN;
     cc_buffer_take_separated (self->cc_buffer, out_fps_entry, out.data,
-        &cea608_len, NULL, 0, NULL, 0);
+        &cea608_len, unused_field, &unused_len, NULL, 0);
   } else {
-    cc_buffer_take_separated (self->cc_buffer, out_fps_entry, NULL, 0, out.data,
-        &cea608_len, NULL, 0);
+    guint8 unused_field[MAX_CEA608_LEN];
+    guint unused_len = MAX_CEA608_LEN;
+    cc_buffer_take_separated (self->cc_buffer, out_fps_entry, unused_field,
+        &unused_len, out.data, &cea608_len, NULL, 0);
   }
   gst_buffer_unmap (outbuf, &out);
   self->output_frames++;

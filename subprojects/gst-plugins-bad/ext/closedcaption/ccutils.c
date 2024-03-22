@@ -784,7 +784,7 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
   *field1_padding = 0;
   *field2_padding = 0;
 
-  wrote_first = !buf->last_cea608_written_was_field1;
+  wrote_first = buf->last_cea608_written_was_field1;
   /* try to push data into the packets.  Anything 'extra' will be
    * stored for later */
   while (TRUE) {
@@ -795,7 +795,7 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
     if (avail_1 + avail_2 >= 2 * fps_entry->max_cea608_count)
       break;
 
-    if (wrote_first) {
+    if (!wrote_first) {
       if (extra_cea608_1 > 0) {
         extra_cea608_1 -= 2;
         g_assert_cmpint (extra_cea608_1, >=, 0);
@@ -821,7 +821,7 @@ cc_buffer_get_out_sizes (CCBuffer * buf, const struct cdp_fps_entry *fps_entry,
        * requested to start with field2 */
       *field2_padding += 2;
     }
-    wrote_first = TRUE;
+    wrote_first = FALSE;
   }
 
   // don't write padding if not requested
@@ -868,11 +868,13 @@ cc_buffer_take_separated (CCBuffer * buf,
       memcpy (cea608_1, buf->cea608_1->data, write_cea608_1_size);
       memset (&cea608_1[write_cea608_1_size], 0x80, field1_padding);
       if (write_cea608_1_size == 0) {
-        buf->field1_padding_written_count += write_cea608_1_size / 2;
+        buf->field1_padding_written_count += field1_padding / 2;
       } else {
         buf->field1_padding_written_count = 0;
       }
       *cea608_1_len = write_cea608_1_size + field1_padding;
+      if (*cea608_1_len > 0)
+        buf->last_cea608_written_was_field1 = TRUE;
     } else {
       *cea608_1_len = 0;
     }
@@ -886,11 +888,13 @@ cc_buffer_take_separated (CCBuffer * buf,
       memcpy (cea608_2, buf->cea608_2->data, write_cea608_2_size);
       memset (&cea608_2[write_cea608_2_size], 0x80, field2_padding);
       if (write_cea608_2_size == 0) {
-        buf->field2_padding_written_count += write_cea608_2_size / 2;
+        buf->field2_padding_written_count += field2_padding / 2;
       } else {
         buf->field2_padding_written_count = 0;
       }
       *cea608_2_len = write_cea608_2_size + field2_padding;
+      if (*cea608_2_len > 0)
+        buf->last_cea608_written_was_field1 = FALSE;
     } else {
       *cea608_2_len = 0;
     }
