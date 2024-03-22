@@ -1334,7 +1334,7 @@ gst_rist_src_finalize (GObject * object)
   g_clear_object (&src->jitterbuffer);
   g_clear_object (&src->rtxbin);
 
-  gst_caps_unref (src->caps);
+  gst_clear_caps (&src->caps);
   g_free (src->encoding_name);
 
   g_mutex_unlock (&src->bonds_lock);
