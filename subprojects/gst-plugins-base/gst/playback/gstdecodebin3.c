@@ -546,9 +546,9 @@ static void gst_decodebin_input_unblock_streams (DecodebinInput * input,
 
 static gboolean reconfigure_output_stream (DecodebinOutputStream * output,
     MultiQueueSlot * slot, GstMessage ** msg);
-static void free_output_stream (GstDecodebin3 * dbin,
-    DecodebinOutputStream * output);
-static DecodebinOutputStream *create_output_stream (GstDecodebin3 * dbin,
+static void db_output_stream_reset (DecodebinOutputStream * output);
+static void db_output_stream_free (DecodebinOutputStream * output);
+static DecodebinOutputStream *db_output_stream_new (GstDecodebin3 * dbin,
     GstStreamType type);
 
 static GstPadProbeReturn slot_unassign_probe (GstPad * pad,
@@ -695,11 +695,8 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   GST_DEBUG_OBJECT (dbin, "Resetting");
 
   /* Free output streams */
-  for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
-    DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
-    free_output_stream (dbin, output);
-  }
-  g_list_free (dbin->output_streams);
+  g_list_free_full (dbin->output_streams,
+      (GDestroyNotify) db_output_stream_free);
   dbin->output_streams = NULL;
 
   /* Free multiqueue slots */
@@ -1408,7 +1405,7 @@ remove_slot_from_streaming_thread (GstDecodebin3 * dbin, MultiQueueSlot * slot)
         "Multiqueue slot is drained, Remove output stream");
 
     dbin->output_streams = g_list_remove (dbin->output_streams, output);
-    free_output_stream (dbin, output);
+    db_output_stream_free (output);
   }
 
   GST_DEBUG_OBJECT (slot->src_pad, "No pending pad, Remove multiqueue slot");
@@ -2917,11 +2914,73 @@ find_free_compatible_output (GstDecodebin3 * dbin, GstStream * stream)
   return NULL;
 }
 
-/* Give a certain slot, figure out if it should be linked to an
- * output stream
- * CALL WITH SELECTION LOCK TAKEN !*/
+/** mq_slot_set_output:
+ * @slot: A #MultiQueueSlot
+ * @output: (allow none): A #DecodebinOutputStream
+ *
+ * Sets @output as the @slot output. The slot present previously will be
+ * returned.
+ *
+ * If the output previously associated was linked (via a decoder) to the slot,
+ * they will be unlinked.
+ *
+ * Returns: The output previously used on @slot.
+ */
 static DecodebinOutputStream *
-get_output_for_slot (MultiQueueSlot * slot)
+mq_slot_set_output (MultiQueueSlot * slot, DecodebinOutputStream * output)
+{
+  DecodebinOutputStream *old_output = slot->output;
+
+  GST_DEBUG_OBJECT (slot->src_pad, "output: %p", output);
+
+  if (old_output == output) {
+    GST_LOG_OBJECT (slot->src_pad, "Already targetting that output");
+    return output;
+  }
+
+  if (old_output) {
+    if (!old_output->slot)
+      GST_DEBUG_OBJECT (slot->src_pad,
+          "Old output %p was not associated to any slot", old_output);
+    else
+      GST_DEBUG_OBJECT (slot->src_pad,
+          "Old output %p was associated to %" GST_PTR_FORMAT, old_output,
+          old_output->slot->src_pad);
+    /* Check for inconsistencies in assigning */
+    g_assert (old_output->slot == slot);
+    GST_DEBUG_OBJECT (slot->src_pad, "Unassigning");
+    if (old_output->decoder_sink && old_output->decoder)
+      gst_pad_unlink (slot->src_pad, old_output->decoder_sink);
+    old_output->linked = FALSE;
+    old_output->slot = NULL;
+  }
+
+  if (output) {
+    if (output->slot)
+      GST_DEBUG_OBJECT (slot->src_pad,
+          "New output was previously associated to slot %s:%s",
+          GST_DEBUG_PAD_NAME (output->slot->src_pad));
+    output->slot = slot;
+  }
+  slot->output = output;
+
+  return old_output;
+}
+
+/** mq_slot_get_or_create_output:
+ * @slot: A #MultiQueueSlot
+ *
+ * Provides the #DecodebinOutputStream the @slot should use. This function will
+ * figure that out based on the current selection. The slot output will be
+ * updated accordingly.
+ *
+ * Call with SELECTION_LOCK taken
+ *
+ * Returns: The #DecodebinOutputStream to use, or #NULL if none can/should be
+ * used.
+ */
+static DecodebinOutputStream *
+mq_slot_get_or_create_output (MultiQueueSlot * slot)
 {
   GstDecodebin3 *dbin = slot->dbin;
   DecodebinOutputStream *output = NULL;
@@ -2930,8 +2989,11 @@ get_output_for_slot (MultiQueueSlot * slot)
   gchar *id_in_list = NULL;
 
   /* If we already have a configured output, just use it */
-  if (slot->output != NULL)
+  if (slot->output != NULL) {
+    GST_LOG_OBJECT (slot->src_pad, "Returning current output %s:%s",
+        GST_DEBUG_PAD_NAME (slot->output->src_pad));
     return slot->output;
+  }
 
   /*
    * FIXME
@@ -2950,7 +3012,8 @@ get_output_for_slot (MultiQueueSlot * slot)
 
   stream_id = gst_stream_get_stream_id (slot->active_stream);
   caps = gst_stream_get_caps (slot->active_stream);
-  GST_DEBUG_OBJECT (dbin, "stream %s , %" GST_PTR_FORMAT, stream_id, caps);
+  GST_DEBUG_OBJECT (slot->src_pad, "stream %s , %" GST_PTR_FORMAT, stream_id,
+      caps);
   gst_caps_unref (caps);
 
   /* 0. Emit autoplug-continue signal for pending caps ? */
@@ -2961,36 +3024,38 @@ get_output_for_slot (MultiQueueSlot * slot)
 
   /* 3. In default mode check if we should expose */
   id_in_list = (gchar *) stream_in_list (dbin->requested_selection, stream_id);
-  if (id_in_list || dbin->upstream_handles_selection) {
-    /* Check if we can steal an existing output stream we could re-use.
-     * that is:
-     * * an output stream whose slot->stream is not in requested
-     * * and is of the same type as this stream
-     */
-    output = find_free_compatible_output (dbin, slot->active_stream);
-    if (output) {
-      /* Move this output from its current slot to this slot */
-      dbin->to_activate =
-          g_list_append (dbin->to_activate, (gchar *) stream_id);
-      dbin->requested_selection =
-          g_list_remove (dbin->requested_selection, id_in_list);
-      g_free (id_in_list);
-      SELECTION_UNLOCK (dbin);
-      gst_pad_add_probe (output->slot->src_pad, GST_PAD_PROBE_TYPE_IDLE,
-          (GstPadProbeCallback) slot_unassign_probe, output->slot, NULL);
-      SELECTION_LOCK (dbin);
-      return NULL;
-    }
+  if (!id_in_list && !dbin->upstream_handles_selection) {
+    GST_DEBUG_OBJECT (slot->src_pad, "Not selected, not creating any output");
+    return NULL;
+  }
 
-    output = create_output_stream (dbin, slot->type);
-    output->slot = slot;
-    GST_DEBUG ("Linking slot %p to new output %p", slot, output);
-    slot->output = output;
-    GST_DEBUG ("Adding '%s' to active_selection", stream_id);
-    dbin->active_selection =
-        g_list_append (dbin->active_selection, (gchar *) g_strdup (stream_id));
-  } else
-    GST_DEBUG ("Not creating any output for slot %p", slot);
+  /* Check if we can steal an existing output stream we could re-use.
+   * that is:
+   * * an output stream whose slot->stream is not in requested
+   * * and is of the same type as this stream
+   */
+  output = find_free_compatible_output (dbin, slot->active_stream);
+  if (output) {
+    GST_DEBUG_OBJECT (slot->src_pad, "Reassigning to output %s:%s",
+        GST_DEBUG_PAD_NAME (output->src_pad));
+    /* Move this output from its current slot to this slot */
+    dbin->to_activate = g_list_append (dbin->to_activate, (gchar *) stream_id);
+    dbin->requested_selection =
+        g_list_remove (dbin->requested_selection, id_in_list);
+    g_free (id_in_list);
+    SELECTION_UNLOCK (dbin);
+    gst_pad_add_probe (output->slot->src_pad, GST_PAD_PROBE_TYPE_IDLE,
+        (GstPadProbeCallback) mq_slot_unassign_probe, output->slot, NULL);
+    SELECTION_LOCK (dbin);
+    return NULL;
+  }
+
+  output = db_output_stream_new (dbin, slot->type);
+  mq_slot_set_output (slot, output);
+
+  GST_DEBUG ("Adding '%s' to active_selection", stream_id);
+  dbin->active_selection =
+      g_list_append (dbin->active_selection, (gchar *) g_strdup (stream_id));
 
   return output;
 }
@@ -3222,17 +3287,18 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
           slot->active_stream = stream;
 
           if (stream_type_changed) {
+            DecodebinOutputStream *previous_output;
             /* The stream type has changed, we get rid of the current output. A
              * new one (targetting the new stream type) will be created once the
              * caps are received. */
-            GST_DEBUG_OBJECT (pad,
-                "Stream type change, discarding current output stream");
-            if (slot->output) {
-              DecodebinOutputStream *output = slot->output;
+            previous_output = mq_slot_set_output (slot, NULL);
+            if (previous_output) {
+              GST_DEBUG_OBJECT (pad,
+                  "Stream type change, discarding current output stream");
               SELECTION_LOCK (dbin);
               dbin->output_streams =
-                  g_list_remove (dbin->output_streams, output);
-              free_output_stream (dbin, output);
+                  g_list_remove (dbin->output_streams, previous_output);
+              db_output_stream_free (previous_output);
               SELECTION_UNLOCK (dbin);
             }
           }
@@ -3884,15 +3950,9 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   }
 
   /* Unlink slot from output */
-  /* FIXME : Handle flushing ? */
-  /* FIXME : Handle outputs without decoders */
-  GST_DEBUG_OBJECT (slot->src_pad, "Unlinking from decoder %p",
-      output->decoder_sink);
-  if (output->decoder_sink)
-    gst_pad_unlink (slot->src_pad, output->decoder_sink);
-  output->linked = FALSE;
-  slot->output = NULL;
-  output->slot = NULL;
+  GST_DEBUG_OBJECT (slot->src_pad, "Unlinking from previous output");
+  mq_slot_set_output (slot, NULL);
+
   /* Remove sid from active selection */
   GST_DEBUG ("Removing '%s' from active_selection", sid);
   for (tmp = dbin->active_selection; tmp; tmp = tmp->next)
@@ -3923,8 +3983,7 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   if (target_slot) {
     GST_DEBUG_OBJECT (slot->src_pad, "Assigning output to slot %p '%s'",
         target_slot, tsid);
-    target_slot->output = output;
-    output->slot = target_slot;
+    mq_slot_set_output (target_slot, output);
     GST_DEBUG ("Adding '%s' to active_selection", tsid);
     dbin->active_selection =
         g_list_append (dbin->active_selection, (gchar *) g_strdup (tsid));
@@ -3939,7 +3998,7 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     GstMessage *msg;
 
     dbin->output_streams = g_list_remove (dbin->output_streams, output);
-    free_output_stream (dbin, output);
+    db_output_stream_free (output);
     msg = is_selection_done (slot->dbin);
     SELECTION_UNLOCK (dbin);
 
@@ -4282,11 +4341,17 @@ free_multiqueue_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   g_free (slot);
 }
 
-/* Create a DecodebinOutputStream for a given type
- * Note: It will be empty initially, it needs to be configured
- * afterwards */
+/** db_output_stream_new:
+ * @dbin: A #GstDecodebin3
+ * @type: The #GstStreamType
+ *
+ * Creates a #DecodebinOutputStream for the given type and adds it to the list
+ * of available outputs.
+ *
+ * Returns: a #DecodebinOutputStream for the given @type.
+ */
 static DecodebinOutputStream *
-create_output_stream (GstDecodebin3 * dbin, GstStreamType type)
+db_output_stream_new (GstDecodebin3 * dbin, GstStreamType type)
 {
   DecodebinOutputStream *res = g_new0 (DecodebinOutputStream, 1);
   gchar *pad_name;
@@ -4338,29 +4403,74 @@ create_output_stream (GstDecodebin3 * dbin, GstStreamType type)
 
   dbin->output_streams = g_list_append (dbin->output_streams, res);
 
+  GST_DEBUG_OBJECT (dbin, "Created output stream %p (%s:%s)", res,
+      GST_DEBUG_PAD_NAME (res->src_pad));
+
   return res;
 }
 
+/** db_output_stream_reset:
+ * @output: A #DecodebinOutputStream
+ *
+ * Resets the @output to be able to be re-used by another slot/format. If a
+ * decoder is present it will be disabled and removed
+ */
 static void
-free_output_stream (GstDecodebin3 * dbin, DecodebinOutputStream * output)
+db_output_stream_reset (DecodebinOutputStream * output)
 {
-  if (output->slot) {
-    if (output->decoder_sink && output->decoder)
-      gst_pad_unlink (output->slot->src_pad, output->decoder_sink);
+  MultiQueueSlot *slot = output->slot;
 
-    output->slot->output = NULL;
-    output->slot = NULL;
+  GST_DEBUG_OBJECT (output->dbin, "Resetting %s:%s",
+      GST_DEBUG_PAD_NAME (output->src_pad));
+
+  /* Unlink decoder if needed */
+  if (output->linked && slot && output->decoder_sink) {
+    gst_pad_unlink (slot->src_pad, output->decoder_sink);
   }
+  output->linked = FALSE;
+
+  if (slot && output->drop_probe_id) {
+    gst_pad_remove_probe (slot->src_pad, output->drop_probe_id);
+    output->drop_probe_id = 0;
+  }
+
+  /* Remove/Reset pads */
   gst_object_replace ((GstObject **) & output->decoder_sink, NULL);
   decode_pad_set_target ((GstGhostPad *) output->src_pad, NULL);
   gst_object_replace ((GstObject **) & output->decoder_src, NULL);
-  if (output->src_exposed) {
-    gst_element_remove_pad ((GstElement *) dbin, output->src_pad);
-  }
+
+  /* Remove decoder */
   if (output->decoder) {
     gst_element_set_locked_state (output->decoder, TRUE);
     gst_element_set_state (output->decoder, GST_STATE_NULL);
-    gst_bin_remove ((GstBin *) dbin, output->decoder);
+    gst_bin_remove ((GstBin *) output->dbin, output->decoder);
+
+    output->decoder = NULL;
+    output->decoder_latency = GST_CLOCK_TIME_NONE;
+  }
+
+}
+
+/** db_output_stream_free:
+ * @output: A #DecodebinOutputstream
+ *
+ * Releases the @output from the associated slot, removes the associated source
+ * ghost pad and frees any decoder
+ */
+static void
+db_output_stream_free (DecodebinOutputStream * output)
+{
+  GstDecodebin3 *dbin = output->dbin;
+
+  GST_DEBUG_OBJECT (output->src_pad, "Freeing");
+
+  db_output_stream_reset (output);
+
+  if (output->slot)
+    mq_slot_set_output (output->slot, NULL);
+
+  if (output->src_exposed) {
+    gst_element_remove_pad ((GstElement *) dbin, output->src_pad);
   }
   g_free (output);
 }
