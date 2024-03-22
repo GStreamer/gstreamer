@@ -58,4 +58,8 @@ gboolean      gst_d3d12_need_transform (gfloat rotation_x,
                                         gfloat scale_x,
                                         gfloat scale_y);
 
+gboolean     gst_d3d12_buffer_copy_into (GstBuffer * dst,
+                                         GstBuffer * src,
+                                         const GstVideoInfo * info);
+
 G_END_DECLS
