@@ -161,7 +161,7 @@
  *    stream is in the REQUESTED selection.
  *  2) Deactivating a stream (i.e. unlinking a slot from an output) is also done
  *    within the stream thread, but only in a purposefully called IDLE probe
- *    that calls reassign_slot().
+ *    that calls mq_slot_reassign().
  *
  * Based on those two principles, 3 "selection" of streams (stream-id) are used:
  * 1) requested_selection
@@ -170,7 +170,7 @@
  *    List of streams that are exposed by decodebin
  * 3) to_activate
  *    List of streams that will be moved to requested_selection in the
- *    reassign_slot() method (i.e. once a stream was deactivated, and the output
+ *    mq_slot_reassign() method (i.e. once a stream was deactivated, and the output
  *    was retargetted)
  */
 
@@ -551,15 +551,15 @@ static void db_output_stream_free (DecodebinOutputStream * output);
 static DecodebinOutputStream *db_output_stream_new (GstDecodebin3 * dbin,
     GstStreamType type);
 
-static GstPadProbeReturn slot_unassign_probe (GstPad * pad,
+static GstPadProbeReturn mq_slot_unassign_probe (GstPad * pad,
     GstPadProbeInfo * info, MultiQueueSlot * slot);
-static gboolean reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot);
+static void mq_slot_reassign (MultiQueueSlot * slot);
 static MultiQueueSlot
     * gst_decodebin_get_slot_for_input_stream_locked (GstDecodebin3 * dbin,
     DecodebinInputStream * input);
 static void link_input_to_slot (DecodebinInputStream * input,
     MultiQueueSlot * slot);
-static void free_multiqueue_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot);
+static void mq_slot_free (GstDecodebin3 * dbin, MultiQueueSlot * slot);
 
 static GstStreamCollection *get_merged_collection (GstDecodebin3 * dbin);
 static void update_requested_selection (GstDecodebin3 * dbin);
@@ -702,7 +702,7 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   /* Free multiqueue slots */
   for (tmp = dbin->slots; tmp; tmp = tmp->next) {
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
-    free_multiqueue_slot (dbin, slot);
+    mq_slot_free (dbin, slot);
   }
   g_list_free (dbin->slots);
   dbin->slots = NULL;
@@ -1418,7 +1418,7 @@ remove_slot_from_streaming_thread (GstDecodebin3 * dbin, MultiQueueSlot * slot)
   gst_decodebin3_update_min_interleave (dbin);
 
   gst_element_call_async (GST_ELEMENT_CAST (dbin),
-      (GstElementCallAsyncFunc) free_multiqueue_slot, slot, NULL);
+      (GstElementCallAsyncFunc) mq_slot_free, slot, NULL);
 }
 
 static void
@@ -3229,7 +3229,7 @@ check_slot_reconfiguration (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     else
       GST_ELEMENT_WARNING (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
           ("Some plugins were missing"));
-    reassign_slot (dbin, slot);
+    mq_slot_reassign (slot);
   } else {
     GstMessage *selection_msg = is_selection_done (dbin);
     SELECTION_UNLOCK (dbin);
@@ -3912,9 +3912,10 @@ find_slot_for_stream_id (GstDecodebin3 * dbin, const gchar * sid)
 
 /* This function handles the reassignment of a slot. Call this from
  * the streaming thread of a slot. */
-static gboolean
-reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
+static void
+mq_slot_reassign (MultiQueueSlot * slot)
 {
+  GstDecodebin3 *dbin = slot->dbin;
   DecodebinOutputStream *output;
   MultiQueueSlot *target_slot = NULL;
   GList *tmp;
@@ -3927,14 +3928,14 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     GST_DEBUG_OBJECT (slot->src_pad,
         "Called on inactive slot (active_stream == NULL)");
     SELECTION_UNLOCK (dbin);
-    return FALSE;
+    return;
   }
 
   if (G_UNLIKELY (output == NULL)) {
     GST_DEBUG_OBJECT (slot->src_pad,
         "Slot doesn't have any output to be removed");
     SELECTION_UNLOCK (dbin);
-    return FALSE;
+    return;
   }
 
   sid = gst_stream_get_stream_id (slot->active_stream);
@@ -3946,7 +3947,7 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     SELECTION_UNLOCK (dbin);
     GST_DEBUG_OBJECT (slot->src_pad,
         "Stream '%s' doesn't need to be deactivated", sid);
-    return FALSE;
+    return;
   }
 
   /* Unlink slot from output */
@@ -4005,8 +4006,6 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
     if (msg)
       gst_element_post_message ((GstElement *) slot->dbin, msg);
   }
-
-  return TRUE;
 }
 
 /* Idle probe called when a slot should be unassigned from its output stream.
@@ -4015,12 +4014,10 @@ reassign_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
  * Also, this method will search for a pending stream which could re-use
  * the output stream. */
 static GstPadProbeReturn
-slot_unassign_probe (GstPad * pad, GstPadProbeInfo * info,
+mq_slot_unassign_probe (GstPad * pad, GstPadProbeInfo * info,
     MultiQueueSlot * slot)
 {
-  GstDecodebin3 *dbin = slot->dbin;
-
-  reassign_slot (dbin, slot);
+  mq_slot_reassign (slot);
 
   return GST_PAD_PROBE_REMOVE;
 }
@@ -4220,7 +4217,7 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   for (tmp = slots_to_reassign; tmp; tmp = tmp->next) {
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
     gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_IDLE,
-        (GstPadProbeCallback) slot_unassign_probe, slot, NULL);
+        (GstPadProbeCallback) mq_slot_unassign_probe, slot, NULL);
   }
 
   if (to_deactivate)
@@ -4323,9 +4320,8 @@ gst_decodebin3_send_event (GstElement * element, GstEvent * event)
   return GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
 }
 
-
 static void
-free_multiqueue_slot (GstDecodebin3 * dbin, MultiQueueSlot * slot)
+mq_slot_free (GstDecodebin3 * dbin, MultiQueueSlot * slot)
 {
   if (slot->probe_id)
     gst_pad_remove_probe (slot->src_pad, slot->probe_id);
