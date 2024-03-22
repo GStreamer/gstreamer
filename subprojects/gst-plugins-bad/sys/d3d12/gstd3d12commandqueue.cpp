@@ -384,16 +384,6 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
 
   auto priv = queue->priv;
 
-  auto completed = priv->fence->GetCompletedValue ();
-  if (completed >= fence_value) {
-    GST_DEBUG_OBJECT (queue, "Already completed fence value %"
-        G_GUINT64_FORMAT, fence_value);
-
-    if (notify)
-      notify (fence_data);
-    return;
-  }
-
   std::lock_guard < std::mutex > elk (priv->execute_lock);
   auto gc_data = std::make_shared < GCData > (fence_data, notify, fence_value);
   if (!priv->gc_thread) {
