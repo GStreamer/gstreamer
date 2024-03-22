@@ -45,6 +45,9 @@
 #include "gstd3d12vp8dec.h"
 #include "gstd3d12vp9dec.h"
 #include "gstd3d12av1dec.h"
+#include "gstd3d12ipcclient.h"
+#include "gstd3d12ipcsrc.h"
+#include "gstd3d12ipcsink.h"
 #include <windows.h>
 #include <versionhelpers.h>
 #include <wrl.h>
@@ -64,6 +67,7 @@ GST_DEBUG_CATEGORY (gst_d3d12_utils_debug);
 static void
 plugin_deinit (gpointer data)
 {
+  gst_d3d12_ipc_client_deinit ();
 }
 
 static gboolean
@@ -142,6 +146,10 @@ plugin_init (GstPlugin * plugin)
   gst_device_provider_register (plugin,
       "d3d12screencapturedeviceprovider", GST_RANK_PRIMARY,
       GST_TYPE_D3D12_SCREEN_CAPTURE_DEVICE_PROVIDER);
+  gst_element_register (plugin,
+      "d3d12ipcsrc", GST_RANK_NONE, GST_TYPE_D3D12_IPC_SRC);
+  gst_element_register (plugin,
+      "d3d12ipcsink", GST_RANK_NONE, GST_TYPE_D3D12_IPC_SINK);
 
   g_object_set_data_full (G_OBJECT (plugin),
       "plugin-d3d12-shutdown", (gpointer) "shutdown-data",
