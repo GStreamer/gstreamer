@@ -3193,7 +3193,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
    * speed and quality, while the others control encoding bit rate and
    * quality. The lower value has better quality(maybe bigger MV search
    * range) but slower speed, the higher value has faster speed but lower
-   * quality.
+   * quality. It is valid for all modes.
    *
    * The possible composition to control the bit rate and quality:
    *
@@ -3228,6 +3228,17 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
    *    target bit rate, and encoder will try its best to make the QP
    *    with in the ["max-qp", "min-qp"] range. Other paramters are
    *    ignored.
+   *
+   * 5. ICQ mode: "rate-control=ICQ", which is similar to CQP mode
+   *    except that its QP may be increased or decreaed to avoid huge
+   *    bit rate fluctuation. The "qpi" specifies a quality factor
+   *    as the base quality value. Other properties are ignored.
+   *
+   * 6. QVBR mode: "rate-control=QVBR", which is similar to VBR mode
+   *    with the same usage of "bitrate", "target-percentage" and
+   *    "cpb-size" properties. Besides that, the "qpi" specifies a
+   *    quality factor as the base quality value which the driver
+   *    should try its best to meet. Other properties are ignored.
    */
 
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
@@ -3263,6 +3274,17 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
     }
   } else {
     self->rc.rc_ctrl_mode = VA_RC_NONE;
+  }
+
+  /* ICQ mode and QVBR mode do not need max/min qp. */
+  if (self->rc.rc_ctrl_mode == VA_RC_ICQ || self->rc.rc_ctrl_mode == VA_RC_QVBR) {
+    self->rc.min_qp = 0;
+    self->rc.max_qp = 51;
+
+    update_property_uint (base, &self->prop.min_qp, self->rc.min_qp,
+        PROP_MIN_QP);
+    update_property_uint (base, &self->prop.max_qp, self->rc.max_qp,
+        PROP_MAX_QP);
   }
 
   if (self->rc.min_qp > self->rc.max_qp) {
@@ -3320,7 +3342,8 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
 
   /* Calculate a bitrate is not set. */
   if ((self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
-          || self->rc.rc_ctrl_mode == VA_RC_VCM) && bitrate == 0) {
+          || self->rc.rc_ctrl_mode == VA_RC_VCM
+          || self->rc.rc_ctrl_mode == VA_RC_QVBR) && bitrate == 0) {
     /* FIXME: Provide better estimation. */
     /* Choose the max value of all levels' MinCr which is 8, and x2 for
        conservative calculation. So just using a 1/16 compression ratio,
@@ -3355,6 +3378,9 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
   /* Adjust the setting based on RC mode. */
   switch (self->rc.rc_ctrl_mode) {
     case VA_RC_NONE:
+    case VA_RC_ICQ:
+      self->rc.qp_p = self->rc.qp_b = 26;
+      /* Fall through. */
     case VA_RC_CQP:
       self->rc.max_bitrate = 0;
       self->rc.target_bitrate = 0;
@@ -3368,11 +3394,14 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
       self->rc.qp_i = self->rc.qp_p = self->rc.qp_b = 26;
       break;
     case VA_RC_VBR:
+      self->rc.qp_i = 26;
+      /* Fall through. */
+    case VA_RC_QVBR:
+      self->rc.qp_p = self->rc.qp_b = 26;
       g_assert (self->rc.target_percentage >= 10);
       self->rc.max_bitrate = (guint) gst_util_uint64_scale_int (bitrate,
           100, self->rc.target_percentage);
       self->rc.target_bitrate = bitrate;
-      self->rc.qp_i = self->rc.qp_p = self->rc.qp_b = 26;
       break;
     case VA_RC_VCM:
       self->rc.max_bitrate = bitrate;
@@ -3397,7 +3426,9 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
       "Target bitrate: %u bits/sec", self->rc.max_bitrate,
       self->rc.target_bitrate);
 
-  if (self->rc.rc_ctrl_mode != VA_RC_NONE && self->rc.rc_ctrl_mode != VA_RC_CQP)
+  if (self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
+      || self->rc.rc_ctrl_mode == VA_RC_VCM
+      || self->rc.rc_ctrl_mode == VA_RC_QVBR)
     _h265_calculate_bitrate_hrd (self);
 
   /* notifications */
@@ -5129,7 +5160,8 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_QP_I] = g_param_spec_uint ("qpi", "I Frame QP",
       "The quantizer value for I frame. In CQP mode, it specifies the QP of I "
-      "frame, in other mode, it specifies the init QP of all frames", 0, 51, 26,
+      "frame. In ICQ and QVBR modes, it specifies a quality factor. In other "
+      "modes, it is ignored", 0, 51, 26,
       param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
