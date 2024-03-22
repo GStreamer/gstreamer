@@ -973,14 +973,22 @@ gst_va_base_enc_add_rate_control_parameter (GstVaBaseEnc * base,
       .bits_per_second = max_bitrate_bits,
       .target_percentage = target_percentage,
       .window_size = window_size,
-      .initial_qp = qp_i,
       .min_qp = min_qp,
       .max_qp = max_qp,
       .rc_flags.bits.mb_rate_control = mbbrc,
-      .quality_factor = 0,
     },
   };
   /* *INDENT-ON* */
+
+  if (rc_mode == VA_RC_ICQ) {
+    g_assert (min_qp == 0);
+    rate_control.rate_control.ICQ_quality_factor = qp_i;
+  } else if (rc_mode == VA_RC_QVBR) {
+    g_assert (min_qp == 0);
+    rate_control.rate_control.quality_factor = qp_i;
+  } else {
+    rate_control.rate_control.initial_qp = qp_i;
+  }
 
   if (!gst_va_encoder_add_param (base->encoder, picture,
           VAEncMiscParameterBufferType, &rate_control, sizeof (rate_control))) {
@@ -1065,7 +1073,8 @@ gst_va_base_enc_add_hrd_parameter (GstVaBaseEnc * base,
   };
   /* *INDENT-ON* */
 
-  if (rc_mode == VA_RC_NONE || rc_mode == VA_RC_CQP || rc_mode == VA_RC_VCM)
+  if (rc_mode == VA_RC_NONE || rc_mode == VA_RC_CQP ||
+      rc_mode == VA_RC_VCM || rc_mode == VA_RC_ICQ)
     return TRUE;
 
   if (!gst_va_encoder_add_param (base->encoder, picture,
