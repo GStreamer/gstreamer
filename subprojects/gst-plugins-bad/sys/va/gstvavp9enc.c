@@ -1986,9 +1986,6 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
         GST_VIDEO_INFO_FPS_D (&base->in_info)) / 1000;
 
     GST_INFO_OBJECT (self, "target bitrate computed to %u kbps", bitrate);
-
-    self->prop.bitrate = bitrate;
-    g_object_notify_by_pspec (G_OBJECT (self), properties[PROP_BITRATE]);
   }
 
   /* Adjust the setting based on RC mode. */
@@ -1996,6 +1993,7 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
     case VA_RC_NONE:
     case VA_RC_ICQ:
     case VA_RC_CQP:
+      bitrate = 0;
       self->rc.max_bitrate = 0;
       self->rc.target_bitrate = 0;
       self->rc.target_percentage = 0;
@@ -2050,7 +2048,8 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
       || self->rc.rc_ctrl_mode == VA_RC_QVBR)
     _vp9_calculate_bitrate_hrd (self);
 
-  /* notifications */
+  /* update & notifications */
+  update_property_uint (base, &self->prop.bitrate, bitrate, PROP_BITRATE);
   update_property_uint (base, &self->prop.cpb_size, self->rc.cpb_size,
       PROP_CPB_SIZE);
   update_property_uint (base, &self->prop.target_percentage,

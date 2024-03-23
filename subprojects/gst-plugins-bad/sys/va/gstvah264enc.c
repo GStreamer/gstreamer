@@ -636,6 +636,7 @@ _ensure_rate_control (GstVaH264Enc * self)
       self->rc.qp_p = self->rc.qp_b = 26;
       /* Fall through. */
     case VA_RC_CQP:
+      bitrate = 0;
       self->rc.max_bitrate = 0;
       self->rc.target_bitrate = 0;
       self->rc.target_percentage = 0;

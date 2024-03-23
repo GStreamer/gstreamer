@@ -3369,10 +3369,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
     bitrate = gst_util_uint64_scale (factor,
         GST_VIDEO_INFO_FPS_N (&base->in_info),
         GST_VIDEO_INFO_FPS_D (&base->in_info)) / 1000;
-
     GST_INFO_OBJECT (self, "target bitrate computed to %u kbps", bitrate);
-
-    update_property_uint (base, &self->prop.bitrate, bitrate, PROP_BITRATE);
   }
 
   /* Adjust the setting based on RC mode. */
@@ -3382,6 +3379,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
       self->rc.qp_p = self->rc.qp_b = 26;
       /* Fall through. */
     case VA_RC_CQP:
+      bitrate = 0;
       self->rc.max_bitrate = 0;
       self->rc.target_bitrate = 0;
       self->rc.target_percentage = 0;
@@ -3431,7 +3429,8 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
       || self->rc.rc_ctrl_mode == VA_RC_QVBR)
     _h265_calculate_bitrate_hrd (self);
 
-  /* notifications */
+  /* update & notifications */
+  update_property_uint (base, &self->prop.bitrate, bitrate, PROP_BITRATE);
   update_property_uint (base, &self->prop.min_qp, self->rc.min_qp, PROP_MIN_QP);
   update_property_uint (base, &self->prop.cpb_size,
       self->rc.cpb_size, PROP_CPB_SIZE);
