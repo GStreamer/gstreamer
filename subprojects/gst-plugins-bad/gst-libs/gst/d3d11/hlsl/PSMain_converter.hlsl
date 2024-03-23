@@ -18,6 +18,11 @@
  */
 
 #ifdef BUILDING_HLSL
+cbuffer PsAlphaFactor : register(b1)
+{
+  float alphaFactor;
+};
+
 struct PSColorSpace
 {
   float3 CoeffX;
@@ -29,19 +34,22 @@ struct PSColorSpace
   float padding;
 };
 
-cbuffer PsConstBuffer : register(b0)
+cbuffer PsConstBuffer : register(b2)
 {
   PSColorSpace preCoeff;
   PSColorSpace postCoeff;
   PSColorSpace primariesCoeff;
-  float alphaFactor;
 };
 
-Texture2D shaderTexture[4] : register(t0);
+Texture2D shaderTexture_0 : register(t0);
+Texture2D shaderTexture_1 : register(t1);
+Texture2D shaderTexture_2 : register(t2);
+Texture2D shaderTexture_3 : register(t3);
 Texture1D<float> gammaDecLUT : register(t4);
 Texture1D<float> gammaEncLUT: register(t5);
+
 SamplerState samplerState : register(s0);
-SamplerState linearSampler : register(s1);
+SamplerState lutSamplerState : register(s1);
 
 struct PS_INPUT
 {
@@ -114,7 +122,7 @@ class SamplerGRAY : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.x = shaderTexture[0].Sample(samplerState, uv).x;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
     sample.y = 0.5;
     sample.z = 0.5;
     sample.a = 1.0;
@@ -127,8 +135,8 @@ class SamplerNV12 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.x = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.yz = shaderTexture[1].Sample(samplerState, uv).xy;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.yz = shaderTexture_1.Sample(samplerState, uv).xy;
     sample.a = 1.0;
     return sample;
   }
@@ -139,8 +147,8 @@ class SamplerNV21 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.x = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.yz = shaderTexture[1].Sample(samplerState, uv).yx;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.yz = shaderTexture_1.Sample(samplerState, uv).yx;
     sample.a = 1.0;
     return sample;
   }
@@ -151,9 +159,9 @@ class SamplerI420 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.x = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.y = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.z = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.y = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.z = shaderTexture_2.Sample(samplerState, uv).x;
     sample.a = 1.0;
     return sample;
   }
@@ -164,9 +172,9 @@ class SamplerYV12 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.x = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.z = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.y = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.z = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.y = shaderTexture_2.Sample(samplerState, uv).x;
     sample.a = 1.0;
     return sample;
   }
@@ -177,9 +185,9 @@ class SamplerI420_10 : ISampler
   float4 Execute (float2 uv)
   {
     float3 sample;
-    sample.x = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.y = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.z = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.y = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.z = shaderTexture_2.Sample(samplerState, uv).x;
     return float4 (saturate (sample * 64.0), 1.0);
   }
 };
@@ -189,9 +197,9 @@ class SamplerI420_12 : ISampler
   float4 Execute (float2 uv)
   {
     float3 sample;
-    sample.x = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.y = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.z = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.y = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.z = shaderTexture_2.Sample(samplerState, uv).x;
     return float4 (saturate (sample * 16.0), 1.0);
   }
 };
@@ -200,7 +208,7 @@ class SamplerVUYA : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv).zyxw;
+    return shaderTexture_0.Sample(samplerState, uv).zyxw;
   }
 };
 
@@ -208,7 +216,7 @@ class SamplerVUYAPremul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).zyxw);
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).zyxw);
   }
 };
 
@@ -216,7 +224,7 @@ class SamplerY410 : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return float4 (shaderTexture[0].Sample(samplerState, uv).yxz, 1.0);
+    return float4 (shaderTexture_0.Sample(samplerState, uv).yxz, 1.0);
   }
 };
 
@@ -224,7 +232,7 @@ class SamplerY412 : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv).grba;
+    return shaderTexture_0.Sample(samplerState, uv).grba;
   }
 };
 
@@ -232,7 +240,7 @@ class SamplerY412Premul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).grba);
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).grba);
   }
 };
 
@@ -240,7 +248,7 @@ class SamplerAYUV : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv).yzwx;
+    return shaderTexture_0.Sample(samplerState, uv).yzwx;
   }
 };
 
@@ -248,7 +256,7 @@ class SamplerAYUVPremul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).yzwx);
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).yzwx);
   }
 };
 
@@ -256,7 +264,7 @@ class SamplerRGBA : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv);
+    return shaderTexture_0.Sample(samplerState, uv);
   }
 };
 
@@ -264,7 +272,7 @@ class SamplerRGBAPremul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv));
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv));
   }
 };
 
@@ -272,7 +280,7 @@ class SamplerRGBx : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return float4 (shaderTexture[0].Sample(samplerState, uv).rgb, 1.0);
+    return float4 (shaderTexture_0.Sample(samplerState, uv).rgb, 1.0);
   }
 };
 
@@ -280,7 +288,7 @@ class SamplerxRGB : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return float4 (shaderTexture[0].Sample(samplerState, uv).gba, 1.0);
+    return float4 (shaderTexture_0.Sample(samplerState, uv).gba, 1.0);
   }
 };
 
@@ -288,7 +296,7 @@ class SamplerARGB : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv).gbar;
+    return shaderTexture_0.Sample(samplerState, uv).gbar;
   }
 };
 
@@ -296,7 +304,7 @@ class SamplerARGBPremul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).gbar);
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).gbar);
   }
 };
 
@@ -304,7 +312,7 @@ class SamplerxBGR : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return float4 (shaderTexture[0].Sample(samplerState, uv).abg, 1.0);
+    return float4 (shaderTexture_0.Sample(samplerState, uv).abg, 1.0);
   }
 };
 
@@ -312,7 +320,7 @@ class SamplerABGR : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv).abgr;
+    return shaderTexture_0.Sample(samplerState, uv).abgr;
   }
 };
 
@@ -320,7 +328,7 @@ class SamplerABGRPremul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).abgr);
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).abgr);
   }
 };
 
@@ -328,7 +336,7 @@ class SamplerBGR10A2 : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return float4 (shaderTexture[0].Sample(samplerState, uv).zyx, 1.0);
+    return float4 (shaderTexture_0.Sample(samplerState, uv).zyx, 1.0);
   }
 };
 
@@ -336,7 +344,7 @@ class SamplerBGRA64 : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv).bgra;
+    return shaderTexture_0.Sample(samplerState, uv).bgra;
   }
 };
 
@@ -344,7 +352,7 @@ class SamplerBGRA64Premul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).bgra);
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).bgra);
   }
 };
 
@@ -353,9 +361,9 @@ class SamplerGBR : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
     sample.a = 1.0;
     return sample;
   }
@@ -366,9 +374,9 @@ class SamplerGBR_10 : ISampler
   float4 Execute (float2 uv)
   {
     float3 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
     return float4 (saturate (sample * 64.0), 1.0);
   }
 };
@@ -378,9 +386,9 @@ class SamplerGBR_12 : ISampler
   float4 Execute (float2 uv)
   {
     float3 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
     return float4 (saturate (sample * 16.0), 1.0);
   }
 };
@@ -390,10 +398,10 @@ class SamplerGBRA : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
-    sample.a = shaderTexture[3].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
+    sample.a = shaderTexture_3.Sample(samplerState, uv).x;
     return sample;
   }
 };
@@ -403,10 +411,10 @@ class SamplerGBRAPremul : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
-    sample.a = shaderTexture[3].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
+    sample.a = shaderTexture_3.Sample(samplerState, uv).x;
     return DoAlphaUnpremul (sample);
   }
 };
@@ -416,10 +424,10 @@ class SamplerGBRA_10 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
-    sample.a = shaderTexture[3].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
+    sample.a = shaderTexture_3.Sample(samplerState, uv).x;
     return saturate (sample * 64.0);
   }
 };
@@ -429,10 +437,10 @@ class SamplerGBRAPremul_10 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
-    sample.a = shaderTexture[3].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
+    sample.a = shaderTexture_3.Sample(samplerState, uv).x;
     return DoAlphaUnpremul (saturate (sample * 64.0));
   }
 };
@@ -442,10 +450,10 @@ class SamplerGBRA_12 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
-    sample.a = shaderTexture[3].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
+    sample.a = shaderTexture_3.Sample(samplerState, uv).x;
     return saturate (sample * 16.0);
   }
 };
@@ -455,10 +463,10 @@ class SamplerGBRAPremul_12 : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.g = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
-    sample.a = shaderTexture[3].Sample(samplerState, uv).x;
+    sample.g = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
+    sample.a = shaderTexture_3.Sample(samplerState, uv).x;
     return DoAlphaUnpremul (saturate (sample * 16.0));
   }
 };
@@ -468,9 +476,9 @@ class SamplerRGBP : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.r = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.g = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.b = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.r = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.g = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.b = shaderTexture_2.Sample(samplerState, uv).x;
     sample.a = 1.0;
     return sample;
   }
@@ -481,9 +489,9 @@ class SamplerBGRP : ISampler
   float4 Execute (float2 uv)
   {
     float4 sample;
-    sample.b = shaderTexture[0].Sample(samplerState, uv).x;
-    sample.g = shaderTexture[1].Sample(samplerState, uv).x;
-    sample.r = shaderTexture[2].Sample(samplerState, uv).x;
+    sample.b = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.g = shaderTexture_1.Sample(samplerState, uv).x;
+    sample.r = shaderTexture_2.Sample(samplerState, uv).x;
     sample.a = 1.0;
     return sample;
   }
@@ -493,7 +501,7 @@ class SamplerRBGA : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return shaderTexture[0].Sample(samplerState, uv).rbga;
+    return shaderTexture_0.Sample(samplerState, uv).rbga;
   }
 };
 
@@ -501,7 +509,7 @@ class SamplerRBGAPremul : ISampler
 {
   float4 Execute (float2 uv)
   {
-    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).rbga);
+    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).rbga);
   }
 };
 
@@ -555,13 +563,13 @@ class ConverterGamma : IConverter
     out_space += preCoeff.Offset;
     out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);
 
-    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);
-    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);
-    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);
+    out_space.x = gammaDecLUT.Sample (lutSamplerState, out_space.x);
+    out_space.y = gammaDecLUT.Sample (lutSamplerState, out_space.y);
+    out_space.z = gammaDecLUT.Sample (lutSamplerState, out_space.z);
 
-    out_space.x = gammaEncLUT.Sample (linearSampler, out_space.x);
-    out_space.y = gammaEncLUT.Sample (linearSampler, out_space.y);
-    out_space.z = gammaEncLUT.Sample (linearSampler, out_space.z);
+    out_space.x = gammaEncLUT.Sample (lutSamplerState, out_space.x);
+    out_space.y = gammaEncLUT.Sample (lutSamplerState, out_space.y);
+    out_space.z = gammaEncLUT.Sample (lutSamplerState, out_space.z);
 
     out_space.x = dot (postCoeff.CoeffX, out_space);
     out_space.y = dot (postCoeff.CoeffY, out_space);
@@ -583,17 +591,17 @@ class ConverterPrimary : IConverter
     out_space += preCoeff.Offset;
     out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);
 
-    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);
-    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);
-    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);
+    out_space.x = gammaDecLUT.Sample (lutSamplerState, out_space.x);
+    out_space.y = gammaDecLUT.Sample (lutSamplerState, out_space.y);
+    out_space.z = gammaDecLUT.Sample (lutSamplerState, out_space.z);
 
     tmp.x = dot (primariesCoeff.CoeffX, out_space);
     tmp.y = dot (primariesCoeff.CoeffY, out_space);
     tmp.z = dot (primariesCoeff.CoeffZ, out_space);
 
-    out_space.x = gammaEncLUT.Sample (linearSampler, tmp.x);
-    out_space.y = gammaEncLUT.Sample (linearSampler, tmp.y);
-    out_space.z = gammaEncLUT.Sample (linearSampler, tmp.z);
+    out_space.x = gammaEncLUT.Sample (lutSamplerState, tmp.x);
+    out_space.y = gammaEncLUT.Sample (lutSamplerState, tmp.y);
+    out_space.z = gammaEncLUT.Sample (lutSamplerState, tmp.z);
 
     out_space.x = dot (postCoeff.CoeffX, out_space);
     out_space.y = dot (postCoeff.CoeffY, out_space);
@@ -1127,6 +1135,11 @@ OUTPUT_TYPE ENTRY_POINT (PS_INPUT input)
 }
 #else /* BUILDING_HLSL */
 static const char g_PSMain_converter_str[] =
+"cbuffer PsAlphaFactor : register(b1)\n"
+"{\n"
+"  float alphaFactor;\n"
+"};\n"
+"\n"
 "struct PSColorSpace\n"
 "{\n"
 "  float3 CoeffX;\n"
@@ -1138,19 +1151,22 @@ static const char g_PSMain_converter_str[] =
 "  float padding;\n"
 "};\n"
 "\n"
-"cbuffer PsConstBuffer : register(b0)\n"
+"cbuffer PsConstBuffer : register(b2)\n"
 "{\n"
 "  PSColorSpace preCoeff;\n"
 "  PSColorSpace postCoeff;\n"
 "  PSColorSpace primariesCoeff;\n"
-"  float alphaFactor;\n"
 "};\n"
 "\n"
-"Texture2D shaderTexture[4] : register(t0);\n"
+"Texture2D shaderTexture_0 : register(t0);\n"
+"Texture2D shaderTexture_1 : register(t1);\n"
+"Texture2D shaderTexture_2 : register(t2);\n"
+"Texture2D shaderTexture_3 : register(t3);\n"
 "Texture1D<float> gammaDecLUT : register(t4);\n"
 "Texture1D<float> gammaEncLUT: register(t5);\n"
+"\n"
 "SamplerState samplerState : register(s0);\n"
-"SamplerState linearSampler : register(s1);\n"
+"SamplerState lutSamplerState : register(s1);\n"
 "\n"
 "struct PS_INPUT\n"
 "{\n"
@@ -1223,7 +1239,7 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
 "    sample.y = 0.5;\n"
 "    sample.z = 0.5;\n"
 "    sample.a = 1.0;\n"
@@ -1236,8 +1252,8 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.yz = shaderTexture[1].Sample(samplerState, uv).xy;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.yz = shaderTexture_1.Sample(samplerState, uv).xy;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
 "  }\n"
@@ -1248,8 +1264,8 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.yz = shaderTexture[1].Sample(samplerState, uv).yx;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.yz = shaderTexture_1.Sample(samplerState, uv).yx;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
 "  }\n"
@@ -1260,9 +1276,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.y = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.z = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.y = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.z = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
 "  }\n"
@@ -1273,9 +1289,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.z = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.y = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.z = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.y = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
 "  }\n"
@@ -1286,9 +1302,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float3 sample;\n"
-"    sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.y = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.z = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.y = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.z = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    return float4 (saturate (sample * 64.0), 1.0);\n"
 "  }\n"
 "};\n"
@@ -1298,9 +1314,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float3 sample;\n"
-"    sample.x = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.y = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.z = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.y = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.z = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    return float4 (saturate (sample * 16.0), 1.0);\n"
 "  }\n"
 "};\n"
@@ -1309,7 +1325,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv).zyxw;\n"
+"    return shaderTexture_0.Sample(samplerState, uv).zyxw;\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1317,7 +1333,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).zyxw);\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).zyxw);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1325,7 +1341,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return float4 (shaderTexture[0].Sample(samplerState, uv).yxz, 1.0);\n"
+"    return float4 (shaderTexture_0.Sample(samplerState, uv).yxz, 1.0);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1333,7 +1349,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv).grba;\n"
+"    return shaderTexture_0.Sample(samplerState, uv).grba;\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1341,7 +1357,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).grba);\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).grba);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1349,7 +1365,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv).yzwx;\n"
+"    return shaderTexture_0.Sample(samplerState, uv).yzwx;\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1357,7 +1373,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).yzwx);\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).yzwx);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1365,7 +1381,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv);\n"
+"    return shaderTexture_0.Sample(samplerState, uv);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1373,7 +1389,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv));\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv));\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1381,7 +1397,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return float4 (shaderTexture[0].Sample(samplerState, uv).rgb, 1.0);\n"
+"    return float4 (shaderTexture_0.Sample(samplerState, uv).rgb, 1.0);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1389,7 +1405,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return float4 (shaderTexture[0].Sample(samplerState, uv).gba, 1.0);\n"
+"    return float4 (shaderTexture_0.Sample(samplerState, uv).gba, 1.0);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1397,7 +1413,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv).gbar;\n"
+"    return shaderTexture_0.Sample(samplerState, uv).gbar;\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1405,7 +1421,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).gbar);\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).gbar);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1413,7 +1429,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return float4 (shaderTexture[0].Sample(samplerState, uv).abg, 1.0);\n"
+"    return float4 (shaderTexture_0.Sample(samplerState, uv).abg, 1.0);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1421,7 +1437,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv).abgr;\n"
+"    return shaderTexture_0.Sample(samplerState, uv).abgr;\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1429,7 +1445,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).abgr);\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).abgr);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1437,7 +1453,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return float4 (shaderTexture[0].Sample(samplerState, uv).zyx, 1.0);\n"
+"    return float4 (shaderTexture_0.Sample(samplerState, uv).zyx, 1.0);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1445,7 +1461,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv).bgra;\n"
+"    return shaderTexture_0.Sample(samplerState, uv).bgra;\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1453,7 +1469,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).bgra);\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).bgra);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1462,9 +1478,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
 "  }\n"
@@ -1475,9 +1491,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float3 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    return float4 (saturate (sample * 64.0), 1.0);\n"
 "  }\n"
 "};\n"
@@ -1487,9 +1503,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float3 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    return float4 (saturate (sample * 16.0), 1.0);\n"
 "  }\n"
 "};\n"
@@ -1499,10 +1515,10 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
-"    sample.a = shaderTexture[3].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
+"    sample.a = shaderTexture_3.Sample(samplerState, uv).x;\n"
 "    return sample;\n"
 "  }\n"
 "};\n"
@@ -1512,10 +1528,10 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
-"    sample.a = shaderTexture[3].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
+"    sample.a = shaderTexture_3.Sample(samplerState, uv).x;\n"
 "    return DoAlphaUnpremul (sample);\n"
 "  }\n"
 "};\n"
@@ -1525,10 +1541,10 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
-"    sample.a = shaderTexture[3].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
+"    sample.a = shaderTexture_3.Sample(samplerState, uv).x;\n"
 "    return saturate (sample * 64.0);\n"
 "  }\n"
 "};\n"
@@ -1538,10 +1554,10 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
-"    sample.a = shaderTexture[3].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
+"    sample.a = shaderTexture_3.Sample(samplerState, uv).x;\n"
 "    return DoAlphaUnpremul (saturate (sample * 64.0));\n"
 "  }\n"
 "};\n"
@@ -1551,10 +1567,10 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
-"    sample.a = shaderTexture[3].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
+"    sample.a = shaderTexture_3.Sample(samplerState, uv).x;\n"
 "    return saturate (sample * 16.0);\n"
 "  }\n"
 "};\n"
@@ -1564,10 +1580,10 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.g = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
-"    sample.a = shaderTexture[3].Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
+"    sample.a = shaderTexture_3.Sample(samplerState, uv).x;\n"
 "    return DoAlphaUnpremul (saturate (sample * 16.0));\n"
 "  }\n"
 "};\n"
@@ -1577,9 +1593,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.r = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.g = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.b = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
 "  }\n"
@@ -1590,9 +1606,9 @@ static const char g_PSMain_converter_str[] =
 "  float4 Execute (float2 uv)\n"
 "  {\n"
 "    float4 sample;\n"
-"    sample.b = shaderTexture[0].Sample(samplerState, uv).x;\n"
-"    sample.g = shaderTexture[1].Sample(samplerState, uv).x;\n"
-"    sample.r = shaderTexture[2].Sample(samplerState, uv).x;\n"
+"    sample.b = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.g = shaderTexture_1.Sample(samplerState, uv).x;\n"
+"    sample.r = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    sample.a = 1.0;\n"
 "    return sample;\n"
 "  }\n"
@@ -1602,7 +1618,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return shaderTexture[0].Sample(samplerState, uv).rbga;\n"
+"    return shaderTexture_0.Sample(samplerState, uv).rbga;\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1610,7 +1626,7 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float2 uv)\n"
 "  {\n"
-"    return DoAlphaUnpremul (shaderTexture[0].Sample(samplerState, uv).rbga);\n"
+"    return DoAlphaUnpremul (shaderTexture_0.Sample(samplerState, uv).rbga);\n"
 "  }\n"
 "};\n"
 "\n"
@@ -1664,13 +1680,13 @@ static const char g_PSMain_converter_str[] =
 "    out_space += preCoeff.Offset;\n"
 "    out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);\n"
 "\n"
-"    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);\n"
-"    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);\n"
-"    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);\n"
+"    out_space.x = gammaDecLUT.Sample (lutSamplerState, out_space.x);\n"
+"    out_space.y = gammaDecLUT.Sample (lutSamplerState, out_space.y);\n"
+"    out_space.z = gammaDecLUT.Sample (lutSamplerState, out_space.z);\n"
 "\n"
-"    out_space.x = gammaEncLUT.Sample (linearSampler, out_space.x);\n"
-"    out_space.y = gammaEncLUT.Sample (linearSampler, out_space.y);\n"
-"    out_space.z = gammaEncLUT.Sample (linearSampler, out_space.z);\n"
+"    out_space.x = gammaEncLUT.Sample (lutSamplerState, out_space.x);\n"
+"    out_space.y = gammaEncLUT.Sample (lutSamplerState, out_space.y);\n"
+"    out_space.z = gammaEncLUT.Sample (lutSamplerState, out_space.z);\n"
 "\n"
 "    out_space.x = dot (postCoeff.CoeffX, out_space);\n"
 "    out_space.y = dot (postCoeff.CoeffY, out_space);\n"
@@ -1692,17 +1708,17 @@ static const char g_PSMain_converter_str[] =
 "    out_space += preCoeff.Offset;\n"
 "    out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);\n"
 "\n"
-"    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);\n"
-"    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);\n"
-"    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);\n"
+"    out_space.x = gammaDecLUT.Sample (lutSamplerState, out_space.x);\n"
+"    out_space.y = gammaDecLUT.Sample (lutSamplerState, out_space.y);\n"
+"    out_space.z = gammaDecLUT.Sample (lutSamplerState, out_space.z);\n"
 "\n"
 "    tmp.x = dot (primariesCoeff.CoeffX, out_space);\n"
 "    tmp.y = dot (primariesCoeff.CoeffY, out_space);\n"
 "    tmp.z = dot (primariesCoeff.CoeffZ, out_space);\n"
 "\n"
-"    out_space.x = gammaEncLUT.Sample (linearSampler, tmp.x);\n"
-"    out_space.y = gammaEncLUT.Sample (linearSampler, tmp.y);\n"
-"    out_space.z = gammaEncLUT.Sample (linearSampler, tmp.z);\n"
+"    out_space.x = gammaEncLUT.Sample (lutSamplerState, tmp.x);\n"
+"    out_space.y = gammaEncLUT.Sample (lutSamplerState, tmp.y);\n"
+"    out_space.z = gammaEncLUT.Sample (lutSamplerState, tmp.z);\n"
 "\n"
 "    out_space.x = dot (postCoeff.CoeffX, out_space);\n"
 "    out_space.y = dot (postCoeff.CoeffY, out_space);\n"

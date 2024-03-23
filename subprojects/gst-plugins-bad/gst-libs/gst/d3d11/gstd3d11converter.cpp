@@ -151,13 +151,17 @@ struct PSColorSpace
   FLOAT max[4];
 };
 
+struct PSAlphaFactor
+{
+  FLOAT alpha;
+  FLOAT padding[3];
+};
+
 struct PSConstBuffer
 {
   PSColorSpace preCoeff;
   PSColorSpace postCoeff;
   PSColorSpace primariesCoeff;
-  FLOAT alpha;
-  FLOAT padding[3];
 };
 
 struct VertexData
@@ -297,6 +301,7 @@ struct _GstD3D11ConverterPrivate
 
   ComPtr < ID3D11Buffer > vertex_buffer;
   ComPtr < ID3D11Buffer > index_buffer;
+  ComPtr < ID3D11Buffer > alpha_buffer;
   ComPtr < ID3D11Buffer > const_buffer;
   ComPtr < ID3D11Buffer > vs_const_buffer;
   ComPtr < ID3D11VertexShader > vs;
@@ -324,6 +329,7 @@ struct _GstD3D11ConverterPrivate
   gboolean update_transform = FALSE;
   XMFLOAT4X4A custom_transform;
 
+  PSAlphaFactor alpha_data;
   PSConstBuffer const_data;
 
   gboolean clear_background = FALSE;
@@ -606,7 +612,7 @@ gst_d3d11_converter_set_property (GObject * object, guint prop_id,
       break;
     case PROP_ALPHA:
       update_alpha (self, &priv->alpha, value);
-      priv->const_data.alpha = priv->alpha;
+      priv->alpha_data.alpha = priv->alpha;
       break;
     case PROP_BLEND_STATE:{
       ID3D11BlendState *blend =
@@ -782,6 +788,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   ComPtr < ID3D11InputLayout > layout;
   ComPtr < ID3D11SamplerState > sampler;
   ComPtr < ID3D11SamplerState > linear_sampler;
+  ComPtr < ID3D11Buffer > alpha_buffer;
   ComPtr < ID3D11Buffer > const_buffer;
   ComPtr < ID3D11Buffer > vs_const_buffer;
   ComPtr < ID3D11Buffer > vertex_buffer;
@@ -849,8 +856,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   }
 
   /* const buffer */
-  if (priv->convert_type != CONVERT_TYPE::IDENTITY ||
-      GST_VIDEO_INFO_HAS_ALPHA (out_info)) {
+  if (priv->convert_type != CONVERT_TYPE::IDENTITY) {
     G_STATIC_ASSERT (sizeof (PSConstBuffer) % 16 == 0);
     buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
     buffer_desc.ByteWidth = sizeof (PSConstBuffer);
@@ -867,6 +873,21 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
           "Couldn't create constant buffer, hr: 0x%x", (guint) hr);
       return FALSE;
     }
+  }
+
+  G_STATIC_ASSERT (sizeof (PSAlphaFactor) % 16 == 0);
+  buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
+  buffer_desc.ByteWidth = sizeof (PSAlphaFactor);
+  buffer_desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+  buffer_desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+  subresource.pSysMem = &priv->alpha_data;
+  subresource.SysMemPitch = sizeof (PSAlphaFactor);
+
+  hr = device_handle->CreateBuffer (&buffer_desc, &subresource, &alpha_buffer);
+  if (!gst_d3d11_result (hr, device)) {
+    GST_ERROR_OBJECT (self,
+        "Couldn't create alpha buffer, hr: 0x%x", (guint) hr);
+    return FALSE;
   }
 
   buffer_desc.Usage = D3D11_USAGE_DYNAMIC;
@@ -945,6 +966,7 @@ gst_d3d11_color_convert_setup_shader (GstD3D11Converter * self,
   /* holds vertex buffer for crop rect update */
   priv->vertex_buffer = vertex_buffer;
   priv->index_buffer = index_buffer;
+  priv->alpha_buffer = alpha_buffer;
   priv->const_buffer = const_buffer;
   priv->vs_const_buffer = vs_const_buffer;
   priv->vs = vs;
@@ -2107,7 +2129,7 @@ gst_d3d11_converter_new (GstD3D11Device * device, const GstVideoInfo * in_info,
   }
 
   self->device = (GstD3D11Device *) gst_object_ref (device);
-  priv->const_data.alpha = 1.0;
+  priv->alpha_data.alpha = 1.0;
   priv->in_info = *in_info;
   priv->preproc_info = *in_info;
   priv->piv_info = *in_info;
@@ -2329,12 +2351,12 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
     }
   }
 
-  if (priv->const_buffer && priv->update_alpha) {
+  if (priv->update_alpha) {
     D3D11_MAPPED_SUBRESOURCE map;
-    PSConstBuffer *const_buffer;
+    PSAlphaFactor *alpha_buffer;
     HRESULT hr;
 
-    hr = context->Map (priv->const_buffer.Get (),
+    hr = context->Map (priv->alpha_buffer.Get (),
         0, D3D11_MAP_WRITE_DISCARD, 0, &map);
     if (!gst_d3d11_result (hr, self->device)) {
       GST_ERROR_OBJECT (self,
@@ -2342,10 +2364,10 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
       return FALSE;
     }
 
-    const_buffer = (PSConstBuffer *) map.pData;
-    memcpy (const_buffer, &priv->const_data, sizeof (PSConstBuffer));
+    alpha_buffer = (PSAlphaFactor *) map.pData;
+    memcpy (alpha_buffer, &priv->alpha_data, sizeof (PSConstBuffer));
 
-    context->Unmap (priv->const_buffer.Get (), 0);
+    context->Unmap (priv->alpha_buffer.Get (), 0);
   }
   priv->update_alpha = FALSE;
 
@@ -2370,9 +2392,13 @@ gst_d3d11_converter_convert_internal (GstD3D11Converter * self,
   context->VSSetShader (priv->vs.Get (), nullptr, 0);
   context->VSSetConstantBuffers (0, 1, vs_const_buffer);
 
+  ID3D11Buffer *alpha_buffer[] = { priv->alpha_buffer.Get () };
+  context->PSSetConstantBuffers (1, 1, alpha_buffer);
+
+
   if (priv->const_buffer) {
     ID3D11Buffer *const_buffer[] = { priv->const_buffer.Get () };
-    context->PSSetConstantBuffers (0, 1, const_buffer);
+    context->PSSetConstantBuffers (2, 1, const_buffer);
   }
 
   context->PSSetShaderResources (0, priv->num_input_view, srv);
