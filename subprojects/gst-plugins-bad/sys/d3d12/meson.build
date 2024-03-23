@@ -75,10 +75,10 @@ dx_headers_dep = dependency('DirectX-Headers',
     version: '>= 1.611',
     allow_fallback: true,
     required: d3d12_option)
-dxc = find_program('dxc', required : d3d12_option)
+fxc = find_program('fxc', required : d3d12_option)
 
 if not gstdxva_dep.found() or not d3d12_lib.found() or not dxgi_lib.found() \
-  or not dx_headers_dep.found() or not dxc.found() or not d2d_dep.found() \
+  or not dx_headers_dep.found() or not fxc.found() or not d2d_dep.found() \
   or not dwmapi_lib.found()
   if d3d12_option.enabled()
     error('The d3d12 was enabled explicitly, but required dependencies were not found.')

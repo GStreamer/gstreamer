@@ -478,17 +478,17 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
 
     /* VS root const, maybe updated */
     vs_root_const_ = (UINT) param_list_v1_1.size ();
-    param.InitAsConstants (16, 0, 1, D3D12_SHADER_VISIBILITY_VERTEX);
+    param.InitAsConstants (16, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
     param_list_v1_1.push_back (param);
 
     /* PS alpha constant value, maybe updated */
     ps_root_const_ = (UINT) param_list_v1_1.size ();
-    param.InitAsConstants (1, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+    param.InitAsConstants (1, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
     param_list_v1_1.push_back (param);
 
     /* PS CBV, this is static */
     ps_cbv_ = (UINT) param_list_v1_1.size ();
-    param.InitAsConstantBufferView (1, 0,
+    param.InitAsConstantBufferView (2, 0,
         D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE,
         D3D12_SHADER_VISIBILITY_PIXEL);
     param_list_v1_1.push_back (param);
@@ -522,12 +522,12 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
 
     /* PS alpha constant value, maybe updated */
     ps_root_const_ = (UINT) param_list_v1_0.size ();
-    param.InitAsConstants (1, 0, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+    param.InitAsConstants (1, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
     param_list_v1_0.push_back (param);
 
     /* PS CBV, this is static */
     ps_cbv_ = (UINT) param_list_v1_0.size ();
-    param.InitAsConstantBufferView (1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+    param.InitAsConstantBufferView (2, 0, D3D12_SHADER_VISIBILITY_PIXEL);
     param_list_v1_0.push_back (param);
 
     CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (desc,

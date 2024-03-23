@@ -90,16 +90,15 @@ foreach input_format : hlsl_conv_ps_input_formats
       compiled_shader = custom_target(header,
           input : hlsl_conv_ps_source,
           output : header,
-          command : [dxc, '/Fh', '@OUTPUT@',
+          command : [fxc, '/Fh', '@OUTPUT@',
                     '/E', entry_point,
-                    '/T', 'ps_6_0',
+                    '/T', 'ps_5_0',
                     '/D', 'OUTPUT_TYPE=@0@'.format(output_type),
                     '/D', 'ENTRY_POINT=@0@'.format(entry_point),
                     '/D', 'SAMPLER=Sampler@0@'.format(in_format),
                     '/D', 'CONVERTER=Converter@0@'.format(conv),
                     '/D', 'OUTPUT_BUILDER=Output@0@'.format(output_builder),
-                    '/D', 'NUM_SRV_@0@=1'.format(num_srv),
-                    '/all-resources-bound',
+                    '/nologo',
                     '@INPUT@'])
       hlsl_precompiled += [compiled_shader]
     endforeach
@@ -110,17 +109,15 @@ foreach input_format : hlsl_conv_ps_input_formats
       compiled_shader = custom_target(header,
           input : hlsl_conv_ps_source,
           output : header,
-          command : [dxc, '/Fh', '@OUTPUT@',
+          command : [fxc, '/Fh', '@OUTPUT@',
                     '/E', entry_point,
-                    '/T', 'ps_6_0',
+                    '/T', 'ps_5_0',
                     '/D', 'OUTPUT_TYPE=@0@'.format(output_type),
                     '/D', 'ENTRY_POINT=@0@'.format(entry_point),
                     '/D', 'SAMPLER=Sampler@0@'.format(in_format),
                     '/D', 'CONVERTER=Converter@0@'.format(conv),
                     '/D', 'OUTPUT_BUILDER=Output@0@'.format(output_builder),
-                    '/D', 'NUM_SRV_@0@=1'.format(num_srv),
-                    '/D', 'BUILD_LUT=1',
-                    '/all-resources-bound',
+                    '/nologo',
                     '@INPUT@'])
       hlsl_precompiled += [compiled_shader]
     endforeach
@@ -140,18 +137,18 @@ generated_collection = custom_target(header_collection,
 hlsl_precompiled += generated_collection
 
 hlsl_sources = [
-  ['VSMain_converter', 'vs_6_0'],
-  ['PSMain_sample', 'ps_6_0'],
-  ['PSMain_sample_premul', 'ps_6_0'],
-  ['VSMain_coord', 'vs_6_0'],
-  ['PSMain_color', 'ps_6_0'],
-  ['VSMain_color', 'vs_6_0'],
-  ['PSMain_snow', 'ps_6_0'],
-  ['PSMain_checker', 'ps_6_0'],
-  ['PSMain_checker_luma', 'ps_6_0'],
-  ['PSMain_checker_rgb', 'ps_6_0'],
-  ['PSMain_checker_vuya', 'ps_6_0'],
-  ['VSMain_pos', 'vs_6_0'],
+  ['VSMain_converter', 'vs_5_0'],
+  ['PSMain_sample', 'ps_5_0'],
+  ['PSMain_sample_premul', 'ps_5_0'],
+  ['VSMain_coord', 'vs_5_0'],
+  ['PSMain_color', 'ps_5_0'],
+  ['VSMain_color', 'vs_5_0'],
+  ['PSMain_snow', 'ps_5_0'],
+  ['PSMain_checker', 'ps_5_0'],
+  ['PSMain_checker_luma', 'ps_5_0'],
+  ['PSMain_checker_rgb', 'ps_5_0'],
+  ['PSMain_checker_vuya', 'ps_5_0'],
+  ['VSMain_pos', 'vs_5_0'],
 ]
 
 foreach shader : hlsl_sources
@@ -161,10 +158,10 @@ foreach shader : hlsl_sources
   compiled_shader = custom_target(header,
       input : source,
       output : header,
-      command : [dxc, '/Fh', '@OUTPUT@',
+      command : [fxc, '/Fh', '@OUTPUT@',
                 '/E', entry_point,
                 '/T', shader.get(1),
-                '/all-resources-bound',
+                '/nologo',
                 '@INPUT@'])
   hlsl_precompiled += [compiled_shader]
 endforeach

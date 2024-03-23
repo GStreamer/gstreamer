@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-cbuffer PsAlphaFactor : register(b0, space0)
+cbuffer PsAlphaFactor : register(b1)
 {
   float alphaFactor;
 };
@@ -33,39 +33,22 @@ struct PSColorSpace
   float padding;
 };
 
-cbuffer PsConstBuffer : register(b1, space0)
+cbuffer PsConstBuffer : register(b2)
 {
   PSColorSpace preCoeff;
   PSColorSpace postCoeff;
   PSColorSpace primariesCoeff;
 };
 
-#ifdef NUM_SRV_1
-Texture2D shaderTexture_0 : register(t0, space0);
-#endif
-#ifdef NUM_SRV_2
-Texture2D shaderTexture_0 : register(t0, space0);
-Texture2D shaderTexture_1 : register(t1, space0);
-#endif
-#ifdef NUM_SRV_3
-Texture2D shaderTexture_0 : register(t0, space0);
-Texture2D shaderTexture_1 : register(t1, space0);
-Texture2D shaderTexture_2 : register(t2, space0);
-#endif
-#ifdef NUM_SRV_4
-Texture2D shaderTexture_0 : register(t0, space0);
-Texture2D shaderTexture_1 : register(t1, space0);
-Texture2D shaderTexture_2 : register(t2, space0);
-Texture2D shaderTexture_3 : register(t3, space0);
-#endif
+Texture2D shaderTexture_0 : register(t0);
+Texture2D shaderTexture_1 : register(t1);
+Texture2D shaderTexture_2 : register(t2);
+Texture2D shaderTexture_3 : register(t3);
+Texture1D<float> gammaDecLUT : register(t4);
+Texture1D<float> gammaEncLUT : register(t5);
 
-SamplerState samplerState : register(s0, space0);
-
-#ifdef BUILD_LUT
-Texture1D<float> gammaDecLUT : register(t4, space0);
-Texture1D<float> gammaEncLUT : register(t5, space0);
-SamplerState lutSamplerState : register(s1, space0);
-#endif
+SamplerState samplerState : register(s0);
+SamplerState lutSamplerState : register(s1);
 
 struct PS_INPUT
 {
@@ -133,7 +116,6 @@ interface ISampler
   float4 Execute (float2 uv);
 };
 
-#ifdef NUM_SRV_1
 class SamplerRGBA : ISampler
 {
   float4 Execute (float2 uv)
@@ -258,9 +240,7 @@ class SamplerGRAY : ISampler
     return sample;
   }
 };
-#endif
 
-#ifdef NUM_SRV_2
 class SamplerNV12 : ISampler
 {
   float4 Execute (float2 uv)
@@ -284,9 +264,7 @@ class SamplerNV21 : ISampler
     return sample;
   }
 };
-#endif
 
-#ifdef NUM_SRV_3
 class SamplerI420 : ISampler
 {
   float4 Execute (float2 uv)
@@ -399,9 +377,7 @@ class SamplerBGRP : ISampler
     return sample;
   }
 };
-#endif
 
-#ifdef NUM_SRV_4
 class SamplerGBRA : ISampler
 {
   float4 Execute (float2 uv)
@@ -440,7 +416,6 @@ class SamplerGBRA_12 : ISampler
     return saturate (sample * 16.0);
   }
 };
-#endif
 
 interface IConverter
 {
@@ -481,7 +456,6 @@ class ConverterSimple : IConverter
   }
 };
 
-#ifdef BUILD_LUT
 class ConverterGamma : IConverter
 {
   float4 Execute (float4 sample)
@@ -540,7 +514,6 @@ class ConverterPrimary : IConverter
     return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);
   }
 };
-#endif
 
 float UnormTo10bit (float sample)
 {

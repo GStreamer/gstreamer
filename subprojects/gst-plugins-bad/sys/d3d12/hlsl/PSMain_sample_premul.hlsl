@@ -17,8 +17,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-Texture2D shaderTexture : register(t0, space0);
-SamplerState samplerState : register(s0, space0);
+Texture2D shaderTexture : register(t0);
+SamplerState samplerState : register(s0);
 
 struct PS_INPUT
 {

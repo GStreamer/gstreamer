@@ -17,7 +17,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-cbuffer VsConstBuffer : register(b0, space1)
+cbuffer VsConstBuffer : register(b0)
 {
   matrix Transform;
 };
