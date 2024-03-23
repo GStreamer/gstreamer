@@ -2493,7 +2493,7 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
    * speed and quality, while the others control encoding bit rate and
    * quality. The lower value has better quality(maybe bigger MV search
    * range) but slower speed, the higher value has faster speed but lower
-   * quality.
+   * quality. It is valid for all modes.
    *
    * The possible composition to control the bit rate and quality:
    *
@@ -2528,6 +2528,17 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
    *    target bit rate, and encoder will try its best to make the QP
    *    with in the ["max-qp", "min-qp"] range. Other paramters are
    *    ignored.
+   *
+   * 5. ICQ mode: "rate-control=ICQ", which is similar to CQP mode
+   *    except that its QP(qindex in AV1) may be increased or decreaed
+   *    to avoid huge bit rate fluctuation. The "qp" specifies a quality
+   *    factor as the base quality value. Other properties are ignored.
+   *
+   * 6. QVBR mode: "rate-control=QVBR", which is similar to VBR mode
+   *    with the same usage of "bitrate", "target-percentage" and
+   *    "cpb-size" properties. Besides that, the "qp"(the qindex in AV1)
+   *    specifies a quality factor as the base quality value which the
+   *    driver should try its best to meet. Other properties are ignored.
    */
 
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
@@ -2567,6 +2578,17 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
     self->rc.rc_ctrl_mode = VA_RC_NONE;
   }
 
+  /* ICQ mode and QVBR mode do not need max/min qp. */
+  if (self->rc.rc_ctrl_mode == VA_RC_ICQ || self->rc.rc_ctrl_mode == VA_RC_QVBR) {
+    self->rc.min_qindex = 0;
+    self->rc.max_qindex = 255;
+
+    update_property_uint (base, &self->prop.min_qp, self->rc.min_qindex,
+        PROP_MIN_QP);
+    update_property_uint (base, &self->prop.max_qp, self->rc.max_qindex,
+        PROP_MAX_QP);
+  }
+
   if (self->rc.min_qindex > self->rc.max_qindex) {
     GST_INFO_OBJECT (self, "The min_qindex %d is bigger than the max_qindex"
         " %d, set it to the max_qindex", self->rc.min_qindex,
@@ -2599,7 +2621,8 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
 
   /* Calculate a bitrate if it is not set. */
   if ((self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
-          || self->rc.rc_ctrl_mode == VA_RC_VCM) && bitrate == 0) {
+          || self->rc.rc_ctrl_mode == VA_RC_VCM
+          || self->rc.rc_ctrl_mode == VA_RC_QVBR) && bitrate == 0) {
     /* FIXME: Provide better estimation. */
     /* Choose the max value of all levels' MainCR which is 8, and x2 for
        conservative calculation. So just using a 1/16 compression ratio,
@@ -2636,6 +2659,7 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
   /* Adjust the setting based on RC mode. */
   switch (self->rc.rc_ctrl_mode) {
     case VA_RC_NONE:
+    case VA_RC_ICQ:
     case VA_RC_CQP:
       self->rc.max_bitrate = 0;
       self->rc.target_bitrate = 0;
@@ -2650,11 +2674,13 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
       self->rc.base_qindex = DEFAULT_BASE_QINDEX;
       break;
     case VA_RC_VBR:
+      self->rc.base_qindex = DEFAULT_BASE_QINDEX;
+      /* Fall through. */
+    case VA_RC_QVBR:
       g_assert (self->rc.target_percentage >= 10);
       self->rc.max_bitrate = (guint) gst_util_uint64_scale_int (bitrate,
           100, self->rc.target_percentage);
       self->rc.target_bitrate = bitrate;
-      self->rc.base_qindex = DEFAULT_BASE_QINDEX;
       break;
     case VA_RC_VCM:
       self->rc.max_bitrate = bitrate;
@@ -2678,7 +2704,9 @@ _av1_ensure_rate_control (GstVaAV1Enc * self)
       "Target bitrate: %u bits/sec", self->rc.max_bitrate,
       self->rc.target_bitrate);
 
-  if (self->rc.rc_ctrl_mode != VA_RC_NONE && self->rc.rc_ctrl_mode != VA_RC_CQP)
+  if (self->rc.rc_ctrl_mode == VA_RC_CBR || self->rc.rc_ctrl_mode == VA_RC_VBR
+      || self->rc.rc_ctrl_mode == VA_RC_VCM
+      || self->rc.rc_ctrl_mode == VA_RC_QVBR)
     _av1_calculate_bitrate_hrd (self);
 
   /* notifications */
@@ -4238,7 +4266,9 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
    * The basic quantizer value for all frames.
    */
   properties[PROP_QP] = g_param_spec_uint ("qp", "The frame QP",
-      "The basic quantizer value for all frames.", 0, 255, DEFAULT_BASE_QINDEX,
+      "In CQP mode, it specifies the basic quantizer value for all frames. "
+      "In ICQ and QVBR modes, it specifies a quality factor. In other "
+      "modes, it is ignored", 0, 255, DEFAULT_BASE_QINDEX,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
 
   /**
