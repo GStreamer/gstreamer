@@ -5,6 +5,7 @@ subdir('audio')
 subdir('basecamerabinsrc')
 subdir('codecparsers')
 subdir('codecs')
+subdir('d3dshader')
 subdir('d3d11')
 # cuda can depend on d3d11
 subdir('cuda')

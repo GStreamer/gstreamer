@@ -210,6 +210,9 @@ option('isac', type : 'feature', value : 'auto', description : 'iSAC plugin')
 option('aja-sdk-dir', type : 'string', value : '',
   description : 'Directory with AJA SDK, e.g. ntv2sdklinux_16.0.0.4')
 
+# D3D11/D3D12 HLSL library options
+option('d3d-hlsl-precompile', type : 'feature', value : 'auto', description : 'Enable buildtime HLSL compile for d3d11/d3d12 library/plugin')
+
 # D3D11 plugin options
 option('d3d11-math', type : 'feature', value : 'auto', description : 'Enable DirectX SIMD Math support')
 option('d3d11-hlsl-precompile', type : 'feature', value : 'auto', description : 'Enable buildtime HLSL compile for d3d11 library/plugin')
