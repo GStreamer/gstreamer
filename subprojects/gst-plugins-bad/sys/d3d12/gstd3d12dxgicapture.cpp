@@ -55,8 +55,7 @@
 #include <memory>
 #include <future>
 #include <wrl.h>
-#include "PSMain_sample.h"
-#include "VSMain_coord.h"
+#include <gst/d3dshader/gstd3dshader.h>
 
 #define _XM_NO_INTRINSICS_
 #include <DirectXMath.h>
@@ -953,12 +952,26 @@ gst_d3d12_dxgi_capture_open (GstD3D12DxgiCapture * self,
   input_desc[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
+  GstD3DShaderByteCode vs_code;
+  GstD3DShaderByteCode ps_code;
+  if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COORD,
+          GST_D3D_SM_5_0, &vs_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get vs bytecode");
+    return FALSE;
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SAMPLE,
+          GST_D3D_SM_5_0, &ps_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
+    return FALSE;
+  }
+
   D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = { };
   pso_desc.pRootSignature = priv->rs.Get ();
-  pso_desc.VS.BytecodeLength = sizeof (g_VSMain_coord);
-  pso_desc.VS.pShaderBytecode = g_VSMain_coord;
-  pso_desc.PS.BytecodeLength = sizeof (g_PSMain_sample);
-  pso_desc.PS.pShaderBytecode = g_PSMain_sample;
+  pso_desc.VS.BytecodeLength = vs_code.byte_code_len;
+  pso_desc.VS.pShaderBytecode = vs_code.byte_code;
+  pso_desc.PS.BytecodeLength = ps_code.byte_code_len;
+  pso_desc.PS.pShaderBytecode = ps_code.byte_code;
   pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
   pso_desc.SampleMask = UINT_MAX;
   pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);

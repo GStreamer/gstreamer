@@ -27,9 +27,7 @@
 #include <memory>
 #include <vector>
 #include <algorithm>
-#include "PSMain_sample.h"
-#include "PSMain_sample_premul.h"
-#include "VSMain_coord.h"
+#include <gst/d3dshader/gstd3dshader.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_overlay_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d12_overlay_compositor_debug
@@ -430,6 +428,27 @@ gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
   gst_d3d12_device_get_format (self->device, GST_VIDEO_INFO_FORMAT (info),
       &device_format);
 
+  GstD3DShaderByteCode vs_code;
+  GstD3DShaderByteCode ps_sample_code;
+  GstD3DShaderByteCode ps_sample_premul_code;
+  if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COORD,
+          GST_D3D_SM_5_0, &vs_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get vs bytecode");
+    return FALSE;
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SAMPLE,
+          GST_D3D_SM_5_0, &ps_sample_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
+    return FALSE;
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SAMPLE_PREMULT,
+          GST_D3D_SM_5_0, &ps_sample_premul_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
+    return FALSE;
+  }
+
   auto device = gst_d3d12_device_get_device_handle (self->device);
   ComPtr < ID3D12RootSignature > rs;
   device->CreateRootSignature (0, rs_blob->GetBufferPointer (),
@@ -455,10 +474,10 @@ gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
 
   auto & pso_desc = priv->pso_desc;
   pso_desc.pRootSignature = rs.Get ();
-  pso_desc.VS.BytecodeLength = sizeof (g_VSMain_coord);
-  pso_desc.VS.pShaderBytecode = g_VSMain_coord;
-  pso_desc.PS.BytecodeLength = sizeof (g_PSMain_sample);
-  pso_desc.PS.pShaderBytecode = g_PSMain_sample;
+  pso_desc.VS.BytecodeLength = vs_code.byte_code_len;
+  pso_desc.VS.pShaderBytecode = vs_code.byte_code;
+  pso_desc.PS.BytecodeLength = ps_sample_code.byte_code_len;
+  pso_desc.PS.pShaderBytecode = ps_sample_code.byte_code;
   pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
   pso_desc.BlendState.RenderTarget[0].BlendEnable = TRUE;
   pso_desc.BlendState.RenderTarget[0].LogicOpEnable = FALSE;
@@ -494,8 +513,8 @@ gst_d3d12_overlay_compositor_setup_shader (GstD3D12OverlayCompositor * self)
   ComPtr < ID3D12PipelineState > pso_premul;
   auto & pso_premul_desc = priv->pso_premul_desc;
   pso_premul_desc = priv->pso_desc;
-  pso_premul_desc.PS.BytecodeLength = sizeof (g_PSMain_sample_premul);
-  pso_premul_desc.PS.pShaderBytecode = g_PSMain_sample_premul;
+  pso_premul_desc.PS.BytecodeLength = ps_sample_premul_code.byte_code_len;
+  pso_premul_desc.PS.pShaderBytecode = ps_sample_premul_code.byte_code;
   hr = device->CreateGraphicsPipelineState (&pso_premul_desc,
       IID_PPV_ARGS (&pso_premul));
   if (!gst_d3d12_result (hr, self->device)) {

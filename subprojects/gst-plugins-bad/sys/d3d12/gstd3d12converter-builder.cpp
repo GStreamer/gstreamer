@@ -23,345 +23,80 @@
 
 #include "gstd3d12.h"
 #include "gstd3d12converter-builder.h"
+#include <gst/d3dshader/gstd3dshader.h>
 #include <directx/d3dx12.h>
-#include <map>
 #include <mutex>
 #include <string>
 #include <utility>
 #include <memory>
-#include "PSMainConverter.h"
-#include "VSMain_converter.h"
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_converter_debug);
 #define GST_CAT_DEFAULT gst_d3d12_converter_debug
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
-
-enum class PS_OUTPUT
-{
-  PACKED,
-  LUMA,
-  CHROMA,
-  CHROMA_PLANAR,
-  PLANAR,
-  PLANAR_FULL,
-};
-
-static const std::string
-ps_output_to_string (PS_OUTPUT output)
-{
-  switch (output) {
-    case PS_OUTPUT::PACKED:
-      return "PS_OUTPUT_PACKED";
-    case PS_OUTPUT::LUMA:
-      return "PS_OUTPUT_LUMA";
-    case PS_OUTPUT::CHROMA:
-      return "PS_OUTPUT_CHROMA";
-    case PS_OUTPUT::CHROMA_PLANAR:
-      return "PS_OUTPUT_CHROMA_PLANAR";
-    case PS_OUTPUT::PLANAR:
-      return "PS_OUTPUT_PLANAR";
-    case PS_OUTPUT::PLANAR_FULL:
-      return "PS_OUTPUT_PLANAR_FULL";
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  return "";
-}
-
-static guint
-ps_output_get_num_rtv (PS_OUTPUT output)
-{
-  switch (output) {
-    case PS_OUTPUT::PACKED:
-    case PS_OUTPUT::LUMA:
-    case PS_OUTPUT::CHROMA:
-      return 1;
-    case PS_OUTPUT::CHROMA_PLANAR:
-      return 2;
-    case PS_OUTPUT::PLANAR:
-      return 3;
-    case PS_OUTPUT::PLANAR_FULL:
-      return 4;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  return 0;
-}
-
-static std::string
-make_input (GstVideoFormat format, gboolean premul)
-{
-  switch (format) {
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGBA64_LE:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-    case GST_VIDEO_FORMAT_BGRA:
-      if (premul)
-        return "RGBAPremul";
-      return "RGBA";
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-      return "RGBx";
-    case GST_VIDEO_FORMAT_ARGB:
-      return "ARGB";
-    case GST_VIDEO_FORMAT_xRGB:
-      return "xRGB";
-    case GST_VIDEO_FORMAT_ABGR:
-      return "ABGR";
-    case GST_VIDEO_FORMAT_xBGR:
-      return "xBGR";
-    case GST_VIDEO_FORMAT_VUYA:
-      return "VUYA";
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_AYUV64:
-      return "AYUV";
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:
-      return "NV12";
-    case GST_VIDEO_FORMAT_NV21:
-      return "NV21";
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_Y42B:
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-      return "I420";
-    case GST_VIDEO_FORMAT_YV12:
-      return "YV12";
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I422_10LE:
-    case GST_VIDEO_FORMAT_Y444_10LE:
-      return "I420_10";
-    case GST_VIDEO_FORMAT_I420_12LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-    case GST_VIDEO_FORMAT_Y444_12LE:
-      return "I420_12";
-    case GST_VIDEO_FORMAT_Y410:
-      return "Y410";
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-      return "GRAY";
-    case GST_VIDEO_FORMAT_RGBP:
-      return "RGBP";
-    case GST_VIDEO_FORMAT_BGRP:
-      return "BGRP";
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-      return "GBR";
-    case GST_VIDEO_FORMAT_GBR_10LE:
-      return "GBR_10";
-    case GST_VIDEO_FORMAT_GBR_12LE:
-      return "GBR_12";
-    case GST_VIDEO_FORMAT_GBRA:
-      return "GBRA";
-    case GST_VIDEO_FORMAT_GBRA_10LE:
-      return "GBRA_10";
-    case GST_VIDEO_FORMAT_GBRA_12LE:
-      return "GBRA_12";
-    case GST_VIDEO_FORMAT_Y412_LE:
-      return "Y412";
-    case GST_VIDEO_FORMAT_BGR10A2_LE:
-      return "BGR10A2";
-    case GST_VIDEO_FORMAT_BGRA64_LE:
-      return "BGRA64";
-    case GST_VIDEO_FORMAT_RBGA:
-      return "RBGA";
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  return "";
-}
-
-static std::vector<std::pair<PS_OUTPUT, std::string>>
-make_output (GstVideoFormat format, gboolean premul)
-{
-  std::vector<std::pair<PS_OUTPUT, std::string>> ret;
-
-  switch (format) {
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_RGBA64_LE:
-    case GST_VIDEO_FORMAT_RGB10A2_LE:
-    case GST_VIDEO_FORMAT_BGRA:
-      if (premul)
-        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "RGBAPremul"));
-      else
-        ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "RGBA"));
-      break;
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "RGBx"));
-      break;
-    case GST_VIDEO_FORMAT_ARGB:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "ARGB"));
-      break;
-    case GST_VIDEO_FORMAT_xRGB:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "xRGB"));
-      break;
-    case GST_VIDEO_FORMAT_ABGR:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "ABGR"));
-      break;
-    case GST_VIDEO_FORMAT_xBGR:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "xBGR"));
-      break;
-    case GST_VIDEO_FORMAT_VUYA:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "VUYA"));
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-    case GST_VIDEO_FORMAT_AYUV64:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "AYUV"));
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_P010_10LE:
-    case GST_VIDEO_FORMAT_P012_LE:
-    case GST_VIDEO_FORMAT_P016_LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::LUMA, "Luma"));
-      ret.push_back(std::make_pair(PS_OUTPUT::CHROMA, "ChromaNV12"));
-      break;
-    case GST_VIDEO_FORMAT_NV21:
-      ret.push_back(std::make_pair(PS_OUTPUT::LUMA, "Luma"));
-      ret.push_back(std::make_pair(PS_OUTPUT::CHROMA, "ChromaNV21"));
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_Y42B:
-      ret.push_back(std::make_pair(PS_OUTPUT::LUMA, "Luma"));
-      ret.push_back(std::make_pair(PS_OUTPUT::CHROMA_PLANAR, "ChromaI420"));
-      break;
-    case GST_VIDEO_FORMAT_Y444:
-    case GST_VIDEO_FORMAT_Y444_16LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "Y444"));
-      break;
-    case GST_VIDEO_FORMAT_YV12:
-      ret.push_back(std::make_pair(PS_OUTPUT::LUMA, "Luma"));
-      ret.push_back(std::make_pair(PS_OUTPUT::CHROMA_PLANAR, "ChromaYV12"));
-      break;
-    case GST_VIDEO_FORMAT_I420_10LE:
-    case GST_VIDEO_FORMAT_I422_10LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::LUMA, "Luma_10"));
-      ret.push_back(std::make_pair(PS_OUTPUT::CHROMA_PLANAR, "ChromaI420_10"));
-      break;
-    case GST_VIDEO_FORMAT_Y444_10LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "Y444_10"));
-      break;
-    case GST_VIDEO_FORMAT_I420_12LE:
-    case GST_VIDEO_FORMAT_I422_12LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::LUMA, "Luma_12"));
-      ret.push_back(std::make_pair(PS_OUTPUT::CHROMA_PLANAR, "ChromaI420_12"));
-      break;
-    case GST_VIDEO_FORMAT_Y444_12LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "Y444_12"));
-      break;
-    case GST_VIDEO_FORMAT_GRAY8:
-    case GST_VIDEO_FORMAT_GRAY16_LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::LUMA, "Luma"));
-      break;
-    case GST_VIDEO_FORMAT_RGBP:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "RGBP"));
-      break;
-    case GST_VIDEO_FORMAT_BGRP:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "BGRP"));
-      break;
-    case GST_VIDEO_FORMAT_GBR:
-    case GST_VIDEO_FORMAT_GBR_16LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "GBR"));
-      break;
-    case GST_VIDEO_FORMAT_GBR_10LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "GBR_10"));
-      break;
-    case GST_VIDEO_FORMAT_GBR_12LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR, "GBR_12"));
-      break;
-    case GST_VIDEO_FORMAT_GBRA:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR_FULL, "GBRA"));
-      break;
-    case GST_VIDEO_FORMAT_GBRA_10LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR_FULL, "GBRA_10"));
-      break;
-    case GST_VIDEO_FORMAT_GBRA_12LE:
-      ret.push_back(std::make_pair(PS_OUTPUT::PLANAR_FULL, "GBRA_12"));
-      break;
-    case GST_VIDEO_FORMAT_RBGA:
-      ret.push_back(std::make_pair(PS_OUTPUT::PACKED, "RBGA"));
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  return ret;
-}
+/* *INDENT-ON* */
 
 PixelShaderBlobList
 gst_d3d12_get_converter_pixel_shader_blob (GstVideoFormat in_format,
     GstVideoFormat out_format, gboolean in_premul, gboolean out_premul,
     CONVERT_TYPE type)
 {
-  auto input = make_input (in_format, in_premul);
-  auto output = make_output (out_format, out_premul);
-  std::string conv_type;
+  GstD3DConverterType conv_type;
   PixelShaderBlobList ret;
-  static std::mutex cache_lock;
-  static std::map<std::string, std::shared_ptr<PixelShaderBlob>> ps_cache;
 
   switch (type) {
     case CONVERT_TYPE::IDENTITY:
-      conv_type = "Identity";
+      conv_type = GST_D3D_CONVERTER_IDENTITY;
       break;
     case CONVERT_TYPE::SIMPLE:
-      conv_type = "Simple";
+      conv_type = GST_D3D_CONVERTER_SIMPLE;
       break;
     case CONVERT_TYPE::RANGE:
-      conv_type = "Range";
+      conv_type = GST_D3D_CONVERTER_RANGE;
       break;
     case CONVERT_TYPE::GAMMA:
-      conv_type = "Gamma";
+      conv_type = GST_D3D_CONVERTER_GAMMA;
       break;
     case CONVERT_TYPE::PRIMARY:
-      conv_type = "Primary";
+      conv_type = GST_D3D_CONVERTER_PRIMARY;
       break;
+    default:
+      g_assert_not_reached ();
+      return ret;
   }
 
-  for (const auto & it : output) {
-    std::string entry_point = "PSMain_" + input + "_" + conv_type + "_" +
-        it.second;
-    std::shared_ptr<PixelShaderBlob> source;
-    std::lock_guard<std::mutex> lk (cache_lock);
-    auto cached = ps_cache.find(entry_point);
-    if (cached != ps_cache.end()) {
-      source = cached->second;
-    } else {
-      auto precompiled = precompiled_bytecode.find (entry_point);
-      if (precompiled == precompiled_bytecode.end ()) {
-        GST_ERROR ("Couldn't find precompiled %s", entry_point.c_str ());
-        ret.clear ();
-        return ret;
-      }
-      source = std::make_shared<PixelShaderBlob> ();
-      source->bytecode.pShaderBytecode = precompiled->second.first;
-      source->bytecode.BytecodeLength = precompiled->second.second;
-      source->num_rtv = ps_output_get_num_rtv (it.first);
-      ps_cache[entry_point] = source;
-    }
+  GstD3DConverterPSByteCode blobs[4];
+  auto num_blobs = gst_d3d_converter_shader_get_ps_blob (in_format, out_format,
+      in_premul, out_premul, conv_type, GST_D3D_SM_5_0, blobs);
 
-    ret.push_back (*source);
+  if (!num_blobs) {
+    GST_ERROR ("Couldn't get compiled bytecode");
+    return ret;
+  }
+
+  for (guint i = 0; i < num_blobs; i++) {
+    auto blob = &blobs[i];
+    PixelShaderBlob ps;
+    ps.bytecode.pShaderBytecode = blob->byte_code.byte_code;
+    ps.bytecode.BytecodeLength = blob->byte_code.byte_code_len;
+    ps.num_rtv = blob->num_rtv;
+    ret.push_back (ps);
   }
 
   return ret;
 }
-/* *INDENT-ON* */
 
 HRESULT
 gst_d3d12_get_converter_vertex_shader_blob (D3D12_SHADER_BYTECODE * vs,
     D3D12_INPUT_ELEMENT_DESC input_desc[2])
 {
+  GstD3DShaderByteCode bytecode = { };
+  if (!gst_d3d_converter_shader_get_vs_blob (GST_D3D_SM_5_0, &bytecode)) {
+    GST_ERROR ("Couldn't get compiled bytecode");
+    return E_FAIL;
+  }
+
   input_desc[0].SemanticName = "POSITION";
   input_desc[0].SemanticIndex = 0;
   input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
@@ -378,8 +113,8 @@ gst_d3d12_get_converter_vertex_shader_blob (D3D12_SHADER_BYTECODE * vs,
   input_desc[1].InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
   input_desc[1].InstanceDataStepRate = 0;
 
-  vs->BytecodeLength = sizeof (g_VSMain_converter);
-  vs->pShaderBytecode = g_VSMain_converter;
+  vs->BytecodeLength = bytecode.byte_code_len;
+  vs->pShaderBytecode = bytecode.byte_code;
 
   return S_OK;
 }

@@ -46,11 +46,7 @@
 #include <memory>
 #include <vector>
 #include <queue>
-#include "PSMain_checker.h"
-#include "PSMain_color.h"
-#include "PSMain_snow.h"
-#include "VSMain_color.h"
-#include "VSMain_coord.h"
+#include <gst/d3dshader/gstd3dshader.h>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -417,6 +413,20 @@ setup_snow_render (GstD3D12TestSrc * self, RenderContext * ctx,
     return FALSE;
   }
 
+  GstD3DShaderByteCode vs_code;
+  GstD3DShaderByteCode ps_code;
+  if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COORD,
+          GST_D3D_SM_5_0, &vs_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get vs bytecode");
+    return FALSE;
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SNOW,
+          GST_D3D_SM_5_0, &ps_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
+    return FALSE;
+  }
+
   D3D12_INPUT_ELEMENT_DESC input_desc[2];
   input_desc[0].SemanticName = "POSITION";
   input_desc[0].SemanticIndex = 0;
@@ -436,10 +446,10 @@ setup_snow_render (GstD3D12TestSrc * self, RenderContext * ctx,
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = { };
   pso_desc.pRootSignature = rs.Get ();
-  pso_desc.VS.BytecodeLength = sizeof (g_VSMain_coord);
-  pso_desc.VS.pShaderBytecode = g_VSMain_coord;
-  pso_desc.PS.BytecodeLength = sizeof (g_PSMain_snow);
-  pso_desc.PS.pShaderBytecode = g_PSMain_snow;
+  pso_desc.VS.BytecodeLength = vs_code.byte_code_len;
+  pso_desc.VS.pShaderBytecode = vs_code.byte_code;
+  pso_desc.PS.BytecodeLength = ps_code.byte_code_len;
+  pso_desc.PS.pShaderBytecode = ps_code.byte_code;
   pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
   pso_desc.SampleMask = UINT_MAX;
   pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);
@@ -627,6 +637,20 @@ setup_smpte_render (GstD3D12TestSrc * self, RenderContext * ctx)
     return FALSE;
   }
 
+  GstD3DShaderByteCode vs_code;
+  GstD3DShaderByteCode ps_code;
+  if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COLOR,
+          GST_D3D_SM_5_0, &vs_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get vs bytecode");
+    return FALSE;
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_COLOR,
+          GST_D3D_SM_5_0, &ps_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
+    return FALSE;
+  }
+
   D3D12_INPUT_ELEMENT_DESC input_desc[2];
   input_desc[0].SemanticName = "POSITION";
   input_desc[0].SemanticIndex = 0;
@@ -646,10 +670,10 @@ setup_smpte_render (GstD3D12TestSrc * self, RenderContext * ctx)
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = { };
   pso_desc.pRootSignature = rs.Get ();
-  pso_desc.VS.BytecodeLength = sizeof (g_VSMain_color);
-  pso_desc.VS.pShaderBytecode = g_VSMain_color;
-  pso_desc.PS.BytecodeLength = sizeof (g_PSMain_color);
-  pso_desc.PS.pShaderBytecode = g_PSMain_color;
+  pso_desc.VS.BytecodeLength = vs_code.byte_code_len;
+  pso_desc.VS.pShaderBytecode = vs_code.byte_code;
+  pso_desc.PS.BytecodeLength = ps_code.byte_code_len;
+  pso_desc.PS.pShaderBytecode = ps_code.byte_code;
   pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
   pso_desc.SampleMask = UINT_MAX;
   pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);
@@ -1004,6 +1028,20 @@ setup_checker_render (GstD3D12TestSrc * self, RenderContext * ctx,
     return FALSE;
   }
 
+  GstD3DShaderByteCode vs_code;
+  GstD3DShaderByteCode ps_code;
+  if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COORD,
+          GST_D3D_SM_5_0, &vs_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get vs bytecode");
+    return FALSE;
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_CHECKER,
+          GST_D3D_SM_5_0, &ps_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
+    return FALSE;
+  }
+
   D3D12_INPUT_ELEMENT_DESC input_desc[2];
   input_desc[0].SemanticName = "POSITION";
   input_desc[0].SemanticIndex = 0;
@@ -1023,10 +1061,10 @@ setup_checker_render (GstD3D12TestSrc * self, RenderContext * ctx,
 
   D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = { };
   pso_desc.pRootSignature = rs.Get ();
-  pso_desc.VS.BytecodeLength = sizeof (g_VSMain_coord);
-  pso_desc.VS.pShaderBytecode = g_VSMain_coord;
-  pso_desc.PS.BytecodeLength = sizeof (g_PSMain_checker);
-  pso_desc.PS.pShaderBytecode = g_PSMain_checker;
+  pso_desc.VS.BytecodeLength = vs_code.byte_code_len;
+  pso_desc.VS.pShaderBytecode = vs_code.byte_code;
+  pso_desc.PS.BytecodeLength = ps_code.byte_code_len;
+  pso_desc.PS.pShaderBytecode = ps_code.byte_code;
   pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
   pso_desc.SampleMask = UINT_MAX;
   pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);

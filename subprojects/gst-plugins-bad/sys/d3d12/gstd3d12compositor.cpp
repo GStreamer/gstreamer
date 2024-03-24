@@ -44,10 +44,7 @@
 #include <queue>
 #include <string.h>
 #include <wrl.h>
-#include "PSMain_checker_luma.h"
-#include "PSMain_checker_rgb.h"
-#include "PSMain_checker_vuya.h"
-#include "VSMain_pos.h"
+#include <gst/d3dshader/gstd3dshader.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_compositor_debug);
 #define GST_CAT_DEFAULT gst_d3d12_compositor_debug
@@ -368,20 +365,34 @@ struct BackgroundRender
     input_desc.InputSlotClass = D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
     input_desc.InstanceDataStepRate = 0;
 
+    GstD3DShaderByteCode vs_code;
+    if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_POS,
+        GST_D3D_SM_5_0, &vs_code)) {
+      GST_ERROR_OBJECT (device, "Couldn't get vs bytecode");
+      return;
+    }
+
+    GstD3DShaderByteCode ps_code;
+    GstD3DPluginPS ps_type;
+    if (GST_VIDEO_INFO_IS_RGB (&info))
+      ps_type = GST_D3D_PLUGIN_PS_CHECKER_RGB;
+    else if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_VUYA)
+      ps_type = GST_D3D_PLUGIN_PS_CHECKER_VUYA;
+    else
+      ps_type = GST_D3D_PLUGIN_PS_CHECKER_LUMA;
+
+    if (!gst_d3d_plugin_shader_get_ps_blob (ps_type,
+        GST_D3D_SM_5_0, &ps_code)) {
+      GST_ERROR_OBJECT (device, "Couldn't get ps bytecode");
+      return;
+    }
+
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pso_desc = { };
     pso_desc.pRootSignature = rs.Get ();
-    pso_desc.VS.BytecodeLength = sizeof (g_VSMain_pos);
-    pso_desc.VS.pShaderBytecode = g_VSMain_pos;
-    if (GST_VIDEO_INFO_IS_RGB (&info)) {
-      pso_desc.PS.BytecodeLength = sizeof (g_PSMain_checker_rgb);
-      pso_desc.PS.pShaderBytecode = g_PSMain_checker_rgb;
-    } else if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_VUYA) {
-      pso_desc.PS.BytecodeLength = sizeof (g_PSMain_checker_vuya);
-      pso_desc.PS.pShaderBytecode = g_PSMain_checker_vuya;
-    } else {
-      pso_desc.PS.BytecodeLength = sizeof (g_PSMain_checker_luma);
-      pso_desc.PS.pShaderBytecode = g_PSMain_checker_luma;
-    }
+    pso_desc.VS.BytecodeLength = vs_code.byte_code_len;
+    pso_desc.VS.pShaderBytecode = vs_code.byte_code;
+    pso_desc.PS.BytecodeLength = ps_code.byte_code_len;
+    pso_desc.PS.pShaderBytecode = ps_code.byte_code;
     pso_desc.BlendState = CD3DX12_BLEND_DESC (D3D12_DEFAULT);
     pso_desc.SampleMask = UINT_MAX;
     pso_desc.RasterizerState = CD3DX12_RASTERIZER_DESC (D3D12_DEFAULT);
