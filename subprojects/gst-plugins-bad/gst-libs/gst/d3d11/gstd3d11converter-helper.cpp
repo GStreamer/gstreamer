@@ -29,13 +29,11 @@
 #include "gstd3d11memory.h"
 #include "gstd3d11bufferpool.h"
 #include "gstd3d11shadercache.h"
+#include <gst/d3dshader/gstd3dshader.h>
 #include <wrl.h>
 #include <math.h>
-#include <map>
 #include <vector>
 #include <mutex>
-#include <string>
-#include <memory>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -43,27 +41,6 @@ using namespace Microsoft::WRL;
 
 GST_DEBUG_CATEGORY_EXTERN (gst_d3d11_converter_debug);
 #define GST_CAT_DEFAULT gst_d3d11_converter_debug
-
-/* *INDENT-OFF* */
-struct ConverterCSSource
-{
-  gint64 token;
-  std::string entry_point;
-  const BYTE *bytecode;
-  SIZE_T bytecode_size;
-  std::vector<std::pair<std::string, std::string>> macros;
-};
-
-static std::map<std::string, std::shared_ptr<ConverterCSSource>> cs_source_cache;
-static std::mutex cache_lock;
-#ifdef HLSL_PRECOMPILED
-#include "CSMainConverter.h"
-#else
-static const std::map<std::string, std::pair<const BYTE *, SIZE_T>> precompiled_bytecode;
-#endif
-/* *INDENT-ON* */
-
-#include "hlsl/CSMain_converter.hlsl"
 
 struct _GstD3D11ConverterHelper
 {
@@ -105,249 +82,28 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
 {
   GstD3D11ConverterHelper *self;
   ComPtr < ID3D11ComputeShader > cs;
-  D3D_FEATURE_LEVEL feature_level;
   DXGI_FORMAT srv_format = DXGI_FORMAT_UNKNOWN;
   DXGI_FORMAT uav_format = DXGI_FORMAT_UNKNOWN;
   guint x_unit = 8;
   guint y_unit = 8;
-  std::string entry_point;
   HRESULT hr;
+  GstD3DConverterCSByteCode bytecode = { };
+  gboolean try_cs = FALSE;
+  gboolean need_convert = FALSE;
+  auto handle = gst_d3d11_device_get_device_handle (device);
 
   if (in_format != out_format) {
-    std::string in_format_str;
-    std::string out_format_str;
-
-    switch (in_format) {
-      case GST_VIDEO_FORMAT_YUY2:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "YUY2";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_UYVY:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "UYVY";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_VYUY:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "VYUY";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_YVYU:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "YVYU";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_Y210:
-      case GST_VIDEO_FORMAT_Y212_LE:
-        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        in_format_str = "YUY2";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_v210:
-        srv_format = DXGI_FORMAT_R10G10B10A2_UNORM;
-        in_format_str = "v210";
-        x_unit = 48;
-        break;
-      case GST_VIDEO_FORMAT_v216:
-        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        in_format_str = "UYVY";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_v308:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "v308";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_IYU2:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "IYU2";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_RGB:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "RGB";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_BGR:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "BGR";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_RGB16:
-        srv_format = DXGI_FORMAT_R16_UINT;
-        in_format_str = "RGB16";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_BGR16:
-        srv_format = DXGI_FORMAT_R16_UINT;
-        in_format_str = "BGR16";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_RGB15:
-        srv_format = DXGI_FORMAT_R16_UINT;
-        in_format_str = "RGB15";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_BGR15:
-        srv_format = DXGI_FORMAT_R16_UINT;
-        in_format_str = "BGR15";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_r210:
-        srv_format = DXGI_FORMAT_R32_UINT;
-        in_format_str = "r210";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_AYUV:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "AYUV";
-        break;
-      case GST_VIDEO_FORMAT_AYUV64:
-        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        in_format_str = "AYUV";
-        break;
-      case GST_VIDEO_FORMAT_RGBA:
-        srv_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        in_format_str = "RGBA";
-        break;
-      case GST_VIDEO_FORMAT_RGB10A2_LE:
-        srv_format = DXGI_FORMAT_R10G10B10A2_UNORM;
-        in_format_str = "RGBA";
-        break;
-      case GST_VIDEO_FORMAT_RGBA64_LE:
-        srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        in_format_str = "RGBA";
-        break;
-      default:
-        g_assert_not_reached ();
-        return nullptr;
+    need_convert = TRUE;
+    if (handle->GetFeatureLevel () >= D3D_FEATURE_LEVEL_11_0) {
+      try_cs = gst_d3d_converter_shader_get_cs_blob (in_format, out_format,
+          GST_D3D_SM_5_0, &bytecode);
+      if (try_cs) {
+        srv_format = bytecode.srv_format;
+        uav_format = bytecode.uav_format;
+        x_unit = bytecode.x_unit;
+        y_unit = bytecode.y_unit;
+      }
     }
-
-    switch (out_format) {
-      case GST_VIDEO_FORMAT_YUY2:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "YUY2";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_UYVY:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "UYVY";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_VYUY:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "VYUY";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_YVYU:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "YVYU";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_Y210:
-      case GST_VIDEO_FORMAT_Y212_LE:
-        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        out_format_str = "YUY2";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_v210:
-        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
-        out_format_str = "v210";
-        x_unit = 48;
-        break;
-      case GST_VIDEO_FORMAT_v216:
-        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        out_format_str = "UYVY";
-        x_unit = 16;
-        break;
-      case GST_VIDEO_FORMAT_v308:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "v308";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_IYU2:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "IYU2";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_Y410:
-        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
-        out_format_str = "Y410";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_Y412_LE:
-        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        out_format_str = "Y410";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_RGB:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "RGB";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_BGR:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "BGR";
-        x_unit = 32;
-        break;
-      case GST_VIDEO_FORMAT_RGB16:
-        uav_format = DXGI_FORMAT_R16_UINT;
-        out_format_str = "RGB16";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_BGR16:
-        uav_format = DXGI_FORMAT_R16_UINT;
-        out_format_str = "BGR16";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_RGB15:
-        uav_format = DXGI_FORMAT_R16_UINT;
-        out_format_str = "RGB15";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_BGR15:
-        uav_format = DXGI_FORMAT_R16_UINT;
-        out_format_str = "BGR15";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_r210:
-        uav_format = DXGI_FORMAT_R32_UINT;
-        out_format_str = "r210";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_BGRA64_LE:
-        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        out_format_str = "BGRA";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_BGR10A2_LE:
-        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
-        out_format_str = "BGRA";
-        x_unit = 8;
-        break;
-      case GST_VIDEO_FORMAT_AYUV:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "AYUV";
-        break;
-      case GST_VIDEO_FORMAT_AYUV64:
-        uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
-        out_format_str = "AYUV";
-        break;
-      case GST_VIDEO_FORMAT_RGBA:
-        uav_format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        out_format_str = "RGBA";
-        break;
-      case GST_VIDEO_FORMAT_RGB10A2_LE:
-        uav_format = DXGI_FORMAT_R10G10B10A2_UNORM;
-        out_format_str = "RGBA";
-        break;
-      default:
-        g_assert_not_reached ();
-        return nullptr;
-    }
-
-    entry_point = "CSMain_" + in_format_str + "_to_" + out_format_str;
   }
 
   self = new GstD3D11ConverterHelper ();
@@ -361,14 +117,8 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
   self->srv_format = srv_format;
   self->uav_format = uav_format;
 
-  if (!entry_point.empty ()) {
-    auto handle = gst_d3d11_device_get_device_handle (device);
-    gboolean try_cs = TRUE;
-    feature_level = handle->GetFeatureLevel ();
-    if (feature_level < D3D_FEATURE_LEVEL_11_0) {
-      try_cs = FALSE;
-      GST_DEBUG ("Device does not support typed UAV");
-    } else if (uav_format != DXGI_FORMAT_R32_UINT) {
+  if (need_convert) {
+    if (try_cs && uav_format != DXGI_FORMAT_R32_UINT) {
       D3D11_FEATURE_DATA_FORMAT_SUPPORT2 support2;
       support2.InFormat = uav_format;
       support2.OutFormatSupport2 = 0;
@@ -383,57 +133,14 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
     }
 
     if (try_cs) {
-      std::lock_guard<std::mutex> lk (cache_lock);
-      std::shared_ptr<ConverterCSSource> source;
-      auto cached = cs_source_cache.find (entry_point);
-      if (cached != cs_source_cache.end ()) {
-        source = cached->second;
-      } else {
-        source = std::make_shared<ConverterCSSource> ();
-        source->token = gst_d3d11_compute_shader_token_new ();
-        source->entry_point = entry_point;
-        auto precompiled = precompiled_bytecode.find (entry_point);
-        if (precompiled != precompiled_bytecode.end ()) {
-          source->bytecode = precompiled->second.first;
-          source->bytecode_size = precompiled->second.second;
-        } else {
-          source->bytecode = nullptr;
-          source->bytecode_size = 0;
-          source->macros.push_back(std::make_pair("ENTRY_POINT", entry_point));
-          source->macros.push_back(std::make_pair("BUILDING_" + entry_point, "1"));
-        }
-
-        cs_source_cache[entry_point] = source;
-      }
-
-      if (source->bytecode) {
-        hr = handle->CreateComputeShader (source->bytecode,
-            source->bytecode_size, nullptr, &cs);
-        if (!gst_d3d11_result (hr, device))
-          GST_WARNING ("Couldn't create compute shader from precompiled blob");
-      } else {
-        std::vector<D3D_SHADER_MACRO> macros;
-        ComPtr < ID3DBlob > blob;
-
-        for (const auto & defines : source->macros)
-          macros.push_back({defines.first.c_str (), defines.second.c_str ()});
-
-        macros.push_back({nullptr, nullptr});
-
-        gst_d3d11_shader_cache_get_compute_shader_blob (source->token,
-            g_CSMain_converter_str, sizeof (g_CSMain_converter_str),
-            source->entry_point.c_str (), &macros[0], &blob);
-        if (blob) {
-          hr = handle->CreateComputeShader (blob->GetBufferPointer (),
-              blob->GetBufferSize (), nullptr, &cs);
-          if (!gst_d3d11_result (hr, device))
-            GST_WARNING ("Couldn't create compute shader from source");
-        }
-      }
+      hr = handle->CreateComputeShader (bytecode.byte_code.byte_code,
+          bytecode.byte_code.byte_code_len, nullptr, &cs);
+      if (!gst_d3d11_result (hr, device))
+        GST_WARNING ("Couldn't create compute shader from precompiled blob");
     }
 
     if (cs) {
-      GST_DEBUG ("Compute shader \"%s\" available", entry_point.c_str ());
+      GST_DEBUG ("Compute shader available");
 
       self->cs = cs;
 
@@ -448,8 +155,7 @@ gst_d3d11_converter_helper_new (GstD3D11Device * device,
         self->tg_y = (UINT) ceil (height / (float) y_unit);
       }
     } else {
-      GST_DEBUG ("Creating software converter for \"%s\"",
-          entry_point.c_str ());
+      GST_DEBUG ("Creating software converter");
 
       self->sw_conv =
           gst_video_converter_new (&self->in_info, &self->out_info, nullptr);

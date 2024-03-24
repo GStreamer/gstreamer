@@ -1719,75 +1719,30 @@ gst_d3d11_compute_shader_token_new (void)
 }
 
 HRESULT
-gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
-    gint64 token, const void *bytecode, gsize bytecode_size,
-    const gchar * source, gsize source_size, const gchar * entry_point,
-    const D3D_SHADER_MACRO * defines, ID3D11PixelShader ** ps)
-{
-  GstD3D11DevicePrivate *priv = device->priv;
-  HRESULT hr;
-  ComPtr < ID3D11PixelShader > shader;
-  ComPtr < ID3DBlob > blob;
-  const void *data;
-  gsize size;
-
-  GST_LOG_OBJECT (device,
-      "Creating pixel shader for token %" G_GINT64_FORMAT ", source:\n%s",
-      token, source);
-
-  if (bytecode && bytecode_size > 1) {
-    data = bytecode;
-    size = bytecode_size;
-    GST_DEBUG_OBJECT (device,
-        "Creating shader \"%s\" using precompiled bytecode", entry_point);
-  } else {
-    hr = gst_d3d11_shader_cache_get_pixel_shader_blob (token,
-        source, source_size, entry_point, defines, &blob);
-    if (!gst_d3d11_result (hr, device))
-      return hr;
-
-    data = blob->GetBufferPointer ();
-    size = blob->GetBufferSize ();
-  }
-
-  hr = priv->device->CreatePixelShader (data, size, nullptr, &shader);
-  if (!gst_d3d11_result (hr, device))
-    return hr;
-
-  GST_DEBUG_OBJECT (device,
-      "Created pixel shader \"%s\" for token %" G_GINT64_FORMAT,
-      entry_point, token);
-  *ps = shader.Detach ();
-
-  return S_OK;
-}
-
-HRESULT
 gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
-    const void *bytecode, gsize bytecode_size, const gchar * source,
-    gsize source_size, const gchar * entry_point,
-    const D3D_SHADER_MACRO * defines, ID3D11PixelShader ** ps)
+    const gchar * entry_point, const GstD3DShaderByteCode * bytecode,
+    ID3D11PixelShader ** ps)
 {
   GstD3D11DevicePrivate *priv = device->priv;
   HRESULT hr;
   ComPtr < ID3D11PixelShader > shader;
 
   GST_DEBUG_OBJECT (device, "Getting pixel shader \"%s\" for token %"
-      G_GINT64_FORMAT, entry_point, token);
+      G_GINT64_FORMAT, GST_STR_NULL (entry_point), token);
 
   std::lock_guard < std::mutex > lk (priv->resource_lock);
   auto cached = priv->ps_cache.find (token);
   if (cached != priv->ps_cache.end ()) {
     GST_DEBUG_OBJECT (device,
-        "Found cached pixel shader \"%s\" for token %" G_GINT64_FORMAT,
-        entry_point, token);
+        "Found cached pixel shader \"%s for token %" G_GINT64_FORMAT,
+        GST_STR_NULL (entry_point), token);
     *ps = cached->second.Get ();
     (*ps)->AddRef ();
     return S_OK;
   }
 
-  hr = gst_d3d11_device_get_pixel_shader_uncached (device, token, bytecode,
-      bytecode_size, source, source_size, entry_point, defines, &shader);
+  hr = priv->device->CreatePixelShader (bytecode->byte_code,
+      bytecode->byte_code_len, nullptr, &shader);
   if (!gst_d3d11_result (hr, device))
     return hr;
 
@@ -1799,8 +1754,7 @@ gst_d3d11_device_get_pixel_shader (GstD3D11Device * device, gint64 token,
 
 HRESULT
 gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
-    const void *bytecode, gsize bytecode_size, const gchar * source,
-    gsize source_size, const gchar * entry_point,
+    const gchar * entry_point, const GstD3DShaderByteCode * bytecode,
     const D3D11_INPUT_ELEMENT_DESC * input_desc, guint desc_len,
     ID3D11VertexShader ** vs, ID3D11InputLayout ** layout)
 {
@@ -1808,19 +1762,16 @@ gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
   HRESULT hr;
   ComPtr < ID3D11VertexShader > shader;
   ComPtr < ID3D11InputLayout > input_layout;
-  ComPtr < ID3DBlob > blob;
-  const void *data;
-  gsize size;
 
   GST_DEBUG_OBJECT (device, "Getting vertext shader \"%s\" for token %"
-      G_GINT64_FORMAT, entry_point, token);
+      G_GINT64_FORMAT, GST_STR_NULL (entry_point), token);
 
   std::lock_guard < std::mutex > lk (priv->resource_lock);
   auto cached = priv->vs_cache.find (token);
   if (cached != priv->vs_cache.end ()) {
     GST_DEBUG_OBJECT (device,
         "Found cached vertex shader \"%s\" for token %" G_GINT64_FORMAT,
-        entry_point, token);
+        GST_STR_NULL (entry_point), token);
     *vs = cached->second.first.Get ();
     *layout = cached->second.second.Get ();
     (*vs)->AddRef ();
@@ -1828,36 +1779,18 @@ gst_d3d11_device_get_vertex_shader (GstD3D11Device * device, gint64 token,
     return S_OK;
   }
 
-  GST_LOG_OBJECT (device,
-      "Creating vertex shader for token %" G_GINT64_FORMAT ", shader: \n%s",
-      token, source);
-
-  if (bytecode && bytecode_size > 1) {
-    data = bytecode;
-    size = bytecode_size;
-    GST_DEBUG_OBJECT (device,
-        "Creating shader \"%s\" using precompiled bytecode", entry_point);
-  } else {
-    hr = gst_d3d11_shader_cache_get_vertex_shader_blob (token,
-        source, source_size, entry_point, &blob);
-    if (!gst_d3d11_result (hr, device))
-      return hr;
-
-    data = blob->GetBufferPointer ();
-    size = blob->GetBufferSize ();
-  }
-
-  hr = priv->device->CreateVertexShader (data, size, nullptr, &shader);
+  hr = priv->device->CreateVertexShader (bytecode->byte_code,
+      bytecode->byte_code_len, nullptr, &shader);
   if (!gst_d3d11_result (hr, device))
     return hr;
 
-  hr = priv->device->CreateInputLayout (input_desc, desc_len, data,
-      size, &input_layout);
+  hr = priv->device->CreateInputLayout (input_desc, desc_len,
+      bytecode->byte_code, bytecode->byte_code_len, &input_layout);
   if (!gst_d3d11_result (hr, device))
     return hr;
 
   GST_DEBUG_OBJECT (device, "Created vertex shader \"%s\" for token %"
-      G_GINT64_FORMAT, entry_point, token);
+      G_GINT64_FORMAT, GST_STR_NULL (entry_point), token);
   priv->vs_cache[token] = std::make_pair (shader, input_layout);
 
   *vs = shader.Detach ();

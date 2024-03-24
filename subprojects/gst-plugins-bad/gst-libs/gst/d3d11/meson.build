@@ -51,6 +51,13 @@ dxgi_lib = cc.find_library('dxgi', required: d3d11_opt)
 d3dcompiler_lib = cc.find_library('d3dcompiler', required: false)
 runtimeobject_lib = cc.find_library('runtimeobject', required: false)
 
+if not gstd3dshader_dep.found()
+  if d3d11_option.enabled()
+    error('The d3d11 was enabled explicitly, but required d3dshader dep were not found.')
+  endif
+  subdir_done()
+endif
+
 if not d3d11_lib.found() or not dxgi_lib.found()
   subdir_done()
 endif
@@ -174,13 +181,6 @@ if cc.get_id() != 'msvc'
   extra_comm_args += extra_args
 endif
 
-hlsl_precompiled = []
-fxc = find_program ('fxc', required : get_option ('d3d11-hlsl-precompile'))
-if cc.get_id() == 'msvc' and fxc.found()
-  subdir('hlsl')
-  extra_comm_args += ['-DHLSL_PRECOMPILED']
-endif
-
 have_dx_math = cxx.compiles('''
     #include <windows.h>
     #include <DirectXMath.h>
@@ -233,14 +233,14 @@ configure_file(
 
 pkg_name = 'gstreamer-d3d11-' + api_version
 gstd3d11 = library('gstd3d11-' + api_version,
-  d3d11_sources + hlsl_precompiled,
+  d3d11_sources,
   c_args : gst_plugins_bad_args + extra_c_args + extra_comm_args,
   cpp_args : gst_plugins_bad_args + extra_comm_args,
   include_directories : [configinc, libsinc],
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, d3d11_lib, dxgi_lib] + extra_deps
+  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep, gstd3dshader_dep, d3d11_lib, dxgi_lib] + extra_deps
 )
 
 pkgconfig.generate(gstd3d11,

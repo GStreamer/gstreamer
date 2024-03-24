@@ -25,7 +25,6 @@
 #include <vector>
 #include <wrl.h>
 #include <memory>
-#include <vector>
 
 enum class CONVERT_TYPE
 {

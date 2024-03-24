@@ -21,6 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/d3d11/gstd3d11_fwd.h>
+#include <gst/d3dshader/gstd3dshader.h>
 
 G_BEGIN_DECLS
 
@@ -36,33 +37,15 @@ gint64  gst_d3d11_compute_shader_token_new (void);
 GST_D3D11_API
 HRESULT gst_d3d11_device_get_pixel_shader  (GstD3D11Device * device,
                                             gint64 token,
-                                            const void * bytecode,
-                                            gsize bytecode_size,
-                                            const gchar * source,
-                                            gsize source_size,
                                             const gchar * entry_point,
-                                            const D3D_SHADER_MACRO * defines,
+                                            const GstD3DShaderByteCode * bytecode,
                                             ID3D11PixelShader ** ps);
-
-GST_D3D11_API
-HRESULT gst_d3d11_device_get_pixel_shader_uncached (GstD3D11Device * device,
-                                                    gint64 token,
-                                                    const void * bytecode,
-                                                    gsize bytecode_size,
-                                                    const gchar * source,
-                                                    gsize source_size,
-                                                    const gchar * entry_point,
-                                                    const D3D_SHADER_MACRO * defines,
-                                                    ID3D11PixelShader ** ps);
 
 GST_D3D11_API
 HRESULT gst_d3d11_device_get_vertex_shader (GstD3D11Device * device,
                                             gint64 token,
-                                            const void * bytecode,
-                                            gsize bytecode_size,
-                                            const gchar * source,
-                                            gsize source_size,
                                             const gchar * entry_point,
+                                            const GstD3DShaderByteCode * bytecode,
                                             const D3D11_INPUT_ELEMENT_DESC * input_desc,
                                             guint desc_len,
                                             ID3D11VertexShader ** vs,
