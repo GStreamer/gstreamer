@@ -543,6 +543,7 @@ static gboolean gst_decodebin_input_set_group_id (DecodebinInput * input,
     guint32 * group_id);
 static void gst_decodebin_input_unblock_streams (DecodebinInput * input,
     gboolean unblock_other_inputs);
+static void gst_decodebin_input_link_to_slot (DecodebinInputStream * input);
 
 static gboolean reconfigure_output_stream (DecodebinOutputStream * output,
     MultiQueueSlot * slot, GstMessage ** msg);
@@ -557,8 +558,6 @@ static void mq_slot_reassign (MultiQueueSlot * slot);
 static MultiQueueSlot
     * gst_decodebin_get_slot_for_input_stream_locked (GstDecodebin3 * dbin,
     DecodebinInputStream * input);
-static void link_input_to_slot (DecodebinInputStream * input,
-    MultiQueueSlot * slot);
 static void mq_slot_free (GstDecodebin3 * dbin, MultiQueueSlot * slot);
 
 static GstStreamCollection *get_merged_collection (GstDecodebin3 * dbin);
@@ -1022,16 +1021,12 @@ gst_decodebin_input_stream_src_probe (GstPad * pad, GstPadProbeInfo * info,
         /* FIXME : Would we ever end up with a stream already set on the input ?? */
         if (stream) {
           if (input->active_stream != stream) {
-            MultiQueueSlot *slot;
             if (input->active_stream)
               gst_object_unref (input->active_stream);
             input->active_stream = stream;
             /* We have the beginning of a stream, get a multiqueue slot and link to it */
             SELECTION_LOCK (input->dbin);
-            slot =
-                gst_decodebin_get_slot_for_input_stream_locked (input->dbin,
-                input);
-            link_input_to_slot (input, slot);
+            gst_decodebin_input_link_to_slot (input);
             SELECTION_UNLOCK (input->dbin);
           } else
             gst_object_unref (stream);
@@ -1254,7 +1249,6 @@ gst_decodebin_input_unblock_streams (DecodebinInput * input,
   while (tmp != NULL) {
     DecodebinInputStream *input_stream = (DecodebinInputStream *) tmp->data;
     GList *next = tmp->next;
-    MultiQueueSlot *slot;
 
     if (input_stream->input != input) {
       tmp = next;
@@ -1266,10 +1260,8 @@ gst_decodebin_input_unblock_streams (DecodebinInput * input,
     if (!input_stream->active_stream)
       input_stream->active_stream = gst_pad_get_stream (input_stream->srcpad);
 
-    /* Ensure the stream has an associated slot */
-    slot = gst_decodebin_get_slot_for_input_stream_locked (dbin, input_stream);
-    if (slot->input != input_stream)
-      link_input_to_slot (input_stream, slot);
+    /* Ensure the stream is linked to a slot */
+    gst_decodebin_input_link_to_slot (input_stream);
 
     if (input_stream->buffer_probe_id) {
       GST_DEBUG_OBJECT (dbin,
@@ -3550,17 +3542,28 @@ gst_decodebin_get_slot_for_input_stream_locked (GstDecodebin3 * dbin,
   return NULL;
 }
 
+/** gst_decodebin_input_link_to_slot:
+ * @input_stream: A #DecodebinInputStream
+ *
+ * Figures out the appropriate #MultiQueueSlot for @input_stream and links to it
+ *
+ * Must be called with the SELECTION_LOCK taken
+ */
 static void
-link_input_to_slot (DecodebinInputStream * input, MultiQueueSlot * slot)
+gst_decodebin_input_link_to_slot (DecodebinInputStream * input_stream)
 {
-  if (slot->input != NULL && slot->input != input) {
-    GST_ERROR_OBJECT (slot->dbin,
-        "Trying to link input to an already used slot");
+  GstDecodebin3 *dbin = input_stream->dbin;
+  MultiQueueSlot *slot =
+      gst_decodebin_get_slot_for_input_stream_locked (dbin, input_stream);
+
+  if (slot->input != NULL && slot->input != input_stream) {
+    GST_ERROR_OBJECT (slot->dbin, "Input stream is already linked to a slot");
     return;
   }
-  gst_pad_link_full (input->srcpad, slot->sink_pad, GST_PAD_LINK_CHECK_NOTHING);
-  slot->pending_stream = input->active_stream;
-  slot->input = input;
+  gst_pad_link_full (input_stream->srcpad, slot->sink_pad,
+      GST_PAD_LINK_CHECK_NOTHING);
+  slot->pending_stream = input_stream->active_stream;
+  slot->input = input_stream;
 }
 
 static GList *
