@@ -1239,7 +1239,7 @@ gst_decodebin_input_unblock_streams (DecodebinInput * input,
     gboolean unblock_other_inputs)
 {
   GstDecodebin3 *dbin = input->dbin;
-  GList *tmp, *unused_slot = NULL;
+  GList *tmp, *unused_slot_sinkpads = NULL;
 
   GST_DEBUG_OBJECT (dbin,
       "DecodebinInput for %" GST_PTR_FORMAT " , unblock_other_inputs:%d",
@@ -1293,19 +1293,19 @@ gst_decodebin_input_unblock_streams (DecodebinInput * input,
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
     GST_LOG_OBJECT (dbin, "Slot %d input:%p", slot->id, slot->input);
     if (slot->input == NULL) {
-      unused_slot =
-          g_list_append (unused_slot, gst_object_ref (slot->sink_pad));
+      unused_slot_sinkpads =
+          g_list_append (unused_slot_sinkpads, gst_object_ref (slot->sink_pad));
     }
   }
   SELECTION_UNLOCK (dbin);
 
-  if (unused_slot) {
-    for (tmp = unused_slot; tmp; tmp = tmp->next) {
+  if (unused_slot_sinkpads) {
+    for (tmp = unused_slot_sinkpads; tmp; tmp = tmp->next) {
       GstPad *sink_pad = (GstPad *) tmp->data;
       GST_DEBUG_OBJECT (sink_pad, "Sending EOS to unused slot");
       gst_pad_send_event (sink_pad, gst_event_new_eos ());
     }
-    g_list_free_full (unused_slot, (GDestroyNotify) gst_object_unref);
+    g_list_free_full (unused_slot_sinkpads, (GDestroyNotify) gst_object_unref);
   }
 
   if (unblock_other_inputs) {
