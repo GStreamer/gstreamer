@@ -27,6 +27,7 @@
 #include <wrl.h>
 #include <string.h>
 #include <mutex>
+#include <condition_variable>
 #include <set>
 #include <vector>
 #include <queue>

@@ -39,6 +39,7 @@
 #include <condition_variable>
 #include <unordered_map>
 #include <memory>
+#include <algorithm>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -1243,7 +1244,7 @@ gst_d3d12_h264_enc_build_pps (GstD3D12H264Enc * self, guint num_ref)
   return TRUE;
 }
 
-static gboolean
+static guint
 gst_d3d12_h264_enc_get_max_ref_frames (GstD3D12H264Enc * self)
 {
   auto priv = self->priv;
@@ -2350,8 +2351,8 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
     return;
   }
 
-  if (slice_mode_support & (1 <<
-          D3D12_VIDEO_ENCODER_FRAME_SUBREGION_LAYOUT_MODE_FULL_FRAME)
+  if ((slice_mode_support & (1 <<
+              D3D12_VIDEO_ENCODER_FRAME_SUBREGION_LAYOUT_MODE_FULL_FRAME))
       == 0) {
     GST_WARNING_OBJECT (device, "Full frame encoding is not supported");
     return;

@@ -2211,8 +2211,8 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
     }
 
     auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (rtv_heap->GetCPUDescriptorHandleForHeapStart ());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+        (rtv_heap));
 
     for (guint plane = 0; plane < num_planes; plane++) {
       D3D12_RECT rect = { };

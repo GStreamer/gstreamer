@@ -919,8 +919,8 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     }
 
     auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (priv->gamma_lut_heap->GetCPUDescriptorHandleForHeapStart ());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+        (priv->gamma_lut_heap));
 
     D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
     srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
@@ -1819,7 +1819,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   std::lock_guard < std::mutex > lk (priv->prop_lock);
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, 0);
   auto resource = gst_d3d12_memory_get_resource_handle (mem);
-  auto desc = resource->GetDesc ();
+  auto desc = GetDesc (resource);
   if (desc.Width != priv->input_texture_width ||
       desc.Height != priv->input_texture_height) {
     GST_DEBUG_OBJECT (self, "Texture resolution changed %ux%u -> %ux%u",
@@ -1832,7 +1832,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
 
   mem = (GstD3D12Memory *) gst_buffer_peek_memory (out_buf, 0);
   resource = gst_d3d12_memory_get_resource_handle (mem);
-  desc = resource->GetDesc ();
+  desc = GetDesc (resource);
   if (desc.SampleDesc.Count != priv->sample_desc.Count ||
       desc.SampleDesc.Quality != priv->sample_desc.Quality) {
     GST_DEBUG_OBJECT (self, "Sample desc updated");
@@ -1955,8 +1955,8 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, descriptor);
 
   auto cpu_handle =
-      CD3DX12_CPU_DESCRIPTOR_HANDLE
-      (srv_heap->GetCPUDescriptorHandleForHeapStart ());
+      CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+      (srv_heap));
 
   for (guint i = 0; i < gst_buffer_n_memory (in_buf); i++) {
     auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, i);
@@ -1969,14 +1969,14 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
     }
 
     device->CopyDescriptorsSimple (num_planes, cpu_handle,
-        mem_srv_heap->GetCPUDescriptorHandleForHeapStart (),
+        GetCPUDescriptorHandleForHeapStart (mem_srv_heap),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     cpu_handle.Offset (num_planes, priv->srv_inc_size);
   }
 
   if (priv->crs->HaveLut ()) {
     device->CopyDescriptorsSimple (2, cpu_handle,
-        priv->gamma_lut_heap->GetCPUDescriptorHandleForHeapStart (),
+        GetCPUDescriptorHandleForHeapStart (priv->gamma_lut_heap),
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   }
 
@@ -1991,8 +1991,8 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
     }
 
     auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (rtv_heap->GetCPUDescriptorHandleForHeapStart ());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+        (rtv_heap));
 
     for (guint plane = 0; plane < num_planes; plane++) {
       D3D12_RECT rect = { };
@@ -2021,7 +2021,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   ID3D12DescriptorHeap *heaps[] = { srv_heap.Get () };
   cl->SetDescriptorHeaps (1, heaps);
   cl->SetGraphicsRootDescriptorTable (priv->crs->GetPsSrvIdx (),
-      srv_heap->GetGPUDescriptorHandleForHeapStart ());
+      GetGPUDescriptorHandleForHeapStart (srv_heap));
   cl->SetGraphicsRoot32BitConstants (priv->crs->GetVsRootConstIdx (),
       16, &priv->transform, 0);
   cl->SetGraphicsRoot32BitConstants (priv->crs->GetPsRootConstIdx (),
@@ -2196,7 +2196,7 @@ gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
     return TRUE;
 
   auto resource = gst_d3d12_memory_get_resource_handle (dmem);
-  auto desc = resource->GetDesc ();
+  auto desc = GetDesc (resource);
   if ((desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) ==
       D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) {
     return TRUE;

@@ -347,7 +347,7 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
   srv_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
 
   device->CreateShaderResourceView (texture.Get (), &srv_desc,
-      srv_heap_handle->GetCPUDescriptorHandleForHeapStart ());
+      GetCPUDescriptorHandleForHeapStart (srv_heap_handle));
 
   auto rect = new GstD3D12OverlayRect ();
   gst_mini_object_init (rect, 0, gst_d3d12_overlay_rect_get_type (),
@@ -758,7 +758,7 @@ gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
       cl->RSSetViewports (1, &priv->viewport);
       cl->RSSetScissorRects (1, &priv->scissor_rect);
       D3D12_CPU_DESCRIPTOR_HANDLE rtv_heaps[] = {
-        rtv_heap->GetCPUDescriptorHandleForHeapStart ()
+        GetCPUDescriptorHandleForHeapStart (rtv_heap)
       };
       cl->OMSetRenderTargets (1, rtv_heaps, FALSE, nullptr);
     } else if (pso != prev_pso) {
@@ -770,7 +770,7 @@ gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
     ID3D12DescriptorHeap *heaps[] = { srv_heap.Get () };
     cl->SetDescriptorHeaps (1, heaps);
     cl->SetGraphicsRootDescriptorTable (0,
-        srv_heap->GetGPUDescriptorHandleForHeapStart ());
+        GetGPUDescriptorHandleForHeapStart (srv_heap));
     cl->IASetVertexBuffers (0, 1, &rect->vbv);
 
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
@@ -808,7 +808,7 @@ gst_d3d12_overlay_compositor_draw (GstD3D12OverlayCompositor * compositor,
 
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (buf, 0);
   auto resource = gst_d3d12_memory_get_resource_handle (mem);
-  auto desc = resource->GetDesc ();
+  auto desc = GetDesc (resource);
   if (desc.SampleDesc.Count != priv->sample_desc.Count ||
       desc.SampleDesc.Quality != priv->sample_desc.Quality) {
     auto device = gst_d3d12_device_get_device_handle (compositor->device);

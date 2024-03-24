@@ -47,22 +47,27 @@ d3d12_sources = [
 
 extra_args = [
   '-DGST_USE_UNSTABLE_API',
-  # Disable this warning error. Otherwise d3dx12.h will break build
-  '/wd4062',
 ]
+
+# Disable this warning error. Otherwise d3dx12.h will break build
+if cc.get_argument_syntax() == 'msvc'
+  extra_args += cc.get_supported_arguments([
+    '/wd4062', # 'identifier' : unreferenced local variable
+  ])
+else
+  extra_args += cc.get_supported_arguments([
+    '-Wno-misleading-indentation',
+    # MinGW 32bits compiler seems to be complaining about redundant-decls
+    # when ComPtr is in use. Let's just disable the warning
+    '-Wno-redundant-decls',
+  ])
+endif
 
 extra_deps = []
 
 d3d12_option = get_option('d3d12')
 d3d12_wgc_option = get_option('d3d12-wgc')
 if host_system != 'windows' or d3d12_option.disabled()
-  subdir_done()
-endif
-
-if cc.get_id() != 'msvc'
-  if d3d12_option.enabled()
-    error('d3d12 plugin supports only MSVC build')
-  endif
   subdir_done()
 endif
 
@@ -110,12 +115,35 @@ if not d3d12_wgc_option.disabled()
   endif
 endif
 
+have_dx_math = cxx.compiles('''
+    #include <windows.h>
+    #include <DirectXMath.h>
+    using namespace DirectX;
+    int main(int argc, char ** argv) {
+      XMMATRIX matrix;
+      XMFLOAT4X4 dump;
+      matrix = XMMatrixIdentity ();
+      XMStoreFloat4x4 (&dump, matrix);
+      return 0;
+    }
+    ''',
+    name: 'DirectXMath support in Windows SDK')
+
+if not have_dx_math
+  directxmath_dep = dependency('directxmath',
+      allow_fallback: true,
+      required: d3d12_option)
+  if not directxmath_dep.found()
+    subdir_done()
+  endif
+  extra_deps += [directxmath_dep]
+endif
+
 d3d12_headers = [
   'dxgi1_6.h',
   'd3d11.h',
   'd3d11on12.h',
   'd2d1.h',
-  'DirectXMath.h',
 ]
 
 have_d3d12_headers = true

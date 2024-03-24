@@ -32,3 +32,4 @@
 #include "gstd3d12format.h"
 #include "gstd3d12memory.h"
 #include "gstd3d12utils.h"
+#include "gstd3d12compat.h"

@@ -31,6 +31,8 @@ G_DECLARE_FINAL_TYPE (GstD3D12CommandAllocatorPool,
 
 typedef struct _GstD3D12CommandAllocator GstD3D12CommandAllocator;
 
+GType gst_d3d12_command_allocator_get_type (void);
+
 GstD3D12CommandAllocatorPool * gst_d3d12_command_allocator_pool_new (ID3D12Device * device,
                                                                      D3D12_COMMAND_LIST_TYPE type);
 

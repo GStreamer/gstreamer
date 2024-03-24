@@ -520,7 +520,7 @@ gst_d3d12_ipc_upload (GstD3D12IpcSink * self, GstBuffer * buf)
       D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
 
       auto resource = gst_d3d12_memory_get_resource_handle (dmem);
-      desc = resource->GetDesc ();
+      desc = GetDesc (resource);
       resource->GetHeapProperties (nullptr, &heap_flags);
       if ((desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS) != 0 &&
           (heap_flags & D3D12_HEAP_FLAG_SHARED) != 0) {

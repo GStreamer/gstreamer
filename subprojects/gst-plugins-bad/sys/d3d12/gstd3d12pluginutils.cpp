@@ -211,7 +211,7 @@ gst_d3d12_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
   std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
   D3D12_BOX src_box[4];
   guint resource_idx = 0;
-  GstD3D12Device *device;
+  GstD3D12Device *device = nullptr;
 
   for (guint i = 0; i < num_mem; i++) {
     auto dst_mem = gst_buffer_peek_memory (dst, i);
@@ -275,6 +275,8 @@ gst_d3d12_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
       copy_args.push_back (args);
     }
   }
+
+  g_assert (device);
 
   guint64 fence_val;
   if (!gst_d3d12_device_copy_texture_region (device, copy_args.size (),

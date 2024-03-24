@@ -253,7 +253,7 @@ public:
     return device;
   }
 
-  void ReleaseDevice (guint64 luid)
+  void ReleaseDevice (gint64 luid)
   {
     std::lock_guard <std::mutex> lk (lock_);
     for (const auto & it : list_) {
@@ -399,7 +399,7 @@ gst_d3d12_device_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (self, "Finalize");
 
-  guint64 luid = 0;
+  gint64 luid = 0;
   if (self->priv->inner)
     luid = self->priv->inner->adapter_luid;
 
@@ -1187,7 +1187,7 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   ComPtr < ID3D12DescriptorHeap > heap;
 
   auto resource = gst_d3d12_memory_get_resource_handle (dmem);
-  auto desc = resource->GetDesc ();
+  auto desc = GetDesc (resource);
 
   if (desc.Format != DXGI_FORMAT_NV12 && desc.Format != DXGI_FORMAT_P010 &&
       desc.Format != DXGI_FORMAT_P016) {
@@ -1225,8 +1225,7 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   cl_base.As (&cl);
 
   auto rtv_handle =
-      CD3DX12_CPU_DESCRIPTOR_HANDLE (heap->GetCPUDescriptorHandleForHeapStart
-      (),
+      CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart (heap),
       priv->rtv_inc_size);
 
   const FLOAT clear_color[4] = { 0.5f, 0.5f, 0.5f, 1.0f };

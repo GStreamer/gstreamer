@@ -2062,20 +2062,18 @@ gst_d3d12_test_src_draw_pattern (GstD3D12TestSrc * self, GstClockTime pts,
 
   if (ctx->static_color[0].is_valid) {
     if (ctx->static_color[1].is_valid && (priv->n_frames % 2) == 1) {
-      cl->ClearRenderTargetView (ctx->
-          rtv_heap->GetCPUDescriptorHandleForHeapStart (),
-          ctx->static_color[1].value.color, 0, nullptr);
+      cl->ClearRenderTargetView (GetCPUDescriptorHandleForHeapStart
+          (ctx->rtv_heap), ctx->static_color[1].value.color, 0, nullptr);
     } else {
-      cl->ClearRenderTargetView (ctx->
-          rtv_heap->GetCPUDescriptorHandleForHeapStart (),
-          ctx->static_color[0].value.color, 0, nullptr);
+      cl->ClearRenderTargetView (GetCPUDescriptorHandleForHeapStart
+          (ctx->rtv_heap), ctx->static_color[0].value.color, 0, nullptr);
     }
   } else {
     cl->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     cl->RSSetViewports (1, &ctx->viewport);
     cl->RSSetScissorRects (1, &ctx->scissor_rect);
     D3D12_CPU_DESCRIPTOR_HANDLE rtv_heaps[] = {
-      priv->ctx->rtv_heap->GetCPUDescriptorHandleForHeapStart ()
+      GetCPUDescriptorHandleForHeapStart (priv->ctx->rtv_heap)
     };
     cl->OMSetRenderTargets (1, rtv_heaps, FALSE, nullptr);
 

@@ -31,6 +31,8 @@ G_DECLARE_FINAL_TYPE (GstD3D12EncoderBufferPool,
 
 typedef struct _GstD3D12EncoderBuffer GstD3D12EncoderBuffer;
 
+GType gst_d3d12_encoder_buffer_get_type (void);
+
 GstD3D12EncoderBufferPool * gst_d3d12_encoder_buffer_pool_new (GstD3D12Device * device,
                                                                guint metadata_size,
                                                                guint resolved_metadata_size,

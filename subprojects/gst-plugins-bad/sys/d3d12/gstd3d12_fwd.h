@@ -27,6 +27,7 @@
 
 #include <directx/d3d12.h>
 #include <directx/d3d12video.h>
+#include <dxguids/dxguids.h>
 #include <dxgi1_6.h>
 
 G_BEGIN_DECLS

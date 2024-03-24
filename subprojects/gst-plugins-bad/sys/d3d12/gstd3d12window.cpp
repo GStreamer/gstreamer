@@ -1103,7 +1103,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
     }
 
     if (i == 0)
-      priv->ctx->buffer_desc = backbuf->GetDesc ();
+      priv->ctx->buffer_desc = GetDesc (backbuf);
 
     auto mem = gst_d3d12_allocator_alloc_wrapped (nullptr, self->device,
         backbuf.Get (), 0, nullptr, nullptr);

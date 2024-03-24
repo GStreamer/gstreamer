@@ -324,7 +324,7 @@ gst_d3d12_memory_set_external_fence_unlocked (GstD3D12Memory * dmem,
     }
 
     priv->external_fence = nullptr;
-    priv->external_fence_val;
+    priv->external_fence_val = 0;
   }
 
   if (fence) {
@@ -615,8 +615,8 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
     srv_desc.Texture2D.MipLevels = 1;
 
     auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (srv_heap->GetCPUDescriptorHandleForHeapStart ());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+        (srv_heap));
 
     for (guint i = 0; i < priv->num_subresources; i++) {
       srv_desc.Format = priv->resource_formats[i];
@@ -670,8 +670,8 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
       rtv_desc.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
 
     auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE
-        (rtv_heap->GetCPUDescriptorHandleForHeapStart ());
+        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+        (rtv_heap));
 
     for (guint i = 0; i < priv->num_subresources; i++) {
       rtv_desc.Format = priv->resource_formats[i];
@@ -830,7 +830,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
   }
 
   auto device_handle = gst_d3d12_device_get_device_handle (device);
-  auto desc = resource->GetDesc ();
+  auto desc = GetDesc (resource);
   guint8 num_subresources =
       D3D12GetFormatPlaneCount (device_handle, desc.Format);
 

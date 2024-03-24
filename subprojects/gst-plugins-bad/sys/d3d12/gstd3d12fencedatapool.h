@@ -29,6 +29,8 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstD3D12FenceDataPool,
     gst_d3d12_fence_data_pool, GST, D3D12_FENCE_DATA_POOL, GstObject);
 
+GType gst_d3d12_fence_data_get_type (void);
+
 GstD3D12FenceDataPool * gst_d3d12_fence_data_pool_new (void);
 
 gboolean                gst_d3d12_fence_data_pool_acquire (GstD3D12FenceDataPool * pool,
