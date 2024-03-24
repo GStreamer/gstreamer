@@ -20,7 +20,6 @@ d3d12_sources = [
   'gstd3d12encoderbufferpool.cpp',
   'gstd3d12fencedatapool.cpp',
   'gstd3d12format.cpp',
-  'gstd3d12graphicscapture.cpp',
   'gstd3d12h264dec.cpp',
   'gstd3d12h264enc.cpp',
   'gstd3d12h265dec.cpp',
@@ -52,7 +51,10 @@ extra_args = [
   '/wd4062',
 ]
 
+extra_deps = []
+
 d3d12_option = get_option('d3d12')
+d3d12_wgc_option = get_option('d3d12-wgc')
 if host_system != 'windows' or d3d12_option.disabled()
   subdir_done()
 endif
@@ -68,22 +70,23 @@ d3d12_lib = cc.find_library('d3d12', required : d3d12_option)
 d3d11_lib = cc.find_library('d3d11', required : d3d12_option)
 d2d_dep = cc.find_library('d2d1', required: d3d12_option)
 dxgi_lib = cc.find_library('dxgi', required : d3d12_option)
-dwmapi_lib = cc.find_library('dwmapi', required: d3d12_option)
+dwmapi_lib = cc.find_library('dwmapi', required: d3d12_wgc_option)
 dx_headers_dep = dependency('DirectX-Headers',
     version: '>= 1.611',
     allow_fallback: true,
     required: d3d12_option)
 
 if not gstdxva_dep.found() or not d3d12_lib.found() or not dxgi_lib.found() \
-  or not dx_headers_dep.found() or not gstd3dshader_dep.found() or not d2d_dep.found() \
-  or not dwmapi_lib.found()
+  or not dx_headers_dep.found() or not gstd3dshader_dep.found() or not d2d_dep.found()
   if d3d12_option.enabled()
     error('The d3d12 was enabled explicitly, but required dependencies were not found.')
   endif
   subdir_done()
 endif
 
-have_wgc = cxx.compiles('''
+have_wgc = false
+if not d3d12_wgc_option.disabled()
+  have_wgc = cxx.compiles('''
     #include<windows.h>
     #include<winstring.h>
     #include<roapi.h>
@@ -102,11 +105,9 @@ have_wgc = cxx.compiles('''
     ''',
     name: 'Windows Graphics Capture support in Windows SDK')
 
-if not have_wgc
-  if d3d12_option.enabled()
-    error('Windows SDK does not support Windows Graphics Capture')
+  if d3d12_wgc_option.enabled() and not have_wgc
+    error('The Windows Graphics Capture feature is enabled but not supported by Windows SDK')
   endif
-  subdir_done()
 endif
 
 d3d12_headers = [
@@ -137,6 +138,12 @@ if host_machine.cpu_family() != 'x86'
   extra_args += ['-DHAVE_DIRECTX_MATH_SIMD']
 endif
 
+if have_wgc and dwmapi_lib.found()
+  d3d12_sources += ['gstd3d12graphicscapture.cpp']
+  extra_args += ['-DHAVE_WGC']
+  extra_deps += [dwmapi_lib]
+endif
+
 gstd3d12 = library('gstd3d12',
   d3d12_sources,
   c_args : gst_plugins_bad_args + extra_args,
@@ -144,7 +151,7 @@ gstd3d12 = library('gstd3d12',
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep, gmodule_dep,
                   gstdxva_dep, d3d12_lib, d3d11_lib, d2d_dep, dxgi_lib,
-                  gstd3dshader_dep, dx_headers_dep, dwmapi_lib],
+                  gstd3dshader_dep, dx_headers_dep] + extra_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

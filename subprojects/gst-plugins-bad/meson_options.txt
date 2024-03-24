@@ -218,6 +218,9 @@ option('d3d11-math', type : 'feature', value : 'auto', description : 'Enable Dir
 option('d3d11-hlsl-precompile', type : 'feature', value : 'auto', description : 'Enable buildtime HLSL compile for d3d11 library/plugin')
 option('d3d11-wgc', type : 'feature', value : 'auto', description : 'Windows Graphics Capture API support in d3d11 plugin')
 
+# D3D12 plugin options
+option('d3d12-wgc', type : 'feature', value : 'auto', description : 'Windows Graphics Capture API support in d3d12 plugin')
+
 # HLS plugin options
 option('hls', type : 'feature', value : 'auto', description : 'HTTP Live Streaming plugin')
 option('hls-crypto', type : 'combo', value : 'auto', choices : ['auto', 'nettle', 'libgcrypt', 'openssl'],
