@@ -2883,6 +2883,8 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   gchar *long_name;
   const gchar *name, *desc;
   gint n_props = N_PROPERTIES;
+  GParamFlags param_flags =
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT;
 
   if (cdata->entrypoint == VAEntrypointEncSlice) {
     desc = "VA-API based VP9 video encoder";
@@ -2971,8 +2973,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_KEYFRAME_INT] = g_param_spec_uint ("key-int-max",
       "Key frame maximal interval",
       "The maximal distance between two keyframes. It decides the size of GOP"
-      " (0: auto-calculate)", 0, MAX_KEY_FRAME_INTERVAL, 60,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      " (0: auto-calculate)", 0, MAX_KEY_FRAME_INTERVAL, 60, param_flags);
 
   /**
    * GstVaVp9Enc:gf-group-size:
@@ -2982,8 +2983,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_GOLDEN_GROUP_SIZE] = g_param_spec_uint ("gf-group-size",
       "Golden frame group size",
       "The size of the golden frame group.",
-      1, MAX_GF_GROUP_SIZE, DEFAULT_GF_GROUP_SIZE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      1, MAX_GF_GROUP_SIZE, DEFAULT_GF_GROUP_SIZE, param_flags);
 
   /**
    * GstVaVp9Enc:ref-frames:
@@ -2993,7 +2993,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_NUM_REF_FRAMES] = g_param_spec_uint ("ref-frames",
       "Number of Reference Frames",
       "Number of reference frames, including both the forward and the backward",
-      0, 3, 3, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 3, 3, param_flags);
 
   /**
    * GstVaVp9Enc:hierarchical-level:
@@ -3004,7 +3004,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
       g_param_spec_uint ("hierarchical-level", "The hierarchical level",
       "The hierarchical level for golden frame group. Setting to 1 disables "
       "all future reference", 1, HIGHEST_PYRAMID_LEVELS, HIGHEST_PYRAMID_LEVELS,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags);
 
   /**
    * GstVaVp9Enc:min-qp:
@@ -3012,8 +3012,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
    * The minimum quantizer value.
    */
   properties[PROP_MIN_QP] = g_param_spec_uint ("min-qp", "Minimum QP",
-      "Minimum quantizer value for each frame", 0, 255, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Minimum quantizer value for each frame", 0, 255, 0, param_flags);
 
   /**
    * GstVaVp9Enc:max-qp:
@@ -3021,8 +3020,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
    * The maximum quantizer value.
    */
   properties[PROP_MAX_QP] = g_param_spec_uint ("max-qp", "Maximum QP",
-      "Maximum quantizer value for each frame", 1, 255, 255,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Maximum quantizer value for each frame", 1, 255, 255, param_flags);
 
   /**
    * GstVaVp9Enc:qp:
@@ -3033,7 +3031,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
       "In CQP mode, it specifies the basic quantizer value for all frames. "
       "In ICQ and QVBR modes, it specifies a quality factor. In other "
       "modes, it is ignored", 0, 255, DEFAULT_BASE_QINDEX,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaVp9Enc:bitrate:
@@ -3049,8 +3047,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_BITRATE] = g_param_spec_uint ("bitrate", "Bitrate (kbps)",
       "The desired bitrate expressed in kbps (0: auto-calculate)",
-      0, 2000 * 1024, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 2000 * 1024, 0, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaVp9Enc:target-percentage:
@@ -3064,8 +3061,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_TARGET_PERCENTAGE] = g_param_spec_uint ("target-percentage",
       "target bitrate percentage",
       "The percentage for 'target bitrate'/'maximum bitrate' (Only in VBR)",
-      50, 100, 66,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      50, 100, 66, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaVp9Enc:cpb-size:
@@ -3075,7 +3071,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_CPB_SIZE] = g_param_spec_uint ("cpb-size",
       "max CPB size in Kb",
       "The desired max CPB size in Kb (0: auto-calculate)", 0, 2000 * 1024, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaVp9Enc:target-usage:
@@ -3087,7 +3083,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_TARGET_USAGE] = g_param_spec_uint ("target-usage",
       "target usage",
       "The target usage to control and balance the encoding speed/quality",
-      1, 7, 4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      1, 7, 4, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaVp9Enc:mbbrc:
@@ -3098,8 +3094,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_MBBRC] = g_param_spec_enum ("mbbrc",
       "Macroblock level Bitrate Control",
       "Macroblock level Bitrate Control. It is not compatible with CQP",
-      GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO, param_flags);
 
   /**
    * GstVaVp9Enc:loop-filter-level:
@@ -3109,8 +3104,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_LOOP_FILTER_LEVEL] = g_param_spec_int ("loop-filter-level",
       "Loop Filter Level",
       "Controls the deblocking filter strength, -1 means auto calculation",
-      -1, 63, -1,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      -1, 63, -1, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaVp9Enc:sharpness-level:
@@ -3120,7 +3114,7 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_SHARPNESS_LEVEL] = g_param_spec_uint ("sharpness-level",
       "Sharpness Level",
       "Controls the deblocking filter sensitivity",
-      0, 7, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 7, 0, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   if (vavp9enc_class->rate_control_type > 0) {
     properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",
@@ -3128,8 +3122,8 @@ gst_va_vp9_enc_class_init (gpointer g_klass, gpointer class_data)
         "The desired rate control mode for the encoder",
         vavp9enc_class->rate_control_type,
         vavp9enc_class->rate_control[0].value,
-        GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READWRITE |
-        G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+        GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_PLAYING
+        | param_flags);
   } else {
     n_props--;
     properties[PROP_RATE_CONTROL] = NULL;
