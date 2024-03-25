@@ -258,8 +258,6 @@ struct _GstDecodebin3
   GList *to_activate;
   /* Pending select streams event */
   guint32 select_streams_seqnum;
-  /* There is a pending GST_EVENT_SELECT_STREAMS being handled */
-  gboolean pending_select_streams;
   /* TRUE if requested_selection was updated, will become FALSE once
    * it has fully transitioned to active */
   gboolean selection_updated;
@@ -729,8 +727,6 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
   dbin->to_activate = NULL;
 
   dbin->select_streams_seqnum = GST_SEQNUM_INVALID;
-
-  dbin->pending_select_streams = FALSE;
 
   dbin->selection_updated = FALSE;
 }
@@ -2315,12 +2311,6 @@ update_requested_selection (GstDecodebin3 * dbin)
   /* 1. Is there a pending SELECT_STREAMS we can return straight away since
    *  the switch handler will take care of the pending selection */
   SELECTION_LOCK (dbin);
-  if (dbin->pending_select_streams) {
-    GST_DEBUG_OBJECT (dbin,
-        "No need to create pending selection, SELECT_STREAMS underway");
-    goto beach;
-  }
-
   collection = dbin->collection;
   if (G_UNLIKELY (collection == NULL)) {
     GST_DEBUG_OBJECT (dbin, "No current GstStreamCollection");
@@ -4017,11 +4007,19 @@ mq_slot_unassign_probe (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_REMOVE;
 }
 
-static gboolean
+/** handle_stream_switch:
+ * @dbin: A #GstDecodebin3
+ * @select_streams: The list of stream-id to switch to
+ * @seqnum: The seqnum of the event that triggered this
+ *
+ * Figures out which slots to (de)activate for the given @select_streams.
+ *
+ * Must be called with SELECTION_LOCK taken.
+ */
+static void
 handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
     guint32 seqnum)
 {
-  gboolean ret = TRUE;
   GList *tmp;
   /* List of slots to (de)activate. */
   GList *slots_to_deactivate = NULL;
@@ -4034,14 +4032,10 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   GList *pending_streams = NULL;
   GList *slots_to_reassign = NULL;
 
-  SELECTION_LOCK (dbin);
   if (G_UNLIKELY (seqnum != dbin->select_streams_seqnum)) {
     GST_DEBUG_OBJECT (dbin, "New SELECT_STREAMS has arrived in the meantime");
-    SELECTION_UNLOCK (dbin);
-    return TRUE;
+    return;
   }
-  /* Remove pending select_streams */
-  dbin->pending_select_streams = FALSE;
 
   /* COMPARE the requested streams to the active and requested streams
    * on multiqueue. */
@@ -4226,7 +4220,7 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   if (slots_to_reassign)
     g_list_free (slots_to_reassign);
 
-  return ret;
+  SELECTION_LOCK (dbin);
 }
 
 /*
@@ -4248,28 +4242,30 @@ handle_select_streams (GstDecodebin3 * dbin, GstEvent * event)
     return FALSE;
   }
 
-  SELECTION_LOCK (dbin);
-  if (seqnum == dbin->select_streams_seqnum) {
-    SELECTION_UNLOCK (dbin);
-    GST_DEBUG_OBJECT (dbin,
-        "Already handled/handling that SELECT_STREAMS event");
+  gst_event_parse_select_streams (event, &streams);
+  if (streams == NULL) {
+    GST_DEBUG_OBJECT (dbin, "No streams in select streams");
     gst_event_unref (event);
     return TRUE;
   }
 
-  dbin->select_streams_seqnum = seqnum;
-  if (dbin->pending_select_streams)
-    GST_LOG_OBJECT (dbin, "Replacing pending select streams");
-  dbin->pending_select_streams = TRUE;
-  gst_event_parse_select_streams (event, &streams);
-  SELECTION_UNLOCK (dbin);
+  SELECTION_LOCK (dbin);
+  /* Find the collection to which these list of streams apply */
 
-  /* Finally handle the switch */
-  if (streams) {
-    handle_stream_switch (dbin, streams, seqnum);
-    g_list_free_full (streams, g_free);
+  if (seqnum == dbin->select_streams_seqnum) {
+    GST_DEBUG_OBJECT (dbin,
+        "Already handled/handling that SELECT_STREAMS event");
+    goto beach;
   }
 
+  dbin->select_streams_seqnum = seqnum;
+
+  /* Finally handle the switch */
+  handle_stream_switch (dbin, streams, seqnum);
+  g_list_free_full (streams, g_free);
+
+beach:
+  SELECTION_UNLOCK (dbin);
   gst_event_unref (event);
   return TRUE;
 }
