@@ -4,3 +4,6 @@ source_url = https://download.videolan.org/pub/videolan/dav1d/1.4.1/dav1d-1.4.1.
 source_filename = dav1d-1.4.1.tar.xz
 source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/dav1d-1.4.1.tar.xz
 source_hash = 8d407dd5fe7986413c937b14e67f36aebd06e1fa5cfec679d10e548476f2d5f8
+
+[provide]
+dav1d = dav1d_dep
