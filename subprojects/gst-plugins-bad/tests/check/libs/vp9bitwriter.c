@@ -22,7 +22,7 @@
 #include <gst/codecparsers/gstvp9bitwriter.h>
 
 /* *INDENT-OFF* */
-static const guint8 vp9_frames[4][1024] = {
+static const guint8 vp9_frames[][1024] = {
   {
     0x84, 0x00, 0x40, 0x00, 0x00, 0x1f, 0xc0, 0x17, 0xd2, 0x03, 0x8e, 0x02, 0x02, 0x02, 0x02, 0x02,
     0x00, 0xb8, 0x00, 0x00, 0x60, 0x70, 0x00, 0x00, 0x15, 0x0f, 0x42, 0x89, 0x0d, 0x00, 0x00, 0x00,
@@ -207,7 +207,7 @@ static const guint8 vp9_frames[4][1024] = {
   },
 };
 
-static const gint vp9_frames_size[4] = {
+static const gint vp9_frames_size[] = {
   717, 673, 669, 698
 };
 /* *INDENT-ON* */
@@ -218,7 +218,6 @@ GST_START_TEST (test_vp9_bitwriter_superframe)
   GstVp9ParserResult parser_ret;
   GstVp9Parser *const parser = gst_vp9_parser_new ();
   GstVp9SuperframeInfo superframe_info;
-  GstVp9FrameHdr frame_hdr;
   guint size;
   guint8 data[4096];
   guint offset;
@@ -230,7 +229,7 @@ GST_START_TEST (test_vp9_bitwriter_superframe)
     offset += vp9_frames_size[i];
   }
 
-  size = 4096;
+  size = sizeof (data);
   ret = gst_vp9_bit_writer_superframe_info (4, vp9_frames_size, data, &size);
   fail_if (ret != GST_VP9_BIT_WRITER_OK);
 
@@ -248,6 +247,7 @@ GST_START_TEST (test_vp9_bitwriter_superframe)
   offset = 0;
   for (i = 0; i < superframe_info.frames_in_superframe; i++) {
     guint32 frame_size;
+    GstVp9FrameHdr frame_hdr = { 0, };
 
     frame_size = superframe_info.frame_sizes[i];
     parser_ret = gst_vp9_parser_parse_frame_header (parser, &frame_hdr,
