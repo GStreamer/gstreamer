@@ -166,9 +166,7 @@
  * Based on those two principles, 3 "selection" of streams (stream-id) are used:
  * 1) requested_selection
  *    All streams within that list should be activated
- * 2) active_selection
- *    List of streams that are exposed by decodebin
- * 3) to_activate
+ * 2) to_activate
  *    List of streams that will be moved to requested_selection in the
  *    mq_slot_reassign() method (i.e. once a stream was deactivated, and the output
  *    was retargetted)
@@ -256,8 +254,6 @@ struct _GstDecodebin3
   GstStreamCollection *collection;
   /* requested selection of stream-id to activate post-multiqueue */
   GList *requested_selection;
-  /* list of stream-id currently activated in output */
-  GList *active_selection;
   /* List of stream-id that need to be activated (after a stream switch for ex) */
   GList *to_activate;
   /* Pending select streams event */
@@ -728,9 +724,6 @@ gst_decodebin3_reset (GstDecodebin3 * dbin)
 
   g_list_free_full (dbin->requested_selection, g_free);
   dbin->requested_selection = NULL;
-
-  g_list_free_full (dbin->active_selection, g_free);
-  dbin->active_selection = NULL;
 
   g_list_free (dbin->to_activate);
   dbin->to_activate = NULL;
@@ -2295,6 +2288,21 @@ stream_list_equal (GList * lista, GList * listb)
   return TRUE;
 }
 
+/* Called with SELECTION_LOCK */
+static gboolean
+stream_is_active (GstDecodebin3 * dbin, const gchar * stream_id)
+{
+  GList *tmp;
+
+  for (tmp = dbin->slots; tmp; tmp = tmp->next) {
+    MultiQueueSlot *slot = tmp->data;
+    if (slot->output && !g_strcmp0 (stream_id, slot->active_stream_id))
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 update_requested_selection (GstDecodebin3 * dbin)
 {
@@ -2340,7 +2348,7 @@ update_requested_selection (GstDecodebin3 * dbin)
       all_user_selected = FALSE;
     if (request == 1 || (request == -1
             && (stream_in_list (dbin->requested_selection, sid)
-                || stream_in_list (dbin->active_selection, sid)))) {
+                || stream_is_active (dbin, sid)))) {
       GstStreamType curtype = gst_stream_get_stream_type (stream);
       if (request == 1)
         GST_DEBUG_OBJECT (dbin,
@@ -2983,16 +2991,15 @@ mq_slot_get_or_create_output (MultiQueueSlot * slot)
   output = db_output_stream_new (dbin, slot->type);
   mq_slot_set_output (slot, output);
 
-  GST_DEBUG ("Adding '%s' to active_selection", stream_id);
-  dbin->active_selection =
-      g_list_append (dbin->active_selection, (gchar *) g_strdup (stream_id));
+  GST_DEBUG_OBJECT (dbin, "Now active : %s", stream_id);
 
   return output;
 }
 
-/* Returns SELECTED_STREAMS message if active_selection is equal to
+/* Returns SELECTED_STREAMS message if the active slots are equal to
  * requested_selection, else NULL.
- * Must be called with LOCK taken */
+ *
+ * Must be called with SELECTION_LOCK taken */
 static GstMessage *
 is_selection_done (GstDecodebin3 * dbin)
 {
@@ -3015,7 +3022,7 @@ is_selection_done (GstDecodebin3 * dbin)
   }
   for (tmp = dbin->requested_selection; tmp; tmp = tmp->next) {
     GST_DEBUG ("Checking requested stream %s", (gchar *) tmp->data);
-    if (!stream_in_list (dbin->active_selection, (gchar *) tmp->data)) {
+    if (!stream_is_active (dbin, (gchar *) tmp->data)) {
       GST_DEBUG ("Not in active selection, returning");
       return NULL;
     }
@@ -3117,8 +3124,18 @@ check_and_drain_multiqueue_locked (GstDecodebin3 * dbin, GstEvent * eos_event)
 static inline gboolean
 no_more_streams_locked (GstDecodebin3 * dbin)
 {
-  return (!dbin->requested_selection && !dbin->active_selection
-      && !dbin->to_activate);
+  GList *tmp;
+
+  if (dbin->requested_selection || dbin->to_activate)
+    return FALSE;
+
+  for (tmp = dbin->slots; tmp; tmp = tmp->next) {
+    MultiQueueSlot *slot = tmp->data;
+    if (slot->output)
+      return FALSE;
+  }
+
+  return TRUE;
 }
 
 /** mq_slot_check_reconfiguration:
@@ -3157,8 +3174,12 @@ mq_slot_check_reconfiguration (MultiQueueSlot * slot)
     slot->dbin->requested_selection =
         remove_from_list (slot->dbin->requested_selection,
         slot->active_stream_id);
-    slot->dbin->active_selection =
-        remove_from_list (slot->dbin->active_selection, slot->active_stream_id);
+
+    /* Remove output */
+    mq_slot_set_output (slot, NULL);
+    dbin->output_streams = g_list_remove (dbin->output_streams, output);
+    db_output_stream_free (output);
+
     no_more_streams = no_more_streams_locked (dbin);
     dbin->selection_updated = TRUE;
     SELECTION_UNLOCK (dbin);
@@ -3170,7 +3191,6 @@ mq_slot_check_reconfiguration (MultiQueueSlot * slot)
     else
       GST_ELEMENT_WARNING (slot->dbin, CORE, MISSING_PLUGIN, (NULL),
           ("Some plugins were missing"));
-    mq_slot_reassign (slot);
   } else {
     GstMessage *selection_msg = is_selection_done (dbin);
     /* All good, we reconfigured the associated output. Check if we're done with
@@ -3941,15 +3961,6 @@ mq_slot_reassign (MultiQueueSlot * slot)
   GST_DEBUG_OBJECT (slot->src_pad, "Unlinking from previous output");
   mq_slot_set_output (slot, NULL);
 
-  /* Remove sid from active selection */
-  GST_DEBUG ("Removing '%s' from active_selection", sid);
-  for (tmp = dbin->active_selection; tmp; tmp = tmp->next)
-    if (!g_strcmp0 (sid, tmp->data)) {
-      g_free (tmp->data);
-      dbin->active_selection = g_list_delete_link (dbin->active_selection, tmp);
-      break;
-    }
-
   /* Can we re-assign this output to a requested stream ? */
   GST_DEBUG_OBJECT (slot->src_pad, "Attempting to re-assing output stream");
   for (tmp = dbin->to_activate; tmp; tmp = tmp->next) {
@@ -3972,9 +3983,6 @@ mq_slot_reassign (MultiQueueSlot * slot)
     GST_DEBUG_OBJECT (slot->src_pad, "Assigning output to slot %p '%s'",
         target_slot, tsid);
     mq_slot_set_output (target_slot, output);
-    GST_DEBUG ("Adding '%s' to active_selection", tsid);
-    dbin->active_selection =
-        g_list_append (dbin->active_selection, (gchar *) g_strdup (tsid));
     SELECTION_UNLOCK (dbin);
 
     /* Wakeup the target slot so that it retries to send events/buffers
