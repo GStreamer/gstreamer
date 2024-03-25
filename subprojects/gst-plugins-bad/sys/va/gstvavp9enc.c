@@ -263,7 +263,7 @@ gst_va_vp9_enc_frame_new (void)
 {
   GstVaVp9EncFrame *frame;
 
-  frame = g_slice_new (GstVaVp9EncFrame);
+  frame = g_new (GstVaVp9EncFrame, 1);
   frame->frame_num = -1;
   frame->type = FRAME_TYPE_INVALID;
   frame->picture = NULL;

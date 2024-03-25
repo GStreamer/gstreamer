@@ -497,7 +497,7 @@ gst_va_av1_enc_frame_new (void)
 {
   GstVaAV1EncFrame *frame;
 
-  frame = g_slice_new (GstVaAV1EncFrame);
+  frame = g_new (GstVaAV1EncFrame, 1);
   frame->frame_num = -1;
   frame->type = FRAME_TYPE_INVALID;
   frame->temporal_id = 0;
