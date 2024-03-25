@@ -369,6 +369,9 @@ typedef struct _MultiQueueSlot
   GstStream *pending_stream;
   /* active => last stream outputted on source pad */
   GstStream *active_stream;
+  /* Cache of the stream_id of active_stream */
+  const gchar *active_stream_id;
+
 
   GstPad *sink_pad, *src_pad;
 
@@ -2834,9 +2837,8 @@ find_free_compatible_output (GstDecodebin3 * dbin, GstStream * stream)
   for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
     DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
     if (output->type == stype && output->slot && output->slot->active_stream) {
-      GstStream *tstream = output->slot->active_stream;
       if (!stream_in_list (dbin->requested_selection,
-              (gchar *) gst_stream_get_stream_id (tstream))) {
+              (gchar *) output->slot->active_stream_id)) {
         return output;
       }
     }
@@ -2916,7 +2918,6 @@ mq_slot_get_or_create_output (MultiQueueSlot * slot)
   GstDecodebin3 *dbin = slot->dbin;
   DecodebinOutputStream *output = NULL;
   const gchar *stream_id;
-  GstCaps *caps;
   gchar *id_in_list = NULL;
 
   /* If we already have a configured output, just use it */
@@ -2941,11 +2942,9 @@ mq_slot_get_or_create_output (MultiQueueSlot * slot)
    *   stream.
    */
 
-  stream_id = gst_stream_get_stream_id (slot->active_stream);
-  caps = gst_stream_get_caps (slot->active_stream);
-  GST_DEBUG_OBJECT (slot->src_pad, "stream %s , %" GST_PTR_FORMAT, stream_id,
-      caps);
-  gst_caps_unref (caps);
+  stream_id = slot->active_stream_id;
+  GST_DEBUG_OBJECT (slot->src_pad, "active stream %" GST_PTR_FORMAT,
+      slot->active_stream);
 
   /* 0. Emit autoplug-continue signal for pending caps ? */
   GST_FIXME_OBJECT (dbin, "emit autoplug-continue");
@@ -3032,10 +3031,10 @@ is_selection_done (GstDecodebin3 * dbin)
   for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
     DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
     if (output->slot) {
-      const gchar *output_streamid =
-          gst_stream_get_stream_id (output->slot->active_stream);
-      GST_DEBUG_OBJECT (dbin, "Adding stream %s", output_streamid);
-      if (stream_in_list (dbin->requested_selection, output_streamid))
+      GST_DEBUG_OBJECT (dbin, "Adding stream %s",
+          output->slot->active_stream_id);
+      if (stream_in_list (dbin->requested_selection,
+              output->slot->active_stream_id))
         gst_message_streams_selected_add (msg, output->slot->active_stream);
       else
         GST_WARNING_OBJECT (dbin,
@@ -3152,14 +3151,14 @@ mq_slot_check_reconfiguration (MultiQueueSlot * slot)
   }
 
   if (!db_output_stream_reconfigure (output, &msg)) {
-    GST_DEBUG_OBJECT (dbin, "Removing failing stream from selection: %s ",
-        gst_stream_get_stream_id (slot->active_stream));
+    GST_DEBUG_OBJECT (dbin,
+        "Removing failing stream from selection: %" GST_PTR_FORMAT,
+        slot->active_stream);
     slot->dbin->requested_selection =
         remove_from_list (slot->dbin->requested_selection,
-        gst_stream_get_stream_id (slot->active_stream));
+        slot->active_stream_id);
     slot->dbin->active_selection =
-        remove_from_list (slot->dbin->active_selection,
-        gst_stream_get_stream_id (slot->active_stream));
+        remove_from_list (slot->dbin->active_selection, slot->active_stream_id);
     no_more_streams = no_more_streams_locked (dbin);
     dbin->selection_updated = TRUE;
     SELECTION_UNLOCK (dbin);
@@ -3182,6 +3181,74 @@ mq_slot_check_reconfiguration (MultiQueueSlot * slot)
   }
 }
 
+/** mq_slot_handle_stream_start:
+ * @slot: A #MultiQueueSlot
+ * @stream_event: (transfer none): A #GST_EVENT_STREAM_START
+ *
+ * Returns: The #GstPadProbeReturn
+ */
+static GstPadProbeReturn
+mq_slot_handle_stream_start (MultiQueueSlot * slot, GstEvent * stream_event)
+{
+  GstDecodebin3 *dbin = slot->dbin;
+  GstStream *stream = NULL;
+  const GstStructure *s = gst_event_get_structure (stream_event);
+
+  /* Drop STREAM_START events used to cleanup multiqueue */
+  if (s && gst_structure_has_field (s, "decodebin3-flushing-stream-start")) {
+    gst_event_unref (stream_event);
+    return GST_PAD_PROBE_HANDLED;
+  }
+
+  gst_event_parse_stream (stream_event, &stream);
+  if (stream == NULL) {
+    GST_ERROR_OBJECT (slot->src_pad,
+        "Got a STREAM_START event without a GstStream");
+    return GST_PAD_PROBE_OK;
+  }
+
+  slot->is_drained = FALSE;
+  GST_DEBUG_OBJECT (slot->src_pad, "Stream Start '%s'",
+      gst_stream_get_stream_id (stream));
+
+  if (slot->active_stream == NULL) {
+    slot->active_stream = stream;
+    slot->active_stream_id = gst_stream_get_stream_id (stream);
+  } else if (slot->active_stream != stream) {
+    gboolean stream_type_changed =
+        gst_stream_get_stream_type (stream) !=
+        gst_stream_get_stream_type (slot->active_stream);
+
+    GST_DEBUG_OBJECT (slot->src_pad, "Stream change (%s => %s) !",
+        gst_stream_get_stream_id (slot->active_stream),
+        gst_stream_get_stream_id (stream));
+    gst_object_unref (slot->active_stream);
+    slot->active_stream = stream;
+    slot->active_stream_id = gst_stream_get_stream_id (stream);
+
+    if (stream_type_changed) {
+      DecodebinOutputStream *previous_output;
+      /* The stream type has changed, we get rid of the current output. A
+       * new one (targetting the new stream type) will be created once the
+       * caps are received. */
+      previous_output = mq_slot_set_output (slot, NULL);
+      if (previous_output) {
+        /* FIXME : Can we transfer this to another slot ? */
+        GST_DEBUG_OBJECT (slot->src_pad,
+            "Stream type change, discarding current output stream");
+        SELECTION_LOCK (dbin);
+        dbin->output_streams =
+            g_list_remove (dbin->output_streams, previous_output);
+        db_output_stream_free (previous_output);
+        SELECTION_UNLOCK (dbin);
+      }
+    }
+  } else
+    gst_object_unref (stream);
+
+  return GST_PAD_PROBE_OK;
+}
+
 static GstPadProbeReturn
 multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
     MultiQueueSlot * slot)
@@ -3195,60 +3262,7 @@ multiqueue_src_probe (GstPad * pad, GstPadProbeInfo * info,
     GST_DEBUG_OBJECT (pad, "Got event %p %s", ev, GST_EVENT_TYPE_NAME (ev));
     switch (GST_EVENT_TYPE (ev)) {
       case GST_EVENT_STREAM_START:
-      {
-        GstStream *stream = NULL;
-        const GstStructure *s = gst_event_get_structure (ev);
-
-        /* Drop STREAM_START events used to cleanup multiqueue */
-        if (s
-            && gst_structure_has_field (s,
-                "decodebin3-flushing-stream-start")) {
-          ret = GST_PAD_PROBE_HANDLED;
-          gst_event_unref (ev);
-          break;
-        }
-
-        gst_event_parse_stream (ev, &stream);
-        if (stream == NULL) {
-          GST_ERROR_OBJECT (pad,
-              "Got a STREAM_START event without a GstStream");
-          break;
-        }
-        slot->is_drained = FALSE;
-        GST_DEBUG_OBJECT (pad, "Stream Start '%s'",
-            gst_stream_get_stream_id (stream));
-        if (slot->active_stream == NULL) {
-          slot->active_stream = stream;
-        } else if (slot->active_stream != stream) {
-          gboolean stream_type_changed =
-              gst_stream_get_stream_type (stream) !=
-              gst_stream_get_stream_type (slot->active_stream);
-
-          GST_DEBUG_OBJECT (pad, "Stream change (%s => %s) !",
-              gst_stream_get_stream_id (slot->active_stream),
-              gst_stream_get_stream_id (stream));
-          gst_object_unref (slot->active_stream);
-          slot->active_stream = stream;
-
-          if (stream_type_changed) {
-            DecodebinOutputStream *previous_output;
-            /* The stream type has changed, we get rid of the current output. A
-             * new one (targetting the new stream type) will be created once the
-             * caps are received. */
-            previous_output = mq_slot_set_output (slot, NULL);
-            if (previous_output) {
-              GST_DEBUG_OBJECT (pad,
-                  "Stream type change, discarding current output stream");
-              SELECTION_LOCK (dbin);
-              dbin->output_streams =
-                  g_list_remove (dbin->output_streams, previous_output);
-              db_output_stream_free (previous_output);
-              SELECTION_UNLOCK (dbin);
-            }
-          }
-        } else
-          gst_object_unref (stream);
-      }
+        ret = mq_slot_handle_stream_start (slot, (GstEvent *) ev);
         break;
       case GST_EVENT_CAPS:
       {
@@ -3473,11 +3487,9 @@ gst_decodebin_get_slot_for_input_stream_locked (GstDecodebin3 * dbin,
       GST_LOG_OBJECT (dbin, "Checking candidate slot %d (active_stream:%p)",
           slot->id, slot->active_stream);
       if (stream_id && slot->active_stream) {
-        gchar *ostream_id =
-            (gchar *) gst_stream_get_stream_id (slot->active_stream);
         GST_DEBUG_OBJECT (dbin, "Checking slot %d %s against %s", slot->id,
-            ostream_id, stream_id);
-        if (!g_strcmp0 (stream_id, ostream_id))
+            slot->active_stream_id, stream_id);
+        if (!g_strcmp0 (stream_id, slot->active_stream_id))
           break;
       }
     }
@@ -3873,14 +3885,10 @@ find_slot_for_stream_id (GstDecodebin3 * dbin, const gchar * sid)
 
   for (tmp = dbin->slots; tmp; tmp = tmp->next) {
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
-    const gchar *stream_id;
-    if (slot->active_stream) {
-      stream_id = gst_stream_get_stream_id (slot->active_stream);
-      if (!g_strcmp0 (sid, stream_id))
-        return slot;
-    }
+    if (!g_strcmp0 (sid, slot->active_stream_id))
+      return slot;
     if (slot->pending_stream && slot->pending_stream != slot->active_stream) {
-      stream_id = gst_stream_get_stream_id (slot->pending_stream);
+      const gchar *stream_id = gst_stream_get_stream_id (slot->pending_stream);
       if (!g_strcmp0 (sid, stream_id))
         return slot;
     }
@@ -3917,7 +3925,7 @@ mq_slot_reassign (MultiQueueSlot * slot)
     return;
   }
 
-  sid = gst_stream_get_stream_id (slot->active_stream);
+  sid = slot->active_stream_id;
   GST_DEBUG_OBJECT (slot->src_pad, "slot %s %p", sid, slot);
 
   /* Recheck whether this stream is still in the list of streams to deactivate */
@@ -3947,7 +3955,7 @@ mq_slot_reassign (MultiQueueSlot * slot)
   for (tmp = dbin->to_activate; tmp; tmp = tmp->next) {
     MultiQueueSlot *tslot = find_slot_for_stream_id (dbin, tmp->data);
     GST_LOG_OBJECT (tslot->src_pad, "Checking slot %p (output:%p , stream:%s)",
-        tslot, tslot->output, gst_stream_get_stream_id (tslot->active_stream));
+        tslot, tslot->output, tslot->active_stream_id);
     if (tslot && tslot->type == output->type && tslot->output == NULL) {
       GST_DEBUG_OBJECT (tslot->src_pad, "Using as reassigned slot");
       target_slot = tslot;
@@ -4008,12 +4016,12 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   gboolean ret = TRUE;
   GList *tmp;
   /* List of slots to (de)activate. */
-  GList *to_deactivate = NULL;
-  GList *to_activate = NULL;
+  GList *slots_to_deactivate = NULL;
+  GList *slots_to_activate = NULL;
   /* List of unknown stream id, most likely means the event
    * should be sent upstream so that elements can expose the requested stream */
-  GList *unknown = NULL;
-  GList *to_reassign = NULL;
+  GList *unknown_streams = NULL;
+  GList *streams_to_reassign = NULL;
   GList *future_request_streams = NULL;
   GList *pending_streams = NULL;
   GList *slots_to_reassign = NULL;
@@ -4046,14 +4054,14 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
         pending_streams = g_list_append (pending_streams, (gchar *) sid);
       } else {
         GST_DEBUG_OBJECT (dbin, "We don't have a slot for stream '%s'", sid);
-        unknown = g_list_append (unknown, (gchar *) sid);
+        unknown_streams = g_list_append (unknown_streams, (gchar *) sid);
       }
     } else if (slot->output == NULL) {
       /* There is a slot on which this stream is active or pending */
       GST_DEBUG_OBJECT (dbin,
           "We need to activate slot %p %s:%s for stream '%s')", slot,
           GST_DEBUG_PAD_NAME (slot->src_pad), sid);
-      to_activate = g_list_append (to_activate, slot);
+      slots_to_activate = g_list_append (slots_to_activate, slot);
     } else {
       GST_DEBUG_OBJECT (dbin,
           "Stream '%s' from slot %p is already active on output %p", sid, slot,
@@ -4071,8 +4079,7 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
       gboolean slot_to_deactivate = TRUE;
 
       if (slot->active_stream) {
-        if (stream_in_list (select_streams,
-                gst_stream_get_stream_id (slot->active_stream)))
+        if (stream_in_list (select_streams, slot->active_stream_id))
           slot_to_deactivate = FALSE;
       }
       if (slot_to_deactivate && slot->pending_stream
@@ -4084,21 +4091,19 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
       if (slot_to_deactivate) {
         GST_DEBUG_OBJECT (dbin,
             "Slot %p (%s) should be deactivated, no longer used", slot,
-            slot->
-            active_stream ? gst_stream_get_stream_id (slot->active_stream) :
-            "NULL");
-        to_deactivate = g_list_append (to_deactivate, slot);
+            slot->active_stream_id);
+        slots_to_deactivate = g_list_append (slots_to_deactivate, slot);
       }
     }
   }
 
-  if (to_deactivate != NULL) {
+  if (slots_to_deactivate != NULL) {
     GST_DEBUG_OBJECT (dbin, "Check if we can reassign slots");
     /* We need to compare what needs to be activated and deactivated in order
      * to determine whether there are outputs that can be transferred */
     /* Take the stream-id of the slots that are to be activated, for which there
      * is a slot of the same type that needs to be deactivated */
-    tmp = to_deactivate;
+    tmp = slots_to_deactivate;
     while (tmp) {
       MultiQueueSlot *slot_to_deactivate = (MultiQueueSlot *) tmp->data;
       gboolean removeit = FALSE;
@@ -4106,28 +4111,29 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
       GST_DEBUG_OBJECT (dbin,
           "Checking if slot to deactivate (%p) has a candidate slot to activate",
           slot_to_deactivate);
-      for (tmp2 = to_activate; tmp2; tmp2 = tmp2->next) {
+      for (tmp2 = slots_to_activate; tmp2; tmp2 = tmp2->next) {
         MultiQueueSlot *slot_to_activate = (MultiQueueSlot *) tmp2->data;
         GST_DEBUG_OBJECT (dbin, "Comparing to slot %p", slot_to_activate);
         if (slot_to_activate->type == slot_to_deactivate->type) {
           GST_DEBUG_OBJECT (dbin, "Re-using");
-          to_reassign = g_list_append (to_reassign, (gchar *)
-              gst_stream_get_stream_id (slot_to_activate->active_stream));
+          streams_to_reassign = g_list_append (streams_to_reassign, (gchar *)
+              slot_to_activate->active_stream_id);
           slots_to_reassign =
               g_list_append (slots_to_reassign, slot_to_deactivate);
-          to_activate = g_list_remove (to_activate, slot_to_activate);
+          slots_to_activate =
+              g_list_remove (slots_to_activate, slot_to_activate);
           removeit = TRUE;
           break;
         }
       }
       next = tmp->next;
       if (removeit)
-        to_deactivate = g_list_delete_link (to_deactivate, tmp);
+        slots_to_deactivate = g_list_delete_link (slots_to_deactivate, tmp);
       tmp = next;
     }
   }
 
-  for (tmp = to_deactivate; tmp; tmp = tmp->next) {
+  for (tmp = slots_to_deactivate; tmp; tmp = tmp->next) {
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
     GST_DEBUG_OBJECT (dbin,
         "Really need to deactivate slot %p, but no available alternative",
@@ -4138,12 +4144,12 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
 
   /* The only slots left to activate are the ones that won't be reassigned and
    * therefore really need to have a new output created */
-  for (tmp = to_activate; tmp; tmp = tmp->next) {
+  for (tmp = slots_to_activate; tmp; tmp = tmp->next) {
     MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
     if (slot->active_stream)
       future_request_streams =
           g_list_append (future_request_streams,
-          (gchar *) gst_stream_get_stream_id (slot->active_stream));
+          (gchar *) slot->active_stream_id);
     else if (slot->pending_stream)
       future_request_streams =
           g_list_append (future_request_streams,
@@ -4152,15 +4158,15 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
       GST_ERROR_OBJECT (dbin, "No stream for slot %p !!", slot);
   }
 
-  if (to_activate == NULL && pending_streams != NULL) {
+  if (slots_to_activate == NULL && pending_streams != NULL) {
     GST_DEBUG_OBJECT (dbin, "Stream switch requested for future collection");
     if (dbin->requested_selection)
       g_list_free_full (dbin->requested_selection, g_free);
     dbin->requested_selection =
         g_list_copy_deep (select_streams, (GCopyFunc) g_strdup, NULL);
-    g_list_free (to_deactivate);
+    g_list_free (slots_to_deactivate);
     g_list_free (pending_streams);
-    to_deactivate = NULL;
+    slots_to_deactivate = NULL;
     pending_streams = NULL;
   } else {
     if (dbin->requested_selection)
@@ -4172,19 +4178,19 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
         g_list_copy_deep (pending_streams, (GCopyFunc) g_strdup, NULL));
     if (dbin->to_activate)
       g_list_free (dbin->to_activate);
-    dbin->to_activate = g_list_copy (to_reassign);
+    dbin->to_activate = g_list_copy (streams_to_reassign);
   }
 
   dbin->selection_updated = TRUE;
   SELECTION_UNLOCK (dbin);
 
-  if (unknown) {
+  if (unknown_streams) {
     GST_FIXME_OBJECT (dbin, "Got request for an unknown stream");
-    g_list_free (unknown);
+    g_list_free (unknown_streams);
   }
 
-  if (to_activate && !slots_to_reassign) {
-    for (tmp = to_activate; tmp; tmp = tmp->next) {
+  if (slots_to_activate && !slots_to_reassign) {
+    for (tmp = slots_to_activate; tmp; tmp = tmp->next) {
       MultiQueueSlot *slot = (MultiQueueSlot *) tmp->data;
       gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_IDLE,
           (GstPadProbeCallback) idle_reconfigure, slot, NULL);
@@ -4199,12 +4205,12 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
         (GstPadProbeCallback) mq_slot_unassign_probe, slot, NULL);
   }
 
-  if (to_deactivate)
-    g_list_free (to_deactivate);
-  if (to_activate)
-    g_list_free (to_activate);
-  if (to_reassign)
-    g_list_free (to_reassign);
+  if (slots_to_deactivate)
+    g_list_free (slots_to_deactivate);
+  if (slots_to_activate)
+    g_list_free (slots_to_activate);
+  if (streams_to_reassign)
+    g_list_free (streams_to_reassign);
   if (future_request_streams)
     g_list_free (future_request_streams);
   if (pending_streams)
