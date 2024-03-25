@@ -4024,9 +4024,7 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
   /* List of slots to (de)activate. */
   GList *slots_to_deactivate = NULL;
   GList *slots_to_activate = NULL;
-  /* List of unknown stream id, most likely means the event
-   * should be sent upstream so that elements can expose the requested stream */
-  GList *unknown_streams = NULL;
+
   GList *streams_to_reassign = NULL;
   GList *future_request_streams = NULL;
   GList *pending_streams = NULL;
@@ -4056,7 +4054,6 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
         pending_streams = g_list_append (pending_streams, (gchar *) sid);
       } else {
         GST_DEBUG_OBJECT (dbin, "We don't have a slot for stream '%s'", sid);
-        unknown_streams = g_list_append (unknown_streams, (gchar *) sid);
       }
     } else if (slot->output == NULL) {
       /* There is a slot on which this stream is active or pending */
@@ -4185,11 +4182,6 @@ handle_stream_switch (GstDecodebin3 * dbin, GList * select_streams,
 
   dbin->selection_updated = TRUE;
   SELECTION_UNLOCK (dbin);
-
-  if (unknown_streams) {
-    GST_FIXME_OBJECT (dbin, "Got request for an unknown stream");
-    g_list_free (unknown_streams);
-  }
 
   if (slots_to_activate && !slots_to_reassign) {
     for (tmp = slots_to_activate; tmp; tmp = tmp->next) {
