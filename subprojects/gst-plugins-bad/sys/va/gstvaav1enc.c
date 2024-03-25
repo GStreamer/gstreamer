@@ -4106,6 +4106,8 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   gchar *long_name;
   const gchar *name, *desc;
   gint n_props = N_PROPERTIES;
+  GParamFlags param_flags =
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT;
 
   if (cdata->entrypoint == VAEntrypointEncSlice) {
     desc = "VA-API based AV1 video encoder";
@@ -4195,8 +4197,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_KEYFRAME_INT] = g_param_spec_uint ("key-int-max",
       "Key frame maximal interval",
       "The maximal distance between two keyframes. It decides the size of GOP"
-      " (0: auto-calculate)", 0, MAX_KEY_FRAME_INTERVAL, 60,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      " (0: auto-calculate)", 0, MAX_KEY_FRAME_INTERVAL, 60, param_flags);
 
   /**
    * GstVaAV1Enc:gf-group-size:
@@ -4206,8 +4207,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_GOLDEN_GROUP_SIZE] = g_param_spec_uint ("gf-group-size",
       "Golden frame group size",
       "The size of the golden frame group.",
-      1, MAX_GF_GROUP_SIZE, MAX_GF_GROUP_SIZE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      1, MAX_GF_GROUP_SIZE, MAX_GF_GROUP_SIZE, param_flags);
 
   /**
    * GstVaAV1Enc:ref-frames:
@@ -4217,7 +4217,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_NUM_REF_FRAMES] = g_param_spec_uint ("ref-frames",
       "Number of Reference Frames",
       "Number of reference frames, including both the forward and the backward",
-      0, 7, 7, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 7, 7, param_flags);
 
   /**
    * GstVaAV1Enc:hierarchical-level:
@@ -4228,8 +4228,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
       g_param_spec_uint ("hierarchical-level", "The hierarchical level",
       "The hierarchical level for golden frame group. Setting to 1 disables "
       "all future reference", 1, HIGHEST_PYRAMID_LEVELS,
-      HIGHEST_PYRAMID_LEVELS,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      HIGHEST_PYRAMID_LEVELS, param_flags);
 
   /**
    * GstVaAV1Enc:superblock-128x128:
@@ -4238,8 +4237,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_128X128_SUPERBLOCK] =
       g_param_spec_boolean ("superblock-128x128", "128x128 superblock",
-      "Enable the 128x128 superblock mode", FALSE,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Enable the 128x128 superblock mode", FALSE, param_flags);
 
   /**
    * GstVaAV1Enc:min-qp:
@@ -4247,8 +4245,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
    * The minimum quantizer value.
    */
   properties[PROP_MIN_QP] = g_param_spec_uint ("min-qp", "Minimum QP",
-      "Minimum quantizer value for each frame", 0, 255, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Minimum quantizer value for each frame", 0, 255, 0, param_flags);
 
   /**
    * GstVaAV1Enc:max-qp:
@@ -4256,8 +4253,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
    * The maximum quantizer value.
    */
   properties[PROP_MAX_QP] = g_param_spec_uint ("max-qp", "Maximum QP",
-      "Maximum quantizer value for each frame", 1, 255, 255,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "Maximum quantizer value for each frame", 1, 255, 255, param_flags);
 
   /**
    * GstVaAV1Enc:qp:
@@ -4268,7 +4264,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
       "In CQP mode, it specifies the basic quantizer value for all frames. "
       "In ICQ and QVBR modes, it specifies a quality factor. In other "
       "modes, it is ignored", 0, 255, DEFAULT_BASE_QINDEX,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaAV1Enc:bitrate:
@@ -4284,8 +4280,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_BITRATE] = g_param_spec_uint ("bitrate", "Bitrate (kbps)",
       "The desired bitrate expressed in kbps (0: auto-calculate)",
-      0, 2000 * 1024, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      0, 2000 * 1024, 0, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaAV1Enc:target-percentage:
@@ -4299,8 +4294,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_TARGET_PERCENTAGE] = g_param_spec_uint ("target-percentage",
       "target bitrate percentage",
       "The percentage for 'target bitrate'/'maximum bitrate' (Only in VBR)",
-      50, 100, 66,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      50, 100, 66, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaAV1Enc:cpb-size:
@@ -4309,8 +4303,8 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_CPB_SIZE] = g_param_spec_uint ("cpb-size",
       "max CPB size in Kb",
-      "The desired max CPB size in Kb (0: auto-calculate)", 0, 2000 * 1024, 0,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      "The desired max CPB size in Kb (0: auto-calculate)",
+      0, 2000 * 1024, 0, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaAV1Enc:target-usage:
@@ -4322,7 +4316,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_TARGET_USAGE] = g_param_spec_uint ("target-usage",
       "target usage",
       "The target usage to control and balance the encoding speed/quality",
-      1, 7, 4, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      1, 7, 4, param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaAV1Enc:num-tile-cols:
@@ -4332,7 +4326,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_NUM_TILE_COLS] = g_param_spec_uint ("num-tile-cols",
       "number of tile columns",
       "The number of columns for tile encoding", 1, GST_AV1_MAX_TILE_COLS, 1,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags);
 
   /**
    * GstVaAV1Enc:num-tile-rows:
@@ -4342,7 +4336,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_NUM_TILE_ROWS] = g_param_spec_uint ("num-tile-rows",
       "number of tile rows",
       "The number of rows for tile encoding", 1, GST_AV1_MAX_TILE_ROWS, 1,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      param_flags);
 
   /**
    * GstVaAV1Enc:tile-groups:
@@ -4351,8 +4345,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
    */
   properties[PROP_TILE_GROUPS] = g_param_spec_uint ("tile-groups",
       "Number of tile groups", "Number of tile groups for each frame",
-      1, GST_AV1_MAX_TILE_COLS * GST_AV1_MAX_TILE_ROWS, 1,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      1, GST_AV1_MAX_TILE_COLS * GST_AV1_MAX_TILE_ROWS, 1, param_flags);
 
   /**
    * GstVaAV1Enc:mbbrc:
@@ -4363,8 +4356,7 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_MBBRC] = g_param_spec_enum ("mbbrc",
       "Macroblock level Bitrate Control",
       "Macroblock level Bitrate Control. It is not compatible with CQP",
-      GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO,
-      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+      GST_TYPE_VA_FEATURE, GST_VA_FEATURE_AUTO, param_flags);
 
   if (vaav1enc_class->rate_control_type > 0) {
     properties[PROP_RATE_CONTROL] = g_param_spec_enum ("rate-control",
@@ -4372,8 +4364,8 @@ gst_va_av1_enc_class_init (gpointer g_klass, gpointer class_data)
         "The desired rate control mode for the encoder",
         vaav1enc_class->rate_control_type,
         vaav1enc_class->rate_control[0].value,
-        GST_PARAM_CONDITIONALLY_AVAILABLE | G_PARAM_READWRITE |
-        G_PARAM_STATIC_STRINGS | G_PARAM_CONSTRUCT);
+        GST_PARAM_CONDITIONALLY_AVAILABLE | GST_PARAM_MUTABLE_PLAYING
+        | param_flags);
   } else {
     n_props--;
     properties[PROP_RATE_CONTROL] = NULL;
