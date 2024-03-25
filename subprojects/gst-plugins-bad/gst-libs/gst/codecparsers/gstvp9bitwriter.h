@@ -53,7 +53,7 @@ GST_CODEC_PARSERS_API
 GstVp9BitWriterResult     gst_vp9_bit_writer_superframe_info (guint frame_num,
                                                               const gint * frame_size,
                                                               guint8 * data,
-                                                              guint * total_size);
+                                                              guint * size);
 
 G_END_DECLS
 #endif /* __GST_VP9_BIT_WRITER_H__ */
