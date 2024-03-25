@@ -1871,16 +1871,16 @@ _av1_get_rtformat (GstVaAV1Enc * self, GstVideoFormat format,
   update_property (bool, obj, old_val, new_val, prop_id)
 
 static gboolean
-_av1_decide_profile (GstVaAV1Enc * self)
+_av1_decide_profile (GstVaAV1Enc * self, guint rt_format,
+    guint depth, guint chrome)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
-  gboolean ret = FALSE;
   GstCaps *allowed_caps = NULL;
   guint num_structures, i;
   GstStructure *structure;
   const GValue *v_profile;
   GArray *candidates = NULL;
-  VAProfile va_profile;
+  VAProfile va_profile, ret_profile = VAProfileNone;
 
   candidates = g_array_new (TRUE, TRUE, sizeof (VAProfile));
 
@@ -1918,7 +1918,6 @@ _av1_decide_profile (GstVaAV1Enc * self)
 
   if (candidates->len == 0) {
     GST_ERROR_OBJECT (self, "No available profile in caps");
-    ret = FALSE;
     goto out;
   }
 
@@ -1930,19 +1929,16 @@ _av1_decide_profile (GstVaAV1Enc * self)
      2            12         Yes                 YUV 4:2:0,YUV 4:2:2,YUV 4:4:4
    */
   /* We only support 0 and 1 profile now */
-  if (self->chrome == 0 || self->chrome == 1) {
+  if (chrome == 0 || chrome == 1) {
     va_profile = VAProfileAV1Profile0;
-  } else if (self->chrome == 3) {
+  } else if (chrome == 3) {
     va_profile = VAProfileAV1Profile1;
   } else {
     va_profile = VAProfileNone;
-    GST_ERROR_OBJECT (self, "No suitable profile for chroma value %d",
-        self->chrome);
-    ret = FALSE;
+    GST_ERROR_OBJECT (self, "No suitable profile for chroma value %d", chrome);
     goto out;
   }
 
-  ret = FALSE;
   for (i = 0; i < candidates->len; i++) {
     VAProfile p;
 
@@ -1950,19 +1946,22 @@ _av1_decide_profile (GstVaAV1Enc * self)
     if (!gst_va_encoder_has_profile (base->encoder, p))
       continue;
 
-    if ((base->rt_format & gst_va_encoder_get_rtformat (base->encoder,
+    if ((rt_format & gst_va_encoder_get_rtformat (base->encoder,
                 p, GST_VA_BASE_ENC_ENTRYPOINT (base))) == 0)
       continue;
 
     if (p == va_profile) {
-      base->profile = p;
-      ret = TRUE;
+      ret_profile = p;
       goto out;
     }
   }
 
 out:
-  return ret;
+  if (ret_profile != VAProfileNone)
+    GST_INFO_OBJECT (self, "Decide the profile: %s",
+        gst_va_profile_name (ret_profile));
+
+  return ret_profile;
 }
 
 static gboolean
@@ -2716,15 +2715,57 @@ gst_va_av1_enc_reconfig (GstVaBaseEnc * base)
   GstVaBaseEncClass *klass = GST_VA_BASE_ENC_GET_CLASS (base);
   GstVideoEncoder *venc = GST_VIDEO_ENCODER (base);
   GstVaAV1Enc *self = GST_VA_AV1_ENC (base);
-  GstCaps *out_caps;
+  GstCaps *out_caps, *reconf_caps = NULL;
   GstVideoCodecState *output_state;
-  GstVideoFormat in_format;
-  guint max_ref_frames;
+  GstVideoFormat format, reconf_format = GST_VIDEO_FORMAT_UNKNOWN;
+  VAProfile profile;
+  gboolean do_renegotiation = TRUE, do_reopen, need_negotiation;
+  guint max_ref_frames, max_surfaces = 0,
+      rt_format, depth = 0, chrome = 0, codedbuf_size;
+  gint width, height;
+
+  width = GST_VIDEO_INFO_WIDTH (&base->in_info);
+  height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
+  format = GST_VIDEO_INFO_FORMAT (&base->in_info);
+  codedbuf_size = base->codedbuf_size;
+
+  need_negotiation =
+      !gst_va_encoder_get_reconstruct_pool_config (base->encoder, &reconf_caps,
+      &max_surfaces);
+  if (!need_negotiation && reconf_caps) {
+    GstVideoInfo vi;
+    if (!gst_video_info_from_caps (&vi, reconf_caps))
+      return FALSE;
+    reconf_format = GST_VIDEO_INFO_FORMAT (&vi);
+  }
+
+  rt_format = _av1_get_rtformat (self, format, &depth, &chrome);
+  if (!rt_format) {
+    GST_ERROR_OBJECT (self, "unrecognized input format.");
+    return FALSE;
+  }
+
+  profile = _av1_decide_profile (self, rt_format, depth, chrome);
+  if (profile == VAProfileNone)
+    return FALSE;
+
+  /* first check */
+  do_reopen = !(base->profile == profile && base->rt_format == rt_format
+      && format == reconf_format && width == base->width
+      && height == base->height && self->prop.rc_ctrl == self->rc.rc_ctrl_mode
+      && depth == self->depth && chrome == self->chrome);
+
+  if (do_reopen && gst_va_encoder_is_open (base->encoder))
+    gst_va_encoder_close (base->encoder);
 
   gst_va_base_enc_reset_state (base);
 
-  base->width = GST_VIDEO_INFO_WIDTH (&base->in_info);
-  base->height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
+  base->profile = profile;
+  base->rt_format = rt_format;
+  self->depth = depth;
+  self->chrome = chrome;
+  base->width = width;
+  base->height = height;
   self->mi_cols = 2 * ((base->width + 7) >> 3);
   self->mi_rows = 2 * ((base->height + 7) >> 3);
 
@@ -2739,16 +2780,9 @@ gst_va_av1_enc_reconfig (GstVaBaseEnc * base)
       GST_VIDEO_INFO_FPS_D (&base->in_info),
       GST_VIDEO_INFO_FPS_N (&base->in_info));
 
-  in_format = GST_VIDEO_INFO_FORMAT (&base->in_info);
-  base->rt_format =
-      _av1_get_rtformat (self, in_format, &self->depth, &self->chrome);
-  if (!base->rt_format) {
-    GST_ERROR_OBJECT (self, "unrecognized input format.");
-    return FALSE;
-  }
-
-  if (!_av1_decide_profile (self))
-    return FALSE;
+  GST_DEBUG_OBJECT (self, "resolution:%dx%d, Mi size: %dx%d, "
+      "frame duration is %" GST_TIME_FORMAT, base->width, base->height,
+      self->mi_cols, self->mi_rows, GST_TIME_ARGS (base->frame_duration));
 
   if (!_av1_ensure_rate_control (self))
     return FALSE;
@@ -2770,7 +2804,15 @@ gst_va_av1_enc_reconfig (GstVaBaseEnc * base)
   _av1_calculate_coded_size (self);
 
   max_ref_frames = GST_AV1_NUM_REF_FRAMES + 3 /* scratch frames */ ;
-  if (!gst_va_encoder_open (base->encoder, base->profile,
+
+  /* second check after calculations */
+  do_reopen |=
+      !(max_ref_frames == max_surfaces && codedbuf_size == base->codedbuf_size);
+  if (do_reopen && gst_va_encoder_is_open (base->encoder))
+    gst_va_encoder_close (base->encoder);
+
+  if (!gst_va_encoder_is_open (base->encoder)
+      && !gst_va_encoder_open (base->encoder, base->profile,
           GST_VIDEO_INFO_FORMAT (&base->in_info), base->rt_format,
           base->width, base->height, base->codedbuf_size, max_ref_frames,
           self->rc.rc_ctrl_mode, self->packed_headers)) {
@@ -2792,6 +2834,19 @@ gst_va_av1_enc_reconfig (GstVaBaseEnc * base)
   gst_caps_set_simple (out_caps, "width", G_TYPE_INT, base->width,
       "height", G_TYPE_INT, base->height, "alignment", G_TYPE_STRING, "frame",
       "stream-format", G_TYPE_STRING, "obu-stream", NULL);
+
+  if (!need_negotiation) {
+    output_state = gst_video_encoder_get_output_state (venc);
+    do_renegotiation = TRUE;
+    if (output_state) {
+      do_renegotiation = !gst_caps_is_subset (output_state->caps, out_caps);
+      gst_video_codec_state_unref (output_state);
+    }
+    if (!do_renegotiation) {
+      gst_caps_unref (out_caps);
+      return TRUE;
+    }
+  }
 
   GST_DEBUG_OBJECT (self, "output caps is %" GST_PTR_FORMAT, out_caps);
 
