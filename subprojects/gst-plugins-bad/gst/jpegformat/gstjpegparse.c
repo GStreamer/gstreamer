@@ -405,6 +405,7 @@ gst_jpeg_parse_sof (GstJpegParse * parse, GstJpegSegment * seg)
           && parse->height < ((parse->orig_height * 3) / 4)) {
         parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
       } else if (parse->avid) {
+        /* if no container info, let's suppose it doubles its height */
         if (parse->orig_height == 0)
           parse->orig_height = 2 * hdr.height;
         parse->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
@@ -531,11 +532,11 @@ gst_jpeg_parse_app0 (GstJpegParse * parse, GstJpegSegment * seg)
     if (!gst_byte_reader_get_uint8 (&reader, &unit))
       return FALSE;
 
-    parse->avid = TRUE;
-    parse->field = unit == 1 ? 0 : 1;
+    parse->avid = (unit > 0);   /* otherwise is not interleaved */
 
     /* TODO: update caps for interlaced MJPEG */
-    GST_DEBUG_OBJECT (parse, "MJPEG interleaved field: %d", unit);
+    GST_DEBUG_OBJECT (parse, "MJPEG interleaved field: %s", unit == 0 ?
+        "not interleaved" : unit % 2 ? "Odd" : "Even");
 
     return TRUE;
   }
@@ -820,6 +821,7 @@ gst_jpeg_parse_finish_frame (GstJpegParse * parse, GstBaseParseFrame * frame,
     GST_WARNING_OBJECT (parse, "Potentially invalid picture");
   }
 
+  GST_TRACE_OBJECT (parse, "Finish frame %" GST_PTR_FORMAT, frame->buffer);
   ret = gst_base_parse_finish_frame (bparse, frame, size);
 
   gst_jpeg_parse_reset (parse);
