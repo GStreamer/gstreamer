@@ -382,6 +382,11 @@ typedef struct
   GstClock *domain_clock;
 } PtpDomainData;
 
+// The lists domain_clocks and domain_data are same but the former is protected
+// by the domain_clocks_lock.
+// It is needed because sometimes other threads than the PTP thread will need
+// to access the list, and without a mutex it might happen that the original
+// list (domain_data) is modified at the same time (prepending a new domain).
 static GList *domain_data;
 static GMutex domain_clocks_lock;
 static GList *domain_clocks;
@@ -3050,7 +3055,8 @@ gst_ptp_deinit (void)
   }
   g_list_free (domain_data);
   domain_data = NULL;
-  g_list_foreach (domain_clocks, (GFunc) g_free, NULL);
+  // The domain_clocks list is same as domain_data
+  // and the elements are freed above already
   g_list_free (domain_clocks);
   domain_clocks = NULL;
 
