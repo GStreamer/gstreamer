@@ -254,7 +254,7 @@ static void
       "RTP Header Extension RFC6051 64-bit NTP timestamp",
       GST_RTP_HDREXT_ELEMENT_CLASS,
       "Extends RTP packets to add or retrieve a 64-bit NTP "
-      "timestamp as specified in RFC6501",
+      "timestamp as specified in RFC6051",
       "Sebastian Dröge <sebastian@centricular.com>");
   gst_rtp_header_extension_class_set_uri (rtp_hdr_class,
       GST_RTP_HDREXT_BASE GST_RTP_HDREXT_NTP_64);

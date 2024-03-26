@@ -18443,7 +18443,7 @@
             "rtphdrextntp64": {
                 "RTP-Header-Extension-URI": "urn:ietf:params:rtp-hdrext:ntp-64",
                 "author": "Sebastian Dröge <sebastian@centricular.com>",
-                "description": "Extends RTP packets to add or retrieve a 64-bit NTP timestamp as specified in RFC6501",
+                "description": "Extends RTP packets to add or retrieve a 64-bit NTP timestamp as specified in RFC6051",
                 "hierarchy": [
                     "GstRTPHeaderExtensionNtp64",
                     "GstRTPHeaderExtension",
