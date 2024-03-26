@@ -66,7 +66,11 @@ struct _GESFrameCompositionMeta {
   gdouble height;
   gdouble width;
   guint zorder;
+#ifdef __cplusplus
+  gint _operator;
+#else
   gint operator;
+#endif
 };
 
 GES_API
