@@ -25,6 +25,13 @@ ges_tests = [
     ['nle/tempochange']
 ]
 
+# Make sure our headers are C++ clean
+if add_languages('cpp', native: false, required: false)
+  ges_tests += [
+    [ 'gescpp.cc', false ],
+  ]
+endif
+
 fsmod = import('fs')
 test_defines = [
   '-UG_DISABLE_ASSERT',
@@ -50,7 +57,11 @@ endif
 gst_plugin_scanner_path = join_paths(gst_plugin_scanner_dir, 'gst-plugin-scanner')
 
 foreach t : ges_tests
-  fname = '@0@.c'.format(t.get(0))
+  if t.get(0).endswith('.cc')
+    fname = t.get(0)
+  else
+    fname = '@0@.c'.format(t.get(0))
+  endif
   test_name = t.get(0).underscorify()
   if t.length() == 2
     skip_test = t.get(1)
