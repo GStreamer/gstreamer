@@ -60,6 +60,36 @@
  * Since: 1.20
  */
 
+/**
+ * SECTION:element-vtenc_h265
+ * @title: vtenc_h265
+ *
+ * Apple VideoToolbox H265 encoder, which can either use HW or a SW
+ * implementation depending on the device.
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! vtenc_h265 ! qtmux ! filesink location=out.mov
+ * ]| Encode a test video pattern and save it as an MOV file
+ *
+ * Since: 1.22
+ */
+
+/**
+ * SECTION:element-vtenc_h265_hw
+ * @title: vtenc_h265_hw
+ *
+ * Apple VideoToolbox H265 HW-only encoder (only available on macOS at
+ * present).
+ *
+ * ## Example pipeline
+ * |[
+ * gst-launch-1.0 -v videotestsrc ! vtenc_h265_hw ! qtmux ! filesink location=out.mov
+ * ]| Encode a test video pattern and save it as an MOV file
+ *
+ * Since: 1.22
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
