@@ -20,10 +20,6 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gprintf.h>
@@ -31,7 +27,6 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplaybackelements.h"
-#include "gstplay-enum.h"
 #include "gstrawcaps.h"
 
 /**
