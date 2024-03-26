@@ -113,6 +113,13 @@ base_tests = [
   [['libs/cudamemory.c'], not gstcuda_dep.found(), [gstcuda_dep, gstcuda_stub_dep]],
 ]
 
+# Make sure our headers are C++ clean
+if add_languages('cpp', native: false, required: false)
+  base_tests += [
+    [['libs/gstlibscpp.cc'], false ],
+  ]
+endif
+
 # FIXME: unistd dependency, unstable or not tested yet on windows
 if host_machine.system() != 'windows'
   base_tests += [
