@@ -1215,8 +1215,30 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
   frame->output_buffer = NULL;
 
   if (status != noErr) {
-    GST_ERROR_OBJECT (vtdec, "Error decoding frame %d", (int) status);
-    frame->flags |= VTDEC_FRAME_FLAG_ERROR;
+    switch (status) {
+      case kVTVideoDecoderReferenceMissingErr:
+        /* ReferenceMissingErr is not critical, when it occurs the frame
+         * usually has the kVTDecodeInfo_FrameDropped flag set. Log only for debugging purposes. */
+        GST_DEBUG_OBJECT (vtdec, "ReferenceMissingErr when decoding frame %d",
+            frame->decode_frame_number);
+        break;
+#ifndef HAVE_IOS
+      case codecBadDataErr:    /* SW decoder on macOS uses a different code from the hardware one... */
+#endif
+      case kVTVideoDecoderBadDataErr:
+        /* BadDataErr also shouldn't cause an error to be displayed immediately.
+         * Set the error flag so the output loop will log a warning
+         * and only error out if this happens too many times. */
+        GST_DEBUG_OBJECT (vtdec, "BadDataErr when decoding frame %d",
+            frame->decode_frame_number);
+        frame->flags |= VTDEC_FRAME_FLAG_ERROR;
+        break;
+      default:
+        GST_ERROR_OBJECT (vtdec, "Error decoding frame %d: %d",
+            frame->decode_frame_number, (int) status);
+        frame->flags |= VTDEC_FRAME_FLAG_ERROR;
+        break;
+    }
   }
 
   if (image_buffer) {
@@ -1238,8 +1260,8 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
     }
   } else {
     if (info_flags & kVTDecodeInfo_FrameDropped) {
-      GST_DEBUG_OBJECT (vtdec, "Frame dropped by video toolbox %p %d",
-          frame, frame->decode_frame_number);
+      GST_DEBUG_OBJECT (vtdec, "Frame %d dropped by VideoToolbox (%p)",
+          frame->decode_frame_number, frame);
       frame->flags |= VTDEC_FRAME_FLAG_DROP;
     } else {
       GST_DEBUG_OBJECT (vtdec, "Decoded frame is NULL");
