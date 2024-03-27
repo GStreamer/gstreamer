@@ -250,8 +250,12 @@ gst_futex_cond_broadcast (guint * cond_val)
 {
   g_atomic_int_inc (cond_val);
 
-#if defined(__NR_futex_time64)
+#if defined(HAVE_FUTEX_TIME64)
+#if defined(__BIONIC__)
+  if (__builtin_available (android 30, *)) {
+#else
   {
+#endif
     int res;
     res = syscall (__NR_futex_time64, cond_val, (gsize) FUTEX_WAKE_PRIVATE,
         (gsize) INT_MAX, NULL);
@@ -260,7 +264,7 @@ gst_futex_cond_broadcast (guint * cond_val)
      * normal `futex` syscall. This can happen if newer kernel headers are
      * used than the kernel that is actually running.
      */
-#ifdef __NR_futex
+#if defined(HAVE_FUTEX)
     if (res >= 0 || errno != ENOSYS) {
 #else
     {
@@ -270,7 +274,7 @@ gst_futex_cond_broadcast (guint * cond_val)
   }
 #endif
 
-#if defined(__NR_futex)
+#if defined(HAVE_FUTEX)
   syscall (__NR_futex, cond_val, (gsize) FUTEX_WAKE_PRIVATE, (gsize) INT_MAX,
       NULL);
 #endif
@@ -308,8 +312,12 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
    * define `__NR_futex_time64`.
    */
 
-#ifdef __NR_futex_time64
+#if defined(HAVE_FUTEX_TIME64)
+#if defined(__BIONIC__)
+  if (__builtin_available (android 30, *)) {
+#else
   {
+#endif
     struct
     {
       gint64 tv_sec;
@@ -329,7 +337,7 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
      * normal `futex` syscall. This can happen if newer kernel headers are
      * used than the kernel that is actually running.
      */
-#ifdef __NR_futex
+#if defined(HAVE_FUTEX)
     if (res >= 0 || errno != ENOSYS) {
 #else
     {
@@ -342,7 +350,7 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
   }
 #endif
 
-#ifdef __NR_futex
+#if defined(HAVE_FUTEX)
   {
     struct
     {
