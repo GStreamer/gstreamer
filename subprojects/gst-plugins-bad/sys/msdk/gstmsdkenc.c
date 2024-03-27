@@ -601,6 +601,7 @@ gst_msdkenc_init_encoder (GstMsdkEnc * thiz)
       break;
 #endif
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
       thiz->param.mfx.FrameInfo.FourCC = MFX_FOURCC_RGB4;
       thiz->param.mfx.FrameInfo.ChromaFormat = MFX_CHROMAFORMAT_YUV444;
       thiz->param.mfx.FrameInfo.BitDepthLuma = 8;
