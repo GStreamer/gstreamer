@@ -172,10 +172,10 @@ gst_v4l2_codec_alpha_decode_bin_constructed (GObject * obj)
   gst_ghost_pad_set_target (GST_GHOST_PAD (src_gpad), src_pad);
   gst_object_unref (src_pad);
 
-  g_object_set (queue, "max-size-bytes", 0, "max-size-time", 0,
-      "max-size-buffers", 1, NULL);
-  g_object_set (alpha_queue, "max-size-bytes", 0, "max-size-time", 0,
-      "max-size-buffers", 1, NULL);
+  g_object_set (queue, "max-size-bytes", 0, "max-size-time",
+      G_GUINT64_CONSTANT (0), "max-size-buffers", 1, NULL);
+  g_object_set (alpha_queue, "max-size-bytes", 0, "max-size-time",
+      G_GUINT64_CONSTANT (0), "max-size-buffers", 1, NULL);
 
   /* signal success, we will handle this in NULL->READY transition */
   priv->constructed = TRUE;
