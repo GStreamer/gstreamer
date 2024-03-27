@@ -4038,6 +4038,7 @@ gst_va_av1_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_QP:
       self->prop.qp = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_MAX_QP:
       self->prop.max_qp = g_value_get_uint (value);
@@ -4047,6 +4048,7 @@ gst_va_av1_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_BITRATE:
       self->prop.bitrate = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_NUM_TILE_COLS:
       self->prop.num_tile_cols = g_value_get_uint (value);
@@ -4059,15 +4061,19 @@ gst_va_av1_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_TARGET_USAGE:
       self->prop.target_usage = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_TARGET_PERCENTAGE:
       self->prop.target_percentage = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_CPB_SIZE:
       self->prop.cpb_size = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_RATE_CONTROL:
       self->prop.rc_ctrl = g_value_get_enum (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_MBBRC:{
       /* Macroblock-level rate control.
