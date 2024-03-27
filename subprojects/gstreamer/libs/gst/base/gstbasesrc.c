@@ -2599,7 +2599,8 @@ again:
       wait_ret = gst_base_src_wait_playing_unlocked (src);
       if (wait_ret != GST_FLOW_OK) {
         if (ret == GST_FLOW_OK && own_res_buf)
-          gst_buffer_unref (res_buf);
+          gst_clear_buffer (&res_buf);
+        gst_clear_buffer_list (&src->priv->pending_bufferlist);
         ret = wait_ret;
         goto stopped;
       }
@@ -2612,7 +2613,8 @@ again:
   if (G_UNLIKELY (g_atomic_int_get (&src->priv->has_pending_eos))) {
     if (ret == GST_FLOW_OK) {
       if (own_res_buf)
-        gst_buffer_unref (res_buf);
+        gst_clear_buffer (&res_buf);
+      gst_clear_buffer_list (&src->priv->pending_bufferlist);
     }
     src->priv->forced_eos = TRUE;
     goto eos;
