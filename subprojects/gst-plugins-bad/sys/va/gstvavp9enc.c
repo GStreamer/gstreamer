@@ -2023,7 +2023,7 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
       self->rc.base_qindex = DEFAULT_BASE_QINDEX;
       /* Fall through. */
     case VA_RC_QVBR:
-      g_assert (self->rc.target_percentage >= 10);
+      self->rc.target_percentage = MAX (10, self->rc.target_percentage);
       self->rc.max_bitrate = (guint) gst_util_uint64_scale_int (bitrate,
           100, self->rc.target_percentage);
       self->rc.target_bitrate = bitrate;

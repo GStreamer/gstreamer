@@ -653,7 +653,7 @@ _ensure_rate_control (GstVaH264Enc * self)
       /* Fall through. */
     case VA_RC_QVBR:
       self->rc.qp_p = self->rc.qp_b = 26;
-      g_assert (self->rc.target_percentage >= 10);
+      self->rc.target_percentage = MAX (10, self->rc.target_percentage);
       self->rc.max_bitrate = (guint) gst_util_uint64_scale_int (bitrate,
           100, self->rc.target_percentage);
       self->rc.target_bitrate = bitrate;
