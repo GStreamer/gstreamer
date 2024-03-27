@@ -200,8 +200,8 @@ print_keyboard_help (void)
     "<", "Decrease bitrate by 100 kbps"}, {
     "]", "Increase target usage"}, {
     "[", "Decrease target usage"}, {
-    "}", "Increase target percentage by 10% (only in VBR)"}, {
-    "{", "Decrease target percentage by 10% (only in VBR)"}, {
+    "}", "Increase target percentage by 10% (only in [Q]VBR)"}, {
+    "{", "Decrease target percentage by 10% (only in [Q]VBR)"}, {
     "I", "Increase QP-I"}, {
     "i", "Decrease QP-I"}, {
     "P", "Increase QP-P (only in CQP)"}, {
@@ -329,7 +329,8 @@ keyboard_cb (gchar input, gboolean is_ascii, gpointer user_data)
       case '}':{
         guint target;
 
-        if (!is_ratectl (data->encoder, 0x00000004 /* VA_RC_VBR */ ))
+        if (!is_ratectl (data->encoder, 0x00000004 /* VA_RC_VBR */ )
+            || is_ratectl (data->encoder, 0x00000400 /* VA_RC_QVBR */ ))
           break;
 
         g_object_get (data->encoder, "target-percentage", &target, NULL);
@@ -341,7 +342,8 @@ keyboard_cb (gchar input, gboolean is_ascii, gpointer user_data)
       case '{':{
         guint target;
 
-        if (!is_ratectl (data->encoder, 0x00000004 /* VA_RC_VBR */ ))
+        if (!is_ratectl (data->encoder, 0x00000004 /* VA_RC_VBR */ )
+            || is_ratectl (data->encoder, 0x00000400 /* VA_RC_QVBR */ ))
           break;
 
         g_object_get (data->encoder, "target-percentage", &target, NULL);
