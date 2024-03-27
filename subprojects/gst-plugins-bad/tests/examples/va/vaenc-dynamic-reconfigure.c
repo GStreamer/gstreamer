@@ -284,7 +284,8 @@ keyboard_cb (gchar input, gboolean is_ascii, gpointer user_data)
       case '>':{
         guint bitrate;
 
-        if (is_ratectl (data->encoder, 0x00000010 /* VA_RC_CQP */ ))
+        if (is_ratectl (data->encoder, 0x00000010 /* VA_RC_CQP */ )
+            || is_ratectl (data->encoder, 0x00000040 /* VA_RC_ICQ */ ))
           break;
 
         g_object_get (data->encoder, "bitrate", &bitrate, NULL);
@@ -296,7 +297,8 @@ keyboard_cb (gchar input, gboolean is_ascii, gpointer user_data)
       case '<':{
         gint bitrate;
 
-        if (is_ratectl (data->encoder, 0x00000010 /* VA_RC_CQP */ ))
+        if (is_ratectl (data->encoder, 0x00000010 /* VA_RC_CQP */ )
+            || is_ratectl (data->encoder, 0x00000040 /* VA_RC_ICQ */ ))
           break;
 
         g_object_get (data->encoder, "bitrate", &bitrate, NULL);
