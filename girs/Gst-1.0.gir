@@ -30985,7 +30985,10 @@ of the peer sink pad, if present.</doc>
         </parameters>
       </method>
       <method name="set_offset" c:identifier="gst_pad_set_offset">
-        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">Set the offset that will be applied to the running time of @pad.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstpad.c">Set the offset that will be applied to the running time of @pad. Upon next
+buffer, every sticky events (notably segment) will be pushed again with
+their running time adjusted. For that reason this is only reliable on
+source pads.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstpad.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>

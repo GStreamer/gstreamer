@@ -4014,12 +4014,23 @@ mark_event_not_received (GstPad * pad, PadEvent * ev, gpointer user_data)
  * @pad: a #GstPad
  * @offset: the offset
  *
- * Set the offset that will be applied to the running time of @pad.
+ * Set the offset that will be applied to the running time of @pad. Upon next
+ * buffer, every sticky events (notably segment) will be pushed again with
+ * their running time adjusted. For that reason this is only reliable on
+ * source pads.
  */
 void
 gst_pad_set_offset (GstPad * pad, gint64 offset)
 {
   g_return_if_fail (GST_IS_PAD (pad));
+
+  /* Setting pad offset on a sink pad does not work reliably:
+   * https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/6464 */
+  if (GST_PAD_IS_SINK (pad)) {
+    /* Make it non fatal warning for backward compatibility. */
+    GST_WARNING_OBJECT (pad,
+        "Setting pad offset only works reliably on source pads");
+  }
 
   GST_OBJECT_LOCK (pad);
   /* if nothing changed, do nothing */
