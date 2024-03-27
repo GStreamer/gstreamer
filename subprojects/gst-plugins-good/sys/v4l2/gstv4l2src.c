@@ -448,6 +448,7 @@ gst_v4l2src_fixed_caps_compare (GstCaps * caps_a, GstCaps * caps_b,
   gint a_fps_n = G_MAXINT, a_fps_d = 1;
   gint b_fps_n = G_MAXINT, b_fps_d = 1;
   gint a_distance, b_distance;
+  gint ret = 0;
 
   a = gst_caps_get_structure (caps_a, 0);
   b = gst_caps_get_structure (caps_b, 0);
@@ -468,7 +469,11 @@ gst_v4l2src_fixed_caps_compare (GstCaps * caps_a, GstCaps * caps_b,
   a_distance = ABS (aw * ah - pref->width * pref->height);
   b_distance = ABS (bw * bh - pref->width * pref->height);
 
-  gint ret = a_distance - b_distance;
+  /* If the distance are equivalent, maintain the order */
+  if (a_distance == b_distance)
+    ret = 1;
+  else
+    ret = a_distance - b_distance;
 
   GST_TRACE ("Placing %" GST_PTR_FORMAT " %s %" GST_PTR_FORMAT,
       caps_a, ret > 0 ? "after" : "before", caps_b);
