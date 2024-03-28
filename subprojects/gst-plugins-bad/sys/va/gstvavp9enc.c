@@ -2794,12 +2794,13 @@ gst_va_vp9_enc_set_property (GObject * object, guint prop_id,
 {
   GstVaVp9Enc *const self = GST_VA_VP9_ENC (object);
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+  GstVaEncoder *encoder = NULL;
+  gboolean no_effect;
 
-  if (base->encoder && gst_va_encoder_is_open (base->encoder)) {
-    GST_ERROR_OBJECT (object,
-        "failed to set any property after encoding started");
-    return;
-  }
+  gst_object_replace ((GstObject **) (&encoder), (GstObject *) base->encoder);
+  no_effect = (encoder && gst_va_encoder_is_open (encoder));
+  if (encoder)
+    gst_object_unref (encoder);
 
   GST_OBJECT_LOCK (self);
 
@@ -2818,6 +2819,7 @@ gst_va_vp9_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_QP:
       self->prop.qp = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_MAX_QP:
@@ -2828,30 +2830,37 @@ gst_va_vp9_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_BITRATE:
       self->prop.bitrate = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_TARGET_USAGE:
       self->prop.target_usage = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_TARGET_PERCENTAGE:
       self->prop.target_percentage = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_CPB_SIZE:
       self->prop.cpb_size = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_RATE_CONTROL:
       self->prop.rc_ctrl = g_value_get_enum (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_LOOP_FILTER_LEVEL:
       self->prop.filter_level = g_value_get_int (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_SHARPNESS_LEVEL:
       self->prop.sharpness_level = g_value_get_uint (value);
+      no_effect = FALSE;
       g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     case PROP_MBBRC:{
@@ -2878,6 +2887,13 @@ gst_va_vp9_enc_set_property (GObject * object, guint prop_id,
   }
 
   GST_OBJECT_UNLOCK (self);
+
+  if (no_effect) {
+#ifndef GST_DISABLE_GST_DEBUG
+    GST_WARNING_OBJECT (self, "Property `%s` change may not take effect "
+        "until the next encoder reconfig.", pspec->name);
+#endif
+  }
 }
 
 static void
