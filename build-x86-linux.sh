@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 export PROJECT_ROOT_PATH=`pwd`
+#export PROJECT_BUILD_TYPE=debug
+export PROJECT_BUILD_TYPE=release
 
 function build_init()
 {
