@@ -958,6 +958,17 @@ gst_d3d11_video_sink_set_caps (GstBaseSink * sink, GstCaps * caps)
   return TRUE;
 }
 
+static void
+gst_d3d11_video_sink_release_window (GstD3D11VideoSink * self)
+{
+  if (self->window == NULL)
+    return;
+
+  g_signal_handlers_disconnect_by_data (self->window, self);
+  gst_d3d11_window_unprepare (self->window);
+  gst_clear_object (&self->window);
+}
+
 static GstFlowReturn
 gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
 {
@@ -1087,8 +1098,7 @@ gst_d3d11_video_sink_update_window (GstD3D11VideoSink * self, GstCaps * caps)
     if (ret == GST_FLOW_FLUSHING) {
       GstD3D11CSLockGuard lk (&self->lock);
       GST_WARNING_OBJECT (self, "Couldn't prepare window but we are flushing");
-      gst_d3d11_window_unprepare (self->window);
-      gst_clear_object (&self->window);
+      gst_d3d11_video_sink_release_window (self);
       gst_object_unref (window);
 
       return GST_FLOW_FLUSHING;
@@ -1330,10 +1340,8 @@ gst_d3d11_video_sink_stop (GstBaseSink * sink)
     gst_clear_object (&self->pool);
   }
 
-  if (self->window)
-    gst_d3d11_window_unprepare (self->window);
+  gst_d3d11_video_sink_release_window (self);
 
-  gst_clear_object (&self->window);
   gst_clear_object (&self->device);
   g_clear_pointer (&self->title, g_free);
 
