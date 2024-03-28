@@ -223,7 +223,7 @@ GstQSGTexture::GstQSGTexture(QRhiTexture * texture)
 GstQSGTexture::~GstQSGTexture()
 {
   if (m_texture) {
-    delete m_texture;
+    m_texture->deleteLater();
     m_texture = nullptr;
   }
 }
