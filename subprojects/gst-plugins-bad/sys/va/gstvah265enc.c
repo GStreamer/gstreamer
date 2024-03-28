@@ -4860,6 +4860,7 @@ gst_va_h265_enc_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CPB_SIZE:
       self->prop.cpb_size = g_value_get_uint (value);
+      g_atomic_int_set (&GST_VA_BASE_ENC (self)->reconf, TRUE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5260,7 +5261,7 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
   properties[PROP_CPB_SIZE] = g_param_spec_uint ("cpb-size",
       "max CPB size in Kb",
       "The desired max CPB size in Kb (0: auto-calculate)", 0, 2000 * 1024, 0,
-      param_flags);
+      param_flags | GST_PARAM_MUTABLE_PLAYING);
 
   /**
    * GstVaH265Enc:num-tile-cols:
