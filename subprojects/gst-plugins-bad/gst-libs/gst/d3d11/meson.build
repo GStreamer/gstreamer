@@ -198,7 +198,10 @@ have_dx_math = cxx.compiles('''
 if not have_dx_math
   directxmath_dep = dependency('directxmath',
       allow_fallback: true,
-      required: get_option('d3d11-math'))
+      required: d3d11_opt)
+  if not directxmath_dep.found()
+    subdir_done()
+  endif
   extra_deps += [directxmath_dep]
 endif
 
