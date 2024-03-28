@@ -521,7 +521,7 @@ gst_va_av1_enc_frame_free (gpointer pframe)
   GstVaAV1EncFrame *frame = pframe;
 
   g_clear_pointer (&frame->picture, gst_va_encode_picture_free);
-  g_slice_free (GstVaAV1EncFrame, frame);
+  g_free (frame);
 }
 
 static gboolean
