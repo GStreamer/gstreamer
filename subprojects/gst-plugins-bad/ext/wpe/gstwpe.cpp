@@ -42,14 +42,18 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   gboolean result;
-  gchar *dirname = g_path_get_dirname (gst_plugin_get_filename (plugin));
+  gchar *dirname;
+  const gchar *filename = gst_plugin_get_filename (plugin);
 
   GST_DEBUG_CATEGORY_INIT (wpe_video_src_debug, "wpevideosrc", 0, "WPE Video Source");
   GST_DEBUG_CATEGORY_INIT (wpe_view_debug, "wpeview", 0, "WPE Threaded View");
   GST_DEBUG_CATEGORY_INIT (wpe_src_debug, "wpesrc", 0, "WPE Source");
 
-  extension_path = g_build_filename (dirname, "wpe-extension", NULL);
-  g_free (dirname);
+  if (filename != NULL) {
+      dirname = g_path_get_dirname (filename);
+      extension_path = g_build_filename (dirname, "wpe-extension", NULL);
+      g_free (dirname);
+  }
   result = gst_element_register (plugin, "wpevideosrc", GST_RANK_NONE,
       GST_TYPE_WPE_VIDEO_SRC);
   result &= gst_element_register(plugin, "wpesrc", GST_RANK_NONE, GST_TYPE_WPE_SRC);
