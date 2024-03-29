@@ -1633,6 +1633,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
               (sgroup->parser)), NULL);
 
       gst_bin_add (GST_BIN (ebin), p1);
+      tosync = g_list_append (tosync, p1);
       if (G_UNLIKELY (!gst_element_link (p1, last)))
         goto parser_link_failure;
 
