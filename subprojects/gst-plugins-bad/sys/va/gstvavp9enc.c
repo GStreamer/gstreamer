@@ -1754,8 +1754,23 @@ _vp9_calculate_coded_size (GstVaVp9Enc * self)
   }
 
   codedbuf_size = codedbuf_size + (codedbuf_size * (self->depth - 8) / 8);
-  /* FIXME: Just use a rough 1/2 min compression ratio here. */
-  codedbuf_size = codedbuf_size / 2;
+
+  if (self->rc.rc_ctrl_mode == VA_RC_CQP || self->rc.rc_ctrl_mode == VA_RC_ICQ) {
+    if (self->rc.base_qindex > DEFAULT_BASE_QINDEX)
+      codedbuf_size = codedbuf_size / 2;
+  } else if (self->rc.max_bitrate_bits > 0) {
+    guint64 frame_sz = gst_util_uint64_scale (self->rc.max_bitrate_bits / 8,
+        GST_VIDEO_INFO_FPS_D (&base->input_state->info),
+        GST_VIDEO_INFO_FPS_N (&base->input_state->info));
+
+    /* FIXME: If average frame size is smaller than 1/10 coded buffer size,
+       we shrink the coded buffer size to 1/2 to improve performance. */
+    if (frame_sz * 10 < codedbuf_size)
+      codedbuf_size = codedbuf_size / 2;
+  } else {
+    /* FIXME: Just use a rough 1/2 min compression ratio here. */
+    codedbuf_size = codedbuf_size / 2;
+  }
 
   base->codedbuf_size = codedbuf_size;
 
