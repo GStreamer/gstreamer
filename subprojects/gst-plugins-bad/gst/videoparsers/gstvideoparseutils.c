@@ -175,7 +175,7 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
             break;
           }
           if (temp != 0xff) {
-            GST_WARNING_OBJECT (elt, "em data does not equal 0xFF");
+            GST_DEBUG_OBJECT (elt, "em data does not equal 0xFF");
           }
           process_708_em_data = process_708_em_data && (temp == 0xff);
           /* ignore process_708_em_data as there is content that doesn't follow spec for this field */
