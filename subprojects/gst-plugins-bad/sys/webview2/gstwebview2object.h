@@ -35,17 +35,17 @@ GstWebView2Object * gst_webview2_object_new          (GstD3D11Device * device);
 gboolean            gst_webview2_object_set_location (GstWebView2Object * client,
                                                       const std::string & location);
 
-gboolean            gst_webview2_object_set_caps     (GstWebView2Object * client,
-                                                      GstCaps * caps);
+gboolean            gst_webview_object_update_size   (GstWebView2Object * client,
+                                                      guint width, guint height);
 
 void                gst_webview2_object_send_event   (GstWebView2Object * client,
                                                       GstEvent * event);
 
-GstFlowReturn       gst_webview2_object_get_buffer   (GstWebView2Object * client,
-                                                      GstBuffer ** buffer);
+GstFlowReturn       gst_webview2_object_do_capture   (GstWebView2Object * client,
+                                                      ID3D11Texture2D * texture);
 
 void                gst_webview2_object_set_flushing (GstWebView2Object * client,
-                                                      bool flushing);
+                                                      gboolean flushing);
 
 G_END_DECLS
 

@@ -36,18 +36,16 @@ have_wgc = cxx.compiles('''
     #include<windows.h>
     #include<winstring.h>
     #include<roapi.h>
+    #include <dispatcherqueue.h>
     #include<windows.graphics.capture.h>,
-    #include<windows.graphics.capture.interop.h>
     #include<windows.graphics.directx.direct3d11.h>
     #include<windows.graphics.directx.direct3d11.interop.h>
     #include<wrl.h>
     using namespace Microsoft::WRL;
     using namespace ABI::Windows::Graphics::Capture;
     ComPtr<IDirect3D11CaptureFramePoolStatics> pool_statics;
-    ComPtr<IDirect3D11CaptureFramePoolStatics2> pool_statics2;
     ComPtr<IDirect3D11CaptureFramePool> pool;
     ComPtr<IGraphicsCaptureSession> session;
-    ComPtr<IGraphicsCaptureSession2> session2;
     ''',
     name: 'Windows Graphics Capture support in Windows SDK')
 
@@ -73,10 +71,16 @@ if not building_for_win10
   extra_args += ['-DWINVER=0x0A00', '-D_WIN32_WINNT=0x0A00', '-DNTDDI_VERSION=WDK_NTDDI_VERSION']
 endif
 
-winmm_lib = cc.find_library('winmm', required : webview2_option)
 dwmapi_lib = cc.find_library('dwmapi', required : webview2_option)
 dcomp_lib = cc.find_library('dcomp', required : webview2_option)
 runtimeobject_dep = cc.find_library('runtimeobject', required : webview2_option)
+coremessaging_lib = cc.find_library('coremessaging', required : webview2_option)
+
+if not dwmapi_lib.found() or not dcomp_lib.found() or not runtimeobject_dep.found() \
+  or not coremessaging_lib.found()
+  subdir_done()
+endif
+
 loader_lib = cc.find_library('WebView2LoaderStatic', required: false)
 sdk_deps = []
 if loader_lib.found() and cc.has_header('WebView2.h') and cc.has_header('WebView2EnvironmentOptions.h')
@@ -96,9 +100,8 @@ gstwebview2 = library('gstwebview2',
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gmodule_dep,
-                  gstd3d11_dep, winmm_lib, runtimeobject_dep, dwmapi_lib,
-                  dcomp_lib] + sdk_deps,
+  dependencies : [gstbase_dep, gstvideo_dep, coremessaging_lib,
+                  gstd3d11_dep, runtimeobject_dep, dwmapi_lib, dcomp_lib] + sdk_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

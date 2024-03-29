@@ -34,6 +34,11 @@
 #include <gst/d3d11/gstd3d11-private.h>
 #include <mutex>
 #include <string>
+#include <wrl.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY (gst_webview2_src_debug);
 #define GST_CAT_DEFAULT gst_webview2_src_debug
@@ -69,6 +74,7 @@ struct GstWebView2SrcPrivate
   GstVideoInfo info;
   guint64 last_frame_no;
   GstClockID clock_id = nullptr;
+  ComPtr<ID3D11Texture2D> staging;
 
   /* properties */
   gint adapter_index = DEFAULT_ADAPTER;
@@ -101,6 +107,8 @@ static gboolean gst_webview2_src_unlock_stop (GstBaseSrc * src);
 static gboolean gst_webview2_src_query (GstBaseSrc * src, GstQuery * query);
 static GstCaps *gst_webview2_src_fixate (GstBaseSrc * src, GstCaps * caps);
 static gboolean gst_webview2_src_set_caps (GstBaseSrc * src, GstCaps * caps);
+static gboolean gst_webview2_decide_allocation (GstBaseSrc * src,
+    GstQuery * query);
 static gboolean gst_webview2_src_event (GstBaseSrc * src, GstEvent * event);
 static GstFlowReturn gst_webview2_src_create (GstBaseSrc * src,
     guint64 offset, guint size, GstBuffer ** buf);
@@ -159,6 +167,8 @@ gst_webview2_src_class_init (GstWebView2SrcClass * klass)
   src_class->query = GST_DEBUG_FUNCPTR (gst_webview2_src_query);
   src_class->fixate = GST_DEBUG_FUNCPTR (gst_webview2_src_fixate);
   src_class->set_caps = GST_DEBUG_FUNCPTR (gst_webview2_src_set_caps);
+  src_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_webview2_decide_allocation);
   src_class->event = GST_DEBUG_FUNCPTR (gst_webview2_src_event);
   src_class->create = GST_DEBUG_FUNCPTR (gst_webview2_src_create);
 
@@ -318,6 +328,8 @@ gst_webview2_src_stop (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (self, "Stop");
 
+  priv->staging = nullptr;
+
   gst_clear_object (&priv->object);
   gst_clear_object (&priv->device);
 
@@ -413,8 +425,100 @@ gst_webview2_src_set_caps (GstBaseSrc * src, GstCaps * caps)
     return FALSE;
   }
 
-  if (priv->object)
-    gst_webview2_object_set_caps (priv->object, caps);
+  GST_DEBUG_OBJECT (self, "Set caps %" GST_PTR_FORMAT, caps);
+  priv->staging = nullptr;
+
+  if (priv->object) {
+    gst_webview_object_update_size (priv->object,
+        priv->info.width, priv->info.height);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_webview2_decide_allocation (GstBaseSrc * src, GstQuery * query)
+{
+  auto self = GST_WEBVIEW2_SRC (src);
+  auto priv = self->priv;
+  GstCaps *caps;
+
+  gst_query_parse_allocation (query, &caps, nullptr);
+  if (!caps) {
+    GST_ERROR_OBJECT (self, "No output caps");
+    return FALSE;
+  }
+
+  GstVideoInfo info;
+  gst_video_info_from_caps (&info, caps);
+
+  gboolean update_pool = FALSE;
+  GstBufferPool *pool = nullptr;
+  guint min, max, size;
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    update_pool = TRUE;
+  } else {
+    size = info.size;
+    min = max = 0;
+    update_pool = FALSE;
+  }
+
+  auto features = gst_caps_get_features (caps, 0);
+  auto is_d3d11 = gst_caps_features_contains (features,
+      GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+  if (pool) {
+    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
+      gst_clear_object (&pool);
+    } else {
+      auto d3d11_pool = GST_D3D11_BUFFER_POOL (pool);
+      if (d3d11_pool->device != priv->device)
+        gst_clear_object (&pool);
+    }
+  }
+
+  if (!pool) {
+    if (is_d3d11)
+      pool = gst_d3d11_buffer_pool_new (priv->device);
+    else
+      pool = gst_video_buffer_pool_new ();
+  }
+
+  auto config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  if (is_d3d11) {
+    auto params = gst_buffer_pool_config_get_d3d11_allocation_params (config);
+    if (!params) {
+      params = gst_d3d11_allocation_params_new (priv->device, &info,
+          GST_D3D11_ALLOCATION_FLAG_DEFAULT,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
+    } else {
+      gst_d3d11_allocation_params_set_bind_flags (params,
+          D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+    }
+
+    gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
+    gst_d3d11_allocation_params_free (params);
+  }
+
+  if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_ERROR_OBJECT (self, "Failed to set config");
+    gst_clear_object (&pool);
+    return FALSE;
+  }
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_get_params (config, nullptr, &size, nullptr, nullptr);
+  gst_structure_free (config);
+
+  if (update_pool)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  gst_object_unref (pool);
 
   return TRUE;
 }
@@ -435,27 +539,6 @@ gst_webview2_src_event (GstBaseSrc * src, GstEvent * event)
   return GST_BASE_SRC_CLASS (parent_class)->event (src, event);
 }
 
-static bool
-gst_webview2_clock_is_system (GstClock * clock)
-{
-  GstClockType clock_type = GST_CLOCK_TYPE_MONOTONIC;
-  GstClock *mclock;
-
-  if (G_OBJECT_TYPE (clock) != GST_TYPE_SYSTEM_CLOCK)
-    return false;
-
-  g_object_get (clock, "clock-type", &clock_type, nullptr);
-  if (clock_type != GST_CLOCK_TYPE_MONOTONIC)
-    return false;
-
-  mclock = gst_clock_get_master (clock);
-  if (!mclock)
-    return true;
-
-  gst_object_unref (mclock);
-  return false;
-}
-
 static GstFlowReturn
 gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
     GstBuffer ** buf)
@@ -464,12 +547,8 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
   auto priv = self->priv;
   GstFlowReturn ret;
   GstClock *clock;
-  bool is_system_clock;
-  GstClockTime pts;
   GstClockTime base_time;
-  GstClockTime now_system;
   GstClockTime now_gst;
-  GstClockTime capture_pts;
   GstClockTime next_capture_ts;
   guint64 next_frame_no = 0;
   GstBuffer *buffer;
@@ -480,7 +559,6 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
   now_gst = gst_clock_get_time (clock);
   base_time = GST_ELEMENT_CAST (self)->base_time;
   next_capture_ts = now_gst - base_time;
-  is_system_clock = gst_webview2_clock_is_system (clock);
 
   fps_n = priv->info.fps_n;
   fps_d = priv->info.fps_d;
@@ -523,40 +601,111 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
       dur = next_frame_ts - next_capture_ts;
     }
   }
+  gst_clear_object (&clock);
 
   priv->last_frame_no = next_frame_no;
 
-  ret = gst_webview2_object_get_buffer (priv->object, &buffer);
-  if (ret != GST_FLOW_OK) {
-    gst_object_unref (clock);
-    return ret;
+  auto pool = gst_base_src_get_buffer_pool (src);
+  if (!pool) {
+    GST_ERROR_OBJECT (self, "No configured pool");
+    return GST_FLOW_ERROR;
   }
+  ret = gst_buffer_pool_acquire_buffer (pool, &buffer, nullptr);
+  gst_object_unref (pool);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
-  capture_pts = GST_BUFFER_PTS (buffer);
-  now_system = gst_util_get_timestamp ();
-  now_gst = gst_clock_get_time (clock);
-  gst_object_unref (clock);
+  ID3D11Texture2D *out_texture = nullptr;
+  gboolean system_copy = TRUE;
+  GstMapInfo out_map;
+  auto mem = gst_buffer_peek_memory (buffer, 0);
+  if (gst_is_d3d11_memory (mem)) {
+    auto dmem = GST_D3D11_MEMORY_CAST (mem);
+    if (dmem->device == priv->device) {
+      if (!gst_memory_map (mem, &out_map, (GstMapFlags)
+              (GST_MAP_D3D11 | GST_MAP_WRITE))) {
+        GST_ERROR_OBJECT (self, "Couldn't map output memory");
+        gst_buffer_unref (buffer);
+        return GST_FLOW_ERROR;
+      }
 
-  if (!is_system_clock) {
-    GstClockTimeDiff now_pts = now_gst - base_time + capture_pts - now_system;
-
-    if (now_pts >= 0)
-      pts = now_pts;
-    else
-      pts = 0;
-  } else {
-    if (capture_pts >= base_time) {
-      pts = capture_pts - base_time;
-    } else {
-      GST_WARNING_OBJECT (self,
-          "Captured time is smaller than our base time, remote %"
-          GST_TIME_FORMAT ", base_time %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (capture_pts), GST_TIME_ARGS (base_time));
-      pts = 0;
+      out_texture = (ID3D11Texture2D *) out_map.data;
+      system_copy = FALSE;
     }
   }
 
-  GST_BUFFER_PTS (buffer) = pts;
+  if (!out_texture) {
+    if (!priv->staging) {
+      auto device = gst_d3d11_device_get_device_handle (priv->device);
+      D3D11_TEXTURE2D_DESC staging_desc = { };
+      staging_desc.Width = priv->info.width;
+      staging_desc.Height = priv->info.height;
+      staging_desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+      staging_desc.MipLevels = 1;
+      staging_desc.SampleDesc.Count = 1;
+      staging_desc.ArraySize = 1;
+      staging_desc.Usage = D3D11_USAGE_STAGING;
+      staging_desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+
+      auto hr = device->CreateTexture2D (&staging_desc,
+          nullptr, &priv->staging);
+      if (!gst_d3d11_result (hr, priv->device)) {
+        GST_ERROR_OBJECT (self, "Couldn't create staging texture");
+        gst_buffer_unref (buffer);
+        return GST_FLOW_ERROR;
+      }
+    }
+
+    out_texture = priv->staging.Get ();
+    GST_TRACE_OBJECT (self, "Do CPU copy");
+  } else {
+    GST_TRACE_OBJECT (self, "Do GPU copy");
+  }
+
+  ret = gst_webview2_object_do_capture (priv->object, out_texture);
+  if (ret != GST_FLOW_OK) {
+    if (!system_copy)
+      gst_memory_unmap (mem, &out_map);
+    gst_buffer_unref (buffer);
+    return ret;
+  }
+
+  if (!system_copy) {
+    gst_memory_unmap (mem, &out_map);
+  } else {
+    auto context = gst_d3d11_device_get_device_context_handle (priv->device);
+    D3D11_MAPPED_SUBRESOURCE map;
+    GstD3D11DeviceLockGuard lk (priv->device);
+    auto hr = context->Map (priv->staging.Get (), 0, D3D11_MAP_READ, 0, &map);
+    if (!gst_d3d11_result (hr, priv->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't map staging texture");
+      gst_buffer_unref (buffer);
+      return GST_FLOW_ERROR;
+    }
+
+    GstVideoFrame frame;
+    if (!gst_video_frame_map (&frame, &priv->info, buffer, GST_MAP_WRITE)) {
+      GST_ERROR_OBJECT (self, "Couldn't map output frame");
+      context->Unmap (priv->staging.Get (), 0);
+      gst_buffer_unref (buffer);
+      return GST_FLOW_ERROR;
+    }
+
+    auto width_in_bytes = priv->info.width * 4;
+    auto src_data = (guint8 *) map.pData;
+    auto dst_data = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
+    for (guint i = 0; i < priv->info.height; i++) {
+      memcpy (dst_data, src_data, width_in_bytes);
+      src_data += map.RowPitch;
+      dst_data += GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
+    }
+
+    context->Unmap (priv->staging.Get (), 0);
+    gst_video_frame_unmap (&frame);
+  }
+
+  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_PTS (buffer) = next_capture_ts;
   GST_BUFFER_DURATION (buffer) = dur;
   *buf = buffer;
 

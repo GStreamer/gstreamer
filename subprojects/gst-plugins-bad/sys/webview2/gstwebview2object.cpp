@@ -34,20 +34,17 @@
 #include <wrl.h>
 #include <mutex>
 #include <condition_variable>
-#include <memory>
 #include <string>
 #include <string.h>
-#include <shobjidl.h>
 #include <dwmapi.h>
 #include <locale>
 #include <codecvt>
-#include <gmodule.h>
 #include <winstring.h>
 #include <roapi.h>
-#include <mmsystem.h>
-#include <chrono>
+#include <dispatcherqueue.h>
+#include <windows.system.h>
+#include <windows.ui.composition.h>
 #include <windows.graphics.capture.h>
-#include <windows.graphics.capture.interop.h>
 #include <windows.graphics.directx.direct3d11.h>
 #include <windows.graphics.directx.direct3d11.interop.h>
 
@@ -56,16 +53,30 @@ GST_DEBUG_CATEGORY_EXTERN (gst_webview2_src_debug);
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
+using namespace ABI::Windows::System;
+using namespace ABI::Windows::UI::Composition;
 using namespace ABI::Windows::Foundation;
 using namespace ABI::Windows::Graphics;
 using namespace ABI::Windows::Graphics::Capture;
 using namespace ABI::Windows::Graphics::DirectX;
 using namespace ABI::Windows::Graphics::DirectX::Direct3D11;
 using namespace Windows::Graphics::DirectX::Direct3D11;
-/* *INDENT-ON* */
 
-#define WEBVIEW2_OBJECT_PROP_NAME "gst-d3d11-webview2-object"
-#define WEBVIEW2_WINDOW_OFFSET (-16384)
+typedef ABI::Windows::Foundation::__FITypedEventHandler_2_Windows__CGraphics__CCapture__CDirect3D11CaptureFramePool_IInspectable_t
+    IFrameArrivedHandler;
+
+#define DEFAULT_WIDTH 1920
+#define DEFAULT_HEIGHT 1080
+
+static void gst_webview2_object_initialized (GstWebView2Object * obj);
+static void gst_webview2_object_frame_arrived (GstWebView2Object * obj,
+    ID3D11Texture2D * texture);
+
+enum
+{
+  PROP_0,
+  PROP_DEVICE,
+};
 
 template < typename InterfaceType, PCNZWCH runtime_class_id > static HRESULT
 GstGetActivationFactory (InterfaceType ** factory)
@@ -87,73 +98,6 @@ GstGetActivationFactory (InterfaceType ** factory)
   return WindowsDeleteString (class_id_hstring);
 }
 
-enum
-{
-  PROP_0,
-  PROP_DEVICE,
-};
-
-enum WebView2State
-{
-  WEBVIEW2_STATE_INIT,
-  WEBVIEW2_STATE_RUNNING,
-  WEBVIEW2_STATE_ERROR,
-};
-
-struct WebView2StatusData
-{
-  GstWebView2Object *object;
-  WebView2State state;
-};
-
-struct GstWebView2;
-
-struct GstWebView2ObjectPrivate
-{
-  GstWebView2ObjectPrivate ()
-  {
-    context = g_main_context_new ();
-    loop = g_main_loop_new (context, FALSE);
-  }
-
-   ~GstWebView2ObjectPrivate ()
-  {
-    g_main_loop_quit (loop);
-    g_clear_pointer (&main_thread, g_thread_join);
-    g_main_loop_unref (loop);
-    g_main_context_unref (context);
-    if (pool)
-      gst_buffer_pool_set_active (pool, FALSE);
-    gst_clear_object (&pool);
-    gst_clear_object (&device);
-    gst_clear_caps (&caps);
-  }
-
-  GstD3D11Device *device = nullptr;
-  std::mutex lock;
-  std::condition_variable cond;
-  std::shared_ptr < GstWebView2 > webview;
-  ComPtr < ID3D11Texture2D > staging;
-  GThread *main_thread = nullptr;
-  GMainContext *context = nullptr;
-  GMainLoop *loop = nullptr;
-  GstBufferPool *pool = nullptr;
-  GstCaps *caps = nullptr;
-  GstVideoInfo info;
-  std::string location;
-  HWND hwnd;
-  WebView2State state = WEBVIEW2_STATE_INIT;
-};
-
-struct _GstWebView2Object
-{
-  GstObject parent;
-
-  GstWebView2ObjectPrivate *priv;
-};
-
-static gboolean gst_webview2_callback (WebView2StatusData * data);
-
 #define CLOSE_COM(obj) G_STMT_START { \
   if (obj) { \
     ComPtr<IClosable> closable; \
@@ -164,436 +108,570 @@ static gboolean gst_webview2_callback (WebView2StatusData * data);
   } \
 } G_STMT_END
 
-struct GstWebView2
+#define CHECK_HR_AND_RETURN(hr,func) G_STMT_START { \
+  if (FAILED (hr)) { \
+    GST_ERROR_OBJECT (obj_, G_STRINGIFY (func) " failed, hr 0x%x", (guint) hr); \
+    SetEvent (event_handle_); \
+    return hr; \
+  } \
+} G_STMT_END
+
+class GstWebView2Item : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+    FtmBase, IFrameArrivedHandler,
+    ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
+    ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>
 {
-  GstWebView2 (GstWebView2Object * object, HWND hwnd)
-  :object_ (object), hwnd_ (hwnd)
+public:
+  static LRESULT CALLBACK
+  WndProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
   {
-    ID3D11Device *device_handle;
-      ComPtr < ID3D10Multithread > multi_thread;
+    return DefWindowProcA (hwnd, msg, wparam, lparam);
+  }
+
+  STDMETHODIMP
+  RuntimeClassInitialize (GstWebView2Object * obj, GstD3D11Device * device,
+      HANDLE event_handle, HWND hwnd)
+  {
+    obj_ = obj;
+    device_ = device;
+    event_handle_ = event_handle;
+    hwnd_ = hwnd;
+
     HRESULT hr;
+    ComPtr<IInspectable> insp;
+    HSTRING class_id_hstring;
+    WindowsCreateString (RuntimeClass_Windows_UI_Composition_Compositor,
+      wcslen (RuntimeClass_Windows_UI_Composition_Compositor), &class_id_hstring);
+    hr = RoActivateInstance (class_id_hstring, &insp);
+    WindowsDeleteString (class_id_hstring);
 
-      device_ = (GstD3D11Device *) gst_object_ref (object->priv->device);
+    CHECK_HR_AND_RETURN (hr, RoActivateInstance);
 
-      device_handle = gst_d3d11_device_get_device_handle (device_);
-      hr = device_handle->QueryInterface (IID_PPV_ARGS (&multi_thread));
+    hr = insp.As (&comp_);
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
+
+    hr = comp_->CreateContainerVisual (&root_container_visual_);
+    CHECK_HR_AND_RETURN (hr, CreateContainerVisual);
+
+    hr = root_container_visual_.As (&root_visual_);
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
+
+    hr = root_visual_->put_Size ({ DEFAULT_WIDTH, DEFAULT_HEIGHT });
+    CHECK_HR_AND_RETURN (hr, put_Size);
+
+    hr = root_visual_->put_IsVisible (TRUE);
+    CHECK_HR_AND_RETURN (hr, put_IsVisible);
+
+    ComPtr<IVisualCollection> collection;
+    hr = root_container_visual_->get_Children (&collection);
+    CHECK_HR_AND_RETURN (hr, get_Children);
+
+    hr = comp_->CreateContainerVisual (&webview_container_visual_);
+    CHECK_HR_AND_RETURN (hr, CreateContainerVisual);
+
+    hr = webview_container_visual_.As (&webview_visual_);
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
+
+    hr = webview_visual_.As (&webview_visual2_);
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
+
+    hr = collection->InsertAtTop (webview_visual_.Get ());
+    CHECK_HR_AND_RETURN (hr, InsertAtTop);
+
+    hr = webview_visual2_->put_RelativeSizeAdjustment ({ 1, 1 });
+    CHECK_HR_AND_RETURN (hr, put_RelativeSizeAdjustment);
+
+    hr = webview_visual_->put_IsVisible (TRUE);
+    CHECK_HR_AND_RETURN (hr, put_IsVisible);
+
+    return CreateCoreWebView2Environment (this);
+  }
+
+  IFACEMETHOD (Invoke) (HRESULT hr, ICoreWebView2Environment * env)
+  {
+    CHECK_HR_AND_RETURN (hr, OnEnvironmentCompleted);
+
+    hr = env->QueryInterface (IID_PPV_ARGS (&env_));
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
+
+    hr = env_->CreateCoreWebView2CompositionController (hwnd_, this);
+    CHECK_HR_AND_RETURN (hr, CreateCoreWebView2CompositionController);
+
+    return S_OK;
+  }
+
+  IFACEMETHOD (Invoke) (HRESULT hr, ICoreWebView2CompositionController * comp_ctrl)
+  {
+    CHECK_HR_AND_RETURN (hr, OnControllerCompleted);
+
+    comp_ctrl_ = comp_ctrl;
+    ComPtr<ICoreWebView2Controller> ctrl;
+    hr = comp_ctrl_.As (&ctrl);
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
+
+    hr = ctrl.As (&ctrl_);
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
+
+    hr = ctrl_->put_BoundsMode (COREWEBVIEW2_BOUNDS_MODE_USE_RAW_PIXELS);
+    CHECK_HR_AND_RETURN (hr, put_BoundsMode);
+
+    RECT rect = {};
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = DEFAULT_WIDTH;
+    rect.bottom = DEFAULT_HEIGHT;
+    hr = ctrl_->put_Bounds (rect);
+    CHECK_HR_AND_RETURN (hr, put_Bounds);
+
+    hr = ctrl_->put_ShouldDetectMonitorScaleChanges (FALSE);
+    CHECK_HR_AND_RETURN (hr, put_ShouldDetectMonitorScaleChanges);
+
+    hr = ctrl_->put_RasterizationScale (1);
+    CHECK_HR_AND_RETURN (hr, put_RasterizationScale);
+
+    hr = ctrl_->put_IsVisible (TRUE);
+    CHECK_HR_AND_RETURN (hr, put_IsVisible);
+
+    hr = comp_ctrl_->put_RootVisualTarget (webview_container_visual_.Get ());
+    CHECK_HR_AND_RETURN (hr, put_RootVisualTarget);
+
+    hr = ctrl_->get_CoreWebView2 (&webview_);
+    CHECK_HR_AND_RETURN (hr, get_CoreWebView2);
+
+    ComPtr<ICoreWebView2_8> webview8;
+    hr = webview_.As (&webview8);
     if (SUCCEEDED (hr))
-        multi_thread->SetMultithreadProtected (TRUE);
+      webview8->put_IsMuted (TRUE);
 
-      device_handle->QueryInterface (IID_PPV_ARGS (&dxgi_device_));
+    hr = startCapture ();
+    CHECK_HR_AND_RETURN (hr, startCapture);
+
+    gst_webview2_object_initialized (obj_);
+
+    return S_OK;
   }
 
-   ~GstWebView2 ()
+  HRESULT
+  startCapture ()
   {
-    if (comp_ctrl_)
-      comp_ctrl_->put_RootVisualTarget (nullptr);
-    webview_ = nullptr;
-    ctrl_ = nullptr;
-    comp_ctrl_ = nullptr;
-    env_ = nullptr;
+    ComPtr<IGraphicsCaptureItemStatics> item_statics;
 
-    root_visual_ = nullptr;
-    comp_target_ = nullptr;
-    comp_device_ = nullptr;
+    auto hr = GstGetActivationFactory <IGraphicsCaptureItemStatics,
+        RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem> (&item_statics);
+    CHECK_HR_AND_RETURN (hr, GstGetActivationFactory);
 
-    CLOSE_COM (session_);
-    CLOSE_COM (pool_);
-    CLOSE_COM (item_);
-    CLOSE_COM (d3d_device_);
+    hr = item_statics->CreateFromVisual (root_visual_.Get (), &item_);
+    CHECK_HR_AND_RETURN (hr, CreateFromVisual);
 
-    dxgi_device_ = nullptr;
+    auto device = gst_d3d11_device_get_device_handle (device_);
+    ComPtr<ID3D10Multithread> multi_thread;
+    hr = device->QueryInterface (IID_PPV_ARGS (&multi_thread));
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
 
-    gst_object_unref (device_);
-  }
+    multi_thread->SetMultithreadProtected (TRUE);
+    ComPtr<IDXGIDevice> dxgi_device;
+    hr = device->QueryInterface (IID_PPV_ARGS (&dxgi_device));
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
 
-  HRESULT Open ()
-  {
-    HRESULT hr;
+    ComPtr < IInspectable > insp;
+    hr = CreateDirect3D11DeviceFromDXGIDevice (dxgi_device.Get (), &insp);
+    CHECK_HR_AND_RETURN (hr, CreateDirect3D11DeviceFromDXGIDevice);
 
-    if (!dxgi_device_)
-      return E_FAIL;
+    hr = insp.As (&d3d_device_);
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
 
-    hr = SetupCapture ();
-    if (FAILED (hr))
-      return hr;
-
-    hr = SetupComposition ();
-    if (FAILED (hr))
-      return hr;
-
-    return CreateCoreWebView2Environment (Callback <
-        ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler > (this,
-            &GstWebView2::OnCreateEnvironmentCompleted).Get ());
-  }
-
-  HRESULT SetupCapture ()
-  {
-    ComPtr < ID3D10Multithread > multi_thread;
-    ComPtr < IGraphicsCaptureItemInterop > interop;
-    ComPtr < IDXGIDevice > dxgi_device;
-    ComPtr < IInspectable > inspectable;
     ComPtr < IDirect3D11CaptureFramePoolStatics > pool_statics;
-    ComPtr < IDirect3D11CaptureFramePoolStatics2 > pool_statics2;
-    ComPtr < IGraphicsCaptureSession2 > session2;
-    HRESULT hr;
-
-    hr = GstGetActivationFactory < IGraphicsCaptureItemInterop,
-        RuntimeClass_Windows_Graphics_Capture_GraphicsCaptureItem > (&interop);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    hr = interop->CreateForWindow (hwnd_, IID_PPV_ARGS (&item_));
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    hr = item_->get_Size (&pool_size_);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    hr = CreateDirect3D11DeviceFromDXGIDevice (dxgi_device_.Get (),
-        &inspectable);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    hr = inspectable.As (&d3d_device_);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
     hr = GstGetActivationFactory < IDirect3D11CaptureFramePoolStatics,
         RuntimeClass_Windows_Graphics_Capture_Direct3D11CaptureFramePool >
         (&pool_statics);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
+    CHECK_HR_AND_RETURN (hr, GstGetActivationFactory);
 
-    hr = pool_statics.As (&pool_statics2);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
+    frame_size_.Width = DEFAULT_WIDTH;
+    frame_size_.Height = DEFAULT_HEIGHT;
 
-    hr = pool_statics2->CreateFreeThreaded (d3d_device_.Get (),
+    hr = pool_statics->Create (d3d_device_.Get (),
         DirectXPixelFormat::DirectXPixelFormat_B8G8R8A8UIntNormalized,
-        1, pool_size_, &pool_);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
+        2, frame_size_, &frame_pool_);
+    CHECK_HR_AND_RETURN (hr, Create);
 
-    hr = pool_->CreateCaptureSession (item_.Get (), &session_);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
+    hr = frame_pool_->add_FrameArrived (this, &arrived_token_);
+    CHECK_HR_AND_RETURN (hr, add_FrameArrived);
 
-    session_.As (&session2);
-    if (session2)
-      session2->put_IsCursorCaptureEnabled (FALSE);
+    hr = frame_pool_->CreateCaptureSession (item_.Get (), &session_);
+    CHECK_HR_AND_RETURN (hr, CreateCaptureSession);
 
     hr = session_->StartCapture ();
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
+    CHECK_HR_AND_RETURN (hr, StartCapture);
 
     return S_OK;
   }
 
-  HRESULT SetupComposition ()
+  IFACEMETHOD(Invoke) (IDirect3D11CaptureFramePool * pool, IInspectable * arg)
   {
     HRESULT hr;
 
-    hr = DCompositionCreateDevice (dxgi_device_.Get (),
-        IID_PPV_ARGS (&comp_device_));
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
+    GST_LOG_OBJECT (obj_, "Frame arrived");
 
-    hr = comp_device_->CreateTargetForHwnd (hwnd_, TRUE, &comp_target_);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    hr = comp_device_->CreateVisual (&root_visual_);
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    hr = comp_target_->SetRoot (root_visual_.Get ());
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    return S_OK;
-  }
-
-  HRESULT
-      OnCreateEnvironmentCompleted (HRESULT hr, ICoreWebView2Environment * env)
-  {
-    ComPtr < ICoreWebView2Environment3 > env3;
-
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_, "Couldn't create environment");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return hr;
+    ComPtr < IDirect3D11CaptureFrame > new_frame;
+    pool->TryGetNextFrame (&new_frame);
+    if (!new_frame) {
+      GST_WARNING_OBJECT (obj_, "No frame");
+      return S_OK;
     }
 
-    env_ = env;
-    hr = env_.As (&env3);
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_,
-          "ICoreWebView2Environment3 interface is unavailable");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return hr;
-    }
-
-    hr = env3->CreateCoreWebView2CompositionController (hwnd_,
-        Callback <
-        ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler >
-        (this, &GstWebView2::OnCreateCoreWebView2ControllerCompleted).Get ());
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_,
-          "CreateCoreWebView2CompositionController failed");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return hr;
-    }
-
-    return S_OK;
-  }
-
-  HRESULT
-      OnCreateCoreWebView2ControllerCompleted (HRESULT hr,
-      ICoreWebView2CompositionController * comp_ctr) {
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_, "Couldn't create composition controller");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return hr;
-    }
-
-    comp_ctrl_ = comp_ctr;
-    hr = comp_ctrl_.As (&ctrl_);
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_, "Couldn't get controller interface");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return hr;
-    }
-
-    hr = comp_ctrl_->put_RootVisualTarget (root_visual_.Get ());
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_, "Couldn't set root visual object");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return hr;
-    }
-
-    hr = ctrl_->get_CoreWebView2 (&webview_);
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_, "Couldn't get webview2 interface");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return hr;
-    }
-
-    /* TODO: add audio mute property */
-#if 0
-    ComPtr < ICoreWebView2_8 > webview8;
-    hr = webview_.As (&webview8);
-    if (!gst_d3d11_result (hr, nullptr)) {
-      GST_WARNING_OBJECT (object_, "ICoreWebView2_8 interface is unavailable");
-      NotifyState (WEBVIEW2_STATE_ERROR);
-      return E_FAIL;
-    }
-
-    webview8->put_IsMuted (TRUE);
-#endif
-
-    RECT bounds;
-    GetClientRect (hwnd_, &bounds);
-    ctrl_->put_Bounds (bounds);
-    ctrl_->put_IsVisible (TRUE);
-
-    GST_INFO_OBJECT (object_, "All configured");
-
-    NotifyState (WEBVIEW2_STATE_RUNNING);
-
-    return S_OK;
-  }
-
-  void NotifyState (WebView2State state)
-  {
-    WebView2StatusData *data = g_new0 (WebView2StatusData, 1);
-
-    data->object = object_;
-    data->state = state;
-
-    g_main_context_invoke_full (object_->priv->context,
-        G_PRIORITY_DEFAULT,
-        (GSourceFunc) gst_webview2_callback, data, (GDestroyNotify) g_free);
-  }
-
-  HRESULT DoCompose ()
-  {
-    HRESULT hr;
-    GstD3D11DeviceLockGuard lk (device_);
-    hr = comp_device_->Commit ();
-    if (!gst_d3d11_result (hr, device_))
-      return hr;
-
-    return comp_device_->WaitForCommitCompletion ();
-  }
-
-  GstFlowReturn DoCapture (ID3D11Texture2D * dst_texture)
-  {
-    HRESULT hr;
-    ComPtr < IDirect3D11CaptureFrame > frame;
-    GstClockTime timeout = gst_util_get_timestamp () + 5 * GST_SECOND;
-    SizeInt32 size;
     ComPtr < IDirect3DSurface > surface;
+    hr = new_frame->get_Surface (&surface);
+    CHECK_HR_AND_RETURN (hr, get_Surface);
+
     ComPtr < IDirect3DDxgiInterfaceAccess > access;
-    ComPtr < ID3D11Texture2D > texture;
-    TimeSpan time;
-    GstClockTime pts;
-    RECT object_rect, bound_rect;
-    POINT object_pos = { 0, };
-    UINT width, height;
-    D3D11_TEXTURE2D_DESC src_desc;
-    D3D11_TEXTURE2D_DESC dst_desc;
-    UINT x_offset = 0;
-    UINT y_offset = 0;
-    D3D11_BOX box = { 0, };
-
-  again:
-    std::unique_lock < std::mutex > flush_lk (lock_);
-    do {
-      if (flushing_)
-        return GST_FLOW_FLUSHING;
-
-      hr = pool_->TryGetNextFrame (&frame);
-      if (frame)
-        break;
-
-      if (!gst_d3d11_result (hr, device_))
-        return GST_FLOW_ERROR;
-
-      cond_.wait_for (flush_lk, std::chrono::milliseconds (1));
-    } while (gst_util_get_timestamp () < timeout);
-    flush_lk.unlock ();
-
-    if (!frame) {
-      GST_ERROR_OBJECT (object_, "Timeout");
-      return GST_FLOW_ERROR;
-    }
-
-    hr = frame->get_ContentSize (&size);
-    if (!gst_d3d11_result (hr, device_))
-      return GST_FLOW_ERROR;
-
-    if (size.Width != pool_size_.Width || size.Height != pool_size_.Height) {
-      GST_DEBUG_OBJECT (object_, "Size changed %dx%d -> %dx%d",
-          pool_size_.Width, pool_size_.Height, size.Width, size.Height);
-      pool_size_ = size;
-      frame = nullptr;
-      hr = pool_->Recreate (d3d_device_.Get (),
-          DirectXPixelFormat::DirectXPixelFormat_B8G8R8A8UIntNormalized, 1,
-          size);
-      if (!gst_d3d11_result (hr, device_))
-        return GST_FLOW_ERROR;
-
-      goto again;
-    }
-
-    hr = frame->get_SystemRelativeTime (&time);
-    if (SUCCEEDED (hr))
-      pts = time.Duration * 100;
-    else
-      pts = gst_util_get_timestamp ();
-
-    hr = frame->get_Surface (&surface);
-    if (!gst_d3d11_result (hr, device_))
-      return GST_FLOW_ERROR;
-
     hr = surface.As (&access);
-    if (!gst_d3d11_result (hr, device_))
-      return GST_FLOW_ERROR;
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
 
+    ComPtr < ID3D11Texture2D > texture;
     hr = access->GetInterface (IID_PPV_ARGS (&texture));
-    if (!gst_d3d11_result (hr, device_))
-      return GST_FLOW_ERROR;
+    CHECK_HR_AND_RETURN (hr, QueryInterface);
 
-    if (!GetClientRect (hwnd_, &object_rect)) {
-      GST_ERROR_OBJECT (object_, "Couldn't get object rect");
-      return GST_FLOW_ERROR;
-    }
+    gst_webview2_object_frame_arrived (obj_, texture.Get ());
 
-    hr = DwmGetWindowAttribute (hwnd_, DWMWA_EXTENDED_FRAME_BOUNDS, &bound_rect,
-        sizeof (RECT));
-    if (!gst_d3d11_result (hr, device_))
-      return GST_FLOW_ERROR;
-
-    if (!ClientToScreen (hwnd_, &object_pos)) {
-      GST_ERROR_OBJECT (object_, "Couldn't get position");
-      return GST_FLOW_ERROR;
-    }
-
-    width = object_rect.right - object_rect.left;
-    height = object_rect.bottom - object_rect.top;
-
-    width = MAX (width, 1);
-    height = MAX (height, 1);
-
-    if (object_pos.x > bound_rect.left)
-      x_offset = object_pos.x - bound_rect.left;
-
-    if (object_pos.y > bound_rect.top)
-      y_offset = object_pos.y - bound_rect.top;
-
-    box.front = 0;
-    box.back = 1;
-
-    texture->GetDesc (&src_desc);
-    dst_texture->GetDesc (&dst_desc);
-
-    box.left = x_offset;
-    box.left = MIN (src_desc.Width - 1, box.left);
-
-    box.top = y_offset;
-    box.top = MIN (src_desc.Height - 1, box.top);
-
-    box.right = dst_desc.Width + x_offset;
-    box.right = MIN (src_desc.Width, box.right);
-
-    box.bottom = dst_desc.Height + y_offset;
-    box.bottom = MIN (src_desc.Height, box.right);
-
-    {
-      auto context = gst_d3d11_device_get_device_context_handle (device_);
-      GstD3D11DeviceLockGuard lk (device_);
-
-      context->CopySubresourceRegion (dst_texture, 0, 0, 0, 0,
-          texture.Get (), 0, &box);
-    }
-
-    return GST_FLOW_OK;
+    return S_OK;
   }
 
-  void SetFlushing (bool flushing)
+  void Close ()
   {
-    std::lock_guard < std::mutex > lk (lock_);
-    flushing_ = flushing;
-    cond_.notify_all ();
+    if (frame_pool_)
+      frame_pool_->remove_FrameArrived (arrived_token_);
+
+    CLOSE_COM (session_);
+    CLOSE_COM (frame_pool_);
+    CLOSE_COM (item_);
+
+    if (webview_) {
+      webview_->Stop ();
+      webview_ = nullptr;
+    }
+
+    if (ctrl_) {
+      ctrl_->Close ();
+      ctrl_ = nullptr;
+    }
+
+    comp_ctrl_ = nullptr;
+    ctrl_ = nullptr;
+    env_ = nullptr;
+
+    webview_visual2_ = nullptr;
+    webview_visual_ = nullptr;
+    webview_container_visual_ = nullptr;
+    root_visual_ = nullptr;
+    root_container_visual_ = nullptr;
+    comp_ = nullptr;
   }
 
-  HWND hwnd_;
-  ComPtr < IDXGIDevice > dxgi_device_;
+  HRESULT Navigate (LPCWSTR location)
+  {
+    if (!webview_ || !location)
+      return E_FAIL;
 
-  ComPtr < IDCompositionDevice > comp_device_;
-  ComPtr < IDCompositionTarget > comp_target_;
-  ComPtr < IDCompositionVisual > root_visual_;
+    return webview_->Navigate (location);
+  }
 
-  ComPtr < ICoreWebView2Environment > env_;
-  ComPtr < ICoreWebView2 > webview_;
-  ComPtr < ICoreWebView2Controller > ctrl_;
-  ComPtr < ICoreWebView2CompositionController > comp_ctrl_;
+  HRESULT UpdateSize (FLOAT width, FLOAT height)
+  {
+    GST_DEBUG_OBJECT (obj_, "Updating size to %dx%d",
+        (UINT) width, (UINT) height);
 
-  ComPtr < IDirect3DDevice > d3d_device_;
-  ComPtr < IGraphicsCaptureItem > item_;
-  ComPtr < IDirect3D11CaptureFramePool > pool_;
-  ComPtr < IGraphicsCaptureSession > session_;
-  SizeInt32 pool_size_;
+    auto hr = root_visual_->put_Size ({width, height});
+    CHECK_HR_AND_RETURN (hr, put_Size);
 
-  HRESULT last_hr_ = S_OK;
-  GstWebView2Object *object_;
-  GstD3D11Device *device_;
+    RECT rect = {};
+    rect.left = 0;
+    rect.top = 0;
+    rect.right = width;
+    rect.bottom = height;
+    hr = ctrl_->put_Bounds (rect);
+    CHECK_HR_AND_RETURN (hr, put_Bounds);
 
-  std::mutex lock_;
-  std::condition_variable cond_;
+    frame_size_.Width = width;
+    frame_size_.Height = height;
+    hr = frame_pool_->Recreate (d3d_device_.Get (),
+      DirectXPixelFormat::DirectXPixelFormat_B8G8R8A8UIntNormalized,
+      2, frame_size_);
+    CHECK_HR_AND_RETURN (hr, Recreate);
 
-  bool flushing_ = false;
+    return S_OK;
+  }
+
+  void HandleEvent (GstEvent * event)
+  {
+    auto type = gst_navigation_event_get_type (event);
+    gdouble x, y;
+    gint button;
+
+    switch (type) {
+      /* FIXME: Implement key event */
+      case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
+        if (gst_navigation_event_parse_mouse_button_event (event,
+                &button, &x, &y)) {
+          GST_TRACE_OBJECT (obj_, "Mouse press, button %d, %lfx%lf",
+              button, x, y);
+          COREWEBVIEW2_MOUSE_EVENT_KIND kind;
+          POINT point;
+
+          point.x = (LONG) x;
+          point.y = (LONG) y;
+
+          switch (button) {
+            case 1:
+              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_DOWN;
+              break;
+            case 2:
+              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_DOWN;
+              break;
+            case 3:
+              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_DOWN;
+              break;
+            default:
+              return;
+          }
+
+          /* FIXME: need to know the virtual key state */
+          comp_ctrl_->SendMouseInput (kind,
+              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
+        }
+        break;
+      case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
+        if (gst_navigation_event_parse_mouse_button_event (event,
+                &button, &x, &y)) {
+          GST_TRACE_OBJECT (obj_, "Mouse release, button %d, %lfx%lf",
+              button, x, y);
+          COREWEBVIEW2_MOUSE_EVENT_KIND kind;
+          POINT point;
+
+          point.x = (LONG) x;
+          point.y = (LONG) y;
+
+          switch (button) {
+            case 1:
+              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_UP;
+              break;
+            case 2:
+              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_UP;
+              break;
+            case 3:
+              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_UP;
+              break;
+            default:
+              return;
+          }
+
+          /* FIXME: need to know the virtual key state */
+          comp_ctrl_->SendMouseInput (kind,
+              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
+        }
+        break;
+      case GST_NAVIGATION_EVENT_MOUSE_MOVE:
+        if (gst_navigation_event_parse_mouse_move_event (event, &x, &y)) {
+          GST_TRACE_OBJECT (obj_, "Mouse move, %lfx%lf", x, y);
+          POINT point;
+
+          point.x = (LONG) x;
+          point.y = (LONG) y;
+
+          /* FIXME: need to know the virtual key state */
+          comp_ctrl_->SendMouseInput (COREWEBVIEW2_MOUSE_EVENT_KIND_MOVE,
+              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+private:
+  HANDLE event_handle_;
+  HWND hwnd_ = nullptr;
+  GstWebView2Object *obj_ = nullptr;
+  GstD3D11Device *device_ = nullptr;
+  ComPtr<ICompositor> comp_;
+  ComPtr<IContainerVisual> root_container_visual_;
+  ComPtr<IVisual> root_visual_;
+  ComPtr<IContainerVisual> webview_container_visual_;
+  ComPtr<IVisual> webview_visual_;
+  ComPtr<IVisual2> webview_visual2_;
+
+  ComPtr<ICoreWebView2Environment3> env_;
+  ComPtr<ICoreWebView2Controller3> ctrl_;
+  ComPtr<ICoreWebView2CompositionController > comp_ctrl_;
+  ComPtr<ICoreWebView2 > webview_;
+
+  ComPtr<IGraphicsCaptureItem> item_;
+  SizeInt32 frame_size_ = { };
+  ComPtr<IDirect3DDevice> d3d_device_;
+  ComPtr<IDirect3D11CaptureFramePool> frame_pool_;
+  ComPtr<IGraphicsCaptureSession> session_;
+  EventRegistrationToken arrived_token_ = { };
+};
+
+class NaviEventHandler : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+    FtmBase, IDispatcherQueueHandler>
+{
+public:
+  STDMETHODIMP
+  RuntimeClassInitialize (GstWebView2Item * item, GstEvent * event)
+  {
+    item_ = item;
+    event_ = gst_event_ref (event);
+
+    return S_OK;
+  }
+
+  IFACEMETHOD(Invoke) (void)
+  {
+    item_->HandleEvent (event_);
+    item_ = nullptr;
+
+    return S_OK;
+  }
+
+  ~NaviEventHandler ()
+  {
+    gst_clear_event (&event_);
+  }
+
+private:
+  ComPtr<GstWebView2Item> item_;
+  GstEvent *event_;
+};
+
+class UpdateSizeHandler : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+    FtmBase, IDispatcherQueueHandler>
+{
+public:
+  STDMETHODIMP
+  RuntimeClassInitialize (GstWebView2Item * item, guint width, guint height)
+  {
+    item_ = item;
+    width_ = width;
+    height_ = height;
+
+    return S_OK;
+  }
+
+  IFACEMETHOD(Invoke) (void)
+  {
+    item_->UpdateSize (width_, height_);
+    item_ = nullptr;
+
+    return S_OK;
+  }
+
+private:
+  ComPtr<GstWebView2Item> item_;
+  FLOAT width_;
+  FLOAT height_;
+};
+
+class UpdateLocationHandler : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+    FtmBase, IDispatcherQueueHandler>
+{
+public:
+  STDMETHODIMP
+  RuntimeClassInitialize (GstWebView2Item * item, const std::string & location)
+  {
+    item_ = item;
+    location_wide_ = g_utf8_to_utf16 (location.c_str (),
+        -1, nullptr, nullptr, nullptr);
+
+    return S_OK;
+  }
+
+  IFACEMETHOD(Invoke) (void)
+  {
+    item_->Navigate ((LPCWSTR) location_wide_);
+    item_ = nullptr;
+
+    return S_OK;
+  }
+
+  ~UpdateLocationHandler ()
+  {
+    g_free (location_wide_);
+  }
+
+private:
+  ComPtr<GstWebView2Item> item_;
+  gunichar2 *location_wide_ = nullptr;
+};
+
+class AsyncWaiter : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
+    FtmBase, IAsyncActionCompletedHandler>
+{
+public:
+  STDMETHODIMP
+  RuntimeClassInitialize (HANDLE event_handle)
+  {
+    event_handle_ = event_handle;
+    return S_OK;
+  }
+
+  STDMETHOD (Invoke) (IAsyncAction * action, AsyncStatus status)
+  {
+    SetEvent (event_handle_);
+
+    return S_OK;
+  }
+
+private:
+  HANDLE event_handle_;
+};
+
+enum WebView2State
+{
+  WEBVIEW2_STATE_INIT,
+  WEBVIEW2_STATE_RUNNING,
+  WEBVIEW2_STATE_EXIT,
+};
+
+struct GstWebView2ObjectPrivate
+{
+  GstWebView2ObjectPrivate ()
+  {
+    shutdown_begin_handle = CreateEventEx (nullptr,
+        nullptr, 0, EVENT_ALL_ACCESS);
+    shutdown_end_handle = CreateEventEx (nullptr,
+        nullptr, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS);
+  }
+
+   ~GstWebView2ObjectPrivate ()
+  {
+    SetEvent (shutdown_begin_handle);
+    g_clear_pointer (&main_thread, g_thread_join);
+
+    CloseHandle (shutdown_begin_handle);
+    CloseHandle (shutdown_end_handle);
+    gst_clear_object (&device);
+  }
+
+  GstD3D11Device *device = nullptr;
+  std::mutex lock;
+  std::condition_variable cond;
+  ComPtr<GstWebView2Item> item;
+  ComPtr<ID3D11Texture2D> texture;
+  ComPtr<IDispatcherQueue> queue;
+  GThread *main_thread = nullptr;
+  std::string location;
+  HANDLE shutdown_begin_handle;
+  HANDLE shutdown_end_handle;
+  WebView2State state = WEBVIEW2_STATE_INIT;
+  gboolean flushing = FALSE;
+};
+/* *INDENT-ON* */
+
+struct _GstWebView2Object
+{
+  GstObject parent;
+
+  GstWebView2ObjectPrivate *priv;
 };
 
 static void gst_webview2_object_constructed (GObject * object);
@@ -631,7 +709,7 @@ gst_webview2_object_init (GstWebView2Object * self)
 static void
 gst_webview2_object_constructed (GObject * object)
 {
-  GstWebView2Object *self = GST_WEBVIEW2_OBJECT (object);
+  auto self = GST_WEBVIEW2_OBJECT (object);
   auto priv = self->priv;
 
   priv->main_thread = g_thread_new ("d3d11-webview2",
@@ -648,9 +726,13 @@ gst_webview2_object_constructed (GObject * object)
 static void
 gst_webview2_object_finalize (GObject * object)
 {
-  GstWebView2Object *self = GST_WEBVIEW2_OBJECT (object);
+  auto self = GST_WEBVIEW2_OBJECT (object);
+
+  GST_DEBUG_OBJECT (self, "Clearing engine");
 
   delete self->priv;
+
+  GST_DEBUG_OBJECT (self, "Cleared");
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -659,7 +741,7 @@ static void
 gst_webview2_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstWebView2Object *self = GST_WEBVIEW2_OBJECT (object);
+  auto self = GST_WEBVIEW2_OBJECT (object);
   auto priv = self->priv;
   std::lock_guard < std::mutex > lk (priv->lock);
 
@@ -673,156 +755,160 @@ gst_webview2_set_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-gst_webview2_callback (WebView2StatusData * data)
+static void
+gst_webview2_event_loop (GstWebView2Object * self)
 {
-  GstWebView2Object *self = data->object;
   auto priv = self->priv;
-  std::lock_guard < std::mutex > lk (priv->lock);
-
-  GST_DEBUG_OBJECT (self, "Got callback, state: %d", data->state);
-
-  priv->state = data->state;
-  priv->cond.notify_all ();
-
-  return G_SOURCE_REMOVE;
-}
-
-static LRESULT CALLBACK
-WndProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-  GstWebView2Object *self;
-
-  switch (msg) {
-    case WM_CREATE:
-      self = (GstWebView2Object *)
-          ((LPCREATESTRUCTA) lparam)->lpCreateParams;
-      SetPropA (hwnd, WEBVIEW2_OBJECT_PROP_NAME, self);
-      break;
-    case WM_SIZE:
-      self = (GstWebView2Object *)
-          GetPropA (hwnd, WEBVIEW2_OBJECT_PROP_NAME);
-      if (self && self->priv->webview && self->priv->webview->ctrl_) {
-        RECT bounds;
-        GetClientRect (hwnd, &bounds);
-        self->priv->webview->ctrl_->put_Bounds (bounds);
-      }
-      break;
-    default:
-      break;
-  }
-
-  return DefWindowProcA (hwnd, msg, wparam, lparam);
-}
-
-static HWND
-gst_webview2_create_hwnd (GstWebView2Object * self)
-{
-  HINSTANCE inst = GetModuleHandle (nullptr);
+  ComPtr < AsyncWaiter > async_waiter;
+  ComPtr < IAsyncAction > shutdown_action;
+  HRESULT hr;
+  ComPtr < IDispatcherQueueController > queue_ctrl;
+  DispatcherQueueOptions queue_opt;
+  HWND hwnd = nullptr;
+  HANDLE waitables[] = { priv->shutdown_begin_handle,
+    priv->shutdown_end_handle
+  };
 
   GST_D3D11_CALL_ONCE_BEGIN {
-    WNDCLASSEXA wc;
-    memset (&wc, 0, sizeof (WNDCLASSEXA));
-
+    WNDCLASSEXA wc = { };
     wc.cbSize = sizeof (WNDCLASSEXA);
-    wc.lpfnWndProc = WndProc;
-    wc.hInstance = inst;
+    wc.lpfnWndProc = &GstWebView2Item::WndProc;
+    wc.hInstance = GetModuleHandle (nullptr);
     wc.style = CS_HREDRAW | CS_VREDRAW;
-    wc.lpszClassName = "GstD3D11Webview2Window";
+    wc.lpszClassName = "GstWebView2Item";
     RegisterClassExA (&wc);
   }
   GST_D3D11_CALL_ONCE_END;
 
-  return CreateWindowExA (0, "GstD3D11Webview2Window", "GstD3D11Webview2Window",
-      WS_POPUP, WEBVIEW2_WINDOW_OFFSET,
-      WEBVIEW2_WINDOW_OFFSET, 1920, 1080, nullptr, nullptr, inst, self);
-}
+  hwnd = CreateWindowExA (0, "GstWebView2Item", "GstWebView2Item", 0,
+      CW_DEFAULT, CW_DEFAULT, 0, 0, HWND_MESSAGE, nullptr,
+      GetModuleHandle (nullptr), nullptr);
+  if (!hwnd) {
+    GST_ERROR_OBJECT (self, "Couldn't create message hwnd");
+    goto out;
+  }
 
-static gboolean
-msg_cb (GIOChannel * source, GIOCondition condition, gpointer data)
-{
-  MSG msg;
+  hr = MakeAndInitialize < AsyncWaiter > (&async_waiter,
+      priv->shutdown_end_handle);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't create shutdown waiter");
+    goto out;
+  }
 
-  if (!PeekMessage (&msg, nullptr, 0, 0, PM_REMOVE))
-    return G_SOURCE_CONTINUE;
+  queue_opt.dwSize = sizeof (DispatcherQueueOptions);
+  queue_opt.threadType = DQTYPE_THREAD_CURRENT;
+  queue_opt.apartmentType = DQTAT_COM_NONE;
 
-  TranslateMessage (&msg);
-  DispatchMessage (&msg);
+  hr = CreateDispatcherQueueController (queue_opt, &queue_ctrl);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't create queue controller");
+    goto out;
+  }
 
-  return G_SOURCE_CONTINUE;
+  hr = queue_ctrl->get_DispatcherQueue (&priv->queue);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't get dispatcher queue");
+    goto out;
+  }
+
+  hr = MakeAndInitialize < GstWebView2Item > (&priv->item, self, priv->device,
+      priv->shutdown_begin_handle, hwnd);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't initialize item");
+    goto out;
+  }
+
+  while (true) {
+    MSG msg;
+    while (PeekMessage (&msg, nullptr, 0, 0, PM_REMOVE)) {
+      TranslateMessage (&msg);
+      DispatchMessage (&msg);
+    }
+
+    auto wait_ret = MsgWaitForMultipleObjects (G_N_ELEMENTS (waitables),
+        waitables, FALSE, INFINITE, QS_ALLINPUT);
+
+    if (wait_ret == WAIT_OBJECT_0) {
+      GST_DEBUG_OBJECT (self, "Begin shutdown");
+      {
+        std::lock_guard < std::mutex > lk (priv->lock);
+        priv->texture = nullptr;
+        priv->queue = nullptr;
+        priv->item->Close ();
+      }
+      hr = queue_ctrl->ShutdownQueueAsync (&shutdown_action);
+      if (FAILED (hr)) {
+        GST_ERROR_OBJECT (self, "Shutdown failed");
+        break;
+      }
+
+      hr = shutdown_action->put_Completed (async_waiter.Get ());
+      if (FAILED (hr)) {
+        GST_ERROR_OBJECT (self, "Couldn't install shutdown callback");
+        break;
+      }
+    } else if (wait_ret == WAIT_OBJECT_0 + 1) {
+      GST_DEBUG_OBJECT (self, "Shutdown completed");
+      break;
+    } else if (wait_ret == WAIT_IO_COMPLETION) {
+      /* Do nothing */
+    } else if (wait_ret != WAIT_OBJECT_0 + G_N_ELEMENTS (waitables)) {
+      GST_ERROR_OBJECT (self, "Unexpected wait return %u", (guint) wait_ret);
+      break;
+    }
+  }
+
+out:
+  std::lock_guard < std::mutex > lk (priv->lock);
+  priv->state = WEBVIEW2_STATE_EXIT;
+  priv->cond.notify_all ();
+
+  priv->item = nullptr;
+  priv->queue = nullptr;
+  if (hwnd)
+    CloseWindow (hwnd);
 }
 
 static gpointer
 gst_webview2_thread_func (GstWebView2Object * self)
 {
   auto priv = self->priv;
-  GSource *msg_source;
-  GIOChannel *msg_io_channel;
-  ComPtr < ITaskbarList > taskbar_list;
-  HRESULT hr;
-  TIMECAPS time_caps;
-  guint timer_res = 0;
-
-  if (timeGetDevCaps (&time_caps, sizeof (TIMECAPS)) == TIMERR_NOERROR) {
-    guint resolution;
-
-    resolution = MIN (MAX (time_caps.wPeriodMin, 1), time_caps.wPeriodMax);
-
-    if (timeBeginPeriod (resolution) != TIMERR_NOERROR)
-      timer_res = resolution;
-  }
 
   GST_DEBUG_OBJECT (self, "Entering thread");
 
-  RoInitialize (RO_INIT_SINGLETHREADED);
-  g_main_context_push_thread_default (priv->context);
-
   SetThreadDpiAwarenessContext (DPI_AWARENESS_CONTEXT_SYSTEM_AWARE);
 
-  priv->hwnd = gst_webview2_create_hwnd (self);
-
-  msg_io_channel = g_io_channel_win32_new_messages (0);
-  msg_source = g_io_create_watch (msg_io_channel, G_IO_IN);
-  g_source_set_callback (msg_source, (GSourceFunc) msg_cb, self, NULL);
-  g_source_attach (msg_source, priv->context);
-
-  ShowWindow (priv->hwnd, SW_SHOW);
-
-  priv->webview = std::make_shared < GstWebView2 > (self, priv->hwnd);
-  hr = priv->webview->Open ();
-  if (FAILED (hr) || priv->state == WEBVIEW2_STATE_ERROR) {
-    GST_ERROR_OBJECT (self, "Couldn't open webview2");
-    goto out;
-  }
-
-  hr = CoCreateInstance (CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER,
-      IID_PPV_ARGS (&taskbar_list));
-  if (SUCCEEDED (hr)) {
-    taskbar_list->DeleteTab (priv->hwnd);
-    taskbar_list = nullptr;
-  }
-
-  GST_DEBUG_OBJECT (self, "Run loop");
-  g_main_loop_run (priv->loop);
-  GST_DEBUG_OBJECT (self, "Exit loop");
-
-out:
-  g_source_destroy (msg_source);
-  g_source_unref (msg_source);
-  g_io_channel_unref (msg_io_channel);
-
-  priv->webview = nullptr;
-  DestroyWindow (priv->hwnd);
-
-  GST_DEBUG_OBJECT (self, "Leaving thread");
-
-  g_main_context_pop_thread_default (priv->context);
+  RoInitialize (RO_INIT_SINGLETHREADED);
+  gst_webview2_event_loop (self);
   RoUninitialize ();
 
-  if (timer_res != 0)
-    timeEndPeriod (timer_res);
+  SetEvent (priv->shutdown_end_handle);
 
   return nullptr;
+}
+
+static void
+gst_webview2_object_initialized (GstWebView2Object * obj)
+{
+  auto priv = obj->priv;
+
+  GST_DEBUG_OBJECT (obj, "Initialized");
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  priv->state = WEBVIEW2_STATE_RUNNING;
+  priv->cond.notify_all ();
+}
+
+static void
+gst_webview2_object_frame_arrived (GstWebView2Object * obj,
+    ID3D11Texture2D * texture)
+{
+  auto priv = obj->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  priv->texture = nullptr;
+  priv->texture = texture;
+  priv->cond.notify_all ();
 }
 
 GstWebView2Object *
@@ -844,417 +930,113 @@ gst_webview2_object_new (GstD3D11Device * device)
   return self;
 }
 
-static gboolean
-gst_webview2_update_location (GstWebView2Object * self)
-{
-  auto priv = self->priv;
-  std::wstring_convert < std::codecvt_utf8 < wchar_t >>conv;
-  std::wstring location_wide = conv.from_bytes (priv->location);
-  HRESULT hr;
-
-  GST_DEBUG_OBJECT (self, "Navigate to %s", priv->location.c_str ());
-  hr = priv->webview->webview_->Navigate (location_wide.c_str ());
-
-  if (FAILED (hr))
-    GST_WARNING_OBJECT (self, "Couldn't navigate to %s",
-        priv->location.c_str ());
-
-  return G_SOURCE_REMOVE;
-}
-
 gboolean
 gst_webview2_object_set_location (GstWebView2Object * object,
     const std::string & location)
 {
   auto priv = object->priv;
-  std::unique_lock < std::mutex > lk (priv->lock);
-
-  if (priv->state != WEBVIEW2_STATE_RUNNING) {
-    GST_WARNING_OBJECT (object, "Not running state");
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->queue || !priv->item)
     return FALSE;
-  }
-  priv->location = location;
-  lk.unlock ();
 
-  g_main_context_invoke (priv->context,
-      (GSourceFunc) gst_webview2_update_location, object);
+  ComPtr < UpdateLocationHandler > handler;
+  auto hr = MakeAndInitialize < UpdateLocationHandler > (&handler,
+      priv->item.Get (), location);
+  if (FAILED (hr))
+    return FALSE;
 
-  return TRUE;
-}
+  boolean ret;
+  priv->queue->TryEnqueue (handler.Get (), &ret);
 
-static gboolean
-gst_d3d11_webview_object_update_size (GstWebView2Object * self)
-{
-  auto priv = self->priv;
-
-  GST_DEBUG_OBJECT (self, "Updating size to %dx%d", priv->info.width,
-      priv->info.height);
-
-  MoveWindow (priv->hwnd, WEBVIEW2_WINDOW_OFFSET,
-      WEBVIEW2_WINDOW_OFFSET, priv->info.width, priv->info.height, TRUE);
-
-  return G_SOURCE_REMOVE;
+  return ret;
 }
 
 gboolean
-gst_webview2_object_set_caps (GstWebView2Object * object, GstCaps * caps)
+gst_webview_object_update_size (GstWebView2Object * object,
+    guint width, guint height)
 {
   auto priv = object->priv;
-  std::unique_lock < std::mutex > lk (priv->lock);
-  bool is_d3d11 = false;
-
-  if (priv->pool) {
-    gst_buffer_pool_set_active (priv->pool, FALSE);
-    gst_object_unref (priv->pool);
-  }
-
-  priv->staging = nullptr;
-
-  gst_video_info_from_caps (&priv->info, caps);
-
-  auto features = gst_caps_get_features (caps, 0);
-  if (features
-      && gst_caps_features_contains (features,
-          GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
-    priv->pool = gst_d3d11_buffer_pool_new (priv->device);
-    is_d3d11 = true;
-  } else {
-    priv->pool = gst_video_buffer_pool_new ();
-  }
-
-  auto config = gst_buffer_pool_get_config (priv->pool);
-
-  if (is_d3d11) {
-    auto params = gst_d3d11_allocation_params_new (priv->device, &priv->info,
-        GST_D3D11_ALLOCATION_FLAG_DEFAULT,
-        D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET, 0);
-    gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
-    gst_d3d11_allocation_params_free (params);
-  } else {
-    D3D11_TEXTURE2D_DESC desc = { 0, };
-    ID3D11Device *device_handle =
-        gst_d3d11_device_get_device_handle (priv->device);
-    HRESULT hr;
-
-    desc.Width = priv->info.width;
-    desc.Height = priv->info.height;
-    desc.MipLevels = 1;
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    desc.SampleDesc.Count = 1;
-    desc.ArraySize = 1;
-    desc.Usage = D3D11_USAGE_STAGING;
-    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
-
-    hr = device_handle->CreateTexture2D (&desc, nullptr, &priv->staging);
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (object, "Couldn't create staging texture");
-      gst_clear_object (&priv->pool);
-      return FALSE;
-    }
-  }
-
-  gst_buffer_pool_config_set_params (config, caps, priv->info.size, 0, 0);
-  gst_caps_replace (&priv->caps, caps);
-
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-
-  if (!gst_buffer_pool_set_config (priv->pool, config)) {
-    GST_ERROR_OBJECT (object, "Couldn't set pool config");
-    gst_clear_object (&priv->pool);
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->queue || !priv->item)
     return FALSE;
-  }
 
-  if (!gst_buffer_pool_set_active (priv->pool, TRUE)) {
-    GST_ERROR_OBJECT (object, "Couldn't set active");
-    gst_clear_object (&priv->pool);
+  ComPtr < UpdateSizeHandler > handler;
+  auto hr = MakeAndInitialize < UpdateSizeHandler > (&handler,
+      priv->item.Get (), width, height);
+  if (FAILED (hr))
     return FALSE;
-  }
 
-  lk.unlock ();
+  boolean ret;
+  priv->queue->TryEnqueue (handler.Get (), &ret);
 
-  g_main_context_invoke (priv->context,
-      (GSourceFunc) gst_d3d11_webview_object_update_size, object);
-
-  return TRUE;
-}
-
-struct NavigationEventData
-{
-  NavigationEventData ()
-  {
-    if (event)
-      gst_event_unref (event);
-  }
-
-  GstWebView2Object *object;
-  GstEvent *event = nullptr;
-};
-
-static void
-navigation_event_free (NavigationEventData * data)
-{
-  delete data;
-}
-
-static gboolean
-gst_webview2_on_navigation_event (NavigationEventData * data)
-{
-  GstWebView2Object *self = data->object;
-  auto priv = self->priv;
-  GstEvent *event = data->event;
-  GstNavigationEventType type;
-  gdouble x, y;
-  gint button;
-
-  if (!priv->webview || !priv->webview->comp_ctrl_)
-    goto out;
-
-  type = gst_navigation_event_get_type (event);
-
-  switch (type) {
-      /* FIXME: Implement key event */
-    case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
-      if (gst_navigation_event_parse_mouse_button_event (event,
-              &button, &x, &y)) {
-        GST_TRACE_OBJECT (self, "Mouse press, button %d, %lfx%lf",
-            button, x, y);
-        COREWEBVIEW2_MOUSE_EVENT_KIND kind;
-        POINT point;
-
-        point.x = (LONG) x;
-        point.y = (LONG) y;
-
-        switch (button) {
-          case 1:
-            kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_DOWN;
-            break;
-          case 2:
-            kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_DOWN;
-            break;
-          case 3:
-            kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_DOWN;
-            break;
-          default:
-            goto out;
-        }
-
-        /* FIXME: need to know the virtual key state */
-        priv->webview->comp_ctrl_->SendMouseInput (kind,
-            COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
-      }
-      break;
-    case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
-      if (gst_navigation_event_parse_mouse_button_event (event,
-              &button, &x, &y)) {
-        GST_TRACE_OBJECT (self, "Mouse release, button %d, %lfx%lf",
-            button, x, y);
-        COREWEBVIEW2_MOUSE_EVENT_KIND kind;
-        POINT point;
-
-        point.x = (LONG) x;
-        point.y = (LONG) y;
-
-        switch (button) {
-          case 1:
-            kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_UP;
-            break;
-          case 2:
-            kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_UP;
-            break;
-          case 3:
-            kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_UP;
-            break;
-          default:
-            goto out;
-        }
-
-        /* FIXME: need to know the virtual key state */
-        priv->webview->comp_ctrl_->SendMouseInput (kind,
-            COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
-      }
-      break;
-    case GST_NAVIGATION_EVENT_MOUSE_MOVE:
-      if (gst_navigation_event_parse_mouse_move_event (event, &x, &y)) {
-        GST_TRACE_OBJECT (self, "Mouse move, %lfx%lf", x, y);
-        POINT point;
-
-        point.x = (LONG) x;
-        point.y = (LONG) y;
-
-        /* FIXME: need to know the virtual key state */
-        priv->webview->
-            comp_ctrl_->SendMouseInput (COREWEBVIEW2_MOUSE_EVENT_KIND_MOVE,
-            COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
-      }
-      break;
-    default:
-      break;
-  }
-
-out:
-  return G_SOURCE_REMOVE;
+  return ret;
 }
 
 void
 gst_webview2_object_send_event (GstWebView2Object * object, GstEvent * event)
 {
   auto priv = object->priv;
-  auto data = new NavigationEventData ();
-  data->object = object;
-  data->event = gst_event_ref (event);
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->queue || !priv->item)
+    return;
 
-  g_main_context_invoke_full (priv->context, G_PRIORITY_DEFAULT,
-      (GSourceFunc) gst_webview2_on_navigation_event, data,
-      (GDestroyNotify) navigation_event_free);
-}
+  ComPtr < NaviEventHandler > handler;
+  auto hr = MakeAndInitialize < NaviEventHandler > (&handler,
+      priv->item.Get (), event);
+  if (FAILED (hr))
+    return;
 
-struct CaptureData
-{
-  GstWebView2Object *object;
-  bool notified = false;
-    std::mutex lock;
-    std::condition_variable cond;
-  GstBuffer *buffer = nullptr;
-  GstFlowReturn ret = GST_FLOW_ERROR;
-};
-
-static gboolean
-gst_webview2_do_capture (CaptureData * data)
-{
-  GstWebView2Object *self = data->object;
-  auto priv = self->priv;
-  HRESULT hr;
-  GstFlowReturn ret;
-  GstBuffer *buffer;
-  GstMemory *mem;
-  GstMapInfo info;
-  GstClockTime pts;
-  ID3D11Texture2D *texture;
-
-  if (!priv->pool) {
-    GST_ERROR_OBJECT (self, "Pool was not configured");
-    goto out;
-  }
-
-  hr = priv->webview->DoCompose ();
-  if (!gst_d3d11_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't compose");
-    goto out;
-  }
-
-  pts = gst_util_get_timestamp ();
-
-  ret = gst_buffer_pool_acquire_buffer (priv->pool, &buffer, nullptr);
-  if (ret != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (self, "Couldn't acquire buffer");
-    goto out;
-  }
-
-  if (priv->staging) {
-    texture = priv->staging.Get ();
-  } else {
-    mem = gst_buffer_peek_memory (buffer, 0);
-    if (!gst_memory_map (mem, &info,
-            (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D11))) {
-      GST_ERROR_OBJECT (self, "Couldn't map memory");
-      gst_buffer_unref (buffer);
-      goto out;
-    }
-
-    texture = (ID3D11Texture2D *) info.data;
-  }
-
-  ret = priv->webview->DoCapture (texture);
-
-  if (!priv->staging)
-    gst_memory_unmap (mem, &info);
-
-  if (ret != GST_FLOW_OK) {
-    gst_buffer_unref (buffer);
-    data->ret = ret;
-    goto out;
-  }
-
-  if (priv->staging) {
-    GstVideoFrame frame;
-    D3D11_MAPPED_SUBRESOURCE map;
-    ID3D11DeviceContext *context =
-        gst_d3d11_device_get_device_context_handle (priv->device);
-    GstD3D11DeviceLockGuard lk (priv->device);
-    guint8 *dst;
-    guint8 *src;
-    guint width_in_bytes;
-
-    hr = context->Map (priv->staging.Get (), 0, D3D11_MAP_READ, 0, &map);
-    if (!gst_d3d11_result (hr, priv->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't map staging texture");
-      gst_buffer_unref (buffer);
-      goto out;
-    }
-
-    if (!gst_video_frame_map (&frame, &priv->info, buffer, GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (self, "Couldn't map frame");
-      gst_buffer_unref (buffer);
-      context->Unmap (priv->staging.Get (), 0);
-      goto out;
-    }
-
-    src = (guint8 *) map.pData;
-    dst = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&frame, 0);
-    width_in_bytes = GST_VIDEO_FRAME_COMP_PSTRIDE (&frame, 0)
-        * GST_VIDEO_FRAME_WIDTH (&frame);
-
-    for (guint i = 0; i < GST_VIDEO_FRAME_HEIGHT (&frame); i++) {
-      memcpy (dst, src, width_in_bytes);
-      dst += GST_VIDEO_FRAME_PLANE_STRIDE (&frame, 0);
-      src += map.RowPitch;
-    }
-
-    gst_video_frame_unmap (&frame);
-    context->Unmap (priv->staging.Get (), 0);
-  }
-
-  GST_BUFFER_PTS (buffer) = pts;
-  GST_BUFFER_DTS (buffer) = GST_CLOCK_TIME_NONE;
-  GST_BUFFER_DURATION (buffer) = GST_CLOCK_TIME_NONE;
-
-  data->buffer = buffer;
-  data->ret = GST_FLOW_OK;
-
-out:
-  std::lock_guard < std::mutex > lk (data->lock);
-  data->notified = true;
-  data->cond.notify_one ();
-
-  return G_SOURCE_REMOVE;
+  boolean ret;
+  priv->queue->TryEnqueue (handler.Get (), &ret);
 }
 
 GstFlowReturn
-gst_webview2_object_get_buffer (GstWebView2Object * object, GstBuffer ** buffer)
+gst_webview2_object_do_capture (GstWebView2Object * object,
+    ID3D11Texture2D * texture)
 {
   auto priv = object->priv;
-  CaptureData data;
 
-  data.object = object;
+  std::unique_lock < std::mutex > lk (priv->lock);
+  while (!priv->flushing && priv->state == WEBVIEW2_STATE_RUNNING &&
+      !priv->texture) {
+    priv->cond.wait (lk);
+  }
 
-  g_main_context_invoke (priv->context,
-      (GSourceFunc) gst_webview2_do_capture, &data);
+  if (priv->flushing) {
+    GST_DEBUG_OBJECT (object, "We are flushing");
+    return GST_FLOW_FLUSHING;
+  }
 
-  std::unique_lock < std::mutex > lk (data.lock);
-  while (!data.notified)
-    data.cond.wait (lk);
+  if (priv->state != WEBVIEW2_STATE_RUNNING) {
+    GST_DEBUG_OBJECT (object, "Not a running state");
+    return GST_FLOW_EOS;
+  }
 
-  if (!data.buffer)
-    return data.ret;
+  D3D11_TEXTURE2D_DESC src_desc;
+  D3D11_TEXTURE2D_DESC dst_desc;
 
-  *buffer = data.buffer;
+  priv->texture->GetDesc (&src_desc);
+  texture->GetDesc (&dst_desc);
+  auto context = gst_d3d11_device_get_device_context_handle (priv->device);
+  GstD3D11DeviceLockGuard dlk (priv->device);
+
+  D3D11_BOX box = { };
+  box.right = MIN (src_desc.Width, dst_desc.Width);
+  box.bottom = MIN (src_desc.Height, dst_desc.Height);
+  box.front = 0;
+  box.back = 1;
+
+  context->CopySubresourceRegion (texture, 0, 0, 0, 0, priv->texture.Get (),
+      0, &box);
+
   return GST_FLOW_OK;
 }
 
 void
-gst_webview2_object_set_flushing (GstWebView2Object * object, bool flushing)
+gst_webview2_object_set_flushing (GstWebView2Object * object, gboolean flushing)
 {
   auto priv = object->priv;
-
-  priv->webview->SetFlushing (flushing);
+  std::lock_guard < std::mutex > lk (priv->lock);
+  priv->flushing = flushing;
+  priv->cond.notify_all ();
 }
