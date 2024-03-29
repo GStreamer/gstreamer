@@ -4,7 +4,7 @@ set -eux
 
 # Install Rust
 RUSTUP_VERSION=1.27.0
-RUST_VERSION=1.77.0
+RUST_VERSION=1.77.1
 RUST_ARCH="x86_64-unknown-linux-gnu"
 
 RUSTUP_URL=https://static.rust-lang.org/rustup/archive/$RUSTUP_VERSION/$RUST_ARCH/rustup-init
