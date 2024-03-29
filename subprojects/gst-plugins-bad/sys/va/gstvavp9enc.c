@@ -2514,7 +2514,7 @@ _vp9_create_super_frame_output_buffer (GstVaVp9Enc * self,
   g_assert ((_enc_frame (last_frame)->flags & FRAME_FLAG_NOT_SHOW) == 0);
   g_assert (self->frames_in_super_num <= GST_VP9_MAX_FRAMES_IN_SUPERFRAME - 1);
 
-  total_sz = self->frames_in_super_num * base->codedbuf_size;
+  total_sz = (self->frames_in_super_num + 1) * base->codedbuf_size;
 
   data = g_malloc (total_sz);
   if (!data)
