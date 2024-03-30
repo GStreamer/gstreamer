@@ -937,22 +937,16 @@ gst_jpeg_parse_handle_frame (GstBaseParse * bparse, GstBaseParseFrame * frame,
           GST_WARNING_OBJECT (parse, "Failed to parse com segment");
         break;
       case GST_JPEG_MARKER_APP0:
-        if (!gst_jpeg_parse_app0 (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse app0 segment"));
-        }
+        if (!gst_jpeg_parse_app0 (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse app0 segment");
         break;
       case GST_JPEG_MARKER_APP1:
-        if (!gst_jpeg_parse_app1 (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse app1 segment"));
-        }
+        if (!gst_jpeg_parse_app1 (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse app1 segment");
         break;
       case GST_JPEG_MARKER_APP14:
-        if (!gst_jpeg_parse_app14 (parse, &seg)) {
-          GST_ELEMENT_WARNING (parse, STREAM, FORMAT,
-              ("Invalid data"), ("Failed to parse app14 segment"));
-        }
+        if (!gst_jpeg_parse_app14 (parse, &seg))
+          GST_WARNING_OBJECT (parse, "Failed to parse app14 segment");
         break;
       case GST_JPEG_MARKER_DHT:
       case GST_JPEG_MARKER_DAC:
