@@ -33,10 +33,12 @@ G_DECLARE_FINAL_TYPE (GstWebView2Object, gst_webview2_object,
 GstWebView2Object * gst_webview2_object_new          (GstD3D11Device * device);
 
 gboolean            gst_webview2_object_set_location (GstWebView2Object * client,
-                                                      const std::string & location);
+                                                      const std::string & location,
+                                                      const std::string & script);
 
 gboolean            gst_webview_object_update_size   (GstWebView2Object * client,
-                                                      guint width, guint height);
+                                                      guint width,
+                                                      guint height);
 
 void                gst_webview2_object_send_event   (GstWebView2Object * client,
                                                       GstEvent * event);

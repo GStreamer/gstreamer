@@ -119,7 +119,9 @@ GstGetActivationFactory (InterfaceType ** factory)
 class GstWebView2Item : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
     FtmBase, IFrameArrivedHandler,
     ICoreWebView2CreateCoreWebView2EnvironmentCompletedHandler,
-    ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler>
+    ICoreWebView2CreateCoreWebView2CompositionControllerCompletedHandler,
+    ICoreWebView2NavigationCompletedEventHandler,
+    ICoreWebView2ExecuteScriptCompletedHandler>
 {
 public:
   static LRESULT CALLBACK
@@ -238,6 +240,9 @@ public:
     hr = ctrl_->get_CoreWebView2 (&webview_);
     CHECK_HR_AND_RETURN (hr, get_CoreWebView2);
 
+    hr = webview_->add_NavigationCompleted (this, &navigation_compl_token_);
+    CHECK_HR_AND_RETURN (hr, get_CoreWebView2);
+
     ComPtr<ICoreWebView2_8> webview8;
     hr = webview_.As (&webview8);
     if (SUCCEEDED (hr))
@@ -247,6 +252,26 @@ public:
     CHECK_HR_AND_RETURN (hr, startCapture);
 
     gst_webview2_object_initialized (obj_);
+
+    return S_OK;
+  }
+
+  IFACEMETHOD(Invoke) (HRESULT hr, LPCWSTR result_json)
+  {
+    GST_DEBUG_OBJECT (obj_, "Executing script result 0x%x", (guint) hr);
+
+    return S_OK;
+  }
+
+  IFACEMETHOD(Invoke) (ICoreWebView2 * sender,
+      ICoreWebView2NavigationCompletedEventArgs * arg)
+  {
+    GST_DEBUG_OBJECT (obj_, "Navigation completed");
+
+    if (!script_.empty ()) {
+      GST_DEBUG_OBJECT (obj_, "Executing script");
+      sender->ExecuteScript (script_.c_str (), this);
+    }
 
     return S_OK;
   }
@@ -367,10 +392,15 @@ public:
     comp_ = nullptr;
   }
 
-  HRESULT Navigate (LPCWSTR location)
+  HRESULT Navigate (LPCWSTR location, LPCWSTR script)
   {
     if (!webview_ || !location)
       return E_FAIL;
+
+    if (script)
+      script_ = script;
+    else
+      script_.clear ();
 
     return webview_->Navigate (location);
   }
@@ -503,6 +533,8 @@ private:
   ComPtr<ICoreWebView2Controller3> ctrl_;
   ComPtr<ICoreWebView2CompositionController > comp_ctrl_;
   ComPtr<ICoreWebView2 > webview_;
+  EventRegistrationToken navigation_compl_token_ = { };
+  std::wstring script_;
 
   ComPtr<IGraphicsCaptureItem> item_;
   SizeInt32 frame_size_ = { };
@@ -576,18 +608,23 @@ class UpdateLocationHandler : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
 {
 public:
   STDMETHODIMP
-  RuntimeClassInitialize (GstWebView2Item * item, const std::string & location)
+  RuntimeClassInitialize (GstWebView2Item * item, const std::string & location,
+      const std::string & script)
   {
     item_ = item;
     location_wide_ = g_utf8_to_utf16 (location.c_str (),
         -1, nullptr, nullptr, nullptr);
+    if (!script.empty ()) {
+      script_wide_ = g_utf8_to_utf16 (script.c_str (),
+          -1, nullptr, nullptr, nullptr);
+    }
 
     return S_OK;
   }
 
   IFACEMETHOD(Invoke) (void)
   {
-    item_->Navigate ((LPCWSTR) location_wide_);
+    item_->Navigate ((LPCWSTR) location_wide_, (LPCWSTR) script_wide_);
     item_ = nullptr;
 
     return S_OK;
@@ -596,11 +633,13 @@ public:
   ~UpdateLocationHandler ()
   {
     g_free (location_wide_);
+    g_free (script_wide_);
   }
 
 private:
   ComPtr<GstWebView2Item> item_;
   gunichar2 *location_wide_ = nullptr;
+  gunichar2 *script_wide_ = nullptr;
 };
 
 class AsyncWaiter : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
@@ -932,7 +971,7 @@ gst_webview2_object_new (GstD3D11Device * device)
 
 gboolean
 gst_webview2_object_set_location (GstWebView2Object * object,
-    const std::string & location)
+    const std::string & location, const std::string & script)
 {
   auto priv = object->priv;
   std::lock_guard < std::mutex > lk (priv->lock);
@@ -941,7 +980,7 @@ gst_webview2_object_set_location (GstWebView2Object * object,
 
   ComPtr < UpdateLocationHandler > handler;
   auto hr = MakeAndInitialize < UpdateLocationHandler > (&handler,
-      priv->item.Get (), location);
+      priv->item.Get (), location, script);
   if (FAILED (hr))
     return FALSE;
 

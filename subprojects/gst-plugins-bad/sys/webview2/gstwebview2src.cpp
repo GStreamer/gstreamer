@@ -57,6 +57,7 @@ enum
   PROP_ADAPTER,
   PROP_LOCATION,
   PROP_PROCESSING_DEADLINE,
+  PROP_JAVASCRIPT,
 };
 
 #define DEFAULT_LOCATION "about:blank"
@@ -80,6 +81,7 @@ struct GstWebView2SrcPrivate
   gint adapter_index = DEFAULT_ADAPTER;
   std::string location = DEFAULT_LOCATION;
   GstClockTime processing_deadline = DEFAULT_PROCESSING_DEADLINE;
+  std::string script;
 };
 /* *INDENT-ON* */
 
@@ -138,7 +140,7 @@ gst_webview2_src_class_init (GstWebView2SrcClass * klass)
               G_PARAM_STATIC_STRINGS)));
 
   g_object_class_install_property (object_class, PROP_LOCATION,
-      g_param_spec_string ("location", "location",
+      g_param_spec_string ("location", "Location",
           "The URL to display",
           nullptr, (GParamFlags) (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING)));
@@ -147,6 +149,12 @@ gst_webview2_src_class_init (GstWebView2SrcClass * klass)
       g_param_spec_uint64 ("processing-deadline", "Processing deadline",
           "Maximum processing time for a buffer in nanoseconds", 0, G_MAXUINT64,
           DEFAULT_PROCESSING_DEADLINE, (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING)));
+
+  g_object_class_install_property (object_class, PROP_JAVASCRIPT,
+      g_param_spec_string ("javascript", "Javascript",
+          "Javascript to run on nevigation completed",
+          nullptr, (GParamFlags) (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING)));
 
   gst_element_class_set_static_metadata (element_class,
@@ -208,8 +216,10 @@ gst_webview2_src_set_location (GstWebView2Src * self, const gchar * location)
   else
     priv->location = DEFAULT_LOCATION;
 
-  if (priv->object)
-    gst_webview2_object_set_location (priv->object, priv->location);
+  if (priv->object) {
+    gst_webview2_object_set_location (priv->object,
+        priv->location, priv->script);
+  }
 }
 
 static void
@@ -242,6 +252,20 @@ gst_webview2_src_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_JAVASCRIPT:
+    {
+      auto script = g_value_get_string (value);
+      if (script)
+        priv->script = script;
+      else
+        priv->script.clear ();
+
+      if (priv->object) {
+        gst_webview2_object_set_location (priv->object, priv->location,
+            priv->script);
+      }
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -265,6 +289,9 @@ gst_win32_video_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PROCESSING_DEADLINE:
       g_value_set_uint64 (value, priv->processing_deadline);
+      break;
+    case PROP_JAVASCRIPT:
+      g_value_set_string (value, priv->script.c_str ());
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -311,7 +338,7 @@ gst_webview2_src_start (GstBaseSrc * src)
     return FALSE;
   }
 
-  gst_webview2_object_set_location (priv->object, priv->location);
+  gst_webview2_object_set_location (priv->object, priv->location, priv->script);
 
   priv->last_frame_no = -1;
 
