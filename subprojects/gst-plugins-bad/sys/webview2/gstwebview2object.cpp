@@ -440,11 +440,16 @@ public:
     switch (type) {
       /* FIXME: Implement key event */
       case GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS:
+      case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
+      case GST_NAVIGATION_EVENT_MOUSE_DOUBLE_CLICK:
         if (gst_navigation_event_parse_mouse_button_event (event,
                 &button, &x, &y)) {
           GST_TRACE_OBJECT (obj_, "Mouse press, button %d, %lfx%lf",
               button, x, y);
           COREWEBVIEW2_MOUSE_EVENT_KIND kind;
+          COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS vkeys =
+              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE;
+          GstNavigationModifierType state = GST_NAVIGATION_MODIFIER_NONE;
           POINT point;
 
           point.x = (LONG) x;
@@ -452,51 +457,45 @@ public:
 
           switch (button) {
             case 1:
-              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_DOWN;
+              if (type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS)
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_DOWN;
+              else if (type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE)
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_UP;
+              else
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_DOUBLE_CLICK;
               break;
             case 2:
-              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_DOWN;
+              if (type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS)
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_DOWN;
+              else if (type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE)
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_UP;
+              else
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_DOUBLE_CLICK;
               break;
             case 3:
-              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_DOWN;
+              if (type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_PRESS)
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_DOWN;
+              else if (type == GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE)
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_UP;
+              else
+                kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_DOUBLE_CLICK;
               break;
             default:
               return;
           }
 
-          /* FIXME: need to know the virtual key state */
-          comp_ctrl_->SendMouseInput (kind,
-              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
-        }
-        break;
-      case GST_NAVIGATION_EVENT_MOUSE_BUTTON_RELEASE:
-        if (gst_navigation_event_parse_mouse_button_event (event,
-                &button, &x, &y)) {
-          GST_TRACE_OBJECT (obj_, "Mouse release, button %d, %lfx%lf",
-              button, x, y);
-          COREWEBVIEW2_MOUSE_EVENT_KIND kind;
-          POINT point;
-
-          point.x = (LONG) x;
-          point.y = (LONG) y;
-
-          switch (button) {
-            case 1:
-              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_LEFT_BUTTON_UP;
-              break;
-            case 2:
-              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_RIGHT_BUTTON_UP;
-              break;
-            case 3:
-              kind = COREWEBVIEW2_MOUSE_EVENT_KIND_MIDDLE_BUTTON_UP;
-              break;
-            default:
-              return;
+          if (gst_navigation_event_parse_modifier_state (event, &state)) {
+            if ((state & GST_NAVIGATION_MODIFIER_SHIFT_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_SHIFT;
+            if ((state & GST_NAVIGATION_MODIFIER_CONTROL_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_CONTROL;
+            if ((state & GST_NAVIGATION_MODIFIER_BUTTON1_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_LEFT_BUTTON;
+            if ((state & GST_NAVIGATION_MODIFIER_BUTTON2_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_RIGHT_BUTTON;
           }
 
-          /* FIXME: need to know the virtual key state */
-          comp_ctrl_->SendMouseInput (kind,
-              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
+          comp_ctrl_->SendMouseInput (kind, vkeys, 0, point);
         }
         break;
       case GST_NAVIGATION_EVENT_MOUSE_MOVE:
@@ -507,9 +506,23 @@ public:
           point.x = (LONG) x;
           point.y = (LONG) y;
 
-          /* FIXME: need to know the virtual key state */
+          COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS vkeys =
+              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE;
+          GstNavigationModifierType state = GST_NAVIGATION_MODIFIER_NONE;
+
+          if (gst_navigation_event_parse_modifier_state (event, &state)) {
+            if ((state & GST_NAVIGATION_MODIFIER_SHIFT_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_SHIFT;
+            if ((state & GST_NAVIGATION_MODIFIER_CONTROL_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_CONTROL;
+            if ((state & GST_NAVIGATION_MODIFIER_BUTTON1_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_LEFT_BUTTON;
+            if ((state & GST_NAVIGATION_MODIFIER_BUTTON2_MASK) != 0)
+              vkeys |= COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_RIGHT_BUTTON;
+          }
+
           comp_ctrl_->SendMouseInput (COREWEBVIEW2_MOUSE_EVENT_KIND_MOVE,
-              COREWEBVIEW2_MOUSE_EVENT_VIRTUAL_KEYS_NONE, 0, point);
+              vkeys, 0, point);
         }
         break;
       default:
