@@ -52,6 +52,15 @@ static LRESULT CALLBACK window_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
 static LRESULT FAR PASCAL sub_class_proc (HWND hWnd, UINT uMsg, WPARAM wParam,
     LPARAM lParam);
 
+/* windowsx.h */
+#ifndef GET_X_LPARAM
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#endif
+
+#ifndef GET_Y_LPARAM
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+#endif
+
 typedef enum
 {
   GST_D3D11_WINDOW_WIN32_OVERLAY_STATE_NONE = 0,
@@ -722,7 +731,8 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
 {
   GstD3D11Window *window = GST_D3D11_WINDOW (self);
   gint button;
-  const gchar *event = NULL;
+  const gchar *event = nullptr;
+  guint modifier = 0;
 
   if (!window->enable_navigation_events)
     return;
@@ -740,6 +750,10 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
       button = 1;
       event = "mouse-button-release";
       break;
+    case WM_LBUTTONDBLCLK:
+      button = 1;
+      event = "mouse-double-click";
+      break;
     case WM_RBUTTONDOWN:
       button = 2;
       event = "mouse-button-press";
@@ -747,6 +761,10 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
     case WM_RBUTTONUP:
       button = 2;
       event = "mouse-button-release";
+      break;
+    case WM_RBUTTONDBLCLK:
+      button = 2;
+      event = "mouse-double-click";
       break;
     case WM_MBUTTONDOWN:
       button = 3;
@@ -756,13 +774,28 @@ gst_d3d11_window_win32_on_mouse_event (GstD3D11WindowWin32 * self,
       button = 3;
       event = "mouse-button-release";
       break;
-    default:
+    case WM_MBUTTONDBLCLK:
+      button = 3;
+      event = "mouse-double-click";
       break;
+    default:
+      return;
   }
 
-  if (event)
-    gst_d3d11_window_on_mouse_event (window,
-        event, button, (gdouble) LOWORD (lParam), (gdouble) HIWORD (lParam));
+  if ((wParam & MK_CONTROL) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_CONTROL_MASK;
+  if ((wParam & MK_LBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON1_MASK;
+  if ((wParam & MK_RBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON2_MASK;
+  if ((wParam & MK_MBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON3_MASK;
+  if ((wParam & MK_SHIFT) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_SHIFT_MASK;
+
+  gst_d3d11_window_on_mouse_event (window,
+      event, button, (gdouble) GET_X_LPARAM (lParam),
+      (gdouble) GET_Y_LPARAM (lParam), modifier);
 }
 
 static void
@@ -795,6 +828,9 @@ gst_d3d11_window_win32_handle_window_proc (GstD3D11WindowWin32 * self,
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
     case WM_MOUSEMOVE:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDBLCLK:
       gst_d3d11_window_win32_on_mouse_event (self, hWnd, uMsg, wParam, lParam);
       break;
     case WM_SYSKEYDOWN:

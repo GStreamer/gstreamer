@@ -1183,8 +1183,8 @@ gst_d3d11_video_sink_key_event (GstD3D11Window * window, const gchar * event,
 }
 
 static void
-gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
-    gint button, gdouble x, gdouble y, GstD3D11VideoSink * self)
+gst_d3d11_video_sink_mouse_event (GstD3D11Window * window, const gchar * event,
+    gint button, gdouble x, gdouble y, guint modifier, GstD3D11VideoSink * self)
 {
   GstEvent *mouse_event;
 
@@ -1195,13 +1195,16 @@ gst_d3d11_video_mouse_key_event (GstD3D11Window * window, const gchar * event,
       "send mouse event %s, button %d (%.1f, %.1f)", event, button, x, y);
   if (g_strcmp0 ("mouse-button-press", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_button_press (button, x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
   } else if (g_strcmp0 ("mouse-button-release", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_button_release (button, x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
   } else if (g_strcmp0 ("mouse-move", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_move (x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
+  } else if (g_strcmp0 ("mouse-double-click", event) == 0) {
+    mouse_event = gst_navigation_event_new_mouse_double_click (button, x, y,
+        (GstNavigationModifierType) modifier);
   } else {
     return;
   }
@@ -1325,7 +1328,7 @@ done:
   g_signal_connect (self->window, "key-event",
       G_CALLBACK (gst_d3d11_video_sink_key_event), self);
   g_signal_connect (self->window, "mouse-event",
-      G_CALLBACK (gst_d3d11_video_mouse_key_event), self);
+      G_CALLBACK (gst_d3d11_video_sink_mouse_event), self);
   g_signal_connect (self->window, "present",
       G_CALLBACK (gst_d3d11_video_sink_present), self);
 

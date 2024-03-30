@@ -232,7 +232,8 @@ void          gst_d3d11_window_on_mouse_event       (GstD3D11Window * window,
                                                      const gchar * event,
                                                      gint button,
                                                      gdouble x,
-                                                     gdouble y);
+                                                     gdouble y,
+                                                     guint modifier);
 
 /* utils */
 GstD3D11WindowNativeType gst_d3d11_window_get_native_type_from_handle (guintptr handle);
