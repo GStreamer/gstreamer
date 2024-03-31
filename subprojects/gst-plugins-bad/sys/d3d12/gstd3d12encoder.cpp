@@ -704,8 +704,7 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
     auto dmem = GST_D3D12_MEMORY_CAST (mem);
     if (gst_d3d12_device_is_equal (dmem->device, self->device)) {
       GstMapInfo map_info;
-      if (!gst_memory_map (mem, &map_info,
-              (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D12))) {
+      if (!gst_memory_map (mem, &map_info, GST_MAP_READ_D3D12)) {
         GST_ERROR_OBJECT (self, "Couldn't map memory");
         return nullptr;
       }
@@ -813,8 +812,7 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
 
     GstMapInfo map_info;
     mem = gst_buffer_peek_memory (upload, 0);
-    if (!gst_memory_map (mem, &map_info,
-            (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D12))) {
+    if (!gst_memory_map (mem, &map_info, GST_MAP_READ_D3D12)) {
       GST_ERROR_OBJECT (self, "Couldn't map memory");
       gst_buffer_unref (upload);
       return nullptr;

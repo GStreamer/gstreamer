@@ -620,8 +620,7 @@ gst_d3d12_ipc_sink_prepare (GstBaseSink * sink, GstBuffer * buf)
   dmem = (GstD3D12Memory *) gst_buffer_peek_memory (uploaded, 0);
 
   /* Upload staging to device memory */
-  if (!gst_video_frame_map (&frame, &priv->info, uploaded,
-          (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D12))) {
+  if (!gst_video_frame_map (&frame, &priv->info, uploaded, GST_MAP_READ_D3D12)) {
     GST_ERROR_OBJECT (self, "Couldn't upload memory");
     gst_buffer_unref (uploaded);
     return GST_FLOW_ERROR;

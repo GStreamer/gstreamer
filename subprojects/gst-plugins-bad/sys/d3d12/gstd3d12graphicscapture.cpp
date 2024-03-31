@@ -582,8 +582,7 @@ public:
           shared_data, (GDestroyNotify) shared_texture_data_free);
     }
 
-    if (!gst_memory_map (mem,
-        &map_info, (GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D12))) {
+    if (!gst_memory_map (mem, &map_info, GST_MAP_WRITE_D3D12)) {
       GST_ERROR_OBJECT (obj_, "Couldn't map memory");
       gst_buffer_unref (outbuf);
       return GST_FLOW_ERROR;

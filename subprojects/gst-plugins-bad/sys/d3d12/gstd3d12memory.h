@@ -69,6 +69,20 @@ G_BEGIN_DECLS
 #define GST_MAP_D3D12 (GST_MAP_FLAG_LAST << 1)
 
 /**
+ * GST_MAP_READ_D3D12:
+ *
+ * GstMapFlags value alias for GST_MAP_READ | GST_MAP_D3D12
+ */
+#define GST_MAP_READ_D3D12 ((GstMapFlags) (GST_MAP_READ | GST_MAP_D3D12))
+
+/**
+ * GST_MAP_WRITE_D3D12:
+ *
+ * GstMapFlags value alias for GST_MAP_WRITE | GST_MAP_D3D12
+ */
+#define GST_MAP_WRITE_D3D12 ((GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D12))
+
+/**
  * GstD3D12MemoryTransfer:
  *
  * Pending memory transfer operation
