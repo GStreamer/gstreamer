@@ -221,7 +221,7 @@ gst_d3d12_buffer_copy_into (GstBuffer * dst, GstBuffer * src,
     auto src_dmem = GST_D3D12_MEMORY_CAST (src_mem);
 
     device = dst_dmem->device;
-    if (device != src_dmem->device) {
+    if (!gst_d3d12_device_is_equal (device, src_dmem->device)) {
       GST_LOG ("different device, perform fallback copy");
       return gst_d3d12_buffer_copy_into_fallback (dst, src, info);
     }

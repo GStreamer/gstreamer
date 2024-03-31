@@ -202,7 +202,7 @@ gst_d3d12_base_filter_before_transform (GstBaseTransform * trans,
 
   dmem = GST_D3D12_MEMORY_CAST (mem);
   /* d3d12 devices are singletons per adapter */
-  if (dmem->device == self->device)
+  if (gst_d3d12_device_is_equal (dmem->device, self->device))
     return;
 
   GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"

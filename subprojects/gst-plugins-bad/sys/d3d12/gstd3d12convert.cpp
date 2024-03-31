@@ -1457,7 +1457,7 @@ gst_d3d12_convert_propose_allocation (GstBaseTransform * trans,
         gst_clear_object (&pool);
       } else {
         auto dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (dpool->device != filter->device)
+        if (!gst_d3d12_device_is_equal (dpool->device, filter->device))
           gst_clear_object (&pool);
       }
     }
@@ -1548,7 +1548,7 @@ gst_d3d12_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
         gst_clear_object (&pool);
       } else {
         auto dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (dpool->device != filter->device)
+        if (!gst_d3d12_device_is_equal (dpool->device, filter->device))
           gst_clear_object (&pool);
       }
     }

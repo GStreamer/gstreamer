@@ -515,7 +515,7 @@ gst_d3d12_ipc_upload (GstD3D12IpcSink * self, GstBuffer * buf)
   mem = gst_buffer_peek_memory (buf, 0);
   if (gst_is_d3d12_memory (mem)) {
     auto dmem = GST_D3D12_MEMORY_CAST (mem);
-    if (dmem->device == priv->device) {
+    if (gst_d3d12_device_is_equal (dmem->device, priv->device)) {
       D3D12_RESOURCE_DESC desc;
       D3D12_HEAP_FLAGS heap_flags = D3D12_HEAP_FLAG_NONE;
 
@@ -575,7 +575,7 @@ gst_d3d12_ipc_sink_ensure_server (GstD3D12IpcSink * self, GstBuffer * buffer)
   mem = gst_buffer_peek_memory (buffer, 0);
   if (gst_is_d3d12_memory (mem)) {
     GstD3D12Memory *dmem = GST_D3D12_MEMORY_CAST (mem);
-    if (dmem->device != priv->device) {
+    if (!gst_d3d12_device_is_equal (dmem->device, priv->device)) {
       g_object_get (dmem->device, "adapter-luid", &adapter_luid, nullptr);
       gst_object_unref (priv->device);
       priv->device = (GstD3D12Device *) gst_object_ref (dmem->device);

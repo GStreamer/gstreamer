@@ -1814,7 +1814,7 @@ gst_d3d12_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
       gst_clear_object (&pool);
     } else {
       GstD3D12BufferPool *dpool = GST_D3D12_BUFFER_POOL (pool);
-      if (dpool->device != self->device)
+      if (!gst_d3d12_device_is_equal (dpool->device, self->device))
         gst_clear_object (&pool);
     }
   }

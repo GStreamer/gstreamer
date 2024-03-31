@@ -2132,7 +2132,7 @@ gst_d3d12_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
       gst_clear_object (&pool);
     } else {
       GstD3D12BufferPool *dpool = GST_D3D12_BUFFER_POOL (pool);
-      if (dpool->device != self->device) {
+      if (!gst_d3d12_device_is_equal (dpool->device, self->device)) {
         GST_DEBUG_OBJECT (self, "Different device, will create new one");
         gst_clear_object (&pool);
       }
@@ -2487,7 +2487,7 @@ gst_d3d12_compositor_check_device_update (GstElement * agg,
   dmem = GST_D3D12_MEMORY_CAST (mem);
 
   /* We can use existing device */
-  if (dmem->device == self->device) {
+  if (gst_d3d12_device_is_equal (dmem->device, self->device)) {
     data->have_same_device = TRUE;
     return FALSE;
   }

@@ -119,5 +119,8 @@ void                    gst_d3d12_device_d3d12_debug              (GstD3D12Devic
                                                                    const gchar * function,
                                                                    gint line);
 
+gboolean                gst_d3d12_device_is_equal                 (GstD3D12Device * device1,
+                                                                   GstD3D12Device * device2);
+
 G_END_DECLS
 

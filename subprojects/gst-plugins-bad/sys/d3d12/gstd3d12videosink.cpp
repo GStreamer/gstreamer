@@ -1025,7 +1025,7 @@ gst_d3d12_video_sink_check_device_update (GstD3D12VideoSink * self,
     return;
 
   auto dmem = GST_D3D12_MEMORY_CAST (mem);
-  if (dmem->device == self->device)
+  if (gst_d3d12_device_is_equal (dmem->device, self->device))
     return;
 
   GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"

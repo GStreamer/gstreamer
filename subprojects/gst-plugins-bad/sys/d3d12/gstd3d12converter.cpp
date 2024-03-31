@@ -2192,7 +2192,7 @@ gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
     return TRUE;
 
   auto dmem = GST_D3D12_MEMORY_CAST (mem);
-  if (dmem->device != self->device)
+  if (!gst_d3d12_device_is_equal (dmem->device, self->device))
     return TRUE;
 
   auto resource = gst_d3d12_memory_get_resource_handle (dmem);

@@ -702,7 +702,7 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
   auto mem = gst_buffer_peek_memory (buffer, 0);
   if (gst_is_d3d12_memory (mem)) {
     auto dmem = GST_D3D12_MEMORY_CAST (mem);
-    if (dmem->device == self->device) {
+    if (gst_d3d12_device_is_equal (dmem->device, self->device)) {
       GstMapInfo map_info;
       if (!gst_memory_map (mem, &map_info,
               (GstMapFlags) (GST_MAP_READ | GST_MAP_D3D12))) {

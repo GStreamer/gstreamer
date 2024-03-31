@@ -1420,7 +1420,7 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     mem = gst_buffer_peek_memory (frame->output_buffer, 0);
     if (gst_is_d3d12_memory (mem)) {
       dmem = GST_D3D12_MEMORY_CAST (mem);
-      if (dmem->device == self->device) {
+      if (gst_d3d12_device_is_equal (dmem->device, self->device)) {
         out_resource = gst_d3d12_memory_get_resource_handle (dmem);
         gst_d3d12_memory_get_subresource_index (dmem, 0, &out_subresource[0]);
         gst_d3d12_memory_get_subresource_index (dmem, 1, &out_subresource[1]);
@@ -1791,7 +1791,7 @@ gst_d3d12_decoder_decide_allocation (GstD3D12Decoder * decoder,
         gst_clear_object (&pool);
       } else {
         GstD3D12BufferPool *dpool = GST_D3D12_BUFFER_POOL (pool);
-        if (dpool->device != decoder->device) {
+        if (!gst_d3d12_device_is_equal (dpool->device, decoder->device)) {
           GST_DEBUG_OBJECT (videodec, "Different device, will create new one");
           gst_clear_object (&pool);
         }

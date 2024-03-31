@@ -1232,7 +1232,7 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
   std::unique_lock < std::recursive_mutex > lk (priv->lock);
   HRESULT hr;
 
-  if (window->device != device) {
+  if (!gst_d3d12_device_is_equal (window->device, device)) {
     priv->ctx = nullptr;
     gst_clear_object (&window->device);
     window->device = (GstD3D12Device *) gst_object_ref (device);

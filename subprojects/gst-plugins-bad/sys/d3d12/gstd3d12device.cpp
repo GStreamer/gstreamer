@@ -1253,3 +1253,21 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
     gst_d3d12_command_allocator_unref (gst_ca);
   }
 }
+
+gboolean
+gst_d3d12_device_is_equal (GstD3D12Device * device1, GstD3D12Device * device2)
+{
+  if (!device1 || !device2)
+    return FALSE;
+
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device1), FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device2), FALSE);
+
+  if (device1 == device2)
+    return TRUE;
+
+  if (device1->priv->inner == device2->priv->inner)
+    return TRUE;
+
+  return FALSE;
+}
