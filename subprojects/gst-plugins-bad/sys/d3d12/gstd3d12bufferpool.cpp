@@ -116,6 +116,21 @@ gst_d3d12_buffer_pool_get_options (GstBufferPool * pool)
   return options;
 }
 
+static void
+gst_d3d12_buffer_pool_do_align (D3D12_RESOURCE_DESC & desc)
+{
+  UINT width_align =
+      D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetWidthAlignment (desc.Format);
+  UINT height_align =
+      D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetHeightAlignment (desc.Format);
+
+  if (width_align > 1)
+    desc.Width = GST_ROUND_UP_N (desc.Width, (UINT64) width_align);
+
+  if (height_align > 1)
+    desc.Height = GST_ROUND_UP_N (desc.Height, height_align);
+}
+
 static gboolean
 gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 {
@@ -173,20 +188,8 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
     desc[0] = CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.dxgi_format,
         params->aligned_info.width, params->aligned_info.height,
         params->array_size, 1, 1, 0, params->resource_flags);
-    switch (params->d3d12_format.dxgi_format) {
-      case DXGI_FORMAT_NV12:
-      case DXGI_FORMAT_P010:
-      case DXGI_FORMAT_P016:
-        desc[0].Width = GST_ROUND_UP_2 (desc[0].Width);
-        desc[0].Height = GST_ROUND_UP_2 (desc[0].Height);
-        break;
-      case DXGI_FORMAT_Y210:
-      case DXGI_FORMAT_Y216:
-        desc[0].Width = GST_ROUND_UP_2 (desc[0].Width);
-        break;
-      default:
-        break;
-    }
+
+    gst_d3d12_buffer_pool_do_align (desc[0]);
 
     auto alloc = (GstD3D12Allocator *)
         gst_d3d12_pool_allocator_new (self->device,
@@ -215,6 +218,8 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
           GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, i),
           GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, i),
           params->array_size, 1, 1, 0, params->resource_flags);
+
+      gst_d3d12_buffer_pool_do_align (desc[i]);
 
       auto alloc = (GstD3D12Allocator *)
           gst_d3d12_pool_allocator_new (self->device,
