@@ -1,5 +1,4 @@
 d3d12_sources = [
-  'gstd3d11on12.cpp',
   'gstd3d12av1dec.cpp',
   'gstd3d12basefilter.cpp',
   'gstd3d12bufferpool.cpp',

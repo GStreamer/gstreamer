@@ -35,11 +35,11 @@
 #endif
 
 #include "gstd3d12testsrc.h"
-#include "gstd3d11on12.h"
 #include "gstd3d12pluginutils.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <string.h>
+#include <d3d11on12.h>
 #include <d3d11.h>
 #include <d2d1.h>
 #include <math.h>
@@ -240,12 +240,12 @@ struct RenderContext
 
     CloseHandle (event_handle);
 
-    /* releasing d3d12/d3d11/d2d shared resource might not thread safe? */
-    gst_d3d12_device_lock (device);
     brush = nullptr;
     d2d_target = nullptr;
     wrapped_texture = nullptr;
-    gst_d3d12_device_unlock (device);
+    device11on12 = nullptr;
+    d3d11_context = nullptr;
+    device11 = nullptr;
 
     gst_clear_buffer (&render_buffer);
 
@@ -264,7 +264,8 @@ struct RenderContext
   GstBuffer *render_buffer = nullptr;
   GstBufferPool *convert_pool = nullptr;
 
-  ComPtr<IUnknown> d3d11on12;
+  ComPtr<ID3D11On12Device> device11on12;
+  ComPtr<ID3D11Device> device11;
   ComPtr<ID3D11DeviceContext> d3d11_context;
   ComPtr<ID2D1RenderTarget> d2d_target;
   ComPtr<ID2D1RadialGradientBrush> brush;
@@ -1180,6 +1181,13 @@ setup_d2d_render (GstD3D12TestSrc * self, RenderContext * ctx)
   auto priv = self->priv;
   HRESULT hr;
 
+  static const D3D_FEATURE_LEVEL feature_levels[] = {
+    D3D_FEATURE_LEVEL_12_1,
+    D3D_FEATURE_LEVEL_12_0,
+    D3D_FEATURE_LEVEL_11_1,
+    D3D_FEATURE_LEVEL_11_0,
+  };
+
   if (!priv->d2d_factory) {
     ComPtr < ID2D1Factory > d2d_factory;
     hr = D2D1CreateFactory (D2D1_FACTORY_TYPE_MULTI_THREADED,
@@ -1193,27 +1201,35 @@ setup_d2d_render (GstD3D12TestSrc * self, RenderContext * ctx)
     priv->d2d_factory = d2d_factory;
   }
 
-  hr = gst_d3d12_device_get_d3d11on12_device (self->device, &ctx->d3d11on12);
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't get d3d11on12 device");
-    return FALSE;
-  }
+  auto device = gst_d3d12_device_get_device_handle (self->device);
+  auto cq = gst_d3d12_device_get_command_queue (self->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  ComPtr < ID3D12CommandQueue > cq_handle;
+  gst_d3d12_command_queue_get_handle (cq, &cq_handle);
+  IUnknown *cq_list[] = { cq_handle.Get () };
 
-  ComPtr < ID3D11Device > d3d11dev;
-  hr = ctx->d3d11on12.As (&d3d11dev);
+  hr = D3D11On12CreateDevice (device, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+      feature_levels, G_N_ELEMENTS (feature_levels), cq_list, 1, 0,
+      &ctx->device11, &ctx->d3d11_context, nullptr);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't get d3d11 device");
     return FALSE;
   }
 
-  d3d11dev->GetImmediateContext (&ctx->d3d11_context);
+  hr = ctx->device11.As (&ctx->device11on12);
+  if (!gst_d3d12_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't get d3d11on12 device");
+    return FALSE;
+  }
 
-  hr = GstD3D11On12CreateWrappedResource (ctx->d3d11on12.Get (),
-      ctx->texture.Get (),
-      D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE,
-      D3D11_RESOURCE_MISC_SHARED, 0, 0,
+  D3D11_RESOURCE_FLAGS flags11 = { };
+  flags11.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+  flags11.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
+
+  hr = ctx->device11on12->CreateWrappedResource (ctx->texture.Get (), &flags11,
       D3D12_RESOURCE_STATE_RENDER_TARGET,
-      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, &ctx->wrapped_texture);
+      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+      IID_PPV_ARGS (&ctx->wrapped_texture));
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create wrapped resource");
     return FALSE;
@@ -1998,11 +2014,9 @@ gst_d3d12_test_src_draw_ball (GstD3D12TestSrc * self)
   x = 20 + (0.5 + 0.5 * sin (rad)) * (priv->info.width - 40);
   y = 20 + (0.5 + 0.5 * sin (rad * sqrt (2))) * (priv->info.height - 40);
 
-  gst_d3d12_device_lock (self->device);
   ID3D11Resource *resources[] = { priv->ctx->wrapped_texture.Get () };
 
-  GstD3D11On12AcquireWrappedResource (priv->ctx->d3d11on12.Get (), resources,
-      1);
+  priv->ctx->device11on12->AcquireWrappedResources (resources, 1);
 
   priv->ctx->brush->SetCenter (D2D1::Point2F (x, y));
   priv->ctx->d2d_target->BeginDraw ();
@@ -2010,12 +2024,9 @@ gst_d3d12_test_src_draw_ball (GstD3D12TestSrc * self)
   priv->ctx->d2d_target->FillEllipse (D2D1::Ellipse (D2D1::Point2F (x, y),
           20, 20), priv->ctx->brush.Get ());
   priv->ctx->d2d_target->EndDraw ();
-
-  GstD3D11On12ReleaseWrappedResource (priv->ctx->d3d11on12.Get (), resources,
-      1);
+  priv->ctx->device11on12->ReleaseWrappedResources (resources, 1);
 
   priv->ctx->d3d11_context->Flush ();
-  gst_d3d12_device_unlock (self->device);
 
   return TRUE;
 }
@@ -2025,24 +2036,18 @@ gst_d3d12_test_src_draw_circular (GstD3D12TestSrc * self)
 {
   auto priv = self->priv;
 
-  gst_d3d12_device_lock (self->device);
   ID3D11Resource *resources[] = { priv->ctx->wrapped_texture.Get () };
 
-  GstD3D11On12AcquireWrappedResource (priv->ctx->d3d11on12.Get (), resources,
-      1);
+  priv->ctx->device11on12->AcquireWrappedResources (resources, 1);
   priv->ctx->d2d_target->BeginDraw ();
   priv->ctx->d2d_target->Clear (D2D1::ColorF (D2D1::ColorF::Black));
   priv->ctx->d2d_target->FillEllipse (D2D1::Ellipse (D2D1::Point2F (priv->
               ctx->x, priv->ctx->y), priv->ctx->rad, priv->ctx->rad),
       priv->ctx->brush.Get ());
   priv->ctx->d2d_target->EndDraw ();
-
-  GstD3D11On12ReleaseWrappedResource (priv->ctx->d3d11on12.Get (), resources,
-      1);
+  priv->ctx->device11on12->ReleaseWrappedResources (resources, 1);
 
   priv->ctx->d3d11_context->Flush ();
-
-  gst_d3d12_device_unlock (self->device);
 
   return TRUE;
 }

@@ -609,14 +609,10 @@ gst_d3d12_ipc_client_wait_msg_finish (GstD3D12IpcClient * client)
       break;
     case GstD3D12IpcPktType::HAVE_DATA:
       GST_LOG_OBJECT (client, "Got HAVE-DATA");
-      gst_d3d12_device_lock (priv->device);
       if (!gst_d3d12_ipc_client_have_data (client)) {
-        gst_d3d12_device_unlock (priv->device);
         gst_d3d12_ipc_client_abort (client);
         return;
       }
-
-      gst_d3d12_device_unlock (priv->device);
 
       GST_LOG_OBJECT (client, "Sending READ-DONE");
       gst_d3d12_ipc_pkt_build_read_done (conn->client_msg);
