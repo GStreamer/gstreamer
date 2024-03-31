@@ -1078,8 +1078,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   memset (&in_args, 0, sizeof (D3D12_VIDEO_DECODE_INPUT_STREAM_ARGUMENTS));
   memset (&out_args, 0, sizeof (D3D12_VIDEO_DECODE_OUTPUT_STREAM_ARGUMENTS));
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
   hr = ca->Reset ();
   if (!gst_d3d12_result (hr, decoder->device)) {
@@ -1091,9 +1090,9 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   if (!priv->cmd->cl) {
     hr = priv->cmd->device->CreateCommandList (0,
         D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE,
-        ca.Get (), nullptr, IID_PPV_ARGS (&priv->cmd->cl));
+        ca, nullptr, IID_PPV_ARGS (&priv->cmd->cl));
   } else {
-    hr = priv->cmd->cl->Reset (ca.Get ());
+    hr = priv->cmd->cl->Reset (ca);
   }
 
   if (!gst_d3d12_result (hr, decoder->device)) {

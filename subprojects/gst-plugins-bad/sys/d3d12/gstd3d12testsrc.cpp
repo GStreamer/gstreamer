@@ -1204,9 +1204,8 @@ setup_d2d_render (GstD3D12TestSrc * self, RenderContext * ctx)
   auto device = gst_d3d12_device_get_device_handle (self->device);
   auto cq = gst_d3d12_device_get_command_queue (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  ComPtr < ID3D12CommandQueue > cq_handle;
-  gst_d3d12_command_queue_get_handle (cq, &cq_handle);
-  IUnknown *cq_list[] = { cq_handle.Get () };
+  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+  IUnknown *cq_list[] = { cq_handle };
 
   hr = D3D11On12CreateDevice (device, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
       feature_levels, G_N_ELEMENTS (feature_levels), cq_list, 1, 0,
@@ -1647,8 +1646,9 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
     return FALSE;
   }
 
-  if (!gst_d3d12_memory_get_render_target_view_heap ((GstD3D12Memory *) mem,
-          &ctx->rtv_heap)) {
+  ctx->rtv_heap =
+      gst_d3d12_memory_get_render_target_view_heap ((GstD3D12Memory *) mem);
+  if (!ctx->rtv_heap) {
     GST_ERROR_OBJECT (self, "Couldn't get rtv heap");
     gst_memory_unref (mem);
     return FALSE;
@@ -2167,8 +2167,7 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
     return GST_FLOW_ERROR;
   }
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {
@@ -2181,7 +2180,7 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   if (!priv->ctx->cl) {
     auto device = gst_d3d12_device_get_device_handle (self->device);
     hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca.Get (), nullptr, IID_PPV_ARGS (&priv->ctx->cl));
+        ca, nullptr, IID_PPV_ARGS (&priv->ctx->cl));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
       gst_d3d12_command_allocator_unref (gst_ca);
@@ -2189,7 +2188,7 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
       return GST_FLOW_ERROR;
     }
   } else {
-    hr = priv->ctx->cl->Reset (ca.Get (), nullptr);
+    hr = priv->ctx->cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
       gst_d3d12_command_allocator_unref (gst_ca);

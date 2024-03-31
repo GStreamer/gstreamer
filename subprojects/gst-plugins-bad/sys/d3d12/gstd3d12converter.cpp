@@ -1944,14 +1944,13 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
 
-  ComPtr < ID3D12DescriptorHeap > srv_heap;
   GstD3D12Descriptor *descriptor;
   if (!gst_d3d12_descriptor_pool_acquire (priv->srv_heap_pool, &descriptor)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire srv heap");
     return FALSE;
   }
 
-  gst_d3d12_descriptor_get_handle (descriptor, &srv_heap);
+  auto srv_heap = gst_d3d12_descriptor_get_handle (descriptor);
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, descriptor);
 
   auto cpu_handle =
@@ -1961,9 +1960,9 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   for (guint i = 0; i < gst_buffer_n_memory (in_buf); i++) {
     auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, i);
     auto num_planes = gst_d3d12_memory_get_plane_count (mem);
-    ComPtr < ID3D12DescriptorHeap > mem_srv_heap;
+    auto mem_srv_heap = gst_d3d12_memory_get_shader_resource_view_heap (mem);
 
-    if (!gst_d3d12_memory_get_shader_resource_view_heap (mem, &mem_srv_heap)) {
+    if (!mem_srv_heap) {
       GST_ERROR_OBJECT (self, "Couldn't get SRV");
       return FALSE;
     }
@@ -1983,9 +1982,9 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   for (guint i = 0; i < gst_buffer_n_memory (out_buf); i++) {
     auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (out_buf, i);
     auto num_planes = gst_d3d12_memory_get_plane_count (mem);
-    ComPtr < ID3D12DescriptorHeap > rtv_heap;
+    auto rtv_heap = gst_d3d12_memory_get_render_target_view_heap (mem);
 
-    if (!gst_d3d12_memory_get_render_target_view_heap (mem, &rtv_heap)) {
+    if (!rtv_heap) {
       GST_ERROR_OBJECT (self, "Couldn't get rtv heap");
       return FALSE;
     }
@@ -2018,7 +2017,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   cl->SetGraphicsRootSignature (priv->rs.Get ());
   cl->SetPipelineState (pso);
 
-  ID3D12DescriptorHeap *heaps[] = { srv_heap.Get () };
+  ID3D12DescriptorHeap *heaps[] = { srv_heap };
   cl->SetDescriptorHeaps (1, heaps);
   cl->SetGraphicsRootDescriptorTable (priv->crs->GetPsSrvIdx (),
       GetGPUDescriptorHandleForHeapStart (srv_heap));

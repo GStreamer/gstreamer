@@ -1505,7 +1505,6 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
   auto fence_data = priv->mouse_fence_data;
 
   GstD3D12CommandAllocator *gst_ca = nullptr;
-  ComPtr < ID3D12CommandAllocator > ca;
 
   if (!gst_d3d12_command_allocator_pool_acquire (priv->ca_pool, &gst_ca)) {
     GST_ERROR_OBJECT (self, "Couldn't acquire command allocator");
@@ -1514,7 +1513,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
   hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't reset command allocator");
@@ -1523,9 +1522,9 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
   if (!priv->mouse_cl) {
     hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca.Get (), nullptr, IID_PPV_ARGS (&priv->mouse_cl));
+        ca, nullptr, IID_PPV_ARGS (&priv->mouse_cl));
   } else {
-    hr = priv->mouse_cl->Reset (ca.Get (), nullptr);
+    hr = priv->mouse_cl->Reset (ca, nullptr);
   }
 
   if (!gst_d3d12_result (hr, self->device)) {
@@ -1584,7 +1583,7 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
   ID3D12CommandList *cmd_list[1];
   GstD3D12FenceData *fence_data = nullptr;
   GstD3D12CommandAllocator *gst_ca = nullptr;
-  ComPtr < ID3D12CommandAllocator > ca;
+  ID3D12CommandAllocator *ca = nullptr;
   HRESULT hr;
 
   std::lock_guard < std::mutex > lk (priv->lock);
@@ -1654,7 +1653,7 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
   hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {
@@ -1664,9 +1663,9 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
 
   if (!priv->cl) {
     hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca.Get (), priv->pso.Get (), IID_PPV_ARGS (&priv->cl));
+        ca, priv->pso.Get (), IID_PPV_ARGS (&priv->cl));
   } else {
-    hr = priv->cl->Reset (ca.Get (), priv->pso.Get ());
+    hr = priv->cl->Reset (ca, priv->pso.Get ());
   }
 
   if (!gst_d3d12_result (hr, self->device)) {

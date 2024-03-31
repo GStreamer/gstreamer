@@ -1009,10 +1009,8 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
     return FALSE;
   }
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
-
-  gst_d3d12_command_list_pool_acquire (cl_pool, ca.Get (), &gst_cl);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  gst_d3d12_command_list_pool_acquire (cl_pool, ca, &gst_cl);
 
   if (!gst_cl) {
     GST_ERROR_OBJECT (device, "Couldn't acquire command list");
@@ -1023,7 +1021,7 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
   ComPtr < ID3D12CommandList > cl_base;
   ComPtr < ID3D12GraphicsCommandList > cl;
 
-  gst_d3d12_command_list_get_handle (gst_cl, &cl_base);
+  cl_base = gst_d3d12_command_list_get_handle (gst_cl);
   cl_base.As (&cl);
 
   for (guint i = 0; i < num_args; i++) {
@@ -1135,7 +1133,6 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
 {
   auto priv = device->priv->inner;
   auto dmem = GST_D3D12_MEMORY_CAST (mem);
-  ComPtr < ID3D12DescriptorHeap > heap;
 
   auto resource = gst_d3d12_memory_get_resource_handle (dmem);
   auto desc = GetDesc (resource);
@@ -1145,7 +1142,7 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
     return;
   }
 
-  gst_d3d12_memory_get_render_target_view_heap (dmem, &heap);
+  auto heap = gst_d3d12_memory_get_render_target_view_heap (dmem);
   if (!heap)
     return;
 
@@ -1158,12 +1155,10 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   if (!gst_ca)
     return;
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
   GstD3D12CommandList *gst_cl = nullptr;
-  gst_d3d12_command_list_pool_acquire (priv->direct_cl_pool,
-      ca.Get (), &gst_cl);
+  gst_d3d12_command_list_pool_acquire (priv->direct_cl_pool, ca, &gst_cl);
   if (!gst_cl) {
     gst_d3d12_command_allocator_unref (gst_ca);
     return;
@@ -1172,7 +1167,7 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   ComPtr < ID3D12CommandList > cl_base;
   ComPtr < ID3D12GraphicsCommandList > cl;
 
-  gst_d3d12_command_list_get_handle (gst_cl, &cl_base);
+  cl_base = gst_d3d12_command_list_get_handle (gst_cl);
   cl_base.As (&cl);
 
   auto rtv_handle =

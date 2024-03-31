@@ -47,8 +47,7 @@ void                           gst_clear_d3d12_command_allocator (GstD3D12Comman
 
 D3D12_COMMAND_LIST_TYPE        gst_d3d12_command_allocator_get_command_type (GstD3D12CommandAllocator * cmd);
 
-gboolean                       gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd,
-                                                                       ID3D12CommandAllocator ** ca);
+ID3D12CommandAllocator *       gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd);
 
 void                           gst_d3d12_command_allocator_set_user_data (GstD3D12CommandAllocator * cmd,
                                                                           gpointer user_data,

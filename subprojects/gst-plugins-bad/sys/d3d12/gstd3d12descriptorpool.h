@@ -45,8 +45,7 @@ void                      gst_d3d12_descriptor_unref (GstD3D12Descriptor * desc)
 
 void                      gst_clear_d3d12_descriptor (GstD3D12Descriptor ** desc);
 
-gboolean                  gst_d3d12_descriptor_get_handle (GstD3D12Descriptor * desc,
-                                                           ID3D12DescriptorHeap ** heap);
+ID3D12DescriptorHeap *    gst_d3d12_descriptor_get_handle (GstD3D12Descriptor * desc);
 
 G_END_DECLS
 

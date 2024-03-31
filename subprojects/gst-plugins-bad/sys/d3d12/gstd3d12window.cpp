@@ -1257,11 +1257,10 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
 
     auto factory = gst_d3d12_device_get_factory_handle (device);
 
-    ComPtr < ID3D12CommandQueue > cq;
-    gst_d3d12_command_queue_get_handle (ctx->queue, &cq);
+    auto cq = gst_d3d12_command_queue_get_handle (ctx->queue);
 
     ComPtr < IDXGISwapChain1 > swapchain;
-    hr = factory->CreateSwapChainForHwnd (cq.Get (), priv->hwnd,
+    hr = factory->CreateSwapChainForHwnd (cq, priv->hwnd,
         &desc, nullptr, nullptr, &swapchain);
     if (!gst_d3d12_result (hr, window->device)) {
       GST_ERROR_OBJECT (window, "Couldn't create swapchain");
@@ -1452,8 +1451,7 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, window->device)) {
     GST_ERROR_OBJECT (window, "Couldn't reset command list");
@@ -1465,7 +1463,7 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
   if (!priv->ctx->cl) {
     auto device = gst_d3d12_device_get_device_handle (priv->ctx->device);
     hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca.Get (), nullptr, IID_PPV_ARGS (&cl));
+        ca, nullptr, IID_PPV_ARGS (&cl));
     if (!gst_d3d12_result (hr, priv->ctx->device)) {
       GST_ERROR_OBJECT (window, "Couldn't create command list");
       gst_d3d12_command_allocator_unref (gst_ca);
@@ -1475,7 +1473,7 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     priv->ctx->cl = cl;
   } else {
     cl = priv->ctx->cl;
-    hr = cl->Reset (ca.Get (), nullptr);
+    hr = cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, priv->ctx->device)) {
       GST_ERROR_OBJECT (window, "Couldn't reset command list");
       gst_d3d12_command_allocator_unref (gst_ca);
@@ -1566,9 +1564,8 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
   if (completed < max_fence_val) {
     auto device_queue = gst_d3d12_device_get_command_queue (priv->ctx->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    ComPtr < ID3D12Fence > fence;
-    gst_d3d12_command_queue_get_fence (device_queue, &fence);
-    gst_d3d12_command_queue_execute_wait (priv->ctx->queue, fence.Get (),
+    auto fence = gst_d3d12_command_queue_get_fence_handle (device_queue);
+    gst_d3d12_command_queue_execute_wait (priv->ctx->queue, fence,
         max_fence_val);
   }
 

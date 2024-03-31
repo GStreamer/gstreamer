@@ -48,8 +48,7 @@ void                      gst_clear_d3d12_command_list (GstD3D12CommandList ** c
 
 D3D12_COMMAND_LIST_TYPE   gst_d3d12_command_list_get_command_type (GstD3D12CommandList * cmd);
 
-gboolean                  gst_d3d12_command_list_get_handle (GstD3D12CommandList * cmd,
-                                                             ID3D12CommandList ** cl);
+ID3D12CommandList *       gst_d3d12_command_list_get_handle (GstD3D12CommandList * cmd);
 
 G_END_DECLS
 

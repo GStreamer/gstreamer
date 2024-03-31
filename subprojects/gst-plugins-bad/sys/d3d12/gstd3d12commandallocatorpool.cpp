@@ -246,17 +246,12 @@ gst_d3d12_command_allocator_get_command_type (GstD3D12CommandAllocator * cmd)
   return cmd->type;
 }
 
-gboolean
-gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd,
-    ID3D12CommandAllocator ** ca)
+ID3D12CommandAllocator *
+gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd)
 {
-  g_return_val_if_fail (cmd, FALSE);
-  g_return_val_if_fail (ca, FALSE);
+  g_return_val_if_fail (cmd, nullptr);
 
-  *ca = cmd->ca.Get ();
-  (*ca)->AddRef ();
-
-  return TRUE;
+  return cmd->ca.Get ();
 }
 
 void

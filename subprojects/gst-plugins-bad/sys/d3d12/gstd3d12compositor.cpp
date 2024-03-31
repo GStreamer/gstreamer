@@ -1129,8 +1129,7 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
   gst_d3d12_fence_data_pool_acquire (self->priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, priv->ctx->device)) {
@@ -1142,14 +1141,14 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
   if (!priv->ctx->cl) {
     auto device = gst_d3d12_device_get_device_handle (priv->ctx->device);
     hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca.Get (), nullptr, IID_PPV_ARGS (&priv->ctx->cl));
+        ca, nullptr, IID_PPV_ARGS (&priv->ctx->cl));
     if (!gst_d3d12_result (hr, priv->ctx->device)) {
       GST_ERROR_OBJECT (cpad, "Couldn't create command list");
       gst_d3d12_fence_data_unref (fence_data);
       return FALSE;
     }
   } else {
-    hr = priv->ctx->cl->Reset (ca.Get (), nullptr);
+    hr = priv->ctx->cl->Reset (ca, nullptr);
     if (!gst_d3d12_result (hr, priv->ctx->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
       gst_d3d12_fence_data_unref (fence_data);
@@ -2203,9 +2202,9 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
     auto mem = (GstD3D12Memory *)
         gst_buffer_peek_memory (priv->generated_output_buf, i);
     auto num_planes = gst_d3d12_memory_get_plane_count (mem);
-    ComPtr < ID3D12DescriptorHeap > rtv_heap;
+    auto rtv_heap = gst_d3d12_memory_get_render_target_view_heap (mem);
 
-    if (!gst_d3d12_memory_get_render_target_view_heap (mem, &rtv_heap)) {
+    if (!rtv_heap) {
       GST_ERROR_OBJECT (self, "Couldn't get rtv heap");
       return FALSE;
     }
@@ -2233,8 +2232,7 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
-  ComPtr < ID3D12CommandAllocator > ca;
-  gst_d3d12_command_allocator_get_handle (gst_ca, &ca);
+  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
   auto hr = ca->Reset ();
   if (!gst_d3d12_result (hr, self->device)) {
@@ -2246,14 +2244,14 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
   if (!bg_render->cl) {
     auto device = gst_d3d12_device_get_device_handle (self->device);
     hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        ca.Get (), bg_render->pso.Get (), IID_PPV_ARGS (&bg_render->cl));
+        ca, bg_render->pso.Get (), IID_PPV_ARGS (&bg_render->cl));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create command list");
       gst_d3d12_fence_data_unref (fence_data);
       return FALSE;
     }
   } else {
-    hr = bg_render->cl->Reset (ca.Get (), bg_render->pso.Get ());
+    hr = bg_render->cl->Reset (ca, bg_render->pso.Get ());
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't reset command list");
       gst_d3d12_fence_data_unref (fence_data);

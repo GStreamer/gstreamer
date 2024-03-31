@@ -338,8 +338,7 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
     return nullptr;
   }
 
-  ComPtr < ID3D12DescriptorHeap > srv_heap_handle;
-  gst_d3d12_descriptor_get_handle (srv_heap, &srv_heap_handle);
+  auto srv_heap_handle = gst_d3d12_descriptor_get_handle (srv_heap);
   D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc = { };
   srv_desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
   srv_desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -718,8 +717,8 @@ gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
   auto priv = self->priv;
 
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (buf, 0);
-  ComPtr < ID3D12DescriptorHeap > rtv_heap;
-  if (!gst_d3d12_memory_get_render_target_view_heap (mem, &rtv_heap)) {
+  auto rtv_heap = gst_d3d12_memory_get_render_target_view_heap (mem);
+  if (!rtv_heap) {
     GST_ERROR_OBJECT (self, "Couldn't get rtv heap");
     return FALSE;
   }
@@ -765,9 +764,8 @@ gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
       cl->SetPipelineState (pso.Get ());
     }
 
-    ComPtr < ID3D12DescriptorHeap > srv_heap;
-    gst_d3d12_descriptor_get_handle (rect->srv_heap, &srv_heap);
-    ID3D12DescriptorHeap *heaps[] = { srv_heap.Get () };
+    auto srv_heap = gst_d3d12_descriptor_get_handle (rect->srv_heap);
+    ID3D12DescriptorHeap *heaps[] = { srv_heap };
     cl->SetDescriptorHeaps (1, heaps);
     cl->SetGraphicsRootDescriptorTable (0,
         GetGPUDescriptorHandleForHeapStart (srv_heap));

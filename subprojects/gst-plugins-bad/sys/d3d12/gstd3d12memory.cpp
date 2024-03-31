@@ -578,9 +578,8 @@ gst_d3d12_memory_get_plane_rectangle (GstD3D12Memory * mem, guint plane,
   return TRUE;
 }
 
-gboolean
-gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
-    ID3D12DescriptorHeap ** heap)
+ID3D12DescriptorHeap *
+gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem)
 {
   auto priv = mem->priv;
   auto allocator = GST_MEMORY_CAST (mem)->allocator;
@@ -588,7 +587,7 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
     GST_LOG_OBJECT (allocator,
         "Shader resource was denied, configured flags 0x%x",
         (guint) priv->desc.Flags);
-    return FALSE;
+    return nullptr;
   }
 
   std::lock_guard < std::mutex > lk (priv->lock);
@@ -604,7 +603,7 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
     auto hr = device->CreateDescriptorHeap (&desc, IID_PPV_ARGS (&srv_heap));
     if (!gst_d3d12_result (hr, mem->device)) {
       GST_ERROR_OBJECT (allocator, "Couldn't create descriptor heap");
-      return FALSE;
+      return nullptr;
     }
 
     priv->srv_heap = srv_heap;
@@ -627,15 +626,11 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem,
     }
   }
 
-  *heap = priv->srv_heap.Get ();
-  (*heap)->AddRef ();
-
-  return TRUE;
+  return priv->srv_heap.Get ();
 }
 
-gboolean
-gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
-    ID3D12DescriptorHeap ** heap)
+ID3D12DescriptorHeap *
+gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem)
 {
   auto priv = mem->priv;
   auto allocator = GST_MEMORY_CAST (mem)->allocator;
@@ -643,7 +638,7 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
     GST_LOG_OBJECT (allocator,
         "Render target is not allowed, configured flags 0x%x",
         (guint) priv->desc.Flags);
-    return FALSE;
+    return nullptr;
   }
 
   std::lock_guard < std::mutex > lk (priv->lock);
@@ -659,7 +654,7 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
     auto hr = device->CreateDescriptorHeap (&desc, IID_PPV_ARGS (&rtv_heap));
     if (!gst_d3d12_result (hr, mem->device)) {
       GST_ERROR_OBJECT (allocator, "Couldn't create descriptor heap");
-      return FALSE;
+      return nullptr;
     }
 
     priv->rtv_heap = rtv_heap;
@@ -683,10 +678,7 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem,
     }
   }
 
-  *heap = priv->rtv_heap.Get ();
-  (*heap)->AddRef ();
-
-  return TRUE;
+  return priv->rtv_heap.Get ();
 }
 
 gboolean

@@ -34,11 +34,9 @@ GstD3D12CommandQueue * gst_d3d12_command_queue_new (ID3D12Device * device,
                                                     D3D12_FENCE_FLAGS fence_flags,
                                                     guint queue_size);
 
-gboolean               gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue,
-                                                           ID3D12CommandQueue ** handle);
+ID3D12CommandQueue *   gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue);
 
-gboolean               gst_d3d12_command_queue_get_fence  (GstD3D12CommandQueue * queue,
-                                                           ID3D12Fence ** handle);
+ID3D12Fence *          gst_d3d12_command_queue_get_fence_handle (GstD3D12CommandQueue * queue);
 
 HRESULT                gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
                                                                       guint num_command_lists,

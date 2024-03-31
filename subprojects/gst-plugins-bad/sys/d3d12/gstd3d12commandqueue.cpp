@@ -182,34 +182,20 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
   return self;
 }
 
-gboolean
-gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue,
-    ID3D12CommandQueue ** handle)
+ID3D12CommandQueue *
+gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), FALSE);
-  g_return_val_if_fail (handle, FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), nullptr);
 
-  auto priv = queue->priv;
-
-  *handle = priv->cq.Get ();
-  (*handle)->AddRef ();
-
-  return TRUE;
+  return queue->priv->cq.Get ();
 }
 
-gboolean
-gst_d3d12_command_queue_get_fence (GstD3D12CommandQueue * queue,
-    ID3D12Fence ** handle)
+ID3D12Fence *
+gst_d3d12_command_queue_get_fence_handle (GstD3D12CommandQueue * queue)
 {
-  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), FALSE);
-  g_return_val_if_fail (handle, FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), nullptr);
 
-  auto priv = queue->priv;
-
-  *handle = priv->fence.Get ();
-  (*handle)->AddRef ();
-
-  return TRUE;
+  return queue->priv->fence.Get ();
 }
 
 HRESULT

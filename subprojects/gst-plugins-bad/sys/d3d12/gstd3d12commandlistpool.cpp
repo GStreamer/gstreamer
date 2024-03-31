@@ -257,15 +257,10 @@ gst_d3d12_command_list_get_command_type (GstD3D12CommandList * cmd)
   return cmd->type;
 }
 
-gboolean
-gst_d3d12_command_list_get_handle (GstD3D12CommandList * cmd,
-    ID3D12CommandList ** cl)
+ID3D12CommandList *
+gst_d3d12_command_list_get_handle (GstD3D12CommandList * cmd)
 {
-  g_return_val_if_fail (cmd, FALSE);
-  g_return_val_if_fail (cl, FALSE);
+  g_return_val_if_fail (cmd, nullptr);
 
-  *cl = cmd->cl.Get ();
-  (*cl)->AddRef ();
-
-  return TRUE;
+  return cmd->cl.Get ();
 }
