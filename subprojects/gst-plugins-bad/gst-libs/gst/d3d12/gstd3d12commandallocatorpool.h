@@ -21,38 +21,81 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d12_fwd.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL (gst_d3d12_command_allocator_pool_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D12CommandAllocatorPool,
-    gst_d3d12_command_allocator_pool, GST, D3D12_COMMAND_ALLOCATOR_POOL, GstObject);
+#define GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL                (gst_d3d12_command_allocator_pool_get_type ())
+#define GST_D3D12_COMMAND_ALLOCATOR_POOL(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL, GstD3D12CommandAllocatorPool))
+#define GST_D3D12_COMMAND_ALLOCATOR_POOL_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL, GstD3D12CommandAllocatorPoolClass))
+#define GST_IS_D3D12_COMMAND_ALLOCATOR_POOL(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL))
+#define GST_IS_D3D12_COMMAND_ALLOCATOR_POOL_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL))
+#define GST_D3D12_COMMAND_ALLOCATOR_POOL_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_D3D12_COMMAND_ALLOCATOR_POOL, GstD3D12CommandAllocatorPoolClass))
+#define GST_D3D12_COMMAND_ALLOCATOR_POOL_CAST(obj)           ((GstD3D12CommandAllocatorPool*)(obj))
 
-typedef struct _GstD3D12CommandAllocator GstD3D12CommandAllocator;
+/**
+ * GstD3D12CommandAllocatorPool:
+ *
+ * Opaque GstD3D12CommandAllocatorPool struct
+ *
+ * Since: 1.26
+ */
+struct _GstD3D12CommandAllocatorPool
+{
+  GstObject parent;
 
-GType gst_d3d12_command_allocator_get_type (void);
+  /*< private >*/
+  GstD3D12CommandAllocatorPoolPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
+};
 
+/**
+ * GstD3D12CommandAllocatorPoolClass:
+ *
+ * Opaque GstD3D12CommandAllocatorPoolClass struct
+ *
+ * Since: 1.26
+ */
+struct _GstD3D12CommandAllocatorPoolClass
+{
+  GstObjectClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+GST_D3D12_API
+GType                          gst_d3d12_command_allocator_pool_get_type (void);
+
+GST_D3D12_API
+GType                          gst_d3d12_command_allocator_get_type (void);
+
+GST_D3D12_API
 GstD3D12CommandAllocatorPool * gst_d3d12_command_allocator_pool_new (ID3D12Device * device,
                                                                      D3D12_COMMAND_LIST_TYPE type);
 
+GST_D3D12_API
 gboolean                       gst_d3d12_command_allocator_pool_acquire (GstD3D12CommandAllocatorPool * pool,
                                                                          GstD3D12CommandAllocator ** cmd);
 
+GST_D3D12_API
 GstD3D12CommandAllocator *     gst_d3d12_command_allocator_ref (GstD3D12CommandAllocator * cmd);
 
+GST_D3D12_API
 void                           gst_d3d12_command_allocator_unref (GstD3D12CommandAllocator * cmd);
 
+GST_D3D12_API
 void                           gst_clear_d3d12_command_allocator (GstD3D12CommandAllocator ** cmd);
 
-D3D12_COMMAND_LIST_TYPE        gst_d3d12_command_allocator_get_command_type (GstD3D12CommandAllocator * cmd);
-
+GST_D3D12_API
 ID3D12CommandAllocator *       gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd);
 
+GST_D3D12_API
 void                           gst_d3d12_command_allocator_set_user_data (GstD3D12CommandAllocator * cmd,
                                                                           gpointer user_data,
                                                                           GDestroyNotify notify);
 
+GST_D3D12_API
 gpointer                       gst_d3d12_command_allocator_get_user_data (GstD3D12CommandAllocator * cmd);
 
 G_END_DECLS

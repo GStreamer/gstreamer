@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2023 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2024 GStreamer developers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -20,14 +20,12 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesrc.h>
-#include <gst/video/video.h>
-#include <gst/d3d12/gstd3d12.h>
 
-G_BEGIN_DECLS
+#ifndef GST_D3D12_API
+# ifdef BUILDING_GST_D3D12
+#  define GST_D3D12_API GST_API_EXPORT         /* from config.h */
+# else
+#  define GST_D3D12_API GST_API_IMPORT
+# endif
+#endif
 
-#define GST_TYPE_D3D12_IPC_SRC (gst_d3d12_ipc_src_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D12IpcSrc, gst_d3d12_ipc_src,
-    GST, D3D12_IPC_SRC, GstBaseSrc);
-
-G_END_DECLS

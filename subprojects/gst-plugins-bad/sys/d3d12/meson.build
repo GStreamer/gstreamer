@@ -1,24 +1,14 @@
 d3d12_sources = [
   'gstd3d12av1dec.cpp',
   'gstd3d12basefilter.cpp',
-  'gstd3d12bufferpool.cpp',
-  'gstd3d12commandallocatorpool.cpp',
-  'gstd3d12commandlistpool.cpp',
-  'gstd3d12commandqueue.cpp',
   'gstd3d12compositor.cpp',
-  'gstd3d12converter-builder.cpp',
-  'gstd3d12converter.cpp',
   'gstd3d12convert.cpp',
   'gstd3d12decoder.cpp',
-  'gstd3d12descriptorpool.cpp',
-  'gstd3d12device.cpp',
   'gstd3d12download.cpp',
   'gstd3d12dpbstorage.cpp',
   'gstd3d12dxgicapture.cpp',
   'gstd3d12encoder.cpp',
   'gstd3d12encoderbufferpool.cpp',
-  'gstd3d12fencedatapool.cpp',
-  'gstd3d12format.cpp',
   'gstd3d12h264dec.cpp',
   'gstd3d12h264enc.cpp',
   'gstd3d12h265dec.cpp',
@@ -27,7 +17,6 @@ d3d12_sources = [
   'gstd3d12ipcserver.cpp',
   'gstd3d12ipcsink.cpp',
   'gstd3d12ipcsrc.cpp',
-  'gstd3d12memory.cpp',
   'gstd3d12mpeg2dec.cpp',
   'gstd3d12overlaycompositor.cpp',
   'gstd3d12pluginutils.cpp',
@@ -36,7 +25,6 @@ d3d12_sources = [
   'gstd3d12screencapturesrc.cpp',
   'gstd3d12testsrc.cpp',
   'gstd3d12upload.cpp',
-  'gstd3d12utils.cpp',
   'gstd3d12videosink.cpp',
   'gstd3d12vp8dec.cpp',
   'gstd3d12vp9dec.cpp',
@@ -46,6 +34,7 @@ d3d12_sources = [
 
 extra_args = [
   '-DGST_USE_UNSTABLE_API',
+  '-DGST_D3D12_USE_DIRECTX_HEADERS',
 ]
 
 # Disable this warning error. Otherwise d3dx12.h will break build
@@ -70,18 +59,16 @@ if host_system != 'windows' or d3d12_option.disabled()
   subdir_done()
 endif
 
-d3d12_lib = cc.find_library('d3d12', required : d3d12_option)
 d3d11_lib = cc.find_library('d3d11', required : d3d12_option)
-d2d_dep = cc.find_library('d2d1', required: d3d12_option)
-dxgi_lib = cc.find_library('dxgi', required : d3d12_option)
+d2d_lib = cc.find_library('d2d1', required: d3d12_option)
 dwmapi_lib = cc.find_library('dwmapi', required: d3d12_wgc_option)
 dx_headers_dep = dependency('DirectX-Headers',
     version: '>= 1.611',
     allow_fallback: true,
     required: d3d12_option)
 
-if not gstdxva_dep.found() or not d3d12_lib.found() or not dxgi_lib.found() \
-  or not dx_headers_dep.found() or not gstd3dshader_dep.found() or not d2d_dep.found()
+if not gstdxva_dep.found() or not gstd3d12_dep.found() or not gstd3dshader_dep.found() \
+  or not dx_headers_dep.found() or not d2d_lib.found() or not d3d11_lib.found()
   if d3d12_option.enabled()
     error('The d3d12 was enabled explicitly, but required dependencies were not found.')
   endif
@@ -139,7 +126,6 @@ if not have_dx_math
 endif
 
 d3d12_headers = [
-  'dxgi1_6.h',
   'd3d11.h',
   'd3d11on12.h',
   'd2d1.h',
@@ -177,8 +163,8 @@ gstd3d12 = library('gstd3d12',
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, gstcodecs_dep, gmodule_dep,
-                  gstdxva_dep, d3d12_lib, d3d11_lib, d2d_dep, dxgi_lib,
-                  gstd3dshader_dep, dx_headers_dep] + extra_deps,
+                  gstdxva_dep, gstd3dshader_dep, gstd3d12_dep, d3d11_lib,
+                  d2d_lib, dx_headers_dep] + extra_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

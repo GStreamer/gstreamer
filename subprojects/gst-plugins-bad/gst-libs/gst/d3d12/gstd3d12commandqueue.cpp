@@ -60,14 +60,14 @@ struct gc_cmp {
   }
 };
 
-struct GstD3D12CommandQueuePrivate
+struct _GstD3D12CommandQueuePrivate
 {
-  GstD3D12CommandQueuePrivate ()
+  _GstD3D12CommandQueuePrivate ()
   {
     event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
   }
 
-  ~GstD3D12CommandQueuePrivate ()
+  ~_GstD3D12CommandQueuePrivate ()
   {
     {
       std::lock_guard <std::mutex> lk (lock);
@@ -106,13 +106,6 @@ struct GstD3D12CommandQueuePrivate
 };
 /* *INDENT-ON* */
 
-struct _GstD3D12CommandQueue
-{
-  GstObject parent;
-
-  GstD3D12CommandQueuePrivate *priv;
-};
-
 static void gst_d3d12_command_queue_finalize (GObject * object);
 
 #define gst_d3d12_command_queue_parent_class parent_class
@@ -142,6 +135,19 @@ gst_d3d12_command_queue_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_d3d12_command_queue_new:
+ * @device: a #GstD3D12Device
+ * @desc: a D3D12_COMMAND_QUEUE_DESC
+ * @fence_flags: a D3D12_FENCE_FLAGS
+ * @queue_size: command queue size, Sets zero for unlimited queue size
+ *
+ * Creates GstD3D12CommandQueue with given parameters.
+ *
+ * Returns: (transfer full): a new #GstD3D12CommandQueue instance
+ *
+ * Since: 1.26
+ */
 GstD3D12CommandQueue *
 gst_d3d12_command_queue_new (ID3D12Device * device,
     const D3D12_COMMAND_QUEUE_DESC * desc, D3D12_FENCE_FLAGS fence_flags,
@@ -182,6 +188,16 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
   return self;
 }
 
+/**
+ * gst_d3d12_command_queue_get_handle:
+ * @queue: a #GstD3D12CommandQueue
+ *
+ * Gets command queue handle
+ *
+ * Return: (transfer none): ID3D12CommandQueue handle
+ *
+ * Since: 1.26
+ */
 ID3D12CommandQueue *
 gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue)
 {
@@ -190,6 +206,16 @@ gst_d3d12_command_queue_get_handle (GstD3D12CommandQueue * queue)
   return queue->priv->cq.Get ();
 }
 
+/**
+ * gst_d3d12_command_queue_get_fence_handle:
+ * @queue: a #GstD3D12CommandQueue
+ *
+ * Gets fence handle handle
+ *
+ * Return: (transfer none): ID3D12Fence handle
+ *
+ * Since: 1.26
+ */
 ID3D12Fence *
 gst_d3d12_command_queue_get_fence_handle (GstD3D12CommandQueue * queue)
 {
@@ -198,6 +224,20 @@ gst_d3d12_command_queue_get_fence_handle (GstD3D12CommandQueue * queue)
   return queue->priv->fence.Get ();
 }
 
+/**
+ * gst_d3d12_command_queue_execute_command_lists:
+ * @queue: a #GstD3D12CommandQueue
+ * @num_command_lists: command list size
+ * @command_lists: array of ID3D12CommandList
+ * @fence_value: (out) (optional): fence value of submitted command
+ *
+ * Executes command list and signals queue. If @num_command_lists is zero,
+ * Only fence signal is executed with fence value increment.
+ *
+ * Return: HRESULT code
+ *
+ * Since: 1.26
+ */
 HRESULT
 gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
     guint num_command_lists, ID3D12CommandList ** command_lists,
@@ -236,6 +276,18 @@ gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
   return hr;
 }
 
+/**
+ * gst_d3d12_command_queue_execute_wait:
+ * @queue: a #GstD3D12CommandQueue
+ * @fence: a ID3D12Fence
+ * @fence_value: fence value to wait
+ *
+ * Exectues ID3D12CommandQueue::Wait() operation
+ *
+ * Return: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 HRESULT
 gst_d3d12_command_queue_execute_wait (GstD3D12CommandQueue * queue,
     ID3D12Fence * fence, guint64 fence_value)
@@ -248,6 +300,16 @@ gst_d3d12_command_queue_execute_wait (GstD3D12CommandQueue * queue,
   return priv->cq->Wait (fence, fence_value);
 }
 
+/**
+ * gst_d3d12_command_queue_get_completed_value:
+ * @queue: a #GstD3D12CommandQueue
+ *
+ * Gets completed fence value
+ *
+ * Returns: Completed fence value
+ *
+ * Since: 1.26
+ */
 guint64
 gst_d3d12_command_queue_get_completed_value (GstD3D12CommandQueue * queue)
 {
@@ -256,6 +318,20 @@ gst_d3d12_command_queue_get_completed_value (GstD3D12CommandQueue * queue)
   return queue->priv->fence->GetCompletedValue ();
 }
 
+/**
+ * gst_d3d12_command_queue_fence_wait:
+ * @queue: a #GstD3D12CommandQueue
+ * @fence_value: fence value to wait
+ * @handle: (nullable) (transfer none): event handle used for fence wait
+ *
+ * Blocks calling CPU thread until command corresponding @fence_value
+ * is completed. If @fence_value is %G_MAXUINT64, this method will block
+ * calling thread until all pending GPU operations are completed
+ *
+ * Returns: HRESULT code
+ *
+ * Since: 1.26
+ */
 HRESULT
 gst_d3d12_command_queue_fence_wait (GstD3D12CommandQueue * queue,
     guint64 fence_value, HANDLE event_handle)
@@ -362,6 +438,26 @@ gst_d3d12_command_queue_gc_thread (GstD3D12CommandQueue * self)
   return nullptr;
 }
 
+/**
+ * gst_d3d12_command_queue_set_notify:
+ * @queue: a #GstD3D12CommandQueue
+ * @fence_value: target fence value
+ * @fence_data: user data
+ * @notify: a #GDestroyNotify
+ *
+ * Schedules oneshot @notify callback.
+ *
+ * This method is designed for garbage collection task.
+ * Users can construct a storage which holds graphics command associated
+ * resources (e.g., command allocator, descriptors, and textures) and pass
+ * the storage with destructor, in order to keep resources alive during
+ * command execution.
+ *
+ * GstD3D12CommandQueue launches internal worker thread to monitor fence value
+ * and once it reaches the scheduled value, @notify will be called with @fence_data
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
     guint64 fence_value, gpointer fence_data, GDestroyNotify notify)
@@ -384,6 +480,16 @@ gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,
   priv->cond.notify_one ();
 }
 
+/**
+ * gst_d3d12_command_queue_drain:
+ * @queue: a #GstD3D12CommandQueue
+ *
+ * Waits for all scheduled GPU commands to be finished
+ *
+ * Returns: HRESULT code
+ *
+ * Since: 1.26
+ */
 HRESULT
 gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
 {

@@ -25,8 +25,20 @@
 #include "gstd3d12-private.h"
 #include <string.h>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_format_debug);
-#define GST_CAT_DEFAULT gst_d3d12_format_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("d3d12format", 0, "d3d12format");
+  } GST_D3D12_CALL_ONCE_END;
+
+  return cat;
+}
+#endif
 
 GstVideoFormat
 gst_d3d12_dxgi_format_to_gst (DXGI_FORMAT format)
@@ -59,8 +71,8 @@ gst_d3d12_dxgi_format_to_gst (DXGI_FORMAT format)
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
-gboolean
-gst_d3d12_dxgi_format_to_resource_formats (DXGI_FORMAT format,
+guint
+gst_d3d12_dxgi_format_get_resource_format (DXGI_FORMAT format,
     DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES])
 {
   g_return_val_if_fail (resource_format != nullptr, FALSE);
@@ -68,43 +80,29 @@ gst_d3d12_dxgi_format_to_resource_formats (DXGI_FORMAT format,
   for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++)
     resource_format[i] = DXGI_FORMAT_UNKNOWN;
 
-  switch (format) {
-    case DXGI_FORMAT_B8G8R8A8_UNORM:
-    case DXGI_FORMAT_R8G8B8A8_UNORM:
-    case DXGI_FORMAT_R10G10B10A2_UNORM:
-    case DXGI_FORMAT_R8_UNORM:
-    case DXGI_FORMAT_R8G8_UNORM:
-    case DXGI_FORMAT_R16_UNORM:
-    case DXGI_FORMAT_R16G16_UNORM:
-    case DXGI_FORMAT_G8R8_G8B8_UNORM:
-    case DXGI_FORMAT_R8G8_B8G8_UNORM:
-    case DXGI_FORMAT_R16G16B16A16_UNORM:
-      resource_format[0] = format;
-      break;
-    case DXGI_FORMAT_AYUV:
-    case DXGI_FORMAT_YUY2:
-      resource_format[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-      break;
-    case DXGI_FORMAT_NV12:
-      resource_format[0] = DXGI_FORMAT_R8_UNORM;
-      resource_format[1] = DXGI_FORMAT_R8G8_UNORM;
-      break;
-    case DXGI_FORMAT_P010:
-    case DXGI_FORMAT_P016:
-      resource_format[0] = DXGI_FORMAT_R16_UNORM;
-      resource_format[1] = DXGI_FORMAT_R16G16_UNORM;
-      break;
-    case DXGI_FORMAT_Y210:
-      resource_format[0] = DXGI_FORMAT_R16G16B16A16_UNORM;
-      break;
-    case DXGI_FORMAT_Y410:
-      resource_format[0] = DXGI_FORMAT_R10G10B10A2_UNORM;
-      break;
-    default:
-      return FALSE;
+  if (format == DXGI_FORMAT_UNKNOWN)
+    return 0;
+
+  for (guint i = 0; i < GST_D3D12_N_FORMATS; i++) {
+    const GstD3D12Format *fmt = &g_gst_d3d12_default_format_map[i];
+
+    if (fmt->dxgi_format == format) {
+      guint n_planes = 0;
+
+      for (n_planes = 0; n_planes < GST_VIDEO_MAX_PLANES; n_planes++) {
+        if (fmt->resource_format[n_planes] == DXGI_FORMAT_UNKNOWN)
+          break;
+
+        resource_format[n_planes] = fmt->resource_format[n_planes];
+      }
+
+      return n_planes;
+    }
   }
 
-  return TRUE;
+  resource_format[0] = format;
+
+  return 1;
 }
 
 char *

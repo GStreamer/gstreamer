@@ -20,8 +20,8 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gstd3d12.h"
-#include "gstd3d12-private.h"
+#include <gst/d3d12/gstd3d12.h>
+#include <gst/d3d12/gstd3d12-private.h>
 
 G_BEGIN_DECLS
 

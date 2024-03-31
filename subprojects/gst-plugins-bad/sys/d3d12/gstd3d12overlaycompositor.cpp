@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12overlaycompositor.h"
+#include "gstd3d12pluginutils.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <memory>

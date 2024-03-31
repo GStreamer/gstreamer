@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2023 Seungha Yang <seungha@centricular.com>
+ * Copyright (C) 2024 Seungha Yang <seungha@centricular.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,17 +19,21 @@
 
 #pragma once
 
+#ifndef GST_USE_UNSTABLE_API
+#pragma message ("The d3d12 library from gst-plugins-bad is unstable API and may change in future.")
+#pragma message ("You can define GST_USE_UNSTABLE_API to avoid this warning.")
+#endif
+
 #include <gst/gst.h>
-#include "gstd3d12_fwd.h"
-#include "gstd3d12bufferpool.h"
-#include "gstd3d12commandallocatorpool.h"
-#include "gstd3d12commandlistpool.h"
-#include "gstd3d12commandqueue.h"
-#include "gstd3d12converter.h"
-#include "gstd3d12descriptorpool.h"
-#include "gstd3d12device.h"
-#include "gstd3d12fencedatapool.h"
-#include "gstd3d12format.h"
-#include "gstd3d12memory.h"
-#include "gstd3d12utils.h"
-#include "gstd3d12compat.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
+#include <gst/d3d12/gstd3d12bufferpool.h>
+#include <gst/d3d12/gstd3d12commandallocatorpool.h>
+#include <gst/d3d12/gstd3d12commandqueue.h>
+#include <gst/d3d12/gstd3d12converter.h>
+#include <gst/d3d12/gstd3d12descriptorpool.h>
+#include <gst/d3d12/gstd3d12device.h>
+#include <gst/d3d12/gstd3d12fencedatapool.h>
+#include <gst/d3d12/gstd3d12format.h>
+#include <gst/d3d12/gstd3d12memory.h>
+#include <gst/d3d12/gstd3d12utils.h>
+

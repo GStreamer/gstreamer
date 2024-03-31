@@ -23,6 +23,7 @@
 
 #include "gstd3d12.h"
 #include "gstd3d12-private.h"
+#include "gstd3d12commandlistpool.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <vector>
@@ -773,6 +774,15 @@ error:
   return nullptr;
 }
 
+/**
+ * gst_d3d12_device_new:
+ * @adapter_index: DXGI adapter index
+ *
+ * Returns: (transfer full) (nullable): a new #GstD3D12Device for @adapter_index
+ * or %NULL when failed to create D3D12 device with given adapter index.
+ *
+ * Since: 1.26
+ */
 GstD3D12Device *
 gst_d3d12_device_new (guint adapter_index)
 {
@@ -784,6 +794,15 @@ gst_d3d12_device_new (guint adapter_index)
   return manager->GetDevice (&data);
 }
 
+/**
+ * gst_d3d12_device_new_for_adapter_luid:
+ * @adapter_luid: an int64 representation of the DXGI adapter LUID
+ *
+ * Returns: (transfer full) (nullable): a new #GstD3D12Device for @adapter_luid
+ * or %NULL when failed to create D3D12 device with given adapter luid.
+ *
+ * Since: 1.26
+ */
 GstD3D12Device *
 gst_d3d12_device_new_for_adapter_luid (gint64 adapter_luid)
 {
@@ -795,6 +814,16 @@ gst_d3d12_device_new_for_adapter_luid (gint64 adapter_luid)
   return manager->GetDevice (&data);
 }
 
+/**
+ * gst_d3d12_device_get_device_handle:
+ * @device: a #GstD3D12Device
+ *
+ * Gets ID3D12Device handle
+ *
+ * Returns: (transfer none): ID3D12Device handle
+ *
+ * Since: 1.26
+ */
 ID3D12Device *
 gst_d3d12_device_get_device_handle (GstD3D12Device * device)
 {
@@ -803,6 +832,16 @@ gst_d3d12_device_get_device_handle (GstD3D12Device * device)
   return device->priv->inner->device.Get ();
 }
 
+/**
+ * gst_d3d12_device_get_adapter_handle:
+ * @device: a #GstD3D12Device
+ *
+ * Gets IDXGIAdapter1 handle
+ *
+ * Returns: (transfer none): IDXGIAdapter1 handle
+ *
+ * Since: 1.26
+ */
 IDXGIAdapter1 *
 gst_d3d12_device_get_adapter_handle (GstD3D12Device * device)
 {
@@ -811,6 +850,16 @@ gst_d3d12_device_get_adapter_handle (GstD3D12Device * device)
   return device->priv->inner->adapter.Get ();
 }
 
+/**
+ * gst_d3d12_device_get_factory_handle:
+ * @device: a #GstD3D12Device
+ *
+ * Gets IDXGIFactory2 handle
+ *
+ * Returns: (transfer none): IDXGIFactory2 handle
+ *
+ * Since: 1.26
+ */
 IDXGIFactory2 *
 gst_d3d12_device_get_factory_handle (GstD3D12Device * device)
 {
@@ -819,6 +868,19 @@ gst_d3d12_device_get_factory_handle (GstD3D12Device * device)
   return device->priv->inner->factory.Get ();
 }
 
+/**
+ * gst_d3d12_device_get_format:
+ * @device: a #GstD3D12Device
+ * @format: a #GstVideoFormat
+ * @device_format: (out caller-allocates): a #GstD3D11Format
+ *
+ * Converts @format to #GstD3D12Format if the @format is supported
+ * by device
+ *
+ * Returns: %TRUE if @format is supported by @device
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_device_get_format (GstD3D12Device * device,
     GstVideoFormat format, GstD3D12Format * device_format)
@@ -831,12 +893,22 @@ gst_d3d12_device_get_format (GstD3D12Device * device,
   if (target == priv->format_table.end ())
     return FALSE;
 
-  if (device_format)
-    *device_format = target->second;
+  *device_format = target->second;
 
   return TRUE;
 }
 
+/**
+ * gst_d3d12_device_get_command_queue:
+ * @device: a #GstD3D12Device
+ * @queue_type: a D3D12_COMMAND_LIST_TYPE
+ *
+ * Gets #GstD3D12CommandQueue corresponding to @queue_type
+ *
+ * Returns: (transfer none): a #GstD3D12CommandQueue
+ *
+ * Since: 1.26
+ */
 GstD3D12CommandQueue *
 gst_d3d12_device_get_command_queue (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type)
@@ -859,6 +931,21 @@ gst_d3d12_device_get_command_queue (GstD3D12Device * device,
   return nullptr;
 }
 
+/**
+ * gst_d3d12_device_execute_command_lists:
+ * @device: a #GstD3D12Device
+ * @queue_type: a D3D12_COMMAND_LIST_TYPE
+ * @num_command_lists: command list size
+ * @command_lists: array of ID3D12CommandList
+ * @fence_value: (out) (optional): fence value of submitted command
+ *
+ * Exectues gst_d3d12_command_queue_execute_command_lists ()
+ * using a #GstD3D12CommandQueue corresponding to @queue_type
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type, guint num_command_lists,
@@ -887,6 +974,18 @@ gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
   return gst_d3d12_result (hr, device);
 }
 
+/**
+ * gst_d3d12_device_get_completed_value:
+ * @device: a #GstD3D12Device
+ * @queue_type: a D3D12_COMMAND_LIST_TYPE
+ *
+ * Exectues gst_d3d12_command_queue_get_completed_value ()
+ * using a #GstD3D12CommandQueue corresponding to @queue_type
+ *
+ * Returns: Completed fence value
+ *
+ * Since: 1.26
+ */
 guint64
 gst_d3d12_device_get_completed_value (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type)
@@ -911,6 +1010,21 @@ gst_d3d12_device_get_completed_value (GstD3D12Device * device,
   return gst_d3d12_command_queue_get_completed_value (queue);
 }
 
+/**
+ * gst_d3d12_device_get_completed_value:
+ * @device: a #GstD3D12Device
+ * @queue_type: a D3D12_COMMAND_LIST_TYPE
+ * @fence_value: target fence value
+ * @fence_data: user data
+ * @notify: a #GDestroyNotify
+ *
+ * Exectues gst_d3d12_command_queue_set_notify ()
+ * using a #GstD3D12CommandQueue corresponding to @queue_type
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value,
@@ -940,6 +1054,20 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_device_fence_wait:
+ * @device: a #GstD3D12Device
+ * @queue_type: a D3D12_COMMAND_LIST_TYPE
+ * @fence_value: target fence value
+ * @handle: (nullable) (transfer none): event handle used for fence wait
+ *
+ * Exectues gst_d3d12_command_queue_fence_wait ()
+ * using a #GstD3D12CommandQueue corresponding to @queue_type
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_device_fence_wait (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value,
@@ -1200,6 +1328,17 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   }
 }
 
+/**
+ * gst_d3d12_device_is_equal:
+ * @device1: (transfer none) (nullable): a #GstD3D12Device
+ * @device2: (transfer none) (nullable): a #GstD3D12Device
+ *
+ * Checks if the given devices represent the same device
+ *
+ * Returns: %TRUE if both devices are valid and equal
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_device_is_equal (GstD3D12Device * device1, GstD3D12Device * device2)
 {

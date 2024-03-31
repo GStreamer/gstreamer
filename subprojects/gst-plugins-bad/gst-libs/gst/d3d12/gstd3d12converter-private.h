@@ -20,14 +20,22 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesrc.h>
 #include <gst/video/video.h>
-#include <gst/d3d12/gstd3d12.h>
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D12_IPC_SRC (gst_d3d12_ipc_src_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D12IpcSrc, gst_d3d12_ipc_src,
-    GST, D3D12_IPC_SRC, GstBaseSrc);
+GST_D3D12_API
+gboolean            gst_d3d12_converter_apply_transform (GstD3D12Converter * converter,
+                                                         GstVideoOrientationMethod orientation,
+                                                         gfloat viewport_width,
+                                                         gfloat viewport_height,
+                                                         gfloat fov,
+                                                         gboolean ortho,
+                                                         gfloat rotation_x,
+                                                         gfloat rotation_y,
+                                                         gfloat rotation_z,
+                                                         gfloat scale_x,
+                                                         gfloat scale_y);
 
 G_END_DECLS

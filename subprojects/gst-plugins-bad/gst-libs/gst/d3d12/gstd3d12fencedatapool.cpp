@@ -66,9 +66,9 @@ struct _GstD3D12FenceData : public GstMiniObject
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12FenceData, gst_d3d12_fence_data);
 
-struct GstD3D12FenceDataPoolPrivate
+struct _GstD3D12FenceDataPoolPrivate
 {
-  ~GstD3D12FenceDataPoolPrivate ()
+  ~_GstD3D12FenceDataPoolPrivate ()
   {
     while (!data_pool.empty ()) {
       auto data = data_pool.front ();
@@ -81,13 +81,6 @@ struct GstD3D12FenceDataPoolPrivate
   std::queue<GstD3D12FenceData *>data_pool;
 };
 /* *INDENT-ON* */
-
-struct _GstD3D12FenceDataPool
-{
-  GstObject parent;
-
-  GstD3D12FenceDataPoolPrivate *priv;
-};
 
 static void gst_d3d12_fence_data_pool_finalize (GObject * object);
 
@@ -122,6 +115,15 @@ gst_d3d12_fence_data_pool_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_d3d12_fence_data_pool_new:
+ *
+ * Creates #GstD3D12FenceDataPool instance
+ *
+ * Returns: (transfer full): a #GstD3D12FenceDataPool instance
+ *
+ * Since: 1.26
+ */
 GstD3D12FenceDataPool *
 gst_d3d12_fence_data_pool_new (void)
 {
@@ -177,6 +179,17 @@ gst_d3d12_fence_data_new (void)
   return data;
 }
 
+/**
+ * gst_d3d12_fence_data_pool_acquire:
+ * @pool: a #GstD3D12FenceDataPool
+ * @data: (out) (transfer full): a pointer to #GstD3D12FenceData
+ *
+ * Acquire #GstD3D12CommandAllocator object
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_fence_data_pool_acquire (GstD3D12FenceDataPool * pool,
     GstD3D12FenceData ** data)
@@ -219,6 +232,16 @@ gst_d3d12_fence_data_add_notify_internal (GstD3D12FenceData * data,
   gst_queue_array_push_tail_struct (data->queue, &notify_data);
 }
 
+/**
+ * gst_d3d12_fence_data_add_notify:
+ * @data: a #GstD3D12FenceData
+ * @user_data: private data
+ * @notify: a #GDestroyNotify
+ *
+ * Sets notify callback
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_fence_data_add_notify (GstD3D12FenceData * data, gpointer user_data,
     GDestroyNotify notify)
@@ -235,6 +258,15 @@ com_free_func (IUnknown * unknown)
     unknown->Release ();
 }
 
+/**
+ * gst_d3d12_fence_data_add_notify_com:
+ * @data: a #GstD3D12FenceData
+ * @unknown: (transfer full): IUnknown COM pointer
+ *
+ * Schedules IUnknown::Release() notify for @unknown
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_fence_data_add_notify_com (GstD3D12FenceData * data, gpointer unknown)
 {
@@ -244,6 +276,15 @@ gst_d3d12_fence_data_add_notify_com (GstD3D12FenceData * data, gpointer unknown)
       unknown, (GDestroyNotify) com_free_func);
 }
 
+/**
+ * gst_d3d12_fence_data_add_notify_mini_object:
+ * @data: a #GstD3D12FenceData
+ * @object: (transfer full): #GstMiniObject
+ *
+ * Schedules gst_mini_object_unref() notify for @object
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_fence_data_add_notify_mini_object (GstD3D12FenceData * data,
     gpointer object)
@@ -254,18 +295,44 @@ gst_d3d12_fence_data_add_notify_mini_object (GstD3D12FenceData * data,
       object, (GDestroyNotify) gst_mini_object_unref);
 }
 
+/**
+ * gst_d3d12_fence_data_ref:
+ * @data: a #GstD3D12FenceData
+ *
+ * Increments the refcount of @data
+ *
+ * Returns: (transfer full): a #GstD3D12FenceData
+ *
+ * Since: 1.26
+ */
 GstD3D12FenceData *
 gst_d3d12_fence_data_ref (GstD3D12FenceData * data)
 {
   return (GstD3D12FenceData *) gst_mini_object_ref (data);
 }
 
+/**
+ * gst_d3d12_fence_data_unref:
+ * @cmd: a #GstD3D12FenceData
+ *
+ * Decrements the refcount of @data
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_fence_data_unref (GstD3D12FenceData * data)
 {
   gst_mini_object_unref (data);
 }
 
+/**
+ * gst_clear_d3d12_fence_data:
+ * @data: a pointer to #GstD3D12FenceData
+ *
+ * Clears a reference to a #GstD3D12FenceData
+ *
+ * Since: 1.26
+ */
 void
 gst_clear_d3d12_fence_data (GstD3D12FenceData ** data)
 {

@@ -21,35 +21,57 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d12_fwd.h"
-#include "gstd3d12memory.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D12_BUFFER_POOL    (gst_d3d12_buffer_pool_get_type())
-#define GST_D3D12_BUFFER_POOL(obj)    (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_D3D12_BUFFER_POOL, GstD3D12BufferPool))
-#define GST_IS_D3D12_BUFFER_POOL(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_D3D12_BUFFER_POOL))
+#define GST_TYPE_D3D12_BUFFER_POOL                (gst_d3d12_buffer_pool_get_type ())
+#define GST_D3D12_BUFFER_POOL(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_D3D12_BUFFER_POOL, GstD3D12BufferPool))
+#define GST_D3D12_BUFFER_POOL_CLASS(klass)        (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_D3D12_BUFFER_POOL, GstD3D12BufferPoolClass))
+#define GST_IS_D3D12_BUFFER_POOL(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_D3D12_BUFFER_POOL))
+#define GST_IS_D3D12_BUFFER_POOL_CLASS(klass)     (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_D3D12_BUFFER_POOL))
+#define GST_D3D12_BUFFER_POOL_GET_CLASS(obj)      (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_D3D12_BUFFER_POOL, GstD3D12BufferPoolClass))
+#define GST_D3D12_BUFFER_POOL_CAST(obj)           ((GstD3D12BufferPool*)(obj))
 
+/**
+ * GstD3D12BufferPool:
+ *
+ * Opaque GstD3D12BufferPool struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12BufferPool
 {
   GstBufferPool parent;
 
   GstD3D12Device *device;
 
+  /*< private >*/
   GstD3D12BufferPoolPrivate *priv;
 };
 
+/**
+ * GstD3D12BufferPoolClass:
+ *
+ * Opaque GstD3D12BufferPoolClass struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12BufferPoolClass
 {
   GstBufferPoolClass parent_class;
 };
 
+GST_D3D12_API
 GType           gst_d3d12_buffer_pool_get_type (void);
 
+GST_D3D12_API
 GstBufferPool * gst_d3d12_buffer_pool_new (GstD3D12Device * device);
 
+GST_D3D12_API
 GstD3D12AllocationParams * gst_buffer_pool_config_get_d3d12_allocation_params (GstStructure * config);
 
+GST_D3D12_API
 void            gst_buffer_pool_config_set_d3d12_allocation_params (GstStructure * config,
                                                                     GstD3D12AllocationParams * params);
 

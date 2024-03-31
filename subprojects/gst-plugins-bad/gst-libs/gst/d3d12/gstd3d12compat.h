@@ -19,9 +19,6 @@
 
 #pragma once
 
-#include <gst/gst.h>
-#include "gstd3d12_fwd.h"
-
 #ifdef __cplusplus
 template <typename T>
 D3D12_CPU_DESCRIPTOR_HANDLE

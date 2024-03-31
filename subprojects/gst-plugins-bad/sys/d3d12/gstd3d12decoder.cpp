@@ -21,8 +21,8 @@
 #include <config.h>
 #endif
 
-#include <directx/d3dx12.h>
 #include "gstd3d12decoder.h"
+#include <directx/d3dx12.h>
 #include <gst/base/gstqueuearray.h>
 #include <wrl.h>
 #include <string.h>
@@ -37,8 +37,20 @@
 #include <algorithm>
 #include <atomic>
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_decoder_debug);
-#define GST_CAT_DEFAULT gst_d3d12_decoder_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("d3d12decoder", 0, "d3d12decoder");
+  } GST_D3D12_CALL_ONCE_END;
+
+  return cat;
+}
+#endif /* GST_DISABLE_GST_DEBUG */
 
 struct DecoderFormat
 {

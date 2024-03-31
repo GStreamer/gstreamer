@@ -47,9 +47,9 @@ struct _GstD3D12CommandAllocator : public GstMiniObject
   GDestroyNotify notify = nullptr;
 };
 
-struct GstD3D12CommandAllocatorPoolPrivate
+struct _GstD3D12CommandAllocatorPoolPrivate
 {
-  ~GstD3D12CommandAllocatorPoolPrivate ()
+  ~_GstD3D12CommandAllocatorPoolPrivate ()
   {
     while (!cmd_pool.empty ()) {
       auto cmd = cmd_pool.front ();
@@ -65,13 +65,6 @@ struct GstD3D12CommandAllocatorPoolPrivate
   D3D12_COMMAND_LIST_TYPE cmd_type;
 };
 /* *INDENT-ON* */
-
-struct _GstD3D12CommandAllocatorPool
-{
-  GstObject parent;
-
-  GstD3D12CommandAllocatorPoolPrivate *priv;
-};
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12CommandAllocator,
     gst_d3d12_command_allocator);
@@ -110,6 +103,15 @@ gst_d3d12_command_allocator_pool_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_d3d12_command_allocator_pool_new:
+ * @device: a #GstD3D12Device
+ * @type: D3D12_COMMAND_LIST_TYPE
+ *
+ * Returns: (transfer full): a new #GstD3D12CommandAllocatorPool instance
+ *
+ * Since: 1.26
+ */
 GstD3D12CommandAllocatorPool *
 gst_d3d12_command_allocator_pool_new (ID3D12Device * device,
     D3D12_COMMAND_LIST_TYPE type)
@@ -175,6 +177,17 @@ gst_d3d12_command_allocator_new (ID3D12CommandAllocator * ca,
   return cmd;
 }
 
+/**
+ * gst_d3d12_command_allocator_pool_acquire:
+ * @pool: a #GstD3D12CommandAllocatorPool
+ * @cmd: (out) (transfer full): a pointer to #GstD3D12CommandAllocator
+ *
+ * Acquire #GstD3D12CommandAllocator object
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_command_allocator_pool_acquire (GstD3D12CommandAllocatorPool * pool,
     GstD3D12CommandAllocator ** cmd)
@@ -220,32 +233,60 @@ gst_d3d12_command_allocator_pool_acquire (GstD3D12CommandAllocatorPool * pool,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_command_allocator_ref:
+ * @cmd: a #GstD3D12CommandAllocator
+ *
+ * Increments the refcount of @cmd
+ *
+ * Returns: (transfer full): a #GstD3D12CommandAllocator
+ *
+ * Since: 1.26
+ */
 GstD3D12CommandAllocator *
 gst_d3d12_command_allocator_ref (GstD3D12CommandAllocator * cmd)
 {
   return (GstD3D12CommandAllocator *) gst_mini_object_ref (cmd);
 }
 
+/**
+ * gst_d3d12_command_allocator_unref:
+ * @cmd: a #GstD3D12CommandAllocator
+ *
+ * Decrements the refcount of @cmd
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_command_allocator_unref (GstD3D12CommandAllocator * cmd)
 {
   gst_mini_object_unref (cmd);
 }
 
+/**
+ * gst_clear_d3d12_command_allocator:
+ * @cmd: a pointer to #GstD3D12CommandAllocator
+ *
+ * Clears a reference to a #GstD3D12CommandAllocator
+ *
+ * Since: 1.26
+ */
 void
 gst_clear_d3d12_command_allocator (GstD3D12CommandAllocator ** cmd)
 {
   gst_clear_mini_object (cmd);
 }
 
-D3D12_COMMAND_LIST_TYPE
-gst_d3d12_command_allocator_get_command_type (GstD3D12CommandAllocator * cmd)
-{
-  g_return_val_if_fail (cmd, D3D12_COMMAND_LIST_TYPE_NONE);
-
-  return cmd->type;
-}
-
+/**
+ * gst_d3d12_command_allocator_get_handle:
+ * @cmd: a #GstD3D12CommandAllocator
+ *
+ * Gets ID3D12CommandAllocator handle.
+ *
+ * Returns: (transfer none): ID3D12CommandAllocator handle
+ *
+ * Since: 1.26
+ */
 ID3D12CommandAllocator *
 gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd)
 {
@@ -254,6 +295,16 @@ gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd)
   return cmd->ca.Get ();
 }
 
+/**
+ * gst_d3d12_command_allocator_set_user_data:
+ * @cmd: a #GstD3D12CommandAllocator
+ * @user_data: private data
+ * @notify: a #GDestroyNotify
+ *
+ * Sets @user_data on the @cmd
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_command_allocator_set_user_data (GstD3D12CommandAllocator * cmd,
     gpointer user_data, GDestroyNotify notify)
@@ -267,6 +318,16 @@ gst_d3d12_command_allocator_set_user_data (GstD3D12CommandAllocator * cmd,
   cmd->notify = notify;
 }
 
+/**
+ * gst_d3d12_command_allocator_get_user_data:
+ * @cmd: a #GstD3D12CommandAllocator
+ *
+ * Gets private data configured via gst_d3d12_command_allocator_set_user_data()
+ *
+ * Returns: (transfer none): previously set user_data
+ *
+ * Since: 1.26
+ */
 gpointer
 gst_d3d12_command_allocator_get_user_data (GstD3D12CommandAllocator * cmd)
 {

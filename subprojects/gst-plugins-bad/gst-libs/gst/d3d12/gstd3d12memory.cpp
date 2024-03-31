@@ -39,8 +39,20 @@
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_allocator_debug);
-#define GST_CAT_DEFAULT gst_d3d12_allocator_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("d3d12allocator", 0, "d3d12allocator");
+  } GST_D3D12_CALL_ONCE_END;
+
+  return cat;
+}
+#endif
 
 static GstD3D12Allocator *_d3d12_memory_allocator = nullptr;
 
@@ -75,6 +87,23 @@ G_DEFINE_BOXED_TYPE_WITH_CODE (GstD3D12AllocationParams,
     (GBoxedFreeFunc) gst_d3d12_allocation_params_free,
     gst_d3d12_allocation_params_init (g_define_type_id));
 
+/**
+ * gst_d3d12_allocation_params_new:
+ * @device: a #GstD3D12Device
+ * @info: a #GstVideoInfo
+ * @flags: a #GstD3D12AllocationFlags
+ * @resource_flags: D3D12_RESOURCE_FLAGS value used for creating texture
+ * @heap_flags: D3D12_HEAP_FLAGS value used for creating texture
+ *
+ * Create #GstD3D12AllocationParams object which is used by #GstD3D12BufferPool
+ * and #GstD3D12Allocator in order to allocate new ID3D12Resource
+ * object with given configuration
+ *
+ * Returns: (transfer full) (nullable): a #GstD3D12AllocationParams
+ * or %NULL if given configuration is not supported
+ *
+ * Since: 1.26
+ */
 GstD3D12AllocationParams *
 gst_d3d12_allocation_params_new (GstD3D12Device * device,
     const GstVideoInfo * info, GstD3D12AllocationFlags flags,
@@ -106,6 +135,14 @@ gst_d3d12_allocation_params_new (GstD3D12Device * device,
   return ret;
 }
 
+/**
+ * gst_d3d12_allocation_params_copy:
+ * @src: a #GstD3D12AllocationParams
+ *
+ * Returns: (transfer full): a copy of @src
+ *
+ * Since: 1.26
+ */
 GstD3D12AllocationParams *
 gst_d3d12_allocation_params_copy (GstD3D12AllocationParams * src)
 {
@@ -119,12 +156,31 @@ gst_d3d12_allocation_params_copy (GstD3D12AllocationParams * src)
   return dst;
 }
 
+/**
+ * gst_d3d12_allocation_params_free:
+ * @params: a #GstD3D12AllocationParams
+ *
+ * Free @params
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_allocation_params_free (GstD3D12AllocationParams * params)
 {
   g_free (params);
 }
 
+/**
+ * gst_d3d12_allocation_params_alignment:
+ * @params: a #GstD3D12AllocationParams
+ * @align: a #GstVideoAlignment
+ *
+ * Adjust alignment
+ *
+ * Returns: %TRUE if alignment could be applied
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_allocation_params_alignment (GstD3D12AllocationParams * params,
     const GstVideoAlignment * align)
@@ -154,6 +210,17 @@ gst_d3d12_allocation_params_alignment (GstD3D12AllocationParams * params,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_allocation_params_set_resource_flags:
+ * @params: a #GstD3D12AllocationParams
+ * @resource_flags: D3D12_RESOURCE_FLAGS
+ *
+ * Set @resource_flags
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_allocation_params_set_resource_flags (GstD3D12AllocationParams *
     params, D3D12_RESOURCE_FLAGS resource_flags)
@@ -165,6 +232,17 @@ gst_d3d12_allocation_params_set_resource_flags (GstD3D12AllocationParams *
   return TRUE;
 }
 
+/**
+ * gst_d3d12_allocation_params_unset_resource_flags:
+ * @params: a #GstD3D12AllocationParams
+ * @resource_flags: D3D12_RESOURCE_FLAGS
+ *
+ * Unset @resource_flags
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_allocation_params_unset_resource_flags (GstD3D12AllocationParams *
     params, D3D12_RESOURCE_FLAGS resource_flags)
@@ -176,6 +254,17 @@ gst_d3d12_allocation_params_unset_resource_flags (GstD3D12AllocationParams *
   return TRUE;
 }
 
+/**
+ * gst_d3d12_allocation_params_set_heap_flags:
+ * @params: a #GstD3D12AllocationParams
+ * @heap_flags: D3D12_HEAP_FLAGS
+ *
+ * Set @heap_flags
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_allocation_params_set_heap_flags (GstD3D12AllocationParams *
     params, D3D12_HEAP_FLAGS heap_flags)
@@ -187,6 +276,15 @@ gst_d3d12_allocation_params_set_heap_flags (GstD3D12AllocationParams *
   return TRUE;
 }
 
+/**
+ * gst_d3d12_allocation_params_set_array_size:
+ * @params: a #GstD3D12AllocationParams
+ * @size: a texture array size
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
     guint size)
@@ -495,6 +593,14 @@ gst_d3d12_memory_share (GstMemory * mem, gssize offset, gssize size)
   return nullptr;
 }
 
+/**
+ * gst_is_d3d12_memory:
+ * @mem: a #GstMemory
+ *
+ * Returns: %TRUE if @mem is allocated by #GstD3D12Allocator
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_is_d3d12_memory (GstMemory * mem)
 {
@@ -503,6 +609,16 @@ gst_is_d3d12_memory (GstMemory * mem)
       GST_IS_D3D12_POOL_ALLOCATOR (mem->allocator));
 }
 
+/**
+ * gst_d3d12_memory_sync:
+ * @mem: a #GstD3D12Memory
+ *
+ * Wait for pending GPU operation
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_memory_sync (GstD3D12Memory * mem)
 {
@@ -515,6 +631,15 @@ gst_d3d12_memory_sync (GstD3D12Memory * mem)
   return TRUE;
 }
 
+/**
+ * gst_d3d12_memory_init_once:
+ *
+ * Initializes the Direct3D12 Texture allocator. It is safe to call
+ * this function multiple times. This must be called before any other
+ * GstD3D12Memory operation.
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_memory_init_once (void)
 {
@@ -529,6 +654,14 @@ gst_d3d12_memory_init_once (void)
   } GST_D3D12_CALL_ONCE_END;
 }
 
+/**
+ * gst_d3d12_memory_get_resource_handle:
+ * @mem: a #GstD3D12Memory
+ *
+ * Returns: (transfer none) (nullable): ID3D12Resource handle
+ *
+ * Since: 1.26
+ */
 ID3D12Resource *
 gst_d3d12_memory_get_resource_handle (GstD3D12Memory * mem)
 {
@@ -537,6 +670,16 @@ gst_d3d12_memory_get_resource_handle (GstD3D12Memory * mem)
   return mem->priv->resource.Get ();
 }
 
+/**
+ * gst_d3d12_memory_get_subresource_index:
+ * @mem: a #GstD3D12Memory
+ * @plane: a plane index
+ * @index: (out): subresource index of @plane
+ *
+ * Returns: %TRUE if returned @index is valid
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem, guint plane,
     guint * index)
@@ -555,6 +698,14 @@ gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem, guint plane,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_memory_get_plane_count:
+ * @mem: a #GstD3D12Memory
+ *
+ * Returns: the number of planes of resource
+ *
+ * Since: 1.26
+ */
 guint
 gst_d3d12_memory_get_plane_count (GstD3D12Memory * mem)
 {
@@ -563,6 +714,16 @@ gst_d3d12_memory_get_plane_count (GstD3D12Memory * mem)
   return mem->priv->num_subresources;
 }
 
+/**
+ * gst_d3d12_memory_get_plane_rectangle:
+ * @mem: a #GstD3D12Memory
+ * @plane: a plane index
+ * @rect: (out): a rectangle of @plane
+ *
+ * Returns: %TRUE if returned @rect is valid
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_memory_get_plane_rectangle (GstD3D12Memory * mem, guint plane,
     D3D12_RECT * rect)
@@ -578,6 +739,19 @@ gst_d3d12_memory_get_plane_rectangle (GstD3D12Memory * mem, guint plane,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_memory_get_shader_resource_view_heap:
+ * @mem: a #GstD3D12Memory
+ *
+ * Gets shader invisible shader resource view descriptor heap.
+ * Caller needs to copy returned descriptor heap to another shader visible
+ * descriptor heap in order for resource to be used in shader.
+ *
+ * Returns: (transfer none) (nullable): ID3D12DescriptorHeap handle or %NULL
+ * if the resource was allocated without shader resource view enabled
+ *
+ * Since: 1.26
+ */
 ID3D12DescriptorHeap *
 gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem)
 {
@@ -629,6 +803,17 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem)
   return priv->srv_heap.Get ();
 }
 
+/**
+ * gst_d3d12_memory_get_render_target_view_heap:
+ * @mem: a #GstD3D12Memory
+ *
+ * Gets render target view descriptor heap
+ *
+ * Returns: (transfer none) (nullable): ID3D12DescriptorHeap handle or %NULL
+ * if the resource was allocated without render target view enabled
+ *
+ * Since: 1.26
+ */
 ID3D12DescriptorHeap *
 gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem)
 {
@@ -681,6 +866,19 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem)
   return priv->rtv_heap.Get ();
 }
 
+/**
+ * gst_d3d12_memory_get_nt_handle:
+ * @mem: a #GstD3D12Memory
+ * @handle: (out) (transfer none) a sharable NT handle
+ *
+ * Gets NT handle created via ID3D12Device::CreateSharedHandle().
+ * Returned NT handle is owned by @mem, thus caller should not close
+ * the @handle
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_memory_get_nt_handle (GstD3D12Memory * mem, HANDLE * handle)
 {
@@ -704,6 +902,17 @@ gst_d3d12_memory_get_nt_handle (GstD3D12Memory * mem, HANDLE * handle)
   return TRUE;
 }
 
+/**
+ * gst_d3d12_memory_set_token_data:
+ * @mem: a #GstD3D12Memory
+ * @token: an user token
+ * @data: an user data
+ * @notify: a #GDestroyNotify
+ *
+ * Sets an opaque user data on a #GstD3D12Memory
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_memory_set_token_data (GstD3D12Memory * mem, gint64 token,
     gpointer data, GDestroyNotify notify)
@@ -721,6 +930,17 @@ gst_d3d12_memory_set_token_data (GstD3D12Memory * mem, gint64 token,
   }
 }
 
+/**
+ * gst_d3d12_memory_get_token_data:
+ * @mem: a #GstD3D12Memory
+ * @token: an user token
+ *
+ * Gets back user data pointer stored via gst_d3d12_memory_set_token_data()
+ *
+ * Returns: (transfer none) (nullable): user data pointer or %NULL
+ *
+ * Since: 1.26
+ */
 gpointer
 gst_d3d12_memory_get_token_data (GstD3D12Memory * mem, gint64 token)
 {
@@ -735,6 +955,17 @@ gst_d3d12_memory_get_token_data (GstD3D12Memory * mem, gint64 token)
   return ret;
 }
 
+/**
+ * gst_d3d12_memory_set_external_fence:
+ * @mem: a #GstD3D12Memory
+ * @fence: (allow-none): a ID3D12Fence
+ * @fence_val: fence value
+ *
+ * Sets external fence handle to @mem. Later memory map operation will wait
+ * for @fence if needed
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
     guint64 fence_val)
@@ -808,6 +1039,23 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
   g_free (dmem);
 }
 
+/**
+ * gst_d3d12_allocator_alloc_wrapped:
+ * @allocator:  (allow-none): a #GstD3D12Allocator
+ * @device: a #GstD3D12Device
+ * @resource: a ID3D12Resource
+ * @array_slice: array slice index of the first plane
+ * @user_data: (allow-none): an user data
+ * @notify: a #GDestroyNotify
+ *
+ * Allocates memory object with @resource. The refcount of @resource
+ * will be increased by one.
+ *
+ * Returns: (transfer full) (nullable): a newly allocated #GstD3D12Memory
+ * with given @resource if successful, otherwise %NULL.
+ *
+ * Since: 1.26
+ */
 GstMemory *
 gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
     GstD3D12Device * device, ID3D12Resource * resource, guint array_slice,
@@ -843,7 +1091,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
   priv->desc = desc;
   priv->num_subresources = num_subresources;
   priv->resource = resource;
-  gst_d3d12_dxgi_format_to_resource_formats (priv->desc.Format,
+  gst_d3d12_dxgi_format_get_resource_format (priv->desc.Format,
       priv->resource_formats);
   priv->srv_inc_size =
       device_handle->GetDescriptorHandleIncrementSize
@@ -955,6 +1203,22 @@ gst_d3d12_allocator_alloc_internal (GstD3D12Allocator * self,
   return mem;
 }
 
+/**
+ * gst_d3d12_allocator_alloc:
+ * @allocator: (allow-none): a #GstD3D12Allocator
+ * @device: a #GstD3D12Device
+ * @heap_prop: a D3D12_HEAP_PROPERTIES
+ * @heap_flags: a D3D12_HEAP_FLAGS
+ * @desc: a D3D12_RESOURCE_DESC
+ * @initial_state: initial resource state
+ * @optimized_clear_value: (allow-none): optimized clear value
+ *
+ * Returns: (transfer full) (nullable): a newly allocated #GstD3D12Memory
+ * with given parameters.
+ *
+ * Since: 1.26
+ */
+
 GstMemory *
 gst_d3d12_allocator_alloc (GstD3D12Allocator * allocator,
     GstD3D12Device * device, const D3D12_HEAP_PROPERTIES * heap_props,
@@ -976,6 +1240,22 @@ gst_d3d12_allocator_alloc (GstD3D12Allocator * allocator,
       heap_flags, desc, initial_state, optimized_clear_value);
 }
 
+/**
+ * gst_d3d12_allocator_set_active:
+ * @allocator: a #GstD3D12Allocator
+ * @active: the new active state
+ *
+ * Controls the active state of @allocator. Default #GstD3D12Allocator is
+ * stateless and therefore active state is ignored, but subclass implementation
+ * (e.g., #GstD3D12PoolAllocator) will require explicit active state control
+ * for its internal resource management.
+ *
+ * This method is conceptually identical to gst_buffer_pool_set_active method.
+ *
+ * Returns: %TRUE if active state of @allocator was successfully updated.
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_allocator_set_active (GstD3D12Allocator * allocator, gboolean active)
 {
@@ -1325,6 +1605,19 @@ gst_d3d12_pool_allocator_acquire_memory_internal (GstD3D12PoolAllocator * self,
   return ret;
 }
 
+/**
+ * gst_d3d12_pool_allocator_new:
+ * @device: a #GstD3D12Device
+ * @heap_prop: a D3D12_HEAP_PROPERTIES
+ * @heap_flags: a D3D12_HEAP_FLAGS
+ * @desc: a D3D12_RESOURCE_DESC
+ * @initial_state: initial resource state
+ * @optimized_clear_value: (allow-none) optimized clear value
+ *
+ * Returns: (transfer full) (nullable): a new #GstD3D12PoolAllocator instance
+ *
+ * Since: 1.26
+ */
 GstD3D12PoolAllocator *
 gst_d3d12_pool_allocator_new (GstD3D12Device * device,
     const D3D12_HEAP_PROPERTIES * heap_props, D3D12_HEAP_FLAGS heap_flags,
@@ -1358,6 +1651,19 @@ gst_d3d12_pool_allocator_new (GstD3D12Device * device,
   return self;
 }
 
+/**
+ * gst_d3d12_pool_allocator_acquire_memory:
+ * @allocator: a #GstD3D12PoolAllocator
+ * @memory: (out) (transfer full): a #GstMemory
+ *
+ * Acquires a #GstMemory from @allocator. @memory should point to a memory
+ * location that can hold a pointer to the new #GstMemory.
+ *
+ * Returns: a #GstFlowReturn such as %GST_FLOW_FLUSHING when the allocator is
+ * inactive.
+ *
+ * Since: 1.26
+ */
 GstFlowReturn
 gst_d3d12_pool_allocator_acquire_memory (GstD3D12PoolAllocator * allocator,
     GstMemory ** memory)

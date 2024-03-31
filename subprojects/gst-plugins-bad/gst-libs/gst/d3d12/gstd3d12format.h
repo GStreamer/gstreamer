@@ -20,14 +20,36 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesrc.h>
 #include <gst/video/video.h>
-#include <gst/d3d12/gstd3d12.h>
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_D3D12_IPC_SRC (gst_d3d12_ipc_src_get_type())
-G_DECLARE_FINAL_TYPE (GstD3D12IpcSrc, gst_d3d12_ipc_src,
-    GST, D3D12_IPC_SRC, GstBaseSrc);
+struct _GstD3D12Format
+{
+  GstVideoFormat format;
+
+  /* direct mapping to dxgi format if applicable */
+  DXGI_FORMAT dxgi_format;
+
+  /* formats for texture processing */
+  DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES];
+
+  /* extra format used for unordered access view (unused) */
+  DXGI_FORMAT uav_format[GST_VIDEO_MAX_PLANES];
+
+  /* D3D12_FORMAT_SUPPORT1 flags */
+  guint format_support1[GST_VIDEO_MAX_PLANES];
+
+  /* D3D12_FORMAT_SUPPORT2 flags (unused) */
+  guint format_support2[GST_VIDEO_MAX_PLANES];
+
+  /*< private >*/
+  guint padding[GST_PADDING_LARGE];
+};
+
+GST_D3D12_API
+GstVideoFormat  gst_d3d12_dxgi_format_to_gst        (DXGI_FORMAT format);
 
 G_END_DECLS
+

@@ -38,9 +38,9 @@ struct _GstD3D12Descriptor : public GstMiniObject
   ComPtr < ID3D12DescriptorHeap > heap;
 };
 
-struct GstD3D12DescriptorPoolPrivate
+struct _GstD3D12DescriptorPoolPrivate
 {
-  ~GstD3D12DescriptorPoolPrivate ()
+  ~_GstD3D12DescriptorPoolPrivate ()
   {
     while (!heap_pool.empty ()) {
       auto desc = heap_pool.front ();
@@ -56,13 +56,6 @@ struct GstD3D12DescriptorPoolPrivate
   D3D12_DESCRIPTOR_HEAP_DESC heap_desc;
 };
 /* *INDENT-ON* */
-
-struct _GstD3D12DescriptorPool
-{
-  GstObject parent;
-
-  GstD3D12DescriptorPoolPrivate *priv;
-};
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12Descriptor, gst_d3d12_descriptor);
 
@@ -99,6 +92,15 @@ gst_d3d12_descriptor_pool_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+/**
+ * gst_d3d12_descriptor_pool_new:
+ * @device: a #GstD3D12Device
+ * @type: D3D12_DESCRIPTOR_HEAP_DESC
+ *
+ * Returns: (transfer full): a new #GstD3D12DescriptorPool instance
+ *
+ * Since: 1.26
+ */
 GstD3D12DescriptorPool *
 gst_d3d12_descriptor_pool_new (ID3D12Device * device,
     const D3D12_DESCRIPTOR_HEAP_DESC * desc)
@@ -162,6 +164,17 @@ gst_d3d12_descriptor_new (ID3D12DescriptorHeap * heap)
   return desc;
 }
 
+/**
+ * gst_d3d12_descriptor_pool_acquire:
+ * @pool: a #GstD3D12DescriptorPool
+ * @cmd: (out) (transfer full): a pointer to GstD3D12Descriptor
+ *
+ * Acquire #GstD3D12Descriptor object
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_descriptor_pool_acquire (GstD3D12DescriptorPool * pool,
     GstD3D12Descriptor ** desc)
@@ -205,24 +218,60 @@ gst_d3d12_descriptor_pool_acquire (GstD3D12DescriptorPool * pool,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_descriptor_ref:
+ * @desc: a #GstD3D12Descriptor
+ *
+ * Increments the refcount of @desc
+ *
+ * Returns: (transfer full): a #GstD3D12Descriptor
+ *
+ * Since: 1.26
+ */
 GstD3D12Descriptor *
 gst_d3d12_descriptor_ref (GstD3D12Descriptor * desc)
 {
   return (GstD3D12Descriptor *) gst_mini_object_ref (desc);
 }
 
+/**
+ * gst_d3d12_descriptor_unref:
+ * @desc: a #GstD3D12Descriptor
+ *
+ * Decrements the refcount of @desc
+ *
+ * Since: 1.26
+ */
 void
 gst_d3d12_descriptor_unref (GstD3D12Descriptor * desc)
 {
   gst_mini_object_unref (desc);
 }
 
+/**
+ * gst_clear_d3d12_descriptor:
+ * @desc: a pointer to #GstD3D12Descriptor
+ *
+ * Clears a reference to a #GstD3D12Descriptor
+ *
+ * Since: 1.26
+ */
 void
 gst_clear_d3d12_descriptor (GstD3D12Descriptor ** desc)
 {
   gst_clear_mini_object (desc);
 }
 
+/**
+ * gst_d3d12_descriptor_get_handle:
+ * @desc: a #GstD3D12Descriptor
+ *
+ * Gets ID3D12DescriptorHeap handle.
+ *
+ * Returns: (transfer none): ID3D12DescriptorHeap handle
+ *
+ * Since: 1.26
+ */
 ID3D12DescriptorHeap *
 gst_d3d12_descriptor_get_handle (GstD3D12Descriptor * desc)
 {

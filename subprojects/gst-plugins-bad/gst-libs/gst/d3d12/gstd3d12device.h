@@ -21,8 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d12_fwd.h"
-#include "gstd3d12commandqueue.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -36,6 +35,13 @@ G_BEGIN_DECLS
 
 #define GST_D3D12_DEVICE_HANDLE_CONTEXT_TYPE "gst.d3d12.device.handle"
 
+/**
+ * GstD3D12Device:
+ *
+ * Opaque GstD3D12Device struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12Device
 {
   GstObject parent;
@@ -45,6 +51,13 @@ struct _GstD3D12Device
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D12DeviceClass:
+ *
+ * Opaque GstD3D12DeviceClass struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12DeviceClass
 {
   GstObjectClass parent_class;
@@ -53,65 +66,57 @@ struct _GstD3D12DeviceClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef struct _GstD3D12CopyTextureRegionArgs
-{
-  D3D12_TEXTURE_COPY_LOCATION dst;
-  guint dst_x;
-  guint dst_y;
-  guint dst_z;
-  D3D12_TEXTURE_COPY_LOCATION src;
-  const D3D12_BOX * src_box;
-} GstD3D12CopyTextureRegionArgs;
-
+GST_D3D12_API
 GType                   gst_d3d12_device_get_type                 (void);
 
+GST_D3D12_API
 GstD3D12Device *        gst_d3d12_device_new                      (guint adapter_index);
 
+GST_D3D12_API
 GstD3D12Device *        gst_d3d12_device_new_for_adapter_luid     (gint64 adapter_luid);
 
+GST_D3D12_API
 ID3D12Device *          gst_d3d12_device_get_device_handle        (GstD3D12Device * device);
 
+GST_D3D12_API
 IDXGIAdapter1 *         gst_d3d12_device_get_adapter_handle       (GstD3D12Device * device);
 
+GST_D3D12_API
 IDXGIFactory2 *         gst_d3d12_device_get_factory_handle       (GstD3D12Device * device);
 
+GST_D3D12_API
 gboolean                gst_d3d12_device_get_format               (GstD3D12Device * device,
                                                                    GstVideoFormat format,
                                                                    GstD3D12Format * device_format);
 
+GST_D3D12_API
 GstD3D12CommandQueue *  gst_d3d12_device_get_command_queue        (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type);
 
+GST_D3D12_API
 gboolean                gst_d3d12_device_execute_command_lists    (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
                                                                    guint num_command_lists,
                                                                    ID3D12CommandList ** command_lists,
                                                                    guint64 * fence_value);
 
+GST_D3D12_API
 guint64                 gst_d3d12_device_get_completed_value      (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type);
 
+GST_D3D12_API
 gboolean                gst_d3d12_device_set_fence_notify         (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
                                                                    guint64 fence_value,
                                                                    GstD3D12FenceData * fence_data);
 
+GST_D3D12_API
 gboolean                gst_d3d12_device_fence_wait               (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
                                                                    guint64 fence_value,
                                                                    HANDLE event_handle);
 
-gboolean                gst_d3d12_device_copy_texture_region      (GstD3D12Device * device,
-                                                                   guint num_args,
-                                                                   const GstD3D12CopyTextureRegionArgs * args,
-                                                                   D3D12_COMMAND_LIST_TYPE command_type,
-                                                                   guint64 * fence_value);
-
-void                    gst_d3d12_device_d3d12_debug              (GstD3D12Device * device,
-                                                                   const gchar * file,
-                                                                   const gchar * function,
-                                                                   gint line);
-
+GST_D3D12_API
 gboolean                gst_d3d12_device_is_equal                 (GstD3D12Device * device1,
                                                                    GstD3D12Device * device2);
 

@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12.h"
+#include "gstd3d12commandlistpool.h"
 #include <wrl.h>
 #include <queue>
 #include <mutex>
@@ -247,14 +248,6 @@ void
 gst_clear_d3d12_command_list (GstD3D12CommandList ** cmd)
 {
   gst_clear_mini_object (cmd);
-}
-
-D3D12_COMMAND_LIST_TYPE
-gst_d3d12_command_list_get_command_type (GstD3D12CommandList * cmd)
-{
-  g_return_val_if_fail (cmd, D3D12_COMMAND_LIST_TYPE_NONE);
-
-  return cmd->type;
 }
 
 ID3D12CommandList *

@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12.h"
+#include "gstd3d12-private.h"
 #include <mutex>
 #include <atomic>
 
@@ -30,8 +31,21 @@ static std::recursive_mutex context_lock_;
 /* *INDENT-ON* */
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
-GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_utils_debug);
-#define GST_CAT_DEFAULT gst_d3d12_utils_debug
+
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("d3d12allocator", 0, "d3d12allocator");
+  } GST_D3D12_CALL_ONCE_END;
+
+  return cat;
+}
+#endif
 
 static void
 init_context_debug (void)
@@ -41,6 +55,24 @@ init_context_debug (void)
   } GST_D3D12_CALL_ONCE_END;
 }
 
+/**
+ * gst_d3d12_handle_set_context:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @adapter_index: a DXGI adapter index
+ * @device: (inout) (transfer full): location of a #GstD3D12Device
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * D3D12 capable elements.
+ *
+ * Retrieve's the #GstD3D12Device in @context and places the result in @device.
+ * @device is accepted if @adapter_index is equal to -1 (accept any device)
+ * or equal to that of @device
+ *
+ * Returns: whether the @device could be set successfully
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_handle_set_context (GstElement * element, GstContext * context,
     gint adapter_index, GstD3D12Device ** device)
@@ -85,6 +117,23 @@ gst_d3d12_handle_set_context (GstElement * element, GstContext * context,
   return FALSE;
 }
 
+/**
+ * gst_d3d12_handle_set_context_for_adapter_luid:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @adapter_luid: an int64 representation of DXGI adapter LUID
+ * @device: (inout) (transfer full): location of a #GstD3D12Device
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * D3D12 capable elements.
+ *
+ * Retrieve's the #GstD3D12Device in @context and places the result in @device.
+ * @device is accepted only when @adapter_index is equal to that of @device
+ *
+ * Returns: whether the @device could be set successfully
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_handle_set_context_for_adapter_luid (GstElement * element,
     GstContext * context, gint64 adapter_luid, GstD3D12Device ** device)
@@ -160,6 +209,17 @@ context_set_d3d12_device (GstContext * context, GstD3D12Device * device)
   g_free (desc);
 }
 
+/**
+ * gst_d3d12_handle_context_query:
+ * @element: a #GstElement
+ * @query: a #GstQuery of type %GST_QUERY_CONTEXT
+ * @device: (transfer none) (nullable): a #GstD3D12Device
+ *
+ * Returns: Whether the @query was successfully responded to from the passed
+ * @device.
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_handle_context_query (GstElement * element, GstQuery * query,
     GstD3D12Device * device)
@@ -277,6 +337,23 @@ run_d3d12_context_query (GstElement * element, GstD3D12Device ** device)
   gst_query_unref (query);
 }
 
+/**
+ * gst_d3d12_ensure_element_data:
+ * @element: the #GstElement running the query
+ * @adapter: preferred DXGI adapter index, pass adapter >=0 when
+ *           the adapter explicitly required. Otherwise, set -1.
+ * @device: (inout): the resulting #GstD3D12Device
+ *
+ * Perform the steps necessary for retrieving a #GstD3D12Device
+ * from the surrounding elements or from the application using the #GstContext mechanism.
+ *
+ * If the contents of @device is not %NULL, then no #GstContext query is
+ * necessary for #GstD3D12Device retrieval is performed.
+ *
+ * Returns: whether a #GstD3D12Device exists in @device
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_ensure_element_data (GstElement * element, gint adapter_index,
     GstD3D12Device ** device)
@@ -328,6 +405,23 @@ gst_d3d12_ensure_element_data (GstElement * element, gint adapter_index,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_ensure_element_data_for_adapter_luid:
+ * @element: a #GstElement
+ * @context: a #GstContext
+ * @adapter_luid: an int64 representation of DXGI adapter LUID
+ * @device: (inout) (transfer full): location of a #GstD3D12Device
+ *
+ * Helper function for implementing #GstElementClass.set_context() in
+ * D3D12 capable elements.
+ *
+ * Retrieve's the #GstD3D12Device in @context and places the result in @device.
+ * @device is accepted only when @adapter_index is equal to that of @device
+ *
+ * Returns: whether the @device could be set successfully
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_ensure_element_data_for_adapter_luid (GstElement * element,
     gint64 adapter_luid, GstD3D12Device ** device)
@@ -375,6 +469,16 @@ gst_d3d12_ensure_element_data_for_adapter_luid (GstElement * element,
   return TRUE;
 }
 
+/**
+ * gst_d3d12_luid_to_int64:
+ * @luid: A pointer to LUID struct
+ *
+ * Converts @luid to a 64-bit signed integer.
+ * See also Int64FromLuid method defined in
+ * windows.devices.display.core.interop.h Windows SDK header
+ *
+ * Since: 1.26
+ */
 gint64
 gst_d3d12_luid_to_int64 (const LUID * luid)
 {
@@ -388,6 +492,16 @@ gst_d3d12_luid_to_int64 (const LUID * luid)
   return val.QuadPart;
 }
 
+/**
+ * gst_d3d12_context_new:
+ * @device: (transfer none): a #GstD3D12Device
+ *
+ * Creates a new #GstContext object with @device
+ *
+ * Returns: a #GstContext object
+ *
+ * Since: 1.26
+ */
 GstContext *
 gst_d3d12_context_new (GstD3D12Device * device)
 {
@@ -401,6 +515,15 @@ gst_d3d12_context_new (GstD3D12Device * device)
   return context;
 }
 
+/**
+ * gst_d3d12_create_user_token:
+ *
+ * Creates new user token value
+ *
+ * Returns: user token value
+ *
+ * Since: 1.26
+ */
 gint64
 gst_d3d12_create_user_token (void)
 {
@@ -411,6 +534,21 @@ gst_d3d12_create_user_token (void)
   return user_token.fetch_add (1);
 }
 
+/**
+ * _gst_d3d12_result:
+ * @result: HRESULT D3D12 API return code
+ * @device: (nullable): Associated #GstD3D12Device
+ * @cat: a #GstDebugCategory
+ * @file: the file that checking the result code
+ * @function: the function that checking the result code
+ * @line: the line that checking the result code
+ *
+ * Prints debug message if @result code indicates the operation was failed.
+ *
+ * Returns: %TRUE if D3D12 API call result is SUCCESS
+ *
+ * Since: 1.26
+ */
 gboolean
 _gst_d3d12_result (HRESULT hr, GstD3D12Device * device, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line, GstDebugLevel level)

@@ -20,40 +20,45 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gstd3d12device.h"
-#include "gstd3d12format.h"
+#include <gst/video/video.h>
+#include <gst/d3d12/gstd3d12_fwd.h>
+#include <gst/d3d12/gstd3d12format.h>
 
-/*
- * Preferred sorting order in a tier
- *   - number of components
- *   - depth
- *   - subsampling
- *   - supports both SRV and RTV
- *   - prefer smaller number of planes
- *   - prefer non-complex formats
- *   - prefer YUV formats over RGB ones
- *   - prefer I420 over YV12
- *   - format name
- */
+G_BEGIN_DECLS
 
-/* DXGI (semi) native formats */
-#define GST_D3D12_TIER_0_FORMATS \
-    "RGBA64_LE, RGB10A2_LE, Y410, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, " \
-    "P010_10LE, RGBx, BGRx, NV12"
+struct GstD3D12ColorMatrix
+{
+  gdouble matrix[3][3];
+  gdouble offset[3];
+  gdouble min[3];
+  gdouble max[3];
+};
 
-/* both SRV and RTV are supported */
-#define GST_D3D12_TIER_1_FORMATS \
-    "AYUV64, GBRA_12LE, GBRA_10LE, AYUV, ABGR, ARGB, GBRA, Y444_16LE, " \
-    "GBR_16LE, Y444_12LE, GBR_12LE, I422_12LE, I420_12LE, Y444_10LE, GBR_10LE, " \
-    "I422_10LE, I420_10LE, Y444, BGRP, GBR, RGBP, xBGR, xRGB, Y42B, NV21, " \
-    "I420, YV12, GRAY16_LE, GRAY8"
+GST_D3D12_API
+void            gst_d3d12_color_matrix_init (GstD3D12ColorMatrix * matrix);
 
-#define GST_D3D12_COMMON_FORMATS \
-    GST_D3D12_TIER_0_FORMATS ", " \
-    GST_D3D12_TIER_1_FORMATS
+GST_D3D12_API
+gchar *         gst_d3d12_dump_color_matrix (GstD3D12ColorMatrix * matrix);
 
-#define GST_D3D12_ALL_FORMATS \
-    "{ " GST_D3D12_COMMON_FORMATS " }"
+GST_D3D12_API
+gboolean        gst_d3d12_color_range_adjust_matrix_unorm (const GstVideoInfo * in_info,
+                                                           const GstVideoInfo * out_info,
+                                                           GstD3D12ColorMatrix * matrix);
+
+GST_D3D12_API
+gboolean        gst_d3d12_yuv_to_rgb_matrix_unorm (const GstVideoInfo * in_yuv_info,
+                                                   const GstVideoInfo * out_rgb_info,
+                                                   GstD3D12ColorMatrix * matrix);
+
+GST_D3D12_API
+gboolean        gst_d3d12_rgb_to_yuv_matrix_unorm (const GstVideoInfo * in_rgb_info,
+                                                   const GstVideoInfo * out_yuv_info,
+                                                   GstD3D12ColorMatrix * matrix);
+
+GST_D3D12_API
+gboolean        gst_d3d12_color_primaries_matrix_unorm (const GstVideoColorPrimariesInfo * in_info,
+                                                        const GstVideoColorPrimariesInfo * out_info,
+                                                        GstD3D12ColorMatrix * matrix);
 
 #define MAKE_FORMAT_MAP_YUV(g,d,r0,r1,r2,r3) \
   { GST_VIDEO_FORMAT_ ##g, DXGI_FORMAT_ ##d, \
@@ -189,5 +194,9 @@ static const GstD3D12Format g_gst_d3d12_default_format_map[] = {
 
 #define GST_D3D12_N_FORMATS G_N_ELEMENTS(g_gst_d3d12_default_format_map)
 
-void gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device,
-                                         GstMemory * mem);
+GST_D3D12_API
+guint gst_d3d12_dxgi_format_get_resource_format (DXGI_FORMAT format,
+                                                 DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES]);
+
+G_END_DECLS
+

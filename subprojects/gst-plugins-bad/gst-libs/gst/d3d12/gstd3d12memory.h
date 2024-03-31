@@ -21,14 +21,12 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d12_fwd.h"
-#include "gstd3d12format.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
 #define GST_TYPE_D3D12_ALLOCATION_PARAMS    (gst_d3d12_allocation_params_get_type())
 
-#define GST_TYPE_D3D12_MEMORY               (gst_d3d12_memory_get_type())
 #define GST_D3D12_MEMORY_CAST(obj)          ((GstD3D12Memory *)obj)
 
 #define GST_TYPE_D3D12_ALLOCATOR            (gst_d3d12_allocator_get_type())
@@ -51,6 +49,8 @@ G_BEGIN_DECLS
  * GST_D3D12_MEMORY_NAME:
  *
  * The name of the Direct3D12 memory
+ *
+ * Since: 1.26
  */
 #define GST_D3D12_MEMORY_NAME "D3D12Memory"
 
@@ -58,6 +58,8 @@ G_BEGIN_DECLS
  * GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY:
  *
  * Name of the caps feature for indicating the use of #GstD3D12Memory
+ *
+ * Since: 1.26
  */
 #define GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY "memory:D3D12Memory"
 
@@ -65,6 +67,8 @@ G_BEGIN_DECLS
  * GST_MAP_D3D12:
  *
  * Flag indicating that we should map the D3D12 resource instead of to system memory.
+ *
+ * Since: 1.26
  */
 #define GST_MAP_D3D12 (GST_MAP_FLAG_LAST << 1)
 
@@ -72,6 +76,8 @@ G_BEGIN_DECLS
  * GST_MAP_READ_D3D12:
  *
  * GstMapFlags value alias for GST_MAP_READ | GST_MAP_D3D12
+ *
+ * Since: 1.26
  */
 #define GST_MAP_READ_D3D12 ((GstMapFlags) (GST_MAP_READ | GST_MAP_D3D12))
 
@@ -79,6 +85,8 @@ G_BEGIN_DECLS
  * GST_MAP_WRITE_D3D12:
  *
  * GstMapFlags value alias for GST_MAP_WRITE | GST_MAP_D3D12
+ *
+ * Since: 1.26
  */
 #define GST_MAP_WRITE_D3D12 ((GstMapFlags) (GST_MAP_WRITE | GST_MAP_D3D12))
 
@@ -86,6 +94,8 @@ G_BEGIN_DECLS
  * GstD3D12MemoryTransfer:
  *
  * Pending memory transfer operation
+ *
+ * Since: 1.26
  */
 typedef enum
 {
@@ -93,43 +103,64 @@ typedef enum
   GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD     = (GST_MEMORY_FLAG_LAST << 1)
 } GstD3D12MemoryTransfer;
 
+/**
+ * GstD3D12AllocationFlags:
+ * @GST_D3D12_ALLOCATION_FLAG_DEFAULT: Default allocation behavior
+ *
+ * Since: 1.26
+ */
 typedef enum
 {
   GST_D3D12_ALLOCATION_FLAG_DEFAULT = 0,
 } GstD3D12AllocationFlags;
 
+GST_D3D12_API
 GType                      gst_d3d12_allocation_params_get_type (void);
 
+GST_D3D12_API
 GstD3D12AllocationParams * gst_d3d12_allocation_params_new      (GstD3D12Device * device,
                                                                  const GstVideoInfo * info,
                                                                  GstD3D12AllocationFlags flags,
                                                                  D3D12_RESOURCE_FLAGS resource_flags,
                                                                  D3D12_HEAP_FLAGS heap_flags);
 
+GST_D3D12_API
 GstD3D12AllocationParams * gst_d3d12_allocation_params_copy     (GstD3D12AllocationParams * src);
 
+GST_D3D12_API
 void                       gst_d3d12_allocation_params_free     (GstD3D12AllocationParams * params);
 
+GST_D3D12_API
 gboolean                   gst_d3d12_allocation_params_alignment (GstD3D12AllocationParams * parms,
                                                                   const GstVideoAlignment * align);
 
+GST_D3D12_API
 gboolean                   gst_d3d12_allocation_params_set_resource_flags (GstD3D12AllocationParams * params,
                                                                            D3D12_RESOURCE_FLAGS resource_flags);
 
+GST_D3D12_API
 gboolean                   gst_d3d12_allocation_params_unset_resource_flags (GstD3D12AllocationParams * params,
                                                                              D3D12_RESOURCE_FLAGS resource_flags);
 
+GST_D3D12_API
 gboolean                   gst_d3d12_allocation_params_set_heap_flags (GstD3D12AllocationParams * params,
                                                                        D3D12_HEAP_FLAGS heap_flags);
 
+GST_D3D12_API
 gboolean                   gst_d3d12_allocation_params_set_array_size (GstD3D12AllocationParams * params,
                                                                        guint size);
 
+/**
+ * GstD3D12Memory:
+ *
+ * Opaque GstD3D12Memory struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12Memory
 {
   GstMemory mem;
 
-  /*< public >*/
   GstD3D12Device *device;
   guint64 fence_value;
 
@@ -138,45 +169,66 @@ struct _GstD3D12Memory
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_D3D12_API
 GType             gst_d3d12_memory_get_type (void);
 
+GST_D3D12_API
 void              gst_d3d12_memory_init_once (void);
 
+GST_D3D12_API
 gboolean          gst_is_d3d12_memory        (GstMemory * mem);
 
+GST_D3D12_API
 gboolean          gst_d3d12_memory_sync      (GstD3D12Memory * mem);
 
+GST_D3D12_API
 ID3D12Resource *  gst_d3d12_memory_get_resource_handle (GstD3D12Memory * mem);
 
+GST_D3D12_API
 gboolean          gst_d3d12_memory_get_subresource_index (GstD3D12Memory * mem,
                                                           guint plane,
                                                           guint * index);
 
+GST_D3D12_API
 guint             gst_d3d12_memory_get_plane_count       (GstD3D12Memory * mem);
 
+GST_D3D12_API
 gboolean          gst_d3d12_memory_get_plane_rectangle   (GstD3D12Memory * mem,
                                                           guint plane,
                                                           D3D12_RECT * rect);
 
+GST_D3D12_API
 ID3D12DescriptorHeap * gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem);
 
+GST_D3D12_API
 ID3D12DescriptorHeap * gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem);
 
+GST_D3D12_API
 gboolean          gst_d3d12_memory_get_nt_handle (GstD3D12Memory * mem,
                                                   HANDLE * handle);
 
+GST_D3D12_API
 void              gst_d3d12_memory_set_token_data (GstD3D12Memory * mem,
                                                    gint64 token,
                                                    gpointer data,
                                                    GDestroyNotify notify);
 
+GST_D3D12_API
 gpointer          gst_d3d12_memory_get_token_data (GstD3D12Memory * mem,
                                                    gint64 token);
 
+GST_D3D12_API
 void              gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem,
                                                        ID3D12Fence * fence,
                                                        guint64 fence_val);
 
+/**
+ * GstD3D12Allocator:
+ *
+ * Opaque GstD3D12Allocator struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12Allocator
 {
   GstAllocator allocator;
@@ -187,6 +239,13 @@ struct _GstD3D12Allocator
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D12AllocatorClass:
+ *
+ * Opaque GstD3D12AllocatorClass struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12AllocatorClass
 {
   GstAllocatorClass allocator_class;
@@ -198,8 +257,10 @@ struct _GstD3D12AllocatorClass
   gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
+GST_D3D12_API
 GType       gst_d3d12_allocator_get_type  (void);
 
+GST_D3D12_API
 GstMemory * gst_d3d12_allocator_alloc     (GstD3D12Allocator * allocator,
                                            GstD3D12Device * device,
                                            const D3D12_HEAP_PROPERTIES * heap_props,
@@ -208,6 +269,7 @@ GstMemory * gst_d3d12_allocator_alloc     (GstD3D12Allocator * allocator,
                                            D3D12_RESOURCE_STATES initial_state,
                                            const D3D12_CLEAR_VALUE * optimized_clear_value);
 
+GST_D3D12_API
 GstMemory * gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
                                                GstD3D12Device * device,
                                                ID3D12Resource * resource,
@@ -215,9 +277,17 @@ GstMemory * gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
                                                gpointer user_data,
                                                GDestroyNotify notify);
 
+GST_D3D12_API
 gboolean    gst_d3d12_allocator_set_active (GstD3D12Allocator * allocator,
                                             gboolean active);
 
+/**
+ * GstD3D12PoolAllocator:
+ *
+ * Opaque GstD3D12PoolAllocator struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12PoolAllocator
 {
   GstD3D12Allocator allocator;
@@ -231,6 +301,13 @@ struct _GstD3D12PoolAllocator
   gpointer _gst_reserved[GST_PADDING];
 };
 
+/**
+ * GstD3D12PoolAllocatorClass:
+ *
+ * Opaque GstD3D12PoolAllocatorClass struct
+ *
+ * Since: 1.26
+ */
 struct _GstD3D12PoolAllocatorClass
 {
   GstD3D12AllocatorClass allocator_class;
@@ -239,8 +316,10 @@ struct _GstD3D12PoolAllocatorClass
   gpointer _gst_reserved[GST_PADDING];
 };
 
+GST_D3D12_API
 GType                   gst_d3d12_pool_allocator_get_type  (void);
 
+GST_D3D12_API
 GstD3D12PoolAllocator * gst_d3d12_pool_allocator_new (GstD3D12Device * device,
                                                       const D3D12_HEAP_PROPERTIES * heap_props,
                                                       D3D12_HEAP_FLAGS heap_flags,
@@ -248,6 +327,7 @@ GstD3D12PoolAllocator * gst_d3d12_pool_allocator_new (GstD3D12Device * device,
                                                       D3D12_RESOURCE_STATES initial_state,
                                                       const D3D12_CLEAR_VALUE * optimized_clear_value);
 
+GST_D3D12_API
 GstFlowReturn           gst_d3d12_pool_allocator_acquire_memory (GstD3D12PoolAllocator * allocator,
                                                                  GstMemory ** memory);
 

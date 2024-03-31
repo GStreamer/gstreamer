@@ -23,7 +23,6 @@
 
 #include "gstd3d12encoder.h"
 #include "gstd3d12encoderbufferpool.h"
-#include "gstd3d12pluginutils.h"
 #include <gst/base/gstqueuearray.h>
 #include <directx/d3dx12.h>
 #include <wrl.h>

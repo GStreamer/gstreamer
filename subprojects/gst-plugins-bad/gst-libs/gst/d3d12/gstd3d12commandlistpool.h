@@ -21,7 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d12_fwd.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
@@ -45,8 +45,6 @@ GstD3D12CommandList *     gst_d3d12_command_list_ref (GstD3D12CommandList * cmd)
 void                      gst_d3d12_command_list_unref (GstD3D12CommandList * cmd);
 
 void                      gst_clear_d3d12_command_list (GstD3D12CommandList ** cmd);
-
-D3D12_COMMAND_LIST_TYPE   gst_d3d12_command_list_get_command_type (GstD3D12CommandList * cmd);
 
 ID3D12CommandList *       gst_d3d12_command_list_get_handle (GstD3D12CommandList * cmd);
 

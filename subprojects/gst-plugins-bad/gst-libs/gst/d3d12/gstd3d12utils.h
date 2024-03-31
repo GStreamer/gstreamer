@@ -20,38 +20,47 @@
 #pragma once
 
 #include <gst/gst.h>
-#include "gstd3d12_fwd.h"
+#include <gst/d3d12/gstd3d12_fwd.h>
 
 G_BEGIN_DECLS
 
+GST_D3D12_API
 gboolean  gst_d3d12_handle_set_context (GstElement * element,
                                         GstContext * context,
                                         gint adapter_index,
                                         GstD3D12Device ** device);
 
+GST_D3D12_API
 gboolean  gst_d3d12_handle_set_context_for_adapter_luid (GstElement * element,
                                                          GstContext * context,
                                                          gint64 adapter_luid,
                                                          GstD3D12Device ** device);
 
+GST_D3D12_API
 gboolean  gst_d3d12_handle_context_query (GstElement * element,
                                           GstQuery * query,
                                           GstD3D12Device * device);
 
+GST_D3D12_API
 gboolean  gst_d3d12_ensure_element_data  (GstElement * element,
                                           gint adapter_index,
                                           GstD3D12Device ** device);
 
+GST_D3D12_API
 gboolean  gst_d3d12_ensure_element_data_for_adapter_luid (GstElement * element,
                                                           gint64 adapter_luid,
                                                           GstD3D12Device ** device);
 
+GST_D3D12_API
 gint64    gst_d3d12_luid_to_int64 (const LUID * luid);
 
+GST_D3D12_API
 GstContext * gst_d3d12_context_new (GstD3D12Device * device);
 
+GST_D3D12_API
 gint64    gst_d3d12_create_user_token (void);
 
+GST_D3D12_API
 gboolean _gst_d3d12_result (HRESULT hr,
                             GstD3D12Device * device,
                             GstDebugCategory * cat,
@@ -66,6 +75,8 @@ gboolean _gst_d3d12_result (HRESULT hr,
  * @device: (nullable): Associated #GstD3D12Device
  *
  * Returns: %TRUE if D3D12 API call result is SUCCESS
+ *
+ * Since: 1.26
  */
 #ifndef GST_DISABLE_GST_DEBUG
 #define gst_d3d12_result(result,device) \
@@ -77,10 +88,3 @@ gboolean _gst_d3d12_result (HRESULT hr,
 
 G_END_DECLS
 
-#include <mutex>
-
-#define GST_D3D12_CALL_ONCE_BEGIN \
-    static std::once_flag __once_flag; \
-    std::call_once (__once_flag, [&]()
-
-#define GST_D3D12_CALL_ONCE_END )

@@ -22,7 +22,9 @@
 #endif
 
 #include "gstd3d12.h"
+#include "gstd3d12-private.h"
 #include "gstd3d12converter-builder.h"
+#include "gstd3d12converter-private.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <string.h>
@@ -1588,6 +1590,22 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
   }
 }
 
+/**
+ * gst_d3d12_converter_new:
+ * @device: a #GstD3D12Device
+ * @in_info: a #GstVideoInfo
+ * @out_info: a #GstVideoInfo
+ * @blend_desc: (nullable): D3D12_BLEND_DESC
+ * @blend_factor: (nullable): blend factor value
+ * @config: (nullable): converter config
+ *
+ * Creates a new converter instance
+ *
+ * Returns: (transfer full) (nullable): a new #GstD3D12Converter instance
+ * or %NULL if conversion is not supported
+ *
+ * Since: 1.26
+ */
 GstD3D12Converter *
 gst_d3d12_converter_new (GstD3D12Device * device, const GstVideoInfo * in_info,
     const GstVideoInfo * out_info, const D3D12_BLEND_DESC * blend_desc,
@@ -2204,6 +2222,22 @@ gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
   return FALSE;
 }
 
+/**
+ * gst_d3d12_converter_convert_buffer:
+ * @converter: a #GstD3D12Converter
+ * @in_buf: a #GstBuffer
+ * @out_buf: a #GstBuffer
+ * @fence_data: a #GstD3D12FenceData
+ * @cl: a ID3D12GraphicsCommandList
+ *
+ * Records command list for conversion operation. converter will attach
+ * conversion command associated resources such as command allocator
+ * to @fence_data.
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
@@ -2244,6 +2278,19 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   return ret;
 }
 
+/**
+ * gst_d3d12_converter_update_blend_state:
+ * @converter: a #GstD3D12Converter
+ * @blend_desc: (nullable): D3D12_BLEND_DESC
+ * @blend_factor: (nullable): blend factor values
+ *
+ * Updates pipeline state object with new @blend_desc. If @blend_desc is %NULL,
+ * pipeline state object will be updated with default blend state
+ *
+ * Returns: %TRUE if successful
+ *
+ * Since: 1.26
+ */
 gboolean
 gst_d3d12_converter_update_blend_state (GstD3D12Converter * converter,
     const D3D12_BLEND_DESC * blend_desc, const gfloat blend_factor[4])

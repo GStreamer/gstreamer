@@ -28,8 +28,8 @@
 #endif
 
 #include <gst/gst.h>
-#include "gstd3d12.h"
-#include "gstd3d12-private.h"
+#include <gst/d3d12/gstd3d12.h>
+#include "gstd3d12pluginutils.h"
 #include "gstd3d12convert.h"
 #include "gstd3d12download.h"
 #include "gstd3d12upload.h"
@@ -51,18 +51,11 @@
 #include <windows.h>
 #include <versionhelpers.h>
 #include <wrl.h>
+#include <glib/gi18n-lib.h>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
-
-GST_DEBUG_CATEGORY (gst_d3d12_debug);
-GST_DEBUG_CATEGORY (gst_d3d12_allocator_debug);
-GST_DEBUG_CATEGORY (gst_d3d12_decoder_debug);
-GST_DEBUG_CATEGORY (gst_d3d12_format_debug);
-GST_DEBUG_CATEGORY (gst_d3d12_utils_debug);
-
-#define GST_CAT_DEFAULT gst_d3d12_debug
 
 static void
 plugin_deinit (gpointer data)
@@ -73,21 +66,11 @@ plugin_deinit (gpointer data)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_debug, "d3d12", 0, "d3d12");
-
   if (!IsWindows8OrGreater ()) {
-    GST_WARNING ("Not supported OS");
+    gst_plugin_add_status_warning (plugin,
+        N_("This plugin requires at least Windows 8 or newer."));
     return TRUE;
   }
-
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_allocator_debug, "d3d12allocator", 0,
-      "d3d12allocator");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_decoder_debug, "d3d12decoder", 0,
-      "d3d12decoder");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_format_debug, "d3d12format", 0,
-      "d3d12format");
-  GST_DEBUG_CATEGORY_INIT (gst_d3d12_utils_debug,
-      "d3d12utils", 0, "d3d12utils");
 
   /* Enumerate devices to register decoders per device and to get the highest
    * feature level */

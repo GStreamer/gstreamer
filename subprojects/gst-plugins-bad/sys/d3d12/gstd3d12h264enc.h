@@ -21,7 +21,7 @@
 
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include "gstd3d12.h"
+#include "gstd3d12pluginutils.h"
 
 G_BEGIN_DECLS
 

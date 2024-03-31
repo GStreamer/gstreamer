@@ -371,6 +371,15 @@ gst_d3d12_buffer_pool_stop (GstBufferPool * pool)
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
+/**
+ * gst_d3d12_buffer_pool_new:
+ * @device: a #GstD3D12Device to use
+ *
+ * Returns: (transfer full): a #GstBufferPool that allocates buffers with
+ * #GstD3D12Memory
+ *
+ * Since: 1.26
+ */
 GstBufferPool *
 gst_d3d12_buffer_pool_new (GstD3D12Device * device)
 {
@@ -385,6 +394,16 @@ gst_d3d12_buffer_pool_new (GstD3D12Device * device)
   return GST_BUFFER_POOL_CAST (self);
 }
 
+/**
+ * gst_buffer_pool_config_get_d3d12_allocation_params:
+ * @config: a buffer pool config
+ *
+ * Returns: (transfer full) (nullable): the currently configured
+ * #GstD3D12AllocationParams on @config or %NULL if @config doesn't contain
+ * #GstD3D12AllocationParams
+ *
+ * Since: 1.26
+ */
 GstD3D12AllocationParams *
 gst_buffer_pool_config_get_d3d12_allocation_params (GstStructure * config)
 {
@@ -398,6 +417,15 @@ gst_buffer_pool_config_get_d3d12_allocation_params (GstStructure * config)
   return ret;
 }
 
+/**
+ * gst_buffer_pool_config_set_d3d12_allocation_params:
+ * @config: a buffer pool config
+ * @params: (transfer none): a #GstD3D12AllocationParams
+ *
+ * Sets @params on @config
+ *
+ * Since: 1.26
+ */
 void
 gst_buffer_pool_config_set_d3d12_allocation_params (GstStructure * config,
     GstD3D12AllocationParams * params)
