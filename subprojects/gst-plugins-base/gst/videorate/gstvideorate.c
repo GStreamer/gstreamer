@@ -1039,6 +1039,7 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
           videorate->base_ts = segment.start;
         videorate->out_frame_count = 0;
         videorate->next_ts = GST_CLOCK_TIME_NONE;
+        videorate->last_ts = GST_CLOCK_TIME_NONE;
         gst_buffer_replace (&videorate->prevbuf, NULL);
       }
 
