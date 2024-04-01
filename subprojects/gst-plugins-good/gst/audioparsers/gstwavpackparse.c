@@ -322,8 +322,11 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
     size <<= 8;
     size += c;
     size <<= 1;
-    if (id & ID_ODD_SIZE)
+    if (id & ID_ODD_SIZE) {
+      if (size == 0)
+        goto read_failed;
       size--;
+    }
 
     CHECK (gst_byte_reader_get_data (&br, size + (size & 1), &data));
     gst_byte_reader_init (&mbr, data, size);
