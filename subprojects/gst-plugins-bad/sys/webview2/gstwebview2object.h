@@ -22,6 +22,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 #include <gst/d3d11/gstd3d11.h>
+#include <d3d11_4.h>
 #include <string>
 
 G_BEGIN_DECLS
@@ -44,7 +45,11 @@ void                gst_webview2_object_send_event   (GstWebView2Object * client
                                                       GstEvent * event);
 
 GstFlowReturn       gst_webview2_object_do_capture   (GstWebView2Object * client,
-                                                      ID3D11Texture2D * texture);
+                                                      ID3D11Texture2D * texture,
+                                                      ID3D11DeviceContext4 * context4,
+                                                      ID3D11Fence * fence,
+                                                      guint64 * fence_val,
+                                                      gboolean need_signal);
 
 void                gst_webview2_object_set_flushing (GstWebView2Object * client,
                                                       gboolean flushing);

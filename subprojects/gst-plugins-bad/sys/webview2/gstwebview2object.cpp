@@ -1031,7 +1031,8 @@ gst_webview2_object_send_event (GstWebView2Object * object, GstEvent * event)
 
 GstFlowReturn
 gst_webview2_object_do_capture (GstWebView2Object * object,
-    ID3D11Texture2D * texture)
+    ID3D11Texture2D * texture, ID3D11DeviceContext4 * context4,
+    ID3D11Fence * fence, guint64 * fence_val, gboolean need_signal)
 {
   auto priv = object->priv;
 
@@ -1067,6 +1068,16 @@ gst_webview2_object_do_capture (GstWebView2Object * object,
 
   context->CopySubresourceRegion (texture, 0, 0, 0, 0, priv->texture.Get (),
       0, &box);
+  if (need_signal) {
+    auto fence_value = *fence_val + 1;
+    auto hr = context4->Signal (fence, fence_value);
+    if (!gst_d3d11_result (hr, priv->device)) {
+      GST_ERROR_OBJECT (object, "Signal failed");
+      return GST_FLOW_ERROR;
+    }
+
+    *fence_val = fence_value;
+  }
 
   return GST_FLOW_OK;
 }

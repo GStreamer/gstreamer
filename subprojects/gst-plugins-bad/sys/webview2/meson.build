@@ -11,7 +11,7 @@ if host_system != 'windows' or webview2_option.disabled()
   subdir_done()
 endif
 
-if not gstd3d11_dep.found()
+if not gstd3d11_dep.found() or not gstd3d12_dep.found()
   if webview2_option.enabled()
     error('The webview2 was enabled explicitly, but required dependencies were not found.')
   endif
@@ -101,7 +101,7 @@ gstwebview2 = library('gstwebview2',
   cpp_args : gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
   dependencies : [gstbase_dep, gstvideo_dep, coremessaging_lib,
-                  gstd3d11_dep, runtimeobject_dep, dwmapi_lib, dcomp_lib] + sdk_deps,
+                  gstd3d11_dep, gstd3d12_dep, runtimeobject_dep, dwmapi_lib, dcomp_lib] + sdk_deps,
   install : true,
   install_dir : plugins_install_dir,
 )

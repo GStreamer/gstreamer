@@ -32,6 +32,7 @@
 #include "gstwebview2src.h"
 #include "gstwebview2object.h"
 #include <gst/d3d11/gstd3d11-private.h>
+#include <gst/d3d12/gstd3d12.h>
 #include <mutex>
 #include <string>
 #include <wrl.h>
@@ -48,8 +49,10 @@ static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY,
-            "BGRA") ", pixel-aspect-ratio = 1/1;" GST_VIDEO_CAPS_MAKE ("BGRA")
-        ", pixel-aspect-ratio = 1/1"));
+            "BGRA") ", pixel-aspect-ratio = 1/1; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY,
+            "BGRA") ", pixel-aspect-ratio = 1/1; "
+        GST_VIDEO_CAPS_MAKE ("BGRA") ", pixel-aspect-ratio = 1/1"));
 
 enum
 {
@@ -67,7 +70,43 @@ enum
 /* *INDENT-OFF* */
 struct GstWebView2SrcPrivate
 {
+  GstWebView2SrcPrivate ()
+  {
+    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+  }
+
+  ~GstWebView2SrcPrivate ()
+  {
+    ClearResource ();
+    gst_clear_object (&object);
+    gst_clear_object (&device12);
+    gst_clear_object (&device);
+
+    CloseHandle (event_handle);
+  }
+
+  void ClearResource ()
+  {
+    if (fence12) {
+      auto completed = fence12->GetCompletedValue ();
+      if (completed < fence_val) {
+        auto hr = fence12->SetEventOnCompletion (fence_val, event_handle);
+        if (SUCCEEDED (hr))
+          WaitForSingleObject (event_handle, INFINITE);
+      }
+    }
+
+    staging = nullptr;
+    fence12 = nullptr;
+    fence11 = nullptr;
+    fence_val = 0;
+    context4 = nullptr;
+    device_5 = nullptr;
+    can_d3d12_copy = FALSE;
+  }
+
   GstD3D11Device *device = nullptr;
+  GstD3D12Device *device12 = nullptr;
 
   GstWebView2Object *object = nullptr;
 
@@ -76,6 +115,15 @@ struct GstWebView2SrcPrivate
   guint64 last_frame_no;
   GstClockID clock_id = nullptr;
   ComPtr<ID3D11Texture2D> staging;
+
+  /* D3D12 interop */
+  ComPtr<ID3D11Device5> device_5;
+  ComPtr<ID3D11DeviceContext4> context4;
+  ComPtr<ID3D11Fence> fence11;
+  ComPtr<ID3D12Fence> fence12;
+  gboolean can_d3d12_copy;
+  UINT64 fence_val = 0;
+  HANDLE event_handle;
 
   /* properties */
   gint adapter_index = DEFAULT_ADAPTER;
@@ -322,14 +370,51 @@ gst_webview2_src_start (GstBaseSrc * src)
 {
   auto self = GST_WEBVIEW2_SRC (src);
   auto priv = self->priv;
+  auto elem = GST_ELEMENT_CAST (src);
+  HRESULT hr;
 
   GST_DEBUG_OBJECT (self, "Start");
 
-  if (!gst_d3d11_ensure_element_data (GST_ELEMENT_CAST (self),
-          priv->adapter_index, &priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't get D3D11 context");
+  priv->ClearResource ();
+
+  if (!gst_d3d11_ensure_element_data (elem, priv->adapter_index, &priv->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't get D3D11 device");
     return FALSE;
   }
+
+  gint64 luid;
+  g_object_get (priv->device, "adapter-luid", &luid, nullptr);
+  if (!gst_d3d12_ensure_element_data_for_adapter_luid (elem,
+          luid, &priv->device12)) {
+    GST_ERROR_OBJECT (self, "Couldn't get d3d12 device");
+    return FALSE;
+  }
+
+  auto device = gst_d3d11_device_get_device_handle (priv->device);
+  device->QueryInterface (IID_PPV_ARGS (&priv->device_5));
+
+  auto context = gst_d3d11_device_get_device_context_handle (priv->device);
+  context->QueryInterface (IID_PPV_ARGS (&priv->context4));
+
+  if (priv->device_5 && priv->context4) {
+    hr = priv->device_5->CreateFence (0, D3D11_FENCE_FLAG_SHARED,
+        IID_PPV_ARGS (&priv->fence11));
+    if (gst_d3d11_result (hr, priv->device)) {
+      HANDLE fence_handle;
+      hr = priv->fence11->CreateSharedHandle (nullptr, GENERIC_ALL, nullptr,
+          &fence_handle);
+      if (gst_d3d11_result (hr, priv->device)) {
+        auto device12 = gst_d3d12_device_get_device_handle (priv->device12);
+        hr = device12->OpenSharedHandle (fence_handle,
+            IID_PPV_ARGS (&priv->fence12));
+        CloseHandle (fence_handle);
+        if (gst_d3d12_result (hr, priv->device12))
+          priv->can_d3d12_copy = TRUE;
+      }
+    }
+  }
+
+  GST_DEBUG_OBJECT (self, "D3D12 copy support: %d", priv->can_d3d12_copy);
 
   std::lock_guard < std::mutex > lk (priv->lock);
   priv->object = gst_webview2_object_new (priv->device);
@@ -355,10 +440,11 @@ gst_webview2_src_stop (GstBaseSrc * src)
 
   GST_DEBUG_OBJECT (self, "Stop");
 
-  priv->staging = nullptr;
+  priv->ClearResource ();
 
   gst_clear_object (&priv->object);
   gst_clear_object (&priv->device);
+  gst_clear_object (&priv->device12);
 
   return TRUE;
 }
@@ -494,19 +580,33 @@ gst_webview2_decide_allocation (GstBaseSrc * src, GstQuery * query)
   auto features = gst_caps_get_features (caps, 0);
   auto is_d3d11 = gst_caps_features_contains (features,
       GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY);
+  auto is_d3d12 = gst_caps_features_contains (features,
+      GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY);
   if (pool) {
-    if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
-      gst_clear_object (&pool);
-    } else {
-      auto d3d11_pool = GST_D3D11_BUFFER_POOL (pool);
-      if (d3d11_pool->device != priv->device)
+    if (is_d3d11) {
+      if (!GST_IS_D3D11_BUFFER_POOL (pool)) {
         gst_clear_object (&pool);
+      } else {
+        auto d3d11_pool = GST_D3D11_BUFFER_POOL (pool);
+        if (d3d11_pool->device != priv->device)
+          gst_clear_object (&pool);
+      }
+    } else if (is_d3d12) {
+      if (!GST_IS_D3D12_BUFFER_POOL (pool)) {
+        gst_clear_object (&pool);
+      } else {
+        auto d3d12_pool = GST_D3D12_BUFFER_POOL (pool);
+        if (!gst_d3d12_device_is_equal (d3d12_pool->device, priv->device12))
+          gst_clear_object (&pool);
+      }
     }
   }
 
   if (!pool) {
     if (is_d3d11)
       pool = gst_d3d11_buffer_pool_new (priv->device);
+    else if (is_d3d12)
+      pool = gst_d3d12_buffer_pool_new (priv->device12);
     else
       pool = gst_video_buffer_pool_new ();
   }
@@ -528,6 +628,23 @@ gst_webview2_decide_allocation (GstBaseSrc * src, GstQuery * query)
 
     gst_buffer_pool_config_set_d3d11_allocation_params (config, params);
     gst_d3d11_allocation_params_free (params);
+  } else if (is_d3d12) {
+    auto params = gst_buffer_pool_config_get_d3d12_allocation_params (config);
+    if (!params) {
+      params = gst_d3d12_allocation_params_new (priv->device12, &info,
+          GST_D3D12_ALLOCATION_FLAG_DEFAULT,
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+          D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_HEAP_FLAG_SHARED);
+    } else {
+      gst_d3d12_allocation_params_set_resource_flags (params,
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+          D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+      gst_d3d12_allocation_params_set_heap_flags (params,
+          D3D12_HEAP_FLAG_SHARED);
+    }
+
+    gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
+    gst_d3d12_allocation_params_free (params);
   }
 
   if (!gst_buffer_pool_set_config (pool, config)) {
@@ -642,8 +759,11 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  ID3D11Texture2D *out_texture = nullptr;
+  auto device = gst_d3d11_device_get_device_handle (priv->device);
+
+  ComPtr < ID3D11Texture2D > out_texture;
   gboolean system_copy = TRUE;
+  gboolean is_d3d12 = FALSE;
   GstMapInfo out_map;
   auto mem = gst_buffer_peek_memory (buffer, 0);
   if (gst_is_d3d11_memory (mem)) {
@@ -659,11 +779,27 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
       out_texture = (ID3D11Texture2D *) out_map.data;
       system_copy = FALSE;
     }
+  } else if (priv->can_d3d12_copy && gst_is_d3d12_memory (mem)) {
+    auto dmem = GST_D3D12_MEMORY_CAST (mem);
+    if (gst_d3d12_device_is_equal (dmem->device, priv->device12)) {
+      out_texture = gst_d3d12_memory_get_d3d11_texture (dmem, device);
+      if (out_texture) {
+        gst_d3d12_memory_sync (dmem);
+
+        if (!gst_memory_map (mem, &out_map, GST_MAP_WRITE_D3D12)) {
+          GST_ERROR_OBJECT (self, "Couldn't map output d3d12 memory");
+          gst_buffer_unref (buffer);
+          return GST_FLOW_ERROR;
+        }
+
+        is_d3d12 = TRUE;
+        system_copy = FALSE;
+      }
+    }
   }
 
   if (!out_texture) {
     if (!priv->staging) {
-      auto device = gst_d3d11_device_get_device_handle (priv->device);
       D3D11_TEXTURE2D_DESC staging_desc = { };
       staging_desc.Width = priv->info.width;
       staging_desc.Height = priv->info.height;
@@ -683,13 +819,14 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
       }
     }
 
-    out_texture = priv->staging.Get ();
+    out_texture = priv->staging;
     GST_TRACE_OBJECT (self, "Do CPU copy");
   } else {
     GST_TRACE_OBJECT (self, "Do GPU copy");
   }
 
-  ret = gst_webview2_object_do_capture (priv->object, out_texture);
+  ret = gst_webview2_object_do_capture (priv->object, out_texture.Get (),
+      priv->context4.Get (), priv->fence11.Get (), &priv->fence_val, is_d3d12);
   if (ret != GST_FLOW_OK) {
     if (!system_copy)
       gst_memory_unmap (mem, &out_map);
@@ -699,6 +836,17 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
 
   if (!system_copy) {
     gst_memory_unmap (mem, &out_map);
+    if (is_d3d12) {
+      auto cq = gst_d3d12_device_get_command_queue (priv->device12,
+          D3D12_COMMAND_LIST_TYPE_DIRECT);
+      gst_d3d12_command_queue_execute_wait (cq,
+          priv->fence12.Get (), priv->fence_val);
+      guint64 fence_val_12;
+      gst_d3d12_command_queue_execute_command_lists (cq,
+          0, nullptr, &fence_val_12);
+      auto dmem = GST_D3D12_MEMORY_CAST (mem);
+      dmem->fence_value = fence_val_12;
+    }
   } else {
     auto context = gst_d3d11_device_get_device_context_handle (priv->device);
     D3D11_MAPPED_SUBRESOURCE map;
