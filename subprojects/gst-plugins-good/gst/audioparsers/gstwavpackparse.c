@@ -308,7 +308,7 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
 
   /* need to dig metadata blocks for some more */
   while (gst_byte_reader_get_remaining (&br)) {
-    gint size = 0;
+    guint32 size = 0;
     guint16 size2 = 0;
     guint8 c, id;
     const guint8 *data;
