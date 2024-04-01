@@ -337,6 +337,7 @@ gst_wavpack_parse_frame_metadata (GstWavpackParse * parse, GstBuffer * buf,
         break;
       case ID_WV_BITSTREAM:
       case ID_WVX_BITSTREAM:
+      case ID_WVX_NEW_BITSTREAM:
         break;
       case ID_SAMPLE_RATE:
         if (size == 3) {
