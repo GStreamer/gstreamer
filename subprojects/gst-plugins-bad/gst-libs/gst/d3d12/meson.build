@@ -74,6 +74,7 @@ endif
 
 sdk_headers = [
   'dxgi1_6.h',
+  'd3d11_1.h',
 ]
 
 have_d3d12_headers = true

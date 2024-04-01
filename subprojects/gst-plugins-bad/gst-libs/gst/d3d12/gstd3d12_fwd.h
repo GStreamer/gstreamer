@@ -38,6 +38,7 @@
 #endif
 
 #include <dxgi1_6.h>
+#include <d3d11.h>
 
 G_BEGIN_DECLS
 

@@ -34,6 +34,8 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <algorithm>
+#include <d3d11_1.h>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -316,6 +318,12 @@ struct GstD3D12MemoryTokenData
   GDestroyNotify notify;
 };
 
+struct D3D11Interop
+{
+  ComPtr<ID3D11Device> device11;
+  ComPtr<ID3D11Texture2D> texture11;
+};
+
 struct _GstD3D12MemoryPrivate
 {
   _GstD3D12MemoryPrivate ()
@@ -346,6 +354,7 @@ struct _GstD3D12MemoryPrivate
   HANDLE event_handle = nullptr;
   HANDLE nt_handle = nullptr;
   std::map<gint64, std::unique_ptr<GstD3D12MemoryTokenData>> token_map;
+  std::vector<std::shared_ptr<D3D11Interop>> shared_texture11;
 
   /* Queryied via ID3D12Device::GetCopyableFootprints */
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout[GST_VIDEO_MAX_PLANES];
@@ -866,6 +875,28 @@ gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem)
   return priv->rtv_heap.Get ();
 }
 
+static gboolean
+gst_d3d12_memory_get_nt_handle_unlocked (GstD3D12Memory * mem, HANDLE * handle)
+{
+  auto priv = mem->priv;
+
+  *handle = nullptr;
+
+  if (priv->nt_handle) {
+    *handle = priv->nt_handle;
+    return TRUE;
+  }
+
+  auto device = gst_d3d12_device_get_device_handle (mem->device);
+  auto hr = device->CreateSharedHandle (priv->resource.Get (), nullptr,
+      GENERIC_ALL, nullptr, &priv->nt_handle);
+  if (!gst_d3d12_result (hr, mem->device))
+    return FALSE;
+
+  *handle = priv->nt_handle;
+  return TRUE;
+}
+
 /**
  * gst_d3d12_memory_get_nt_handle:
  * @mem: a #GstD3D12Memory
@@ -884,22 +915,9 @@ gst_d3d12_memory_get_nt_handle (GstD3D12Memory * mem, HANDLE * handle)
 {
   auto priv = mem->priv;
 
-  *handle = nullptr;
-
   std::lock_guard < std::mutex > lk (priv->lock);
-  if (priv->nt_handle) {
-    *handle = priv->nt_handle;
-    return TRUE;
-  }
 
-  auto device = gst_d3d12_device_get_device_handle (mem->device);
-  auto hr = device->CreateSharedHandle (priv->resource.Get (), nullptr,
-      GENERIC_ALL, nullptr, &priv->nt_handle);
-  if (!gst_d3d12_result (hr, mem->device))
-    return FALSE;
-
-  *handle = priv->nt_handle;
-  return TRUE;
+  return gst_d3d12_memory_get_nt_handle_unlocked (mem, handle);
 }
 
 /**
@@ -976,6 +994,60 @@ gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
   gst_d3d12_memory_set_external_fence_unlocked (mem, fence, fence_val);
 }
 
+/**
+ * gst_d3d12_memory_get_d3d11_texture:
+ * @mem: a #GstD3D12Memory
+ * @device11: a ID3D11Device
+ *
+ * Opens ID3D11Texture2D texture from ID3D12Resource
+ *
+ * Returns: (transfer none) (nullable): ID3D11Texture2D handle or %NULL
+ * if resource sharing is not supported
+ *
+ * Since: 1.26
+ */
+ID3D11Texture2D *
+gst_d3d12_memory_get_d3d11_texture (GstD3D12Memory * mem,
+    ID3D11Device * device11)
+{
+  auto priv = mem->priv;
+
+  g_return_val_if_fail (mem, nullptr);
+  g_return_val_if_fail (device11, nullptr);
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  auto it = std::find_if (priv->shared_texture11.begin (),
+      priv->shared_texture11.end (),[&](const auto & shared)->bool {
+        return shared->device11.Get () == device11;
+      }
+  );
+
+  if (it != priv->shared_texture11.end ())
+    return (*it)->texture11.Get ();
+
+  HANDLE shared_handle;
+  if (!gst_d3d12_memory_get_nt_handle_unlocked (mem, &shared_handle))
+    return nullptr;
+
+  ComPtr < ID3D11Device1 > device11_1;
+  auto hr = device11->QueryInterface (IID_PPV_ARGS (&device11_1));
+  if (FAILED (hr))
+    return nullptr;
+
+  ComPtr < ID3D11Texture2D > texture11;
+  hr = device11_1->OpenSharedResource1 (shared_handle,
+      IID_PPV_ARGS (&texture11));
+  if (FAILED (hr))
+    return nullptr;
+
+  auto storage = std::make_shared < D3D11Interop > ();
+  storage->device11 = device11;
+  storage->texture11 = texture11;
+  priv->shared_texture11.push_back (std::move (storage));
+
+  return texture11.Get ();
+}
+
 /* GstD3D12Allocator */
 #define gst_d3d12_allocator_parent_class alloc_parent_class
 G_DEFINE_TYPE (GstD3D12Allocator, gst_d3d12_allocator, GST_TYPE_ALLOCATOR);
@@ -1031,6 +1103,8 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
 
   if (dmem->priv->notify)
     dmem->priv->notify (dmem->priv->user_data);
+
+  dmem->priv->shared_texture11.clear ();
 
   delete dmem->priv;
 
