@@ -63,7 +63,7 @@ struct _GstPulseSink
   guint32 current_sink_idx;
   gchar *current_sink_name;
 
-  guint defer_pending;
+  volatile guint defer_pending;
 
   gint notify; /* atomic */
 
