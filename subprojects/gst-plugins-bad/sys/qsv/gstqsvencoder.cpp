@@ -38,6 +38,10 @@ using namespace Microsoft::WRL;
 #include "gstqsvallocator_va.h"
 #endif /* G_OS_WIN32 */
 
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_encoder_debug);
 #define GST_CAT_DEFAULT gst_qsv_encoder_debug
 
@@ -115,6 +119,7 @@ typedef struct _GstQsvEncoderTask
 struct _GstQsvEncoderPrivate
 {
   GstObject *device;
+  GstObject *device12;
 
   GstVideoCodecState *input_state;
   GstQsvAllocator *allocator;
@@ -282,6 +287,7 @@ gst_qsv_encoder_dispose (GObject * object)
   GstQsvEncoderPrivate *priv = self->priv;
 
   gst_clear_object (&priv->device);
+  gst_clear_object (&priv->device12);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -384,6 +390,8 @@ gst_qsv_encoder_open_platform_device (GstQsvEncoder * self)
 
   device = GST_D3D11_DEVICE_CAST (priv->device);
   priv->allocator = gst_qsv_d3d11_allocator_new (device);
+  gst_qsv_d3d11_allocator_set_d3d12_import_allowed (priv->allocator,
+      klass->d3d12_interop);
 
   /* For D3D11 device handle to be used by QSV, multithread protection layer
    * must be enabled before the MFXVideoCORE_SetHandle() call.
@@ -1474,12 +1482,16 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   GstQsvEncoderPrivate *priv = self->priv;
   GstD3D11Device *device = GST_D3D11_DEVICE (priv->device);
   GstVideoInfo info;
-  GstBufferPool *pool;
+  GstBufferPool *pool = nullptr;
   GstCaps *caps;
   guint size;
   GstStructure *config;
   GstCapsFeatures *features;
   gboolean is_d3d11 = FALSE;
+#ifdef HAVE_GST_D3D12
+  GstQsvEncoderClass *klass = GST_QSV_ENCODER_GET_CLASS (self);
+  gboolean is_d3d12 = FALSE;
+#endif
 
   gst_query_parse_allocation (query, &caps, nullptr);
   if (!caps) {
@@ -1493,14 +1505,25 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
   }
 
   features = gst_caps_get_features (caps, 0);
-  if (features && gst_caps_features_contains (features,
+  if (gst_caps_features_contains (features,
           GST_CAPS_FEATURE_MEMORY_D3D11_MEMORY)) {
     GST_DEBUG_OBJECT (self, "upstream support d3d11 memory");
     pool = gst_d3d11_buffer_pool_new (device);
     is_d3d11 = TRUE;
-  } else {
-    pool = gst_video_buffer_pool_new ();
   }
+#ifdef HAVE_GST_D3D12
+  else if (gst_caps_features_contains (features,
+          GST_CAPS_FEATURE_MEMORY_D3D12_MEMORY) &&
+      gst_d3d12_ensure_element_data_for_adapter_luid (GST_ELEMENT (self),
+          klass->adapter_luid, (GstD3D12Device **) & priv->device12)) {
+    GST_DEBUG_OBJECT (self, "upstream support d3d12 memory");
+    pool = gst_d3d12_buffer_pool_new ((GstD3D12Device *) priv->device12);
+    is_d3d12 = TRUE;
+  }
+#endif
+
+  if (!pool)
+    pool = gst_video_buffer_pool_new ();
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
@@ -1525,7 +1548,28 @@ gst_qsv_encoder_propose_allocation (GstVideoEncoder * encoder, GstQuery * query)
     gst_d3d11_allocation_params_alignment (d3d11_params, &align);
     gst_buffer_pool_config_set_d3d11_allocation_params (config, d3d11_params);
     gst_d3d11_allocation_params_free (d3d11_params);
-  } else {
+  }
+#ifdef HAVE_GST_D3D12
+  else if (is_d3d12) {
+    GstVideoAlignment align;
+    gst_video_alignment_reset (&align);
+    auto device12 = GST_D3D12_DEVICE (priv->device12);
+
+    align.padding_right = GST_VIDEO_INFO_WIDTH (&priv->aligned_info) -
+        GST_VIDEO_INFO_WIDTH (&info);
+    align.padding_bottom = GST_VIDEO_INFO_HEIGHT (&priv->aligned_info) -
+        GST_VIDEO_INFO_HEIGHT (&info);
+
+    auto params = gst_d3d12_allocation_params_new (device12, &info,
+        GST_D3D12_ALLOCATION_FLAG_DEFAULT,
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET, D3D12_HEAP_FLAG_SHARED);
+    gst_d3d12_allocation_params_alignment (params, &align);
+    gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
+    gst_d3d12_allocation_params_free (params);
+  }
+#endif
+  else {
     gst_buffer_pool_config_add_option (config,
         GST_BUFFER_POOL_OPTION_VIDEO_ALIGNMENT);
   }

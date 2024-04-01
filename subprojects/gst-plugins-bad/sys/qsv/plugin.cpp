@@ -61,6 +61,10 @@
 #include <gst/va/gstva.h>
 #endif
 
+#ifdef HAVE_GST_D3D12
+#include <gst/d3d12/gstd3d12.h>
+#endif
+
 #include <glib/gi18n-lib.h>
 
 GST_DEBUG_CATEGORY (gst_qsv_debug);
@@ -250,6 +254,7 @@ plugin_init (GstPlugin * plugin)
     mfxSession session = nullptr;
     mfxImplDescription *desc = nullptr;
     GstObject *device = nullptr;
+    gboolean d3d12_interop = FALSE;
 
     status = MFXEnumImplementations (loader,
         i, MFX_IMPLCAPS_IMPLDESCSTRUCTURE, (mfxHDL *) & desc);
@@ -268,16 +273,45 @@ plugin_init (GstPlugin * plugin)
     if (!session)
       goto next;
 
+#ifdef HAVE_GST_D3D12
+    {
+      gint64 luid;
+      g_object_get (device, "adapter-luid", &luid, nullptr);
+      auto device12 = gst_d3d12_device_new_for_adapter_luid (luid);
+      if (device12) {
+        auto handle12 = gst_d3d12_device_get_device_handle (device12);
+        D3D12_FEATURE_DATA_D3D12_OPTIONS4 feature_data = { };
+        auto hr = handle12->CheckFeatureSupport (D3D12_FEATURE_D3D12_OPTIONS4,
+            &feature_data, sizeof (feature_data));
+        if (SUCCEEDED (hr) && feature_data.SharedResourceCompatibilityTier >=
+            D3D12_SHARED_RESOURCE_COMPATIBILITY_TIER_2) {
+          GST_INFO_OBJECT (device, "Device supports D3D12 resource share");
+          d3d12_interop = TRUE;
+        } else {
+          GST_INFO_OBJECT (device,
+              "Device does not support D3D12 resource share");
+        }
+
+        gst_object_unref (device12);
+      }
+    }
+#endif
+
     gst_qsv_h264_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
     gst_qsv_h265_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
     gst_qsv_jpeg_dec_register (plugin, GST_RANK_SECONDARY, i, device, session);
     gst_qsv_vp9_dec_register (plugin, GST_RANK_MARGINAL, i, device, session);
 
-    gst_qsv_h264_enc_register (plugin, enc_rank, i, device, session);
-    gst_qsv_h265_enc_register (plugin, enc_rank, i, device, session);
-    gst_qsv_jpeg_enc_register (plugin, enc_rank, i, device, session);
-    gst_qsv_vp9_enc_register (plugin, enc_rank, i, device, session);
-    gst_qsv_av1_enc_register (plugin, enc_rank, i, device, session);
+    gst_qsv_h264_enc_register (plugin,
+        enc_rank, i, device, session, d3d12_interop);
+    gst_qsv_h265_enc_register (plugin,
+        enc_rank, i, device, session, d3d12_interop);
+    gst_qsv_jpeg_enc_register (plugin,
+        enc_rank, i, device, session, d3d12_interop);
+    gst_qsv_vp9_enc_register (plugin,
+        enc_rank, i, device, session, d3d12_interop);
+    gst_qsv_av1_enc_register (plugin,
+        enc_rank, i, device, session, d3d12_interop);
 
   next:
     MFXDispReleaseImplDescription (loader, desc);

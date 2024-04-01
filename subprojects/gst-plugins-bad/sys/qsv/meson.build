@@ -57,6 +57,10 @@ if host_system == 'windows'
 
   qsv_sources += qsv_d3d11_sources
   qsv_platform_deps += [gstd3d11_dep]
+  if gstd3d12_dep.found()
+    qsv_platform_deps += [gstd3d12_dep]
+    extra_args += ['-DHAVE_GST_D3D12']
+  endif
 elif host_system == 'linux'
   if not gstva_dep.found()
     if qsv_option.enabled()
