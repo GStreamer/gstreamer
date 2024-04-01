@@ -191,32 +191,6 @@ GstGetActivationFactory (InterfaceType ** factory)
   return g_vtable.WindowsDeleteString (class_id_hstring);
 }
 
-static gint64
-get_d3d11_texture_token (void)
-{
-  static gint64 token = 0;
-
-  GST_D3D12_CALL_ONCE_BEGIN {
-    token = gst_d3d12_create_user_token ();
-  } GST_D3D12_CALL_ONCE_END;
-
-  return token;
-}
-
-struct SharedTextureData
-{
-  ComPtr<ID3D11Device> device;
-  ComPtr<ID3D11Texture2D> shared_texture;
-};
-
-static void
-shared_texture_data_free (SharedTextureData * data)
-{
-  data->shared_texture = nullptr;
-  data->device = nullptr;
-  delete data;
-}
-
 class GraphicsCapture : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
     FtmBase, IFrameArrivedHandler, IItemClosedHandler>
 {
@@ -224,7 +198,6 @@ public:
   GraphicsCapture ()
   {
     gst_video_info_init (&pool_info_);
-    fence_event_handle_ = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
   }
 
   virtual ~GraphicsCapture ()
@@ -242,7 +215,6 @@ public:
     }
 
     gst_clear_object (&device12_);
-    CloseHandle (fence_event_handle_);
   }
 
   STDMETHODIMP
@@ -553,33 +525,13 @@ public:
     auto dmem = GST_D3D12_MEMORY_CAST (mem);
     GST_MEMORY_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
     gst_d3d12_memory_sync (dmem);
-    SharedTextureData *shared_data = (SharedTextureData *)
-        gst_d3d12_memory_get_token_data (dmem,
-        get_d3d11_texture_token ());
 
-    if (!shared_data) {
-      HANDLE shared_handle = nullptr;
-      if (!gst_d3d12_memory_get_nt_handle (dmem, &shared_handle)) {
-        GST_ERROR_OBJECT (obj_, "Couldn't get shared handle");
-        gst_buffer_unref (outbuf);
-        return GST_FLOW_ERROR;
-      }
-
-      ComPtr<ID3D11Texture2D> shared_texture;
-      auto hr = device11_->OpenSharedResource1 (shared_handle,
-          IID_PPV_ARGS (&shared_texture));
-      if (FAILED (hr)) {
-        GST_ERROR_OBJECT (obj_, "Couldn't open shared d3d11 texture");
-        gst_buffer_unref (outbuf);
-        return GST_FLOW_ERROR;
-      }
-
-      shared_data = new SharedTextureData ();
-      shared_data->shared_texture = shared_texture;
-      shared_data->device = device11_;
-
-      gst_d3d12_memory_set_token_data (dmem, get_d3d11_texture_token (),
-          shared_data, (GDestroyNotify) shared_texture_data_free);
+    auto texture11 = gst_d3d12_memory_get_d3d11_texture (dmem,
+        device11_.Get ());
+    if (!texture11) {
+      GST_ERROR_OBJECT (obj_, "Couldn't get sharable d3d11 texture");
+      gst_buffer_unref (outbuf);
+      return GST_FLOW_ERROR;
     }
 
     if (!gst_memory_map (mem, &map_info, GST_MAP_WRITE_D3D12)) {
@@ -588,24 +540,20 @@ public:
       return GST_FLOW_ERROR;
     }
 
-    context_->CopySubresourceRegion (shared_data->shared_texture.Get (),
+    context_->CopySubresourceRegion (texture11,
         0, 0, 0, 0, texture_.Get (), 0, (const D3D11_BOX *) &crop_box);
     fence_val_++;
     context_->Signal (shared_fence11_.Get (), fence_val_);
     gst_memory_unmap (mem, &map_info);
 
-    auto completed = shared_fence12_->GetCompletedValue ();
-    if (completed < fence_val_) {
-      auto hr = shared_fence12_->SetEventOnCompletion (fence_val_,
-          fence_event_handle_);
-      if (!gst_d3d12_result (hr, device12_)) {
-        GST_ERROR_OBJECT (obj_, "SetEventOnCompletion failed");
-        gst_buffer_unref (outbuf);
-        return GST_FLOW_ERROR;
-      }
-
-      WaitForSingleObject (fence_event_handle_, INFINITE);
-    }
+    auto cq = gst_d3d12_device_get_command_queue (device12_,
+        D3D12_COMMAND_LIST_TYPE_DIRECT);
+    gst_d3d12_command_queue_execute_wait (cq, shared_fence12_.Get (),
+        fence_val_);
+    guint64 fence_val_12;
+    gst_d3d12_command_queue_execute_command_lists (cq,
+        0, nullptr, &fence_val_12);
+    dmem->fence_value = fence_val_12;
 
     *width = crop_w;
     *height = crop_h;
@@ -877,7 +825,6 @@ private:
   UINT64 fence_val_ = 0;
   ComPtr<ID3D11Fence> shared_fence11_;
   ComPtr<ID3D12Fence> shared_fence12_;
-  HANDLE fence_event_handle_;
 };
 
 class AsyncWaiter : public RuntimeClass<RuntimeClassFlags<ClassicCom>,
