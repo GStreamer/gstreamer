@@ -1182,7 +1182,8 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
 
   _init_value_string_list (&rgb_formats, "RGBA", "ARGB", "BGRA", "ABGR", "RGBx",
       "xRGB", "BGRx", "xBGR", "RGB", "BGR", "ARGB64", "BGR10A2_LE",
-      "RGB10A2_LE", "RGBA64_LE", "RGBA64_BE", "RBGA", NULL);
+      "RGB10A2_LE", "RGBA64_LE", "RGBA64_BE", "RBGA", "GBRA", "GBR",
+      "RGBP", "BGRP", "RGB16", "BGR16", NULL);
   _init_supported_formats (context, output, &supported_formats);
   gst_value_intersect (&supported_rgb_formats, &rgb_formats,
       &supported_formats);
