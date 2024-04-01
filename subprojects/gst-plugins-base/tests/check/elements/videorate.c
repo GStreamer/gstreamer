@@ -2018,6 +2018,56 @@ GST_START_TEST (test_segment_update_same)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_segment_update_average_period)
+{
+  GstElement *videorate;
+  GstBuffer *buf;
+  GstCaps *caps;
+  GstSegment segment;
+
+  /* Create a videorate that outputs at most 1 frame per second. */
+  videorate = setup_videorate_full (&srctemplate, &downstreamsinktemplate);
+  g_object_set (videorate, "drop-only", TRUE, "average-period", GST_SECOND,
+      NULL);
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* Segment starts at 0  */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* First buffer at t=30s (pts=30s + segment.base=0s). */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 30 * GST_SECOND;
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  assert_videorate_stats (videorate, "first", 1, 1, 0, 0);
+
+  /* Simulate a pad offset of 30s */
+  segment.base = 30 * GST_SECOND;
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* Second buffer at t=32s (pts=2s + segment.base=30s). Videorate used to do
+   * current PTS (2s) - previous PTS (30s) = -28s, negative value being always
+   * smaller than the target average, the buffer was droped. This verify that it
+   * now correctly reset average computation when receiving a new segment. */
+  buf = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_PTS (buf) = 2 * GST_SECOND;
+  fail_unless (gst_pad_push (mysrcpad, buf) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 2);
+  assert_videorate_stats (videorate, "second", 2, 2, 0, 0);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
 static Suite *
 videorate_suite (void)
 {
@@ -2047,6 +2097,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_segment_base_nonzero);
   tcase_add_test (tc_chain, test_segment_update_start_advance);
   tcase_add_test (tc_chain, test_segment_update_same);
+  tcase_add_test (tc_chain, test_segment_update_average_period);
 
   return s;
 }
