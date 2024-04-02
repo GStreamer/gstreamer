@@ -46,14 +46,15 @@ struct GstDWriteOverlayObjectPrivate
 
   ~GstDWriteOverlayObjectPrivate ()
   {
-    ClearResource ();
+    ClearResource (true);
     gst_clear_caps (&outcaps);
     gst_clear_object (&device);
   }
 
-  void ClearResource (void)
+  void ClearResource (bool hard)
   {
-    blend_mode = GstDWriteBlendMode::NOT_SUPPORTED;
+    if (hard)
+      blend_mode = GstDWriteBlendMode::NOT_SUPPORTED;
 
     g_clear_pointer (&overlay_rect, gst_video_overlay_rectangle_unref);
     gst_clear_buffer (&layout_buf);
@@ -509,7 +510,7 @@ gst_dwrite_overlay_object_stop (GstDWriteOverlayObject * object)
 {
   GstDWriteOverlayObjectPrivate *priv = object->priv;
 
-  priv->ClearResource ();
+  priv->ClearResource (true);
   priv->dwrite_factory = nullptr;
   priv->d2d_factory = nullptr;
   priv->renderer = nullptr;
@@ -752,7 +753,7 @@ gst_dwrite_overlay_object_set_caps (GstDWriteOverlayObject * object,
 
   *selected_mode = GstDWriteBlendMode::NOT_SUPPORTED;
 
-  priv->ClearResource ();
+  priv->ClearResource (true);
   gst_caps_replace (&priv->outcaps, out_caps);
 
   if (!gst_video_info_from_caps (info, in_caps)) {
@@ -803,7 +804,7 @@ gst_dwrite_overlay_object_set_caps (GstDWriteOverlayObject * object,
 
   if (!gst_dwrite_overlay_object_prepare_resource (object)) {
     GST_ERROR_OBJECT (elem, "Couldn't prepare resource");
-    priv->ClearResource ();
+    priv->ClearResource (true);
     return FALSE;
   }
 
@@ -834,7 +835,7 @@ gst_dwrite_overlay_object_update_device (GstDWriteOverlayObject * object,
   GST_DEBUG_OBJECT (object, "Updating device");
   gst_clear_object (&priv->device);
   priv->device = (GstD3D11Device *) gst_object_ref (dmem->device);
-  priv->ClearResource ();
+  priv->ClearResource (false);
   gst_dwrite_overlay_object_prepare_resource (object);
 
   return TRUE;
