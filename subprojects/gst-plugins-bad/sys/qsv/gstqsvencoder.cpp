@@ -362,6 +362,10 @@ gst_qsv_encoder_set_context (GstElement * element, GstContext * context)
 #ifdef G_OS_WIN32
   gst_d3d11_handle_set_context_for_adapter_luid (element,
       context, klass->adapter_luid, (GstD3D11Device **) & priv->device);
+#ifdef HAVE_GST_D3D12
+  gst_d3d12_handle_set_context_for_adapter_luid (element,
+      context, klass->adapter_luid, (GstD3D12Device **) & priv->device12);
+#endif
 #else
   gst_va_handle_set_context (element, context, klass->display_path,
       (GstVaDisplay **) & priv->device);
@@ -1429,13 +1433,20 @@ gst_qsv_encoder_flush (GstVideoEncoder * encoder)
 static gboolean
 gst_qsv_encoder_handle_context_query (GstQsvEncoder * self, GstQuery * query)
 {
-  GstQsvEncoderPrivate *priv = self->priv;
+  auto priv = self->priv;
+  auto elem = GST_ELEMENT_CAST (self);
 
 #ifdef G_OS_WIN32
-  return gst_d3d11_handle_context_query (GST_ELEMENT (self), query,
+#ifdef HAVE_GST_D3D12
+  if (gst_d3d12_handle_context_query (elem, query,
+          (GstD3D12Device *) priv->device12)) {
+    return TRUE;
+  }
+#endif
+  return gst_d3d11_handle_context_query (elem, query,
       (GstD3D11Device *) priv->device);
 #else
-  return gst_va_handle_context_query (GST_ELEMENT (self), query,
+  return gst_va_handle_context_query (elem, query,
       (GstVaDisplay *) priv->device);
 #endif
 }
