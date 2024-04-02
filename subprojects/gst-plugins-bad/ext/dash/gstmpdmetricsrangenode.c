@@ -64,7 +64,11 @@ gst_mpd_metrics_range_node_init (GstMPDMetricsRangeNode * self)
 GstMPDMetricsRangeNode *
 gst_mpd_metrics_range_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_METRICS_RANGE_NODE, NULL);
+  GstMPDMetricsRangeNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_METRICS_RANGE_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

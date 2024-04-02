@@ -203,7 +203,11 @@ gst_mpd_period_node_init (GstMPDPeriodNode * self)
 GstMPDPeriodNode *
 gst_mpd_period_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_PERIOD_NODE, NULL);
+  GstMPDPeriodNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_PERIOD_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

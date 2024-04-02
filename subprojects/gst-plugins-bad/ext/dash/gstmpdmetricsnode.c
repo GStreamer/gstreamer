@@ -83,7 +83,10 @@ gst_mpd_metrics_node_init (GstMPDMetricsNode * self)
 GstMPDMetricsNode *
 gst_mpd_metrics_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_METRICS_NODE, NULL);
+  GstMPDMetricsNode *ret;
+  ret = g_object_new (GST_TYPE_MPD_METRICS_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

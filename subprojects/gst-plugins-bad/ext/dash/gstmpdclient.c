@@ -459,9 +459,13 @@ gst_mpd_client_init (GstMPDClient * client)
 GstMPDClient *
 gst_mpd_client_new (void)
 {
+  GstMPDClient *ret;
+
   GST_DEBUG_CATEGORY_INIT (gst_dash_mpd_client_debug, "dashmpdclient", 0,
       "DashmMpdClient");
-  return g_object_new (GST_TYPE_MPD_CLIENT, NULL);
+  ret = g_object_new (GST_TYPE_MPD_CLIENT, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 GstMPDClient *

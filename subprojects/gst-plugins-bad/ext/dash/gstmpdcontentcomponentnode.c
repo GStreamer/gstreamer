@@ -109,7 +109,11 @@ gst_mpd_content_component_node_init (GstMPDContentComponentNode * self)
 GstMPDContentComponentNode *
 gst_mpd_content_component_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_CONTENT_COMPONENT_NODE, NULL);
+  GstMPDContentComponentNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_CONTENT_COMPONENT_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

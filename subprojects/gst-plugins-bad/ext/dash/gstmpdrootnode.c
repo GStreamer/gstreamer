@@ -405,7 +405,11 @@ gst_mpd_root_node_init (GstMPDRootNode * self)
 GstMPDRootNode *
 gst_mpd_root_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_ROOT_NODE, NULL);
+  GstMPDRootNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_ROOT_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void
