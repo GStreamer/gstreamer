@@ -101,7 +101,11 @@ gst_mpd_segment_base_node_init (GstMPDSegmentBaseNode * self)
 GstMPDSegmentBaseNode *
 gst_mpd_segment_base_node_new (void)
 {
-  return g_object_new (GST_TYPE_MPD_SEGMENT_BASE_NODE, NULL);
+  GstMPDSegmentBaseNode *ret;
+
+  ret = g_object_new (GST_TYPE_MPD_SEGMENT_BASE_NODE, NULL);
+  gst_object_ref_sink (ret);
+  return ret;
 }
 
 void

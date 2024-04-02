@@ -88,6 +88,7 @@ gst_mpd_descriptor_type_node_new (const gchar * name)
   GstMPDDescriptorTypeNode *self =
       g_object_new (GST_TYPE_MPD_DESCRIPTOR_TYPE_NODE, NULL);
   self->node_name = g_strdup (name);
+  gst_object_ref_sink (self);
   return self;
 }
 
