@@ -84,7 +84,7 @@ GstBufferPool *gst_vulkan_buffer_pool_new               (GstVulkanDevice * devic
 GST_VULKAN_API
 void            gst_vulkan_buffer_pool_config_set_allocation_params
                                                         (GstStructure * config,
-                                                         VkImageUsageFlags usage,
+                                                         VkBufferUsageFlags usage,
                                                          VkMemoryPropertyFlags mem_properties);
 
 G_END_DECLS
