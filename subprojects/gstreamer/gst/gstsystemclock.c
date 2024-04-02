@@ -251,7 +251,7 @@ gst_futex_cond_broadcast (guint * cond_val)
   g_atomic_int_inc (cond_val);
 
 #if defined(HAVE_FUTEX_TIME64)
-#if defined(__BIONIC__)
+#if defined(__ANDROID__)
   if (__builtin_available (android 30, *)) {
 #else
   {
@@ -313,7 +313,7 @@ gst_futex_cond_wait_until (guint * cond_val, GMutex * mutex, gint64 end_time)
    */
 
 #if defined(HAVE_FUTEX_TIME64)
-#if defined(__BIONIC__)
+#if defined(__ANDROID__)
   if (__builtin_available (android 30, *)) {
 #else
   {
