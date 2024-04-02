@@ -2485,25 +2485,30 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 static void
 gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
 {
-  GstGLWindow *window;
+  GstGLWindow *window = NULL;
 
   GST_WARNING_OBJECT (gl_sink, "Output window was closed");
 
-  window = gst_gl_context_get_window (gl_sink->context);
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+  if (gl_sink->context)
+    window = gst_gl_context_get_window (gl_sink->context);
+  GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 
-  if (gl_sink->key_sig_id)
-    g_signal_handler_disconnect (window, gl_sink->key_sig_id);
-  gl_sink->key_sig_id = 0;
-  if (gl_sink->mouse_sig_id)
-    g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
-  gl_sink->mouse_sig_id = 0;
-  if (gl_sink->mouse_scroll_sig_id)
-    g_signal_handler_disconnect (window, gl_sink->mouse_scroll_sig_id);
-  gl_sink->mouse_scroll_sig_id = 0;
+  if (window) {
+    if (gl_sink->key_sig_id)
+      g_signal_handler_disconnect (window, gl_sink->key_sig_id);
+    gl_sink->key_sig_id = 0;
+    if (gl_sink->mouse_sig_id)
+      g_signal_handler_disconnect (window, gl_sink->mouse_sig_id);
+    gl_sink->mouse_sig_id = 0;
+    if (gl_sink->mouse_scroll_sig_id)
+      g_signal_handler_disconnect (window, gl_sink->mouse_scroll_sig_id);
+    gl_sink->mouse_scroll_sig_id = 0;
+
+    gst_object_unref (window);
+  }
 
   g_atomic_int_set (&gl_sink->to_quit, 1);
-
-  gst_object_unref (window);
 }
 
 static gboolean
