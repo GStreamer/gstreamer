@@ -4597,6 +4597,7 @@ gst_play_get_video_snapshot (GstPlay * self,
     GstPlaySnapshotFormat format, const GstStructure * config)
 {
   gint video_tracks = 0;
+  GstPlayVideoInfo *video_info = NULL;
   GstSample *sample = NULL;
   GstCaps *caps = NULL;
   gint width = -1;
@@ -4605,10 +4606,20 @@ gst_play_get_video_snapshot (GstPlay * self,
   gint par_d = 1;
   g_return_val_if_fail (GST_IS_PLAY (self), NULL);
 
-  g_object_get (self->playbin, "n-video", &video_tracks, NULL);
-  if (video_tracks == 0) {
-    GST_DEBUG_OBJECT (self, "total video track num is 0");
-    return NULL;
+  if (self->use_playbin3) {
+    video_info = gst_play_get_current_video_track (self);
+    if (video_info == NULL) {
+      GST_DEBUG_OBJECT (self, "no current video track");
+      return NULL;
+    } else {
+      g_object_unref (video_info);
+    }
+  } else {
+    g_object_get (self->playbin, "n-video", &video_tracks, NULL);
+    if (video_tracks == 0) {
+      GST_DEBUG_OBJECT (self, "total video track num is 0");
+      return NULL;
+    }
   }
 
   switch (format) {
