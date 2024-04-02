@@ -1082,7 +1082,9 @@ rtp_jitter_buffer_calculate_pts (RTPJitterBuffer * jbuf, GstClockTime dts,
 
     /* do skew calculation by measuring the difference between rtptime and the
      * receive dts, this function will return the skew corrected rtptime. */
-    pts = calculate_skew (jbuf, ext_rtptime, gstrtptime, dts, gap, is_rtx);
+    pts =
+        calculate_skew (jbuf, ext_rtptime, gstrtptime, estimated_dts ? -1 : dts,
+        gap, is_rtx);
   }
 
   /* check if timestamps are not going backwards, we can only check this if we
