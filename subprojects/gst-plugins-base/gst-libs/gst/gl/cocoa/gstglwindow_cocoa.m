@@ -286,6 +286,7 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
   priv = window_cocoa->priv;
 
   if (priv->internal_win_id) {
+    GstGLWindowCocoa *window_cocoa2 = gst_object_ref (window_cocoa);
     if (handle) {
       priv->external_view = (gpointer)handle;
       priv->visible = TRUE;
@@ -294,7 +295,6 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
       priv->external_view = 0;
       priv->visible = FALSE;
     }
-
 
     dispatch_async (dispatch_get_main_queue (), ^{
       GstGLNSWindow *internal_win_id =
@@ -310,6 +310,7 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
       [external_view setAutoresizesSubviews: YES];
       [view setFrame: [external_view bounds]];
       [view setAutoresizingMask: NSViewWidthSizable|NSViewHeightSizable];
+      gst_object_unref (window_cocoa2);
     });
   } else {
     /* no internal window yet so delay it to the next drawing */
