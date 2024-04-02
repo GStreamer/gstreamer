@@ -1004,12 +1004,17 @@ gst_glimage_sink_mouse_scroll_event_cb (GstGLWindow * window,
 static void
 _set_context (GstGLImageSink * gl_sink, GstGLContext * context)
 {
-  GST_GLIMAGE_SINK_LOCK (gl_sink);
-  if (gl_sink->context)
-    gst_object_unref (gl_sink->context);
+  GstGLContext *old_context;
 
+  GST_GLIMAGE_SINK_LOCK (gl_sink);
+
+  old_context = gl_sink->context;
   gl_sink->context = context;
+
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
+
+  if (old_context)
+    gst_object_unref (old_context);
 }
 
 static void
