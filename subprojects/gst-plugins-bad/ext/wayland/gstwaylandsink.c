@@ -609,6 +609,7 @@ gst_wayland_update_pool (GstWaylandSink * self, GstAllocator * allocator)
     gst_object_unref (self->pool);
   }
   self->pool = gst_wl_video_buffer_pool_new ();
+  gst_object_ref_sink (self->pool);
 
   config = gst_buffer_pool_get_config (self->pool);
   gst_buffer_pool_config_set_params (config, self->caps, size, 2, 0);
