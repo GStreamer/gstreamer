@@ -742,16 +742,17 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
 
     switch (ver) {
       case 1:
-        gst_structure_get_int (s, "layer", &layer);
-        switch (layer) {
-          case 1:
-          case 2:
-          case 3:
-            return g_strdup_printf ("MPEG-1 Layer %d (MP%d)", layer, layer);
-          default:
-            break;
+        if (gst_structure_get_int (s, "layer", &layer)) {
+          switch (layer) {
+            case 1:
+            case 2:
+            case 3:
+              return g_strdup_printf ("MPEG-1 Layer %d (MP%d)", layer, layer);
+            default:
+              break;
+          }
+          GST_WARNING ("Unexpected MPEG-1 layer in %" GST_PTR_FORMAT, caps);
         }
-        GST_WARNING ("Unexpected MPEG-1 layer in %" GST_PTR_FORMAT, caps);
         return g_strdup ("MPEG-1 Audio");
       case 2:
         return g_strdup ("MPEG-2 AAC");
