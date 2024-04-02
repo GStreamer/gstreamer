@@ -1115,7 +1115,7 @@ multiple times.  This must be called before any other #GstVulkanBufferMemory ope
           </parameter>
           <parameter name="usage" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbufferpool.c">The Vulkan buffer usage flags.</doc>
-            <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags"/>
+            <type name="Vulkan.BufferUsageFlags" c:type="VkBufferUsageFlags"/>
           </parameter>
           <parameter name="mem_properties" transfer-ownership="none">
             <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags"/>

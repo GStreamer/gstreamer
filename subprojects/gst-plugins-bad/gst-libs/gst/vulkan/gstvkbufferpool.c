@@ -44,7 +44,7 @@ struct _GstVulkanBufferPoolPrivate
   GstCaps *caps;
   GstVideoInfo v_info;
   gboolean add_videometa;
-  VkImageUsageFlags usage;
+  VkBufferUsageFlags usage;
   VkMemoryPropertyFlags mem_props;
   gsize alloc_sizes[GST_VIDEO_MAX_PLANES];
 };
@@ -74,7 +74,7 @@ gst_vulkan_buffer_pool_get_options (GstBufferPool * pool)
 
 static inline gboolean
 gst_vulkan_buffer_pool_config_get_allocation_params (GstStructure *
-    config, VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props)
+    config, VkBufferUsageFlags * usage, VkMemoryPropertyFlags * mem_props)
 {
   if (!gst_structure_get_uint (config, "usage", usage)) {
     *usage =
@@ -98,7 +98,7 @@ gst_vulkan_buffer_pool_config_get_allocation_params (GstStructure *
  */
 void
 gst_vulkan_buffer_pool_config_set_allocation_params (GstStructure *
-    config, VkImageUsageFlags usage, VkMemoryPropertyFlags mem_properties)
+    config, VkBufferUsageFlags usage, VkMemoryPropertyFlags mem_properties)
 {
   /* assumption: G_TYPE_UINT is compatible with uint32_t (VkFlags) */
   gst_structure_set (config, "usage", G_TYPE_UINT, usage, "memory-properties",
