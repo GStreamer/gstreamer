@@ -855,6 +855,7 @@ gst_gtk_wayland_update_pool (GstGtkWaylandSink * self, GstAllocator * allocator)
     gst_object_unref (priv->pool);
   }
   priv->pool = gst_wl_video_buffer_pool_new ();
+  gst_object_ref_sink (priv->pool);
 
   config = gst_buffer_pool_get_config (priv->pool);
   gst_buffer_pool_config_set_params (config, priv->caps, size, 2, 0);
