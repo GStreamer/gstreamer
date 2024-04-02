@@ -30,7 +30,7 @@ public class WebrtcSendRecv {
     private static final Logger logger = LoggerFactory.getLogger(WebrtcSendRecv.class);
     private static final String REMOTE_SERVER_URL = "wss://webrtc.gstreamer.net:8443";
     private static final String VIDEO_BIN_DESCRIPTION = "videotestsrc ! videoconvert ! queue ! vp8enc deadline=1 ! rtpvp8pay ! queue ! capsfilter caps=application/x-rtp,media=video,encoding-name=VP8,payload=97";
-    private static final String AUDIO_BIN_DESCRIPTION = "audiotestsrc ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay ! queue ! capsfilter caps=application/x-rtp,media=audio,encoding-name=OPUS,payload=96";
+    private static final String AUDIO_BIN_DESCRIPTION = "audiotestsrc ! audioconvert ! audioresample ! queue ! opusenc perfect-timestamp=true ! rtpopuspay ! queue ! capsfilter caps=application/x-rtp,media=audio,encoding-name=OPUS,payload=96";
 
     private final String serverUrl;
     private final String peerId;

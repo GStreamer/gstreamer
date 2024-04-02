@@ -39,7 +39,7 @@ PIPELINE_DESC_VP8 = WEBRTCBIN + '''
  {vsrc} ! videoconvert ! queue !
   vp8enc deadline=1 keyframe-max-dist=2000 ! rtpvp8pay picture-id-mode=15-bit !
   queue ! application/x-rtp,media=video,encoding-name=VP8,payload={video_pt} ! sendrecv.
- {asrc} ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay !
+ {asrc} ! audioconvert ! audioresample ! queue ! opusenc perfect-timestamp=true ! rtpopuspay !
   queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload={audio_pt} ! sendrecv.
 '''
 PIPELINE_DESC_H264 = WEBRTCBIN + '''
@@ -47,7 +47,7 @@ PIPELINE_DESC_H264 = WEBRTCBIN + '''
   x264enc tune=zerolatency speed-preset=ultrafast key-int-max=30 intra-refresh=true !
   rtph264pay aggregate-mode=zero-latency config-interval=-1 !
   queue ! application/x-rtp,media=video,encoding-name=H264,payload={video_pt} ! sendrecv.
- {asrc} ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay !
+ {asrc} ! audioconvert ! audioresample ! queue ! opusenc perfect-timestamp=true ! rtpopuspay !
   queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload={audio_pt} ! sendrecv.
 '''
 # Force I420 because dav1d bundled with Chrome doesn't support 10-bit choma/luma (I420_10LE)
@@ -55,7 +55,7 @@ PIPELINE_DESC_AV1 = WEBRTCBIN + '''
  {vsrc} ! videoconvert ! queue !
   video/x-raw,format=I420 ! svtav1enc preset=13 ! av1parse ! rtpav1pay !
   queue ! application/x-rtp,media=video,encoding-name=AV1,payload={video_pt} ! sendrecv.
- {asrc} ! audioconvert ! audioresample ! queue ! opusenc ! rtpopuspay !
+ {asrc} ! audioconvert ! audioresample ! queue ! opusenc perfect-timestamp=true ! rtpopuspay !
   queue ! application/x-rtp,media=audio,encoding-name=OPUS,payload={audio_pt} ! sendrecv.
 '''
 PIPELINE_DESC = {

@@ -390,7 +390,7 @@ start_pipeline (WebRTC * webrtc)
       "ahcsrc device-facing=front ! video/x-raw,width=[320,1280] ! queue max-size-buffers=1 ! videoconvert ! "
       "vp8enc keyframe-max-dist=30 deadline=1 error-resilient=default ! rtpvp8pay picture-id-mode=15-bit mtu=1300 ! "
       "queue max-size-time=300000000 ! " RTP_CAPS_VP8 " ! sendrecv.sink_0 "
-      "openslessrc ! queue ! audioconvert ! audioresample ! audiorate ! queue ! opusenc ! rtpopuspay ! "
+      "openslessrc ! queue ! audioconvert ! audioresample ! audiorate ! queue ! opusenc perfect-timestamp=true ! rtpopuspay ! "
       "queue ! " RTP_CAPS_OPUS " ! sendrecv.sink_1 ", &error);
 
   if (error) {
