@@ -369,18 +369,7 @@ va_ensure_image (GstVaDisplay * display, VASurfaceID surface,
 gboolean
 va_check_surface (GstVaDisplay * display, VASurfaceID surface)
 {
-  VADisplay dpy = gst_va_display_get_va_dpy (display);
-  VAStatus status;
-  VASurfaceStatus state;
-
-  status = vaQuerySurfaceStatus (dpy, surface, &state);
-
-  if (status != VA_STATUS_SUCCESS)
-    GST_ERROR ("vaQuerySurfaceStatus: %s", vaErrorStr (status));
-
-  GST_LOG ("surface %#x status %d", surface, state);
-
-  return (status == VA_STATUS_SUCCESS);
+  return va_check_surface_has_status (display, surface, 0);
 }
 
 gboolean
