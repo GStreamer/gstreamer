@@ -293,10 +293,18 @@ gst_gl_buffer_pool_stop (GstBufferPool * pool)
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
   GstBuffer *buffer;
+  GQueue *free_buffers;
 
-  while ((buffer = g_queue_pop_head (priv->free_cache_buffers))) {
+  GST_OBJECT_LOCK (pool);
+  free_buffers = priv->free_cache_buffers;
+  priv->free_cache_buffers = g_queue_new ();
+  GST_OBJECT_UNLOCK (pool);
+
+  while ((buffer = g_queue_pop_head (free_buffers))) {
     GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buffer);
   }
+
+  g_clear_pointer (&free_buffers, g_queue_free);
 
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
@@ -345,18 +353,35 @@ gst_gl_buffer_pool_release_buffer (GstBufferPool * pool, GstBuffer * buffer)
   GstGLBufferPool *glpool = GST_GL_BUFFER_POOL_CAST (pool);
   GstGLBufferPoolPrivate *priv = glpool->priv;
 
+  GST_OBJECT_LOCK (pool);
+
   if (priv->free_queue_min_depth == 0
-      && g_queue_get_length (priv->free_cache_buffers) == 0) {
+      && g_queue_is_empty (priv->free_cache_buffers)) {
+    GST_OBJECT_UNLOCK (pool);
+
     GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool, buffer);
   } else {
+    GPtrArray *free_buffers = g_ptr_array_new ();
+    guint q_len = g_queue_get_length (priv->free_cache_buffers);
+    guint i;
+
     g_queue_push_tail (priv->free_cache_buffers, buffer);
 
-    while (g_queue_get_length (priv->free_cache_buffers) >
-        priv->free_queue_min_depth) {
+    while (q_len > priv->free_queue_min_depth) {
       GstBuffer *release_buffer = g_queue_pop_head (priv->free_cache_buffers);
+      g_ptr_array_add (free_buffers, release_buffer);
+      q_len -= 1;
+    }
+
+    GST_OBJECT_UNLOCK (pool);
+
+    for (i = 0; i < free_buffers->len; i++) {
+      GstBuffer *release_buffer = g_ptr_array_index (free_buffers, i);
       GST_BUFFER_POOL_CLASS (parent_class)->release_buffer (pool,
           release_buffer);
     }
+
+    g_ptr_array_unref (free_buffers);
   }
 }
 
