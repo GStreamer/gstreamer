@@ -1636,23 +1636,6 @@ _is_planar_rgb (GstVideoFormat v_format)
   }
 }
 
-static inline gchar
-_index_to_shader_swizzle (int idx)
-{
-  switch (idx) {
-    case 0:
-      return 'r';
-    case 1:
-      return 'g';
-    case 2:
-      return 'b';
-    case 3:
-      return 'a';
-    default:
-      return '#';
-  }
-}
-
 static void
 video_format_to_gl_reorder (GstVideoFormat v_format, gint * reorder,
     gboolean input)
@@ -1723,105 +1706,6 @@ calculate_reorder_indexes (GstVideoFormat in_format,
       ret_in[3]);
   GST_TRACE ("out reorder: %u, %u, %u, %u", ret_out[0], ret_out[1], ret_out[2],
       ret_out[3]);
-}
-
-/* attempts to transform expected to want using swizzling */
-static gchar *
-_RGB_pixel_order (const gchar * expected, const gchar * wanted)
-{
-  GString *ret = g_string_sized_new (4);
-  gchar *expect, *want;
-  gchar *orig_want;
-  int len;
-  gboolean discard_output = TRUE;
-
-  if (g_ascii_strcasecmp (expected, wanted) == 0) {
-    g_string_free (ret, TRUE);
-    return g_ascii_strdown (expected, -1);
-  }
-
-  expect = g_ascii_strdown (expected, -1);
-  orig_want = want = g_ascii_strdown (wanted, -1);
-
-  if (strcmp (expect, "rgb16") == 0 || strcmp (expect, "bgr16") == 0) {
-    gchar *temp = expect;
-    expect = g_strndup (temp, 3);
-    g_free (temp);
-  } else if (strcmp (expect, "bgr10a2_le") == 0) {
-    gchar *temp = expect;
-    expect = g_strndup ("bgra", 4);
-    g_free (temp);
-  } else if (strcmp (expect, "rgb10a2_le") == 0) {
-    gchar *temp = expect;
-    expect = g_strndup ("rgba", 4);
-    g_free (temp);
-  } else if (strcmp (expect, "rgbp") == 0 || strcmp (expect, "bgrp") == 0) {
-    gchar *temp = expect;
-    expect = g_strndup (temp, 3);
-    g_free (temp);
-  }
-
-  if (strcmp (want, "rgb16") == 0 || strcmp (want, "bgr16") == 0) {
-    gchar *temp = want;
-    orig_want = want = g_strndup (temp, 3);
-    g_free (temp);
-  } else if (strcmp (want, "bgr10a2_le") == 0) {
-    gchar *temp = want;
-    orig_want = want = g_strndup ("bgra", 4);
-    g_free (temp);
-  } else if (strcmp (want, "rgb10a2_le") == 0) {
-    gchar *temp = want;
-    orig_want = want = g_strndup ("rgba", 4);
-    g_free (temp);
-  }
-
-  /* pad want with 'a's */
-  if ((len = strlen (want)) < 4) {
-    gchar *new_want = g_strndup (want, 4);
-    while (len < 4) {
-      new_want[len] = 'a';
-      len++;
-    }
-    g_free (want);
-    orig_want = want = new_want;
-  }
-
-  /* pad expect with 'a's */
-  if ((len = strlen (expect)) < 4) {
-    gchar *new_expect = g_strndup (expect, 4);
-    while (len < 4) {
-      new_expect[len] = 'a';
-      len++;
-    }
-    g_free (expect);
-    expect = new_expect;
-  }
-
-  /* build the swizzle format */
-  while (want && want[0] != '\0') {
-    gchar *val;
-    gint idx;
-    gchar needle = want[0];
-
-    if (needle == 'x')
-      needle = 'a';
-
-    if (!(val = strchr (expect, needle))
-        && needle == 'a' && !(val = strchr (expect, 'x')))
-      goto out;
-
-    idx = (gint) (val - expect);
-
-    ret = g_string_append_c (ret, _index_to_shader_swizzle (idx));
-    want = &want[1];
-  }
-
-  discard_output = FALSE;
-out:
-  g_free (orig_want);
-  g_free (expect);
-
-  return g_string_free (ret, discard_output);
 }
 
 static guint
@@ -1981,8 +1865,6 @@ _YUV_to_RGB (GstGLColorConvert * convert)
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
   const GstVideoFormatInfo *in_finfo = gst_video_format_get_info (in_format);
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
-  const gchar *out_format_str = gst_video_format_to_string (out_format);
-  gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
   gboolean apple_ycbcr = gst_gl_context_check_feature (convert->context,
       "GL_APPLE_ycbcr_422");
   gboolean in_tex_rectangular = FALSE;
@@ -2189,8 +2071,6 @@ _YUV_to_RGB (GstGLColorConvert * convert)
     info->cms_coeff2 = (gfloat *) from_yuv_bt601_gcoeff;
     info->cms_coeff3 = (gfloat *) from_yuv_bt601_bcoeff;
   }
-
-  g_free (pixel_order);
 }
 
 static void
@@ -2198,10 +2078,8 @@ _RGB_to_YUV (GstGLColorConvert * convert)
 {
   struct ConvertInfo *info = &convert->priv->convert_info;
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
-  const gchar *in_format_str = gst_video_format_to_string (in_format);
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
   const GstVideoFormatInfo *out_finfo = gst_video_format_get_info (out_format);
-  gchar *pixel_order = _RGB_pixel_order (in_format_str, "rgba");
   const gchar *alpha;
 
   info->frag_prog = NULL;
@@ -2330,7 +2208,6 @@ _RGB_to_YUV (GstGLColorConvert * convert)
     info->cms_coeff3 = (gfloat *) from_rgb_bt601_vcoeff;
   }
 
-  g_free (pixel_order);
 }
 
 static void
@@ -2338,8 +2215,6 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
 {
   struct ConvertInfo *info = &convert->priv->convert_info;
   GstVideoFormat in_format = GST_VIDEO_INFO_FORMAT (&convert->in_info);
-  const gchar *in_format_str = gst_video_format_to_string (in_format);
-  gchar *pixel_order = _RGB_pixel_order (in_format_str, "rgba");
   gchar *alpha = NULL;
 
   info->shader_tex_names[0] = "tex";
@@ -2367,7 +2242,6 @@ _RGB_to_GRAY (GstGLColorConvert * convert)
   }
 
   g_free (alpha);
-  g_free (pixel_order);
 }
 
 static void
@@ -2375,8 +2249,6 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
 {
   struct ConvertInfo *info = &convert->priv->convert_info;
   GstVideoFormat out_format = GST_VIDEO_INFO_FORMAT (&convert->out_info);
-  const gchar *out_format_str = gst_video_format_to_string (out_format);
-  gchar *pixel_order = _RGB_pixel_order ("rgba", out_format_str);
 
   info->shader_tex_names[0] = "tex";
 
@@ -2416,8 +2288,6 @@ _GRAY_to_RGB (GstGLColorConvert * convert)
     default:
       break;
   }
-
-  g_free (pixel_order);
 }
 
 static void
