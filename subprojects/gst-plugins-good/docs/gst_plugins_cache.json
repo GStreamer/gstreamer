@@ -21734,6 +21734,18 @@
                         "type": "guint64",
                         "writable": true
                     },
+                    "tcp-timestamp": {
+                        "blurb": "Timestamp RTP packets with receive times in TCP/HTTP mode",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "teardown-timeout": {
                         "blurb": "When transitioning PAUSED-READY, allow up to timeout (in nanoseconds) delay in order to send teardown (0 = disabled)",
                         "conditionally-available": false,
