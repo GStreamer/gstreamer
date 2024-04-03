@@ -25,6 +25,7 @@
 
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
+#include <gst/app/app.h>
 #include <glib/gstdio.h>
 
 static void
@@ -134,6 +135,92 @@ GST_START_TEST (test_unixfd_videotestsrc)
 
 GST_END_TEST;
 
+GST_START_TEST (test_unixfd_segment)
+{
+  GError *error = NULL;
+
+  /* Ensure we don't have socket from previous failed test */
+  gchar *socket_path =
+      g_strdup_printf ("%s/unixfd-test-socket", g_get_user_runtime_dir ());
+  if (g_file_test (socket_path, G_FILE_TEST_EXISTS)) {
+    g_unlink (socket_path);
+  }
+
+  GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
+
+  /* Setup service */
+  gchar *pipeline_str =
+      g_strdup_printf
+      ("appsrc name=src format=time handle-segment-change=true ! unixfdsink socket-path=%s sync=false async=false",
+      socket_path);
+  GstElement *pipeline_service = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsrc = gst_bin_get_by_name (GST_BIN (pipeline_service), "src");
+  gst_object_unref (appsrc);
+  g_free (pipeline_str);
+
+  /* Setup client */
+  pipeline_str =
+      g_strdup_printf
+      ("unixfdsrc socket-path=%s ! appsink name=sink sync=false async=false",
+      socket_path);
+  GstElement *pipeline_client = gst_parse_launch (pipeline_str, &error);
+  g_assert_no_error (error);
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
+  GstElement *appsink = gst_bin_get_by_name (GST_BIN (pipeline_client), "sink");
+  gst_object_unref (appsink);
+  g_free (pipeline_str);
+
+  /* Send a buffer with PTS=30s */
+  GstSegment segment;
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  GstBuffer *buf = gst_buffer_new ();
+  GST_BUFFER_PTS (buf) = 30 * GST_SECOND;
+  GstSample *sample = gst_sample_new (buf, caps, &segment, NULL);
+  gst_app_src_push_sample (GST_APP_SRC (appsrc), sample);
+  gst_sample_unref (sample);
+  gst_buffer_unref (buf);
+
+  /* Wait for it */
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (appsink));
+  buf = gst_sample_get_buffer (sample);
+  GstClockTime first_pts = GST_BUFFER_PTS (buf);
+  gst_sample_unref (sample);
+
+  /* Send a buffer with PTS=1s but with 30s offset in the segment */
+  segment.base = 30 * GST_SECOND;
+  buf = gst_buffer_new ();
+  GST_BUFFER_PTS (buf) = 1 * GST_SECOND;
+  sample = gst_sample_new (buf, caps, &segment, NULL);
+  gst_app_src_push_sample (GST_APP_SRC (appsrc), sample);
+  gst_sample_unref (sample);
+  gst_buffer_unref (buf);
+
+  /* Wait for it */
+  sample = gst_app_sink_pull_sample (GST_APP_SINK (appsink));
+  buf = gst_sample_get_buffer (sample);
+  GstClockTime second_pts = GST_BUFFER_PTS (buf);
+  gst_sample_unref (sample);
+
+  /* They should be 1s appart */
+  fail_unless_equals_uint64 (second_pts - first_pts, GST_SECOND);
+
+  /* Teardown */
+  fail_unless (gst_element_set_state (pipeline_client,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  fail_unless (gst_element_set_state (pipeline_service,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipeline_service);
+  gst_object_unref (pipeline_client);
+  g_free (socket_path);
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 unixfd_suite (void)
 {
@@ -142,6 +229,7 @@ unixfd_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_unixfd_videotestsrc);
+  tcase_add_test (tc, test_unixfd_segment);
 
   return s;
 }
