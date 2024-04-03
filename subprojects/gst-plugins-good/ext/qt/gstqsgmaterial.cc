@@ -46,6 +46,8 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 #define UNIFORM_TRIPLANAR_PLANE0 "Ytex"
 #define UNIFORM_TRIPLANAR_PLANE1 "Utex"
 #define UNIFORM_TRIPLANAR_PLANE2 "Vtex"
+#define UNIFORM_BIPLANAR_PLANE0 "Ytex"
+#define UNIFORM_BIPLANAR_PLANE1 "UVtex"
 
 /* matrices from glcolorconvert */
 /* FIXME: use the colormatrix support from videoconvert */
@@ -114,6 +116,10 @@ public:
         tex_names[0] = UNIFORM_TRIPLANAR_PLANE0;
         tex_names[1] = UNIFORM_TRIPLANAR_PLANE1;
         tex_names[2] = UNIFORM_TRIPLANAR_PLANE2;
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        tex_names[0] = UNIFORM_BIPLANAR_PLANE0;
+        tex_names[1] = UNIFORM_BIPLANAR_PLANE1;
         break;
       default:
         g_assert_not_reached ();
@@ -186,6 +192,7 @@ G_PASTE(GstQSGMaterial_,format)::~G_PASTE(GstQSGMaterial_,format)() {}
 DEFINE_MATERIAL(RGBA);
 DEFINE_MATERIAL(RGBA_SWIZZLE);
 DEFINE_MATERIAL(YUV_TRIPLANAR);
+DEFINE_MATERIAL(YUV_BIPLANAR);
 
 GstQSGMaterial *
 GstQSGMaterial::new_for_format(GstVideoFormat format)
@@ -198,6 +205,8 @@ GstQSGMaterial::new_for_format(GstVideoFormat format)
       return static_cast<GstQSGMaterial *>(new GstQSGMaterial_RGBA_SWIZZLE());
     case GST_VIDEO_FORMAT_YV12:
       return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_TRIPLANAR());
+    case GST_VIDEO_FORMAT_NV12:
+      return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_BIPLANAR());
     default:
       g_assert_not_reached ();
   }
@@ -263,6 +272,9 @@ vertexShaderForFormat(GstVideoFormat v_format)
   "uniform sampler2D " UNIFORM_TRIPLANAR_PLANE0 ";\n" \
   "uniform sampler2D " UNIFORM_TRIPLANAR_PLANE1 ";\n" \
   "uniform sampler2D " UNIFORM_TRIPLANAR_PLANE2 ";\n"
+#define biplanar_texture_input \
+  "uniform sampler2D " UNIFORM_BIPLANAR_PLANE0 ";\n" \
+  "uniform sampler2D " UNIFORM_BIPLANAR_PLANE1 ";\n"
 
 #define uniform_swizzle \
   "uniform int " UNIFORM_SWIZZLE_COMPONENTS_NAME "[4];\n"
@@ -316,6 +328,27 @@ fragmentShaderForFormat(GstVideoFormat v_format, GstGLContext * context)
         "  rgba.a = yuva.a;\n"
         "  gl_FragColor = rgba * " UNIFORM_OPACITY_NAME ";\n"
         //"  gl_FragColor = vec4(yuva.x, 0.0, 0.0, 1.0);\n"
+        "}\n", yuv_to_rgb, swizzle);
+      g_clear_pointer (&yuv_to_rgb, g_free);
+      g_clear_pointer (&swizzle, g_free);
+      return ret;
+    }
+    case GST_VIDEO_FORMAT_NV12: {
+      char *yuv_to_rgb = gst_gl_color_convert_yuv_to_rgb_shader_string (context);
+      char *swizzle = gst_gl_color_convert_swizzle_shader_string (context);
+      char *ret = g_strdup_printf (texcoord_input biplanar_texture_input uniform_swizzle uniform_yuv_to_rgb_color_matrix uniform_opacity
+        "%s\n"
+        "%s\n"
+        "void main(void) {\n"
+        "  vec4 yuva, rgba;\n"
+        "  yuva.x = texture2D(Ytex, v_texcoord).r;\n"
+        "  yuva.y = texture2D(UVtex, v_texcoord).r;\n"
+        "  yuva.z = texture2D(UVtex, v_texcoord).g;\n"
+        "  yuva.a = 1.0;\n"
+        "  yuva = swizzle(yuva, " UNIFORM_SWIZZLE_COMPONENTS_NAME ");\n"
+        "  rgba.rgb = yuv_to_rgb (yuva.xyz, " UNIFORM_YUV_OFFSET_NAME ", " UNIFORM_YUV_YCOEFF_NAME ", " UNIFORM_YUV_UCOEFF_NAME ", " UNIFORM_YUV_VCOEFF_NAME ");\n"
+        "  rgba.a = yuva.a;\n"
+        "  gl_FragColor = rgba * " UNIFORM_OPACITY_NAME ";\n"
         "}\n", yuv_to_rgb, swizzle);
       g_clear_pointer (&yuv_to_rgb, g_free);
       g_clear_pointer (&swizzle, g_free);
@@ -521,6 +554,16 @@ out:
               for (gsize j = 0; j < tex_sidelength; j++) {
                 for (gsize k = 0; k < tex_sidelength; k++) {
                   data[(j * tex_sidelength + k) * 4 + 0] = 0x7F;
+                }
+              }
+            }
+            break;
+          case GST_VIDEO_FORMAT_NV12:
+            if (i == 1) {
+              for (gsize j = 0; j < tex_sidelength; j++) {
+                for (gsize k = 0; k < tex_sidelength; k++) {
+                  data[(j * tex_sidelength + k) * 4 + 0] = 0x7F;
+                  data[(j * tex_sidelength + k) * 4 + 1] = 0x7F;
                 }
               }
             }
