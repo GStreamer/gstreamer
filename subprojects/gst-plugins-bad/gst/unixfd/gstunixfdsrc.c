@@ -90,30 +90,33 @@ typedef struct
 } BufferContext;
 
 static void
+release_buffer (GstUnixFdSrc * self, guint64 id)
+{
+  /* Notify that we are not using this buffer anymore */
+  ReleaseBufferPayload payload = { id };
+  GError *error = NULL;
+  if (!gst_unix_fd_send_command (self->socket, COMMAND_TYPE_RELEASE_BUFFER,
+          NULL, (guint8 *) & payload, sizeof (payload), &error)) {
+    GST_WARNING_OBJECT (self, "Failed to send release-buffer command: %s",
+        error->message);
+    g_clear_error (&error);
+  }
+}
+
+static void
 memory_weak_ref_cb (GstUnixFdSrc * self, GstMemory * mem)
 {
   GST_OBJECT_LOCK (self);
 
   BufferContext *ctx = g_hash_table_lookup (self->memories, mem);
-  if (ctx == NULL)
-    goto out;
-
-  if (--ctx->n_memory == 0) {
-    /* Notify that we are not using this buffer anymore */
-    ReleaseBufferPayload payload = { ctx->id };
-    GError *error = NULL;
-    if (!gst_unix_fd_send_command (self->socket, COMMAND_TYPE_RELEASE_BUFFER,
-            NULL, (guint8 *) & payload, sizeof (payload), &error)) {
-      GST_WARNING_OBJECT (self, "Failed to send release-buffer command: %s",
-          error->message);
-      g_clear_error (&error);
+  if (ctx != NULL) {
+    if (--ctx->n_memory == 0) {
+      release_buffer (self, ctx->id);
+      g_free (ctx);
     }
-    g_free (ctx);
+    g_hash_table_remove (self->memories, mem);
   }
 
-  g_hash_table_remove (self->memories, mem);
-
-out:
   GST_OBJECT_UNLOCK (self);
 }
 
@@ -335,32 +338,25 @@ again:
         goto on_error;
       }
 
-      if (fds == NULL) {
-        GST_ERROR_OBJECT (self,
-            "Received new buffer command without file descriptors");
-        return GST_FLOW_ERROR;
-      }
-
-      if (g_unix_fd_list_get_length (fds) != new_buffer->n_memory) {
+      gint fds_arr_len = 0;
+      gint *fds_arr =
+          (fds != NULL) ? g_unix_fd_list_steal_fds (fds, &fds_arr_len) : NULL;
+      if (fds_arr_len != new_buffer->n_memory) {
         GST_ERROR_OBJECT (self,
             "Received new buffer command with %d file descriptors instead of "
-            "%d", g_unix_fd_list_get_length (fds), new_buffer->n_memory);
+            "%d", fds_arr_len, new_buffer->n_memory);
         ret = GST_FLOW_ERROR;
+        g_free (fds_arr);
         goto on_error;
       }
 
       if (new_buffer->type >= MEMORY_TYPE_LAST) {
         GST_ERROR_OBJECT (self, "Unknown buffer type %d", new_buffer->type);
         ret = GST_FLOW_ERROR;
+        g_free (fds_arr);
         goto on_error;
       }
       GstAllocator *allocator = self->allocators[new_buffer->type];
-
-      gint *fds_arr = g_unix_fd_list_steal_fds (fds, NULL);
-
-      BufferContext *ctx = g_new0 (BufferContext, 1);
-      ctx->id = new_buffer->id;
-      ctx->n_memory = new_buffer->n_memory;
 
       *outbuf = gst_buffer_new ();
 
@@ -394,18 +390,27 @@ again:
       }
 
       GST_OBJECT_LOCK (self);
-      for (int i = 0; i < new_buffer->n_memory; i++) {
-        GstMemory *mem = gst_fd_allocator_alloc (allocator, fds_arr[i],
-            new_buffer->memories[i].size, GST_FD_MEMORY_FLAG_NONE);
-        gst_memory_resize (mem, new_buffer->memories[i].offset,
-            new_buffer->memories[i].size);
-        GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
+      if (new_buffer->n_memory > 0) {
+        BufferContext *ctx = g_new0 (BufferContext, 1);
+        ctx->id = new_buffer->id;
+        ctx->n_memory = new_buffer->n_memory;
+        for (int i = 0; i < new_buffer->n_memory; i++) {
+          GstMemory *mem = gst_fd_allocator_alloc (allocator, fds_arr[i],
+              new_buffer->memories[i].size, GST_FD_MEMORY_FLAG_NONE);
+          gst_memory_resize (mem, new_buffer->memories[i].offset,
+              new_buffer->memories[i].size);
+          GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 
-        g_hash_table_insert (self->memories, mem, ctx);
-        gst_mini_object_weak_ref (GST_MINI_OBJECT_CAST (mem),
-            (GstMiniObjectNotify) memory_weak_ref_cb, self);
+          g_hash_table_insert (self->memories, mem, ctx);
+          gst_mini_object_weak_ref (GST_MINI_OBJECT_CAST (mem),
+              (GstMiniObjectNotify) memory_weak_ref_cb, self);
 
-        gst_buffer_append_memory (*outbuf, mem);
+          gst_buffer_append_memory (*outbuf, mem);
+        }
+      } else {
+        /* This buffer has no memories, we can release it immediately otherwise
+         * it gets leaked. */
+        release_buffer (self, new_buffer->id);
       }
       GST_OBJECT_UNLOCK (self);
 
