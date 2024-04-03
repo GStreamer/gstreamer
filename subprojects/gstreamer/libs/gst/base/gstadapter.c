@@ -1454,7 +1454,7 @@ gst_adapter_dts_at_discont (GstAdapter * adapter)
  *
  * The offset is reset to GST_BUFFER_OFFSET_NONE and the distance is set to 0
  * when the adapter is first created or when it is cleared. This also means that
- * before the first byte with an offset is removed from the adapter, the offset
+ * before the first byte with an offset is added to the adapter, the offset
  * and distance returned are GST_BUFFER_OFFSET_NONE and 0 respectively.
  *
  * Since: 1.10
@@ -1483,7 +1483,7 @@ gst_adapter_prev_offset (GstAdapter * adapter, guint64 * distance)
  *
  * The pts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
  * the adapter is first created or when it is cleared. This also means that before
- * the first byte with a pts is removed from the adapter, the pts
+ * the first byte with a pts is added to the adapter, the pts
  * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
  *
  * Returns: The previously seen pts.
@@ -1510,7 +1510,7 @@ gst_adapter_prev_pts (GstAdapter * adapter, guint64 * distance)
  *
  * The dts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
  * the adapter is first created or when it is cleared. This also means that before
- * the first byte with a dts is removed from the adapter, the dts
+ * the first byte with a dts is added to the adapter, the dts
  * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
  *
  * Returns: The previously seen dts.
@@ -1538,7 +1538,7 @@ gst_adapter_prev_dts (GstAdapter * adapter, guint64 * distance)
  *
  * The pts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
  * the adapter is first created or when it is cleared. This also means that before
- * the first byte with a pts is removed from the adapter, the pts
+ * the first byte with a pts is added to the adapter, the pts
  * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
  *
  * Since: 1.2
@@ -1588,7 +1588,7 @@ gst_adapter_prev_pts_at_offset (GstAdapter * adapter, gsize offset,
  *
  * The dts is reset to GST_CLOCK_TIME_NONE and the distance is set to 0 when
  * the adapter is first created or when it is cleared. This also means that before
- * the first byte with a dts is removed from the adapter, the dts
+ * the first byte with a dts is added to the adapter, the dts
  * and distance returned are GST_CLOCK_TIME_NONE and 0 respectively.
  *
  * Since: 1.2
