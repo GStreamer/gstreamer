@@ -282,7 +282,7 @@ gst_unix_fd_src_unlock_stop (GstBaseSrc * bsrc)
 }
 
 static GstClockTime
-calculate_timestamp (GstClockTime timestamp, GstClockTime base_time,
+from_monotonic (GstClockTime timestamp, GstClockTime base_time,
     GstClockTimeDiff clock_diff)
 {
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -369,9 +369,9 @@ again:
       }
 
       GST_BUFFER_PTS (*outbuf) =
-          calculate_timestamp (new_buffer->pts, base_time, clock_diff);
+          from_monotonic (new_buffer->pts, base_time, clock_diff);
       GST_BUFFER_DTS (*outbuf) =
-          calculate_timestamp (new_buffer->dts, base_time, clock_diff);
+          from_monotonic (new_buffer->dts, base_time, clock_diff);
       GST_BUFFER_DURATION (*outbuf) = new_buffer->duration;
       GST_BUFFER_OFFSET (*outbuf) = new_buffer->offset;
       GST_BUFFER_OFFSET_END (*outbuf) = new_buffer->offset_end;

@@ -428,12 +428,22 @@ send_command_to_all (GstUnixFdSink * self, CommandType type, GUnixFDList * fds,
 }
 
 static GstClockTime
-calculate_timestamp (GstClockTime timestamp, GstClockTime base_time,
-    GstClockTime latency, GstClockTimeDiff clock_diff)
+to_monotonic (GstClockTime timestamp, const GstSegment * segment,
+    GstClockTime base_time, GstClockTime latency, GstClockTimeDiff clock_diff)
 {
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
     /* Convert running time to pipeline clock time */
-    timestamp += base_time;
+    gint res =
+        gst_segment_to_running_time_full (segment, GST_FORMAT_TIME, timestamp,
+        &timestamp);
+    if (res == 0)
+      return GST_CLOCK_TIME_NONE;
+    else if (res > 0)
+      timestamp += base_time;
+    else if (base_time > timestamp)
+      timestamp = base_time - timestamp;
+    else
+      timestamp = 0;
     if (GST_CLOCK_TIME_IS_VALID (latency))
       timestamp += latency;
     /* Convert to system monotonic clock time */
@@ -485,11 +495,11 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
    * id so we know which buffer to unref. */
   new_buffer->id = (guint64) buffer;
   new_buffer->pts =
-      calculate_timestamp (GST_BUFFER_PTS (buffer), base_time, latency,
-      clock_diff);
+      to_monotonic (GST_BUFFER_PTS (buffer),
+      &GST_BASE_SINK_CAST (self)->segment, base_time, latency, clock_diff);
   new_buffer->dts =
-      calculate_timestamp (GST_BUFFER_DTS (buffer), base_time, latency,
-      clock_diff);
+      to_monotonic (GST_BUFFER_DTS (buffer),
+      &GST_BASE_SINK_CAST (self)->segment, base_time, latency, clock_diff);
   new_buffer->duration = GST_BUFFER_DURATION (buffer);
   new_buffer->offset = GST_BUFFER_OFFSET (buffer);
   new_buffer->offset_end = GST_BUFFER_OFFSET_END (buffer);
@@ -497,6 +507,15 @@ gst_unix_fd_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
   new_buffer->type = MEMORY_TYPE_DEFAULT;
   new_buffer->n_memory = n_memory;
   new_buffer->n_meta = n_meta;
+
+  if ((GST_BUFFER_PTS_IS_VALID (buffer)
+          && !GST_CLOCK_TIME_IS_VALID (new_buffer->pts))
+      || (GST_BUFFER_DTS_IS_VALID (buffer)
+          && !GST_CLOCK_TIME_IS_VALID (new_buffer->dts))) {
+    GST_ERROR_OBJECT (self,
+        "Could not convert buffer timestamp to running time");
+    return GST_FLOW_ERROR;
+  }
 
   gboolean dmabuf_count = 0;
   GUnixFDList *fds = g_unix_fd_list_new ();
