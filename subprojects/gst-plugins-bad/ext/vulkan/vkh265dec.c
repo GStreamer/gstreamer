@@ -60,9 +60,6 @@ struct _GstVulkanH265Decoder
 
   GstVulkanDecoder *decoder;
 
-  GstBuffer *inbuf;
-  GstMapInfo in_mapinfo;
-
   gboolean need_negotiation;
   gboolean need_params_update;
 
@@ -75,9 +72,6 @@ struct _GstVulkanH265Decoder
   VkChromaLocation xloc, yloc;
 
   GstVideoCodecState *output_state;
-
-  GstBufferPool *dpb_pool;
-  GstBuffer *layered_dpb;
 };
 
 static GstStaticPadTemplate gst_vulkan_h265dec_sink_template =
@@ -244,10 +238,6 @@ gst_vulkan_h265_decoder_close (GstVideoDecoder * decoder)
   if (self->decoder)
     gst_vulkan_decoder_stop (self->decoder);
 
-  if (self->inbuf)
-    gst_buffer_unmap (self->inbuf, &self->in_mapinfo);
-  gst_clear_buffer (&self->inbuf);
-
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
 
@@ -256,13 +246,6 @@ gst_vulkan_h265_decoder_close (GstVideoDecoder * decoder)
   gst_clear_object (&self->graphic_queue);
   gst_clear_object (&self->device);
   gst_clear_object (&self->instance);
-
-  if (self->dpb_pool) {
-    gst_buffer_pool_set_active (self->dpb_pool, FALSE);
-    gst_clear_object (&self->dpb_pool);
-  }
-
-  gst_clear_buffer (&self->layered_dpb);
 
   return TRUE;
 }
