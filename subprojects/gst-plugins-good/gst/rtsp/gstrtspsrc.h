@@ -213,7 +213,6 @@ struct _GstRTSPSrc {
   gboolean         need_segment;
   gboolean         clip_out_segment;
   GstSegment       out_segment;
-  GstClockTime     base_time;
 
   /* UDP mode loop */
   gint             pending_cmd;
@@ -281,6 +280,7 @@ struct _GstRTSPSrc {
   gboolean          is_live;
   gboolean          ignore_x_server_reply;
   GstStructure     *prop_extra_http_request_headers;
+  gboolean          tcp_timestamp;
 
   /* state */
   GstRTSPState       state;

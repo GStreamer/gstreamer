@@ -314,6 +314,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_ONVIF_RATE_CONTROL TRUE
 #define DEFAULT_IS_LIVE TRUE
 #define DEFAULT_IGNORE_X_SERVER_REPLY FALSE
+#define DEFAULT_TCP_TIMESTAMP FALSE
 
 enum
 {
@@ -365,6 +366,7 @@ enum
   PROP_IS_LIVE,
   PROP_IGNORE_X_SERVER_REPLY,
   PROP_EXTRA_HTTP_REQUEST_HEADERS,
+  PROP_TCP_TIMESTAMP,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -1117,6 +1119,37 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Extra headers to append to HTTP requests when in tunneled mode",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstRTSPSrc:tcp-timestamp
+   *
+   * Timestamp all buffers with their receive time when receiving RTP packets
+   * over TCP or HTTP.
+   *
+   * When dealing with TCP based connections, setting timestamps for every
+   * packet is not done by default because a server typically bursts data, for
+   * which we don't want to compensate by speeding up the media. The other
+   * timestamps will be interpollated from this one using the RTP timestamps.
+   *
+   * This has the side effect that no drift compensation between the server
+   * and client is done, and over time the RTP timestamps will drift against
+   * the client's clock. This can lead to buffers (and observed end-to-end
+   * latency) to grow over time, or all packets arriving too late once a
+   * threshold is reached.
+   *
+   * Enabling this property will timestamp all RTP packets with their receive
+   * times, which gets around the drift problem but can cause other problems
+   * if the server is sending data not smoothly in real-time.
+   *
+   * Only applicable for RTSP over TCP or HTTP.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_TCP_TIMESTAMP,
+      g_param_spec_boolean ("tcp-timestamp", "TCP Timestamp",
+          "Timestamp RTP packets with receive times in TCP/HTTP mode",
+          DEFAULT_TCP_TIMESTAMP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -1548,6 +1581,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->group_id = GST_GROUP_ID_INVALID;
   src->prop_extra_http_request_headers =
       gst_structure_new_empty ("extra-http-request-headers");
+  src->tcp_timestamp = DEFAULT_TCP_TIMESTAMP;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1908,6 +1942,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
           gst_structure_new_empty ("extra-http-request-headers");
     }
       break;
+    case PROP_TCP_TIMESTAMP:
+      rtspsrc->tcp_timestamp = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2083,6 +2120,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_EXTRA_HTTP_REQUEST_HEADERS:
       gst_value_set_structure (value, rtspsrc->prop_extra_http_request_headers);
+      break;
+    case PROP_TCP_TIMESTAMP:
+      g_value_set_boolean (value, rtspsrc->tcp_timestamp);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -5818,30 +5858,6 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     src->need_segment = TRUE;
   }
 
-  if (src->base_time == -1) {
-    /* Take current running_time. This timestamp will be put on
-     * the first buffer of each stream because we are a live source and so we
-     * timestamp with the running_time. When we are dealing with TCP, we also
-     * only timestamp the first buffer (using the DISCONT flag) because a server
-     * typically bursts data, for which we don't want to compensate by speeding
-     * up the media. The other timestamps will be interpollated from this one
-     * using the RTP timestamps. */
-    GST_OBJECT_LOCK (src);
-    if (GST_ELEMENT_CLOCK (src)) {
-      GstClockTime now;
-      GstClockTime base_time;
-
-      now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
-      base_time = GST_ELEMENT_CAST (src)->base_time;
-
-      src->base_time = now - base_time;
-
-      GST_DEBUG_OBJECT (src, "first buffer at time %" GST_TIME_FORMAT ", base %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (now), GST_TIME_ARGS (base_time));
-    }
-    GST_OBJECT_UNLOCK (src);
-  }
-
   /* If needed send a new segment, don't forget we are live and buffer are
    * timestamped with running time */
   if (src->need_segment) {
@@ -5878,16 +5894,28 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     stream->need_caps = FALSE;
   }
 
+  if (!is_rtcp && (stream->discont || src->tcp_timestamp)) {
+    GstClockTime timestamp = GST_CLOCK_TIME_NONE;
+
+    GST_OBJECT_LOCK (src);
+    if (GST_ELEMENT_CLOCK (src)) {
+      GstClockTime now;
+
+      now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
+      timestamp = now - GST_ELEMENT_CAST (src)->base_time;
+    }
+    GST_OBJECT_UNLOCK (src);
+
+    GST_TRACE_OBJECT (src, "setting timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+
+    GST_BUFFER_DTS (buf) = timestamp;
+  }
+
   if (stream->discont && !is_rtcp) {
     /* mark first RTP buffer as discont */
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     stream->discont = FALSE;
-    /* first buffer gets the timestamp, other buffers are not timestamped and
-     * their presentation time will be interpollated from the rtp timestamps. */
-    GST_DEBUG_OBJECT (src, "setting timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (src->base_time));
-
-    GST_BUFFER_TIMESTAMP (buf) = src->base_time;
   }
 
   /* chain to the peer pad */
@@ -9166,7 +9194,6 @@ restart:
   src->need_range = FALSE;
 
   src->running = TRUE;
-  src->base_time = -1;
   src->state = GST_RTSP_STATE_PLAYING;
 
   /* mark discont */
