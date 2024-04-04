@@ -1703,11 +1703,11 @@ gst_h264_parse_process_backlog_loop (GstH264Parse * h264parse,
 
 static gboolean
 gst_h264_parse_process_backlog_nal (GstH264Parse * h264parse, gint * proc_size,
-    gboolean * aud_insert, guint8 * data, gboolean drain, gboolean au_completed)
+    gboolean * aud_insert, guint8 * data, gboolean clear_bl,
+    gboolean au_completed)
 {
   GstH264NalUnit *bnalu;
   gint framesize = 0;
-  gboolean next_is_aud = FALSE;
 
   g_assert (h264parse->nal_backlog != NULL);
   g_assert (h264parse->nal_backlog->len > 0);
@@ -1737,19 +1737,14 @@ gst_h264_parse_process_backlog_nal (GstH264Parse * h264parse, gint * proc_size,
     gst_h264_parse_trim_backlog (h264parse);
   }
 
-  if (h264parse->bl_next_nal < h264parse->nal_backlog->len) {
-    bnalu = &g_array_index (h264parse->nal_backlog, GstH264NalUnit,
-        h264parse->bl_next_nal);
-    next_is_aud = bnalu->type == GST_H264_NAL_AU_DELIMITER;
+  /* Process all backlog. Used when draining or output in NAL mode. */
+  if (!gst_h264_parse_process_backlog_loop (h264parse,
+          h264parse->nal_backlog->len, TRUE, aud_insert, data, &framesize)) {
+    goto fail;
   }
 
-  /* Process all backlog. Used when draining or in NAL mode and nals still
-   * in backlog after completing or next is AUD. */
-  if ((au_completed || drain || next_is_aud)) {
-    if (!gst_h264_parse_process_backlog_loop (h264parse,
-            h264parse->nal_backlog->len, TRUE, aud_insert, data, &framesize)) {
-      goto fail;
-    }
+  if (clear_bl) {
+    gst_h264_parse_clear_backlog (h264parse);
   }
 
   /* Backlog content doesn't need to parsed again, adjust offset accordingly. */
@@ -2036,7 +2031,7 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
 
     if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
       if (!gst_h264_parse_process_backlog_nal (h264parse, &framesize,
-              &h264parse->aud_insert, data, drain,
+              &h264parse->aud_insert, data, FALSE,
               blstatus == GST_H264_PARSE_BACKLOG_STATUS_AU_COMPLETE)) {
         *skipsize = current_off;
       }
