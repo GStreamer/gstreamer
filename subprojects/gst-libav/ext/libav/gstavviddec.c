@@ -2277,10 +2277,10 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
   if (avcodec_send_packet (ffmpegdec->context, packet) < 0) {
     GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
-    av_packet_unref (packet);
+    av_packet_free (&packet);
     goto send_packet_failed;
   }
-  av_packet_unref (packet);
+  av_packet_free (&packet);
   GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   do {
