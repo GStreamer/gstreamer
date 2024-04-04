@@ -1553,13 +1553,16 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   GstVideoFormat format, reconf_format = GST_VIDEO_FORMAT_UNKNOWN;
   VAProfile profile = VAProfileNone;
   gboolean do_renegotiation = TRUE, do_reopen, need_negotiation;
-  guint max_ref_frames, max_surfaces = 0, rt_format = 0, codedbuf_size;
+  guint max_ref_frames, max_surfaces = 0, rt_format = 0,
+      codedbuf_size, latency_num;
   gint width, height;
+  GstClockTime latency;
 
   width = GST_VIDEO_INFO_WIDTH (&base->in_info);
   height = GST_VIDEO_INFO_HEIGHT (&base->in_info);
   format = GST_VIDEO_INFO_FORMAT (&base->in_info);
   codedbuf_size = base->codedbuf_size;
+  latency_num = base->preferred_output_delay + self->gop.ip_period - 1;
 
   need_negotiation =
       !gst_va_encoder_get_reconstruct_pool_config (base->encoder, &reconf_caps,
@@ -1583,6 +1586,13 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
     gst_va_encoder_close (base->encoder);
 
   gst_va_base_enc_reset_state (base);
+
+  if (base->is_live) {
+    base->preferred_output_delay = 0;
+  } else {
+    /* FIXME: An experience value for most of the platforms. */
+    base->preferred_output_delay = 4;
+  }
 
   base->profile = profile;
   base->rt_format = rt_format;
@@ -1636,7 +1646,20 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   self->cc = self->cc && self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA;
   update_property_bool (base, &self->prop.cc, self->cc, PROP_CC);
 
+  /* Let the downstream know the new latency. */
+  if (latency_num != base->preferred_output_delay + self->gop.ip_period - 1) {
+    need_negotiation = TRUE;
+    latency_num = base->preferred_output_delay + self->gop.ip_period - 1;
+  }
+
+  /* Set the latency */
+  latency = gst_util_uint64_scale (latency_num,
+      GST_VIDEO_INFO_FPS_D (&base->input_state->info) * GST_SECOND,
+      GST_VIDEO_INFO_FPS_N (&base->input_state->info));
+  gst_video_encoder_set_latency (venc, latency, latency);
+
   max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
+  max_ref_frames += base->preferred_output_delay;
 
   /* second check after calculations */
   do_reopen |=
