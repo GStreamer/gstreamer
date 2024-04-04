@@ -1588,13 +1588,12 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     min = rtp_min = G_MAXINT64;
     use_rtp = FALSE;
     if (rtcp_sync == GST_RTP_BIN_RTCP_SYNC_RTP) {
-      guint64 ext_base;
+      guint64 ext_base = -1;
 
       use_rtp = TRUE;
       /* signed version for convenience */
       clock_base = base_rtptime;
-      /* deal with possible wrap-around */
-      ext_base = base_rtptime;
+      /* convert to extended RTP time */
       rtp_clock_base = gst_rtp_buffer_ext_timestamp (&ext_base, rtp_clock_base);
       /* sanity check; base rtp and provided clock_base should be close */
       if (rtp_clock_base >= clock_base) {
