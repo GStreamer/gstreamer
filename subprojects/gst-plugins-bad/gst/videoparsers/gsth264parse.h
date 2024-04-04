@@ -206,9 +206,6 @@ struct _GstH264Parse
   /* Index of next nal to be processed in backlog */
   gint bl_next_nal;
 
-  /* Index of last AUD */
-  gint bl_last_aud_nal;
-
   GstVideoParseUserData user_data;
   GstVideoParseUserDataUnregistered user_data_unregistered;
 
