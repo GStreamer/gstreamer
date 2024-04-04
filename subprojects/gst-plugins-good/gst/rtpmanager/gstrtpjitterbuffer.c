@@ -1549,14 +1549,15 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 
   gst_rtp_packet_rate_ctx_reset (&priv->packet_rate_ctx, priv->clock_rate);
 
-  /* The clock base is the RTP timestamp corrsponding to the npt-start value. We
+  /* The clock base is the RTP timestamp corresponding to the npt-start value. We
    * can use this to track the amount of time elapsed on the sender. */
-  if (gst_structure_get_uint (caps_struct, "clock-base", &val))
-    priv->clock_base = val;
-  else
+  priv->ext_timestamp = -1;
+  if (gst_structure_get_uint (caps_struct, "clock-base", &val)) {
+    priv->clock_base = gst_rtp_buffer_ext_timestamp (&priv->ext_timestamp, val);
+    priv->ext_timestamp = priv->clock_base;
+  } else {
     priv->clock_base = -1;
-
-  priv->ext_timestamp = priv->clock_base;
+  }
 
   GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %" G_GINT64_FORMAT,
       priv->clock_base);
@@ -4594,7 +4595,7 @@ do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer, guint64 ntpnstime)
       "base-rtptime", G_TYPE_UINT64, base_rtptime,
       "base-time", G_TYPE_UINT64, base_time,
       "clock-rate", G_TYPE_UINT, clock_rate,
-      "clock-base", G_TYPE_UINT64, priv->clock_base,
+      "clock-base", G_TYPE_UINT64, priv->clock_base & G_MAXUINT32,
       "cname", G_TYPE_STRING, cname,
       "ssrc", G_TYPE_UINT, priv->last_ssrc,
       "inband-ext-rtptime", G_TYPE_UINT64, last_rtptime,
@@ -4682,7 +4683,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
         "base-rtptime", G_TYPE_UINT64, base_rtptime,
         "base-time", G_TYPE_UINT64, base_time,
         "clock-rate", G_TYPE_UINT, clock_rate,
-        "clock-base", G_TYPE_UINT64, clock_base,
+        "clock-base", G_TYPE_UINT64, priv->clock_base & G_MAXUINT32,
         "ssrc", G_TYPE_UINT, priv->last_sr_ssrc,
         "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
         "sr-ntpnstime", G_TYPE_UINT64, priv->last_sr_ntpnstime,
