@@ -32,6 +32,8 @@
 #define GST_CAT_DEFAULT gst_va_base_enc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+#define GST_FLOW_OUTPUT_NOT_READY GST_FLOW_CUSTOM_SUCCESS_2
+
 struct _GstVaBaseEncPrivate
 {
   GstVideoInfo sinkpad_info;
@@ -73,6 +75,7 @@ gst_va_base_enc_reset_state_default (GstVaBaseEnc * base)
   base->profile = VAProfileNone;
   base->rt_format = 0;
   base->codedbuf_size = 0;
+  base->preferred_output_delay = 0;
   g_atomic_int_set (&base->reconf, FALSE);
 }
 
@@ -506,6 +509,33 @@ _push_out_one_buffer (GstVaBaseEnc * base)
 }
 
 static GstFlowReturn
+_try_to_push_out_one_buffer (GstVaBaseEnc * base)
+{
+  GstVideoCodecFrame *frame_out;
+  GstVaEncFrame *frame_enc;
+  VASurfaceID surface;
+  gboolean ready;
+
+  frame_out = g_queue_peek_head (&base->output_list);
+  if (frame_out == NULL)
+    return GST_FLOW_OUTPUT_NOT_READY;
+
+  frame_enc = gst_va_get_enc_frame (frame_out);
+
+  surface = gst_va_encode_picture_get_reconstruct_surface (frame_enc->picture);
+
+  ready = va_check_surface_has_status (base->display, surface, VASurfaceReady);
+
+  GST_LOG_OBJECT (base, "Output of system_frame_number %d is %s",
+      frame_out->system_frame_number, ready ? "ready" : "not ready");
+
+  if (!ready)
+    return GST_FLOW_OUTPUT_NOT_READY;
+
+  return _push_out_one_buffer (base);
+}
+
+static GstFlowReturn
 gst_va_base_enc_drain (GstVideoEncoder * venc)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
@@ -655,20 +685,41 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
   /* pass it to reorder list and we should not use it again. */
   frame = NULL;
 
-  while (frame_encode) {
-    ret = base_class->encode_frame (base, frame_encode, FALSE);
-    if (ret != GST_FLOW_OK)
-      goto error_encode;
+  if (frame_encode) {
+    while (frame_encode) {
+      ret = base_class->encode_frame (base, frame_encode, FALSE);
+      if (ret != GST_FLOW_OK)
+        goto error_encode;
 
-    while (ret == GST_FLOW_OK && g_queue_get_length (&base->output_list) > 0)
-      ret = _push_out_one_buffer (base);
+      while (ret == GST_FLOW_OK && g_queue_get_length (&base->output_list) >
+          base->preferred_output_delay)
+        ret = _push_out_one_buffer (base);
 
+      if (ret != GST_FLOW_OK)
+        goto error_push_buffer;
+
+      /* Try to push out all ready frames. */
+      do {
+        ret = _try_to_push_out_one_buffer (base);
+      } while (ret == GST_FLOW_OK);
+      if (ret == GST_FLOW_OUTPUT_NOT_READY)
+        ret = GST_FLOW_OK;
+      if (ret != GST_FLOW_OK)
+        goto error_push_buffer;
+
+      frame_encode = NULL;
+      if (!base_class->reorder_frame (base, NULL, FALSE, &frame_encode))
+        goto error_reorder;
+    }
+  } else {
+    /* Try to push out all ready frames. */
+    do {
+      ret = _try_to_push_out_one_buffer (base);
+    } while (ret == GST_FLOW_OK);
+    if (ret == GST_FLOW_OUTPUT_NOT_READY)
+      ret = GST_FLOW_OK;
     if (ret != GST_FLOW_OK)
       goto error_push_buffer;
-
-    frame_encode = NULL;
-    if (!base_class->reorder_frame (base, NULL, FALSE, &frame_encode))
-      goto error_reorder;
   }
 
   return ret;

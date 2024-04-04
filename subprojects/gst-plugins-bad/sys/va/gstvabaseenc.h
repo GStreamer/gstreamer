@@ -67,6 +67,7 @@ struct _GstVaBaseEnc
   GQueue ref_list;
   GQueue output_list;
   GstVecDeque *dts_queue;
+  guint preferred_output_delay;
 
   GstVideoCodecState *input_state;
   union {
