@@ -1562,7 +1562,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     stream_set_ts_offset (bin, stream, stream->rt_delta, bin->max_ts_offset,
         bin->min_ts_offset, FALSE);
   } else {
-    gint64 min, rtp_min, clock_base = stream->clock_base;
+    gint64 min, rtp_min, clock_base;
     gboolean all_sync, use_rtp;
     gboolean rtcp_sync = g_atomic_int_get (&bin->rtcp_sync);
 
@@ -1589,25 +1589,24 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     use_rtp = FALSE;
     if (rtcp_sync == GST_RTP_BIN_RTCP_SYNC_RTP) {
       guint64 ext_base = -1;
+      gint64 rtp_delta = 0;
 
       use_rtp = TRUE;
-      /* signed version for convenience */
-      clock_base = base_rtptime;
       /* convert to extended RTP time */
       rtp_clock_base = gst_rtp_buffer_ext_timestamp (&ext_base, rtp_clock_base);
       /* sanity check; base rtp and provided clock_base should be close */
-      if (rtp_clock_base >= clock_base) {
-        if (rtp_clock_base - clock_base < 10 * clock_rate) {
-          rtp_clock_base = base_time +
-              gst_util_uint64_scale_int (rtp_clock_base - clock_base,
+      if (rtp_clock_base >= base_rtptime) {
+        if (rtp_clock_base - base_rtptime < 10 * clock_rate) {
+          rtp_delta = base_time +
+              gst_util_uint64_scale_int (rtp_clock_base - base_rtptime,
               GST_SECOND, clock_rate);
         } else {
           use_rtp = FALSE;
         }
       } else {
-        if (clock_base - rtp_clock_base < 10 * clock_rate) {
-          rtp_clock_base = base_time -
-              gst_util_uint64_scale_int (clock_base - rtp_clock_base,
+        if (base_rtptime - rtp_clock_base < 10 * clock_rate) {
+          rtp_delta = base_time -
+              gst_util_uint64_scale_int (base_rtptime - rtp_clock_base,
               GST_SECOND, clock_rate);
         } else {
           use_rtp = FALSE;
@@ -1619,11 +1618,11 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
         return;
       }
       /* store to track changes */
-      clock_base = rtp_clock_base;
+      clock_base = rtp_delta;
       /* generate a fake as before,
        * now equating rtptime obtained from RTP-Info,
        * where the large time represent the otherwise irrelevant npt/ntp time */
-      stream->rtp_delta = (GST_SECOND << 28) - rtp_clock_base;
+      stream->rtp_delta = (GST_SECOND << 28) - rtp_delta;
     } else {
       clock_base = rtp_clock_base;
     }
