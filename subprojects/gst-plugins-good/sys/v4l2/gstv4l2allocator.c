@@ -374,7 +374,7 @@ gst_v4l2_allocator_release (GstV4l2Allocator * allocator, GstV4l2Memory * mem)
   }
 
   /* Keep last, allocator may be freed after this call */
-  g_object_unref (allocator);
+  gst_object_unref (allocator);
 }
 
 static void
