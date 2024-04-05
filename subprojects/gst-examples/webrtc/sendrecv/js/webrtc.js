@@ -360,7 +360,7 @@ function createCall() {
     peer_connection.ontrack = ({track, streams}) => {
         console.log("ontrack triggered");
         var videoElem = getVideoElement();
-        if (event.track.kind === 'audio')
+        if (track.kind === 'audio')
             videoElem.style.display = 'none';
 
         videoElem.srcObject = streams[0];
