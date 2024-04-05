@@ -247,26 +247,7 @@ gst_cc_converter_transform_caps (GstBaseTransform * base,
           res = gst_caps_merge (res, gst_static_caps_get (&cdp_caps_framerate));
 
           /* Or anything else with a CDP framerate */
-          if (framerate) {
-            GstCaps *tmp;
-            GstStructure *t;
-            const GValue *cdp_framerate;
-
-            /* Create caps that contain the intersection of all framerates with
-             * the CDP allowed framerates */
-            tmp =
-                gst_caps_make_writable (gst_static_caps_get
-                (&cdp_caps_framerate));
-            t = gst_caps_get_structure (tmp, 0);
-
-            /* There's an intersection between the framerates so we can convert
-             * into CDP with exactly those framerates from anything else */
-            cdp_framerate = gst_structure_get_value (t, "framerate");
-            tmp = gst_caps_make_writable (gst_static_caps_get (&non_cdp_caps));
-            tmp = gst_caps_merge (tmp, gst_static_caps_get (&raw_608_caps));
-            gst_caps_set_value (tmp, "framerate", cdp_framerate);
-            res = gst_caps_merge (res, tmp);
-          } else {
+          {
             GstCaps *tmp, *cdp_caps;
             const GValue *cdp_framerate;
 
