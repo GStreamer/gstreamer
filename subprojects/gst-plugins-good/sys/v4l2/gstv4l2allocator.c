@@ -272,6 +272,13 @@ gst_v4l2_memory_group_new (GstV4l2Allocator * allocator, guint32 index)
     return NULL;
   }
 
+  if (IS_QUEUED (group->buffer)) {
+    GST_WARNING_OBJECT (allocator,
+        "Driver pretends buffer %d is queued even if freshly created, "
+        "this indicates a bug in the driver.", group->buffer.index);
+    UNSET_QUEUED (group->buffer);
+  }
+
   /* Check that provided size matches the format we have negotiation. Failing
    * there usually means a driver of libv4l bug. */
   if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
