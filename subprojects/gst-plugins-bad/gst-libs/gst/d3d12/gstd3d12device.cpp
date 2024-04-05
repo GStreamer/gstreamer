@@ -279,7 +279,7 @@ private:
       idx = name_it->second;
     }
 
-    return std::string ("d3d11device") + std::to_string (adapter_index) + "-" +
+    return std::string ("d3d12device") + std::to_string (adapter_index) + "-" +
         std::to_string (idx);
   }
 
