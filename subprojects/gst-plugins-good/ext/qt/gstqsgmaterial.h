@@ -52,6 +52,9 @@ public:
     QSGMaterialShader *createShader() const override;
 
 private:
+    void initYuvShaders(GstQSGMaterialShader *shader,
+        const GstVideoColorimetry *cinfo);
+
     GstBuffer * buffer_;
     gboolean buffer_was_bound;
     GstBuffer * sync_buffer_;
