@@ -17,6 +17,7 @@ supported_decoders = {
   'vp8': [],
   'vp9': [],
   'h.264': [
+    'FM1_BT_B',
     'FM2_SVA_C'
   ],
   'h.265': [
