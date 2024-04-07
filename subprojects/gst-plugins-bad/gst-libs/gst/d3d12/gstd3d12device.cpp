@@ -2253,6 +2253,14 @@ gst_d3d12_device_non_zeroed_supported (GstD3D12Device * device)
   return device->priv->inner->non_zeroed_supported;
 }
 
+gboolean
+gst_d3d12_device_is_uma (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+
+  return device->priv->inner->feature_support.UMA ();
+}
+
 /**
  * gst_d3d12_flush_all_devices:
  *

@@ -101,6 +101,9 @@ GST_D3D12_API
 gboolean    gst_d3d12_device_non_zeroed_supported (GstD3D12Device * device);
 
 GST_D3D12_API
+gboolean    gst_d3d12_device_is_uma (GstD3D12Device * device);
+
+GST_D3D12_API
 HRESULT     gst_d3d12_device_get_converter_resources (GstD3D12Device * device,
                                                       ID3D12Resource * index_buf,
                                                       ID3D12Resource * index_upload,
