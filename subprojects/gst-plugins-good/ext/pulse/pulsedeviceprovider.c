@@ -193,12 +193,36 @@ context_state_cb (pa_context * c, void *userdata)
   }
 }
 
+static gboolean
+is_default_device_name (GstPulseDeviceProvider * self,
+    const char *name, GstPulseDeviceType type)
+{
+  gboolean ret = FALSE;
+
+  GST_OBJECT_LOCK (self);
+  switch (type) {
+    case GST_PULSE_DEVICE_TYPE_SINK:
+      ret = !g_strcmp0 (name, self->default_sink_name);
+      break;
+    case GST_PULSE_DEVICE_TYPE_SOURCE:
+      ret = !g_strcmp0 (name, self->default_source_name);
+      break;
+    default:
+      GST_ERROR_OBJECT (self, "Unknown pulse device type!");
+      break;
+  }
+  GST_OBJECT_UNLOCK (self);
+
+  return ret;
+}
+
 static GstDevice *
 new_source (GstPulseDeviceProvider * self, const pa_source_info * info)
 {
   GstCaps *caps;
   GstStructure *props;
   guint i;
+  gboolean is_default = FALSE;
 
   caps = gst_caps_new_empty ();
 
@@ -211,9 +235,11 @@ new_source (GstPulseDeviceProvider * self, const pa_source_info * info)
     gst_device_provider_hide_provider (GST_DEVICE_PROVIDER (self),
         "alsadeviceprovider");
 
+  is_default = is_default_device_name (self, info->name,
+      GST_PULSE_DEVICE_TYPE_SOURCE);
+
   return gst_pulse_device_new (info->index, info->description,
-      caps, info->name, GST_PULSE_DEVICE_TYPE_SOURCE, props,
-      !g_strcmp0 (info->name, self->default_source_name));
+      caps, info->name, GST_PULSE_DEVICE_TYPE_SOURCE, props, is_default);
 }
 
 static GstDevice *
@@ -222,6 +248,8 @@ new_sink (GstPulseDeviceProvider * self, const pa_sink_info * info)
   GstCaps *caps;
   GstStructure *props;
   guint i;
+  gboolean is_default = FALSE;
+
 
   caps = gst_caps_new_empty ();
 
@@ -230,9 +258,11 @@ new_sink (GstPulseDeviceProvider * self, const pa_sink_info * info)
 
   props = gst_pulse_make_structure (info->proplist);
 
+  is_default = is_default_device_name (self, info->name,
+      GST_PULSE_DEVICE_TYPE_SINK);
+
   return gst_pulse_device_new (info->index, info->description,
-      caps, info->name, GST_PULSE_DEVICE_TYPE_SINK, props,
-      !g_strcmp0 (info->name, self->default_sink_name));
+      caps, info->name, GST_PULSE_DEVICE_TYPE_SINK, props, is_default);
 }
 
 static void
@@ -280,10 +310,14 @@ get_server_info_cb (pa_context * context, const pa_server_info * info,
     gst_structure_get_boolean (props, "is-default", &was_default);
     switch (dev->type) {
       case GST_PULSE_DEVICE_TYPE_SINK:
-        is_default = !g_strcmp0 (dev->internal_name, self->default_sink_name);
+        is_default =
+            is_default_device_name (self, dev->internal_name,
+            GST_PULSE_DEVICE_TYPE_SINK);
         break;
       case GST_PULSE_DEVICE_TYPE_SOURCE:
-        is_default = !g_strcmp0 (dev->internal_name, self->default_source_name);
+        is_default =
+            is_default_device_name (self, dev->internal_name,
+            GST_PULSE_DEVICE_TYPE_SOURCE);
         break;
     }
 
