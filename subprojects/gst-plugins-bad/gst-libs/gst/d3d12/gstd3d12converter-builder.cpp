@@ -183,96 +183,54 @@ ConverterRootSignature::ConverterRootSignature (D3D_ROOT_SIGNATURE_VERSION
   std::vector < D3D12_DESCRIPTOR_RANGE1 > range_v1_1;
   std::vector < D3D12_ROOT_PARAMETER1 > param_list_v1_1;
 
-  std::vector < D3D12_DESCRIPTOR_RANGE > range_v1_0;
-  std::vector < D3D12_ROOT_PARAMETER > param_list_v1_0;
-
-  if (version == D3D_ROOT_SIGNATURE_VERSION_1_1) {
-    CD3DX12_ROOT_PARAMETER1 param;
-    ps_srv_ = 0;
-    for (UINT i = 0; i < num_srv; i++) {
-      range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
-          (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i, 0,
-              D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE |
-              D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE));
-    }
-
-    if (build_lut) {
-      range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
-          (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0,
-              D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE |
-              D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE));
-      range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
-          (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5, 0,
-              D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE |
-              D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE));
-    }
-
-    param.InitAsDescriptorTable (range_v1_1.size (),
-        range_v1_1.data (), D3D12_SHADER_VISIBILITY_PIXEL);
-    param_list_v1_1.push_back (param);
-
-    /* VS root const, maybe updated */
-    vs_root_const_ = (UINT) param_list_v1_1.size ();
-    param.InitAsConstants (16, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-    param_list_v1_1.push_back (param);
-
-    /* PS alpha constant value, maybe updated */
-    ps_root_const_ = (UINT) param_list_v1_1.size ();
-    param.InitAsConstants (1, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
-    param_list_v1_1.push_back (param);
-
-    /* PS CBV, this is static */
-    ps_cbv_ = (UINT) param_list_v1_1.size ();
-    param.InitAsConstantBufferView (2, 0,
-        D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE,
-        D3D12_SHADER_VISIBILITY_PIXEL);
-    param_list_v1_1.push_back (param);
-
-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_1 (desc,
-        param_list_v1_1.size (), param_list_v1_1.data (),
-        static_sampler.size (), static_sampler.data (), rs_flags_);
-  } else {
-    CD3DX12_ROOT_PARAMETER param;
-    ps_srv_ = 0;
-    for (UINT i = 0; i < num_srv; i++) {
-      range_v1_0.push_back (CD3DX12_DESCRIPTOR_RANGE
-          (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i));
-    }
-
-    if (build_lut) {
-      range_v1_0.push_back (CD3DX12_DESCRIPTOR_RANGE
-          (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4));
-      range_v1_0.push_back (CD3DX12_DESCRIPTOR_RANGE
-          (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5));
-    }
-
-    param.InitAsDescriptorTable (range_v1_0.size (),
-        range_v1_0.data (), D3D12_SHADER_VISIBILITY_PIXEL);
-    param_list_v1_0.push_back (param);
-
-    /* VS root const, maybe updated */
-    vs_root_const_ = (UINT) param_list_v1_0.size ();
-    param.InitAsConstants (16, 0, 1, D3D12_SHADER_VISIBILITY_VERTEX);
-    param_list_v1_0.push_back (param);
-
-    /* PS alpha constant value, maybe updated */
-    ps_root_const_ = (UINT) param_list_v1_0.size ();
-    param.InitAsConstants (1, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
-    param_list_v1_0.push_back (param);
-
-    /* PS CBV, this is static */
-    ps_cbv_ = (UINT) param_list_v1_0.size ();
-    param.InitAsConstantBufferView (2, 0, D3D12_SHADER_VISIBILITY_PIXEL);
-    param_list_v1_0.push_back (param);
-
-    CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_0 (desc,
-        param_list_v1_0.size (), param_list_v1_0.data (),
-        static_sampler.size (), static_sampler.data (), rs_flags_);
+  CD3DX12_ROOT_PARAMETER1 param;
+  ps_srv_ = 0;
+  for (UINT i = 0; i < num_srv; i++) {
+    range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
+        (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, i, 0,
+            D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE |
+            D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE));
   }
+
+  if (build_lut) {
+    range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
+        (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4, 0,
+            D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE |
+            D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE));
+    range_v1_1.push_back (CD3DX12_DESCRIPTOR_RANGE1
+        (D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5, 0,
+            D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE |
+            D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE));
+  }
+
+  param.InitAsDescriptorTable (range_v1_1.size (),
+      range_v1_1.data (), D3D12_SHADER_VISIBILITY_PIXEL);
+  param_list_v1_1.push_back (param);
+
+  /* VS root const, maybe updated */
+  vs_root_const_ = (UINT) param_list_v1_1.size ();
+  param.InitAsConstants (16, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+  param_list_v1_1.push_back (param);
+
+  /* PS alpha constant value, maybe updated */
+  ps_root_const_ = (UINT) param_list_v1_1.size ();
+  param.InitAsConstants (1, 1, 0, D3D12_SHADER_VISIBILITY_PIXEL);
+  param_list_v1_1.push_back (param);
+
+  /* PS CBV, this is static */
+  ps_cbv_ = (UINT) param_list_v1_1.size ();
+  param.InitAsConstantBufferView (2, 0,
+      D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE,
+      D3D12_SHADER_VISIBILITY_PIXEL);
+  param_list_v1_1.push_back (param);
+
+  CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC::Init_1_1 (desc,
+      param_list_v1_1.size (), param_list_v1_1.data (),
+      static_sampler.size (), static_sampler.data (), rs_flags_);
 
   ComPtr < ID3DBlob > error_blob;
   hr_ = D3DX12SerializeVersionedRootSignature (&desc,
-      D3D_ROOT_SIGNATURE_VERSION_1_1, &blob_, &error_blob);
+      version, &blob_, &error_blob);
   if (FAILED (hr_)) {
     const gchar *error_msg = nullptr;
     if (error_blob)
