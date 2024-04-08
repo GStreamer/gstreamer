@@ -2124,37 +2124,40 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
     }
 
     if (GST_CLOCK_TIME_IS_VALID (hold_back)) {
-      GstSeekFlags flags =
-          GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_KEY_UNIT |
-          GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
       GstM3U8MediaSegment *last_seg =
           g_ptr_array_index (self->segments, self->segments->len - 1);
-      GstClockTime playlist_duration =
-          last_seg->stream_time + last_seg->duration;
-      GstClockTime target_ts;
 
-      /* Clamp the hold back so we don't go below zero */
-      if (hold_back > playlist_duration)
-        hold_back = playlist_duration;
+      if (GST_CLOCK_STIME_IS_VALID (last_seg->stream_time)) {
+        GstSeekFlags flags =
+            GST_SEEK_FLAG_SNAP_BEFORE | GST_SEEK_FLAG_KEY_UNIT |
+            GST_HLS_M3U8_SEEK_FLAG_ALLOW_PARTIAL;
+        GstClockTime playlist_duration =
+            last_seg->stream_time + last_seg->duration;
+        GstClockTime target_ts;
 
-      target_ts = playlist_duration - hold_back;
+        /* Clamp the hold back so we don't go below zero */
+        if (hold_back > playlist_duration)
+          hold_back = playlist_duration;
 
-      GST_DEBUG ("Hold back is %" GST_TIME_FORMAT
-          " Looking for a segment before %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (hold_back), GST_TIME_ARGS (target_ts));
+        target_ts = playlist_duration - hold_back;
 
-      if (gst_hls_media_playlist_seek (self, TRUE, flags, target_ts,
-              seek_result)) {
+        GST_DEBUG ("Hold back is %" GST_TIME_FORMAT
+            " Looking for a segment before %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (hold_back), GST_TIME_ARGS (target_ts));
+
+        if (gst_hls_media_playlist_seek (self, TRUE, flags, target_ts,
+                seek_result)) {
 #ifndef GST_DISABLE_GST_DEBUG
-        GstClockTime distance_from_edge =
-            playlist_duration - seek_result->stream_time;
+          GstClockTime distance_from_edge =
+              playlist_duration - seek_result->stream_time;
 
-        GST_DEBUG ("Found starting position %" GST_TIME_FORMAT " which is %"
-            GST_TIME_FORMAT " from the live edge",
-            GST_TIME_ARGS (seek_result->stream_time),
-            GST_TIME_ARGS (distance_from_edge));
+          GST_DEBUG ("Found starting position %" GST_TIME_FORMAT " which is %"
+              GST_TIME_FORMAT " from the live edge",
+              GST_TIME_ARGS (seek_result->stream_time),
+              GST_TIME_ARGS (distance_from_edge));
 #endif
-        return TRUE;
+          return TRUE;
+        }
       }
     }
 
