@@ -1155,17 +1155,31 @@ create_poc:
   self->gop.log2_max_frame_num = _get_log2_max_num (self->gop.idr_period);
   self->gop.max_frame_num = (1 << self->gop.log2_max_frame_num);
   self->gop.log2_max_pic_order_cnt = self->gop.log2_max_frame_num + 1;
+  /* 8.2.1.1 Decoding process for picture order count type 0:
+     For intra only stream, because all frames are non-ref, poc is
+     easy to wrap. Need to increase the max poc. */
+  if (self->gop.ip_period == 0)
+    self->gop.log2_max_pic_order_cnt++;
   self->gop.max_pic_order_cnt = (1 << self->gop.log2_max_pic_order_cnt);
-  self->gop.num_reorder_frames = self->gop.b_pyramid ?
-      self->gop.highest_pyramid_level + 1 /* the last P frame. */ :
-      self->gop.ref_num_list1;
-  self->gop.num_reorder_frames = MIN (self->gop.num_reorder_frames, 16);
 
-  /* Let the DPB contain total refs plus the current frame. */
-  self->gop.max_dec_frame_buffering = self->gop.b_pyramid ?
-      self->gop.highest_pyramid_level + 2 + 1 : self->gop.num_ref_frames + 1;
-  g_assert (self->gop.max_dec_frame_buffering <= 16);
-  self->gop.max_num_ref_frames = self->gop.max_dec_frame_buffering - 1;
+  /* Intra only stream. */
+  if (self->gop.ip_period == 0) {
+    self->gop.num_reorder_frames = 0;
+
+    self->gop.max_dec_frame_buffering = 1 + 1;  /* IDR and current frame. */
+    self->gop.max_num_ref_frames = 0;
+  } else {
+    self->gop.num_reorder_frames = self->gop.b_pyramid ?
+        self->gop.highest_pyramid_level + 1 /* the last P frame. */ :
+        self->gop.ref_num_list1;
+    self->gop.num_reorder_frames = MIN (self->gop.num_reorder_frames, 16);
+
+    /* Let the DPB contain total refs plus the current frame. */
+    self->gop.max_dec_frame_buffering = self->gop.b_pyramid ?
+        self->gop.highest_pyramid_level + 2 + 1 : self->gop.num_ref_frames + 1;
+    g_assert (self->gop.max_dec_frame_buffering <= 16);
+    self->gop.max_num_ref_frames = self->gop.max_dec_frame_buffering - 1;
+  }
 
   _create_gop_frame_types (self);
   _print_gop_structure (self);
