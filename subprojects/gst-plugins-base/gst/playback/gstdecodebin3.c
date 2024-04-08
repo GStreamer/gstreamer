@@ -2293,6 +2293,12 @@ stream_is_active (GstDecodebin3 * dbin, const gchar * stream_id)
   return FALSE;
 }
 
+/* Called with SELECTION_LOCK */
+static gboolean
+stream_is_requested (GstDecodebin3 * dbin, const gchar * stream_id)
+{
+  return stream_in_list (dbin->requested_selection, stream_id) != NULL;
+}
 static void
 update_requested_selection (GstDecodebin3 * dbin)
 {
@@ -2330,8 +2336,7 @@ update_requested_selection (GstDecodebin3 * dbin)
 
     if (request == -1)
       all_user_selected = FALSE;
-    if (request == 1 || (request == -1
-            && (stream_in_list (dbin->requested_selection, sid)
+    if (request == 1 || (request == -1 && (stream_is_requested (dbin, sid)
                 || stream_is_active (dbin, sid)))) {
       GstStreamType curtype = gst_stream_get_stream_type (stream);
       if (request == 1)
@@ -2829,8 +2834,7 @@ find_free_compatible_output (GstDecodebin3 * dbin, GstStream * stream)
   for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
     DecodebinOutputStream *output = (DecodebinOutputStream *) tmp->data;
     if (output->type == stype && output->slot && output->slot->active_stream) {
-      if (!stream_in_list (dbin->requested_selection,
-              (gchar *) output->slot->active_stream_id)) {
+      if (!stream_is_requested (dbin, output->slot->active_stream_id)) {
         return output;
       }
     }
@@ -2946,7 +2950,9 @@ mq_slot_get_or_create_output (MultiQueueSlot * slot)
 
   /* 3. In default mode check if we should expose */
   id_in_list = (gchar *) stream_in_list (dbin->requested_selection, stream_id);
-  if (!id_in_list && !dbin->upstream_handles_selection) {
+  /* If the stream is not requested, bail out */
+  if (!stream_is_requested (dbin, stream_id)
+      && !dbin->upstream_handles_selection) {
     GST_DEBUG_OBJECT (slot->src_pad, "Not selected, not creating any output");
     return NULL;
   }
@@ -3929,11 +3935,10 @@ mq_slot_reassign (MultiQueueSlot * slot)
     return;
   }
 
-  sid = slot->active_stream_id;
   GST_DEBUG_OBJECT (slot->src_pad, "stream: %s", slot->active_stream_id);
 
   /* Recheck whether this stream is still in the list of streams to deactivate */
-  if (stream_in_list (dbin->requested_selection, sid)) {
+  if (stream_is_requested (dbin, slot->active_stream_id)) {
     /* Stream is in the list of requested streams, don't remove */
     SELECTION_UNLOCK (dbin);
     GST_DEBUG_OBJECT (slot->src_pad,
