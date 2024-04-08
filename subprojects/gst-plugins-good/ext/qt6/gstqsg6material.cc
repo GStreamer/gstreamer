@@ -512,7 +512,21 @@ video_format_to_rhi_format (GstVideoFormat format, guint plane)
     case GST_VIDEO_FORMAT_BGRA:
       return QRhiTexture::RGBA8;
     case GST_VIDEO_FORMAT_YV12:
-      return QRhiTexture::RED_OR_ALPHA8;
+      return QRhiTexture::R8;
+    default:
+      g_assert_not_reached ();
+  }
+}
+
+static int
+video_format_to_texel_size (GstVideoFormat format, guint plane)
+{
+  switch (format) {
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+      return 4;
+    case GST_VIDEO_FORMAT_YV12:
+      return 1;
     default:
       g_assert_not_reached ();
   }
@@ -576,24 +590,31 @@ out:
     /* Make this a black 64x64 pixel RGBA texture.
      * This size and format is supported pretty much everywhere, so these
      * are a safe pick. (64 pixel sidelength must be supported according
-     * to the GLES2 spec, table 6.18.)
-     * Set min/mag filters to GL_LINEAR to make sure no mipmapping is used. */
+     * to the GLES2 spec, table 6.18.) */
     const int tex_sidelength = 64;
-    std::vector < char > dummy_data (tex_sidelength * tex_sidelength * 4, 0);
 
     rhi_tex = rhi->newTexture (video_format_to_rhi_format (v_format, plane), QSize(tex_sidelength, tex_sidelength), 1, {});
+    g_assert (rhi_tex->create());
+
+    int ts = video_format_to_texel_size (v_format, plane);
+    QByteArray dummy_data (tex_sidelength * tex_sidelength * ts, 0);
+    char *data = dummy_data.data();
 
     switch (v_format) {
       case GST_VIDEO_FORMAT_RGBA:
       case GST_VIDEO_FORMAT_BGRA:
       case GST_VIDEO_FORMAT_RGB:
+        for (gsize j = 0; j < tex_sidelength; j++) {
+          for (gsize k = 0; k < tex_sidelength; k++) {
+            data[(j * tex_sidelength + k) * ts + 3] = 0xFF; // opaque
+          }
+        }
         break;
       case GST_VIDEO_FORMAT_YV12:
         if (plane == 1 || plane == 2) {
-          char *data = dummy_data.data();
           for (gsize j = 0; j < tex_sidelength; j++) {
             for (gsize k = 0; k < tex_sidelength; k++) {
-              data[(j * tex_sidelength + k) * 4 + 0] = 0x7F;
+              data[(j * tex_sidelength + k) * ts + 0] = 0x7F;
             }
           }
         }
@@ -603,12 +624,9 @@ out:
         break;
     }
 
-    QRhiTextureSubresourceUploadDescription sub_desc;
-
-    sub_desc.setData(QByteArray::fromRawData(dummy_data.data(), dummy_data.size()));
-
+    QRhiTextureSubresourceUploadDescription sub_desc(dummy_data);
     QRhiTextureUploadEntry entry(0, 0, sub_desc);
-    QRhiTextureUploadDescription desc({ entry });
+    QRhiTextureUploadDescription desc(entry);
     res_updates->uploadTexture(rhi_tex, desc);
 
     GST_LOG ("%p binding for plane %d fallback dummy Qt texture", this, plane);
