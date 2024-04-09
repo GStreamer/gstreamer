@@ -386,7 +386,8 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
     } else if (!strcmp (h265enc->profile_name, "main-444") ||
         !strcmp (h265enc->profile_name, "main-422-10") ||
         !strcmp (h265enc->profile_name, "main-444-10") ||
-        !strcmp (h265enc->profile_name, "main-12"))
+        !strcmp (h265enc->profile_name, "main-12") ||
+        !strcmp (h265enc->profile_name, "main-422-12"))
       encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
 
 #if (MFX_VERSION >= 1032)
@@ -410,6 +411,7 @@ gst_msdkh265enc_configure (GstMsdkEnc * encoder)
 #endif
 #if (MFX_VERSION >= 1031)
       case MFX_FOURCC_P016:
+      case MFX_FOURCC_Y216:
 #endif
         encoder->param.mfx.CodecProfile = MFX_PROFILE_HEVC_REXT;
         break;
@@ -596,6 +598,10 @@ gst_msdkh265enc_set_src_caps (GstMsdkEnc * encoder)
 #if (MFX_VERSION >= 1031)
       case MFX_FOURCC_P016:
         gst_structure_set (structure, "profile", G_TYPE_STRING, "main-12",
+            NULL);
+        break;
+      case MFX_FOURCC_Y216:
+        gst_structure_set (structure, "profile", G_TYPE_STRING, "main-422-12",
             NULL);
         break;
 #endif

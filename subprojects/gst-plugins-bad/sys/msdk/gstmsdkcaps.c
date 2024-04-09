@@ -85,7 +85,8 @@ static const Profile profs_hevc[] = {
   {MFX_PROFILE_HEVC_MAIN, "main"},
   {MFX_PROFILE_HEVC_MAIN10, "main-10, main-10-still-picture"},
   {MFX_PROFILE_HEVC_MAINSP, "main-still-picture"},
-  {MFX_PROFILE_HEVC_REXT, "main-444, main-444-10, main-422-10, main-12"},
+  {MFX_PROFILE_HEVC_REXT,
+      "main-444, main-444-10, main-422-10, main-12, main-422-12"},
 #if (MFX_VERSION >= 1032)
   {MFX_PROFILE_HEVC_SCC, "screen-extended-main, screen-extended-main-10, "
         "screen-extended-main-444, screen-extended-main-444-10"},
