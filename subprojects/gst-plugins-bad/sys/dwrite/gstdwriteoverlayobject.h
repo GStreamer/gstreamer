@@ -27,6 +27,7 @@
 
 G_BEGIN_DECLS
 
+#if 0
 enum class GstDWriteBlendMode
 {
   NOT_SUPPORTED,
@@ -56,6 +57,7 @@ enum class GstDWriteBlendMode
    * 3) converts back original format */
   CONVERT_64,
 };
+#endif
 
 #define GST_TYPE_DWRITE_OVERLAY_OBJECT (gst_dwrite_overlay_object_get_type())
 G_DECLARE_FINAL_TYPE (GstDWriteOverlayObject,
@@ -88,8 +90,7 @@ gboolean  gst_dwrite_overlay_object_set_caps (GstDWriteOverlayObject * object,
                                               GstElement * elem,
                                               GstCaps * in_caps,
                                               GstCaps * out_caps,
-                                              GstVideoInfo * info,
-                                              GstDWriteBlendMode * selected_mode);
+                                              GstVideoInfo * info);
 
 gboolean  gst_dwrite_overlay_object_update_device (GstDWriteOverlayObject * object,
                                                    GstBuffer * buffer);

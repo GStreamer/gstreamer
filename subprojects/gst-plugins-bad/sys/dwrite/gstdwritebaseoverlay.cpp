@@ -119,7 +119,7 @@ struct _GstDWriteBaseOverlayPrivate
   std::wstring prev_text;
   std::wstring cur_text;
 
-  GstDWriteBlendMode blend_mode = GstDWriteBlendMode::NOT_SUPPORTED;
+  gboolean force_passthrough = FALSE;
 
   /* properties */
   gboolean visible = DEFAULT_VISIBLE;
@@ -700,22 +700,20 @@ gst_dwrite_base_overlay_set_caps (GstBaseTransform * trans, GstCaps * incaps,
 
   gst_dwrite_base_overlay_clear_layout (self);
 
+  priv->force_passthrough = FALSE;
   if (!gst_dwrite_overlay_object_set_caps (priv->overlay,
-          GST_ELEMENT (self), incaps, outcaps, &self->info,
-          &priv->blend_mode)) {
-    GST_ERROR_OBJECT (self, "Set caps failed");
-    return FALSE;
+          GST_ELEMENT (self), incaps, outcaps, &self->info)) {
+    GST_WARNING_OBJECT (self, "Set caps failed");
+    priv->force_passthrough = TRUE;
+    gst_base_transform_set_passthrough (trans, TRUE);
+  } else {
+    gst_base_transform_set_passthrough (trans, FALSE);
   }
 
   priv->prop_lock.lock ();
   priv->text_format = nullptr;
   priv->layout = nullptr;
   priv->prop_lock.unlock ();
-
-  if (priv->blend_mode == GstDWriteBlendMode::NOT_SUPPORTED)
-    gst_base_transform_set_passthrough (trans, TRUE);
-  else
-    gst_base_transform_set_passthrough (trans, FALSE);
 
   return TRUE;
 }
@@ -728,7 +726,7 @@ gst_dwrite_base_overlay_before_transform (GstBaseTransform * trans,
   GstDWriteBaseOverlayPrivate *priv = self->priv;
 
   if (gst_dwrite_overlay_object_update_device (priv->overlay, buf))
-    gst_base_transform_reconfigure (trans);
+    gst_base_transform_reconfigure_src (trans);
 }
 
 static GstFlowReturn
@@ -739,9 +737,7 @@ gst_dwrite_base_overlay_prepare_output_buffer (GstBaseTransform * trans,
   GstDWriteBaseOverlayPrivate *priv = self->priv;
   GstDWriteBaseOverlayClass *klass = GST_DWRITE_BASE_OVERLAY_GET_CLASS (self);
 
-  if (priv->blend_mode == GstDWriteBlendMode::NOT_SUPPORTED) {
-    GST_TRACE_OBJECT (self, "Force passthrough");
-
+  if (priv->force_passthrough) {
     return
         GST_BASE_TRANSFORM_CLASS (parent_class)->prepare_output_buffer (trans,
         inbuf, outbuf);

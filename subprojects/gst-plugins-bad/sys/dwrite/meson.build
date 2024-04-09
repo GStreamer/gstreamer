@@ -8,6 +8,9 @@ dwrite_sources = [
   'gstdwritebitmappool.cpp',
   'gstdwriteclockoverlay.cpp',
   'gstdwriteoverlayobject.cpp',
+  'gstdwriterender_bitmap.cpp',
+  'gstdwriterender_d3d11.cpp',
+  'gstdwriterender.cpp',
   'gstdwritesubtitlemux.cpp',
   'gstdwritesubtitleoverlay.cpp',
   'gstdwritetextoverlay.cpp',
@@ -16,6 +19,7 @@ dwrite_sources = [
 ]
 
 extra_args = ['-DGST_USE_UNSTABLE_API']
+extra_deps = []
 
 dwrite_option = get_option('dwrite')
 if host_system != 'windows' or dwrite_option.disabled()
@@ -63,12 +67,19 @@ endif
 
 subdir('libcaption')
 
+if gstd3d12_dep.found() and cc.has_header('d3d11on12.h')
+  extra_args += ['-DHAVE_GST_D3D12']
+  extra_deps += [gstd3d12_dep]
+  dwrite_sources += ['gstdwriterender_d3d12.cpp']
+endif
+
 gstdwrite = library('gstdwrite',
   dwrite_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc],
-  dependencies : [gstbase_dep, gstvideo_dep, gstd3d11_dep, d2d_dep, dwrite_lib, dwrite_libcaption_dep],
+  dependencies : [gstbase_dep, gstvideo_dep, gstd3d11_dep, d2d_dep, dwrite_lib,
+                  dwrite_libcaption_dep] + extra_deps,
   install : true,
   install_dir : plugins_install_dir,
 )
