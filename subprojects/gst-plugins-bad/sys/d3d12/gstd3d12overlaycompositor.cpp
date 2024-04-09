@@ -167,7 +167,7 @@ gst_d3d12_overlay_rect_free (GstD3D12OverlayRect * rect)
 
 static GstD3D12OverlayRect *
 gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
-    GstVideoOverlayRectangle * overlay_rect)
+    GstVideoOverlayRectangle * overlay_rect, guint64 & fence_val)
 {
   auto priv = self->priv;
   gint x, y;
@@ -177,6 +177,8 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
   gdouble val;
   GstVideoOverlayFormatFlags flags;
   gboolean premul_alpha = FALSE;
+
+  fence_val = 0;
 
   if (!gst_video_overlay_rectangle_get_render_rectangle (overlay_rect, &x, &y,
           &width, &height)) {
@@ -199,74 +201,91 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
     return nullptr;
   }
 
-  auto vmeta = gst_buffer_get_video_meta (buf);
-  if (!vmeta) {
-    GST_ERROR_OBJECT (self, "Failed to get video meta");
-    return nullptr;
-  }
-
   auto device = gst_d3d12_device_get_device_handle (self->device);
-  D3D12_HEAP_PROPERTIES heap_prop =
-      CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
-  D3D12_RESOURCE_DESC desc =
-      CD3DX12_RESOURCE_DESC::Tex2D (DXGI_FORMAT_B8G8R8A8_UNORM, vmeta->width,
-      vmeta->height, 1, 1);
-
+  auto mem = gst_buffer_peek_memory (buf, 0);
+  bool is_d3d12 = false;
   ComPtr < ID3D12Resource > texture;
-  auto hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-      &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS (&texture));
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create texture");
-    return nullptr;
-  }
-
-  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
-  UINT64 size;
-  device->GetCopyableFootprints (&desc, 0, 1, 0, &layout, nullptr, nullptr,
-      &size);
-
-  ComPtr < ID3D12Resource > staging;
-  heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-  desc = CD3DX12_RESOURCE_DESC::Buffer (size);
-  hr = device->CreateCommittedResource (&heap_prop,
-      D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-      &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-      IID_PPV_ARGS (&staging));
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create upload buffer");
-    return nullptr;
-  }
-
-  guint8 *map_data;
-  hr = staging->Map (0, nullptr, (void **) &map_data);
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map staging");
-    return nullptr;
-  }
-
-  guint8 *data;
-  gint stride;
-  GstMapInfo info;
-  if (!gst_video_meta_map (vmeta,
-          0, &info, (gpointer *) & data, &stride, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (self, "Failed to map");
-    return nullptr;
-  }
-
-  if (layout.Footprint.RowPitch == (UINT) stride) {
-    memcpy (map_data, data, stride * layout.Footprint.Height);
-  } else {
-    guint width_in_bytes = 4 * layout.Footprint.Width;
-    for (UINT i = 0; i < layout.Footprint.Height; i++) {
-      memcpy (map_data, data, width_in_bytes);
-      map_data += layout.Footprint.RowPitch;
-      data += stride;
+  if (gst_is_d3d12_memory (mem)) {
+    GST_LOG_OBJECT (self, "Overlay is d3d12 memory");
+    auto dmem = GST_D3D12_MEMORY_CAST (mem);
+    if (gst_d3d12_device_is_equal (dmem->device, self->device) &&
+        gst_d3d12_memory_get_shader_resource_view_heap (dmem)) {
+      texture = gst_d3d12_memory_get_resource_handle (dmem);
+      is_d3d12 = true;
+      fence_val = dmem->fence_value;
     }
   }
 
-  staging->Unmap (0, nullptr);
-  gst_video_meta_unmap (vmeta, 0, &info);
+  ComPtr < ID3D12Resource > staging;
+  D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
+  if (!is_d3d12) {
+    auto vmeta = gst_buffer_get_video_meta (buf);
+
+    if (!vmeta) {
+      GST_ERROR_OBJECT (self, "Failed to get video meta");
+      return nullptr;
+    }
+
+    D3D12_HEAP_PROPERTIES heap_prop =
+        CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
+    D3D12_RESOURCE_DESC desc =
+        CD3DX12_RESOURCE_DESC::Tex2D (DXGI_FORMAT_B8G8R8A8_UNORM, vmeta->width,
+        vmeta->height, 1, 1);
+
+    auto hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+        &desc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,
+        IID_PPV_ARGS (&texture));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create texture");
+      return nullptr;
+    }
+
+    UINT64 size;
+    device->GetCopyableFootprints (&desc, 0, 1, 0, &layout, nullptr, nullptr,
+        &size);
+
+    heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
+    desc = CD3DX12_RESOURCE_DESC::Buffer (size);
+    hr = device->CreateCommittedResource (&heap_prop,
+        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
+        &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
+        IID_PPV_ARGS (&staging));
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't create upload buffer");
+      return nullptr;
+    }
+
+    guint8 *map_data;
+    hr = staging->Map (0, nullptr, (void **) &map_data);
+    if (!gst_d3d12_result (hr, self->device)) {
+      GST_ERROR_OBJECT (self, "Couldn't map staging");
+      return nullptr;
+    }
+
+    guint8 *data;
+    gint stride;
+    GstMapInfo info;
+    if (!gst_video_meta_map (vmeta,
+            0, &info, (gpointer *) & data, &stride, GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "Failed to map");
+      return nullptr;
+    }
+
+    if (layout.Footprint.RowPitch == (UINT) stride) {
+      memcpy (map_data, data, stride * layout.Footprint.Height);
+    } else {
+      guint width_in_bytes = 4 * layout.Footprint.Width;
+      for (UINT i = 0; i < layout.Footprint.Height; i++) {
+        memcpy (map_data, data, width_in_bytes);
+        map_data += layout.Footprint.RowPitch;
+        data += stride;
+      }
+    }
+
+    staging->Unmap (0, nullptr);
+    gst_video_meta_unmap (vmeta, 0, &info);
+  }
 
   /* bottom left */
   gst_util_fraction_to_double (x, GST_VIDEO_INFO_WIDTH (&priv->info), &val);
@@ -313,9 +332,11 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
   vertex_data[3].texture.v = 1.0f;
 
   ComPtr < ID3D12Resource > vertex_buf;
-  heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-  desc = CD3DX12_RESOURCE_DESC::Buffer (sizeof (VertexData) * 4);
-  hr = device->CreateCommittedResource (&heap_prop,
+  D3D12_HEAP_PROPERTIES heap_prop =
+      CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
+  D3D12_RESOURCE_DESC desc =
+      CD3DX12_RESOURCE_DESC::Buffer (sizeof (VertexData) * 4);
+  auto hr = device->CreateCommittedResource (&heap_prop,
       D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
       &desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
       IID_PPV_ARGS (&vertex_buf));
@@ -324,6 +345,7 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
     return nullptr;
   }
 
+  guint8 *map_data;
   hr = vertex_buf->Map (0, nullptr, (void **) &map_data);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't map vertex buffer");
@@ -364,6 +386,8 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
   rect->layout = layout;
   rect->srv_heap = srv_heap;
   rect->premul_alpha = premul_alpha;
+  if (is_d3d12)
+    rect->need_upload = FALSE;
 
   return rect;
 }
@@ -627,13 +651,15 @@ gst_d3d12_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
 
 gboolean
 gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
-    GstBuffer * buf)
+    GstBuffer * buf, guint64 * fence_val)
 {
   g_return_val_if_fail (compositor != nullptr, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buf), FALSE);
 
   auto priv = compositor->priv;
   priv->rects_to_upload.clear ();
+
+  *fence_val = 0;
 
   gst_buffer_foreach_meta (buf,
       (GstBufferForeachMetaFunc) gst_d3d12_overlay_compositor_foreach_meta,
@@ -649,6 +675,7 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
   GST_LOG_OBJECT (compositor, "Found %" G_GSIZE_FORMAT
       " overlay rectangles", priv->rects_to_upload.size ());
 
+  guint64 max_fence_val = 0;
   for (size_t i = 0; i < priv->rects_to_upload.size (); i++) {
     GList *iter;
     bool found = false;
@@ -661,10 +688,14 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
     }
 
     if (!found) {
+      guint64 cur_fence_val = 0;
       auto new_rect = gst_d3d12_overlay_rect_new (compositor,
-          priv->rects_to_upload[i]);
-      if (new_rect)
+          priv->rects_to_upload[i], cur_fence_val);
+      if (new_rect) {
         priv->overlays = g_list_append (priv->overlays, new_rect);
+        if (max_fence_val < cur_fence_val)
+          max_fence_val = cur_fence_val;
+      }
     }
   }
 
@@ -684,6 +715,8 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
       priv->overlays = g_list_delete_link (priv->overlays, iter);
     }
   }
+
+  *fence_val = max_fence_val;
 
   return TRUE;
 }
