@@ -2,11 +2,11 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.1 and was released on 21 March 2024.
+The latest bug-fix release in the stable 1.24 series is 1.24.2 and was released on 9 April 2024.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Thursday 21 March 2024, 14:00 UTC (log)
+Last updated: Tuesday 9 April 2024, 12:30 UTC (log)
 
 ## Introduction
 
@@ -1364,6 +1364,9 @@ Highlighted bugfixes in 1.24.1
 -   gst-libav: fixes for video decoder frame handling, interlaced mode detection
 -   avenc_aac: support for 7.1 and 16 channel modes
 -   glimagesink: Fix the sink not always respecting preferred size on macOS
+-   gtk4paintablesink: Fix scaling of texture position
+-   webrtc: Allow resolution and framerate changes, and many other improvements
+-   webrtc: Add new LiveKit source element
 -   Fix usability of binary packages on arm64 iOS
 -   various bug fixes, memory leak fixes, and other stability and reliability improvements
 
@@ -1509,6 +1512,165 @@ List of merge requests and issues fixed in 1.24.1
 
 -   List of Merge Requests applied in 1.24.1
 -   List of Issues fixed in 1.24.1
+
+1.24.2
+
+The second 1.24 bug-fix release (1.24.2) was released on 9 April 2024.
+
+This release only contains bugfixes and it should be safe to update from 1.24.x.
+
+Highlighted bugfixes in 1.24.2
+
+-   H.264 parsing regression fixes
+-   WavPack typefinding improvements
+-   Video4linux fixes and improvements
+-   Android build and runtime fixes
+-   macOS OpenGL memory leak and robustness fixes
+-   Qt/QML video sink fixes
+-   Package new analytics and mse libraries in binary packages
+-   Windows MSVC binary packages: fix libvpx avx/avx2/avx512 instruction set detection
+-   various bug fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   clock: Block futex_time64 usage on Android API level < 30
+-   basesrc: Clear submitted buffer lists consistently with buffers
+-   ptpclock: fix double free of domain data during deinit
+-   clocksync: Proxy allocation queries
+-   inputselector: fix possible clock leak on shutdown
+-   typefind: Handle WavPack block sizes > 131072
+
+gst-plugins-base
+
+-   glcolorconvert: Ensure glcolorconvert does not miss supported RGB formats
+-   gl/macos: a couple of race/reference count fixes
+-   pbutils: descriptions: Don’t warn on MPEG-1 audio caps without layer field
+-   encodebin: Add the parser before timestamper to tosync list
+-   videorate: Reset last_ts when a new segment is received
+
+gst-plugins-good
+
+-   qml6glsink: fix destruction of underlying texture
+-   qt/qt6: Fixup for dummy textures
+-   rtpjitterbuffer: Don’t use estimated_dts to do default skew adjustment
+-   rtpjitterbuffer: Use an extended RTP timestamp for the clock-base
+-   rtpmp4adepay: Set duration on outgoing buffers
+-   tests: rtpred: fix out-of-bound writes
+-   v4l2: allocator: Fix unref log/trace on memory release
+-   v4l2: Also set max_width/max_width if enum framesize fail
+-   v4l2: enforce a pixel aspect ratio of 1/1 if no data are available
+-   v4l2: fix error in calculating padding bottom for tile format
+-   v4l2src: need maintain the caps order in caps compare when fixate
+-   vpxenc: Include vpx error details in errors and warnings
+
+gst-plugins-bad
+
+-   h264parse: element hangs with some video streams (regression)
+-   h264parse: Revert “AU boundary detection changes”
+-   alphadecodebin: Explicitly pass 64 bit integers as such through varargs
+-   atdec: Set a channel mask for channel counts greater than 2
+-   ccconverter: Fix caps leak and remove unnecessary code
+-   d3d11videosink: disconnect signals before releasing the window
+-   d3d11: meson: Add support for MinGW DirectXMath package and update directxmath wrap to 3.1.9
+-   d3d11: meson: Disable library build if DirectXMath header was not found
+-   dwrite: Fix crash on device update
+-   GstPlay: Update video_snapshot to support playbin3
+-   jpegparse: avi1 tag can be progressive
+-   jpegparse: turn some bus warnings into object ones
+-   qsvdecoder: Release too old frames
+-   ristsrc: Only free caps if needed
+-   va: av1enc: Correct the reference number and improve the reference setting
+-   va: {vp9, av1}enc: Avoid reopen encoder or renegotiate
+-   videoparsers: Demote CC warning message
+-   vkbufferpool: correct usage flags type
+-   vkh26xdec: a couple decoding fixes
+-   vtdec: Fix caps criticals during negotiation
+-   wpe: avoid crash with G_DEBUG=fatal_criticals and static build
+-   Sink missing floating references
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   aws: use fixed BehaviorVersion
+-   aws: improve error message logs
+-   fmp4: Update to dash-mpd 0.16
+-   fmp4mux: Require gstreamer-pbutils 1.20 for the examples
+-   onvifmetadataparse: Reset state in PAUSED->READY after pad deactivation, fixing occasional deadlock on shutdown
+-   reqwest: Update to reqwest 0.12
+-   webrtcsink: set perfect-timestamp=true on audio encoders
+-   webrtcsink: improve panic message on unexpected caps during discovery
+-   webrtchttp: Update to reqwest 0.12
+-   webrtc: fix inconsistencies in documentation of object names
+-   Fix clippy warnings after upgrade to Rust 1.77
+
+gst-libav
+
+-   avviddec: Fix AVPacket leak
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   ges: frame-composition-meta: Stop using keyword ‘operator’ for field in C++
+
+gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   webrtc examples: set perfect-timestamp=true on opusenc for better Chrome interoperability
+
+Development build environment
+
+-   flac: Add subproject wrap and allow falling back to it in the flac plugin
+-   libnice: bump subproject wrap to v0.1.22 (needed for ICE consent freshness support in gstwebrtc)
+
+Cerbero build tool and packaging changes in 1.24.2
+
+-   glib: Block futex_time64 usage on Android API level < 30
+-   libvpx: Fix build with Python 3.8
+-   libvpx: Fix errors with avx* instruction set detection for x86* builds and MSVC
+-   openjpeg: Update to 2.5.2
+-   directxmath: Update to 3.1.9
+-   gst-plugins-rs: Fix superstripping for ELF breaking all plugins
+-   Rust-based plugin initialization hangs on Android with GStreamer 1.24.0
+
+Contributors to 1.24.2
+
+Alexander Slobodeniuk, Arnaud Vrac, Chao Guo, Chris Spencer, Daniel Morin, Edward Hervey, Elizabeth Figura, Elliot Chen, eri,
+François Laignel, Guillaume Desmottes, Haihua Hu, He Junyan, Hou Qi, Jan Schmidt, Jochen Henneberg, L. E. Segovia, Martin
+Nordholts, Matthew Waters, Nicolas Dufresne, Philippe Normand, Philipp Zabel, Piotr Brzeziński, Robert Guziolowski, Robert
+Mader, Ruben Gonzalez, Sebastian Dröge, Seungha Yang, Taruntej Kanakamalla, Thibault Saunier, Tim Blechmann, Tim-Philipp Müller,
+Víctor Manuel Jáquez Leal, Wojciech Kapsa, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.2
+
+-   List of Merge Requests applied in 1.24.2
+-   List of Issues fixed in 1.24.2
 
 Schedule for 1.26
 
