@@ -12,6 +12,7 @@ closedcaption_sources = [
     'gstceaccoverlay.c',
     'gstline21enc.c',
     'ccutils.c',
+    'gsth264ccextractor.c',
 ]
 
 closedcaption_headers = [
@@ -34,6 +35,8 @@ zvbi_sources = [
   'io-sim.c',
 ]
 
+extra_args = ['-DGST_USE_UNSTABLE_API']
+
 doc_sources = []
 foreach s: closedcaption_sources + closedcaption_headers
   doc_sources += meson.current_source_dir() / s
@@ -47,10 +50,11 @@ if closedcaption_dep.found()
   gstclosedcaption = library('gstclosedcaption',
     closedcaption_sources,
     zvbi_sources,
-    c_args : gst_plugins_bad_args,
+    c_args : gst_plugins_bad_args + extra_args,
     link_args : noseh_link_args,
     include_directories : [configinc],
-    dependencies : [gstvideo_dep, gstbase_dep, gst_dep, closedcaption_dep, libm],
+    dependencies : [gstvideo_dep, gstbase_dep, gst_dep, closedcaption_dep, libm,
+                    gstcodecs_dep],
     install : true,
     install_dir : plugins_install_dir,
   )

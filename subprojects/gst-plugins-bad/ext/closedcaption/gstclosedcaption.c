@@ -33,6 +33,7 @@
 #include "gstceaccoverlay.h"
 #include "gstline21enc.h"
 #include "ccutils.h"
+#include "gsth264ccextractor.h"
 
 static gboolean
 closedcaption_init (GstPlugin * plugin)
@@ -49,6 +50,7 @@ closedcaption_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (line21decoder, plugin);
   ret |= GST_ELEMENT_REGISTER (cc708overlay, plugin);
   ret |= GST_ELEMENT_REGISTER (line21encoder, plugin);
+  ret |= GST_ELEMENT_REGISTER (h264ccextractor, plugin);
 
   return ret;
 }
