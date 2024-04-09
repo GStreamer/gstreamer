@@ -1238,6 +1238,7 @@ static GstFlowReturn
 gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
     gboolean * outstanding, gboolean wait)
 {
+  GstBufferPool *bpool = GST_BUFFER_POOL_CAST (pool);
   GstFlowReturn res;
   GstBuffer *outbuf = NULL;
   GstV4l2Object *obj = pool->obj;
@@ -1281,12 +1282,6 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
         group->buffer.index);
   }
 
-  if (group->buffer.flags & V4L2_BUF_FLAG_LAST &&
-      group->planes[0].bytesused == 0) {
-    GST_DEBUG_OBJECT (pool, "Empty last buffer, signalling eos.");
-    goto eos;
-  }
-
   outbuf = pool->buffers[group->buffer.index];
   if (outbuf == NULL)
     goto no_buffer;
@@ -1296,6 +1291,16 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer,
     GST_OBJECT_LOCK (pool);
     pool->empty = TRUE;
     GST_OBJECT_UNLOCK (pool);
+  }
+
+  if (group->buffer.flags & V4L2_BUF_FLAG_LAST &&
+      group->planes[0].bytesused == 0) {
+    GST_DEBUG_OBJECT (pool, "Empty last buffer, signalling eos.");
+    *buffer = outbuf;
+    outbuf = NULL;
+    gst_buffer_ref (*buffer);
+    gst_v4l2_buffer_pool_complete_release_buffer (bpool, *buffer, FALSE);
+    goto eos;
   }
 
   timestamp = GST_TIMEVAL_TO_TIME (group->buffer.timestamp);
