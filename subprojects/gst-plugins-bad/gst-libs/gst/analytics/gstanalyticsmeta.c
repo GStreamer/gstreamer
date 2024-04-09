@@ -130,7 +130,6 @@ gst_analytics_relation_meta_get_mtd_data_internal (GstAnalyticsRelationMeta *
 
 /**
  * gst_analytics_mtd_get_mtd_type:
- *
  * @instance: Instance of #GstAnalyticsMtd
  * Get analysis result type.
  *
@@ -138,11 +137,12 @@ gst_analytics_relation_meta_get_mtd_data_internal (GstAnalyticsRelationMeta *
  * Since: 1.24
  */
 GstAnalyticsMtdType
-gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * handle)
+gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * instance)
 {
   GstAnalyticsRelatableMtdData *rlt;
-  rlt = gst_analytics_relation_meta_get_mtd_data_internal (handle->meta,
-      handle->id);
+
+  rlt = gst_analytics_relation_meta_get_mtd_data_internal (instance->meta,
+      instance->id);
 
   g_return_val_if_fail (rlt != NULL, 0);
 
@@ -159,9 +159,9 @@ gst_analytics_mtd_get_mtd_type (GstAnalyticsMtd * handle)
  * Since: 1.24
  */
 guint
-gst_analytics_mtd_get_id (GstAnalyticsMtd * handle)
+gst_analytics_mtd_get_id (GstAnalyticsMtd * instance)
 {
-  return handle->id;
+  return instance->id;
 }
 
 /**
@@ -174,11 +174,13 @@ gst_analytics_mtd_get_id (GstAnalyticsMtd * handle)
  * Since: 1.24
  */
 gsize
-gst_analytics_mtd_get_size (GstAnalyticsMtd * handle)
+gst_analytics_mtd_get_size (GstAnalyticsMtd * instance)
 {
   GstAnalyticsRelatableMtdData *rlt;
-  rlt = gst_analytics_relation_meta_get_mtd_data_internal (handle->meta,
-      handle->id);
+
+  rlt = gst_analytics_relation_meta_get_mtd_data_internal (instance->meta,
+      instance->id);
+
   if (rlt == NULL) {
     GST_CAT_ERROR (GST_CAT_AN_RELATION, "Invalid parameter");
     return 0;
