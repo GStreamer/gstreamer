@@ -229,6 +229,8 @@ struct _GstVaH264Enc
     guint32 ref_num_list1;
 
     guint num_reorder_frames;
+
+    GstVideoCodecFrame *last_keyframe;
   } gop;
 
   struct
@@ -1531,6 +1533,7 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->gop.ref_num_list0 = 0;
   self->gop.ref_num_list1 = 0;
   self->gop.num_reorder_frames = 0;
+  self->gop.last_keyframe = NULL;
 
   self->rc.max_bitrate = 0;
   self->rc.target_bitrate = 0;
@@ -1700,58 +1703,97 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
 {
   GstVaH264Enc *self = GST_VA_H264_ENC (base);
   GstVaH264EncFrame *frame;
+  gboolean add_cached_key_frame = FALSE;
 
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
       FALSE);
 
   if (gst_frame) {
-    /* Begin a new GOP, should have a empty reorder_list. */
-    if (self->gop.cur_frame_index == self->gop.idr_period) {
-      g_assert (g_queue_is_empty (&base->reorder_list));
-      self->gop.cur_frame_index = 0;
-      self->gop.cur_frame_num = 0;
-    }
-
     frame = _enc_frame (gst_frame);
-    frame->poc =
-        ((self->gop.cur_frame_index * 2) % self->gop.max_pic_order_cnt);
 
-    /* TODO: move most this logic onto vabaseenc class  */
-    if (self->gop.cur_frame_index == 0) {
-      g_assert (frame->poc == 0);
-      GST_LOG_OBJECT (self, "system_frame_number: %d, an IDR frame, starts"
-          " a new GOP", gst_frame->system_frame_number);
+    /* Force to insert the key frame inside a GOP, just end the current
+       GOP and start a new one. */
+    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (gst_frame) &&
+        !(self->gop.cur_frame_index == 0 ||
+            self->gop.cur_frame_index == self->gop.idr_period)) {
+      GST_DEBUG_OBJECT (base, "system_frame_number: %d is a force key "
+          "frame(IDR), begin a new GOP.", gst_frame->system_frame_number);
 
+      frame->poc = 0;
+      frame->type = self->gop.frame_types[0].slice_type;
+      frame->is_ref = self->gop.frame_types[0].is_ref;
+      frame->pyramid_level = self->gop.frame_types[0].pyramid_level;
+      frame->left_ref_poc_diff = self->gop.frame_types[0].left_ref_poc_diff;
+      frame->right_ref_poc_diff = self->gop.frame_types[0].right_ref_poc_diff;
+
+      /* The previous key frame should be already be poped out. */
+      g_assert (self->gop.last_keyframe == NULL);
+
+      /* An empty reorder list, start the new GOP immediately. */
+      if (g_queue_is_empty (&base->reorder_list)) {
+        self->gop.cur_frame_index = 1;
+        self->gop.cur_frame_num = 0;
+        g_queue_clear_full (&base->ref_list,
+            (GDestroyNotify) gst_video_codec_frame_unref);
+        last = FALSE;
+      } else {
+        /* Cache the key frame and end the current GOP.
+           Next time calling this push() without frame, start the new GOP. */
+        self->gop.last_keyframe = gst_frame;
+        last = TRUE;
+      }
+
+      add_cached_key_frame = TRUE;
+    } else {
+      /* Begin a new GOP, should have a empty reorder_list. */
+      if (self->gop.cur_frame_index == self->gop.idr_period) {
+        g_assert (g_queue_is_empty (&base->reorder_list));
+        self->gop.cur_frame_index = 0;
+        self->gop.cur_frame_num = 0;
+      }
+
+      frame->poc =
+          ((self->gop.cur_frame_index * 2) % self->gop.max_pic_order_cnt);
+
+      /* TODO: move most this logic onto vabaseenc class  */
+      if (self->gop.cur_frame_index == 0) {
+        g_assert (frame->poc == 0);
+        GST_LOG_OBJECT (self, "system_frame_number: %d, an IDR frame, starts"
+            " a new GOP", gst_frame->system_frame_number);
+
+        g_queue_clear_full (&base->ref_list,
+            (GDestroyNotify) gst_video_codec_frame_unref);
+      }
+
+      frame->type = self->gop.frame_types[self->gop.cur_frame_index].slice_type;
+      frame->is_ref = self->gop.frame_types[self->gop.cur_frame_index].is_ref;
+      frame->pyramid_level =
+          self->gop.frame_types[self->gop.cur_frame_index].pyramid_level;
+      frame->left_ref_poc_diff =
+          self->gop.frame_types[self->gop.cur_frame_index].left_ref_poc_diff;
+      frame->right_ref_poc_diff =
+          self->gop.frame_types[self->gop.cur_frame_index].right_ref_poc_diff;
+
+      GST_LOG_OBJECT (self, "Push frame, system_frame_number: %d, poc %d, "
+          "frame type %s", gst_frame->system_frame_number, frame->poc,
+          _slice_type_name (frame->type));
+
+      self->gop.cur_frame_index++;
+
+      g_queue_push_tail (&base->reorder_list,
+          gst_video_codec_frame_ref (gst_frame));
+    }
+  } else if (self->gop.last_keyframe) {
+    g_assert (self->gop.last_keyframe ==
+        g_queue_peek_tail (&base->reorder_list));
+    if (g_queue_get_length (&base->reorder_list) == 1) {
+      /* The last cached key frame begins a new GOP */
+      self->gop.cur_frame_index = 1;
+      self->gop.cur_frame_num = 0;
+      self->gop.last_keyframe = NULL;
       g_queue_clear_full (&base->ref_list,
           (GDestroyNotify) gst_video_codec_frame_unref);
-
-      GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (gst_frame);
     }
-
-    frame->type = self->gop.frame_types[self->gop.cur_frame_index].slice_type;
-    frame->is_ref = self->gop.frame_types[self->gop.cur_frame_index].is_ref;
-    frame->pyramid_level =
-        self->gop.frame_types[self->gop.cur_frame_index].pyramid_level;
-    frame->left_ref_poc_diff =
-        self->gop.frame_types[self->gop.cur_frame_index].left_ref_poc_diff;
-    frame->right_ref_poc_diff =
-        self->gop.frame_types[self->gop.cur_frame_index].right_ref_poc_diff;
-
-    if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (gst_frame)) {
-      GST_DEBUG_OBJECT (self, "system_frame_number: %d, a force key frame,"
-          " promote its type from %s to %s", gst_frame->system_frame_number,
-          _slice_type_name (frame->type), _slice_type_name (GST_H264_I_SLICE));
-      frame->type = GST_H264_I_SLICE;
-      frame->is_ref = TRUE;
-    }
-
-    GST_LOG_OBJECT (self, "Push frame, system_frame_number: %d, poc %d, "
-        "frame type %s", gst_frame->system_frame_number, frame->poc,
-        _slice_type_name (frame->type));
-
-    self->gop.cur_frame_index++;
-    g_queue_push_tail (&base->reorder_list,
-        gst_video_codec_frame_ref (gst_frame));
   }
 
   /* ensure the last one a non-B and end the GOP. */
@@ -1769,6 +1811,12 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
         frame->is_ref = TRUE;
       }
     }
+  }
+
+  /* Insert the cached next key frame after ending the current GOP. */
+  if (add_cached_key_frame) {
+    g_queue_push_tail (&base->reorder_list,
+        gst_video_codec_frame_ref (gst_frame));
   }
 
   return TRUE;
@@ -1792,7 +1840,7 @@ _count_backward_ref_num (gpointer data, gpointer user_data)
 }
 
 static GstVideoCodecFrame *
-_pop_pyramid_b_frame (GstVaH264Enc * self)
+_pop_pyramid_b_frame (GstVaH264Enc * self, guint gop_len)
 {
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
   guint i;
@@ -1807,7 +1855,7 @@ _pop_pyramid_b_frame (GstVaH264Enc * self)
   b_vaframe = NULL;
 
   /* Find the lowest level with smallest poc. */
-  for (i = 0; i < g_queue_get_length (&base->reorder_list); i++) {
+  for (i = 0; i < gop_len; i++) {
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
 
@@ -1839,7 +1887,7 @@ again:
   /* Check whether its refs are already poped. */
   g_assert (b_vaframe->left_ref_poc_diff != 0);
   g_assert (b_vaframe->right_ref_poc_diff != 0);
-  for (i = 0; i < g_queue_get_length (&base->reorder_list); i++) {
+  for (i = 0; i < gop_len; i++) {
     GstVaH264EncFrame *vaf;
     GstVideoCodecFrame *f;
 
@@ -1881,6 +1929,7 @@ _pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
   GstVaH264Enc *self = GST_VA_H264_ENC (base);
   GstVaH264EncFrame *vaframe;
   GstVideoCodecFrame *frame;
+  guint gop_len;
   struct RefFramesCount count;
 
   g_return_val_if_fail (self->gop.cur_frame_index <= self->gop.idr_period,
@@ -1891,16 +1940,21 @@ _pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
   if (g_queue_is_empty (&base->reorder_list))
     return TRUE;
 
+  gop_len = g_queue_get_length (&base->reorder_list);
+
+  if (self->gop.last_keyframe && gop_len > 1)
+    gop_len--;
+
   /* Return the last pushed non-B immediately. */
-  frame = g_queue_peek_tail (&base->reorder_list);
+  frame = g_queue_peek_nth (&base->reorder_list, gop_len - 1);
   vaframe = _enc_frame (frame);
   if (vaframe->type != GST_H264_B_SLICE) {
-    frame = g_queue_pop_tail (&base->reorder_list);
+    frame = g_queue_pop_nth (&base->reorder_list, gop_len - 1);
     goto get_one;
   }
 
   if (self->gop.b_pyramid) {
-    frame = _pop_pyramid_b_frame (self);
+    frame = _pop_pyramid_b_frame (self, gop_len);
     if (frame == NULL)
       return TRUE;
     goto get_one;
@@ -3050,6 +3104,7 @@ gst_va_h264_enc_flush (GstVideoEncoder * venc)
   /* begin from an IDR after flush. */
   self->gop.cur_frame_index = 0;
   self->gop.cur_frame_num = 0;
+  self->gop.last_keyframe = NULL;
 
   return GST_VIDEO_ENCODER_CLASS (parent_class)->flush (venc);
 }
