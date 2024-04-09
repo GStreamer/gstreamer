@@ -37,6 +37,8 @@ using namespace Microsoft::WRL;
 #include "gstqsvallocator_va.h"
 #endif /* G_OS_WIN32 */
 
+#include <queue>
+
 GST_DEBUG_CATEGORY_STATIC (gst_qsv_decoder_debug);
 #define GST_CAT_DEFAULT gst_qsv_decoder_debug
 
@@ -524,6 +526,7 @@ gst_qsv_decoder_get_next_task (GstQsvDecoder * self)
 static GstVideoCodecFrame *
 gst_qsv_decoder_find_output_frame (GstQsvDecoder * self, GstClockTime pts)
 {
+  auto videodec = GST_VIDEO_DECODER (self);
   GList *frames, *iter;
   GstVideoCodecFrame *ret = nullptr;
   GstVideoCodecFrame *closest = nullptr;
@@ -531,9 +534,9 @@ gst_qsv_decoder_find_output_frame (GstQsvDecoder * self, GstClockTime pts)
 
   /* give up, just returns the oldest frame */
   if (!GST_CLOCK_TIME_IS_VALID (pts))
-    return gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
+    return gst_video_decoder_get_oldest_frame (videodec);
 
-  frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
+  frames = gst_video_decoder_get_frames (videodec);
 
   for (iter = frames; iter; iter = g_list_next (iter)) {
     GstVideoCodecFrame *frame = (GstVideoCodecFrame *) iter->data;
@@ -564,21 +567,33 @@ gst_qsv_decoder_find_output_frame (GstQsvDecoder * self, GstClockTime pts)
   if (ret) {
     gst_video_codec_frame_ref (ret);
 
+    /* Do garbage collection */
+    std::queue < GstVideoCodecFrame * >old_frames;
+
     /* Release older frames, it can happen if input buffer holds only single
-     * field in case of H264 */
+     * field in case of H264 or incomplete AU */
     for (iter = frames; iter; iter = g_list_next (iter)) {
       GstVideoCodecFrame *frame = (GstVideoCodecFrame *) iter->data;
 
       if (frame == ret)
-        continue;
+        break;
 
-      if (!GST_CLOCK_TIME_IS_VALID (frame->pts))
-        continue;
+      old_frames.push (gst_video_codec_frame_ref (frame));
+    }
 
-      if (frame->pts < ret->pts) {
-        gst_video_decoder_release_frame (GST_VIDEO_DECODER (self),
-            gst_video_codec_frame_ref (frame));
-      }
+    GST_LOG_OBJECT (self, "%u frames are queued before the current output",
+        (guint) old_frames.size ());
+
+    while (old_frames.size () > 16) {
+      auto front = old_frames.front ();
+      old_frames.pop ();
+      gst_video_decoder_release_frame (videodec, front);
+    }
+
+    while (!old_frames.empty ()) {
+      auto front = old_frames.front ();
+      old_frames.pop ();
+      gst_video_codec_frame_unref (front);
     }
   } else {
     ret = gst_video_decoder_get_oldest_frame (GST_VIDEO_DECODER (self));
