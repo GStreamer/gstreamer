@@ -8,6 +8,8 @@
 //
 // SPDX-License-Identifier: MPL-2.0
 
+#![allow(unused)]
+
 use std::io;
 
 pub trait ReadBytesBEExt: io::Read {
