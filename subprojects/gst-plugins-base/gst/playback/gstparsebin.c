@@ -1765,9 +1765,40 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
 {
   gboolean res = FALSE;
   GString *error_details = NULL;
+  GstFormat segment_format = GST_FORMAT_TIME;
+  GstPbUtilsCapsDescriptionFlags caps_flags =
+      gst_pb_utils_get_caps_description_flags (caps);
 
   g_return_val_if_fail (factories != NULL, FALSE);
   g_return_val_if_fail (factories->n_values > 0, FALSE);
+
+  /* For subtitles, which can come from standalone files, we need to ensure we
+   * output a timed/parsed stream. But not all formats have a parser, so we also
+   * want to try plugging in subtitle "decoders" like `subparse`.
+   *
+   * In order to ensure that, if the caps are subtitles, we query the stream
+   * format to check if it's in time or not. If it's not in time format, we will
+   * attempt to plugin in a "decoder" (if present). */
+  if (caps_flags == GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE) {
+    GstEvent *segment_event =
+        gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+    const GstSegment *segment = NULL;
+
+    segment_format = GST_FORMAT_UNDEFINED;
+    if (segment_event) {
+      gst_event_parse_segment (segment_event, &segment);
+      if (segment)
+        segment_format = segment->format;
+    }
+    if (segment == GST_FORMAT_UNDEFINED) {
+      GstQuery *segment_query = gst_query_new_segment (GST_FORMAT_TIME);
+      if (gst_pad_query (pad, segment_query)) {
+        gst_query_parse_segment (segment_query, NULL, &segment_format, NULL,
+            NULL);
+      }
+      gst_query_unref (segment_query);
+    }
+  }
 
   GST_DEBUG_OBJECT (parsebin,
       "pad %s:%s , chain:%p, %d factories, caps %" GST_PTR_FORMAT,
@@ -1888,9 +1919,11 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
 
     }
 
-    /* Expose pads if the next factory is a decoder */
+    /* Expose pads if the next factory is a decoder. segment_format might be not
+     * time for subtitle streams */
     if (gst_element_factory_list_is_type (factory,
-            GST_ELEMENT_FACTORY_TYPE_DECODER)) {
+            GST_ELEMENT_FACTORY_TYPE_DECODER)
+        && segment_format == GST_FORMAT_TIME) {
       ret = GST_AUTOPLUG_SELECT_EXPOSE;
     } else {
       /* emit autoplug-select to see what we should do with it. */
