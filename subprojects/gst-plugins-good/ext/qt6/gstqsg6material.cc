@@ -283,6 +283,9 @@ GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format)
     case GST_VIDEO_FORMAT_YV12:
       setShaderFileName(FragmentStage, ":/org/freedesktop/gstreamer/qml6/YUV_TRIPLANAR.frag.qsb");
       break;
+    case GST_VIDEO_FORMAT_NV12:
+      setShaderFileName(FragmentStage, ":/org/freedesktop/gstreamer/qml6/YUV_BIPLANAR.frag.qsb");
+      break;
     default:
       g_assert_not_reached ();
   }
@@ -365,6 +368,7 @@ G_PASTE(GstQSGMaterial_,format)::~G_PASTE(GstQSGMaterial_,format)() {}
 
 DEFINE_MATERIAL(RGBA_SWIZZLE);
 DEFINE_MATERIAL(YUV_TRIPLANAR);
+DEFINE_MATERIAL(YUV_BIPLANAR);
 
 GstQSGMaterial *
 GstQSGMaterial::new_for_format(GstVideoFormat format)
@@ -378,6 +382,8 @@ GstQSGMaterial::new_for_format(GstVideoFormat format)
   switch (format) {
     case GST_VIDEO_FORMAT_YV12:
       return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_TRIPLANAR());
+    case GST_VIDEO_FORMAT_NV12:
+      return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_BIPLANAR());
     default:
       g_assert_not_reached ();
   }
@@ -513,6 +519,8 @@ video_format_to_rhi_format (GstVideoFormat format, guint plane)
       return QRhiTexture::RGBA8;
     case GST_VIDEO_FORMAT_YV12:
       return QRhiTexture::R8;
+    case GST_VIDEO_FORMAT_NV12:
+      return (plane == 0 ? QRhiTexture::R8 : QRhiTexture::RG8);
     default:
       g_assert_not_reached ();
   }
@@ -527,6 +535,8 @@ video_format_to_texel_size (GstVideoFormat format, guint plane)
       return 4;
     case GST_VIDEO_FORMAT_YV12:
       return 1;
+    case GST_VIDEO_FORMAT_NV12:
+      return (plane == 0 ? 1 : 2);
     default:
       g_assert_not_reached ();
   }
@@ -615,6 +625,16 @@ out:
           for (gsize j = 0; j < tex_sidelength; j++) {
             for (gsize k = 0; k < tex_sidelength; k++) {
               data[(j * tex_sidelength + k) * ts + 0] = 0x7F;
+            }
+          }
+        }
+        break;
+      case GST_VIDEO_FORMAT_NV12:
+        if (plane == 1) {
+          for (gsize j = 0; j < tex_sidelength; j++) {
+            for (gsize k = 0; k < tex_sidelength; k++) {
+                data[(j * tex_sidelength + k) * ts + 0] = 0x7F;
+                data[(j * tex_sidelength + k) * ts + 1] = 0x7F;
             }
           }
         }

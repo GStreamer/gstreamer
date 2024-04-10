@@ -21,6 +21,7 @@ moc_headers = [
 shader_sources = [
   'vertex.vert',
   'RGBA.frag',
+  'YUV_BIPLANAR.frag',
   'YUV_TRIPLANAR.frag',
 ]
 
