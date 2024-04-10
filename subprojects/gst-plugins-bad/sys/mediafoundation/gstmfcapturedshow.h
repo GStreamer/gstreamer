@@ -33,4 +33,7 @@ GstMFSourceObject * gst_mf_capture_dshow_new (GstMFSourceType type,
                                               const gchar * device_name,
                                               const gchar * device_path);
 
+GstMFSourceResult   gst_mf_capture_dshow_enumerate (gint device_index,
+                                                    GstMFSourceObject ** object);
+
 G_END_DECLS

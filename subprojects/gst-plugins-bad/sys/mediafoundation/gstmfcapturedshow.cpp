@@ -1187,16 +1187,20 @@ gst_mf_capture_dshow_thread_func (GstMFCaptureDShow * self)
       self->inner->grabber = grabber;
       self->inner->fakesink = fakesink;
 
-      object->opened =
-          gst_mf_capture_dshow_open (self, selected.moniker.Get ());
+      if (!gst_mf_capture_dshow_open (self, selected.moniker.Get ())) {
+        object->source_state = GST_MF_ACTIVATION_FAILED;
+      } else {
+        object->source_state = GST_MF_OK;
+        g_free (object->device_path);
+        object->device_path = g_strdup (selected.path.c_str());
 
-      g_free (object->device_path);
-      object->device_path = g_strdup (selected.path.c_str());
+        g_free (object->device_name);
+        object->device_name = g_strdup (selected.name.c_str());
 
-      g_free (object->device_name);
-      object->device_name = g_strdup (selected.name.c_str());
-
-      object->device_index = selected.index;
+        object->device_index = selected.index;
+      }
+    } else {
+      object->source_state = GST_MF_DEVICE_NOT_FOUND;
     }
   }
 
@@ -1411,11 +1415,29 @@ gst_mf_capture_dshow_new (GstMFSourceType type, gint device_index,
 
   gst_object_ref_sink (self);
 
-  if (!self->opened) {
+  if (self->source_state != GST_MF_OK) {
     GST_DEBUG_OBJECT (self, "Couldn't open device");
     gst_object_unref (self);
     return nullptr;
   }
 
   return self;
+}
+
+GstMFSourceResult
+gst_mf_capture_dshow_enumerate (gint device_index, GstMFSourceObject ** object)
+{
+  auto self = (GstMFSourceObject *) g_object_new (GST_TYPE_MF_CAPTURE_DSHOW,
+      "source-type", GST_MF_SOURCE_TYPE_VIDEO, "device-index", device_index,
+      nullptr);
+  gst_object_ref_sink (self);
+
+  auto ret = self->source_state;
+  if (ret != GST_MF_OK) {
+    gst_object_unref (self);
+    return ret;
+  }
+
+  *object = self;
+  return GST_MF_OK;
 }
