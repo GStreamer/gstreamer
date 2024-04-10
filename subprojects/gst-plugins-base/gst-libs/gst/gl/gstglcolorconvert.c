@@ -48,6 +48,9 @@
  * #GstGLColorConvert to convert between video formats and color spaces.
  */
 
+/* TODO: by default videoconvert does not convert primaries, but this may
+ * be an option in the future */
+
 #define USING_OPENGL(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL, 1, 0))
 #define USING_OPENGL3(context) (gst_gl_context_check_gl_version (context, GST_GL_API_OPENGL3, 3, 1))
 #define USING_OPENGL30(context) \
@@ -74,55 +77,10 @@ typedef struct
 } CopyMetaData;
 
 #define YUV_TO_RGB_COEFFICIENTS \
-      "uniform vec3 offset;\n" \
-      "uniform vec3 coeff1;\n" \
-      "uniform vec3 coeff2;\n" \
-      "uniform vec3 coeff3;\n"
-
-/* FIXME: use the colormatrix support from videoconvert */
-
-/* BT. 601 standard with the following ranges:
- * Y = [16..235] (of 255)
- * Cb/Cr = [16..240] (of 255)
- */
-static const gfloat from_yuv_bt601_offset[] = {-0.0625f, -0.5f, -0.5f};
-static const gfloat from_yuv_bt601_rcoeff[] = {1.164f, 0.000f, 1.596f};
-static const gfloat from_yuv_bt601_gcoeff[] = {1.164f,-0.391f,-0.813f};
-static const gfloat from_yuv_bt601_bcoeff[] = {1.164f, 2.018f, 0.000f};
-
-/* BT. 709 standard with the following ranges:
- * Y = [16..235] (of 255)
- * Cb/Cr = [16..240] (of 255)
- */
-static const gfloat from_yuv_bt709_offset[] = {-0.0625f, -0.5f, -0.5f};
-static const gfloat from_yuv_bt709_rcoeff[] = {1.164f, 0.000f, 1.787f};
-static const gfloat from_yuv_bt709_gcoeff[] = {1.164f,-0.213f,-0.531f};
-static const gfloat from_yuv_bt709_bcoeff[] = {1.164f,2.112f, 0.000f};
+      "uniform mat4 to_RGB_matrix;\n" \
 
 #define RGB_TO_YUV_COEFFICIENTS \
-      "uniform vec3 offset;\n" \
-      "uniform vec3 coeff1;\n" \
-      "uniform vec3 coeff2;\n" \
-      "uniform vec3 coeff3;\n"
-
-/* Matrix inverses of the color matrices found above */
-/* BT. 601 standard with the following ranges:
- * Y = [16..235] (of 255)
- * Cb/Cr = [16..240] (of 255)
- */
-static const gfloat from_rgb_bt601_offset[] = {0.0625f, 0.5f, 0.5f};
-static const gfloat from_rgb_bt601_ycoeff[] = {0.256816f, 0.504154f, 0.0979137f};
-static const gfloat from_rgb_bt601_ucoeff[] = {-0.148246f, -0.29102f, 0.439266f};
-static const gfloat from_rgb_bt601_vcoeff[] = {0.439271f, -0.367833f, -0.071438f};
-
-/* BT. 709 standard with the following ranges:
- * Y = [16..235] (of 255)
- * Cb/Cr = [16..240] (of 255)
- */
-static const gfloat from_rgb_bt709_offset[] = {0.0625f, 0.5f, 0.5f};
-static const gfloat from_rgb_bt709_ycoeff[] = {0.182604f, 0.614526f, 0.061976f};
-static const gfloat from_rgb_bt709_ucoeff[] = {-0.100640f, -0.338688f, 0.439327f};
-static const gfloat from_rgb_bt709_vcoeff[] = {0.440654f, -0.400285f, -0.040370f};
+      "uniform mat4 to_YUV_matrix;\n" \
 
 /* GRAY16 to RGB conversion
  *  data transferred as GL_LUMINANCE_ALPHA then convert back to GRAY16
@@ -158,24 +116,9 @@ struct shader_templ
   GstGLTextureTarget target;
 };
 
-static const char glsl_func_yuv_to_rgb[] = \
-    "vec3 yuv_to_rgb (vec3 yuv, vec3 offset, vec3 ycoeff, vec3 ucoeff, vec3 vcoeff) {\n" \
-    "  vec3 rgb;\n"                 \
-    "  yuv += offset;\n"            \
-    "  rgb.r = dot(yuv, ycoeff);\n" \
-    "  rgb.g = dot(yuv, ucoeff);\n" \
-    "  rgb.b = dot(yuv, vcoeff);\n" \
-    "  return rgb;\n"               \
-    "}\n";
-
-static const char glsl_func_rgb_to_yuv[] = \
-    "vec3 rgb_to_yuv (vec3 rgb, vec3 offset, vec3 rcoeff, vec3 gcoeff, vec3 bcoeff) {\n" \
-    "  vec3 yuv;\n"                         \
-    "  yuv.r = dot(rgb.rgb, rcoeff);\n"     \
-    "  yuv.g = dot(rgb.rgb, gcoeff);\n"     \
-    "  yuv.b = dot(rgb.rgb, bcoeff);\n"     \
-    "  yuv += offset;\n"                    \
-    "  return yuv;\n"                       \
+static const char glsl_func_color_matrix[] = \
+    "vec4 color_matrix_apply (vec4 texel, mat4 colormatrix) {\n" \
+    "  return colormatrix * texel;\n" \
     "}\n";
 
 static const char glsl_func_swizzle[] = "vec4 swizzle(vec4 texel, int components[4]) {\n" \
@@ -244,51 +187,43 @@ static const struct shader_templ templ_COMPOSE =
 
 /* Shaders for AYUV and varieties */
 static const gchar templ_AYUV_to_RGB_BODY[] =
-    "vec4 texel, rgba;\n"
-    "texel = swizzle(texture2D(tex, texcoord * tex_scale0), input_swizzle);\n"
-    "rgba.rgb = yuv_to_rgb (texel.rgb, offset, coeff1, coeff2, coeff3);\n"
-    "rgba.a = texel.a;\n"
+    "vec4 texel = swizzle(texture2D(tex, texcoord * tex_scale0), input_swizzle);\n"
+    "vec4 rgba = color_matrix_apply(texel, to_RGB_matrix);\n"
     "gl_FragColor = swizzle(rgba, output_swizzle);\n";
 
 static const struct shader_templ templ_AYUV_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n",
-    { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_RGB_to_AYUV_BODY[] =
-    "vec4 texel, yuva;\n"
-    "texel = swizzle(texture2D(tex, texcoord), input_swizzle);\n"
-    "yuva.xyz = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3);\n"
+    "vec4 texel = swizzle(texture2D(tex, texcoord), input_swizzle);\n"
+    "vec4 yuva = color_matrix_apply(texel, to_YUV_matrix);\n"
     "yuva.a = %s;\n"
     "gl_FragColor = swizzle(yuva, output_swizzle);\n";
 
 static const struct shader_templ templ_RGB_to_AYUV =
   { NULL,
     DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n",
-    { glsl_func_swizzle, glsl_func_rgb_to_yuv, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 /* YUV to RGB conversion */
 static const gchar templ_PLANAR_YUV_to_RGB_BODY[] =
-    "vec4 yuva, rgba;\n"
     /* FIXME: should get the sampling right... */
-    "yuva.x = texture2D(Ytex, texcoord * tex_scale0).r;\n"
-    "yuva.y = texture2D(Utex, texcoord * tex_scale1).r;\n"
-    "yuva.z = texture2D(Vtex, texcoord * tex_scale2).r;\n"
-    "%s"
-    "yuva = yuva * in_bitdepth_factor;\n"
+    "vec4 yuva = fetch_planar_yuv(Ytex, Utex, Vtex, texcoord);\n"
     "yuva = swizzle(yuva, input_swizzle);\n"
-    "rgba.rgb = yuv_to_rgb (yuva.xyz, offset, coeff1, coeff2, coeff3);\n"
-    "rgba.a = yuva.a;\n"
+    "vec4 rgba = color_matrix_apply(yuva, to_RGB_matrix);\n"
+    "%s"
     "gl_FragColor = swizzle(rgba, output_swizzle);\n";
 
 static const struct shader_templ templ_PLANAR_YUV_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, Utex, Vtex;\n" "uniform float in_bitdepth_factor;\n",
-    { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
@@ -297,7 +232,7 @@ static const struct shader_templ templ_A420_to_RGB =
   { NULL,
     /* 4th uniform is the alpha buffer */
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, Utex, Vtex, Atex;\n" "uniform float in_bitdepth_factor;\n",
-    { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
@@ -332,8 +267,8 @@ static const gchar templ_RGB_to_PLANAR_YUV_BODY[] =
     "    }\n"
     "  }\n"
     "}\n"
-    "yuva.x = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3).x;\n"
-    "yuva.yz = rgb_to_yuv (uv_texel.rgb, offset, coeff1, coeff2, coeff3).yz;\n"
+    "yuva.x = color_matrix_apply(texel, to_YUV_matrix).x;\n"
+    "yuva.yz = color_matrix_apply(uv_texel, to_YUV_matrix).yz;\n"
     "yuva.a = texel.a;\n"
     "yuva = swizzle(yuva, output_swizzle);\n"
     "yuva = yuva * out_bitdepth_factor;\n"
@@ -346,34 +281,32 @@ static const struct shader_templ templ_RGB_to_PLANAR_YUV =
   { NULL,
     DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n"
     "uniform vec2 chroma_sampling;\n" "uniform float out_bitdepth_factor;\n",
-    { glsl_func_swizzle, glsl_func_rgb_to_yuv, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 /* semi-planar to RGB conversion */
 static const gchar templ_SEMI_PLANAR_to_RGB_BODY[] =
-    "vec4 rgba;\n"
     "vec4 yuva;\n"
     /* FIXME: should get the sampling right... */
     "yuva.x=texture2D(Ytex, texcoord * tex_scale0).r;\n"
     "yuva.yz=texture2D(UVtex, texcoord * tex_scale1).r%c;\n"
     "%s"
     "yuva = swizzle(yuva, input_swizzle);\n"
-    "rgba.rgb = yuv_to_rgb (yuva.xyz, offset, coeff1, coeff2, coeff3);\n"
-    "rgba.a = yuva.a;\n"
+    "vec4 rgba = color_matrix_apply (yuva, to_RGB_matrix);\n"
     "gl_FragColor = swizzle(rgba, output_swizzle);\n";
 
 static const struct shader_templ templ_SEMI_PLANAR_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, UVtex;\n",
-    { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const struct shader_templ templ_AV12_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, UVtex, Atex;\n",
-    { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
@@ -389,7 +322,7 @@ static const struct shader_templ templ_AV12_to_RGB =
 /* TILED semi-planar to RGB conversion */
 static const gchar templ_TILED_SEMI_PLANAR_to_RGB_BODY[] =
     "  vec4 rgba;\n"
-    "  vec3 yuv;\n"
+    "  vec4 yuva;\n"
     "  ivec2 texel;\n"
     "\n"
     "  const ivec2 luma_dim = ivec2(%i, %i);\n"
@@ -403,20 +336,20 @@ static const gchar templ_TILED_SEMI_PLANAR_to_RGB_BODY[] =
     "  ivec2 tile_coord = coord / luma_dim;\n"
     "  ivec2 delta_coord = coord %% luma_dim;\n" \
     "  texel = frag_to_tile(tile_coord, delta_coord, luma_dim, iwidth, tiles_per_row, 0);\n"
-    "  yuv.x = texelFetch(Ytex, texel, 0).r;\n"
+    "  yuva.x = texelFetch(Ytex, texel, 0).r;\n"
     "\n"
     "  ivec2 chroma_tcoord = ivec2(tile_coord.x, tile_coord.y / fy);\n"
     "  texel = frag_to_tile(chroma_tcoord, delta_coord / 2, chroma_dim, iwidth / 2, tiles_per_row, tile_coord.y %% fy);\n"
-    "  yuv.yz = texelFetch(UVtex, texel, 0).%c%c;\n"
+    "  yuva.yz = texelFetch(UVtex, texel, 0).%c%c;\n"
+    "  yuva.a = 1.0;\n"
     "\n"
-    "  rgba.rgb = yuv_to_rgb (yuv, offset, coeff1, coeff2, coeff3);\n"
-    "  rgba.a = 1.0;\n"
+    "  vec4 rgba = color_matrix_apply(yuva, to_RGB_matrix);\n"
     "  gl_FragColor = swizzle(rgba, output_swizzle);\n";
 
 static const struct shader_templ templ_TILED_SEMI_PLANAR_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex, UVtex;\n",
-    { glsl_func_swizzle, glsl_func_yuv_to_rgb, glsl_func_frag_to_tile, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_frag_to_tile, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
@@ -428,8 +361,8 @@ static const gchar templ_RGB_to_SEMI_PLANAR_YUV_BODY[] =
     "vec4 yuva;\n"
     "texel = swizzle(texture2D(tex, texcoord), input_swizzle);\n"
     "uv_texel = swizzle(texture2D(tex, texcoord * tex_scale0 * chroma_sampling), input_swizzle);\n"
-    "yuva.x = rgb_to_yuv (texel.rgb, offset, coeff1, coeff2, coeff3).x;\n"
-    "yuva.yz = rgb_to_yuv (uv_texel.rgb, offset, coeff1, coeff2, coeff3).yz;\n"
+    "yuva.x = color_matrix_apply(texel, to_YUV_matrix).x;\n"
+    "yuva.yz = color_matrix_apply(uv_texel, to_YUV_matrix).yz;\n"
     "yuva.a = 1.0;\n"
     "yuva = swizzle(yuva, output_swizzle);\n"
     "gl_FragData[0] = vec4(yuva.x, 0.0, 0.0, 1.0);\n"
@@ -440,19 +373,19 @@ static const struct shader_templ templ_RGB_to_SEMI_PLANAR_YUV =
   { NULL,
     DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n"
     "uniform vec2 chroma_sampling;\n",
-    {glsl_func_swizzle, glsl_func_rgb_to_yuv, NULL, },
+    {glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 /* YUY2:r,g,a
    UYVY:a,b,r */
 static const gchar templ_YUY2_UYVY_to_RGB_BODY[] =
-    "vec4 rgba, uv_texel;\n"
-    "vec3 yuv;\n"
+    "vec4 uv_texel;\n"
+    "vec4 yuva;\n"
     /* FIXME: should get the sampling right... */
     "float dx1 = -poffset_x;\n"
     "float dx2 = 0.0;\n"
-    "yuv.x = texture2D(Ytex, texcoord * tex_scale0).%c;\n"
+    "yuva.x = texture2D(Ytex, texcoord * tex_scale0).%c;\n"
     /* v_texcoord are normalized, texcoord may not be e.g. rectangle textures */
     "float inorder = mod (v_texcoord.x * width, 2.0);\n"
     "if (inorder < 1.0) {\n"
@@ -461,21 +394,21 @@ static const gchar templ_YUY2_UYVY_to_RGB_BODY[] =
     "}\n"
     "uv_texel.rg = texture2D(Ytex, texcoord * tex_scale0 + vec2(dx1, 0.0)).r%c;\n"
     "uv_texel.ba = texture2D(Ytex, texcoord * tex_scale0 + vec2(dx2, 0.0)).r%c;\n"
-    "yuv.yz = uv_texel.%c%c;\n"
-    "rgba.rgb = yuv_to_rgb (yuv, offset, coeff1, coeff2, coeff3);\n"
-    "rgba.a = 1.0;\n"
+    "yuva.yz = uv_texel.%c%c;\n"
+    "yuva.a = 1.0;\n"
+    "vec4 rgba = color_matrix_apply(yuva, to_RGB_matrix);\n"
     "gl_FragColor = swizzle(rgba, output_swizzle);\n";
 
 static const struct shader_templ templ_YUY2_UYVY_to_RGB =
   { NULL,
     DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n",
-    { glsl_func_swizzle, glsl_func_yuv_to_rgb, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_RGB_to_YUY2_UYVY_BODY[] =
     "vec4 texel1, texel2;\n"
-    "vec3 yuv, yuv1, yuv2;\n"
+    "vec4 yuva, yuv1, yuv2;\n"
     "float fx, dx, fy;\n"
     /* v_texcoord are normalized, texcoord may not be e.g. rectangle textures */
     "float inorder = mod (v_texcoord.x * width, 2.0);\n"
@@ -487,20 +420,20 @@ static const gchar templ_RGB_to_YUY2_UYVY_BODY[] =
     "fy = texcoord.y;\n"
     "texel1 = swizzle(texture2D(tex, vec2(fx, fy)), input_swizzle);\n"
     "texel2 = swizzle(texture2D(tex, vec2(fx + dx, fy)), input_swizzle);\n"
-    "yuv1 = rgb_to_yuv (texel1.rgb, offset, coeff1, coeff2, coeff3);\n"
-    "yuv2 = rgb_to_yuv (texel2.rgb, offset, coeff1, coeff2, coeff3);\n"
-    "yuv.x = yuv1.x;\n"
-    "yuv.yz = (yuv1.yz + yuv2.yz) * 0.5;\n"
+    "yuv1 = color_matrix_apply(texel1, to_YUV_matrix);\n"
+    "yuv2 = color_matrix_apply(texel2, to_YUV_matrix);\n"
+    "yuva.x = yuv1.x;\n"
+    "yuva.yz = (yuv1.yz + yuv2.yz) * 0.5;\n"
     "if (inorder < 1.0) {\n"
-    "  gl_FragColor = vec4(yuv.%c, yuv.%c, 0.0, 0.0);\n"
+    "  gl_FragColor = vec4(yuva.%c, yuva.%c, 0.0, 0.0);\n"
     "} else {\n"
-    "  gl_FragColor = vec4(yuv.%c, yuv.%c, 0.0, 0.0);\n"
+    "  gl_FragColor = vec4(yuva.%c, yuva.%c, 0.0, 0.0);\n"
     "}\n";
 
 static const struct shader_templ templ_RGB_to_YUY2_UYVY =
   { NULL,
     DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n",
-    { glsl_func_swizzle, glsl_func_rgb_to_yuv, NULL, },
+    { glsl_func_swizzle, glsl_func_color_matrix, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
@@ -580,6 +513,132 @@ static const GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
 /* *INDENT-ON* */
 
+typedef struct
+{
+  double dm[4][4];
+} Matrix4;
+
+static void
+matrix_debug (const Matrix4 * s)
+{
+  GST_DEBUG ("[%f %f %f %f]", s->dm[0][0], s->dm[0][1], s->dm[0][2],
+      s->dm[0][3]);
+  GST_DEBUG ("[%f %f %f %f]", s->dm[1][0], s->dm[1][1], s->dm[1][2],
+      s->dm[1][3]);
+  GST_DEBUG ("[%f %f %f %f]", s->dm[2][0], s->dm[2][1], s->dm[2][2],
+      s->dm[2][3]);
+  GST_DEBUG ("[%f %f %f %f]", s->dm[3][0], s->dm[3][1], s->dm[3][2],
+      s->dm[3][3]);
+}
+
+static void
+matrix_to_float (const Matrix4 * m, float *ret)
+{
+  int i, j;
+
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      ret[j * 4 + i] = m->dm[i][j];
+    }
+  }
+}
+
+static void
+matrix_set_identity (Matrix4 * m)
+{
+  int i, j;
+
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      m->dm[i][j] = (i == j);
+    }
+  }
+}
+
+static void
+matrix_copy (Matrix4 * d, const Matrix4 * s)
+{
+  gint i, j;
+
+  for (i = 0; i < 4; i++)
+    for (j = 0; j < 4; j++)
+      d->dm[i][j] = s->dm[i][j];
+}
+
+/* Perform 4x4 matrix multiplication:
+ *  - @dst@ = @a@ * @b@
+ *  - @dst@ may be a pointer to @a@ andor @b@
+ */
+static void
+matrix_multiply (Matrix4 * dst, Matrix4 * a, Matrix4 * b)
+{
+  Matrix4 tmp;
+  int i, j, k;
+
+  for (i = 0; i < 4; i++) {
+    for (j = 0; j < 4; j++) {
+      double x = 0;
+      for (k = 0; k < 4; k++) {
+        x += a->dm[i][k] * b->dm[k][j];
+      }
+      tmp.dm[i][j] = x;
+    }
+  }
+  matrix_copy (dst, &tmp);
+}
+
+#if 0
+static void
+matrix_invert (Matrix4 * d, Matrix4 * s)
+{
+  Matrix4 tmp;
+  int i, j;
+  double det;
+
+  matrix_set_identity (&tmp);
+  for (j = 0; j < 3; j++) {
+    for (i = 0; i < 3; i++) {
+      tmp.dm[j][i] =
+          s->dm[(i + 1) % 3][(j + 1) % 3] * s->dm[(i + 2) % 3][(j + 2) % 3] -
+          s->dm[(i + 1) % 3][(j + 2) % 3] * s->dm[(i + 2) % 3][(j + 1) % 3];
+    }
+  }
+  det =
+      tmp.dm[0][0] * s->dm[0][0] + tmp.dm[0][1] * s->dm[1][0] +
+      tmp.dm[0][2] * s->dm[2][0];
+  for (j = 0; j < 3; j++) {
+    for (i = 0; i < 3; i++) {
+      tmp.dm[i][j] /= det;
+    }
+  }
+  matrix_copy (d, &tmp);
+}
+#endif
+static void
+matrix_offset_components (Matrix4 * m, double a1, double a2, double a3)
+{
+  Matrix4 a;
+
+  matrix_set_identity (&a);
+  a.dm[0][3] = a1;
+  a.dm[1][3] = a2;
+  a.dm[2][3] = a3;
+  matrix_debug (&a);
+  matrix_multiply (m, &a, m);
+}
+
+static void
+matrix_scale_components (Matrix4 * m, double a1, double a2, double a3)
+{
+  Matrix4 a;
+
+  matrix_set_identity (&a);
+  a.dm[0][0] = a1;
+  a.dm[1][1] = a2;
+  a.dm[2][2] = a3;
+  matrix_multiply (m, &a, m);
+}
+
 struct ConvertInfo
 {
   gint in_n_textures;
@@ -588,16 +647,136 @@ struct ConvertInfo
   gchar *frag_body;
   gchar *frag_prog;
   const gchar *shader_tex_names[GST_VIDEO_MAX_PLANES];
-  gfloat *cms_offset;
-  gfloat *cms_coeff1;           /* r,y */
-  gfloat *cms_coeff2;           /* g,u */
-  gfloat *cms_coeff3;           /* b,v */
+  Matrix4 to_RGB_matrix;
+  Matrix4 to_YUV_matrix;
   gfloat chroma_sampling[2];
   int input_swizzle[GST_VIDEO_MAX_PLANES];
   int output_swizzle[GST_VIDEO_MAX_PLANES];
   gfloat in_bitdepth_factor;
   gfloat out_bitdepth_factor;
 };
+
+static void
+matrix_YCbCr_to_RGB (Matrix4 * m, double Kr, double Kb)
+{
+  double Kg = 1.0 - Kr - Kb;
+  Matrix4 k = {
+    {
+          {1., 0., 2 * (1 - Kr), 0.},
+          {1., -2 * Kb * (1 - Kb) / Kg, -2 * Kr * (1 - Kr) / Kg, 0.},
+          {1., 2 * (1 - Kb), 0., 0.},
+          {0., 0., 0., 1.},
+        }
+  };
+
+  matrix_multiply (m, &k, m);
+}
+
+static void
+convert_to_RGB (struct ConvertInfo *conv, GstVideoInfo * info)
+{
+  Matrix4 *m = &conv->to_RGB_matrix;
+
+  {
+    const GstVideoFormatInfo *uinfo;
+    gint offset[4], scale[4], depth[4];
+    int i;
+
+    uinfo = gst_video_format_get_info (GST_VIDEO_INFO_FORMAT (info));
+
+    /* bring color components to [0..1.0] range */
+    gst_video_color_range_offsets (info->colorimetry.range, uinfo, offset,
+        scale);
+
+    for (i = 0; i < uinfo->n_components; i++)
+      depth[i] = (1 << uinfo->depth[i]) - 1;
+
+    matrix_offset_components (m, -offset[0] / (float) depth[0],
+        -offset[1] / (float) depth[1], -offset[2] / (float) depth[2]);
+    matrix_scale_components (m, depth[0] / ((float) scale[0]),
+        depth[1] / ((float) scale[1]), depth[2] / ((float) scale[2]));
+    GST_DEBUG ("to RGB scale/offset matrix");
+    matrix_debug (m);
+  }
+
+  if (GST_VIDEO_INFO_IS_YUV (info)) {
+    gdouble Kr, Kb;
+
+    if (gst_video_color_matrix_get_Kr_Kb (info->colorimetry.matrix, &Kr, &Kb))
+      matrix_YCbCr_to_RGB (m, Kr, Kb);
+    GST_DEBUG ("to RGB matrix");
+    matrix_debug (m);
+  }
+}
+
+static void
+matrix_RGB_to_YCbCr (Matrix4 * m, double Kr, double Kb)
+{
+  double Kg = 1.0 - Kr - Kb;
+  Matrix4 k;
+  double x;
+
+  k.dm[0][0] = Kr;
+  k.dm[0][1] = Kg;
+  k.dm[0][2] = Kb;
+  k.dm[0][3] = 0;
+
+  x = 1 / (2 * (1 - Kb));
+  k.dm[1][0] = -x * Kr;
+  k.dm[1][1] = -x * Kg;
+  k.dm[1][2] = x * (1 - Kb);
+  k.dm[1][3] = 0;
+
+  x = 1 / (2 * (1 - Kr));
+  k.dm[2][0] = x * (1 - Kr);
+  k.dm[2][1] = -x * Kg;
+  k.dm[2][2] = -x * Kb;
+  k.dm[2][3] = 0;
+
+  k.dm[3][0] = 0;
+  k.dm[3][1] = 0;
+  k.dm[3][2] = 0;
+  k.dm[3][3] = 1;
+
+  matrix_multiply (m, &k, m);
+}
+
+static void
+convert_to_YUV (struct ConvertInfo *conv, GstVideoInfo * info)
+{
+  Matrix4 *m = &conv->to_YUV_matrix;
+
+  if (GST_VIDEO_INFO_IS_YUV (info)) {
+    gdouble Kr, Kb;
+
+    if (gst_video_color_matrix_get_Kr_Kb (info->colorimetry.matrix, &Kr, &Kb))
+      matrix_RGB_to_YCbCr (m, Kr, Kb);
+    GST_DEBUG ("to YUV matrix");
+    matrix_debug (m);
+  }
+
+  {
+    const GstVideoFormatInfo *uinfo;
+    gint offset[4], scale[4], depth[4];
+    int i;
+
+    uinfo = gst_video_format_get_info (GST_VIDEO_INFO_FORMAT (info));
+
+    /* bring color components to nominal range */
+    gst_video_color_range_offsets (info->colorimetry.range, uinfo, offset,
+        scale);
+
+    for (i = 0; i < uinfo->n_components; i++)
+      depth[i] = (1 << uinfo->depth[i]) - 1;
+
+    matrix_scale_components (m, scale[0] / (float) depth[0],
+        scale[1] / (float) depth[1], scale[2] / (float) depth[2]);
+    matrix_offset_components (m, offset[0] / (float) depth[0],
+        offset[1] / (float) depth[1], offset[2] / (float) depth[2]);
+    GST_DEBUG ("to YUV scale/offset matrix");
+    matrix_debug (m);
+  }
+}
 
 struct _GstGLColorConvertPrivate
 {
@@ -2058,19 +2237,7 @@ _YUV_to_RGB (GstGLColorConvert * convert)
     }
   }
 
-  if (gst_video_colorimetry_matches (&convert->in_info.colorimetry,
-          GST_VIDEO_COLORIMETRY_BT709)) {
-    info->cms_offset = (gfloat *) from_yuv_bt709_offset;
-    info->cms_coeff1 = (gfloat *) from_yuv_bt709_rcoeff;
-    info->cms_coeff2 = (gfloat *) from_yuv_bt709_gcoeff;
-    info->cms_coeff3 = (gfloat *) from_yuv_bt709_bcoeff;
-  } else {
-    /* defaults/bt601 */
-    info->cms_offset = (gfloat *) from_yuv_bt601_offset;
-    info->cms_coeff1 = (gfloat *) from_yuv_bt601_rcoeff;
-    info->cms_coeff2 = (gfloat *) from_yuv_bt601_gcoeff;
-    info->cms_coeff3 = (gfloat *) from_yuv_bt601_bcoeff;
-  }
+  convert_to_RGB (info, &convert->in_info);
 }
 
 static void
@@ -2171,6 +2338,18 @@ _RGB_to_YUV (GstGLColorConvert * convert)
         info->chroma_sampling[1] = 1.0f;
       } else {
         info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
+        break;
+      case GST_VIDEO_FORMAT_NV21:
+      case GST_VIDEO_FORMAT_NV61:
+        info->templ = &templ_RGB_to_SEMI_PLANAR_YUV;
+        info->frag_body = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY, "");
+        if (out_format == GST_VIDEO_FORMAT_NV61) {
+          info->chroma_sampling[0] = 2.0f;
+          info->chroma_sampling[1] = 1.0f;
+        } else {
+          info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
+        }
+        break;
       }
       break;
     case GST_VIDEO_FORMAT_AV12:
@@ -2179,35 +2358,11 @@ _RGB_to_YUV (GstGLColorConvert * convert)
           "gl_FragData[2] = vec4(yuva.a, 0.0, 0.0, 1.0);\n");
       info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
       break;
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV61:
-      info->templ = &templ_RGB_to_SEMI_PLANAR_YUV;
-      info->frag_body = g_strdup_printf (templ_RGB_to_SEMI_PLANAR_YUV_BODY, "");
-      if (out_format == GST_VIDEO_FORMAT_NV61) {
-        info->chroma_sampling[0] = 2.0f;
-        info->chroma_sampling[1] = 1.0f;
-      } else {
-        info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
-      }
-      break;
     default:
       break;
   }
 
-  if (gst_video_colorimetry_matches (&convert->out_info.colorimetry,
-          GST_VIDEO_COLORIMETRY_BT709)) {
-    info->cms_offset = (gfloat *) from_rgb_bt709_offset;
-    info->cms_coeff1 = (gfloat *) from_rgb_bt709_ycoeff;
-    info->cms_coeff2 = (gfloat *) from_rgb_bt709_ucoeff;
-    info->cms_coeff3 = (gfloat *) from_rgb_bt709_vcoeff;
-  } else {
-    /* defaults/bt601 */
-    info->cms_offset = (gfloat *) from_rgb_bt601_offset;
-    info->cms_coeff1 = (gfloat *) from_rgb_bt601_ycoeff;
-    info->cms_coeff2 = (gfloat *) from_rgb_bt601_ucoeff;
-    info->cms_coeff3 = (gfloat *) from_rgb_bt601_vcoeff;
-  }
-
+  convert_to_YUV (info, &convert->out_info);
 }
 
 static void
@@ -2522,6 +2677,9 @@ _init_convert (GstGLColorConvert * convert)
   info->out_n_textures =
       _get_n_textures (GST_VIDEO_INFO_FORMAT (&convert->out_info));
 
+  matrix_set_identity (&info->to_RGB_matrix);
+  matrix_set_identity (&info->to_YUV_matrix);
+
   if (GST_VIDEO_INFO_IS_RGB (&convert->in_info)) {
     if (GST_VIDEO_INFO_IS_RGB (&convert->out_info)) {
       _RGB_to_RGB (convert);
@@ -2592,16 +2750,14 @@ _init_convert (GstGLColorConvert * convert)
 
   gst_gl_shader_use (convert->shader);
 
-  if (info->cms_offset && info->cms_coeff1
-      && info->cms_coeff2 && info->cms_coeff3) {
-    gst_gl_shader_set_uniform_3fv (convert->shader, "offset", 1,
-        info->cms_offset);
-    gst_gl_shader_set_uniform_3fv (convert->shader, "coeff1", 1,
-        info->cms_coeff1);
-    gst_gl_shader_set_uniform_3fv (convert->shader, "coeff2", 1,
-        info->cms_coeff2);
-    gst_gl_shader_set_uniform_3fv (convert->shader, "coeff3", 1,
-        info->cms_coeff3);
+  {
+    gfloat m[16];
+    matrix_to_float (&info->to_RGB_matrix, m);
+    gst_gl_shader_set_uniform_matrix_4fv (convert->shader, "to_RGB_matrix", 1,
+        FALSE, m);
+    matrix_to_float (&info->to_YUV_matrix, m);
+    gst_gl_shader_set_uniform_matrix_4fv (convert->shader, "to_YUV_matrix", 1,
+        FALSE, m);
   }
 
   for (i = info->in_n_textures - 1; i >= 0; i--) {
@@ -3189,6 +3345,18 @@ gst_gl_color_convert_swizzle_shader_string (GstGLContext * context)
 {
   return g_strdup (glsl_func_swizzle);
 }
+
+/* *INDENT-OFF* */
+static const char glsl_func_yuv_to_rgb[] =
+    "vec3 yuv_to_rgb (vec3 yuv, vec3 offset, vec3 ycoeff, vec3 ucoeff, vec3 vcoeff) {\n"
+    "  vec3 rgb;\n"
+    "  yuv += offset;\n"
+    "  rgb.r = dot(yuv, ycoeff);\n"
+    "  rgb.g = dot(yuv, ucoeff);\n"
+    "  rgb.b = dot(yuv, vcoeff);\n"
+    "  return rgb;\n"
+    "}\n";
+/* *INDENT-ON* */
 
 /**
  * gst_gl_color_convert_yuv_to_rgb_shader_string:
