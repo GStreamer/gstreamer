@@ -2604,7 +2604,7 @@ _init_convert (GstGLColorConvert * convert)
         info->cms_coeff3);
   }
 
-  for (i = info->in_n_textures; i >= 0; i--) {
+  for (i = info->in_n_textures - 1; i >= 0; i--) {
     if (info->shader_tex_names[i])
       gst_gl_shader_set_uniform_1i (convert->shader, info->shader_tex_names[i],
           i);
