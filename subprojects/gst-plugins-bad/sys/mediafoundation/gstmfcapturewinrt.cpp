@@ -295,6 +295,7 @@ gst_mf_capture_winrt_thread_func (GstMFCaptureWinRT * self)
 
   if (!target_group) {
     GST_WARNING_OBJECT (self, "No matching device");
+    source->source_state = GST_MF_DEVICE_NOT_FOUND;
     goto run_loop;
   }
 
@@ -318,7 +319,7 @@ gst_mf_capture_winrt_thread_func (GstMFCaptureWinRT * self)
   GST_DEBUG_OBJECT (self, "Available output caps %" GST_PTR_FORMAT,
       self->supported_caps);
 
-  source->opened = TRUE;
+  source->source_state = GST_MF_OK;
 
   g_free (source->device_path);
   source->device_path = g_strdup (target_group->id_.c_str ());
@@ -751,18 +752,40 @@ gst_mf_capture_winrt_new (GstMFSourceType type, gint device_index,
       "source-type", type, "device-index", device_index, "device-name",
       device_name, "device-path", device_path, "dispatcher", dispatcher,
       nullptr);
+  gst_object_ref_sink (self);
 
   /* Reset explicitly to ensure that it happens before
    * RoInitializeWrapper dtor is called */
   core_dispatcher.Reset ();
 
-  if (!self->opened) {
+  if (self->source_state != GST_MF_OK) {
     GST_WARNING_OBJECT (self, "Couldn't open device");
     gst_object_unref (self);
     return nullptr;
   }
 
+  return self;
+}
+
+GstMFSourceResult
+gst_mf_capture_winrt_enumerate (gint device_index, GstMFSourceObject ** object)
+{
+  ComPtr < ICoreDispatcher > core_dispatcher;
+  /* Multiple COM init is allowed */
+  RoInitializeWrapper init_wrapper (RO_INIT_MULTITHREADED);
+  FindCoreDispatcherForCurrentThread (&core_dispatcher);
+
+  auto self = (GstMFSourceObject *) g_object_new (GST_TYPE_MF_CAPTURE_WINRT,
+      "source-type", GST_MF_SOURCE_TYPE_VIDEO, "device-index", device_index,
+      "dispatcher", core_dispatcher.Get (), nullptr);
   gst_object_ref_sink (self);
 
-  return self;
+  auto ret = self->source_state;
+  if (ret != GST_MF_OK) {
+    gst_object_unref (self);
+    return ret;
+  }
+
+  *object = self;
+  return GST_MF_OK;
 }

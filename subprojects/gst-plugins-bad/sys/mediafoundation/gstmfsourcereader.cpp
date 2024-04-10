@@ -839,15 +839,20 @@ gst_mf_source_reader_thread_func (GstMFSourceReader * self)
   }
 
   if (target) {
-    object->opened = gst_mf_source_reader_open (self, target->handle);
+    if (!gst_mf_source_reader_open (self, target->handle)) {
+      object->source_state = GST_MF_ACTIVATION_FAILED;
+    } else {
+      object->source_state = GST_MF_OK;
+      g_free (object->device_path);
+      object->device_path = g_strdup (target->path);
 
-    g_free (object->device_path);
-    object->device_path = g_strdup (target->path);
+      g_free (object->device_name);
+      object->device_name = g_strdup (target->name);
 
-    g_free (object->device_name);
-    object->device_name = g_strdup (target->name);
-
-    object->device_index = target->index;
+      object->device_index = target->index;
+    }
+  } else {
+    object->source_state = GST_MF_DEVICE_NOT_FOUND;
   }
 
   if (activate_list)
@@ -991,11 +996,29 @@ gst_mf_source_reader_new (GstMFSourceType type, gint device_index,
 
   gst_object_ref_sink (self);
 
-  if (!self->opened) {
+  if (self->source_state != GST_MF_OK) {
     GST_DEBUG_OBJECT (self, "Couldn't open device");
     gst_object_unref (self);
     return nullptr;
   }
 
   return self;
+}
+
+GstMFSourceResult
+gst_mf_source_reader_enumerate (gint device_index, GstMFSourceObject ** object)
+{
+  auto self = (GstMFSourceObject *) g_object_new (GST_TYPE_MF_SOURCE_READER,
+      "source-type", GST_MF_SOURCE_TYPE_VIDEO, "device-index", device_index,
+      nullptr);
+  gst_object_ref_sink (self);
+
+  auto ret = self->source_state;
+  if (ret != GST_MF_OK) {
+    gst_object_unref (self);
+    return ret;
+  }
+
+  *object = self;
+  return GST_MF_OK;
 }

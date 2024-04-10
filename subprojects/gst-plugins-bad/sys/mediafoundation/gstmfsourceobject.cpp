@@ -396,6 +396,26 @@ gst_mf_source_object_new (GstMFSourceType type, gint device_index,
   return nullptr;
 }
 
+GstMFSourceResult
+gst_mf_source_object_enumerate (gint device_index, GstMFSourceObject ** object)
+{
+#if (!GST_MF_WINAPI_APP)
+  return gst_mf_source_reader_enumerate (device_index, object);
+#else
+#if (!GST_MF_WINAPI_DESKTOP)
+  return gst_mf_capture_winrt_enumerate (device_index, object);
+#else
+  if (gst_mf_source_object_use_winrt_api ())
+    return gst_mf_capture_winrt_enumerate (device_index, object);
+
+  return gst_mf_source_reader_enumerate (device_index, object);
+#endif
+#endif
+  g_assert_not_reached ();
+
+  return GST_MF_DEVICE_NOT_FOUND;
+}
+
 gint
 gst_mf_source_object_caps_compare (GstCaps * caps1, GstCaps * caps2)
 {
