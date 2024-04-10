@@ -33,6 +33,7 @@ variables:
     value: ""
 
   FEDORA_AMD64_SUFFIX: 'amd64/fedora'
+  DEBIAN_AMD64_SUFFIX: 'amd64/debian'
   INDENT_AMD64_SUFFIX: 'amd64/gst-indent'
   COMMITLINT_AMD64_SUFFIX: 'amd64/commitlint'
   WINDOWS_AMD64_SUFFIX: 'amd64/windows'
@@ -124,6 +125,7 @@ trigger:
 
 .fedora image:
   variables:
+    CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache/'
     FDO_BASE_IMAGE: 'registry.fedoraproject.org/fedora-toolbox:34'
     FDO_DISTRIBUTION_VERSION: '34'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
@@ -134,6 +136,25 @@ fedora amd64 docker:
   extends:
     - '.fedora image'
     - '.fdo.container-build@fedora'
+  stage: 'preparation'
+  needs: []
+  # Note: assumption is that placeholder jobs run on a packet runner
+  # (which has faster network connectivity to the registry).
+  tags: [ 'placeholder-job' ]
+
+.debian image:
+  variables:
+    CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache_debian/'
+    FDO_BASE_IMAGE: "quay.io/toolbx-images/debian-toolbox:12"
+    FDO_DISTRIBUTION_VERSION: '12'
+    FDO_REPO_SUFFIX: "$DEBIAN_AMD64_SUFFIX"
+    FDO_DISTRIBUTION_TAG: "$DEBIAN_TAG-$GST_UPSTREAM_BRANCH"
+    FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/debian/prepare.sh'
+
+debian amd64 docker:
+  extends:
+    - '.debian image'
+    - '.fdo.container-build@debian'
   stage: 'preparation'
   needs: []
   # Note: assumption is that placeholder jobs run on a packet runner
@@ -264,7 +285,6 @@ commitlint:
     CCACHE_COMPILERCHECK: 'content'
     CCACHE_COMPRESS: 'true'
     CCACHE_BASEDIR: '/cache/gstreamer/gstreamer'
-    CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache/'
     # shared across everything really
     CCACHE_MAXSIZE: '10G'
 
@@ -329,15 +349,10 @@ commitlint:
     - changes:
         - subprojects/gstreamer-vaapi/**/*
 
-.build fedora x86_64:
+.build simple:
   extends:
-    - '.fedora image'
-    - '.fdo.suffixed-image@fedora'
     - '.build'
     - '.build_ccache_vars'
-  needs:
-    - "trigger"
-    - "fedora amd64 docker"
   variables:
     GST_WERROR: "true"
     MESON_ARGS: "${SIMPLE_BUILD}"
@@ -349,6 +364,15 @@ commitlint:
     - G_DEBUG=fatal_criticals ./gst-env.py gst-inspect-1.0 --print-all --gst-disable-registry-fork > /dev/null
     - meson install --destdir $CI_PROJECT_DIR/destdir -C build
     - rm -rf $CI_PROJECT_DIR/destdir
+
+.build fedora x86_64:
+  extends:
+    - '.fedora image'
+    - '.fdo.suffixed-image@fedora'
+    - '.build simple'
+  needs:
+    - "trigger"
+    - "fedora amd64 docker"
 
 build fedora gcc:
   extends: '.build fedora x86_64'
@@ -404,6 +428,18 @@ build fedora clang:
           -Ddoc=disabled
           -Dgstreamer-sharp:tests=disabled
           --force-fallback-for=glib
+
+build debian x86_64:
+  extends:
+    - '.debian image'
+    - '.fdo.suffixed-image@debian'
+    - '.build simple'
+  needs:
+    - "trigger"
+    - "debian amd64 docker"
+  variables:
+    BUILD_TYPE: "--default-library=shared"
+    BUILD_GST_DEBUG: "-Dgstreamer:gst_debug=true"
 
 .build windows:
   image: $WINDOWS_IMAGE

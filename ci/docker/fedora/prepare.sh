@@ -12,8 +12,8 @@ bash ./ci/docker/fedora/install-gdk-pixbuf.sh
 
 bash ./ci/docker/fedora/install-wayland-protocols.sh
 
-bash ./ci/docker/fedora/install-rust.sh
+bash ./ci/scripts/install-rust.sh
 
 bash ./ci/docker/fedora/virtme-fluster-setup.sh
 
-bash ./ci/docker/fedora/create-subprojects-cache.sh
+bash ./ci/scripts/create-subprojects-cache.sh
