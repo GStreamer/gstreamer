@@ -211,7 +211,6 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
   GstMemory *mem;
   GstD3D11Memory *dmem;
   D3D11_TEXTURE2D_DESC desc;
-  gboolean use_keyed_mutex = FALSE;
 
   device_handle = gst_d3d11_device_get_device_handle (device);
 
@@ -234,16 +233,9 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     return FALSE;
 
   texture->GetDesc (&desc);
-  use_keyed_mutex = (desc.MiscFlags & D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX) ==
+  data->use_keyed_mutex =
+      (desc.MiscFlags & D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX) ==
       D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-
-  if (use_keyed_mutex) {
-    hr = texture->QueryInterface (IID_PPV_ARGS (&keyed_mutex));
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (window, "Keyed mutex is unavailable");
-      return FALSE;
-    }
-  }
 
   mem = gst_d3d11_allocator_alloc_wrapped (nullptr,
       device, texture.Get (), desc.Width * desc.Height * 4, nullptr, nullptr);
@@ -260,23 +252,12 @@ gst_d3d11_window_dummy_open_shared_handle (GstD3D11Window * window,
     return FALSE;
   }
 
-  if (keyed_mutex) {
-    hr = keyed_mutex->AcquireSync (data->acquire_key, INFINITE);
-    if (!gst_d3d11_result (hr, device)) {
-      GST_ERROR_OBJECT (window, "Couldn't acquire sync");
-      gst_memory_unref (mem);
-      return FALSE;
-    }
-  }
-
   /* Everything is prepared now */
   gst_d3d11_window_dummy_on_resize (window, desc.Width, desc.Height);
 
   /* Move owned resources */
   data->render_target = gst_buffer_new ();
   gst_buffer_append_memory (data->render_target, mem);
-  if (keyed_mutex)
-    data->keyed_mutex = keyed_mutex.Detach ();
 
   return TRUE;
 }
@@ -287,15 +268,9 @@ gst_d3d11_window_dummy_release_shared_handle (GstD3D11Window * window,
 {
   GstD3D11WindowDummy *self = GST_D3D11_WINDOW_DUMMY (window);
   GstD3D11Device *device = window->device;
-  HRESULT hr;
 
   /* TODO: cache owned resource for the later reuse? */
-  if (data->keyed_mutex) {
-    hr = data->keyed_mutex->ReleaseSync (data->release_key);
-    gst_d3d11_result (hr, device);
-
-    GST_D3D11_CLEAR_COM (data->keyed_mutex);
-  } else {
+  if (!data->use_keyed_mutex) {
     /* If keyed mutex is not used, let's handle sync manually by using
      * fence. Issued GPU commands might not be finished yet */
 

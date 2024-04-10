@@ -66,9 +66,9 @@ typedef struct
   guint texture_misc_flags;
   guint64 acquire_key;
   guint64 release_key;
+  gboolean use_keyed_mutex;
 
   GstBuffer *render_target;
-  IDXGIKeyedMutex *keyed_mutex;
 } GstD3D11WindowSharedHandleData;
 
 struct _GstD3D11Window

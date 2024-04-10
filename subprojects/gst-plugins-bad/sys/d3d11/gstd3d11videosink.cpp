@@ -346,6 +346,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    * - DXGI_FORMAT_R10G10B10A2_UNORM
    *
    * Since: 1.20
+   *
+   * Deprecated, Use appsink to access GStreamer produced D3D11 texture
    */
   g_object_class_install_property (gobject_class, PROP_DRAW_ON_SHARED_TEXTURE,
       g_param_spec_boolean ("draw-on-shared-texture",
@@ -573,6 +575,8 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    * #d3d11videosink::begin-draw signal handler.
    *
    * Since: 1.20
+   *
+   * Deprecated, Use appsink to access GStreamer produced D3D11 texture
    */
   gst_d3d11_video_sink_signals[SIGNAL_BEGIN_DRAW] =
       g_signal_new ("begin-draw", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -597,6 +601,11 @@ gst_d3d11_video_sink_class_init (GstD3D11VideoSinkClass * klass)
    * @acquire_key and @release_key will be ignored.
    *
    * Since: 1.20
+   *
+   * As of 1.24, @acquire_key and @release_key must be zero. Other values are
+   * not supported.
+   *
+   * Deprecated, Use appsink to access GStreamer produced D3D11 texture
    */
   gst_d3d11_video_sink_signals[SIGNAL_DRAW] =
       g_signal_new ("draw", G_TYPE_FROM_CLASS (klass),
@@ -1841,6 +1850,11 @@ gst_d3d11_video_sink_draw_action (GstD3D11VideoSink * self,
 
   if (!shared_handle) {
     GST_ERROR_OBJECT (self, "Invalid handle");
+    return FALSE;
+  }
+
+  if (acquire_key != 0 || release_key != 0) {
+    GST_ERROR_OBJECT (self, "Non zero mutex key value is not supported");
     return FALSE;
   }
 
