@@ -155,6 +155,11 @@ struct _GstHLSDemuxStream
   GstClockTime presentation_offset;
 
   gboolean pdt_tag_sent;
+
+  /* The next segment needs to have the discont flag set on it. This is set when
+   * a playlist update was detected as not being continuous/contiguous with the
+   * previous one. */
+  gboolean pending_discont;
 };
 
 GstFlowReturn

@@ -1291,36 +1291,47 @@ gst_hls_demux_stream_handle_playlist_update (GstHLSDemuxStream * stream,
     const gchar * new_playlist_uri, GstHLSMediaPlaylist * new_playlist)
 {
   GstHLSDemux *demux = GST_HLS_DEMUX_STREAM_GET_DEMUX (stream);
+  gboolean found_segment_discont = FALSE;
 
   /* Synchronize playlist with previous one. If we can't update the playlist
    * timing and inform the base class that we lost sync */
-  if (stream->playlist
-      && !gst_hls_media_playlist_sync_to_playlist (new_playlist,
-          stream->playlist)) {
-    /* Failure to synchronize with the previous media playlist is only fatal for
-     * variant streams. */
-    if (stream->is_variant) {
-      GST_DEBUG_OBJECT (stream,
-          "Could not synchronize new variant playlist with previous one !");
-      goto lost_sync;
-    }
+  if (stream->playlist) {
+    if (!gst_hls_media_playlist_sync_to_playlist (new_playlist,
+            stream->playlist, &found_segment_discont)) {
+      /* Failure to synchronize with the previous media playlist is only fatal for
+       * variant streams. */
+      if (stream->is_variant) {
+        GST_DEBUG_OBJECT (stream,
+            "Could not synchronize new variant playlist with previous one !");
+        goto lost_sync;
+      }
 
-    /* For rendition streams, we can attempt synchronization against the
-     * variant playlist which is constantly updated */
-    if (demux->main_stream->playlist
-        && !gst_hls_media_playlist_sync_to_playlist (new_playlist,
-            demux->main_stream->playlist)) {
-      GST_DEBUG_OBJECT (stream,
-          "Could not do fallback synchronization of rendition stream to variant stream");
-      goto lost_sync;
+      /* For rendition streams, we can attempt synchronization against the
+       * variant playlist which is constantly updated */
+      if (demux->main_stream->playlist
+          && !gst_hls_media_playlist_sync_to_playlist (new_playlist,
+              demux->main_stream->playlist, &found_segment_discont)) {
+        GST_DEBUG_OBJECT (stream,
+            "Could not do fallback synchronization of rendition stream to variant stream");
+        goto lost_sync;
+      }
     }
-  } else if (!stream->is_variant && demux->main_stream->playlist) {
-    /* For initial rendition media playlist, attempt to synchronize the playlist
-     * against the variant stream. This is non-fatal if it fails. */
-    GST_DEBUG_OBJECT (stream,
-        "Attempting to synchronize initial rendition stream with variant stream");
-    gst_hls_media_playlist_sync_to_playlist (new_playlist,
-        demux->main_stream->playlist);
+  } else {
+    found_segment_discont = TRUE;
+    if (!stream->is_variant && demux->main_stream->playlist) {
+      /* For initial rendition media playlist, attempt to synchronize the playlist
+       * against the variant stream. This is non-fatal if it fails. */
+      GST_DEBUG_OBJECT (stream,
+          "Attempting to synchronize initial rendition stream with variant stream");
+      gst_hls_media_playlist_sync_to_playlist (new_playlist,
+          demux->main_stream->playlist, NULL);
+    }
+  }
+
+  GST_DEBUG_OBJECT (stream, "Synchronized playlist. Update is discont : %d",
+      found_segment_discont);
+  if (found_segment_discont) {
+    stream->pending_discont = TRUE;
   }
 
   if (stream->current_segment) {
@@ -1665,12 +1676,14 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
         hlsdemux_stream->part_idx, GST_STIME_ARGS (part->stream_time));
     discont = stream->discont;
     /* Use the segment discont flag only on the first partial segment */
-    if (file->discont && hlsdemux_stream->part_idx == 0)
+    if ((hlsdemux_stream->pending_discont || file->discont)
+        && hlsdemux_stream->part_idx == 0)
       discont = TRUE;
   } else {
     GST_DEBUG_OBJECT (stream, "Current segment stream_time %" GST_STIME_FORMAT,
         GST_STIME_ARGS (file->stream_time));
-    discont = file->discont || stream->discont;
+    discont = file->discont || stream->discont
+        || hlsdemux_stream->pending_discont;
   }
 
   gboolean need_header = GST_ADAPTIVE_DEMUX2_STREAM_NEED_HEADER (stream);
@@ -1747,6 +1760,7 @@ gst_hls_demux_stream_update_fragment_info (GstAdaptiveDemux2Stream * stream)
 
   if (discont)
     stream->discont = TRUE;
+  hlsdemux_stream->pending_discont = FALSE;
 
   return ret;
 }

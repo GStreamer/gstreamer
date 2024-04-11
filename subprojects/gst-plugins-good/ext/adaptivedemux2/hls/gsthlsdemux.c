@@ -1108,8 +1108,7 @@ gst_hls_demux_handle_variant_playlist_update (GstHLSDemux * demux,
                   main_uri, "uri", G_TYPE_STRING,
                   uri, "bitrate", G_TYPE_INT, new_bandwidth, NULL)));
 
-      /* Mark discont on the next packet after switching variant */
-      GST_ADAPTIVE_DEMUX2_STREAM (demux->main_stream)->discont = TRUE;
+      GST_DEBUG_OBJECT (demux, "Changed variant");
     }
   }
 
