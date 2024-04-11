@@ -2189,16 +2189,24 @@ gst_hls_media_playlist_get_starting_segment (GstHLSMediaPlaylist * self,
  * This should be used when a reference media segment couldn't be matched in the
  * playlist, but we still want to carry over the information from a reference
  * playlist to an updated one. This can happen with live playlists where the
- * reference media segment is no longer present but the playlists intersect */
+ * reference media segment is no longer present but the playlists intersect
+ *
+ * If the sync is sucessfull, discont will be set to TRUE if it was a perfect
+ * URI fragment match, else it will be FALSE (ex: match was done on PDT or
+ * SN/DSN).
+ **/
 gboolean
 gst_hls_media_playlist_sync_to_playlist (GstHLSMediaPlaylist * playlist,
-    GstHLSMediaPlaylist * reference)
+    GstHLSMediaPlaylist * reference, gboolean * discont)
 {
   GstM3U8MediaSegment *res = NULL;
   GstM3U8MediaSegment *cand = NULL;
   guint idx;
   gboolean is_before;
   gboolean matched_pdt = FALSE;
+
+  if (discont)
+    *discont = FALSE;
 
   g_return_val_if_fail (playlist && reference, FALSE);
 
@@ -2227,6 +2235,13 @@ retry_without_dsn:
     }
     GST_WARNING ("Could not synchronize media playlists");
     return FALSE;
+  }
+
+  if (discont) {
+    /* If not a perfect match, mark as such */
+    GST_DEBUG ("Checking match uri cand: %s", cand->uri);
+    GST_DEBUG ("Checking match uri res : %s", res->uri);
+    *discont = g_strcmp0 (res->uri, cand->uri) != 0;
   }
 
   /* Carry over reference stream time */
