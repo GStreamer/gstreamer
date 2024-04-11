@@ -325,6 +325,8 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
       GST_TRACE ("old buffer %p was not bound yet, unreffing", old_buffer);
       gst_buffer_unref (old_buffer);
     } else {
+      texNode->markDirty(QSGNode::DirtyMaterial);
+
       GstBuffer *tmp_buffer;
 
       GST_TRACE ("old buffer %p was bound, queueing up for later", old_buffer);
