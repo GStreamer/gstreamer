@@ -1448,6 +1448,7 @@ lost_sync:
     stream->playlist = new_playlist;
     stream->playlist = gst_hls_media_playlist_ref (new_playlist);
     stream->playlist_fetched = TRUE;
+    stream->pending_discont = TRUE;
 
     gst_hls_demux_reset_for_lost_sync (demux);
   }
