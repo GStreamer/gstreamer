@@ -20,7 +20,9 @@
  */
 
 /**
- * SECTION:qml6glsrc
+ * SECTION:element-qml6glsrc
+ *
+ * A video src that captures a window from a QML view.
  *
  * Since: 1.24
  */

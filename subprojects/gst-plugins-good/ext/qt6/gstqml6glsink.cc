@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstqml6glsink
+ * SECTION:element-qml6glsink
  *
  * qml6glsink provides a way to render a video stream as a Qml object inside
  * the Qml scene graph.  This is achieved by providing the incoming OpenGL
@@ -67,6 +67,8 @@
  * return the exact same #GstGLDisplay object while the pipeline is running
  * regardless of whether any `qml6glsink` or `qml6gloverlay` elements are
  * added or removed from the pipeline.
+ *
+ * Since: 1.22
  */
 
 #ifdef HAVE_CONFIG_H

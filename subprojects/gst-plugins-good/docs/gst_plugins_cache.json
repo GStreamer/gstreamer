@@ -12020,6 +12020,301 @@
         "tracers": {},
         "url": "Unknown package origin"
     },
+    "qml6": {
+        "description": "Qt6 Qml plugin",
+        "elements": {
+            "qml6glmixer": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "A mixer that renders a QML scene",
+                "hierarchy": [
+                    "GstQml6GLMixer",
+                    "GstGLMixer",
+                    "GstGLBaseMixer",
+                    "GstVideoAggregator",
+                    "GstAggregator",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Video/QML/Mixer",
+                "pad-templates": {
+                    "sink_%%u": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, YV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "sink",
+                        "presence": "request",
+                        "type": "GstQml6GLMixerPad"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always",
+                        "type": "GstAggregatorPad"
+                    }
+                },
+                "properties": {
+                    "qml-scene": {
+                        "blurb": "The contents of the QML scene",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "root-item": {
+                        "blurb": "The root QQuickItem from the qml-scene used to render",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gpointer",
+                        "writable": false
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "qml-scene-destroyed": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "qml-scene-initialized": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
+            "qml6gloverlay": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "A filter that renders a QML scene onto a video stream",
+                "hierarchy": [
+                    "GstQml6GLOverlay",
+                    "GstGLFilter",
+                    "GstGLBaseFilter",
+                    "GstBaseTransform",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Filter/QML/Overlay",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(ANY):\n         format: { RGBA, BGRA, YV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "qml-scene": {
+                        "blurb": "The contents of the QML scene",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "NULL",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gchararray",
+                        "writable": true
+                    },
+                    "root-item": {
+                        "blurb": "The root QQuickItem from the qml-scene used to render",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gpointer",
+                        "writable": false
+                    },
+                    "widget": {
+                        "blurb": "The QQuickItem to place the input video in the object hierarchy",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gpointer",
+                        "writable": true
+                    }
+                },
+                "rank": "none",
+                "signals": {
+                    "qml-scene-destroyed": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    },
+                    "qml-scene-initialized": {
+                        "args": [],
+                        "return-type": "void",
+                        "when": "last"
+                    }
+                }
+            },
+            "qml6glsink": {
+                "author": "Matthew Waters <matthew@centricular.com>",
+                "description": "A video sink that renders to a QQuickItem for Qt6",
+                "hierarchy": [
+                    "GstQml6GLSink",
+                    "GstVideoSink",
+                    "GstBaseSink",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "interfaces": [
+                    "GstNavigation"
+                ],
+                "klass": "Sink/Video",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGB, YV12, NV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "force-aspect-ratio": {
+                        "blurb": "When enabled, scaling will respect original aspect ratio",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "pixel-aspect-ratio": {
+                        "blurb": "The pixel aspect ratio of the device",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0/1",
+                        "max": "2147483647/1",
+                        "min": "0/1",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstFraction",
+                        "writable": true
+                    },
+                    "widget": {
+                        "blurb": "The QQuickItem to place in the object hierarchy",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gpointer",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            },
+            "qml6glsrc": {
+                "author": "Multimedia Team <shmmmw@freescale.com>",
+                "description": "A video src that captures a window from a QML view",
+                "hierarchy": [
+                    "GstQml6GLSrc",
+                    "GstPushSrc",
+                    "GstBaseSrc",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Source/Video",
+                "pad-templates": {
+                    "src": {
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: RGBA\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "properties": {
+                    "use-default-fbo": {
+                        "blurb": "When set it will not create a new FBO for the QML render thread",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
+                    "window": {
+                        "blurb": "The QQuickWindow to place in the object hierarchy",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gpointer",
+                        "writable": true
+                    }
+                },
+                "rank": "none"
+            }
+        },
+        "filename": "gstqml6",
+        "license": "LGPL",
+        "other-types": {
+            "GstQml6GLMixerPad": {
+                "hierarchy": [
+                    "GstQml6GLMixerPad",
+                    "GstGLMixerPad",
+                    "GstGLBaseMixerPad",
+                    "GstVideoAggregatorPad",
+                    "GstAggregatorPad",
+                    "GstPad",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "kind": "object",
+                "properties": {
+                    "widget": {
+                        "blurb": "The QQuickItem to place the input video in the object hierarchy",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gpointer",
+                        "writable": true
+                    }
+                }
+            }
+        },
+        "package": "GStreamer Good Plug-ins",
+        "source": "gst-plugins-good",
+        "tracers": {},
+        "url": "Unknown package origin"
+    },
     "qmlgl": {
         "description": "Qt gl plugin",
         "elements": {

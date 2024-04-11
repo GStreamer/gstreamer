@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstqml6gmixer
+ * SECTION:element-qml6glmixer
  *
  * `qml6glmixer` provides a way to render an almost-arbitrary QML scene within
  * GStreamer pipeline using the same OpenGL context that GStreamer uses
@@ -72,6 +72,8 @@
  *
  * The Qml scene will run at configured output framerate.  The timestamps on the
  * output buffers are used to drive the animation time.
+ *
+ * Since: 1.24
  */
 
 #ifdef HAVE_CONFIG_H
@@ -361,6 +363,8 @@ gst_qml6_gl_mixer_class_init (GstQml6GLMixerClass * klass)
       &src_factory, GST_TYPE_AGGREGATOR_PAD);
   gst_element_class_add_static_pad_template_with_gtype (element_class,
       &sink_factory, GST_TYPE_QML6_GL_MIXER_PAD);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_QML6_GL_MIXER_PAD, (GstPluginAPIFlags) 0);
 }
 
 static void
