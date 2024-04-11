@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstqtoverlay
+ * SECTION:element-qmlgloverlay
  *
  * qmlgloverlay provides a way to render an almost-arbitrary QML scene within
  * GStreamer pipeline using the same OpenGL context that GStreamer uses

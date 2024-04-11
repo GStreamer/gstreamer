@@ -730,7 +730,7 @@ QtGLVideoItem::onSceneGraphInvalidated ()
   GST_FIXME ("%p scene graph invalidated", this);
 }
 
-/**
+/*
  * Retrieve and populate the GL context information from the current
  * OpenGL context.
  */

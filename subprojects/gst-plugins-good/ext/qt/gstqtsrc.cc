@@ -19,8 +19,9 @@
  */
 
 /**
- * SECTION:qmlglsrc
+ * SECTION:element-qmlglsrc
  *
+ * A video src that captures a window from a QML view.
  */
 
 #ifdef HAVE_CONFIG_H

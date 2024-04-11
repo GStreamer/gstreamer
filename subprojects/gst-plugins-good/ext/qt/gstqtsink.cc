@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstqtsink
+ * SECTION:element-qmlglsink
  *
  * qmlglsink provides a way to render a video stream as a Qml object inside
  * the Qml scene graph.  This is achieved by providing the incoming OpenGL
