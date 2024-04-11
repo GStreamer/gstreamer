@@ -648,14 +648,14 @@ gst_adaptive_demux2_stream_push_buffer (GstAdaptiveDemux2Stream * stream,
       if (demux->have_group_id)
         gst_event_set_group_id (stream_start, demux->group_id);
     }
+    stream->first_fragment_buffer = FALSE;
+
+    if (stream->discont) {
+      discont = TRUE;
+      stream->discont = FALSE;
+    }
   } else {
     GST_BUFFER_PTS (buffer) = GST_CLOCK_TIME_NONE;
-  }
-  stream->first_fragment_buffer = FALSE;
-
-  if (stream->discont) {
-    discont = TRUE;
-    stream->discont = FALSE;
   }
 
   if (discont) {
