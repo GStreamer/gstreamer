@@ -1307,6 +1307,11 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
         /* FU-B      Fragmentation unit                 5.8 */
         gboolean S, E;
 
+        guint fu_hdr_size = (nal_unit_type == 28) ? 2 : 4;
+
+        if (payload_len < fu_hdr_size)
+          goto short_payload;
+
         /* +---------------+
          * |0|1|2|3|4|5|6|7|
          * +-+-+-+-+-+-+-+-+
@@ -1344,9 +1349,9 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           /* reconstruct NAL header */
           nal_header = (payload[0] & 0xe0) | (payload[1] & 0x1f);
 
-          /* Strip type header, FU header */
-          payload += 2;
-          payload_len -= 2;
+          /* Strip type header, FU header, and FU-B DON (if present) */
+          payload += fu_hdr_size;
+          payload_len -= fu_hdr_size;
 
           nalu_size = 1 + payload_len;
           outsize = nalu_size + sizeof (sync_bytes);
@@ -1387,9 +1392,9 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
           }
           rtph264depay->last_fu_seqnum = gst_rtp_buffer_get_seq (rtp);
 
-          /* strip off FU indicator and FU header bytes */
-          payload += 2;
-          payload_len -= 2;
+          /* strip off FU indicator, FU header bytes and FU-B DON (if present) */
+          payload += fu_hdr_size;
+          payload_len -= fu_hdr_size;
 
           outsize = payload_len;
           outbuf = gst_buffer_new_and_alloc (outsize);
@@ -1446,6 +1451,12 @@ gst_rtp_h264_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
 empty_packet:
   {
     GST_DEBUG_OBJECT (rtph264depay, "empty packet");
+    gst_rtp_base_depayload_dropped (depayload);
+    return NULL;
+  }
+short_payload:
+  {
+    GST_DEBUG_OBJECT (rtph264depay, "short payload");
     gst_rtp_base_depayload_dropped (depayload);
     return NULL;
   }
