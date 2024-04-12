@@ -29,7 +29,8 @@ if pythonver.version_compare('<3.0')
   error('Python2 is not supported anymore, please port your code to python3 (@0@ specified)'.format(python.language_version()))
 endif
 
-python_dep = python.dependency(embed:true, required : true)
+python_embed_dep = python.dependency(embed: true, required: true)
+python_dep = python.dependency(embed: false, required: true)
 
 python_abi_flags = python.get_variable('ABIFLAGS', '')
 pylib_loc = get_option('libpython-dir')
