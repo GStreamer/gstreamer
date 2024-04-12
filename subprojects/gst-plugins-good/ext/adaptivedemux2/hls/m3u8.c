@@ -417,7 +417,7 @@ gst_hls_media_playlist_new (const gchar * uri, const gchar * base_uri)
   m3u8->targetduration = GST_CLOCK_TIME_NONE;
   m3u8->partial_targetduration = GST_CLOCK_TIME_NONE;
   m3u8->media_sequence = 0;
-  m3u8->discont_sequence = 0;
+  m3u8->discont_sequence = -1;
   m3u8->endlist = FALSE;
   m3u8->i_frame = FALSE;
   m3u8->allowcache = TRUE;
@@ -1242,6 +1242,9 @@ gst_hls_media_playlist_parse (gchar * data,
     gst_hls_media_playlist_unref (self);
     return NULL;
   }
+
+  if (!self->has_ext_x_dsn)
+    self->discont_sequence = 0;
 
   /* Now go over the parsed data to ensure MSN and/or PDT are set */
   if (self->ext_x_pdt_present)
