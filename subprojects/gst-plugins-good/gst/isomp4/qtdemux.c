@@ -11623,7 +11623,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             guint16 primaries = GST_READ_UINT16_BE (colr_data + 12);
             guint16 transfer_function = GST_READ_UINT16_BE (colr_data + 14);
             guint16 matrix = GST_READ_UINT16_BE (colr_data + 16);
-            gboolean full_range = len == 19 ? colr_data[17] >> 7 : FALSE;
+            gboolean full_range = len == 19 ? colr_data[18] >> 7 : FALSE;
 
             CUR_STREAM (stream)->colorimetry.primaries =
                 gst_video_color_primaries_from_iso (primaries);
