@@ -208,6 +208,7 @@ print_keyboard_help (void)
     "p", "Decrease QP-P (only in CQP)"}, {
     "B", "Increase QP-B (only in CQP)"}, {
     "b", "Decrease QP-B (only in CQP)"}, {
+    "f", "Force to set a key frame"}, {
     "k", "show keyboard shortcuts"}
   };
   /* *INDENT-ON* */
@@ -412,6 +413,13 @@ keyboard_cb (gchar input, gboolean is_ascii, gpointer user_data)
         qpb -= 1;
         if (qpb >= 0)
           g_object_set (data->encoder, "qpb", qpb, NULL);
+        break;
+      }
+      case 'f':{
+        GstEvent *event = gst_video_event_new_upstream_force_key_unit
+            (GST_CLOCK_TIME_NONE, TRUE, 0);
+        gst_println ("Sending force keyunit event");
+        gst_element_send_event (data->encoder, event);
         break;
       }
       default:
