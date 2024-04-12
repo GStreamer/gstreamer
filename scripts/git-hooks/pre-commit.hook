@@ -7,23 +7,29 @@
 # On some *bsd systems the binary seems to be called gnunindent,
 # so check for that first.
 
-version=$(gnuindent --version 2>/dev/null)
+
+version=$(gst-indent-1.0 --version 2>/dev/null)
 if test -z "$version"; then
-  version=$(gindent --version 2>/dev/null)
+  version=$(gnuindent --version 2>/dev/null)
   if test -z "$version"; then
-    version=$(indent --version 2>/dev/null)
+    version=$(gindent --version 2>/dev/null)
     if test -z "$version"; then
-      echo "GStreamer git pre-commit hook:"
-      echo "Did not find GNU indent, please install it before continuing."
-      exit 1
+      version=$(indent --version 2>/dev/null)
+      if test -z "$version"; then
+        echo "GStreamer git pre-commit hook:"
+        echo "Did not find GNU indent, please install it before continuing."
+        exit 1
+      else
+        INDENT=indent
+      fi
     else
-      INDENT=indent
+      INDENT=gindent
     fi
   else
-    INDENT=gindent
+    INDENT=gnuindent
   fi
 else
-  INDENT=gnuindent
+  INDENT=gst-indent-1.o
 fi
 
 case $($INDENT --version) in
