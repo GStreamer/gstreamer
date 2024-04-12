@@ -5192,10 +5192,12 @@ add_simulcast_audio_test_src_harness (GstHarness * h, guint n_rid,
       g_signal_emit_by_name (payloader, "add-extension", ext);
       gst_clear_object (&ext);
     }
-    if (n_rid > 0 && stream_ext_id != G_MAXUINT) {
-      ext = gst_rtp_header_extension_create_from_uri (RTPHDREXT_STREAM_ID);
+    if (n_rid > 0 && repaired_ext_id != G_MAXUINT) {
+      ext =
+          gst_rtp_header_extension_create_from_uri
+          (RTPHDREXT_REPAIRED_STREAM_ID);
       fail_unless (ext);
-      gst_rtp_header_extension_set_id (ext, stream_ext_id);
+      gst_rtp_header_extension_set_id (ext, repaired_ext_id);
       g_object_set (ext, "rid", rid, NULL);
       g_signal_emit_by_name (payloader, "add-extension", ext);
       gst_clear_object (&ext);
