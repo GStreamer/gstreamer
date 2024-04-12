@@ -36,7 +36,8 @@ if pythonver.version_compare('<3.7')
 endif
 
 
-python_dep = python.dependency(embed: true, required: true)
+python_embed_dep = python.dependency(embed: true, required: true)
+python_dep = python.dependency(embed: false, required: true)
 
 python_abi_flags = python.get_variable('ABIFLAGS', '')
 message(f'python_abi_flags = @python_abi_flags@')
