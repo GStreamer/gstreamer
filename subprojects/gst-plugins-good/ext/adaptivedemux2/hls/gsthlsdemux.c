@@ -917,6 +917,34 @@ gst_hls_time_map_free (GstHLSTimeMap * map)
 }
 
 void
+gst_time_map_set_values (GstHLSTimeMap * map, GstClockTimeDiff stream_time,
+    GstClockTime internal_time, GDateTime * pdt)
+{
+  GstClockTime offset = 0;
+
+  if (stream_time < 0) {
+    offset = -stream_time;
+    stream_time = 0;
+    /* Handle negative stream times. This can happen for example when the server
+     * returns an older playlist.
+     *
+     * Shift the values accordingly to end up with non-negative reference stream
+     * time */
+    GST_DEBUG ("Shifting values before storage (offset : %" GST_TIME_FORMAT ")",
+        GST_TIME_ARGS (offset));
+  }
+
+  map->stream_time = stream_time;
+  map->internal_time = internal_time;
+  if (pdt) {
+    if (offset)
+      map->pdt = g_date_time_add (pdt, offset / GST_USECOND);
+    else
+      map->pdt = g_date_time_ref (pdt);
+  }
+}
+
+void
 gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
     GstClockTimeDiff stream_time, GDateTime * pdt)
 {
@@ -925,7 +953,6 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
 #endif
   GstHLSTimeMap *map;
   GList *tmp;
-  GstClockTime offset = 0;
 
   /* Check if we don't already have a mapping for the given dsn */
   for (tmp = demux->mappings; tmp; tmp = tmp->next) {
@@ -955,28 +982,9 @@ gst_hls_demux_add_time_mapping (GstHLSDemux * demux, gint64 dsn,
   g_free (datestring);
 #endif
 
-  if (stream_time < 0) {
-    offset = -stream_time;
-    stream_time = 0;
-    /* Handle negative stream times. This can happen for example when the server
-     * returns an older playlist.
-     *
-     * Shift the values accordingly to end up with non-negative reference stream
-     * time */
-    GST_DEBUG_OBJECT (demux,
-        "Shifting values before storage (offset : %" GST_TIME_FORMAT ")",
-        GST_TIME_ARGS (offset));
-  }
-
   map = gst_hls_time_map_new ();
   map->dsn = dsn;
-  map->stream_time = stream_time;
-  if (pdt) {
-    if (offset)
-      map->pdt = g_date_time_add (pdt, offset / GST_USECOND);
-    else
-      map->pdt = g_date_time_ref (pdt);
-  }
+  gst_time_map_set_values (map, stream_time, GST_CLOCK_TIME_NONE, pdt);
 
   demux->mappings = g_list_append (demux->mappings, map);
 }
