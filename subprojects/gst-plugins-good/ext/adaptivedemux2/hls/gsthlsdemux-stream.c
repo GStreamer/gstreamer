@@ -627,7 +627,9 @@ gst_hlsdemux_stream_handle_internal_time (GstHLSDemuxStream * hls_stream,
       GST_WARNING_OBJECT (hls_stream,
           "Could not find a replacement stream, carrying on with segment");
       stream->discont = TRUE;
-      stream->fragment.stream_time = real_stream_time;
+      stream->fragment.stream_time = current_stream_time;
+      gst_time_map_set_values (map, current_stream_time, internal_time,
+          hls_stream->current_segment->datetime);
     }
   }
 
