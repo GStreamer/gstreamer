@@ -1049,8 +1049,14 @@ gst_d3d12_memory_get_d3d11_texture (GstD3D12Memory * mem,
 }
 
 /* GstD3D12Allocator */
+struct _GstD3D12AllocatorPrivate
+{
+  GstMemoryCopyFunction fallback_copy;
+};
+
 #define gst_d3d12_allocator_parent_class alloc_parent_class
-G_DEFINE_TYPE (GstD3D12Allocator, gst_d3d12_allocator, GST_TYPE_ALLOCATOR);
+G_DEFINE_TYPE_WITH_PRIVATE (GstD3D12Allocator,
+    gst_d3d12_allocator, GST_TYPE_ALLOCATOR);
 
 static GstMemory *gst_d3d12_allocator_dummy_alloc (GstAllocator * allocator,
     gsize size, GstAllocationParams * params);
@@ -1071,15 +1077,92 @@ gst_d3d12_allocator_class_init (GstD3D12AllocatorClass * klass)
   allocator_class->free = gst_d3d12_allocator_free;
 }
 
-static void
-gst_d3d12_allocator_init (GstD3D12Allocator * allocator)
+static GstMemory *
+gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
 {
-  GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
+  auto self = GST_D3D12_ALLOCATOR (mem->allocator);
+  auto priv = self->priv;
+  auto dmem = GST_D3D12_MEMORY_CAST (mem);
+
+  /* non-zero offset or different size is not supported */
+  if (offset != 0 || (size != -1 && (gsize) size != mem->size)) {
+    GST_DEBUG_OBJECT (self, "Different size/offset, try fallback copy");
+    return priv->fallback_copy (mem, offset, size);
+  }
+
+  GstMapInfo info;
+  if (!gst_memory_map (mem, &info, GST_MAP_READ_D3D12)) {
+    GST_WARNING_OBJECT (self, "Failed to map memory, try fallback copy");
+    return priv->fallback_copy (mem, offset, size);
+  }
+
+  GstMemory *dst = nullptr;
+  /* Try pool allocator first */
+  if (GST_IS_D3D12_POOL_ALLOCATOR (self)) {
+    auto pool = GST_D3D12_POOL_ALLOCATOR (self);
+    gst_d3d12_pool_allocator_acquire_memory (pool, &dst);
+  }
+
+  auto src_tex = (ID3D12Resource *) info.data;
+  if (!dst) {
+    D3D12_RESOURCE_DESC desc;
+    D3D12_HEAP_PROPERTIES heap_props;
+    D3D12_HEAP_FLAGS heap_flags;
+
+    desc = GetDesc (src_tex);
+    desc.DepthOrArraySize = 1;
+    src_tex->GetHeapProperties (&heap_props, &heap_flags);
+    dst = gst_d3d12_allocator_alloc_internal (nullptr, dmem->device,
+        &heap_props, heap_flags, &desc, D3D12_RESOURCE_STATE_COMMON, nullptr);
+  }
+
+  if (!dst) {
+    GST_ERROR_OBJECT (self, "Couldn't allocate texture");
+    gst_memory_unmap (mem, &info);
+    return priv->fallback_copy (mem, offset, size);
+  }
+
+  std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
+  auto dst_dmem = GST_D3D12_MEMORY_CAST (dst);
+  auto dst_priv = dst_dmem->priv;
+  auto mem_priv = dmem->priv;
+  for (guint i = 0; i < mem_priv->num_subresources; i++) {
+    GstD3D12CopyTextureRegionArgs args;
+    memset (&args, 0, sizeof (args));
+
+    args.dst = CD3DX12_TEXTURE_COPY_LOCATION (dst_priv->resource.Get (),
+        dst_priv->subresource_index[i]);
+    args.src = CD3DX12_TEXTURE_COPY_LOCATION (mem_priv->resource.Get (),
+        mem_priv->subresource_index[i]);
+    copy_args.push_back (args);
+  }
+
+  gst_d3d12_device_copy_texture_region (dmem->device,
+      copy_args.size (), copy_args.data (), D3D12_COMMAND_LIST_TYPE_DIRECT,
+      &dst_dmem->fence_value);
+  gst_memory_unmap (mem, &info);
+
+  GST_MINI_OBJECT_FLAG_SET (dst, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+
+  return dst;
+}
+
+static void
+gst_d3d12_allocator_init (GstD3D12Allocator * self)
+{
+  GstAllocator *alloc = GST_ALLOCATOR_CAST (self);
+
+  self->priv = (GstD3D12AllocatorPrivate *)
+      gst_d3d12_allocator_get_instance_private (self);
 
   alloc->mem_type = GST_D3D12_MEMORY_NAME;
   alloc->mem_map_full = gst_d3d12_memory_map_full;
   alloc->mem_unmap_full = gst_d3d12_memory_unmap_full;
   alloc->mem_share = gst_d3d12_memory_share;
+
+  /* Store pointer to default mem_copy method for fallback copy */
+  self->priv->fallback_copy = alloc->mem_copy;
+  alloc->mem_copy = gst_d3d12_memory_copy;
 
   GST_OBJECT_FLAG_SET (alloc, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
