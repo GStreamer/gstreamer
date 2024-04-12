@@ -537,8 +537,8 @@ gst_hlsdemux_stream_handle_internal_time (GstHLSDemuxStream * hls_stream,
     if (hls_stream->parser_type == GST_HLS_PARSER_ISOBMFF)
       hls_stream->presentation_offset = internal_time - current_stream_time;
 
-    map->stream_time = current_stream_time;
-    map->internal_time = internal_time;
+    gst_time_map_set_values (map, current_stream_time, internal_time,
+        current_segment->datetime);
 
     gst_hls_demux_start_rendition_streams (demux);
     return GST_HLS_PARSER_RESULT_DONE;
@@ -550,8 +550,8 @@ gst_hlsdemux_stream_handle_internal_time (GstHLSDemuxStream * hls_stream,
         "DISCONT segment, Updating time map to stream_time:%" GST_STIME_FORMAT
         " internal_time:%" GST_TIME_FORMAT, GST_STIME_ARGS (internal_time),
         GST_TIME_ARGS (current_stream_time));
-    map->stream_time = current_stream_time;
-    map->internal_time = internal_time;
+    gst_time_map_set_values (map, current_stream_time, internal_time,
+        current_segment->datetime);
     return GST_HLS_PARSER_RESULT_DONE;
   }
 
