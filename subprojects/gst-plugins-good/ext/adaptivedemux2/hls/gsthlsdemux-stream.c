@@ -563,7 +563,9 @@ gst_hlsdemux_stream_handle_internal_time (GstHLSDemuxStream * hls_stream,
       " difference against expected : %" GST_STIME_FORMAT,
       GST_STIME_ARGS (real_stream_time), GST_STIME_ARGS (difference));
 
-  if (ABS (difference) > 10 * GST_MSECOND) {
+  /* We allow a tolerance of 3-4 frames between the estimated and observed
+   * stream time. */
+  if (ABS (difference) > 100 * GST_MSECOND) {
     GstClockTimeDiff wrong_position_threshold =
         hls_stream->current_segment->duration / 2;
 
