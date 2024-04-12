@@ -136,6 +136,7 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   {V4L2_PIX_FMT_UYVY, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_VYUY, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_YUV422P, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV422M, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_YUV411P, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_Y41P, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_YUV444, TRUE, GST_V4L2_RAW},
@@ -1154,6 +1155,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       rank = YUV_BASE_RANK + 4;
       break;
     case V4L2_PIX_FMT_YUV422P: /* Y42B, 16 bits per pixel */
+    case V4L2_PIX_FMT_YUV422M:
       rank = YUV_BASE_RANK + 8;
       break;
 
@@ -1447,6 +1449,7 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
       format = GST_VIDEO_FORMAT_Y41B;
       break;
     case V4L2_PIX_FMT_YUV422P:
+    case V4L2_PIX_FMT_YUV422M:
       format = GST_VIDEO_FORMAT_Y42B;
       break;
     case V4L2_PIX_FMT_YVYU:
@@ -1625,6 +1628,7 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_YVU420M:
     case V4L2_PIX_FMT_UYVY:
     case V4L2_PIX_FMT_YUV422P:
+    case V4L2_PIX_FMT_YUV422M:
     case V4L2_PIX_FMT_YVYU:
     case V4L2_PIX_FMT_YUV411P:{
       GstVideoFormat format;
@@ -1953,6 +1957,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         break;
       case GST_VIDEO_FORMAT_Y42B:
         fourcc = V4L2_PIX_FMT_YUV422P;
+        fourcc_nc = V4L2_PIX_FMT_YUV422M;
         break;
       case GST_VIDEO_FORMAT_NV12:
         fourcc = V4L2_PIX_FMT_NV12;
