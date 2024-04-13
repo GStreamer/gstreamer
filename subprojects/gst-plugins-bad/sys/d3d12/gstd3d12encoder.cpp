@@ -69,6 +69,9 @@ struct EncoderSessionData
 
   ~EncoderSessionData ()
   {
+    if (upload_pool)
+      gst_buffer_pool_set_active (upload_pool, FALSE);
+    gst_clear_object (&upload_pool);
     gst_clear_object (&encoder_pool);
     gst_queue_array_free (output_queue);
   }
@@ -463,11 +466,13 @@ gst_d3d12_encoder_create_upload_pool (GstD3D12Encoder * self)
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     GST_ERROR_OBJECT (self, "Set config failed");
+    gst_object_unref (pool);
     return nullptr;
   }
 
   if (!gst_buffer_pool_set_active (pool, TRUE)) {
     GST_ERROR_OBJECT (self, "Set active failed");
+    gst_object_unref (pool);
     return nullptr;
   }
 
