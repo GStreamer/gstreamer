@@ -8106,16 +8106,19 @@ gst_video_format_to_fourcc (GstVideoFormat format)
  * gst_video_format_to_string:
  * @format: a #GstVideoFormat video format
  *
- * Returns a string containing a descriptive name for
- * the #GstVideoFormat if there is one, or NULL otherwise.
+ * Returns a string containing a descriptive name for the #GstVideoFormat.
+ *
+ * Since 1.26 this can also be used with %GST_VIDEO_FORMAT_UNKNOWN, previous
+ * versions were printing a critical warning and returned %NULL.
  *
  * Returns: the name corresponding to @format
  */
 const gchar *
 gst_video_format_to_string (GstVideoFormat format)
 {
-  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail ((gint) format < G_N_ELEMENTS (formats), NULL);
 
+  /* In case glib checks are disabled */
   if ((gint) format >= G_N_ELEMENTS (formats))
     return NULL;
 

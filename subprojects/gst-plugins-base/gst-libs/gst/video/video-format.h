@@ -619,7 +619,18 @@ typedef enum {
    * Since: 1.24
    */
   GST_VIDEO_FORMAT_RBGA,
+
+  /* Update GST_VIDEO_FORMAT_LAST below when adding more formats here */
 } GstVideoFormat;
+
+/**
+ * GST_VIDEO_FORMAT_LAST:
+ *
+ * Number of video formats in #GstVideoFormat.
+ *
+ * Since: 1.26
+ */
+#define GST_VIDEO_FORMAT_LAST (GST_VIDEO_FORMAT_RBGA + 1)
 
 #define GST_VIDEO_MAX_PLANES 4
 #define GST_VIDEO_MAX_COMPONENTS 4

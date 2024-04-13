@@ -424,11 +424,23 @@ gst_audio_format_from_string (const gchar * format)
   return GST_AUDIO_FORMAT_UNKNOWN;
 }
 
+/**
+ * gst_audio_format_to_string:
+ * @format: a #GstAudioFormat audio format
+ *
+ * Returns a string containing a descriptive name for the #GstAudioFormat.
+ *
+ * Since 1.26 this can also be used with %GST_AUDIO_FORMAT_UNKNOWN, previous
+ * versions were printing a critical warning and returned %NULL.
+ *
+ * Returns: the name corresponding to @format
+ */
 const gchar *
 gst_audio_format_to_string (GstAudioFormat format)
 {
-  g_return_val_if_fail (format != GST_AUDIO_FORMAT_UNKNOWN, NULL);
+  g_return_val_if_fail ((gint) format < G_N_ELEMENTS (formats), NULL);
 
+  /* In case glib checks are disabled */
   if ((gint) format >= G_N_ELEMENTS (formats))
     return NULL;
 

@@ -3403,6 +3403,11 @@ Return the width of one tile in pixels, zero if its not an integer.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="VIDEO_FORMAT_LAST" value="134" c:type="GST_VIDEO_FORMAT_LAST" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h">Number of video formats in #GstVideoFormat.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
     <constant name="VIDEO_FPS_RANGE" value="(fraction) [ 0, max ]" c:type="GST_VIDEO_FPS_RANGE">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <type name="utf8" c:type="gchar*"/>
@@ -10414,8 +10419,10 @@ no corresponding FOURCC value, 0 is returned.</doc>
         </parameters>
       </function>
       <function name="to_string" c:identifier="gst_video_format_to_string">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Returns a string containing a descriptive name for
-the #GstVideoFormat if there is one, or NULL otherwise.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Returns a string containing a descriptive name for the #GstVideoFormat.
+
+Since 1.26 this can also be used with %GST_VIDEO_FORMAT_UNKNOWN, previous
+versions were printing a critical warning and returned %NULL.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">the name corresponding to @format</doc>
@@ -18669,8 +18676,10 @@ no corresponding FOURCC value, 0 is returned.</doc>
       </parameters>
     </function>
     <function name="video_format_to_string" c:identifier="gst_video_format_to_string" moved-to="VideoFormat.to_string">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Returns a string containing a descriptive name for
-the #GstVideoFormat if there is one, or NULL otherwise.</doc>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">Returns a string containing a descriptive name for the #GstVideoFormat.
+
+Since 1.26 this can also be used with %GST_VIDEO_FORMAT_UNKNOWN, previous
+versions were printing a critical warning and returned %NULL.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.h"/>
       <return-value transfer-ownership="none">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video-format.c">the name corresponding to @format</doc>

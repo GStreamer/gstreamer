@@ -794,6 +794,11 @@ format.</doc>
         </parameter>
       </parameters>
     </function-macro>
+    <constant name="AUDIO_FORMAT_LAST" value="32" c:type="GST_AUDIO_FORMAT_LAST" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h">Number of audio formats in #GstAudioFormat.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h"/>
+      <type name="gint" c:type="gint"/>
+    </constant>
     <function-macro name="AUDIO_INFO_BPF" c:identifier="GST_AUDIO_INFO_BPF" introspectable="0">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-info.h"/>
       <parameters>
@@ -6413,12 +6418,18 @@ string is not a known format.</doc>
         </parameters>
       </function>
       <function name="to_string" c:identifier="gst_audio_format_to_string">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.c">Returns a string containing a descriptive name for the #GstAudioFormat.
+
+Since 1.26 this can also be used with %GST_AUDIO_FORMAT_UNKNOWN, previous
+versions were printing a critical warning and returned %NULL.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h"/>
         <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.c">the name corresponding to @format</doc>
           <type name="utf8" c:type="const gchar*"/>
         </return-value>
         <parameters>
           <parameter name="format" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.c">a #GstAudioFormat audio format</doc>
             <type name="AudioFormat" c:type="GstAudioFormat"/>
           </parameter>
         </parameters>
@@ -10919,12 +10930,18 @@ string is not a known format.</doc>
       </return-value>
     </function>
     <function name="audio_format_to_string" c:identifier="gst_audio_format_to_string" moved-to="AudioFormat.to_string">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.c">Returns a string containing a descriptive name for the #GstAudioFormat.
+
+Since 1.26 this can also be used with %GST_AUDIO_FORMAT_UNKNOWN, previous
+versions were printing a critical warning and returned %NULL.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.h"/>
       <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.c">the name corresponding to @format</doc>
         <type name="utf8" c:type="const gchar*"/>
       </return-value>
       <parameters>
         <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/audio/audio-format.c">a #GstAudioFormat audio format</doc>
           <type name="AudioFormat" c:type="GstAudioFormat"/>
         </parameter>
       </parameters>

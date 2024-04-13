@@ -365,25 +365,12 @@ video_format_is_packed (GstVideoFormat fmt)
   return FALSE;
 }
 
-static gint
-get_num_formats (void)
-{
-  gint num_formats = 200;
-  fail_unless (gst_video_format_to_string (num_formats) == NULL);
-  while (gst_video_format_to_string (num_formats) == NULL)
-    --num_formats;
-  GST_INFO ("number of known video formats: %d", num_formats);
-  return num_formats + 1;
-}
-
 GST_START_TEST (test_video_formats_all)
 {
   GstStructure *s;
   const GValue *val, *list_val;
   GstCaps *caps;
-  guint num, n, num_formats;
-
-  num_formats = get_num_formats ();
+  guint num, n;
 
   caps = gst_caps_from_string ("video/x-raw, format=" GST_VIDEO_FORMATS_ALL);
   s = gst_caps_get_structure (caps, 0);
@@ -403,7 +390,7 @@ GST_START_TEST (test_video_formats_all)
         GST_VIDEO_FORMAT_UNKNOWN);
   }
   /* Take into account GST_VIDEO_FORMAT_ENCODED, UNKNOWN and DMA_DRM. */
-  fail_unless_equals_int (num, num_formats - 3);
+  fail_unless_equals_int (num, GST_VIDEO_FORMAT_LAST - 3);
 
   gst_caps_unref (caps);
 }
@@ -414,11 +401,7 @@ GST_END_TEST;
 #define HEIGHT 20
 GST_START_TEST (test_video_formats_pack_unpack)
 {
-  guint n, num_formats;
-
-  num_formats = get_num_formats ();
-
-  for (n = GST_VIDEO_FORMAT_ENCODED + 1; n < num_formats; ++n) {
+  for (guint n = GST_VIDEO_FORMAT_ENCODED + 1; n < GST_VIDEO_FORMAT_LAST; ++n) {
     const GstVideoFormatInfo *vfinfo, *unpackinfo;
     GstVideoFormat fmt = n;
     GstVideoInfo vinfo;
@@ -2174,7 +2157,7 @@ GST_START_TEST (test_video_pack_unpack2)
 {
   GstVideoFormat format;
   GTimer *timer;
-  gint num_formats, i;
+  gint i;
   GArray *packarray, *unpackarray;
 
 #define WIDTH 320
@@ -2186,11 +2169,9 @@ GST_START_TEST (test_video_pack_unpack2)
   packarray = g_array_new (FALSE, FALSE, sizeof (ConvertResult));
   unpackarray = g_array_new (FALSE, FALSE, sizeof (ConvertResult));
 
-  num_formats = get_num_formats ();
-
   GST_DEBUG ("pack/sec\t unpack/sec \tpack GB/sec\tunpack GB/sec\tformat");
 
-  for (format = GST_VIDEO_FORMAT_I420; format < num_formats; format++) {
+  for (format = GST_VIDEO_FORMAT_I420; format < GST_VIDEO_FORMAT_LAST; format++) {
     GstVideoInfo info;
     const GstVideoFormatInfo *finfo, *fuinfo;
     GstBuffer *buffer;
@@ -2528,11 +2509,8 @@ static void
 run_video_color_convert (ColorType in_type, ColorType out_type)
 {
   GstVideoFormat infmt, outfmt;
-  gint num_formats;
 
-  num_formats = get_num_formats ();
-
-  for (infmt = GST_VIDEO_FORMAT_I420; infmt < num_formats; infmt++) {
+  for (infmt = GST_VIDEO_FORMAT_I420; infmt < GST_VIDEO_FORMAT_LAST; infmt++) {
     GstVideoInfo ininfo;
     GstVideoFrame inframe;
     GstBuffer *inbuffer;
@@ -2548,7 +2526,8 @@ run_video_color_convert (ColorType in_type, ColorType out_type)
     gst_buffer_memset (inbuffer, 0, 0, -1);
     gst_video_frame_map (&inframe, &ininfo, inbuffer, GST_MAP_READ);
 
-    for (outfmt = GST_VIDEO_FORMAT_I420; outfmt < num_formats; outfmt++) {
+    for (outfmt = GST_VIDEO_FORMAT_I420; outfmt < GST_VIDEO_FORMAT_LAST;
+        outfmt++) {
       GstVideoInfo outinfo;
       GstVideoFrame outframe;
       GstBuffer *outbuffer;
@@ -2632,16 +2611,14 @@ GST_START_TEST (test_video_size_convert)
 {
   GstVideoFormat infmt, outfmt;
   GTimer *timer;
-  gint num_formats, i;
+  gint i;
   GArray *array;
 
   array = g_array_new (FALSE, FALSE, sizeof (ConvertResult));
 
   timer = g_timer_new ();
 
-  num_formats = get_num_formats ();
-
-  for (infmt = GST_VIDEO_FORMAT_I420; infmt < num_formats; infmt++) {
+  for (infmt = GST_VIDEO_FORMAT_I420; infmt < GST_VIDEO_FORMAT_LAST; infmt++) {
     GstVideoInfo ininfo, outinfo;
     GstVideoFrame inframe, outframe;
     GstBuffer *inbuffer, *outbuffer;
@@ -3267,8 +3244,7 @@ GST_START_TEST (test_video_formats_pstrides)
 {
   GstVideoFormat fmt = GST_VIDEO_FORMAT_I420;
 
-
-  while ((gst_video_format_to_string (fmt) != NULL)) {
+  while (fmt < GST_VIDEO_FORMAT_LAST) {
     const GstVideoFormatInfo *vf_info = gst_video_format_get_info (fmt);
     guint n_comps = GST_VIDEO_FORMAT_INFO_N_COMPONENTS (vf_info);
 
@@ -4101,10 +4077,9 @@ GST_END_TEST;
 
 GST_START_TEST (test_video_extrapolate_stride)
 {
-  guint num_formats = get_num_formats ();
   GstVideoFormat format;
 
-  for (format = 2; format < num_formats; format++) {
+  for (format = 2; format < GST_VIDEO_FORMAT_LAST; format++) {
     GstVideoInfo info;
     guint p;
 
