@@ -257,8 +257,9 @@ gst_vp9_enc_init (GstVP9Enc * gst_vp9_enc)
       &gst_vpx_enc->cfg, 0);
   if (status != VPX_CODEC_OK) {
     GST_ERROR_OBJECT (gst_vpx_enc,
-        "Failed to get default encoder configuration: %s",
-        gst_vpx_error_name (status));
+        "Failed to get default encoder configuration: %s (details: %s)",
+        gst_vpx_error_name (status),
+        GST_STR_NULL (gst_vpx_enc->encoder.err_detail));
     gst_vpx_enc->have_default_config = FALSE;
   } else {
     gst_vpx_enc->have_default_config = TRUE;
@@ -290,9 +291,8 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP9E_SET_TILE_COLUMNS,
             gst_vp9_enc->tile_columns);
         if (status != VPX_CODEC_OK) {
-          GST_WARNING_OBJECT (gst_vpx_enc,
-              "Failed to set VP9E_SET_TILE_COLUMNS: %s",
-              gst_vpx_error_name (status));
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP9E_SET_TILE_COLUMNS",
+              status);
         }
       }
       break;
@@ -303,9 +303,8 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP9E_SET_TILE_ROWS,
             gst_vp9_enc->tile_rows);
         if (status != VPX_CODEC_OK) {
-          GST_WARNING_OBJECT (gst_vpx_enc,
-              "Failed to set VP9E_SET_TILE_ROWS: %s",
-              gst_vpx_error_name (status));
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP9E_SET_TILE_ROWS",
+              status);
         }
       }
       break;
@@ -316,8 +315,8 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP9E_SET_ROW_MT,
             gst_vp9_enc->row_mt ? 1 : 0);
         if (status != VPX_CODEC_OK) {
-          GST_WARNING_OBJECT (gst_vpx_enc,
-              "Failed to set VP9E_SET_ROW_MT: %s", gst_vpx_error_name (status));
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP9E_SET_ROW_MT",
+              status);
         }
       }
       break;
@@ -327,9 +326,8 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
         status = vpx_codec_control (&gst_vpx_enc->encoder, VP9E_SET_AQ_MODE,
             gst_vp9_enc->aq_mode);
         if (status != VPX_CODEC_OK) {
-          GST_WARNING_OBJECT (gst_vpx_enc,
-              "Failed to set VP9E_SET_AQ_MODE: %s",
-              gst_vpx_error_name (status));
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP9E_SET_AQ_MODE",
+              status);
         }
       }
       break;
@@ -340,9 +338,8 @@ gst_vp9_enc_set_property (GObject * object, guint prop_id,
             VP9E_SET_FRAME_PARALLEL_DECODING,
             gst_vp9_enc->frame_parallel_decoding ? 1 : 0);
         if (status != VPX_CODEC_OK) {
-          GST_WARNING_OBJECT (gst_vpx_enc,
-              "Failed to set VP9E_SET_FRAME_PARALLEL_DECODING: %s",
-              gst_vpx_error_name (status));
+          GST_VPX_ENC_WARN (gst_vpx_enc,
+              "Failed to set VP9E_SET_FRAME_PARALLEL_DECODING", status);
         }
       }
       break;
@@ -468,52 +465,45 @@ gst_vp9_enc_configure_encoder (GstVPXEnc * encoder, GstVideoCodecState * state)
       gst_vp9_get_vpx_colorspace (encoder, &GST_VIDEO_INFO_COLORIMETRY (info),
           GST_VIDEO_INFO_FORMAT (info)));
   if (status != VPX_CODEC_OK) {
-    GST_WARNING_OBJECT (encoder,
-        "Failed to set VP9E_SET_COLOR_SPACE: %s", gst_vpx_error_name (status));
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP9E_SET_COLOR_SPACE", status);
   }
 
   status = vpx_codec_control (&encoder->encoder, VP9E_SET_COLOR_RANGE,
       gst_vp9_get_vpx_color_range (&GST_VIDEO_INFO_COLORIMETRY (info)));
   if (status != VPX_CODEC_OK) {
-    GST_WARNING_OBJECT (encoder,
-        "Failed to set VP9E_SET_COLOR_RANGE: %s", gst_vpx_error_name (status));
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP9E_SET_COLOR_RANGE", status);
   }
 
   status =
       vpx_codec_control (&encoder->encoder, VP9E_SET_TILE_COLUMNS,
       vp9enc->tile_columns);
   if (status != VPX_CODEC_OK) {
-    GST_DEBUG_OBJECT (encoder, "Failed to set VP9E_SET_TILE_COLUMNS: %s",
-        gst_vpx_error_name (status));
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP9E_SET_TILE_COLUMNS", status);
   }
 
   status =
       vpx_codec_control (&encoder->encoder, VP9E_SET_TILE_ROWS,
       vp9enc->tile_rows);
   if (status != VPX_CODEC_OK) {
-    GST_DEBUG_OBJECT (encoder, "Failed to set VP9E_SET_TILE_ROWS: %s",
-        gst_vpx_error_name (status));
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP9E_SET_TILE_ROWS", status);
   }
   status =
       vpx_codec_control (&encoder->encoder, VP9E_SET_ROW_MT,
       vp9enc->row_mt ? 1 : 0);
   if (status != VPX_CODEC_OK) {
-    GST_DEBUG_OBJECT (encoder,
-        "Failed to set VP9E_SET_ROW_MT: %s", gst_vpx_error_name (status));
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP9E_SET_ROW_MT", status);
   }
   status =
       vpx_codec_control (&encoder->encoder, VP9E_SET_AQ_MODE, vp9enc->aq_mode);
   if (status != VPX_CODEC_OK) {
-    GST_WARNING_OBJECT (encoder,
-        "Failed to set VP9E_SET_AQ_MODE: %s", gst_vpx_error_name (status));
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP9E_SET_AQ_MODE", status);
   }
   status =
       vpx_codec_control (&encoder->encoder, VP9E_SET_FRAME_PARALLEL_DECODING,
       vp9enc->frame_parallel_decoding ? 1 : 0);
   if (status != VPX_CODEC_OK) {
-    GST_WARNING_OBJECT (encoder,
-        "Failed to set VP9E_SET_FRAME_PARALLEL_DECODING: %s",
-        gst_vpx_error_name (status));
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP9E_SET_FRAME_PARALLEL_DECODING",
+        status);
   }
 
   return TRUE;
