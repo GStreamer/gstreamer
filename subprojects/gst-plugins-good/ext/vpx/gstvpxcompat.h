@@ -51,4 +51,13 @@ typedef enum gst_vpx_img_fmt
                        GST_STR_NULL(element->encoder.err_detail));      \
   }                                                                     \
   G_STMT_END
+
+#define GST_VPX_DEC_WARN(element, message, status)                      \
+  G_STMT_START {                                                        \
+    GST_WARNING_OBJECT(element, "%s: %s (details: %s)", #message,       \
+                       gst_vpx_error_name(status),                      \
+                       GST_STR_NULL(element->decoder.err_detail));      \
+  }                                                                     \
+  G_STMT_END
+
 G_END_DECLS
