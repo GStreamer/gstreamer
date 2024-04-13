@@ -61,6 +61,11 @@ GST_D3D12_API
 gint64    gst_d3d12_create_user_token (void);
 
 GST_D3D12_API
+gboolean  gst_d3d12_buffer_copy_into (GstBuffer * dest,
+                                      GstBuffer * src,
+                                      const GstVideoInfo * info);
+
+GST_D3D12_API
 gboolean _gst_d3d12_result (HRESULT hr,
                             GstD3D12Device * device,
                             GstDebugCategory * cat,

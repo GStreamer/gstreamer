@@ -534,6 +534,113 @@ gst_d3d12_create_user_token (void)
   return user_token.fetch_add (1);
 }
 
+static gboolean
+gst_d3d12_buffer_copy_into_fallback (GstBuffer * dst, GstBuffer * src,
+    const GstVideoInfo * info)
+{
+  GstVideoFrame in_frame, out_frame;
+  gboolean ret;
+
+  if (!gst_video_frame_map (&in_frame, (GstVideoInfo *) info, src,
+          (GstMapFlags) (GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))) {
+    GST_ERROR ("Couldn't map src frame");
+    return FALSE;
+  }
+
+  if (!gst_video_frame_map (&out_frame, (GstVideoInfo *) info, dst,
+          (GstMapFlags) (GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF))) {
+    GST_ERROR ("Couldn't map dst frame");
+    gst_video_frame_unmap (&in_frame);
+    return FALSE;
+  }
+
+  ret = gst_video_frame_copy (&out_frame, &in_frame);
+
+  gst_video_frame_unmap (&in_frame);
+  gst_video_frame_unmap (&out_frame);
+
+  return ret;
+}
+
+static GstD3D12Device *
+get_device_from_buffer (GstBuffer * buffer)
+{
+  GstD3D12Device *device = nullptr;
+  for (guint i = 0; i < gst_buffer_n_memory (buffer); i++) {
+    auto mem = gst_buffer_peek_memory (buffer, i);
+    if (!gst_is_d3d12_memory (mem))
+      return nullptr;
+
+    auto dmem = GST_D3D12_MEMORY_CAST (mem);
+    if (!device)
+      device = dmem->device;
+    else if (!gst_d3d12_device_is_equal (device, dmem->device))
+      return nullptr;
+  }
+
+  return device;
+}
+
+/**
+ * gst_d3d12_buffer_copy_into:
+ * @dest: a #GstBuffer
+ * @src: a #GstBuffer
+ * @info: a #GstVideoInfo
+ *
+ * Copy @src data into @dest. This method executes only memory copy.
+ * Use gst_buffer_copy_into() method for metadata copy
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_d3d12_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
+    const GstVideoInfo * info)
+{
+  g_return_val_if_fail (GST_IS_BUFFER (dest), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (src), FALSE);
+  g_return_val_if_fail (info, FALSE);
+
+  auto num_mem = gst_buffer_n_memory (dest);
+  if (gst_buffer_n_memory (src) != num_mem)
+    return gst_d3d12_buffer_copy_into_fallback (dest, src, info);
+
+  auto dest_device = get_device_from_buffer (dest);
+  auto src_device = get_device_from_buffer (src);
+
+  if (!dest_device || !src_device ||
+      !gst_d3d12_device_is_equal (dest_device, src_device)) {
+    return gst_d3d12_buffer_copy_into_fallback (dest, src, info);
+  }
+
+  GstD3D12Frame src_frame, dest_frame;
+  if (!gst_d3d12_frame_map (&src_frame, info, src, GST_MAP_READ_D3D12,
+          GST_D3D12_FRAME_MAP_FLAG_NONE)) {
+    GST_ERROR ("Couldn't map src buffer");
+    return FALSE;
+  }
+
+  if (!gst_d3d12_frame_map (&dest_frame, info, dest, GST_MAP_WRITE_D3D12,
+          GST_D3D12_FRAME_MAP_FLAG_NONE)) {
+    GST_ERROR ("Couldn't map dest buffer");
+    gst_d3d12_frame_unmap (&src_frame);
+    return FALSE;
+  }
+
+  guint64 fence_val = 0;
+  auto ret = gst_d3d12_frame_copy (&dest_frame, &src_frame, &fence_val);
+  gst_d3d12_frame_unmap (&dest_frame);
+  gst_d3d12_frame_unmap (&src_frame);
+
+  if (ret) {
+    for (guint i = 0; i < num_mem; i++) {
+      auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (dest, i);
+      dmem->fence_value = fence_val;
+    }
+  }
+
+  return ret;
+}
+
 /**
  * _gst_d3d12_result:
  * @result: HRESULT D3D12 API return code
