@@ -295,7 +295,6 @@ struct _GstD3D12ConverterPrivate
   guint rtv_inc_size;
 
   std::vector<D3D12_RESOURCE_BARRIER> barriers;
-  std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> rtv_handles;
 
   guint64 input_texture_width;
   guint input_texture_height;
@@ -1828,16 +1827,14 @@ gst_d3d12_converter_update_pso (GstD3D12Converter * self)
 }
 
 static gboolean
-gst_d3d12_converter_execute (GstD3D12Converter * self,
-    GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
+gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
+    GstD3D12Frame * out_frame, GstD3D12FenceData * fence_data,
     ID3D12GraphicsCommandList * cl)
 {
   auto priv = self->priv;
 
   std::lock_guard < std::mutex > lk (priv->prop_lock);
-  auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, 0);
-  auto resource = gst_d3d12_memory_get_resource_handle (mem);
-  auto desc = GetDesc (resource);
+  auto desc = GetDesc (in_frame->data[0]);
   if (desc.Width != priv->input_texture_width ||
       desc.Height != priv->input_texture_height) {
     GST_DEBUG_OBJECT (self, "Texture resolution changed %ux%u -> %ux%u",
@@ -1848,9 +1845,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
     priv->update_src_rect = TRUE;
   }
 
-  mem = (GstD3D12Memory *) gst_buffer_peek_memory (out_buf, 0);
-  resource = gst_d3d12_memory_get_resource_handle (mem);
-  desc = GetDesc (resource);
+  desc = GetDesc (out_frame->data[0]);
   if (desc.SampleDesc.Count != priv->sample_desc.Count ||
       desc.SampleDesc.Quality != priv->sample_desc.Quality) {
     GST_DEBUG_OBJECT (self, "Sample desc updated");
@@ -1879,14 +1874,9 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   }
 
   auto & barriers = priv->barriers;
-  auto & rtv_handles = priv->rtv_handles;
-
   barriers.clear ();
-  rtv_handles.clear ();
-  std::vector < D3D12_RECT > rtv_rects;
 
   auto upload_data = priv->upload_data;
-
   if (priv->is_first) {
     g_assert (upload_data);
 
@@ -1975,20 +1965,10 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
       CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
       (srv_heap));
 
-  for (guint i = 0; i < gst_buffer_n_memory (in_buf); i++) {
-    auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (in_buf, i);
-    auto num_planes = gst_d3d12_memory_get_plane_count (mem);
-    auto mem_srv_heap = gst_d3d12_memory_get_shader_resource_view_heap (mem);
-
-    if (!mem_srv_heap) {
-      GST_ERROR_OBJECT (self, "Couldn't get SRV");
-      return FALSE;
-    }
-
-    device->CopyDescriptorsSimple (num_planes, cpu_handle,
-        GetCPUDescriptorHandleForHeapStart (mem_srv_heap),
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->in_info); i++) {
+    device->CopyDescriptorsSimple (1, cpu_handle, in_frame->srv_desc_handle[i],
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-    cpu_handle.Offset (num_planes, priv->srv_inc_size);
+    cpu_handle.Offset (priv->srv_inc_size);
   }
 
   if (priv->crs->HaveLut ()) {
@@ -1997,36 +1977,13 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   }
 
-  for (guint i = 0; i < gst_buffer_n_memory (out_buf); i++) {
-    auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (out_buf, i);
-    auto num_planes = gst_d3d12_memory_get_plane_count (mem);
-    auto rtv_heap = gst_d3d12_memory_get_render_target_view_heap (mem);
-
-    if (!rtv_heap) {
-      GST_ERROR_OBJECT (self, "Couldn't get rtv heap");
-      return FALSE;
-    }
-
-    auto cpu_handle =
-        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
-        (rtv_heap));
-
-    for (guint plane = 0; plane < num_planes; plane++) {
-      D3D12_RECT rect = { };
-      gst_d3d12_memory_get_plane_rectangle (mem, plane, &rect);
-      rtv_rects.push_back (rect);
-      rtv_handles.push_back (cpu_handle);
-      cpu_handle.Offset (priv->rtv_inc_size);
-    }
-  }
-
   if (!barriers.empty ())
     cl->ResourceBarrier (barriers.size (), barriers.data ());
 
   if (priv->clear_background) {
-    for (size_t i = 0; i < rtv_handles.size (); i++) {
-      cl->ClearRenderTargetView (rtv_handles[i],
-          priv->clear_color[i], 1, &rtv_rects[i]);
+    for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
+      cl->ClearRenderTargetView (out_frame->rtv_desc_handle[i],
+          priv->clear_color[i], 1, &out_frame->plane_rect[i]);
     }
   }
 
@@ -2052,7 +2009,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   cl->RSSetViewports (priv->quad_data[0].num_rtv, priv->viewport);
   cl->RSSetScissorRects (priv->quad_data[0].num_rtv, priv->scissor_rect);
   cl->OMSetRenderTargets (priv->quad_data[0].num_rtv,
-      rtv_handles.data (), FALSE, nullptr);
+      out_frame->rtv_desc_handle, FALSE, nullptr);
   cl->OMSetBlendFactor (priv->blend_factor);
   cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
@@ -2068,7 +2025,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
     cl->RSSetScissorRects (priv->quad_data[1].num_rtv,
         &priv->scissor_rect[offset]);
     cl->OMSetRenderTargets (priv->quad_data[1].num_rtv,
-        rtv_handles.data () + offset, FALSE, nullptr);
+        out_frame->rtv_desc_handle + offset, FALSE, nullptr);
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
     pso->AddRef ();
@@ -2076,7 +2033,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   }
 
   gst_d3d12_fence_data_add_notify_mini_object (fence_data,
-      gst_buffer_ref (in_buf));
+      gst_buffer_ref (in_frame->buffer));
   if (priv->upload_data) {
     gst_d3d12_fence_data_add_notify (fence_data,
         priv->upload_data, (GDestroyNotify) converter_upload_data_free);
@@ -2085,43 +2042,6 @@ gst_d3d12_converter_execute (GstD3D12Converter * self,
   priv->is_first = false;
 
   return TRUE;
-}
-
-static gboolean
-gst_d3d12_converter_map_buffer (GstBuffer * buffer,
-    GstMapInfo info[GST_VIDEO_MAX_PLANES], GstMapFlags flags)
-{
-  GstMapFlags map_flags;
-  guint num_mapped = 0;
-
-  map_flags = (GstMapFlags) (flags | GST_MAP_D3D12);
-
-  for (num_mapped = 0; num_mapped < gst_buffer_n_memory (buffer); num_mapped++) {
-    auto mem = gst_buffer_peek_memory (buffer, num_mapped);
-
-    if (!gst_memory_map (mem, &info[num_mapped], map_flags))
-      goto error;
-  }
-
-  return TRUE;
-
-error:
-  for (guint i = 0; i < num_mapped; i++) {
-    auto mem = gst_buffer_peek_memory (buffer, i);
-    gst_memory_unmap (mem, &info[i]);
-  }
-
-  return FALSE;
-}
-
-static void
-gst_d3d12_converter_unmap_buffer (GstBuffer * buffer,
-    GstMapInfo info[GST_VIDEO_MAX_PLANES])
-{
-  for (guint i = 0; i < gst_buffer_n_memory (buffer); i++) {
-    auto mem = gst_buffer_peek_memory (buffer, i);
-    gst_memory_unmap (mem, &info[i]);
-  }
 }
 
 static GstBuffer *
@@ -2249,27 +2169,41 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   g_return_val_if_fail (fence_data, FALSE);
   g_return_val_if_fail (cl, FALSE);
 
-  GstMapInfo in_info[GST_VIDEO_MAX_PLANES];
+  GstD3D12Frame in_frame;
+  GstD3D12Frame out_frame;
+
+  auto priv = converter->priv;
+
+  /* Don't map output memory, we don't actually update output memory here */
+  if (!gst_d3d12_frame_map (&out_frame, &priv->out_info, out_buf,
+          (GstMapFlags) GST_MAP_D3D12, GST_D3D12_FRAME_MAP_FLAG_RTV)) {
+    GST_ERROR_OBJECT (converter, "Couldn't map output buffer");
+    return FALSE;
+  }
 
   gboolean need_upload = gst_d3d12_converter_check_needs_upload (converter,
       in_buf);
-
   if (need_upload) {
     in_buf = gst_d3d12_converter_upload_buffer (converter, in_buf);
-    if (!in_buf)
+    if (!in_buf) {
+      gst_d3d12_frame_unmap (&out_frame);
       return FALSE;
+    }
   }
 
-  if (!gst_d3d12_converter_map_buffer (in_buf, in_info, GST_MAP_READ)) {
-    GST_ERROR_OBJECT (converter, "Couldn't map input buffer");
+  if (!gst_d3d12_frame_map (&in_frame, &priv->in_info,
+          in_buf, GST_MAP_READ_D3D12, GST_D3D12_FRAME_MAP_FLAG_SRV)) {
+    GST_ERROR_OBJECT (converter, "Couldn't map fallback input");
     if (need_upload)
       gst_buffer_unref (in_buf);
+    gst_d3d12_frame_unmap (&out_frame);
     return FALSE;
   }
-  gst_d3d12_converter_unmap_buffer (in_buf, in_info);
 
   auto ret = gst_d3d12_converter_execute (converter,
-      in_buf, out_buf, fence_data, cl);
+      &in_frame, &out_frame, fence_data, cl);
+  gst_d3d12_frame_unmap (&in_frame);
+  gst_d3d12_frame_unmap (&out_frame);
 
   /* fence data will hold this buffer */
   if (need_upload)
