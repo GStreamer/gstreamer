@@ -371,12 +371,6 @@ static gboolean gst_vpx_enc_propose_allocation (GstVideoEncoder * encoder,
 static gboolean gst_vpx_enc_transform_meta (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame, GstMeta * meta);
 
-#define GST_VPX_WARN(element, message, status)   G_STMT_START  {    \
-    GST_WARNING_OBJECT (element,                                        \
-                        "%s: %s (details: %s)",                         \
-                        #message, gst_vpx_error_name (status), GST_STR_NULL (element->encoder.err_detail)); \
-  } G_STMT_END
-
 #define parent_class gst_vpx_enc_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVPXEnc, gst_vpx_enc, GST_TYPE_VIDEO_ENCODER,
     G_IMPLEMENT_INTERFACE (GST_TYPE_TAG_SETTER, NULL);
@@ -1146,7 +1140,7 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
         status =
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_SCALEMODE, &sm);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_SCALEMODE",
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP8E_SET_SCALEMODE",
               status);
         }
       }
@@ -1162,7 +1156,7 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
         status =
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_SCALEMODE, &sm);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_SCALEMODE",
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP8E_SET_SCALEMODE",
               status);
         }
       }
@@ -1174,7 +1168,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_CPUUSED,
             gst_vpx_enc->cpu_used);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_CPUUSED", status);
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP8E_SET_CPUUSED",
+              status);
         }
       }
       break;
@@ -1185,8 +1180,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_ENABLEAUTOALTREF,
             (gst_vpx_enc->enable_auto_alt_ref ? 1 : 0));
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_ENABLEAUTOALTREF",
-              status);
+          GST_VPX_ENC_WARN (gst_vpx_enc,
+              "Failed to set VP8E_SET_ENABLEAUTOALTREF", status);
         }
       }
       break;
@@ -1197,8 +1192,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder,
             VP8E_SET_NOISE_SENSITIVITY, gst_vpx_enc->noise_sensitivity);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_NOISE_SENSITIVITY",
-              status);
+          GST_VPX_ENC_WARN (gst_vpx_enc,
+              "Failed to set VP8E_SET_NOISE_SENSITIVITY", status);
         }
       }
       break;
@@ -1208,7 +1203,7 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
         status = vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_SHARPNESS,
             gst_vpx_enc->sharpness);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_SHARPNESS",
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP8E_SET_SHARPNESS",
               status);
         }
       }
@@ -1220,8 +1215,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_STATIC_THRESHOLD,
             gst_vpx_enc->static_threshold);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_STATIC_THRESHOLD",
-              status);
+          GST_VPX_ENC_WARN (gst_vpx_enc,
+              "Failed to set VP8E_SET_STATIC_THRESHOLD", status);
         }
       }
       break;
@@ -1232,8 +1227,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_TOKEN_PARTITIONS,
             gst_vpx_enc->token_partitions);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_TOKEN_PARTIONS",
-              status);
+          GST_VPX_ENC_WARN (gst_vpx_enc,
+              "Failed to set VP8E_SET_TOKEN_PARTIONS", status);
         }
       }
       break;
@@ -1244,8 +1239,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_ARNR_MAXFRAMES,
             gst_vpx_enc->arnr_maxframes);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_ARNR_MAXFRAMES",
-              status);
+          GST_VPX_ENC_WARN (gst_vpx_enc,
+              "Failed to set VP8E_SET_ARNR_MAXFRAMES", status);
         }
       }
       break;
@@ -1256,7 +1251,7 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_ARNR_STRENGTH,
             gst_vpx_enc->arnr_strength);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_ARNR_STRENGTH",
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP8E_SET_ARNR_STRENGTH",
               status);
         }
       }
@@ -1272,7 +1267,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
         status = vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_TUNING,
             gst_vpx_enc->tuning);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_TUNING", status);
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP8E_SET_TUNING",
+              status);
         }
       }
       break;
@@ -1282,7 +1278,8 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
         status = vpx_codec_control (&gst_vpx_enc->encoder, VP8E_SET_CQ_LEVEL,
             gst_vpx_enc->cq_level);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc, "Failed to set VP8E_SET_CQ_LEVEL", status);
+          GST_VPX_ENC_WARN (gst_vpx_enc, "Failed to set VP8E_SET_CQ_LEVEL",
+              status);
         }
       }
       break;
@@ -1293,7 +1290,7 @@ gst_vpx_enc_set_property (GObject * object, guint prop_id,
             vpx_codec_control (&gst_vpx_enc->encoder,
             VP8E_SET_MAX_INTRA_BITRATE_PCT, gst_vpx_enc->max_intra_bitrate_pct);
         if (status != VPX_CODEC_OK) {
-          GST_VPX_WARN (gst_vpx_enc,
+          GST_VPX_ENC_WARN (gst_vpx_enc,
               "Failed to set VP8E_SET_MAX_INTRA_BITRATE_PCT", status);
         }
       }
@@ -1840,7 +1837,7 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
 
     status = vpx_codec_control (&encoder->encoder, VP8E_SET_SCALEMODE, &sm);
     if (status != VPX_CODEC_OK) {
-      GST_VPX_WARN (encoder, "Failed to set VP8E_SET_SCALEMODE", status);
+      GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_SCALEMODE", status);
     }
   }
 
@@ -1848,59 +1845,62 @@ gst_vpx_enc_set_format (GstVideoEncoder * video_encoder,
       vpx_codec_control (&encoder->encoder, VP8E_SET_CPUUSED,
       encoder->cpu_used);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_CPUUSED", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_CPUUSED", status);
   }
 
   status =
       vpx_codec_control (&encoder->encoder, VP8E_SET_ENABLEAUTOALTREF,
       (encoder->enable_auto_alt_ref ? 1 : 0));
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_ENABLEAUTOALTREF", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_ENABLEAUTOALTREF",
+        status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_NOISE_SENSITIVITY,
       encoder->noise_sensitivity);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_NOISE_SENSITIVITY", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_NOISE_SENSITIVITY",
+        status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_SHARPNESS,
       encoder->sharpness);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_SHARPNESS", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_SHARPNESS", status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_STATIC_THRESHOLD,
       encoder->static_threshold);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_STATIC_THRESHOLD", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_STATIC_THRESHOLD",
+        status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_TOKEN_PARTITIONS,
       encoder->token_partitions);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_TOKEN_PARTIONS", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_TOKEN_PARTIONS", status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_MAXFRAMES,
       encoder->arnr_maxframes);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_ARNR_MAXFRAMES", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_ARNR_MAXFRAMES", status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_ARNR_STRENGTH,
       encoder->arnr_strength);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_ARNR_STRENGTH", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_ARNR_STRENGTH", status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_TUNING,
       encoder->tuning);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_TUNING", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_TUNING", status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_CQ_LEVEL,
       encoder->cq_level);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_CQ_LEVEL", status);
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_CQ_LEVEL", status);
   }
   status = vpx_codec_control (&encoder->encoder, VP8E_SET_MAX_INTRA_BITRATE_PCT,
       encoder->max_intra_bitrate_pct);
   if (status != VPX_CODEC_OK) {
-    GST_VPX_WARN (encoder, "Failed to set VP8E_SET_MAX_INTRA_BITRATE_PCT",
+    GST_VPX_ENC_WARN (encoder, "Failed to set VP8E_SET_MAX_INTRA_BITRATE_PCT",
         status);
   }
 
