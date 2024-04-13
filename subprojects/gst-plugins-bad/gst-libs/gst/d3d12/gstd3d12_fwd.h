@@ -88,5 +88,7 @@ typedef struct _GstD3D12FenceDataPoolClass GstD3D12FenceDataPoolClass;
 typedef struct _GstD3D12FenceDataPoolPrivate GstD3D12FenceDataPoolPrivate;
 typedef struct _GstD3D12FenceData GstD3D12FenceData;
 
+typedef struct _GstD3D12Frame GstD3D12Frame;
+
 G_END_DECLS
 

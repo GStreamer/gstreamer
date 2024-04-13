@@ -9,6 +9,7 @@ d3d12_sources = [
   'gstd3d12device.cpp',
   'gstd3d12fencedatapool.cpp',
   'gstd3d12format.cpp',
+  'gstd3d12frame.cpp',
   'gstd3d12memory.cpp',
   'gstd3d12utils.cpp',
 ]
@@ -25,6 +26,7 @@ d3d12_headers = [
   'gstd3d12device.h',
   'gstd3d12fencedatapool.h',
   'gstd3d12format.h',
+  'gstd3d12frame.h',
   'gstd3d12memory.h',
   'gstd3d12utils.h',
 ]

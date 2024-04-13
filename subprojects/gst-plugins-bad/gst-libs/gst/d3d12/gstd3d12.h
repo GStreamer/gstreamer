@@ -34,6 +34,7 @@
 #include <gst/d3d12/gstd3d12device.h>
 #include <gst/d3d12/gstd3d12fencedatapool.h>
 #include <gst/d3d12/gstd3d12format.h>
+#include <gst/d3d12/gstd3d12frame.h>
 #include <gst/d3d12/gstd3d12memory.h>
 #include <gst/d3d12/gstd3d12utils.h>
 
