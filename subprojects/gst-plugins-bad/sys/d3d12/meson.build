@@ -15,6 +15,7 @@ d3d12_sources = [
   'gstd3d12h264dec.cpp',
   'gstd3d12h264enc.cpp',
   'gstd3d12h265dec.cpp',
+  'gstd3d12h265enc.cpp',
   'gstd3d12ipc.cpp',
   'gstd3d12ipcclient.cpp',
   'gstd3d12ipcserver.cpp',

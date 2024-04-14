@@ -50,6 +50,7 @@ struct GstD3D12EncoderConfig
   D3D12_VIDEO_ENCODER_RATE_CONTROL_QVBR qvbr;
   D3D12_VIDEO_ENCODER_RATE_CONTROL rate_control;
   guint max_subregions;
+  DXGI_FORMAT encoder_format;
 };
 
 enum GstD3D12EncoderSeiInsertMode
@@ -107,6 +108,9 @@ struct GstD3D12EncoderClass
                                gboolean * need_new_session);
 
   gboolean  (*end_frame)      (GstD3D12Encoder * encoder);
+
+  guint64   (*get_bitstream_size) (GstD3D12Encoder * encoder,
+                                   const GstD3D12EncoderConfig * config);
 };
 
 GType gst_d3d12_encoder_get_type (void);

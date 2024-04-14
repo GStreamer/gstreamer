@@ -433,12 +433,13 @@ gst_d3d12_encoder_src_query (GstVideoEncoder * encoder, GstQuery * query)
 }
 
 static GstBufferPool *
-gst_d3d12_encoder_create_upload_pool (GstD3D12Encoder * self)
+gst_d3d12_encoder_create_upload_pool (GstD3D12Encoder * self,
+    GstVideoFormat format)
 {
   auto priv = self->priv;
   GstVideoInfo info;
 
-  gst_video_info_set_format (&info, GST_VIDEO_FORMAT_NV12,
+  gst_video_info_set_format (&info, format,
       priv->config.resolution.Width, priv->config.resolution.Height);
   auto caps = gst_video_info_to_caps (&info);
   auto pool = gst_d3d12_buffer_pool_new (self->device);
@@ -547,6 +548,69 @@ gst_d3d12_encoder_propose_allocation (GstVideoEncoder * encoder,
   return TRUE;
 }
 
+/* *INDENT-OFF* */
+template <typename T>
+static inline T
+align_up (T value, T alignment)
+{
+  return ((value + alignment - 1) / alignment) * alignment;
+}
+/* *INDENT-ON* */
+
+static guint
+gst_d3d12_encoder_get_bitstream_size (GstD3D12Encoder * self)
+{
+  auto priv = self->priv;
+  auto klass = GST_D3D12_ENCODER_GET_CLASS (self);
+  const auto & config = priv->config;
+  /* magic number! */
+  const guint64 min_bound = 1024 * 1024 * 8;
+  auto size = klass->get_bitstream_size (self, &config);
+
+  size = MAX (size, min_bound);
+
+  if (config.rate_control.Mode == D3D12_VIDEO_ENCODER_RATE_CONTROL_MODE_CBR) {
+    const auto & fps = config.rate_control.TargetFrameRate;
+    guint64 cbr_size = gst_util_uint64_scale_ceil (config.cbr.TargetBitRate,
+        fps.Denominator, (guint64) fps.Numerator * 4);
+    size = MAX (size, cbr_size);
+  }
+
+  guint64 alignment =
+      MAX (1, priv->resource_req.CompressedBitstreamBufferAccessAlignment);
+  size += config.max_subregions * (alignment - 1);
+  size = align_up (size, alignment);
+
+  if (size > G_MAXUINT) {
+    GST_ERROR_OBJECT (self, "Invalid bitstream buffer size %" G_GUINT64_FORMAT,
+        size);
+    return 0;
+  }
+
+  return (guint) size;
+}
+
+static GstD3D12EncoderBufferPool *
+gst_d3d12_encoder_create_buffer_pool (GstD3D12Encoder * self,
+    guint bitstream_size)
+{
+  auto priv = self->priv;
+  const auto & resource_req = priv->resource_req;
+  guint resolved_metadata_size = sizeof (D3D12_VIDEO_ENCODER_OUTPUT_METADATA)
+      + sizeof (D3D12_VIDEO_ENCODER_FRAME_SUBREGION_METADATA) *
+      priv->config.max_subregions;
+  guint alignment = MAX (1, resource_req.EncoderMetadataBufferAccessAlignment);
+
+  resolved_metadata_size = align_up (resolved_metadata_size, alignment);
+
+  GST_DEBUG_OBJECT (self, "Creating encoder buffer pool, bitstream size %u",
+      bitstream_size);
+
+  return gst_d3d12_encoder_buffer_pool_new (self->device,
+      resource_req.MaxEncoderOutputMetadataBufferSize,
+      resolved_metadata_size, bitstream_size, ASYNC_DEPTH);
+}
+
 static gboolean
 gst_d3d12_encoder_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state)
@@ -601,7 +665,7 @@ gst_d3d12_encoder_set_format (GstVideoEncoder * encoder,
   auto & resource_req = priv->resource_req;
   resource_req.Codec = klass->codec;
   resource_req.Profile = config.profile_desc;
-  resource_req.InputFormat = DXGI_FORMAT_NV12;
+  resource_req.InputFormat = config.encoder_format;
   resource_req.PictureTargetResolution = config.resolution;
   auto hr = video_device->CheckFeatureSupport
       (D3D12_FEATURE_VIDEO_ENCODER_RESOURCE_REQUIREMENTS,
@@ -620,7 +684,7 @@ gst_d3d12_encoder_set_format (GstVideoEncoder * encoder,
   }
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
-  priv->format_info.Format = DXGI_FORMAT_NV12;
+  priv->format_info.Format = config.encoder_format;
   hr = device->CheckFeatureSupport (D3D12_FEATURE_FORMAT_INFO,
       &priv->format_info, sizeof (priv->format_info));
   if (!gst_d3d12_result (hr, self->device)) {
@@ -660,25 +724,17 @@ gst_d3d12_encoder_set_format (GstVideoEncoder * encoder,
     return FALSE;
   }
 
-  guint resolved_metadata_size;
-  resolved_metadata_size = sizeof (D3D12_VIDEO_ENCODER_OUTPUT_METADATA)
-      + sizeof (D3D12_VIDEO_ENCODER_FRAME_SUBREGION_METADATA) *
-      config.max_subregions;
-  if (resource_req.EncoderMetadataBufferAccessAlignment > 1) {
-    resolved_metadata_size =
-        ((resolved_metadata_size +
-            resource_req.EncoderMetadataBufferAccessAlignment - 1) /
-        resource_req.EncoderMetadataBufferAccessAlignment) *
-        resource_req.EncoderMetadataBufferAccessAlignment;
-  }
+  guint bitstream_size = gst_d3d12_encoder_get_bitstream_size (self);
+  if (!bitstream_size)
+    return FALSE;
 
-  /* TODO: calculate bitstream buffer size */
-  guint bitstream_size = 1024 * 1024 * 8;
-  session->encoder_pool = gst_d3d12_encoder_buffer_pool_new (self->device,
-      resource_req.MaxEncoderOutputMetadataBufferSize,
-      resolved_metadata_size, bitstream_size, ASYNC_DEPTH);
+  session->encoder_pool =
+      gst_d3d12_encoder_create_buffer_pool (self, bitstream_size);
+  if (!session->encoder_pool)
+    return FALSE;
 
-  session->upload_pool = gst_d3d12_encoder_create_upload_pool (self);
+  session->upload_pool = gst_d3d12_encoder_create_upload_pool (self,
+      GST_VIDEO_INFO_FORMAT (&state->info));
   if (!session->upload_pool)
     return FALSE;
 
@@ -1255,31 +1311,38 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
     }
   }
 
-  if (prev_max_subregions != config.max_subregions) {
-    gst_clear_object (&priv->session->encoder_pool);
-    const auto & resource_req = priv->resource_req;
+  auto bitstream_size = gst_d3d12_encoder_get_bitstream_size (self);
+  if (!bitstream_size) {
+    klass->end_frame (self);
+    gst_clear_buffer (&frame->output_buffer);
+    gst_d3d12_fence_data_unref (fence_data);
+    gst_video_encoder_finish_frame (encoder, frame);
+    return GST_FLOW_ERROR;
+  }
 
-    GST_DEBUG_OBJECT (self, "Subregion count changed %d -> %d",
-        prev_max_subregions, config.max_subregions);
+  auto prev_bitstream_size =
+      gst_d3d12_encoder_buffer_pool_get_size (priv->session->encoder_pool);
+  if (prev_max_subregions != config.max_subregions ||
+      bitstream_size > prev_bitstream_size) {
+    bitstream_size = MAX (bitstream_size, prev_bitstream_size);
 
-    guint resolved_metadata_size;
-    resolved_metadata_size = sizeof (D3D12_VIDEO_ENCODER_OUTPUT_METADATA)
-        + sizeof (D3D12_VIDEO_ENCODER_FRAME_SUBREGION_METADATA) *
-        config.max_subregions;
-    if (priv->resource_req.EncoderMetadataBufferAccessAlignment > 1) {
-      resolved_metadata_size =
-          ((resolved_metadata_size +
-              resource_req.EncoderMetadataBufferAccessAlignment - 1) /
-          resource_req.EncoderMetadataBufferAccessAlignment) *
-          resource_req.EncoderMetadataBufferAccessAlignment;
+    auto pool = gst_d3d12_encoder_create_buffer_pool (self, bitstream_size);
+    if (!pool) {
+      GST_ERROR_OBJECT (self, "Couldn't create encoder buffer pool");
+      klass->end_frame (self);
+      gst_clear_buffer (&frame->output_buffer);
+      gst_d3d12_fence_data_unref (fence_data);
+      gst_video_encoder_finish_frame (encoder, frame);
+      return GST_FLOW_ERROR;
     }
 
-    /* TODO: calculate bitstream buffer size */
-    guint bitstream_size = 1024 * 1024 * 8;
-    priv->session->encoder_pool =
-        gst_d3d12_encoder_buffer_pool_new (self->device,
-        resource_req.MaxEncoderOutputMetadataBufferSize,
-        resolved_metadata_size, bitstream_size, ASYNC_DEPTH);
+    GST_DEBUG_OBJECT (self,
+        "Replacing encoder buffer pool, subregions %u -> %u, "
+        "bitstream size %u -> %u", prev_max_subregions, config.max_subregions,
+        prev_bitstream_size, bitstream_size);
+
+    gst_clear_object (&priv->session->encoder_pool);
+    priv->session->encoder_pool = pool;
   }
 
   GstD3D12EncoderBuffer *encoder_buf;
@@ -1321,7 +1384,7 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
 
   meta_in_args.EncoderCodec = klass->codec;
   meta_in_args.EncoderProfile = config.profile_desc;
-  meta_in_args.EncoderInputFormat = DXGI_FORMAT_NV12;
+  meta_in_args.EncoderInputFormat = config.encoder_format;
   meta_in_args.EncodedPictureEffectiveResolution = config.resolution;
   meta_in_args.HWLayoutMetadata.pBuffer = metadata.Get ();
   meta_in_args.HWLayoutMetadata.Offset = 0;

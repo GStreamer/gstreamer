@@ -504,6 +504,8 @@ static gboolean gst_d3d12_h264_enc_start_frame (GstD3D12Encoder * encoder,
     D3D12_VIDEO_ENCODER_RECONSTRUCTED_PICTURE * recon_pic,
     GstD3D12EncoderConfig * config, gboolean * need_new_session);
 static gboolean gst_d3d12_h264_enc_end_frame (GstD3D12Encoder * encoder);
+static guint64 gst_d3d12_h264_enc_get_bitstream_size (GstD3D12Encoder * encoder,
+    const GstD3D12EncoderConfig * config);
 
 static GstElementClass *parent_class = nullptr;
 
@@ -648,6 +650,7 @@ gst_d3d12_h264_enc_class_init (GstD3D12H264EncClass * klass, gpointer data)
   encoder_class->transform_meta =
       GST_DEBUG_FUNCPTR (gst_d3d12_h264_enc_transform_meta);
 
+  d3d12enc_class->codec = D3D12_VIDEO_ENCODER_CODEC_H264;
   d3d12enc_class->adapter_luid = cdata->luid;
   d3d12enc_class->device_id = cdata->device_id;
   d3d12enc_class->vendor_id = cdata->vendor_id;
@@ -656,6 +659,8 @@ gst_d3d12_h264_enc_class_init (GstD3D12H264EncClass * klass, gpointer data)
   d3d12enc_class->start_frame =
       GST_DEBUG_FUNCPTR (gst_d3d12_h264_enc_start_frame);
   d3d12enc_class->end_frame = GST_DEBUG_FUNCPTR (gst_d3d12_h264_enc_end_frame);
+  d3d12enc_class->get_bitstream_size =
+      GST_DEBUG_FUNCPTR (gst_d3d12_h264_enc_get_bitstream_size);
 }
 
 static void
@@ -1844,6 +1849,8 @@ gst_d3d12_h264_enc_new_sequence (GstD3D12Encoder * encoder,
   config->resolution.Height = ((info->height + cdata->height_multiple - 1) /
       cdata->height_multiple) * cdata->height_multiple;
 
+  config->encoder_format = DXGI_FORMAT_NV12;
+
   priv->selected_profile = GST_H264_PROFILE_MAIN;
   priv->profile_h264 = D3D12_VIDEO_ENCODER_PROFILE_H264_MAIN;
 
@@ -2142,6 +2149,27 @@ gst_d3d12_h264_enc_end_frame (GstD3D12Encoder * encoder)
   priv->dpb->EndFrame ();
 
   return TRUE;
+}
+
+static guint64
+gst_d3d12_h264_enc_get_bitstream_size (GstD3D12Encoder * encoder,
+    const GstD3D12EncoderConfig * config)
+{
+  auto self = GST_D3D12_H264_ENC (encoder);
+  const auto & sps = self->priv->sps.sps;
+  guint64 num_mbs = ((guint64) sps.pic_width_in_mbs_minus1 + 1) *
+      (sps.pic_height_in_map_units_minus1 + 1);
+
+  /* See vah264enc, use similar upper bound for slice header size */
+  const guint max_slice_header_size = 1536;
+  /* Estimated bytes per MB for 8-bit 4:2:0 */
+  const guint bytes_per_mb = 400;
+
+  guint64 size = num_mbs * bytes_per_mb +
+      (guint64) config->max_subregions * max_slice_header_size;
+
+  /* Add 10% margin */
+  return gst_util_uint64_scale_ceil (size, 110, 100);
 }
 
 void

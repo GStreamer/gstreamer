@@ -42,6 +42,8 @@ GstD3D12EncoderBufferPool * gst_d3d12_encoder_buffer_pool_new (GstD3D12Device * 
 gboolean                    gst_d3d12_encoder_buffer_pool_acquire (GstD3D12EncoderBufferPool * pool,
                                                                    GstD3D12EncoderBuffer ** buffer);
 
+guint                       gst_d3d12_encoder_buffer_pool_get_size (GstD3D12EncoderBufferPool * pool);
+
 GstD3D12EncoderBuffer *     gst_d3d12_encoder_buffer_ref (GstD3D12EncoderBuffer * buffer);
 
 void                        gst_d3d12_encoder_buffer_unref (GstD3D12EncoderBuffer * buffer);
