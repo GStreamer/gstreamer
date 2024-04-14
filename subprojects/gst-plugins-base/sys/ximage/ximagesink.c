@@ -584,7 +584,7 @@ gst_x_image_sink_xwindow_new (GstXImageSink * ximagesink, gint width,
 #ifdef HAVE_XI2
     if (ximagesink->xcontext->use_xi2) {
       XIEventMask mask_data;
-      unsigned char mask[2];
+      unsigned char mask[2] = { 0 };
 
       gst_x_image_sink_xwindow_select_touch_events (ximagesink, xwindow);
 
