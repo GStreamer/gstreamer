@@ -463,6 +463,20 @@ gst_v4l2_decoder_probe_caps_for_format (GstV4l2Decoder * self,
   return caps;
 }
 
+static gboolean
+filter_only_dmabuf_caps (GstCapsFeatures * features,
+    GstStructure * structure, gpointer user_data)
+{
+  return gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF);
+}
+
+static gboolean
+filter_non_dmabuf_caps (GstCapsFeatures * features,
+    GstStructure * structure, gpointer user_data)
+{
+  return !gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF);
+}
+
 GstCaps *
 gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
     GstStaticCaps * static_filter)
@@ -509,6 +523,11 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
   caps = gst_caps_intersect_full (tmp, filter, GST_CAPS_INTERSECT_FIRST);
   gst_caps_unref (tmp);
   gst_caps_unref (filter);
+
+  tmp = gst_caps_copy (caps);
+  gst_caps_filter_and_map_in_place (caps, filter_only_dmabuf_caps, NULL);
+  gst_caps_filter_and_map_in_place (tmp, filter_non_dmabuf_caps, NULL);
+  gst_caps_append (caps, tmp);
 
   GST_DEBUG_OBJECT (self, "Probed caps: %" GST_PTR_FORMAT, caps);
 
