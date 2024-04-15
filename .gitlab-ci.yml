@@ -136,8 +136,9 @@ fedora amd64 docker:
     - '.fdo.container-build@fedora'
   stage: 'preparation'
   needs: []
-  tags:
-    - 'packet.net'
+  # Note: assumption is that placeholder jobs run on a packet runner
+  # (which has faster network connectivity to the registry).
+  tags: [ 'placeholder-job' ]
 
 .gst-indent image:
   tags: [ 'placeholder-job' ]
