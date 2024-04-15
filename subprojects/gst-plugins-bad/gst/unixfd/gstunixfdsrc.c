@@ -298,6 +298,14 @@ from_monotonic (GstClockTime timestamp, GstClockTime base_time,
   return timestamp;
 }
 
+static void
+close_and_free_fds (gint * fds, gint fds_len)
+{
+  for (int i = 0; i < fds_len; i++)
+    g_close (fds[i], NULL);
+  g_free (fds);
+}
+
 static GstFlowReturn
 gst_unix_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
@@ -346,14 +354,14 @@ again:
             "Received new buffer command with %d file descriptors instead of "
             "%d", fds_arr_len, new_buffer->n_memory);
         ret = GST_FLOW_ERROR;
-        g_free (fds_arr);
+        close_and_free_fds (fds_arr, fds_arr_len);
         goto on_error;
       }
 
       if (new_buffer->type >= MEMORY_TYPE_LAST) {
         GST_ERROR_OBJECT (self, "Unknown buffer type %d", new_buffer->type);
         ret = GST_FLOW_ERROR;
-        g_free (fds_arr);
+        close_and_free_fds (fds_arr, fds_arr_len);
         goto on_error;
       }
       GstAllocator *allocator = self->allocators[new_buffer->type];
@@ -384,6 +392,8 @@ again:
         if (consumed == 0) {
           GST_ERROR_OBJECT (self, "Malformed meta serialization");
           ret = GST_FLOW_ERROR;
+          close_and_free_fds (fds_arr, fds_arr_len);
+          gst_clear_buffer (outbuf);
           goto on_error;
         }
         payload_off += consumed;
