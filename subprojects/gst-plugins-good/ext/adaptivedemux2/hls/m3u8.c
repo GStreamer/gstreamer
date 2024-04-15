@@ -1876,15 +1876,24 @@ find_segment_in_playlist (GstHLSMediaPlaylist * playlist,
         }
       }
 
-      if (cand->datetime
-          && g_date_time_difference (cand->datetime, segment->datetime) >= 0) {
+      /* The reported PDT might not be 100% identical for matching segments
+       * across playlists, we therefore need to take into account a certain
+       * tolerance otherwise we would fail to match candidates with a PDT which
+       * is slightly before. We therefore check whether the segment starts
+       * within the first third of the candidate segment.
+       */
+      if (cand->datetime) {
+        GstClockTimeDiff pdtdiff = g_date_time_difference (cand->datetime,
+            segment->datetime) * GST_USECOND + cand->duration / 3;
+        if (pdtdiff >= 0) {
 #ifndef GST_DISABLE_GST_DEBUG
-        gchar *pdtstring = g_date_time_format_iso8601 (cand->datetime);
-        GST_DEBUG ("Picking segment with datetime %s", pdtstring);
-        g_free (pdtstring);
+          gchar *pdtstring = g_date_time_format_iso8601 (cand->datetime);
+          GST_DEBUG ("Picking segment with datetime %s", pdtstring);
+          g_free (pdtstring);
 #endif
-        *matched_pdt = TRUE;
-        return cand;
+          *matched_pdt = TRUE;
+          return cand;
+        }
       }
     }
   }
