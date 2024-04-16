@@ -309,14 +309,14 @@ create_cropped_frame (GstDvbSubEnc * enc, GstVideoFrame * in,
     y++;
   }
 
-  /* By mapping the video frame no ref, it takes ownership of the buffer and it will be released
-   * on unmap (if the map call succeeds) */
+  /* Remap the video frame as read-only, and then drop our ref to the
+   * underlying buffer so the video frame holds the only remaining ref */
   gst_video_frame_unmap (out);
-  if (!gst_video_frame_map (out, &cropped_info, cropped_buffer,
-          GST_MAP_READ | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+  if (!gst_video_frame_map (out, &cropped_info, cropped_buffer, GST_MAP_READ)) {
     gst_buffer_unref (cropped_buffer);
     return FALSE;
   }
+  gst_buffer_unref (cropped_buffer);
   return TRUE;
 }
 
@@ -338,6 +338,10 @@ process_largest_subregion (GstDvbSubEnc * enc, GstVideoFrame * vframe)
   find_largest_subregion (pixels, stride, pixel_stride, enc->in_info.width,
       enc->in_info.height, &left, &right, &top, &bottom);
 
+  /* Don't crash if subtitle is empty */
+  if (right < left || bottom < top)
+    goto skip;
+
   GST_LOG_OBJECT (enc, "Found subregion %u,%u -> %u,%u w %u, %u", left, top,
       right, bottom, right - left + 1, bottom - top + 1);
 
@@ -354,14 +358,15 @@ process_largest_subregion (GstDvbSubEnc * enc, GstVideoFrame * vframe)
   ayuv8p_buffer =
       gst_buffer_new_allocate (NULL, GST_VIDEO_INFO_SIZE (&ayuv8p_info), NULL);
 
-  /* Mapped without extra ref - the frame now owns the only ref */
+  /* Pass buffer ref to the frame, and remove the ref that we have - now frame owns the only ref */
   if (!gst_video_frame_map (&ayuv8p_frame, &ayuv8p_info, ayuv8p_buffer,
-          GST_MAP_WRITE | GST_VIDEO_FRAME_MAP_FLAG_NO_REF)) {
+          GST_MAP_WRITE)) {
     GST_WARNING_OBJECT (enc, "Failed to map frame conversion output buffer");
     gst_video_frame_unmap (&cropped_frame);
     gst_buffer_unref (ayuv8p_buffer);
     goto fail;
   }
+  gst_buffer_unref (ayuv8p_buffer);
 
   if (!gst_dvbsubenc_ayuv_to_ayuv8p (&cropped_frame, &ayuv8p_frame,
           enc->max_colours, &num_colours)) {
