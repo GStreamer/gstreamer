@@ -684,6 +684,7 @@ mpegts_base_program_remove_stream (MpegTSBase * base,
   program->streams[pid] = NULL;
 }
 
+#if 0                           /* Smart-update disabled */
 /* Check if pmtstream is already present in the program */
 static inline gboolean
 _stream_in_pmt (const GstMpegtsPMT * pmt, MpegTSBaseStream * stream)
@@ -768,7 +769,7 @@ mpegts_base_update_program (MpegTSBase * base, MpegTSBaseProgram * program,
   g_list_free (toremove);
   return TRUE;
 }
-
+#endif
 
 static gboolean
 _stream_is_private_section (const GstMpegtsPMT * pmt,
@@ -862,6 +863,7 @@ mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
   return TRUE;
 }
 
+#if 0                           /* Smart-update disabled */
 /* Return TRUE if program is an update
  *
  * A program is equal if:
@@ -923,6 +925,7 @@ mpegts_base_is_program_update (MpegTSBase * base,
   GST_DEBUG ("Program is not an update of the previous one");
   return FALSE;
 }
+#endif
 
 static void
 mpegts_base_deactivate_program (MpegTSBase * base, MpegTSBaseProgram * program)
@@ -1208,6 +1211,8 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
               pmt)))
     goto same_program;
 
+#if 0
+  /* parsebin doesn't support program update properly. Disable this feature for now */
   if (base->streams_aware
       && mpegts_base_is_program_update (base, old_program, section->pid, pmt)) {
     GST_FIXME ("We are streams_aware and new program is an update");
@@ -1215,6 +1220,7 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
     mpegts_base_update_program (base, old_program, section, pmt);
     goto beach;
   }
+#endif
 
   /* If the current program is active, this means we have a new program */
   if (old_program->active) {
@@ -1247,7 +1253,9 @@ mpegts_base_apply_pmt (MpegTSBase * base, GstMpegtsSection * section)
   mpegts_base_activate_program (base, program, section->pid, section, pmt,
       initial_program);
 
+#if 0                           /* Smart-update disabled */
 beach:
+#endif
   GST_DEBUG ("Done activating program");
   return TRUE;
 
