@@ -90,6 +90,36 @@
  * Since: 1.22
  */
 
+/**
+ * SECTION:element-vtenc_h265a
+ * @title: vtenc_h265a
+ *
+ * Apple VideoToolbox H265 encoder with alpha channel support.
+ * This encoder can either use HW or a SW implementation depending on the device.
+ * 
+ * ## Example pipeline (assuming a PNG with an alpha channel as input)
+ * |[
+ * gst-launch-1.0 -v filesrc location=test.png ! pngdec ! imagefreeze num-buffers=1000 ! videoconvert ! vtenc_h265a ! qtmux ! filesink location=out.mov
+ * ]| Encode 1000 frames of a PNG image with an alpha channel and save it as an MOV file.
+ *
+ * Since: 1.26
+ */
+
+/**
+ * SECTION:element-vtenc_h265a_hw
+ * @title: vtenc_h265a_hw
+ *
+ * Apple VideoToolbox H265 HW-only encoder with alpha channel support.
+ * Currently only available on macOS.
+ * 
+ * ## Example pipeline (assuming a PNG with an alpha channel as input)
+ * |[
+ * gst-launch-1.0 -v filesrc location=test.png ! pngdec ! imagefreeze num-buffers=1000 ! videoconvert ! vtenc_h265a ! qtmux ! filesink location=out.mov
+ * ]| Encode 1000 frames of a PNG image with an alpha channel and save it as an MOV file.
+ *
+ * Since: 1.26
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -111,6 +141,7 @@
 #define VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL_DURATION 0
 #define VTENC_DEFAULT_PRESERVE_ALPHA TRUE
 #define VTENC_OUTPUT_QUEUE_SIZE 3
+#define VTENC_HEVCALPHA_INPUT_LIMIT 5
 
 GST_DEBUG_CATEGORY (gst_vtenc_debug);
 #define GST_CAT_DEFAULT (gst_vtenc_debug)
@@ -232,14 +263,8 @@ static void gst_pixel_buffer_release_cb (void *releaseRefCon,
     const void *planeAddresses[]);
 #endif
 
-#ifdef HAVE_IOS
-static GstStaticCaps sink_caps =
-GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
-#else
 static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV64, UYVY, NV12, I420 }"));
-#endif
-
 
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)
@@ -330,6 +355,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case kCMVideoCodecType_HEVC:
+    case kCMVideoCodecType_HEVCWithAlpha:
       gst_structure_set (gst_caps_get_structure (src_caps, 0),
           "stream-format", G_TYPE_STRING, "hvc1",
           "alignment", G_TYPE_STRING, "au", NULL);
@@ -436,7 +462,8 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   /*
-   * H264 doesn't support alpha components, so only add the property for prores
+   * H264 doesn't support alpha components, and H265 uses a separate element for encoding
+   * with alpha, so only add the property for prores
    */
   if (g_strcmp0 (G_OBJECT_CLASS_NAME (klass), "vtenc_prores") == 0) {
     /**
@@ -479,6 +506,9 @@ gst_vtenc_init (GstVTEnc * self)
 
   g_mutex_init (&self->queue_mutex);
   g_cond_init (&self->queue_cond);
+
+  g_mutex_init (&self->encoding_mutex);
+  g_cond_init (&self->encoding_cond);
 }
 
 static void
@@ -489,6 +519,9 @@ gst_vtenc_finalize (GObject * obj)
   CFRelease (self->keyframe_props);
   g_mutex_clear (&self->queue_mutex);
   g_cond_clear (&self->queue_cond);
+
+  g_mutex_clear (&self->encoding_mutex);
+  g_cond_clear (&self->encoding_cond);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -952,7 +985,8 @@ gst_vtenc_negotiate_profile_and_level (GstVTEnc * self, GstStructure * s)
   if (self->profile_level)
     CFRelease (self->profile_level);
 
-  if (self->specific_format_id == kCMVideoCodecType_HEVC) {
+  if (self->specific_format_id == kCMVideoCodecType_HEVC ||
+      self->specific_format_id == kCMVideoCodecType_HEVCWithAlpha) {
     return gst_vtenc_hevc_parse_profile_level_key (self, profile, level);
   } else {
     return gst_vtenc_h264_parse_profile_level_key (self, profile, level);
@@ -1002,6 +1036,11 @@ gst_vtenc_negotiate_specific_format_details (GstVideoEncoder * enc)
         break;
       case kCMVideoCodecType_HEVC:
         self->specific_format_id = kCMVideoCodecType_HEVC;
+        if (!gst_vtenc_negotiate_profile_and_level (self, s))
+          goto fail;
+        break;
+      case kCMVideoCodecType_HEVCWithAlpha:
+        self->specific_format_id = kCMVideoCodecType_HEVCWithAlpha;
         if (!gst_vtenc_negotiate_profile_and_level (self, s))
           goto fail;
         break;
@@ -1109,6 +1148,7 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
   switch (self->details->format_id) {
     case kCMVideoCodecType_H264:
     case kCMVideoCodecType_HEVC:
+    case kCMVideoCodecType_HEVCWithAlpha:
     {
       CMFormatDescriptionRef fmt;
       CFDictionaryRef atoms;
@@ -1123,7 +1163,8 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
       atoms = CMFormatDescriptionGetExtension (fmt,
           kCMFormatDescriptionExtension_SampleDescriptionExtensionAtoms);
 
-      if (self->details->format_id == kCMVideoCodecType_HEVC)
+      if (self->details->format_id == kCMVideoCodecType_HEVC ||
+          self->details->format_id == kCMVideoCodecType_HEVCWithAlpha)
         boxKey =
             CFStringCreateWithCString (NULL, "hvcC", kCFStringEncodingUTF8);
       else
@@ -1140,7 +1181,8 @@ gst_vtenc_negotiate_downstream (GstVTEnc * self, CMSampleBufferRef sbuf)
       gst_structure_set (s, "codec_data", GST_TYPE_BUFFER, codec_data_buf,
           NULL);
 
-      if (self->details->format_id == kCMVideoCodecType_HEVC) {
+      if (self->details->format_id == kCMVideoCodecType_HEVC ||
+          self->details->format_id == kCMVideoCodecType_HEVCWithAlpha) {
         sps[0] = codec_data[1];
         sps[11] = codec_data[12];
         gst_codec_utils_h265_caps_set_level_tier_and_profile (caps, sps, 12);
@@ -2031,10 +2073,41 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
 #endif
 
   /* We need to unlock the stream lock here because
-   * it can wait for gst_vtenc_enqueue_buffer() to
-   * handle a buffer... which will take the stream
-   * lock from another thread and then deadlock */
+   * the encode call can wait for gst_vtenc_enqueue_buffer()
+   * to handle a buffer... which will take the stream lock
+   * from another thread and then deadlock */
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
+
+  /* HEVCWithAlpha encoder has a bug where it does not throttle the amount
+   * of input frames queued internally. Other encoders do not have this
+   * problem and correctly block until the internal queue has space.
+   * Trying to use kVTCompressionPropertyKey_MaxFrameDelayCount does not help.
+   * When paired with a fast enough source like videotestsrc, this can result in
+   * a ton of memory being taken up by frames inside the encoder, eventually killing
+   * the process because of OOM.
+   * 
+   * The workaround here tries to block until the number of pending frames falls
+   * below a certain threshold. Best we can do until Apple fixes this. */
+  if (self->specific_format_id == kCMVideoCodecType_HEVCWithAlpha) {
+    CFNumberRef pending_num;
+    gint pending_frames;
+
+    VTSessionCopyProperty (self->session,
+        kVTCompressionPropertyKey_NumberOfPendingFrames, NULL, &pending_num);
+    CFNumberGetValue (pending_num, kCFNumberSInt32Type, &pending_frames);
+    CFRelease (pending_num);
+
+    g_mutex_lock (&self->encoding_mutex);
+    while (pending_frames > VTENC_HEVCALPHA_INPUT_LIMIT) {
+      g_cond_wait (&self->encoding_cond, &self->encoding_mutex);
+      VTSessionCopyProperty (self->session,
+          kVTCompressionPropertyKey_NumberOfPendingFrames, NULL, &pending_num);
+      CFNumberGetValue (pending_num, kCFNumberIntType, &pending_frames);
+      CFRelease (pending_num);
+    }
+    g_mutex_unlock (&self->encoding_mutex);
+  }
+
   vt_status = VTCompressionSessionEncodeFrame (self->session,
       pbuf, ts, duration, frame_props,
       GINT_TO_POINTER (frame->system_frame_number), NULL);
@@ -2104,6 +2177,13 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
     }
 
     goto drop;
+  }
+
+  if (self->specific_format_id == kCMVideoCodecType_HEVCWithAlpha) {
+    /* See comment in gst_vtenc_encode_frame() above */
+    g_mutex_lock (&self->encoding_mutex);
+    g_cond_signal (&self->encoding_cond);
+    g_mutex_unlock (&self->encoding_mutex);
   }
 
   if (!frame) {
@@ -2341,10 +2421,14 @@ gst_vtenc_register (GstPlugin * plugin,
 static const GstVTEncoderDetails gst_vtenc_codecs[] = {
   {"H.264", "h264", "video/x-h264", kCMVideoCodecType_H264, FALSE},
   {"H.265/HEVC", "h265", "video/x-h265", kCMVideoCodecType_HEVC, FALSE},
+  {"H.265/HEVC with alpha", "h265a", "video/x-h265",
+      kCMVideoCodecType_HEVCWithAlpha, FALSE},
 #ifndef HAVE_IOS
   {"H.264 (HW only)", "h264_hw", "video/x-h264", kCMVideoCodecType_H264, TRUE},
   {"H.265/HEVC (HW only)", "h265_hw", "video/x-h265", kCMVideoCodecType_HEVC,
       TRUE},
+  {"H.265/HEVC with alpha (HW only)", "h265a_hw", "video/x-h265",
+      kCMVideoCodecType_HEVCWithAlpha, TRUE},
 #endif
   {"Apple ProRes", "prores", "video/x-prores",
       GST_kCMVideoCodecType_Some_AppleProRes, FALSE},

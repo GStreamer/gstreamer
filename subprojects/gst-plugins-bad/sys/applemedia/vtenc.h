@@ -86,7 +86,11 @@ struct _GstVTEnc
   /* Protects output_queue, is_flushing and pause_task */
   GMutex queue_mutex;
   GCond queue_cond;
-  
+
+  /* Temporary workaround for HEVCWithAlpha encoder not throttling input */
+  GMutex encoding_mutex;
+  GCond encoding_cond;
+
   /* downstream_ret is protected by the STREAM_LOCK */
   GstFlowReturn downstream_ret;
   gboolean negotiate_downstream;
