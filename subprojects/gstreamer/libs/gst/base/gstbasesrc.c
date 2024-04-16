@@ -2885,6 +2885,7 @@ gst_base_src_loop (GstPad * pad)
   gboolean eos;
   guint blocksize;
   GList *pending_events = NULL, *tmp;
+  GstEvent *seg_event = NULL;
 
   eos = FALSE;
 
@@ -2973,14 +2974,15 @@ gst_base_src_loop (GstPad * pad)
 
   /* push events to close/start our segment before we push the buffer. */
   if (G_UNLIKELY (src->priv->segment_pending)) {
-    GstEvent *seg_event = gst_event_new_segment (&src->segment);
+    /* generate the event but do not send until outside of live_lock  */
+    seg_event = gst_event_new_segment (&src->segment);
 
     gst_event_set_seqnum (seg_event, src->priv->segment_seqnum);
     src->priv->segment_seqnum = gst_util_seqnum_next ();
-    gst_pad_push_event (pad, seg_event);
     src->priv->segment_pending = FALSE;
   }
 
+  /* collect any pending events */
   if (g_atomic_int_get (&src->priv->have_events)) {
     GST_OBJECT_LOCK (src);
     /* take the events */
@@ -2989,8 +2991,13 @@ gst_base_src_loop (GstPad * pad)
     g_atomic_int_set (&src->priv->have_events, FALSE);
     GST_OBJECT_UNLOCK (src);
   }
+  GST_LIVE_UNLOCK (src);
 
-  /* Push out pending events if any */
+  /* now outside the live_lock we can push the segment event */
+  if (G_UNLIKELY (seg_event))
+    gst_pad_push_event (pad, seg_event);
+
+  /* and the pending events if any */
   if (G_UNLIKELY (pending_events != NULL)) {
     for (tmp = pending_events; tmp; tmp = g_list_next (tmp)) {
       GstEvent *ev = (GstEvent *) tmp->data;
@@ -3070,7 +3077,6 @@ gst_base_src_loop (GstPad * pad)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     src->priv->discont = FALSE;
   }
-  GST_LIVE_UNLOCK (src);
 
   /* push buffer or buffer list */
   if (src->priv->pending_bufferlist != NULL) {
