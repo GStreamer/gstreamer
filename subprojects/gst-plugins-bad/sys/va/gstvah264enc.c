@@ -178,6 +178,7 @@ struct _GstVaH264Enc
   guint min_cr;
   gboolean use_cabac;
   gboolean use_dct8x8;
+  gboolean support_trellis;
   gboolean use_trellis;
   gboolean aud;
   gboolean cc;
@@ -767,9 +768,9 @@ _validate_parameters (GstVaH264Enc * self)
       self->num_slices, PROP_NUM_SLICES);
 
   /* Ensure trellis. */
-  if (self->use_trellis &&
-      !gst_va_encoder_has_trellis (base->encoder, base->profile,
-          GST_VA_BASE_ENC_ENTRYPOINT (base))) {
+  self->support_trellis = gst_va_encoder_has_trellis (base->encoder,
+      base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
+  if (self->use_trellis && !self->support_trellis) {
     GST_INFO_OBJECT (self, "The trellis is not supported");
     self->use_trellis = FALSE;
   }
@@ -1516,6 +1517,7 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->level_str = NULL;
   self->mb_width = 0;
   self->mb_height = 0;
+  self->support_trellis = FALSE;
 
   self->gop.i_period = 0;
   self->gop.total_idr_count = 0;
@@ -3009,8 +3011,8 @@ _encode_one_frame (GstVaH264Enc * self, GstVideoCodecFrame * gst_frame)
             self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
       return FALSE;
 
-    if (!gst_va_base_enc_add_trellis_parameter (base, frame->base.picture,
-            self->use_trellis))
+    if (self->support_trellis && !gst_va_base_enc_add_trellis_parameter (base,
+            frame->base.picture, self->use_trellis))
       return FALSE;
 
     _fill_sequence_param (self, &sequence);
