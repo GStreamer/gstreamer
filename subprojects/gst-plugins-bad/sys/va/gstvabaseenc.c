@@ -1170,16 +1170,13 @@ gst_va_base_enc_add_trellis_parameter (GstVaBaseEnc * base,
   } trellis = {
     .type = VAEncMiscParameterTypeQuantization,
     .tr.quantization_flags.bits = {
-       .disable_trellis = 0,
-       .enable_trellis_I = 1,
-       .enable_trellis_B = 1,
-       .enable_trellis_P = 1,
+       .disable_trellis = !use_trellis,
+       .enable_trellis_I = use_trellis,
+       .enable_trellis_B = use_trellis,
+       .enable_trellis_P = use_trellis,
     },
   };
   /* *INDENT-ON* */
-
-  if (!use_trellis)
-    return TRUE;
 
   if (!gst_va_encoder_add_param (base->encoder, picture,
           VAEncMiscParameterBufferType, &trellis, sizeof (trellis))) {
