@@ -186,6 +186,61 @@ check_d3d11_available (void)
   return TRUE;
 }
 
+static gboolean stopping = FALSE;
+
+static gpointer
+test_device_new_concurrency_thread (gpointer)
+{
+  GstVideoInfo in_info, out_info;
+
+  gst_video_info_set_format (&in_info, GST_VIDEO_FORMAT_I420, 320, 240);
+  gst_video_info_set_format (&out_info, GST_VIDEO_FORMAT_RGBx, 1920, 1080);
+
+  while (!g_atomic_int_get (&stopping)) {
+    GstD3D11Converter *converter;
+    GstD3D11Device *device = gst_d3d11_device_new (0, D3D11_CREATE_DEVICE_BGRA_SUPPORT);
+
+    gst_d3d11_device_lock (device);
+    converter = gst_d3d11_converter_new (device, &in_info, &out_info,
+        gst_structure_new ("converter-config",
+        GST_D3D11_CONVERTER_OPT_BACKEND, GST_TYPE_D3D11_CONVERTER_BACKEND,
+        GST_D3D11_CONVERTER_BACKEND_SHADER,
+        GST_D3D11_CONVERTER_OPT_GAMMA_MODE,
+        GST_TYPE_VIDEO_GAMMA_MODE, GST_VIDEO_GAMMA_MODE_NONE,
+        GST_D3D11_CONVERTER_OPT_PRIMARIES_MODE,
+        GST_TYPE_VIDEO_PRIMARIES_MODE, GST_VIDEO_PRIMARIES_MODE_NONE,
+					      nullptr));
+    gst_d3d11_device_unlock (device);
+
+    g_usleep (g_random_int_range (10, 1000));
+
+    gst_d3d11_device_lock (device);
+    gst_object_unref (converter);
+    gst_d3d11_device_unlock (device);
+
+    gst_object_unref (device);
+  }
+
+  return NULL;
+}
+
+GST_START_TEST (test_device_new_concurrency)
+{
+#define NUM_THREADS 32
+  GThread *threads[NUM_THREADS];
+
+  for (int t = 0; t < NUM_THREADS; t++)
+    threads[t] = g_thread_new (NULL, test_device_new_concurrency_thread, NULL);
+
+  g_usleep (20 * G_TIME_SPAN_SECOND);
+  g_atomic_int_set (&stopping, TRUE);
+  for (int t = 0; t < NUM_THREADS; t++)
+    g_thread_join(threads[t]);
+
+}
+
+GST_END_TEST;
+
 static Suite *
 d3d11device_suite (void)
 {
@@ -200,6 +255,7 @@ d3d11device_suite (void)
   tcase_add_test (tc_basic, test_device_new);
   tcase_add_test (tc_basic, test_device_for_adapter_luid);
   tcase_add_test (tc_basic, test_device_new_wrapped);
+  tcase_add_test (tc_basic, test_device_new_concurrency);
 
 out:
   return s;
