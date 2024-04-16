@@ -2029,7 +2029,7 @@ get_shader_format (GstVideoFormat format, gboolean is_input)
  * @device: a #GstD3D11Device
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
- * @method: (inout) (optional) (nullable): a #GstD3D11ConverterMethod
+ * @config: (transfer full) (optional) (nullable): a #GstStructure containing converter config
 
  * Create a new converter object to convert between @in_info and @out_info
  * with @method. When @method is not specified, converter will configure
