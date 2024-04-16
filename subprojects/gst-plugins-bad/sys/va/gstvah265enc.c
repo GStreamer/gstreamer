@@ -191,6 +191,7 @@ struct _GstVaH265Enc
 
   gboolean aud;
   guint32 packed_headers;
+  gboolean support_trellis;
 
   struct
   {
@@ -1894,8 +1895,8 @@ _h265_encode_one_frame (GstVaH265Enc * self, GstVideoCodecFrame * gst_frame)
             self->rc.rc_ctrl_mode, self->rc.cpb_length_bits))
       return FALSE;
 
-    if (!gst_va_base_enc_add_trellis_parameter (base, frame->base.picture,
-            self->features.use_trellis))
+    if (self->support_trellis && !gst_va_base_enc_add_trellis_parameter (base,
+            frame->base.picture, self->features.use_trellis))
       return FALSE;
 
     _h265_fill_sequence_parameter (self, &sequence);
@@ -2521,6 +2522,7 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   self->bits_depth_chroma_minus8 = 0;
 
   self->packed_headers = 0;
+  self->support_trellis = FALSE;
 
   self->partition.slice_span_tiles = FALSE;
   g_clear_pointer (&self->partition.slice_segment_address, g_free);
@@ -4338,9 +4340,9 @@ print_options:
       self->features.transquant_bypass_enabled_flag);
 
   /* Ensure trellis. */
-  if (self->features.use_trellis &&
-      !gst_va_encoder_has_trellis (base->encoder, base->profile,
-          GST_VA_BASE_ENC_ENTRYPOINT (base))) {
+  self->support_trellis = gst_va_encoder_has_trellis (base->encoder,
+      base->profile, GST_VA_BASE_ENC_ENTRYPOINT (base));
+  if (self->features.use_trellis && !self->support_trellis) {
     GST_INFO_OBJECT (self, "The trellis is not supported");
     self->features.use_trellis = FALSE;
   }
