@@ -1517,6 +1517,8 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->level_str = NULL;
   self->mb_width = 0;
   self->mb_height = 0;
+  self->min_cr = 0;
+  self->packed_headers = 0;
   self->support_trellis = FALSE;
 
   self->gop.i_period = 0;
