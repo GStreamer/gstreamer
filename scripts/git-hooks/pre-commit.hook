@@ -8,11 +8,11 @@
 # so check for that first.
 
 version=$(gnuindent --version 2>/dev/null)
-if test "x$version" = "x"; then
+if test -z "$version"; then
   version=$(gindent --version 2>/dev/null)
-  if test "x$version" = "x"; then
+  if test -z "$version"; then
     version=$(indent --version 2>/dev/null)
-    if test "x$version" = "x"; then
+    if test -z "$version"; then
       echo "GStreamer git pre-commit hook:"
       echo "Did not find GNU indent, please install it before continuing."
       exit 1
@@ -92,9 +92,9 @@ echo "==========================================================================
 fi
 
 csharp_files=$( git diff-index --cached --name-only HEAD --diff-filter=ACMR| grep "^subprojects/gstreamer-sharp/.*cs$" )
-if test "x$csharp_files" != "x"; then
+if test -n "$csharp_files"; then
   version=$(dotnet-format --version 2>/dev/null)
-  if test "x$version" = "x"; then
+  if test -z "$version"; then
       echo "GStreamer git pre-commit hook:"
       echo "Did not find dotnet-format required to format C# files, please install it before continuing."
       exit 1
