@@ -404,6 +404,8 @@ gst_rtp_bin_rtcp_sync_get_type (void)
     {GST_RTP_BIN_RTCP_SYNC_ALWAYS, "always", "always"},
     {GST_RTP_BIN_RTCP_SYNC_INITIAL, "initial", "initial"},
     {GST_RTP_BIN_RTCP_SYNC_RTP_INFO, "rtp-info", "rtp-info"},
+    {GST_RTP_BIN_RTCP_SYNC_NTP, "ntp", "ntp"},
+    {GST_RTP_BIN_RTCP_SYNC_NEVER, "never", "never"},
     {0, NULL, NULL},
   };
 
@@ -446,7 +448,7 @@ static GstElement *session_request_element (GstRtpBinSession * session,
 typedef enum
 {
   GST_RTP_BIN_STREAM_SYNCED_NONE,
-  GST_RTP_BIN_STREAM_SYNCED_RTCP,
+  GST_RTP_BIN_STREAM_SYNCED_NTP,
   GST_RTP_BIN_STREAM_SYNCED_RTP_INFO
 } GstRtpBinStreamSynced;
 
@@ -1643,11 +1645,16 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
       if (!GST_CLOCK_TIME_IS_VALID (extrtptime)
           || !GST_CLOCK_TIME_IS_VALID (ntpnstime)
           || extrtptime < base_rtptime) {
-        GST_DEBUG_OBJECT (bin, "invalidated sync data, bailing out");
-        return;
-      }
+        if (!GST_CLOCK_TIME_IS_VALID (npt_start)) {
+          GST_DEBUG_OBJECT (bin, "invalidated sync data, bailing out");
+          return;
+        }
 
-      GST_DEBUG_OBJECT (bin, "Doing RTCP sync");
+        rtp_info_sync = TRUE;
+        GST_DEBUG_OBJECT (bin, "Doing RTP-Info sync");
+      } else {
+        GST_DEBUG_OBJECT (bin, "Doing RTCP sync");
+      }
       break;
     }
     case GST_RTP_BIN_RTCP_SYNC_RTP_INFO:{
@@ -1660,6 +1667,20 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
       GST_DEBUG_OBJECT (bin, "Doing RTP-Info sync");
 
       break;
+    }
+    case GST_RTP_BIN_RTCP_SYNC_NTP:{
+      if (!GST_CLOCK_TIME_IS_VALID (extrtptime)
+          || !GST_CLOCK_TIME_IS_VALID (ntpnstime)
+          || extrtptime < base_rtptime) {
+        GST_DEBUG_OBJECT (bin, "invalidated sync data, bailing out");
+        return;
+      }
+      GST_DEBUG_OBJECT (bin, "Doing RTCP sync");
+      break;
+    }
+    case GST_RTP_BIN_RTCP_SYNC_NEVER:{
+      GST_DEBUG_OBJECT (bin, "Not doing any sync");
+      return;
     }
   }
 
@@ -1817,7 +1838,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
   for (walk = client->streams; walk; walk = g_slist_next (walk)) {
     GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
 
-    if (rtp_info_sync && ostream->have_sync == GST_RTP_BIN_STREAM_SYNCED_RTCP) {
+    if (rtp_info_sync && ostream->have_sync == GST_RTP_BIN_STREAM_SYNCED_NTP) {
       if (ostream->rtp_delta == G_MININT64) {
         GST_DEBUG_OBJECT (bin,
             "Switching sync mode, waiting for all streams to be ready");
@@ -1888,7 +1909,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
     if (rtp_info_sync)
       ostream->have_sync = GST_RTP_BIN_STREAM_SYNCED_RTP_INFO;
     else
-      ostream->have_sync = GST_RTP_BIN_STREAM_SYNCED_RTCP;;
+      ostream->have_sync = GST_RTP_BIN_STREAM_SYNCED_NTP;
   }
 
   gst_rtp_bin_send_sync_event (stream);
