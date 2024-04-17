@@ -593,7 +593,6 @@ gst_v4l2_codec_vp9_dec_decide_allocation (GstVideoDecoder * decoder,
         "DMABuf caps negotiated without the mandatory support of VideoMeta");
     return FALSE;
   }
-  gst_caps_unref (caps);
 
   if (gst_query_get_n_allocation_pools (query) > 0)
     gst_query_parse_nth_allocation_pool (query, 0, NULL, NULL, &min, NULL);
