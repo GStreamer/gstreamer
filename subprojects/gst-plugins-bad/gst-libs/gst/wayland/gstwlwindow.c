@@ -196,6 +196,9 @@ gst_wl_window_finalize (GObject * gobject)
   gst_wl_display_callback_destroy (priv->display, &priv->frame_callback);
   gst_wl_display_callback_destroy (priv->display, &priv->commit_callback);
 
+  if (priv->staged_buffer)
+    gst_wl_buffer_unref_buffer (priv->staged_buffer);
+
   g_cond_clear (&priv->configure_cond);
   g_mutex_clear (&priv->configure_mutex);
   g_mutex_clear (&priv->window_lock);
