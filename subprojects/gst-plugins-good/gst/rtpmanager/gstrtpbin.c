@@ -1809,6 +1809,30 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
   if (client->nstreams <= 1)
     return;
 
+  /* If this stream was synced before but with a different mode then wait
+   * until all streams of this client that were synced before are ready for
+   * the new mode. Otherwise this can cause unnecessary glitches when
+   * temporarily a different reference stream is selected because the old
+   * reference stream is not ready yet for the new mode */
+  for (walk = client->streams; walk; walk = g_slist_next (walk)) {
+    GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
+
+    if (rtp_info_sync && ostream->have_sync == GST_RTP_BIN_STREAM_SYNCED_RTCP) {
+      if (ostream->rtp_delta == G_MININT64) {
+        GST_DEBUG_OBJECT (bin,
+            "Switching sync mode, waiting for all streams to be ready");
+        return;
+      }
+    } else if (!rtp_info_sync
+        && ostream->have_sync == GST_RTP_BIN_STREAM_SYNCED_RTP_INFO) {
+      if (ostream->rt_delta == G_MININT64) {
+        GST_DEBUG_OBJECT (bin,
+            "Switching sync mode, waiting for all streams to be ready");
+        return;
+      }
+    }
+  }
+
   GST_DEBUG_OBJECT (bin,
       "client %p RTP-Info sync %d, min delta %" G_GINT64_FORMAT
       ", min RTP delta %" G_GINT64_FORMAT ", all sync %d", client,
