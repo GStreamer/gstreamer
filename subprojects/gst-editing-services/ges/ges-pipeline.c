@@ -1270,6 +1270,8 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
       return FALSE;
     }
 
+    g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
+        !(!(mode & GES_PIPELINE_MODE_SMART_RENDER)), NULL);
     if (!gst_bin_add (GST_BIN_CAST (pipeline), pipeline->priv->encodebin)) {
       GST_ERROR_OBJECT (pipeline, "Couldn't add encodebin");
       return FALSE;
@@ -1294,8 +1296,6 @@ ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
       GST_INFO_OBJECT (pipeline,
           "Using an muxing sink, not adding any sink element");
     }
-    g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
-        !(!(mode & GES_PIPELINE_MODE_SMART_RENDER)), NULL);
   }
 
   if (pipeline->priv->timeline) {
