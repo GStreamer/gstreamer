@@ -1463,6 +1463,13 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
     guint64 base_rtptime, guint64 base_time, guint clock_rate,
     gint64 rtp_clock_base)
 {
+  /* Don't do any stream offsetting in RFC7273 sync mode. Everything is
+   * handled inside rtpjitterbuffer for this case. */
+  if (bin->rfc7273_sync) {
+    GST_DEBUG_OBJECT (bin, "Doing RFC7273 sync");
+    return;
+  }
+
   GstRtpBinClient *client;
   gboolean created;
   GSList *walk;
