@@ -1562,6 +1562,7 @@ _create_stream_group (GstEncodeBaseBin * ebin, GstEncodingProfile * sprof,
     gst_object_unref (muxerpad);
   } else {
     if (ebin->srcpad) {
+      /* encodebin static source pad */
       gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), srcpad);
     } else {
       if (!gst_encode_base_bin_create_src_pad (ebin, srcpad)) {
@@ -2272,6 +2273,7 @@ create_elements_and_pads (GstEncodeBaseBin * ebin)
      * but for the time being let's assume it's a static pad :) */
     muxerpad = gst_element_get_static_pad (muxer, "src");
     if (ebin->srcpad) {
+      /* encodebin static source pad */
       if (G_UNLIKELY (muxerpad == NULL))
         goto no_muxer_pad;
       if (!gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), muxerpad))
@@ -2551,7 +2553,7 @@ gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
     stream_group_remove (ebin, (StreamGroup *) ebin->streams->data);
 
   if (ebin->srcpad) {
-    /* Set ghostpad target to NULL */
+    /* encodebin static source pad, set ghostpad target to NULL */
     gst_ghost_pad_set_target (GST_GHOST_PAD (ebin->srcpad), NULL);
   }
 
@@ -2564,7 +2566,8 @@ gst_encode_base_bin_tear_down_profile (GstEncodeBaseBin * ebin)
     ebin->muxer = NULL;
   }
 
-  if (!element->srcpads) {
+  if (!ebin->srcpad) {
+    /* encodebin2 dynamic source pads */
     while (element->srcpads)
       gst_element_remove_pad (element, element->srcpads->data);
   }
