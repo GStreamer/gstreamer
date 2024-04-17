@@ -671,12 +671,20 @@ _set_rendering_details (GESLauncher * self)
           goto done;
         }
 
-        for (tmp = (GList *)
-            gst_encoding_container_profile_get_profiles
-            (GST_ENCODING_CONTAINER_PROFILE (prof)); tmp; tmp = tmp->next) {
+        /* Existing profile is a single-elementary-stream profile, put it in the
+         * new target container profile */
+        if (!GST_IS_ENCODING_CONTAINER_PROFILE (prof)) {
           gst_encoding_container_profile_add_profile
               (GST_ENCODING_CONTAINER_PROFILE (new_prof),
-              GST_ENCODING_PROFILE (gst_encoding_profile_ref (tmp->data)));
+              GST_ENCODING_PROFILE (gst_encoding_profile_ref (prof)));
+        } else {
+          for (tmp = (GList *)
+              gst_encoding_container_profile_get_profiles
+              (GST_ENCODING_CONTAINER_PROFILE (prof)); tmp; tmp = tmp->next) {
+            gst_encoding_container_profile_add_profile
+                (GST_ENCODING_CONTAINER_PROFILE (new_prof),
+                GST_ENCODING_PROFILE (gst_encoding_profile_ref (tmp->data)));
+          }
         }
 
         gst_encoding_profile_unref (prof);
