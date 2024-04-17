@@ -151,7 +151,7 @@ enum
 #define DEFAULT_RTX_MAX_RETRIES    -1
 #define DEFAULT_RTX_DEADLINE       -1
 #define DEFAULT_RTX_STATS_TIMEOUT   1000
-#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF 1000
+#define DEFAULT_MAX_RTCP_RTP_TIME_DIFF -1
 #define DEFAULT_MAX_DROPOUT_TIME    60000
 #define DEFAULT_MAX_MISORDER_TIME   2000
 #define DEFAULT_RFC7273_SYNC        FALSE
@@ -4831,7 +4831,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
       if (ext_rtptime > last_rtptime) {
         /* check how far ahead it is to our RTP timestamps */
         diff = ext_rtptime - last_rtptime;
-        /* if bigger than 1 second, we drop it */
+        /* if bigger than configured maximum difference then we drop it */
         if (jitterbuffer->priv->max_rtcp_rtp_time_diff != -1 &&
             diff >
             gst_util_uint64_scale (jitterbuffer->priv->max_rtcp_rtp_time_diff,
@@ -4839,7 +4839,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
           GST_DEBUG_OBJECT (jitterbuffer, "too far ahead");
           /* should drop this, but some RTSP servers end up with bogus
            * way too ahead RTCP packet when repeated PAUSE/PLAY,
-           * so still trigger rptbin sync but invalidate RTCP data
+           * so still trigger rtpbin sync but invalidate RTCP data
            * (sync might use other methods) */
           ext_rtptime = -1;
         }
