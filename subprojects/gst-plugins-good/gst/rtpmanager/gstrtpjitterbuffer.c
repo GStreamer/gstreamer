@@ -4688,6 +4688,7 @@ do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer, guint64 ntpnstime)
       "base-time", G_TYPE_UINT64, base_time,
       "clock-rate", G_TYPE_UINT, clock_rate,
       "clock-base", G_TYPE_UINT64, priv->clock_base & G_MAXUINT32,
+      "npt-start", G_TYPE_UINT64, priv->npt_start,
       "cname", G_TYPE_STRING, cname,
       "ssrc", G_TYPE_UINT, priv->last_ssrc,
       "inband-ext-rtptime", G_TYPE_UINT64, last_rtptime,
@@ -4712,6 +4713,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
   guint32 clock_rate;
   guint64 last_rtptime;
   guint64 clock_base;
+  GstClockTime npt_start;
   guint64 ext_rtptime, diff;
   gboolean valid = TRUE, keep = FALSE;
 
@@ -4722,6 +4724,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
       &clock_rate, &last_rtptime);
 
   clock_base = priv->clock_base;
+  npt_start = priv->npt_start;
   ext_rtptime = priv->last_sr_ext_rtptime;
 
   GST_DEBUG_OBJECT (jitterbuffer,
@@ -4776,6 +4779,7 @@ do_handle_sync (GstRtpJitterBuffer * jitterbuffer)
         "base-time", G_TYPE_UINT64, base_time,
         "clock-rate", G_TYPE_UINT, clock_rate,
         "clock-base", G_TYPE_UINT64, priv->clock_base & G_MAXUINT32,
+        "npt-start", G_TYPE_UINT64, npt_start,
         "ssrc", G_TYPE_UINT, priv->last_sr_ssrc,
         "sr-ext-rtptime", G_TYPE_UINT64, ext_rtptime,
         "sr-ntpnstime", G_TYPE_UINT64, priv->last_sr_ntpnstime,

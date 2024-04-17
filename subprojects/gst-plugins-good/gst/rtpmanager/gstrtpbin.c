@@ -493,8 +493,9 @@ struct _GstRtpBinStream
   gint64 base_rtptime;
   guint64 base_time;
 
-  /* clock-base for RTP-Info */
+  /* clock-base and npt-start for RTP-Info */
   guint64 clock_base;
+  guint64 npt_start;
 
   /* Smoothing of ts-offset adjustments */
   gint64 avg_ts_offset;
@@ -1069,6 +1070,7 @@ gst_rtp_bin_reset_sync (GstRtpBin * rtpbin)
       stream->base_rtptime = -1;
       stream->base_time = GST_CLOCK_TIME_NONE;
       stream->clock_base = -1;
+      stream->npt_start = GST_CLOCK_TIME_NONE;
 
       stream->avg_ts_offset = 0;
       stream->is_initialized = FALSE;
@@ -1275,12 +1277,28 @@ get_client (GstRtpBin * bin, guint8 len, const guint8 * data)
   for (walk = bin->clients; walk; walk = g_slist_next (walk)) {
     GstRtpBinClient *client = (GstRtpBinClient *) walk->data;
 
+    /* In case of RTSP this can be called without a CNAME first, in which case
+     * we assume that all streams belong to the same client.
+     *
+     * If RTCP is happening later we will get CNAMEs. Remove the client in
+     * that case and create new ones with the actual CNAME once we have one.
+     *
+     * All streams are directly moved over to the new client.
+     */
+    if (client->cname_len == 0 && len != 0) {
+      result = client;
+      g_free (result->cname);
+      result->cname = g_strndup ((gchar *) data, len);
+      result->cname_len = len;
+      break;
+    }
+
     if (len != client->cname_len)
       continue;
 
-    if (!strncmp ((gchar *) data, client->cname, client->cname_len)) {
+    if (len == 0 || !strncmp ((gchar *) data, client->cname, client->cname_len)) {
       GST_DEBUG_OBJECT (bin, "found existing client %p with CNAME %s", client,
-          client->cname);
+          GST_STR_NULL (client->cname));
       result = client;
       break;
     }
@@ -1293,7 +1311,7 @@ get_client (GstRtpBin * bin, guint8 len, const guint8 * data)
     result->cname_len = len;
     bin->clients = g_slist_prepend (bin->clients, result);
     GST_DEBUG_OBJECT (bin, "created new client %p with CNAME %s", result,
-        result->cname);
+        GST_STR_NULL (result->cname));
   }
   return result;
 }
@@ -1472,8 +1490,16 @@ gst_rtp_bin_send_sync_event (GstRtpBinStream * stream)
   }
 }
 
-/* associate a stream to the given CNAME. This will make sure all streams for
+/* Associate a stream to the given CNAME. This will make sure all streams for
  * that CNAME are synchronized together.
+ *
+ * For RTSP streams (or similar) this can also be called with a NULL CNAME and
+ * no ntpnstime / last_extrtptime for doing synchronization based on the
+ * RTP-Info (rtptime maps to rtp_clock_base, and npt_start is provided).
+ *
+ * Synchronization based on RTCP / NTP header extension is generally preferred
+ * over RTP-Info if possible, and this can be configured via the rtcp-sync
+ * property.
  *
  * @len: length of CNAME in @data
  * @data: CNAME
@@ -1491,7 +1517,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
     const guint8 len, const guint8 * data, const guint64 ntpnstime,
     const guint64 extrtptime, const guint64 base_rtptime,
     const guint64 base_time, const guint clock_rate,
-    const guint64 rtp_clock_base)
+    const guint64 rtp_clock_base, const guint64 npt_start)
 {
   /* Don't do any stream offsetting in RFC7273 sync mode. Everything is
    * handled inside rtpjitterbuffer for this case. */
@@ -1598,13 +1624,13 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
   if (walk == NULL) {
     GST_DEBUG_OBJECT (bin,
         "new association of SSRC %08x with client %p with CNAME %s",
-        stream->ssrc, client, client->cname);
+        stream->ssrc, client, GST_STR_NULL (client->cname));
     client->streams = g_slist_prepend (client->streams, stream);
     client->nstreams++;
   } else {
     GST_DEBUG_OBJECT (bin,
         "found association of SSRC %08x with client %p with CNAME %s",
-        stream->ssrc, client, client->cname);
+        stream->ssrc, client, GST_STR_NULL (client->cname));
   }
 
   /* First decide whether to do RTP-Info or RTCP / NTP header extension sync */
@@ -1625,6 +1651,11 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
       break;
     }
     case GST_RTP_BIN_RTCP_SYNC_RTP_INFO:{
+      if (!GST_CLOCK_TIME_IS_VALID (npt_start)) {
+        GST_DEBUG_OBJECT (bin, "invalidated sync data, bailing out");
+        return;
+      }
+
       rtp_info_sync = TRUE;
       GST_DEBUG_OBJECT (bin, "Doing RTP-Info sync");
 
@@ -1643,7 +1674,8 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
 
     GST_DEBUG_OBJECT (bin,
         "base RTP time %" G_GUINT64_FORMAT ", clock-rate %d, " "clock-base %"
-        G_GUINT64_FORMAT, base_rtptime, clock_rate, rtp_clock_base);
+        G_GUINT64_FORMAT ", NPT start %" GST_TIME_FORMAT, base_rtptime,
+        clock_rate, rtp_clock_base, GST_TIME_ARGS (npt_start));
 
     /* convert to extended RTP time */
     rtp_clock_base_ext =
@@ -1662,8 +1694,8 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
     GST_DEBUG_OBJECT (bin, "RTP time difference %" GST_STIME_FORMAT,
         GST_STIME_ARGS (diff_rtp));
 
-    /* Calculate the difference between NPT start (0) and the local time */
-    stream->rtp_delta = 0 - (base_time + diff_rtp);
+    /* Calculate the difference between NPT start and the local time */
+    stream->rtp_delta = npt_start - (base_time + diff_rtp);
 
     for (walk = client->streams; walk; walk = g_slist_next (walk)) {
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
@@ -1676,10 +1708,12 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
 
       /* change in current stream's base from previously init'ed value leads
        * to reset of all stream's base, e.g. after a seek */
-      if (stream != ostream && stream->clock_base >= 0 &&
-          (stream->clock_base != rtp_clock_base)) {
-        GST_DEBUG_OBJECT (bin, "reset upon clock base change");
+      if (stream != ostream && stream->clock_base != -1 &&
+          (stream->clock_base != rtp_clock_base
+              || stream->npt_start != npt_start)) {
+        GST_DEBUG_OBJECT (bin, "reset upon clock base or NPT start change");
         ostream->clock_base = -1;
+        ostream->npt_start = GST_CLOCK_TIME_NONE;
         ostream->rtp_delta = G_MININT64;
         if (ostream->have_sync == GST_RTP_BIN_STREAM_SYNCED_RTP_INFO)
           ostream->have_sync = GST_RTP_BIN_STREAM_SYNCED_NONE;
@@ -1760,11 +1794,13 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
   /* arrange to re-sync for each stream upon significant change, e.g. post-seek
    * or when the RTP base time changes because of a jitterbuffer reset */
   all_sync = all_sync && stream->base_rtptime == base_rtptime &&
-      ((rtp_info_sync && stream->clock_base == rtp_clock_base)
+      ((rtp_info_sync && stream->clock_base == rtp_clock_base
+          && stream->npt_start == npt_start)
       || (!rtp_info_sync && stream->base_time == base_time));
   stream->base_rtptime = base_rtptime;
   if (rtp_info_sync) {
     stream->clock_base = rtp_clock_base;
+    stream->npt_start = npt_start;
   } else {
     stream->base_time = base_time;
   }
@@ -1854,6 +1890,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   GstRTCPPacket packet;
   guint32 ssrc;
   guint64 ntpnstime, inband_ntpnstime;
+  guint64 npt_start = GST_CLOCK_TIME_NONE;
   gboolean have_sr;
   gboolean more;
   guint64 base_rtptime;
@@ -1867,7 +1904,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
 
   bin = stream->bin;
 
-  GST_DEBUG_OBJECT (bin, "sync handler called");
+  GST_DEBUG_OBJECT (bin, "sync handler called %" GST_PTR_FORMAT, s);
 
   /* get the last relation between the rtp timestamps and the gstreamer
    * timestamps. We get this info directly from the jitterbuffer which
@@ -1882,13 +1919,13 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
   }
 
   cname = gst_structure_get_string (s, "cname");
+  gst_structure_get_uint64 (s, "npt-start", &npt_start);
 
   /* if the jitterbuffer directly got the NTP timestamp then don't work
    * through the RTCP SR, otherwise extract it from there */
   if (gst_structure_get_uint64 (s, "inband-ntpnstime", &inband_ntpnstime)
       && gst_structure_get_uint64 (s, "inband-ext-rtptime", &inband_ext_rtptime)
-      && (cname = gst_structure_get_string (s, "cname"))
-      && gst_structure_get_uint (s, "ssrc", &ssrc)) {
+      && cname && gst_structure_get_uint (s, "ssrc", &ssrc)) {
     GST_DEBUG_OBJECT (bin,
         "handle sync from inband NTP-64 information for SSRC %08x", ssrc);
 
@@ -1898,7 +1935,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
     GST_RTP_BIN_LOCK (bin);
     gst_rtp_bin_associate (bin, stream, strlen (cname), (const guint8 *) cname,
         inband_ntpnstime, inband_ext_rtptime, base_rtptime, base_time,
-        clock_rate, clock_base);
+        clock_rate, clock_base, npt_start);
     GST_RTP_BIN_UNLOCK (bin);
     return;
   }
@@ -1917,7 +1954,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
     /* associate the stream to CNAME */
     gst_rtp_bin_associate (bin, stream, strlen (cname),
         (const guint8 *) cname, ntpnstime, extrtptime, base_rtptime,
-        base_time, clock_rate, clock_base);
+        base_time, clock_rate, clock_base, npt_start);
     GST_RTP_BIN_UNLOCK (bin);
     return;
   }
@@ -1961,7 +1998,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
           /* associate the stream to CNAME */
           gst_rtp_bin_associate (bin, stream, strlen (cname),
               (const guint8 *) cname, ntpnstime, extrtptime, base_rtptime,
-              base_time, clock_rate, clock_base);
+              base_time, clock_rate, clock_base, npt_start);
           GST_RTP_BIN_UNLOCK (bin);
 
           goto out;
@@ -1997,7 +2034,7 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
               /* associate the stream to CNAME */
               gst_rtp_bin_associate (bin, stream, len, data,
                   ntpnstime, extrtptime, base_rtptime, base_time, clock_rate,
-                  clock_base);
+                  clock_base, npt_start);
               GST_RTP_BIN_UNLOCK (bin);
 
               goto out;
@@ -2056,6 +2093,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   stream->base_rtptime = -1;
   stream->base_time = GST_CLOCK_TIME_NONE;
   stream->clock_base = -1;
+  stream->npt_start = GST_CLOCK_TIME_NONE;
 
   stream->avg_ts_offset = 0;
   stream->is_initialized = FALSE;
