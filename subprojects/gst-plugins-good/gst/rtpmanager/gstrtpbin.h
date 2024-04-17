@@ -41,7 +41,7 @@ typedef enum
 {
   GST_RTP_BIN_RTCP_SYNC_ALWAYS,
   GST_RTP_BIN_RTCP_SYNC_INITIAL,
-  GST_RTP_BIN_RTCP_SYNC_RTP
+  GST_RTP_BIN_RTCP_SYNC_RTP_INFO
 } GstRTCPSync;
 
 typedef struct _GstRtpBin GstRtpBin;
