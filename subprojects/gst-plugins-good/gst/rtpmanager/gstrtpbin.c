@@ -1456,10 +1456,21 @@ gst_rtp_bin_send_sync_event (GstRtpBinStream * stream)
 
 /* associate a stream to the given CNAME. This will make sure all streams for
  * that CNAME are synchronized together.
+ *
+ * @len: length of CNAME in @data
+ * @data: CNAME
+ * @ntpnstime: NTP time in nanoseconds that corresponds to RTP time @extrtptime.
+ * @extrtptime: Extended RTP time that corresponds to NTP time @ntpnstime.
+ * @base_rtptime: Extended RTP time that corresponds to the local time @base_time.
+ * @base_time: Local time that corresponds to RTP time @base_rtptime.
+ * @clock_rate: RTP clock rate for this stream.
+ * @rtp_clock_base: RTP time signalled in RTSP RTP-Info for this stream, which
+ *     corresponds to the NPT start of the PLAY request.
+ *
  * Must be called with GST_RTP_BIN_LOCK */
 static void
 gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
-    const guint8 * data, guint64 ntpnstime, guint64 last_extrtptime,
+    const guint8 * data, guint64 ntpnstime, guint64 extrtptime,
     guint64 base_rtptime, guint64 base_time, guint clock_rate,
     gint64 rtp_clock_base)
 {
@@ -1498,12 +1509,12 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
         stream->ssrc, client, client->cname);
   }
 
-  if (!GST_CLOCK_TIME_IS_VALID (last_extrtptime)) {
+  if (!GST_CLOCK_TIME_IS_VALID (extrtptime)) {
     GST_DEBUG_OBJECT (bin, "invalidated sync data");
     if (bin->rtcp_sync == GST_RTP_BIN_RTCP_SYNC_RTP) {
       /* we don't need that data, so carry on,
        * but make some values look saner */
-      last_extrtptime = base_rtptime;
+      extrtptime = base_rtptime;
     } else {
       /* nothing we can do with this data in this case */
       GST_DEBUG_OBJECT (bin, "bailing out");
@@ -1515,13 +1526,13 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
    * local rtptime. The local rtp time is used to construct timestamps on the
    * buffers so we will calculate what running_time corresponds to the RTP
    * timestamp in the SR packet. */
-  running_time_rtp = last_extrtptime - base_rtptime;
+  running_time_rtp = extrtptime - base_rtptime;
 
   GST_DEBUG_OBJECT (bin,
       "base %" G_GUINT64_FORMAT ", extrtptime %" G_GUINT64_FORMAT
       ", local RTP %" G_GUINT64_FORMAT ", clock-rate %d, "
       "clock-base %" G_GINT64_FORMAT, base_rtptime,
-      last_extrtptime, running_time_rtp, clock_rate, rtp_clock_base);
+      extrtptime, running_time_rtp, clock_rate, rtp_clock_base);
 
   /* calculate local RTP time in gstreamer timestamp, we essentially perform the
    * same conversion that a jitterbuffer would use to convert an rtp timestamp
