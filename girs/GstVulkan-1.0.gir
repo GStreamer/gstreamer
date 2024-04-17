@@ -2531,6 +2531,23 @@ the error</doc>
         <type name="Vulkan.ImageAspectFlags" c:type="VkImageAspectFlags"/>
       </field>
     </record>
+    <record name="VulkanFormatMap" c:type="GstVulkanFormatMap" version="1.26">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h"/>
+      <field name="format" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">the GStreamer video format</doc>
+        <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
+      </field>
+      <field name="vkfrmt" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">the Vulkan format with a single memory</doc>
+        <type name="Vulkan.Format" c:type="VkFormat"/>
+      </field>
+      <field name="vkfrmts" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">Vulkan formats for multiple memories</doc>
+        <array zero-terminated="0" fixed-size="4">
+          <type name="Vulkan.Format" c:type="VkFormat"/>
+        </array>
+      </field>
+    </record>
     <enumeration name="VulkanFormatScaling" version="1.18" glib:type-name="GstVulkanFormatScaling" glib:get-type="gst_vulkan_format_scaling_get_type" c:type="GstVulkanFormatScaling">
       <member name="unorm" value="1" c:identifier="GST_VULKAN_FORMAT_SCALING_UNORM" glib:nick="unorm">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">[0, 2^n - 1] -&gt; [0.0, 1.0]</doc>
@@ -7137,6 +7154,19 @@ properties.</doc>
         <parameter name="format" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">a valid `VkFormat`</doc>
           <type name="Vulkan.Format" c:type="VkFormat"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="vulkan_format_get_map" c:identifier="gst_vulkan_format_get_map" version="1.26" introspectable="0">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">the #GstVulkanFormatMap matching with @format</doc>
+        <type name="VulkanFormatMap" c:type="const GstVulkanFormatMap*"/>
+      </return-value>
+      <parameters>
+        <parameter name="format" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.c">the #GstVideoFormat to get</doc>
+          <type name="GstVideo.VideoFormat" c:type="GstVideoFormat"/>
         </parameter>
       </parameters>
     </function>

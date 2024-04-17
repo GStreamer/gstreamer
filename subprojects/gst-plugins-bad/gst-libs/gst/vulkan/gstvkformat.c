@@ -431,11 +431,7 @@ gst_vulkan_format_get_aspect (VkFormat format)
 }
 
 /* *INDENT-OFF* */
-const static struct {
-  GstVideoFormat format;
-  VkFormat vkfrmt;
-  VkFormat vkfrmts[GST_VIDEO_MAX_PLANES];
-} vk_formats_map[] = {
+const static GstVulkanFormatMap vk_formats_map[] = {
   /* RGB                   unsigned normalized format         sRGB nonlinear encoding */
   { GST_VIDEO_FORMAT_RGBA,  VK_FORMAT_R8G8B8A8_UNORM,      { VK_FORMAT_R8G8B8A8_SRGB, } },
   { GST_VIDEO_FORMAT_RGBx,  VK_FORMAT_R8G8B8A8_UNORM,      { VK_FORMAT_R8G8B8A8_SRGB, } },
@@ -466,6 +462,28 @@ const static struct {
   { GST_VIDEO_FORMAT_YV12, VK_FORMAT_UNDEFINED, { VK_FORMAT_R8_UNORM, } },
 };
 /* *INDENT-ON* */
+
+/**
+ * gst_vulkan_format_get_map: (skip)
+ * @format: the #GstVideoFormat to get
+ *
+ * Returns: (nullable): the #GstVulkanFormatMap matching with @format
+ *
+ * Since: 1.26
+ */
+const GstVulkanFormatMap *
+gst_vulkan_format_get_map (GstVideoFormat format)
+{
+  guint i;
+
+  for (i = 0; i < G_N_ELEMENTS (vk_formats_map); i++) {
+    if (vk_formats_map[i].format != format)
+      continue;
+    return &vk_formats_map[i];
+  }
+
+  return NULL;
+}
 
 /**
  * gst_vulkan_format_from_video_info: (skip)
