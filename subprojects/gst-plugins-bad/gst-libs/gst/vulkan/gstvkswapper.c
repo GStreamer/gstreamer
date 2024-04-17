@@ -178,8 +178,18 @@ _get_function_table (GstVulkanSwapper * swapper)
 }
 
 static VkColorSpaceKHR
-_vk_color_space_from_video_info (GstVideoInfo * v_info)
+_vk_color_space_from_vk_format (GstVulkanSwapper * swapper, VkFormat format)
 {
+  GstVulkanSwapperPrivate *priv = GET_PRIV (swapper);
+  int i;
+
+  for (i = 0; i < priv->n_surf_formats; i++) {
+    if (format != priv->surf_formats[i].format)
+      continue;
+    return priv->surf_formats[i].colorSpace;
+  }
+
+  GST_WARNING_OBJECT (swapper, "unsupported format for swapper's colospaces");
   return VK_COLORSPACE_SRGB_NONLINEAR_KHR;
 }
 
@@ -790,7 +800,7 @@ _allocate_swapchain (GstVulkanSwapper * swapper, GstCaps * caps,
   }
 
   format = gst_vulkan_format_from_video_info (&priv->v_info, 0);
-  color_space = _vk_color_space_from_video_info (&priv->v_info);
+  color_space = _vk_color_space_from_vk_format (swapper, format);
 
   if ((priv->surf_props.supportedCompositeAlpha &
           VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR) != 0) {
