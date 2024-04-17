@@ -443,6 +443,13 @@ static GstPad *complete_session_rtcp (GstRtpBin * rtpbin,
 static GstElement *session_request_element (GstRtpBinSession * session,
     guint signal);
 
+typedef enum
+{
+  GST_RTP_BIN_STREAM_SYNCED_NONE,
+  GST_RTP_BIN_STREAM_SYNCED_RTCP,
+  GST_RTP_BIN_STREAM_SYNCED_RTP_INFO
+} GstRtpBinStreamSynced;
+
 /* Manages the RTP stream for one SSRC.
  *
  * We pipe the stream (coming from the SSRC demuxer) into a jitterbuffer.
@@ -475,15 +482,23 @@ struct _GstRtpBinStream
   gulong demux_ptreq_sig;
   gulong demux_ptchange_sig;
 
-  /* if we have calculated a valid rt_delta for this stream */
-  gboolean have_sync;
+  /* if we have synced this stream */
+  GstRtpBinStreamSynced have_sync;
+
   /* mapping to local RTP and NTP time */
-  gint64 rt_delta;
-  gint64 rtp_delta;
+  gint64 rt_delta;              /* based on RTCP */
+  gint64 rtp_delta;             /* based on RTP-Info */
+
+  /* base RTP time */
+  gint64 base_rtptime;
+  guint64 base_time;
+
+  /* clock-base for RTP-Info */
+  guint64 clock_base;
+
+  /* Smoothing of ts-offset adjustments */
   gint64 avg_ts_offset;
   gboolean is_initialized;
-  /* base rtptime in gst time */
-  gint64 clock_base;
 };
 
 #define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock (&(sess)->lock)
@@ -1048,12 +1063,16 @@ gst_rtp_bin_reset_sync (GstRtpBin * rtpbin)
 
       /* make use require a new SR packet for this stream before we attempt new
        * lip-sync */
-      stream->have_sync = FALSE;
-      stream->rt_delta = 0;
+      stream->have_sync = GST_RTP_BIN_STREAM_SYNCED_NONE;
+      stream->rt_delta = G_MININT64;
+      stream->rtp_delta = G_MININT64;
+      stream->base_rtptime = -1;
+      stream->base_time = GST_CLOCK_TIME_NONE;
+      stream->clock_base = -1;
+
       stream->avg_ts_offset = 0;
       stream->is_initialized = FALSE;
-      stream->rtp_delta = 0;
-      stream->clock_base = -100 * GST_SECOND;
+
     }
   }
   GST_RTP_BIN_UNLOCK (rtpbin);
@@ -1616,8 +1635,6 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
   gboolean all_sync = TRUE;
   gint64 min = G_MAXINT64, rtp_min = G_MAXINT64;
 
-  stream->have_sync = TRUE;
-
   /* recalc inter stream playout offset based on the selected mode */
   if (rtp_info_sync) {
     guint64 ext_base = -1;
@@ -1652,7 +1669,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
 
       /* if not set yet for the other stream then ignore it */
-      if (!ostream->have_sync) {
+      if (ostream->rtp_delta == G_MININT64) {
         all_sync = FALSE;
         continue;
       }
@@ -1662,8 +1679,11 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
       if (stream != ostream && stream->clock_base >= 0 &&
           (stream->clock_base != rtp_clock_base)) {
         GST_DEBUG_OBJECT (bin, "reset upon clock base change");
-        ostream->clock_base = -100 * GST_SECOND;
-        ostream->rtp_delta = 0;
+        ostream->clock_base = -1;
+        ostream->rtp_delta = G_MININT64;
+        if (ostream->have_sync == GST_RTP_BIN_STREAM_SYNCED_RTP_INFO)
+          ostream->have_sync = GST_RTP_BIN_STREAM_SYNCED_NONE;
+        continue;
       }
 
       if (ostream->rtp_delta < rtp_min)
@@ -1711,7 +1731,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
       GstRtpBinStream *ostream = (GstRtpBinStream *) walk->data;
 
       /* if not set yet for the other stream then ignore it */
-      if (!ostream->have_sync) {
+      if (ostream->rt_delta == G_MININT64) {
         all_sync = FALSE;
         continue;
       }
@@ -1739,8 +1759,15 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
 
   /* arrange to re-sync for each stream upon significant change, e.g. post-seek
    * or when the RTP base time changes because of a jitterbuffer reset */
-  all_sync = all_sync && stream->clock_base == rtp_clock_base;
-  stream->clock_base = rtp_clock_base;
+  all_sync = all_sync && stream->base_rtptime == base_rtptime &&
+      ((rtp_info_sync && stream->clock_base == rtp_clock_base)
+      || (!rtp_info_sync && stream->base_time == base_time));
+  stream->base_rtptime = base_rtptime;
+  if (rtp_info_sync) {
+    stream->clock_base = rtp_clock_base;
+  } else {
+    stream->base_time = base_time;
+  }
 
   /* may need init performed above later on, but nothing more to do now */
   if (client->nstreams <= 1)
@@ -1779,8 +1806,10 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
     /* ignore streams for which we didn't receive an SR packet yet, we
      * can't synchronize them yet. We can however sync other streams just
      * fine. */
-    if (!ostream->have_sync)
+    if ((rtp_info_sync && ostream->rtp_delta == G_MININT64) ||
+        (!rtp_info_sync && ostream->rt_delta == G_MININT64)) {
       continue;
+    }
 
     /* calculate offset to our reference stream, this should always give a
      * positive number. */
@@ -1795,11 +1824,14 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
 
     stream_set_ts_offset (bin, ostream, ts_offset, bin->max_ts_offset,
         bin->min_ts_offset, TRUE);
+
+    if (rtp_info_sync)
+      ostream->have_sync = GST_RTP_BIN_STREAM_SYNCED_RTP_INFO;
+    else
+      ostream->have_sync = GST_RTP_BIN_STREAM_SYNCED_RTCP;;
   }
 
   gst_rtp_bin_send_sync_event (stream);
-
-  return;
 }
 
 #define GST_RTCP_BUFFER_FOR_PACKETS(b,buffer,packet) \
@@ -2018,13 +2050,18 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   stream->buffer = gst_object_ref (buffer);
   stream->demux = demux;
 
-  stream->have_sync = FALSE;
-  stream->rt_delta = 0;
+  stream->have_sync = GST_RTP_BIN_STREAM_SYNCED_NONE;
+  stream->rt_delta = G_MININT64;
+  stream->rtp_delta = G_MININT64;
+  stream->base_rtptime = -1;
+  stream->base_time = GST_CLOCK_TIME_NONE;
+  stream->clock_base = -1;
+
   stream->avg_ts_offset = 0;
   stream->is_initialized = FALSE;
-  stream->rtp_delta = 0;
+
   stream->percent = 100;
-  stream->clock_base = -100 * GST_SECOND;
+
   session->streams = g_slist_prepend (session->streams, stream);
 
   jb_class = G_OBJECT_GET_CLASS (G_OBJECT (buffer));
