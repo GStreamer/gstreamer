@@ -1468,10 +1468,11 @@ gst_rtp_bin_send_sync_event (GstRtpBinStream * stream)
  *
  * Must be called with GST_RTP_BIN_LOCK */
 static void
-gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
-    const guint8 * data, guint64 ntpnstime, guint64 extrtptime,
-    guint64 base_rtptime, guint64 base_time, guint clock_rate,
-    gint64 rtp_clock_base)
+gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
+    const guint8 len, const guint8 * data, const guint64 ntpnstime,
+    const guint64 extrtptime, const guint64 base_rtptime,
+    const guint64 base_time, const guint clock_rate,
+    const guint64 rtp_clock_base)
 {
   /* Don't do any stream offsetting in RFC7273 sync mode. Everything is
    * handled inside rtpjitterbuffer for this case. */
