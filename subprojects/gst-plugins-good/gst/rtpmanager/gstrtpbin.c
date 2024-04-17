@@ -1248,8 +1248,7 @@ gst_rtp_bin_propagate_property_to_session (GstRtpBin * bin,
 
 /* get a client with the given SDES name. Must be called with RTP_BIN_LOCK */
 static GstRtpBinClient *
-get_client (GstRtpBin * bin, guint8 len, const guint8 * data,
-    gboolean * created)
+get_client (GstRtpBin * bin, guint8 len, const guint8 * data)
 {
   GstRtpBinClient *result = NULL;
   GSList *walk;
@@ -1564,12 +1563,11 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
    * all streams of a client relate to each other */
 
   GstRtpBinClient *client;
-  gboolean created;
   GSList *walk;
   GstClockTime running_time, running_time_rtp;
 
   /* first find or create the CNAME */
-  client = get_client (bin, len, data, &created);
+  client = get_client (bin, len, data);
 
   /* find stream in the client */
   for (walk = client->streams; walk; walk = g_slist_next (walk)) {
