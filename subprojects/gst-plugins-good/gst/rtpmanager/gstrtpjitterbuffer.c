@@ -396,6 +396,7 @@ struct _GstRtpJitterBufferPrivate
   gint32 clock_rate;
   gint64 clock_base;
   gint64 ts_offset_remainder;
+  gboolean rtsp_sync_done;
 
   /* when we are shutting down */
   GstFlowReturn srcresult;
@@ -582,6 +583,7 @@ gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jitterbuffer,
 static void do_handle_sync (GstRtpJitterBuffer * jitterbuffer);
 static void do_handle_sync_inband (GstRtpJitterBuffer * jitterbuffer,
     guint64 ntpnstime);
+static void do_handle_sync_rtsp (GstRtpJitterBuffer * jitterbuffer);
 
 static void unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer);
 
@@ -1219,6 +1221,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   rtp_jitter_buffer_set_delay (priv->jbuf, priv->latency_ns);
   rtp_jitter_buffer_set_buffering (priv->jbuf, FALSE);
   priv->active = TRUE;
+  priv->rtsp_sync_done = FALSE;
 
   priv->srcpad =
       gst_pad_new_from_static_template (&gst_rtp_jitter_buffer_src_template,
@@ -1461,6 +1464,7 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
   /* do not clear current content, but refresh state for new arrival */
   GST_DEBUG_OBJECT (jitterbuffer, "reset jitterbuffer");
   rtp_jitter_buffer_reset_skew (priv->jbuf);
+  priv->rtsp_sync_done = FALSE;
   JBUF_UNLOCK (priv);
 }
 
@@ -1651,6 +1655,8 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     priv->npt_stop = tval;
   else
     priv->npt_stop = -1;
+
+  priv->rtsp_sync_done = FALSE;
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "npt start/stop: %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
@@ -1855,6 +1861,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   rtp_jitter_buffer_flush (priv->jbuf, NULL, NULL);
   rtp_jitter_buffer_disable_buffering (priv->jbuf, FALSE);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
+  priv->rtsp_sync_done = FALSE;
   rtp_timer_queue_remove_all (priv->timers);
   g_queue_foreach (&priv->gap_packets, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (&priv->gap_packets);
@@ -3074,6 +3081,7 @@ gst_rtp_jitter_buffer_reset (GstRtpJitterBuffer * jitterbuffer,
   rtp_timer_queue_remove_all (priv->timers);
   priv->discont = TRUE;
   priv->last_popped_seqnum = -1;
+  priv->rtsp_sync_done = FALSE;
 
   if (priv->gap_packets.head) {
     GstBuffer *gap_buffer = priv->gap_packets.head->data;
@@ -3642,6 +3650,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   if (priv->do_retransmission)
     update_rtx_timers (jitterbuffer, seqnum, dts, pts, do_next_seqnum, is_rtx,
         g_steal_pointer (&timer));
+
+  if (priv->seqnum_base != -1)
+    do_handle_sync_rtsp (jitterbuffer);
 
   /* we had an unhandled SR, handle it now */
   if (priv->last_sr)
@@ -4633,6 +4644,76 @@ pause:
     }
     return;
   }
+}
+
+static void
+do_handle_sync_rtsp (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv;
+  guint64 base_rtptime, base_time;
+  guint32 clock_rate;
+  guint64 clock_base;
+  guint64 npt_start;
+
+  priv = jitterbuffer->priv;
+
+  if (priv->rtsp_sync_done)
+    return;
+
+  /* no RTSP information in the caps  */
+  if (priv->clock_base == -1 || priv->npt_start == -1) {
+    priv->rtsp_sync_done = TRUE;
+    return;
+  }
+
+  /* get the last values from the jitterbuffer */
+  rtp_jitter_buffer_get_sync (priv->jbuf, &base_rtptime, &base_time,
+      &clock_rate, NULL);
+
+  /* clock-base is the RTP timestamp at npt-start */
+  npt_start = priv->npt_start;
+  clock_base = priv->clock_base;
+
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "NPT start %" GST_TIME_FORMAT ", clock-base %" G_GUINT64_FORMAT ", base %"
+      GST_TIME_FORMAT ", base RTP time %" G_GUINT64_FORMAT ", clock-rate %"
+      G_GUINT32_FORMAT, GST_TIME_ARGS (npt_start), clock_base,
+      GST_TIME_ARGS (base_time), base_rtptime, clock_rate);
+
+  if (base_rtptime == -1 || clock_rate == -1 || base_time == -1) {
+    GST_ERROR_OBJECT (jitterbuffer,
+        "No base RTP time, clock rate or base time");
+    priv->rtsp_sync_done = TRUE;
+    return;
+  }
+
+  GstStructure *s;
+  GList *l;
+
+  s = gst_structure_new ("application/x-rtp-sync",
+      "base-rtptime", G_TYPE_UINT64, base_rtptime,
+      "base-time", G_TYPE_UINT64, base_time,
+      "clock-rate", G_TYPE_UINT, clock_rate,
+      "clock-base", G_TYPE_UINT64, clock_base & G_MAXUINT32,
+      "npt-start", G_TYPE_UINT64, npt_start,
+      "ssrc", G_TYPE_UINT, priv->last_ssrc, NULL);
+
+  for (l = priv->cname_ssrc_mappings; l; l = l->next) {
+    const CNameSSRCMapping *map = l->data;
+
+    if (map->ssrc == priv->last_ssrc) {
+      gst_structure_set (s, "cname", G_TYPE_STRING, map->cname, NULL);
+      break;
+    }
+  }
+
+  GST_DEBUG_OBJECT (jitterbuffer, "signaling sync");
+  JBUF_UNLOCK (priv);
+  g_signal_emit (jitterbuffer,
+      gst_rtp_jitter_buffer_signals[SIGNAL_HANDLE_SYNC], 0, s);
+  JBUF_LOCK (priv);
+  gst_structure_free (s);
+  priv->rtsp_sync_done = TRUE;
 }
 
 static void

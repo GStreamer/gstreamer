@@ -1652,6 +1652,9 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
 
         rtp_info_sync = TRUE;
         GST_DEBUG_OBJECT (bin, "Doing RTP-Info sync");
+      } else if (!client->cname) {
+        GST_DEBUG_OBJECT (bin, "Have no CNAME yet");
+        return;
       } else {
         GST_DEBUG_OBJECT (bin, "Doing RTCP sync");
       }
@@ -1660,6 +1663,9 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream,
     case GST_RTP_BIN_RTCP_SYNC_RTP_INFO:{
       if (!GST_CLOCK_TIME_IS_VALID (npt_start)) {
         GST_DEBUG_OBJECT (bin, "invalidated sync data, bailing out");
+        return;
+      } else if (!client->cname) {
+        GST_DEBUG_OBJECT (bin, "Have no CNAME yet");
         return;
       }
 
@@ -1987,6 +1993,22 @@ gst_rtp_bin_handle_sync (GstElement * jitterbuffer, GstStructure * s,
 
   if (!gst_structure_get_uint64 (s, "sr-ext-rtptime", &extrtptime)
       || !gst_structure_has_field_typed (s, "sr-buffer", GST_TYPE_BUFFER)) {
+    /* Do initial RTSP sync if allowed */
+    if (npt_start != GST_CLOCK_TIME_NONE
+        && gst_structure_get_uint (s, "ssrc", &ssrc)) {
+      GST_DEBUG_OBJECT (bin, "handle sync from RTSP information for SSRC %08x",
+          ssrc);
+
+      if (ssrc != stream->ssrc)
+        return;
+
+      GST_RTP_BIN_LOCK (bin);
+      gst_rtp_bin_associate (bin, stream, cname ? strlen (cname) : 0,
+          (const guint8 *) cname, GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE,
+          base_rtptime, base_time, clock_rate, clock_base, npt_start);
+      GST_RTP_BIN_UNLOCK (bin);
+      return;
+    }
     /* invalid structure */
     return;
   }
