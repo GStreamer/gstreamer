@@ -47,6 +47,7 @@ struct _GstVulkanImageBufferPoolPrivate
   gboolean raw_caps;
   GstVideoInfo v_info;
   VkImageUsageFlags usage;
+  VkImageCreateFlags img_flags;
   VkMemoryPropertyFlags mem_props;
   VkImageLayout initial_layout;
   guint64 initial_access;
@@ -253,12 +254,34 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     priv->usage = supported_usage & default_usage;
   }
 
+  {
+    gboolean dpb_only = FALSE, sampleable;
+    const GstVulkanFormatMap *vkmap;
+
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+    dpb_only = (priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)
+        && !(priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR);
+#endif
+    sampleable = priv->usage &
+        (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
+
+    if (sampleable && !dpb_only) {
+      vkmap = gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
+      priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
+      if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1
+          && vkmap->vkfrmt != priv->vk_fmts[0]) {
+        priv->img_flags |= VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT
+            | VK_IMAGE_CREATE_EXTENDED_USAGE_BIT;
+      }
+    }
+  }
+
   /* get the size of the buffer to allocate */
   /* *INDENT-OFF* */
   image_info = (VkImageCreateInfo) {
     .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
     .pNext = NULL,
-    .flags = 0,
+    .flags = priv->img_flags,
     .imageType = VK_IMAGE_TYPE_2D,
     /* .format = fill per image,  */
     /* .extent = fill per plane, */
@@ -463,7 +486,7 @@ gst_vulkan_image_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   image_info = (VkImageCreateInfo) {
     .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
     .pNext = NULL,
-    .flags = 0,
+    .flags = priv->img_flags,
     .imageType = VK_IMAGE_TYPE_2D,
     /* .format = fill per image,  */
     /* .extent = fill per plane, */
