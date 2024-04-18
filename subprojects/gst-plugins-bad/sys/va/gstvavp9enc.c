@@ -2684,12 +2684,6 @@ gst_va_vp9_enc_prepare_output (GstVaBaseEnc * base,
     return TRUE;
   }
 
-  frame->pts =
-      base->start_pts + base->frame_duration * frame_enc->total_frame_count;
-  frame->dts =
-      base->start_pts + base->frame_duration * base->output_frame_count;
-  frame->duration = base->frame_duration;
-
   if (frame_enc->flags & FRAME_FLAG_ALREADY_OUTPUTTED) {
     gsize sz;
 
