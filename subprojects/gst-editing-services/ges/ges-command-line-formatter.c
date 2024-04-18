@@ -1135,6 +1135,9 @@ ges_command_line_formatter_get_timeline_uri (GESTimeline * timeline)
 
         _sanitize_argument (ges_uri_clip_get_uri (GES_URI_CLIP (clip)), res);
         option = &options[CLIP];
+      } else if (GES_IS_TRANSITION_CLIP (clip)) {
+        g_string_append (res, " +transition");
+        option = &options[CLIP];
       } else {
         g_warning ("Unhandled clip type: %s", G_OBJECT_TYPE_NAME (clip));
         continue;
