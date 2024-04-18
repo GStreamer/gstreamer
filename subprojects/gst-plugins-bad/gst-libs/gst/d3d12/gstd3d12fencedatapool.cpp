@@ -50,18 +50,18 @@ struct _GstD3D12FenceData : public GstMiniObject
 {
   _GstD3D12FenceData ()
   {
-    queue = gst_queue_array_new_for_struct (sizeof (NotifyData), 4);
-    gst_queue_array_set_clear_func (queue,
+    queue = gst_vec_deque_new_for_struct (sizeof (NotifyData), 4);
+    gst_vec_deque_set_clear_func (queue,
         (GDestroyNotify) notify_data_clear_func);
   }
 
   ~_GstD3D12FenceData ()
   {
-    gst_queue_array_free (queue);
+    gst_vec_deque_free (queue);
   }
 
   GstD3D12FenceDataPool *pool = nullptr;
-  GstQueueArray *queue;
+  GstVecDeque *queue;
 };
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D12FenceData, gst_d3d12_fence_data);
@@ -139,7 +139,7 @@ gst_d3d12_fence_data_pool_release (GstD3D12FenceDataPool * pool,
     GstD3D12FenceData * data)
 {
   auto priv = pool->priv;
-  gst_queue_array_clear (data->queue);
+  gst_vec_deque_clear (data->queue);
 
   {
     std::lock_guard < std::mutex > lk (priv->lock);
@@ -229,7 +229,7 @@ gst_d3d12_fence_data_add_notify_internal (GstD3D12FenceData * data,
   notify_data.user_data = user_data;
   notify_data.notify = notify;
 
-  gst_queue_array_push_tail_struct (data->queue, &notify_data);
+  gst_vec_deque_push_tail_struct (data->queue, &notify_data);
 }
 
 /**

@@ -83,7 +83,7 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
                       "(%s:%s) " msg ": %u of %u-%u buffers, %u of %u-%u " \
                       "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
-                      "-%" G_GUINT64_FORMAT " ns, %u items", \
+                      "-%" G_GUINT64_FORMAT " ns, %" G_GSIZE_FORMAT " items", \
                       GST_DEBUG_PAD_NAME (pad), \
                       queue->cur_level.buffers, \
                       queue->min_threshold.buffers, \
@@ -94,7 +94,7 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
                       queue->cur_level.time, \
                       queue->min_threshold.time, \
                       queue->max_size.time, \
-                      gst_queue_array_get_length (queue->queue))
+                      gst_vec_deque_get_length (queue->queue))
 
 /* Queue signals and args */
 enum
@@ -467,7 +467,7 @@ gst_queue_init (GstQueue * queue)
   g_cond_init (&queue->query_handled);
 
   queue->queue =
-      gst_queue_array_new_for_struct (sizeof (GstQueueItem),
+      gst_vec_deque_new_for_struct (sizeof (GstQueueItem),
       DEFAULT_MAX_SIZE_BUFFERS * 3 / 2);
 
   queue->sinktime = GST_CLOCK_STIME_NONE;
@@ -492,12 +492,12 @@ gst_queue_finalize (GObject * object)
 
   GST_DEBUG_OBJECT (queue, "finalizing queue");
 
-  while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
+  while ((qitem = gst_vec_deque_pop_head_struct (queue->queue))) {
     /* FIXME: if it's a query, shouldn't we unref that too? */
     if (!qitem->is_query)
       gst_mini_object_unref (qitem->item);
   }
-  gst_queue_array_free (queue->queue);
+  gst_vec_deque_free (queue->queue);
 
   g_mutex_clear (&queue->qlock);
   g_cond_clear (&queue->item_add);
@@ -745,7 +745,7 @@ gst_queue_locked_flush (GstQueue * queue, gboolean full)
 {
   GstQueueItem *qitem;
 
-  while ((qitem = gst_queue_array_pop_head_struct (queue->queue))) {
+  while ((qitem = gst_vec_deque_pop_head_struct (queue->queue))) {
     /* Then lose another reference because we are supposed to destroy that
        data when flushing */
     if (!full && !qitem->is_query && GST_IS_EVENT (qitem->item)
@@ -792,7 +792,7 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
   qitem.item = item;
   qitem.is_query = FALSE;
   qitem.size = bsize;
-  gst_queue_array_push_tail_struct (queue->queue, &qitem);
+  gst_vec_deque_push_tail_struct (queue->queue, &qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
@@ -813,7 +813,7 @@ gst_queue_locked_enqueue_buffer_list (GstQueue * queue, gpointer item)
   qitem.item = item;
   qitem.is_query = FALSE;
   qitem.size = bsize;
-  gst_queue_array_push_tail_struct (queue->queue, &qitem);
+  gst_vec_deque_push_tail_struct (queue->queue, &qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
@@ -838,7 +838,7 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
     case GST_EVENT_SEGMENT:
       apply_segment (queue, event, &queue->sink_segment, TRUE);
       /* if the queue is empty, apply sink segment on the source */
-      if (gst_queue_array_is_empty (queue->queue)) {
+      if (gst_vec_deque_is_empty (queue->queue)) {
         GST_CAT_LOG_OBJECT (queue_dataflow, queue, "Apply segment on srcpad");
         apply_segment (queue, event, &queue->src_segment, FALSE);
         queue->newseg_applied_to_src = TRUE;
@@ -857,7 +857,7 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
   qitem.item = item;
   qitem.is_query = FALSE;
   qitem.size = 0;
-  gst_queue_array_push_tail_struct (queue->queue, &qitem);
+  gst_vec_deque_push_tail_struct (queue->queue, &qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
@@ -869,7 +869,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
   GstMiniObject *item;
   gsize bufsize;
 
-  qitem = gst_queue_array_pop_head_struct (queue->queue);
+  qitem = gst_vec_deque_pop_head_struct (queue->queue);
   if (qitem == NULL)
     goto no_item;
 
@@ -1112,7 +1112,7 @@ gst_queue_handle_sink_query (GstPad * pad, GstObject * parent, GstQuery * query)
         qitem.item = GST_MINI_OBJECT_CAST (query);
         qitem.is_query = TRUE;
         qitem.size = 0;
-        gst_queue_array_push_tail_struct (queue->queue, &qitem);
+        gst_vec_deque_push_tail_struct (queue->queue, &qitem);
         GST_QUEUE_SIGNAL_ADD (queue);
         while (queue->srcresult == GST_FLOW_OK &&
             queue->last_handled_query != query)
@@ -1143,7 +1143,7 @@ gst_queue_is_empty (GstQueue * queue)
 {
   GstQueueItem *tail;
 
-  tail = gst_queue_array_peek_tail_struct (queue->queue);
+  tail = gst_vec_deque_peek_tail_struct (queue->queue);
 
   if (tail == NULL)
     return TRUE;

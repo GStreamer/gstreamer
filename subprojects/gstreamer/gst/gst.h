@@ -90,6 +90,7 @@
 #include <gst/gsturi.h>
 #include <gst/gstutils.h>
 #include <gst/gstvalue.h>
+#include <gst/gstvecdeque.h>
 
 #include <gst/gstparse.h>
 

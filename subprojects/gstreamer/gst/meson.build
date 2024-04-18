@@ -69,6 +69,7 @@ gst_sources = files(
   'gsturi.c',
   'gstutils.c',
   'gstvalue.c',
+  'gstvecdeque.c',
   'gstparse.c',
 )
 
@@ -144,6 +145,7 @@ gst_headers = files(
   'gsturi.h',
   'gstutils.h',
   'gstvalue.h',
+  'gstvecdeque.h',
   'gstregistry.h',
   'gstparse.h',
   'math-compat.h',

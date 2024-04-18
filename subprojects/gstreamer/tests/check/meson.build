@@ -51,6 +51,7 @@ core_tests = [
   [ 'gst/gsturi.c' ],
   [ 'gst/gstutils.c', not gst_registry ],
   [ 'gst/gstvalue.c' ],
+  [ 'gst/gstvecdeque.c' ],
   [ 'generic/states.c', not gst_registry ],
   [ 'libs/adapter.c' ],
   [ 'libs/aggregator.c' ],

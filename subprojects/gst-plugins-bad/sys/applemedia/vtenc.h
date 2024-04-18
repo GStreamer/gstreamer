@@ -82,7 +82,7 @@ struct _GstVTEnc
   CFDictionaryRef keyframe_props;
   GstClockTime dts_offset;
 
-  GstQueueArray * output_queue;
+  GstVecDeque * output_queue;
   /* Protects output_queue, is_flushing and pause_task */
   GMutex queue_mutex;
   GCond queue_cond;

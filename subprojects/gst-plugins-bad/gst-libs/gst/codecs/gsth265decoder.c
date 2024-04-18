@@ -133,7 +133,7 @@ struct _GstH265DecoderPrivate
   /* For delayed output */
   guint preferred_output_delay;
   gboolean is_live;
-  GstQueueArray *output_queue;
+  GstVecDeque *output_queue;
 
   gboolean input_state_changed;
 
@@ -238,8 +238,8 @@ gst_h265_decoder_init (GstH265Decoder * self)
   g_array_set_clear_func (priv->nalu,
       (GDestroyNotify) gst_h265_decoder_clear_nalu);
   priv->output_queue =
-      gst_queue_array_new_for_struct (sizeof (GstH265DecoderOutputFrame), 1);
-  gst_queue_array_set_clear_func (priv->output_queue,
+      gst_vec_deque_new_for_struct (sizeof (GstH265DecoderOutputFrame), 1);
+  gst_vec_deque_set_clear_func (priv->output_queue,
       (GDestroyNotify) gst_h265_decoder_clear_output_frame);
 }
 
@@ -254,7 +254,7 @@ gst_h265_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list1);
   g_array_unref (priv->nalu);
   g_array_unref (priv->split_nalu);
-  gst_queue_array_free (priv->output_queue);
+  gst_vec_deque_free (priv->output_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -344,9 +344,9 @@ gst_h265_decoder_drain_output_queue (GstH265Decoder * self, guint num,
   g_assert (klass->output_picture);
   g_assert (ret != NULL);
 
-  while (gst_queue_array_get_length (priv->output_queue) > num) {
+  while (gst_vec_deque_get_length (priv->output_queue) > num) {
     GstH265DecoderOutputFrame *output_frame = (GstH265DecoderOutputFrame *)
-        gst_queue_array_pop_head_struct (priv->output_queue);
+        gst_vec_deque_pop_head_struct (priv->output_queue);
     GstFlowReturn flow_ret = klass->output_picture (self, output_frame->frame,
         output_frame->picture);
 
@@ -1741,7 +1741,7 @@ gst_h265_decoder_do_output_picture (GstH265Decoder * self,
   output_frame.frame = frame;
   output_frame.picture = picture;
   output_frame.self = self;
-  gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
+  gst_vec_deque_push_tail_struct (priv->output_queue, &output_frame);
 
   gst_h265_decoder_drain_output_queue (self, priv->preferred_output_delay,
       &priv->last_flow);
@@ -1767,7 +1767,7 @@ gst_h265_decoder_clear_dpb (GstH265Decoder * self, gboolean flush)
     }
   }
 
-  gst_queue_array_clear (priv->output_queue);
+  gst_vec_deque_clear (priv->output_queue);
   gst_h265_dpb_clear (priv->dpb);
   priv->last_output_poc = G_MININT32;
 }

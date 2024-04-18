@@ -82,7 +82,7 @@ struct _GstDecklinkVideoSrc
   GCond cond;
   GMutex lock;
   gboolean flushing;
-  GstQueueArray *current_frames;
+  GstVecDeque *current_frames;
   GstDecklinkSignalState signal_state;
 
   guint buffer_size;

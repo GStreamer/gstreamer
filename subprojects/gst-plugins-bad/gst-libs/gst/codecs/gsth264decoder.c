@@ -150,7 +150,7 @@ struct _GstH264DecoderPrivate
   GArray *split_nalu;
 
   /* For delayed output */
-  GstQueueArray *output_queue;
+  GstVecDeque *output_queue;
 
   gboolean input_state_changed;
 
@@ -392,8 +392,8 @@ gst_h264_decoder_init (GstH264Decoder * self)
   priv->split_nalu = g_array_new (FALSE, FALSE, sizeof (GstH264NalUnit));
 
   priv->output_queue =
-      gst_queue_array_new_for_struct (sizeof (GstH264DecoderOutputFrame), 1);
-  gst_queue_array_set_clear_func (priv->output_queue,
+      gst_vec_deque_new_for_struct (sizeof (GstH264DecoderOutputFrame), 1);
+  gst_vec_deque_set_clear_func (priv->output_queue,
       (GDestroyNotify) gst_h264_decoder_clear_output_frame);
 }
 
@@ -412,7 +412,7 @@ gst_h264_decoder_finalize (GObject * object)
   g_array_unref (priv->ref_pic_list0);
   g_array_unref (priv->ref_pic_list1);
   g_array_unref (priv->split_nalu);
-  gst_queue_array_free (priv->output_queue);
+  gst_vec_deque_free (priv->output_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -506,7 +506,7 @@ gst_h264_decoder_clear_dpb (GstH264Decoder * self, gboolean flush)
     }
   }
 
-  gst_queue_array_clear (priv->output_queue);
+  gst_vec_deque_clear (priv->output_queue);
   gst_h264_decoder_clear_ref_pic_lists (self);
   gst_clear_h264_picture (&priv->last_field);
   gst_h264_dpb_clear (priv->dpb);
@@ -1801,9 +1801,9 @@ gst_h264_decoder_drain_output_queue (GstH264Decoder * self, guint num,
   g_assert (klass->output_picture);
   g_assert (ret != NULL);
 
-  while (gst_queue_array_get_length (priv->output_queue) > num) {
+  while (gst_vec_deque_get_length (priv->output_queue) > num) {
     GstH264DecoderOutputFrame *output_frame = (GstH264DecoderOutputFrame *)
-        gst_queue_array_pop_head_struct (priv->output_queue);
+        gst_vec_deque_pop_head_struct (priv->output_queue);
     GstFlowReturn flow_ret = klass->output_picture (self, output_frame->frame,
         output_frame->picture);
 
@@ -1881,7 +1881,7 @@ gst_h264_decoder_do_output_picture (GstH264Decoder * self,
   output_frame.frame = frame;
   output_frame.picture = picture;
   output_frame.self = self;
-  gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
+  gst_vec_deque_push_tail_struct (priv->output_queue, &output_frame);
 
   gst_h264_decoder_drain_output_queue (self, priv->preferred_output_delay,
       &priv->last_flow);

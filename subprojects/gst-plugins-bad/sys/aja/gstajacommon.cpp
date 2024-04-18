@@ -534,17 +534,17 @@ static GstAjaMemory *_aja_memory_new_block(GstAjaAllocator *alloc,
   mem = (GstAjaMemory *)g_new0(GstAjaMemory, 1);
 
   GST_OBJECT_LOCK(alloc);
-  guint n = gst_queue_array_get_length(alloc->freed_mems);
+  guint n = gst_vec_deque_get_length(alloc->freed_mems);
   for (guint i = 0; i < n; i++) {
     FreedMemory *fmem =
-        (FreedMemory *)gst_queue_array_peek_nth_struct(alloc->freed_mems, i);
+        (FreedMemory *)gst_vec_deque_peek_nth_struct(alloc->freed_mems, i);
 
     if (fmem->size == size) {
       data = fmem->data;
       GST_TRACE_OBJECT(
           alloc, "Using cached freed memory of size %" G_GSIZE_FORMAT " at %p",
           fmem->size, fmem->data);
-      gst_queue_array_drop_struct(alloc->freed_mems, i, NULL);
+      gst_vec_deque_drop_struct(alloc->freed_mems, i, NULL);
       break;
     }
   }
@@ -625,9 +625,9 @@ static void gst_aja_allocator_free(GstAllocator *alloc, GstMemory *mem) {
     GstAjaAllocator *aja_alloc = GST_AJA_ALLOCATOR(alloc);
 
     GST_OBJECT_LOCK(aja_alloc);
-    while (gst_queue_array_get_length(aja_alloc->freed_mems) > 8) {
+    while (gst_vec_deque_get_length(aja_alloc->freed_mems) > 8) {
       FreedMemory *fmem =
-          (FreedMemory *)gst_queue_array_pop_head_struct(aja_alloc->freed_mems);
+          (FreedMemory *)gst_vec_deque_pop_head_struct(aja_alloc->freed_mems);
 
       GST_TRACE_OBJECT(
           alloc, "Freeing cached memory of size %" G_GSIZE_FORMAT " at %p",
@@ -643,7 +643,7 @@ static void gst_aja_allocator_free(GstAllocator *alloc, GstMemory *mem) {
                      mem->maxsize, dmem->data);
     fmem.data = dmem->data;
     fmem.size = mem->size;
-    gst_queue_array_push_tail_struct(aja_alloc->freed_mems, &fmem);
+    gst_vec_deque_push_tail_struct(aja_alloc->freed_mems, &fmem);
     GST_OBJECT_UNLOCK(aja_alloc);
   }
 
@@ -656,7 +656,7 @@ static void gst_aja_allocator_finalize(GObject *alloc) {
   GST_DEBUG_OBJECT(alloc, "Freeing allocator");
 
   FreedMemory *mem;
-  while ((mem = (FreedMemory *)gst_queue_array_pop_head_struct(
+  while ((mem = (FreedMemory *)gst_vec_deque_pop_head_struct(
               aja_alloc->freed_mems))) {
     GST_TRACE_OBJECT(alloc, "Freeing cached memory at %p", mem->data);
     aja_alloc->device->device->DMABufferUnlock((ULWord *)mem->data, mem->size);
@@ -696,7 +696,7 @@ GstAllocator *gst_aja_allocator_new(GstAjaNtv2Device *device) {
       (GstAjaAllocator *)g_object_new(GST_TYPE_AJA_ALLOCATOR, NULL);
 
   alloc->device = gst_aja_ntv2_device_ref(device);
-  alloc->freed_mems = gst_queue_array_new_for_struct(sizeof(FreedMemory), 16);
+  alloc->freed_mems = gst_vec_deque_new_for_struct(sizeof(FreedMemory), 16);
 
   GST_DEBUG_OBJECT(alloc, "Creating allocator for device %d",
                    device->device->GetIndexNumber());

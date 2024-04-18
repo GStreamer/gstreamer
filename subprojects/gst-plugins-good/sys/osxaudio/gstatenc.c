@@ -256,8 +256,8 @@ gst_atenc_start (GstAudioEncoder * enc)
 
   GST_DEBUG_OBJECT (self, "Starting encoder");
 
-  self->input_queue = gst_queue_array_new (0);
-  gst_queue_array_set_clear_func (self->input_queue,
+  self->input_queue = gst_vec_deque_new (0);
+  gst_vec_deque_set_clear_func (self->input_queue,
       (GDestroyNotify) gst_buffer_unref);
 
   return TRUE;
@@ -271,7 +271,7 @@ gst_atenc_flush (GstAudioEncoder * enc)
   GST_DEBUG_OBJECT (self, "Flushing encoder");
   AudioConverterReset (self->converter);
 
-  gst_queue_array_clear (self->input_queue);
+  gst_vec_deque_clear (self->input_queue);
 }
 
 static gboolean
@@ -288,7 +288,7 @@ gst_atenc_stop (GstAudioEncoder * enc)
     self->converter = NULL;
   }
 
-  gst_queue_array_free (self->input_queue);
+  gst_vec_deque_free (self->input_queue);
   self->input_queue = NULL;
 
   if (self->used_buffer) {
@@ -364,7 +364,7 @@ gst_atenc_fill_buffer (AudioConverterRef converter, UInt32 * packets_amount,
    * No data currently available, but more is expected => packets_amount=0 and return 1
    * No data available and input got EOS => packets_amount=0 and return noErr
    */
-  buf = gst_queue_array_pop_head (self->input_queue);
+  buf = gst_vec_deque_pop_head (self->input_queue);
   if (!buf) {
     *packets_amount = 0;
 
@@ -419,7 +419,7 @@ gst_atenc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
     GST_DEBUG_OBJECT (self, "No input buffer, draining encoder");
   } else {
     self->input_eos = FALSE;
-    gst_queue_array_push_tail (self->input_queue, buffer);
+    gst_vec_deque_push_tail (self->input_queue, buffer);
     GST_LOG ("Pushed buffer to queue");
   }
 

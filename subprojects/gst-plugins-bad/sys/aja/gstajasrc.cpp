@@ -102,7 +102,7 @@ enum {
   PROP_ATTACH_ANCILLARY_META,
 };
 
-// Make these plain C structs for usage in GstQueueArray
+// Make these plain C structs for usage in GstVecDeque
 G_BEGIN_DECLS
 
 typedef enum {
@@ -422,7 +422,7 @@ static void gst_aja_src_init(GstAjaSrc *self) {
   self->attach_ancillary_meta = DEFAULT_ATTACH_ANCILLARY_META;
 
   self->queue =
-      gst_queue_array_new_for_struct(sizeof(QueueItem), self->queue_size);
+      gst_vec_deque_new_for_struct(sizeof(QueueItem), self->queue_size);
   gst_base_src_set_live(GST_BASE_SRC_CAST(self), TRUE);
   gst_base_src_set_format(GST_BASE_SRC_CAST(self), GST_FORMAT_TIME);
 
@@ -575,8 +575,8 @@ void gst_aja_src_finalize(GObject *object) {
   GstAjaSrc *self = GST_AJA_SRC(object);
 
   g_assert(self->device == NULL);
-  g_assert(gst_queue_array_get_length(self->queue) == 0);
-  g_clear_pointer(&self->queue, gst_queue_array_free);
+  g_assert(gst_vec_deque_get_length(self->queue) == 0);
+  g_clear_pointer(&self->queue, gst_vec_deque_free);
 
   gst_clear_object(&self->clock);
 
@@ -1576,7 +1576,7 @@ static gboolean gst_aja_src_stop(GstAjaSrc *self) {
   self->configured_audio_channels = 0;
   GST_OBJECT_UNLOCK(self);
 
-  while ((item = (QueueItem *)gst_queue_array_pop_head_struct(self->queue))) {
+  while ((item = (QueueItem *)gst_vec_deque_pop_head_struct(self->queue))) {
     queue_item_clear(item);
   }
   self->queue_num_frames = 0;
@@ -1768,7 +1768,7 @@ next_item:
   item.type = QUEUE_ITEM_TYPE_DUMMY;
 
   g_mutex_lock(&self->queue_lock);
-  while (gst_queue_array_is_empty(self->queue) && !self->flushing) {
+  while (gst_vec_deque_is_empty(self->queue) && !self->flushing) {
     g_cond_wait(&self->queue_cond, &self->queue_lock);
   }
 
@@ -1778,7 +1778,7 @@ next_item:
     return GST_FLOW_FLUSHING;
   }
 
-  item = *(QueueItem *)gst_queue_array_pop_head_struct(self->queue);
+  item = *(QueueItem *)gst_vec_deque_pop_head_struct(self->queue);
   if (item.type == QUEUE_ITEM_TYPE_FRAME) {
     self->queue_num_frames -= 1;
   }
@@ -2283,7 +2283,7 @@ next_item:
     g_free(__dbg);                                                          \
     __msg = gst_message_new_error(GST_OBJECT(el), __err, __fmt_dbg);        \
     QueueItem item = {.type = QUEUE_ITEM_TYPE_ERROR, .error{.msg = __msg}}; \
-    gst_queue_array_push_tail_struct(el->queue, &item);                     \
+    gst_vec_deque_push_tail_struct(el->queue, &item);                     \
     g_cond_signal(&el->queue_cond);                                         \
   }                                                                         \
   G_STMT_END;
@@ -2386,7 +2386,7 @@ restart:
               .signal_change = {.have_signal = FALSE,
                                 .detected_format = ::NTV2_FORMAT_UNKNOWN,
                                 .vpid = 0}};
-          gst_queue_array_push_tail_struct(self->queue, &item);
+          gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
           have_signal = FALSE;
           discont = TRUE;
@@ -2511,7 +2511,7 @@ restart:
                               .detected_format = ::NTV2_FORMAT_UNKNOWN,
                               .vpid = 0}};
         last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
-        gst_queue_array_push_tail_struct(self->queue, &item);
+        gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
         have_signal = FALSE;
         discont = TRUE;
@@ -2548,7 +2548,7 @@ restart:
                               .detected_format = current_video_format,
                               .vpid = vpid_a}};
         last_detected_video_format = current_video_format;
-        gst_queue_array_push_tail_struct(self->queue, &item);
+        gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
         have_signal = FALSE;
         discont = TRUE;
@@ -2564,7 +2564,7 @@ restart:
                             .detected_format = current_video_format,
                             .vpid = vpid_a}};
       last_detected_video_format = current_video_format;
-      gst_queue_array_push_tail_struct(self->queue, &item);
+      gst_vec_deque_push_tail_struct(self->queue, &item);
       g_cond_signal(&self->queue_cond);
     }
 
@@ -2606,7 +2606,7 @@ restart:
             .signal_change = {.have_signal = TRUE,
                               .detected_format = current_video_format,
                               .vpid = vpid_a}};
-        gst_queue_array_push_tail_struct(self->queue, &item);
+        gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
         have_signal = TRUE;
       }
@@ -2866,7 +2866,7 @@ restart:
                           .frames_dropped = {.driver_side = TRUE,
                                              .timestamp_start = timestamp,
                                              .timestamp_end = timestamp_end}};
-        gst_queue_array_push_tail_struct(self->queue, &item);
+        gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
 
         frames_dropped_last = transfer_status.acFramesDropped;
@@ -2906,11 +2906,11 @@ restart:
       frame_stamp.GetInputTimeCode(time_code, tc_index);
 
       while (self->queue_num_frames >= self->queue_size) {
-        guint n = gst_queue_array_get_length(self->queue);
+        guint n = gst_vec_deque_get_length(self->queue);
 
         for (guint i = 0; i < n; i++) {
           QueueItem *tmp =
-              (QueueItem *)gst_queue_array_peek_nth_struct(self->queue, i);
+              (QueueItem *)gst_vec_deque_peek_nth_struct(self->queue, i);
           if (tmp->type == QUEUE_ITEM_TYPE_FRAME) {
             GST_WARNING_OBJECT(self,
                                "Element queue overrun, dropping old frame");
@@ -2926,8 +2926,8 @@ restart:
                                               self->configured_info.fps_d,
                                               self->configured_info.fps_n)}};
             queue_item_clear(tmp);
-            gst_queue_array_drop_struct(self->queue, i, NULL);
-            gst_queue_array_push_tail_struct(self->queue, &item);
+            gst_vec_deque_drop_struct(self->queue, i, NULL);
+            gst_vec_deque_push_tail_struct(self->queue, &item);
             self->queue_num_frames -= 1;
             discont = TRUE;
             g_cond_signal(&self->queue_cond);
@@ -2958,7 +2958,7 @@ restart:
 
       GST_TRACE_OBJECT(self, "Queuing frame %" GST_TIME_FORMAT,
                        GST_TIME_ARGS(capture_time));
-      gst_queue_array_push_tail_struct(self->queue, &item);
+      gst_vec_deque_push_tail_struct(self->queue, &item);
       self->queue_num_frames += 1;
       GST_TRACE_OBJECT(self, "%u frames queued", self->queue_num_frames);
       g_cond_signal(&self->queue_cond);
@@ -2979,7 +2979,7 @@ restart:
                                 .detected_format = current_video_format,
                                 .vpid = vpid_a}};
           last_detected_video_format = current_video_format;
-          gst_queue_array_push_tail_struct(self->queue, &item);
+          gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
           have_signal = FALSE;
           discont = TRUE;

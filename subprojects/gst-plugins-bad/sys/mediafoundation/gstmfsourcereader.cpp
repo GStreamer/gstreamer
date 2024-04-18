@@ -70,7 +70,7 @@ struct _GstMFSourceReader
   GMainLoop *loop;
 
   /* protected by lock */
-  GstQueueArray *queue;
+  GstVecDeque *queue;
 
   IMFActivate *activate;
   IMFMediaSource *source;
@@ -145,8 +145,8 @@ static void
 gst_mf_source_reader_init (GstMFSourceReader * self)
 {
   self->queue =
-      gst_queue_array_new_for_struct (sizeof (GstMFSourceReaderSample), 2);
-  gst_queue_array_set_clear_func (self->queue,
+      gst_vec_deque_new_for_struct (sizeof (GstMFSourceReaderSample), 2);
+  gst_vec_deque_set_clear_func (self->queue,
       (GDestroyNotify) gst_mf_source_reader_sample_clear);
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
@@ -376,7 +376,7 @@ gst_mf_source_reader_finalize (GObject * object)
   g_main_loop_unref (self->loop);
   g_main_context_unref (self->context);
 
-  gst_queue_array_free (self->queue);
+  gst_vec_deque_free (self->queue);
   gst_clear_caps (&self->supported_caps);
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
@@ -459,7 +459,7 @@ gst_mf_source_reader_stop (GstMFSourceObject * object)
 {
   GstMFSourceReader *self = GST_MF_SOURCE_READER (object);
 
-  gst_queue_array_clear (self->queue);
+  gst_vec_deque_clear (self->queue);
 
   return TRUE;
 }
@@ -496,7 +496,7 @@ gst_mf_source_reader_read_sample (GstMFSourceReader * self)
   reader_sample.clock_time =
       gst_mf_source_object_get_running_time (GST_MF_SOURCE_OBJECT (self));
 
-  gst_queue_array_push_tail_struct (self->queue, &reader_sample);
+  gst_vec_deque_push_tail_struct (self->queue, &reader_sample);
 
   return GST_FLOW_OK;
 }
@@ -516,7 +516,7 @@ gst_mf_source_reader_get_media_buffer (GstMFSourceReader * self,
   *timestamp = GST_CLOCK_TIME_NONE;
   *duration = GST_CLOCK_TIME_NONE;
 
-  while (gst_queue_array_is_empty (self->queue)) {
+  while (gst_vec_deque_is_empty (self->queue)) {
     ret = gst_mf_source_reader_read_sample (self);
     if (ret != GST_FLOW_OK)
       return ret;
@@ -530,7 +530,7 @@ gst_mf_source_reader_get_media_buffer (GstMFSourceReader * self,
   }
 
   reader_sample =
-      (GstMFSourceReaderSample *) gst_queue_array_pop_head_struct (self->queue);
+      (GstMFSourceReaderSample *) gst_vec_deque_pop_head_struct (self->queue);
   sample = reader_sample->sample;
   g_assert (sample);
 

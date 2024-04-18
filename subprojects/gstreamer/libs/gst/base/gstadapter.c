@@ -142,7 +142,7 @@ struct _GstAdapter
   GObject object;
 
   /*< private > */
-  GstQueueArray *bufqueue;
+  GstVecDeque *bufqueue;
   gsize size;
   gsize skip;
   guint count;
@@ -209,7 +209,7 @@ gst_adapter_init (GstAdapter * adapter)
   adapter->dts_at_discont = GST_CLOCK_TIME_NONE;
   adapter->offset_at_discont = GST_BUFFER_OFFSET_NONE;
   adapter->distance_from_discont = 0;
-  adapter->bufqueue = gst_queue_array_new (10);
+  adapter->bufqueue = gst_vec_deque_new (10);
 }
 
 static void
@@ -229,7 +229,7 @@ gst_adapter_finalize (GObject * object)
 
   g_free (adapter->assembled_data);
 
-  gst_queue_array_free (adapter->bufqueue);
+  gst_vec_deque_free (adapter->bufqueue);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
@@ -262,7 +262,7 @@ gst_adapter_clear (GstAdapter * adapter)
   if (adapter->info.memory)
     gst_adapter_unmap (adapter);
 
-  while ((obj = gst_queue_array_pop_head (adapter->bufqueue)))
+  while ((obj = gst_vec_deque_pop_head (adapter->bufqueue)))
     gst_mini_object_unref (obj);
 
   adapter->count = 0;
@@ -334,11 +334,11 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, gsize skip,
   } else {
     idx = 0;
   }
-  buf = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+  buf = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
   bsize = gst_buffer_get_size (buf);
   while (G_UNLIKELY (skip >= bsize)) {
     skip -= bsize;
-    buf = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    buf = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
     bsize = gst_buffer_get_size (buf);
   }
   /* copy partial buffer */
@@ -353,7 +353,7 @@ copy_into_unchecked (GstAdapter * adapter, guint8 * dest, gsize skip,
 
   /* second step, copy remainder */
   while (size > 0) {
-    buf = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    buf = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
     bsize = gst_buffer_get_size (buf);
     if (G_LIKELY (bsize > 0)) {
       csize = MIN (bsize, size);
@@ -386,16 +386,16 @@ gst_adapter_push (GstAdapter * adapter, GstBuffer * buf)
   adapter->size += size;
 
   /* Note: merging buffers at this point is premature. */
-  if (gst_queue_array_is_empty (adapter->bufqueue)) {
+  if (gst_vec_deque_is_empty (adapter->bufqueue)) {
     GST_LOG_OBJECT (adapter, "pushing %p first %" G_GSIZE_FORMAT " bytes",
         buf, size);
-    gst_queue_array_push_tail (adapter->bufqueue, buf);
+    gst_vec_deque_push_tail (adapter->bufqueue, buf);
     update_timestamps_and_offset (adapter, buf);
   } else {
     /* Otherwise append to the end, and advance our end pointer */
     GST_LOG_OBJECT (adapter, "pushing %p %" G_GSIZE_FORMAT " bytes at end, "
         "size now %" G_GSIZE_FORMAT, buf, size, adapter->size);
-    gst_queue_array_push_tail (adapter->bufqueue, buf);
+    gst_vec_deque_push_tail (adapter->bufqueue, buf);
   }
   ++adapter->count;
 }
@@ -507,7 +507,7 @@ gst_adapter_map (GstAdapter * adapter, gsize size)
 #if 0
   do {
 #endif
-    cur = gst_queue_array_peek_head (adapter->bufqueue);
+    cur = gst_vec_deque_peek_head (adapter->bufqueue);
     skip = adapter->skip;
 
     csize = gst_buffer_get_size (cur);
@@ -568,7 +568,7 @@ gst_adapter_unmap (GstAdapter * adapter)
   g_return_if_fail (GST_IS_ADAPTER (adapter));
 
   if (adapter->info.memory) {
-    GstBuffer *cur = gst_queue_array_peek_head (adapter->bufqueue);
+    GstBuffer *cur = gst_vec_deque_peek_head (adapter->bufqueue);
     GST_LOG_OBJECT (adapter, "unmap memory buffer %p", cur);
     gst_buffer_unmap (cur, &adapter->info);
     adapter->info.memory = NULL;
@@ -648,7 +648,7 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
   adapter->offset_distance -= adapter->skip;
   adapter->distance_from_discont -= adapter->skip;
 
-  cur = gst_queue_array_peek_head (adapter->bufqueue);
+  cur = gst_vec_deque_peek_head (adapter->bufqueue);
   size = gst_buffer_get_size (cur);
   while (flush >= size) {
     /* can skip whole buffer */
@@ -662,14 +662,14 @@ gst_adapter_flush_unchecked (GstAdapter * adapter, gsize flush)
     --adapter->count;
 
     cur = NULL;
-    gst_buffer_unref (gst_queue_array_pop_head (adapter->bufqueue));
+    gst_buffer_unref (gst_vec_deque_pop_head (adapter->bufqueue));
 
-    if (gst_queue_array_is_empty (adapter->bufqueue)) {
+    if (gst_vec_deque_is_empty (adapter->bufqueue)) {
       GST_LOG_OBJECT (adapter, "adapter empty now");
       break;
     }
     /* there is a new head buffer, update the timestamps */
-    cur = gst_queue_array_peek_head (adapter->bufqueue);
+    cur = gst_vec_deque_peek_head (adapter->bufqueue);
     update_timestamps_and_offset (adapter, cur);
     size = gst_buffer_get_size (cur);
   }
@@ -828,7 +828,7 @@ gst_adapter_get_buffer_fast (GstAdapter * adapter, gsize nbytes)
     return NULL;
 
   skip = adapter->skip;
-  cur = gst_queue_array_peek_head (adapter->bufqueue);
+  cur = gst_vec_deque_peek_head (adapter->bufqueue);
 
   if (skip == 0 && gst_buffer_get_size (cur) == nbytes) {
     GST_LOG_OBJECT (adapter, "providing buffer of %" G_GSIZE_FORMAT " bytes"
@@ -837,12 +837,12 @@ gst_adapter_get_buffer_fast (GstAdapter * adapter, gsize nbytes)
     goto done;
   }
 
-  len = gst_queue_array_get_length (adapter->bufqueue);
+  len = gst_vec_deque_get_length (adapter->bufqueue);
 
   for (idx = 0; idx < len && left > 0; idx++) {
     gsize size, cur_size;
 
-    cur = gst_queue_array_peek_nth (adapter->bufqueue, idx);
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx);
     cur_size = gst_buffer_get_size (cur);
     size = MIN (cur_size - skip, left);
 
@@ -980,7 +980,7 @@ gst_adapter_get_buffer (GstAdapter * adapter, gsize nbytes)
   if (G_UNLIKELY (nbytes > adapter->size))
     return NULL;
 
-  cur = gst_queue_array_peek_head (adapter->bufqueue);
+  cur = gst_vec_deque_peek_head (adapter->bufqueue);
   skip = adapter->skip;
   hsize = gst_buffer_get_size (cur);
 
@@ -1020,10 +1020,10 @@ gst_adapter_get_buffer (GstAdapter * adapter, gsize nbytes)
     gsize read_offset = 0;
 
     idx = 0;
-    len = gst_queue_array_get_length (adapter->bufqueue);
+    len = gst_vec_deque_get_length (adapter->bufqueue);
 
     while (idx < len && read_offset < nbytes + adapter->skip) {
-      cur = gst_queue_array_peek_nth (adapter->bufqueue, idx);
+      cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx);
 
       gst_buffer_foreach_meta (cur, foreach_metadata, buffer);
       read_offset += gst_buffer_get_size (cur);
@@ -1111,7 +1111,7 @@ gst_adapter_take_list (GstAdapter * adapter, gsize nbytes)
   GST_LOG_OBJECT (adapter, "taking %" G_GSIZE_FORMAT " bytes", nbytes);
 
   while (nbytes > 0) {
-    cur = gst_queue_array_peek_head (adapter->bufqueue);
+    cur = gst_vec_deque_peek_head (adapter->bufqueue);
     skip = adapter->skip;
     cur_size = gst_buffer_get_size (cur);
     hsize = MIN (nbytes, cur_size - skip);
@@ -1160,7 +1160,7 @@ gst_adapter_get_list (GstAdapter * adapter, gsize nbytes)
   skip = adapter->skip;
 
   while (nbytes > 0) {
-    cur = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
     cur_size = gst_buffer_get_size (cur);
     hsize = MIN (nbytes, cur_size - skip);
 
@@ -1226,7 +1226,7 @@ gst_adapter_take_buffer_list (GstAdapter * adapter, gsize nbytes)
   buffer_list = gst_buffer_list_new_sized (n_bufs);
 
   while (nbytes > 0) {
-    cur = gst_queue_array_peek_head (adapter->bufqueue);
+    cur = gst_vec_deque_peek_head (adapter->bufqueue);
     skip = adapter->skip;
     cur_size = gst_buffer_get_size (cur);
     hsize = MIN (nbytes, cur_size - skip);
@@ -1283,7 +1283,7 @@ gst_adapter_get_buffer_list (GstAdapter * adapter, gsize nbytes)
   skip = adapter->skip;
 
   while (nbytes > 0) {
-    cur = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
     cur_size = gst_buffer_get_size (cur);
     hsize = MIN (nbytes, cur_size - skip);
 
@@ -1355,7 +1355,7 @@ gst_adapter_available_fast (GstAdapter * adapter)
   /* take the first non-zero buffer */
   idx = 0;
   while (TRUE) {
-    cur = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
     size = gst_buffer_get_size (cur);
     if (size != 0)
       break;
@@ -1557,10 +1557,10 @@ gst_adapter_prev_pts_at_offset (GstAdapter * adapter, gsize offset,
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
 
   idx = 0;
-  len = gst_queue_array_get_length (adapter->bufqueue);
+  len = gst_vec_deque_get_length (adapter->bufqueue);
 
   while (idx < len && read_offset < offset + adapter->skip) {
-    cur = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
 
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (cur))) {
       pts = GST_BUFFER_PTS (cur);
@@ -1607,10 +1607,10 @@ gst_adapter_prev_dts_at_offset (GstAdapter * adapter, gsize offset,
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), GST_CLOCK_TIME_NONE);
 
   idx = 0;
-  len = gst_queue_array_get_length (adapter->bufqueue);
+  len = gst_vec_deque_get_length (adapter->bufqueue);
 
   while (idx < len && read_offset < offset + adapter->skip) {
-    cur = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    cur = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
 
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (cur))) {
       dts = GST_BUFFER_DTS (cur);
@@ -1680,13 +1680,13 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     adapter->scan_offset = 0;
     adapter->scan_entry_idx = G_MAXUINT;
   }
-  buf = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+  buf = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
   bsize = gst_buffer_get_size (buf);
   while (G_UNLIKELY (skip >= bsize)) {
     skip -= bsize;
     adapter->scan_offset += bsize;
     adapter->scan_entry_idx = idx;
-    buf = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    buf = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
     bsize = gst_buffer_get_size (buf);
   }
   /* get the data now */
@@ -1725,7 +1725,7 @@ gst_adapter_masked_scan_uint32_peek (GstAdapter * adapter, guint32 mask,
     adapter->scan_offset += info.size;
     adapter->scan_entry_idx = idx;
     gst_buffer_unmap (buf, &info);
-    buf = gst_queue_array_peek_nth (adapter->bufqueue, idx++);
+    buf = gst_vec_deque_peek_nth (adapter->bufqueue, idx++);
 
     if (!gst_buffer_map (buf, &info, GST_MAP_READ))
       return -1;

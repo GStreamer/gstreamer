@@ -1344,7 +1344,7 @@ private:
   GMutex m_mutex;
   uint32_t m_lastBufferSize;
   uint32_t m_nonEmptyCalls;
-  GstQueueArray *m_buffers;
+  GstVecDeque *m_buffers;
   gint m_refcount;
 
   void _clearBufferPool ()
@@ -1354,7 +1354,7 @@ private:
     if (!m_buffers)
         return;
 
-    while ((buf = (uint8_t *) gst_queue_array_pop_head (m_buffers))) {
+    while ((buf = (uint8_t *) gst_vec_deque_pop_head (m_buffers))) {
       uint8_t offset = *(buf - 1);
       void *alloc_buf = buf - 128 + offset;
         g_free (alloc_buf);
@@ -1369,13 +1369,13 @@ public:
   {
     g_mutex_init (&m_mutex);
 
-    m_buffers = gst_queue_array_new (60);
+    m_buffers = gst_vec_deque_new (60);
   }
 
   virtual ~ GStreamerDecklinkMemoryAllocator () {
     Decommit ();
 
-    gst_queue_array_free (m_buffers);
+    gst_vec_deque_free (m_buffers);
 
     g_mutex_clear (&m_mutex);
   }
@@ -1429,7 +1429,7 @@ public:
     }
 
     /* Look if there is a free buffer in the pool */
-    if (!(buf = (uint8_t *) gst_queue_array_pop_head (m_buffers))) {
+    if (!(buf = (uint8_t *) gst_vec_deque_pop_head (m_buffers))) {
       /* If not, alloc a new one */
       buf = (uint8_t *) g_malloc (bufferSize + 128);
 
@@ -1454,9 +1454,9 @@ public:
 
     /* If there are still unused buffers in the pool
      * remove one of them every fifth call */
-    if (gst_queue_array_get_length (m_buffers) > 0) {
+    if (gst_vec_deque_get_length (m_buffers) > 0) {
       if (++m_nonEmptyCalls >= 5) {
-        buf = (uint8_t *) gst_queue_array_pop_head (m_buffers);
+        buf = (uint8_t *) gst_vec_deque_pop_head (m_buffers);
         uint8_t offset = *(buf - 1);
         void *alloc_buf = buf - 128 + offset;
         g_free (alloc_buf);
@@ -1480,7 +1480,7 @@ public:
     uint8_t *alloc_buffer = ((uint8_t *) buffer) - 128 + offset;
     uint32_t size = *(uint32_t *) alloc_buffer;
     if (size == m_lastBufferSize) {
-      gst_queue_array_push_tail (m_buffers, buffer);
+      gst_vec_deque_push_tail (m_buffers, buffer);
     } else {
       g_free (alloc_buffer);
     }

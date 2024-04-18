@@ -100,7 +100,7 @@ struct _GstQueue2
   gboolean unexpected;
 
   /* the queue of data we're keeping our hands on */
-  GstQueueArray *queue;
+  GstVecDeque *queue;
 
   GCond query_handled;
   gboolean last_query; /* result of last serialized query */

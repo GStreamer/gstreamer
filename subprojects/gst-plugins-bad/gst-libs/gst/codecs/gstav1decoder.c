@@ -46,7 +46,7 @@ struct _GstAV1DecoderPrivate
   GstVideoCodecFrame *current_frame;
 
   guint preferred_output_delay;
-  GstQueueArray *output_queue;
+  GstVecDeque *output_queue;
   gboolean is_live;
 
   gboolean input_state_changed;
@@ -124,8 +124,8 @@ gst_av1_decoder_init (GstAV1Decoder * self)
   self->priv = priv = gst_av1_decoder_get_instance_private (self);
 
   priv->output_queue =
-      gst_queue_array_new_for_struct (sizeof (GstAV1DecoderOutputFrame), 1);
-  gst_queue_array_set_clear_func (priv->output_queue,
+      gst_vec_deque_new_for_struct (sizeof (GstAV1DecoderOutputFrame), 1);
+  gst_vec_deque_set_clear_func (priv->output_queue,
       (GDestroyNotify) gst_av1_decoder_clear_output_frame);
 }
 
@@ -135,7 +135,7 @@ gst_av1_decoder_finalize (GObject * object)
   GstAV1Decoder *self = GST_AV1_DECODER (object);
   GstAV1DecoderPrivate *priv = self->priv;
 
-  gst_queue_array_free (priv->output_queue);
+  gst_vec_deque_free (priv->output_queue);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -158,7 +158,7 @@ gst_av1_decoder_reset (GstAV1Decoder * self)
   if (priv->parser)
     gst_av1_parser_reset (priv->parser, FALSE);
 
-  gst_queue_array_clear (priv->output_queue);
+  gst_vec_deque_clear (priv->output_queue);
 }
 
 static gboolean
@@ -254,9 +254,9 @@ gst_av1_decoder_drain_output_queue (GstAV1Decoder * self,
 
   g_assert (klass->output_picture);
 
-  while (gst_queue_array_get_length (priv->output_queue) > num) {
+  while (gst_vec_deque_get_length (priv->output_queue) > num) {
     GstAV1DecoderOutputFrame *output_frame = (GstAV1DecoderOutputFrame *)
-        gst_queue_array_pop_head_struct (priv->output_queue);
+        gst_vec_deque_pop_head_struct (priv->output_queue);
     GstFlowReturn flow_ret = klass->output_picture (self,
         output_frame->frame, output_frame->picture);
 
@@ -771,7 +771,7 @@ out:
         output_frame.picture = priv->current_picture;
         output_frame.self = self;
 
-        gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
+        gst_vec_deque_push_tail_struct (priv->output_queue, &output_frame);
       }
     } else {
       GST_LOG_OBJECT (self, "Decode only picture %p", priv->current_picture);

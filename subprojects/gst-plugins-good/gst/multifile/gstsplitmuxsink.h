@@ -210,7 +210,7 @@ struct _GstSplitMuxSink
 
   gboolean split_requested;
   gboolean do_split_next_gop;
-  GstQueueArray *times_to_split;
+  GstVecDeque *times_to_split;
 
   /* Async finalize options */
   gboolean async_finalize;

@@ -260,7 +260,7 @@ gst_decklink_audio_src_init (GstDecklinkAudioSrc * self)
   g_cond_init (&self->cond);
 
   self->current_packets =
-      gst_queue_array_new_for_struct (sizeof (CapturePacket),
+      gst_vec_deque_new_for_struct (sizeof (CapturePacket),
       DEFAULT_BUFFER_SIZE);
 
   self->skipped_last = 0;
@@ -353,12 +353,12 @@ gst_decklink_audio_src_finalize (GObject * object)
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
   if (self->current_packets) {
-    while (gst_queue_array_get_length (self->current_packets) > 0) {
+    while (gst_vec_deque_get_length (self->current_packets) > 0) {
       CapturePacket *tmp = (CapturePacket *)
-          gst_queue_array_pop_head_struct (self->current_packets);
+          gst_vec_deque_pop_head_struct (self->current_packets);
       capture_packet_clear (tmp);
     }
-    gst_queue_array_free (self->current_packets);
+    gst_vec_deque_free (self->current_packets);
     self->current_packets = NULL;
   }
 
@@ -570,10 +570,10 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     CapturePacket p;
     guint skipped_packets = 0;
 
-    while (gst_queue_array_get_length (self->current_packets) >=
+    while (gst_vec_deque_get_length (self->current_packets) >=
         self->buffer_size) {
       CapturePacket *tmp = (CapturePacket *)
-          gst_queue_array_pop_head_struct (self->current_packets);
+          gst_vec_deque_pop_head_struct (self->current_packets);
       if (skipped_packets == 0 && self->skipped_last == 0)
         self->skip_from_timestamp = tmp->timestamp;
       skipped_packets++;
@@ -609,7 +609,7 @@ gst_decklink_audio_src_got_packet (GstElement * element,
     p.hardware_duration = hardware_duration;
     p.no_signal = no_signal;
     packet->AddRef ();
-    gst_queue_array_push_tail_struct (self->current_packets, &p);
+    gst_vec_deque_push_tail_struct (self->current_packets, &p);
     g_cond_signal (&self->cond);
   }
   g_mutex_unlock (&self->lock);
@@ -640,7 +640,7 @@ gst_decklink_audio_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
 retry:
   g_mutex_lock (&self->lock);
-  while (gst_queue_array_is_empty (self->current_packets) && !self->flushing) {
+  while (gst_vec_deque_is_empty (self->current_packets) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
   }
 
@@ -651,7 +651,7 @@ retry:
   }
 
   p = *(CapturePacket *)
-      gst_queue_array_pop_head_struct (self->current_packets);
+      gst_vec_deque_pop_head_struct (self->current_packets);
   g_mutex_unlock (&self->lock);
 
   p.packet->GetBytes ((gpointer *) & data);
@@ -951,9 +951,9 @@ gst_decklink_audio_src_unlock_stop (GstBaseSrc * bsrc)
 
   g_mutex_lock (&self->lock);
   self->flushing = FALSE;
-  while (gst_queue_array_get_length (self->current_packets) > 0) {
+  while (gst_vec_deque_get_length (self->current_packets) > 0) {
     CapturePacket *tmp = (CapturePacket *)
-        gst_queue_array_pop_head_struct (self->current_packets);
+        gst_vec_deque_pop_head_struct (self->current_packets);
     capture_packet_clear (tmp);
   }
   g_mutex_unlock (&self->lock);
@@ -1027,9 +1027,9 @@ gst_decklink_audio_src_stop (GstDecklinkAudioSrc * self)
 {
   GST_DEBUG_OBJECT (self, "Stopping");
 
-  while (gst_queue_array_get_length (self->current_packets) > 0) {
+  while (gst_vec_deque_get_length (self->current_packets) > 0) {
     CapturePacket *tmp = (CapturePacket *)
-        gst_queue_array_pop_head_struct (self->current_packets);
+        gst_vec_deque_pop_head_struct (self->current_packets);
     capture_packet_clear (tmp);
   }
 

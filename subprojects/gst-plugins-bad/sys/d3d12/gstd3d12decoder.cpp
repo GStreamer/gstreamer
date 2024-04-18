@@ -255,7 +255,7 @@ struct DecoderSessionData
 {
   DecoderSessionData ()
   {
-    output_queue = gst_queue_array_new_for_struct (sizeof (DecoderOutputData),
+    output_queue = gst_vec_deque_new_for_struct (sizeof (DecoderOutputData),
         16);
   }
 
@@ -277,7 +277,7 @@ struct DecoderSessionData
     if (output_state)
       gst_video_codec_state_unref (output_state);
 
-    gst_queue_array_free (output_queue);
+    gst_vec_deque_free (output_queue);
   }
 
   D3D12_VIDEO_DECODER_DESC decoder_desc = {};
@@ -323,7 +323,7 @@ struct DecoderSessionData
 
   std::mutex queue_lock;
   std::condition_variable queue_cond;
-  GstQueueArray *output_queue;
+  GstVecDeque *output_queue;
 
   std::recursive_mutex lock;
 };
@@ -475,7 +475,7 @@ gst_d3d12_decoder_drain (GstD3D12Decoder * decoder, GstVideoDecoder * videodec)
   if (priv->output_thread && priv->session) {
     auto empty_data = DecoderOutputData ();
     std::lock_guard < std::mutex > lk (priv->session->queue_lock);
-    gst_queue_array_push_tail_struct (priv->session->output_queue, &empty_data);
+    gst_vec_deque_push_tail_struct (priv->session->output_queue, &empty_data);
     priv->session->queue_cond.notify_one ();
   }
 
@@ -807,7 +807,7 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
   if (priv->output_thread && priv->session) {
     auto empty_data = DecoderOutputData ();
     std::lock_guard < std::mutex > lk (priv->session->queue_lock);
-    gst_queue_array_push_tail_struct (priv->session->output_queue, &empty_data);
+    gst_vec_deque_push_tail_struct (priv->session->output_queue, &empty_data);
     priv->session->queue_cond.notify_one ();
   }
 
@@ -1621,11 +1621,11 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
     {
       GST_LOG_OBJECT (self, "Waiting for output data");
       std::unique_lock < std::mutex > lk (priv->session->queue_lock);
-      while (gst_queue_array_is_empty (priv->session->output_queue))
+      while (gst_vec_deque_is_empty (priv->session->output_queue))
         priv->session->queue_cond.wait (lk);
 
       output_data = *((DecoderOutputData *)
-          gst_queue_array_pop_head_struct (priv->session->output_queue));
+          gst_vec_deque_pop_head_struct (priv->session->output_queue));
     }
 
     if (!output_data.frame) {
@@ -1694,7 +1694,7 @@ gst_d3d12_decoder_output_picture (GstD3D12Decoder * decoder,
   output_data.height = display_height;
 
   std::lock_guard < std::mutex > lk (priv->session->queue_lock);
-  gst_queue_array_push_tail_struct (priv->session->output_queue, &output_data);
+  gst_vec_deque_push_tail_struct (priv->session->output_queue, &output_data);
   priv->session->queue_cond.notify_one ();
 
   return priv->last_flow;

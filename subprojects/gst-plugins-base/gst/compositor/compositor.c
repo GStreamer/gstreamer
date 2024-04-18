@@ -1263,8 +1263,8 @@ gst_parallelized_task_runner_join (GstParallelizedTaskRunner * self)
 
   while (!joined) {
     g_mutex_lock (&self->lock);
-    if (!(joined = gst_queue_array_is_empty (self->tasks))) {
-      gpointer task = gst_queue_array_pop_head (self->tasks);
+    if (!(joined = gst_vec_deque_is_empty (self->tasks))) {
+      gpointer task = gst_vec_deque_pop_head (self->tasks);
       g_mutex_unlock (&self->lock);
       gst_task_pool_join (self->pool, task);
     } else {
@@ -1278,7 +1278,7 @@ gst_parallelized_task_runner_free (GstParallelizedTaskRunner * self)
 {
   gst_parallelized_task_runner_join (self);
 
-  gst_queue_array_free (self->tasks);
+  gst_vec_deque_free (self->tasks);
   if (self->own_pool)
     gst_task_pool_cleanup (self->pool);
   gst_object_unref (self->pool);
@@ -1315,7 +1315,7 @@ gst_parallelized_task_runner_new (guint n_threads, GstTaskPool * pool,
     gst_task_pool_prepare (self->pool, NULL);
   }
 
-  self->tasks = gst_queue_array_new (n_threads);
+  self->tasks = gst_vec_deque_new (n_threads);
 
   self->n_threads = n_threads;
 
@@ -1370,7 +1370,7 @@ gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
        * on.
        */
       g_assert (task != NULL);
-      gst_queue_array_push_tail (self->tasks, task);
+      gst_vec_deque_push_tail (self->tasks, task);
     }
     g_mutex_unlock (&self->lock);
   }

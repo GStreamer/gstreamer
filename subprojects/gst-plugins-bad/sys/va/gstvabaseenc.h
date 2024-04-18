@@ -23,7 +23,6 @@
 #include "gstvadevice.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
-#include <gst/base/gstqueuearray.h>
 
 G_BEGIN_DECLS
 
@@ -61,7 +60,7 @@ struct _GstVaBaseEnc
   GQueue reorder_list;
   GQueue ref_list;
   GQueue output_list;
-  GstQueueArray *dts_queue;
+  GstVecDeque *dts_queue;
 
   GstVideoCodecState *input_state;
   union {

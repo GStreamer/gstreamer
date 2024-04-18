@@ -47,7 +47,7 @@ struct _GstAjaSrc {
   // Everything below protected by queue lock
   GMutex queue_lock;
   GCond queue_cond;
-  GstQueueArray *queue;
+  GstVecDeque *queue;
   guint queue_num_frames;
   gboolean playing;
   gboolean shutdown;

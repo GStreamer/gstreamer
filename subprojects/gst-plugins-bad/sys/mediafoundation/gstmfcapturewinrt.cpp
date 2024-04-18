@@ -61,7 +61,7 @@ struct _GstMFCaptureWinRT
   GMainLoop *loop;
 
   /* protected by lock */
-  GstQueueArray *queue;
+  GstVecDeque *queue;
 
   GstCaps *supported_caps;
   GstVideoInfo info;
@@ -137,8 +137,8 @@ static void
 gst_mf_capture_winrt_init (GstMFCaptureWinRT * self)
 {
   self->queue =
-      gst_queue_array_new_for_struct (sizeof (GstMFCaptureWinRTFrame), 2);
-  gst_queue_array_set_clear_func (self->queue,
+      gst_vec_deque_new_for_struct (sizeof (GstMFCaptureWinRTFrame), 2);
+  gst_vec_deque_set_clear_func (self->queue,
       (GDestroyNotify) gst_mf_capture_winrt_frame_clear);
   g_mutex_init (&self->lock);
   g_cond_init (&self->cond);
@@ -173,7 +173,7 @@ gst_mf_capture_winrt_finalize (GObject * object)
   g_main_loop_unref (self->loop);
   g_main_context_unref (self->context);
 
-  gst_queue_array_free (self->queue);
+  gst_vec_deque_free (self->queue);
   gst_clear_caps (&self->supported_caps);
   g_mutex_clear (&self->lock);
   g_cond_clear (&self->cond);
@@ -377,7 +377,7 @@ gst_mf_capture_winrt_stop (GstMFSourceObject * object)
 
   hr = self->capture->StopCapture ();
 
-  gst_queue_array_clear (self->queue);
+  gst_vec_deque_clear (self->queue);
 
   if (!gst_mf_result (hr)) {
     GST_ERROR_OBJECT (self, "Capture object doesn't want to stop capture");
@@ -402,7 +402,7 @@ gst_mf_capture_winrt_on_frame (IMediaFrameReference * frame, void *user_data)
   winrt_frame.frame = frame;
   winrt_frame.clock_time =
       gst_mf_source_object_get_running_time (GST_MF_SOURCE_OBJECT (self));
-  gst_queue_array_push_tail_struct (self->queue, &winrt_frame);
+  gst_vec_deque_push_tail_struct (self->queue, &winrt_frame);
   frame->AddRef ();
 
   g_cond_broadcast (&self->cond);
@@ -454,7 +454,7 @@ gst_mf_capture_winrt_get_video_media_frame (GstMFCaptureWinRT * self,
   }
 
   while (!self->flushing && !self->got_error &&
-      gst_queue_array_is_empty (self->queue))
+      gst_vec_deque_is_empty (self->queue))
     g_cond_wait (&self->cond, &self->lock);
 
   if (self->got_error) {
@@ -468,7 +468,7 @@ gst_mf_capture_winrt_get_video_media_frame (GstMFCaptureWinRT * self,
   }
 
   winrt_frame =
-      (GstMFCaptureWinRTFrame *) gst_queue_array_pop_head_struct (self->queue);
+      (GstMFCaptureWinRTFrame *) gst_vec_deque_pop_head_struct (self->queue);
 
   frame_ref = winrt_frame->frame;
   g_assert (frame_ref);

@@ -264,7 +264,7 @@ struct _GstMpeg2DecoderPrivate
 
   guint preferred_output_delay;
   /* for delayed output */
-  GstQueueArray *output_queue;
+  GstVecDeque *output_queue;
   /* used for low-latency vs. high throughput mode decision */
   gboolean is_live;
 
@@ -357,8 +357,8 @@ gst_mpeg2_decoder_start (GstVideoDecoder * decoder)
   priv->last_flow = GST_FLOW_OK;
 
   priv->output_queue =
-      gst_queue_array_new_for_struct (sizeof (GstMpeg2DecoderOutputFrame), 1);
-  gst_queue_array_set_clear_func (priv->output_queue,
+      gst_vec_deque_new_for_struct (sizeof (GstMpeg2DecoderOutputFrame), 1);
+  gst_vec_deque_set_clear_func (priv->output_queue,
       (GDestroyNotify) gst_mpeg2_decoder_clear_output_frame);
 
   return TRUE;
@@ -372,7 +372,7 @@ gst_mpeg2_decoder_stop (GstVideoDecoder * decoder)
 
   g_clear_pointer (&self->input_state, gst_video_codec_state_unref);
   g_clear_pointer (&priv->dpb, gst_mpeg2_dpb_free);
-  gst_queue_array_free (priv->output_queue);
+  gst_vec_deque_free (priv->output_queue);
 
   return TRUE;
 }
@@ -429,7 +429,7 @@ gst_mpeg2_decoder_drain (GstVideoDecoder * decoder)
   }
 
   gst_mpeg2_decoder_drain_output_queue (self, 0, &ret);
-  gst_queue_array_clear (priv->output_queue);
+  gst_vec_deque_clear (priv->output_queue);
   gst_mpeg2_dpb_clear (priv->dpb);
 
   return ret;
@@ -448,7 +448,7 @@ gst_mpeg2_decoder_flush (GstVideoDecoder * decoder)
   GstMpeg2DecoderPrivate *priv = self->priv;
 
   gst_mpeg2_dpb_clear (priv->dpb);
-  gst_queue_array_clear (priv->output_queue);
+  gst_vec_deque_clear (priv->output_queue);
   priv->state &= GST_MPEG2_DECODER_STATE_VALID_SEQ_HEADERS;
   priv->pic_hdr = PIC_HDR_INIT;
   priv->pic_ext = PIC_HDR_EXT_INIT;
@@ -1173,7 +1173,7 @@ gst_mpeg2_decoder_do_output_picture (GstMpeg2Decoder * decoder,
   output_frame.frame = frame;
   output_frame.picture = to_output;
   output_frame.self = decoder;
-  gst_queue_array_push_tail_struct (priv->output_queue, &output_frame);
+  gst_vec_deque_push_tail_struct (priv->output_queue, &output_frame);
   gst_mpeg2_decoder_drain_output_queue (decoder, priv->preferred_output_delay,
       &priv->last_flow);
 }
@@ -1342,9 +1342,9 @@ gst_mpeg2_decoder_drain_output_queue (GstMpeg2Decoder * self, guint num,
 
   g_assert (klass->output_picture);
 
-  while (gst_queue_array_get_length (priv->output_queue) > num) {
+  while (gst_vec_deque_get_length (priv->output_queue) > num) {
     GstMpeg2DecoderOutputFrame *output_frame = (GstMpeg2DecoderOutputFrame *)
-        gst_queue_array_pop_head_struct (priv->output_queue);
+        gst_vec_deque_pop_head_struct (priv->output_queue);
     GST_LOG_OBJECT (self,
         "Output picture %p (frame_num %d, poc %d, pts: %" GST_TIME_FORMAT
         "), from DPB",

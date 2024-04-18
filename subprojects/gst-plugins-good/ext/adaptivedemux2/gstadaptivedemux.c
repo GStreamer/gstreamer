@@ -3300,7 +3300,7 @@ handle_slot_pending_track_switch_locked (GstAdaptiveDemux * demux,
       slot->pending_track->buffering_threshold);
   pending_is_ready |= slot->pending_track->eos;
 
-  if (!pending_is_ready && gst_queue_array_get_length (track->queue) > 0) {
+  if (!pending_is_ready && gst_vec_deque_get_length (track->queue) > 0) {
     GST_DEBUG_OBJECT (demux,
         "Replacement track '%s' doesn't have enough data for switching yet",
         slot->pending_track->id);
@@ -3435,7 +3435,7 @@ restart:
     } else {
       GST_DEBUG_ID (track->id, "Track is EOS, not waiting for timed data");
 
-      if (gst_queue_array_get_length (track->queue) > 0) {
+      if (gst_vec_deque_get_length (track->queue) > 0) {
         all_tracks_empty = FALSE;
       }
     }

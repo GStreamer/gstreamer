@@ -134,8 +134,8 @@ struct _GstParallelizedTaskRunner
   gboolean own_pool;
   guint n_threads;
 
-  GstQueueArray *tasks;
-  GstQueueArray *work_items;
+  GstVecDeque *tasks;
+  GstVecDeque *work_items;
 
   GMutex lock;
 
@@ -149,7 +149,7 @@ gst_parallelized_task_thread_func (gpointer data)
   GstParallelizedWorkItem *work_item;
 
   g_mutex_lock (&runner->lock);
-  work_item = gst_queue_array_pop_head (runner->work_items);
+  work_item = gst_vec_deque_pop_head (runner->work_items);
   g_mutex_unlock (&runner->lock);
 
   g_assert (work_item != NULL);
@@ -168,8 +168,8 @@ gst_parallelized_task_runner_join (GstParallelizedTaskRunner * self)
 
   while (!joined) {
     g_mutex_lock (&self->lock);
-    if (!(joined = gst_queue_array_is_empty (self->tasks))) {
-      gpointer task = gst_queue_array_pop_head (self->tasks);
+    if (!(joined = gst_vec_deque_is_empty (self->tasks))) {
+      gpointer task = gst_vec_deque_pop_head (self->tasks);
       g_mutex_unlock (&self->lock);
       gst_task_pool_join (self->pool, task);
     } else {
@@ -183,8 +183,8 @@ gst_parallelized_task_runner_free (GstParallelizedTaskRunner * self)
 {
   gst_parallelized_task_runner_join (self);
 
-  gst_queue_array_free (self->work_items);
-  gst_queue_array_free (self->tasks);
+  gst_vec_deque_free (self->work_items);
+  gst_vec_deque_free (self->tasks);
   if (self->own_pool)
     gst_task_pool_cleanup (self->pool);
   gst_object_unref (self->pool);
@@ -221,8 +221,8 @@ gst_parallelized_task_runner_new (guint n_threads, GstTaskPool * pool,
     gst_task_pool_prepare (self->pool, NULL);
   }
 
-  self->tasks = gst_queue_array_new (n_threads);
-  self->work_items = gst_queue_array_new (n_threads);
+  self->tasks = gst_vec_deque_new (n_threads);
+  self->work_items = gst_vec_deque_new (n_threads);
 
   self->n_threads = n_threads;
 
@@ -265,7 +265,7 @@ gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
       work_item->self = self;
       work_item->func = func;
       work_item->user_data = task_data[i];
-      gst_queue_array_push_tail (self->work_items, work_item);
+      gst_vec_deque_push_tail (self->work_items, work_item);
 
       task =
           gst_task_pool_push (self->pool, gst_parallelized_task_thread_func,
@@ -273,7 +273,7 @@ gst_parallelized_task_runner_run (GstParallelizedTaskRunner * self,
 
       /* The return value of push() is unfortunately nullable, and we can't deal with that */
       g_assert (task != NULL);
-      gst_queue_array_push_tail (self->tasks, task);
+      gst_vec_deque_push_tail (self->tasks, task);
     }
     g_mutex_unlock (&self->lock);
   }

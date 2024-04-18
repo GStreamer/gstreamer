@@ -3953,7 +3953,7 @@ struct _GstRTSPWatch
   /* queued message for transmission */
   guint id;
   GMutex mutex;
-  GstQueueArray *messages;
+  GstVecDeque *messages;
   gsize messages_bytes;
   guint messages_count;
 
@@ -4221,7 +4221,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
 
   g_mutex_lock (&watch->mutex);
   do {
-    guint n_messages = gst_queue_array_get_length (watch->messages);
+    guint n_messages = gst_vec_deque_get_length (watch->messages);
     GOutputVector *vectors;
     GstMapInfo *map_infos;
     guint *ids;
@@ -4266,7 +4266,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
     }
 
     for (i = 0, n_vectors = 0, n_memories = 0, n_ids = 0; i < n_messages; i++) {
-      msg = gst_queue_array_peek_nth_struct (watch->messages, i);
+      msg = gst_vec_deque_peek_nth_struct (watch->messages, i);
       if (msg->id != 0)
         n_ids++;
 
@@ -4304,7 +4304,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
 
     for (i = 0, j = 0, n_mmap = 0, l = 0, bytes_to_write = 0; i < n_messages;
         i++) {
-      msg = gst_queue_array_peek_nth_struct (watch->messages, i);
+      msg = gst_vec_deque_peek_nth_struct (watch->messages, i);
 
       if (msg->data_offset < msg->data_size) {
         vectors[j].buffer = (msg->data_is_data_header ?
@@ -4374,7 +4374,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
     if (bytes_written == bytes_to_write) {
       /* fast path, just unmap all memories, free memory, drop all messages and notify them */
       l = 0;
-      while ((msg = gst_queue_array_pop_head_struct (watch->messages))) {
+      while ((msg = gst_vec_deque_pop_head_struct (watch->messages))) {
         if (msg->id) {
           ids[l] = msg->id;
           l++;
@@ -4388,7 +4388,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
     } else if (bytes_written > 0) {
       /* not done, let's skip all messages that were sent already and free them */
       for (i = 0, drop_messages = 0; i < n_messages; i++) {
-        msg = gst_queue_array_peek_nth_struct (watch->messages, i);
+        msg = gst_vec_deque_peek_nth_struct (watch->messages, i);
 
         if (bytes_written >= msg->data_size - msg->data_offset) {
           guint body_size;
@@ -4434,7 +4434,7 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
       }
 
       while (drop_messages > 0) {
-        msg = gst_queue_array_pop_head_struct (watch->messages);
+        msg = gst_vec_deque_pop_head_struct (watch->messages);
         g_assert (msg);
         drop_messages--;
       }
@@ -4482,10 +4482,10 @@ write_error:
     if (watch->funcs.error_full) {
       guint i, n_messages;
 
-      n_messages = gst_queue_array_get_length (watch->messages);
+      n_messages = gst_vec_deque_get_length (watch->messages);
       for (i = 0; i < n_messages; i++) {
         GstRTSPSerializedMessage *msg =
-            gst_queue_array_peek_nth_struct (watch->messages, i);
+            gst_vec_deque_peek_nth_struct (watch->messages, i);
         if (msg->id)
           watch->funcs.error_full (watch, res, NULL, msg->id, watch->user_data);
       }
@@ -4509,10 +4509,10 @@ gst_rtsp_source_finalize (GSource * source)
   build_reset (&watch->builder);
   gst_rtsp_message_unset (&watch->message);
 
-  while ((msg = gst_queue_array_pop_head_struct (watch->messages))) {
+  while ((msg = gst_vec_deque_pop_head_struct (watch->messages))) {
     gst_rtsp_serialized_message_clear (msg);
   }
-  gst_queue_array_free (watch->messages);
+  gst_vec_deque_free (watch->messages);
   watch->messages = NULL;
   watch->messages_bytes = 0;
   watch->messages_count = 0;
@@ -4575,7 +4575,7 @@ gst_rtsp_watch_new (GstRTSPConnection * conn,
 
   g_mutex_init (&result->mutex);
   result->messages =
-      gst_queue_array_new_for_struct (sizeof (GstRTSPSerializedMessage), 10);
+      gst_vec_deque_new_for_struct (sizeof (GstRTSPSerializedMessage), 10);
   g_cond_init (&result->queue_not_full);
 
   gst_rtsp_watch_reset (result);
@@ -4750,7 +4750,7 @@ gst_rtsp_watch_write_serialized_messages (GstRTSPWatch * watch,
     goto flushing;
 
   /* try to send the message synchronously first */
-  if (gst_queue_array_get_length (watch->messages) == 0) {
+  if (gst_vec_deque_get_length (watch->messages) == 0) {
     gint j, k;
     GOutputVector *vectors;
     GstMapInfo *map_infos;
@@ -4907,7 +4907,7 @@ gst_rtsp_watch_write_serialized_messages (GstRTSPWatch * watch,
     }
 
     /* add the record to a queue. */
-    gst_queue_array_push_tail_struct (watch->messages, &local_message);
+    gst_vec_deque_push_tail_struct (watch->messages, &local_message);
     watch->messages_bytes +=
         (local_message.data_size - local_message.data_offset);
     if (local_message.body_data)
@@ -5174,7 +5174,7 @@ gst_rtsp_watch_set_flushing (GstRTSPWatch * watch, gboolean flushing)
   if (flushing) {
     GstRTSPSerializedMessage *msg;
 
-    while ((msg = gst_queue_array_pop_head_struct (watch->messages))) {
+    while ((msg = gst_vec_deque_pop_head_struct (watch->messages))) {
       gst_rtsp_serialized_message_clear (msg);
     }
   }

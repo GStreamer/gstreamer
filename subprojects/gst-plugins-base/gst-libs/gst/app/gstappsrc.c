@@ -143,7 +143,7 @@ struct _GstAppSrcPrivate
 {
   GCond cond;
   GMutex mutex;
-  GstQueueArray *queue;
+  GstVecDeque *queue;
   GstAppSrcWaitStatus wait_status;
 
   GstCaps *last_caps;
@@ -157,7 +157,7 @@ struct _GstAppSrcPrivate
   gboolean pending_custom_segment;
   /* events that have been delayed until either the caps is configured, ensuring
      that no events are sent before CAPS, or buffers are being pushed. */
-  GstQueueArray *delayed_events;
+  GstVecDeque *delayed_events;
   /* if a buffer has been pushed yet */
   gboolean pushed_buffer;
 
@@ -744,8 +744,8 @@ gst_app_src_init (GstAppSrc * appsrc)
 
   g_mutex_init (&priv->mutex);
   g_cond_init (&priv->cond);
-  priv->queue = gst_queue_array_new (16);
-  priv->delayed_events = gst_queue_array_new (16);
+  priv->queue = gst_vec_deque_new (16);
+  priv->delayed_events = gst_vec_deque_new (16);
   priv->wait_status = NOONE_WAITING;
   priv->pushed_buffer = FALSE;
 
@@ -775,8 +775,8 @@ gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
   GstAppSrcPrivate *priv = src->priv;
   GstCaps *requeue_caps = NULL;
 
-  while (!gst_queue_array_is_empty (priv->queue)) {
-    obj = gst_queue_array_pop_head (priv->queue);
+  while (!gst_vec_deque_is_empty (priv->queue)) {
+    obj = gst_vec_deque_pop_head (priv->queue);
     if (obj) {
       if (GST_IS_CAPS (obj) && retain_last_caps) {
         gst_caps_replace (&requeue_caps, GST_CAPS_CAST (obj));
@@ -786,10 +786,10 @@ gst_app_src_flush_queued (GstAppSrc * src, gboolean retain_last_caps)
   }
 
   if (requeue_caps) {
-    gst_queue_array_push_tail (priv->queue, requeue_caps);
+    gst_vec_deque_push_tail (priv->queue, requeue_caps);
   }
 
-  gst_queue_array_clear (priv->delayed_events);
+  gst_vec_deque_clear (priv->delayed_events);
   priv->pushed_buffer = FALSE;
 
   gst_queue_status_info_reset (&priv->queue_status_info);
@@ -834,8 +834,8 @@ gst_app_src_finalize (GObject * obj)
 
   g_mutex_clear (&priv->mutex);
   g_cond_clear (&priv->cond);
-  gst_queue_array_free (priv->queue);
-  gst_queue_array_free (priv->delayed_events);
+  gst_vec_deque_free (priv->queue);
+  gst_vec_deque_free (priv->delayed_events);
 
   g_free (priv->uri);
 
@@ -1033,7 +1033,7 @@ gst_app_src_send_event (GstElement * element, GstEvent * event)
         GST_DEBUG_OBJECT (appsrc, "queue event: %" GST_PTR_FORMAT, event);
         g_mutex_lock (&priv->mutex);
 
-        gst_queue_array_push_tail (priv->queue, event);
+        gst_vec_deque_push_tail (priv->queue, event);
 
         if ((priv->wait_status & STREAM_WAITING))
           g_cond_broadcast (&priv->cond);
@@ -1442,10 +1442,10 @@ push_delayed_events (GstAppSrc * appsrc)
 {
   GstAppSrcPrivate *priv = appsrc->priv;
 
-  while (!gst_queue_array_is_empty (priv->delayed_events)) {
+  while (!gst_vec_deque_is_empty (priv->delayed_events)) {
     GstEvent *event;
 
-    event = gst_queue_array_pop_head (priv->delayed_events);
+    event = gst_vec_deque_pop_head (priv->delayed_events);
     GST_DEBUG_OBJECT (appsrc, "sending event: %" GST_PTR_FORMAT, event);
 
     g_mutex_unlock (&priv->mutex);
@@ -1517,8 +1517,8 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       goto flushing;
 
     /* return data as long as we have some */
-    if (!gst_queue_array_is_empty (priv->queue)) {
-      GstMiniObject *obj = gst_queue_array_pop_head (priv->queue);
+    if (!gst_vec_deque_is_empty (priv->queue)) {
+      GstMiniObject *obj = gst_vec_deque_pop_head (priv->queue);
 
       if (priv->current_caps && needs_segment (obj)) {
         /* need to have sent a segment before sending `obj` */
@@ -1546,7 +1546,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
           gst_app_src_do_negotiate (bsrc);
 
         /* sending delayed events which were waiting on the caps */
-        if (!gst_queue_array_is_empty (priv->delayed_events)) {
+        if (!gst_vec_deque_is_empty (priv->delayed_events)) {
           /* need to send a segment before the events */
           ensure_segment (appsrc);
 
@@ -1573,7 +1573,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
           priv->need_discont_downstream = FALSE;
         }
 
-        if (!gst_queue_array_is_empty (priv->delayed_events)) {
+        if (!gst_vec_deque_is_empty (priv->delayed_events)) {
           /* don't keep delaying events if a buffer has been pushed without CAPS */
           GST_DEBUG_OBJECT (appsrc, "push delayed events before buffer");
           push_delayed_events (appsrc);
@@ -1599,7 +1599,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
           priv->need_discont_downstream = FALSE;
         }
 
-        if (!gst_queue_array_is_empty (priv->delayed_events)) {
+        if (!gst_vec_deque_is_empty (priv->delayed_events)) {
           /* don't keep delaying events if a buffer has been pushed without CAPS */
           GST_DEBUG_OBJECT (appsrc, "push delayed events before buffer");
           push_delayed_events (appsrc);
@@ -1644,7 +1644,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
           if (!priv->current_caps && !priv->pushed_buffer) {
             GST_DEBUG_OBJECT (appsrc,
                 "did not send caps yet, delay event for now");
-            gst_queue_array_push_tail (priv->delayed_events, event);
+            gst_vec_deque_push_tail (priv->delayed_events, event);
           } else {
             /* We are about to push an event, release out lock */
             g_mutex_unlock (&priv->mutex);
@@ -1691,7 +1691,7 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
        * signal) we can still be empty because the pushed buffer got flushed or
        * when the application pushes the requested buffer later, we support both
        * possibilities. */
-      if (!gst_queue_array_is_empty (priv->queue))
+      if (!gst_vec_deque_is_empty (priv->queue))
         continue;
 
       /* no buffer yet, maybe we are EOS, if not, block for more data. */
@@ -1776,10 +1776,10 @@ gst_app_src_set_caps (GstAppSrc * appsrc, const GstCaps * caps)
     new_caps = caps ? gst_caps_copy (caps) : NULL;
     GST_DEBUG_OBJECT (appsrc, "setting caps to %" GST_PTR_FORMAT, caps);
 
-    while ((t = gst_queue_array_peek_tail (priv->queue)) && GST_IS_CAPS (t)) {
-      gst_caps_unref (gst_queue_array_pop_tail (priv->queue));
+    while ((t = gst_vec_deque_peek_tail (priv->queue)) && GST_IS_CAPS (t)) {
+      gst_caps_unref (gst_vec_deque_pop_tail (priv->queue));
     }
-    gst_queue_array_push_tail (priv->queue, new_caps);
+    gst_vec_deque_push_tail (priv->queue, new_caps);
     gst_caps_replace (&priv->last_caps, new_caps);
 
     if ((priv->wait_status & STREAM_WAITING))
@@ -2442,16 +2442,16 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
         priv->need_discont_upstream = TRUE;
         goto dropped;
       } else if (priv->leaky_type == GST_APP_LEAKY_TYPE_DOWNSTREAM) {
-        guint i, length = gst_queue_array_get_length (priv->queue);
+        guint i, length = gst_vec_deque_get_length (priv->queue);
         GstMiniObject *item = NULL;
 
         /* Find the oldest buffer or buffer list and drop it, then update the
          * limits. Dropping one is sufficient to go below the limits again.
          */
         for (i = 0; i < length; i++) {
-          item = gst_queue_array_peek_nth (priv->queue, i);
+          item = gst_vec_deque_peek_nth (priv->queue, i);
           if (GST_IS_BUFFER (item) || GST_IS_BUFFER_LIST (item)) {
-            gst_queue_array_drop_element (priv->queue, i);
+            gst_vec_deque_drop_element (priv->queue, i);
             break;
           }
           /* To not accidentally have an event after the loop */
@@ -2502,7 +2502,7 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
     GstEvent *event = gst_event_new_segment (&priv->last_segment);
 
     GST_DEBUG_OBJECT (appsrc, "enqueue new segment %" GST_PTR_FORMAT, event);
-    gst_queue_array_push_tail (priv->queue, event);
+    gst_vec_deque_push_tail (priv->queue, event);
     priv->pending_custom_segment = FALSE;
   }
 
@@ -2525,7 +2525,7 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
 
     if (!steal_ref)
       gst_buffer_list_ref (buflist);
-    gst_queue_array_push_tail (priv->queue, buflist);
+    gst_vec_deque_push_tail (priv->queue, buflist);
   } else {
     /* Mark the buffer as DISCONT if we previously dropped a buffer instead of
      * queueing it */
@@ -2543,7 +2543,7 @@ gst_app_src_push_internal (GstAppSrc * appsrc, GstBuffer * buffer,
     GST_DEBUG_OBJECT (appsrc, "queueing buffer %p", buffer);
     if (!steal_ref)
       gst_buffer_ref (buffer);
-    gst_queue_array_push_tail (priv->queue, buffer);
+    gst_vec_deque_push_tail (priv->queue, buffer);
   }
 
   gst_app_src_update_queued_push (appsrc,

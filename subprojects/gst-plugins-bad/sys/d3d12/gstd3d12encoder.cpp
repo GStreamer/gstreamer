@@ -62,7 +62,7 @@ struct EncoderSessionData
 {
   EncoderSessionData ()
   {
-    output_queue = gst_queue_array_new_for_struct (sizeof (EncoderOutputData),
+    output_queue = gst_vec_deque_new_for_struct (sizeof (EncoderOutputData),
         16);
   }
 
@@ -72,7 +72,7 @@ struct EncoderSessionData
       gst_buffer_pool_set_active (upload_pool, FALSE);
     gst_clear_object (&upload_pool);
     gst_clear_object (&encoder_pool);
-    gst_queue_array_free (output_queue);
+    gst_vec_deque_free (output_queue);
   }
 
   ComPtr<ID3D12VideoEncoder> encoder;
@@ -80,7 +80,7 @@ struct EncoderSessionData
 
   std::mutex queue_lock;
   std::condition_variable queue_cond;
-  GstQueueArray *output_queue;
+  GstVecDeque *output_queue;
 
   GstD3D12EncoderBufferPool *encoder_pool = nullptr;
   GstBufferPool *upload_pool = nullptr;
@@ -361,7 +361,7 @@ gst_d3d12_encoder_drain (GstD3D12Encoder * self, gboolean locked)
     GST_DEBUG_OBJECT (self, "Sending empty task");
     auto empty_data = EncoderOutputData ();
     std::lock_guard < std::mutex > lk (priv->session->queue_lock);
-    gst_queue_array_push_tail_struct (priv->session->output_queue, &empty_data);
+    gst_vec_deque_push_tail_struct (priv->session->output_queue, &empty_data);
     priv->session->queue_cond.notify_one ();
   }
 
@@ -1144,11 +1144,11 @@ gst_d3d12_encoder_output_loop (GstD3D12Encoder * self)
     {
       GST_LOG_OBJECT (self, "Waiting for output data");
       std::unique_lock < std::mutex > lk (priv->session->queue_lock);
-      while (gst_queue_array_is_empty (priv->session->output_queue))
+      while (gst_vec_deque_is_empty (priv->session->output_queue))
         priv->session->queue_cond.wait (lk);
 
       output_data = *((EncoderOutputData *)
-          gst_queue_array_pop_head_struct (priv->session->output_queue));
+          gst_vec_deque_pop_head_struct (priv->session->output_queue));
     }
 
     if (!output_data.frame) {
@@ -1474,8 +1474,7 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
   GST_VIDEO_ENCODER_STREAM_UNLOCK (self);
   {
     std::lock_guard < std::mutex > lk (priv->session->queue_lock);
-    gst_queue_array_push_tail_struct (priv->session->output_queue,
-        &output_data);
+    gst_vec_deque_push_tail_struct (priv->session->output_queue, &output_data);
     priv->session->queue_cond.notify_one ();
   }
   GST_VIDEO_ENCODER_STREAM_LOCK (self);

@@ -42,7 +42,7 @@ struct _GstMpg123AudioDec
 
   off_t frame_offset;
 
-  GstQueueArray *audio_clip_info_queue;
+  GstVecDeque *audio_clip_info_queue;
 };
 
 GST_ELEMENT_REGISTER_DECLARE (mpg123audiodec);

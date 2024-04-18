@@ -56,7 +56,7 @@ struct _GstVtdec
   GstVideoTextureCache *texture_cache;
   GstGLContextHelper *ctxh;
 
-  GstQueueArray *reorder_queue;
+  GstVecDeque *reorder_queue;
   gint dbp_size;
   GMutex queue_mutex;
   GCond queue_cond;

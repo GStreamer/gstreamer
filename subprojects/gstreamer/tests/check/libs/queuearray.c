@@ -24,6 +24,10 @@
 #include "config.h"
 #endif
 
+#ifdef GST_DISABLE_DEPRECATED
+#undef GST_DISABLE_DEPRECATED
+#endif
+
 #include <gst/gst.h>
 #include <gst/check/gstcheck.h>
 #include <gst/base/gstqueuearray.h>

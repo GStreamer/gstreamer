@@ -68,7 +68,7 @@ struct _GstATEnc
   AudioConverterRef converter;
   UInt32 max_output_buffer_size;
   UInt32 n_output_samples;
-  GstQueueArray *input_queue;
+  GstVecDeque *input_queue;
   GstAudioBuffer *used_buffer;
   gboolean input_eos;
 

@@ -620,7 +620,7 @@ gst_splitmux_sink_init (GstSplitMuxSink * splitmux)
   GST_OBJECT_FLAG_SET (splitmux, GST_ELEMENT_FLAG_SINK);
   splitmux->split_requested = FALSE;
   splitmux->do_split_next_gop = FALSE;
-  splitmux->times_to_split = gst_queue_array_new_for_struct (8, 8);
+  splitmux->times_to_split = gst_vec_deque_new_for_struct (8, 8);
   splitmux->next_fku_time = GST_CLOCK_TIME_NONE;
 
   g_queue_init (&splitmux->pending_input_gops);
@@ -697,7 +697,7 @@ gst_splitmux_sink_finalize (GObject * object)
     gst_video_time_code_interval_free (splitmux->tc_interval);
 
   if (splitmux->times_to_split)
-    gst_queue_array_free (splitmux->times_to_split);
+    gst_vec_deque_free (splitmux->times_to_split);
 
   g_free (splitmux->location);
 
@@ -2344,7 +2344,7 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   thresh_bytes = splitmux->threshold_bytes;
   thresh_time = splitmux->threshold_time;
   ptr_to_time = (GstClockTime *)
-      gst_queue_array_peek_head_struct (splitmux->times_to_split);
+      gst_vec_deque_peek_head_struct (splitmux->times_to_split);
   if (ptr_to_time)
     time_to_split = *ptr_to_time;
   check_robust_muxing = splitmux->use_robust_muxing
@@ -2376,16 +2376,16 @@ need_new_fragment (GstSplitMuxSink * splitmux,
   if (gop->start_time >= time_to_split) {
     GST_OBJECT_LOCK (splitmux);
     /* Dequeue running time */
-    gst_queue_array_pop_head_struct (splitmux->times_to_split);
+    gst_vec_deque_pop_head_struct (splitmux->times_to_split);
     /* Empty any running times after this that are past now */
-    ptr_to_time = gst_queue_array_peek_head_struct (splitmux->times_to_split);
+    ptr_to_time = gst_vec_deque_peek_head_struct (splitmux->times_to_split);
     while (ptr_to_time) {
       time_to_split = *ptr_to_time;
       if (gop->start_time < time_to_split) {
         break;
       }
-      gst_queue_array_pop_head_struct (splitmux->times_to_split);
-      ptr_to_time = gst_queue_array_peek_head_struct (splitmux->times_to_split);
+      gst_vec_deque_pop_head_struct (splitmux->times_to_split);
+      ptr_to_time = gst_vec_deque_peek_head_struct (splitmux->times_to_split);
     }
     GST_TRACE_OBJECT (splitmux,
         "GOP start time %" GST_STIME_FORMAT " is after requested split point %"
@@ -3971,7 +3971,7 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
   g_atomic_int_set (&(splitmux->do_split_next_gop), FALSE);
 
   splitmux->next_fku_time = GST_CLOCK_TIME_NONE;
-  gst_queue_array_clear (splitmux->times_to_split);
+  gst_vec_deque_clear (splitmux->times_to_split);
 
   g_list_foreach (splitmux->contexts, (GFunc) mq_stream_ctx_reset, NULL);
   splitmux->queued_keyframes = 0;
@@ -4121,7 +4121,7 @@ split_at_running_time (GstSplitMuxSink * splitmux, GstClockTime split_time)
   gboolean send_keyframe_requests;
 
   GST_SPLITMUX_LOCK (splitmux);
-  gst_queue_array_push_tail_struct (splitmux->times_to_split, &split_time);
+  gst_vec_deque_push_tail_struct (splitmux->times_to_split, &split_time);
   send_keyframe_requests = splitmux->send_keyframe_requests;
   GST_SPLITMUX_UNLOCK (splitmux);
 

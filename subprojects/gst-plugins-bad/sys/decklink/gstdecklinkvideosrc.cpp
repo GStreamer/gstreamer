@@ -448,7 +448,7 @@ gst_decklink_video_src_init (GstDecklinkVideoSrc * self)
   g_cond_init (&self->cond);
 
   self->current_frames =
-      gst_queue_array_new_for_struct (sizeof (CaptureFrame),
+      gst_vec_deque_new_for_struct (sizeof (CaptureFrame),
       DEFAULT_BUFFER_SIZE);
 }
 
@@ -601,12 +601,12 @@ gst_decklink_video_src_finalize (GObject * object)
   g_cond_clear (&self->cond);
 
   if (self->current_frames) {
-    while (gst_queue_array_get_length (self->current_frames) > 0) {
+    while (gst_vec_deque_get_length (self->current_frames) > 0) {
       CaptureFrame *tmp = (CaptureFrame *)
-          gst_queue_array_pop_head_struct (self->current_frames);
+          gst_vec_deque_pop_head_struct (self->current_frames);
       capture_frame_clear (tmp);
     }
-    gst_queue_array_free (self->current_frames);
+    gst_vec_deque_free (self->current_frames);
     self->current_frames = NULL;
   }
 
@@ -865,7 +865,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     memset (&f, 0, sizeof (f));
 
     /* Notify the streaming thread about the signal loss */
-    gst_queue_array_push_tail_struct (self->current_frames, &f);
+    gst_vec_deque_push_tail_struct (self->current_frames, &f);
     g_cond_signal (&self->cond);
     g_mutex_unlock (&self->lock);
 
@@ -904,10 +904,10 @@ gst_decklink_video_src_got_frame (GstElement * element,
     guint field_count = 0;
     guint skipped_frames = 0;
 
-    while (gst_queue_array_get_length (self->current_frames) >=
+    while (gst_vec_deque_get_length (self->current_frames) >=
         self->buffer_size) {
       CaptureFrame *tmp = (CaptureFrame *)
-          gst_queue_array_pop_head_struct (self->current_frames);
+          gst_vec_deque_pop_head_struct (self->current_frames);
       if (tmp->frame) {
         if (skipped_frames == 0 && self->skipped_last == 0)
           self->skip_from_timestamp = tmp->timestamp;
@@ -991,7 +991,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
     }
 
     frame->AddRef ();
-    gst_queue_array_push_tail_struct (self->current_frames, &f);
+    gst_vec_deque_push_tail_struct (self->current_frames, &f);
     g_cond_signal (&self->cond);
   }
   g_mutex_unlock (&self->lock);
@@ -1262,7 +1262,7 @@ gst_decklink_video_src_create (GstPushSrc * bsrc, GstBuffer ** buffer)
 
   g_mutex_lock (&self->lock);
 retry:
-  while (gst_queue_array_is_empty (self->current_frames) && !self->flushing) {
+  while (gst_vec_deque_is_empty (self->current_frames) && !self->flushing) {
     g_cond_wait (&self->cond, &self->lock);
   }
 
@@ -1272,7 +1272,7 @@ retry:
     return GST_FLOW_FLUSHING;
   }
 
-  f = *(CaptureFrame *) gst_queue_array_pop_head_struct (self->current_frames);
+  f = *(CaptureFrame *) gst_vec_deque_pop_head_struct (self->current_frames);
 
   // We will have no frame if frames without signal are dropped immediately
   // but we still have to signal that it's lost here.
@@ -1561,9 +1561,9 @@ gst_decklink_video_src_unlock_stop (GstBaseSrc * bsrc)
 
   g_mutex_lock (&self->lock);
   self->flushing = FALSE;
-  while (gst_queue_array_get_length (self->current_frames) > 0) {
+  while (gst_vec_deque_get_length (self->current_frames) > 0) {
     CaptureFrame *tmp =
-        (CaptureFrame *) gst_queue_array_pop_head_struct (self->current_frames);
+        (CaptureFrame *) gst_vec_deque_pop_head_struct (self->current_frames);
     capture_frame_clear (tmp);
   }
   g_mutex_unlock (&self->lock);
@@ -1628,9 +1628,9 @@ gst_decklink_video_src_stop (GstDecklinkVideoSrc * self)
 {
   GST_DEBUG_OBJECT (self, "Stopping");
 
-  while (gst_queue_array_get_length (self->current_frames) > 0) {
+  while (gst_vec_deque_get_length (self->current_frames) > 0) {
     CaptureFrame *tmp =
-        (CaptureFrame *) gst_queue_array_pop_head_struct (self->current_frames);
+        (CaptureFrame *) gst_vec_deque_pop_head_struct (self->current_frames);
     capture_frame_clear (tmp);
   }
   self->caps_mode = GST_DECKLINK_MODE_AUTO;

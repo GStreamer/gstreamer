@@ -781,9 +781,9 @@ gst_vtenc_start (GstVideoEncoder * enc)
   self->is_flushing = FALSE;
   self->downstream_ret = GST_FLOW_OK;
 
-  self->output_queue = gst_queue_array_new (VTENC_OUTPUT_QUEUE_SIZE);
-  /* Set clear_func to unref all remaining frames in gst_queue_array_free() */
-  gst_queue_array_set_clear_func (self->output_queue,
+  self->output_queue = gst_vec_deque_new (VTENC_OUTPUT_QUEUE_SIZE);
+  /* Set clear_func to unref all remaining frames in gst_vec_deque_free() */
+  gst_vec_deque_set_clear_func (self->output_queue,
       (GDestroyNotify) gst_video_codec_frame_unref);
 
   /* Create the output task, but pause it immediately */
@@ -830,7 +830,7 @@ gst_vtenc_stop (GstVideoEncoder * enc)
   self->video_info.width = self->video_info.height = 0;
   self->video_info.fps_n = self->video_info.fps_d = 0;
 
-  gst_queue_array_free (self->output_queue);
+  gst_vec_deque_free (self->output_queue);
   self->output_queue = NULL;
 
   return TRUE;
@@ -2039,7 +2039,7 @@ gst_vtenc_enqueue_buffer (void *outputCallbackRefCon,
   /* Limit the amount of frames in our output queue
    * to avoid processing too many frames ahead */
   g_mutex_lock (&self->queue_mutex);
-  while (gst_queue_array_get_length (self->output_queue) >
+  while (gst_vec_deque_get_length (self->output_queue) >
       VTENC_OUTPUT_QUEUE_SIZE) {
     g_cond_wait (&self->queue_cond, &self->queue_mutex);
   }
@@ -2058,7 +2058,7 @@ beach:
   }
 
   /* Buffer-less frames will be discarded in the output loop */
-  gst_queue_array_push_tail (self->output_queue, frame);
+  gst_vec_deque_push_tail (self->output_queue, frame);
   g_cond_signal (&self->queue_cond);
   g_mutex_unlock (&self->queue_mutex);
 }
@@ -2072,7 +2072,7 @@ gst_vtenc_loop (GstVTEnc * self)
   gboolean should_pause;
 
   g_mutex_lock (&self->queue_mutex);
-  while (gst_queue_array_is_empty (self->output_queue) && !self->pause_task
+  while (gst_vec_deque_is_empty (self->output_queue) && !self->pause_task
       && !self->is_flushing) {
     g_cond_wait (&self->queue_cond, &self->queue_mutex);
   }
@@ -2083,7 +2083,7 @@ gst_vtenc_loop (GstVTEnc * self)
     return;
   }
 
-  while ((outframe = gst_queue_array_pop_head (self->output_queue))) {
+  while ((outframe = gst_vec_deque_pop_head (self->output_queue))) {
     g_cond_signal (&self->queue_cond);
     g_mutex_unlock (&self->queue_mutex);
 
@@ -2136,7 +2136,7 @@ gst_vtenc_loop (GstVTEnc * self)
   if (ret != GST_FLOW_OK) {
     g_mutex_lock (&self->queue_mutex);
 
-    while ((outframe = gst_queue_array_pop_head (self->output_queue))) {
+    while ((outframe = gst_vec_deque_pop_head (self->output_queue))) {
       GST_LOG_OBJECT (self, "flushing frame %d", outframe->system_frame_number);
       gst_video_codec_frame_unref (outframe);
     }

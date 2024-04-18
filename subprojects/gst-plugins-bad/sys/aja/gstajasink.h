@@ -47,7 +47,7 @@ struct _GstAjaSink {
   // Everything below protected by queue lock
   GMutex queue_lock;
   GCond queue_cond;
-  GstQueueArray *queue;
+  GstVecDeque *queue;
   gboolean eos;
   gboolean playing;
   gboolean shutdown;

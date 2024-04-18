@@ -512,7 +512,7 @@ psmux_stream_add_data (PsMuxStream * stream, GstBuffer * buffer,
     stream->last_pts = pts;
 
   stream->bytes_avail += packet->map.size;
-  /* FIXME: perhaps use GstQueueArray instead? */
+  /* FIXME: perhaps use GstVecDeque instead? */
   stream->buffers = g_list_append (stream->buffers, packet);
 
 }

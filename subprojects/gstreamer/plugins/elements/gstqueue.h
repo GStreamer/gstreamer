@@ -109,7 +109,7 @@ struct _GstQueue {
   gboolean      eos;
 
   /* the queue of data we're keeping our grubby hands on */
-  GstQueueArray *queue;
+  GstVecDeque *queue;
 
   GstQueueSize
     cur_level,          /* currently in the queue */
