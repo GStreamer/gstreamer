@@ -204,3 +204,32 @@
    fun:vmaf_predict_score_at_index
    ...
 }
+
+{
+   libsrt_pthread_key_delete_at_exit_1
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN3srt4sync19SetThreadLocalError*
+   fun:*CUDT10epoll_wait*
+   fun:_ZN3UDT11epoll_wait2EiPiS0_S0_S0_lS0_S0_S0_S0_
+}
+{
+   libsrt_pthread_key_delete_at_exit_2
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_ZnwmRKSt9nothrow_t
+   fun:_ZN3srt4sync12CThreadError3getEv
+   fun:_ZN3srt4sync12CThreadError3set*
+   fun:*CUDT10epoll_wait*
+   fun:_ZN3UDT11epoll_wait2EiPiS0_S0_S0_lS0_S0_S0_S0_
+}
+{
+   libsrt_pthread_key_delete_at_exit_3
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_ZnwmRKSt9nothrow_t
+   fun:get
+   fun:set
+   fun:_ZN3srt4sync19SetThreadLocalError*
+}
