@@ -4038,23 +4038,6 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
     return TRUE;
   }
 
-  if (frame_enc->flags & FRAME_FLAG_NOT_SHOW &&
-      ((frame_enc->type & FRAME_TYPE_REPEAT) == 0)) {
-    frame->pts = self->last_pts;
-    frame->dts = self->last_dts;
-    frame->duration = GST_CLOCK_TIME_NONE;
-  } else {
-    frame->pts =
-        base->start_pts + base->frame_duration * frame_enc->total_frame_count;
-    /* The PTS should always be later than the DTS. */
-    frame->dts = frame->pts - base->frame_duration;
-    base->output_frame_count++;
-    frame->duration = base->frame_duration;
-
-    self->last_pts = frame->pts;
-    self->last_dts = frame->dts;
-  }
-
   if (frame_enc->flags & FRAME_FLAG_ALREADY_OUTPUTTED) {
     gsize sz;
 
@@ -4097,6 +4080,7 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
   }
 
   *complete = TRUE;
+  base->output_frame_count++;
 
   gst_buffer_replace (&frame->output_buffer, buf);
   gst_clear_buffer (&buf);
