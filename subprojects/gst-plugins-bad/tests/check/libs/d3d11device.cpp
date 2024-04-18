@@ -241,6 +241,20 @@ GST_START_TEST (test_device_new_concurrency)
 
 GST_END_TEST;
 
+GST_START_TEST (test_device_lock_recursiveness)
+{
+  GstD3D11Device *device = gst_d3d11_device_new (0, 0);
+
+  gst_d3d11_device_lock (device);
+  gst_d3d11_device_lock (device);
+  gst_d3d11_device_unlock (device);
+  gst_d3d11_device_unlock (device);
+
+  gst_object_unref (device);
+}
+
+GST_END_TEST;
+
 static Suite *
 d3d11device_suite (void)
 {
@@ -256,6 +270,7 @@ d3d11device_suite (void)
   tcase_add_test (tc_basic, test_device_for_adapter_luid);
   tcase_add_test (tc_basic, test_device_new_wrapped);
   tcase_add_test (tc_basic, test_device_new_concurrency);
+  tcase_add_test (tc_basic, test_device_lock_recursiveness);
 
 out:
   return s;
