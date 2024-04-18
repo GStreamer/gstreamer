@@ -19047,6 +19047,20 @@
                         "type": "guint64",
                         "writable": true
                     },
+                    "min-sync-interval": {
+                        "blurb": "Minimum RTCP SR / NTP-64 interval synchronization (ms)",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "0",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
                     "mode": {
                         "blurb": "Control the buffering algorithm in use",
                         "conditionally-available": false,
