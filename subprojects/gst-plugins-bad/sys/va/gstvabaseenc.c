@@ -478,12 +478,9 @@ _push_buffer_to_downstream (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   if (complete) {
     ret = gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (base), frame);
   } else {
-    if (frame->output_buffer) {
-      ret = gst_video_encoder_finish_subframe (GST_VIDEO_ENCODER (base), frame);
-    } else {
-      /* Allow to output later and no data here. */
-      ret = GST_FLOW_OK;
-    }
+    /* Allow to output later and no data here. */
+    g_assert (!frame->output_buffer);
+    ret = GST_FLOW_OK;
   }
 
   return ret;
