@@ -125,6 +125,8 @@ static GstElementClass *parent_class = NULL;
 #define FRAME_FLAG_ALREADY_OUTPUTTED  0x80
 /* The frame not show */
 #define FRAME_FLAG_NOT_SHOW  0x100
+/* The frame is inside a TU cache */
+#define FRAME_FLAG_FRAME_IN_TU_CACHE  0x200
 
 #define MAX_ORDER_HINT_BITS_MINUS_1 7
 
@@ -302,6 +304,11 @@ struct _GstVaAV1Enc
     /* (tx_mode_support & mode) == 1 means support the mode. */
     guint tx_mode_support;
   } features;
+
+  /* The cached frames in the same TU. */
+  GstVideoCodecFrame *frames_in_tu[GST_AV1_NUM_REF_FRAMES - 1];
+  guint frames_in_tu_num;
+  gboolean inside_tu;
 
   GstAV1SequenceHeaderOBU sequence_hdr;
 };
@@ -1721,6 +1728,21 @@ _av1_update_ref_list (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
 }
 
 static void
+_av1_clear_frames_in_tu (GstVaAV1Enc * self)
+{
+  guint i;
+  GstVaAV1EncFrame *frame_enc;
+
+  for (i = 0; i < self->frames_in_tu_num; i++) {
+    frame_enc = _enc_frame (self->frames_in_tu[i]);
+    frame_enc->flags &= (~FRAME_FLAG_FRAME_IN_TU_CACHE);
+  }
+
+  memset (self->frames_in_tu, 0, sizeof (self->frames_in_tu));
+  self->frames_in_tu_num = 0;
+}
+
+static void
 gst_va_av1_enc_reset_state (GstVaBaseEnc * base)
 {
   GstVaAV1Enc *self = GST_VA_AV1_ENC (base);
@@ -1804,6 +1826,10 @@ gst_va_av1_enc_reset_state (GstVaBaseEnc * base)
   self->rc.max_bitrate_bits = 0;
   self->rc.cpb_length_bits = 0;
 
+  memset (self->frames_in_tu, 0, sizeof (self->frames_in_tu));
+  self->frames_in_tu_num = 0;
+  self->inside_tu = FALSE;
+
   memset (&self->sequence_hdr, 0, sizeof (self->sequence_hdr));
 }
 
@@ -1812,6 +1838,9 @@ gst_va_av1_enc_flush (GstVideoEncoder * venc)
 {
   GstVaAV1Enc *self = GST_VA_AV1_ENC (venc);
   GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+
+  _av1_clear_frames_in_tu (self);
+  self->inside_tu = FALSE;
 
   /* begin from an key frame after flush. */
   self->gop.frame_num_since_kf = 0;
@@ -2832,7 +2861,7 @@ gst_va_av1_enc_reconfig (GstVaBaseEnc * base)
         NULL);
 
   gst_caps_set_simple (out_caps, "width", G_TYPE_INT, base->width,
-      "height", G_TYPE_INT, base->height, "alignment", G_TYPE_STRING, "frame",
+      "height", G_TYPE_INT, base->height, "alignment", G_TYPE_STRING, "tu",
       "stream-format", G_TYPE_STRING, "obu-stream", NULL);
 
   if (!need_negotiation) {
@@ -3796,6 +3825,7 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
   if (va_frame->type & FRAME_TYPE_REPEAT) {
     g_assert (va_frame->flags & FRAME_FLAG_ALREADY_ENCODED);
     _av1_add_repeat_frame_header (self, va_frame);
+    self->inside_tu = FALSE;
   } else {
     guint size_offset = 0;
 
@@ -3805,9 +3835,17 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
 
     _av1_find_ref_to_update (base, gst_frame);
 
-    if (!(va_frame->flags & FRAME_FLAG_NOT_SHOW) &&
-        (self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA))
+    if (!self->inside_tu &&
+        (self->packed_headers & VA_ENC_PACKED_HEADER_RAW_DATA)) {
       _av1_add_td (self, va_frame);
+    }
+
+    if (va_frame->flags & FRAME_FLAG_NOT_SHOW) {
+      if (!self->inside_tu)
+        self->inside_tu = TRUE;
+    } else {
+      self->inside_tu = FALSE;
+    }
 
     /* Repeat the sequence for each key. */
     if (va_frame->frame_num == 0) {
@@ -3853,6 +3891,100 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
   return GST_FLOW_OK;
 }
 
+static GstBuffer *
+_av1_create_tu_output_buffer (GstVaAV1Enc * self,
+    GstVideoCodecFrame * last_frame)
+{
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (self);
+  guint8 *data;
+  guint total_sz, offset;
+  gint frame_size;
+  GstVaAV1EncFrame *frame_enc;
+  GstBuffer *buf = NULL;
+  guint num;
+
+  g_assert ((_enc_frame (last_frame)->flags & FRAME_TYPE_REPEAT) == 0);
+  g_assert ((_enc_frame (last_frame)->flags & FRAME_FLAG_NOT_SHOW) == 0);
+  g_assert (self->frames_in_tu_num <= GST_AV1_NUM_REF_FRAMES - 1);
+
+  /* cached_frame_header + max codedbuf_size for each */
+  total_sz = (self->frames_in_tu_num + 1) * (32 + base->codedbuf_size);
+
+  data = g_malloc (total_sz);
+  if (!data)
+    goto error;
+
+  offset = 0;
+  for (num = 0; num < self->frames_in_tu_num; num++) {
+    frame_enc = _enc_frame (self->frames_in_tu[num]);
+
+    if (frame_enc->cached_frame_header_size > 0) {
+      memcpy (data + offset, frame_enc->cached_frame_header,
+          frame_enc->cached_frame_header_size);
+      offset += frame_enc->cached_frame_header_size;
+    }
+
+    frame_size = gst_va_base_enc_copy_output_data (base,
+        frame_enc->picture, data + offset, total_sz - offset);
+    if (frame_size <= 0) {
+      GST_ERROR_OBJECT (self, "Fails to copy the output data of "
+          "system_frame_number %d, frame_num: %d",
+          self->frames_in_tu[num]->system_frame_number, frame_enc->frame_num);
+      goto error;
+    }
+
+    offset += frame_size;
+  }
+
+  frame_enc = _enc_frame (last_frame);
+
+  if (frame_enc->cached_frame_header_size > 0) {
+    memcpy (data + offset, frame_enc->cached_frame_header,
+        frame_enc->cached_frame_header_size);
+    offset += frame_enc->cached_frame_header_size;
+  }
+
+  frame_size = gst_va_base_enc_copy_output_data (base,
+      frame_enc->picture, data + offset, total_sz - offset);
+  if (frame_size <= 0) {
+    GST_ERROR_OBJECT (self, "Fails to copy the output data of "
+        "system_frame_number %d, frame_num: %d",
+        last_frame->system_frame_number, frame_enc->frame_num);
+    goto error;
+  }
+  offset += frame_size;
+  num++;
+
+  buf = gst_video_encoder_allocate_output_buffer
+      (GST_VIDEO_ENCODER_CAST (base), offset);
+  if (!buf) {
+    GST_ERROR_OBJECT (base, "Failed to create output buffer");
+    goto error;
+  }
+
+  if (gst_buffer_fill (buf, 0, data, offset) != offset) {
+    GST_ERROR_OBJECT (base, "Failed to write output buffer for TU");
+    goto error;
+  }
+
+  g_free (data);
+
+  _av1_clear_frames_in_tu (self);
+
+  return buf;
+
+error:
+  {
+    if (data)
+      g_free (data);
+
+    _av1_clear_frames_in_tu (self);
+    gst_clear_buffer (&buf);
+
+    return NULL;
+  }
+}
+
 static gboolean
 gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
     GstVideoCodecFrame * frame, gboolean * complete)
@@ -3862,6 +3994,23 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
   GstBuffer *buf = NULL;
 
   frame_enc = _enc_frame (frame);
+
+  if (frame_enc->flags & FRAME_FLAG_NOT_SHOW &&
+      (frame_enc->flags & FRAME_FLAG_ALREADY_OUTPUTTED) == 0) {
+    g_assert (self->frames_in_tu_num <= GST_AV1_NUM_REF_FRAMES - 1);
+    self->frames_in_tu[self->frames_in_tu_num] = frame;
+    self->frames_in_tu_num++;
+
+    g_assert ((frame_enc->flags & FRAME_FLAG_FRAME_IN_TU_CACHE) == 0);
+    frame_enc->flags |= FRAME_FLAG_FRAME_IN_TU_CACHE;
+    frame_enc->flags |= FRAME_FLAG_ALREADY_OUTPUTTED;
+
+    *complete = FALSE;
+
+    gst_buffer_replace (&frame->output_buffer, NULL);
+
+    return TRUE;
+  }
 
   if (frame_enc->flags & FRAME_FLAG_NOT_SHOW &&
       ((frame_enc->type & FRAME_TYPE_REPEAT) == 0)) {
@@ -3885,6 +4034,8 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
 
     /* Already outputted, must be a repeat this time. */
     g_assert (frame_enc->type & FRAME_TYPE_REPEAT);
+    /* Should already sync and complete in previous TU. */
+    g_assert ((frame_enc->flags & FRAME_FLAG_FRAME_IN_TU_CACHE) == 0);
 
     buf = gst_video_encoder_allocate_output_buffer
         (GST_VIDEO_ENCODER_CAST (base), frame_enc->cached_frame_header_size);
@@ -3901,27 +4052,25 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
       gst_clear_buffer (&buf);
       return FALSE;
     }
-
-    *complete = TRUE;
   } else {
-    buf = gst_va_base_enc_create_output_buffer (base, frame_enc->picture,
-        (frame_enc->cached_frame_header_size > 0 ?
-            frame_enc->cached_frame_header : NULL),
-        frame_enc->cached_frame_header_size);
-    if (!buf) {
-      GST_ERROR_OBJECT (base, "Failed to create output buffer");
-      return FALSE;
-    }
-
-    /* If no show frame, the later repeat will complete this frame. */
-    if (frame_enc->flags & FRAME_FLAG_NOT_SHOW) {
-      *complete = FALSE;
+    if (self->frames_in_tu_num > 0) {
+      buf = _av1_create_tu_output_buffer (self, frame);
     } else {
-      *complete = TRUE;
+      buf = gst_va_base_enc_create_output_buffer (base, frame_enc->picture,
+          (frame_enc->cached_frame_header_size > 0 ?
+              frame_enc->cached_frame_header : NULL),
+          frame_enc->cached_frame_header_size);
+    }
+    if (!buf) {
+      GST_ERROR_OBJECT (base, "Failed to create output buffer%s",
+          self->frames_in_tu_num > 0 ? " for TU" : "");
+      return FALSE;
     }
 
     frame_enc->flags |= FRAME_FLAG_ALREADY_OUTPUTTED;
   }
+
+  *complete = TRUE;
 
   gst_buffer_replace (&frame->output_buffer, buf);
   gst_clear_buffer (&buf);
@@ -3936,7 +4085,7 @@ static const gchar *sink_caps_str =
     GST_VIDEO_CAPS_MAKE ("{ NV12 }");
 /* *INDENT-ON* */
 
-static const gchar *src_caps_str = "video/x-av1,alignment=(string)frame,"
+static const gchar *src_caps_str = "video/x-av1,alignment=(string)tu,"
     "stream-format=(string)obu-stream";
 
 static gpointer
@@ -4443,7 +4592,7 @@ _complete_src_caps (GstCaps * srccaps)
   GValue val = G_VALUE_INIT;
 
   g_value_init (&val, G_TYPE_STRING);
-  g_value_set_string (&val, "frame");
+  g_value_set_string (&val, "tu");
   gst_caps_set_value (caps, "alignment", &val);
   g_value_unset (&val);
 
