@@ -1844,8 +1844,10 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
       gst_element_post_message (GST_ELEMENT (src), message);
     }
 
+    GST_OBJECT_LOCK (src);
     src->priv->segment_pending = TRUE;
     src->priv->segment_seqnum = seqnum;
+    GST_OBJECT_UNLOCK (src);
   }
 
   src->priv->discont = TRUE;
@@ -1905,9 +1907,9 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
 
       /* For external flush, restart the task .. */
       GST_LIVE_LOCK (src);
-      src->priv->segment_pending = TRUE;
 
       GST_OBJECT_LOCK (src->srcpad);
+      src->priv->segment_pending = TRUE;
       start = (GST_PAD_MODE (src->srcpad) == GST_PAD_MODE_PUSH);
       GST_OBJECT_UNLOCK (src->srcpad);
 
@@ -2977,9 +2979,11 @@ gst_base_src_loop (GstPad * pad)
     /* generate the event but do not send until outside of live_lock  */
     seg_event = gst_event_new_segment (&src->segment);
 
+    GST_OBJECT_LOCK (src);
     gst_event_set_seqnum (seg_event, src->priv->segment_seqnum);
     src->priv->segment_seqnum = gst_util_seqnum_next ();
     src->priv->segment_pending = FALSE;
+    GST_OBJECT_UNLOCK (src);
   }
 
   /* collect any pending events */
