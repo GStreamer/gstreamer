@@ -2727,6 +2727,15 @@ gst_va_vp9_enc_prepare_output (GstVaBaseEnc * base,
     frame_enc->flags |= FRAME_FLAG_ALREADY_OUTPUTTED;
   }
 
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
+  if (frame_enc->frame_num == 0) {
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
+    GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+
   gst_buffer_replace (&frame->output_buffer, buf);
   gst_clear_buffer (&buf);
 
