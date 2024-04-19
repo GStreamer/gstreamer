@@ -127,7 +127,6 @@ endif
 
 d3d12_headers = [
   'd3d11.h',
-  'd3d11on12.h',
   'd2d1.h',
 ]
 

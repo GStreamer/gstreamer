@@ -25,6 +25,7 @@
 #include "gstd3d12-private.h"
 #include "gstd3d12commandlistpool.h"
 #include <directx/d3dx12.h>
+#include <d3d11on12.h>
 #include <wrl.h>
 #include <vector>
 #include <string.h>
@@ -39,6 +40,7 @@
 #include <queue>
 #include <unordered_map>
 #include <thread>
+#include <gmodule.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
 
@@ -55,6 +57,30 @@ ensure_debug_category (void)
   return cat;
 }
 #endif /* GST_DISABLE_GST_DEBUG */
+
+static PFN_D3D11ON12_CREATE_DEVICE GstD3D11On12CreateDevice = nullptr;
+
+static gboolean
+load_d3d11on12_symbol (void)
+{
+  static gboolean ret = FALSE;
+  static GModule *d3d11_lib_module = nullptr;
+  GST_D3D12_CALL_ONCE_BEGIN {
+    d3d11_lib_module = g_module_open ("d3d11.dll", G_MODULE_BIND_LAZY);
+    if (!d3d11_lib_module)
+      return;
+
+    if (!g_module_symbol (d3d11_lib_module, "D3D11On12CreateDevice",
+            (gpointer *) & GstD3D11On12CreateDevice)) {
+      return;
+    }
+
+    ret = TRUE;
+  }
+  GST_D3D12_CALL_ONCE_END;
+
+  return ret;
+}
 
 enum
 {
@@ -146,8 +172,10 @@ struct DeviceInner
   ComPtr<ID3D12Device> device;
   ComPtr<IDXGIAdapter1> adapter;
   ComPtr<IDXGIFactory2> factory;
+  ComPtr<ID3D11On12Device> device11on12;
   std::unordered_map<GstVideoFormat, GstD3D12Format> format_table;
   std::recursive_mutex extern_lock;
+  std::recursive_mutex device11on12_lock;
   std::mutex lock;
 
   ComPtr<ID3D12InfoQueue> info_queue;
@@ -1355,4 +1383,65 @@ gst_d3d12_device_is_equal (GstD3D12Device * device1, GstD3D12Device * device2)
     return TRUE;
 
   return FALSE;
+}
+
+IUnknown *
+gst_d3d12_device_get_11on12_handle (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+
+  auto priv = device->priv->inner;
+  std::lock_guard < std::mutex > lk (priv->lock);
+
+  if (!priv->device11on12) {
+    if (!load_d3d11on12_symbol ()) {
+      GST_WARNING_OBJECT (device, "D3D11On12CreateDevice symbol was not found");
+      return nullptr;
+    }
+
+    static const D3D_FEATURE_LEVEL feature_levels[] = {
+      D3D_FEATURE_LEVEL_12_1,
+      D3D_FEATURE_LEVEL_12_0,
+      D3D_FEATURE_LEVEL_11_1,
+      D3D_FEATURE_LEVEL_11_0,
+    };
+
+    IUnknown *cq[] =
+        { gst_d3d12_command_queue_get_handle (priv->direct_queue) };
+    ComPtr < ID3D11Device > device11;
+    auto hr = GstD3D11On12CreateDevice (priv->device.Get (),
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT, feature_levels,
+        G_N_ELEMENTS (feature_levels), cq, 1, 0, &device11, nullptr, nullptr);
+    if (FAILED (hr)) {
+      GST_WARNING_OBJECT (device, "Couldn't create 11on12 device, hr: 0x%x",
+          (guint) hr);
+      return nullptr;
+    }
+
+    hr = device11.As (&priv->device11on12);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (device, "Couldn't get 11on12 interface");
+      return nullptr;
+    }
+  }
+
+  return priv->device11on12.Get ();
+}
+
+void
+gst_d3d12_device_11on12_lock (GstD3D12Device * device)
+{
+  g_return_if_fail (GST_IS_D3D12_DEVICE (device));
+
+  auto priv = device->priv->inner;
+  priv->device11on12_lock.lock ();
+}
+
+void
+gst_d3d12_device_11on12_unlock (GstD3D12Device * device)
+{
+  g_return_if_fail (GST_IS_D3D12_DEVICE (device));
+
+  auto priv = device->priv->inner;
+  priv->device11on12_lock.unlock ();
 }

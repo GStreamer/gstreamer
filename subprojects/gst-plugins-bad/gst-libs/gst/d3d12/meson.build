@@ -77,6 +77,7 @@ endif
 sdk_headers = [
   'dxgi1_6.h',
   'd3d11_1.h',
+  'd3d11on12.h',
 ]
 
 have_d3d12_headers = true
@@ -125,12 +126,12 @@ endif
 
 pkg_name = 'gstreamer-d3d12-' + api_version
 gstd3d12 = library('gstd3d12-' + api_version,
-  d3d12_sources + hlsl_precompiled,
+  d3d12_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args: gst_plugins_bad_args + extra_args,
   include_directories : [configinc, libsinc],
   dependencies : [gstbase_dep, gstvideo_dep, gstd3dshader_dep, d3d12_lib,
-                  dxgi_lib, dx_headers_dep] + extra_deps,
+                  dxgi_lib, dx_headers_dep, gmodule_dep] + extra_deps,
   version : libversion,
   install : true,
 )

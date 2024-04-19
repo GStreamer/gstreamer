@@ -67,5 +67,26 @@
 
 #define GST_D3D12_CALL_ONCE_END )
 
-#endif /* __cplusplus */
+class GstD3D12Device11on12LockGuard
+{
+public:
+  explicit GstD3D12Device11on12LockGuard(GstD3D12Device * device) : device_ (device)
+  {
+    if (device_)
+      gst_d3d12_device_11on12_lock (device_);
+  }
 
+  ~GstD3D12Device11on12LockGuard()
+  {
+    if (device_)
+      gst_d3d12_device_11on12_unlock (device_);
+  }
+
+  GstD3D12Device11on12LockGuard(const GstD3D12Device11on12LockGuard&) = delete;
+  GstD3D12Device11on12LockGuard& operator=(const GstD3D12Device11on12LockGuard&) = delete;
+
+private:
+  GstD3D12Device *device_;
+};
+
+#endif /* __cplusplus */
