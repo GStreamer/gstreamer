@@ -2650,6 +2650,17 @@ gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
           GST_TIME_FORMAT, ret ? "TRUE" : "FALSE", GST_TIME_ARGS (duration));
       break;
     }
+    case GST_QUERY_CAPS:
+    {
+      OutputSlot *slot = gst_pad_get_element_private (pad);
+      if (slot->track && slot->track->generic_caps) {
+        GST_DEBUG_OBJECT (demux, "Answering caps query %" GST_PTR_FORMAT,
+            slot->track->generic_caps);
+        gst_query_set_caps_result (query, slot->track->generic_caps);
+        ret = TRUE;
+      }
+      break;
+    }
     case GST_QUERY_LATENCY:{
       gst_query_set_latency (query, FALSE, 0, -1);
       ret = TRUE;
