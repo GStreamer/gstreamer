@@ -64,12 +64,16 @@ struct GstDWriteD3D12RenderPrivate
 
     gst_clear_object (&ca_pool);
     cl = nullptr;
-    d2d_target = nullptr;
-    wrapped_texture = nullptr;
-    layout_resource = nullptr;
-    device11on12 = nullptr;
-    d3d11_context = nullptr;
-    device11 = nullptr;
+
+    {
+      GstD3D12Device11on12LockGuard lk (device);
+      d2d_target = nullptr;
+      wrapped_texture = nullptr;
+      layout_resource = nullptr;
+      device11on12 = nullptr;
+      d3d11_context = nullptr;
+      device11 = nullptr;
+    }
 
     if (layout_pool)
       gst_buffer_pool_set_active (layout_pool, FALSE);
@@ -236,6 +240,8 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
           priv->layout_info.height != height)) {
     gst_buffer_pool_set_active (priv->layout_pool, FALSE);
     gst_clear_object (&priv->layout_pool);
+
+    GstD3D12Device11on12LockGuard lk (priv->device);
     priv->d2d_target = nullptr;
     priv->wrapped_texture = nullptr;
     priv->layout_resource = nullptr;
@@ -282,6 +288,7 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
       return nullptr;
     }
 
+    GstD3D12Device11on12LockGuard lk (priv->device);
     D3D11_RESOURCE_FLAGS flags11 = { };
     flags11.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
     flags11.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
@@ -334,15 +341,18 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
     return nullptr;
   }
 
-  ID3D11Resource *wrapped[] = { priv->wrapped_texture.Get () };
-  priv->device11on12->AcquireWrappedResources (wrapped, 1);
-  priv->d2d_target->BeginDraw ();
-  priv->d2d_target->Clear (D2D1::ColorF (D2D1::ColorF::Black, 0.0));
-  priv->renderer->Draw (D2D1::Point2F (),
-      D2D1::Rect (0, 0, width, height), layout, priv->d2d_target.Get ());
-  priv->d2d_target->EndDraw ();
-  priv->device11on12->ReleaseWrappedResources (wrapped, 1);
-  priv->d3d11_context->Flush ();
+  {
+    GstD3D12Device11on12LockGuard lk (priv->device);
+    ID3D11Resource *wrapped[] = { priv->wrapped_texture.Get () };
+    priv->device11on12->AcquireWrappedResources (wrapped, 1);
+    priv->d2d_target->BeginDraw ();
+    priv->d2d_target->Clear (D2D1::ColorF (D2D1::ColorF::Black, 0.0));
+    priv->renderer->Draw (D2D1::Point2F (),
+        D2D1::Rect (0, 0, width, height), layout, priv->d2d_target.Get ());
+    priv->d2d_target->EndDraw ();
+    priv->device11on12->ReleaseWrappedResources (wrapped, 1);
+    priv->d3d11_context->Flush ();
+  }
 
   auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (layout_buf, 0);
   auto texture = gst_d3d12_memory_get_resource_handle (dmem);
@@ -816,28 +826,18 @@ gst_dwrite_d3d12_render_prepare (GstDWriteD3D12Render * self)
       return FALSE;
   }
 
-  auto device = gst_d3d12_device_get_device_handle (priv->device);
-  auto cq = gst_d3d12_device_get_command_queue (priv->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
-  IUnknown *cq_list[] = { cq_handle };
-
-  static const D3D_FEATURE_LEVEL feature_levels[] = {
-    D3D_FEATURE_LEVEL_12_1,
-    D3D_FEATURE_LEVEL_12_0,
-    D3D_FEATURE_LEVEL_11_1,
-    D3D_FEATURE_LEVEL_11_0,
-  };
-
-  auto hr = D3D11On12CreateDevice (device, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-      feature_levels, G_N_ELEMENTS (feature_levels), cq_list, 1, 0,
-      &priv->device11, &priv->d3d11_context, nullptr);
-  if (!gst_d3d12_result (hr, priv->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't create d3d11 device");
+  ComPtr < IUnknown > unknown =
+      gst_d3d12_device_get_11on12_handle (priv->device);
+  if (!unknown) {
+    GST_ERROR_OBJECT (self, "Couldn't get d3d11on12 device");
     return FALSE;
   }
 
-  priv->device11.As (&priv->device11on12);
+  unknown.As (&priv->device11on12);
+  priv->device11on12.As (&priv->device11);
+  priv->device11->GetImmediateContext (&priv->d3d11_context);
+
+  auto device = gst_d3d12_device_get_device_handle (priv->device);
   priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
 
