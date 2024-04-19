@@ -1443,6 +1443,15 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
       }
     } else if (new_state == GST_STATE_PLAYING
         && pending_state == GST_STATE_VOID_PENDING) {
+      /* Try to query duration again if needed */
+      if (self->cached_duration == GST_CLOCK_TIME_NONE) {
+        gint64 duration = -1;
+
+        if (gst_element_query_duration (self->playbin, GST_FORMAT_TIME,
+                &duration)) {
+          on_duration_changed (self, duration);
+        }
+      }
       /* api_bus_post_message (self, GST_PLAY_MESSAGE_POSITION_UPDATED, */
       /*     GST_PLAY_MESSAGE_DATA_POSITION, GST_TYPE_CLOCK_TIME, 0, NULL); */
 
