@@ -740,13 +740,13 @@ gst_adaptive_demux_output_slot_free (GstAdaptiveDemux * demux,
 
 static OutputSlot *
 gst_adaptive_demux_output_slot_new (GstAdaptiveDemux * demux,
-    GstStreamType streamtype)
+    GstAdaptiveDemuxTrack * track)
 {
   OutputSlot *slot;
   GstPadTemplate *tmpl;
   gchar *name;
 
-  switch (streamtype) {
+  switch (track->type) {
     case GST_STREAM_TYPE_AUDIO:
       name = g_strdup_printf ("audio_%02u", demux->priv->n_audio_streams++);
       tmpl =
@@ -770,7 +770,8 @@ gst_adaptive_demux_output_slot_new (GstAdaptiveDemux * demux,
   }
 
   slot = g_new0 (OutputSlot, 1);
-  slot->type = streamtype;
+  slot->type = track->type;
+  slot->track = gst_adaptive_demux_track_ref (track);
   slot->pushed_timed_data = FALSE;
 
   /* Create and activate new pads */
@@ -778,16 +779,16 @@ gst_adaptive_demux_output_slot_new (GstAdaptiveDemux * demux,
   g_free (name);
   gst_object_unref (tmpl);
 
-  gst_element_add_pad (GST_ELEMENT_CAST (demux), slot->pad);
-  gst_flow_combiner_add_pad (demux->priv->flowcombiner, slot->pad);
-  gst_pad_set_active (slot->pad, TRUE);
-
   gst_pad_set_query_function (slot->pad,
       GST_DEBUG_FUNCPTR (gst_adaptive_demux_src_query));
   gst_pad_set_event_function (slot->pad,
       GST_DEBUG_FUNCPTR (gst_adaptive_demux_src_event));
 
   gst_pad_set_element_private (slot->pad, slot);
+
+  gst_element_add_pad (GST_ELEMENT_CAST (demux), slot->pad);
+  gst_flow_combiner_add_pad (demux->priv->flowcombiner, slot->pad);
+  gst_pad_set_active (slot->pad, TRUE);
 
   GST_INFO_OBJECT (demux, "Created output slot %s:%s",
       GST_DEBUG_PAD_NAME (slot->pad));
@@ -3171,13 +3172,12 @@ check_and_handle_selection_update_locked (GstAdaptiveDemux * demux)
         }
       } else {
         /* 2. There is no compatible replacement slot, create a new one */
-        slot = gst_adaptive_demux_output_slot_new (demux, track->type);
+        slot = gst_adaptive_demux_output_slot_new (demux, track);
         GST_DEBUG_OBJECT (demux, "Created slot for track '%s'", track->id);
         demux->priv->outputs = g_list_append (demux->priv->outputs, slot);
 
         track->update_next_segment = TRUE;
 
-        slot->track = gst_adaptive_demux_track_ref (track);
         track->active = TRUE;
         gst_adaptive_demux_send_initial_events (demux, slot);
       }
