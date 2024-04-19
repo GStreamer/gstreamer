@@ -3652,11 +3652,15 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
     goto done;
   }
 
-  /* Is buffer too late (QoS) ? */
-  if (priv->do_qos && GST_CLOCK_TIME_IS_VALID (priv->earliest_time)
-      && GST_CLOCK_TIME_IS_VALID (cstart)) {
-    GstClockTime deadline =
-        gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstart);
+  /* Check if the buffer is too late (QoS). */
+  if (priv->do_qos && GST_CLOCK_TIME_IS_VALID (priv->earliest_time)) {
+    GstClockTime deadline = GST_CLOCK_TIME_NONE;
+    /* We prefer to use the frame stop position for checking for QoS since we
+     * don't want to drop a frame which is partially late */
+    if (GST_CLOCK_TIME_IS_VALID (cstop))
+      deadline = gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstop);
+    else if (GST_CLOCK_TIME_IS_VALID (cstart))
+      deadline = gst_segment_to_running_time (segment, GST_FORMAT_TIME, cstart);
     if (GST_CLOCK_TIME_IS_VALID (deadline) && deadline < priv->earliest_time) {
       GST_WARNING_OBJECT (decoder,
           "Dropping frame due to QoS. start:%" GST_TIME_FORMAT " deadline:%"
