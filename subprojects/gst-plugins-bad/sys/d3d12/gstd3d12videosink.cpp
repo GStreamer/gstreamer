@@ -151,6 +151,7 @@ static void gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_d3d12_video_sink_dispose (GObject * object);
 static void gst_d3d12_video_sink_finalize (GObject * object);
 static void gst_d3d12_video_sink_set_context (GstElement * element,
     GstContext * context);
@@ -205,6 +206,7 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
 
   object_class->set_property = gst_d3d12_videosink_set_property;
   object_class->get_property = gst_d3d12_videosink_get_property;
+  object_class->finalize = gst_d3d12_video_sink_dispose;
   object_class->finalize = gst_d3d12_video_sink_finalize;
 
   g_object_class_install_property (object_class, PROP_ADAPTER,
@@ -361,6 +363,17 @@ gst_d3d12_video_sink_init (GstD3D12VideoSink * self)
       G_CALLBACK (gst_d3d12_video_sink_mouse_event), self);
   g_signal_connect (priv->window, "fullscreen",
       G_CALLBACK (gst_d3d12_video_sink_on_fullscreen), self);
+}
+
+static void
+gst_d3d12_video_sink_dispose (GObject * object)
+{
+  auto self = GST_D3D12_VIDEO_SINK (object);
+  auto priv = self->priv;
+
+  g_signal_handlers_disconnect_by_data (priv->window, self);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
