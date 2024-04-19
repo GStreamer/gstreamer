@@ -871,6 +871,21 @@ sub_class_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
       priv->hwnd_cond.notify_all ();
       break;
     }
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+      if (priv->enable_navigation)
+        gst_d3d12_window_on_key_event (self, msg, wparam, lparam);
+      break;
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_MOUSEMOVE:
+      if (priv->enable_navigation)
+        gst_d3d12_window_on_mouse_event (self, msg, wparam, lparam);
+      break;
     default:
       break;
   }
