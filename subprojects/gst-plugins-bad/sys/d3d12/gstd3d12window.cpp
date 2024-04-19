@@ -50,6 +50,15 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d12_window_debug);
 
 #define BACK_BUFFER_COUNT 3
 
+/* windowsx.h */
+#ifndef GET_X_LPARAM
+#define GET_X_LPARAM(lp) ((int)(short)LOWORD(lp))
+#endif
+
+#ifndef GET_Y_LPARAM
+#define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
+#endif
+
 enum
 {
   SIGNAL_KEY_EVENT,
@@ -260,7 +269,8 @@ gst_d3d12_window_class_init (GstD3D12WindowClass * klass)
   d3d12_window_signals[SIGNAL_MOUSE_EVENT] =
       g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
-      G_TYPE_NONE, 4, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE);
+      G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE,
+      G_TYPE_UINT);
 
   d3d12_window_signals[SIGNAL_FULLSCREEN] =
       g_signal_new ("fullscreen", G_TYPE_FROM_CLASS (klass),
@@ -319,6 +329,7 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * self, UINT msg, WPARAM wparam,
   auto priv = self->priv;
   gint button = 0;
   const gchar *event = nullptr;
+  guint modifier = 0;
 
   switch (msg) {
     case WM_MOUSEMOVE:
@@ -333,6 +344,10 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * self, UINT msg, WPARAM wparam,
       button = 1;
       event = "mouse-button-release";
       break;
+    case WM_LBUTTONDBLCLK:
+      button = 1;
+      event = "mouse-double-click";
+      break;
     case WM_RBUTTONDOWN:
       button = 2;
       event = "mouse-button-press";
@@ -340,6 +355,10 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * self, UINT msg, WPARAM wparam,
     case WM_RBUTTONUP:
       button = 2;
       event = "mouse-button-release";
+      break;
+    case WM_RBUTTONDBLCLK:
+      button = 2;
+      event = "mouse-double-click";
       break;
     case WM_MBUTTONDOWN:
       button = 3;
@@ -349,9 +368,24 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * self, UINT msg, WPARAM wparam,
       button = 3;
       event = "mouse-button-release";
       break;
+    case WM_MBUTTONDBLCLK:
+      button = 3;
+      event = "mouse-double-click";
+      break;
     default:
       return;
   }
+
+  if ((wparam & MK_CONTROL) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_CONTROL_MASK;
+  if ((wparam & MK_LBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON1_MASK;
+  if ((wparam & MK_RBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON2_MASK;
+  if ((wparam & MK_MBUTTON) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_BUTTON3_MASK;
+  if ((wparam & MK_SHIFT) != 0)
+    modifier |= GST_NAVIGATION_MODIFIER_SHIFT_MASK;
 
   GstVideoRectangle output_rect = { };
   GstVideoOrientationMethod orientation;
@@ -363,8 +397,8 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * self, UINT msg, WPARAM wparam,
     in_w = priv->input_info.width;
     in_h = priv->input_info.height;
   }
-  auto xpos = LOWORD (lparam);
-  auto ypos = HIWORD (lparam);
+  auto xpos = GET_X_LPARAM (lparam);
+  auto ypos = GET_Y_LPARAM (lparam);
 
   if (in_w <= 0 || in_h <= 0 || xpos < output_rect.x ||
       xpos >= output_rect.x + output_rect.w || ypos < output_rect.y ||
@@ -432,7 +466,7 @@ gst_d3d12_window_on_mouse_event (GstD3D12Window * self, UINT msg, WPARAM wparam,
   }
 
   g_signal_emit (self, d3d12_window_signals[SIGNAL_MOUSE_EVENT], 0,
-      event, button, final_x, final_y);
+      event, button, final_x, final_y, modifier);
 }
 
 static void
@@ -656,6 +690,9 @@ gst_d3d12_window_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
     case WM_MOUSEMOVE:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDBLCLK:
     {
       auto self = gst_d3d12_window_from_hwnd (hwnd);
       if (self) {
@@ -884,6 +921,9 @@ sub_class_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     case WM_MBUTTONDOWN:
     case WM_MBUTTONUP:
     case WM_MOUSEMOVE:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDBLCLK:
       if (priv->enable_navigation)
         gst_d3d12_window_on_mouse_event (self, msg, wparam, lparam);
       break;

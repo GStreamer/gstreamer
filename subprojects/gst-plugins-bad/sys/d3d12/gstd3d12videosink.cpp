@@ -176,7 +176,7 @@ static void gst_d3d12_video_sink_set_orientation (GstD3D12VideoSink * self,
 static void gst_d3d12_video_sink_key_event (GstD3D12Window * window,
     const gchar * event, const gchar * key, GstD3D12VideoSink * self);
 static void gst_d3d12_video_sink_mouse_event (GstD3D12Window * window,
-    const gchar * event, gint button, gdouble x, gdouble y,
+    const gchar * event, gint button, gdouble x, gdouble y, guint modifier,
     GstD3D12VideoSink * self);
 static void gst_d3d12_video_sink_on_fullscreen (GstD3D12Window * window,
     gboolean is_fullscreen, GstD3D12VideoSink * self);
@@ -683,7 +683,7 @@ gst_d3d12_video_sink_key_event (GstD3D12Window * window, const gchar * event,
 
 static void
 gst_d3d12_video_sink_mouse_event (GstD3D12Window * window, const gchar * event,
-    gint button, gdouble x, gdouble y, GstD3D12VideoSink * self)
+    gint button, gdouble x, gdouble y, guint modifier, GstD3D12VideoSink * self)
 {
   GstEvent *mouse_event;
 
@@ -691,13 +691,16 @@ gst_d3d12_video_sink_mouse_event (GstD3D12Window * window, const gchar * event,
       "send mouse event %s, button %d (%.1f, %.1f)", event, button, x, y);
   if (g_strcmp0 ("mouse-button-press", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_button_press (button, x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
   } else if (g_strcmp0 ("mouse-button-release", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_button_release (button, x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
   } else if (g_strcmp0 ("mouse-move", event) == 0) {
     mouse_event = gst_navigation_event_new_mouse_move (x, y,
-        GST_NAVIGATION_MODIFIER_NONE);
+        (GstNavigationModifierType) modifier);
+  } else if (g_strcmp0 ("mouse-double-click", event) == 0) {
+    mouse_event = gst_navigation_event_new_mouse_double_click (button, x, y,
+        (GstNavigationModifierType) modifier);
   } else {
     return;
   }
