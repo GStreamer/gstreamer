@@ -240,12 +240,15 @@ struct RenderContext
 
     CloseHandle (event_handle);
 
-    brush = nullptr;
-    d2d_target = nullptr;
-    wrapped_texture = nullptr;
-    device11on12 = nullptr;
-    d3d11_context = nullptr;
-    device11 = nullptr;
+    {
+      GstD3D12Device11on12LockGuard lk (device);
+      brush = nullptr;
+      d2d_target = nullptr;
+      wrapped_texture = nullptr;
+      device11on12 = nullptr;
+      d3d11_context = nullptr;
+      device11 = nullptr;
+    }
 
     gst_clear_buffer (&render_buffer);
 
@@ -1201,30 +1204,22 @@ setup_d2d_render (GstD3D12TestSrc * self, RenderContext * ctx)
     priv->d2d_factory = d2d_factory;
   }
 
-  auto device = gst_d3d12_device_get_device_handle (self->device);
-  auto cq = gst_d3d12_device_get_command_queue (self->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
-  IUnknown *cq_list[] = { cq_handle };
-
-  hr = D3D11On12CreateDevice (device, D3D11_CREATE_DEVICE_BGRA_SUPPORT,
-      feature_levels, G_N_ELEMENTS (feature_levels), cq_list, 1, 0,
-      &ctx->device11, &ctx->d3d11_context, nullptr);
-  if (!gst_d3d12_result (hr, self->device)) {
+  ComPtr < IUnknown > unknown =
+      gst_d3d12_device_get_11on12_handle (self->device);
+  if (!unknown) {
     GST_ERROR_OBJECT (self, "Couldn't get d3d11 device");
     return FALSE;
   }
 
-  hr = ctx->device11.As (&ctx->device11on12);
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't get d3d11on12 device");
-    return FALSE;
-  }
+  unknown.As (&ctx->device11on12);
+  unknown.As (&ctx->device11);
+  ctx->device11->GetImmediateContext (&ctx->d3d11_context);
 
   D3D11_RESOURCE_FLAGS flags11 = { };
   flags11.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
   flags11.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
+  GstD3D12Device11on12LockGuard lk (self->device);
   hr = ctx->device11on12->CreateWrappedResource (ctx->texture.Get (), &flags11,
       D3D12_RESOURCE_STATE_RENDER_TARGET,
       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
@@ -2016,6 +2011,7 @@ gst_d3d12_test_src_draw_ball (GstD3D12TestSrc * self)
 
   ID3D11Resource *resources[] = { priv->ctx->wrapped_texture.Get () };
 
+  GstD3D12Device11on12LockGuard lk (self->device);
   priv->ctx->device11on12->AcquireWrappedResources (resources, 1);
 
   priv->ctx->brush->SetCenter (D2D1::Point2F (x, y));
@@ -2038,6 +2034,7 @@ gst_d3d12_test_src_draw_circular (GstD3D12TestSrc * self)
 
   ID3D11Resource *resources[] = { priv->ctx->wrapped_texture.Get () };
 
+  GstD3D12Device11on12LockGuard lk (self->device);
   priv->ctx->device11on12->AcquireWrappedResources (resources, 1);
   priv->ctx->d2d_target->BeginDraw ();
   priv->ctx->d2d_target->Clear (D2D1::ColorF (D2D1::ColorF::Black));
