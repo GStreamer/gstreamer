@@ -61,5 +61,8 @@ void        gst_d3d12_device_11on12_lock        (GstD3D12Device * device);
 GST_D3D12_API
 void        gst_d3d12_device_11on12_unlock      (GstD3D12Device * device);
 
+GST_D3D12_API
+void        gst_d3d12_device_check_device_removed (GstD3D12Device * device);
+
 G_END_DECLS
 

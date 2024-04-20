@@ -661,14 +661,11 @@ _gst_d3d12_result (HRESULT hr, GstD3D12Device * device, GstDebugCategory * cat,
     const gchar * file, const gchar * function, gint line, GstDebugLevel level)
 {
 #ifndef GST_DISABLE_GST_DEBUG
-  gboolean ret = TRUE;
-
   if (device)
     gst_d3d12_device_d3d12_debug (device, file, function, line);
 
   if (FAILED (hr)) {
     gchar *error_text = nullptr;
-
     error_text = g_win32_error_message ((guint) hr);
     /* g_win32_error_message() doesn't cover all HERESULT return code,
      * so it could be empty string, or nullptr if there was an error
@@ -677,12 +674,14 @@ _gst_d3d12_result (HRESULT hr, GstD3D12Device * device, GstDebugCategory * cat,
         nullptr, "D3D12 call failed: 0x%x, %s", (guint) hr,
         GST_STR_NULL (error_text));
     g_free (error_text);
-
-    ret = FALSE;
   }
-
-  return ret;
-#else
-  return SUCCEEDED (hr);
 #endif
+
+  if (SUCCEEDED (hr))
+    return TRUE;
+
+  if (device)
+    gst_d3d12_device_check_device_removed (device);
+
+  return FALSE;
 }
