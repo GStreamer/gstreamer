@@ -96,24 +96,31 @@ enum
   PROP_DESCRIPTION,
   PROP_CREATE_FLAGS,
   PROP_ADAPTER_LUID,
+  PROP_DEVICE_REMOVED_REASON,
 };
+
+static GParamSpec *pspec_removed_reason = nullptr;
 
 #define DEFAULT_ADAPTER 0
 #define DEFAULT_CREATE_FLAGS 0
 
-enum
-{
-  /* signals */
-  SIGNAL_DEVICE_REMOVED,
-  LAST_SIGNAL
-};
-
-static guint gst_d3d11_device_signals[LAST_SIGNAL] = { 0, };
-
-
 /* *INDENT-OFF* */
 struct _GstD3D11DevicePrivate
 {
+  _GstD3D11DevicePrivate ()
+  {
+    device_removed_event =
+        CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+    cancallable =
+        CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+  }
+
+  ~_GstD3D11DevicePrivate ()
+  {
+    CloseHandle (device_removed_event);
+    CloseHandle (cancallable);
+  }
+
   guint adapter = 0;
   guint device_id = 0;
   guint vendor_id = 0;
@@ -123,6 +130,7 @@ struct _GstD3D11DevicePrivate
   gint64 adapter_luid = 0;
 
   ID3D11Device *device = nullptr;
+  ID3D11Device4 *device4 = nullptr;
   ID3D11Device5 *device5 = nullptr;
   ID3D11DeviceContext *device_context = nullptr;
   ID3D11DeviceContext4 *device_context4 = nullptr;
@@ -157,7 +165,11 @@ struct _GstD3D11DevicePrivate
   IDXGIInfoQueue *dxgi_info_queue = nullptr;
 #endif
 
-  gboolean device_removed = FALSE;
+  DWORD device_removed_cookie = 0;
+  GThread *device_removed_monitor_thread = nullptr;
+  HANDLE device_removed_event;
+  HANDLE cancallable;
+  std::atomic<HRESULT> removed_reason = { S_OK };
 };
 /* *INDENT-ON* */
 
@@ -430,18 +442,18 @@ gst_d3d11_device_class_init (GstD3D11DeviceClass * klass)
           G_MININT64, G_MAXINT64, 0, readable_flags));
 
   /**
-   * GstD3D11Device::device-removed:
-   * @device: the #d3d11device
+   * GstD3D11Device:device-removed-reason:
    *
-   * Emitted when the D3D11Device gets suspended by the DirectX (error
-   * DXGI_ERROR_DEVICE_REMOVED or DXGI_ERROR_DEVICE_RESET have been returned
-   * after one of the DirectX operations).
+   * Device removed reason HRESULT code
    *
    * Since: 1.26
    */
-  gst_d3d11_device_signals[SIGNAL_DEVICE_REMOVED] =
-      g_signal_new ("device-removed", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
+  pspec_removed_reason =
+      g_param_spec_int ("device-removed-reason", "Device Removed Reason",
+      "HRESULT code returned from ID3D11Device::GetDeviceRemovedReason",
+      G_MININT32, G_MAXINT32, 0, readable_flags);
+  g_object_class_install_property (gobject_class, PROP_DEVICE_REMOVED_REASON,
+      pspec_removed_reason);
 
   gst_d3d11_memory_init_once ();
 }
@@ -700,6 +712,9 @@ gst_d3d11_device_get_property (GObject * object, guint prop_id,
     case PROP_ADAPTER_LUID:
       g_value_set_int64 (value, priv->adapter_luid);
       break;
+    case PROP_DEVICE_REMOVED_REASON:
+      g_value_set_int (value, priv->removed_reason);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -741,7 +756,14 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
+  if (priv->device4 && priv->device_removed_monitor_thread) {
+    priv->device4->UnregisterDeviceRemoved (priv->device_removed_cookie);
+    SetEvent (priv->cancallable);
+    g_clear_pointer (&priv->device_removed_monitor_thread, g_thread_join);
+  }
+
   AcquireSRWLockExclusive (&_device_creation_rwlock);
+
   priv->ps_cache.clear ();
   priv->vs_cache.clear ();
   priv->sampler_cache.clear ();
@@ -749,6 +771,7 @@ gst_d3d11_device_dispose (GObject * object)
   GST_D3D11_CLEAR_COM (priv->rs);
   GST_D3D11_CLEAR_COM (priv->rs_msaa);
   GST_D3D11_CLEAR_COM (priv->device5);
+  GST_D3D11_CLEAR_COM (priv->device4);
   GST_D3D11_CLEAR_COM (priv->device_context4);
   GST_D3D11_CLEAR_COM (priv->video_device);
   GST_D3D11_CLEAR_COM (priv->video_context);
@@ -977,12 +1000,47 @@ gst_d3d11_device_setup_debug_layer (GstD3D11Device * self)
 #endif
 }
 
+void
+gst_d3d11_device_check_device_removed (GstD3D11Device * self)
+{
+  auto priv = self->priv;
+  auto removed_reason = priv->device->GetDeviceRemovedReason ();
+
+  if (removed_reason == S_OK)
+    return;
+
+  HRESULT expected = S_OK;
+  if (std::atomic_compare_exchange_strong (&priv->removed_reason,
+          &expected, removed_reason)) {
+    auto error_text = g_win32_error_message ((guint) priv->removed_reason);
+    GST_ERROR_OBJECT (self, "DeviceRemovedReason: 0x%x, %s",
+        (guint) priv->removed_reason, GST_STR_NULL (error_text));
+    g_free (error_text);
+
+    g_object_notify_by_pspec (G_OBJECT (self), pspec_removed_reason);
+  }
+}
+
+static gpointer
+gst_d3d11_device_removed_monitor_thread (GstD3D11Device * self)
+{
+  auto priv = self->priv;
+  HANDLE waitables[] = { priv->device_removed_event, priv->cancallable };
+
+  auto ret = WaitForMultipleObjects (2, waitables, FALSE, INFINITE);
+  if (ret == WAIT_OBJECT_0)
+    gst_d3d11_device_check_device_removed (self);
+
+  return nullptr;
+}
+
 static GstD3D11Device *
 gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
 {
   ComPtr < IDXGIAdapter1 > adapter;
   ComPtr < IDXGIFactory1 > factory;
   ComPtr < ID3D11Device > device;
+  ComPtr < ID3D11Device4 > device4;
   ComPtr < ID3D11Device5 > device5;
   ComPtr < ID3D11DeviceContext > device_context;
   ComPtr < ID3D11DeviceContext4 > device_context4;
@@ -1114,6 +1172,18 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
   gst_object_ref_sink (self);
 
   priv = self->priv;
+
+  hr = device.As (&device4);
+  if (SUCCEEDED (hr)) {
+    hr = device4->RegisterDeviceRemovedEvent (priv->device_removed_event,
+        &priv->device_removed_cookie);
+    if (SUCCEEDED (hr)) {
+      priv->device4 = device4.Detach ();
+      priv->device_removed_monitor_thread =
+          g_thread_new ("d3d11-removed-monitor",
+          (GThreadFunc) gst_d3d11_device_removed_monitor_thread, self);
+    }
+  }
 
   hr = device.As (&device5);
   if (SUCCEEDED (hr))
@@ -1428,18 +1498,6 @@ gst_d3d11_device_get_format (GstD3D11Device * device, GstVideoFormat format,
     *device_format = target->second;
 
   return TRUE;
-}
-
-void
-gst_d3d11_device_mark_removed (GstD3D11Device * device, HRESULT reason)
-{
-  g_return_if_fail (GST_IS_D3D11_DEVICE (device));
-
-  if (!device->priv->device_removed) {
-    g_signal_emit (device, gst_d3d11_device_signals[SIGNAL_DEVICE_REMOVED], 0,
-        reason);
-    device->priv->device_removed = TRUE;
-  }
 }
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstD3D11Fence, gst_d3d11_fence);
