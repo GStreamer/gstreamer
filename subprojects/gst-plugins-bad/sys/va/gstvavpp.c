@@ -2220,13 +2220,6 @@ gst_va_vpp_class_init (gpointer g_class, gpointer class_data)
   if (gst_va_filter_open (filter)) {
     caps = gst_va_filter_get_caps (filter);
 
-    /* adds any to enable passthrough */
-    {
-      GstCaps *any_caps = gst_caps_new_empty_simple ("video/x-raw");
-      gst_caps_set_features_simple (any_caps, gst_caps_features_new_any ());
-      caps = gst_caps_merge (caps, any_caps);
-    }
-
     /* add converter klass */
     {
       int i;
