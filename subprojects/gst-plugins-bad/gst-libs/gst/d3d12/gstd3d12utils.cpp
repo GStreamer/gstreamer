@@ -649,6 +649,7 @@ gst_d3d12_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
  * @file: the file that checking the result code
  * @function: the function that checking the result code
  * @line: the line that checking the result code
+ * @level: #GstDebugLevel
  *
  * Prints debug message if @result code indicates the operation was failed.
  *
