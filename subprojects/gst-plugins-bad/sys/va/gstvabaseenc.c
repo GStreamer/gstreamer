@@ -637,8 +637,10 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
       GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)));
 
   if (g_atomic_int_compare_and_exchange (&base->reconf, TRUE, FALSE)) {
-    if (!gst_va_base_enc_reset (base))
+    if (!gst_va_base_enc_reset (base)) {
+      gst_video_encoder_finish_frame (venc, frame);
       return GST_FLOW_ERROR;
+    }
   }
 
   ret = gst_va_base_enc_import_input_buffer (base,
