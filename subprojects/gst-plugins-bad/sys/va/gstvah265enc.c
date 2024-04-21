@@ -333,6 +333,7 @@ struct _GstVaH265Enc
     guint cpb_length_bits;
   } rc;
 
+  GstClockTime last_dts;
   GstH265VPS vps_hdr;
   GstH265SPS sps_hdr;
 };
@@ -349,8 +350,7 @@ struct _GstVaH265EncFrame
 
   gint poc;
   gboolean last_frame;
-  /* The total frame count we handled. */
-  guint total_frame_count;
+  gboolean reorder;
 };
 
 /**
@@ -452,7 +452,7 @@ gst_va_h265_enc_frame_new (void)
   frame = g_new (GstVaH265EncFrame, 1);
   frame->last_frame = FALSE;
   frame->picture = NULL;
-  frame->total_frame_count = 0;
+  frame->reorder = FALSE;
 
   return frame;
 }
@@ -2193,6 +2193,9 @@ again:
     /* it will unref at pop_frame */
     f = g_queue_pop_nth (&base->reorder_list, index);
     g_assert (f == b_frame);
+
+    if (index > 0)
+      _enc_frame (f)->reorder = TRUE;
   } else {
     b_frame = NULL;
   }
@@ -2221,6 +2224,9 @@ _h265_pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
   vaframe = _enc_frame (frame);
   if (vaframe->type != GST_H265_B_SLICE) {
     frame = g_queue_pop_tail (&base->reorder_list);
+    if (!g_queue_is_empty (&base->reorder_list))
+      vaframe->reorder = TRUE;
+
     goto get_one;
   }
 
@@ -2536,6 +2542,7 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   self->rc.target_bitrate_bits = 0;
   self->rc.cpb_length_bits = 0;
 
+  self->last_dts = GST_CLOCK_TIME_NONE;
   memset (&self->vps_hdr, 0, sizeof (GstH265VPS));
   memset (&self->sps_hdr, 0, sizeof (GstH265SPS));
 }
@@ -4613,7 +4620,6 @@ gst_va_h265_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   GstVaH265EncFrame *frame_in;
 
   frame_in = gst_va_h265_enc_frame_new ();
-  frame_in->total_frame_count = base->input_frame_count++;
   gst_video_codec_frame_set_user_data (frame, frame_in,
       gst_va_h265_enc_frame_free);
 
@@ -4630,14 +4636,22 @@ gst_va_h265_enc_prepare_output (GstVaBaseEnc * base,
 
   frame_enc = _enc_frame (frame);
 
-  frame->pts =
-      base->start_pts + base->frame_duration * frame_enc->total_frame_count;
-  /* The PTS should always be later than the DTS. */
-  frame->dts = base->start_pts + base->frame_duration *
-      ((gint64) base->output_frame_count -
-      (gint64) self->gop.num_reorder_frames);
-  base->output_frame_count++;
-  frame->duration = base->frame_duration;
+  if (frame_enc->reorder) {
+    if (!GST_CLOCK_TIME_IS_VALID (self->last_dts)) {
+      GST_WARNING_OBJECT (base, "Reorder frame poc: %d, system frame "
+          "number: %d without previous valid DTS.", frame_enc->poc,
+          frame->system_frame_number);
+      frame->dts = frame->pts;
+    } else {
+      GST_LOG_OBJECT (base, "Set reorder frame poc: %d, system frame "
+          "number: %d with DTS: %" GST_TIME_FORMAT, frame_enc->poc,
+          frame->system_frame_number, GST_TIME_ARGS (self->last_dts));
+      frame->dts = self->last_dts;
+    }
+  } else {
+    frame->dts = frame->pts;
+    self->last_dts = frame->dts;
+  }
 
   buf = gst_va_base_enc_create_output_buffer (base,
       frame_enc->picture, NULL, 0);
