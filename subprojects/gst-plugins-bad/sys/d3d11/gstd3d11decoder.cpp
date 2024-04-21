@@ -1551,6 +1551,7 @@ gst_d3d11_decoder_output_picture (GstD3D11Decoder * decoder,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *view_buffer;
+  bool attach_crop_meta = false;
 
   if (picture->discont_state) {
     g_clear_pointer (&decoder->input_state, gst_video_codec_state_unref);
@@ -1593,21 +1594,8 @@ gst_d3d11_decoder_output_picture (GstD3D11Decoder * decoder,
     mem = gst_buffer_peek_memory (view_buffer, 0);
     GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D11_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
-    if (decoder->need_crop) {
-      GstVideoCropMeta *crop_meta;
-
-      view_buffer = gst_buffer_make_writable (view_buffer);
-      crop_meta = gst_buffer_get_video_crop_meta (view_buffer);
-      if (!crop_meta)
-        crop_meta = gst_buffer_add_video_crop_meta (view_buffer);
-
-      crop_meta->x = decoder->offset_x;
-      crop_meta->y = decoder->offset_y;
-      crop_meta->width = decoder->info.width;
-      crop_meta->height = decoder->info.height;
-
-      GST_TRACE_OBJECT (decoder, "Attatching crop meta");
-    }
+    if (decoder->need_crop)
+      attach_crop_meta = true;
 
     frame->output_buffer = gst_buffer_ref (view_buffer);
   } else {
@@ -1627,6 +1615,18 @@ gst_d3d11_decoder_output_picture (GstD3D11Decoder * decoder,
 
   GST_BUFFER_FLAG_SET (frame->output_buffer, buffer_flags);
   gst_codec_picture_unref (picture);
+
+  if (attach_crop_meta) {
+    frame->output_buffer = gst_buffer_make_writable (frame->output_buffer);
+
+    auto crop_meta = gst_buffer_add_video_crop_meta (frame->output_buffer);
+    crop_meta->x = decoder->offset_x;
+    crop_meta->y = decoder->offset_y;
+    crop_meta->width = decoder->info.width;
+    crop_meta->height = decoder->info.height;
+
+    GST_TRACE_OBJECT (decoder, "Attatching crop meta");
+  }
 
   return gst_video_decoder_finish_frame (videodec, frame);
 
