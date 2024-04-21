@@ -44,6 +44,7 @@
 #include <atomic>
 
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_d3d12_dred_debug);
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -60,6 +61,7 @@ ensure_debug_category (void)
 #endif /* GST_DISABLE_GST_DEBUG */
 
 static PFN_D3D11ON12_CREATE_DEVICE GstD3D11On12CreateDevice = nullptr;
+static gboolean gst_d3d12_device_enable_dred (void);
 
 static gboolean
 load_d3d11on12_symbol (void)
@@ -371,6 +373,77 @@ public:
         (guint) ptr->removed_reason, GST_STR_NULL (error_text));
     g_free (error_text);
 
+    if (gst_d3d12_device_enable_dred ()) {
+      ComPtr<ID3D12DeviceRemovedExtendedData1> dred1;
+      auto hr = ptr->device.As (&dred1);
+      if (SUCCEEDED (hr)) {
+        ComPtr<ID3D12DeviceRemovedExtendedData2> dred2;
+        hr = dred1.As (&dred2);
+        if (SUCCEEDED (hr)) {
+          GST_CAT_ERROR (gst_d3d12_dred_debug, "D3D12_DRED_DEVICE_STATE: %d",
+              dred2->GetDeviceState ());
+        }
+
+        D3D12_DRED_AUTO_BREADCRUMBS_OUTPUT breadcrumbs_output;
+        hr = dred1->GetAutoBreadcrumbsOutput (&breadcrumbs_output);
+        if (SUCCEEDED (hr)) {
+          guint node_idx = 0;
+          const D3D12_AUTO_BREADCRUMB_NODE *node =
+              breadcrumbs_output.pHeadAutoBreadcrumbNode;
+          GST_CAT_ERROR (gst_d3d12_dred_debug,
+              "Reporting GetAutoBreadcrumbsOutput");
+          while (node) {
+            GST_CAT_ERROR (gst_d3d12_dred_debug, "  [%u]%s:%s - "
+                "pLastBreadcrumbValue (%u) BreadcrumbCount (%u)", node_idx,
+                GST_STR_NULL (node->pCommandQueueDebugNameA),
+                GST_STR_NULL (node->pCommandListDebugNameA),
+                node->pLastBreadcrumbValue ? *node->pLastBreadcrumbValue : 0,
+                node->BreadcrumbCount);
+            for (UINT32 count = 0; count < node->BreadcrumbCount; count++) {
+              GST_CAT_ERROR (gst_d3d12_dred_debug,
+                  "    [%u][%u] D3D12_AUTO_BREADCRUMB_OP: %u",
+                  node_idx, count, node->pCommandHistory[count]);
+            }
+
+            node_idx++;
+            node = node->pNext;
+          }
+        } else {
+          GST_CAT_ERROR (gst_d3d12_dred_debug,
+              "GetAutoBreadcrumbsOutput() return 0x%x", (guint) hr);
+        }
+
+        D3D12_DRED_PAGE_FAULT_OUTPUT fault_output;
+        hr = dred1->GetPageFaultAllocationOutput (&fault_output);
+        if (SUCCEEDED (hr)) {
+          GST_ERROR ("Reporting GetPageFaultAllocationOutput");
+          guint node_idx = 0;
+          const D3D12_DRED_ALLOCATION_NODE *node =
+              fault_output.pHeadExistingAllocationNode;
+          GST_CAT_ERROR (gst_d3d12_dred_debug, "  Existing allocation nodes: ");
+          while (node) {
+            GST_CAT_ERROR (gst_d3d12_dred_debug, "    [%u]%s: %d", node_idx,
+                GST_STR_NULL (node->ObjectNameA), node->AllocationType);
+            node_idx++;
+            node = node->pNext;
+          }
+
+          GST_ERROR ("  Recently freed allocation nodes: ");
+          node_idx = 0;
+          node = fault_output.pHeadRecentFreedAllocationNode;
+          while (node) {
+            GST_CAT_ERROR (gst_d3d12_dred_debug,"    [%u]%s: %d", node_idx,
+                GST_STR_NULL (node->ObjectNameA), node->AllocationType);
+            node_idx++;
+            node = node->pNext;
+          }
+        } else {
+          GST_CAT_ERROR (gst_d3d12_dred_debug,
+              "GetPageFaultAllocationOutput () return 0x%x", (guint) hr);
+        }
+      }
+    }
+
     std::vector<GstD3D12Device *> clients;
     {
       std::lock_guard<std::mutex> client_lk (ptr->lock);
@@ -466,6 +539,39 @@ gst_d3d12_device_enable_debug (void)
     d3d12_debug1->SetEnableGPUBasedValidation (TRUE);
 
     GST_INFO ("Enabled GPU based validation");
+  }
+  GST_D3D12_CALL_ONCE_END;
+
+  return enabled;
+}
+
+static gboolean
+gst_d3d12_device_enable_dred (void)
+{
+  static gboolean enabled = FALSE;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    GST_DEBUG_CATEGORY_INIT (gst_d3d12_dred_debug,
+        "d3d12dred", 0, "d3d12 Device Removed Extended(DRED) debug");
+
+    if (gst_debug_category_get_threshold (gst_d3d12_dred_debug) >
+        GST_LEVEL_ERROR) {
+      HRESULT hr;
+      ComPtr < ID3D12DeviceRemovedExtendedDataSettings1 > settings;
+      hr = D3D12GetDebugInterface (IID_PPV_ARGS (&settings));
+      if (FAILED (hr)) {
+        GST_CAT_WARNING (gst_d3d12_dred_debug,
+            "ID3D12DeviceRemovedExtendedDataSettings1 interface unavailable");
+        return;
+      }
+
+      settings->SetAutoBreadcrumbsEnablement (D3D12_DRED_ENABLEMENT_FORCED_ON);
+      settings->SetPageFaultEnablement (D3D12_DRED_ENABLEMENT_FORCED_ON);
+      GST_CAT_INFO (gst_d3d12_dred_debug,
+          "D3D12 DRED (Device Removed Extended Data) is enabled");
+
+      enabled = TRUE;
+    }
   }
   GST_D3D12_CALL_ONCE_END;
 
@@ -819,6 +925,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   guint index = 0;
 
   gst_d3d12_device_enable_debug ();
+  gst_d3d12_device_enable_dred ();
 
   hr = CreateDXGIFactory2 (factory_flags, IID_PPV_ARGS (&factory));
   if (FAILED (hr)) {
