@@ -109,6 +109,7 @@ gst_mf_source_object_init (GstMFSourceObject * self)
 {
   self->device_index = DEFAULT_DEVICE_INDEX;
   self->source_type = DEFAULT_SOURCE_TYPE;
+  self->source_state = GST_MF_DEVICE_NOT_FOUND;
 
   g_weak_ref_init (&self->client, nullptr);
 }
