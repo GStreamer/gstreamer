@@ -255,6 +255,7 @@ struct _GstVaH264Enc
     guint cpb_length_bits;
   } rc;
 
+  GstClockTime last_dts;
   GstH264SPS sequence_hdr;
 };
 
@@ -275,10 +276,8 @@ struct _GstVaH264EncFrame
    * explicitly. */
   gint unused_for_reference_pic_num;
 
-  /* The total frame count we handled. */
-  guint total_frame_count;
-
   gboolean last_frame;
+  gboolean reorder;
 };
 
 /**
@@ -380,8 +379,8 @@ gst_va_enc_frame_new (void)
   frame->frame_num = 0;
   frame->unused_for_reference_pic_num = -1;
   frame->picture = NULL;
-  frame->total_frame_count = 0;
   frame->last_frame = FALSE;
+  frame->reorder = FALSE;
 
   return frame;
 }
@@ -1522,6 +1521,7 @@ gst_va_h264_enc_reset_state (GstVaBaseEnc * base)
   self->rc.target_bitrate_bits = 0;
   self->rc.cpb_length_bits = 0;
 
+  self->last_dts = GST_CLOCK_TIME_NONE;
   memset (&self->sequence_hdr, 0, sizeof (GstH264SPS));
 }
 
@@ -1852,6 +1852,9 @@ again:
     /* it will unref at pop_frame */
     f = g_queue_pop_nth (&base->reorder_list, index);
     g_assert (f == b_frame);
+
+    if (index > 0)
+      _enc_frame (f)->reorder = TRUE;
   } else {
     b_frame = NULL;
   }
@@ -1880,6 +1883,9 @@ _pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
   vaframe = _enc_frame (frame);
   if (vaframe->type != GST_H264_B_SLICE) {
     frame = g_queue_pop_tail (&base->reorder_list);
+    if (!g_queue_is_empty (&base->reorder_list))
+      vaframe->reorder = TRUE;
+
     goto get_one;
   }
 
@@ -3048,14 +3054,22 @@ gst_va_h264_enc_prepare_output (GstVaBaseEnc * base,
 
   frame_enc = _enc_frame (frame);
 
-  frame->pts =
-      base->start_pts + base->frame_duration * frame_enc->total_frame_count;
-  /* The PTS should always be later than the DTS. */
-  frame->dts = base->start_pts + base->frame_duration *
-      ((gint64) base->output_frame_count -
-      (gint64) self->gop.num_reorder_frames);
-  base->output_frame_count++;
-  frame->duration = base->frame_duration;
+  if (frame_enc->reorder) {
+    if (!GST_CLOCK_TIME_IS_VALID (self->last_dts)) {
+      GST_WARNING_OBJECT (base, "Reorder frame poc: %d, system frame "
+          "number: %d without previous valid DTS.", frame_enc->poc,
+          frame->system_frame_number);
+      frame->dts = frame->pts;
+    } else {
+      GST_LOG_OBJECT (base, "Set reorder frame poc: %d, system frame "
+          "number: %d with DTS: %" GST_TIME_FORMAT, frame_enc->poc,
+          frame->system_frame_number, GST_TIME_ARGS (self->last_dts));
+      frame->dts = self->last_dts;
+    }
+  } else {
+    frame->dts = frame->pts;
+    self->last_dts = frame->dts;
+  }
 
   buf = gst_va_base_enc_create_output_buffer (base,
       frame_enc->picture, NULL, 0);
@@ -3198,7 +3212,6 @@ gst_va_h264_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   GstVaH264EncFrame *frame_in;
 
   frame_in = gst_va_enc_frame_new ();
-  frame_in->total_frame_count = base->input_frame_count++;
   gst_video_codec_frame_set_user_data (frame, frame_in, gst_va_enc_frame_free);
 
   return TRUE;
