@@ -1387,6 +1387,11 @@ gst_d3d12_allocator_alloc_internal (GstD3D12Allocator * self,
   HRESULT hr;
   ComPtr < ID3D12Resource > resource;
 
+  if (!self) {
+    gst_d3d12_memory_init_once ();
+    self = _d3d12_memory_allocator;
+  }
+
   device_handle = gst_d3d12_device_get_device_handle (device);
   hr = device_handle->CreateCommittedResource (heap_props, heap_flags,
       desc, initial_state, optimized_clear_value, IID_PPV_ARGS (&resource));
@@ -1427,7 +1432,6 @@ gst_d3d12_allocator_alloc_internal (GstD3D12Allocator * self,
  *
  * Since: 1.26
  */
-
 GstMemory *
 gst_d3d12_allocator_alloc (GstD3D12Allocator * allocator,
     GstD3D12Device * device, const D3D12_HEAP_PROPERTIES * heap_props,
@@ -1435,10 +1439,14 @@ gst_d3d12_allocator_alloc (GstD3D12Allocator * allocator,
     D3D12_RESOURCE_STATES initial_state,
     const D3D12_CLEAR_VALUE * optimized_clear_value)
 {
-  g_return_val_if_fail (GST_IS_D3D12_ALLOCATOR (allocator), nullptr);
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (heap_props != nullptr, nullptr);
   g_return_val_if_fail (desc != nullptr, nullptr);
+
+  if (!allocator) {
+    gst_d3d12_memory_init_once ();
+    allocator = _d3d12_memory_allocator;
+  }
 
   if (desc->DepthOrArraySize > 1) {
     GST_ERROR_OBJECT (allocator, "Array is not supported, use pool allocator");
