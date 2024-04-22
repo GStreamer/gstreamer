@@ -74,6 +74,7 @@ struct _QtGLVideoItemPrivate
   GstCaps *caps;
   GstVideoInfo new_v_info;
   GstVideoInfo v_info;
+  GstVideoRectangle v_rect;
 
   gboolean initted;
   GstGLDisplay *display;
@@ -375,6 +376,11 @@ QtGLVideoItem::updatePaintNode(QSGNode * oldNode,
   QRectF rect(result.x, result.y, result.w, result.h);
   QRectF sourceRect(0, 0, 1, 1);
   QSGGeometry::updateTexturedRectGeometry(geometry, rect, sourceRect);
+  if(priv->v_rect.x != result.x || priv->v_rect.y != result.y ||
+     priv->v_rect.w != result.w || priv->v_rect.h != result.h) {
+    texNode->markDirty(QSGNode::DirtyGeometry);
+    priv->v_rect = result;
+  }
 
   g_mutex_unlock (&this->priv->lock);
 
