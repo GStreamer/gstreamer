@@ -3109,6 +3109,16 @@ gst_va_h264_enc_prepare_output (GstVaBaseEnc * base,
     return FALSE;
   }
 
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
+  if (frame_enc->poc == 0) {
+    GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
+    GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_HEADER);
+  } else {
+    GST_VIDEO_CODEC_FRAME_UNSET_SYNC_POINT (frame);
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+
   gst_buffer_replace (&frame->output_buffer, buf);
   gst_clear_buffer (&buf);
 
