@@ -915,6 +915,34 @@ gst_d3d12_decoder_new_picture (GstD3D12Decoder * decoder,
   return GST_FLOW_OK;
 }
 
+GstFlowReturn
+gst_d3d12_decoder_new_picture_with_size (GstD3D12Decoder * decoder,
+    GstVideoDecoder * videodec, GstCodecPicture * picture, guint width,
+    guint height)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DECODER (decoder), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (videodec), GST_FLOW_ERROR);
+  g_return_val_if_fail (picture != nullptr, GST_FLOW_ERROR);
+
+  auto priv = decoder->priv;
+  if (!priv->session) {
+    GST_ERROR_OBJECT (decoder, "No session configured");
+    return GST_FLOW_ERROR;
+  }
+
+  if (priv->session->coded_width >= width &&
+      priv->session->coded_height >= height) {
+    return gst_d3d12_decoder_new_picture (decoder, videodec, picture);
+  }
+
+  /* FIXME: D3D12_VIDEO_DECODE_CONFIGURATION_FLAG_ALLOW_RESOLUTION_CHANGE_ON_NON_KEY_FRAME
+   * supported GPU can decode stream with mixed decoder heap */
+  GST_ERROR_OBJECT (decoder,
+      "Non-keyframe resolution change with larger size is not supported");
+
+  return GST_FLOW_ERROR;
+}
+
 static inline GstD3D12DecoderPicture *
 get_decoder_picture (GstCodecPicture * picture)
 {

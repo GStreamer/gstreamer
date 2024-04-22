@@ -266,9 +266,11 @@ gst_d3d12_vp9_dec_new_picture (GstDxvaVp9Decoder * decoder,
     GstCodecPicture * picture)
 {
   auto self = GST_D3D12_VP9_DEC (decoder);
+  auto vp9pic = GST_VP9_PICTURE (picture);
 
-  return gst_d3d12_decoder_new_picture (self->decoder,
-      GST_VIDEO_DECODER (decoder), picture);
+  return gst_d3d12_decoder_new_picture_with_size (self->decoder,
+      GST_VIDEO_DECODER (decoder), picture, vp9pic->frame_hdr.width,
+      vp9pic->frame_hdr.height);
 }
 
 static GstFlowReturn
