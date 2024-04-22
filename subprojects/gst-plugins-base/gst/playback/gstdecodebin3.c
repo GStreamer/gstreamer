@@ -1404,6 +1404,14 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
 
       input->input_is_parsed = s
           && gst_structure_has_field (s, "urisourcebin-parsed-data");
+      if (input->input_is_parsed) {
+        /* We remove the custom field from stream-start so as not to pollute
+         * downstream */
+        event = gst_event_make_writable (event);
+        s = gst_event_get_structure (event);
+        gst_structure_remove_field ((GstStructure *) s,
+            "urisourcebin-parsed-data");
+      }
 
       /* Make sure group ids will be recalculated */
       input->group_id = GST_GROUP_ID_INVALID;
