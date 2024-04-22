@@ -138,7 +138,6 @@ public:
     subresources_[id] = 0;
     heaps_[id] = nullptr;
 
-
     cond_.notify_one ();
   }
 
@@ -150,24 +149,14 @@ public:
     frames.ppHeaps = heaps_.data ();
   }
 
-  guint8 GetSize ()
+  void Lock ()
   {
-    return size_;
+    lock_.lock ();
   }
 
-  ID3D12Resource ** GetTextures ()
+  void Unlock ()
   {
-    return &textures_[0];
-  }
-
-  UINT * GetSubresources ()
-  {
-    return &subresources_[0];
-  }
-
-  ID3D12VideoDecoderHeap ** GetHeaps ()
-  {
-    return &heaps_[0];
+    lock_.unlock ();
   }
 
 private:
@@ -1281,6 +1270,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   in_args.CompressedBitstream.Size = args->bitstream_size;
   in_args.pHeap = decoder_pic->heap.Get ();
 
+  priv->session->dpb->Lock ();
   priv->session->dpb->GetReferenceFrames (in_args.ReferenceFrames);
 
   priv->cmd->cl->DecodeFrame (priv->session->decoder.Get (),
@@ -1290,6 +1280,8 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     priv->cmd->cl->ResourceBarrier (post_barriers.size (), &post_barriers[0]);
 
   hr = priv->cmd->cl->Close ();
+  priv->session->dpb->Unlock ();
+
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't record decoding command");
     gst_d3d12_command_allocator_unref (gst_ca);
