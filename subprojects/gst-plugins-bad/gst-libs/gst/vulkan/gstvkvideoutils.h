@@ -50,6 +50,7 @@ struct _GstVulkanVideoProfile
     VkVideoDecodeH265ProfileInfoKHR h265dec;
 #if GST_VULKAN_HAVE_VIDEO_ENCODERS
     VkVideoEncodeH264ProfileInfoKHR h264enc;
+    VkVideoEncodeH265ProfileInfoKHR h265enc;
 #endif
   } codec;
 #endif

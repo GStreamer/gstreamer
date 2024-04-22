@@ -79,7 +79,7 @@ struct _GstVulkanVideoFunctions
 #undef DEFINE_FUNCTION
 };
 
-extern const VkExtensionProperties _vk_codec_extensions[3];
+extern const VkExtensionProperties _vk_codec_extensions[4];
 extern const VkComponentMapping _vk_identity_component_map;
 
 gboolean                gst_vulkan_video_get_vk_functions       (GstVulkanInstance * instance,
