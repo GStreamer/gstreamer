@@ -1312,6 +1312,11 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_add_notify_mini_object (fence_data,
       gst_mini_object_ref (decoder_pic));
+  for (guint i = 0; i < ref_pics->len; i++) {
+    auto ref_pic = (GstCodecPicture *) g_ptr_array_index (ref_pics, i);
+    gst_d3d12_fence_data_add_notify_mini_object (fence_data,
+        gst_codec_picture_ref (ref_pic));
+  }
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   gst_d3d12_command_queue_set_notify (priv->cmd->queue, priv->cmd->fence_val,
