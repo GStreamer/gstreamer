@@ -130,6 +130,12 @@ GstFlowReturn     gst_d3d12_decoder_new_picture   (GstD3D12Decoder * decoder,
                                                    GstVideoDecoder * videodec,
                                                    GstCodecPicture * picture);
 
+GstFlowReturn     gst_d3d12_decoder_new_picture_with_size (GstD3D12Decoder * decoder,
+                                                           GstVideoDecoder * videodec,
+                                                           GstCodecPicture * picture,
+                                                           guint width,
+                                                           guint height);
+
 GstFlowReturn     gst_d3d12_decoder_duplicate_picture (GstD3D12Decoder * decoder,
                                                        GstCodecPicture * src,
                                                        GstCodecPicture * dst);
