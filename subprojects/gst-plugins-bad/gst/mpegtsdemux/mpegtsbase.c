@@ -815,7 +815,6 @@ mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
 {
   guint i, nbstreams;
   MpegTSBaseStream *oldstream;
-  gboolean sawpcrpid = FALSE;
 
   if (oldprogram->pmt_pid != new_pmt_pid) {
     GST_DEBUG ("Different pmt_pid (new:0x%04x, old:0x%04x)", new_pmt_pid,
@@ -829,7 +828,6 @@ mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
     return FALSE;
   }
 
-  /* Check the streams */
   nbstreams = new_pmt->streams->len;
   for (i = 0; i < nbstreams; ++i) {
     GstMpegtsPMTStream *stream = g_ptr_array_index (new_pmt->streams, i);
@@ -845,17 +843,14 @@ mpegts_base_is_same_program (MpegTSBase * base, MpegTSBaseProgram * oldprogram,
           stream->pid, stream->stream_type, oldstream->stream_type);
       return FALSE;
     }
-    if (stream->pid == oldprogram->pcr_pid)
-      sawpcrpid = TRUE;
   }
 
-  /* If we have a PCR PID and the pcr is not shared with an existing stream, we'll have one extra stream */
-  if (!sawpcrpid && !base->ignore_pcr)
-    nbstreams += 1;
+  /* We can now just check the number of streams from each PMT. The check for
+   * PCR was already done previously */
 
-  if (nbstreams != g_list_length (oldprogram->stream_list)) {
-    GST_DEBUG ("Different number of streams (new:%d, old:%d)",
-        nbstreams, g_list_length (oldprogram->stream_list));
+  if (nbstreams != oldprogram->pmt->streams->len) {
+    GST_DEBUG ("Different number of streams (new:%d, old:%u)",
+        nbstreams, oldprogram->pmt->streams->len);
     return FALSE;
   }
 
