@@ -618,10 +618,10 @@ _set_rendering_details (GESLauncher * self)
           smart_profile = TRUE;
         else {
           opts->format = get_file_extension (opts->outputuri);
-          prof = parse_encoding_profile (opts->format);
+          prof = gst_encoding_profile_from_string (opts->format);
         }
       } else {
-        prof = parse_encoding_profile (opts->format);
+        prof = gst_encoding_profile_from_string (opts->format);
         if (!prof) {
           ges_printerr ("Invalid format specified: %s", opts->format);
           goto done;
@@ -636,7 +636,7 @@ _set_rendering_details (GESLauncher * self)
 
         opts->format =
             g_strdup ("application/ogg:video/x-theora:audio/x-vorbis");
-        prof = parse_encoding_profile (opts->format);
+        prof = gst_encoding_profile_from_string (opts->format);
       }
 
       if (!prof) {
@@ -649,7 +649,8 @@ _set_rendering_details (GESLauncher * self)
         GstEncodingProfile *new_prof;
         GList *tmp;
 
-        if (!(new_prof = parse_encoding_profile (opts->container_profile))) {
+        if (!(new_prof =
+                gst_encoding_profile_from_string (opts->container_profile))) {
           ges_printerr ("Failed to parse container profile %s",
               opts->container_profile);
           gst_object_unref (prof);

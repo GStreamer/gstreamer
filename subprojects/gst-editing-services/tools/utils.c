@@ -183,26 +183,6 @@ ensure_uri (const gchar * location)
     return gst_filename_to_uri (location, NULL);
 }
 
-GstEncodingProfile *
-parse_encoding_profile (const gchar * format)
-{
-  GstEncodingProfile *profile;
-  GValue value = G_VALUE_INIT;
-
-  g_value_init (&value, GST_TYPE_ENCODING_PROFILE);
-
-  if (!gst_value_deserialize (&value, format)) {
-    g_value_reset (&value);
-
-    return NULL;
-  }
-
-  profile = g_value_dup_object (&value);
-  g_value_reset (&value);
-
-  return profile;
-}
-
 void
 print_enum (GType enum_type)
 {
