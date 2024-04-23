@@ -44,15 +44,6 @@ G_BEGIN_DECLS
 typedef struct _GstRsvgDec GstRsvgDec;
 typedef struct _GstRsvgDecClass GstRsvgDecClass;
 
-#if LIBRSVG_MAJOR_VERSION > (2) || (LIBRSVG_MAJOR_VERSION == (2) && LIBRSVG_MINOR_VERSION > (52))
-typedef struct
-{
-  gdouble width, height;
-} GstRsvgDimension;
-#else
-typedef RsvgDimensionData GstRsvgDimension;
-#endif
-
 struct _GstRsvgDec
 {
   GstVideoDecoder  decoder;
@@ -66,7 +57,7 @@ struct _GstRsvgDec
   guint64 frame_count;
 
   GstVideoCodecState *input_state;
-  GstRsvgDimension dimension;
+  RsvgDimensionData dimension;
 
   GstSegment segment;
   gboolean need_newsegment;
