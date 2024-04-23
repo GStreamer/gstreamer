@@ -164,7 +164,9 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
     return GST_FLOW_ERROR;
   }
 
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   rsvg_handle_get_dimensions (handle, &dimension);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
 
   output_state = gst_video_decoder_get_output_state (decoder);
   if ((output_state == NULL)
@@ -276,7 +278,9 @@ gst_rsvg_decode_image (GstRsvgDec * rsvg, GstBuffer * buffer,
   }
 
   cairo_scale (cr, scalex, scaley);
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   rsvg_handle_render_cairo (handle, cr);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
 
   g_object_unref (handle);
   cairo_destroy (cr);

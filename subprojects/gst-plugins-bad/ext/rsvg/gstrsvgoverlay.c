@@ -163,7 +163,9 @@ gst_rsvg_overlay_set_svg_data (GstRsvgOverlay * overlay, const gchar * data,
       } else {
         /* Get SVG dimension. */
         RsvgDimensionData svg_dimension;
+        G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
         rsvg_handle_get_dimensions (overlay->handle, &svg_dimension);
+        G_GNUC_END_IGNORE_DEPRECATIONS;
         overlay->svg_width = svg_dimension.width;
         overlay->svg_height = svg_dimension.height;
         gst_base_transform_set_passthrough (btrans, FALSE);
@@ -421,7 +423,9 @@ gst_rsvg_overlay_transform_frame_ip (GstVideoFilter * vfilter,
     cairo_scale (cr, (double) applied_width / overlay->svg_width,
         (double) applied_height / overlay->svg_height);
   }
+  G_GNUC_BEGIN_IGNORE_DEPRECATIONS;
   rsvg_handle_render_cairo (overlay->handle, cr);
+  G_GNUC_END_IGNORE_DEPRECATIONS;
   GST_RSVG_UNLOCK (overlay);
 
   cairo_destroy (cr);
