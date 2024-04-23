@@ -1320,15 +1320,6 @@ need to use this function.</doc>
     <record name="VulkanDecoderClass" c:type="GstVulkanDecoderClass" disguised="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
-    <union name="VulkanDecoderParameters" c:type="GstVulkanDecoderParameters">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
-    </union>
-    <record name="VulkanDecoderPicture" c:type="GstVulkanDecoderPicture" disguised="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
-    </record>
-    <record name="VulkanDecoderPrivate" c:type="GstVulkanDecoderPrivate" disguised="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
-    </record>
     <class name="VulkanDescriptorCache" c:symbol-prefix="vulkan_descriptor_cache" c:type="GstVulkanDescriptorCache" version="1.18" parent="VulkanHandlePool" glib:type-name="GstVulkanDescriptorCache" glib:get-type="gst_vulkan_descriptor_cache_get_type" glib:type-struct="VulkanDescriptorCacheClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdescriptorcache.h"/>
       <constructor name="new" c:identifier="gst_vulkan_descriptor_cache_new" version="1.18">

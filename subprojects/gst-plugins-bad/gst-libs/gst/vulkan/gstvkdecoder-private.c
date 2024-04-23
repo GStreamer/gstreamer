@@ -39,6 +39,7 @@
  * Since: 1.24
  */
 
+typedef struct _GstVulkanDecoderPrivate GstVulkanDecoderPrivate;
 struct _GstVulkanDecoderPrivate
 {
   GstVulkanHandle *empty_params;
