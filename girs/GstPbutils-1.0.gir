@@ -1733,6 +1733,23 @@ subtitles), are currently ignored.</doc>
           </parameter>
         </parameters>
       </function>
+      <function name="from_string" c:identifier="gst_encoding_profile_from_string" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Converts a string in the "encoding profile serialization format" into a
+GstEncodingProfile. Refer to the encoding-profile documentation for details
+on the format.</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">A newly created GstEncodingProfile or NULL if the
+input string is not a valid encoding profile serialization format.</doc>
+          <type name="EncodingProfile" c:type="GstEncodingProfile*"/>
+        </return-value>
+        <parameters>
+          <parameter name="string" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">The string to convert into a GstEncodingProfile.</doc>
+            <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
       <method name="copy" c:identifier="gst_encoding_profile_copy" version="1.12">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Makes a deep copy of @self</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
@@ -2173,6 +2190,22 @@ eat so as to appear as one segment.
 single segment before the encoder, #FALSE otherwise.</doc>
             <type name="gboolean" c:type="gboolean"/>
           </parameter>
+        </parameters>
+      </method>
+      <method name="to_string" c:identifier="gst_encoding_profile_to_string" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Converts a GstEncodingProfile to a string in the "Encoding Profile
+serialization format".</doc>
+        <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">A string representation of the GstEncodingProfile,
+  or NULL if the input is invalid.</doc>
+          <type name="utf8" c:type="gchar*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="profile" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">The GstEncodingProfile to convert.</doc>
+            <type name="EncodingProfile" c:type="GstEncodingProfile*"/>
+          </instance-parameter>
         </parameters>
       </method>
       <property name="element-properties" version="1.20" writable="1" transfer-ownership="none">

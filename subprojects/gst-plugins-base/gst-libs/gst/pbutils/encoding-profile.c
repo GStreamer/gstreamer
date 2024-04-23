@@ -2068,8 +2068,21 @@ error:
   goto done;
 }
 
-static GstEncodingProfile *
-profile_from_string (const gchar * string)
+/**
+ * gst_encoding_profile_from_string:
+ * @string: The string to convert into a GstEncodingProfile.
+ *
+ * Converts a string in the "encoding profile serialization format" into a
+ * GstEncodingProfile. Refer to the encoding-profile documentation for details
+ * on the format.
+ *
+ * Since: 1.26
+ *
+ * Returns: (transfer full): A newly created GstEncodingProfile or NULL if the
+ * input string is not a valid encoding profile serialization format.
+ */
+GstEncodingProfile *
+gst_encoding_profile_from_string (const gchar * string)
 {
   GstEncodingProfile *profile;
   gchar *filename_end;
@@ -2117,7 +2130,7 @@ string_to_profile_transform (const GValue * src_value, GValue * dest_value)
 
   profilename = g_value_get_string (src_value);
 
-  profile = profile_from_string (profilename);
+  profile = gst_encoding_profile_from_string (profilename);
 
   if (profile)
     g_value_take_object (dest_value, (GObject *) profile);
@@ -2156,15 +2169,37 @@ serialize_profile (GString * res, GstEncodingProfile * profile)
   }
 }
 
-static gchar *
-gst_encoding_profile_serialize_valfunc (GValue * value)
+/**
+ * gst_encoding_profile_to_string:
+ * @profile: (transfer none): The GstEncodingProfile to convert.
+ *
+ * Converts a GstEncodingProfile to a string in the "Encoding Profile
+ * serialization format".
+ *
+ * Since: 1.26
+ *
+ * Returns: (transfer full): A string representation of the GstEncodingProfile,
+ *   or NULL if the input is invalid.
+ */
+gchar *
+gst_encoding_profile_to_string (GstEncodingProfile * profile)
 {
-  GString *res = g_string_new (NULL);
-  GstEncodingProfile *profile = g_value_get_object (value);
+  GString *res;
+
+  g_return_val_if_fail (profile != NULL, NULL);
+
+  res = g_string_new (NULL);
 
   serialize_profile (res, profile);
 
   return g_string_free (res, FALSE);
+}
+
+static gchar *
+gst_encoding_profile_serialize_valfunc (GValue * value)
+{
+  GstEncodingProfile *profile = g_value_get_object (value);
+  return gst_encoding_profile_to_string (profile);
 }
 
 static gboolean
@@ -2172,7 +2207,7 @@ gst_encoding_profile_deserialize_valfunc (GValue * value, const gchar * s)
 {
   GstEncodingProfile *profile;
 
-  profile = profile_from_string (s);
+  profile = gst_encoding_profile_from_string (s);
 
   if (profile) {
     g_value_take_object (value, (GObject *) profile);
