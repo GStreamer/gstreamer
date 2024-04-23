@@ -333,12 +333,9 @@ static StdVideoH265PictureParameterSet h265_pps;
   endif
   if have_vk_video
     vulkan_conf.set('GST_VULKAN_HAVE_VIDEO_EXTENSIONS', 1)
-    vulkan_priv_sources += files('gstvkvideo-private.c')
-    vulkan_sources += files(
-      'gstvkdecoder.c',
-    )
-    vulkan_headers += files(
-      'gstvkdecoder.h'
+    vulkan_priv_sources += files(
+      'gstvkvideo-private.c',
+      'gstvkdecoder-private.c',
     )
   elif get_option('vulkan-video').enabled()
     error('Vulkan Video extensions headers not found')
@@ -501,4 +498,3 @@ if enabled_vulkan_winsys.contains('wayland')
       sources : vulkan_wayland_gir)
   meson.override_dependency('gstreamer-vulkan-wayland-1.0', gstvulkanwayland_dep)
 endif
-

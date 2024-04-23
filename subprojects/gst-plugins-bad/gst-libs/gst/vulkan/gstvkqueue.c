@@ -23,6 +23,9 @@
 #endif
 
 #include "gstvkqueue.h"
+#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
+#include "gstvkdecoder-private.h"
+#endif
 
 /**
  * SECTION:vkqueue

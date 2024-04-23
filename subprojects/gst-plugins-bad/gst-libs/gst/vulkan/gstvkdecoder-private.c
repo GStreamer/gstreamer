@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-#include "gstvkdecoder.h"
+#include "gstvkdecoder-private.h"
 
 #include "gstvkoperation.h"
 #include "gstvkphysicaldevice-private.h"

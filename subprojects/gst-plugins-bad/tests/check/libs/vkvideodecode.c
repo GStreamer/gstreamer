@@ -26,6 +26,8 @@
 #include <gst/check/gstcheck.h>
 #include <gst/vulkan/vulkan.h>
 
+#include "gst/vulkan/gstvkdecoder-private.h"
+
 static GstVulkanInstance *instance;
 static GstVulkanDevice *device;
 static GstVulkanQueue *video_queue = NULL;

@@ -23,9 +23,6 @@
 
 #include <gst/vulkan/gstvkdevice.h>
 #include <gst/vulkan/gstvkcommandpool.h>
-#if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-#include <gst/vulkan/gstvkdecoder.h>
-#endif
 
 #define GST_TYPE_VULKAN_QUEUE         (gst_vulkan_queue_get_type())
 #define GST_VULKAN_QUEUE(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_VULKAN_QUEUE, GstVulkanQueue))

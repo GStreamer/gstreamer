@@ -25,6 +25,7 @@
 
 #include <gst/video/video.h>
 #include <gst/vulkan/vulkan.h>
+#include "gst/vulkan/gstvkdecoder-private.h"
 
 #include "gstvulkanelements.h"
 
