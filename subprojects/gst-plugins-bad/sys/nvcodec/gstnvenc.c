@@ -1036,156 +1036,247 @@ gst_nvenc_plugin_init (GstPlugin * plugin, guint device_index,
       "h265", GST_RANK_PRIMARY * 2, device_index, cuda_ctx);
 }
 
+/* To verify things when updating SDK */
+#define USE_STATIC_SDK_VER 0
+
 guint32
 gst_nvenc_get_api_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NVENCAPI_VERSION;
+#else
   /* NVENCAPI_VERSION == (NVENCAPI_MAJOR_VERSION | (NVENCAPI_MINOR_VERSION << 24)) */
   return gst_nvenc_api_version;
+#endif
 }
 
 guint32
 gst_nvenc_get_caps_param_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_CAPS_PARAM_VER;
+#else
   /* NV_ENC_CAPS_PARAM_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_encode_out_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_ENCODE_OUT_PARAMS_VER;
+#else
   /* NV_ENC_ENCODE_OUT_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_create_input_buffer_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_CREATE_INPUT_BUFFER_VER;
+#else
   /* NV_ENC_CREATE_INPUT_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_create_bitstream_buffer_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_CREATE_BITSTREAM_BUFFER_VER;
+#else
   /* NV_ENC_CREATE_BITSTREAM_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_create_mv_buffer_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_CREATE_MV_BUFFER_VER;
+#else
   /* NV_ENC_CREATE_MV_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_rc_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_RC_PARAMS_VER;
+#else
   /* NV_ENC_RC_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_config_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_CONFIG_VER;
+#else
+  /* Version updated since SDK 12.0 */
+  if ((gst_nvenc_api_version & 12) == 12)
+    return GST_NVENCAPI_STRUCT_VERSION (8, gst_nvenc_api_version) | (1 << 31);
+
   /* NV_ENC_CONFIG_VER ==
    *   (NVENCAPI_STRUCT_VERSION(7) | ( 1<<31 )) */
   return GST_NVENCAPI_STRUCT_VERSION (7, gst_nvenc_api_version) | (1 << 31);
+#endif
 }
 
 guint32
 gst_nvenc_get_initialize_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_INITIALIZE_PARAMS_VER;
+#else
   /* NV_ENC_INITIALIZE_PARAMS_VER ==
    *   (NVENCAPI_STRUCT_VERSION(5) | ( 1<<31 )) */
   return GST_NVENCAPI_STRUCT_VERSION (5, gst_nvenc_api_version) | (1 << 31);
+#endif
 }
 
 guint32
 gst_nvenc_get_reconfigure_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_RECONFIGURE_PARAMS_VER;
+#else
   /* NV_ENC_RECONFIGURE_PARAMS_VER ==
    *   (NVENCAPI_STRUCT_VERSION(1) | ( 1<<31 )) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version) | (1 << 31);
+#endif
 }
 
 guint32
 gst_nvenc_get_preset_config_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_PRESET_CONFIG_VER;
+#else
   /* NV_ENC_PRESET_CONFIG_VER ==
    *   (NVENCAPI_STRUCT_VERSION(4) | ( 1<<31 )) */
   return GST_NVENCAPI_STRUCT_VERSION (4, gst_nvenc_api_version) | (1 << 31);
+#endif
 }
 
 guint32
 gst_nvenc_get_pic_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_PIC_PARAMS_VER;
+#else
   /* NV_ENC_PIC_PARAMS_VER ==
    *  (NVENCAPI_STRUCT_VERSION(4) | ( 1<<31 )) */
   return GST_NVENCAPI_STRUCT_VERSION (4, gst_nvenc_api_version) | (1 << 31);
+#endif
 }
 
 guint32
 gst_nvenc_get_meonly_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_MEONLY_PARAMS_VER;
+#else
   /* NV_ENC_MEONLY_PARAMS_VER == NVENCAPI_STRUCT_VERSION(3) */
   return GST_NVENCAPI_STRUCT_VERSION (3, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_lock_bitstream_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_LOCK_BITSTREAM_VER;
+#else
   /* NV_ENC_LOCK_BITSTREAM_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_lock_input_buffer_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_LOCK_INPUT_BUFFER_VER;
+#else
   /* NV_ENC_LOCK_INPUT_BUFFER_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_map_input_resource_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_MAP_INPUT_RESOURCE_VER;
+#else
   /* NV_ENC_MAP_INPUT_RESOURCE_VER == NVENCAPI_STRUCT_VERSION(4) */
   return GST_NVENCAPI_STRUCT_VERSION (4, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_register_resource_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_REGISTER_RESOURCE_VER;
+#else
   /* NV_ENC_REGISTER_RESOURCE_VER == NVENCAPI_STRUCT_VERSION(3) */
   return GST_NVENCAPI_STRUCT_VERSION (3, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_stat_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_STAT_VER;
+#else
   /* NV_ENC_STAT_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_sequence_param_payload_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_SEQUENCE_PARAM_PAYLOAD_VER;
+#else
   /* NV_ENC_SEQUENCE_PARAM_PAYLOAD_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_event_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_EVENT_PARAMS_VER;
+#else
   /* NV_ENC_EVENT_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 guint32
 gst_nvenc_get_open_encode_session_ex_params_version (void)
 {
+#if USE_STATIC_SDK_VER
+  return NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER;
+#else
   /* NV_ENC_OPEN_ENCODE_SESSION_EX_PARAMS_VER == NVENCAPI_STRUCT_VERSION(1) */
   return GST_NVENCAPI_STRUCT_VERSION (1, gst_nvenc_api_version);
+#endif
 }
 
 gboolean

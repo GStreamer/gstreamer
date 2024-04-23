@@ -1509,7 +1509,7 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
 
   vui->videoSignalTypePresentFlag = 1;
   /* Unspecified */
-  vui->videoFormat = 5;
+  vui->videoFormat = NV_ENC_VUI_VIDEO_FORMAT_UNSPECIFIED;
   if (cinfo.range == GST_VIDEO_COLOR_RANGE_0_255) {
     vui->videoFullRangeFlag = 1;
   } else {
@@ -1521,16 +1521,18 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
     case GST_VIDEO_FORMAT_GBR:
     case GST_VIDEO_FORMAT_GBR_16LE:
       /* color matrix must be "Identity" */
-      vui->colourMatrix =
+      vui->colourMatrix = (NV_ENC_VUI_MATRIX_COEFFS)
           gst_video_color_matrix_to_iso (GST_VIDEO_COLOR_MATRIX_RGB);
       break;
     default:
-      vui->colourMatrix = gst_video_color_matrix_to_iso (cinfo.matrix);
+      vui->colourMatrix = (NV_ENC_VUI_MATRIX_COEFFS)
+          gst_video_color_matrix_to_iso (cinfo.matrix);
       break;
   }
 
-  vui->colourPrimaries = gst_video_color_primaries_to_iso (cinfo.primaries);
-  vui->transferCharacteristics =
+  vui->colourPrimaries = (NV_ENC_VUI_COLOR_PRIMARIES)
+      gst_video_color_primaries_to_iso (cinfo.primaries);
+  vui->transferCharacteristics = (NV_ENC_VUI_TRANSFER_CHARACTERISTIC)
       gst_video_transfer_function_to_iso (cinfo.transfer);
 
   g_mutex_unlock (&self->prop_lock);

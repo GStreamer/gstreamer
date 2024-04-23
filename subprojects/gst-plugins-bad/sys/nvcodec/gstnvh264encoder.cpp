@@ -1553,7 +1553,7 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
 
   vui->videoSignalTypePresentFlag = 1;
   /* Unspecified */
-  vui->videoFormat = 5;
+  vui->videoFormat = NV_ENC_VUI_VIDEO_FORMAT_UNSPECIFIED;
   if (cinfo.range == GST_VIDEO_COLOR_RANGE_0_255) {
     vui->videoFullRangeFlag = 1;
   } else {
@@ -1561,9 +1561,11 @@ gst_nv_h264_encoder_set_format (GstNvEncoder * encoder,
   }
 
   vui->colourDescriptionPresentFlag = 1;
-  vui->colourMatrix = gst_video_color_matrix_to_iso (cinfo.matrix);
-  vui->colourPrimaries = gst_video_color_primaries_to_iso (cinfo.primaries);
-  vui->transferCharacteristics =
+  vui->colourMatrix = (NV_ENC_VUI_MATRIX_COEFFS)
+      gst_video_color_matrix_to_iso (cinfo.matrix);
+  vui->colourPrimaries = (NV_ENC_VUI_COLOR_PRIMARIES)
+      gst_video_color_primaries_to_iso (cinfo.primaries);
+  vui->transferCharacteristics = (NV_ENC_VUI_TRANSFER_CHARACTERISTIC)
       gst_video_transfer_function_to_iso (cinfo.transfer);
 
   g_mutex_unlock (&self->prop_lock);
