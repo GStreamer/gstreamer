@@ -233,7 +233,8 @@ typedef enum _GstQuarkId
   GST_QUARK_GAP_FLAGS = 202,
   GST_QUARK_QUERY_SELECTABLE = 203,
   GST_QUARK_SELECTABLE = 204,
-  GST_QUARK_MAX = 205
+  GST_QUARK_ALLOCATION_PARAMS = 205,
+  GST_QUARK_MAX = 206
 } GstQuarkId;
 
 extern GQuark _priv_gst_quark_table[GST_QUARK_MAX];

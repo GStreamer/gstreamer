@@ -8043,6 +8043,25 @@ gst_value_compare_allocation_params (const GValue * value1,
   return GST_VALUE_UNORDERED;
 }
 
+static void
+gst_value_transform_allocation_params_string (const GValue * value1,
+    GValue * dest_value)
+{
+  GstAllocationParams *params = value1->data[0].v_pointer;
+  gchar *res;
+  GstStructure *s;
+
+  s = gst_structure_new_id (GST_QUARK (ALLOCATION_PARAMS),
+      GST_QUARK (FLAGS), GST_TYPE_MEMORY_FLAGS, params->flags,
+      GST_QUARK (ALIGN), G_TYPE_UINT64, params->align,
+      GST_QUARK (PREFIX), G_TYPE_UINT64, params->prefix,
+      GST_QUARK (PADDING), G_TYPE_UINT64, params->padding, NULL);
+
+  res = gst_structure_to_string (s);
+  gst_structure_free (s);
+
+  dest_value->data[0].v_pointer = res;
+}
 
 /************
  * GObject *
@@ -8398,6 +8417,8 @@ _priv_gst_value_initialize (void)
       gst_value_transform_flagset_string);
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_FLAG_SET,
       gst_value_transform_string_flagset);
+  g_value_register_transform_func (GST_TYPE_ALLOCATION_PARAMS, G_TYPE_STRING,
+      gst_value_transform_allocation_params_string);
 
   /* Only register intersection functions for *different* types.
    * Identical type intersection should be specified directly in
