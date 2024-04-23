@@ -196,6 +196,10 @@ gst_wl_window_finalize (GObject * gobject)
   gst_wl_display_callback_destroy (priv->display, &priv->frame_callback);
   gst_wl_display_callback_destroy (priv->display, &priv->commit_callback);
 
+  g_cond_clear (&priv->configure_cond);
+  g_mutex_clear (&priv->configure_mutex);
+  g_mutex_clear (&priv->window_lock);
+
   if (priv->xdg_toplevel)
     xdg_toplevel_destroy (priv->xdg_toplevel);
   if (priv->xdg_surface)
