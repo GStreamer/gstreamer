@@ -1452,6 +1452,28 @@ state_changed_cb (G_GNUC_UNUSED GstBus * bus, GstMessage * msg,
           on_duration_changed (self, duration);
         }
       }
+
+      /* Try to query seek information again for live stream */
+      if (self->is_live) {
+        gboolean seekable = FALSE;
+        gboolean updated = FALSE;
+
+        GstQuery *query = gst_query_new_seeking (GST_FORMAT_TIME);
+        if (gst_element_query (self->playbin, query))
+          gst_query_parse_seeking (query, NULL, &seekable, NULL, NULL);
+        gst_query_unref (query);
+
+        g_mutex_lock (&self->lock);
+        if (self->media_info && seekable != self->media_info->seekable) {
+          self->media_info->seekable = seekable;
+          updated = TRUE;
+        }
+        g_mutex_unlock (&self->lock);
+
+        if (updated) {
+          on_media_info_updated (self);
+        }
+      }
       /* api_bus_post_message (self, GST_PLAY_MESSAGE_POSITION_UPDATED, */
       /*     GST_PLAY_MESSAGE_DATA_POSITION, GST_TYPE_CLOCK_TIME, 0, NULL); */
 
