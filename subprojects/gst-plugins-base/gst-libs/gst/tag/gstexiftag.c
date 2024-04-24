@@ -65,6 +65,25 @@ typedef struct _GstExifWriter GstExifWriter;
 typedef struct _GstExifReader GstExifReader;
 typedef struct _GstExifTagData GstExifTagData;
 
+#define GST_CAT_DEFAULT gst_exif_tag_ensure_debug_category()
+
+static GstDebugCategory *
+gst_exif_tag_ensure_debug_category (void)
+{
+  static gsize cat_gonce = 0;
+
+  if (g_once_init_enter (&cat_gonce)) {
+    GstDebugCategory *cat = NULL;
+
+    GST_DEBUG_CATEGORY_INIT (cat, "exif-tags", 0, "EXIF tag parsing");
+
+    g_once_init_leave (&cat_gonce, (gsize) cat);
+  }
+
+  return (GstDebugCategory *) cat_gonce;
+}
+
+
 typedef void (*GstExifSerializationFunc) (GstExifWriter * writer,
     const GstTagList * taglist, const GstExifTagMatch * exiftag);
 
