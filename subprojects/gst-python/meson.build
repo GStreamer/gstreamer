@@ -55,9 +55,13 @@ elif host_system == 'darwin'
 endif
 pylib_fnames = []
 # Library name with soversion, non-devel package
-pylib_fnames += python.get_variable('INSTSONAME', [])
+if python.has_variable('INSTSONAME')
+  pylib_fnames += python.get_variable('INSTSONAME')
+endif
 # Library name without soversion, devel package, framework, etc.
-pylib_fnames += python.get_variable('LDLIBRARY', [])
+if python.has_variable('LDLIBRARY')
+  pylib_fnames += python.get_variable('LDLIBRARY')
+endif
 # Manually construct name as a fallback
 pylib_fnames += [
   pylib_prefix + 'python' + python_dep.version() + python_abi_flags + '.' + pylib_suffix
@@ -81,12 +85,7 @@ foreach loc: pylib_locs
   endforeach
 endforeach
 if pylib_fname == ''
-  error_msg = 'Could not find python library to load'
-  if python_opt.enabled()
-    error(error_msg)
-  else
-    message(error_msg)
-  endif
+  message('Could not find python library to load, will try loading at runtime')
 endif
 
 pygi_override_dir = get_option('pygi-overrides-dir')
