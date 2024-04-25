@@ -1314,12 +1314,6 @@ need to use this function.</doc>
     <record name="VulkanCommandPoolPrivate" c:type="GstVulkanCommandPoolPrivate" disguised="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
-    <record name="VulkanDecoder" c:type="GstVulkanDecoder" disguised="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
-    </record>
-    <record name="VulkanDecoderClass" c:type="GstVulkanDecoderClass" disguised="1">
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
-    </record>
     <class name="VulkanDescriptorCache" c:symbol-prefix="vulkan_descriptor_cache" c:type="GstVulkanDescriptorCache" version="1.18" parent="VulkanHandlePool" glib:type-name="GstVulkanDescriptorCache" glib:get-type="gst_vulkan_descriptor_cache_get_type" glib:type-struct="VulkanDescriptorCacheClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdescriptorcache.h"/>
       <constructor name="new" c:identifier="gst_vulkan_descriptor_cache_new" version="1.18">
@@ -5167,24 +5161,6 @@ surrounding elements of @element.</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstVulkanQueue</doc>
             <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
           </instance-parameter>
-        </parameters>
-      </method>
-      <method name="create_decoder" c:identifier="gst_vulkan_queue_create_decoder" version="1.24" introspectable="0">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">Creates a #GstVulkanDecoder object if @codec decoding is supported by @queue</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.h"/>
-        <return-value transfer-ownership="full" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">the #GstVulkanDecoder object</doc>
-          <type name="VulkanDecoder" c:type="GstVulkanDecoder*"/>
-        </return-value>
-        <parameters>
-          <instance-parameter name="queue" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">a #GstVulkanQueue</doc>
-            <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
-          </instance-parameter>
-          <parameter name="codec" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkqueue.c">the VkVideoCodecOperationFlagBitsKHR to decode</doc>
-            <type name="guint" c:type="guint"/>
-          </parameter>
         </parameters>
       </method>
       <method name="get_device" c:identifier="gst_vulkan_queue_get_device" version="1.18">

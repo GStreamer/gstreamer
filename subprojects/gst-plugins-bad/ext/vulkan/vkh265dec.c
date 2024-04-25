@@ -220,7 +220,7 @@ gst_vulkan_h265_decoder_open (GstVideoDecoder * decoder)
     return FALSE;
   }
 
-  self->decoder = gst_vulkan_queue_create_decoder (self->decode_queue,
+  self->decoder = gst_vulkan_decoder_new_from_queue (self->decode_queue,
       VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR);
   if (!self->decoder) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,

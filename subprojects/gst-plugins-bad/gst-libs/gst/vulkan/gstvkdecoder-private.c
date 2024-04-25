@@ -1310,3 +1310,72 @@ gst_vulkan_decoder_wait (GstVulkanDecoder * self)
 
   return TRUE;
 }
+
+/**
+ * gst_vulkan_decoder_new_from_queue:
+ * @queue: a #GstVulkanQueue
+ * @codec: (type guint): the VkVideoCodecOperationFlagBitsKHR to decode
+ *
+ * Creates a #GstVulkanDecoder object if @codec decoding is supported by @queue
+ *
+ * Returns: (transfer full) (nullable): the #GstVulkanDecoder object
+  */
+GstVulkanDecoder *
+gst_vulkan_decoder_new_from_queue (GstVulkanQueue * queue, guint codec)
+{
+  GstVulkanPhysicalDevice *device;
+  GstVulkanDecoder *decoder;
+  guint flags, expected_flag, supported_video_ops;
+  const char *extension;
+
+  g_return_val_if_fail (GST_IS_VULKAN_QUEUE (queue), NULL);
+
+  device = queue->device->physical_device;
+  expected_flag = VK_QUEUE_VIDEO_DECODE_BIT_KHR;
+  flags = device->queue_family_props[queue->family].queueFlags;
+  supported_video_ops = device->queue_family_ops[queue->family].video;
+
+  if (device->properties.apiVersion < VK_MAKE_VERSION (1, 3, 238)) {
+    GST_WARNING_OBJECT (queue,
+        "Driver API version [%d.%d.%d] doesn't support Video extensions",
+        VK_VERSION_MAJOR (device->properties.apiVersion),
+        VK_VERSION_MINOR (device->properties.apiVersion),
+        VK_VERSION_PATCH (device->properties.apiVersion));
+    return NULL;
+  }
+
+  switch (codec) {
+    case VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR:
+      extension = VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME;
+      break;
+    case VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR:
+      extension = VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME;
+      break;
+    default:
+      GST_WARNING_OBJECT (queue, "Unsupported codec %u", codec);
+      return NULL;
+  }
+  if ((flags & expected_flag) != expected_flag) {
+    GST_WARNING_OBJECT (queue, "Queue doesn't support decoding");
+    return NULL;
+  }
+  if ((supported_video_ops & codec) != codec) {
+    GST_WARNING_OBJECT (queue, "Queue doesn't support codec %u decoding",
+        codec);
+    return NULL;
+  }
+
+  if (!(gst_vulkan_device_is_extension_enabled (queue->device,
+              VK_KHR_VIDEO_QUEUE_EXTENSION_NAME)
+          && gst_vulkan_device_is_extension_enabled (queue->device,
+              VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME)
+          && gst_vulkan_device_is_extension_enabled (queue->device, extension)))
+    return NULL;
+
+  decoder = g_object_new (GST_TYPE_VULKAN_DECODER, NULL);
+  gst_object_ref_sink (decoder);
+  decoder->queue = gst_object_ref (queue);
+  decoder->codec = codec;
+
+  return decoder;
+}

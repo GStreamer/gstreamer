@@ -33,6 +33,8 @@ G_BEGIN_DECLS
 GST_VULKAN_API
 GType gst_vulkan_decoder_get_type       (void);
 
+typedef struct _GstVulkanDecoder GstVulkanDecoder;
+typedef struct _GstVulkanDecoderClass GstVulkanDecoderClass;
 typedef struct _GstVulkanDecoderPicture GstVulkanDecoderPicture;
 typedef union _GstVulkanDecoderParameters GstVulkanDecoderParameters;
 
@@ -134,6 +136,9 @@ union _GstVulkanDecoderParameters
 
 G_DEFINE_AUTOPTR_CLEANUP_FUNC (GstVulkanDecoder, gst_object_unref)
 
+GST_VULKAN_API
+GstVulkanDecoder *      gst_vulkan_decoder_new_from_queue       (GstVulkanQueue * queue,
+                                                                 guint codec);
 GST_VULKAN_API
 gboolean                gst_vulkan_decoder_start                (GstVulkanDecoder * self,
                                                                  GstVulkanVideoProfile * profile,

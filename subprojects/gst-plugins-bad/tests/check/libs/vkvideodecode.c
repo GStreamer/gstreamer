@@ -329,7 +329,7 @@ GST_START_TEST (test_h264_decoder)
     return;
   }
 
-  dec = gst_vulkan_queue_create_decoder (video_queue,
+  dec = gst_vulkan_decoder_new_from_queue (video_queue,
       VK_VIDEO_CODEC_OPERATION_DECODE_H264_BIT_KHR);
   if (!dec) {
     GST_WARNING ("Unable to create a vulkan decoder");
@@ -497,7 +497,7 @@ GST_START_TEST (test_h265_decoder)
     return;
   }
 
-  dec = gst_vulkan_queue_create_decoder (video_queue,
+  dec = gst_vulkan_decoder_new_from_queue (video_queue,
       VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR);
   if (!dec) {
     GST_WARNING ("Unable to create a vulkan decoder");
