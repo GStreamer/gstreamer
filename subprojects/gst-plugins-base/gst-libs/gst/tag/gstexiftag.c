@@ -1383,6 +1383,7 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
 
   if (count > 4) {
     GstMapInfo info;
+    gsize alloc_size;
 
     if (offset < reader->base_offset) {
       GST_WARNING ("Offset is smaller (%u) than base offset (%u)", offset,
@@ -1404,14 +1405,28 @@ parse_exif_undefined_tag (GstExifReader * reader, const GstExifTagMatch * tag,
       return;
     }
 
+    if (info.size - real_offset < count) {
+      GST_WARNING ("Invalid size %u for buffer of size %" G_GSIZE_FORMAT
+          ", not adding tag %s", count, info.size, tag->gst_tag);
+      gst_buffer_unmap (reader->buffer, &info);
+      return;
+    }
+
+    if (!g_size_checked_add (&alloc_size, count, 1)) {
+      GST_WARNING ("Invalid size %u for buffer of size %" G_GSIZE_FORMAT
+          ", not adding tag %s", real_offset, info.size, tag->gst_tag);
+      gst_buffer_unmap (reader->buffer, &info);
+      return;
+    }
+
     /* +1 because it could be a string without the \0 */
-    data = malloc (sizeof (guint8) * count + 1);
+    data = malloc (alloc_size);
     memcpy (data, info.data + real_offset, count);
     data[count] = 0;
 
     gst_buffer_unmap (reader->buffer, &info);
   } else {
-    data = malloc (sizeof (guint8) * count + 1);
+    data = malloc (count + 1);
     memcpy (data, (guint8 *) offset_as_data, count);
     data[count] = 0;
   }
