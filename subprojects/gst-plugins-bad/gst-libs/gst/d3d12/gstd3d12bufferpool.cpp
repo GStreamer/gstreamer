@@ -316,9 +316,12 @@ gst_d3d12_buffer_pool_acquire_buffer (GstBufferPool * pool,
   if (ret != GST_FLOW_OK)
     return ret;
 
-  auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (*buffer, 0);
-  GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
-  gst_d3d12_memory_sync (mem);
+  guint num_mems = gst_buffer_n_memory (*buffer);
+  for (guint i = 0; i < num_mems; i++) {
+    auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (*buffer, i);
+    GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+    gst_d3d12_memory_sync (mem);
+  }
 
   return ret;
 }
