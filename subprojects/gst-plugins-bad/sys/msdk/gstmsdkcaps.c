@@ -1605,7 +1605,7 @@ _enc_get_static_raw_formats (guint codec_id)
       return "NV12, YUY2, UYVY, BGRA";
     case MFX_CODEC_HEVC:
       return "NV12, YUY2, BGRA, BGR10A2_LE, P010_10LE, VUYA, Y410, Y210, "
-          "P012_LE";
+          "P012_LE, Y212_LE";
     case MFX_CODEC_MPEG2:
       return "NV12";
     case MFX_CODEC_VP9:
