@@ -1992,11 +1992,13 @@ get_shader_format (GstVideoFormat format, gboolean is_input)
       return GST_VIDEO_FORMAT_AYUV;
     case GST_VIDEO_FORMAT_Y210:
     case GST_VIDEO_FORMAT_Y212_LE:
+    case GST_VIDEO_FORMAT_Y216_LE:
     case GST_VIDEO_FORMAT_v210:
     case GST_VIDEO_FORMAT_v216:
       return GST_VIDEO_FORMAT_AYUV64;
     case GST_VIDEO_FORMAT_Y410:
     case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_Y416_LE:
       if (!is_input)
         return GST_VIDEO_FORMAT_AYUV64;
       break;

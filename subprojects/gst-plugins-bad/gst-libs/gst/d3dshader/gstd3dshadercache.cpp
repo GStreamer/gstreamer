@@ -288,6 +288,7 @@ gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
       break;
     case GST_VIDEO_FORMAT_Y210:
     case GST_VIDEO_FORMAT_Y212_LE:
+    case GST_VIDEO_FORMAT_Y216_LE:
       srv_format = DXGI_FORMAT_R16G16B16A16_UNORM;
       in_format_str = "YUY2";
       x_unit = 16;
@@ -394,6 +395,7 @@ gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
       break;
     case GST_VIDEO_FORMAT_Y210:
     case GST_VIDEO_FORMAT_Y212_LE:
+    case GST_VIDEO_FORMAT_Y216_LE:
       uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
       out_format_str = "YUY2";
       x_unit = 16;
@@ -424,6 +426,7 @@ gst_d3d_converter_shader_get_cs_blob (GstVideoFormat in_format,
       x_unit = 8;
       break;
     case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_Y416_LE:
       uav_format = DXGI_FORMAT_R16G16B16A16_UNORM;
       out_format_str = "Y410";
       x_unit = 8;
@@ -691,6 +694,7 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
         return "GBRAPremul_12";
       return "GBRA_12";
     case GST_VIDEO_FORMAT_Y412_LE:
+    case GST_VIDEO_FORMAT_Y416_LE:
       if (premul)
         return "Y412Premul";
       return "Y412";

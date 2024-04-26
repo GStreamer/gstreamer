@@ -561,7 +561,9 @@ gst_d3d11_device_setup_format_table (GstD3D11Device * self)
       case GST_VIDEO_FORMAT_YUY2:
       case GST_VIDEO_FORMAT_Y210:
       case GST_VIDEO_FORMAT_Y212_LE:
+      case GST_VIDEO_FORMAT_Y216_LE:
       case GST_VIDEO_FORMAT_Y412_LE:
+      case GST_VIDEO_FORMAT_Y416_LE:
       case GST_VIDEO_FORMAT_BGRA64_LE:
       case GST_VIDEO_FORMAT_BGR10A2_LE:
       case GST_VIDEO_FORMAT_RBGA:
