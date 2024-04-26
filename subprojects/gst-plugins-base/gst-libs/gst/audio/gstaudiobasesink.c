@@ -1199,8 +1199,8 @@ static guint64
 gst_audio_base_sink_get_offset (GstAudioBaseSink * sink)
 {
   guint64 sample, sps;
-  gint writeseg, segdone;
-  gint diff;
+  guint64 writeseg, segdone;
+  gint64 diff;
 
   /* assume we can append to the previous sample */
   sample = sink->next_sample;
@@ -1215,8 +1215,8 @@ gst_audio_base_sink_get_offset (GstAudioBaseSink * sink)
   writeseg = sample / sps;
 
   /* get the currently processed segment */
-  segdone = g_atomic_int_get (&sink->ringbuffer->segdone)
-      - sink->ringbuffer->segbase;
+  segdone = gst_audio_ring_buffer_get_segdone (sink->ringbuffer)
+      - gst_audio_ring_buffer_get_segbase (sink->ringbuffer);
 
   /* see how far away it is from the write segment */
   diff = writeseg - segdone;
@@ -1728,7 +1728,8 @@ gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
   gint64 align;
   gint64 sample_diff;
   gint64 max_sample_diff;
-  gint segdone = g_atomic_int_get (&ringbuf->segdone) - ringbuf->segbase;
+  guint64 segdone = gst_audio_ring_buffer_get_segdone (sink->ringbuffer)
+      - gst_audio_ring_buffer_get_segbase (sink->ringbuffer);
   gint64 samples_done = segdone * (gint64) ringbuf->samples_per_seg;
   gint64 headroom = sample_offset - samples_done;
   gboolean allow_align = TRUE;

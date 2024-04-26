@@ -744,8 +744,8 @@ gst_pulsering_stream_latency_cb (pa_stream * s, void *userdata)
      * less. One concern here is that latency updates happen every 100ms, which
      * means segdone is not updated very often, but increasing the update
      * frequency would mean more communication overhead. */
-    g_atomic_int_set (&ringbuf->segdone,
-        (int) gst_util_uint64_scale_ceil (info->read_index, 1,
+    gst_audio_ring_buffer_set_segdone (ringbuf,
+        gst_util_uint64_scale_ceil (info->read_index, 1,
             ringbuf->spec.segsize));
   }
 
