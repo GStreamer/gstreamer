@@ -1169,7 +1169,7 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
     /* now owned by the loop */
     g_main_context_unref (ctx);
 
-    src->session->thread = g_thread_try_new ("souphttpsrc-thread",
+    src->session->thread = g_thread_try_new ("souphttpsrc",
         thread_func, src, NULL);
 
     if (!src->session->thread) {
