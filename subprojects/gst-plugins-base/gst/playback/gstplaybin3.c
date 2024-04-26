@@ -2614,25 +2614,38 @@ reconfigure_output (GstPlayBin3 * playbin)
       GST_DEBUG_OBJECT (playbin, "Stream type '%s' is now requested",
           gst_stream_type_get_name (combine->stream_type));
 
-      g_assert (combine->sinkpad == NULL);
+      if (combine->sinkpad) {
+        /* This was previously an assert but is now just a WARNING
+         *
+         * This *theoretically* should never happen, but there is the
+         * possibility where there was a failure within (uri)decodebin3 where
+         * the collection was posted (by demuxer for ex) but the decoding failed
+         * (no decoder, bad stream, etc...).
+         *
+         * in that case, we could have a combiner already prepared for that type
+         * but never got activated.
+         **/
+        GST_WARNING_OBJECT (playbin, "Combiner already configured");
+      } else {
 
-      /* Request playsink sink pad */
-      combine->sinkpad =
-          gst_play_sink_request_pad (playbin->playsink,
-          gst_play_sink_type_from_stream_type (combine->stream_type));
-      gst_object_ref (combine->sinkpad);
-      /* Create combiner if needed and link it */
-      create_combiner (playbin, combine);
-      if (combine->combiner) {
-        res = gst_pad_link (combine->srcpad, combine->sinkpad);
-        GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d",
-            gst_stream_type_get_name (combine->stream_type), res);
-        if (res != GST_PAD_LINK_OK) {
-          GST_ELEMENT_ERROR (playbin, CORE, PAD,
-              ("Internal playbin error."),
-              ("Failed to link combiner to sink. Error %d", res));
+        /* Request playsink sink pad */
+        combine->sinkpad =
+            gst_play_sink_request_pad (playbin->playsink,
+            gst_play_sink_type_from_stream_type (combine->stream_type));
+        gst_object_ref (combine->sinkpad);
+        /* Create combiner if needed and link it */
+        create_combiner (playbin, combine);
+        if (combine->combiner) {
+          res = gst_pad_link (combine->srcpad, combine->sinkpad);
+          GST_DEBUG_OBJECT (playbin, "linked type %s, result: %d",
+              gst_stream_type_get_name (combine->stream_type), res);
+          if (res != GST_PAD_LINK_OK) {
+            GST_ELEMENT_ERROR (playbin, CORE, PAD,
+                ("Internal playbin error."),
+                ("Failed to link combiner to sink. Error %d", res));
+          }
+
         }
-
       }
     }
   }
