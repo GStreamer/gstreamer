@@ -736,6 +736,12 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
     std::vector < GstD3D12CopyTextureRegionArgs > copy_args;
     auto dmem = GST_D3D12_MEMORY_CAST (mem);
     auto src_resource = gst_d3d12_memory_get_resource_handle (dmem);
+    ComPtr < ID3D12Fence > fence_to_wait;
+    guint64 fence_val_to_wait = 0;
+
+    gst_d3d12_memory_get_external_fence (dmem,
+        &fence_to_wait, &fence_val_to_wait);
+
     dmem = (GstD3D12Memory *) gst_buffer_peek_memory (upload, 0);
     auto dst_resource = gst_d3d12_memory_get_resource_handle (dmem);
     D3D12_BOX src_box[2];
@@ -771,8 +777,8 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
 
     guint64 fence_val = 0;
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), nullptr, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        &fence_val);
+        copy_args.data (), nullptr, fence_to_wait.Get (), fence_val_to_wait,
+        D3D12_COMMAND_LIST_TYPE_DIRECT, &fence_val);
     gst_d3d12_buffer_after_write (upload, fence_val);
   } else {
     GstVideoFrame src_frame, dst_frame;
@@ -1423,6 +1429,14 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
     gst_clear_buffer (&frame->output_buffer);
     gst_video_encoder_finish_frame (encoder, frame);
     return GST_FLOW_ERROR;
+  }
+
+  ComPtr < ID3D12Fence > fence_to_wait;
+  guint64 fence_val_to_wait = 0;
+  if (gst_d3d12_memory_get_external_fence (mem,
+          &fence_to_wait, &fence_val_to_wait)) {
+    gst_d3d12_command_queue_execute_wait (priv->cmd->queue,
+        fence_to_wait.Get (), fence_val_to_wait);
   }
 
   auto completed = gst_d3d12_device_get_completed_value (self->device,
