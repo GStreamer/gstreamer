@@ -995,6 +995,36 @@ gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
 }
 
 /**
+ * gst_d3d12_memory_get_external_fence:
+ * @mem: a #GstD3D12Memory
+ * @fence: (out) (transfer full) (nullable): a ID3D12Fence
+ * @fence_val: (out): fence value
+ *
+ * Gets configured external fence and fence value
+ *
+ * Returns: %TRUE if external fence was configured in @mem
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_d3d12_memory_get_external_fence (GstD3D12Memory * mem, ID3D12Fence ** fence,
+    guint64 * fence_val)
+{
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (priv->external_fence) {
+    *fence = priv->external_fence.Get ();
+    (*fence)->AddRef ();
+    *fence_val = priv->external_fence_val;
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
  * gst_d3d12_memory_get_d3d11_texture:
  * @mem: a #GstD3D12Memory
  * @device11: a ID3D11Device
