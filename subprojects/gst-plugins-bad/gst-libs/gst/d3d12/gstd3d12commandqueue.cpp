@@ -224,6 +224,40 @@ gst_d3d12_command_queue_get_fence_handle (GstD3D12CommandQueue * queue)
   return queue->priv->fence.Get ();
 }
 
+static HRESULT
+gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
+    queue, guint num_command_lists, ID3D12CommandList ** command_lists,
+    guint64 * fence_value)
+{
+  auto priv = queue->priv;
+
+  priv->fence_val++;
+  if (num_command_lists)
+    priv->cq->ExecuteCommandLists (num_command_lists, command_lists);
+  auto hr = priv->cq->Signal (priv->fence.Get (), priv->fence_val);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (queue, "Signal failed");
+    priv->fence_val--;
+  } else if (fence_value) {
+    *fence_value = priv->fence_val;
+  }
+
+  if (priv->queue_size > 0) {
+    auto completed = priv->fence->GetCompletedValue ();
+    if (completed + priv->queue_size < priv->fence_val) {
+      hr = priv->fence->SetEventOnCompletion (priv->fence_val -
+          priv->queue_size, priv->event_handle);
+      if (FAILED (hr)) {
+        GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
+        return hr;
+      }
+      WaitForSingleObjectEx (priv->event_handle, INFINITE, FALSE);
+    }
+  }
+
+  return hr;
+}
+
 /**
  * gst_d3d12_command_queue_execute_command_lists:
  * @queue: a #GstD3D12CommandQueue
@@ -246,34 +280,46 @@ gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
   g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
 
   auto priv = queue->priv;
-  HRESULT hr;
 
   std::lock_guard < std::mutex > lk (priv->execute_lock);
-  priv->fence_val++;
-  if (num_command_lists)
-    priv->cq->ExecuteCommandLists (num_command_lists, command_lists);
-  hr = priv->cq->Signal (priv->fence.Get (), priv->fence_val);
-  if (FAILED (hr)) {
-    GST_ERROR_OBJECT (queue, "Signal failed");
-    priv->fence_val--;
-  } else if (fence_value) {
-    *fence_value = priv->fence_val;
+  return gst_d3d12_command_queue_execute_command_lists_unlocked (queue,
+      num_command_lists, command_lists, fence_value);
+}
+
+/**
+ * gst_d3d12_command_queue_execute_wait_and_command_lists:
+ * @queue: a #GstD3D12CommandQueue
+ * @fence_to_wait: (allow-none): a ID3D11Fence
+ * @fence_value_to_wait: fence value to wait
+ * @num_command_lists: command list size
+ * @command_lists: array of ID3D12CommandList
+ * @fence_value: (out) (optional): fence value of submitted command
+ *
+ * Executes wait if @fence_to_wait is passed, and executes command list.
+ *
+ * Return: HRESULT code
+ *
+ * Since: 1.26
+ */
+HRESULT
+gst_d3d12_command_queue_execute_wait_and_command_lists (GstD3D12CommandQueue *
+    queue, ID3D12Fence * fence_to_wait, guint64 fence_value_to_wait,
+    guint num_command_lists, ID3D12CommandList ** command_lists,
+    guint64 * fence_value)
+{
+  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+
+  auto priv = queue->priv;
+
+  std::lock_guard < std::mutex > lk (priv->execute_lock);
+  if (fence_to_wait) {
+    auto hr = priv->cq->Wait (fence_to_wait, fence_value_to_wait);
+    if (FAILED (hr))
+      return hr;
   }
 
-  if (priv->queue_size > 0) {
-    auto completed = priv->fence->GetCompletedValue ();
-    if (completed + priv->queue_size < priv->fence_val) {
-      hr = priv->fence->SetEventOnCompletion (priv->fence_val -
-          priv->queue_size, priv->event_handle);
-      if (FAILED (hr)) {
-        GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
-        return hr;
-      }
-      WaitForSingleObjectEx (priv->event_handle, INFINITE, FALSE);
-    }
-  }
-
-  return hr;
+  return gst_d3d12_command_queue_execute_command_lists_unlocked (queue,
+      num_command_lists, command_lists, fence_value);
 }
 
 /**
