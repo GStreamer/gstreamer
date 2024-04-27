@@ -25,6 +25,8 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstD3D12FrameFence GstD3D12FrameFence;
+
 /**
  * GstD3D12FrameMapFlags:
  * @GST_D3D12_FRAME_MAP_FLAG_NONE: No flags
@@ -42,6 +44,12 @@ typedef enum
 
 DEFINE_ENUM_FLAG_OPERATORS (GstD3D12FrameMapFlags);
 
+struct _GstD3D12FrameFence
+{
+  ID3D12Fence *fence;
+  guint64 fence_value;
+};
+
 /**
  * GstD3D12Frame:
  * @info: the #GstVideoInfo
@@ -53,6 +61,7 @@ DEFINE_ENUM_FLAG_OPERATORS (GstD3D12FrameMapFlags);
  * @data: pointers to the plane data
  * @subresource_index: subresource index of the plane
  * @plane_rect: plane rectangle
+ * @fence: external fences
  * @srv_desc_handle: shader resource view descriptor handle
  * @rtb_desc_handle: render target view descriptor handle
  *
@@ -72,6 +81,7 @@ struct _GstD3D12Frame
   ID3D12Resource *data[GST_VIDEO_MAX_PLANES];
   guint subresource_index[GST_VIDEO_MAX_PLANES];
   D3D12_RECT plane_rect[GST_VIDEO_MAX_PLANES];
+  GstD3D12FrameFence fence[GST_VIDEO_MAX_PLANES];
   D3D12_CPU_DESCRIPTOR_HANDLE srv_desc_handle[GST_VIDEO_MAX_PLANES];
   D3D12_CPU_DESCRIPTOR_HANDLE rtv_desc_handle[GST_VIDEO_MAX_PLANES];
 
@@ -99,6 +109,13 @@ gboolean  gst_d3d12_frame_copy_plane  (GstD3D12Frame * dest,
                                        const GstD3D12Frame * src,
                                        guint plane,
                                        guint64 * fence_value);
+
+GST_D3D12_API
+gboolean  gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,
+                                          ID3D12CommandQueue * queue);
+
+GST_D3D12_API
+gboolean  gst_d3d12_frame_fence_cpu_wait (const GstD3D12Frame * frame);
 
 G_END_DECLS
 

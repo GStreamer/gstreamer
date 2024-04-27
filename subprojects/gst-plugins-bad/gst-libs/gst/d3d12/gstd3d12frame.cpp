@@ -27,6 +27,12 @@
 #include "gstd3d12-private.h"
 #include <string.h>
 #include <directx/d3dx12.h>
+#include <vector>
+#include <wrl.h>
+
+/* *INDENT-OFF* */
+using namespace Microsoft::WRL;
+/* *INDENT-ON* */
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -90,7 +96,7 @@ gst_d3d12_frame_map (GstD3D12Frame * frame, const GstVideoInfo * info,
   for (guint i = 0; i < num_mem; i++) {
     auto mem = gst_buffer_peek_memory (buffer, i);
     if (!gst_is_d3d12_memory (mem)) {
-      GST_WARNING ("memory %u is not a d3d12 memory", i);
+      GST_LOG ("memory %u is not a d3d12 memory", i);
       return FALSE;
     }
 
@@ -217,6 +223,9 @@ gst_d3d12_frame_map (GstD3D12Frame * frame, const GstVideoInfo * info,
         rtv_handle.Offset (rtv_inc_size);
       }
 
+      gst_d3d12_memory_get_external_fence (dmem, &frame->fence[plane_idx].fence,
+          &frame->fence[plane_idx].fence_value);
+
       plane_idx++;
     }
   }
@@ -265,6 +274,11 @@ void
 gst_d3d12_frame_unmap (GstD3D12Frame * frame)
 {
   g_return_if_fail (frame);
+
+  for (guint i = 0; i < G_N_ELEMENTS (frame->fence); i++) {
+    if (frame->fence[i].fence)
+      frame->fence[i].fence->Release ();
+  }
 
   for (guint i = 0; i < G_N_ELEMENTS (frame->map); i++) {
     auto mem = frame->map[i].memory;
@@ -337,6 +351,12 @@ gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
   gst_d3d12_fence_data_add_notify_mini_object (fence_data,
       gst_buffer_ref (src->buffer));
 
+  auto cq = gst_d3d12_device_get_command_queue (src->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+  gst_d3d12_frame_fence_gpu_wait (src, cq_handle);
+  gst_d3d12_frame_fence_gpu_wait (dest, cq_handle);
+
   return gst_d3d12_device_copy_texture_region (dest->device,
       GST_VIDEO_INFO_N_PLANES (&dest->info), args, fence_data,
       nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
@@ -383,6 +403,113 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
   gst_d3d12_fence_data_add_notify_mini_object (fence_data,
       gst_buffer_ref (src->buffer));
 
+  auto cq = gst_d3d12_device_get_command_queue (src->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+
+  if (src->fence[plane].fence)
+    cq_handle->Wait (src->fence[plane].fence, src->fence[plane].fence_value);
+
+  if (dest->fence[plane].fence)
+    cq_handle->Wait (dest->fence[plane].fence, dest->fence[plane].fence_value);
+
   return gst_d3d12_device_copy_texture_region (dest->device, 1, &args,
       fence_data, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
+}
+
+/**
+ * gst_d3d12_frame_fence_gpu_wait:
+ * @frame: a #GstD3D12Frame
+ * @queue: a ID3D12CommandQueue
+ *
+ * Executes ID3D12CommandQueue::Wait() if external fence exists
+ *
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,
+    ID3D12CommandQueue * queue)
+{
+  g_return_val_if_fail (frame, FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (frame->device), FALSE);
+  g_return_val_if_fail (queue, FALSE);
+
+  ID3D12Fence *last_fence = nullptr;
+  guint64 last_fence_val = 0;
+  for (guint i = 0; i < G_N_ELEMENTS (frame->fence); i++) {
+    if (frame->fence[i].fence) {
+      if (frame->fence[i].fence == last_fence &&
+          frame->fence[i].fence_value <= last_fence_val) {
+        continue;
+      }
+      last_fence = frame->fence[i].fence;
+      last_fence_val = frame->fence[i].fence_value;
+
+      auto hr = queue->Wait (frame->fence[i].fence,
+          frame->fence[i].fence_value);
+      if (!gst_d3d12_result (hr, frame->device))
+        return FALSE;
+    }
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_d3d12_frame_fence_cpu_wait:
+ * @frame: a #GstD3D12Frame
+ *
+ * Waits for external fence objects
+ *
+ * Returns: %TRUE on success.
+ *
+ * Since: 1.26
+ */
+gboolean
+gst_d3d12_frame_fence_cpu_wait (const GstD3D12Frame * frame)
+{
+  g_return_val_if_fail (frame, FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (frame->device), FALSE);
+
+  ID3D12Fence *last_fence = nullptr;
+  guint64 last_fence_val = 0;
+  std::vector < ID3D12Fence * >fences;
+  std::vector < UINT64 > fence_vals;
+
+  for (guint i = 0; i < G_N_ELEMENTS (frame->fence); i++) {
+    if (frame->fence[i].fence) {
+      if (frame->fence[i].fence == last_fence &&
+          frame->fence[i].fence_value <= last_fence_val) {
+        continue;
+      }
+      last_fence = frame->fence[i].fence;
+      last_fence_val = frame->fence[i].fence_value;
+
+      fences.push_back (frame->fence[i].fence);
+      fence_vals.push_back (frame->fence[i].fence_value);
+    }
+  }
+
+  if (fences.empty ())
+    return TRUE;
+
+  ComPtr < ID3D12Device1 > device1;
+  auto device = gst_d3d12_device_get_device_handle (frame->device);
+  auto hr = device->QueryInterface (IID_PPV_ARGS (&device1));
+
+  if (SUCCEEDED (hr)) {
+    hr = device1->SetEventOnMultipleFenceCompletion (fences.data (),
+        fence_vals.data (), fences.size (), D3D12_MULTIPLE_FENCE_WAIT_FLAG_ALL,
+        nullptr);
+  } else {
+    for (size_t i = 0; i < fences.size (); i++) {
+      hr = fences[i]->SetEventOnCompletion (fence_vals[i], nullptr);
+      if (FAILED (hr))
+        break;
+    }
+  }
+
+  return gst_d3d12_result (hr, frame->device);
 }
