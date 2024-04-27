@@ -1491,6 +1491,9 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
   gst_d3d12_memory_set_external_fence (dmem, priv->shared_fence.Get (),
       priv->fence_val);
 
+  GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+  GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+
   if (draw_mouse && !gst_d3d12_dxgi_capture_draw_mouse (self, buffer, crop_box)) {
     priv->WaitGPU ();
     priv->ctx = nullptr;
