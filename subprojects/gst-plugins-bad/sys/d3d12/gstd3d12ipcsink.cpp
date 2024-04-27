@@ -632,6 +632,17 @@ gst_d3d12_ipc_sink_prepare (GstBaseSink * sink, GstBuffer * buf)
 
   gst_video_frame_unmap (&frame);
 
+  GstD3D12Frame d3d12_frame;
+  if (!gst_d3d12_frame_map (&d3d12_frame, &priv->info, uploaded, GST_MAP_D3D12,
+          GST_D3D12_FRAME_MAP_FLAG_NONE)) {
+    GST_ERROR_OBJECT (self, "Couldn't map frame");
+    gst_buffer_unref (uploaded);
+    return GST_FLOW_ERROR;
+  }
+
+  gst_d3d12_frame_fence_cpu_wait (&d3d12_frame);
+  gst_d3d12_frame_unmap (&d3d12_frame);
+
   if (!gst_d3d12_memory_get_nt_handle (dmem, &nt_handle)) {
     GST_ERROR_OBJECT (self, "Couldn't get NT handle");
     gst_buffer_unref (uploaded);
