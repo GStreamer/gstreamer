@@ -2149,10 +2149,15 @@ gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
  * @out_buf: a #GstBuffer
  * @fence_data: a #GstD3D12FenceData
  * @cl: a ID3D12GraphicsCommandList
+ * @queue: (allow-none): a ID3D12CommandQueue
  *
  * Records command list for conversion operation. converter will attach
  * conversion command associated resources such as command allocator
  * to @fence_data.
+ *
+ * If @queue is passed and @in_buf needs external fence wait,
+ * ID3D12CommandQueue::Wait() method for each external fence object
+ * will be executed in this method
  *
  * Returns: %TRUE if successful
  *
@@ -2161,7 +2166,7 @@ gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
 gboolean
 gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
-    ID3D12GraphicsCommandList * cl)
+    ID3D12GraphicsCommandList * cl, ID3D12CommandQueue * queue)
 {
   g_return_val_if_fail (GST_IS_D3D12_CONVERTER (converter), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (in_buf), FALSE);
@@ -2202,6 +2207,12 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
 
   auto ret = gst_d3d12_converter_execute (converter,
       &in_frame, &out_frame, fence_data, cl);
+
+  if (ret && queue) {
+    gst_d3d12_frame_fence_gpu_wait (&in_frame, queue);
+    gst_d3d12_frame_fence_gpu_wait (&out_frame, queue);
+  }
+
   gst_d3d12_frame_unmap (&in_frame);
   gst_d3d12_frame_unmap (&out_frame);
 

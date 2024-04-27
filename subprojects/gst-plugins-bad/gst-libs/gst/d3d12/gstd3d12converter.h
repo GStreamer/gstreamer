@@ -164,7 +164,8 @@ gboolean            gst_d3d12_converter_convert_buffer (GstD3D12Converter * conv
                                                         GstBuffer * in_buf,
                                                         GstBuffer * out_buf,
                                                         GstD3D12FenceData * fence_data,
-                                                        ID3D12GraphicsCommandList * command_list);
+                                                        ID3D12GraphicsCommandList * command_list,
+                                                        ID3D12CommandQueue * queue);
 
 GST_D3D12_API
 gboolean            gst_d3d12_converter_update_blend_state (GstD3D12Converter * converter,

@@ -2203,7 +2203,8 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   gst_d3d12_test_src_draw_pattern (self, pts, cl.Get ());
 
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
-          priv->ctx->render_buffer, convert_buffer, fence_data, cl.Get ())) {
+          priv->ctx->render_buffer, convert_buffer, fence_data, cl.Get (),
+          nullptr)) {
     GST_ERROR_OBJECT (self, "Couldn't build convert command");
     gst_clear_buffer (&convert_buffer);
     gst_d3d12_fence_data_unref (fence_data);

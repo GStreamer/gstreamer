@@ -454,10 +454,14 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
   gboolean ret = TRUE;
   GstBuffer *bgra_buf = nullptr;
+  auto cq = gst_d3d12_device_get_command_queue (priv->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+
   if (priv->direct_blend) {
     GST_LOG_OBJECT (self, "Direct blend");
     ret = gst_d3d12_converter_convert_buffer (priv->blend_conv,
-        layout_buf, output, fence_data, priv->cl.Get ());
+        layout_buf, output, fence_data, priv->cl.Get (), cq_handle);
   } else {
     GST_LOG_OBJECT (self, "Need conversion for blending");
 
@@ -469,7 +473,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
     if (ret) {
       ret = gst_d3d12_converter_convert_buffer (priv->pre_conv,
-          output, bgra_buf, fence_data, priv->cl.Get ());
+          output, bgra_buf, fence_data, priv->cl.Get (), cq_handle);
     }
 
     if (ret) {
@@ -486,7 +490,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
       priv->cl->ResourceBarrier (1, &barrier);
 
       ret = gst_d3d12_converter_convert_buffer (priv->blend_conv,
-          layout_buf, bgra_buf, fence_data, priv->cl.Get ());
+          layout_buf, bgra_buf, fence_data, priv->cl.Get (), nullptr);
     }
 
     if (ret) {
@@ -517,7 +521,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
       priv->cl->ResourceBarrier (barriers.size (), barriers.data ());
 
       ret = gst_d3d12_converter_convert_buffer (priv->post_conv,
-          bgra_buf, output, fence_data, priv->cl.Get ());
+          bgra_buf, output, fence_data, priv->cl.Get (), nullptr);
     }
 
     gst_clear_buffer (&bgra_buf);

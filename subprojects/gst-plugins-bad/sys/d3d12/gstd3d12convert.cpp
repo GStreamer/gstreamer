@@ -2010,8 +2010,12 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
   gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
+  auto cq = gst_d3d12_device_get_command_queue (priv->ctx->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
-          inbuf, outbuf, fence_data, priv->ctx->cl.Get ())) {
+          inbuf, outbuf, fence_data, priv->ctx->cl.Get (), cq_handle)) {
     GST_ERROR_OBJECT (self, "Couldn't build command list");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;

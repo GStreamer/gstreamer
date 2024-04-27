@@ -1559,8 +1559,11 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     cl->ResourceBarrier (1, &barrier);
   }
 
+  auto cq_handle = gst_d3d12_command_queue_get_handle (priv->ctx->queue);
+
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
-          priv->ctx->cached_buf, conv_outbuf, fence_data, cl.Get ())) {
+          priv->ctx->cached_buf, conv_outbuf, fence_data, cl.Get (),
+          cq_handle)) {
     GST_ERROR_OBJECT (window, "Couldn't build convert command");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;

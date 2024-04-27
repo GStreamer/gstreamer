@@ -1379,8 +1379,12 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
       ptr_w, "src-height", ptr_h, "dest-x", ptr_x, "dest-y", ptr_y,
       "dest-width", ptr_w, "dest-height", ptr_h, nullptr);
 
+  auto cq = gst_d3d12_device_get_command_queue (priv->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+
   if (!gst_d3d12_converter_convert_buffer (priv->mouse_blend,
-          priv->mouse_buf, buffer, fence_data, cl.Get ())) {
+          priv->mouse_buf, buffer, fence_data, cl.Get (), cq_handle)) {
     GST_ERROR_OBJECT (self, "Couldn't build mouse blend command");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
@@ -1392,7 +1396,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
         "dest-width", ptr_w, "dest-height", ptr_h, nullptr);
 
     if (!gst_d3d12_converter_convert_buffer (priv->mouse_xor_blend,
-            priv->mouse_xor_buf, buffer, fence_data, cl.Get ())) {
+            priv->mouse_xor_buf, buffer, fence_data, cl.Get (), nullptr)) {
       GST_ERROR_OBJECT (self, "Couldn't build mouse blend command");
       gst_d3d12_fence_data_unref (fence_data);
       return FALSE;
@@ -1406,10 +1410,6 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
     return FALSE;
   }
 
-  auto cq = gst_d3d12_device_get_command_queue (priv->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  gst_d3d12_command_queue_execute_wait (cq, priv->shared_fence.Get (),
-      priv->fence_val);
   ID3D12CommandList *cmd_list[] = { cl.Get () };
 
   guint64 fence_val = 0;
@@ -1480,15 +1480,13 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
     return ret;
   }
 
+  gst_d3d12_memory_set_external_fence (dmem, priv->shared_fence.Get (),
+      priv->fence_val);
+
   if (draw_mouse && !gst_d3d12_dxgi_capture_draw_mouse (self, buffer, crop_box)) {
     priv->WaitGPU ();
     return GST_FLOW_ERROR;
   }
-
-  /* Set external fence after drawing mouse.
-   * Otherwise converter will wait for fence value */
-  gst_d3d12_memory_set_external_fence (dmem, priv->shared_fence.Get (),
-      priv->fence_val);
 
   return GST_FLOW_OK;
 }
