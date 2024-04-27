@@ -550,8 +550,6 @@ gst_d3d12_memory_map_full (GstMemory * mem, GstMapInfo * info, gsize maxsize)
   GstMapFlags flags = info->flags;
   std::lock_guard < std::mutex > lk (priv->lock);
 
-  gst_d3d12_memory_set_external_fence_unlocked (dmem, nullptr, 0);
-
   if ((flags & GST_MAP_D3D12) != 0) {
     gst_d3d12_memory_upload (dmem);
 
