@@ -120,6 +120,8 @@ struct DeviceInner
     gst_clear_object (&copy_ca_pool);
     gst_clear_object (&copy_cl_pool);
 
+    gst_clear_object (&fence_data_pool);
+
     factory = nullptr;
     adapter = nullptr;
 
@@ -221,6 +223,8 @@ struct DeviceInner
 
   GstD3D12CommandListPool *copy_cl_pool = nullptr;
   GstD3D12CommandAllocatorPool *copy_ca_pool = nullptr;
+
+  GstD3D12FenceDataPool *fence_data_pool = nullptr;
 
   guint rtv_inc_size;
 
@@ -910,6 +914,8 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   priv->rtv_inc_size =
       device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
+  priv->fence_data_pool = gst_d3d12_fence_data_pool_new ();
+
   GST_OBJECT_FLAG_SET (priv->direct_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->direct_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->direct_ca_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
@@ -917,6 +923,8 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   GST_OBJECT_FLAG_SET (priv->copy_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->copy_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->copy_ca_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
+
+  GST_OBJECT_FLAG_SET (priv->fence_data_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
 
   hr = device->CreateFence (0,
       D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS (&priv->dev_removed_fence));
@@ -1270,6 +1278,8 @@ gst_d3d12_device_fence_wait (GstD3D12Device * device,
 gboolean
 gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
     guint num_args, const GstD3D12CopyTextureRegionArgs * args,
+    GstD3D12FenceData * fence_data,
+    ID3D12Fence * fence_to_wait, guint64 fence_value_to_wait,
     D3D12_COMMAND_LIST_TYPE command_type, guint64 * fence_value)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
@@ -1285,6 +1295,9 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
   GstD3D12CommandQueue *queue = nullptr;
   guint64 fence_val = 0;
 
+  if (!fence_data)
+    gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
+
   switch (command_type) {
     case D3D12_COMMAND_LIST_TYPE_DIRECT:
       queue = priv->direct_queue;
@@ -1299,21 +1312,25 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
     default:
       GST_ERROR_OBJECT (device, "Not supported command list type %d",
           command_type);
+      gst_d3d12_fence_data_unref (fence_data);
       return FALSE;
   }
 
   gst_d3d12_command_allocator_pool_acquire (ca_pool, &gst_ca);
   if (!gst_ca) {
     GST_ERROR_OBJECT (device, "Couldn't acquire command allocator");
+    gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
   }
+
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
 
   auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
   gst_d3d12_command_list_pool_acquire (cl_pool, ca, &gst_cl);
 
   if (!gst_cl) {
     GST_ERROR_OBJECT (device, "Couldn't acquire command list");
-    gst_clear_d3d12_command_allocator (&gst_ca);
+    gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
   }
 
@@ -1333,29 +1350,41 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
   if (!gst_d3d12_result (hr, device)) {
     GST_ERROR_OBJECT (device, "Couldn't close command list");
     gst_clear_d3d12_command_list (&gst_cl);
-    gst_clear_d3d12_command_allocator (&gst_ca);
+    gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
   }
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
-  hr = gst_d3d12_command_queue_execute_command_lists (queue,
-      1, cmd_list, &fence_val);
+  hr = gst_d3d12_command_queue_execute_wait_and_command_lists (queue,
+      fence_to_wait, fence_value_to_wait, 1, cmd_list, &fence_val);
   auto ret = gst_d3d12_result (hr, device);
 
   /* We can release command list since command list pool will hold it */
   gst_d3d12_command_list_unref (gst_cl);
 
   if (ret) {
-    gst_d3d12_command_queue_set_notify (queue, fence_val, gst_ca,
-        (GDestroyNotify) gst_d3d12_command_allocator_unref);
+    gst_d3d12_command_queue_set_notify (queue, fence_val, fence_data,
+        (GDestroyNotify) gst_d3d12_fence_data_unref);
   } else {
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_fence_data_unref (fence_data);
   }
 
   if (fence_value)
     *fence_value = fence_val;
 
   return ret;
+}
+
+gboolean
+gst_d3d12_device_acquire_fence_data (GstD3D12Device * device,
+    GstD3D12FenceData ** fence_data)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (fence_data, FALSE);
+
+  auto priv = device->priv->inner;
+
+  return gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, fence_data);
 }
 
 static inline GstDebugLevel

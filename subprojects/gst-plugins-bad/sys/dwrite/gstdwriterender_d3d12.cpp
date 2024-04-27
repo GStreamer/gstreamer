@@ -363,12 +363,6 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
   args.dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
   args.dst.pResource = texture;
 
-  gst_d3d12_device_copy_texture_region (priv->device,
-      1, &args, D3D12_COMMAND_LIST_TYPE_DIRECT, &priv->fence_val);
-
-  priv->scheduled.push (priv->fence_val);
-  dmem->fence_value = priv->fence_val;
-
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
   auto resource_clone = priv->layout_resource;
@@ -377,8 +371,12 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
   gst_d3d12_fence_data_add_notify_com (fence_data, resource_clone.Detach ());
   gst_d3d12_fence_data_add_notify_com (fence_data, wrapped_clone.Detach ());
 
-  gst_d3d12_device_set_fence_notify (priv->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, dmem->fence_value, fence_data);
+  gst_d3d12_device_copy_texture_region (priv->device,
+      1, &args, fence_data, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+      &priv->fence_val);
+
+  priv->scheduled.push (priv->fence_val);
+  dmem->fence_value = priv->fence_val;
 
   GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
   GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);

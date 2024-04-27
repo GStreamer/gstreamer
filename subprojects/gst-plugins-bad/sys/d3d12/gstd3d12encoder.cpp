@@ -771,7 +771,8 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
 
     guint64 fence_val = 0;
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), D3D12_COMMAND_LIST_TYPE_DIRECT, &fence_val);
+        copy_args.data (), nullptr, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        &fence_val);
     gst_d3d12_buffer_after_write (upload, fence_val);
   } else {
     GstVideoFrame src_frame, dst_frame;

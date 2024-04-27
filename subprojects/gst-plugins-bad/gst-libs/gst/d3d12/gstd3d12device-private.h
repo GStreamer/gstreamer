@@ -39,8 +39,15 @@ GST_D3D12_API
 gboolean  gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
                                                 guint num_args,
                                                 const GstD3D12CopyTextureRegionArgs * args,
+                                                GstD3D12FenceData * fence_data,
+                                                ID3D12Fence * fence_to_wait,
+                                                guint64 fence_value_to_wait,
                                                 D3D12_COMMAND_LIST_TYPE command_type,
                                                 guint64 * fence_value);
+
+GST_D3D12_API
+gboolean  gst_d3d12_device_acquire_fence_data (GstD3D12Device * device,
+                                               GstD3D12FenceData ** fence_data);
 
 GST_D3D12_API
 void      gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device,

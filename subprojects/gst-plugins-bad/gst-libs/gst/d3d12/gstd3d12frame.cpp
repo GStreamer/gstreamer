@@ -332,9 +332,14 @@ gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
     args[i].src_box = &src_box[i];
   }
 
+  GstD3D12FenceData *fence_data;
+  gst_d3d12_device_acquire_fence_data (dest->device, &fence_data);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data,
+      gst_buffer_ref (src->buffer));
+
   return gst_d3d12_device_copy_texture_region (dest->device,
-      GST_VIDEO_INFO_N_PLANES (&dest->info), args,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
+      GST_VIDEO_INFO_N_PLANES (&dest->info), args, fence_data,
+      nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
 }
 
 /**
@@ -373,6 +378,11 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
   gst_d3d12_frame_build_copy_args (dest, src, plane, &args, &src_box);
   args.src_box = &src_box;
 
+  GstD3D12FenceData *fence_data;
+  gst_d3d12_device_acquire_fence_data (dest->device, &fence_data);
+  gst_d3d12_fence_data_add_notify_mini_object (fence_data,
+      gst_buffer_ref (src->buffer));
+
   return gst_d3d12_device_copy_texture_region (dest->device, 1, &args,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
+      fence_data, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
 }

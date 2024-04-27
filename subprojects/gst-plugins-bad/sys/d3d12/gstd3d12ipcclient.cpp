@@ -513,7 +513,8 @@ gst_d3d12_ipc_client_have_data (GstD3D12IpcClient * self)
 
     guint64 copy_fence_val;
     gst_d3d12_device_copy_texture_region (priv->device, copy_args.size (),
-        copy_args.data (), D3D12_COMMAND_LIST_TYPE_DIRECT, &copy_fence_val);
+        copy_args.data (), nullptr, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        &copy_fence_val);
 
     auto data = new GstD3D12IpcReleaseData ();
     data->self = (GstD3D12IpcClient *) gst_object_ref (self);

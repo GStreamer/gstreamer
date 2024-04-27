@@ -1523,7 +1523,7 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     if (out_resource)
       queue_type = D3D12_COMMAND_LIST_TYPE_DIRECT;
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), queue_type, &copy_fence_val);
+        copy_args.data (), nullptr, nullptr, 0, queue_type, &copy_fence_val);
     gst_d3d12_device_fence_wait (self->device, queue_type,
         copy_fence_val, priv->copy_event_handle);
 
