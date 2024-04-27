@@ -264,6 +264,14 @@ class DesktopDupCtx
 public:
   DesktopDupCtx () {}
 
+  ~DesktopDupCtx ()
+  {
+    if (context_) {
+      context_->ClearState ();
+      context_->Flush ();
+    }
+  }
+
   GstFlowReturn Init (HMONITOR monitor, HANDLE fence_handle)
   {
     ComPtr<IDXGIAdapter1> adapter;
@@ -894,6 +902,7 @@ struct GstD3D12DxgiCapturePrivate
   ~GstD3D12DxgiCapturePrivate ()
   {
     WaitGPU ();
+    ctx = nullptr;
     CloseHandle (event_handle);
     if (shared_fence_handle)
       CloseHandle (shared_fence_handle);
@@ -1469,7 +1478,6 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
   ret = priv->ctx->Execute (texture, (D3D11_BOX *) crop_box, priv->fence_val);
   if (ret != GST_FLOW_OK) {
     priv->WaitGPU ();
-
     priv->ctx = nullptr;
     if (ret == GST_D3D12_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR) {
       GST_WARNING_OBJECT (self, "Couldn't capture frame, but expected failure");
@@ -1485,6 +1493,7 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
 
   if (draw_mouse && !gst_d3d12_dxgi_capture_draw_mouse (self, buffer, crop_box)) {
     priv->WaitGPU ();
+    priv->ctx = nullptr;
     return GST_FLOW_ERROR;
   }
 
