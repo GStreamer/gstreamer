@@ -70,7 +70,7 @@ G_BEGIN_DECLS
  *
  * Since: 1.26
  */
-#define GST_MAP_D3D12 (GST_MAP_FLAG_LAST << 1)
+#define GST_MAP_D3D12 ((GstMapFlags) (GST_MAP_FLAG_LAST << 1))
 
 /**
  * GST_MAP_READ_D3D12:
