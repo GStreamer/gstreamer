@@ -1420,7 +1420,6 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
 
     frame->output_buffer = gst_buffer_ref (buffer);
   } else {
-    GstMemory *mem;
     ID3D12Resource *out_resource = nullptr;
     UINT out_subresource[2];
 
@@ -1430,17 +1429,19 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
       goto error;
     }
 
-    mem = gst_buffer_peek_memory (frame->output_buffer, 0);
-    if (gst_is_d3d12_memory (mem)) {
-      dmem = GST_D3D12_MEMORY_CAST (mem);
+    auto out_mem = gst_buffer_peek_memory (frame->output_buffer, 0);
+    if (gst_is_d3d12_memory (out_mem)) {
+      auto out_dmem = GST_D3D12_MEMORY_CAST (out_mem);
       if (dmem->device == self->device) {
-        out_resource = gst_d3d12_memory_get_resource_handle (dmem);
-        gst_d3d12_memory_get_subresource_index (dmem, 0, &out_subresource[0]);
-        gst_d3d12_memory_get_subresource_index (dmem, 1, &out_subresource[1]);
+        out_resource = gst_d3d12_memory_get_resource_handle (out_dmem);
+        gst_d3d12_memory_get_subresource_index (out_dmem, 0,
+            &out_subresource[0]);
+        gst_d3d12_memory_get_subresource_index (out_dmem, 1,
+            &out_subresource[1]);
 
-        GST_MINI_OBJECT_FLAG_SET (dmem,
+        GST_MINI_OBJECT_FLAG_SET (out_dmem,
             GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
-        GST_MINI_OBJECT_FLAG_UNSET (dmem,
+        GST_MINI_OBJECT_FLAG_UNSET (out_dmem,
             GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
       }
     }
