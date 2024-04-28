@@ -10,6 +10,7 @@ nvcodec_sources = [
   'gstcudamemorycopy.c',
   'gstcuvidloader.c',
   'gstnvav1dec.cpp',
+  'gstnvav1encoder.cpp',
   'gstnvdec.c',
   'gstnvdecobject.cpp',
   'gstnvdecoder.cpp',

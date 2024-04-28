@@ -49,6 +49,7 @@
 #endif
 #include "gstnvh264encoder.h"
 #include "gstnvh265encoder.h"
+#include "gstnvav1encoder.h"
 #include "gstcudaipcsink.h"
 #include "gstcudaipcsrc.h"
 #include "gstnvcodecutils.h"
@@ -126,6 +127,7 @@ plugin_init (GstPlugin * plugin)
   guint api_minor_ver = 1;
   GList *h264_enc_cdata = NULL;
   GList *h265_enc_cdata = NULL;
+  GList *av1_enc_cdata = NULL;
   gboolean have_nvrtc = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
@@ -291,6 +293,11 @@ plugin_init (GstPlugin * plugin)
           if (cdata)
             h265_enc_cdata = g_list_append (h265_enc_cdata, cdata);
 
+          cdata = gst_nv_av1_encoder_register_d3d11 (plugin,
+              d3d11_device, GST_RANK_NONE);
+          if (cdata)
+            av1_enc_cdata = g_list_append (av1_enc_cdata, cdata);
+
           gst_object_unref (d3d11_device);
         }
       }
@@ -304,6 +311,11 @@ plugin_init (GstPlugin * plugin)
           context, GST_RANK_PRIMARY + 1);
       if (cdata)
         h265_enc_cdata = g_list_append (h265_enc_cdata, cdata);
+
+      cdata = gst_nv_av1_encoder_register_cuda (plugin,
+          context, GST_RANK_PRIMARY + 1);
+      if (cdata)
+        av1_enc_cdata = g_list_append (av1_enc_cdata, cdata);
     }
 
     gst_nv_jpeg_enc_register (plugin, context, GST_RANK_NONE, have_nvrtc);
@@ -315,8 +327,14 @@ plugin_init (GstPlugin * plugin)
     gst_nv_h264_encoder_register_auto_select (plugin, h264_enc_cdata,
         GST_RANK_NONE);
   }
+
   if (h265_enc_cdata) {
     gst_nv_h265_encoder_register_auto_select (plugin, h265_enc_cdata,
+        GST_RANK_NONE);
+  }
+
+  if (av1_enc_cdata) {
+    gst_nv_av1_encoder_register_auto_select (plugin, av1_enc_cdata,
         GST_RANK_NONE);
   }
 

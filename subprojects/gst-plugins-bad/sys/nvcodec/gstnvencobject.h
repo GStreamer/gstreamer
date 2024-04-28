@@ -138,6 +138,7 @@ enum GstNvEncCodec
 {
   GST_NV_ENC_CODEC_H264,
   GST_NV_ENC_CODEC_H265,
+  GST_NV_ENC_CODEC_AV1,
 };
 
 class GstNvEncObject : public std::enable_shared_from_this <GstNvEncObject>

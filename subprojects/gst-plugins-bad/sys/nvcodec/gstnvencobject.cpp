@@ -145,11 +145,14 @@ GstNvEncObject::IsSuccess (NVENCSTATUS status, GstNvEncObject * self,
 
 #ifndef GST_DISABLE_GST_DEBUG
   const gchar *status_str = nvenc_status_to_string (status);
+  const gchar *error_detail = nullptr;
+  if (self && self->session_)
+    error_detail = NvEncGetLastErrorString (self->session_);
 
   if (self) {
     gst_debug_log_id (GST_CAT_DEFAULT, GST_LEVEL_ERROR, file, function,
-        line, self->id_.c_str (), "NvEnc API call failed: 0x%x, %s",
-        (guint) status, status_str);
+        line, self->id_.c_str (), "NvEnc API call failed: 0x%x, %s (%s)",
+        (guint) status, status_str, GST_STR_NULL (error_detail));
   } else {
     gst_debug_log (GST_CAT_DEFAULT, GST_LEVEL_ERROR, file, function,
       line, nullptr, "NvEnc API call failed: 0x%x, %s",
@@ -293,8 +296,11 @@ GstNvEncObject::InitSession (NV_ENC_INITIALIZE_PARAMS * params,
 
   if (memcmp (&params->encodeGUID, &NV_ENC_CODEC_H264_GUID, sizeof (GUID)) == 0) {
     codec_ = GST_NV_ENC_CODEC_H264;
-  } else {
+  } else if (memcmp (&params->encodeGUID,
+      &NV_ENC_CODEC_HEVC_GUID, sizeof (GUID)) == 0) {
     codec_ = GST_NV_ENC_CODEC_H265;
+  } else {
+    codec_ = GST_NV_ENC_CODEC_AV1;
   }
 
   info_ = *info;
