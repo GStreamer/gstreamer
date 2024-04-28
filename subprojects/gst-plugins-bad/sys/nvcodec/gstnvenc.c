@@ -45,8 +45,8 @@
 #endif
 
 /* For backward compatibility */
-#define GST_NVENC_MIN_API_MAJOR_VERSION 8
-#define GST_NVENC_MIN_API_MINOR_VERSION 1
+#define GST_NVENC_MIN_API_MAJOR_VERSION 10
+#define GST_NVENC_MIN_API_MINOR_VERSION 0
 
 #define GST_NVENCAPI_VERSION(major,minor) ((major) | ((minor) << 24))
 #define GST_NVENCAPI_STRUCT_VERSION(ver,api_ver) ((uint32_t)(api_ver) | ((ver)<<16) | (0x7 << 28))
@@ -913,8 +913,10 @@ gst_nvenc_load_library (guint * api_major_ver, guint * api_minor_ver)
   gint i;
   static const GstNvEncVersion version_list[] = {
     {NVENCAPI_MAJOR_VERSION, NVENCAPI_MINOR_VERSION},
-    {9, 1},
-    {9, 0},
+    {12, 1},
+    {12, 0},
+    {11, 1},
+    {11, 0},
     {GST_NVENC_MIN_API_MAJOR_VERSION, GST_NVENC_MIN_API_MINOR_VERSION}
   };
 
