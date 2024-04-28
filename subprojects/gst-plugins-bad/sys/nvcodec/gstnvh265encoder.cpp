@@ -1163,7 +1163,9 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_VUYA:
     case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_BGRx:
       if (downstream_profiles.find ("main") == downstream_profiles.end ()) {
         GST_ERROR_OBJECT (self, "Downstream does not support main profile");
         return FALSE;
