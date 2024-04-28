@@ -295,13 +295,13 @@ plugin_init (GstPlugin * plugin)
         }
       }
 #endif
-      cdata =
-          gst_nv_h264_encoder_register_cuda (plugin, context, GST_RANK_NONE);
+      cdata = gst_nv_h264_encoder_register_cuda (plugin,
+          context, GST_RANK_PRIMARY + 1);
       if (cdata)
         h264_enc_cdata = g_list_append (h264_enc_cdata, cdata);
 
-      cdata =
-          gst_nv_h265_encoder_register_cuda (plugin, context, GST_RANK_NONE);
+      cdata = gst_nv_h265_encoder_register_cuda (plugin,
+          context, GST_RANK_PRIMARY + 1);
       if (cdata)
         h265_enc_cdata = g_list_append (h265_enc_cdata, cdata);
     }

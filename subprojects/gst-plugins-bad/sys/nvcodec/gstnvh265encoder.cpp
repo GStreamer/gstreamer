@@ -18,14 +18,6 @@
  */
 
 /**
- * element-nvcudah265enc:
- *
- * NVIDIA CUDA mode H.265 encoder
- *
- * Since: 1.22
- */
-
-/**
  * element-nvd3d11h265enc:
  *
  * NVIDIA Direct3D11 mode H.265 encoder
@@ -2356,16 +2348,16 @@ gst_nv_h265_encoder_register_cuda (GstPlugin * plugin, GstCudaContext * context,
     (GInstanceInitFunc) gst_nv_h265_encoder_init,
   };
 
-  type_name = g_strdup ("GstNvCudaH265Enc");
-  feature_name = g_strdup ("nvcudah265enc");
+  type_name = g_strdup ("GstNvH265Enc");
+  feature_name = g_strdup ("nvh265enc");
 
   gint index = 0;
   while (g_type_from_name (type_name)) {
     index++;
     g_free (type_name);
     g_free (feature_name);
-    type_name = g_strdup_printf ("GstNvCudaH265Device%dEnc", index);
-    feature_name = g_strdup_printf ("nvcudah265device%denc", index);
+    type_name = g_strdup_printf ("GstNvH265Device%dEnc", index);
+    feature_name = g_strdup_printf ("nvh265device%denc", index);
   }
 
   type = g_type_register_static (GST_TYPE_NV_ENCODER, type_name,
