@@ -268,7 +268,7 @@ typedef enum
 #define GST_RTCP_REDUCED_SIZE_VALID_MASK (0xc000 | 0xf8)
 
 /**
- * GST_RTCP_VALID_VALUE:
+ * GST_RTCP_VALID_VALUE: (value 32968)
  *
  * Valid value for the first two bytes of an RTCP packet after applying
  * #GST_RTCP_VALID_MASK to them.

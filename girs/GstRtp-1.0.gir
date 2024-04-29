@@ -2100,7 +2100,7 @@ packets, basically it accepts other types than RR and SR</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h"/>
       <type name="gint" c:type="gint"/>
     </constant>
-    <constant name="RTCP_VALID_VALUE" value="200" c:type="GST_RTCP_VALID_VALUE">
+    <constant name="RTCP_VALID_VALUE" value="32968" c:type="GST_RTCP_VALID_VALUE">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Valid value for the first two bytes of an RTCP packet after applying
 #GST_RTCP_VALID_MASK to them.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h"/>
