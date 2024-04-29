@@ -2,11 +2,11 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.2 and was released on 9 April 2024.
+The latest bug-fix release in the stable 1.24 series is 1.24.3 and was released on 30 April 2024.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Tuesday 9 April 2024, 12:30 UTC (log)
+Last updated: Tuesday 30 April 2024, 00:10 UTC (log)
 
 ## Introduction
 
@@ -1671,6 +1671,172 @@ List of merge requests and issues fixed in 1.24.2
 
 -   List of Merge Requests applied in 1.24.2
 -   List of Issues fixed in 1.24.2
+
+1.24.3
+
+The third 1.24 bug-fix release (1.24.3) was released on 30 April 2024.
+
+This release only contains bugfixes and it should be safe to update from 1.24.x.
+
+Highlighted bugfixes in 1.24.3
+
+-   EXIF image tag parsing security fixes
+-   Subtitle handling improvements in parsebin
+-   Fix issues with HLS streams that contain VTT subtitles
+-   Qt6 QML sink re-render and re-sizing fixes
+-   unixfd ipc plugin timestamp and segment handling fixes
+-   vah264enc, vah265enc: Do not touch the PTS of the output frame
+-   vah264dec and vapostproc fixes and improvements
+-   v4l2: multiple fixes and improvements, incl. for mediatek JPEG decoder and v4l2 loopback
+-   v4l2: fix hang after seek with some v4l2 decoders
+-   Wayland sink fixes
+-   ximagesink: fix regression on RPi/aarch64
+-   fmp4mux, mp4mux gained FLAC audio support
+-   D3D11, D3D12: reliablity improvements and memory leak fixes
+-   Media Foundation device provider fixes
+-   GTK4 paintable sink improvements including support for directly importing dmabufs with GTK 4.14
+-   WebRTC sink/source fixes and improvements
+-   AWS s3sink, s3src, s3hlssink now support path-style addressing
+-   MPEG-TS demuxer fixes
+-   Python bindings fixes
+-   various bug fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   ptp: Silence Rust compiler warning about some unused trait methods
+
+gst-plugins-base
+
+-   EXIF image tag parsing security fixes
+-   glcolorconvert: remove some dead code
+-   parsebin: Ensure non-time subtitle streams get “parsed”
+-   playbin3: Handle combiner update in case of errors
+-   ximagesink: initialize mask for XISelectEvents
+
+gst-plugins-good
+
+-   adaptivedemux2: Playback hangs with VTT fragments
+-   adaptivedemux2: Avoid double usage of parsebin
+-   pulsedeviceprovider: Add compare_device_type_name function and missing lock
+-   qml6glsink: Notify that the returned QSGNode node has changes
+-   qml6glsink: video content resizes to new item size
+-   qtdemux: fix wrong full_range offset when parsing colr box
+-   soup: fix thread name
+-   v4l2: add multiplane y42b (yuv422m) support (for mediatek v4l2 jpeg decoder)
+-   v4l2: bufferpool: Drop writable check on output pool process
+-   v4l2: bufferpool: Ensure freshly created buffers are not marked as queued, fixing issues with v4l2sink on a v4l2loopback
+    device
+-   v4l2: bufferpool: queue back the buffer flagged LAST but empty, fixes hangs after seek with some decoders
+-   v4l2: silence valgrind warning
+-   vpx: Include vpx error details in errors and warnings
+
+gst-plugins-bad
+
+-   d3d11device: protect device_lock vs device_new
+-   d3d11decoder, d3d12decoder: Fix potential use after free
+-   d3d11videosink: Fix rendering on keyed mutex enabled handle
+-   d3d12decoder: Fix d3d12 resource copy
+-   d3d12encoder: Fix buffer pool leak
+-   d3d12videosink: HWND event handling related fixes
+-   d3d12vp9dec: Fix Intel GPU crash occurred when decoding VP9 SVC
+-   dvbsubenc: fixed some memory leaks and a crash
+-   GstPlay: fix read duration failure issue for some type rtsp streams which have valid duration
+-   mediafoundation: Fix device enumeration
+-   mediafoundation: Fix infinite loop in device provider
+-   tests: fix possible libscpp build failure in gst-plugins-bad
+-   tsdemux, tsparse: Fix Program equality check
+-   tsdemux: Disable smart program update
+-   unixfdsink: Take segment into account when converting timestamps
+-   va: videoformat: use video library to get DRM fourcc
+-   va: radeonsi: DRM RGB formats doesn’t look correctly mapped to VA formats
+-   vah264enc, vah265enc: Do not touch the PTS of output frame
+-   vaav1enc: Change the alignment of output to “tu”
+-   vaallocator: disable derived all together for Mesa <23.3
+-   waylandsink: free staged buffer when do gst_wl_window_finalize
+-   wlwindow: clear configure mutex and cond when finalize
+-   waylandsink: config buffer pool with query size when propose_allocation
+-   v4l2codecs: Don’t unref allocation query caps
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+Fixed:
+
+-   hrtfrender: Use a bitmask instead of an int in the caps for the channel-mask
+-   rtpgccbwe: Don’t log an error when pushing a buffer list fails while stopping
+-   webrtcsink: Don’t panic in bitrate handling with unsupported encoders
+-   webrtcsink: Don’t panic if unsupported input caps are used
+-   webrtcsrc: Allow a None producer-id in request-encoded-filter signal
+
+Added:
+
+-   aws: New property to support path-style addressing
+-   fmp4mux / mp4mux: Support FLAC inside (f)MP4
+-   gtk4: Support directly importing dmabufs with GTK 4.14
+-   gtk4: Add force-aspect-ratio property similar to other video sinks
+
+gst-libav
+
+-   libav: guard some recently dropped APIs
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   Fix Python library name fetching and library searching on Windows
+-   Don’t link to python for the gi overrides module
+
+gst-editing-services
+
+-   ges-launcher: Fix for forcing container profiles
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   debug-viewer: Fix plugin loading machinery
+-   validate/flvdemux: Stop spamming audio/video on test
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.24.3
+
+-   No changes
+
+Contributors to 1.24.3
+
+Alexander Slobodeniuk, Edward Hervey, Elliot Chen, F. Duncanh, François Laignel, Haihua Hu, He Junyan, Hou Qi, Jan Schmidt,
+Jimmy Ohn, Maksym Khomenko, Matthew Waters, Nicolas Dufresne, Nirbheek Chauhan, Philippe Normand, Philipp Zabel, Qian Hu (胡骞),
+Sanchayan Maity, Sebastian Dröge, Seungha Yang, Simonas Kazlauskas, Taruntej Kanakamalla, Tim Blechmann, Tim-Philipp Müller, U.
+Artie Eoff, Víctor Manuel Jáquez Leal, William Wedler, Xavier Claessens,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.3
+
+-   List of Merge Requests applied in 1.24.3
+-   List of Issues fixed in 1.24.3
 
 Schedule for 1.26
 
