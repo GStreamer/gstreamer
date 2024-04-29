@@ -239,7 +239,7 @@ gst_gl_mixer_propose_allocation (GstAggregator * agg,
 
   /* we also support various metadata */
   if (context->gl_vtable->FenceSync)
-    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, 0);
+    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL);
 
   return TRUE;
 
@@ -644,6 +644,9 @@ gst_gl_mixer_decide_allocation (GstAggregator * agg, GstQuery * query)
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  if (gst_query_find_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL))
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
   gst_buffer_pool_set_config (pool, config);
 

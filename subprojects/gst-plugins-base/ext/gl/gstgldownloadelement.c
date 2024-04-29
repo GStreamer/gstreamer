@@ -23,6 +23,7 @@
 #endif
 
 #include <gst/gl/gl.h>
+#include <gst/gl/gstglfuncs.h>
 #if GST_GL_HAVE_PLATFORM_EGL && GST_GL_HAVE_DMABUF
 #include <gst/gl/egl/gsteglimage.h>
 #include <gst/allocators/gstdmabuf.h>
@@ -1454,13 +1455,15 @@ gst_gl_download_element_propose_allocation (GstBaseTransform * bt,
   size = info.size;
   gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
   gst_buffer_pool_config_set_gl_min_free_queue_size (config, 1);
-  gst_buffer_pool_config_add_option (config,
-      GST_BUFFER_POOL_OPTION_GL_SYNC_META);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     gst_object_unref (pool);
     goto config_failed;
   }
+
+  if (context->gl_vtable->FenceSync)
+    gst_query_add_allocation_meta (query, GST_GL_SYNC_META_API_TYPE, NULL);
+
   gst_query_add_allocation_pool (query, pool, size, 1, 0);
 
   gst_object_unref (pool);
