@@ -581,10 +581,12 @@ gst_stream_synchronizer_handle_flush_stop (GstStreamSynchronizer * self,
     gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
   }
 
-  stream->is_eos = FALSE;
+  if (stream->is_eos) {
+    stream->wait = FALSE;
+    stream->is_eos = FALSE;
+  }
   stream->eos_sent = FALSE;
   stream->flushing = FALSE;
-  stream->wait = FALSE;
   g_cond_broadcast (&stream->stream_finish_cond);
 
   if (reset_time) {
