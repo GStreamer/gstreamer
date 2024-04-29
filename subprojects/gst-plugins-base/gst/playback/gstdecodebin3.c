@@ -372,6 +372,10 @@ struct _DecodebinInput
   /* TEMPORARY HACK for knowing if upstream is already parsed and identity can
    * be avoided */
   gboolean input_is_parsed;
+
+  /* List of events that need to be pushed once we get the first
+   * GST_EVENT_STREAM_COLLECTION */
+  GList *events_waiting_for_collection;
 };
 
 /* Streams that come from parsebin or identity */
@@ -1891,6 +1895,10 @@ gst_decodebin_input_reset (DecodebinInput * input)
   if (input->collection)
     gst_clear_object (&input->collection);
 
+  g_list_free_full (input->events_waiting_for_collection,
+      (GDestroyNotify) gst_event_unref);
+  input->events_waiting_for_collection = NULL;
+
   input->group_id = GST_GROUP_ID_INVALID;
 }
 
@@ -2096,6 +2104,15 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       /* If we are waiting to create an identity passthrough, do it now */
       if (!input->parsebin && !input->identity)
         gst_decodebin_input_setup_identity (input);
+
+      /* Drain all pending events */
+      if (input->events_waiting_for_collection) {
+        GList *tmp;
+        for (tmp = input->events_waiting_for_collection; tmp; tmp = tmp->next)
+          gst_pad_event_default (sinkpad, GST_OBJECT (dbin), tmp->data);
+        g_list_free (input->events_waiting_for_collection);
+        input->events_waiting_for_collection = NULL;
+      }
       break;
     }
     case GST_EVENT_CAPS:
@@ -2163,6 +2180,16 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
     }
     default:
       break;
+  }
+
+  /* For parsed inputs, if we are waiting for a collection event, store them for
+   * now */
+  if (!input->collection && input->input_is_parsed) {
+    GST_DEBUG_OBJECT (sinkpad,
+        "Postponing event until we get a stream collection");
+    input->events_waiting_for_collection =
+        g_list_append (input->events_waiting_for_collection, event);
+    return TRUE;
   }
 
   /* Chain to parent function */
