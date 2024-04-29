@@ -57,6 +57,7 @@ typedef struct _GstSplitMuxPartPad
   gboolean first_activation;
 
   gboolean is_sparse;
+  GstClockTime min_ts;
   GstClockTime max_ts;
   GstSegment segment;
 
@@ -174,6 +175,11 @@ handle_buffer_measuring (GstSplitMuxPartReader * reader,
       GST_STIME_ARGS (offset), GST_STIME_ARGS (ts));
 
   if (GST_CLOCK_STIME_IS_VALID (ts)) {
+    if (GST_CLOCK_STIME_IS_VALID (ts) &&
+        !GST_CLOCK_TIME_IS_VALID (part_pad->min_ts)) {
+      part_pad->min_ts = ts;
+    }
+
     if (GST_BUFFER_DURATION_IS_VALID (buf))
       ts += GST_BUFFER_DURATION (buf);
 
@@ -617,6 +623,7 @@ gst_splitmux_part_pad_init (GstSplitMuxPartPad * pad)
       NULL, NULL, pad);
   gst_segment_init (&pad->segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&pad->orig_segment, GST_FORMAT_UNDEFINED);
+  pad->min_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -953,6 +960,13 @@ gst_splitmux_part_reader_finish_measuring_streams (GstSplitMuxPartReader *
     GST_DEBUG_OBJECT (reader,
         "Stream measuring complete. File %s is now ready", reader->path);
     reader->prep_state = PART_STATE_READY;
+    for (GList * cur = g_list_first (reader->pads); cur != NULL;
+        cur = g_list_next (cur)) {
+      GstSplitMuxPartPad *part_pad = SPLITMUX_PART_PAD_CAST (cur->data);
+      GST_WARNING_OBJECT (part_pad,
+          "Finished measuring. MinTS seen %" GST_TIMEP_FORMAT " MaxTS seen %"
+          GST_TIMEP_FORMAT, &part_pad->min_ts, &part_pad->max_ts);
+    }
     SPLITMUX_PART_UNLOCK (reader);
     do_async_done (reader);
   } else {
