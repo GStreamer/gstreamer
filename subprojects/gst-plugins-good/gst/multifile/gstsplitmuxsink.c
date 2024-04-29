@@ -262,9 +262,23 @@ mq_stream_buf_free (MqStreamBuf * data)
 }
 
 static SplitMuxOutputCommand *
-out_cmd_buf_new (void)
+out_cmd_buf_new_finish_fragment (void)
 {
-  return g_new0 (SplitMuxOutputCommand, 1);
+  SplitMuxOutputCommand *res = g_new0 (SplitMuxOutputCommand, 1);
+
+  res->cmd_type = SPLITMUX_OUTPUT_COMMAND_FINISH_FRAGMENT;
+  return res;
+}
+
+static SplitMuxOutputCommand *
+out_cmd_buf_new_release_gop (GstClockTimeDiff max_output_ts)
+{
+  SplitMuxOutputCommand *res = g_new0 (SplitMuxOutputCommand, 1);
+
+  res->cmd_type = SPLITMUX_OUTPUT_COMMAND_RELEASE_GOP;
+  res->release_gop.max_output_ts = max_output_ts;
+
+  return res;
 }
 
 static void
@@ -1341,30 +1355,44 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
               if (g_queue_get_length (&splitmux->out_cmd_q) == 0)
                 grow_blocked_queues (splitmux);
 
-              if (cmd->start_new_fragment) {
-                if (splitmux->muxed_out_bytes > 0) {
-                  GST_DEBUG_OBJECT (splitmux, "Got cmd to start new fragment");
-                  splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_FILE;
-                } else {
-                  GST_DEBUG_OBJECT (splitmux,
-                      "Got cmd to start new fragment, but fragment is empty - ignoring.");
+              switch (cmd->cmd_type) {
+                case SPLITMUX_OUTPUT_COMMAND_FINISH_FRAGMENT:
+                {
+                  if (splitmux->muxed_out_bytes > 0) {
+                    GST_DEBUG_OBJECT (splitmux,
+                        "Got cmd to start new fragment");
+                    splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_FILE;
+                  } else {
+                    GST_DEBUG_OBJECT (splitmux,
+                        "Got cmd to start new fragment, but fragment is empty - ignoring.");
+                  }
+                  break;
                 }
-              } else {
-                GST_DEBUG_OBJECT (splitmux,
-                    "Got new output cmd for time %" GST_STIME_FORMAT,
-                    GST_STIME_ARGS (cmd->max_output_ts));
+                case SPLITMUX_OUTPUT_COMMAND_RELEASE_GOP:
+                {
+                  GstClockTimeDiff new_max_output_ts =
+                      cmd->release_gop.max_output_ts;
 
-                /* Extend the output range immediately */
-                if (splitmux->max_out_running_time == GST_CLOCK_STIME_NONE
-                    || cmd->max_output_ts > splitmux->max_out_running_time)
-                  splitmux->max_out_running_time = cmd->max_output_ts;
-                GST_DEBUG_OBJECT (splitmux,
-                    "Max out running time now %" GST_STIME_FORMAT,
-                    GST_STIME_ARGS (splitmux->max_out_running_time));
-                splitmux->output_state = SPLITMUX_OUTPUT_STATE_OUTPUT_GOP;
+                  GST_DEBUG_OBJECT (splitmux,
+                      "Got new output cmd for time %" GST_STIME_FORMAT,
+                      GST_STIME_ARGS (new_max_output_ts));
+
+                  /* Extend the output range immediately */
+                  if (splitmux->max_out_running_time == GST_CLOCK_STIME_NONE
+                      || new_max_output_ts > splitmux->max_out_running_time)
+                    splitmux->max_out_running_time = new_max_output_ts;
+                  GST_DEBUG_OBJECT (splitmux,
+                      "Max out running time now %" GST_STIME_FORMAT,
+                      GST_STIME_ARGS (splitmux->max_out_running_time));
+                  splitmux->output_state = SPLITMUX_OUTPUT_STATE_OUTPUT_GOP;
+                  break;
+                }
+                default:
+                  g_assert_not_reached ();
+                  break;
               }
-              GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
 
+              GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
               out_cmd_buf_free (cmd);
               break;
             } else {
@@ -2534,8 +2562,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
         "This GOP (dur %" GST_STIME_FORMAT
         ") would overflow the fragment, Sending start_new_fragment cmd",
         GST_STIME_ARGS (queued_gop_time));
-    cmd = out_cmd_buf_new ();
-    cmd->start_new_fragment = TRUE;
+    cmd = out_cmd_buf_new_finish_fragment ();
     g_queue_push_head (&splitmux->out_cmd_q, cmd);
     GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
 
@@ -2578,9 +2605,7 @@ handle_gathered_gop (GstSplitMuxSink * splitmux, const InputGop * gop,
         splitmux->fragment_total_bytes, GST_STIME_ARGS (queued_time));
 
     /* Send this GOP to the output command queue */
-    cmd = out_cmd_buf_new ();
-    cmd->start_new_fragment = FALSE;
-    cmd->max_output_ts = max_out_running_time;
+    cmd = out_cmd_buf_new_release_gop (max_out_running_time);
     GST_LOG_OBJECT (splitmux, "Sending GOP cmd to output for TS %"
         GST_STIME_FORMAT, GST_STIME_ARGS (max_out_running_time));
     g_queue_push_head (&splitmux->out_cmd_q, cmd);

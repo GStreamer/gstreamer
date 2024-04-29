@@ -53,10 +53,19 @@ typedef enum _SplitMuxOutputState
   SPLITMUX_OUTPUT_STATE_START_NEXT_FILE /* Restarting after ENDING_FILE */
 } SplitMuxOutputState;
 
+typedef enum _SplitMuxOutputCommandType
+{
+  SPLITMUX_OUTPUT_COMMAND_FINISH_FRAGMENT,
+  SPLITMUX_OUTPUT_COMMAND_RELEASE_GOP,
+} SplitMuxOutputCommandType;
+
 typedef struct _SplitMuxOutputCommand
 {
-  gboolean start_new_fragment;  /* Whether to start a new fragment before advancing output ts */
-  GstClockTimeDiff max_output_ts;       /* Set the limit to stop GOP output */
+  SplitMuxOutputCommandType cmd_type;
+  struct
+  {
+    GstClockTimeDiff max_output_ts;   /* Set the limit to stop GOP output */
+  } release_gop;
 } SplitMuxOutputCommand;
 
 typedef struct _MqStreamBuf
