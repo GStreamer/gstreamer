@@ -103,19 +103,63 @@ dump_error (GstMessage * msg)
 }
 
 static GstMessage *
-run_pipeline (GstElement * pipeline)
+run_pipeline (GstElement * pipeline, guint num_fragments_expected,
+    const GstClockTime * fragment_offsets,
+    const GstClockTime * fragment_durations)
 {
   GstBus *bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   GstMessage *msg;
+  guint fragment_number = 0;
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  do {
+    msg =
+        gst_bus_poll (bus,
+        GST_MESSAGE_EOS | GST_MESSAGE_ERROR | GST_MESSAGE_ELEMENT, -1);
+    if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS
+        || GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+      break;
+    }
+    if (num_fragments_expected != 0) {
+      // Handle element message
+      const GstStructure *s = gst_message_get_structure (msg);
+      if (gst_structure_has_name (s, "splitmuxsrc-fragment-info") ||
+          gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
+        GstClockTime fragment_offset, fragment_duration;
+        fail_unless (gst_structure_get_clock_time (s, "fragment-offset",
+                &fragment_offset));
+        fail_unless (gst_structure_get_clock_time (s, "fragment-duration",
+                &fragment_duration));
+        if (fragment_offsets != NULL) {
+          fail_unless (fragment_offsets[fragment_number] == fragment_offset,
+              "Expected offset %" GST_TIME_FORMAT
+              " for fragment %u. Got offset %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (fragment_offsets[fragment_number]),
+              fragment_number, GST_TIME_ARGS (fragment_offset));
+        }
+        if (fragment_durations != NULL) {
+          fail_unless (fragment_durations[fragment_number] == fragment_duration,
+              "Expected duration %" GST_TIME_FORMAT
+              " for fragment %u. Got duration %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (fragment_durations[fragment_number]),
+              fragment_number, GST_TIME_ARGS (fragment_duration));
+        }
+        fragment_number++;
+      }
+    }
+    gst_message_unref (msg);
+  } while (TRUE);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   gst_object_unref (bus);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
+  else if (num_fragments_expected != 0) {
+    // Success. Check we got the expected number of fragment messages
+    fail_unless (fragment_number == num_fragments_expected);
+  }
 
   return msg;
 }
@@ -222,7 +266,9 @@ receive_sample (GstAppSink * appsink, gpointer user_data)
 
 static void
 test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
-    GstClockTime exp_last_time, gboolean test_reverse)
+    GstClockTime exp_last_time, gboolean test_reverse,
+    guint num_fragments_expected, const GstClockTime * fragment_offsets,
+    const GstClockTime * fragment_durations)
 {
   GstMessage *msg;
   GstElement *pipeline;
@@ -256,7 +302,9 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   /* test forwards */
   seek_pipeline (pipeline, 1.0, 0, -1);
   fail_unless (first_ts == GST_CLOCK_TIME_NONE);
-  msg = run_pipeline (pipeline);
+  msg =
+      run_pipeline (pipeline, num_fragments_expected, fragment_offsets,
+      fragment_durations);
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
@@ -272,7 +320,9 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   if (test_reverse) {
     /* Test backwards */
     seek_pipeline (pipeline, -1.0, 0, -1);
-    msg = run_pipeline (pipeline);
+    msg =
+        run_pipeline (pipeline, num_fragments_expected, fragment_offsets,
+        fragment_durations);
     fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
     gst_message_unref (msg);
     /* Check we saw the entire range of values */
@@ -394,7 +444,9 @@ GST_START_TEST (test_splitmuxsink)
       &location_state, NULL);
   gst_object_unref (bus);
 
-  msg = run_pipeline (pipeline);
+  GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
+  GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
+  msg = run_pipeline (pipeline, 3, offsets, durations);
 
   /* Clean up the location state */
   g_free (location_state.current_location);
@@ -427,7 +479,7 @@ GST_START_TEST (test_splitmuxsink)
   fail_unless (count == 3, "Expected 3 output files, got %d", count);
 
   in_pattern = g_build_filename (tmpdir, "out*.ogg", NULL);
-  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE);
+  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE, 3, offsets, durations);
   g_free (in_pattern);
 }
 
@@ -458,7 +510,7 @@ GST_START_TEST (test_splitmuxsink_clean_failure)
   g_object_set (sink, "sink", fakesink, NULL);
   gst_object_unref (sink);
 
-  msg = run_pipeline (pipeline);
+  msg = run_pipeline (pipeline, 0, NULL, NULL);
 
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
   gst_message_unref (msg);
@@ -501,7 +553,9 @@ GST_START_TEST (test_splitmuxsink_multivid)
   g_free (dest_pattern);
   g_object_unref (sink);
 
-  msg = run_pipeline (pipeline);
+  GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
+  GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
+  msg = run_pipeline (pipeline, 3, offsets, durations);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -519,7 +573,7 @@ GST_START_TEST (test_splitmuxsink_multivid)
    * written, and causes test failures like buffers being output
    * multiple times by qtdemux as it loops through GOPs. Disable that
    * for now */
-  test_playback (in_pattern, 0, 3 * GST_SECOND, FALSE);
+  test_playback (in_pattern, 0, 3 * GST_SECOND, FALSE, 3, offsets, durations);
   g_free (in_pattern);
 }
 
@@ -553,7 +607,9 @@ GST_START_TEST (test_splitmuxsink_async)
   g_free (dest_pattern);
   g_object_unref (sink);
 
-  msg = run_pipeline (pipeline);
+  GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
+  GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
+  msg = run_pipeline (pipeline, 3, offsets, durations);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -583,7 +639,7 @@ GST_START_TEST (test_splitmuxsink_async)
   fail_unless (count == 3, "Expected 3 output files, got %d", count);
 
   in_pattern = g_build_filename (tmpdir, "matroska*.mkv", NULL);
-  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE);
+  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE, 3, offsets, durations);
   g_free (in_pattern);
 }
 
@@ -690,7 +746,7 @@ run_eos_pipeline (guint num_video_buf, guint num_audio_buf,
 
   fail_if (pipeline == NULL);
 
-  msg = run_pipeline (pipeline);
+  msg = run_pipeline (pipeline, 0, NULL, NULL);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -778,7 +834,7 @@ splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
   gst_object_unref (srcpad);
   gst_object_unref (enc);
 
-  msg = run_pipeline (pipeline);
+  msg = run_pipeline (pipeline, 0, 0, NULL);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -810,7 +866,7 @@ splitmuxsink_split_by_keyframe (gboolean send_keyframe_request,
    * written, and causes test failures like buffers being output
    * multiple times by qtdemux as it loops through GOPs. Disable that
    * for now */
-  test_playback (in_pattern, 0, 6 * GST_SECOND, FALSE);
+  test_playback (in_pattern, 0, 6 * GST_SECOND, FALSE, 0, NULL, NULL);
   g_free (in_pattern);
 }
 

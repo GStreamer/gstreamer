@@ -103,19 +103,63 @@ dump_error (GstMessage * msg)
 }
 
 static GstMessage *
-run_pipeline (GstElement * pipeline)
+run_pipeline (GstElement * pipeline, guint num_fragments_expected,
+    const GstClockTime * fragment_offsets,
+    const GstClockTime * fragment_durations)
 {
   GstBus *bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   GstMessage *msg;
+  guint fragment_number = 0;
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
-  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  do {
+    msg =
+        gst_bus_poll (bus,
+        GST_MESSAGE_EOS | GST_MESSAGE_ERROR | GST_MESSAGE_ELEMENT, -1);
+    if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS
+        || GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+      break;
+    }
+    if (num_fragments_expected != 0) {
+      // Handle element message
+      const GstStructure *s = gst_message_get_structure (msg);
+      if (gst_structure_has_name (s, "splitmuxsrc-fragment-info") ||
+          gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
+        GstClockTime fragment_offset, fragment_duration;
+        fail_unless (gst_structure_get_clock_time (s, "fragment-offset",
+                &fragment_offset));
+        fail_unless (gst_structure_get_clock_time (s, "fragment-duration",
+                &fragment_duration));
+        if (fragment_offsets != NULL) {
+          fail_unless (fragment_offsets[fragment_number] == fragment_offset,
+              "Expected offset %" GST_TIME_FORMAT
+              " for fragment %u. Got offset %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (fragment_offsets[fragment_number]),
+              fragment_number, GST_TIME_ARGS (fragment_offset));
+        }
+        if (fragment_durations != NULL) {
+          fail_unless (fragment_durations[fragment_number] == fragment_duration,
+              "Expected duration %" GST_TIME_FORMAT
+              " for fragment %u. Got duration %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (fragment_durations[fragment_number]),
+              fragment_number, GST_TIME_ARGS (fragment_duration));
+        }
+        fragment_number++;
+      }
+    }
+    gst_message_unref (msg);
+  } while (TRUE);
+
   gst_element_set_state (pipeline, GST_STATE_NULL);
 
   gst_object_unref (bus);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
+  else if (num_fragments_expected != 0) {
+    // Success. Check we got the expected number of fragment messages
+    fail_unless (fragment_number == num_fragments_expected);
+  }
 
   return msg;
 }
@@ -216,7 +260,9 @@ receive_sample (GstAppSink * appsink, gpointer user_data G_GNUC_UNUSED)
 
 static void
 test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
-    GstClockTime exp_last_time, gboolean test_reverse)
+    GstClockTime exp_last_time, gboolean test_reverse,
+    guint num_fragments_expected, const GstClockTime * fragment_offsets,
+    const GstClockTime * fragment_durations)
 {
   GstMessage *msg;
   GstElement *pipeline;
@@ -250,7 +296,9 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   /* test forwards */
   seek_pipeline (pipeline, 1.0, 0, -1);
   fail_unless (first_ts == GST_CLOCK_TIME_NONE);
-  msg = run_pipeline (pipeline);
+  msg =
+      run_pipeline (pipeline, num_fragments_expected, fragment_offsets,
+      fragment_durations);
   fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
@@ -266,7 +314,9 @@ test_playback (const gchar * in_pattern, GstClockTime exp_first_time,
   if (test_reverse) {
     /* Test backwards */
     seek_pipeline (pipeline, -1.0, 0, -1);
-    msg = run_pipeline (pipeline);
+    msg =
+        run_pipeline (pipeline, num_fragments_expected, fragment_offsets,
+        fragment_durations);
     fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS);
     gst_message_unref (msg);
     /* Check we saw the entire range of values */
@@ -287,7 +337,10 @@ GST_START_TEST (test_splitmuxsrc)
 {
   gchar *in_pattern =
       g_build_filename (GST_TEST_FILES_PATH, "splitvideo*.ogg", NULL);
-  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE);
+
+  GstClockTime offsets[] = { 0, GST_SECOND, 2 * GST_SECOND };
+  GstClockTime durations[] = { GST_SECOND, GST_SECOND, GST_SECOND };
+  test_playback (in_pattern, 0, 3 * GST_SECOND, TRUE, 3, offsets, durations);
   g_free (in_pattern);
 }
 
@@ -320,7 +373,7 @@ GST_START_TEST (test_splitmuxsrc_format_location)
       (GCallback) src_format_location_cb, NULL);
   g_object_unref (src);
 
-  msg = run_pipeline (pipeline);
+  msg = run_pipeline (pipeline, 0, NULL, NULL);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -533,7 +586,14 @@ GST_START_TEST (test_splitmuxsrc_sparse_streams)
         (GCallback) new_sample_verify_1sec_offset, &tsink_prev_ts);
     g_clear_object (&element);
 
-    msg = run_pipeline (pipeline);
+    /* Vorbis packet sizes cause some slightly strange fragment sizes */
+    GstClockTime offsets[] = { 0, 999666666, 2 * (GstClockTime) 999666666,
+      3 * (GstClockTime) 999666666, 4 * (GstClockTime) 999666666
+    };
+    GstClockTime durations[] =
+        { 1017600000, GST_SECOND, GST_SECOND, GST_SECOND, 1107200000 };
+
+    msg = run_pipeline (pipeline, 5, offsets, durations);
   }
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
@@ -608,7 +668,10 @@ GST_START_TEST (test_splitmuxsrc_caps_change)
   gst_object_unref (sinkpad);
   gst_object_unref (cf);
 
-  msg = run_pipeline (pipeline);
+  GstClockTime offsets[] = { 0, GST_SECOND / 2 };
+  GstClockTime durations[] = { GST_SECOND / 2, GST_SECOND / 2 };
+
+  msg = run_pipeline (pipeline, 2, offsets, durations);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -621,7 +684,7 @@ GST_START_TEST (test_splitmuxsrc_caps_change)
   fail_unless (count == 2, "Expected 2 output files, got %d", count);
 
   in_pattern = g_build_filename (tmpdir, "out*.mp4", NULL);
-  test_playback (in_pattern, 0, GST_SECOND, TRUE);
+  test_playback (in_pattern, 0, GST_SECOND, TRUE, 2, offsets, durations);
   g_free (in_pattern);
 }
 
@@ -654,7 +717,7 @@ GST_START_TEST (test_splitmuxsrc_robust_mux)
   g_free (dest_pattern);
   g_object_unref (sink);
 
-  msg = run_pipeline (pipeline);
+  msg = run_pipeline (pipeline, 0, NULL, NULL);
 
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR)
     dump_error (msg);
@@ -668,7 +731,7 @@ GST_START_TEST (test_splitmuxsrc_robust_mux)
    * reserved duration property. All we care about is that the muxing didn't fail because space ran out */
 
   in_pattern = g_build_filename (tmpdir, "out*.mp4", NULL);
-  test_playback (in_pattern, 0, GST_SECOND, TRUE);
+  test_playback (in_pattern, 0, GST_SECOND, TRUE, 0, NULL, NULL);
   g_free (in_pattern);
 }
 

@@ -183,7 +183,7 @@ GST_STATIC_PAD_TEMPLATE ("caption_%u",
 
 static GQuark PAD_CONTEXT;
 static GQuark EOS_FROM_US;
-static GQuark RUNNING_TIME;
+static GQuark SINK_FRAGMENT_INFO;
 /* EOS_FROM_US is only valid in async-finalize mode. We need to know whether
  * to forward an incoming EOS message, but we cannot rely on the state of the
  * splitmux anymore, so we set this qdata on the sink instead.
@@ -203,9 +203,10 @@ static GQuark RUNNING_TIME;
 static void
 _do_init (void)
 {
-  PAD_CONTEXT = g_quark_from_static_string ("pad-context");
-  EOS_FROM_US = g_quark_from_static_string ("eos-from-us");
-  RUNNING_TIME = g_quark_from_static_string ("running-time");
+  PAD_CONTEXT = g_quark_from_static_string ("splitmuxsink-pad-context");
+  EOS_FROM_US = g_quark_from_static_string ("splitmuxsink-eos-from-us");
+  SINK_FRAGMENT_INFO =
+      g_quark_from_static_string ("splitmuxsink-fragment-info");
   GST_DEBUG_CATEGORY_INIT (splitmux_debug, "splitmuxsink", 0,
       "Split File Muxing Sink");
 }
@@ -1079,7 +1080,8 @@ mq_stream_ctx_reset (MqStreamCtx * ctx)
 {
   gst_segment_init (&ctx->in_segment, GST_FORMAT_UNDEFINED);
   gst_segment_init (&ctx->out_segment, GST_FORMAT_UNDEFINED);
-  ctx->in_running_time = ctx->out_running_time = GST_CLOCK_STIME_NONE;
+  ctx->out_fragment_start_runts = ctx->in_running_time = ctx->out_running_time =
+      GST_CLOCK_STIME_NONE;
   g_queue_foreach (&ctx->queued_bufs, (GFunc) mq_stream_buf_free, NULL);
   g_queue_clear (&ctx->queued_bufs);
 }
@@ -1125,33 +1127,46 @@ send_fragment_opened_closed_msg (GstSplitMuxSink * splitmux, gboolean opened,
     GstElement * sink)
 {
   gchar *location = NULL;
-  GstMessage *msg;
   const gchar *msg_name = opened ?
       "splitmuxsink-fragment-opened" : "splitmuxsink-fragment-closed";
-  GstClockTime running_time = splitmux->reference_ctx->out_running_time;
+  OutputFragmentInfo *out_fragment_info = &splitmux->out_fragment_info;
 
   if (!opened) {
-    GstClockTime *rtime = g_object_get_qdata (G_OBJECT (sink), RUNNING_TIME);
-    if (rtime)
-      running_time = *rtime;
+    OutputFragmentInfo *sink_fragment_info =
+        g_object_get_qdata (G_OBJECT (sink), SINK_FRAGMENT_INFO);
+    if (sink_fragment_info != NULL) {
+      out_fragment_info = sink_fragment_info;
+    }
   }
 
   if (g_object_class_find_property (G_OBJECT_GET_CLASS (sink),
-          "location") != NULL)
+          "location") != NULL) {
     g_object_get (sink, "location", &location, NULL);
+  }
 
   GST_DEBUG_OBJECT (splitmux,
       "Sending %s message. Running time %" GST_TIME_FORMAT " location %s",
-      msg_name, GST_TIME_ARGS (running_time), GST_STR_NULL (location));
+      msg_name, GST_TIME_ARGS (out_fragment_info->last_running_time),
+      GST_STR_NULL (location));
 
   /* If it's in the middle of a teardown, the reference_ctc might have become
    * NULL */
   if (splitmux->reference_ctx) {
-    msg = gst_message_new_element (GST_OBJECT (splitmux),
-        gst_structure_new (msg_name,
-            "location", G_TYPE_STRING, location,
-            "running-time", GST_TYPE_CLOCK_TIME, running_time,
-            "sink", GST_TYPE_ELEMENT, sink, NULL));
+    GstStructure *s = gst_structure_new (msg_name,
+        "location", G_TYPE_STRING, location,
+        "running-time", GST_TYPE_CLOCK_TIME,
+        out_fragment_info->last_running_time, "sink", GST_TYPE_ELEMENT,
+        sink, NULL);
+
+    if (!opened) {
+      GstClockTime offset = out_fragment_info->fragment_offset;
+      GstClockTime duration = out_fragment_info->fragment_duration;
+
+      gst_structure_set (s,
+          "fragment-offset", GST_TYPE_CLOCK_TIME, offset,
+          "fragment-duration", GST_TYPE_CLOCK_TIME, duration, NULL);
+    }
+    GstMessage *msg = gst_message_new_element (GST_OBJECT (splitmux), s);
     gst_element_post_message (GST_ELEMENT_CAST (splitmux), msg);
   }
 
@@ -1250,6 +1265,43 @@ all_contexts_are_async_eos (GstSplitMuxSink * splitmux)
   return ret;
 }
 
+/* Called with splitmux lock held before ending a fragment,
+ * to update the fragment info used for sending fragment opened/closed messages */
+static void
+update_output_fragment_info (GstSplitMuxSink * splitmux)
+{
+  // Update the fragment output info before finalization
+
+  GstClockTime offset =
+      splitmux->out_fragment_start_runts - splitmux->out_start_runts;
+
+  GstClockTime duration = GST_CLOCK_TIME_NONE;
+
+  /* Look for the largest duration across all streams */
+  for (GList * item = splitmux->contexts; item; item = item->next) {
+    MqStreamCtx *ctx = item->data;
+    if (ctx->out_running_time_end > splitmux->out_fragment_start_runts) {
+      GstClockTime ctx_duration =
+          ctx->out_running_time_end - splitmux->out_fragment_start_runts;
+      if (!GST_CLOCK_TIME_IS_VALID (duration) || ctx_duration > duration) {
+        duration = ctx_duration;
+      }
+    }
+  }
+
+  GST_LOG_OBJECT (splitmux,
+      "Updating fragment info with reference TS %" GST_STIME_FORMAT
+      " with fragment-offset %" GST_TIMEP_FORMAT
+      " and fragment-duration %" GST_TIMEP_FORMAT,
+      GST_STIME_ARGS (splitmux->reference_ctx->out_running_time),
+      &offset, &duration);
+
+  splitmux->out_fragment_info.last_running_time =
+      splitmux->reference_ctx->out_running_time;
+  splitmux->out_fragment_info.fragment_offset = offset;
+  splitmux->out_fragment_info.fragment_duration = duration;
+}
+
 /* Called with splitmux lock held to check if this output
  * context needs to sleep to wait for the release of the
  * next GOP, or to send EOS to close out the current file
@@ -1286,6 +1338,8 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         GST_STIME_ARGS (my_max_out_running_time));
 
     if (can_output) {
+      /* Always outputting everything up to the next max_out_running_time
+       * before advancing the state machine */
       if (splitmux->max_out_running_time != GST_CLOCK_STIME_NONE &&
           ctx->out_running_time < my_max_out_running_time) {
         return GST_FLOW_OK;
@@ -1303,14 +1357,18 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
         case SPLITMUX_OUTPUT_STATE_ENDING_STREAM:
           /* We've reached the max out running_time to get here, so end this file now */
           if (ctx->out_eos == FALSE) {
+            update_output_fragment_info (splitmux);
+
             if (splitmux->async_finalize) {
               /* For async finalization, we must store the fragment timing
                * info on the element via qdata, because EOS will be processed
                * asynchronously */
-              GstClockTime *sink_running_time = g_new (GstClockTime, 1);
-              *sink_running_time = splitmux->reference_ctx->out_running_time;
+
+              OutputFragmentInfo *sink_fragment_info =
+                  g_new (OutputFragmentInfo, 1);
+              *sink_fragment_info = splitmux->out_fragment_info;
               g_object_set_qdata_full (G_OBJECT (splitmux->sink),
-                  RUNNING_TIME, sink_running_time, g_free);
+                  SINK_FRAGMENT_INFO, sink_fragment_info, g_free);
 
               /* We must set EOS asynchronously at this point. We cannot defer
                * it, because we need all contexts to wake up, for the
@@ -1333,9 +1391,15 @@ complete_or_wait_on_out (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
               send_eos (splitmux, ctx);
               continue;
             }
+          } else if (splitmux->output_state ==
+              SPLITMUX_OUTPUT_STATE_ENDING_STREAM) {
+            GST_LOG_OBJECT (splitmux,
+                "At end-of-stream state, and context %p is already EOS. Returning.",
+                ctx);
+            return GST_FLOW_OK;
           } else {
             GST_INFO_OBJECT (splitmux,
-                "At end-of-file state, but context %p is already EOS", ctx);
+                "At end-of-file state, and context %p is already EOS.", ctx);
           }
           break;
         case SPLITMUX_OUTPUT_STATE_START_NEXT_FILE:
@@ -1721,18 +1785,23 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
         locked = TRUE;
         if (splitmux->output_state == SPLITMUX_OUTPUT_STATE_STOPPED)
           goto beach;
+
+        GST_INFO_OBJECT (splitmux,
+            "Have EOS event at pad %" GST_PTR_FORMAT " ctx %p", pad, ctx);
         ctx->out_eos = TRUE;
 
         if (ctx == splitmux->reference_ctx) {
+          GST_INFO_OBJECT (splitmux,
+              "EOS on reference context - ending the recording");
           splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_STREAM;
+          update_output_fragment_info (splitmux);
+
           // Waiting before outputting will ensure the muxer end-of-stream
           // qdata is set without racing against this EOS event reaching the muxer
           wait = TRUE;
           GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
         }
 
-        GST_INFO_OBJECT (splitmux,
-            "Have EOS event at pad %" GST_PTR_FORMAT " ctx %p", pad, ctx);
         break;
       case GST_EVENT_GAP:{
         GstClockTime gap_ts;
@@ -1822,6 +1891,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
               "New caps were not accepted. Switching output file");
           if (ctx->out_eos == FALSE) {
             splitmux->output_state = SPLITMUX_OUTPUT_STATE_ENDING_FILE;
+            update_output_fragment_info (splitmux);
             GST_SPLITMUX_BROADCAST_OUTPUT (splitmux);
           }
         }
@@ -1871,6 +1941,7 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
     splitmux->queued_keyframes--;
 
   ctx->out_running_time = buf_info->run_ts;
+
   ctx->cur_out_buffer = gst_pad_probe_info_get_buffer (info);
 
   GST_LOG_OBJECT (splitmux,
@@ -1884,9 +1955,56 @@ handle_mq_output (GstPad * pad, GstPadProbeInfo * info, MqStreamCtx * ctx)
 
   splitmux->muxed_out_bytes += buf_info->buf_size;
 
+  if (GST_CLOCK_STIME_IS_VALID (buf_info->run_ts)) {
+    if (!GST_CLOCK_STIME_IS_VALID (ctx->out_fragment_start_runts)) {
+      ctx->out_fragment_start_runts = buf_info->run_ts;
+
+      /* For the first fragment check if this is the earliest of all start running times */
+      if (splitmux->fragment_id == 1) {
+        if (!GST_CLOCK_STIME_IS_VALID (splitmux->out_start_runts)
+            || (ctx->out_fragment_start_runts < splitmux->out_start_runts)) {
+          splitmux->out_start_runts = ctx->out_fragment_start_runts;
+          GST_LOG_OBJECT (splitmux,
+              "Overall recording start TS now %" GST_STIMEP_FORMAT,
+              &splitmux->out_start_runts);
+        }
+      }
+
+      if (!GST_CLOCK_STIME_IS_VALID (splitmux->out_fragment_start_runts)
+          || (ctx->out_fragment_start_runts <
+              splitmux->out_fragment_start_runts)) {
+        splitmux->out_fragment_start_runts = ctx->out_fragment_start_runts;
+
+        GST_LOG_OBJECT (splitmux,
+            "Overall fragment start TS now %" GST_STIMEP_FORMAT,
+            &splitmux->out_fragment_start_runts);
+      }
+
+      GST_LOG_OBJECT (splitmux,
+          "Pad %" GST_PTR_FORMAT " buffer run TS %" GST_STIME_FORMAT
+          " is first for this fragment", pad,
+          GST_STIME_ARGS (ctx->out_fragment_start_runts));
+    }
+
+    /* Extend the context end running time if it grew */
+    GstClockTime end_run_ts = buf_info->run_ts;
+    if (GST_CLOCK_TIME_IS_VALID (buf_info->duration)) {
+      end_run_ts += buf_info->duration;
+    }
+    if (!GST_CLOCK_TIME_IS_VALID (ctx->out_running_time_end) ||
+        end_run_ts > ctx->out_running_time_end) {
+      ctx->out_running_time_end = end_run_ts;
+
+      GstClockTimeDiff duration = end_run_ts - ctx->out_fragment_start_runts;
+      GST_LOG_OBJECT (splitmux,
+          "Pad %" GST_PTR_FORMAT " fragment duration now %" GST_STIMEP_FORMAT,
+          pad, &duration);
+    }
+  }
 #ifndef GST_DISABLE_GST_DEBUG
   {
     GstBuffer *buf = gst_pad_probe_info_get_buffer (info);
+
     GST_LOG_OBJECT (pad, "Returning to pass buffer %" GST_PTR_FORMAT
         " run ts %" GST_STIME_FORMAT, buf,
         GST_STIME_ARGS (ctx->out_running_time));
@@ -1947,6 +2065,7 @@ restart_context (MqStreamCtx * ctx, GstSplitMuxSink * splitmux)
   /* Clear EOS flag if not actually EOS */
   ctx->out_eos = GST_PAD_IS_EOS (ctx->srcpad);
   ctx->out_eos_async_done = ctx->out_eos;
+  ctx->out_fragment_start_runts = GST_CLOCK_STIME_NONE;
 
   gst_object_unref (peer);
 }
@@ -2162,6 +2281,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   GST_SPLITMUX_LOCK (splitmux);
   set_next_filename (splitmux, ctx);
   splitmux->muxed_out_bytes = 0;
+  splitmux->out_fragment_start_runts = GST_CLOCK_STIME_NONE;
   GST_SPLITMUX_UNLOCK (splitmux);
 
   if (gst_element_set_state (sink,
@@ -3595,6 +3715,7 @@ gst_splitmux_sink_request_new_pad (GstElement * element,
   GST_DEBUG_OBJECT (splitmux, "splitmuxsink pad %" GST_PTR_FORMAT
       " feeds queue pad %" GST_PTR_FORMAT, ret, q_sink);
 
+  ctx->ctx_id = g_list_length (splitmux->contexts);
   splitmux->contexts = g_list_append (splitmux->contexts, ctx);
 
   g_free (gname);
@@ -4008,6 +4129,9 @@ gst_splitmux_sink_reset (GstSplitMuxSink * splitmux)
 
   g_queue_foreach (&splitmux->out_cmd_q, (GFunc) out_cmd_buf_free, NULL);
   g_queue_clear (&splitmux->out_cmd_q);
+
+  splitmux->out_fragment_start_runts = splitmux->out_start_runts =
+      GST_CLOCK_STIME_NONE;
 }
 
 static GstStateChangeReturn
