@@ -59,11 +59,9 @@ GST_START_TEST (test_unixfd_videotestsrc)
   gst_meta_register_custom ("unix-fd-custom-meta", tags, NULL, NULL, NULL);
 
   /* Ensure we don't have socket from previous failed test */
-  gchar *socket_path =
-      g_strdup_printf ("%s/unixfd-test-socket", g_get_user_runtime_dir ());
-  if (g_file_test (socket_path, G_FILE_TEST_EXISTS)) {
-    g_unlink (socket_path);
-  }
+  gchar *tempdir = g_dir_make_tmp ("unixfd-test-XXXXXX", &error);
+  g_assert_no_error (error);
+  gchar *socket_path = g_strdup_printf ("%s/socket", tempdir);
 
   /* Setup source */
   gchar *pipeline_str =
@@ -126,6 +124,9 @@ GST_START_TEST (test_unixfd_videotestsrc)
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
   fail_if (g_file_test (socket_path, G_FILE_TEST_EXISTS));
 
+  g_rmdir (tempdir);
+  g_free (tempdir);
+
   gst_object_unref (pipeline_service);
   gst_object_unref (pipeline_client_1);
   gst_object_unref (pipeline_client_2);
@@ -142,18 +143,16 @@ GST_START_TEST (test_unixfd_segment)
   GError *error = NULL;
 
   /* Ensure we don't have socket from previous failed test */
-  gchar *socket_path =
-      g_strdup_printf ("%s/unixfd-test-socket", g_get_user_runtime_dir ());
-  if (g_file_test (socket_path, G_FILE_TEST_EXISTS)) {
-    g_unlink (socket_path);
-  }
+  gchar *tempdir = g_dir_make_tmp ("unixfd-test-XXXXXX", &error);
+  g_assert_no_error (error);
+  gchar *socket_path = g_strdup_printf ("%s/socket", tempdir);
 
   GstCaps *caps = gst_caps_new_empty_simple ("video/x-raw");
 
   /* Setup service */
   gchar *pipeline_str =
       g_strdup_printf
-      ("appsrc name=src format=time handle-segment-change=true ! unixfdsink socket-path=%s sync=false async=false",
+      ("appsrc name=src format=time handle-segment-change=true ! unixfdsink socket-path=%s sync=false async=false wait-for-connection=true",
       socket_path);
   GstElement *pipeline_service = gst_parse_launch (pipeline_str, &error);
   g_assert_no_error (error);
@@ -215,6 +214,10 @@ GST_START_TEST (test_unixfd_segment)
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
   fail_unless (gst_element_set_state (pipeline_service,
           GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  g_rmdir (tempdir);
+  g_free (tempdir);
+
   gst_object_unref (pipeline_service);
   gst_object_unref (pipeline_client);
   g_free (socket_path);
