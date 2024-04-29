@@ -60,8 +60,11 @@ GST_DEBUG_CATEGORY (splitmux_debug);
 enum
 {
   PROP_0,
-  PROP_LOCATION
+  PROP_LOCATION,
+  PROP_NUM_OPEN_FRAGMENTS
 };
+
+#define DEFAULT_OPEN_FRAGMENTS 0
 
 enum
 {
@@ -234,6 +237,13 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
       g_param_spec_string ("location", "File Input Pattern",
           "Glob pattern for the location of the files to read", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_NUM_OPEN_FRAGMENTS,
+      g_param_spec_uint ("num-open-fragments", "Open files limit",
+          "Number of files to keep open simultaneously. "
+          "(0 = open all fragments at the start). "
+          "May still use slightly more if set to less than the number of streams in the files",
+          0, G_MAXUINT, DEFAULT_OPEN_FRAGMENTS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstSplitMuxSrc::format-location:
@@ -257,6 +267,7 @@ gst_splitmux_src_init (GstSplitMuxSrc * splitmux)
   g_rw_lock_init (&splitmux->pads_rwlock);
   splitmux->total_duration = GST_CLOCK_TIME_NONE;
   gst_segment_init (&splitmux->play_segment, GST_FORMAT_TIME);
+  splitmux->target_max_readers = DEFAULT_OPEN_FRAGMENTS;
 }
 
 static void
@@ -305,6 +316,11 @@ gst_splitmux_src_set_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (splitmux);
       break;
     }
+    case PROP_NUM_OPEN_FRAGMENTS:
+      GST_OBJECT_LOCK (splitmux);
+      splitmux->target_max_readers = g_value_get_uint (value);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -321,6 +337,11 @@ gst_splitmux_src_get_property (GObject * object, guint prop_id,
     case PROP_LOCATION:
       GST_OBJECT_LOCK (splitmux);
       g_value_set_string (value, splitmux->location);
+      GST_OBJECT_UNLOCK (splitmux);
+      break;
+    case PROP_NUM_OPEN_FRAGMENTS:
+      GST_OBJECT_LOCK (splitmux);
+      g_value_set_uint (value, splitmux->target_max_readers);
       GST_OBJECT_UNLOCK (splitmux);
       break;
     default:
@@ -433,9 +454,6 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
       gboolean need_no_more_pads;
 
       if (idx >= splitmux->num_parts) {
-        /* Shouldn't really happen! */
-        do_async_done (splitmux);
-        g_warn_if_reached ();
         break;
       }
 
@@ -544,7 +562,7 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
 }
 
 static GstSplitMuxPartReader *
-gst_splitmux_part_create (GstSplitMuxSrc * splitmux, char *filename)
+gst_splitmux_part_reader_create (GstSplitMuxSrc * splitmux, char *filename)
 {
   GstSplitMuxPartReader *r;
   GstBus *bus;
@@ -830,20 +848,69 @@ flushing:
   return;
 }
 
+static void
+reduce_active_readers (GstSplitMuxSrc * splitmux)
+{
+  /* Try and reduce the active reader count by deactivating the
+   * oldest reader if it's no longer in use */
+  if (splitmux->target_max_readers == 0) {
+    return;
+  }
+  while (g_queue_get_length (splitmux->active_parts) >=
+      splitmux->target_max_readers) {
+    GstSplitMuxPartReader *oldest_reader =
+        g_queue_peek_head (splitmux->active_parts);
+    if (gst_splitmux_part_reader_is_active (oldest_reader)) {
+      return;
+    }
+
+    GST_DEBUG_OBJECT (splitmux, "Stopping least recently used part %s",
+        oldest_reader->path);
+    oldest_reader = g_queue_pop_head (splitmux->active_parts);
+    gst_splitmux_part_reader_stop (oldest_reader);
+    g_object_unref (oldest_reader);
+  }
+}
+
+static void
+add_to_active_readers (GstSplitMuxSrc * splitmux,
+    GstSplitMuxPartReader * reader)
+{
+  if (splitmux->target_max_readers != 0) {
+    /* Check if it's already in the active reader pool, and move this reader
+     * to the tail, or else add a ref and push it on the tail */
+    if (gst_splitmux_part_reader_is_running (reader)) {
+      /* Already in the queue, and reffed, move it to the end without
+       * adding another ref */
+      gboolean in_queue = g_queue_remove (splitmux->active_parts, reader);
+      g_assert (in_queue == TRUE);
+    } else {
+      /* Putting it in the queue. Add a ref */
+      g_object_ref (reader);
+      /* When adding a new reader to the list, reduce active readers first */
+      reduce_active_readers (splitmux);
+    }
+    g_queue_push_tail (splitmux->active_parts, reader);
+  }
+}
+
 static gboolean
 gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
     GstSeekFlags extra_flags)
 {
-  GList *cur;
-
   GST_DEBUG_OBJECT (splitmux, "Activating part %d", part);
+  GstSplitMuxPartReader *reader = splitmux->parts[part];
 
   splitmux->cur_part = part;
-  if (!gst_splitmux_part_reader_activate (splitmux->parts[part],
-          &splitmux->play_segment, extra_flags))
+  add_to_active_readers (splitmux, reader);
+  if (!gst_splitmux_part_reader_activate (reader,
+          &splitmux->play_segment, extra_flags)) {
     return FALSE;
+  }
 
   SPLITMUX_SRC_PADS_RLOCK (splitmux);
+  GList *cur;
+
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
     SplitMuxSrcPad *splitpad = (SplitMuxSrcPad *) (cur->data);
@@ -878,6 +945,8 @@ gst_splitmux_src_prepare_next_part (GstSplitMuxSrc * splitmux)
 
   GST_DEBUG_OBJECT (splitmux, "Preparing file part %s (%u)",
       splitmux->parts[idx]->path, idx);
+
+  add_to_active_readers (splitmux, splitmux->parts[idx]);
 
   gst_splitmux_part_reader_set_start_offset (splitmux->parts[idx],
       splitmux->end_offset, FIXED_TS_OFFSET);
@@ -939,13 +1008,15 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   splitmux->running = TRUE;
   SPLITMUX_SRC_UNLOCK (splitmux);
 
+  splitmux->active_parts = g_queue_new ();
+
   splitmux->num_parts = g_strv_length (files);
 
   splitmux->parts = g_new0 (GstSplitMuxPartReader *, splitmux->num_parts);
 
   /* Create all part pipelines */
   for (i = 0; i < splitmux->num_parts; i++) {
-    splitmux->parts[i] = gst_splitmux_part_create (splitmux, files[i]);
+    splitmux->parts[i] = gst_splitmux_part_reader_create (splitmux, files[i]);
     if (splitmux->parts[i] == NULL)
       break;
   }
@@ -1008,16 +1079,12 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   splitmux->running = FALSE;
   GST_DEBUG_OBJECT (splitmux, "Stopping");
 
-  SPLITMUX_SRC_UNLOCK (splitmux);
-
-  /* Stop all part readers. We don't need the lock here,
-   * because all parts were created in _start()  */
+  /* Stop all part readers. */
   for (i = 0; i < splitmux->num_created_parts; i++) {
     if (splitmux->parts[i] == NULL)
       continue;
     gst_splitmux_part_reader_unprepare (splitmux->parts[i]);
   }
-  SPLITMUX_SRC_LOCK (splitmux);
 
   SPLITMUX_SRC_PADS_WLOCK (splitmux);
   pads_list = splitmux->pads;
@@ -1034,6 +1101,8 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   SPLITMUX_SRC_LOCK (splitmux);
 
   /* Now the pad task is stopped we can destroy the readers */
+  g_queue_free_full (splitmux->active_parts, g_object_unref);
+
   for (i = 0; i < splitmux->num_created_parts; i++) {
     if (splitmux->parts[i] == NULL)
       continue;
@@ -1047,6 +1116,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   splitmux->num_prepared_parts = 0;
   splitmux->num_created_parts = 0;
   splitmux->total_duration = GST_CLOCK_TIME_NONE;
+
   /* Reset playback segment */
   gst_segment_init (&splitmux->play_segment, GST_FORMAT_TIME);
 out:
@@ -1087,7 +1157,6 @@ gst_splitmux_find_output_pad (GstSplitMuxPartReader * part, GstPad * pad,
   GstPad *target = NULL;
   gboolean is_new_pad = FALSE;
 
-  SPLITMUX_SRC_LOCK (splitmux);
   SPLITMUX_SRC_PADS_WLOCK (splitmux);
   for (cur = g_list_first (splitmux->pads);
       cur != NULL; cur = g_list_next (cur)) {
@@ -1116,7 +1185,6 @@ gst_splitmux_find_output_pad (GstSplitMuxPartReader * part, GstPad * pad,
     is_new_pad = TRUE;
   }
   SPLITMUX_SRC_PADS_WUNLOCK (splitmux);
-  SPLITMUX_SRC_UNLOCK (splitmux);
 
   g_free (pad_name);
 
@@ -1212,8 +1280,11 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
   SPLITMUX_SRC_LOCK (splitmux);
 
   /* If all pads are done with this part, deactivate it */
-  if (gst_splitmux_part_is_eos (splitmux->parts[splitpad->cur_part]))
+  if (gst_splitmux_part_is_eos (splitmux->parts[splitpad->cur_part])) {
+    GST_DEBUG_OBJECT (splitmux, "All pads in part %d finished. Deactivating it",
+        cur_part);
     gst_splitmux_part_reader_deactivate (splitmux->parts[cur_part]);
+  }
 
   if (splitmux->play_segment.rate >= 0.0) {
     if (splitmux->play_segment.stop != -1) {
@@ -1244,11 +1315,6 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
         " moving to part %d", splitpad, next_part);
     splitpad->cur_part = next_part;
     splitpad->reader = splitmux->parts[splitpad->cur_part];
-    if (splitpad->part_pad)
-      gst_object_unref (splitpad->part_pad);
-    splitpad->part_pad =
-        gst_splitmux_part_reader_lookup_pad (splitpad->reader,
-        (GstPad *) (splitpad));
 
     if (splitmux->cur_part != next_part) {
       if (!gst_splitmux_part_reader_is_active (splitpad->reader)) {
@@ -1264,12 +1330,22 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
         GST_DEBUG_OBJECT (splitpad,
             "First pad to change part. Activating part %d with seg %"
             GST_SEGMENT_FORMAT, next_part, &tmp);
+        add_to_active_readers (splitmux, splitpad->reader);
+
         if (!gst_splitmux_part_reader_activate (splitpad->reader, &tmp,
-                GST_SEEK_FLAG_NONE))
+                GST_SEEK_FLAG_NONE)) {
           goto error;
+        }
       }
       splitmux->cur_part = next_part;
     }
+
+    if (splitpad->part_pad)
+      gst_object_unref (splitpad->part_pad);
+    splitpad->part_pad =
+        gst_splitmux_part_reader_lookup_pad (splitpad->reader,
+        (GstPad *) (splitpad));
+
     res = TRUE;
   }
 
@@ -1424,12 +1500,15 @@ splitmux_src_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       splitmux->segment_seqnum = seqnum;
 
       /* Work out where to start from now */
-      for (i = 0; i < splitmux->num_parts; i++) {
-        GstSplitMuxPartReader *reader = splitmux->parts[i];
-        GstClockTime part_end =
-            gst_splitmux_part_reader_get_end_offset (reader);
+      for (i = 0; i < splitmux->num_parts - 1; i++) {
+        GstSplitMuxPartReader *reader = splitmux->parts[i + 1];
+        GstClockTime part_start =
+            gst_splitmux_part_reader_get_start_offset (reader);
 
-        if (part_end > position)
+        GST_LOG_OBJECT (splitmux, "Part %d has start offset %" GST_TIMEP_FORMAT
+            " (want position %" GST_TIMEP_FORMAT ")", i, &part_start,
+            &position);
+        if (position < part_start)
           break;
       }
       if (i == splitmux->num_parts)

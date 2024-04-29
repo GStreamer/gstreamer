@@ -67,6 +67,9 @@ struct _GstSplitMuxSrc
   GstClockTime end_offset;
   GstSegment play_segment;
   guint32 segment_seqnum;
+
+  guint   target_max_readers; /* Maximum number of readers we try to keep open */
+  GQueue *active_parts;
 };
 
 struct _GstSplitMuxSrcClass

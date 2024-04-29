@@ -37,6 +37,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstSplitMuxPartReader GstSplitMuxPartReader;
 typedef struct _GstSplitMuxPartReaderClass GstSplitMuxPartReaderClass;
+typedef struct _GstSplitMuxPartReaderInfo GstSplitMuxPartReaderInfo;
 typedef struct _SplitMuxSrcPad SplitMuxSrcPad;
 typedef struct _SplitMuxSrcPadClass SplitMuxSrcPadClass;
 
@@ -52,11 +53,18 @@ typedef enum
 
 typedef GstPad *(*GstSplitMuxPartReaderPadCb)(GstSplitMuxPartReader *reader, GstPad *src_pad, gpointer cb_data);
 
+struct _GstSplitMuxPartReaderInfo
+{
+  GstClockTime duration;
+  GstClockTime start_offset;
+};
+
 struct _GstSplitMuxPartReader
 {
   GstPipeline parent;
 
   GstSplitMuxPartState prep_state;
+  gboolean need_duration_measuring;
 
   gchar *path;
 
@@ -71,9 +79,10 @@ struct _GstSplitMuxPartReader
   gboolean flushing;
   gboolean no_more_pads;
 
-  GstClockTime duration;
-  GstClockTime start_offset;
+  GstSplitMuxPartReaderInfo info;
+
   GstClockTime ts_offset;
+  GstClockTime end_offset;
 
   GList *pads;
 
@@ -100,6 +109,7 @@ void gst_splitmux_part_reader_set_callbacks (GstSplitMuxPartReader *reader,
     gpointer cb_data, GstSplitMuxPartReaderPadCb get_pad_cb);
 gboolean gst_splitmux_part_reader_prepare (GstSplitMuxPartReader *part);
 void gst_splitmux_part_reader_unprepare (GstSplitMuxPartReader *part);
+gboolean gst_splitmux_part_reader_is_running (GstSplitMuxPartReader *part);
 void gst_splitmux_part_reader_set_location (GstSplitMuxPartReader *reader,
     const gchar *path);
 gboolean gst_splitmux_part_is_eos (GstSplitMuxPartReader *reader);
@@ -107,6 +117,8 @@ gboolean gst_splitmux_part_is_eos (GstSplitMuxPartReader *reader);
 gboolean gst_splitmux_part_reader_activate (GstSplitMuxPartReader *part, GstSegment *seg, GstSeekFlags extra_flags);
 void gst_splitmux_part_reader_deactivate (GstSplitMuxPartReader *part);
 gboolean gst_splitmux_part_reader_is_active (GstSplitMuxPartReader *part);
+
+void gst_splitmux_part_reader_stop (GstSplitMuxPartReader *part);
 
 gboolean gst_splitmux_part_reader_src_query (GstSplitMuxPartReader *part, GstPad *src_pad, GstQuery * query);
 void gst_splitmux_part_reader_set_start_offset (GstSplitMuxPartReader *part, GstClockTime time_offset, GstClockTime ts_offset);
