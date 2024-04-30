@@ -403,7 +403,7 @@ gst_qsv_h264_dec_process_input (GstQsvDecoder * decoder,
     memcpy (data + sizeof (start_code), nalu.data + nalu.offset, nalu.size);
 
     mem = gst_memory_new_wrapped ((GstMemoryFlags) 0, data, size, 0, size,
-        nullptr, (GDestroyNotify) g_free);
+        data, (GDestroyNotify) g_free);
     gst_buffer_append_memory (new_buf, mem);
   } while (pres == GST_H264_PARSER_OK);
 
