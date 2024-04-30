@@ -88,6 +88,8 @@ static gboolean gst_vtdec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vtdec_finish (GstVideoDecoder * decoder);
 static gboolean gst_vtdec_sink_event (GstVideoDecoder * decoder,
     GstEvent * event);
+static GstStateChangeReturn gst_vtdec_change_state (GstElement * element,
+    GstStateChange transition);
 static GstFlowReturn gst_vtdec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 
@@ -188,6 +190,7 @@ gst_vtdec_class_init (GstVtdecClass * klass)
 
   gobject_class->finalize = gst_vtdec_finalize;
   element_class->set_context = gst_vtdec_set_context;
+  element_class->change_state = gst_vtdec_change_state;
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vtdec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vtdec_stop);
   video_decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_vtdec_negotiate);
@@ -254,6 +257,8 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
   GstVideoCodecFrame *frame;
   GstVtdec *vtdec = GST_VTDEC (decoder);
 
+  GST_DEBUG_OBJECT (vtdec, "stop");
+
   gst_vtdec_drain_decoder (GST_VIDEO_DECODER_CAST (vtdec), TRUE);
   vtdec->downstream_ret = GST_FLOW_FLUSHING;
 
@@ -288,8 +293,6 @@ gst_vtdec_stop (GstVideoDecoder * decoder)
   gst_clear_object (&vtdec->device);
   gst_clear_object (&vtdec->instance);
 #endif
-
-  GST_DEBUG_OBJECT (vtdec, "stop");
 
   return TRUE;
 }
@@ -803,6 +806,20 @@ gst_vtdec_sink_event (GstVideoDecoder * decoder, GstEvent * event)
   }
 
   return ret;
+}
+
+static GstStateChangeReturn
+gst_vtdec_change_state (GstElement * element, GstStateChange transition)
+{
+  GstVtdec *self = GST_VTDEC (element);
+
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
+    GST_DEBUG_OBJECT (self, "pausing output loop on PAUSED->READY");
+    gst_vtdec_pause_output_loop (self);
+  }
+
+  return GST_ELEMENT_CLASS (gst_vtdec_parent_class)->change_state (element,
+      transition);
 }
 
 static GstFlowReturn
