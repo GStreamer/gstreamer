@@ -384,20 +384,6 @@ bail:
   }
 }
 
-/* set a common pipeline stage valid for any queue to avoid Vulkan Validation
- * errors */
-static void
-reset_pipeline_stage_mask (GstBuffer * buf)
-{
-  guint i, n = gst_buffer_n_memory (buf);
-
-  for (i = 0; i < n; i++) {
-    GstVulkanImageMemory *vk_mem =
-        (GstVulkanImageMemory *) gst_buffer_peek_memory (buf, i);
-    vk_mem->barrier.parent.pipeline_stages = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
-  }
-}
-
 static GstVulkanH264Picture *
 gst_vulkan_h264_picture_new (GstVulkanH264Decoder * self, GstBuffer * out)
 {
@@ -405,7 +391,6 @@ gst_vulkan_h264_picture_new (GstVulkanH264Decoder * self, GstBuffer * out)
 
   pic = g_new0 (GstVulkanH264Picture, 1);
   gst_vulkan_decoder_picture_init (self->decoder, &pic->base, out);
-  reset_pipeline_stage_mask (out);
 
   return pic;
 }
@@ -1287,8 +1272,6 @@ gst_vulkan_h264_decoder_output_picture (GstH264Decoder * decoder,
   }
 
   gst_h264_picture_unref (picture);
-
-  reset_pipeline_stage_mask (frame->output_buffer);
 
   return gst_video_decoder_finish_frame (vdec, frame);
 }
