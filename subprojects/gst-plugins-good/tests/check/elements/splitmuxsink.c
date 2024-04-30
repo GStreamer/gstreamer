@@ -489,6 +489,62 @@ GST_START_TEST (test_splitmuxsink)
 
 GST_END_TEST;
 
+static GstPadProbeReturn
+remove_timestamps (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  guint *num_buffers = (guint *) user_data;
+
+  if (*num_buffers == 5) {
+    GstBuffer *buf = gst_pad_probe_info_get_buffer (info);
+    buf = gst_buffer_copy (buf);
+    GST_BUFFER_PTS (buf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
+    gst_pad_probe_info_set_buffer (info, buf);
+  }
+
+  *num_buffers += 1;
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_splitmuxsink_missing_timestamp)
+{
+  GstMessage *msg;
+  GstElement *pipeline;
+  GstElement *sink;
+  GstPad *probe_pad;
+  guint num_buffers = 0;
+  gchar *dest_pattern;
+
+  pipeline =
+      gst_parse_launch
+      ("videotestsrc num-buffers=8 ! video/x-raw,width=80,height=64,framerate=10/1 ! videoconvert !"
+      " queue ! theoraenc keyframe-force=5 ! splitmuxsink name=splitsink "
+      " max-size-time=1000000 max-size-bytes=1000000 muxer=oggmux", NULL);
+  fail_if (pipeline == NULL);
+  sink = gst_bin_get_by_name (GST_BIN (pipeline), "splitsink");
+  fail_if (sink == NULL);
+  g_signal_connect (sink, "format-location-full",
+      (GCallback) check_format_location, NULL);
+  dest_pattern = g_build_filename (tmpdir, "out%05d.m4v", NULL);
+  g_object_set (G_OBJECT (sink), "location", dest_pattern, NULL);
+  g_free (dest_pattern);
+
+  probe_pad = gst_element_get_static_pad (sink, "video");
+  fail_if (probe_pad == NULL);
+
+  gst_pad_add_probe (probe_pad, GST_PAD_PROBE_TYPE_BUFFER, remove_timestamps,
+      &num_buffers, NULL);
+
+  msg = run_pipeline (pipeline, 0, NULL, NULL);
+
+  fail_unless (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR);
+  gst_message_unref (msg);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_splitmuxsink_clean_failure)
 {
   GstMessage *msg;
@@ -953,6 +1009,7 @@ splitmuxsink_suite (void)
     tcase_add_checked_fixture (tc_chain, tempdir_setup, tempdir_cleanup);
 
     tcase_add_test (tc_chain, test_splitmuxsink);
+    tcase_add_test (tc_chain, test_splitmuxsink_missing_timestamp);
     tcase_add_test (tc_chain, test_splitmuxsink_clean_failure);
 
     if (have_matroska && have_vorbis) {
