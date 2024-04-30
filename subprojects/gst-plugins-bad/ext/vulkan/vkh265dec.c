@@ -255,7 +255,7 @@ gst_vulkan_h265_decoder_stop (GstVideoDecoder * decoder)
   if (self->output_state)
     gst_video_codec_state_unref (self->output_state);
 
-  return TRUE;
+  return GST_VIDEO_DECODER_CLASS (parent_class)->stop (decoder);
 }
 
 static gboolean
