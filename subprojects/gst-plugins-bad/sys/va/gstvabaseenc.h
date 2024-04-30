@@ -56,9 +56,6 @@ struct _GstVaBaseEnc
 
   GstClockTime start_pts;
   GstClockTime frame_duration;
-  /* Total frames we handled since reconfig. */
-  guint input_frame_count;
-  guint output_frame_count;
 
   GQueue reorder_list;
   GQueue ref_list;

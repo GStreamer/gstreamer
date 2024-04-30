@@ -160,8 +160,6 @@ struct _GstVaVp9EncFrame
   gint frame_num;
   guint32 flags;
   guint pyramid_level;
-  /* The total frame count we handled. */
-  guint total_frame_count;
   gboolean bidir_ref;
   gint8 ref_frame_idx[GST_VP9_REF_FRAME_MAX];
   /* The index in reference list to update */
@@ -267,7 +265,6 @@ gst_va_vp9_enc_frame_new (void)
   frame->frame_num = -1;
   frame->type = FRAME_TYPE_INVALID;
   frame->picture = NULL;
-  frame->total_frame_count = 0;
   frame->pyramid_level = 0;
   frame->flags = 0;
   frame->bidir_ref = FALSE;
@@ -294,7 +291,6 @@ gst_va_vp9_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   GstVaVp9EncFrame *frame_in;
 
   frame_in = gst_va_vp9_enc_frame_new ();
-  frame_in->total_frame_count = base->input_frame_count++;
   gst_video_codec_frame_set_user_data (frame, frame_in,
       gst_va_vp9_enc_frame_free);
 
@@ -2738,8 +2734,6 @@ gst_va_vp9_enc_prepare_output (GstVaBaseEnc * base,
 
   gst_buffer_replace (&frame->output_buffer, buf);
   gst_clear_buffer (&buf);
-
-  base->output_frame_count++;
 
   return TRUE;
 }
