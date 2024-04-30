@@ -130,12 +130,6 @@ gst_va_base_enc_start (GstVideoEncoder * venc)
 
   base->input_state = NULL;
 
-  /* Set the minimum pts to some huge value (1000 hours). This keeps
-   * the dts at the start of the stream from needing to be
-   * negative. */
-  base->start_pts = GST_SECOND * 60 * 60 * 1000;
-  gst_video_encoder_set_min_pts (venc, base->start_pts);
-
   return TRUE;
 }
 
