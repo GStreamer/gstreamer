@@ -1738,7 +1738,7 @@ subtitles), are currently ignored.</doc>
 GstEncodingProfile. Refer to the encoding-profile documentation for details
 on the format.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
-        <return-value transfer-ownership="full">
+        <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">A newly created GstEncodingProfile or NULL if the
 input string is not a valid encoding profile serialization format.</doc>
           <type name="EncodingProfile" c:type="GstEncodingProfile*"/>
@@ -2197,8 +2197,7 @@ single segment before the encoder, #FALSE otherwise.</doc>
 serialization format".</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
         <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">A string representation of the GstEncodingProfile,
-  or NULL if the input is invalid.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">A string representation of the GstEncodingProfile.</doc>
           <type name="utf8" c:type="gchar*"/>
         </return-value>
         <parameters>

@@ -2078,7 +2078,7 @@ error:
  *
  * Since: 1.26
  *
- * Returns: (transfer full): A newly created GstEncodingProfile or NULL if the
+ * Returns: (transfer full) (nullable): A newly created GstEncodingProfile or NULL if the
  * input string is not a valid encoding profile serialization format.
  */
 GstEncodingProfile *
@@ -2178,8 +2178,7 @@ serialize_profile (GString * res, GstEncodingProfile * profile)
  *
  * Since: 1.26
  *
- * Returns: (transfer full): A string representation of the GstEncodingProfile,
- *   or NULL if the input is invalid.
+ * Returns: (transfer full): A string representation of the GstEncodingProfile.
  */
 gchar *
 gst_encoding_profile_to_string (GstEncodingProfile * profile)
