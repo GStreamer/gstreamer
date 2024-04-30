@@ -125,9 +125,6 @@ gst_va_base_enc_start (GstVideoEncoder * venc)
 
   gst_va_base_enc_reset_state (base);
 
-  base->input_frame_count = 0;
-  base->output_frame_count = 0;
-
   base->input_state = NULL;
 
   return TRUE;

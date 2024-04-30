@@ -170,8 +170,6 @@ struct _GstVaAV1EncFrame
   gint frame_num;
   guint32 flags;
   guint pyramid_level;
-  /* The total frame count we handled. */
-  guint total_frame_count;
   gboolean bidir_ref;
   gint8 ref_frame_idx[GST_AV1_NUM_REF_FRAMES];
   /* The index in reference list to update */
@@ -510,7 +508,6 @@ gst_va_av1_enc_frame_new (void)
   frame->temporal_id = 0;
   frame->spatial_id = 0;
   frame->picture = NULL;
-  frame->total_frame_count = 0;
   frame->pyramid_level = 0;
   frame->flags = 0;
   frame->bidir_ref = FALSE;
@@ -537,7 +534,6 @@ gst_va_av1_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   GstVaAV1EncFrame *frame_in;
 
   frame_in = gst_va_av1_enc_frame_new ();
-  frame_in->total_frame_count = base->input_frame_count++;
   gst_video_codec_frame_set_user_data (frame, frame_in,
       gst_va_av1_enc_frame_free);
 
@@ -4054,7 +4050,6 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
   }
 
   *complete = TRUE;
-  base->output_frame_count++;
 
   GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
   if (frame_enc->frame_num == 0) {
