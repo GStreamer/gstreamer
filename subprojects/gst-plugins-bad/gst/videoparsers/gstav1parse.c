@@ -106,6 +106,8 @@ struct _GstAV1Parse
   gint subsampling_x;
   gint subsampling_y;
   gboolean mono_chrome;
+  guint8 seq_level_idx;
+  guint8 seq_tier;
   guint8 bit_depth;
   gchar *colorimetry;
   GstAV1Profile profile;
@@ -311,6 +313,8 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->subsampling_y = -1;
   self->mono_chrome = FALSE;
   self->profile = GST_AV1_PROFILE_UNDEFINED;
+  self->seq_level_idx = GST_AV1_SEQ_LEVEL_MAX;
+  self->seq_tier = 0;
   self->bit_depth = 0;
   self->align = GST_AV1_PARSE_ALIGN_NONE;
   self->in_align = GST_AV1_PARSE_ALIGN_NONE;
@@ -417,6 +421,65 @@ gst_av1_parse_profile_to_string (GstAV1Profile profile)
       return "high";
     case GST_AV1_PROFILE_2:
       return "professional";
+    default:
+      break;
+  }
+
+  return NULL;
+}
+
+static const gchar *
+gst_av1_parse_seq_level_idx_to_string (GstAV1SeqLevels seq_level_idx)
+{
+  switch (seq_level_idx) {
+    case GST_AV1_SEQ_LEVEL_2_0:
+      return "2.0";
+    case GST_AV1_SEQ_LEVEL_2_1:
+      return "2.1";
+    case GST_AV1_SEQ_LEVEL_2_2:
+      return "2.2";
+    case GST_AV1_SEQ_LEVEL_2_3:
+      return "2.3";
+    case GST_AV1_SEQ_LEVEL_3_0:
+      return "3.0";
+    case GST_AV1_SEQ_LEVEL_3_1:
+      return "3.1";
+    case GST_AV1_SEQ_LEVEL_3_2:
+      return "3.2";
+    case GST_AV1_SEQ_LEVEL_3_3:
+      return "3.3";
+    case GST_AV1_SEQ_LEVEL_4_0:
+      return "4.0";
+    case GST_AV1_SEQ_LEVEL_4_1:
+      return "4.1";
+    case GST_AV1_SEQ_LEVEL_4_2:
+      return "4.2";
+    case GST_AV1_SEQ_LEVEL_4_3:
+      return "4.3";
+    case GST_AV1_SEQ_LEVEL_5_0:
+      return "5.0";
+    case GST_AV1_SEQ_LEVEL_5_1:
+      return "5.1";
+    case GST_AV1_SEQ_LEVEL_5_2:
+      return "5.2";
+    case GST_AV1_SEQ_LEVEL_5_3:
+      return "5.3";
+    case GST_AV1_SEQ_LEVEL_6_0:
+      return "6.0";
+    case GST_AV1_SEQ_LEVEL_6_1:
+      return "6.1";
+    case GST_AV1_SEQ_LEVEL_6_2:
+      return "6.2";
+    case GST_AV1_SEQ_LEVEL_6_3:
+      return "6.3";
+    case GST_AV1_SEQ_LEVEL_7_0:
+      return "7.0";
+    case GST_AV1_SEQ_LEVEL_7_1:
+      return "7.1";
+    case GST_AV1_SEQ_LEVEL_7_2:
+      return "7.2";
+    case GST_AV1_SEQ_LEVEL_7_3:
+      return "7.3";
     default:
       break;
   }
@@ -647,6 +710,7 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   gint width, height;
   gint par_n = 0, par_d = 0;
   const gchar *profile = NULL;
+  const gchar *level = NULL;
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (self))))
     self->update_caps = TRUE;
@@ -737,6 +801,13 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   profile = gst_av1_parse_profile_to_string (self->profile);
   if (profile)
     gst_caps_set_simple (final_caps, "profile", G_TYPE_STRING, profile, NULL);
+
+  level = gst_av1_parse_seq_level_idx_to_string (self->seq_level_idx);
+  if (level)
+    gst_caps_set_simple (final_caps, "level", G_TYPE_STRING, level, NULL);
+
+  gst_caps_set_simple (final_caps, "seq-tier", G_TYPE_UINT, self->seq_tier,
+      NULL);
 
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
 
@@ -1264,12 +1335,15 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
     else
       cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
 
-    cinfo.matrix = gst_video_color_matrix_from_iso
-        (seq_header.color_config.matrix_coefficients);
-    cinfo.transfer = gst_video_transfer_function_from_iso
-        (seq_header.color_config.transfer_characteristics);
-    cinfo.primaries = gst_video_color_primaries_from_iso
-        (seq_header.color_config.color_primaries);
+    cinfo.matrix =
+        gst_video_color_matrix_from_iso (seq_header.
+        color_config.matrix_coefficients);
+    cinfo.transfer =
+        gst_video_transfer_function_from_iso (seq_header.
+        color_config.transfer_characteristics);
+    cinfo.primaries =
+        gst_video_color_primaries_from_iso (seq_header.
+        color_config.color_primaries);
 
     colorimetry = gst_video_colorimetry_to_string (&cinfo);
 
@@ -1296,6 +1370,15 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
   if (self->mono_chrome != seq_header.color_config.mono_chrome) {
     self->mono_chrome = seq_header.color_config.mono_chrome;
     self->update_caps = TRUE;
+  }
+
+  if (seq_header.operating_points_cnt_minus_1 + 1) {
+    if (self->seq_level_idx != seq_header.operating_points[0].seq_level_idx) {
+      self->seq_level_idx = seq_header.operating_points[0].seq_level_idx;
+    }
+    if (self->seq_tier != seq_header.operating_points[0].seq_tier) {
+      self->seq_tier = seq_header.operating_points[0].seq_tier;
+    }
   }
 
   if (self->bit_depth != seq_header.bit_depth) {
