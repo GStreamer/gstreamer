@@ -796,6 +796,7 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
       if (ffmpegmux->opened) {
         ffmpegmux->opened = FALSE;
         gst_ffmpegdata_close (ffmpegmux->context->pb);
+        ffmpegmux->context->pb = NULL;
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
