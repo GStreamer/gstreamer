@@ -67,7 +67,6 @@ struct _GstFFMpegDemux
   guint group_id;
 
   AVFormatContext *context;
-  gboolean opened;
 
   GstFFStream *streams[MAX_STREAMS];
 
@@ -273,7 +272,6 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
   demux->have_group_id = FALSE;
   demux->group_id = G_MAXUINT;
 
-  demux->opened = FALSE;
   demux->context = NULL;
 
   for (n = 0; n < MAX_STREAMS; n++) {
@@ -324,7 +322,7 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
   gint n;
   GstEvent **event_p;
 
-  if (!demux->opened)
+  if (!demux->context)
     return;
 
   /* remove pads from ourselves */
@@ -353,12 +351,8 @@ gst_ffmpegdemux_close (GstFFMpegDemux * demux)
     gst_ffmpeg_pipe_close (demux->context->pb);
   demux->context->pb = NULL;
   avformat_close_input (&demux->context);
-  if (demux->context)
-    avformat_free_context (demux->context);
-  demux->context = NULL;
 
   GST_OBJECT_LOCK (demux);
-  demux->opened = FALSE;
   event_p = &demux->seek_event;
   gst_event_replace (event_p, NULL);
   GST_OBJECT_UNLOCK (demux);
@@ -700,7 +694,7 @@ gst_ffmpegdemux_send_event (GstElement * element, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       GST_OBJECT_LOCK (demux);
-      if (!demux->opened) {
+      if (!demux->context) {
         GstEvent **event_p;
 
         GST_DEBUG_OBJECT (demux, "caching seek event");
@@ -1309,7 +1303,6 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   demux->segment.duration = demux->duration;
 
   GST_OBJECT_LOCK (demux);
-  demux->opened = TRUE;
   event = demux->seek_event;
   demux->seek_event = NULL;
   cached_events = demux->cached_events;
@@ -1366,6 +1359,15 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   /* ERRORS */
 beach:
   {
+    if (demux->context->pb) {
+      if (demux->seekable)
+        gst_ffmpegdata_close (demux->context->pb);
+      else
+        gst_ffmpeg_pipe_close (demux->context->pb);
+      demux->context->pb = NULL;
+    }
+    avformat_close_input (&demux->context);
+
     GST_ELEMENT_ERROR (demux, LIBRARY, FAILED, (NULL),
         ("%s", gst_ffmpegdemux_averror (res)));
     return FALSE;
@@ -1390,7 +1392,7 @@ gst_ffmpegdemux_loop (GstFFMpegDemux * demux)
   gint64 pts;
 
   /* open file if we didn't so already */
-  if (!demux->opened)
+  if (!demux->context)
     if (!gst_ffmpegdemux_open (demux))
       goto open_failed;
 
@@ -1725,7 +1727,7 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstObject * parent,
        * If the demuxer isn't opened, push straight away, since we'll
        * be waiting against a cond that will never be signalled. */
       if (GST_EVENT_IS_SERIALIZED (event)) {
-        if (demux->opened) {
+        if (demux->context) {
           GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
           while (!ffpipe->needed)
             GST_FFMPEG_PIPE_WAIT (ffpipe);
