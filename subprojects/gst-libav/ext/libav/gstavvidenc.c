@@ -630,7 +630,9 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
     picture->pts = AV_NOPTS_VALUE;
   } else {
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-    const gint ticks_per_frame = (ffmpegenc->context->codec_descriptor
+    const gint ticks_per_frame =
+        (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegenc->input_state->info)
+        && ffmpegenc->context->codec_descriptor
         && ffmpegenc->context->
         codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
 #else
