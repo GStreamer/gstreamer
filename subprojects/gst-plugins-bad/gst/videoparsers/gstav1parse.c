@@ -108,6 +108,8 @@ struct _GstAV1Parse
   gboolean mono_chrome;
   guint8 seq_level_idx;
   guint8 seq_tier;
+  guint8 max_seq_level_idx;
+  guint8 max_seq_tier;
   guint8 bit_depth;
   gchar *colorimetry;
   GstAV1Profile profile;
@@ -315,6 +317,8 @@ gst_av1_parse_reset (GstAV1Parse * self)
   self->profile = GST_AV1_PROFILE_UNDEFINED;
   self->seq_level_idx = GST_AV1_SEQ_LEVEL_MAX;
   self->seq_tier = 0;
+  self->max_seq_level_idx = GST_AV1_SEQ_LEVEL_MAX;
+  self->max_seq_tier = 0;
   self->bit_depth = 0;
   self->align = GST_AV1_PARSE_ALIGN_NONE;
   self->in_align = GST_AV1_PARSE_ALIGN_NONE;
@@ -482,6 +486,21 @@ gst_av1_parse_seq_level_idx_to_string (GstAV1SeqLevels seq_level_idx)
       return "7.3";
     default:
       break;
+  }
+
+  return NULL;
+}
+
+static const gchar *
+gst_av1_parse_tier_to_string (guint8 seq_tier)
+{
+  switch (seq_tier) {
+   case 0:
+     return "main";
+   case 1:
+     return "high";
+   default:
+     break;
   }
 
   return NULL;
@@ -711,6 +730,7 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   gint par_n = 0, par_d = 0;
   const gchar *profile = NULL;
   const gchar *level = NULL;
+  const gchar *tier = NULL;
 
   if (G_UNLIKELY (!gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (self))))
     self->update_caps = TRUE;
@@ -806,8 +826,29 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   if (level)
     gst_caps_set_simple (final_caps, "level", G_TYPE_STRING, level, NULL);
 
-  gst_caps_set_simple (final_caps, "seq-tier", G_TYPE_UINT, self->seq_tier,
-      NULL);
+  tier = gst_av1_parse_tier_to_string(self->seq_tier);
+  if (tier)
+    gst_caps_set_simple (final_caps, "tier", G_TYPE_STRING, tier, NULL);
+
+  if ((self->max_seq_tier != self->seq_tier)
+      || (self->max_seq_level_idx != self->seq_level_idx)) {
+
+    tier = gst_av1_parse_tier_to_string(self->max_seq_tier);
+    if (tier) {
+      gst_caps_set_simple(final_caps, "max-tier", G_TYPE_STRING, tier, NULL);
+    } else {
+      GST_WARNING_OBJECT (self, "Invalid max seq tier %d",
+          self->max_seq_tier);
+    }
+
+    level = gst_av1_parse_seq_level_idx_to_string (self->max_seq_level_idx);
+    if (level) {
+      gst_caps_set_simple (final_caps, "max-level", G_TYPE_STRING, level, NULL);
+    } else {
+      GST_WARNING_OBJECT (self, "Invalid max level idx %d",
+          self->max_seq_level_idx);
+    }
+  }
 
   src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (self));
 
@@ -1373,11 +1414,18 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
   }
 
   if (seq_header.operating_points_cnt_minus_1 + 1) {
-    if (self->seq_level_idx != seq_header.operating_points[0].seq_level_idx) {
-      self->seq_level_idx = seq_header.operating_points[0].seq_level_idx;
-    }
-    if (self->seq_tier != seq_header.operating_points[0].seq_tier) {
-      self->seq_tier = seq_header.operating_points[0].seq_tier;
+    /* Search for the actual max level and tier */
+    self->seq_level_idx = self->max_seq_level_idx =
+        seq_header.operating_points[0].seq_level_idx;
+    self->seq_tier = self->max_seq_tier =
+        seq_header.operating_points[0].seq_tier;
+
+    for (i = 1; i < seq_header.operating_points_cnt_minus_1 + 1; i++) {
+      if (self->max_seq_level_idx <
+          seq_header.operating_points[i].seq_level_idx) {
+        self->max_seq_level_idx = seq_header.operating_points[i].seq_level_idx;
+        self->max_seq_tier = seq_header.operating_points[i].seq_tier;
+      }
     }
   }
 
