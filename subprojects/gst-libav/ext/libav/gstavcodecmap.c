@@ -3833,6 +3833,42 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("audio/x-brstm");
   } else if (!strcmp (format_name, "bfstm")) {
     caps = gst_caps_from_string ("audio/x-bfstm");
+  } else if (!strcmp (format_name, "avs")) {
+    caps = gst_caps_from_string ("video/x-avs");
+  } else if (!strcmp (format_name, "dsf")) {
+    caps = gst_caps_from_string ("audio/x-dsf");
+  } else if (!strcmp (format_name, "ea")) {
+    caps = gst_caps_from_string ("video/x-ea");
+  } else if (!strcmp (format_name, "film_cpk")) {
+    caps = gst_caps_from_string ("video/x-film-cpk");
+  } else if (!strcmp (format_name, "xwma")) {
+    caps = gst_caps_from_string ("audio/x-xwma");
+  } else if (!strcmp (format_name, "iff")) {
+    caps = gst_caps_from_string ("application/x-iff");
+  } else if (!strcmp (format_name, "idcin")) {
+    caps = gst_caps_new_empty_simple ("video/x-idcin");
+  } else if (!strcmp (format_name, "ipmovie")) {
+    caps = gst_caps_new_empty_simple ("video/x-ipmovie");
+  } else if (!strcmp (format_name, "mm")) {
+    caps = gst_caps_new_empty_simple ("application/x-mm");
+  } else if (!strcmp (format_name, "mmf")) {
+    caps = gst_caps_new_empty_simple ("application/vnd.smaf");
+  } else if (!strcmp (format_name, "nut")) {
+    caps = gst_caps_new_empty_simple ("application/x-nut");
+  } else if (!strcmp (format_name, "pxstr")) {
+    caps = gst_caps_new_empty_simple ("application/x-pxstr");
+  } else if (!strcmp (format_name, "smk")) {
+    caps = gst_caps_new_empty_simple ("application/x-smk");
+  } else if (!strcmp (format_name, "sol")) {
+    caps = gst_caps_new_empty_simple ("application/x-sol");
+  } else if (!strcmp (format_name, "vmd")) {
+    caps = gst_caps_new_empty_simple ("application/x-vmd");
+  } else if (!strcmp (format_name, "wc3movie")) {
+    caps = gst_caps_new_empty_simple ("application/x-wc3movie");
+  } else if (!strcmp (format_name, "wsaud")) {
+    caps = gst_caps_new_empty_simple ("application/x-wsaud");
+  } else if (!strcmp (format_name, "wsvqa")) {
+    caps = gst_caps_new_empty_simple ("application/x-wsvqa");
   } else {
     gchar *name;
 
@@ -4029,6 +4065,18 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
 
     *video_codec_list = ivf_video_list;
     *audio_codec_list = ivf_audio_list;
+  } else if ((!strcmp (format_name, "film_cpk"))) {
+    static enum AVCodecID cpk_video_list[] = {
+      AV_CODEC_ID_CINEPAK,
+      AV_CODEC_ID_NONE
+    };
+    static enum AVCodecID cpk_audio_list[] = {
+      AV_CODEC_ID_PCM_S16BE,
+      AV_CODEC_ID_NONE
+    };
+
+    *video_codec_list = cpk_video_list;
+    *audio_codec_list = cpk_audio_list;
   } else if ((plugin->audio_codec != AV_CODEC_ID_NONE) ||
       (plugin->video_codec != AV_CODEC_ID_NONE)) {
     tmp_vlist[0] = plugin->video_codec;
