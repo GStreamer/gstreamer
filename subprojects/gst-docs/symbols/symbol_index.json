@@ -34154,6 +34154,7 @@
   "avmux_f4v:maxdelay",
   "avmux_f4v:preload",
   "avmux_film_cpk",
+  "avmux_film_cpk!audio_%u",
   "avmux_film_cpk!src",
   "avmux_film_cpk!video_%u",
   "avmux_film_cpk:maxdelay",

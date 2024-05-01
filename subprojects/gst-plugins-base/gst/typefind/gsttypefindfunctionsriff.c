@@ -81,3 +81,7 @@ TYPE_FIND_REGISTER_RIFF_DEFINE (wav, "audio/x-wav", GST_RANK_PRIMARY, "wav",
     "WAVE");
 TYPE_FIND_REGISTER_RIFF_DEFINE (webp, "image/webp", GST_RANK_PRIMARY,
     "webp", "WEBP");
+TYPE_FIND_REGISTER_RIFF_DEFINE (fourxm, "video/x-4xm", GST_RANK_PRIMARY,
+    NULL, "4XMV");
+TYPE_FIND_REGISTER_RIFF_DEFINE (xwma, "audio/x-xwma", GST_RANK_PRIMARY,
+    NULL, "XWMA");
