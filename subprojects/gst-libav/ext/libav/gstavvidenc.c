@@ -248,6 +248,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
     GST_DEBUG_OBJECT (ffmpegenc, "Failed to allocate context");
     return FALSE;
   }
+  ffmpegenc->last_pts_ff = G_MININT64;
 
   /* additional avcodec settings */
   gst_ffmpeg_cfg_fill_context (G_OBJECT (ffmpegenc), ffmpegenc->context);
@@ -550,6 +551,7 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   gint res;
   GstFlowReturn ret = GST_FLOW_ERROR;
   AVFrame *picture = NULL;
+  GstClockTime pts, pts_running_time;
 
   if (!frame)
     goto send_frame;
@@ -619,13 +621,21 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
   picture->width = GST_VIDEO_FRAME_WIDTH (&buffer_info->vframe);
   picture->height = GST_VIDEO_FRAME_HEIGHT (&buffer_info->vframe);
 
+  // Use the running time to calculate a PTS that is passed to the encoder.
+  // This ensures that it is increasing even if there are segment changes and
+  // makes it unnecessary to drain the encoder on every segment change.
+  pts = frame->pts;
+  pts_running_time =
+      gst_segment_to_running_time (&GST_VIDEO_ENCODER
+      (ffmpegenc)->input_segment, GST_FORMAT_TIME, pts);
+
   if (ffmpegenc->pts_offset == GST_CLOCK_TIME_NONE) {
-    ffmpegenc->pts_offset = frame->pts;
+    ffmpegenc->pts_offset = pts_running_time;
   }
 
-  if (frame->pts == GST_CLOCK_TIME_NONE) {
+  if (pts_running_time == GST_CLOCK_TIME_NONE) {
     picture->pts = AV_NOPTS_VALUE;
-  } else if (frame->pts < ffmpegenc->pts_offset) {
+  } else if (pts_running_time < ffmpegenc->pts_offset) {
     GST_ERROR_OBJECT (ffmpegenc, "PTS is going backwards");
     picture->pts = AV_NOPTS_VALUE;
   } else {
@@ -639,8 +649,18 @@ gst_ffmpegvidenc_send_frame (GstFFMpegVidEnc * ffmpegenc,
     const gint ticks_per_frame = ffmpegenc->context->ticks_per_frame;
 #endif
     picture->pts =
-        gst_ffmpeg_time_gst_to_ff ((frame->pts - ffmpegenc->pts_offset) /
+        gst_ffmpeg_time_gst_to_ff ((pts_running_time - ffmpegenc->pts_offset) /
         ticks_per_frame, ffmpegenc->context->time_base);
+
+    // Certain codecs require always increasing PTS to work correctly. This
+    // affects at least all MPEG1/2/4 based encoders.
+    if (ffmpegenc->last_pts_ff == G_MININT64
+        || picture->pts > ffmpegenc->last_pts_ff) {
+      ffmpegenc->last_pts_ff = picture->pts;
+    } else {
+      ffmpegenc->last_pts_ff += 1;
+      picture->pts = ffmpegenc->last_pts_ff;
+    }
   }
 
 send_frame:
