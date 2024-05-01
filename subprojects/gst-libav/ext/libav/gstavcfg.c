@@ -488,10 +488,8 @@ gst_ffmpeg_cfg_install_properties (GObjectClass * klass, AVCodec * in_plugin,
       install_opts ((GObjectClass *) klass, &ctx->av_class, prop_id, flags,
       " (Generic codec option, might have no effect)", generic_overrides);
 
-  if (ctx) {
-    gst_ffmpeg_avcodec_close (ctx);
-    av_free (ctx);
-  }
+  if (ctx)
+    avcodec_free_context (&ctx);
 }
 
 static gint

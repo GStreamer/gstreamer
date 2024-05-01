@@ -337,14 +337,7 @@ gst_ffmpegviddec_init (GstFFMpegVidDec * ffmpegdec)
 static void
 gst_ffmpegviddec_subinit (GstFFMpegVidDec * ffmpegdec)
 {
-  GstFFMpegVidDecClass *klass =
-      (GstFFMpegVidDecClass *) G_OBJECT_GET_CLASS (ffmpegdec);
-
   /* some ffmpeg data */
-  ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
-  ffmpegdec->context->opaque = ffmpegdec;
-  ffmpegdec->picture = av_frame_alloc ();
-  ffmpegdec->opened = FALSE;
   ffmpegdec->skip_frame = ffmpegdec->lowres = 0;
   ffmpegdec->direct_rendering = DEFAULT_DIRECT_RENDERING;
   ffmpegdec->max_threads = DEFAULT_MAX_THREADS;
@@ -365,6 +358,8 @@ gst_ffmpegviddec_finalize (GObject * object)
   GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (object);
 
   av_frame_free (&ffmpegdec->picture);
+  if (ffmpegdec->context)
+    av_freep (&ffmpegdec->context->extradata);
   avcodec_free_context (&ffmpegdec->context);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -395,37 +390,23 @@ gst_ffmpegviddec_context_set_flags2 (AVCodecContext * context, guint flags,
 }
 
 /* with LOCK */
-static gboolean
-gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
+static void
+gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec)
 {
-  GstFFMpegVidDecClass *oclass;
   guint i;
-
-  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
 
   GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
 
-  gst_ffmpeg_avcodec_close (ffmpegdec->context);
-  ffmpegdec->opened = FALSE;
+  if (ffmpegdec->context)
+    av_freep (&ffmpegdec->context->extradata);
+  avcodec_free_context (&ffmpegdec->context);
 
   for (i = 0; i < G_N_ELEMENTS (ffmpegdec->stride); i++)
     ffmpegdec->stride[i] = -1;
 
   gst_buffer_replace (&ffmpegdec->palette, NULL);
-
-  av_freep (&ffmpegdec->context->extradata);
-  if (reset) {
-    avcodec_free_context (&ffmpegdec->context);
-    ffmpegdec->context = avcodec_alloc_context3 (oclass->in_plugin);
-    if (ffmpegdec->context == NULL) {
-      GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
-      return FALSE;
-    }
-    ffmpegdec->context->opaque = ffmpegdec;
-  }
-  return TRUE;
 }
 
 /* with LOCK */
@@ -443,8 +424,6 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
   for (i = 0; i < G_N_ELEMENTS (ffmpegdec->stride); i++)
     ffmpegdec->stride[i] = -1;
 
-  ffmpegdec->opened = TRUE;
-
   GST_LOG_OBJECT (ffmpegdec, "Opened libav codec %s, id %d",
       oclass->in_plugin->name, oclass->in_plugin->id);
 
@@ -460,7 +439,7 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
   /* ERRORS */
 could_not_open:
   {
-    gst_ffmpegviddec_close (ffmpegdec, TRUE);
+    gst_ffmpegviddec_close (ffmpegdec);
     GST_DEBUG_OBJECT (ffmpegdec, "avdec_%s: Failed to open libav codec",
         oclass->in_plugin->name);
     return FALSE;
@@ -537,14 +516,11 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
   }
 
   /* close old session */
-  if (ffmpegdec->opened) {
+  if (ffmpegdec->context) {
     GST_OBJECT_UNLOCK (ffmpegdec);
     gst_ffmpegviddec_finish (decoder);
     GST_OBJECT_LOCK (ffmpegdec);
-    if (!gst_ffmpegviddec_close (ffmpegdec, TRUE)) {
-      GST_OBJECT_UNLOCK (ffmpegdec);
-      return FALSE;
-    }
+    gst_ffmpegviddec_close (ffmpegdec);
     ffmpegdec->pic_pix_fmt = 0;
     ffmpegdec->pic_width = 0;
     ffmpegdec->pic_height = 0;
@@ -559,6 +535,14 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     ffmpegdec->cur_multiview_mode = GST_VIDEO_MULTIVIEW_MODE_NONE;
     ffmpegdec->cur_multiview_flags = GST_VIDEO_MULTIVIEW_FLAGS_NONE;
   }
+
+  ffmpegdec->context = avcodec_alloc_context3 (oclass->in_plugin);
+  if (ffmpegdec->context == NULL) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Failed to allocate context");
+    GST_OBJECT_UNLOCK (ffmpegdec);
+    return FALSE;
+  }
+  ffmpegdec->context->opaque = ffmpegdec;
 
   gst_caps_replace (&ffmpegdec->last_caps, state->caps);
 
@@ -718,12 +702,18 @@ done:
 open_failed:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "Failed to open");
+    if (ffmpegdec->context)
+      av_freep (&ffmpegdec->context->extradata);
+    avcodec_free_context (&ffmpegdec->context);
     goto done;
   }
 nal_only_slice:
   {
     GST_ERROR_OBJECT (ffmpegdec,
         "Can't do NAL aligned H.264 with frame threading.");
+    if (ffmpegdec->context)
+      av_freep (&ffmpegdec->context->extradata);
+    avcodec_free_context (&ffmpegdec->context);
     goto done;
   }
 }
@@ -1848,7 +1838,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   GstFFMpegVidDecVideoFrame *out_dframe;
   GstBufferPool *pool;
 
-  if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
+  if (G_UNLIKELY (!ffmpegdec->context))
     goto no_codec;
 
 #if LIBAVCODEC_VERSION_MAJOR >= 60
@@ -2141,7 +2131,7 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
   GstFlowReturn ret = GST_FLOW_OK;
   gboolean got_frame = FALSE;
 
-  if (!ffmpegdec->opened)
+  if (!ffmpegdec->context)
     return GST_FLOW_OK;
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
@@ -2187,6 +2177,12 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   GstFlowReturn ret = GST_FLOW_OK;
   AVPacket *packet;
 
+  if (G_UNLIKELY (!ffmpegdec->context)) {
+    gst_video_codec_frame_unref (frame);
+    GST_ERROR_OBJECT (ffmpegdec, "no codec context");
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
   GST_LOG_OBJECT (ffmpegdec,
       "Received new data of size %" G_GSIZE_FORMAT ", dts %" GST_TIME_FORMAT
       ", pts:%" GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT,
@@ -2196,6 +2192,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   if (!gst_buffer_map (frame->input_buffer, &minfo, GST_MAP_READ)) {
     GST_ELEMENT_ERROR (ffmpegdec, STREAM, DECODE, ("Decoding problem"),
         ("Failed to map buffer for reading"));
+    gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
 
@@ -2304,19 +2301,13 @@ static gboolean
 gst_ffmpegviddec_start (GstVideoDecoder * decoder)
 {
   GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
-  GstFFMpegVidDecClass *oclass;
-
-  oclass = GST_FFMPEGVIDDEC_GET_CLASS (ffmpegdec);
 
   GST_OBJECT_LOCK (ffmpegdec);
+  av_frame_free (&ffmpegdec->picture);
+  if (ffmpegdec->context)
+    av_freep (&ffmpegdec->context->extradata);
   avcodec_free_context (&ffmpegdec->context);
-  ffmpegdec->context = avcodec_alloc_context3 (oclass->in_plugin);
-  if (ffmpegdec->context == NULL) {
-    GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
-    GST_OBJECT_UNLOCK (ffmpegdec);
-    return FALSE;
-  }
-  ffmpegdec->context->opaque = ffmpegdec;
+  ffmpegdec->picture = av_frame_alloc ();
   GST_OBJECT_UNLOCK (ffmpegdec);
 
   return TRUE;
@@ -2328,7 +2319,8 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
   GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
 
   GST_OBJECT_LOCK (ffmpegdec);
-  gst_ffmpegviddec_close (ffmpegdec, FALSE);
+  av_frame_free (&ffmpegdec->picture);
+  gst_ffmpegviddec_close (ffmpegdec);
   GST_OBJECT_UNLOCK (ffmpegdec);
   g_free (ffmpegdec->padded);
   ffmpegdec->padded = NULL;
@@ -2382,7 +2374,7 @@ gst_ffmpegviddec_flush (GstVideoDecoder * decoder)
 {
   GstFFMpegVidDec *ffmpegdec = GST_FFMPEGVIDDEC (decoder);
 
-  if (ffmpegdec->opened) {
+  if (ffmpegdec->context) {
     GST_LOG_OBJECT (decoder, "flushing buffers");
     GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
     avcodec_flush_buffers (ffmpegdec->context);
@@ -2571,11 +2563,10 @@ gst_ffmpegviddec_set_property (GObject * object,
 
   switch (prop_id) {
     case PROP_LOWRES:
-      ffmpegdec->lowres = ffmpegdec->context->lowres = g_value_get_enum (value);
+      ffmpegdec->lowres = g_value_get_enum (value);
       break;
     case PROP_SKIPFRAME:
-      ffmpegdec->skip_frame = ffmpegdec->context->skip_frame =
-          g_value_get_enum (value);
+      ffmpegdec->skip_frame = g_value_get_enum (value);
       break;
     case PROP_DIRECT_RENDERING:
       ffmpegdec->direct_rendering = g_value_get_boolean (value);
