@@ -735,7 +735,7 @@ gst_ffmpegvidenc_receive_packet (GstFFMpegVidEnc * ffmpegenc,
           ffmpegenc->context->time_base);
 
       if (gst_pts_dts_diff > frame->pts)
-        frame->pts = 0;
+        frame->dts = 0;
       else
         frame->dts = frame->pts - gst_pts_dts_diff;
     } else {
