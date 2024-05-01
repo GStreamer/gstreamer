@@ -102,7 +102,11 @@ gst_ffmpegdata_read (void *priv_data, unsigned char *buf, int size)
 }
 
 static int
+#if LIBAVUTIL_VERSION_MAJOR >= 59
+gst_ffmpegdata_write (void *priv_data, const uint8_t * buf, int size)
+#else
 gst_ffmpegdata_write (void *priv_data, uint8_t * buf, int size)
+#endif
 {
   GstProtocolInfo *info;
   GstBuffer *outbuf;
