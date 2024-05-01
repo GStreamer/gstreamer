@@ -670,7 +670,9 @@ update_state:
     const gint fps_n = ffmpegdec->context->time_base.den;
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
     const gint ticks_per_frame =
-        (ffmpegdec->context->
+        (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info)
+        && ffmpegdec->context->codec_descriptor
+        && ffmpegdec->context->
         codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
 #else
     const gint ticks_per_frame = ffmpegdec->context->ticks_per_frame;
@@ -1155,8 +1157,11 @@ static gboolean
 context_changed (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context)
 {
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-  const gint ticks_per_frame = (context->codec_descriptor
-      && context->codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+  const gint ticks_per_frame =
+      (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info)
+      && ffmpegdec->context->codec_descriptor
+      && ffmpegdec->context->
+      codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
 #else
   const gint ticks_per_frame = context->ticks_per_frame;
 #endif
@@ -1228,8 +1233,11 @@ update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
     ffmpegdec->pic_field_order_changed = FALSE;
 
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
-  const gint ticks_per_frame = (context->codec_descriptor
-      && context->codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
+  const gint ticks_per_frame =
+      (GST_VIDEO_INFO_IS_INTERLACED (&ffmpegdec->input_state->info)
+      && ffmpegdec->context->codec_descriptor
+      && ffmpegdec->context->
+      codec_descriptor->props & AV_CODEC_PROP_FIELDS) ? 2 : 1;
 #else
   const gint ticks_per_frame = context->ticks_per_frame;
 #endif
