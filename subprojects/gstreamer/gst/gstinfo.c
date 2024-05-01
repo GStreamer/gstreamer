@@ -104,6 +104,7 @@
 #include "gstquark.h"
 #include "gstsegment.h"
 #include "gstvalue.h"
+#include "gstvecdeque.h"
 #include "gstcapsfeatures.h"
 
 #ifdef HAVE_VALGRIND_VALGRIND_H
@@ -3517,7 +3518,7 @@ typedef struct
   gint64 last_use;
   GThread *thread;
 
-  GQueue log;
+  GstVecDeque *log;
   gsize log_size;
 } GstRingBufferLog;
 
@@ -3588,8 +3589,9 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
         break;
 
       g_hash_table_remove (logger->thread_index, log->thread);
-      while ((buf = g_queue_pop_head (&log->log)))
+      while ((buf = gst_vec_deque_pop_head (log->log)))
         g_free (buf);
+      gst_vec_deque_free (log->log);
       g_free (log);
       g_queue_pop_tail (&logger->threads);
     }
@@ -3600,7 +3602,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
   log = g_hash_table_lookup (logger->thread_index, thread);
   if (!log) {
     log = g_new0 (GstRingBufferLog, 1);
-    g_queue_init (&log->log);
+    log->log = gst_vec_deque_new (2048);
     log->log_size = 0;
     g_queue_push_head (&logger->threads, log);
     log->link = logger->threads.head;
@@ -3615,20 +3617,12 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
   if (output_len < logger->max_size_per_thread) {
     gchar *buf;
 
-    /* While using a GQueue here is not the most efficient thing to do, we
-     * have to allocate a string for every output anyway and could just store
-     * that instead of copying it to an actual ringbuffer.
-     * Better than GQueue would be GstQueueArray, but that one is in
-     * libgstbase and we can't use it here. That one allocation will not make
-     * much of a difference anymore, considering the number of allocations
-     * needed to get to this point...
-     */
     while (log->log_size + output_len > logger->max_size_per_thread) {
-      buf = g_queue_pop_head (&log->log);
+      buf = gst_vec_deque_pop_head (log->log);
       log->log_size -= strlen (buf);
       g_free (buf);
     }
-    g_queue_push_tail (&log->log, output);
+    gst_vec_deque_push_tail (log->log, output);
     log->log_size += output_len;
   } else {
     gchar *buf;
@@ -3636,7 +3630,7 @@ gst_ring_buffer_logger_log (GstDebugCategory * category,
     /* Can't really write anything as the line is bigger than the maximum
      * allowed log size already, so just remove everything */
 
-    while ((buf = g_queue_pop_head (&log->log)))
+    while ((buf = gst_vec_deque_pop_head (log->log)))
       g_free (buf);
     g_free (output);
     log->log_size = 0;
@@ -3669,16 +3663,17 @@ gst_debug_ring_buffer_logger_get_logs (void)
   tmp = logs = g_new0 (gchar *, ring_buffer_logger->threads.length + 1);
   for (l = ring_buffer_logger->threads.head; l; l = l->next) {
     GstRingBufferLog *log = l->data;
-    GList *l;
     gchar *p;
-    gsize len;
+    gsize n_lines, line_len;
 
     *tmp = p = g_new0 (gchar, log->log_size + 1);
 
-    for (l = log->log.head; l; l = l->next) {
-      len = strlen (l->data);
-      memcpy (p, l->data, len);
-      p += len;
+    n_lines = gst_vec_deque_get_length (log->log);
+    for (gsize i = 0; i < n_lines; i++) {
+      const gchar *line = gst_vec_deque_peek_nth (log->log, i);
+      line_len = strlen (line);
+      memcpy (p, line, line_len);
+      p += line_len;
     }
 
     tmp++;
@@ -3698,7 +3693,7 @@ gst_ring_buffer_logger_free (GstRingBufferLogger * logger)
 
     while ((log = g_queue_pop_head (&logger->threads))) {
       gchar *buf;
-      while ((buf = g_queue_pop_head (&log->log)))
+      while ((buf = gst_vec_deque_pop_head (log->log)))
         g_free (buf);
       g_free (log);
     }
