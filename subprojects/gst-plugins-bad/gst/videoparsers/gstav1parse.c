@@ -484,8 +484,10 @@ gst_av1_parse_seq_level_idx_to_string (GstAV1SeqLevels seq_level_idx)
       return "7.2";
     case GST_AV1_SEQ_LEVEL_7_3:
       return "7.3";
-    default:
-      break;
+    case GST_AV1_SEQ_LEVEL_MAX:
+    case GST_AV1_SEQ_LEVELS:
+      /* not valid */
+      return NULL;
   }
 
   return NULL;
@@ -495,12 +497,10 @@ static const gchar *
 gst_av1_parse_tier_to_string (guint8 seq_tier)
 {
   switch (seq_tier) {
-   case 0:
-     return "main";
-   case 1:
-     return "high";
-   default:
-     break;
+    case 0:
+      return "main";
+    case 1:
+      return "high";
   }
 
   return NULL;
@@ -826,19 +826,18 @@ gst_av1_parse_update_src_caps (GstAV1Parse * self, GstCaps * caps)
   if (level)
     gst_caps_set_simple (final_caps, "level", G_TYPE_STRING, level, NULL);
 
-  tier = gst_av1_parse_tier_to_string(self->seq_tier);
+  tier = gst_av1_parse_tier_to_string (self->seq_tier);
   if (tier)
     gst_caps_set_simple (final_caps, "tier", G_TYPE_STRING, tier, NULL);
 
   if ((self->max_seq_tier != self->seq_tier)
       || (self->max_seq_level_idx != self->seq_level_idx)) {
 
-    tier = gst_av1_parse_tier_to_string(self->max_seq_tier);
+    tier = gst_av1_parse_tier_to_string (self->max_seq_tier);
     if (tier) {
-      gst_caps_set_simple(final_caps, "max-tier", G_TYPE_STRING, tier, NULL);
+      gst_caps_set_simple (final_caps, "max-tier", G_TYPE_STRING, tier, NULL);
     } else {
-      GST_WARNING_OBJECT (self, "Invalid max seq tier %d",
-          self->max_seq_tier);
+      GST_WARNING_OBJECT (self, "Invalid max seq tier %d", self->max_seq_tier);
     }
 
     level = gst_av1_parse_seq_level_idx_to_string (self->max_seq_level_idx);
@@ -1376,15 +1375,12 @@ gst_av1_parse_handle_sequence_obu (GstAV1Parse * self, GstAV1OBU * obu)
     else
       cinfo.range = GST_VIDEO_COLOR_RANGE_16_235;
 
-    cinfo.matrix =
-        gst_video_color_matrix_from_iso (seq_header.
-        color_config.matrix_coefficients);
-    cinfo.transfer =
-        gst_video_transfer_function_from_iso (seq_header.
-        color_config.transfer_characteristics);
-    cinfo.primaries =
-        gst_video_color_primaries_from_iso (seq_header.
-        color_config.color_primaries);
+    cinfo.matrix = gst_video_color_matrix_from_iso
+        (seq_header.color_config.matrix_coefficients);
+    cinfo.transfer = gst_video_transfer_function_from_iso
+        (seq_header.color_config.transfer_characteristics);
+    cinfo.primaries = gst_video_color_primaries_from_iso
+        (seq_header.color_config.color_primaries);
 
     colorimetry = gst_video_colorimetry_to_string (&cinfo);
 
