@@ -557,6 +557,8 @@ gst_va_base_enc_drain (GstVideoEncoder * venc)
   g_queue_clear_full (&base->ref_list,
       (GDestroyNotify) gst_video_codec_frame_unref);
 
+  gst_queue_array_clear (base->dts_queue);
+
   return GST_FLOW_OK;
 
 error_and_purge_all:
@@ -590,6 +592,8 @@ error_and_purge_all:
   /* Also clear the reference list. */
   g_queue_clear_full (&base->ref_list,
       (GDestroyNotify) gst_video_codec_frame_unref);
+
+  gst_queue_array_clear (base->dts_queue);
 
   return ret;
 }
@@ -744,7 +748,12 @@ gst_va_base_enc_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 static gboolean
 gst_va_base_enc_flush (GstVideoEncoder * venc)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (venc);
+
   _flush_all_frames (GST_VA_BASE_ENC (venc));
+
+  gst_queue_array_clear (base->dts_queue);
+
   return TRUE;
 }
 
@@ -882,14 +891,19 @@ gst_va_base_enc_init (GstVaBaseEnc * self)
   g_queue_init (&self->output_list);
   gst_video_info_init (&self->in_info);
 
+  self->dts_queue = gst_queue_array_new_for_struct (sizeof (GstClockTime), 8);
+
   self->priv = gst_va_base_enc_get_instance_private (self);
 }
 
 static void
 gst_va_base_enc_dispose (GObject * object)
 {
+  GstVaBaseEnc *base = GST_VA_BASE_ENC (object);
+
   _flush_all_frames (GST_VA_BASE_ENC (object));
   gst_va_base_enc_close (GST_VIDEO_ENCODER (object));
+  g_clear_pointer (&base->dts_queue, gst_queue_array_free);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1132,6 +1146,48 @@ gst_va_base_enc_add_codec_tag (GstVaBaseEnc * base, const gchar * codec_name)
 
   gst_video_encoder_merge_tags (venc, tags, GST_TAG_MERGE_REPLACE);
   gst_tag_list_unref (tags);
+}
+
+void
+gst_va_base_enc_push_dts (GstVaBaseEnc * base,
+    GstVideoCodecFrame * frame, guint max_reorder_num)
+{
+  /* We need to manually insert max_reorder_num slots before the
+     first frame to ensure DTS never bigger than PTS. */
+  if (gst_queue_array_get_length (base->dts_queue) == 0 && max_reorder_num > 0) {
+    GstClockTime dts_diff = 0, dts;
+
+    if (GST_CLOCK_TIME_IS_VALID (frame->duration))
+      dts_diff = frame->duration;
+
+    if (GST_CLOCK_TIME_IS_VALID (base->frame_duration))
+      dts_diff = MAX (base->frame_duration, dts_diff);
+
+    while (max_reorder_num > 0) {
+      if (GST_CLOCK_TIME_IS_VALID (frame->pts)) {
+        dts = frame->pts - dts_diff * max_reorder_num;
+      } else {
+        dts = frame->pts;
+      }
+
+      gst_queue_array_push_tail_struct (base->dts_queue, &dts);
+      max_reorder_num--;
+    }
+  }
+
+  gst_queue_array_push_tail_struct (base->dts_queue, &frame->pts);
+}
+
+GstClockTime
+gst_va_base_enc_pop_dts (GstVaBaseEnc * base)
+{
+  GstClockTime dts;
+
+  g_return_val_if_fail (gst_queue_array_get_length (base->dts_queue) > 0,
+      GST_CLOCK_TIME_NONE);
+
+  dts = *((GstClockTime *) gst_queue_array_pop_head_struct (base->dts_queue));
+  return dts;
 }
 
 void

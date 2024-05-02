@@ -23,6 +23,7 @@
 #include "gstvadevice.h"
 #include "gstvaencoder.h"
 #include "gstvaprofile.h"
+#include <gst/base/gstqueuearray.h>
 
 G_BEGIN_DECLS
 
@@ -60,6 +61,7 @@ struct _GstVaBaseEnc
   GQueue reorder_list;
   GQueue ref_list;
   GQueue output_list;
+  GstQueueArray *dts_queue;
 
   GstVideoCodecState *input_state;
   union {
@@ -142,6 +144,10 @@ gint                  gst_va_base_enc_copy_output_data    (GstVaBaseEnc * base,
                                                            GstVaEncodePicture * picture,
                                                            guint8 * data,
                                                            gint size);
+void                  gst_va_base_enc_push_dts            (GstVaBaseEnc * base,
+                                                           GstVideoCodecFrame * frame,
+                                                           guint max_reorder_num);
+GstClockTime          gst_va_base_enc_pop_dts             (GstVaBaseEnc * base);
 void                  gst_va_base_enc_update_property_uint (GstVaBaseEnc * base,
                                                             guint32 * old_val,
                                                             guint32 new_val,
