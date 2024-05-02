@@ -303,7 +303,7 @@ static JNINativeMethod native_methods[] = {
 };
 
 /* Library initializer */
-jint
+JNIEXPORT jint
 JNI_OnLoad (JavaVM * vm, void *reserved)
 {
   JNIEnv *env = NULL;

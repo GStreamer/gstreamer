@@ -20,7 +20,7 @@ static JNINativeMethod native_methods[] = {
       (void *) gst_native_get_gstreamer_info}
 };
 
-jint
+JNIEXPORT jint
 JNI_OnLoad (JavaVM * vm, void *reserved)
 {
   JNIEnv *env = NULL;
