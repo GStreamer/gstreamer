@@ -114,9 +114,13 @@ static inline guint
 _get_plane_width (const GstVideoInfo * info, guint plane)
 {
   if (GST_VIDEO_INFO_IS_YUV (info)) {
-    gint comp[GST_VIDEO_MAX_COMPONENTS];
-    gst_video_format_info_component (info->finfo, plane, comp);
-    return GST_VIDEO_INFO_COMP_WIDTH (info, comp[0]);
+    if (GST_VIDEO_INFO_FORMAT (info) == GST_VIDEO_FORMAT_v210) {
+      return (guint) (((guint64) (info->width + 5) / 6) * 4);
+    } else {
+      gint comp[GST_VIDEO_MAX_COMPONENTS];
+      gst_video_format_info_component (info->finfo, plane, comp);
+      return GST_VIDEO_INFO_COMP_WIDTH (info, comp[0]);
+    }
   } else {
     /* RGB, GRAY */
     return GST_VIDEO_INFO_WIDTH (info);

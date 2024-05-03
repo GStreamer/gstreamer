@@ -564,6 +564,101 @@ static const struct shader_templ templ_RGB_to_YUY2_UYVY =
     GST_GL_TEXTURE_TARGET_2D
   };
 
+/* v210 layout (produces 6 pixels):
+ * U Y V X | Y U Y X | V Y U X | Y V Y X
+ */
+
+static const char glsl_func_v210_unpack[] =
+    "ivec2 v210_component_to_texel(int comp) {\n"
+    // (the texel index in the row, the swizzle index in that texel)
+    "  return ivec2(comp / 3, comp % 3);\n"
+    "}\n"
+    "ivec2 v210_y_xoffset(int xpos) {\n"
+    // 1 3 5 7 9 ...
+    "  int texel_i = xpos * 2 + 1;\n"
+    "  return v210_component_to_texel(texel_i);\n"
+    "}\n"
+    "ivec2 v210_u_xoffset(int xpos) {\n"
+    // 0 0 4 4 8 8 12 12 ...
+    "  int texel_i = 4 * (xpos / 2);\n"
+    "  return v210_component_to_texel(texel_i);\n"
+    "}\n"
+    "ivec2 v210_v_xoffset(int xpos) {\n"
+    // 2 2 6 6 10 10 14 14 ...
+    "  int texel_i = 4 * (xpos / 2) + 2;\n"
+    "  return v210_component_to_texel(texel_i);\n"
+    "}\n"
+    "vec4 v210_unpack(sampler2D tex, vec2 texcoord) {\n"
+    "  int xpos = int(texcoord.x * out_width);\n"
+    "  ivec2 y_xoffset = v210_y_xoffset(xpos);\n"
+    "  ivec2 u_xoffset = v210_u_xoffset(xpos);\n"
+    "  ivec2 v_xoffset = v210_v_xoffset(xpos);\n"
+    "  vec2 half_x_offset = vec2(poffset_x / 2.0, 0.0);\n"
+    "  vec4 y_texel = texture2D(tex, vec2(poffset_x * float(y_xoffset[0]), texcoord.y) * tex_scale0 + half_x_offset);\n"
+    "  vec4 u_texel = texture2D(tex, vec2(poffset_x * float(u_xoffset[0]), texcoord.y) * tex_scale0 + half_x_offset);\n"
+    "  vec4 v_texel = texture2D(tex, vec2(poffset_x * float(v_xoffset[0]), texcoord.y) * tex_scale0 + half_x_offset);\n"
+    "  return vec4(y_texel[y_xoffset[1]], u_texel[u_xoffset[1]], v_texel[v_xoffset[1]], 1.0);\n"
+    "}\n";
+
+static const gchar templ_v210_to_RGB_BODY[] =
+    "vec4 yuva = v210_unpack(Ytex, v_texcoord);\n"
+    "vec4 rgba = color_matrix_apply(yuva, to_RGB_matrix);\n"
+    "gl_FragColor = swizzle(rgba, output_swizzle);\n";
+
+static const struct shader_templ templ_v210_to_RGB =
+  { NULL,
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform float out_width;\n",
+    { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_unpack, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
+static const char glsl_func_v210_pack[] =
+    // UYV YUY VYU YVY
+    "vec4 v210_pack(sampler2D tex, vec2 texcoord) {\n"
+    // (texel index, component of the texel)
+    // array initialisation is not available in GLES2 so we construct it
+    // manually.
+    "  ivec2[12] block_indices;\n"
+    "  block_indices[0] = ivec2(0, 1);\n"
+    "  block_indices[1] = ivec2(0, 0);\n"
+    "  block_indices[2] = ivec2(0, 2);\n"
+    "  block_indices[3] = ivec2(1, 0);\n"
+    "  block_indices[4] = ivec2(2, 1);\n"
+    "  block_indices[5] = ivec2(2, 0);\n"
+    "  block_indices[6] = ivec2(2, 2);\n"
+    "  block_indices[7] = ivec2(3, 0);\n"
+    "  block_indices[8] = ivec2(4, 1);\n"
+    "  block_indices[9] = ivec2(4, 0);\n"
+    "  block_indices[10] = ivec2(4, 2);\n"
+    "  block_indices[11] = ivec2(5, 0);\n"
+    // poffset_x is in display width coordinates, not data width which is a
+    // factor of 2/3 (4/6) different
+    "  vec2 half_x_offset = vec2(poffset_x * 0.66666 / 2.0, 0.0);\n"
+    "  int xpos = int(texcoord.x * out_width);\n"
+    "  ivec2 sub_idx0 = block_indices[(xpos % 4) * 3 + 0];\n"
+    "  ivec2 sub_idx1 = block_indices[(xpos % 4) * 3 + 1];\n"
+    "  ivec2 sub_idx2 = block_indices[(xpos % 4) * 3 + 2];\n"
+    "  vec2 block_offset = vec2(float((xpos / 4) * 6) * poffset_x, texcoord.y) + half_x_offset;\n"
+    "  vec4 rgba0 = swizzle(texture2D(tex, block_offset + vec2(float(sub_idx0[0]) * poffset_x, 0.0)), input_swizzle);\n"
+    "  vec4 rgba1 = swizzle(texture2D(tex, block_offset + vec2(float(sub_idx1[0]) * poffset_x, 0.0)), input_swizzle);\n"
+    "  vec4 rgba2 = swizzle(texture2D(tex, block_offset + vec2(float(sub_idx2[0]) * poffset_x, 0.0)), input_swizzle);\n"
+    "  vec4 yuva0 = color_matrix_apply(rgba0, to_YUV_matrix);\n"
+    "  vec4 yuva1 = color_matrix_apply(rgba1, to_YUV_matrix);\n"
+    "  vec4 yuva2 = color_matrix_apply(rgba2, to_YUV_matrix);\n"
+    "  return vec4(yuva0[sub_idx0[1]], yuva1[sub_idx1[1]], yuva2[sub_idx2[1]], 1.0);\n"
+    "}\n";
+
+static const gchar templ_RGB_to_v210_BODY[] =
+    "vec4 yuva = v210_pack(tex, v_texcoord);\n"
+    "gl_FragColor = yuva;\n";
+
+static const struct shader_templ templ_RGB_to_v210 =
+  { NULL,
+    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_pack, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
 /* PLANAR RGB to PACKED RGB conversion */
 static const gchar templ_PLANAR_RGB_to_PACKED_RGB_BODY[] =
     "vec4 rgba;\n"
@@ -1427,7 +1522,7 @@ _init_supported_formats (GstGLContext * context, gboolean output,
   if (!context || gst_gl_format_is_supported (context, GST_GL_RGB10_A2)) {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
     _append_value_string_list (supported_formats, "BGR10A2_LE", "RGB10A2_LE",
-        "Y410", NULL);
+        "Y410", "v210", NULL);
 #else
     _append_value_string_list (supported_formats, "Y410", NULL);
 #endif
@@ -1998,6 +2093,13 @@ video_format_to_gl_reorder (GstVideoFormat v_format, gint * reorder,
     gboolean input)
 {
   switch (v_format) {
+    case GST_VIDEO_FORMAT_v210:
+      /* complex, handled in shader */
+      reorder[0] = 0;
+      reorder[1] = 1;
+      reorder[2] = 2;
+      reorder[3] = 3;
+      break;
     case GST_VIDEO_FORMAT_UYVY:
       reorder[0] = 1;
       reorder[1] = 0;
@@ -2381,6 +2483,13 @@ _YUV_to_RGB (GstGLColorConvert * convert)
         info->shader_tex_names[1] = "UVtex";
         break;
       }
+      case GST_VIDEO_FORMAT_v210:
+      {
+        info->templ = &templ_v210_to_RGB;
+        info->frag_body = g_strdup (templ_v210_to_RGB_BODY);
+        info->shader_tex_names[0] = "Ytex";
+        break;
+      }
       default:
         break;
     }
@@ -2478,6 +2587,10 @@ _RGB_to_YUV (GstGLColorConvert * convert)
         } else {
           info->chroma_sampling[0] = info->chroma_sampling[1] = 2.0f;
         }
+        break;
+      case GST_VIDEO_FORMAT_v210:
+        info->templ = &templ_RGB_to_v210;
+        info->frag_body = g_strdup (templ_RGB_to_v210_BODY);
         break;
       default:
         break;
@@ -2848,6 +2961,8 @@ _init_convert (GstGLColorConvert * convert)
 {
   GstGLFuncs *gl;
   struct ConvertInfo *info = &convert->priv->convert_info;
+  gsize input_data_width = GST_VIDEO_INFO_WIDTH (&convert->in_info);
+  gsize output_data_width = GST_VIDEO_INFO_WIDTH (&convert->out_info);
   gint i;
 
   gl = convert->context->gl_vtable;
@@ -2966,6 +3081,17 @@ _init_convert (GstGLColorConvert * convert)
           i);
   }
 
+  if (GST_VIDEO_INFO_FORMAT (&convert->in_info) == GST_VIDEO_FORMAT_v210) {
+    /* XXX: this may not work with strides larger than the minimum required, */
+    input_data_width = ((GST_VIDEO_INFO_WIDTH (&convert->in_info) + 5) / 6) * 4;
+  }
+
+  if (GST_VIDEO_INFO_FORMAT (&convert->out_info) == GST_VIDEO_FORMAT_v210) {
+    /* XXX: this may not work with strides larger than the minimum required, */
+    output_data_width =
+        ((GST_VIDEO_INFO_WIDTH (&convert->out_info) + 5) / 6) * 4;
+  }
+
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (convert->in_info.finfo)) {
     guint tile_width, tile_height;
     gsize stride;
@@ -2981,18 +3107,21 @@ _init_convert (GstGLColorConvert * convert)
     gst_gl_shader_set_uniform_1f (convert->shader, "width", width);
     gst_gl_shader_set_uniform_1f (convert->shader, "height", height);
   } else {
-    gst_gl_shader_set_uniform_1f (convert->shader, "width",
-        GST_VIDEO_INFO_WIDTH (&convert->in_info));
+    gst_gl_shader_set_uniform_1f (convert->shader, "width", input_data_width);
     gst_gl_shader_set_uniform_1f (convert->shader, "height",
         GST_VIDEO_INFO_HEIGHT (&convert->in_info));
   }
+  gst_gl_shader_set_uniform_1f (convert->shader, "out_width",
+      output_data_width);
+  gst_gl_shader_set_uniform_1f (convert->shader, "out_height",
+      GST_VIDEO_INFO_HEIGHT (&convert->out_info));
 
   if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_RECTANGLE) {
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_x", 1.);
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_y", 1.);
   } else {
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_x",
-        1. / (gfloat) GST_VIDEO_INFO_WIDTH (&convert->in_info));
+        1. / (gfloat) input_data_width);
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_y",
         1. / (gfloat) GST_VIDEO_INFO_HEIGHT (&convert->in_info));
   }
@@ -3153,7 +3282,9 @@ _do_convert_one_view (GstGLContext * context, GstGLColorConvert * convert,
 
     if (out_tex->tex_format == GST_GL_LUMINANCE
         || out_tex->tex_format == GST_GL_LUMINANCE_ALPHA
-        || out_width != mem_width || out_height != mem_height) {
+        || out_height != mem_height
+        || (out_width != mem_width
+            && convert->out_info.finfo->format != GST_VIDEO_FORMAT_v210)) {
       /* Luminance formats are not color renderable */
       /* rendering to a framebuffer only renders the intersection of all
        * the attachments i.e. the smallest attachment size */
@@ -3225,7 +3356,9 @@ out:
 
     if (out_tex->tex_format == GST_GL_LUMINANCE
         || out_tex->tex_format == GST_GL_LUMINANCE_ALPHA
-        || out_width != mem_width || out_height != mem_height) {
+        || out_height != mem_height
+        || (out_width != mem_width
+            && convert->out_info.finfo->format != GST_VIDEO_FORMAT_v210)) {
       GstMapInfo to_info, from_info;
 
       if (!gst_memory_map ((GstMemory *) convert->priv->out_tex[j], &from_info,
