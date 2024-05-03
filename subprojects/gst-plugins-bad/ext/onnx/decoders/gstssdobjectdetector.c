@@ -70,9 +70,11 @@ enum
   PROP_0,
   PROP_LABEL_FILE,
   PROP_SCORE_THRESHOLD,
+  PROP_SIZE_THRESHOLD
 };
 
 #define GST_SSD_OBJECT_DETECTOR_DEFAULT_SCORE_THRESHOLD       0.3f      /* 0 to 1 */
+#define GST_SSD_OBJECT_DETECTOR_DEFAULT_SIZE_THRESHOLD       0.9f       /* 0 to 1 */
 
 static GstStaticPadTemplate gst_ssd_object_detector_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -144,6 +146,21 @@ gst_ssd_object_detector_class_init (GstSsdObjectDetectorClass * klass)
           (GParamFlags)
           (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstSsdObjectDetector:size-threshold
+   *
+   * Threshold for deciding when to remove boxes based on proportion of the image
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIZE_THRESHOLD,
+      g_param_spec_float ("size-threshold",
+          "Size threshold",
+          "Threshold for deciding when to remove boxes based on proportion of the image",
+          0.0, 1.0, GST_SSD_OBJECT_DETECTOR_DEFAULT_SIZE_THRESHOLD,
+          (GParamFlags)
+          (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
   gst_element_class_set_static_metadata (element_class, "objectdetector",
       "Filter/Effect/Video",
       "Apply tensor output from inference to detect objects in video frames",
@@ -161,6 +178,8 @@ gst_ssd_object_detector_class_init (GstSsdObjectDetectorClass * klass)
 static void
 gst_ssd_object_detector_init (GstSsdObjectDetector * self)
 {
+  self->size_threshold = GST_SSD_OBJECT_DETECTOR_DEFAULT_SIZE_THRESHOLD;
+  self->score_threshold = GST_SSD_OBJECT_DETECTOR_DEFAULT_SCORE_THRESHOLD;
 }
 
 static void
@@ -251,6 +270,11 @@ gst_ssd_object_detector_set_property (GObject * object, guint prop_id,
       self->score_threshold = g_value_get_float (value);
       GST_OBJECT_UNLOCK (self);
       break;
+    case PROP_SIZE_THRESHOLD:
+      GST_OBJECT_LOCK (self);
+      self->size_threshold = g_value_get_float (value);
+      GST_OBJECT_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -270,6 +294,11 @@ gst_ssd_object_detector_get_property (GObject * object, guint prop_id,
     case PROP_SCORE_THRESHOLD:
       GST_OBJECT_LOCK (self);
       g_value_set_float (value, self->score_threshold);
+      GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_SIZE_THRESHOLD:
+      GST_OBJECT_LOCK (self);
+      g_value_set_float (value, self->size_threshold);
       GST_OBJECT_UNLOCK (self);
       break;
     default:
@@ -480,6 +509,13 @@ DEFINE_GET_FUNC (guint32, UINT32_MAX)
     if (!get_float_at_index (&tmeta->tensor[boxes_index], &boxes_map,
             i * 4 + 3, &bwidth))
       continue;
+
+    if (CLAMP (bwidth, 0, 1) * CLAMP (bheight, 0, 1) > self->size_threshold) {
+      GST_LOG_OBJECT (self, "Object at (%fx%f)=%f > %f, skipping",
+          CLAMP (bwidth, 0, 1), CLAMP (bheight, 0, 1),
+          CLAMP (bwidth, 0, 1) * CLAMP (bheight, 0, 1), self->size_threshold);
+      continue;
+    }
 
     if (self->labels && classes_map.memory &&
         get_guint32_at_index (&tmeta->tensor[classes_index], &classes_map,

@@ -51,6 +51,7 @@ struct _GstSsdObjectDetector
   gchar *label_file;
   GArray *labels;
   gfloat score_threshold;
+  gfloat size_threshold;
   GstVideoInfo video_info;
 };
 
