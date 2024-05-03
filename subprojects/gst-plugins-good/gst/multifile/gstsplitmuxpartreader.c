@@ -312,6 +312,17 @@ splitmux_part_is_prerolled_locked (GstSplitMuxPartReader * part)
   return TRUE;
 }
 
+gboolean
+gst_splitmux_part_reader_needs_measuring (GstSplitMuxPartReader * reader)
+{
+  gboolean res;
+
+  SPLITMUX_PART_LOCK (reader);
+  res = reader->need_duration_measuring;
+  SPLITMUX_PART_UNLOCK (reader);
+
+  return res;
+}
 
 gboolean
 gst_splitmux_part_is_eos (GstSplitMuxPartReader * reader)
@@ -688,6 +699,7 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
   reader->need_duration_measuring = TRUE;
 
   reader->active = FALSE;
+  reader->info.start_offset = GST_CLOCK_TIME_NONE;
   reader->info.duration = GST_CLOCK_TIME_NONE;
 
   g_cond_init (&reader->inactive_cond);
@@ -960,6 +972,8 @@ gst_splitmux_part_reader_finish_measuring_streams (GstSplitMuxPartReader *
   SPLITMUX_PART_LOCK (reader);
   if (reader->prep_state == PART_STATE_PREPARING_RESET_FOR_READY) {
     GstClockTime end_offset = GST_CLOCK_TIME_NONE;
+    gboolean done_measuring = FALSE;
+    GstSplitMuxPartReaderInfo info;
 
     /* Fire the prepared signal and go to READY state */
     reader->prep_state = PART_STATE_READY;
@@ -981,10 +995,17 @@ gst_splitmux_part_reader_finish_measuring_streams (GstSplitMuxPartReader *
 
       reader->end_offset = end_offset;
       reader->need_duration_measuring = FALSE;  // We won't re-measure this part
+      info = reader->info;
+      done_measuring = TRUE;
     }
 
     SPLITMUX_PART_BROADCAST (reader);
     SPLITMUX_PART_UNLOCK (reader);
+
+    if (done_measuring && reader->measured_cb) {
+      reader->measured_cb (reader, reader->path, info.start_offset,
+          info.duration, reader->cb_data);
+    }
     do_async_done (reader);
   } else {
     SPLITMUX_PART_UNLOCK (reader);
@@ -1366,10 +1387,12 @@ gst_splitmux_part_reader_set_flushing_locked (GstSplitMuxPartReader * reader,
 
 void
 gst_splitmux_part_reader_set_callbacks (GstSplitMuxPartReader * reader,
-    gpointer cb_data, GstSplitMuxPartReaderPadCb get_pad_cb)
+    gpointer cb_data, GstSplitMuxPartReaderPadCb get_pad_cb,
+    GstSplitMuxPartReaderMeasuredCb measured_cb)
 {
   reader->cb_data = cb_data;
   reader->get_pad_cb = get_pad_cb;
+  reader->measured_cb = measured_cb;
 }
 
 GstClockTime
@@ -1393,6 +1416,19 @@ gst_splitmux_part_reader_set_start_offset (GstSplitMuxPartReader * reader,
   reader->ts_offset = ts_offset;
   GST_INFO_OBJECT (reader, "Time offset now %" GST_TIME_FORMAT,
       GST_TIME_ARGS (time_offset));
+  SPLITMUX_PART_UNLOCK (reader);
+}
+
+void
+gst_splitmux_part_reader_set_duration (GstSplitMuxPartReader * reader,
+    GstClockTime duration)
+{
+  SPLITMUX_PART_LOCK (reader);
+  reader->info.duration = duration;
+  reader->need_duration_measuring = (duration == GST_CLOCK_TIME_NONE);
+
+  GST_INFO_OBJECT (reader, "Duration manually set to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration));
   SPLITMUX_PART_UNLOCK (reader);
 }
 

@@ -69,6 +69,7 @@ enum
 enum
 {
   SIGNAL_FORMAT_LOCATION,
+  SIGNAL_ADD_FRAGMENT,
   SIGNAL_LAST
 };
 
@@ -117,15 +118,22 @@ static void splitmux_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
 
 
+static void
+gst_splitmux_part_measured_cb (GstSplitMuxPartReader * part,
+    const gchar * filename, GstClockTime offset, GstClockTime duration,
+    GstSplitMuxSrc * splitmux);
 static GstPad *gst_splitmux_find_output_pad (GstSplitMuxPartReader * part,
     GstPad * pad, GstSplitMuxSrc * splitmux);
 static gboolean gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux,
     SplitMuxSrcPad * pad);
 static gboolean gst_splitmux_check_new_caps (SplitMuxSrcPad * splitpad,
     GstEvent * event);
-static gboolean gst_splitmux_src_prepare_next_part (GstSplitMuxSrc * splitmux);
+static gboolean gst_splitmux_src_measure_next_part (GstSplitMuxSrc * splitmux);
 static gboolean gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux,
     guint part, GstSeekFlags extra_flags);
+
+static gboolean gst_splitmuxsrc_add_fragment (GstSplitMuxSrc * splitmux,
+    const gchar * filename, GstClockTime offset, GstClockTime duration);
 
 #define _do_init \
     G_IMPLEMENT_INTERFACE(GST_TYPE_URI_HANDLER, splitmux_src_uri_handler_init); \
@@ -258,6 +266,31 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
   signals[SIGNAL_FORMAT_LOCATION] =
       g_signal_new ("format-location", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_STRV, 0);
+
+  /**
+   * GstSplitMuxSrc::add-fragment:
+   * @splitmux: the #GstSplitMuxSrc
+   * @filename: The fragment filename to add
+   * @offset:   Playback offset for the fragment (can be #GST_CLOCK_TIME_NONE)
+   * @duration: Fragment nominal duration (can be #GST_CLOCK_TIME_NONE)
+   *
+   * Add a file fragment to the set of parts. If the offset and duration are provided,
+   * the file will be placed in the set immediately without loading the file to measure
+   * it.
+   *
+   * Returns: A boolean. TRUE if the fragment was successfully appended.
+   *   FALSE on failure.
+   *
+   * Since: 1.24
+   */
+  signals[SIGNAL_ADD_FRAGMENT] =
+      g_signal_new_class_handler ("add-fragment",
+      G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
+      G_CALLBACK (gst_splitmuxsrc_add_fragment),
+      NULL, NULL, NULL,
+      G_TYPE_BOOLEAN, 3, G_TYPE_STRING, GST_TYPE_CLOCK_TIME,
+      GST_TYPE_CLOCK_TIME);
 }
 
 static void
@@ -434,12 +467,84 @@ gst_splitmux_src_activate_first_part (GstSplitMuxSrc * splitmux)
 {
   SPLITMUX_SRC_LOCK (splitmux);
   if (splitmux->running) {
+    do_async_done (splitmux);
+
     if (!gst_splitmux_src_activate_part (splitmux, 0, GST_SEEK_FLAG_NONE)) {
       GST_ELEMENT_ERROR (splitmux, RESOURCE, OPEN_READ, (NULL),
           ("Failed to activate first part for playback"));
     }
   }
   SPLITMUX_SRC_UNLOCK (splitmux);
+}
+
+static void
+gst_splitmux_part_measured_cb (GstSplitMuxPartReader * part,
+    const gchar * filename, GstClockTime offset, GstClockTime duration,
+    GstSplitMuxSrc * splitmux)
+{
+  guint idx = splitmux->num_measured_parts;
+  gboolean need_no_more_pads;
+
+  /* signal no-more-pads as we have all pads at this point now */
+  SPLITMUX_SRC_LOCK (splitmux);
+  need_no_more_pads = !splitmux->pads_complete;
+  splitmux->pads_complete = TRUE;
+  SPLITMUX_SRC_UNLOCK (splitmux);
+
+  if (need_no_more_pads) {
+    GST_DEBUG_OBJECT (splitmux, "Signalling no-more-pads");
+    gst_element_no_more_pads (GST_ELEMENT_CAST (splitmux));
+  }
+
+  if (idx >= splitmux->num_parts) {
+    return;
+  }
+
+  GST_DEBUG_OBJECT (splitmux, "Measured file part %s (%u)",
+      splitmux->parts[idx]->path, idx);
+
+  /* Post part measured info message */
+  GstMessage *msg = gst_message_new_element (GST_OBJECT (splitmux),
+      gst_structure_new ("splitmuxsrc-fragment-info",
+          "location", G_TYPE_STRING, filename,
+          "fragment-offset", GST_TYPE_CLOCK_TIME, offset,
+          "fragment-duration", GST_TYPE_CLOCK_TIME, duration,
+          NULL));
+  gst_element_post_message (GST_ELEMENT_CAST (splitmux), msg);
+
+  /* Extend our total duration to cover this part */
+  GST_OBJECT_LOCK (splitmux);
+  splitmux->total_duration +=
+      gst_splitmux_part_reader_get_duration (splitmux->parts[idx]);
+  splitmux->play_segment.duration = splitmux->total_duration;
+  GST_OBJECT_UNLOCK (splitmux);
+
+  splitmux->end_offset =
+      gst_splitmux_part_reader_get_end_offset (splitmux->parts[idx]);
+
+  GST_DEBUG_OBJECT (splitmux,
+      "Duration %" GST_TIME_FORMAT ", total duration now: %" GST_TIME_FORMAT
+      " and end offset %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (gst_splitmux_part_reader_get_duration (splitmux->parts
+              [idx])), GST_TIME_ARGS (splitmux->total_duration),
+      GST_TIME_ARGS (splitmux->end_offset));
+
+  splitmux->num_measured_parts++;
+
+  /* If we're done or preparing the next part fails, finish here */
+  if (splitmux->num_measured_parts >= splitmux->num_parts
+      || !gst_splitmux_src_measure_next_part (splitmux)) {
+    /* Store how many parts we actually prepared in the end */
+    splitmux->num_parts = splitmux->num_measured_parts;
+
+    /* All done preparing, activate the first part */
+    GST_INFO_OBJECT (splitmux,
+        "All parts measured. Total duration %" GST_TIME_FORMAT
+        " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
+    gst_element_call_async (GST_ELEMENT_CAST (splitmux),
+        (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
+        NULL, NULL);
+  }
 }
 
 static GstBusSyncReply
@@ -450,70 +555,14 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
 
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ASYNC_DONE:{
-      guint idx = splitmux->num_prepared_parts;
-      gboolean need_no_more_pads;
-
-      if (idx >= splitmux->num_parts) {
-        break;
-      }
-
-      GST_DEBUG_OBJECT (splitmux, "Prepared file part %s (%u)",
-          splitmux->parts[idx]->path, idx);
-
-      /* signal no-more-pads as we have all pads at this point now */
-      SPLITMUX_SRC_LOCK (splitmux);
-      need_no_more_pads = !splitmux->pads_complete;
-      splitmux->pads_complete = TRUE;
-      SPLITMUX_SRC_UNLOCK (splitmux);
-
-      if (need_no_more_pads) {
-        GST_DEBUG_OBJECT (splitmux, "Signalling no-more-pads");
-        gst_element_no_more_pads (GST_ELEMENT_CAST (splitmux));
-      }
-
-      /* Extend our total duration to cover this part */
-      GST_OBJECT_LOCK (splitmux);
-      splitmux->total_duration +=
-          gst_splitmux_part_reader_get_duration (splitmux->parts[idx]);
-      splitmux->play_segment.duration = splitmux->total_duration;
-      GST_OBJECT_UNLOCK (splitmux);
-
-      splitmux->end_offset =
-          gst_splitmux_part_reader_get_end_offset (splitmux->parts[idx]);
-
-      GST_DEBUG_OBJECT (splitmux,
-          "Duration %" GST_TIME_FORMAT ", total duration now: %" GST_TIME_FORMAT
-          " and end offset %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (gst_splitmux_part_reader_get_duration (splitmux->parts
-                  [idx])), GST_TIME_ARGS (splitmux->total_duration),
-          GST_TIME_ARGS (splitmux->end_offset));
-
-      splitmux->num_prepared_parts++;
-
-      /* If we're done or preparing the next part fails, finish here */
-      if (splitmux->num_prepared_parts >= splitmux->num_parts
-          || !gst_splitmux_src_prepare_next_part (splitmux)) {
-        /* Store how many parts we actually prepared in the end */
-        splitmux->num_parts = splitmux->num_prepared_parts;
-        do_async_done (splitmux);
-
-        /* All done preparing, activate the first part */
-        GST_INFO_OBJECT (splitmux,
-            "All parts prepared. Total duration %" GST_TIME_FORMAT
-            " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
-        gst_element_call_async (GST_ELEMENT_CAST (splitmux),
-            (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
-            NULL, NULL);
-      }
-
       break;
     }
     case GST_MESSAGE_ERROR:{
       GST_ERROR_OBJECT (splitmux,
           "Got error message from part %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT,
           GST_MESSAGE_SRC (msg), msg);
-      if (splitmux->num_prepared_parts < splitmux->num_parts) {
-        guint idx = splitmux->num_prepared_parts;
+      if (splitmux->num_measured_parts < splitmux->num_parts) {
+        guint idx = splitmux->num_measured_parts;
 
         if (idx == 0) {
           GST_ERROR_OBJECT (splitmux,
@@ -532,7 +581,7 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
         }
 
         /* Store how many parts we actually prepared in the end */
-        splitmux->num_parts = splitmux->num_prepared_parts;
+        splitmux->num_parts = splitmux->num_measured_parts;
         do_async_done (splitmux);
 
         if (idx > 0) {
@@ -562,7 +611,8 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
 }
 
 static GstSplitMuxPartReader *
-gst_splitmux_part_reader_create (GstSplitMuxSrc * splitmux, char *filename)
+gst_splitmux_part_reader_create (GstSplitMuxSrc * splitmux,
+    const char *filename, gsize index)
 {
   GstSplitMuxPartReader *r;
   GstBus *bus;
@@ -570,7 +620,8 @@ gst_splitmux_part_reader_create (GstSplitMuxSrc * splitmux, char *filename)
   r = g_object_new (GST_TYPE_SPLITMUX_PART_READER, NULL);
 
   gst_splitmux_part_reader_set_callbacks (r, splitmux,
-      (GstSplitMuxPartReaderPadCb) gst_splitmux_find_output_pad);
+      (GstSplitMuxPartReaderPadCb) gst_splitmux_find_output_pad,
+      (GstSplitMuxPartReaderMeasuredCb) gst_splitmux_part_measured_cb);
   gst_splitmux_part_reader_set_location (r, filename);
 
   bus = gst_element_get_bus (GST_ELEMENT_CAST (r));
@@ -671,7 +722,7 @@ gst_splitmux_handle_event (GstSplitMuxSrc * splitmux,
         if (splitmux->play_segment.stop != -1)
           seg.stop = splitmux->play_segment.stop + FIXED_TS_OFFSET;
         else
-          seg.stop = splitpad->segment.stop;
+          seg.stop = -1;
       } else {
         /* Reverse playback from stop time to start time */
         /* See if an end point was requested in the seek */
@@ -899,15 +950,22 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
     GstSeekFlags extra_flags)
 {
   GST_DEBUG_OBJECT (splitmux, "Activating part %d", part);
-  GstSplitMuxPartReader *reader = splitmux->parts[part];
+  GstSplitMuxPartReader *reader = gst_object_ref (splitmux->parts[part]);
 
   splitmux->cur_part = part;
   add_to_active_readers (splitmux, reader);
+  SPLITMUX_SRC_UNLOCK (splitmux);
+
+  /* Drop lock around calling activate, as it might call back
+   * into the splitmuxsrc when exposing pads */
   if (!gst_splitmux_part_reader_activate (reader,
           &splitmux->play_segment, extra_flags)) {
+    gst_object_unref (reader);
     return FALSE;
   }
+  gst_object_unref (reader);
 
+  SPLITMUX_SRC_LOCK (splitmux);
   SPLITMUX_SRC_PADS_RLOCK (splitmux);
   GList *cur;
 
@@ -937,30 +995,66 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
 }
 
 static gboolean
-gst_splitmux_src_prepare_next_part (GstSplitMuxSrc * splitmux)
+gst_splitmux_src_measure_next_part (GstSplitMuxSrc * splitmux)
 {
-  guint idx = splitmux->num_prepared_parts;
-
+  guint idx = splitmux->num_measured_parts;
   g_assert (idx < splitmux->num_parts);
 
-  GST_DEBUG_OBJECT (splitmux, "Preparing file part %s (%u)",
-      splitmux->parts[idx]->path, idx);
+  GstClockTime end_offset = 0;
+  /* Take the end offset of the most recently measured part */
+  if (splitmux->num_measured_parts > 0) {
+    GstSplitMuxPartReader *reader =
+        splitmux->parts[splitmux->num_measured_parts - 1];
+    end_offset = gst_splitmux_part_reader_get_end_offset (reader);
+  }
 
-  add_to_active_readers (splitmux, splitmux->parts[idx]);
+  for (guint idx = splitmux->num_measured_parts; idx < splitmux->num_parts;
+      idx++) {
+    /* Walk forward until we find a part that needs measuring */
+    GstSplitMuxPartReader *reader = splitmux->parts[idx];
 
-  gst_splitmux_part_reader_set_start_offset (splitmux->parts[idx],
-      splitmux->end_offset, FIXED_TS_OFFSET);
-  if (!gst_splitmux_part_reader_prepare (splitmux->parts[idx])) {
-    GST_WARNING_OBJECT (splitmux,
-        "Failed to prepare file part %s. Cannot play past there.",
-        splitmux->parts[idx]->path);
-    GST_ELEMENT_WARNING (splitmux, RESOURCE, READ, (NULL),
-        ("Failed to prepare file part %s. Cannot play past there.",
-            splitmux->parts[idx]->path));
-    gst_splitmux_part_reader_unprepare (splitmux->parts[idx]);
-    g_object_unref (splitmux->parts[idx]);
-    splitmux->parts[idx] = NULL;
-    return FALSE;
+    GstClockTime start_offset =
+        gst_splitmux_part_reader_get_start_offset (reader);
+    if (start_offset == GST_CLOCK_TIME_NONE) {
+      GST_DEBUG_OBJECT (splitmux,
+          "Setting start offset for file part %s (%u) to %" GST_TIMEP_FORMAT,
+          reader->path, idx, &end_offset);
+      gst_splitmux_part_reader_set_start_offset (reader, end_offset,
+          FIXED_TS_OFFSET);
+    }
+
+    if (gst_splitmux_part_reader_needs_measuring (reader)) {
+      GST_DEBUG_OBJECT (splitmux, "Measuring file part %s (%u)",
+          reader->path, idx);
+
+      add_to_active_readers (splitmux, reader);
+
+      SPLITMUX_SRC_UNLOCK (splitmux);
+      if (!gst_splitmux_part_reader_prepare (reader)) {
+        GST_WARNING_OBJECT (splitmux,
+            "Failed to prepare file part %s. Cannot play past there.",
+            reader->path);
+        GST_ELEMENT_WARNING (splitmux, RESOURCE, READ, (NULL),
+            ("Failed to prepare file part %s. Cannot play past there.",
+                reader->path));
+        gst_splitmux_part_reader_unprepare (reader);
+        g_object_unref (reader);
+
+        SPLITMUX_SRC_LOCK (splitmux);
+        splitmux->parts[idx] = NULL;
+
+        splitmux->num_measured_parts = idx;
+        return FALSE;
+      }
+
+      SPLITMUX_SRC_LOCK (splitmux);
+      return TRUE;
+    }
+
+    /* Get the end offset (start offset of the next piece) */
+    end_offset = gst_splitmux_part_reader_get_end_offset (reader);
+    splitmux->total_duration += gst_splitmux_part_reader_get_duration (reader);
+    splitmux->num_measured_parts++;
   }
 
   return TRUE;
@@ -973,7 +1067,7 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   GError *err = NULL;
   gchar *basename = NULL;
   gchar *dirname = NULL;
-  gchar **files;
+  gchar **files = NULL;
   guint i;
 
   SPLITMUX_SRC_LOCK (splitmux);
@@ -982,48 +1076,55 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
     SPLITMUX_SRC_UNLOCK (splitmux);
     return FALSE;
   }
-  SPLITMUX_SRC_UNLOCK (splitmux);
 
   GST_DEBUG_OBJECT (splitmux, "Starting");
-
-  g_signal_emit (splitmux, signals[SIGNAL_FORMAT_LOCATION], 0, &files);
-
-  if (files == NULL || *files == NULL) {
-    GST_OBJECT_LOCK (splitmux);
-    if (splitmux->location != NULL && splitmux->location[0] != '\0') {
-      basename = g_path_get_basename (splitmux->location);
-      dirname = g_path_get_dirname (splitmux->location);
-    }
-    GST_OBJECT_UNLOCK (splitmux);
-
-    g_strfreev (files);
-    files = gst_split_util_find_files (dirname, basename, &err);
-
-    if (files == NULL || *files == NULL)
-      goto no_files;
-  }
-
-  SPLITMUX_SRC_LOCK (splitmux);
-  splitmux->pads_complete = FALSE;
-  splitmux->running = TRUE;
-  SPLITMUX_SRC_UNLOCK (splitmux);
-
   splitmux->active_parts = g_queue_new ();
 
-  splitmux->num_parts = g_strv_length (files);
+  if (splitmux->num_parts == 0) {
+    /* No parts were added via add-fragment signal, try via
+     * format-location signal and location property glob */
+    g_signal_emit (splitmux, signals[SIGNAL_FORMAT_LOCATION], 0, &files);
 
-  splitmux->parts = g_new0 (GstSplitMuxPartReader *, splitmux->num_parts);
+    if (files == NULL || *files == NULL) {
+      GST_OBJECT_LOCK (splitmux);
+      if (splitmux->location != NULL && splitmux->location[0] != '\0') {
+        basename = g_path_get_basename (splitmux->location);
+        dirname = g_path_get_dirname (splitmux->location);
+      }
+      GST_OBJECT_UNLOCK (splitmux);
 
-  /* Create all part pipelines */
-  for (i = 0; i < splitmux->num_parts; i++) {
-    splitmux->parts[i] = gst_splitmux_part_reader_create (splitmux, files[i]);
-    if (splitmux->parts[i] == NULL)
-      break;
+      g_strfreev (files);
+      files = gst_split_util_find_files (dirname, basename, &err);
+
+      if (files == NULL || *files == NULL) {
+        SPLITMUX_SRC_UNLOCK (splitmux);
+        goto no_files;
+      }
+    }
   }
 
-  /* Store how many parts we actually created */
-  splitmux->num_created_parts = splitmux->num_parts = i;
-  splitmux->num_prepared_parts = 0;
+  splitmux->pads_complete = FALSE;
+  splitmux->running = TRUE;
+
+  if (files != NULL) {
+    g_assert (splitmux->parts == NULL);
+
+    splitmux->num_parts_alloced = g_strv_length (files);
+    splitmux->parts =
+        g_new0 (GstSplitMuxPartReader *, splitmux->num_parts_alloced);
+
+    /* Create all part pipelines */
+    for (i = 0; i < splitmux->num_parts_alloced; i++) {
+      splitmux->parts[i] =
+          gst_splitmux_part_reader_create (splitmux, files[i], i);
+      if (splitmux->parts[i] == NULL)
+        break;
+    }
+
+    /* Store how many parts we actually created */
+    splitmux->num_parts = i;
+  }
+  splitmux->num_measured_parts = 0;
 
   /* Update total_duration state variable */
   GST_OBJECT_LOCK (splitmux);
@@ -1031,11 +1132,24 @@ gst_splitmux_src_start (GstSplitMuxSrc * splitmux)
   splitmux->end_offset = 0;
   GST_OBJECT_UNLOCK (splitmux);
 
-  /* Then start the first: it will asynchronously go to PAUSED
+  /* Ensure all the parts we have are measured.
+   * Start the first: it will asynchronously go to PAUSED
    * or error out and then we can proceed with the next one
    */
-  if (!gst_splitmux_src_prepare_next_part (splitmux) || splitmux->num_parts < 1)
+  if (!gst_splitmux_src_measure_next_part (splitmux) || splitmux->num_parts < 1) {
+    SPLITMUX_SRC_UNLOCK (splitmux);
     goto failed_part;
+  }
+  if (splitmux->num_measured_parts >= splitmux->num_parts) {
+    /* Nothing needed measuring, activate the first part */
+    GST_INFO_OBJECT (splitmux,
+        "All parts measured. Total duration %" GST_TIME_FORMAT
+        " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
+    gst_element_call_async (GST_ELEMENT_CAST (splitmux),
+        (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
+        NULL, NULL);
+  }
+  SPLITMUX_SRC_UNLOCK (splitmux);
 
   /* All good now: we have to wait for all parts to be asynchronously
    * prepared to know the total duration we can play */
@@ -1080,7 +1194,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   GST_DEBUG_OBJECT (splitmux, "Stopping");
 
   /* Stop all part readers. */
-  for (i = 0; i < splitmux->num_created_parts; i++) {
+  for (i = 0; i < splitmux->num_parts; i++) {
     if (splitmux->parts[i] == NULL)
       continue;
     gst_splitmux_part_reader_unprepare (splitmux->parts[i]);
@@ -1103,7 +1217,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   /* Now the pad task is stopped we can destroy the readers */
   g_queue_free_full (splitmux->active_parts, g_object_unref);
 
-  for (i = 0; i < splitmux->num_created_parts; i++) {
+  for (i = 0; i < splitmux->num_parts; i++) {
     if (splitmux->parts[i] == NULL)
       continue;
     g_object_unref (splitmux->parts[i]);
@@ -1113,8 +1227,8 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   g_free (splitmux->parts);
   splitmux->parts = NULL;
   splitmux->num_parts = 0;
-  splitmux->num_prepared_parts = 0;
-  splitmux->num_created_parts = 0;
+  splitmux->num_measured_parts = 0;
+  splitmux->num_parts_alloced = 0;
   splitmux->total_duration = GST_CLOCK_TIME_NONE;
 
   /* Reset playback segment */
@@ -1636,4 +1750,39 @@ splitmux_src_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       break;
   }
   return ret;
+}
+
+static gboolean
+gst_splitmuxsrc_add_fragment (GstSplitMuxSrc * splitmux,
+    const gchar * filename, GstClockTime offset, GstClockTime duration)
+{
+  SPLITMUX_SRC_LOCK (splitmux);
+  /* Ensure we have enough space in the parts array, reallocating if necessary */
+  if (splitmux->num_parts == splitmux->num_parts_alloced) {
+    gsize to_alloc = splitmux->num_parts_alloced;
+    to_alloc = MAX (to_alloc + 8, 3 * to_alloc / 2);
+
+    splitmux->parts =
+        g_renew (GstSplitMuxPartReader *, splitmux->parts, to_alloc);
+    /* Zero newly allocated memory */
+    for (gsize i = splitmux->num_parts_alloced; i < to_alloc; i++) {
+      splitmux->parts[i] = NULL;
+    }
+    splitmux->num_parts_alloced = to_alloc;
+  }
+
+  GstSplitMuxPartReader *reader =
+      gst_splitmux_part_reader_create (splitmux, filename, splitmux->num_parts);
+  if (GST_CLOCK_TIME_IS_VALID (offset)) {
+    gst_splitmux_part_reader_set_start_offset (reader, offset, FIXED_TS_OFFSET);
+  }
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    gst_splitmux_part_reader_set_duration (reader, duration);
+  }
+
+  splitmux->parts[splitmux->num_parts] = reader;
+  splitmux->num_parts++;
+
+  SPLITMUX_SRC_UNLOCK (splitmux);
+  return TRUE;
 }

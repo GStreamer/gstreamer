@@ -51,8 +51,8 @@ struct _GstSplitMuxSrc
 
   GstSplitMuxPartReader **parts;
   guint        num_parts;
-  guint        num_prepared_parts;
-  guint        num_created_parts;
+  guint        num_parts_alloced;
+  guint        num_measured_parts;
   guint        cur_part;
 
   gboolean async_pending;
