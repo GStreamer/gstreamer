@@ -4942,6 +4942,19 @@ gst_va_h265_enc_get_property (GObject * object, guint prop_id,
 }
 
 static void
+gst_va_h265_enc_dispose (GObject * object)
+{
+  GstVaH265Enc *self = GST_VA_H265_ENC (object);
+
+  g_clear_pointer (&self->partition.slice_segment_address, g_free);
+  g_clear_pointer (&self->partition.num_ctu_in_slice, g_free);
+  g_clear_pointer (&self->partition.tile_ctu_cols, g_free);
+  g_clear_pointer (&self->partition.tile_ctu_rows, g_free);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
 {
   GstCaps *src_doc_caps, *sink_doc_caps;
@@ -5001,6 +5014,7 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
 
   object_class->set_property = gst_va_h265_enc_set_property;
   object_class->get_property = gst_va_h265_enc_get_property;
+  object_class->dispose = gst_va_h265_enc_dispose;
 
   venc_class->flush = GST_DEBUG_FUNCPTR (gst_va_h265_enc_flush);
   venc_class->start = GST_DEBUG_FUNCPTR (gst_va_h265_enc_start);
