@@ -333,7 +333,6 @@ struct _GstVaH265Enc
     guint cpb_length_bits;
   } rc;
 
-  GstClockTime last_dts;
   GstH265VPS vps_hdr;
   GstH265SPS sps_hdr;
 };
@@ -350,7 +349,6 @@ struct _GstVaH265EncFrame
 
   gint poc;
   gboolean last_frame;
-  gboolean reorder;
 };
 
 /**
@@ -452,7 +450,6 @@ gst_va_h265_enc_frame_new (void)
   frame = g_new (GstVaH265EncFrame, 1);
   frame->last_frame = FALSE;
   frame->picture = NULL;
-  frame->reorder = FALSE;
 
   return frame;
 }
@@ -2193,9 +2190,6 @@ again:
     /* it will unref at pop_frame */
     f = g_queue_pop_nth (&base->reorder_list, index);
     g_assert (f == b_frame);
-
-    if (index > 0)
-      _enc_frame (f)->reorder = TRUE;
   } else {
     b_frame = NULL;
   }
@@ -2224,9 +2218,6 @@ _h265_pop_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame ** out_frame)
   vaframe = _enc_frame (frame);
   if (vaframe->type != GST_H265_B_SLICE) {
     frame = g_queue_pop_tail (&base->reorder_list);
-    if (!g_queue_is_empty (&base->reorder_list))
-      vaframe->reorder = TRUE;
-
     goto get_one;
   }
 
@@ -2542,7 +2533,6 @@ gst_va_h265_enc_reset_state (GstVaBaseEnc * base)
   self->rc.target_bitrate_bits = 0;
   self->rc.cpb_length_bits = 0;
 
-  self->last_dts = GST_CLOCK_TIME_NONE;
   memset (&self->vps_hdr, 0, sizeof (GstH265VPS));
   memset (&self->sps_hdr, 0, sizeof (GstH265SPS));
 }
@@ -4669,13 +4659,26 @@ gst_va_h265_enc_flush (GstVideoEncoder * venc)
 }
 
 static gboolean
+gst_va_h265_enc_start (GstVideoEncoder * venc)
+{
+  /* Set the minimum pts to some huge value (1000 hours). This keeps
+   * the dts at the start of the stream from needing to be negative. */
+  gst_video_encoder_set_min_pts (venc, GST_SECOND * 60 * 60 * 1000);
+
+  return GST_VIDEO_ENCODER_CLASS (parent_class)->start (venc);
+}
+
+static gboolean
 gst_va_h265_enc_new_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
 {
+  GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstVaH265EncFrame *frame_in;
 
   frame_in = gst_va_h265_enc_frame_new ();
   gst_video_codec_frame_set_user_data (frame, frame_in,
       gst_va_h265_enc_frame_free);
+
+  gst_va_base_enc_push_dts (base, frame, self->gop.num_reorder_frames);
 
   return TRUE;
 }
@@ -4684,27 +4687,19 @@ static gboolean
 gst_va_h265_enc_prepare_output (GstVaBaseEnc * base,
     GstVideoCodecFrame * frame, gboolean * complete)
 {
-  GstVaH265Enc *self = GST_VA_H265_ENC (base);
   GstVaH265EncFrame *frame_enc;
   GstBuffer *buf;
 
   frame_enc = _enc_frame (frame);
 
-  if (frame_enc->reorder) {
-    if (!GST_CLOCK_TIME_IS_VALID (self->last_dts)) {
-      GST_WARNING_OBJECT (base, "Reorder frame poc: %d, system frame "
-          "number: %d without previous valid DTS.", frame_enc->poc,
-          frame->system_frame_number);
-      frame->dts = frame->pts;
-    } else {
-      GST_LOG_OBJECT (base, "Set reorder frame poc: %d, system frame "
-          "number: %d with DTS: %" GST_TIME_FORMAT, frame_enc->poc,
-          frame->system_frame_number, GST_TIME_ARGS (self->last_dts));
-      frame->dts = self->last_dts;
-    }
-  } else {
+  frame->dts = gst_va_base_enc_pop_dts (base);
+  if (!GST_CLOCK_TIME_IS_VALID (frame->dts)) {
+    GST_DEBUG_OBJECT (base, "Pop invalid DTS.");
+  } else if (GST_CLOCK_TIME_IS_VALID (frame->pts) && frame->dts > frame->pts) {
+    GST_WARNING_OBJECT (base, "Pop DTS: %" GST_TIME_FORMAT " > PTS: %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (frame->dts),
+        GST_TIME_ARGS (frame->pts));
     frame->dts = frame->pts;
-    self->last_dts = frame->dts;
   }
 
   buf = gst_va_base_enc_create_output_buffer (base,
@@ -5069,6 +5064,7 @@ gst_va_h265_enc_class_init (gpointer g_klass, gpointer class_data)
   object_class->get_property = gst_va_h265_enc_get_property;
 
   venc_class->flush = GST_DEBUG_FUNCPTR (gst_va_h265_enc_flush);
+  venc_class->start = GST_DEBUG_FUNCPTR (gst_va_h265_enc_start);
 
   va_enc_class->reset_state = GST_DEBUG_FUNCPTR (gst_va_h265_enc_reset_state);
   va_enc_class->reconfig = GST_DEBUG_FUNCPTR (gst_va_h265_enc_reconfig);
