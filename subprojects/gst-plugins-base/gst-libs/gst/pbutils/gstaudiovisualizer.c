@@ -1181,6 +1181,7 @@ gst_audio_visualizer_chain (GstPad * pad, GstObject * parent,
       }
     }
 
+    gst_buffer_remove_all_memory (inbuf);
     gst_buffer_copy_into (inbuf, databuf, GST_BUFFER_COPY_MEMORY, 0, sbpf);
     gst_buffer_unref (databuf);
 
