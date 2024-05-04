@@ -548,24 +548,25 @@ class ConverterGamma : IConverter
 {
   float4 Execute (float4 sample)
   {
+    float3 rgb_space;
     float3 out_space;
-    out_space.x = dot (preCoeff.CoeffX, sample.xyz);
-    out_space.y = dot (preCoeff.CoeffY, sample.xyz);
-    out_space.z = dot (preCoeff.CoeffZ, sample.xyz);
-    out_space += preCoeff.Offset;
-    out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);
+    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);
+    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);
+    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);
+    rgb_space += preCoeff.Offset;
+    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);
 
-    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);
-    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);
-    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);
+    rgb_space.x = gammaDecLUT.Sample (linearSampler, rgb_space.x);
+    rgb_space.y = gammaDecLUT.Sample (linearSampler, rgb_space.y);
+    rgb_space.z = gammaDecLUT.Sample (linearSampler, rgb_space.z);
 
-    out_space.x = gammaEncLUT.Sample (linearSampler, out_space.x);
-    out_space.y = gammaEncLUT.Sample (linearSampler, out_space.y);
-    out_space.z = gammaEncLUT.Sample (linearSampler, out_space.z);
+    rgb_space.x = gammaEncLUT.Sample (linearSampler, rgb_space.x);
+    rgb_space.y = gammaEncLUT.Sample (linearSampler, rgb_space.y);
+    rgb_space.z = gammaEncLUT.Sample (linearSampler, rgb_space.z);
 
-    out_space.x = dot (postCoeff.CoeffX, out_space);
-    out_space.y = dot (postCoeff.CoeffY, out_space);
-    out_space.z = dot (postCoeff.CoeffZ, out_space);
+    out_space.x = dot (postCoeff.CoeffX, rgb_space);
+    out_space.y = dot (postCoeff.CoeffY, rgb_space);
+    out_space.z = dot (postCoeff.CoeffZ, rgb_space);
     out_space += postCoeff.Offset;
     return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);
   }
@@ -575,29 +576,31 @@ class ConverterPrimary : IConverter
 {
   float4 Execute (float4 sample)
   {
+    float3 rgb_space;
+    float3 primary_converted;
     float3 out_space;
-    float3 tmp;
-    out_space.x = dot (preCoeff.CoeffX, sample.xyz);
-    out_space.y = dot (preCoeff.CoeffY, sample.xyz);
-    out_space.z = dot (preCoeff.CoeffZ, sample.xyz);
-    out_space += preCoeff.Offset;
-    out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);
 
-    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);
-    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);
-    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);
+    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);
+    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);
+    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);
+    rgb_space += preCoeff.Offset;
+    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);
 
-    tmp.x = dot (primariesCoeff.CoeffX, out_space);
-    tmp.y = dot (primariesCoeff.CoeffY, out_space);
-    tmp.z = dot (primariesCoeff.CoeffZ, out_space);
+    rgb_space.x = gammaDecLUT.Sample (linearSampler, rgb_space.x);
+    rgb_space.y = gammaDecLUT.Sample (linearSampler, rgb_space.y);
+    rgb_space.z = gammaDecLUT.Sample (linearSampler, rgb_space.z);
 
-    out_space.x = gammaEncLUT.Sample (linearSampler, tmp.x);
-    out_space.y = gammaEncLUT.Sample (linearSampler, tmp.y);
-    out_space.z = gammaEncLUT.Sample (linearSampler, tmp.z);
+    primary_converted.x = dot (primariesCoeff.CoeffX, rgb_space);
+    primary_converted.y = dot (primariesCoeff.CoeffY, rgb_space);
+    primary_converted.z = dot (primariesCoeff.CoeffZ, rgb_space);
 
-    out_space.x = dot (postCoeff.CoeffX, out_space);
-    out_space.y = dot (postCoeff.CoeffY, out_space);
-    out_space.z = dot (postCoeff.CoeffZ, out_space);
+    rgb_space.x = gammaEncLUT.Sample (linearSampler, primary_converted.x);
+    rgb_space.y = gammaEncLUT.Sample (linearSampler, primary_converted.y);
+    rgb_space.z = gammaEncLUT.Sample (linearSampler, primary_converted.z);
+
+    out_space.x = dot (postCoeff.CoeffX, rgb_space);
+    out_space.y = dot (postCoeff.CoeffY, rgb_space);
+    out_space.z = dot (postCoeff.CoeffZ, rgb_space);
     out_space += postCoeff.Offset;
     return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);
   }
@@ -1627,54 +1630,29 @@ static const char g_PSMain_converter_str[] =
 "  }\n"
 "};\n"
 "\n"
-"class ConverterRange : IConverter\n"
-"{\n"
-"  float4 Execute (float4 sample)\n"
-"  {\n"
-"    float3 out_space;\n"
-"    out_space.x = postCoeff.CoeffX.x * sample.x;\n"
-"    out_space.y = postCoeff.CoeffY.y * sample.y;\n"
-"    out_space.z = postCoeff.CoeffZ.z * sample.z;\n"
-"    out_space += postCoeff.Offset;\n"
-"    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);\n"
-"  }\n"
-"};\n"
-"\n"
-"class ConverterSimple : IConverter\n"
-"{\n"
-"  float4 Execute (float4 sample)\n"
-"  {\n"
-"    float3 out_space;\n"
-"    out_space.x = dot (postCoeff.CoeffX, sample.xyz);\n"
-"    out_space.y = dot (postCoeff.CoeffY, sample.xyz);\n"
-"    out_space.z = dot (postCoeff.CoeffZ, sample.xyz);\n"
-"    out_space += postCoeff.Offset;\n"
-"    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);\n"
-"  }\n"
-"};\n"
-"\n"
 "class ConverterGamma : IConverter\n"
 "{\n"
 "  float4 Execute (float4 sample)\n"
 "  {\n"
+"    float3 rgb_space;\n"
 "    float3 out_space;\n"
-"    out_space.x = dot (preCoeff.CoeffX, sample.xyz);\n"
-"    out_space.y = dot (preCoeff.CoeffY, sample.xyz);\n"
-"    out_space.z = dot (preCoeff.CoeffZ, sample.xyz);\n"
-"    out_space += preCoeff.Offset;\n"
-"    out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);\n"
+"    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);\n"
+"    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);\n"
+"    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);\n"
+"    rgb_space += preCoeff.Offset;\n"
+"    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);\n"
 "\n"
-"    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);\n"
-"    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);\n"
-"    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);\n"
+"    rgb_space.x = gammaDecLUT.Sample (linearSampler, rgb_space.x);\n"
+"    rgb_space.y = gammaDecLUT.Sample (linearSampler, rgb_space.y);\n"
+"    rgb_space.z = gammaDecLUT.Sample (linearSampler, rgb_space.z);\n"
 "\n"
-"    out_space.x = gammaEncLUT.Sample (linearSampler, out_space.x);\n"
-"    out_space.y = gammaEncLUT.Sample (linearSampler, out_space.y);\n"
-"    out_space.z = gammaEncLUT.Sample (linearSampler, out_space.z);\n"
+"    rgb_space.x = gammaEncLUT.Sample (linearSampler, rgb_space.x);\n"
+"    rgb_space.y = gammaEncLUT.Sample (linearSampler, rgb_space.y);\n"
+"    rgb_space.z = gammaEncLUT.Sample (linearSampler, rgb_space.z);\n"
 "\n"
-"    out_space.x = dot (postCoeff.CoeffX, out_space);\n"
-"    out_space.y = dot (postCoeff.CoeffY, out_space);\n"
-"    out_space.z = dot (postCoeff.CoeffZ, out_space);\n"
+"    out_space.x = dot (postCoeff.CoeffX, rgb_space);\n"
+"    out_space.y = dot (postCoeff.CoeffY, rgb_space);\n"
+"    out_space.z = dot (postCoeff.CoeffZ, rgb_space);\n"
 "    out_space += postCoeff.Offset;\n"
 "    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);\n"
 "  }\n"
@@ -1684,29 +1662,31 @@ static const char g_PSMain_converter_str[] =
 "{\n"
 "  float4 Execute (float4 sample)\n"
 "  {\n"
+"    float3 rgb_space;\n"
+"    float3 primary_converted;\n"
 "    float3 out_space;\n"
-"    float3 tmp;\n"
-"    out_space.x = dot (preCoeff.CoeffX, sample.xyz);\n"
-"    out_space.y = dot (preCoeff.CoeffY, sample.xyz);\n"
-"    out_space.z = dot (preCoeff.CoeffZ, sample.xyz);\n"
-"    out_space += preCoeff.Offset;\n"
-"    out_space = clamp (out_space, preCoeff.Min, preCoeff.Max);\n"
 "\n"
-"    out_space.x = gammaDecLUT.Sample (linearSampler, out_space.x);\n"
-"    out_space.y = gammaDecLUT.Sample (linearSampler, out_space.y);\n"
-"    out_space.z = gammaDecLUT.Sample (linearSampler, out_space.z);\n"
+"    rgb_space.x = dot (preCoeff.CoeffX, sample.xyz);\n"
+"    rgb_space.y = dot (preCoeff.CoeffY, sample.xyz);\n"
+"    rgb_space.z = dot (preCoeff.CoeffZ, sample.xyz);\n"
+"    rgb_space += preCoeff.Offset;\n"
+"    rgb_space = clamp (rgb_space, preCoeff.Min, preCoeff.Max);\n"
 "\n"
-"    tmp.x = dot (primariesCoeff.CoeffX, out_space);\n"
-"    tmp.y = dot (primariesCoeff.CoeffY, out_space);\n"
-"    tmp.z = dot (primariesCoeff.CoeffZ, out_space);\n"
+"    rgb_space.x = gammaDecLUT.Sample (linearSampler, rgb_space.x);\n"
+"    rgb_space.y = gammaDecLUT.Sample (linearSampler, rgb_space.y);\n"
+"    rgb_space.z = gammaDecLUT.Sample (linearSampler, rgb_space.z);\n"
 "\n"
-"    out_space.x = gammaEncLUT.Sample (linearSampler, tmp.x);\n"
-"    out_space.y = gammaEncLUT.Sample (linearSampler, tmp.y);\n"
-"    out_space.z = gammaEncLUT.Sample (linearSampler, tmp.z);\n"
+"    primary_converted.x = dot (primariesCoeff.CoeffX, rgb_space);\n"
+"    primary_converted.y = dot (primariesCoeff.CoeffY, rgb_space);\n"
+"    primary_converted.z = dot (primariesCoeff.CoeffZ, rgb_space);\n"
 "\n"
-"    out_space.x = dot (postCoeff.CoeffX, out_space);\n"
-"    out_space.y = dot (postCoeff.CoeffY, out_space);\n"
-"    out_space.z = dot (postCoeff.CoeffZ, out_space);\n"
+"    rgb_space.x = gammaEncLUT.Sample (linearSampler, primary_converted.x);\n"
+"    rgb_space.y = gammaEncLUT.Sample (linearSampler, primary_converted.y);\n"
+"    rgb_space.z = gammaEncLUT.Sample (linearSampler, primary_converted.z);\n"
+"\n"
+"    out_space.x = dot (postCoeff.CoeffX, rgb_space);\n"
+"    out_space.y = dot (postCoeff.CoeffY, rgb_space);\n"
+"    out_space.z = dot (postCoeff.CoeffZ, rgb_space);\n"
 "    out_space += postCoeff.Offset;\n"
 "    return float4 (clamp (out_space, postCoeff.Min, postCoeff.Max), sample.a);\n"
 "  }\n"
