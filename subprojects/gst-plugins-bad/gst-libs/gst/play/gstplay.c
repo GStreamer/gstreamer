@@ -382,6 +382,9 @@ gst_play_class_init (GstPlayClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (gst_play_debug, "gst-play", 0, "GstPlay");
+  gst_play_error_quark ();
+
   gobject_class->set_property = gst_play_set_property;
   gobject_class->get_property = gst_play_get_property;
   gobject_class->dispose = gst_play_dispose;
@@ -2743,9 +2746,6 @@ static gpointer
 gst_play_init_once (G_GNUC_UNUSED gpointer user_data)
 {
   gst_init (NULL, NULL);
-
-  GST_DEBUG_CATEGORY_INIT (gst_play_debug, "gst-play", 0, "GstPlay");
-  gst_play_error_quark ();
 
   return NULL;
 }
