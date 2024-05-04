@@ -625,6 +625,9 @@ gst_player_constructed (GObject * object)
  * no special video set up will be done and some default handling will be
  * performed.
  *
+ * This also initializes GStreamer via `gst_init()` on the first call if this
+ * didn't happen before.
+ *
  * Returns: (transfer full): a new #GstPlayer instance
  */
 GstPlayer *
