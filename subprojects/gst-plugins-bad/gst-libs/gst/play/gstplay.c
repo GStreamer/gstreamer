@@ -2760,6 +2760,9 @@ gst_play_init_once (G_GNUC_UNUSED gpointer user_data)
  * no special video set up will be done and some default handling will be
  * performed.
  *
+ * This also initializes GStreamer via `gst_init()` on the first call if this
+ * didn't happen before.
+ *
  * Returns: (transfer full): a new #GstPlay instance
  * Since: 1.20
  */
