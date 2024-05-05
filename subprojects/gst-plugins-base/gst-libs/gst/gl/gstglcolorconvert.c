@@ -1796,7 +1796,7 @@ gst_gl_color_convert_fixate_format_target (GstCaps * caps, GstCaps * result)
   const GstVideoFormatInfo *in_info, *out_info = NULL;
   const GValue *targets;
   guint targets_mask = 0;
-  GstGLTextureTarget target;
+  GstGLTextureTarget target = GST_GL_TEXTURE_TARGET_NONE;
   gint min_loss = G_MAXINT;
   guint i, capslen;
 
@@ -1860,7 +1860,7 @@ gst_gl_color_convert_fixate_format_target (GstCaps * caps, GstCaps * result)
   if (out_info)
     gst_structure_set (outs, "format", G_TYPE_STRING,
         GST_VIDEO_FORMAT_INFO_NAME (out_info), NULL);
-  if (target)
+  if (target != GST_GL_TEXTURE_TARGET_NONE)
     gst_structure_set (outs, "texture-target", G_TYPE_STRING,
         gst_gl_texture_target_to_string (target), NULL);
 }
