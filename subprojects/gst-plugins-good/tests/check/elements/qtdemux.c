@@ -1085,8 +1085,9 @@ GST_START_TEST (test_qtdemux_compensate_data_offset)
       "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000, NULL);
   caps =
       gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
-      "mss-fragmented", "timescale", G_TYPE_UINT64, 10000000, "media-caps",
-      GST_TYPE_CAPS, mediacaps, NULL);
+      "mss-fragmented", "timescale", G_TYPE_UINT64,
+      G_GUINT64_CONSTANT (10000000), "media-caps", GST_TYPE_CAPS, mediacaps,
+      NULL);
 
   /* Send segment event* */
   event = gst_event_new_caps (caps);
@@ -1165,8 +1166,9 @@ GST_START_TEST (test_qtdemux_mss_fragment)
       "channels", G_TYPE_INT, 2, "rate", G_TYPE_INT, 48000, NULL);
   caps =
       gst_caps_new_simple ("video/quicktime", "variant", G_TYPE_STRING,
-      "mss-fragmented", "timescale", G_TYPE_UINT64, 10000000, "media-caps",
-      GST_TYPE_CAPS, mediacaps, NULL);
+      "mss-fragmented", "timescale", G_TYPE_UINT64,
+      G_GUINT64_CONSTANT (10000000), "media-caps", GST_TYPE_CAPS, mediacaps,
+      NULL);
 
   /* Send segment event* */
   event = gst_event_new_caps (caps);
