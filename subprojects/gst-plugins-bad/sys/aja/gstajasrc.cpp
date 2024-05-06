@@ -1079,9 +1079,9 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
       // their framebuffers/muxers, and muxers from their framebuffers
       for (auto iter = connections.begin(); iter != connections.end(); iter++) {
         if (iter->first == NTV2_XptFrameBuffer1Input ||
-            iter->first == NTV2_XptFrameBuffer1BInput ||
+            iter->first == NTV2_XptFrameBuffer1DS2Input ||
             iter->first == NTV2_XptFrameBuffer2Input ||
-            iter->first == NTV2_XptFrameBuffer2BInput ||
+            iter->first == NTV2_XptFrameBuffer2DS2Input ||
             iter->second == NTV2_Xpt425Mux1AYUV ||
             iter->second == NTV2_Xpt425Mux1BYUV ||
             iter->second == NTV2_Xpt425Mux2AYUV ||
@@ -1099,10 +1099,10 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
     } else if (self->channel == NTV2_CHANNEL1) {
       for (auto iter = connections.begin(); iter != connections.end(); iter++) {
         if (iter->first == NTV2_XptFrameBuffer1Input ||
-            iter->first == NTV2_XptFrameBuffer1BInput ||
+            iter->first == NTV2_XptFrameBuffer1DS2Input ||
             iter->first == NTV2_XptFrameBuffer1DS2Input ||
             iter->first == NTV2_XptFrameBuffer2Input ||
-            iter->first == NTV2_XptFrameBuffer2BInput ||
+            iter->first == NTV2_XptFrameBuffer2DS2Input ||
             iter->first == NTV2_XptFrameBuffer2DS2Input ||
             iter->second == NTV2_Xpt425Mux1AYUV ||
             iter->second == NTV2_Xpt425Mux1BYUV ||
@@ -1125,10 +1125,10 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
     } else if (self->channel == NTV2_CHANNEL5) {
       for (auto iter = connections.begin(); iter != connections.end(); iter++) {
         if (iter->first == NTV2_XptFrameBuffer5Input ||
-            iter->first == NTV2_XptFrameBuffer5BInput ||
+            iter->first == NTV2_XptFrameBuffer5DS2Input ||
             iter->first == NTV2_XptFrameBuffer5DS2Input ||
             iter->first == NTV2_XptFrameBuffer6Input ||
-            iter->first == NTV2_XptFrameBuffer6BInput ||
+            iter->first == NTV2_XptFrameBuffer6DS2Input ||
             iter->first == NTV2_XptFrameBuffer6DS2Input ||
             iter->second == NTV2_Xpt425Mux3AYUV ||
             iter->second == NTV2_Xpt425Mux3BYUV ||
@@ -1229,9 +1229,9 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
   if (self->quad_mode) {
     if (self->input_source >= GST_AJA_INPUT_SOURCE_HDMI1 &&
         self->input_source <= GST_AJA_INPUT_SOURCE_HDMI4) {
-      router.AddConnection(NTV2_XptFrameBuffer1BInput, NTV2_Xpt425Mux1BYUV);
+      router.AddConnection(NTV2_XptFrameBuffer1DS2Input, NTV2_Xpt425Mux1BYUV);
       router.AddConnection(NTV2_XptFrameBuffer2Input, NTV2_Xpt425Mux2AYUV);
-      router.AddConnection(NTV2_XptFrameBuffer2BInput, NTV2_Xpt425Mux2BYUV);
+      router.AddConnection(NTV2_XptFrameBuffer2DS2Input, NTV2_Xpt425Mux2BYUV);
 
       router.AddConnection(NTV2_Xpt425Mux1AInput, NTV2_XptHDMIIn1);
       router.AddConnection(NTV2_Xpt425Mux1BInput, NTV2_XptHDMIIn1Q2);
@@ -1271,11 +1271,11 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
           // TSI?
         } else {
           if (self->channel == NTV2_CHANNEL1) {
-            router.AddConnection(NTV2_XptFrameBuffer1BInput,
+            router.AddConnection(NTV2_XptFrameBuffer1DS2Input,
                                  NTV2_Xpt425Mux1BYUV);
             router.AddConnection(NTV2_XptFrameBuffer2Input,
                                  NTV2_Xpt425Mux2AYUV);
-            router.AddConnection(NTV2_XptFrameBuffer2BInput,
+            router.AddConnection(NTV2_XptFrameBuffer2DS2Input,
                                  NTV2_Xpt425Mux2BYUV);
 
             router.AddConnection(NTV2_Xpt425Mux1AInput, NTV2_XptSDIIn1);
@@ -1283,11 +1283,11 @@ static gboolean gst_aja_src_configure(GstAjaSrc *self) {
             router.AddConnection(NTV2_Xpt425Mux2AInput, NTV2_XptSDIIn3);
             router.AddConnection(NTV2_Xpt425Mux2BInput, NTV2_XptSDIIn4);
           } else if (self->channel == NTV2_CHANNEL5) {
-            router.AddConnection(NTV2_XptFrameBuffer5BInput,
+            router.AddConnection(NTV2_XptFrameBuffer5DS2Input,
                                  NTV2_Xpt425Mux3BYUV);
             router.AddConnection(NTV2_XptFrameBuffer6Input,
                                  NTV2_Xpt425Mux4AYUV);
-            router.AddConnection(NTV2_XptFrameBuffer6BInput,
+            router.AddConnection(NTV2_XptFrameBuffer6DS2Input,
                                  NTV2_Xpt425Mux4BYUV);
 
             router.AddConnection(NTV2_Xpt425Mux3AInput, NTV2_XptSDIIn5);

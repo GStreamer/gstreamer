@@ -208,8 +208,10 @@ option('uvcgadget', type : 'feature', value : 'auto', description : 'uvc video g
 option('isac', type : 'feature', value : 'auto', description : 'iSAC plugin')
 
 # AJA plugin options
-option('aja-sdk-dir', type : 'string', value : '',
-  description : 'Directory with AJA SDK, e.g. ntv2sdklinux_16.0.0.4')
+option('aja-include-dir', type : 'string', value : '',
+  description : 'Directory where AJA NTV2 headers are located')
+option('aja-lib-dir', type : 'string', value : '',
+  description : 'Directory where AJA NTV2 library is located')
 
 # D3D11/D3D12 HLSL library options
 option('d3d-hlsl-precompile', type : 'feature', value : 'auto', description : 'Enable buildtime HLSL compile for d3d11/d3d12 library/plugin')
