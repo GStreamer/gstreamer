@@ -7504,7 +7504,8 @@ on_rtpbin_request_aux_sender (GstElement * rtpbin, guint session_id,
     GstPad *sinkpad = gst_element_get_static_pad (aux_sender, "sink");
     GstPad *srcpad = gst_element_get_static_pad (aux_sender, "src");
 
-    gst_object_ref_sink (aux_sender);
+    if (g_object_is_floating (aux_sender))
+      aux_sender = gst_object_ref_sink (aux_sender);
 
     if (!sinkpad || !srcpad) {
       GST_ERROR_OBJECT (webrtc,
