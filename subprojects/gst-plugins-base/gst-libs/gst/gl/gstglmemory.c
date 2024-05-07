@@ -71,6 +71,10 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GL_UNPACK_ROW_LENGTH 0x0CF2
 #endif
 
+#ifndef GL_PACK_ROW_LENGTH
+#define GL_PACK_ROW_LENGTH 0x0D02
+#endif
+
 #ifndef GL_TEXTURE_RECTANGLE
 #define GL_TEXTURE_RECTANGLE 0x84F5
 #endif
@@ -457,6 +461,13 @@ gst_gl_memory_read_pixels (GstGLMemory * gl_mem, gpointer write_pointer)
         return FALSE;
       }
     }
+  }
+
+  if (USING_OPENGL (context) || USING_GLES3 (context)
+      || USING_OPENGL3 (context)) {
+    gl->PixelStorei (GL_PACK_ROW_LENGTH, gl_mem->unpack_length);
+  } else if (USING_GLES2 (context)) {
+    gl->PixelStorei (GL_PACK_ALIGNMENT, gl_mem->unpack_length);
   }
 
   _gst_gl_memory_start_log (gl_mem, "glReadPixels");
