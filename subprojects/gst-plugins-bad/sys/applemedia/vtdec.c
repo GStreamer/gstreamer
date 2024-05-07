@@ -743,7 +743,7 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     gst_video_codec_state_unref (vtdec->input_state);
   vtdec->input_state = gst_video_codec_state_ref (state);
 
-  return gst_video_decoder_negotiate (decoder);
+  return gst_vtdec_negotiate (decoder);
 }
 
 static gboolean
