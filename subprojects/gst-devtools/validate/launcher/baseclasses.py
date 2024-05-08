@@ -79,6 +79,63 @@ EXITING_SIGNALS.update({(v, k) for k, v in EXITING_SIGNALS.items()})
 
 
 CI_ARTIFACTS_URL = os.environ.get('CI_ARTIFACTS_URL')
+DEBUGGER = None
+
+
+def get_debugger():
+    global DEBUGGER
+    if DEBUGGER is not None:
+        return DEBUGGER
+
+    gdb = shutil.which('gdb')
+    if gdb:
+        DEBUGGER = GDBDebugger(gdb)
+    else:
+        lldb = shutil.which('lldb')
+        DEBUGGER = LLDBDebugger(lldb)
+
+    return DEBUGGER
+
+
+class Debugger:
+    def __init__(self, executable):
+        self.executable = executable
+
+    def get_args(self, args, non_stop) -> list:
+        raise NotImplementedError
+
+    def get_attach_args(self, pid):
+        raise NotImplementedError
+
+
+class GDBDebugger(Debugger):
+    def get_args(self, args, non_stop) -> list:
+        if non_stop:
+            return [
+                self.executable,
+                "-ex",
+                "run",
+                "-ex",
+                "bt",
+                "-ex",
+                "quit",
+                "--args",
+            ] + args
+        else:
+            return [self.executable, "--args"] + args
+
+    def get_attach_args(self, pid):
+        return [self.executable, "-p", str(pid)]
+
+
+class LLDBDebugger(Debugger):
+    def get_args(self, args, non_stop) -> list:
+        if non_stop:
+            return [self.executable, "-o", "run", "-o", "bt", "-o", "quit", "--"] + args
+        return [self.executable, "--"] + args
+
+    def get_attach_args(self, pid):
+        return [self.executable, "-p", str(pid)]
 
 
 class Test(Loggable):
@@ -365,6 +422,7 @@ class Test(Loggable):
                                                                     message, error))
 
         if result is Result.TIMEOUT:
+            self.add_stack_trace_to_logfile()
             if self.options.debug is True:
                 if self.options.gdb:
                     printc("Timeout, you should process <ctrl>c to get into gdb",
@@ -373,11 +431,21 @@ class Test(Loggable):
                     self.process.communicate()
                 else:
                     pname = self.command[0]
-                    input("%sTimeout happened  on %s you can attach gdb doing:\n $gdb %s %d%s\n"
-                          "Press enter to continue" % (Colors.FAIL, self.classname,
-                          pname, self.process.pid, Colors.ENDC))
-            else:
-                self.add_stack_trace_to_logfile()
+                    while True:
+                        debugger = get_debugger()
+                        if not debugger:
+                            res = input(f"{Colors.FAIL}Timeout happened on {self.classname} no known debugger found but the process PID is {self.process.pid}\n"
+                                f"You can find log file at {self.logfile}\n"
+                                f"Press 'ok(o)' enter to continue\n\n")
+                        else:
+                            res = input(f"{Colors.FAIL}Timeout happened on {self.classname} you can attach the debugger doing:\n"
+                                    f"   $ {' '.join([shlex.quote(a) for a in debugger.get_attach_args(self.process.pid)])}\n"
+                                    f"You can find log file at {self.logfile}\n"
+                                    f"**Press ok(o) to continue**{Colors.ENDC}\n\n")
+
+                        if res.lower() in ['o', 'ok']:
+                            print("Continuing...\n")
+                            break
 
         self.result = result
         self.message = message
@@ -544,10 +612,8 @@ class Test(Loggable):
             self.timeout = sys.maxsize
             self.hard_timeout = sys.maxsize
 
-        args = ["gdb"]
-        if self.options.gdb_non_stop:
-            args += ["-ex", "run", "-ex", "backtrace", "-ex", "quit"]
-        args += ["--args"] + command
+        assert DEBUGGER is not None
+        args = DEBUGGER.get_args(command, self.options.gdb_non_stop)
         return args
 
     def use_rr(self, command, subenv):
@@ -1620,6 +1686,10 @@ class TestsManager(Loggable):
         if options.blacklisted_tests:
             for patterns in options.blacklisted_tests:
                 self._add_blacklist(patterns)
+
+        if options.gdb:
+            if get_debugger() is None:
+                raise RuntimeError("No debugger found, can't run tests with --gdb")
 
     def check_blacklists(self):
         if self.options.check_bugs_status:
