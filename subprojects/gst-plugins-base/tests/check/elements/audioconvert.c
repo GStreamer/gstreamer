@@ -1823,6 +1823,49 @@ GST_START_TEST (test_layout_conv_fixate_caps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_96_channels_conversion)
+{
+  GstCaps *incaps, *outcaps;
+  GstElement *audioconvert;
+  GstCaps *caps;
+  GstStructure *s;
+
+  incaps = gst_caps_from_string ("audio/x-raw, "
+      "format = (string) F32LE, "
+      "layout = (string) interleaved, "
+      "rate = (int) 44100, "
+      "channels = (int) 96, " "channel-mask = (bitmask) 0");
+  outcaps = gst_caps_from_string ("audio/x-raw, "
+      "format = (string) F64LE, " "layout = (string) non-interleaved");
+
+  audioconvert = setup_audioconvert (outcaps);
+
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  gst_check_setup_events (mysrcpad, audioconvert, incaps, GST_FORMAT_TIME);
+
+  caps = gst_pad_get_current_caps (mysinkpad);
+  s = gst_caps_get_structure (caps, 0);
+  assert_equals_string (gst_structure_get_string (s, "format"), "F64LE");
+  assert_equals_string (gst_structure_get_string (s, "layout"),
+      "non-interleaved");
+  gst_clear_caps (&caps);
+
+  fail_unless (gst_element_set_state (audioconvert,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS, "could not set to null");
+  /* cleanup */
+  GST_DEBUG ("cleanup audioconvert");
+  cleanup_audioconvert (audioconvert);
+  GST_DEBUG ("cleanup, unref incaps");
+  gst_caps_unref (incaps);
+  gst_caps_unref (outcaps);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 audioconvert_suite (void)
 {
@@ -1843,6 +1886,7 @@ audioconvert_suite (void)
   tcase_add_test (tc_chain, test_gap_buffers);
   tcase_add_test (tc_chain, test_layout_conversion);
   tcase_add_test (tc_chain, test_layout_conv_fixate_caps);
+  tcase_add_test (tc_chain, test_96_channels_conversion);
 
   return s;
 }
