@@ -82,6 +82,7 @@ struct _GstSplitMuxPartReader
 
   GstSplitMuxPartReaderInfo info;
 
+  GstClockTime smallest_ts_offset;
   GstClockTime ts_offset;
   GstClockTime end_offset;
 

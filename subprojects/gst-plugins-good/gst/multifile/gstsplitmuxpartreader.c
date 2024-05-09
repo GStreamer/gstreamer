@@ -141,19 +141,38 @@ handle_buffer_measuring (GstSplitMuxPartReader * reader,
   if (reader->prep_state == PART_STATE_PREPARING_COLLECT_STREAMS &&
       !part_pad->seen_buffer) {
     /* If this is the first buffer on the pad in the collect_streams state,
-     * then calculate initial offset based on running time of this segment */
+     * then calculate initial offset based on running time of this segment
+     * that will put this stream's timestamps on a common zero base */
     part_pad->initial_ts_offset =
-        part_pad->orig_segment.start + part_pad->orig_segment.base -
-        part_pad->orig_segment.time;
+        part_pad->orig_segment.start - part_pad->orig_segment.base;
+
     GST_DEBUG_OBJECT (reader,
-        "Initial TS offset for pad %" GST_PTR_FORMAT " now %" GST_TIME_FORMAT,
-        part_pad, GST_TIME_ARGS (part_pad->initial_ts_offset));
+        "Initial TS offset for pad %" GST_PTR_FORMAT " now %" GST_TIME_FORMAT
+        " from seg %" GST_SEGMENT_FORMAT,
+        part_pad, GST_TIME_ARGS (part_pad->initial_ts_offset),
+        &part_pad->orig_segment);
+
+    /* And check if this is the 'earliest' stream in the set that
+     * will be used to move the entire presentation back to 0 */
+    GstClockTime smallest_offset = part_pad->orig_segment.base;
+
+    if (!GST_CLOCK_TIME_IS_VALID (reader->smallest_ts_offset) ||
+        smallest_offset < reader->smallest_ts_offset) {
+
+      reader->smallest_ts_offset = smallest_offset;
+
+      GST_DEBUG_OBJECT (reader,
+          "Overall TS offset for all pads %" GST_PTR_FORMAT " now %"
+          GST_TIME_FORMAT, part_pad,
+          GST_TIME_ARGS (reader->smallest_ts_offset));
+    }
   }
   part_pad->seen_buffer = TRUE;
 
   /* Adjust buffer timestamps */
-  offset = reader->info.start_offset + part_pad->segment.base;
-  offset -= part_pad->initial_ts_offset;
+  offset = reader->info.start_offset - part_pad->initial_ts_offset;
+  offset -= reader->smallest_ts_offset;
+
   /* We don't add the ts_offset here, because we
    * want to measure the logical length of the stream,
    * not to generate output timestamps */
@@ -245,8 +264,8 @@ splitmux_part_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   }
 
   /* Adjust buffer timestamps */
-  offset = reader->info.start_offset + part_pad->segment.base;
-  offset -= part_pad->initial_ts_offset;
+  offset = reader->info.start_offset - part_pad->initial_ts_offset;
+  offset -= reader->smallest_ts_offset;
   offset += reader->ts_offset;
 
   if (GST_BUFFER_PTS_IS_VALID (buf))
@@ -699,6 +718,7 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
   reader->need_duration_measuring = TRUE;
 
   reader->active = FALSE;
+  reader->smallest_ts_offset = GST_CLOCK_TIME_NONE;
   reader->info.start_offset = GST_CLOCK_TIME_NONE;
   reader->info.duration = GST_CLOCK_TIME_NONE;
 
