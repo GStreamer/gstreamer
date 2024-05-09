@@ -51551,6 +51551,47 @@ would write out.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="debug_print_object" c:identifier="gst_debug_print_object" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Returns a string that represents @ptr. This is safe to call with
+%GstStructure, %GstCapsFeatures, %GstMiniObject s (e.g. %GstCaps,
+%GstBuffer or %GstMessage), and %GObjects (e.g. %GstElement or %GstPad).
+
+The string representation is meant to be used for debugging purposes and
+might change between GStreamer versions.
+
+Passing other kind of pointers might or might not work and is generally
+unsafe to do.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a string containing a string
+    representation of the object</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="ptr" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the object</doc>
+          <type name="gpointer" c:type="gconstpointer"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="debug_print_segment" c:identifier="gst_debug_print_segment" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">Returns a string that represents @segments.
+
+The string representation is meant to be used for debugging purposes and
+might change between GStreamer versions.</doc>
+      <source-position filename="../subprojects/gstreamer/gst/gstinfo.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">a string containing a string
+    representation of the segment</doc>
+        <type name="utf8" c:type="gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="segment" transfer-ownership="none" nullable="1" allow-none="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">the %GstSegment</doc>
+          <type name="Segment" c:type="const GstSegment*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="debug_print_stack_trace" c:identifier="gst_debug_print_stack_trace">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstinfo.c">If libunwind, glibc backtrace or DbgHelp are present
 a stack trace is printed.</doc>

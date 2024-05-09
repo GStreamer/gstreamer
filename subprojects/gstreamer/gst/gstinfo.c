@@ -1065,8 +1065,27 @@ gst_info_describe_stream_collection (GstStreamCollection * collection)
   return ret;
 }
 
-static gchar *
-gst_debug_print_object (gpointer ptr)
+/**
+ * gst_debug_print_object:
+ * @ptr: (nullable): the object
+ *
+ * Returns a string that represents @ptr. This is safe to call with
+ * %GstStructure, %GstCapsFeatures, %GstMiniObject s (e.g. %GstCaps,
+ * %GstBuffer or %GstMessage), and %GObjects (e.g. %GstElement or %GstPad).
+ *
+ * The string representation is meant to be used for debugging purposes and
+ * might change between GStreamer versions.
+ *
+ * Passing other kind of pointers might or might not work and is generally
+ * unsafe to do.
+ *
+ * Returns: (transfer full) (type gchar*): a string containing a string
+ *     representation of the object
+ *
+ * Since: 1.26
+ */
+gchar *
+gst_debug_print_object (gconstpointer ptr)
 {
   GObject *object = (GObject *) ptr;
 
@@ -1162,11 +1181,23 @@ gst_debug_print_object (gpointer ptr)
   return g_strdup_printf ("%p", ptr);
 }
 
-static gchar *
-gst_debug_print_segment (gpointer ptr)
+/**
+ * gst_debug_print_segment:
+ * @segment: (nullable): the %GstSegment
+ *
+ * Returns a string that represents @segments.
+ *
+ * The string representation is meant to be used for debugging purposes and
+ * might change between GStreamer versions.
+ *
+ * Returns: (transfer full) (type gchar*): a string containing a string
+ *     representation of the segment
+ *
+ * Since: 1.26
+ */
+gchar *
+gst_debug_print_segment (const GstSegment * segment)
 {
-  GstSegment *segment = (GstSegment *) ptr;
-
   /* nicely printed segment */
   if (segment == NULL) {
     return g_strdup ("(NULL)");
