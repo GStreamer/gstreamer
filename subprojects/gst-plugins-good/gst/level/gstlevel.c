@@ -747,6 +747,9 @@ gst_level_post_message (GstLevel * filter)
   gint channels, rate, frames = filter->num_frames;
   GstClockTime duration;
 
+  if (!GST_AUDIO_INFO_IS_VALID (&filter->info))
+    return;
+
   channels = GST_AUDIO_INFO_CHANNELS (&filter->info);
   rate = GST_AUDIO_INFO_RATE (&filter->info);
   duration = GST_FRAMES_TO_CLOCK_TIME (frames, rate);
