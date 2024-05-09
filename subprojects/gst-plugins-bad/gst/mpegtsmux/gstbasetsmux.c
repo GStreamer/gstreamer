@@ -1090,9 +1090,13 @@ new_packet_common_init (GstBaseTsMux * mux, GstBuffer * buf, guint8 * data,
 static GstFlowReturn
 gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
 {
+  GstSegment *segment =
+      &GST_AGGREGATOR_PAD (GST_AGGREGATOR_SRC_PAD (mux))->segment;
   GstBufferList *buffer_list;
   gint align = mux->alignment;
   gint av, packet_size;
+  GstFlowReturn flow_ret;
+  GstClockTime pts;
 
   packet_size = mux->packet_size;
 
@@ -1108,8 +1112,16 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
   /* no alignment, just push all available data */
   if (align == 0) {
     buffer_list = gst_adapter_take_buffer_list (mux->out_adapter, av);
-    return gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux),
+    flow_ret = gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux),
         buffer_list);
+
+    pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
+    if (GST_CLOCK_TIME_IS_VALID (pts)
+        && (!GST_CLOCK_TIME_IS_VALID (segment->position)
+            || segment->position < pts))
+      segment->position = pts;
+
+    return flow_ret;
   }
 
   align *= packet_size;
@@ -1122,7 +1134,6 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
   GST_LOG_OBJECT (mux, "aligning to %d bytes", align);
   while (align <= av) {
     GstBuffer *buf;
-    GstClockTime pts;
 
     pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
     buf = gst_adapter_take_buffer (mux->out_adapter, align);
@@ -1135,7 +1146,6 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
 
   if (av > 0 && force) {
     GstBuffer *buf;
-    GstClockTime pts;
     guint8 *data;
     guint32 header;
     gint dummy;
@@ -1185,7 +1195,16 @@ gst_base_ts_mux_push_packets (GstBaseTsMux * mux, gboolean force)
     gst_buffer_list_add (buffer_list, buf);
   }
 
-  return gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux), buffer_list);
+  flow_ret =
+      gst_aggregator_finish_buffer_list (GST_AGGREGATOR (mux), buffer_list);
+
+  pts = gst_adapter_prev_pts (mux->out_adapter, NULL);
+  if (GST_CLOCK_TIME_IS_VALID (pts)
+      && (!GST_CLOCK_TIME_IS_VALID (segment->position)
+          || segment->position < pts))
+    segment->position = pts;
+
+  return flow_ret;
 }
 
 static GstFlowReturn
@@ -2802,6 +2821,7 @@ gst_base_ts_mux_class_init (GstBaseTsMuxClass * klass)
   gstagg_class->src_event = gst_base_ts_mux_src_event;
   gstagg_class->start = gst_base_ts_mux_start;
   gstagg_class->stop = gst_base_ts_mux_stop;
+  gstagg_class->get_next_time = gst_aggregator_simple_get_next_time;
 
   klass->create_ts_mux = gst_base_ts_mux_default_create_ts_mux;
   klass->allocate_packet = gst_base_ts_mux_default_allocate_packet;
