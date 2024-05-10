@@ -289,8 +289,8 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_CALLBACK (gst_splitmuxsrc_add_fragment),
       NULL, NULL, NULL,
-      G_TYPE_BOOLEAN, 3, G_TYPE_STRING, GST_TYPE_CLOCK_TIME,
-      GST_TYPE_CLOCK_TIME);
+      G_TYPE_BOOLEAN, 3, G_TYPE_STRING | G_SIGNAL_TYPE_STATIC_SCOPE,
+      GST_TYPE_CLOCK_TIME, GST_TYPE_CLOCK_TIME);
 }
 
 static void
@@ -517,10 +517,9 @@ gst_splitmux_part_measured_cb (GstSplitMuxPartReader * part,
   splitmux->total_duration +=
       gst_splitmux_part_reader_get_duration (splitmux->parts[idx]);
   splitmux->play_segment.duration = splitmux->total_duration;
-  GST_OBJECT_UNLOCK (splitmux);
-
   splitmux->end_offset =
       gst_splitmux_part_reader_get_end_offset (splitmux->parts[idx]);
+  GST_OBJECT_UNLOCK (splitmux);
 
   GST_DEBUG_OBJECT (splitmux,
       "Duration %" GST_TIME_FORMAT ", total duration now: %" GST_TIME_FORMAT
@@ -529,6 +528,7 @@ gst_splitmux_part_measured_cb (GstSplitMuxPartReader * part,
               [idx])), GST_TIME_ARGS (splitmux->total_duration),
       GST_TIME_ARGS (splitmux->end_offset));
 
+  SPLITMUX_SRC_LOCK (splitmux);
   splitmux->num_measured_parts++;
 
   /* If we're done or preparing the next part fails, finish here */
@@ -537,14 +537,18 @@ gst_splitmux_part_measured_cb (GstSplitMuxPartReader * part,
     /* Store how many parts we actually prepared in the end */
     splitmux->num_parts = splitmux->num_measured_parts;
 
-    /* All done preparing, activate the first part */
-    GST_INFO_OBJECT (splitmux,
-        "All parts measured. Total duration %" GST_TIME_FORMAT
-        " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
-    gst_element_call_async (GST_ELEMENT_CAST (splitmux),
-        (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
-        NULL, NULL);
+    if (!splitmux->did_initial_measuring) {
+      /* All done preparing, activate the first part if this was the initial measurement phase */
+      GST_INFO_OBJECT (splitmux,
+          "All parts measured. Total duration %" GST_TIME_FORMAT
+          " Activating first part", GST_TIME_ARGS (splitmux->total_duration));
+      gst_element_call_async (GST_ELEMENT_CAST (splitmux),
+          (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
+          NULL, NULL);
+    }
+    splitmux->did_initial_measuring = TRUE;
   }
+  SPLITMUX_SRC_UNLOCK (splitmux);
 }
 
 static GstBusSyncReply
@@ -561,6 +565,7 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
       GST_ERROR_OBJECT (splitmux,
           "Got error message from part %" GST_PTR_FORMAT ": %" GST_PTR_FORMAT,
           GST_MESSAGE_SRC (msg), msg);
+      SPLITMUX_SRC_LOCK (splitmux);
       if (splitmux->num_measured_parts < splitmux->num_parts) {
         guint idx = splitmux->num_measured_parts;
 
@@ -582,9 +587,8 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
 
         /* Store how many parts we actually prepared in the end */
         splitmux->num_parts = splitmux->num_measured_parts;
-        do_async_done (splitmux);
 
-        if (idx > 0) {
+        if (idx > 0 && !splitmux->did_initial_measuring) {
           /* All done preparing, activate the first part */
           GST_INFO_OBJECT (splitmux,
               "All parts prepared. Total duration %" GST_TIME_FORMAT
@@ -594,7 +598,13 @@ gst_splitmux_part_bus_handler (GstBus * bus, GstMessage * msg,
               (GstElementCallAsyncFunc) gst_splitmux_src_activate_first_part,
               NULL, NULL);
         }
+        splitmux->did_initial_measuring = TRUE;
+        SPLITMUX_SRC_UNLOCK (splitmux);
+
+        do_async_done (splitmux);
       } else {
+        SPLITMUX_SRC_UNLOCK (splitmux);
+
         /* Need to update the message source so that it's part of the element
          * hierarchy the application would expect */
         msg = gst_message_copy (msg);
@@ -1051,10 +1061,14 @@ gst_splitmux_src_measure_next_part (GstSplitMuxSrc * splitmux)
       return TRUE;
     }
 
+    GST_OBJECT_LOCK (splitmux);
+
     /* Get the end offset (start offset of the next piece) */
     end_offset = gst_splitmux_part_reader_get_end_offset (reader);
     splitmux->total_duration += gst_splitmux_part_reader_get_duration (reader);
     splitmux->num_measured_parts++;
+
+    GST_OBJECT_UNLOCK (splitmux);
   }
 
   return TRUE;
@@ -1228,6 +1242,7 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   splitmux->parts = NULL;
   splitmux->num_parts = 0;
   splitmux->num_measured_parts = 0;
+  splitmux->did_initial_measuring = FALSE;
   splitmux->num_parts_alloced = 0;
   splitmux->total_duration = GST_CLOCK_TIME_NONE;
 
@@ -1782,6 +1797,14 @@ gst_splitmuxsrc_add_fragment (GstSplitMuxSrc * splitmux,
 
   splitmux->parts[splitmux->num_parts] = reader;
   splitmux->num_parts++;
+
+  /* If we already did the initial measuring, and we added a new first part here,
+   * call 'measure_next_part' to get it measured / added to our duration */
+  if (splitmux->did_initial_measuring
+      && (splitmux->num_measured_parts + 1) == splitmux->num_parts) {
+    if (!gst_splitmux_src_measure_next_part (splitmux)) {
+    }
+  }
 
   SPLITMUX_SRC_UNLOCK (splitmux);
   return TRUE;

@@ -46,6 +46,7 @@ struct _GstSplitMuxSrc
   GMutex lock;
   GMutex msg_lock;
   gboolean     running;
+  gboolean     did_initial_measuring;
 
   gchar       *location;  /* OBJECT_LOCK */
 
