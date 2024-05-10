@@ -28,6 +28,61 @@
 #include <atomic>
 #include <string>
 
+/**
+ * GstD3D12VideoSinkDisplayFormat:
+ *
+ * Swapchain display format
+ *
+ * Since: 1.26
+ */
+#define GST_TYPE_D3D12_VIDEO_SINK_DISPLAY_FORMAT (gst_d3d12_video_sink_display_format_type())
+static GType
+gst_d3d12_video_sink_display_format_type (void)
+{
+  static GType format_type = 0;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    static const GEnumValue format_types[] = {
+      /**
+       * GstD3D12VideoSinkDisplayFormat::unknown:
+       *
+       * Since: 1.26
+       */
+      {DXGI_FORMAT_UNKNOWN, "DXGI_FORMAT_UNKNOWN", "unknown"},
+
+      /**
+       * GstD3D12VideoSinkDisplayFormat::r10g10b10a2-unorm:
+       *
+       * Since: 1.26
+       */
+      {DXGI_FORMAT_R10G10B10A2_UNORM,
+          "DXGI_FORMAT_R10G10B10A2_UNORM", "r10g10b10a2-unorm"},
+
+      /**
+       * GstD3D12VideoSinkDisplayFormat::r8g8b8a8-unorm:
+       *
+       * Since: 1.26
+       */
+      {DXGI_FORMAT_R8G8B8A8_UNORM,
+          "DXGI_FORMAT_R8G8B8A8_UNORM", "r8g8b8a8-unorm"},
+
+      /**
+       * GstD3D12VideoSinkDisplayFormat::b8g8r8a8-unorm:
+       *
+       * Since: 1.26
+       */
+      {DXGI_FORMAT_B8G8R8A8_UNORM,
+          "DXGI_FORMAT_B8G8R8A8_UNORM", "b8g8r8a8-unorm"},
+      {0, nullptr, nullptr},
+    };
+
+    format_type = g_enum_register_static ("GstD3D12VideoSinkDisplayFormat",
+        format_types);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return format_type;
+}
+
 enum
 {
   PROP_0,
@@ -49,6 +104,8 @@ enum
   PROP_SAMPLING_METHOD,
   PROP_GAMMA_MODE,
   PROP_PRIMARIES_MODE,
+  PROP_OVERLAY_MODE,
+  PROP_DISPLAY_FORMAT,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -66,6 +123,16 @@ enum
 #define DEFAULT_SAMPLING_METHOD GST_D3D12_SAMPLING_METHOD_BILINEAR
 #define DEFAULT_GAMMA_MODE GST_VIDEO_GAMMA_MODE_NONE
 #define DEFAULT_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
+#define DEFAULT_OVERLAY_MODE GST_D3D12_WINDOW_OVERLAY_NONE
+#define DEFAULT_DISPLAY_FORMAT DXGI_FORMAT_UNKNOWN
+
+enum
+{
+  SIGNAL_OVERLAY,
+  SIGNAL_LAST
+};
+
+static guint d3d12_video_sink_signals[SIGNAL_LAST] = { 0, };
 
 static GstStaticPadTemplate sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -135,6 +202,8 @@ struct GstD3D12VideoSinkPrivate
   GstVideoGammaMode gamma_mode = DEFAULT_GAMMA_MODE;
   GstVideoPrimariesMode primaries_mode = DEFAULT_PRIMARIES_MODE;
   GstD3D12SamplingMethod sampling_method = DEFAULT_SAMPLING_METHOD;
+  GstD3D12WindowOverlayMode overlay_mode = DEFAULT_OVERLAY_MODE;
+  DXGI_FORMAT display_format = DEFAULT_DISPLAY_FORMAT;
 };
 /* *INDENT-ON* */
 
@@ -147,9 +216,9 @@ struct _GstD3D12VideoSink
   GstD3D12VideoSinkPrivate *priv;
 };
 
-static void gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
+static void gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
+static void gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_d3d12_video_sink_dispose (GObject * object);
 static void gst_d3d12_video_sink_finalize (GObject * object);
@@ -180,6 +249,10 @@ static void gst_d3d12_video_sink_mouse_event (GstD3D12Window * window,
     GstD3D12VideoSink * self);
 static void gst_d3d12_video_sink_on_fullscreen (GstD3D12Window * window,
     gboolean is_fullscreen, GstD3D12VideoSink * self);
+static void gst_d3d12_video_sink_on_overlay (GstD3D12Window * window,
+    gpointer command_queue, gpointer resource12, gpointer device11on12,
+    gpointer resource11, gpointer context2d, gpointer viewport,
+    GstD3D12VideoSink * self);
 
 static void
 gst_d3d12_video_sink_video_overlay_init (GstVideoOverlayInterface * iface);
@@ -204,8 +277,8 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
   auto basesink_class = GST_BASE_SINK_CLASS (klass);
   auto videosink_class = GST_VIDEO_SINK_CLASS (klass);
 
-  object_class->set_property = gst_d3d12_videosink_set_property;
-  object_class->get_property = gst_d3d12_videosink_get_property;
+  object_class->set_property = gst_d3d12_video_sink_set_property;
+  object_class->get_property = gst_d3d12_video_sink_get_property;
   object_class->finalize = gst_d3d12_video_sink_dispose;
   object_class->finalize = gst_d3d12_video_sink_finalize;
 
@@ -322,6 +395,87 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           DEFAULT_SAMPLING_METHOD,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
+  /**
+   * GstD3D12VideoSink:overlay-mode:
+   *
+   * Overly signal type
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_OVERLAY_MODE,
+      g_param_spec_flags ("overlay-mode", "Overlay Mode",
+          "Overlay signal type to use", GST_TYPE_D3D12_WINDOW_OVERLAY_MODE,
+          DEFAULT_OVERLAY_MODE,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12VideoSink:display-format:
+   *
+   * Swapchain display format
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_DISPLAY_FORMAT,
+      g_param_spec_enum ("display-format", "Display Format",
+          "Swapchain display format", GST_TYPE_D3D12_VIDEO_SINK_DISPLAY_FORMAT,
+          DEFAULT_DISPLAY_FORMAT, (GParamFlags) (G_PARAM_READWRITE |
+              GST_PARAM_MUTABLE_READY | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12VideoSink::overlay:
+   * @d3d12videosink: the d3d12videosink element that emitted the signal
+   * @command_queue: ID3D12CommandQueue
+   * @resource12: ID3D12Resource
+   * @device11on12: (nullable): ID3D11On12Device
+   * @resource11: (nullable): ID3D11Texture2D
+   * @context2d: (nullable): ID2D1DeviceContext2
+   * @viewport: (nullable): D3D12_RECT, d3d12videosink's current viewport
+   *
+   * Signal emitted with Direct3D12, Direct3D11 and Direct2D resources
+   * associated with swapchain backbuffer.
+   *
+   * This signal is emitted from the streaming thread if "overlay-mode" property
+   * includes GST_D3D12_WINDOW_OVERLAY_D3D12. The @resource12 is a render target
+   * backbuffer of the swapchain. The Resource state of @resource12 when this
+   * signal is emitted will be always D3D12_RESOURCE_STATE_RENDER_TARGET and
+   * signal handler should make sure the state is
+   * D3D12_RESOURCE_STATE_RENDER_TARGET when signal handler is returned,
+   * so that state change to final D3D12_RESOURCE_STATE_PRESENT can be
+   * processed by videosink.
+   *
+   * In addition to the d2d12 resources, if "overlay-mode" includes
+   * GST_D3D12_WINDOW_OVERLAY_D3D11 flag and d3d11on12 API is supported by
+   * system, @device11on12 and @resource11 will be valid handles.
+   * Singla handler should not assume the @device11on12 and @resource11
+   * are always valid handle since d3d11on12 API may not be supported.
+   * The @resource11 is wrapped resource created via
+   * ID3D11On12Device::CreateWrappedResource(). Thus, signal handler must follow
+   * required steps for d3d11on12 device, for example,
+   * ID3D11On12Device::AcquireWrappedResources() must be called before recoding
+   * GPU commands. Once GPU commands are recoded via d3d11 or d2d APIs,
+   * the resource should be released via
+   * ID3D11On12Device::ReleaseWrappedResources(), and then
+   * ID3D11DeviceContext::Flush() must be called in the signal handler.
+   *
+   * If "overlay-mode" is GST_D3D12_WINDOW_OVERLAY_D2D and d2d device is
+   * available, @context2d will be valid handle. When this signal is emitted,
+   * @context2d has configured render target already. The D2D render target
+   * is also a resource derived from @resource11 and it's swapchain's backbuffer.
+   * The same step for d3d11 resource (i.e., acquire, release, and flush)
+   * is required for d2d as well.
+   *
+   * Since the resource is swapchain's backbuffer, signal handler must not hold
+   * any derived resources such as ID3D11RenderTargetView, so that videosink
+   * can clear swapchain resources and resize anytime it's needed.
+   *
+   * Since: 1.26
+   */
+  d3d12_video_sink_signals[SIGNAL_OVERLAY] =
+      g_signal_new_class_handler ("overlay", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, nullptr, nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 6, G_TYPE_POINTER, G_TYPE_POINTER, G_TYPE_POINTER,
+      G_TYPE_POINTER, G_TYPE_POINTER, G_TYPE_POINTER);
+
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_video_sink_set_context);
 
@@ -363,6 +517,8 @@ gst_d3d12_video_sink_init (GstD3D12VideoSink * self)
       G_CALLBACK (gst_d3d12_video_sink_mouse_event), self);
   g_signal_connect (priv->window, "fullscreen",
       G_CALLBACK (gst_d3d12_video_sink_on_fullscreen), self);
+  g_signal_connect (priv->window, "overlay",
+      G_CALLBACK (gst_d3d12_video_sink_on_overlay), self);
 }
 
 static void
@@ -388,7 +544,7 @@ gst_d3d12_video_sink_finalize (GObject * object)
 }
 
 static void
-gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
+gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   auto self = GST_D3D12_VIDEO_SINK (object);
@@ -485,6 +641,14 @@ gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_OVERLAY_MODE:
+      priv->overlay_mode =
+          (GstD3D12WindowOverlayMode) g_value_get_flags (value);
+      gst_d3d12_window_set_overlay_mode (priv->window, priv->overlay_mode);
+      break;
+    case PROP_DISPLAY_FORMAT:
+      priv->display_format = (DXGI_FORMAT) g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -492,7 +656,7 @@ gst_d3d12_videosink_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
+gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   auto self = GST_D3D12_VIDEO_SINK (object);
@@ -553,6 +717,12 @@ gst_d3d12_videosink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SAMPLING_METHOD:
       g_value_set_enum (value, priv->sampling_method);
+      break;
+    case PROP_OVERLAY_MODE:
+      g_value_set_flags (value, priv->overlay_mode);
+      break;
+    case PROP_DISPLAY_FORMAT:
+      g_value_set_enum (value, priv->display_format);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -829,7 +999,7 @@ gst_d3d12_video_sink_update_window (GstD3D12VideoSink * self)
 
   auto ret = gst_d3d12_window_prepare (priv->window, self->device,
       window_handle, GST_VIDEO_SINK_WIDTH (self),
-      GST_VIDEO_SINK_HEIGHT (self), priv->caps, config);
+      GST_VIDEO_SINK_HEIGHT (self), priv->caps, config, priv->display_format);
   if (ret != GST_FLOW_OK) {
     if (ret == GST_FLOW_FLUSHING) {
       GST_WARNING_OBJECT (self, "We are flushing");
@@ -1246,4 +1416,14 @@ static void
 gst_d3d12_video_sink_navigation_init (GstNavigationInterface * iface)
 {
   iface->send_event_simple = gst_d3d12_video_sink_navigation_send_event;
+}
+
+static void
+gst_d3d12_video_sink_on_overlay (GstD3D12Window * window,
+    gpointer command_queue, gpointer resource12, gpointer device11on12,
+    gpointer resource11, gpointer context2d, gpointer viewport,
+    GstD3D12VideoSink * self)
+{
+  g_signal_emit (self, d3d12_video_sink_signals[SIGNAL_OVERLAY], 0,
+      command_queue, resource12, device11on12, resource11, context2d, viewport);
 }

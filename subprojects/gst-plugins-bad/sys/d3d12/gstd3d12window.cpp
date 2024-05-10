@@ -24,6 +24,8 @@
 #include "gstd3d12window.h"
 #include "gstd3d12overlaycompositor.h"
 #include <directx/d3dx12.h>
+#include <d3d11on12.h>
+#include <d2d1_3.h>
 #include <mutex>
 #include <condition_variable>
 #include <vector>
@@ -65,24 +67,57 @@ enum
   SIGNAL_KEY_EVENT,
   SIGNAL_MOUSE_EVENT,
   SIGNAL_FULLSCREEN,
+  SIGNAL_OVERLAY,
   SIGNAL_LAST
 };
 
 static guint d3d12_window_signals[SIGNAL_LAST] = { 0, };
 
+GType
+gst_d3d12_window_overlay_mode_get_type (void)
+{
+  static GType mode_type = 0;
+
+  GST_D3D12_CALL_ONCE_BEGIN {
+    static const GFlagsValue mode_types[] = {
+      {GST_D3D12_WINDOW_OVERLAY_NONE, "None", "none"},
+      {GST_D3D12_WINDOW_OVERLAY_D3D12,
+          "Emits present signal with Direct3D12 resources", "d3d12"},
+      {GST_D3D12_WINDOW_OVERLAY_D3D11,
+          "Emits present signal with Direct3D12/11 resources", "d3d11"},
+      {GST_D3D12_WINDOW_OVERLAY_D2D,
+            "Emit present signal with Direct3D12/11 and Direct2D resources",
+          "d2d"},
+      {0, nullptr, nullptr},
+    };
+
+    mode_type = g_flags_register_static ("GstD3D12WindowOverlayMode",
+        mode_types);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return mode_type;
+}
+
 /* *INDENT-OFF* */
 struct SwapBuffer
 {
-  SwapBuffer (GstBuffer * buf)
+  SwapBuffer (GstBuffer * buf, ID3D12Resource * res)
   {
     backbuf = buf;
+    resource = res;
   }
 
   ~SwapBuffer ()
   {
+    d2d_target = nullptr;
+    wrapped_resource = nullptr;
+    resource = nullptr;
     gst_clear_buffer (&backbuf);
   }
 
+  ComPtr<ID2D1Bitmap1> d2d_target;
+  ComPtr<ID3D11Texture2D> wrapped_resource;
+  ComPtr<ID3D12Resource> resource;
   GstBuffer *backbuf = nullptr;
   gboolean first = TRUE;
 };
@@ -94,21 +129,145 @@ struct DeviceContext
   {
     event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     device = (GstD3D12Device *) gst_object_ref (dev);
-
     auto device_handle = gst_d3d12_device_get_device_handle (device);
     ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    if (!ca_pool) {
-      GST_ERROR_OBJECT (device, "Couldn't create command allocator pool");
-      return;
+  }
+
+  bool EnsureD3D11 ()
+  {
+    if (device11on12)
+      return true;
+
+    auto unknown = gst_d3d12_device_get_11on12_handle (device);
+    if (!unknown)
+      return false;
+
+    unknown->QueryInterface (IID_PPV_ARGS (&device11on12));
+    device11on12.As (&device11);
+    device11->GetImmediateContext (&context11);
+
+    return true;
+  }
+
+  bool EnsureD2D ()
+  {
+    if (context2d)
+      return true;
+
+    if (!EnsureD3D11 ())
+      return false;
+
+    HRESULT hr;
+    if (!factory2d) {
+      hr = D2D1CreateFactory (D2D1_FACTORY_TYPE_SINGLE_THREADED,
+          IID_PPV_ARGS (&factory2d));
+      if (FAILED (hr))
+        return false;
     }
 
-    initialized = true;
+    GstD3D12Device11on12LockGuard lk (device);
+    if (!device2d) {
+      ComPtr<IDXGIDevice> device_dxgi;
+      hr = device11.As (&device_dxgi);
+      if (FAILED (hr))
+        return false;
+
+      hr = factory2d->CreateDevice (device_dxgi.Get (), &device2d);
+      if (FAILED (hr))
+        return false;
+    }
+
+    if (!context2d) {
+      hr = device2d->CreateDeviceContext (D2D1_DEVICE_CONTEXT_OPTIONS_NONE,
+          &context2d);
+      if (FAILED (hr))
+        return false;
+    }
+
+    return true;
+  }
+
+  bool EnsureD3D11RenderTarget (std::shared_ptr<SwapBuffer> swapbuf)
+  {
+    if (swapbuf->wrapped_resource)
+      return true;
+
+    if (!EnsureD3D11 ())
+      return false;
+
+    D3D11_RESOURCE_FLAGS d3d11_flags = { };
+    d3d11_flags.BindFlags = D3D11_BIND_RENDER_TARGET;
+    auto hr = device11on12->CreateWrappedResource (swapbuf->resource.Get (),
+          &d3d11_flags, D3D12_RESOURCE_STATE_RENDER_TARGET,
+          D3D12_RESOURCE_STATE_RENDER_TARGET,
+          IID_PPV_ARGS (&swapbuf->wrapped_resource));
+    if (FAILED (hr))
+      return false;
+
+    return true;
+  }
+
+  bool EnsureD2DRenderTarget (std::shared_ptr<SwapBuffer> swapbuf)
+  {
+    if (swapbuf->d2d_target)
+      return true;
+
+    if (!EnsureD2D ())
+      return false;
+
+    if (!EnsureD3D11RenderTarget (swapbuf))
+      return false;
+
+    GstD3D12Device11on12LockGuard lk (device);
+    ComPtr<IDXGISurface> surface;
+    auto hr = swapbuf->wrapped_resource.As (&surface);
+    if (FAILED (hr))
+      return false;
+
+    D2D1_BITMAP_PROPERTIES1 props = D2D1::BitmapProperties1(
+        D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED));
+
+    hr = context2d->CreateBitmapFromDxgiSurface (surface.Get (), &props,
+        &swapbuf->d2d_target);
+    if (FAILED (hr))
+      return false;
+
+    return true;
+  }
+
+  void WaitGpu ()
+  {
+    gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        G_MAXUINT64, event_handle);
+    prev_fence_val = { };
+  }
+
+  void ReleaseSizeDependentResources ()
+  {
+    if (fence_val != 0)
+      WaitGpu ();
+
+    if (context11)
+      gst_d3d12_device_11on12_lock (device);
+
+    swap_buffers.clear ();
+    gst_clear_buffer (&msaa_buf);
+
+    if (context2d)
+      context2d->SetTarget (nullptr);
+
+    if (context11) {
+      context11->ClearState ();
+      context11->Flush ();
+      gst_d3d12_device_11on12_unlock (device);
+    }
   }
 
   ~DeviceContext ()
   {
-    WaitGpu ();
+    ReleaseSizeDependentResources ();
 
     CloseHandle (event_handle);
 
@@ -116,18 +275,7 @@ struct DeviceContext
     gst_clear_buffer (&cached_buf);
     gst_clear_object (&conv);
     gst_clear_object (&comp);
-    gst_clear_buffer (&msaa_buf);
     gst_clear_object (&device);
-  }
-
-  void WaitGpu ()
-  {
-    if (!device)
-      return;
-
-    gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        G_MAXUINT64, event_handle);
-    prev_fence_val = { };
   }
 
   gboolean BeforeRendering ()
@@ -167,10 +315,15 @@ struct DeviceContext
   GstBuffer *cached_buf = nullptr;
   GstD3D12Device *device = nullptr;
   GstD3D12CommandAllocatorPool *ca_pool = nullptr;
+  ComPtr<ID3D11On12Device> device11on12;
+  ComPtr<ID3D11Device> device11;
+  ComPtr<ID3D11DeviceContext> context11;
+  ComPtr<ID2D1Factory3> factory2d;
+  ComPtr<ID2D1Device2> device2d;
+  ComPtr<ID2D1DeviceContext2> context2d;
   UINT64 fence_val = 0;
   std::queue<UINT64> prev_fence_val;
-  HANDLE event_handle;
-  bool initialized = false;
+  HANDLE event_handle = nullptr;
 };
 
 struct GstD3D12WindowPrivate
@@ -239,6 +392,7 @@ struct GstD3D12WindowPrivate
   gboolean update_title = FALSE;
 
   GstD3D12MSAAMode msaa = GST_D3D12_MSAA_DISABLED;
+  GstD3D12WindowOverlayMode overlay_mode = GST_D3D12_WINDOW_OVERLAY_NONE;
 
   /* Win32 window handles */
   std::mutex hwnd_lock;
@@ -280,20 +434,26 @@ gst_d3d12_window_class_init (GstD3D12WindowClass * klass)
   object_class->finalize = gst_d3d12_window_finalize;
 
   d3d12_window_signals[SIGNAL_KEY_EVENT] =
-      g_signal_new ("key-event", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
+      g_signal_new_class_handler ("key-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, nullptr, nullptr, nullptr, nullptr,
       G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_STRING);
 
   d3d12_window_signals[SIGNAL_MOUSE_EVENT] =
-      g_signal_new ("mouse-event", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
+      g_signal_new_class_handler ("mouse-event", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, nullptr, nullptr, nullptr, nullptr,
       G_TYPE_NONE, 5, G_TYPE_STRING, G_TYPE_INT, G_TYPE_DOUBLE, G_TYPE_DOUBLE,
       G_TYPE_UINT);
 
   d3d12_window_signals[SIGNAL_FULLSCREEN] =
-      g_signal_new ("fullscreen", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, 0, nullptr, nullptr, nullptr,
+      g_signal_new_class_handler ("fullscreen", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, nullptr, nullptr, nullptr, nullptr,
       G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
+
+  d3d12_window_signals[SIGNAL_OVERLAY] =
+      g_signal_new_class_handler ("overlay", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, nullptr, nullptr, nullptr, nullptr,
+      G_TYPE_NONE, 6, G_TYPE_POINTER, G_TYPE_POINTER, G_TYPE_POINTER,
+      G_TYPE_POINTER, G_TYPE_POINTER, G_TYPE_POINTER);
 
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_window_debug,
       "d3d12window", 0, "d3d12window");
@@ -1153,10 +1313,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
   if (!priv->ctx)
     return GST_FLOW_OK;
 
-  if (priv->ctx->fence_val != 0)
-    priv->ctx->WaitGpu ();
-  priv->ctx->swap_buffers.clear ();
-  gst_clear_buffer (&priv->ctx->msaa_buf);
+  priv->ctx->ReleaseSizeDependentResources ();
 
   DXGI_SWAP_CHAIN_DESC desc = { };
   priv->ctx->swapchain->GetDesc (&desc);
@@ -1182,7 +1339,8 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
         backbuf.Get (), 0, nullptr, nullptr);
     auto buf = gst_buffer_new ();
     gst_buffer_append_memory (buf, mem);
-    priv->ctx->swap_buffers.push_back (std::make_shared < SwapBuffer > (buf));
+    auto swapbuf = std::make_shared < SwapBuffer > (buf, backbuf.Get ());
+    priv->ctx->swap_buffers.push_back (swapbuf);
   }
 
   guint sample_count = 1;
@@ -1263,7 +1421,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
 GstFlowReturn
 gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     guintptr window_handle, guint display_width, guint display_height,
-    GstCaps * caps, GstStructure * config)
+    GstCaps * caps, GstStructure * config, DXGI_FORMAT display_format)
 {
   auto priv = window->priv;
   GstVideoInfo in_info;
@@ -1271,7 +1429,10 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
   priv->display_format = DXGI_FORMAT_R8G8B8A8_UNORM;
   gst_video_info_from_caps (&in_info, caps);
 
-  if (GST_VIDEO_INFO_COMP_DEPTH (&in_info, 0) > 8) {
+  if (display_format != DXGI_FORMAT_UNKNOWN) {
+    priv->display_format = display_format;
+    format = gst_d3d12_dxgi_format_to_gst (display_format);
+  } else if (GST_VIDEO_INFO_COMP_DEPTH (&in_info, 0) > 8) {
     auto device_handle = gst_d3d12_device_get_device_handle (device);
     D3D12_FEATURE_DATA_FORMAT_SUPPORT format_support = { };
     const D3D12_FORMAT_SUPPORT1 support_flags =
@@ -1313,13 +1474,6 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
 
   if (!priv->ctx) {
     auto ctx = std::make_unique < DeviceContext > (device);
-    if (!ctx->initialized) {
-      GST_ERROR_OBJECT (window, "Couldn't initialize device context");
-      if (config)
-        gst_structure_free (config);
-
-      return GST_FLOW_ERROR;
-    }
 
     DXGI_SWAP_CHAIN_DESC1 desc = { };
     desc.Format = priv->display_format;
@@ -1514,9 +1668,6 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
         &priv->output_rect);
   }
 
-  g_object_set (priv->ctx->conv, "fill-border", swapbuf->first, nullptr);
-  swapbuf->first = FALSE;
-
   guint64 overlay_fence_val = 0;
   gst_d3d12_overlay_compositor_upload (priv->ctx->comp, priv->ctx->cached_buf,
       &overlay_fence_val);
@@ -1578,6 +1729,15 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     cl->ResourceBarrier (1, &barrier);
   }
 
+  if (swapbuf->first || priv->overlay_mode != GST_D3D12_WINDOW_OVERLAY_NONE) {
+    FLOAT clear_color[4] = { 0, 0, 0, 1 };
+    auto rtv_heap = gst_d3d12_memory_get_render_target_view_heap (mem);
+    auto cpu_handle = GetCPUDescriptorHandleForHeapStart (rtv_heap);
+    cl->ClearRenderTargetView (cpu_handle, clear_color, 0, nullptr);
+  }
+
+  swapbuf->first = FALSE;
+
   auto cq = gst_d3d12_device_get_command_queue (priv->ctx->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
@@ -1597,6 +1757,32 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
+  D3D12_RESOURCE_STATES state_after = D3D12_RESOURCE_STATE_COMMON;
+  GstD3D12WindowOverlayMode selected_overlay_mode =
+      GST_D3D12_WINDOW_OVERLAY_NONE;
+  bool signal_with_lock = false;
+  bool set_d2d_target = false;
+  if ((priv->overlay_mode & GST_D3D12_WINDOW_OVERLAY_D3D12) != 0) {
+    selected_overlay_mode |= GST_D3D12_WINDOW_OVERLAY_D3D12;
+    state_after = D3D12_RESOURCE_STATE_RENDER_TARGET;
+  }
+
+  if ((priv->overlay_mode & GST_D3D12_WINDOW_OVERLAY_D3D11) ==
+      GST_D3D12_WINDOW_OVERLAY_D3D11 &&
+      priv->ctx->EnsureD3D11RenderTarget (swapbuf)) {
+    selected_overlay_mode |= GST_D3D12_WINDOW_OVERLAY_D3D11;
+    signal_with_lock = true;
+  }
+
+  if ((priv->overlay_mode & GST_D3D12_WINDOW_OVERLAY_D2D) ==
+      GST_D3D12_WINDOW_OVERLAY_D2D &&
+      (priv->display_format == DXGI_FORMAT_R8G8B8A8_UNORM ||
+          priv->display_format == DXGI_FORMAT_B8G8R8A8_UNORM) &&
+      priv->ctx->EnsureD2DRenderTarget (swapbuf)) {
+    selected_overlay_mode |= GST_D3D12_WINDOW_OVERLAY_D2D;
+    set_d2d_target = true;
+  }
+
   if (msaa_resource) {
     std::vector < D3D12_RESOURCE_BARRIER > barriers;
     barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (msaa_resource,
@@ -1614,9 +1800,9 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
             D3D12_RESOURCE_STATE_RESOLVE_SOURCE,
             D3D12_RESOURCE_STATE_RENDER_TARGET));
     barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,
-            D3D12_RESOURCE_STATE_RESOLVE_DEST, D3D12_RESOURCE_STATE_COMMON));
+            D3D12_RESOURCE_STATE_RESOLVE_DEST, state_after));
     cl->ResourceBarrier (barriers.size (), barriers.data ());
-  } else {
+  } else if (state_after == D3D12_RESOURCE_STATE_COMMON) {
     D3D12_RESOURCE_BARRIER barrier =
         CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,
         D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
@@ -1650,6 +1836,71 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
       fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
 
   priv->backbuf_rendered = TRUE;
+
+  if (selected_overlay_mode != GST_D3D12_WINDOW_OVERLAY_NONE) {
+    D3D12_RECT viewport = priv->dirty_rect;
+    if (signal_with_lock)
+      gst_d3d12_device_11on12_lock (window->device);
+
+    if (set_d2d_target)
+      priv->ctx->context2d->SetTarget (swapbuf->d2d_target.Get ());
+
+    g_signal_emit (window, d3d12_window_signals[SIGNAL_OVERLAY], 0,
+        cq_handle, backbuf_texture, priv->ctx->device11on12.Get (),
+        swapbuf->wrapped_resource.Get (), priv->ctx->context2d.Get (),
+        &viewport);
+
+    if (signal_with_lock)
+      gst_d3d12_device_11on12_unlock (window->device);
+  }
+
+  if (state_after != D3D12_RESOURCE_STATE_COMMON) {
+    if (!gst_d3d12_command_allocator_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {
+      GST_ERROR_OBJECT (window, "Couldn't acquire command allocator");
+      return GST_FLOW_ERROR;
+    }
+
+    ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+    hr = ca->Reset ();
+    if (!gst_d3d12_result (hr, priv->ctx->device)) {
+      GST_ERROR_OBJECT (window, "Couldn't reset command allocator");
+      gst_d3d12_command_allocator_unref (gst_ca);
+      return GST_FLOW_ERROR;
+    }
+
+    hr = cl->Reset (ca, nullptr);
+    if (!gst_d3d12_result (hr, priv->ctx->device)) {
+      GST_ERROR_OBJECT (window, "Couldn't reset command list");
+      gst_d3d12_command_allocator_unref (gst_ca);
+      return GST_FLOW_ERROR;
+    }
+
+    gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
+    gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+
+    D3D12_RESOURCE_BARRIER barrier =
+        CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,
+        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_COMMON);
+    cl->ResourceBarrier (1, &barrier);
+    hr = cl->Close ();
+    if (!gst_d3d12_result (hr, priv->ctx->device)) {
+      GST_ERROR_OBJECT (window, "Couldn't close command list");
+      gst_d3d12_fence_data_unref (fence_data);
+      return GST_FLOW_ERROR;
+    }
+
+    hr = gst_d3d12_command_queue_execute_command_lists (cq,
+        1, cmd_list, &priv->ctx->fence_val);
+    if (!gst_d3d12_result (hr, priv->ctx->device)) {
+      GST_ERROR_OBJECT (window, "Signal failed");
+      gst_d3d12_fence_data_unref (fence_data);
+      return GST_FLOW_ERROR;
+    }
+
+    gst_d3d12_command_queue_set_notify (cq, priv->ctx->fence_val,
+        fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
+  }
+
   priv->ctx->AfterRendering ();
 
   return GST_FLOW_OK;
@@ -1838,4 +2089,13 @@ gst_d3d12_window_set_msaa (GstD3D12Window * window, GstD3D12MSAAMode msaa)
     priv->msaa = msaa;
     gst_d3d12_window_on_resize (window);
   }
+}
+
+void
+gst_d3d12_window_set_overlay_mode (GstD3D12Window * window,
+    GstD3D12WindowOverlayMode mode)
+{
+  auto priv = window->priv;
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  priv->overlay_mode = mode;
 }

@@ -39,6 +39,19 @@ enum GstD3D12WindowState
   GST_D3D12_WINDOW_STATE_CLOSED,
 };
 
+enum GstD3D12WindowOverlayMode
+{
+  GST_D3D12_WINDOW_OVERLAY_NONE = 0,
+  GST_D3D12_WINDOW_OVERLAY_D3D12 = 0x1,
+  GST_D3D12_WINDOW_OVERLAY_D3D11 = 0x3,
+  GST_D3D12_WINDOW_OVERLAY_D2D = 0x7,
+};
+
+DEFINE_ENUM_FLAG_OPERATORS (GstD3D12WindowOverlayMode);
+
+#define GST_TYPE_D3D12_WINDOW_OVERLAY_MODE (gst_d3d12_window_overlay_mode_get_type())
+GType gst_d3d12_window_overlay_mode_get_type (void);
+
 GstD3D12Window * gst_d3d12_window_new (void);
 
 guintptr         gst_d3d12_window_get_window_handle (GstD3D12Window * window);
@@ -51,7 +64,8 @@ GstFlowReturn    gst_d3d12_window_prepare (GstD3D12Window * window,
                                            guint display_width,
                                            guint display_height,
                                            GstCaps * caps,
-                                           GstStructure * config);
+                                           GstStructure * config,
+                                           DXGI_FORMAT display_format);
 
 void             gst_d3d12_window_unprepare (GstD3D12Window * window);
 
@@ -96,6 +110,9 @@ void             gst_d3d12_window_set_fullscreen (GstD3D12Window * window,
 
 void             gst_d3d12_window_set_msaa (GstD3D12Window * window,
                                             GstD3D12MSAAMode msaa);
+
+void             gst_d3d12_window_set_overlay_mode (GstD3D12Window * window,
+                                                    GstD3D12WindowOverlayMode mode);
 
 G_END_DECLS
 

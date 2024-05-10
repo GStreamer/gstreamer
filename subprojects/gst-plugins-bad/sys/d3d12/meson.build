@@ -127,7 +127,7 @@ endif
 
 d3d12_headers = [
   'd3d11.h',
-  'd2d1.h',
+  'd2d1_3.h',
 ]
 
 have_d3d12_headers = true
