@@ -62,7 +62,8 @@ void             gst_d3d12_window_unlock_stop (GstD3D12Window * window);
 GstFlowReturn    gst_d3d12_window_set_buffer (GstD3D12Window * window,
                                               GstBuffer * buffer);
 
-GstFlowReturn    gst_d3d12_window_present (GstD3D12Window * window);
+GstFlowReturn    gst_d3d12_window_present (GstD3D12Window * window,
+                                           gboolean sync);
 
 void             gst_d3d12_window_set_render_rect (GstD3D12Window * window,
                                                    const GstVideoRectangle * rect);

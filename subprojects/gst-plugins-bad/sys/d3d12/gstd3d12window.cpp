@@ -31,6 +31,7 @@
 #include <atomic>
 #include <wrl.h>
 #include <string>
+#include <queue>
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
@@ -94,18 +95,7 @@ struct DeviceContext
     event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     device = (GstD3D12Device *) gst_object_ref (dev);
 
-    D3D12_COMMAND_QUEUE_DESC queue_desc = { };
-    queue_desc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
-    queue_desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-
     auto device_handle = gst_d3d12_device_get_device_handle (device);
-    queue = gst_d3d12_command_queue_new (device_handle,
-        &queue_desc, D3D12_FENCE_FLAG_NONE, BACK_BUFFER_COUNT * 2);
-    if (!queue) {
-      GST_ERROR_OBJECT (device, "Couldn't create command queue");
-      return;
-    }
-
     ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
     if (!ca_pool) {
@@ -122,7 +112,6 @@ struct DeviceContext
 
     CloseHandle (event_handle);
 
-    gst_clear_object (&queue);
     gst_clear_object (&ca_pool);
     gst_clear_buffer (&cached_buf);
     gst_clear_object (&conv);
@@ -133,10 +122,39 @@ struct DeviceContext
 
   void WaitGpu ()
   {
-    if (!queue)
+    if (!device)
       return;
 
-    gst_d3d12_command_queue_fence_wait (queue, G_MAXUINT64, event_handle);
+    gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
+        G_MAXUINT64, event_handle);
+    prev_fence_val = { };
+  }
+
+  gboolean BeforeRendering ()
+  {
+    UINT64 fence_val_to_wait = 0;
+    gboolean ret = TRUE;
+
+    while (prev_fence_val.size () > BACK_BUFFER_COUNT) {
+      fence_val_to_wait = prev_fence_val.front ();
+      prev_fence_val.pop ();
+    }
+
+    if (fence_val_to_wait) {
+      auto completed = gst_d3d12_device_get_completed_value (device,
+          D3D12_COMMAND_LIST_TYPE_DIRECT);
+      if (completed < fence_val_to_wait) {
+        ret = gst_d3d12_device_fence_wait (device,
+            D3D12_COMMAND_LIST_TYPE_DIRECT, fence_val_to_wait, event_handle);
+      }
+    }
+
+    return ret;
+  }
+
+  void AfterRendering ()
+  {
+    prev_fence_val.push (fence_val);
   }
 
   ComPtr<ID3D12GraphicsCommandList> cl;
@@ -148,9 +166,9 @@ struct DeviceContext
   GstD3D12OverlayCompositor *comp = nullptr;
   GstBuffer *cached_buf = nullptr;
   GstD3D12Device *device = nullptr;
-  GstD3D12CommandQueue *queue = nullptr;
   GstD3D12CommandAllocatorPool *ca_pool = nullptr;
   UINT64 fence_val = 0;
+  std::queue<UINT64> prev_fence_val;
   HANDLE event_handle;
   bool initialized = false;
 };
@@ -1236,7 +1254,7 @@ gst_d3d12_window_on_resize (GstD3D12Window * self)
   if (priv->ctx->cached_buf) {
     ret = gst_d3d12_window_set_buffer (self, priv->ctx->cached_buf);
     if (ret == GST_FLOW_OK)
-      ret = gst_d3d12_window_present (self);
+      ret = gst_d3d12_window_present (self, TRUE);
   }
 
   return ret;
@@ -1311,8 +1329,9 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_SEQUENTIAL;
 
     auto factory = gst_d3d12_device_get_factory_handle (device);
-
-    auto cq = gst_d3d12_command_queue_get_handle (ctx->queue);
+    auto queue = gst_d3d12_device_get_command_queue (device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT);
+    auto cq = gst_d3d12_command_queue_get_handle (queue);
 
     ComPtr < IDXGISwapChain1 > swapchain;
     hr = factory->CreateSwapChainForHwnd (cq, priv->hwnd,
@@ -1559,7 +1578,9 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     cl->ResourceBarrier (1, &barrier);
   }
 
-  auto cq_handle = gst_d3d12_command_queue_get_handle (priv->ctx->queue);
+  auto cq = gst_d3d12_device_get_command_queue (priv->ctx->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
 
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
           priv->ctx->cached_buf, conv_outbuf, fence_data, cl.Get (),
@@ -1610,28 +1631,14 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  guint64 max_fence_val = 0;
-  auto num_mem = gst_buffer_n_memory (priv->ctx->cached_buf);
-  for (guint i = 0; i < num_mem; i++) {
-    mem = (GstD3D12Memory *) gst_buffer_peek_memory (priv->ctx->cached_buf, 0);
-    if (mem->fence_value > max_fence_val)
-      max_fence_val = mem->fence_value;
-  }
-
-  max_fence_val = MAX (max_fence_val, overlay_fence_val);
-  auto completed = gst_d3d12_device_get_completed_value (priv->ctx->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-
-  if (completed < max_fence_val) {
-    auto device_queue = gst_d3d12_device_get_command_queue (priv->ctx->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT);
-    auto fence = gst_d3d12_command_queue_get_fence_handle (device_queue);
-    gst_d3d12_command_queue_execute_wait (priv->ctx->queue, fence,
-        max_fence_val);
+  if (!priv->ctx->BeforeRendering ()) {
+    GST_ERROR_OBJECT (window, "Couldn't wait fence value");
+    gst_d3d12_fence_data_unref (fence_data);
+    return GST_FLOW_ERROR;
   }
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
-  hr = gst_d3d12_command_queue_execute_command_lists (priv->ctx->queue,
+  hr = gst_d3d12_command_queue_execute_command_lists (cq,
       1, cmd_list, &priv->ctx->fence_val);
   if (!gst_d3d12_result (hr, priv->ctx->device)) {
     GST_ERROR_OBJECT (window, "Signal failed");
@@ -1639,16 +1646,17 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d12_command_queue_set_notify (priv->ctx->queue, priv->ctx->fence_val,
+  gst_d3d12_command_queue_set_notify (cq, priv->ctx->fence_val,
       fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
 
   priv->backbuf_rendered = TRUE;
+  priv->ctx->AfterRendering ();
 
   return GST_FLOW_OK;
 }
 
 GstFlowReturn
-gst_d3d12_window_present (GstD3D12Window * window)
+gst_d3d12_window_present (GstD3D12Window * window, gboolean sync)
 {
   auto priv = window->priv;
 
@@ -1665,20 +1673,27 @@ gst_d3d12_window_present (GstD3D12Window * window)
 
   if (priv->backbuf_rendered) {
     DXGI_PRESENT_PARAMETERS params = { };
+    UINT present_flag = sync ? 0 : DXGI_PRESENT_DO_NOT_WAIT;
 
     if (!priv->first_present) {
       params.DirtyRectsCount = 1;
       params.pDirtyRects = &priv->dirty_rect;
     }
 
-    auto hr = priv->ctx->swapchain->Present1 (0,
-        DXGI_PRESENT_DO_NOT_WAIT, &params);
-
     priv->first_present = FALSE;
     priv->backbuf_rendered = FALSE;
-    if (hr != DXGI_ERROR_WAS_STILL_DRAWING &&
-        !gst_d3d12_result (hr, window->device))
-      GST_WARNING_OBJECT (window, "Present return 0x%x", (guint) hr);
+
+    auto hr = priv->ctx->swapchain->Present1 (0, present_flag, &params);
+    switch (hr) {
+      case DXGI_ERROR_DEVICE_REMOVED:
+      case DXGI_ERROR_INVALID_CALL:
+      case E_OUTOFMEMORY:
+        gst_d3d12_result (hr, window->device);
+        return GST_FLOW_ERROR;
+      default:
+        /* Ignore other return code */
+        break;
+    }
   }
 
   return GST_FLOW_OK;

@@ -1144,8 +1144,9 @@ gst_d3d12_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
   auto self = GST_D3D12_VIDEO_SINK (sink);
   auto priv = self->priv;
+  auto sync = gst_base_sink_get_sync (GST_BASE_SINK_CAST (sink));
 
-  auto ret = gst_d3d12_window_present (priv->window);
+  auto ret = gst_d3d12_window_present (priv->window, sync);
   if (ret == GST_D3D12_WINDOW_FLOW_CLOSED) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
         ("Output window was closed"), (nullptr));
