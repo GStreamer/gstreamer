@@ -1752,8 +1752,8 @@ _vp9_calculate_coded_size (GstVaVp9Enc * self)
       codedbuf_size = codedbuf_size / 2;
   } else if (self->rc.max_bitrate_bits > 0) {
     guint64 frame_sz = gst_util_uint64_scale (self->rc.max_bitrate_bits / 8,
-        GST_VIDEO_INFO_FPS_D (&base->input_state->info),
-        GST_VIDEO_INFO_FPS_N (&base->input_state->info));
+        GST_VIDEO_INFO_FPS_D (&base->in_info),
+        GST_VIDEO_INFO_FPS_N (&base->in_info));
 
     /* FIXME: If average frame size is smaller than 1/10 coded buffer size,
        we shrink the coded buffer size to 1/2 to improve performance. */
