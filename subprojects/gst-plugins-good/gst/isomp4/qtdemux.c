@@ -15846,6 +15846,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       g_free (format);
       break;
     }
+    case FOURCC_LAGS:
+      _codec ("Lagarith lossless video codec");
+      caps = gst_caps_new_empty_simple ("video/x-lagarith");
+      break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:
     {
