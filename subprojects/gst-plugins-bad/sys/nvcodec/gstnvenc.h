@@ -28,24 +28,6 @@
 
 G_BEGIN_DECLS
 
-gboolean                gst_nvenc_cmp_guid (GUID g1, GUID g2);
-
-NV_ENC_BUFFER_FORMAT    gst_nvenc_get_nv_buffer_format (GstVideoFormat fmt);
-
-gboolean                gst_nvenc_get_supported_input_formats (gpointer encoder,
-                                                               GUID codec_id,
-                                                               GValue ** formats);
-
-GValue *                gst_nvenc_get_interlace_modes (gpointer enc,
-                                                       GUID codec_id);
-
-GValue *                gst_nvenc_get_supported_codec_profiles (gpointer enc,
-                                                                GUID codec_id);
-
-void                    gst_nvenc_plugin_init (GstPlugin * plugin,
-                                               guint device_index,
-                                               CUcontext cuda_ctx);
-
 guint32                 gst_nvenc_get_api_version (void);
 
 guint32                 gst_nvenc_get_caps_param_version (void);

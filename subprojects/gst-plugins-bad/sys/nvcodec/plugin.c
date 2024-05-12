@@ -304,8 +304,6 @@ plugin_init (GstPlugin * plugin)
           gst_nv_h265_encoder_register_cuda (plugin, context, GST_RANK_NONE);
       if (cdata)
         h265_enc_cdata = g_list_append (h265_enc_cdata, cdata);
-
-      gst_nvenc_plugin_init (plugin, i, cuda_ctx);
     }
 
     gst_nv_jpeg_enc_register (plugin, context, GST_RANK_NONE, have_nvrtc);
