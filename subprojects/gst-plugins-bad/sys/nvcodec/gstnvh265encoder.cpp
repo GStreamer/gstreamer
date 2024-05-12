@@ -1328,8 +1328,22 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
     init_params->darHeight = dar_d;
   }
 
-  gst_nv_encoder_preset_to_native (self->preset, self->tune,
-      &init_params->presetGUID, &init_params->tuningInfo);
+  GstNvEncoderPresetOptions in_opt = { };
+  GstNvEncoderPresetOptionsNative out_opt = { };
+  in_opt.preset = self->preset;
+  in_opt.tune = self->tune;
+  in_opt.rc_mode = self->rc_mode;
+  in_opt.multi_pass = self->multipass;
+  GstNvEncoderPresetResolution resolution = GST_NV_ENCODER_PRESET_720;
+  auto frame_size = info->width * info->height;
+  if (frame_size >= 3840 * 2160)
+    resolution = GST_NV_ENCODER_PRESET_2160;
+  else if (frame_size >= 1920 * 1080)
+    resolution = GST_NV_ENCODER_PRESET_1080;
+
+  gst_nv_encoder_preset_to_native (resolution, &in_opt, &out_opt);
+  init_params->presetGUID = out_opt.preset;
+  init_params->tuningInfo = out_opt.tune;
 
   preset_config.version = gst_nvenc_get_preset_config_version ();
   preset_config.presetCfg.version = gst_nvenc_get_config_version ();
@@ -1362,6 +1376,9 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
   }
 
   rc_params = &config->rcParams;
+
+  rc_params->rateControlMode = out_opt.rc_mode;
+  rc_params->multiPass = out_opt.multi_pass;
 
   if (self->bitrate)
     rc_params->averageBitRate = self->bitrate * 1024;
@@ -1409,9 +1426,6 @@ gst_nv_h265_encoder_set_format (GstNvEncoder * encoder,
       rc_params->maxQP.qpInterB = rc_params->maxQP.qpInterP;
     }
   }
-
-  gst_nv_encoder_rc_mode_to_native (self->rc_mode, self->multipass,
-      &rc_params->rateControlMode, &rc_params->multiPass);
 
   if (rc_params->rateControlMode == NV_ENC_PARAMS_RC_CONSTQP) {
     if (self->qp_const >= 0) {

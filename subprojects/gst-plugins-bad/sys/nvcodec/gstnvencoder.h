@@ -124,6 +124,29 @@ typedef enum
   GST_NV_ENCODER_TUNE_LOSSLESS = 4,
 } GstNvEncoderTune;
 
+typedef enum
+{
+  GST_NV_ENCODER_PRESET_720,
+  GST_NV_ENCODER_PRESET_1080,
+  GST_NV_ENCODER_PRESET_2160,
+} GstNvEncoderPresetResolution;
+
+typedef struct
+{
+  GstNvEncoderPreset preset;
+  GstNvEncoderTune tune;
+  GstNvEncoderRCMode rc_mode;
+  GstNvEncoderMultiPass multi_pass;
+} GstNvEncoderPresetOptions;
+
+typedef struct
+{
+  GUID preset;
+  NV_ENC_TUNING_INFO tune;
+  NV_ENC_PARAMS_RC_MODE rc_mode;
+  NV_ENC_MULTI_PASS multi_pass;
+} GstNvEncoderPresetOptionsNative;
+
 typedef struct
 {
   gint max_bframes;
@@ -251,16 +274,13 @@ struct _GstNvEncoderClass
 
 GType gst_nv_encoder_get_type (void);
 
-void gst_nv_encoder_preset_to_native (GstNvEncoderPreset preset,
-                                      GstNvEncoderTune tune,
-                                      GUID * preset_guid,
-                                      NV_ENC_TUNING_INFO * tune_info);
+void gst_nv_encoder_preset_to_native_h264 (GstNvEncoderPresetResolution resolution,
+                                      const GstNvEncoderPresetOptions * input,
+                                      GstNvEncoderPresetOptionsNative * output);
 
-void gst_nv_encoder_rc_mode_to_native (GstNvEncoderRCMode rc_mode,
-                                       GstNvEncoderMultiPass multipass,
-                                       NV_ENC_PARAMS_RC_MODE * rc_mode_native,
-                                       NV_ENC_MULTI_PASS * multipass_native);
-
+void gst_nv_encoder_preset_to_native (GstNvEncoderPresetResolution resolution,
+                                      const GstNvEncoderPresetOptions * input,
+                                      GstNvEncoderPresetOptionsNative * output);
 
 void gst_nv_encoder_set_device_mode (GstNvEncoder * encoder,
                                      GstNvEncoderDeviceMode mode,
