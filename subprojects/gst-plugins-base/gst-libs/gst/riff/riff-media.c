@@ -969,6 +969,12 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
       break;
 
+    case GST_MAKE_FOURCC ('L', 'A', 'G', 'S'):
+      caps = gst_caps_new_empty_simple ("video/x-lagarith");
+      if (codec_name)
+        *codec_name = g_strdup ("Lagarith lossless video codec");
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
