@@ -842,13 +842,13 @@ gst_nv_h264_encoder_set_property (GObject * object, guint prop_id,
       update_int (self, &self->min_qp_b, value, UPDATE_RC_PARAM);
       break;
     case PROP_MAX_QP_I:
-      update_int (self, &self->min_qp_i, value, UPDATE_RC_PARAM);
+      update_int (self, &self->max_qp_i, value, UPDATE_RC_PARAM);
       break;
     case PROP_MAX_QP_P:
-      update_int (self, &self->min_qp_p, value, UPDATE_RC_PARAM);
+      update_int (self, &self->max_qp_p, value, UPDATE_RC_PARAM);
       break;
     case PROP_MAX_QP_B:
-      update_int (self, &self->min_qp_b, value, UPDATE_RC_PARAM);
+      update_int (self, &self->max_qp_b, value, UPDATE_RC_PARAM);
       break;
     case PROP_CONST_QUALITY:
       update_double (self, &self->const_quality, value, UPDATE_RC_PARAM);
