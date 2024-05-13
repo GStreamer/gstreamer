@@ -2016,9 +2016,33 @@ gst_d3d12_decoder_check_feature_support (GstD3D12Device * device,
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (video_device != nullptr, nullptr);
 
+  D3D12_FEATURE_DATA_VIDEO_DECODE_PROFILE_COUNT profile_cnt = { };
+  hr = video_device->CheckFeatureSupport
+      (D3D12_FEATURE_VIDEO_DECODE_PROFILE_COUNT, &profile_cnt,
+      sizeof (profile_cnt));
+  if (FAILED (hr) || profile_cnt.ProfileCount == 0) {
+    GST_INFO_OBJECT (device, "device does not support decoding");
+    return nullptr;
+  }
+
+  std::vector < GUID > profile_guids;
+  profile_guids.resize (profile_cnt.ProfileCount);
+  D3D12_FEATURE_DATA_VIDEO_DECODE_PROFILES profiles_data = { };
+  profiles_data.ProfileCount = profile_cnt.ProfileCount;
+  profiles_data.pProfiles = profile_guids.data ();
+  hr = video_device->CheckFeatureSupport (D3D12_FEATURE_VIDEO_DECODE_PROFILES,
+      &profiles_data, sizeof (profiles_data));
+  if (!gst_d3d12_result (hr, device))
+    return nullptr;
+
   for (guint i = 0; i < G_N_ELEMENTS (format_list); i++) {
     if (format_list[i].codec != codec)
       continue;
+
+    if (std::find (profile_guids.begin (), profile_guids.end (),
+            format_list[i].decode_profile) == profile_guids.end ()) {
+      continue;
+    }
 
     D3D12_FEATURE_DATA_VIDEO_DECODE_SUPPORT s;
     s.NodeIndex = 0;
