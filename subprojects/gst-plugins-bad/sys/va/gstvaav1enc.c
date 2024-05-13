@@ -180,6 +180,9 @@ struct _GstVaAV1EncFrame
 
   guint cached_frame_header_size;
   guint8 cached_frame_header[32];
+
+  guint repeat_frame_header_size;
+  guint8 repeat_frame_header[32];
 };
 
 struct _GstVaAV1Enc
@@ -515,6 +518,9 @@ gst_va_av1_enc_frame_new (void)
   frame->order_hint = -1;
   frame->repeat_index = -1;
   frame->cached_frame_header_size = 0;
+  memset (frame->cached_frame_header, 0, sizeof (frame->cached_frame_header));
+  frame->repeat_frame_header_size = 0;
+  memset (frame->repeat_frame_header, 0, sizeof (frame->repeat_frame_header));
 
   return frame;
 }
@@ -3815,26 +3821,37 @@ static void
 _av1_add_repeat_frame_header (GstVaAV1Enc * self, GstVaAV1EncFrame * va_frame)
 {
   GstAV1FrameHeaderOBU frame_hdr = { 0, };
-  guint frame_hdr_data_size;
+  guint data_size;
+
+  data_size = sizeof (va_frame->repeat_frame_header) -
+      va_frame->repeat_frame_header_size;
 
   /* Repeat frame always shows a frame and so begins with a TD. */
-  _av1_add_td (self, va_frame);
+  if (gst_av1_bit_writer_temporal_delimiter_obu (TRUE,
+          va_frame->repeat_frame_header + va_frame->repeat_frame_header_size,
+          &data_size) != GST_AV1_BIT_WRITER_OK) {
+    GST_ERROR_OBJECT (self, "Failed to write temporal delimiter.");
+    /* The only possible failure is not enough buffer size,
+       user should ensure that. */
+    g_assert_not_reached ();
+  }
+
+  va_frame->repeat_frame_header_size += data_size;
+  data_size = sizeof (va_frame->repeat_frame_header) -
+      va_frame->repeat_frame_header_size;
 
   frame_hdr.show_existing_frame = 1;
   frame_hdr.frame_to_show_map_idx = va_frame->repeat_index;
 
-  frame_hdr_data_size = sizeof (va_frame->cached_frame_header) -
-      va_frame->cached_frame_header_size;
-
   if (gst_av1_bit_writer_frame_header_obu (&frame_hdr, &self->sequence_hdr,
           va_frame->temporal_id, va_frame->spatial_id, TRUE,
-          va_frame->cached_frame_header + va_frame->cached_frame_header_size,
-          &frame_hdr_data_size) != GST_AV1_BIT_WRITER_OK) {
+          va_frame->repeat_frame_header + va_frame->repeat_frame_header_size,
+          &data_size) != GST_AV1_BIT_WRITER_OK) {
     GST_ERROR_OBJECT (self, "Failed to write repeat frame header.");
     g_assert_not_reached ();
   }
 
-  va_frame->cached_frame_header_size += frame_hdr_data_size;
+  va_frame->repeat_frame_header_size += data_size;
 }
 
 static GstFlowReturn
@@ -3852,10 +3869,6 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
         _av1_get_frame_type_name (va_frame->type));
     return GST_FLOW_ERROR;
   }
-
-  memset (va_frame->cached_frame_header, 0,
-      sizeof (va_frame->cached_frame_header));
-  va_frame->cached_frame_header_size = 0;
 
   if (va_frame->type & FRAME_TYPE_REPEAT) {
     g_assert (va_frame->flags & FRAME_FLAG_ALREADY_ENCODED);
@@ -4058,16 +4071,16 @@ gst_va_av1_enc_prepare_output (GstVaBaseEnc * base,
     g_assert ((frame_enc->flags & FRAME_FLAG_FRAME_IN_TU_CACHE) == 0);
 
     buf = gst_video_encoder_allocate_output_buffer
-        (GST_VIDEO_ENCODER_CAST (base), frame_enc->cached_frame_header_size);
+        (GST_VIDEO_ENCODER_CAST (base), frame_enc->repeat_frame_header_size);
     if (!buf) {
       GST_ERROR_OBJECT (base, "Failed to create output buffer");
       return FALSE;
     }
 
-    sz = gst_buffer_fill (buf, 0, frame_enc->cached_frame_header,
-        frame_enc->cached_frame_header_size);
+    sz = gst_buffer_fill (buf, 0, frame_enc->repeat_frame_header,
+        frame_enc->repeat_frame_header_size);
 
-    if (sz != frame_enc->cached_frame_header_size) {
+    if (sz != frame_enc->repeat_frame_header_size) {
       GST_ERROR_OBJECT (base, "Failed to write output buffer for repeat frame");
       gst_clear_buffer (&buf);
       return FALSE;
