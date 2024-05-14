@@ -3373,7 +3373,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
   switch (self->rc.rc_ctrl_mode) {
     case VA_RC_NONE:
     case VA_RC_ICQ:
-      self->rc.qp_p = self->rc.qp_b = 26;
+      self->rc.qp_p = self->rc.qp_b = self->rc.qp_i;
       /* Fall through. */
     case VA_RC_CQP:
       bitrate = 0;
@@ -3392,7 +3392,7 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
       self->rc.qp_i = 26;
       /* Fall through. */
     case VA_RC_QVBR:
-      self->rc.qp_p = self->rc.qp_b = 26;
+      self->rc.qp_p = self->rc.qp_b = self->rc.qp_i;
       self->rc.target_percentage = MAX (10, self->rc.target_percentage);
       self->rc.max_bitrate = (guint) gst_util_uint64_scale_int (bitrate,
           100, self->rc.target_percentage);
