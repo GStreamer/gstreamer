@@ -75,7 +75,7 @@ static LARGE_INTEGER performance_counter_frequency;
  * to a simple memory read.
  */
 #if defined __APPLE__ || defined G_OS_WIN32
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
 #include <stdatomic.h>
 
 typedef atomic_int gst_atomic_int;
@@ -112,11 +112,11 @@ gst_atomic_int_set_release (gst_atomic_int * x, gint val)
 {
   InterlockedOrRelease (x, 1);
 }
-#else /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS) */
+#else /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) */
 typedef int gst_atomic_int;
 #define gst_atomic_int_get_acquire(x) g_atomic_int_get(x)
 #define gst_atomic_int_set_release(x, val) g_atomic_int_set(x, val)
-#endif /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS) */
+#endif /* defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__) */
 #endif /* defined __APPLE__ || defined G_OS_WIN32 */
 
 /* priv_gst_clock_init:
