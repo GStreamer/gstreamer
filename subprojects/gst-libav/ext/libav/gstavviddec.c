@@ -1839,14 +1839,23 @@ not_negotiated:
  */
 static gboolean
 gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
-    GstVideoCodecFrame * frame, GstFlowReturn * ret)
+    GstVideoCodecFrame * input_frame, GstFlowReturn * ret)
 {
   gint res;
   gboolean got_frame = FALSE;
   gboolean mode_switch;
-  GstVideoCodecFrame *out_frame;
+  GstVideoCodecFrame *output_frame;
   GstFFMpegVidDecVideoFrame *out_dframe;
   GstBufferPool *pool;
+
+  if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
+    goto no_codec;
+
+#if LIBAVCODEC_VERSION_MAJOR >= 60
+  ffmpegdec->context->frame_num++;
+#else
+  ffmpegdec->context->frame_number++;
+#endif
 
   *ret = GST_FLOW_OK;
 
@@ -1855,7 +1864,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* run QoS code, we don't stop decoding the frame when we are late because
    * else we might skip a reference frame */
-  gst_ffmpegviddec_do_qos (ffmpegdec, frame, &mode_switch);
+  gst_ffmpegviddec_do_qos (ffmpegdec, input_frame, &mode_switch);
 
   /* FFmpeg might request new buffer from other threads.
    * Release lock here */
@@ -1882,17 +1891,17 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   /* get the output picture timing info again */
   out_dframe = ffmpegdec->picture->opaque;
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT (60, 31, 100)
-  out_frame =
+  output_frame =
       gst_video_codec_frame_ref (av_buffer_get_opaque (ffmpegdec->
           picture->opaque_ref));
 #else
   g_assert (out_dframe);
-  out_frame = gst_video_codec_frame_ref (out_dframe->frame);
+  output_frame = gst_video_codec_frame_ref (out_dframe->frame);
 #endif
 
   /* also give back a buffer allocated by the frame, if any */
   if (out_dframe) {
-    gst_buffer_replace (&out_frame->output_buffer, out_dframe->buffer);
+    gst_buffer_replace (&output_frame->output_buffer, out_dframe->buffer);
     gst_buffer_replace (&out_dframe->buffer, NULL);
   }
 
@@ -1923,7 +1932,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "pts %" G_GUINT64_FORMAT " duration %" G_GUINT64_FORMAT,
-      out_frame->pts, out_frame->duration);
+      output_frame->pts, output_frame->duration);
   GST_DEBUG_OBJECT (ffmpegdec, "picture: pts %" G_GUINT64_FORMAT,
       (guint64) ffmpegdec->picture->pts);
 #if LIBAVUTIL_VERSION_MAJOR < 58
@@ -1947,21 +1956,22 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       !!(ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT));
 
   if (!gst_ffmpegviddec_negotiate (ffmpegdec, ffmpegdec->context,
-          ffmpegdec->picture, GST_BUFFER_FLAGS (out_frame->input_buffer)))
+          ffmpegdec->picture, GST_BUFFER_FLAGS (output_frame->input_buffer)))
     goto negotiation_error;
 
   pool = gst_video_decoder_get_buffer_pool (GST_VIDEO_DECODER (ffmpegdec));
-  if (G_UNLIKELY (out_frame->output_buffer == NULL)) {
-    *ret = get_output_buffer (ffmpegdec, out_frame);
-  } else if (G_UNLIKELY (out_frame->output_buffer->pool != pool)) {
-    GstBuffer *tmp = out_frame->output_buffer;
-    out_frame->output_buffer = NULL;
-    *ret = get_output_buffer (ffmpegdec, out_frame);
+  if (G_UNLIKELY (output_frame->output_buffer == NULL)) {
+    *ret = get_output_buffer (ffmpegdec, output_frame);
+  } else if (G_UNLIKELY (output_frame->output_buffer->pool != pool)) {
+    GstBuffer *tmp = output_frame->output_buffer;
+    output_frame->output_buffer = NULL;
+    *ret = get_output_buffer (ffmpegdec, output_frame);
     gst_buffer_unref (tmp);
   }
 #ifndef G_DISABLE_ASSERT
   else {
-    GstVideoMeta *vmeta = gst_buffer_get_video_meta (out_frame->output_buffer);
+    GstVideoMeta *vmeta =
+        gst_buffer_get_video_meta (output_frame->output_buffer);
     if (vmeta) {
       GstVideoInfo *info = &ffmpegdec->output_state->info;
       g_assert ((gint) vmeta->width == GST_VIDEO_INFO_WIDTH (info));
@@ -1976,24 +1986,27 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   /* Mark corrupted frames as corrupted */
   if (ffmpegdec->picture->flags & AV_FRAME_FLAG_CORRUPT)
-    GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_BUFFER_FLAG_CORRUPTED);
+    GST_BUFFER_FLAG_SET (output_frame->output_buffer,
+        GST_BUFFER_FLAG_CORRUPTED);
 
   if (ffmpegdec->pic_interlaced) {
     /* set interlaced flags */
     if (ffmpegdec->picture->repeat_pict)
-      GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_RFF);
+      GST_BUFFER_FLAG_SET (output_frame->output_buffer,
+          GST_VIDEO_BUFFER_FLAG_RFF);
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
     if (ffmpegdec->picture->flags & AV_FRAME_FLAG_TOP_FIELD_FIRST)
 #else
     if (ffmpegdec->picture->top_field_first)
 #endif
-      GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+      GST_BUFFER_FLAG_SET (output_frame->output_buffer,
+          GST_VIDEO_BUFFER_FLAG_TFF);
 #if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(60, 31, 100)
     if (ffmpegdec->picture->flags & AV_FRAME_FLAG_INTERLACED)
 #else
     if (ffmpegdec->picture->interlaced_frame)
 #endif
-      GST_BUFFER_FLAG_SET (out_frame->output_buffer,
+      GST_BUFFER_FLAG_SET (output_frame->output_buffer,
           GST_VIDEO_BUFFER_FLAG_INTERLACED);
   }
 
@@ -2007,11 +2020,11 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
       GST_MEMDUMP ("A53 CC", side_data->data, side_data->size);
 
       /* do not add closed caption meta if it already exists */
-      if (!gst_buffer_get_meta (out_frame->input_buffer,
+      if (!gst_buffer_get_meta (output_frame->input_buffer,
               GST_VIDEO_CAPTION_META_API_TYPE)) {
-        out_frame->output_buffer =
-            gst_buffer_make_writable (out_frame->output_buffer);
-        gst_buffer_add_video_caption_meta (out_frame->output_buffer,
+        output_frame->output_buffer =
+            gst_buffer_make_writable (output_frame->output_buffer);
+        gst_buffer_add_video_caption_meta (output_frame->output_buffer,
             GST_VIDEO_CAPTION_TYPE_CEA708_RAW, side_data->data,
             side_data->size);
       } else {
@@ -2037,7 +2050,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     while (l) {
       GstVideoCodecFrame *tmp = l->data;
 
-      if (tmp == out_frame)
+      if (tmp == output_frame)
         old = FALSE;
 
       if (old && GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (tmp)) {
@@ -2060,28 +2073,30 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
 
   av_frame_unref (ffmpegdec->picture);
 
-  if (frame)
-    GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
+  if (input_frame)
+    GST_VIDEO_CODEC_FRAME_FLAG_UNSET (input_frame,
         GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
 
   if (gst_video_decoder_get_subframe_mode (GST_VIDEO_DECODER (ffmpegdec)))
     gst_video_decoder_have_last_subframe (GST_VIDEO_DECODER (ffmpegdec),
-        out_frame);
+        output_frame);
 
   /* FIXME: Ideally we would remap the buffer read-only now before pushing but
    * libav might still have a reference to it!
    */
-  if (GST_BUFFER_FLAG_IS_SET (out_frame->input_buffer,
+  if (GST_BUFFER_FLAG_IS_SET (output_frame->input_buffer,
           GST_VIDEO_BUFFER_FLAG_ONEFIELD)) {
-    GST_BUFFER_FLAG_SET (out_frame->output_buffer,
+    GST_BUFFER_FLAG_SET (output_frame->output_buffer,
         GST_VIDEO_BUFFER_FLAG_ONEFIELD);
-    if (GST_BUFFER_FLAG_IS_SET (out_frame->input_buffer,
+    if (GST_BUFFER_FLAG_IS_SET (output_frame->input_buffer,
             GST_VIDEO_BUFFER_FLAG_TFF)) {
-      GST_BUFFER_FLAG_SET (out_frame->output_buffer, GST_VIDEO_BUFFER_FLAG_TFF);
+      GST_BUFFER_FLAG_SET (output_frame->output_buffer,
+          GST_VIDEO_BUFFER_FLAG_TFF);
     }
   }
   *ret =
-      gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
+      gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec),
+      output_frame);
 
 beach:
   GST_DEBUG_OBJECT (ffmpegdec, "return flow %s, got frame: %d",
@@ -2092,15 +2107,15 @@ beach:
 no_output:
   {
     GST_DEBUG_OBJECT (ffmpegdec, "no output buffer");
-    GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
+    GST_VIDEO_CODEC_FRAME_FLAG_UNSET (input_frame,
         GST_FFMPEG_VIDEO_CODEC_FRAME_FLAG_ALLOCATED);
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), output_frame);
     goto beach;
   }
 
 negotiation_error:
   {
-    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
+    gst_video_decoder_drop_frame (GST_VIDEO_DECODER (ffmpegdec), output_frame);
     if (GST_PAD_IS_FLUSHING (GST_VIDEO_DECODER_SRC_PAD (ffmpegdec))) {
       *ret = GST_FLOW_FLUSHING;
       goto beach;
@@ -2109,38 +2124,15 @@ negotiation_error:
     *ret = GST_FLOW_NOT_NEGOTIATED;
     goto beach;
   }
-}
 
-
- /* Returns: Whether a frame was decoded */
-static gboolean
-gst_ffmpegviddec_frame (GstFFMpegVidDec * ffmpegdec, GstVideoCodecFrame * frame,
-    GstFlowReturn * ret)
-{
-  gboolean got_frame = FALSE;
-
-  if (G_UNLIKELY (ffmpegdec->context->codec == NULL))
-    goto no_codec;
-
-  *ret = GST_FLOW_OK;
-#if LIBAVCODEC_VERSION_MAJOR >= 60
-  ffmpegdec->context->frame_num++;
-#else
-  ffmpegdec->context->frame_number++;
-#endif
-
-  got_frame = gst_ffmpegviddec_video_frame (ffmpegdec, frame, ret);
-
-  return got_frame;
-
-  /* ERRORS */
 no_codec:
   {
     GST_ERROR_OBJECT (ffmpegdec, "no codec context");
     *ret = GST_FLOW_NOT_NEGOTIATED;
-    return -1;
+    goto beach;
   }
 }
+
 
 static GstFlowReturn
 gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
@@ -2160,7 +2152,7 @@ gst_ffmpegviddec_drain (GstVideoDecoder * decoder)
   GST_VIDEO_DECODER_STREAM_LOCK (ffmpegdec);
 
   do {
-    got_frame = gst_ffmpegviddec_frame (ffmpegdec, NULL, &ret);
+    got_frame = gst_ffmpegviddec_video_frame (ffmpegdec, NULL, &ret);
   } while (got_frame && ret == GST_FLOW_OK);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (ffmpegdec);
@@ -2285,7 +2277,7 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
 
   do {
     /* decode a frame of audio/video now */
-    got_frame = gst_ffmpegviddec_frame (ffmpegdec, frame, &ret);
+    got_frame = gst_ffmpegviddec_video_frame (ffmpegdec, frame, &ret);
 
     if (ret != GST_FLOW_OK) {
       GST_LOG_OBJECT (ffmpegdec, "breaking because of flow ret %s",
