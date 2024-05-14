@@ -856,18 +856,12 @@ is_valid_pmt_pid (guint16 pmt_pid)
 
 /* Must be called with mux->lock held */
 static GstFlowReturn
-gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad)
+gst_base_ts_mux_create_stream (GstBaseTsMux * mux, GstBaseTsMuxPad * ts_pad,
+    GstCaps * caps)
 {
-  GstCaps *caps = gst_pad_get_current_caps (GST_PAD (ts_pad));
   GstFlowReturn ret;
 
-  if (caps == NULL) {
-    GST_DEBUG_OBJECT (ts_pad, "Sink pad caps were not set before pushing");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
   ret = gst_base_ts_mux_create_or_update_stream (mux, ts_pad, caps);
-  gst_caps_unref (caps);
 
   if (ret == GST_FLOW_OK) {
     tsmux_program_add_stream (ts_pad->prog, ts_pad->stream);
@@ -904,12 +898,22 @@ get_pmt_pcr_sink (GstBaseTsMux * mux, const gchar * prop_name)
 
 /* Must be called with mux->lock held */
 static GstFlowReturn
-gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
+gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad,
+    gboolean allow_no_caps)
 {
   GstBaseTsMuxPad *ts_pad = GST_BASE_TS_MUX_PAD (pad);
   gchar *name = NULL;
   gchar *prop_name;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstCaps *caps = gst_pad_get_current_caps (pad);
+
+  if (caps == NULL) {
+    GST_DEBUG_OBJECT (ts_pad, "Sink pad caps were not set yet");
+    /* Try again later once the first buffer is pushed */
+    if (allow_no_caps)
+      return GST_FLOW_OK;
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 
   if (ts_pad->prog_id == -1) {
     name = GST_PAD_NAME (pad);
@@ -967,7 +971,7 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
   }
 
   if (ts_pad->stream == NULL) {
-    ret = gst_base_ts_mux_create_stream (mux, ts_pad);
+    ret = gst_base_ts_mux_create_stream (mux, ts_pad, caps);
     if (ret != GST_FLOW_OK)
       goto no_stream;
   }
@@ -991,6 +995,7 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
     tsmux_program_set_pcr_pid (ts_pad->prog, pcr_pid);
     goto have_pcr_pid;
   }
+
   gchar *pcr_sink_name = get_pmt_pcr_sink (mux, prop_name);
   if (!g_strcmp0 (GST_PAD_NAME (pad), pcr_sink_name)) {
     GST_DEBUG_OBJECT (mux, "User specified stream (pid=%d) as PCR for "
@@ -1001,6 +1006,7 @@ gst_base_ts_mux_create_pad_stream (GstBaseTsMux * mux, GstPad * pad)
 
 have_pcr_pid:
   g_clear_pointer (&prop_name, g_free);
+  gst_clear_caps (&caps);
 
   return ret;
 
@@ -1009,12 +1015,14 @@ no_program:
   {
     GST_ELEMENT_ERROR (mux, STREAM, MUX,
         ("Could not create new program"), (NULL));
+    gst_clear_caps (&caps);
     return GST_FLOW_ERROR;
   }
 no_stream:
   {
     GST_ELEMENT_ERROR (mux, STREAM, MUX,
         ("Could not create handler for stream"), (NULL));
+    gst_clear_caps (&caps);
     return ret;
   }
 }
@@ -1026,7 +1034,8 @@ gst_base_ts_mux_create_pad_stream_func (GstElement * element, GstPad * pad,
 {
   GstFlowReturn *ret = user_data;
 
-  *ret = gst_base_ts_mux_create_pad_stream (GST_BASE_TS_MUX (element), pad);
+  *ret =
+      gst_base_ts_mux_create_pad_stream (GST_BASE_TS_MUX (element), pad, TRUE);
 
   return *ret == GST_FLOW_OK;
 }
@@ -1371,7 +1380,13 @@ gst_base_ts_mux_aggregate_buffer (GstBaseTsMux * mux,
   if (prog == NULL) {
     GList *cur;
 
-    gst_base_ts_mux_create_pad_stream (mux, GST_PAD (best));
+    ret = gst_base_ts_mux_create_pad_stream (mux, GST_PAD (best), FALSE);
+    if (G_UNLIKELY (ret != GST_FLOW_OK)) {
+      if (buf)
+        gst_buffer_unref (buf);
+      g_mutex_unlock (&mux->lock);
+      return ret;
+    }
     tsmux_resend_pat (mux->tsmux);
     tsmux_resend_si (mux->tsmux);
     prog = best->prog;
