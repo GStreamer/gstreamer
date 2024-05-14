@@ -3273,17 +3273,6 @@ _h265_ensure_rate_control (GstVaH265Enc * self)
     self->rc.rc_ctrl_mode = VA_RC_NONE;
   }
 
-  /* ICQ mode and QVBR mode do not need max/min qp. */
-  if (self->rc.rc_ctrl_mode == VA_RC_ICQ || self->rc.rc_ctrl_mode == VA_RC_QVBR) {
-    self->rc.min_qp = 0;
-    self->rc.max_qp = 51;
-
-    update_property_uint (base, &self->prop.min_qp, self->rc.min_qp,
-        PROP_MIN_QP);
-    update_property_uint (base, &self->prop.max_qp, self->rc.max_qp,
-        PROP_MAX_QP);
-  }
-
   if (self->rc.min_qp > self->rc.max_qp) {
     GST_INFO_OBJECT (self, "The min_qp %d is bigger than the max_qp %d, "
         "set it to the max_qp", self->rc.min_qp, self->rc.max_qp);

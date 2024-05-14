@@ -1913,17 +1913,6 @@ _vp9_ensure_rate_control (GstVaVp9Enc * self)
     self->rc.rc_ctrl_mode = VA_RC_NONE;
   }
 
-  /* ICQ mode and QVBR mode do not need max/min qp. */
-  if (self->rc.rc_ctrl_mode == VA_RC_ICQ || self->rc.rc_ctrl_mode == VA_RC_QVBR) {
-    self->rc.min_qindex = 0;
-    self->rc.max_qindex = 255;
-
-    update_property_uint (base, &self->prop.min_qp, self->rc.min_qindex,
-        PROP_MIN_QP);
-    update_property_uint (base, &self->prop.max_qp, self->rc.max_qindex,
-        PROP_MAX_QP);
-  }
-
   if (self->rc.min_qindex > self->rc.max_qindex) {
     GST_INFO_OBJECT (self, "The min_qindex %d is bigger than the max_qindex"
         " %d, set it to the max_qindex", self->rc.min_qindex,

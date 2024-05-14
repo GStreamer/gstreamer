@@ -985,10 +985,8 @@ gst_va_base_enc_add_rate_control_parameter (GstVaBaseEnc * base,
   /* *INDENT-ON* */
 
   if (rc_mode == VA_RC_ICQ) {
-    g_assert (min_qp == 0);
     rate_control.rate_control.ICQ_quality_factor = qp_i;
   } else if (rc_mode == VA_RC_QVBR) {
-    g_assert (min_qp == 0);
     rate_control.rate_control.quality_factor = qp_i;
   } else {
     rate_control.rate_control.initial_qp = qp_i;
