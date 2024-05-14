@@ -1937,7 +1937,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     while (l) {
       GstVideoCodecFrame *tmp = l->data;
 
-      if (tmp == frame)
+      if (tmp == out_frame)
         old = FALSE;
 
       if (old && GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (tmp)) {
