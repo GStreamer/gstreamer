@@ -71,6 +71,9 @@ struct _GstSplitMuxSrc
 
   guint   target_max_readers; /* Maximum number of readers we try to keep open */
   GQueue *active_parts;
+
+  guint num_lookahead;
+  gboolean lookahead_check_pending;
 };
 
 struct _GstSplitMuxSrcClass

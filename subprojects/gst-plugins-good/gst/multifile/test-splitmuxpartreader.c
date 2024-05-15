@@ -87,7 +87,7 @@ main (int argc, char **argv)
   /* Connect to prepare signal */
   g_signal_connect (data.reader, "prepared", (GCallback) part_prepared, &data);
   gst_splitmux_part_reader_set_callbacks (data.reader, &data,
-      (GstSplitMuxPartReaderPadCb) handle_get_pad, NULL);
+      (GstSplitMuxPartReaderPadCb) handle_get_pad, NULL, NULL);
 
   g_idle_add ((GSourceFunc) start_reader, &data);
 

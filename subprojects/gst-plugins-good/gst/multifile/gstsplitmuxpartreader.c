@@ -1028,6 +1028,10 @@ gst_splitmux_part_reader_finish_measuring_streams (GstSplitMuxPartReader *
           info.duration, reader->cb_data);
     }
     do_async_done (reader);
+
+    if (reader->loaded_cb) {
+      reader->loaded_cb (reader, reader->cb_data);
+    }
   } else {
     SPLITMUX_PART_UNLOCK (reader);
   }
@@ -1409,11 +1413,13 @@ gst_splitmux_part_reader_set_flushing_locked (GstSplitMuxPartReader * reader,
 void
 gst_splitmux_part_reader_set_callbacks (GstSplitMuxPartReader * reader,
     gpointer cb_data, GstSplitMuxPartReaderPadCb get_pad_cb,
-    GstSplitMuxPartReaderMeasuredCb measured_cb)
+    GstSplitMuxPartReaderMeasuredCb measured_cb,
+    GstSplitMuxPartReaderLoadedCb loaded_cb)
 {
   reader->cb_data = cb_data;
   reader->get_pad_cb = get_pad_cb;
   reader->measured_cb = measured_cb;
+  reader->loaded_cb = loaded_cb;
 }
 
 GstClockTime

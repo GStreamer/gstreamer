@@ -53,6 +53,7 @@ typedef enum
 
 typedef GstPad *(*GstSplitMuxPartReaderPadCb)(GstSplitMuxPartReader *reader, GstPad *src_pad, gpointer cb_data);
 typedef void (*GstSplitMuxPartReaderMeasuredCb)(GstSplitMuxPartReader *reader, const gchar *filename, GstClockTime offset, GstClockTime duration, gpointer cb_data);
+typedef void (*GstSplitMuxPartReaderLoadedCb)(GstSplitMuxPartReader *reader, gpointer cb_data);
 
 struct _GstSplitMuxPartReaderInfo
 {
@@ -97,6 +98,7 @@ struct _GstSplitMuxPartReader
 
   GstSplitMuxPartReaderPadCb get_pad_cb;
   GstSplitMuxPartReaderMeasuredCb measured_cb;
+  GstSplitMuxPartReaderLoadedCb loaded_cb;
   gpointer cb_data;
 };
 
@@ -114,7 +116,9 @@ gboolean gst_splitmux_part_reader_is_loaded (GstSplitMuxPartReader *part);
 gboolean gst_splitmux_part_reader_is_playing (GstSplitMuxPartReader *part);
 
 void gst_splitmux_part_reader_set_callbacks (GstSplitMuxPartReader *reader,
-    gpointer cb_data, GstSplitMuxPartReaderPadCb get_pad_cb, GstSplitMuxPartReaderMeasuredCb measured_cb);
+    gpointer cb_data, GstSplitMuxPartReaderPadCb get_pad_cb, GstSplitMuxPartReaderMeasuredCb measured_cb,
+    GstSplitMuxPartReaderLoadedCb loaded_cb);
+
 gboolean gst_splitmux_part_reader_prepare (GstSplitMuxPartReader *part);
 void gst_splitmux_part_reader_unprepare (GstSplitMuxPartReader *part);
 void gst_splitmux_part_reader_set_location (GstSplitMuxPartReader *reader,
