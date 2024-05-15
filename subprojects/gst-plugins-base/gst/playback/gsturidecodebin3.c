@@ -945,6 +945,8 @@ gst_uri_decode_bin3_dispose (GObject * obj)
 
   g_mutex_clear (&dec->play_items_lock);
 
+  gst_clear_caps (&dec->caps);
+
   G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
@@ -1308,6 +1310,7 @@ uri_src_probe (GstPad * pad, GstPadProbeInfo * info, GstSourcePad * srcpad)
             stream);
         gst_object_replace ((GstObject **) & srcpad->stream,
             (GstObject *) stream);
+        gst_object_unref (stream);
       }
 
       /* Remember whether upstream is selectable or not */

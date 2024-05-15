@@ -745,6 +745,8 @@ gst_decodebin3_dispose (GObject * object)
   }
   INPUT_UNLOCK (dbin);
 
+  gst_clear_caps (&dbin->caps);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
