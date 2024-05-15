@@ -844,6 +844,7 @@ new_demuxer_pad_added_cb (GstElement * element, GstPad * pad,
 
     if (stream) {
       slot = find_replacement_slot (info, stream);
+      gst_object_unref (stream);
       if (slot) {
         GST_DEBUG_OBJECT (pad, "Can re-use slot %s:%s",
             GST_DEBUG_PAD_NAME (slot->originating_pad));
