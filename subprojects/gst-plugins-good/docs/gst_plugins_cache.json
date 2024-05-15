@@ -11002,10 +11002,57 @@
                         "readable": true,
                         "type": "gchararray",
                         "writable": true
+                    },
+                    "num-lookahead": {
+                        "blurb": "When switching fragments, ensure the next N fragments are prepared. Useful on slow devices if opening/preparing a new fragment can cause playback stalls",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "1",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
+                    },
+                    "num-open-fragments": {
+                        "blurb": "Number of files to keep open simultaneously. (0 = open all fragments at the start). May still use slightly more if set to less than the number of streams in the files",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "100",
+                        "max": "-1",
+                        "min": "0",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "guint",
+                        "writable": true
                     }
                 },
                 "rank": "none",
                 "signals": {
+                    "add-fragment": {
+                        "action": true,
+                        "args": [
+                            {
+                                "name": "arg0",
+                                "type": "gchararray"
+                            },
+                            {
+                                "name": "arg1",
+                                "type": "guint64"
+                            },
+                            {
+                                "name": "arg2",
+                                "type": "guint64"
+                            }
+                        ],
+                        "return-type": "gboolean",
+                        "when": "last"
+                    },
                     "format-location": {
                         "args": [],
                         "return-type": "GStrv",

@@ -249,10 +249,33 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_splitmux_src_change_state);
 
+  /**
+   * GstSplitMuxSrc:location:
+   *
+   * File glob pattern for the input file fragments. Files that match the glob will be
+   * sorted and added to the set of fragments to play.
+   *
+   * This property is ignored if files are provided via the #GstSplitMuxSrc::format-location
+   * signal, or #GstSplitMuxSrc::add-fragment signal
+   *
+   */
   g_object_class_install_property (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "File Input Pattern",
           "Glob pattern for the location of the files to read", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSplitMuxSrc:num-open-fragments:
+   *
+   * Upper target for the number of files the splitmuxsrc will try to keep open
+   * simultaneously. This limits the number of file handles and threads that
+   * will be active.
+   *
+   * If num-open-fragments is quite small, a few more files might be open
+   * than requested, because of the way splitmuxsrc operates internally.
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (gobject_class, PROP_NUM_OPEN_FRAGMENTS,
       g_param_spec_uint ("num-open-fragments", "Open files limit",
           "Number of files to keep open simultaneously. "
@@ -260,6 +283,23 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
           "May still use slightly more if set to less than the number of streams in the files",
           0, G_MAXUINT, DEFAULT_OPEN_FRAGMENTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstSplitMuxSrc:num-lookahead:
+   *
+   * During playback, prepare / open the next N fragments in advance of the playback
+   * position.
+   *
+   * When used in conjunction with a #GstSplitMuxSrc:num-open-fragments limit,
+   * that closes fragments that haven't been used recently, lookahead can
+   * re-prepare a fragment before it is used, by opening the file and reading
+   * file headers and creating internal pads early.
+   *
+   * This can help when reading off very slow media by avoiding any data stall
+   * at fragment transitions.
+   *
+   * Since: 1.26
+   */
   g_object_class_install_property (gobject_class, PROP_NUM_LOOKAHEAD,
       g_param_spec_uint ("num-lookahead", "Fragment Lookahead",
           "When switching fragments, ensure the next N fragments are prepared. "
@@ -269,7 +309,7 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
 
 
   /**
-   * GstSplitMuxSrc::format-location:
+   * GstSplitMuxSrc:format-location:
    * @splitmux: the #GstSplitMuxSrc
    *
    * Returns: A NULL-terminated sorted array of strings containing the
@@ -293,10 +333,14 @@ gst_splitmux_src_class_init (GstSplitMuxSrcClass * klass)
    * the file will be placed in the set immediately without loading the file to measure
    * it.
    *
+   * At least one fragment must be ready and available before starting
+   * splitmuxsrc, either via this signal or via the #GstSplitMuxSrc:location property
+   * or #GstSplitMuxSrc::format-location signal.
+   *
    * Returns: A boolean. TRUE if the fragment was successfully appended.
    *   FALSE on failure.
    *
-   * Since: 1.24
+   * Since: 1.26
    */
   signals[SIGNAL_ADD_FRAGMENT] =
       g_signal_new_class_handler ("add-fragment",
