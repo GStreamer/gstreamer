@@ -1720,6 +1720,18 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
   return TRUE;
 }
 
+static void
+frame_setup_from_gop (GstVaH264Enc * self, GstVaH264EncFrame * frame, guint i)
+{
+  g_assert (i >= 0 && i < 1024);
+
+  frame->type = self->gop.frame_types[i].slice_type;
+  frame->is_ref = self->gop.frame_types[i].is_ref;
+  frame->pyramid_level = self->gop.frame_types[i].pyramid_level;
+  frame->left_ref_poc_diff = self->gop.frame_types[i].left_ref_poc_diff;
+  frame->right_ref_poc_diff = self->gop.frame_types[i].right_ref_poc_diff;
+}
+
 static gboolean
 _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
     gboolean last)
@@ -1743,11 +1755,7 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
           "frame(IDR), begin a new GOP.", gst_frame->system_frame_number);
 
       frame->poc = 0;
-      frame->type = self->gop.frame_types[0].slice_type;
-      frame->is_ref = self->gop.frame_types[0].is_ref;
-      frame->pyramid_level = self->gop.frame_types[0].pyramid_level;
-      frame->left_ref_poc_diff = self->gop.frame_types[0].left_ref_poc_diff;
-      frame->right_ref_poc_diff = self->gop.frame_types[0].right_ref_poc_diff;
+      frame_setup_from_gop (self, frame, 0);
 
       /* The previous key frame should be already be poped out. */
       g_assert (self->gop.last_keyframe == NULL);
@@ -1788,14 +1796,7 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
             (GDestroyNotify) gst_video_codec_frame_unref);
       }
 
-      frame->type = self->gop.frame_types[self->gop.cur_frame_index].slice_type;
-      frame->is_ref = self->gop.frame_types[self->gop.cur_frame_index].is_ref;
-      frame->pyramid_level =
-          self->gop.frame_types[self->gop.cur_frame_index].pyramid_level;
-      frame->left_ref_poc_diff =
-          self->gop.frame_types[self->gop.cur_frame_index].left_ref_poc_diff;
-      frame->right_ref_poc_diff =
-          self->gop.frame_types[self->gop.cur_frame_index].right_ref_poc_diff;
+      frame_setup_from_gop (self, frame, self->gop.cur_frame_index);
 
       GST_LOG_OBJECT (self, "Push frame, system_frame_number: %d, poc %d, "
           "frame type %s", gst_frame->system_frame_number, frame->poc,
