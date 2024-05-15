@@ -172,7 +172,14 @@ typedef struct
 static gint64 meta_seq;         /* 0 *//* ATOMIC */
 
 /* TODO: use GLib's once https://gitlab.gnome.org/GNOME/glib/issues/1076 lands */
-#if defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8)
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_ATOMICS__)
+#include <stdatomic.h>
+static inline gint64
+gst_atomic_int64_inc (gint64 * atomic)
+{
+  return atomic_fetch_add ((_Atomic gint64 *) atomic, 1);
+}
+#elif defined(__GCC_HAVE_SYNC_COMPARE_AND_SWAP_8)
 static inline gint64
 gst_atomic_int64_inc (gint64 * atomic)
 {
