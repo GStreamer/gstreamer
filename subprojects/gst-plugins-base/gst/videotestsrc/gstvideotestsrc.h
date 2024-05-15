@@ -210,6 +210,7 @@ struct _GstVideoTestSrc {
 
   /* cached buffer used for static patterns that don't change */
   GstBuffer *cached;
+  GMutex cache_lock;
   gboolean have_static_pattern;
 };
 
