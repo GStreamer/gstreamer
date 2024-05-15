@@ -921,7 +921,8 @@ reduce_active_readers (GstSplitMuxSrc * splitmux)
       splitmux->target_max_readers) {
     GstSplitMuxPartReader *oldest_reader =
         g_queue_peek_head (splitmux->active_parts);
-    if (gst_splitmux_part_reader_is_active (oldest_reader)) {
+    if (gst_splitmux_part_reader_is_playing (oldest_reader)) {
+      /* This part is still playing on some pad(s). Keep it active */
       return;
     }
 
@@ -940,7 +941,7 @@ add_to_active_readers (GstSplitMuxSrc * splitmux,
   if (splitmux->target_max_readers != 0) {
     /* Check if it's already in the active reader pool, and move this reader
      * to the tail, or else add a ref and push it on the tail */
-    if (gst_splitmux_part_reader_is_running (reader)) {
+    if (gst_splitmux_part_reader_is_loaded (reader)) {
       /* Already in the queue, and reffed, move it to the end without
        * adding another ref */
       gboolean in_queue = g_queue_remove (splitmux->active_parts, reader);
@@ -1446,7 +1447,7 @@ gst_splitmux_end_of_part (GstSplitMuxSrc * splitmux, SplitMuxSrcPad * splitpad)
     splitpad->reader = splitmux->parts[splitpad->cur_part];
 
     if (splitmux->cur_part != next_part) {
-      if (!gst_splitmux_part_reader_is_active (splitpad->reader)) {
+      if (!gst_splitmux_part_reader_is_playing (splitpad->reader)) {
         GstSegment tmp;
         /* If moving backward into a new part, set stop
          * to -1 to ensure we play the entire file - workaround

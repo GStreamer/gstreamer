@@ -74,8 +74,10 @@ struct _GstSplitMuxPartReader
   GstElement *demux;
 
   gboolean async_pending;
-  gboolean active;
-  gboolean running;
+
+  gboolean loaded;
+  gboolean playing;
+
   gboolean prepared;
   gboolean flushing;
   gboolean no_more_pads;
@@ -108,11 +110,13 @@ struct _GstSplitMuxPartReaderClass
 
 GType gst_splitmux_part_reader_get_type (void);
 
+gboolean gst_splitmux_part_reader_is_loaded (GstSplitMuxPartReader *part);
+gboolean gst_splitmux_part_reader_is_playing (GstSplitMuxPartReader *part);
+
 void gst_splitmux_part_reader_set_callbacks (GstSplitMuxPartReader *reader,
     gpointer cb_data, GstSplitMuxPartReaderPadCb get_pad_cb, GstSplitMuxPartReaderMeasuredCb measured_cb);
 gboolean gst_splitmux_part_reader_prepare (GstSplitMuxPartReader *part);
 void gst_splitmux_part_reader_unprepare (GstSplitMuxPartReader *part);
-gboolean gst_splitmux_part_reader_is_running (GstSplitMuxPartReader *part);
 void gst_splitmux_part_reader_set_location (GstSplitMuxPartReader *reader,
     const gchar *path);
 gboolean gst_splitmux_part_reader_needs_measuring (GstSplitMuxPartReader *reader);
@@ -120,7 +124,6 @@ gboolean gst_splitmux_part_is_eos (GstSplitMuxPartReader *reader);
 
 gboolean gst_splitmux_part_reader_activate (GstSplitMuxPartReader *part, GstSegment *seg, GstSeekFlags extra_flags);
 void gst_splitmux_part_reader_deactivate (GstSplitMuxPartReader *part);
-gboolean gst_splitmux_part_reader_is_active (GstSplitMuxPartReader *part);
 
 void gst_splitmux_part_reader_stop (GstSplitMuxPartReader *part);
 

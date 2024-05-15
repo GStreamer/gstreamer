@@ -114,10 +114,10 @@ have_empty_queue (GstSplitMuxPartReader * reader)
 static gboolean
 block_until_can_push (GstSplitMuxPartReader * reader)
 {
-  while (reader->running) {
+  while (reader->loaded) {
     if (reader->flushing)
       goto out;
-    if (reader->active && have_empty_queue (reader))
+    if (reader->playing && have_empty_queue (reader))
       goto out;
 
     GST_LOG_OBJECT (reader,
@@ -125,10 +125,10 @@ block_until_can_push (GstSplitMuxPartReader * reader)
     SPLITMUX_PART_WAIT (reader);
   }
 
-  GST_LOG_OBJECT (reader, "Done waiting on reader %s active %d flushing %d",
-      reader->path, reader->active, reader->flushing);
+  GST_LOG_OBJECT (reader, "Done waiting on reader %s playing %d flushing %d",
+      reader->path, reader->playing, reader->flushing);
 out:
-  return reader->active && !reader->flushing;
+  return reader->playing && !reader->flushing;
 }
 
 static void
@@ -603,14 +603,14 @@ splitmux_part_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstSplitMuxPartReader *reader = part_pad->reader;
   GstPad *target;
   gboolean ret = FALSE;
-  gboolean active;
+  gboolean playing;
 
   SPLITMUX_PART_LOCK (reader);
   target = gst_object_ref (part_pad->target);
-  active = reader->active;
+  playing = reader->playing;
   SPLITMUX_PART_UNLOCK (reader);
 
-  if (active) {
+  if (playing) {
     GST_LOG_OBJECT (pad, "Forwarding query %" GST_PTR_FORMAT
         " from %" GST_PTR_FORMAT " on %" GST_PTR_FORMAT, query, pad, target);
 
@@ -717,7 +717,8 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
   reader->prep_state = PART_STATE_NULL;
   reader->need_duration_measuring = TRUE;
 
-  reader->active = FALSE;
+  reader->loaded = FALSE;
+  reader->playing = FALSE;
   reader->smallest_ts_offset = GST_CLOCK_TIME_NONE;
   reader->info.start_offset = GST_CLOCK_TIME_NONE;
   reader->info.duration = GST_CLOCK_TIME_NONE;
@@ -1214,7 +1215,7 @@ gst_splitmux_part_reader_change_state (GstElement * element,
       g_object_set (reader->src, "location", reader->path, NULL);
       reader->prep_state = PART_STATE_PREPARING_COLLECT_STREAMS;
       gst_splitmux_part_reader_set_flushing_locked (reader, FALSE);
-      reader->running = TRUE;
+      reader->loaded = TRUE;
       SPLITMUX_PART_UNLOCK (reader);
 
       /* we go to PAUSED asynchronously once all streams have been collected
@@ -1226,13 +1227,13 @@ gst_splitmux_part_reader_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       SPLITMUX_PART_LOCK (reader);
       gst_splitmux_part_reader_set_flushing_locked (reader, TRUE);
-      reader->running = FALSE;
+      reader->loaded = FALSE;
       SPLITMUX_PART_BROADCAST (reader);
       SPLITMUX_PART_UNLOCK (reader);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       SPLITMUX_PART_LOCK (reader);
-      reader->active = FALSE;
+      reader->playing = FALSE;
       gst_splitmux_part_reader_set_flushing_locked (reader, TRUE);
       SPLITMUX_PART_BROADCAST (reader);
       SPLITMUX_PART_UNLOCK (reader);
@@ -1258,7 +1259,7 @@ gst_splitmux_part_reader_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       SPLITMUX_PART_LOCK (reader);
       gst_splitmux_part_reader_set_flushing_locked (reader, FALSE);
-      reader->active = TRUE;
+      reader->playing = TRUE;
       SPLITMUX_PART_BROADCAST (reader);
       SPLITMUX_PART_UNLOCK (reader);
       break;
@@ -1297,7 +1298,7 @@ gst_splitmux_part_reader_prepare_sync (GstSplitMuxPartReader * reader)
 
   if (ret == GST_STATE_CHANGE_ASYNC) {
     SPLITMUX_PART_LOCK (reader);
-    while (reader->running && reader->prep_state != PART_STATE_READY) {
+    while (reader->loaded && reader->prep_state != PART_STATE_READY) {
       if (reader->prep_state == PART_STATE_FAILED) {
         SPLITMUX_PART_UNLOCK (reader);
         return FALSE;
@@ -1321,12 +1322,12 @@ gst_splitmux_part_reader_unprepare (GstSplitMuxPartReader * part)
 }
 
 gboolean
-gst_splitmux_part_reader_is_running (GstSplitMuxPartReader * part)
+gst_splitmux_part_reader_is_loaded (GstSplitMuxPartReader * part)
 {
   gboolean ret;
 
   SPLITMUX_PART_LOCK (part);
-  ret = part->running;
+  ret = part->loaded;
   SPLITMUX_PART_UNLOCK (part);
 
   return ret;
@@ -1364,12 +1365,12 @@ gst_splitmux_part_reader_activate (GstSplitMuxPartReader * reader,
 }
 
 gboolean
-gst_splitmux_part_reader_is_active (GstSplitMuxPartReader * part)
+gst_splitmux_part_reader_is_playing (GstSplitMuxPartReader * part)
 {
   gboolean ret;
 
   SPLITMUX_PART_LOCK (part);
-  ret = part->active;
+  ret = part->playing;
   SPLITMUX_PART_UNLOCK (part);
 
   return ret;
