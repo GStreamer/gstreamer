@@ -31,6 +31,7 @@ static GMainLoop *loop = NULL;
 static gint width = 640;
 static gint height = 480;
 static guint rc_ctrl = 0;
+static gboolean alive = FALSE;
 
 G_LOCK_DEFINE_STATIC (input_lock);
 
@@ -455,6 +456,8 @@ main (gint argc, gchar ** argv)
     {"codec", 'c', 0, G_OPTION_ARG_STRING, &codec,
         "Codec to test: "
         "[ *h264, h265, vp9, av1, h264lp, h265lp, vp9lp, av1lp ]"},
+    {"alive", 'a', 0, G_OPTION_ARG_NONE, &alive,
+        "Set test source as a live stream"},
     {NULL}
   };
   const struct {
@@ -516,7 +519,7 @@ main (gint argc, gchar ** argv)
   pipeline = gst_pipeline_new (NULL);
 
   MAKE_ELEMENT_AND_ADD (src, "videotestsrc");
-  g_object_set (src, "pattern", 1, NULL);
+  g_object_set (src, "pattern", 1, "is-live", alive, NULL);
 
   MAKE_ELEMENT_AND_ADD (capsfilter, "capsfilter");
   MAKE_ELEMENT_AND_ADD (convert, "videoconvert");
