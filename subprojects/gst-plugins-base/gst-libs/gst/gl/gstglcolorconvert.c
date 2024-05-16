@@ -569,7 +569,7 @@ static const gchar glsl_func_YUY2_UYVY_pack[] =
     "  vec4 yuva, yuv1, yuv2;\n"
     "  float fx, dx, fy;\n"
     /* v_texcoord are normalized, texcoord may not be e.g. rectangle textures */
-    "  float inorder = mod (v_texcoord.x * width, 2.0);\n"
+    "  float inorder = mod (v_texcoord.x * out_width, 2.0);\n"
     "  fx = texcoord.x;\n"
     "  dx = poffset_x;\n"
     "  if (inorder > 1.0) {\n"
@@ -599,7 +599,7 @@ static const gchar templ_RGB_to_YUY2_UYVY_BODY[] =
 
 static const struct shader_templ templ_RGB_to_YUY2_UYVY =
   { NULL,
-    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n",
+    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_pack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -616,7 +616,7 @@ static const gchar templ_PLANAR_YUV_to_YUY2_UYVY_BODY[] =
 
 static const struct shader_templ templ_PLANAR_YUV_to_YUY2_UYVY =
   { NULL,
-    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform sampler2D Utex;\n" "uniform sampler2D Vtex;\n" "uniform float in_bitdepth_factor;\n",
+    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform sampler2D Utex;\n" "uniform sampler2D Vtex;\n" "uniform float in_bitdepth_factor;\n" "uniform float out_width;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_pack, glsl_func_fetch_planar_yuv, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -756,6 +756,47 @@ static const struct shader_templ templ_RGB_to_v210 =
   { NULL,
     DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_pack, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
+static const gchar templ_YUY2_UYVY_to_v210_BODY[] =
+    "vec2 texcoord0, texcoord1, texcoord2;\n"
+    "ivec3 idx = v210_pack(v_texcoord, texcoord0, texcoord1, texcoord2);\n"
+    "vec4 yuva0 = yuy2_uyvy_unpack(tex, texcoord0, texcoord0, vec2(1.0));\n"
+    "vec4 yuva1 = yuy2_uyvy_unpack(tex, texcoord1, texcoord1, vec2(1.0));\n"
+    "vec4 yuva2 = yuy2_uyvy_unpack(tex, texcoord2, texcoord2, vec2(1.0));\n"
+    "gl_FragColor = vec4(yuva0[idx[0]], yuva1[idx[1]], yuva2[idx[2]], 1.0);\n";
+
+static const struct shader_templ templ_YUY2_UYVY_to_v210 =
+  { NULL,
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_unpack, glsl_func_v210_pack, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
+static const gchar templ_v210_to_YUY2_UYVY_BODY[] =
+    "vec4 yuva = v210_unpack(tex, v_texcoord, vec2(1.0));\n"
+    "vec2 texcoord0, texcoord1;\n"
+    "ivec2 idx = YUY2_UYVY_pack(texcoord, v_texcoord, texcoord0, texcoord1);\n"
+    "gl_FragColor = vec4(yuva[idx[0]], yuva[idx[1]], 0.0, 0.0);\n";
+
+static const struct shader_templ templ_v210_to_YUY2_UYVY =
+  { NULL,
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_unpack, glsl_func_YUY2_UYVY_pack, NULL, },
+    GST_GL_TEXTURE_TARGET_2D
+  };
+
+static const gchar templ_YUY2_UYVY_to_YUY2_UYVY_BODY[] =
+    "vec4 yuva = yuy2_uyvy_unpack(tex, texcoord, v_texcoord, vec2(1.0));\n"
+    "vec2 texcoord0, texcoord1;\n"
+    "ivec2 idx = YUY2_UYVY_pack(texcoord, v_texcoord, texcoord0, texcoord1);\n"
+    "gl_FragColor = vec4(yuva[idx[0]], yuva[idx[1]], 0.0, 0.0);\n";
+
+static const struct shader_templ templ_YUY2_UYVY_to_YUY2_UYVY =
+  { NULL,
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_unpack, glsl_func_YUY2_UYVY_pack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
@@ -1309,46 +1350,35 @@ _gst_gl_color_convert_can_passthrough_info (const GstVideoInfo * in,
 }
 
 static gboolean
+supports_yuv_yuv_conversion (const GstVideoFormatInfo * from)
+{
+  if (GST_VIDEO_FORMAT_INFO_IS_YUV (from)
+      && GST_VIDEO_FORMAT_INFO_N_PLANES (from) ==
+      GST_VIDEO_FORMAT_INFO_N_COMPONENTS (from))
+    return TRUE;
+
+  if (GST_VIDEO_FORMAT_INFO_FORMAT (from) == GST_VIDEO_FORMAT_v210)
+    return TRUE;
+  if (GST_VIDEO_FORMAT_INFO_FORMAT (from) == GST_VIDEO_FORMAT_UYVY)
+    return TRUE;
+  if (GST_VIDEO_FORMAT_INFO_FORMAT (from) == GST_VIDEO_FORMAT_YUY2)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
 conversion_formats_are_supported (const GstVideoFormatInfo * in_finfo,
     const GstVideoFormatInfo * out_finfo)
 {
-  gboolean input_yuv_planar = GST_VIDEO_FORMAT_INFO_IS_YUV (in_finfo)
-      && GST_VIDEO_FORMAT_INFO_N_PLANES (in_finfo) ==
-      GST_VIDEO_FORMAT_INFO_N_COMPONENTS (in_finfo);
-  gboolean output_yuv_planar = GST_VIDEO_FORMAT_INFO_IS_YUV (out_finfo)
-      && GST_VIDEO_FORMAT_INFO_N_PLANES (out_finfo) ==
-      GST_VIDEO_FORMAT_INFO_N_COMPONENTS (out_finfo);
-
-  /* GRAY/YUV -> GRAY/YUV is not supported for non-passthrough */
   if (GST_VIDEO_FORMAT_INFO_IS_RGB (in_finfo))
     return TRUE;
   if (GST_VIDEO_FORMAT_INFO_IS_RGB (out_finfo))
     return TRUE;
 
-  if (input_yuv_planar && output_yuv_planar)
+  if (supports_yuv_yuv_conversion (in_finfo)
+      && supports_yuv_yuv_conversion (out_finfo))
     return TRUE;
-
-  if (input_yuv_planar) {
-    switch GST_VIDEO_FORMAT_INFO_FORMAT (out_finfo) {
-      case GST_VIDEO_FORMAT_v210:
-      case GST_VIDEO_FORMAT_UYVY:
-      case GST_VIDEO_FORMAT_YUY2:
-        return TRUE;
-      default:
-        break;
-    }
-  }
-
-  if (output_yuv_planar) {
-    switch GST_VIDEO_FORMAT_INFO_FORMAT (in_finfo) {
-      case GST_VIDEO_FORMAT_v210:
-      case GST_VIDEO_FORMAT_UYVY:
-      case GST_VIDEO_FORMAT_YUY2:
-        return TRUE;
-      default:
-        break;
-    }
-  }
 
   return FALSE;
 }
@@ -1694,24 +1724,6 @@ _init_supported_formats (GstGLContext * context, gboolean output,
     _append_value_string_list (supported_formats, "NV12_16L32S", "NV12_4L4",
         NULL);
   }
-}
-
-static gboolean
-supports_yuv_yuv_conversion (const GstVideoFormatInfo *from)
-{
-  if (GST_VIDEO_FORMAT_INFO_IS_YUV (from)
-      && GST_VIDEO_FORMAT_INFO_N_PLANES (from) ==
-      GST_VIDEO_FORMAT_INFO_N_COMPONENTS (from))
-    return TRUE;
-
-  if (GST_VIDEO_FORMAT_INFO_FORMAT (from) == GST_VIDEO_FORMAT_v210)
-    return TRUE;
-  if (GST_VIDEO_FORMAT_INFO_FORMAT (from) == GST_VIDEO_FORMAT_UYVY)
-    return TRUE;
-  if (GST_VIDEO_FORMAT_INFO_FORMAT (from) == GST_VIDEO_FORMAT_YUY2)
-    return TRUE;
-
-  return FALSE;
 }
 
 /* copies the given caps */
@@ -2859,7 +2871,42 @@ _YUV_to_YUV (GstGLColorConvert * convert)
         break;
     }
   } else {
-    g_assert_not_reached ();
+    switch (in_format) {
+      case GST_VIDEO_FORMAT_UYVY:
+      case GST_VIDEO_FORMAT_YUY2:
+        info->shader_tex_names[0] = "tex";
+        switch (out_format) {
+          case GST_VIDEO_FORMAT_v210:
+            info->templ = &templ_YUY2_UYVY_to_v210;
+            info->frag_body = g_strdup (templ_YUY2_UYVY_to_v210_BODY);
+            break;
+          case GST_VIDEO_FORMAT_YUY2:
+          case GST_VIDEO_FORMAT_UYVY:
+            info->templ = &templ_YUY2_UYVY_to_YUY2_UYVY;
+            info->frag_body = g_strdup (templ_YUY2_UYVY_to_YUY2_UYVY_BODY);
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+        break;
+      case GST_VIDEO_FORMAT_v210:
+        info->shader_tex_names[0] = "tex";
+        switch (out_format) {
+          case GST_VIDEO_FORMAT_YUY2:
+          case GST_VIDEO_FORMAT_UYVY:
+            info->templ = &templ_v210_to_YUY2_UYVY;
+            info->frag_body = g_strdup (templ_v210_to_YUY2_UYVY_BODY);
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+        break;
+      default:
+        g_assert_not_reached ();
+        break;
+    }
   }
 }
 
