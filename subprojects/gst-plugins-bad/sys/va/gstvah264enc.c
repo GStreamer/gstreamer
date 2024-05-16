@@ -1658,8 +1658,10 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
       GST_VIDEO_INFO_FPS_N (&base->input_state->info));
   gst_video_encoder_set_latency (venc, latency, latency);
 
-  max_ref_frames = self->gop.num_ref_frames + 3 /* scratch frames */ ;
+  max_ref_frames = self->gop.num_ref_frames;
   max_ref_frames += base->preferred_output_delay;
+  base->min_buffers = max_ref_frames;
+  max_ref_frames += 3 /* scratch frames */ ;
 
   /* second check after calculations */
   do_reopen |=

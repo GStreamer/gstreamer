@@ -61,6 +61,8 @@ struct _GstVaBaseEnc
   gint height;
   guint rt_format;
   guint codedbuf_size;
+  /* The min buffer number required for reorder and output delay. */
+  guint min_buffers;
 
   GstClockTime start_pts;
   GstClockTime frame_duration;

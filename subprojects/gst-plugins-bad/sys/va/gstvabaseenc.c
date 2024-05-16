@@ -76,6 +76,7 @@ gst_va_base_enc_reset_state_default (GstVaBaseEnc * base)
   base->rt_format = 0;
   base->codedbuf_size = 0;
   base->preferred_output_delay = 0;
+  base->min_buffers = 1;
   g_atomic_int_set (&base->reconf, FALSE);
 }
 
@@ -417,7 +418,7 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
   if (!(allocator = _allocator_from_caps (base, caps)))
     return FALSE;
 
-  pool = gst_va_pool_new_with_config (caps, 1, 0, usage_hint,
+  pool = gst_va_pool_new_with_config (caps, base->min_buffers, 0, usage_hint,
       GST_VA_FEATURE_AUTO, allocator, &params);
   if (!pool) {
     gst_object_unref (allocator);
@@ -428,7 +429,7 @@ gst_va_base_enc_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
     goto config_failed;
 
   gst_query_add_allocation_param (query, allocator, &params);
-  gst_query_add_allocation_pool (query, pool, size, 1, 0);
+  gst_query_add_allocation_pool (query, pool, size, base->min_buffers, 0);
 
   GST_DEBUG_OBJECT (base,
       "proposing %" GST_PTR_FORMAT " with allocator %" GST_PTR_FORMAT,
@@ -958,6 +959,7 @@ gst_va_base_enc_init (GstVaBaseEnc * self)
   g_queue_init (&self->ref_list);
   g_queue_init (&self->output_list);
   gst_video_info_init (&self->in_info);
+  self->min_buffers = 1;
 
   self->dts_queue = gst_vec_deque_new_for_struct (sizeof (GstClockTime), 8);
 

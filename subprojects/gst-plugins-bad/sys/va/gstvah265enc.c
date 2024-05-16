@@ -4649,8 +4649,9 @@ gst_va_h265_enc_reconfig (GstVaBaseEnc * base)
 
   max_ref_frames = self->gop.b_pyramid ?
       self->gop.highest_pyramid_level + 2 : self->gop.num_ref_frames;
-  max_ref_frames += 3 /* scratch frames */ ;
   max_ref_frames += base->preferred_output_delay;
+  base->min_buffers = max_ref_frames;
+  max_ref_frames += 3 /* scratch frames */ ;
 
   /* second check after calculations */
   do_reopen |=
