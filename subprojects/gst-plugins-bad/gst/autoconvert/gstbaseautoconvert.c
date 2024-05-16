@@ -869,8 +869,6 @@ gst_base_auto_convert_sink_setcaps (GstBaseAutoConvert * self, GstCaps * caps,
     if (gst_base_auto_convert_activate_element (self, element, caps)) {
       res = TRUE;
       break;
-    } else {
-      gst_object_unref (element);
     }
   }
 
