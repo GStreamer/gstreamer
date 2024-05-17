@@ -2116,9 +2116,26 @@ container profile. If 0, it is not a mandatory stream</doc>
         </parameters>
       </method>
       <method name="set_preset" c:identifier="gst_encoding_profile_set_preset">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Sets the name of the #GstElement that implements the #GstPreset interface
-to use for the profile.
-This is the name that has been set when saving the preset.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Sets the name of the preset to be used in the profile.
+This is the name that has been set when saving the preset.
+You can list the available presets for a specific element factory
+using  `$ gst-inspect-1.0 element-factory-name`, for example for
+`x264enc`:
+
+``` bash
+$ gst-inspect-1.0 x264enc
+...
+Presets:
+ "Profile Baseline": Baseline Profile
+ "Profile High": High Profile
+ "Profile Main": Main Profile
+ "Profile YouTube": YouTube recommended settings (https://support.google.com/youtube/answer/1722171)
+ "Quality High": High quality
+ "Quality Low": Low quality
+ "Quality Normal": Normal quality
+ "Zero Latency"
+```
+ }</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -2135,7 +2152,9 @@ This is the name that has been set when saving the preset.</doc>
         </parameters>
       </method>
       <method name="set_preset_name" c:identifier="gst_encoding_profile_set_preset_name">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Sets the name of the #GstPreset's factory to be used in the profile.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">Sets the name of the #GstPreset's factory to be used in the profile. This
+is the name of the **element factory** that implements the #GstPreset interface not
+the name of the preset itself (see #gst_encoding_profile_set_preset).</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -2146,7 +2165,7 @@ This is the name that has been set when saving the preset.</doc>
             <type name="EncodingProfile" c:type="GstEncodingProfile*"/>
           </instance-parameter>
           <parameter name="preset_name" transfer-ownership="none" nullable="1" allow-none="1">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">The name of the preset to use in this @profile.</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">The name of the element factory to use in this @profile.</doc>
             <type name="utf8" c:type="const gchar*"/>
           </parameter>
         </parameters>
@@ -3850,6 +3869,7 @@ Moreover, you can set the extra properties:
  * `|single-segment=true` (See #gst_encoding_profile_set_single_segment)
  * `|single-segment=true` (See
    #gst_encoding_video_profile_set_variableframerate)
+ * `|factory-name=element-factory-name` (See #gst_encoding_profile_set_preset_name)
 
 for example:
 

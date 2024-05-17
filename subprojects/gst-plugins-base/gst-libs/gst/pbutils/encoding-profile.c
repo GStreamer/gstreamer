@@ -109,6 +109,7 @@
  *  * `|single-segment=true` (See #gst_encoding_profile_set_single_segment)
  *  * `|single-segment=true` (See
  *    #gst_encoding_video_profile_set_variableframerate)
+ *  * `|factory-name=element-factory-name` (See #gst_encoding_profile_set_preset_name)
  *
  * for example:
  *
@@ -765,9 +766,26 @@ gst_encoding_profile_set_single_segment (GstEncodingProfile * profile,
  * @profile: a #GstEncodingProfile
  * @preset: (nullable): the element preset to use
  *
- * Sets the name of the #GstElement that implements the #GstPreset interface
- * to use for the profile.
+ * Sets the name of the preset to be used in the profile.
  * This is the name that has been set when saving the preset.
+ * You can list the available presets for a specific element factory
+ * using  `$ gst-inspect-1.0 element-factory-name`, for example for
+ * `x264enc`:
+ *
+ * ``` bash
+ * $ gst-inspect-1.0 x264enc
+ * ...
+ * Presets:
+ *  "Profile Baseline": Baseline Profile
+ *  "Profile High": High Profile
+ *  "Profile Main": Main Profile
+ *  "Profile YouTube": YouTube recommended settings (https://support.google.com/youtube/answer/1722171)
+ *  "Quality High": High quality
+ *  "Quality Low": Low quality
+ *  "Quality Normal": Normal quality
+ *  "Zero Latency"
+ * ```
+ }
  */
 void
 gst_encoding_profile_set_preset (GstEncodingProfile * profile,
@@ -782,9 +800,11 @@ gst_encoding_profile_set_preset (GstEncodingProfile * profile,
 /**
  * gst_encoding_profile_set_preset_name:
  * @profile: a #GstEncodingProfile
- * @preset_name: (nullable): The name of the preset to use in this @profile.
+ * @preset_name: (nullable): The name of the element factory to use in this @profile.
  *
- * Sets the name of the #GstPreset's factory to be used in the profile.
+ * Sets the name of the #GstPreset's factory to be used in the profile. This
+ * is the name of the **element factory** that implements the #GstPreset interface not
+ * the name of the preset itself (see #gst_encoding_profile_set_preset).
  */
 void
 gst_encoding_profile_set_preset_name (GstEncodingProfile * profile,
@@ -1908,6 +1928,14 @@ create_encoding_stream_profile (gchar * serialized_profile,
 
         single_segment = g_value_get_boolean (&v);
         g_value_reset (&v);
+      } else if (!g_strcmp0 (propv[0], "factory-name")) {
+        if (factory_name) {
+          g_warning ("Multiple factory names specified");
+          g_strfreev (propv);
+          goto cleanup;
+        }
+
+        factory_name = g_strdup (propv[1]);
       } else {
         g_warning ("Unsupported property: %s", propv[0]);
         g_strfreev (propv);
