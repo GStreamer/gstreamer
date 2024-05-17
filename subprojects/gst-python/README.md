@@ -39,7 +39,7 @@ to use the overrides. They will be loaded automatically on
 ```python
 import gi
 gi.require_version('Gst', '1.0')
-gi.repository import GObject, Gst
+from gi.repository import GObject, Gst
 ```
 
 Note that additional imports will be required for other GStreamer libraries to
