@@ -58,7 +58,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 /* we include this here to get the G_OS_* defines */
 #include <glib.h>
@@ -1431,20 +1430,17 @@ gen_date_string (gchar * date_string, guint len)
       { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
     "Nov", "Dec"
   };
-  struct tm tm;
-  time_t t;
+  GDateTime *now;
 
-  time (&t);
+  now = g_date_time_new_now_utc ();
 
-#ifdef HAVE_GMTIME_R
-  gmtime_r (&t, &tm);
-#else
-  tm = *gmtime (&t);
-#endif
+  g_snprintf (date_string, len, "%s, %02u %s %04u %02u:%02u:%02u GMT",
+      wkdays[g_date_time_get_day_of_week (now)],
+      g_date_time_get_day_of_month (now), months[g_date_time_get_month (now)],
+      g_date_time_get_year (now), g_date_time_get_hour (now),
+      g_date_time_get_minute (now), g_date_time_get_second (now));
 
-  g_snprintf (date_string, len, "%s, %02d %s %04d %02d:%02d:%02d GMT",
-      wkdays[tm.tm_wday], tm.tm_mday, months[tm.tm_mon], tm.tm_year + 1900,
-      tm.tm_hour, tm.tm_min, tm.tm_sec);
+  g_date_time_unref (now);
 }
 
 static GstRTSPResult
