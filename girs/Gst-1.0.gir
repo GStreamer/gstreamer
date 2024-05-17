@@ -43947,9 +43947,10 @@ printf("%" GST_TIME_FORMAT "\n", GST_TIME_ARGS(ts));
     <function-macro name="TIME_TO_TIMEVAL" c:identifier="GST_TIME_TO_TIMEVAL" introspectable="0">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstclock.h">Converts a #GstClockTime to a GTimeVal
 
-&gt; on 32-bit systems, a timeval has a range of only 2^32 - 1 seconds,
-&gt; which is about 68 years.  Expect trouble if you want to schedule stuff
-&gt; in your pipeline for 2038.</doc>
+&gt; on many 32-bit systems, a timeval has a range of only 2^32 - 1 seconds,
+&gt; which is about 68 years. Expect trouble if you want to schedule stuff
+&gt; in your pipeline for 2038. This macro asserts that this case does not
+&gt; happen.</doc>
       <source-position filename="../subprojects/gstreamer/gst/gstclock.h"/>
       <parameters>
         <parameter name="t">
