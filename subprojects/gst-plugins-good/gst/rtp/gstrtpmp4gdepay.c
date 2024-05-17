@@ -717,6 +717,9 @@ gst_rtp_mp4g_depay_process (GstRTPBaseDepayload * depayload, GstRTPBuffer * rtp)
              * in this RTP packet. */
             timestamp += (rtpmp4gdepay->constantDuration * GST_SECOND) /
                 depayload->clock_rate;
+
+            /* Set the duration for the outgoing buffer */
+            GST_BUFFER_DURATION (outbuf) = timestamp - GST_BUFFER_PTS (outbuf);
           } else {
             /* otherwise, make sure we don't use the timestamp again for other
              * AUs. */
