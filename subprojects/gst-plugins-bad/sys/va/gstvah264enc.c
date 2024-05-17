@@ -1723,7 +1723,7 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
 static void
 frame_setup_from_gop (GstVaH264Enc * self, GstVaH264EncFrame * frame, guint i)
 {
-  g_assert (i >= 0 && i < 1024);
+  g_assert (i < 1024);
 
   frame->type = self->gop.frame_types[i].slice_type;
   frame->is_ref = self->gop.frame_types[i].is_ref;
