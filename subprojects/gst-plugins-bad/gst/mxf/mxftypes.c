@@ -555,30 +555,19 @@ mxf_timestamp_to_string (const MXFTimestamp * t, gchar str[32])
 void
 mxf_timestamp_set_now (MXFTimestamp * timestamp)
 {
-  gint64 now;
-  time_t t;
-  struct tm *tm;
+  GDateTime *now;
 
-#ifdef HAVE_GMTIME_R
-  struct tm tm_;
-#endif
+  now = g_date_time_new_now_utc ();
 
-  now = g_get_real_time ();
-  t = now / G_USEC_PER_SEC;
+  timestamp->year = g_date_time_get_year (now);
+  timestamp->month = g_date_time_get_month (now);
+  timestamp->day = g_date_time_get_day_of_month (now);
+  timestamp->hour = g_date_time_get_hour (now);
+  timestamp->minute = g_date_time_get_minute (now);
+  timestamp->second = g_date_time_get_second (now);
+  timestamp->msecond = g_date_time_get_microsecond (now);
 
-#ifdef HAVE_GMTIME_R
-  tm = gmtime_r (&t, &tm_);
-#else
-  tm = gmtime (&t);
-#endif
-
-  timestamp->year = tm->tm_year + 1900;
-  timestamp->month = tm->tm_mon;
-  timestamp->day = tm->tm_mday;
-  timestamp->hour = tm->tm_hour;
-  timestamp->minute = tm->tm_min;
-  timestamp->second = tm->tm_sec;
-  timestamp->msecond = now / 1000;
+  g_date_time_unref (now);
 }
 
 void
