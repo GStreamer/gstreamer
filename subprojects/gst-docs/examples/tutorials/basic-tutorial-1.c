@@ -31,8 +31,8 @@ tutorial_main (int argc, char *argv[])
 
   /* See next tutorial for proper error message handling/parsing */
   if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-    g_error ("An error occurred! Re-run with the GST_DEBUG=*:WARN environment "
-        "variable set for more details.");
+    g_printerr ("An error occurred! Re-run with the GST_DEBUG=*:WARN "
+        "environment variable set for more details.\n");
   }
 
   /* Free resources */
