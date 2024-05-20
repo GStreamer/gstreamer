@@ -143,6 +143,7 @@ option('mplex', type : 'feature', value : 'auto', description : 'mplex audio/vid
 option('msdk', type : 'feature', value : 'auto', description : 'Intel Media SDK video encoder/decoder plugin')
 option('musepack', type : 'feature', value : 'auto', description : 'libmpcdec Musepack decoder plugin')
 option('neon', type : 'feature', value : 'auto', description : 'NEON HTTP source plugin')
+option('nvcomp', type : 'feature', value : 'auto', description : 'NVIDIA nvCOMP compression/decompression plugin')
 option('nvcodec', type : 'feature', value : 'auto', description : 'NVIDIA GPU codec plugin')
 option('onnx', type : 'feature', value : 'auto', description : 'ONNX neural network plugin')
 option('openal', type : 'feature', value : 'auto', description : 'OpenAL plugin')
@@ -240,6 +241,10 @@ option('sctp-internal-usrsctp', type: 'feature', value : 'enabled',
 # MSDK plugin options
 option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 'auto',
        description : 'Select MFX API to build against')
+
+# nvCOMP plugin options
+option('nvcomp-sdk-path', type: 'string', value : '',
+       description : 'nvCOMP SDK root directory')
 
 # QSV plugin options
 option('mfx-modules-dir', type: 'string', value : '',
