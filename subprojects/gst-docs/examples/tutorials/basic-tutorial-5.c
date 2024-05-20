@@ -341,7 +341,7 @@ tutorial_main (int argc, char *argv[])
    * GStreamer will render the video at and we can add to our UI.
    * Try to create the OpenGL version of the video sink, and fallback if that fails */
   if (gtkglsink != NULL && videosink != NULL) {
-    g_print ("Successfully created GTK GL Sink");
+    g_print ("Successfully created GTK GL Sink\n");
 
     g_object_set (videosink, "sink", gtkglsink, NULL);
 
@@ -349,6 +349,11 @@ tutorial_main (int argc, char *argv[])
      * So we get it and use it later to add it to our gui. */
     g_object_get (gtkglsink, "widget", &data.sink_widget, NULL);
   } else {
+    if (gtkglsink != NULL)
+      gst_object_unref (gtkglsink);
+    if (videosink != NULL)
+      gst_object_unref (videosink);
+
     g_printerr ("Could not create gtkglsink, falling back to gtksink.\n");
 
     videosink = gst_element_factory_make ("gtksink", "gtksink");
@@ -365,7 +370,8 @@ tutorial_main (int argc, char *argv[])
       "https://gstreamer.freedesktop.org/data/media/sintel_trailer-480p.webm",
       NULL);
 
-  /* Set the video-sink  */
+  /* Set the video-sink. The playbin assumes ownership of videosink, because
+   * that's still a floating reference. */
   g_object_set (data.playbin, "video-sink", videosink, NULL);
 
   /* Connect to interesting signals in playbin */
@@ -396,7 +402,6 @@ tutorial_main (int argc, char *argv[])
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
     gst_object_unref (data.playbin);
-    gst_object_unref (videosink);
     return -1;
   }
 
@@ -409,7 +414,6 @@ tutorial_main (int argc, char *argv[])
   /* Free resources */
   gst_element_set_state (data.playbin, GST_STATE_NULL);
   gst_object_unref (data.playbin);
-  gst_object_unref (videosink);
 
   return 0;
 }
