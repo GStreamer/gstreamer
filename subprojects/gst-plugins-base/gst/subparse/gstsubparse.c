@@ -274,7 +274,7 @@ gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
 
       /* Forward seek event first and return if succeeded */
-      ret = gst_pad_event_default (pad, parent, event);
+      ret = gst_pad_event_default (pad, parent, g_steal_pointer (&event));
       if (ret)
         break;
 
@@ -299,7 +299,6 @@ gst_sub_parse_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_WARNING_OBJECT (self, "seek to 0 bytes failed");
       }
 
-      gst_event_unref (event);
       break;
     }
     default:
