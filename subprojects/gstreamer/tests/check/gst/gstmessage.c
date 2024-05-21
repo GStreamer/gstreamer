@@ -85,6 +85,7 @@ GST_START_TEST (test_parsing)
     gchar *debug;
     GstStructure *d;
     const GstStructure *dc;
+    GstStructure *writable_dc;
 
     error = g_error_new (domain, 10, "test error");
     fail_if (error == NULL);
@@ -114,6 +115,15 @@ GST_START_TEST (test_parsing)
     fail_unless (gst_structure_has_field_typed (dc, "test-field",
             G_TYPE_STRING));
     fail_unless (gst_structure_get_string (dc, "test-field"), "test-contents");
+
+    /* Check writable variant */
+    gst_message_ref (message);
+    /* Should fail if message is not writable */
+    ASSERT_CRITICAL (gst_message_parse_error_writable_details (message,
+            &writable_dc));
+    gst_message_unref (message);
+    gst_message_parse_error_writable_details (message, &writable_dc);
+    fail_unless (dc == writable_dc);
 
     gst_message_unref (message);
     g_error_free (error);
@@ -624,6 +634,54 @@ GST_START_TEST (test_parsing)
 
     gst_message_parse_instant_rate_request (message, &rate_multiplier);
     fail_unless (rate_multiplier == 1.5);
+
+    gst_message_unref (message);
+  }
+  /* Message details */
+  {
+    GstStructure *details = NULL;
+    const GstStructure *message_structure = NULL;
+
+    /* create a message without a pre-existing structure */
+    message = gst_message_new_eos (NULL);
+
+    details = gst_message_writable_details (message);
+    fail_unless (details != NULL);
+    fail_unless (GST_IS_STRUCTURE (details));
+
+    /* The message (which initially did not have a supporting structure) should
+     * now has a structure whose name should be the message type name */
+    message_structure = gst_message_get_structure (message);
+    fail_if (message_structure == NULL);
+    fail_unless_equals_string (gst_structure_get_name (message_structure),
+        gst_message_type_get_name (GST_MESSAGE_TYPE (message)));
+
+    gst_message_unref (message);
+
+    /* Same thing but when trying to set details */
+    message = gst_message_new_eos (NULL);
+    details =
+        gst_structure_new ("awesome-details", "something", G_TYPE_INT, 42,
+        NULL);
+    gst_message_set_details (message, details);
+
+    details = gst_message_writable_details (message);
+    fail_unless (details != NULL);
+    fail_unless (GST_IS_STRUCTURE (details));
+
+    gst_message_unref (message);
+
+    /* Make sure we can't set details on a message which already has details */
+    message = gst_message_new_eos (NULL);
+    details =
+        gst_structure_new ("awesome-details", "something", G_TYPE_INT, 42,
+        NULL);
+    gst_message_set_details (message, details);
+    details = NULL;
+
+    details = gst_structure_new_empty ("some-other-details");
+    ASSERT_CRITICAL (gst_message_set_details (message, details));
+    /* No need to free structure on failures, it will be freed */
 
     gst_message_unref (message);
   }

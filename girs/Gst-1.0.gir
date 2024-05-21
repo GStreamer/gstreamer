@@ -24121,6 +24121,22 @@ MT safe</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_details" c:identifier="gst_message_get_details" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Returns the optional details structure of the message. May be NULL if none.
+
+The returned structure must not be freed.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The details, or NULL if none.</doc>
+          <type name="Structure" c:type="const GstStructure*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A #GstMessage</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="get_num_redirect_entries" c:identifier="gst_message_get_num_redirect_entries" version="1.10">
         <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
         <return-value transfer-ownership="none">
@@ -24477,6 +24493,24 @@ The returned structure must not be freed.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="parse_error_writable_details" c:identifier="gst_message_parse_error_writable_details" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Returns the details structure if present or will create one if not present.
+The returned structure must not be freed.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The writable message object</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
+          <parameter name="structure" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A pointer to the returned details</doc>
+            <type name="Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="parse_group_id" c:identifier="gst_message_parse_group_id" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Extract the group from the STREAM_START message.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
@@ -24558,6 +24592,24 @@ The returned structure must not be freed.</doc>
           <parameter name="structure" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1" optional="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A pointer to the returned details</doc>
             <type name="Structure" c:type="const GstStructure**"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="parse_info_writable_details" c:identifier="gst_message_parse_info_writable_details" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Returns the details structure if present or will create one if not present.
+The returned structure must not be freed.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The writable message object</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
+          <parameter name="structure" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A pointer to the returned details</doc>
+            <type name="Structure" c:type="GstStructure**"/>
           </parameter>
         </parameters>
       </method>
@@ -25209,6 +25261,24 @@ The returned structure must not be freed.</doc>
           </parameter>
         </parameters>
       </method>
+      <method name="parse_warning_writable_details" c:identifier="gst_message_parse_warning_writable_details" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Returns the details structure if present or will create one if not present.
+The returned structure must not be freed.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The writable message object</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
+          <parameter name="structure" direction="out" caller-allocates="0" transfer-ownership="none" nullable="1" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A pointer to the returned details</doc>
+            <type name="Structure" c:type="GstStructure**"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="ref" c:identifier="gst_message_ref" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Convenience macro to increase the reference count of the message.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
@@ -25249,6 +25319,24 @@ The returned structure must not be freed.</doc>
           <parameter name="buffering_left" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">amount of buffering time left in milliseconds</doc>
             <type name="gint64" c:type="gint64"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="set_details" c:identifier="gst_message_set_details" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Add @details to @message. Will fail if the message already has details set on
+it or if it is not writable.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A #GstMessage</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
+          <parameter name="details" transfer-ownership="full" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A GstStructure with details</doc>
+            <type name="Structure" c:type="GstStructure*"/>
           </parameter>
         </parameters>
       </method>
@@ -25441,6 +25529,24 @@ freeing it.</doc>
         <parameters>
           <instance-parameter name="msg" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">the message to unref</doc>
+            <type name="Message" c:type="GstMessage*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="writable_details" c:identifier="gst_message_writable_details" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">Returns the details structure of the @message. If not present it will be
+created. Use this function (instead of gst_message_get_details()) if you
+want to write to the @details structure.
+
+The returned structure must not be freed.</doc>
+        <source-position filename="../subprojects/gstreamer/gst/gstmessage.h"/>
+        <return-value transfer-ownership="none" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">The details, or NULL if none.</doc>
+          <type name="Structure" c:type="GstStructure*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="message" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstmessage.c">A writable #GstMessage</doc>
             <type name="Message" c:type="GstMessage*"/>
           </instance-parameter>
         </parameters>

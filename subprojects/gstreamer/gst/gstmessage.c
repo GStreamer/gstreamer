@@ -399,6 +399,138 @@ gst_message_new_eos (GstObject * src)
   return message;
 }
 
+/* Internal function for setting details on a message. Checks for valid
+ * arguments should be done before calling this.
+ *
+ * Will create a message structure if it doesn't have one already
+ **/
+static void
+message_set_details (GstMessage * message, GstStructure * details)
+{
+  GValue v = G_VALUE_INIT;
+
+  if (GST_MESSAGE_STRUCTURE (message) == NULL) {
+    GQuark message_quark = gst_message_type_to_quark (message->type);
+    g_return_if_fail (message_quark);
+    GstStructure *structure = gst_structure_new_id_empty (message_quark);
+    gst_structure_set_parent_refcount (structure,
+        &message->mini_object.refcount);
+    GST_MESSAGE_STRUCTURE (message) = structure;
+  }
+  g_value_init (&v, GST_TYPE_STRUCTURE);
+  g_value_take_boxed (&v, details);
+  gst_structure_id_take_value (GST_MESSAGE_STRUCTURE (message), details_quark,
+      &v);
+}
+
+/**
+ * gst_message_set_details:
+ * @message: A #GstMessage
+ * @details: (transfer full) (nullable): A GstStructure with details
+ *
+ * Add @details to @message. Will fail if the message already has details set on
+ * it or if it is not writable.
+ *
+ * Since: 1.26
+ */
+void
+gst_message_set_details (GstMessage * message, GstStructure * details)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (gst_message_is_writable (message));
+  g_return_if_fail (details);
+
+  if (GST_MESSAGE_STRUCTURE (message)
+      && gst_structure_id_has_field (GST_MESSAGE_STRUCTURE (message),
+          details_quark)) {
+    gst_structure_free (details);
+    g_critical ("Message already has details");
+    return;
+  }
+
+  message_set_details (message, details);
+}
+
+/* Internal function for parsing details of a message.
+ * Checks for valid arguments should be done before calling this.
+ *
+ * Will create a details structure if create_if_missing is TRUE
+ */
+static void
+message_parse_details (GstMessage * message, GstStructure ** details,
+    gboolean create_if_missing)
+{
+  *details = NULL;
+
+  if (GST_MESSAGE_STRUCTURE (message) == NULL && !create_if_missing)
+    return;
+
+  if (GST_MESSAGE_STRUCTURE (message) &&
+      gst_structure_id_has_field (GST_MESSAGE_STRUCTURE (message),
+          details_quark)) {
+    const GValue *v =
+        gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (message),
+        details_quark);
+    if (v && G_VALUE_TYPE (v) == GST_TYPE_STRUCTURE) {
+      *details = g_value_get_boxed (v);
+    }
+  } else if (create_if_missing) {
+    *details = gst_structure_new_empty ("message-details");
+    message_set_details (message, (GstStructure *) * details);
+  }
+}
+
+/**
+ * gst_message_get_details:
+ * @message: A #GstMessage
+ *
+ * Returns the optional details structure of the message. May be NULL if none.
+ *
+ * The returned structure must not be freed.
+ *
+ * Returns: (transfer none) (nullable): The details, or NULL if none.
+ *
+ * Since: 1.26
+ */
+const GstStructure *
+gst_message_get_details (GstMessage * message)
+{
+  const GstStructure *details;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (message), NULL);
+
+  message_parse_details (message, (GstStructure **) & details, FALSE);
+
+  return details;
+}
+
+/**
+ * gst_message_writable_details:
+ * @message: A writable #GstMessage
+ *
+ * Returns the details structure of the @message. If not present it will be
+ * created. Use this function (instead of gst_message_get_details()) if you
+ * want to write to the @details structure.
+ *
+ * The returned structure must not be freed.
+ *
+ * Returns: (transfer none) (nullable): The details, or NULL if none.
+ *
+ * Since: 1.26
+ */
+GstStructure *
+gst_message_writable_details (GstMessage * message)
+{
+  GstStructure *details;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (message), NULL);
+  g_return_val_if_fail (gst_message_is_writable (message), NULL);
+
+  message_parse_details (message, &details, TRUE);
+
+  return details;
+}
+
 /**
  * gst_message_new_error_with_details:
  * @src: (transfer none) (nullable): The object originating the message.
@@ -433,12 +565,7 @@ gst_message_new_error_with_details (GstObject * src, GError * error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_ERROR, src, structure);
   if (details) {
-    GValue v = G_VALUE_INIT;
-
-    g_value_init (&v, GST_TYPE_STRUCTURE);
-    g_value_take_boxed (&v, details);
-    gst_structure_id_take_value (GST_MESSAGE_STRUCTURE (message), details_quark,
-        &v);
+    message_set_details (message, details);
   }
 
   return message;
@@ -479,18 +606,33 @@ void
 gst_message_parse_error_details (GstMessage * message,
     const GstStructure ** structure)
 {
-  const GValue *v;
-
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
   g_return_if_fail (structure != NULL);
 
-  *structure = NULL;
-  v = gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (message),
-      details_quark);
-  if (v) {
-    *structure = g_value_get_boxed (v);
-  }
+  message_parse_details (message, (GstStructure **) structure, FALSE);
+}
+
+/**
+ * gst_message_parse_error_writable_details:
+ * @message: The writable message object
+ * @structure: (optional) (nullable) (transfer none) (out): A pointer to the returned details
+ *
+ * Returns the details structure if present or will create one if not present.
+ * The returned structure must not be freed.
+ *
+ * Since: 1.26
+ */
+void
+gst_message_parse_error_writable_details (GstMessage * message,
+    GstStructure ** structure)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
+  g_return_if_fail (gst_message_is_writable (message));
+  g_return_if_fail (structure != NULL);
+
+  message_parse_details (message, (GstStructure **) structure, TRUE);
 }
 
 /**
@@ -525,12 +667,7 @@ gst_message_new_warning_with_details (GstObject * src, GError * error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_WARNING, src, structure);
   if (details) {
-    GValue v = G_VALUE_INIT;
-
-    g_value_init (&v, GST_TYPE_STRUCTURE);
-    g_value_take_boxed (&v, details);
-    gst_structure_id_take_value (GST_MESSAGE_STRUCTURE (message), details_quark,
-        &v);
+    message_set_details (message, details);
   }
 
   return message;
@@ -569,18 +706,33 @@ void
 gst_message_parse_warning_details (GstMessage * message,
     const GstStructure ** structure)
 {
-  const GValue *v;
-
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
   g_return_if_fail (structure != NULL);
 
-  *structure = NULL;
-  v = gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (message),
-      details_quark);
-  if (v) {
-    *structure = g_value_get_boxed (v);
-  }
+  message_parse_details (message, (GstStructure **) structure, FALSE);
+}
+
+/**
+ * gst_message_parse_warning_writable_details:
+ * @message: The writable message object
+ * @structure: (optional) (nullable) (transfer none) (out): A pointer to the returned details
+ *
+ * Returns the details structure if present or will create one if not present.
+ * The returned structure must not be freed.
+ *
+ * Since: 1.26
+ */
+void
+gst_message_parse_warning_writable_details (GstMessage * message,
+    GstStructure ** structure)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
+  g_return_if_fail (gst_message_is_writable (message));
+  g_return_if_fail (structure != NULL);
+
+  message_parse_details (message, (GstStructure **) structure, TRUE);
 }
 
 /**
@@ -615,12 +767,7 @@ gst_message_new_info_with_details (GstObject * src, GError * error,
       GST_QUARK (DEBUG), G_TYPE_STRING, debug, NULL);
   message = gst_message_new_custom (GST_MESSAGE_INFO, src, structure);
   if (details) {
-    GValue v = G_VALUE_INIT;
-
-    g_value_init (&v, GST_TYPE_STRUCTURE);
-    g_value_take_boxed (&v, details);
-    gst_structure_id_take_value (GST_MESSAGE_STRUCTURE (message), details_quark,
-        &v);
+    message_set_details (message, details);
   }
 
   return message;
@@ -659,18 +806,33 @@ void
 gst_message_parse_info_details (GstMessage * message,
     const GstStructure ** structure)
 {
-  const GValue *v;
-
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_INFO);
   g_return_if_fail (structure != NULL);
 
-  *structure = NULL;
-  v = gst_structure_id_get_value (GST_MESSAGE_STRUCTURE (message),
-      details_quark);
-  if (v) {
-    *structure = g_value_get_boxed (v);
-  }
+  message_parse_details (message, (GstStructure **) structure, FALSE);
+}
+
+/**
+ * gst_message_parse_info_writable_details:
+ * @message: The writable message object
+ * @structure: (optional) (nullable) (transfer none) (out): A pointer to the returned details
+ *
+ * Returns the details structure if present or will create one if not present.
+ * The returned structure must not be freed.
+ *
+ * Since: 1.26
+ */
+void
+gst_message_parse_info_writable_details (GstMessage * message,
+    GstStructure ** structure)
+{
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_INFO);
+  g_return_if_fail (gst_message_is_writable (message));
+  g_return_if_fail (structure != NULL);
+
+  message_parse_details (message, (GstStructure **) structure, TRUE);
 }
 
 /**
