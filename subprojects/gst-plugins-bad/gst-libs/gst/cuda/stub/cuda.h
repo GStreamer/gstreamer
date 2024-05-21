@@ -314,6 +314,12 @@ typedef struct
 #define cuMemAllocHost  cuMemAllocHost_v2
 #define cuMemcpy2D cuMemcpy2D_v2
 #define cuMemcpy2DAsync cuMemcpy2DAsync_v2
+#define cuMemcpyDtoD cuMemcpyDtoD_v2
+#define cuMemcpyDtoDAsync cuMemcpyDtoDAsync_v2
+#define cuMemcpyDtoH cuMemcpyDtoH_v2
+#define cuMemcpyDtoHAsync cuMemcpyDtoHAsync_v2
+#define cuMemcpyHtoD cuMemcpyHtoD_v2
+#define cuMemcpyHtoDAsync cuMemcpyHtoDAsync_v2
 #define cuMemFree cuMemFree_v2
 
 #define cuEventDestroy cuEventDestroy_v2

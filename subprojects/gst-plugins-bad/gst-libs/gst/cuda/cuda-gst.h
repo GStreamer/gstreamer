@@ -95,6 +95,39 @@ GST_CUDA_API
 CUresult CUDAAPI CuMemcpy2DAsync    (const CUDA_MEMCPY2D *pCopy, CUstream hStream);
 
 GST_CUDA_API
+CUresult CUDAAPI CuMemcpyDtoD       (CUdeviceptr dstDevice,
+                                     CUdeviceptr srcDevice,
+                                     size_t ByteCount);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemcpyDtoDAsync  (CUdeviceptr dstDevice,
+                                     CUdeviceptr srcDevice,
+                                     size_t ByteCount,
+                                     CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemcpyDtoH       (void *dstHost,
+                                     CUdeviceptr srcDevice,
+                                     size_t ByteCount);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemcpyDtoHAsync  (void *dstHost,
+                                     CUdeviceptr srcDevice,
+                                     size_t ByteCount,
+                                     CUstream hStream);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemcpyHtoD       (CUdeviceptr dstDevice,
+                                     const void *srcHost,
+                                     size_t ByteCount);
+
+GST_CUDA_API
+CUresult CUDAAPI CuMemcpyHtoDAsync  (CUdeviceptr dstDevice,
+                                     const void *srcHost,
+                                     size_t ByteCount,
+                                     CUstream hStream);
+
+GST_CUDA_API
 CUresult CUDAAPI CuMemFree          (CUdeviceptr dptr);
 
 GST_CUDA_API

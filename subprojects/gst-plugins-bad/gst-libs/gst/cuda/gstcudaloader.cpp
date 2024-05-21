@@ -91,6 +91,18 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuMemcpy2D) (const CUDA_MEMCPY2D * pCopy);
   CUresult (CUDAAPI * CuMemcpy2DAsync) (const CUDA_MEMCPY2D * pCopy,
       CUstream hStream);
+  CUresult (CUDAAPI *CuMemcpyDtoD) (CUdeviceptr dstDevice,
+      CUdeviceptr srcDevice, size_t ByteCount);
+  CUresult (CUDAAPI *CuMemcpyDtoDAsync) (CUdeviceptr dstDevice,
+      CUdeviceptr srcDevice, size_t ByteCount, CUstream hStream);
+  CUresult (CUDAAPI *CuMemcpyDtoH) (void *dstHost, CUdeviceptr srcDevice,
+      size_t ByteCount);
+  CUresult (CUDAAPI *CuMemcpyDtoHAsync) (void *dstHost, CUdeviceptr srcDevice,
+      size_t ByteCount, CUstream hStream);
+  CUresult (CUDAAPI *CuMemcpyHtoD) (CUdeviceptr dstDevice, const void *srcHost,
+      size_t ByteCount);
+  CUresult (CUDAAPI *CuMemcpyHtoDAsync) (CUdeviceptr dstDevice,
+      const void *srcHost, size_t ByteCount, CUstream hStream);
 
   CUresult (CUDAAPI * CuMemFree) (CUdeviceptr dptr);
   CUresult (CUDAAPI * CuMemFreeHost) (void *p);
@@ -261,6 +273,12 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuMemAllocHost, CuMemAllocHost);
   LOAD_SYMBOL (cuMemcpy2D, CuMemcpy2D);
   LOAD_SYMBOL (cuMemcpy2DAsync, CuMemcpy2DAsync);
+  LOAD_SYMBOL (cuMemcpyDtoD, CuMemcpyDtoD);
+  LOAD_SYMBOL (cuMemcpyDtoDAsync, CuMemcpyDtoDAsync);
+  LOAD_SYMBOL (cuMemcpyDtoH, CuMemcpyDtoH);
+  LOAD_SYMBOL (cuMemcpyDtoHAsync, CuMemcpyDtoHAsync);
+  LOAD_SYMBOL (cuMemcpyHtoD, CuMemcpyHtoD);
+  LOAD_SYMBOL (cuMemcpyHtoDAsync, CuMemcpyHtoDAsync);
 
   LOAD_SYMBOL (cuMemFree, CuMemFree);
   LOAD_SYMBOL (cuMemFreeHost, CuMemFreeHost);
@@ -511,6 +529,60 @@ CuMemcpy2DAsync (const CUDA_MEMCPY2D * pCopy, CUstream hStream)
   g_assert (gst_cuda_vtable.CuMemcpy2DAsync != nullptr);
 
   return gst_cuda_vtable.CuMemcpy2DAsync (pCopy, hStream);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoD (CUdeviceptr dstDevice, CUdeviceptr srcDevice, size_t ByteCount)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoD != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoD (dstDevice, srcDevice, ByteCount);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoDAsync (CUdeviceptr dstDevice, CUdeviceptr srcDevice,
+    size_t ByteCount, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoDAsync != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoDAsync (dstDevice, srcDevice, ByteCount,
+      hStream);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoH (void *dstHost, CUdeviceptr srcDevice, size_t ByteCount)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoH != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoH (dstHost, srcDevice, ByteCount);
+}
+
+CUresult CUDAAPI
+CuMemcpyDtoHAsync (void *dstHost, CUdeviceptr srcDevice, size_t ByteCount,
+    CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyDtoHAsync != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyDtoHAsync (dstHost, srcDevice, ByteCount,
+      hStream);
+}
+
+CUresult CUDAAPI
+CuMemcpyHtoD (CUdeviceptr dstDevice, const void *srcHost, size_t ByteCount)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyHtoD != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyHtoD (dstDevice, srcHost, ByteCount);
+}
+
+CUresult CUDAAPI
+CuMemcpyHtoDAsync (CUdeviceptr dstDevice, const void *srcHost,
+    size_t ByteCount, CUstream hStream)
+{
+  g_assert (gst_cuda_vtable.CuMemcpyHtoD != nullptr);
+
+  return gst_cuda_vtable.CuMemcpyHtoDAsync (dstDevice, srcHost, ByteCount,
+      hStream);
 }
 
 CUresult CUDAAPI
