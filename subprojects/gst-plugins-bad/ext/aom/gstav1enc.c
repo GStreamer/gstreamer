@@ -831,15 +831,13 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 
   av1enc->aom_cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
   av1enc->aom_cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
-  /* Recommended method is to set the timebase to that of the parent
-   * container or multimedia framework (ex: 1/1000 for ms, as in FLV) */
-  if (GST_VIDEO_INFO_FPS_D (info) != 0 && GST_VIDEO_INFO_FPS_N (info) != 0) {
-    av1enc->aom_cfg.g_timebase.num = GST_VIDEO_INFO_FPS_D (info);
-    av1enc->aom_cfg.g_timebase.den = GST_VIDEO_INFO_FPS_N (info);
-  } else {
-    av1enc->aom_cfg.g_timebase.num = DEFAULT_TIMEBASE_N;
-    av1enc->aom_cfg.g_timebase.den = DEFAULT_TIMEBASE_D;
-  }
+  /* Zero framerate and max-framerate but still need to setup the timebase to avoid
+   * a divide by zero error. Presuming the lowest common denominator will be RTP -
+   * VP8 payload draft states clock rate of 90000 which should work for anyone where
+   * FPS < 90000 (shouldn't be too many cases where it's higher) though wouldn't be optimal. RTP specification
+   * http://tools.ietf.org/html/draft-ietf-payload-vp8-01 section 6.3.1 */
+  av1enc->aom_cfg.g_timebase.num = 1;
+  av1enc->aom_cfg.g_timebase.den = 90000;
   av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
 
   if (av1enc->threads == DEFAULT_THREADS)
