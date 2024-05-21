@@ -3989,6 +3989,8 @@ missing_decoder:
     GST_DEBUG_OBJECT (slot->src_pad,
         "We are missing a decoder for %" GST_PTR_FORMAT, caps);
     *msg = gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps);
+    gst_missing_plugin_message_set_stream_id (*msg,
+        gst_stream_get_stream_id (slot->active_stream));
     gst_caps_unref (caps);
 
     /* FALLTHROUGH */
