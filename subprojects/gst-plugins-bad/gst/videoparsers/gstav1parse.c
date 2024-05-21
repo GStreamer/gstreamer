@@ -1117,20 +1117,25 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
     }
 
-    if (frame_finished) {
-      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
-    } else {
-      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_MARKER);
-    }
-
-    if (self->align == GST_AV1_PARSE_ALIGN_FRAME) {
+    if (self->align == GST_AV1_PARSE_ALIGN_FRAME
+        || self->align == GST_AV1_PARSE_ALIGN_OBU) {
       if (!self->show_frame) {
         GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
       } else {
         GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
+        if (frame_finished) {
+          GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
+        } else {
+          GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_MARKER);
+        }
       }
     } else {
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
+      if (frame_finished) {
+        GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
+      } else {
+        GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_MARKER);
+      }
     }
 
     gst_buffer_replace (&frame->out_buffer, buf);
