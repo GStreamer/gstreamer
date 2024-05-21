@@ -2205,6 +2205,39 @@ beach:
   return message;
 }
 
+static GstMessage *
+update_message_with_uri (GstURIDecodeBin3 * uridecodebin, GstMessage * msg)
+{
+  gchar *uri = NULL;
+  gboolean unlock_after = FALSE;
+  if (gst_object_has_as_ancestor (GST_MESSAGE_SRC (msg),
+          (GstObject *) uridecodebin->decodebin)) {
+    uri = uridecodebin->output_item->main_item->uri;
+  } else {
+    GstSourceHandler *handler;
+    PLAY_ITEMS_LOCK (uridecodebin);
+    unlock_after = TRUE;
+    /* Find the matching handler (if any) */
+    if ((handler = find_source_handler_for_element (uridecodebin, msg->src))) {
+      uri = handler->play_item->main_item->uri;
+    }
+  }
+
+  if (uri) {
+    GstStructure *details;
+    msg = gst_message_make_writable (msg);
+    details = gst_message_writable_details (msg);
+    if (details) {
+      gst_structure_set (details, "uri", G_TYPE_STRING, uri, NULL);
+    }
+  }
+
+  if (unlock_after)
+    PLAY_ITEMS_UNLOCK (uridecodebin);
+
+  return msg;
+}
+
 static void
 gst_uri_decode_bin3_handle_message (GstBin * bin, GstMessage * msg)
 {
@@ -2263,8 +2296,14 @@ gst_uri_decode_bin3_handle_message (GstBin * bin, GstMessage * msg)
       if (details && gst_structure_has_field (details, "redirect-location"))
         msg =
             gst_uri_decode_bin3_handle_redirection (uridecodebin, msg, details);
+      if (msg)
+        msg = update_message_with_uri (uridecodebin, msg);
       break;
     }
+    case GST_MESSAGE_WARNING:
+    case GST_MESSAGE_INFO:
+      msg = update_message_with_uri (uridecodebin, msg);
+      break;
     default:
       break;
   }
