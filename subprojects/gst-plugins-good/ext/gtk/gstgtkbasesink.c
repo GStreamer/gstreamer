@@ -203,6 +203,16 @@ gst_gtk_base_sink_get_widget (GstGtkBaseSink * gtk_sink)
   if (gtk_sink->widget != NULL)
     return g_object_ref (gtk_sink->widget);
 
+  /* Fix segfault when GTK3 and GTK4 are loaded (e.g. `gst-inspect-1.0 -a`)
+   * into the same process.
+   *
+   * GtkNoMediaFile only exists in GTK4 and is registered as part of
+   * gtk_init(). */
+  if (g_type_from_name ("GtkNoMediaFile")) {
+    GST_INFO_OBJECT (gtk_sink, "GTK4 is already initialized");
+    return NULL;
+  }
+
   /* Ensure GTK is initialized, this has no side effect if it was already
    * initialized. Also, we do that lazily, so the application can be first */
   if (!gtk_init_check (NULL, NULL)) {
