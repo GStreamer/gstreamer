@@ -41,6 +41,15 @@ static void create_stream_done (const gchar * command_name, GPtrArray * args,
 static void on_publish_or_play_status (const gchar * command_name,
     GPtrArray * args, gpointer user_data);
 
+GQuark
+gst_rtmp_conn_parsing_error_quark (void)
+{
+  static GQuark quark = 0;
+  if (!quark)
+    quark = g_quark_from_static_string ("gst-rtmp-conn-parsing-error-quark");
+  return quark;
+}
+
 static void
 init_debug (void)
 {
@@ -200,6 +209,7 @@ gst_rtmp_location_copy (GstRtmpLocation * dest, const GstRtmpLocation * src)
   dest->username = g_strdup (src->username);
   dest->password = g_strdup (src->password);
   dest->secure_token = g_strdup (src->secure_token);
+  dest->extra_connect_args = g_strdup (src->extra_connect_args);
   dest->authmod = src->authmod;
   dest->timeout = src->timeout;
   dest->tls_flags = src->tls_flags;
@@ -219,6 +229,7 @@ gst_rtmp_location_clear (GstRtmpLocation * location)
   g_clear_pointer (&location->username, g_free);
   g_clear_pointer (&location->password, g_free);
   g_clear_pointer (&location->secure_token, g_free);
+  g_clear_pointer (&location->extra_connect_args, g_free);
   g_clear_pointer (&location->flash_ver, g_free);
   location->publish = FALSE;
 }
@@ -580,10 +591,151 @@ do_adobe_auth (const gchar * username, const gchar * password,
   return auth_query;
 }
 
+static GstAmfNode *
+parse_conn_token (gchar type, const gchar * value, GError ** error)
+{
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  // Function called without a type
+  g_assert (type);
+
+  gchar *end_ptr;
+  gboolean bool_;
+
+  GST_TRACE ("Parsing Connection token of Type: %c and Value: %s", type, value);
+
+  switch (type) {
+    case 'N':
+      // Empty value
+      if (value[0] == '\0') {
+        g_set_error (error,
+            GST_RTMP_CONN_PARSING_ERROR,
+            GST_RTMP_CONN_PARSING_ERROR_INVALID_VALUE,
+            "Found Numeric type, but the value is an empty string");
+        return NULL;
+      }
+
+      gdouble num = g_ascii_strtod (value, &end_ptr);
+      if (end_ptr[0] != '\0') {
+        g_set_error (error,
+            GST_RTMP_CONN_PARSING_ERROR,
+            GST_RTMP_CONN_PARSING_ERROR_FAILED_PARSING_DOUBLE,
+            "Failed to convert %s to double", value);
+        return NULL;
+      }
+
+      return gst_amf_node_new_number (num);
+    case 'S':
+      return gst_amf_node_new_string (value, -1);
+    case 'B':
+      // We are mimicking the behavior of librtmp here, which
+      // is using atoi and thus every invalid string is false
+      // https://salsa.debian.org/multimedia-team/rtmpdump/-/blob/a56abc82a99e8c4497a421d9dbc06e4544ade200/librtmp/rtmp.c#L632-634
+      bool_ = g_ascii_strtoull (value, &end_ptr, 10);
+      if (end_ptr[0] != '\0') {
+        return gst_amf_node_new_boolean (FALSE);
+      }
+
+      return gst_amf_node_new_boolean (bool_);
+    case 'Z':
+      return gst_amf_node_new_null ();
+    case 'O':
+      // Unimplemented for now
+      // Error: Unsupported
+      // O:1 Starts the object, then we parse the other conn= until O:0
+      // Then finish the object and serialize it
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_UNSUPPORTED,
+          "Objects are not yet supported");
+      return NULL;
+    default:
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_INVALID_TYPE,
+          "Invalid data type passed: %c", type);
+      return NULL;
+  }
+}
+
+// LIBRTMP(3) can append arbitrary data to the connection packet of RTMP.
+// It does so using a "connection" parameter appended after the url.
+// For a description of the format, see LIBRTMP(3) Connection Parameters
+//
+// Here we parse the conn= options and replicate the behavior for librtmp
+static gboolean
+parse_librtmp_style_conn_props (const gchar * connect_string, GPtrArray * array,
+    GError ** error)
+{
+  g_return_val_if_fail (error == NULL || *error == NULL, FALSE);
+
+  gchar **params;
+
+  // Split the string "conn=S:Foo conn=B:Bar"
+  params = g_strsplit (connect_string, "conn=", -1);
+
+  for (gsize i = 0; params[i]; i++) {
+    const gchar *param = g_strstrip (params[i]);
+
+    // Continue on empty string
+    if (param[0] == '\0') {
+      continue;
+    }
+    // Check for Named field of an object
+    // Example token: 'NS:Foo:Bar'
+    // The [0] byte will always be 'N' and the [2] must be the colon, which
+    // only occurs on named fields
+    if (param[0] == 'N' && param[1] != ':' && param[1] != '\0'
+        && param[2] == ':') {
+      // TODO: Error out if we had not found an object before
+
+      // TODO: split the value and create the AMF node
+      // then append it to the amf object, with the name
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_UNSUPPORTED,
+          "Objects are not yet supported");
+      g_strfreev (params);
+      return FALSE;
+    }
+
+    if (param[1] != ':') {
+      g_set_error (error,
+          GST_RTMP_CONN_PARSING_ERROR,
+          GST_RTMP_CONN_PARSING_ERROR_INVALID_VALUE,
+          "Parameter values are not separated by colon (:): %s",
+          connect_string);
+      g_strfreev (params);
+      return FALSE;
+    }
+    // Example token: 'S:Bar'
+    // [0] is the type prefix: 'S', 'B', etc
+    // [1] should always be a ':' separator
+    // [2] and is our arbitrary data value
+    const gchar type_ = param[0];
+    const gchar *value = &param[2];
+
+    GError *parse_error = NULL;
+    GstAmfNode *node = parse_conn_token (type_, value, &parse_error);
+    if (!node) {
+      g_strfreev (params);
+      g_propagate_error (error, parse_error);
+      return FALSE;
+    }
+
+    g_ptr_array_add (array, node);
+  };
+
+  g_strfreev (params);
+
+  return TRUE;
+}
+
 static void
 send_connect (GTask * task)
 {
   ConnectTaskData *data = g_task_get_task_data (task);
+  GPtrArray *arguments = g_ptr_array_new_with_free_func (gst_amf_node_free);
   GstAmfNode *node;
   const gchar *app, *flash_ver;
   gchar *uri, *appstr = NULL, *uristr = NULL;
@@ -679,11 +831,32 @@ send_connect (GTask * task)
      * XXX: libavformat sends "pageUrl" here, if provided. */
   }
 
-  gst_rtmp_connection_send_command (data->connection, send_connect_done,
-      task, 0, "connect", node, NULL);
+  g_ptr_array_add (arguments, node);
+
+  /* Parse librtmp style connect parameters */
+  if (data->location.extra_connect_args
+      && data->location.extra_connect_args[0] != '\0') {
+    GError *error = NULL;
+    gboolean conn_result =
+        parse_librtmp_style_conn_props (data->location.extra_connect_args,
+        arguments,
+        &error);
+
+    // Failed to parse the connect-args prop
+    if (!conn_result) {
+      g_task_return_new_error (task, error->domain, error->code,
+          "Failed to parse extra connection args: %s", error->message);
+      g_clear_error (&error);
+      goto out;
+    }
+  }
+
+  gst_rtmp_connection_send_command_with_args (data->connection,
+      send_connect_done, task, 0, "connect", arguments->len,
+      (const GstAmfNode **) arguments->pdata);
 
 out:
-  gst_amf_node_free (node);
+  g_ptr_array_free (arguments, TRUE);
   g_free (uri);
 }
 

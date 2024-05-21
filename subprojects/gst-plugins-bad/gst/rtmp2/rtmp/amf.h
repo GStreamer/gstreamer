@@ -112,6 +112,8 @@ GBytes * gst_amf_serialize_command (gdouble transaction_id,
     const gchar * command_name, const GstAmfNode * argument, ...) G_GNUC_NULL_TERMINATED;
 GBytes * gst_amf_serialize_command_valist (gdouble transaction_id,
     const gchar * command_name, const GstAmfNode * argument, va_list va_args);
+GBytes * gst_amf_serialize_command_with_args (gdouble transaction_id,
+    const gchar * command_name, gsize n_arguments, const GstAmfNode ** arguments);
 
 G_END_DECLS
 #endif

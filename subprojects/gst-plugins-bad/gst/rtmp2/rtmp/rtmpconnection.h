@@ -89,6 +89,12 @@ void gst_rtmp_connection_request_window_size (GstRtmpConnection * connection,
 void gst_rtmp_connection_set_data_frame (GstRtmpConnection * connection,
     GstBuffer * buffer);
 
+guint
+gst_rtmp_connection_send_command_with_args (GstRtmpConnection * connection,
+    GstRtmpCommandCallback response_command, gpointer user_data,
+    guint32 stream_id, const gchar * command_name,
+    gsize n_arguments, const GstAmfNode ** arguments);
+
 GstStructure * gst_rtmp_connection_get_null_stats (void);
 GstStructure * gst_rtmp_connection_get_stats (GstRtmpConnection * connection);
 
