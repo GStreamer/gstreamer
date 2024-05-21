@@ -507,19 +507,19 @@ static const struct shader_templ templ_RGB_to_SEMI_PLANAR_YUV =
 /* YUY2:r,g,a
    UYVY:a,b,r */
 static const gchar glsl_func_YUY2_UYVY_unpack[] =
-    "vec4 yuy2_uyvy_unpack(sampler2D tex, vec2 texcoord, vec2 v_texcoord, vec2 chroma_sampling) {\n"
+    "vec4 yuy2_uyvy_unpack(sampler2D tex, vec2 v_texcoord, vec2 vert_to_tex, vec2 chroma_sampling) {\n"
     "  vec4 yuva;\n"
     "  float dx1 = -poffset_x;\n"
     "  float dx2 = 0.0;\n"
-    "  yuva.x = texture2D(tex, texcoord * tex_scale0)[input_swizzle[0]];\n"
+    "  yuva.x = texture2D(tex, v_texcoord * vert_to_tex * tex_scale0)[input_swizzle[0]];\n"
     /* v_texcoord are normalized, texcoord may not be e.g. rectangle textures */
     "  vec2 half_poffset = vec2(poffset_x / 2.0, poffset_y / 2.0);\n"
-    "  int inorder = int(((v_texcoord.x - half_poffset.x) * chroma_sampling.x + half_poffset.x) * width) % 2;\n"
+    "  int inorder = int(((v_texcoord.x * vert_to_tex.x - half_poffset.x) * chroma_sampling.x + half_poffset.x) * width / vert_to_tex) % 2;\n"
     "  if (inorder == 0) {\n"
     "    dx2 = -dx1;\n"
     "    dx1 = 0.0;\n"
     "  }\n"
-    "  vec2 non_offset = texcoord * tex_scale0 - half_poffset;\n"
+    "  vec2 non_offset = v_texcoord * vert_to_tex * tex_scale0 - half_poffset;\n"
     "  vec4 u_texel = texture2D(tex, non_offset * chroma_sampling + half_poffset + vec2(dx1, 0.0));\n"
     "  vec4 v_texel = texture2D(tex, non_offset * chroma_sampling + half_poffset + vec2(dx2, 0.0));\n"
     "  yuva.yz = vec2(u_texel[input_swizzle[1]], v_texel[input_swizzle[2]]);\n"
@@ -528,37 +528,37 @@ static const gchar glsl_func_YUY2_UYVY_unpack[] =
     "}\n";
 
 static const gchar templ_YUY2_UYVY_to_RGB_BODY[] =
-    "vec4 yuva = yuy2_uyvy_unpack(Ytex, texcoord, v_texcoord, vec2(1.0));\n"
+    "vec4 yuva = yuy2_uyvy_unpack(Ytex, v_texcoord, vert_to_tex, vec2(1.0));\n"
     "vec4 rgba = color_matrix_apply(yuva, to_RGB_matrix);\n"
     "gl_FragColor = swizzle(rgba, output_swizzle);\n";
 
 static const struct shader_templ templ_YUY2_UYVY_to_RGB =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_unpack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_YUY2_UYVY_to_PLANAR_YUV_BODY[] =
-    "vec4 yuva = yuy2_uyvy_unpack(Ytex, texcoord, v_texcoord, chroma_sampling);\n"
+    "vec4 yuva = yuy2_uyvy_unpack(Ytex, v_texcoord, vert_to_tex, chroma_sampling);\n"
     "yuva = swizzle(yuva, output_swizzle) * out_bitdepth_factor;\n"
     "write_planar_yuv(yuva);\n";
 
 static const struct shader_templ templ_YUY2_UYVY_to_PLANAR_YUV =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform vec2 chroma_sampling;\n" "uniform float out_bitdepth_factor;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform vec2 chroma_sampling;\n" "uniform float out_bitdepth_factor;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_unpack, glsl_func_write_planar_yuv, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_YUY2_UYVY_to_PLANAR_YUVA_BODY[] =
-    "vec4 yuva = yuy2_uyvy_unpack(Ytex, texcoord, v_texcoord, chroma_sampling);\n"
+    "vec4 yuva = yuy2_uyvy_unpack(Ytex, v_texcoord, vert_to_tex, chroma_sampling);\n"
     "yuva = swizzle(yuva, output_swizzle) * out_bitdepth_factor;\n"
     "write_planar_yuva(yuva);\n";
 
 static const struct shader_templ templ_YUY2_UYVY_to_PLANAR_YUVA =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform vec2 chroma_sampling;\n" "uniform float out_bitdepth_factor;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform vec2 chroma_sampling;\n" "uniform float out_bitdepth_factor;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_unpack, glsl_func_write_planar_yuva, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -645,57 +645,57 @@ static const char glsl_func_v210_unpack[] =
     "  int texel_i = 4 * (xpos / 2) + 2;\n"
     "  return v210_component_to_texel(texel_i);\n"
     "}\n"
-    "vec4 v210_unpack(sampler2D tex, vec2 texcoord, vec2 chroma_sampling) {\n"
-    "  int xpos = int(texcoord.x * out_width);\n"
+    "vec4 v210_unpack(sampler2D tex, vec2 v_texcoord, vec2 vert_to_tex, vec2 chroma_sampling) {\n"
+    "  int xpos = int(v_texcoord.x * out_width);\n"
     "  ivec2 y_xoffset = v210_y_xoffset(xpos);\n"
     "  ivec2 u_xoffset = v210_u_xoffset(xpos * int(chroma_sampling.x));\n"
     "  ivec2 v_xoffset = v210_v_xoffset(xpos * int(chroma_sampling.x));\n"
     "  vec2 half_x_offset = vec2(poffset_x / 2.0, 0.0);\n"
-    "  vec4 y_texel = texture2D(tex, vec2(poffset_x * float(y_xoffset[0]), texcoord.y) * tex_scale0 + half_x_offset);\n"
-    "  vec4 u_texel = texture2D(tex, vec2(poffset_x * float(u_xoffset[0]), texcoord.y * chroma_sampling.y) * tex_scale0 + half_x_offset);\n"
-    "  vec4 v_texel = texture2D(tex, vec2(poffset_x * float(v_xoffset[0]), texcoord.y * chroma_sampling.y) * tex_scale0 + half_x_offset);\n"
+    "  vec4 y_texel = texture2D(tex, vec2(poffset_x * float(y_xoffset[0]), v_texcoord.y * vert_to_tex.y) * tex_scale0 + half_x_offset);\n"
+    "  vec4 u_texel = texture2D(tex, vec2(poffset_x * float(u_xoffset[0]), v_texcoord.y * vert_to_tex.y * chroma_sampling.y) * tex_scale0 + half_x_offset);\n"
+    "  vec4 v_texel = texture2D(tex, vec2(poffset_x * float(v_xoffset[0]), v_texcoord.y * vert_to_tex.y * chroma_sampling.y) * tex_scale0 + half_x_offset);\n"
     "  return vec4(y_texel[y_xoffset[1]], u_texel[u_xoffset[1]], v_texel[v_xoffset[1]], 1.0);\n"
     "}\n";
 
 static const gchar templ_v210_to_RGB_BODY[] =
-    "vec4 yuva = v210_unpack(Ytex, v_texcoord, vec2(1.0));\n"
+    "vec4 yuva = v210_unpack(Ytex, v_texcoord, vert_to_tex, vec2(1.0));\n"
     "vec4 rgba = color_matrix_apply(yuva, to_RGB_matrix);\n"
     "gl_FragColor = swizzle(rgba, output_swizzle);\n";
 
 static const struct shader_templ templ_v210_to_RGB =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform float out_width;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform float out_width;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_unpack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_v210_to_PLANAR_YUV_BODY[] =
-    "vec4 yuva = v210_unpack(Ytex, v_texcoord, chroma_sampling);\n"
+    "vec4 yuva = v210_unpack(Ytex, v_texcoord, vert_to_tex, chroma_sampling);\n"
     "yuva = swizzle(yuva, output_swizzle) * out_bitdepth_factor;\n"
     "write_planar_yuv(yuva);\n";
 
 static const struct shader_templ templ_v210_to_PLANAR_YUV =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform float out_width;\n" "uniform float out_bitdepth_factor;\n" "uniform vec2 chroma_sampling;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform float out_width;\n" "uniform float out_bitdepth_factor;\n" "uniform vec2 chroma_sampling;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_unpack, glsl_func_write_planar_yuv, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_v210_to_PLANAR_YUVA_BODY[] =
-    "vec4 yuva = v210_unpack(Ytex, v_texcoord, chroma_sampling);\n"
+    "vec4 yuva = v210_unpack(Ytex, v_texcoord, vert_to_tex, chroma_sampling);\n"
     "yuva = swizzle(yuva, output_swizzle) * out_bitdepth_factor;\n"
     "write_planar_yuva(yuva);\n";
 
 static const struct shader_templ templ_v210_to_PLANAR_YUVA =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform float out_width;\n" "uniform float out_bitdepth_factor;\n" "uniform vec2 chroma_sampling;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform float out_width;\n" "uniform float out_bitdepth_factor;\n" "uniform vec2 chroma_sampling;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_unpack, glsl_func_write_planar_yuva, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const char glsl_func_v210_pack[] =
     // UYV YUY VYU YVY
-    "ivec3 v210_pack(vec2 texcoord, out vec2 texcoord0, out vec2 texcoord1, out vec2 texcoord2) {\n"
+    "ivec3 v210_pack(vec2 texcoord, vec2 vert_to_tex, out vec2 texcoord0, out vec2 texcoord1, out vec2 texcoord2) {\n"
     // (texel index, component of the texel)
     // array initialisation is not available in GLES2 so we construct it
     // manually.
@@ -719,7 +719,7 @@ static const char glsl_func_v210_pack[] =
     "  ivec2 sub_idx0 = block_indices[(xpos % 4) * 3 + 0];\n"
     "  ivec2 sub_idx1 = block_indices[(xpos % 4) * 3 + 1];\n"
     "  ivec2 sub_idx2 = block_indices[(xpos % 4) * 3 + 2];\n"
-    "  vec2 block_offset = vec2(float((xpos / 4) * 6) * poffset_x, texcoord.y) + half_x_offset;\n"
+    "  vec2 block_offset = vec2(float((xpos / 4) * 6) * poffset_x, texcoord.y * vert_to_tex.y) + half_x_offset;\n"
     "  texcoord0 = block_offset + vec2(float(sub_idx0[0]) * poffset_x, 0.0);\n"
     "  texcoord1 = block_offset + vec2(float(sub_idx1[0]) * poffset_x, 0.0);\n"
     "  texcoord2 = block_offset + vec2(float(sub_idx2[0]) * poffset_x, 0.0);\n"
@@ -728,7 +728,7 @@ static const char glsl_func_v210_pack[] =
 
 static const gchar templ_PLANAR_YUV_to_v210_BODY[] =
     "vec2 texcoord0, texcoord1, texcoord2;\n"
-    "ivec3 idx = v210_pack(v_texcoord, texcoord0, texcoord1, texcoord2);\n"
+    "ivec3 idx = v210_pack(v_texcoord, vert_to_tex, texcoord0, texcoord1, texcoord2);\n"
     "vec4 yuva0 = fetch_planar_yuv(Ytex, Utex, Vtex, texcoord0);\n"
     "vec4 yuva1 = fetch_planar_yuv(Ytex, Utex, Vtex, texcoord1);\n"
     "vec4 yuva2 = fetch_planar_yuv(Ytex, Utex, Vtex, texcoord2);\n"
@@ -736,14 +736,14 @@ static const gchar templ_PLANAR_YUV_to_v210_BODY[] =
 
 static const struct shader_templ templ_PLANAR_YUV_to_v210 =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform sampler2D Utex;\n" "uniform sampler2D Vtex;\n" "uniform float out_width;\n" "uniform float in_bitdepth_factor;\n" "uniform vec2 chroma_sampling;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D Ytex;\n" "uniform sampler2D Utex;\n" "uniform sampler2D Vtex;\n" "uniform float out_width;\n" "uniform float in_bitdepth_factor;\n" "uniform vec2 chroma_sampling;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_fetch_planar_yuv, glsl_func_v210_pack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_RGB_to_v210_BODY[] =
     "vec2 texcoord0, texcoord1, texcoord2;\n"
-    "ivec3 idx = v210_pack(v_texcoord, texcoord0, texcoord1, texcoord2);\n"
+    "ivec3 idx = v210_pack(v_texcoord, vert_to_tex, texcoord0, texcoord1, texcoord2);\n"
     "vec4 rgba0 = swizzle(texture2D(tex, texcoord0), input_swizzle);\n"
     "vec4 rgba1 = swizzle(texture2D(tex, texcoord1), input_swizzle);\n"
     "vec4 rgba2 = swizzle(texture2D(tex, texcoord2), input_swizzle);\n"
@@ -754,48 +754,48 @@ static const gchar templ_RGB_to_v210_BODY[] =
 
 static const struct shader_templ templ_RGB_to_v210 =
   { NULL,
-    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    DEFAULT_UNIFORMS RGB_TO_YUV_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_pack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_YUY2_UYVY_to_v210_BODY[] =
     "vec2 texcoord0, texcoord1, texcoord2;\n"
-    "ivec3 idx = v210_pack(v_texcoord, texcoord0, texcoord1, texcoord2);\n"
-    "vec4 yuva0 = yuy2_uyvy_unpack(tex, texcoord0, texcoord0, vec2(1.0));\n"
-    "vec4 yuva1 = yuy2_uyvy_unpack(tex, texcoord1, texcoord1, vec2(1.0));\n"
-    "vec4 yuva2 = yuy2_uyvy_unpack(tex, texcoord2, texcoord2, vec2(1.0));\n"
+    "ivec3 idx = v210_pack(v_texcoord, vert_to_tex, texcoord0, texcoord1, texcoord2);\n"
+    "vec4 yuva0 = yuy2_uyvy_unpack(tex, texcoord0 / vert_to_tex, vert_to_tex, vec2(1.0));\n"
+    "vec4 yuva1 = yuy2_uyvy_unpack(tex, texcoord1 / vert_to_tex, vert_to_tex, vec2(1.0));\n"
+    "vec4 yuva2 = yuy2_uyvy_unpack(tex, texcoord2 / vert_to_tex, vert_to_tex, vec2(1.0));\n"
     "gl_FragColor = vec4(yuva0[idx[0]], yuva1[idx[1]], yuva2[idx[2]], 1.0);\n";
 
 static const struct shader_templ templ_YUY2_UYVY_to_v210 =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_unpack, glsl_func_v210_pack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_v210_to_YUY2_UYVY_BODY[] =
-    "vec4 yuva = v210_unpack(tex, v_texcoord, vec2(1.0));\n"
+    "vec4 yuva = v210_unpack(tex, v_texcoord, vert_to_tex, vec2(1.0));\n"
     "vec2 texcoord0, texcoord1;\n"
     "ivec2 idx = YUY2_UYVY_pack(texcoord, v_texcoord, texcoord0, texcoord1);\n"
     "gl_FragColor = vec4(yuva[idx[0]], yuva[idx[1]], 0.0, 0.0);\n";
 
 static const struct shader_templ templ_v210_to_YUY2_UYVY =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_v210_unpack, glsl_func_YUY2_UYVY_pack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
 
 static const gchar templ_YUY2_UYVY_to_YUY2_UYVY_BODY[] =
-    "vec4 yuva = yuy2_uyvy_unpack(tex, texcoord, v_texcoord, vec2(1.0));\n"
+    "vec4 yuva = yuy2_uyvy_unpack(tex, v_texcoord, vert_to_tex, vec2(1.0));\n"
     "vec2 texcoord0, texcoord1;\n"
     "ivec2 idx = YUY2_UYVY_pack(texcoord, v_texcoord, texcoord0, texcoord1);\n"
     "gl_FragColor = vec4(yuva[idx[0]], yuva[idx[1]], 0.0, 0.0);\n";
 
 static const struct shader_templ templ_YUY2_UYVY_to_YUY2_UYVY =
   { NULL,
-    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n",
+    DEFAULT_UNIFORMS YUV_TO_RGB_COEFFICIENTS "uniform sampler2D tex;\n" "uniform float out_width;\n" "uniform vec2 vert_to_tex;\n",
     { glsl_func_swizzle, glsl_func_color_matrix, glsl_func_YUY2_UYVY_unpack, glsl_func_YUY2_UYVY_pack, NULL, },
     GST_GL_TEXTURE_TARGET_2D
   };
@@ -3357,11 +3357,15 @@ _init_convert (GstGLColorConvert * convert)
   if (convert->priv->from_texture_target == GST_GL_TEXTURE_TARGET_RECTANGLE) {
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_x", 1.);
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_y", 1.);
+    gst_gl_shader_set_uniform_2f (convert->shader, "vert_to_tex",
+        (gfloat) input_data_width,
+        (gfloat) GST_VIDEO_INFO_HEIGHT (&convert->in_info));
   } else {
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_x",
         1. / (gfloat) input_data_width);
     gst_gl_shader_set_uniform_1f (convert->shader, "poffset_y",
         1. / (gfloat) GST_VIDEO_INFO_HEIGHT (&convert->in_info));
+    gst_gl_shader_set_uniform_2f (convert->shader, "vert_to_tex", 1., 1.);
   }
 
   if (info->chroma_sampling[0] > 0.0f && info->chroma_sampling[1] > 0.0f) {
