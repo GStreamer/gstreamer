@@ -424,7 +424,7 @@ GST_START_TEST (test_structure_new)
   GstStructure *s;
   GError *e;
   GQuark domain;
-  gboolean bool;
+  gboolean get_bool;
   gint num, den;
   GstClockTime clocktime;
   guint64 uint64;
@@ -448,8 +448,8 @@ GST_START_TEST (test_structure_new)
   fail_if (gst_structure_has_field (s, "key"));
   fail_unless_equals_int (gst_structure_n_fields (s), 4);
 
-  fail_unless (gst_structure_get_boolean (s, "bool", &bool));
-  fail_unless (bool);
+  fail_unless (gst_structure_get_boolean (s, "bool", &get_bool));
+  fail_unless (get_bool);
 
   fail_unless (gst_structure_get_fraction (s, "fraction", &num, &den));
   fail_unless_equals_int (num, 1);
