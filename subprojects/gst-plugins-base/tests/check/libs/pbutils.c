@@ -199,6 +199,7 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   msg = gst_missing_decoder_message_new (pipeline, caps);
   fail_unless (msg != NULL);
   fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  gst_missing_plugin_message_set_stream_id (msg, "teststreamid");
   fail_unless (gst_message_get_structure (msg) != NULL);
   s = gst_message_get_structure (msg);
   fail_unless (gst_structure_has_name (s, "missing-plugin"));
@@ -207,6 +208,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   fail_unless (gst_structure_has_field_typed (s, "detail", GST_TYPE_CAPS));
   fail_unless (gst_structure_has_field_typed (s, "name", G_TYPE_STRING));
   fail_unless (gst_structure_get_string (s, "name") != NULL);
+  fail_unless_equals_string (gst_missing_plugin_message_get_stream_id (msg),
+      "teststreamid");
   missing_msg_check_getters (msg);
   gst_message_unref (msg);
 

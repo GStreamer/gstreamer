@@ -4763,6 +4763,37 @@ installation mechanisms using one of the two above-mentioned functions.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="missing_plugin_message_get_stream_id" c:identifier="gst_missing_plugin_message_get_stream_id" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">Get the stream-id of the stream for which an element is missing.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.h"/>
+      <return-value transfer-ownership="none" nullable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">The stream-id or %NULL if none is specified.</doc>
+        <type name="utf8" c:type="const gchar*"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">A missing-plugin #GstMessage of type #GST_MESSAGE_ELEMENT</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="missing_plugin_message_set_stream_id" c:identifier="gst_missing_plugin_message_set_stream_id" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">Set the stream-id of the stream for which an element is missing.</doc>
+      <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.h"/>
+      <return-value transfer-ownership="none">
+        <type name="none" c:type="void"/>
+      </return-value>
+      <parameters>
+        <parameter name="msg" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">A missing-plugin #GstMessage of type #GST_MESSAGE_ELEMENT</doc>
+          <type name="Gst.Message" c:type="GstMessage*"/>
+        </parameter>
+        <parameter name="stream_id" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">The stream id for which an element is missing</doc>
+          <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
     <function name="missing_uri_sink_installer_detail_new" c:identifier="gst_missing_uri_sink_installer_detail_new">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/missing-plugins.c">Returns an opaque string containing all the details about the missing
 element to be passed to an external installer called via
