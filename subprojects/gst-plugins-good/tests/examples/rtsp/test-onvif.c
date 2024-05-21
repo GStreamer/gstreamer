@@ -4,8 +4,6 @@ static GMainLoop *loop = NULL;
 static GstElement *backpipe = NULL;
 static gint stream_id = -1;
 
-#define PCMU_CAPS "application/x-rtp, media=audio, payload=0, clock-rate=8000, encoding-name=PCMU"
-
 static GstFlowReturn
 new_sample (GstElement * appsink, GstElement * rtspsrc)
 {
