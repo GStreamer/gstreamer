@@ -1130,6 +1130,7 @@ gst_av1_parse_push_data (GstAV1Parse * self, GstBaseParseFrame * frame,
         }
       }
     } else {
+      /* Aligning to TUs which must contain a display frame. */
       GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DECODE_ONLY);
       if (frame_finished) {
         GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_MARKER);
@@ -1504,6 +1505,7 @@ new_tu:
           "Start a new temporal unit with incompleted frame.");
 
     gst_av1_parse_reset_obu_data_state (self);
+    gst_av1_parse_reset_tu_timestamp (self);
   }
 
   return ret;
@@ -1587,6 +1589,7 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
      start a TU. We only check TD here. */
   if (obu->obu_type == GST_AV1_OBU_TEMPORAL_DELIMITER) {
     gst_av1_parse_reset_obu_data_state (self);
+    gst_av1_parse_reset_tu_timestamp (self);
 
     if (check_new_tu) {
       *check_new_tu = TRUE;
@@ -1609,11 +1612,13 @@ gst_av1_parse_handle_one_obu (GstAV1Parse * self, GstAV1OBU * obu,
     self->show_frame = fh->show_frame || fh->show_existing_frame;
     if (self->show_frame) {
       /* Check whether a new temporal starts, and return early. */
-      if (check_new_tu && obu->obu_type != GST_AV1_OBU_REDUNDANT_FRAME_HEADER
+      if (obu->obu_type != GST_AV1_OBU_REDUNDANT_FRAME_HEADER
           && gst_av1_parse_frame_start_new_temporal_unit (self, obu)) {
-        *check_new_tu = TRUE;
-        res = GST_AV1_PARSER_OK;
-        goto out;
+        if (check_new_tu) {
+          *check_new_tu = TRUE;
+          res = GST_AV1_PARSER_OK;
+          goto out;
+        }
       }
 
       self->last_shown_frame_temporal_id = obu->header.obu_temporal_id;
@@ -1941,6 +1946,10 @@ again:
     if (res != GST_AV1_PARSER_OK)
       break;
 
+    /* Take the DTS from the first OBU of the TU */
+    if (!GST_CLOCK_TIME_IS_VALID (self->buffer_dts))
+      self->buffer_dts = GST_BUFFER_DTS (buffer);
+
     check_new_tu = FALSE;
     if (self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
         || self->align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
@@ -1981,13 +1990,16 @@ again:
   if (complete || GST_BASE_PARSE_DRAINING (parse)) {
     *skipsize = 0;
 
+    /* Save the oldest valid PTS as the TU PTS */
+    if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buffer)))
+      self->buffer_pts = GST_BUFFER_PTS (buffer);
+
     /* push the left anyway if no error */
     if (res == GST_AV1_PARSER_OK)
       ret = gst_av1_parse_push_data (self, frame,
           self->last_parsed_offset, TRUE);
 
     self->last_parsed_offset = 0;
-
     goto out;
   }
 
@@ -2155,8 +2167,10 @@ gst_av1_parse_handle_frame (GstBaseParse * parse,
   if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DISCONT)) {
     self->discont = TRUE;
 
-    if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME)
+    if (frame->flags & GST_BASE_PARSE_FRAME_FLAG_NEW_FRAME) {
       gst_av1_parse_reset_obu_data_state (self);
+      gst_av1_parse_reset_tu_timestamp (self);
+    }
   } else {
     self->discont = FALSE;
   }
@@ -2273,28 +2287,20 @@ gst_av1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
     return GST_FLOW_OK;
 
   if (self->align == GST_AV1_PARSE_ALIGN_FRAME) {
-    /* When the input align to TU, it may may contain more than one frames
-       inside its buffer. When splitting a TU into frames, the base parse
-       class only assign the PTS to the first frame and leave the others'
-       PTS invalid. But in fact, all decode only frames should have invalid
-       PTS while showable frames should have correct PTS setting. */
-    if (self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT
-        || self->in_align == GST_AV1_PARSE_ALIGN_TEMPORAL_UNIT_ANNEX_B) {
-      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
-        GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
-        GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
-      } else {
-        GST_BUFFER_PTS (frame->buffer) = self->buffer_pts;
-        GST_BUFFER_DURATION (frame->buffer) = self->buffer_duration;
-      }
-
-      GST_BUFFER_DTS (frame->buffer) = self->buffer_dts;
+    /* Input buffers may may contain more than one frames inside its buffer.
+       When splitting a TU into frames, the base parse class only assign the
+       PTS to the first frame and leave the others PTS invalid. But in fact,
+       all decode only frames should have invalid PTS while showable frames
+       should have correct PTS setting. */
+    if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
+      GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
+      GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
     } else {
-      if (GST_BUFFER_FLAG_IS_SET (frame->buffer, GST_BUFFER_FLAG_DECODE_ONLY)) {
-        GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
-        GST_BUFFER_DURATION (frame->buffer) = GST_CLOCK_TIME_NONE;
-      }
+      GST_BUFFER_PTS (frame->buffer) = self->buffer_pts;
+      GST_BUFFER_DURATION (frame->buffer) = self->buffer_duration;
     }
+
+    GST_BUFFER_DTS (frame->buffer) = self->buffer_dts;
   } else if (self->align == GST_AV1_PARSE_ALIGN_OBU) {
     /* When we split a big frame or TU into OBUs, all OBUs should have the
        same PTS and DTS of the input buffer, and should not have duration. */
