@@ -45,6 +45,7 @@
   #endif
 #endif
 #include <AudioUnit/AudioUnit.h>
+#include <mach/mach_time.h>
 #include "gstosxaudioelement.h"
 
 
@@ -111,8 +112,9 @@ struct _GstCoreAudio
   AudioDeviceIOProcID procID;
 #endif
 
+  mach_timebase_info_data_t timebase;
   GMutex timing_lock;
-  uint64_t anchor_hosttime;
+  uint64_t anchor_hosttime_ns;
   uint32_t anchor_pend_samples;
   float rate_scalar;
 };

@@ -65,6 +65,7 @@ gst_core_audio_init (GstCoreAudio * core_audio)
   core_audio->disabled_mixing = FALSE;
 #endif
 
+  mach_timebase_info (&core_audio->timebase);
   g_mutex_init (&core_audio->timing_lock);
 }
 
@@ -106,6 +107,21 @@ _audio_unit_property_listener (void *inRefCon, AudioUnit inUnit,
       }
       break;
   }
+}
+
+static GstClockTime
+_current_time_ns (GstCoreAudio * core_audio)
+{
+  guint64 mach_t = mach_absolute_time ();
+  return gst_util_uint64_scale (mach_t, core_audio->timebase.numer,
+      core_audio->timebase.denom);
+}
+
+static GstClockTime
+_host_time_to_ns (GstCoreAudio * core_audio, uint64_t host_time)
+{
+  return gst_util_uint64_scale (host_time, core_audio->timebase.numer,
+      core_audio->timebase.denom);
 }
 
 /**************************
@@ -214,7 +230,7 @@ gboolean
 gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
     gdouble rate, guint * samples, gdouble * latency)
 {
-  uint64_t now_ns = AudioConvertHostTimeToNanos (AudioGetCurrentHostTime ());
+  uint64_t now_ns = _current_time_ns (core_audio);
   gboolean ret = gst_core_audio_get_samples_and_latency_impl (core_audio, rate,
       samples, latency);
 
@@ -224,8 +240,7 @@ gst_core_audio_get_samples_and_latency (GstCoreAudio * core_audio,
   CORE_AUDIO_TIMING_LOCK (core_audio);
 
   uint32_t samples_remain = 0;
-  uint64_t anchor_ns =
-      AudioConvertHostTimeToNanos (core_audio->anchor_hosttime);
+  uint64_t anchor_ns = core_audio->anchor_hosttime_ns;
 
   if (core_audio->is_src) {
     int64_t captured_ns =
@@ -292,14 +307,15 @@ gst_core_audio_update_timing (GstCoreAudio * core_audio,
       kAudioTimeStampSampleHostTimeValid | kAudioTimeStampRateScalarValid;
 
   if ((inTimeStamp->mFlags & target_flags) == target_flags) {
-    core_audio->anchor_hosttime = inTimeStamp->mHostTime;
+    core_audio->anchor_hosttime_ns =
+        _host_time_to_ns (core_audio, inTimeStamp->mHostTime);
     core_audio->anchor_pend_samples = inNumberFrames;
     core_audio->rate_scalar = inTimeStamp->mRateScalar;
 
     GST_DEBUG_OBJECT (core_audio,
         "anchor hosttime_ns %" G_GUINT64_FORMAT
         " scalar_rate %f anchor_pend_samples %u",
-        AudioConvertHostTimeToNanos (core_audio->anchor_hosttime),
+        core_audio->anchor_hosttime_ns,
         core_audio->rate_scalar, core_audio->anchor_pend_samples);
   }
 }
