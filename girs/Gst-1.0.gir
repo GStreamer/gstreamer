@@ -3739,10 +3739,10 @@ the list should be skipped.</doc>
 You must make sure that @idx does not exceed the number of
 buffers available.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
-        <return-value transfer-ownership="none" nullable="1">
-          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">the buffer at @idx in @group
-    or %NULL when there is no buffer. The buffer remains valid as
-    long as @list is valid and buffer is not removed from the list.</doc>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">the buffer at @idx in @group.
+    The returned buffer remains valid as long as @list is valid and
+    buffer is not removed from the list.</doc>
           <type name="Buffer" c:type="GstBuffer*"/>
         </return-value>
         <parameters>
@@ -3762,9 +3762,9 @@ buffers available.</doc>
 You must make sure that @idx does not exceed the number of
 buffers available.</doc>
         <source-position filename="../subprojects/gstreamer/gst/gstbufferlist.h"/>
-        <return-value transfer-ownership="none" nullable="1">
+        <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gstreamer/gst/gstbufferlist.c">the buffer at @idx in @group.
-    The returned  buffer remains valid as long as @list is valid and
+    The returned buffer remains valid as long as @list is valid and
     the buffer is not removed from the list.</doc>
           <type name="Buffer" c:type="GstBuffer*"/>
         </return-value>
