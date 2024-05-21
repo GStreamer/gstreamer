@@ -208,7 +208,8 @@ enum
   PROP_ENC_PASS,
   PROP_USAGE_PROFILE,
   PROP_LAG_IN_FRAMES,
-  PROP_KEYFRAME_MAX_DIST
+  PROP_KEYFRAME_MAX_DIST,
+  PROP_TIMEBASE
 };
 
 /* From av1/av1_cx_iface.c */
@@ -232,8 +233,6 @@ enum
 #define DEFAULT_BUF_SZ                                       6000
 #define DEFAULT_BUF_INITIAL_SZ                               4000
 #define DEFAULT_BUF_OPTIMAL_SZ                               5000
-#define DEFAULT_TIMEBASE_N                                      1
-#define DEFAULT_TIMEBASE_D                                  90000
 #define DEFAULT_BIT_DEPTH                              AOM_BITS_8
 #define DEFAULT_THREADS                                         0
 #define DEFAULT_ROW_MT                                       TRUE
@@ -244,6 +243,8 @@ enum
 #define DEFAULT_USAGE_PROFILE      GST_AV1_ENC_USAGE_GOOD_QUALITY
 #define DEFAULT_LAG_IN_FRAMES                                   0
 #define DEFAULT_KEYFRAME_MAX_DIST                              30
+#define DEFAULT_TIMEBASE_N                                      0
+#define DEFAULT_TIMEBASE_D                                      1
 
 static void gst_av1_enc_finalize (GObject * object);
 static void gst_av1_enc_set_property (GObject * object, guint prop_id,
@@ -526,6 +527,18 @@ gst_av1_enc_class_init (GstAV1EncClass * klass)
           (GParamFlags) (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | GST_PARAM_DOC_SHOW_DEFAULT)));
 
+  /**
+   * av1enc:timebase:
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_TIMEBASE,
+      gst_param_spec_fraction ("timebase", "Shortest interframe time",
+          "Fraction of one second that is the shortest interframe time - normally left as zero which will default to the framerate",
+          0, 1, G_MAXINT, 1, DEFAULT_TIMEBASE_N, DEFAULT_TIMEBASE_D,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_DOC_SHOW_DEFAULT));
+
   gst_type_mark_as_plugin_api (GST_TYPE_END_USAGE_MODE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_RESIZE_MODE, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_SUPERRES_MODE, 0);
@@ -555,6 +568,8 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->row_mt = DEFAULT_ROW_MT;
   av1enc->tile_columns = DEFAULT_TILE_COLUMNS;
   av1enc->tile_rows = DEFAULT_TILE_ROWS;
+  av1enc->timebase_n = DEFAULT_TIMEBASE_N;
+  av1enc->timebase_d = DEFAULT_TIMEBASE_D;
 
 #ifdef FIXED_QP_OFFSET_COUNT
   av1enc->aom_cfg.fixed_qp_offsets[0] = -1;
@@ -586,8 +601,8 @@ gst_av1_enc_init (GstAV1Enc * av1enc)
   av1enc->aom_cfg.rc_buf_sz = DEFAULT_BUF_SZ;
   av1enc->aom_cfg.rc_buf_initial_sz = DEFAULT_BUF_INITIAL_SZ;
   av1enc->aom_cfg.rc_buf_optimal_sz = DEFAULT_BUF_OPTIMAL_SZ;
-  av1enc->aom_cfg.g_timebase.num = DEFAULT_TIMEBASE_N;
-  av1enc->aom_cfg.g_timebase.den = DEFAULT_TIMEBASE_D;
+  av1enc->aom_cfg.g_timebase.num = 1;
+  av1enc->aom_cfg.g_timebase.den = 90000;
   av1enc->aom_cfg.g_bit_depth = DEFAULT_BIT_DEPTH;
   av1enc->aom_cfg.g_input_bit_depth = (unsigned int) DEFAULT_BIT_DEPTH;
   av1enc->aom_cfg.kf_mode = (enum aom_kf_mode) DEFAULT_KF_MODE;
@@ -835,13 +850,19 @@ gst_av1_enc_set_format (GstVideoEncoder * encoder, GstVideoCodecState * state)
 
   av1enc->aom_cfg.g_w = GST_VIDEO_INFO_WIDTH (info);
   av1enc->aom_cfg.g_h = GST_VIDEO_INFO_HEIGHT (info);
-  /* Zero framerate and max-framerate but still need to setup the timebase to avoid
-   * a divide by zero error. Presuming the lowest common denominator will be RTP -
-   * VP8 payload draft states clock rate of 90000 which should work for anyone where
-   * FPS < 90000 (shouldn't be too many cases where it's higher) though wouldn't be optimal. RTP specification
-   * http://tools.ietf.org/html/draft-ietf-payload-vp8-01 section 6.3.1 */
-  av1enc->aom_cfg.g_timebase.num = 1;
-  av1enc->aom_cfg.g_timebase.den = 90000;
+  if (av1enc->timebase_n != 0 && av1enc->timebase_d != 0) {
+    GST_DEBUG_OBJECT (av1enc, "Using timebase configuration");
+    av1enc->aom_cfg.g_timebase.num = av1enc->timebase_n;
+    av1enc->aom_cfg.g_timebase.den = av1enc->timebase_d;
+  } else {
+    /* Zero framerate and max-framerate but still need to setup the timebase to avoid
+     * a divide by zero error. Presuming the lowest common denominator will be RTP -
+     * VP8 payload draft states clock rate of 90000 which should work for anyone where
+     * FPS < 90000 (shouldn't be too many cases where it's higher) though wouldn't be optimal. RTP specification
+     * http://tools.ietf.org/html/draft-ietf-payload-vp8-01 section 6.3.1 */
+    av1enc->aom_cfg.g_timebase.num = 1;
+    av1enc->aom_cfg.g_timebase.den = 90000;
+  }
   av1enc->aom_cfg.g_error_resilient = AOM_ERROR_RESILIENT_DEFAULT;
 
   if (av1enc->threads == DEFAULT_THREADS)
@@ -1223,6 +1244,10 @@ gst_av1_enc_set_property (GObject * object, guint prop_id,
       av1enc->aom_cfg.kf_max_dist = g_value_get_int (value);
       global = TRUE;
       break;
+    case PROP_TIMEBASE:
+      av1enc->timebase_n = gst_value_get_fraction_numerator (value);
+      av1enc->timebase_d = gst_value_get_fraction_denominator (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1332,6 +1357,9 @@ gst_av1_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_KEYFRAME_MAX_DIST:
       g_value_set_int (value, av1enc->aom_cfg.kf_max_dist);
+      break;
+    case PROP_TIMEBASE:
+      gst_value_set_fraction (value, av1enc->timebase_n, av1enc->timebase_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

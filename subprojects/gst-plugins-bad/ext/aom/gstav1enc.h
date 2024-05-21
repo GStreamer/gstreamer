@@ -185,6 +185,7 @@ struct _GstAV1Enc
   gboolean row_mt;
   guint tile_columns;
   guint tile_rows;
+  gint timebase_n, timebase_d;
 
   /* state */
   gboolean encoder_inited;
