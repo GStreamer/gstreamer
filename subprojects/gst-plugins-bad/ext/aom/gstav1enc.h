@@ -194,8 +194,10 @@ struct _GstAV1Enc
   aom_img_fmt_t format;
   GMutex encoder_lock;
 
-  /* next pts, in running time */
-  GstClockTime next_pts;
+  /* Last inputi pts, in running time */
+  GstClockTime last_pts;
+  /* duration of the last input buffer */
+  GstClockTime last_input_duration;
 
   gboolean target_bitrate_set;
 };
