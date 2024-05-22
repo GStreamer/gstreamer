@@ -1425,7 +1425,7 @@ gst_vulkan_h265_decoder_start_picture (GstH265Decoder * decoder,
     .flags = {
       .IrapPicFlag = GST_H265_IS_NAL_TYPE_IRAP (slice->nalu.type),
       .IdrPicFlag = GST_H265_IS_NAL_TYPE_IDR (slice->nalu.type),
-      .IsReference = picture->ref,
+      .IsReference = picture->RapPicFlag ? 1 : slice->nalu.type & 1,
       .short_term_ref_pic_set_sps_flag =
          slice->header.short_term_ref_pic_set_sps_flag,
     },
