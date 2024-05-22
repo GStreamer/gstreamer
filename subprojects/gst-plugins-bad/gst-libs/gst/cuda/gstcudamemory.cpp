@@ -196,6 +196,8 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_12LE:
+    {
+      guint chroma_height = GST_ROUND_UP_2 (height) / 2;
       /* we are wasting space yes, but required so that this memory
        * can be used in kernel function */
       ret.stride[0] = pitch;
@@ -203,8 +205,9 @@ gst_cuda_allocator_update_info (const GstVideoInfo * reference,
       ret.stride[2] = pitch;
       ret.offset[0] = 0;
       ret.offset[1] = ret.stride[0] * height;
-      ret.offset[2] = ret.offset[1] + (ret.stride[1] * (height + 1) / 2);
+      ret.offset[2] = ret.offset[1] + (ret.stride[1] * chroma_height);
       break;
+    }
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_I422_12LE:
