@@ -1081,8 +1081,8 @@ _fill_ref_slot (GstVulkanH264Decoder * self, GstH264Picture * picture,
       .width = self->coded_width,
       .height = self->coded_height,
     },
-    .baseArrayLayer = self->decoder->layered_dpb ? pic->slot_idx : 0,
-    .imageViewBinding = pic->base.img_view_ref->view,
+   .baseArrayLayer = self->decoder->layered_dpb ? pic->slot_idx : 0,
+   .imageViewBinding = pic->base.img_view_ref->view,
   };
 
   *slot = (VkVideoReferenceSlotInfoKHR) {
