@@ -86,6 +86,10 @@ if use_wayland
     '-D_GNU_SOURCE'
   ]
 
+  if wl_client_dep.version().version_compare('>= 1.22.91')
+    extra_c_args += [ '-DHAVE_WL_EVENT_QUEUE_NAME' ]
+  endif
+
   gstwayland = library('gstwayland-' + api_version,
     wl_sources + protocols_files,
     c_args : gst_plugins_bad_args + extra_c_args,
