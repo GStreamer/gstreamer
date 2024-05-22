@@ -427,7 +427,12 @@ gst_wl_display_new_existing (struct wl_display *display,
   priv->display_wrapper = wl_proxy_create_wrapper (display);
   priv->own_display = take_ownership;
 
+#ifdef HAVE_WL_EVENT_QUEUE_NAME
+  priv->queue = wl_display_create_queue_with_name (priv->display,
+      "GStreamer display queue");
+#else
   priv->queue = wl_display_create_queue (priv->display);
+#endif
   wl_proxy_set_queue ((struct wl_proxy *) priv->display_wrapper, priv->queue);
   priv->registry = wl_display_get_registry (priv->display_wrapper);
   wl_registry_add_listener (priv->registry, &registry_listener, self);
