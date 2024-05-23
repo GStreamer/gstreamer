@@ -936,6 +936,49 @@ gst_vtdec_change_state (GstElement * element, GstStateChange transition)
       transition);
 }
 
+static gboolean
+gst_vtdec_reset_session (GstVtdec * vtdec)
+{
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER_CAST (vtdec);
+  GstVideoCodecState *output_state;
+  GstVideoFormat format;
+  OSStatus status;
+
+  if (!vtdec->session) {
+    GST_ERROR_OBJECT (vtdec, "Cannot reset without a valid session!");
+    return FALSE;
+  }
+
+  output_state = gst_video_decoder_get_output_state (decoder);
+  if (!output_state) {
+    GST_ERROR_OBJECT (vtdec,
+        "Cannot reset session without a current output state!");
+    return FALSE;
+  }
+
+  gst_vtdec_invalidate_session (vtdec);
+
+  format = GST_VIDEO_INFO_FORMAT (&output_state->info);
+  gst_video_codec_state_unref (output_state);
+
+  status = gst_vtdec_create_session (vtdec, format, TRUE);
+  if (status == noErr) {
+    GST_INFO_OBJECT (vtdec, "reset session using hardware decoder");
+  } else if (status == kVTVideoDecoderNotAvailableNowErr) {
+    GST_WARNING_OBJECT (vtdec, "hw decoder not available after reset");
+    status = gst_vtdec_create_session (vtdec, format, FALSE);
+  }
+
+  if (status != noErr) {
+    GST_ERROR_OBJECT (vtdec,
+        "Could not reset decoder session, VTDecompressionSessionCreate returned %d",
+        (int) status);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
@@ -1062,6 +1105,26 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   status = VTDecompressionSessionDecodeFrame (vtdec->session, cm_sample_buffer,
       input_flags, frame, NULL);
   GST_VIDEO_DECODER_STREAM_LOCK (vtdec);
+
+  GST_LOG_OBJECT (vtdec, "VTDecompressionSessionDecodeFrame returned: %d",
+      status);
+
+  /* kVTInvalidSessionErr is usually returned on iOS if the application goes
+   * into background mode, if so, we can reset the session and request an
+   * intra frame to continue decoding.
+   *
+   * kVTVideoDecoderMalfunctionErr is returned for some unknown reason. It is
+   * only seen on iOS so far, but could also happen on macOS.
+   */
+  if (status == kVTInvalidSessionErr || status == kVTVideoDecoderMalfunctionErr) {
+    if (!gst_vtdec_reset_session (vtdec))
+      return GST_FLOW_ERROR;
+
+    gst_video_decoder_request_sync_point (decoder, frame,
+        GST_VIDEO_DECODER_REQUEST_SYNC_POINT_DISCARD_INPUT);
+    gst_video_decoder_drop_frame (decoder, frame);
+    return GST_FLOW_OK;
+  }
 
   if (status != noErr) {
     GST_VIDEO_DECODER_ERROR (vtdec, 1, STREAM, DECODE,
