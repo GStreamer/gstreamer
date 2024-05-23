@@ -1775,11 +1775,6 @@ gst_gl_color_convert_caps_transform_format_info (GstGLContext * context,
     st = gst_caps_get_structure (caps, i);
     f = gst_caps_get_features (caps, i);
 
-    /* If this is already expressed by the existing caps
-     * skip this structure */
-    if (i > 0 && gst_caps_is_subset_structure_full (res, st, f))
-      continue;
-
     format = gst_structure_get_value (st, "format");
     st = gst_structure_copy (st);
 
