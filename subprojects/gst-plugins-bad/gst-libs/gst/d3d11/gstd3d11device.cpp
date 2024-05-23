@@ -705,8 +705,6 @@ gst_d3d11_device_log_live_objects (GstD3D11Device * device,
 #endif
 }
 
-static SRWLOCK _device_creation_rwlock = SRWLOCK_INIT;
-
 static void
 gst_d3d11_device_dispose (GObject * object)
 {
@@ -715,7 +713,6 @@ gst_d3d11_device_dispose (GObject * object)
 
   GST_LOG_OBJECT (self, "dispose");
 
-  AcquireSRWLockExclusive (&_device_creation_rwlock);
   priv->ps_cache.clear ();
   priv->vs_cache.clear ();
   priv->sampler_cache.clear ();
@@ -741,7 +738,6 @@ gst_d3d11_device_dispose (GObject * object)
   GST_D3D11_CLEAR_COM (priv->dxgi_info_queue);
 #endif
 
-  ReleaseSRWLockExclusive (&_device_creation_rwlock);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -974,7 +970,6 @@ gst_d3d11_device_new_internal (const GstD3D11DeviceConstructData * data)
 
   debug_init_once ();
 
-  GstD3D11SRWLockGuard lk (&_device_creation_rwlock);
   hr = CreateDXGIFactory1 (IID_PPV_ARGS (&factory));
   if (!gst_d3d11_result (hr, NULL)) {
     GST_WARNING ("cannot create dxgi factory, hr: 0x%x", (guint) hr);
@@ -1336,8 +1331,6 @@ gst_d3d11_device_lock (GstD3D11Device * device)
 
   priv = device->priv;
 
-  AcquireSRWLockShared (&_device_creation_rwlock);
-
   GST_TRACE_OBJECT (device, "device locking");
   priv->extern_lock.lock ();
   GST_TRACE_OBJECT (device, "device locked");
@@ -1363,8 +1356,6 @@ gst_d3d11_device_unlock (GstD3D11Device * device)
 
   priv->extern_lock.unlock ();
   GST_TRACE_OBJECT (device, "device unlocked");
-
-  ReleaseSRWLockShared (&_device_creation_rwlock);
 }
 
 /**
