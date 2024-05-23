@@ -20,6 +20,8 @@ core_tests = [
   [ 'gst/gstelement.c', not gst_registry or not gst_parse],
   [ 'gst/gstelementfactory.c', not gst_registry ],
   [ 'gst/gstghostpad.c', not gst_registry ],
+  [ 'gst/gstidstr.c' ],
+  [ 'gst/gstidstr-noinline.c' ],
   [ 'gst/gstinfo.c' ],
   [ 'gst/gstiterator.c' ],
   [ 'gst/gstmessage.c' ],

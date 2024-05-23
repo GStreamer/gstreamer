@@ -53,6 +53,7 @@
 #include <gst/gsterror.h>
 #include <gst/gstevent.h>
 #include <gst/gstghostpad.h>
+#include <gst/gstidstr.h>
 #include <gst/gstinfo.h>
 #include <gst/gstiterator.h>
 #include <gst/gstmessage.h>
