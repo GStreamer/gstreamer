@@ -134,7 +134,7 @@ gst_level_class_init (GstLevelClass * klass)
   gobject_class->finalize = gst_level_finalize;
 
   /**
-   * GstLevel:post-messages
+   * GstLevel:post-messages:
    *
    * Post messages on the bus with level information.
    *
@@ -146,7 +146,7 @@ gst_level_class_init (GstLevelClass * klass)
           "passed interval", TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /* FIXME(2.0): remove this property */
   /**
-   * GstLevel:post-messages
+   * GstLevel:message:
    *
    * Post messages on the bus with level information.
    *
