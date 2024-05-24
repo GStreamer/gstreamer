@@ -3072,10 +3072,12 @@ _do_convert (GstGLContext * context, GstGLColorConvert * convert)
       return;
     }
 
-    sync_meta = gst_buffer_add_gl_sync_meta (convert->context, convert->outbuf);
-
-    if (sync_meta)
-      gst_gl_sync_meta_set_sync_point (sync_meta, convert->context);
+    sync_meta = gst_buffer_get_gl_sync_meta (convert->outbuf);
+    if (!sync_meta) {
+      sync_meta = gst_buffer_add_gl_sync_meta (convert->context,
+          convert->outbuf);
+    }
+    gst_gl_sync_meta_set_sync_point (sync_meta, convert->context);
 
     composition_meta =
         gst_buffer_get_video_overlay_composition_meta (convert->inbuf);
