@@ -1721,7 +1721,7 @@ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstKMSSink *self;
   GstCaps *caps;
   gboolean need_pool;
-  GstVideoInfo vinfo;
+  GstVideoInfoDmaDrm vinfo_drm;
   GstBufferPool *pool;
   gsize size;
 
@@ -1732,13 +1732,28 @@ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_parse_allocation (query, &caps, &need_pool);
   if (!caps)
     goto no_caps;
-  if (!gst_video_info_from_caps (&vinfo, caps))
-    goto invalid_caps;
 
-  size = GST_VIDEO_INFO_SIZE (&vinfo);
+  if (gst_video_is_dma_drm_caps (caps)) {
+    if (!gst_video_info_dma_drm_from_caps (&vinfo_drm, caps))
+      goto invalid_caps;
+  } else {
+    if (!gst_video_info_from_caps (&vinfo_drm.vinfo, caps))
+      goto invalid_caps;
+    vinfo_drm.drm_modifier = DRM_FORMAT_MOD_LINEAR;
+  }
+
+  size = GST_VIDEO_INFO_SIZE (&vinfo_drm.vinfo);
 
   pool = NULL;
   if (need_pool) {
+    if (vinfo_drm.drm_modifier != DRM_FORMAT_MOD_LINEAR) {
+      /* DUMB allocator (which is the only thing we have right now) does not
+       * support modifiers */
+      GST_DEBUG_OBJECT (bsink,
+          "can't offer a pool supporting non-linear modifiers");
+      goto out;
+    }
+
     pool = gst_kms_sink_create_pool (self, caps, size, 0);
     if (!pool)
       goto no_pool;
@@ -1757,6 +1772,7 @@ gst_kms_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   if (pool)
     gst_object_unref (pool);
 
+out:
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
