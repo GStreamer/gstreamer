@@ -1338,7 +1338,8 @@ gst_base_text_overlay_update_render_size (GstBaseTextOverlay * overlay)
   overlay->render_scale = (gdouble) overlay->render_width /
       (gdouble) overlay->width;
 
-  GST_DEBUG ("updating render dimensions %dx%d from stream %dx%d, window %dx%d "
+  GST_DEBUG_OBJECT (overlay,
+      "updating render dimensions %dx%d from stream %dx%d, window %dx%d "
       "and render scale %f", overlay->render_width, overlay->render_height,
       overlay->width, overlay->height, overlay->window_width,
       overlay->window_height, overlay->render_scale);
@@ -1664,7 +1665,8 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
     render_width = overlay->ink_rect.width;
     render_height = overlay->ink_rect.height;
 
-    GST_DEBUG ("updating composition for '%s' with window size %dx%d, "
+    GST_DEBUG_OBJECT (overlay,
+        "updating composition for '%s' with window size %dx%d, "
         "buffer size %dx%d, render size %dx%d and position (%d, %d)",
         overlay->default_text, overlay->window_width, overlay->window_height,
         overlay->text_width, overlay->text_height, render_width,
@@ -2195,7 +2197,7 @@ gst_base_text_overlay_render_text (GstBaseTextOverlay * overlay,
   gchar *string;
 
   if (!overlay->need_render) {
-    GST_DEBUG ("Using previously rendered text.");
+    GST_DEBUG_OBJECT (overlay, "Using previously rendered text.");
     return;
   }
 
@@ -2214,7 +2216,7 @@ gst_base_text_overlay_render_text (GstBaseTextOverlay * overlay,
 
   /* FIXME: should we check for UTF-8 here? */
 
-  GST_DEBUG ("Rendering '%s'", string);
+  GST_DEBUG_OBJECT (overlay, "Rendering '%s'", string);
   gst_base_text_overlay_render_pangocairo (overlay, string, textlen);
 
   g_free (string);
@@ -2702,10 +2704,9 @@ gst_base_text_overlay_text_chain (GstPad * pad, GstObject * parent,
 
     /* Wait for the previous buffer to go away */
     while (overlay->text_buffer != NULL) {
-      GST_DEBUG ("Pad %s:%s has a buffer queued, waiting",
-          GST_DEBUG_PAD_NAME (pad));
+      GST_DEBUG_OBJECT (pad, "Pad has a buffer queued, waiting");
       GST_BASE_TEXT_OVERLAY_WAIT (overlay);
-      GST_DEBUG ("Pad %s:%s resuming", GST_DEBUG_PAD_NAME (pad));
+      GST_DEBUG_OBJECT (pad, "Pad resuming");
       if (overlay->text_flushing) {
         GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
         ret = GST_FLOW_FLUSHING;
@@ -2773,7 +2774,7 @@ gst_base_text_overlay_video_chain (GstPad * pad, GstObject * parent,
   composition_meta = gst_buffer_get_video_overlay_composition_meta (buffer);
   if (composition_meta) {
     if (overlay->upstream_composition != composition_meta->overlay) {
-      GST_DEBUG ("GstVideoOverlayCompositionMeta found.");
+      GST_DEBUG_OBJECT (overlay, "GstVideoOverlayCompositionMeta found.");
       overlay->upstream_composition = composition_meta->overlay;
       overlay->need_render = TRUE;
     }
