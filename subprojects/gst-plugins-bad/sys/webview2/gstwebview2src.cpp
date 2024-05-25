@@ -61,6 +61,7 @@ enum
   PROP_LOCATION,
   PROP_PROCESSING_DEADLINE,
   PROP_JAVASCRIPT,
+  PROP_USER_DATA_FOLDER,
 };
 
 #define DEFAULT_LOCATION "about:blank"
@@ -130,6 +131,7 @@ struct GstWebView2SrcPrivate
   std::string location = DEFAULT_LOCATION;
   GstClockTime processing_deadline = DEFAULT_PROCESSING_DEADLINE;
   std::string script;
+  std::string user_data_folder;
 };
 /* *INDENT-ON* */
 
@@ -204,6 +206,12 @@ gst_webview2_src_class_init (GstWebView2SrcClass * klass)
           "Javascript to run on nevigation completed",
           nullptr, (GParamFlags) (G_PARAM_READWRITE |
               G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING)));
+
+  g_object_class_install_property (object_class, PROP_USER_DATA_FOLDER,
+      g_param_spec_string ("user-data-folder", "User Data Folder",
+          "Absolute path to WebView2 user data folder location.", nullptr,
+          (GParamFlags) (G_PARAM_READWRITE |
+              G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_READY)));
 
   gst_element_class_set_static_metadata (element_class,
       "WebView2 Source", "Source/Video",
@@ -314,6 +322,15 @@ gst_webview2_src_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_USER_DATA_FOLDER:
+    {
+      auto udf = g_value_get_string (value);
+      if (udf)
+        priv->user_data_folder = udf;
+      else
+        priv->user_data_folder.clear ();
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -339,6 +356,9 @@ gst_win32_video_src_get_property (GObject * object, guint prop_id,
       g_value_set_uint64 (value, priv->processing_deadline);
       break;
     case PROP_JAVASCRIPT:
+      g_value_set_string (value, priv->script.c_str ());
+      break;
+    case PROP_USER_DATA_FOLDER:
       g_value_set_string (value, priv->script.c_str ());
       break;
     default:
@@ -417,7 +437,7 @@ gst_webview2_src_start (GstBaseSrc * src)
   GST_DEBUG_OBJECT (self, "D3D12 copy support: %d", priv->can_d3d12_copy);
 
   std::lock_guard < std::mutex > lk (priv->lock);
-  priv->object = gst_webview2_object_new (priv->device);
+  priv->object = gst_webview2_object_new (priv->device, priv->user_data_folder);
   if (!priv->object) {
     GST_ERROR_OBJECT (self, "Couldn't create object");
     return FALSE;

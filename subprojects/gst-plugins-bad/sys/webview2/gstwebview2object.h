@@ -31,7 +31,8 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstWebView2Object, gst_webview2_object,
     GST, WEBVIEW2_OBJECT, GstObject);
 
-GstWebView2Object * gst_webview2_object_new          (GstD3D11Device * device);
+GstWebView2Object * gst_webview2_object_new          (GstD3D11Device * device,
+                                                      const std::string & user_data_folder);
 
 gboolean            gst_webview2_object_set_location (GstWebView2Object * client,
                                                       const std::string & location,

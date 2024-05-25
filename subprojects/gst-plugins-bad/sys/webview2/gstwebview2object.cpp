@@ -30,6 +30,7 @@
 #include "gstwebview2object.h"
 #include <gst/d3d11/gstd3d11-private.h>
 #include <webview2.h>
+#include <WebView2EnvironmentOptions.h>
 #include <dcomp.h>
 #include <wrl.h>
 #include <mutex>
@@ -76,6 +77,7 @@ enum
 {
   PROP_0,
   PROP_DEVICE,
+  PROP_USER_DATA_FOLDER,
 };
 
 template < typename InterfaceType, PCNZWCH runtime_class_id > static HRESULT
@@ -132,7 +134,7 @@ public:
 
   STDMETHODIMP
   RuntimeClassInitialize (GstWebView2Object * obj, GstD3D11Device * device,
-      HANDLE event_handle, HWND hwnd)
+      HANDLE event_handle, HWND hwnd, PCWSTR user_data_folder)
   {
     obj_ = obj;
     device_ = device;
@@ -185,6 +187,12 @@ public:
 
     hr = webview_visual_->put_IsVisible (TRUE);
     CHECK_HR_AND_RETURN (hr, put_IsVisible);
+
+    if (user_data_folder) {
+      auto option = Make<CoreWebView2EnvironmentOptions>();
+      return CreateCoreWebView2EnvironmentWithOptions (nullptr,
+          user_data_folder, option.Get (), this);
+    }
 
     return CreateCoreWebView2Environment (this);
   }
@@ -712,6 +720,7 @@ struct GstWebView2ObjectPrivate
   ComPtr<IDispatcherQueue> queue;
   GThread *main_thread = nullptr;
   std::string location;
+  std::string user_data_folder;
   HANDLE shutdown_begin_handle;
   HANDLE shutdown_end_handle;
   WebView2State state = WEBVIEW2_STATE_INIT;
@@ -749,6 +758,13 @@ gst_webview2_object_class_init (GstWebView2ObjectClass * klass)
           "GstD3D11Device object for operating",
           GST_TYPE_D3D11_DEVICE, (GParamFlags)
           (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
+              G_PARAM_STATIC_STRINGS)));
+
+  g_object_class_install_property (object_class, PROP_USER_DATA_FOLDER,
+      g_param_spec_string ("user-data-folder", "User Data Folder",
+          "User data folder location. Default location is ${APP_EXE}.WebView2 "
+          "but can be varying depending on platform",
+          nullptr, (GParamFlags) (G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY |
               G_PARAM_STATIC_STRINGS)));
 }
 
@@ -801,6 +817,13 @@ gst_webview2_set_property (GObject * object, guint prop_id,
     case PROP_DEVICE:
       priv->device = (GstD3D11Device *) g_value_dup_object (value);
       break;
+    case PROP_USER_DATA_FOLDER:
+    {
+      auto udf = g_value_get_string (value);
+      if (udf)
+        priv->user_data_folder = udf;
+      break;
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -820,6 +843,12 @@ gst_webview2_event_loop (GstWebView2Object * self)
   HANDLE waitables[] = { priv->shutdown_begin_handle,
     priv->shutdown_end_handle
   };
+  gunichar2 *udf_location = nullptr;
+
+  if (!priv->user_data_folder.empty ()) {
+    udf_location = g_utf8_to_utf16 (priv->user_data_folder.c_str (),
+        -1, nullptr, nullptr, nullptr);
+  }
 
   GST_D3D11_CALL_ONCE_BEGIN {
     WNDCLASSEXA wc = { };
@@ -864,7 +893,7 @@ gst_webview2_event_loop (GstWebView2Object * self)
   }
 
   hr = MakeAndInitialize < GstWebView2Item > (&priv->item, self, priv->device,
-      priv->shutdown_begin_handle, hwnd);
+      priv->shutdown_begin_handle, hwnd, (PCWSTR) udf_location);
   if (FAILED (hr)) {
     GST_ERROR_OBJECT (self, "Couldn't initialize item");
     goto out;
@@ -919,6 +948,8 @@ out:
   priv->queue = nullptr;
   if (hwnd)
     CloseWindow (hwnd);
+
+  g_free (udf_location);
 }
 
 static gpointer
@@ -964,14 +995,16 @@ gst_webview2_object_frame_arrived (GstWebView2Object * obj,
 }
 
 GstWebView2Object *
-gst_webview2_object_new (GstD3D11Device * device)
+gst_webview2_object_new (GstD3D11Device * device,
+    const std::string & user_data_folder)
 {
   GstWebView2Object *self;
 
   g_return_val_if_fail (GST_IS_D3D11_DEVICE (device), nullptr);
 
   self = (GstWebView2Object *)
-      g_object_new (GST_TYPE_WEBVIEW2_OBJECT, "device", device, nullptr);
+      g_object_new (GST_TYPE_WEBVIEW2_OBJECT, "device", device,
+      "user-data-folder", user_data_folder.c_str (), nullptr);
   gst_object_ref_sink (self);
 
   if (self->priv->state != WEBVIEW2_STATE_RUNNING) {
