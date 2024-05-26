@@ -284,9 +284,7 @@ pub mod unix {
         )]
         pub fn poll(fds: *mut pollfd, nfds: nfds_t, timeout: c_int) -> c_int;
 
-        #[cfg(not(any(target_os = "solaris", target_os = "illumos")))]
         pub fn if_nametoindex(name: *const c_char) -> c_uint;
-        #[cfg(not(any(target_os = "solaris", target_os = "illumos")))]
         pub fn setsockopt(
             socket: c_int,
             level: c_int,
