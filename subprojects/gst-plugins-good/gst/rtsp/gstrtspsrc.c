@@ -2486,7 +2486,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx,
      * If the control_path starts with a non rtsp: protocol we will most
      * likely build a URL that the server will fail to understand, this is ok,
      * we will fail then. */
-    if (g_str_has_prefix (control_path, "rtsp://"))
+    if (gst_uri_is_valid (control_path))
       stream->conninfo.location = g_strdup (control_path);
     else {
       const gchar *base;
@@ -8233,7 +8233,7 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
         break;
 
       /* only take fully qualified urls */
-      if (g_str_has_prefix (control, "rtsp://"))
+      if (gst_uri_is_valid (control))
         break;
     }
     if (control) {
