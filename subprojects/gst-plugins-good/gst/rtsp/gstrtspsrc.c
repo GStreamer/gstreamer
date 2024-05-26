@@ -7866,7 +7866,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
          *   https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/1447
          */
         if (!tried_non_compliant_url && stream->control_url
-            && !g_str_has_prefix (stream->control_url, "rtsp://")) {
+            && !gst_uri_is_valid (stream->control_url)) {
           const gchar *base;
 
           gst_rtsp_message_unset (&request);
