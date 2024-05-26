@@ -573,6 +573,21 @@ mathlib = cc.find_library('m', required : false)
 # Also provides clock_gettime in glibc < 2.17
 rt_lib = cc.find_library('rt', required : false)
 
+#
+# Solaris and Illumos distros split a lot of networking-related code
+# into '-lsocket -lnsl'.  Anything that calls socketpair(), getifaddr(),
+# etc. probably needs to include network_deps
+#
+socket_lib = cc.find_library('socket', required: false)
+nsl_lib    = cc.find_library('nsl',    required: false)
+network_deps = []
+if socket_lib.found()
+  network_deps += socket_lib
+endif
+if nsl_lib.found()
+  network_deps += nsl_lib
+endif
+
 gir = find_program('g-ir-scanner', required : get_option('introspection'))
 gnome = import('gnome')
 
