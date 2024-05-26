@@ -136,7 +136,7 @@ if get_option('check').disabled()
   endif
 endif
 
-gst_deps = [gst_dep, gst_base_dep, gst_check_dep, gst_net_dep, gst_controller_dep, gio_dep, gmodule_dep]
+gst_deps = [gst_dep, gst_base_dep, gst_check_dep, gst_net_dep, gst_controller_dep, gio_dep, gmodule_dep, network_deps]
 
 foreach t : core_tests
   fname = t[0]
