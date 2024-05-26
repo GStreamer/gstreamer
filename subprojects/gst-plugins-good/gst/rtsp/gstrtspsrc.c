@@ -8260,23 +8260,29 @@ gst_rtspsrc_open_from_sdp (GstRTSPSrc * src, GstSDPMessage * sdp,
       if (control == NULL)
         break;
 
+      if (g_strcmp0 (control, "*") == 0)
+        break;
+
       /* only take fully qualified urls */
       if (gst_uri_is_valid (control))
         break;
     }
-    if (control) {
-      g_free (src->conninfo.location);
-      src->conninfo.location = g_strdup (control);
-      /* make a connection for this, if there was a connection already, nothing
-       * happens. */
-      if (gst_rtsp_conninfo_connect (src, &src->conninfo, async) < 0) {
-        GST_ERROR_OBJECT (src, "could not connect");
+
+    if (g_strcmp0 (control, "*") != 0) {
+      if (control) {
+        g_free (src->conninfo.location);
+        src->conninfo.location = g_strdup (control);
+        /* make a connection for this, if there was a connection already, nothing
+         * happens. */
+        if (gst_rtsp_conninfo_connect (src, &src->conninfo, async) < 0) {
+          GST_ERROR_OBJECT (src, "could not connect");
+        }
       }
+      /* we need to keep the control url separate from the connection url because
+       * the rules for constructing the media control url need it */
+      g_free (src->control);
+      src->control = g_strdup (control);
     }
-    /* we need to keep the control url separate from the connection url because
-     * the rules for constructing the media control url need it */
-    g_free (src->control);
-    src->control = g_strdup (control);
   }
 
   /* create streams */
