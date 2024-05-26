@@ -220,13 +220,25 @@ pub mod unix {
     #[cfg(target_os = "linux")]
     pub const AF_PACKET: c_int = 17;
 
-    pub const IFF_UP: c_int = 0x1;
-    pub const IFF_LOOPBACK: c_int = 0x8;
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "freebsd",
+        target_os = "openbsd",
+        target_os = "netbsd",
+        target_os = "dragonfly",
+        target_os = "macos",
+    ))]
+    pub type IfaFlags = c_uint;
+    #[cfg(any(target_os = "solaris", target_os = "illumos"))]
+    pub type IfaFlags = c_ulong;
+
+    pub const IFF_UP: IfaFlags = 0x1;
+    pub const IFF_LOOPBACK: IfaFlags = 0x8;
 
     #[cfg(target_os = "linux")]
-    pub const IFF_MULTICAST: c_int = 0x1000;
+    pub const IFF_MULTICAST: IfaFlags = 0x1000;
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
-    pub const IFF_MULTICAST: ::c_int = 0x0800;
+    pub const IFF_MULTICAST: IfaFlags = 0x0800;
     #[cfg(any(
         target_os = "freebsd",
         target_os = "openbsd",
@@ -234,7 +246,7 @@ pub mod unix {
         target_os = "dragonfly",
         target_os = "macos",
     ))]
-    pub const IFF_MULTICAST: c_int = 0x08000;
+    pub const IFF_MULTICAST: IfaFlags = 0x08000;
 
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
     pub const IF_NAMESIZE: usize = 32;
@@ -342,7 +354,7 @@ pub mod unix {
     pub struct ifaddrs {
         pub ifa_next: *mut ifaddrs,
         pub ifa_name: *mut c_char,
-        pub ifa_flags: c_ulong,
+        pub ifa_flags: IfaFlags,
         pub ifa_addr: *mut sockaddr,
         pub ifa_netmask: *mut sockaddr,
         pub ifa_dstaddr: *mut sockaddr,
@@ -354,7 +366,7 @@ pub mod unix {
     pub struct ifaddrs {
         pub ifa_next: *mut ifaddrs,
         pub ifa_name: *mut c_char,
-        pub ifa_flags: c_uint,
+        pub ifa_flags: IfaFlags,
         pub ifa_addr: *mut sockaddr,
         pub ifa_netmask: *mut sockaddr,
         pub ifa_ifu: *mut sockaddr,
@@ -372,7 +384,7 @@ pub mod unix {
     pub struct ifaddrs {
         pub ifa_next: *mut ifaddrs,
         pub ifa_name: *mut c_char,
-        pub ifa_flags: c_uint,
+        pub ifa_flags: IfaFlags,
         pub ifa_addr: *mut sockaddr,
         pub ifa_netmask: *mut sockaddr,
         pub ifa_dstaddr: *mut sockaddr,
