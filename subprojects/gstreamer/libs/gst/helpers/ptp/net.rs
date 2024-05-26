@@ -498,8 +498,6 @@ mod imp {
 
         #[cfg(any(target_os = "solaris", target_os = "illumos"))]
         {
-            use crate::error::Context;
-
             socket
                 .join_multicast_v4(addr, &iface.ip_addr)
                 .with_context(|| {
