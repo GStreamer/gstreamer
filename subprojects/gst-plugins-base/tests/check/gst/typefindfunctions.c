@@ -508,6 +508,19 @@ GST_START_TEST (test_webvtt)
 
 GST_END_TEST;
 
+GST_START_TEST (test_subparse)
+{
+  const gchar *type;
+  GstCaps *caps = NULL;
+
+  caps = typefind_test_file ("subrip.srt");
+  type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (type, "application/x-subtitle");
+  gst_caps_unref (caps);
+}
+
+GST_END_TEST;
+
 static Suite *
 typefindfunctions_suite (void)
 {
@@ -526,6 +539,7 @@ typefindfunctions_suite (void)
   tcase_add_test (tc_chain, test_hls_m3u8);
   tcase_add_test (tc_chain, test_manifest_typefinding);
   tcase_add_test (tc_chain, test_webvtt);
+  tcase_add_test (tc_chain, test_subparse);
 
   return s;
 }
