@@ -1,4 +1,12 @@
 [wrap-git]
-directory=libva
-url=https://github.com/intel/libva.git
-revision=1c58941b93ba5013c68e8370a408efd630275c9c
+directory = libva
+url = https://github.com/intel/libva.git
+revision = 1c58941b93ba5013c68e8370a408efd630275c9c
+
+[provide]
+libva = libva_dep
+libva-drm = libva_drm_dep
+libva-glx = libva_glx_dep
+libva-wayland = libva_wayland_dep
+libva-win32 = libva_win32_dep
+libva-x11 = libva_x11_dep
