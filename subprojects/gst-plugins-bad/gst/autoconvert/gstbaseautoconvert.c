@@ -1150,6 +1150,16 @@ gst_base_auto_convert_sink_query (GstPad * pad, GstObject * parent,
     return ret;
   }
 
+  /* Should not forward the allocation query downstream directly
+   * if no subelement is selected, otherwise it can influence
+   * the downstream allocation choices and upstream buffer usage.
+   */
+  if (GST_QUERY_TYPE (query) == GST_QUERY_ALLOCATION) {
+    GST_DEBUG_OBJECT (self,
+        "no subelement is selected yet, can't answer ALLOCATION query");
+    return FALSE;
+  }
+
 ignore_acceptcaps_failure:
 
   if (GST_QUERY_TYPE (query) == GST_QUERY_ACCEPT_CAPS) {
