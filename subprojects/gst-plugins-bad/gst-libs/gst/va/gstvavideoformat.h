@@ -25,8 +25,8 @@
 #include <gst/video/video.h>
 #include <va/va.h>
 
-#ifndef G_OS_WIN32
-#include <libdrm/drm_fourcc.h>
+#ifdef HAVE_LIBDRM
+#include <drm_fourcc.h>
 #else
 /**
  * DRM_FORMAT_INVALID: (skip) (attributes doc.skip=true)
