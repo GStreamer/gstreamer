@@ -6705,7 +6705,8 @@ propagate_error:
 
 static GstRTSPResult
 gst_rtsp_src_receive_response (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
-    GstRTSPMessage * response, GstRTSPStatusCode * code)
+    GstRTSPMessage * response, GstRTSPStatusCode * code,
+    gboolean update_content_base)
 {
   GstRTSPStatusCode thecode;
   gchar *content_base = NULL;
@@ -6766,12 +6767,14 @@ next:
   if (thecode != GST_RTSP_STS_OK)
     return GST_RTSP_OK;
 
-  /* store new content base if any */
-  gst_rtsp_message_get_header (response, GST_RTSP_HDR_CONTENT_BASE,
-      &content_base, 0);
-  if (content_base) {
-    g_free (src->content_base);
-    src->content_base = g_strdup (content_base);
+  if (update_content_base) {
+    /* store new content base if any */
+    gst_rtsp_message_get_header (response, GST_RTSP_HDR_CONTENT_BASE,
+        &content_base, 0);
+    if (content_base) {
+      g_free (src->content_base);
+      src->content_base = g_strdup (content_base);
+    }
   }
 
   return GST_RTSP_OK;
@@ -6818,7 +6821,7 @@ server_eof:
 static GstRTSPResult
 gst_rtspsrc_try_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
     GstRTSPMessage * request, GstRTSPMessage * response,
-    GstRTSPStatusCode * code)
+    GstRTSPStatusCode * code, gboolean update_content_base)
 {
   GstRTSPResult res;
   gint try = 0;
@@ -6847,7 +6850,9 @@ again:
   if (!response)
     return res;
 
-  res = gst_rtsp_src_receive_response (src, conninfo, response, code);
+  res =
+      gst_rtsp_src_receive_response (src, conninfo, response, code,
+      update_content_base);
   if (res == GST_RTSP_EEOF) {
     GST_WARNING_OBJECT (src, "server closed connection");
     /* only try once after reconnect, then fallthrough and error out */
@@ -6923,7 +6928,8 @@ receive_error:
 static GstRTSPResult
 gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
     GstRTSPMessage * request, GstRTSPMessage * response,
-    GstRTSPStatusCode * code, GstRTSPVersion * versions)
+    GstRTSPStatusCode * code, GstRTSPVersion * versions,
+    gboolean update_content_base)
 {
   GstRTSPStatusCode int_code = GST_RTSP_STS_OK;
   GstRTSPResult res = GST_RTSP_ERROR;
@@ -6948,7 +6954,7 @@ gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPConnInfo * conninfo,
 
     if ((res =
             gst_rtspsrc_try_send (src, conninfo, request, response,
-                &int_code)) < 0)
+                &int_code, update_content_base)) < 0)
       goto error;
 
     switch (int_code) {
@@ -7075,7 +7081,8 @@ static GstRTSPResult
 gst_rtspsrc_send_cb (GstRTSPExtension * ext, GstRTSPMessage * request,
     GstRTSPMessage * response, GstRTSPSrc * src)
 {
-  return gst_rtspsrc_send (src, &src->conninfo, request, response, NULL, NULL);
+  return gst_rtspsrc_send (src, &src->conninfo, request, response, NULL, NULL,
+      FALSE);
 }
 
 
@@ -7561,7 +7568,7 @@ gst_rtspsrc_setup_streams_end (GstRTSPSrc * src, gboolean async)
     if (!src->conninfo.connection)
       conninfo = &((GstRTSPStream *) tmp->data)->conninfo;
 
-    gst_rtsp_src_receive_response (src, conninfo, &response, NULL);
+    gst_rtsp_src_receive_response (src, conninfo, &response, NULL, FALSE);
 
     gst_rtsp_src_setup_stream_from_response (src, stream,
         &response, NULL, 0, NULL, NULL);
@@ -7792,7 +7799,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     /* handle the code ourselves */
     res =
         gst_rtspsrc_send (src, conninfo, &request,
-        pipelined_request_id ? NULL : &response, &code, NULL);
+        pipelined_request_id ? NULL : &response, &code, NULL, FALSE);
     if (res < 0)
       goto send_error;
 
@@ -8335,7 +8342,7 @@ restart:
 
   if ((res =
           gst_rtspsrc_send (src, &src->conninfo, &request, &response,
-              NULL, versions)) < 0) {
+              NULL, versions, TRUE)) < 0) {
     goto send_error;
   }
 
@@ -8372,7 +8379,7 @@ restart:
 
   if ((res =
           gst_rtspsrc_send (src, &src->conninfo, &request, &response,
-              NULL, NULL)) < 0)
+              NULL, NULL, TRUE)) < 0)
     goto send_error;
 
   /* we only perform redirect for describe and play, currently */
@@ -8613,7 +8620,8 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
       GST_ELEMENT_PROGRESS (src, CONTINUE, "close", ("Closing stream"));
 
     if ((res =
-            gst_rtspsrc_send (src, info, &request, &response, NULL, NULL)) < 0)
+            gst_rtspsrc_send (src, info, &request, &response, NULL, NULL,
+                FALSE)) < 0)
       goto send_error;
 
     /* FIXME, parse result? */
@@ -9060,7 +9068,8 @@ restart:
       GST_ELEMENT_PROGRESS (src, CONTINUE, "request", ("Sending PLAY request"));
 
     if ((res =
-            gst_rtspsrc_send (src, conninfo, &request, &response, NULL, NULL))
+            gst_rtspsrc_send (src, conninfo, &request, &response, NULL, NULL,
+                FALSE))
         < 0)
       goto send_error;
 
@@ -9294,7 +9303,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
 
     if ((res =
             gst_rtspsrc_send (src, conninfo, &request, &response, NULL,
-                NULL)) < 0)
+                NULL, FALSE)) < 0)
       goto send_error;
 
     gst_rtsp_message_unset (&request);
@@ -9904,7 +9913,7 @@ gst_rtspsrc_get_parameter (GstRTSPSrc * src, ParameterRequest * req)
   }
 
   if ((res = gst_rtspsrc_send (src, &src->conninfo,
-              &request, &response, &code, NULL)) < 0)
+              &request, &response, &code, NULL, FALSE)) < 0)
     goto send_error;
 
   res = gst_rtsp_message_get_body (&response, (guint8 **) & recv_body,
@@ -10024,7 +10033,7 @@ gst_rtspsrc_set_parameter (GstRTSPSrc * src, ParameterRequest * req)
   }
 
   if ((res = gst_rtspsrc_send (src, &src->conninfo,
-              &request, &response, &code, NULL)) < 0)
+              &request, &response, &code, NULL, FALSE)) < 0)
     goto send_error;
 
 done:
