@@ -52,7 +52,9 @@
 
 #if GST_GL_HAVE_DMABUF
 #include <gst/allocators/gstdmabuf.h>
-#include <libdrm/drm_fourcc.h>
+#ifdef HAVE_LIBDRM
+#include <drm_fourcc.h>
+#endif
 
 #ifndef DRM_FORMAT_R8
 #define DRM_FORMAT_R8 fourcc_code('R', '8', ' ', ' ')

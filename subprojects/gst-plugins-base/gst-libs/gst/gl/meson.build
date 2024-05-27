@@ -566,8 +566,8 @@ if need_platform_egl != 'no'
     gl_platform_deps += egl_dep
     glconf.set('GST_GL_HAVE_PLATFORM_EGL', 1)
 
-    if cc.has_header('libdrm/drm_fourcc.h')
-      gl_misc_deps += allocators_dep
+    if cc.has_header('drm_fourcc.h', dependencies: libdrm_dep)
+      gl_misc_deps += [allocators_dep, libdrm_dep]
       glconf.set('GST_GL_HAVE_DMABUF', 1)
     endif
 
@@ -1103,8 +1103,8 @@ if build_gstgl
     soversion : soversion,
     darwin_versions : osxversion,
     install : true,
-    dependencies : [gst_base_dep, video_dep, allocators_dep, gmodule_dep,
-                    gl_lib_deps, gl_platform_deps, gl_winsys_deps, gl_misc_deps],
+    dependencies : [gst_base_dep, video_dep, gmodule_dep, gl_lib_deps,
+                    gl_platform_deps, gl_winsys_deps, gl_misc_deps],
     # don't confuse EGL/egl.h with gst-libs/gl/egl/egl.h on case-insensitive file systems
     implicit_include_directories : false)
 
