@@ -167,6 +167,11 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
 {
   gint ret;
   struct v4l2_capability querycap;
+  struct v4l2_create_buffers createbufs = {
+    .count = 0,
+    .memory = V4L2_MEMORY_MMAP,
+  };
+
   guint32 capabilities;
 
   self->media_fd = open (self->media_device, 0);
@@ -207,6 +212,15 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
     self->mplane = FALSE;
   } else {
     GST_ERROR_OBJECT (self, "Unsupported memory-2-memory device.");
+    gst_v4l2_decoder_close (self);
+    return FALSE;
+  }
+
+  createbufs.format.type = self->sink_buf_type;
+  ret = ioctl (self->video_fd, VIDIOC_CREATE_BUFS, &createbufs);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self,
+        "GStreamer requires VIDIOC_CREATE_BUFS to be supported by stateless decoders.");
     gst_v4l2_decoder_close (self);
     return FALSE;
   }
