@@ -58,6 +58,8 @@ GstWebRTCRTPTransceiverDirection    _get_final_direction                     (Gs
 G_GNUC_INTERNAL
 GstWebRTCDTLSSetup                  _get_dtls_setup_from_media              (const GstSDPMedia * media);
 G_GNUC_INTERNAL
+GstWebRTCDTLSSetup                  _get_dtls_setup_from_session            (const GstSDPMessage * sdp);
+G_GNUC_INTERNAL
 GstWebRTCDTLSSetup                  _intersect_dtls_setup                   (GstWebRTCDTLSSetup offer);
 G_GNUC_INTERNAL
 void                                _media_replace_setup                    (GstSDPMedia * media,
