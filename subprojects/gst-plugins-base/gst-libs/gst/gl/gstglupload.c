@@ -38,7 +38,9 @@
 
 #if GST_GL_HAVE_DMABUF
 #include <gst/allocators/gstdmabuf.h>
-#include <libdrm/drm_fourcc.h>
+#ifdef HAVE_LIBDRM
+#include <drm_fourcc.h>
+#endif
 #else
 /* to avoid ifdef in _gst_gl_upload_set_caps_unlocked() */
 #define DRM_FORMAT_MOD_LINEAR  0ULL
