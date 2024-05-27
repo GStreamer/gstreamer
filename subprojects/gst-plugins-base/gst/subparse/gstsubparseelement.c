@@ -261,14 +261,14 @@ gst_sub_parse_detect_encoding (const gchar * str, gsize len)
  * also, give different  subtitle formats really different types */
 static GstStaticCaps mpl2_caps =
 GST_STATIC_CAPS ("application/x-subtitle-mpl2");
-#define SUB_CAPS (gst_static_caps_get (&sub_caps))
+#define MPL2_CAPS (gst_static_caps_get (&mpl2_caps))
 
 static GstStaticCaps tmp_caps =
 GST_STATIC_CAPS ("application/x-subtitle-tmplayer");
 #define TMP_CAPS (gst_static_caps_get (&tmp_caps))
 
 static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
-#define MPL2_CAPS (gst_static_caps_get (&mpl2_caps))
+#define SUB_CAPS (gst_static_caps_get (&sub_caps))
 
 static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
 #define SAMI_CAPS (gst_static_caps_get (&smi_caps))
