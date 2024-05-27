@@ -90,6 +90,11 @@ gint              gst_v4l2_decoder_create_buffers (GstV4l2Decoder * self,
                                                    GstPadDirection direction,
 						   guint num_buffers);
 
+gint              gst_v4l2_decoder_remove_buffers (GstV4l2Decoder * self,
+		                                   GstPadDirection direction,
+                                                   guint index,
+						   guint num_buffers);
+
 gboolean          gst_v4l2_decoder_export_buffer (GstV4l2Decoder * self,
                                                   GstPadDirection directon,
                                                   gint index,
@@ -145,6 +150,7 @@ void              gst_v4l2_decoder_set_render_delay (GstV4l2Decoder * self,
 
 guint             gst_v4l2_decoder_get_render_delay (GstV4l2Decoder * self);
 
+gboolean	  gst_v4l2_decoder_has_remove_bufs (GstV4l2Decoder * self);
 
 GstV4l2Request *  gst_v4l2_request_ref (GstV4l2Request * request);
 

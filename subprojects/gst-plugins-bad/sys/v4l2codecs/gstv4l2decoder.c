@@ -78,6 +78,7 @@ struct _GstV4l2Decoder
   GstVecDeque *request_pool;
   GstVecDeque *pending_requests;
   guint version;
+  GstVideoInfo *info;
 
   enum v4l2_buf_type src_buf_type;
   enum v4l2_buf_type sink_buf_type;
@@ -90,6 +91,7 @@ struct _GstV4l2Decoder
 
   /* detected features */
   gboolean supports_holding_capture;
+  gboolean supports_remove_buffers;
 };
 
 G_DEFINE_TYPE_WITH_CODE (GstV4l2Decoder, gst_v4l2_decoder, GST_TYPE_OBJECT,
@@ -224,6 +226,11 @@ gst_v4l2_decoder_open (GstV4l2Decoder * self)
     gst_v4l2_decoder_close (self);
     return FALSE;
   }
+
+  if (createbufs.capabilities & V4L2_BUF_CAP_SUPPORTS_REMOVE_BUFS)
+    self->supports_remove_buffers = TRUE;
+  else
+    self->supports_remove_buffers = FALSE;
 
   self->opened = TRUE;
 
@@ -548,6 +555,31 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
   GST_DEBUG_OBJECT (self, "Probed caps: %" GST_PTR_FORMAT, caps);
 
   return caps;
+}
+
+gboolean
+gst_v4l2_decoder_remove_buffers (GstV4l2Decoder * self,
+    GstPadDirection direction, guint index, guint num_buffers)
+{
+  gint ret;
+  struct v4l2_remove_buffers remove_bufs = {
+    .type = direction_to_buffer_type (self, direction),
+    .index = index,
+    .count = num_buffers,
+  };
+
+  if (!self->supports_remove_buffers)
+    return FALSE;
+
+  GST_DEBUG_OBJECT (self, "remove buffers %d from index %d", remove_bufs.count,
+      remove_bufs.index);
+  ret = ioctl (self->video_fd, VIDIOC_REMOVE_BUFS, &remove_bufs);
+  if (ret < 0) {
+    GST_ERROR_OBJECT (self, "VIDIOC_REMOVE_BUF failed: %s", g_strerror (errno));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 gboolean
@@ -1231,6 +1263,19 @@ guint
 gst_v4l2_decoder_get_render_delay (GstV4l2Decoder * self)
 {
   return self->render_delay;
+}
+
+/**
+ * gst_v4l2_decoder_has_remove_bufs:
+ * @self: a #GstV4l2Decoder pointer
+ *
+ * Returns: TRUE if the video decoder driver allows to remove
+ * buffers from CAPTURE queue.
+ */
+gboolean
+gst_v4l2_decoder_has_remove_bufs (GstV4l2Decoder * self)
+{
+  return self->supports_remove_buffers;
 }
 
 GstV4l2Request *
