@@ -69,15 +69,13 @@ if host_system == 'windows'
   libva_req = ['>= 1.18']
 endif
 
-libva_dep = dependency('libva', version: libva_req, required: va_required,
-    fallback: ['libva', 'libva_dep'])
+libva_dep = dependency('libva', version: libva_req, required: va_required)
 if not libva_dep.found()
   subdir_done()
 endif
 
 if host_system == 'linux'
-  libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_required,
-      fallback: ['libva', 'libva_drm_dep'])
+  libva_drm_dep = dependency('libva-drm', version: libva_req, required: va_required)
   if not libva_drm_dep.found()
     subdir_done()
   endif
@@ -92,8 +90,7 @@ if host_system == 'linux'
   va_sources += va_linux_sources
   va_headers += va_linux_headers
 else
-  libva_win32_dep = dependency('libva-win32', version: libva_req, required: va_required,
-      fallback: ['libva', 'libva_win32_dep'])
+  libva_win32_dep = dependency('libva-win32', version: libva_req, required: va_required)
   if not libva_win32_dep.found()
     subdir_done()
   endif
