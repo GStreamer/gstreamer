@@ -32,7 +32,7 @@
 
 #include <va/va.h>
 #include <va/va_drmcommon.h>
-#include <libdrm/drm_fourcc.h>
+#include <drm_fourcc.h>
 #include <unistd.h>
 #include "gstmsdkallocator.h"
 #include "gstmsdkallocator_libva.h"
