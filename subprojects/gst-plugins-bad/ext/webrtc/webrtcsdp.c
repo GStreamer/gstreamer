@@ -236,9 +236,20 @@ _media_get_ice_pwd (const GstSDPMessage * msg, guint media_idx)
 }
 
 static gboolean
-_media_has_setup (const GstSDPMedia * media, guint media_idx, GError ** error)
+_validate_setup_attribute (const gchar * setup, GError ** error)
 {
   static const gchar *valid_setups[] = { "actpass", "active", "passive", NULL };
+  if (!g_strv_contains (valid_setups, setup)) {
+    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+        "SDP contains unknown \'setup\' attribute, \'%s\'", setup);
+    return FALSE;
+  }
+  return TRUE;
+}
+
+static gboolean
+_media_has_setup (const GstSDPMedia * media, guint media_idx, GError ** error)
+{
   const gchar *setup = gst_sdp_media_get_attribute_val (media, "setup");
   if (IS_EMPTY_SDP_ATTRIBUTE (setup)) {
     g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
@@ -246,13 +257,7 @@ _media_has_setup (const GstSDPMedia * media, guint media_idx, GError ** error)
         media_idx);
     return FALSE;
   }
-  if (!g_strv_contains (valid_setups, setup)) {
-    g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-        "media %u contains unknown \'setup\' attribute, \'%s\'", media_idx,
-        setup);
-    return FALSE;
-  }
-  return TRUE;
+  return _validate_setup_attribute (setup, error);
 }
 
 #if 0
@@ -273,9 +278,11 @@ gboolean
 validate_sdp (GstWebRTCSignalingState state, SDPSource source,
     GstWebRTCSessionDescription * sdp, GError ** error)
 {
-  const gchar *group, *bundle_ice_ufrag = NULL, *bundle_ice_pwd = NULL;
+  const gchar *group, *bundle_ice_ufrag = NULL, *bundle_ice_pwd = NULL, *setup =
+      NULL;
   gchar **group_members = NULL;
   gboolean is_bundle = FALSE;
+  gboolean has_session_setup = FALSE;
   int i;
 
   if (!_check_valid_state_for_sdp_change (state, source, sdp->type, error))
@@ -289,6 +296,13 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
   is_bundle = group && g_str_has_prefix (group, "BUNDLE");
   if (is_bundle)
     group_members = g_strsplit (&group[6], " ", -1);
+
+  setup = gst_sdp_message_get_attribute_val (sdp->sdp, "setup");
+  if (setup) {
+    if (!_validate_setup_attribute (setup, error))
+      return FALSE;
+    has_session_setup = TRUE;
+  }
 
   for (i = 0; i < gst_sdp_message_medias_len (sdp->sdp); i++) {
     const GstSDPMedia *media = gst_sdp_message_get_media (sdp->sdp, i);
@@ -310,7 +324,7 @@ validate_sdp (GstWebRTCSignalingState state, SDPSource source,
           "media %u is missing or contains an empty \'ice-pwd\' attribute", i);
       goto fail;
     }
-    if (!_media_has_setup (media, i, error))
+    if (!has_session_setup && !_media_has_setup (media, i, error))
       goto fail;
     /* check parameters in bundle are the same */
     if (media_in_bundle) {
@@ -524,6 +538,26 @@ _get_dtls_setup_from_media (const GstSDPMedia * media)
   }
 
   GST_LOG ("no setup attribute in media");
+  return SETUP (NONE);
+}
+
+GstWebRTCDTLSSetup
+_get_dtls_setup_from_session (const GstSDPMessage * sdp)
+{
+  const gchar *attr = gst_sdp_message_get_attribute_val (sdp, "setup");
+  if (!attr) {
+    GST_LOG ("no setup attribute in session");
+    return SETUP (NONE);
+  }
+  if (g_strcmp0 (attr, "actpass") == 0) {
+    return SETUP (ACTPASS);
+  } else if (g_strcmp0 (attr, "active") == 0) {
+    return SETUP (ACTIVE);
+  } else if (g_strcmp0 (attr, "passive") == 0) {
+    return SETUP (PASSIVE);
+  }
+
+  GST_ERROR ("unknown setup value %s", attr);
   return SETUP (NONE);
 }
 

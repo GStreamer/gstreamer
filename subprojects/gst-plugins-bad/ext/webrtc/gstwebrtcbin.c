@@ -5737,7 +5737,15 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
     GstWebRTCDTLSSetup local_setup, remote_setup;
 
     local_setup = _get_dtls_setup_from_media (local_media);
+    if (local_setup == GST_WEBRTC_DTLS_SETUP_NONE)
+      local_setup =
+          _get_dtls_setup_from_session (webrtc->current_local_description->sdp);
+
     remote_setup = _get_dtls_setup_from_media (remote_media);
+    if (remote_setup == GST_WEBRTC_DTLS_SETUP_NONE)
+      remote_setup =
+          _get_dtls_setup_from_session (webrtc->
+          current_remote_description->sdp);
     new_setup = _get_final_setup (local_setup, remote_setup);
     if (new_setup == GST_WEBRTC_DTLS_SETUP_NONE) {
       g_set_error (error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,

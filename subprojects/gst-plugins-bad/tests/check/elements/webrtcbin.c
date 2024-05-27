@@ -5842,6 +5842,76 @@ GST_START_TEST (test_ice_end_of_candidates)
 
 GST_END_TEST;
 
+static void
+_set_setup_session_attr_on_answer (struct test_webrtc *t, GstElement * element,
+    GstPromise * promise, gpointer user_data)
+{
+  GstSDPMessage *sdp;
+  GstSDPMessage *modified_sdp = NULL;
+  const GstSDPMedia *media;
+  GstSDPMedia *modified_media;
+  const gchar *attr;
+
+  if (TEST_IS_OFFER_ELEMENT (t, element))
+    return;
+
+  sdp = t->answer_desc->sdp;
+  media = gst_sdp_message_get_media (sdp, 0);
+  attr = gst_sdp_media_get_attribute_val (media, "setup");
+
+  /* Remove the setup attribute from first media */
+  gst_sdp_media_copy (media, &modified_media);
+  for (unsigned index = 0;
+      index < gst_sdp_media_attributes_len (modified_media); index++) {
+    const GstSDPAttribute *current =
+        gst_sdp_media_get_attribute (modified_media, index);
+    if (!g_str_equal (current->key, "setup"))
+      continue;
+    gst_sdp_media_remove_attribute (modified_media, index);
+    break;
+  }
+
+  gst_sdp_message_copy (sdp, &modified_sdp);
+
+  /* Add session-level setup attribute to modified answer */
+  gst_sdp_message_add_attribute (modified_sdp, "setup", attr);
+
+  /* Replace first media of answer with a media without session attribute */
+  gst_sdp_message_remove_media (modified_sdp, 0);
+  gst_sdp_message_add_media (modified_sdp, modified_media);
+  gst_sdp_media_free (modified_media);
+
+  gst_sdp_message_free (sdp);
+  t->answer_desc->sdp = modified_sdp;
+}
+
+static void
+_offer_created_do_nothing (struct test_webrtc *t, GstElement * element,
+    GstPromise * promise, gpointer user_data)
+{
+}
+
+GST_START_TEST (test_sdp_session_setup_attribute)
+{
+  struct test_webrtc *t = create_audio_test ();
+
+  t->on_offer_created = _offer_created_do_nothing;
+  t->on_answer_created = _set_setup_session_attr_on_answer;
+
+  fail_if (gst_element_set_state (t->webrtc1, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2, GST_STATE_READY) ==
+      GST_STATE_CHANGE_FAILURE);
+  test_webrtc_create_offer (t);
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_ANSWER_SET);
+
+  test_webrtc_wait_for_ice_gathering_complete (t);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -5908,6 +5978,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_add_turn_server);
     tcase_add_test (tc, test_msid);
     tcase_add_test (tc, test_ice_end_of_candidates);
+    tcase_add_test (tc, test_sdp_session_setup_attribute);
     if (sctpenc && sctpdec) {
       tcase_add_test (tc, test_data_channel_create);
       tcase_add_test (tc, test_data_channel_create_two_channels);
