@@ -136,8 +136,6 @@ GST_START_TEST (test_unixfd_videotestsrc)
 
 GST_END_TEST;
 
-// Disable test_unixfd_segment for now, it's flaky and it's a problem with the test
-#if 0
 GST_START_TEST (test_unixfd_segment)
 {
   GError *error = NULL;
@@ -225,7 +223,6 @@ GST_START_TEST (test_unixfd_segment)
 }
 
 GST_END_TEST;
-#endif
 
 static Suite *
 unixfd_suite (void)
@@ -235,7 +232,7 @@ unixfd_suite (void)
 
   suite_add_tcase (s, tc);
   tcase_add_test (tc, test_unixfd_videotestsrc);
-  //tcase_add_test (tc, test_unixfd_segment);
+  tcase_add_test (tc, test_unixfd_segment);
 
   return s;
 }
