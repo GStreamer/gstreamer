@@ -398,6 +398,17 @@ if x11_dep.found()
   cdata.set('HAVE_X11', 1)
 endif
 
+# Optional dep of msdk and va
+if host_system not in ['darwin', 'ios', 'android', 'windows']
+  libdrm_dep = dependency('libdrm', version : '>=2.4.50',
+    required : get_option('drm').enabled() or get_option('msdk').enabled(),
+  )
+  cdata.set('HAVE_LIBDRM', libdrm_dep.found())
+else
+  libdrm_dep = dependency('', required: false)
+endif
+
+
 #
 # Solaris and Illumos distros split a lot of networking-related code
 # into '-lsocket -lnsl'.  Anything that calls socketpair(), getifaddr(),

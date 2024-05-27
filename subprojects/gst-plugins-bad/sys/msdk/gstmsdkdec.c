@@ -41,7 +41,7 @@
 #include "gstmsdkcaps.h"
 
 #ifndef _WIN32
-#include <libdrm/drm_fourcc.h>
+#include <drm_fourcc.h>
 #include <gst/va/gstvaallocator.h>
 #include <gst/va/gstvavideoformat.h>
 #else

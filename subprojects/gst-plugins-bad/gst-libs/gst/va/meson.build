@@ -81,10 +81,8 @@ if host_system == 'linux'
   endif
   platform_deps += [libva_drm_dep]
 
-  libdrm_dep = dependency('libdrm', version: '>=2.4', required: get_option('drm'))
   if libdrm_dep.found()
     platform_deps += [libdrm_dep]
-    extra_args += ['-DHAVE_LIBDRM']
   endif
 
   va_sources += va_linux_sources

@@ -32,7 +32,7 @@
 #include "gstmsdkcaps.h"
 
 #ifndef _WIN32
-#include <libdrm/drm_fourcc.h>
+#include <drm_fourcc.h>
 #include <gst/video/video-info-dma.h>
 #include "gstmsdkallocator_libva.h"
 #include <gst/va/gstvavideoformat.h>

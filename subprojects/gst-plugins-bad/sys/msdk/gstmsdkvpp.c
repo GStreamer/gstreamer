@@ -60,7 +60,7 @@
 #include "gstmsdkallocator.h"
 
 #ifndef _WIN32
-#include <libdrm/drm_fourcc.h>
+#include <drm_fourcc.h>
 #include "gstmsdkallocator_libva.h"
 #include <gst/va/gstvaallocator.h>
 #include <gst/va/gstvavideoformat.h>
