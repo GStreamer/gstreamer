@@ -9309,6 +9309,18 @@
                         "type": "guint",
                         "writable": true
                     },
+                    "response-time-compensation": {
+                        "blurb": "Render twice in a moving pattern to mitigate display response time causing ghosting",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "scale-mode": {
                         "blurb": "Scale text to compensate for and avoid distortion by subsequent video scaling.",
                         "conditionally-available": false,

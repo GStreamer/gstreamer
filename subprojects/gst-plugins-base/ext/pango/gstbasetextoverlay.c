@@ -72,6 +72,7 @@
 #define DEFAULT_PROP_TEXT_Y 0
 #define DEFAULT_PROP_TEXT_WIDTH 1
 #define DEFAULT_PROP_TEXT_HEIGHT 1
+#define DEFAULT_PROP_ALT_RENDER FALSE
 
 #define MINIMUM_OUTLINE_OFFSET 1.0
 #define DEFAULT_SCALE_BASIS    640
@@ -109,6 +110,7 @@ enum
   PROP_TEXT_Y,
   PROP_TEXT_WIDTH,
   PROP_TEXT_HEIGHT,
+  PROP_ALT_RENDER,
   PROP_LAST
 };
 
@@ -637,6 +639,34 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           1, 100, 100, 1, DEFAULT_PROP_SCALE_PAR_N, DEFAULT_PROP_SCALE_PAR_D,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstBaseTextOverlay:response-time-compensation:
+   *
+   * Compensate for display response time by doing a second text render in
+   * a slightly different (sequential and non-overlapping) place every frame.
+   *
+   * On all current displays, after a pixel is told to show a different color
+   * value, there is a "response time" after which the transition from the
+   * previous color to the new color is complete. On some displays this can
+   * take tens of milliseconds to complete, causing the previous frame's text
+   * render to overlap with the current frame's text render.
+   *
+   * This makes text renders that have the same position but change contents
+   * every frame impossible to use on displays with bad response times, such
+   * as when using clockoverlay and timeoverlay.
+   *
+   * Note that this is different from display lag/latency, which is an
+   * inherent property of the display and cannot be compensated for.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ALT_RENDER,
+      g_param_spec_boolean ("response-time-compensation",
+          "Display Response Time Compensation",
+          "Render twice in a moving pattern to mitigate display response time "
+          "causing ghosting", DEFAULT_PROP_ALT_RENDER, G_PARAM_READWRITE
+          | G_PARAM_STATIC_STRINGS));
+
   gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_HALIGN, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_VALIGN, 0);
   gst_type_mark_as_plugin_api (GST_TYPE_BASE_TEXT_OVERLAY_LINE_ALIGN, 0);
@@ -770,6 +800,7 @@ gst_base_text_overlay_init (GstBaseTextOverlay * overlay,
   overlay->scale_mode = DEFAULT_PROP_SCALE_MODE;
   overlay->scale_par_n = DEFAULT_PROP_SCALE_PAR_N;
   overlay->scale_par_d = DEFAULT_PROP_SCALE_PAR_D;
+  overlay->alt_render = DEFAULT_PROP_ALT_RENDER;
 
   overlay->line_align = DEFAULT_PROP_LINE_ALIGNMENT;
   pango_layout_set_alignment (overlay->layout,
@@ -1155,6 +1186,9 @@ gst_base_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_SHADING_VALUE:
       overlay->shading_value = g_value_get_uint (value);
       break;
+    case PROP_ALT_RENDER:
+      overlay->alt_render = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1247,6 +1281,9 @@ gst_base_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SHADING_VALUE:
       g_value_set_uint (value, overlay->shading_value);
+      break;
+    case PROP_ALT_RENDER:
+      g_value_set_boolean (value, overlay->alt_render);
       break;
     case PROP_FONT_DESC:
     {
@@ -1654,8 +1691,9 @@ gst_base_text_overlay_get_pos (GstBaseTextOverlay * overlay,
 static inline void
 gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
 {
-  gint xpos, ypos;
-  GstVideoOverlayRectangle *rectangle;
+  static gint alt_idx;
+  gint xpos, ypos, alt_xpos, alt_ypos;
+  GstVideoOverlayRectangle *rectangle, *alt_rect = NULL;
 
   if (overlay->text_image) {
     gint render_width, render_height;
@@ -1669,8 +1707,8 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
         "updating composition for '%s' with window size %dx%d, "
         "buffer size %dx%d, render size %dx%d and position (%d, %d)",
         overlay->default_text, overlay->window_width, overlay->window_height,
-        overlay->text_width, overlay->text_height, render_width,
-        render_height, xpos, ypos);
+        overlay->text_width, overlay->text_height, render_width, render_height,
+        xpos, ypos);
 
     gst_buffer_add_video_meta (overlay->text_image, GST_VIDEO_FRAME_FLAG_NONE,
         GST_VIDEO_OVERLAY_COMPOSITION_FORMAT_RGB,
@@ -1679,6 +1717,27 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
     rectangle = gst_video_overlay_rectangle_new_raw (overlay->text_image,
         xpos, ypos, render_width, render_height,
         GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+
+    if (overlay->alt_render) {
+      gint num_x = (overlay->window_width - xpos) / render_width;
+      gint num_y = (overlay->window_height - ypos) / render_height;
+
+      if (num_x < 2 && num_y < 2) {
+        GST_ERROR ("Not enough space on the frame for an alternate position");
+      } else {
+        /* Find the next available slot in sequence for the secondary/alt
+         * display of the text overlay rectangle. We want to go up to down,
+         * left to right, all wrapping. */
+        alt_xpos = xpos + (alt_idx / num_y) * render_width;
+        alt_ypos = ypos + (alt_idx % num_y) * render_height;
+        alt_rect = gst_video_overlay_rectangle_new_raw (overlay->text_image,
+            alt_xpos, alt_ypos, render_width, render_height,
+            GST_VIDEO_OVERLAY_FORMAT_FLAG_PREMULTIPLIED_ALPHA);
+        /* Increment with wrapping */
+        alt_idx++;
+        alt_idx %= (num_x * num_y);
+      }
+    }
 
     if (overlay->composition)
       gst_video_overlay_composition_unref (overlay->composition);
@@ -1690,6 +1749,12 @@ gst_base_text_overlay_set_composition (GstBaseTextOverlay * overlay)
           rectangle);
     } else {
       overlay->composition = gst_video_overlay_composition_new (rectangle);
+    }
+
+    if (alt_rect) {
+      gst_video_overlay_composition_add_rectangle (overlay->composition,
+          alt_rect);
+      gst_video_overlay_rectangle_unref (alt_rect);
     }
 
     gst_video_overlay_rectangle_unref (rectangle);
