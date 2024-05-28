@@ -230,7 +230,7 @@ pub mod unix {
     ))]
     pub type IfaFlags = c_uint;
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
-    pub type IfaFlags = c_ulong;
+    pub type IfaFlags = u64;
 
     pub const IFF_UP: IfaFlags = 0x1;
     pub const IFF_LOOPBACK: IfaFlags = 0x8;
