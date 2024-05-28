@@ -512,11 +512,25 @@ GST_START_TEST (test_subparse)
 {
   const gchar *type;
   GstCaps *caps = NULL;
+  GstTypeFindProbability prob;
+  guint8 one_byte[] = {
+    'A',
+  };
 
   caps = typefind_test_file ("subrip.srt");
   type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
   fail_unless_equals_string (type, "application/x-subtitle");
   gst_caps_unref (caps);
+
+  caps = typefind_test_file ("subrip-short.srt");
+  type = gst_structure_get_name (gst_caps_get_structure (caps, 0));
+  fail_unless_equals_string (type, "application/x-subtitle");
+  gst_caps_unref (caps);
+
+  /* check that one byte content does not crash subparse typefinder */
+  prob = 0;
+  caps = typefind_data (one_byte, sizeof (one_byte), &prob);
+  fail_unless (caps == NULL);
 }
 
 GST_END_TEST;
