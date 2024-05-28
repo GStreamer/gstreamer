@@ -1563,7 +1563,8 @@ _get_non_alpha_caps (GstCaps * caps)
       if (has_format) {
         s = gst_structure_copy (s);
         gst_structure_take_value (s, "format", &new_formats);
-        gst_caps_append_structure (result, s);
+        gst_caps_append_structure_full (result, s,
+            gst_caps_features_copy (gst_caps_get_features (caps, i)));
       }
 
     }
