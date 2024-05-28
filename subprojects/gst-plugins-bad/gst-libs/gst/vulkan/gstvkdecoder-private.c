@@ -298,15 +298,6 @@ gst_vulkan_decoder_start (GstVulkanDecoder * self,
   self->layered_dpb = ((priv->caps.caps.flags &
           VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR) == 0);
 
-  if (self->layered_dpb && !self->dedicated_dpb) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INCOMPATIBLE_DRIVER,
-        "Buggy driver: "
-        "VK_VIDEO_DECODE_CAPABILITY_DPB_AND_OUTPUT_COINCIDE_BIT_KHR set but "
-        "VK_VIDEO_CAPABILITY_SEPARATE_REFERENCE_IMAGES_BIT_KHR is unset!");
-
-    goto failed;
-  }
-
   priv->caps.caps.pNext = NULL;
 
   /* Get output format */
@@ -697,7 +688,7 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
     return FALSE;
   }
 
-  new_layout = (self->layered_dpb || pic->dpb) ?
+  new_layout = ((self->layered_dpb && self->dedicated_dpb) || pic->dpb) ?
       VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR :
       VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR;
   gst_vulkan_operation_add_frame_barrier (priv->exec, pic->out,
@@ -713,7 +704,7 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
     }
   }
 
-  if (!self->layered_dpb) {
+  if (!self->layered_buffer) {
     /* All references (apart from the current) for non-layered refs */
 
     for (i = 0; i < pic->decode_info.referenceSlotCount; i++) {
@@ -1148,7 +1139,7 @@ gst_vulkan_decoder_picture_init (GstVulkanDecoder * self,
 
   priv = gst_vulkan_decoder_get_instance_private (self);
 
-  if (self->layered_dpb)
+  if (self->layered_dpb && self->dedicated_dpb)
     g_return_val_if_fail (GST_IS_BUFFER (self->layered_buffer), FALSE);
   else if (self->dedicated_dpb)
     g_return_val_if_fail (GST_IS_BUFFER_POOL (priv->dpb_pool), FALSE);
@@ -1161,7 +1152,7 @@ gst_vulkan_decoder_picture_init (GstVulkanDecoder * self,
   pic->dpb = NULL;
   pic->img_view_ref = NULL;
 
-  if (self->layered_dpb) {
+  if (self->layered_dpb && self->dedicated_dpb) {
     pic->img_view_ref =
         gst_vulkan_decoder_picture_create_view (self, self->layered_buffer,
         FALSE);
