@@ -451,8 +451,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
       goto error;
     g_object_set_property (target, pspec->name, &v);
   } else {
-    const gchar *obj_name = GST_OBJECT_NAME(object);
-    gint len = strlen (obj_name);
+    gint len = strlen (name);
 
     /*
      * We've been notified that a new child has beed added, but the
@@ -472,7 +471,7 @@ static void gst_parse_new_child(GstChildProxy *child_proxy, GObject *object,
      */
 
     /* Cases 1,2: The child just added corresponds to this delayed set */
-    if ((strlen (set->name) > (len+2)) && !strncmp (set->name, obj_name, len)
+    if ((strlen (set->name) > (len+2)) && !strncmp (set->name, name, len)
 	&& !strncmp (&set->name[len], "::", 2)) {
       gchar *children = NULL;
       gchar *prop = NULL;
