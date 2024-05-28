@@ -1912,7 +1912,7 @@ gst_d3d12_window_present (GstD3D12Window * window, gboolean sync)
   auto priv = window->priv;
 
   if (priv->state != GST_D3D12_WINDOW_STATE_OPENED) {
-    GST_ERROR_OBJECT (window, "Window was closed");
+    GST_WARNING_OBJECT (window, "Window was closed");
     return GST_D3D12_WINDOW_FLOW_CLOSED;
   }
 

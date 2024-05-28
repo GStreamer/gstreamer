@@ -106,6 +106,7 @@ enum
   PROP_PRIMARIES_MODE,
   PROP_OVERLAY_MODE,
   PROP_DISPLAY_FORMAT,
+  PROP_ERROR_ON_CLOSED,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -125,6 +126,7 @@ enum
 #define DEFAULT_PRIMARIES_MODE GST_VIDEO_PRIMARIES_MODE_NONE
 #define DEFAULT_OVERLAY_MODE GST_D3D12_WINDOW_OVERLAY_NONE
 #define DEFAULT_DISPLAY_FORMAT DXGI_FORMAT_UNKNOWN
+#define DEFAULT_ERROR_ON_CLOSED TRUE
 
 enum
 {
@@ -180,6 +182,8 @@ struct GstD3D12VideoSinkPrivate
   gboolean update_window = FALSE;
   GstBufferPool *pool = nullptr;
 
+  gboolean warn_closed_window = FALSE;
+
   std::recursive_mutex lock;
   /* properties */
   std::atomic<gint> adapter = { DEFAULT_ADAPTER };
@@ -204,6 +208,7 @@ struct GstD3D12VideoSinkPrivate
   GstD3D12SamplingMethod sampling_method = DEFAULT_SAMPLING_METHOD;
   GstD3D12WindowOverlayMode overlay_mode = DEFAULT_OVERLAY_MODE;
   DXGI_FORMAT display_format = DEFAULT_DISPLAY_FORMAT;
+  std::atomic<gboolean> error_on_closed = { DEFAULT_ERROR_ON_CLOSED };
 };
 /* *INDENT-ON* */
 
@@ -420,6 +425,19 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           "Swapchain display format", GST_TYPE_D3D12_VIDEO_SINK_DISPLAY_FORMAT,
           DEFAULT_DISPLAY_FORMAT, (GParamFlags) (G_PARAM_READWRITE |
               GST_PARAM_MUTABLE_READY | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12VideoSink:error-on-closed:
+   *
+   * Posts error message if window got closed in playing or paused state
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_ERROR_ON_CLOSED,
+      g_param_spec_boolean ("error-on-closed", "Error On Closed",
+          "Posts error message and return flow error if window is closed "
+          "in playing or paused state", DEFAULT_ERROR_ON_CLOSED,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
    * GstD3D12VideoSink::overlay:
@@ -649,6 +667,9 @@ gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
     case PROP_DISPLAY_FORMAT:
       priv->display_format = (DXGI_FORMAT) g_value_get_enum (value);
       break;
+    case PROP_ERROR_ON_CLOSED:
+      priv->error_on_closed = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -723,6 +744,9 @@ gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DISPLAY_FORMAT:
       g_value_set_enum (value, priv->display_format);
+      break;
+    case PROP_ERROR_ON_CLOSED:
+      g_value_set_boolean (value, priv->error_on_closed);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -907,8 +931,8 @@ gst_d3d12_video_sink_update_window (GstD3D12VideoSink * self)
   auto window_state = gst_d3d12_window_get_state (priv->window);
 
   if (window_state == GST_D3D12_WINDOW_STATE_CLOSED) {
-    GST_ERROR_OBJECT (self, "Window was closed");
-    return GST_FLOW_ERROR;
+    GST_WARNING_OBJECT (self, "Window was closed");
+    return GST_D3D12_WINDOW_FLOW_CLOSED;
   }
 
   {
@@ -1045,6 +1069,8 @@ gst_d3d12_video_sink_start (GstBaseSink * sink)
     GST_ERROR_OBJECT (sink, "Cannot create device");
     return FALSE;
   }
+
+  priv->warn_closed_window = TRUE;
 
   return TRUE;
 }
@@ -1251,14 +1277,14 @@ gst_d3d12_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
 {
   auto self = GST_D3D12_VIDEO_SINK (sink);
   auto priv = self->priv;
+  GstBuffer *upload = nullptr;
+  auto mem = gst_buffer_peek_memory (buffer, 0);
 
   gst_d3d12_video_sink_check_device_update (self, buffer);
   auto ret = gst_d3d12_video_sink_update_window (self);
   if (ret != GST_FLOW_OK)
-    return ret;
+    goto out;
 
-  GstBuffer *upload = nullptr;
-  auto mem = gst_buffer_peek_memory (buffer, 0);
   if (!gst_is_d3d12_memory (mem)) {
     gst_buffer_pool_acquire_buffer (priv->pool, &upload, nullptr);
     if (!upload) {
@@ -1300,10 +1326,22 @@ gst_d3d12_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
   if (upload)
     gst_buffer_unref (upload);
 
+out:
   if (ret == GST_D3D12_WINDOW_FLOW_CLOSED) {
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Output window was closed"), (nullptr));
-    return GST_FLOW_ERROR;
+    if (priv->error_on_closed) {
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+          ("Output window was closed"), (nullptr));
+      return GST_FLOW_ERROR;
+    } else {
+      if (priv->warn_closed_window) {
+        GST_ELEMENT_WARNING (self, RESOURCE, NOT_FOUND,
+            ("Output window was closed"), (nullptr));
+        priv->warn_closed_window = FALSE;
+      } else {
+        GST_WARNING_OBJECT (self, "Output window was closed");
+      }
+      ret = GST_FLOW_OK;
+    }
   }
 
   return ret;
@@ -1318,9 +1356,20 @@ gst_d3d12_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 
   auto ret = gst_d3d12_window_present (priv->window, sync);
   if (ret == GST_D3D12_WINDOW_FLOW_CLOSED) {
-    GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Output window was closed"), (nullptr));
-    ret = GST_FLOW_ERROR;
+    if (priv->error_on_closed) {
+      GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
+          ("Output window was closed"), (nullptr));
+      ret = GST_FLOW_ERROR;
+    } else {
+      if (priv->warn_closed_window) {
+        GST_ELEMENT_WARNING (self, RESOURCE, NOT_FOUND,
+            ("Output window was closed"), (nullptr));
+        priv->warn_closed_window = FALSE;
+      } else {
+        GST_WARNING_OBJECT (self, "Output window was closed");
+      }
+      ret = GST_FLOW_OK;
+    }
   }
 
   return ret;
