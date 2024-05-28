@@ -12889,10 +12889,10 @@ operation of video-sources or operators.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Flip vertically</doc>
       </member>
       <member name="ul_lr" value="6" c:identifier="GST_VIDEO_ORIENTATION_UL_LR" glib:nick="ul-lr">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Flip across upper left/lower right diagonal</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Rotate counter-clockwise 90 degrees and flip vertically</doc>
       </member>
       <member name="ur_ll" value="7" c:identifier="GST_VIDEO_ORIENTATION_UR_LL" glib:nick="ur-ll">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Flip across upper right/lower left diagonal</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Rotate clockwise 90 degrees and flip vertically</doc>
       </member>
       <member name="auto" value="8" c:identifier="GST_VIDEO_ORIENTATION_AUTO" glib:nick="auto">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/video/video.h">Select flip method based on image-orientation tag</doc>
