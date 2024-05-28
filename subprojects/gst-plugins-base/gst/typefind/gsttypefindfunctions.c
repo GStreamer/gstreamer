@@ -2094,12 +2094,8 @@ wavpack_type_find (GstTypeFind * tf, gpointer unused)
       sublen += 1 + 1;          /* id + length */
     }
 
-    // ID_ODD_SIZE
-    if (data[0] & 0x40) {
-      if (sublen == 0)
-        return;
-      sublen -= 1;
-    }
+    // ID_ODD_SIZE only affects how much of the chunk is valid. The next one
+    // still starts at an even position, so it's ignored here.
 
     if (offset + sublen > 8 + blocksize) {
       GST_LOG ("chunk length too big (%u > %" G_GUINT64_FORMAT ")", sublen,
