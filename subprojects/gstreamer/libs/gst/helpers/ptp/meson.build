@@ -5,7 +5,7 @@ if ptp_helper_option.disabled()
   subdir_done()
 endif
 
-if host_system not in ['linux', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'darwin', 'sunos', 'solaris', 'illumos', 'windows']
+if host_system not in ['linux', 'freebsd', 'openbsd', 'netbsd', 'dragonfly', 'darwin', 'sunos', 'solaris', 'illumos', 'windows', 'gnu']
   if ptp_helper_option.enabled()
     error('PTP not supported on this OS')
   endif

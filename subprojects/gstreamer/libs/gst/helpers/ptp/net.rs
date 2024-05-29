@@ -217,7 +217,7 @@ mod imp {
                     }
                 }
             }
-            #[cfg(not(target_os = "linux"))]
+            #[cfg(not(any(target_os = "linux", target_os = "hurd")))]
             {
                 use std::slice;
 
@@ -295,6 +295,7 @@ mod imp {
                 target_os = "dragonfly",
                 target_os = "solaris",
                 target_os = "illumos",
+                target_os = "hurd",
             ))]
             let ty = SOCK_DGRAM | SOCK_CLOEXEC;
             #[cfg(target_os = "macos")]
@@ -352,6 +353,7 @@ mod imp {
                     target_os = "netbsd",
                     target_os = "dragonfly",
                     target_os = "macos",
+                    target_os = "hurd",
                 ))]
                 sin_len: mem::size_of::<sockaddr_in>() as _,
             };
