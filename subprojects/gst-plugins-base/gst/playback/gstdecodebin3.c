@@ -2899,6 +2899,28 @@ gst_decodebin3_handle_message (GstBin * bin, GstMessage * message)
       }
       SELECTION_UNLOCK (dbin);
     }
+    case GST_MESSAGE_WARNING:
+    case GST_MESSAGE_ERROR:
+    case GST_MESSAGE_INFO:
+    {
+      GList *tmp;
+      /* Add the relevant stream-id if the message comes from a decoder */
+      for (tmp = dbin->output_streams; tmp; tmp = tmp->next) {
+        DecodebinOutputStream *out = tmp->data;
+        GstStructure *structure;
+        if (out->decoder
+            && (GST_MESSAGE_SRC (message) == (GstObject *) out->decoder
+                || gst_object_has_as_ancestor (GST_MESSAGE_SRC (message),
+                    (GstObject *) out->decoder))) {
+          message = gst_message_make_writable (message);
+          structure = gst_message_writable_details (message);
+          gst_structure_set (structure, "stream-id", G_TYPE_STRING,
+              out->slot->active_stream_id, NULL);
+          break;
+        }
+      }
+      break;
+    }
     default:
       break;
   }
