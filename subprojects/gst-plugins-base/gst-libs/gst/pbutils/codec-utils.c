@@ -3215,6 +3215,9 @@ gst_codec_utils_caps_from_mime_codec_single (const gchar * codec)
           gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING, "g726",
           NULL);
       break;
+    case GST_MAKE_FOURCC ('m', 'j', 'p', 'g'):
+      caps = gst_caps_new_empty_simple ("image/jpeg");
+      break;
     default:
       GST_WARNING ("Unknown codec '%s' please file a bug", codec);
       break;
