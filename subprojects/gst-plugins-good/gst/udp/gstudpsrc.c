@@ -1589,6 +1589,7 @@ gst_udpsrc_open (GstUDPSrc * src)
   GInetAddress *addr, *bind_addr;
   GSocketAddress *bind_saddr;
   GError *err = NULL;
+  gboolean allow_port_reuse = src->reuse;
 
   if (src->source_addrs) {
     g_list_free_full (src->source_addrs, (GDestroyNotify) g_object_unref);
@@ -1632,7 +1633,15 @@ gst_udpsrc_open (GstUDPSrc * src)
 
     bind_saddr = g_inet_socket_address_new (bind_addr, src->port);
     g_object_unref (bind_addr);
-    if (!g_socket_bind (src->used_socket, bind_saddr, src->reuse, &err)) {
+
+    if (allow_port_reuse && src->port == 0
+        && !g_inet_address_get_is_multicast (addr)) {
+      GST_WARNING_OBJECT (src,
+          "Disabling port reuse for dynamically allocated port to avoid potential conflicts");
+      allow_port_reuse = FALSE;
+    }
+
+    if (!g_socket_bind (src->used_socket, bind_saddr, allow_port_reuse, &err)) {
       GST_ERROR_OBJECT (src, "%s: error binding to %s:%d", err->message,
           src->address, src->port);
       goto bind_error;
