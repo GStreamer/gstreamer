@@ -84,6 +84,7 @@ pub fn time() -> u64 {
     target_os = "dragonfly",
     target_os = "solaris",
     target_os = "illumos",
+    target_os = "hurd",
 ))]
 /// Returns the monotonic system clock in nanoseconds or 0 on error.
 pub fn time() -> u64 {

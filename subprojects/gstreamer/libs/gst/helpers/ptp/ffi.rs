@@ -22,6 +22,7 @@ pub mod unix {
         target_os = "macos",
         target_os = "solaris",
         target_os = "illumos",
+        target_os = "hurd",
     )))]
     compile_error!("Unsupported Operating System");
 
@@ -48,6 +49,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub const IP_ADD_MEMBERSHIP: c_int = 12;
     #[cfg(target_os = "linux")]
@@ -61,6 +63,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub const IP_MULTICAST_IF: c_int = 9;
     #[cfg(target_os = "linux")]
@@ -76,6 +79,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub const SOL_SOCKET: c_int = 0xffff;
     #[cfg(all(
@@ -119,6 +123,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub const SO_REUSEADDR: c_int = 0x4;
     #[cfg(all(
@@ -148,6 +153,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub const SO_REUSEPORT: c_int = 0x200;
     #[cfg(all(
@@ -171,7 +177,12 @@ pub mod unix {
     ))]
     pub const SO_REUSEPORT: c_int = 15;
 
-    #[cfg(any(target_os = "freebsd", target_os = "dragonfly", target_os = "netbsd"))]
+    #[cfg(any(
+        target_os = "freebsd",
+        target_os = "dragonfly",
+        target_os = "netbsd",
+        target_os = "hurd",
+    ))]
     pub const SOCK_CLOEXEC: c_int = 0x10000000;
     #[cfg(target_os = "openbsd")]
     pub const SOCK_CLOEXEC: c_int = 0x8000;
@@ -194,6 +205,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "openbsd",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub const SOCK_DGRAM: c_int = 2;
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
@@ -213,6 +225,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub const AF_LINK: c_int = 18;
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
@@ -227,6 +240,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     pub type IfaFlags = c_uint;
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
@@ -235,7 +249,7 @@ pub mod unix {
     pub const IFF_UP: IfaFlags = 0x1;
     pub const IFF_LOOPBACK: IfaFlags = 0x8;
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "hurd"))]
     pub const IFF_MULTICAST: IfaFlags = 0x1000;
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
     pub const IFF_MULTICAST: IfaFlags = 0x0800;
@@ -250,7 +264,12 @@ pub mod unix {
 
     #[cfg(any(target_os = "solaris", target_os = "illumos"))]
     pub const IF_NAMESIZE: usize = 32;
-    #[cfg(not(any(target_os = "linux", target_os = "solaris", target_os = "illumos")))]
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "solaris",
+        target_os = "illumos",
+        target_os = "hurd",
+    )))]
     pub const IF_NAMESIZE: usize = 16;
 
     pub const PRIO_PROCESS: c_int = 0;
@@ -316,9 +335,19 @@ pub mod unix {
         pub fn pipe(pipefd: *mut i32) -> i32;
     }
 
-    #[cfg(any(target_os = "linux", target_os = "solaris", target_os = "illumos"))]
+    #[cfg(any(
+        target_os = "linux",
+        target_os = "solaris",
+        target_os = "illumos",
+        target_os = "hurd",
+    ))]
     pub type nfds_t = c_ulong;
-    #[cfg(not(any(target_os = "linux", target_os = "solaris", target_os = "illumos")))]
+    #[cfg(not(any(
+        target_os = "linux",
+        target_os = "solaris",
+        target_os = "illumos",
+        target_os = "hurd",
+    )))]
     pub type nfds_t = c_uint;
 
     #[repr(C)]
@@ -359,7 +388,7 @@ pub mod unix {
         pub ifa_data: *mut c_void,
     }
 
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", target_os = "hurd"))]
     #[repr(C)]
     pub struct ifaddrs {
         pub ifa_next: *mut ifaddrs,
@@ -404,6 +433,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     #[repr(C)]
     pub struct sockaddr {
@@ -426,6 +456,7 @@ pub mod unix {
         target_os = "netbsd",
         target_os = "dragonfly",
         target_os = "macos",
+        target_os = "hurd",
     ))]
     #[repr(C)]
     pub struct sockaddr_in {
@@ -597,13 +628,14 @@ pub mod unix {
             target_os = "netbsd",
             target_os = "solaris",
             target_os = "illumos",
+            target_os = "hurd",
         ))]
         pub type clock_id_t = c_int;
 
         #[cfg(target_os = "dragonfly")]
         pub type clock_id_t = c_ulong;
 
-        #[cfg(any(target_os = "solaris", target_os = "illumos"))]
+        #[cfg(any(target_os = "solaris", target_os = "illumos", target_os = "hurd"))]
         pub type time_t = c_long;
 
         #[cfg(any(target_os = "openbsd", target_os = "netbsd", target_os = "dragonfly"))]
@@ -677,7 +709,7 @@ pub mod unix {
         #[cfg(any(target_os = "openbsd", target_os = "netbsd",))]
         pub const CLOCK_MONOTONIC: clock_id_t = 3;
 
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "hurd"))]
         pub const CLOCK_MONOTONIC: clock_id_t = 1;
 
         extern "C" {
