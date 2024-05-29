@@ -1240,7 +1240,7 @@ gst_gl_download_element_prepare_output_buffer (GstBaseTransform * bt,
   in_sync_meta = gst_buffer_get_gl_sync_meta (inbuf);
   if (in_sync_meta) {
     if (context) {
-      gst_gl_sync_meta_wait (in_sync_meta, context);
+      gst_gl_sync_meta_wait_cpu (in_sync_meta, context);
     } else if (dl->mode != GST_GL_DOWNLOAD_MODE_PASSTHROUGH) {
       GST_WARNING_OBJECT (dl, "No configured GL context in non-passthrough "
           "mode. Cannot wait on incoming `GstGLSyncMeta`");
