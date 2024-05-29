@@ -2164,7 +2164,7 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   hr = video_device->CheckFeatureSupport (D3D12_FEATURE_VIDEO_ENCODER_CODEC,
       &feature_codec, sizeof (feature_codec));
 
-  if (!gst_d3d12_result (hr, device) || !feature_codec.IsSupported) {
+  if (FAILED (hr) || !feature_codec.IsSupported) {
     GST_INFO_OBJECT (device, "Device does not support H.264 encoding");
     return;
   }
@@ -2190,7 +2190,7 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   hr = video_device->CheckFeatureSupport
       (D3D12_FEATURE_VIDEO_ENCODER_PROFILE_LEVEL, &feature_profile_level,
       sizeof (feature_profile_level));
-  if (!gst_d3d12_result (hr, device) || !feature_profile_level.IsSupported) {
+  if (FAILED (hr) || !feature_profile_level.IsSupported) {
     GST_WARNING_OBJECT (device, "Main profile is not supported");
     return;
   }
@@ -2199,7 +2199,7 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   hr = video_device->CheckFeatureSupport
       (D3D12_FEATURE_VIDEO_ENCODER_INPUT_FORMAT, &feature_input_format,
       sizeof (feature_input_format));
-  if (!gst_d3d12_result (hr, device) || !feature_input_format.IsSupported) {
+  if (FAILED (hr) || !feature_input_format.IsSupported) {
     GST_WARNING_OBJECT (device, "NV12 format is not supported");
     return;
   }
@@ -2213,7 +2213,7 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   hr = video_device->CheckFeatureSupport
       (D3D12_FEATURE_VIDEO_ENCODER_PROFILE_LEVEL, &feature_profile_level,
       sizeof (feature_profile_level));
-  if (gst_d3d12_result (hr, device) && feature_profile_level.IsSupported) {
+  if (SUCCEEDED (hr) && feature_profile_level.IsSupported) {
     profiles.push_back ("high");
     GST_INFO_OBJECT (device, "High profile is supported, level [%d, %d]",
         level_h264_min, level_h264_max);
@@ -2230,7 +2230,7 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   hr = video_device->CheckFeatureSupport
       (D3D12_FEATURE_VIDEO_ENCODER_OUTPUT_RESOLUTION_RATIOS_COUNT,
       &ratios_count, sizeof (ratios_count));
-  if (!gst_d3d12_result (hr, device)) {
+  if (FAILED (hr)) {
     GST_WARNING_OBJECT (device,
         "Couldn't query output resolution ratios count");
     return;
@@ -2249,7 +2249,7 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   hr = video_device->CheckFeatureSupport
       (D3D12_FEATURE_VIDEO_ENCODER_OUTPUT_RESOLUTION, &feature_resolution,
       sizeof (feature_resolution));
-  if (!gst_d3d12_result (hr, device) || !feature_resolution.IsSupported) {
+  if (FAILED (hr) || !feature_resolution.IsSupported) {
     GST_WARNING_OBJECT (device, "Couldn't query output resolution");
     return;
   }
@@ -2376,7 +2376,7 @@ gst_d3d12_h264_enc_register (GstPlugin * plugin, GstD3D12Device * device,
   hr = video_device->CheckFeatureSupport
       (D3D12_FEATURE_VIDEO_ENCODER_CODEC_PICTURE_CONTROL_SUPPORT,
       &feature_pic_ctrl, sizeof (feature_pic_ctrl));
-  if (!gst_d3d12_result (hr, device) || !feature_pic_ctrl.IsSupported) {
+  if (FAILED (hr) || !feature_pic_ctrl.IsSupported) {
     GST_WARNING_OBJECT (device, "Couldn't query picture control support");
     return;
   }
