@@ -29,7 +29,7 @@ if test -z "$version"; then
     INDENT=gnuindent
   fi
 else
-  INDENT=gst-indent-1.o
+  INDENT=gst-indent-1.0
 fi
 
 case $($INDENT --version) in
