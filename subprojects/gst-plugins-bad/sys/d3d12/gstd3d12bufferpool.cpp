@@ -194,14 +194,17 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
         D3D12_RESOURCE_STATE_COMMON, nullptr);
     auto num_planes = D3D12GetFormatPlaneCount (device,
         params->d3d12_format.dxgi_format);
-    for (guint i = 0; i < num_planes; i++) {
-      UINT64 mem_size;
-      device->GetCopyableFootprints (&desc[0], i, 1, 0,
-          &layout[i], nullptr, nullptr, &mem_size);
 
+    auto single_array_desc = desc[0];
+    single_array_desc.DepthOrArraySize = 1;
+
+    UINT64 mem_size;
+    device->GetCopyableFootprints (&single_array_desc, 0, num_planes, 0,
+        layout, nullptr, nullptr, &mem_size);
+    total_mem_size = mem_size;
+    for (guint i = 0; i < num_planes; i++) {
       priv->stride[i] = layout[i].Footprint.RowPitch;
-      priv->offset[i] = total_mem_size;
-      total_mem_size += mem_size;
+      priv->offset[i] = layout[i].Offset;
     }
 
     priv->alloc[0] = alloc;

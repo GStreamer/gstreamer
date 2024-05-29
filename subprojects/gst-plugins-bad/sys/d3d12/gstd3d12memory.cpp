@@ -733,10 +733,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
 
   mem->device = (GstD3D12Device *) gst_object_ref (device);
 
-  mem->priv->size = 0;
   for (guint i = 0; i < num_subresources; i++) {
-    UINT64 size;
-
     /* One notable difference between D3D12/D3D11 is that, D3D12 introduced
      * *PLANE* slice concept. That means, Each plane of YUV format
      * (e.g, DXGI_FORMAT_NV12) can be accessible in D3D12 but that wasn't
@@ -753,14 +750,14 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
      */
     mem->priv->subresource_index[i] = D3D12CalcSubresource (0,
         array_slice, i, 1, desc.DepthOrArraySize);
-
-    device_handle->GetCopyableFootprints (&desc, priv->subresource_index[i],
-        1, 0, &priv->layout[i], nullptr, nullptr, &size);
-
-    /* Update offset manually */
-    priv->layout[i].Offset = priv->size;
-    priv->size += size;
   }
+
+  /* Then calculate staging memory size and copyable layout */
+  UINT64 size;
+  desc.DepthOrArraySize = 1;
+  device_handle->GetCopyableFootprints (&desc, 0,
+      num_subresources, 0, priv->layout, nullptr, nullptr, &size);
+  priv->size = size;
 
   priv->subresource_rect[0].left = 0;
   priv->subresource_rect[0].top = 0;
