@@ -983,10 +983,11 @@ handle_incoming_manifest (GstAdaptiveDemux * demux)
 
     if (!g_str_has_prefix (demux->manifest_uri, "data:")
         && !g_str_has_prefix (demux->manifest_uri, "http://")
-        && !g_str_has_prefix (demux->manifest_uri, "https://")) {
+        && !g_str_has_prefix (demux->manifest_uri, "https://")
+        && !g_str_has_prefix (demux->manifest_uri, "file://")) {
       GST_ELEMENT_ERROR (demux, STREAM, DEMUX,
           (_("Invalid manifest URI")),
-          ("Manifest URI needs to use either data:, http:// or https://"));
+          ("Manifest URI needs to use either data:, http://, https:// or file://"));
       gst_query_unref (query);
       ret = FALSE;
       goto unlock_out;
