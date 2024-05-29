@@ -139,6 +139,9 @@ enum
 /* 8 should enough for a normal encoder */
 #define SRC_POOL_SIZE_DEFAULT            8
 
+/* It is used to compensate timestamp for input mfx surface */
+#define PTS_OFFSET                       GST_SECOND * 60 * 60 * 1000
+
 /* *INDENT-OFF* */
 static const gchar *doc_sink_caps_str =
     GST_VIDEO_CAPS_MAKE (
@@ -862,8 +865,20 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   if (inbuf->pts == GST_CLOCK_TIME_NONE)
     in_surface->surface->Data.TimeStamp = MFX_TIMESTAMP_UNKNOWN;
   else
+    /* In the case of multi-channel transoding, for example:
+     * "gst-launch-1.0 -vf filesrc location=input.bin ! h265parse ! msdkh265dec !\
+     * tee name=t ! queue ! msdkh265enc ! h265parse ! filesink location=out.h265\
+     * t. ! queue ! msdkvpp denoise=10 ! fakesink",
+     * msdkenc and msdkvpp re-use surface from decoder and they both need to set
+     * timestamp for input mfx surface; but encoder use input frame->pts while vpp
+     * use input buffer->pts, and frame->pts has 1000h offset larger than inbuf->pts;
+     * It is very likely to cause conflict or mfx surface timestamp. So we add this 
+     * PTS_OFFSET here to ensure enc and vpp set the same value to input mfx surface
+     * meanwhile does not break encoder's setting min_pts for dts protection.
+     */
     in_surface->surface->Data.TimeStamp =
-        gst_util_uint64_scale_round (inbuf->pts, 90000, GST_SECOND);
+        gst_util_uint64_scale_round
+        (inbuf->pts + PTS_OFFSET, 90000, GST_SECOND);
 
   if (thiz->use_video_memory) {
     out_surface = gst_msdk_import_to_msdk_surface (outbuf, thiz->context,
@@ -916,7 +931,9 @@ gst_msdkvpp_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     if (timestamp == MFX_TIMESTAMP_UNKNOWN)
       timestamp = GST_CLOCK_TIME_NONE;
     else
-      timestamp = gst_util_uint64_scale_round (timestamp, GST_SECOND, 90000);
+      /* We remove PTS_OFFSET here to avoid 1000h delay introduced earlier */
+      timestamp = gst_util_uint64_scale_round (timestamp, GST_SECOND, 90000)
+          - PTS_OFFSET;
 
     if (status == MFX_WRN_INCOMPATIBLE_VIDEO_PARAM)
       GST_WARNING_OBJECT (thiz, "VPP returned: %s",
