@@ -2863,8 +2863,12 @@ gst_hls_variant_parse (gchar * data, const gchar * base_uri)
       g_free (stream->codecs);
       stream->codecs = g_strdup (v);
       stream->caps = gst_codec_utils_caps_from_mime_codec (stream->codecs);
-      stream->codecs_stream_type =
-          gst_hls_get_stream_type_from_caps (stream->caps);
+      if (stream->caps != NULL) {
+        stream->codecs_stream_type =
+            gst_hls_get_stream_type_from_caps (stream->caps);
+      } else {
+        GST_WARNING ("Unhandled codec in CODECS tags: %s", v);
+      }
     } else if (g_str_equal (a, "RESOLUTION")) {
       if (!int_from_string (v, &v, &stream->width))
         GST_WARNING ("Error while reading RESOLUTION width");
