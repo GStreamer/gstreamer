@@ -115,6 +115,7 @@ G_GNUC_END_IGNORE_DEPRECATIONS
     result = g_list_prepend (result, gst_object_ref_sink (gst_device));
 
     gst_structure_free (props);
+    gst_caps_unref (caps);
   }
 
   result = g_list_reverse (result);
