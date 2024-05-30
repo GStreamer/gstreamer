@@ -2687,6 +2687,13 @@ gst_debug_log_literal (GstDebugCategory * category, GstDebugLevel level,
 {
 }
 
+void
+gst_debug_log_id_literal (GstDebugCategory * category, GstDebugLevel level,
+    const gchar * file, const gchar * function, gint line,
+    const gchar * id, const gchar * message_string)
+{
+}
+
 const gchar *
 gst_debug_message_get (GstDebugMessage * message)
 {
