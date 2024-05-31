@@ -444,8 +444,11 @@ gst_codec_timestamper_output_frame (GstCodecTimestamper * self,
       if (dts > frame->pts) {
         if (frame->pts >= priv->last_dts)
           dts = frame->pts;
-        else
-          dts = GST_CLOCK_TIME_NONE;
+        else {
+          GST_WARNING_OBJECT (self,
+              "Setting DTS to last DTS to avoid PTS < DTS and backward DTS");
+          dts = priv->last_dts;
+        }
       }
 
       if (GST_CLOCK_TIME_IS_VALID (dts))
