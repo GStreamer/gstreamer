@@ -21,16 +21,29 @@
 #include "config.h"
 #endif
 
-#include "gstcudanvmm.h"
+#include "gstcudanvmm-private.h"
 #include <gmodule.h>
 #include <string.h>
+#include "gstcuda-private.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_cuda_nvmm_debug);
-#define GST_CAT_DEFAULT gst_cuda_nvmm_debug
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT ensure_debug_category()
+static GstDebugCategory *
+ensure_debug_category (void)
+{
+  static GstDebugCategory *cat = nullptr;
+
+  GST_CUDA_CALL_ONCE_BEGIN {
+    cat = _gst_debug_category_new ("cudanvmm", 0, "cudanvmm");
+  } GST_CUDA_CALL_ONCE_END;
+
+  return cat;
+}
+#endif
 
 #define LOAD_SYMBOL(name) G_STMT_START { \
   if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &vtable->name)) { \
-    GST_ERROR ("Failed to load symbol '%s', %s", G_STRINGIFY (name), g_module_error()); \
+    GST_INFO ("Failed to load symbol '%s', %s", G_STRINGIFY (name), g_module_error()); \
     goto error; \
   } \
 } G_STMT_END;
@@ -79,12 +92,10 @@ gboolean
 gst_cuda_nvmm_init_once (void)
 {
   static gboolean loaded = FALSE;
-  static gsize load_once = 0;
 
-  if (g_once_init_enter (&load_once)) {
+  GST_CUDA_CALL_ONCE_BEGIN {
     loaded = gst_cuda_nvmm_load_library ();
-    g_once_init_leave (&load_once, 1);
-  }
+  } GST_CUDA_CALL_ONCE_END;
 
   return loaded;
 }

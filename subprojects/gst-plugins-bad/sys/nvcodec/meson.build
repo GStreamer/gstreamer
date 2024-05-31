@@ -27,10 +27,6 @@ nvcodec_sources = [
   'plugin.c',
 ]
 
-nvmm_sources = [
-  'gstcudanvmm.c',
-]
-
 nvcodec_win32_sources = [
   'gstcudaipcclient_win32.cpp',
   'gstcudaipcserver_win32.cpp',
@@ -61,18 +57,9 @@ if gstgl_dep.found()
 endif
 
 if host_system == 'linux'
-  have_nvmm = false
-  if cc.has_header('nvbufsurface.h')
-    have_nvmm = true
-  elif cc.has_header('/opt/nvidia/deepstream/deepstream/sources/includes/nvbufsurface.h')
-    # XXX: Should add an option for SDK path??
-    have_nvmm = true
-    plugin_incdirs += [include_directories('/opt/nvidia/deepstream/deepstream/sources/includes')]
-  endif
-
-  if have_nvmm
-    extra_args += ['-DHAVE_NVCODEC_NVMM']
-    nvcodec_sources += nvmm_sources
+  if have_nvbufsurface_h
+    extra_args += ['-DHAVE_CUDA_NVMM']
+    plugin_incdirs += gstcuda_nvmm_inc
   endif
 
   gio_unix_dep = dependency('gio-unix-2.0', required : get_option('nvcodec'))

@@ -20,15 +20,16 @@
 #pragma once
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
-#include <nvbufsurface.h>
+#include <gst/cuda/cuda-prelude.h>
 
 G_BEGIN_DECLS
 
 #define GST_CAPS_FEATURE_MEMORY_CUDA_NVMM_MEMORY "memory:NVMM"
 
+GST_CUDA_API
 gboolean                gst_cuda_nvmm_init_once       (void);
 
+GST_CUDA_API
 GstBufferPool *         gst_cuda_nvmm_buffer_pool_new (void);
 
 G_END_DECLS

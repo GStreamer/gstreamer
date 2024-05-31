@@ -213,6 +213,10 @@ option('aja-include-dir', type : 'string', value : '',
 option('aja-lib-dir', type : 'string', value : '',
   description : 'Directory where AJA NTV2 library is located')
 
+# CUDA library options
+option('cuda-nvmm', type : 'feature', value : 'auto', description : 'Enable NVMM support in cuda library')
+option('cuda-nvmm-include-path', type : 'string', value : '', description : 'Include path for NVMM support in cuda library')
+
 # D3D11/D3D12 HLSL library options
 option('d3d-hlsl-precompile', type : 'feature', value : 'auto', description : 'Enable buildtime HLSL compile for d3d11/d3d12 library/plugin')
 

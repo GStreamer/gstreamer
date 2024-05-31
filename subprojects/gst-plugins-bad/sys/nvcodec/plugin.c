@@ -40,9 +40,7 @@
 #include "gstnvdecoder.h"
 #include "gstcudamemorycopy.h"
 #include "gstcudaconvertscale.h"
-#ifdef HAVE_NVCODEC_NVMM
-#include "gstcudanvmm.h"
-#endif
+#include <gst/cuda/gstcudanvmm-private.h>
 
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
@@ -61,10 +59,6 @@ GST_DEBUG_CATEGORY (gst_nvcodec_debug);
 GST_DEBUG_CATEGORY (gst_nvdec_debug);
 GST_DEBUG_CATEGORY (gst_nvenc_debug);
 GST_DEBUG_CATEGORY (gst_nv_decoder_debug);
-
-#ifdef HAVE_NVCODEC_NVMM
-GST_DEBUG_CATEGORY (gst_cuda_nvmm_debug);
-#endif
 
 #define GST_CAT_DEFAULT gst_nvcodec_debug
 
@@ -134,10 +128,6 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_nvdec_debug, "nvdec", 0, "nvdec");
   GST_DEBUG_CATEGORY_INIT (gst_nvenc_debug, "nvenc", 0, "nvenc");
   GST_DEBUG_CATEGORY_INIT (gst_nv_decoder_debug, "nvdecoder", 0, "nvdecoder");
-
-#ifdef HAVE_NVCODEC_NVMM
-  GST_DEBUG_CATEGORY_INIT (gst_cuda_nvmm_debug, "cudanvmm", 0, "cudanvmm");
-#endif
 
   if (!gst_cuda_load_library ()) {
     gst_plugin_add_status_warning (plugin,
@@ -354,12 +344,8 @@ plugin_init (GstPlugin * plugin)
       "cudaipcsrc", GST_RANK_NONE, GST_TYPE_CUDA_IPC_SRC);
 
   gst_cuda_memory_init_once ();
-
-#ifdef HAVE_NVCODEC_NVMM
-  if (gst_cuda_nvmm_init_once ()) {
+  if (gst_cuda_nvmm_init_once ())
     GST_INFO ("Enable NVMM support");
-  }
-#endif
 
   g_object_set_data_full (G_OBJECT (plugin),
       "plugin-nvcodec-shutdown", (gpointer) "shutdown-data",

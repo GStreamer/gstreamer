@@ -39,8 +39,9 @@
 #include <sddl.h>
 #endif
 
-#ifdef HAVE_NVCODEC_NVMM
-#include "gstcudanvmm.h"
+#ifdef HAVE_CUDA_NVMM
+#include "gstcudanvmm-private.h"
+#include <nvbufsurface.h>
 #endif
 
 #include "gstcudamemory.h"
@@ -784,7 +785,7 @@ map_buffer_and_fill_copy2d (GstBuffer * buf, const GstVideoInfo * info,
   gboolean buffer_mapped = FALSE;
   guint i;
 
-#ifdef HAVE_NVCODEC_NVMM
+#ifdef HAVE_CUDA_NVMM
   if (copy_type == GST_CUDA_BUFFER_COPY_NVMM) {
     NvBufSurface *surface;
     NvBufSurfaceParams *surface_params;

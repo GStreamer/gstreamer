@@ -3,6 +3,7 @@ cuda_sources = files([
   'gstcudacontext.cpp',
   'gstcudaloader.cpp',
   'gstcudamemory.cpp',
+  'gstcudanvmm.cpp',
   'gstcudanvrtc.cpp',
   'gstcudastream.cpp',
   'gstcudautils.cpp',
@@ -25,6 +26,9 @@ cuda_stubinc = include_directories('./stub')
 gstcuda_stub_dep = declare_dependency(
   include_directories: cuda_stubinc
 )
+
+have_nvbufsurface_h = false
+gstcuda_nvmm_inc = []
 
 gstcuda_platform_dep = []
 if host_system not in ['windows', 'linux']
@@ -80,6 +84,21 @@ if host_system == 'windows'
       '-Wno-redundant-decls',
     ])
   endif
+else
+  nvmm_opt = get_option('cuda-nvmm')
+  if not nvmm_opt.disabled()
+    nvmm_inc_opt = get_option('cuda-nvmm-include-path')
+    if nvmm_inc_opt != ''
+      gstcuda_nvmm_inc = [include_directories(nvmm_inc_opt)]
+    endif
+
+    have_nvbufsurface_h = cc.has_header('nvbufsurface.h',
+                                        include_directories: gstcuda_nvmm_inc,
+                                        required: nvmm_opt)
+  endif
+  if have_nvbufsurface_h
+    extra_args += ['-DHAVE_CUDA_NVMM']
+  endif
 endif
 
 pkg_name = 'gstreamer-cuda-' + api_version
@@ -87,7 +106,7 @@ gstcuda= library('gstcuda-' + api_version,
   cuda_sources,
   c_args : gst_plugins_bad_args + extra_args,
   cpp_args : gst_plugins_bad_args + extra_args,
-  include_directories : [configinc, libsinc, cuda_stubinc],
+  include_directories : [configinc, libsinc, cuda_stubinc] + gstcuda_nvmm_inc,
   version : libversion,
   soversion : soversion,
   install : true,
