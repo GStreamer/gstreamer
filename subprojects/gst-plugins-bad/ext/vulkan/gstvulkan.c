@@ -31,14 +31,17 @@
 
 #include "vksink.h"
 #include "vkupload.h"
+#include "vkdownload.h"
+#include "vkdeviceprovider.h"
+#include "gstvulkanelements.h"
+
+#if defined(HAVE_GLSLC)
 #include "vkimageidentity.h"
 #include "vkcolorconvert.h"
 #include "vkshaderspv.h"
-#include "vkdownload.h"
 #include "vkviewconvert.h"
-#include "vkdeviceprovider.h"
-#include "gstvulkanelements.h"
 #include "vkoverlaycompositor.h"
+#endif
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
 #include "vkh264dec.h"
@@ -57,7 +60,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (vulkanupload, plugin);
 
   ret |= GST_ELEMENT_REGISTER (vulkandownload, plugin);
-
+#if defined(HAVE_GLSLC)
   ret |= GST_ELEMENT_REGISTER (vulkancolorconvert, plugin);
 
   ret |= GST_ELEMENT_REGISTER (vulkanimageidentity, plugin);
@@ -67,7 +70,7 @@ plugin_init (GstPlugin * plugin)
   ret |= GST_ELEMENT_REGISTER (vulkanviewconvert, plugin);
 
   ret |= GST_ELEMENT_REGISTER (vulkanoverlaycompositor, plugin);
-
+#endif
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   GST_ELEMENT_REGISTER (vulkanh264dec, plugin);
   GST_ELEMENT_REGISTER (vulkanh265dec, plugin);

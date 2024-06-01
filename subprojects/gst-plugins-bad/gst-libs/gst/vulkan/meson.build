@@ -298,11 +298,7 @@ if not vulkan_windowing
   endif
 endif
 
-# Only needed for the vulkan plugin, but doesn't make sense to build
-# anything else vulkan related if we are not going to build the plugin
-glslc = find_program('glslc', required: get_option('vulkan'))
-
-if not vulkan_dep.found() or not has_vulkan_header or not glslc.found()
+if not vulkan_dep.found() or not has_vulkan_header
   if get_option('vulkan').enabled()
     error('GStreamer Vulkan integration required via options, but needed dependencies not found.')
   else
