@@ -23,10 +23,11 @@ vulkan_sources = files(
 )
 vulkan_plugin_enums = []
 
-glslc = find_program('glslc', required: get_option('vulkan'))
-if not glslc.found()
+glslc = find_program('glslc', required: false)
+glslang = find_program('glslang', required: false)
+if not glslc.found() and not glslang.found()
   if get_option('vulkan').enabled()
-    error('GStreamer Vulkan plugin required via options, but glslc was not found.')
+    error('GStreamer Vulkan plugin required via options, but glslc or glslang was not found.')
   else
     subdir_done()
   endif

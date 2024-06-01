@@ -19,6 +19,8 @@
 
 #version 450 core
 
+#extension GL_GOOGLE_include_directive : enable
+
 #include "swizzle.glsl"
 
 layout(location = 0) in vec2 inTexCoord;
