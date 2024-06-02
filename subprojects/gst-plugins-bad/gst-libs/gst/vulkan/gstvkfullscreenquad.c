@@ -898,7 +898,7 @@ gst_vulkan_full_screen_quad_class_init (GstVulkanFullScreenQuadClass * klass)
  */
 gboolean
 gst_vulkan_full_screen_quad_set_info (GstVulkanFullScreenQuad * self,
-    GstVideoInfo * in_info, GstVideoInfo * out_info)
+    const GstVideoInfo * in_info, const GstVideoInfo * out_info)
 {
   self->out_info = *out_info;
   self->in_info = *in_info;

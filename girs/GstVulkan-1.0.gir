@@ -2766,11 +2766,11 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
           </instance-parameter>
           <parameter name="in_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the input #GstVideoInfo to set</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
           </parameter>
           <parameter name="out_info" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the output #GstVideoInfo to set</doc>
-            <type name="GstVideo.VideoInfo" c:type="GstVideoInfo*"/>
+            <type name="GstVideo.VideoInfo" c:type="const GstVideoInfo*"/>
           </parameter>
         </parameters>
       </method>
