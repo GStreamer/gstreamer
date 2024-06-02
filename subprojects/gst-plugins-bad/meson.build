@@ -439,24 +439,8 @@ if ['darwin', 'ios'].contains(host_system)
   if not have_objc
     error('Building on MacOS/iOS/etc requires an ObjC compiler')
   endif
-  if host_system == 'ios'
-    cdata.set('HAVE_IOS', 1)
-  endif
 
-  avfoundation_dep = dependency('AVFoundation', required : false)
-  if avfoundation_dep.found()
-      cdata.set('HAVE_AVFOUNDATION', 1)
-  endif
-
-  videotoolbox_dep = dependency('VideoToolbox', required : false)
-  if videotoolbox_dep.found()
-      cdata.set('HAVE_VIDEOTOOLBOX', 1)
-  endif
-
-#  FIXME: framework.version() returns 'unknown'
-#  if videotoolbox_dep.version().version_compare('>=10.9.6')
-#    cdata.set('HAVE_VIDEOTOOLBOX_10_9_6', 1)
-#  endif
+  cdata.set('HAVE_IOS', host_system == 'ios')
 endif
 
 have_orcc = false

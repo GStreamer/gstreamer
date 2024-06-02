@@ -90,7 +90,6 @@ option('aom', type : 'feature', value : 'auto', description : 'AOM AV1 video cod
 option('avtp', type : 'feature', value : 'auto', description : 'Audio/Video Transport Protocol (AVTP) plugin')
 option('amfcodec', type : 'feature', value : 'auto', description : 'AMD AMF codec plugin')
 option('androidmedia', type : 'feature', value : 'auto', description : 'Video capture and codec plugins for Android')
-option('applemedia', type : 'feature', value : 'auto', description : 'Video capture and codec access plugins for macOS and iOS')
 option('asio', type : 'feature', value : 'auto', description : 'Steinberg Audio Streaming Input Output (ASIO) plugin')
 option('asio-sdk-path', type : 'string', value : '', description : 'Full path to Steinberg Audio Streaming Input Output (ASIO) SDK')
 option('assrender', type : 'feature', value : 'auto', description : 'ASS/SSA subtitle renderer plugin')
@@ -210,6 +209,10 @@ option('isac', type : 'feature', value : 'auto', description : 'iSAC plugin')
 # AJA plugin options
 option('aja-sdk-dir', type : 'string', value : '',
   description : 'Directory with AJA SDK, e.g. ntv2sdklinux_16.0.0.4')
+
+# applemedia plugin options
+option('applemedia', type : 'feature', value : 'auto', description : 'Video capture and codec access plugins for macOS and iOS')
+option('applemedia-swift', type : 'feature', value : 'auto', description : 'Whether to build additional Swift-based elements in applemedia')
 
 # D3D11 plugin options
 option('d3d11-math', type : 'feature', value : 'auto', description : 'Enable DirectX SIMD Math support')

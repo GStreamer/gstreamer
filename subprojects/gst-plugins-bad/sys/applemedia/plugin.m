@@ -46,6 +46,10 @@
 void gst_vtenc_register_elements (GstPlugin * plugin);
 #endif
 
+#ifdef HAVE_SCREENCAPTUREKIT
+#include "swift/sckitvideosrc.h"
+#endif
+
 #ifndef HAVE_IOS
 
 static void
@@ -92,6 +96,14 @@ plugin_init (GstPlugin * plugin)
   }
 #endif
 
+#ifdef HAVE_SCREENCAPTUREKIT
+  if (@available(macOS 12.3, *)) {
+    res &= gst_element_register (plugin, "sckitvideosrc", GST_RANK_PRIMARY,
+        GST_TYPE_SCKIT_VIDEO_SRC);
+  } else {
+    gst_plugin_add_status_error (plugin, "sckit features unavailable: macOS version too old");
+  }
+#endif
 
   return res;
 }
