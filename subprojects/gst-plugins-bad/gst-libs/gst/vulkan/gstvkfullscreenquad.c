@@ -1666,3 +1666,23 @@ gst_vulkan_full_screen_quad_submit (GstVulkanFullScreenQuad * self,
 error:
   return FALSE;
 }
+
+/**
+ * gst_vulkan_full_screen_quad_get_queue:
+ * @filter: a #GstVulkanVideoFilter
+ *
+ * Returns: (transfer full) (nullable): The currently configured
+ *     #GstVulkanQueue
+ *
+ * Since: 1.26
+ */
+GstVulkanQueue *
+gst_vulkan_full_screen_quad_get_queue (GstVulkanFullScreenQuad * self)
+{
+  g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), NULL);
+
+  if (self->queue)
+    return gst_object_ref (self->queue);
+  else
+    return NULL;
+}

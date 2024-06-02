@@ -148,5 +148,8 @@ gboolean            gst_vulkan_full_screen_quad_draw                (GstVulkanFu
 GST_VULKAN_API
 GstVulkanFence *    gst_vulkan_full_screen_quad_get_last_fence      (GstVulkanFullScreenQuad * self);
 
+GST_VULKAN_API
+GstVulkanQueue *    gst_vulkan_full_screen_quad_get_queue           (GstVulkanFullScreenQuad * self);
+
 G_END_DECLS
 #endif /* __GST_VULKAN_FULL_SCREEN_QUAD_H__ */

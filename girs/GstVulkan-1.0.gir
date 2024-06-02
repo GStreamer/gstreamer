@@ -2655,6 +2655,19 @@ gst_vulkan_full_screen_quad_set_blend_factors().</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="get_queue" c:identifier="gst_vulkan_full_screen_quad_get_queue" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">The currently configured
+    #GstVulkanQueue</doc>
+          <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="self" transfer-ownership="none">
+            <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="prepare_draw" c:identifier="gst_vulkan_full_screen_quad_prepare_draw" version="1.18" throws="1">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.h"/>
         <return-value transfer-ownership="none">
