@@ -310,3 +310,63 @@ gst_vulkan_video_filter_stop (GstBaseTransform * bt)
 
   return TRUE;
 }
+
+/**
+ * gst_vulkan_video_filter_get_instance:
+ * @filter: a #GstVulkanVideoFilter
+ *
+ * Returns: (transfer full) (nullable): The currently configured
+ *     #GstVulkanInstance
+ *
+ * Since: 1.26
+ */
+GstVulkanInstance *
+gst_vulkan_video_filter_get_instance (GstVulkanVideoFilter * filter)
+{
+  g_return_val_if_fail (GST_IS_VULKAN_VIDEO_FILTER (filter), NULL);
+
+  if (filter->instance)
+    return gst_object_ref (filter->instance);
+  else
+    return NULL;
+}
+
+/**
+ * gst_vulkan_video_filter_get_device:
+ * @filter: a #GstVulkanVideoFilter
+ *
+ * Returns: (transfer full) (nullable): The currently configured
+ *     #GstVulkanDevice
+ *
+ * Since: 1.26
+ */
+GstVulkanDevice *
+gst_vulkan_video_filter_get_device (GstVulkanVideoFilter * filter)
+{
+  g_return_val_if_fail (GST_IS_VULKAN_VIDEO_FILTER (filter), NULL);
+
+  if (filter->device)
+    return gst_object_ref (filter->device);
+  else
+    return NULL;
+}
+
+/**
+ * gst_vulkan_video_filter_get_queue:
+ * @filter: a #GstVulkanVideoFilter
+ *
+ * Returns: (transfer full) (nullable): The currently configured
+ *     #GstVulkanQueue
+ *
+ * Since: 1.26
+ */
+GstVulkanQueue *
+gst_vulkan_video_filter_get_queue (GstVulkanVideoFilter * filter)
+{
+  g_return_val_if_fail (GST_IS_VULKAN_VIDEO_FILTER (filter), NULL);
+
+  if (filter->queue)
+    return gst_object_ref (filter->queue);
+  else
+    return NULL;
+}

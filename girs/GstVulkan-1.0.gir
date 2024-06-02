@@ -5824,6 +5824,48 @@ signalled and freed.</doc>
     </record>
     <class name="VulkanVideoFilter" c:symbol-prefix="vulkan_video_filter" c:type="GstVulkanVideoFilter" version="1.18" parent="GstBase.BaseTransform" glib:type-name="GstVulkanVideoFilter" glib:get-type="gst_vulkan_video_filter_get_type" glib:type-struct="VulkanVideoFilterClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+      <method name="get_device" c:identifier="gst_vulkan_video_filter_get_device" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">The currently configured
+    #GstVulkanDevice</doc>
+          <type name="VulkanDevice" c:type="GstVulkanDevice*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="filter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">a #GstVulkanVideoFilter</doc>
+            <type name="VulkanVideoFilter" c:type="GstVulkanVideoFilter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_instance" c:identifier="gst_vulkan_video_filter_get_instance" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">The currently configured
+    #GstVulkanInstance</doc>
+          <type name="VulkanInstance" c:type="GstVulkanInstance*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="filter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">a #GstVulkanVideoFilter</doc>
+            <type name="VulkanVideoFilter" c:type="GstVulkanVideoFilter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_queue" c:identifier="gst_vulkan_video_filter_get_queue" version="1.26">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h"/>
+        <return-value transfer-ownership="full" nullable="1">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">The currently configured
+    #GstVulkanQueue</doc>
+          <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="filter" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.c">a #GstVulkanVideoFilter</doc>
+            <type name="VulkanVideoFilter" c:type="GstVulkanVideoFilter*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <field name="parent">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideofilter.h">the parent #GstBaseTransform</doc>
         <type name="GstBase.BaseTransform" c:type="GstBaseTransform"/>
