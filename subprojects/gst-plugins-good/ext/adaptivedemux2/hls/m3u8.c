@@ -1584,7 +1584,7 @@ gst_m3u8_get_hls_media_type_from_string (const gchar * type_name)
     return GST_HLS_RENDITION_STREAM_TYPE_VIDEO;
   if (strcmp (type_name, "SUBTITLES") == 0)
     return GST_HLS_RENDITION_STREAM_TYPE_SUBTITLES;
-  if (strcmp (type_name, "CLOSED_CAPTIONS") == 0)
+  if (strcmp (type_name, "CLOSED-CAPTIONS") == 0)
     return GST_HLS_RENDITION_STREAM_TYPE_CLOSED_CAPTIONS;
 
   return GST_HLS_RENDITION_STREAM_TYPE_INVALID;
@@ -1669,7 +1669,8 @@ gst_m3u8_parse_media (gchar * desc, const gchar * base_uri)
   if (media->group_id == NULL || media->name == NULL)
     goto required_attributes_missing;
 
-  if (media->mtype == GST_HLS_RENDITION_STREAM_TYPE_CLOSED_CAPTIONS)
+  if (media->mtype == GST_HLS_RENDITION_STREAM_TYPE_CLOSED_CAPTIONS
+      && media->uri != NULL)
     goto uri_with_cc;
 
   GST_DEBUG ("media: %s, group '%s', name '%s', uri '%s', %s %s %s, lang=%s",
