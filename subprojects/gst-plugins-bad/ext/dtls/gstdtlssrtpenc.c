@@ -396,6 +396,9 @@ gst_dtls_srtp_enc_request_new_pad (GstElement * element,
   g_return_val_if_fail (templ->direction == GST_PAD_SINK, NULL);
   g_return_val_if_fail (self->srtp_enc, NULL);
 
+  if (name == NULL)
+    return NULL;
+
   if (templ == gst_element_class_get_pad_template (klass, "rtp_sink_%d")) {
     gchar *clocksync_name;
     GstElement *clocksync;
