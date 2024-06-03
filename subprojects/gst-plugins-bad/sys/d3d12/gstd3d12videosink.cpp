@@ -852,6 +852,60 @@ gst_d3d12_video_sink_set_info (GstVideoSink * sink, GstCaps * caps,
   priv->info = *info;
   priv->update_window = TRUE;
 
+  auto video_width = GST_VIDEO_INFO_WIDTH (&priv->info);
+  auto video_height = GST_VIDEO_INFO_HEIGHT (&priv->info);
+  auto video_par_n = GST_VIDEO_INFO_PAR_N (&priv->info);
+  auto video_par_d = GST_VIDEO_INFO_PAR_D (&priv->info);
+  gint display_par_n = 1;
+  gint display_par_d = 1;
+  guint num, den;
+
+  if (!gst_video_calculate_display_ratio (&num, &den, video_width,
+          video_height, video_par_n, video_par_d, display_par_n,
+          display_par_d)) {
+    GST_ELEMENT_WARNING (self, CORE, NEGOTIATION, (nullptr),
+        ("Error calculating the output display ratio of the video."));
+    GST_VIDEO_SINK_WIDTH (self) = video_width;
+    GST_VIDEO_SINK_HEIGHT (self) = video_height;
+  } else {
+    GST_DEBUG_OBJECT (self,
+        "video width/height: %dx%d, calculated display ratio: %d/%d format: %s",
+        video_width, video_height, num, den,
+        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&priv->info)));
+
+    if (video_height % den == 0) {
+      GST_DEBUG_OBJECT (self, "keeping video height");
+      GST_VIDEO_SINK_WIDTH (self) = (guint)
+          gst_util_uint64_scale_int (video_height, num, den);
+      GST_VIDEO_SINK_HEIGHT (self) = video_height;
+    } else if (video_width % num == 0) {
+      GST_DEBUG_OBJECT (self, "keeping video width");
+      GST_VIDEO_SINK_WIDTH (self) = video_width;
+      GST_VIDEO_SINK_HEIGHT (self) = (guint)
+          gst_util_uint64_scale_int (video_width, den, num);
+    } else {
+      GST_DEBUG_OBJECT (self, "approximating while keeping video height");
+      GST_VIDEO_SINK_WIDTH (self) = (guint)
+          gst_util_uint64_scale_int (video_height, num, den);
+      GST_VIDEO_SINK_HEIGHT (self) = video_height;
+    }
+  }
+
+  if (GST_VIDEO_SINK_WIDTH (self) <= 0) {
+    GST_WARNING_OBJECT (self, "Invalid display width %d",
+        GST_VIDEO_SINK_WIDTH (self));
+    GST_VIDEO_SINK_WIDTH (self) = 8;
+  }
+
+  if (GST_VIDEO_SINK_HEIGHT (self) <= 0) {
+    GST_WARNING_OBJECT (self, "Invalid display height %d",
+        GST_VIDEO_SINK_HEIGHT (self));
+    GST_VIDEO_SINK_HEIGHT (self) = 8;
+  }
+
+  GST_DEBUG_OBJECT (self, "scaling to %dx%d",
+      GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self));
+
   return TRUE;
 }
 
@@ -963,53 +1017,6 @@ gst_d3d12_video_sink_update_window (GstD3D12VideoSink * self)
   if (priv->pool) {
     gst_buffer_pool_set_active (priv->pool, FALSE);
     gst_clear_object (&priv->pool);
-  }
-
-  auto video_width = GST_VIDEO_INFO_WIDTH (&priv->info);
-  auto video_height = GST_VIDEO_INFO_HEIGHT (&priv->info);
-  auto video_par_n = GST_VIDEO_INFO_PAR_N (&priv->info);
-  auto video_par_d = GST_VIDEO_INFO_PAR_D (&priv->info);
-  gint display_par_n = 1;
-  gint display_par_d = 1;
-  guint num, den;
-
-  if (!gst_video_calculate_display_ratio (&num, &den, video_width,
-          video_height, video_par_n, video_par_d, display_par_n,
-          display_par_d)) {
-    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (nullptr),
-        ("Error calculating the output display ratio of the video."));
-    return GST_FLOW_ERROR;
-  }
-
-  GST_DEBUG_OBJECT (self,
-      "video width/height: %dx%d, calculated display ratio: %d/%d format: %s",
-      video_width, video_height, num, den,
-      gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (&priv->info)));
-
-  if (video_height % den == 0) {
-    GST_DEBUG_OBJECT (self, "keeping video height");
-    GST_VIDEO_SINK_WIDTH (self) = (guint)
-        gst_util_uint64_scale_int (video_height, num, den);
-    GST_VIDEO_SINK_HEIGHT (self) = video_height;
-  } else if (video_width % num == 0) {
-    GST_DEBUG_OBJECT (self, "keeping video width");
-    GST_VIDEO_SINK_WIDTH (self) = video_width;
-    GST_VIDEO_SINK_HEIGHT (self) = (guint)
-        gst_util_uint64_scale_int (video_width, den, num);
-  } else {
-    GST_DEBUG_OBJECT (self, "approximating while keeping video height");
-    GST_VIDEO_SINK_WIDTH (self) = (guint)
-        gst_util_uint64_scale_int (video_height, num, den);
-    GST_VIDEO_SINK_HEIGHT (self) = video_height;
-  }
-
-  GST_DEBUG_OBJECT (self, "scaling to %dx%d",
-      GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self));
-
-  if (GST_VIDEO_SINK_WIDTH (self) <= 0 || GST_VIDEO_SINK_HEIGHT (self) <= 0) {
-    GST_ELEMENT_ERROR (self, CORE, NEGOTIATION, (nullptr),
-        ("Error calculating the output display ratio of the video."));
-    return GST_FLOW_ERROR;
   }
 
   auto config = gst_structure_new ("convert-config",
