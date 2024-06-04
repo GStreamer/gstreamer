@@ -36,12 +36,10 @@ static const struct {
       VK_STRUCTURE_TYPE_VIDEO_DECODE_H264_PROFILE_INFO_KHR },
   { GST_VULKAN_VIDEO_OPERATION_DECODE, VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR, "video/x-h265",
       VK_STRUCTURE_TYPE_VIDEO_DECODE_H265_PROFILE_INFO_KHR },
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
   { GST_VULKAN_VIDEO_OPERATION_ENCODE, VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR, "video/x-h264",
       VK_STRUCTURE_TYPE_VIDEO_ENCODE_H264_PROFILE_INFO_KHR },
   { GST_VULKAN_VIDEO_OPERATION_ENCODE, VK_VIDEO_CODEC_OPERATION_ENCODE_H265_BIT_KHR, "video/x-h265",
       VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_KHR },
-#endif
 };
 
 static const struct {
@@ -152,7 +150,6 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             }
           }
           break;
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
         case VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR:
           if (profile->codec.h264enc.sType == video_codecs_map[i].stype) {
             int j;
@@ -173,7 +170,6 @@ gst_vulkan_video_profile_to_caps (const GstVulkanVideoProfile * profile)
             }
           }
           break;
-#endif
         default:
           break;
       }
@@ -310,7 +306,6 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
           }
           break;
         }
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
         case VK_VIDEO_CODEC_OPERATION_ENCODE_H264_BIT_KHR:{
           int j;
 
@@ -347,7 +342,6 @@ gst_vulkan_video_profile_from_caps (GstVulkanVideoProfile * profile,
           }
           break;
         }
-#endif
         default:
           profile->usage.decode.pNext = NULL;
           break;

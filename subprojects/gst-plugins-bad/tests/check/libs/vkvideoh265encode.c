@@ -1140,11 +1140,9 @@ vkvideo_suite (void)
   have_instance = gst_vulkan_instance_open (instance, NULL);
   gst_object_unref (instance);
   if (have_instance) {
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
     tcase_add_test (tc_basic, test_encoder_h265_i);
     tcase_add_test (tc_basic, test_encoder_h265_i_p);
     tcase_add_test (tc_basic, test_encoder_h265_i_p_b);
-#endif
   }
 
   return s;

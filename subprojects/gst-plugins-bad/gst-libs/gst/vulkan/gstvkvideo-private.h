@@ -61,21 +61,14 @@ typedef enum {
   V(CmdBeginVideoCoding)                                                       \
   V(CmdControlVideoCoding)                                                     \
   V(CmdEndVideoCoding)                                                         \
-  V(CmdDecodeVideo)
-
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
-#define GST_VULKAN_VIDEO_ENCODING_FN_LIST(V) \
-  V(CmdEncodeVideo)                          \
+  V(CmdDecodeVideo)                                                            \
+  V(CmdEncodeVideo)                                                            \
   V(GetEncodedVideoSessionParameters)
-#endif
 
 struct _GstVulkanVideoFunctions
 {
 #define DEFINE_FUNCTION(name) G_PASTE(G_PASTE(PFN_vk, name), KHR) name;
     GST_VULKAN_VIDEO_FN_LIST (DEFINE_FUNCTION)
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
-    GST_VULKAN_VIDEO_ENCODING_FN_LIST (DEFINE_FUNCTION)
-#endif
 #undef DEFINE_FUNCTION
 };
 

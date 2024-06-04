@@ -39,19 +39,15 @@ struct _GstVulkanVideoProfile
   VkVideoProfileInfoKHR profile;
   union {
     VkVideoDecodeUsageInfoKHR decode;
- #if GST_VULKAN_HAVE_VIDEO_ENCODERS
     VkVideoEncodeUsageInfoKHR encode;
-#endif
   } usage;
 
   union {
     VkBaseInStructure base;
     VkVideoDecodeH264ProfileInfoKHR h264dec;
     VkVideoDecodeH265ProfileInfoKHR h265dec;
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
     VkVideoEncodeH264ProfileInfoKHR h264enc;
     VkVideoEncodeH265ProfileInfoKHR h265enc;
-#endif
   } codec;
 #endif
   gpointer _reserved[GST_PADDING];
@@ -72,10 +68,8 @@ struct _GstVulkanVideoCapabilities
     VkBaseInStructure base;
     VkVideoDecodeH264CapabilitiesKHR h264dec;
     VkVideoDecodeH265CapabilitiesKHR h265dec;
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
     VkVideoEncodeH264CapabilitiesKHR h264enc;
     VkVideoEncodeH265CapabilitiesKHR h265enc;
-#endif
   } codec;
 #endif
   gpointer _reserved[GST_PADDING];

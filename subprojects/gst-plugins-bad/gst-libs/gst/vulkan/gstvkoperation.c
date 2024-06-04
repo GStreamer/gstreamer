@@ -1249,12 +1249,10 @@ gst_vulkan_operation_enable_query (GstVulkanOperation * self,
       if (priv->has_video)
         stride = sizeof (guint32);
       break;
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
     case VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR:
       if (priv->has_video)
         stride = sizeof (GstVulkanEncodeQueryResult);
       break;
-#endif
 #endif
 
     default:
@@ -1299,10 +1297,7 @@ gst_vulkan_operation_get_query (GstVulkanOperation * self, gpointer * result,
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   if (priv->has_video
       && (priv->query_type == VK_QUERY_TYPE_RESULT_STATUS_ONLY_KHR
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
-          || priv->query_type == VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR
-#endif
-      )) {
+          || priv->query_type == VK_QUERY_TYPE_VIDEO_ENCODE_FEEDBACK_KHR)) {
     flags |= VK_QUERY_RESULT_WITH_STATUS_BIT_KHR;
   }
 #endif

@@ -214,7 +214,6 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
         priv->n_profiles++;
     }
     gst_clear_caps (&decode_caps);
-#if GST_VULKAN_HAVE_VIDEO_ENCODERS
     if (encode_caps && ((priv->usage
                 & (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
                     | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR)) != 0)) {
@@ -224,7 +223,6 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
         priv->n_profiles++;
     }
     gst_clear_caps (&encode_caps);
-#endif
 
     if (priv->n_profiles != n)
       goto missing_profile;
