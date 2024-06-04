@@ -570,9 +570,13 @@ gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
     }
 
     {
-      std::lock_guard < std::mutex > lk (priv->lock);
-      gc_list = priv->gc_list;
-      priv->gc_list = { };
+      if (priv->gc_thread != g_thread_self ()) {
+        std::lock_guard < std::mutex > lk (priv->lock);
+        gc_list = priv->gc_list;
+        priv->gc_list = { };
+      } else {
+        priv->gc_list = { };
+      }
     }
   }
 
