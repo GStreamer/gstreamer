@@ -429,6 +429,43 @@ typedef enum
   GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD = 0xff
 } GstMpegtsMetadataFormat;
 
+/**
+ * GstMepgtsMetadataApplicationFormat:
+ *
+ * metadata_application_format valid values. See ISO/IEC 13818-1:2023(E) Table 2-84.
+ *
+ * Since: 1.26
+ */
+typedef enum
+{
+  /**
+   * GST_METADATA_APPLICATION_FORMAT_ISAN:
+   *
+   * ISO 15706-1 (ISAN) encoded in its binary form
+   *
+   * Since: 1.26
+   */
+  GST_MPEGTS_METADATA_APPLICATION_FORMAT_ISAN = 0x0010,
+
+  /**
+   * GST_METADATA_APPLICATION_FORMAT_VSAN:
+   *
+   * ISO 15706-2 (V-ISAN) encoded in its binary form
+   *
+   * Since: 1.26
+   */
+  GST_MPEGTS_METADATA_APPLICATION_FORMAT_VSAN = 0x0011,
+
+  /**
+   * GST_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD:
+   *
+   * Defined by the metadata_application_format_identifier field
+   *
+   * Since: 1.26
+   */
+  GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD = 0xffff,
+} GstMpegtsMetadataApplicationFormat;
+
 /* MPEG-TS Metadata Descriptor (0x26) */
 typedef struct _GstMpegtsMetadataDescriptor GstMpegtsMetadataDescriptor;
 
@@ -563,6 +600,46 @@ GST_MPEGTS_API
 GstMpegtsPESMetadataMeta *
 gst_buffer_add_mpegts_pes_metadata_meta(GstBuffer *buffer);
 
+/* MPEG-TS Metadata Descriptor (0x25) */
+typedef struct _GstMpegtsMetadataPointerDescriptor
+    GstMpegtsMetadataPointerDescriptor;
+
+/**
+ * GstMpegtsMetadataPointerDescriptor:
+ * @metadata_application_format: specifies the application responsible for defining usage, syntax and semantics
+ * @metadata_format: indicates the format and coding of the metadata
+ * @metadata_format_identifier: format identifier (equivalent to registration descriptor), for example 0x4B4C4641 ('KLVA') to indicate SMPTE 336 KLV, or 0x49443320 ('ID3 ').
+ * @metadata_service_id:  metadata service to which this metadata descriptor applies, typically 0x00
+ * @program_number: Indicates the program in which the metadata is carried.
+ *
+ * This structure is not complete. The following fields are missing in comparison to the standard (ISO/IEC 13818-1:2023 Section 2.6.58):
+ * * metadata_locator_record_flag: hardcoded to 0. Indicating no metadata_locator_record present in the descriptor.
+ * * MPEG_carriage_flags: hardcoded to 0b00, indicating the metadata is carried in the same transport steam.
+ * * metadata_locator_record_length.
+ * * transport_stream_location.
+ * * transport_stream_id.
+ *
+ * See also: gst_mpegts_descriptor_from_metadata_pointer
+ *
+ * Since: 1.26
+ */
+struct _GstMpegtsMetadataPointerDescriptor
+{
+  GstMpegtsMetadataApplicationFormat metadata_application_format;
+  GstMpegtsMetadataFormat metadata_format;
+  guint32 metadata_format_identifier;
+  guint8 metadata_service_id;
+  guint16 program_number;
+};
+
+#define GST_TYPE_MPEGTS_METADATA_POINTER_DESCRIPTOR \
+  (gst_mpegts_metadata_pointer_descriptor_get_type())
+
+GST_MPEGTS_API
+GType gst_mpegts_metadata_pointer_descriptor_get_type(void);
+
+GST_MPEGTS_API
+GstMpegtsDescriptor *gst_mpegts_descriptor_from_metadata_pointer(const GstMpegtsMetadataPointerDescriptor *metadata_pointer_descriptor);
 
 G_END_DECLS
 

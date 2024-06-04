@@ -1477,3 +1477,67 @@ gst_buffer_add_mpegts_pes_metadata_meta (GstBuffer * buffer)
       GST_MPEGTS_PES_METADATA_META_INFO, NULL);
   return meta;
 }
+
+static GstMpegtsMetadataPointerDescriptor *
+_gst_mpegts_metadata_pointer_descriptor_copy (GstMpegtsMetadataPointerDescriptor
+    * source)
+{
+  GstMpegtsMetadataPointerDescriptor *copy =
+      g_memdup2 (source, sizeof (GstMpegtsMetadataPointerDescriptor));
+  return copy;
+}
+
+static void
+_gst_mpegts_metadata_pointer_descriptor_free (GstMpegtsMetadataPointerDescriptor
+    * desc)
+{
+  g_free (desc);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegtsMetadataPointerDescriptor,
+    gst_mpegts_metadata_pointer_descriptor,
+    (GBoxedCopyFunc) _gst_mpegts_metadata_pointer_descriptor_copy,
+    (GFreeFunc) _gst_mpegts_metadata_pointer_descriptor_free);
+
+GstMpegtsDescriptor *
+gst_mpegts_descriptor_from_metadata_pointer (const
+    GstMpegtsMetadataPointerDescriptor * metadata_pointer_descriptor)
+{
+  g_return_val_if_fail (metadata_pointer_descriptor != NULL, NULL);
+
+  int wr_size = 0;
+  guint8 *add_info = NULL;
+  GstByteWriter writer;
+
+  // metadata_pointer_descriptor
+  gst_byte_writer_init_with_size (&writer, 32, FALSE);
+
+  gst_byte_writer_put_uint16_be (&writer,
+      metadata_pointer_descriptor->metadata_application_format);
+  if (metadata_pointer_descriptor->metadata_application_format ==
+      GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD) {
+    gst_byte_writer_put_uint32_be (&writer, metadata_pointer_descriptor->metadata_format_identifier);   // metadata_application_format_identifier
+  }
+
+  gst_byte_writer_put_uint8 (&writer,
+      metadata_pointer_descriptor->metadata_format);
+  if (metadata_pointer_descriptor->metadata_format ==
+      GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD) {
+    gst_byte_writer_put_uint32_be (&writer, metadata_pointer_descriptor->metadata_format_identifier);   // metadata_format_identifier
+  }
+
+  gst_byte_writer_put_uint8 (&writer,
+      metadata_pointer_descriptor->metadata_service_id);
+  gst_byte_writer_put_uint8 (&writer, 0x1F);    // metadata_locator_record_flag = 0, MPEG_carriage_flag = 00, reserved = 11111
+  gst_byte_writer_put_uint16_be (&writer, metadata_pointer_descriptor->program_number); // program_number
+
+  wr_size = gst_byte_writer_get_size (&writer);
+  add_info = gst_byte_writer_reset_and_get_data (&writer);
+
+  GstMpegtsDescriptor *descriptor =
+      _new_descriptor (GST_MTS_DESC_METADATA_POINTER, wr_size);
+  memcpy (descriptor->data + 2, add_info, wr_size);
+  g_free (add_info);
+
+  return descriptor;
+}
