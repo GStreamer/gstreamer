@@ -516,6 +516,7 @@ video_format_to_rhi_format (GstVideoFormat format, guint plane)
   switch (format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGB:
       return QRhiTexture::RGBA8;
     case GST_VIDEO_FORMAT_YV12:
       return QRhiTexture::R8;
@@ -532,6 +533,7 @@ video_format_to_texel_size (GstVideoFormat format, guint plane)
   switch (format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_RGB:
       return 4;
     case GST_VIDEO_FORMAT_YV12:
       return 1;
