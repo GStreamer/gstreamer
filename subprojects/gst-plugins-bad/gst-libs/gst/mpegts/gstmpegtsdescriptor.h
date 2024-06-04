@@ -489,7 +489,7 @@ metadata_service_id to identify the metadata service to which the metadata descr
  */
 struct _GstMpegtsMetadataDescriptor
 {
-  guint16 metadata_application_format;
+  GstMpegtsMetadataApplicationFormat metadata_application_format;
   GstMpegtsMetadataFormat metadata_format;
   guint32 metadata_format_identifier;
   guint8 metadata_service_id;

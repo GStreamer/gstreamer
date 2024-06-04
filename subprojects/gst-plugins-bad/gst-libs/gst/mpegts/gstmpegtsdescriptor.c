@@ -1283,7 +1283,8 @@ gst_mpegts_descriptor_from_metadata (const GstMpegtsMetadataDescriptor *
 
   gst_byte_writer_put_uint16_be (&writer,
       metadata_descriptor->metadata_application_format);
-  if (metadata_descriptor->metadata_application_format == 0xFFFF) {
+  if (metadata_descriptor->metadata_application_format ==
+      GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD) {
     gst_byte_writer_put_uint32_be (&writer, metadata_descriptor->metadata_format_identifier);   // metadata_application_format_identifier
   }
 
@@ -1339,7 +1340,8 @@ gst_mpegts_descriptor_parse_metadata (const GstMpegtsDescriptor * descriptor,
 
   res->metadata_application_format = GST_READ_UINT16_BE (data);
   data += 2;
-  if (res->metadata_application_format == 0xFFFF) {
+  if (res->metadata_application_format ==
+      GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD) {
     // skip over metadata_application_format_identifier if it is provided
     data += 4;
   }
