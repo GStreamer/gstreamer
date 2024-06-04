@@ -40,8 +40,6 @@
 #include <gst/mpegts/gst-scte-section.h>
 #include <gst/mpegts/gstmpegts-enumtypes.h>
 #include <gst/mpegts/gst-hdmv-section.h>
-#include <gst/mpegts/gst-mpegtspesmetadatameta.h>
-#include <gst/mpegts/gst-metadata-descriptor.h>
 
 G_BEGIN_DECLS
 
