@@ -69,6 +69,7 @@
 
 #include <gst/mpegts/mpegts.h>
 #include <gst/base/gstbytewriter.h>
+#include <gst/mpegtsdemux/gstmpegdesc.h>
 
 #include "tsmuxcommon.h"
 #include "tsmuxstream.h"
@@ -216,6 +217,14 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       stream->is_meta = TRUE;
       stream->pi.flags |=
           TSMUX_PACKET_FLAG_PES_FULL_HEADER |
+          TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+      break;
+    case TSMUX_ST_PS_ID3:
+      stream->id = 0xBD;        // private stream
+      stream->stream_type = TSMUX_ST_PES_METADATA;
+      stream->is_meta = TRUE;
+      stream->is_id3_metadata = TRUE;
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER |
           TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
       break;
     case TSMUX_ST_PS_OPUS:
@@ -493,6 +502,12 @@ tsmux_stream_initialize_pes_packet (TsMuxStream * stream)
     /* Unbounded for video streams if pes packet length is over 16 bit */
     if ((stream->cur_pes_payload_size + hdr_len - 6) > G_MAXUINT16)
       stream->cur_pes_payload_size = 0;
+  }
+  // stream_type specific flags
+  switch (stream->stream_type) {
+    case TSMUX_ST_PES_METADATA:
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_DATA_ALIGNMENT;
+      break;
   }
 
   return TRUE;
@@ -909,6 +924,35 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
           gst_mpegts_descriptor_from_custom (GST_MTS_DESC_DVB_TELETEXT, 0, 1);
 
       g_ptr_array_add (pmt_stream->descriptors, descriptor);
+      break;
+
+    case TSMUX_ST_PES_METADATA:
+
+      if (stream->is_id3_metadata) {
+        // metadata_descriptor
+        GstMpegtsMetadataDescriptor metadata_descriptor;
+
+        metadata_descriptor.metadata_application_format =
+            GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD;
+        metadata_descriptor.metadata_format =
+            GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD;
+        metadata_descriptor.metadata_format_identifier = DRF_ID_ID3;
+        metadata_descriptor.metadata_service_id = 0;
+        metadata_descriptor.decoder_config_flags = 0x00;
+        metadata_descriptor.dsm_cc_flag = FALSE;
+
+        descriptor = gst_mpegts_descriptor_from_metadata (&metadata_descriptor);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+
+        // registration_descriptor
+        guint32 format_identifier = 0;
+        GST_WRITE_UINT32_BE (&format_identifier,
+            metadata_descriptor.metadata_format_identifier);
+
+        descriptor = gst_mpegts_descriptor_from_registration ((const char *)
+            &format_identifier, NULL, 0);
+        g_ptr_array_add (pmt_stream->descriptors, descriptor);
+      }
       break;
     case TSMUX_ST_PS_DVB_SUBPICTURE:
       /* fallthrough ...

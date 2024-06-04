@@ -67,7 +67,9 @@
 
 #include <string.h>
 
+#include <gst/base/gstbytewriter.h>
 #include <gst/mpegts/mpegts.h>
+#include <gst/mpegtsdemux/gstmpegdesc.h>
 
 #include "tsmux.h"
 #include "tsmuxstream.h"
@@ -1851,6 +1853,27 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
     if (program->scte35_pid != 0) {
       descriptor = gst_mpegts_descriptor_from_registration ("CUEI", NULL, 0);
       g_ptr_array_add (pmt->descriptors, descriptor);
+    }
+
+    /* Scan the streams looking for metadata streams */
+    for (i = 0; i < program->streams->len; i++) {
+      TsMuxStream *stream = g_ptr_array_index (program->streams, i);
+
+      if (stream->is_id3_metadata == TRUE) {
+        GstMpegtsMetadataPointerDescriptor metadata_pointer_descriptor;
+        metadata_pointer_descriptor.metadata_application_format =
+            GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD;
+        metadata_pointer_descriptor.metadata_format =
+            GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD;
+        metadata_pointer_descriptor.metadata_format_identifier = DRF_ID_ID3;
+        metadata_pointer_descriptor.metadata_service_id = 0;
+        metadata_pointer_descriptor.program_number = program->pgm_number;
+
+        descriptor =
+            gst_mpegts_descriptor_from_metadata_pointer
+            (&metadata_pointer_descriptor);
+        g_ptr_array_add (pmt->descriptors, descriptor);
+      }
     }
 
     /* Write out the entries */
