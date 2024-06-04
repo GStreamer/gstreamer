@@ -26,7 +26,17 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/vulkan/vulkan.h>
 
 void vulkan_element_init (GstPlugin * plugin);
+void gst_vulkan_create_feature_name (GstVulkanDevice * device,
+                                     const gchar * type_name_default,
+                                     const gchar * type_name_templ,
+                                     gchar ** type_name,
+                                     const gchar * feature_name_default,
+                                     const gchar * feature_name_templ,
+                                     gchar ** feature_name,
+                                     gchar ** desc,
+                                     guint * rank);
 
 #endif /* __GST_VULKAN_ELEMENTS_H__ */

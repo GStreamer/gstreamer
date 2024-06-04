@@ -21,11 +21,11 @@
 
 #include <gst/codecs/gsth264decoder.h>
 
+#include <gst/vulkan/vulkan.h>
+
 G_BEGIN_DECLS
 
-#define GST_TYPE_VULKAN_H264_DECODER (gst_vulkan_h264_decoder_get_type())
-G_DECLARE_FINAL_TYPE (GstVulkanH264Decoder, gst_vulkan_h264_decoder, GST, VULKAN_H264_DECODER, GstH264Decoder)
-
-GST_ELEMENT_REGISTER_DECLARE (vulkanh264dec);
+gboolean
+gst_vulkan_h264_decoder_register (GstPlugin * plugin, GstVulkanDevice *device, guint rank);
 
 G_END_DECLS

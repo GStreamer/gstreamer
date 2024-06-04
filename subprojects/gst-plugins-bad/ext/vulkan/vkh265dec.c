@@ -29,6 +29,23 @@
 
 #include "gstvulkanelements.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_vulkan_h265_decoder_debug);
+#define GST_CAT_DEFAULT gst_vulkan_h265_decoder_debug
+
+#define GST_VULKAN_H265_DECODER(obj)            ((GstVulkanH265Decoder *) obj)
+#define GST_VULKAN_H265_DECODER_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVulkanH265DecoderClass))
+#define GST_VULKAN_H265_DECODER_CLASS(klass)    ((GstVulkanH265DecoderClass *) klass)
+
+static GstElementClass *parent_class = NULL;
+
+struct CData
+{
+  gchar *description;
+  gint device_index;
+};
+
+typedef struct _GstVulkanH265Decoder GstVulkanH265Decoder;
+typedef struct _GstVulkanH265DecoderClass GstVulkanH265DecoderClass;
 typedef struct _GstVulkanH265Decoder GstVulkanH265Decoder;
 typedef struct _GstVulkanH265Picture GstVulkanH265Picture;
 typedef struct _VPS VPS;
@@ -117,6 +134,14 @@ struct _GstVulkanH265Decoder
   PPS std_pps;
 };
 
+
+struct _GstVulkanH265DecoderClass
+{
+  GstH265DecoderClass parent;
+
+  gint device_index;
+};
+
 static GstStaticPadTemplate gst_vulkan_h265dec_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h265, "
@@ -129,16 +154,16 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_MEMORY_VULKAN_IMAGE, "NV12")));
 
-GST_DEBUG_CATEGORY (gst_debug_vulkan_h265_decoder);
-#define GST_CAT_DEFAULT gst_debug_vulkan_h265_decoder
-
 #define gst_vulkan_h265_decoder_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanH265Decoder, gst_vulkan_h265_decoder,
-    GST_TYPE_H265_DECODER,
-    GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_h265_decoder,
-        "vulkanh265dec", 0, "Vulkan H.265 Decoder"));
-GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkanh265dec, "vulkanh265dec",
-    GST_RANK_NONE, GST_TYPE_VULKAN_H265_DECODER, vulkan_element_init (plugin));
+
+static gpointer
+_register_debug_category (gpointer data)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_vulkan_h265_decoder_debug,
+      "gst_vulkan_h265_decoder_debug", 0, "Vulkan H.265 decoder");
+
+  return NULL;
+}
 
 static void
 gst_vulkan_h265_decoder_set_context (GstElement * element, GstContext * context)
@@ -227,6 +252,7 @@ static gboolean
 gst_vulkan_h265_decoder_open (GstVideoDecoder * decoder)
 {
   GstVulkanH265Decoder *self = GST_VULKAN_H265_DECODER (decoder);
+  GstVulkanH265DecoderClass *klass = GST_VULKAN_H265_DECODER_GET_CLASS (self);
 
   if (!gst_vulkan_ensure_element_data (GST_ELEMENT (decoder), NULL,
           &self->instance)) {
@@ -236,7 +262,7 @@ gst_vulkan_h265_decoder_open (GstVideoDecoder * decoder)
   }
 
   if (!gst_vulkan_ensure_element_device (GST_ELEMENT (decoder), self->instance,
-          &self->device, 0)) {
+          &self->device, klass->device_index)) {
     return FALSE;
   }
 
@@ -1634,21 +1660,38 @@ gst_vulkan_h265_decoder_output_picture (GstH265Decoder * decoder,
 }
 
 static void
-gst_vulkan_h265_decoder_init (GstVulkanH265Decoder * self)
+gst_vulkan_h265_decoder_init (GTypeInstance * instance, gpointer g_class)
 {
   gst_vulkan_buffer_memory_init_once ();
 }
 
 static void
-gst_vulkan_h265_decoder_class_init (GstVulkanH265DecoderClass * klass)
+gst_vulkan_h265_decoder_class_init (gpointer g_klass, gpointer class_data)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
-  GstH265DecoderClass *h265decoder_class = GST_H265_DECODER_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_klass);
+  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (g_klass);
+  GstH265DecoderClass *h265decoder_class = GST_H265_DECODER_CLASS (g_klass);
+  GstVulkanH265DecoderClass *vk_h265_class =
+      GST_VULKAN_H265_DECODER_CLASS (g_klass);
+  struct CData *cdata = class_data;
+  gchar *long_name;
+  const gchar *name, *desc;
 
-  gst_element_class_set_metadata (element_class, "Vulkan H.265 decoder",
-      "Codec/Decoder/Video/Hardware", "A H.265 video decoder based on Vulkan",
+  name = "Vulkan H.265 decoder";
+  desc = "A H.265 video decoder based on Vulkan";
+
+  if (cdata->description)
+    long_name = g_strdup_printf ("%s on %s", name, cdata->description);
+  else
+    long_name = g_strdup (name);
+
+  vk_h265_class->device_index = cdata->device_index;
+
+  gst_element_class_set_metadata (element_class, long_name,
+      "Codec/Decoder/Video/Hardware", desc,
       "Víctor Jáquez <vjaquez@igalia.com>");
+
+  parent_class = g_type_class_peek_parent (g_klass);
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_vulkan_h265dec_sink_template);
@@ -1683,4 +1726,44 @@ gst_vulkan_h265_decoder_class_init (GstVulkanH265DecoderClass * klass)
       GST_DEBUG_FUNCPTR (gst_vulkan_h265_decoder_end_picture);
   h265decoder_class->output_picture =
       GST_DEBUG_FUNCPTR (gst_vulkan_h265_decoder_output_picture);
+}
+
+gboolean
+gst_vulkan_h265_decoder_register (GstPlugin * plugin, GstVulkanDevice * device,
+    guint rank)
+{
+  static GOnce debug_once = G_ONCE_INIT;
+  GType type;
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstVulkanH265DecoderClass),
+    .class_init = gst_vulkan_h265_decoder_class_init,
+    .instance_size = sizeof (GstVulkanH265Decoder),
+    .instance_init = gst_vulkan_h265_decoder_init,
+  };
+  struct CData *cdata;
+  gboolean ret;
+  gchar *type_name, *feature_name;
+
+  cdata = g_new (struct CData, 1);
+  cdata->description = NULL;
+  cdata->device_index = device->physical_device->device_index;
+
+  g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
+
+  gst_vulkan_create_feature_name (device, "GstVulkanH265Decoder",
+      "GstVulkanH265Device%dDecoder", &type_name, "vulkanh265dec",
+      "vulkanh265device%ddec", &feature_name, &cdata->description, &rank);
+
+  type_info.class_data = cdata;
+
+  g_once (&debug_once, _register_debug_category, NULL);
+  type = g_type_register_static (GST_TYPE_H265_DECODER,
+      type_name, &type_info, 0);
+
+  ret = gst_element_register (plugin, feature_name, rank, type);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
 }
