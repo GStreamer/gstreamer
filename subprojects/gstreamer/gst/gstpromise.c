@@ -174,10 +174,9 @@ gst_promise_reply (GstPromise * promise, GstStructure * s)
   g_mutex_lock (GST_PROMISE_LOCK (promise));
   if (GST_PROMISE_RESULT (promise) != GST_PROMISE_RESULT_PENDING &&
       GST_PROMISE_RESULT (promise) != GST_PROMISE_RESULT_INTERRUPTED) {
-    GstPromiseResult result = GST_PROMISE_RESULT (promise);
+    g_warning ("Promise result isn't PENDING or INTERRUPTED");
     g_mutex_unlock (GST_PROMISE_LOCK (promise));
-    g_return_if_fail (result == GST_PROMISE_RESULT_PENDING ||
-        result == GST_PROMISE_RESULT_INTERRUPTED);
+    return;
   }
 
   /* XXX: is this necessary and valid? */
@@ -232,9 +231,9 @@ gst_promise_get_reply (GstPromise * promise)
 
   g_mutex_lock (GST_PROMISE_LOCK (promise));
   if (GST_PROMISE_RESULT (promise) != GST_PROMISE_RESULT_REPLIED) {
-    GstPromiseResult result = GST_PROMISE_RESULT (promise);
+    g_warning ("Promise result isn't REPLIED");
     g_mutex_unlock (GST_PROMISE_LOCK (promise));
-    g_return_val_if_fail (result == GST_PROMISE_RESULT_REPLIED, NULL);
+    return NULL;
   }
 
   g_mutex_unlock (GST_PROMISE_LOCK (promise));
@@ -263,10 +262,9 @@ gst_promise_interrupt (GstPromise * promise)
   g_mutex_lock (GST_PROMISE_LOCK (promise));
   if (GST_PROMISE_RESULT (promise) != GST_PROMISE_RESULT_PENDING &&
       GST_PROMISE_RESULT (promise) != GST_PROMISE_RESULT_REPLIED) {
-    GstPromiseResult result = GST_PROMISE_RESULT (promise);
+    g_warning ("Promise result isn't PENDING or REPLIED");
     g_mutex_unlock (GST_PROMISE_LOCK (promise));
-    g_return_if_fail (result == GST_PROMISE_RESULT_PENDING ||
-        result == GST_PROMISE_RESULT_REPLIED);
+    return;
   }
   /* only interrupt if we are currently in pending */
   if (GST_PROMISE_RESULT (promise) == GST_PROMISE_RESULT_PENDING) {

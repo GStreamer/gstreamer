@@ -315,7 +315,7 @@ GST_START_TEST (test_reply_reply)
   gst_promise_reply (r, s);
   fail_unless (data.result == GST_PROMISE_RESULT_REPLIED);
   fail_unless (data.change_count == 1);
-  ASSERT_CRITICAL (gst_promise_reply (r, NULL));
+  ASSERT_WARNING (gst_promise_reply (r, NULL));
   fail_unless (gst_promise_wait (r) == GST_PROMISE_RESULT_REPLIED);
   ret = gst_promise_get_reply (r);
   fail_unless (gst_structure_is_equal (ret, s));
@@ -372,7 +372,7 @@ GST_START_TEST (test_interrupt_interrupt)
   gst_promise_interrupt (r);
   fail_unless (data.result == GST_PROMISE_RESULT_INTERRUPTED);
   fail_unless (data.change_count == 1);
-  ASSERT_CRITICAL (gst_promise_interrupt (r));
+  ASSERT_WARNING (gst_promise_interrupt (r));
   fail_unless (data.result == GST_PROMISE_RESULT_INTERRUPTED);
   fail_unless (data.change_count == 1);
 
@@ -408,7 +408,7 @@ GST_START_TEST (test_expire_interrupt)
   gst_promise_expire (r);
   fail_unless (data.result == GST_PROMISE_RESULT_EXPIRED);
   fail_unless (data.change_count == 1);
-  ASSERT_CRITICAL (gst_promise_interrupt (r));
+  ASSERT_WARNING (gst_promise_interrupt (r));
   fail_unless (data.result == GST_PROMISE_RESULT_EXPIRED);
   fail_unless (data.change_count == 1);
 
@@ -426,7 +426,7 @@ GST_START_TEST (test_expire_reply)
   gst_promise_expire (r);
   fail_unless (data.result == GST_PROMISE_RESULT_EXPIRED);
   fail_unless (data.change_count == 1);
-  ASSERT_CRITICAL (gst_promise_reply (r, NULL));
+  ASSERT_WARNING (gst_promise_reply (r, NULL));
   fail_unless (data.result == GST_PROMISE_RESULT_EXPIRED);
   fail_unless (data.change_count == 1);
 
