@@ -11,7 +11,7 @@ clap = { version = "4", features = ["derive"] }
 anyhow = "1"
 url = "2"
 rand = "0.8"
-async-tungstenite = { version = "0.25", features = ["gio-runtime"] }
+async-tungstenite = { version = "0.26", features = ["gio-runtime"] }
 gst = { package = "gstreamer", version = "0.22" }
 gst-webrtc = { package = "gstreamer-webrtc", version = "0.22" }
 gst-sdp = { package = "gstreamer-sdp", version = "0.22" }
