@@ -66,3 +66,15 @@ executable('cudamemory-sync', 'cudamemory-sync.c',
   dependencies: [gst_dep, gstvideo_dep, gstcuda_dep, gl_header_dep] + cuda_deps,
   c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
   install: false)
+
+executable('cuda-template',
+  [
+    '../key-handler.c',
+    'cuda-template.c',
+    'template-plugin/cuda-transform-ip-template.c',
+    'template-plugin/plugin.c',
+  ],
+  include_directories : [configinc] + compat_includes + cuda_inc_dir,
+  dependencies: [gst_dep, gstvideo_dep, gstcuda_dep, gl_header_dep] + cuda_deps,
+  c_args : gst_plugins_bad_args + ['-DGST_USE_UNSTABLE_API'],
+  install: false)
