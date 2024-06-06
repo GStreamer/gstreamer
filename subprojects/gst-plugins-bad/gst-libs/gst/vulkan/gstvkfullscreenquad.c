@@ -378,6 +378,12 @@ create_pipeline (GstVulkanFullScreenQuad * self, GError ** error)
     return FALSE;
   }
 
+  if (GST_VIDEO_INFO_FORMAT (&self->out_info) == GST_VIDEO_FORMAT_UNKNOWN) {
+    g_set_error_literal (error, GST_VULKAN_ERROR,
+        VK_ERROR_INITIALIZATION_FAILED, "Output video info is unset");
+    return FALSE;
+  }
+
   if (!self->pipeline_layout)
     if (!create_pipeline_layout (self, error))
       return FALSE;
@@ -1471,6 +1477,12 @@ gst_vulkan_full_screen_quad_fill_command_buffer (GstVulkanFullScreenQuad * self,
   g_return_val_if_fail (GST_IS_VULKAN_FULL_SCREEN_QUAD (self), FALSE);
   g_return_val_if_fail (cmd != NULL, FALSE);
   g_return_val_if_fail (fence != NULL, FALSE);
+
+  if (GST_VIDEO_INFO_FORMAT (&self->out_info) == GST_VIDEO_FORMAT_UNKNOWN) {
+    g_set_error_literal (error, GST_VULKAN_ERROR,
+        VK_ERROR_INITIALIZATION_FAILED, "Output video info is unset");
+    return FALSE;
+  }
 
   priv = GET_PRIV (self);
 
