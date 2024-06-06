@@ -100,7 +100,6 @@ vulkan_conf_options = [
     'GST_VULKAN_HAVE_WINDOW_WIN32',
     'GST_VULKAN_HAVE_WINDOW_ANDROID',
     'GST_VULKAN_HAVE_VIDEO_EXTENSIONS',
-    'GST_VULKAN_HAVE_VIDEO_ENCODERS',
 ]
 
 foreach option : vulkan_conf_options
