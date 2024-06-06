@@ -915,7 +915,7 @@ gst_vulkan_full_screen_quad_set_info (GstVulkanFullScreenQuad * self,
 /**
  * gst_vulkan_full_screen_quad_set_input_buffer:
  * @self: the #GstVulkanFullScreenQuad
- * @buffer: the input #GstBuffer to set
+ * @buffer: (nullable): the input #GstBuffer to set
  * @error: #GError to fill on failure
  *
  * Returns: whether the input buffer could be changed
@@ -940,7 +940,7 @@ gst_vulkan_full_screen_quad_set_input_buffer (GstVulkanFullScreenQuad * self,
 /**
  * gst_vulkan_full_screen_quad_set_output_buffer:
  * @self: the #GstVulkanFullScreenQuad
- * @buffer: the output #GstBuffer to set
+ * @buffer: (nullable): the output #GstBuffer to set
  * @error: #GError to fill on failure
  *
  * Returns: whether the input buffer could be changed

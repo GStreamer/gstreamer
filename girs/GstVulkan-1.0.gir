@@ -2798,7 +2798,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the #GstVulkanFullScreenQuad</doc>
             <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
           </instance-parameter>
-          <parameter name="buffer" transfer-ownership="none">
+          <parameter name="buffer" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the input #GstBuffer to set</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
@@ -2815,7 +2815,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the #GstVulkanFullScreenQuad</doc>
             <type name="VulkanFullScreenQuad" c:type="GstVulkanFullScreenQuad*"/>
           </instance-parameter>
-          <parameter name="buffer" transfer-ownership="none">
+          <parameter name="buffer" transfer-ownership="none" nullable="1" allow-none="1">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkfullscreenquad.c">the output #GstBuffer to set</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
