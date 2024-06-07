@@ -146,6 +146,12 @@ struct _GstAdaptiveDemuxPrivate
   guint32 current_selection_seqnum;
   /* Current output position (in running time) */
   GstClockTime global_output_position;
+  /* NOTE: The two following variables are to handle lost-sync internal flushing
+   * and transposing the base time */
+  /* Initial output position (in running time) */
+  GstClockTime initial_output_position;
+  /* Offset to apply to outgoing segments (in running time) */
+  GstClockTime base_offset;
   /* End of fields protected by output_lock */
 
   gint n_audio_streams, n_video_streams, n_subtitle_streams;

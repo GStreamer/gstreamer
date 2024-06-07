@@ -269,6 +269,24 @@ handle_event:
           /* Replace the stored sticky event with this one */
           is_pending_sticky = FALSE;
         }
+
+        if (demux->priv->base_offset != 0) {
+          GstSegment ev_segment;
+          GstEvent *new_event;
+          GST_DEBUG_ID (track->id,
+              "Offsetting segment base by %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (demux->priv->base_offset));
+          gst_event_copy_segment (event, &ev_segment);
+          ev_segment.base += demux->priv->base_offset;
+          new_event = gst_event_new_segment (&ev_segment);
+          gst_event_set_seqnum (new_event, gst_event_get_seqnum (event));
+          gst_mini_object_unref (res);
+          event = new_event;
+          res = (GstMiniObject *) event;
+          /* Replace the stored sticky event with this one */
+          is_pending_sticky = FALSE;
+        }
+
         break;
       default:
         break;

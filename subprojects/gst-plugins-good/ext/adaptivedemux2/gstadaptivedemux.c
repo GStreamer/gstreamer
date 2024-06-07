@@ -213,7 +213,7 @@ static gboolean gst_adaptive_demux_src_query (GstPad * pad, GstObject * parent,
 static gboolean gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
 static gboolean gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
-    GstEvent * event);
+    GstEvent * event, gboolean lost_sync);
 static gboolean gst_adaptive_demux_handle_select_streams_event (GstAdaptiveDemux
     * demux, GstEvent * event);
 
@@ -1406,6 +1406,8 @@ gst_adaptive_demux_reset (GstAdaptiveDemux * demux)
   demux->priv->segment_seqnum = gst_util_seqnum_next ();
 
   demux->priv->global_output_position = 0;
+  demux->priv->initial_output_position = 0;
+  demux->priv->base_offset = 0;
 
   demux->priv->n_audio_streams = 0;
   demux->priv->n_video_streams = 0;
@@ -1425,7 +1427,7 @@ gst_adaptive_demux_send_event (GstElement * element, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
-      res = gst_adaptive_demux_handle_seek_event (demux, event);
+      res = gst_adaptive_demux_handle_seek_event (demux, event, FALSE);
       break;
     }
     case GST_EVENT_SELECT_STREAMS:
@@ -2008,9 +2010,16 @@ gst_adaptive_demux_setup_streams_for_restart (GstAdaptiveDemux * demux,
                               GST_SEEK_FLAG_SNAP_AFTER | \
                               GST_SEEK_FLAG_SNAP_NEAREST))
 
+/**
+ * gst_adaptive_demux_handle_seek_event:
+ * @demux:
+ * @event: The seek event
+ * @lost_sync: TRUE if this triggered by a "lost sync" and not an external seek
+ *
+ */
 static gboolean
 gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
-    GstEvent * event)
+    GstEvent * event, gboolean lost_sync)
 {
   GstAdaptiveDemuxClass *demux_class = GST_ADAPTIVE_DEMUX_GET_CLASS (demux);
   gdouble rate;
@@ -2183,11 +2192,13 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   /* have a backup in case seek fails */
   gst_segment_copy_into (&demux->segment, &oldsegment);
 
-  GST_DEBUG_OBJECT (demux, "sending flush start");
-  flush_event = gst_event_new_flush_start ();
-  gst_event_set_seqnum (flush_event, seqnum);
+  if (!lost_sync) {
+    GST_DEBUG_OBJECT (demux, "sending flush start");
+    flush_event = gst_event_new_flush_start ();
+    gst_event_set_seqnum (flush_event, seqnum);
 
-  gst_adaptive_demux_push_src_event (demux, flush_event);
+    gst_adaptive_demux_push_src_event (demux, flush_event);
+  }
 
   gst_adaptive_demux_stop_tasks (demux, FALSE);
   gst_adaptive_demux_reset_tracks (demux);
@@ -2307,10 +2318,12 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   /* Resetting flow combiner */
   gst_flow_combiner_reset (demux->priv->flowcombiner);
 
-  GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
-  flush_event = gst_event_new_flush_stop (TRUE);
-  gst_event_set_seqnum (flush_event, seqnum);
-  gst_adaptive_demux_push_src_event (demux, flush_event);
+  if (!lost_sync) {
+    GST_DEBUG_OBJECT (demux, "Sending flush stop on all pad");
+    flush_event = gst_event_new_flush_stop (TRUE);
+    gst_event_set_seqnum (flush_event, seqnum);
+    gst_adaptive_demux_push_src_event (demux, flush_event);
+  }
 
   /* If the seek generated a new period, prepare it */
   if (!demux->input_period->prepared) {
@@ -2325,8 +2338,19 @@ gst_adaptive_demux_handle_seek_event (GstAdaptiveDemux * demux,
   gst_adaptive_demux_setup_streams_for_restart (demux, start_type, stop_type);
   demux->priv->qos_earliest_time = GST_CLOCK_TIME_NONE;
 
-  /* Reset the global output position (running time) for when the output loop restarts */
-  demux->priv->global_output_position = 0;
+  if (!lost_sync) {
+    /* Reset the global output position (running time) for when the output loop restarts */
+    demux->priv->global_output_position = 0;
+    demux->priv->initial_output_position = demux->priv->base_offset = 0;
+  } else {
+    /* When dealing with lost-sync, we don't reset the global output position
+     * (running time), but we do need to take into account how much was played
+     * previously to add it to the outgoing segment base */
+    demux->priv->base_offset =
+        demux->priv->global_output_position -
+        demux->priv->initial_output_position;
+    demux->priv->initial_output_position = demux->priv->global_output_position;
+  }
 
   /* After a flushing seek, any instant-rate override is undone */
   demux->instant_rate_multiplier = 1.0;
@@ -2519,7 +2543,7 @@ gst_adaptive_demux_src_event (GstPad * pad, GstObject * parent,
         gst_event_unref (event);
         return TRUE;
       }
-      return gst_adaptive_demux_handle_seek_event (demux, event);
+      return gst_adaptive_demux_handle_seek_event (demux, event, FALSE);
     }
     case GST_EVENT_LATENCY:{
       /* Upstream and our internal source are irrelevant
@@ -2747,7 +2771,7 @@ gst_adaptive_demux_handle_lost_sync (GstAdaptiveDemux * demux)
       gst_event_new_seek (1.0, GST_FORMAT_TIME,
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, GST_SEEK_TYPE_END, 0,
       GST_SEEK_TYPE_NONE, 0);
-  gst_adaptive_demux_handle_seek_event (demux, seek);
+  gst_adaptive_demux_handle_seek_event (demux, seek, TRUE);
   return FALSE;
 }
 
