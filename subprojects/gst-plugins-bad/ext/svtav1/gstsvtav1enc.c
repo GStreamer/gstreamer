@@ -17,6 +17,8 @@
  * ]|
  * Encodes test input into AV1 compressed data which is then packaged in out.mkv
  * </refsect2>
+ *
+ * Since: 1.24
  */
 
 #include "config.h"
