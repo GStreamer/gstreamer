@@ -159,10 +159,12 @@ struct GstD3D12VideoSinkPrivate
   GstD3D12VideoSinkPrivate ()
   {
     window = gst_d3d12_window_new ();
+    convert_config = gst_structure_new_empty ("convert-config");
   }
 
   ~GstD3D12VideoSinkPrivate ()
   {
+    gst_structure_free (convert_config);
     gst_clear_caps (&caps);
     gst_clear_object (&window);
     if (pool) {
@@ -181,8 +183,10 @@ struct GstD3D12VideoSinkPrivate
   GstCaps *caps = nullptr;
   gboolean update_window = FALSE;
   GstBufferPool *pool = nullptr;
+  GstStructure *convert_config;
 
   gboolean warn_closed_window = FALSE;
+  gboolean window_open_called = FALSE;
 
   std::recursive_mutex lock;
   /* properties */
@@ -545,6 +549,7 @@ gst_d3d12_video_sink_dispose (GObject * object)
   auto self = GST_D3D12_VIDEO_SINK (object);
   auto priv = self->priv;
 
+  gst_d3d12_window_invalidate (priv->window);
   g_signal_handlers_disconnect_by_data (priv->window, self);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -906,6 +911,23 @@ gst_d3d12_video_sink_set_info (GstVideoSink * sink, GstCaps * caps,
   GST_DEBUG_OBJECT (self, "scaling to %dx%d",
       GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self));
 
+  if (priv->pool) {
+    gst_buffer_pool_set_active (priv->pool, FALSE);
+    gst_clear_object (&priv->pool);
+  }
+
+  priv->pool = gst_d3d12_buffer_pool_new (self->device);
+  auto config = gst_buffer_pool_get_config (priv->pool);
+
+  gst_buffer_pool_config_set_params (config, priv->caps, priv->info.size, 0, 0);
+  if (!gst_buffer_pool_set_config (priv->pool, config) ||
+      !gst_buffer_pool_set_active (priv->pool, TRUE)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (nullptr),
+        ("Couldn't setup buffer pool"));
+    gst_clear_object (&priv->pool);
+    return FALSE;
+  }
+
   return TRUE;
 }
 
@@ -975,92 +997,126 @@ gst_d3d12_video_sink_on_fullscreen (GstD3D12Window * window,
     g_object_notify (G_OBJECT (self), "fullscreen");
 }
 
+static gboolean
+gst_d3d12_video_sink_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
+    GstBuffer * uploaded)
+{
+  if ((*meta)->info->api != GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)
+    return TRUE;
+
+  auto cmeta = (GstVideoOverlayCompositionMeta *) (*meta);
+  if (!cmeta->overlay)
+    return TRUE;
+
+  if (gst_video_overlay_composition_n_rectangles (cmeta->overlay) == 0)
+    return TRUE;
+
+  gst_buffer_add_video_overlay_composition_meta (uploaded, cmeta->overlay);
+
+  return TRUE;
+}
+
 static GstFlowReturn
-gst_d3d12_video_sink_update_window (GstD3D12VideoSink * self)
+gst_d3d12_video_sink_set_buffer (GstD3D12VideoSink * self,
+    GstBuffer * buffer, gboolean is_prepare)
 {
   auto priv = self->priv;
-  auto overlay = GST_VIDEO_OVERLAY (self);
-  bool notify_window_handle = false;
-  guintptr window_handle = 0;
-  auto window_state = gst_d3d12_window_get_state (priv->window);
-
-  if (window_state == GST_D3D12_WINDOW_STATE_CLOSED) {
-    GST_WARNING_OBJECT (self, "Window was closed");
-    return GST_D3D12_WINDOW_FLOW_CLOSED;
-  }
+  GstFlowReturn ret = GST_FLOW_OK;
+  gboolean set_buffer = FALSE;
+  gboolean update_window = FALSE;
 
   {
     std::lock_guard < std::recursive_mutex > lk (priv->lock);
-    if (window_state == GST_D3D12_WINDOW_STATE_OPENED && !priv->update_window)
-      return GST_FLOW_OK;
-
-    GST_DEBUG_OBJECT (self, "Updating window with caps %" GST_PTR_FORMAT,
-        priv->caps);
-
-    if (window_state == GST_D3D12_WINDOW_STATE_INIT) {
-      if (!priv->window_handle)
-        gst_video_overlay_prepare_window_handle (overlay);
-
-      if (priv->window_handle) {
-        gst_video_overlay_got_window_handle (overlay, priv->window_handle);
-        window_handle = priv->window_handle;
+    if (is_prepare) {
+      if (priv->update_window) {
+        set_buffer = FALSE;
+        update_window = FALSE;
       } else {
-        notify_window_handle = true;
+        set_buffer = TRUE;
+        update_window = FALSE;
       }
     } else {
-      window_handle = priv->window_handle;
+      if (priv->update_window) {
+        set_buffer = TRUE;
+        update_window = TRUE;
+        priv->update_window = FALSE;
+      } else {
+        set_buffer = FALSE;
+        update_window = FALSE;
+      }
     }
-
-    priv->update_window = FALSE;
   }
 
-  if (priv->pool) {
-    gst_buffer_pool_set_active (priv->pool, FALSE);
-    gst_clear_object (&priv->pool);
-  }
+  if (update_window) {
+    gst_structure_set (priv->convert_config,
+        GST_D3D12_CONVERTER_OPT_GAMMA_MODE,
+        GST_TYPE_VIDEO_GAMMA_MODE, priv->gamma_mode,
+        GST_D3D12_CONVERTER_OPT_PRIMARIES_MODE,
+        GST_TYPE_VIDEO_PRIMARIES_MODE, priv->primaries_mode,
+        GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
+        GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
+        gst_d3d12_sampling_method_to_native (priv->sampling_method),
+        GST_D3D12_CONVERTER_OPT_DEST_ALPHA_MODE,
+        GST_TYPE_D3D12_CONVERTER_ALPHA_MODE,
+        GST_VIDEO_INFO_HAS_ALPHA (&priv->info) ?
+        GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED :
+        GST_D3D12_CONVERTER_ALPHA_MODE_UNSPECIFIED, nullptr);
 
-  auto config = gst_structure_new ("convert-config",
-      GST_D3D12_CONVERTER_OPT_GAMMA_MODE,
-      GST_TYPE_VIDEO_GAMMA_MODE, priv->gamma_mode,
-      GST_D3D12_CONVERTER_OPT_PRIMARIES_MODE,
-      GST_TYPE_VIDEO_PRIMARIES_MODE, priv->primaries_mode,
-      GST_D3D12_CONVERTER_OPT_SAMPLER_FILTER,
-      GST_TYPE_D3D12_CONVERTER_SAMPLER_FILTER,
-      gst_d3d12_sampling_method_to_native (priv->sampling_method), nullptr);
+    ret = gst_d3d12_window_prepare (priv->window, self->device,
+        GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self), priv->caps,
+        priv->convert_config, priv->display_format);
 
-  auto ret = gst_d3d12_window_prepare (priv->window, self->device,
-      window_handle, GST_VIDEO_SINK_WIDTH (self),
-      GST_VIDEO_SINK_HEIGHT (self), priv->caps, config, priv->display_format);
-  if (ret != GST_FLOW_OK) {
-    if (ret == GST_FLOW_FLUSHING) {
-      GST_WARNING_OBJECT (self, "We are flushing");
-      gst_d3d12_window_unprepare (priv->window);
-
+    if (ret != GST_FLOW_OK)
       return ret;
+  }
+
+  if (!set_buffer)
+    return GST_FLOW_OK;
+
+  GstBuffer *upload = nullptr;
+  auto mem = gst_buffer_peek_memory (buffer, 0);
+  if (!gst_is_d3d12_memory (mem)) {
+    gst_buffer_pool_acquire_buffer (priv->pool, &upload, nullptr);
+    if (!upload) {
+      GST_ERROR_OBJECT (self, "Couldn't allocate upload buffer");
+      return GST_FLOW_ERROR;
     }
 
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (nullptr),
-        ("Couldn't setup swapchain"));
-    return GST_FLOW_ERROR;
+    GstVideoFrame in_frame, out_frame;
+    if (!gst_video_frame_map (&in_frame, &priv->info, buffer, GST_MAP_READ)) {
+      GST_ERROR_OBJECT (self, "Couldn't map input frame");
+      gst_buffer_unref (upload);
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_video_frame_map (&out_frame, &priv->info, upload, GST_MAP_WRITE)) {
+      GST_ERROR_OBJECT (self, "Couldn't map upload frame");
+      gst_video_frame_unmap (&in_frame);
+      gst_buffer_unref (upload);
+      return GST_FLOW_ERROR;
+    }
+
+    auto copy_ret = gst_video_frame_copy (&out_frame, &in_frame);
+    gst_video_frame_unmap (&out_frame);
+    gst_video_frame_unmap (&in_frame);
+    if (!copy_ret) {
+      GST_ERROR_OBJECT (self, "Couldn't copy frame");
+      gst_buffer_unref (upload);
+      return GST_FLOW_ERROR;
+    }
+
+    gst_buffer_foreach_meta (buffer,
+        (GstBufferForeachMetaFunc) gst_d3d12_video_sink_foreach_meta, upload);
+
+    buffer = upload;
   }
 
-  if (notify_window_handle && !window_handle) {
-    window_handle = gst_d3d12_window_get_window_handle (priv->window);
-    gst_video_overlay_got_window_handle (overlay, window_handle);
-  }
+  ret = gst_d3d12_window_set_buffer (priv->window, buffer);
 
-  priv->pool = gst_d3d12_buffer_pool_new (self->device);
-  config = gst_buffer_pool_get_config (priv->pool);
+  if (upload)
+    gst_buffer_unref (upload);
 
-  gst_buffer_pool_config_set_params (config, priv->caps, priv->info.size, 0, 0);
-  if (!gst_buffer_pool_set_config (priv->pool, config) ||
-      !gst_buffer_pool_set_active (priv->pool, TRUE)) {
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (nullptr),
-        ("Couldn't setup buffer pool"));
-    return GST_FLOW_ERROR;
-  }
-
-  return GST_FLOW_OK;
+  return ret;
 }
 
 static gboolean
@@ -1078,6 +1134,7 @@ gst_d3d12_video_sink_start (GstBaseSink * sink)
   }
 
   priv->warn_closed_window = TRUE;
+  priv->window_open_called = FALSE;
 
   return TRUE;
 }
@@ -1233,7 +1290,7 @@ gst_d3d12_video_sink_query (GstBaseSink * sink, GstQuery * query)
   return GST_BASE_SINK_CLASS (parent_class)->query (sink, query);
 }
 
-static void
+static GstFlowReturn
 gst_d3d12_video_sink_check_device_update (GstD3D12VideoSink * self,
     GstBuffer * buf)
 {
@@ -1241,11 +1298,11 @@ gst_d3d12_video_sink_check_device_update (GstD3D12VideoSink * self,
 
   auto mem = gst_buffer_peek_memory (buf, 0);
   if (!gst_is_d3d12_memory (mem))
-    return;
+    return GST_FLOW_OK;
 
   auto dmem = GST_D3D12_MEMORY_CAST (mem);
   if (gst_d3d12_device_is_equal (dmem->device, self->device))
-    return;
+    return GST_FLOW_OK;
 
   GST_INFO_OBJECT (self, "Updating device %" GST_PTR_FORMAT " -> %"
       GST_PTR_FORMAT, self->device, dmem->device);
@@ -1258,25 +1315,90 @@ gst_d3d12_video_sink_check_device_update (GstD3D12VideoSink * self,
   std::lock_guard < std::recursive_mutex > lk (priv->context_lock);
   gst_clear_object (&self->device);
   self->device = (GstD3D12Device *) gst_object_ref (dmem->device);
+
+  if (priv->pool) {
+    gst_buffer_pool_set_active (priv->pool, FALSE);
+    gst_clear_object (&priv->pool);
+  }
+
+  priv->pool = gst_d3d12_buffer_pool_new (self->device);
+  auto config = gst_buffer_pool_get_config (priv->pool);
+
+  gst_buffer_pool_config_set_params (config, priv->caps, priv->info.size, 0, 0);
+  if (!gst_buffer_pool_set_config (priv->pool, config) ||
+      !gst_buffer_pool_set_active (priv->pool, TRUE)) {
+    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, (nullptr),
+        ("Couldn't setup buffer pool"));
+    gst_clear_object (&priv->pool);
+    return GST_FLOW_ERROR;
+  }
+
+  return GST_FLOW_OK;
 }
 
-static gboolean
-gst_d3d12_video_sink_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
-    GstBuffer * uploaded)
+static GstFlowReturn
+gst_d3d12_video_sink_open_window (GstD3D12VideoSink * self)
 {
-  if ((*meta)->info->api != GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE)
-    return TRUE;
+  auto overlay = GST_VIDEO_OVERLAY (self);
+  auto priv = self->priv;
+  guintptr window_handle = 0;
+  auto is_closed = gst_d3d12_window_is_closed (priv->window);
+  gboolean need_open = FALSE;
 
-  auto cmeta = (GstVideoOverlayCompositionMeta *) (*meta);
-  if (!cmeta->overlay)
-    return TRUE;
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    if (!priv->window_open_called) {
+      GST_DEBUG_OBJECT (self, "Open was not called, try open");
+      gst_video_overlay_prepare_window_handle (overlay);
+      need_open = TRUE;
+    } else if (priv->window_handle_updated) {
+      GST_DEBUG_OBJECT (self, "Set window handle was called, try open again");
+      need_open = TRUE;
+    } else if (is_closed) {
+      /* Request new window handle */
+      GST_LOG_OBJECT (self, "Window was closed, requesting new window handle");
+      gst_video_overlay_prepare_window_handle (overlay);
+      if (priv->window_handle_updated) {
+        GST_DEBUG_OBJECT (self, "Set window handle was called");
+        need_open = TRUE;
+      }
+    }
 
-  if (gst_video_overlay_composition_n_rectangles (cmeta->overlay) == 0)
-    return TRUE;
+    if (!need_open) {
+      if (!is_closed)
+        return GST_FLOW_OK;
 
-  gst_buffer_add_video_overlay_composition_meta (uploaded, cmeta->overlay);
+      GST_WARNING_OBJECT (self, "Window was closed");
+      return GST_D3D12_WINDOW_FLOW_CLOSED;
+    }
 
-  return TRUE;
+    window_handle = priv->window_handle;
+    priv->window_handle_updated = FALSE;
+  }
+
+  priv->window_open_called = TRUE;
+  priv->warn_closed_window = TRUE;
+  auto ret = gst_d3d12_window_open (priv->window, self->device,
+      GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self),
+      (HWND) window_handle);
+
+  std::lock_guard < std::recursive_mutex > lk (priv->lock);
+  if (ret == GST_FLOW_OK) {
+    if (window_handle) {
+      GST_DEBUG_OBJECT (self, "Window created with HWND %p",
+          (void *) window_handle);
+      gst_video_overlay_got_window_handle (overlay, window_handle);
+    } else {
+      auto internal_hwnd = gst_d3d12_window_get_window_handle (priv->window);
+      GST_DEBUG_OBJECT (self, "Window created with internal HWND %p",
+          (void *) internal_hwnd);
+      gst_video_overlay_got_window_handle (overlay, internal_hwnd);
+    }
+
+    priv->update_window = TRUE;
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1284,54 +1406,16 @@ gst_d3d12_video_sink_prepare (GstBaseSink * sink, GstBuffer * buffer)
 {
   auto self = GST_D3D12_VIDEO_SINK (sink);
   auto priv = self->priv;
-  GstBuffer *upload = nullptr;
-  auto mem = gst_buffer_peek_memory (buffer, 0);
 
-  gst_d3d12_video_sink_check_device_update (self, buffer);
-  auto ret = gst_d3d12_video_sink_update_window (self);
+  auto ret = gst_d3d12_video_sink_check_device_update (self, buffer);
   if (ret != GST_FLOW_OK)
     goto out;
 
-  if (!gst_is_d3d12_memory (mem)) {
-    gst_buffer_pool_acquire_buffer (priv->pool, &upload, nullptr);
-    if (!upload) {
-      GST_ERROR_OBJECT (self, "Couldn't allocate upload buffer");
-      return GST_FLOW_ERROR;
-    }
+  ret = gst_d3d12_video_sink_open_window (self);
+  if (ret != GST_FLOW_OK)
+    goto out;
 
-    GstVideoFrame in_frame, out_frame;
-    if (!gst_video_frame_map (&in_frame, &priv->info, buffer, GST_MAP_READ)) {
-      GST_ERROR_OBJECT (self, "Couldn't map input frame");
-      gst_buffer_unref (upload);
-      return GST_FLOW_ERROR;
-    }
-
-    if (!gst_video_frame_map (&out_frame, &priv->info, upload, GST_MAP_WRITE)) {
-      GST_ERROR_OBJECT (self, "Couldn't map upload frame");
-      gst_video_frame_unmap (&in_frame);
-      gst_buffer_unref (upload);
-      return GST_FLOW_ERROR;
-    }
-
-    auto copy_ret = gst_video_frame_copy (&out_frame, &in_frame);
-    gst_video_frame_unmap (&out_frame);
-    gst_video_frame_unmap (&in_frame);
-    if (!copy_ret) {
-      GST_ERROR_OBJECT (self, "Couldn't copy frame");
-      gst_buffer_unref (upload);
-      return GST_FLOW_ERROR;
-    }
-
-    gst_buffer_foreach_meta (buffer,
-        (GstBufferForeachMetaFunc) gst_d3d12_video_sink_foreach_meta, upload);
-
-    buffer = upload;
-  }
-
-  ret = gst_d3d12_window_set_buffer (priv->window, buffer);
-
-  if (upload)
-    gst_buffer_unref (upload);
+  ret = gst_d3d12_video_sink_set_buffer (self, buffer, TRUE);
 
 out:
   if (ret == GST_D3D12_WINDOW_FLOW_CLOSED) {
@@ -1359,9 +1443,13 @@ gst_d3d12_video_sink_show_frame (GstVideoSink * sink, GstBuffer * buf)
 {
   auto self = GST_D3D12_VIDEO_SINK (sink);
   auto priv = self->priv;
-  auto sync = gst_base_sink_get_sync (GST_BASE_SINK_CAST (sink));
+  auto ret = gst_d3d12_video_sink_set_buffer (self, buf, FALSE);
+  if (ret != GST_FLOW_OK)
+    goto out;
 
-  auto ret = gst_d3d12_window_present (priv->window, sync);
+  ret = gst_d3d12_window_present (priv->window);
+
+out:
   if (ret == GST_D3D12_WINDOW_FLOW_CLOSED) {
     if (priv->error_on_closed) {
       GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
@@ -1415,7 +1503,8 @@ gst_d3d12_video_sink_overlay_set_window_handle (GstVideoOverlay * overlay,
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (priv->window_handle != window_handle) {
     priv->window_handle = window_handle;
-    priv->update_window = TRUE;
+    if (priv->window_handle)
+      priv->window_handle_updated = TRUE;
   }
 }
 

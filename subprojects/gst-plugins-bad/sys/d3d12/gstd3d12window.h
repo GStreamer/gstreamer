@@ -23,6 +23,8 @@
 #include <gst/video/video.h>
 #include <gst/d3d12/gstd3d12.h>
 #include "gstd3d12pluginutils.h"
+#include "gstd3d12window-swapchain-resource.h"
+#include <string>
 
 G_BEGIN_DECLS
 
@@ -31,13 +33,6 @@ G_BEGIN_DECLS
 #define GST_TYPE_D3D12_WINDOW (gst_d3d12_window_get_type())
 G_DECLARE_FINAL_TYPE (GstD3D12Window, gst_d3d12_window,
     GST, D3D12_WINDOW, GstObject)
-
-enum GstD3D12WindowState
-{
-  GST_D3D12_WINDOW_STATE_INIT,
-  GST_D3D12_WINDOW_STATE_OPENED,
-  GST_D3D12_WINDOW_STATE_CLOSED,
-};
 
 enum GstD3D12WindowOverlayMode
 {
@@ -54,13 +49,20 @@ GType gst_d3d12_window_overlay_mode_get_type (void);
 
 GstD3D12Window * gst_d3d12_window_new (void);
 
+void             gst_d3d12_window_invalidate (GstD3D12Window * window);
+
 guintptr         gst_d3d12_window_get_window_handle (GstD3D12Window * window);
 
-GstD3D12WindowState gst_d3d12_window_get_state (GstD3D12Window * window);
+gboolean         gst_d3d12_window_is_closed (GstD3D12Window * window);
+
+GstFlowReturn    gst_d3d12_window_open (GstD3D12Window * window,
+                                        GstD3D12Device * device,
+                                        guint display_width,
+                                        guint display_height,
+                                        HWND parent_hwnd);
 
 GstFlowReturn    gst_d3d12_window_prepare (GstD3D12Window * window,
                                            GstD3D12Device * device,
-                                           guintptr window_handle,
                                            guint display_width,
                                            guint display_height,
                                            GstCaps * caps,
@@ -76,17 +78,27 @@ void             gst_d3d12_window_unlock_stop (GstD3D12Window * window);
 GstFlowReturn    gst_d3d12_window_set_buffer (GstD3D12Window * window,
                                               GstBuffer * buffer);
 
-GstFlowReturn    gst_d3d12_window_present (GstD3D12Window * window,
-                                           gboolean sync);
+GstFlowReturn    gst_d3d12_window_render     (GstD3D12Window * window,
+                                              SwapChainResource * resource,
+                                              GstBuffer * buffer,
+                                              bool is_first,
+                                              RECT & output_rect);
+
+GstFlowReturn    gst_d3d12_window_present (GstD3D12Window * window);
 
 void             gst_d3d12_window_set_render_rect (GstD3D12Window * window,
                                                    const GstVideoRectangle * rect);
+
+void             gst_d3d12_window_get_render_rect (GstD3D12Window * window,
+                                                   GstVideoRectangle * rect);
 
 void             gst_d3d12_window_set_force_aspect_ratio (GstD3D12Window * window,
                                                           gboolean force_aspect_ratio);
 
 void             gst_d3d12_window_set_enable_navigation_events (GstD3D12Window * window,
                                                                 gboolean enable);
+
+gboolean         gst_d3d12_window_get_navigation_events_enabled (GstD3D12Window * window);
 
 void             gst_d3d12_window_set_orientation (GstD3D12Window * window,
                                                    gboolean immediate,
@@ -111,8 +123,35 @@ void             gst_d3d12_window_set_fullscreen (GstD3D12Window * window,
 void             gst_d3d12_window_set_msaa (GstD3D12Window * window,
                                             GstD3D12MSAAMode msaa);
 
+void             gst_d3d12_window_get_msaa (GstD3D12Window * window,
+                                            GstD3D12MSAAMode & msaa);
+
 void             gst_d3d12_window_set_overlay_mode (GstD3D12Window * window,
                                                     GstD3D12WindowOverlayMode mode);
+
+void             gst_d3d12_window_on_key_event (GstD3D12Window * window,
+                                                const gchar * event,
+                                                const gchar * name);
+
+void             gst_d3d12_window_on_mouse_event (GstD3D12Window * window,
+                                                  const gchar * event,
+                                                  gint button,
+                                                  double xpos,
+                                                  double ypos,
+                                                  guint modifier);
+
+void             gst_d3d12_window_get_create_params (GstD3D12Window * window,
+                                                     std::wstring & title,
+                                                     GstVideoRectangle * rect,
+                                                     int & display_width,
+                                                     int & display_height,
+                                                     GstVideoOrientationMethod & orientation);
+
+void             gst_d3d12_window_get_mouse_pos_info (GstD3D12Window * window,
+                                                      GstVideoRectangle * out_rect,
+                                                      int & input_width,
+                                                      int & input_height,
+                                                      GstVideoOrientationMethod & orientation);
 
 G_END_DECLS
 

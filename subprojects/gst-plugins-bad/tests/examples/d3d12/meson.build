@@ -12,7 +12,16 @@ executable('d3d12enc-dynamic-reconfigure',
   include_directories : [configinc],
   dependencies: [gst_dep, gstbase_dep, gstvideo_dep],
   c_args : gst_plugins_bad_args,
-  install: false)
+  install: false
+)
+
+executable('d3d12videosink-switch',
+  ['d3d12videosink-switch.cpp', '../key-handler.c'],
+  include_directories : [configinc],
+  dependencies: [gst_dep, gstbase_dep, gstvideo_dep],
+  c_args : gst_plugins_bad_args,
+  install: false
+)
 
 if gstd3d12_dep.found()
   if have_d2d_h and have_dwrite_h and have_d3d12video_h and dwrite_dep.found()

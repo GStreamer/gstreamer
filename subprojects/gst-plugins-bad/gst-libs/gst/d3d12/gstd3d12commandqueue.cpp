@@ -582,3 +582,55 @@ gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
 
   return S_OK;
 }
+
+HRESULT
+gst_d3d12_command_queue_idle_for_swapchain (GstD3D12CommandQueue * queue,
+    guint64 fence_value, HANDLE event_handle)
+{
+  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+
+  auto priv = queue->priv;
+  guint64 fence_to_wait = fence_value;
+  HRESULT hr;
+
+  {
+    std::lock_guard < std::mutex > lk (priv->execute_lock);
+    if (fence_value < priv->fence_val) {
+      fence_to_wait = fence_value + 1;
+    } else {
+      priv->fence_val++;
+      hr = priv->cq->Signal (priv->fence.Get (), priv->fence_val);
+      if (FAILED (hr)) {
+        GST_ERROR_OBJECT (queue, "Signal failed");
+        priv->fence_val--;
+        return hr;
+      }
+
+      fence_to_wait = priv->fence_val;
+    }
+  }
+
+  auto completed = priv->fence->GetCompletedValue ();
+  if (completed < fence_to_wait) {
+    bool close_handle = false;
+    if (!event_handle) {
+      event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+      close_handle = true;
+    }
+
+    hr = priv->fence->SetEventOnCompletion (fence_to_wait, event_handle);
+    if (FAILED (hr)) {
+      GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
+      if (close_handle)
+        CloseHandle (event_handle);
+
+      return hr;
+    }
+
+    WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
+    if (close_handle)
+      CloseHandle (event_handle);
+  }
+
+  return S_OK;
+}
