@@ -206,7 +206,7 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
 
   object_class->set_property = gst_d3d12_videosink_set_property;
   object_class->get_property = gst_d3d12_videosink_get_property;
-  object_class->finalize = gst_d3d12_video_sink_dispose;
+  object_class->dispose = gst_d3d12_video_sink_dispose;
   object_class->finalize = gst_d3d12_video_sink_finalize;
 
   g_object_class_install_property (object_class, PROP_ADAPTER,
