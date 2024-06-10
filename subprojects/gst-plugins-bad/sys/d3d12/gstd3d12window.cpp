@@ -1668,9 +1668,7 @@ gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
         &priv->output_rect);
   }
 
-  guint64 overlay_fence_val = 0;
-  gst_d3d12_overlay_compositor_upload (priv->ctx->comp, priv->ctx->cached_buf,
-      &overlay_fence_val);
+  gst_d3d12_overlay_compositor_upload (priv->ctx->comp, priv->ctx->cached_buf);
 
   GstD3D12CommandAllocator *gst_ca;
   if (!gst_d3d12_command_allocator_pool_acquire (priv->ctx->ca_pool, &gst_ca)) {

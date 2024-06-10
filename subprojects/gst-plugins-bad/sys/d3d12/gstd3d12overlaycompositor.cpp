@@ -167,7 +167,7 @@ gst_d3d12_overlay_rect_free (GstD3D12OverlayRect * rect)
 
 static GstD3D12OverlayRect *
 gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
-    GstVideoOverlayRectangle * overlay_rect, guint64 & fence_val)
+    GstVideoOverlayRectangle * overlay_rect)
 {
   auto priv = self->priv;
   gint x, y;
@@ -177,8 +177,6 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
   gdouble val;
   GstVideoOverlayFormatFlags flags;
   gboolean premul_alpha = FALSE;
-
-  fence_val = 0;
 
   if (!gst_video_overlay_rectangle_get_render_rectangle (overlay_rect, &x, &y,
           &width, &height)) {
@@ -212,7 +210,6 @@ gst_d3d12_overlay_rect_new (GstD3D12OverlayCompositor * self,
         gst_d3d12_memory_get_shader_resource_view_heap (dmem)) {
       texture = gst_d3d12_memory_get_resource_handle (dmem);
       is_d3d12 = true;
-      fence_val = dmem->fence_value;
     }
   }
 
@@ -651,15 +648,13 @@ gst_d3d12_overlay_compositor_foreach_meta (GstBuffer * buffer, GstMeta ** meta,
 
 gboolean
 gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
-    GstBuffer * buf, guint64 * fence_val)
+    GstBuffer * buf)
 {
   g_return_val_if_fail (compositor != nullptr, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (buf), FALSE);
 
   auto priv = compositor->priv;
   priv->rects_to_upload.clear ();
-
-  *fence_val = 0;
 
   gst_buffer_foreach_meta (buf,
       (GstBufferForeachMetaFunc) gst_d3d12_overlay_compositor_foreach_meta,
@@ -675,7 +670,6 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
   GST_LOG_OBJECT (compositor, "Found %" G_GSIZE_FORMAT
       " overlay rectangles", priv->rects_to_upload.size ());
 
-  guint64 max_fence_val = 0;
   for (size_t i = 0; i < priv->rects_to_upload.size (); i++) {
     GList *iter;
     bool found = false;
@@ -688,14 +682,10 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
     }
 
     if (!found) {
-      guint64 cur_fence_val = 0;
       auto new_rect = gst_d3d12_overlay_rect_new (compositor,
-          priv->rects_to_upload[i], cur_fence_val);
-      if (new_rect) {
+          priv->rects_to_upload[i]);
+      if (new_rect)
         priv->overlays = g_list_append (priv->overlays, new_rect);
-        if (max_fence_val < cur_fence_val)
-          max_fence_val = cur_fence_val;
-      }
     }
   }
 
@@ -715,8 +705,6 @@ gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
       priv->overlays = g_list_delete_link (priv->overlays, iter);
     }
   }
-
-  *fence_val = max_fence_val;
 
   return TRUE;
 }

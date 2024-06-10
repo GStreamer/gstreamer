@@ -35,8 +35,7 @@ GstD3D12OverlayCompositor * gst_d3d12_overlay_compositor_new  (GstD3D12Device * 
                                                                const GstVideoInfo * info);
 
 gboolean                    gst_d3d12_overlay_compositor_upload (GstD3D12OverlayCompositor * compositor,
-                                                                 GstBuffer * buf,
-                                                                 guint64 * fence_val);
+                                                                 GstBuffer * buf);
 
 gboolean                    gst_d3d12_overlay_compositor_update_viewport (GstD3D12OverlayCompositor * compositor,
                                                                           GstVideoRectangle * viewport);
