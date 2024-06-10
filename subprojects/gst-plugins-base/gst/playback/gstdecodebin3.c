@@ -376,6 +376,9 @@ struct _DecodebinInput
   /* List of events that need to be pushed once we get the first
    * GST_EVENT_STREAM_COLLECTION */
   GList *events_waiting_for_collection;
+
+  /* input buffer probe for detecting whether input has caps or not */
+  gulong input_probe;
 };
 
 /* Streams that come from parsebin or identity */
@@ -1627,6 +1630,23 @@ no_parsebin:
   }
 }
 
+static GstPadProbeReturn
+input_pad_buffer_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  DecodebinInput *input = user_data;
+
+  INPUT_LOCK (input->dbin);
+  if (!input->parsebin && !input->identity) {
+    GST_DEBUG_OBJECT (pad, "Push-stream without caps, setting up identity");
+    gst_decodebin_input_ensure_parsebin (input);
+  }
+  input->input_probe = 0;
+  INPUT_UNLOCK (input->dbin);
+
+  return GST_PAD_PROBE_REMOVE;
+};
+
 static GstPadLinkReturn
 gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
 {
@@ -1662,6 +1682,15 @@ gst_decodebin3_input_pad_link (GstPad * pad, GstObject * parent, GstPad * peer)
           "Can't reconfigure input from push-based to pull-based");
       res = GST_PAD_LINK_REFUSED;
     }
+  } else if (input->input_probe == 0) {
+    /* We setup a buffer probe to handle the corner case of push-based
+     * time-based inputs without CAPS/COLLECTION. If we get a buffer without
+     * having figured out if we need identity or parsebin, we will plug in
+     * parsebin */
+    GST_DEBUG_OBJECT (pad, "Setting up buffer probe");
+    input->input_probe =
+        gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+        input_pad_buffer_probe, input, NULL);
   }
 
   /* Clear stream-collection corresponding to current INPUT.  We do not
@@ -1880,6 +1909,11 @@ gst_decodebin_input_reset (DecodebinInput * input)
   if (input->collection)
     gst_clear_object (&input->collection);
 
+  if (input->input_probe) {
+    gst_pad_remove_probe (input->ghost_sink, input->input_probe);
+    input->input_probe = 0;
+  }
+
   g_list_free_full (input->events_waiting_for_collection,
       (GDestroyNotify) gst_event_unref);
   input->events_waiting_for_collection = NULL;
@@ -2090,6 +2124,12 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       if (!input->parsebin && !input->identity)
         gst_decodebin_input_setup_identity (input);
 
+      /* Remove buffer probe for caps/collection detection */
+      if (input->input_probe) {
+        gst_pad_remove_probe (sinkpad, input->input_probe);
+        input->input_probe = 0;
+      }
+
       /* Drain all pending events */
       if (input->events_waiting_for_collection) {
         GList *tmp;
@@ -2108,6 +2148,12 @@ sink_event_function (GstPad * sinkpad, GstDecodebin3 * dbin, GstEvent * event)
       if (!newcaps)
         break;
       GST_DEBUG_OBJECT (sinkpad, "new caps %" GST_PTR_FORMAT, newcaps);
+
+      /* Remove buffer probe for caps/collection detection */
+      if (input->input_probe) {
+        gst_pad_remove_probe (sinkpad, input->input_probe);
+        input->input_probe = 0;
+      }
 
       /* No parsebin or identity present, check if we can avoid creating one */
       if (!input->parsebin && !input->identity) {
