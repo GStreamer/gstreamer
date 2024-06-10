@@ -1005,6 +1005,12 @@ gst_av1_enc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
     duration = 1;
   }
 
+  if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame)) {
+    GST_DEBUG_OBJECT (av1enc, "Forcing keyframe for frame %u",
+        frame->system_frame_number);
+    flags |= AOM_EFLAG_FORCE_KF;
+  }
+
   if (aom_codec_encode (&av1enc->encoder, &raw, scaled_pts, duration, flags)
       != AOM_CODEC_OK) {
     gst_av1_codec_error (&av1enc->encoder, "Failed to encode frame");
