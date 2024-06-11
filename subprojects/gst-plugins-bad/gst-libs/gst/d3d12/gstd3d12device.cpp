@@ -126,6 +126,8 @@ struct DeviceInner
 
     gst_clear_object (&direct_queue);
     gst_clear_object (&copy_queue);
+    for (guint i = 0; i < num_decode_queue; i++)
+      gst_clear_object (&decode_queue[i]);
 
     gst_clear_object (&direct_ca_pool);
     gst_clear_object (&direct_cl_pool);
@@ -154,6 +156,9 @@ struct DeviceInner
 
     if (copy_queue)
       gst_d3d12_command_queue_drain (copy_queue);
+
+    for (guint i = 0; i < num_decode_queue; i++)
+      gst_d3d12_command_queue_drain (decode_queue[i]);
   }
 
   void ReportLiveObjects ()
@@ -230,6 +235,11 @@ struct DeviceInner
 
   GstD3D12CommandQueue *direct_queue = nullptr;
   GstD3D12CommandQueue *copy_queue = nullptr;
+  GstD3D12CommandQueue *decode_queue[2] = { nullptr, };
+  guint num_decode_queue = 0;
+  guint decode_queue_index = 0;
+  std::recursive_mutex decoder_lock;
+  GstD3D12WAFlags wa_flags = GST_D3D12_WA_NONE;
 
   GstD3D12CommandListPool *direct_cl_pool = nullptr;
   GstD3D12CommandAllocatorPool *direct_ca_pool = nullptr;
@@ -238,6 +248,8 @@ struct DeviceInner
   GstD3D12CommandAllocatorPool *copy_ca_pool = nullptr;
 
   GstD3D12FenceDataPool *fence_data_pool = nullptr;
+
+  D3D12_FEATURE_DATA_ARCHITECTURE feature_data_arch = { };
 
   guint rtv_inc_size;
 
@@ -961,6 +973,24 @@ gst_d3d12_device_find_adapter (const GstD3D12DeviceConstructData * data,
   return E_FAIL;
 }
 
+static gboolean
+is_intel_gen11_or_older (UINT vendor_id, D3D_FEATURE_LEVEL feature_level,
+    const std::string & description)
+{
+  if (vendor_id != 0x8086)
+    return FALSE;
+
+  /* Arc GPU supports feature level 12.2 and iGPU Xe does 12.1 */
+  if (feature_level <= D3D_FEATURE_LEVEL_12_0)
+    return TRUE;
+
+  /* gen 11 is UHD xxx, older ones are HD xxx */
+  if (description.find ("HD") != std::string::npos)
+    return TRUE;
+
+  return FALSE;
+}
+
 static GstD3D12Device *
 gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 {
@@ -970,6 +1000,13 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   HRESULT hr;
   UINT factory_flags = 0;
   guint index = 0;
+  const D3D_FEATURE_LEVEL feature_levels[] = {
+    D3D_FEATURE_LEVEL_11_0,
+    D3D_FEATURE_LEVEL_11_1,
+    D3D_FEATURE_LEVEL_12_0,
+    D3D_FEATURE_LEVEL_12_1,
+    D3D_FEATURE_LEVEL_12_2,
+  };
 
   gst_d3d12_device_enable_debug ();
   gst_d3d12_device_enable_dred ();
@@ -1014,16 +1051,31 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   priv->device_id = desc.DeviceId;
   priv->adapter_index = index;
 
+  device->CheckFeatureSupport (D3D12_FEATURE_ARCHITECTURE,
+      &priv->feature_data_arch, sizeof (D3D12_FEATURE_DATA_ARCHITECTURE));
+
+  D3D12_FEATURE_DATA_FEATURE_LEVELS flevel = { };
+  flevel.NumFeatureLevels = G_N_ELEMENTS (feature_levels);
+  flevel.pFeatureLevelsRequested = feature_levels;
+  device->CheckFeatureSupport (D3D12_FEATURE_FEATURE_LEVELS,
+      &flevel, sizeof (flevel));
+
   std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t >converter;
   priv->description = converter.to_bytes (desc.Description);
 
   GST_INFO_OBJECT (self,
       "adapter index %d: D3D12 device vendor-id: 0x%04x, device-id: 0x%04x, "
-      "Flags: 0x%x, adapter-luid: %" G_GINT64_FORMAT ", %s",
+      "Flags: 0x%x, adapter-luid: %" G_GINT64_FORMAT ", is-UMA: %d, "
+      "feature-level: 0x%x, %s",
       priv->adapter_index, desc.VendorId, desc.DeviceId, desc.Flags,
-      priv->adapter_luid, priv->description.c_str ());
+      priv->adapter_luid, priv->feature_data_arch.UMA,
+      flevel.MaxSupportedFeatureLevel, priv->description.c_str ());
 
   gst_d3d12_device_setup_format_table (self);
+  if (priv->feature_data_arch.UMA && is_intel_gen11_or_older (priv->vendor_id,
+          flevel.MaxSupportedFeatureLevel, priv->description)) {
+    priv->wa_flags |= GST_D3D12_WA_DECODER_RACE;
+  }
 
   if (gst_d3d12_device_enable_debug ()) {
     ComPtr < ID3D12InfoQueue > info_queue;
@@ -1070,6 +1122,30 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
       device->GetDescriptorHandleIncrementSize (D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
   priv->fence_data_pool = gst_d3d12_fence_data_pool_new ();
+
+  {
+    ComPtr < ID3D12VideoDevice > video_device;
+    auto hr = device.As (&video_device);
+    if (SUCCEEDED (hr)) {
+      queue_desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
+      for (guint i = 0; i < G_N_ELEMENTS (priv->decode_queue); i++) {
+        priv->decode_queue[i] = gst_d3d12_command_queue_new (device.Get (),
+            &queue_desc, D3D12_FENCE_FLAG_NONE, 8);
+        if (!priv->decode_queue)
+          break;
+
+        GST_OBJECT_FLAG_SET (priv->decode_queue[i],
+            GST_OBJECT_FLAG_MAY_BE_LEAKED);
+        priv->num_decode_queue++;
+
+        /* XXX: Old Intel iGPU crashes with multiple decode queues */
+        if ((priv->wa_flags & GST_D3D12_WA_DECODER_RACE) ==
+            GST_D3D12_WA_DECODER_RACE) {
+          break;
+        }
+      }
+    }
+  }
 
   GST_OBJECT_FLAG_SET (priv->direct_queue, GST_OBJECT_FLAG_MAY_BE_LEAKED);
   GST_OBJECT_FLAG_SET (priv->direct_cl_pool, GST_OBJECT_FLAG_MAY_BE_LEAKED);
@@ -1822,4 +1898,49 @@ gst_d3d12_device_check_device_removed (GstD3D12Device * device)
     auto manager = DeviceCacheManager::GetInstance ();
     manager->OnDeviceRemoved (priv->adapter_luid);
   }
+}
+
+GstD3D12CommandQueue *
+gst_d3d12_device_get_decode_queue (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+  auto priv = device->priv->inner;
+
+  if (!priv->num_decode_queue)
+    return nullptr;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  auto queue = priv->decode_queue[priv->decode_queue_index];
+  priv->decode_queue_index++;
+  priv->decode_queue_index %= priv->num_decode_queue;
+
+  return queue;
+}
+
+void
+gst_d3d12_device_decoder_lock (GstD3D12Device * device)
+{
+  g_return_if_fail (GST_IS_D3D12_DEVICE (device));
+
+  auto priv = device->priv->inner;
+  if ((priv->wa_flags & GST_D3D12_WA_DECODER_RACE) == GST_D3D12_WA_DECODER_RACE)
+    priv->decoder_lock.lock ();
+}
+
+void
+gst_d3d12_device_decoder_unlock (GstD3D12Device * device)
+{
+  g_return_if_fail (GST_IS_D3D12_DEVICE (device));
+
+  auto priv = device->priv->inner;
+  if ((priv->wa_flags & GST_D3D12_WA_DECODER_RACE) == GST_D3D12_WA_DECODER_RACE)
+    priv->decoder_lock.unlock ();
+}
+
+GstD3D12WAFlags
+gst_d3d12_device_get_workaround_flags (GstD3D12Device * device)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), GST_D3D12_WA_NONE);
+
+  return device->priv->inner->wa_flags;
 }

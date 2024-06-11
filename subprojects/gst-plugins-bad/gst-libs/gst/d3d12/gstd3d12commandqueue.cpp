@@ -164,7 +164,7 @@ gst_d3d12_command_queue_new (ID3D12Device * device,
   ComPtr < ID3D12CommandQueue > cq;
   auto hr = device->CreateCommandQueue (desc, IID_PPV_ARGS (&cq));
   if (FAILED (hr)) {
-    GST_ERROR ("Couldn't create command queue, hr: 0x%x", (guint) hr);
+    GST_WARNING ("Couldn't create command queue, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 

@@ -226,15 +226,14 @@ struct DecoderCmdData
   {
     CloseHandle (event_handle);
     gst_clear_object (&ca_pool);
-    gst_clear_object (&queue);
   }
 
   ComPtr<ID3D12Device> device;
-
   ComPtr<ID3D12VideoDevice> video_device;
   ComPtr<ID3D12VideoDecodeCommandList> cl;
   GstD3D12CommandQueue *queue = nullptr;
   GstD3D12CommandAllocatorPool *ca_pool = nullptr;
+  bool need_full_drain = false;
 
   /* Fence to wait at command record thread */
   HANDLE event_handle;
@@ -441,11 +440,7 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
     return FALSE;
   }
 
-  D3D12_COMMAND_QUEUE_DESC desc = { };
-  desc.Type = D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE;
-  desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-  cmd->queue = gst_d3d12_command_queue_new (cmd->device.Get (), &desc,
-      D3D12_FENCE_FLAG_NONE, ASYNC_DEPTH * 2);
+  cmd->queue = gst_d3d12_device_get_decode_queue (decoder->device);
   if (!cmd->queue) {
     GST_ERROR_OBJECT (element, "Couldn't create command queue");
     return FALSE;
@@ -453,6 +448,10 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
 
   cmd->ca_pool = gst_d3d12_command_allocator_pool_new (cmd->device.Get (),
       D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE);
+
+  auto flags = gst_d3d12_device_get_workaround_flags (decoder->device);
+  if ((flags & GST_D3D12_WA_DECODER_RACE) == GST_D3D12_WA_DECODER_RACE)
+    cmd->need_full_drain = true;
 
   priv->cmd = std::move (cmd);
   priv->flushing = false;
@@ -511,13 +510,11 @@ gst_d3d12_decoder_close (GstD3D12Decoder * decoder)
 
   GST_DEBUG_OBJECT (decoder, "Close");
 
-  if (priv->cmd) {
-    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
-        priv->cmd->event_handle);
+  {
+    GstD3D12DeviceDecoderLockGuard lk (decoder->device);
+    priv->session = nullptr;
+    priv->cmd = nullptr;
   }
-
-  priv->session = nullptr;
-  priv->cmd = nullptr;
 
   gst_clear_object (&decoder->device);
 
@@ -539,6 +536,13 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   g_return_val_if_fail (coded_height >= GST_VIDEO_INFO_HEIGHT (info),
       GST_FLOW_ERROR);
   g_return_val_if_fail (dpb_size > 0, GST_FLOW_ERROR);
+
+  if (!decoder->device) {
+    GST_ERROR_OBJECT (decoder, "Device was not configured");
+    return GST_FLOW_ERROR;
+  }
+
+  GstD3D12DeviceDecoderLockGuard dlk (decoder->device);
 
   GstD3D12Format device_format;
   auto priv = decoder->priv;
@@ -800,8 +804,12 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
 
   priv->flushing = true;
   if (priv->cmd) {
-    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
-        priv->cmd->event_handle);
+    if (priv->cmd->need_full_drain) {
+      gst_d3d12_command_queue_drain (priv->cmd->queue);
+    } else {
+      gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
+          priv->cmd->fence_val, priv->cmd->event_handle);
+    }
   }
 
   if (priv->output_thread && priv->session) {
@@ -814,6 +822,7 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
   g_clear_pointer (&priv->output_thread, g_thread_join);
   priv->flushing = false;
 
+  GstD3D12DeviceDecoderLockGuard lk (decoder->device);
   priv->session = nullptr;
 
   return TRUE;
@@ -1112,8 +1121,8 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   memset (&in_args, 0, sizeof (D3D12_VIDEO_DECODE_INPUT_STREAM_ARGUMENTS));
   memset (&out_args, 0, sizeof (D3D12_VIDEO_DECODE_OUTPUT_STREAM_ARGUMENTS));
 
+  GstD3D12DeviceDecoderLockGuard dlk (decoder->device);
   auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
-
   hr = ca->Reset ();
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't reset command allocator");
@@ -1299,17 +1308,6 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
   }
 
   decoder_pic->fence_val = priv->cmd->fence_val;
-  auto fence_handle =
-      gst_d3d12_command_queue_get_fence_handle (priv->cmd->queue);
-  dmem = (GstD3D12Memory *) gst_buffer_peek_memory (decoder_pic->buffer, 0);
-  gst_d3d12_memory_set_external_fence (dmem,
-      fence_handle, priv->cmd->fence_val);
-  if (decoder_pic->output_buffer) {
-    dmem = (GstD3D12Memory *)
-        gst_buffer_peek_memory (decoder_pic->output_buffer, 0);
-    gst_d3d12_memory_set_external_fence (dmem,
-        fence_handle, priv->cmd->fence_val);
-  }
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
@@ -1540,10 +1538,8 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
           gst_buffer_ref (buffer));
     }
 
-    auto fence_handle =
-        gst_d3d12_command_queue_get_fence_handle (priv->cmd->queue);
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), fence_data, fence_handle, decoder_pic->fence_val,
+        copy_args.data (), fence_data, nullptr, decoder_pic->fence_val,
         queue_type, &copy_fence_val);
 
     if (!out_resource) {
@@ -1616,6 +1612,8 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
 
   GST_DEBUG_OBJECT (self, "Entering output thread");
 
+  auto event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
+
   while (true) {
     DecoderOutputData output_data;
     {
@@ -1635,6 +1633,9 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
 
     auto decoder_pic = get_decoder_picture (output_data.picture);
     g_assert (decoder_pic);
+
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
+        decoder_pic->fence_val, event_handle);
 
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "Drop framem, we are flushing");
@@ -1659,6 +1660,8 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
   }
 
   GST_DEBUG_OBJECT (self, "Leaving output thread");
+
+  CloseHandle (event_handle);
 
   return nullptr;
 }

@@ -89,4 +89,26 @@ private:
   GstD3D12Device *device_;
 };
 
+class GstD3D12DeviceDecoderLockGuard
+{
+public:
+  explicit GstD3D12DeviceDecoderLockGuard(GstD3D12Device * device) : device_ (device)
+  {
+    if (device_)
+      gst_d3d12_device_decoder_lock (device_);
+  }
+
+  ~GstD3D12DeviceDecoderLockGuard()
+  {
+    if (device_)
+      gst_d3d12_device_decoder_unlock (device_);
+  }
+
+  GstD3D12DeviceDecoderLockGuard(const GstD3D12DeviceDecoderLockGuard&) = delete;
+  GstD3D12DeviceDecoderLockGuard& operator=(const GstD3D12DeviceDecoderLockGuard&) = delete;
+
+private:
+  GstD3D12Device *device_;
+};
+
 #endif /* __cplusplus */
