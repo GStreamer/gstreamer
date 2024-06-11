@@ -1600,9 +1600,7 @@ gst_uri_decode_bin3_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_URI:
-      PLAY_ITEMS_LOCK (dec);
       gst_uri_decode_bin3_set_uri (dec, g_value_get_string (value));
-      PLAY_ITEMS_UNLOCK (dec);
       break;
     case PROP_SUBURI:
       gst_uri_decode_bin3_set_suburi (dec, g_value_get_string (value));
@@ -1934,7 +1932,6 @@ uri_src_ignore_block_probe (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_OK;
 }
 
-/* PLAY_ITEMS_LOCK held */
 static void
 gst_uri_decode_bin3_set_uri (GstURIDecodeBin3 * dec, const gchar * uri)
 {
@@ -1943,6 +1940,7 @@ gst_uri_decode_bin3_set_uri (GstURIDecodeBin3 * dec, const gchar * uri)
 
   GST_DEBUG_OBJECT (dec, "uri: %s", uri);
 
+  PLAY_ITEMS_LOCK (dec);
   item = next_inactive_play_item (dec);
   play_item_set_uri (item, uri);
 
@@ -1985,6 +1983,7 @@ gst_uri_decode_bin3_set_uri (GstURIDecodeBin3 * dec, const gchar * uri)
     }
   }
 
+  PLAY_ITEMS_UNLOCK (dec);
   if (start_item) {
     /* Start new item */
     activate_play_item (item);
@@ -2185,18 +2184,21 @@ gst_uri_decode_bin3_handle_redirection (GstURIDecodeBin3 * uridecodebin,
     goto beach;
 
   if (g_strcmp0 (current_uri, uri)) {
-    gboolean was_instant = uridecodebin->instant_uri;
+    gst_message_unref (message);
+    message = NULL;
+
     /* We only want to handle the redirection once */
     if (!handler->saw_redirection) {
+      gboolean was_instant = uridecodebin->instant_uri;
       handler->saw_redirection = TRUE;
       GST_DEBUG_OBJECT (uridecodebin, "Doing instant switch to '%s'", uri);
       uridecodebin->instant_uri = TRUE;
       /* Force instant switch */
+      PLAY_ITEMS_UNLOCK (uridecodebin);
       gst_uri_decode_bin3_set_uri (uridecodebin, uri);
+      PLAY_ITEMS_LOCK (uridecodebin);
       uridecodebin->instant_uri = was_instant;
     }
-    gst_message_unref (message);
-    message = NULL;
   }
   g_free (uri);
 
