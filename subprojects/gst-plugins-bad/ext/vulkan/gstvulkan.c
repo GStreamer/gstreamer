@@ -71,8 +71,6 @@ plugin_init (GstPlugin * plugin)
 
   ret |= GST_DEVICE_PROVIDER_REGISTER (vulkandeviceprovider, plugin);
 
-  ret |= GST_ELEMENT_REGISTER (vulkansink, plugin);
-
   ret |= GST_ELEMENT_REGISTER (vulkanupload, plugin);
 
   ret |= GST_ELEMENT_REGISTER (vulkandownload, plugin);
@@ -99,6 +97,7 @@ plugin_init (GstPlugin * plugin)
               VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME)) {
         ret |= gst_vulkan_h265_decoder_register (plugin, device, GST_RANK_NONE);
       }
+      ret |= gst_vulkan_sink_register (plugin, device, GST_RANK_NONE);
       gst_object_unref (device);
     }
 #endif

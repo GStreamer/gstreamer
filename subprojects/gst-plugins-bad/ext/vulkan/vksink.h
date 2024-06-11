@@ -28,14 +28,6 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_VULKAN_SINK            (gst_vulkan_sink_get_type())
-#define GST_VULKAN_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VULKAN_SINK,GstVulkanSink))
-#define GST_VULKAN_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VULKAN_SINK,GstVulkanSinkClass))
-#define GST_IS_VULKAN_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VULKAN_SINK))
-#define GST_IS_VULKAN_SINK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VULKAN_SINK))
-
-typedef struct _GstVulkanSink GstVulkanSink;
-typedef struct _GstVulkanSinkClass GstVulkanSinkClass;
 
 struct _GstVulkanSink
 {
@@ -67,11 +59,12 @@ struct _GstVulkanSink
 struct _GstVulkanSinkClass
 {
     GstVideoSinkClass video_sink_class;
+    gint device_index;
 };
 
-GType gst_vulkan_sink_get_type(void);
 
-GST_ELEMENT_REGISTER_DECLARE (vulkansink);
+gboolean
+gst_vulkan_sink_register (GstPlugin * plugin, GstVulkanDevice *device, guint rank);
 
 G_END_DECLS
 

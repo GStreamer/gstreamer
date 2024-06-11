@@ -38,10 +38,26 @@
 GST_DEBUG_CATEGORY (gst_debug_vulkan_sink);
 #define GST_CAT_DEFAULT gst_debug_vulkan_sink
 
+#define GST_VULKAN_SINK(obj)            ((GstVulkanSink *) obj)
+#define GST_VULKAN_SINK_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS ((obj), G_TYPE_FROM_INSTANCE (obj), GstVulkanSinkClass))
+#define GST_VULKAN_SINK_CLASS(klass)    ((GstVulkanSinkClass *) klass)
+
+typedef struct _GstVulkanSink GstVulkanSink;
+typedef struct _GstVulkanSinkClass GstVulkanSinkClass;
+
+static GstElementClass *parent_class = NULL;
+
+struct CData
+{
+  gchar *description;
+  gint device_index;
+};
+
 #define DEFAULT_FORCE_ASPECT_RATIO TRUE
 #define DEFAULT_PIXEL_ASPECT_RATIO_N 0
 #define DEFAULT_PIXEL_ASPECT_RATIO_D 1
 
+static void gst_vulkan_sink_init (GTypeInstance * instance, gpointer g_class);
 static void gst_vulkan_sink_finalize (GObject * object);
 static void gst_vulkan_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * param_spec);
@@ -102,30 +118,35 @@ enum
 /* static guint gst_vulkan_sink_signals[LAST_SIGNAL] = { 0 }; */
 
 #define gst_vulkan_sink_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstVulkanSink, gst_vulkan_sink,
-    GST_TYPE_VIDEO_SINK, GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_sink,
-        "vulkansink", 0, "Vulkan Video Sink");
-    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
-        gst_vulkan_sink_video_overlay_init);
-    G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
-        gst_vulkan_sink_navigation_interface_init));
-GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (vulkansink, "vulkansink", GST_RANK_NONE,
-    GST_TYPE_VULKAN_SINK, vulkan_element_init (plugin));
 
 static void
-gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
+gst_vulkan_sink_class_init (gpointer g_klass, gpointer class_data)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstBaseSinkClass *gstbasesink_class;
   GstVideoSinkClass *gstvideosink_class;
   GstElementClass *element_class;
+  GstVulkanSinkClass *vk_sink_class = GST_VULKAN_SINK_CLASS (g_klass);
 
-  gobject_class = (GObjectClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstvideosink_class = (GstVideoSinkClass *) klass;
-  element_class = GST_ELEMENT_CLASS (klass);
+  gobject_class = (GObjectClass *) g_klass;
+  gstelement_class = (GstElementClass *) g_klass;
+  gstbasesink_class = (GstBaseSinkClass *) g_klass;
+  gstvideosink_class = (GstVideoSinkClass *) g_klass;
+  element_class = GST_ELEMENT_CLASS (g_klass);
+  struct CData *cdata = class_data;
+  gchar *long_name;
+  const gchar *name, *desc;
+
+  name = "Vulkan Video sink";
+  desc = "A videosink based on Vulkan";
+
+  if (cdata->description)
+    long_name = g_strdup_printf ("%s on %s", name, cdata->description);
+  else
+    long_name = g_strdup (name);
+
+  vk_sink_class->device_index = cdata->device_index;
 
   gobject_class->set_property = gst_vulkan_sink_set_property;
   gobject_class->get_property = gst_vulkan_sink_get_property;
@@ -145,9 +166,10 @@ gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
       g_param_spec_object ("device", "Device", "Vulkan device",
           GST_TYPE_VULKAN_DEVICE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
-  gst_element_class_set_metadata (element_class, "Vulkan video sink",
-      "Sink/Video", "A videosink based on Vulkan",
-      "Matthew Waters <matthew@centricular.com>");
+  gst_element_class_set_metadata (element_class, long_name,
+      "Sink/Video", desc, "Matthew Waters <matthew@centricular.com>");
+
+  parent_class = g_type_class_peek_parent (g_klass);
 
   gst_element_class_add_static_pad_template (element_class,
       &gst_vulkan_sink_template);
@@ -166,9 +188,64 @@ gst_vulkan_sink_class_init (GstVulkanSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_vulkan_sink_show_frame);
 }
 
-static void
-gst_vulkan_sink_init (GstVulkanSink * vk_sink)
+static gpointer
+_register_debug_category (gpointer data)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_debug_vulkan_sink,
+      "vulkansink", 0, "Vulkan Video Sink");
+
+  return NULL;
+}
+
+gboolean
+gst_vulkan_sink_register (GstPlugin * plugin, GstVulkanDevice * device,
+    guint rank)
+{
+  static GOnce debug_once = G_ONCE_INIT;
+  GType g_define_type_id;
+  GTypeInfo type_info = {
+    .class_size = sizeof (GstVulkanSinkClass),
+    .class_init = gst_vulkan_sink_class_init,
+    .instance_size = sizeof (GstVulkanSink),
+    .instance_init = gst_vulkan_sink_init,
+  };
+  struct CData *cdata;
+  gboolean ret;
+  gchar *type_name, *feature_name;
+
+  cdata = g_new (struct CData, 1);
+  cdata->description = NULL;
+  cdata->device_index = device->physical_device->device_index;
+
+  g_return_val_if_fail (GST_IS_PLUGIN (plugin), FALSE);
+
+  gst_vulkan_create_feature_name (device, "GstVulkanSink",
+      "GstVulkanDevice%dSink", &type_name, "vulkansink",
+      "vulkandevice%dsink", &feature_name, &cdata->description, &rank);
+
+  type_info.class_data = cdata;
+
+  g_once (&debug_once, _register_debug_category, NULL);
+
+  g_define_type_id = g_type_register_static (GST_TYPE_VIDEO_SINK,
+      type_name, &type_info, 0);
+  G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_OVERLAY,
+      gst_vulkan_sink_video_overlay_init);
+  G_IMPLEMENT_INTERFACE (GST_TYPE_NAVIGATION,
+      gst_vulkan_sink_navigation_interface_init);
+
+  ret = gst_element_register (plugin, feature_name, rank, g_define_type_id);
+
+  g_free (type_name);
+  g_free (feature_name);
+
+  return ret;
+}
+
+static void
+gst_vulkan_sink_init (GTypeInstance * instance, gpointer g_class)
+{
+  GstVulkanSink *vk_sink = GST_VULKAN_SINK (instance);
   vk_sink->force_aspect_ratio = DEFAULT_FORCE_ASPECT_RATIO;
   vk_sink->par_n = DEFAULT_PIXEL_ASPECT_RATIO_N;
   vk_sink->par_d = DEFAULT_PIXEL_ASPECT_RATIO_D;
@@ -273,6 +350,7 @@ static GstStateChangeReturn
 gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
 {
   GstVulkanSink *vk_sink = GST_VULKAN_SINK (element);
+  GstVulkanSinkClass *klass = GST_VULKAN_SINK_GET_CLASS (element);
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GError *error = NULL;
 
@@ -289,7 +367,7 @@ gst_vulkan_sink_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       }
       if (!gst_vulkan_ensure_element_device (element, vk_sink->instance,
-              &vk_sink->device, 0)) {
+              &vk_sink->device, klass->device_index)) {
         return GST_STATE_CHANGE_FAILURE;
       }
       break;
