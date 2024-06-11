@@ -687,7 +687,8 @@ gst_v4l2src_query_preferred_size (GstV4l2Src * v4l2src,
   GST_INFO_OBJECT (v4l2src, "Detect input %u as `%s`", in.index, in.name);
 
   /* Notify signal status using WARNING/INFO messages */
-  if (in.status & (V4L2_IN_ST_NO_POWER | V4L2_IN_ST_NO_SIGNAL)) {
+  if (in.status & (V4L2_IN_ST_NO_POWER | V4L2_IN_ST_NO_SIGNAL |
+          V4L2_IN_ST_NO_SYNC)) {
     if (!v4l2src->no_signal)
       /* note: taken from decklinksrc element */
       GST_ELEMENT_WARNING (v4l2src, RESOURCE, READ, ("Signal lost"),
