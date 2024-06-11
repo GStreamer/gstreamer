@@ -53,7 +53,6 @@ else
 endif
 
 cdata = configuration_data()
-cdata.set('ENABLE_NLS', 1)
 
 if cc.get_id() == 'msvc'
   msvc_args = [
@@ -617,6 +616,7 @@ endif
 
 # xgettext is optional (on Windows for instance)
 if find_program('xgettext', required : get_option('nls')).found()
+  cdata.set('ENABLE_NLS', 1)
   subdir('po')
 endif
 
