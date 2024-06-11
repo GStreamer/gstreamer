@@ -43,8 +43,19 @@
 #include <gmodule.h>
 #include <atomic>
 
+#ifdef HAVE_DXGIDEBUG_H
+#include <dxgidebug.h>
+/* *INDENT-OFF* */
+typedef HRESULT (WINAPI * DXGIGetDebugInterface_t) (REFIID riid, void **iface);
+static DXGIGetDebugInterface_t GstDXGIGetDebugInterface = nullptr;
+static IDXGIInfoQueue *g_dxgi_info_queue = nullptr;
+static std::mutex g_dxgi_debug_lock;
+/* *INDENT-ON* */
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_sdk_debug);
 GST_DEBUG_CATEGORY_STATIC (gst_d3d12_dred_debug);
+GST_DEBUG_CATEGORY_STATIC (gst_d3d12_dxgi_debug);
 
 #ifndef GST_DISABLE_GST_DEBUG
 #define GST_CAT_DEFAULT ensure_debug_category()
@@ -578,6 +589,42 @@ gst_d3d12_device_enable_dred (void)
   return enabled;
 }
 
+static gboolean
+gst_d3d12_device_enable_dxgi_debug (void)
+{
+  static gboolean enabled = FALSE;
+#ifdef HAVE_DXGIDEBUG_H
+  static GModule *dxgi_debug_module = nullptr;
+  GST_D3D12_CALL_ONCE_BEGIN {
+    GST_DEBUG_CATEGORY_INIT (gst_d3d12_dxgi_debug,
+        "d3d12dxgidebug", 0, "d3d12dxgidebug");
+
+    if (!g_getenv ("GST_ENABLE_D3D12_DXGI_DEBUG"))
+      return;
+
+    dxgi_debug_module = g_module_open ("dxgidebug.dll", G_MODULE_BIND_LAZY);
+    if (!dxgi_debug_module)
+      return;
+
+    if (!g_module_symbol (dxgi_debug_module, "DXGIGetDebugInterface",
+            (gpointer *) & GstDXGIGetDebugInterface)) {
+      return;
+    }
+
+    auto hr = GstDXGIGetDebugInterface (IID_PPV_ARGS (&g_dxgi_info_queue));
+    if (FAILED (hr))
+      return;
+
+    GST_INFO ("DXGI debug is enabled");
+
+    enabled = TRUE;
+  }
+  GST_D3D12_CALL_ONCE_END;
+#endif
+
+  return enabled;
+}
+
 #define gst_d3d12_device_parent_class parent_class
 G_DEFINE_TYPE (GstD3D12Device, gst_d3d12_device, GST_TYPE_OBJECT);
 
@@ -926,6 +973,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 
   gst_d3d12_device_enable_debug ();
   gst_d3d12_device_enable_dred ();
+  gst_d3d12_device_enable_dxgi_debug ();
 
   hr = CreateDXGIFactory2 (factory_flags, IID_PPV_ARGS (&factory));
   if (FAILED (hr)) {
@@ -1521,46 +1569,84 @@ gst_d3d12_device_d3d12_debug (GstD3D12Device * device, const gchar * file,
   g_return_if_fail (GST_IS_D3D12_DEVICE (device));
 
   auto priv = device->priv->inner;
-  if (!priv->info_queue)
-    return;
+  if (priv->info_queue) {
+    std::lock_guard < std::recursive_mutex > lk (priv->extern_lock);
+    ID3D12InfoQueue *info_queue = priv->info_queue.Get ();
+    UINT64 num_msg = info_queue->GetNumStoredMessages ();
+    for (guint64 i = 0; i < num_msg; i++) {
+      HRESULT hr;
+      SIZE_T msg_len;
+      D3D12_MESSAGE *msg;
+      GstDebugLevel msg_level;
+      GstDebugLevel selected_level;
 
-  std::lock_guard < std::recursive_mutex > lk (priv->extern_lock);
-  ID3D12InfoQueue *info_queue = priv->info_queue.Get ();
-  UINT64 num_msg = info_queue->GetNumStoredMessages ();
-  for (guint64 i = 0; i < num_msg; i++) {
-    HRESULT hr;
-    SIZE_T msg_len;
-    D3D12_MESSAGE *msg;
-    GstDebugLevel msg_level;
-    GstDebugLevel selected_level;
+      hr = info_queue->GetMessage (i, nullptr, &msg_len);
+      if (FAILED (hr) || msg_len == 0)
+        continue;
 
-    hr = info_queue->GetMessage (i, nullptr, &msg_len);
-    if (FAILED (hr) || msg_len == 0)
-      continue;
+      msg = (D3D12_MESSAGE *) g_malloc0 (msg_len);
+      hr = info_queue->GetMessage (i, msg, &msg_len);
+      if (FAILED (hr) || msg_len == 0) {
+        g_free (msg);
+        continue;
+      }
 
-    msg = (D3D12_MESSAGE *) g_malloc0 (msg_len);
-    hr = info_queue->GetMessage (i, msg, &msg_len);
-    if (FAILED (hr) || msg_len == 0) {
+      msg_level = d3d12_message_severity_to_gst (msg->Severity);
+      if (msg->Category == D3D12_MESSAGE_CATEGORY_STATE_CREATION &&
+          msg_level > GST_LEVEL_ERROR) {
+        /* Do not warn for live object, since there would be live object
+         * when ReportLiveDeviceObjects was called */
+        selected_level = GST_LEVEL_INFO;
+      } else {
+        selected_level = msg_level;
+      }
+
+      gst_debug_log (gst_d3d12_sdk_debug, selected_level, file, function, line,
+          G_OBJECT (device), "D3D12InfoQueue: %s", msg->pDescription);
       g_free (msg);
-      continue;
     }
 
-    msg_level = d3d12_message_severity_to_gst (msg->Severity);
-    if (msg->Category == D3D12_MESSAGE_CATEGORY_STATE_CREATION &&
-        msg_level > GST_LEVEL_ERROR) {
-      /* Do not warn for live object, since there would be live object
-       * when ReportLiveDeviceObjects was called */
-      selected_level = GST_LEVEL_INFO;
-    } else {
-      selected_level = msg_level;
-    }
-
-    gst_debug_log (gst_d3d12_sdk_debug, selected_level, file, function, line,
-        G_OBJECT (device), "D3D12InfoQueue: %s", msg->pDescription);
-    g_free (msg);
+    info_queue->ClearStoredMessages ();
   }
 
-  info_queue->ClearStoredMessages ();
+#ifdef HAVE_DXGIDEBUG_H
+  if (gst_d3d12_device_enable_dxgi_debug ()) {
+    std::lock_guard < std::mutex > lk (g_dxgi_debug_lock);
+
+    UINT64 num_msg = g_dxgi_info_queue->GetNumStoredMessages (DXGI_DEBUG_ALL);
+    for (UINT64 i = 0; i < num_msg; i++) {
+      SIZE_T msg_len;
+      auto hr = g_dxgi_info_queue->GetMessage (DXGI_DEBUG_ALL,
+          i, nullptr, &msg_len);
+      if (FAILED (hr) || msg_len == 0)
+        continue;
+
+      auto msg = (DXGI_INFO_QUEUE_MESSAGE *) g_malloc0 (msg_len);
+      hr = g_dxgi_info_queue->GetMessage (DXGI_DEBUG_ALL, i, msg, &msg_len);
+
+      GstDebugLevel level = GST_LEVEL_LOG;
+      switch (msg->Severity) {
+        case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_CORRUPTION:
+        case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_ERROR:
+          level = GST_LEVEL_ERROR;
+        case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_WARNING:
+          level = GST_LEVEL_WARNING;
+        case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_INFO:
+          level = GST_LEVEL_INFO;
+        case DXGI_INFO_QUEUE_MESSAGE_SEVERITY_MESSAGE:
+          level = GST_LEVEL_DEBUG;
+        default:
+          break;
+      }
+
+      gst_debug_log (gst_d3d12_dxgi_debug, level, file, function, line,
+          G_OBJECT (device), "DXGIInfoQueue: %s", msg->pDescription);
+      g_free (msg);
+    }
+
+    g_dxgi_info_queue->ClearStoredMessages (DXGI_DEBUG_ALL);
+  }
+#endif
 }
 
 void

@@ -124,6 +124,18 @@ if host_machine.cpu_family() != 'x86'
   extra_args += ['-DHAVE_DIRECTX_MATH_SIMD']
 endif
 
+if cc.compiles('''
+  #include <dxgi.h>
+  #include <dxgidebug.h>
+  int main(int argc, char ** argv) {
+    IDXGIDebug *debug = NULL;
+    IDXGIInfoQueue *info_queue = NULL;
+    return 0;
+  }''',
+  name: 'DXGI debug layer support in Windows SDK')
+  extra_args += ['-DHAVE_DXGIDEBUG_H']
+endif
+
 pkg_name = 'gstreamer-d3d12-' + api_version
 gstd3d12 = library('gstd3d12-' + api_version,
   d3d12_sources,
