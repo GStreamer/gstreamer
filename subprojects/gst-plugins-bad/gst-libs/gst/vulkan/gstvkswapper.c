@@ -290,10 +290,10 @@ _choose_queue (GstVulkanDevice * device, GstVulkanQueue * queue,
   return TRUE;
 }
 
-/*
+/**
  * gst_vulkan_swapper_choose_queue:
  * @swapper: a #GstVulkanSwapper
- * @available_queue: (transfer none): a #GstVulkanQueue chosen elsewhere
+ * @available_queue: (transfer none) (nullable): a #GstVulkanQueue chosen elsewhere
  * @error: a #GError
  */
 gboolean

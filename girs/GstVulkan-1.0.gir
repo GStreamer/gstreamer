@@ -5327,9 +5327,11 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         </return-value>
         <parameters>
           <instance-parameter name="swapper" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.c">a #GstVulkanSwapper</doc>
             <type name="VulkanSwapper" c:type="GstVulkanSwapper*"/>
           </instance-parameter>
-          <parameter name="available_queue" transfer-ownership="none">
+          <parameter name="available_queue" transfer-ownership="none" nullable="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.c">a #GstVulkanQueue chosen elsewhere</doc>
             <type name="VulkanQueue" c:type="GstVulkanQueue*"/>
           </parameter>
         </parameters>
