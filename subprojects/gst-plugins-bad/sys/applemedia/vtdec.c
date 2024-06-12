@@ -332,10 +332,10 @@ gst_vtdec_output_loop (GstVtdec * vtdec)
       GST_VIDEO_DECODER_STREAM_LOCK (vtdec);
 
       if (frame->flags & VTDEC_FRAME_FLAG_ERROR) {
-        GST_LOG_OBJECT (vtdec, "ignoring frame %d because of error flag",
-            frame->system_frame_number);
+        GST_VIDEO_DECODER_ERROR (vtdec, 1, STREAM, DECODE,
+            ("Got frame %d with an error flag", frame->system_frame_number),
+            (NULL), ret);
         gst_video_decoder_release_frame (decoder, frame);
-        ret = GST_FLOW_ERROR;
       } else if (is_flushing || (frame->flags & VTDEC_FRAME_FLAG_SKIP)) {
         GST_LOG_OBJECT (vtdec, "flushing frame %d", frame->system_frame_number);
         gst_video_decoder_release_frame (decoder, frame);
