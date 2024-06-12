@@ -107,6 +107,7 @@ enum
   PROP_OVERLAY_MODE,
   PROP_DISPLAY_FORMAT,
   PROP_ERROR_ON_CLOSED,
+  PROP_EXTERNAL_WINDOW_ONLY,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -127,6 +128,7 @@ enum
 #define DEFAULT_OVERLAY_MODE GST_D3D12_WINDOW_OVERLAY_NONE
 #define DEFAULT_DISPLAY_FORMAT DXGI_FORMAT_UNKNOWN
 #define DEFAULT_ERROR_ON_CLOSED TRUE
+#define DEFAULT_EXTERNAL_WINDOW_ONLY FALSE
 
 enum
 {
@@ -213,6 +215,7 @@ struct GstD3D12VideoSinkPrivate
   GstD3D12WindowOverlayMode overlay_mode = DEFAULT_OVERLAY_MODE;
   DXGI_FORMAT display_format = DEFAULT_DISPLAY_FORMAT;
   std::atomic<gboolean> error_on_closed = { DEFAULT_ERROR_ON_CLOSED };
+  gboolean external_only = DEFAULT_EXTERNAL_WINDOW_ONLY;
 };
 /* *INDENT-ON* */
 
@@ -441,6 +444,20 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
       g_param_spec_boolean ("error-on-closed", "Error On Closed",
           "Posts error message and return flow error if window is closed "
           "in playing or paused state", DEFAULT_ERROR_ON_CLOSED,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
+   * GstD3D12VideoSink:external-window-only:
+   *
+   * If enabled and window handle is not set by user, videosink will report
+   * error instead of creating videosink's own window.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_EXTERNAL_WINDOW_ONLY,
+      g_param_spec_boolean ("external-window-only", "External Window Only",
+          "Disallow creating videosink's own window when overlay handle is not set",
+          DEFAULT_EXTERNAL_WINDOW_ONLY,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
@@ -675,6 +692,9 @@ gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
     case PROP_ERROR_ON_CLOSED:
       priv->error_on_closed = g_value_get_boolean (value);
       break;
+    case PROP_EXTERNAL_WINDOW_ONLY:
+      priv->external_only = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -752,6 +772,9 @@ gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_ERROR_ON_CLOSED:
       g_value_set_boolean (value, priv->error_on_closed);
+      break;
+    case PROP_EXTERNAL_WINDOW_ONLY:
+      g_value_set_boolean (value, priv->external_only);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1364,6 +1387,8 @@ gst_d3d12_video_sink_open_window (GstD3D12VideoSink * self)
       }
     }
 
+    priv->window_handle_updated = FALSE;
+
     if (!need_open) {
       if (!is_closed)
         return GST_FLOW_OK;
@@ -1373,7 +1398,11 @@ gst_d3d12_video_sink_open_window (GstD3D12VideoSink * self)
     }
 
     window_handle = priv->window_handle;
-    priv->window_handle_updated = FALSE;
+    if (!window_handle && priv->external_only) {
+      GST_WARNING_OBJECT (self,
+          "external-window-only mode but window handle is unavailable");
+      return GST_D3D12_WINDOW_FLOW_CLOSED;
+    }
   }
 
   priv->window_open_called = TRUE;
@@ -1503,8 +1532,7 @@ gst_d3d12_video_sink_overlay_set_window_handle (GstVideoOverlay * overlay,
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (priv->window_handle != window_handle) {
     priv->window_handle = window_handle;
-    if (priv->window_handle)
-      priv->window_handle_updated = TRUE;
+    priv->window_handle_updated = TRUE;
   }
 }
 
