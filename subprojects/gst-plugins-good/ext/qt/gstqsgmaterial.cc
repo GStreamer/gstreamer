@@ -264,6 +264,9 @@ vertexShaderForFormat(GstVideoFormat v_format)
   "attribute vec4 " ATTRIBUTE_POSITION ";\n" \
   "attribute vec2 " ATTRIBUTE_TEXCOORD ";\n" \
 
+#define gles2_precision \
+  "precision mediump float;\n"
+
 #define texcoord_input \
   "varying vec2 v_texcoord;\n"
 #define single_texture_input \
@@ -289,32 +292,34 @@ vertexShaderForFormat(GstVideoFormat v_format)
 static char *
 fragmentShaderForFormat(GstVideoFormat v_format, GstGLContext * context)
 {
+  gboolean is_gles2 = (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) != 0;
+
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_RGBA: {
       char *swizzle = gst_gl_color_convert_swizzle_shader_string (context);
-      char *ret = g_strdup_printf (texcoord_input single_texture_input uniform_opacity
+      char *ret = g_strdup_printf ("%s" texcoord_input single_texture_input uniform_opacity
           "%s\n"
           "void main(void) {\n"
           "  gl_FragColor = texture2D(tex, v_texcoord) * " UNIFORM_OPACITY_NAME ";\n"
-          "}\n", swizzle);
+          "}\n", is_gles2 ? gles2_precision : "", swizzle);
       g_clear_pointer (&swizzle, g_free);
       return ret;
     }
     case GST_VIDEO_FORMAT_BGRA: {
       char *swizzle = gst_gl_color_convert_swizzle_shader_string (context);
-      char *ret = g_strdup_printf (texcoord_input single_texture_input uniform_swizzle uniform_opacity
+      char *ret = g_strdup_printf ("%s" texcoord_input single_texture_input uniform_swizzle uniform_opacity
           "%s\n"
           "void main(void) {\n"
           "  gl_FragColor = swizzle(texture2D(tex, v_texcoord), " UNIFORM_SWIZZLE_COMPONENTS_NAME ") * " UNIFORM_OPACITY_NAME ";\n"
-          "}\n", swizzle);
+          "}\n", is_gles2 ? gles2_precision : "", swizzle);
       g_clear_pointer (&swizzle, g_free);
       return ret;
     }
     case GST_VIDEO_FORMAT_YV12: {
       char *yuv_to_rgb = gst_gl_color_convert_yuv_to_rgb_shader_string (context);
       char *swizzle = gst_gl_color_convert_swizzle_shader_string (context);
-      char *ret = g_strdup_printf (texcoord_input triplanar_texture_input uniform_swizzle uniform_yuv_to_rgb_color_matrix uniform_opacity
+      char *ret = g_strdup_printf ("%s" texcoord_input triplanar_texture_input uniform_swizzle uniform_yuv_to_rgb_color_matrix uniform_opacity
         "%s\n"
         "%s\n"
         "void main(void) {\n"
@@ -328,7 +333,7 @@ fragmentShaderForFormat(GstVideoFormat v_format, GstGLContext * context)
         "  rgba.a = yuva.a;\n"
         "  gl_FragColor = rgba * " UNIFORM_OPACITY_NAME ";\n"
         //"  gl_FragColor = vec4(yuva.x, 0.0, 0.0, 1.0);\n"
-        "}\n", yuv_to_rgb, swizzle);
+        "}\n", is_gles2 ? gles2_precision : "", yuv_to_rgb, swizzle);
       g_clear_pointer (&yuv_to_rgb, g_free);
       g_clear_pointer (&swizzle, g_free);
       return ret;
@@ -336,7 +341,7 @@ fragmentShaderForFormat(GstVideoFormat v_format, GstGLContext * context)
     case GST_VIDEO_FORMAT_NV12: {
       char *yuv_to_rgb = gst_gl_color_convert_yuv_to_rgb_shader_string (context);
       char *swizzle = gst_gl_color_convert_swizzle_shader_string (context);
-      char *ret = g_strdup_printf (texcoord_input biplanar_texture_input uniform_swizzle uniform_yuv_to_rgb_color_matrix uniform_opacity
+      char *ret = g_strdup_printf ("%s" texcoord_input biplanar_texture_input uniform_swizzle uniform_yuv_to_rgb_color_matrix uniform_opacity
         "%s\n"
         "%s\n"
         "void main(void) {\n"
@@ -349,7 +354,7 @@ fragmentShaderForFormat(GstVideoFormat v_format, GstGLContext * context)
         "  rgba.rgb = yuv_to_rgb (yuva.xyz, " UNIFORM_YUV_OFFSET_NAME ", " UNIFORM_YUV_YCOEFF_NAME ", " UNIFORM_YUV_UCOEFF_NAME ", " UNIFORM_YUV_VCOEFF_NAME ");\n"
         "  rgba.a = yuva.a;\n"
         "  gl_FragColor = rgba * " UNIFORM_OPACITY_NAME ";\n"
-        "}\n", yuv_to_rgb, swizzle);
+        "}\n", is_gles2 ? gles2_precision : "", yuv_to_rgb, swizzle);
       g_clear_pointer (&yuv_to_rgb, g_free);
       g_clear_pointer (&swizzle, g_free);
       return ret;
@@ -364,7 +369,7 @@ GstQSGMaterial::createShader() const
 {
   GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&this->v_info);
   char *vertex = vertexShaderForFormat(v_format);
-  char *fragment = fragmentShaderForFormat(v_format, NULL);
+  char *fragment = fragmentShaderForFormat(v_format, gst_gl_context_get_current ());
 
   if (!vertex || !fragment)
     return nullptr;
