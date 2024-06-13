@@ -21,6 +21,14 @@
 #define GST_CAT_DEFAULT gst_qt_gl_renderer_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
+// from GL_EXT_discard_framebuffer
+#ifndef GL_DEPTH_EXT
+#define GL_DEPTH_EXT 0x1801
+#endif
+#ifndef GL_STENCIL_EXT
+#define GL_STENCIL_EXT 0x1802
+#endif
+
 static void
 init_debug (void)
 {
@@ -217,6 +225,7 @@ GstQuickRenderer::GstQuickRenderer()
       gl_allocator(NULL),
       gl_params(NULL),
       gl_mem(NULL),
+      m_useDepthBuffer(TRUE),
       m_sharedRenderData(NULL)
 {
   init_debug ();
@@ -292,7 +301,7 @@ bool CreateSurfaceWorker::event(QEvent * ev)
     return QObject::event(ev);
 }
 
-bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
+bool GstQuickRenderer::init (GstGLContext * context, const gboolean use_depth_buffer, GError ** error)
 {
     g_return_val_if_fail (GST_IS_GL_CONTEXT (context), false);
     g_return_val_if_fail (gst_gl_context_get_current () == context, false);
@@ -305,6 +314,9 @@ bool GstQuickRenderer::init (GstGLContext * context, GError ** error)
             "native context");
         return false;
     }
+
+    m_useDepthBuffer = use_depth_buffer;
+    GST_DEBUG ("%s", m_useDepthBuffer ? "Use depth and stencil buffer" : "Discard depth and stencil buffer");
 
     struct SharedRenderData *render_data = NULL, *old_render_data;
     do {
@@ -551,7 +563,8 @@ void GstQuickRenderer::ensureFbo()
 
     if (!m_fbo) {
         m_fbo = new QOpenGLFramebufferObject(m_sharedRenderData->m_surface->size(),
-                QOpenGLFramebufferObject::CombinedDepthStencil);
+            m_useDepthBuffer ? QOpenGLFramebufferObject::CombinedDepthStencil :
+                QOpenGLFramebufferObject::NoAttachment);
         m_quickWindow->setRenderTarget(m_fbo);
         GST_DEBUG ("%p new framebuffer created with size %ix%i", this,
             m_fbo->size().width(), m_fbo->size().height());
@@ -583,6 +596,23 @@ GstQuickRenderer::renderGstGL ()
 
     /* Meanwhile on this thread continue with the actual rendering. */
     m_renderControl->render();
+
+    {
+        GLint currentFbo = -1;
+        gl->GetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &currentFbo);
+
+        if ((GLuint)currentFbo == m_fbo->handle()) {
+            if (gl->InvalidateFramebuffer) {
+                const GLenum attachments[] = { GL_DEPTH_ATTACHMENT, GL_STENCIL_ATTACHMENT };
+                gl->InvalidateFramebuffer(GL_FRAMEBUFFER, sizeof(attachments) / sizeof(*attachments), attachments);
+            } else if (gl->DiscardFramebuffer) {
+                const GLenum attachments[] = { GL_DEPTH_EXT, GL_STENCIL_EXT };
+                gl->DiscardFramebuffer(GL_FRAMEBUFFER, sizeof(attachments) / sizeof(*attachments), attachments);
+            } else {
+                GST_DEBUG ("Context lacks both - GL_ARB_invalidate_subdata and GL_EXT_discard_framebuffer, cannot discard");
+            }
+        }
+    }
 
     GST_DEBUG ("wrapping Qfbo %p with texture %u", m_fbo, m_fbo->texture());
     struct FBOUserData *data = g_new0 (struct FBOUserData, 1);

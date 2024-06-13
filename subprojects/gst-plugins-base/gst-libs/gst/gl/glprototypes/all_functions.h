@@ -32,3 +32,4 @@
 #include "buffers.h"
 #include "query.h"
 #include "buffer_storage.h"
+#include "invalidate_subdata.h"

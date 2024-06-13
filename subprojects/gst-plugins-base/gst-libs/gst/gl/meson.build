@@ -103,6 +103,7 @@ gl_prototype_headers = files([
   'glprototypes/gles.h',
   'glprototypes/gstgl_compat.h',
   'glprototypes/gstgl_gles2compat.h',
+  'glprototypes/invalidate_subdata.h',
   'glprototypes/opengl.h',
   'glprototypes/query.h',
   'glprototypes/shaders.h',

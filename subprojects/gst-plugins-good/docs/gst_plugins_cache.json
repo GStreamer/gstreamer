@@ -12450,6 +12450,18 @@
                         "type": "GstGLContext",
                         "writable": false
                     },
+                    "depth-buffer": {
+                        "blurb": "Use depth and stencil buffer for the rendering of the scene. Might corrupt the rendering when set to FALSE! Only set to FALSE after carefully checking the targeted QML scene.",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "true",
+                        "mutable": "ready",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "qml-scene": {
                         "blurb": "The contents of the QML scene",
                         "conditionally-available": false,
