@@ -456,8 +456,8 @@ gst_pcap_parse_scan_frame (GstPcapParse * self,
     return FALSE;
 
   /* ip info */
-  ip_src_addr = *((guint32 *) (buf_ip + 12));
-  ip_dst_addr = *((guint32 *) (buf_ip + 16));
+  memcpy (&ip_src_addr, buf_ip + 12, sizeof (ip_src_addr));
+  memcpy (&ip_dst_addr, buf_ip + 16, sizeof (ip_dst_addr));
   buf_proto = buf_ip + ip_header_size;
   ip_packet_len = GUINT16_FROM_BE (*(guint16 *) (buf_ip + 2));
 
