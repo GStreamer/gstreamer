@@ -560,6 +560,37 @@ GST_START_TEST (test_dtmfsrc_min_duration)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtpdtmfdepay_src_caps_fixated)
+{
+  GstElement *pipeline;
+  GstStructure *s;
+
+  pipeline =
+      gst_parse_launch ("rtpdtmfsrc ! rtpdtmfdepay ! audioconvert ! fakesink",
+      NULL);
+
+  fail_unless_equals_int (gst_element_set_state (pipeline, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  // Send an event so there's some data flow and the pipeline prerolls
+  s = gst_structure_new ("dtmf-event",
+      "type", G_TYPE_INT, 1, "number", G_TYPE_INT, 3,
+      "method", G_TYPE_INT, 1, "volume", G_TYPE_INT, 8,
+      "start", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  fail_unless (gst_element_send_event (pipeline,
+          gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s)));
+
+  // Wait for preroll
+  fail_unless_equals_int (gst_element_get_state (pipeline, NULL, NULL, -1),
+      GST_STATE_CHANGE_SUCCESS);
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 static Suite *
 dtmf_suite (void)
 {
@@ -568,6 +599,7 @@ dtmf_suite (void)
 
   tc = tcase_create ("rtpdtmfdepay");
   tcase_add_test (tc, test_rtpdtmfdepay);
+  tcase_add_test (tc, test_rtpdtmfdepay_src_caps_fixated);
   suite_add_tcase (s, tc);
 
   tc = tcase_create ("rtpdtmfsrc");
