@@ -138,9 +138,11 @@ static GstStaticPadTemplate gst_rtp_dtmf_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) \"" GST_AUDIO_NE (S16) "\", "
-        "rate = " GST_AUDIO_RATE_RANGE ", " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-raw, "    //
+        "format = (string) " GST_AUDIO_NE (S16) ", "    //
+        "rate = " GST_AUDIO_RATE_RANGE ", "     //
+        "channels = (int) 1, "  //
+        "layout = (string) interleaved")
     );
 
 static GstStaticPadTemplate gst_rtp_dtmf_depay_sink_template =
@@ -282,6 +284,8 @@ gst_rtp_dtmf_depay_setcaps (GstRTPBaseDepayload * filter, GstCaps * caps)
   srccaps = gst_pad_peer_query_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter),
       filtercaps);
   gst_caps_unref (filtercaps);
+
+  srccaps = gst_caps_truncate (srccaps);
 
   gst_pad_set_caps (GST_RTP_BASE_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
