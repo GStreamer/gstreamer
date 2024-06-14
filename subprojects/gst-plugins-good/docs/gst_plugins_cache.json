@@ -5190,7 +5190,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "audio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: 1\n",
+                        "caps": "audio/x-raw:\n         format: S16LE\n           rate: [ 1, 2147483647 ]\n       channels: 1\n         layout: interleaved\n",
                         "direction": "src",
                         "presence": "always"
                     }

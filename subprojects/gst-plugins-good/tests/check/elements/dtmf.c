@@ -178,7 +178,8 @@ GST_START_TEST (test_rtpdtmfdepay)
   caps_out = gst_pad_get_current_caps (sink);
   expected_caps_out = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE (S16),
-      "rate", G_TYPE_INT, 1000, "channels", G_TYPE_INT, 1, NULL);
+      "rate", G_TYPE_INT, 1000, "channels", G_TYPE_INT, 1,
+      "layout", G_TYPE_STRING, "interleaved", NULL);
   fail_unless (gst_caps_is_equal_fixed (caps_out, expected_caps_out));
   gst_caps_unref (expected_caps_out);
   gst_caps_unref (caps_out);
