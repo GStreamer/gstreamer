@@ -49,6 +49,7 @@ public:
   void set_window_handles (HWND parent_hwnd, HWND child_hwnd);
   HWND get_window_handle ();
   SIZE_T get_id ();
+  GstD3D12Window *get_window ();
   bool has_parent ();
   void on_destroy ();
   void set_fullscreen_on_alt_enter (bool enable);
@@ -60,10 +61,12 @@ public:
   void handle_key_event (UINT msg, WPARAM wparam, LPARAM lparam);
   void handle_mouse_event (UINT msg, WPARAM wparam, LPARAM lparam);
   void handle_swapchain_created ();
+  void handle_position_changed (INT width, INT height);
+  void release_swapchin ();
   GstFlowReturn setup_swapchain (GstD3D12Device * device, DXGI_FORMAT format,
       const GstVideoInfo * in_info, const GstVideoInfo * out_info,
       GstStructure * conv_config);
-  GstFlowReturn resize_buffer ();
+  GstFlowReturn resize_buffer (INT width, INT height);
   GstFlowReturn set_buffer (GstBuffer * buffer);
   GstFlowReturn present ();
 
@@ -78,6 +81,8 @@ private:
   GThread *window_thread_ = nullptr;
   FullscreenState fstate_;
   std::shared_ptr<SwapChain> swapchain_;
+  INT width_ = 0;
+  INT height_ = 0;
 
   std::recursive_mutex lock_;
 };
@@ -104,9 +109,11 @@ public:
   void unlock_stop_window (GstD3D12Window * window);
 
   GstFlowReturn create_child_hwnd (GstD3D12Window * window,
-      HWND parent_hwnd, SIZE_T & proxy_id);
+      HWND parent_hwnd, gboolean direct_swapchain, SIZE_T & proxy_id);
 
   void create_child_hwnd_finish (GstD3D12Window * window,
+      HWND parent_hwnd, SIZE_T proxy_id);
+  void create_proxy_finish (GstD3D12Window * window,
       HWND parent_hwnd, SIZE_T proxy_id);
 
   SIZE_T create_internal_window (GstD3D12Window * window);
@@ -122,6 +129,7 @@ public:
 
   std::shared_ptr<SwapChainProxy> get_proxy (GstD3D12Window * window,
       SIZE_T proxy_id);
+  std::shared_ptr<SwapChainProxy> get_direct_proxy (HWND parent_hwnd);
 
 private:
   enum CreateState
@@ -147,5 +155,6 @@ private:
   std::recursive_mutex lock_;
   std::unordered_map<GstD3D12Window *, std::shared_ptr<State>> state_;
   std::unordered_map<HWND, std::vector<HWND>> parent_hwnd_map_;
+  std::unordered_map<HWND, std::weak_ptr<SwapChainProxy>> direct_proxy_map_;
 };
 

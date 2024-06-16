@@ -30,7 +30,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_window_debug);
 
 #define WM_GST_D3D12_FULLSCREEN (WM_USER + 1)
 #define WM_GST_D3D12_ATTACH_INTERNAL_WINDOW (WM_USER + 2)
-#define WM_GST_D3D12_DETACH_INTERNAL_WINDOW (WM_USER + 3)
+#define WM_GST_D3D12_CREATE_PROXY (WM_USER + 3)
 #define WM_GST_D3D12_DESTROY_INTERNAL_WINDOW (WM_USER + 4)
 #define WM_GST_D3D12_UPDATE_RENDER_RECT (WM_USER + 5)
 #define WM_GST_D3D12_PARENT_SIZE (WM_USER + 6)
@@ -59,7 +59,7 @@ SwapChainProxy::~SwapChainProxy ()
   GST_DEBUG_OBJECT (window_, "Destroying proxy %" G_GSIZE_FORMAT, id_);
 
   swapchain_ = nullptr;
-  if (window_thread_ && hwnd_) {
+  if (window_thread_ && hwnd_ && hwnd_ != parent_hwnd_) {
     if (window_thread_ == g_thread_self ())
       DestroyWindow (hwnd_);
     else
@@ -87,6 +87,12 @@ SIZE_T
 SwapChainProxy::get_id ()
 {
   return id_;
+}
+
+GstD3D12Window *
+SwapChainProxy::get_window ()
+{
+  return window_;
 }
 
 bool
@@ -137,7 +143,7 @@ SwapChainProxy::update_render_rect ()
   bool send_msg = false;
   {
     std::lock_guard <std::recursive_mutex> lk (lock_);
-    if (!hwnd_)
+    if (!hwnd_ || hwnd_ == parent_hwnd_)
       return;
 
     if (window_thread_ == g_thread_self ())
@@ -267,7 +273,7 @@ SwapChainProxy::handle_mouse_event (UINT msg, WPARAM wparam, LPARAM lparam)
   auto xpos = GET_X_LPARAM (lparam);
   auto ypos = GET_Y_LPARAM (lparam);
 
-  if (parent_hwnd_) {
+  if (parent_hwnd_ && parent_hwnd_ != hwnd_) {
     POINT updated_pos;
     updated_pos.x = xpos;
     updated_pos.y = ypos;
@@ -477,12 +483,46 @@ SwapChainProxy::handle_swapchain_created ()
   swapchain_->disable_alt_enter (hwnd_);
 }
 
+void
+SwapChainProxy::handle_position_changed (INT width, INT height)
+{
+  {
+    std::lock_guard <std::recursive_mutex> lk (lock_);
+    if (!hwnd_ || !swapchain_)
+      return;
+
+    if (width != width_ || height != height_) {
+      width_ = width;
+      height_ = height;
+    } else {
+      return;
+    }
+  }
+
+  auto sc = get_swapchain ();
+  if (sc)
+    sc->resize_buffer (window_);
+}
+
+void
+SwapChainProxy::release_swapchin ()
+{
+  std::lock_guard <std::recursive_mutex> lk (lock_);
+  swapchain_ = nullptr;
+}
+
 GstFlowReturn
-SwapChainProxy::resize_buffer ()
+SwapChainProxy::resize_buffer (INT width, INT height)
 {
   auto sc = get_swapchain ();
   if (!sc)
     return GST_FLOW_OK;
+
+  if (width > 0 && height > 0) {
+    std::lock_guard <std::recursive_mutex> lk (lock_);
+    width_ = width;
+    height_ = height;
+  }
 
   return sc->resize_buffer (window_);
 }
@@ -570,9 +610,68 @@ parent_wnd_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     server->create_child_hwnd_finish ((GstD3D12Window *) lparam, hwnd,
         (SIZE_T) wparam);
     return 0;
+  } else if (msg == WM_GST_D3D12_CREATE_PROXY) {
+    server->create_proxy_finish ((GstD3D12Window *) lparam, hwnd,
+        (SIZE_T) wparam);
+    return 0;
   }
 
   server->forward_parent_message (hwnd, msg, wparam, lparam);
+
+  auto direct_proxy = server->get_direct_proxy (hwnd);
+  switch (msg) {
+    case WM_SIZE:
+    {
+      auto dproxy = server->get_direct_proxy (hwnd);
+      if (dproxy)
+        dproxy->resize_buffer (LOWORD (lparam), HIWORD (lparam));
+      break;
+    }
+    case WM_WINDOWPOSCHANGED:
+    {
+      WINDOWPOS *pos = (WINDOWPOS *) lparam;
+      if ((pos->flags & SWP_HIDEWINDOW) == 0) {
+        INT width = pos->cx;
+        INT height = pos->cy;
+        if ((pos->flags & SWP_NOSIZE) != 0) {
+          RECT rect = { };
+          GetClientRect (hwnd, &rect);
+          width = rect.right - rect.left;
+          height = rect.bottom - rect.top;
+        }
+        auto dproxy = server->get_direct_proxy (hwnd);
+        if (dproxy)
+          dproxy->handle_position_changed (width, height);
+      }
+      break;
+    }
+    case WM_KEYDOWN:
+    case WM_KEYUP:
+    {
+      auto dproxy = server->get_direct_proxy (hwnd);
+      if (dproxy)
+        dproxy->handle_key_event (msg, wparam, lparam);
+      break;
+    }
+    case WM_LBUTTONDOWN:
+    case WM_LBUTTONUP:
+    case WM_RBUTTONDOWN:
+    case WM_RBUTTONUP:
+    case WM_MBUTTONDOWN:
+    case WM_MBUTTONUP:
+    case WM_MOUSEMOVE:
+    case WM_LBUTTONDBLCLK:
+    case WM_RBUTTONDBLCLK:
+    case WM_MBUTTONDBLCLK:
+    {
+      auto proxy = server->get_direct_proxy (hwnd);
+      if (proxy)
+        proxy->handle_mouse_event (msg, wparam, lparam);
+      break;
+    }
+    default:
+      break;
+  }
 
   if (msg == WM_DESTROY) {
     GST_INFO ("Parent HWND %p is being destroyed", hwnd);
@@ -699,7 +798,7 @@ internal_wnd_proc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
     {
       auto proxy = server->get_proxy (window, id);
       if (proxy)
-        proxy->resize_buffer ();
+        proxy->resize_buffer (0, 0);
       break;
     }
     case WM_SYSKEYDOWN:
@@ -753,7 +852,7 @@ register_window_class ()
 
 GstFlowReturn
 HwndServer::create_child_hwnd (GstD3D12Window * window, HWND parent_hwnd,
-    SIZE_T & proxy_id)
+    gboolean direct_swapchain, SIZE_T & proxy_id)
 {
   proxy_id = 0;
   if (!IsWindow (parent_hwnd)) {
@@ -781,6 +880,31 @@ HwndServer::create_child_hwnd (GstD3D12Window * window, HWND parent_hwnd,
           "subclass proc installed for hwnd %p", parent_hwnd);
     }
 
+    /* Cannot attach multiple swapchain to a single HWND.
+     * release swapchain if needed */
+    if (direct_swapchain) {
+      for (auto it : state_) {
+        auto state = it.second;
+        if (state) {
+          auto proxy = state->proxy;
+          if (proxy && proxy->get_window_handle () == parent_hwnd) {
+            proxy->release_swapchin ();
+            std::unique_lock<std::mutex> lk (state->create_lock);
+            state->proxy = nullptr;
+          }
+        }
+      }
+
+      auto it = direct_proxy_map_.find (parent_hwnd);
+      if (it != direct_proxy_map_.end ()) {
+        auto proxy = it->second.lock ();
+        if (proxy)
+          proxy->release_swapchin ();
+      }
+
+      direct_proxy_map_.erase (parent_hwnd);
+    }
+
     auto it = state_.find (window);
     state = it->second;
   }
@@ -800,7 +924,8 @@ HwndServer::create_child_hwnd (GstD3D12Window * window, HWND parent_hwnd,
   }
 
   state->create_state = CreateState::Waiting;
-  if (!PostMessageW (parent_hwnd, WM_GST_D3D12_ATTACH_INTERNAL_WINDOW,
+  if (!PostMessageW (parent_hwnd, direct_swapchain ?
+      WM_GST_D3D12_CREATE_PROXY: WM_GST_D3D12_ATTACH_INTERNAL_WINDOW,
       (WPARAM) id, (LPARAM) window)) {
     GST_WARNING_OBJECT (window, "Couldn't post message");
     state->create_state = CreateState::None;
@@ -912,6 +1037,43 @@ HwndServer::create_child_hwnd_finish (GstD3D12Window * window,
   }
 }
 
+void
+HwndServer::create_proxy_finish (GstD3D12Window * window,
+    HWND parent_hwnd, SIZE_T proxy_id)
+{
+  std::shared_ptr<State> state;
+  std::shared_ptr<SwapChainProxy> proxy;
+
+  std::lock_guard<std::recursive_mutex> lk (lock_);
+  auto it = state_.find (window);
+  if (it == state_.end ()) {
+    GST_WARNING ("Window is not registered");
+    return;
+  }
+
+  state = it->second;
+  proxy = state->proxy;
+
+  if (!proxy) {
+    GST_INFO ("Proxy was released");
+    return;
+  }
+
+  if (proxy->get_id () != proxy_id) {
+    GST_INFO ("Different proxy id");
+    return;
+  }
+
+  direct_proxy_map_.insert ({parent_hwnd, proxy});
+
+  {
+    std::lock_guard <std::mutex> lk (state->create_lock);
+    proxy->set_window_handles (parent_hwnd, parent_hwnd);
+    state->create_state = CreateState::Opened;
+    state->create_cond.notify_all ();
+  }
+}
+
 SIZE_T
 HwndServer::create_internal_window (GstD3D12Window * window)
 {
@@ -1006,6 +1168,15 @@ HwndServer::release_proxy (GstD3D12Window * window, SIZE_T proxy_id)
         state->proxy = nullptr;
       }
     }
+
+    auto dit = direct_proxy_map_.begin ();
+    while (dit != direct_proxy_map_.end ()) {
+      auto proxy = dit->second.lock ();
+      if (!proxy || proxy->get_window () == window)
+        dit = direct_proxy_map_.erase (dit);
+      else
+        dit++;
+    }
   }
 }
 
@@ -1061,6 +1232,18 @@ HwndServer::on_parent_destroy (HWND parent_hwnd)
 {
   std::lock_guard <std::recursive_mutex> lk (lock_);
   parent_hwnd_map_.erase (parent_hwnd);
+  direct_proxy_map_.erase (parent_hwnd);
+  for (auto it : state_) {
+    auto state = it.second;
+    if (state) {
+      auto proxy = state->proxy;
+      if (proxy && proxy->get_window_handle () == parent_hwnd) {
+        proxy->release_swapchin ();
+        std::unique_lock<std::mutex> lk (state->create_lock);
+        state->proxy = nullptr;
+      }
+    }
+  }
 }
 
 void
@@ -1099,4 +1282,16 @@ HwndServer::get_proxy (GstD3D12Window * window, SIZE_T proxy_id)
 
   return ret;
 }
+
+std::shared_ptr<SwapChainProxy>
+HwndServer::get_direct_proxy (HWND parent_hwnd)
+{
+  std::lock_guard <std::recursive_mutex> lk (lock_);
+  auto it = direct_proxy_map_.find (parent_hwnd);
+  if (it == direct_proxy_map_.end ())
+    return nullptr;
+
+  return it->second.lock ();
+}
+
 /* *INDENT-ON* */

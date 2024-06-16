@@ -335,12 +335,13 @@ gst_d3d12_window_resize_buffer (GstD3D12Window * self)
   if (!proxy)
     return GST_FLOW_OK;
 
-  return proxy->resize_buffer ();
+  return proxy->resize_buffer (0, 0);
 }
 
 GstFlowReturn
 gst_d3d12_window_open (GstD3D12Window * window, GstD3D12Device * device,
-    guint display_width, guint display_height, HWND parent_hwnd)
+    guint display_width, guint display_height, HWND parent_hwnd,
+    gboolean direct_swapchain)
 {
   auto priv = window->priv;
   auto server = HwndServer::get_instance ();
@@ -363,7 +364,8 @@ gst_d3d12_window_open (GstD3D12Window * window, GstD3D12Device * device,
     return GST_FLOW_OK;
   }
 
-  auto ret = server->create_child_hwnd (window, parent_hwnd, priv->proxy_id);
+  auto ret = server->create_child_hwnd (window, parent_hwnd,
+      direct_swapchain, priv->proxy_id);
   if (ret == GST_FLOW_OK)
     priv->proxy = server->get_proxy (window, priv->proxy_id);
 

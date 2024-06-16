@@ -246,6 +246,19 @@ SwapChain::~SwapChain()
   lock_.unlock ();
 }
 
+static inline bool
+is_expected_error (HRESULT hr)
+{
+  switch (hr) {
+    case DXGI_ERROR_INVALID_CALL:
+    case E_ACCESSDENIED:
+      return true;
+    break;
+  }
+
+  return false;
+}
+
 GstFlowReturn
 SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
     HWND hwnd, DXGI_FORMAT format, const GstVideoInfo * in_info,
@@ -278,8 +291,16 @@ SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
     ComPtr < IDXGISwapChain1 > swapchain;
     auto hr = factory->CreateSwapChainForHwnd (cq_handle, hwnd, &desc, nullptr,
         nullptr, &swapchain);
-    if (!gst_d3d12_result (hr, device))
+    if (FAILED (hr)) {
+      if (is_expected_error (hr)) {
+        GST_WARNING_OBJECT (window,
+            "Expected error 0x%x, maybe window is being closed", (guint) hr);
+        return GST_D3D12_WINDOW_FLOW_CLOSED;
+      }
+
+      gst_d3d12_result (hr, device);
       return GST_FLOW_ERROR;
+    }
 
     hr = swapchain.As (&resource_->swapchain);
     if (!gst_d3d12_result (hr, device))
@@ -370,8 +391,16 @@ SwapChain::resize_buffer (GstD3D12Window * window)
   resource_->swapchain->GetDesc (&desc);
   auto hr = resource_->swapchain->ResizeBuffers (BACK_BUFFER_COUNT,
       0, 0, render_format_, desc.Flags);
-  if (!gst_d3d12_result (hr, device))
+  if (FAILED (hr)) {
+    if (is_expected_error (hr)) {
+      GST_WARNING_OBJECT (window,
+          "Expected error 0x%x, maybe window is being closed", (guint) hr);
+      return GST_D3D12_WINDOW_FLOW_CLOSED;
+    }
+
+    gst_d3d12_result (hr, device);
     return GST_FLOW_ERROR;
+  }
 
   for (guint i = 0; i < BACK_BUFFER_COUNT; i++) {
     ComPtr < ID3D12Resource > backbuf;
@@ -534,10 +563,13 @@ SwapChain::present ()
 
   switch (hr) {
     case DXGI_ERROR_DEVICE_REMOVED:
-    case DXGI_ERROR_INVALID_CALL:
     case E_OUTOFMEMORY:
       gst_d3d12_result (hr, resource_->device);
       return GST_FLOW_ERROR;
+    case DXGI_ERROR_INVALID_CALL:
+    case E_ACCESSDENIED:
+      GST_WARNING ("Present failed, hr: 0x%x", (guint) hr);
+      return GST_D3D12_WINDOW_FLOW_CLOSED;
     default:
       /* Ignore other return code */
       break;

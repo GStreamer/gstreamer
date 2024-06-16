@@ -108,6 +108,7 @@ enum
   PROP_DISPLAY_FORMAT,
   PROP_ERROR_ON_CLOSED,
   PROP_EXTERNAL_WINDOW_ONLY,
+  PROP_DIRECT_SWAPCHAIN,
 };
 
 #define DEFAULT_ADAPTER -1
@@ -129,6 +130,7 @@ enum
 #define DEFAULT_DISPLAY_FORMAT DXGI_FORMAT_UNKNOWN
 #define DEFAULT_ERROR_ON_CLOSED TRUE
 #define DEFAULT_EXTERNAL_WINDOW_ONLY FALSE
+#define DEFAULT_DIRECT_SWAPCHAIN FALSE
 
 enum
 {
@@ -216,6 +218,7 @@ struct GstD3D12VideoSinkPrivate
   DXGI_FORMAT display_format = DEFAULT_DISPLAY_FORMAT;
   std::atomic<gboolean> error_on_closed = { DEFAULT_ERROR_ON_CLOSED };
   gboolean external_only = DEFAULT_EXTERNAL_WINDOW_ONLY;
+  std::atomic<gboolean> direct_swapchain = { DEFAULT_DIRECT_SWAPCHAIN };
 };
 /* *INDENT-ON* */
 
@@ -461,6 +464,24 @@ gst_d3d12_video_sink_class_init (GstD3D12VideoSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
 
   /**
+   * GstD3D12VideoSink:direct-swapchain:
+   *
+   * Attach DXGI swapchain to external window handle directly, instead of
+   * creating child window. Note that once direct swapchain is configured,
+   * GDI will no longer work with the given window handle.
+   *
+   * If enabled, GstVideoOverlay::set_render_rectangle() will be ignored,
+   * and application should handle window positioning.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (object_class, PROP_DIRECT_SWAPCHAIN,
+      g_param_spec_boolean ("direct-swapchain", "Direct Swapchain",
+          "Attach DXGI swapchain to external window handle directly",
+          DEFAULT_DIRECT_SWAPCHAIN,
+          (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)));
+
+  /**
    * GstD3D12VideoSink::overlay:
    * @d3d12videosink: the d3d12videosink element that emitted the signal
    * @command_queue: ID3D12CommandQueue
@@ -695,6 +716,9 @@ gst_d3d12_video_sink_set_property (GObject * object, guint prop_id,
     case PROP_EXTERNAL_WINDOW_ONLY:
       priv->external_only = g_value_get_boolean (value);
       break;
+    case PROP_DIRECT_SWAPCHAIN:
+      priv->direct_swapchain = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -775,6 +799,9 @@ gst_d3d12_video_sink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXTERNAL_WINDOW_ONLY:
       g_value_set_boolean (value, priv->external_only);
+      break;
+    case PROP_DIRECT_SWAPCHAIN:
+      g_value_set_boolean (value, priv->direct_swapchain);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1409,7 +1436,7 @@ gst_d3d12_video_sink_open_window (GstD3D12VideoSink * self)
   priv->warn_closed_window = TRUE;
   auto ret = gst_d3d12_window_open (priv->window, self->device,
       GST_VIDEO_SINK_WIDTH (self), GST_VIDEO_SINK_HEIGHT (self),
-      (HWND) window_handle);
+      (HWND) window_handle, priv->direct_swapchain);
 
   std::lock_guard < std::recursive_mutex > lk (priv->lock);
   if (ret == GST_FLOW_OK) {

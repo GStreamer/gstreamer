@@ -59,7 +59,8 @@ GstFlowReturn    gst_d3d12_window_open (GstD3D12Window * window,
                                         GstD3D12Device * device,
                                         guint display_width,
                                         guint display_height,
-                                        HWND parent_hwnd);
+                                        HWND parent_hwnd,
+                                        gboolean direct_swapchain);
 
 GstFlowReturn    gst_d3d12_window_prepare (GstD3D12Window * window,
                                            GstD3D12Device * device,
