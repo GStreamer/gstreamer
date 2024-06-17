@@ -415,7 +415,7 @@ static GstFlowReturn
 gst_av1_dec_handle_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
 {
   GstAV1Dec *av1dec = GST_AV1_DEC_CAST (dec);
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstMapInfo minfo;
   aom_codec_err_t status;
   aom_image_t *img;
@@ -444,8 +444,11 @@ gst_av1_dec_handle_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
   gst_buffer_unmap (frame->input_buffer, &minfo);
 
   if (status) {
-    GST_ELEMENT_ERROR (av1dec, LIBRARY, INIT,
-        ("Failed to decode frame"), ("%s", ""));
+    const gchar *error = aom_codec_error (&av1dec->decoder);
+    const gchar *details = aom_codec_error_detail (&av1dec->decoder);
+    GST_VIDEO_DECODER_ERROR (av1dec, 1, LIBRARY, INIT,
+        ("Failed to decode frame"), ("%s (details: %s)", error,
+            GST_STR_NULL (details)), ret);
     gst_video_codec_frame_unref (frame);
     return ret;
   }
@@ -454,11 +457,11 @@ gst_av1_dec_handle_frame (GstVideoDecoder * dec, GstVideoCodecFrame * frame)
   if (img) {
     if (gst_av1_dec_get_valid_format (av1dec, img, &fmt) == FALSE) {
       aom_img_free (img);
-      GST_ELEMENT_ERROR (dec, LIBRARY, ENCODE,
+      GST_VIDEO_DECODER_ERROR (dec, 1, LIBRARY, ENCODE,
           ("Failed to decode frame"), ("Unsupported color format %d",
-              img->fmt));
+              img->fmt), ret);
       gst_video_codec_frame_unref (frame);
-      return GST_FLOW_ERROR;
+      return ret;
     }
 
     gst_av1_dec_handle_resolution_change (av1dec, img, fmt);
