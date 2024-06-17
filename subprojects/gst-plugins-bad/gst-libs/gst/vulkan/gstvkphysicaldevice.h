@@ -38,14 +38,21 @@ GType gst_vulkan_physical_device_get_type       (void);
 /**
  * GstVulkanQueueFamilyOps:
  * @video: video operation supported by queue family
- * @query: if queue family supports queries
+ * @query_result_status: if queue family supports result status queries
  *
  * Since: 1.24
  */
 struct _GstVulkanQueueFamilyOps
 {
   guint32 video;
-  gboolean query;
+    /**
+   * GstVulkanQueueFamilyOps.query_result_status:
+   *
+   * query status result support
+   *
+   * Since: 1.26
+   */
+  gboolean query_result_status;
 };
 
 /**

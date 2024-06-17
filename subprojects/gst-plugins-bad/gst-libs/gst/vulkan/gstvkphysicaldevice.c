@@ -1046,7 +1046,7 @@ gst_vulkan_physical_device_fill_info (GstVulkanPhysicalDevice * device,
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
         device->queue_family_ops[i].video =
             queue_family_video_props[i].videoCodecOperations;
-        device->queue_family_ops[i].query =
+        device->queue_family_ops[i].query_result_status =
             queue_family_query_props[i].queryResultStatusSupport;
 #endif
       }

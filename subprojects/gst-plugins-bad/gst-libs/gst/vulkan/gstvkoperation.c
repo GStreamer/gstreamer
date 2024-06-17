@@ -1223,9 +1223,10 @@ gst_vulkan_operation_enable_query (GstVulkanOperation * self,
 
   queue_family = priv->cmd_pool->queue->family;
   device = priv->cmd_pool->queue->device->physical_device;
-  if (!device->queue_family_ops[queue_family].query) {
+  if (!device->queue_family_ops[queue_family].query_result_status) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_FEATURE_NOT_PRESENT,
-        "Queue %" GST_PTR_FORMAT " doesn't support query operations",
+        "Queue %" GST_PTR_FORMAT
+        " doesn't support result status query operations",
         priv->cmd_pool->queue);
     return FALSE;
   }

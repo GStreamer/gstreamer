@@ -5296,8 +5296,8 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">video operation supported by queue family</doc>
         <type name="guint32" c:type="guint32"/>
       </field>
-      <field name="query" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">if queue family supports queries</doc>
+      <field name="query_result_status" version="1.26" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h">query status result support</doc>
         <type name="gboolean" c:type="gboolean"/>
       </field>
     </record>
