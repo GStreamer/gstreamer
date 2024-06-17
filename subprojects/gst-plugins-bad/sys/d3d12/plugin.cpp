@@ -72,6 +72,13 @@ plugin_init (GstPlugin * plugin)
     return TRUE;
   }
 
+  guint sink_rank = GST_RANK_NONE;
+  guint decoder_rank = GST_RANK_NONE;
+  bool have_video_device = false;
+
+  if (gst_d3d12_is_windows_10_or_greater ())
+    decoder_rank = GST_RANK_PRIMARY + 2;
+
   /* Enumerate devices to register decoders per device and to get the highest
    * feature level */
   /* AMD seems to be supporting up to 12 cards, and 8 for NVIDIA */
@@ -93,24 +100,29 @@ plugin_init (GstPlugin * plugin)
       continue;
     }
 
+    have_video_device = true;
+
     gst_d3d12_mpeg2_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE);
+        decoder_rank);
     gst_d3d12_h264_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE);
+        decoder_rank);
     gst_d3d12_h265_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE);
+        decoder_rank);
     gst_d3d12_vp8_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE);
+        decoder_rank);
     gst_d3d12_vp9_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE);
+        decoder_rank);
     gst_d3d12_av1_dec_register (plugin, device, video_device.Get (),
-        GST_RANK_NONE);
+        decoder_rank);
 
     gst_d3d12_h264_enc_register (plugin, device, video_device.Get (),
         GST_RANK_NONE);
 
     gst_object_unref (device);
   }
+
+  if (gst_d3d12_is_windows_10_or_greater () && have_video_device)
+    sink_rank = GST_RANK_PRIMARY + 1;
 
   gst_element_register (plugin,
       "d3d12convert", GST_RANK_NONE, GST_TYPE_D3D12_CONVERT);
@@ -119,7 +131,7 @@ plugin_init (GstPlugin * plugin)
   gst_element_register (plugin,
       "d3d12upload", GST_RANK_NONE, GST_TYPE_D3D12_UPLOAD);
   gst_element_register (plugin,
-      "d3d12videosink", GST_RANK_NONE, GST_TYPE_D3D12_VIDEO_SINK);
+      "d3d12videosink", sink_rank, GST_TYPE_D3D12_VIDEO_SINK);
   gst_element_register (plugin,
       "d3d12testsrc", GST_RANK_NONE, GST_TYPE_D3D12_TEST_SRC);
   gst_element_register (plugin,

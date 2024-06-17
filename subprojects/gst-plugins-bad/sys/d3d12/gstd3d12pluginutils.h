@@ -58,4 +58,6 @@ gboolean      gst_d3d12_need_transform (gfloat rotation_x,
                                         gfloat scale_x,
                                         gfloat scale_y);
 
+gboolean      gst_d3d12_is_windows_10_or_greater (void);
+
 G_END_DECLS

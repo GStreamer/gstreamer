@@ -143,3 +143,14 @@ gst_d3d12_need_transform (gfloat rotation_x, gfloat rotation_y,
 
   return FALSE;
 }
+
+gboolean
+gst_d3d12_is_windows_10_or_greater (void)
+{
+  static gboolean ret = FALSE;
+  GST_D3D12_CALL_ONCE_BEGIN {
+    ret = g_win32_check_windows_version (10, 0, 0, G_WIN32_OS_ANY);
+  } GST_D3D12_CALL_ONCE_END;
+
+  return ret;
+}
