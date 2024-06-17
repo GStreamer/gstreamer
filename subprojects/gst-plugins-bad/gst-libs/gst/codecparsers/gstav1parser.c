@@ -3957,12 +3957,10 @@ gst_av1_parse_uncompressed_frame_header (GstAV1Parser * parser, GstAV1OBU * obu,
         if (expected_frame_id !=
             parser->state.ref_info.entry[frame_header->
                 ref_frame_idx[i]].ref_frame_id) {
-          GST_INFO ("Reference buffer frame ID mismatch, expectedFrameId"
-              " is %d wihle ref frame id is %d", expected_frame_id,
+          GST_DEBUG ("Reference buffer frame ID mismatch, expectedFrameId"
+              " is %d while ref frame id is %d", expected_frame_id,
               parser->state.ref_info.entry[frame_header->
                   ref_frame_idx[i]].ref_frame_id);
-          retval = GST_AV1_PARSER_BITSTREAM_ERROR;
-          goto error;
         }
       }
     }
