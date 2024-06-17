@@ -197,6 +197,9 @@ gst_analytics_relation_meta_add_cls_mtd (GstAnalyticsRelationMeta *
     GstAnalyticsClsMtd * cls_mtd)
 {
   g_return_val_if_fail (instance, FALSE);
+  g_return_val_if_fail (confidence_levels != NULL, FALSE);
+  g_return_val_if_fail (class_quarks != NULL, FALSE);
+
   gsize confidence_levels_size =
       (sizeof (GstAnalyticsClsConfLvlAndClass) * length);
   gsize size = sizeof (GstAnalyticsClsMtdData) + confidence_levels_size;
