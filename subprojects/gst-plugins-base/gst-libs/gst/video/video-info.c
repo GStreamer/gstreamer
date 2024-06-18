@@ -605,6 +605,10 @@ gst_video_info_is_equal (const GstVideoInfo * info, const GstVideoInfo * other)
 {
   gint i;
 
+  if (info == other)
+    return TRUE;
+  if (info->finfo == NULL || other->finfo == NULL)
+    return FALSE;
   if (GST_VIDEO_INFO_FORMAT (info) != GST_VIDEO_INFO_FORMAT (other))
     return FALSE;
   if (GST_VIDEO_INFO_INTERLACE_MODE (info) !=
