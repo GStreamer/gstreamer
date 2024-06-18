@@ -533,8 +533,9 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
   if (ret) {
     ID3D12CommandList *cl[] = { priv->cl.Get () };
-    ret = gst_d3d12_device_execute_command_lists (priv->device,
+    hr = gst_d3d12_device_execute_command_lists (priv->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cl, &priv->fence_val);
+    ret = gst_d3d12_result (hr, priv->device);
   }
 
   if (ret) {

@@ -2321,9 +2321,9 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
 
-  if (!gst_d3d12_device_execute_command_lists (self->device,
-          D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cmd_list,
-          &priv->bg_render->fence_val)) {
+  hr = gst_d3d12_device_execute_command_lists (self->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cmd_list, &priv->bg_render->fence_val);
+  if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't execute command list");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
@@ -2412,9 +2412,11 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
     GST_LOG_OBJECT (cpad, "Command list prepared");
 
     ID3D12CommandList *cmd_list[] = { pad_priv->ctx->cl.Get () };
-    if (!gst_d3d12_device_execute_command_lists (self->device,
-            D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cmd_list,
-            &pad_priv->ctx->fence_val)) {
+
+    auto hr = gst_d3d12_device_execute_command_lists (self->device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cmd_list,
+        &pad_priv->ctx->fence_val);
+    if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't execute command list");
       ret = GST_FLOW_ERROR;
       break;

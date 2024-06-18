@@ -2222,8 +2222,9 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
 
   ID3D12CommandList *cmd_list[] = { priv->ctx->cl.Get () };
 
-  if (!gst_d3d12_device_execute_command_lists (self->device,
-          D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cmd_list, &priv->ctx->fence_val)) {
+  hr = gst_d3d12_device_execute_command_lists (self->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cmd_list, &priv->ctx->fence_val);
+  if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't execute command list");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;

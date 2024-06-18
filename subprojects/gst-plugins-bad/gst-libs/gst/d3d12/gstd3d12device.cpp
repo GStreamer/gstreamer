@@ -1352,16 +1352,16 @@ gst_d3d12_device_get_command_queue (GstD3D12Device * device,
  * Exectues gst_d3d12_command_queue_execute_command_lists ()
  * using a #GstD3D12CommandQueue corresponding to @queue_type
  *
- * Returns: %TRUE if successful
+ * Returns: HRESULT code
  *
  * Since: 1.26
  */
-gboolean
+HRESULT
 gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type, guint num_command_lists,
     ID3D12CommandList ** command_lists, guint64 * fence_value)
 {
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), E_INVALIDARG);
 
   auto priv = device->priv->inner;
   GstD3D12CommandQueue *queue;
@@ -1375,13 +1375,11 @@ gst_d3d12_device_execute_command_lists (GstD3D12Device * device,
       break;
     default:
       GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-      return FALSE;
+      return E_INVALIDARG;
   }
 
-  auto hr = gst_d3d12_command_queue_execute_command_lists (queue,
+  return gst_d3d12_command_queue_execute_command_lists (queue,
       num_command_lists, command_lists, fence_value);
-
-  return gst_d3d12_result (hr, device);
 }
 
 /**
@@ -1474,16 +1472,16 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
  * Exectues gst_d3d12_command_queue_fence_wait ()
  * using a #GstD3D12CommandQueue corresponding to @queue_type
  *
- * Returns: %TRUE if successful
+ * Returns: HRESULT code
  *
  * Since: 1.26
  */
-gboolean
+HRESULT
 gst_d3d12_device_fence_wait (GstD3D12Device * device,
     D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value,
     HANDLE event_handle)
 {
-  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), E_INVALIDARG);
 
   auto priv = device->priv->inner;
   GstD3D12CommandQueue *queue;
@@ -1497,13 +1495,10 @@ gst_d3d12_device_fence_wait (GstD3D12Device * device,
       break;
     default:
       GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
-      return FALSE;
+      return E_INVALIDARG;
   }
 
-  auto hr = gst_d3d12_command_queue_fence_wait (queue,
-      fence_value, event_handle);
-
-  return gst_d3d12_result (hr, device);
+  return gst_d3d12_command_queue_fence_wait (queue, fence_value, event_handle);
 }
 
 gboolean

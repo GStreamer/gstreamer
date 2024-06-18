@@ -94,7 +94,7 @@ GstD3D12CommandQueue *  gst_d3d12_device_get_command_queue        (GstD3D12Devic
                                                                    D3D12_COMMAND_LIST_TYPE queue_type);
 
 GST_D3D12_API
-gboolean                gst_d3d12_device_execute_command_lists    (GstD3D12Device * device,
+HRESULT                 gst_d3d12_device_execute_command_lists    (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
                                                                    guint num_command_lists,
                                                                    ID3D12CommandList ** command_lists,
@@ -111,7 +111,7 @@ gboolean                gst_d3d12_device_set_fence_notify         (GstD3D12Devic
                                                                    GstD3D12FenceData * fence_data);
 
 GST_D3D12_API
-gboolean                gst_d3d12_device_fence_wait               (GstD3D12Device * device,
+HRESULT                 gst_d3d12_device_fence_wait               (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
                                                                    guint64 fence_value,
                                                                    HANDLE event_handle);
