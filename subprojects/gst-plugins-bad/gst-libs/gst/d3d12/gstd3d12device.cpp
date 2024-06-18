@@ -1504,8 +1504,8 @@ gst_d3d12_device_fence_wait (GstD3D12Device * device,
 gboolean
 gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
     guint num_args, const GstD3D12CopyTextureRegionArgs * args,
-    GstD3D12FenceData * fence_data,
-    ID3D12Fence * fence_to_wait, guint64 fence_value_to_wait,
+    GstD3D12FenceData * fence_data, guint num_fences_to_wait,
+    ID3D12Fence ** fences_to_wait, const guint64 * fence_values_to_wait,
     D3D12_COMMAND_LIST_TYPE command_type, guint64 * fence_value)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), FALSE);
@@ -1581,8 +1581,10 @@ gst_d3d12_device_copy_texture_region (GstD3D12Device * device,
   }
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
-  hr = gst_d3d12_command_queue_execute_wait_and_command_lists (queue,
-      fence_to_wait, fence_value_to_wait, 1, cmd_list, &fence_val);
+
+  hr = gst_d3d12_command_queue_execute_command_lists_full (queue,
+      num_fences_to_wait, fences_to_wait, fence_values_to_wait, 1, cmd_list,
+      &fence_val);
   auto ret = gst_d3d12_result (hr, device);
 
   /* We can release command list since command list pool will hold it */

@@ -359,7 +359,7 @@ gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
 
   return gst_d3d12_device_copy_texture_region (dest->device,
       GST_VIDEO_INFO_N_PLANES (&dest->info), args, fence_data,
-      nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
+      0, nullptr, nullptr, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
 }
 
 /**
@@ -414,7 +414,8 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
     cq_handle->Wait (dest->fence[plane].fence, dest->fence[plane].fence_value);
 
   return gst_d3d12_device_copy_texture_region (dest->device, 1, &args,
-      fence_data, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
+      fence_data, 0, nullptr, nullptr, D3D12_COMMAND_LIST_TYPE_DIRECT,
+      fence_value);
 }
 
 /**

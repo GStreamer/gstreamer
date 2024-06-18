@@ -372,7 +372,7 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
   gst_d3d12_fence_data_add_notify_com (fence_data, wrapped_clone.Detach ());
 
   gst_d3d12_device_copy_texture_region (priv->device,
-      1, &args, fence_data, nullptr, 0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+      1, &args, fence_data, 0, nullptr, nullptr, D3D12_COMMAND_LIST_TYPE_DIRECT,
       &priv->fence_val);
 
   priv->scheduled.push (priv->fence_val);

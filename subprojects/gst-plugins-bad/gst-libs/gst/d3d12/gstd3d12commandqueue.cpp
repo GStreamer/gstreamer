@@ -262,7 +262,7 @@ gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
  * gst_d3d12_command_queue_execute_command_lists:
  * @queue: a #GstD3D12CommandQueue
  * @num_command_lists: command list size
- * @command_lists: array of ID3D12CommandList
+ * @command_lists: (allow-none): array of ID3D12CommandList
  * @fence_value: (out) (optional): fence value of submitted command
  *
  * Executes command list and signals queue. If @num_command_lists is zero,
@@ -287,35 +287,42 @@ gst_d3d12_command_queue_execute_command_lists (GstD3D12CommandQueue * queue,
 }
 
 /**
- * gst_d3d12_command_queue_execute_wait_and_command_lists:
+ * gst_d3d12_command_queue_execute_command_lists_full:
  * @queue: a #GstD3D12CommandQueue
- * @fence_to_wait: (allow-none): a ID3D11Fence
- * @fence_value_to_wait: fence value to wait
+ * @num_fences_to_wait: the number of fences to wait
+ * @fences_to_wait: (allow-none): array of ID3D11Fence
+ * @fence_values_to_wait: (allow-none): array of fence value to wait
  * @num_command_lists: command list size
- * @command_lists: array of ID3D12CommandList
+ * @command_lists: (allow-none): array of ID3D12CommandList
  * @fence_value: (out) (optional): fence value of submitted command
  *
- * Executes wait if @fence_to_wait is passed, and executes command list.
+ * Executes wait if @num_fences_to_wait is non-zero, and executes command list.
  *
  * Return: HRESULT code
  *
  * Since: 1.26
  */
 HRESULT
-gst_d3d12_command_queue_execute_wait_and_command_lists (GstD3D12CommandQueue *
-    queue, ID3D12Fence * fence_to_wait, guint64 fence_value_to_wait,
-    guint num_command_lists, ID3D12CommandList ** command_lists,
-    guint64 * fence_value)
+gst_d3d12_command_queue_execute_command_lists_full (GstD3D12CommandQueue *
+    queue, guint num_fences_to_wait, ID3D12Fence ** fences_to_wait,
+    const guint64 * fence_values_to_wait, guint num_command_lists,
+    ID3D12CommandList ** command_lists, guint64 * fence_value)
 {
   g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
+  g_return_val_if_fail (num_fences_to_wait == 0 ||
+      (fences_to_wait && fence_values_to_wait), E_INVALIDARG);
 
   auto priv = queue->priv;
 
   std::lock_guard < std::mutex > lk (priv->execute_lock);
-  if (fence_to_wait) {
-    auto hr = priv->cq->Wait (fence_to_wait, fence_value_to_wait);
-    if (FAILED (hr))
-      return hr;
+  for (guint i = 0; i < num_fences_to_wait; i++) {
+    auto fence = fences_to_wait[i];
+    auto val = fence_values_to_wait[i];
+    if (fence != priv->fence.Get () && fence->GetCompletedValue () < val) {
+      auto hr = priv->cq->Wait (fence, val);
+      if (FAILED (hr))
+        return hr;
+    }
   }
 
   return gst_d3d12_command_queue_execute_command_lists_unlocked (queue,

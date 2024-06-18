@@ -488,12 +488,14 @@ gst_d3d12_memory_download (GstD3D12Memory * dmem)
 
   auto cq = gst_d3d12_device_get_command_queue (dmem->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto direct_fence = gst_d3d12_command_queue_get_fence_handle (cq);
+  ID3D12Fence *direct_fence[] =
+      { gst_d3d12_command_queue_get_fence_handle (cq) };
+  guint64 fence_value_to_wait[] = { dmem->fence_value };
 
   guint64 fence_val = 0;
   /* Use async copy queue when downloading */
   if (!gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
-          copy_args.data (), nullptr, direct_fence, dmem->fence_value,
+          copy_args.data (), nullptr, 1, direct_fence, fence_value_to_wait,
           D3D12_COMMAND_LIST_TYPE_COPY, &fence_val)) {
     GST_ERROR_OBJECT (dmem->device, "Couldn't download texture to staging");
     return FALSE;
@@ -529,9 +531,15 @@ gst_d3d12_memory_upload (GstD3D12Memory * dmem)
     copy_args.push_back (args);
   }
 
+  guint num_fences_to_wait = 0;
+  ID3D12Fence *fences_to_wait[] = { priv->external_fence.Get () };
+  guint64 fence_values_to_wait[] = { priv->external_fence_val };
+  if (fences_to_wait[0])
+    num_fences_to_wait = 1;
+
   if (!gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
-          copy_args.data (), nullptr, priv->external_fence.Get (),
-          priv->external_fence_val, D3D12_COMMAND_LIST_TYPE_DIRECT,
+          copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
+          fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
           &dmem->fence_value)) {
     GST_ERROR_OBJECT (dmem->device, "Couldn't upload texture");
     return FALSE;
@@ -1177,11 +1185,11 @@ gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
   gst_memory_unmap (mem, &info);
 
   ComPtr < ID3D12Fence > fence_to_wait;
-  guint64 fence_value_to_wait;
+  guint64 fence_value_to_wait[1];
   {
     std::lock_guard < std::mutex > lk (mem_priv->lock);
     fence_to_wait = mem_priv->external_fence;
-    fence_value_to_wait = mem_priv->external_fence_val;
+    fence_value_to_wait[0] = mem_priv->external_fence_val;
   }
 
   GstD3D12FenceData *fence_data;
@@ -1189,9 +1197,14 @@ gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
   gst_d3d12_fence_data_add_notify_mini_object (fence_data,
       gst_memory_ref (mem));
 
+  ID3D12Fence *fences_to_wait[] = { fence_to_wait.Get () };
+  guint num_fences_to_wait = 0;
+  if (fence_to_wait)
+    num_fences_to_wait = 1;
+
   gst_d3d12_device_copy_texture_region (dmem->device,
-      copy_args.size (), copy_args.data (), fence_data, fence_to_wait.Get (),
-      fence_value_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
+      copy_args.size (), copy_args.data (), fence_data, num_fences_to_wait,
+      fences_to_wait, fence_value_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
       &dst_dmem->fence_value);
 
   GST_MINI_OBJECT_FLAG_SET (dst, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);

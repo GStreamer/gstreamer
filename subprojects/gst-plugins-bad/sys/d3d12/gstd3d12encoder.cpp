@@ -776,9 +776,15 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
     }
 
     guint64 fence_val = 0;
+    guint num_fences_to_wait = 0;
+    ID3D12Fence *fences_to_wait[] = { fence_to_wait.Get () };
+    guint64 fence_values_to_wait[] = { fence_val_to_wait };
+    if (fence_to_wait)
+      num_fences_to_wait++;
+
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), nullptr, fence_to_wait.Get (), fence_val_to_wait,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, &fence_val);
+        copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
+        fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT, &fence_val);
     gst_d3d12_buffer_after_write (upload, fence_val);
   } else {
     GstVideoFrame src_frame, dst_frame;

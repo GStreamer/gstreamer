@@ -86,12 +86,13 @@ HRESULT                gst_d3d12_command_queue_execute_command_lists (GstD3D12Co
                                                                       guint64 * fence_value);
 
 GST_D3D12_API
-HRESULT                gst_d3d12_command_queue_execute_wait_and_command_lists (GstD3D12CommandQueue * queue,
-                                                                               ID3D12Fence * fence_to_wait,
-                                                                               guint64 fence_value_to_wait,
-                                                                               guint num_command_lists,
-                                                                               ID3D12CommandList ** command_lists,
-                                                                               guint64 * fence_value);
+HRESULT                gst_d3d12_command_queue_execute_command_lists_full (GstD3D12CommandQueue * queue,
+                                                                           guint num_fences_to_wait,
+                                                                           ID3D12Fence ** fences_to_wait,
+                                                                           const guint64 * fence_values_to_wait,
+                                                                           guint num_command_lists,
+                                                                           ID3D12CommandList ** command_lists,
+                                                                           guint64 * fence_value);
 
 GST_D3D12_API
 HRESULT                gst_d3d12_command_queue_execute_wait (GstD3D12CommandQueue * queue,

@@ -1539,8 +1539,8 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     }
 
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
-        copy_args.data (), fence_data, nullptr, decoder_pic->fence_val,
-        queue_type, &copy_fence_val);
+        copy_args.data (), fence_data, 0, nullptr, nullptr, queue_type,
+        &copy_fence_val);
 
     if (!out_resource) {
       guint8 *map_data;
