@@ -85,6 +85,10 @@ GST_D3D12_API
 IDXGIFactory2 *         gst_d3d12_device_get_factory_handle       (GstD3D12Device * device);
 
 GST_D3D12_API
+ID3D12Fence *           gst_d3d12_device_get_fence_handle         (GstD3D12Device * device,
+                                                                   D3D12_COMMAND_LIST_TYPE queue_type);
+
+GST_D3D12_API
 gboolean                gst_d3d12_device_get_format               (GstD3D12Device * device,
                                                                    GstVideoFormat format,
                                                                    GstD3D12Format * device_format);

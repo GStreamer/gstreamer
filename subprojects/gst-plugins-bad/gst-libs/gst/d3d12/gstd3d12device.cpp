@@ -1279,6 +1279,41 @@ gst_d3d12_device_get_factory_handle (GstD3D12Device * device)
 }
 
 /**
+ * gst_d3d12_device_get_fence_handle:
+ * @device: a #GstD3D12Device
+ * @queue_type: a D3D12_COMMAND_LIST_TYPE
+ *
+ * Gets fence handle of command queue
+ *
+ * Returns: (transfer none): ID3D12Fence handle
+ *
+ * Since: 1.26
+ */
+ID3D12Fence *
+gst_d3d12_device_get_fence_handle (GstD3D12Device * device,
+    D3D12_COMMAND_LIST_TYPE queue_type)
+{
+  g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
+
+  auto priv = device->priv->inner;
+  GstD3D12CommandQueue *queue;
+
+  switch (queue_type) {
+    case D3D12_COMMAND_LIST_TYPE_DIRECT:
+      queue = priv->direct_queue;
+      break;
+    case D3D12_COMMAND_LIST_TYPE_COPY:
+      queue = priv->copy_queue;
+      break;
+    default:
+      GST_ERROR_OBJECT (device, "Not supported queue type %d", queue_type);
+      return nullptr;
+  }
+
+  return gst_d3d12_command_queue_get_fence_handle (queue);
+}
+
+/**
  * gst_d3d12_device_get_format:
  * @device: a #GstD3D12Device
  * @format: a #GstVideoFormat

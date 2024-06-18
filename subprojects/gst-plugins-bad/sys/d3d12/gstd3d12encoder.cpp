@@ -1450,9 +1450,8 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
   auto completed = gst_d3d12_device_get_completed_value (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (completed < mem->fence_value) {
-    auto queue = gst_d3d12_device_get_command_queue (self->device,
+    auto fence = gst_d3d12_device_get_fence_handle (self->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    auto fence = gst_d3d12_command_queue_get_fence_handle (queue);
     gst_d3d12_command_queue_execute_wait (priv->cmd->queue, fence,
         mem->fence_value);
   }

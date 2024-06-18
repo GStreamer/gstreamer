@@ -486,10 +486,9 @@ gst_d3d12_memory_download (GstD3D12Memory * dmem)
         priv->external_fence_val);
   }
 
-  auto cq = gst_d3d12_device_get_command_queue (dmem->device,
+  auto fence = gst_d3d12_device_get_fence_handle (dmem->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  ID3D12Fence *direct_fence[] =
-      { gst_d3d12_command_queue_get_fence_handle (cq) };
+  ID3D12Fence *direct_fence[] = { fence };
   guint64 fence_value_to_wait[] = { dmem->fence_value };
 
   guint64 fence_val = 0;
