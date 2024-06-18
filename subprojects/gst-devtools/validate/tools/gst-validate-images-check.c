@@ -27,8 +27,8 @@
 #include <gst/video/video.h>
 #include <locale.h>             /* for LC_ALL */
 
-int
-main (int argc, char **argv)
+static int
+real_main (int argc, char **argv)
 {
   GstValidateSsim *ssim;
   gint rep_err, ret = 0;
@@ -117,6 +117,28 @@ main (int argc, char **argv)
 
   gst_validate_printf (NULL, "\n=======> Test %s (Return value: %i)\n\n",
       ret == 0 ? "PASSED" : "FAILED", ret);
+
+  return ret;
+}
+
+int
+main (int argc, char *argv[])
+{
+  int ret;
+
+#ifdef G_OS_WIN32
+  argv = g_win32_get_command_line ();
+#endif
+
+#if defined(__APPLE__) && TARGET_OS_MAC && !TARGET_OS_IPHONE
+  ret = gst_macos_main ((GstMainFunc) real_main, argc, argv, NULL);
+#else
+  ret = real_main (argc, argv);
+#endif
+
+#ifdef G_OS_WIN32
+  g_strfreev (argv);
+#endif
 
   return ret;
 }
