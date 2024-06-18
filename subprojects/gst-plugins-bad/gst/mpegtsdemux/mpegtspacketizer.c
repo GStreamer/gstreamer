@@ -31,10 +31,12 @@
 /* Skew calculation pameters */
 #define MAX_TIME	(2 * GST_SECOND)
 
-/* maximal PCR time */
-#define PCR_MAX_VALUE (((((guint64)1)<<33) * 300) + 298)
+/* 90kHz maximum values, coded in 33bits */
+#define MAX_33BIT (((guint64)1) << 33)
+#define PTS_DTS_MAX_VALUE (MAX_33BIT - 1)
+/* maximal PCR time, 27Mhz, coded with additional 9bits */
+#define PCR_MAX_VALUE (MAX_33BIT * 300 - 1)
 #define PCR_GST_MAX_VALUE (PCR_MAX_VALUE * GST_MSECOND / (PCR_MSECOND))
-#define PTS_DTS_MAX_VALUE (((guint64)1) << 33)
 
 #include "mpegtspacketizer.h"
 #include "gstmpegdesc.h"
