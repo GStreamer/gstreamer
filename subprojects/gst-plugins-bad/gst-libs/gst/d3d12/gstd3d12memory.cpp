@@ -1194,8 +1194,8 @@ gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_device_acquire_fence_data (dmem->device, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data,
-      gst_memory_ref (mem));
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (gst_memory_ref (mem)));
 
   ID3D12Fence *fences_to_wait[] = { fence_to_wait.Get () };
   guint num_fences_to_wait = 0;

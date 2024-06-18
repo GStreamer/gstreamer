@@ -535,7 +535,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
   auto mem = (GstD3D12Memory *) gst_buffer_peek_memory (swapbuf->backbuf, 0);
   auto backbuf_texture = gst_d3d12_memory_get_resource_handle (mem);
@@ -693,7 +693,7 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
     }
 
     gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-    gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+    gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
     D3D12_RESOURCE_BARRIER barrier =
         CD3DX12_RESOURCE_BARRIER::Transition (backbuf_texture,

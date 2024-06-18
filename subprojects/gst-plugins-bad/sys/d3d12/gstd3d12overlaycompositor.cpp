@@ -795,18 +795,19 @@ gst_d3d12_overlay_compositor_execute (GstD3D12OverlayCompositor * self,
 
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
-    gst_d3d12_fence_data_add_notify_mini_object (fence_data,
-        gst_mini_object_ref (rect));
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_MINI_OBJECT (gst_mini_object_ref (rect)));
 
     prev_pso = nullptr;
     prev_pso = pso;
   }
 
   priv->pso->AddRef ();
-  gst_d3d12_fence_data_add_notify_com (fence_data, priv->pso.Get ());
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (priv->pso.Get ()));
 
   priv->pso_premul->AddRef ();
-  gst_d3d12_fence_data_add_notify_com (fence_data, priv->pso_premul.Get ());
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_COM (priv->pso_premul.Get ()));
 
   return TRUE;
 }

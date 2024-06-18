@@ -112,4 +112,17 @@ private:
   GstD3D12Device *device_;
 };
 
+static inline void
+gst_d3d12_com_release (IUnknown * unknown)
+{
+  if (unknown)
+    unknown->Release ();
+}
+
+#define FENCE_NOTIFY_COM(obj) \
+    ((gpointer) (obj)), ((GDestroyNotify) gst_d3d12_com_release)
+
+#define FENCE_NOTIFY_MINI_OBJECT(obj) \
+    ((gpointer) (obj)), ((GDestroyNotify) gst_mini_object_unref)
+
 #endif /* __cplusplus */

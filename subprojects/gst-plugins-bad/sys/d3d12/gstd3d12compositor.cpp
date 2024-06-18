@@ -1127,7 +1127,7 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (self->priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
   auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
@@ -1221,7 +1221,7 @@ gst_d3d12_compositor_pad_clean_frame (GstVideoAggregatorPad * pad,
   if (priv->ctx && priv->ctx->fence_data) {
     gst_d3d12_device_set_fence_notify (priv->ctx->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val,
-        priv->ctx->fence_data);
+        FENCE_NOTIFY_MINI_OBJECT (priv->ctx->fence_data));
     priv->ctx->fence_data = nullptr;
   }
 }
@@ -2233,7 +2233,7 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
   auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
 
@@ -2333,12 +2333,13 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
       bg_render->fence_val);
 
   if (bg_render->vertex_index_upload) {
-    gst_d3d12_fence_data_add_notify_com (fence_data,
-        bg_render->vertex_index_upload.Detach ());
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_COM (bg_render->vertex_index_upload.Detach ()));
   }
 
   gst_d3d12_device_set_fence_notify (self->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->bg_render->fence_val, fence_data);
+      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->bg_render->fence_val,
+      FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   return TRUE;
 }

@@ -108,7 +108,8 @@ GST_D3D12_API
 gboolean                gst_d3d12_device_set_fence_notify         (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
                                                                    guint64 fence_value,
-                                                                   GstD3D12FenceData * fence_data);
+                                                                   gpointer fence_data,
+                                                                   GDestroyNotify notify);
 
 GST_D3D12_API
 HRESULT                 gst_d3d12_device_fence_wait               (GstD3D12Device * device,

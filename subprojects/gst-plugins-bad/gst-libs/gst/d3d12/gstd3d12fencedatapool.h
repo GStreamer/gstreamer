@@ -78,17 +78,9 @@ gboolean                gst_d3d12_fence_data_pool_acquire (GstD3D12FenceDataPool
                                                            GstD3D12FenceData ** data);
 
 GST_D3D12_API
-void                    gst_d3d12_fence_data_add_notify (GstD3D12FenceData * data,
-                                                         gpointer user_data,
-                                                         GDestroyNotify notify);
-
-GST_D3D12_API
-void                    gst_d3d12_fence_data_add_notify_com (GstD3D12FenceData * data,
-                                                             gpointer unknown);
-
-GST_D3D12_API
-void                    gst_d3d12_fence_data_add_notify_mini_object (GstD3D12FenceData * data,
-                                                                     gpointer object);
+void                    gst_d3d12_fence_data_push (GstD3D12FenceData * data,
+                                                   gpointer user_data,
+                                                   GDestroyNotify notify);
 
 GST_D3D12_API
 GstD3D12FenceData *     gst_d3d12_fence_data_ref (GstD3D12FenceData * data);

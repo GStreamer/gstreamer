@@ -1959,7 +1959,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   }
 
   auto srv_heap = gst_d3d12_descriptor_get_handle (descriptor);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, descriptor);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (descriptor));
 
   auto cpu_handle =
       CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
@@ -2014,7 +2014,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
   pso->AddRef ();
-  gst_d3d12_fence_data_add_notify_com (fence_data, pso);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (pso));
 
   auto offset = priv->quad_data[0].num_rtv;
   if (priv->quad_data.size () == 2) {
@@ -2029,13 +2029,13 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
     pso->AddRef ();
-    gst_d3d12_fence_data_add_notify_com (fence_data, pso);
+    gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (pso));
   }
 
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data,
-      gst_buffer_ref (in_frame->buffer));
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (in_frame->buffer)));
   if (priv->upload_data) {
-    gst_d3d12_fence_data_add_notify (fence_data,
+    gst_d3d12_fence_data_push (fence_data,
         priv->upload_data, (GDestroyNotify) converter_upload_data_free);
   }
   priv->upload_data = nullptr;

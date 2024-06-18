@@ -368,8 +368,10 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
   auto resource_clone = priv->layout_resource;
   auto wrapped_clone = priv->wrapped_texture;
 
-  gst_d3d12_fence_data_add_notify_com (fence_data, resource_clone.Detach ());
-  gst_d3d12_fence_data_add_notify_com (fence_data, wrapped_clone.Detach ());
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_COM (resource_clone.Detach ()));
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_COM (wrapped_clone.Detach ()));
 
   gst_d3d12_device_copy_texture_region (priv->device,
       1, &args, fence_data, 0, nullptr, nullptr, D3D12_COMMAND_LIST_TYPE_DIRECT,
@@ -445,7 +447,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
   g_object_set (priv->blend_conv, "src-width", priv->layout_info.width,
       "src-height", priv->layout_info.height,
@@ -540,7 +542,8 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
   if (ret) {
     gst_d3d12_device_set_fence_notify (priv->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, priv->fence_val, fence_data);
+        D3D12_COMMAND_LIST_TYPE_DIRECT, priv->fence_val,
+        FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
     priv->scheduled.push (priv->fence_val);
 

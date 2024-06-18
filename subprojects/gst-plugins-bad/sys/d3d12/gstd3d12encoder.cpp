@@ -872,7 +872,7 @@ gst_d3d12_encoder_build_command (GstD3D12Encoder * self,
         auto ref_pic =
             in_args->PictureControlDesc.ReferenceFrames.ppTexture2Ds[i];
         ref_pic->AddRef ();
-        gst_d3d12_fence_data_add_notify_com (fence_data, ref_pic);
+        gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (ref_pic));
         pre_enc_barrier.push_back (CD3DX12_RESOURCE_BARRIER::
             Transition (ref_pic, D3D12_RESOURCE_STATE_COMMON,
                 D3D12_RESOURCE_STATE_VIDEO_ENCODE_READ));
@@ -884,7 +884,7 @@ gst_d3d12_encoder_build_command (GstD3D12Encoder * self,
       auto ref_pic =
           in_args->PictureControlDesc.ReferenceFrames.ppTexture2Ds[0];
       ref_pic->AddRef ();
-      gst_d3d12_fence_data_add_notify_com (fence_data, ref_pic);
+      gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (ref_pic));
       auto ref_pic_desc = GetDesc (ref_pic);
 
       for (UINT i = 0;
@@ -913,8 +913,9 @@ gst_d3d12_encoder_build_command (GstD3D12Encoder * self,
   /* Reconstructed picture barries */
   if (out_args->ReconstructedPicture.pReconstructedPicture) {
     out_args->ReconstructedPicture.pReconstructedPicture->AddRef ();
-    gst_d3d12_fence_data_add_notify_com (fence_data,
-        out_args->ReconstructedPicture.pReconstructedPicture);
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_COM (out_args->
+            ReconstructedPicture.pReconstructedPicture));
 
     if (array_of_textures) {
       pre_enc_barrier.push_back (CD3DX12_RESOURCE_BARRIER::
@@ -971,8 +972,8 @@ gst_d3d12_encoder_build_command (GstD3D12Encoder * self,
   auto heap = priv->session->heap;
 
   command_list->EncodeFrame (encoder.Get (), heap.Get (), in_args, out_args);
-  gst_d3d12_fence_data_add_notify_com (fence_data, encoder.Detach ());
-  gst_d3d12_fence_data_add_notify_com (fence_data, heap.Detach ());
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (encoder.Detach ()));
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (heap.Detach ()));
 
   post_enc_barrier.
       push_back (CD3DX12_RESOURCE_BARRIER::Transition (out_args->Bitstream.
@@ -1255,7 +1256,7 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, upload);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (upload));
 
   GstD3D12CommandAllocator *gst_ca;
   if (!gst_d3d12_command_allocator_pool_acquire (priv->cmd->ca_pool, &gst_ca)) {
@@ -1265,7 +1266,7 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
   auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
   auto hr = ca->Reset ();
@@ -1390,7 +1391,8 @@ gst_d3d12_encoder_handle_frame (GstVideoEncoder * encoder,
   }
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
 
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, encoder_buf);
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (encoder_buf));
 
   ComPtr < ID3D12Resource > metadata;
   ComPtr < ID3D12Resource > resolved_metadata;

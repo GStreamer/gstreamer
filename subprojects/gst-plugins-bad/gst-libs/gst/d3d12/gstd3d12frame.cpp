@@ -348,8 +348,8 @@ gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_device_acquire_fence_data (dest->device, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data,
-      gst_buffer_ref (src->buffer));
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src->buffer)));
 
   auto cq = gst_d3d12_device_get_command_queue (src->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
@@ -400,8 +400,8 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
 
   GstD3D12FenceData *fence_data;
   gst_d3d12_device_acquire_fence_data (dest->device, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data,
-      gst_buffer_ref (src->buffer));
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src->buffer)));
 
   auto cq = gst_d3d12_device_get_command_queue (src->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);

@@ -220,20 +220,8 @@ gst_d3d12_fence_data_pool_acquire (GstD3D12FenceDataPool * pool,
   return TRUE;
 }
 
-static inline void
-gst_d3d12_fence_data_add_notify_internal (GstD3D12FenceData * data,
-    gpointer user_data, GDestroyNotify notify)
-{
-  NotifyData notify_data;
-
-  notify_data.user_data = user_data;
-  notify_data.notify = notify;
-
-  gst_vec_deque_push_tail_struct (data->queue, &notify_data);
-}
-
 /**
- * gst_d3d12_fence_data_add_notify:
+ * gst_d3d12_fence_data_push:
  * @data: a #GstD3D12FenceData
  * @user_data: private data
  * @notify: a #GDestroyNotify
@@ -243,56 +231,17 @@ gst_d3d12_fence_data_add_notify_internal (GstD3D12FenceData * data,
  * Since: 1.26
  */
 void
-gst_d3d12_fence_data_add_notify (GstD3D12FenceData * data, gpointer user_data,
+gst_d3d12_fence_data_push (GstD3D12FenceData * data, gpointer user_data,
     GDestroyNotify notify)
 {
   g_return_if_fail (data);
 
-  gst_d3d12_fence_data_add_notify_internal (data, user_data, notify);
-}
+  NotifyData notify_data;
 
-static void
-com_free_func (IUnknown * unknown)
-{
-  if (unknown)
-    unknown->Release ();
-}
+  notify_data.user_data = user_data;
+  notify_data.notify = notify;
 
-/**
- * gst_d3d12_fence_data_add_notify_com:
- * @data: a #GstD3D12FenceData
- * @unknown: (transfer full): IUnknown COM pointer
- *
- * Schedules IUnknown::Release() notify for @unknown
- *
- * Since: 1.26
- */
-void
-gst_d3d12_fence_data_add_notify_com (GstD3D12FenceData * data, gpointer unknown)
-{
-  g_return_if_fail (data);
-
-  gst_d3d12_fence_data_add_notify_internal (data,
-      unknown, (GDestroyNotify) com_free_func);
-}
-
-/**
- * gst_d3d12_fence_data_add_notify_mini_object:
- * @data: a #GstD3D12FenceData
- * @object: (transfer full): #GstMiniObject
- *
- * Schedules gst_mini_object_unref() notify for @object
- *
- * Since: 1.26
- */
-void
-gst_d3d12_fence_data_add_notify_mini_object (GstD3D12FenceData * data,
-    gpointer object)
-{
-  g_return_if_fail (data);
-
-  gst_d3d12_fence_data_add_notify_internal (data,
-      object, (GDestroyNotify) gst_mini_object_unref);
+  gst_vec_deque_push_tail_struct (data->queue, &notify_data);
 }
 
 /**

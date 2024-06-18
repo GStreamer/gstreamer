@@ -2197,7 +2197,7 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   auto cl = priv->ctx->cl;
   GstD3D12FenceData *fence_data;
   gst_d3d12_fence_data_pool_acquire (priv->fence_data_pool, &fence_data);
-  gst_d3d12_fence_data_add_notify_mini_object (fence_data, gst_ca);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
 
   pts = priv->accum_rtime + priv->running_time;
   gst_d3d12_test_src_draw_pattern (self, pts, cl.Get ());
@@ -2233,7 +2233,8 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
   gst_d3d12_buffer_after_write (convert_buffer, priv->ctx->fence_val);
 
   gst_d3d12_device_set_fence_notify (self->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val, fence_data);
+      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val,
+      FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);
 
