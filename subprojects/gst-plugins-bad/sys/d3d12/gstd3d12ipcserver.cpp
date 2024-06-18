@@ -796,7 +796,7 @@ gst_d3d12_ipc_server_send_data (GstD3D12IpcServer * server, GstSample * sample,
   data->handle = handle;
   data->layout = layout;
   data->pts = pts;
-  data->fence_val = dmem->fence_value;
+  gst_d3d12_memory_get_fence (dmem, nullptr, &data->fence_val);
   data->seq_num = priv->seq_num;
 
   priv->seq_num++;

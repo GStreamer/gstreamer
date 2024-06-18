@@ -378,7 +378,9 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
       &priv->fence_val);
 
   priv->scheduled.push (priv->fence_val);
-  dmem->fence_value = priv->fence_val;
+  gst_d3d12_memory_set_fence (dmem,
+      gst_d3d12_device_get_fence_handle (priv->device,
+          D3D12_COMMAND_LIST_TYPE_DIRECT), priv->fence_val, FALSE);
 
   GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
   GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
@@ -458,12 +460,12 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
   GstBuffer *bgra_buf = nullptr;
   auto cq = gst_d3d12_device_get_command_queue (priv->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
+  auto fence = gst_d3d12_command_queue_get_fence_handle (cq);
 
   if (priv->direct_blend) {
     GST_LOG_OBJECT (self, "Direct blend");
     ret = gst_d3d12_converter_convert_buffer (priv->blend_conv,
-        layout_buf, output, fence_data, priv->cl.Get (), cq_handle);
+        layout_buf, output, fence_data, priv->cl.Get (), cq);
   } else {
     GST_LOG_OBJECT (self, "Need conversion for blending");
 
@@ -475,7 +477,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
     if (ret) {
       ret = gst_d3d12_converter_convert_buffer (priv->pre_conv,
-          output, bgra_buf, fence_data, priv->cl.Get (), cq_handle);
+          output, bgra_buf, fence_data, priv->cl.Get (), cq);
     }
 
     if (ret) {
@@ -549,7 +551,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
     for (guint i = 0; i < gst_buffer_n_memory (output); i++) {
       auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (output, i);
-      dmem->fence_value = priv->fence_val;
+      gst_d3d12_memory_set_fence (dmem, fence, priv->fence_val, FALSE);
       GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
       GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
     }

@@ -566,9 +566,8 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
   auto cq = gst_d3d12_device_get_command_queue (device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
-
   if (!gst_d3d12_converter_convert_buffer (resource->conv,
-          buffer, conv_outbuf, fence_data, cl.Get (), cq_handle)) {
+          buffer, conv_outbuf, fence_data, cl.Get (), cq)) {
     GST_ERROR_OBJECT (self, "Couldn't build convert command");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;

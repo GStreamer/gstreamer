@@ -857,15 +857,9 @@ gst_webview2_src_create (GstBaseSrc * src, guint64 offset, guint size,
   if (!system_copy) {
     gst_memory_unmap (mem, &out_map);
     if (is_d3d12) {
-      auto cq = gst_d3d12_device_get_command_queue (priv->device12,
-          D3D12_COMMAND_LIST_TYPE_DIRECT);
-      gst_d3d12_command_queue_execute_wait (cq,
-          priv->fence12.Get (), priv->fence_val);
-      guint64 fence_val_12;
-      gst_d3d12_command_queue_execute_command_lists (cq,
-          0, nullptr, &fence_val_12);
       auto dmem = GST_D3D12_MEMORY_CAST (mem);
-      dmem->fence_value = fence_val_12;
+      gst_d3d12_memory_set_fence (dmem, priv->fence12.Get (), priv->fence_val,
+          FALSE);
     }
   } else {
     auto context = gst_d3d11_device_get_device_context_handle (priv->device);

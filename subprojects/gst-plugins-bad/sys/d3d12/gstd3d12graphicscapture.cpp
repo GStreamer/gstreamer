@@ -546,14 +546,8 @@ public:
     context_->Signal (shared_fence11_.Get (), fence_val_);
     gst_memory_unmap (mem, &map_info);
 
-    auto cq = gst_d3d12_device_get_command_queue (device12_,
-        D3D12_COMMAND_LIST_TYPE_DIRECT);
-    gst_d3d12_command_queue_execute_wait (cq, shared_fence12_.Get (),
-        fence_val_);
-    guint64 fence_val_12;
-    gst_d3d12_command_queue_execute_command_lists (cq,
-        0, nullptr, &fence_val_12);
-    dmem->fence_value = fence_val_12;
+    gst_d3d12_memory_set_fence (dmem,
+        shared_fence12_.Get (), fence_val_, FALSE);
 
     *width = crop_w;
     *height = crop_h;

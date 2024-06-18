@@ -525,7 +525,9 @@ gst_d3d12_ipc_client_have_data (GstD3D12IpcClient * self)
     gst_d3d12_command_queue_set_notify (queue, copy_fence_val, data,
         (GDestroyNotify) gst_d3d12_ipc_client_release_imported_data);
 
-    gst_d3d12_buffer_after_write (buffer, copy_fence_val);
+    gst_d3d12_buffer_after_write (buffer,
+        gst_d3d12_device_get_fence_handle (priv->device,
+            D3D12_COMMAND_LIST_TYPE_DIRECT), copy_fence_val);
 
     lk.lock ();
   } else {
@@ -545,8 +547,8 @@ gst_d3d12_ipc_client_have_data (GstD3D12IpcClient * self)
         texture.Get (), 0, data,
         (GDestroyNotify) gst_d3d12_ipc_client_release_imported_data);
 
-    gst_d3d12_memory_set_external_fence (GST_D3D12_MEMORY_CAST (mem),
-        priv->server_fence.Get (), fence_val);
+    gst_d3d12_memory_set_fence (GST_D3D12_MEMORY_CAST (mem),
+        priv->server_fence.Get (), fence_val, FALSE);
 
     GST_MINI_OBJECT_FLAG_SET (mem, GST_MEMORY_FLAG_READONLY);
 

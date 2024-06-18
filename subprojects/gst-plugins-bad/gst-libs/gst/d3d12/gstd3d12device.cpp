@@ -1814,6 +1814,7 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
 
   ID3D12CommandList *cmd_list[] = { cl.Get () };
   guint64 fence_val = 0;
+  auto fence = gst_d3d12_command_queue_get_fence_handle (priv->direct_queue);
   hr = gst_d3d12_command_queue_execute_command_lists (priv->direct_queue,
       1, cmd_list, &fence_val);
   auto ret = gst_d3d12_result (hr, device);
@@ -1822,7 +1823,7 @@ gst_d3d12_device_clear_yuv_texture (GstD3D12Device * device, GstMemory * mem)
   if (ret) {
     gst_d3d12_command_queue_set_notify (priv->direct_queue, fence_val,
         gst_ca, (GDestroyNotify) gst_d3d12_command_allocator_unref);
-    dmem->fence_value = fence_val;
+    gst_d3d12_memory_set_fence (dmem, fence, fence_val, FALSE);
   } else {
     gst_d3d12_command_allocator_unref (gst_ca);
   }

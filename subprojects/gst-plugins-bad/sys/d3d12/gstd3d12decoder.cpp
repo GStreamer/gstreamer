@@ -1541,6 +1541,7 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
         copy_args.data (), fence_data, 0, nullptr, nullptr, queue_type,
         &copy_fence_val);
+    auto fence = gst_d3d12_device_get_fence_handle (self->device, queue_type);
 
     if (!out_resource) {
       guint8 *map_data;
@@ -1574,7 +1575,8 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
       priv->session->staging->Unmap (0, nullptr);
       gst_video_frame_unmap (&vframe);
     } else {
-      gst_d3d12_buffer_after_write (frame->output_buffer, copy_fence_val);
+      gst_d3d12_buffer_after_write (frame->output_buffer,
+          fence, copy_fence_val);
     }
   }
 

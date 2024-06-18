@@ -162,7 +162,6 @@ struct _GstD3D12Memory
   GstMemory mem;
 
   GstD3D12Device *device;
-  guint64 fence_value;
 
   /*< private >*/
   GstD3D12MemoryPrivate *priv;
@@ -218,14 +217,15 @@ gpointer          gst_d3d12_memory_get_token_data (GstD3D12Memory * mem,
                                                    gint64 token);
 
 GST_D3D12_API
-void              gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem,
-                                                       ID3D12Fence * fence,
-                                                       guint64 fence_val);
+void              gst_d3d12_memory_set_fence (GstD3D12Memory * mem,
+                                              ID3D12Fence * fence,
+                                              guint64 fence_value,
+                                              gboolean wait);
 
 GST_D3D12_API
-gboolean          gst_d3d12_memory_get_external_fence (GstD3D12Memory * mem,
-                                                       ID3D12Fence ** fence,
-                                                       guint64 * fence_val);
+gboolean          gst_d3d12_memory_get_fence (GstD3D12Memory * mem,
+                                              ID3D12Fence ** fence,
+                                              guint64 * fence_value);
 
 GST_D3D12_API
 ID3D11Texture2D * gst_d3d12_memory_get_d3d11_texture (GstD3D12Memory * mem,

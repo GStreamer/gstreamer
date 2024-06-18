@@ -50,6 +50,7 @@ enum GstD3D12MSAAMode
 GType gst_d3d12_msaa_mode_get_type (void);
 
 void          gst_d3d12_buffer_after_write (GstBuffer * buffer,
+                                            ID3D12Fence * fence,
                                             guint64 fence_value);
 
 gboolean      gst_d3d12_need_transform (gfloat rotation_x,

@@ -631,10 +631,13 @@ gst_d3d12_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   gst_d3d12_frame_unmap (&dest_frame);
   gst_d3d12_frame_unmap (&src_frame);
 
+  auto fence = gst_d3d12_device_get_fence_handle (dest_device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+
   if (ret) {
     for (guint i = 0; i < num_mem; i++) {
       auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (dest, i);
-      dmem->fence_value = fence_val;
+      gst_d3d12_memory_set_fence (dmem, fence, fence_val, FALSE);
     }
   }
 

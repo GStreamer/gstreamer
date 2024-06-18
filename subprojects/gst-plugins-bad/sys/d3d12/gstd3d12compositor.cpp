@@ -1158,10 +1158,9 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
 
   auto cq = gst_d3d12_device_get_command_queue (priv->ctx->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
           buffer, self->priv->generated_output_buf, fence_data,
-          priv->ctx->cl.Get (), cq_handle)) {
+          priv->ctx->cl.Get (), cq)) {
     GST_ERROR_OBJECT (self, "Couldn't build command list");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
@@ -2329,7 +2328,9 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
     return FALSE;
   }
 
-  gst_d3d12_buffer_after_write (priv->generated_output_buf,
+  auto fence = gst_d3d12_device_get_fence_handle (self->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  gst_d3d12_buffer_after_write (priv->generated_output_buf, fence,
       bg_render->fence_val);
 
   if (bg_render->vertex_index_upload) {
@@ -2386,6 +2387,8 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
   }
 
   guint64 fence_val = priv->bg_render->fence_val;
+  auto fence = gst_d3d12_device_get_fence_handle (self->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
   GST_OBJECT_LOCK (self);
   for (iter = GST_ELEMENT (vagg)->sinkpads; iter; iter = g_list_next (iter)) {
     auto pad = GST_VIDEO_AGGREGATOR_PAD (iter->data);
@@ -2424,7 +2427,7 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
     }
 
     fence_val = pad_priv->ctx->fence_val;
-    gst_d3d12_buffer_after_write (priv->generated_output_buf, fence_val);
+    gst_d3d12_buffer_after_write (priv->generated_output_buf, fence, fence_val);
   }
   GST_OBJECT_UNLOCK (self);
 

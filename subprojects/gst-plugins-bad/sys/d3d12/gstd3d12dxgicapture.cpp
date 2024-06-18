@@ -1390,10 +1390,8 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
   auto cq = gst_d3d12_device_get_command_queue (priv->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
-
   if (!gst_d3d12_converter_convert_buffer (priv->mouse_blend,
-          priv->mouse_buf, buffer, fence_data, cl.Get (), cq_handle)) {
+          priv->mouse_buf, buffer, fence_data, cl.Get (), cq)) {
     GST_ERROR_OBJECT (self, "Couldn't build mouse blend command");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
@@ -1432,7 +1430,8 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
   gst_d3d12_command_queue_set_notify (cq, fence_val, fence_data,
       (GDestroyNotify) gst_d3d12_fence_data_unref);
-  gst_d3d12_buffer_after_write (buffer, fence_val);
+  gst_d3d12_buffer_after_write (buffer,
+      gst_d3d12_command_queue_get_fence_handle (cq), fence_val);
 
   return TRUE;
 }
@@ -1488,8 +1487,8 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
     return ret;
   }
 
-  gst_d3d12_memory_set_external_fence (dmem, priv->shared_fence.Get (),
-      priv->fence_val);
+  gst_d3d12_memory_set_fence (dmem, priv->shared_fence.Get (),
+      priv->fence_val, FALSE);
 
   GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
   GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);

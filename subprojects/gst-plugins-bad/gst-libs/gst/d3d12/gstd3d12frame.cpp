@@ -223,7 +223,7 @@ gst_d3d12_frame_map (GstD3D12Frame * frame, const GstVideoInfo * info,
         rtv_handle.Offset (rtv_inc_size);
       }
 
-      gst_d3d12_memory_get_external_fence (dmem, &frame->fence[plane_idx].fence,
+      gst_d3d12_memory_get_fence (dmem, &frame->fence[plane_idx].fence,
           &frame->fence[plane_idx].fence_value);
 
       plane_idx++;
@@ -351,15 +351,26 @@ gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
   gst_d3d12_fence_data_push (fence_data,
       FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (src->buffer)));
 
-  auto cq = gst_d3d12_device_get_command_queue (src->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  auto cq_handle = gst_d3d12_command_queue_get_handle (cq);
-  gst_d3d12_frame_fence_gpu_wait (src, cq_handle);
-  gst_d3d12_frame_fence_gpu_wait (dest, cq_handle);
+  std::vector < ID3D12Fence * >fences_to_wait;
+  std::vector < guint64 > fence_values_to_wait;
+
+  for (guint i = 0; i < G_N_ELEMENTS (dest->fence); i++) {
+    if (dest->fence[i].fence) {
+      fences_to_wait.push_back (dest->fence[i].fence);
+      fence_values_to_wait.push_back (dest->fence[i].fence_value);
+    }
+
+    if (src->fence[i].fence) {
+      fences_to_wait.push_back (src->fence[i].fence);
+      fence_values_to_wait.push_back (src->fence[i].fence_value);
+    }
+  }
 
   return gst_d3d12_device_copy_texture_region (dest->device,
       GST_VIDEO_INFO_N_PLANES (&dest->info), args, fence_data,
-      0, nullptr, nullptr, D3D12_COMMAND_LIST_TYPE_DIRECT, fence_value);
+      (guint) fences_to_wait.size (), fences_to_wait.data (),
+      fence_values_to_wait.data (), D3D12_COMMAND_LIST_TYPE_DIRECT,
+      fence_value);
 }
 
 /**
@@ -421,9 +432,9 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
 /**
  * gst_d3d12_frame_fence_gpu_wait:
  * @frame: a #GstD3D12Frame
- * @queue: a ID3D12CommandQueue
+ * @queue: a GstD3D12CommandQueue
  *
- * Executes ID3D12CommandQueue::Wait() if external fence exists
+ * Executes ID3D12CommandQueue::Wait() if @frame has different fence object
  *
  * Returns: %TRUE on success.
  *
@@ -431,16 +442,18 @@ gst_d3d12_frame_copy_plane (GstD3D12Frame * dest, const GstD3D12Frame * src,
  */
 gboolean
 gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,
-    ID3D12CommandQueue * queue)
+    GstD3D12CommandQueue * queue)
 {
   g_return_val_if_fail (frame, FALSE);
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (frame->device), FALSE);
-  g_return_val_if_fail (queue, FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), FALSE);
 
   ID3D12Fence *last_fence = nullptr;
   guint64 last_fence_val = 0;
+  auto fence = gst_d3d12_command_queue_get_fence_handle (queue);
+
   for (guint i = 0; i < G_N_ELEMENTS (frame->fence); i++) {
-    if (frame->fence[i].fence) {
+    if (frame->fence[i].fence && frame->fence[i].fence != fence) {
       if (frame->fence[i].fence == last_fence &&
           frame->fence[i].fence_value <= last_fence_val) {
         continue;
@@ -448,8 +461,8 @@ gst_d3d12_frame_fence_gpu_wait (const GstD3D12Frame * frame,
       last_fence = frame->fence[i].fence;
       last_fence_val = frame->fence[i].fence_value;
 
-      auto hr = queue->Wait (frame->fence[i].fence,
-          frame->fence[i].fence_value);
+      auto hr = gst_d3d12_command_queue_execute_wait (queue,
+          frame->fence[i].fence, frame->fence[i].fence_value);
       if (!gst_d3d12_result (hr, frame->device))
         return FALSE;
     }

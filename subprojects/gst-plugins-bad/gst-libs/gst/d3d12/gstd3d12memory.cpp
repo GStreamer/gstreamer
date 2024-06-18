@@ -372,8 +372,8 @@ struct _GstD3D12MemoryPrivate
   gpointer user_data = nullptr;
   GDestroyNotify notify = nullptr;
 
-  ComPtr<ID3D12Fence> external_fence;
-  UINT64 external_fence_val = 0;
+  ComPtr<ID3D12Fence> fence;
+  UINT64 fence_val = 0;
 };
 /* *INDENT-ON* */
 
@@ -415,45 +415,27 @@ gst_d3d12_memory_ensure_staging_resource (GstD3D12Memory * dmem)
 }
 
 static void
-gst_d3d12_memory_set_external_fence_unlocked (GstD3D12Memory * dmem,
-    ID3D12Fence * fence, guint64 fence_val)
+gst_d3d12_memory_set_fence_unlocked (GstD3D12Memory * dmem,
+    ID3D12Fence * fence, guint64 fence_val, gboolean wait)
 {
   auto priv = dmem->priv;
   HRESULT hr;
 
-  if (priv->external_fence) {
-    auto completed = priv->external_fence->GetCompletedValue ();
-    if (completed < priv->external_fence_val) {
-      hr = priv->external_fence->SetEventOnCompletion (priv->external_fence_val,
+  if (priv->fence && priv->fence.Get () != fence && wait) {
+    auto completed = priv->fence->GetCompletedValue ();
+    if (completed < priv->fence_val) {
+      hr = priv->fence->SetEventOnCompletion (priv->fence_val,
           priv->event_handle);
       if (SUCCEEDED (hr))
         WaitForSingleObjectEx (priv->event_handle, INFINITE, FALSE);
     }
-
-    priv->external_fence = nullptr;
-    priv->external_fence_val = 0;
   }
 
-  if (fence) {
-    priv->external_fence = fence;
-    priv->external_fence_val = fence_val;
-  }
-}
-
-static void
-gst_d3d12_memory_wait_gpu (GstD3D12Memory * dmem,
-    D3D12_COMMAND_LIST_TYPE command_type, guint64 fence_value)
-{
-  auto priv = dmem->priv;
-
-  gst_d3d12_memory_set_external_fence_unlocked (dmem, nullptr, 0);
-
-  auto completed = gst_d3d12_device_get_completed_value (dmem->device,
-      command_type);
-  if (completed < fence_value) {
-    gst_d3d12_device_fence_wait (dmem->device, command_type,
-        fence_value, priv->event_handle);
-  }
+  priv->fence = fence;
+  if (fence)
+    priv->fence_val = fence_val;
+  else
+    priv->fence_val = 0;
 }
 
 static gboolean
@@ -479,28 +461,26 @@ gst_d3d12_memory_download (GstD3D12Memory * dmem)
     copy_args.push_back (args);
   }
 
-  if (priv->external_fence) {
-    auto cq = gst_d3d12_device_get_command_queue (dmem->device,
-        D3D12_COMMAND_LIST_TYPE_COPY);
-    gst_d3d12_command_queue_execute_wait (cq, priv->external_fence.Get (),
-        priv->external_fence_val);
-  }
-
-  auto fence = gst_d3d12_device_get_fence_handle (dmem->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-  ID3D12Fence *direct_fence[] = { fence };
-  guint64 fence_value_to_wait[] = { dmem->fence_value };
-
   guint64 fence_val = 0;
+  guint num_fences_to_wait = 0;
+  ID3D12Fence *fences_to_wait[] = { priv->fence.Get () };
+  guint64 fence_values_to_wait[] = { priv->fence_val };
+  if (priv->fence)
+    num_fences_to_wait = 1;
+
   /* Use async copy queue when downloading */
   if (!gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
-          copy_args.data (), nullptr, 1, direct_fence, fence_value_to_wait,
-          D3D12_COMMAND_LIST_TYPE_COPY, &fence_val)) {
+          copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
+          fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_COPY, &fence_val)) {
     GST_ERROR_OBJECT (dmem->device, "Couldn't download texture to staging");
     return FALSE;
   }
 
-  gst_d3d12_memory_wait_gpu (dmem, D3D12_COMMAND_LIST_TYPE_COPY, fence_val);
+  gst_d3d12_device_fence_wait (dmem->device, D3D12_COMMAND_LIST_TYPE_COPY,
+      fence_val, priv->event_handle);
+
+  priv->fence = nullptr;
+  priv->fence_val = 0;
 
   GST_MEMORY_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -531,18 +511,21 @@ gst_d3d12_memory_upload (GstD3D12Memory * dmem)
   }
 
   guint num_fences_to_wait = 0;
-  ID3D12Fence *fences_to_wait[] = { priv->external_fence.Get () };
-  guint64 fence_values_to_wait[] = { priv->external_fence_val };
+  ID3D12Fence *fences_to_wait[] = { priv->fence.Get () };
+  guint64 fence_values_to_wait[] = { priv->fence_val };
   if (fences_to_wait[0])
     num_fences_to_wait = 1;
 
   if (!gst_d3d12_device_copy_texture_region (dmem->device, copy_args.size (),
           copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
           fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
-          &dmem->fence_value)) {
+          &priv->fence_val)) {
     GST_ERROR_OBJECT (dmem->device, "Couldn't upload texture");
     return FALSE;
   }
+
+  priv->fence = gst_d3d12_device_get_fence_handle (dmem->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   GST_MEMORY_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
 
@@ -648,9 +631,11 @@ gst_d3d12_memory_sync (GstD3D12Memory * mem)
 {
   g_return_val_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)), FALSE);
 
+  auto priv = mem->priv;
+
+  std::lock_guard < std::mutex > lk (priv->lock);
   gst_d3d12_memory_upload (mem);
-  gst_d3d12_memory_wait_gpu (mem,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, mem->fence_value);
+  gst_d3d12_memory_set_fence_unlocked (mem, nullptr, 0, TRUE);
 
   return TRUE;
 }
@@ -989,49 +974,61 @@ gst_d3d12_memory_get_token_data (GstD3D12Memory * mem, gint64 token)
 }
 
 /**
- * gst_d3d12_memory_set_external_fence:
+ * gst_d3d12_memory_set_fence:
  * @mem: a #GstD3D12Memory
  * @fence: (allow-none): a ID3D12Fence
- * @fence_val: fence value
+ * @fence_value: fence value
+ * @wait: waits for previously configured fence if any
  *
- * Sets external fence handle to @mem. Later memory map operation will wait
- * for @fence if needed
+ * Replace fence object of @mem with new @fence.
+ * This method will block calling thread for synchronization
+ * if @wait is %TRUE and configured fence is different from new @fence
  *
  * Since: 1.26
  */
 void
-gst_d3d12_memory_set_external_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
-    guint64 fence_val)
+gst_d3d12_memory_set_fence (GstD3D12Memory * mem, ID3D12Fence * fence,
+    guint64 fence_value, gboolean wait)
 {
+  g_return_if_fail (gst_is_d3d12_memory (GST_MEMORY_CAST (mem)));
+
   auto priv = mem->priv;
 
   std::lock_guard < std::mutex > lk (priv->lock);
-  gst_d3d12_memory_set_external_fence_unlocked (mem, fence, fence_val);
+  gst_d3d12_memory_set_fence_unlocked (mem, fence, fence_value, wait);
 }
 
 /**
- * gst_d3d12_memory_get_external_fence:
+ * gst_d3d12_memory_get_fence:
  * @mem: a #GstD3D12Memory
- * @fence: (out) (transfer full) (nullable): a ID3D12Fence
- * @fence_val: (out): fence value
+ * @fence: (out) (transfer full) (allow-none): a ID3D12Fence
+ * @fence_value: (out) (allow-none): fence value
  *
- * Gets configured external fence and fence value
+ * Gets configured fence and fence value. Valid operations against returned
+ * fence object are ID3D12Fence::GetCompletedValue() and
+ * ID3D12Fence::SetEventOnCompletion(). Caller should not try to update
+ * completed value via ID3D12Fence::Signal() since the fence is likely
+ * owned by external component and shared only for read-only operations.
  *
- * Returns: %TRUE if external fence was configured in @mem
+ * Returns: %TRUE if @mem has configured fence object
  *
  * Since: 1.26
  */
 gboolean
-gst_d3d12_memory_get_external_fence (GstD3D12Memory * mem, ID3D12Fence ** fence,
-    guint64 * fence_val)
+gst_d3d12_memory_get_fence (GstD3D12Memory * mem, ID3D12Fence ** fence,
+    guint64 * fence_value)
 {
   auto priv = mem->priv;
 
   std::lock_guard < std::mutex > lk (priv->lock);
-  if (priv->external_fence) {
-    *fence = priv->external_fence.Get ();
-    (*fence)->AddRef ();
-    *fence_val = priv->external_fence_val;
+  if (priv->fence) {
+    if (fence) {
+      *fence = priv->fence.Get ();
+      (*fence)->AddRef ();
+    }
+
+    if (fence_value)
+      *fence_value = priv->fence_val;
 
     return TRUE;
   }
@@ -1187,8 +1184,8 @@ gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
   guint64 fence_value_to_wait[1];
   {
     std::lock_guard < std::mutex > lk (mem_priv->lock);
-    fence_to_wait = mem_priv->external_fence;
-    fence_value_to_wait[0] = mem_priv->external_fence_val;
+    fence_to_wait = mem_priv->fence;
+    fence_value_to_wait[0] = mem_priv->fence_val;
   }
 
   GstD3D12FenceData *fence_data;
@@ -1204,7 +1201,9 @@ gst_d3d12_memory_copy (GstMemory * mem, gssize offset, gssize size)
   gst_d3d12_device_copy_texture_region (dmem->device,
       copy_args.size (), copy_args.data (), fence_data, num_fences_to_wait,
       fences_to_wait, fence_value_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT,
-      &dst_dmem->fence_value);
+      &dst_priv->fence_val);
+  dst_priv->fence = gst_d3d12_device_get_fence_handle (dmem->device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
 
   GST_MINI_OBJECT_FLAG_SET (dst, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
 
@@ -1245,8 +1244,7 @@ gst_d3d12_allocator_free (GstAllocator * allocator, GstMemory * mem)
 
   GST_LOG_OBJECT (allocator, "Free memory %p", mem);
 
-  gst_d3d12_memory_wait_gpu (dmem, D3D12_COMMAND_LIST_TYPE_DIRECT,
-      dmem->fence_value);
+  gst_d3d12_memory_set_fence_unlocked (dmem, nullptr, 0, TRUE);
 
   if (dmem->priv->notify)
     dmem->priv->notify (dmem->priv->user_data);
