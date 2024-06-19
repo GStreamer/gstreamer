@@ -29,12 +29,24 @@ GST_DEBUG_CATEGORY_STATIC (gst_d3d12_base_filter_debug);
 #define META_TAG_VIDEO meta_tag_video_quark
 static GQuark meta_tag_video_quark;
 
+enum
+{
+  PROP_0,
+  PROP_ADAPTER,
+};
+
+#define DEFAULT_ADAPTER -1
+
 #define gst_d3d12_base_filter_parent_class parent_class
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstD3D12BaseFilter, gst_d3d12_base_filter,
     GST_TYPE_BASE_TRANSFORM,
     GST_DEBUG_CATEGORY_INIT (gst_d3d12_base_filter_debug,
         "d3d12basefilter", 0, "d3d12 basefilter"));
 
+static void gst_d3d12_base_filter_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_d3d12_base_filter_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 static void gst_d3d12_base_filter_dispose (GObject * object);
 static void gst_d3d12_base_filter_set_context (GstElement * element,
     GstContext * context);
@@ -58,6 +70,22 @@ gst_d3d12_base_filter_class_init (GstD3D12BaseFilterClass * klass)
   GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->dispose = gst_d3d12_base_filter_dispose;
+  gobject_class->set_property = gst_d3d12_base_filter_set_property;
+  gobject_class->get_property = gst_d3d12_base_filter_get_property;
+
+  /**
+   * GstD3D12BaseFilter:adapter:
+   *
+   * Adapter index for creating device (-1 for default)
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_ADAPTER,
+      g_param_spec_int ("adapter", "Adapter",
+          "Adapter index for creating device (-1 for default)",
+          -1, G_MAXINT32, DEFAULT_ADAPTER,
+          (GParamFlags) (G_PARAM_READWRITE | GST_PARAM_MUTABLE_READY |
+              G_PARAM_STATIC_STRINGS)));
 
   element_class->set_context =
       GST_DEBUG_FUNCPTR (gst_d3d12_base_filter_set_context);
@@ -77,14 +105,15 @@ gst_d3d12_base_filter_class_init (GstD3D12BaseFilterClass * klass)
 }
 
 static void
-gst_d3d12_base_filter_init (GstD3D12BaseFilter * filter)
+gst_d3d12_base_filter_init (GstD3D12BaseFilter * self)
 {
+  self->adapter = DEFAULT_ADAPTER;
 }
 
 static void
 gst_d3d12_base_filter_dispose (GObject * object)
 {
-  GstD3D12BaseFilter *self = GST_D3D12_BASE_FILTER (object);
+  auto self = GST_D3D12_BASE_FILTER (object);
 
   gst_clear_object (&self->device);
 
@@ -92,9 +121,41 @@ gst_d3d12_base_filter_dispose (GObject * object)
 }
 
 static void
+gst_d3d12_base_filter_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_BASE_FILTER (object);
+
+  switch (prop_id) {
+    case PROP_ADAPTER:
+      self->adapter = g_value_get_int (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_d3d12_base_filter_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  auto self = GST_D3D12_BASE_FILTER (object);
+
+  switch (prop_id) {
+    case PROP_ADAPTER:
+      g_value_set_int (value, self->adapter);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_d3d12_base_filter_set_context (GstElement * element, GstContext * context)
 {
-  GstD3D12BaseFilter *self = GST_D3D12_BASE_FILTER (element);
+  auto self = GST_D3D12_BASE_FILTER (element);
 
   gst_d3d12_handle_set_context (element, context, -1, &self->device);
 
@@ -104,10 +165,10 @@ gst_d3d12_base_filter_set_context (GstElement * element, GstContext * context)
 static gboolean
 gst_d3d12_base_filter_start (GstBaseTransform * trans)
 {
-  GstD3D12BaseFilter *self = GST_D3D12_BASE_FILTER (trans);
+  auto self = GST_D3D12_BASE_FILTER (trans);
 
   if (!gst_d3d12_ensure_element_data (GST_ELEMENT_CAST (self),
-          -1, &self->device)) {
+          self->adapter, &self->device)) {
     GST_ERROR_OBJECT (self, "Failed to get D3D12 device");
     return FALSE;
   }
@@ -118,7 +179,7 @@ gst_d3d12_base_filter_start (GstBaseTransform * trans)
 static gboolean
 gst_d3d12_base_filter_stop (GstBaseTransform * trans)
 {
-  GstD3D12BaseFilter *self = GST_D3D12_BASE_FILTER (trans);
+  auto self = GST_D3D12_BASE_FILTER (trans);
 
   gst_clear_object (&self->device);
 
@@ -129,7 +190,7 @@ static gboolean
 gst_d3d12_base_filter_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps)
 {
-  GstD3D12BaseFilter *self = GST_D3D12_BASE_FILTER (trans);
+  auto self = GST_D3D12_BASE_FILTER (trans);
   GstVideoInfo in_info, out_info;
   GstD3D12BaseFilterClass *klass;
   gboolean res;
@@ -167,7 +228,7 @@ static gboolean
 gst_d3d12_base_filter_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query)
 {
-  GstD3D12BaseFilter *self = GST_D3D12_BASE_FILTER (trans);
+  auto self = GST_D3D12_BASE_FILTER (trans);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CONTEXT:
@@ -190,7 +251,7 @@ static void
 gst_d3d12_base_filter_before_transform (GstBaseTransform * trans,
     GstBuffer * buffer)
 {
-  GstD3D12BaseFilter *self = GST_D3D12_BASE_FILTER (trans);
+  auto self = GST_D3D12_BASE_FILTER (trans);
   GstD3D12Memory *dmem;
   GstMemory *mem;
   GstCaps *in_caps = nullptr;

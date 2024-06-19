@@ -42,6 +42,8 @@ struct _GstD3D12BaseFilter
 
   GstD3D12Device *device;
 
+  gint adapter;
+
   GstVideoInfo in_info;
   GstVideoInfo out_info;
 };
