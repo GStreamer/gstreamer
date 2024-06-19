@@ -244,6 +244,11 @@ gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
 
   if (priv->queue_size > 0) {
     auto completed = priv->fence->GetCompletedValue ();
+    if (completed == G_MAXUINT64) {
+      GST_ERROR_OBJECT (queue, "Device removed");
+      return DXGI_ERROR_DEVICE_REMOVED;
+    }
+
     if (completed + priv->queue_size < priv->fence_val) {
       hr = priv->fence->SetEventOnCompletion (priv->fence_val -
           priv->queue_size, priv->event_handle);
