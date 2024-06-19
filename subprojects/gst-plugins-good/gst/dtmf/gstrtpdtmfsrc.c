@@ -1084,6 +1084,9 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       }
       dtmfsrc->last_event_was_start = FALSE;
 
+      // Clear out any unfinished events
+      g_clear_pointer (&dtmfsrc->payload, g_free);
+
       /* Indicate that we don't do PRE_ROLL */
       break;
 
