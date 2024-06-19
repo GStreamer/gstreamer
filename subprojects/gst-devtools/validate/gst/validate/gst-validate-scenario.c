@@ -4432,6 +4432,7 @@ _execute_flush (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstElement *target;
   GstEvent *event;
+  gboolean ret;
   gboolean reset_time = TRUE;
 
   target = _get_target_element (scenario, action);
@@ -4446,19 +4447,28 @@ _execute_flush (GstValidateScenario * scenario, GstValidateAction * action)
 
   gst_structure_get_boolean (action->structure, "reset-time", &reset_time);
 
+  // FLUSH_START and FLUSH_STOP are "fire-and-forget" events.
+  //
+  // In the case of a pipeline where the most downstream element has unlinked srcpads
+  // (as is the case for many autoplugging elements before preroll), the event will
+  // "fail" due to "not-linked" but will have still correctly flushed all the existing
+  // elements and pads.
+  //
+  // For this reason, we cannot consider a test failed if a FLUSH_START or FLUSH_STOP
+  // "fails". However, since those "failures" reflect edge cases, we still want to log
+  // them as they can become useful during debugging.
+  //
+  // Source: https://gitlab.freedesktop.org/gstreamer/gstreamer/-/merge_requests/7064#note_2460206
+
   event = gst_event_new_flush_start ();
-  if (!gst_element_send_event (target, event)) {
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        SCENARIO_ACTION_EXECUTION_ERROR, "FLUSH_START event was not handled");
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-  }
+  ret = gst_element_send_event (target, event);
+  GST_DEBUG_OBJECT (scenario, "Sending FLUSH_START event returned %s.",
+      ret ? "TRUE" : "FALSE");
 
   event = gst_event_new_flush_stop (reset_time);
-  if (!gst_element_send_event (target, event)) {
-    GST_VALIDATE_REPORT_ACTION (scenario, action,
-        SCENARIO_ACTION_EXECUTION_ERROR, "FLUSH_STOP event was not handled");
-    return GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED;
-  }
+  ret = gst_element_send_event (target, event);
+  GST_DEBUG_OBJECT (scenario, "Sending FLUSH_STOP event returned %s.",
+      ret ? "TRUE" : "FALSE");
 
   return GST_VALIDATE_EXECUTE_ACTION_OK;
 }
