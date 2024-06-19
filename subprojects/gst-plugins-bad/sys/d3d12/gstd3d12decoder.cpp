@@ -1575,8 +1575,8 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
       priv->session->staging->Unmap (0, nullptr);
       gst_video_frame_unmap (&vframe);
     } else {
-      gst_d3d12_buffer_after_write (frame->output_buffer,
-          fence, copy_fence_val);
+      gst_d3d12_buffer_set_fence (frame->output_buffer,
+          fence, copy_fence_val, FALSE);
     }
   }
 

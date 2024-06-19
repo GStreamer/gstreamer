@@ -784,9 +784,9 @@ gst_d3d12_encoder_upload_frame (GstD3D12Encoder * self, GstBuffer * buffer)
     gst_d3d12_device_copy_texture_region (self->device, copy_args.size (),
         copy_args.data (), nullptr, num_fences_to_wait, fences_to_wait,
         fence_values_to_wait, D3D12_COMMAND_LIST_TYPE_DIRECT, &fence_val);
-    gst_d3d12_buffer_after_write (upload,
+    gst_d3d12_buffer_set_fence (upload,
         gst_d3d12_device_get_fence_handle (self->device,
-            D3D12_COMMAND_LIST_TYPE_DIRECT), fence_val);
+            D3D12_COMMAND_LIST_TYPE_DIRECT), fence_val, FALSE);
   } else {
     GstVideoFrame src_frame, dst_frame;
     if (!gst_video_frame_map (&src_frame, info, buffer, GST_MAP_READ)) {

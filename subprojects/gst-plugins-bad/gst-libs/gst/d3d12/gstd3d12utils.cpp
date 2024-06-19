@@ -631,17 +631,45 @@ gst_d3d12_buffer_copy_into (GstBuffer * dest, GstBuffer * src,
   gst_d3d12_frame_unmap (&dest_frame);
   gst_d3d12_frame_unmap (&src_frame);
 
-  auto fence = gst_d3d12_device_get_fence_handle (dest_device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
-
   if (ret) {
-    for (guint i = 0; i < num_mem; i++) {
-      auto dmem = (GstD3D12Memory *) gst_buffer_peek_memory (dest, i);
-      gst_d3d12_memory_set_fence (dmem, fence, fence_val, FALSE);
-    }
+    auto fence = gst_d3d12_device_get_fence_handle (dest_device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT);
+    gst_d3d12_buffer_set_fence (dest, fence, fence_val, FALSE);
   }
 
   return ret;
+}
+
+/**
+ * gst_d3d12_buffer_set_fence:
+ * @buffer: a #GstBuffer
+ * @fence: (allow-none): a ID3D12Fence
+ * @fence_value: fence value
+ * @wait: waits previously configured fence in buffer
+ *
+ * Should be called after GPU write operation against @buffer.
+ * This method will call gst_d3d12_memory_set_fence() for each memory in @buffer
+ * and sets #GstD3D12MemoryTransfer flags to memory objects
+ *
+ * Since: 1.26
+ */
+void
+gst_d3d12_buffer_set_fence (GstBuffer * buffer, ID3D12Fence * fence,
+    guint64 fence_value, gboolean wait)
+{
+  g_return_if_fail (GST_IS_BUFFER (buffer));
+
+  auto num_mem = gst_buffer_n_memory (buffer);
+  for (guint i = 0; i < num_mem; i++) {
+    auto mem = gst_buffer_peek_memory (buffer, i);
+    if (!gst_is_d3d12_memory (mem))
+      return;
+
+    gst_d3d12_memory_set_fence (GST_D3D12_MEMORY_CAST (mem),
+        fence, fence_value, wait);
+    GST_MINI_OBJECT_FLAG_SET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
+    GST_MINI_OBJECT_FLAG_UNSET (mem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
+  }
 }
 
 /**

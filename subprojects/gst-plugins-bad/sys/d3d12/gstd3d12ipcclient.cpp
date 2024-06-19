@@ -525,9 +525,9 @@ gst_d3d12_ipc_client_have_data (GstD3D12IpcClient * self)
     gst_d3d12_command_queue_set_notify (queue, copy_fence_val, data,
         (GDestroyNotify) gst_d3d12_ipc_client_release_imported_data);
 
-    gst_d3d12_buffer_after_write (buffer,
+    gst_d3d12_buffer_set_fence (buffer,
         gst_d3d12_device_get_fence_handle (priv->device,
-            D3D12_COMMAND_LIST_TYPE_DIRECT), copy_fence_val);
+            D3D12_COMMAND_LIST_TYPE_DIRECT), copy_fence_val, FALSE);
 
     lk.lock ();
   } else {

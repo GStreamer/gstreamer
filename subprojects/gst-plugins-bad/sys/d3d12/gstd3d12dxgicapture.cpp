@@ -1430,8 +1430,8 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
 
   gst_d3d12_command_queue_set_notify (cq, fence_val, fence_data,
       (GDestroyNotify) gst_d3d12_fence_data_unref);
-  gst_d3d12_buffer_after_write (buffer,
-      gst_d3d12_command_queue_get_fence_handle (cq), fence_val);
+  gst_d3d12_buffer_set_fence (buffer,
+      gst_d3d12_command_queue_get_fence_handle (cq), fence_val, FALSE);
 
   return TRUE;
 }

@@ -113,21 +113,6 @@ gst_d3d12_msaa_mode_get_type (void)
   return type;
 }
 
-void
-gst_d3d12_buffer_after_write (GstBuffer * buffer, ID3D12Fence * fence,
-    guint64 fence_value)
-{
-  for (guint i = 0; i < gst_buffer_n_memory (buffer); i++) {
-    auto mem = gst_buffer_peek_memory (buffer, i);
-    g_return_if_fail (gst_is_d3d12_memory (mem));
-
-    auto dmem = GST_D3D12_MEMORY_CAST (mem);
-    gst_d3d12_memory_set_fence (dmem, fence, fence_value, FALSE);
-    GST_MINI_OBJECT_FLAG_SET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_DOWNLOAD);
-    GST_MINI_OBJECT_FLAG_UNSET (dmem, GST_D3D12_MEMORY_TRANSFER_NEED_UPLOAD);
-  }
-}
-
 gboolean
 gst_d3d12_need_transform (gfloat rotation_x, gfloat rotation_y,
     gfloat rotation_z, gfloat scale_x, gfloat scale_y)

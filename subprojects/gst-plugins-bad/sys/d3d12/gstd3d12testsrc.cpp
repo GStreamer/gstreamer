@@ -2229,9 +2229,9 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d12_buffer_after_write (convert_buffer,
+  gst_d3d12_buffer_set_fence (convert_buffer,
       gst_d3d12_device_get_fence_handle (self->device,
-          D3D12_COMMAND_LIST_TYPE_DIRECT), priv->ctx->fence_val);
+          D3D12_COMMAND_LIST_TYPE_DIRECT), priv->ctx->fence_val, FALSE);
 
   gst_d3d12_device_set_fence_notify (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val,

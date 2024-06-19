@@ -2328,8 +2328,8 @@ gst_d3d12_compositor_draw_background (GstD3D12Compositor * self)
 
   auto fence = gst_d3d12_device_get_fence_handle (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-  gst_d3d12_buffer_after_write (priv->generated_output_buf, fence,
-      bg_render->fence_val);
+  gst_d3d12_buffer_set_fence (priv->generated_output_buf, fence,
+      bg_render->fence_val, FALSE);
 
   if (bg_render->vertex_index_upload) {
     gst_d3d12_fence_data_push (fence_data,
@@ -2425,7 +2425,8 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
     }
 
     fence_val = pad_priv->ctx->fence_val;
-    gst_d3d12_buffer_after_write (priv->generated_output_buf, fence, fence_val);
+    gst_d3d12_buffer_set_fence (priv->generated_output_buf,
+        fence, fence_val, FALSE);
   }
   GST_OBJECT_UNLOCK (self);
 

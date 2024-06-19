@@ -66,6 +66,12 @@ gboolean  gst_d3d12_buffer_copy_into (GstBuffer * dest,
                                       const GstVideoInfo * info);
 
 GST_D3D12_API
+void      gst_d3d12_buffer_set_fence (GstBuffer * buffer,
+                                      ID3D12Fence * fence,
+                                      guint64 fence_value,
+                                      gboolean wait);
+
+GST_D3D12_API
 gboolean _gst_d3d12_result (HRESULT hr,
                             GstD3D12Device * device,
                             GstDebugCategory * cat,

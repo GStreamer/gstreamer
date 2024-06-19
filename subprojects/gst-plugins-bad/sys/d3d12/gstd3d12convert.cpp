@@ -2037,7 +2037,7 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d12_buffer_after_write (outbuf, fence, priv->ctx->fence_val);
+  gst_d3d12_buffer_set_fence (outbuf, fence, priv->ctx->fence_val, FALSE);
   gst_d3d12_command_queue_set_notify (cq, priv->ctx->fence_val,
       FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
