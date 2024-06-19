@@ -1028,8 +1028,8 @@ gst_d3d12_compositor_pad_setup_converter (GstVideoAggregatorPad * pad,
     auto ctx = std::make_unique < PadContext > (self->device);
     ctx->info = pad->info;
 
-    ctx->conv = gst_d3d12_converter_new (self->device, &pad->info, info,
-        &priv->blend_desc, priv->blend_factor, nullptr);
+    ctx->conv = gst_d3d12_converter_new (self->device, nullptr, &pad->info,
+        info, &priv->blend_desc, priv->blend_factor, nullptr);
     if (!ctx->conv) {
       GST_ERROR_OBJECT (pad, "Couldn't create converter");
       return FALSE;
@@ -1156,11 +1156,9 @@ gst_d3d12_compositor_preprare_func (GstVideoAggregatorPad * pad,
     }
   }
 
-  auto cq = gst_d3d12_device_get_command_queue (priv->ctx->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
           buffer, self->priv->generated_output_buf, fence_data,
-          priv->ctx->cl.Get (), cq)) {
+          priv->ctx->cl.Get (), TRUE)) {
     GST_ERROR_OBJECT (self, "Couldn't build command list");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;

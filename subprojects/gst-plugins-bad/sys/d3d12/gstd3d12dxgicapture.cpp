@@ -1102,13 +1102,13 @@ gst_d3d12_dxgi_capture_open (GstD3D12DxgiCapture * self,
   blend_desc.RenderTarget[0].RenderTargetWriteMask =
       D3D12_COLOR_WRITE_ENABLE_ALL;
 
-  priv->mouse_blend = gst_d3d12_converter_new (self->device, &info, &info,
-      &blend_desc, nullptr, nullptr);
+  priv->mouse_blend = gst_d3d12_converter_new (self->device, nullptr, &info,
+      &info, &blend_desc, nullptr, nullptr);
 
   blend_desc.RenderTarget[0].SrcBlend = D3D12_BLEND_INV_DEST_COLOR;
   blend_desc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_COLOR;
-  priv->mouse_xor_blend = gst_d3d12_converter_new (self->device, &info, &info,
-      &blend_desc, nullptr, nullptr);
+  priv->mouse_xor_blend = gst_d3d12_converter_new (self->device, nullptr, &info,
+      &info, &blend_desc, nullptr, nullptr);
 
   hr = device->CreateFence (0,
       D3D12_FENCE_FLAG_SHARED, IID_PPV_ARGS (&priv->shared_fence));
@@ -1391,7 +1391,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
   auto cq = gst_d3d12_device_get_command_queue (priv->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!gst_d3d12_converter_convert_buffer (priv->mouse_blend,
-          priv->mouse_buf, buffer, fence_data, cl.Get (), cq)) {
+          priv->mouse_buf, buffer, fence_data, cl.Get (), TRUE)) {
     GST_ERROR_OBJECT (self, "Couldn't build mouse blend command");
     gst_d3d12_fence_data_unref (fence_data);
     return FALSE;
@@ -1403,7 +1403,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
         "dest-width", ptr_w, "dest-height", ptr_h, nullptr);
 
     if (!gst_d3d12_converter_convert_buffer (priv->mouse_xor_blend,
-            priv->mouse_xor_buf, buffer, fence_data, cl.Get (), nullptr)) {
+            priv->mouse_xor_buf, buffer, fence_data, cl.Get (), FALSE)) {
       GST_ERROR_OBJECT (self, "Couldn't build mouse blend command");
       gst_d3d12_fence_data_unref (fence_data);
       return FALSE;

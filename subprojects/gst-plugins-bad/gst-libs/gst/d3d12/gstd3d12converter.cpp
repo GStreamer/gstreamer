@@ -251,7 +251,10 @@ struct _GstD3D12ConverterPrivate
     }
     converter_upload_data_free (upload_data);
     gst_clear_object (&srv_heap_pool);
+    gst_clear_object (&cq);
   }
+
+  GstD3D12CommandQueue *cq = nullptr;
 
   GstVideoInfo in_info;
   GstVideoInfo out_info;
@@ -1592,6 +1595,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
 /**
  * gst_d3d12_converter_new:
  * @device: a #GstD3D12Device
+ * @queue: (allow-none): a #GstD3D12CommandQueue
  * @in_info: a #GstVideoInfo
  * @out_info: a #GstVideoInfo
  * @blend_desc: (nullable): D3D12_BLEND_DESC
@@ -1606,9 +1610,10 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
  * Since: 1.26
  */
 GstD3D12Converter *
-gst_d3d12_converter_new (GstD3D12Device * device, const GstVideoInfo * in_info,
-    const GstVideoInfo * out_info, const D3D12_BLEND_DESC * blend_desc,
-    const gfloat blend_factor[4], GstStructure * config)
+gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
+    const GstVideoInfo * in_info, const GstVideoInfo * out_info,
+    const D3D12_BLEND_DESC * blend_desc, const gfloat blend_factor[4],
+    GstStructure * config)
 {
   GstD3D12Converter *self;
   GstD3D12Format in_d3d12_format;
@@ -1622,10 +1627,19 @@ gst_d3d12_converter_new (GstD3D12Device * device, const GstVideoInfo * in_info,
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
   g_return_val_if_fail (in_info != nullptr, nullptr);
   g_return_val_if_fail (out_info != nullptr, nullptr);
+  g_return_val_if_fail (queue == nullptr || GST_IS_D3D12_COMMAND_QUEUE (queue),
+      nullptr);
 
   self = (GstD3D12Converter *) g_object_new (GST_TYPE_D3D12_CONVERTER, nullptr);
   gst_object_ref_sink (self);
   auto priv = self->priv;
+  priv->cq = queue;
+  if (!priv->cq) {
+    priv->cq = gst_d3d12_device_get_command_queue (device,
+        D3D12_COMMAND_LIST_TYPE_DIRECT);
+  }
+
+  gst_object_ref (priv->cq);
 
   if (blend_desc)
     priv->blend_desc = *blend_desc;
@@ -2149,15 +2163,14 @@ gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
  * @out_buf: a #GstBuffer
  * @fence_data: a #GstD3D12FenceData
  * @command_list: a ID3D12GraphicsCommandList
- * @queue: (allow-none): a #GstD3D12CommandQueue
+ * @execute_gpu_wait: Executes wait operation against @queue
  *
  * Records command list for conversion operation. converter will attach
  * conversion command associated resources such as command allocator
  * to @fence_data.
  *
- * If @queue is passed and @in_buf needs external fence wait,
- * ID3D12CommandQueue::Wait() method for each external fence object
- * will be executed in this method
+ * If @execute_wait is %TRUE and buffers are associated with external fences,
+ * this method will schedule GPU wait operation against @queue.
  *
  * Returns: %TRUE if successful
  *
@@ -2166,15 +2179,13 @@ gst_d3d12_converter_check_needs_upload (GstD3D12Converter * self,
 gboolean
 gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
     GstBuffer * in_buf, GstBuffer * out_buf, GstD3D12FenceData * fence_data,
-    ID3D12GraphicsCommandList * command_list, GstD3D12CommandQueue * queue)
+    ID3D12GraphicsCommandList * command_list, gboolean execute_gpu_wait)
 {
   g_return_val_if_fail (GST_IS_D3D12_CONVERTER (converter), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (in_buf), FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (out_buf), FALSE);
   g_return_val_if_fail (fence_data, FALSE);
   g_return_val_if_fail (command_list, FALSE);
-  g_return_val_if_fail (queue == nullptr || GST_IS_D3D12_COMMAND_QUEUE (queue),
-      FALSE);
 
   GstD3D12Frame in_frame;
   GstD3D12Frame out_frame;
@@ -2210,9 +2221,9 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   auto ret = gst_d3d12_converter_execute (converter,
       &in_frame, &out_frame, fence_data, command_list);
 
-  if (ret && queue) {
-    gst_d3d12_frame_fence_gpu_wait (&in_frame, queue);
-    gst_d3d12_frame_fence_gpu_wait (&out_frame, queue);
+  if (ret && execute_gpu_wait) {
+    gst_d3d12_frame_fence_gpu_wait (&in_frame, priv->cq);
+    gst_d3d12_frame_fence_gpu_wait (&out_frame, priv->cq);
   }
 
   gst_d3d12_frame_unmap (&in_frame);

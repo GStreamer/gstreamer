@@ -465,7 +465,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
   if (priv->direct_blend) {
     GST_LOG_OBJECT (self, "Direct blend");
     ret = gst_d3d12_converter_convert_buffer (priv->blend_conv,
-        layout_buf, output, fence_data, priv->cl.Get (), cq);
+        layout_buf, output, fence_data, priv->cl.Get (), TRUE);
   } else {
     GST_LOG_OBJECT (self, "Need conversion for blending");
 
@@ -477,7 +477,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
     if (ret) {
       ret = gst_d3d12_converter_convert_buffer (priv->pre_conv,
-          output, bgra_buf, fence_data, priv->cl.Get (), cq);
+          output, bgra_buf, fence_data, priv->cl.Get (), TRUE);
     }
 
     if (ret) {
@@ -494,7 +494,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
       priv->cl->ResourceBarrier (1, &barrier);
 
       ret = gst_d3d12_converter_convert_buffer (priv->blend_conv,
-          layout_buf, bgra_buf, fence_data, priv->cl.Get (), nullptr);
+          layout_buf, bgra_buf, fence_data, priv->cl.Get (), FALSE);
     }
 
     if (ret) {
@@ -525,7 +525,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
       priv->cl->ResourceBarrier (barriers.size (), barriers.data ());
 
       ret = gst_d3d12_converter_convert_buffer (priv->post_conv,
-          bgra_buf, output, fence_data, priv->cl.Get (), nullptr);
+          bgra_buf, output, fence_data, priv->cl.Get (), FALSE);
     }
 
     gst_clear_buffer (&bgra_buf);
@@ -537,14 +537,13 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
 
   if (ret) {
     ID3D12CommandList *cl[] = { priv->cl.Get () };
-    hr = gst_d3d12_device_execute_command_lists (priv->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cl, &priv->fence_val);
+    hr = gst_d3d12_command_queue_execute_command_lists (cq,
+        1, cl, &priv->fence_val);
     ret = gst_d3d12_result (hr, priv->device);
   }
 
   if (ret) {
-    gst_d3d12_device_set_fence_notify (priv->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, priv->fence_val,
+    gst_d3d12_command_queue_set_notify (cq, priv->fence_val,
         FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
     priv->scheduled.push (priv->fence_val);
@@ -792,7 +791,7 @@ create_converter (GstDWriteD3D12Render * self, const GstVideoInfo * in_info,
         GST_D3D12_CONVERTER_ALPHA_MODE_PREMULTIPLIED, nullptr);
   }
 
-  auto ret = gst_d3d12_converter_new (priv->device, in_info, out_info,
+  auto ret = gst_d3d12_converter_new (priv->device, nullptr, in_info, out_info,
       &blend_desc, nullptr, config);
 
   if (!ret)

@@ -1750,7 +1750,7 @@ gst_d3d12_convert_set_info (GstD3D12BaseFilter * filter,
 
   auto ctx = std::make_unique < ConvertContext > (filter->device);
 
-  ctx->conv = gst_d3d12_converter_new (filter->device, in_info,
+  ctx->conv = gst_d3d12_converter_new (filter->device, nullptr, in_info,
       out_info, nullptr, nullptr, config);
   if (!ctx->conv) {
     GST_ERROR_OBJECT (self, "Couldn't create converter");
@@ -2012,9 +2012,9 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   auto cq = gst_d3d12_device_get_command_queue (priv->ctx->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
-
+  auto fence = gst_d3d12_command_queue_get_fence_handle (cq);
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
-          inbuf, outbuf, fence_data, priv->ctx->cl.Get (), cq)) {
+          inbuf, outbuf, fence_data, priv->ctx->cl.Get (), TRUE)) {
     GST_ERROR_OBJECT (self, "Couldn't build command list");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;
@@ -2029,20 +2029,16 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 
   ID3D12CommandList *cmd_list[] = { priv->ctx->cl.Get () };
 
-  hr = gst_d3d12_device_execute_command_lists (priv->ctx->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, 1, cmd_list, &priv->ctx->fence_val);
+  hr = gst_d3d12_command_queue_execute_command_lists (cq,
+      1, cmd_list, &priv->ctx->fence_val);
   if (!gst_d3d12_result (hr, priv->ctx->device)) {
     GST_ERROR_OBJECT (self, "Couldn't execute command list");
     gst_d3d12_fence_data_unref (fence_data);
     return GST_FLOW_ERROR;
   }
 
-  gst_d3d12_buffer_after_write (outbuf,
-      gst_d3d12_device_get_fence_handle (priv->ctx->device,
-          D3D12_COMMAND_LIST_TYPE_DIRECT), priv->ctx->fence_val);
-
-  gst_d3d12_device_set_fence_notify (priv->ctx->device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT, priv->ctx->fence_val,
+  gst_d3d12_buffer_after_write (outbuf, fence, priv->ctx->fence_val);
+  gst_d3d12_command_queue_set_notify (cq, priv->ctx->fence_val,
       FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   priv->ctx->scheduled.push (priv->ctx->fence_val);

@@ -1577,7 +1577,7 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
 
   gst_video_info_set_format (&draw_info, GST_VIDEO_FORMAT_BGRA,
       priv->info.width, priv->info.height);
-  ctx->conv = gst_d3d12_converter_new (self->device,
+  ctx->conv = gst_d3d12_converter_new (self->device, nullptr,
       &draw_info, &priv->info, nullptr, nullptr, config);
 
   if (!ctx->conv) {
@@ -2201,10 +2201,9 @@ gst_d3d12_test_src_create (GstBaseSrc * bsrc, guint64 offset,
 
   pts = priv->accum_rtime + priv->running_time;
   gst_d3d12_test_src_draw_pattern (self, pts, cl.Get ());
-
   if (!gst_d3d12_converter_convert_buffer (priv->ctx->conv,
           priv->ctx->render_buffer, convert_buffer, fence_data, cl.Get (),
-          nullptr)) {
+          FALSE)) {
     GST_ERROR_OBJECT (self, "Couldn't build convert command");
     gst_clear_buffer (&convert_buffer);
     gst_d3d12_fence_data_unref (fence_data);

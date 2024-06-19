@@ -153,6 +153,7 @@ GType               gst_d3d12_converter_get_type (void);
 
 GST_D3D12_API
 GstD3D12Converter * gst_d3d12_converter_new  (GstD3D12Device * device,
+                                              GstD3D12CommandQueue * queue,
                                               const GstVideoInfo * in_info,
                                               const GstVideoInfo * out_info,
                                               const D3D12_BLEND_DESC * blend_desc,
@@ -165,7 +166,7 @@ gboolean            gst_d3d12_converter_convert_buffer (GstD3D12Converter * conv
                                                         GstBuffer * out_buf,
                                                         GstD3D12FenceData * fence_data,
                                                         ID3D12GraphicsCommandList * command_list,
-                                                        GstD3D12CommandQueue * queue);
+                                                        gboolean execute_gpu_wait);
 
 GST_D3D12_API
 gboolean            gst_d3d12_converter_update_blend_state (GstD3D12Converter * converter,

@@ -327,7 +327,7 @@ SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
   converter_config_ = gst_structure_copy (conv_config);
 
   if (!resource_->conv) {
-    resource_->conv = gst_d3d12_converter_new (resource_->device,
+    resource_->conv = gst_d3d12_converter_new (resource_->device, nullptr,
       in_info, out_info, nullptr, nullptr, gst_structure_copy (conv_config));
     if (!resource_->conv) {
       GST_ERROR ("Couldn't create converter");
