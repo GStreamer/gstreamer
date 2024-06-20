@@ -832,28 +832,28 @@ apply_gap (GstQueue2 * queue, GstEvent * event,
 
   gst_event_parse_gap (event, &timestamp, &duration);
 
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time)) {
-      queue->sink_start_time = gst_segment_to_running_time (segment,
-          GST_FORMAT_TIME, timestamp);
-      GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (queue->sink_start_time));
-    }
+  g_return_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp));
 
-    if (GST_CLOCK_TIME_IS_VALID (duration)) {
-      timestamp += duration;
-    }
-
-    segment->position = timestamp;
-
-    if (is_sink)
-      queue->sink_tainted = TRUE;
-    else
-      queue->src_tainted = TRUE;
-
-    /* calc diff with other end */
-    update_time_level (queue);
+  if (is_sink && !GST_CLOCK_TIME_IS_VALID (queue->sink_start_time)) {
+    queue->sink_start_time = gst_segment_to_running_time (segment,
+        GST_FORMAT_TIME, timestamp);
+    GST_DEBUG_OBJECT (queue, "Start time updated to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (queue->sink_start_time));
   }
+
+  if (GST_CLOCK_TIME_IS_VALID (duration)) {
+    timestamp += duration;
+  }
+
+  segment->position = timestamp;
+
+  if (is_sink)
+    queue->sink_tainted = TRUE;
+  else
+    queue->src_tainted = TRUE;
+
+  /* calc diff with other end */
+  update_time_level (queue);
 }
 
 static void
