@@ -3142,7 +3142,7 @@ is_selection_done (GstDecodebin3 * dbin)
 
   GST_DEBUG_OBJECT (dbin, "Selection active, creating message");
 
-  /* We are completely active */
+  /* All requested streams are present */
   msg =
       gst_message_new_streams_selected ((GstObject *) dbin,
       collection->collection);
@@ -3153,7 +3153,14 @@ is_selection_done (GstDecodebin3 * dbin)
     MultiQueueSlot *slot = tmp->data;
     if (slot->output) {
       GST_DEBUG_OBJECT (dbin, "Adding stream %s", slot->active_stream_id);
-      g_assert (stream_is_requested (dbin, slot->active_stream_id));
+      if (!stream_is_requested (dbin, slot->active_stream_id)) {
+        /* We *could* still have an old output which isn't fully deactivated
+         * yet. Not 100% ready yet */
+        GST_DEBUG_OBJECT (dbin,
+            "Stream from previous selection still active, bailing out");
+        gst_message_unref (msg);
+        return NULL;
+      }
       gst_message_streams_selected_add (msg, slot->active_stream);
     }
   }
