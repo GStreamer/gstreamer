@@ -183,6 +183,10 @@ static const XMFLOAT4X4A g_matrix_ur_ll = XMFLOAT4X4A (
     1.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 0.0f, 1.0f, 0.0f,
     0.0f, 0.0f, 0.0f, 1.0f);
+
+constexpr UINT g_vertex_buf_size = sizeof (VertexData) * 4;
+constexpr UINT g_index_buf_size = sizeof (g_indices);
+constexpr UINT g_const_buf_size = sizeof (PSConstBuffer);
 /* *INDENT-ON* */
 
 enum
@@ -214,21 +218,6 @@ struct QuadData
 #define STATE_VERTEX_AND_INDEX \
   (D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER | D3D12_RESOURCE_STATE_INDEX_BUFFER)
 
-struct ConverterUploadData
-{
-  ComPtr<ID3D12Resource> vertex_index_upload;
-  ComPtr<ID3D12Resource> ps_const_upload;
-  ComPtr<ID3D12Resource> gamma_dec_lut_upload;
-  ComPtr<ID3D12Resource> gamma_enc_lut_upload;
-};
-
-static void
-converter_upload_data_free (ConverterUploadData * data)
-{
-  if (data)
-    delete data;
-}
-
 struct _GstD3D12ConverterPrivate
 {
   _GstD3D12ConverterPrivate ()
@@ -245,11 +234,13 @@ struct _GstD3D12ConverterPrivate
 
   ~_GstD3D12ConverterPrivate ()
   {
+    if (fence_val > 0 && cq)
+      gst_d3d12_command_queue_fence_wait (cq, fence_val, nullptr);
+
     if (fallback_pool) {
       gst_buffer_pool_set_active (fallback_pool, FALSE);
       gst_clear_object (&fallback_pool);
     }
-    converter_upload_data_free (upload_data);
     gst_clear_object (&srv_heap_pool);
     gst_clear_object (&cq);
   }
@@ -280,8 +271,9 @@ struct _GstD3D12ConverterPrivate
 
   D3D12_VERTEX_BUFFER_VIEW vbv;
   D3D12_INDEX_BUFFER_VIEW idv;
-  ComPtr<ID3D12Resource> vertex_index_buf;
-  ComPtr<ID3D12Resource> ps_const_buf;
+  D3D12_GPU_VIRTUAL_ADDRESS const_buf_addr;
+  ComPtr<ID3D12Resource> shader_buf;
+  ComPtr<ID3D12Resource> vertex_upload;
   ComPtr<ID3D12Resource> gamma_dec_lut;
   ComPtr<ID3D12Resource> gamma_enc_lut;
   D3D12_PLACED_SUBRESOURCE_FOOTPRINT gamma_lut_layout;
@@ -291,13 +283,8 @@ struct _GstD3D12ConverterPrivate
 
   GstD3D12DescriptorPool *srv_heap_pool = nullptr;
 
-  ConverterUploadData *upload_data = nullptr;
-  bool is_first = true;
-
   guint srv_inc_size;
   guint rtv_inc_size;
-
-  std::vector<D3D12_RESOURCE_BARRIER> barriers;
 
   guint64 input_texture_width;
   guint input_texture_height;
@@ -316,6 +303,7 @@ struct _GstD3D12ConverterPrivate
   GstVideoOrientationMethod video_direction;
 
   std::mutex prop_lock;
+  guint64 fence_val = 0;
 
   /* properties */
   gint src_x = 0;
@@ -626,6 +614,9 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   auto priv = self->priv;
   HRESULT hr;
   VertexData vertex_data[4];
+  ComPtr < ID3D12Resource > upload_buf;
+  ComPtr < ID3D12Resource > gamma_dec_lut_upload;
+  ComPtr < ID3D12Resource > gamma_enc_lut_upload;
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
 
@@ -726,9 +717,6 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
   priv->srv_heap_pool = gst_d3d12_descriptor_pool_new (device, &srv_heap_desc);
 
-  priv->upload_data = new ConverterUploadData ();
-  auto upload_data = priv->upload_data;
-
   /* bottom left */
   vertex_data[0].position.x = -1.0f;
   vertex_data[0].position.y = -1.0f;
@@ -757,85 +745,60 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   vertex_data[3].texture.u = 1.0f;
   vertex_data[3].texture.v = 1.0f;
 
-  /* vertex and index buffers */
+  /* vertex, index and constant buffers */
   D3D12_HEAP_PROPERTIES heap_prop;
   D3D12_RESOURCE_DESC resource_desc;
   CD3DX12_RANGE range (0, 0);
   guint8 *data;
   {
+    guint vertex_index_size = g_vertex_buf_size + g_index_buf_size;
+    vertex_index_size = GST_ROUND_UP_N (vertex_index_size,
+        D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+    guint const_size = GST_ROUND_UP_N (g_const_buf_size,
+        D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
     resource_desc =
-        CD3DX12_RESOURCE_DESC::Buffer (sizeof (VertexData) * 4 +
-        sizeof (g_indices));
+        CD3DX12_RESOURCE_DESC::Buffer (vertex_index_size + const_size);
     hr = device->CreateCommittedResource (&heap_prop,
         D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
-        IID_PPV_ARGS (&priv->vertex_index_buf));
+        IID_PPV_ARGS (&priv->shader_buf));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create vertex buffer");
       return FALSE;
     }
 
-    priv->vbv.BufferLocation = priv->vertex_index_buf->GetGPUVirtualAddress ();
-    priv->vbv.SizeInBytes = sizeof (VertexData) * 4;
+    priv->vbv.BufferLocation = priv->shader_buf->GetGPUVirtualAddress ();
+    priv->vbv.SizeInBytes = g_vertex_buf_size;
     priv->vbv.StrideInBytes = sizeof (VertexData);
 
-    priv->idv.BufferLocation = priv->vbv.BufferLocation + priv->vbv.SizeInBytes;
-    priv->idv.SizeInBytes = sizeof (g_indices);
+    priv->idv.BufferLocation = priv->vbv.BufferLocation + g_vertex_buf_size;
+    priv->idv.SizeInBytes = g_index_buf_size;
     priv->idv.Format = DXGI_FORMAT_R16_UINT;
+
+    priv->const_buf_addr = priv->vbv.BufferLocation + vertex_index_size;
 
     heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     hr = device->CreateCommittedResource (&heap_prop,
         D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-        IID_PPV_ARGS (&upload_data->vertex_index_upload));
+        IID_PPV_ARGS (&upload_buf));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create vertex buffer upload");
       return FALSE;
     }
 
-    hr = upload_data->vertex_index_upload->Map (0, &range, (void **) &data);
+    hr = upload_buf->Map (0, &range, (void **) &data);
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't map vertext buffer");
       return FALSE;
     }
 
-    memcpy (data, vertex_data, sizeof (VertexData) * 4);
-    memcpy (data + sizeof (VertexData) * 4, g_indices, sizeof (g_indices));
-    upload_data->vertex_index_upload->Unmap (0, nullptr);
-  }
-
-  /* pixel shader const buffer, static */
-  {
-    heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
-    resource_desc = CD3DX12_RESOURCE_DESC::Buffer (sizeof (PSConstBuffer));
-    hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-        &resource_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
-        IID_PPV_ARGS (&priv->ps_const_buf));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create const buffer");
-      return FALSE;
-    }
-
-    heap_prop = CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-    hr = device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
-        &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-        IID_PPV_ARGS (&upload_data->ps_const_upload));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't create const buffer upload");
-      return FALSE;
-    }
-
-    hr = upload_data->ps_const_upload->Map (0, &range, (void **) &data);
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Couldn't map index buffer");
-      return FALSE;
-    }
-
-    memcpy (data, &priv->const_data, sizeof (PSConstBuffer));
-    upload_data->ps_const_upload->Unmap (0, nullptr);
+    memcpy (data, vertex_data, g_vertex_buf_size);
+    memcpy (data + g_vertex_buf_size, g_indices, g_index_buf_size);
+    memcpy (data + vertex_index_size, &priv->const_data, g_const_buf_size);
+    upload_buf->Unmap (0, nullptr);
   }
 
   if (priv->crs->HaveLut ()) {
@@ -871,7 +834,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     hr = device->CreateCommittedResource (&heap_prop,
         D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-        IID_PPV_ARGS (&upload_data->gamma_dec_lut_upload));
+        IID_PPV_ARGS (&gamma_dec_lut_upload));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create gamma decoding LUT upload");
       return FALSE;
@@ -880,7 +843,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     hr = device->CreateCommittedResource (&heap_prop,
         D3D12_HEAP_FLAG_CREATE_NOT_ZEROED,
         &resource_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-        IID_PPV_ARGS (&upload_data->gamma_enc_lut_upload));
+        IID_PPV_ARGS (&gamma_enc_lut_upload));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create gamma encoding LUT upload");
       return FALSE;
@@ -892,23 +855,23 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     auto gamma_dec_table = gst_d3d12_converter_get_gamma_dec_table (in_trc);
     auto gamma_enc_table = gst_d3d12_converter_get_gamma_enc_table (out_trc);
 
-    hr = upload_data->gamma_dec_lut_upload->Map (0, &range, (void **) &data);
+    hr = gamma_dec_lut_upload->Map (0, &range, (void **) &data);
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't map gamma lut upload buffer");
       return FALSE;
     }
 
     memcpy (data, gamma_dec_table->lut, GAMMA_LUT_SIZE * sizeof (guint16));
-    upload_data->gamma_dec_lut_upload->Unmap (0, nullptr);
+    gamma_dec_lut_upload->Unmap (0, nullptr);
 
-    hr = upload_data->gamma_enc_lut_upload->Map (0, &range, (void **) &data);
+    hr = gamma_enc_lut_upload->Map (0, &range, (void **) &data);
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't map gamma lut upload buffer");
       return FALSE;
     }
 
     memcpy (data, gamma_enc_table->lut, GAMMA_LUT_SIZE * sizeof (guint16));
-    upload_data->gamma_enc_lut_upload->Unmap (0, nullptr);
+    gamma_enc_lut_upload->Unmap (0, nullptr);
 
     D3D12_DESCRIPTOR_HEAP_DESC desc = { };
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -955,6 +918,85 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     priv->scissor_rect[i].right = GST_VIDEO_INFO_COMP_WIDTH (out_info, i);
     priv->scissor_rect[i].bottom = GST_VIDEO_INFO_COMP_HEIGHT (out_info, i);
   }
+
+  ComPtr < ID3D12CommandAllocator > ca;
+  hr = device->CreateCommandAllocator (D3D12_COMMAND_LIST_TYPE_DIRECT,
+      IID_PPV_ARGS (&ca));
+  if (!gst_d3d12_result (hr, self->device))
+    return FALSE;
+
+  ComPtr < ID3D12GraphicsCommandList > cl;
+  hr = device->CreateCommandList (0, D3D12_COMMAND_LIST_TYPE_DIRECT,
+      ca.Get (), nullptr, IID_PPV_ARGS (&cl));
+  if (!gst_d3d12_result (hr, self->device))
+    return FALSE;
+
+  std::vector < D3D12_RESOURCE_BARRIER > barriers;
+  cl->CopyResource (priv->shader_buf.Get (), upload_buf.Get ());
+
+  barriers.push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->shader_buf.
+          Get (), D3D12_RESOURCE_STATE_COPY_DEST, STATE_VERTEX_AND_INDEX));
+
+  if (priv->crs->HaveLut ()) {
+    D3D12_TEXTURE_COPY_LOCATION src;
+    D3D12_TEXTURE_COPY_LOCATION dst;
+    src =
+        CD3DX12_TEXTURE_COPY_LOCATION (gamma_dec_lut_upload.Get (),
+        priv->gamma_lut_layout);
+    dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->gamma_dec_lut.Get ());
+    cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
+
+    src =
+        CD3DX12_TEXTURE_COPY_LOCATION (gamma_enc_lut_upload.Get (),
+        priv->gamma_lut_layout);
+    dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->gamma_enc_lut.Get ());
+    cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
+
+    barriers.
+        push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->gamma_dec_lut.
+            Get (), D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+    barriers.
+        push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->gamma_enc_lut.
+            Get (), D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+  }
+
+  cl->ResourceBarrier (barriers.size (), barriers.data ());
+
+  hr = cl->Close ();
+  if (!gst_d3d12_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't close upload command list");
+    return FALSE;
+  }
+
+  ID3D12CommandList *cmd_list[] = { cl.Get () };
+
+  hr = gst_d3d12_command_queue_execute_command_lists (priv->cq, 1, cmd_list,
+      &priv->fence_val);
+  if (!gst_d3d12_result (hr, self->device)) {
+    GST_ERROR_OBJECT (self, "Couldn't execute command list");
+    return FALSE;
+  }
+
+  GstD3D12FenceData *fence_data;
+  gst_d3d12_device_acquire_fence_data (self->device, &fence_data);
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (cl.Detach ()));
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_COM (ca.Detach ()));
+  gst_d3d12_fence_data_push (fence_data,
+      FENCE_NOTIFY_COM (upload_buf.Detach ()));
+  if (gamma_dec_lut_upload) {
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_COM (gamma_dec_lut_upload.Detach ()));
+  }
+
+  if (gamma_enc_lut_upload) {
+    gst_d3d12_fence_data_push (fence_data,
+        FENCE_NOTIFY_COM (gamma_enc_lut_upload.Detach ()));
+  }
+
+  gst_d3d12_command_queue_set_notify (priv->cq, priv->fence_val,
+      FENCE_NOTIFY_MINI_OBJECT (fence_data));
 
   return TRUE;
 }
@@ -1048,20 +1090,15 @@ gst_d3d12_converter_update_src_rect (GstD3D12Converter * self)
 
   GST_DEBUG_OBJECT (self, "Updating vertex buffer");
 
-  if (!priv->upload_data)
-    priv->upload_data = new ConverterUploadData ();
-
-  auto upload_data = priv->upload_data;
-  if (!upload_data->vertex_index_upload) {
+  if (!priv->vertex_upload) {
     D3D12_HEAP_PROPERTIES heap_prop =
         CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
     D3D12_RESOURCE_DESC buffer_desc =
-        CD3DX12_RESOURCE_DESC::Buffer (sizeof (vertex_data) +
-        sizeof (g_indices));
+        CD3DX12_RESOURCE_DESC::Buffer (g_vertex_buf_size);
     auto device = gst_d3d12_device_get_device_handle (self->device);
     hr = device->CreateCommittedResource (&heap_prop, D3D12_HEAP_FLAG_NONE,
         &buffer_desc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
-        IID_PPV_ARGS (&upload_data->vertex_index_upload));
+        IID_PPV_ARGS (&priv->vertex_upload));
     if (!gst_d3d12_result (hr, self->device)) {
       GST_ERROR_OBJECT (self, "Couldn't create vertex buffer upload");
       return FALSE;
@@ -1126,16 +1163,14 @@ gst_d3d12_converter_update_src_rect (GstD3D12Converter * self)
 
   guint8 *data;
   CD3DX12_RANGE range (0, 0);
-  hr = upload_data->vertex_index_upload->Map (0, &range, (void **) &data);
+  hr = priv->vertex_upload->Map (0, &range, (void **) &data);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't map vertex buffer, hr: 0x%x", (guint) hr);
     return FALSE;
   }
 
-  memcpy (data, vertex_data, sizeof (VertexData) * 4);
-  memcpy (data + sizeof (VertexData) * 4, g_indices, sizeof (g_indices));
-
-  upload_data->vertex_index_upload->Unmap (0, nullptr);
+  memcpy (data, vertex_data, g_vertex_buf_size);
+  priv->vertex_upload->Unmap (0, nullptr);
 
   return TRUE;
 }
@@ -1887,81 +1922,20 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     return FALSE;
   }
 
-  auto & barriers = priv->barriers;
-  barriers.clear ();
+  if (priv->vertex_upload) {
+    auto barrier =
+        CD3DX12_RESOURCE_BARRIER::Transition (priv->shader_buf.Get (),
+        STATE_VERTEX_AND_INDEX, D3D12_RESOURCE_STATE_COPY_DEST);
+    cl->ResourceBarrier (1, &barrier);
 
-  auto upload_data = priv->upload_data;
-  if (priv->is_first) {
-    g_assert (upload_data);
+    cl->CopyBufferRegion (priv->shader_buf.Get (), 0,
+        priv->vertex_upload.Get (), 0, g_vertex_buf_size);
+    barrier =
+        CD3DX12_RESOURCE_BARRIER::Transition (priv->shader_buf.Get (),
+        D3D12_RESOURCE_STATE_COPY_DEST, STATE_VERTEX_AND_INDEX);
+    cl->ResourceBarrier (1, &barrier);
 
-    GST_DEBUG_OBJECT (self, "First loop, uploading data");
-    cl->CopyResource (priv->vertex_index_buf.Get (),
-        upload_data->vertex_index_upload.Get ());
-    barriers.
-        push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->vertex_index_buf.
-            Get (), D3D12_RESOURCE_STATE_COPY_DEST, STATE_VERTEX_AND_INDEX));
-
-    cl->CopyResource (priv->ps_const_buf.Get (),
-        upload_data->ps_const_upload.Get ());
-    barriers.
-        push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->ps_const_buf.
-            Get (), D3D12_RESOURCE_STATE_COPY_DEST,
-            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
-
-    if (priv->crs->HaveLut ()) {
-      D3D12_TEXTURE_COPY_LOCATION src;
-      D3D12_TEXTURE_COPY_LOCATION dst;
-      g_assert (upload_data->gamma_dec_lut_upload);
-      g_assert (upload_data->gamma_enc_lut_upload);
-      g_assert (priv->gamma_dec_lut);
-      g_assert (priv->gamma_enc_lut);
-
-      src =
-          CD3DX12_TEXTURE_COPY_LOCATION (upload_data->
-          gamma_dec_lut_upload.Get (), priv->gamma_lut_layout);
-      dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->gamma_dec_lut.Get ());
-
-      cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
-      barriers.
-          push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->gamma_dec_lut.
-              Get (), D3D12_RESOURCE_STATE_COPY_DEST,
-              D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-
-      src =
-          CD3DX12_TEXTURE_COPY_LOCATION (upload_data->
-          gamma_enc_lut_upload.Get (), priv->gamma_lut_layout);
-      dst = CD3DX12_TEXTURE_COPY_LOCATION (priv->gamma_enc_lut.Get ());
-
-      cl->CopyTextureRegion (&dst, 0, 0, 0, &src, nullptr);
-      barriers.
-          push_back (CD3DX12_RESOURCE_BARRIER::Transition (priv->gamma_enc_lut.
-              Get (), D3D12_RESOURCE_STATE_COPY_DEST,
-              D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-    }
-  } else if (upload_data) {
-    std::vector < D3D12_RESOURCE_BARRIER > pre_copy_barriers;
-    if (upload_data->vertex_index_upload) {
-      pre_copy_barriers.
-          push_back (CD3DX12_RESOURCE_BARRIER::
-          Transition (priv->vertex_index_buf.Get (), STATE_VERTEX_AND_INDEX,
-              D3D12_RESOURCE_STATE_COPY_DEST));
-
-      barriers.
-          push_back (CD3DX12_RESOURCE_BARRIER::
-          Transition (priv->vertex_index_buf.Get (),
-              D3D12_RESOURCE_STATE_COPY_DEST, STATE_VERTEX_AND_INDEX));
-    }
-
-    if (!pre_copy_barriers.empty ()) {
-      cl->ResourceBarrier (pre_copy_barriers.size (),
-          pre_copy_barriers.data ());
-    }
-
-    if (upload_data->vertex_index_upload) {
-      GST_DEBUG_OBJECT (self, "Vertex updated");
-      cl->CopyResource (priv->vertex_index_buf.Get (),
-          upload_data->vertex_index_upload.Get ());
-    }
+    GST_DEBUG_OBJECT (self, "Vertex updated");
   }
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
@@ -1991,9 +1965,6 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
         D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
   }
 
-  if (!barriers.empty ())
-    cl->ResourceBarrier (barriers.size (), barriers.data ());
-
   if (priv->clear_background) {
     for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
       cl->ClearRenderTargetView (out_frame->rtv_desc_handle[i],
@@ -2015,7 +1986,7 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   cl->SetGraphicsRoot32BitConstants (priv->crs->GetPsRootConstIdx (),
       1, &priv->alpha, 0);
   cl->SetGraphicsRootConstantBufferView (priv->crs->GetPsCbvIdx (),
-      priv->ps_const_buf->GetGPUVirtualAddress ());
+      priv->const_buf_addr);
 
   cl->IASetIndexBuffer (&priv->idv);
   cl->IASetVertexBuffers (0, 1, &priv->vbv);
@@ -2048,12 +2019,10 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
 
   gst_d3d12_fence_data_push (fence_data,
       FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (in_frame->buffer)));
-  if (priv->upload_data) {
+  if (priv->vertex_upload) {
     gst_d3d12_fence_data_push (fence_data,
-        priv->upload_data, (GDestroyNotify) converter_upload_data_free);
+        FENCE_NOTIFY_COM (priv->vertex_upload.Detach ()));
   }
-  priv->upload_data = nullptr;
-  priv->is_first = false;
 
   return TRUE;
 }
