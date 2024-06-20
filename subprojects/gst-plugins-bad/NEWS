@@ -2,11 +2,11 @@ GStreamer 1.24 Release Notes
 
 GStreamer 1.24.0 was originally released on 4 March 2024.
 
-The latest bug-fix release in the stable 1.24 series is 1.24.4 and was released on 29 May 2024.
+The latest bug-fix release in the stable 1.24 series is 1.24.5 and was released on 20 June 2024.
 
 See https://gstreamer.freedesktop.org/releases/1.24/ for the latest version of this document.
 
-Last updated: Tuesday 28 May 2024, 16:00 UTC (log)
+Last updated: Wednesday 20 June 2024, 22:35 UTC (log)
 
 ## Introduction
 
@@ -1855,7 +1855,7 @@ Highlighted bugfixes in 1.24.4
 -   vtdec deadlock fixes on shutdown and format/resolution changes (as might happen with e.g. HLS/DASH)
 -   fmp4mux, isomp4mux: Add support for adding AV1 header OBUs into the MP4 headers, and add language from tags
 -   gtk4paintablesink improvements: fullscreen mode and gst-play-1.0 support
--   webrtcsink: add support for insecure TLS and imrpove error handling and VP9 handling
+-   webrtcsink: add support for insecure TLS and improve error handling and VP9 handling
 -   v4l2codecs: decoder: Reorder caps to prefer DMA_DRM ones, fixes issues with playbin3
 -   vah264enc, vah265enc: timestamp handling fixes; generate IDR frames on force-keyunit-requests, not I frames
 -   Visualizer plugins fixes
@@ -1987,6 +1987,147 @@ List of merge requests and issues fixed in 1.24.4
 
 -   List of Merge Requests applied in 1.24.4
 -   List of Issues fixed in 1.24.4
+
+1.24.5
+
+The fifth 1.24 bug-fix release (1.24.5) was released on 20 June 2024.
+
+This release only contains bugfixes and it should be safe to update from 1.24.x.
+
+Highlighted bugfixes in 1.24.5
+
+-   webrtcsink: Support for AV1 via nvav1enc, av1enc or rav1enc encoders
+-   AV1 RTP payloader/depayloader fixes to work correctly with Chrome and Pion WebRTC
+-   av1parse, av1dec error handling/robustness improvements
+-   av1enc: Handle force-keyunit events properly for WebRTC
+-   decodebin3: selection and collection handling improvements
+-   hlsdemux2: Various fixes for discontinuities, variant switching, playlist updates
+-   qml6glsink: fix RGB format support
+-   rtspsrc: more control URL handling fixes
+-   v4l2src: Interpret V4L2 report of sync loss as video signal loss
+-   d3d12 encoder, memory and videosink fixes
+-   vtdec: more robust error handling, fix regression
+-   ndi: support for NDI SDK v6
+-   Various bug fixes, memory leak fixes, and other stability and reliability improvements
+
+gstreamer
+
+-   promise: Don’t use g_return_* for internal checks
+-   debug: Add missing gst_debug_log_id_literal() dummy with gst_debug=false
+-   ptp-helper: Add GNU/Hurd support
+
+gst-plugins-base
+
+-   uridecodebin3: Don’t hold PLAY_ITEMS lock when activating them
+-   decodebin3: Always ensure we end up with parsebin or identity
+-   decodebin3: Properly support changing input collections
+-   decodebin3: Avoid usage of parsebin even more
+-   decodebin3: Fix dealing with input without caps
+-   video-info: Don’t crash in gst_video_info_is_equal() if one videoinfo is zero-initialized
+
+gst-plugins-good
+
+-   flacparse: fix buffer overflow
+-   hlsdemux2: Various fixes for discontinuities, variant switching, playlist updates
+-   qml6glsink: fix RGB format support
+-   rtpdtmfdepay: fix caps negotiation with audioconvert
+-   rtpdtmfsrc: fix leak when shutting down mid-event
+-   rtspsrc: fix invalid seqnum assertions
+-   rtspsrc: Various control URL handling fixes
+-   v4l2src: Interpret V4L2 report of sync loss as video signal loss
+
+gst-plugins-bad
+
+-   av1parse: Do not return error when expectedFrameId mismatch
+-   av1dec: Don’t treat decoding errors as fatal and print more error details
+-   av1enc: Handle force-keyunit events properly by requesting keyframes
+-   codectimestamper: never set DTS to NONE
+-   d3d12encoder: Do not print error log for not-supported feature
+-   d3d12memory: Fix staging buffer alignment
+-   d3d12videosink: Disconnect window signal handler on dispose as intended
+-   dtlssrtpenc: Don’t crash if no pad name is provided when requesting a new pad
+-   glcolorconvert: update existing sync meta if outbuf has one
+-   pcapparse: Parsing code assumes unaligned memory accesses are OK
+-   pcapparse: Avoid unaligned memory access
+-   tsdemux: Fix maximum PCR/DTS values
+-   vtdec: Improve error handling in edge cases
+-   vtdec, qtdemux: regression in 1.24.3 - internal data stream error
+-   uvcgadget: Use g_path_get_basename instead of libc basename
+
+gst-plugins-ugly
+
+-   No changes
+
+GStreamer Rust plugins
+
+-   gtk4: update flatpak integration code
+-   ndi: Add support for loading NDI SDK v6
+-   reqwesthttpsrc: Fix race condition when unlocking
+-   rtp: Don’t restrict payload types for payloaders
+-   rtp: av1pay: Correctly use N flag for marking keyframes
+-   rtp: av1depay: Parse internal size fields of OBUs and handle them
+-   webrtcsink: Refactor value retrieval to avoid lock poisoning
+-   webrtcsink: Add support for AV1
+-   webrtc: Update to async-tungstenite 0.26
+-   Fix various new clippy 1.79 warnings
+-   meson: Fix various issues in dependency management, feature detection, some regressions, and add logging
+
+gst-libav
+
+-   No changes
+
+gst-rtsp-server
+
+-   No changes
+
+gstreamer-vaapi
+
+-   No changes
+
+gstreamer-sharp
+
+-   No changes
+
+gst-omx
+
+-   No changes
+
+gst-python
+
+-   No changes
+
+gst-editing-services
+
+-   No changes
+
+gst-devtools, gst-validate + gst-integration-testsuites
+
+-   No changes
+
+gst-examples
+
+-   No changes
+
+Development build environment
+
+-   No changes
+
+Cerbero build tool and packaging changes in 1.24.5
+
+-   No changes
+
+Contributors to 1.24.5
+
+Angelo Verlain, Chris Del Guercio, Corentin Damman, Edward Hervey, Francisco Javier Velázquez-García, He Junyan, Jakub Adam,
+Jakub Vaněk, Khem Raj, Martin Nordholts, Mathieu Duponchelle, Nirbheek Chauhan, Piotr Brzeziński, Samuel Thibault, Sebastian
+Dröge, Sergey Krivohatskiy, Seungha Yang, Tim-Philipp Müller, Zach van Rijn,
+
+… and many others who have contributed bug reports, translations, sent suggestions or helped testing. Thank you all!
+
+List of merge requests and issues fixed in 1.24.5
+
+-   List of Merge Requests applied in 1.24.5
+-   List of Issues fixed in 1.24.5
 
 Schedule for 1.26
 
