@@ -884,7 +884,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     }
 
     auto in_trc = in_info->colorimetry.transfer;
-    auto out_trc = in_info->colorimetry.transfer;
+    auto out_trc = out_info->colorimetry.transfer;
 
     auto gamma_dec_table = gst_d3d12_converter_get_gamma_dec_table (in_trc);
     auto gamma_enc_table = gst_d3d12_converter_get_gamma_enc_table (out_trc);
