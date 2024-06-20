@@ -429,6 +429,9 @@ typedef struct _MultiQueueSlot
   /* id of the MQ src_pad event probe */
   gulong probe_id;
 
+  /* keyframe dropping probe */
+  gulong drop_probe_id;
+
   /* TRUE if EOS was pushed out by multiqueue */
   gboolean is_drained;
 
@@ -456,9 +459,6 @@ struct _DecodebinOutputStream
 
   /* Reported decoder latency */
   GstClockTime decoder_latency;
-
-  /* keyframe dropping probe */
-  gulong drop_probe_id;
 };
 
 /* properties */
@@ -3815,7 +3815,7 @@ create_decoder_factory_list (GstDecodebin3 * dbin, GstCaps * caps)
 
 static GstPadProbeReturn
 keyframe_waiter_probe (GstPad * pad, GstPadProbeInfo * info,
-    DecodebinOutputStream * output)
+    MultiQueueSlot * slot)
 {
   GstBuffer *buf = GST_PAD_PROBE_INFO_BUFFER (info);
 
@@ -3824,7 +3824,7 @@ keyframe_waiter_probe (GstPad * pad, GstPadProbeInfo * info,
       GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_HEADER)) {
     GST_DEBUG_OBJECT (pad,
         "Buffer is keyframe or header, letting through and removing probe");
-    output->drop_probe_id = 0;
+    slot->drop_probe_id = 0;
     return GST_PAD_PROBE_REMOVE;
   }
   GST_DEBUG_OBJECT (pad, "Buffer is not a keyframe, dropping");
@@ -4027,11 +4027,11 @@ db_output_stream_setup_decoder (DecodebinOutputStream * output,
   gst_plugin_feature_list_free (factories);
 
 done:
-  if (output->type & GST_STREAM_TYPE_VIDEO) {
+  if (output->type & GST_STREAM_TYPE_VIDEO && slot->drop_probe_id == 0) {
     GST_DEBUG_OBJECT (dbin, "Adding keyframe-waiter probe");
-    output->drop_probe_id =
+    slot->drop_probe_id =
         gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_BUFFER,
-        (GstPadProbeCallback) keyframe_waiter_probe, output, NULL);
+        (GstPadProbeCallback) keyframe_waiter_probe, slot, NULL);
   }
 
   /* Set the decode pad target */
@@ -4118,11 +4118,11 @@ db_output_stream_reconfigure (DecodebinOutputStream * output, GstMessage ** msg)
         "Reusing existing decoder '%" GST_PTR_FORMAT "' for slot %p",
         output->decoder, slot);
     /* Re-add the keyframe-waiter probe */
-    if (output->type & GST_STREAM_TYPE_VIDEO && output->drop_probe_id == 0) {
+    if (output->type & GST_STREAM_TYPE_VIDEO && slot->drop_probe_id == 0) {
       GST_DEBUG_OBJECT (dbin, "Adding keyframe-waiter probe");
-      output->drop_probe_id =
+      slot->drop_probe_id =
           gst_pad_add_probe (slot->src_pad, GST_PAD_PROBE_TYPE_BUFFER,
-          (GstPadProbeCallback) keyframe_waiter_probe, output, NULL);
+          (GstPadProbeCallback) keyframe_waiter_probe, slot, NULL);
     }
     if (output->linked == FALSE) {
       gst_pad_link_full (slot->src_pad, output->decoder_sink,
@@ -4566,6 +4566,8 @@ mq_slot_free (GstDecodebin3 * dbin, MultiQueueSlot * slot)
 {
   if (slot->probe_id)
     gst_pad_remove_probe (slot->src_pad, slot->probe_id);
+  if (slot->drop_probe_id)
+    gst_pad_remove_probe (slot->src_pad, slot->drop_probe_id);
   if (slot->input) {
     if (slot->input->srcpad)
       gst_pad_unlink (slot->input->srcpad, slot->sink_pad);
@@ -4666,9 +4668,9 @@ db_output_stream_reset (DecodebinOutputStream * output)
   }
   output->linked = FALSE;
 
-  if (slot && output->drop_probe_id) {
-    gst_pad_remove_probe (slot->src_pad, output->drop_probe_id);
-    output->drop_probe_id = 0;
+  if (slot && slot->drop_probe_id) {
+    gst_pad_remove_probe (slot->src_pad, slot->drop_probe_id);
+    slot->drop_probe_id = 0;
   }
 
   /* Remove/Reset pads */
