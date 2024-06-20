@@ -42,6 +42,8 @@
 #include <thread>
 #include <gmodule.h>
 #include <atomic>
+#include <sstream>
+#include <ios>
 
 #ifdef HAVE_DXGIDEBUG_H
 #include <dxgidebug.h>
@@ -230,6 +232,7 @@ struct DeviceInner
   std::recursive_mutex extern_lock;
   std::recursive_mutex device11on12_lock;
   std::mutex lock;
+  CD3DX12FeatureSupport feature_support;
 
   ComPtr<ID3D12InfoQueue> info_queue;
 
@@ -248,8 +251,6 @@ struct DeviceInner
   GstD3D12CommandAllocatorPool *copy_ca_pool = nullptr;
 
   GstD3D12FenceDataPool *fence_data_pool = nullptr;
-
-  D3D12_FEATURE_DATA_ARCHITECTURE feature_data_arch = { };
 
   guint rtv_inc_size;
 
@@ -991,6 +992,172 @@ is_intel_gen11_or_older (UINT vendor_id, D3D_FEATURE_LEVEL feature_level,
   return FALSE;
 }
 
+/* *INDENT-OFF* */
+#ifndef GST_DISABLE_GST_DEBUG
+static void
+dump_feature_support (GstD3D12Device * self)
+{
+  auto priv = self->priv->inner;
+  auto &fs = priv->feature_support;
+  std::stringstream dump;
+
+  dump << "Device feature supports of " << priv->description
+  << "\nD3D12_OPTIONS:"
+  << "\n    DoublePrecisionFloatShaderOps: "
+  << fs.DoublePrecisionFloatShaderOps()
+  << "\n    OutputMergerLogicOp: " << fs.OutputMergerLogicOp()
+  << std::showbase << std::hex
+  << "\n    MinPrecisionSupport: " << fs.MinPrecisionSupport()
+  << std::noshowbase << std::dec
+  << "\n    TiledResourcesTier: " << fs.TiledResourcesTier()
+  << "\n    ResourceBindingTier: " << fs.ResourceBindingTier()
+  << "\n    PSSpecifiedStencilRefSupported: "
+  << fs.PSSpecifiedStencilRefSupported()
+  << "\n    TypedUAVLoadAdditionalFormats: "
+  << fs.TypedUAVLoadAdditionalFormats()
+  << "\n    ROVsSupported: " << fs.ROVsSupported()
+  << "\n    ConservativeRasterizationTier: "
+  << fs.ConservativeRasterizationTier()
+  << "\n    MaxGPUVirtualAddressBitsPerResource: "
+  << fs.MaxGPUVirtualAddressBitsPerResource()
+  << "\n    StandardSwizzle64KBSupported: " << fs.StandardSwizzle64KBSupported()
+  << "\n    CrossNodeSharingTier: " << fs.CrossNodeSharingTier()
+  << "\n    CrossAdapterRowMajorTextureSupported: "
+  << fs.CrossAdapterRowMajorTextureSupported()
+  << "\n    VPAndRTArrayIndexFromAnyShaderFeedingRasterizerSupportedWithoutGSEmulation: "
+  << fs.VPAndRTArrayIndexFromAnyShaderFeedingRasterizerSupportedWithoutGSEmulation()
+  << "\n    ResourceHeapTier: " << fs.ResourceHeapTier()
+  << std::showbase << std::hex
+  << "\nMaxSupportedFeatureLevel: " << fs.MaxSupportedFeatureLevel()
+  << "\nHighestShaderModel: " << fs.HighestShaderModel()
+  << std::noshowbase << std::dec
+  << "\nMaxGPUVirtualAddressBitsPerProcess: "
+  << fs.MaxGPUVirtualAddressBitsPerProcess()
+  << "\nD3D12_OPTIONS1:"
+  << "\n    WaveOps: " << fs.WaveOps()
+  << "\n    WaveLaneCountMin: " << fs.WaveLaneCountMin()
+  << "\n    WaveLaneCountMax: " << fs.WaveLaneCountMax()
+  << "\n    TotalLaneCount: " << fs.TotalLaneCount()
+  << "\n    ExpandedComputeResourceStates: "
+  << fs.ExpandedComputeResourceStates()
+  << "\n    Int64ShaderOps: " << fs.Int64ShaderOps()
+  << std::showbase << std::hex
+  << "\nProtectedResourceSessionSupport: "
+  << fs.ProtectedResourceSessionSupport()
+  << "\nHighestRootSignatureVersion: " << fs.HighestRootSignatureVersion()
+  << std::noshowbase << std::dec
+  << "\nARCHITECTURE1:"
+  << "\n    TileBasedRenderer: " << fs.TileBasedRenderer()
+  << "\n    UMA: " << fs.UMA()
+  << "\n    CacheCoherentUMA: " << fs.CacheCoherentUMA()
+  << "\n    IsolatedMMU: " << fs.IsolatedMMU()
+  << "\nD3D12_OPTIONS2:"
+  << "\n    DepthBoundsTestSupported: " << fs.DepthBoundsTestSupported()
+  << "\n    ProgrammableSamplePositionsTier: "
+  << fs.ProgrammableSamplePositionsTier()
+  << std::showbase << std::hex
+  << "\nShaderCacheSupportFlags: " << fs.ShaderCacheSupportFlags()
+  << std::noshowbase << std::dec
+  << "\nD3D12_OPTIONS3:"
+  << "\n    CopyQueueTimestampQueriesSupported: "
+  << fs.CopyQueueTimestampQueriesSupported()
+  << "\n    CastingFullyTypedFormatSupported: "
+  << fs.CastingFullyTypedFormatSupported()
+  << std::showbase << std::hex
+  << "\n    WriteBufferImmediateSupportFlags: "
+  << fs.WriteBufferImmediateSupportFlags()
+  << std::noshowbase << std::dec
+  << "\n    ViewInstancingTier: " << fs.ViewInstancingTier()
+  << "\n    BarycentricsSupported: " << fs.BarycentricsSupported()
+  << "\nExistingHeapsSupported: " << fs.ExistingHeapsSupported()
+  << "\nD3D12_OPTIONS4:"
+  << "\n    MSAA64KBAlignedTextureSupported: "
+  << fs.MSAA64KBAlignedTextureSupported()
+  << "\n    SharedResourceCompatibilityTier: "
+  << fs.SharedResourceCompatibilityTier()
+  << "\n    Native16BitShaderOpsSupported: "
+  << fs.Native16BitShaderOpsSupported()
+  << "\nHeapSerializationTier: " << fs.HeapSerializationTier()
+  << "\nCrossNodeAtomicShaderInstructions: "
+  << fs.CrossNodeAtomicShaderInstructions()
+  << "\nD3D12_OPTIONS5:"
+  << "\n    SRVOnlyTiledResourceTier3: " << fs.SRVOnlyTiledResourceTier3()
+  << "\n    RenderPassesTier: " << fs.RenderPassesTier()
+  << "\n    RaytracingTier: " << fs.RaytracingTier()
+  << "\nDisplayableTexture: " << fs.DisplayableTexture()
+  << "\nD3D12_OPTIONS6:"
+  << "\n    AdditionalShadingRatesSupported: "
+  << fs.AdditionalShadingRatesSupported()
+  << "\n    PerPrimitiveShadingRateSupportedWithViewportIndexing: "
+  << fs.PerPrimitiveShadingRateSupportedWithViewportIndexing()
+  << "\n    VariableShadingRateTier: " << fs.VariableShadingRateTier()
+  << "\n    ShadingRateImageTileSize: " << fs.ShadingRateImageTileSize()
+  << "\n    BackgroundProcessingSupported: "
+  << fs.BackgroundProcessingSupported()
+  << "\nD3D12_OPTIONS7:"
+  << "\n    MeshShaderTier: " << fs.MeshShaderTier()
+  << "\n    SamplerFeedbackTier: " << fs.SamplerFeedbackTier()
+  << "\nD3D12_OPTIONS8:"
+  << "\n    UnalignedBlockTexturesSupported: "
+  << fs.UnalignedBlockTexturesSupported()
+  << "\nD3D12_OPTIONS9:"
+  << "\n    MeshShaderPipelineStatsSupported: "
+  << fs.MeshShaderPipelineStatsSupported()
+  << "\n    MeshShaderSupportsFullRangeRenderTargetArrayIndex: "
+  << fs.MeshShaderSupportsFullRangeRenderTargetArrayIndex()
+  << "\n    AtomicInt64OnTypedResourceSupported: "
+  << fs.AtomicInt64OnTypedResourceSupported()
+  << "\n    AtomicInt64OnGroupSharedSupported: "
+  << fs.AtomicInt64OnGroupSharedSupported()
+  << "\n    DerivativesInMeshAndAmplificationShadersSupported: "
+  << fs.DerivativesInMeshAndAmplificationShadersSupported()
+  << "\n    WaveMMATier: " << fs.WaveMMATier()
+  << "\nD3D12_OPTIONS10:"
+  << "\n    VariableRateShadingSumCombinerSupported: "
+  << fs.VariableRateShadingSumCombinerSupported()
+  << "\n    MeshShaderPerPrimitiveShadingRateSupported: "
+  << fs.MeshShaderPerPrimitiveShadingRateSupported()
+  << "\nD3D12_OPTIONS11:"
+  << "\n    AtomicInt64OnDescriptorHeapResourceSupported: "
+  << fs.AtomicInt64OnDescriptorHeapResourceSupported()
+  << "\nD3D12_OPTIONS12:"
+  << "\n    MSPrimitivesPipelineStatisticIncludesCulledPrimitives: "
+  << fs.MSPrimitivesPipelineStatisticIncludesCulledPrimitives()
+  << "\n    EnhancedBarriersSupported: " << fs.EnhancedBarriersSupported()
+  << "\n    RelaxedFormatCastingSupported: "
+  << fs.RelaxedFormatCastingSupported()
+  << "\nD3D12_OPTIONS13:"
+  << "\n    UnrestrictedBufferTextureCopyPitchSupported: "
+  << fs.UnrestrictedBufferTextureCopyPitchSupported()
+  << "\n    UnrestrictedVertexElementAlignmentSupported: "
+  << fs.UnrestrictedVertexElementAlignmentSupported()
+  << "\n    InvertedViewportHeightFlipsYSupported: "
+  << fs.InvertedViewportHeightFlipsYSupported()
+  << "\n    InvertedViewportDepthFlipsZSupported: "
+  << fs.InvertedViewportDepthFlipsZSupported()
+  << "\n    TextureCopyBetweenDimensionsSupported: "
+  << fs.TextureCopyBetweenDimensionsSupported()
+  << "\n    AlphaBlendFactorSupported: " << fs.AlphaBlendFactorSupported()
+  << "\nD3D12_OPTIONS14:"
+  << "\n    AdvancedTextureOpsSupported: " << fs.AdvancedTextureOpsSupported()
+  << "\n    WriteableMSAATexturesSupported: "
+  << fs.WriteableMSAATexturesSupported()
+  << "\n    IndependentFrontAndBackStencilRefMaskSupported: "
+  << fs.IndependentFrontAndBackStencilRefMaskSupported()
+  << "\nD3D12_OPTIONS15:"
+  << "\n    TriangleFanSupported: " << fs.TriangleFanSupported()
+  << "\n    DynamicIndexBufferStripCutSupported: "
+  << fs.DynamicIndexBufferStripCutSupported()
+  << "\nD3D12_OPTIONS16:"
+  << "\n    DynamicDepthBiasSupported: " << fs.DynamicDepthBiasSupported()
+  << "\n    GPUUploadHeapSupported: " << fs.GPUUploadHeapSupported();
+
+  auto dump_str = dump.str ();
+  GST_DEBUG_OBJECT (self, "%s", dump_str.c_str ());
+}
+#endif
+/* *INDENT-ON* */
+
 static GstD3D12Device *
 gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 {
@@ -1000,13 +1167,6 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   HRESULT hr;
   UINT factory_flags = 0;
   guint index = 0;
-  const D3D_FEATURE_LEVEL feature_levels[] = {
-    D3D_FEATURE_LEVEL_11_0,
-    D3D_FEATURE_LEVEL_11_1,
-    D3D_FEATURE_LEVEL_12_0,
-    D3D_FEATURE_LEVEL_12_1,
-    D3D_FEATURE_LEVEL_12_2,
-  };
 
   gst_d3d12_device_enable_debug ();
   gst_d3d12_device_enable_dred ();
@@ -1051,29 +1211,31 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   priv->device_id = desc.DeviceId;
   priv->adapter_index = index;
 
-  device->CheckFeatureSupport (D3D12_FEATURE_ARCHITECTURE,
-      &priv->feature_data_arch, sizeof (D3D12_FEATURE_DATA_ARCHITECTURE));
+  if (desc.Description) {
+    std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t >converter;
+    priv->description = converter.to_bytes (desc.Description);
+  }
 
-  D3D12_FEATURE_DATA_FEATURE_LEVELS flevel = { };
-  flevel.NumFeatureLevels = G_N_ELEMENTS (feature_levels);
-  flevel.pFeatureLevelsRequested = feature_levels;
-  device->CheckFeatureSupport (D3D12_FEATURE_FEATURE_LEVELS,
-      &flevel, sizeof (flevel));
-
-  std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t >converter;
-  priv->description = converter.to_bytes (desc.Description);
+  priv->feature_support.Init (device.Get ());
 
   GST_INFO_OBJECT (self,
       "adapter index %d: D3D12 device vendor-id: 0x%04x, device-id: 0x%04x, "
       "Flags: 0x%x, adapter-luid: %" G_GINT64_FORMAT ", is-UMA: %d, "
       "feature-level: 0x%x, %s",
       priv->adapter_index, desc.VendorId, desc.DeviceId, desc.Flags,
-      priv->adapter_luid, priv->feature_data_arch.UMA,
-      flevel.MaxSupportedFeatureLevel, priv->description.c_str ());
+      priv->adapter_luid, priv->feature_support.UMA (),
+      priv->feature_support.MaxSupportedFeatureLevel (),
+      priv->description.c_str ());
+
+#ifndef GST_DISABLE_GST_DEBUG
+  if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_DEBUG)
+    dump_feature_support (self);
+#endif
 
   gst_d3d12_device_setup_format_table (self);
-  if (priv->feature_data_arch.UMA && is_intel_gen11_or_older (priv->vendor_id,
-          flevel.MaxSupportedFeatureLevel, priv->description)) {
+  if (priv->feature_support.UMA () && is_intel_gen11_or_older (priv->vendor_id,
+          priv->feature_support.MaxSupportedFeatureLevel (),
+          priv->description)) {
     priv->wa_flags |= GST_D3D12_WA_DECODER_RACE;
   }
 
