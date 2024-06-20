@@ -63,11 +63,6 @@ GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SINK_NAME,
 static GstStaticCaps static_src_caps = GST_STATIC_CAPS (SRC_CAPS);
 static GstStaticCaps static_src_caps_no_drm = GST_STATIC_CAPS (SRC_CAPS_NO_DRM);
 
-static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE (GST_VIDEO_DECODER_SRC_NAME,
-    GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (SRC_CAPS));
-
 struct _GstV4l2CodecMpeg2Dec
 {
   GstMpeg2Decoder parent;
@@ -1074,7 +1069,10 @@ gst_v4l2_codec_mpeg2_dec_subclass_init (GstV4l2CodecMpeg2DecClass * klass,
       "Daniel Almeida <daniel.almeida@collabora.com>");
 
   gst_element_class_add_static_pad_template (element_class, &sink_template);
-  gst_element_class_add_static_pad_template (element_class, &src_template);
+  gst_element_class_add_pad_template (element_class,
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          device->src_caps));
+
   element_class->change_state =
       GST_DEBUG_FUNCPTR (gst_v4l2_codec_mpeg2_dec_change_state);
 
@@ -1118,6 +1116,8 @@ gst_v4l2_codec_mpeg2_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
   if (!gst_v4l2_decoder_set_sink_fmt (decoder, V4L2_PIX_FMT_MPEG2_SLICE,
           320, 240, 8))
     return;
+
+  /* Make sure that decoder support stateless MPEG2 */
   src_caps = gst_v4l2_decoder_enum_src_formats (decoder, &static_src_caps);
 
   if (gst_caps_is_empty (src_caps)) {
@@ -1125,6 +1125,10 @@ gst_v4l2_codec_mpeg2_dec_register (GstPlugin * plugin, GstV4l2Decoder * decoder,
         "supported format");
     goto done;
   }
+
+  /* Get all supported pixel formats for MPEG2 */
+  device->src_caps =
+      gst_v4l2_decoder_enum_all_src_formats (decoder, &static_src_caps);
 
   gst_v4l2_decoder_register (plugin, GST_TYPE_V4L2_CODEC_MPEG2_DEC,
       (GClassInitFunc) gst_v4l2_codec_mpeg2_dec_subclass_init,

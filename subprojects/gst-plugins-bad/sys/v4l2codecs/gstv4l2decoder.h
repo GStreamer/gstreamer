@@ -70,6 +70,9 @@ gboolean          gst_v4l2_decoder_set_sink_fmt (GstV4l2Decoder * self, guint32 
 GstCaps *         gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
                                                      GstStaticCaps * static_filter);
 
+GstCaps *         gst_v4l2_decoder_enum_all_src_formats (GstV4l2Decoder * self,
+                                                         GstStaticCaps * static_filter);
+
 gboolean          gst_v4l2_decoder_select_src_format (GstV4l2Decoder * self,
                                                       GstCaps * caps,
                                                       GstVideoInfo * vinfo,

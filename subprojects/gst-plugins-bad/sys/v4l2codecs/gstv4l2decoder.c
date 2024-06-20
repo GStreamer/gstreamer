@@ -41,6 +41,12 @@
 GST_DEBUG_CATEGORY (v4l2_decoder_debug);
 #define GST_CAT_DEFAULT v4l2_decoder_debug
 
+#define SRC_CAPS \
+    GST_VIDEO_DMA_DRM_CAPS_MAKE " ; " \
+    GST_VIDEO_CAPS_MAKE (GST_V4L2_DEFAULT_VIDEO_FORMATS)
+
+static GstStaticCaps default_src_caps = GST_STATIC_CAPS (SRC_CAPS);
+
 enum
 {
   PROP_0,
@@ -499,9 +505,9 @@ filter_non_dmabuf_caps (GstCapsFeatures * features,
   return !gst_caps_features_contains (features, GST_CAPS_FEATURE_MEMORY_DMABUF);
 }
 
-GstCaps *
-gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
-    GstStaticCaps * static_filter)
+static GstCaps *
+gst_v4l2_decoder_enum_src_formats_full (GstV4l2Decoder * self,
+    GstStaticCaps * static_filter, gboolean enum_all)
 {
   gint ret;
   struct v4l2_format fmt = {
@@ -527,7 +533,17 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
   for (i = 0; ret >= 0; i++) {
     struct v4l2_fmtdesc fmtdesc = { i, self->src_buf_type, };
 
+    if (enum_all)
+      fmtdesc.index |= V4L2_FMTDESC_FLAG_ENUM_ALL;
+
     ret = ioctl (self->video_fd, VIDIOC_ENUM_FMT, &fmtdesc);
+    /* If the driver can't enumerate all the pixels formats
+     * return empty caps */
+    if (enum_all && ret == -EINVAL) {
+      gst_caps_unref (caps);
+      return gst_static_caps_get (&default_src_caps);
+    }
+
     if (ret < 0) {
       if (errno != EINVAL)
         GST_ERROR_OBJECT (self, "VIDIOC_ENUM_FMT failed: %s",
@@ -551,9 +567,34 @@ gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
   gst_caps_filter_and_map_in_place (tmp, filter_non_dmabuf_caps, NULL);
   gst_caps_append (caps, tmp);
 
+  if (enum_all) {
+    /* When enumerating all the formats we don't need yet resolution
+     * so remove width, height and framerate fields */
+    guint n = gst_caps_get_size (caps);
+    for (i = 0; i < n; i++) {
+      GstStructure *s = gst_caps_get_structure (caps, i);
+
+      gst_structure_remove_fields (s, "width", "height", "framerate", NULL);
+    }
+    caps = gst_caps_simplify (caps);
+  }
   GST_DEBUG_OBJECT (self, "Probed caps: %" GST_PTR_FORMAT, caps);
 
   return caps;
+}
+
+GstCaps *
+gst_v4l2_decoder_enum_src_formats (GstV4l2Decoder * self,
+    GstStaticCaps * static_filter)
+{
+  return gst_v4l2_decoder_enum_src_formats_full (self, static_filter, FALSE);
+}
+
+GstCaps *
+gst_v4l2_decoder_enum_all_src_formats (GstV4l2Decoder * self,
+    GstStaticCaps * static_filter)
+{
+  return gst_v4l2_decoder_enum_src_formats_full (self, static_filter, TRUE);
 }
 
 gboolean

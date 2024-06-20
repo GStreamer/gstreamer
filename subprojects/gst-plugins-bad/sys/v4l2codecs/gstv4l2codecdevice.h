@@ -34,6 +34,7 @@ typedef struct {
   guint32 function;
   gchar *media_device_path;
   gchar *video_device_path;
+  GstCaps *src_caps;
 } GstV4l2CodecDevice;
 
 GType  gst_v4l2_codec_device_get_type (void);
