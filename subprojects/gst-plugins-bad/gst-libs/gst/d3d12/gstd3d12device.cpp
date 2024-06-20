@@ -1180,7 +1180,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 
   hr = gst_d3d12_device_find_adapter (data, factory.Get (), &index, &adapter);
   if (FAILED (hr)) {
-    GST_WARNING ("Could not find adapter, hr: 0x%x", (guint) hr);
+    GST_INFO ("Could not find adapter, hr: 0x%x", (guint) hr);
     return nullptr;
   }
 
