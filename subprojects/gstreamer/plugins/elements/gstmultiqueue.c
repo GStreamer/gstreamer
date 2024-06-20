@@ -1836,10 +1836,15 @@ apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstClockTime timestamp,
 
   GST_MULTI_QUEUE_MUTEX_LOCK (mq);
 
-  /* if no timestamp is set, assume it's continuous with the previous
-   * time */
-  if (timestamp == GST_CLOCK_TIME_NONE)
-    timestamp = segment->position;
+  /* if no timestamp is set, assume it didn't change compared to the previous
+   * buffer and simply return here. Non-time limits might have still changed
+   * and a buffering message might have to be posted */
+  if (timestamp == GST_CLOCK_TIME_NONE) {
+    update_buffering (mq, sq);
+    GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+    gst_multi_queue_post_buffering (mq);
+    return;
+  }
 
   if (is_sink && !GST_CLOCK_STIME_IS_VALID (sq->sink_start_time)) {
     sq->sink_start_time = my_segment_to_running_time (segment, timestamp);
