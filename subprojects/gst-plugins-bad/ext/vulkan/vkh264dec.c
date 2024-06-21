@@ -64,6 +64,7 @@ struct _GstVulkanH264Picture
   StdVideoDecodeH264PictureInfo std_h264pic;
 
   gint32 slot_idx;
+  guint ref_count;
 };
 
 struct _GstVulkanH264Decoder
@@ -401,8 +402,16 @@ gst_vulkan_h264_picture_new (GstVulkanH264Decoder * self, GstBuffer * out)
   GstVulkanH264Picture *pic;
 
   pic = g_new0 (GstVulkanH264Picture, 1);
+  g_atomic_int_inc (&pic->ref_count);
   gst_vulkan_decoder_picture_init (self->decoder, &pic->base, out);
 
+  return pic;
+}
+
+static inline gpointer
+gst_vulkan_h264_picture_ref (GstVulkanH264Picture * pic)
+{
+  g_atomic_int_inc (&pic->ref_count);
   return pic;
 }
 
@@ -413,6 +422,14 @@ gst_vulkan_h264_picture_free (gpointer data)
 
   gst_vulkan_decoder_picture_release (&pic->base);
   g_free (pic);
+}
+
+static inline void
+gst_vulkan_h264_picture_unref (gpointer data)
+{
+  GstVulkanH264Picture *pic = data;
+  if (g_atomic_int_dec_and_test (&pic->ref_count))
+    gst_vulkan_h264_picture_free (data);
 }
 
 static VkVideoChromaSubsamplingFlagBitsKHR
@@ -666,7 +683,7 @@ gst_vulkan_h264_decoder_new_picture (GstH264Decoder * decoder,
     goto allocation_failed;
 
   pic = gst_vulkan_h264_picture_new (self, frame->output_buffer);
-  gst_h264_picture_set_user_data (picture, pic, gst_vulkan_h264_picture_free);
+  gst_h264_picture_set_user_data (picture, pic, gst_vulkan_h264_picture_unref);
 
   return GST_FLOW_OK;
 
@@ -683,7 +700,7 @@ gst_vulkan_h264_decoder_new_field_picture (GstH264Decoder * decoder,
     GstH264Picture * first_field, GstH264Picture * second_field)
 {
   GstVulkanH264Decoder *self = GST_VULKAN_H264_DECODER (decoder);
-  GstVulkanH264Picture *first_pic, *second_pic;
+  GstVulkanH264Picture *first_pic;
 
   GST_TRACE_OBJECT (self, "New field picture");
 
@@ -691,11 +708,10 @@ gst_vulkan_h264_decoder_new_field_picture (GstH264Decoder * decoder,
   if (!first_pic)
     return GST_FLOW_ERROR;
 
-  second_pic = gst_vulkan_h264_picture_new (self, first_pic->base.out);
-  gst_h264_picture_set_user_data (second_field, second_pic,
-      gst_vulkan_h264_picture_free);
+  gst_h264_picture_set_user_data (second_field,
+      gst_vulkan_h264_picture_ref (first_pic), gst_vulkan_h264_picture_unref);
 
-  GST_LOG_OBJECT (self, "New vulkan decode picture %p", second_pic);
+  GST_LOG_OBJECT (self, "New vulkan decode picture %p", second_field);
 
   return GST_FLOW_OK;
 }
