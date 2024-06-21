@@ -17,6 +17,127 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:element-streamsynchronizer
+ * @title: streamsynchronizer
+ *
+ * Enables gapless playback of heterogenous streams groups. This element is
+ * used inside #playsink.
+ *
+ * #streamsynchronizer ensures only one stream group is active downstream at any
+ * given time. Whenever a pad receives a `STREAM_START` with a group-id
+ * different than the current one the pad is blocked until all other pads also
+ * receive a `STREAM_START` with the same group-id.
+ *
+ * Once all pads have received a `STREAM_START` with the same group-id, the
+ * previous group is completed and all the pads unblocked.
+ *
+ * When a group is completed, a patched #GstSegment is emitted downstream so
+ * that the running time 0 from upstream of the new group becomes the running
+ * time of the end of the previous group.
+ *
+ * ### Warning: deadlocks with multiple pads with different group-ids
+ *
+ * All pads connected to a streamsynchronizer are expected to share a group-id.
+ * Therefore, sending `STREAM_START` in two or more sinkpads of
+ * #streamsynchronizer with different group-ids will not allow for playback.
+ *
+ * As #streamsynchronizer is part of #playsink, this can easily happen
+ * accidentally when mixing streams from different elements. The following is a
+ * minimal naive pipeline exhibiting this problem:
+ *
+ * |[
+ * # Will get stuck! The streams from audiotestsrc and videotestsrc don't
+ * # share a group-id.
+ * gst-launch-1.0 \
+ *   playsink name=myplaysink \
+ *   audiotestsrc ! myplaysink.audio_sink \
+ *   videotestsrc ! myplaysink.video_sink
+ * ]|
+ *
+ * ## What are stream groups and group-ids
+ *
+ * A stream group is a group of streams that are meant to be played together.
+ * Two streams belong to the same group if they set the same group-id in their
+ * `STREAM_START` event (see #gst_event_set_group_id).
+ *
+ * The most common example is video and audio from the same .mp4 file. Demuxers
+ * will ensure that the streams they output from their srcpads share the same
+ * group-id.
+ *
+ * Another example is an out-of-band .srt subtitles file. In this case, despite
+ * being a separate file, the subtitle stream should use the same group-id as
+ * the video its meant to be used with, as they both need to be played together.
+ * uridecodebin3 takes care of this automatically.
+ *
+ * ## Why do we need stream groups for gapless playback
+ *
+ * In theory, a player could implement gapless playback by performing some kind
+ * of auto-plugging, keeping track of the playlists themselves and adding probes
+ * to patch the #GstSegment. This is a lot of work, especially to get it done
+ * correctly.
+ *
+ * The goal of #streamsynchronizer and group-ids is to standardize a solution
+ * for gapless playback so that applications don't have to implement it from the
+ * ground up, and for that solution to be generalizable to the worst possible
+ * cases.
+ *
+ * Every new stream group received upstream of streamsynchronizer is expected
+ * to start at running-time of zero. Hence, once the previous file is drained,
+ * you can even remove a demuxer element and replace it by a demuxer for a
+ * different format, and streamsynchronizer will take care of adjusting the
+ * segment so that the data of the second file plays after the second.
+ * If there is more than one stream within the same group (e.g. audio and video)
+ * the shift will be done by the duration of the longest stream.
+ *
+ * ## Gapless playback caveats
+ *
+ * Given the substantial number of edge cases that need to be handled across a
+ * large code surface, bugs in gapless playback are not uncommon.
+ *
+ * In general (not only in GStreamer) gapless playback requires several things
+ * to work:
+ *
+ *  - Buffering of the new file done well ahead of the previous file.
+ *    For this purpose #urisourcebin emits (and #decodebin3, #uridecodebin3,
+ *    #playbin and #playbin3 propagate) the #urisourcebin::about-to-finish
+ *    signal to notify what is the optimal time at which to provide the next uri
+ *    to play.
+ *     - Note that this requirement applies to the entire pipeline, including
+ *       decoders and audio sinks.
+ *
+ *  - Extremely well bounded audio files. This is particularly hard for
+ *    compressed audio formats. See: codec delay, audio frame sizes. Achieving
+ *    arbitrary length of audio in many compressed formats will require either:
+ *     - Container features like MP4 edit lists to clip the priming and padding
+ *       PCM samples at the beginning and the end of the file, plus elements
+ *       correctly clipping the data accordingly.
+ *     - Features of the specific audio format used to perform the same clipping
+ *       at the decoder level.
+ *
+ *  - All autoplugging during the switch must be done without pausing the
+ *    pipeline.
+ *
+ *  - Playback must be possible without resetting the audio device (e.g. to
+ *    select a different sampling rate or audio format), or such a switch to be
+ *    done gapless.
+ *
+ * ## Example command line
+ *
+ * gst-play supports the `--gapless` flag which can be used to test gapless
+ * playback. It will instantiate a playbin/playbin3 with a #playsink, which
+ * itself will contain a #streamsynchronizer.
+ *
+ * |[
+ * # BEWARE: high-pitch audio sweep, lower your volume.
+ * wget https://www2.iis.fraunhofer.de/AAC/gapless-sweep_part1_iis.m4a
+ * wget https://www2.iis.fraunhofer.de/AAC/gapless-sweep_part2_iis.m4a
+ * gst-play-1.0 --gapless \
+ *   gapless-sweep_part1_iis.m4a \
+ *   gapless-sweep_part2_iis.m4a \
+ * ]|
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
