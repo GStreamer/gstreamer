@@ -577,6 +577,7 @@ gst_splitmux_part_measured_cb (GstSplitMuxPartReader * part,
   /* Post part measured info message */
   GstMessage *msg = gst_message_new_element (GST_OBJECT (splitmux),
       gst_structure_new ("splitmuxsrc-fragment-info",
+          "fragment-id", G_TYPE_UINT, idx,
           "location", G_TYPE_STRING, filename,
           "fragment-offset", GST_TYPE_CLOCK_TIME, offset,
           "fragment-duration", GST_TYPE_CLOCK_TIME, duration,

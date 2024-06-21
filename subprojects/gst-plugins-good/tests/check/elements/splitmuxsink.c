@@ -109,7 +109,7 @@ run_pipeline (GstElement * pipeline, guint num_fragments_expected,
 {
   GstBus *bus = gst_element_get_bus (GST_ELEMENT (pipeline));
   GstMessage *msg;
-  guint fragment_number = 0;
+  guint fragments_seen = 0;
 
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
   do {
@@ -126,25 +126,29 @@ run_pipeline (GstElement * pipeline, guint num_fragments_expected,
       if (gst_structure_has_name (s, "splitmuxsrc-fragment-info") ||
           gst_structure_has_name (s, "splitmuxsink-fragment-closed")) {
         GstClockTime fragment_offset, fragment_duration;
+        guint fragment_id;
+        fail_unless (gst_structure_get_uint (s, "fragment-id", &fragment_id));
+        fail_unless (fragment_id < num_fragments_expected);
+
         fail_unless (gst_structure_get_clock_time (s, "fragment-offset",
                 &fragment_offset));
         fail_unless (gst_structure_get_clock_time (s, "fragment-duration",
                 &fragment_duration));
         if (fragment_offsets != NULL) {
-          fail_unless (fragment_offsets[fragment_number] == fragment_offset,
+          fail_unless (fragment_offsets[fragment_id] == fragment_offset,
               "Expected offset %" GST_TIME_FORMAT
               " for fragment %u. Got offset %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (fragment_offsets[fragment_number]),
-              fragment_number, GST_TIME_ARGS (fragment_offset));
+              GST_TIME_ARGS (fragment_offsets[fragment_id]),
+              fragment_id, GST_TIME_ARGS (fragment_offset));
         }
         if (fragment_durations != NULL) {
-          fail_unless (fragment_durations[fragment_number] == fragment_duration,
+          fail_unless (fragment_durations[fragment_id] == fragment_duration,
               "Expected duration %" GST_TIME_FORMAT
               " for fragment %u. Got duration %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (fragment_durations[fragment_number]),
-              fragment_number, GST_TIME_ARGS (fragment_duration));
+              GST_TIME_ARGS (fragment_durations[fragment_id]),
+              fragment_id, GST_TIME_ARGS (fragment_duration));
         }
-        fragment_number++;
+        fragments_seen++;
       }
     }
     gst_message_unref (msg);
@@ -158,7 +162,7 @@ run_pipeline (GstElement * pipeline, guint num_fragments_expected,
     dump_error (msg);
   else if (num_fragments_expected != 0) {
     // Success. Check we got the expected number of fragment messages
-    fail_unless (fragment_number == num_fragments_expected);
+    fail_unless (fragments_seen == num_fragments_expected);
   }
 
   return msg;

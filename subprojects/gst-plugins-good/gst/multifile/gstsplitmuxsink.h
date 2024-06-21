@@ -70,6 +70,7 @@ typedef struct _SplitMuxOutputCommand
 
 typedef struct
 {
+  guint fragment_id;
   GstClockTime last_running_time;
 
   GstClockTime fragment_offset;
@@ -181,7 +182,9 @@ struct _GstSplitMuxSink
   gboolean ready_for_output;
 
   gchar *location;
-  guint fragment_id;
+  guint cur_fragment_id;
+
+  guint next_fragment_id;
   guint start_index;
   GList *contexts;
 
