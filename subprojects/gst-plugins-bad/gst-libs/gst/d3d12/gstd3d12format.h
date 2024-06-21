@@ -25,9 +25,39 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstD3D12FormatFlags:
+ *
+ * Since: 1.26
+ */
+typedef enum
+{
+  /**
+   * GST_D3D12_FORMAT_FLAG_NONE:
+   *
+   * Default flag
+   */
+  GST_D3D12_FORMAT_FLAG_NONE = 0,
+
+  /**
+   * GST_D3D12_FORMAT_FLAG_OUTPUT_UAV:
+   *
+   * The format may or may not support RTV, but UAV binding is strictly required
+   * for the format to be used as a conversion output.
+   */
+  GST_D3D12_FORMAT_FLAG_OUTPUT_UAV = (1 << 0),
+} GstD3D12FormatFlags;
+
+DEFINE_ENUM_FLAG_OPERATORS (GstD3D12FormatFlags);
+
 struct _GstD3D12Format
 {
   GstVideoFormat format;
+
+  GstD3D12FormatFlags format_flags;
+
+  /* Texture2D or Buffer */
+  D3D12_RESOURCE_DIMENSION dimension;
 
   /* direct mapping to dxgi format if applicable */
   DXGI_FORMAT dxgi_format;
@@ -38,11 +68,8 @@ struct _GstD3D12Format
   /* extra format used for unordered access view (unused) */
   DXGI_FORMAT uav_format[GST_VIDEO_MAX_PLANES];
 
-  /* D3D12_FORMAT_SUPPORT1 flags */
-  guint format_support1[GST_VIDEO_MAX_PLANES];
-
-  /* D3D12_FORMAT_SUPPORT2 flags (unused) */
-  guint format_support2[GST_VIDEO_MAX_PLANES];
+  D3D12_FORMAT_SUPPORT1 support1;
+  D3D12_FORMAT_SUPPORT2 support2;
 
   /*< private >*/
   guint padding[GST_PADDING_LARGE];

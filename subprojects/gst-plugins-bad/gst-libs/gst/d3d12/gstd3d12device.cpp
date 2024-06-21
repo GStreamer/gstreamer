@@ -215,7 +215,6 @@ struct DeviceInner
   void RemoveClient (GstD3D12Device * client)
   {
     std::lock_guard <std::mutex> lk (lock);
-    auto it = clients.begin ();
     for (auto it = clients.begin (); it != clients.end(); it++) {
       if (*it == client) {
         clients.erase (it);
@@ -758,169 +757,105 @@ gst_d3d12_device_get_property (GObject * object, guint prop_id,
   }
 }
 
-static gboolean
-check_format_support (GstD3D12Device * self, DXGI_FORMAT format,
-    guint flags, D3D12_FEATURE_DATA_FORMAT_SUPPORT * support)
+static void
+make_buffer_format (GstVideoFormat format, GstD3D12Format * d3d12_format)
 {
-  auto device = self->priv->inner->device;
-  HRESULT hr;
-
-  support->Format = format;
-  hr = device->CheckFeatureSupport (D3D12_FEATURE_FORMAT_SUPPORT, support,
-      sizeof (D3D12_FEATURE_DATA_FORMAT_SUPPORT));
-  if (FAILED (hr)) {
-    GST_INFO_OBJECT (self,
-        "Failed to check feature support for DXGI format %d", format);
-    return FALSE;
+  d3d12_format->format = format;
+  d3d12_format->dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+  d3d12_format->dxgi_format = DXGI_FORMAT_UNKNOWN;
+  d3d12_format->support1 = D3D12_FORMAT_SUPPORT1_NONE;
+  d3d12_format->support2 = D3D12_FORMAT_SUPPORT2_NONE;
+  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    d3d12_format->resource_format[i] = DXGI_FORMAT_UNKNOWN;
+    d3d12_format->uav_format[i] = DXGI_FORMAT_UNKNOWN;
   }
-
-  if (((guint) support->Support1 & flags) != flags) {
-    GST_INFO_OBJECT (self,
-        "DXGI format %d supports1 flag 0x%x, required 0x%x", format,
-        support->Support1, flags);
-
-    return FALSE;
-  }
-
-  return TRUE;
 }
 
 static void
 gst_d3d12_device_setup_format_table (GstD3D12Device * self)
 {
   auto priv = self->priv->inner;
+  auto & fs = priv->feature_support;
+  HRESULT hr;
 
-  for (guint i = 0; i < GST_D3D12_N_FORMATS; i++) {
-    const auto iter = &g_gst_d3d12_default_format_map[i];
-    D3D12_FEATURE_DATA_FORMAT_SUPPORT support[GST_VIDEO_MAX_PLANES];
-    gboolean native = true;
+  for (guint f = 0; f < GST_VIDEO_FORMAT_LAST; f++) {
+    GstD3D12Format format = { };
+    if (!gst_d3d12_get_format ((GstVideoFormat) f, &format))
+      continue;
 
-    switch (iter->format) {
-        /* RGB/GRAY */
-      case GST_VIDEO_FORMAT_BGRA:
-      case GST_VIDEO_FORMAT_BGRx:
-      case GST_VIDEO_FORMAT_RGBA:
-      case GST_VIDEO_FORMAT_RGBx:
-      case GST_VIDEO_FORMAT_RGB10A2_LE:
-      case GST_VIDEO_FORMAT_RGBA64_LE:
-      case GST_VIDEO_FORMAT_GRAY8:
-      case GST_VIDEO_FORMAT_GRAY16_LE:
-        if (!check_format_support (self, iter->dxgi_format,
-                iter->format_support1[0], &support[0])) {
-          continue;
-        }
-        break;
-        /* YUV DXGI native formats */
-      case GST_VIDEO_FORMAT_VUYA:
-      case GST_VIDEO_FORMAT_Y410:
-      case GST_VIDEO_FORMAT_NV12:
-      case GST_VIDEO_FORMAT_P010_10LE:
-      case GST_VIDEO_FORMAT_P012_LE:
-      case GST_VIDEO_FORMAT_P016_LE:
-      case GST_VIDEO_FORMAT_YUY2:
-      case GST_VIDEO_FORMAT_Y210:
-      case GST_VIDEO_FORMAT_Y212_LE:
-      case GST_VIDEO_FORMAT_Y412_LE:
-      case GST_VIDEO_FORMAT_BGRA64_LE:
-      case GST_VIDEO_FORMAT_BGR10A2_LE:
-      case GST_VIDEO_FORMAT_RBGA:
-      {
-        if (!check_format_support (self, iter->dxgi_format,
-                iter->format_support1[0], &support[0])) {
-          bool supported = true;
-          for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
-            if (iter->resource_format[j] == DXGI_FORMAT_UNKNOWN)
-              break;
+    g_assert (format.dimension == D3D12_RESOURCE_DIMENSION_BUFFER ||
+        format.dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
 
-            if (!check_format_support (self, iter->resource_format[j],
-                    iter->format_support1[0], &support[j])) {
-              supported = false;
-              break;
-            }
-          }
-
-          if (!supported)
-            continue;
-
-          native = false;
-        }
-        break;
-      }
-        /* non-DXGI native formats */
-      case GST_VIDEO_FORMAT_NV21:
-      case GST_VIDEO_FORMAT_I420:
-      case GST_VIDEO_FORMAT_YV12:
-      case GST_VIDEO_FORMAT_I420_10LE:
-      case GST_VIDEO_FORMAT_I420_12LE:
-      case GST_VIDEO_FORMAT_Y42B:
-      case GST_VIDEO_FORMAT_I422_10LE:
-      case GST_VIDEO_FORMAT_I422_12LE:
-      case GST_VIDEO_FORMAT_Y444:
-      case GST_VIDEO_FORMAT_Y444_10LE:
-      case GST_VIDEO_FORMAT_Y444_12LE:
-      case GST_VIDEO_FORMAT_Y444_16LE:
-      case GST_VIDEO_FORMAT_AYUV:
-      case GST_VIDEO_FORMAT_AYUV64:
-      case GST_VIDEO_FORMAT_UYVY:
-      case GST_VIDEO_FORMAT_VYUY:
-      case GST_VIDEO_FORMAT_YVYU:
-      case GST_VIDEO_FORMAT_ARGB:
-      case GST_VIDEO_FORMAT_xRGB:
-      case GST_VIDEO_FORMAT_ABGR:
-      case GST_VIDEO_FORMAT_xBGR:
-      case GST_VIDEO_FORMAT_RGB:
-      case GST_VIDEO_FORMAT_BGR:
-      case GST_VIDEO_FORMAT_v210:
-      case GST_VIDEO_FORMAT_v216:
-      case GST_VIDEO_FORMAT_v308:
-      case GST_VIDEO_FORMAT_IYU2:
-      case GST_VIDEO_FORMAT_RGB16:
-      case GST_VIDEO_FORMAT_BGR16:
-      case GST_VIDEO_FORMAT_RGB15:
-      case GST_VIDEO_FORMAT_BGR15:
-      case GST_VIDEO_FORMAT_r210:
-        /* RGB planar formats */
-      case GST_VIDEO_FORMAT_RGBP:
-      case GST_VIDEO_FORMAT_BGRP:
-      case GST_VIDEO_FORMAT_GBR:
-      case GST_VIDEO_FORMAT_GBR_10LE:
-      case GST_VIDEO_FORMAT_GBR_12LE:
-      case GST_VIDEO_FORMAT_GBR_16LE:
-      case GST_VIDEO_FORMAT_GBRA:
-      case GST_VIDEO_FORMAT_GBRA_10LE:
-      case GST_VIDEO_FORMAT_GBRA_12LE:
-      {
-        bool supported = true;
-        native = false;
-
-        for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
-          if (iter->resource_format[j] == DXGI_FORMAT_UNKNOWN)
-            break;
-
-          if (!check_format_support (self, iter->resource_format[j],
-                  iter->format_support1[0], &support[j])) {
-            supported = false;
-            break;
-          }
-        }
-
-        if (!supported)
-          continue;
-        break;
-      }
-      default:
-        g_assert_not_reached ();
-        return;
+    D3D12_FORMAT_SUPPORT1 support1 = D3D12_FORMAT_SUPPORT1_NONE;
+    D3D12_FORMAT_SUPPORT2 support2 = D3D12_FORMAT_SUPPORT2_NONE;
+    bool supported = false;
+    auto dxgi_format = format.dxgi_format;
+    if (format.dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+      /* Buffer type is always supported */
+      supported = true;
     }
 
-    auto format = *iter;
+    if (!supported && dxgi_format != DXGI_FORMAT_UNKNOWN) {
+      /* packed or yuv semi-planar */
+      hr = fs.FormatSupport (format.dxgi_format, support1, support2);
+      if (SUCCEEDED (hr) && (support1 & format.support1) == format.support1 &&
+          (support2 & format.support2) == format.support2) {
+        supported = true;
+      } else {
+        format.dxgi_format = DXGI_FORMAT_UNKNOWN;
+      }
+    }
 
-    if (!native)
+    if (!supported) {
+      bool check_failed = false;
+      for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+        auto resource_format = format.resource_format[i];
+        if (resource_format == DXGI_FORMAT_UNKNOWN)
+          break;
+
+        hr = fs.FormatSupport (resource_format, support1, support2);
+        if (FAILED (hr) || (support1 & format.support1) != format.support1 ||
+            (support2 & format.support2) != format.support2) {
+          check_failed = true;
+          break;
+        }
+      }
+
+      if (!check_failed)
+        supported = true;
+    }
+
+    if (!supported) {
+      /* Use buffer format */
+      format.dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
       format.dxgi_format = DXGI_FORMAT_UNKNOWN;
+      format.support1 = D3D12_FORMAT_SUPPORT1_NONE;
+      format.support2 = D3D12_FORMAT_SUPPORT2_NONE;
+      for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+        format.resource_format[i] = DXGI_FORMAT_UNKNOWN;
+        format.uav_format[i] = DXGI_FORMAT_UNKNOWN;
+      }
+    } else {
+      format.support1 = support1;
+      format.support2 = support2;
+    }
 
-    for (guint j = 0; j < GST_VIDEO_MAX_PLANES; j++) {
-      format.format_support1[j] = support[j].Support1;
-      format.format_support2[j] = support[j].Support2;
+    if (format.dimension == D3D12_RESOURCE_DIMENSION_BUFFER) {
+      GST_LOG_OBJECT (self, "Format %s support: buffer",
+          gst_video_format_to_string (format.format));
+    } else {
+      GST_LOG_OBJECT (self, "Format %s support: dxgi-format: %s, "
+          "resource-format: [%s, %s, %s, %s]",
+          gst_video_format_to_string (format.format),
+          D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetName (format.dxgi_format),
+          D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::
+          GetName (format.resource_format[0]),
+          D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::
+          GetName (format.resource_format[1]),
+          D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::
+          GetName (format.resource_format[2]),
+          D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::
+          GetName (format.resource_format[3]));
     }
 
     priv->format_table[format.format] = format;
@@ -1158,6 +1093,13 @@ dump_feature_support (GstD3D12Device * self)
 #endif
 /* *INDENT-ON* */
 
+struct TestFormatInfo
+{
+  DXGI_FORMAT format;
+  D3D12_FORMAT_SUPPORT1 support1;
+  D3D12_FORMAT_SUPPORT2 support2;
+};
+
 static GstD3D12Device *
 gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
 {
@@ -1167,6 +1109,56 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   HRESULT hr;
   UINT factory_flags = 0;
   guint index = 0;
+  /* *INDENT-OFF* */
+  const TestFormatInfo required_formats[] = {
+    { DXGI_FORMAT_R8G8B8A8_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D |
+          D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW |
+          D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE
+    },
+    { DXGI_FORMAT_R10G10B10A2_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D |
+          D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW |
+          D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE
+    },
+    { DXGI_FORMAT_R16G16B16A16_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D |
+          D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW |
+          D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE
+    },
+    { DXGI_FORMAT_B8G8R8A8_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_NONE
+    },
+    { DXGI_FORMAT_R8_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_NONE
+    },
+    { DXGI_FORMAT_R8G8_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_NONE
+    },
+    { DXGI_FORMAT_R16_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_NONE
+    },
+    { DXGI_FORMAT_R16G16_UNORM,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+          D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
+      D3D12_FORMAT_SUPPORT2_NONE
+    }
+  };
+  /* *INDENT-ON* */
 
   gst_d3d12_device_enable_debug ();
   gst_d3d12_device_enable_dred ();
@@ -1211,10 +1203,8 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
   priv->device_id = desc.DeviceId;
   priv->adapter_index = index;
 
-  if (desc.Description) {
-    std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t >converter;
-    priv->description = converter.to_bytes (desc.Description);
-  }
+  std::wstring_convert < std::codecvt_utf8 < wchar_t >, wchar_t >converter;
+  priv->description = converter.to_bytes (desc.Description);
 
   priv->feature_support.Init (device.Get ());
 
@@ -1226,6 +1216,25 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
       priv->adapter_luid, priv->feature_support.UMA (),
       priv->feature_support.MaxSupportedFeatureLevel (),
       priv->description.c_str ());
+
+  /* Minimum required format support. Feature level 11.0 device should support
+   * below formats */
+  for (guint i = 0; i < G_N_ELEMENTS (required_formats); i++) {
+    D3D12_FORMAT_SUPPORT1 support1;
+    D3D12_FORMAT_SUPPORT2 support2;
+    const auto & format = required_formats[i];
+    hr = priv->feature_support.FormatSupport (format.format,
+        support1, support2);
+    if (FAILED (hr) || (support1 & format.support1) != format.support1 ||
+        (support2 & format.support2) != format.support2) {
+      auto format_name =
+          D3D12_PROPERTY_LAYOUT_FORMAT_TABLE::GetName (format.format);
+      GST_WARNING_OBJECT (self, "Device does not support DXGI format %d (%s)",
+          format.format, format_name);
+      gst_object_unref (self);
+      return nullptr;
+    }
+  }
 
 #ifndef GST_DISABLE_GST_DEBUG
   if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= GST_LEVEL_DEBUG)
@@ -1293,7 +1302,7 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
       for (guint i = 0; i < G_N_ELEMENTS (priv->decode_queue); i++) {
         priv->decode_queue[i] = gst_d3d12_command_queue_new (device.Get (),
             &queue_desc, D3D12_FENCE_FLAG_NONE, 8);
-        if (!priv->decode_queue)
+        if (!priv->decode_queue[i])
           break;
 
         GST_OBJECT_FLAG_SET (priv->decode_queue[i],

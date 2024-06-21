@@ -40,6 +40,368 @@ ensure_debug_category (void)
 }
 #endif
 
+/* *INDENT-OFF* */
+const D3D12_FORMAT_SUPPORT1 kDefaultFormatSupport1 =
+    D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
+    D3D12_FORMAT_SUPPORT1_RENDER_TARGET;
+
+struct FormatBuilder : public GstD3D12Format
+{
+  explicit FormatBuilder (const GstD3D12Format & other)
+      : GstD3D12Format (other) {}
+
+  FormatBuilder ()
+  {
+    format = GST_VIDEO_FORMAT_UNKNOWN;
+    dimension = D3D12_RESOURCE_DIMENSION_UNKNOWN;
+    support1 = D3D12_FORMAT_SUPPORT1_NONE;
+    support2 = D3D12_FORMAT_SUPPORT2_NONE;
+
+    for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+      resource_format[i] = DXGI_FORMAT_UNKNOWN;
+      uav_format[i] = DXGI_FORMAT_UNKNOWN;
+    }
+  }
+
+  FormatBuilder (
+      GstVideoFormat Format,
+      GstD3D12FormatFlags FormatFlags,
+      D3D12_RESOURCE_DIMENSION Dimension,
+      DXGI_FORMAT DxgiFormat,
+      const DXGI_FORMAT ResourceFormat[GST_VIDEO_MAX_PLANES],
+      D3D12_FORMAT_SUPPORT1 Support1,
+      D3D12_FORMAT_SUPPORT2 Support2
+    )
+  {
+    format = Format;
+    format_flags = FormatFlags;
+    dimension = Dimension;
+    dxgi_format = DxgiFormat;
+    support1 = Support1;
+    support2 = Support2;
+
+    for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+      resource_format[i] = ResourceFormat[i];
+      uav_format[i] = DXGI_FORMAT_UNKNOWN;
+    }
+  }
+
+  static inline FormatBuilder NotSupported (
+      GstVideoFormat Format
+    )
+  {
+    auto f = FormatBuilder();
+    f.format = Format;
+    return f;
+  }
+
+  static inline FormatBuilder RgbPacked (
+      GstVideoFormat Format,
+      DXGI_FORMAT DxgiFormat,
+      D3D12_FORMAT_SUPPORT1 Support1 = kDefaultFormatSupport1,
+      D3D12_FORMAT_SUPPORT2 Support2 = D3D12_FORMAT_SUPPORT2_NONE,
+      GstD3D12FormatFlags FormatFlags = GST_D3D12_FORMAT_FLAG_NONE
+    )
+  {
+    DXGI_FORMAT resource_format[] = { DxgiFormat, DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN,
+        DXGI_FORMAT_UNKNOWN };
+
+    return FormatBuilder (Format, FormatFlags,
+        D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+        DxgiFormat, resource_format, Support1, Support2);
+  }
+
+  static inline FormatBuilder Planar (
+      GstVideoFormat Format,
+      DXGI_FORMAT ResourceFormat = DXGI_FORMAT_R8_UNORM,
+      D3D12_FORMAT_SUPPORT1 Support1 = kDefaultFormatSupport1,
+      D3D12_FORMAT_SUPPORT2 Support2 = D3D12_FORMAT_SUPPORT2_NONE
+    )
+  {
+    DXGI_FORMAT resource_format[] = { ResourceFormat, ResourceFormat,
+        ResourceFormat, DXGI_FORMAT_UNKNOWN };
+    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_NONE,
+        D3D12_RESOURCE_DIMENSION_TEXTURE2D, DXGI_FORMAT_UNKNOWN,
+        resource_format, Support1, Support2);
+  }
+
+  static inline FormatBuilder PlanarFull (
+      GstVideoFormat Format,
+      DXGI_FORMAT ResourceFormat = DXGI_FORMAT_R8_UNORM,
+      D3D12_FORMAT_SUPPORT1 Support1 = kDefaultFormatSupport1,
+      D3D12_FORMAT_SUPPORT2 Support2 = D3D12_FORMAT_SUPPORT2_NONE
+    )
+  {
+    DXGI_FORMAT resource_format[] = { ResourceFormat, ResourceFormat,
+        ResourceFormat, ResourceFormat };
+    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_NONE,
+        D3D12_RESOURCE_DIMENSION_TEXTURE2D, DXGI_FORMAT_UNKNOWN,
+        resource_format, Support1, Support2);
+  }
+
+  static inline FormatBuilder YuvSemiPlanar (
+      GstVideoFormat Format,
+      DXGI_FORMAT DxgiFormat,
+      DXGI_FORMAT ResourceFormatY,
+      DXGI_FORMAT ResourceFormatUV,
+      D3D12_FORMAT_SUPPORT1 Support1 = kDefaultFormatSupport1,
+      D3D12_FORMAT_SUPPORT2 Support2 = D3D12_FORMAT_SUPPORT2_NONE
+    )
+  {
+    DXGI_FORMAT resource_format[] = { ResourceFormatY, ResourceFormatUV,
+        DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN };
+    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_NONE,
+        D3D12_RESOURCE_DIMENSION_TEXTURE2D, DxgiFormat, resource_format,
+        Support1, Support2);
+  }
+
+  static inline FormatBuilder YuvPacked (
+      GstVideoFormat Format,
+      DXGI_FORMAT DxgiFormat,
+      DXGI_FORMAT ResourceFormat,
+      GstD3D12FormatFlags FormatFlags = GST_D3D12_FORMAT_FLAG_OUTPUT_UAV,
+      D3D12_FORMAT_SUPPORT1 Support1 = (D3D12_FORMAT_SUPPORT1_TEXTURE2D |
+          D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW),
+      D3D12_FORMAT_SUPPORT2 Support2 = D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE
+    )
+  {
+    DXGI_FORMAT resource_format[] = { ResourceFormat, DXGI_FORMAT_UNKNOWN,
+        DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN };
+    return FormatBuilder (Format, FormatFlags,
+        D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+        DxgiFormat, resource_format, Support1, Support2);
+  }
+
+  static inline FormatBuilder Gray (
+      GstVideoFormat Format,
+      DXGI_FORMAT DxgiFormat,
+      D3D12_FORMAT_SUPPORT1 Support1 = kDefaultFormatSupport1,
+      D3D12_FORMAT_SUPPORT2 Support2 = D3D12_FORMAT_SUPPORT2_NONE
+    )
+  {
+    DXGI_FORMAT resource_format[] = { DxgiFormat, DXGI_FORMAT_UNKNOWN,
+        DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN };
+    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_NONE,
+        D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+        DxgiFormat, resource_format, Support1, Support2);
+  }
+
+  static inline FormatBuilder Buffer (
+      GstVideoFormat Format
+    )
+  {
+    DXGI_FORMAT resource_format[] = { DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN,
+        DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_UNKNOWN };
+    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_NONE,
+        D3D12_RESOURCE_DIMENSION_BUFFER, DXGI_FORMAT_UNKNOWN, resource_format,
+        D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE);
+  }
+};
+
+static const GstD3D12Format g_format_map[] = {
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_UNKNOWN),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_ENCODED),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_I420),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_YV12),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_YUY2,
+      DXGI_FORMAT_YUY2, DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_UYVY,
+      DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_AYUV,
+      DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_RGBx,
+      DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_BGRx,
+      DXGI_FORMAT_B8G8R8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_xRGB,
+      DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_xBGR,
+      DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_RGBA,
+      DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_BGRA,
+      DXGI_FORMAT_B8G8R8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_ARGB,
+      DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_ABGR,
+      DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_RGB),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_BGR),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_Y41B),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_Y42B),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_YVYU,
+      DXGI_FORMAT_UNKNOWN, DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_Y444),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_v210),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_v216),
+  FormatBuilder::YuvSemiPlanar (GST_VIDEO_FORMAT_NV12,
+      DXGI_FORMAT_NV12, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM),
+  FormatBuilder::YuvSemiPlanar (GST_VIDEO_FORMAT_NV21,
+      DXGI_FORMAT_NV12, DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM),
+  FormatBuilder::Gray (GST_VIDEO_FORMAT_GRAY8,
+      DXGI_FORMAT_R8_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GRAY16_BE),
+  FormatBuilder::Gray (GST_VIDEO_FORMAT_GRAY16_LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_v308),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_RGB16,
+      DXGI_FORMAT_B5G6R5_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_BGR16,
+      DXGI_FORMAT_B5G6R5_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_RGB15,
+      DXGI_FORMAT_B5G5R5A1_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_BGR15,
+      DXGI_FORMAT_B5G5R5A1_UNORM),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_UYVP),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A420),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_RGB8P),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_YUV9),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_YVU9),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_IYU1),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_ARGB64,
+      DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_AYUV64,
+      DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_r210),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_I420_10BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_I420_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_I422_10BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_I422_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y444_10BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_Y444_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_GBR),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GBR_10BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_GBR_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV16),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV24),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_64Z32),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A420_10BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A420_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A422_10BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A422_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A444_10BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A444_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV61),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_P010_10BE),
+  FormatBuilder::YuvSemiPlanar (GST_VIDEO_FORMAT_P010_10LE,
+      DXGI_FORMAT_P010, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM),
+  FormatBuilder::Buffer (GST_VIDEO_FORMAT_IYU2),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_VYUY,
+      DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_GBRA),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GBRA_10BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_GBRA_10LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GBR_12BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_GBR_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GBRA_12BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_GBRA_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_I420_12BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_I420_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_I422_12BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_I422_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y444_12BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_Y444_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GRAY10_LE32),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_10LE32),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV16_10LE32),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_10LE40),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_Y210,
+      DXGI_FORMAT_Y210, DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_Y410,
+      DXGI_FORMAT_Y410, DXGI_FORMAT_R10G10B10A2_UNORM),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_VUYA,
+      DXGI_FORMAT_AYUV, DXGI_FORMAT_R8G8B8A8_UNORM, GST_D3D12_FORMAT_FLAG_NONE,
+      kDefaultFormatSupport1, D3D12_FORMAT_SUPPORT2_NONE),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_BGR10A2_LE,
+      DXGI_FORMAT_Y410, DXGI_FORMAT_R10G10B10A2_UNORM),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_RGB10A2_LE,
+      DXGI_FORMAT_R10G10B10A2_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y444_16BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_Y444_16LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_P016_BE),
+  FormatBuilder::YuvSemiPlanar (GST_VIDEO_FORMAT_P016_LE,
+      DXGI_FORMAT_P016, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_P012_BE),
+  FormatBuilder::YuvSemiPlanar (GST_VIDEO_FORMAT_P012_LE,
+      DXGI_FORMAT_P016, DXGI_FORMAT_R16_UNORM, DXGI_FORMAT_R16G16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y212_BE),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_Y212_LE,
+      DXGI_FORMAT_Y216, DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y412_BE),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_Y412_LE,
+      DXGI_FORMAT_Y416, DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_4L4),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_32L32),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_RGBP),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_BGRP),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_AV12),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_ARGB64_LE),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_ARGB64_BE),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_RGBA64_LE,
+      DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_RGBA64_BE),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_BGRA64_LE,
+      DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_BGRA64_BE),
+  FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_ABGR64_LE,
+      DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_ABGR64_BE),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_16L32S),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_8L128),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_10BE_8L128),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_10LE40_4L4),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_DMA_DRM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_MT2110T),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_MT2110R),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A422),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A444),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A444_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A444_12BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A422_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A422_12BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A420_12LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A420_12BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A444_16LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A444_16BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A422_16LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A422_16BE),
+  FormatBuilder::PlanarFull (GST_VIDEO_FORMAT_A420_16LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_A420_16BE),
+  FormatBuilder::Planar (GST_VIDEO_FORMAT_GBR_16LE,
+      DXGI_FORMAT_R16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_GBR_16BE),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_RBGA,
+      DXGI_FORMAT_AYUV, DXGI_FORMAT_R8G8B8A8_UNORM, GST_D3D12_FORMAT_FLAG_NONE,
+      kDefaultFormatSupport1, D3D12_FORMAT_SUPPORT2_NONE),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_Y216_LE,
+      DXGI_FORMAT_Y216, DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y216_BE),
+  FormatBuilder::YuvPacked (GST_VIDEO_FORMAT_Y416_LE,
+      DXGI_FORMAT_Y416, DXGI_FORMAT_R16G16B16A16_UNORM),
+  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_Y416_BE),
+};
+/* *INDENT-ON* */
+
 GstVideoFormat
 gst_d3d12_dxgi_format_to_gst (DXGI_FORMAT format)
 {
@@ -71,6 +433,23 @@ gst_d3d12_dxgi_format_to_gst (DXGI_FORMAT format)
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
+gboolean
+gst_d3d12_get_format (GstVideoFormat format, GstD3D12Format * d3d12_format)
+{
+  if ((guint) format >= G_N_ELEMENTS (g_format_map))
+    return FALSE;
+
+  const auto & f = g_format_map[(guint) format];
+  g_assert (f.format == format);
+
+  if (f.dimension == D3D12_RESOURCE_DIMENSION_UNKNOWN)
+    return FALSE;
+
+  *d3d12_format = g_format_map[(guint) format];
+
+  return TRUE;
+}
+
 guint
 gst_d3d12_dxgi_format_get_resource_format (DXGI_FORMAT format,
     DXGI_FORMAT resource_format[GST_VIDEO_MAX_PLANES])
@@ -83,21 +462,21 @@ gst_d3d12_dxgi_format_get_resource_format (DXGI_FORMAT format,
   if (format == DXGI_FORMAT_UNKNOWN)
     return 0;
 
-  for (guint i = 0; i < GST_D3D12_N_FORMATS; i++) {
-    const GstD3D12Format *fmt = &g_gst_d3d12_default_format_map[i];
+  for (guint i = 0; i < G_N_ELEMENTS (g_format_map); i++) {
+    const auto & f = g_format_map[i];
+    if (f.dxgi_format != format)
+      continue;
 
-    if (fmt->dxgi_format == format) {
-      guint n_planes = 0;
+    guint n_planes = 0;
+    for (n_planes = 0; n_planes < GST_VIDEO_MAX_PLANES; n_planes++) {
+      auto rf = f.resource_format[n_planes];
+      if (rf == DXGI_FORMAT_UNKNOWN)
+        break;
 
-      for (n_planes = 0; n_planes < GST_VIDEO_MAX_PLANES; n_planes++) {
-        if (fmt->resource_format[n_planes] == DXGI_FORMAT_UNKNOWN)
-          break;
-
-        resource_format[n_planes] = fmt->resource_format[n_planes];
-      }
-
-      return n_planes;
+      resource_format[n_planes] = rf;
     }
+
+    return n_planes;
   }
 
   resource_format[0] = format;
