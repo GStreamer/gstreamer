@@ -76,6 +76,8 @@ void             gst_d3d12_window_unlock    (GstD3D12Window * window);
 
 void             gst_d3d12_window_unlock_stop (GstD3D12Window * window);
 
+void             gst_d3d12_window_expose      (GstD3D12Window * window);
+
 GstFlowReturn    gst_d3d12_window_set_buffer (GstD3D12Window * window,
                                               GstBuffer * buffer);
 

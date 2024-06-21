@@ -40,6 +40,7 @@ public:
   GstFlowReturn resize_buffer (GstD3D12Window * window);
   GstFlowReturn set_buffer (GstD3D12Window * window, GstBuffer * buffer);
   GstFlowReturn present ();
+  void expose (GstD3D12Window * window);
 
 private:
   void before_rendering ();

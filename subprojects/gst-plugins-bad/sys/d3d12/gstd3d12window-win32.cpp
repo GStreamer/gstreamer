@@ -548,6 +548,14 @@ SwapChainProxy::present ()
 }
 
 void
+SwapChainProxy::expose ()
+{
+  auto sc = get_swapchain ();
+  if (sc)
+    sc->expose (window_);
+}
+
+void
 HwndServer::register_window (GstD3D12Window * window)
 {
   std::lock_guard<std::recursive_mutex> lk (lock_);

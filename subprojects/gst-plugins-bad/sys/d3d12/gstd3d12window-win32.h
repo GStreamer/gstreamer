@@ -69,6 +69,7 @@ public:
   GstFlowReturn resize_buffer (INT width, INT height);
   GstFlowReturn set_buffer (GstBuffer * buffer);
   GstFlowReturn present ();
+  void expose ();
 
 private:
   std::shared_ptr<SwapChain> get_swapchain ();

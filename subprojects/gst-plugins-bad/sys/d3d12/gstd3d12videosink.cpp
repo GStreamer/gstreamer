@@ -1532,7 +1532,7 @@ gst_d3d12_video_sink_overlay_expose (GstVideoOverlay * overlay)
   auto self = GST_D3D12_VIDEO_SINK (overlay);
   auto priv = self->priv;
 
-  gst_d3d12_window_set_buffer (priv->window, nullptr);
+  gst_d3d12_window_expose (priv->window);
 }
 
 static void

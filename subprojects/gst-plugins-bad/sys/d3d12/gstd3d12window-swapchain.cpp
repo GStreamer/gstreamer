@@ -586,6 +586,18 @@ SwapChain::present ()
 }
 
 void
+SwapChain::expose (GstD3D12Window * window)
+{
+  std::lock_guard <std::recursive_mutex> lk (lock_);
+  if (!resource_->swapchain || !resource_->cached_buf)
+    return;
+
+  auto ret = set_buffer (window, resource_->cached_buf);
+  if (ret == GST_FLOW_OK)
+    present ();
+}
+
+void
 SwapChain::before_rendering ()
 {
   UINT64 fence_val_to_wait = 0;

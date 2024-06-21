@@ -720,6 +720,16 @@ gst_d3d12_window_render (GstD3D12Window * self, SwapChainResource * resource,
   return GST_FLOW_OK;
 }
 
+void
+gst_d3d12_window_expose (GstD3D12Window * window)
+{
+  auto priv = window->priv;
+  auto proxy = priv->proxy.lock ();
+
+  if (proxy)
+    proxy->expose ();
+}
+
 GstFlowReturn
 gst_d3d12_window_set_buffer (GstD3D12Window * window, GstBuffer * buffer)
 {
