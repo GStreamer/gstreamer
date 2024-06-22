@@ -258,7 +258,7 @@ if host_system == 'darwin'
 endif
 
 if host_system == 'ios'
-  uikit_dep = dependency('appleframeworks', modules : ['UIKit'], required : vulkan_opt)
+  uikit_dep = dependency('appleframeworks', modules : ['UIKit', 'IOSurface', 'CoreGraphics', 'Metal'], required : vulkan_opt)
 
   if uikit_dep.found() and cc.has_header('vulkan/vulkan_ios.h', dependencies : vulkan_dep, required: vulkan_opt)
     vulkan_priv_sources += files(
