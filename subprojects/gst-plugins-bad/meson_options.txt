@@ -179,7 +179,6 @@ option('uvch264', type : 'feature', value : 'auto', description : 'UVC compliant
 option('va', type : 'feature', value : 'auto', description: 'VA-API new plugin')
 option('voaacenc', type : 'feature', value : 'auto', description : 'AAC audio encoder plugin')
 option('voamrwbenc', type : 'feature', value : 'auto', description : 'AMR-WB audio encoder plugin')
-option('vulkan', type : 'feature', value : 'auto', description : 'Vulkan video sink plugin')
 option('wasapi', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin')
 option('wasapi2', type : 'feature', value : 'auto', description : 'Windows Audio Session API source/sink plugin with WinRT API')
 option('webview2', type : 'feature', value : 'auto', description : 'WebView2 plugin')
@@ -250,9 +249,12 @@ option('nvcomp-sdk-path', type: 'string', value : '',
 option('mfx-modules-dir', type: 'string', value : '',
        description : 'libmfx runtime module dir, linux only')
 
-# Vulkan plugin options
-option('vulkan-video', type: 'feature', value: 'auto',
-       description: 'Whether to use Vulkan Video Extensions')
+# Vulkan integration library and plugin options
+option('vulkan', type: 'feature', value: 'auto', description: 'Vulkan integration library and video sink plugin')
+option('vulkan-video', type: 'feature', value: 'auto', description: 'Whether to use Vulkan Video Extensions for encoding/decoding')
+option('vulkan-windowing', type : 'array',
+       choices : ['x11', 'wayland', 'auto'], value : ['auto'],
+       description : 'A comma separated list of Vulkan windowing systems to enable. Non-Linux platforms are auto-detected.')
 
 # License-related feature options
 option('gpl', type: 'feature', value: 'disabled', yield: true,
