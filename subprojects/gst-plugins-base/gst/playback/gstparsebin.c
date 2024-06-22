@@ -1790,7 +1790,7 @@ connect_pad (GstParseBin * parsebin, GstElement * src, GstParsePad * parsepad,
       if (segment)
         segment_format = segment->format;
     }
-    if (segment == GST_FORMAT_UNDEFINED) {
+    if (segment_format == GST_FORMAT_UNDEFINED) {
       GstQuery *segment_query = gst_query_new_segment (GST_FORMAT_TIME);
       if (gst_pad_query (pad, segment_query)) {
         gst_query_parse_segment (segment_query, NULL, &segment_format, NULL,
