@@ -42,8 +42,8 @@
 
 /* DXGI (semi) native formats */
 #define GST_D3D12_TIER_0_FORMATS \
-    "RGBA64_LE, RGB10A2_LE, Y410, VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, " \
-    "P010_10LE, RGBx, BGRx, NV12"
+    "RGBA64_LE, Y416_LE, Y412_LE, RGB10A2_LE, Y410, Y216_LE, Y212_LE, Y210, " \
+    "VUYA, RGBA, BGRA, RBGA, P016_LE, P012_LE, P010_10LE, RGBx, BGRx, YUY2, NV12"
 
 /* both SRV and RTV are supported */
 #define GST_D3D12_TIER_1_FORMATS \

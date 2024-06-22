@@ -24,7 +24,7 @@
 #include "gstd3d12.h"
 #include "gstd3d12-private.h"
 #include <gst/d3dshader/gstd3dshader.h>
-#include "gstd3d12converter-pack.h"
+#include "gstd3d12converter-unpack.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <math.h>
@@ -36,13 +36,16 @@ GST_DEBUG_CATEGORY_EXTERN (gst_d3d12_converter_debug);
 using namespace Microsoft::WRL;
 /* *INDENT-ON* */
 
-struct GstD3D12PackPrivate
+struct GstD3D12UnpackPrivate
 {
-  ~GstD3D12PackPrivate ()
+  ~GstD3D12UnpackPrivate ()
   {
-    if (render_target_pool)
-      gst_buffer_pool_set_active (render_target_pool, FALSE);
-    gst_clear_object (&render_target_pool);
+    if (upload_pool)
+      gst_buffer_pool_set_active (upload_pool, FALSE);
+    if (output_pool)
+      gst_buffer_pool_set_active (output_pool, FALSE);
+    gst_clear_object (&upload_pool);
+    gst_clear_object (&output_pool);
     gst_clear_object (&desc_pool);
     gst_clear_object (&device);
   }
@@ -50,50 +53,55 @@ struct GstD3D12PackPrivate
   GstD3D12Device *device = nullptr;
   GstVideoInfo in_info;
   GstVideoInfo out_info;
+  GstVideoInfo upload_info;
+  GstVideoInfo pool_info;
 
   ComPtr < ID3D12RootSignature > rs_typed;
   ComPtr < ID3D12PipelineState > pso_typed;
   guint tg_x = 0;
   guint tg_y = 0;
+  guint x_unit = 8;
+  guint y_unit = 8;
 
   GstD3D12DescriptorPool *desc_pool = nullptr;
 
-  GstBufferPool *render_target_pool = nullptr;
+  GstBufferPool *upload_pool = nullptr;
+  GstBufferPool *output_pool = nullptr;
   bool need_process = false;
   guint heap_inc_size;
 };
 
-struct _GstD3D12Pack
+struct _GstD3D12Unpack
 {
   GstObject parent;
 
   GstD3D12Device *device;
-  GstD3D12PackPrivate *priv;
+  GstD3D12UnpackPrivate *priv;
 };
 
-static void gst_d3d12_pack_finalize (GObject * object);
+static void gst_d3d12_unpack_finalize (GObject * object);
 
-#define gst_d3d12_pack_parent_class parent_class
-G_DEFINE_TYPE (GstD3D12Pack, gst_d3d12_pack, GST_TYPE_OBJECT);
+#define gst_d3d12_unpack_parent_class parent_class
+G_DEFINE_TYPE (GstD3D12Unpack, gst_d3d12_unpack, GST_TYPE_OBJECT);
 
 static void
-gst_d3d12_pack_class_init (GstD3D12PackClass * klass)
+gst_d3d12_unpack_class_init (GstD3D12UnpackClass * klass)
 {
   auto object_class = G_OBJECT_CLASS (klass);
 
-  object_class->finalize = gst_d3d12_pack_finalize;
+  object_class->finalize = gst_d3d12_unpack_finalize;
 }
 
 static void
-gst_d3d12_pack_init (GstD3D12Pack * self)
+gst_d3d12_unpack_init (GstD3D12Unpack * self)
 {
-  self->priv = new GstD3D12PackPrivate ();
+  self->priv = new GstD3D12UnpackPrivate ();
 }
 
 static void
-gst_d3d12_pack_finalize (GObject * object)
+gst_d3d12_unpack_finalize (GObject * object)
 {
-  auto self = GST_D3D12_PACK (object);
+  auto self = GST_D3D12_UNPACK (object);
 
   delete self->priv;
   gst_clear_object (&self->device);
@@ -102,7 +110,7 @@ gst_d3d12_pack_finalize (GObject * object)
 }
 
 static GstBufferPool *
-gst_d3d12_unpacker_create_pool (GstD3D12Pack * self,
+gst_d3d12_unpacker_create_pool (GstD3D12Unpack * self,
     const GstVideoInfo * info, D3D12_RESOURCE_FLAGS resource_flags)
 {
   auto priv = self->priv;
@@ -131,31 +139,30 @@ gst_d3d12_unpacker_create_pool (GstD3D12Pack * self,
   return pool;
 }
 
-GstD3D12Pack *
-gst_d3d12_pack_new (GstD3D12Device * device,
-    const GstVideoInfo * converter_output_info)
+GstD3D12Unpack *
+gst_d3d12_unpack_new (GstD3D12Device * device,
+    const GstVideoInfo * converter_input_info)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), nullptr);
-  g_return_val_if_fail (converter_output_info, nullptr);
+  g_return_val_if_fail (converter_input_info, nullptr);
 
-  auto self = (GstD3D12Pack *) g_object_new (GST_TYPE_D3D12_PACK, nullptr);
+  auto self = (GstD3D12Unpack *) g_object_new (GST_TYPE_D3D12_UNPACK, nullptr);
   gst_object_ref_sink (self);
 
   auto priv = self->priv;
 
   priv->device = (GstD3D12Device *) gst_object_ref (device);
-  priv->in_info = *converter_output_info;
-  priv->out_info = *converter_output_info;
+  priv->in_info = *converter_input_info;
+  priv->out_info = *converter_input_info;
+  priv->upload_info = *converter_input_info;
+  priv->pool_info = *converter_input_info;
 
   auto conv_format = GST_VIDEO_FORMAT_UNKNOWN;
-  auto format = GST_VIDEO_INFO_FORMAT (converter_output_info);
+  auto format = GST_VIDEO_INFO_FORMAT (converter_input_info);
   switch (format) {
     case GST_VIDEO_FORMAT_YUY2:
       conv_format = GST_VIDEO_FORMAT_AYUV;
       break;
-    case GST_VIDEO_FORMAT_Y410:
-    case GST_VIDEO_FORMAT_Y412_LE:
-    case GST_VIDEO_FORMAT_Y416_LE:
     case GST_VIDEO_FORMAT_Y210:
     case GST_VIDEO_FORMAT_Y212_LE:
     case GST_VIDEO_FORMAT_Y216_LE:
@@ -168,10 +175,11 @@ gst_d3d12_pack_new (GstD3D12Device * device,
   g_assert (conv_format != GST_VIDEO_FORMAT_UNKNOWN);
 
   priv->need_process = true;
-  gst_video_info_set_format (&priv->in_info, conv_format,
-      converter_output_info->width, converter_output_info->height);
-  priv->in_info.colorimetry = converter_output_info->colorimetry;
-  priv->in_info.chroma_site = converter_output_info->chroma_site;
+  gst_video_info_set_format (&priv->out_info, conv_format,
+      converter_input_info->width, converter_input_info->height);
+  priv->out_info.colorimetry = converter_input_info->colorimetry;
+  priv->out_info.chroma_site = converter_input_info->chroma_site;
+  priv->pool_info = priv->out_info;
 
   auto dev_handle = gst_d3d12_device_get_device_handle (device);
   priv->heap_inc_size = dev_handle->GetDescriptorHandleIncrementSize
@@ -239,6 +247,9 @@ gst_d3d12_pack_new (GstD3D12Device * device,
   priv->tg_x = (guint) ceil (priv->in_info.width / (float) bytecode.x_unit);
   priv->tg_y = (guint) ceil (priv->in_info.height / (float) bytecode.y_unit);
 
+  priv->x_unit = bytecode.x_unit;
+  priv->y_unit = bytecode.x_unit;
+
   D3D12_COMPUTE_PIPELINE_STATE_DESC pso_desc = { };
   pso_desc.pRootSignature = priv->rs_typed.Get ();
   pso_desc.CS.pShaderBytecode = bytecode.byte_code.byte_code;
@@ -251,10 +262,10 @@ gst_d3d12_pack_new (GstD3D12Device * device,
     return nullptr;
   }
 
-  priv->render_target_pool = gst_d3d12_unpacker_create_pool (self,
-      &priv->in_info, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
+  priv->output_pool = gst_d3d12_unpacker_create_pool (self,
+      &priv->pool_info, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS |
       D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
-  if (!priv->render_target_pool) {
+  if (!priv->output_pool) {
     gst_object_unref (self);
     return nullptr;
   }
@@ -263,88 +274,176 @@ gst_d3d12_pack_new (GstD3D12Device * device,
 }
 
 gboolean
-gst_d3d12_pack_get_video_info (GstD3D12Pack * pack,
-    GstVideoInfo * pack_input_info)
+gst_d3d12_unpack_get_video_info (GstD3D12Unpack * unpack,
+    GstVideoInfo * unpack_output_info)
 {
-  g_return_val_if_fail (GST_IS_D3D12_PACK (pack), FALSE);
-  g_return_val_if_fail (pack_input_info, FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_UNPACK (unpack), FALSE);
+  g_return_val_if_fail (unpack_output_info, FALSE);
 
-  auto priv = pack->priv;
-  *pack_input_info = priv->in_info;
+  auto priv = unpack->priv;
+  *unpack_output_info = priv->out_info;
 
   return TRUE;
 }
 
-GstBuffer *
-gst_d3d12_pack_acquire_render_target (GstD3D12Pack * pack, GstBuffer * buffer)
+static gboolean
+gst_d3d12_unpack_needs_upload (GstD3D12Unpack * self, GstBuffer * buf)
 {
-  g_return_val_if_fail (GST_IS_D3D12_PACK (pack), nullptr);
-  g_return_val_if_fail (GST_IS_BUFFER (buffer), nullptr);
+  auto priv = self->priv;
+  auto mem = gst_buffer_peek_memory (buf, 0);
+  if (!gst_is_d3d12_memory (mem))
+    return TRUE;
 
-  auto priv = pack->priv;
-  GstD3D12Frame out_frame;
-  if (!gst_d3d12_frame_map (&out_frame, &priv->out_info, buffer,
-          GST_MAP_D3D12, priv->need_process ? GST_D3D12_FRAME_MAP_FLAG_UAV :
-          GST_D3D12_FRAME_MAP_FLAG_RTV)) {
-    GST_ERROR_OBJECT (pack, "Couldn't map output buffer");
+  auto dmem = GST_D3D12_MEMORY_CAST (mem);
+  if (!gst_d3d12_device_is_equal (dmem->device, priv->device))
+    return TRUE;
+
+  auto resource = gst_d3d12_memory_get_resource_handle (dmem);
+  auto desc = GetDesc (resource);
+  if ((desc.Flags & D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) ==
+      D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE) {
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static GstBuffer *
+gst_d3d12_unpack_upload (GstD3D12Unpack * self, GstBuffer * in_buf,
+    gint & width, gint & height)
+{
+  auto priv = self->priv;
+  GstBuffer *upload_buf = nullptr;
+
+  auto meta = gst_buffer_get_video_meta (in_buf);
+  if (meta) {
+    width = meta->width;
+    height = meta->height;
+  } else {
+    width = priv->in_info.width;
+    height = priv->in_info.height;
+  }
+
+  if (!gst_d3d12_unpack_needs_upload (self, in_buf))
+    return gst_buffer_ref (in_buf);
+
+  if (priv->upload_info.width != width || priv->upload_info.height != height) {
+    gst_video_info_set_format (&priv->upload_info,
+        GST_VIDEO_INFO_FORMAT (&priv->in_info), width, height);
+    if (priv->upload_pool) {
+      gst_buffer_pool_set_active (priv->upload_pool, FALSE);
+      gst_clear_object (&priv->upload_pool);
+    }
+  }
+
+  if (!priv->upload_pool) {
+    priv->upload_pool = gst_d3d12_unpacker_create_pool (self,
+        &priv->upload_info, D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
+    if (!priv->upload_pool)
+      return nullptr;
+  }
+
+  gst_buffer_pool_acquire_buffer (priv->upload_pool, &upload_buf, nullptr);
+  if (!upload_buf) {
+    GST_ERROR_OBJECT (self, "Couldn't acquire fallback buf");
     return nullptr;
   }
-  gst_d3d12_frame_unmap (&out_frame);
 
-  if (!priv->need_process)
-    return gst_buffer_ref (buffer);
+  if (gst_d3d12_buffer_copy_into (upload_buf, in_buf, &priv->upload_info)) {
+    GST_ERROR_OBJECT (self, "Couldn't copy to upload buffer");
+    gst_buffer_unref (upload_buf);
+    return nullptr;
+  }
+
+  return upload_buf;
+}
+
+static GstBuffer *
+gst_d3d12_unpack_create_output (GstD3D12Unpack * self, gint width, gint height)
+{
+  auto priv = self->priv;
+  if (priv->pool_info.width != width || priv->pool_info.height != height) {
+    if (priv->output_pool)
+      gst_buffer_pool_set_active (priv->output_pool, FALSE);
+    gst_clear_object (&priv->output_pool);
+
+    gst_video_info_set_format (&priv->pool_info,
+        GST_VIDEO_INFO_FORMAT (&priv->out_info), width, height);
+  }
+
+  if (!priv->output_pool) {
+    priv->output_pool = gst_d3d12_unpacker_create_pool (self,
+        &priv->pool_info, D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
+        D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
+    if (!priv->output_pool)
+      return nullptr;
+
+    priv->tg_x = (guint) ceil (width / (float) priv->x_unit);
+    priv->tg_y = (guint) ceil (height / (float) priv->y_unit);
+  }
 
   GstBuffer *outbuf = nullptr;
-  gst_buffer_pool_acquire_buffer (priv->render_target_pool, &outbuf, nullptr);
+  gst_buffer_pool_acquire_buffer (priv->output_pool, &outbuf, nullptr);
 
   return outbuf;
 }
 
-gboolean
-gst_d3d12_pack_execute (GstD3D12Pack * pack, GstBuffer * in_buf,
-    GstBuffer * out_buf, GstD3D12FenceData * fence_data,
-    ID3D12GraphicsCommandList * cl)
+GstBuffer *
+gst_d3d12_unpack_execute (GstD3D12Unpack * unpack, GstBuffer * buffer,
+    GstD3D12FenceData * fence_data, ID3D12GraphicsCommandList * cl)
 {
-  g_return_val_if_fail (GST_IS_D3D12_PACK (pack), FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (in_buf), FALSE);
-  g_return_val_if_fail (GST_IS_BUFFER (out_buf), FALSE);
+  g_return_val_if_fail (GST_IS_D3D12_UNPACK (unpack), FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
   g_return_val_if_fail (fence_data, FALSE);
   g_return_val_if_fail (cl, FALSE);
 
-  auto priv = pack->priv;
-  if (!priv->need_process)
-    return TRUE;
+  auto priv = unpack->priv;
+  gint width, height;
+  auto upload_buf = gst_d3d12_unpack_upload (unpack, buffer, width, height);
+  if (!upload_buf)
+    return nullptr;
 
-  g_assert (in_buf != out_buf);
+  if (!priv->need_process)
+    return upload_buf;
+
+  auto outbuf = gst_d3d12_unpack_create_output (unpack, width, height);
+  if (!outbuf) {
+    GST_ERROR_OBJECT (unpack, "Couldn't create output buffer");
+    gst_buffer_unref (upload_buf);
+    return nullptr;
+  }
 
   GstD3D12Frame in_frame;
   GstD3D12Frame out_frame;
-  if (!gst_d3d12_frame_map (&in_frame, &priv->in_info, in_buf,
+  if (!gst_d3d12_frame_map (&in_frame, &priv->in_info, upload_buf,
           GST_MAP_D3D12, GST_D3D12_FRAME_MAP_FLAG_SRV)) {
-    GST_ERROR_OBJECT (pack, "Couldn't map input frame");
-    return FALSE;
+    GST_ERROR_OBJECT (unpack, "Couldn't map input frame");
+    gst_buffer_unref (upload_buf);
+    gst_buffer_unref (outbuf);
+    return nullptr;
   }
 
-  if (!gst_d3d12_frame_map (&out_frame, &priv->out_info, out_buf,
+  if (!gst_d3d12_frame_map (&out_frame, &priv->out_info, outbuf,
           GST_MAP_D3D12, GST_D3D12_FRAME_MAP_FLAG_UAV)) {
-    GST_ERROR_OBJECT (pack, "Couldn't map output frame");
+    GST_ERROR_OBJECT (unpack, "Couldn't map output frame");
     gst_d3d12_frame_unmap (&in_frame);
-    return FALSE;
+    gst_buffer_unref (upload_buf);
+    gst_buffer_unref (outbuf);
+    return nullptr;
   }
 
   GstD3D12Descriptor *descriptor;
   if (!gst_d3d12_descriptor_pool_acquire (priv->desc_pool, &descriptor)) {
-    GST_ERROR_OBJECT (pack, "Couldn't acquire descriptor heap");
+    GST_ERROR_OBJECT (unpack, "Couldn't acquire descriptor heap");
     gst_d3d12_frame_unmap (&in_frame);
-    gst_d3d12_frame_unmap (&out_frame);
-    return FALSE;
+    gst_buffer_unref (upload_buf);
+    gst_buffer_unref (outbuf);
+    return nullptr;
   }
 
   gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (descriptor));
 
   auto device = gst_d3d12_device_get_device_handle (priv->device);
-  auto in_resource = in_frame.data[0];
-
   auto desc_handle = gst_d3d12_descriptor_get_handle (descriptor);
   auto desc_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE
       (GetCPUDescriptorHandleForHeapStart (desc_handle));
@@ -354,11 +453,6 @@ gst_d3d12_pack_execute (GstD3D12Pack * pack, GstBuffer * in_buf,
   device->CopyDescriptorsSimple (1, desc_cpu_handle,
       out_frame.uav_desc_handle[0], D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-  D3D12_RESOURCE_BARRIER barrier =
-      CD3DX12_RESOURCE_BARRIER::Transition (in_resource,
-      D3D12_RESOURCE_STATE_RENDER_TARGET,
-      D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
-  cl->ResourceBarrier (1, &barrier);
   cl->SetComputeRootSignature (priv->rs_typed.Get ());
   cl->SetPipelineState (priv->pso_typed.Get ());
 
@@ -367,12 +461,16 @@ gst_d3d12_pack_execute (GstD3D12Pack * pack, GstBuffer * in_buf,
   cl->SetComputeRootDescriptorTable (0,
       GetGPUDescriptorHandleForHeapStart (desc_handle));
   cl->Dispatch (priv->tg_x, priv->tg_y, 1);
+  D3D12_RESOURCE_BARRIER barrier =
+      CD3DX12_RESOURCE_BARRIER::Transition (out_frame.data[0],
+      D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+      D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+  cl->ResourceBarrier (1, &barrier);
 
-  gst_d3d12_frame_unmap (&in_frame);
   gst_d3d12_frame_unmap (&out_frame);
+  gst_d3d12_frame_unmap (&in_frame);
 
-  gst_d3d12_fence_data_push (fence_data,
-      FENCE_NOTIFY_MINI_OBJECT (gst_buffer_ref (in_buf)));
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (upload_buf));
 
-  return TRUE;
+  return outbuf;
 }
