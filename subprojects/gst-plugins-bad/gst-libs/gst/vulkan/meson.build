@@ -352,7 +352,7 @@ install_headers(vulkan_headers, subdir : 'gstreamer-1.0/gst/vulkan')
 
 configure_file(input : 'gstvkconfig.h.meson',
   output : 'gstvkconfig.h',
-  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan'),
+  install_dir : get_option('includedir') / 'gstreamer-1.0/gst/vulkan',
   configuration : vulkan_conf)
 
 glib_mkenums = find_program('glib-mkenums')
@@ -361,7 +361,7 @@ vulkan_enumtypes_h = custom_target('gstvulkanenum_h',
   output : 'vulkan-enumtypes.h',
   input : vulkan_headers,
   install : true,
-  install_dir : join_paths(get_option('includedir'), 'gstreamer-1.0/gst/vulkan/'),
+  install_dir : get_option('includedir') / 'gstreamer-1.0/gst/vulkan',
   command : [mkenums, glib_mkenums, '@OUTPUT@', '@INPUT@'])
 
 vulkan_enumtypes_c = custom_target('gstvulkanenum_c',
