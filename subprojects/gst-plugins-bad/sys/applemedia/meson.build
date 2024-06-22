@@ -20,22 +20,19 @@ applemedia_args = [
 ]
 
 applemedia_objc_args = []
+applemedia_found_deps = false
 applemedia_option = get_option('applemedia')
 if not ['darwin', 'ios'].contains(host_system) or applemedia_option.disabled()
-  applemedia_found_deps = false
   subdir_done()
 endif
 
-if ['darwin', 'ios'].contains(host_system)
-  objc = meson.get_compiler('objc')
-  if not objc.has_argument('-fobjc-arc')
-    error('ARC is required for building')
-  endif
-
-  applemedia_objc_args += ['-fobjc-arc']
-
-  objcpp = meson.get_compiler('objcpp')
+objc = meson.get_compiler('objc')
+if not objc.has_argument('-fobjc-arc')
+  error('ARC is required for building')
 endif
+
+applemedia_objc_args += ['-fobjc-arc']
+objcpp = meson.get_compiler('objcpp')
 
 applemedia_frameworks = []
 corefoundation_dep = dependency('CoreFoundation', required : applemedia_option)
