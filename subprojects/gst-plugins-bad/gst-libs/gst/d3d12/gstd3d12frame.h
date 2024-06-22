@@ -31,6 +31,7 @@ typedef struct _GstD3D12FrameFence GstD3D12FrameFence;
  * GstD3D12FrameMapFlags:
  * @GST_D3D12_FRAME_MAP_FLAG_NONE: No flags
  * @GST_D3D12_FRAME_MAP_FLAG_SRV: Frame mapping requires shared resource view
+ * @GST_D3D12_FRAME_MAP_FLAG_UAV: Frame mapping requires unordered access view
  * @GST_D3D12_FRAME_MAP_FLAG_RTV: Frame mapping requires render target view
  *
  * Since: 1.26
@@ -39,7 +40,8 @@ typedef enum
 {
   GST_D3D12_FRAME_MAP_FLAG_NONE = 0,
   GST_D3D12_FRAME_MAP_FLAG_SRV = (1 << 0),
-  GST_D3D12_FRAME_MAP_FLAG_RTV = (1 << 1),
+  GST_D3D12_FRAME_MAP_FLAG_UAV = (1 << 1),
+  GST_D3D12_FRAME_MAP_FLAG_RTV = (1 << 2),
 } GstD3D12FrameMapFlags;
 
 DEFINE_ENUM_FLAG_OPERATORS (GstD3D12FrameMapFlags);
@@ -83,6 +85,7 @@ struct _GstD3D12Frame
   D3D12_RECT plane_rect[GST_VIDEO_MAX_PLANES];
   GstD3D12FrameFence fence[GST_VIDEO_MAX_PLANES];
   D3D12_CPU_DESCRIPTOR_HANDLE srv_desc_handle[GST_VIDEO_MAX_PLANES];
+  D3D12_CPU_DESCRIPTOR_HANDLE uav_desc_handle[GST_VIDEO_MAX_PLANES];
   D3D12_CPU_DESCRIPTOR_HANDLE rtv_desc_handle[GST_VIDEO_MAX_PLANES];
 
   /*< private >*/

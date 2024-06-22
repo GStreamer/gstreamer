@@ -124,6 +124,18 @@ gst_d3d12_frame_map (GstD3D12Frame * frame, const GstVideoInfo * info,
       }
     }
 
+    if ((d3d12_flags & GST_D3D12_FRAME_MAP_FLAG_UAV) != 0) {
+      if ((desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS) == 0) {
+        GST_WARNING ("UAV map is requested but UAV is not allowed");
+        return FALSE;
+      }
+
+      if (!gst_d3d12_memory_get_unordered_access_view_heap (dmem)) {
+        GST_ERROR ("Couldn't get UAV descriptor heap");
+        return FALSE;
+      }
+    }
+
     if ((d3d12_flags & GST_D3D12_FRAME_MAP_FLAG_RTV) != 0) {
       if ((desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) == 0) {
         GST_WARNING ("RTV map is requested but RTV is not allowed");
@@ -178,22 +190,33 @@ gst_d3d12_frame_map (GstD3D12Frame * frame, const GstVideoInfo * info,
     desc = GetDesc (resource);
 
     ID3D12DescriptorHeap *srv_heap = nullptr;
+    ID3D12DescriptorHeap *uav_heap = nullptr;
     ID3D12DescriptorHeap *rtv_heap = nullptr;
 
     if ((d3d12_flags & GST_D3D12_FRAME_MAP_FLAG_SRV) != 0)
       srv_heap = gst_d3d12_memory_get_shader_resource_view_heap (dmem);
 
+    if ((d3d12_flags & GST_D3D12_FRAME_MAP_FLAG_UAV) != 0)
+      uav_heap = gst_d3d12_memory_get_unordered_access_view_heap (dmem);
+
     if ((d3d12_flags & GST_D3D12_FRAME_MAP_FLAG_RTV) != 0)
       rtv_heap = gst_d3d12_memory_get_render_target_view_heap (dmem);
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE srv_handle;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE srv_handle = { };
     if (srv_heap) {
       srv_handle =
           CD3DX12_CPU_DESCRIPTOR_HANDLE
           (GetCPUDescriptorHandleForHeapStart (srv_heap));
     }
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE uav_handle = { };
+    if (uav_heap) {
+      uav_handle =
+          CD3DX12_CPU_DESCRIPTOR_HANDLE
+          (GetCPUDescriptorHandleForHeapStart (uav_heap));
+    }
+
+    CD3DX12_CPU_DESCRIPTOR_HANDLE rtv_handle = { };
     if (rtv_heap) {
       rtv_handle =
           CD3DX12_CPU_DESCRIPTOR_HANDLE
@@ -221,6 +244,11 @@ gst_d3d12_frame_map (GstD3D12Frame * frame, const GstVideoInfo * info,
       if (rtv_heap) {
         frame->rtv_desc_handle[plane_idx] = rtv_handle;
         rtv_handle.Offset (rtv_inc_size);
+      }
+
+      if (uav_heap) {
+        frame->uav_desc_handle[plane_idx] = uav_handle;
+        uav_handle.Offset (srv_inc_size);
       }
 
       gst_d3d12_memory_get_fence (dmem, &frame->fence[plane_idx].fence,

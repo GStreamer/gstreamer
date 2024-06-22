@@ -346,6 +346,7 @@ struct _GstD3D12MemoryPrivate
 
   ComPtr<ID3D12DescriptorHeap> srv_heap;
   ComPtr<ID3D12DescriptorHeap> rtv_heap;
+  ComPtr<ID3D12DescriptorHeap> uav_heap;
 
   gpointer staging_ptr = nullptr;
 
@@ -810,6 +811,67 @@ gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem)
   }
 
   return priv->srv_heap.Get ();
+}
+
+/**
+ * gst_d3d12_memory_get_unordered_access_view_heap:
+ * @mem: a #GstD3D12Memory
+ *
+ * Gets shader invisible unordered access view descriptor heap.
+ * Caller needs to copy returned descriptor heap to another shader visible
+ * descriptor heap in order for resource to be used in shader.
+ *
+ * Returns: (transfer none) (nullable): ID3D12DescriptorHeap handle or %NULL
+ * if the resource was allocated without unordered access view enabled
+ *
+ * Since: 1.26
+ */
+ID3D12DescriptorHeap *
+gst_d3d12_memory_get_unordered_access_view_heap (GstD3D12Memory * mem)
+{
+  auto priv = mem->priv;
+  auto allocator = GST_MEMORY_CAST (mem)->allocator;
+  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS) == 0) {
+    GST_LOG_OBJECT (allocator,
+        "Unordered access view is not allowed, configured flags 0x%x",
+        (guint) priv->desc.Flags);
+    return nullptr;
+  }
+
+  std::lock_guard < std::mutex > lk (priv->lock);
+  if (!priv->uav_heap) {
+    D3D12_DESCRIPTOR_HEAP_DESC desc = { };
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    desc.NumDescriptors = priv->num_subresources;
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+    auto device = gst_d3d12_device_get_device_handle (mem->device);
+
+    ComPtr < ID3D12DescriptorHeap > uav_heap;
+    auto hr = device->CreateDescriptorHeap (&desc, IID_PPV_ARGS (&uav_heap));
+    if (!gst_d3d12_result (hr, mem->device)) {
+      GST_ERROR_OBJECT (allocator, "Couldn't create descriptor heap");
+      return nullptr;
+    }
+
+    priv->uav_heap = uav_heap;
+
+    D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc = { };
+    uav_desc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+    auto cpu_handle =
+        CD3DX12_CPU_DESCRIPTOR_HANDLE (GetCPUDescriptorHandleForHeapStart
+        (uav_heap));
+
+    for (guint i = 0; i < priv->num_subresources; i++) {
+      uav_desc.Format = priv->resource_formats[i];
+      uav_desc.Texture2D.PlaneSlice = i;
+      device->CreateUnorderedAccessView (priv->resource.Get (), nullptr,
+          &uav_desc, cpu_handle);
+      cpu_handle.Offset (priv->srv_inc_size);
+    }
+  }
+
+  return priv->uav_heap.Get ();
 }
 
 /**

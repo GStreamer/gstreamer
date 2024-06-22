@@ -200,6 +200,9 @@ GST_D3D12_API
 ID3D12DescriptorHeap * gst_d3d12_memory_get_shader_resource_view_heap (GstD3D12Memory * mem);
 
 GST_D3D12_API
+ID3D12DescriptorHeap * gst_d3d12_memory_get_unordered_access_view_heap (GstD3D12Memory * mem);
+
+GST_D3D12_API
 ID3D12DescriptorHeap * gst_d3d12_memory_get_render_target_view_heap (GstD3D12Memory * mem);
 
 GST_D3D12_API
