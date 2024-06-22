@@ -117,7 +117,8 @@ if ['ios', 'darwin'].contains(host_system)
     #   retrieving the metal device from the VkDevice) which is currently waiting
     #   on implementing a proper Metal extension for Vulkan
     #   https://github.com/KhronosGroup/MoltenVK/issues/492
-    vulkan_dep = cc.find_library('MoltenVK', required : vulkan_opt)
+    objcpp = meson.get_compiler('objcpp')
+    vulkan_dep = objcpp.find_library('MoltenVK', required : vulkan_opt)
   endif
 elif host_system == 'windows'
   vulkan_root = run_command(python3, '-c', 'import os; print(os.environ.get("VK_SDK_PATH"))', check: false).stdout().strip()

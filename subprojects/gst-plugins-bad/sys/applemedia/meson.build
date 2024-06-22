@@ -91,9 +91,9 @@ applemedia_objcpp_args = []
 vulkan_option = get_option('vulkan')
 vk_required = applemedia_option.enabled() and vulkan_option.enabled()
 if gstvulkan_dep.found() and have_objcpp and not vulkan_option.disabled()
-  moltenvk_dep = cc.find_library('MoltenVK', required: vk_required)
+  moltenvk_dep = objcpp.find_library('MoltenVK', required: vk_required)
   metal_dep = dependency('appleframeworks', modules : ['Metal'], required: vk_required)
-  have_mvk_header = cc.has_header('MoltenVK/vk_mvk_moltenvk.h', required: vk_required)
+  have_mvk_header = objcpp.has_header('MoltenVK/vk_mvk_moltenvk.h', required: vk_required)
   if metal_dep.found() and moltenvk_dep.found() and have_mvk_header
     applemedia_frameworks += [moltenvk_dep, gstvulkan_dep, metal_dep]
     applemedia_sources += [
