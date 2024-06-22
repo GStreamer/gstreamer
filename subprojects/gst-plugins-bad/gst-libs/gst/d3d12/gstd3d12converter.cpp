@@ -25,6 +25,7 @@
 #include "gstd3d12-private.h"
 #include "gstd3d12converter-builder.h"
 #include "gstd3d12converter-private.h"
+#include "gstd3d12converter-pack.h"
 #include <directx/d3dx12.h>
 #include <wrl.h>
 #include <string.h>
@@ -243,15 +244,14 @@ struct _GstD3D12ConverterPrivate
     }
     gst_clear_object (&srv_heap_pool);
     gst_clear_object (&cq);
+    gst_clear_object (&pack);
   }
 
   GstD3D12CommandQueue *cq = nullptr;
+  GstD3D12Pack *pack = nullptr;
 
   GstVideoInfo in_info;
   GstVideoInfo out_info;
-
-  GstD3D12Format in_d3d12_format;
-  GstD3D12Format out_d3d12_format;
 
   CONVERT_TYPE convert_type = CONVERT_TYPE::IDENTITY;
 
@@ -609,6 +609,7 @@ gst_d3d12_converter_get_gamma_enc_table (GstVideoTransferFunction func)
 static gboolean
 gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info,
+    const GstD3D12Format * in_format, const GstD3D12Format * out_format,
     D3D12_FILTER sampler_filter)
 {
   auto priv = self->priv;
@@ -663,7 +664,7 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
 
   std::queue < DXGI_FORMAT > rtv_formats;
   for (guint i = 0; i < 4; i++) {
-    auto format = priv->out_d3d12_format.resource_format[i];
+    auto format = out_format->resource_format[i];
     if (format == DXGI_FORMAT_UNKNOWN)
       break;
 
@@ -1673,8 +1674,14 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
     priv->cq = gst_d3d12_device_get_command_queue (device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
   }
-
   gst_object_ref (priv->cq);
+
+  priv->pack = gst_d3d12_pack_new (device, out_info);
+  if (!priv->pack) {
+    GST_ERROR_OBJECT (self, "Couldn't create pack object");
+    gst_object_unref (self);
+    return nullptr;
+  }
 
   if (blend_desc)
     priv->blend_desc = *blend_desc;
@@ -1716,27 +1723,25 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
       gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (out_info)),
       allow_gamma, allow_primaries);
 
-  if (!gst_d3d12_device_get_format (device, GST_VIDEO_INFO_FORMAT (in_info),
-          &in_d3d12_format)) {
-    GST_ERROR_OBJECT (self, "%s couldn't be converted to d3d12 format",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
-    gst_object_unref (self);
-    return nullptr;
-  }
-
-  if (!gst_d3d12_device_get_format (device, GST_VIDEO_INFO_FORMAT (out_info),
-          &out_d3d12_format)) {
-    GST_ERROR_OBJECT (self, "%s couldn't be converted to d3d12 format",
-        gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (in_info)));
-    gst_object_unref (self);
-    return nullptr;
-  }
-
   self->device = (GstD3D12Device *) gst_object_ref (device);
   priv->in_info = *in_info;
-  priv->out_info = *out_info;
-  priv->in_d3d12_format = in_d3d12_format;
-  priv->out_d3d12_format = out_d3d12_format;
+  gst_d3d12_pack_get_video_info (priv->pack, &priv->out_info);
+
+  auto in_format = GST_VIDEO_INFO_FORMAT (&priv->in_info);
+  auto out_format = GST_VIDEO_INFO_FORMAT (&priv->out_info);
+  if (!gst_d3d12_device_get_format (device, in_format, &in_d3d12_format)) {
+    GST_ERROR_OBJECT (self, "%s couldn't be converted to d3d12 format",
+        gst_video_format_to_string (in_format));
+    gst_object_unref (self);
+    return nullptr;
+  }
+
+  if (!gst_d3d12_device_get_format (device, out_format, &out_d3d12_format)) {
+    GST_ERROR_OBJECT (self, "%s couldn't be converted to d3d12 format",
+        gst_video_format_to_string (out_format));
+    gst_object_unref (self);
+    return nullptr;
+  }
 
   /* Init properties */
   priv->src_width = GST_VIDEO_INFO_WIDTH (in_info);
@@ -1831,7 +1836,8 @@ gst_d3d12_converter_new (GstD3D12Device * device, GstD3D12CommandQueue * queue,
   }
 
   if (!gst_d3d12_converter_setup_resource (self, &priv->in_info,
-          &priv->out_info, sampler_filter)) {
+          &priv->out_info, &in_d3d12_format, &out_d3d12_format,
+          sampler_filter)) {
     gst_object_unref (self);
     return nullptr;
   }
@@ -2161,10 +2167,18 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
 
   auto priv = converter->priv;
 
+  auto render_target =
+      gst_d3d12_pack_acquire_render_target (priv->pack, out_buf);
+  if (!render_target) {
+    GST_ERROR_OBJECT (converter, "Couldn't get render target buffer");
+    return FALSE;
+  }
+
   /* Don't map output memory, we don't actually update output memory here */
-  if (!gst_d3d12_frame_map (&out_frame, &priv->out_info, out_buf,
+  if (!gst_d3d12_frame_map (&out_frame, &priv->out_info, render_target,
           (GstMapFlags) GST_MAP_D3D12, GST_D3D12_FRAME_MAP_FLAG_RTV)) {
     GST_ERROR_OBJECT (converter, "Couldn't map output buffer");
+    gst_buffer_unref (render_target);
     return FALSE;
   }
 
@@ -2174,6 +2188,7 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
     in_buf = gst_d3d12_converter_upload_buffer (converter, in_buf);
     if (!in_buf) {
       gst_d3d12_frame_unmap (&out_frame);
+      gst_buffer_unref (render_target);
       return FALSE;
     }
   }
@@ -2184,11 +2199,17 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
     if (need_upload)
       gst_buffer_unref (in_buf);
     gst_d3d12_frame_unmap (&out_frame);
+    gst_buffer_unref (render_target);
     return FALSE;
   }
 
   auto ret = gst_d3d12_converter_execute (converter,
       &in_frame, &out_frame, fence_data, command_list);
+
+  if (ret) {
+    ret = gst_d3d12_pack_execute (priv->pack, render_target, out_buf,
+        fence_data, command_list);
+  }
 
   if (ret && execute_gpu_wait) {
     gst_d3d12_frame_fence_gpu_wait (&in_frame, priv->cq);
@@ -2201,6 +2222,8 @@ gst_d3d12_converter_convert_buffer (GstD3D12Converter * converter,
   /* fence data will hold this buffer */
   if (need_upload)
     gst_buffer_unref (in_buf);
+
+  gst_buffer_unref (render_target);
 
   return ret;
 }

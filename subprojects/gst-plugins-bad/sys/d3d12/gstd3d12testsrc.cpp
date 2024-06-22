@@ -1585,6 +1585,13 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
     return FALSE;
   }
 
+  GstD3D12Format device_format;
+  if (!gst_d3d12_device_get_format (self->device,
+          GST_VIDEO_INFO_FORMAT (&priv->info), &device_format)) {
+    GST_ERROR_OBJECT (self, "Couldn't get device foramt");
+    return FALSE;
+  }
+
   auto device = gst_d3d12_device_get_device_handle (self->device);
   D3D12_HEAP_PROPERTIES heap_prop =
       CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_DEFAULT);
@@ -1656,10 +1663,20 @@ gst_d3d12_test_src_setup_context (GstD3D12TestSrc * self, GstCaps * caps)
     ctx->convert_pool = gst_d3d12_buffer_pool_new (self->device);
     config = gst_buffer_pool_get_config (ctx->convert_pool);
     gst_buffer_pool_config_set_params (config, caps, priv->info.size, 0, 0);
+
+    D3D12_RESOURCE_FLAGS resource_flags =
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
+
+    if ((device_format.format_flags & GST_D3D12_FORMAT_FLAG_OUTPUT_UAV)
+        == GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) {
+      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    } else {
+      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    }
+
     auto params = gst_d3d12_allocation_params_new (self->device, &priv->info,
-        GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
+        GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
+        D3D12_HEAP_FLAG_NONE);
     gst_buffer_pool_config_set_d3d12_allocation_params (config, params);
     gst_d3d12_allocation_params_free (params);
 
@@ -1810,6 +1827,13 @@ gst_d3d12_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   gst_video_info_from_caps (&vinfo, caps);
 
+  GstD3D12Format device_format;
+  if (!gst_d3d12_device_get_format (self->device,
+          GST_VIDEO_INFO_FORMAT (&vinfo), &device_format)) {
+    GST_ERROR_OBJECT (self, "Couldn't get device foramt");
+    return FALSE;
+  }
+
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     update_pool = TRUE;
@@ -1844,8 +1868,13 @@ gst_d3d12_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   if (priv->downstream_supports_d3d12) {
     D3D12_RESOURCE_FLAGS resource_flags =
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
-        D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
+    if ((device_format.format_flags & GST_D3D12_FORMAT_FLAG_OUTPUT_UAV)
+        == GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) {
+      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    } else {
+      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    }
 
     auto params = gst_buffer_pool_config_get_d3d12_allocation_params (config);
     if (!params) {
