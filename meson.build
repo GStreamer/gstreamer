@@ -238,7 +238,7 @@ giomodules = []
 glib_dep = dependency('glib-2.0')
 if glib_dep.type_name() == 'internal'
   subp = subproject('glib-networking', required : get_option('tls'),
-             default_options: ['gnutls=auto', 'openssl=auto'])
+             default_options: ['gnutls=auto', 'openssl=auto', 'libproxy=auto', 'gnome_proxy=auto'])
   if subp.found()
     giomodules += subp.get_variable('giomodules', [])
   endif
