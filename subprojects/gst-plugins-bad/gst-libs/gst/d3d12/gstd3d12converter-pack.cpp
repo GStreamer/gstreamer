@@ -161,6 +161,14 @@ gst_d3d12_pack_new (GstD3D12Device * device,
     case GST_VIDEO_FORMAT_Y216_LE:
       conv_format = GST_VIDEO_FORMAT_AYUV64;
       break;
+    case GST_VIDEO_FORMAT_BGR10A2_LE:
+      gst_video_info_set_format (&priv->in_info, GST_VIDEO_FORMAT_RGB10A2_LE,
+          converter_output_info->width, converter_output_info->height);
+      break;
+    case GST_VIDEO_FORMAT_BGRA64_LE:
+      gst_video_info_set_format (&priv->in_info, GST_VIDEO_FORMAT_RGBA64_LE,
+          converter_output_info->width, converter_output_info->height);
+      break;
     default:
       return self;
   }
