@@ -801,6 +801,18 @@ gst_d3d12_device_setup_format_table (GstD3D12Device * self)
       if (SUCCEEDED (hr) && (support1 & format.support1) == format.support1 &&
           (support2 & format.support2) == format.support2) {
         supported = true;
+      } else if (dxgi_format == DXGI_FORMAT_B5G6R5_UNORM ||
+          dxgi_format == DXGI_FORMAT_B5G5R5A1_UNORM) {
+        /* This format may not be supported by old OS. Use R16_UINT
+         * with compute shader */
+        format.dxgi_format = DXGI_FORMAT_R16_UINT;
+        format.format_flags = GST_D3D12_FORMAT_FLAG_OUTPUT_UAV;
+        fs.FormatSupport (DXGI_FORMAT_R16_UINT, support1, support2);
+        format.support1 = support1;
+        format.support2 = support2;
+        format.resource_format[0] = DXGI_FORMAT_R16_UINT;
+        format.uav_format[0] = DXGI_FORMAT_R16_UINT;
+        supported = true;
       } else {
         format.dxgi_format = DXGI_FORMAT_UNKNOWN;
       }
@@ -1156,7 +1168,13 @@ gst_d3d12_device_new_internal (const GstD3D12DeviceConstructData * data)
       D3D12_FORMAT_SUPPORT1_TEXTURE2D | D3D12_FORMAT_SUPPORT1_SHADER_SAMPLE |
           D3D12_FORMAT_SUPPORT1_RENDER_TARGET,
       D3D12_FORMAT_SUPPORT2_NONE
-    }
+    },
+    { DXGI_FORMAT_R16_UINT,
+      D3D12_FORMAT_SUPPORT1_TEXTURE2D |
+          D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW |
+          D3D12_FORMAT_SUPPORT1_SHADER_LOAD,
+      D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE
+    },
   };
   /* *INDENT-ON* */
 

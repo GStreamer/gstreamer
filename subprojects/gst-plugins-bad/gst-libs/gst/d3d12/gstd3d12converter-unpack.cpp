@@ -168,6 +168,21 @@ gst_d3d12_unpack_new (GstD3D12Device * device,
     case GST_VIDEO_FORMAT_Y216_LE:
       conv_format = GST_VIDEO_FORMAT_AYUV64;
       break;
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_BGR15:
+    {
+      GstD3D12Format device_format;
+      gst_d3d12_device_get_format (device, format, &device_format);
+      if (device_format.dxgi_format == DXGI_FORMAT_R16_UINT) {
+        conv_format = GST_VIDEO_FORMAT_RGBA;
+      } else {
+        /* Device supports this format */
+        return self;
+      }
+      break;
+    }
     default:
       return self;
   }

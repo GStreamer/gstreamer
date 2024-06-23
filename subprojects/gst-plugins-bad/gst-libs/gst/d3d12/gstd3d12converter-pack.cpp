@@ -162,13 +162,26 @@ gst_d3d12_pack_new (GstD3D12Device * device,
       conv_format = GST_VIDEO_FORMAT_AYUV64;
       break;
     case GST_VIDEO_FORMAT_BGR10A2_LE:
-      gst_video_info_set_format (&priv->in_info, GST_VIDEO_FORMAT_RGB10A2_LE,
-          converter_output_info->width, converter_output_info->height);
+      conv_format = GST_VIDEO_FORMAT_RGB10A2_LE;
       break;
     case GST_VIDEO_FORMAT_BGRA64_LE:
-      gst_video_info_set_format (&priv->in_info, GST_VIDEO_FORMAT_RGBA64_LE,
-          converter_output_info->width, converter_output_info->height);
+      conv_format = GST_VIDEO_FORMAT_RGBA64_LE;
       break;
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_BGR16:
+    case GST_VIDEO_FORMAT_RGB15:
+    case GST_VIDEO_FORMAT_BGR15:
+    {
+      GstD3D12Format device_format;
+      gst_d3d12_device_get_format (device, format, &device_format);
+      if (device_format.dxgi_format == DXGI_FORMAT_R16_UINT) {
+        conv_format = GST_VIDEO_FORMAT_RGBA;
+      } else {
+        /* Device supports this format */
+        return self;
+      }
+      break;
+    }
     default:
       return self;
   }

@@ -708,6 +708,14 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
       if (premul)
         return "RBGAPremul";
       return "RBGA";
+    case GST_VIDEO_FORMAT_RGB16:
+      return "RGB16";
+    case GST_VIDEO_FORMAT_BGR16:
+      return "BGR16";
+    case GST_VIDEO_FORMAT_RGB15:
+      return "RGB15";
+    case GST_VIDEO_FORMAT_BGR15:
+      return "BGR15";
     default:
       g_assert_not_reached ();
       break;
@@ -846,6 +854,18 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
         ret.push_back({PS_OUTPUT::PACKED, "RBGAPremul"});
       else
         ret.push_back({PS_OUTPUT::PACKED, "RBGA"});
+      break;
+    case GST_VIDEO_FORMAT_RGB16:
+      ret.push_back({PS_OUTPUT::PACKED, "RGB16"});
+      break;
+    case GST_VIDEO_FORMAT_BGR16:
+      ret.push_back({PS_OUTPUT::PACKED, "BGR16"});
+      break;
+    case GST_VIDEO_FORMAT_RGB15:
+      ret.push_back({PS_OUTPUT::PACKED, "RGB15"});
+      break;
+    case GST_VIDEO_FORMAT_BGR15:
+      ret.push_back({PS_OUTPUT::PACKED, "BGR15"});
       break;
     default:
       g_assert_not_reached ();
