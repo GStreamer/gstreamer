@@ -1265,6 +1265,8 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_A422_10LE:
     case GST_VIDEO_FORMAT_A422_12LE:
     case GST_VIDEO_FORMAT_A422_16LE:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV61:
       priv->viewport[1].TopLeftX = priv->viewport[0].TopLeftX / 2;
       priv->viewport[1].TopLeftY = priv->viewport[0].TopLeftY;
       priv->viewport[1].Width = priv->viewport[0].Width / 2;
@@ -1297,6 +1299,7 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_A444_10LE:
     case GST_VIDEO_FORMAT_A444_12LE:
     case GST_VIDEO_FORMAT_A444_16LE:
+    case GST_VIDEO_FORMAT_NV24:
       for (guint i = 1; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
         priv->viewport[i] = priv->viewport[0];
         priv->scissor_rect[i] = priv->scissor_rect[0];
@@ -1594,6 +1597,9 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         break;
       case GST_VIDEO_FORMAT_NV12:
       case GST_VIDEO_FORMAT_NV21:
+      case GST_VIDEO_FORMAT_NV16:
+      case GST_VIDEO_FORMAT_NV61:
+      case GST_VIDEO_FORMAT_NV24:
       case GST_VIDEO_FORMAT_P010_10LE:
       case GST_VIDEO_FORMAT_P012_LE:
       case GST_VIDEO_FORMAT_P016_LE:
@@ -1601,7 +1607,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         priv->clear_color[0][1] = 0;
         priv->clear_color[0][2] = 0;
         priv->clear_color[0][3] = 1.0;
-        if (format == GST_VIDEO_FORMAT_NV21) {
+        if (format == GST_VIDEO_FORMAT_NV21 || format == GST_VIDEO_FORMAT_NV61) {
           priv->clear_color[1][0] = converted[2];
           priv->clear_color[1][1] = converted[1];
         } else {

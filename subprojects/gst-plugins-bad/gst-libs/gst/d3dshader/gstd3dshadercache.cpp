@@ -651,8 +651,11 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV24:
       return "NV12";
     case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV61:
       return "NV21";
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_Y41B:
@@ -797,10 +800,13 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_P010_10LE:
     case GST_VIDEO_FORMAT_P012_LE:
     case GST_VIDEO_FORMAT_P016_LE:
+    case GST_VIDEO_FORMAT_NV16:
+    case GST_VIDEO_FORMAT_NV24:
       ret.push_back({PS_OUTPUT::LUMA, "Luma"});
       ret.push_back({PS_OUTPUT::CHROMA, "ChromaNV12"});
       break;
     case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_NV61:
       ret.push_back({PS_OUTPUT::LUMA, "Luma"});
       ret.push_back({PS_OUTPUT::CHROMA, "ChromaNV21"});
       break;
