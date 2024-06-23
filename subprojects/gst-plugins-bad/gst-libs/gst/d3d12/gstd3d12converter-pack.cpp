@@ -151,6 +151,9 @@ gst_d3d12_pack_new (GstD3D12Device * device,
   auto format = GST_VIDEO_INFO_FORMAT (converter_output_info);
   switch (format) {
     case GST_VIDEO_FORMAT_YUY2:
+    case GST_VIDEO_FORMAT_UYVY:
+    case GST_VIDEO_FORMAT_VYUY:
+    case GST_VIDEO_FORMAT_YVYU:
       conv_format = GST_VIDEO_FORMAT_AYUV;
       break;
     case GST_VIDEO_FORMAT_Y410:
