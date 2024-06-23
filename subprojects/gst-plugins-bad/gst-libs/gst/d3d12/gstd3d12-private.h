@@ -55,7 +55,8 @@
 
 /* pre/post processing required formats */
 #define GST_D3D12_TIER_LAST_FORMATS \
-    "UYVY, VYUY, YVYU, RGB16, BGR16, RGB15, BGR15"
+    "v216, v210, r210, v308, IYU2, RGB, BGR, UYVY, VYUY, YVYU, RGB16, BGR16, " \
+    "RGB15, BGR15"
 
 #define GST_D3D12_COMMON_FORMATS \
     GST_D3D12_TIER_0_FORMATS ", " \

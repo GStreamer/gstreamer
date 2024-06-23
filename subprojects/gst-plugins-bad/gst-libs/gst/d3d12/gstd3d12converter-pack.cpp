@@ -154,6 +154,8 @@ gst_d3d12_pack_new (GstD3D12Device * device,
     case GST_VIDEO_FORMAT_UYVY:
     case GST_VIDEO_FORMAT_VYUY:
     case GST_VIDEO_FORMAT_YVYU:
+    case GST_VIDEO_FORMAT_v308:
+    case GST_VIDEO_FORMAT_IYU2:
       conv_format = GST_VIDEO_FORMAT_AYUV;
       break;
     case GST_VIDEO_FORMAT_Y410:
@@ -162,9 +164,16 @@ gst_d3d12_pack_new (GstD3D12Device * device,
     case GST_VIDEO_FORMAT_Y210:
     case GST_VIDEO_FORMAT_Y212_LE:
     case GST_VIDEO_FORMAT_Y216_LE:
+    case GST_VIDEO_FORMAT_v210:
+    case GST_VIDEO_FORMAT_v216:
       conv_format = GST_VIDEO_FORMAT_AYUV64;
       break;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+      conv_format = GST_VIDEO_FORMAT_RGBA;
+      break;
     case GST_VIDEO_FORMAT_BGR10A2_LE:
+    case GST_VIDEO_FORMAT_r210:
       conv_format = GST_VIDEO_FORMAT_RGB10A2_LE;
       break;
     case GST_VIDEO_FORMAT_BGRA64_LE:
