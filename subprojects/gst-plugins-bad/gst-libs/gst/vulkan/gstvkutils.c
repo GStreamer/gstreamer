@@ -493,9 +493,10 @@ gst_vulkan_get_or_create_image_view_with_info (GstVulkanImageMemory * image,
     fill_vulkan_image_view_info (image->image, image->create_info.format,
         &_create_info);
     create_info = &_create_info;
-  } else if (!(create_info->format == image->create_info.format
-          && create_info->image == image->image)) {
-    return NULL;
+  } else {
+    g_return_val_if_fail (create_info->format == image->create_info.format,
+        NULL);
+    g_return_val_if_fail (create_info->image == image->image, NULL);
   }
 
   ret = gst_vulkan_image_memory_find_view (image,
