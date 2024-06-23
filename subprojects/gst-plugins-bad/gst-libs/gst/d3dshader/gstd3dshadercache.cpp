@@ -560,6 +560,7 @@ enum class PS_OUTPUT
   LUMA,
   CHROMA,
   CHROMA_PLANAR,
+  LUMA_ALPHA,
   PLANAR,
   PLANAR_FULL,
 };
@@ -576,6 +577,8 @@ ps_output_to_string (PS_OUTPUT output)
       return "PS_OUTPUT_CHROMA";
     case PS_OUTPUT::CHROMA_PLANAR:
       return "PS_OUTPUT_CHROMA_PLANAR";
+    case PS_OUTPUT::LUMA_ALPHA:
+      return "PS_OUTPUT_LUMA_ALPHA";
     case PS_OUTPUT::PLANAR:
       return "PS_OUTPUT_PLANAR";
     case PS_OUTPUT::PLANAR_FULL:
@@ -597,6 +600,7 @@ ps_output_get_num_rtv (PS_OUTPUT output)
     case PS_OUTPUT::CHROMA:
       return 1;
     case PS_OUTPUT::CHROMA_PLANAR:
+    case PS_OUTPUT::LUMA_ALPHA:
       return 2;
     case PS_OUTPUT::PLANAR:
       return 3;
@@ -719,6 +723,21 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
       return "RGB15";
     case GST_VIDEO_FORMAT_BGR15:
       return "BGR15";
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_16LE:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A422_16LE:
+    case GST_VIDEO_FORMAT_A444:
+    case GST_VIDEO_FORMAT_A444_16LE:
+      return "A420";
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A444_10LE:
+      return "A420_10";
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A444_12LE:
+      return "A420_12";
     default:
       g_assert_not_reached ();
       break;
@@ -806,6 +825,23 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
       ret.push_back({PS_OUTPUT::LUMA, "Luma_10"});
       ret.push_back({PS_OUTPUT::CHROMA_PLANAR, "ChromaI420_10"});
       break;
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_16LE:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A422_16LE:
+      ret.push_back({PS_OUTPUT::LUMA_ALPHA, "LumaAlphaA420"});
+      ret.push_back({PS_OUTPUT::CHROMA_PLANAR, "ChromaI420"});
+      break;
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+      ret.push_back({PS_OUTPUT::LUMA_ALPHA, "LumaAlphaA420_10"});
+      ret.push_back({PS_OUTPUT::CHROMA_PLANAR, "ChromaI420_10"});
+      break;
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+      ret.push_back({PS_OUTPUT::LUMA_ALPHA, "LumaAlphaA420_12"});
+      ret.push_back({PS_OUTPUT::CHROMA_PLANAR, "ChromaI420_12"});
+      break;
     case GST_VIDEO_FORMAT_Y444_10LE:
       ret.push_back({PS_OUTPUT::PLANAR, "Y444_10"});
       break;
@@ -854,6 +890,16 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
         ret.push_back({PS_OUTPUT::PLANAR_FULL, "GBRAPremul_12"});
       else
         ret.push_back({PS_OUTPUT::PLANAR_FULL, "GBRA_12"});
+      break;
+    case GST_VIDEO_FORMAT_A444:
+    case GST_VIDEO_FORMAT_A444_16LE:
+      ret.push_back({PS_OUTPUT::PLANAR_FULL, "A444"});
+      break;
+    case GST_VIDEO_FORMAT_A444_10LE:
+      ret.push_back({PS_OUTPUT::PLANAR_FULL, "A444_10"});
+      break;
+    case GST_VIDEO_FORMAT_A444_12LE:
+      ret.push_back({PS_OUTPUT::PLANAR_FULL, "A444_12"});
       break;
     case GST_VIDEO_FORMAT_RBGA:
       if (premul)

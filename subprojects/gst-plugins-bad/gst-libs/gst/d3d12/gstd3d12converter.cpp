@@ -1197,7 +1197,8 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
 
   gst_d3d12_converter_update_clear_background (self);
 
-  switch (GST_VIDEO_INFO_FORMAT (&priv->out_info)) {
+  auto format = GST_VIDEO_INFO_FORMAT (&priv->out_info);
+  switch (format) {
     case GST_VIDEO_FORMAT_YUV9:
     case GST_VIDEO_FORMAT_YVU9:
       priv->viewport[1].TopLeftX = priv->viewport[0].TopLeftX / 4;
@@ -1238,6 +1239,10 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_I420_10LE:
     case GST_VIDEO_FORMAT_I420_12LE:
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A420_16LE:
       priv->viewport[1].TopLeftX = priv->viewport[0].TopLeftX / 2;
       priv->viewport[1].TopLeftY = priv->viewport[0].TopLeftY / 2;
       priv->viewport[1].Width = priv->viewport[0].Width / 2;
@@ -1256,6 +1261,10 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_I422_12LE:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A422_16LE:
       priv->viewport[1].TopLeftX = priv->viewport[0].TopLeftX / 2;
       priv->viewport[1].TopLeftY = priv->viewport[0].TopLeftY;
       priv->viewport[1].Width = priv->viewport[0].Width / 2;
@@ -1284,6 +1293,10 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_GBRA:
     case GST_VIDEO_FORMAT_GBRA_10LE:
     case GST_VIDEO_FORMAT_GBRA_12LE:
+    case GST_VIDEO_FORMAT_A444:
+    case GST_VIDEO_FORMAT_A444_10LE:
+    case GST_VIDEO_FORMAT_A444_12LE:
+    case GST_VIDEO_FORMAT_A444_16LE:
       for (guint i = 1; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
         priv->viewport[i] = priv->viewport[0];
         priv->scissor_rect[i] = priv->scissor_rect[0];
@@ -1513,6 +1526,9 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_Y444_10LE:
     case GST_VIDEO_FORMAT_GBR_10LE:
     case GST_VIDEO_FORMAT_GBRA_10LE:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A444_10LE:
       for (guint i = 0; i < 3; i++) {
         converted[i] /= 64.0;
       }
@@ -1523,6 +1539,9 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_Y444_12LE:
     case GST_VIDEO_FORMAT_GBR_12LE:
     case GST_VIDEO_FORMAT_GBRA_12LE:
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A444_12LE:
       for (guint i = 0; i < 3; i++) {
         converted[i] /= 16.0;
       }
@@ -1623,6 +1642,23 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         priv->clear_color[2][1] = 0;
         priv->clear_color[2][2] = 0;
         priv->clear_color[2][3] = 1.0;
+        break;
+      case GST_VIDEO_FORMAT_A420:
+      case GST_VIDEO_FORMAT_A420_10LE:
+      case GST_VIDEO_FORMAT_A420_12LE:
+      case GST_VIDEO_FORMAT_A420_16LE:
+      case GST_VIDEO_FORMAT_A422:
+      case GST_VIDEO_FORMAT_A422_10LE:
+      case GST_VIDEO_FORMAT_A422_12LE:
+      case GST_VIDEO_FORMAT_A422_16LE:
+      case GST_VIDEO_FORMAT_A444:
+      case GST_VIDEO_FORMAT_A444_10LE:
+      case GST_VIDEO_FORMAT_A444_12LE:
+      case GST_VIDEO_FORMAT_A444_16LE:
+        priv->clear_color[0][0] = converted[0];
+        priv->clear_color[1][0] = converted[1];
+        priv->clear_color[2][0] = converted[2];
+        priv->clear_color[3][0] = a;
         break;
       case GST_VIDEO_FORMAT_RGBP:
         priv->clear_color[0][0] = converted[0];
@@ -1917,6 +1953,32 @@ gst_d3d12_converter_update_pso (GstD3D12Converter * self)
   return TRUE;
 }
 
+static void
+reorder_rtv_handles (GstVideoFormat output_format,
+    D3D12_CPU_DESCRIPTOR_HANDLE * src, D3D12_CPU_DESCRIPTOR_HANDLE * dst)
+{
+  switch (output_format) {
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A420_16LE:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A422_16LE:
+      dst[0] = src[0];
+      dst[1] = src[3];
+      dst[2] = src[1];
+      dst[3] = src[2];
+      return;
+    default:
+      break;
+  }
+
+  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++)
+    dst[i] = src[i];
+}
+
 static gboolean
 gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     GstD3D12Frame * out_frame, GstD3D12FenceData * fence_data,
@@ -2014,6 +2076,10 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     }
   }
 
+  D3D12_CPU_DESCRIPTOR_HANDLE reordered_rtv_handle[GST_VIDEO_MAX_PLANES];
+  reorder_rtv_handles (GST_VIDEO_INFO_FORMAT (&priv->out_info),
+      out_frame->rtv_desc_handle, reordered_rtv_handle);
+
   auto pso = priv->quad_data[0].pso.Get ();
 
   cl->SetGraphicsRootSignature (priv->rs.Get ());
@@ -2033,10 +2099,10 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
   cl->IASetIndexBuffer (&priv->idv);
   cl->IASetVertexBuffers (0, 1, &priv->vbv);
   cl->IASetPrimitiveTopology (D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-  cl->RSSetViewports (priv->quad_data[0].num_rtv, priv->viewport);
-  cl->RSSetScissorRects (priv->quad_data[0].num_rtv, priv->scissor_rect);
+  cl->RSSetViewports (1, priv->viewport);
+  cl->RSSetScissorRects (1, priv->scissor_rect);
   cl->OMSetRenderTargets (priv->quad_data[0].num_rtv,
-      out_frame->rtv_desc_handle, FALSE, nullptr);
+      reordered_rtv_handle, FALSE, nullptr);
   cl->OMSetBlendFactor (priv->blend_factor);
   cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
@@ -2048,11 +2114,10 @@ gst_d3d12_converter_execute (GstD3D12Converter * self, GstD3D12Frame * in_frame,
     pso = priv->quad_data[1].pso.Get ();
 
     cl->SetPipelineState (pso);
-    cl->RSSetViewports (priv->quad_data[1].num_rtv, &priv->viewport[offset]);
-    cl->RSSetScissorRects (priv->quad_data[1].num_rtv,
-        &priv->scissor_rect[offset]);
+    cl->RSSetViewports (1, &priv->viewport[offset]);
+    cl->RSSetScissorRects (1, &priv->scissor_rect[offset]);
     cl->OMSetRenderTargets (priv->quad_data[1].num_rtv,
-        out_frame->rtv_desc_handle + offset, FALSE, nullptr);
+        reordered_rtv_handle + offset, FALSE, nullptr);
     cl->DrawIndexedInstanced (6, 1, 0, 0, 0);
 
     pso->AddRef ();
