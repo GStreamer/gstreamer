@@ -1198,6 +1198,37 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
   gst_d3d12_converter_update_clear_background (self);
 
   switch (GST_VIDEO_INFO_FORMAT (&priv->out_info)) {
+    case GST_VIDEO_FORMAT_YUV9:
+    case GST_VIDEO_FORMAT_YVU9:
+      priv->viewport[1].TopLeftX = priv->viewport[0].TopLeftX / 4;
+      priv->viewport[1].TopLeftY = priv->viewport[0].TopLeftY / 4;
+      priv->viewport[1].Width = priv->viewport[0].Width / 4;
+      priv->viewport[1].Height = priv->viewport[0].Height / 4;
+
+      priv->scissor_rect[1].left = priv->scissor_rect[0].left / 4;
+      priv->scissor_rect[1].top = priv->scissor_rect[0].top / 4;
+      priv->scissor_rect[1].right = priv->scissor_rect[0].right / 4;
+      priv->scissor_rect[1].bottom = priv->scissor_rect[0].bottom / 4;
+      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
+        priv->viewport[i] = priv->viewport[1];
+        priv->scissor_rect[i] = priv->scissor_rect[1];
+      }
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      priv->viewport[1].TopLeftX = priv->viewport[0].TopLeftX / 4;
+      priv->viewport[1].TopLeftY = priv->viewport[0].TopLeftY;
+      priv->viewport[1].Width = priv->viewport[0].Width / 4;
+      priv->viewport[1].Height = priv->viewport[0].Height;
+
+      priv->scissor_rect[1].left = priv->scissor_rect[0].left / 4;
+      priv->scissor_rect[1].top = priv->scissor_rect[0].top;
+      priv->scissor_rect[1].right = priv->scissor_rect[0].right / 4;
+      priv->scissor_rect[1].bottom = priv->scissor_rect[0].bottom;
+      for (guint i = 2; i < GST_VIDEO_INFO_N_PLANES (&priv->out_info); i++) {
+        priv->viewport[i] = priv->viewport[1];
+        priv->scissor_rect[i] = priv->scissor_rect[1];
+      }
+      break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
     case GST_VIDEO_FORMAT_P010_10LE:
@@ -1221,7 +1252,6 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
         priv->viewport[i] = priv->viewport[1];
         priv->scissor_rect[i] = priv->scissor_rect[1];
       }
-
       break;
     case GST_VIDEO_FORMAT_Y42B:
     case GST_VIDEO_FORMAT_I422_10LE:
@@ -1562,6 +1592,9 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         priv->clear_color[1][2] = 0;
         priv->clear_color[1][3] = 1.0;
         break;
+      case GST_VIDEO_FORMAT_YUV9:
+      case GST_VIDEO_FORMAT_YVU9:
+      case GST_VIDEO_FORMAT_Y41B:
       case GST_VIDEO_FORMAT_I420:
       case GST_VIDEO_FORMAT_YV12:
       case GST_VIDEO_FORMAT_I420_10LE:
@@ -1577,7 +1610,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         priv->clear_color[0][1] = 0;
         priv->clear_color[0][2] = 0;
         priv->clear_color[0][3] = 1.0;
-        if (format == GST_VIDEO_FORMAT_YV12) {
+        if (format == GST_VIDEO_FORMAT_YV12 || format == GST_VIDEO_FORMAT_YVU9) {
           priv->clear_color[1][0] = converted[2];
           priv->clear_color[2][0] = converted[1];
         } else {

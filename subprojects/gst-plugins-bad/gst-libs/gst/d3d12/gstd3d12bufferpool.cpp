@@ -216,11 +216,14 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
       if (params->d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
         break;
 
+      guint width = GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, i);
+      guint height = GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, i);
+      width = MAX (width, 1);
+      height = MAX (height, 1);
+
       desc[i] =
           CD3DX12_RESOURCE_DESC::Tex2D (params->d3d12_format.resource_format[i],
-          GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, i),
-          GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, i),
-          params->array_size, 1, 1, 0, params->resource_flags);
+          width, height, params->array_size, 1, 1, 0, params->resource_flags);
 
       gst_d3d12_buffer_pool_do_align (desc[i]);
 
