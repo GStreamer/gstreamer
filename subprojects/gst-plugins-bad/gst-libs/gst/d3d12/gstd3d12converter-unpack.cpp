@@ -445,7 +445,7 @@ gst_d3d12_unpack_execute (GstD3D12Unpack * unpack, GstBuffer * buffer,
   GstD3D12Frame in_frame;
   GstD3D12Frame out_frame;
   if (!gst_d3d12_frame_map (&in_frame, &priv->in_info, upload_buf,
-          GST_MAP_D3D12, GST_D3D12_FRAME_MAP_FLAG_SRV)) {
+          GST_MAP_READ_D3D12, GST_D3D12_FRAME_MAP_FLAG_SRV)) {
     GST_ERROR_OBJECT (unpack, "Couldn't map input frame");
     gst_buffer_unref (upload_buf);
     gst_buffer_unref (outbuf);
