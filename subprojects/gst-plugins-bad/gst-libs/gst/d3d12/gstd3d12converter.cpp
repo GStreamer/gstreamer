@@ -602,6 +602,58 @@ gst_d3d12_converter_get_gamma_enc_table (GstVideoTransferFunction func)
   return table;
 }
 
+static guint
+reorder_rtv_index (GstVideoFormat output_format, guint index)
+{
+  switch (output_format) {
+    case GST_VIDEO_FORMAT_A420:
+    case GST_VIDEO_FORMAT_A420_10LE:
+    case GST_VIDEO_FORMAT_A420_12LE:
+    case GST_VIDEO_FORMAT_A420_16LE:
+    case GST_VIDEO_FORMAT_A422:
+    case GST_VIDEO_FORMAT_A422_10LE:
+    case GST_VIDEO_FORMAT_A422_12LE:
+    case GST_VIDEO_FORMAT_A422_16LE:
+    {
+      switch (index) {
+        case 0:
+          return 0;
+        case 1:
+          return 3;
+        case 2:
+          return 1;
+        case 3:
+          return 2;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      return 0;
+    }
+    case GST_VIDEO_FORMAT_AV12:
+    {
+      switch (index) {
+        case 0:
+          return 0;
+        case 1:
+          return 2;
+        case 2:
+          return 1;
+        case 3:
+          return 3;
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      return 0;
+    }
+    default:
+      break;
+  }
+
+  return index;
+}
+
 static gboolean
 gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
     const GstVideoInfo * in_info, const GstVideoInfo * out_info,
@@ -659,8 +711,10 @@ gst_d3d12_converter_setup_resource (GstD3D12Converter * self,
   }
 
   std::queue < DXGI_FORMAT > rtv_formats;
+  auto output_format = GST_VIDEO_INFO_FORMAT (out_info);
   for (guint i = 0; i < 4; i++) {
-    auto format = out_format->resource_format[i];
+    auto index = reorder_rtv_index (output_format, i);
+    auto format = out_format->resource_format[index];
     if (format == DXGI_FORMAT_UNKNOWN)
       break;
 
@@ -1243,6 +1297,7 @@ gst_d3d12_converter_update_dest_rect (GstD3D12Converter * self)
     case GST_VIDEO_FORMAT_A420_10LE:
     case GST_VIDEO_FORMAT_A420_12LE:
     case GST_VIDEO_FORMAT_A420_16LE:
+    case GST_VIDEO_FORMAT_AV12:
       priv->viewport[1].TopLeftX = priv->viewport[0].TopLeftX / 2;
       priv->viewport[1].TopLeftY = priv->viewport[0].TopLeftY / 2;
       priv->viewport[1].Width = priv->viewport[0].Width / 2;
@@ -1617,6 +1672,12 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         priv->clear_color[1][2] = 0;
         priv->clear_color[1][3] = 1.0;
         break;
+      case GST_VIDEO_FORMAT_AV12:
+        priv->clear_color[0][0] = converted[0];
+        priv->clear_color[1][0] = converted[1];
+        priv->clear_color[1][1] = converted[2];
+        priv->clear_color[2][0] = a;
+        break;
       case GST_VIDEO_FORMAT_YUV9:
       case GST_VIDEO_FORMAT_YVU9:
       case GST_VIDEO_FORMAT_Y41B:
@@ -1963,26 +2024,10 @@ static void
 reorder_rtv_handles (GstVideoFormat output_format,
     D3D12_CPU_DESCRIPTOR_HANDLE * src, D3D12_CPU_DESCRIPTOR_HANDLE * dst)
 {
-  switch (output_format) {
-    case GST_VIDEO_FORMAT_A420:
-    case GST_VIDEO_FORMAT_A420_10LE:
-    case GST_VIDEO_FORMAT_A420_12LE:
-    case GST_VIDEO_FORMAT_A420_16LE:
-    case GST_VIDEO_FORMAT_A422:
-    case GST_VIDEO_FORMAT_A422_10LE:
-    case GST_VIDEO_FORMAT_A422_12LE:
-    case GST_VIDEO_FORMAT_A422_16LE:
-      dst[0] = src[0];
-      dst[1] = src[3];
-      dst[2] = src[1];
-      dst[3] = src[2];
-      return;
-    default:
-      break;
+  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+    auto index = reorder_rtv_index (output_format, i);
+    dst[i] = src[index];
   }
-
-  for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++)
-    dst[i] = src[i];
 }
 
 static gboolean

@@ -162,6 +162,18 @@ class SamplerNV21 : ISampler
   }
 };
 
+class SamplerAV12 : ISampler
+{
+  float4 Execute (float2 uv)
+  {
+    float4 sample;
+    sample.x = shaderTexture_0.Sample(samplerState, uv).x;
+    sample.yz = shaderTexture_1.Sample(samplerState, uv).xy;
+    sample.a = shaderTexture_2.Sample(samplerState, uv).x;
+    return sample;
+  }
+};
+
 class SamplerI420 : ISampler
 {
   float4 Execute (float2 uv)
@@ -1485,6 +1497,18 @@ static const char str_PSMain_converter[] =
 "    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
 "    sample.yz = shaderTexture_1.Sample(samplerState, uv).yx;\n"
 "    sample.a = 1.0;\n"
+"    return sample;\n"
+"  }\n"
+"};\n"
+"\n"
+"class SamplerAV12 : ISampler\n"
+"{\n"
+"  float4 Execute (float2 uv)\n"
+"  {\n"
+"    float4 sample;\n"
+"    sample.x = shaderTexture_0.Sample(samplerState, uv).x;\n"
+"    sample.yz = shaderTexture_1.Sample(samplerState, uv).xy;\n"
+"    sample.a = shaderTexture_2.Sample(samplerState, uv).x;\n"
 "    return sample;\n"
 "  }\n"
 "};\n"

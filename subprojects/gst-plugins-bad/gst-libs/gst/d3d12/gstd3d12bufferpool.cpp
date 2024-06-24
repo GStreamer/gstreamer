@@ -212,12 +212,18 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
     priv->alloc[0] = alloc;
   } else {
+    auto finfo = params->aligned_info.finfo;
+
     for (guint i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
       if (params->d3d12_format.resource_format[i] == DXGI_FORMAT_UNKNOWN)
         break;
 
-      guint width = GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, i);
-      guint height = GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, i);
+      gint comp[GST_VIDEO_MAX_COMPONENTS];
+      gst_video_format_info_component (finfo, i, comp);
+
+      guint width = GST_VIDEO_INFO_COMP_WIDTH (&params->aligned_info, comp[0]);
+      guint height =
+          GST_VIDEO_INFO_COMP_HEIGHT (&params->aligned_info, comp[0]);
       width = MAX (width, 1);
       height = MAX (height, 1);
 

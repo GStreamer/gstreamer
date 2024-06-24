@@ -155,6 +155,22 @@ struct FormatBuilder : public GstD3D12Format
         Support1, Support2);
   }
 
+  static inline FormatBuilder YuvSemiPlanarWithAlpha (
+      GstVideoFormat Format,
+      DXGI_FORMAT ResourceFormatY,
+      DXGI_FORMAT ResourceFormatUV,
+      DXGI_FORMAT ResourceFormatA,
+      D3D12_FORMAT_SUPPORT1 Support1 = kDefaultFormatSupport1,
+      D3D12_FORMAT_SUPPORT2 Support2 = D3D12_FORMAT_SUPPORT2_NONE
+    )
+  {
+    DXGI_FORMAT resource_format[] = { ResourceFormatY, ResourceFormatUV,
+        ResourceFormatA, DXGI_FORMAT_UNKNOWN };
+    return FormatBuilder (Format, GST_D3D12_FORMAT_FLAG_NONE,
+        D3D12_RESOURCE_DIMENSION_TEXTURE2D, DXGI_FORMAT_UNKNOWN,
+        resource_format, Support1, Support2);
+  }
+
   static inline FormatBuilder YuvPacked (
       GstVideoFormat Format,
       DXGI_FORMAT DxgiFormat,
@@ -358,7 +374,8 @@ static const GstD3D12Format g_format_map[] = {
   FormatBuilder::NotSupported(GST_VIDEO_FORMAT_NV12_32L32),
   FormatBuilder::Planar (GST_VIDEO_FORMAT_RGBP),
   FormatBuilder::Planar (GST_VIDEO_FORMAT_BGRP),
-  FormatBuilder::NotSupported(GST_VIDEO_FORMAT_AV12),
+  FormatBuilder::YuvSemiPlanarWithAlpha (GST_VIDEO_FORMAT_AV12,
+      DXGI_FORMAT_R8_UNORM, DXGI_FORMAT_R8G8_UNORM, DXGI_FORMAT_R8_UNORM),
   FormatBuilder::NotSupported(GST_VIDEO_FORMAT_ARGB64_LE),
   FormatBuilder::NotSupported(GST_VIDEO_FORMAT_ARGB64_BE),
   FormatBuilder::RgbPacked (GST_VIDEO_FORMAT_RGBA64_LE,
