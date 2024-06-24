@@ -2066,39 +2066,39 @@ ISO 639-1 language code from the returned ISO 639-2 one.</doc>
         </parameters>
       </method>
       <method name="parse_metadata" c:identifier="gst_mpegts_descriptor_parse_metadata" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.c">Parses out the metadata descriptor from the @descriptor.
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Parses out the metadata descriptor from the @descriptor.
 
 See ISO/IEC 13818-1:2018 Section 2.6.60 and 2.6.61 for details.
 metadata_application_format is provided in Table 2-82. metadata_format is
 provided in Table 2-85.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.c">%TRUE if the parsing worked correctly, else %FALSE.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">%TRUE if the parsing worked correctly, else %FALSE.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="descriptor" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.c">a %GST_TYPE_MPEGTS_METADATA_DESCRIPTOR #GstMpegtsDescriptor</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">a %GST_TYPE_MPEGTS_METADATA_DESCRIPTOR #GstMpegtsDescriptor</doc>
             <type name="Descriptor" c:type="const GstMpegtsDescriptor*"/>
           </instance-parameter>
           <parameter name="res" direction="out" caller-allocates="0" transfer-ownership="full">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.c">#GstMpegtsMetadataDescriptor</doc>
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">#GstMpegtsMetadataDescriptor</doc>
             <type name="MetadataDescriptor" c:type="GstMpegtsMetadataDescriptor**"/>
           </parameter>
         </parameters>
       </method>
       <method name="parse_metadata_std" c:identifier="gst_mpegts_descriptor_parse_metadata_std" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.c">Extracts the metadata STD descriptor from @descriptor.
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Extracts the metadata STD descriptor from @descriptor.
 
 See ISO/IEC 13818-1:2018 Section 2.6.62 and 2.6.63 for details.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.c">%TRUE if parsing succeeded, else %FALSE.</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">%TRUE if parsing succeeded, else %FALSE.</doc>
           <type name="gboolean" c:type="gboolean"/>
         </return-value>
         <parameters>
           <instance-parameter name="descriptor" transfer-ownership="none">
-            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.c">a %GST_MTS_DESC_METADATA_STD #GstMpegtsDescriptor
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">a %GST_MTS_DESC_METADATA_STD #GstMpegtsDescriptor
 @metadata_input_leak_rate (out): the input leak rate in units of 400bits/sec.
 @metadata_buffer_size (out): the buffer size in units of 1024 bytes
 @metadata_output_leak_rate (out): the output leak rate in units of 400bits/sec.</doc>
@@ -2307,6 +2307,28 @@ a single language</doc>
           <parameter name="language" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">ISO-639-2 language 3-char code</doc>
             <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_metadata" c:identifier="gst_mpegts_descriptor_from_metadata">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+        </return-value>
+        <parameters>
+          <parameter name="metadata_descriptor" transfer-ownership="none">
+            <type name="MetadataDescriptor" c:type="const GstMpegtsMetadataDescriptor*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+        <return-value transfer-ownership="full">
+          <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+        </return-value>
+        <parameters>
+          <parameter name="metadata_pointer_descriptor" transfer-ownership="none">
+            <type name="MetadataPointerDescriptor" c:type="const GstMpegtsMetadataPointerDescriptor*"/>
           </parameter>
         </parameters>
       </function>
@@ -2784,55 +2806,95 @@ Consult the relevant specifications for more details.</doc>
         </array>
       </field>
     </record>
+    <enumeration name="MetadataApplicationFormat" c:type="GstMpegtsMetadataApplicationFormat">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <member name="isan" value="16" c:identifier="GST_MPEGTS_METADATA_APPLICATION_FORMAT_ISAN">
+      </member>
+      <member name="vsan" value="17" c:identifier="GST_MPEGTS_METADATA_APPLICATION_FORMAT_VSAN">
+      </member>
+      <member name="identifier_field" value="65535" c:identifier="GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD">
+      </member>
+    </enumeration>
     <record name="MetadataDescriptor" c:type="GstMpegtsMetadataDescriptor" version="1.24" glib:type-name="GstMpegtsMetadataDescriptor" glib:get-type="gst_mpegts_metadata_descriptor_get_type" c:symbol-prefix="metadata_descriptor">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">The metadata descriptor specifies parameters of a metadata service carried in an MPEG-2 Transport Stream (or Program Stream). The descriptor is included in the PMT in the descriptor loop for the elementary stream that carries the
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">The metadata descriptor specifies parameters of a metadata service carried in an MPEG-2 Transport Stream (or Program Stream). The descriptor is included in the PMT in the descriptor loop for the elementary stream that carries the
 metadata service. The descriptor specifies the format of the associated metadata, and contains the value of the
 metadata_service_id to identify the metadata service to which the metadata descriptor applies.
 
 Note that this structure does not include all of the metadata_descriptor items, and will need extension to support DSM-CC and private data.
 See ISO/IEC 13818-1:2018 Section 2.6.60 and Section 2.6.61 for more information.</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <field name="metadata_application_format" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">specifies the application responsible for defining usage, syntax and semantics</doc>
-        <type name="guint16" c:type="guint16"/>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">specifies the application responsible for defining usage, syntax and semantics</doc>
+        <type name="MetadataApplicationFormat" c:type="GstMpegtsMetadataApplicationFormat"/>
       </field>
       <field name="metadata_format" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">indicates the format and coding of the metadata</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">indicates the format and coding of the metadata</doc>
         <type name="MetadataFormat" c:type="GstMpegtsMetadataFormat"/>
       </field>
       <field name="metadata_format_identifier" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">format identifier (equivalent to registration descriptor), for example 0x4B4C4641 ('KLVA') to indicate SMPTE 336 KLV.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">format identifier (equivalent to registration descriptor), for example 0x4B4C4641 ('KLVA') to indicate SMPTE 336 KLV.</doc>
         <type name="guint32" c:type="guint32"/>
       </field>
       <field name="metadata_service_id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">metadata service to which this metadata descriptor applies, typically 0x00</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">metadata service to which this metadata descriptor applies, typically 0x00</doc>
         <type name="guint8" c:type="guint8"/>
       </field>
       <field name="decoder_config_flags" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">decoder flags, see ISO/IEC 13818-1:2018 Table 2-88.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">decoder flags, see ISO/IEC 13818-1:2018 Table 2-88.</doc>
         <type name="guint8" c:type="guint8"/>
       </field>
       <field name="dsm_cc_flag" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">true if stream associated with this descriptor is in an ISO/IEC 13818-6 data or object carousel.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">true if stream associated with this descriptor is in an ISO/IEC 13818-6 data or object carousel.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </field>
     </record>
     <enumeration name="MetadataFormat" version="1.24" c:type="GstMpegtsMetadataFormat">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">metadata_descriptor metadata_format valid values. See ISO/IEC 13818-1:2018(E) Table 2-85.</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h"/>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">metadata_descriptor metadata_format valid values. See ISO/IEC 13818-1:2018(E) Table 2-85.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <member name="tem" value="16" c:identifier="GST_MPEGTS_METADATA_FORMAT_TEM" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">ISO/IEC 15938-1 TeM.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">ISO/IEC 15938-1 TeM.</doc>
       </member>
       <member name="bim" value="17" c:identifier="GST_MPEGTS_METADATA_FORMAT_BIM" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">ISO/IEC 15938-1 BiM.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">ISO/IEC 15938-1 BiM.</doc>
       </member>
       <member name="application_format" value="63" c:identifier="GST_MPEGTS_METADATA_FORMAT_APPLICATION_FORMAT" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">Defined by metadata application format.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Defined by metadata application format.</doc>
       </member>
       <member name="identifier_field" value="255" c:identifier="GST_MPEGTS_METADATA_FORMAT_IDENTIFIER_FIELD" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-metadata-descriptor.h">Defined by metadata_format_identifier field.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Defined by metadata_format_identifier field.</doc>
       </member>
     </enumeration>
+    <record name="MetadataPointerDescriptor" c:type="GstMpegtsMetadataPointerDescriptor" version="1.26" glib:type-name="GstMpegtsMetadataPointerDescriptor" glib:get-type="gst_mpegts_metadata_pointer_descriptor_get_type" c:symbol-prefix="metadata_pointer_descriptor">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">This structure is not complete. The following fields are missing in comparison to the standard (ISO/IEC 13818-1:2023 Section 2.6.58):
+* metadata_locator_record_flag: hardcoded to 0. Indicating no metadata_locator_record present in the descriptor.
+* MPEG_carriage_flags: hardcoded to 0b00, indicating the metadata is carried in the same transport steam.
+* metadata_locator_record_length.
+* transport_stream_location.
+* transport_stream_id.
+
+See also: gst_mpegts_descriptor_from_metadata_pointer</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <field name="metadata_application_format" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">specifies the application responsible for defining usage, syntax and semantics</doc>
+        <type name="MetadataApplicationFormat" c:type="GstMpegtsMetadataApplicationFormat"/>
+      </field>
+      <field name="metadata_format" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">indicates the format and coding of the metadata</doc>
+        <type name="MetadataFormat" c:type="GstMpegtsMetadataFormat"/>
+      </field>
+      <field name="metadata_format_identifier" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">format identifier (equivalent to registration descriptor), for example 0x4B4C4641 ('KLVA') to indicate SMPTE 336 KLV, or 0x49443320 ('ID3 ').</doc>
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="metadata_service_id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">metadata service to which this metadata descriptor applies, typically 0x00</doc>
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="program_number" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Indicates the program in which the metadata is carried.</doc>
+        <type name="guint16" c:type="guint16"/>
+      </field>
+    </record>
     <enumeration name="MiscDescriptorType" c:type="GstMpegtsMiscDescriptorType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">The type of #GstMpegtsDescriptor
 
@@ -2930,29 +2992,29 @@ not yet identified from known specifications.</doc>
       </constructor>
     </record>
     <record name="PESMetadataMeta" c:type="GstMpegtsPESMetadataMeta" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">Extra buffer metadata describing the PES Metadata context.
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Extra buffer metadata describing the PES Metadata context.
 This is based on the Metadata AU cell header in
 ISO/IEC 13818-1:2018 Section 2.12.4.
 
 AU_cell_data_length is not provided, since it matches the length of the buffer</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h"/>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">parent #GstMeta</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">parent #GstMeta</doc>
         <type name="Gst.Meta" c:type="GstMeta"/>
       </field>
       <field name="metadata_service_id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">metadata service identifier</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">metadata service identifier</doc>
         <type name="guint8" c:type="guint8"/>
       </field>
       <field name="flags" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">bit flags, see spec for details</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">bit flags, see spec for details</doc>
         <type name="guint8" c:type="guint8"/>
       </field>
       <function name="get_info" c:identifier="gst_mpegts_pes_metadata_meta_get_info" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">Gets the global #GstMetaInfo describing the #GstMpegtsPESMetadataMeta meta.</doc>
-        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h"/>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Gets the global #GstMetaInfo describing the #GstMpegtsPESMetadataMeta meta.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
         <return-value transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">The #GstMetaInfo</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">The #GstMetaInfo</doc>
           <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
         </return-value>
       </function>
@@ -4864,15 +4926,15 @@ profiles defined in Annex A for service-compatible stereoscopic 3D services</doc
       </member>
     </enumeration>
     <function name="buffer_add_mpegts_pes_metadata_meta" c:identifier="gst_buffer_add_mpegts_pes_metadata_meta" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">Creates and adds a #GstMpegtsPESMetadataMeta to a @buffer.</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h"/>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Creates and adds a #GstMpegtsPESMetadataMeta to a @buffer.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">a newly created #GstMpegtsPESMetadataMeta</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a newly created #GstMpegtsPESMetadataMeta</doc>
         <type name="PESMetadataMeta" c:type="GstMpegtsPESMetadataMeta*"/>
       </return-value>
       <parameters>
         <parameter name="buffer" transfer-ownership="none">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">a #GstBuffer</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstBuffer</doc>
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
         </parameter>
       </parameters>
@@ -5005,6 +5067,28 @@ a single language</doc>
         <parameter name="language" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">ISO-639-2 language 3-char code</doc>
           <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="descriptor_from_metadata" c:identifier="gst_mpegts_descriptor_from_metadata" moved-to="Descriptor.from_metadata">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <return-value transfer-ownership="full">
+        <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+      </return-value>
+      <parameters>
+        <parameter name="metadata_descriptor" transfer-ownership="none">
+          <type name="MetadataDescriptor" c:type="const GstMpegtsMetadataDescriptor*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="descriptor_from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer" moved-to="Descriptor.from_metadata_pointer">
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <return-value transfer-ownership="full">
+        <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+      </return-value>
+      <parameters>
+        <parameter name="metadata_pointer_descriptor" transfer-ownership="none">
+          <type name="MetadataPointerDescriptor" c:type="const GstMpegtsMetadataPointerDescriptor*"/>
         </parameter>
       </parameters>
     </function>
@@ -5331,18 +5415,18 @@ and then converted to a PAT section with gst_mpegts_section_from_pat().</doc>
       </return-value>
     </function>
     <function name="pes_metadata_meta_api_get_type" c:identifier="gst_mpegts_pes_metadata_meta_api_get_type" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">Return the #GType associated with #GstMpegtsPESMetadataMeta</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h"/>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Return the #GType associated with #GstMpegtsPESMetadataMeta</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">a #GType</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GType</doc>
         <type name="GType" c:type="GType"/>
       </return-value>
     </function>
     <function name="pes_metadata_meta_get_info" c:identifier="gst_mpegts_pes_metadata_meta_get_info" moved-to="PESMetadataMeta.get_info" version="1.24">
-      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">Gets the global #GstMetaInfo describing the #GstMpegtsPESMetadataMeta meta.</doc>
-      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h"/>
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Gets the global #GstMetaInfo describing the #GstMpegtsPESMetadataMeta meta.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <return-value transfer-ownership="none">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gst-mpegtspesmetadatameta.h">The #GstMetaInfo</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">The #GstMetaInfo</doc>
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
       </return-value>
     </function>
