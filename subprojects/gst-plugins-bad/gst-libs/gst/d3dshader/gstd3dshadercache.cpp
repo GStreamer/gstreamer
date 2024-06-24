@@ -629,6 +629,7 @@ conv_ps_make_input (GstVideoFormat format, gboolean premul)
     case GST_VIDEO_FORMAT_BGRx:
       return "RGBx";
     case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ARGB64_LE:
       if (premul)
         return "ARGBPremul";
       return "ARGB";
@@ -771,6 +772,7 @@ conv_ps_make_output (GstVideoFormat format, gboolean premul)
       ret.push_back({PS_OUTPUT::PACKED, "RGBx"});
       break;
     case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ARGB64_LE:
       if (premul)
         ret.push_back({PS_OUTPUT::PACKED, "ARGBPremul"});
       else

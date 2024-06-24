@@ -1539,6 +1539,7 @@ is_custom_format (GstVideoFormat format)
     case GST_VIDEO_FORMAT_BGRA64_LE:
     case GST_VIDEO_FORMAT_BGR10A2_LE:
     case GST_VIDEO_FORMAT_RBGA:
+    case GST_VIDEO_FORMAT_ARGB64_LE:
       return TRUE;
     default:
       break;
@@ -1632,6 +1633,7 @@ gst_d3d12_converter_calculate_border_color (GstD3D12Converter * self)
         break;
       case GST_VIDEO_FORMAT_ARGB:
       case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_ARGB64_LE:
         priv->clear_color[0][0] = a;
         priv->clear_color[0][1] = converted[0];
         priv->clear_color[0][2] = converted[1];
