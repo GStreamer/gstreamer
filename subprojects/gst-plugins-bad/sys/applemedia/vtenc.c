@@ -1720,7 +1720,7 @@ gst_vtenc_update_latency (GstVTEnc * self)
   }
 
   CFNumberGetValue (value, kCFNumberSInt32Type, &frames);
-  if (self->latency_frames == -1 || self->latency_frames != frames) {
+  if (MAX (self->latency_frames, frames) != self->latency_frames) {
     self->latency_frames = frames;
     if (self->video_info.fps_d == 0 || self->video_info.fps_n == 0) {
       /* FIXME: Assume 25fps. This is better than reporting no latency at
