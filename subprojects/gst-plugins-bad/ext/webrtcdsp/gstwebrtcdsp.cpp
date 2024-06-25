@@ -628,6 +628,9 @@ gst_webrtc_dsp_setup (GstAudioFilter * filter, const GstAudioInfo * info)
     GST_WEBRTC_ECHO_PROBE_UNLOCK (self->probe);
   }
 
+  config.pipeline.multi_channel_render = (info->channels > 1);
+  config.pipeline.multi_channel_capture = (probe_info.channels > 1);
+
   /* Setup Filters */
   // TODO: expose pre_amplifier
 
