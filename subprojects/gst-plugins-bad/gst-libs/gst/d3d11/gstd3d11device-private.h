@@ -67,5 +67,8 @@ HRESULT gst_d3d11_device_get_rasterizer_msaa (GstD3D11Device * device,
 GST_D3D11_API
 void    gst_d3d11_device_check_device_removed (GstD3D11Device * device);
 
+GST_D3D11_API
+gboolean gst_d3d11_device_d3d12_import_supported (GstD3D11Device * device);
+
 G_END_DECLS
 

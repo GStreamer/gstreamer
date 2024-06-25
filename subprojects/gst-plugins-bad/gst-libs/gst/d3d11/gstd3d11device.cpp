@@ -1962,3 +1962,34 @@ gst_d3d11_device_get_rasterizer_msaa (GstD3D11Device * device,
 
   return S_OK;
 }
+
+gboolean
+gst_d3d11_device_d3d12_import_supported (GstD3D11Device * device)
+{
+#ifdef HAVE_D3D11_FEATURE_DATA_D3D11_OPTIONS5
+  auto priv = device->priv;
+  auto dev = priv->device;
+
+  D3D11_FEATURE_DATA_D3D11_OPTIONS options = { };
+  D3D11_FEATURE_DATA_D3D11_OPTIONS4 options4 = { };
+  D3D11_FEATURE_DATA_D3D11_OPTIONS5 options5 = { };
+  auto hr = dev->CheckFeatureSupport (D3D11_FEATURE_D3D11_OPTIONS5,
+      &options5, sizeof (options5));
+  if (FAILED (hr) || options5.SharedResourceTier < D3D11_SHARED_RESOURCE_TIER_2)
+    return FALSE;
+
+  hr = dev->CheckFeatureSupport (D3D11_FEATURE_D3D11_OPTIONS,
+      &options, sizeof (options));
+  if (FAILED (hr) || !options.ExtendedResourceSharing)
+    return FALSE;
+
+  hr = dev->CheckFeatureSupport (D3D11_FEATURE_D3D11_OPTIONS4,
+      &options4, sizeof (options4));
+  if (FAILED (hr) || !options4.ExtendedNV12SharedTextureSupported)
+    return FALSE;
+
+  return TRUE;
+#else
+  return FALSE;
+#endif
+}

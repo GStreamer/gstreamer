@@ -227,6 +227,23 @@ if host_machine.cpu_family() != 'x86'
   endif
 endif
 
+if cxx.compiles('''
+    #include <d3d11_4.h>
+    #include <d3d11.h>
+    int main(int argc, char ** argv) {
+      D3D11_FEATURE_DATA_D3D11_OPTIONS options;
+      D3D11_FEATURE_DATA_D3D11_OPTIONS4 options4;
+      D3D11_FEATURE_DATA_D3D11_OPTIONS5 options5;
+      D3D11_FEATURE fo = D3D11_FEATURE_D3D11_OPTIONS;
+      D3D11_FEATURE fo4 = D3D11_FEATURE_D3D11_OPTIONS4;
+      D3D11_FEATURE fo5 = D3D11_FEATURE_D3D11_OPTIONS5;
+      return 0;
+    }
+    ''',
+    name: 'D3D11_FEATURE_DATA_* symbols in d3d11 header')
+  extra_comm_args += ['-DHAVE_D3D11_FEATURE_DATA_D3D11_OPTIONS5']
+endif
+
 configure_file(
   input : 'gstd3d11config.h.meson',
   output : 'gstd3d11config.h',

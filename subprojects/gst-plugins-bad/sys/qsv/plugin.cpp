@@ -57,12 +57,14 @@
 #include <windows.h>
 #include <versionhelpers.h>
 #include <gst/d3d11/gstd3d11.h>
+#include <gst/d3d11/gstd3d11device-private.h>
 #else
 #include <gst/va/gstva.h>
 #endif
 
 #ifdef HAVE_GST_D3D12
 #include <gst/d3d12/gstd3d12.h>
+#include <d3d11_4.h>
 #endif
 
 #include <glib/gi18n-lib.h>
@@ -274,26 +276,9 @@ plugin_init (GstPlugin * plugin)
       goto next;
 
 #ifdef HAVE_GST_D3D12
-    {
-      gint64 luid;
-      g_object_get (device, "adapter-luid", &luid, nullptr);
-      auto device12 = gst_d3d12_device_new_for_adapter_luid (luid);
-      if (device12) {
-        auto handle12 = gst_d3d12_device_get_device_handle (device12);
-        D3D12_FEATURE_DATA_D3D12_OPTIONS4 feature_data = { };
-        auto hr = handle12->CheckFeatureSupport (D3D12_FEATURE_D3D12_OPTIONS4,
-            &feature_data, sizeof (feature_data));
-        if (SUCCEEDED (hr) && feature_data.SharedResourceCompatibilityTier >=
-            D3D12_SHARED_RESOURCE_COMPATIBILITY_TIER_2) {
-          GST_INFO_OBJECT (device, "Device supports D3D12 resource share");
-          d3d12_interop = TRUE;
-        } else {
-          GST_INFO_OBJECT (device,
-              "Device does not support D3D12 resource share");
-        }
-
-        gst_object_unref (device12);
-      }
+    if (gst_d3d11_device_d3d12_import_supported (GST_D3D11_DEVICE (device))) {
+      GST_INFO_OBJECT (device, "Device supports D3D12 resource share");
+      d3d12_interop = TRUE;
     }
 #endif
 
