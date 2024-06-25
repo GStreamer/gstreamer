@@ -326,7 +326,7 @@ gst_va_base_transform_decide_allocation (GstBaseTransform * trans,
 {
   GstVaBaseTransform *self = GST_VA_BASE_TRANSFORM (trans);
   GstAllocator *allocator = NULL, *other_allocator = NULL;
-  GstAllocationParams params, other_params;
+  GstAllocationParams params = { 0, }, other_params = { 0, };
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *outcaps = NULL;
   GstStructure *config;
