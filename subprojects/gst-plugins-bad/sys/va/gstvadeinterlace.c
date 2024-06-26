@@ -724,12 +724,6 @@ gst_va_deinterlace_class_init (gpointer g_class, gpointer class_data)
 
   if (gst_va_filter_open (filter)) {
     src_caps = gst_va_filter_get_caps (filter);
-    /* adds any to enable passthrough */
-    {
-      GstCaps *any_caps = gst_caps_new_empty_simple ("video/x-raw");
-      gst_caps_set_features_simple (any_caps, gst_caps_features_new_any ());
-      src_caps = gst_caps_merge (src_caps, any_caps);
-    }
   } else {
     src_caps = gst_caps_from_string (caps_str);
   }
