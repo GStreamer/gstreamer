@@ -903,7 +903,7 @@ gst_amf_node_parse (const guint8 * data, gsize size, guint8 ** endptr)
   GST_TRACE ("Starting parse with %" G_GSIZE_FORMAT " bytes", parser.size);
 
   node = parse_value (&parser);
-  if (gst_amf_node_get_type (node) == GST_AMF_TYPE_INVALID) {
+  if (!node || gst_amf_node_get_type (node) == GST_AMF_TYPE_INVALID) {
     GST_ERROR ("invalid value");
     goto out;
   }
@@ -946,13 +946,13 @@ gst_amf_parse_command (const guint8 * data, gsize size,
   GST_TRACE ("Starting parse with %" G_GSIZE_FORMAT " bytes", parser.size);
 
   node1 = parse_value (&parser);
-  if (gst_amf_node_get_type (node1) != GST_AMF_TYPE_STRING) {
+  if (!node1 || gst_amf_node_get_type (node1) != GST_AMF_TYPE_STRING) {
     GST_ERROR ("no command name");
     goto out;
   }
 
   node2 = parse_value (&parser);
-  if (gst_amf_node_get_type (node2) != GST_AMF_TYPE_NUMBER) {
+  if (!node2 || gst_amf_node_get_type (node2) != GST_AMF_TYPE_NUMBER) {
     GST_ERROR ("no transaction ID");
     goto out;
   }
