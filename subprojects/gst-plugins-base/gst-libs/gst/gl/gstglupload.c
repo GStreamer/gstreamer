@@ -1647,7 +1647,8 @@ static void
 _dma_buf_upload_propose_allocation (gpointer impl, GstQuery * decide_query,
     GstQuery * query)
 {
-  /* nothing to do for now. */
+  /* The raw method always adds the GST_VIDEO_META_API_TYPE
+     and so nothing to do here. */
 }
 
 static void
