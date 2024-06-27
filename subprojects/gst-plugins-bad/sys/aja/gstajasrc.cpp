@@ -2322,6 +2322,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   bool reset_clock = false;
   GstClockTime first_frame_time = 0;
   guint64 first_frame_processed_plus_dropped_minus_buffered = 0;
+  guint frames_to_drop = 0;
 
   g_mutex_lock(&self->queue_lock);
 restart:
@@ -2611,6 +2612,12 @@ restart:
         g_cond_signal(&self->queue_cond);
         have_signal = TRUE;
         reset_clock = true;
+
+        // Drop the next frames after signal recovery as the capture times
+        // are generally just wrong.
+        frames_to_drop = MAX(status.acBufferLevel + 1, 5);
+        GST_TRACE_OBJECT(self, "Dropping %u frames after signal recovery",
+                         frames_to_drop);
       }
 
       iterations_without_frame = 0;
@@ -2685,6 +2692,16 @@ restart:
       g_mutex_lock(&self->queue_lock);
 
       if (!transfered) {
+        gst_clear_buffer(&anc_buffer2);
+        gst_clear_buffer(&anc_buffer);
+        gst_clear_buffer(&audio_buffer);
+        gst_clear_buffer(&video_buffer);
+        continue;
+      }
+
+      if (frames_to_drop > 0) {
+        GST_TRACE_OBJECT(self, "Dropping frame");
+        frames_to_drop -= 1;
         gst_clear_buffer(&anc_buffer2);
         gst_clear_buffer(&anc_buffer);
         gst_clear_buffer(&audio_buffer);
