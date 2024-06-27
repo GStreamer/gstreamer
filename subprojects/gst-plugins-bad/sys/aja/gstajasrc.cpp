@@ -2319,6 +2319,7 @@ static void capture_thread_func(AJAThread *thread, void *data) {
 
   bool clock_is_monotonic_system_clock = false;
   bool first_frame_after_start = true;
+  bool reset_clock = false;
   GstClockTime first_frame_time = 0;
   guint64 first_frame_processed_plus_dropped_minus_buffered = 0;
 
@@ -2609,6 +2610,7 @@ restart:
         gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
         have_signal = TRUE;
+        reset_clock = true;
       }
 
       iterations_without_frame = 0;
@@ -2742,12 +2744,19 @@ restart:
       GstClockTime frame_src_time;
 
       // Update clock mapping
-      if (first_frame_after_start) {
+      if (first_frame_after_start || reset_clock) {
         GstClockTime internal, external;
         guint64 num, denom;
 
-        // FIXME: Workaround to get rid of all previous observations
-        g_object_set(self->clock, "window-size", 32, NULL);
+        // Keep observations if there was only temporary signal loss or a
+        // format change as the source is either using the same clock as
+        // before, or it's different but then our previous configuration would
+        // be as good/bad as the local monotonic system clock and over some
+        // frames we would converge to the new clock.
+        if (!first_frame_after_start) {
+          // FIXME: Workaround to get rid of all previous observations
+          g_object_set(self->clock, "window-size", 32, NULL);
+        }
 
         // Use the monotonic frame time converted back to our clock as base.
         // In the beginning this would be equal to the monotonic clock, at
@@ -2764,6 +2773,16 @@ restart:
         first_frame_processed_plus_dropped_minus_buffered =
             transfer_status.acFramesProcessed +
             transfer_status.acFramesDropped - transfer_status.acBufferLevel;
+
+        GST_TRACE_OBJECT(
+            self,
+            "Initializing clock with first frame time %" GST_TIME_FORMAT
+            " and initial frame count %" G_GUINT64_FORMAT,
+            GST_TIME_ARGS(first_frame_time),
+            first_frame_processed_plus_dropped_minus_buffered);
+
+        first_frame_after_start = false;
+        reset_clock = false;
       } else {
         gdouble r_squared;
 
@@ -2780,7 +2799,6 @@ restart:
         gst_clock_add_observation(self->clock, frame_time_monotonic,
                                   frame_src_time, &r_squared);
       }
-      first_frame_after_start = false;
 
       GstClockTime capture_time;
       if (self->clock == clock) {
