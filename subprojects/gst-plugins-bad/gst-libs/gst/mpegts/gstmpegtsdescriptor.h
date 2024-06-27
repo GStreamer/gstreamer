@@ -509,6 +509,11 @@ struct _GstMpegtsMetadataDescriptor
 GST_MPEGTS_API
 GType gst_mpegts_metadata_descriptor_get_type(void);
 
+/**
+ * 
+ * 
+ * Since: 1.26
+ */
 GST_MPEGTS_API
 GstMpegtsDescriptor *gst_mpegts_descriptor_from_metadata(const GstMpegtsMetadataDescriptor *metadata_descriptor);
 
@@ -625,6 +630,9 @@ typedef struct _GstMpegtsMetadataPointerDescriptor
  */
 struct _GstMpegtsMetadataPointerDescriptor
 {
+  /**
+   * Since: 1.26
+   */
   GstMpegtsMetadataApplicationFormat metadata_application_format;
   GstMpegtsMetadataFormat metadata_format;
   guint32 metadata_format_identifier;
@@ -632,12 +640,27 @@ struct _GstMpegtsMetadataPointerDescriptor
   guint16 program_number;
 };
 
+/**
+ * Since: 1.26
+ */
 #define GST_TYPE_MPEGTS_METADATA_POINTER_DESCRIPTOR \
   (gst_mpegts_metadata_pointer_descriptor_get_type())
 
+/**
+ * Since: 1.26
+ */
 GST_MPEGTS_API
 GType gst_mpegts_metadata_pointer_descriptor_get_type(void);
 
+/**
+ * gst_mpegts_descriptor_from_metadata_pointer:
+ *
+ * @metadata_pointer_descriptor: a #GstMpegtsMetadataPointerDescriptor
+ *
+ * Returns: a #GstMpegtsDescriptor from the metadata pointer descriptor.
+ *
+ * Since 1.26
+ */
 GST_MPEGTS_API
 GstMpegtsDescriptor *gst_mpegts_descriptor_from_metadata_pointer(const GstMpegtsMetadataPointerDescriptor *metadata_pointer_descriptor);
 
