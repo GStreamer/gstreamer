@@ -4,6 +4,7 @@ d3d12_sources = [
   'gstd3d12compositor.cpp',
   'gstd3d12convert.cpp',
   'gstd3d12decoder.cpp',
+  'gstd3d12decodercpbpool.cpp',
   'gstd3d12download.cpp',
   'gstd3d12dpbstorage.cpp',
   'gstd3d12dxgicapture.cpp',

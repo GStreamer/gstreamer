@@ -22,6 +22,7 @@
 #endif
 
 #include "gstd3d12decoder.h"
+#include "gstd3d12decodercpbpool.h"
 #include <directx/d3dx12.h>
 #include <gst/base/gstqueuearray.h>
 #include <wrl.h>
@@ -225,14 +226,12 @@ struct DecoderCmdData
   ~DecoderCmdData ()
   {
     CloseHandle (event_handle);
-    gst_clear_object (&ca_pool);
   }
 
   ComPtr<ID3D12Device> device;
   ComPtr<ID3D12VideoDevice> video_device;
   ComPtr<ID3D12VideoDecodeCommandList> cl;
   GstD3D12CommandQueue *queue = nullptr;
-  GstD3D12CommandAllocatorPool *ca_pool = nullptr;
   bool need_full_drain = false;
 
   /* Fence to wait at command record thread */
@@ -277,6 +276,7 @@ struct DecoderSessionData
       gst_video_codec_state_unref (output_state);
 
     gst_vec_deque_free (output_queue);
+    gst_clear_object (&cpb_pool);
   }
 
   D3D12_VIDEO_DECODER_DESC decoder_desc = {};
@@ -293,6 +293,8 @@ struct DecoderSessionData
 
   /* Used for output if reference-only texture is required */
   GstBufferPool *output_pool = nullptr;
+
+  GstD3D12DecoderCpbPool *cpb_pool = nullptr;
 
   GstVideoCodecState *input_state = nullptr;
   GstVideoCodecState *output_state = nullptr;
@@ -446,9 +448,6 @@ gst_d3d12_decoder_open (GstD3D12Decoder * decoder, GstElement * element)
     return FALSE;
   }
 
-  cmd->ca_pool = gst_d3d12_command_allocator_pool_new (cmd->device.Get (),
-      D3D12_COMMAND_LIST_TYPE_VIDEO_DECODE);
-
   auto flags = gst_d3d12_device_get_workaround_flags (decoder->device);
   if ((flags & GST_D3D12_WA_DECODER_RACE) == GST_D3D12_WA_DECODER_RACE)
     cmd->need_full_drain = true;
@@ -586,6 +585,7 @@ gst_d3d12_decoder_configure (GstD3D12Decoder * decoder,
   session->coded_height = coded_height;
   session->dpb_size = dpb_size;
   session->decoder_format = device_format.dxgi_format;
+  session->cpb_pool = gst_d3d12_decoder_cpb_pool_new (priv->cmd->device.Get ());
 
   if (crop_x != 0 || crop_y != 0)
     session->need_crop = true;
@@ -994,73 +994,6 @@ gst_d3d12_decoder_start_picture (GstD3D12Decoder * decoder,
   return GST_FLOW_OK;
 }
 
-struct DecoderBitstream
-{
-  ComPtr < ID3D12Resource > bitstream;
-  gsize bitstream_size = 0;
-};
-
-static void
-bitstream_free_func (DecoderBitstream * buffer)
-{
-  if (buffer)
-    delete buffer;
-}
-
-static gboolean
-gst_d3d12_decoder_upload_bitstream (GstD3D12Decoder * self, gpointer data,
-    gsize size, GstD3D12CommandAllocator * cmd)
-{
-  auto priv = self->priv;
-  HRESULT hr;
-
-  auto buffer = (DecoderBitstream *)
-      gst_d3d12_command_allocator_get_user_data (cmd);
-
-  if (!buffer || buffer->bitstream_size < size) {
-    buffer = new DecoderBitstream ();
-    gst_d3d12_command_allocator_set_user_data (cmd, buffer,
-        (GDestroyNotify) bitstream_free_func);
-  }
-
-  if (!buffer->bitstream) {
-    ComPtr < ID3D12Resource > bitstream;
-    size_t alloc_size = GST_ROUND_UP_128 (size) + 1024;
-
-    D3D12_HEAP_PROPERTIES heap_prop =
-        CD3DX12_HEAP_PROPERTIES (D3D12_HEAP_TYPE_UPLOAD);
-    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer (alloc_size);
-    hr = priv->cmd->device->CreateCommittedResource (&heap_prop,
-        D3D12_HEAP_FLAG_CREATE_NOT_ZEROED, &desc,
-        D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS (&bitstream));
-    if (!gst_d3d12_result (hr, self->device)) {
-      GST_ERROR_OBJECT (self, "Failed to create bitstream buffer");
-      return FALSE;
-    }
-
-    GST_LOG_OBJECT (self, "Allocated new bitstream buffer with size %"
-        G_GSIZE_FORMAT, size);
-
-    buffer->bitstream = bitstream;
-    buffer->bitstream_size = alloc_size;
-  }
-
-  gpointer map_data;
-  D3D12_RANGE zero_range = { 0, 0 };
-  hr = buffer->bitstream->Map (0, &zero_range, &map_data);
-  if (!gst_d3d12_result (hr, self->device)) {
-    GST_ERROR_OBJECT (self, "Couldn't map bitstream buffer");
-    return FALSE;
-  }
-
-  memcpy (map_data, data, size);
-
-  D3D12_RANGE range = { 0, size };
-  buffer->bitstream->Unmap (0, &range);
-
-  return TRUE;
-}
-
 GstFlowReturn
 gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     GstCodecPicture * picture, GPtrArray * ref_pics,
@@ -1102,31 +1035,23 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
         (GThreadFunc) gst_d3d12_decoder_output_loop, decoder);
   }
 
-  GstD3D12CommandAllocator *gst_ca;
-  if (!gst_d3d12_command_allocator_pool_acquire (priv->cmd->ca_pool, &gst_ca)) {
-    GST_ERROR_OBJECT (decoder, "Couldn't acquire command allocator");
+  GstD3D12DecoderCpb *cpb;
+  hr = gst_d3d12_decoder_cpb_pool_acquire (priv->session->cpb_pool,
+      args->bitstream, args->bitstream_size, &cpb);
+  if (!gst_d3d12_result (hr, decoder->device)) {
+    GST_ERROR_OBJECT (decoder, "Couldn't upload bitstream");
     return GST_FLOW_ERROR;
   }
-
-  if (!gst_d3d12_decoder_upload_bitstream (decoder, args->bitstream,
-          args->bitstream_size, gst_ca)) {
-    gst_d3d12_command_allocator_unref (gst_ca);
-    return GST_FLOW_ERROR;
-  }
-
-  auto bitstream = (DecoderBitstream *)
-      gst_d3d12_command_allocator_get_user_data (gst_ca);
-  g_assert (bitstream);
 
   memset (&in_args, 0, sizeof (D3D12_VIDEO_DECODE_INPUT_STREAM_ARGUMENTS));
   memset (&out_args, 0, sizeof (D3D12_VIDEO_DECODE_OUTPUT_STREAM_ARGUMENTS));
 
   GstD3D12DeviceDecoderLockGuard dlk (decoder->device);
-  auto ca = gst_d3d12_command_allocator_get_handle (gst_ca);
+  auto ca = gst_d3d12_decoder_cpb_get_command_allocator (cpb);
   hr = ca->Reset ();
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't reset command allocator");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_decoder_cpb_unref (cpb);
     return GST_FLOW_ERROR;
   }
 
@@ -1140,7 +1065,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
 
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't configure command list");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_decoder_cpb_unref (cpb);
     return GST_FLOW_ERROR;
   }
 
@@ -1274,8 +1199,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     in_args.NumFrameArguments++;
   }
 
-  in_args.CompressedBitstream.pBuffer = bitstream->bitstream.Get ();
-  in_args.CompressedBitstream.Offset = 0;
+  gst_d3d12_decoder_cpb_get_bitstream (cpb, &in_args.CompressedBitstream);
   in_args.CompressedBitstream.Size = args->bitstream_size;
   in_args.pHeap = decoder_pic->heap.Get ();
 
@@ -1293,7 +1217,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
 
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't record decoding command");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_decoder_cpb_unref (cpb);
     return GST_FLOW_ERROR;
   }
 
@@ -1303,7 +1227,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
       1, cl, &priv->cmd->fence_val);
   if (!gst_d3d12_result (hr, decoder->device)) {
     GST_ERROR_OBJECT (decoder, "Couldn't execute command list");
-    gst_d3d12_command_allocator_unref (gst_ca);
+    gst_d3d12_decoder_cpb_unref (cpb);
     return GST_FLOW_ERROR;
   }
 
@@ -1318,7 +1242,7 @@ gst_d3d12_decoder_end_picture (GstD3D12Decoder * decoder,
     gst_d3d12_fence_data_push (fence_data,
         FENCE_NOTIFY_MINI_OBJECT (gst_codec_picture_ref (ref_pic)));
   }
-  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (gst_ca));
+  gst_d3d12_fence_data_push (fence_data, FENCE_NOTIFY_MINI_OBJECT (cpb));
 
   gst_d3d12_command_queue_set_notify (priv->cmd->queue, priv->cmd->fence_val,
       fence_data, (GDestroyNotify) gst_d3d12_fence_data_unref);
