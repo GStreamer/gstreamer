@@ -654,7 +654,7 @@ gst_va_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
   GstVideoAggregator *vagg = GST_VIDEO_AGGREGATOR (agg);
 
   GstAllocator *allocator = NULL, *other_allocator = NULL;
-  GstAllocationParams params, other_params;
+  GstAllocationParams params = { 0, }, other_params = { 0, };
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *caps = NULL;
   GstStructure *config;
