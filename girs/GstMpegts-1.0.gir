@@ -2324,10 +2324,14 @@ a single language</doc>
       <function name="from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
         <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsDescriptor from the metadata pointer descriptor.
+
+Since 1.26</doc>
           <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
         </return-value>
         <parameters>
           <parameter name="metadata_pointer_descriptor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsMetadataPointerDescriptor</doc>
             <type name="MetadataPointerDescriptor" c:type="const GstMpegtsMetadataPointerDescriptor*"/>
           </parameter>
         </parameters>
@@ -5084,10 +5088,14 @@ a single language</doc>
     <function name="descriptor_from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer" moved-to="Descriptor.from_metadata_pointer">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsDescriptor from the metadata pointer descriptor.
+
+Since 1.26</doc>
         <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>
         <parameter name="metadata_pointer_descriptor" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsMetadataPointerDescriptor</doc>
           <type name="MetadataPointerDescriptor" c:type="const GstMpegtsMetadataPointerDescriptor*"/>
         </parameter>
       </parameters>
