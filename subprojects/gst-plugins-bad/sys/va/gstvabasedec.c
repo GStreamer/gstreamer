@@ -266,7 +266,7 @@ _decide_allocation_for_video_crop (GstVideoDecoder * decoder,
     GstQuery * query, GstCaps * caps)
 {
   GstAllocator *allocator = NULL, *other_allocator = NULL;
-  GstAllocationParams other_params, params;
+  GstAllocationParams other_params = { 0, }, params = { 0, };
   gboolean update_pool = FALSE, update_allocator = FALSE;
   GstBufferPool *pool = NULL, *other_pool = NULL;
   guint size = 0, min, max, usage_hint;
@@ -475,7 +475,7 @@ static gboolean
 gst_va_base_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
 {
   GstAllocator *allocator = NULL, *other_allocator = NULL;
-  GstAllocationParams other_params, params;
+  GstAllocationParams other_params = { 0, }, params = { 0, };
   GstBufferPool *pool = NULL, *other_pool = NULL;
   GstCaps *caps = NULL;
   GstVaBaseDec *base = GST_VA_BASE_DEC (decoder);
