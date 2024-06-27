@@ -4106,3 +4106,10 @@
    fun:dl_open_worker
 }
 
+{
+   ducktape shows up from glib-networking calling into libproxy if there's a proxy setup, like in the CI
+   Memcheck:ReallocZero
+   fun:realloc
+   fun:duk_heap_mem_realloc_indirect.lto_priv.0
+   fun:duk_hbuffer_resize.lto_priv.0
+}
