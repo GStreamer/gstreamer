@@ -77,6 +77,9 @@ struct _GstDecklinkVideoSink
 
   gint afd_bar_line;
   GstDecklinkMappingFormat mapping_format;
+
+  gboolean initial_sync;
+  GQueue *pending_frames;
 };
 
 struct _GstDecklinkVideoSinkClass

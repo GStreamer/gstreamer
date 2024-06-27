@@ -142,98 +142,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_decklink_video_sink_debug);
 
 #define DEFAULT_PERSISTENT_ID (-1)
 
-class GStreamerVideoOutputCallback:public IDeckLinkVideoOutputCallback
-{
-public:
-  GStreamerVideoOutputCallback (GstDecklinkVideoSink * sink)
-  :IDeckLinkVideoOutputCallback (), m_refcount (1)
-  {
-    m_sink = GST_DECKLINK_VIDEO_SINK_CAST (gst_object_ref (sink));
-    g_mutex_init (&m_mutex);
-  }
-
-  virtual HRESULT WINAPI QueryInterface (REFIID, LPVOID *)
-  {
-    return E_NOINTERFACE;
-  }
-
-  virtual ULONG WINAPI AddRef (void)
-  {
-    ULONG ret;
-
-    g_mutex_lock (&m_mutex);
-    m_refcount++;
-    ret = m_refcount;
-    g_mutex_unlock (&m_mutex);
-
-    return ret;
-  }
-
-  virtual ULONG WINAPI Release (void)
-  {
-    ULONG ret;
-
-    g_mutex_lock (&m_mutex);
-    m_refcount--;
-    ret = m_refcount;
-    g_mutex_unlock (&m_mutex);
-
-    if (ret == 0) {
-      delete this;
-    }
-
-    return ret;
-  }
-
-  virtual HRESULT WINAPI ScheduledFrameCompleted (IDeckLinkVideoFrame *
-      completedFrame, BMDOutputFrameCompletionResult result)
-  {
-    switch (result) {
-      case bmdOutputFrameCompleted:
-        GST_LOG_OBJECT (m_sink, "Completed frame %p", completedFrame);
-        break;
-      case bmdOutputFrameDisplayedLate:
-        GST_INFO_OBJECT (m_sink, "Late Frame %p", completedFrame);
-        break;
-      case bmdOutputFrameDropped:
-        GST_INFO_OBJECT (m_sink, "Dropped Frame %p", completedFrame);
-        break;
-      case bmdOutputFrameFlushed:
-        GST_DEBUG_OBJECT (m_sink, "Flushed Frame %p", completedFrame);
-        break;
-      default:
-        GST_INFO_OBJECT (m_sink, "Unknown Frame %p: %d", completedFrame,
-            (gint) result);
-        break;
-    }
-
-    return S_OK;
-  }
-
-  virtual HRESULT WINAPI ScheduledPlaybackHasStopped (void)
-  {
-    GST_LOG_OBJECT (m_sink, "Scheduled playback stopped");
-
-    if (m_sink->output) {
-      g_mutex_lock (&m_sink->output->lock);
-      g_cond_signal (&m_sink->output->cond);
-      g_mutex_unlock (&m_sink->output->lock);
-    }
-
-    return S_OK;
-  }
-
-  virtual ~ GStreamerVideoOutputCallback () {
-    gst_object_unref (m_sink);
-    g_mutex_clear (&m_mutex);
-  }
-
-private:
-  GstDecklinkVideoSink * m_sink;
-  GMutex m_mutex;
-  gint m_refcount;
-};
-
 class GstDecklinkTimecode:public IDeckLinkTimecode
 {
 public:
@@ -348,14 +256,16 @@ private:
 class GstDecklinkVideoFrame:public IDeckLinkVideoFrame
 {
 public:
-  GstDecklinkVideoFrame (GstVideoFrame * frame):m_frame (0),
+  GstDecklinkVideoFrame (GstVideoFrame * frame):
+      running_time(0), running_time_duration(0), sync_buffer(0), m_frame(0),
       m_dframe (0), m_ancillary (0), m_timecode (0), m_refcount (1)
   {
     m_frame = g_new0 (GstVideoFrame, 1);
     *m_frame = *frame;
   }
 
-  GstDecklinkVideoFrame (IDeckLinkMutableVideoFrame * dframe):m_frame (0),
+  GstDecklinkVideoFrame (IDeckLinkMutableVideoFrame * dframe):
+      running_time(0), running_time_duration(0), sync_buffer(0), m_frame(0),
       m_dframe (dframe), m_ancillary (0), m_timecode (0), m_refcount (1)
   {
   }
@@ -479,6 +389,9 @@ public:
     return ret - 1;
   }
 
+  GstClockTime running_time;
+  GstClockTime running_time_duration;
+  GstBuffer *sync_buffer;
 private:
   GstVideoFrame * m_frame;
   IDeckLinkMutableVideoFrame *m_dframe;
@@ -500,7 +413,108 @@ private:
     if (m_timecode) {
       m_timecode->Release ();
     }
+    gst_clear_buffer (&sync_buffer);
   }
+};
+
+class GStreamerVideoOutputCallback:public IDeckLinkVideoOutputCallback
+{
+public:
+  GStreamerVideoOutputCallback (GstDecklinkVideoSink * sink)
+  :IDeckLinkVideoOutputCallback (), m_refcount (1)
+  {
+    m_sink = GST_DECKLINK_VIDEO_SINK_CAST (gst_object_ref (sink));
+    g_mutex_init (&m_mutex);
+  }
+
+  virtual HRESULT WINAPI QueryInterface (REFIID, LPVOID *)
+  {
+    return E_NOINTERFACE;
+  }
+
+  virtual ULONG WINAPI AddRef (void)
+  {
+    ULONG ret;
+
+    g_mutex_lock (&m_mutex);
+    m_refcount++;
+    ret = m_refcount;
+    g_mutex_unlock (&m_mutex);
+
+    return ret;
+  }
+
+  virtual ULONG WINAPI Release (void)
+  {
+    ULONG ret;
+
+    g_mutex_lock (&m_mutex);
+    m_refcount--;
+    ret = m_refcount;
+    g_mutex_unlock (&m_mutex);
+
+    if (ret == 0) {
+      delete this;
+    }
+
+    return ret;
+  }
+
+  virtual HRESULT WINAPI ScheduledFrameCompleted (IDeckLinkVideoFrame *
+      completedFrame, BMDOutputFrameCompletionResult result)
+  {
+    GstDecklinkVideoFrame *frame = (GstDecklinkVideoFrame *) completedFrame;
+    switch (result) {
+      case bmdOutputFrameCompleted:
+        GST_LOG_OBJECT (m_sink, "Completed frame %p running time %"
+            GST_TIME_FORMAT, completedFrame, GST_TIME_ARGS (frame->running_time));
+        break;
+      case bmdOutputFrameDisplayedLate:
+        GST_INFO_OBJECT (m_sink, "Late Frame %p running time %" GST_TIME_FORMAT,
+            completedFrame, GST_TIME_ARGS (frame->running_time));
+        break;
+      case bmdOutputFrameDropped:
+        GST_INFO_OBJECT (m_sink, "Dropped Frame %p running time %"
+            GST_TIME_FORMAT, completedFrame,
+            GST_TIME_ARGS (frame->running_time));
+        break;
+      case bmdOutputFrameFlushed:
+        GST_INFO_OBJECT (m_sink, "Flushed Frame %p running time %"
+            GST_TIME_FORMAT, completedFrame,
+            GST_TIME_ARGS (frame->running_time));
+        break;
+      default:
+        GST_INFO_OBJECT (m_sink, "Unknown Frame %p: %d, running time %"
+            GST_TIME_FORMAT, completedFrame, (gint) result,
+            GST_TIME_ARGS (frame->running_time));
+        break;
+    }
+
+    return S_OK;
+  }
+
+  virtual HRESULT WINAPI ScheduledPlaybackHasStopped (void)
+  {
+    GST_LOG_OBJECT (m_sink, "Scheduled playback stopped");
+
+    if (m_sink->output) {
+      g_mutex_lock (&m_sink->output->lock);
+      g_cond_signal (&m_sink->output->cond);
+      g_mutex_unlock (&m_sink->output->lock);
+    }
+
+    return S_OK;
+  }
+
+  virtual ~ GStreamerVideoOutputCallback () {
+    gst_object_unref (m_sink);
+    g_mutex_clear (&m_mutex);
+  }
+
+private:
+  GstDecklinkVideoSink * m_sink;
+  GMutex m_mutex;
+  gint m_refcount;
 };
 
 /**
@@ -543,8 +557,6 @@ static GstCaps *gst_decklink_video_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 static gboolean gst_decklink_video_sink_set_caps (GstBaseSink * bsink,
     GstCaps * caps);
-static GstFlowReturn gst_decklink_video_sink_prepare (GstBaseSink * bsink,
-    GstBuffer * buffer);
 static GstFlowReturn gst_decklink_video_sink_render (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean gst_decklink_video_sink_open (GstBaseSink * bsink);
@@ -554,6 +566,8 @@ static gboolean gst_decklink_video_sink_propose_allocation (GstBaseSink * bsink,
     GstQuery * query);
 static gboolean gst_decklink_video_sink_event (GstBaseSink * bsink,
     GstEvent * event);
+static void gst_decklink_video_sink_get_times (GstBaseSink * bsink,
+    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 
 static void
 gst_decklink_video_sink_start_scheduled_playback (GstElement * element);
@@ -596,7 +610,6 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_decklink_video_sink_get_caps);
   basesink_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_decklink_video_sink_set_caps);
-  basesink_class->prepare = GST_DEBUG_FUNCPTR (gst_decklink_video_sink_prepare);
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_decklink_video_sink_render);
   // FIXME: These are misnamed in basesink!
   basesink_class->start = GST_DEBUG_FUNCPTR (gst_decklink_video_sink_open);
@@ -604,6 +617,8 @@ gst_decklink_video_sink_class_init (GstDecklinkVideoSinkClass * klass)
   basesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_decklink_video_sink_propose_allocation);
   basesink_class->event = GST_DEBUG_FUNCPTR (gst_decklink_video_sink_event);
+  basesink_class->get_times =
+      GST_DEBUG_FUNCPTR (gst_decklink_video_sink_get_times);
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Playback Mode",
@@ -752,6 +767,7 @@ gst_decklink_video_sink_init (GstDecklinkVideoSink * self)
   self->caption_line = 0;
   self->afd_bar_line = 0;
   self->mapping_format = GST_DECKLINK_MAPPING_FORMAT_DEFAULT;
+  self->pending_frames = g_queue_new();
 
   gst_base_sink_set_max_lateness (GST_BASE_SINK_CAST (self), 20 * GST_MSECOND);
   gst_base_sink_set_qos_enabled (GST_BASE_SINK_CAST (self), TRUE);
@@ -875,10 +891,20 @@ gst_decklink_video_sink_get_property (GObject * object, guint property_id,
   }
 }
 
+static void
+unref_frame (GstDecklinkVideoFrame * frame)
+{
+  if (frame)
+    frame->Release();
+}
+
 void
 gst_decklink_video_sink_finalize (GObject * object)
 {
-  //GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (object);
+  GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (object);
+
+  g_queue_clear_full (self->pending_frames, (GDestroyNotify) unref_frame);
+  self->pending_frames = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1036,12 +1062,6 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
   return caps;
 }
 
-static GstFlowReturn
-gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
-{
-  return GST_FLOW_OK;
-}
-
 void
 gst_decklink_video_sink_convert_to_internal_clock (GstDecklinkVideoSink * self,
     GstClockTime * timestamp, GstClockTime * duration)
@@ -1133,8 +1153,9 @@ gst_decklink_video_sink_convert_to_internal_clock (GstDecklinkVideoSink * self,
     *timestamp = gst_clock_get_internal_time (self->output->clock);
 
   GST_DEBUG_OBJECT (self, "Output timestamp %" GST_TIME_FORMAT
-      " using clock epoch %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (*timestamp), GST_TIME_ARGS (self->output->clock_epoch));
+      " using clock epoch %" GST_TIME_FORMAT " and offset %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (*timestamp), GST_TIME_ARGS (self->output->clock_epoch),
+      GST_TIME_ARGS (internal_offset));
 
   if (clock)
     gst_object_unref (clock);
@@ -1548,6 +1569,16 @@ buffer_is_pbo_memory (GstBuffer * buffer)
   return FALSE;
 }
 
+static void
+gst_decklink_video_sink_get_times (GstBaseSink * bsink,
+    GstBuffer * buffer, GstClockTime * start, GstClockTime * end)
+{
+  /* in order to push multiple buffers into decklink, we need to reimplement
+   * basesink's clock synchronisation */
+  *start = GST_CLOCK_TIME_NONE;
+  *end = GST_CLOCK_TIME_NONE;
+}
+
 static GstFlowReturn
 gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 {
@@ -1667,22 +1698,13 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
 
   write_vbi (self, buffer, format, frame, tc_meta);
 
-  gst_decklink_video_sink_convert_to_internal_clock (self, &running_time,
-      &running_time_duration);
+  frame->running_time = running_time;
+  frame->running_time_duration = running_time_duration;
+  frame->sync_buffer = gst_buffer_ref (buffer);
 
-  GST_LOG_OBJECT (self, "Scheduling video frame %p at %" GST_TIME_FORMAT
-      " with duration %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
-      GST_TIME_ARGS (running_time_duration));
+  g_queue_push_tail (self->pending_frames, frame);
 
-  ret = self->output->output->ScheduleVideoFrame (frame,
-      running_time, running_time_duration, GST_SECOND);
-  if (ret != S_OK) {
-    GST_ELEMENT_ERROR (self, STREAM, FAILED,
-        (NULL), ("Failed to schedule frame: 0x%08lx", (unsigned long) ret));
-    flow_ret = GST_FLOW_ERROR;
-    goto out;
-  }
-
+  frame = nullptr;
   flow_ret = GST_FLOW_OK;
 
 out:
@@ -1690,6 +1712,154 @@ out:
   if (frame)
     frame->Release ();
 
+  return flow_ret;
+}
+
+static GstFlowReturn
+gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
+{
+  GstDecklinkVideoSink *self = GST_DECKLINK_VIDEO_SINK_CAST (bsink);
+  GstFlowReturn flow_ret = GST_FLOW_OK;
+  HRESULT ret;
+
+  if ((flow_ret = gst_decklink_video_sink_prepare (bsink, buffer)) != GST_FLOW_OK)
+    return flow_ret;
+
+  GST_TRACE_OBJECT (bsink, "render with %u pending frames", self->pending_frames->length);
+
+  GST_OBJECT_LOCK (self);
+  if (self->initial_sync) {
+    /* this is effectively the preroll logic. We wait for at least 2 buffers */
+    GstDecklinkVideoFrame *frame;
+
+    if (self->pending_frames->length < 1) {
+      GST_OBJECT_UNLOCK (self);
+      return GST_FLOW_OK;
+    }
+    GST_OBJECT_UNLOCK (self);
+
+    frame = (GstDecklinkVideoFrame *) g_queue_peek_head (self->pending_frames);
+    GST_ERROR_OBJECT (self, "attempting preroll");
+    flow_ret =
+        gst_base_sink_do_preroll (bsink,
+        GST_MINI_OBJECT_CAST (frame->sync_buffer));
+    if (flow_ret != GST_FLOW_OK)
+      goto out;
+
+    g_mutex_lock (&self->output->lock);
+    if (self->output->start_scheduled_playback)
+      self->output->start_scheduled_playback (self->output->videosink);
+    g_mutex_unlock (&self->output->lock);
+
+    GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
+    GST_OBJECT_LOCK (self);
+    self->initial_sync = FALSE;
+    if (clock) {
+      if (clock != self->output->clock) {
+        gst_clock_set_master (self->output->clock, clock);
+      }
+
+      if (self->external_base_time == GST_CLOCK_TIME_NONE
+          || self->internal_base_time == GST_CLOCK_TIME_NONE) {
+        self->external_base_time = gst_clock_get_internal_time (clock);
+        self->internal_base_time =
+            gst_clock_get_internal_time (self->output->clock);
+        self->internal_time_offset = self->internal_base_time;
+      } else if (GST_CLOCK_TIME_IS_VALID (self->internal_pause_time)) {
+        self->internal_time_offset +=
+            gst_clock_get_internal_time (self->output->clock) -
+            self->internal_pause_time;
+        self->internal_pause_time = GST_CLOCK_TIME_NONE;
+      }
+
+      GST_INFO_OBJECT (self, "clock has been set to %" GST_PTR_FORMAT
+          ", updated base times - internal: %" GST_TIME_FORMAT
+          " external: %" GST_TIME_FORMAT " internal offset %"
+          GST_TIME_FORMAT, clock,
+          GST_TIME_ARGS (self->internal_base_time),
+          GST_TIME_ARGS (self->external_base_time),
+          GST_TIME_ARGS (self->internal_time_offset));
+
+      gst_object_unref (clock);
+    } else {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          (NULL), ("Need a clock to go to PLAYING"));
+      GST_OBJECT_UNLOCK (self);
+      return GST_FLOW_ERROR;
+    }
+  }
+  GST_OBJECT_UNLOCK (self);
+
+
+  while (self->pending_frames->length > 0) {
+    GstDecklinkVideoFrame *frame =
+        (GstDecklinkVideoFrame *) g_queue_pop_head (self->pending_frames);
+    GstClockTime sync_time = frame->running_time;
+    GstClockTime running_time = frame->running_time;
+    GstClockTime running_time_duration = frame->running_time_duration;
+    GstClockTime clock_time, frame_duration;
+    GstClockTimeDiff jitter;
+    GstClockReturn status;
+
+    flow_ret =
+        gst_base_sink_do_preroll (bsink,
+        GST_MINI_OBJECT_CAST (frame->sync_buffer));
+    if (flow_ret != GST_FLOW_OK) {
+      frame->Release ();
+      goto out;
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (sync_time)) {
+      if (sync_time > 30 * GST_MSECOND) {
+        sync_time -= 30 * GST_MSECOND;
+      } else {
+        sync_time = 0;
+      }
+    }
+
+    do {
+      status = gst_base_sink_wait_clock (bsink, sync_time, &jitter);
+      if (status == GST_CLOCK_BADTIME)
+        break;
+      if (G_UNLIKELY (bsink->flushing)) {
+        frame->Release ();
+        return GST_FLOW_FLUSHING;
+      }
+    } while (status == GST_CLOCK_UNSCHEDULED);
+
+    /* if we don't have a clock or are not syncing, then display the frame 'now' */
+    clock_time = gst_clock_get_internal_time (self->output->clock);
+    if (status == GST_CLOCK_BADTIME) {
+      running_time = clock_time;
+    }
+
+    gst_decklink_video_sink_convert_to_internal_clock (self, &running_time,
+        &running_time_duration);
+
+    frame_duration =
+        gst_util_uint64_scale_int (GST_SECOND, self->output->mode->fps_d,
+        self->output->mode->fps_n);
+    running_time = gst_util_uint64_scale (running_time, 1, frame_duration);
+    running_time = gst_util_uint64_scale_ceil (running_time, frame_duration, 1);
+
+    GST_DEBUG_OBJECT (self, "Scheduling video frame %p at %" GST_TIME_FORMAT
+        " with duration %" GST_TIME_FORMAT " sync time %" GST_TIME_FORMAT
+        " clock time %" GST_TIME_FORMAT, frame, GST_TIME_ARGS (running_time),
+        GST_TIME_ARGS (running_time_duration), GST_TIME_ARGS (sync_time), GST_TIME_ARGS (clock_time));
+
+    ret = self->output->output->ScheduleVideoFrame (frame,
+        running_time, running_time_duration, GST_SECOND);
+    if (ret != S_OK) {
+      GST_ELEMENT_ERROR (self, STREAM, FAILED,
+          (NULL), ("Failed to schedule frame: 0x%08lx", (unsigned long) ret));
+      frame->Release ();
+      flow_ret = GST_FLOW_ERROR;
+      goto out;
+    }
+    frame->Release ();
+  }
+
+out:
   return flow_ret;
 }
 
@@ -1942,48 +2112,12 @@ gst_decklink_video_sink_change_state (GstElement * element,
       gst_element_post_message (element,
           gst_message_new_clock_provide (GST_OBJECT_CAST (element),
               self->output->clock, TRUE));
-      g_mutex_lock (&self->output->lock);
-      if (self->output->start_scheduled_playback)
-        self->output->start_scheduled_playback (self->output->videosink);
-      g_mutex_unlock (&self->output->lock);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:{
-      GstClock *clock;
-
-      clock = gst_element_get_clock (GST_ELEMENT_CAST (self));
-      if (clock) {
-        if (clock != self->output->clock) {
-          gst_clock_set_master (self->output->clock, clock);
-        }
-
-        GST_OBJECT_LOCK (self);
-        if (self->external_base_time == GST_CLOCK_TIME_NONE
-            || self->internal_base_time == GST_CLOCK_TIME_NONE) {
-          self->external_base_time = gst_clock_get_internal_time (clock);
-          self->internal_base_time =
-              gst_clock_get_internal_time (self->output->clock);
-          self->internal_time_offset = self->internal_base_time;
-        } else if (GST_CLOCK_TIME_IS_VALID (self->internal_pause_time)) {
-          self->internal_time_offset +=
-              gst_clock_get_internal_time (self->output->clock) -
-              self->internal_pause_time;
-        }
-
-        GST_INFO_OBJECT (self, "clock has been set to %" GST_PTR_FORMAT
-            ", updated base times - internal: %" GST_TIME_FORMAT
-            " external: %" GST_TIME_FORMAT " internal offset %"
-            GST_TIME_FORMAT, clock,
-            GST_TIME_ARGS (self->internal_base_time),
-            GST_TIME_ARGS (self->external_base_time),
-            GST_TIME_ARGS (self->internal_time_offset));
-        GST_OBJECT_UNLOCK (self);
-
-        gst_object_unref (clock);
-      } else {
-        GST_ELEMENT_ERROR (self, STREAM, FAILED,
-            (NULL), ("Need a clock to go to PLAYING"));
-        ret = GST_STATE_CHANGE_FAILURE;
-      }
+      GST_OBJECT_LOCK (self);
+      self->initial_sync = TRUE;
+      GST_INFO_OBJECT (self, "initial sync set to TRUE");
+      GST_OBJECT_UNLOCK (self);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -1992,6 +2126,9 @@ gst_decklink_video_sink_change_state (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_OBJECT_LOCK (self);
+      self->initial_sync = FALSE;
+      GST_OBJECT_UNLOCK (self);
       break;
     default:
       break;
