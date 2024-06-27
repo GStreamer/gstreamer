@@ -90,13 +90,5 @@ void                           gst_clear_d3d12_command_allocator (GstD3D12Comman
 GST_D3D12_API
 ID3D12CommandAllocator *       gst_d3d12_command_allocator_get_handle (GstD3D12CommandAllocator * cmd);
 
-GST_D3D12_API
-void                           gst_d3d12_command_allocator_set_user_data (GstD3D12CommandAllocator * cmd,
-                                                                          gpointer user_data,
-                                                                          GDestroyNotify notify);
-
-GST_D3D12_API
-gpointer                       gst_d3d12_command_allocator_get_user_data (GstD3D12CommandAllocator * cmd);
-
 G_END_DECLS
 
