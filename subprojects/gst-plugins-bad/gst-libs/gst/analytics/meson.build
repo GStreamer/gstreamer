@@ -22,7 +22,6 @@ gstanalytics = library('gstanalytics-' + api_version,
   install : true,
   dependencies : [gstbase_dep, gstvideo_dep])
 
-gst_libraries += [[pkg_name, {'lib': gstanalytics}]]
 pkgconfig.generate(gstanalytics,
   libraries : [gst_dep, gstbase_dep],
   variables : pkgconfig_variables,
@@ -32,6 +31,7 @@ pkgconfig.generate(gstanalytics,
 )
 gen_sources = []
 
+library_def = {'lib': gstanalytics}
 if build_gir
   gir = {
     'sources' : analytics_sources + analytics_headers,

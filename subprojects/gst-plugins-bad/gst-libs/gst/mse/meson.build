@@ -102,7 +102,6 @@ gstmse = library('gstmse-' + api_version,
 )
 
 pkg_name = 'gstreamer-mse-' + api_version
-gst_libraries += [[pkg_name, {'lib': gstmse}]]
 pkgconfig.generate(gstmse,
   libraries : [gst_dep],
   variables : pkgconfig_variables,
