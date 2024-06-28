@@ -470,6 +470,8 @@ gst_encoding_profile_finalize (GObject * object)
   if (prof->restriction)
     gst_caps_unref (prof->restriction);
   g_free (prof->preset_name);
+
+  G_OBJECT_CLASS (gst_encoding_profile_parent_class)->finalize (object);
 }
 
 static void
