@@ -74,6 +74,10 @@ va_av1enc_sources = [
   'gstvaav1enc.c'
 ]
 
+va_h266dec_sources = [
+  'gstvah266dec.c'
+]
+
 doc_sources = []
 foreach s: va_sources + va_linux_sources + va_win32_sources + va_av1enc_sources + va_headers
   doc_sources += meson.current_source_dir() / s
@@ -122,6 +126,10 @@ endif
 
 if libva_dep.version().version_compare('>= 1.15')
   va_sources += va_av1enc_sources
+endif
+
+if libva_dep.version().version_compare('>= 1.22')
+  va_sources += va_h266dec_sources
 endif
 
 gstva = library('gstva',
