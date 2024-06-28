@@ -1096,8 +1096,8 @@ _fill_ref_slot (GstVulkanH264Decoder * self, GstH264Picture * picture,
   if (ref)
     *ref = &pic->base;
 
-  GST_TRACE_OBJECT (self, "0x%lx slotIndex: %d", res->imageViewBinding,
-      slot->slotIndex);
+  GST_TRACE_OBJECT (self, "0x%" G_GUINT64_FORMAT "x slotIndex: %d",
+      res->imageViewBinding, slot->slotIndex);
 }
 
 static GstFlowReturn

@@ -746,8 +746,9 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   if (priv->enc_caps.maxBitrate
       && priv->prop.average_bitrate >= priv->enc_caps.maxBitrate) {
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "The driver does not support the average bitrate requested %d, driver caps: %ld",
-        priv->prop.average_bitrate, priv->enc_caps.maxBitrate);
+        "The driver does not support the average bitrate requested %d, driver caps: %"
+        G_GUINT64_FORMAT, priv->prop.average_bitrate,
+        priv->enc_caps.maxBitrate);
     GST_OBJECT_UNLOCK (self);
     return FALSE;
   }
@@ -758,7 +759,7 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
   GST_LOG_OBJECT (self, "Capabilities for %" GST_PTR_FORMAT ":\n"
       "     Width from %i to %i\n"
       "     Height from %i to %i\n"
-      "     MaxBitrate: %ld\n"
+      "     MaxBitrate: %" G_GUINT64_FORMAT "\n"
       "     Encode mode:%s",
       priv->profile_caps,
       priv->caps.caps.minCodedExtent.width,
