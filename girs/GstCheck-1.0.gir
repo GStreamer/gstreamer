@@ -31,7 +31,7 @@ and/or use gtk-doc annotations.  -->
         <type name="gint" c:type="int"/>
       </field>
     </record>
-    <record name="CheckLogFilter" c:type="GstCheckLogFilter" disguised="1">
+    <record name="CheckLogFilter" c:type="GstCheckLogFilter" disguised="1" opaque="1">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstcheck.h">Opaque structure containing data about a log filter
 function.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/check/gstcheck.h"/>
@@ -2124,10 +2124,10 @@ MT safe.</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="HarnessPrivate" c:type="GstHarnessPrivate" disguised="1">
+    <record name="HarnessPrivate" c:type="GstHarnessPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/check/gstharness.h"/>
     </record>
-    <record name="HarnessThread" c:type="GstHarnessThread" disguised="1" version="1.6">
+    <record name="HarnessThread" c:type="GstHarnessThread" disguised="1" opaque="1" version="1.6">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstharness.h">Opaque handle representing a GstHarness stress testing thread.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/check/gstharness.h"/>
     </record>
@@ -2145,7 +2145,7 @@ MT safe.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <record name="StreamConsistency" c:type="GstStreamConsistency" disguised="1">
+    <record name="StreamConsistency" c:type="GstStreamConsistency" disguised="1" opaque="1">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gstconsistencychecker.h">Opaque consistency checker handle.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/check/gstconsistencychecker.h"/>
     </record>
@@ -2674,10 +2674,10 @@ with information about the pending clock notification</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="clock-type" writable="1" transfer-ownership="none">
+      <property name="clock-type" writable="1" transfer-ownership="none" default-value="GST_CLOCK_TYPE_MONOTONIC">
         <type name="Gst.ClockType"/>
       </property>
-      <property name="start-time" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="start-time" writable="1" construct-only="1" transfer-ownership="none" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/check/gsttestclock.c">When a #GstTestClock is constructed it will have a certain start time set.
 If the clock was created using gst_test_clock_new_with_start_time() then
 this property contains the value of the @start_time argument. If
@@ -2700,7 +2700,7 @@ this property contains the value 0.</doc>
         <type name="Gst.ClockClass" c:type="GstClockClass"/>
       </field>
     </record>
-    <record name="TestClockPrivate" c:type="GstTestClockPrivate" disguised="1">
+    <record name="TestClockPrivate" c:type="GstTestClockPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/check/gsttestclock.h"/>
     </record>
     <function name="buffer_straw_get_buffer" c:identifier="gst_buffer_straw_get_buffer">

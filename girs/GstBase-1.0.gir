@@ -962,7 +962,7 @@ buffer in the list before freeing the list after usage.</doc>
         </parameters>
       </method>
     </class>
-    <record name="AdapterClass" c:type="GstAdapterClass" disguised="1" glib:is-gtype-struct-for="Adapter">
+    <record name="AdapterClass" c:type="GstAdapterClass" disguised="1" opaque="1" glib:is-gtype-struct-for="Adapter">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstadapter.h"/>
     </record>
     <class name="Aggregator" c:symbol-prefix="aggregator" c:type="GstAggregator" version="1.14" parent="Gst.Element" abstract="1" glib:type-name="GstAggregator" glib:get-type="gst_aggregator_get_type" glib:type-struct="AggregatorClass">
@@ -1029,6 +1029,13 @@ Control is given to the subclass when all pads have data.
 This class used to live in gst-plugins-bad and was moved to core.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
       <virtual-method name="aggregate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Mandatory.
+                 Called when buffers are queued on all sinkpads. Classes
+                 should iterate the GstElement-&gt;sinkpads and peek or steal
+                 buffers from the #GstAggregatorPads. If the subclass returns
+                 GST_FLOW_EOS, sending of the eos event will be taken care
+                 of. Once / if a buffer has been constructed from the
+                 aggregated buffers, the subclass should call _finish_buffer.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -1043,6 +1050,14 @@ This class used to live in gst-plugins-bad and was moved to core.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="clip">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a buffer is received on a sink pad, the task of
+                 clipping it and translating it to the current segment falls
+                 on the subclass. The function should use the segment of data
+                 and the negotiated media type on the pad to perform
+                 clipping of input buffer. This function takes ownership of
+                 buf and should output a buffer or return NULL in
+                 if the buffer should be dropped.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -1060,6 +1075,10 @@ This class used to live in gst-plugins-bad and was moved to core.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="create_new_pad" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a new pad needs to be created. Allows subclass that
+                 don't have a single sink pad template to provide a pad based
+                 on the provided information.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value>
           <type name="AggregatorPad" c:type="GstAggregatorPad*"/>
@@ -1080,6 +1099,11 @@ This class used to live in gst-plugins-bad and was moved to core.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="decide_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                    Allows the subclass to influence the allocation choices.
+                    Setup the allocation parameters for allocating output
+                    buffers. The passed in query contains the result of the
+                    downstream allocation query.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1132,6 +1156,10 @@ sent before pushing the buffer.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="fixate_src_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                  Fixate and return the src pad caps provided.  The function takes
+                  ownership of @caps and returns a fixated version of
+                  @caps. @caps is not guaranteed to be writable.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Caps" c:type="GstCaps*"/>
@@ -1146,6 +1174,10 @@ sent before pushing the buffer.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="flush">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called after a successful flushing seek, once all the flush
+                 stops have been received. Flush pad-specific data in
+                 #GstAggregatorPad-&gt;flush.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -1157,6 +1189,12 @@ sent before pushing the buffer.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="get_next_time">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the element needs to know the running time of the next
+                 rendered buffer for live pipelines. This causes deadline
+                 based aggregation to occur. Defaults to returning
+                 GST_CLOCK_TIME_NONE causing the element to wait for buffers
+                 on all sink pads before aggregating.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.ClockTime" c:type="GstClockTime"/>
@@ -1184,6 +1222,8 @@ if #GstAggregatorClass::negotiate fails.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="negotiated_src_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                      Notifies subclasses what caps format has been negotiated</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1220,6 +1260,8 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="propose_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                    Allows the subclass to handle the allocation query from upstream.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1240,6 +1282,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="sink_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when an event is received on a sink pad, the subclass
+                 should always chain up.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1257,6 +1302,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="sink_event_pre_queue">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                       Called when an event is received on a sink pad before queueing up
+                       serialized events. The subclass should always chain up (Since: 1.18).</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -1274,6 +1322,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="sink_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a query is received on a sink pad, the subclass
+                 should always chain up.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1291,6 +1342,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="sink_query_pre_queue">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                       Called when a query is received on a sink pad before queueing up
+                       serialized queries. The subclass should always chain up (Since: 1.18).</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1308,6 +1362,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="src_activate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the src pad is activated, it will start/stop its
+                 pad task right after that call.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1325,6 +1382,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="src_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when an event is received on the src pad, the subclass
+                 should always chain up.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1339,6 +1399,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="src_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a query is received on the src pad, the subclass
+                 should always chain up.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1353,6 +1416,10 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the element goes from READY to PAUSED.
+                 The subclass should get ready to process
+                 aggregated buffers.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1364,6 +1431,9 @@ control aggregating parameters for a given set of input samples.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the element goes from PAUSED to READY.
+                 The subclass should free all resources and reset its state.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1495,7 +1565,7 @@ by @trans; free it after use it</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_latency" c:identifier="gst_aggregator_get_latency">
+      <method name="get_latency" c:identifier="gst_aggregator_get_latency" glib:get-property="latency">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">Retrieves the latency values reported by @self in response to the latency
 query, or %GST_CLOCK_TIME_NONE if there is not live source connected and the element
 will not wait for the clock.
@@ -1648,7 +1718,7 @@ sure upstream has had a fair chance to start up.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_latency" c:identifier="gst_aggregator_set_latency">
+      <method name="set_latency" c:identifier="gst_aggregator_set_latency" glib:set-property="latency">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">Lets #GstAggregator sub-classes tell the baseclass what their internal
 latency is. Will also post a LATENCY message on the bus so the pipeline
 can reconfigure its global latency if the values changed.</doc>
@@ -1727,14 +1797,14 @@ if it is used at all.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="emit-signals" version="1.18" writable="1" transfer-ownership="none">
+      <property name="emit-signals" version="1.18" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">Enables the emission of signals such as #GstAggregator::samples-selected</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="latency" writable="1" transfer-ownership="none">
+      <property name="latency" writable="1" transfer-ownership="none" setter="set_latency" getter="get_latency" default-value="0">
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="min-upstream-latency" version="1.16" writable="1" transfer-ownership="none">
+      <property name="min-upstream-latency" version="1.16" writable="1" transfer-ownership="none" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">Force minimum upstream latency (in nanoseconds). When sources with a
 higher latency are expected to be plugged in dynamically after the
 aggregator has started playing, this allows overriding the minimum
@@ -1742,10 +1812,10 @@ latency reported by the initial source(s). This is only taken into
 account when larger than the actually reported minimum latency.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="start-time" writable="1" transfer-ownership="none">
+      <property name="start-time" writable="1" transfer-ownership="none" default-value="18446744073709551615">
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="start-time-selection" writable="1" transfer-ownership="none">
+      <property name="start-time-selection" writable="1" transfer-ownership="none" default-value="GST_AGGREGATOR_START_TIME_SELECTION_ZERO">
         <type name="AggregatorStartTimeSelection"/>
       </property>
       <field name="parent">
@@ -1809,6 +1879,10 @@ _finish_buffer from inside that function.</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="flush">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called after a successful flushing seek, once all the flush
+                 stops have been received. Flush pad-specific data in
+                 #GstAggregatorPad-&gt;flush.</doc>
         <callback name="flush">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1822,6 +1896,14 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="clip">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a buffer is received on a sink pad, the task of
+                 clipping it and translating it to the current segment falls
+                 on the subclass. The function should use the segment of data
+                 and the negotiated media type on the pad to perform
+                 clipping of input buffer. This function takes ownership of
+                 buf and should output a buffer or return NULL in
+                 if the buffer should be dropped.</doc>
         <callback name="clip">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="full">
@@ -1841,6 +1923,13 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="finish_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a subclass calls gst_aggregator_finish_buffer()
+                 from their aggregate function to push out a buffer.
+                 Subclasses can override this to modify or decorate buffers
+                 before they get pushed out. This function takes ownership
+                 of the buffer passed. Subclasses that override this method
+                 should always chain up to the parent class virtual method.</doc>
         <callback name="finish_buffer">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1859,6 +1948,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="sink_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when an event is received on a sink pad, the subclass
+                 should always chain up.</doc>
         <callback name="sink_event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1878,6 +1970,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="sink_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a query is received on a sink pad, the subclass
+                 should always chain up.</doc>
         <callback name="sink_query">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1897,6 +1992,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="src_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when an event is received on the src pad, the subclass
+                 should always chain up.</doc>
         <callback name="src_event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1913,6 +2011,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="src_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a query is received on the src pad, the subclass
+                 should always chain up.</doc>
         <callback name="src_query">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1929,6 +2030,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="src_activate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the src pad is activated, it will start/stop its
+                 pad task right after that call.</doc>
         <callback name="src_activate">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1948,6 +2052,13 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="aggregate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Mandatory.
+                 Called when buffers are queued on all sinkpads. Classes
+                 should iterate the GstElement-&gt;sinkpads and peek or steal
+                 buffers from the #GstAggregatorPads. If the subclass returns
+                 GST_FLOW_EOS, sending of the eos event will be taken care
+                 of. Once / if a buffer has been constructed from the
+                 aggregated buffers, the subclass should call _finish_buffer.</doc>
         <callback name="aggregate">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1964,6 +2075,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the element goes from PAUSED to READY.
+                 The subclass should free all resources and reset its state.</doc>
         <callback name="stop">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1977,6 +2091,10 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the element goes from READY to PAUSED.
+                 The subclass should get ready to process
+                 aggregated buffers.</doc>
         <callback name="start">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -1990,6 +2108,12 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="get_next_time">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when the element needs to know the running time of the next
+                 rendered buffer for live pipelines. This causes deadline
+                 based aggregation to occur. Defaults to returning
+                 GST_CLOCK_TIME_NONE causing the element to wait for buffers
+                 on all sink pads before aggregating.</doc>
         <callback name="get_next_time">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2003,6 +2127,10 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="create_new_pad" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                 Called when a new pad needs to be created. Allows subclass that
+                 don't have a single sink pad template to provide a pad based
+                 on the provided information.</doc>
         <callback name="create_new_pad" introspectable="0">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value>
@@ -2025,6 +2153,12 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="update_src_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Lets subclasses update the #GstCaps representing
+                  the src pad caps before usage.  The result should end up
+                  in @ret. Return %GST_AGGREGATOR_FLOW_NEED_DATA to indicate that the
+                  element needs more information (caps, a buffer, etc) to
+                  choose the correct caps. Should return ANY caps if the
+                  stream has not caps at all.</doc>
         <callback name="update_src_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2044,6 +2178,10 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="fixate_src_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                  Fixate and return the src pad caps provided.  The function takes
+                  ownership of @caps and returns a fixated version of
+                  @caps. @caps is not guaranteed to be writable.</doc>
         <callback name="fixate_src_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="full">
@@ -2060,6 +2198,8 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="negotiated_src_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                      Notifies subclasses what caps format has been negotiated</doc>
         <callback name="negotiated_src_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2076,6 +2216,11 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="decide_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                    Allows the subclass to influence the allocation choices.
+                    Setup the allocation parameters for allocating output
+                    buffers. The passed in query contains the result of the
+                    downstream allocation query.</doc>
         <callback name="decide_allocation">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2092,6 +2237,8 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="propose_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                    Allows the subclass to handle the allocation query from upstream.</doc>
         <callback name="propose_allocation">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2114,6 +2261,8 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="negotiate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+            Negotiate the caps with the peer (Since: 1.18).</doc>
         <callback name="negotiate">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2129,6 +2278,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="sink_event_pre_queue">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                       Called when an event is received on a sink pad before queueing up
+                       serialized events. The subclass should always chain up (Since: 1.18).</doc>
         <callback name="sink_event_pre_queue">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2148,6 +2300,9 @@ _finish_buffer from inside that function.</doc>
         </callback>
       </field>
       <field name="sink_query_pre_queue">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional.
+                       Called when a query is received on a sink pad before queueing up
+                       serialized queries. The subclass should always chain up (Since: 1.18).</doc>
         <callback name="sink_query_pre_queue">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2216,6 +2371,10 @@ _finish_buffer from inside that function.</doc>
 This class used to live in gst-plugins-bad and was moved to core.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
       <virtual-method name="flush">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional
+              Called when the pad has received a flush stop, this is the place
+              to flush any information specific to the pad, it allows for individual
+              pads to be flushed while others might not be.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -2230,6 +2389,9 @@ This class used to live in gst-plugins-bad and was moved to core.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="skip_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional
+              Called before input buffers are queued in the pad, return %TRUE
+              if the buffer should be skipped.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2334,7 +2496,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="emit-signals" version="1.16" writable="1" transfer-ownership="none">
+      <property name="emit-signals" version="1.16" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.c">Enables the emission of signals such as #GstAggregatorPad::buffer-consumed</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
@@ -2370,6 +2532,10 @@ usage.</doc>
         <type name="Gst.PadClass" c:type="GstPadClass"/>
       </field>
       <field name="flush">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional
+              Called when the pad has received a flush stop, this is the place
+              to flush any information specific to the pad, it allows for individual
+              pads to be flushed while others might not be.</doc>
         <callback name="flush">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2386,6 +2552,9 @@ usage.</doc>
         </callback>
       </field>
       <field name="skip_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Optional
+              Called before input buffers are queued in the pad, return %TRUE
+              if the buffer should be skipped.</doc>
         <callback name="skip_buffer">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
           <return-value transfer-ownership="none">
@@ -2410,21 +2579,21 @@ usage.</doc>
         </array>
       </field>
     </record>
-    <record name="AggregatorPadPrivate" c:type="GstAggregatorPadPrivate" disguised="1">
+    <record name="AggregatorPadPrivate" c:type="GstAggregatorPadPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
     </record>
-    <record name="AggregatorPrivate" c:type="GstAggregatorPrivate" disguised="1">
+    <record name="AggregatorPrivate" c:type="GstAggregatorPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h"/>
     </record>
     <enumeration name="AggregatorStartTimeSelection" version="1.18" glib:type-name="GstAggregatorStartTimeSelection" glib:get-type="gst_aggregator_start_time_selection_get_type" c:type="GstAggregatorStartTimeSelection">
-      <member name="zero" value="0" c:identifier="GST_AGGREGATOR_START_TIME_SELECTION_ZERO" glib:nick="zero">
+      <member name="zero" value="0" c:identifier="GST_AGGREGATOR_START_TIME_SELECTION_ZERO" glib:nick="zero" glib:name="GST_AGGREGATOR_START_TIME_SELECTION_ZERO">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Start at running time 0.</doc>
       </member>
-      <member name="first" value="1" c:identifier="GST_AGGREGATOR_START_TIME_SELECTION_FIRST" glib:nick="first">
+      <member name="first" value="1" c:identifier="GST_AGGREGATOR_START_TIME_SELECTION_FIRST" glib:nick="first" glib:name="GST_AGGREGATOR_START_TIME_SELECTION_FIRST">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Start at the running time of
 the first buffer that is received.</doc>
       </member>
-      <member name="set" value="2" c:identifier="GST_AGGREGATOR_START_TIME_SELECTION_SET" glib:nick="set">
+      <member name="set" value="2" c:identifier="GST_AGGREGATOR_START_TIME_SELECTION_SET" glib:nick="set" glib:name="GST_AGGREGATOR_START_TIME_SELECTION_SET">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstaggregator.h">Start at the running time
 selected by the `start-time` property.</doc>
       </member>
@@ -2935,6 +3104,8 @@ Things that subclass need to take care of:
   frame intervals.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
       <virtual-method name="convert">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Convert between formats.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2958,6 +3129,10 @@ Things that subclass need to take care of:
         </parameters>
       </virtual-method>
       <virtual-method name="detect">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Called until it doesn't return GST_FLOW_OK anymore for
+                  the first buffers. Can be used by the subclass to detect
+                  the stream format.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -2972,6 +3147,8 @@ Things that subclass need to take care of:
         </parameters>
       </virtual-method>
       <virtual-method name="get_sink_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Allows the subclass to do its own sink get caps if needed.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Caps" c:type="GstCaps*"/>
@@ -3013,6 +3190,12 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="pre_push_frame">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Called just prior to pushing a frame (after any pending
+                  events have been sent) to give subclass a chance to perform
+                  additional actions at this time (e.g. tag sending) or to
+                  decide whether this buffer should be dropped or not
+                  (e.g. custom segment clipping).</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3027,6 +3210,8 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="set_sink_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Allows the subclass to be notified of the actual caps set.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3041,6 +3226,10 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="sink_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Event handler on the sink pad. This function should chain
+                 up to the parent implementation to let the default handler
+                 run.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3055,6 +3244,10 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="sink_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Query handler on the sink pad. This function should chain
+                  up to the parent implementation to let the default handler
+                  run (Since: 1.2)</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3069,6 +3262,9 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="src_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Event handler on the source pad. Should chain up to the
+                 parent to let the default handler run.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3083,6 +3279,9 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="src_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Query handler on the source pad. Should chain up to the
+                  parent to let the default handler run (Since: 1.2)</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3097,6 +3296,9 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Called when the element starts processing.
+                 Allows opening external resources.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3108,6 +3310,9 @@ if desired.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Called when the element stops processing.
+                 Allows closing external resources.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3536,7 +3741,7 @@ into the frame data that the picture starts.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="disable-passthrough" writable="1" transfer-ownership="none">
+      <property name="disable-passthrough" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.c">If set to %TRUE, baseparse will unconditionally force parsing of the
 incoming data. This can be required in the rare cases where the incoming
 side-data (caps, pts, dts, ...) is not trusted by the user and wants to
@@ -3579,6 +3784,9 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Called when the element starts processing.
+                 Allows opening external resources.</doc>
         <callback name="start">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3592,6 +3800,9 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Called when the element stops processing.
+                 Allows closing external resources.</doc>
         <callback name="stop">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3605,6 +3816,8 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="set_sink_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Allows the subclass to be notified of the actual caps set.</doc>
         <callback name="set_sink_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3621,6 +3834,16 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="handle_frame">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Parses the input data into valid frames as defined by subclass
+                 which should be passed to gst_base_parse_finish_frame().
+                 The frame's input buffer is guaranteed writable,
+                 whereas the input frame ownership is held by caller
+                 (so subclass should make a copy if it needs to hang on).
+                 Input buffer (data) is provided by baseclass with as much
+                 metadata set as possible by baseclass according to upstream
+                 information and/or subclass settings,
+                 though subclass may still set buffer timestamp and duration
+                 if desired.</doc>
         <callback name="handle_frame">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3640,6 +3863,12 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="pre_push_frame">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Called just prior to pushing a frame (after any pending
+                  events have been sent) to give subclass a chance to perform
+                  additional actions at this time (e.g. tag sending) or to
+                  decide whether this buffer should be dropped or not
+                  (e.g. custom segment clipping).</doc>
         <callback name="pre_push_frame">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3656,6 +3885,8 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="convert">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Convert between formats.</doc>
         <callback name="convert">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3681,6 +3912,10 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="sink_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Event handler on the sink pad. This function should chain
+                 up to the parent implementation to let the default handler
+                 run.</doc>
         <callback name="sink_event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3697,6 +3932,9 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="src_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Event handler on the source pad. Should chain up to the
+                 parent to let the default handler run.</doc>
         <callback name="src_event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3713,6 +3951,8 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="get_sink_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                 Allows the subclass to do its own sink get caps if needed.</doc>
         <callback name="get_sink_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="full">
@@ -3729,6 +3969,10 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="detect">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Called until it doesn't return GST_FLOW_OK anymore for
+                  the first buffers. Can be used by the subclass to detect
+                  the stream format.</doc>
         <callback name="detect">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3745,6 +3989,10 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="sink_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Query handler on the sink pad. This function should chain
+                  up to the parent implementation to let the default handler
+                  run (Since: 1.2)</doc>
         <callback name="sink_query">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3761,6 +4009,9 @@ needed. At minimum @handle_frame needs to be overridden.</doc>
         </callback>
       </field>
       <field name="src_query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h">Optional.
+                  Query handler on the source pad. Should chain up to the
+                  parent to let the default handler run (Since: 1.2)</doc>
         <callback name="src_query">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
           <return-value transfer-ownership="none">
@@ -3937,7 +4188,7 @@ allocated on the stack.</doc>
    when the first non-queued frame is finished</doc>
       </member>
     </bitfield>
-    <record name="BaseParsePrivate" c:type="GstBaseParsePrivate" disguised="1">
+    <record name="BaseParsePrivate" c:type="GstBaseParsePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbaseparse.h"/>
     </record>
     <class name="BaseSink" c:symbol-prefix="base_sink" c:type="GstBaseSink" parent="Gst.Element" abstract="1" glib:type-name="GstBaseSink" glib:get-type="gst_base_sink_get_type" glib:type-struct="BaseSinkClass">
@@ -4056,6 +4307,11 @@ perform an ASYNC state change. This feature is mostly usable when dealing
 with non-synchronized streams or sparse streams.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
       <virtual-method name="activate_pull">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Subclasses should override this when they can provide an
+    alternate method of spawning a thread to drive the pipeline in pull mode.
+    Should start or stop the pulling thread, depending on the value of the
+    "active" argument. Called after actually activating the sink pad in pull
+    mode. The default implementation starts a task on the sink pad.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4070,6 +4326,7 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Override this to handle events arriving on the sink pad</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4084,6 +4341,8 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="fixate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Only useful in pull mode. Implement if you have
+    ideas about what should be the default values for the caps you support.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Caps" c:type="GstCaps*"/>
@@ -4136,6 +4395,8 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="prepare">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to prepare the buffer for @render and @preroll. This
+    function is called before synchronisation is performed.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4150,6 +4411,8 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="prepare_list">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to prepare the buffer list for @render_list. This
+    function is called before synchronisation is performed.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4164,6 +4427,7 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="preroll">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to present the preroll buffer if desired.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4178,6 +4442,7 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="propose_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">configure the allocation query</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4192,6 +4457,7 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">perform a #GstQuery on the element.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4206,6 +4472,8 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="render">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called when a buffer should be presented or output, at the
+    correct moment if the #GstBaseSink has been set to sync to the clock.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4220,6 +4488,8 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="render_list">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Same as @render but used with buffer lists instead of
+    buffers.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4234,6 +4504,7 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Notify subclass of changed caps</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4248,6 +4519,7 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Start processing. Ideal for opening resources in the subclass</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4259,6 +4531,7 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Stop processing. Subclasses should use this to close resources.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4270,6 +4543,8 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="unlock">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Unlock any pending access to the resource. Subclasses should
+    unblock any blocked function ASAP and call gst_base_sink_wait_preroll()</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4281,6 +4556,11 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="unlock_stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Clear the previous unlock request. Subclasses should clear
+    any state they set during #GstBaseSinkClass::unlock, and be ready to
+    continue where they left off after gst_base_sink_wait_preroll(),
+    gst_base_sink_wait() or gst_wait_sink_wait_clock() return or
+    #GstBaseSinkClass::render is called again.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -4292,6 +4572,9 @@ with non-synchronized streams or sparse streams.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="wait_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Override this to implement custom logic to wait for the event
+    time (for events like EOS and GAP). Subclasses should always first
+    chain up to the default implementation.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -4329,7 +4612,7 @@ continue. Any other return value should be returned from the render vmethod.</do
           </parameter>
         </parameters>
       </method>
-      <method name="get_blocksize" c:identifier="gst_base_sink_get_blocksize">
+      <method name="get_blocksize" c:identifier="gst_base_sink_get_blocksize" glib:get-property="blocksize">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Get the number of bytes that the sink will pull when it is operating in pull
 mode.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
@@ -4360,7 +4643,7 @@ current segment.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_last_sample" c:identifier="gst_base_sink_get_last_sample">
+      <method name="get_last_sample" c:identifier="gst_base_sink_get_last_sample" glib:get-property="last-sample">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Get the last sample that arrived in the sink and was used for preroll or for
 rendering. This property can be used to generate thumbnails.
 
@@ -4395,7 +4678,7 @@ Free-function: gst_sample_unref</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_bitrate" c:identifier="gst_base_sink_get_max_bitrate" version="1.2">
+      <method name="get_max_bitrate" c:identifier="gst_base_sink_get_max_bitrate" glib:get-property="max-bitrate" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Get the maximum amount of bits per second that the sink will render.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
@@ -4409,7 +4692,7 @@ Free-function: gst_sample_unref</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_lateness" c:identifier="gst_base_sink_get_max_lateness">
+      <method name="get_max_lateness" c:identifier="gst_base_sink_get_max_lateness" glib:get-property="max-lateness">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Gets the max lateness value. See gst_base_sink_set_max_lateness() for
 more details.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
@@ -4426,7 +4709,7 @@ unlimited time.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_processing_deadline" c:identifier="gst_base_sink_get_processing_deadline" version="1.16">
+      <method name="get_processing_deadline" c:identifier="gst_base_sink_get_processing_deadline" glib:get-property="processing-deadline" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Get the processing deadline of @sink. see
 gst_base_sink_set_processing_deadline() for more information about
 the processing deadline.</doc>
@@ -4442,7 +4725,7 @@ the processing deadline.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_render_delay" c:identifier="gst_base_sink_get_render_delay">
+      <method name="get_render_delay" c:identifier="gst_base_sink_get_render_delay" glib:get-property="render-delay">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Get the render delay of @sink. see gst_base_sink_set_render_delay() for more
 information about the render delay.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
@@ -4457,7 +4740,7 @@ information about the render delay.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_stats" c:identifier="gst_base_sink_get_stats" version="1.18">
+      <method name="get_stats" c:identifier="gst_base_sink_get_stats" glib:get-property="stats" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Return various #GstBaseSink statistics. This function returns a #GstStructure
 with name `application/x-gst-base-sink-stats` with the following fields:
 
@@ -4476,7 +4759,7 @@ with name `application/x-gst-base-sink-stats` with the following fields:
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_sync" c:identifier="gst_base_sink_get_sync">
+      <method name="get_sync" c:identifier="gst_base_sink_get_sync" glib:get-property="sync">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Checks if @sink is currently configured to synchronize against the
 clock.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
@@ -4491,7 +4774,7 @@ clock.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_throttle_time" c:identifier="gst_base_sink_get_throttle_time">
+      <method name="get_throttle_time" c:identifier="gst_base_sink_get_throttle_time" glib:get-property="throttle-time">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Get the time that will be inserted between frames to control the
 maximum buffers per second.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
@@ -4506,7 +4789,7 @@ maximum buffers per second.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_ts_offset" c:identifier="gst_base_sink_get_ts_offset">
+      <method name="get_ts_offset" c:identifier="gst_base_sink_get_ts_offset" glib:get-property="ts-offset">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Get the synchronisation offset of @sink.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
@@ -4625,7 +4908,7 @@ against the clock or when it is dealing with sparse streams.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_blocksize" c:identifier="gst_base_sink_set_blocksize">
+      <method name="set_blocksize" c:identifier="gst_base_sink_set_blocksize" glib:set-property="blocksize">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Set the number of bytes that the sink will pull when it is operating in pull
 mode.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
@@ -4678,7 +4961,7 @@ property.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_bitrate" c:identifier="gst_base_sink_set_max_bitrate" version="1.2">
+      <method name="set_max_bitrate" c:identifier="gst_base_sink_set_max_bitrate" glib:set-property="max-bitrate" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Set the maximum amount of bits per second that the sink will render.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
         <return-value transfer-ownership="none">
@@ -4695,7 +4978,7 @@ property.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_lateness" c:identifier="gst_base_sink_set_max_lateness">
+      <method name="set_max_lateness" c:identifier="gst_base_sink_set_max_lateness" glib:set-property="max-lateness">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Sets the new max lateness value to @max_lateness. This value is
 used to decide if a buffer should be dropped or not based on the
 buffer timestamp and the current clock time. A value of -1 means
@@ -4715,7 +4998,7 @@ an unlimited time.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_processing_deadline" c:identifier="gst_base_sink_set_processing_deadline" version="1.16">
+      <method name="set_processing_deadline" c:identifier="gst_base_sink_set_processing_deadline" glib:set-property="processing-deadline" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Maximum amount of time (in nanoseconds) that the pipeline can take
 for processing the buffer. This is added to the latency of live
 pipelines.
@@ -4753,7 +5036,7 @@ This function is usually called by subclasses.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_render_delay" c:identifier="gst_base_sink_set_render_delay">
+      <method name="set_render_delay" c:identifier="gst_base_sink_set_render_delay" glib:set-property="render-delay">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Set the render delay in @sink to @delay. The render delay is the time
 between actual rendering of a buffer and its synchronisation time. Some
 devices might delay media rendering which can be compensated for with this
@@ -4778,7 +5061,7 @@ This function is usually called by subclasses.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_sync" c:identifier="gst_base_sink_set_sync">
+      <method name="set_sync" c:identifier="gst_base_sink_set_sync" glib:set-property="sync">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Configures @sink to synchronize on the clock or not. When
 @sync is %FALSE, incoming samples will be played as fast as
 possible. If @sync is %TRUE, the timestamps of the incoming
@@ -4799,7 +5082,7 @@ contents.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_throttle_time" c:identifier="gst_base_sink_set_throttle_time">
+      <method name="set_throttle_time" c:identifier="gst_base_sink_set_throttle_time" glib:set-property="throttle-time">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Set the time that will be inserted between rendered buffers. This
 can be used to control the maximum buffers per second that the sink
 will render.</doc>
@@ -4818,7 +5101,7 @@ will render.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_ts_offset" c:identifier="gst_base_sink_set_ts_offset">
+      <method name="set_ts_offset" c:identifier="gst_base_sink_set_ts_offset" glib:set-property="ts-offset">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Adjust the synchronisation of @sink with @offset. A negative value will
 render buffers earlier than their timestamp. A positive value will delay
 rendering. This function can be used to fix playback of badly timestamped
@@ -4938,55 +5221,55 @@ continue. Any other return value should be returned from the render vmethod.</do
           </instance-parameter>
         </parameters>
       </method>
-      <property name="async" writable="1" transfer-ownership="none">
+      <property name="async" writable="1" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">If set to %TRUE, the basesink will perform asynchronous state changes.
 When set to %FALSE, the sink will not signal the parent when it prerolls.
 Use this option when dealing with sparse streams or when synchronisation is
 not required.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="blocksize" writable="1" transfer-ownership="none">
+      <property name="blocksize" writable="1" transfer-ownership="none" setter="set_blocksize" getter="get_blocksize" default-value="4096">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">The amount of bytes to pull when operating in pull mode.</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="enable-last-sample" writable="1" transfer-ownership="none">
+      <property name="enable-last-sample" writable="1" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Enable the last-sample property. If %FALSE, basesink doesn't keep a
 reference to the last buffer arrived and the last-sample property is always
 set to %NULL. This can be useful if you need buffers to be released as soon
 as possible, eg. if you're using a buffer pool.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="last-sample" transfer-ownership="none">
+      <property name="last-sample" transfer-ownership="none" getter="get_last_sample">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">The last buffer that arrived in the sink and was used for preroll or for
 rendering. This property can be used to generate thumbnails. This property
 can be %NULL when the sink has not yet received a buffer.</doc>
         <type name="Gst.Sample"/>
       </property>
-      <property name="max-bitrate" version="1.2" writable="1" transfer-ownership="none">
+      <property name="max-bitrate" version="1.2" writable="1" transfer-ownership="none" setter="set_max_bitrate" getter="get_max_bitrate" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Control the maximum amount of bits that will be rendered per second.
 Setting this property to a value bigger than 0 will make the sink delay
 rendering of the buffers when it would exceed to max-bitrate.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="max-lateness" writable="1" transfer-ownership="none">
+      <property name="max-lateness" writable="1" transfer-ownership="none" setter="set_max_lateness" getter="get_max_lateness" default-value="-1">
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="processing-deadline" version="1.16" writable="1" transfer-ownership="none">
+      <property name="processing-deadline" version="1.16" writable="1" transfer-ownership="none" setter="set_processing_deadline" getter="get_processing_deadline" default-value="20000000">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Maximum amount of time (in nanoseconds) that the pipeline can take
 for processing the buffer. This is added to the latency of live
 pipelines.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="qos" writable="1" transfer-ownership="none">
+      <property name="qos" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="render-delay" writable="1" transfer-ownership="none">
+      <property name="render-delay" writable="1" transfer-ownership="none" setter="set_render_delay" getter="get_render_delay" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">The additional delay between synchronisation and actual rendering of the
 media. This property will add additional latency to the device in order to
 make other sinks compensate for the delay.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="stats" version="1.18" transfer-ownership="none">
+      <property name="stats" version="1.18" transfer-ownership="none" getter="get_stats">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Various #GstBaseSink statistics. This property returns a #GstStructure
 with name `application/x-gst-base-sink-stats` with the following fields:
 
@@ -4995,16 +5278,16 @@ with name `application/x-gst-base-sink-stats` with the following fields:
 - "rendered" G_TYPE_UINT64   Number of rendered frames</doc>
         <type name="Gst.Structure"/>
       </property>
-      <property name="sync" writable="1" transfer-ownership="none">
+      <property name="sync" writable="1" transfer-ownership="none" setter="set_sync" getter="get_sync" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="throttle-time" writable="1" transfer-ownership="none">
+      <property name="throttle-time" writable="1" transfer-ownership="none" setter="set_throttle_time" getter="get_throttle_time" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">The time to insert between buffers. This property can be used to control
 the maximum amount of buffers per second to render. Setting this property
 to a value bigger than 0 will make the sink create THROTTLE QoS events.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="ts-offset" writable="1" transfer-ownership="none">
+      <property name="ts-offset" writable="1" transfer-ownership="none" setter="set_ts_offset" getter="get_ts_offset" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.c">Controls the final synchronisation, a negative value will render the buffer
 earlier while a positive value delays playback. This property can be
 used to fix synchronisation in bad files.</doc>
@@ -5086,6 +5369,7 @@ output/present buffers.</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="get_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to get sink pad caps from the subclass</doc>
         <callback name="get_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="full">
@@ -5102,6 +5386,7 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Notify subclass of changed caps</doc>
         <callback name="set_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5118,6 +5403,8 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="fixate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Only useful in pull mode. Implement if you have
+    ideas about what should be the default values for the caps you support.</doc>
         <callback name="fixate">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="full">
@@ -5134,6 +5421,11 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="activate_pull">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Subclasses should override this when they can provide an
+    alternate method of spawning a thread to drive the pipeline in pull mode.
+    Should start or stop the pulling thread, depending on the value of the
+    "active" argument. Called after actually activating the sink pad in pull
+    mode. The default implementation starts a task on the sink pad.</doc>
         <callback name="activate_pull">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5150,6 +5442,8 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="get_times">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to get the start and end times for synchronising
+    the passed buffer to the clock</doc>
         <callback name="get_times">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5174,6 +5468,7 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="propose_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">configure the allocation query</doc>
         <callback name="propose_allocation">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5190,6 +5485,7 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Start processing. Ideal for opening resources in the subclass</doc>
         <callback name="start">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5203,6 +5499,7 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Stop processing. Subclasses should use this to close resources.</doc>
         <callback name="stop">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5216,6 +5513,8 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="unlock">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Unlock any pending access to the resource. Subclasses should
+    unblock any blocked function ASAP and call gst_base_sink_wait_preroll()</doc>
         <callback name="unlock">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5229,6 +5528,11 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="unlock_stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Clear the previous unlock request. Subclasses should clear
+    any state they set during #GstBaseSinkClass::unlock, and be ready to
+    continue where they left off after gst_base_sink_wait_preroll(),
+    gst_base_sink_wait() or gst_wait_sink_wait_clock() return or
+    #GstBaseSinkClass::render is called again.</doc>
         <callback name="unlock_stop">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5242,6 +5546,7 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">perform a #GstQuery on the element.</doc>
         <callback name="query">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5258,6 +5563,7 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Override this to handle events arriving on the sink pad</doc>
         <callback name="event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5274,6 +5580,9 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="wait_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Override this to implement custom logic to wait for the event
+    time (for events like EOS and GAP). Subclasses should always first
+    chain up to the default implementation.</doc>
         <callback name="wait_event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5290,6 +5599,8 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="prepare">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to prepare the buffer for @render and @preroll. This
+    function is called before synchronisation is performed.</doc>
         <callback name="prepare">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5306,6 +5617,8 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="prepare_list">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to prepare the buffer list for @render_list. This
+    function is called before synchronisation is performed.</doc>
         <callback name="prepare_list">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5322,6 +5635,7 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="preroll">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called to present the preroll buffer if desired.</doc>
         <callback name="preroll">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5338,6 +5652,8 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="render">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Called when a buffer should be presented or output, at the
+    correct moment if the #GstBaseSink has been set to sync to the clock.</doc>
         <callback name="render">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5354,6 +5670,8 @@ output/present buffers.</doc>
         </callback>
       </field>
       <field name="render_list">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h">Same as @render but used with buffer lists instead of
+    buffers.</doc>
         <callback name="render_list">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
           <return-value transfer-ownership="none">
@@ -5375,7 +5693,7 @@ output/present buffers.</doc>
         </array>
       </field>
     </record>
-    <record name="BaseSinkPrivate" c:type="GstBaseSinkPrivate" disguised="1">
+    <record name="BaseSinkPrivate" c:type="GstBaseSinkPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesink.h"/>
     </record>
     <class name="BaseSrc" c:symbol-prefix="base_src" c:type="GstBaseSrc" parent="Gst.Element" abstract="1" glib:type-name="GstBaseSrc" glib:get-type="gst_base_src_get_type" glib:type-struct="BaseSrcClass">
@@ -5537,6 +5855,7 @@ implementation will call alloc if no allocated @buf is provided and then call fi
         </parameters>
       </virtual-method>
       <virtual-method name="decide_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">configure the allocation query</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5551,6 +5870,7 @@ implementation will call alloc if no allocated @buf is provided and then call fi
         </parameters>
       </virtual-method>
       <virtual-method name="do_seek">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Perform seeking on the resource to the indicated segment.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5565,6 +5885,7 @@ implementation will call alloc if no allocated @buf is provided and then call fi
         </parameters>
       </virtual-method>
       <virtual-method name="event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Override this to implement custom event handling.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5579,6 +5900,8 @@ implementation will call alloc if no allocated @buf is provided and then call fi
         </parameters>
       </virtual-method>
       <virtual-method name="fill">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Ask the subclass to fill the buffer with data for offset and size. The
+  passed buffer is guaranteed to hold the requested amount of bytes.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -5669,6 +5992,7 @@ out. The base class will sync on the clock using these times.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="is_seekable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Check if the source can seek</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5700,6 +6024,12 @@ buffer is allocated.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="prepare_seek_segment">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Prepare the #GstSegment that will be passed to the
+  #GstBaseSrcClass::do_seek vmethod for executing a seek
+  request. Sub-classes should override this if they support seeking in
+  formats other than the configured native format. By default, it tries to
+  convert the seek arguments to the configured native format and prepare a
+  segment in that format.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5717,6 +6047,7 @@ buffer is allocated.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Handle a requested query.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5749,6 +6080,10 @@ buffer is allocated.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Start processing. Subclasses should open resources and prepare
+   to produce data. Implementation should call gst_base_src_start_complete()
+   when the operation completes, either from the current thread or any other
+   thread that finishes the start operation asynchronously.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5760,6 +6095,7 @@ buffer is allocated.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Stop processing. Subclasses should use this to close resources.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5771,6 +6107,12 @@ buffer is allocated.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="unlock">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Unlock any pending access to the resource. Subclasses should unblock
+   any blocked function ASAP. In particular, any `create()` function in
+   progress should be unblocked and should return GST_FLOW_FLUSHING. Any
+   future #GstBaseSrcClass::create function call should also return
+   GST_FLOW_FLUSHING until the #GstBaseSrcClass::unlock_stop function has
+   been called.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5782,6 +6124,9 @@ buffer is allocated.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="unlock_stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Clear the previous unlock request. Subclasses should clear any
+   state they set during #GstBaseSrcClass::unlock, such as clearing command
+   queues.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5817,7 +6162,7 @@ used</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_blocksize" c:identifier="gst_base_src_get_blocksize">
+      <method name="get_blocksize" c:identifier="gst_base_src_get_blocksize" glib:get-property="blocksize">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">Get the number of bytes that @src will push out with each buffer.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
@@ -5845,7 +6190,7 @@ by the src; unref it after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_do_timestamp" c:identifier="gst_base_src_get_do_timestamp">
+      <method name="get_do_timestamp" c:identifier="gst_base_src_get_do_timestamp" glib:get-property="do-timestamp">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">Query if @src timestamps outgoing buffers based on the current running_time.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
         <return-value transfer-ownership="none">
@@ -6047,7 +6392,7 @@ blocking operation should be unblocked with the unlock vmethod.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_automatic_eos" c:identifier="gst_base_src_set_automatic_eos" version="1.4">
+      <method name="set_automatic_eos" c:identifier="gst_base_src_set_automatic_eos" glib:set-property="automatic-eos" version="1.4">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">If @automatic_eos is %TRUE, @src will automatically go EOS if a buffer
 after the total size is returned. By default this is %TRUE but sources
 that can't return an authoritative size and only know that they're EOS
@@ -6073,7 +6418,7 @@ returns %GST_FLOW_EOS.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_blocksize" c:identifier="gst_base_src_set_blocksize">
+      <method name="set_blocksize" c:identifier="gst_base_src_set_blocksize" glib:set-property="blocksize">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">Set the number of bytes that @src will push out with each buffer. When
 @blocksize is set to -1, a default length will be used.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
@@ -6109,7 +6454,7 @@ returns %GST_FLOW_EOS.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_do_timestamp" c:identifier="gst_base_src_set_do_timestamp">
+      <method name="set_do_timestamp" c:identifier="gst_base_src_set_do_timestamp" glib:set-property="do-timestamp">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">Configure @src to automatically timestamp outgoing buffers based on the
 current running_time of the pipeline. This property is mostly useful for live
 sources.</doc>
@@ -6282,20 +6627,20 @@ continue. Any other return value should be returned from the create vmethod.</do
           </instance-parameter>
         </parameters>
       </method>
-      <property name="automatic-eos" version="1.24" writable="1" transfer-ownership="none">
+      <property name="automatic-eos" version="1.24" writable="1" transfer-ownership="none" setter="set_automatic_eos" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.c">See gst_base_src_set_automatic_eos()</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="blocksize" writable="1" transfer-ownership="none">
+      <property name="blocksize" writable="1" transfer-ownership="none" setter="set_blocksize" getter="get_blocksize" default-value="4096">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="do-timestamp" writable="1" transfer-ownership="none">
+      <property name="do-timestamp" writable="1" transfer-ownership="none" setter="set_do_timestamp" getter="get_do_timestamp" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="num-buffers" writable="1" transfer-ownership="none">
+      <property name="num-buffers" writable="1" transfer-ownership="none" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="typefind" writable="1" transfer-ownership="none">
+      <property name="typefind" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="element">
@@ -6368,6 +6713,7 @@ buffers.</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="get_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Called to get the caps to report</doc>
         <callback name="get_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="full">
@@ -6384,6 +6730,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="negotiate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Negotiated the caps with the peer.</doc>
         <callback name="negotiate">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6399,6 +6746,8 @@ buffers.</doc>
         </callback>
       </field>
       <field name="fixate">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Called during negotiation if caps need fixating. Implement instead of
+  setting a fixate function on the source pad.</doc>
         <callback name="fixate">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="full">
@@ -6416,6 +6765,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Notify subclass of changed output caps</doc>
         <callback name="set_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6435,6 +6785,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="decide_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">configure the allocation query</doc>
         <callback name="decide_allocation">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6451,6 +6802,10 @@ buffers.</doc>
         </callback>
       </field>
       <field name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Start processing. Subclasses should open resources and prepare
+   to produce data. Implementation should call gst_base_src_start_complete()
+   when the operation completes, either from the current thread or any other
+   thread that finishes the start operation asynchronously.</doc>
         <callback name="start">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6464,6 +6819,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Stop processing. Subclasses should use this to close resources.</doc>
         <callback name="stop">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6477,6 +6833,9 @@ buffers.</doc>
         </callback>
       </field>
       <field name="get_times">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Given a buffer, return the start and stop time when it
+   should be pushed out. The base class will sync on the clock using
+   these times.</doc>
         <callback name="get_times">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6499,6 +6858,8 @@ buffers.</doc>
         </callback>
       </field>
       <field name="get_size">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Return the total size of the resource, in the format set by
+    gst_base_src_set_format().</doc>
         <callback name="get_size">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6516,6 +6877,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="is_seekable">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Check if the source can seek</doc>
         <callback name="is_seekable">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6529,6 +6891,12 @@ buffers.</doc>
         </callback>
       </field>
       <field name="prepare_seek_segment">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Prepare the #GstSegment that will be passed to the
+  #GstBaseSrcClass::do_seek vmethod for executing a seek
+  request. Sub-classes should override this if they support seeking in
+  formats other than the configured native format. By default, it tries to
+  convert the seek arguments to the configured native format and prepare a
+  segment in that format.</doc>
         <callback name="prepare_seek_segment">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6548,6 +6916,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="do_seek">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Perform seeking on the resource to the indicated segment.</doc>
         <callback name="do_seek">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6564,6 +6933,12 @@ buffers.</doc>
         </callback>
       </field>
       <field name="unlock">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Unlock any pending access to the resource. Subclasses should unblock
+   any blocked function ASAP. In particular, any `create()` function in
+   progress should be unblocked and should return GST_FLOW_FLUSHING. Any
+   future #GstBaseSrcClass::create function call should also return
+   GST_FLOW_FLUSHING until the #GstBaseSrcClass::unlock_stop function has
+   been called.</doc>
         <callback name="unlock">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6577,6 +6952,9 @@ buffers.</doc>
         </callback>
       </field>
       <field name="unlock_stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Clear the previous unlock request. Subclasses should clear any
+   state they set during #GstBaseSrcClass::unlock, such as clearing command
+   queues.</doc>
         <callback name="unlock_stop">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6590,6 +6968,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Handle a requested query.</doc>
         <callback name="query">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6606,6 +6985,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Override this to implement custom event handling.</doc>
         <callback name="event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6622,6 +7002,13 @@ buffers.</doc>
         </callback>
       </field>
       <field name="create">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Ask the subclass to create a buffer with offset and size.  When the
+  subclass returns GST_FLOW_OK, it MUST return a buffer of the requested size
+  unless fewer bytes are available because an EOS condition is near. No
+  buffer should be returned when the return value is different from
+  GST_FLOW_OK. A return value of GST_FLOW_EOS signifies that the end of
+  stream is reached. The default implementation will call
+  #GstBaseSrcClass::alloc and then call #GstBaseSrcClass::fill.</doc>
         <callback name="create">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6644,6 +7031,8 @@ buffers.</doc>
         </callback>
       </field>
       <field name="alloc">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Ask the subclass to allocate a buffer with for offset and size. The
+  default implementation will create a new buffer from the negotiated allocator.</doc>
         <callback name="alloc">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6666,6 +7055,8 @@ buffers.</doc>
         </callback>
       </field>
       <field name="fill">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">Ask the subclass to fill the buffer with data for offset and size. The
+  passed buffer is guaranteed to hold the requested amount of bytes.</doc>
         <callback name="fill">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
           <return-value transfer-ownership="none">
@@ -6706,7 +7097,7 @@ buffers.</doc>
         <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h">offset to define more flags</doc>
       </member>
     </bitfield>
-    <record name="BaseSrcPrivate" c:type="GstBaseSrcPrivate" disguised="1">
+    <record name="BaseSrcPrivate" c:type="GstBaseSrcPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasesrc.h"/>
     </record>
     <class name="BaseTransform" c:symbol-prefix="base_transform" c:type="GstBaseTransform" parent="Gst.Element" abstract="1" glib:type-name="GstBaseTransform" glib:get-type="gst_base_transform_get_type" glib:type-struct="BaseTransformClass">
@@ -6816,6 +7207,10 @@ It provides for:
   * Implied %FALSE if ONLY transform function is implemented.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
       <virtual-method name="accept_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Subclasses can override this method to check if @caps can be
+                 handled by the element. The default implementation might not be
+                 the most optimal way to check this in all cases.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -6833,6 +7228,10 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="before_transform">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                   This method is called right before the base class will
+                   start processing. Dynamic properties or other delayed
+                   configuration could be performed in this method.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -6847,6 +7246,10 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="copy_metadata">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                Copy the metadata from the input buffer to the output buffer.
+                The default implementation will copy the flags, timestamps and
+                offsets of the buffer.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -6864,6 +7267,14 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="decide_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Setup the allocation parameters for allocating output
+                   buffers. The passed in query contains the result of the
+                   downstream allocation query. This function is only called
+                   when not operating in passthrough mode. The default
+                   implementation will remove all memory dependent metadata.
+                   If there is a @filter_meta method implementation, it will
+                   be called for all metadata API in the downstream query,
+                   otherwise the metadata API is removed.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -6878,6 +7289,9 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="filter_meta">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Return %TRUE if the metadata API should be proposed in the
+              upstream allocation query. The default implementation is %NULL
+              and will cause all metadata to be removed.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -6966,6 +7380,14 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="propose_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Propose buffer allocation parameters for upstream elements.
+                     This function must be implemented if the element reads or
+                     writes the buffer content. The query that was passed to
+                     the decide_allocation is passed in this method (or %NULL
+                     when the element is in passthrough mode). The default
+                     implementation will pass the query downstream when in
+                     passthrough mode and will copy all the filtered metadata
+                     API in non-passthrough mode.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -6983,6 +7405,10 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Handle a requested query. Subclasses that implement this
+                 must chain up to the parent if they didn't handle the
+                 query</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -7000,6 +7426,7 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Allows the subclass to be notified of the actual caps set.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -7045,6 +7472,9 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Called when the element starts processing.
+                 Allows opening external resources.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -7056,6 +7486,9 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Called when the element stops processing.
+                 Allows closing external resources.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -7067,6 +7500,13 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="submit_input_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Function which accepts a new input buffer and pre-processes it.
+                 The default implementation performs caps (re)negotiation, then
+                 QoS if needed, and places the input buffer into the @queued_buf
+                 member variable. If the buffer is dropped due to QoS, it returns
+                 GST_BASE_TRANSFORM_FLOW_DROPPED. If this input buffer is not
+                 contiguous with any previous input buffer, then @is_discont
+                 is set to %TRUE. (Since: 1.6)</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -7084,6 +7524,10 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="transform">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Required if the element does not operate in-place.
+                 Transforms one incoming buffer to one outgoing buffer.
+                 The function is allowed to change size/timestamp/duration
+                 of the outgoing buffer.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -7101,6 +7545,9 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="transform_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.  Given the pad in this direction and the given
+                 caps, what caps are allowed on the other pad in this
+                 element ?</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Caps" c:type="GstCaps*"/>
@@ -7121,6 +7568,8 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="transform_ip">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Required if the element operates in-place.
+                 Transform the incoming buffer in-place.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -7135,6 +7584,10 @@ It provides for:
         </parameters>
       </virtual-method>
       <virtual-method name="transform_meta">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional. Transform the metadata on the input buffer to the
+                 output buffer. By default this method copies all meta without
+                 tags. Subclasses can implement this method and return %TRUE if
+                 the metadata is to be copied.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -7494,7 +7947,7 @@ downstream</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="qos" writable="1" transfer-ownership="none">
+      <property name="qos" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="element">
@@ -7549,6 +8002,9 @@ same type and quantity) it should provide @transform_ip.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </field>
       <field name="transform_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.  Given the pad in this direction and the given
+                 caps, what caps are allowed on the other pad in this
+                 element ?</doc>
         <callback name="transform_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="full">
@@ -7571,6 +8027,10 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="fixate_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional. Given the pad in this direction and the given
+                 caps, fixate the caps on the other pad. The function takes
+                 ownership of @othercaps and returns a fixated version of
+                 @othercaps. @othercaps is not guaranteed to be writable.</doc>
         <callback name="fixate_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="full">
@@ -7593,6 +8053,10 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="accept_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Subclasses can override this method to check if @caps can be
+                 handled by the element. The default implementation might not be
+                 the most optimal way to check this in all cases.</doc>
         <callback name="accept_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7612,6 +8076,7 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Allows the subclass to be notified of the actual caps set.</doc>
         <callback name="set_caps">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7631,6 +8096,10 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="query">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Handle a requested query. Subclasses that implement this
+                 must chain up to the parent if they didn't handle the
+                 query</doc>
         <callback name="query">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7650,6 +8119,14 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="decide_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Setup the allocation parameters for allocating output
+                   buffers. The passed in query contains the result of the
+                   downstream allocation query. This function is only called
+                   when not operating in passthrough mode. The default
+                   implementation will remove all memory dependent metadata.
+                   If there is a @filter_meta method implementation, it will
+                   be called for all metadata API in the downstream query,
+                   otherwise the metadata API is removed.</doc>
         <callback name="decide_allocation">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7666,6 +8143,9 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="filter_meta">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Return %TRUE if the metadata API should be proposed in the
+              upstream allocation query. The default implementation is %NULL
+              and will cause all metadata to be removed.</doc>
         <callback name="filter_meta">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7688,6 +8168,14 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="propose_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Propose buffer allocation parameters for upstream elements.
+                     This function must be implemented if the element reads or
+                     writes the buffer content. The query that was passed to
+                     the decide_allocation is passed in this method (or %NULL
+                     when the element is in passthrough mode). The default
+                     implementation will pass the query downstream when in
+                     passthrough mode and will copy all the filtered metadata
+                     API in non-passthrough mode.</doc>
         <callback name="propose_allocation">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7707,6 +8195,11 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="transform_size">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional. Given the size of a buffer in the given direction
+                 with the given caps, calculate the size in bytes of a buffer
+                 on the other pad with the given other caps.
+                 The default implementation uses get_unit_size and keeps
+                 the number of units the same.</doc>
         <callback name="transform_size">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7735,6 +8228,8 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="get_unit_size">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Required if the transform is not in-place.
+                 Get the size in bytes of one unit for the given caps.</doc>
         <callback name="get_unit_size">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7754,6 +8249,9 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="start">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Called when the element starts processing.
+                 Allows opening external resources.</doc>
         <callback name="start">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7767,6 +8265,9 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="stop">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Called when the element stops processing.
+                 Allows closing external resources.</doc>
         <callback name="stop">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7780,6 +8281,9 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="sink_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Event handler on the sink pad. The default implementation
+                 handles the event and forwards it downstream.</doc>
         <callback name="sink_event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7796,6 +8300,9 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="src_event">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                 Event handler on the source pad. The default implementation
+                 handles the event and forwards it upstream.</doc>
         <callback name="src_event">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7812,6 +8319,15 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="prepare_output_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                        Subclasses can override this to do their own
+                        allocation of output buffers.  Elements that only do
+                        analysis can return a subbuffer or even just
+                        return a reference to the input buffer (if in
+                        passthrough mode). The default implementation will
+                        use the negotiated allocator or bufferpool and
+                        transform_size to allocate an output buffer or it
+                        will return the input buffer in passthrough mode.</doc>
         <callback name="prepare_output_buffer">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7831,6 +8347,10 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="copy_metadata">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                Copy the metadata from the input buffer to the output buffer.
+                The default implementation will copy the flags, timestamps and
+                offsets of the buffer.</doc>
         <callback name="copy_metadata">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7850,6 +8370,10 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="transform_meta">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional. Transform the metadata on the input buffer to the
+                 output buffer. By default this method copies all meta without
+                 tags. Subclasses can implement this method and return %TRUE if
+                 the metadata is to be copied.</doc>
         <callback name="transform_meta">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7872,6 +8396,10 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="before_transform">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Optional.
+                   This method is called right before the base class will
+                   start processing. Dynamic properties or other delayed
+                   configuration could be performed in this method.</doc>
         <callback name="before_transform">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7888,6 +8416,10 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="transform">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Required if the element does not operate in-place.
+                 Transforms one incoming buffer to one outgoing buffer.
+                 The function is allowed to change size/timestamp/duration
+                 of the outgoing buffer.</doc>
         <callback name="transform">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7907,6 +8439,8 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="transform_ip">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Required if the element operates in-place.
+                 Transform the incoming buffer in-place.</doc>
         <callback name="transform_ip">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7923,6 +8457,13 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="submit_input_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Function which accepts a new input buffer and pre-processes it.
+                 The default implementation performs caps (re)negotiation, then
+                 QoS if needed, and places the input buffer into the @queued_buf
+                 member variable. If the buffer is dropped due to QoS, it returns
+                 GST_BASE_TRANSFORM_FLOW_DROPPED. If this input buffer is not
+                 contiguous with any previous input buffer, then @is_discont
+                 is set to %TRUE. (Since: 1.6)</doc>
         <callback name="submit_input_buffer">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7942,6 +8483,15 @@ same type and quantity) it should provide @transform_ip.</doc>
         </callback>
       </field>
       <field name="generate_output">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h">Called after each new input buffer is submitted repeatedly
+                  until it either generates an error or fails to generate an output
+                  buffer. The default implementation takes the contents of the
+                  @queued_buf variable, generates an output buffer if needed
+                  by calling the class @prepare_output_buffer, and then
+                  calls either @transform or @transform_ip. Elements that don't
+                  do 1-to-1 transformations of input to output buffers can either
+                  return GST_BASE_TRANSFORM_FLOW_DROPPED or simply not generate
+                  an output buffer until they are ready to do so. (Since: 1.6)</doc>
         <callback name="generate_output">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
           <return-value transfer-ownership="none">
@@ -7963,7 +8513,7 @@ same type and quantity) it should provide @transform_ip.</doc>
         </array>
       </field>
     </record>
-    <record name="BaseTransformPrivate" c:type="GstBaseTransformPrivate" disguised="1">
+    <record name="BaseTransformPrivate" c:type="GstBaseTransformPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstbasetransform.h"/>
     </record>
     <record name="BitReader" c:type="GstBitReader">
@@ -11207,7 +11757,7 @@ memory and resources allocated for it.</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="CollectDataPrivate" c:type="GstCollectDataPrivate" disguised="1">
+    <record name="CollectDataPrivate" c:type="GstCollectDataPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstcollectpads.h"/>
     </record>
     <class name="CollectPads" c:symbol-prefix="collect_pads" c:type="GstCollectPads" parent="Gst.Object" glib:type-name="GstCollectPads" glib:get-type="gst_collect_pads_get_type" glib:type-struct="CollectPadsClass">
@@ -12071,7 +12621,7 @@ gst_collect_pads_set_flushing nor gst_collect_pads_clear from this function.</do
         </parameter>
       </parameters>
     </callback>
-    <record name="CollectPadsPrivate" c:type="GstCollectPadsPrivate" disguised="1">
+    <record name="CollectPadsPrivate" c:type="GstCollectPadsPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstcollectpads.h"/>
     </record>
     <callback name="CollectPadsQueryFunction" c:type="GstCollectPadsQueryFunction">
@@ -12408,13 +12958,13 @@ MT Safe.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="current-level-bytes" transfer-ownership="none">
+      <property name="current-level-bytes" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="current-level-time" transfer-ownership="none">
+      <property name="current-level-time" transfer-ownership="none" default-value="0">
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="current-level-visible" transfer-ownership="none">
+      <property name="current-level-visible" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
       <field name="object">
@@ -12577,7 +13127,7 @@ This function should also drop the reference to @object the owner of the
         </array>
       </field>
     </record>
-    <record name="DataQueuePrivate" c:type="GstDataQueuePrivate" disguised="1">
+    <record name="DataQueuePrivate" c:type="GstDataQueuePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gstdataqueue.h"/>
     </record>
     <record name="DataQueueSize" c:type="GstDataQueueSize" introspectable="0">
@@ -12596,7 +13146,7 @@ This function should also drop the reference to @object the owner of the
         <type name="guint64" c:type="guint64"/>
       </field>
     </record>
-    <record name="FlowCombiner" c:type="GstFlowCombiner" version="1.4" glib:type-name="GstFlowCombiner" glib:get-type="gst_flow_combiner_get_type" c:symbol-prefix="flow_combiner">
+    <record name="FlowCombiner" c:type="GstFlowCombiner" opaque="1" version="1.4" glib:type-name="GstFlowCombiner" glib:get-type="gst_flow_combiner_get_type" c:symbol-prefix="flow_combiner">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstflowcombiner.c">Utility struct to help handling #GstFlowReturn combination. Useful for
 #GstElement&lt;!-- --&gt;s that have multiple source pads and need to combine
 the different #GstFlowReturn for those pads.
@@ -13003,6 +13553,7 @@ no allocated @buf is provided and then call fill.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="fill">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h">Ask the subclass to fill the buffer with data.</doc>
         <source-position filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -13035,6 +13586,10 @@ buffers.</doc>
         <type name="BaseSrcClass" c:type="GstBaseSrcClass"/>
       </field>
       <field name="create">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h">Ask the subclass to create a buffer. The subclass decides which
+         size this buffer should be. Other then that, refer to
+         #GstBaseSrc&lt;!-- --&gt;.create() for more details. If this method is
+         not implemented, @alloc followed by @fill will be called.</doc>
         <callback name="create">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h"/>
           <return-value transfer-ownership="none">
@@ -13051,6 +13606,9 @@ buffers.</doc>
         </callback>
       </field>
       <field name="alloc">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h">Ask the subclass to allocate a buffer. The subclass decides which
+        size this buffer should be. The default implementation will create
+        a new buffer from the negotiated allocator.</doc>
         <callback name="alloc">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h"/>
           <return-value transfer-ownership="none">
@@ -13067,6 +13625,7 @@ buffers.</doc>
         </callback>
       </field>
       <field name="fill">
+        <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h">Ask the subclass to fill the buffer with data.</doc>
         <callback name="fill">
           <source-position filename="../subprojects/gstreamer/libs/gst/base/gstpushsrc.h"/>
           <return-value transfer-ownership="none">
@@ -13088,7 +13647,7 @@ buffers.</doc>
         </array>
       </field>
     </record>
-    <record name="QueueArray" c:type="GstQueueArray" disguised="1" introspectable="0" deprecated="1" deprecated-version="1.26">
+    <record name="QueueArray" c:type="GstQueueArray" disguised="1" opaque="1" introspectable="0" deprecated="1" deprecated-version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gstqueuearray.c">#GstQueueArray is an object that provides standard queue functionality
 based on an array instead of linked lists. This reduces the overhead
 caused by memory management by a large factor.</doc>
@@ -13569,7 +14128,7 @@ of size @struct_size, with an initial queue size of @initial_size.</doc>
         </parameters>
       </function>
     </record>
-    <record name="TypeFindData" c:type="GstTypeFindData" disguised="1" version="1.22">
+    <record name="TypeFindData" c:type="GstTypeFindData" disguised="1" opaque="1" version="1.22">
       <doc xml:space="preserve" filename="../subprojects/gstreamer/libs/gst/base/gsttypefindhelper.c">The opaque #GstTypeFindData structure.</doc>
       <source-position filename="../subprojects/gstreamer/libs/gst/base/gsttypefindhelper.h"/>
       <method name="free" c:identifier="gst_type_find_data_free" version="1.22" introspectable="0">

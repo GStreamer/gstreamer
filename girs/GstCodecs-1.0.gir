@@ -384,7 +384,7 @@ decoding process for the #GstAV1Picture</doc>
         </array>
       </field>
     </record>
-    <record name="AV1DecoderPrivate" c:type="GstAV1DecoderPrivate" disguised="1">
+    <record name="AV1DecoderPrivate" c:type="GstAV1DecoderPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstav1decoder.h"/>
     </record>
     <record name="AV1Dpb" c:type="GstAV1Dpb" version="1.20">
@@ -862,7 +862,7 @@ the @system_frame_number</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="compliance" version="1.20" writable="1" construct="1" transfer-ownership="none">
+      <property name="compliance" version="1.20" writable="1" construct="1" transfer-ownership="none" default-value="GST_H264_DECODER_COMPLIANCE_AUTO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.c">The compliance controls the behavior of the decoder to handle some
 subtle cases and contexts, such as the low-latency DPB bumping or
 mapping the baseline profile as the constrained-baseline profile,
@@ -1085,17 +1085,17 @@ etc.</doc>
       </field>
     </record>
     <enumeration name="H264DecoderCompliance" version="1.20" glib:type-name="GstH264DecoderCompliance" glib:get-type="gst_h264_decoder_compliance_get_type" c:type="GstH264DecoderCompliance">
-      <member name="auto" value="0" c:identifier="GST_H264_DECODER_COMPLIANCE_AUTO" glib:nick="auto">
+      <member name="auto" value="0" c:identifier="GST_H264_DECODER_COMPLIANCE_AUTO" glib:nick="auto" glib:name="GST_H264_DECODER_COMPLIANCE_AUTO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">The decoder behavior is
     automatically choosen.</doc>
       </member>
-      <member name="strict" value="1" c:identifier="GST_H264_DECODER_COMPLIANCE_STRICT" glib:nick="strict">
+      <member name="strict" value="1" c:identifier="GST_H264_DECODER_COMPLIANCE_STRICT" glib:nick="strict" glib:name="GST_H264_DECODER_COMPLIANCE_STRICT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">The decoder behavior strictly
     conforms to the SPEC. All the decoder behaviors conform to the
     SPEC, not including any nonstandard behavior which is not
     mentioned in the SPEC.</doc>
       </member>
-      <member name="normal" value="2" c:identifier="GST_H264_DECODER_COMPLIANCE_NORMAL" glib:nick="normal">
+      <member name="normal" value="2" c:identifier="GST_H264_DECODER_COMPLIANCE_NORMAL" glib:nick="normal" glib:name="GST_H264_DECODER_COMPLIANCE_NORMAL">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">The decoder behavior normally
     conforms to the SPEC. Most behaviors conform to the SPEC but
     including some nonstandard features which are widely used or
@@ -1109,7 +1109,7 @@ etc.</doc>
     have problems when a real baseline stream comes with FMO or
     ASO.</doc>
       </member>
-      <member name="flexible" value="3" c:identifier="GST_H264_DECODER_COMPLIANCE_FLEXIBLE" glib:nick="flexible">
+      <member name="flexible" value="3" c:identifier="GST_H264_DECODER_COMPLIANCE_FLEXIBLE" glib:nick="flexible" glib:name="GST_H264_DECODER_COMPLIANCE_FLEXIBLE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h">The decoder behavior
     flexibly conforms to the SPEC. It uses the nonstandard features
     more aggressively in order to get better performance(for
@@ -1119,10 +1119,10 @@ etc.</doc>
     disorder when reference frames POC decrease in decoder order.</doc>
       </member>
     </enumeration>
-    <record name="H264DecoderPrivate" c:type="GstH264DecoderPrivate" disguised="1">
+    <record name="H264DecoderPrivate" c:type="GstH264DecoderPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264decoder.h"/>
     </record>
-    <record name="H264Dpb" c:type="GstH264Dpb" disguised="1">
+    <record name="H264Dpb" c:type="GstH264Dpb" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.h"/>
       <method name="add" c:identifier="gst_h264_dpb_add">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth264picture.c">Store the @picture</doc>
@@ -2217,10 +2217,10 @@ the @system_frame_number</doc>
         </array>
       </field>
     </record>
-    <record name="H265DecoderPrivate" c:type="GstH265DecoderPrivate" disguised="1">
+    <record name="H265DecoderPrivate" c:type="GstH265DecoderPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265decoder.h"/>
     </record>
-    <record name="H265Dpb" c:type="GstH265Dpb" disguised="1">
+    <record name="H265Dpb" c:type="GstH265Dpb" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.h"/>
       <method name="add" c:identifier="gst_h265_dpb_add">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gsth265picture.c">Store the @picture and perform increase pic_latency_cnt as defined in
@@ -3215,10 +3215,10 @@ decoding process for the #GstMpeg2Picture</doc>
         </array>
       </field>
     </record>
-    <record name="Mpeg2DecoderPrivate" c:type="GstMpeg2DecoderPrivate" disguised="1">
+    <record name="Mpeg2DecoderPrivate" c:type="GstMpeg2DecoderPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2decoder.h"/>
     </record>
-    <record name="Mpeg2Dpb" c:type="GstMpeg2Dpb" disguised="1" version="1.20">
+    <record name="Mpeg2Dpb" c:type="GstMpeg2Dpb" disguised="1" opaque="1" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.h"/>
       <method name="add" c:identifier="gst_mpeg2_dpb_add" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstmpeg2picture.c">Store the @picture</doc>
@@ -3616,6 +3616,9 @@ outputted</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="end_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Optional.
+                    Called per one #GstVp8Picture to notify subclass to finish
+                    decoding process for the #GstVp8Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3649,6 +3652,10 @@ preferred by subclass or not.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="new_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Optional.
+                    Called whenever new #GstVp8Picture is created.
+                    Subclass can set implementation specific user data
+                    on the #GstVp8Picture via gst_vp8_picture_set_user_data</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3666,6 +3673,7 @@ preferred by subclass or not.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="new_sequence" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Notifies subclass of SPS update</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3683,6 +3691,11 @@ preferred by subclass or not.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="output_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Called with a #GstVp8Picture which is required to be outputted.
+                    Subclass can retrieve parent #GstVideoCodecFrame by using
+                    gst_video_decoder_get_frame() with system_frame_number
+                    and the #GstVideoCodecFrame must be consumed by subclass via
+                    gst_video_decoder_{finish,drop,release}_frame().</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3700,6 +3713,9 @@ preferred by subclass or not.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="start_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Optional.
+                    Called per one #GstVp8Picture to notify subclass to prepare
+                    decoding process for the #GstVp8Picture</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -3743,6 +3759,7 @@ preferred by subclass or not.</doc>
         <type name="GstVideo.VideoDecoderClass" c:type="GstVideoDecoderClass"/>
       </field>
       <field name="new_sequence" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Notifies subclass of SPS update</doc>
         <callback name="new_sequence" introspectable="0">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
           <return-value transfer-ownership="none">
@@ -3762,6 +3779,10 @@ preferred by subclass or not.</doc>
         </callback>
       </field>
       <field name="new_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Optional.
+                    Called whenever new #GstVp8Picture is created.
+                    Subclass can set implementation specific user data
+                    on the #GstVp8Picture via gst_vp8_picture_set_user_data</doc>
         <callback name="new_picture">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
           <return-value transfer-ownership="none">
@@ -3781,6 +3802,9 @@ preferred by subclass or not.</doc>
         </callback>
       </field>
       <field name="start_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Optional.
+                    Called per one #GstVp8Picture to notify subclass to prepare
+                    decoding process for the #GstVp8Picture</doc>
         <callback name="start_picture">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
           <return-value transfer-ownership="none">
@@ -3816,6 +3840,9 @@ preferred by subclass or not.</doc>
         </callback>
       </field>
       <field name="end_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Optional.
+                    Called per one #GstVp8Picture to notify subclass to finish
+                    decoding process for the #GstVp8Picture</doc>
         <callback name="end_picture">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
           <return-value transfer-ownership="none">
@@ -3832,6 +3859,11 @@ preferred by subclass or not.</doc>
         </callback>
       </field>
       <field name="output_picture">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h">Called with a #GstVp8Picture which is required to be outputted.
+                    Subclass can retrieve parent #GstVideoCodecFrame by using
+                    gst_video_decoder_get_frame() with system_frame_number
+                    and the #GstVideoCodecFrame must be consumed by subclass via
+                    gst_video_decoder_{finish,drop,release}_frame().</doc>
         <callback name="output_picture">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
           <return-value transfer-ownership="none">
@@ -3875,7 +3907,7 @@ preferred by subclass or not.</doc>
         </array>
       </field>
     </record>
-    <record name="Vp8DecoderPrivate" c:type="GstVp8DecoderPrivate" disguised="1">
+    <record name="Vp8DecoderPrivate" c:type="GstVp8DecoderPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp8decoder.h"/>
     </record>
     <record name="Vp8Picture" c:type="GstVp8Picture" glib:type-name="GstVp8Picture" glib:get-type="gst_vp8_picture_get_type" c:symbol-prefix="vp8_picture">
@@ -4294,7 +4326,7 @@ profile.</doc>
         </array>
       </field>
     </record>
-    <record name="Vp9DecoderPrivate" c:type="GstVp9DecoderPrivate" disguised="1">
+    <record name="Vp9DecoderPrivate" c:type="GstVp9DecoderPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9decoder.h"/>
     </record>
     <record name="Vp9DeltaProbabilities" c:type="GstVp9DeltaProbabilities" version="1.20">

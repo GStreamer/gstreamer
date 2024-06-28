@@ -34,13 +34,13 @@ and/or use gtk-doc annotations.  -->
     </record>
     <enumeration name="RTSPAuthMethod" glib:type-name="GstRTSPAuthMethod" glib:get-type="gst_rtsp_auth_method_get_type" c:type="GstRTSPAuthMethod">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">Authentication methods, ordered by strength</doc>
-      <member name="none" value="0" c:identifier="GST_RTSP_AUTH_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_RTSP_AUTH_NONE" glib:nick="none" glib:name="GST_RTSP_AUTH_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">no authentication</doc>
       </member>
-      <member name="basic" value="1" c:identifier="GST_RTSP_AUTH_BASIC" glib:nick="basic">
+      <member name="basic" value="1" c:identifier="GST_RTSP_AUTH_BASIC" glib:nick="basic" glib:name="GST_RTSP_AUTH_BASIC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">basic authentication</doc>
       </member>
-      <member name="digest" value="2" c:identifier="GST_RTSP_AUTH_DIGEST" glib:nick="digest">
+      <member name="digest" value="2" c:identifier="GST_RTSP_AUTH_DIGEST" glib:nick="digest" glib:name="GST_RTSP_AUTH_DIGEST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">digest authentication</doc>
       </member>
     </enumeration>
@@ -78,7 +78,7 @@ and/or use gtk-doc annotations.  -->
         </parameters>
       </method>
     </record>
-    <record name="RTSPConnection" c:type="GstRTSPConnection" disguised="1">
+    <record name="RTSPConnection" c:type="GstRTSPConnection" disguised="1" opaque="1">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.c">This object manages the RTSP connection to the server. It provides function
 to receive and send bytes and messages.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
@@ -1302,10 +1302,10 @@ read from @socket which should be used before starting to read new data.</doc>
     </callback>
     <bitfield name="RTSPEvent" glib:type-name="GstRTSPEvent" glib:get-type="gst_rtsp_event_get_type" c:type="GstRTSPEvent">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">The possible events for the connection.</doc>
-      <member name="read" value="1" c:identifier="GST_RTSP_EV_READ" glib:nick="read">
+      <member name="read" value="1" c:identifier="GST_RTSP_EV_READ" glib:nick="read" glib:name="GST_RTSP_EV_READ">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">connection is readable</doc>
       </member>
-      <member name="write" value="2" c:identifier="GST_RTSP_EV_WRITE" glib:nick="write">
+      <member name="write" value="2" c:identifier="GST_RTSP_EV_WRITE" glib:nick="write" glib:name="GST_RTSP_EV_WRITE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">connection is writable</doc>
       </member>
     </bitfield>
@@ -1817,217 +1817,217 @@ read from @socket which should be used before starting to read new data.</doc>
     </record>
     <enumeration name="RTSPFamily" glib:type-name="GstRTSPFamily" glib:get-type="gst_rtsp_family_get_type" c:type="GstRTSPFamily">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">The possible network families.</doc>
-      <member name="none" value="0" c:identifier="GST_RTSP_FAM_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_RTSP_FAM_NONE" glib:nick="none" glib:name="GST_RTSP_FAM_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">unknown network family</doc>
       </member>
-      <member name="inet" value="1" c:identifier="GST_RTSP_FAM_INET" glib:nick="inet">
+      <member name="inet" value="1" c:identifier="GST_RTSP_FAM_INET" glib:nick="inet" glib:name="GST_RTSP_FAM_INET">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">internet</doc>
       </member>
-      <member name="inet6" value="2" c:identifier="GST_RTSP_FAM_INET6" glib:nick="inet6">
+      <member name="inet6" value="2" c:identifier="GST_RTSP_FAM_INET6" glib:nick="inet6" glib:name="GST_RTSP_FAM_INET6">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">internet V6</doc>
       </member>
     </enumeration>
     <enumeration name="RTSPHeaderField" glib:type-name="GstRTSPHeaderField" glib:get-type="gst_rtsp_header_field_get_type" c:type="GstRTSPHeaderField">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">Enumeration of rtsp header fields</doc>
-      <member name="invalid" value="0" c:identifier="GST_RTSP_HDR_INVALID" glib:nick="invalid">
+      <member name="invalid" value="0" c:identifier="GST_RTSP_HDR_INVALID" glib:nick="invalid" glib:name="GST_RTSP_HDR_INVALID">
       </member>
-      <member name="accept" value="1" c:identifier="GST_RTSP_HDR_ACCEPT" glib:nick="accept">
+      <member name="accept" value="1" c:identifier="GST_RTSP_HDR_ACCEPT" glib:nick="accept" glib:name="GST_RTSP_HDR_ACCEPT">
       </member>
-      <member name="accept_encoding" value="2" c:identifier="GST_RTSP_HDR_ACCEPT_ENCODING" glib:nick="accept-encoding">
+      <member name="accept_encoding" value="2" c:identifier="GST_RTSP_HDR_ACCEPT_ENCODING" glib:nick="accept-encoding" glib:name="GST_RTSP_HDR_ACCEPT_ENCODING">
       </member>
-      <member name="accept_language" value="3" c:identifier="GST_RTSP_HDR_ACCEPT_LANGUAGE" glib:nick="accept-language">
+      <member name="accept_language" value="3" c:identifier="GST_RTSP_HDR_ACCEPT_LANGUAGE" glib:nick="accept-language" glib:name="GST_RTSP_HDR_ACCEPT_LANGUAGE">
       </member>
-      <member name="allow" value="4" c:identifier="GST_RTSP_HDR_ALLOW" glib:nick="allow">
+      <member name="allow" value="4" c:identifier="GST_RTSP_HDR_ALLOW" glib:nick="allow" glib:name="GST_RTSP_HDR_ALLOW">
       </member>
-      <member name="authorization" value="5" c:identifier="GST_RTSP_HDR_AUTHORIZATION" glib:nick="authorization">
+      <member name="authorization" value="5" c:identifier="GST_RTSP_HDR_AUTHORIZATION" glib:nick="authorization" glib:name="GST_RTSP_HDR_AUTHORIZATION">
       </member>
-      <member name="bandwidth" value="6" c:identifier="GST_RTSP_HDR_BANDWIDTH" glib:nick="bandwidth">
+      <member name="bandwidth" value="6" c:identifier="GST_RTSP_HDR_BANDWIDTH" glib:nick="bandwidth" glib:name="GST_RTSP_HDR_BANDWIDTH">
       </member>
-      <member name="blocksize" value="7" c:identifier="GST_RTSP_HDR_BLOCKSIZE" glib:nick="blocksize">
+      <member name="blocksize" value="7" c:identifier="GST_RTSP_HDR_BLOCKSIZE" glib:nick="blocksize" glib:name="GST_RTSP_HDR_BLOCKSIZE">
       </member>
-      <member name="cache_control" value="8" c:identifier="GST_RTSP_HDR_CACHE_CONTROL" glib:nick="cache-control">
+      <member name="cache_control" value="8" c:identifier="GST_RTSP_HDR_CACHE_CONTROL" glib:nick="cache-control" glib:name="GST_RTSP_HDR_CACHE_CONTROL">
       </member>
-      <member name="conference" value="9" c:identifier="GST_RTSP_HDR_CONFERENCE" glib:nick="conference">
+      <member name="conference" value="9" c:identifier="GST_RTSP_HDR_CONFERENCE" glib:nick="conference" glib:name="GST_RTSP_HDR_CONFERENCE">
       </member>
-      <member name="connection" value="10" c:identifier="GST_RTSP_HDR_CONNECTION" glib:nick="connection">
+      <member name="connection" value="10" c:identifier="GST_RTSP_HDR_CONNECTION" glib:nick="connection" glib:name="GST_RTSP_HDR_CONNECTION">
       </member>
-      <member name="content_base" value="11" c:identifier="GST_RTSP_HDR_CONTENT_BASE" glib:nick="content-base">
+      <member name="content_base" value="11" c:identifier="GST_RTSP_HDR_CONTENT_BASE" glib:nick="content-base" glib:name="GST_RTSP_HDR_CONTENT_BASE">
       </member>
-      <member name="content_encoding" value="12" c:identifier="GST_RTSP_HDR_CONTENT_ENCODING" glib:nick="content-encoding">
+      <member name="content_encoding" value="12" c:identifier="GST_RTSP_HDR_CONTENT_ENCODING" glib:nick="content-encoding" glib:name="GST_RTSP_HDR_CONTENT_ENCODING">
       </member>
-      <member name="content_language" value="13" c:identifier="GST_RTSP_HDR_CONTENT_LANGUAGE" glib:nick="content-language">
+      <member name="content_language" value="13" c:identifier="GST_RTSP_HDR_CONTENT_LANGUAGE" glib:nick="content-language" glib:name="GST_RTSP_HDR_CONTENT_LANGUAGE">
       </member>
-      <member name="content_length" value="14" c:identifier="GST_RTSP_HDR_CONTENT_LENGTH" glib:nick="content-length">
+      <member name="content_length" value="14" c:identifier="GST_RTSP_HDR_CONTENT_LENGTH" glib:nick="content-length" glib:name="GST_RTSP_HDR_CONTENT_LENGTH">
       </member>
-      <member name="content_location" value="15" c:identifier="GST_RTSP_HDR_CONTENT_LOCATION" glib:nick="content-location">
+      <member name="content_location" value="15" c:identifier="GST_RTSP_HDR_CONTENT_LOCATION" glib:nick="content-location" glib:name="GST_RTSP_HDR_CONTENT_LOCATION">
       </member>
-      <member name="content_type" value="16" c:identifier="GST_RTSP_HDR_CONTENT_TYPE" glib:nick="content-type">
+      <member name="content_type" value="16" c:identifier="GST_RTSP_HDR_CONTENT_TYPE" glib:nick="content-type" glib:name="GST_RTSP_HDR_CONTENT_TYPE">
       </member>
-      <member name="cseq" value="17" c:identifier="GST_RTSP_HDR_CSEQ" glib:nick="cseq">
+      <member name="cseq" value="17" c:identifier="GST_RTSP_HDR_CSEQ" glib:nick="cseq" glib:name="GST_RTSP_HDR_CSEQ">
       </member>
-      <member name="date" value="18" c:identifier="GST_RTSP_HDR_DATE" glib:nick="date">
+      <member name="date" value="18" c:identifier="GST_RTSP_HDR_DATE" glib:nick="date" glib:name="GST_RTSP_HDR_DATE">
       </member>
-      <member name="expires" value="19" c:identifier="GST_RTSP_HDR_EXPIRES" glib:nick="expires">
+      <member name="expires" value="19" c:identifier="GST_RTSP_HDR_EXPIRES" glib:nick="expires" glib:name="GST_RTSP_HDR_EXPIRES">
       </member>
-      <member name="from" value="20" c:identifier="GST_RTSP_HDR_FROM" glib:nick="from">
+      <member name="from" value="20" c:identifier="GST_RTSP_HDR_FROM" glib:nick="from" glib:name="GST_RTSP_HDR_FROM">
       </member>
-      <member name="if_modified_since" value="21" c:identifier="GST_RTSP_HDR_IF_MODIFIED_SINCE" glib:nick="if-modified-since">
+      <member name="if_modified_since" value="21" c:identifier="GST_RTSP_HDR_IF_MODIFIED_SINCE" glib:nick="if-modified-since" glib:name="GST_RTSP_HDR_IF_MODIFIED_SINCE">
       </member>
-      <member name="last_modified" value="22" c:identifier="GST_RTSP_HDR_LAST_MODIFIED" glib:nick="last-modified">
+      <member name="last_modified" value="22" c:identifier="GST_RTSP_HDR_LAST_MODIFIED" glib:nick="last-modified" glib:name="GST_RTSP_HDR_LAST_MODIFIED">
       </member>
-      <member name="proxy_authenticate" value="23" c:identifier="GST_RTSP_HDR_PROXY_AUTHENTICATE" glib:nick="proxy-authenticate">
+      <member name="proxy_authenticate" value="23" c:identifier="GST_RTSP_HDR_PROXY_AUTHENTICATE" glib:nick="proxy-authenticate" glib:name="GST_RTSP_HDR_PROXY_AUTHENTICATE">
       </member>
-      <member name="proxy_require" value="24" c:identifier="GST_RTSP_HDR_PROXY_REQUIRE" glib:nick="proxy-require">
+      <member name="proxy_require" value="24" c:identifier="GST_RTSP_HDR_PROXY_REQUIRE" glib:nick="proxy-require" glib:name="GST_RTSP_HDR_PROXY_REQUIRE">
       </member>
-      <member name="public" value="25" c:identifier="GST_RTSP_HDR_PUBLIC" glib:nick="public">
+      <member name="public" value="25" c:identifier="GST_RTSP_HDR_PUBLIC" glib:nick="public" glib:name="GST_RTSP_HDR_PUBLIC">
       </member>
-      <member name="range" value="26" c:identifier="GST_RTSP_HDR_RANGE" glib:nick="range">
+      <member name="range" value="26" c:identifier="GST_RTSP_HDR_RANGE" glib:nick="range" glib:name="GST_RTSP_HDR_RANGE">
       </member>
-      <member name="referer" value="27" c:identifier="GST_RTSP_HDR_REFERER" glib:nick="referer">
+      <member name="referer" value="27" c:identifier="GST_RTSP_HDR_REFERER" glib:nick="referer" glib:name="GST_RTSP_HDR_REFERER">
       </member>
-      <member name="require" value="28" c:identifier="GST_RTSP_HDR_REQUIRE" glib:nick="require">
+      <member name="require" value="28" c:identifier="GST_RTSP_HDR_REQUIRE" glib:nick="require" glib:name="GST_RTSP_HDR_REQUIRE">
       </member>
-      <member name="retry_after" value="29" c:identifier="GST_RTSP_HDR_RETRY_AFTER" glib:nick="retry-after">
+      <member name="retry_after" value="29" c:identifier="GST_RTSP_HDR_RETRY_AFTER" glib:nick="retry-after" glib:name="GST_RTSP_HDR_RETRY_AFTER">
       </member>
-      <member name="rtp_info" value="30" c:identifier="GST_RTSP_HDR_RTP_INFO" glib:nick="rtp-info">
+      <member name="rtp_info" value="30" c:identifier="GST_RTSP_HDR_RTP_INFO" glib:nick="rtp-info" glib:name="GST_RTSP_HDR_RTP_INFO">
       </member>
-      <member name="scale" value="31" c:identifier="GST_RTSP_HDR_SCALE" glib:nick="scale">
+      <member name="scale" value="31" c:identifier="GST_RTSP_HDR_SCALE" glib:nick="scale" glib:name="GST_RTSP_HDR_SCALE">
       </member>
-      <member name="session" value="32" c:identifier="GST_RTSP_HDR_SESSION" glib:nick="session">
+      <member name="session" value="32" c:identifier="GST_RTSP_HDR_SESSION" glib:nick="session" glib:name="GST_RTSP_HDR_SESSION">
       </member>
-      <member name="server" value="33" c:identifier="GST_RTSP_HDR_SERVER" glib:nick="server">
+      <member name="server" value="33" c:identifier="GST_RTSP_HDR_SERVER" glib:nick="server" glib:name="GST_RTSP_HDR_SERVER">
       </member>
-      <member name="speed" value="34" c:identifier="GST_RTSP_HDR_SPEED" glib:nick="speed">
+      <member name="speed" value="34" c:identifier="GST_RTSP_HDR_SPEED" glib:nick="speed" glib:name="GST_RTSP_HDR_SPEED">
       </member>
-      <member name="transport" value="35" c:identifier="GST_RTSP_HDR_TRANSPORT" glib:nick="transport">
+      <member name="transport" value="35" c:identifier="GST_RTSP_HDR_TRANSPORT" glib:nick="transport" glib:name="GST_RTSP_HDR_TRANSPORT">
       </member>
-      <member name="unsupported" value="36" c:identifier="GST_RTSP_HDR_UNSUPPORTED" glib:nick="unsupported">
+      <member name="unsupported" value="36" c:identifier="GST_RTSP_HDR_UNSUPPORTED" glib:nick="unsupported" glib:name="GST_RTSP_HDR_UNSUPPORTED">
       </member>
-      <member name="user_agent" value="37" c:identifier="GST_RTSP_HDR_USER_AGENT" glib:nick="user-agent">
+      <member name="user_agent" value="37" c:identifier="GST_RTSP_HDR_USER_AGENT" glib:nick="user-agent" glib:name="GST_RTSP_HDR_USER_AGENT">
       </member>
-      <member name="via" value="38" c:identifier="GST_RTSP_HDR_VIA" glib:nick="via">
+      <member name="via" value="38" c:identifier="GST_RTSP_HDR_VIA" glib:nick="via" glib:name="GST_RTSP_HDR_VIA">
       </member>
-      <member name="www_authenticate" value="39" c:identifier="GST_RTSP_HDR_WWW_AUTHENTICATE" glib:nick="www-authenticate">
+      <member name="www_authenticate" value="39" c:identifier="GST_RTSP_HDR_WWW_AUTHENTICATE" glib:nick="www-authenticate" glib:name="GST_RTSP_HDR_WWW_AUTHENTICATE">
       </member>
-      <member name="client_challenge" value="40" c:identifier="GST_RTSP_HDR_CLIENT_CHALLENGE" glib:nick="client-challenge">
+      <member name="client_challenge" value="40" c:identifier="GST_RTSP_HDR_CLIENT_CHALLENGE" glib:nick="client-challenge" glib:name="GST_RTSP_HDR_CLIENT_CHALLENGE">
       </member>
-      <member name="real_challenge1" value="41" c:identifier="GST_RTSP_HDR_REAL_CHALLENGE1" glib:nick="real-challenge1">
+      <member name="real_challenge1" value="41" c:identifier="GST_RTSP_HDR_REAL_CHALLENGE1" glib:nick="real-challenge1" glib:name="GST_RTSP_HDR_REAL_CHALLENGE1">
       </member>
-      <member name="real_challenge2" value="42" c:identifier="GST_RTSP_HDR_REAL_CHALLENGE2" glib:nick="real-challenge2">
+      <member name="real_challenge2" value="42" c:identifier="GST_RTSP_HDR_REAL_CHALLENGE2" glib:nick="real-challenge2" glib:name="GST_RTSP_HDR_REAL_CHALLENGE2">
       </member>
-      <member name="real_challenge3" value="43" c:identifier="GST_RTSP_HDR_REAL_CHALLENGE3" glib:nick="real-challenge3">
+      <member name="real_challenge3" value="43" c:identifier="GST_RTSP_HDR_REAL_CHALLENGE3" glib:nick="real-challenge3" glib:name="GST_RTSP_HDR_REAL_CHALLENGE3">
       </member>
-      <member name="subscribe" value="44" c:identifier="GST_RTSP_HDR_SUBSCRIBE" glib:nick="subscribe">
+      <member name="subscribe" value="44" c:identifier="GST_RTSP_HDR_SUBSCRIBE" glib:nick="subscribe" glib:name="GST_RTSP_HDR_SUBSCRIBE">
       </member>
-      <member name="alert" value="45" c:identifier="GST_RTSP_HDR_ALERT" glib:nick="alert">
+      <member name="alert" value="45" c:identifier="GST_RTSP_HDR_ALERT" glib:nick="alert" glib:name="GST_RTSP_HDR_ALERT">
       </member>
-      <member name="client_id" value="46" c:identifier="GST_RTSP_HDR_CLIENT_ID" glib:nick="client-id">
+      <member name="client_id" value="46" c:identifier="GST_RTSP_HDR_CLIENT_ID" glib:nick="client-id" glib:name="GST_RTSP_HDR_CLIENT_ID">
       </member>
-      <member name="company_id" value="47" c:identifier="GST_RTSP_HDR_COMPANY_ID" glib:nick="company-id">
+      <member name="company_id" value="47" c:identifier="GST_RTSP_HDR_COMPANY_ID" glib:nick="company-id" glib:name="GST_RTSP_HDR_COMPANY_ID">
       </member>
-      <member name="guid" value="48" c:identifier="GST_RTSP_HDR_GUID" glib:nick="guid">
+      <member name="guid" value="48" c:identifier="GST_RTSP_HDR_GUID" glib:nick="guid" glib:name="GST_RTSP_HDR_GUID">
       </member>
-      <member name="region_data" value="49" c:identifier="GST_RTSP_HDR_REGION_DATA" glib:nick="region-data">
+      <member name="region_data" value="49" c:identifier="GST_RTSP_HDR_REGION_DATA" glib:nick="region-data" glib:name="GST_RTSP_HDR_REGION_DATA">
       </member>
-      <member name="max_asm_width" value="50" c:identifier="GST_RTSP_HDR_MAX_ASM_WIDTH" glib:nick="max-asm-width">
+      <member name="max_asm_width" value="50" c:identifier="GST_RTSP_HDR_MAX_ASM_WIDTH" glib:nick="max-asm-width" glib:name="GST_RTSP_HDR_MAX_ASM_WIDTH">
       </member>
-      <member name="language" value="51" c:identifier="GST_RTSP_HDR_LANGUAGE" glib:nick="language">
+      <member name="language" value="51" c:identifier="GST_RTSP_HDR_LANGUAGE" glib:nick="language" glib:name="GST_RTSP_HDR_LANGUAGE">
       </member>
-      <member name="player_start_time" value="52" c:identifier="GST_RTSP_HDR_PLAYER_START_TIME" glib:nick="player-start-time">
+      <member name="player_start_time" value="52" c:identifier="GST_RTSP_HDR_PLAYER_START_TIME" glib:nick="player-start-time" glib:name="GST_RTSP_HDR_PLAYER_START_TIME">
       </member>
-      <member name="location" value="53" c:identifier="GST_RTSP_HDR_LOCATION" glib:nick="location">
+      <member name="location" value="53" c:identifier="GST_RTSP_HDR_LOCATION" glib:nick="location" glib:name="GST_RTSP_HDR_LOCATION">
       </member>
-      <member name="etag" value="54" c:identifier="GST_RTSP_HDR_ETAG" glib:nick="etag">
+      <member name="etag" value="54" c:identifier="GST_RTSP_HDR_ETAG" glib:nick="etag" glib:name="GST_RTSP_HDR_ETAG">
       </member>
-      <member name="if_match" value="55" c:identifier="GST_RTSP_HDR_IF_MATCH" glib:nick="if-match">
+      <member name="if_match" value="55" c:identifier="GST_RTSP_HDR_IF_MATCH" glib:nick="if-match" glib:name="GST_RTSP_HDR_IF_MATCH">
       </member>
-      <member name="accept_charset" value="56" c:identifier="GST_RTSP_HDR_ACCEPT_CHARSET" glib:nick="accept-charset">
+      <member name="accept_charset" value="56" c:identifier="GST_RTSP_HDR_ACCEPT_CHARSET" glib:nick="accept-charset" glib:name="GST_RTSP_HDR_ACCEPT_CHARSET">
       </member>
-      <member name="supported" value="57" c:identifier="GST_RTSP_HDR_SUPPORTED" glib:nick="supported">
+      <member name="supported" value="57" c:identifier="GST_RTSP_HDR_SUPPORTED" glib:nick="supported" glib:name="GST_RTSP_HDR_SUPPORTED">
       </member>
-      <member name="vary" value="58" c:identifier="GST_RTSP_HDR_VARY" glib:nick="vary">
+      <member name="vary" value="58" c:identifier="GST_RTSP_HDR_VARY" glib:nick="vary" glib:name="GST_RTSP_HDR_VARY">
       </member>
-      <member name="x_accelerate_streaming" value="59" c:identifier="GST_RTSP_HDR_X_ACCELERATE_STREAMING" glib:nick="x-accelerate-streaming">
+      <member name="x_accelerate_streaming" value="59" c:identifier="GST_RTSP_HDR_X_ACCELERATE_STREAMING" glib:nick="x-accelerate-streaming" glib:name="GST_RTSP_HDR_X_ACCELERATE_STREAMING">
       </member>
-      <member name="x_accept_authent" value="60" c:identifier="GST_RTSP_HDR_X_ACCEPT_AUTHENT" glib:nick="x-accept-authent">
+      <member name="x_accept_authent" value="60" c:identifier="GST_RTSP_HDR_X_ACCEPT_AUTHENT" glib:nick="x-accept-authent" glib:name="GST_RTSP_HDR_X_ACCEPT_AUTHENT">
       </member>
-      <member name="x_accept_proxy_authent" value="61" c:identifier="GST_RTSP_HDR_X_ACCEPT_PROXY_AUTHENT" glib:nick="x-accept-proxy-authent">
+      <member name="x_accept_proxy_authent" value="61" c:identifier="GST_RTSP_HDR_X_ACCEPT_PROXY_AUTHENT" glib:nick="x-accept-proxy-authent" glib:name="GST_RTSP_HDR_X_ACCEPT_PROXY_AUTHENT">
       </member>
-      <member name="x_broadcast_id" value="62" c:identifier="GST_RTSP_HDR_X_BROADCAST_ID" glib:nick="x-broadcast-id">
+      <member name="x_broadcast_id" value="62" c:identifier="GST_RTSP_HDR_X_BROADCAST_ID" glib:nick="x-broadcast-id" glib:name="GST_RTSP_HDR_X_BROADCAST_ID">
       </member>
-      <member name="x_burst_streaming" value="63" c:identifier="GST_RTSP_HDR_X_BURST_STREAMING" glib:nick="x-burst-streaming">
+      <member name="x_burst_streaming" value="63" c:identifier="GST_RTSP_HDR_X_BURST_STREAMING" glib:nick="x-burst-streaming" glib:name="GST_RTSP_HDR_X_BURST_STREAMING">
       </member>
-      <member name="x_notice" value="64" c:identifier="GST_RTSP_HDR_X_NOTICE" glib:nick="x-notice">
+      <member name="x_notice" value="64" c:identifier="GST_RTSP_HDR_X_NOTICE" glib:nick="x-notice" glib:name="GST_RTSP_HDR_X_NOTICE">
       </member>
-      <member name="x_player_lag_time" value="65" c:identifier="GST_RTSP_HDR_X_PLAYER_LAG_TIME" glib:nick="x-player-lag-time">
+      <member name="x_player_lag_time" value="65" c:identifier="GST_RTSP_HDR_X_PLAYER_LAG_TIME" glib:nick="x-player-lag-time" glib:name="GST_RTSP_HDR_X_PLAYER_LAG_TIME">
       </member>
-      <member name="x_playlist" value="66" c:identifier="GST_RTSP_HDR_X_PLAYLIST" glib:nick="x-playlist">
+      <member name="x_playlist" value="66" c:identifier="GST_RTSP_HDR_X_PLAYLIST" glib:nick="x-playlist" glib:name="GST_RTSP_HDR_X_PLAYLIST">
       </member>
-      <member name="x_playlist_change_notice" value="67" c:identifier="GST_RTSP_HDR_X_PLAYLIST_CHANGE_NOTICE" glib:nick="x-playlist-change-notice">
+      <member name="x_playlist_change_notice" value="67" c:identifier="GST_RTSP_HDR_X_PLAYLIST_CHANGE_NOTICE" glib:nick="x-playlist-change-notice" glib:name="GST_RTSP_HDR_X_PLAYLIST_CHANGE_NOTICE">
       </member>
-      <member name="x_playlist_gen_id" value="68" c:identifier="GST_RTSP_HDR_X_PLAYLIST_GEN_ID" glib:nick="x-playlist-gen-id">
+      <member name="x_playlist_gen_id" value="68" c:identifier="GST_RTSP_HDR_X_PLAYLIST_GEN_ID" glib:nick="x-playlist-gen-id" glib:name="GST_RTSP_HDR_X_PLAYLIST_GEN_ID">
       </member>
-      <member name="x_playlist_seek_id" value="69" c:identifier="GST_RTSP_HDR_X_PLAYLIST_SEEK_ID" glib:nick="x-playlist-seek-id">
+      <member name="x_playlist_seek_id" value="69" c:identifier="GST_RTSP_HDR_X_PLAYLIST_SEEK_ID" glib:nick="x-playlist-seek-id" glib:name="GST_RTSP_HDR_X_PLAYLIST_SEEK_ID">
       </member>
-      <member name="x_proxy_client_agent" value="70" c:identifier="GST_RTSP_HDR_X_PROXY_CLIENT_AGENT" glib:nick="x-proxy-client-agent">
+      <member name="x_proxy_client_agent" value="70" c:identifier="GST_RTSP_HDR_X_PROXY_CLIENT_AGENT" glib:nick="x-proxy-client-agent" glib:name="GST_RTSP_HDR_X_PROXY_CLIENT_AGENT">
       </member>
-      <member name="x_proxy_client_verb" value="71" c:identifier="GST_RTSP_HDR_X_PROXY_CLIENT_VERB" glib:nick="x-proxy-client-verb">
+      <member name="x_proxy_client_verb" value="71" c:identifier="GST_RTSP_HDR_X_PROXY_CLIENT_VERB" glib:nick="x-proxy-client-verb" glib:name="GST_RTSP_HDR_X_PROXY_CLIENT_VERB">
       </member>
-      <member name="x_receding_playlistchange" value="72" c:identifier="GST_RTSP_HDR_X_RECEDING_PLAYLISTCHANGE" glib:nick="x-receding-playlistchange">
+      <member name="x_receding_playlistchange" value="72" c:identifier="GST_RTSP_HDR_X_RECEDING_PLAYLISTCHANGE" glib:nick="x-receding-playlistchange" glib:name="GST_RTSP_HDR_X_RECEDING_PLAYLISTCHANGE">
       </member>
-      <member name="x_rtp_info" value="73" c:identifier="GST_RTSP_HDR_X_RTP_INFO" glib:nick="x-rtp-info">
+      <member name="x_rtp_info" value="73" c:identifier="GST_RTSP_HDR_X_RTP_INFO" glib:nick="x-rtp-info" glib:name="GST_RTSP_HDR_X_RTP_INFO">
       </member>
-      <member name="x_startupprofile" value="74" c:identifier="GST_RTSP_HDR_X_STARTUPPROFILE" glib:nick="x-startupprofile">
+      <member name="x_startupprofile" value="74" c:identifier="GST_RTSP_HDR_X_STARTUPPROFILE" glib:nick="x-startupprofile" glib:name="GST_RTSP_HDR_X_STARTUPPROFILE">
       </member>
-      <member name="timestamp" value="75" c:identifier="GST_RTSP_HDR_TIMESTAMP" glib:nick="timestamp">
+      <member name="timestamp" value="75" c:identifier="GST_RTSP_HDR_TIMESTAMP" glib:nick="timestamp" glib:name="GST_RTSP_HDR_TIMESTAMP">
       </member>
-      <member name="authentication_info" value="76" c:identifier="GST_RTSP_HDR_AUTHENTICATION_INFO" glib:nick="authentication-info">
+      <member name="authentication_info" value="76" c:identifier="GST_RTSP_HDR_AUTHENTICATION_INFO" glib:nick="authentication-info" glib:name="GST_RTSP_HDR_AUTHENTICATION_INFO">
       </member>
-      <member name="host" value="77" c:identifier="GST_RTSP_HDR_HOST" glib:nick="host">
+      <member name="host" value="77" c:identifier="GST_RTSP_HDR_HOST" glib:nick="host" glib:name="GST_RTSP_HDR_HOST">
       </member>
-      <member name="pragma" value="78" c:identifier="GST_RTSP_HDR_PRAGMA" glib:nick="pragma">
+      <member name="pragma" value="78" c:identifier="GST_RTSP_HDR_PRAGMA" glib:nick="pragma" glib:name="GST_RTSP_HDR_PRAGMA">
       </member>
-      <member name="x_server_ip_address" value="79" c:identifier="GST_RTSP_HDR_X_SERVER_IP_ADDRESS" glib:nick="x-server-ip-address">
+      <member name="x_server_ip_address" value="79" c:identifier="GST_RTSP_HDR_X_SERVER_IP_ADDRESS" glib:nick="x-server-ip-address" glib:name="GST_RTSP_HDR_X_SERVER_IP_ADDRESS">
       </member>
-      <member name="x_sessioncookie" value="80" c:identifier="GST_RTSP_HDR_X_SESSIONCOOKIE" glib:nick="x-sessioncookie">
+      <member name="x_sessioncookie" value="80" c:identifier="GST_RTSP_HDR_X_SESSIONCOOKIE" glib:nick="x-sessioncookie" glib:name="GST_RTSP_HDR_X_SESSIONCOOKIE">
       </member>
-      <member name="rtcp_interval" value="81" c:identifier="GST_RTSP_HDR_RTCP_INTERVAL" glib:nick="rtcp-interval">
+      <member name="rtcp_interval" value="81" c:identifier="GST_RTSP_HDR_RTCP_INTERVAL" glib:nick="rtcp-interval" glib:name="GST_RTSP_HDR_RTCP_INTERVAL">
       </member>
-      <member name="keymgmt" value="82" c:identifier="GST_RTSP_HDR_KEYMGMT" glib:nick="keymgmt">
+      <member name="keymgmt" value="82" c:identifier="GST_RTSP_HDR_KEYMGMT" glib:nick="keymgmt" glib:name="GST_RTSP_HDR_KEYMGMT">
       </member>
-      <member name="pipelined_requests" value="83" c:identifier="GST_RTSP_HDR_PIPELINED_REQUESTS" glib:nick="pipelined-requests">
+      <member name="pipelined_requests" value="83" c:identifier="GST_RTSP_HDR_PIPELINED_REQUESTS" glib:nick="pipelined-requests" glib:name="GST_RTSP_HDR_PIPELINED_REQUESTS">
       </member>
-      <member name="media_properties" value="84" c:identifier="GST_RTSP_HDR_MEDIA_PROPERTIES" glib:nick="media-properties">
+      <member name="media_properties" value="84" c:identifier="GST_RTSP_HDR_MEDIA_PROPERTIES" glib:nick="media-properties" glib:name="GST_RTSP_HDR_MEDIA_PROPERTIES">
       </member>
-      <member name="seek_style" value="85" c:identifier="GST_RTSP_HDR_SEEK_STYLE" glib:nick="seek-style">
+      <member name="seek_style" value="85" c:identifier="GST_RTSP_HDR_SEEK_STYLE" glib:nick="seek-style" glib:name="GST_RTSP_HDR_SEEK_STYLE">
       </member>
-      <member name="accept_ranges" value="86" c:identifier="GST_RTSP_HDR_ACCEPT_RANGES" glib:nick="accept-ranges">
+      <member name="accept_ranges" value="86" c:identifier="GST_RTSP_HDR_ACCEPT_RANGES" glib:nick="accept-ranges" glib:name="GST_RTSP_HDR_ACCEPT_RANGES">
       </member>
-      <member name="frames" value="87" c:identifier="GST_RTSP_HDR_FRAMES" glib:nick="frames">
+      <member name="frames" value="87" c:identifier="GST_RTSP_HDR_FRAMES" glib:nick="frames" glib:name="GST_RTSP_HDR_FRAMES">
       </member>
-      <member name="rate_control" value="88" c:identifier="GST_RTSP_HDR_RATE_CONTROL" glib:nick="rate-control">
+      <member name="rate_control" value="88" c:identifier="GST_RTSP_HDR_RATE_CONTROL" glib:nick="rate-control" glib:name="GST_RTSP_HDR_RATE_CONTROL">
       </member>
-      <member name="last" value="89" c:identifier="GST_RTSP_HDR_LAST" glib:nick="last">
+      <member name="last" value="89" c:identifier="GST_RTSP_HDR_LAST" glib:nick="last" glib:name="GST_RTSP_HDR_LAST">
       </member>
     </enumeration>
     <bitfield name="RTSPLowerTrans" glib:type-name="GstRTSPLowerTrans" glib:get-type="gst_rtsp_lower_trans_get_type" c:type="GstRTSPLowerTrans">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">The different transport methods.</doc>
-      <member name="unknown" value="0" c:identifier="GST_RTSP_LOWER_TRANS_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="0" c:identifier="GST_RTSP_LOWER_TRANS_UNKNOWN" glib:nick="unknown" glib:name="GST_RTSP_LOWER_TRANS_UNKNOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">invalid transport flag</doc>
       </member>
-      <member name="udp" value="1" c:identifier="GST_RTSP_LOWER_TRANS_UDP" glib:nick="udp">
+      <member name="udp" value="1" c:identifier="GST_RTSP_LOWER_TRANS_UDP" glib:nick="udp" glib:name="GST_RTSP_LOWER_TRANS_UDP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">stream data over UDP</doc>
       </member>
-      <member name="udp_mcast" value="2" c:identifier="GST_RTSP_LOWER_TRANS_UDP_MCAST" glib:nick="udp-mcast">
+      <member name="udp_mcast" value="2" c:identifier="GST_RTSP_LOWER_TRANS_UDP_MCAST" glib:nick="udp-mcast" glib:name="GST_RTSP_LOWER_TRANS_UDP_MCAST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">stream data over UDP multicast</doc>
       </member>
-      <member name="tcp" value="4" c:identifier="GST_RTSP_LOWER_TRANS_TCP" glib:nick="tcp">
+      <member name="tcp" value="4" c:identifier="GST_RTSP_LOWER_TRANS_TCP" glib:nick="tcp" glib:name="GST_RTSP_LOWER_TRANS_TCP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">stream data over TCP</doc>
       </member>
-      <member name="http" value="16" c:identifier="GST_RTSP_LOWER_TRANS_HTTP" glib:nick="http">
+      <member name="http" value="16" c:identifier="GST_RTSP_LOWER_TRANS_HTTP" glib:nick="http" glib:name="GST_RTSP_LOWER_TRANS_HTTP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">stream data tunneled over HTTP.</doc>
       </member>
-      <member name="tls" value="32" c:identifier="GST_RTSP_LOWER_TRANS_TLS" glib:nick="tls">
+      <member name="tls" value="32" c:identifier="GST_RTSP_LOWER_TRANS_TLS" glib:nick="tls" glib:name="GST_RTSP_LOWER_TRANS_TLS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">encrypt TCP and HTTP with TLS</doc>
       </member>
     </bitfield>
@@ -2773,46 +2773,46 @@ gst_rtsp_message_init_data() on stack allocated #GstRTSPMessage structures.</doc
     </record>
     <bitfield name="RTSPMethod" glib:type-name="GstRTSPMethod" glib:get-type="gst_rtsp_method_get_type" c:type="GstRTSPMethod">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">The different supported RTSP methods.</doc>
-      <member name="invalid" value="0" c:identifier="GST_RTSP_INVALID" glib:nick="invalid">
+      <member name="invalid" value="0" c:identifier="GST_RTSP_INVALID" glib:nick="invalid" glib:name="GST_RTSP_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">invalid method</doc>
       </member>
-      <member name="describe" value="1" c:identifier="GST_RTSP_DESCRIBE" glib:nick="describe">
+      <member name="describe" value="1" c:identifier="GST_RTSP_DESCRIBE" glib:nick="describe" glib:name="GST_RTSP_DESCRIBE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the DESCRIBE method</doc>
       </member>
-      <member name="announce" value="2" c:identifier="GST_RTSP_ANNOUNCE" glib:nick="announce">
+      <member name="announce" value="2" c:identifier="GST_RTSP_ANNOUNCE" glib:nick="announce" glib:name="GST_RTSP_ANNOUNCE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the ANNOUNCE method</doc>
       </member>
-      <member name="get_parameter" value="4" c:identifier="GST_RTSP_GET_PARAMETER" glib:nick="get-parameter">
+      <member name="get_parameter" value="4" c:identifier="GST_RTSP_GET_PARAMETER" glib:nick="get-parameter" glib:name="GST_RTSP_GET_PARAMETER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the GET_PARAMETER method</doc>
       </member>
-      <member name="options" value="8" c:identifier="GST_RTSP_OPTIONS" glib:nick="options">
+      <member name="options" value="8" c:identifier="GST_RTSP_OPTIONS" glib:nick="options" glib:name="GST_RTSP_OPTIONS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the OPTIONS method</doc>
       </member>
-      <member name="pause" value="16" c:identifier="GST_RTSP_PAUSE" glib:nick="pause">
+      <member name="pause" value="16" c:identifier="GST_RTSP_PAUSE" glib:nick="pause" glib:name="GST_RTSP_PAUSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the PAUSE method</doc>
       </member>
-      <member name="play" value="32" c:identifier="GST_RTSP_PLAY" glib:nick="play">
+      <member name="play" value="32" c:identifier="GST_RTSP_PLAY" glib:nick="play" glib:name="GST_RTSP_PLAY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the PLAY method</doc>
       </member>
-      <member name="record" value="64" c:identifier="GST_RTSP_RECORD" glib:nick="record">
+      <member name="record" value="64" c:identifier="GST_RTSP_RECORD" glib:nick="record" glib:name="GST_RTSP_RECORD">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the RECORD method</doc>
       </member>
-      <member name="redirect" value="128" c:identifier="GST_RTSP_REDIRECT" glib:nick="redirect">
+      <member name="redirect" value="128" c:identifier="GST_RTSP_REDIRECT" glib:nick="redirect" glib:name="GST_RTSP_REDIRECT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the REDIRECT method</doc>
       </member>
-      <member name="setup" value="256" c:identifier="GST_RTSP_SETUP" glib:nick="setup">
+      <member name="setup" value="256" c:identifier="GST_RTSP_SETUP" glib:nick="setup" glib:name="GST_RTSP_SETUP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the SETUP method</doc>
       </member>
-      <member name="set_parameter" value="512" c:identifier="GST_RTSP_SET_PARAMETER" glib:nick="set-parameter">
+      <member name="set_parameter" value="512" c:identifier="GST_RTSP_SET_PARAMETER" glib:nick="set-parameter" glib:name="GST_RTSP_SET_PARAMETER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the SET_PARAMETER method</doc>
       </member>
-      <member name="teardown" value="1024" c:identifier="GST_RTSP_TEARDOWN" glib:nick="teardown">
+      <member name="teardown" value="1024" c:identifier="GST_RTSP_TEARDOWN" glib:nick="teardown" glib:name="GST_RTSP_TEARDOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the TEARDOWN method</doc>
       </member>
-      <member name="get" value="2048" c:identifier="GST_RTSP_GET" glib:nick="get">
+      <member name="get" value="2048" c:identifier="GST_RTSP_GET" glib:nick="get" glib:name="GST_RTSP_GET">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the GET method (HTTP).</doc>
       </member>
-      <member name="post" value="4096" c:identifier="GST_RTSP_POST" glib:nick="post">
+      <member name="post" value="4096" c:identifier="GST_RTSP_POST" glib:nick="post" glib:name="GST_RTSP_POST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the POST method (HTTP).</doc>
       </member>
       <function name="as_text" c:identifier="gst_rtsp_method_as_text">
@@ -2832,40 +2832,40 @@ gst_rtsp_message_init_data() on stack allocated #GstRTSPMessage structures.</doc
     </bitfield>
     <enumeration name="RTSPMsgType" glib:type-name="GstRTSPMsgType" glib:get-type="gst_rtsp_msg_type_get_type" c:type="GstRTSPMsgType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.h">The type of a message.</doc>
-      <member name="invalid" value="0" c:identifier="GST_RTSP_MESSAGE_INVALID" glib:nick="invalid">
+      <member name="invalid" value="0" c:identifier="GST_RTSP_MESSAGE_INVALID" glib:nick="invalid" glib:name="GST_RTSP_MESSAGE_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.h">invalid message type</doc>
       </member>
-      <member name="request" value="1" c:identifier="GST_RTSP_MESSAGE_REQUEST" glib:nick="request">
+      <member name="request" value="1" c:identifier="GST_RTSP_MESSAGE_REQUEST" glib:nick="request" glib:name="GST_RTSP_MESSAGE_REQUEST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.h">RTSP request message</doc>
       </member>
-      <member name="response" value="2" c:identifier="GST_RTSP_MESSAGE_RESPONSE" glib:nick="response">
+      <member name="response" value="2" c:identifier="GST_RTSP_MESSAGE_RESPONSE" glib:nick="response" glib:name="GST_RTSP_MESSAGE_RESPONSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.h">RTSP response message</doc>
       </member>
-      <member name="http_request" value="3" c:identifier="GST_RTSP_MESSAGE_HTTP_REQUEST" glib:nick="http-request">
+      <member name="http_request" value="3" c:identifier="GST_RTSP_MESSAGE_HTTP_REQUEST" glib:nick="http-request" glib:name="GST_RTSP_MESSAGE_HTTP_REQUEST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.h">HTTP request message.</doc>
       </member>
-      <member name="http_response" value="4" c:identifier="GST_RTSP_MESSAGE_HTTP_RESPONSE" glib:nick="http-response">
+      <member name="http_response" value="4" c:identifier="GST_RTSP_MESSAGE_HTTP_RESPONSE" glib:nick="http-response" glib:name="GST_RTSP_MESSAGE_HTTP_RESPONSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.h">HTTP response message.</doc>
       </member>
-      <member name="data" value="5" c:identifier="GST_RTSP_MESSAGE_DATA" glib:nick="data">
+      <member name="data" value="5" c:identifier="GST_RTSP_MESSAGE_DATA" glib:nick="data" glib:name="GST_RTSP_MESSAGE_DATA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspmessage.h">data message</doc>
       </member>
     </enumeration>
     <bitfield name="RTSPProfile" glib:type-name="GstRTSPProfile" glib:get-type="gst_rtsp_profile_get_type" c:type="GstRTSPProfile">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">The transfer profile to use.</doc>
-      <member name="unknown" value="0" c:identifier="GST_RTSP_PROFILE_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="0" c:identifier="GST_RTSP_PROFILE_UNKNOWN" glib:nick="unknown" glib:name="GST_RTSP_PROFILE_UNKNOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">invalid profile</doc>
       </member>
-      <member name="avp" value="1" c:identifier="GST_RTSP_PROFILE_AVP" glib:nick="avp">
+      <member name="avp" value="1" c:identifier="GST_RTSP_PROFILE_AVP" glib:nick="avp" glib:name="GST_RTSP_PROFILE_AVP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">the Audio/Visual profile (RFC 3551)</doc>
       </member>
-      <member name="savp" value="2" c:identifier="GST_RTSP_PROFILE_SAVP" glib:nick="savp">
+      <member name="savp" value="2" c:identifier="GST_RTSP_PROFILE_SAVP" glib:nick="savp" glib:name="GST_RTSP_PROFILE_SAVP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">the secure Audio/Visual profile (RFC 3711)</doc>
       </member>
-      <member name="avpf" value="4" c:identifier="GST_RTSP_PROFILE_AVPF" glib:nick="avpf">
+      <member name="avpf" value="4" c:identifier="GST_RTSP_PROFILE_AVPF" glib:nick="avpf" glib:name="GST_RTSP_PROFILE_AVPF">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">the Audio/Visual profile with feedback (RFC 4585)</doc>
       </member>
-      <member name="savpf" value="8" c:identifier="GST_RTSP_PROFILE_SAVPF" glib:nick="savpf">
+      <member name="savpf" value="8" c:identifier="GST_RTSP_PROFILE_SAVPF" glib:nick="savpf" glib:name="GST_RTSP_PROFILE_SAVPF">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">the secure Audio/Visual profile with feedback (RFC 5124)</doc>
       </member>
     </bitfield>
@@ -2976,202 +2976,202 @@ UTC times will be converted to nanoseconds since 1900.</doc>
     </record>
     <enumeration name="RTSPRangeUnit" glib:type-name="GstRTSPRangeUnit" glib:get-type="gst_rtsp_range_unit_get_type" c:type="GstRTSPRangeUnit">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">Different possible time range units.</doc>
-      <member name="smpte" value="0" c:identifier="GST_RTSP_RANGE_SMPTE" glib:nick="smpte">
+      <member name="smpte" value="0" c:identifier="GST_RTSP_RANGE_SMPTE" glib:nick="smpte" glib:name="GST_RTSP_RANGE_SMPTE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">SMPTE timecode</doc>
       </member>
-      <member name="smpte_30_drop" value="1" c:identifier="GST_RTSP_RANGE_SMPTE_30_DROP" glib:nick="smpte-30-drop">
+      <member name="smpte_30_drop" value="1" c:identifier="GST_RTSP_RANGE_SMPTE_30_DROP" glib:nick="smpte-30-drop" glib:name="GST_RTSP_RANGE_SMPTE_30_DROP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">29.97 frames per second</doc>
       </member>
-      <member name="smpte_25" value="2" c:identifier="GST_RTSP_RANGE_SMPTE_25" glib:nick="smpte-25">
+      <member name="smpte_25" value="2" c:identifier="GST_RTSP_RANGE_SMPTE_25" glib:nick="smpte-25" glib:name="GST_RTSP_RANGE_SMPTE_25">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">25 frames per second</doc>
       </member>
-      <member name="npt" value="3" c:identifier="GST_RTSP_RANGE_NPT" glib:nick="npt">
+      <member name="npt" value="3" c:identifier="GST_RTSP_RANGE_NPT" glib:nick="npt" glib:name="GST_RTSP_RANGE_NPT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">Normal play time</doc>
       </member>
-      <member name="clock" value="4" c:identifier="GST_RTSP_RANGE_CLOCK" glib:nick="clock">
+      <member name="clock" value="4" c:identifier="GST_RTSP_RANGE_CLOCK" glib:nick="clock" glib:name="GST_RTSP_RANGE_CLOCK">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">Absolute time expressed as ISO 8601 timestamps</doc>
       </member>
     </enumeration>
     <enumeration name="RTSPResult" glib:type-name="GstRTSPResult" glib:get-type="gst_rtsp_result_get_type" c:type="GstRTSPResult">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">Result codes from the RTSP functions.</doc>
-      <member name="ok" value="0" c:identifier="GST_RTSP_OK" glib:nick="ok">
+      <member name="ok" value="0" c:identifier="GST_RTSP_OK" glib:nick="ok" glib:name="GST_RTSP_OK">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">no error</doc>
       </member>
-      <member name="ok_redirect" value="1" c:identifier="GST_RTSP_OK_REDIRECT" version="1.24" glib:nick="ok-redirect">
+      <member name="ok_redirect" value="1" c:identifier="GST_RTSP_OK_REDIRECT" version="1.24" glib:nick="ok-redirect" glib:name="GST_RTSP_OK_REDIRECT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is successful, but was redirected.</doc>
       </member>
-      <member name="error" value="-1" c:identifier="GST_RTSP_ERROR" glib:nick="error">
+      <member name="error" value="-1" c:identifier="GST_RTSP_ERROR" glib:nick="error" glib:name="GST_RTSP_ERROR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">some unspecified error occurred</doc>
       </member>
-      <member name="einval" value="-2" c:identifier="GST_RTSP_EINVAL" glib:nick="einval">
+      <member name="einval" value="-2" c:identifier="GST_RTSP_EINVAL" glib:nick="einval" glib:name="GST_RTSP_EINVAL">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">invalid arguments were provided to a function</doc>
       </member>
-      <member name="eintr" value="-3" c:identifier="GST_RTSP_EINTR" glib:nick="eintr">
+      <member name="eintr" value="-3" c:identifier="GST_RTSP_EINTR" glib:nick="eintr" glib:name="GST_RTSP_EINTR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">an operation was canceled</doc>
       </member>
-      <member name="enomem" value="-4" c:identifier="GST_RTSP_ENOMEM" glib:nick="enomem">
+      <member name="enomem" value="-4" c:identifier="GST_RTSP_ENOMEM" glib:nick="enomem" glib:name="GST_RTSP_ENOMEM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">no memory was available for the operation</doc>
       </member>
-      <member name="eresolv" value="-5" c:identifier="GST_RTSP_ERESOLV" glib:nick="eresolv">
+      <member name="eresolv" value="-5" c:identifier="GST_RTSP_ERESOLV" glib:nick="eresolv" glib:name="GST_RTSP_ERESOLV">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">a host resolve error occurred</doc>
       </member>
-      <member name="enotimpl" value="-6" c:identifier="GST_RTSP_ENOTIMPL" glib:nick="enotimpl">
+      <member name="enotimpl" value="-6" c:identifier="GST_RTSP_ENOTIMPL" glib:nick="enotimpl" glib:name="GST_RTSP_ENOTIMPL">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">function not implemented</doc>
       </member>
-      <member name="esys" value="-7" c:identifier="GST_RTSP_ESYS" glib:nick="esys">
+      <member name="esys" value="-7" c:identifier="GST_RTSP_ESYS" glib:nick="esys" glib:name="GST_RTSP_ESYS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">a system error occurred, errno contains more details</doc>
       </member>
-      <member name="eparse" value="-8" c:identifier="GST_RTSP_EPARSE" glib:nick="eparse">
+      <member name="eparse" value="-8" c:identifier="GST_RTSP_EPARSE" glib:nick="eparse" glib:name="GST_RTSP_EPARSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">a parsing error occurred</doc>
       </member>
-      <member name="ewsastart" value="-9" c:identifier="GST_RTSP_EWSASTART" glib:nick="ewsastart">
+      <member name="ewsastart" value="-9" c:identifier="GST_RTSP_EWSASTART" glib:nick="ewsastart" glib:name="GST_RTSP_EWSASTART">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">windows networking could not start</doc>
       </member>
-      <member name="ewsaversion" value="-10" c:identifier="GST_RTSP_EWSAVERSION" glib:nick="ewsaversion">
+      <member name="ewsaversion" value="-10" c:identifier="GST_RTSP_EWSAVERSION" glib:nick="ewsaversion" glib:name="GST_RTSP_EWSAVERSION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">windows networking stack has wrong version</doc>
       </member>
-      <member name="eeof" value="-11" c:identifier="GST_RTSP_EEOF" glib:nick="eeof">
+      <member name="eeof" value="-11" c:identifier="GST_RTSP_EEOF" glib:nick="eeof" glib:name="GST_RTSP_EEOF">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">end-of-file was reached</doc>
       </member>
-      <member name="enet" value="-12" c:identifier="GST_RTSP_ENET" glib:nick="enet">
+      <member name="enet" value="-12" c:identifier="GST_RTSP_ENET" glib:nick="enet" glib:name="GST_RTSP_ENET">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">a network problem occurred, h_errno contains more details</doc>
       </member>
-      <member name="enotip" value="-13" c:identifier="GST_RTSP_ENOTIP" glib:nick="enotip">
+      <member name="enotip" value="-13" c:identifier="GST_RTSP_ENOTIP" glib:nick="enotip" glib:name="GST_RTSP_ENOTIP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the host is not an IP host</doc>
       </member>
-      <member name="etimeout" value="-14" c:identifier="GST_RTSP_ETIMEOUT" glib:nick="etimeout">
+      <member name="etimeout" value="-14" c:identifier="GST_RTSP_ETIMEOUT" glib:nick="etimeout" glib:name="GST_RTSP_ETIMEOUT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">a timeout occurred</doc>
       </member>
-      <member name="etget" value="-15" c:identifier="GST_RTSP_ETGET" glib:nick="etget">
+      <member name="etget" value="-15" c:identifier="GST_RTSP_ETGET" glib:nick="etget" glib:name="GST_RTSP_ETGET">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the tunnel GET request has been performed</doc>
       </member>
-      <member name="etpost" value="-16" c:identifier="GST_RTSP_ETPOST" glib:nick="etpost">
+      <member name="etpost" value="-16" c:identifier="GST_RTSP_ETPOST" glib:nick="etpost" glib:name="GST_RTSP_ETPOST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">the tunnel POST request has been performed</doc>
       </member>
-      <member name="elast" value="-17" c:identifier="GST_RTSP_ELAST" glib:nick="elast">
+      <member name="elast" value="-17" c:identifier="GST_RTSP_ELAST" glib:nick="elast" glib:name="GST_RTSP_ELAST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">last error</doc>
       </member>
     </enumeration>
     <enumeration name="RTSPState" glib:type-name="GstRTSPState" glib:get-type="gst_rtsp_state_get_type" c:type="GstRTSPState">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">The different RTSP states.</doc>
-      <member name="invalid" value="0" c:identifier="GST_RTSP_STATE_INVALID" glib:nick="invalid">
+      <member name="invalid" value="0" c:identifier="GST_RTSP_STATE_INVALID" glib:nick="invalid" glib:name="GST_RTSP_STATE_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">invalid state</doc>
       </member>
-      <member name="init" value="1" c:identifier="GST_RTSP_STATE_INIT" glib:nick="init">
+      <member name="init" value="1" c:identifier="GST_RTSP_STATE_INIT" glib:nick="init" glib:name="GST_RTSP_STATE_INIT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">initializing</doc>
       </member>
-      <member name="ready" value="2" c:identifier="GST_RTSP_STATE_READY" glib:nick="ready">
+      <member name="ready" value="2" c:identifier="GST_RTSP_STATE_READY" glib:nick="ready" glib:name="GST_RTSP_STATE_READY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">ready for operation</doc>
       </member>
-      <member name="seeking" value="3" c:identifier="GST_RTSP_STATE_SEEKING" glib:nick="seeking">
+      <member name="seeking" value="3" c:identifier="GST_RTSP_STATE_SEEKING" glib:nick="seeking" glib:name="GST_RTSP_STATE_SEEKING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">seeking in progress</doc>
       </member>
-      <member name="playing" value="4" c:identifier="GST_RTSP_STATE_PLAYING" glib:nick="playing">
+      <member name="playing" value="4" c:identifier="GST_RTSP_STATE_PLAYING" glib:nick="playing" glib:name="GST_RTSP_STATE_PLAYING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">playing</doc>
       </member>
-      <member name="recording" value="5" c:identifier="GST_RTSP_STATE_RECORDING" glib:nick="recording">
+      <member name="recording" value="5" c:identifier="GST_RTSP_STATE_RECORDING" glib:nick="recording" glib:name="GST_RTSP_STATE_RECORDING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">recording</doc>
       </member>
     </enumeration>
     <enumeration name="RTSPStatusCode" glib:type-name="GstRTSPStatusCode" glib:get-type="gst_rtsp_status_code_get_type" c:type="GstRTSPStatusCode">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">Enumeration of rtsp status codes</doc>
-      <member name="invalid" value="0" c:identifier="GST_RTSP_STS_INVALID" glib:nick="invalid">
+      <member name="invalid" value="0" c:identifier="GST_RTSP_STS_INVALID" glib:nick="invalid" glib:name="GST_RTSP_STS_INVALID">
       </member>
-      <member name="continue" value="100" c:identifier="GST_RTSP_STS_CONTINUE" glib:nick="continue">
+      <member name="continue" value="100" c:identifier="GST_RTSP_STS_CONTINUE" glib:nick="continue" glib:name="GST_RTSP_STS_CONTINUE">
       </member>
-      <member name="ok" value="200" c:identifier="GST_RTSP_STS_OK" glib:nick="ok">
+      <member name="ok" value="200" c:identifier="GST_RTSP_STS_OK" glib:nick="ok" glib:name="GST_RTSP_STS_OK">
       </member>
-      <member name="created" value="201" c:identifier="GST_RTSP_STS_CREATED" glib:nick="created">
+      <member name="created" value="201" c:identifier="GST_RTSP_STS_CREATED" glib:nick="created" glib:name="GST_RTSP_STS_CREATED">
       </member>
-      <member name="low_on_storage" value="250" c:identifier="GST_RTSP_STS_LOW_ON_STORAGE" glib:nick="low-on-storage">
+      <member name="low_on_storage" value="250" c:identifier="GST_RTSP_STS_LOW_ON_STORAGE" glib:nick="low-on-storage" glib:name="GST_RTSP_STS_LOW_ON_STORAGE">
       </member>
-      <member name="multiple_choices" value="300" c:identifier="GST_RTSP_STS_MULTIPLE_CHOICES" glib:nick="multiple-choices">
+      <member name="multiple_choices" value="300" c:identifier="GST_RTSP_STS_MULTIPLE_CHOICES" glib:nick="multiple-choices" glib:name="GST_RTSP_STS_MULTIPLE_CHOICES">
       </member>
-      <member name="moved_permanently" value="301" c:identifier="GST_RTSP_STS_MOVED_PERMANENTLY" glib:nick="moved-permanently">
+      <member name="moved_permanently" value="301" c:identifier="GST_RTSP_STS_MOVED_PERMANENTLY" glib:nick="moved-permanently" glib:name="GST_RTSP_STS_MOVED_PERMANENTLY">
       </member>
-      <member name="move_temporarily" value="302" c:identifier="GST_RTSP_STS_MOVE_TEMPORARILY" glib:nick="move-temporarily">
+      <member name="move_temporarily" value="302" c:identifier="GST_RTSP_STS_MOVE_TEMPORARILY" glib:nick="move-temporarily" glib:name="GST_RTSP_STS_MOVE_TEMPORARILY">
       </member>
-      <member name="see_other" value="303" c:identifier="GST_RTSP_STS_SEE_OTHER" glib:nick="see-other">
+      <member name="see_other" value="303" c:identifier="GST_RTSP_STS_SEE_OTHER" glib:nick="see-other" glib:name="GST_RTSP_STS_SEE_OTHER">
       </member>
-      <member name="not_modified" value="304" c:identifier="GST_RTSP_STS_NOT_MODIFIED" glib:nick="not-modified">
+      <member name="not_modified" value="304" c:identifier="GST_RTSP_STS_NOT_MODIFIED" glib:nick="not-modified" glib:name="GST_RTSP_STS_NOT_MODIFIED">
       </member>
-      <member name="use_proxy" value="305" c:identifier="GST_RTSP_STS_USE_PROXY" glib:nick="use-proxy">
+      <member name="use_proxy" value="305" c:identifier="GST_RTSP_STS_USE_PROXY" glib:nick="use-proxy" glib:name="GST_RTSP_STS_USE_PROXY">
       </member>
-      <member name="redirect_temporarily" value="307" c:identifier="GST_RTSP_STS_REDIRECT_TEMPORARILY" version="1.24" glib:nick="redirect-temporarily">
+      <member name="redirect_temporarily" value="307" c:identifier="GST_RTSP_STS_REDIRECT_TEMPORARILY" version="1.24" glib:nick="redirect-temporarily" glib:name="GST_RTSP_STS_REDIRECT_TEMPORARILY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is temporarily redirected</doc>
       </member>
-      <member name="redirect_permanently" value="308" c:identifier="GST_RTSP_STS_REDIRECT_PERMANENTLY" version="1.24" glib:nick="redirect-permanently">
+      <member name="redirect_permanently" value="308" c:identifier="GST_RTSP_STS_REDIRECT_PERMANENTLY" version="1.24" glib:nick="redirect-permanently" glib:name="GST_RTSP_STS_REDIRECT_PERMANENTLY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">RTSP request is permanently redirected</doc>
       </member>
-      <member name="bad_request" value="400" c:identifier="GST_RTSP_STS_BAD_REQUEST" glib:nick="bad-request">
+      <member name="bad_request" value="400" c:identifier="GST_RTSP_STS_BAD_REQUEST" glib:nick="bad-request" glib:name="GST_RTSP_STS_BAD_REQUEST">
       </member>
-      <member name="unauthorized" value="401" c:identifier="GST_RTSP_STS_UNAUTHORIZED" glib:nick="unauthorized">
+      <member name="unauthorized" value="401" c:identifier="GST_RTSP_STS_UNAUTHORIZED" glib:nick="unauthorized" glib:name="GST_RTSP_STS_UNAUTHORIZED">
       </member>
-      <member name="payment_required" value="402" c:identifier="GST_RTSP_STS_PAYMENT_REQUIRED" glib:nick="payment-required">
+      <member name="payment_required" value="402" c:identifier="GST_RTSP_STS_PAYMENT_REQUIRED" glib:nick="payment-required" glib:name="GST_RTSP_STS_PAYMENT_REQUIRED">
       </member>
-      <member name="forbidden" value="403" c:identifier="GST_RTSP_STS_FORBIDDEN" glib:nick="forbidden">
+      <member name="forbidden" value="403" c:identifier="GST_RTSP_STS_FORBIDDEN" glib:nick="forbidden" glib:name="GST_RTSP_STS_FORBIDDEN">
       </member>
-      <member name="not_found" value="404" c:identifier="GST_RTSP_STS_NOT_FOUND" glib:nick="not-found">
+      <member name="not_found" value="404" c:identifier="GST_RTSP_STS_NOT_FOUND" glib:nick="not-found" glib:name="GST_RTSP_STS_NOT_FOUND">
       </member>
-      <member name="method_not_allowed" value="405" c:identifier="GST_RTSP_STS_METHOD_NOT_ALLOWED" glib:nick="method-not-allowed">
+      <member name="method_not_allowed" value="405" c:identifier="GST_RTSP_STS_METHOD_NOT_ALLOWED" glib:nick="method-not-allowed" glib:name="GST_RTSP_STS_METHOD_NOT_ALLOWED">
       </member>
-      <member name="not_acceptable" value="406" c:identifier="GST_RTSP_STS_NOT_ACCEPTABLE" glib:nick="not-acceptable">
+      <member name="not_acceptable" value="406" c:identifier="GST_RTSP_STS_NOT_ACCEPTABLE" glib:nick="not-acceptable" glib:name="GST_RTSP_STS_NOT_ACCEPTABLE">
       </member>
-      <member name="proxy_auth_required" value="407" c:identifier="GST_RTSP_STS_PROXY_AUTH_REQUIRED" glib:nick="proxy-auth-required">
+      <member name="proxy_auth_required" value="407" c:identifier="GST_RTSP_STS_PROXY_AUTH_REQUIRED" glib:nick="proxy-auth-required" glib:name="GST_RTSP_STS_PROXY_AUTH_REQUIRED">
       </member>
-      <member name="request_timeout" value="408" c:identifier="GST_RTSP_STS_REQUEST_TIMEOUT" glib:nick="request-timeout">
+      <member name="request_timeout" value="408" c:identifier="GST_RTSP_STS_REQUEST_TIMEOUT" glib:nick="request-timeout" glib:name="GST_RTSP_STS_REQUEST_TIMEOUT">
       </member>
-      <member name="gone" value="410" c:identifier="GST_RTSP_STS_GONE" glib:nick="gone">
+      <member name="gone" value="410" c:identifier="GST_RTSP_STS_GONE" glib:nick="gone" glib:name="GST_RTSP_STS_GONE">
       </member>
-      <member name="length_required" value="411" c:identifier="GST_RTSP_STS_LENGTH_REQUIRED" glib:nick="length-required">
+      <member name="length_required" value="411" c:identifier="GST_RTSP_STS_LENGTH_REQUIRED" glib:nick="length-required" glib:name="GST_RTSP_STS_LENGTH_REQUIRED">
       </member>
-      <member name="precondition_failed" value="412" c:identifier="GST_RTSP_STS_PRECONDITION_FAILED" glib:nick="precondition-failed">
+      <member name="precondition_failed" value="412" c:identifier="GST_RTSP_STS_PRECONDITION_FAILED" glib:nick="precondition-failed" glib:name="GST_RTSP_STS_PRECONDITION_FAILED">
       </member>
-      <member name="request_entity_too_large" value="413" c:identifier="GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE" glib:nick="request-entity-too-large">
+      <member name="request_entity_too_large" value="413" c:identifier="GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE" glib:nick="request-entity-too-large" glib:name="GST_RTSP_STS_REQUEST_ENTITY_TOO_LARGE">
       </member>
-      <member name="request_uri_too_large" value="414" c:identifier="GST_RTSP_STS_REQUEST_URI_TOO_LARGE" glib:nick="request-uri-too-large">
+      <member name="request_uri_too_large" value="414" c:identifier="GST_RTSP_STS_REQUEST_URI_TOO_LARGE" glib:nick="request-uri-too-large" glib:name="GST_RTSP_STS_REQUEST_URI_TOO_LARGE">
       </member>
-      <member name="unsupported_media_type" value="415" c:identifier="GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE" glib:nick="unsupported-media-type">
+      <member name="unsupported_media_type" value="415" c:identifier="GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE" glib:nick="unsupported-media-type" glib:name="GST_RTSP_STS_UNSUPPORTED_MEDIA_TYPE">
       </member>
-      <member name="parameter_not_understood" value="451" c:identifier="GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD" glib:nick="parameter-not-understood">
+      <member name="parameter_not_understood" value="451" c:identifier="GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD" glib:nick="parameter-not-understood" glib:name="GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD">
       </member>
-      <member name="conference_not_found" value="452" c:identifier="GST_RTSP_STS_CONFERENCE_NOT_FOUND" glib:nick="conference-not-found">
+      <member name="conference_not_found" value="452" c:identifier="GST_RTSP_STS_CONFERENCE_NOT_FOUND" glib:nick="conference-not-found" glib:name="GST_RTSP_STS_CONFERENCE_NOT_FOUND">
       </member>
-      <member name="not_enough_bandwidth" value="453" c:identifier="GST_RTSP_STS_NOT_ENOUGH_BANDWIDTH" glib:nick="not-enough-bandwidth">
+      <member name="not_enough_bandwidth" value="453" c:identifier="GST_RTSP_STS_NOT_ENOUGH_BANDWIDTH" glib:nick="not-enough-bandwidth" glib:name="GST_RTSP_STS_NOT_ENOUGH_BANDWIDTH">
       </member>
-      <member name="session_not_found" value="454" c:identifier="GST_RTSP_STS_SESSION_NOT_FOUND" glib:nick="session-not-found">
+      <member name="session_not_found" value="454" c:identifier="GST_RTSP_STS_SESSION_NOT_FOUND" glib:nick="session-not-found" glib:name="GST_RTSP_STS_SESSION_NOT_FOUND">
       </member>
-      <member name="method_not_valid_in_this_state" value="455" c:identifier="GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE" glib:nick="method-not-valid-in-this-state">
+      <member name="method_not_valid_in_this_state" value="455" c:identifier="GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE" glib:nick="method-not-valid-in-this-state" glib:name="GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE">
       </member>
-      <member name="header_field_not_valid_for_resource" value="456" c:identifier="GST_RTSP_STS_HEADER_FIELD_NOT_VALID_FOR_RESOURCE" glib:nick="header-field-not-valid-for-resource">
+      <member name="header_field_not_valid_for_resource" value="456" c:identifier="GST_RTSP_STS_HEADER_FIELD_NOT_VALID_FOR_RESOURCE" glib:nick="header-field-not-valid-for-resource" glib:name="GST_RTSP_STS_HEADER_FIELD_NOT_VALID_FOR_RESOURCE">
       </member>
-      <member name="invalid_range" value="457" c:identifier="GST_RTSP_STS_INVALID_RANGE" glib:nick="invalid-range">
+      <member name="invalid_range" value="457" c:identifier="GST_RTSP_STS_INVALID_RANGE" glib:nick="invalid-range" glib:name="GST_RTSP_STS_INVALID_RANGE">
       </member>
-      <member name="parameter_is_readonly" value="458" c:identifier="GST_RTSP_STS_PARAMETER_IS_READONLY" glib:nick="parameter-is-readonly">
+      <member name="parameter_is_readonly" value="458" c:identifier="GST_RTSP_STS_PARAMETER_IS_READONLY" glib:nick="parameter-is-readonly" glib:name="GST_RTSP_STS_PARAMETER_IS_READONLY">
       </member>
-      <member name="aggregate_operation_not_allowed" value="459" c:identifier="GST_RTSP_STS_AGGREGATE_OPERATION_NOT_ALLOWED" glib:nick="aggregate-operation-not-allowed">
+      <member name="aggregate_operation_not_allowed" value="459" c:identifier="GST_RTSP_STS_AGGREGATE_OPERATION_NOT_ALLOWED" glib:nick="aggregate-operation-not-allowed" glib:name="GST_RTSP_STS_AGGREGATE_OPERATION_NOT_ALLOWED">
       </member>
-      <member name="only_aggregate_operation_allowed" value="460" c:identifier="GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED" glib:nick="only-aggregate-operation-allowed">
+      <member name="only_aggregate_operation_allowed" value="460" c:identifier="GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED" glib:nick="only-aggregate-operation-allowed" glib:name="GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED">
       </member>
-      <member name="unsupported_transport" value="461" c:identifier="GST_RTSP_STS_UNSUPPORTED_TRANSPORT" glib:nick="unsupported-transport">
+      <member name="unsupported_transport" value="461" c:identifier="GST_RTSP_STS_UNSUPPORTED_TRANSPORT" glib:nick="unsupported-transport" glib:name="GST_RTSP_STS_UNSUPPORTED_TRANSPORT">
       </member>
-      <member name="destination_unreachable" value="462" c:identifier="GST_RTSP_STS_DESTINATION_UNREACHABLE" glib:nick="destination-unreachable">
+      <member name="destination_unreachable" value="462" c:identifier="GST_RTSP_STS_DESTINATION_UNREACHABLE" glib:nick="destination-unreachable" glib:name="GST_RTSP_STS_DESTINATION_UNREACHABLE">
       </member>
-      <member name="key_management_failure" value="463" c:identifier="GST_RTSP_STS_KEY_MANAGEMENT_FAILURE" glib:nick="key-management-failure">
+      <member name="key_management_failure" value="463" c:identifier="GST_RTSP_STS_KEY_MANAGEMENT_FAILURE" glib:nick="key-management-failure" glib:name="GST_RTSP_STS_KEY_MANAGEMENT_FAILURE">
       </member>
-      <member name="internal_server_error" value="500" c:identifier="GST_RTSP_STS_INTERNAL_SERVER_ERROR" glib:nick="internal-server-error">
+      <member name="internal_server_error" value="500" c:identifier="GST_RTSP_STS_INTERNAL_SERVER_ERROR" glib:nick="internal-server-error" glib:name="GST_RTSP_STS_INTERNAL_SERVER_ERROR">
       </member>
-      <member name="not_implemented" value="501" c:identifier="GST_RTSP_STS_NOT_IMPLEMENTED" glib:nick="not-implemented">
+      <member name="not_implemented" value="501" c:identifier="GST_RTSP_STS_NOT_IMPLEMENTED" glib:nick="not-implemented" glib:name="GST_RTSP_STS_NOT_IMPLEMENTED">
       </member>
-      <member name="bad_gateway" value="502" c:identifier="GST_RTSP_STS_BAD_GATEWAY" glib:nick="bad-gateway">
+      <member name="bad_gateway" value="502" c:identifier="GST_RTSP_STS_BAD_GATEWAY" glib:nick="bad-gateway" glib:name="GST_RTSP_STS_BAD_GATEWAY">
       </member>
-      <member name="service_unavailable" value="503" c:identifier="GST_RTSP_STS_SERVICE_UNAVAILABLE" glib:nick="service-unavailable">
+      <member name="service_unavailable" value="503" c:identifier="GST_RTSP_STS_SERVICE_UNAVAILABLE" glib:nick="service-unavailable" glib:name="GST_RTSP_STS_SERVICE_UNAVAILABLE">
       </member>
-      <member name="gateway_timeout" value="504" c:identifier="GST_RTSP_STS_GATEWAY_TIMEOUT" glib:nick="gateway-timeout">
+      <member name="gateway_timeout" value="504" c:identifier="GST_RTSP_STS_GATEWAY_TIMEOUT" glib:nick="gateway-timeout" glib:name="GST_RTSP_STS_GATEWAY_TIMEOUT">
       </member>
-      <member name="rtsp_version_not_supported" value="505" c:identifier="GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED" glib:nick="rtsp-version-not-supported">
+      <member name="rtsp_version_not_supported" value="505" c:identifier="GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED" glib:nick="rtsp-version-not-supported" glib:name="GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED">
       </member>
-      <member name="option_not_supported" value="551" c:identifier="GST_RTSP_STS_OPTION_NOT_SUPPORTED" glib:nick="option-not-supported">
+      <member name="option_not_supported" value="551" c:identifier="GST_RTSP_STS_OPTION_NOT_SUPPORTED" glib:nick="option-not-supported" glib:name="GST_RTSP_STS_OPTION_NOT_SUPPORTED">
       </member>
     </enumeration>
     <record name="RTSPTime" c:type="GstRTSPTime">
@@ -3234,31 +3234,31 @@ UTC times will be converted to nanoseconds since 1900.</doc>
     </record>
     <enumeration name="RTSPTimeType" glib:type-name="GstRTSPTimeType" glib:get-type="gst_rtsp_time_type_get_type" c:type="GstRTSPTimeType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">Possible time types.</doc>
-      <member name="seconds" value="0" c:identifier="GST_RTSP_TIME_SECONDS" glib:nick="seconds">
+      <member name="seconds" value="0" c:identifier="GST_RTSP_TIME_SECONDS" glib:nick="seconds" glib:name="GST_RTSP_TIME_SECONDS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">seconds</doc>
       </member>
-      <member name="now" value="1" c:identifier="GST_RTSP_TIME_NOW" glib:nick="now">
+      <member name="now" value="1" c:identifier="GST_RTSP_TIME_NOW" glib:nick="now" glib:name="GST_RTSP_TIME_NOW">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">now</doc>
       </member>
-      <member name="end" value="2" c:identifier="GST_RTSP_TIME_END" glib:nick="end">
+      <member name="end" value="2" c:identifier="GST_RTSP_TIME_END" glib:nick="end" glib:name="GST_RTSP_TIME_END">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">end</doc>
       </member>
-      <member name="frames" value="3" c:identifier="GST_RTSP_TIME_FRAMES" glib:nick="frames">
+      <member name="frames" value="3" c:identifier="GST_RTSP_TIME_FRAMES" glib:nick="frames" glib:name="GST_RTSP_TIME_FRAMES">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">frames and subframes</doc>
       </member>
-      <member name="utc" value="4" c:identifier="GST_RTSP_TIME_UTC" glib:nick="utc">
+      <member name="utc" value="4" c:identifier="GST_RTSP_TIME_UTC" glib:nick="utc" glib:name="GST_RTSP_TIME_UTC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsprange.h">UTC time</doc>
       </member>
     </enumeration>
     <bitfield name="RTSPTransMode" glib:type-name="GstRTSPTransMode" glib:get-type="gst_rtsp_trans_mode_get_type" c:type="GstRTSPTransMode">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">The transfer mode to use.</doc>
-      <member name="unknown" value="0" c:identifier="GST_RTSP_TRANS_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="0" c:identifier="GST_RTSP_TRANS_UNKNOWN" glib:nick="unknown" glib:name="GST_RTSP_TRANS_UNKNOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">invalid tansport mode</doc>
       </member>
-      <member name="rtp" value="1" c:identifier="GST_RTSP_TRANS_RTP" glib:nick="rtp">
+      <member name="rtp" value="1" c:identifier="GST_RTSP_TRANS_RTP" glib:nick="rtp" glib:name="GST_RTSP_TRANS_RTP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">transfer RTP data</doc>
       </member>
-      <member name="rdt" value="2" c:identifier="GST_RTSP_TRANS_RDT" glib:nick="rdt">
+      <member name="rdt" value="2" c:identifier="GST_RTSP_TRANS_RDT" glib:nick="rdt" glib:name="GST_RTSP_TRANS_RDT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtsptransport.h">transfer RDT (RealMedia) data</doc>
       </member>
     </bitfield>
@@ -3662,16 +3662,16 @@ with gst_rtsp_url_free().</doc>
     </record>
     <enumeration name="RTSPVersion" glib:type-name="GstRTSPVersion" glib:get-type="gst_rtsp_version_get_type" c:type="GstRTSPVersion">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">The supported RTSP versions.</doc>
-      <member name="invalid" value="0" c:identifier="GST_RTSP_VERSION_INVALID" glib:nick="invalid">
+      <member name="invalid" value="0" c:identifier="GST_RTSP_VERSION_INVALID" glib:nick="invalid" glib:name="GST_RTSP_VERSION_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">unknown/invalid version</doc>
       </member>
-      <member name="1_0" value="16" c:identifier="GST_RTSP_VERSION_1_0" glib:nick="1-0">
+      <member name="1_0" value="16" c:identifier="GST_RTSP_VERSION_1_0" glib:nick="1-0" glib:name="GST_RTSP_VERSION_1_0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">version 1.0</doc>
       </member>
-      <member name="1_1" value="17" c:identifier="GST_RTSP_VERSION_1_1" glib:nick="1-1">
+      <member name="1_1" value="17" c:identifier="GST_RTSP_VERSION_1_1" glib:nick="1-1" glib:name="GST_RTSP_VERSION_1_1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">version 1.1.</doc>
       </member>
-      <member name="2_0" value="32" c:identifier="GST_RTSP_VERSION_2_0" glib:nick="2-0">
+      <member name="2_0" value="32" c:identifier="GST_RTSP_VERSION_2_0" glib:nick="2-0" glib:name="GST_RTSP_VERSION_2_0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspdefs.h">version 2.0.</doc>
       </member>
       <function name="as_text" c:identifier="gst_rtsp_version_as_text">
@@ -3689,7 +3689,7 @@ with gst_rtsp_url_free().</doc>
         </parameters>
       </function>
     </enumeration>
-    <record name="RTSPWatch" c:type="GstRTSPWatch" disguised="1">
+    <record name="RTSPWatch" c:type="GstRTSPWatch" disguised="1" opaque="1">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">Opaque RTSP watch object that can be used for asynchronous RTSP
 operations.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
@@ -4004,6 +4004,7 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">Callback functions from a #GstRTSPWatch.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
       <field name="message_received">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">callback when a message was received</doc>
         <callback name="message_received">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4023,6 +4024,7 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="message_sent">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">callback when a message was sent</doc>
         <callback name="message_sent">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4042,6 +4044,7 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="closed">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">callback when the connection is closed</doc>
         <callback name="closed">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4058,6 +4061,7 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="error">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">callback when an error occurred</doc>
         <callback name="error">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4077,6 +4081,8 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="tunnel_start">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">a client started a tunneled connection. The tunnelid of the
+  connection must be saved.</doc>
         <callback name="tunnel_start">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4093,6 +4099,9 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="tunnel_complete">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">a client finished a tunneled connection. In this callback
+  you usually pair the tunnelid of this connection with the saved one using
+  gst_rtsp_connection_do_tunnel().</doc>
         <callback name="tunnel_complete">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4109,6 +4118,8 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="error_full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">callback when an error occurred with more information than
+  the @error callback.</doc>
         <callback name="error_full">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4134,6 +4145,7 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="tunnel_lost">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">callback when the post connection of a tunnel is closed.</doc>
         <callback name="tunnel_lost">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">
@@ -4150,6 +4162,9 @@ communication. Free with gst_rtsp_watch_unref () after usage.</doc>
         </callback>
       </field>
       <field name="tunnel_http_response">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h">callback when an HTTP response to the GET request
+  is about to be sent for a tunneled connection. The response can be
+  modified in the callback. Since: 1.4.</doc>
         <callback name="tunnel_http_response">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtsp/gstrtspconnection.h"/>
           <return-value transfer-ownership="none">

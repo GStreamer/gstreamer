@@ -68,7 +68,7 @@ about the serialization format.</doc>
           </parameter>
         </parameters>
       </function>
-      <method name="get_avoid_reencoding" c:identifier="gst_transcoder_get_avoid_reencoding">
+      <method name="get_avoid_reencoding" c:identifier="gst_transcoder_get_avoid_reencoding" glib:get-property="avoid-reencoding">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">%TRUE if the transcoder tries to avoid reencoding streams where
@@ -82,7 +82,7 @@ reencoding is not strictly needed, %FALSE otherwise.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_dest_uri" c:identifier="gst_transcoder_get_dest_uri">
+      <method name="get_dest_uri" c:identifier="gst_transcoder_get_dest_uri" glib:get-property="dest-uri">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Gets the URI of the destination of the transcoded stream.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
         <return-value transfer-ownership="full">
@@ -97,7 +97,7 @@ destination of the transcoded stream. g_free() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_duration" c:identifier="gst_transcoder_get_duration">
+      <method name="get_duration" c:identifier="gst_transcoder_get_duration" glib:get-property="duration">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Retrieves the duration of the media stream that self represents.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
         <return-value transfer-ownership="none">
@@ -137,7 +137,7 @@ fill memory. To avoid that, the bus has to be set "flushing".</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_pipeline" c:identifier="gst_transcoder_get_pipeline">
+      <method name="get_pipeline" c:identifier="gst_transcoder_get_pipeline" glib:get-property="pipeline">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">The internal uritranscodebin instance</doc>
@@ -150,7 +150,7 @@ fill memory. To avoid that, the bus has to be set "flushing".</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_position" c:identifier="gst_transcoder_get_position">
+      <method name="get_position" c:identifier="gst_transcoder_get_position" glib:get-property="position">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">the absolute position time, in nanoseconds, of the
@@ -164,7 +164,7 @@ transcoding stream.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_position_update_interval" c:identifier="gst_transcoder_get_position_update_interval">
+      <method name="get_position_update_interval" c:identifier="gst_transcoder_get_position_update_interval" glib:get-property="position-update-interval">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">current position update interval in milliseconds</doc>
@@ -265,7 +265,7 @@ notified about any error.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="set_avoid_reencoding" c:identifier="gst_transcoder_set_avoid_reencoding">
+      <method name="set_avoid_reencoding" c:identifier="gst_transcoder_set_avoid_reencoding" glib:set-property="avoid-reencoding">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -302,7 +302,7 @@ should try to use. It takes into account the number of cores available.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_position_update_interval" c:identifier="gst_transcoder_set_position_update_interval">
+      <method name="set_position_update_interval" c:identifier="gst_transcoder_set_position_update_interval" glib:set-property="position-update-interval">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">Set interval in milliseconds between two position-updated signals.
 Pass 0 to stop updating the position.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h"/>
@@ -320,29 +320,29 @@ Pass 0 to stop updating the position.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="avoid-reencoding" writable="1" transfer-ownership="none">
+      <property name="avoid-reencoding" writable="1" transfer-ownership="none" setter="set_avoid_reencoding" getter="get_avoid_reencoding" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.c">See #encodebin:avoid-reencoding</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="dest-uri" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="dest-uri" writable="1" construct-only="1" transfer-ownership="none" getter="get_dest_uri" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="duration" transfer-ownership="none">
+      <property name="duration" transfer-ownership="none" getter="get_duration" default-value="18446744073709551615">
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="pipeline" transfer-ownership="none">
+      <property name="pipeline" transfer-ownership="none" getter="get_pipeline">
         <type name="Gst.Element"/>
       </property>
-      <property name="position" transfer-ownership="none">
+      <property name="position" transfer-ownership="none" getter="get_position" default-value="18446744073709551615">
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="position-update-interval" writable="1" transfer-ownership="none">
+      <property name="position-update-interval" writable="1" transfer-ownership="none" setter="set_position_update_interval" getter="get_position_update_interval" default-value="100">
         <type name="guint" c:type="guint"/>
       </property>
       <property name="profile" writable="1" construct-only="1" transfer-ownership="none">
         <type name="GstPbutils.EncodingProfile"/>
       </property>
-      <property name="src-uri" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="src-uri" writable="1" construct-only="1" transfer-ownership="none" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
     </class>
@@ -353,7 +353,7 @@ Pass 0 to stop updating the position.</doc>
       </field>
     </record>
     <enumeration name="TranscoderError" glib:type-name="GstTranscoderError" glib:get-type="gst_transcoder_error_get_type" c:type="GstTranscoderError" glib:error-domain="gst-transcoder-error-quark">
-      <member name="failed" value="0" c:identifier="GST_TRANSCODER_ERROR_FAILED" glib:nick="failed">
+      <member name="failed" value="0" c:identifier="GST_TRANSCODER_ERROR_FAILED" glib:nick="failed" glib:name="GST_TRANSCODER_ERROR_FAILED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">generic error.</doc>
       </member>
       <function name="get_name" c:identifier="gst_transcoder_error_get_name">
@@ -380,22 +380,22 @@ Pass 0 to stop updating the position.</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Types of messages that will be posted on the transcoder API bus.
 
 See also #gst_transcoder_get_message_bus()</doc>
-      <member name="position_updated" value="0" c:identifier="GST_TRANSCODER_MESSAGE_POSITION_UPDATED" glib:nick="position-updated">
+      <member name="position_updated" value="0" c:identifier="GST_TRANSCODER_MESSAGE_POSITION_UPDATED" glib:nick="position-updated" glib:name="GST_TRANSCODER_MESSAGE_POSITION_UPDATED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Sink position changed</doc>
       </member>
-      <member name="duration_changed" value="1" c:identifier="GST_TRANSCODER_MESSAGE_DURATION_CHANGED" glib:nick="duration-changed">
+      <member name="duration_changed" value="1" c:identifier="GST_TRANSCODER_MESSAGE_DURATION_CHANGED" glib:nick="duration-changed" glib:name="GST_TRANSCODER_MESSAGE_DURATION_CHANGED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Duration of stream changed</doc>
       </member>
-      <member name="state_changed" value="2" c:identifier="GST_TRANSCODER_MESSAGE_STATE_CHANGED" glib:nick="state-changed">
+      <member name="state_changed" value="2" c:identifier="GST_TRANSCODER_MESSAGE_STATE_CHANGED" glib:nick="state-changed" glib:name="GST_TRANSCODER_MESSAGE_STATE_CHANGED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Pipeline state changed</doc>
       </member>
-      <member name="done" value="3" c:identifier="GST_TRANSCODER_MESSAGE_DONE" glib:nick="done">
+      <member name="done" value="3" c:identifier="GST_TRANSCODER_MESSAGE_DONE" glib:nick="done" glib:name="GST_TRANSCODER_MESSAGE_DONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Transcoding is done</doc>
       </member>
-      <member name="error" value="4" c:identifier="GST_TRANSCODER_MESSAGE_ERROR" glib:nick="error">
+      <member name="error" value="4" c:identifier="GST_TRANSCODER_MESSAGE_ERROR" glib:nick="error" glib:name="GST_TRANSCODER_MESSAGE_ERROR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Message contains an error</doc>
       </member>
-      <member name="warning" value="5" c:identifier="GST_TRANSCODER_MESSAGE_WARNING" glib:nick="warning">
+      <member name="warning" value="5" c:identifier="GST_TRANSCODER_MESSAGE_WARNING" glib:nick="warning" glib:name="GST_TRANSCODER_MESSAGE_WARNING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">Message contains an error</doc>
       </member>
       <function name="get_name" c:identifier="gst_transcoder_message_get_name" version="1.20">
@@ -508,7 +508,7 @@ See also #gst_transcoder_get_message_bus()</doc>
     <class name="TranscoderSignalAdapter" c:symbol-prefix="transcoder_signal_adapter" c:type="GstTranscoderSignalAdapter" version="1.20" parent="GObject.Object" glib:type-name="GstTranscoderSignalAdapter" glib:get-type="gst_transcoder_signal_adapter_get_type" glib:type-struct="TranscoderSignalAdapterClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.h">Transforms #GstTranscoder bus messages to signals from the adapter object.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.h"/>
-      <method name="get_transcoder" c:identifier="gst_transcoder_signal_adapter_get_transcoder" version="1.20">
+      <method name="get_transcoder" c:identifier="gst_transcoder_signal_adapter_get_transcoder" glib:get-property="transcoder" version="1.20">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.c">The #GstTranscoder @self is tracking</doc>
@@ -521,7 +521,7 @@ See also #gst_transcoder_get_message_bus()</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="transcoder" version="1.20" transfer-ownership="none">
+      <property name="transcoder" version="1.20" transfer-ownership="none" getter="get_transcoder">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder-signal-adapter.c">The #GstTranscoder tracked by the adapter.</doc>
         <type name="Transcoder"/>
       </property>
@@ -595,13 +595,13 @@ See also #gst_transcoder_get_message_bus()</doc>
     </record>
     <enumeration name="TranscoderState" version="1.20" glib:type-name="GstTranscoderState" glib:get-type="gst_transcoder_state_get_type" c:type="GstTranscoderState">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">High level representation of the transcoder pipeline state.</doc>
-      <member name="stopped" value="0" c:identifier="GST_TRANSCODER_STATE_STOPPED" glib:nick="stopped">
+      <member name="stopped" value="0" c:identifier="GST_TRANSCODER_STATE_STOPPED" glib:nick="stopped" glib:name="GST_TRANSCODER_STATE_STOPPED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">the transcoder is stopped.</doc>
       </member>
-      <member name="paused" value="1" c:identifier="GST_TRANSCODER_STATE_PAUSED" glib:nick="paused">
+      <member name="paused" value="1" c:identifier="GST_TRANSCODER_STATE_PAUSED" glib:nick="paused" glib:name="GST_TRANSCODER_STATE_PAUSED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">the transcoder is paused.</doc>
       </member>
-      <member name="playing" value="2" c:identifier="GST_TRANSCODER_STATE_PLAYING" glib:nick="playing">
+      <member name="playing" value="2" c:identifier="GST_TRANSCODER_STATE_PLAYING" glib:nick="playing" glib:name="GST_TRANSCODER_STATE_PLAYING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/transcoder/gsttranscoder.h">the transcoder is currently transcoding a
 stream.</doc>
       </member>

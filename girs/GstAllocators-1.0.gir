@@ -161,10 +161,10 @@ number and the height is scaled according to the sub-sampling.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="drm-device-path" version="1.24" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="drm-device-path" version="1.24" writable="1" construct-only="1" transfer-ownership="none" default-value="NULL">
         <type name="filename" c:type="gchar*"/>
       </property>
-      <property name="drm-fd" version="1.24" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="drm-fd" version="1.24" writable="1" construct-only="1" transfer-ownership="none" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
     </class>
@@ -405,6 +405,8 @@ The memory is only mmapped on gst_buffer_map() request.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstphysmemory.h"/>
       <prerequisite name="Gst.Allocator"/>
       <virtual-method name="get_phys_addr">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstphysmemory.h">Implementations shall return the physicall memory address
+   that is backing the provided memory, or 0 if none.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstphysmemory.h"/>
         <return-value transfer-ownership="none">
           <type name="guintptr" c:type="guintptr"/>
@@ -426,6 +428,8 @@ The memory is only mmapped on gst_buffer_map() request.</doc>
         <type name="GObject.TypeInterface" c:type="GTypeInterface"/>
       </field>
       <field name="get_phys_addr">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstphysmemory.h">Implementations shall return the physicall memory address
+   that is backing the provided memory, or 0 if none.</doc>
         <callback name="get_phys_addr">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/allocators/gstphysmemory.h"/>
           <return-value transfer-ownership="none">

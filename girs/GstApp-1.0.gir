@@ -52,13 +52,13 @@ and/or use gtk-doc annotations.  -->
     <enumeration name="AppLeakyType" version="1.20" glib:type-name="GstAppLeakyType" glib:get-type="gst_app_leaky_type_get_type" c:type="GstAppLeakyType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Buffer dropping scheme to avoid the element's internal queue to block when
 full.</doc>
-      <member name="none" value="0" c:identifier="GST_APP_LEAKY_TYPE_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_APP_LEAKY_TYPE_NONE" glib:nick="none" glib:name="GST_APP_LEAKY_TYPE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Not Leaky</doc>
       </member>
-      <member name="upstream" value="1" c:identifier="GST_APP_LEAKY_TYPE_UPSTREAM" glib:nick="upstream">
+      <member name="upstream" value="1" c:identifier="GST_APP_LEAKY_TYPE_UPSTREAM" glib:nick="upstream" glib:name="GST_APP_LEAKY_TYPE_UPSTREAM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Leaky on upstream (new buffers)</doc>
       </member>
-      <member name="downstream" value="2" c:identifier="GST_APP_LEAKY_TYPE_DOWNSTREAM" glib:nick="downstream">
+      <member name="downstream" value="2" c:identifier="GST_APP_LEAKY_TYPE_DOWNSTREAM" glib:nick="downstream" glib:name="GST_APP_LEAKY_TYPE_DOWNSTREAM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Leaky on downstream (old buffers)</doc>
       </member>
     </enumeration>
@@ -309,7 +309,7 @@ condition.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_caps" c:identifier="gst_app_sink_get_caps">
+      <method name="get_caps" c:identifier="gst_app_sink_get_caps" glib:get-property="caps">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the configured caps on @appsink.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -323,7 +323,7 @@ condition.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_drop" c:identifier="gst_app_sink_get_drop">
+      <method name="get_drop" c:identifier="gst_app_sink_get_drop" glib:get-property="drop">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Check if @appsink will drop old buffers when the maximum amount of queued
 data is reached (meaning max buffers, time or bytes limit, whichever is hit first).</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
@@ -339,7 +339,7 @@ filled.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_emit_signals" c:identifier="gst_app_sink_get_emit_signals">
+      <method name="get_emit_signals" c:identifier="gst_app_sink_get_emit_signals" glib:get-property="emit-signals">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Check if appsink will emit the "new-preroll" and "new-sample" signals.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
@@ -354,7 +354,7 @@ signals.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_buffers" c:identifier="gst_app_sink_get_max_buffers">
+      <method name="get_max_buffers" c:identifier="gst_app_sink_get_max_buffers" glib:get-property="max-buffers">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the maximum amount of buffers that can be queued in @appsink.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
@@ -368,7 +368,7 @@ signals.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_bytes" c:identifier="gst_app_sink_get_max_bytes" version="1.24">
+      <method name="get_max_bytes" c:identifier="gst_app_sink_get_max_bytes" glib:get-property="max-bytes" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the maximum total size, in bytes, that can be queued in @appsink.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
@@ -382,7 +382,7 @@ signals.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_time" c:identifier="gst_app_sink_get_max_time" version="1.24">
+      <method name="get_max_time" c:identifier="gst_app_sink_get_max_time" glib:get-property="max-time" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Get the maximum total duration that can be queued in @appsink.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
@@ -396,7 +396,7 @@ signals.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_wait_on_eos" c:identifier="gst_app_sink_get_wait_on_eos">
+      <method name="get_wait_on_eos" c:identifier="gst_app_sink_get_wait_on_eos" glib:get-property="wait-on-eos">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Check if @appsink will wait for all buffers to be consumed when an EOS is
 received.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
@@ -573,7 +573,7 @@ way.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_caps" c:identifier="gst_app_sink_set_caps">
+      <method name="set_caps" c:identifier="gst_app_sink_set_caps" glib:set-property="caps">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set the capabilities on the appsink element.  This function takes
 a copy of the caps structure. After calling this method, the sink will only
 accept caps that match @caps. If @caps is non-fixed, or incomplete,
@@ -593,7 +593,7 @@ you must check the caps on the samples to get the actual used caps.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_drop" c:identifier="gst_app_sink_set_drop">
+      <method name="set_drop" c:identifier="gst_app_sink_set_drop" glib:set-property="drop">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Instruct @appsink to drop old buffers when the maximum amount of queued
 data is reached, that is, when any configured limit is hit (max-buffers, max-time or max-bytes).</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
@@ -611,7 +611,7 @@ data is reached, that is, when any configured limit is hit (max-buffers, max-tim
           </parameter>
         </parameters>
       </method>
-      <method name="set_emit_signals" c:identifier="gst_app_sink_set_emit_signals">
+      <method name="set_emit_signals" c:identifier="gst_app_sink_set_emit_signals" glib:set-property="emit-signals">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Make appsink emit the "new-preroll" and "new-sample" signals. This option is
 by default disabled because signal emission is expensive and unneeded when
 the application prefers to operate in pull mode.</doc>
@@ -630,7 +630,7 @@ the application prefers to operate in pull mode.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_buffers" c:identifier="gst_app_sink_set_max_buffers">
+      <method name="set_max_buffers" c:identifier="gst_app_sink_set_max_buffers" glib:set-property="max-buffers">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set the maximum amount of buffers that can be queued in @appsink. After this
 amount of buffers are queued in appsink, any more buffers will block upstream
 elements until a sample is pulled from @appsink, unless 'drop' is set, in which
@@ -650,7 +650,7 @@ case new buffers will be discarded.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_bytes" c:identifier="gst_app_sink_set_max_bytes" version="1.24">
+      <method name="set_max_bytes" c:identifier="gst_app_sink_set_max_bytes" glib:set-property="max-bytes" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set the maximum total size that can be queued in @appsink. After this
 amount of buffers are queued in appsink, any more buffers will block upstream
 elements until a sample is pulled from @appsink, unless 'drop' is set, in which
@@ -670,7 +670,7 @@ case new buffers will be discarded.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_time" c:identifier="gst_app_sink_set_max_time" version="1.24">
+      <method name="set_max_time" c:identifier="gst_app_sink_set_max_time" glib:set-property="max-time" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Set the maximum total duration that can be queued in @appsink. After this
 amount of buffers are queued in appsink, any more buffers will block upstream
 elements until a sample is pulled from @appsink, unless 'drop' is set, in which
@@ -690,7 +690,7 @@ case new buffers will be discarded.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_wait_on_eos" c:identifier="gst_app_sink_set_wait_on_eos">
+      <method name="set_wait_on_eos" c:identifier="gst_app_sink_set_wait_on_eos" glib:set-property="wait-on-eos">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Instruct @appsink to wait for all buffers to be consumed when an EOS is received.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
         <return-value transfer-ownership="none">
@@ -811,34 +811,34 @@ condition.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="buffer-list" writable="1" transfer-ownership="none">
+      <property name="buffer-list" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="caps" writable="1" transfer-ownership="none">
+      <property name="caps" writable="1" transfer-ownership="none" setter="set_caps" getter="get_caps">
         <type name="Gst.Caps"/>
       </property>
-      <property name="drop" writable="1" transfer-ownership="none">
+      <property name="drop" writable="1" transfer-ownership="none" setter="set_drop" getter="get_drop" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="emit-signals" writable="1" transfer-ownership="none">
+      <property name="emit-signals" writable="1" transfer-ownership="none" setter="set_emit_signals" getter="get_emit_signals" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="eos" transfer-ownership="none">
+      <property name="eos" transfer-ownership="none" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="max-buffers" writable="1" transfer-ownership="none">
+      <property name="max-buffers" writable="1" transfer-ownership="none" setter="set_max_buffers" getter="get_max_buffers" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Maximum amount of buffers in the queue (0 = unlimited).</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="max-bytes" version="1.24" writable="1" transfer-ownership="none">
+      <property name="max-bytes" version="1.24" writable="1" transfer-ownership="none" setter="set_max_bytes" getter="get_max_bytes" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Maximum amount of bytes in the queue (0 = unlimited)</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="max-time" version="1.24" writable="1" transfer-ownership="none">
+      <property name="max-time" version="1.24" writable="1" transfer-ownership="none" setter="set_max_time" getter="get_max_time" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Maximum total duration of data in the queue (0 = unlimited)</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="wait-on-eos" version="1.8" writable="1" transfer-ownership="none">
+      <property name="wait-on-eos" version="1.8" writable="1" transfer-ownership="none" setter="set_wait_on_eos" getter="get_wait_on_eos" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.c">Wait for all buffers to be processed after receiving an EOS.
 
 In cases where it is uncertain if an @appsink will have a consumer for its buffers
@@ -1075,6 +1075,8 @@ for the EOS condition.</doc>
 gst_app_sink_set_callbacks().</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
       <field name="eos">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when the end-of-stream has been reached. This callback
+      is called from the streaming thread.</doc>
         <callback name="eos">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
           <return-value transfer-ownership="none">
@@ -1091,6 +1093,11 @@ gst_app_sink_set_callbacks().</doc>
         </callback>
       </field>
       <field name="new_preroll">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when a new preroll sample is available.
+      This callback is called from the streaming thread.
+      The new preroll sample can be retrieved with
+      gst_app_sink_pull_preroll() either from this callback
+      or from any other thread.</doc>
         <callback name="new_preroll">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
           <return-value transfer-ownership="none">
@@ -1107,6 +1114,11 @@ gst_app_sink_set_callbacks().</doc>
         </callback>
       </field>
       <field name="new_sample">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when a new sample is available.
+      This callback is called from the streaming thread.
+      The new sample can be retrieved with
+      gst_app_sink_pull_sample() either from this callback
+      or from any other thread.</doc>
         <callback name="new_sample">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
           <return-value transfer-ownership="none">
@@ -1123,6 +1135,14 @@ gst_app_sink_set_callbacks().</doc>
         </callback>
       </field>
       <field name="new_event">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when a new event is available.
+      This callback is called from the streaming thread.
+      The new event can be retrieved with
+      gst_app_sink_pull_event() either from this callback
+      or from any other thread.
+      The callback should return %TRUE if the event has been handled,
+      %FALSE otherwise.
+      Since: 1.20</doc>
         <callback name="new_event">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
           <return-value transfer-ownership="none">
@@ -1139,6 +1159,12 @@ gst_app_sink_set_callbacks().</doc>
         </callback>
       </field>
       <field name="propose_allocation">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h">Called when the propose_allocation query is available.
+      This callback is called from the streaming thread.
+      The allocation query can be retrieved with
+      gst_app_sink_propose_allocation() either from this callback
+      or from any other thread.
+      Since: 1.24</doc>
         <callback name="propose_allocation">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
           <return-value transfer-ownership="none">
@@ -1305,7 +1331,7 @@ Call gst_mini_object_unref() after usage.</doc>
         </array>
       </field>
     </record>
-    <record name="AppSinkPrivate" c:type="GstAppSinkPrivate" disguised="1">
+    <record name="AppSinkPrivate" c:type="GstAppSinkPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsink.h"/>
     </record>
     <class name="AppSrc" c:symbol-prefix="app_src" c:type="GstAppSrc" parent="GstBase.BaseSrc" glib:type-name="GstAppSrc" glib:get-type="gst_app_src_get_type" glib:type-struct="AppSrcClass">
@@ -1526,7 +1552,7 @@ element is the last buffer of the stream.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_caps" c:identifier="gst_app_src_get_caps">
+      <method name="get_caps" c:identifier="gst_app_src_get_caps" glib:get-property="caps">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the configured caps on @appsrc.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -1540,7 +1566,7 @@ element is the last buffer of the stream.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_current_level_buffers" c:identifier="gst_app_src_get_current_level_buffers" version="1.20">
+      <method name="get_current_level_buffers" c:identifier="gst_app_src_get_current_level_buffers" glib:get-property="current-level-buffers" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the number of currently queued buffers inside @appsrc.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
@@ -1554,7 +1580,7 @@ element is the last buffer of the stream.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_current_level_bytes" c:identifier="gst_app_src_get_current_level_bytes" version="1.2">
+      <method name="get_current_level_bytes" c:identifier="gst_app_src_get_current_level_bytes" glib:get-property="current-level-bytes" version="1.2">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the number of currently queued bytes inside @appsrc.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
@@ -1568,7 +1594,7 @@ element is the last buffer of the stream.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_current_level_time" c:identifier="gst_app_src_get_current_level_time" version="1.20">
+      <method name="get_current_level_time" c:identifier="gst_app_src_get_current_level_time" glib:get-property="current-level-time" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the amount of currently queued time inside @appsrc.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
@@ -1582,7 +1608,7 @@ element is the last buffer of the stream.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_duration" c:identifier="gst_app_src_get_duration" version="1.10">
+      <method name="get_duration" c:identifier="gst_app_src_get_duration" glib:get-property="duration" version="1.10">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the duration of the stream in nanoseconds. A value of GST_CLOCK_TIME_NONE means that the duration is
 not known.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
@@ -1597,7 +1623,7 @@ not known.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_emit_signals" c:identifier="gst_app_src_get_emit_signals">
+      <method name="get_emit_signals" c:identifier="gst_app_src_get_emit_signals" glib:get-property="emit-signals">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Check if appsrc will emit the "new-preroll" and "new-buffer" signals.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
@@ -1633,7 +1659,7 @@ signals.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_leaky_type" c:identifier="gst_app_src_get_leaky_type" version="1.20">
+      <method name="get_leaky_type" c:identifier="gst_app_src_get_leaky_type" glib:get-property="leaky-type" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Returns the currently set #GstAppLeakyType. See gst_app_src_set_leaky_type()
 for more details.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
@@ -1648,7 +1674,7 @@ for more details.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_buffers" c:identifier="gst_app_src_get_max_buffers" version="1.20">
+      <method name="get_max_buffers" c:identifier="gst_app_src_get_max_buffers" glib:get-property="max-buffers" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the maximum amount of buffers that can be queued in @appsrc.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
@@ -1662,7 +1688,7 @@ for more details.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_bytes" c:identifier="gst_app_src_get_max_bytes">
+      <method name="get_max_bytes" c:identifier="gst_app_src_get_max_bytes" glib:get-property="max-bytes">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the maximum amount of bytes that can be queued in @appsrc.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
@@ -1676,7 +1702,7 @@ for more details.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_time" c:identifier="gst_app_src_get_max_time" version="1.20">
+      <method name="get_max_time" c:identifier="gst_app_src_get_max_time" glib:get-property="max-time" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the maximum amount of time that can be queued in @appsrc.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
         <return-value transfer-ownership="none">
@@ -1690,7 +1716,7 @@ for more details.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_size" c:identifier="gst_app_src_get_size">
+      <method name="get_size" c:identifier="gst_app_src_get_size" glib:get-property="size">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the size of the stream in bytes. A value of -1 means that the size is
 not known.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
@@ -1705,7 +1731,7 @@ not known.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_stream_type" c:identifier="gst_app_src_get_stream_type">
+      <method name="get_stream_type" c:identifier="gst_app_src_get_stream_type" glib:get-property="stream-type">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Get the stream type. Control the stream type of @appsrc
 with gst_app_src_set_stream_type().</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
@@ -1833,7 +1859,7 @@ way.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_caps" c:identifier="gst_app_src_set_caps">
+      <method name="set_caps" c:identifier="gst_app_src_set_caps" glib:set-property="caps">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the capabilities on the appsrc element.  This function takes
 a copy of the caps structure. After calling this method, the source will
 only produce caps that match @caps. @caps must be fixed and the caps on the
@@ -1853,7 +1879,7 @@ buffers must match the caps or left NULL.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_duration" c:identifier="gst_app_src_set_duration" version="1.10">
+      <method name="set_duration" c:identifier="gst_app_src_set_duration" glib:set-property="duration" version="1.10">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the duration of the stream in nanoseconds. A value of GST_CLOCK_TIME_NONE means that the duration is
 not known.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
@@ -1871,7 +1897,7 @@ not known.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_emit_signals" c:identifier="gst_app_src_set_emit_signals">
+      <method name="set_emit_signals" c:identifier="gst_app_src_set_emit_signals" glib:set-property="emit-signals">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Make appsrc emit the "new-preroll" and "new-buffer" signals. This option is
 by default disabled because signal emission is expensive and unneeded when
 the application prefers to operate in pull mode.</doc>
@@ -1912,7 +1938,7 @@ default latency calculations for pseudo-live sources will be used.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_leaky_type" c:identifier="gst_app_src_set_leaky_type" version="1.20">
+      <method name="set_leaky_type" c:identifier="gst_app_src_set_leaky_type" glib:set-property="leaky-type" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">When set to any other value than GST_APP_LEAKY_TYPE_NONE then the appsrc
 will drop any buffers that are pushed into it once its internal queue is
 full. The selected type defines whether to drop the oldest or new
@@ -1932,7 +1958,7 @@ buffers.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_buffers" c:identifier="gst_app_src_set_max_buffers" version="1.20">
+      <method name="set_max_buffers" c:identifier="gst_app_src_set_max_buffers" glib:set-property="max-buffers" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the maximum amount of buffers that can be queued in @appsrc.
 After the maximum amount of buffers are queued, @appsrc will emit the
 "enough-data" signal.</doc>
@@ -1951,7 +1977,7 @@ After the maximum amount of buffers are queued, @appsrc will emit the
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_bytes" c:identifier="gst_app_src_set_max_bytes">
+      <method name="set_max_bytes" c:identifier="gst_app_src_set_max_bytes" glib:set-property="max-bytes">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the maximum amount of bytes that can be queued in @appsrc.
 After the maximum amount of bytes are queued, @appsrc will emit the
 "enough-data" signal.</doc>
@@ -1970,7 +1996,7 @@ After the maximum amount of bytes are queued, @appsrc will emit the
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_time" c:identifier="gst_app_src_set_max_time" version="1.20">
+      <method name="set_max_time" c:identifier="gst_app_src_set_max_time" glib:set-property="max-time" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the maximum amount of time that can be queued in @appsrc.
 After the maximum amount of time are queued, @appsrc will emit the
 "enough-data" signal.</doc>
@@ -1989,7 +2015,7 @@ After the maximum amount of time are queued, @appsrc will emit the
           </parameter>
         </parameters>
       </method>
-      <method name="set_size" c:identifier="gst_app_src_set_size">
+      <method name="set_size" c:identifier="gst_app_src_set_size" glib:set-property="size">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the size of the stream in bytes. A value of -1 means that the size is
 not known.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
@@ -2007,7 +2033,7 @@ not known.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_stream_type" c:identifier="gst_app_src_set_stream_type">
+      <method name="set_stream_type" c:identifier="gst_app_src_set_stream_type" glib:set-property="stream-type">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Set the stream type on @appsrc. For seekable streams, the "seek" signal must
 be connected to.
 
@@ -2027,46 +2053,46 @@ A stream_type stream</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="block" writable="1" transfer-ownership="none">
+      <property name="block" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">When max-bytes are queued and after the enough-data signal has been emitted,
 block any further push-buffer calls until the amount of queued bytes drops
 below the max-bytes limit.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="caps" writable="1" transfer-ownership="none">
+      <property name="caps" writable="1" transfer-ownership="none" setter="set_caps" getter="get_caps">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The GstCaps that will negotiated downstream and will be put
 on outgoing buffers.</doc>
         <type name="Gst.Caps"/>
       </property>
-      <property name="current-level-buffers" version="1.20" transfer-ownership="none">
+      <property name="current-level-buffers" version="1.20" transfer-ownership="none" getter="get_current_level_buffers" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The number of currently queued buffers inside appsrc.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="current-level-bytes" version="1.2" transfer-ownership="none">
+      <property name="current-level-bytes" version="1.2" transfer-ownership="none" getter="get_current_level_bytes" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The number of currently queued bytes inside appsrc.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="current-level-time" version="1.20" transfer-ownership="none">
+      <property name="current-level-time" version="1.20" transfer-ownership="none" getter="get_current_level_time" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The amount of currently queued time inside appsrc.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="duration" version="1.10" writable="1" transfer-ownership="none">
+      <property name="duration" version="1.10" writable="1" transfer-ownership="none" setter="set_duration" getter="get_duration" default-value="18446744073709551615">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The total duration in nanoseconds of the data stream. If the total duration is known, it
 is recommended to configure it with this property.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="emit-signals" writable="1" transfer-ownership="none">
+      <property name="emit-signals" writable="1" transfer-ownership="none" setter="set_emit_signals" getter="get_emit_signals" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Make appsrc emit the "need-data", "enough-data" and "seek-data" signals.
 This option is by default enabled for backwards compatibility reasons but
 can disabled when needed because signal emission is expensive.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="format" writable="1" transfer-ownership="none">
+      <property name="format" writable="1" transfer-ownership="none" default-value="GST_FORMAT_BYTES">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The format to use for segment events. When the source is producing
 timestamped buffers this property should be set to GST_FORMAT_TIME.</doc>
         <type name="Gst.Format"/>
       </property>
-      <property name="handle-segment-change" version="1.18" writable="1" transfer-ownership="none">
+      <property name="handle-segment-change" version="1.18" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">When enabled, appsrc will check GstSegment in GstSample which was
 pushed via gst_app_src_push_sample() or "push-sample" signal action.
 If a GstSegment is changed, corresponding segment event will be followed
@@ -2077,55 +2103,55 @@ GstAppSrc::format should be time. However, possibly #GstAppSrc can support
 other formats.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="is-live" writable="1" transfer-ownership="none">
+      <property name="is-live" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Instruct the source to behave like a live source. This includes that it
 will only push out buffers in the PLAYING state.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="leaky-type" version="1.20" writable="1" transfer-ownership="none">
+      <property name="leaky-type" version="1.20" writable="1" transfer-ownership="none" setter="set_leaky_type" getter="get_leaky_type" default-value="GST_APP_LEAKY_TYPE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">When set to any other value than GST_APP_LEAKY_TYPE_NONE then the appsrc
 will drop any buffers that are pushed into it once its internal queue is
 full. The selected type defines whether to drop the oldest or new
 buffers.</doc>
         <type name="AppLeakyType"/>
       </property>
-      <property name="max-buffers" version="1.20" writable="1" transfer-ownership="none">
+      <property name="max-buffers" version="1.20" writable="1" transfer-ownership="none" setter="set_max_buffers" getter="get_max_buffers" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The maximum amount of buffers that can be queued internally.
 After the maximum amount of buffers are queued, appsrc will emit the
 "enough-data" signal.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="max-bytes" writable="1" transfer-ownership="none">
+      <property name="max-bytes" writable="1" transfer-ownership="none" setter="set_max_bytes" getter="get_max_bytes" default-value="200000">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The maximum amount of bytes that can be queued internally.
 After the maximum amount of bytes are queued, appsrc will emit the
 "enough-data" signal.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="max-latency" writable="1" transfer-ownership="none">
+      <property name="max-latency" writable="1" transfer-ownership="none" default-value="-1">
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="max-time" version="1.20" writable="1" transfer-ownership="none">
+      <property name="max-time" version="1.20" writable="1" transfer-ownership="none" setter="set_max_time" getter="get_max_time" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The maximum amount of time that can be queued internally.
 After the maximum amount of time are queued, appsrc will emit the
 "enough-data" signal.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="min-latency" writable="1" transfer-ownership="none">
+      <property name="min-latency" writable="1" transfer-ownership="none" default-value="-1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The minimum latency of the source. A value of -1 will use the default
 latency calculations of #GstBaseSrc.</doc>
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="min-percent" writable="1" transfer-ownership="none">
+      <property name="min-percent" writable="1" transfer-ownership="none" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">Make appsrc emit the "need-data" signal when the amount of bytes in the
 queue drops below this percentage of max-bytes.</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="size" writable="1" transfer-ownership="none">
+      <property name="size" writable="1" transfer-ownership="none" setter="set_size" getter="get_size" default-value="-1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The total size in bytes of the data stream. If the total size is known, it
 is recommended to configure it with this property.</doc>
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="stream-type" writable="1" transfer-ownership="none">
+      <property name="stream-type" writable="1" transfer-ownership="none" setter="set_stream_type" getter="get_stream_type" default-value="GST_APP_STREAM_TYPE_STREAM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.c">The type of stream that this source is producing.  For seekable streams the
 application should connect to the seek-data signal.</doc>
         <type name="AppStreamType"/>
@@ -2259,6 +2285,9 @@ This callback is only called for seekable stream types.</doc>
 gst_app_src_set_callbacks().</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
       <field name="need_data">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Called when the appsrc needs more data. A buffer or EOS should be
+   pushed to appsrc from this thread or another thread. @length is just a hint
+   and when it is set to -1, any number of bytes can be pushed into @appsrc.</doc>
         <callback name="need_data">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
           <return-value transfer-ownership="none">
@@ -2278,6 +2307,9 @@ gst_app_src_set_callbacks().</doc>
         </callback>
       </field>
       <field name="enough_data">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Called when appsrc has enough data. It is recommended that the
+   application stops calling push-buffer until the need_data callback is
+   emitted again to avoid excessive buffer queueing.</doc>
         <callback name="enough_data">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
           <return-value transfer-ownership="none">
@@ -2294,6 +2326,9 @@ gst_app_src_set_callbacks().</doc>
         </callback>
       </field>
       <field name="seek_data">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">Called when a seek should be performed to the offset.
+   The next push-buffer should produce buffers from the new @offset.
+   This callback is only called for seekable stream types.</doc>
         <callback name="seek_data">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
           <return-value transfer-ownership="none">
@@ -2454,20 +2489,20 @@ extracted</doc>
         </array>
       </field>
     </record>
-    <record name="AppSrcPrivate" c:type="GstAppSrcPrivate" disguised="1">
+    <record name="AppSrcPrivate" c:type="GstAppSrcPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h"/>
     </record>
     <enumeration name="AppStreamType" glib:type-name="GstAppStreamType" glib:get-type="gst_app_stream_type_get_type" c:type="GstAppStreamType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">The stream type.</doc>
-      <member name="stream" value="0" c:identifier="GST_APP_STREAM_TYPE_STREAM" glib:nick="stream">
+      <member name="stream" value="0" c:identifier="GST_APP_STREAM_TYPE_STREAM" glib:nick="stream" glib:name="GST_APP_STREAM_TYPE_STREAM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">No seeking is supported in the stream, such as a
 live stream.</doc>
       </member>
-      <member name="seekable" value="1" c:identifier="GST_APP_STREAM_TYPE_SEEKABLE" glib:nick="seekable">
+      <member name="seekable" value="1" c:identifier="GST_APP_STREAM_TYPE_SEEKABLE" glib:nick="seekable" glib:name="GST_APP_STREAM_TYPE_SEEKABLE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">The stream is seekable but seeking might not
 be very fast, such as data from a webserver.</doc>
       </member>
-      <member name="random_access" value="2" c:identifier="GST_APP_STREAM_TYPE_RANDOM_ACCESS" glib:nick="random-access">
+      <member name="random_access" value="2" c:identifier="GST_APP_STREAM_TYPE_RANDOM_ACCESS" glib:nick="random-access" glib:name="GST_APP_STREAM_TYPE_RANDOM_ACCESS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/app/gstappsrc.h">The stream is seekable and seeking is fast,
 such as in a local file.</doc>
       </member>

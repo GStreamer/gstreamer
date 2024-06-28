@@ -142,7 +142,7 @@ and set an error.
           </parameter>
         </parameters>
       </method>
-      <method name="get_active_source_buffers" c:identifier="gst_media_source_get_active_source_buffers" version="1.24">
+      <method name="get_active_source_buffers" c:identifier="gst_media_source_get_active_source_buffers" glib:get-property="active-source-buffers" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">Gets a #GstSourceBufferList containing all the Source Buffers currently
 associated with this Media Source that are considered "active."
 For a Source Buffer to be considered active, either its video track is
@@ -163,7 +163,7 @@ well.
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_duration" c:identifier="gst_media_source_get_duration" version="1.24">
+      <method name="get_duration" c:identifier="gst_media_source_get_duration" glib:get-property="duration" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">Gets the current duration of @self.
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-mediasource-duration)</doc>
@@ -197,7 +197,7 @@ the current live seekable range.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_position" c:identifier="gst_media_source_get_position" version="1.24">
+      <method name="get_position" c:identifier="gst_media_source_get_position" glib:get-property="position" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">Gets the current playback position of the Media Source.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h"/>
         <return-value transfer-ownership="none">
@@ -211,7 +211,7 @@ the current live seekable range.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_ready_state" c:identifier="gst_media_source_get_ready_state" version="1.24">
+      <method name="get_ready_state" c:identifier="gst_media_source_get_ready_state" glib:get-property="ready-state" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">Gets the current Ready State of the Media Source.
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-mediasource-readystate)</doc>
@@ -227,7 +227,7 @@ the current live seekable range.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_source_buffers" c:identifier="gst_media_source_get_source_buffers" version="1.24">
+      <method name="get_source_buffers" c:identifier="gst_media_source_get_source_buffers" glib:get-property="source-buffers" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">Gets a #GstSourceBufferList containing all the Source Buffers currently
 associated with this Media Source. This object will reflect any future
 changes to the parent Media Source as well.
@@ -268,7 +268,7 @@ changes to the parent Media Source as well.
           </parameter>
         </parameters>
       </method>
-      <method name="set_duration" c:identifier="gst_media_source_set_duration" version="1.24" throws="1">
+      <method name="set_duration" c:identifier="gst_media_source_set_duration" glib:set-property="duration" version="1.24" throws="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">Sets the duration of @self.
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-mediasource-duration)</doc>
@@ -316,30 +316,30 @@ If the ready state is not %GST_MEDIA_SOURCE_READY_STATE_OPEN, or the supplied
           </parameter>
         </parameters>
       </method>
-      <property name="active-source-buffers" version="1.24" transfer-ownership="none">
+      <property name="active-source-buffers" version="1.24" transfer-ownership="none" getter="get_active_source_buffers">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">A #GstSourceBufferList of every #GstSourceBuffer in this Media Source that
 is considered active
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-mediasource-activesourcebuffers)</doc>
         <type name="SourceBufferList"/>
       </property>
-      <property name="duration" version="1.24" writable="1" transfer-ownership="none">
+      <property name="duration" version="1.24" writable="1" transfer-ownership="none" setter="set_duration" getter="get_duration" default-value="18446744073709551615">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">The Duration of the Media Source as a #GstClockTime
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-mediasource-duration)</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="position" version="1.24" writable="1" transfer-ownership="none">
+      <property name="position" version="1.24" writable="1" transfer-ownership="none" getter="get_position" default-value="18446744073709551615">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">The position of the player consuming from the Media Source</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="ready-state" version="1.24" transfer-ownership="none">
+      <property name="ready-state" version="1.24" transfer-ownership="none" getter="get_ready_state" default-value="GST_MEDIA_SOURCE_READY_STATE_CLOSED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">The Ready State of the Media Source
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-mediasource-readystate)</doc>
         <type name="MediaSourceReadyState"/>
       </property>
-      <property name="source-buffers" version="1.24" transfer-ownership="none">
+      <property name="source-buffers" version="1.24" transfer-ownership="none" getter="get_source_buffers">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.c">A #GstSourceBufferList of every #GstSourceBuffer in this Media Source
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-mediasource-sourcebuffers)</doc>
@@ -378,13 +378,13 @@ gst_media_source_end_of_stream().
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">Reasons for ending a #GstMediaSource using gst_media_source_end_of_stream().
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-endofstreamerror)</doc>
-      <member name="none" value="0" c:identifier="GST_MEDIA_SOURCE_EOS_ERROR_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_MEDIA_SOURCE_EOS_ERROR_NONE" glib:nick="none" glib:name="GST_MEDIA_SOURCE_EOS_ERROR_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">End the stream successfully</doc>
       </member>
-      <member name="network" value="1" c:identifier="GST_MEDIA_SOURCE_EOS_ERROR_NETWORK" glib:nick="network">
+      <member name="network" value="1" c:identifier="GST_MEDIA_SOURCE_EOS_ERROR_NETWORK" glib:nick="network" glib:name="GST_MEDIA_SOURCE_EOS_ERROR_NETWORK">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">End the stream due to a networking error</doc>
       </member>
-      <member name="decode" value="2" c:identifier="GST_MEDIA_SOURCE_EOS_ERROR_DECODE" glib:nick="decode">
+      <member name="decode" value="2" c:identifier="GST_MEDIA_SOURCE_EOS_ERROR_DECODE" glib:nick="decode" glib:name="GST_MEDIA_SOURCE_EOS_ERROR_DECODE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">End the stream due to a decoding error</doc>
       </member>
     </enumeration>
@@ -393,15 +393,15 @@ gst_media_source_end_of_stream().
 These values correspond directly to those in the Web IDL specification.
 
 [Specification](https://webidl.spec.whatwg.org/#idl-DOMException-error-names)</doc>
-      <member name="invalid_state" value="0" c:identifier="GST_MEDIA_SOURCE_ERROR_INVALID_STATE" glib:nick="invalid-state">
+      <member name="invalid_state" value="0" c:identifier="GST_MEDIA_SOURCE_ERROR_INVALID_STATE" glib:nick="invalid-state" glib:name="GST_MEDIA_SOURCE_ERROR_INVALID_STATE">
       </member>
-      <member name="type" value="1" c:identifier="GST_MEDIA_SOURCE_ERROR_TYPE" glib:nick="type">
+      <member name="type" value="1" c:identifier="GST_MEDIA_SOURCE_ERROR_TYPE" glib:nick="type" glib:name="GST_MEDIA_SOURCE_ERROR_TYPE">
       </member>
-      <member name="not_supported" value="2" c:identifier="GST_MEDIA_SOURCE_ERROR_NOT_SUPPORTED" glib:nick="not-supported">
+      <member name="not_supported" value="2" c:identifier="GST_MEDIA_SOURCE_ERROR_NOT_SUPPORTED" glib:nick="not-supported" glib:name="GST_MEDIA_SOURCE_ERROR_NOT_SUPPORTED">
       </member>
-      <member name="not_found" value="3" c:identifier="GST_MEDIA_SOURCE_ERROR_NOT_FOUND" glib:nick="not-found">
+      <member name="not_found" value="3" c:identifier="GST_MEDIA_SOURCE_ERROR_NOT_FOUND" glib:nick="not-found" glib:name="GST_MEDIA_SOURCE_ERROR_NOT_FOUND">
       </member>
-      <member name="quota_exceeded" value="4" c:identifier="GST_MEDIA_SOURCE_ERROR_QUOTA_EXCEEDED" glib:nick="quota-exceeded">
+      <member name="quota_exceeded" value="4" c:identifier="GST_MEDIA_SOURCE_ERROR_QUOTA_EXCEEDED" glib:nick="quota-exceeded" glib:name="GST_MEDIA_SOURCE_ERROR_QUOTA_EXCEEDED">
       </member>
       <function name="quark" c:identifier="gst_media_source_error_quark" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">Any error type that can be reported by the Media Source API.</doc>
@@ -429,15 +429,15 @@ HTML specification, only representing a single @start and @end time.
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">Describes the possible states of the Media Source.
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-readystate)</doc>
-      <member name="closed" value="0" c:identifier="GST_MEDIA_SOURCE_READY_STATE_CLOSED" glib:nick="closed">
+      <member name="closed" value="0" c:identifier="GST_MEDIA_SOURCE_READY_STATE_CLOSED" glib:nick="closed" glib:name="GST_MEDIA_SOURCE_READY_STATE_CLOSED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">The #GstMediaSource is not connected to
 any playback element.</doc>
       </member>
-      <member name="open" value="1" c:identifier="GST_MEDIA_SOURCE_READY_STATE_OPEN" glib:nick="open">
+      <member name="open" value="1" c:identifier="GST_MEDIA_SOURCE_READY_STATE_OPEN" glib:nick="open" glib:name="GST_MEDIA_SOURCE_READY_STATE_OPEN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">The #GstMediaSource is connected to a
 playback element and ready to append data to its #GstSourceBuffer (s).</doc>
       </member>
-      <member name="ended" value="2" c:identifier="GST_MEDIA_SOURCE_READY_STATE_ENDED" glib:nick="ended">
+      <member name="ended" value="2" c:identifier="GST_MEDIA_SOURCE_READY_STATE_ENDED" glib:nick="ended" glib:name="GST_MEDIA_SOURCE_READY_STATE_ENDED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmediasource.h">gst_media_source_end_of_stream() has
 been called on the current #GstMediaSource</doc>
       </member>
@@ -455,7 +455,7 @@ Once added to a Pipeline, this element should be attached to a Media Source
 using gst_media_source_attach().</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h"/>
       <implements name="Gst.URIHandler"/>
-      <method name="get_duration" c:identifier="gst_mse_src_get_duration" version="1.24">
+      <method name="get_duration" c:identifier="gst_mse_src_get_duration" glib:get-property="duration" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">Gets the duration of @self.
 
 [Specification](https://html.spec.whatwg.org/multipage/media.html#dom-media-duration)</doc>
@@ -471,7 +471,7 @@ using gst_media_source_attach().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_n_audio" c:identifier="gst_mse_src_get_n_audio" version="1.24">
+      <method name="get_n_audio" c:identifier="gst_mse_src_get_n_audio" glib:get-property="n-audio" version="1.24">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">the number of audio tracks available from this source</doc>
@@ -484,7 +484,7 @@ using gst_media_source_attach().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_n_text" c:identifier="gst_mse_src_get_n_text" version="1.24">
+      <method name="get_n_text" c:identifier="gst_mse_src_get_n_text" glib:get-property="n-text" version="1.24">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">the number of text tracks available from this source</doc>
@@ -497,7 +497,7 @@ using gst_media_source_attach().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_n_video" c:identifier="gst_mse_src_get_n_video" version="1.24">
+      <method name="get_n_video" c:identifier="gst_mse_src_get_n_video" glib:get-property="n-video" version="1.24">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">the number of video tracks available from this source</doc>
@@ -510,7 +510,7 @@ using gst_media_source_attach().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_position" c:identifier="gst_mse_src_get_position" version="1.24">
+      <method name="get_position" c:identifier="gst_mse_src_get_position" glib:get-property="position" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">Gets the current playback position of @self.
 
 [Specification](https://html.spec.whatwg.org/multipage/media.html#current-playback-position)</doc>
@@ -526,7 +526,7 @@ using gst_media_source_attach().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_ready_state" c:identifier="gst_mse_src_get_ready_state" version="1.24">
+      <method name="get_ready_state" c:identifier="gst_mse_src_get_ready_state" glib:get-property="ready-state" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The Ready State of @self, describing to what level it can supply content for
 the current #GstMseSrc:position. This is a separate concept from
 #GstMediaSource:ready-state: and corresponds to the HTML Media Element's
@@ -545,31 +545,31 @@ Ready State.
           </instance-parameter>
         </parameters>
       </method>
-      <property name="duration" version="1.24" writable="1" transfer-ownership="none">
+      <property name="duration" version="1.24" writable="1" transfer-ownership="none" getter="get_duration" default-value="18446744073709551615">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The duration of the stream as a #GstClockTime
 
 [Specification](https://html.spec.whatwg.org/multipage/media.html#dom-media-duration)</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="n-audio" version="1.24" transfer-ownership="none">
+      <property name="n-audio" version="1.24" transfer-ownership="none" getter="get_n_audio" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The number of audio tracks in the Media Source</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="n-text" version="1.24" transfer-ownership="none">
+      <property name="n-text" version="1.24" transfer-ownership="none" getter="get_n_text" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The number of text tracks in the Media Source</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="n-video" version="1.24" transfer-ownership="none">
+      <property name="n-video" version="1.24" transfer-ownership="none" getter="get_n_video" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The number of video tracks in the Media Source</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="position" version="1.24" transfer-ownership="none">
+      <property name="position" version="1.24" transfer-ownership="none" getter="get_position" default-value="18446744073709551615">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The playback position as a #GstClockTime
 
 [Specification](https://html.spec.whatwg.org/multipage/media.html#current-playback-position)</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="ready-state" version="1.24" transfer-ownership="none">
+      <property name="ready-state" version="1.24" transfer-ownership="none" getter="get_ready_state" default-value="GST_MSE_SRC_READY_STATE_HAVE_NOTHING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.c">The Ready State of this element, describing to what level it can supply
 content for the current #GstMseSrc:position. This is a separate concept
 from #GstMediaSource:ready-state: and corresponds to the HTML Media
@@ -601,23 +601,23 @@ directly to the ready state of a HTML Media Element and is a separate concept
 from #GstMediaSourceReadyState.
 
 [Specification](https://html.spec.whatwg.org/multipage/media.html#ready-states)</doc>
-      <member name="nothing" value="0" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_NOTHING" glib:nick="nothing">
+      <member name="nothing" value="0" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_NOTHING" glib:nick="nothing" glib:name="GST_MSE_SRC_READY_STATE_HAVE_NOTHING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h">No information is available about the
 stream</doc>
       </member>
-      <member name="metadata" value="1" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_METADATA" glib:nick="metadata">
+      <member name="metadata" value="1" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_METADATA" glib:nick="metadata" glib:name="GST_MSE_SRC_READY_STATE_HAVE_METADATA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h">The duration is available and video
 dimensions are available if the stream contains video</doc>
       </member>
-      <member name="current_data" value="2" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_CURRENT_DATA" glib:nick="current-data">
+      <member name="current_data" value="2" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_CURRENT_DATA" glib:nick="current-data" glib:name="GST_MSE_SRC_READY_STATE_HAVE_CURRENT_DATA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h">The current playback position can
 be presented but future information is not available</doc>
       </member>
-      <member name="future_data" value="3" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_FUTURE_DATA" glib:nick="future-data">
+      <member name="future_data" value="3" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_FUTURE_DATA" glib:nick="future-data" glib:name="GST_MSE_SRC_READY_STATE_HAVE_FUTURE_DATA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h">There is data for the current
 position and some amount in the future and any text tracks are ready.</doc>
       </member>
-      <member name="enough_data" value="4" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_ENOUGH_DATA" glib:nick="enough-data">
+      <member name="enough_data" value="4" c:identifier="GST_MSE_SRC_READY_STATE_HAVE_ENOUGH_DATA" glib:nick="enough-data" glib:name="GST_MSE_SRC_READY_STATE_HAVE_ENOUGH_DATA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstmsesrc.h">Either there is enough data to
 play the stream through at the current playback and input rate or the input
 buffer is full.</doc>
@@ -707,7 +707,7 @@ to the Source Buffer must be of the supplied @type afterward.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_append_mode" c:identifier="gst_source_buffer_get_append_mode" version="1.24">
+      <method name="get_append_mode" c:identifier="gst_source_buffer_get_append_mode" glib:get-property="append-mode" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">[Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebuffer-mode)</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.h"/>
         <return-value transfer-ownership="none">
@@ -721,7 +721,7 @@ to the Source Buffer must be of the supplied @type afterward.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_append_window_end" c:identifier="gst_source_buffer_get_append_window_end" version="1.24">
+      <method name="get_append_window_end" c:identifier="gst_source_buffer_get_append_window_end" glib:get-property="append-window-end" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Returns the current append window end time. Any segment processed that starts
 after this value will be ignored.
 
@@ -738,7 +738,7 @@ after this value will be ignored.
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_append_window_start" c:identifier="gst_source_buffer_get_append_window_start" version="1.24">
+      <method name="get_append_window_start" c:identifier="gst_source_buffer_get_append_window_start" glib:get-property="append-window-start" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Returns the current append window start time. Any segment processed that ends
 earlier than this value will be ignored.
 
@@ -755,7 +755,7 @@ earlier than this value will be ignored.
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_buffered" c:identifier="gst_source_buffer_get_buffered" version="1.24" throws="1">
+      <method name="get_buffered" c:identifier="gst_source_buffer_get_buffered" glib:get-property="buffered" version="1.24" throws="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Returns a sequence of #GstMediaSourceRange values representing which segments
 of @self are buffered in memory.
 
@@ -774,7 +774,7 @@ of @self are buffered in memory.
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_content_type" c:identifier="gst_source_buffer_get_content_type" version="1.24">
+      <method name="get_content_type" c:identifier="gst_source_buffer_get_content_type" glib:get-property="content-type" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Returns the current content type of @self.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.h"/>
         <return-value transfer-ownership="full">
@@ -788,7 +788,7 @@ of @self are buffered in memory.
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_timestamp_offset" c:identifier="gst_source_buffer_get_timestamp_offset" version="1.24">
+      <method name="get_timestamp_offset" c:identifier="gst_source_buffer_get_timestamp_offset" glib:get-property="timestamp-offset" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">[Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebuffer-timestampoffset)</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.h"/>
         <return-value transfer-ownership="none">
@@ -802,7 +802,7 @@ of @self are buffered in memory.
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_updating" c:identifier="gst_source_buffer_get_updating" version="1.24">
+      <method name="get_updating" c:identifier="gst_source_buffer_get_updating" glib:get-property="updating" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">[Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebuffer-updating)</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.h"/>
         <return-value transfer-ownership="none">
@@ -840,7 +840,7 @@ of @self are buffered in memory.
           </parameter>
         </parameters>
       </method>
-      <method name="set_append_mode" c:identifier="gst_source_buffer_set_append_mode" version="1.24" throws="1">
+      <method name="set_append_mode" c:identifier="gst_source_buffer_set_append_mode" glib:set-property="append-mode" version="1.24" throws="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Changes the Append Mode of @self. This influences what timestamps will be
 assigned to media processed by this Source Buffer. In Segment mode, the
 timestamps in each segment determine the position of each sample after it
@@ -908,7 +908,7 @@ ignored.
           </parameter>
         </parameters>
       </method>
-      <method name="set_timestamp_offset" c:identifier="gst_source_buffer_set_timestamp_offset" version="1.24" throws="1">
+      <method name="set_timestamp_offset" c:identifier="gst_source_buffer_set_timestamp_offset" glib:set-property="timestamp-offset" version="1.24" throws="1">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Attempt to set the timestamp offset of @self. Any media processed after this
 value is set will have this value added to its start time.
 
@@ -929,7 +929,7 @@ value is set will have this value added to its start time.
           </parameter>
         </parameters>
       </method>
-      <property name="append-mode" version="1.24" writable="1" transfer-ownership="none">
+      <property name="append-mode" version="1.24" writable="1" transfer-ownership="none" setter="set_append_mode" getter="get_append_mode" default-value="GST_SOURCE_BUFFER_APPEND_MODE_SEGMENTS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Affects how timestamps of processed media segments are interpreted.
 In %GST_SOURCE_BUFFER_APPEND_MODE_SEGMENTS, the start timestamp of a
 processed media segment is used directly along with
@@ -941,21 +941,21 @@ most recently appended segment.
 [Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebuffer-mode)</doc>
         <type name="SourceBufferAppendMode"/>
       </property>
-      <property name="append-window-end" version="1.24" transfer-ownership="none">
+      <property name="append-window-end" version="1.24" transfer-ownership="none" getter="get_append_window_end" default-value="18446744073709551615">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Any segments processed which have a start time greater than this value will
 be ignored by this Source Buffer.
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebuffer-appendwindowend)</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="append-window-start" version="1.24" transfer-ownership="none">
+      <property name="append-window-start" version="1.24" transfer-ownership="none" getter="get_append_window_start" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Any segments processed which end before this value will be ignored by this
 Source Buffer.
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebuffer-appendwindowstart)</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="buffered" version="1.24" transfer-ownership="none">
+      <property name="buffered" version="1.24" transfer-ownership="none" getter="get_buffered">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">The set of Time Intervals that have been loaded into the current Source
 Buffer
 
@@ -964,18 +964,18 @@ Buffer
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </property>
-      <property name="content-type" version="1.24" writable="1" construct="1" transfer-ownership="none">
+      <property name="content-type" version="1.24" writable="1" construct="1" transfer-ownership="none" getter="get_content_type" default-value="NULL">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">The MIME content-type of the data stream</doc>
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="timestamp-offset" version="1.24" writable="1" transfer-ownership="none">
+      <property name="timestamp-offset" version="1.24" writable="1" transfer-ownership="none" setter="set_timestamp_offset" getter="get_timestamp_offset" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">The next media segment appended to the current Source Buffer will have its
 start timestamp increased by this amount.
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebuffer-timestampoffset)</doc>
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="updating" version="1.24" transfer-ownership="none">
+      <property name="updating" version="1.24" transfer-ownership="none" getter="get_updating" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.c">Whether the current source buffer is still asynchronously processing
 previously issued commands.
 
@@ -1030,9 +1030,9 @@ gst_source_buffer_append_buffer().
     </class>
     <enumeration name="SourceBufferAppendMode" version="1.24" glib:type-name="GstSourceBufferAppendMode" glib:get-type="gst_source_buffer_append_mode_get_type" c:type="GstSourceBufferAppendMode">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebuffer.h">[Specification](https://www.w3.org/TR/media-source-2/#dom-appendmode)</doc>
-      <member name="segments" value="0" c:identifier="GST_SOURCE_BUFFER_APPEND_MODE_SEGMENTS" glib:nick="segments">
+      <member name="segments" value="0" c:identifier="GST_SOURCE_BUFFER_APPEND_MODE_SEGMENTS" glib:nick="segments" glib:name="GST_SOURCE_BUFFER_APPEND_MODE_SEGMENTS">
       </member>
-      <member name="sequence" value="1" c:identifier="GST_SOURCE_BUFFER_APPEND_MODE_SEQUENCE" glib:nick="sequence">
+      <member name="sequence" value="1" c:identifier="GST_SOURCE_BUFFER_APPEND_MODE_SEQUENCE" glib:nick="sequence" glib:name="GST_SOURCE_BUFFER_APPEND_MODE_SEQUENCE">
       </member>
     </enumeration>
     <record name="SourceBufferClass" c:type="GstSourceBufferClass" glib:is-gtype-struct-for="SourceBuffer">
@@ -1061,7 +1061,7 @@ It is used by #GstMediaSource to provide direct access to its child
 informing clients which of the Source Buffers are active through
 #GstMediaSource:active-source-buffers.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebufferlist.h"/>
-      <method name="get_length" c:identifier="gst_source_buffer_list_get_length" version="1.24">
+      <method name="get_length" c:identifier="gst_source_buffer_list_get_length" glib:get-property="length" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebufferlist.c">[Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebufferlist-length)</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebufferlist.h"/>
         <return-value transfer-ownership="none">
@@ -1096,7 +1096,7 @@ the highest index in the list, it will return `NULL`.
           </parameter>
         </parameters>
       </method>
-      <property name="length" version="1.24" transfer-ownership="none">
+      <property name="length" version="1.24" transfer-ownership="none" getter="get_length" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mse/gstsourcebufferlist.c">The number of #GstSourceBuffer&lt;!-- --&gt;s contained by this structure
 
 [Specification](https://www.w3.org/TR/media-source-2/#dom-sourcebufferlist-length)</doc>

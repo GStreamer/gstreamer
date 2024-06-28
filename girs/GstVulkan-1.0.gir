@@ -864,7 +864,7 @@ and/or use gtk-doc annotations.  -->
       </field>
     </record>
     <enumeration name="VulkanBarrierFlags" version="1.18" glib:type-name="GstVulkanBarrierFlags" glib:get-type="gst_vulkan_barrier_flags_get_type" c:type="GstVulkanBarrierFlags">
-      <member name="none" value="0" c:identifier="GST_VULKAN_BARRIER_FLAG_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_VULKAN_BARRIER_FLAG_NONE" glib:nick="none" glib:name="GST_VULKAN_BARRIER_FLAG_NONE">
       </member>
     </enumeration>
     <record name="VulkanBarrierImageInfo" c:type="GstVulkanBarrierImageInfo" version="1.18">
@@ -919,14 +919,14 @@ and/or use gtk-doc annotations.  -->
       </field>
     </record>
     <enumeration name="VulkanBarrierType" version="1.18" glib:type-name="GstVulkanBarrierType" glib:get-type="gst_vulkan_barrier_type_get_type" c:type="GstVulkanBarrierType">
-      <member name="none" value="0" c:identifier="GST_VULKAN_BARRIER_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_VULKAN_BARRIER_NONE" glib:nick="none" glib:name="GST_VULKAN_BARRIER_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkbarrier.h">no barrier type</doc>
       </member>
-      <member name="type_memory" value="1" c:identifier="GST_VULKAN_BARRIER_TYPE_MEMORY" glib:nick="type-memory">
+      <member name="type_memory" value="1" c:identifier="GST_VULKAN_BARRIER_TYPE_MEMORY" glib:nick="type-memory" glib:name="GST_VULKAN_BARRIER_TYPE_MEMORY">
       </member>
-      <member name="type_buffer" value="2" c:identifier="GST_VULKAN_BARRIER_TYPE_BUFFER" glib:nick="type-buffer">
+      <member name="type_buffer" value="2" c:identifier="GST_VULKAN_BARRIER_TYPE_BUFFER" glib:nick="type-buffer" glib:name="GST_VULKAN_BARRIER_TYPE_BUFFER">
       </member>
-      <member name="type_image" value="3" c:identifier="GST_VULKAN_BARRIER_TYPE_IMAGE" glib:nick="type-image">
+      <member name="type_image" value="3" c:identifier="GST_VULKAN_BARRIER_TYPE_IMAGE" glib:nick="type-image" glib:name="GST_VULKAN_BARRIER_TYPE_IMAGE">
       </member>
     </enumeration>
     <record name="VulkanBufferMemory" c:type="GstVulkanBufferMemory" version="1.18">
@@ -1149,7 +1149,7 @@ multiple times.  This must be called before any other #GstVulkanBufferMemory ope
         </array>
       </field>
     </record>
-    <record name="VulkanBufferPoolPrivate" c:type="GstVulkanBufferPoolPrivate" disguised="1">
+    <record name="VulkanBufferPoolPrivate" c:type="GstVulkanBufferPoolPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <record name="VulkanCommandBuffer" c:type="GstVulkanCommandBuffer" version="1.18" glib:type-name="GstVulkanCommandBuffer" glib:get-type="gst_vulkan_command_buffer_get_type" c:symbol-prefix="vulkan_command_buffer">
@@ -1206,7 +1206,7 @@ multiple times.  This must be called before any other #GstVulkanBufferMemory ope
           </instance-parameter>
         </parameters>
       </method>
-      <method name="unref" c:identifier="gst_vulkan_command_buffer_unref" version="1.18" introspectable="0">
+      <method-inline name="unref" c:identifier="gst_vulkan_command_buffer_unref" version="1.18" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkcommandbuffer.h">Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
 will be freed.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkcommandbuffer.h"/>
@@ -1219,7 +1219,7 @@ will be freed.</doc>
             <type name="VulkanCommandBuffer" c:type="GstVulkanCommandBuffer*"/>
           </instance-parameter>
         </parameters>
-      </method>
+      </method-inline>
     </record>
     <class name="VulkanCommandPool" c:symbol-prefix="vulkan_command_pool" c:type="GstVulkanCommandPool" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanCommandPool" glib:get-type="gst_vulkan_command_pool_get_type" glib:type-struct="VulkanCommandPoolClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkcommandpool.h"/>
@@ -1311,7 +1311,7 @@ need to use this function.</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanCommandPoolPrivate" c:type="GstVulkanCommandPoolPrivate" disguised="1">
+    <record name="VulkanCommandPoolPrivate" c:type="GstVulkanCommandPoolPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <class name="VulkanDescriptorCache" c:symbol-prefix="vulkan_descriptor_cache" c:type="GstVulkanDescriptorCache" version="1.18" parent="VulkanHandlePool" glib:type-name="GstVulkanDescriptorCache" glib:get-type="gst_vulkan_descriptor_cache_get_type" glib:type-struct="VulkanDescriptorCacheClass">
@@ -1379,7 +1379,7 @@ need to use this function.</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanDescriptorCachePrivate" c:type="GstVulkanDescriptorCachePrivate" disguised="1">
+    <record name="VulkanDescriptorCachePrivate" c:type="GstVulkanDescriptorCachePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <class name="VulkanDescriptorPool" c:symbol-prefix="vulkan_descriptor_pool" c:type="GstVulkanDescriptorPool" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanDescriptorPool" glib:get-type="gst_vulkan_descriptor_pool_get_type" glib:type-struct="VulkanDescriptorPoolClass">
@@ -1485,7 +1485,7 @@ need to use this function.</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanDescriptorPoolPrivate" c:type="GstVulkanDescriptorPoolPrivate" disguised="1">
+    <record name="VulkanDescriptorPoolPrivate" c:type="GstVulkanDescriptorPoolPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <record name="VulkanDescriptorSet" c:type="GstVulkanDescriptorSet" version="1.18" glib:type-name="GstVulkanDescriptorSet" glib:get-type="gst_vulkan_descriptor_set_get_type" c:symbol-prefix="vulkan_descriptor_set">
@@ -1560,7 +1560,7 @@ need to use this function.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="unref" c:identifier="gst_vulkan_descriptor_set_unref" version="1.18" introspectable="0">
+      <method-inline name="unref" c:identifier="gst_vulkan_descriptor_set_unref" version="1.18" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdescriptorset.h">Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
 will be freed.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdescriptorset.h"/>
@@ -1573,7 +1573,7 @@ will be freed.</doc>
             <type name="VulkanDescriptorSet" c:type="GstVulkanDescriptorSet*"/>
           </instance-parameter>
         </parameters>
-      </method>
+      </method-inline>
     </record>
     <class name="VulkanDevice" c:symbol-prefix="vulkan_device" c:type="GstVulkanDevice" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanDevice" glib:get-type="gst_vulkan_device_get_type" glib:type-struct="VulkanDeviceClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.h"/>
@@ -1743,7 +1743,7 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_instance" c:identifier="gst_vulkan_device_get_instance" version="1.18">
+      <method name="get_instance" c:identifier="gst_vulkan_device_get_instance" glib:get-property="instance" version="1.18">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">the #GstVulkanInstance used to create this @device</doc>
@@ -1756,7 +1756,7 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_physical_device" c:identifier="gst_vulkan_device_get_physical_device" version="1.18" introspectable="0">
+      <method name="get_physical_device" c:identifier="gst_vulkan_device_get_physical_device" glib:get-property="physical-device" version="1.18" introspectable="0">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.h"/>
         <return-value>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdevice.c">The VkPhysicalDevice used to create @device</doc>
@@ -1891,10 +1891,10 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="instance" transfer-ownership="none">
+      <property name="instance" transfer-ownership="none" getter="get_instance">
         <type name="VulkanInstance"/>
       </property>
-      <property name="physical-device" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="physical-device" writable="1" construct-only="1" transfer-ownership="none" getter="get_physical_device">
         <type name="VulkanPhysicalDevice"/>
       </property>
       <field name="parent">
@@ -1948,7 +1948,7 @@ only have an effect before the call to gst_vulkan_device_open().</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="VulkanDevicePrivate" c:type="GstVulkanDevicePrivate" disguised="1">
+    <record name="VulkanDevicePrivate" c:type="GstVulkanDevicePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <class name="VulkanDisplay" c:symbol-prefix="vulkan_display" c:type="GstVulkanDisplay" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanDisplay" glib:get-type="gst_vulkan_display_get_type" glib:type-struct="VulkanDisplayClass">
@@ -2048,6 +2048,7 @@ surrounding elements of @element.</doc>
         </parameters>
       </function>
       <virtual-method name="create_window" invoker="create_window" version="1.18">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">create a window</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">a new #GstVulkanWindow for @display or
@@ -2062,6 +2063,7 @@ surrounding elements of @element.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="get_handle" invoker="get_handle" version="1.18">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">get the native handle to the display</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.c">the winsys specific handle of @display</doc>
@@ -2192,6 +2194,7 @@ second argument is @data.</doc>
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
       <field name="get_handle">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">get the native handle to the display</doc>
         <callback name="get_handle">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h"/>
           <return-value transfer-ownership="none" nullable="1">
@@ -2207,6 +2210,7 @@ second argument is @data.</doc>
         </callback>
       </field>
       <field name="create_window">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">create a window</doc>
         <callback name="create_window">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h"/>
           <return-value transfer-ownership="full" nullable="1">
@@ -2228,31 +2232,31 @@ second argument is @data.</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanDisplayPrivate" c:type="GstVulkanDisplayPrivate" disguised="1">
+    <record name="VulkanDisplayPrivate" c:type="GstVulkanDisplayPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <bitfield name="VulkanDisplayType" version="1.18" glib:type-name="GstVulkanDisplayType" glib:get-type="gst_vulkan_display_type_get_type" c:type="GstVulkanDisplayType">
-      <member name="none" value="0" c:identifier="GST_VULKAN_DISPLAY_TYPE_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_VULKAN_DISPLAY_TYPE_NONE" glib:nick="none" glib:name="GST_VULKAN_DISPLAY_TYPE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">no display</doc>
       </member>
-      <member name="xcb" value="1" c:identifier="GST_VULKAN_DISPLAY_TYPE_XCB" glib:nick="xcb">
+      <member name="xcb" value="1" c:identifier="GST_VULKAN_DISPLAY_TYPE_XCB" glib:nick="xcb" glib:name="GST_VULKAN_DISPLAY_TYPE_XCB">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">XCB display</doc>
       </member>
-      <member name="wayland" value="2" c:identifier="GST_VULKAN_DISPLAY_TYPE_WAYLAND" glib:nick="wayland">
+      <member name="wayland" value="2" c:identifier="GST_VULKAN_DISPLAY_TYPE_WAYLAND" glib:nick="wayland" glib:name="GST_VULKAN_DISPLAY_TYPE_WAYLAND">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">wayland display</doc>
       </member>
-      <member name="cocoa" value="4" c:identifier="GST_VULKAN_DISPLAY_TYPE_COCOA" glib:nick="cocoa">
+      <member name="cocoa" value="4" c:identifier="GST_VULKAN_DISPLAY_TYPE_COCOA" glib:nick="cocoa" glib:name="GST_VULKAN_DISPLAY_TYPE_COCOA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">cocoa display for macOS</doc>
       </member>
-      <member name="ios" value="8" c:identifier="GST_VULKAN_DISPLAY_TYPE_IOS" glib:nick="ios">
+      <member name="ios" value="8" c:identifier="GST_VULKAN_DISPLAY_TYPE_IOS" glib:nick="ios" glib:name="GST_VULKAN_DISPLAY_TYPE_IOS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">ios display</doc>
       </member>
-      <member name="win32" value="16" c:identifier="GST_VULKAN_DISPLAY_TYPE_WIN32" glib:nick="win32">
+      <member name="win32" value="16" c:identifier="GST_VULKAN_DISPLAY_TYPE_WIN32" glib:nick="win32" glib:name="GST_VULKAN_DISPLAY_TYPE_WIN32">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">win32 display</doc>
       </member>
-      <member name="android" value="32" c:identifier="GST_VULKAN_DISPLAY_TYPE_ANDROID" glib:nick="android">
+      <member name="android" value="32" c:identifier="GST_VULKAN_DISPLAY_TYPE_ANDROID" glib:nick="android" glib:name="GST_VULKAN_DISPLAY_TYPE_ANDROID">
       </member>
-      <member name="any" value="4294967295" c:identifier="GST_VULKAN_DISPLAY_TYPE_ANY" glib:nick="any">
+      <member name="any" value="4294967295" c:identifier="GST_VULKAN_DISPLAY_TYPE_ANY" glib:nick="any" glib:name="GST_VULKAN_DISPLAY_TYPE_ANY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkdisplay.h">any display type</doc>
       </member>
       <function name="to_extension_string" c:identifier="gst_vulkan_display_type_to_extension_string" version="1.18">
@@ -2287,7 +2291,7 @@ second argument is @data.</doc>
       </field>
     </record>
     <enumeration name="VulkanError" version="1.18" glib:type-name="GstVulkanError" glib:get-type="gst_vulkan_error_get_type" c:type="GstVulkanError" glib:error-domain="gst-vulkan-error">
-      <member name="failed" value="0" c:identifier="GST_VULKAN_FAILED" glib:nick="failed">
+      <member name="failed" value="0" c:identifier="GST_VULKAN_FAILED" glib:nick="failed" glib:name="GST_VULKAN_FAILED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkerror.h">undetermined error</doc>
       </member>
       <function name="quark" c:identifier="gst_vulkan_error_quark" version="1.18">
@@ -2432,19 +2436,19 @@ the error</doc>
       </field>
     </record>
     <bitfield name="VulkanFormatFlags" version="1.18" glib:type-name="GstVulkanFormatFlags" glib:get-type="gst_vulkan_format_flags_get_type" c:type="GstVulkanFormatFlags">
-      <member name="yuv" value="1" c:identifier="GST_VULKAN_FORMAT_FLAG_YUV" glib:nick="yuv">
+      <member name="yuv" value="1" c:identifier="GST_VULKAN_FORMAT_FLAG_YUV" glib:nick="yuv" glib:name="GST_VULKAN_FORMAT_FLAG_YUV">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">is a YUV format</doc>
       </member>
-      <member name="rgb" value="2" c:identifier="GST_VULKAN_FORMAT_FLAG_RGB" glib:nick="rgb">
+      <member name="rgb" value="2" c:identifier="GST_VULKAN_FORMAT_FLAG_RGB" glib:nick="rgb" glib:name="GST_VULKAN_FORMAT_FLAG_RGB">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">is a RGB format</doc>
       </member>
-      <member name="alpha" value="4" c:identifier="GST_VULKAN_FORMAT_FLAG_ALPHA" glib:nick="alpha">
+      <member name="alpha" value="4" c:identifier="GST_VULKAN_FORMAT_FLAG_ALPHA" glib:nick="alpha" glib:name="GST_VULKAN_FORMAT_FLAG_ALPHA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">has an alpha channel</doc>
       </member>
-      <member name="le" value="8" c:identifier="GST_VULKAN_FORMAT_FLAG_LE" glib:nick="le">
+      <member name="le" value="8" c:identifier="GST_VULKAN_FORMAT_FLAG_LE" glib:nick="le" glib:name="GST_VULKAN_FORMAT_FLAG_LE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">data is stored in little-endiate byte order</doc>
       </member>
-      <member name="complex" value="16" c:identifier="GST_VULKAN_FORMAT_FLAG_COMPLEX" glib:nick="complex">
+      <member name="complex" value="16" c:identifier="GST_VULKAN_FORMAT_FLAG_COMPLEX" glib:nick="complex" glib:name="GST_VULKAN_FORMAT_FLAG_COMPLEX">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">data is stored complex and cannot be read/write only using the information in the #GstVulkanFormatInfo</doc>
       </member>
     </bitfield>
@@ -2550,25 +2554,25 @@ the error</doc>
       </field>
     </record>
     <enumeration name="VulkanFormatScaling" version="1.18" glib:type-name="GstVulkanFormatScaling" glib:get-type="gst_vulkan_format_scaling_get_type" c:type="GstVulkanFormatScaling">
-      <member name="unorm" value="1" c:identifier="GST_VULKAN_FORMAT_SCALING_UNORM" glib:nick="unorm">
+      <member name="unorm" value="1" c:identifier="GST_VULKAN_FORMAT_SCALING_UNORM" glib:nick="unorm" glib:name="GST_VULKAN_FORMAT_SCALING_UNORM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">[0, 2^n - 1] -&gt; [0.0, 1.0]</doc>
       </member>
-      <member name="snorm" value="2" c:identifier="GST_VULKAN_FORMAT_SCALING_SNORM" glib:nick="snorm">
+      <member name="snorm" value="2" c:identifier="GST_VULKAN_FORMAT_SCALING_SNORM" glib:nick="snorm" glib:name="GST_VULKAN_FORMAT_SCALING_SNORM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">[-2^(n-1), 2^(n-1) - 1] -&gt; [-1.0, 1.0]</doc>
       </member>
-      <member name="uscaled" value="3" c:identifier="GST_VULKAN_FORMAT_SCALING_USCALED" glib:nick="uscaled">
+      <member name="uscaled" value="3" c:identifier="GST_VULKAN_FORMAT_SCALING_USCALED" glib:nick="uscaled" glib:name="GST_VULKAN_FORMAT_SCALING_USCALED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">[0, 2^n - 1] -&gt; [0.0, float(2^n - 1)]</doc>
       </member>
-      <member name="sscaled" value="4" c:identifier="GST_VULKAN_FORMAT_SCALING_SSCALED" glib:nick="sscaled">
+      <member name="sscaled" value="4" c:identifier="GST_VULKAN_FORMAT_SCALING_SSCALED" glib:nick="sscaled" glib:name="GST_VULKAN_FORMAT_SCALING_SSCALED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">[-2^(n-1), 2^(n-1) - 1] -&gt; [float(-2^(n-1)), float(2^(n-1) - 1)]</doc>
       </member>
-      <member name="uint" value="5" c:identifier="GST_VULKAN_FORMAT_SCALING_UINT" glib:nick="uint">
+      <member name="uint" value="5" c:identifier="GST_VULKAN_FORMAT_SCALING_UINT" glib:nick="uint" glib:name="GST_VULKAN_FORMAT_SCALING_UINT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">[0, 2^n - 1] -&gt; [0, 2^n - 1]</doc>
       </member>
-      <member name="sint" value="6" c:identifier="GST_VULKAN_FORMAT_SCALING_SINT" glib:nick="sint">
+      <member name="sint" value="6" c:identifier="GST_VULKAN_FORMAT_SCALING_SINT" glib:nick="sint" glib:name="GST_VULKAN_FORMAT_SCALING_SINT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">[-2^(n-1), 2^(n-1) - 1] -&gt; [-2^(n-1), 2^(n-1) - 1]</doc>
       </member>
-      <member name="srgb" value="7" c:identifier="GST_VULKAN_FORMAT_SCALING_SRGB" glib:nick="srgb">
+      <member name="srgb" value="7" c:identifier="GST_VULKAN_FORMAT_SCALING_SRGB" glib:nick="srgb" glib:name="GST_VULKAN_FORMAT_SCALING_SRGB">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkformat.h">@GST_VULKAN_FORMAT_SCALING_UNORM but the first three components are gamma corrected for the sRGB colour space.</doc>
       </member>
     </enumeration>
@@ -2994,7 +2998,7 @@ See also: gst_vulkan_full_screen_quad_set_blend_factors().</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanFullScreenQuadPrivate" c:type="GstVulkanFullScreenQuadPrivate" disguised="1">
+    <record name="VulkanFullScreenQuadPrivate" c:type="GstVulkanFullScreenQuadPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <record name="VulkanHandle" c:type="GstVulkanHandle" version="1.18" glib:type-name="GstVulkanHandle" glib:get-type="gst_vulkan_handle_get_type" c:symbol-prefix="vulkan_handle">
@@ -3190,7 +3194,7 @@ more specific implementations (#GstVulkanCommandBuffer, #GstVulkanCommandPool).<
           </instance-parameter>
         </parameters>
       </method>
-      <method name="unref" c:identifier="gst_vulkan_handle_unref" version="1.18" introspectable="0">
+      <method-inline name="unref" c:identifier="gst_vulkan_handle_unref" version="1.18" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">Decreases the refcount of the buffer. If the refcount reaches 0, the buffer
 will be freed.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h"/>
@@ -3203,7 +3207,7 @@ will be freed.</doc>
             <type name="VulkanHandle" c:type="GstVulkanHandle*"/>
           </instance-parameter>
         </parameters>
-      </method>
+      </method-inline>
       <function name="context_query" c:identifier="gst_vulkan_handle_context_query" version="1.18">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkutils.h"/>
         <return-value transfer-ownership="none">
@@ -3287,6 +3291,7 @@ inside @handle.</doc>
     <class name="VulkanHandlePool" c:symbol-prefix="vulkan_handle_pool" c:type="GstVulkanHandlePool" version="1.18" parent="Gst.Object" abstract="1" glib:type-name="GstVulkanHandlePool" glib:get-type="gst_vulkan_handle_pool_get_type" glib:type-struct="VulkanHandlePoolClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
       <virtual-method name="acquire" invoker="acquire" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">acquire a handle for usage</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <type name="gpointer" c:type="gpointer"/>
@@ -3298,6 +3303,7 @@ inside @handle.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="alloc" invoker="alloc" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">allocate a new handle</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
         <return-value transfer-ownership="none" nullable="1">
           <type name="gpointer" c:type="gpointer"/>
@@ -3309,6 +3315,7 @@ inside @handle.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="free">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">free a handle</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3323,6 +3330,7 @@ inside @handle.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="release" invoker="release">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">release a handle for possible reuse at the next call to @acquire</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -3405,6 +3413,7 @@ inside @handle.</doc>
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
       <field name="alloc">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">allocate a new handle</doc>
         <callback name="alloc" throws="1">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
           <return-value transfer-ownership="none" nullable="1">
@@ -3418,6 +3427,7 @@ inside @handle.</doc>
         </callback>
       </field>
       <field name="acquire">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">acquire a handle for usage</doc>
         <callback name="acquire" throws="1">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
           <return-value transfer-ownership="none" nullable="1">
@@ -3431,6 +3441,7 @@ inside @handle.</doc>
         </callback>
       </field>
       <field name="release">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">release a handle for possible reuse at the next call to @acquire</doc>
         <callback name="release">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
           <return-value transfer-ownership="none">
@@ -3447,6 +3458,7 @@ inside @handle.</doc>
         </callback>
       </field>
       <field name="free">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h">free a handle</doc>
         <callback name="free">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandlepool.h"/>
           <return-value transfer-ownership="none">
@@ -3469,34 +3481,34 @@ inside @handle.</doc>
       </field>
     </record>
     <enumeration name="VulkanHandleType" version="1.18" glib:type-name="GstVulkanHandleType" glib:get-type="gst_vulkan_handle_type_get_type" c:type="GstVulkanHandleType">
-      <member name="descriptor_set_layout" value="1" c:identifier="GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT" glib:nick="descriptor-set-layout">
+      <member name="descriptor_set_layout" value="1" c:identifier="GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT" glib:nick="descriptor-set-layout" glib:name="GST_VULKAN_HANDLE_TYPE_DESCRIPTOR_SET_LAYOUT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">descripter set layout</doc>
       </member>
-      <member name="pipeline_layout" value="2" c:identifier="GST_VULKAN_HANDLE_TYPE_PIPELINE_LAYOUT" glib:nick="pipeline-layout">
+      <member name="pipeline_layout" value="2" c:identifier="GST_VULKAN_HANDLE_TYPE_PIPELINE_LAYOUT" glib:nick="pipeline-layout" glib:name="GST_VULKAN_HANDLE_TYPE_PIPELINE_LAYOUT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">pipeline layout</doc>
       </member>
-      <member name="pipeline" value="3" c:identifier="GST_VULKAN_HANDLE_TYPE_PIPELINE" glib:nick="pipeline">
+      <member name="pipeline" value="3" c:identifier="GST_VULKAN_HANDLE_TYPE_PIPELINE" glib:nick="pipeline" glib:name="GST_VULKAN_HANDLE_TYPE_PIPELINE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">pipeline</doc>
       </member>
-      <member name="render_pass" value="4" c:identifier="GST_VULKAN_HANDLE_TYPE_RENDER_PASS" glib:nick="render-pass">
+      <member name="render_pass" value="4" c:identifier="GST_VULKAN_HANDLE_TYPE_RENDER_PASS" glib:nick="render-pass" glib:name="GST_VULKAN_HANDLE_TYPE_RENDER_PASS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">render pass</doc>
       </member>
-      <member name="sampler" value="5" c:identifier="GST_VULKAN_HANDLE_TYPE_SAMPLER" glib:nick="sampler">
+      <member name="sampler" value="5" c:identifier="GST_VULKAN_HANDLE_TYPE_SAMPLER" glib:nick="sampler" glib:name="GST_VULKAN_HANDLE_TYPE_SAMPLER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">sampler</doc>
       </member>
-      <member name="framebuffer" value="6" c:identifier="GST_VULKAN_HANDLE_TYPE_FRAMEBUFFER" glib:nick="framebuffer">
+      <member name="framebuffer" value="6" c:identifier="GST_VULKAN_HANDLE_TYPE_FRAMEBUFFER" glib:nick="framebuffer" glib:name="GST_VULKAN_HANDLE_TYPE_FRAMEBUFFER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">framebuffer</doc>
       </member>
-      <member name="shader" value="7" c:identifier="GST_VULKAN_HANDLE_TYPE_SHADER" glib:nick="shader">
+      <member name="shader" value="7" c:identifier="GST_VULKAN_HANDLE_TYPE_SHADER" glib:nick="shader" glib:name="GST_VULKAN_HANDLE_TYPE_SHADER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">shader</doc>
       </member>
-      <member name="video_session" value="8" c:identifier="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION" version="1.24" glib:nick="video-session">
+      <member name="video_session" value="8" c:identifier="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION" version="1.24" glib:nick="video-session" glib:name="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">video session</doc>
       </member>
-      <member name="video_session_parameters" value="9" c:identifier="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS" version="1.24" glib:nick="video-session-parameters">
+      <member name="video_session_parameters" value="9" c:identifier="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS" version="1.24" glib:nick="video-session-parameters" glib:name="GST_VULKAN_HANDLE_TYPE_VIDEO_SESSION_PARAMETERS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">video session parameters</doc>
       </member>
-      <member name="sampler_ycbcr_conversion" value="10" c:identifier="GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION" version="1.24" glib:nick="sampler-ycbcr-conversion">
+      <member name="sampler_ycbcr_conversion" value="10" c:identifier="GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION" version="1.24" glib:nick="sampler-ycbcr-conversion" glib:name="GST_VULKAN_HANDLE_TYPE_SAMPLER_YCBCR_CONVERSION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkhandle.h">sampler with YCBCR conversion</doc>
       </member>
     </enumeration>
@@ -3642,7 +3654,7 @@ src or DPB images.</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanImageBufferPoolPrivate" c:type="GstVulkanImageBufferPoolPrivate" disguised="1">
+    <record name="VulkanImageBufferPoolPrivate" c:type="GstVulkanImageBufferPoolPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <record name="VulkanImageMemory" c:type="GstVulkanImageMemory" version="1.18">
@@ -4029,7 +4041,7 @@ criteria.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="unref" c:identifier="gst_vulkan_image_view_unref" version="1.18" introspectable="0">
+      <method-inline name="unref" c:identifier="gst_vulkan_image_view_unref" version="1.18" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.h">Decreases the refcount of the trash object. If the refcount reaches 0, the
 trash will be freed.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimageview.h"/>
@@ -4042,7 +4054,7 @@ trash will be freed.</doc>
             <type name="VulkanImageView" c:type="GstVulkanImageView*"/>
           </instance-parameter>
         </parameters>
-      </method>
+      </method-inline>
     </record>
     <class name="VulkanInstance" c:symbol-prefix="vulkan_instance" c:type="GstVulkanInstance" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanInstance" glib:get-type="gst_vulkan_instance_get_type" glib:type-struct="VulkanInstanceClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkinstance.h"/>
@@ -4366,10 +4378,10 @@ version with this function.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="requested-api-major" version="1.18" writable="1" transfer-ownership="none">
+      <property name="requested-api-major" version="1.18" writable="1" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="requested-api-minor" version="1.18" writable="1" transfer-ownership="none">
+      <property name="requested-api-minor" version="1.18" writable="1" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
       <field name="parent">
@@ -4413,7 +4425,7 @@ It can be called from any thread.</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanInstancePrivate" c:type="GstVulkanInstancePrivate" disguised="1">
+    <record name="VulkanInstancePrivate" c:type="GstVulkanInstancePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <record name="VulkanMemory" c:type="GstVulkanMemory" version="1.18">
@@ -5015,7 +5027,7 @@ gst_vulkan_operation_add_frame_barrier().</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanOperationPrivate" c:type="GstVulkanOperationPrivate" disguised="1">
+    <record name="VulkanOperationPrivate" c:type="GstVulkanOperationPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <class name="VulkanPhysicalDevice" c:symbol-prefix="vulkan_physical_device" c:type="GstVulkanPhysicalDevice" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanPhysicalDevice" glib:get-type="gst_vulkan_physical_device_get_type" glib:type-struct="VulkanPhysicalDeviceClass">
@@ -5087,7 +5099,7 @@ called.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_instance" c:identifier="gst_vulkan_physical_device_get_instance" version="1.18">
+      <method name="get_instance" c:identifier="gst_vulkan_physical_device_get_instance" glib:get-property="instance" version="1.18">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkphysicaldevice.c">The #GstVulkanInstance associated with this physical device</doc>
@@ -5133,13 +5145,13 @@ called.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="device-index" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="device-index" writable="1" construct-only="1" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="instance" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="instance" writable="1" construct-only="1" transfer-ownership="none" getter="get_instance">
         <type name="VulkanInstance"/>
       </property>
-      <property name="name" transfer-ownership="none">
+      <property name="name" transfer-ownership="none" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
       <field name="parent">
@@ -5200,7 +5212,7 @@ called.</doc>
         </array>
       </field>
     </record>
-    <record name="VulkanPhysicalDevicePrivate" c:type="GstVulkanPhysicalDevicePrivate" disguised="1">
+    <record name="VulkanPhysicalDevicePrivate" c:type="GstVulkanPhysicalDevicePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <class name="VulkanQueue" c:symbol-prefix="vulkan_queue" c:type="GstVulkanQueue" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanQueue" glib:get-type="gst_vulkan_queue_get_type" glib:type-struct="VulkanQueueClass">
@@ -5364,7 +5376,7 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         <type name="gboolean" c:type="gboolean"/>
       </field>
     </record>
-    <record name="VulkanQueuePrivate" c:type="GstVulkanQueuePrivate" disguised="1">
+    <record name="VulkanQueuePrivate" c:type="GstVulkanQueuePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <class name="VulkanSwapper" c:symbol-prefix="vulkan_swapper" c:type="GstVulkanSwapper" version="1.18" parent="Gst.Object" glib:type-name="GstVulkanSwapper" glib:get-type="gst_vulkan_swapper_get_type" glib:type-struct="VulkanSwapperClass">
@@ -5465,10 +5477,10 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
           </parameter>
         </parameters>
       </method>
-      <property name="force-aspect-ratio" writable="1" transfer-ownership="none">
+      <property name="force-aspect-ratio" writable="1" transfer-ownership="none" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="pixel-aspect-ratio" writable="1" transfer-ownership="none">
+      <property name="pixel-aspect-ratio" writable="1" transfer-ownership="none" default-value="1/1">
         <type name="Gst.Fraction"/>
       </property>
       <field name="parent">
@@ -5509,7 +5521,7 @@ See gst_vulkan_queue_submit_lock() for details on when this call is needed.</doc
         </array>
       </field>
     </record>
-    <record name="VulkanSwapperPrivate" c:type="GstVulkanSwapperPrivate" disguised="1">
+    <record name="VulkanSwapperPrivate" c:type="GstVulkanSwapperPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkswapper.h"/>
     </record>
     <record name="VulkanTrash" c:type="GstVulkanTrash" version="1.18" glib:type-name="GstVulkanTrash" glib:get-type="gst_vulkan_trash_get_type" c:symbol-prefix="vulkan_trash">
@@ -5589,7 +5601,7 @@ to call when @fence is signalled.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="unref" c:identifier="gst_vulkan_trash_unref" version="1.18" introspectable="0">
+      <method-inline name="unref" c:identifier="gst_vulkan_trash_unref" version="1.18" introspectable="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h">Decreases the refcount of the trash object. If the refcount reaches 0, the
 trash will be freed.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h"/>
@@ -5602,7 +5614,7 @@ trash will be freed.</doc>
             <type name="VulkanTrash" c:type="GstVulkanTrash*"/>
           </instance-parameter>
         </parameters>
-      </method>
+      </method-inline>
       <function name="mini_object_unref" c:identifier="gst_vulkan_trash_mini_object_unref" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.c">A #GstVulkanTrashNotify implementation for unreffing a #GstMiniObject when the
 associated #GstVulkanFence is signalled</doc>
@@ -5660,6 +5672,7 @@ associated #GstVulkanFence is signalled</doc>
     <class name="VulkanTrashList" c:symbol-prefix="vulkan_trash_list" c:type="GstVulkanTrashList" version="1.18" parent="VulkanHandlePool" glib:type-name="GstVulkanTrashList" glib:get-type="gst_vulkan_trash_list_get_type" glib:type-struct="VulkanTrashListClass">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h"/>
       <virtual-method name="add_func">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h">the #GstVulkanTrashListAdd functions</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h">whether @trash could be added to @trash_list</doc>
@@ -5677,6 +5690,7 @@ associated #GstVulkanFence is signalled</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="gc_func">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h">the #GstVulkanTrashListGC function</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -5689,6 +5703,7 @@ associated #GstVulkanFence is signalled</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="wait_func">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h">the #GstVulkanTrashListWait function</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvktrash.h">whether all objects were signalled and freed within the @timeout</doc>
@@ -5881,7 +5896,28 @@ signalled and freed.</doc>
     </callback>
     <record name="VulkanVideoCapabilities" c:type="GstVulkanVideoCapabilities" version="1.24">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-      <field name="_reserved" readable="0" private="1">
+      <field name="caps" introspectable="0" readable="0" private="1">
+        <type c:type="VkVideoCapabilitiesKHR"/>
+      </field>
+      <union name="codec" c:type="codec">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+        <field name="base" writable="1">
+          <type name="Vulkan.BaseInStructure" c:type="VkBaseInStructure"/>
+        </field>
+        <field name="h264dec" introspectable="0" writable="1">
+          <type c:type="VkVideoDecodeH264CapabilitiesKHR"/>
+        </field>
+        <field name="h265dec" introspectable="0" writable="1">
+          <type c:type="VkVideoDecodeH265CapabilitiesKHR"/>
+        </field>
+        <field name="h264enc" introspectable="0" writable="1">
+          <type c:type="VkVideoEncodeH264CapabilitiesKHR"/>
+        </field>
+        <field name="h265enc" introspectable="0" writable="1">
+          <type c:type="VkVideoEncodeH265CapabilitiesKHR"/>
+        </field>
+      </union>
+      <field name="_reserved" writable="1">
         <array zero-terminated="0" fixed-size="4">
           <type name="gpointer" c:type="gpointer"/>
         </array>
@@ -5983,19 +6019,50 @@ signalled and freed.</doc>
     </record>
     <enumeration name="VulkanVideoOperation" version="1.24" glib:type-name="GstVulkanVideoOperation" glib:get-type="gst_vulkan_video_operation_get_type" c:type="GstVulkanVideoOperation">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">The type of video operation.</doc>
-      <member name="decode" value="0" c:identifier="GST_VULKAN_VIDEO_OPERATION_DECODE" glib:nick="decode">
+      <member name="decode" value="0" c:identifier="GST_VULKAN_VIDEO_OPERATION_DECODE" glib:nick="decode" glib:name="GST_VULKAN_VIDEO_OPERATION_DECODE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">decode operation</doc>
       </member>
-      <member name="encode" value="1" c:identifier="GST_VULKAN_VIDEO_OPERATION_ENCODE" glib:nick="encode">
+      <member name="encode" value="1" c:identifier="GST_VULKAN_VIDEO_OPERATION_ENCODE" glib:nick="encode" glib:name="GST_VULKAN_VIDEO_OPERATION_ENCODE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">encode operation</doc>
       </member>
-      <member name="unknown" value="2" c:identifier="GST_VULKAN_VIDEO_OPERATION_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="2" c:identifier="GST_VULKAN_VIDEO_OPERATION_UNKNOWN" glib:nick="unknown" glib:name="GST_VULKAN_VIDEO_OPERATION_UNKNOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">unknown</doc>
       </member>
     </enumeration>
     <record name="VulkanVideoProfile" c:type="GstVulkanVideoProfile" version="1.24">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
-      <field name="_reserved" readable="0" private="1">
+      <field name="profile" introspectable="0" readable="0" private="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h">the generic vulkan video profile</doc>
+        <type c:type="VkVideoProfileInfoKHR"/>
+      </field>
+      <union name="usage" c:type="usage">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+        <field name="decode" introspectable="0" writable="1">
+          <type c:type="VkVideoDecodeUsageInfoKHR"/>
+        </field>
+        <field name="encode" introspectable="0" writable="1">
+          <type c:type="VkVideoEncodeUsageInfoKHR"/>
+        </field>
+      </union>
+      <union name="codec" c:type="codec">
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkvideoutils.h"/>
+        <field name="base" writable="1">
+          <type name="Vulkan.BaseInStructure" c:type="VkBaseInStructure"/>
+        </field>
+        <field name="h264dec" introspectable="0" writable="1">
+          <type c:type="VkVideoDecodeH264ProfileInfoKHR"/>
+        </field>
+        <field name="h265dec" introspectable="0" writable="1">
+          <type c:type="VkVideoDecodeH265ProfileInfoKHR"/>
+        </field>
+        <field name="h264enc" introspectable="0" writable="1">
+          <type c:type="VkVideoEncodeH264ProfileInfoKHR"/>
+        </field>
+        <field name="h265enc" introspectable="0" writable="1">
+          <type c:type="VkVideoEncodeH265ProfileInfoKHR"/>
+        </field>
+      </union>
+      <field name="_reserved" writable="1">
         <array zero-terminated="0" fixed-size="4">
           <type name="gpointer" c:type="gpointer"/>
         </array>
@@ -6100,6 +6167,7 @@ provided api.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="get_presentation_support" invoker="get_presentation_support" version="1.18">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">retrieve whether this window supports presentation</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.c">whether the given combination of @window, @device and
@@ -6122,6 +6190,7 @@ provided api.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="get_surface" invoker="get_surface" version="1.18" introspectable="0" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">retrieve the vulkan surface for this window</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
         <return-value>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.c">the VkSurface for displaying into.  The caller is responsible for
@@ -6136,6 +6205,7 @@ provided api.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="get_surface_dimensions" invoker="get_surface_dimensions" version="1.18">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">retrieve the current size of the window</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -6177,6 +6247,7 @@ from the @window.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="open" invoker="open" version="1.18" throws="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">open the connection to the display</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.c">whether @window could be successfully opened</doc>
@@ -6190,6 +6261,7 @@ from the @window.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="set_window_handle" invoker="set_window_handle">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">set the external window handle to render into</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -6216,7 +6288,7 @@ from the @window.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_display" c:identifier="gst_vulkan_window_get_display" version="1.18">
+      <method name="get_display" c:identifier="gst_vulkan_window_get_display" glib:get-property="display" version="1.18">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
         <return-value transfer-ownership="full">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.c">the #GstVulkanDisplay for @window</doc>
@@ -6409,7 +6481,7 @@ Currently intended for subclasses to update internal state.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="display" transfer-ownership="none">
+      <property name="display" transfer-ownership="none" getter="get_display">
         <type name="VulkanDisplay"/>
       </property>
       <field name="parent" readable="0" private="1">
@@ -6494,6 +6566,7 @@ Currently intended for subclasses to update internal state.</doc>
         <type name="Gst.ObjectClass" c:type="GstObjectClass"/>
       </field>
       <field name="open">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">open the connection to the display</doc>
         <callback name="open" throws="1">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
           <return-value transfer-ownership="none">
@@ -6509,6 +6582,7 @@ Currently intended for subclasses to update internal state.</doc>
         </callback>
       </field>
       <field name="close">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">close the connection to the display</doc>
         <callback name="close">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
           <return-value transfer-ownership="none">
@@ -6523,6 +6597,7 @@ Currently intended for subclasses to update internal state.</doc>
         </callback>
       </field>
       <field name="get_surface" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">retrieve the vulkan surface for this window</doc>
         <callback name="get_surface" introspectable="0" throws="1">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
           <return-value>
@@ -6539,6 +6614,7 @@ Currently intended for subclasses to update internal state.</doc>
         </callback>
       </field>
       <field name="get_presentation_support">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">retrieve whether this window supports presentation</doc>
         <callback name="get_presentation_support">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
           <return-value transfer-ownership="none">
@@ -6563,6 +6639,7 @@ Currently intended for subclasses to update internal state.</doc>
         </callback>
       </field>
       <field name="set_window_handle">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">set the external window handle to render into</doc>
         <callback name="set_window_handle">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
           <return-value transfer-ownership="none">
@@ -6579,6 +6656,7 @@ Currently intended for subclasses to update internal state.</doc>
         </callback>
       </field>
       <field name="get_surface_dimensions">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">retrieve the current size of the window</doc>
         <callback name="get_surface_dimensions">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h"/>
           <return-value transfer-ownership="none">
@@ -6625,13 +6703,13 @@ Currently intended for subclasses to update internal state.</doc>
       </field>
     </record>
     <enumeration name="VulkanWindowError" version="1.18" glib:type-name="GstVulkanWindowError" glib:get-type="gst_vulkan_window_error_get_type" c:type="GstVulkanWindowError" glib:error-domain="gst-gl-window-error-quark">
-      <member name="failed" value="0" c:identifier="GST_VULKAN_WINDOW_ERROR_FAILED" glib:nick="failed">
+      <member name="failed" value="0" c:identifier="GST_VULKAN_WINDOW_ERROR_FAILED" glib:nick="failed" glib:name="GST_VULKAN_WINDOW_ERROR_FAILED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">failed</doc>
       </member>
-      <member name="old_libs" value="1" c:identifier="GST_VULKAN_WINDOW_ERROR_OLD_LIBS" glib:nick="old-libs">
+      <member name="old_libs" value="1" c:identifier="GST_VULKAN_WINDOW_ERROR_OLD_LIBS" glib:nick="old-libs" glib:name="GST_VULKAN_WINDOW_ERROR_OLD_LIBS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">old libraries</doc>
       </member>
-      <member name="resource_unavailable" value="2" c:identifier="GST_VULKAN_WINDOW_ERROR_RESOURCE_UNAVAILABLE" glib:nick="resource-unavailable">
+      <member name="resource_unavailable" value="2" c:identifier="GST_VULKAN_WINDOW_ERROR_RESOURCE_UNAVAILABLE" glib:nick="resource-unavailable" glib:name="GST_VULKAN_WINDOW_ERROR_RESOURCE_UNAVAILABLE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkwindow.h">resource unavailable</doc>
       </member>
       <function name="quark" c:identifier="gst_vulkan_window_error_quark" version="1.18">
@@ -6640,7 +6718,7 @@ Currently intended for subclasses to update internal state.</doc>
         </return-value>
       </function>
     </enumeration>
-    <record name="VulkanWindowPrivate" c:type="GstVulkanWindowPrivate" disguised="1">
+    <record name="VulkanWindowPrivate" c:type="GstVulkanWindowPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/vulkan_fwd.h"/>
     </record>
     <function name="context_get_vulkan_device" c:identifier="gst_context_get_vulkan_device" version="1.18">

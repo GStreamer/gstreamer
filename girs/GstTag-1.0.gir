@@ -400,6 +400,9 @@ Subclasses have to do four things:
  128 bytes.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
       <virtual-method name="identify_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">identify tag and determine the size required to parse the
+tag. Buffer may be larger than the specified minimum size.
+Subclassed MUST override this vfunc in their class_init function.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -420,6 +423,10 @@ Subclasses have to do four things:
         </parameters>
       </virtual-method>
       <virtual-method name="merge_tags">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">merge start and end tags. Subclasses may want to override this
+vfunc to allow prioritising of start or end tag according to user
+preference.  Note that both start_tags and end_tags may be NULL. By default
+start tags are preferred over end tags.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.TagList" c:type="GstTagList*"/>
@@ -437,6 +444,12 @@ Subclasses have to do four things:
         </parameters>
       </virtual-method>
       <virtual-method name="parse_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">parse the tag. Buffer will be exactly of the size determined by
+the identify_tag vfunc before. The parse_tag vfunc may change the size
+stored in *tag_size and return GST_TAG_DEMUX_RESULT_AGAIN to request a
+larger or smaller buffer. It is also permitted to adjust the tag_size to a
+smaller value and then return GST_TAG_DEMUX_RESULT_OK in one go.
+Subclassed MUST override the parse_tag vfunc in their class_init function.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
         <return-value transfer-ownership="none">
           <type name="TagDemuxResult" c:type="GstTagDemuxResult"/>
@@ -493,6 +506,9 @@ Subclasses should set this in their class_init function.</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="identify_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">identify tag and determine the size required to parse the
+tag. Buffer may be larger than the specified minimum size.
+Subclassed MUST override this vfunc in their class_init function.</doc>
         <callback name="identify_tag">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
           <return-value transfer-ownership="none">
@@ -515,6 +531,12 @@ Subclasses should set this in their class_init function.</doc>
         </callback>
       </field>
       <field name="parse_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">parse the tag. Buffer will be exactly of the size determined by
+the identify_tag vfunc before. The parse_tag vfunc may change the size
+stored in *tag_size and return GST_TAG_DEMUX_RESULT_AGAIN to request a
+larger or smaller buffer. It is also permitted to adjust the tag_size to a
+smaller value and then return GST_TAG_DEMUX_RESULT_OK in one go.
+Subclassed MUST override the parse_tag vfunc in their class_init function.</doc>
         <callback name="parse_tag">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
           <return-value transfer-ownership="none">
@@ -540,6 +562,10 @@ Subclasses should set this in their class_init function.</doc>
         </callback>
       </field>
       <field name="merge_tags">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">merge start and end tags. Subclasses may want to override this
+vfunc to allow prioritising of start or end tag according to user
+preference.  Note that both start_tags and end_tags may be NULL. By default
+start tags are preferred over end tags.</doc>
         <callback name="merge_tags">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
           <return-value transfer-ownership="full">
@@ -564,146 +590,146 @@ Subclasses should set this in their class_init function.</doc>
         </array>
       </field>
     </record>
-    <record name="TagDemuxPrivate" c:type="GstTagDemuxPrivate" disguised="1">
+    <record name="TagDemuxPrivate" c:type="GstTagDemuxPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h"/>
     </record>
     <enumeration name="TagDemuxResult" glib:type-name="GstTagDemuxResult" glib:get-type="gst_tag_demux_result_get_type" c:type="GstTagDemuxResult">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">Result values from the parse_tag virtual function.</doc>
-      <member name="broken_tag" value="0" c:identifier="GST_TAG_DEMUX_RESULT_BROKEN_TAG" glib:nick="broken-tag">
+      <member name="broken_tag" value="0" c:identifier="GST_TAG_DEMUX_RESULT_BROKEN_TAG" glib:nick="broken-tag" glib:name="GST_TAG_DEMUX_RESULT_BROKEN_TAG">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">cannot parse tag, just skip it</doc>
       </member>
-      <member name="again" value="1" c:identifier="GST_TAG_DEMUX_RESULT_AGAIN" glib:nick="again">
+      <member name="again" value="1" c:identifier="GST_TAG_DEMUX_RESULT_AGAIN" glib:nick="again" glib:name="GST_TAG_DEMUX_RESULT_AGAIN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">call again with less or more data</doc>
       </member>
-      <member name="ok" value="2" c:identifier="GST_TAG_DEMUX_RESULT_OK" glib:nick="ok">
+      <member name="ok" value="2" c:identifier="GST_TAG_DEMUX_RESULT_OK" glib:nick="ok" glib:name="GST_TAG_DEMUX_RESULT_OK">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagdemux.h">parsed tag successfully</doc>
       </member>
     </enumeration>
     <enumeration name="TagImageType" glib:type-name="GstTagImageType" glib:get-type="gst_tag_image_type_get_type" c:type="GstTagImageType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Type of image contained in an image tag (specified as "image-type" field in
 the info structure in the image's #GstSample)</doc>
-      <member name="none" value="-1" c:identifier="GST_TAG_IMAGE_TYPE_NONE" glib:nick="none">
+      <member name="none" value="-1" c:identifier="GST_TAG_IMAGE_TYPE_NONE" glib:nick="none" glib:name="GST_TAG_IMAGE_TYPE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">No image type. Can be used to
      tell functions such as gst_tag_image_data_to_image_sample() that no
      image type should be set.</doc>
       </member>
-      <member name="undefined" value="0" c:identifier="GST_TAG_IMAGE_TYPE_UNDEFINED" glib:nick="undefined">
+      <member name="undefined" value="0" c:identifier="GST_TAG_IMAGE_TYPE_UNDEFINED" glib:nick="undefined" glib:name="GST_TAG_IMAGE_TYPE_UNDEFINED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Undefined/other image type</doc>
       </member>
-      <member name="front_cover" value="1" c:identifier="GST_TAG_IMAGE_TYPE_FRONT_COVER" glib:nick="front-cover">
+      <member name="front_cover" value="1" c:identifier="GST_TAG_IMAGE_TYPE_FRONT_COVER" glib:nick="front-cover" glib:name="GST_TAG_IMAGE_TYPE_FRONT_COVER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Cover (front)</doc>
       </member>
-      <member name="back_cover" value="2" c:identifier="GST_TAG_IMAGE_TYPE_BACK_COVER" glib:nick="back-cover">
+      <member name="back_cover" value="2" c:identifier="GST_TAG_IMAGE_TYPE_BACK_COVER" glib:nick="back-cover" glib:name="GST_TAG_IMAGE_TYPE_BACK_COVER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Cover (back)</doc>
       </member>
-      <member name="leaflet_page" value="3" c:identifier="GST_TAG_IMAGE_TYPE_LEAFLET_PAGE" glib:nick="leaflet-page">
+      <member name="leaflet_page" value="3" c:identifier="GST_TAG_IMAGE_TYPE_LEAFLET_PAGE" glib:nick="leaflet-page" glib:name="GST_TAG_IMAGE_TYPE_LEAFLET_PAGE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Leaflet page</doc>
       </member>
-      <member name="medium" value="4" c:identifier="GST_TAG_IMAGE_TYPE_MEDIUM" glib:nick="medium">
+      <member name="medium" value="4" c:identifier="GST_TAG_IMAGE_TYPE_MEDIUM" glib:nick="medium" glib:name="GST_TAG_IMAGE_TYPE_MEDIUM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Medium (e.g. label side of CD)</doc>
       </member>
-      <member name="lead_artist" value="5" c:identifier="GST_TAG_IMAGE_TYPE_LEAD_ARTIST" glib:nick="lead-artist">
+      <member name="lead_artist" value="5" c:identifier="GST_TAG_IMAGE_TYPE_LEAD_ARTIST" glib:nick="lead-artist" glib:name="GST_TAG_IMAGE_TYPE_LEAD_ARTIST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Lead artist/lead performer/soloist</doc>
       </member>
-      <member name="artist" value="6" c:identifier="GST_TAG_IMAGE_TYPE_ARTIST" glib:nick="artist">
+      <member name="artist" value="6" c:identifier="GST_TAG_IMAGE_TYPE_ARTIST" glib:nick="artist" glib:name="GST_TAG_IMAGE_TYPE_ARTIST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Artist/performer</doc>
       </member>
-      <member name="conductor" value="7" c:identifier="GST_TAG_IMAGE_TYPE_CONDUCTOR" glib:nick="conductor">
+      <member name="conductor" value="7" c:identifier="GST_TAG_IMAGE_TYPE_CONDUCTOR" glib:nick="conductor" glib:name="GST_TAG_IMAGE_TYPE_CONDUCTOR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Conductor</doc>
       </member>
-      <member name="band_orchestra" value="8" c:identifier="GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA" glib:nick="band-orchestra">
+      <member name="band_orchestra" value="8" c:identifier="GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA" glib:nick="band-orchestra" glib:name="GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Band/orchestra</doc>
       </member>
-      <member name="composer" value="9" c:identifier="GST_TAG_IMAGE_TYPE_COMPOSER" glib:nick="composer">
+      <member name="composer" value="9" c:identifier="GST_TAG_IMAGE_TYPE_COMPOSER" glib:nick="composer" glib:name="GST_TAG_IMAGE_TYPE_COMPOSER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Composer</doc>
       </member>
-      <member name="lyricist" value="10" c:identifier="GST_TAG_IMAGE_TYPE_LYRICIST" glib:nick="lyricist">
+      <member name="lyricist" value="10" c:identifier="GST_TAG_IMAGE_TYPE_LYRICIST" glib:nick="lyricist" glib:name="GST_TAG_IMAGE_TYPE_LYRICIST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Lyricist/text writer</doc>
       </member>
-      <member name="recording_location" value="11" c:identifier="GST_TAG_IMAGE_TYPE_RECORDING_LOCATION" glib:nick="recording-location">
+      <member name="recording_location" value="11" c:identifier="GST_TAG_IMAGE_TYPE_RECORDING_LOCATION" glib:nick="recording-location" glib:name="GST_TAG_IMAGE_TYPE_RECORDING_LOCATION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Recording location</doc>
       </member>
-      <member name="during_recording" value="12" c:identifier="GST_TAG_IMAGE_TYPE_DURING_RECORDING" glib:nick="during-recording">
+      <member name="during_recording" value="12" c:identifier="GST_TAG_IMAGE_TYPE_DURING_RECORDING" glib:nick="during-recording" glib:name="GST_TAG_IMAGE_TYPE_DURING_RECORDING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">During recording</doc>
       </member>
-      <member name="during_performance" value="13" c:identifier="GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE" glib:nick="during-performance">
+      <member name="during_performance" value="13" c:identifier="GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE" glib:nick="during-performance" glib:name="GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">During performance</doc>
       </member>
-      <member name="video_capture" value="14" c:identifier="GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE" glib:nick="video-capture">
+      <member name="video_capture" value="14" c:identifier="GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE" glib:nick="video-capture" glib:name="GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Movie/video screen capture</doc>
       </member>
-      <member name="fish" value="15" c:identifier="GST_TAG_IMAGE_TYPE_FISH" glib:nick="fish">
+      <member name="fish" value="15" c:identifier="GST_TAG_IMAGE_TYPE_FISH" glib:nick="fish" glib:name="GST_TAG_IMAGE_TYPE_FISH">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">A fish as funny as the ID3v2 spec</doc>
       </member>
-      <member name="illustration" value="16" c:identifier="GST_TAG_IMAGE_TYPE_ILLUSTRATION" glib:nick="illustration">
+      <member name="illustration" value="16" c:identifier="GST_TAG_IMAGE_TYPE_ILLUSTRATION" glib:nick="illustration" glib:name="GST_TAG_IMAGE_TYPE_ILLUSTRATION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Illustration</doc>
       </member>
-      <member name="band_artist_logo" value="17" c:identifier="GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO" glib:nick="band-artist-logo">
+      <member name="band_artist_logo" value="17" c:identifier="GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO" glib:nick="band-artist-logo" glib:name="GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Band/artist logotype</doc>
       </member>
-      <member name="publisher_studio_logo" value="18" c:identifier="GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO" glib:nick="publisher-studio-logo">
+      <member name="publisher_studio_logo" value="18" c:identifier="GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO" glib:nick="publisher-studio-logo" glib:name="GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">Publisher/studio logotype</doc>
       </member>
     </enumeration>
     <bitfield name="TagLicenseFlags" glib:type-name="GstTagLicenseFlags" glib:get-type="gst_tag_license_flags_get_type" c:type="GstTagLicenseFlags">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">See http://creativecommons.org/ns for more information.</doc>
-      <member name="permits_reproduction" value="1" c:identifier="GST_TAG_LICENSE_PERMITS_REPRODUCTION" glib:nick="permits-reproduction">
+      <member name="permits_reproduction" value="1" c:identifier="GST_TAG_LICENSE_PERMITS_REPRODUCTION" glib:nick="permits-reproduction" glib:name="GST_TAG_LICENSE_PERMITS_REPRODUCTION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">making multiple copies
     is allowed</doc>
       </member>
-      <member name="permits_distribution" value="2" c:identifier="GST_TAG_LICENSE_PERMITS_DISTRIBUTION" glib:nick="permits-distribution">
+      <member name="permits_distribution" value="2" c:identifier="GST_TAG_LICENSE_PERMITS_DISTRIBUTION" glib:nick="permits-distribution" glib:name="GST_TAG_LICENSE_PERMITS_DISTRIBUTION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">distribution, public display
     and public performance are allowed</doc>
       </member>
-      <member name="permits_derivative_works" value="4" c:identifier="GST_TAG_LICENSE_PERMITS_DERIVATIVE_WORKS" glib:nick="permits-derivative-works">
+      <member name="permits_derivative_works" value="4" c:identifier="GST_TAG_LICENSE_PERMITS_DERIVATIVE_WORKS" glib:nick="permits-derivative-works" glib:name="GST_TAG_LICENSE_PERMITS_DERIVATIVE_WORKS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">distribution of derivative
     works is allowed</doc>
       </member>
-      <member name="permits_sharing" value="8" c:identifier="GST_TAG_LICENSE_PERMITS_SHARING" glib:nick="permits-sharing">
+      <member name="permits_sharing" value="8" c:identifier="GST_TAG_LICENSE_PERMITS_SHARING" glib:nick="permits-sharing" glib:name="GST_TAG_LICENSE_PERMITS_SHARING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">commercial derivatives are allowed,
     but only non-commercial distribution is allowed</doc>
       </member>
-      <member name="requires_notice" value="256" c:identifier="GST_TAG_LICENSE_REQUIRES_NOTICE" glib:nick="requires-notice">
+      <member name="requires_notice" value="256" c:identifier="GST_TAG_LICENSE_REQUIRES_NOTICE" glib:nick="requires-notice" glib:name="GST_TAG_LICENSE_REQUIRES_NOTICE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">copyright and license notices
     must be kept intact</doc>
       </member>
-      <member name="requires_attribution" value="512" c:identifier="GST_TAG_LICENSE_REQUIRES_ATTRIBUTION" glib:nick="requires-attribution">
+      <member name="requires_attribution" value="512" c:identifier="GST_TAG_LICENSE_REQUIRES_ATTRIBUTION" glib:nick="requires-attribution" glib:name="GST_TAG_LICENSE_REQUIRES_ATTRIBUTION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">credit must be given to
     copyright holder and/or author</doc>
       </member>
-      <member name="requires_share_alike" value="1024" c:identifier="GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE" glib:nick="requires-share-alike">
+      <member name="requires_share_alike" value="1024" c:identifier="GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE" glib:nick="requires-share-alike" glib:name="GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">derivative works must be
     licensed under the same terms or compatible terms as the original work</doc>
       </member>
-      <member name="requires_source_code" value="2048" c:identifier="GST_TAG_LICENSE_REQUIRES_SOURCE_CODE" glib:nick="requires-source-code">
+      <member name="requires_source_code" value="2048" c:identifier="GST_TAG_LICENSE_REQUIRES_SOURCE_CODE" glib:nick="requires-source-code" glib:name="GST_TAG_LICENSE_REQUIRES_SOURCE_CODE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">source code (the preferred
     form for making modifications) must be provided when exercising some
     rights granted by the license</doc>
       </member>
-      <member name="requires_copyleft" value="4096" c:identifier="GST_TAG_LICENSE_REQUIRES_COPYLEFT" glib:nick="requires-copyleft">
+      <member name="requires_copyleft" value="4096" c:identifier="GST_TAG_LICENSE_REQUIRES_COPYLEFT" glib:nick="requires-copyleft" glib:name="GST_TAG_LICENSE_REQUIRES_COPYLEFT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">derivative and combined works
     must be licensed under specified terms, similar to those of the original
     work</doc>
       </member>
-      <member name="requires_lesser_copyleft" value="8192" c:identifier="GST_TAG_LICENSE_REQUIRES_LESSER_COPYLEFT" glib:nick="requires-lesser-copyleft">
+      <member name="requires_lesser_copyleft" value="8192" c:identifier="GST_TAG_LICENSE_REQUIRES_LESSER_COPYLEFT" glib:nick="requires-lesser-copyleft" glib:name="GST_TAG_LICENSE_REQUIRES_LESSER_COPYLEFT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">derivative works must be
     licensed under specified terms, with at least the same conditions as
     the original work; combinations with the work may be licensed under
     different terms</doc>
       </member>
-      <member name="prohibits_commercial_use" value="65536" c:identifier="GST_TAG_LICENSE_PROHIBITS_COMMERCIAL_USE" glib:nick="prohibits-commercial-use">
+      <member name="prohibits_commercial_use" value="65536" c:identifier="GST_TAG_LICENSE_PROHIBITS_COMMERCIAL_USE" glib:nick="prohibits-commercial-use" glib:name="GST_TAG_LICENSE_PROHIBITS_COMMERCIAL_USE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">exercising rights for
     commercial purposes is prohibited</doc>
       </member>
-      <member name="prohibits_high_income_nation_use" value="131072" c:identifier="GST_TAG_LICENSE_PROHIBITS_HIGH_INCOME_NATION_USE" glib:nick="prohibits-high-income-nation-use">
+      <member name="prohibits_high_income_nation_use" value="131072" c:identifier="GST_TAG_LICENSE_PROHIBITS_HIGH_INCOME_NATION_USE" glib:nick="prohibits-high-income-nation-use" glib:name="GST_TAG_LICENSE_PROHIBITS_HIGH_INCOME_NATION_USE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">use in a
     non-developing country is prohibited</doc>
       </member>
-      <member name="creative_commons_license" value="16777216" c:identifier="GST_TAG_LICENSE_CREATIVE_COMMONS_LICENSE" glib:nick="creative-commons-license">
+      <member name="creative_commons_license" value="16777216" c:identifier="GST_TAG_LICENSE_CREATIVE_COMMONS_LICENSE" glib:nick="creative-commons-license" glib:name="GST_TAG_LICENSE_CREATIVE_COMMONS_LICENSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">this license was created
     by the Creative Commons project</doc>
       </member>
-      <member name="free_software_foundation_license" value="33554432" c:identifier="GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE" glib:nick="free-software-foundation-license">
+      <member name="free_software_foundation_license" value="33554432" c:identifier="GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE" glib:nick="free-software-foundation-license" glib:name="GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/tag.h">this license was
     created by the Free Software Foundation (FSF)</doc>
       </member>
@@ -726,6 +752,8 @@ Subclasses have to do the following things:
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h"/>
       <implements name="Gst.TagSetter"/>
       <virtual-method name="render_end_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h">create a tag buffer to add to the end of the
+    input stream given a tag list, or NULL</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -740,6 +768,8 @@ Subclasses have to do the following things:
         </parameters>
       </virtual-method>
       <virtual-method name="render_start_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h">create a tag buffer to add to the beginning of the
+    input stream given a tag list, or NULL</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -775,6 +805,8 @@ of the two render vfuncs.</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="render_start_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h">create a tag buffer to add to the beginning of the
+    input stream given a tag list, or NULL</doc>
         <callback name="render_start_tag">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h"/>
           <return-value transfer-ownership="full">
@@ -791,6 +823,8 @@ of the two render vfuncs.</doc>
         </callback>
       </field>
       <field name="render_end_tag">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h">create a tag buffer to add to the end of the
+    input stream given a tag list, or NULL</doc>
         <callback name="render_end_tag">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h"/>
           <return-value transfer-ownership="full">
@@ -812,7 +846,7 @@ of the two render vfuncs.</doc>
         </array>
       </field>
     </record>
-    <record name="TagMuxPrivate" c:type="GstTagMuxPrivate" disguised="1">
+    <record name="TagMuxPrivate" c:type="GstTagMuxPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/tag/gsttagmux.h"/>
     </record>
     <interface name="TagXmpWriter" c:symbol-prefix="tag_xmp_writer" c:type="GstTagXmpWriter" glib:type-name="GstTagXmpWriter" glib:get-type="gst_tag_xmp_writer_get_type" glib:type-struct="TagXmpWriterInterface">

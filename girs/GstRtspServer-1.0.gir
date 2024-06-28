@@ -545,7 +545,7 @@ after use.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPAddressPoolPrivate" c:type="GstRTSPAddressPoolPrivate" disguised="1">
+    <record name="RTSPAddressPoolPrivate" c:type="GstRTSPAddressPoolPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-address-pool.h"/>
     </record>
     <enumeration name="RTSPAddressPoolResult" c:type="GstRTSPAddressPoolResult">
@@ -632,6 +632,10 @@ g_free() after usage.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="authenticate">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h">check the authentication of a client. The default implementation
+        checks if the authentication in the header matches one of the basic
+        authentication tokens. This function should set the authgroup field
+        in the context.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -646,6 +650,10 @@ g_free() after usage.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="check">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h">check if a resource can be accessed. this function should
+        call authenticate to authenticate the client when needed. The method
+        should also construct and send an appropriate response message on
+        error.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1021,6 +1029,10 @@ no one else overrides it.</doc>
         <type name="GObject.ObjectClass" c:type="GObjectClass"/>
       </field>
       <field name="authenticate">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h">check the authentication of a client. The default implementation
+        checks if the authentication in the header matches one of the basic
+        authentication tokens. This function should set the authgroup field
+        in the context.</doc>
         <callback name="authenticate">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h"/>
           <return-value transfer-ownership="none">
@@ -1037,6 +1049,10 @@ no one else overrides it.</doc>
         </callback>
       </field>
       <field name="check">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h">check if a resource can be accessed. this function should
+        call authenticate to authenticate the client when needed. The method
+        should also construct and send an appropriate response message on
+        error.</doc>
         <callback name="check">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h"/>
           <return-value transfer-ownership="none">
@@ -1099,7 +1115,7 @@ no one else overrides it.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPAuthPrivate" c:type="GstRTSPAuthPrivate" disguised="1">
+    <record name="RTSPAuthPrivate" c:type="GstRTSPAuthPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-auth.h"/>
     </record>
     <class name="RTSPClient" c:symbol-prefix="rtsp_client" c:type="GstRTSPClient" parent="GObject.Object" glib:type-name="GstRTSPClient" glib:get-type="gst_rtsp_client_get_type" glib:type-struct="RTSPClientClass">
@@ -1137,6 +1153,8 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="adjust_play_mode">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called to give the application the possibility to adjust
+   the range, seek flags, rate and rate-control. Since 1.18</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="none">
           <type name="GstRtsp.RTSPStatusCode" c:type="GstRTSPStatusCode"/>
@@ -1166,6 +1184,9 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="adjust_play_response">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called to give the implementation the possibility to
+   adjust the response to a play request, for example if extra headers were
+   parsed when #GstRTSPClientClass.adjust_play_mode was called. Since 1.18</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="none">
           <type name="GstRtsp.RTSPStatusCode" c:type="GstRTSPStatusCode"/>
@@ -1222,6 +1243,9 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="configure_client_media">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when the stream in media needs to be configured.
+   The default implementation will configure the blocksize on the payloader when
+   spcified in the request headers.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1242,6 +1266,8 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="configure_client_transport">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when the client transport needs to be
+   configured.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -1259,6 +1285,7 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="create_sdp">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when the SDP needs to be created for media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="full">
           <type name="GstSdp.SDPMessage" c:type="GstSDPMessage*"/>
@@ -1335,6 +1362,7 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="make_path_from_uri">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called to create path from uri.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="full">
           <type name="utf8" c:type="gchar*"/>
@@ -1377,6 +1405,8 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="params_get">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">get parameters. This function should also initialize the
+   RTSP response(ctx-&gt;response) via a call to gst_rtsp_message_init_response()</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="none">
           <type name="GstRtsp.RTSPResult" c:type="GstRTSPResult"/>
@@ -1391,6 +1421,8 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="params_set">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">set parameters. This function should also initialize the
+   RTSP response(ctx-&gt;response) via a call to gst_rtsp_message_init_response()</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="none">
           <type name="GstRtsp.RTSPResult" c:type="GstRTSPResult"/>
@@ -1646,6 +1678,8 @@ possibility to adjust the error code.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="tunnel_http_response">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when a response to the GET request is about to
+  be sent for a tunneled connection. The response can be modified. Since: 1.4</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -1742,7 +1776,7 @@ The connection object returned remains valid until the client is freed.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_mount_points" c:identifier="gst_rtsp_client_get_mount_points">
+      <method name="get_mount_points" c:identifier="gst_rtsp_client_get_mount_points" glib:get-property="mount-points">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.c">Get the #GstRTSPMountPoints object that @client uses to manage its sessions.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -1756,7 +1790,7 @@ The connection object returned remains valid until the client is freed.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_session_pool" c:identifier="gst_rtsp_client_get_session_pool">
+      <method name="get_session_pool" c:identifier="gst_rtsp_client_get_session_pool" glib:get-property="session-pool">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.c">Get the #GstRTSPSessionPool object that @client uses to manage its sessions.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -1941,7 +1975,7 @@ limit with response status 413 Request Entity Too Large</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_mount_points" c:identifier="gst_rtsp_client_set_mount_points">
+      <method name="set_mount_points" c:identifier="gst_rtsp_client_set_mount_points" glib:set-property="mount-points">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.c">Set @mounts as the mount points for @client which it will use to map urls
 to media streams. These mount points are usually inherited from the server that
 created the client but can be overriden later.</doc>
@@ -2026,7 +2060,7 @@ but not both at the same time.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_session_pool" c:identifier="gst_rtsp_client_set_session_pool">
+      <method name="set_session_pool" c:identifier="gst_rtsp_client_set_session_pool" glib:set-property="session-pool">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.c">Set @pool as the sessionpool for @client which it will use to find
 or allocate sessions. the sessionpool is usually inherited from the server
 that created the client but can be overridden later.</doc>
@@ -2062,16 +2096,16 @@ that created the client but can be overridden later.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="drop-backlog" writable="1" transfer-ownership="none">
+      <property name="drop-backlog" writable="1" transfer-ownership="none" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="mount-points" writable="1" transfer-ownership="none">
+      <property name="mount-points" writable="1" transfer-ownership="none" setter="set_mount_points" getter="get_mount_points">
         <type name="RTSPMountPoints"/>
       </property>
-      <property name="post-session-timeout" writable="1" transfer-ownership="none">
+      <property name="post-session-timeout" writable="1" transfer-ownership="none" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="session-pool" writable="1" transfer-ownership="none">
+      <property name="session-pool" writable="1" transfer-ownership="none" setter="set_session_pool" getter="get_session_pool">
         <type name="RTSPSessionPool"/>
       </property>
       <field name="parent">
@@ -2394,6 +2428,7 @@ that created the client but can be overridden later.</doc>
         <type name="GObject.ObjectClass" c:type="GObjectClass"/>
       </field>
       <field name="create_sdp">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when the SDP needs to be created for media.</doc>
         <callback name="create_sdp">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="full">
@@ -2410,6 +2445,9 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="configure_client_media">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when the stream in media needs to be configured.
+   The default implementation will configure the blocksize on the payloader when
+   spcified in the request headers.</doc>
         <callback name="configure_client_media">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="none">
@@ -2432,6 +2470,8 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="configure_client_transport">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when the client transport needs to be
+   configured.</doc>
         <callback name="configure_client_transport">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="none">
@@ -2451,6 +2491,8 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="params_set">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">set parameters. This function should also initialize the
+   RTSP response(ctx-&gt;response) via a call to gst_rtsp_message_init_response()</doc>
         <callback name="params_set">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="none">
@@ -2467,6 +2509,8 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="params_get">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">get parameters. This function should also initialize the
+   RTSP response(ctx-&gt;response) via a call to gst_rtsp_message_init_response()</doc>
         <callback name="params_get">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="none">
@@ -2483,6 +2527,7 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="make_path_from_uri">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called to create path from uri.</doc>
         <callback name="make_path_from_uri">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="full">
@@ -2499,6 +2544,8 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="adjust_play_mode">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called to give the application the possibility to adjust
+   the range, seek flags, rate and rate-control. Since 1.18</doc>
         <callback name="adjust_play_mode">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="none">
@@ -2530,6 +2577,9 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="adjust_play_response">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called to give the implementation the possibility to
+   adjust the response to a play request, for example if extra headers were
+   parsed when #GstRTSPClientClass.adjust_play_mode was called. Since 1.18</doc>
         <callback name="adjust_play_response">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="none">
@@ -2719,6 +2769,8 @@ that created the client but can be overridden later.</doc>
         </callback>
       </field>
       <field name="tunnel_http_response">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h">called when a response to the GET request is about to
+  be sent for a tunneled connection. The response can be modified. Since: 1.4</doc>
         <callback name="tunnel_http_response">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
           <return-value transfer-ownership="none">
@@ -3018,7 +3070,7 @@ that created the client but can be overridden later.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPClientPrivate" c:type="GstRTSPClientPrivate" disguised="1">
+    <record name="RTSPClientPrivate" c:type="GstRTSPClientPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-client.h"/>
     </record>
     <callback name="RTSPClientSendFunc" c:type="GstRTSPClientSendFunc">
@@ -3287,6 +3339,7 @@ Ownership is taken of @element.</doc>
         </parameters>
       </constructor>
       <virtual-method name="convert_range">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">convert a range to the given unit</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3315,6 +3368,7 @@ Ownership is taken of @element.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="handle_message">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">handle a message</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3410,6 +3464,7 @@ such as the duration.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="query_position">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">query the current position in the pipeline</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3424,6 +3479,7 @@ such as the duration.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="query_stop">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">query when playback will stop</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3697,7 +3753,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_buffer_size" c:identifier="gst_rtsp_media_get_buffer_size">
+      <method name="get_buffer_size" c:identifier="gst_rtsp_media_get_buffer_size" glib:get-property="buffer-size">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the kernel UDP buffer size.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -3711,7 +3767,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_clock" c:identifier="gst_rtsp_media_get_clock">
+      <method name="get_clock" c:identifier="gst_rtsp_media_get_clock" glib:get-property="clock">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the clock that is used by the pipeline in @media.
 
 @media must be prepared before this method returns a valid clock object.</doc>
@@ -3739,7 +3795,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_dscp_qos" c:identifier="gst_rtsp_media_get_dscp_qos" version="1.18">
+      <method name="get_dscp_qos" c:identifier="gst_rtsp_media_get_dscp_qos" glib:get-property="dscp-qos" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the configured DSCP QoS of attached media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -3753,7 +3809,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_element" c:identifier="gst_rtsp_media_get_element">
+      <method name="get_element" c:identifier="gst_rtsp_media_get_element" glib:get-property="element">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the element that was used when constructing @media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="full">
@@ -3767,7 +3823,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_get_ensure_keyunit_on_start" version="1.24">
+      <method name="get_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_get_ensure_keyunit_on_start" glib:get-property="ensure-keyunit-on-start" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get ensure-keyunit-on-start flag.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -3781,7 +3837,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_get_ensure_keyunit_on_start_timeout" version="1.24">
+      <method name="get_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_get_ensure_keyunit_on_start_timeout" glib:get-property="ensure-keyunit-on-start-timeout" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get ensure-keyunit-on-start-timeout time.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -3795,7 +3851,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_latency" c:identifier="gst_rtsp_media_get_latency">
+      <method name="get_latency" c:identifier="gst_rtsp_media_get_latency" glib:get-property="latency">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the latency that is used for receiving media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -3809,7 +3865,7 @@ g_object_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_mcast_ttl" c:identifier="gst_rtsp_media_get_max_mcast_ttl" version="1.16">
+      <method name="get_max_mcast_ttl" c:identifier="gst_rtsp_media_get_max_mcast_ttl" glib:get-property="max-mcast-ttl" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the the maximum time-to-live value of outgoing multicast packets.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -3852,7 +3908,7 @@ g_free() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_profiles" c:identifier="gst_rtsp_media_get_profiles">
+      <method name="get_profiles" c:identifier="gst_rtsp_media_get_profiles" glib:get-property="profiles">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the allowed profiles of @media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -3866,7 +3922,7 @@ g_free() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_protocols" c:identifier="gst_rtsp_media_get_protocols">
+      <method name="get_protocols" c:identifier="gst_rtsp_media_get_protocols" glib:get-property="protocols">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the allowed protocols of @media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4002,7 +4058,7 @@ until @media is prepared or in error.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_suspend_mode" c:identifier="gst_rtsp_media_get_suspend_mode">
+      <method name="get_suspend_mode" c:identifier="gst_rtsp_media_get_suspend_mode" glib:get-property="suspend-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get how @media will be suspended.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4016,7 +4072,7 @@ until @media is prepared or in error.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_time_provider" c:identifier="gst_rtsp_media_get_time_provider">
+      <method name="get_time_provider" c:identifier="gst_rtsp_media_get_time_provider" glib:get-property="time-provider">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Get the #GstNetTimeProvider for the clock used by @media. The time provider
 will listen on @address and @port for client time requests.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4039,7 +4095,7 @@ will listen on @address and @port for client time requests.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_transport_mode" c:identifier="gst_rtsp_media_get_transport_mode">
+      <method name="get_transport_mode" c:identifier="gst_rtsp_media_get_transport_mode" glib:get-property="transport-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Check if the pipeline for @media can be used for PLAY or RECORD methods.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4359,7 +4415,7 @@ and &gt; 0 to indicate the longest duration between any two random access points
           </parameter>
         </parameters>
       </method>
-      <method name="set_bind_mcast_address" c:identifier="gst_rtsp_media_set_bind_mcast_address" version="1.16">
+      <method name="set_bind_mcast_address" c:identifier="gst_rtsp_media_set_bind_mcast_address" glib:set-property="bind-mcast-address" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Decide whether the multicast socket should be bound to a multicast address or
 INADDR_ANY.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4377,7 +4433,7 @@ INADDR_ANY.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_buffer_size" c:identifier="gst_rtsp_media_set_buffer_size">
+      <method name="set_buffer_size" c:identifier="gst_rtsp_media_set_buffer_size" glib:set-property="buffer-size">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set the kernel UDP buffer size.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4394,7 +4450,7 @@ INADDR_ANY.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_clock" c:identifier="gst_rtsp_media_set_clock">
+      <method name="set_clock" c:identifier="gst_rtsp_media_set_clock" glib:set-property="clock">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Configure the clock used for the media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4426,7 +4482,7 @@ INADDR_ANY.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_dscp_qos" c:identifier="gst_rtsp_media_set_dscp_qos" version="1.18">
+      <method name="set_dscp_qos" c:identifier="gst_rtsp_media_set_dscp_qos" glib:set-property="dscp-qos" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Configure the dscp qos of attached streams to @dscp_qos.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4443,7 +4499,7 @@ INADDR_ANY.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_set_ensure_keyunit_on_start" version="1.24">
+      <method name="set_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_set_ensure_keyunit_on_start" glib:set-property="ensure-keyunit-on-start" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set whether or not a keyunit should be ensured when a client connects. It
 will also configure the streams to drop delta units to ensure that they start
 on a keyunit.
@@ -4464,7 +4520,7 @@ Note that this will only affect non-shared medias for now.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_set_ensure_keyunit_on_start_timeout" version="1.24">
+      <method name="set_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_set_ensure_keyunit_on_start_timeout" glib:set-property="ensure-keyunit-on-start-timeout" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Sets the maximum allowed time before the first keyunit is considered
 expired.
 
@@ -4485,7 +4541,7 @@ enabled.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_eos_shutdown" c:identifier="gst_rtsp_media_set_eos_shutdown">
+      <method name="set_eos_shutdown" c:identifier="gst_rtsp_media_set_eos_shutdown" glib:set-property="eos-shutdown">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set or unset if an EOS event will be sent to the pipeline for @media before
 it is unprepared.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4503,7 +4559,7 @@ it is unprepared.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_latency" c:identifier="gst_rtsp_media_set_latency">
+      <method name="set_latency" c:identifier="gst_rtsp_media_set_latency" glib:set-property="latency">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Configure the latency used for receiving media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4520,7 +4576,7 @@ it is unprepared.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_mcast_ttl" c:identifier="gst_rtsp_media_set_max_mcast_ttl" version="1.16">
+      <method name="set_max_mcast_ttl" c:identifier="gst_rtsp_media_set_max_mcast_ttl" glib:set-property="max-mcast-ttl" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set the maximum time-to-live value of outgoing multicast packets.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4589,7 +4645,7 @@ it is unprepared.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_profiles" c:identifier="gst_rtsp_media_set_profiles">
+      <method name="set_profiles" c:identifier="gst_rtsp_media_set_profiles" glib:set-property="profiles">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Configure the allowed lower transport for @media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4606,7 +4662,7 @@ it is unprepared.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_protocols" c:identifier="gst_rtsp_media_set_protocols">
+      <method name="set_protocols" c:identifier="gst_rtsp_media_set_protocols" glib:set-property="protocols">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Configure the allowed lower transport for @media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4673,7 +4729,7 @@ in the ONVIF replay spec.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_reusable" c:identifier="gst_rtsp_media_set_reusable">
+      <method name="set_reusable" c:identifier="gst_rtsp_media_set_reusable" glib:set-property="reusable">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set or unset if the pipeline for @media can be reused after the pipeline has
 been unprepared.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4691,7 +4747,7 @@ been unprepared.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_shared" c:identifier="gst_rtsp_media_set_shared">
+      <method name="set_shared" c:identifier="gst_rtsp_media_set_shared" glib:set-property="shared">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set or unset if the pipeline for @media can be shared will multiple clients.
 When @shared is %TRUE, client requests for this media will share the media
 pipeline.</doc>
@@ -4737,7 +4793,7 @@ a #GPtrArray of #GstRTSPStreamTransport pointers</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_stop_on_disconnect" c:identifier="gst_rtsp_media_set_stop_on_disconnect">
+      <method name="set_stop_on_disconnect" c:identifier="gst_rtsp_media_set_stop_on_disconnect" glib:set-property="stop-on-disconnect">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Set or unset if the pipeline for @media should be stopped when a
 client disconnects without sending TEARDOWN.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
@@ -4755,7 +4811,7 @@ client disconnects without sending TEARDOWN.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_suspend_mode" c:identifier="gst_rtsp_media_set_suspend_mode">
+      <method name="set_suspend_mode" c:identifier="gst_rtsp_media_set_suspend_mode" glib:set-property="suspend-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Control how @ media will be suspended after the SDP has been generated and
 after a PAUSE request has been performed.
 
@@ -4775,7 +4831,7 @@ Media must be unprepared when setting the suspend mode.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_transport_mode" c:identifier="gst_rtsp_media_set_transport_mode">
+      <method name="set_transport_mode" c:identifier="gst_rtsp_media_set_transport_mode" glib:set-property="transport-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Sets if the media pipeline can work in PLAY or RECORD mode</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
         <return-value transfer-ownership="none">
@@ -4912,22 +4968,22 @@ when the media was not in the suspended state.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="bind-mcast-address" writable="1" transfer-ownership="none">
+      <property name="bind-mcast-address" writable="1" transfer-ownership="none" setter="set_bind_mcast_address" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="buffer-size" writable="1" transfer-ownership="none">
+      <property name="buffer-size" writable="1" transfer-ownership="none" setter="set_buffer_size" getter="get_buffer_size" default-value="524288">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="clock" writable="1" transfer-ownership="none">
+      <property name="clock" writable="1" transfer-ownership="none" setter="set_clock" getter="get_clock">
         <type name="Gst.Clock"/>
       </property>
-      <property name="dscp-qos" writable="1" transfer-ownership="none">
+      <property name="dscp-qos" writable="1" transfer-ownership="none" setter="set_dscp_qos" getter="get_dscp_qos" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="element" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="element" writable="1" construct-only="1" transfer-ownership="none" getter="get_element">
         <type name="Gst.Element"/>
       </property>
-      <property name="ensure-keyunit-on-start" version="1.24" writable="1" transfer-ownership="none">
+      <property name="ensure-keyunit-on-start" version="1.24" writable="1" transfer-ownership="none" setter="set_ensure_keyunit_on_start" getter="get_ensure_keyunit_on_start" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">Whether or not a keyunit should be ensured when a client connects. It
 will also configure the streams to drop delta units to ensure that they start
 on a keyunit.
@@ -4935,7 +4991,7 @@ on a keyunit.
 Note that this will only affect non-shared medias for now.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="ensure-keyunit-on-start-timeout" version="1.24" writable="1" transfer-ownership="none">
+      <property name="ensure-keyunit-on-start-timeout" version="1.24" writable="1" transfer-ownership="none" setter="set_ensure_keyunit_on_start_timeout" getter="get_ensure_keyunit_on_start_timeout" default-value="100">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.c">The maximum allowed time before the first keyunit is considered
 expired.
 
@@ -4943,37 +4999,37 @@ Note that this will only have an effect when ensure-keyunit-on-start is
 enabled.</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="eos-shutdown" writable="1" transfer-ownership="none">
+      <property name="eos-shutdown" writable="1" transfer-ownership="none" setter="set_eos_shutdown" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="latency" writable="1" transfer-ownership="none">
+      <property name="latency" writable="1" transfer-ownership="none" setter="set_latency" getter="get_latency" default-value="200">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="max-mcast-ttl" writable="1" transfer-ownership="none">
+      <property name="max-mcast-ttl" writable="1" transfer-ownership="none" setter="set_max_mcast_ttl" getter="get_max_mcast_ttl" default-value="255">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="profiles" writable="1" transfer-ownership="none">
+      <property name="profiles" writable="1" transfer-ownership="none" setter="set_profiles" getter="get_profiles" default-value="GST_RTSP_PROFILE_AVP">
         <type name="GstRtsp.RTSPProfile"/>
       </property>
-      <property name="protocols" writable="1" transfer-ownership="none">
+      <property name="protocols" writable="1" transfer-ownership="none" setter="set_protocols" getter="get_protocols" default-value="GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP">
         <type name="GstRtsp.RTSPLowerTrans"/>
       </property>
-      <property name="reusable" writable="1" transfer-ownership="none">
+      <property name="reusable" writable="1" transfer-ownership="none" setter="set_reusable" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="shared" writable="1" transfer-ownership="none">
+      <property name="shared" writable="1" transfer-ownership="none" setter="set_shared" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="stop-on-disconnect" writable="1" transfer-ownership="none">
+      <property name="stop-on-disconnect" writable="1" transfer-ownership="none" setter="set_stop_on_disconnect" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="suspend-mode" writable="1" transfer-ownership="none">
+      <property name="suspend-mode" writable="1" transfer-ownership="none" setter="set_suspend_mode" getter="get_suspend_mode" default-value="GST_RTSP_SUSPEND_MODE_NONE">
         <type name="RTSPSuspendMode"/>
       </property>
-      <property name="time-provider" writable="1" transfer-ownership="none">
+      <property name="time-provider" writable="1" transfer-ownership="none" getter="get_time_provider" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="transport-mode" writable="1" transfer-ownership="none">
+      <property name="transport-mode" writable="1" transfer-ownership="none" setter="set_transport_mode" getter="get_transport_mode" default-value="GST_RTSP_TRANSPORT_MODE_PLAY">
         <type name="RTSPTransportMode"/>
       </property>
       <field name="parent">
@@ -5058,6 +5114,7 @@ enabled.</doc>
         <type name="GObject.ObjectClass" c:type="GObjectClass"/>
       </field>
       <field name="handle_message">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">handle a message</doc>
         <callback name="handle_message">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5074,6 +5131,9 @@ enabled.</doc>
         </callback>
       </field>
       <field name="prepare">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">the default implementation adds all elements and sets the
+          pipeline's state to GST_STATE_PAUSED (or GST_STATE_PLAYING
+          in case of NO_PREROLL elements).</doc>
         <callback name="prepare">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5094,6 +5154,8 @@ enabled.</doc>
         </callback>
       </field>
       <field name="unprepare">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">the default implementation sets the pipeline's state
+            to GST_STATE_NULL and removes all elements.</doc>
         <callback name="unprepare">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5109,6 +5171,9 @@ enabled.</doc>
         </callback>
       </field>
       <field name="suspend">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">the default implementation sets the pipeline's state to
+          GST_STATE_NULL GST_STATE_PAUSED depending on the selected
+          suspend mode.</doc>
         <callback name="suspend">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5124,6 +5189,9 @@ enabled.</doc>
         </callback>
       </field>
       <field name="unsuspend">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">the default implementation reverts the suspend operation.
+            The pipeline will be prerolled again if it's state was
+            set to GST_STATE_NULL in suspend.</doc>
         <callback name="unsuspend">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5139,6 +5207,7 @@ enabled.</doc>
         </callback>
       </field>
       <field name="convert_range">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">convert a range to the given unit</doc>
         <callback name="convert_range">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5158,6 +5227,7 @@ enabled.</doc>
         </callback>
       </field>
       <field name="query_position">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">query the current position in the pipeline</doc>
         <callback name="query_position">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5174,6 +5244,7 @@ enabled.</doc>
         </callback>
       </field>
       <field name="query_stop">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">query when playback will stop</doc>
         <callback name="query_stop">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
           <return-value transfer-ownership="none">
@@ -5369,6 +5440,8 @@ can contain multiple streams like audio and video.</doc>
         </return-value>
       </constructor>
       <virtual-method name="configure">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">configure the media created with @construct. The default
+      implementation will configure the 'shared' property of the media.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -5434,6 +5507,8 @@ launch parameter.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="create_pipeline" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">create a new pipeline or re-use an existing one and
+      add the #GstRTSPMedia's element created by @construct to the pipeline.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value>
           <type name="Gst.Element" c:type="GstElement*"/>
@@ -5448,6 +5523,9 @@ launch parameter.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="gen_key">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">convert @url to a key for caching shared #GstRTSPMedia objects.
+      The default implementation of this function will use the complete URL
+      including the query parameters to return a key.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="full">
           <type name="utf8" c:type="gchar*"/>
@@ -5462,6 +5540,7 @@ launch parameter.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="media_configure">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">signal emitted when a media should be configured</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -5476,6 +5555,7 @@ launch parameter.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="media_constructed">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">signal emitted when a media was constructed</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -5599,7 +5679,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_buffer_size" c:identifier="gst_rtsp_media_factory_get_buffer_size">
+      <method name="get_buffer_size" c:identifier="gst_rtsp_media_factory_get_buffer_size" glib:get-property="buffer-size">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the kernel UDP buffer size.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5613,7 +5693,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_clock" c:identifier="gst_rtsp_media_factory_get_clock" version="1.8">
+      <method name="get_clock" c:identifier="gst_rtsp_media_factory_get_clock" glib:get-property="clock" version="1.8">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Returns the clock that is going to be used by the pipelines
 of all medias created from this factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -5640,7 +5720,7 @@ of all medias created from this factory.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_dscp_qos" c:identifier="gst_rtsp_media_factory_get_dscp_qos" version="1.18">
+      <method name="get_dscp_qos" c:identifier="gst_rtsp_media_factory_get_dscp_qos" glib:get-property="dscp-qos" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the configured media DSCP QoS.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5654,7 +5734,7 @@ of all medias created from this factory.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_factory_get_ensure_keyunit_on_start" version="1.24">
+      <method name="get_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_factory_get_ensure_keyunit_on_start" glib:get-property="ensure-keyunit-on-start" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get ensure-keyunit-on-start flag.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5668,7 +5748,7 @@ of all medias created from this factory.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_factory_get_ensure_keyunit_on_start_timeout" version="1.24">
+      <method name="get_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_factory_get_ensure_keyunit_on_start_timeout" glib:get-property="ensure-keyunit-on-start-timeout" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get ensure-keyunit-on-start-timeout time.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5682,7 +5762,7 @@ of all medias created from this factory.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_latency" c:identifier="gst_rtsp_media_factory_get_latency">
+      <method name="get_latency" c:identifier="gst_rtsp_media_factory_get_latency" glib:get-property="latency">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the latency that is used for receiving media</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5696,7 +5776,7 @@ of all medias created from this factory.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_launch" c:identifier="gst_rtsp_media_factory_get_launch">
+      <method name="get_launch" c:identifier="gst_rtsp_media_factory_get_launch" glib:get-property="launch">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the gst_parse_launch() pipeline description that will be used in the
 default prepare vmethod.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -5712,7 +5792,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_max_mcast_ttl" c:identifier="gst_rtsp_media_factory_get_max_mcast_ttl" version="1.16">
+      <method name="get_max_mcast_ttl" c:identifier="gst_rtsp_media_factory_get_max_mcast_ttl" glib:get-property="max-mcast-ttl" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the the maximum time-to-live value of outgoing multicast packets.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5769,7 +5849,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_profiles" c:identifier="gst_rtsp_media_factory_get_profiles">
+      <method name="get_profiles" c:identifier="gst_rtsp_media_factory_get_profiles" glib:get-property="profiles">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the allowed profiles of @factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5783,7 +5863,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_protocols" c:identifier="gst_rtsp_media_factory_get_protocols">
+      <method name="get_protocols" c:identifier="gst_rtsp_media_factory_get_protocols" glib:get-property="protocols">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get the allowed protocols of @factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5825,7 +5905,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_suspend_mode" c:identifier="gst_rtsp_media_factory_get_suspend_mode">
+      <method name="get_suspend_mode" c:identifier="gst_rtsp_media_factory_get_suspend_mode" glib:get-property="suspend-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get how media created from this factory will be suspended.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5839,7 +5919,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_transport_mode" c:identifier="gst_rtsp_media_factory_get_transport_mode">
+      <method name="get_transport_mode" c:identifier="gst_rtsp_media_factory_get_transport_mode" glib:get-property="transport-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Get if media created from this factory can be used for PLAY or RECORD
 methods.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -5939,7 +6019,7 @@ pipeline before shutdown.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_bind_mcast_address" c:identifier="gst_rtsp_media_factory_set_bind_mcast_address" version="1.16">
+      <method name="set_bind_mcast_address" c:identifier="gst_rtsp_media_factory_set_bind_mcast_address" glib:set-property="bind-mcast-address" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Decide whether the multicast socket should be bound to a multicast address or
 INADDR_ANY.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -5957,7 +6037,7 @@ INADDR_ANY.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_buffer_size" c:identifier="gst_rtsp_media_factory_set_buffer_size">
+      <method name="set_buffer_size" c:identifier="gst_rtsp_media_factory_set_buffer_size" glib:set-property="buffer-size">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Set the kernel UDP buffer size.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -5974,7 +6054,7 @@ INADDR_ANY.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_clock" c:identifier="gst_rtsp_media_factory_set_clock" version="1.8">
+      <method name="set_clock" c:identifier="gst_rtsp_media_factory_set_clock" glib:set-property="clock" version="1.8">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configures a specific clock to be used by the pipelines
 of all medias created from this factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -6008,7 +6088,7 @@ receiving media</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_dscp_qos" c:identifier="gst_rtsp_media_factory_set_dscp_qos" version="1.18">
+      <method name="set_dscp_qos" c:identifier="gst_rtsp_media_factory_set_dscp_qos" glib:set-property="dscp-qos" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure the media dscp qos to @dscp_qos.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6025,7 +6105,7 @@ receiving media</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_enable_rtcp" c:identifier="gst_rtsp_media_factory_set_enable_rtcp" version="1.20">
+      <method name="set_enable_rtcp" c:identifier="gst_rtsp_media_factory_set_enable_rtcp" glib:set-property="enable-rtcp" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Decide whether the created media should send and receive RTCP</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6042,7 +6122,7 @@ receiving media</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_factory_set_ensure_keyunit_on_start" version="1.24">
+      <method name="set_ensure_keyunit_on_start" c:identifier="gst_rtsp_media_factory_set_ensure_keyunit_on_start" glib:set-property="ensure-keyunit-on-start" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">If media from this factory should ensure a key unit when a client connects.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6059,7 +6139,7 @@ receiving media</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_factory_set_ensure_keyunit_on_start_timeout" version="1.24">
+      <method name="set_ensure_keyunit_on_start_timeout" c:identifier="gst_rtsp_media_factory_set_ensure_keyunit_on_start_timeout" glib:set-property="ensure-keyunit-on-start-timeout" version="1.24">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configures medias from this factory to consider keyunits older than timeout
 to be expired. Expired keyunits will be discarded.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -6077,7 +6157,7 @@ to be expired. Expired keyunits will be discarded.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_eos_shutdown" c:identifier="gst_rtsp_media_factory_set_eos_shutdown">
+      <method name="set_eos_shutdown" c:identifier="gst_rtsp_media_factory_set_eos_shutdown" glib:set-property="eos-shutdown">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure if media created from this factory will have an EOS sent to the
 pipeline before shutdown.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -6095,7 +6175,7 @@ pipeline before shutdown.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_latency" c:identifier="gst_rtsp_media_factory_set_latency">
+      <method name="set_latency" c:identifier="gst_rtsp_media_factory_set_latency" glib:set-property="latency">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure the latency used for receiving media</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6112,7 +6192,7 @@ pipeline before shutdown.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_launch" c:identifier="gst_rtsp_media_factory_set_launch">
+      <method name="set_launch" c:identifier="gst_rtsp_media_factory_set_launch" glib:set-property="launch">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">The gst_parse_launch() line to use for constructing the pipeline in the
 default prepare vmethod.
 
@@ -6137,7 +6217,7 @@ etc.. Each of the payloaders will result in a stream.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_mcast_ttl" c:identifier="gst_rtsp_media_factory_set_max_mcast_ttl" version="1.16">
+      <method name="set_max_mcast_ttl" c:identifier="gst_rtsp_media_factory_set_max_mcast_ttl" glib:set-property="max-mcast-ttl" version="1.16">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Set the maximum time-to-live value of outgoing multicast packets.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6208,7 +6288,7 @@ may of course do something different)</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_profiles" c:identifier="gst_rtsp_media_factory_set_profiles">
+      <method name="set_profiles" c:identifier="gst_rtsp_media_factory_set_profiles" glib:set-property="profiles">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure the allowed profiles for @factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6225,7 +6305,7 @@ may of course do something different)</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_protocols" c:identifier="gst_rtsp_media_factory_set_protocols">
+      <method name="set_protocols" c:identifier="gst_rtsp_media_factory_set_protocols" glib:set-property="protocols">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure the allowed lower transport for @factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6276,7 +6356,7 @@ may of course do something different)</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_shared" c:identifier="gst_rtsp_media_factory_set_shared">
+      <method name="set_shared" c:identifier="gst_rtsp_media_factory_set_shared" glib:set-property="shared">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure if media created from this factory can be shared between clients.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6293,7 +6373,7 @@ may of course do something different)</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_stop_on_disconnect" c:identifier="gst_rtsp_media_factory_set_stop_on_disconnect">
+      <method name="set_stop_on_disconnect" c:identifier="gst_rtsp_media_factory_set_stop_on_disconnect" glib:set-property="stop-on-disconnect">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure if media created from this factory should be stopped
 when a client disconnects without sending TEARDOWN.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
@@ -6311,7 +6391,7 @@ when a client disconnects without sending TEARDOWN.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_suspend_mode" c:identifier="gst_rtsp_media_factory_set_suspend_mode">
+      <method name="set_suspend_mode" c:identifier="gst_rtsp_media_factory_set_suspend_mode" glib:set-property="suspend-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure how media created from this factory will be suspended.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6328,7 +6408,7 @@ when a client disconnects without sending TEARDOWN.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_transport_mode" c:identifier="gst_rtsp_media_factory_set_transport_mode">
+      <method name="set_transport_mode" c:identifier="gst_rtsp_media_factory_set_transport_mode" glib:set-property="transport-mode">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Configure if this factory creates media for PLAY or RECORD modes.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
         <return-value transfer-ownership="none">
@@ -6345,23 +6425,23 @@ when a client disconnects without sending TEARDOWN.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="bind-mcast-address" writable="1" transfer-ownership="none">
+      <property name="bind-mcast-address" writable="1" transfer-ownership="none" setter="set_bind_mcast_address" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="buffer-size" writable="1" transfer-ownership="none">
+      <property name="buffer-size" writable="1" transfer-ownership="none" setter="set_buffer_size" getter="get_buffer_size" default-value="524288">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="clock" writable="1" transfer-ownership="none">
+      <property name="clock" writable="1" transfer-ownership="none" setter="set_clock" getter="get_clock">
         <type name="Gst.Clock"/>
       </property>
-      <property name="dscp-qos" writable="1" transfer-ownership="none">
+      <property name="dscp-qos" writable="1" transfer-ownership="none" setter="set_dscp_qos" getter="get_dscp_qos" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="enable-rtcp" version="1.20" writable="1" transfer-ownership="none">
+      <property name="enable-rtcp" version="1.20" writable="1" transfer-ownership="none" setter="set_enable_rtcp" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Whether the created media should send and receive RTCP</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="ensure-keyunit-on-start" version="1.24" writable="1" transfer-ownership="none">
+      <property name="ensure-keyunit-on-start" version="1.24" writable="1" transfer-ownership="none" setter="set_ensure_keyunit_on_start" getter="get_ensure_keyunit_on_start" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">If media from this factory should ensure a key unit when a client connects.
 
 This property will ensure that the stream always starts on a key unit
@@ -6370,7 +6450,7 @@ instead of a delta unit which the client would not be able to decode.
 Note that this will only affect non-shared medias for now.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="ensure-keyunit-on-start-timeout" version="1.24" writable="1" transfer-ownership="none">
+      <property name="ensure-keyunit-on-start-timeout" version="1.24" writable="1" transfer-ownership="none" setter="set_ensure_keyunit_on_start_timeout" getter="get_ensure_keyunit_on_start_timeout" default-value="100">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.c">Timeout in milliseconds used to determine if a keyunit should be discarded
 when a client connects.
 
@@ -6380,34 +6460,34 @@ the currently blocking keyframe will be used.
 This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="eos-shutdown" writable="1" transfer-ownership="none">
+      <property name="eos-shutdown" writable="1" transfer-ownership="none" setter="set_eos_shutdown" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="latency" writable="1" transfer-ownership="none">
+      <property name="latency" writable="1" transfer-ownership="none" setter="set_latency" getter="get_latency" default-value="200">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="launch" writable="1" transfer-ownership="none">
+      <property name="launch" writable="1" transfer-ownership="none" setter="set_launch" getter="get_launch" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="max-mcast-ttl" writable="1" transfer-ownership="none">
+      <property name="max-mcast-ttl" writable="1" transfer-ownership="none" setter="set_max_mcast_ttl" getter="get_max_mcast_ttl" default-value="255">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="profiles" writable="1" transfer-ownership="none">
+      <property name="profiles" writable="1" transfer-ownership="none" setter="set_profiles" getter="get_profiles" default-value="GST_RTSP_PROFILE_AVP">
         <type name="GstRtsp.RTSPProfile"/>
       </property>
-      <property name="protocols" writable="1" transfer-ownership="none">
+      <property name="protocols" writable="1" transfer-ownership="none" setter="set_protocols" getter="get_protocols" default-value="GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP">
         <type name="GstRtsp.RTSPLowerTrans"/>
       </property>
-      <property name="shared" writable="1" transfer-ownership="none">
+      <property name="shared" writable="1" transfer-ownership="none" setter="set_shared" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="stop-on-disconnect" writable="1" transfer-ownership="none">
+      <property name="stop-on-disconnect" writable="1" transfer-ownership="none" setter="set_stop_on_disconnect" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="suspend-mode" writable="1" transfer-ownership="none">
+      <property name="suspend-mode" writable="1" transfer-ownership="none" setter="set_suspend_mode" getter="get_suspend_mode" default-value="GST_RTSP_SUSPEND_MODE_NONE">
         <type name="RTSPSuspendMode"/>
       </property>
-      <property name="transport-mode" writable="1" transfer-ownership="none">
+      <property name="transport-mode" writable="1" transfer-ownership="none" setter="set_transport_mode" getter="get_transport_mode" default-value="GST_RTSP_TRANSPORT_MODE_PLAY">
         <type name="RTSPTransportMode"/>
       </property>
       <field name="parent">
@@ -6449,6 +6529,9 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         <type name="GObject.ObjectClass" c:type="GObjectClass"/>
       </field>
       <field name="gen_key">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">convert @url to a key for caching shared #GstRTSPMedia objects.
+      The default implementation of this function will use the complete URL
+      including the query parameters to return a key.</doc>
         <callback name="gen_key">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
           <return-value transfer-ownership="full">
@@ -6465,6 +6548,10 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </callback>
       </field>
       <field name="create_element">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">Construct and return a #GstElement that is a #GstBin containing
+      the elements to use for streaming the media. The bin should contain
+      payloaders pay\%d for each stream. The default implementation of this
+      function returns the bin created from the launch parameter.</doc>
         <callback name="create_element">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
           <return-value transfer-ownership="none" nullable="1">
@@ -6484,6 +6571,10 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </callback>
       </field>
       <field name="construct">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">the vmethod that will be called when the factory has to create the
+      #GstRTSPMedia for @url. The default implementation of this
+      function calls create_element to retrieve an element and then looks for
+      pay\%d to create the streams.</doc>
         <callback name="construct">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
           <return-value transfer-ownership="full" nullable="1">
@@ -6503,6 +6594,8 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </callback>
       </field>
       <field name="create_pipeline" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">create a new pipeline or re-use an existing one and
+      add the #GstRTSPMedia's element created by @construct to the pipeline.</doc>
         <callback name="create_pipeline" introspectable="0">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
           <return-value>
@@ -6519,6 +6612,8 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </callback>
       </field>
       <field name="configure">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">configure the media created with @construct. The default
+      implementation will configure the 'shared' property of the media.</doc>
         <callback name="configure">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
           <return-value transfer-ownership="none">
@@ -6535,6 +6630,7 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </callback>
       </field>
       <field name="media_constructed">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">signal emitted when a media was constructed</doc>
         <callback name="media_constructed">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
           <return-value transfer-ownership="none">
@@ -6551,6 +6647,7 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </callback>
       </field>
       <field name="media_configure">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h">signal emitted when a media should be configured</doc>
         <callback name="media_configure">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
           <return-value transfer-ownership="none">
@@ -6572,7 +6669,7 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPMediaFactoryPrivate" c:type="GstRTSPMediaFactoryPrivate" disguised="1">
+    <record name="RTSPMediaFactoryPrivate" c:type="GstRTSPMediaFactoryPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory.h"/>
     </record>
     <class name="RTSPMediaFactoryURI" c:symbol-prefix="rtsp_media_factory_uri" c:type="GstRTSPMediaFactoryURI" parent="RTSPMediaFactory" glib:type-name="GstRTSPMediaFactoryURI" glib:get-type="gst_rtsp_media_factory_uri_get_type" glib:type-struct="RTSPMediaFactoryURIClass">
@@ -6586,7 +6683,7 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
           <type name="RTSPMediaFactoryURI" c:type="GstRTSPMediaFactoryURI*"/>
         </return-value>
       </constructor>
-      <method name="get_uri" c:identifier="gst_rtsp_media_factory_uri_get_uri">
+      <method name="get_uri" c:identifier="gst_rtsp_media_factory_uri_get_uri" glib:get-property="uri">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory-uri.c">Get the URI that will provide media for this factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory-uri.h"/>
         <return-value transfer-ownership="full">
@@ -6600,7 +6697,7 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="set_uri" c:identifier="gst_rtsp_media_factory_uri_set_uri">
+      <method name="set_uri" c:identifier="gst_rtsp_media_factory_uri_set_uri" glib:set-property="uri">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory-uri.c">Set the URI of the resource that will be streamed by this factory.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory-uri.h"/>
         <return-value transfer-ownership="none">
@@ -6617,10 +6714,10 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="uri" writable="1" transfer-ownership="none">
+      <property name="uri" writable="1" transfer-ownership="none" setter="set_uri" getter="get_uri" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="use-gstpay" writable="1" transfer-ownership="none">
+      <property name="use-gstpay" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="parent">
@@ -6647,10 +6744,10 @@ This options is only relevant when ensure-keyunit-on-start is enabled.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPMediaFactoryURIPrivate" c:type="GstRTSPMediaFactoryURIPrivate" disguised="1">
+    <record name="RTSPMediaFactoryURIPrivate" c:type="GstRTSPMediaFactoryURIPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media-factory-uri.h"/>
     </record>
-    <record name="RTSPMediaPrivate" c:type="GstRTSPMediaPrivate" disguised="1">
+    <record name="RTSPMediaPrivate" c:type="GstRTSPMediaPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h"/>
     </record>
     <enumeration name="RTSPMediaStatus" c:type="GstRTSPMediaStatus">
@@ -6843,6 +6940,7 @@ g_object_unref() after usage.</doc>
         <type name="GObject.ObjectClass" c:type="GObjectClass"/>
       </field>
       <field name="make_path">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-mount-points.h">make a path from the given url.</doc>
         <callback name="make_path">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-mount-points.h"/>
           <return-value transfer-ownership="full" nullable="1">
@@ -6867,7 +6965,7 @@ g_object_unref() after usage.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPMountPointsPrivate" c:type="GstRTSPMountPointsPrivate" disguised="1">
+    <record name="RTSPMountPointsPrivate" c:type="GstRTSPMountPointsPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-mount-points.h"/>
     </record>
     <class name="RTSPOnvifClient" c:symbol-prefix="rtsp_onvif_client" c:type="GstRTSPOnvifClient" version="1.14" parent="RTSPClient" glib:type-name="GstRTSPOnvifClient" glib:get-type="gst_rtsp_onvif_client_get_type" glib:type-struct="RTSPOnvifClientClass">
@@ -7178,10 +7276,10 @@ prepare.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPOnvifMediaFactoryPrivate" c:type="GstRTSPOnvifMediaFactoryPrivate" disguised="1">
+    <record name="RTSPOnvifMediaFactoryPrivate" c:type="GstRTSPOnvifMediaFactoryPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-onvif-media-factory.h"/>
     </record>
-    <record name="RTSPOnvifMediaPrivate" c:type="GstRTSPOnvifMediaPrivate" disguised="1">
+    <record name="RTSPOnvifMediaPrivate" c:type="GstRTSPOnvifMediaPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-onvif-media.h"/>
     </record>
     <class name="RTSPOnvifServer" c:symbol-prefix="rtsp_onvif_server" c:type="GstRTSPOnvifServer" version="1.14" parent="RTSPServer" glib:type-name="GstRTSPOnvifServer" glib:get-type="gst_rtsp_onvif_server_get_type" glib:type-struct="RTSPOnvifServerClass">
@@ -7406,13 +7504,13 @@ remains valid for as long as @permissions is valid.</doc>
     </record>
     <enumeration name="RTSPPublishClockMode" glib:type-name="GstRTSPPublishClockMode" glib:get-type="gst_rtsp_publish_clock_mode_get_type" c:type="GstRTSPPublishClockMode">
       <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Whether the clock and possibly RTP/clock offset should be published according to RFC7273.</doc>
-      <member name="none" value="0" c:identifier="GST_RTSP_PUBLISH_CLOCK_MODE_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_RTSP_PUBLISH_CLOCK_MODE_NONE" glib:nick="none" glib:name="GST_RTSP_PUBLISH_CLOCK_MODE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Publish nothing</doc>
       </member>
-      <member name="clock" value="1" c:identifier="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK" glib:nick="clock">
+      <member name="clock" value="1" c:identifier="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK" glib:nick="clock" glib:name="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Publish the clock but not the offset</doc>
       </member>
-      <member name="clock_and_offset" value="2" c:identifier="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET" glib:nick="clock-and-offset">
+      <member name="clock_and_offset" value="2" c:identifier="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET" glib:nick="clock-and-offset" glib:name="GST_RTSP_PUBLISH_CLOCK_MODE_CLOCK_AND_OFFSET">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Publish the clock and offset</doc>
       </member>
     </enumeration>
@@ -7498,6 +7596,7 @@ new connection on @socket or @server.</doc>
         </parameters>
       </function>
       <virtual-method name="client_connected">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h">emitted when a new client connected.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -7512,6 +7611,10 @@ new connection on @socket or @server.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="create_client" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h">Create, configure a new GstRTSPClient
+         object that handles the new connection on @socket. The default
+         implementation will create a GstRTSPClient and will configure the
+         mount-points, auth, session-pool and thread-pool on the client.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value>
           <type name="RTSPClient" c:type="GstRTSPClient*"/>
@@ -7637,7 +7740,7 @@ occurred. Free with g_source_unref ()</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_address" c:identifier="gst_rtsp_server_get_address">
+      <method name="get_address" c:identifier="gst_rtsp_server_get_address" glib:get-property="address">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Get the address on which the server will accept connections.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -7666,7 +7769,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_backlog" c:identifier="gst_rtsp_server_get_backlog">
+      <method name="get_backlog" c:identifier="gst_rtsp_server_get_backlog" glib:get-property="backlog">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">The maximum amount of queued requests for the server.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="none">
@@ -7680,7 +7783,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_bound_port" c:identifier="gst_rtsp_server_get_bound_port">
+      <method name="get_bound_port" c:identifier="gst_rtsp_server_get_bound_port" glib:get-property="bound-port">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Get the port number where the server was bound to.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="none">
@@ -7694,7 +7797,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_content_length_limit" c:identifier="gst_rtsp_server_get_content_length_limit" version="1.18">
+      <method name="get_content_length_limit" c:identifier="gst_rtsp_server_get_content_length_limit" glib:get-property="content-length-limit" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Get the Content-Length limit of @server.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="none">
@@ -7708,7 +7811,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_mount_points" c:identifier="gst_rtsp_server_get_mount_points">
+      <method name="get_mount_points" c:identifier="gst_rtsp_server_get_mount_points" glib:get-property="mount-points">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Get the #GstRTSPMountPoints used as the mount points of @server.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -7723,7 +7826,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_service" c:identifier="gst_rtsp_server_get_service">
+      <method name="get_service" c:identifier="gst_rtsp_server_get_service" glib:get-property="service">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Get the service on which the server will accept connections.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="full">
@@ -7737,7 +7840,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_session_pool" c:identifier="gst_rtsp_server_get_session_pool">
+      <method name="get_session_pool" c:identifier="gst_rtsp_server_get_session_pool" glib:get-property="session-pool">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Get the #GstRTSPSessionPool used as the session pool of @server.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -7767,7 +7870,7 @@ usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="set_address" c:identifier="gst_rtsp_server_set_address">
+      <method name="set_address" c:identifier="gst_rtsp_server_set_address" glib:set-property="address">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Configure @server to accept connections on the given address.
 
 This function must be called before the server is bound.</doc>
@@ -7803,7 +7906,7 @@ This function must be called before the server is bound.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_backlog" c:identifier="gst_rtsp_server_set_backlog">
+      <method name="set_backlog" c:identifier="gst_rtsp_server_set_backlog" glib:set-property="backlog">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">configure the maximum amount of requests that may be queued for the
 server.
 
@@ -7823,7 +7926,7 @@ This function must be called before the server is bound.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_content_length_limit" c:identifier="gst_rtsp_server_set_content_length_limit" version="1.18">
+      <method name="set_content_length_limit" c:identifier="gst_rtsp_server_set_content_length_limit" glib:set-property="content-length-limit" version="1.18">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Define an appropriate request size limit and reject requests exceeding the
 limit.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
@@ -7841,7 +7944,7 @@ Configure @server to use the specified Content-Length limit.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_mount_points" c:identifier="gst_rtsp_server_set_mount_points">
+      <method name="set_mount_points" c:identifier="gst_rtsp_server_set_mount_points" glib:set-property="mount-points">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">configure @mounts to be used as the mount points of @server.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="none">
@@ -7858,7 +7961,7 @@ Configure @server to use the specified Content-Length limit.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_service" c:identifier="gst_rtsp_server_set_service">
+      <method name="set_service" c:identifier="gst_rtsp_server_set_service" glib:set-property="service">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">Configure @server to accept connections on the given service.
 @service should be a string containing the service name (see services(5)) or
 a string containing a port number between 1 and 65535.
@@ -7883,7 +7986,7 @@ This function must be called before the server is bound.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_session_pool" c:identifier="gst_rtsp_server_set_session_pool">
+      <method name="set_session_pool" c:identifier="gst_rtsp_server_set_session_pool" glib:set-property="session-pool">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server.c">configure @pool to be used as the session pool of @server.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
         <return-value transfer-ownership="none">
@@ -7950,25 +8053,25 @@ that the HTTP server read from the socket while parsing the HTTP header.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="address" writable="1" transfer-ownership="none">
+      <property name="address" writable="1" transfer-ownership="none" setter="set_address" getter="get_address" default-value="0.0.0.0">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="backlog" writable="1" transfer-ownership="none">
+      <property name="backlog" writable="1" transfer-ownership="none" setter="set_backlog" getter="get_backlog" default-value="5">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="bound-port" transfer-ownership="none">
+      <property name="bound-port" transfer-ownership="none" getter="get_bound_port" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="content-length-limit" writable="1" transfer-ownership="none">
+      <property name="content-length-limit" writable="1" transfer-ownership="none" setter="set_content_length_limit" getter="get_content_length_limit" default-value="4294967295">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="mount-points" writable="1" transfer-ownership="none">
+      <property name="mount-points" writable="1" transfer-ownership="none" setter="set_mount_points" getter="get_mount_points">
         <type name="RTSPMountPoints"/>
       </property>
-      <property name="service" writable="1" transfer-ownership="none">
+      <property name="service" writable="1" transfer-ownership="none" setter="set_service" getter="get_service" default-value="8554">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="session-pool" writable="1" transfer-ownership="none">
+      <property name="session-pool" writable="1" transfer-ownership="none" setter="set_session_pool" getter="get_session_pool">
         <type name="RTSPSessionPool"/>
       </property>
       <field name="parent">
@@ -8000,6 +8103,10 @@ that the HTTP server read from the socket while parsing the HTTP header.</doc>
         <type name="GObject.ObjectClass" c:type="GObjectClass"/>
       </field>
       <field name="create_client" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h">Create, configure a new GstRTSPClient
+         object that handles the new connection on @socket. The default
+         implementation will create a GstRTSPClient and will configure the
+         mount-points, auth, session-pool and thread-pool on the client.</doc>
         <callback name="create_client" introspectable="0">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
           <return-value>
@@ -8013,6 +8120,7 @@ that the HTTP server read from the socket while parsing the HTTP header.</doc>
         </callback>
       </field>
       <field name="client_connected">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h">emitted when a new client connected.</doc>
         <callback name="client_connected">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
           <return-value transfer-ownership="none">
@@ -8066,7 +8174,7 @@ gst_rtsp_server_client_filter().</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="RTSPServerPrivate" c:type="GstRTSPServerPrivate" disguised="1">
+    <record name="RTSPServerPrivate" c:type="GstRTSPServerPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-server-object.h"/>
     </record>
     <class name="RTSPSession" c:symbol-prefix="rtsp_session" c:type="GstRTSPSession" parent="GObject.Object" glib:type-name="GstRTSPSession" glib:get-type="gst_rtsp_session_get_type" glib:type-struct="RTSPSessionClass">
@@ -8203,7 +8311,7 @@ characters of @path.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_sessionid" c:identifier="gst_rtsp_session_get_sessionid">
+      <method name="get_sessionid" c:identifier="gst_rtsp_session_get_sessionid" glib:get-property="sessionid">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.c">Get the sessionid of @session.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.h"/>
         <return-value transfer-ownership="none" nullable="1">
@@ -8218,7 +8326,7 @@ The value remains valid as long as @session is alive.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_timeout" c:identifier="gst_rtsp_session_get_timeout">
+      <method name="get_timeout" c:identifier="gst_rtsp_session_get_timeout" glib:get-property="timeout">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.c">Get the timeout value of @session.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.h"/>
         <return-value transfer-ownership="none">
@@ -8362,7 +8470,7 @@ Ownership is taken from @media.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_timeout" c:identifier="gst_rtsp_session_set_timeout">
+      <method name="set_timeout" c:identifier="gst_rtsp_session_set_timeout" glib:set-property="timeout">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.c">Configure @session for a timeout of @timeout seconds. The session will be
 cleaned up when there is no activity for @timeout seconds.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.h"/>
@@ -8393,16 +8501,16 @@ cleaned up when there is no activity for @timeout seconds.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="extra-timeout" writable="1" transfer-ownership="none">
+      <property name="extra-timeout" writable="1" transfer-ownership="none" default-value="5">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="sessionid" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="sessionid" writable="1" construct-only="1" transfer-ownership="none" getter="get_sessionid" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="timeout" writable="1" transfer-ownership="none">
+      <property name="timeout" writable="1" transfer-ownership="none" setter="set_timeout" getter="get_timeout" default-value="60">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="timeout-always-visible" writable="1" transfer-ownership="none">
+      <property name="timeout-always-visible" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="parent">
@@ -8701,7 +8809,7 @@ matched characters is returned in @matched.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPSessionMediaPrivate" c:type="GstRTSPSessionMediaPrivate" disguised="1">
+    <record name="RTSPSessionMediaPrivate" c:type="GstRTSPSessionMediaPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-media.h"/>
     </record>
     <class name="RTSPSessionPool" c:symbol-prefix="rtsp_session_pool" c:type="GstRTSPSessionPool" parent="GObject.Object" glib:type-name="GstRTSPSessionPool" glib:get-type="gst_rtsp_session_pool_get_type" glib:type-struct="RTSPSessionPoolClass">
@@ -8718,6 +8826,7 @@ usage.</doc>
         </return-value>
       </constructor>
       <virtual-method name="create_session" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h">make a new session object.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
         <return-value>
           <type name="RTSPSession" c:type="GstRTSPSession*"/>
@@ -8732,6 +8841,8 @@ usage.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="create_session_id">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h">create a new random session id. Subclasses can create
+   custom session ids and should not check if the session exists.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
         <return-value transfer-ownership="full">
           <type name="utf8" c:type="gchar*"/>
@@ -8743,6 +8854,7 @@ usage.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="session_removed">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h">a session was removed from the pool</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -8859,7 +8971,7 @@ or %NULL when the session did not exist. g_object_unref() after usage.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="get_max_sessions" c:identifier="gst_rtsp_session_pool_get_max_sessions">
+      <method name="get_max_sessions" c:identifier="gst_rtsp_session_pool_get_max_sessions" glib:get-property="max-sessions">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.c">Get the maximum allowed number of sessions in @pool. 0 means an unlimited
 amount of sessions.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
@@ -8906,7 +9018,7 @@ amount of sessions.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_sessions" c:identifier="gst_rtsp_session_pool_set_max_sessions">
+      <method name="set_max_sessions" c:identifier="gst_rtsp_session_pool_set_max_sessions" glib:set-property="max-sessions">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.c">Configure the maximum allowed number of sessions in @pool to @max.
 A value of 0 means an unlimited amount of sessions.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
@@ -8924,7 +9036,7 @@ A value of 0 means an unlimited amount of sessions.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="max-sessions" writable="1" transfer-ownership="none">
+      <property name="max-sessions" writable="1" transfer-ownership="none" setter="set_max_sessions" getter="get_max_sessions" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
       <field name="parent">
@@ -8955,6 +9067,8 @@ A value of 0 means an unlimited amount of sessions.</doc>
         <type name="GObject.ObjectClass" c:type="GObjectClass"/>
       </field>
       <field name="create_session_id">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h">create a new random session id. Subclasses can create
+   custom session ids and should not check if the session exists.</doc>
         <callback name="create_session_id">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
           <return-value transfer-ownership="full">
@@ -8968,6 +9082,7 @@ A value of 0 means an unlimited amount of sessions.</doc>
         </callback>
       </field>
       <field name="create_session" introspectable="0">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h">make a new session object.</doc>
         <callback name="create_session" introspectable="0">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
           <return-value>
@@ -8984,6 +9099,7 @@ A value of 0 means an unlimited amount of sessions.</doc>
         </callback>
       </field>
       <field name="session_removed">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h">a session was removed from the pool</doc>
         <callback name="session_removed">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
           <return-value transfer-ownership="none">
@@ -9058,10 +9174,10 @@ more sessions timed out.</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="RTSPSessionPoolPrivate" c:type="GstRTSPSessionPoolPrivate" disguised="1">
+    <record name="RTSPSessionPoolPrivate" c:type="GstRTSPSessionPoolPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session-pool.h"/>
     </record>
-    <record name="RTSPSessionPrivate" c:type="GstRTSPSessionPrivate" disguised="1">
+    <record name="RTSPSessionPrivate" c:type="GstRTSPSessionPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-session.h"/>
     </record>
     <class name="RTSPStream" c:symbol-prefix="rtsp_stream" c:type="GstRTSPStream" parent="GObject.Object" glib:type-name="GstRTSPStream" glib:get-type="gst_rtsp_stream_get_type" glib:type-struct="RTSPStreamClass">
@@ -9236,7 +9352,7 @@ use gst_caps_unref() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_control" c:identifier="gst_rtsp_stream_get_control">
+      <method name="get_control" c:identifier="gst_rtsp_stream_get_control" glib:get-property="control">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.c">Get the control string to identify this stream.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.h"/>
         <return-value transfer-ownership="full" nullable="1">
@@ -9382,7 +9498,7 @@ g_free() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_profiles" c:identifier="gst_rtsp_stream_get_profiles">
+      <method name="get_profiles" c:identifier="gst_rtsp_stream_get_profiles" glib:get-property="profiles">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.c">Get the allowed profiles of @stream.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.h"/>
         <return-value transfer-ownership="none">
@@ -9396,7 +9512,7 @@ g_free() after usage.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_protocols" c:identifier="gst_rtsp_stream_get_protocols">
+      <method name="get_protocols" c:identifier="gst_rtsp_stream_get_protocols" glib:get-property="protocols">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.c">Get the allowed protocols of @stream.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.h"/>
         <return-value transfer-ownership="none">
@@ -10250,7 +10366,7 @@ an RTSP connection.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_control" c:identifier="gst_rtsp_stream_set_control">
+      <method name="set_control" c:identifier="gst_rtsp_stream_set_control" glib:set-property="control">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.c">Set the control string in @stream.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.h"/>
         <return-value transfer-ownership="none">
@@ -10336,7 +10452,7 @@ an RTSP connection.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_profiles" c:identifier="gst_rtsp_stream_set_profiles">
+      <method name="set_profiles" c:identifier="gst_rtsp_stream_set_profiles" glib:set-property="profiles">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.c">Configure the allowed profiles for @stream.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.h"/>
         <return-value transfer-ownership="none">
@@ -10353,7 +10469,7 @@ an RTSP connection.</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_protocols" c:identifier="gst_rtsp_stream_set_protocols">
+      <method name="set_protocols" c:identifier="gst_rtsp_stream_set_protocols" glib:set-property="protocols">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.c">Configure the allowed lower transport for @stream.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.h"/>
         <return-value transfer-ownership="none">
@@ -10611,13 +10727,13 @@ be removed from @stream.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="control" writable="1" transfer-ownership="none">
+      <property name="control" writable="1" transfer-ownership="none" setter="set_control" getter="get_control" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="profiles" writable="1" transfer-ownership="none">
+      <property name="profiles" writable="1" transfer-ownership="none" setter="set_profiles" getter="get_profiles" default-value="GST_RTSP_PROFILE_AVP">
         <type name="GstRtsp.RTSPProfile"/>
       </property>
-      <property name="protocols" writable="1" transfer-ownership="none">
+      <property name="protocols" writable="1" transfer-ownership="none" setter="set_protocols" getter="get_protocols" default-value="GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP">
         <type name="GstRtsp.RTSPLowerTrans"/>
       </property>
       <field name="parent">
@@ -10673,7 +10789,7 @@ be removed from @stream.</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPStreamPrivate" c:type="GstRTSPStreamPrivate" disguised="1">
+    <record name="RTSPStreamPrivate" c:type="GstRTSPStreamPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream.h"/>
     </record>
     <class name="RTSPStreamTransport" c:symbol-prefix="rtsp_stream_transport" c:type="GstRTSPStreamTransport" parent="GObject.Object" glib:type-name="GstRTSPStreamTransport" glib:get-type="gst_rtsp_stream_transport_get_type" glib:type-struct="RTSPStreamTransportClass">
@@ -11159,19 +11275,19 @@ gst_rtsp_stream_transport_filter().</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="RTSPStreamTransportPrivate" c:type="GstRTSPStreamTransportPrivate" disguised="1">
+    <record name="RTSPStreamTransportPrivate" c:type="GstRTSPStreamTransportPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-stream-transport.h"/>
     </record>
     <enumeration name="RTSPSuspendMode" glib:type-name="GstRTSPSuspendMode" glib:get-type="gst_rtsp_suspend_mode_get_type" c:type="GstRTSPSuspendMode">
       <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">The suspend mode of the media pipeline. A media pipeline is suspended right
 after creating the SDP and when the client performs a PAUSED request.</doc>
-      <member name="none" value="0" c:identifier="GST_RTSP_SUSPEND_MODE_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_RTSP_SUSPEND_MODE_NONE" glib:nick="none" glib:name="GST_RTSP_SUSPEND_MODE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Media is not suspended</doc>
       </member>
-      <member name="pause" value="1" c:identifier="GST_RTSP_SUSPEND_MODE_PAUSE" glib:nick="pause">
+      <member name="pause" value="1" c:identifier="GST_RTSP_SUSPEND_MODE_PAUSE" glib:nick="pause" glib:name="GST_RTSP_SUSPEND_MODE_PAUSE">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Media is PAUSED in suspend</doc>
       </member>
-      <member name="reset" value="2" c:identifier="GST_RTSP_SUSPEND_MODE_RESET" glib:nick="reset">
+      <member name="reset" value="2" c:identifier="GST_RTSP_SUSPEND_MODE_RESET" glib:nick="reset" glib:name="GST_RTSP_SUSPEND_MODE_RESET">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">The media is set to NULL when suspended</doc>
       </member>
     </enumeration>
@@ -11258,6 +11374,8 @@ structures.</doc>
         </return-value>
       </function>
       <virtual-method name="configure_thread">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h">configure a thread object. this vmethod is called when
+      a new thread has been created and should be configured.</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -11298,6 +11416,7 @@ gst_rtsp_thread_stop() after usage</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="thread_enter">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h">called from the thread when it is entered</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -11312,6 +11431,7 @@ gst_rtsp_thread_stop() after usage</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="thread_leave">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h">called from the thread when it is left</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -11325,7 +11445,7 @@ gst_rtsp_thread_stop() after usage</doc>
           </parameter>
         </parameters>
       </virtual-method>
-      <method name="get_max_threads" c:identifier="gst_rtsp_thread_pool_get_max_threads">
+      <method name="get_max_threads" c:identifier="gst_rtsp_thread_pool_get_max_threads" glib:get-property="max-threads">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.c">Get the maximum number of threads used for client connections.
 See gst_rtsp_thread_pool_set_max_threads().</doc>
         <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
@@ -11363,7 +11483,7 @@ gst_rtsp_thread_stop() after usage</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_max_threads" c:identifier="gst_rtsp_thread_pool_set_max_threads">
+      <method name="set_max_threads" c:identifier="gst_rtsp_thread_pool_set_max_threads" glib:set-property="max-threads">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.c">Set the maximum threads used by the pool to handle client requests.
 A value of 0 will use the pool mainloop, a value of -1 will use an
 unlimited number of threads.</doc>
@@ -11382,7 +11502,7 @@ unlimited number of threads.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="max-threads" writable="1" transfer-ownership="none">
+      <property name="max-threads" writable="1" transfer-ownership="none" setter="set_max_threads" getter="get_max_threads" default-value="1">
         <type name="gint" c:type="gint"/>
       </property>
       <field name="parent">
@@ -11408,6 +11528,8 @@ unlimited number of threads.</doc>
         <type name="GLib.ThreadPool" c:type="GThreadPool*"/>
       </field>
       <field name="get_thread">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h">this function should make or reuse an existing thread that runs
+       a mainloop.</doc>
         <callback name="get_thread">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
           <return-value transfer-ownership="full" nullable="1">
@@ -11432,6 +11554,8 @@ gst_rtsp_thread_stop() after usage</doc>
         </callback>
       </field>
       <field name="configure_thread">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h">configure a thread object. this vmethod is called when
+      a new thread has been created and should be configured.</doc>
         <callback name="configure_thread">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
           <return-value transfer-ownership="none">
@@ -11451,6 +11575,7 @@ gst_rtsp_thread_stop() after usage</doc>
         </callback>
       </field>
       <field name="thread_enter">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h">called from the thread when it is entered</doc>
         <callback name="thread_enter">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
           <return-value transfer-ownership="none">
@@ -11467,6 +11592,7 @@ gst_rtsp_thread_stop() after usage</doc>
         </callback>
       </field>
       <field name="thread_leave">
+        <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h">called from the thread when it is left</doc>
         <callback name="thread_leave">
           <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
           <return-value transfer-ownership="none">
@@ -11488,7 +11614,7 @@ gst_rtsp_thread_stop() after usage</doc>
         </array>
       </field>
     </record>
-    <record name="RTSPThreadPoolPrivate" c:type="GstRTSPThreadPoolPrivate" disguised="1">
+    <record name="RTSPThreadPoolPrivate" c:type="GstRTSPThreadPoolPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-thread-pool.h"/>
     </record>
     <enumeration name="RTSPThreadType" c:type="GstRTSPThreadType">
@@ -11674,10 +11800,10 @@ MT safe.</doc>
     </record>
     <bitfield name="RTSPTransportMode" glib:type-name="GstRTSPTransportMode" glib:get-type="gst_rtsp_transport_mode_get_type" c:type="GstRTSPTransportMode">
       <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">The supported modes of the media.</doc>
-      <member name="play" value="1" c:identifier="GST_RTSP_TRANSPORT_MODE_PLAY" glib:nick="play">
+      <member name="play" value="1" c:identifier="GST_RTSP_TRANSPORT_MODE_PLAY" glib:nick="play" glib:name="GST_RTSP_TRANSPORT_MODE_PLAY">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Transport supports PLAY mode</doc>
       </member>
-      <member name="record" value="2" c:identifier="GST_RTSP_TRANSPORT_MODE_RECORD" glib:nick="record">
+      <member name="record" value="2" c:identifier="GST_RTSP_TRANSPORT_MODE_RECORD" glib:nick="record" glib:name="GST_RTSP_TRANSPORT_MODE_RECORD">
         <doc xml:space="preserve" filename="../subprojects/gst-rtsp-server/gst/rtsp-server/rtsp-media.h">Transport supports RECORD mode</doc>
       </member>
     </bitfield>

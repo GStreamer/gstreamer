@@ -258,7 +258,7 @@ value to a GstClockTime.</doc>
         </array>
       </field>
     </record>
-    <record name="ActionPrivate" c:type="GstValidateActionPrivate" disguised="1">
+    <record name="ActionPrivate" c:type="GstValidateActionPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h"/>
     </record>
     <enumeration name="ActionReturn" glib:type-name="GstValidateActionReturn" glib:get-type="gst_validate_action_return_get_type" c:type="GstValidateActionReturn">
@@ -269,26 +269,26 @@ GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED:
 GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS:
 GST_VALIDATE_EXECUTE_ACTION_NONE:
 GST_VALIDATE_EXECUTE_ACTION_DONE:</doc>
-      <member name="error" value="0" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ERROR" glib:nick="error">
+      <member name="error" value="0" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ERROR" glib:nick="error" glib:name="GST_VALIDATE_EXECUTE_ACTION_ERROR">
       </member>
-      <member name="ok" value="1" c:identifier="GST_VALIDATE_EXECUTE_ACTION_OK" glib:nick="ok">
+      <member name="ok" value="1" c:identifier="GST_VALIDATE_EXECUTE_ACTION_OK" glib:nick="ok" glib:name="GST_VALIDATE_EXECUTE_ACTION_OK">
       </member>
-      <member name="async" value="2" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ASYNC" glib:nick="async">
+      <member name="async" value="2" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ASYNC" glib:nick="async" glib:name="GST_VALIDATE_EXECUTE_ACTION_ASYNC">
       </member>
-      <member name="non_blocking" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING" version="1.20" glib:nick="non-blocking">
+      <member name="non_blocking" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING" version="1.20" glib:nick="non-blocking" glib:name="GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action will be executed asynchronously without blocking further
 actions to be executed</doc>
       </member>
-      <member name="interlaced" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_INTERLACED" glib:nick="interlaced">
+      <member name="interlaced" value="3" c:identifier="GST_VALIDATE_EXECUTE_ACTION_INTERLACED" glib:nick="interlaced" glib:name="GST_VALIDATE_EXECUTE_ACTION_INTERLACED">
         <doc-deprecated xml:space="preserve">Use #GST_VALIDATE_EXECUTE_ACTION_NON_BLOCKING instead.</doc-deprecated>
       </member>
-      <member name="error_reported" value="4" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED" glib:nick="error-reported">
+      <member name="error_reported" value="4" c:identifier="GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED" glib:nick="error-reported" glib:name="GST_VALIDATE_EXECUTE_ACTION_ERROR_REPORTED">
       </member>
-      <member name="in_progress" value="5" c:identifier="GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS" glib:nick="in-progress">
+      <member name="in_progress" value="5" c:identifier="GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS" glib:nick="in-progress" glib:name="GST_VALIDATE_EXECUTE_ACTION_IN_PROGRESS">
       </member>
-      <member name="none" value="6" c:identifier="GST_VALIDATE_EXECUTE_ACTION_NONE" glib:nick="none">
+      <member name="none" value="6" c:identifier="GST_VALIDATE_EXECUTE_ACTION_NONE" glib:nick="none" glib:name="GST_VALIDATE_EXECUTE_ACTION_NONE">
       </member>
-      <member name="done" value="7" c:identifier="GST_VALIDATE_EXECUTE_ACTION_DONE" glib:nick="done">
+      <member name="done" value="7" c:identifier="GST_VALIDATE_EXECUTE_ACTION_DONE" glib:nick="done" glib:name="GST_VALIDATE_EXECUTE_ACTION_DONE">
       </member>
       <function name="get_name" c:identifier="gst_validate_action_return_get_name">
         <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h"/>
@@ -352,54 +352,54 @@ actions to be executed</doc>
       </field>
     </record>
     <bitfield name="ActionTypeFlags" glib:type-name="GstValidateActionTypeFlags" glib:get-type="gst_validate_action_type_flags_get_type" c:type="GstValidateActionTypeFlags">
-      <member name="none" value="0" c:identifier="GST_VALIDATE_ACTION_TYPE_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_VALIDATE_ACTION_TYPE_NONE" glib:nick="none" glib:name="GST_VALIDATE_ACTION_TYPE_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">No special flag</doc>
       </member>
-      <member name="config" value="2" c:identifier="GST_VALIDATE_ACTION_TYPE_CONFIG" glib:nick="config">
+      <member name="config" value="2" c:identifier="GST_VALIDATE_ACTION_TYPE_CONFIG" glib:nick="config" glib:name="GST_VALIDATE_ACTION_TYPE_CONFIG">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action is a config</doc>
       </member>
-      <member name="async" value="4" c:identifier="GST_VALIDATE_ACTION_TYPE_ASYNC" glib:nick="async">
+      <member name="async" value="4" c:identifier="GST_VALIDATE_ACTION_TYPE_ASYNC" glib:nick="async" glib:name="GST_VALIDATE_ACTION_TYPE_ASYNC">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can be executed ASYNC</doc>
       </member>
-      <member name="non_blocking" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_NON_BLOCKING" version="1.20" glib:nick="non-blocking">
+      <member name="non_blocking" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_NON_BLOCKING" version="1.20" glib:nick="non-blocking" glib:name="GST_VALIDATE_ACTION_TYPE_NON_BLOCKING">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can be executed asynchronously but without blocking further
 actions execution.</doc>
       </member>
-      <member name="interlaced" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_INTERLACED" glib:nick="interlaced">
+      <member name="interlaced" value="8" c:identifier="GST_VALIDATE_ACTION_TYPE_INTERLACED" glib:nick="interlaced" glib:name="GST_VALIDATE_ACTION_TYPE_INTERLACED">
         <doc-deprecated xml:space="preserve">Use #GST_VALIDATE_ACTION_TYPE_NON_BLOCKING instead.</doc-deprecated>
       </member>
-      <member name="can_execute_on_addition" value="16" c:identifier="GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION" glib:nick="can-execute-on-addition">
+      <member name="can_execute_on_addition" value="16" c:identifier="GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION" glib:nick="can-execute-on-addition" glib:name="GST_VALIDATE_ACTION_TYPE_CAN_EXECUTE_ON_ADDITION">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action will be executed on 'element-added'
                                                 for a particular element type if no playback-time
                                                 is specified</doc>
       </member>
-      <member name="needs_clock" value="32" c:identifier="GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK" glib:nick="needs-clock">
+      <member name="needs_clock" value="32" c:identifier="GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK" glib:nick="needs-clock" glib:name="GST_VALIDATE_ACTION_TYPE_NEEDS_CLOCK">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The pipeline will need to be synchronized with the clock
                                        for that action type to be used.</doc>
       </member>
-      <member name="no_execution_not_fatal" value="64" c:identifier="GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL" glib:nick="no-execution-not-fatal">
+      <member name="no_execution_not_fatal" value="64" c:identifier="GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL" glib:nick="no-execution-not-fatal" glib:name="GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">Do not consider the non execution of the action
                                                   as a fatal error.</doc>
       </member>
-      <member name="can_be_optional" value="128" c:identifier="GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL" glib:nick="can-be-optional">
+      <member name="can_be_optional" value="128" c:identifier="GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL" glib:nick="can-be-optional" glib:name="GST_VALIDATE_ACTION_TYPE_CAN_BE_OPTIONAL">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can use the 'optional' keyword. Such action
                                            instances will have the #GST_VALIDATE_ACTION_TYPE_NO_EXECUTION_NOT_FATAL
                                            flag set and won't be considered as fatal if they fail.</doc>
       </member>
-      <member name="doesnt_need_pipeline" value="256" c:identifier="GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE" glib:nick="doesnt-need-pipeline">
+      <member name="doesnt_need_pipeline" value="256" c:identifier="GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE" glib:nick="doesnt-need-pipeline" glib:name="GST_VALIDATE_ACTION_TYPE_DOESNT_NEED_PIPELINE">
       </member>
-      <member name="handled_in_config" value="512" c:identifier="GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG" glib:nick="handled-in-config">
+      <member name="handled_in_config" value="512" c:identifier="GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG" glib:nick="handled-in-config" glib:name="GST_VALIDATE_ACTION_TYPE_HANDLED_IN_CONFIG">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action can be used in config files even if it is not strictly a config
                                              action (ie. it needs a scenario to run).</doc>
       </member>
-      <member name="check" value="1024" c:identifier="GST_VALIDATE_ACTION_TYPE_CHECK" version="1.22" glib:nick="check">
+      <member name="check" value="1024" c:identifier="GST_VALIDATE_ACTION_TYPE_CHECK" version="1.22" glib:nick="check" glib:name="GST_VALIDATE_ACTION_TYPE_CHECK">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h">The action is checking some state from objects in the pipeline. It means that it can
 be used as 'check' in different action which have a `check` "sub action", such as the 'wait' action type.
 This implies that the action can be executed from any thread and not only from the scenario thread as other
 types.</doc>
       </member>
     </bitfield>
-    <record name="ActionTypePrivate" c:type="GstValidateActionTypePrivate" disguised="1">
+    <record name="ActionTypePrivate" c:type="GstValidateActionTypePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h"/>
     </record>
     <class name="BinMonitor" c:symbol-prefix="bin_monitor" c:type="GstValidateBinMonitor" parent="ElementMonitor" glib:type-name="GstValidateBinMonitor" glib:get-type="gst_validate_bin_monitor_get_type" glib:type-struct="BinMonitorClass">
@@ -443,7 +443,7 @@ under @monitor watch</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="handles-states" transfer-ownership="none">
+      <property name="handles-states" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="parent">
@@ -490,19 +490,19 @@ GST_VALIDATE_FATAL_CRITICALS:
 GST_VALIDATE_PRINT_ISSUES:
 GST_VALIDATE_PRINT_WARNINGS:
 GST_VALIDATE_PRINT_CRITICALS:</doc>
-      <member name="fatal_default" value="0" c:identifier="GST_VALIDATE_FATAL_DEFAULT" glib:nick="fatal-default">
+      <member name="fatal_default" value="0" c:identifier="GST_VALIDATE_FATAL_DEFAULT" glib:nick="fatal-default" glib:name="GST_VALIDATE_FATAL_DEFAULT">
       </member>
-      <member name="fatal_issues" value="1" c:identifier="GST_VALIDATE_FATAL_ISSUES" glib:nick="fatal-issues">
+      <member name="fatal_issues" value="1" c:identifier="GST_VALIDATE_FATAL_ISSUES" glib:nick="fatal-issues" glib:name="GST_VALIDATE_FATAL_ISSUES">
       </member>
-      <member name="fatal_warnings" value="2" c:identifier="GST_VALIDATE_FATAL_WARNINGS" glib:nick="fatal-warnings">
+      <member name="fatal_warnings" value="2" c:identifier="GST_VALIDATE_FATAL_WARNINGS" glib:nick="fatal-warnings" glib:name="GST_VALIDATE_FATAL_WARNINGS">
       </member>
-      <member name="fatal_criticals" value="4" c:identifier="GST_VALIDATE_FATAL_CRITICALS" glib:nick="fatal-criticals">
+      <member name="fatal_criticals" value="4" c:identifier="GST_VALIDATE_FATAL_CRITICALS" glib:nick="fatal-criticals" glib:name="GST_VALIDATE_FATAL_CRITICALS">
       </member>
-      <member name="print_issues" value="8" c:identifier="GST_VALIDATE_PRINT_ISSUES" glib:nick="print-issues">
+      <member name="print_issues" value="8" c:identifier="GST_VALIDATE_PRINT_ISSUES" glib:nick="print-issues" glib:name="GST_VALIDATE_PRINT_ISSUES">
       </member>
-      <member name="print_warnings" value="16" c:identifier="GST_VALIDATE_PRINT_WARNINGS" glib:nick="print-warnings">
+      <member name="print_warnings" value="16" c:identifier="GST_VALIDATE_PRINT_WARNINGS" glib:nick="print-warnings" glib:name="GST_VALIDATE_PRINT_WARNINGS">
       </member>
-      <member name="print_criticals" value="32" c:identifier="GST_VALIDATE_PRINT_CRITICALS" glib:nick="print-criticals">
+      <member name="print_criticals" value="32" c:identifier="GST_VALIDATE_PRINT_CRITICALS" glib:nick="print-criticals" glib:name="GST_VALIDATE_PRINT_CRITICALS">
       </member>
     </bitfield>
     <function-macro name="ELEMENT_MONITOR_ELEMENT_IS_CONVERTER" c:identifier="GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_CONVERTER" introspectable="0">
@@ -651,14 +651,14 @@ Class that wraps a #GstElement for Validate checks</doc>
       </parameters>
     </function-macro>
     <enumeration name="InterceptionReturn" glib:type-name="GstValidateInterceptionReturn" glib:get-type="gst_validate_interception_return_get_type" c:type="GstValidateInterceptionReturn">
-      <member name="drop" value="0" c:identifier="GST_VALIDATE_REPORTER_DROP" glib:nick="drop">
+      <member name="drop" value="0" c:identifier="GST_VALIDATE_REPORTER_DROP" glib:nick="drop" glib:name="GST_VALIDATE_REPORTER_DROP">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h">The report will be completely ignored.</doc>
       </member>
-      <member name="keep" value="1" c:identifier="GST_VALIDATE_REPORTER_KEEP" glib:nick="keep">
+      <member name="keep" value="1" c:identifier="GST_VALIDATE_REPORTER_KEEP" glib:nick="keep" glib:name="GST_VALIDATE_REPORTER_KEEP">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h">The report will be kept by the reporter,
                              but not reported to the runner.</doc>
       </member>
-      <member name="report" value="2" c:identifier="GST_VALIDATE_REPORTER_REPORT" glib:nick="report">
+      <member name="report" value="2" c:identifier="GST_VALIDATE_REPORTER_REPORT" glib:nick="report" glib:name="GST_VALIDATE_REPORTER_REPORT">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h">The report will be kept by the reporter
                                and reported to the runner.</doc>
       </member>
@@ -804,13 +804,13 @@ Class that wraps a #GstElement for Validate checks</doc>
       <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h">GST_VALIDATE_ISSUE_FLAGS_NONE: No special flags for the issue type
 GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS: Always show all occurrences of the issue in full details
 GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE: Do not generate backtrace for the issue type</doc>
-      <member name="none" value="0" c:identifier="GST_VALIDATE_ISSUE_FLAGS_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_VALIDATE_ISSUE_FLAGS_NONE" glib:nick="none" glib:name="GST_VALIDATE_ISSUE_FLAGS_NONE">
       </member>
-      <member name="full_details" value="1" c:identifier="GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS" glib:nick="full-details">
+      <member name="full_details" value="1" c:identifier="GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS" glib:nick="full-details" glib:name="GST_VALIDATE_ISSUE_FLAGS_FULL_DETAILS">
       </member>
-      <member name="no_backtrace" value="2" c:identifier="GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE" glib:nick="no-backtrace">
+      <member name="no_backtrace" value="2" c:identifier="GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE" glib:nick="no-backtrace" glib:name="GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE">
       </member>
-      <member name="force_backtrace" value="4" c:identifier="GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE" version="1.20" glib:nick="force-backtrace">
+      <member name="force_backtrace" value="4" c:identifier="GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE" version="1.20" glib:nick="force-backtrace" glib:name="GST_VALIDATE_ISSUE_FLAGS_FORCE_BACKTRACE">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h">Always generate backtrace, even if not a critical issue</doc>
       </member>
     </bitfield>
@@ -1117,10 +1117,10 @@ GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE: Do not generate backtrace for the issue t
         </array>
       </field>
     </record>
-    <record name="MediaDescriptorParserPrivate" c:type="GstValidateMediaDescriptorParserPrivate" disguised="1">
+    <record name="MediaDescriptorParserPrivate" c:type="GstValidateMediaDescriptorParserPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/media-descriptor-parser.h"/>
     </record>
-    <record name="MediaDescriptorPrivate" c:type="GstValidateMediaDescriptorPrivate" disguised="1">
+    <record name="MediaDescriptorPrivate" c:type="GstValidateMediaDescriptorPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/media-descriptor.h"/>
     </record>
     <class name="MediaDescriptorWriter" c:symbol-prefix="media_descriptor_writer" c:type="GstValidateMediaDescriptorWriter" parent="MediaDescriptor" glib:type-name="GstValidateMediaDescriptorWriter" glib:get-type="gst_validate_media_descriptor_writer_get_type" glib:type-struct="MediaDescriptorWriterClass">
@@ -1318,16 +1318,16 @@ GST_VALIDATE_ISSUE_FLAGS_NO_BACKTRACE: Do not generate backtrace for the issue t
       </field>
     </record>
     <bitfield name="MediaDescriptorWriterFlags" glib:type-name="GstValidateMediaDescriptorWriterFlags" glib:get-type="gst_validate_media_descriptor_writer_flags_get_type" c:type="GstValidateMediaDescriptorWriterFlags">
-      <member name="none" value="1" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NONE" glib:nick="none">
+      <member name="none" value="1" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NONE" glib:nick="none" glib:name="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NONE">
       </member>
-      <member name="no_parser" value="2" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER" glib:nick="no-parser">
+      <member name="no_parser" value="2" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER" glib:nick="no-parser" glib:name="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_NO_PARSER">
       </member>
-      <member name="full" value="4" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_FULL" glib:nick="full">
+      <member name="full" value="4" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_FULL" glib:nick="full" glib:name="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_FULL">
       </member>
-      <member name="handle_glogs" value="8" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_HANDLE_GLOGS" glib:nick="handle-glogs">
+      <member name="handle_glogs" value="8" c:identifier="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_HANDLE_GLOGS" glib:nick="handle-glogs" glib:name="GST_VALIDATE_MEDIA_DESCRIPTOR_WRITER_FLAGS_HANDLE_GLOGS">
       </member>
     </bitfield>
-    <record name="MediaDescriptorWriterPrivate" c:type="GstValidateMediaDescriptorWriterPrivate" disguised="1">
+    <record name="MediaDescriptorWriterPrivate" c:type="GstValidateMediaDescriptorWriterPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/media-descriptor-writer.h"/>
     </record>
     <record name="MediaInfo" c:type="GstValidateMediaInfo">
@@ -1580,7 +1580,7 @@ Class that wraps a #GObject for Validate checks</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_pipeline" c:identifier="gst_validate_monitor_get_pipeline">
+      <method name="get_pipeline" c:identifier="gst_validate_monitor_get_pipeline" glib:get-property="pipeline">
         <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-monitor.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-monitor.c">The pipeline in which @monitor
@@ -1624,7 +1624,7 @@ target is in.</doc>
       <property name="object" writable="1" construct-only="1" transfer-ownership="none">
         <type name="GObject.Object"/>
       </property>
-      <property name="pipeline" writable="1" construct="1" transfer-ownership="none">
+      <property name="pipeline" writable="1" construct="1" transfer-ownership="none" getter="get_pipeline">
         <type name="Gst.Pipeline"/>
       </property>
       <property name="validate-parent" writable="1" construct-only="1" transfer-ownership="none">
@@ -1633,7 +1633,7 @@ target is in.</doc>
       <property name="validate-runner" writable="1" construct-only="1" transfer-ownership="none">
         <type name="Runner"/>
       </property>
-      <property name="verbosity" writable="1" transfer-ownership="none">
+      <property name="verbosity" writable="1" transfer-ownership="none" default-value="GST_VALIDATE_VERBOSITY_POSITION">
         <type name="VerbosityFlags"/>
       </property>
       <field name="object">
@@ -1739,11 +1739,11 @@ target is in.</doc>
       </field>
     </record>
     <bitfield name="ObjectSetPropertyFlags" version="1.24" glib:type-name="GstValidateObjectSetPropertyFlags" glib:get-type="gst_validate_object_set_property_flags_get_type" c:type="GstValidateObjectSetPropertyFlags">
-      <member name="optional" value="1" c:identifier="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL" glib:nick="optional">
+      <member name="optional" value="1" c:identifier="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL" glib:nick="optional" glib:name="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_OPTIONAL">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">The property is optional, if it
 is not found on the object, nothing happens.</doc>
       </member>
-      <member name="no_value_check" value="2" c:identifier="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK" glib:nick="no-value-check">
+      <member name="no_value_check" value="2" c:identifier="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK" glib:nick="no-value-check" glib:name="GST_VALIDATE_OBJECT_SET_PROPERTY_FLAGS_NO_VALUE_CHECK">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">Do not check that after
 setting the property, the value is the one we set.</doc>
       </member>
@@ -2255,7 +2255,7 @@ setting the property, the value is the one we set.</doc>
         </parameter>
       </parameters>
     </callback>
-    <record name="OverridePrivate" c:type="GstValidateOverridePrivate" disguised="1">
+    <record name="OverridePrivate" c:type="GstValidateOverridePrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-override.h"/>
     </record>
     <callback name="OverrideQueryHandler" c:type="GstValidateOverrideQueryHandler">
@@ -2561,7 +2561,7 @@ Class that wraps a #GstPad for Validate checks</doc>
         </array>
       </field>
     </record>
-    <record name="PadSeekData" c:type="GstValidatePadSeekData" disguised="1">
+    <record name="PadSeekData" c:type="GstValidatePadSeekData" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-pad-monitor.h"/>
     </record>
     <callback name="ParseVariableFunc" c:type="GstValidateParseVariableFunc">
@@ -2676,6 +2676,36 @@ equations in the action structure.</doc>
         </parameter>
       </parameters>
     </callback>
+    <function-macro name="REPORT" c:identifier="GST_VALIDATE_REPORT" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h">Reports a new issue in the GstValidate reporting system with @m
+as the source of that issue.</doc>
+      <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h"/>
+      <parameters>
+        <parameter name="m">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h">The #GstValidateReporter where the issue happened</doc>
+        </parameter>
+        <parameter name="issue_id">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h">The #GstValidateIssueId of the issue</doc>
+        </parameter>
+        <parameter name="...">
+          <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h">The format of the message describing the issue in a printf
+      format, followed by the parameters.</doc>
+        </parameter>
+      </parameters>
+    </function-macro>
+    <function-macro name="REPORT_ACTION" c:identifier="GST_VALIDATE_REPORT_ACTION" introspectable="0">
+      <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-reporter.h"/>
+      <parameters>
+        <parameter name="m">
+        </parameter>
+        <parameter name="a">
+        </parameter>
+        <parameter name="issue_id">
+        </parameter>
+        <parameter name="...">
+        </parameter>
+      </parameters>
+    </function-macro>
     <function-macro name="REPORT_PRINT_ARGS" c:identifier="GST_VALIDATE_REPORT_PRINT_ARGS" introspectable="0">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h"/>
       <parameters>
@@ -3088,19 +3118,19 @@ You can also use #GST_VALIDATE_REPORT instead.</doc>
       </function>
     </record>
     <enumeration name="ReportLevel" glib:type-name="GstValidateReportLevel" glib:get-type="gst_validate_report_level_get_type" c:type="GstValidateReportLevel">
-      <member name="critical" value="0" c:identifier="GST_VALIDATE_REPORT_LEVEL_CRITICAL" glib:nick="critical">
+      <member name="critical" value="0" c:identifier="GST_VALIDATE_REPORT_LEVEL_CRITICAL" glib:nick="critical" glib:name="GST_VALIDATE_REPORT_LEVEL_CRITICAL">
       </member>
-      <member name="warning" value="1" c:identifier="GST_VALIDATE_REPORT_LEVEL_WARNING" glib:nick="warning">
+      <member name="warning" value="1" c:identifier="GST_VALIDATE_REPORT_LEVEL_WARNING" glib:nick="warning" glib:name="GST_VALIDATE_REPORT_LEVEL_WARNING">
       </member>
-      <member name="issue" value="2" c:identifier="GST_VALIDATE_REPORT_LEVEL_ISSUE" glib:nick="issue">
+      <member name="issue" value="2" c:identifier="GST_VALIDATE_REPORT_LEVEL_ISSUE" glib:nick="issue" glib:name="GST_VALIDATE_REPORT_LEVEL_ISSUE">
       </member>
-      <member name="ignore" value="3" c:identifier="GST_VALIDATE_REPORT_LEVEL_IGNORE" glib:nick="ignore">
+      <member name="ignore" value="3" c:identifier="GST_VALIDATE_REPORT_LEVEL_IGNORE" glib:nick="ignore" glib:name="GST_VALIDATE_REPORT_LEVEL_IGNORE">
       </member>
-      <member name="unknown" value="4" c:identifier="GST_VALIDATE_REPORT_LEVEL_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="4" c:identifier="GST_VALIDATE_REPORT_LEVEL_UNKNOWN" glib:nick="unknown" glib:name="GST_VALIDATE_REPORT_LEVEL_UNKNOWN">
       </member>
-      <member name="expected" value="5" c:identifier="GST_VALIDATE_REPORT_LEVEL_EXPECTED" glib:nick="expected">
+      <member name="expected" value="5" c:identifier="GST_VALIDATE_REPORT_LEVEL_EXPECTED" glib:nick="expected" glib:name="GST_VALIDATE_REPORT_LEVEL_EXPECTED">
       </member>
-      <member name="num_entries" value="6" c:identifier="GST_VALIDATE_REPORT_LEVEL_NUM_ENTRIES" glib:nick="num-entries">
+      <member name="num_entries" value="6" c:identifier="GST_VALIDATE_REPORT_LEVEL_NUM_ENTRIES" glib:nick="num-entries" glib:name="GST_VALIDATE_REPORT_LEVEL_NUM_ENTRIES">
       </member>
       <function name="from_name" c:identifier="gst_validate_report_level_from_name">
         <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-report.h"/>
@@ -3430,26 +3460,26 @@ and levels. No object category / name sets the global level.
 
 Examples: GST_VALIDATE_REPORTING_DETAILS=synthetic,h264parse:all
           GST_VALIDATE_REPORTING_DETAILS=none,h264parse::sink_0:synthetic</doc>
-      <member name="unknown" value="0" c:identifier="GST_VALIDATE_SHOW_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="0" c:identifier="GST_VALIDATE_SHOW_UNKNOWN" glib:nick="unknown" glib:name="GST_VALIDATE_SHOW_UNKNOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">No reporting level known,
 reporting will default to the global reporting level.</doc>
       </member>
-      <member name="none" value="1" c:identifier="GST_VALIDATE_SHOW_NONE" glib:nick="none">
+      <member name="none" value="1" c:identifier="GST_VALIDATE_SHOW_NONE" glib:nick="none" glib:name="GST_VALIDATE_SHOW_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">No debugging level specified or desired. Used to deactivate
  debugging output.</doc>
       </member>
-      <member name="synthetic" value="2" c:identifier="GST_VALIDATE_SHOW_SYNTHETIC" glib:nick="synthetic">
+      <member name="synthetic" value="2" c:identifier="GST_VALIDATE_SHOW_SYNTHETIC" glib:nick="synthetic" glib:name="GST_VALIDATE_SHOW_SYNTHETIC">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">Summary of the issues found, with no
  details.</doc>
       </member>
-      <member name="subchain" value="3" c:identifier="GST_VALIDATE_SHOW_SUBCHAIN" glib:nick="subchain">
+      <member name="subchain" value="3" c:identifier="GST_VALIDATE_SHOW_SUBCHAIN" glib:nick="subchain" glib:name="GST_VALIDATE_SHOW_SUBCHAIN">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">If set as the default level, similar
  issues can be reported multiple times for different subchains.
  If set as the level for a particular object (my_object:subchain), validate
  will report the issues where the object is the first to report an issue for
  a subchain.</doc>
       </member>
-      <member name="monitor" value="4" c:identifier="GST_VALIDATE_SHOW_MONITOR" glib:nick="monitor">
+      <member name="monitor" value="4" c:identifier="GST_VALIDATE_SHOW_MONITOR" glib:nick="monitor" glib:name="GST_VALIDATE_SHOW_MONITOR">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">If set as the default level, all the
 distinct issues for all the monitors will be reported.
 If set as the level for a particular object, all the distinct issues for this object
@@ -3457,16 +3487,16 @@ will be reported.
 Note that if the same issue happens twice on the same object, up until this
 level that issue is only reported once.</doc>
       </member>
-      <member name="all" value="5" c:identifier="GST_VALIDATE_SHOW_ALL" glib:nick="all">
+      <member name="all" value="5" c:identifier="GST_VALIDATE_SHOW_ALL" glib:nick="all" glib:name="GST_VALIDATE_SHOW_ALL">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">All the issues will be reported, even those
 that repeat themselves inside the same object. This can be *very* verbose if
 set globally.</doc>
       </member>
-      <member name="smart" value="6" c:identifier="GST_VALIDATE_SHOW_SMART" glib:nick="smart">
+      <member name="smart" value="6" c:identifier="GST_VALIDATE_SHOW_SMART" glib:nick="smart" glib:name="GST_VALIDATE_SHOW_SMART">
         <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">Sythetic for not fatal issues and detailed for
 others</doc>
       </member>
-      <member name="count" value="7" c:identifier="GST_VALIDATE_SHOW_COUNT" glib:nick="count">
+      <member name="count" value="7" c:identifier="GST_VALIDATE_SHOW_COUNT" glib:nick="count" glib:name="GST_VALIDATE_SHOW_COUNT">
       </member>
     </enumeration>
     <class name="Runner" c:symbol-prefix="runner" c:type="GstValidateRunner" parent="Gst.Tracer" glib:type-name="GstValidateRunner" glib:get-type="gst_validate_runner_get_type" glib:type-struct="RunnerClass">
@@ -3581,7 +3611,7 @@ exit code of the application.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="params" writable="1" construct="1" transfer-ownership="none">
+      <property name="params" writable="1" construct="1" transfer-ownership="none" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
       <field name="object">
@@ -3624,7 +3654,7 @@ exit code of the application.</doc>
         </array>
       </field>
     </record>
-    <record name="RunnerPrivate" c:type="GstValidateRunnerPrivate" disguised="1">
+    <record name="RunnerPrivate" c:type="GstValidateRunnerPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-runner.h"/>
     </record>
     <function-macro name="SCENARIO_EOS_HANDLING_LOCK" c:identifier="GST_VALIDATE_SCENARIO_EOS_HANDLING_LOCK" introspectable="0">
@@ -3765,10 +3795,10 @@ against</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="execute-on-idle" writable="1" transfer-ownership="none">
+      <property name="execute-on-idle" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="handles-states" transfer-ownership="none">
+      <property name="handles-states" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <property name="validate-runner" writable="1" construct-only="1" transfer-ownership="none">
@@ -3821,20 +3851,20 @@ against</doc>
         </array>
       </field>
     </record>
-    <record name="ScenarioPrivate" c:type="GstValidateScenarioPrivate" disguised="1">
+    <record name="ScenarioPrivate" c:type="GstValidateScenarioPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-scenario.h"/>
     </record>
-    <record name="StreamInfo" c:type="GstValidateStreamInfo" disguised="1">
+    <record name="StreamInfo" c:type="GstValidateStreamInfo" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-media-info.h"/>
     </record>
     <bitfield name="StructureResolveVariablesFlags" version="1.20" glib:type-name="GstValidateStructureResolveVariablesFlags" glib:get-type="gst_validate_structure_resolve_variables_flags_get_type" c:type="GstValidateStructureResolveVariablesFlags">
-      <member name="all" value="0" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_ALL" glib:nick="all">
+      <member name="all" value="0" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_ALL" glib:nick="all" glib:name="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_ALL">
       </member>
-      <member name="local_only" value="1" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY" glib:nick="local-only">
+      <member name="local_only" value="1" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY" glib:nick="local-only" glib:name="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_LOCAL_ONLY">
       </member>
-      <member name="no_failure" value="2" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_FAILURE" glib:nick="no-failure">
+      <member name="no_failure" value="2" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_FAILURE" glib:nick="no-failure" glib:name="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_FAILURE">
       </member>
-      <member name="no_expression" value="2" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_EXPRESSION" glib:nick="no-expression">
+      <member name="no_expression" value="2" c:identifier="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_EXPRESSION" glib:nick="no-expression" glib:name="GST_VALIDATE_STRUCTURE_RESOLVE_VARIABLES_NO_EXPRESSION">
       </member>
     </bitfield>
     <constant name="UNKNOWN_BOOL" value="-1" c:type="GST_VALIDATE_UNKNOWN_BOOL">
@@ -3847,17 +3877,17 @@ against</doc>
     </constant>
     <bitfield name="VerbosityFlags" glib:type-name="GstValidateVerbosityFlags" glib:get-type="gst_validate_verbosity_flags_get_type" c:type="GstValidateVerbosityFlags">
       <doc xml:space="preserve" filename="../subprojects/gst-devtools/validate/gst/validate/gst-validate-enums.h">Defines the level of verbosity of -validate (ie, printing on stdout).</doc>
-      <member name="none" value="0" c:identifier="GST_VALIDATE_VERBOSITY_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_VALIDATE_VERBOSITY_NONE" glib:nick="none" glib:name="GST_VALIDATE_VERBOSITY_NONE">
       </member>
-      <member name="position" value="2" c:identifier="GST_VALIDATE_VERBOSITY_POSITION" glib:nick="position">
+      <member name="position" value="2" c:identifier="GST_VALIDATE_VERBOSITY_POSITION" glib:nick="position" glib:name="GST_VALIDATE_VERBOSITY_POSITION">
       </member>
-      <member name="messages" value="4" c:identifier="GST_VALIDATE_VERBOSITY_MESSAGES" glib:nick="messages">
+      <member name="messages" value="4" c:identifier="GST_VALIDATE_VERBOSITY_MESSAGES" glib:nick="messages" glib:name="GST_VALIDATE_VERBOSITY_MESSAGES">
       </member>
-      <member name="props_changes" value="8" c:identifier="GST_VALIDATE_VERBOSITY_PROPS_CHANGES" glib:nick="props-changes">
+      <member name="props_changes" value="8" c:identifier="GST_VALIDATE_VERBOSITY_PROPS_CHANGES" glib:nick="props-changes" glib:name="GST_VALIDATE_VERBOSITY_PROPS_CHANGES">
       </member>
-      <member name="new_elements" value="16" c:identifier="GST_VALIDATE_VERBOSITY_NEW_ELEMENTS" glib:nick="new-elements">
+      <member name="new_elements" value="16" c:identifier="GST_VALIDATE_VERBOSITY_NEW_ELEMENTS" glib:nick="new-elements" glib:name="GST_VALIDATE_VERBOSITY_NEW_ELEMENTS">
       </member>
-      <member name="all" value="30" c:identifier="GST_VALIDATE_VERBOSITY_ALL" glib:nick="all">
+      <member name="all" value="30" c:identifier="GST_VALIDATE_VERBOSITY_ALL" glib:nick="all" glib:name="GST_VALIDATE_VERBOSITY_ALL">
       </member>
     </bitfield>
     <function name="abort" c:identifier="gst_validate_abort" introspectable="0">

@@ -109,10 +109,10 @@ new frame.</doc>
           </instance-parameter>
         </parameters>
       </virtual-method>
-      <property name="shade-amount" writable="1" transfer-ownership="none">
+      <property name="shade-amount" writable="1" transfer-ownership="none" default-value="657930">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="shader" writable="1" transfer-ownership="none">
+      <property name="shader" writable="1" transfer-ownership="none" default-value="GST_AUDIO_VISUALIZER_SHADER_FADE">
         <type name="AudioVisualizerShader"/>
       </property>
       <field name="parent">
@@ -185,39 +185,39 @@ new frame.</doc>
         </callback>
       </field>
     </record>
-    <record name="AudioVisualizerPrivate" c:type="GstAudioVisualizerPrivate" disguised="1">
+    <record name="AudioVisualizerPrivate" c:type="GstAudioVisualizerPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h"/>
     </record>
     <enumeration name="AudioVisualizerShader" glib:type-name="GstAudioVisualizerShader" glib:get-type="gst_audio_visualizer_shader_get_type" c:type="GstAudioVisualizerShader">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">Different types of supported background shading functions.</doc>
-      <member name="none" value="0" c:identifier="GST_AUDIO_VISUALIZER_SHADER_NONE" glib:nick="none">
+      <member name="none" value="0" c:identifier="GST_AUDIO_VISUALIZER_SHADER_NONE" glib:nick="none" glib:name="GST_AUDIO_VISUALIZER_SHADER_NONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">no shading</doc>
       </member>
-      <member name="fade" value="1" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE" glib:nick="fade">
+      <member name="fade" value="1" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE" glib:nick="fade" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">plain fading</doc>
       </member>
-      <member name="fade_and_move_up" value="2" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_UP" glib:nick="fade-and-move-up">
+      <member name="fade_and_move_up" value="2" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_UP" glib:nick="fade-and-move-up" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_UP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move up</doc>
       </member>
-      <member name="fade_and_move_down" value="3" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN" glib:nick="fade-and-move-down">
+      <member name="fade_and_move_down" value="3" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN" glib:nick="fade-and-move-down" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_DOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move down</doc>
       </member>
-      <member name="fade_and_move_left" value="4" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_LEFT" glib:nick="fade-and-move-left">
+      <member name="fade_and_move_left" value="4" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_LEFT" glib:nick="fade-and-move-left" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_LEFT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move left</doc>
       </member>
-      <member name="fade_and_move_right" value="5" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_RIGHT" glib:nick="fade-and-move-right">
+      <member name="fade_and_move_right" value="5" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_RIGHT" glib:nick="fade-and-move-right" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_RIGHT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move right</doc>
       </member>
-      <member name="fade_and_move_horiz_out" value="6" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT" glib:nick="fade-and-move-horiz-out">
+      <member name="fade_and_move_horiz_out" value="6" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT" glib:nick="fade-and-move-horiz-out" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_OUT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move horizontally out</doc>
       </member>
-      <member name="fade_and_move_horiz_in" value="7" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_IN" glib:nick="fade-and-move-horiz-in">
+      <member name="fade_and_move_horiz_in" value="7" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_IN" glib:nick="fade-and-move-horiz-in" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_HORIZ_IN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move horizontally in</doc>
       </member>
-      <member name="fade_and_move_vert_out" value="8" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_OUT" glib:nick="fade-and-move-vert-out">
+      <member name="fade_and_move_vert_out" value="8" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_OUT" glib:nick="fade-and-move-vert-out" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_OUT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move vertically out</doc>
       </member>
-      <member name="fade_and_move_vert_in" value="9" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_IN" glib:nick="fade-and-move-vert-in">
+      <member name="fade_and_move_vert_in" value="9" c:identifier="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_IN" glib:nick="fade-and-move-vert-in" glib:name="GST_AUDIO_VISUALIZER_SHADER_FADE_AND_MOVE_VERT_IN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstaudiovisualizer.h">fade and move vertically in</doc>
       </member>
     </enumeration>
@@ -487,7 +487,7 @@ pending URIS (if any).</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="timeout" writable="1" construct="1" transfer-ownership="none">
+      <property name="timeout" writable="1" construct="1" transfer-ownership="none" default-value="15000000000">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.c">The duration (in nanoseconds) after which the discovery of an individual
 URI will timeout.
 
@@ -495,7 +495,7 @@ If the discovery of a URI times out, the %GST_DISCOVERER_TIMEOUT will be
 set on the result flags.</doc>
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="use-cache" writable="1" construct="1" transfer-ownership="none">
+      <property name="use-cache" writable="1" construct="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="parent">
@@ -1115,47 +1115,47 @@ what needs to be serialized.</doc>
         </parameters>
       </method>
     </class>
-    <record name="DiscovererPrivate" c:type="GstDiscovererPrivate" disguised="1">
+    <record name="DiscovererPrivate" c:type="GstDiscovererPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h"/>
     </record>
     <enumeration name="DiscovererResult" glib:type-name="GstDiscovererResult" glib:get-type="gst_discoverer_result_get_type" c:type="GstDiscovererResult">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Result values for the discovery process.</doc>
-      <member name="ok" value="0" c:identifier="GST_DISCOVERER_OK" glib:nick="ok">
+      <member name="ok" value="0" c:identifier="GST_DISCOVERER_OK" glib:nick="ok" glib:name="GST_DISCOVERER_OK">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">The discovery was successful</doc>
       </member>
-      <member name="uri_invalid" value="1" c:identifier="GST_DISCOVERER_URI_INVALID" glib:nick="uri-invalid">
+      <member name="uri_invalid" value="1" c:identifier="GST_DISCOVERER_URI_INVALID" glib:nick="uri-invalid" glib:name="GST_DISCOVERER_URI_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the URI is invalid</doc>
       </member>
-      <member name="error" value="2" c:identifier="GST_DISCOVERER_ERROR" glib:nick="error">
+      <member name="error" value="2" c:identifier="GST_DISCOVERER_ERROR" glib:nick="error" glib:name="GST_DISCOVERER_ERROR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">an error happened and the GError is set</doc>
       </member>
-      <member name="timeout" value="3" c:identifier="GST_DISCOVERER_TIMEOUT" glib:nick="timeout">
+      <member name="timeout" value="3" c:identifier="GST_DISCOVERER_TIMEOUT" glib:nick="timeout" glib:name="GST_DISCOVERER_TIMEOUT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the discovery timed-out</doc>
       </member>
-      <member name="busy" value="4" c:identifier="GST_DISCOVERER_BUSY" glib:nick="busy">
+      <member name="busy" value="4" c:identifier="GST_DISCOVERER_BUSY" glib:nick="busy" glib:name="GST_DISCOVERER_BUSY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">the discoverer was already discovering a file</doc>
       </member>
-      <member name="missing_plugins" value="5" c:identifier="GST_DISCOVERER_MISSING_PLUGINS" glib:nick="missing-plugins">
+      <member name="missing_plugins" value="5" c:identifier="GST_DISCOVERER_MISSING_PLUGINS" glib:nick="missing-plugins" glib:name="GST_DISCOVERER_MISSING_PLUGINS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Some plugins are missing for full discovery</doc>
       </member>
     </enumeration>
     <bitfield name="DiscovererSerializeFlags" version="1.6" glib:type-name="GstDiscovererSerializeFlags" glib:get-type="gst_discoverer_serialize_flags_get_type" c:type="GstDiscovererSerializeFlags">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">You can use these flags to control what is serialized by
 gst_discoverer_info_to_variant()</doc>
-      <member name="basic" value="0" c:identifier="GST_DISCOVERER_SERIALIZE_BASIC" glib:nick="basic">
+      <member name="basic" value="0" c:identifier="GST_DISCOVERER_SERIALIZE_BASIC" glib:nick="basic" glib:name="GST_DISCOVERER_SERIALIZE_BASIC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Serialize only basic information, excluding
 caps, tags and miscellaneous information</doc>
       </member>
-      <member name="caps" value="1" c:identifier="GST_DISCOVERER_SERIALIZE_CAPS" glib:nick="caps">
+      <member name="caps" value="1" c:identifier="GST_DISCOVERER_SERIALIZE_CAPS" glib:nick="caps" glib:name="GST_DISCOVERER_SERIALIZE_CAPS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Serialize the caps for each stream</doc>
       </member>
-      <member name="tags" value="2" c:identifier="GST_DISCOVERER_SERIALIZE_TAGS" glib:nick="tags">
+      <member name="tags" value="2" c:identifier="GST_DISCOVERER_SERIALIZE_TAGS" glib:nick="tags" glib:name="GST_DISCOVERER_SERIALIZE_TAGS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Serialize the tags for each stream</doc>
       </member>
-      <member name="misc" value="4" c:identifier="GST_DISCOVERER_SERIALIZE_MISC" glib:nick="misc">
+      <member name="misc" value="4" c:identifier="GST_DISCOVERER_SERIALIZE_MISC" glib:nick="misc" glib:name="GST_DISCOVERER_SERIALIZE_MISC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Serialize miscellaneous information for each stream</doc>
       </member>
-      <member name="all" value="7" c:identifier="GST_DISCOVERER_SERIALIZE_ALL" glib:nick="all">
+      <member name="all" value="7" c:identifier="GST_DISCOVERER_SERIALIZE_ALL" glib:nick="all" glib:name="GST_DISCOVERER_SERIALIZE_ALL">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/gstdiscoverer.h">Serialize all the available info, including
 caps, tags and miscellaneous information</doc>
       </member>
@@ -1596,7 +1596,7 @@ NULL. See gst_encoding_profile_get_restriction() for more details.</doc>
         </parameters>
       </constructor>
     </class>
-    <record name="EncodingAudioProfileClass" c:type="GstEncodingAudioProfileClass" disguised="1" glib:is-gtype-struct-for="EncodingAudioProfile">
+    <record name="EncodingAudioProfileClass" c:type="GstEncodingAudioProfileClass" disguised="1" opaque="1" glib:is-gtype-struct-for="EncodingAudioProfile">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
     </record>
     <class name="EncodingContainerProfile" c:symbol-prefix="encoding_container_profile" c:type="GstEncodingContainerProfile" parent="EncodingProfile" glib:type-name="GstEncodingContainerProfile" glib:get-type="gst_encoding_container_profile_get_type" glib:type-struct="EncodingContainerProfileClass">
@@ -1687,7 +1687,7 @@ the list of contained #GstEncodingProfile.</doc>
         </parameters>
       </method>
     </class>
-    <record name="EncodingContainerProfileClass" c:type="GstEncodingContainerProfileClass" disguised="1" glib:is-gtype-struct-for="EncodingContainerProfile">
+    <record name="EncodingContainerProfileClass" c:type="GstEncodingContainerProfileClass" disguised="1" opaque="1" glib:is-gtype-struct-for="EncodingContainerProfile">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
     </record>
     <class name="EncodingProfile" c:symbol-prefix="encoding_profile" c:type="GstEncodingProfile" parent="GObject.Object" glib:type-name="GstEncodingProfile" glib:get-type="gst_encoding_profile_get_type" glib:type-struct="EncodingProfileClass">
@@ -1791,7 +1791,7 @@ later during the encoding.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <method name="get_element_properties" c:identifier="gst_encoding_profile_get_element_properties" version="1.20">
+      <method name="get_element_properties" c:identifier="gst_encoding_profile_get_element_properties" glib:get-property="element-properties" version="1.20">
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
         <return-value transfer-ownership="full" nullable="1">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">The properties that are going to be set on the underlying element</doc>
@@ -2012,7 +2012,7 @@ during the encoding</doc>
           </parameter>
         </parameters>
       </method>
-      <method name="set_element_properties" c:identifier="gst_encoding_profile_set_element_properties" version="1.20">
+      <method name="set_element_properties" c:identifier="gst_encoding_profile_set_element_properties" glib:set-property="element-properties" version="1.20">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">This allows setting the muxing/encoding element properties.
 
 **Set properties generically**
@@ -2226,7 +2226,7 @@ serialization format".</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="element-properties" version="1.20" writable="1" transfer-ownership="none">
+      <property name="element-properties" version="1.20" writable="1" transfer-ownership="none" setter="set_element_properties" getter="get_element_properties">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.c">A #GstStructure defining the properties to be set to the element
 the profile represents.
 
@@ -2241,7 +2241,7 @@ element-properties,row-mt=true, end-usage=vbr
         <type name="Gst.Caps"/>
       </property>
     </class>
-    <record name="EncodingProfileClass" c:type="GstEncodingProfileClass" disguised="1" glib:is-gtype-struct-for="EncodingProfile">
+    <record name="EncodingProfileClass" c:type="GstEncodingProfileClass" disguised="1" opaque="1" glib:is-gtype-struct-for="EncodingProfile">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
     </record>
     <class name="EncodingTarget" c:symbol-prefix="encoding_target" c:type="GstEncodingTarget" parent="GObject.Object" glib:type-name="GstEncodingTarget" glib:get-type="gst_encoding_target_get_type">
@@ -2582,7 +2582,7 @@ constance framerate.</doc>
         </parameters>
       </method>
     </class>
-    <record name="EncodingVideoProfileClass" c:type="GstEncodingVideoProfileClass" disguised="1" glib:is-gtype-struct-for="EncodingVideoProfile">
+    <record name="EncodingVideoProfileClass" c:type="GstEncodingVideoProfileClass" disguised="1" opaque="1" glib:is-gtype-struct-for="EncodingVideoProfile">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/encoding-profile.h"/>
     </record>
     <function-macro name="IS_DISCOVERER" c:identifier="GST_IS_DISCOVERER" introspectable="0">
@@ -2690,7 +2690,7 @@ constance framerate.</doc>
         </parameter>
       </parameters>
     </function-macro>
-    <record name="InstallPluginsContext" c:type="GstInstallPluginsContext" glib:type-name="GstInstallPluginsContext" glib:get-type="gst_install_plugins_context_get_type" c:symbol-prefix="install_plugins_context">
+    <record name="InstallPluginsContext" c:type="GstInstallPluginsContext" opaque="1" glib:type-name="GstInstallPluginsContext" glib:get-type="gst_install_plugins_context_get_type" c:symbol-prefix="install_plugins_context">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">Opaque context structure for the plugin installation. Use the provided
 API to set details on it.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h"/>
@@ -2874,49 +2874,49 @@ gst_install_plugins_sync(), and also the result code passed to the
 
 These codes indicate success or failure of starting an external installer
 program and to what extent the requested plugins could be installed.</doc>
-      <member name="success" value="0" c:identifier="GST_INSTALL_PLUGINS_SUCCESS" glib:nick="success">
+      <member name="success" value="0" c:identifier="GST_INSTALL_PLUGINS_SUCCESS" glib:nick="success" glib:name="GST_INSTALL_PLUGINS_SUCCESS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">all of the requested plugins could be
     installed</doc>
       </member>
-      <member name="not_found" value="1" c:identifier="GST_INSTALL_PLUGINS_NOT_FOUND" glib:nick="not-found">
+      <member name="not_found" value="1" c:identifier="GST_INSTALL_PLUGINS_NOT_FOUND" glib:nick="not-found" glib:name="GST_INSTALL_PLUGINS_NOT_FOUND">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">no appropriate installation candidate for
     any of the requested plugins could be found. Only return this if nothing
     has been installed. Return #GST_INSTALL_PLUGINS_PARTIAL_SUCCESS if
     some (but not all) of the requested plugins could be installed.</doc>
       </member>
-      <member name="error" value="2" c:identifier="GST_INSTALL_PLUGINS_ERROR" glib:nick="error">
+      <member name="error" value="2" c:identifier="GST_INSTALL_PLUGINS_ERROR" glib:nick="error" glib:name="GST_INSTALL_PLUGINS_ERROR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">an error occurred during the installation. If
     this happens, the  user has already seen an error message and another
     one should not be displayed</doc>
       </member>
-      <member name="partial_success" value="3" c:identifier="GST_INSTALL_PLUGINS_PARTIAL_SUCCESS" glib:nick="partial-success">
+      <member name="partial_success" value="3" c:identifier="GST_INSTALL_PLUGINS_PARTIAL_SUCCESS" glib:nick="partial-success" glib:name="GST_INSTALL_PLUGINS_PARTIAL_SUCCESS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">some of the requested plugins could
     be installed, but not all</doc>
       </member>
-      <member name="user_abort" value="4" c:identifier="GST_INSTALL_PLUGINS_USER_ABORT" glib:nick="user-abort">
+      <member name="user_abort" value="4" c:identifier="GST_INSTALL_PLUGINS_USER_ABORT" glib:nick="user-abort" glib:name="GST_INSTALL_PLUGINS_USER_ABORT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">the user has aborted the installation</doc>
       </member>
-      <member name="crashed" value="100" c:identifier="GST_INSTALL_PLUGINS_CRASHED" glib:nick="crashed">
+      <member name="crashed" value="100" c:identifier="GST_INSTALL_PLUGINS_CRASHED" glib:nick="crashed" glib:name="GST_INSTALL_PLUGINS_CRASHED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">the installer had an unclean exit code
     (ie. death by signal)</doc>
       </member>
-      <member name="invalid" value="101" c:identifier="GST_INSTALL_PLUGINS_INVALID" glib:nick="invalid">
+      <member name="invalid" value="101" c:identifier="GST_INSTALL_PLUGINS_INVALID" glib:nick="invalid" glib:name="GST_INSTALL_PLUGINS_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">the helper returned an invalid status code</doc>
       </member>
-      <member name="started_ok" value="200" c:identifier="GST_INSTALL_PLUGINS_STARTED_OK" glib:nick="started-ok">
+      <member name="started_ok" value="200" c:identifier="GST_INSTALL_PLUGINS_STARTED_OK" glib:nick="started-ok" glib:name="GST_INSTALL_PLUGINS_STARTED_OK">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">returned by gst_install_plugins_async() to
     indicate that everything went fine so far and the provided callback
     will be called with the result of the installation later</doc>
       </member>
-      <member name="internal_failure" value="201" c:identifier="GST_INSTALL_PLUGINS_INTERNAL_FAILURE" glib:nick="internal-failure">
+      <member name="internal_failure" value="201" c:identifier="GST_INSTALL_PLUGINS_INTERNAL_FAILURE" glib:nick="internal-failure" glib:name="GST_INSTALL_PLUGINS_INTERNAL_FAILURE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">some internal failure has
     occurred when trying to start the installer</doc>
       </member>
-      <member name="helper_missing" value="202" c:identifier="GST_INSTALL_PLUGINS_HELPER_MISSING" glib:nick="helper-missing">
+      <member name="helper_missing" value="202" c:identifier="GST_INSTALL_PLUGINS_HELPER_MISSING" glib:nick="helper-missing" glib:name="GST_INSTALL_PLUGINS_HELPER_MISSING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">the helper script to call the
     actual installer is not installed</doc>
       </member>
-      <member name="install_in_progress" value="203" c:identifier="GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS" glib:nick="install-in-progress">
+      <member name="install_in_progress" value="203" c:identifier="GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS" glib:nick="install-in-progress" glib:name="GST_INSTALL_PLUGINS_INSTALL_IN_PROGRESS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/install-plugins.h">a previously-started plugin
     installation is still in progress, try again later</doc>
       </member>
@@ -2969,33 +2969,33 @@ Actual releases have 0, GIT versions have 1, prerelease versions have 2-...</doc
     <bitfield name="PbUtilsCapsDescriptionFlags" version="1.20" glib:type-name="GstPbUtilsCapsDescriptionFlags" glib:get-type="gst_pb_utils_caps_description_flags_get_type" c:type="GstPbUtilsCapsDescriptionFlags">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Flags that are returned by gst_pb_utils_get_caps_description_flags() and
 describe the format of the caps.</doc>
-      <member name="container" value="1" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_CONTAINER" glib:nick="container">
+      <member name="container" value="1" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_CONTAINER" glib:nick="container" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_CONTAINER">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe a container format.</doc>
       </member>
-      <member name="audio" value="2" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_AUDIO" glib:nick="audio">
+      <member name="audio" value="2" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_AUDIO" glib:nick="audio" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_AUDIO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe an audio format, or a
     container format that can store audio.</doc>
       </member>
-      <member name="video" value="4" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_VIDEO" glib:nick="video">
+      <member name="video" value="4" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_VIDEO" glib:nick="video" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_VIDEO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe an video format, or a
     container format that can store video.</doc>
       </member>
-      <member name="image" value="8" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_IMAGE" glib:nick="image">
+      <member name="image" value="8" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_IMAGE" glib:nick="image" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_IMAGE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe an image format, or a
     container format that can store image.</doc>
       </member>
-      <member name="subtitle" value="16" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE" glib:nick="subtitle">
+      <member name="subtitle" value="16" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE" glib:nick="subtitle" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_SUBTITLE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe an subtitle format, or a
     container format that can store subtitles.</doc>
       </member>
-      <member name="tag" value="32" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_TAG" glib:nick="tag">
+      <member name="tag" value="32" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_TAG" glib:nick="tag" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_TAG">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Container format is a tags container.</doc>
       </member>
-      <member name="generic" value="64" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_GENERIC" glib:nick="generic">
+      <member name="generic" value="64" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_GENERIC" glib:nick="generic" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_GENERIC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Container format can store any kind of
     stream type.</doc>
       </member>
-      <member name="metadata" value="128" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_METADATA" version="1.22" glib:nick="metadata">
+      <member name="metadata" value="128" c:identifier="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_METADATA" version="1.22" glib:nick="metadata" glib:name="GST_PBUTILS_CAPS_DESCRIPTION_FLAG_METADATA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/pbutils/descriptions.h">Caps describe a metadata format, or a container format that can store
 metadata.</doc>
       </member>

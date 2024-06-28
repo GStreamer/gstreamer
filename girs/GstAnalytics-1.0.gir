@@ -200,6 +200,9 @@ have a static lifetime (never be freed).</doc>
         <type name="utf8" c:type="const char*"/>
       </field>
       <field name="mtd_meta_transform">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">A pointer to a function that will be called
+when the containing meta is transform to potentially copy the data
+into a new Mtd into the new meta.</doc>
         <callback name="mtd_meta_transform">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
           <return-value transfer-ownership="none">
@@ -225,6 +228,9 @@ have a static lifetime (never be freed).</doc>
         </callback>
       </field>
       <field name="mtd_meta_clear">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">A pointer to a function that will be called when the
+containing meta is cleared to potetially do cleanup (ex. _unref or release)
+resources it was using.</doc>
         <callback name="mtd_meta_clear">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
           <return-value transfer-ownership="none">
@@ -354,7 +360,7 @@ identified by @id is stored.</doc>
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">Only use for criteria.</doc>
       </member>
     </bitfield>
-    <record name="RelationMeta" c:type="GstAnalyticsRelationMeta" disguised="1" version="1.24">
+    <record name="RelationMeta" c:type="GstAnalyticsRelationMeta" disguised="1" opaque="1" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h">An opaque #GstMeta that can be used to hold various types of results
 from analysis processes.
 

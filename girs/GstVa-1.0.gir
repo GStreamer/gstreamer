@@ -528,7 +528,7 @@ GstVaDisplay descendants.</doc>
           </instance-parameter>
         </parameters>
       </method>
-      <property name="description" transfer-ownership="none">
+      <property name="description" transfer-ownership="none" default-value="NULL">
         <type name="utf8" c:type="gchar*"/>
       </property>
       <property name="va-display" writable="1" construct-only="1" transfer-ownership="none">
@@ -582,11 +582,11 @@ and operate the device in @path.</doc>
           </parameter>
         </parameters>
       </constructor>
-      <property name="path" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="path" writable="1" construct-only="1" transfer-ownership="none" default-value="/dev/dri/renderD128">
         <type name="utf8" c:type="gchar*"/>
       </property>
     </class>
-    <record name="VaDisplayDrmClass" c:type="GstVaDisplayDrmClass" disguised="1" glib:is-gtype-struct-for="VaDisplayDrm" version="1.20">
+    <record name="VaDisplayDrmClass" c:type="GstVaDisplayDrmClass" disguised="1" opaque="1" glib:is-gtype-struct-for="VaDisplayDrm" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/va_fwd.h"/>
     </record>
     <class name="VaDisplayWrapped" c:symbol-prefix="va_display_wrapped" c:type="GstVaDisplayWrapped" version="1.20" parent="VaDisplay" glib:type-name="GstVaDisplayWrapped" glib:get-type="gst_va_display_wrapped_get_type" glib:type-struct="VaDisplayWrappedClass">
@@ -614,7 +614,7 @@ pipeline is not in NULL state.</doc>
         </parameters>
       </constructor>
     </class>
-    <record name="VaDisplayWrappedClass" c:type="GstVaDisplayWrappedClass" disguised="1" glib:is-gtype-struct-for="VaDisplayWrapped" version="1.20">
+    <record name="VaDisplayWrappedClass" c:type="GstVaDisplayWrappedClass" disguised="1" opaque="1" glib:is-gtype-struct-for="VaDisplayWrapped" version="1.20">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/va_fwd.h"/>
     </record>
     <class name="VaDmabufAllocator" c:symbol-prefix="va_dmabuf_allocator" version="1.22" parent="Gst.Allocator" glib:type-name="GstVaDmabufAllocator" glib:get-type="gst_va_dmabuf_allocator_get_type">
@@ -742,13 +742,13 @@ later it populates the @buffer with those DMABufs.</doc>
       </function>
     </class>
     <enumeration name="VaFeature" version="1.22" glib:type-name="GstVaFeature" glib:get-type="gst_va_feature_get_type" c:type="GstVaFeature">
-      <member name="disabled" value="0" c:identifier="GST_VA_FEATURE_DISABLED" glib:nick="disabled">
+      <member name="disabled" value="0" c:identifier="GST_VA_FEATURE_DISABLED" glib:nick="disabled" glib:name="GST_VA_FEATURE_DISABLED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstva.h">The feature is disabled.</doc>
       </member>
-      <member name="enabled" value="1" c:identifier="GST_VA_FEATURE_ENABLED" glib:nick="enabled">
+      <member name="enabled" value="1" c:identifier="GST_VA_FEATURE_ENABLED" glib:nick="enabled" glib:name="GST_VA_FEATURE_ENABLED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstva.h">The feature is enabled.</doc>
       </member>
-      <member name="auto" value="2" c:identifier="GST_VA_FEATURE_AUTO" glib:nick="auto">
+      <member name="auto" value="2" c:identifier="GST_VA_FEATURE_AUTO" glib:nick="auto" glib:name="GST_VA_FEATURE_AUTO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstva.h">The feature is enabled automatically.</doc>
       </member>
     </enumeration>
@@ -1037,7 +1037,7 @@ to it.
         </parameter>
       </parameters>
     </function>
-    <function name="va_dmabuf_memories_setup" c:identifier="gst_va_dmabuf_memories_setup" version="1.22" introspectable="0">
+    <function name="va_dmabuf_memories_setup" c:identifier="gst_va_dmabuf_memories_setup" version="1.22">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">It imports the array of @mem, representing a single frame, into a
 VASurfaceID and it's attached into every @mem.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.h"/>
@@ -1066,7 +1066,7 @@ VASurfaceID and it's attached into every @mem.</doc>
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/va/gstvaallocator.c">array of
     DMABuf file descriptors.</doc>
           <array zero-terminated="0" c:type="uintptr_t*" fixed-size="4">
-            <type c:type="uintptr_t"/>
+            <type name="guintptr"/>
           </array>
         </parameter>
         <parameter name="offset" transfer-ownership="none">

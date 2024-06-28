@@ -318,47 +318,47 @@ gst_rtcp_buffer_validate_reduced().</doc>
     </record>
     <enumeration name="RTCPFBType" glib:type-name="GstRTCPFBType" glib:get-type="gst_rtcpfb_type_get_type" c:type="GstRTCPFBType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Different types of feedback messages.</doc>
-      <member name="fb_type_invalid" value="0" c:identifier="GST_RTCP_FB_TYPE_INVALID" glib:nick="fb-type-invalid">
+      <member name="fb_type_invalid" value="0" c:identifier="GST_RTCP_FB_TYPE_INVALID" glib:nick="fb-type-invalid" glib:name="GST_RTCP_FB_TYPE_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Invalid type</doc>
       </member>
-      <member name="rtpfb_type_nack" value="1" c:identifier="GST_RTCP_RTPFB_TYPE_NACK" glib:nick="rtpfb-type-nack">
+      <member name="rtpfb_type_nack" value="1" c:identifier="GST_RTCP_RTPFB_TYPE_NACK" glib:nick="rtpfb-type-nack" glib:name="GST_RTCP_RTPFB_TYPE_NACK">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Generic NACK</doc>
       </member>
-      <member name="rtpfb_type_tmmbr" value="3" c:identifier="GST_RTCP_RTPFB_TYPE_TMMBR" glib:nick="rtpfb-type-tmmbr">
+      <member name="rtpfb_type_tmmbr" value="3" c:identifier="GST_RTCP_RTPFB_TYPE_TMMBR" glib:nick="rtpfb-type-tmmbr" glib:name="GST_RTCP_RTPFB_TYPE_TMMBR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Temporary Maximum Media Stream Bit Rate Request</doc>
       </member>
-      <member name="rtpfb_type_tmmbn" value="4" c:identifier="GST_RTCP_RTPFB_TYPE_TMMBN" glib:nick="rtpfb-type-tmmbn">
+      <member name="rtpfb_type_tmmbn" value="4" c:identifier="GST_RTCP_RTPFB_TYPE_TMMBN" glib:nick="rtpfb-type-tmmbn" glib:name="GST_RTCP_RTPFB_TYPE_TMMBN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Temporary Maximum Media Stream Bit Rate
    Notification</doc>
       </member>
-      <member name="rtpfb_type_rtcp_sr_req" value="5" c:identifier="GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ" glib:nick="rtpfb-type-rtcp-sr-req">
+      <member name="rtpfb_type_rtcp_sr_req" value="5" c:identifier="GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ" glib:nick="rtpfb-type-rtcp-sr-req" glib:name="GST_RTCP_RTPFB_TYPE_RTCP_SR_REQ">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Request an SR packet for early
    synchronization</doc>
       </member>
-      <member name="rtpfb_type_twcc" value="15" c:identifier="GST_RTCP_RTPFB_TYPE_TWCC" glib:nick="rtpfb-type-twcc">
+      <member name="rtpfb_type_twcc" value="15" c:identifier="GST_RTCP_RTPFB_TYPE_TWCC" glib:nick="rtpfb-type-twcc" glib:name="GST_RTCP_RTPFB_TYPE_TWCC">
       </member>
-      <member name="psfb_type_pli" value="1" c:identifier="GST_RTCP_PSFB_TYPE_PLI" glib:nick="psfb-type-pli">
+      <member name="psfb_type_pli" value="1" c:identifier="GST_RTCP_PSFB_TYPE_PLI" glib:nick="psfb-type-pli" glib:name="GST_RTCP_PSFB_TYPE_PLI">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Picture Loss Indication</doc>
       </member>
-      <member name="psfb_type_sli" value="2" c:identifier="GST_RTCP_PSFB_TYPE_SLI" glib:nick="psfb-type-sli">
+      <member name="psfb_type_sli" value="2" c:identifier="GST_RTCP_PSFB_TYPE_SLI" glib:nick="psfb-type-sli" glib:name="GST_RTCP_PSFB_TYPE_SLI">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Slice Loss Indication</doc>
       </member>
-      <member name="psfb_type_rpsi" value="3" c:identifier="GST_RTCP_PSFB_TYPE_RPSI" glib:nick="psfb-type-rpsi">
+      <member name="psfb_type_rpsi" value="3" c:identifier="GST_RTCP_PSFB_TYPE_RPSI" glib:nick="psfb-type-rpsi" glib:name="GST_RTCP_PSFB_TYPE_RPSI">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Reference Picture Selection Indication</doc>
       </member>
-      <member name="psfb_type_afb" value="15" c:identifier="GST_RTCP_PSFB_TYPE_AFB" glib:nick="psfb-type-afb">
+      <member name="psfb_type_afb" value="15" c:identifier="GST_RTCP_PSFB_TYPE_AFB" glib:nick="psfb-type-afb" glib:name="GST_RTCP_PSFB_TYPE_AFB">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Application layer Feedback</doc>
       </member>
-      <member name="psfb_type_fir" value="4" c:identifier="GST_RTCP_PSFB_TYPE_FIR" glib:nick="psfb-type-fir">
+      <member name="psfb_type_fir" value="4" c:identifier="GST_RTCP_PSFB_TYPE_FIR" glib:nick="psfb-type-fir" glib:name="GST_RTCP_PSFB_TYPE_FIR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Full Intra Request Command</doc>
       </member>
-      <member name="psfb_type_tstr" value="5" c:identifier="GST_RTCP_PSFB_TYPE_TSTR" glib:nick="psfb-type-tstr">
+      <member name="psfb_type_tstr" value="5" c:identifier="GST_RTCP_PSFB_TYPE_TSTR" glib:nick="psfb-type-tstr" glib:name="GST_RTCP_PSFB_TYPE_TSTR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Temporal-Spatial Trade-off Request</doc>
       </member>
-      <member name="psfb_type_tstn" value="6" c:identifier="GST_RTCP_PSFB_TYPE_TSTN" glib:nick="psfb-type-tstn">
+      <member name="psfb_type_tstn" value="6" c:identifier="GST_RTCP_PSFB_TYPE_TSTN" glib:nick="psfb-type-tstn" glib:name="GST_RTCP_PSFB_TYPE_TSTN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Temporal-Spatial Trade-off Notification</doc>
       </member>
-      <member name="psfb_type_vbcn" value="7" c:identifier="GST_RTCP_PSFB_TYPE_VBCN" glib:nick="psfb-type-vbcn">
+      <member name="psfb_type_vbcn" value="7" c:identifier="GST_RTCP_PSFB_TYPE_VBCN" glib:nick="psfb-type-vbcn" glib:name="GST_RTCP_PSFB_TYPE_VBCN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Video Back Channel Message</doc>
       </member>
     </enumeration>
@@ -1959,113 +1959,113 @@ is set as zero, @lost_packets or @dup_packets will be zero.</doc>
     </record>
     <enumeration name="RTCPSDESType" glib:type-name="GstRTCPSDESType" glib:get-type="gst_rtcpsdes_type_get_type" c:type="GstRTCPSDESType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Different types of SDES content.</doc>
-      <member name="invalid" value="-1" c:identifier="GST_RTCP_SDES_INVALID" glib:nick="invalid">
+      <member name="invalid" value="-1" c:identifier="GST_RTCP_SDES_INVALID" glib:nick="invalid" glib:name="GST_RTCP_SDES_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Invalid SDES entry</doc>
       </member>
-      <member name="end" value="0" c:identifier="GST_RTCP_SDES_END" glib:nick="end">
+      <member name="end" value="0" c:identifier="GST_RTCP_SDES_END" glib:nick="end" glib:name="GST_RTCP_SDES_END">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">End of SDES list</doc>
       </member>
-      <member name="cname" value="1" c:identifier="GST_RTCP_SDES_CNAME" glib:nick="cname">
+      <member name="cname" value="1" c:identifier="GST_RTCP_SDES_CNAME" glib:nick="cname" glib:name="GST_RTCP_SDES_CNAME">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Canonical name</doc>
       </member>
-      <member name="name" value="2" c:identifier="GST_RTCP_SDES_NAME" glib:nick="name">
+      <member name="name" value="2" c:identifier="GST_RTCP_SDES_NAME" glib:nick="name" glib:name="GST_RTCP_SDES_NAME">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">User name</doc>
       </member>
-      <member name="email" value="3" c:identifier="GST_RTCP_SDES_EMAIL" glib:nick="email">
+      <member name="email" value="3" c:identifier="GST_RTCP_SDES_EMAIL" glib:nick="email" glib:name="GST_RTCP_SDES_EMAIL">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">User's electronic mail address</doc>
       </member>
-      <member name="phone" value="4" c:identifier="GST_RTCP_SDES_PHONE" glib:nick="phone">
+      <member name="phone" value="4" c:identifier="GST_RTCP_SDES_PHONE" glib:nick="phone" glib:name="GST_RTCP_SDES_PHONE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">User's phone number</doc>
       </member>
-      <member name="loc" value="5" c:identifier="GST_RTCP_SDES_LOC" glib:nick="loc">
+      <member name="loc" value="5" c:identifier="GST_RTCP_SDES_LOC" glib:nick="loc" glib:name="GST_RTCP_SDES_LOC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Geographic user location</doc>
       </member>
-      <member name="tool" value="6" c:identifier="GST_RTCP_SDES_TOOL" glib:nick="tool">
+      <member name="tool" value="6" c:identifier="GST_RTCP_SDES_TOOL" glib:nick="tool" glib:name="GST_RTCP_SDES_TOOL">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Name of application or tool</doc>
       </member>
-      <member name="note" value="7" c:identifier="GST_RTCP_SDES_NOTE" glib:nick="note">
+      <member name="note" value="7" c:identifier="GST_RTCP_SDES_NOTE" glib:nick="note" glib:name="GST_RTCP_SDES_NOTE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Notice about the source</doc>
       </member>
-      <member name="priv" value="8" c:identifier="GST_RTCP_SDES_PRIV" glib:nick="priv">
+      <member name="priv" value="8" c:identifier="GST_RTCP_SDES_PRIV" glib:nick="priv" glib:name="GST_RTCP_SDES_PRIV">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Private extensions</doc>
       </member>
-      <member name="h323_caddr" value="9" c:identifier="GST_RTCP_SDES_H323_CADDR" version="1.20" glib:nick="h323-caddr">
+      <member name="h323_caddr" value="9" c:identifier="GST_RTCP_SDES_H323_CADDR" version="1.20" glib:nick="h323-caddr" glib:name="GST_RTCP_SDES_H323_CADDR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">H.323 callable address</doc>
       </member>
-      <member name="apsi" value="10" c:identifier="GST_RTCP_SDES_APSI" version="1.20" glib:nick="apsi">
+      <member name="apsi" value="10" c:identifier="GST_RTCP_SDES_APSI" version="1.20" glib:nick="apsi" glib:name="GST_RTCP_SDES_APSI">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Application Specific Identifier (RFC6776)</doc>
       </member>
-      <member name="rgrp" value="11" c:identifier="GST_RTCP_SDES_RGRP" version="1.20" glib:nick="rgrp">
+      <member name="rgrp" value="11" c:identifier="GST_RTCP_SDES_RGRP" version="1.20" glib:nick="rgrp" glib:name="GST_RTCP_SDES_RGRP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Reporting Group Identifier (RFC8861)</doc>
       </member>
-      <member name="rtp_stream_id" value="12" c:identifier="GST_RTCP_SDES_RTP_STREAM_ID" version="1.20" glib:nick="rtp-stream-id">
+      <member name="rtp_stream_id" value="12" c:identifier="GST_RTCP_SDES_RTP_STREAM_ID" version="1.20" glib:nick="rtp-stream-id" glib:name="GST_RTCP_SDES_RTP_STREAM_ID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">RtpStreamId SDES item (RFC8852).</doc>
       </member>
-      <member name="repaired_rtp_stream_id" value="13" c:identifier="GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID" version="1.20" glib:nick="repaired-rtp-stream-id">
+      <member name="repaired_rtp_stream_id" value="13" c:identifier="GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID" version="1.20" glib:nick="repaired-rtp-stream-id" glib:name="GST_RTCP_SDES_REPAIRED_RTP_STREAM_ID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">RepairedRtpStreamId SDES item (RFC8852).</doc>
       </member>
-      <member name="ccid" value="14" c:identifier="GST_RTCP_SDES_CCID" version="1.20" glib:nick="ccid">
+      <member name="ccid" value="14" c:identifier="GST_RTCP_SDES_CCID" version="1.20" glib:nick="ccid" glib:name="GST_RTCP_SDES_CCID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">CLUE CaptId (RFC8849)</doc>
       </member>
-      <member name="mid" value="15" c:identifier="GST_RTCP_SDES_MID" version="1.20" glib:nick="mid">
+      <member name="mid" value="15" c:identifier="GST_RTCP_SDES_MID" version="1.20" glib:nick="mid" glib:name="GST_RTCP_SDES_MID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">MID SDES item (RFC8843).</doc>
       </member>
     </enumeration>
     <enumeration name="RTCPType" glib:type-name="GstRTCPType" glib:get-type="gst_rtcp_type_get_type" c:type="GstRTCPType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Different RTCP packet types.</doc>
-      <member name="invalid" value="0" c:identifier="GST_RTCP_TYPE_INVALID" glib:nick="invalid">
+      <member name="invalid" value="0" c:identifier="GST_RTCP_TYPE_INVALID" glib:nick="invalid" glib:name="GST_RTCP_TYPE_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Invalid type</doc>
       </member>
-      <member name="sr" value="200" c:identifier="GST_RTCP_TYPE_SR" glib:nick="sr">
+      <member name="sr" value="200" c:identifier="GST_RTCP_TYPE_SR" glib:nick="sr" glib:name="GST_RTCP_TYPE_SR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Sender report</doc>
       </member>
-      <member name="rr" value="201" c:identifier="GST_RTCP_TYPE_RR" glib:nick="rr">
+      <member name="rr" value="201" c:identifier="GST_RTCP_TYPE_RR" glib:nick="rr" glib:name="GST_RTCP_TYPE_RR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Receiver report</doc>
       </member>
-      <member name="sdes" value="202" c:identifier="GST_RTCP_TYPE_SDES" glib:nick="sdes">
+      <member name="sdes" value="202" c:identifier="GST_RTCP_TYPE_SDES" glib:nick="sdes" glib:name="GST_RTCP_TYPE_SDES">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Source description</doc>
       </member>
-      <member name="bye" value="203" c:identifier="GST_RTCP_TYPE_BYE" glib:nick="bye">
+      <member name="bye" value="203" c:identifier="GST_RTCP_TYPE_BYE" glib:nick="bye" glib:name="GST_RTCP_TYPE_BYE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Goodbye</doc>
       </member>
-      <member name="app" value="204" c:identifier="GST_RTCP_TYPE_APP" glib:nick="app">
+      <member name="app" value="204" c:identifier="GST_RTCP_TYPE_APP" glib:nick="app" glib:name="GST_RTCP_TYPE_APP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Application defined</doc>
       </member>
-      <member name="rtpfb" value="205" c:identifier="GST_RTCP_TYPE_RTPFB" glib:nick="rtpfb">
+      <member name="rtpfb" value="205" c:identifier="GST_RTCP_TYPE_RTPFB" glib:nick="rtpfb" glib:name="GST_RTCP_TYPE_RTPFB">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Transport layer feedback.</doc>
       </member>
-      <member name="psfb" value="206" c:identifier="GST_RTCP_TYPE_PSFB" glib:nick="psfb">
+      <member name="psfb" value="206" c:identifier="GST_RTCP_TYPE_PSFB" glib:nick="psfb" glib:name="GST_RTCP_TYPE_PSFB">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Payload-specific feedback.</doc>
       </member>
-      <member name="xr" value="207" c:identifier="GST_RTCP_TYPE_XR" glib:nick="xr">
+      <member name="xr" value="207" c:identifier="GST_RTCP_TYPE_XR" glib:nick="xr" glib:name="GST_RTCP_TYPE_XR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Extended report.</doc>
       </member>
     </enumeration>
     <enumeration name="RTCPXRType" version="1.16" glib:type-name="GstRTCPXRType" glib:get-type="gst_rtcpxr_type_get_type" c:type="GstRTCPXRType">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Types of RTCP Extended Reports, those are defined in RFC 3611 and other RFCs
 according to the [IANA registry](https://www.iana.org/assignments/rtcp-xr-block-types/rtcp-xr-block-types.xhtml).</doc>
-      <member name="invalid" value="-1" c:identifier="GST_RTCP_XR_TYPE_INVALID" glib:nick="invalid">
+      <member name="invalid" value="-1" c:identifier="GST_RTCP_XR_TYPE_INVALID" glib:nick="invalid" glib:name="GST_RTCP_XR_TYPE_INVALID">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Invalid XR Report Block</doc>
       </member>
-      <member name="lrle" value="1" c:identifier="GST_RTCP_XR_TYPE_LRLE" glib:nick="lrle">
+      <member name="lrle" value="1" c:identifier="GST_RTCP_XR_TYPE_LRLE" glib:nick="lrle" glib:name="GST_RTCP_XR_TYPE_LRLE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Loss RLE Report Block</doc>
       </member>
-      <member name="drle" value="2" c:identifier="GST_RTCP_XR_TYPE_DRLE" glib:nick="drle">
+      <member name="drle" value="2" c:identifier="GST_RTCP_XR_TYPE_DRLE" glib:nick="drle" glib:name="GST_RTCP_XR_TYPE_DRLE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Duplicate RLE Report Block</doc>
       </member>
-      <member name="prt" value="3" c:identifier="GST_RTCP_XR_TYPE_PRT" glib:nick="prt">
+      <member name="prt" value="3" c:identifier="GST_RTCP_XR_TYPE_PRT" glib:nick="prt" glib:name="GST_RTCP_XR_TYPE_PRT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Packet Receipt Times Report Block</doc>
       </member>
-      <member name="rrt" value="4" c:identifier="GST_RTCP_XR_TYPE_RRT" glib:nick="rrt">
+      <member name="rrt" value="4" c:identifier="GST_RTCP_XR_TYPE_RRT" glib:nick="rrt" glib:name="GST_RTCP_XR_TYPE_RRT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Receiver Reference Time Report Block</doc>
       </member>
-      <member name="dlrr" value="5" c:identifier="GST_RTCP_XR_TYPE_DLRR" glib:nick="dlrr">
+      <member name="dlrr" value="5" c:identifier="GST_RTCP_XR_TYPE_DLRR" glib:nick="dlrr" glib:name="GST_RTCP_XR_TYPE_DLRR">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Delay since the last Receiver Report</doc>
       </member>
-      <member name="ssumm" value="6" c:identifier="GST_RTCP_XR_TYPE_SSUMM" glib:nick="ssumm">
+      <member name="ssumm" value="6" c:identifier="GST_RTCP_XR_TYPE_SSUMM" glib:nick="ssumm" glib:name="GST_RTCP_XR_TYPE_SSUMM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">Statistics Summary Report Block</doc>
       </member>
-      <member name="voip_metrics" value="7" c:identifier="GST_RTCP_XR_TYPE_VOIP_METRICS" glib:nick="voip-metrics">
+      <member name="voip_metrics" value="7" c:identifier="GST_RTCP_XR_TYPE_VOIP_METRICS" glib:nick="voip-metrics" glib:name="GST_RTCP_XR_TYPE_VOIP_METRICS">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtcpbuffer.h">VoIP Metrics Report Block</doc>
       </member>
     </enumeration>
@@ -2295,7 +2295,7 @@ audio codec</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="buffer-list" writable="1" transfer-ownership="none">
+      <property name="buffer-list" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
       <field name="payload">
@@ -2335,7 +2335,7 @@ audio codec</doc>
         </array>
       </field>
     </record>
-    <record name="RTPBaseAudioPayloadPrivate" c:type="GstRTPBaseAudioPayloadPrivate" disguised="1">
+    <record name="RTPBaseAudioPayloadPrivate" c:type="GstRTPBaseAudioPayloadPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbaseaudiopayload.h"/>
     </record>
     <class name="RTPBaseDepayload" c:symbol-prefix="rtp_base_depayload" c:type="GstRTPBaseDepayload" parent="Gst.Element" abstract="1" glib:type-name="GstRTPBaseDepayload" glib:get-type="gst_rtp_base_depayload_get_type" glib:type-struct="RTPBaseDepayloadClass">
@@ -2374,6 +2374,7 @@ Be aware that in case gst_rtp_base_depayload_push_list() is used
 each buffer will see the same list of RTP header extensions.</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
       <virtual-method name="handle_event">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">custom event handling</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2388,6 +2389,7 @@ each buffer will see the same list of RTP header extensions.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="packet_lost">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">signal the depayloader about packet loss</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2402,6 +2404,11 @@ each buffer will see the same list of RTP header extensions.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="process">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">process incoming rtp packets. Subclass must implement either
+  this method or @process_rtp_packet to process incoming rtp packets.
+  If the child returns a buffer without a valid timestamp, the timestamp
+  of the provided buffer will be applied to the result buffer and the
+  buffer will be pushed. If this function returns %NULL, nothing is pushed.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -2416,6 +2423,14 @@ each buffer will see the same list of RTP header extensions.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="process_rtp_packet">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">Same as the process virtual function, but slightly more
+efficient, since it is passed the rtp buffer structure that has already
+been mapped (with GST_MAP_READ) by the base class and thus does not have
+to be mapped again by the subclass. Can be used by the subclass to process
+incoming rtp packets. If the subclass returns a buffer without a valid
+timestamp, the timestamp of the input buffer will be applied to the result
+buffer and the output buffer will be pushed out. If this function returns
+%NULL, nothing is pushed out. Since: 1.6.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Buffer" c:type="GstBuffer*"/>
@@ -2430,6 +2445,7 @@ each buffer will see the same list of RTP header extensions.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">configure the depayloader</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2626,14 +2642,14 @@ the outgoing buffer when it didn't have a timestamp already.</doc>
           </parameter>
         </parameters>
       </method>
-      <property name="auto-header-extension" version="1.20" writable="1" transfer-ownership="none">
+      <property name="auto-header-extension" version="1.20" writable="1" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">If enabled, the depayloader will automatically try to enable all the
 RTP header extensions provided in the sink caps, saving the application
 the need to handle these extensions manually using the
 GstRTPBaseDepayload::request-extension: signal.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="extensions" version="1.24" transfer-ownership="none">
+      <property name="extensions" version="1.24" transfer-ownership="none" default-value="&lt;  &gt;">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">A list of already enabled RTP header extensions. This may be useful for finding
 out which extensions are already enabled (with add-extension signal) and picking a non-conflicting
 ID for a new extension that needs to be added on top of the existing ones.
@@ -2646,14 +2662,14 @@ Dynamic updates of this property can be received by subscribing to its correspon
 "notify::extensions".</doc>
         <type name="Gst.ValueArray"/>
       </property>
-      <property name="max-reorder" version="1.18" writable="1" transfer-ownership="none">
+      <property name="max-reorder" version="1.18" writable="1" transfer-ownership="none" default-value="100">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Max seqnum reorder before the sender is assumed to have restarted.
 
 When max-reorder is set to 0 all reordered/duplicate packets are
 considered coming from a restarted sender.</doc>
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="source-info" version="1.16" writable="1" transfer-ownership="none">
+      <property name="source-info" version="1.16" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.c">Add RTP source information found in RTP header as meta to output buffer.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
@@ -2748,6 +2764,7 @@ necessary attributes as required by the extension implementation.</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">configure the depayloader</doc>
         <callback name="set_caps">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
           <return-value transfer-ownership="none">
@@ -2764,6 +2781,11 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="process">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">process incoming rtp packets. Subclass must implement either
+  this method or @process_rtp_packet to process incoming rtp packets.
+  If the child returns a buffer without a valid timestamp, the timestamp
+  of the provided buffer will be applied to the result buffer and the
+  buffer will be pushed. If this function returns %NULL, nothing is pushed.</doc>
         <callback name="process">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
           <return-value transfer-ownership="full">
@@ -2780,6 +2802,7 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="packet_lost">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">signal the depayloader about packet loss</doc>
         <callback name="packet_lost">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
           <return-value transfer-ownership="none">
@@ -2796,6 +2819,7 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="handle_event">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">custom event handling</doc>
         <callback name="handle_event">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
           <return-value transfer-ownership="none">
@@ -2812,6 +2836,14 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="process_rtp_packet">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h">Same as the process virtual function, but slightly more
+efficient, since it is passed the rtp buffer structure that has already
+been mapped (with GST_MAP_READ) by the base class and thus does not have
+to be mapped again by the subclass. Can be used by the subclass to process
+incoming rtp packets. If the subclass returns a buffer without a valid
+timestamp, the timestamp of the input buffer will be applied to the result
+buffer and the output buffer will be pushed out. If this function returns
+%NULL, nothing is pushed out. Since: 1.6.</doc>
         <callback name="process_rtp_packet">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
           <return-value transfer-ownership="full">
@@ -2833,13 +2865,14 @@ necessary attributes as required by the extension implementation.</doc>
         </array>
       </field>
     </record>
-    <record name="RTPBaseDepayloadPrivate" c:type="GstRTPBaseDepayloadPrivate" disguised="1">
+    <record name="RTPBaseDepayloadPrivate" c:type="GstRTPBaseDepayloadPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasedepayload.h"/>
     </record>
     <class name="RTPBasePayload" c:symbol-prefix="rtp_base_payload" c:type="GstRTPBasePayload" parent="Gst.Element" abstract="1" glib:type-name="GstRTPBasePayload" glib:get-type="gst_rtp_base_payload_get_type" glib:type-struct="RTPBasePayloadClass">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">Provides a base class for RTP payloaders</doc>
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
       <virtual-method name="get_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">get desired caps</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
         <return-value transfer-ownership="full">
           <type name="Gst.Caps" c:type="GstCaps*"/>
@@ -2857,6 +2890,7 @@ necessary attributes as required by the extension implementation.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="handle_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">process data</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="Gst.FlowReturn" c:type="GstFlowReturn"/>
@@ -2871,6 +2905,7 @@ necessary attributes as required by the extension implementation.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="query">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">custom query handling</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2888,6 +2923,7 @@ necessary attributes as required by the extension implementation.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">configure the payloader</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2902,6 +2938,7 @@ necessary attributes as required by the extension implementation.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="sink_event">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">custom event handling on the sinkpad</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -2916,6 +2953,7 @@ necessary attributes as required by the extension implementation.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="src_event">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">custom event handling on the srcpad</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -3152,14 +3190,14 @@ Variable arguments should be in the form field name, field type
           </parameter>
         </parameters>
       </method>
-      <property name="auto-header-extension" version="1.20" writable="1" transfer-ownership="none">
+      <property name="auto-header-extension" version="1.20" writable="1" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">If enabled, the payloader will automatically try to enable all the
 RTP header extensions provided in the src caps, saving the application
 the need to handle these extensions manually using the
 GstRTPBasePayload::request-extension: signal.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="extensions" version="1.24" transfer-ownership="none">
+      <property name="extensions" version="1.24" transfer-ownership="none" default-value="&lt;  &gt;">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">A list of already enabled RTP header extensions. This may be useful for finding
 out which extensions are already enabled (with add-extension signal) and picking a non-conflicting
 ID for a new extension that needs to be added on top of the existing ones.
@@ -3172,22 +3210,22 @@ Dynamic updates of this property can be received by subscribing to its correspon
 "notify::extensions".</doc>
         <type name="Gst.ValueArray"/>
       </property>
-      <property name="max-ptime" writable="1" transfer-ownership="none">
+      <property name="max-ptime" writable="1" transfer-ownership="none" default-value="-1">
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="min-ptime" writable="1" transfer-ownership="none">
+      <property name="min-ptime" writable="1" transfer-ownership="none" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">Minimum duration of the packet data in ns (can't go above MTU)</doc>
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="mtu" writable="1" transfer-ownership="none">
+      <property name="mtu" writable="1" transfer-ownership="none" default-value="1400">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="onvif-no-rate-control" version="1.16" writable="1" transfer-ownership="none">
+      <property name="onvif-no-rate-control" version="1.16" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">Make the payloader timestamp packets according to the Rate-Control=no
 behaviour specified in the ONVIF replay spec.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="perfect-rtptime" writable="1" transfer-ownership="none">
+      <property name="perfect-rtptime" writable="1" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">Try to use the offset fields to generate perfect RTP timestamps. When this
 option is disabled, RTP timestamps are generated from GST_BUFFER_PTS of
 each payloaded buffer. The PTSes of buffers may not necessarily increment
@@ -3205,14 +3243,14 @@ buffer. Currently GstRTPBasePayload is limited to handling perfect RTP
 timestamps for audio streams.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="pt" writable="1" transfer-ownership="none">
+      <property name="pt" writable="1" transfer-ownership="none" default-value="96">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="ptime-multiple" writable="1" transfer-ownership="none">
+      <property name="ptime-multiple" writable="1" transfer-ownership="none" default-value="0">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">Force buffers to be multiples of this duration in ns (0 disables)</doc>
         <type name="gint64" c:type="gint64"/>
       </property>
-      <property name="scale-rtptime" version="1.18" writable="1" transfer-ownership="none">
+      <property name="scale-rtptime" version="1.18" writable="1" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">Make the RTP packets' timestamps be scaled with the segment's rate
 (corresponding to RTSP speed parameter). Disabling this property means
 the timestamps will not be affected by the set delivery speed (RTSP speed).
@@ -3223,18 +3261,18 @@ video. This is achieved by the client setting RTSP Speed to 2 while the
 server has this property disabled.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="seqnum" transfer-ownership="none">
+      <property name="seqnum" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="seqnum-offset" writable="1" transfer-ownership="none">
+      <property name="seqnum-offset" writable="1" transfer-ownership="none" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="source-info" version="1.16" writable="1" transfer-ownership="none">
+      <property name="source-info" version="1.16" writable="1" transfer-ownership="none" default-value="FALSE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.c">Enable writing the CSRC field in allocated RTP header based on RTP source
 information found in the input buffer's #GstRTPSourceMeta.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="ssrc" writable="1" transfer-ownership="none">
+      <property name="ssrc" writable="1" transfer-ownership="none" default-value="4294967295">
         <type name="guint" c:type="guint"/>
       </property>
       <property name="stats" transfer-ownership="none">
@@ -3254,10 +3292,10 @@ the last processed buffer and current state of the stream being payloaded:
   * `timestamp-offset` :#G_TYPE_UINT, The current offset added to the timestamp</doc>
         <type name="Gst.Structure"/>
       </property>
-      <property name="timestamp" transfer-ownership="none">
+      <property name="timestamp" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="timestamp-offset" writable="1" transfer-ownership="none">
+      <property name="timestamp-offset" writable="1" transfer-ownership="none" default-value="4294967295">
         <type name="guint" c:type="guint"/>
       </property>
       <field name="element">
@@ -3380,6 +3418,7 @@ necessary attributes as required by the extension implementation.</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="get_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">get desired caps</doc>
         <callback name="get_caps">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
           <return-value transfer-ownership="full">
@@ -3399,6 +3438,7 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="set_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">configure the payloader</doc>
         <callback name="set_caps">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
           <return-value transfer-ownership="none">
@@ -3415,6 +3455,7 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="handle_buffer">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">process data</doc>
         <callback name="handle_buffer">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
           <return-value transfer-ownership="none">
@@ -3431,6 +3472,7 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="sink_event">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">custom event handling on the sinkpad</doc>
         <callback name="sink_event">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
           <return-value transfer-ownership="none">
@@ -3447,6 +3489,7 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="src_event">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">custom event handling on the srcpad</doc>
         <callback name="src_event">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
           <return-value transfer-ownership="none">
@@ -3463,6 +3506,7 @@ necessary attributes as required by the extension implementation.</doc>
         </callback>
       </field>
       <field name="query">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h">custom query handling</doc>
         <callback name="query">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
           <return-value transfer-ownership="none">
@@ -3487,7 +3531,7 @@ necessary attributes as required by the extension implementation.</doc>
         </array>
       </field>
     </record>
-    <record name="RTPBasePayloadPrivate" c:type="GstRTPBasePayloadPrivate" disguised="1">
+    <record name="RTPBasePayloadPrivate" c:type="GstRTPBasePayloadPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbasepayload.h"/>
     </record>
     <record name="RTPBuffer" c:type="GstRTPBuffer">
@@ -4553,28 +4597,28 @@ buffers carrying RTP packets.
 
 Note that these are only valid for #GstCaps of type: application/x-rtp (x-rtcp).
 They can conflict with other extended buffer flags.</doc>
-      <member name="retransmission" value="1048576" c:identifier="GST_RTP_BUFFER_FLAG_RETRANSMISSION" glib:nick="retransmission">
+      <member name="retransmission" value="1048576" c:identifier="GST_RTP_BUFFER_FLAG_RETRANSMISSION" glib:nick="retransmission" glib:name="GST_RTP_BUFFER_FLAG_RETRANSMISSION">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbuffer.h">The #GstBuffer was once wrapped
           in a retransmitted packet as specified by RFC 4588.</doc>
       </member>
-      <member name="redundant" value="2097152" c:identifier="GST_RTP_BUFFER_FLAG_REDUNDANT" glib:nick="redundant">
+      <member name="redundant" value="2097152" c:identifier="GST_RTP_BUFFER_FLAG_REDUNDANT" glib:nick="redundant" glib:name="GST_RTP_BUFFER_FLAG_REDUNDANT">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbuffer.h">The packet represents redundant RTP packet.
           The flag is used in gstrtpstorage to be able to hold the packetback
           and use it only for recovery from packet loss.
           Since: 1.14</doc>
       </member>
-      <member name="last" value="268435456" c:identifier="GST_RTP_BUFFER_FLAG_LAST" glib:nick="last">
+      <member name="last" value="268435456" c:identifier="GST_RTP_BUFFER_FLAG_LAST" glib:nick="last" glib:name="GST_RTP_BUFFER_FLAG_LAST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbuffer.h">Offset to define more flags.</doc>
       </member>
     </bitfield>
     <bitfield name="RTPBufferMapFlags" version="1.6.1" glib:type-name="GstRTPBufferMapFlags" glib:get-type="gst_rtp_buffer_map_flags_get_type" c:type="GstRTPBufferMapFlags">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbuffer.h">Additional mapping flags for gst_rtp_buffer_map().</doc>
-      <member name="skip_padding" value="65536" c:identifier="GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING" glib:nick="skip-padding">
+      <member name="skip_padding" value="65536" c:identifier="GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING" glib:nick="skip-padding" glib:name="GST_RTP_BUFFER_MAP_FLAG_SKIP_PADDING">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbuffer.h">Skip mapping and validation of RTP
           padding and RTP pad count when present. Useful for buffers where
           the padding may be encrypted.</doc>
       </member>
-      <member name="last" value="16777216" c:identifier="GST_RTP_BUFFER_MAP_FLAG_LAST" glib:nick="last">
+      <member name="last" value="16777216" c:identifier="GST_RTP_BUFFER_MAP_FLAG_LAST" glib:nick="last" glib:name="GST_RTP_BUFFER_MAP_FLAG_LAST">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpbuffer.h">Offset to define more flags</doc>
       </member>
     </bitfield>
@@ -4618,6 +4662,7 @@ information given in the input @buffer.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="get_supported_flags" invoker="get_supported_flags" version="1.20">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">retrieve the supported flags</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.c">the flags supported by this instance of @ext</doc>
@@ -4664,6 +4709,8 @@ information given in the input @buffer.</doc>
         </parameters>
       </virtual-method>
       <virtual-method name="set_attributes">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">set the necessary attributes that may be signaled e.g. with
+    an SDP.</doc>
         <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -5143,6 +5190,7 @@ from gst_rtp_header_extension_get_max_size().</doc>
         <type name="Gst.ElementClass" c:type="GstElementClass"/>
       </field>
       <field name="get_supported_flags">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">retrieve the supported flags</doc>
         <callback name="get_supported_flags">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5158,6 +5206,13 @@ from gst_rtp_header_extension_get_max_size().</doc>
         </callback>
       </field>
       <field name="get_max_size">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">retrieve the maximum size for this extension based on the
+    information available from input_meta.  Implementations should attempt
+    to provide as accurate information as possible as the returned value
+    will be used to control the amount of possible data in the payload.
+    Implementations must return the maximum as the allocated size for
+    writing the extension will be at least the size of the returned value.
+    Return the amount of data read or &lt;0 on failure.</doc>
         <callback name="get_max_size">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5177,6 +5232,8 @@ from gst_rtp_header_extension_get_max_size().</doc>
         </callback>
       </field>
       <field name="write">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">write into @data the information for this extension.  Various
+    information is provided to help writing extensions in particular cases.</doc>
         <callback name="write">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5215,6 +5272,8 @@ from gst_rtp_header_extension_get_max_size().</doc>
         </callback>
       </field>
       <field name="read">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">read from a rtp payloaded buffer and extract the extension
+    information, optionally adding some meta onto the output buffer.</doc>
         <callback name="read">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5249,6 +5308,8 @@ from gst_rtp_header_extension_get_max_size().</doc>
         </callback>
       </field>
       <field name="set_non_rtp_sink_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">read any information from sink caps that the header
+    extension needs for its function.</doc>
         <callback name="set_non_rtp_sink_caps">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5268,6 +5329,8 @@ from gst_rtp_header_extension_get_max_size().</doc>
         </callback>
       </field>
       <field name="update_non_rtp_src_caps">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">update depayloader non-RTP (depayloaded) caps with
+    the information parsed from RTP header.</doc>
         <callback name="update_non_rtp_src_caps">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5287,6 +5350,8 @@ from gst_rtp_header_extension_get_max_size().</doc>
         </callback>
       </field>
       <field name="set_attributes">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">set the necessary attributes that may be signaled e.g. with
+    an SDP.</doc>
         <callback name="set_attributes">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5306,6 +5371,8 @@ from gst_rtp_header_extension_get_max_size().</doc>
         </callback>
       </field>
       <field name="set_caps_from_attributes">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">write the necessary caps field/s for the configured
+    attributes e.g. as signalled with SDP.</doc>
         <callback name="set_caps_from_attributes">
           <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h"/>
           <return-value transfer-ownership="none">
@@ -5350,34 +5417,34 @@ from gst_rtp_header_extension_get_max_size().</doc>
     </record>
     <bitfield name="RTPHeaderExtensionDirection" version="1.20" glib:type-name="GstRTPHeaderExtensionDirection" glib:get-type="gst_rtp_header_extension_direction_get_type" c:type="GstRTPHeaderExtensionDirection">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">Direction to which to apply the RTP Header Extension</doc>
-      <member name="inactive" value="0" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE" glib:nick="inactive">
+      <member name="inactive" value="0" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE" glib:nick="inactive" glib:name="GST_RTP_HEADER_EXTENSION_DIRECTION_INACTIVE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">Neither send nor
 receive RTP Header Extensions</doc>
       </member>
-      <member name="sendonly" value="1" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY" glib:nick="sendonly">
+      <member name="sendonly" value="1" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY" glib:nick="sendonly" glib:name="GST_RTP_HEADER_EXTENSION_DIRECTION_SENDONLY">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">Only send RTP Header
 Extensions @GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY: Only
 receive RTP Header Extensions</doc>
       </member>
-      <member name="recvonly" value="2" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY" glib:nick="recvonly">
+      <member name="recvonly" value="2" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY" glib:nick="recvonly" glib:name="GST_RTP_HEADER_EXTENSION_DIRECTION_RECVONLY">
       </member>
-      <member name="sendrecv" value="3" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV" glib:nick="sendrecv">
+      <member name="sendrecv" value="3" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV" glib:nick="sendrecv" glib:name="GST_RTP_HEADER_EXTENSION_DIRECTION_SENDRECV">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">Send and receive RTP
 Header Extensions ext</doc>
       </member>
-      <member name="inherited" value="4" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED" glib:nick="inherited">
+      <member name="inherited" value="4" c:identifier="GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED" glib:nick="inherited" glib:name="GST_RTP_HEADER_EXTENSION_DIRECTION_INHERITED">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">RTP header extension
 direction is inherited from the stream</doc>
       </member>
     </bitfield>
     <bitfield name="RTPHeaderExtensionFlags" version="1.20" glib:type-name="GstRTPHeaderExtensionFlags" glib:get-type="gst_rtp_header_extension_flags_get_type" c:type="GstRTPHeaderExtensionFlags">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">Flags that apply to a RTP Audio/Video header extension.</doc>
-      <member name="one_byte" value="1" c:identifier="GST_RTP_HEADER_EXTENSION_ONE_BYTE" glib:nick="one-byte">
+      <member name="one_byte" value="1" c:identifier="GST_RTP_HEADER_EXTENSION_ONE_BYTE" glib:nick="one-byte" glib:name="GST_RTP_HEADER_EXTENSION_ONE_BYTE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">The one byte rtp extension header.
              1-16 data bytes per extension with a maximum of
              14 extension ids in total.</doc>
       </member>
-      <member name="two_byte" value="2" c:identifier="GST_RTP_HEADER_EXTENSION_TWO_BYTE" glib:nick="two-byte">
+      <member name="two_byte" value="2" c:identifier="GST_RTP_HEADER_EXTENSION_TWO_BYTE" glib:nick="two-byte" glib:name="GST_RTP_HEADER_EXTENSION_TWO_BYTE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtphdrext.h">The two byte rtp extension header.
              256 data bytes per extension with a maximum of 255 (or 256
              including appbits) extensions in total.</doc>
@@ -5396,82 +5463,82 @@ unassigned: 20-23,
 Video:
 unassigned: 24, 27, 29, 30, 35-71, 77-95
 Reserved for RTCP conflict avoidance: 72-76</doc>
-      <member name="pcmu" value="0" c:identifier="GST_RTP_PAYLOAD_PCMU" glib:nick="pcmu">
+      <member name="pcmu" value="0" c:identifier="GST_RTP_PAYLOAD_PCMU" glib:nick="pcmu" glib:name="GST_RTP_PAYLOAD_PCMU">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ITU-T G.711. mu-law audio (RFC 3551)</doc>
       </member>
-      <member name="1016" value="1" c:identifier="GST_RTP_PAYLOAD_1016" glib:nick="1016">
+      <member name="1016" value="1" c:identifier="GST_RTP_PAYLOAD_1016" glib:nick="1016" glib:name="GST_RTP_PAYLOAD_1016">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">RFC 3551 says reserved</doc>
       </member>
-      <member name="g721" value="2" c:identifier="GST_RTP_PAYLOAD_G721" glib:nick="g721">
+      <member name="g721" value="2" c:identifier="GST_RTP_PAYLOAD_G721" glib:nick="g721" glib:name="GST_RTP_PAYLOAD_G721">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">RFC 3551 says reserved</doc>
       </member>
-      <member name="gsm" value="3" c:identifier="GST_RTP_PAYLOAD_GSM" glib:nick="gsm">
+      <member name="gsm" value="3" c:identifier="GST_RTP_PAYLOAD_GSM" glib:nick="gsm" glib:name="GST_RTP_PAYLOAD_GSM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">GSM audio</doc>
       </member>
-      <member name="g723" value="4" c:identifier="GST_RTP_PAYLOAD_G723" glib:nick="g723">
+      <member name="g723" value="4" c:identifier="GST_RTP_PAYLOAD_G723" glib:nick="g723" glib:name="GST_RTP_PAYLOAD_G723">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ITU G.723.1 audio</doc>
       </member>
-      <member name="dvi4_8000" value="5" c:identifier="GST_RTP_PAYLOAD_DVI4_8000" glib:nick="dvi4-8000">
+      <member name="dvi4_8000" value="5" c:identifier="GST_RTP_PAYLOAD_DVI4_8000" glib:nick="dvi4-8000" glib:name="GST_RTP_PAYLOAD_DVI4_8000">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">IMA ADPCM wave type (RFC 3551)</doc>
       </member>
-      <member name="dvi4_16000" value="6" c:identifier="GST_RTP_PAYLOAD_DVI4_16000" glib:nick="dvi4-16000">
+      <member name="dvi4_16000" value="6" c:identifier="GST_RTP_PAYLOAD_DVI4_16000" glib:nick="dvi4-16000" glib:name="GST_RTP_PAYLOAD_DVI4_16000">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">IMA ADPCM wave type (RFC 3551)</doc>
       </member>
-      <member name="lpc" value="7" c:identifier="GST_RTP_PAYLOAD_LPC" glib:nick="lpc">
+      <member name="lpc" value="7" c:identifier="GST_RTP_PAYLOAD_LPC" glib:nick="lpc" glib:name="GST_RTP_PAYLOAD_LPC">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">experimental linear predictive encoding</doc>
       </member>
-      <member name="pcma" value="8" c:identifier="GST_RTP_PAYLOAD_PCMA" glib:nick="pcma">
+      <member name="pcma" value="8" c:identifier="GST_RTP_PAYLOAD_PCMA" glib:nick="pcma" glib:name="GST_RTP_PAYLOAD_PCMA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ITU-T G.711 A-law audio (RFC 3551)</doc>
       </member>
-      <member name="g722" value="9" c:identifier="GST_RTP_PAYLOAD_G722" glib:nick="g722">
+      <member name="g722" value="9" c:identifier="GST_RTP_PAYLOAD_G722" glib:nick="g722" glib:name="GST_RTP_PAYLOAD_G722">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ITU-T G.722 (RFC 3551)</doc>
       </member>
-      <member name="l16_stereo" value="10" c:identifier="GST_RTP_PAYLOAD_L16_STEREO" glib:nick="l16-stereo">
+      <member name="l16_stereo" value="10" c:identifier="GST_RTP_PAYLOAD_L16_STEREO" glib:nick="l16-stereo" glib:name="GST_RTP_PAYLOAD_L16_STEREO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">stereo PCM</doc>
       </member>
-      <member name="l16_mono" value="11" c:identifier="GST_RTP_PAYLOAD_L16_MONO" glib:nick="l16-mono">
+      <member name="l16_mono" value="11" c:identifier="GST_RTP_PAYLOAD_L16_MONO" glib:nick="l16-mono" glib:name="GST_RTP_PAYLOAD_L16_MONO">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">mono PCM</doc>
       </member>
-      <member name="qcelp" value="12" c:identifier="GST_RTP_PAYLOAD_QCELP" glib:nick="qcelp">
+      <member name="qcelp" value="12" c:identifier="GST_RTP_PAYLOAD_QCELP" glib:nick="qcelp" glib:name="GST_RTP_PAYLOAD_QCELP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">EIA &amp; TIA standard IS-733</doc>
       </member>
-      <member name="cn" value="13" c:identifier="GST_RTP_PAYLOAD_CN" glib:nick="cn">
+      <member name="cn" value="13" c:identifier="GST_RTP_PAYLOAD_CN" glib:nick="cn" glib:name="GST_RTP_PAYLOAD_CN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">Comfort Noise (RFC 3389)</doc>
       </member>
-      <member name="mpa" value="14" c:identifier="GST_RTP_PAYLOAD_MPA" glib:nick="mpa">
+      <member name="mpa" value="14" c:identifier="GST_RTP_PAYLOAD_MPA" glib:nick="mpa" glib:name="GST_RTP_PAYLOAD_MPA">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">Audio MPEG 1-3.</doc>
       </member>
-      <member name="g728" value="15" c:identifier="GST_RTP_PAYLOAD_G728" glib:nick="g728">
+      <member name="g728" value="15" c:identifier="GST_RTP_PAYLOAD_G728" glib:nick="g728" glib:name="GST_RTP_PAYLOAD_G728">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ITU-T G.728 Speech coder (RFC 3551)</doc>
       </member>
-      <member name="dvi4_11025" value="16" c:identifier="GST_RTP_PAYLOAD_DVI4_11025" glib:nick="dvi4-11025">
+      <member name="dvi4_11025" value="16" c:identifier="GST_RTP_PAYLOAD_DVI4_11025" glib:nick="dvi4-11025" glib:name="GST_RTP_PAYLOAD_DVI4_11025">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">IMA ADPCM wave type (RFC 3551)</doc>
       </member>
-      <member name="dvi4_22050" value="17" c:identifier="GST_RTP_PAYLOAD_DVI4_22050" glib:nick="dvi4-22050">
+      <member name="dvi4_22050" value="17" c:identifier="GST_RTP_PAYLOAD_DVI4_22050" glib:nick="dvi4-22050" glib:name="GST_RTP_PAYLOAD_DVI4_22050">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">IMA ADPCM wave type (RFC 3551)</doc>
       </member>
-      <member name="g729" value="18" c:identifier="GST_RTP_PAYLOAD_G729" glib:nick="g729">
+      <member name="g729" value="18" c:identifier="GST_RTP_PAYLOAD_G729" glib:nick="g729" glib:name="GST_RTP_PAYLOAD_G729">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ITU-T G.729 Speech coder (RFC 3551)</doc>
       </member>
-      <member name="cellb" value="25" c:identifier="GST_RTP_PAYLOAD_CELLB" glib:nick="cellb">
+      <member name="cellb" value="25" c:identifier="GST_RTP_PAYLOAD_CELLB" glib:nick="cellb" glib:name="GST_RTP_PAYLOAD_CELLB">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">See RFC 2029</doc>
       </member>
-      <member name="jpeg" value="26" c:identifier="GST_RTP_PAYLOAD_JPEG" glib:nick="jpeg">
+      <member name="jpeg" value="26" c:identifier="GST_RTP_PAYLOAD_JPEG" glib:nick="jpeg" glib:name="GST_RTP_PAYLOAD_JPEG">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ISO Standards 10918-1 and 10918-2 (RFC 2435)</doc>
       </member>
-      <member name="nv" value="28" c:identifier="GST_RTP_PAYLOAD_NV" glib:nick="nv">
+      <member name="nv" value="28" c:identifier="GST_RTP_PAYLOAD_NV" glib:nick="nv" glib:name="GST_RTP_PAYLOAD_NV">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">nv encoding by Ron Frederick</doc>
       </member>
-      <member name="h261" value="31" c:identifier="GST_RTP_PAYLOAD_H261" glib:nick="h261">
+      <member name="h261" value="31" c:identifier="GST_RTP_PAYLOAD_H261" glib:nick="h261" glib:name="GST_RTP_PAYLOAD_H261">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">ITU-T Recommendation H.261 (RFC 2032)</doc>
       </member>
-      <member name="mpv" value="32" c:identifier="GST_RTP_PAYLOAD_MPV" glib:nick="mpv">
+      <member name="mpv" value="32" c:identifier="GST_RTP_PAYLOAD_MPV" glib:nick="mpv" glib:name="GST_RTP_PAYLOAD_MPV">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">Video MPEG 1 &amp; 2 (RFC 2250)</doc>
       </member>
-      <member name="mp2t" value="33" c:identifier="GST_RTP_PAYLOAD_MP2T" glib:nick="mp2t">
+      <member name="mp2t" value="33" c:identifier="GST_RTP_PAYLOAD_MP2T" glib:nick="mp2t" glib:name="GST_RTP_PAYLOAD_MP2T">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">MPEG-2 transport stream (RFC 2250)</doc>
       </member>
-      <member name="h263" value="34" c:identifier="GST_RTP_PAYLOAD_H263" glib:nick="h263">
+      <member name="h263" value="34" c:identifier="GST_RTP_PAYLOAD_H263" glib:nick="h263" glib:name="GST_RTP_PAYLOAD_H263">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtppayloads.h">Video H263 (RFC 2190)</doc>
       </member>
     </enumeration>
@@ -5550,19 +5617,19 @@ types specified with @payload_type.</doc>
     </record>
     <enumeration name="RTPProfile" version="1.6" glib:type-name="GstRTPProfile" glib:get-type="gst_rtp_profile_get_type" c:type="GstRTPProfile">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpdefs.h">The transfer profile to use.</doc>
-      <member name="unknown" value="0" c:identifier="GST_RTP_PROFILE_UNKNOWN" glib:nick="unknown">
+      <member name="unknown" value="0" c:identifier="GST_RTP_PROFILE_UNKNOWN" glib:nick="unknown" glib:name="GST_RTP_PROFILE_UNKNOWN">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpdefs.h">invalid profile</doc>
       </member>
-      <member name="avp" value="1" c:identifier="GST_RTP_PROFILE_AVP" glib:nick="avp">
+      <member name="avp" value="1" c:identifier="GST_RTP_PROFILE_AVP" glib:nick="avp" glib:name="GST_RTP_PROFILE_AVP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpdefs.h">the Audio/Visual profile (RFC 3551)</doc>
       </member>
-      <member name="savp" value="2" c:identifier="GST_RTP_PROFILE_SAVP" glib:nick="savp">
+      <member name="savp" value="2" c:identifier="GST_RTP_PROFILE_SAVP" glib:nick="savp" glib:name="GST_RTP_PROFILE_SAVP">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpdefs.h">the secure Audio/Visual profile (RFC 3711)</doc>
       </member>
-      <member name="avpf" value="3" c:identifier="GST_RTP_PROFILE_AVPF" glib:nick="avpf">
+      <member name="avpf" value="3" c:identifier="GST_RTP_PROFILE_AVPF" glib:nick="avpf" glib:name="GST_RTP_PROFILE_AVPF">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpdefs.h">the Audio/Visual profile with feedback (RFC 4585)</doc>
       </member>
-      <member name="savpf" value="4" c:identifier="GST_RTP_PROFILE_SAVPF" glib:nick="savpf">
+      <member name="savpf" value="4" c:identifier="GST_RTP_PROFILE_SAVPF" glib:nick="savpf" glib:name="GST_RTP_PROFILE_SAVPF">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/rtp/gstrtpdefs.h">the secure Audio/Visual profile with feedback (RFC 5124)</doc>
       </member>
     </enumeration>

@@ -20,7 +20,7 @@ and/or use gtk-doc annotations.  -->
                           to be used for the specific CSB.</doc>
       </member>
     </enumeration>
-    <record name="MIKEYDecryptInfo" c:type="GstMIKEYDecryptInfo" disguised="1">
+    <record name="MIKEYDecryptInfo" c:type="GstMIKEYDecryptInfo" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstmikey.h"/>
     </record>
     <enumeration name="MIKEYEncAlg" c:type="GstMIKEYEncAlg">
@@ -39,7 +39,7 @@ and/or use gtk-doc annotations.  -->
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstmikey.h">AES-GCM using a 128-bit key (Since: 1.16)</doc>
       </member>
     </enumeration>
-    <record name="MIKEYEncryptInfo" c:type="GstMIKEYEncryptInfo" disguised="1">
+    <record name="MIKEYEncryptInfo" c:type="GstMIKEYEncryptInfo" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-base/gst-libs/gst/sdp/gstmikey.h"/>
     </record>
     <enumeration name="MIKEYKVType" c:type="GstMIKEYKVType">

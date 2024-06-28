@@ -186,10 +186,10 @@ clock.</doc>
           </parameter>
         </parameters>
       </constructor>
-      <property name="address" writable="1" construct="1" transfer-ownership="none">
+      <property name="address" writable="1" construct="1" transfer-ownership="none" default-value="127.0.0.1">
         <type name="utf8" c:type="gchar*"/>
       </property>
-      <property name="base-time" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="base-time" writable="1" construct-only="1" transfer-ownership="none" default-value="0">
         <type name="guint64" c:type="guint64"/>
       </property>
       <property name="bus" writable="1" transfer-ownership="none">
@@ -198,16 +198,16 @@ clock.</doc>
       <property name="internal-clock" transfer-ownership="none">
         <type name="Gst.Clock"/>
       </property>
-      <property name="minimum-update-interval" writable="1" transfer-ownership="none">
+      <property name="minimum-update-interval" writable="1" transfer-ownership="none" default-value="50000000">
         <type name="guint64" c:type="guint64"/>
       </property>
-      <property name="port" writable="1" construct="1" transfer-ownership="none">
+      <property name="port" writable="1" construct="1" transfer-ownership="none" default-value="5637">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="qos-dscp" writable="1" transfer-ownership="none">
+      <property name="qos-dscp" writable="1" transfer-ownership="none" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="round-trip-limit" writable="1" transfer-ownership="none">
+      <property name="round-trip-limit" writable="1" transfer-ownership="none" default-value="1000000000">
         <type name="guint64" c:type="guint64"/>
       </property>
       <field name="clock">
@@ -233,7 +233,7 @@ clock.</doc>
         </array>
       </field>
     </record>
-    <record name="NetClientClockPrivate" c:type="GstNetClientClockPrivate" disguised="1">
+    <record name="NetClientClockPrivate" c:type="GstNetClientClockPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/net/gstnetclientclock.h"/>
     </record>
     <record name="NetControlMessageMeta" c:type="GstNetControlMessageMeta">
@@ -421,19 +421,19 @@ The #GstNetTimeProvider typically wraps the clock used by a #GstPipeline.</doc>
           </parameter>
         </parameters>
       </constructor>
-      <property name="active" writable="1" transfer-ownership="none">
+      <property name="active" writable="1" transfer-ownership="none" default-value="TRUE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="address" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="address" writable="1" construct-only="1" transfer-ownership="none" default-value="0.0.0.0">
         <type name="utf8" c:type="gchar*"/>
       </property>
       <property name="clock" writable="1" construct-only="1" transfer-ownership="none">
         <type name="Gst.Clock"/>
       </property>
-      <property name="port" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="port" writable="1" construct-only="1" transfer-ownership="none" default-value="5637">
         <type name="gint" c:type="gint"/>
       </property>
-      <property name="qos-dscp" writable="1" transfer-ownership="none">
+      <property name="qos-dscp" writable="1" transfer-ownership="none" default-value="-1">
         <type name="gint" c:type="gint"/>
       </property>
       <field name="parent">
@@ -459,7 +459,7 @@ The #GstNetTimeProvider typically wraps the clock used by a #GstPipeline.</doc>
         </array>
       </field>
     </record>
-    <record name="NetTimeProviderPrivate" c:type="GstNetTimeProviderPrivate" disguised="1">
+    <record name="NetTimeProviderPrivate" c:type="GstNetTimeProviderPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/net/gstnettimeprovider.h"/>
     </record>
     <class name="NtpClock" c:symbol-prefix="ntp_clock" c:type="GstNtpClock" parent="NetClientClock" glib:type-name="GstNtpClock" glib:get-type="gst_ntp_clock_get_type" glib:type-struct="NtpClockClass">
@@ -602,16 +602,16 @@ gst_clock_is_synced().</doc>
           </parameter>
         </parameters>
       </constructor>
-      <property name="domain" writable="1" construct-only="1" transfer-ownership="none">
+      <property name="domain" writable="1" construct-only="1" transfer-ownership="none" default-value="0">
         <type name="guint" c:type="guint"/>
       </property>
-      <property name="grandmaster-clock-id" transfer-ownership="none">
+      <property name="grandmaster-clock-id" transfer-ownership="none" default-value="0">
         <type name="guint64" c:type="guint64"/>
       </property>
       <property name="internal-clock" transfer-ownership="none">
         <type name="Gst.Clock"/>
       </property>
-      <property name="master-clock-id" transfer-ownership="none">
+      <property name="master-clock-id" transfer-ownership="none" default-value="0">
         <type name="guint64" c:type="guint64"/>
       </property>
       <field name="clock">
@@ -639,7 +639,7 @@ gst_clock_is_synced().</doc>
         </array>
       </field>
     </record>
-    <record name="PtpClockPrivate" c:type="GstPtpClockPrivate" disguised="1">
+    <record name="PtpClockPrivate" c:type="GstPtpClockPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gstreamer/libs/gst/net/gstptpclock.h"/>
     </record>
     <callback name="PtpStatisticsCallback" c:type="GstPtpStatisticsCallback">

@@ -409,7 +409,7 @@ operation is requested.</doc>
         <type name="Gst.BinClass" c:type="GstBinClass"/>
       </field>
     </record>
-    <record name="InsertBinPrivate" c:type="GstInsertBinPrivate" disguised="1">
+    <record name="InsertBinPrivate" c:type="GstInsertBinPrivate" disguised="1" opaque="1">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/insertbin/gstinsertbin.h"/>
     </record>
   </namespace>

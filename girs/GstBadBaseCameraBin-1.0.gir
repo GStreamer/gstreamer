@@ -54,6 +54,7 @@ and/or use gtk-doc annotations.  -->
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
       <implements name="Gst.ChildProxy"/>
       <virtual-method name="construct_pipeline">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h">construct pipeline</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -96,6 +97,7 @@ and/or use gtk-doc annotations.  -->
         </parameters>
       </virtual-method>
       <virtual-method name="set_zoom">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h">set the zoom</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
@@ -110,6 +112,7 @@ and/or use gtk-doc annotations.  -->
         </parameters>
       </virtual-method>
       <virtual-method name="setup_pipeline">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h">configure pipeline for the chosen settings</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
         <return-value transfer-ownership="none">
           <type name="gboolean" c:type="gboolean"/>
@@ -167,7 +170,7 @@ and/or use gtk-doc annotations.  -->
           </parameter>
         </parameters>
       </method>
-      <method name="set_mode" c:identifier="gst_base_camera_src_set_mode">
+      <method name="set_mode" c:identifier="gst_base_camera_src_set_mode" glib:set-property="mode">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">Set the chosen #GstCameraBinMode capture mode.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
         <return-value transfer-ownership="none">
@@ -214,16 +217,16 @@ and/or use gtk-doc annotations.  -->
           </instance-parameter>
         </parameters>
       </method>
-      <property name="auto-start" writable="1" transfer-ownership="none">
+      <property name="auto-start" writable="1" transfer-ownership="none" default-value="FALSE">
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="max-zoom" transfer-ownership="none">
+      <property name="max-zoom" transfer-ownership="none" default-value="10.000000">
         <type name="gfloat" c:type="gfloat"/>
       </property>
-      <property name="mode" writable="1" transfer-ownership="none">
+      <property name="mode" writable="1" transfer-ownership="none" setter="set_mode" default-value="Still image capture (default)">
         <type name="CameraBin2Mode"/>
       </property>
-      <property name="post-previews" writable="1" transfer-ownership="none">
+      <property name="post-previews" writable="1" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">When %TRUE, preview images should be posted to the bus when
 captures are made</doc>
         <type name="gboolean" c:type="gboolean"/>
@@ -234,7 +237,7 @@ captures are made</doc>
       <property name="preview-filter" writable="1" transfer-ownership="none">
         <type name="Gst.Element"/>
       </property>
-      <property name="ready-for-capture" transfer-ownership="none">
+      <property name="ready-for-capture" transfer-ownership="none" default-value="TRUE">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.c">When TRUE new capture can be prepared. If FALSE capturing is ongoing
 and starting a new capture immediately is not possible.
 
@@ -244,7 +247,7 @@ function, please schedule a new thread to do it. If you're using glib's
 mainloop you can use g_idle_add() for example.</doc>
         <type name="gboolean" c:type="gboolean"/>
       </property>
-      <property name="zoom" writable="1" transfer-ownership="none">
+      <property name="zoom" writable="1" transfer-ownership="none" default-value="1.000000">
         <type name="gfloat" c:type="gfloat"/>
       </property>
       <field name="parent">
@@ -308,6 +311,7 @@ mainloop you can use g_idle_add() for example.</doc>
         <type name="Gst.BinClass" c:type="GstBinClass"/>
       </field>
       <field name="construct_pipeline">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h">construct pipeline</doc>
         <callback name="construct_pipeline">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
           <return-value transfer-ownership="none">
@@ -321,6 +325,7 @@ mainloop you can use g_idle_add() for example.</doc>
         </callback>
       </field>
       <field name="setup_pipeline">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h">configure pipeline for the chosen settings</doc>
         <callback name="setup_pipeline">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
           <return-value transfer-ownership="none">
@@ -334,6 +339,7 @@ mainloop you can use g_idle_add() for example.</doc>
         </callback>
       </field>
       <field name="set_zoom">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h">set the zoom</doc>
         <callback name="set_zoom">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
           <return-value transfer-ownership="none">
@@ -350,6 +356,7 @@ mainloop you can use g_idle_add() for example.</doc>
         </callback>
       </field>
       <field name="set_mode">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h">set the mode</doc>
         <callback name="set_mode">
           <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/basecamerabinsrc/gstbasecamerasrc.h"/>
           <return-value transfer-ownership="none">
@@ -416,9 +423,9 @@ mainloop you can use g_idle_add() for example.</doc>
       </field>
     </record>
     <enumeration name="CameraBin2Mode" glib:type-name="GstCameraBin2Mode" glib:get-type="gst_camerabin_mode_get_type" c:type="GstCameraBin2Mode">
-      <member name="mode_image" value="1" c:identifier="Still image capture (default)" glib:nick="mode-image">
+      <member name="mode_image" value="1" c:identifier="Still image capture (default)" glib:nick="mode-image" glib:name="Still image capture (default)">
       </member>
-      <member name="mode_video" value="2" c:identifier="Video recording" glib:nick="mode-video">
+      <member name="mode_video" value="2" c:identifier="Video recording" glib:nick="mode-video" glib:name="Video recording">
       </member>
     </enumeration>
     <enumeration name="CameraBinMode" c:type="GstCameraBinMode">
