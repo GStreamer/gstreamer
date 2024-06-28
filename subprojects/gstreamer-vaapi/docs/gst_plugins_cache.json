@@ -2,6 +2,32 @@
     "vaapi": {
         "description": "VA-API based elements",
         "elements": {
+            "vaapiav1dec": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>, Junyan He <junyan.he@intel.com>",
+                "description": "A VA-API based AV1 video decoder",
+                "hierarchy": [
+                    "GstVaapiDecode_av1",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-av1:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
+            },
             "vaapidecodebin": {
                 "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Victor Jaquez <victorx.jaquez@intel.com>",
                 "description": "A VA-API based bin with a decoder and a postprocessor",
@@ -25,7 +51,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { AYUV64, ARGB64, GBRA_12LE, GBRA_12BE, Y412_LE, Y412_BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, RGB10A2_LE, BGR10A2_LE, Y410, GBRA, ABGR, VUYA, BGRA, AYUV, ARGB, RGBA, A420, Y444_16LE, Y444_16BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, NV24, xBGR, BGRx, xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, YV12, NV21, NV12, NV12_64Z32, Y41B, IYU1, YVU9, YUV9, RGB16, BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, A420_12BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, UYVP, v210, I420_10LE, I420_10BE, P010_10LE, NV12_10LE40, NV12_10LE32, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -98,10 +124,10 @@
                         "writable": true
                     }
                 },
-                "rank": "primary + 2"
+                "rank": "none"
             },
             "vaapih264dec": {
-                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>, Junyan He <junyan.he@intel.com>",
                 "description": "A VA-API based H264 video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_h264",
@@ -120,7 +146,7 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -151,7 +177,7 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "none"
             },
             "vaapih264enc": {
                 "author": "Wind Yuan <feng.yuan@intel.com>",
@@ -172,17 +198,29 @@
                 "long-name": "VA-API H264 encoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:VASurface):\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:DMABuf):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-h264:\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n        profile: { (string)constrained-baseline, (string)baseline, (string)main, (string)high, (string)multiview-high, (string)stereo-high }\n",
+                        "caps": "video/x-h264:\n  stream-format: { (string)avc, (string)byte-stream }\n      alignment: au\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
                 "properties": {
+                    "aud": {
+                        "blurb": "Use AU (Access Unit) delimeter",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "false",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "gboolean",
+                        "writable": true
+                    },
                     "bitrate": {
                         "blurb": "The desired bitrate expressed in kbps (0: auto-calculate)",
                         "conditionally-available": false,
@@ -532,7 +570,7 @@
                 "rank": "primary"
             },
             "vaapih265dec": {
-                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>, Junyan He <junyan.he@intel.com>",
                 "description": "A VA-API based H265 video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_h265",
@@ -551,13 +589,13 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
                 "properties": {},
-                "rank": "primary"
+                "rank": "none"
             },
             "vaapih265enc": {
                 "author": "Sreerenj Balachandran <sreerenj.balachandran@intel.com>",
@@ -578,12 +616,12 @@
                 "long-name": "VA-API H265 encoder",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw:\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:VASurface):\n         format: { NV12, YV12, I420 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(memory:DMABuf):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-h265:\n  stream-format: { (string)hvc1, (string)byte-stream }\n      alignment: au\n        profile: { (string)main, (string)main-10, (string)main-444, (string)main-444-10 }\n",
+                        "caps": "video/x-h265:\n  stream-format: { (string)hvc1, (string)byte-stream }\n      alignment: au\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -891,7 +929,7 @@
                 "rank": "primary"
             },
             "vaapijpegdec": {
-                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>, Junyan He <junyan.he@intel.com>",
                 "description": "A VA-API based JPEG video decoder",
                 "hierarchy": [
                     "GstVaapiDecode_jpeg",
@@ -910,13 +948,13 @@
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "src",
                         "presence": "always"
                     }
                 },
                 "properties": {},
-                "rank": "marginal"
+                "rank": "none"
             },
             "vaapimpeg2dec": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>",
@@ -1157,12 +1195,12 @@
                 "long-name": "VA-API video postprocessing",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n\nvideo/x-raw(memory:DMABuf):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
                         "direction": "sink",
                         "presence": "always"
                     },
                     "src": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n\nvideo/x-raw(memory:DMABuf):\n         format: { I420, YV12, RGBA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: progressive\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n interlace-mode: { (string)progressive, (string)interleaved, (string)mixed }\n",
                         "direction": "src",
                         "presence": "always"
                     }
@@ -1447,7 +1485,7 @@
                         "writable": true
                     }
                 },
-                "rank": "primary"
+                "rank": "none"
             },
             "vaapisink": {
                 "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>",
@@ -1470,7 +1508,7 @@
                 "long-name": "VA-API sink",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, VUYA, Y210, Y410, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:VASurface, meta:GstVideoOverlayComposition):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoOverlayComposition):\n         format: { AYUV64, ARGB64, GBRA_12LE, GBRA_12BE, Y412_LE, Y412_BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, RGB10A2_LE, BGR10A2_LE, Y410, GBRA, ABGR, VUYA, BGRA, AYUV, ARGB, RGBA, A420, Y444_16LE, Y444_16BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, NV24, xBGR, BGRx, xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, YV12, NV21, NV12, NV12_64Z32, Y41B, IYU1, YVU9, YUV9, RGB16, BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { AYUV64, ARGB64, GBRA_12LE, GBRA_12BE, Y412_LE, Y412_BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, RGB10A2_LE, BGR10A2_LE, Y410, GBRA, ABGR, VUYA, BGRA, AYUV, ARGB, RGBA, A420, Y444_16LE, Y444_16BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, v210, UYVP, I420_10LE, I420_10BE, P010_10LE, NV12_10LE32, NV12_10LE40, P010_10BE, Y444, GBR, NV24, xBGR, BGRx, xRGB, RGBx, BGR, IYU2, v308, RGB, Y42B, NV61, NV16, VYUY, UYVY, YVYU, YUY2, I420, YV12, NV21, NV12, NV12_64Z32, Y41B, IYU1, YVU9, YUV9, RGB16, BGR16, RGB15, BGR15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(memory:VASurface, meta:GstVideoOverlayComposition):\n         format: { ENCODED, NV12, I420, YV12, P010_10LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoOverlayComposition):\n         format: { A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, A420_12BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, UYVP, v210, I420_10LE, I420_10BE, P010_10LE, NV12_10LE40, NV12_10LE32, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { A444_16LE, A444_16BE, Y416_LE, AYUV64, RGBA64_LE, ARGB64, ARGB64_LE, BGRA64_LE, ABGR64_LE, Y416_BE, RGBA64_BE, ARGB64_BE, BGRA64_BE, ABGR64_BE, A422_16LE, A422_16BE, A420_16LE, A420_16BE, A444_12LE, GBRA_12LE, A444_12BE, GBRA_12BE, Y412_LE, Y412_BE, A422_12LE, A422_12BE, A420_12LE, A420_12BE, A444_10LE, GBRA_10LE, A444_10BE, GBRA_10BE, A422_10LE, A422_10BE, A420_10LE, A420_10BE, BGR10A2_LE, RGB10A2_LE, Y410, A444, GBRA, AYUV, VUYA, RGBA, RBGA, ARGB, BGRA, ABGR, A422, A420, AV12, Y444_16LE, GBR_16LE, Y444_16BE, GBR_16BE, Y216_LE, Y216_BE, v216, P016_LE, P016_BE, Y444_12LE, GBR_12LE, Y444_12BE, GBR_12BE, I422_12LE, I422_12BE, Y212_LE, Y212_BE, I420_12LE, I420_12BE, P012_LE, P012_BE, Y444_10LE, GBR_10LE, Y444_10BE, GBR_10BE, r210, I422_10LE, I422_10BE, NV16_10LE32, Y210, UYVP, v210, I420_10LE, I420_10BE, P010_10LE, NV12_10LE40, NV12_10LE32, P010_10BE, MT2110R, MT2110T, NV12_10BE_8L128, NV12_10LE40_4L4, Y444, BGRP, GBR, RGBP, NV24, v308, IYU2, RGBx, xRGB, BGRx, xBGR, RGB, BGR, Y42B, NV16, NV61, YUY2, YVYU, UYVY, VYUY, I420, YV12, NV12, NV21, NV12_16L32S, NV12_32L32, NV12_4L4, NV12_64Z32, NV12_8L128, Y41B, IYU1, YUV9, YVU9, BGR16, RGB16, BGR15, RGB15, RGB8P, GRAY16_LE, GRAY16_BE, GRAY10_LE32, GRAY8 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
                         "direction": "sink",
                         "presence": "always"
                     }
@@ -1619,7 +1657,7 @@
                         "writable": true
                     }
                 },
-                "rank": "marginal",
+                "rank": "none",
                 "signals": {
                     "handoff": {
                         "args": [
@@ -1660,6 +1698,32 @@
                 },
                 "properties": {},
                 "rank": "primary"
+            },
+            "vaapivp9dec": {
+                "author": "Gwenole Beauchesne <gwenole.beauchesne@intel.com>, Halley Zhao <halley.zhao@intel.com>, Sreerenj Balachandran <sreerenj.balachandran@intel.com>, Wind Yuan <feng.yuan@intel.com>, Junyan He <junyan.he@intel.com>",
+                "description": "A VA-API based VP9 video decoder",
+                "hierarchy": [
+                    "GstVaapiDecode_vp9",
+                    "GstVideoDecoder",
+                    "GstElement",
+                    "GstObject",
+                    "GInitiallyUnowned",
+                    "GObject"
+                ],
+                "klass": "Codec/Decoder/Video/Hardware",
+                "pad-templates": {
+                    "sink": {
+                        "caps": "video/x-vp9:\n",
+                        "direction": "sink",
+                        "presence": "always"
+                    },
+                    "src": {
+                        "caps": "video/x-raw(memory:VASurface):\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n\nvideo/x-raw(meta:GstVideoGLTextureUploadMeta):\n         format: { RGBA, BGRA }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\nvideo/x-raw:\n         format: { ENCODED, NV12, YV12, I420, YUY2, UYVY, Y444, GRAY8, P010_10LE, P012_LE, VUYA, Y210, Y410, Y212_LE, Y412_LE, ARGB, xRGB, RGBA, RGBx, ABGR, xBGR, BGRA, BGRx, RGB16, RGB, BGR10A2_LE }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n",
+                        "direction": "src",
+                        "presence": "always"
+                    }
+                },
+                "rank": "none"
             }
         },
         "filename": "gstvaapi",

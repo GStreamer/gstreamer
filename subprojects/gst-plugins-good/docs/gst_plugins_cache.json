@@ -12278,7 +12278,7 @@
                 "klass": "Sink/Video",
                 "pad-templates": {
                     "sink": {
-                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGB, YV12, NV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: 2D\n",
+                        "caps": "video/x-raw(memory:GLMemory):\n         format: { RGBA, BGRA, RGB, YV12, NV12 }\n          width: [ 1, 2147483647 ]\n         height: [ 1, 2147483647 ]\n      framerate: [ 0/1, 2147483647/1 ]\n texture-target: { (string)2D, (string)external-oes }\n",
                         "direction": "sink",
                         "presence": "always"
                     }
