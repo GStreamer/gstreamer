@@ -1322,7 +1322,8 @@ print_element_list (gboolean print_all, gchar * ftypes)
 
   orig_plugins = plugins = gst_registry_get_plugin_list (gst_registry_get ());
   if (sort_output == SORT_TYPE_NAME)
-    plugins = g_list_sort (plugins, gst_plugin_name_compare_func);
+    orig_plugins = plugins =
+        g_list_sort (plugins, gst_plugin_name_compare_func);
   while (plugins) {
     GList *features, *orig_features;
     GstPlugin *plugin;
@@ -1340,7 +1341,8 @@ print_element_list (gboolean print_all, gchar * ftypes)
         gst_registry_get_feature_list_by_plugin (gst_registry_get (),
         gst_plugin_get_name (plugin));
     if (sort_output == SORT_TYPE_NAME)
-      features = g_list_sort (features, gst_plugin_feature_name_compare_func);
+      orig_features = features =
+          g_list_sort (features, gst_plugin_feature_name_compare_func);
     while (features) {
       GstPluginFeature *feature;
 
