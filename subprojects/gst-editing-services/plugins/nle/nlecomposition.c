@@ -1105,6 +1105,8 @@ nle_composition_handle_message (GstBin * bin, GstMessage * message)
       }
       g_mutex_unlock (&q->lock);
 
+      g_atomic_rc_box_release (q);
+
       /* We recursed up already */
       return;
     }
@@ -1906,6 +1908,10 @@ query_ancestors_position (NleComposition * comp)
     res = get_current_position (comp);
   }
   g_mutex_unlock (&q->lock);
+
+  /* Double release. One for the creation. One for the extra we gave to the
+   * structure */
+  g_atomic_rc_box_release (q);
   g_atomic_rc_box_release (q);
 
   return res;
