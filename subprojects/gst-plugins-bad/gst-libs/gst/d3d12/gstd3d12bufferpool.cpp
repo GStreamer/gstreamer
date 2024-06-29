@@ -172,10 +172,28 @@ gst_d3d12_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   priv->d3d12_params =
       gst_buffer_pool_config_get_d3d12_allocation_params (config);
   if (!priv->d3d12_params) {
+    GstD3D12Format format;
+    gst_d3d12_device_get_format (self->device, GST_VIDEO_INFO_FORMAT (&info),
+        &format);
+
+    D3D12_RESOURCE_FLAGS resource_flags =
+        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS;
+    if ((format.support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) ==
+        D3D12_FORMAT_SUPPORT1_RENDER_TARGET) {
+      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    }
+
+    if ((format.support1 & D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW) ==
+        D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW &&
+        (format.format_flags & GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) ==
+        GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) {
+      resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    }
+
     priv->d3d12_params =
         gst_d3d12_allocation_params_new (self->device,
         &info, GST_D3D12_ALLOCATION_FLAG_DEFAULT,
-        D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
+        resource_flags, D3D12_HEAP_FLAG_SHARED);
   }
 
   auto device = gst_d3d12_device_get_device_handle (self->device);
