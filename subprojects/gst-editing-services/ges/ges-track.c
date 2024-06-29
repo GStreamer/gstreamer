@@ -239,7 +239,7 @@ update_gaps (GESTrack * track)
       if (layer_prio != GES_TIMELINE_ELEMENT_NO_LAYER_PRIORITY) {
         GESLayer *layer = g_list_nth_data (priv->timeline->layers, layer_prio);
 
-        if (!ges_layer_get_active_for_track (layer, track))
+        if (!layer || !ges_layer_get_active_for_track (layer, track))
           continue;
       }
     }
