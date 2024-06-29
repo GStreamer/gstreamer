@@ -140,6 +140,8 @@ ges_discoverer_manager_finalize (GObject * object)
   g_hash_table_unref (self->discoverers);
   g_rec_mutex_unlock (&self->lock);
 
+  g_rec_mutex_clear (&self->lock);
+
   G_OBJECT_CLASS (ges_discoverer_manager_parent_class)->finalize (object);
 }
 
@@ -239,6 +241,7 @@ ges_discoverer_manager_init (GESDiscovererManager * self)
 {
   self->discoverers = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) ges_discoverer_data_unref);
+  g_rec_mutex_init (&self->lock);
 }
 
 
