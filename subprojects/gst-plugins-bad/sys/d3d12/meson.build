@@ -5,7 +5,6 @@ d3d12_sources = [
   'gstd3d12convert.cpp',
   'gstd3d12decoder.cpp',
   'gstd3d12decodercpbpool.cpp',
-  'gstd3d12download.cpp',
   'gstd3d12dpbstorage.cpp',
   'gstd3d12dxgicapture.cpp',
   'gstd3d12encoder.cpp',
@@ -25,7 +24,6 @@ d3d12_sources = [
   'gstd3d12screencapturedevice.cpp',
   'gstd3d12screencapturesrc.cpp',
   'gstd3d12testsrc.cpp',
-  'gstd3d12upload.cpp',
   'gstd3d12videosink.cpp',
   'gstd3d12vp8dec.cpp',
   'gstd3d12vp9dec.cpp',
@@ -157,6 +155,19 @@ if have_wgc and dwmapi_lib.found()
   d3d12_sources += ['gstd3d12graphicscapture.cpp']
   extra_args += ['-DHAVE_WGC']
   extra_deps += [dwmapi_lib]
+endif
+
+if gstd3d11_dep.found()
+  extra_args += ['-DHAVE_GST_D3D11']
+  extra_deps += [gstd3d11_dep]
+  d3d12_sources += [
+    'gstd3d12memorycopy.cpp',
+  ]
+else
+  d3d12_sources += [
+    'gstd3d12download.cpp',
+    'gstd3d12upload.cpp',
+  ]
 endif
 
 gstd3d12 = library('gstd3d12',

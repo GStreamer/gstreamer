@@ -31,8 +31,6 @@
 #include <gst/d3d12/gstd3d12.h>
 #include "gstd3d12pluginutils.h"
 #include "gstd3d12convert.h"
-#include "gstd3d12download.h"
-#include "gstd3d12upload.h"
 #include "gstd3d12videosink.h"
 #include "gstd3d12testsrc.h"
 #include "gstd3d12compositor.h"
@@ -52,6 +50,13 @@
 #include <versionhelpers.h>
 #include <wrl.h>
 #include <glib/gi18n-lib.h>
+
+#ifdef HAVE_GST_D3D11
+#include "gstd3d12memorycopy.h"
+#else
+#include "gstd3d12download.h"
+#include "gstd3d12upload.h"
+#endif
 
 /* *INDENT-OFF* */
 using namespace Microsoft::WRL;
