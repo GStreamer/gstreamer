@@ -1,5 +1,12 @@
 #! /bin/bash
 
+builddir="$1"
+
+if [[ -z "$builddir" ]]; then
+  echo "Usage: build.sh <build_directory>"
+  exit 1
+fi
+
 set -eux
 
 # Expects:
@@ -31,7 +38,7 @@ if [ "$GST_WERROR" = "true" ]; then
 fi
 
 date -R
-meson setup build/ --native-file ./ci/meson/gst-ci-cflags.ini  ${ARGS}
+meson setup "$builddir" --native-file ./ci/meson/gst-ci-cflags.ini  ${ARGS}
 date -R
 
 if command -v ccache
@@ -40,7 +47,7 @@ then
 fi
 
 date -R
-meson compile -C build/ --jobs "$jobs"
+meson compile -C "$builddir" --jobs "$jobs"
 date -R
 
 if command -v ccache

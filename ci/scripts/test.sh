@@ -1,5 +1,13 @@
 #! /bin/bash
 
+builddir="$1"
+tests="$2"
+
+if [[ -z "$builddir" || -z "$tests" ]]; then
+  echo "Usage: test.sh <build_directory> <test_name>"
+  exit 1
+fi
+
 set -eux
 
 timeout="${TIMEOUT_FACTOR:="2"}"
@@ -7,10 +15,11 @@ validate="${EXTRA_VALIDATE_ARGS:=""}"
 parent="${CI_PROJECT_DIR:-$(pwd)}"
 
 export XDG_RUNTIME_DIR="$(mktemp -p $(pwd) -d xdg-runtime-XXXXXX)"
-echo "-> Running ${TEST_SUITE}"
+echo "-> Running $tests"
 
 ./gst-env.py \
-    gst-validate-launcher ${TEST_SUITE} \
+    "--builddir=$builddir" \
+    gst-validate-launcher "$tests" \
     --check-bugs \
     --dump-on-failure \
     --mute \

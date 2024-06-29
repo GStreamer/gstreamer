@@ -333,7 +333,7 @@ commitlint:
     # https://gitlab.freedesktop.org/gstreamer/gstreamer/-/issues/3197
     GI_SCANNER_DISABLE_CACHE: "1"
   script:
-    - $CI_PROJECT_DIR/ci/scripts/build.sh
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
     - ./gst-env.py gst-inspect-1.0 --version
     - ./gst-env.py gst-inspect-1.0
   after_script:
@@ -359,7 +359,7 @@ commitlint:
     MESON_ARGS: "${SIMPLE_BUILD}"
     SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
-    - $CI_PROJECT_DIR/ci/scripts/build.sh
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
     - ./gst-env.py gst-inspect-1.0 --version
     - ./gst-env.py gst-inspect-1.0
     - G_DEBUG=fatal_criticals ./gst-env.py gst-inspect-1.0 --print-all --gst-disable-registry-fork > /dev/null
@@ -640,8 +640,8 @@ build macos:
     - mkdir -p ~/.config/gdb
     - echo "set auto-load safe-path /" >> ~/.config/gdb/gdbinit
 
-    - $CI_PROJECT_DIR/ci/scripts/build.sh
-    - $CI_PROJECT_DIR/ci/scripts/test.sh
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
+    - $CI_PROJECT_DIR/ci/scripts/test.sh build/ $TEST_SUITE
   after_script:
     - mv build/meson-logs/ meson-logs
   artifacts:
@@ -715,7 +715,7 @@ check video formats:
     WL_TOKEN: "GST_WL_VIDEO_FORMATS"
     WL_HEADER: "subprojects/gst-plugins-bad/gst-libs/gst/wayland/gstwlvideoformat.h"
   script:
-    - $CI_PROJECT_DIR/ci/scripts/build.sh
+    - $CI_PROJECT_DIR/ci/scripts/build.sh build/
     - $CI_PROJECT_DIR/ci/scripts/check-video-formats.sh
   rules:
     - changes:
@@ -739,7 +739,7 @@ gstreamer-full static build:
       -Ddoc=disabled
     SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
-  - $CI_PROJECT_DIR/ci/scripts/build.sh
+  - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v test-gst-full
 
 gstreamer-full-minimal static build:
@@ -764,7 +764,7 @@ gstreamer-full-minimal static build:
     SUBPROJECTS_CACHE_DIR: "/subprojects"
 
   script:
-  - $CI_PROJECT_DIR/ci/scripts/build.sh
+  - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v test-gst-full
   - meson test -C build test-gst-full-features --test-args "-e filesrc,identity,fakesink -E filesink,capsfilter -t audio/x-wav -T video/vivo -d alsadeviceprovider -D v4l2deviceprovider -l GstVideoMultiviewFlagsSet"
   - strip build/libgstreamer-full-1.0.so
@@ -802,7 +802,7 @@ fluster v4l2-stateless on visl:
       -Dgst-plugins-good:matroska=enabled
     SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
-  - $CI_PROJECT_DIR/ci/scripts/build.sh
+  - $CI_PROJECT_DIR/ci/scripts/build.sh build/
   - meson test -C build -v --suite v4l2-stateless-decoders
   artifacts:
     reports:
@@ -941,7 +941,7 @@ valgrind ges:
     SUBPROJECTS_CACHE_DIR: "/subprojects"
     CI_ARTIFACTS_URL: "${CI_PROJECT_URL}/-/jobs/${CI_JOB_ID}/artifacts/raw/"
   script:
-    - $CI_PROJECT_DIR/ci/scripts/build-docs.sh
+    - $CI_PROJECT_DIR/ci/scripts/build-docs.sh build/
   artifacts:
     when: always
     expire_in: "7 days"
