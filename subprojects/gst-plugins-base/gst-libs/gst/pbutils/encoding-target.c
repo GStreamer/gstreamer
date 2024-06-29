@@ -149,6 +149,8 @@ gst_encoding_target_finalize (GObject * object)
 
   g_list_foreach (target->profiles, (GFunc) g_object_unref, NULL);
   g_list_free (target->profiles);
+
+  G_OBJECT_CLASS (gst_encoding_target_parent_class)->finalize (object);
 }
 
 static void
