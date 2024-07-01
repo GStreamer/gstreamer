@@ -587,7 +587,7 @@ ges_uri_clip_asset_is_image (GESUriClipAsset * self)
 }
 
 /**
- * ges_uri_clip_asset_new:
+ * ges_uri_clip_asset_new: (sync-func request_sync) (finish-func finish):
  * @uri: The URI of the file for which to create a #GESUriClipAsset
  * @cancellable: optional %GCancellable object, %NULL to ignore.
  * @callback: (scope async): a #GAsyncReadyCallback to call when the initialization is finished
@@ -657,7 +657,7 @@ ges_uri_clip_asset_finish (GAsyncResult * res, GError ** error)
 }
 
 /**
- * ges_uri_clip_asset_request_sync:
+ * ges_uri_clip_asset_request_sync: (async-func new):
  * @uri: The URI of the file for which to create a #GESUriClipAsset.
  * You can also use multi file uris for #GESMultiFileSource.
  * @error: An error to be set in case something wrong happens or %NULL
