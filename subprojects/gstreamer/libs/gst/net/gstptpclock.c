@@ -294,8 +294,8 @@ typedef struct
 
   GstClockTime announce_interval;       /* last interval we received */
   GQueue announce_messages;
-  guint64 timed_out_sync;       /* how often did this sender continously time out a FOLLOW_UP */
-  guint64 timed_out_delay_resp; /* how often did this sender continously time out a DELAY_RESP */
+  guint64 timed_out_sync;       /* how often did this sender continuously time out a FOLLOW_UP */
+  guint64 timed_out_delay_resp; /* how often did this sender continuously time out a DELAY_RESP */
 } PtpAnnounceSender;
 
 typedef struct
