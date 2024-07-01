@@ -156,6 +156,7 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   gchar *filename;
   gboolean is_tty = isatty (STDOUT_FILENO);
+  GThread *thread;
 
   if (argc < 2) {
     g_print ("1..0\nnot ok # Missing <testfile> argument\n");
@@ -210,9 +211,10 @@ main (int argc, gchar ** argv)
 
 /* Running the subprocess in it own thread so that we can properly catch
  * interuptions in the main thread main loop */
-  g_thread_new ("gst-tester-thread", (GThreadFunc) _run_app, &app);
+  thread = g_thread_new ("gst-tester-thread", (GThreadFunc) _run_app, &app);
   g_main_loop_run (app.ml);
   g_main_loop_unref (app.ml);
+  g_thread_join (thread);
   g_strfreev (args);
 
   return app.exitcode;
