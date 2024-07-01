@@ -3540,7 +3540,7 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     GST_WARNING_OBJECT (v4l2object->dbg_obj,
         "format %s has a pstride of 0, cannot compute padded with",
         gst_video_format_to_string (GST_VIDEO_INFO_FORMAT (info)));
-    padded_width = stride;
+    padded_width = format->fmt.pix.width;
   }
 
   if (padded_width < format->fmt.pix.width)
