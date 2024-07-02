@@ -2321,12 +2321,10 @@ a single language</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer">
+      <function name="from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer" version="1.26">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
         <return-value transfer-ownership="full">
-          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsDescriptor from the metadata pointer descriptor.
-
-Since 1.26</doc>
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsDescriptor from the metadata pointer descriptor.</doc>
           <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
         </return-value>
         <parameters>
@@ -5085,12 +5083,10 @@ a single language</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="descriptor_from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer" moved-to="Descriptor.from_metadata_pointer">
+    <function name="descriptor_from_metadata_pointer" c:identifier="gst_mpegts_descriptor_from_metadata_pointer" moved-to="Descriptor.from_metadata_pointer" version="1.26">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <return-value transfer-ownership="full">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsDescriptor from the metadata pointer descriptor.
-
-Since 1.26</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">a #GstMpegtsDescriptor from the metadata pointer descriptor.</doc>
         <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
       </return-value>
       <parameters>
