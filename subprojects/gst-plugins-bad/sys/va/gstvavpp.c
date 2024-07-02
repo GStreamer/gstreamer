@@ -934,7 +934,12 @@ gst_va_vpp_caps_remove_fields (GstCaps * caps)
   GstCaps *ret;
   GstStructure *structure;
   GstCapsFeatures *features;
-  gint i, j, n, m;
+  gint i, n;
+  guint sysmem, dmabuf, va;
+
+  sysmem = g_quark_from_static_string (GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+  dmabuf = g_quark_from_static_string (GST_CAPS_FEATURE_MEMORY_DMABUF);
+  va = g_quark_from_static_string (GST_CAPS_FEATURE_MEMORY_VA);
 
   ret = gst_caps_new_empty ();
 
@@ -950,30 +955,22 @@ gst_va_vpp_caps_remove_fields (GstCaps * caps)
 
     structure = gst_structure_copy (structure);
 
-    m = gst_caps_features_get_size (features);
-    for (j = 0; j < m; j++) {
-      const gchar *feature = gst_caps_features_get_nth (features, j);
+    if (gst_caps_features_contains_id (features, sysmem)
+        || gst_caps_features_contains_id (features, dmabuf)
+        || gst_caps_features_contains_id (features, va)) {
+      /* rangify frame size */
+      gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+          "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
 
-      if (g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY) == 0
-          || g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_DMABUF) == 0
-          || g_strcmp0 (feature, GST_CAPS_FEATURE_MEMORY_VA) == 0) {
-
-        /* rangify frame size */
-        gst_structure_set (structure, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-
-        /* if pixel aspect ratio, make a range of it */
-        if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
-          gst_structure_set (structure, "pixel-aspect-ratio",
-              GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
-        }
-
-        /* remove format-related fields */
-        gst_structure_remove_fields (structure, "format", "drm-format",
-            "colorimetry", "chroma-site", NULL);
-
-        break;
+      /* if pixel aspect ratio, make a range of it */
+      if (gst_structure_has_field (structure, "pixel-aspect-ratio")) {
+        gst_structure_set (structure, "pixel-aspect-ratio",
+            GST_TYPE_FRACTION_RANGE, 1, G_MAXINT, G_MAXINT, 1, NULL);
       }
+
+      /* remove format-related fields */
+      gst_structure_remove_fields (structure, "format", "drm-format",
+          "colorimetry", "chroma-site", NULL);
     }
 
     gst_caps_append_structure_full (ret, structure,
@@ -989,7 +986,7 @@ static GstCaps *
 gst_va_vpp_complete_caps_features (const GstCaps * caps,
     const gchar * feature_name)
 {
-  guint i, j, m, n;
+  guint i, n;
   GstCaps *tmp;
 
   tmp = gst_caps_new_empty ();
@@ -997,24 +994,19 @@ gst_va_vpp_complete_caps_features (const GstCaps * caps,
   n = gst_caps_get_size (caps);
   for (i = 0; i < n; i++) {
     GstCapsFeatures *features, *orig_features;
-    GstStructure *s = gst_caps_get_structure (caps, i);
-    gboolean contained = FALSE;
+    GstStructure *s;
 
+    s = gst_caps_get_structure (caps, i);
     orig_features = gst_caps_get_features (caps, i);
-    features = gst_caps_features_new (feature_name, NULL);
 
-    m = gst_caps_features_get_size (orig_features);
-    for (j = 0; j < m; j++) {
-      const gchar *feature = gst_caps_features_get_nth (orig_features, j);
-
-      /* if we already have the features */
-      if (gst_caps_features_contains (features, feature)) {
-        contained = TRUE;
-        break;
-      }
+    if (gst_caps_features_contains (orig_features, feature_name)) {
+      gst_caps_append_structure_full (tmp, gst_structure_copy (s),
+          gst_caps_features_copy (orig_features));
+      continue;
     }
 
-    if (!contained && !gst_caps_is_subset_structure_full (tmp, s, features))
+    features = gst_caps_features_new (feature_name, NULL);
+    if (!gst_caps_is_subset_structure_full (tmp, s, features))
       gst_caps_append_structure_full (tmp, gst_structure_copy (s), features);
     else
       gst_caps_features_free (features);
@@ -1028,41 +1020,34 @@ gst_va_vpp_transform_caps (GstBaseTransform * trans, GstPadDirection direction,
     GstCaps * caps, GstCaps * filter)
 {
   GstVaVpp *self = GST_VA_VPP (trans);
-  GstVaBaseTransform *btrans = GST_VA_BASE_TRANSFORM (trans);
-  GstCaps *ret, *tmp, *filter_caps;
+  GstCaps *ret;
+  GstPadTemplate *pad_tmpl;
+  static const gchar *caps_features[] = { GST_CAPS_FEATURE_MEMORY_VA,
+    GST_CAPS_FEATURE_MEMORY_DMABUF, GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY
+  };
+  guint i;
 
   GST_DEBUG_OBJECT (self,
       "Transforming caps %" GST_PTR_FORMAT " in direction %s", caps,
       (direction == GST_PAD_SINK) ? "sink" : "src");
 
-  filter_caps = gst_va_base_transform_get_filter_caps (btrans);
-  if (filter_caps && !gst_caps_can_intersect (caps, filter_caps)) {
+  pad_tmpl = gst_element_get_pad_template (GST_ELEMENT (self),
+      (direction == GST_PAD_SINK) ? "sink" : "src");
+  if (pad_tmpl->caps == caps) {
     ret = gst_caps_ref (caps);
     goto bail;
   }
 
   ret = gst_va_vpp_caps_remove_fields (caps);
 
-  tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_VA);
-  if (!gst_caps_is_subset (tmp, ret)) {
-    gst_caps_append (ret, tmp);
-  } else {
-    gst_caps_unref (tmp);
-  }
+  for (i = 0; i < G_N_ELEMENTS (caps_features); i++) {
+    GstCaps *tmp;
 
-  tmp = gst_va_vpp_complete_caps_features (ret, GST_CAPS_FEATURE_MEMORY_DMABUF);
-  if (!gst_caps_is_subset (tmp, ret)) {
-    gst_caps_append (ret, tmp);
-  } else {
-    gst_caps_unref (tmp);
-  }
-
-  tmp = gst_va_vpp_complete_caps_features (ret,
-      GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
-  if (!gst_caps_is_subset (tmp, ret)) {
-    gst_caps_append (ret, tmp);
-  } else {
-    gst_caps_unref (tmp);
+    tmp = gst_va_vpp_complete_caps_features (ret, caps_features[i]);
+    if (!gst_caps_is_subset (tmp, ret))
+      gst_caps_append (ret, tmp);
+    else
+      gst_caps_unref (tmp);
   }
 
 bail:
