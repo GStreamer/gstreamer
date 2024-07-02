@@ -430,7 +430,11 @@ typedef enum
 } GstMpegtsMetadataFormat;
 
 /**
- * GstMepgtsMetadataApplicationFormat:
+ * GstMpegtsMetadataApplicationFormat:
+ *
+ * @GST_MPEGTS_METADATA_APPLICATION_FORMAT_ISAN ISO 15706-1 (ISAN) encoded in its binary form
+ * @GST_MPEGTS_METADATA_APPLICATION_FORMAT_VSAN ISO 15706-2 (V-ISAN) encoded in its binary form
+ * @GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD Defined by the metadata_application_format_identifier field
  *
  * metadata_application_format valid values. See ISO/IEC 13818-1:2023(E) Table 2-84.
  *
@@ -438,31 +442,8 @@ typedef enum
  */
 typedef enum
 {
-  /**
-   * GST_METADATA_APPLICATION_FORMAT_ISAN:
-   *
-   * ISO 15706-1 (ISAN) encoded in its binary form
-   *
-   * Since: 1.26
-   */
   GST_MPEGTS_METADATA_APPLICATION_FORMAT_ISAN = 0x0010,
-
-  /**
-   * GST_METADATA_APPLICATION_FORMAT_VSAN:
-   *
-   * ISO 15706-2 (V-ISAN) encoded in its binary form
-   *
-   * Since: 1.26
-   */
   GST_MPEGTS_METADATA_APPLICATION_FORMAT_VSAN = 0x0011,
-
-  /**
-   * GST_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD:
-   *
-   * Defined by the metadata_application_format_identifier field
-   *
-   * Since: 1.26
-   */
   GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD = 0xffff,
 } GstMpegtsMetadataApplicationFormat;
 
@@ -510,8 +491,8 @@ GST_MPEGTS_API
 GType gst_mpegts_metadata_descriptor_get_type(void);
 
 /**
- * 
- * 
+ * gst_mpegts_descriptor_from_metadata
+ *
  * Since: 1.26
  */
 GST_MPEGTS_API
@@ -638,13 +619,14 @@ struct _GstMpegtsMetadataPointerDescriptor
   guint16 program_number;
 };
 
-/** Since: 1.26 */
+/**
+ * GST_TYPE_MPEGTS_METADATA_POINTER_DESCRIPTOR
+ *
+ * Since : 1.26
+ */
 #define GST_TYPE_MPEGTS_METADATA_POINTER_DESCRIPTOR \
   (gst_mpegts_metadata_pointer_descriptor_get_type())
 
-/** Since: 1.26 */
-GST_MPEGTS_API
-GType gst_mpegts_metadata_pointer_descriptor_get_type(void);
 
 /**
  * gst_mpegts_descriptor_from_metadata_pointer:
