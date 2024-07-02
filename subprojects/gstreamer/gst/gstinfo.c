@@ -106,9 +106,6 @@
 #include "gstvalue.h"
 #include "gstcapsfeatures.h"
 
-#ifdef HAVE_VALGRIND_VALGRIND_H
-#  include <valgrind/valgrind.h>
-#endif
 #endif /* GST_DISABLE_GST_DEBUG */
 
 #include <glib/gprintf.h>       /* g_sprintf */
