@@ -659,7 +659,7 @@ GType gst_mpegts_metadata_pointer_descriptor_get_type(void);
  *
  * Returns: a #GstMpegtsDescriptor from the metadata pointer descriptor.
  *
- * Since 1.26
+ * Since: 1.26
  */
 GST_MPEGTS_API
 GstMpegtsDescriptor *gst_mpegts_descriptor_from_metadata_pointer(const GstMpegtsMetadataPointerDescriptor *metadata_pointer_descriptor);
