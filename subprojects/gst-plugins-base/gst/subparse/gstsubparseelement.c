@@ -51,7 +51,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
 #ifdef HAVE_VALGRIND
   if (RUNNING_ON_VALGRIND) {
     /* jitted regex confuse valgrind */
-    jit_flags = G_REGEX_RAW;
+    jit_flags &= ~G_REGEX_OPTIMIZE;
   }
 #endif
 
