@@ -2310,7 +2310,7 @@ a single language</doc>
           </parameter>
         </parameters>
       </function>
-      <function name="from_metadata" c:identifier="gst_mpegts_descriptor_from_metadata">
+      <function name="from_metadata" c:identifier="gst_mpegts_descriptor_from_metadata" version="1.26">
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
         <return-value transfer-ownership="full">
           <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
@@ -2808,7 +2808,12 @@ Consult the relevant specifications for more details.</doc>
         </array>
       </field>
     </record>
-    <enumeration name="MetadataApplicationFormat" c:type="GstMpegtsMetadataApplicationFormat">
+    <enumeration name="MetadataApplicationFormat" version="1.26" c:type="GstMpegtsMetadataApplicationFormat">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">@GST_MPEGTS_METADATA_APPLICATION_FORMAT_ISAN ISO 15706-1 (ISAN) encoded in its binary form
+@GST_MPEGTS_METADATA_APPLICATION_FORMAT_VSAN ISO 15706-2 (V-ISAN) encoded in its binary form
+@GST_MPEGTS_METADATA_APPLICATION_FORMAT_IDENTIFIER_FIELD Defined by the metadata_application_format_identifier field
+
+metadata_application_format valid values. See ISO/IEC 13818-1:2023(E) Table 2-84.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <member name="isan" value="16" c:identifier="GST_MPEGTS_METADATA_APPLICATION_FORMAT_ISAN">
       </member>
@@ -2866,7 +2871,7 @@ See ISO/IEC 13818-1:2018 Section 2.6.60 and Section 2.6.61 for more information.
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Defined by metadata_format_identifier field.</doc>
       </member>
     </enumeration>
-    <record name="MetadataPointerDescriptor" c:type="GstMpegtsMetadataPointerDescriptor" version="1.26" glib:type-name="GstMpegtsMetadataPointerDescriptor" glib:get-type="gst_mpegts_metadata_pointer_descriptor_get_type" c:symbol-prefix="metadata_pointer_descriptor">
+    <record name="MetadataPointerDescriptor" c:type="GstMpegtsMetadataPointerDescriptor" version="1.26">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">This structure is not complete. The following fields are missing in comparison to the standard (ISO/IEC 13818-1:2023 Section 2.6.58):
 * metadata_locator_record_flag: hardcoded to 0. Indicating no metadata_locator_record present in the descriptor.
 * MPEG_carriage_flags: hardcoded to 0b00, indicating the metadata is carried in the same transport steam.
@@ -5072,7 +5077,7 @@ a single language</doc>
         </parameter>
       </parameters>
     </function>
-    <function name="descriptor_from_metadata" c:identifier="gst_mpegts_descriptor_from_metadata" moved-to="Descriptor.from_metadata">
+    <function name="descriptor_from_metadata" c:identifier="gst_mpegts_descriptor_from_metadata" moved-to="Descriptor.from_metadata" version="1.26">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <return-value transfer-ownership="full">
         <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
