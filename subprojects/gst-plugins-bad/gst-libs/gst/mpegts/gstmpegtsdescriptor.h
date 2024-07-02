@@ -626,7 +626,8 @@ struct _GstMpegtsMetadataPointerDescriptor
  */
 #define GST_TYPE_MPEGTS_METADATA_POINTER_DESCRIPTOR \
   (gst_mpegts_metadata_pointer_descriptor_get_type())
-
+GST_MPEGTS_API
+GType gst_mpegts_metadata_pointer_descriptor_get_type(void);
 
 /**
  * gst_mpegts_descriptor_from_metadata_pointer:
