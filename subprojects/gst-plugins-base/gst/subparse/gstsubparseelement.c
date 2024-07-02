@@ -21,6 +21,10 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#endif
+
 #include <stdio.h>
 
 #include "gstsubparseelements.h"
@@ -42,11 +46,20 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
 {
   gpointer result = NULL;
   GError *gerr = NULL;
+  GRegexCompileFlags jit_flags = G_REGEX_OPTIMIZE | G_REGEX_RAW;
+
+#ifdef HAVE_VALGRIND
+  if (RUNNING_ON_VALGRIND) {
+    /* jitted regex confuse valgrind */
+    jit_flags = G_REGEX_RAW;
+  }
+#endif
+
   switch (regtype) {
     case GST_SUB_PARSE_REGEX_MDVDSUB:
       result =
           (gpointer) g_regex_new ("^\\{[0-9]+\\}\\{[0-9]+\\}",
-          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
+          jit_flags, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of mdvd regex failed: %s", gerr->message);
         g_clear_error (&gerr);
@@ -57,7 +70,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
           g_regex_new ("^[\\s\\n]*[\\n]? {0,3}[ 0-9]{1,4}\\s*(\x0d)?\x0a"
           " ?[0-9]{1,2}: ?[0-9]{1,2}: ?[0-9]{1,2}[,.] {0,2}[0-9]{1,3}"
           " +--> +[0-9]{1,2}: ?[0-9]{1,2}: ?[0-9]{1,2}[,.] {0,2}[0-9]{1,2}",
-          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
+          jit_flags, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of subrip regex failed: %s", gerr->message);
         g_clear_error (&gerr);
@@ -65,7 +78,7 @@ gst_sub_parse_data_format_autodetect_regex_once (GstSubParseRegex regtype)
       break;
     case GST_SUB_PARSE_REGEX_DKS:
       result = (gpointer) g_regex_new ("^\\[[0-9]+:[0-9]+:[0-9]+\\].*",
-          G_REGEX_RAW | G_REGEX_OPTIMIZE, 0, &gerr);
+          jit_flags, 0, &gerr);
       if (result == NULL) {
         g_warning ("Compilation of dks regex failed: %s", gerr->message);
         g_clear_error (&gerr);
