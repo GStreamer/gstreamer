@@ -111,6 +111,7 @@ svt-vp9
 svt-vp9-devel
 svt-vp9-libs
 valgrind
+valgrind-devel
 vulkan-devel
 vulkan-loader
 x264
