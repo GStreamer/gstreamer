@@ -303,6 +303,9 @@ if get_option('default_library') == 'static'
   gst_plugins_base_args += ['-DGST_STATIC_COMPILATION']
 endif
 
+valgrind_dep = dependency('valgrind', required: false)
+core_conf.set('HAVE_VALGRIND', valgrind_dep.found())
+
 libdrm_dep = dependency('libdrm', version : '>= 2.4.98',
   required : get_option('drm'),
   allow_fallback: host_system not in ['darwin', 'ios', 'android', 'windows']

@@ -129,11 +129,6 @@ test_defines = [
   '-DGST_USE_UNSTABLE_API',
 ]
 
-valgrind_dep = dependency('valgrind', required: false)
-if valgrind_dep.found()
-  test_defines += ['-DHAVE_VALGRIND']
-endif
-
 if build_gstgl
   test_defines += ['-DTEST_GST_GL_ABI_CHECK']
 endif
