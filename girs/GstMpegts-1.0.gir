@@ -2871,7 +2871,7 @@ See ISO/IEC 13818-1:2018 Section 2.6.60 and Section 2.6.61 for more information.
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">Defined by metadata_format_identifier field.</doc>
       </member>
     </enumeration>
-    <record name="MetadataPointerDescriptor" c:type="GstMpegtsMetadataPointerDescriptor" version="1.26">
+    <record name="MetadataPointerDescriptor" c:type="GstMpegtsMetadataPointerDescriptor" version="1.26" glib:type-name="GstMpegtsMetadataPointerDescriptor" glib:get-type="gst_mpegts_metadata_pointer_descriptor_get_type" c:symbol-prefix="metadata_pointer_descriptor">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">This structure is not complete. The following fields are missing in comparison to the standard (ISO/IEC 13818-1:2023 Section 2.6.58):
 * metadata_locator_record_flag: hardcoded to 0. Indicating no metadata_locator_record present in the descriptor.
 * MPEG_carriage_flags: hardcoded to 0b00, indicating the metadata is carried in the same transport steam.
