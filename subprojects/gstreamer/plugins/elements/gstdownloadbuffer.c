@@ -1730,6 +1730,7 @@ gst_download_buffer_src_activate_push (GstPad * pad, GstObject * parent,
     dlbuf->srcresult = GST_FLOW_OK;
     dlbuf->sinkresult = GST_FLOW_OK;
     dlbuf->unexpected = FALSE;
+    dlbuf->upstream_size = -1;
     result =
         gst_pad_start_task (pad, (GstTaskFunction) gst_download_buffer_loop,
         pad, NULL);
