@@ -1325,8 +1325,10 @@ gst_download_buffer_loop (GstPad * pad)
   GST_DOWNLOAD_BUFFER_MUTEX_LOCK_CHECK (dlbuf, dlbuf->srcresult, out_flushing);
 
   ret = gst_download_buffer_read_buffer (dlbuf, -1, -1, &buffer);
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    dlbuf->srcresult = ret;
     goto out_flushing;
+  }
 
   if (dlbuf->stream_start_event != NULL) {
     gst_pad_push_event (dlbuf->srcpad, dlbuf->stream_start_event);
