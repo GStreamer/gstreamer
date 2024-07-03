@@ -1007,6 +1007,8 @@ gst_download_buffer_handle_sink_event (GstPad * pad, GstObject * parent,
 
   dlbuf = GST_DOWNLOAD_BUFFER (parent);
 
+  GST_DEBUG_OBJECT (dlbuf, "%" GST_PTR_FORMAT, event);
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
     {
@@ -1384,10 +1386,7 @@ gst_download_buffer_handle_src_event (GstPad * pad, GstObject * parent,
   gboolean res = TRUE;
   GstDownloadBuffer *dlbuf = GST_DOWNLOAD_BUFFER (parent);
 
-#ifndef GST_DISABLE_GST_DEBUG
-  GST_DEBUG_OBJECT (dlbuf, "got event %p (%s)",
-      event, GST_EVENT_TYPE_NAME (event));
-#endif
+  GST_DEBUG_OBJECT (dlbuf, "%" GST_PTR_FORMAT, event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
