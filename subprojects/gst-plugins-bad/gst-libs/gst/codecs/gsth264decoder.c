@@ -2180,10 +2180,46 @@ gst_h264_decoder_finish_picture (GstH264Decoder * self,
   if (picture->second_field && picture->other_field &&
       GST_CODEC_PICTURE_FRAME_NUMBER (picture) !=
       GST_CODEC_PICTURE_FRAME_NUMBER (picture->other_field)) {
-    GstVideoCodecFrame *frame = gst_video_decoder_get_frame (decoder,
+    GstVideoCodecFrame *second_field = gst_video_decoder_get_frame (decoder,
         GST_CODEC_PICTURE_FRAME_NUMBER (picture));
+    GstVideoCodecFrame *first_field = gst_video_decoder_get_frame (decoder,
+        GST_CODEC_PICTURE_FRAME_NUMBER (picture->other_field));
 
-    gst_video_decoder_release_frame (decoder, frame);
+    /* Update frame duration. since we output a frame for two input field
+     * pictures, output buffer duration should be first-field-duration +
+     * second-field-duration */
+    if (first_field) {
+      if (GST_CLOCK_TIME_IS_VALID (first_field->pts) &&
+          GST_CLOCK_TIME_IS_VALID (second_field->pts)) {
+        GstClockTime first_field_end_time = first_field->pts;
+        GstClockTime frame_end_time = second_field->pts;
+        GstClockTime frame_duration;
+
+        if (GST_CLOCK_TIME_IS_VALID (first_field->duration))
+          first_field_end_time += first_field->duration;
+
+        if (GST_CLOCK_TIME_IS_VALID (second_field->duration))
+          frame_end_time += second_field->duration;
+
+        frame_end_time = MAX (first_field_end_time, frame_end_time);
+        if (frame_end_time >= first_field->pts) {
+          frame_duration = frame_end_time - first_field->pts;
+
+          GST_LOG_OBJECT (self, "Updating frame duration %"
+              GST_TIME_FORMAT " -> %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (first_field->duration),
+              GST_TIME_ARGS (frame_duration));
+
+          first_field->duration = frame_duration;
+        }
+      }
+      gst_video_codec_frame_unref (first_field);
+    } else {
+      GST_ERROR_OBJECT (self, "Couldn't get first field codec frame %u",
+          GST_CODEC_PICTURE_FRAME_NUMBER (picture->other_field));
+    }
+
+    gst_video_decoder_release_frame (decoder, second_field);
   }
 
   /* C.4.4 */
