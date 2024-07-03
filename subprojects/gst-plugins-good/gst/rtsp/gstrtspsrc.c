@@ -315,6 +315,7 @@ gst_rtsp_backchannel_get_type (void)
 #define DEFAULT_IS_LIVE TRUE
 #define DEFAULT_IGNORE_X_SERVER_REPLY FALSE
 #define DEFAULT_TCP_TIMESTAMP FALSE
+#define DEFAULT_FORCE_NON_COMPLIANT_URL FALSE
 
 enum
 {
@@ -367,6 +368,7 @@ enum
   PROP_IGNORE_X_SERVER_REPLY,
   PROP_EXTRA_HTTP_REQUEST_HEADERS,
   PROP_TCP_TIMESTAMP,
+  PROP_FORCE_NON_COMPLIANT_URL,
 };
 
 #define GST_TYPE_RTSP_NAT_METHOD (gst_rtsp_nat_method_get_type())
@@ -1150,6 +1152,26 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Timestamp RTP packets with receive times in TCP/HTTP mode",
           DEFAULT_TCP_TIMESTAMP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+   /**
+   * GstRTSPSrc:force-non-compliant-url
+   *
+   * There are various non-compliant servers that don't require control URLs
+   * that are not resolved correctly but instead are just appended.
+   *
+   * As some of these servers will nevertheless reply OK to SETUP requests
+   * even if they didn't handle URIs correctly, this property can be set to
+   * revert to the old non-compliant method for constructing URLs.
+   *
+   * Since: 1.24.7
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_FORCE_NON_COMPLIANT_URL,
+      g_param_spec_boolean ("force-non-compliant-url",
+          "Force non-compliant URL",
+          "Revert to old non-compliant method of constructing URLs",
+          DEFAULT_FORCE_NON_COMPLIANT_URL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -1582,6 +1604,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->prop_extra_http_request_headers =
       gst_structure_new_empty ("extra-http-request-headers");
   src->tcp_timestamp = DEFAULT_TCP_TIMESTAMP;
+  src->force_non_compliant_url = DEFAULT_FORCE_NON_COMPLIANT_URL;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -1945,6 +1968,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_TCP_TIMESTAMP:
       rtspsrc->tcp_timestamp = g_value_get_boolean (value);
       break;
+    case PROP_FORCE_NON_COMPLIANT_URL:
+      rtspsrc->force_non_compliant_url = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2123,6 +2149,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TCP_TIMESTAMP:
       g_value_set_boolean (value, rtspsrc->tcp_timestamp);
+      break;
+    case PROP_FORCE_NON_COMPLIANT_URL:
+      g_value_set_boolean (value, rtspsrc->force_non_compliant_url);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -7605,6 +7634,31 @@ gst_rtspsrc_setup_streams_end (GstRTSPSrc * src, gboolean async)
   return GST_RTSP_OK;
 }
 
+static void
+try_non_compliant_url (GstRTSPSrc * src, GstRTSPStream * stream)
+{
+  const gchar *base;
+
+  base = get_aggregate_control (src);
+
+  g_free (stream->conninfo.location);
+
+  /* Make sure to not accumulate too many `/` */
+  if ((g_str_has_suffix (base, "/")
+          && !g_str_has_suffix (stream->control_url, "/"))
+      || (!g_str_has_suffix (base, "/")
+          && g_str_has_suffix (stream->control_url, "/"))
+      )
+    stream->conninfo.location = g_strconcat (base, stream->control_url, NULL);
+  else if (g_str_has_suffix (base, "/")
+      && g_str_has_suffix (stream->control_url, "/"))
+    stream->conninfo.location =
+        g_strconcat (base, stream->control_url + 1, NULL);
+  else
+    stream->conninfo.location =
+        g_strconcat (base, "/", stream->control_url, NULL);
+}
+
 /* Perform the SETUP request for all the streams.
  *
  * We ask the server for a specific transport, which initially includes all the
@@ -7668,7 +7722,7 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
     GstRTSPConnInfo *conninfo;
     gchar *transports;
     gint retry = 0;
-    gboolean tried_non_compliant_url = FALSE;
+    gboolean tried_non_compliant_url;
     guint mask = 0;
     gboolean selected;
     GstCaps *caps;
@@ -7749,6 +7803,14 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
       mask++;
     if (!protocol_masks[mask])
       goto no_protocols;
+
+    if (src->force_non_compliant_url) {
+      try_non_compliant_url (src, stream);
+
+      tried_non_compliant_url = TRUE;
+    } else {
+      tried_non_compliant_url = FALSE;
+    }
 
   retry:
     GST_DEBUG_OBJECT (src, "protocols = 0x%x, protocol mask = 0x%x", protocols,
@@ -7874,30 +7936,11 @@ gst_rtspsrc_setup_streams_start (GstRTSPSrc * src, gboolean async)
          */
         if (!tried_non_compliant_url && stream->control_url
             && !gst_uri_is_valid (stream->control_url)) {
-          const gchar *base;
-
           gst_rtsp_message_unset (&request);
           gst_rtsp_message_unset (&response);
           gst_rtspsrc_stream_free_udp (stream);
 
-          g_free (stream->conninfo.location);
-          base = get_aggregate_control (src);
-
-          /* Make sure to not accumulate too many `/` */
-          if ((g_str_has_suffix (base, "/")
-                  && !g_str_has_suffix (stream->control_url, "/"))
-              || (!g_str_has_suffix (base, "/")
-                  && g_str_has_suffix (stream->control_url, "/"))
-              )
-            stream->conninfo.location =
-                g_strconcat (base, stream->control_url, NULL);
-          else if (g_str_has_suffix (base, "/")
-              && g_str_has_suffix (stream->control_url, "/"))
-            stream->conninfo.location =
-                g_strconcat (base, stream->control_url + 1, NULL);
-          else
-            stream->conninfo.location =
-                g_strconcat (base, "/", stream->control_url, NULL);
+          try_non_compliant_url (src, stream);
 
           tried_non_compliant_url = TRUE;
 
