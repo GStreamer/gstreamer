@@ -29,7 +29,7 @@
 #include <gst/gl/gl.h>
 #include <gst/gl/gstglfuncs.h>
 #include "gstqsg6material.h"
-#include <private/qrhi_p.h>
+#include <QtGui/private/qrhi_p.h>
 
 #define GST_CAT_DEFAULT gst_qsg_texture_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
