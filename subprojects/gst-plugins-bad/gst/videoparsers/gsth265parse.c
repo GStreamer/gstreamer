@@ -981,6 +981,15 @@ gst_h265_parse_process_nal (GstH265Parse * h265parse, GstH265NalUnit * nalu)
       }
       break;
     }
+    case GST_H265_NAL_FD:
+      if (!GST_H265_PARSE_STATE_VALID (h265parse, GST_H265_PARSE_STATE_GOT_SPS)) {
+        GST_DEBUG_OBJECT (h265parse, "dropping FD received before SPS");
+        return FALSE;
+      }
+      pres = gst_h265_parser_parse_nal (nalparser, nalu);
+      if (pres != GST_H265_PARSER_OK)
+        return FALSE;
+      break;
     case GST_H265_NAL_AUD:
     default:
       /* Just accumulate AU Delimiter, whether it's before SPS or not */
