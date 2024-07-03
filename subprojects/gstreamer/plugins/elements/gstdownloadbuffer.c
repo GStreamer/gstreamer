@@ -1769,7 +1769,7 @@ gst_download_buffer_src_activate_pull (GstPad * pad, GstObject * parent,
     dlbuf->srcresult = GST_FLOW_OK;
     dlbuf->sinkresult = GST_FLOW_OK;
     dlbuf->unexpected = FALSE;
-    dlbuf->upstream_size = 0;
+    dlbuf->upstream_size = -1;
     GST_DOWNLOAD_BUFFER_MUTEX_UNLOCK (dlbuf);
   } else {
     GST_DOWNLOAD_BUFFER_MUTEX_LOCK (dlbuf);
