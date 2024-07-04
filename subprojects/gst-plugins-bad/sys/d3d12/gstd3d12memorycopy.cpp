@@ -123,6 +123,8 @@ struct _GstD3D12MemoryCopyPrivate
 
     fence12 = nullptr;
     fence11 = nullptr;
+    fence12_external = nullptr;
+    fence11_external = nullptr;
     fence12_on_11 = nullptr;
     fence11_on_11 = nullptr;
     context11_4 = nullptr;
@@ -148,6 +150,9 @@ struct _GstD3D12MemoryCopyPrivate
 
   ComPtr < ID3D12Fence > fence12;
   ComPtr < ID3D11Fence > fence11;
+
+  ComPtr < ID3D12Fence > fence12_external;
+  ComPtr < ID3D11Fence > fence11_external;
 
   ComPtr < ID3D12Fence > fence12_on_11;
   ComPtr < ID3D11Fence > fence11_on_11;
@@ -1254,6 +1259,9 @@ gst_d3d12_memory_copy_12_to_11 (GstD3D12MemoryCopy * self,
     if (gst_d3d12_memory_get_fence (in_mem12, &fence12, &fence_val)) {
       auto completed = fence12->GetCompletedValue ();
       if (completed < fence_val) {
+        GST_TRACE_OBJECT (self, "Completed %" G_GUINT64_FORMAT
+            " < WaitValue %" G_GUINT64_FORMAT, completed, fence_val);
+
         if (fence12.Get () == priv->fence12.Get ()) {
           GstD3D11DeviceLockGuard lk (priv->device11);
           hr = priv->context11_4->Wait (priv->fence11.Get (), fence_val);
@@ -1263,8 +1271,58 @@ gst_d3d12_memory_copy_12_to_11 (GstD3D12MemoryCopy * self,
             gst_memory_unmap (in_mem, &in_map);
             return FALSE;
           }
+        } else if (priv->fence12_external == fence12) {
+          GST_LOG_OBJECT (self, "Reuse shared fence");
+          GstD3D11DeviceLockGuard lk (priv->device11);
+          hr = priv->context11_4->Wait (priv->fence11_external.Get (),
+              fence_val);
+          if (FAILED (hr)) {
+            GST_ERROR_OBJECT (self, "Wait failed");
+            gst_memory_unmap (out_mem, &out_map);
+            gst_memory_unmap (in_mem, &in_map);
+            return FALSE;
+          }
         } else {
-          gst_d3d12_memory_sync (in_mem12);
+          ComPtr < ID3D12Fence1 > fence12_1;
+          bool need_sync = true;
+
+          hr = fence12.As (&fence12_1);
+          if (SUCCEEDED (hr)) {
+            if ((fence12_1->GetCreationFlags () & D3D12_FENCE_FLAG_SHARED) ==
+                D3D12_FENCE_FLAG_SHARED) {
+              auto device12 =
+                  gst_d3d12_device_get_device_handle (priv->device12);
+              HANDLE handle;
+              hr = device12->CreateSharedHandle (fence12.Get (), nullptr,
+                  GENERIC_ALL, nullptr, &handle);
+              if (SUCCEEDED (hr)) {
+                ComPtr < ID3D11Fence > fence11;
+                hr = priv->device11_5->OpenSharedFence (handle,
+                    IID_PPV_ARGS (&fence11));
+                CloseHandle (handle);
+
+                if (SUCCEEDED (hr)) {
+                  GST_DEBUG_OBJECT (self, "Opened new external shared fence");
+                  priv->fence12_external = fence12;
+                  priv->fence11_external = fence11;
+
+                  GstD3D11DeviceLockGuard lk (priv->device11);
+                  hr = priv->context11_4->Wait (fence11.Get (), fence_val);
+                  if (FAILED (hr)) {
+                    GST_ERROR_OBJECT (self, "Wait failed");
+                    gst_memory_unmap (out_mem, &out_map);
+                    gst_memory_unmap (in_mem, &in_map);
+                    return FALSE;
+                  }
+
+                  need_sync = false;
+                }
+              }
+            }
+          }
+
+          if (need_sync)
+            gst_d3d12_memory_sync (in_mem12);
         }
       }
     }
