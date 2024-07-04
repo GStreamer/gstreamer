@@ -456,6 +456,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
   GstVideoRectangle src = { 0, };
   GstVideoRectangle dst = { 0, };
   GstVideoRectangle res;
+  int wp_src_width;
+  int wp_src_height;
 
   switch (priv->buffer_transform) {
     case WL_OUTPUT_TRANSFORM_NORMAL:
@@ -464,6 +466,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
     case WL_OUTPUT_TRANSFORM_FLIPPED_180:
       src.w = priv->scaled_width;
       src.h = priv->video_height;
+      wp_src_width = priv->video_width;
+      wp_src_height = priv->video_height;
       break;
     case WL_OUTPUT_TRANSFORM_90:
     case WL_OUTPUT_TRANSFORM_270:
@@ -471,7 +475,11 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
     case WL_OUTPUT_TRANSFORM_FLIPPED_270:
       src.w = priv->video_height;
       src.h = priv->scaled_width;
+      wp_src_width = priv->video_height;
+      wp_src_height = priv->video_width;
       break;
+    default:
+      g_assert_not_reached ();
   }
 
   dst.w = priv->render_rectangle.w;
@@ -481,8 +489,8 @@ gst_wl_window_resize_video_surface (GstWlWindow * self, gboolean commit)
   if (priv->video_viewport) {
     gst_video_center_rect (&src, &dst, &res, TRUE);
     wp_viewport_set_source (priv->video_viewport, wl_fixed_from_int (0),
-        wl_fixed_from_int (0), wl_fixed_from_int (priv->video_width),
-        wl_fixed_from_int (priv->video_height));
+        wl_fixed_from_int (0), wl_fixed_from_int (wp_src_width),
+        wl_fixed_from_int (wp_src_height));
     wp_viewport_set_destination (priv->video_viewport, res.w, res.h);
   } else {
     gst_video_center_rect (&src, &dst, &res, FALSE);
