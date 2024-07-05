@@ -454,7 +454,7 @@ gst_event_has_name_id (GstEvent * event, GQuark name)
   if (GST_EVENT_STRUCTURE (event) == NULL)
     return FALSE;
 
-  return (GST_EVENT_STRUCTURE (event)->name == name);
+  return (gst_structure_get_name_id (GST_EVENT_STRUCTURE (event)) == name);
 }
 
 /**

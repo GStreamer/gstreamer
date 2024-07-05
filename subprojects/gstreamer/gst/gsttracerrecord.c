@@ -100,7 +100,7 @@ gst_tracer_record_build_format (GstTracerRecord * self)
 {
   GstStructure *structure = self->spec;
   GString *s;
-  gchar *name = (gchar *) g_quark_to_string (structure->name);
+  gchar *name = (gchar *) gst_structure_get_name (structure);
   gchar *p;
 
   g_return_if_fail (g_str_has_suffix (name, ".class"));

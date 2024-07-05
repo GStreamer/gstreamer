@@ -1413,7 +1413,7 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
   GstCaps *out, *tmp;
   GList *ltmp;
   GstStructure *st, *outst;
-  GQuark out_name;
+  const gchar *out_name;
   guint i, len;
   GstCaps *fcaps;
 
@@ -1438,13 +1438,13 @@ gst_encoding_profile_get_input_caps (GstEncodingProfile * profile)
 
   /* Combine the format with the restriction caps */
   outst = gst_caps_get_structure (fcaps, 0);
-  out_name = gst_structure_get_name_id (outst);
+  out_name = gst_structure_get_name (outst);
   tmp = gst_caps_new_empty ();
   len = gst_caps_get_size (profile->restriction);
 
   for (i = 0; i < len; i++) {
     st = gst_structure_copy (gst_caps_get_structure (profile->restriction, i));
-    st->name = out_name;
+    gst_structure_set_name (st, out_name);
     gst_caps_append_structure (tmp, st);
   }
 
