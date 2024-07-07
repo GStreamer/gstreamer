@@ -4935,6 +4935,18 @@
                     }
                 },
                 "properties": {
+                    "merge-mode": {
+                        "blurb": "Merge mode to merge tags from this element with upstream tags",
+                        "conditionally-available": false,
+                        "construct": false,
+                        "construct-only": false,
+                        "controllable": false,
+                        "default": "replace (2)",
+                        "mutable": "null",
+                        "readable": true,
+                        "type": "GstTagMergeMode",
+                        "writable": true
+                    },
                     "scope": {
                         "blurb": "Scope of tags to inject (stream | global)",
                         "conditionally-available": false,
