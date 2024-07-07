@@ -128,7 +128,7 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
   g_object_class_install_property (gobject_class, PROP_SCOPE,
       g_param_spec_enum ("scope", "Scope",
           "Scope of tags to inject (stream | global)",
-          g_type_from_name ("GstTagScope"), GST_TAG_SCOPE_STREAM,
+          GST_TYPE_TAG_SCOPE, GST_TAG_SCOPE_STREAM,
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_tag_inject_finalize;
