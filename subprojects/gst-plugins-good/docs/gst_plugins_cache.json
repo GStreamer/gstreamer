@@ -4943,7 +4943,7 @@
                         "controllable": false,
                         "default": "stream (0)",
                         "mutable": "null",
-                        "readable": false,
+                        "readable": true,
                         "type": "GstTagScope",
                         "writable": true
                     },
@@ -4955,7 +4955,7 @@
                         "controllable": false,
                         "default": "NULL",
                         "mutable": "null",
-                        "readable": false,
+                        "readable": true,
                         "type": "gchararray",
                         "writable": true
                     }

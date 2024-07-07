@@ -116,7 +116,7 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
   g_object_class_install_property (gobject_class, PROP_TAGS,
       g_param_spec_string ("tags", "taglist",
           "List of tags to inject into the target file",
-          NULL, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * taginject:scope:
@@ -129,7 +129,7 @@ gst_tag_inject_class_init (GstTagInjectClass * klass)
       g_param_spec_enum ("scope", "Scope",
           "Scope of tags to inject (stream | global)",
           GST_TYPE_TAG_SCOPE, GST_TAG_SCOPE_STREAM,
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_tag_inject_finalize;
 
@@ -210,9 +210,16 @@ static void
 gst_tag_inject_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  /*GstTagInject *self = GST_TAG_INJECT (object); */
+  GstTagInject *self = GST_TAG_INJECT (object);
 
   switch (prop_id) {
+    case PROP_TAGS:
+      g_value_take_string (value,
+          self->tags ? gst_tag_list_to_string (self->tags) : NULL);
+      break;
+    case PROP_SCOPE:
+      g_value_set_enum (value, self->tags_scope);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
