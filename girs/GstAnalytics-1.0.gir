@@ -4,6 +4,7 @@ and/or use gtk-doc annotations.  -->
 <repository xmlns="http://www.gtk.org/introspection/core/1.0" xmlns:c="http://www.gtk.org/introspection/c/1.0" xmlns:glib="http://www.gtk.org/introspection/glib/1.0" version="1.2">
   <include name="Gst" version="1.0"/>
   <include name="GstBase" version="1.0"/>
+  <include name="GstVideo" version="1.0"/>
   <package name="gstreamer-analytics-1.0"/>
   <namespace name="GstAnalytics" version="1.0" shared-library="libgstanalytics-1.0.so.0" c:identifier-prefixes="GstAnalytics,Gst" c:symbol-prefixes="gst_analytics,gst">
     <alias name="MtdType" c:type="GstAnalyticsMtdType">
@@ -16,11 +17,11 @@ and/or use gtk-doc annotations.  -->
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
 identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
@@ -125,11 +126,11 @@ infinite.</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
 identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
@@ -223,8 +224,24 @@ have a static lifetime (never be freed).</doc>
           </parameters>
         </callback>
       </field>
+      <field name="mtd_meta_clear">
+        <callback name="mtd_meta_clear">
+          <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
+          <return-value transfer-ownership="none">
+            <type name="none" c:type="void"/>
+          </return-value>
+          <parameters>
+            <parameter name="buffer" transfer-ownership="none">
+              <type name="Gst.Buffer" c:type="GstBuffer*"/>
+            </parameter>
+            <parameter name="mtd" transfer-ownership="none">
+              <type name="Mtd" c:type="GstAnalyticsMtd*"/>
+            </parameter>
+          </parameters>
+        </callback>
+      </field>
       <field name="_reserved" readable="0" private="1">
-        <array zero-terminated="0" fixed-size="20">
+        <array zero-terminated="0" fixed-size="19">
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
@@ -234,11 +251,11 @@ have a static lifetime (never be freed).</doc>
 is generally expected to be allocated on the stack.</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
 identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
@@ -473,6 +490,44 @@ new struct sub-classing GstAnalyticsRelatableMtd.</doc>
           <parameter name="cls_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsclassificationmtd.c">Handle updated to newly added classification meta.</doc>
             <type name="ClsMtd" c:type="GstAnalyticsClsMtd*"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="add_segmentation_mtd" c:identifier="gst_analytics_relation_meta_add_segmentation_mtd" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Add analytics segmentation metadata to @instance.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">TRUE if added successfully, otherwise FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="instance" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance of #GstAnalyticsRelationMeta where to add segmentation
+instance.</doc>
+            <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+          </instance-parameter>
+          <parameter name="buffer" transfer-ownership="full">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Buffer containing segmentation masks. @buffer
+must have a #GstVideoMeta attached</doc>
+            <type name="Gst.Buffer" c:type="GstBuffer*"/>
+          </parameter>
+          <parameter name="segmentation_type" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Segmentation type</doc>
+            <type name="SegmentationType" c:type="GstSegmentationType"/>
+          </parameter>
+          <parameter name="region_count" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Number of regions in the masks</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+          <parameter name="region_ids" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Arrays of region ids present in the mask.</doc>
+            <array length="2" zero-terminated="0" c:type="guint*">
+              <type name="guint" c:type="guint"/>
+            </array>
+          </parameter>
+          <parameter name="segmentation_mtd" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Handle update with newly added segmenation meta.</doc>
+            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
           </parameter>
         </parameters>
       </method>
@@ -806,15 +861,244 @@ Ids must have been obtained a call to
         <type name="gsize" c:type="gsize"/>
       </field>
     </record>
+    <record name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">This type of metadata holds information on which pixels belongs to
+ a region of the image representing a type of object.
+
+ It supports two types of segmentation, semantic or instance:
+  * Semantic: All objects of the same type have the same id
+  * Instance: Each instance of an object has a different id
+
+ The results of the segmentation are stored in a #GstBuffer that has a
+ #GstVideoMeta associated with it. This buffer is stored in the
+ GstAnalyticsSegmentationMtd using
+ #gst_analytics_relation_meta_add_segmentation_mtd(). The #GstBuffer
+ containing the segmentation mask is image-like but the color values are
+ arbitrary values, referred by region-id in this API, without meaning beyond
+ specifying that two pixels in the original image with the same values in
+ their corresponding mask value belong to the same region.
+
+ To further describe a region, the #GstAnalyticsSegmentationMtd can be
+ associated with other #GstAnalyticsMtd. Since region ids are
+ generated by the segmentation process itself and are not always sequential,
+ we use a map of indexes to region ids starting with 0 without discontinuity
+ which facilitate N-to-N mapping with other #GstAnalyticsMtd. For
+ example it can be associated with #GstAnalyticsClsMtd to describe the class
+ of object matching the pixels of a segmented region.
+
+ Example: Associate Instance Segmentation with Classification
+
+ In the following example the segmentation process will fill segmask with
+ values of 0 for background, 12 for the first region which correspond to a
+ to a strawberry, 7 for the second region that also correspond to  a
+ strawberry in the image and 31 for the third region that correspond to a
+ leaf in the image.
+ region_ids is fill during segmentation post-processing
+
+ region_ids:
+ |region-index | region-id |
+ |-------------|-----------|
+ | 0           | 0         |
+ | 1           | 12        |
+ | 2           | 7         |
+ | 3           | 31        |
+
+ region_count = 4
+
+ ``` C
+   GstAnalyticsSegmentationMtd segmtd;
+   GstAnalyticsClassificationMtd clsmtd;
+   GstBuffer *segmask, *img;
+   guint *region_ids;
+   gsize region_count, class_count;
+   gfloat *class_confidence;
+   GQuark *classes;
+
+   ... (segmentation filling segmask based on img)
+
+   gst_analytics_relation_meta_add_segmentation_mtd (rmeta, segmask,
+     GST_SEGMENTATION_TYPE_INSTANCE, region_count, region_ids, &amp;segmtd);
+   class_count = region_count;
+
+   ... (class-index must match and correspond to region-index)
+   classes [0]  = g_quark_from_string ("background");
+   classes [1]  = g_quark_from_string ("strawberry");
+   classes [2] = g_quark_from_string ("strawberry");
+   classes [3] = g_quark_from_string ("leaf");
+
+   ... (set confidence level for each class associated with a region
+   ... where -1.0 mean undefined.)
+   class_confidence [0] = -1.0;
+   class_confidence [1] = 0.6;
+   class_confidence [2] = 0.9;
+   class_confidence [3] = 0.8;
+
+   gst_analytics_relation_meta_add_cls_mtd (rmeta, class_count,
+     class_confidence, classes, &amp;clsmtd);
+
+   gst_analytics_relation_meta_set_relation (rmeta,
+    GST_ANALYTICS_REL_TYPE_RELATE_TO, segmtd.id, clsmtd.id);
+ ```
+
+ Example: Associate Semantic Segmentation with Classification
+ Assuming the same context as for Instance Segmentation above but instead
+ a semantic segmentation is performed, therfore region-id-12 and region-id-7
+ are now represented by the same region-id-12
+
+ region_ids: (here
+ |region-index | region-id |
+ |-------------|-----------|
+ | 0           | 0         |
+ | 1           | 12        |
+ | 2           | 31        |
+
+ Code remain the same except that we set all confidence level to undefined
+ (-1.0).
+
+ ```
+   ... (class-index must match and correspond to region-index)
+   classes [0]  = g_quark_from_string ("background");
+   classes [1]  = g_quark_from_string ("strawberry");
+   classes [2] = g_quark_from_string ("leaf");
+
+   ... (set confidence level for each class associated with a region
+   ... where -1.0 mean undefined.)
+   class_confidence [0] = -1.0;
+   class_confidence [1] = -1.0;
+   class_confidence [2] = -1.0;
+
+   gst_analytics_relation_meta_add_cls_mtd (rmeta, class_count,
+     class_confidence, classes, &amp;clsmtd);
+
+   gst_analytics_relation_meta_set_relation (rmeta,
+    GST_ANALYTICS_REL_TYPE_RELATE_TO, segmtd.id, clsmtd.id);
+ ```
+
+ Example: Retriving class associated with a segmentation region-id-12
+ This the typical case for an overlay as we visit the segmentation mask we
+ we find region-id values
+
+ ```
+ gsize idx;
+ gst_analytics_segmentation_mtd_get_region_index (&amp;segmtd, &amp;idx, 12);
+ gst_analytics_relation_meta_get_direct_related (rmeta, segmtd.id,
+   GST_ANALYTICS_REL_TYPE_RELATE_TO, gst_analytics_cls_mtd_get_type (),
+   NULL, &amp;clsmtd);
+
+  GQuark region_class = gst_analytics_cls_mtd_get_quark (&amp;segmtd, idx)
+  ...
+ ```
+
+ Since: 1.26</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+      <field name="id" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
+        <type name="guint" c:type="guint"/>
+      </field>
+      <field name="meta" writable="1">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
+identified by @id is stored.</doc>
+        <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
+      </field>
+      <method name="get_mask" c:identifier="gst_analytics_segmentation_mtd_get_mask" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get segmentation mask data.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Segmentation mask data stored in a #GstBuffer</doc>
+          <type name="Gst.Buffer" c:type="GstBuffer*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
+            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_region_count" c:identifier="gst_analytics_segmentation_mtd_get_region_count" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get the regions count.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Number of regions segmented</doc>
+          <type name="gsize" c:type="gsize"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
+            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
+      <method name="get_region_id" c:identifier="gst_analytics_segmentation_mtd_get_region_id" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get id of the region corresponding to @index. which should be
+smaller than the return value of
+gst_analytics_segmentation_mtd_get_region_count()</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">The region ID</doc>
+          <type name="guint" c:type="guint"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
+            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+          </instance-parameter>
+          <parameter name="index" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Region index</doc>
+            <type name="gsize" c:type="gsize"/>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="get_region_index" c:identifier="gst_analytics_segmentation_mtd_get_region_index" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get region index of the region identified by @id.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">TRUE if a region with @id exist, otherwise FALSE</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="handle" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Instance</doc>
+            <type name="SegmentationMtd" c:type="GstAnalyticsSegmentationMtd*"/>
+          </instance-parameter>
+          <parameter name="index" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Region index</doc>
+            <type name="gsize" c:type="gsize*"/>
+          </parameter>
+          <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Region id</doc>
+            <type name="guint" c:type="guint"/>
+          </parameter>
+        </parameters>
+      </method>
+      <function name="get_mtd_type" c:identifier="gst_analytics_segmentation_mtd_get_mtd_type" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get an instance of #GstAnalyticsMtdType that represent segmentation
+metadata type.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">A #GstAnalyticsMtdType type</doc>
+          <type name="MtdType" c:type="GstAnalyticsMtdType"/>
+        </return-value>
+      </function>
+    </record>
+    <enumeration name="SegmentationType" version="1.26" c:type="GstSegmentationType">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Enum value describing supported segmentation type</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+      <member name="semantic" value="0" c:identifier="GST_SEGMENTATION_TYPE_SEMANTIC" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Each region of the same type have the same id.</doc>
+      </member>
+      <member name="instance" value="1" c:identifier="GST_SEGMENTATION_TYPE_INSTANCE" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Each instance of a region have different id.</doc>
+      </member>
+    </enumeration>
     <record name="TrackingMtd" c:type="GstAnalyticsTrackingMtd" version="1.24">
       <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.c">Store information on results of object tracking</doc>
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjecttrackingmtd.h"/>
       <field name="id" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance identifier.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance identifier</doc>
         <type name="guint" c:type="guint"/>
       </field>
       <field name="meta" writable="1">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsobjectdetectionmtd.h">Instance of #GstAnalyticsRelationMeta where the analysis-metadata
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h">Instance of #GstAnalyticsRelationMeta where the analytics-metadata
 identified by @id is stored.</doc>
         <type name="RelationMeta" c:type="GstAnalyticsRelationMeta*"/>
       </field>
@@ -1021,6 +1305,15 @@ information about the tracking, for example, it can be used alongside a
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticsmeta.h"/>
       <return-value transfer-ownership="none">
         <type name="Gst.MetaInfo" c:type="const GstMetaInfo*"/>
+      </return-value>
+    </function>
+    <function name="segmentation_mtd_get_mtd_type" c:identifier="gst_analytics_segmentation_mtd_get_mtd_type" moved-to="SegmentationMtd.get_mtd_type" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">Get an instance of #GstAnalyticsMtdType that represent segmentation
+metadata type.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.h"/>
+      <return-value transfer-ownership="none">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/analytics/gstanalyticssegmentationmtd.c">A #GstAnalyticsMtdType type</doc>
+        <type name="MtdType" c:type="GstAnalyticsMtdType"/>
       </return-value>
     </function>
     <function name="tracking_mtd_get_mtd_type" c:identifier="gst_analytics_tracking_mtd_get_mtd_type" moved-to="TrackingMtd.get_mtd_type" version="1.24">

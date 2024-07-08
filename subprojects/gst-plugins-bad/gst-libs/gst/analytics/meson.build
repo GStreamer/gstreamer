@@ -1,14 +1,17 @@
 analytics_sources = files( 'gstanalyticsmeta.c',
                               'gstanalyticsclassificationmtd.c',
                               'gstanalyticsobjectdetectionmtd.c',
-                              'gstanalyticsobjecttrackingmtd.c')
+                              'gstanalyticsobjecttrackingmtd.c',
+                              'gstanalyticssegmentationmtd.c')
 
 analytics_headers = files(    'analytics.h',
                               'gstanalyticsmeta.h',
                               'analytics-meta-prelude.h',
                               'gstanalyticsclassificationmtd.h',
                               'gstanalyticsobjectdetectionmtd.h',
-                              'gstanalyticsobjecttrackingmtd.h')
+                              'gstanalyticsobjecttrackingmtd.h',
+                              'gstanalyticssegmentationmtd.h')
+
 install_headers(analytics_headers, subdir : 'gstreamer-1.0/gst/analytics')
 
 pkg_name = 'gstreamer-analytics-1.0'
@@ -40,7 +43,7 @@ if build_gir
     'identifier_prefix' : ['GstAnalytics', 'Gst'],
     'symbol_prefix' : ['gst_analytics', 'gst'],
     'export_packages' : pkg_name,
-    'includes' : ['Gst-1.0', 'GstBase-1.0'],
+    'includes' : ['Gst-1.0', 'GstBase-1.0', 'GstVideo-1.0'],
     'install' : true,
     'extra_args' : gir_init_section + ['-DGST_USE_UNSTABLE_API'],
     'dependencies' : [gstbase_dep, gstvideo_dep]
