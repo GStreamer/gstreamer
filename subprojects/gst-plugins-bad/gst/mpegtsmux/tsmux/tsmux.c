@@ -1929,5 +1929,13 @@ tsmux_write_scte_null (TsMux * mux, TsMuxProgram * program)
 void
 tsmux_set_bitrate (TsMux * mux, guint64 bitrate)
 {
+  if (bitrate != 0 && mux->bitrate != 0 && mux->n_bytes != 0) {
+    guint64 new_byte_counter =
+        gst_util_uint64_scale (mux->n_bytes, bitrate, mux->bitrate);
+    GST_LOG ("bitrate transition %" G_GUINT64_FORMAT " => %" G_GUINT64_FORMAT
+        ", adjusting byte counter %" G_GUINT64_FORMAT " => %" G_GUINT64_FORMAT,
+        mux->bitrate, bitrate, mux->n_bytes, new_byte_counter);
+    mux->n_bytes = new_byte_counter;
+  }
   mux->bitrate = bitrate;
 }
