@@ -215,7 +215,7 @@ gst_vulkan_h265_decoder_open (GstVideoDecoder * decoder)
 
   if (!self->decode_queue) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Failed to create/retrieve vulkan H.264 decoder queue"), (NULL));
+        ("Failed to create/retrieve vulkan H.265 decoder queue"), (NULL));
     return FALSE;
   }
 
@@ -223,7 +223,7 @@ gst_vulkan_h265_decoder_open (GstVideoDecoder * decoder)
       VK_VIDEO_CODEC_OPERATION_DECODE_H265_BIT_KHR);
   if (!self->decoder) {
     GST_ELEMENT_ERROR (self, RESOURCE, NOT_FOUND,
-        ("Failed to create vulkan H.264 decoder"), (NULL));
+        ("Failed to create vulkan H.265 decoder"), (NULL));
     return FALSE;
   }
 
