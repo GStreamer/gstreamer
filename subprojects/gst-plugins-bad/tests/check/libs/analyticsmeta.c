@@ -936,6 +936,468 @@ GST_START_TEST (test_add_tracking_meta)
 
 GST_END_TEST;
 
+GST_START_TEST (test_verify_mtd_clear)
+{
+  /* This test use segmentation mtd but it's a general functionality of
+   * analytics-meta that _mtd_clear is called when buffer is freed.
+   * _mtd_clear should be called regardless if the buffer where relation-meta
+   * is attached is from a pool or not. This test verify that _mtd_clear is
+   * called when buffer where relation-meta is attached it not from a pool.
+   */
+  GstBuffer *vbuf, *mbuf;
+  GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
+  GstAnalyticsRelationMeta *rmeta;
+  GstBufferPool *mpool;
+  GstCaps *caps;
+  GstStructure *config;
+  GstVideoInfo minfo;
+  GstAnalyticsSegmentationMtd smtd;
+  GstBufferPoolAcquireParams pool_acq_params = { 0, };
+  pool_acq_params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
+
+  vbuf = gst_buffer_new ();
+  rmeta = gst_buffer_add_analytics_relation_meta_full (vbuf, &init_params);
+
+  /* Create pool for segmentation masks */
+  gst_video_info_init (&minfo);
+  gst_video_info_set_format (&minfo, GST_VIDEO_FORMAT_GRAY8, 32, 32);
+  caps = gst_video_info_to_caps (&minfo);
+  mpool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (mpool);
+
+  /* Here we intentionnaly create a pool of only one element to validate the
+   * buffer used to store the masks is returned to the pool when the video
+   * buffer to which it is attached is unreffed with the intention of having
+   * gst_buffer_pool_acquire_buffer (mpool,...) fail if it didn't happen.*/
+  gst_buffer_pool_config_set_params (config, caps, minfo.size, 0, 1);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_set_config (mpool, config);
+  gst_buffer_pool_set_active (mpool, TRUE);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (mpool, &mbuf,
+          &pool_acq_params) == GST_FLOW_OK);
+
+  /* Here we pretend the masks contain 2 region types [2,3] */
+  static const gsize region_count = 2;
+  guint region_ids[] = { 2, 3 };
+
+  gst_analytics_relation_meta_add_segmentation_mtd (rmeta, mbuf,
+      GST_SEGMENTATION_TYPE_INSTANCE, region_count, region_ids, 0, 0, 0, 0,
+      &smtd);
+
+  /* This _unref will dispose vbuf and also mbuf to mpool
+   * because GstAnalyticsSegmentationMtd define a
+   * GstAnalyticsMtdImpl::mtd_meta_clear */
+  gst_buffer_unref (vbuf);
+
+  /* This will succeed because mbuf was returned to the pool. If this
+   * test fail it highlight a memory managemnt failure in analytics-meta.*/
+  fail_unless (gst_buffer_pool_acquire_buffer (mpool, &mbuf,
+          &pool_acq_params) == GST_FLOW_OK);
+
+  gst_buffer_unref (mbuf);
+  gst_buffer_pool_set_active (mpool, FALSE);
+  gst_object_unref (mpool);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_add_segmentation_meta)
+{
+  /*
+   * This a very simple test that add a segmentation analytics-meta
+   * to a buffer. In this test the masks have the same resolution as
+   * the buffer. It verify that masks (GstBuffer) memory management by
+   * validating the GstBuffer was returned to the pool by
+   */
+  GstBuffer *vbuf, *mbuf;
+  GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
+  GstAnalyticsRelationMeta *rmeta;
+  GstBufferPool *vpool, *mpool;
+  GstCaps *caps;
+  GstStructure *config;
+  GstVideoInfo vinfo, minfo;
+  GstAnalyticsSegmentationMtd smtd;
+
+  /* Create a pool for video frames */
+  gst_video_info_init (&vinfo);
+  vpool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (vpool);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_RGBA, 32, 32);
+  caps = gst_video_info_to_caps (&vinfo);
+  gst_buffer_pool_config_set_params (config, caps, vinfo.size, 0, 0);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_set_config (vpool, config);
+  gst_buffer_pool_set_active (vpool, TRUE);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (vpool, &vbuf, NULL) ==
+      GST_FLOW_OK);
+
+  rmeta = gst_buffer_add_analytics_relation_meta_full (vbuf, &init_params);
+
+  /* Create pool for segmentation masks */
+  gst_video_info_init (&minfo);
+  gst_video_info_set_format (&minfo, GST_VIDEO_FORMAT_GRAY8, 32, 32);
+  caps = gst_video_info_to_caps (&minfo);
+  mpool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (mpool);
+
+  /* Here we intentionnaly create a pool of only one element to validate the
+   * buffer used to store the masks is returned to the pool when the video
+   * buffer to which it is attached is unreffed with the intention of having
+   * gst_buffer_pool_acquire_buffer (mpool,...) fail if it didn't happen.*/
+  gst_buffer_pool_config_set_params (config, caps, minfo.size, 0, 1);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_set_config (mpool, config);
+  gst_buffer_pool_set_active (mpool, TRUE);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (mpool, &mbuf, NULL) ==
+      GST_FLOW_OK);
+
+  /* Here we pretend the masks contain 2 region types [2,3] */
+  static const gsize region_count = 2;
+  guint region_ids[] = { 2, 3 };
+
+  gst_analytics_relation_meta_add_segmentation_mtd (rmeta, mbuf,
+      GST_SEGMENTATION_TYPE_INSTANCE, region_count, region_ids, 0, 0, 0, 0,
+      &smtd);
+
+  /* This _unref will return vbuf to vpool and also mbuf to mpool
+   * because GstAnalyticsSegmentationMtd define a
+   * GstAnalyticsMtdImpl::mtd_meta_clear */
+  gst_buffer_unref (vbuf);
+
+  /* This will succeed because mbuf was returned to the pool. If this
+   * test fail it highlight a memory managemnt failure in analytics-meta.*/
+  fail_unless (gst_buffer_pool_acquire_buffer (mpool, &mbuf, NULL) ==
+      GST_FLOW_OK);
+
+  gst_buffer_unref (mbuf);
+  gst_buffer_pool_set_active (mpool, FALSE);
+  gst_object_unref (mpool);
+  gst_buffer_pool_set_active (vpool, FALSE);
+  gst_object_unref (vpool);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_associate_segmentation_meta)
+{
+  /* This test verify that classification can be associated to segmentation.
+   * More specifically we use a grayscale image that contain 2 set of
+   * imbricated pattern. The segmentation problem is simplified by having a
+   * specific value for each region. In a sense the original image is already
+   * segmented to avoid to do a real segmentation, since the goal of this test
+   * is to very segmentation analytics-meta API.
+   *
+   * Original image: 32x24 grayscale
+   * Segmentation input: 16x16 grayscale
+   * Segmentation output: 16x16 tensor (where each value correspond to a region
+   * id in the input)
+   */
+
+  GstBuffer *vbuf, *mbuf;
+  GstAnalyticsRelationMetaInitParams init_params = { 5, 150 };
+  GstAnalyticsRelationMeta *rmeta;
+  GstBufferPool *vpool, *mpool;
+  GstCaps *caps;
+  GstStructure *config;
+  GstVideoInfo vinfo, minfo;
+  GstAnalyticsSegmentationMtd smtd;
+  GstAnalyticsClsMtd clsmtd;
+
+  /* Create a pool for video frames */
+  gst_video_info_init (&vinfo);
+  vpool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (vpool);
+  gst_video_info_set_format (&vinfo, GST_VIDEO_FORMAT_GRAY8, 32, 24);
+  caps = gst_video_info_to_caps (&vinfo);
+  gst_buffer_pool_config_set_params (config, caps, vinfo.size, 0, 0);
+  gst_buffer_pool_set_config (vpool, config);
+  gst_buffer_pool_set_active (vpool, TRUE);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (vpool, &vbuf, NULL) ==
+      GST_FLOW_OK);
+
+  /* This image a 32 x 24, GRAY8  that contain  └ and ┐ that are imbricated.
+   * └ is formed by pixels values of: 9 and 7.
+   * ┐ is formed by pixels values of: 8 and 6.
+   * 9 and 8 are imbricated and 7 and 6 are impbricated. Pixel values [6,7,8,9],
+   * have no importance.
+   */
+
+  guint8 img[] = {
+    /*        0|0|0|0|0|0|0|0|0|0|1|1|1|1|1|1|1|1|1|1|2|2|2|2|2|2|2|2|2|2|3|3  */
+    /*        0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|6|7|8|9|0|1  */
+    /* 0  */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 1  */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 2  */ 0, 0, 9, 9, 9, 9, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 3  */ 0, 0, 9, 9, 9, 9, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 4  */ 0, 0, 9, 9, 9, 9, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 5  */ 0, 0, 9, 9, 9, 9, 8, 8, 8, 8, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 6  */ 0, 0, 9, 9, 9, 9, 9, 9, 9, 9, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 7  */ 0, 0, 9, 9, 9, 9, 9, 9, 9, 9, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 8  */ 0, 0, 9, 9, 9, 9, 9, 9, 9, 9, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 9  */ 0, 0, 9, 9, 9, 9, 9, 9, 9, 9, 8, 8, 8, 8, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 11 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 12 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 6, 6,
+    6, 6, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 13 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 6, 6,
+    6, 6, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 14 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 6, 6,
+    6, 6, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 15 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 6, 6,
+    6, 6, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 16 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7,
+    7, 7, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 17 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7,
+    7, 7, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 18 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7,
+    7, 7, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 19 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 7, 7, 7, 7, 7, 7,
+    7, 7, 6, 6, 6, 6, 0, 0, 0, 0,
+    /* 20 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 21 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 22 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 23 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  };
+
+  /* Pre-processing step 1 will convert the original image to segmentation
+   * processing format.
+   *
+   * Decimation (32x24) -> (16x12)
+   0|0|0|0|0|0|0|0|0|0|1|1|1|1|1|1|
+   0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|
+
+   0      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   1      0,9,9,8,8,8,8,0,0,0,0,0,0,0,0,0,
+   2      0,9,9,8,8,8,8,0,0,0,0,0,0,0,0,0,
+   3      0,9,9,9,9,8,8,0,0,0,0,0,0,0,0,0,
+   4      0,9,9,9,9,8,8,0,0,0,0,0,0,0,0,0,
+   5      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   6      0,0,0,0,0,0,0,0,7,7,6,6,6,6,0,0,
+   7      0,0,0,0,0,0,0,0,7,7,6,6,6,6,0,0,
+   8      0,0,0,0,0,0,0,0,7,7,7,7,6,6,0,0,
+   9      0,0,0,0,0,0,0,0,7,7,7,7,6,6,0,0,
+   10     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   11     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, */
+
+
+  /* Pre-processing step 2: Add padding match segmentation input format
+   * Padding top-bottom (16x12) -> (16x16)
+   *
+   0|0|0|0|0|0|0|0|0|0|1|1|1|1|1|1|
+   0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5|
+
+   0      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  Padding line
+   1      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  Padding line
+   1      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   3      0,9,9,8,8,8,8,0,0,0,0,0,0,0,0,0,
+   4      0,9,9,8,8,8,8,0,0,0,0,0,0,0,0,0,
+   5      0,9,9,9,9,8,8,0,0,0,0,0,0,0,0,0,
+   6      0,9,9,9,9,8,8,0,0,0,0,0,0,0,0,0,
+   7      0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   8      0,0,0,0,0,0,0,0,7,7,6,6,6,6,0,0,
+   9      0,0,0,0,0,0,0,0,7,7,6,6,6,6,0,0,
+   10     0,0,0,0,0,0,0,0,7,7,7,7,6,6,0,0,
+   11     0,0,0,0,0,0,0,0,7,7,7,7,6,6,0,0,
+   12     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   13     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+   14     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  Padding line
+   15     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,  Padding line */
+
+
+  /* Post-processing remove area of the output that correspond to padding
+   * area in the input. In the following array 2, 3, 4, 5 correspond to
+   * segmented region ids.*/
+  guint8 post_proc_segmasks[] = {
+    /*        0|0|0|0|0|0|0|0|0|0|1|1|1|1|1|1| */
+    /*        0|1|2|3|4|5|6|7|8|9|0|1|2|3|4|5| */
+    /* 0  */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 1  */ 0, 2, 2, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 2  */ 0, 2, 2, 3, 3, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 3  */ 0, 2, 2, 2, 2, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 4  */ 0, 2, 2, 2, 2, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 5  */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 6  */ 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 5, 5, 5, 5, 0, 0,
+    /* 7  */ 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 5, 5, 5, 5, 0, 0,
+    /* 8  */ 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 5, 5, 0, 0,
+    /* 9  */ 0, 0, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 5, 5, 0, 0,
+    /* 10 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* 11 */ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+  };
+
+  /* Creating analytics-relation meta to host analytics results */
+  rmeta = gst_buffer_add_analytics_relation_meta_full (vbuf, &init_params);
+
+  /* Create pool for segmentation masks */
+  gst_video_info_init (&minfo);
+  gst_video_info_set_format (&minfo, GST_VIDEO_FORMAT_GRAY8, 32, 24);
+  caps = gst_video_info_to_caps (&minfo);
+  mpool = gst_video_buffer_pool_new ();
+  config = gst_buffer_pool_get_config (mpool);
+
+  gst_buffer_pool_config_set_params (config, caps, minfo.size, 1, 0);
+  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  gst_buffer_pool_set_config (mpool, config);
+  gst_buffer_pool_set_active (mpool, TRUE);
+  gst_caps_unref (caps);
+
+  fail_unless (gst_buffer_pool_acquire_buffer (mpool, &mbuf, NULL) ==
+      GST_FLOW_OK);
+
+  gst_buffer_fill (mbuf, 0, post_proc_segmasks, 32 * 24);
+
+  /* Masks contain 5 region types [0,1,2,3,4]. We intentionnally change the
+   * order of region ids relative to their appearance in the output to
+   * show that API does not depend on any order or continuity. */
+  static const gsize region_count = 5;
+  guint region_ids[5];
+
+  /* Confidence levels are irrelevant in this context. */
+  gfloat confi[] = { 1.0, 1.0, 1.0, 1.0, 1.0 };
+  GQuark classes[5];
+
+  /* It's important that region index and classification index match. This
+   * is how a region is associated to a specific class.
+   *
+   * Region-id-0 correspond to region-index-0 is associated to class
+   * "background".
+   * Region-id-5 correspond to region-index-1 is associated to class
+   * "top-right-corner".  ┐
+   * Region-id-2 correspond to region-index-2 is associated to class
+   * "bottom-left-corner". └
+   * Region-id-3 correspond to region-index-3 is associated to class
+   * "top-right-corner". ┐
+   * Region-id-4 correspond to region-index-4 is associated to class
+   * "bottom-left-corner". └  */
+  region_ids[0] = 0;
+  classes[0] = g_quark_from_string ("background");
+
+  region_ids[1] = 5;
+  classes[1] = g_quark_from_string ("top-right-corner");
+
+  region_ids[2] = 2;
+  classes[2] = g_quark_from_string ("bottom-left-corner");
+
+  region_ids[3] = 3;
+  classes[3] = g_quark_from_string ("top-right-corner");
+
+  region_ids[4] = 4;
+  classes[4] = g_quark_from_string ("bottom-left-corner");
+
+  gst_analytics_relation_meta_add_segmentation_mtd (rmeta, mbuf,
+      GST_SEGMENTATION_TYPE_INSTANCE, region_count, region_ids, 0, 0, 0, 0,
+      &smtd);
+
+  gst_analytics_relation_meta_add_cls_mtd (rmeta, region_count, confi,
+      classes, &clsmtd);
+
+  gst_analytics_relation_meta_set_relation (rmeta,
+      GST_ANALYTICS_REL_TYPE_RELATE_TO, smtd.id, clsmtd.id);
+
+
+  /* Generate a truth vector for segmented region and associated class. */
+  guint8 truth_vector_segmentation_id[768];
+  GQuark truth_vector_segmentation_classes[768];
+
+  for (gsize i = 0; i < 768; i++) {
+    if (img[i] == 9) {
+      truth_vector_segmentation_id[i] = 2;
+      truth_vector_segmentation_classes[i] =
+          g_quark_from_string ("bottom-left-corner");
+    } else if (img[i] == 8) {
+      truth_vector_segmentation_id[i] = 3;
+      truth_vector_segmentation_classes[i] =
+          g_quark_from_string ("top-right-corner");
+    } else if (img[i] == 7) {
+      truth_vector_segmentation_id[i] = 4;
+      truth_vector_segmentation_classes[i] =
+          g_quark_from_string ("bottom-left-corner");
+    } else if (img[i] == 6) {
+      truth_vector_segmentation_id[i] = 5;
+      truth_vector_segmentation_classes[i] =
+          g_quark_from_string ("top-right-corner");
+    } else {
+      truth_vector_segmentation_id[i] = 0;
+      truth_vector_segmentation_classes[i] = g_quark_from_string ("background");
+    }
+  }
+
+  /* Verify segmentation analytics-meta and associated classification
+   * match truth vectors */
+  gsize idx;
+  GstBufferMapInfo mmap_info;   /* mask map info */
+  gst_buffer_map (mbuf, &mmap_info, GST_MAP_READ);
+  for (gsize r = 0; r < 24; r++) {
+    gsize mr = r / 2;
+    for (gsize c = 0; c < 32; c++) {
+      gsize mc = c / 2;
+      gsize mask_idx = mr * 16 + mc;
+      gsize img_idx = r * 32 + c;
+
+      fail_unless (mmap_info.data[mask_idx] ==
+          truth_vector_segmentation_id[img_idx]);
+
+      /* Retrieve segmentation region index */
+      fail_unless (gst_analytics_segmentation_mtd_get_region_index (&smtd,
+              &idx, mmap_info.data[mask_idx]) == TRUE);
+
+      /* Check that the _get_region_id() API is consistent */
+      fail_unless (gst_analytics_segmentation_mtd_get_region_id (&smtd,
+              idx) == mmap_info.data[mask_idx]);
+
+      /* Retrieve classification associated with region */
+      fail_unless (gst_analytics_relation_meta_get_direct_related (rmeta,
+              smtd.id, GST_ANALYTICS_REL_TYPE_RELATE_TO,
+              gst_analytics_cls_mtd_get_mtd_type (), NULL, &clsmtd));
+
+      /* Retrive class associated with segmentation region */
+      fail_unless (gst_analytics_cls_mtd_get_length (&clsmtd) ==
+          gst_analytics_segmentation_mtd_get_region_count (&smtd));
+
+      /* Retrieve class associated with segmentation region */
+      fail_unless (gst_analytics_cls_mtd_get_quark (&clsmtd, idx) ==
+          truth_vector_segmentation_classes[img_idx]);
+    }
+  }
+  gst_buffer_unmap (mbuf, &mmap_info);
+
+
+  /* This _unref will return vbuf to vpool and also mbuf to mpool
+   * because GstAnalyticsSegmentationMtd define a
+   * GstAnalyticsMtdImpl::mtd_meta_clear */
+  gst_buffer_unref (vbuf);
+
+  gst_buffer_pool_set_active (mpool, FALSE);
+  gst_object_unref (mpool);
+  gst_buffer_pool_set_active (vpool, FALSE);
+  gst_object_unref (vpool);
+}
+
+GST_END_TEST;
+
 static Suite *
 analyticmeta_suite (void)
 {
@@ -946,6 +1408,7 @@ analyticmeta_suite (void)
   TCase *tc_chain_od;
   TCase *tc_chain_od_cls;
   TCase *tc_chain_tracking;
+  TCase *tc_chain_segmentation;
 
   s = suite_create ("Analytic Meta Library");
 
@@ -964,6 +1427,7 @@ analyticmeta_suite (void)
   tcase_add_test (tc_chain_relation, test_query_relation_meta_cases);
   tcase_add_test (tc_chain_relation, test_path_relation_meta);
   tcase_add_test (tc_chain_relation, test_cyclic_relation_meta);
+  tcase_add_test (tc_chain_relation, test_verify_mtd_clear);
 
   tc_chain_od = tcase_create ("Object Detection Mtd");
   suite_add_tcase (s, tc_chain_od);
@@ -978,6 +1442,12 @@ analyticmeta_suite (void)
   tc_chain_tracking = tcase_create ("Tracking Mtd");
   suite_add_tcase (s, tc_chain_tracking);
   tcase_add_test (tc_chain_tracking, test_add_tracking_meta);
+
+  tc_chain_segmentation = tcase_create ("Segmentation Mtd");
+  suite_add_tcase (s, tc_chain_segmentation);
+  tcase_add_test (tc_chain_segmentation, test_add_segmentation_meta);
+  tcase_add_test (tc_chain_segmentation, test_associate_segmentation_meta);
+
   return s;
 }
 
