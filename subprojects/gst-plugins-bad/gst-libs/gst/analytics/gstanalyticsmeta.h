@@ -104,6 +104,9 @@ struct _GstAnalyticsMtd
  * @mtd_meta_transform: A pointer to a function that will be called
  * when the containing meta is transform to potentially copy the data
  * into a new Mtd into the new meta.
+ * @mtd_meta_clear: A pointer to a function that will be called when the
+ * containing meta is cleared to potetially do cleanup (ex. _unref or release)
+ * resources it was using.
  *
  * This structure must be provided when registering a new type of Mtd. It must
  * have a static lifetime (never be freed).
@@ -119,8 +122,10 @@ gboolean (*mtd_meta_transform) (GstBuffer * transbuf,
       GstAnalyticsMtd * transmtd, GstBuffer * buffer, GQuark type,
       gpointer data);
 
-  /*< private > */
-  gpointer _reserved[GST_PADDING_LARGE];
+  void (*mtd_meta_clear) (GstBuffer *buffer, GstAnalyticsMtd *mtd);
+
+  /*< private >*/
+  gpointer _reserved[GST_PADDING_LARGE - 1];
 } GstAnalyticsMtdImpl;
 
 GST_ANALYTICS_META_API

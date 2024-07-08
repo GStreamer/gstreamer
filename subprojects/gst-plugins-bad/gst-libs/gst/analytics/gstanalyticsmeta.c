@@ -111,6 +111,8 @@ typedef struct _GstAnalyticsRelationMeta
 static guint
 gst_analytics_relation_meta_get_next_id (GstAnalyticsRelationMeta * meta);
 
+static void
+gst_analytics_relation_meta_clear (GstBuffer * buffer, GstMeta * meta);
 
 static GstAnalyticsRelatableMtdData *
 gst_analytics_relation_meta_get_mtd_data_internal (const
@@ -346,6 +348,8 @@ gst_analytics_relation_meta_free (GstMeta * meta, GstBuffer * buffer)
       "Content analysis meta-data(%p) freed for buffer(%p)",
       (gpointer) rmeta, (gpointer) buffer);
 
+  gst_analytics_relation_meta_clear (buffer, meta);
+
   g_free (rmeta->analysis_results);
   g_free (rmeta->adj_mat);
   g_free (rmeta->mtd_data_lookup);
@@ -442,6 +446,19 @@ static void
 gst_analytics_relation_meta_clear (GstBuffer * buffer, GstMeta * meta)
 {
   GstAnalyticsRelationMeta *rmeta = (GstAnalyticsRelationMeta *) meta;
+  GstAnalyticsRelatableMtdData *rlt_mtd_data = NULL;
+
+  for (gsize index = 0; index < rmeta->length; index++) {
+    rlt_mtd_data = (GstAnalyticsRelatableMtdData *)
+        (rmeta->mtd_data_lookup[index] + rmeta->analysis_results);
+    if (rlt_mtd_data->impl && rlt_mtd_data->impl->mtd_meta_clear) {
+      GstAnalyticsMtd mtd;
+      mtd.id = rlt_mtd_data->id;
+      mtd.meta = rmeta;
+      rlt_mtd_data->impl->mtd_meta_clear (buffer, &mtd);
+    }
+  }
+
   gsize adj_mat_data_size =
       (sizeof (guint8) * rmeta->rel_order * rmeta->rel_order);
 
