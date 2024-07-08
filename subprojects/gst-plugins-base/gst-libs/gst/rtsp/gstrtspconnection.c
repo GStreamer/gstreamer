@@ -1672,6 +1672,9 @@ read_bytes (GstRTSPConnection * conn, guint8 * buffer, guint * idx, guint size,
   if (G_UNLIKELY (*idx > size))
     return GST_RTSP_ERROR;
 
+  if (G_UNLIKELY (!conn->input_stream))
+    return GST_RTSP_EINVAL;
+
   left = size - *idx;
 
   while (left) {
@@ -1689,6 +1692,9 @@ error:
   {
     if (G_UNLIKELY (r == 0))
       return GST_RTSP_EEOF;
+
+    if (G_UNLIKELY (!err))
+      return GST_RTSP_EINVAL;
 
     GST_DEBUG ("%s", err->message);
     res = gst_rtsp_result_from_g_io_error (err, GST_RTSP_ESYS);
