@@ -343,7 +343,7 @@ typedef struct
   GDestroyNotify notify;
 }
 LogFuncEntry;
-static GMutex __log_func_mutex;
+static GRWLock __log_func_mutex;
 static GSList *__log_functions = NULL;
 
 /* whether to add the default log function in gst_init() */
@@ -614,6 +614,7 @@ gst_debug_log_full_valist (GstDebugCategory * category, GstDebugLevel level,
 
   G_VA_COPY (message.arguments, args);
 
+  g_rw_lock_reader_lock (&__log_func_mutex);
   handler = __log_functions;
   while (handler) {
     entry = handler->data;
@@ -621,6 +622,8 @@ gst_debug_log_full_valist (GstDebugCategory * category, GstDebugLevel level,
     entry->func (category, level, file, function, line, object, &message,
         entry->user_data);
   }
+  g_rw_lock_reader_unlock (&__log_func_mutex);
+
   g_free (message.message);
   if (message.free_object_id)
     g_free (message.object_id);
@@ -706,6 +709,7 @@ gst_debug_log_literal_full (GstDebugCategory * category, GstDebugLevel level,
   message.object_id = (gchar *) id;
   message.free_object_id = FALSE;
 
+  g_rw_lock_reader_lock (&__log_func_mutex);
   handler = __log_functions;
   while (handler) {
     entry = handler->data;
@@ -713,6 +717,7 @@ gst_debug_log_literal_full (GstDebugCategory * category, GstDebugLevel level,
     entry->func (category, level, file, function, line, object, &message,
         entry->user_data);
   }
+  g_rw_lock_reader_unlock (&__log_func_mutex);
 
   if (message.free_object_id)
     g_free (message.object_id);
@@ -1745,7 +1750,6 @@ gst_debug_add_log_function (GstLogFunction func, gpointer user_data,
     GDestroyNotify notify)
 {
   LogFuncEntry *entry;
-  GSList *list;
 
   if (func == NULL)
     func = gst_debug_log_default;
@@ -1754,16 +1758,9 @@ gst_debug_add_log_function (GstLogFunction func, gpointer user_data,
   entry->func = func;
   entry->user_data = user_data;
   entry->notify = notify;
-  /* FIXME: we leak the old list here - other threads might access it right now
-   * in gst_debug_logv. Another solution is to lock the mutex in gst_debug_logv,
-   * but that is waaay costly.
-   * It'd probably be clever to use some kind of RCU here, but I don't know
-   * anything about that.
-   */
-  g_mutex_lock (&__log_func_mutex);
-  list = g_slist_copy (__log_functions);
-  __log_functions = g_slist_prepend (list, entry);
-  g_mutex_unlock (&__log_func_mutex);
+  g_rw_lock_writer_lock (&__log_func_mutex);
+  __log_functions = g_slist_prepend (__log_functions, entry);
+  g_rw_lock_writer_unlock (&__log_func_mutex);
 
   if (gst_is_initialized ())
     GST_DEBUG ("prepended log function %p (user data %p) to log functions",
@@ -1790,26 +1787,16 @@ static guint
 gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
 {
   GSList *found;
-  GSList *new, *cleanup = NULL;
+  GSList *cleanup = NULL;
   guint removals = 0;
 
-  g_mutex_lock (&__log_func_mutex);
-  new = __log_functions;
-  cleanup = NULL;
-  while ((found = g_slist_find_custom (new, data, func))) {
-    if (new == __log_functions) {
-      /* make a copy when we have the first hit, so that we modify the copy and
-       * make that the new list later */
-      new = g_slist_copy (new);
-      continue;
-    }
+  g_rw_lock_writer_lock (&__log_func_mutex);
+  while ((found = g_slist_find_custom (__log_functions, data, func))) {
     cleanup = g_slist_prepend (cleanup, found->data);
-    new = g_slist_delete_link (new, found);
+    __log_functions = g_slist_delete_link (__log_functions, found);
     removals++;
   }
-  /* FIXME: We leak the old list here. See _add_log_function for why. */
-  __log_functions = new;
-  g_mutex_unlock (&__log_func_mutex);
+  g_rw_lock_writer_unlock (&__log_func_mutex);
 
   while (cleanup) {
     LogFuncEntry *entry = cleanup->data;
@@ -2569,7 +2556,7 @@ _priv_gst_debug_cleanup (void)
 
   clear_level_names ();
 
-  g_mutex_lock (&__log_func_mutex);
+  g_rw_lock_writer_lock (&__log_func_mutex);
   while (__log_functions) {
     LogFuncEntry *log_func_entry = __log_functions->data;
     if (log_func_entry->notify)
@@ -2577,7 +2564,7 @@ _priv_gst_debug_cleanup (void)
     g_free (log_func_entry);
     __log_functions = g_slist_delete_link (__log_functions, __log_functions);
   }
-  g_mutex_unlock (&__log_func_mutex);
+  g_rw_lock_writer_unlock (&__log_func_mutex);
 }
 
 static void
