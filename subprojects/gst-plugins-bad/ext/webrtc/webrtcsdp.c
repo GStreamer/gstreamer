@@ -399,6 +399,17 @@ _get_direction_from_media (const GstSDPMedia * media)
   return new_dir;
 }
 
+GstWebRTCKind
+_get_kind_from_media (const GstSDPMedia * media)
+{
+  GstWebRTCKind kind = GST_WEBRTC_KIND_UNKNOWN;
+  if (!g_strcmp0 (gst_sdp_media_get_media (media), "audio"))
+    kind = GST_WEBRTC_KIND_AUDIO;
+  else if (!g_strcmp0 (gst_sdp_media_get_media (media), "video"))
+    kind = GST_WEBRTC_KIND_VIDEO;
+  return kind;
+}
+
 #define DIR(val) GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_ ## val
 GstWebRTCRTPTransceiverDirection
 _intersect_answer_directions (GstWebRTCRTPTransceiverDirection offer,

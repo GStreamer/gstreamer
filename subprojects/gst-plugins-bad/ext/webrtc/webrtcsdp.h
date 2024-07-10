@@ -46,6 +46,8 @@ gboolean                            validate_sdp                            (Gst
 G_GNUC_INTERNAL
 GstWebRTCRTPTransceiverDirection    _get_direction_from_media               (const GstSDPMedia * media);
 G_GNUC_INTERNAL
+GstWebRTCKind                       _get_kind_from_media                    (const GstSDPMedia * media);
+G_GNUC_INTERNAL
 GstWebRTCRTPTransceiverDirection    _intersect_answer_directions            (GstWebRTCRTPTransceiverDirection offer,
                                                                              GstWebRTCRTPTransceiverDirection answer);
 G_GNUC_INTERNAL
