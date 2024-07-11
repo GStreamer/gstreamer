@@ -692,7 +692,8 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
       VK_IMAGE_LAYOUT_VIDEO_DECODE_DST_KHR :
       VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR;
   gst_vulkan_operation_add_frame_barrier (priv->exec, pic->out,
-      VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+      VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
       VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR, new_layout, NULL);
 
   /* Reference for the current image, if existing and not layered */
@@ -719,7 +720,8 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
 
       if (!ref_pic->dpb) {
         gst_vulkan_operation_add_frame_barrier (priv->exec, ref_buf,
-            VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+            VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+            VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
             VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR
             | VK_ACCESS_2_VIDEO_DECODE_READ_BIT_KHR,
             VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR, NULL);

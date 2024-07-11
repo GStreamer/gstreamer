@@ -1303,6 +1303,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
       VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR);
   gst_vulkan_operation_add_frame_barrier (priv->exec, pic->in_buffer,
       VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
       VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
       VK_IMAGE_LAYOUT_VIDEO_ENCODE_SRC_KHR, NULL);
 
@@ -1311,6 +1312,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
       VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR);
   gst_vulkan_operation_add_frame_barrier (priv->exec, pic->dpb_buffer,
       VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+      VK_PIPELINE_STAGE_2_VIDEO_ENCODE_BIT_KHR,
       VK_ACCESS_2_VIDEO_ENCODE_READ_BIT_KHR,
       VK_IMAGE_LAYOUT_VIDEO_ENCODE_DPB_KHR, NULL);
 

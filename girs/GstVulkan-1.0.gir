@@ -4636,6 +4636,11 @@ gst_vulkan_operation_update_frame().</doc>
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">a Vulkan Image #GstBuffer</doc>
             <type name="Gst.Buffer" c:type="GstBuffer*"/>
           </parameter>
+          <parameter name="src_stage" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">source pipeline stage (VkPipelineStageFlags or
+  VkPipelineStageFlags2)</doc>
+            <type name="guint64" c:type="guint64"/>
+          </parameter>
           <parameter name="dst_stage" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">destination pipeline stage (VkPipelineStageFlags or
   VkPipelineStageFlags2)</doc>

@@ -859,6 +859,8 @@ gst_vulkan_operation_add_extra_image_barriers (GstVulkanOperation * self,
  * gst_vulkan_operation_add_frame_barrier:
  * @self: a #GstVulkanOperation
  * @frame: a Vulkan Image #GstBuffer
+ * @src_stage: source pipeline stage (VkPipelineStageFlags or
+ *   VkPipelineStageFlags2)
  * @dst_stage: destination pipeline stage (VkPipelineStageFlags or
  *   VkPipelineStageFlags2)
  * @new_access: the new access flags (VkAccessFlags2 or VkAccessFlags)
@@ -876,7 +878,7 @@ gst_vulkan_operation_add_extra_image_barriers (GstVulkanOperation * self,
  */
 gboolean
 gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
-    GstBuffer * frame, guint64 dst_stage, guint64 new_access,
+    GstBuffer * frame, guint64 src_stage, guint64 dst_stage, guint64 new_access,
     VkImageLayout new_layout, GstVulkanQueue * new_queue)
 {
   guint i, n_mems;
@@ -932,8 +934,7 @@ gst_vulkan_operation_add_frame_barrier (GstVulkanOperation * self,
       VkImageMemoryBarrier2KHR barrier2  = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2_KHR,
         .pNext = NULL,
-        .srcStageMask = dep_frame ?
-            dep_frame->dst_stage : vkmem->barrier.parent.pipeline_stages,
+        .srcStageMask = src_stage,
         .dstStageMask = dst_stage,
         .srcAccessMask = dep_frame ?
             dep_frame->new_access : vkmem->barrier.parent.access_flags,

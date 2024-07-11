@@ -188,8 +188,8 @@ download_and_check_output_buffer (GstVulkanDecoder * dec, VkFormat vk_format,
       VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT);
 
   gst_vulkan_operation_add_frame_barrier (exec, pic->out,
-      VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_READ_BIT,
-      VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, NULL);
+      VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+      VK_ACCESS_TRANSFER_READ_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, NULL);
 
   barriers = gst_vulkan_operation_retrieve_image_barriers (exec);
   /* *INDENT-OFF* */

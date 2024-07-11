@@ -103,6 +103,7 @@ GArray *                gst_vulkan_operation_new_extra_image_barriers
 GST_VULKAN_API
 gboolean                gst_vulkan_operation_add_frame_barrier  (GstVulkanOperation * self,
                                                                  GstBuffer * frame,
+                                                                 guint64 src_stage,
                                                                  guint64 dst_stage,
                                                                  guint64 new_access,
                                                                  VkImageLayout new_layout,

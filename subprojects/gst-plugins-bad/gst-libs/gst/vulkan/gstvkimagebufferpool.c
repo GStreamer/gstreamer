@@ -428,8 +428,8 @@ prepare_buffer (GstVulkanImageBufferPool * vk_pool, GstBuffer * buffer)
     goto error;
 
   if (!gst_vulkan_operation_add_frame_barrier (priv->exec, buffer,
-          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, priv->initial_access,
-          priv->initial_layout, NULL))
+          VK_PIPELINE_STAGE_NONE_KHR, VK_PIPELINE_STAGE_ALL_COMMANDS_BIT,
+          priv->initial_access, priv->initial_layout, NULL))
     goto error;
 
   barriers = gst_vulkan_operation_retrieve_image_barriers (priv->exec);

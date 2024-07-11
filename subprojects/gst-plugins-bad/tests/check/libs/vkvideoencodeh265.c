@@ -245,8 +245,9 @@ upload_buffer_to_image (GstBufferPool * pool, GstBuffer * inbuf,
   cmd_buf = exec->cmd_buf;
 
   if (!gst_vulkan_operation_add_frame_barrier (exec, *outbuf,
-          VK_PIPELINE_STAGE_TRANSFER_BIT, VK_ACCESS_TRANSFER_WRITE_BIT,
-          VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, NULL))
+          VK_PIPELINE_STAGE_ALL_COMMANDS_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+          VK_ACCESS_TRANSFER_WRITE_BIT, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+          NULL))
     goto unlock_error;
 
   barriers = gst_vulkan_operation_retrieve_image_barriers (exec);
