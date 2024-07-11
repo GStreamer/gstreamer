@@ -28,17 +28,22 @@
  *
  * ```sh
  * gst-launch-1.0 ajasrc video-format=1080p-3000 ! ajasrcdemux name=d \
- *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! videoconvert ! autovideosink \
- *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! audioconvert ! audioresample ! autoaudiosink
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! videoconvert ! autovideosink \ d.audio ! queue
+ * max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! audioconvert !
+ * audioresample ! autoaudiosink
  * ```
  *
  * Capture 1080p30 audio/video and directly output it again on the same card
  *
  * ```sh
- * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1 audio-system=2 ! ajasrcdemux name=d \
- *     d.video ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.video \
- *     d.audio ! queue max-size-bytes=0 max-size-buffers=0 max-size-time=1000000000 ! c.audio \
- *     ajasinkcombiner name=c ! ajasink channel=0 reference-source=input-1
+ * gst-launch-1.0 ajasrc video-format=1080p-3000 channel=1 input-source=sdi-1
+ * audio-system=2 ! ajasrcdemux name=d \
+ *     d.video ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! c.video \
+ *     d.audio ! queue max-size-bytes=0 max-size-buffers=0
+ * max-size-time=1000000000 ! c.audio \ ajasinkcombiner name=c ! ajasink
+ * channel=0 reference-source=input-1
  * ```
  *
  * Since: 1.24
@@ -2283,7 +2288,7 @@ next_item:
     g_free(__dbg);                                                          \
     __msg = gst_message_new_error(GST_OBJECT(el), __err, __fmt_dbg);        \
     QueueItem item = {.type = QUEUE_ITEM_TYPE_ERROR, .error{.msg = __msg}}; \
-    gst_vec_deque_push_tail_struct(el->queue, &item);                     \
+    gst_vec_deque_push_tail_struct(el->queue, &item);                       \
     g_cond_signal(&el->queue_cond);                                         \
   }                                                                         \
   G_STMT_END;
@@ -2293,9 +2298,6 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   GstClock *clock = NULL;
   GstClock *real_time_clock;
   AUTOCIRCULATE_TRANSFER transfer;
-  guint64 frames_dropped_last = G_MAXUINT64;
-  gboolean have_signal = TRUE, discont = TRUE;
-  guint iterations_without_frame = 0;
   NTV2VideoFormat last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
 
   if (self->capture_cpu_core != G_MAXUINT) {
@@ -2317,12 +2319,29 @@ static void capture_thread_func(AJAThread *thread, void *data) {
   real_time_clock = GST_CLOCK(g_object_new(GST_TYPE_SYSTEM_CLOCK, "clock-type",
                                            GST_CLOCK_TYPE_REALTIME, NULL));
 
+  // if we currently have signal
+  bool have_signal = true;
+  // if the *next* output frame should have the discont flag set
+  bool discont = true;
+  // if the pipeline clock is the monotonic system clock
   bool clock_is_monotonic_system_clock = false;
+  // if the next frame is the first one after autocirculate was started
   bool first_frame_after_start = true;
-  bool reset_clock = false;
-  GstClockTime first_frame_time = 0;
-  guint64 first_frame_processed_plus_dropped_minus_buffered = 0;
+  // acFrameTime of the last captured frame. Used to detect
+  // if a frame is actually missing or the signal changed
+  GstClockTime last_frame_time = GST_CLOCK_TIME_NONE;
+  // Base time of the first frame after a clock observation reset
+  // Internal frame time is calculated from this and the number of frames
+  // captured so far.
+  GstClockTime first_frame_time = GST_CLOCK_TIME_NONE;
+  guint64 num_frames = 0;
+  // Number of frames to drop. After signal loss the first few frames
+  // often have invalid acFrameTime so we drop them to calculate valid
+  // timestamps afterwards
   guint frames_to_drop = 0;
+  // Number of vsync iterations without a captured frame. If this becomes too
+  // high we assume signal loss.
+  guint iterations_without_frame = 0;
 
   g_mutex_lock(&self->queue_lock);
 restart:
@@ -2352,12 +2371,19 @@ restart:
     gst_clear_object(&system_clock);
   }
 
+  // Reset all local state after restart
+  have_signal = true;
+  discont = true;
   first_frame_after_start = true;
-  first_frame_time = 0;
-  frames_dropped_last = G_MAXUINT64;
-  have_signal = TRUE;
+  last_frame_time = GST_CLOCK_TIME_NONE;
+  first_frame_time = GST_CLOCK_TIME_NONE;
+  num_frames = 0;
+  frames_to_drop = 0;
+  iterations_without_frame = 0;
 
   g_mutex_lock(&self->queue_lock);
+  self->video_format = ::NTV2_FORMAT_UNKNOWN;
+
   while (self->playing && !self->shutdown) {
     // If we don't have a video format configured, configure the device now
     // and potentially auto-detect the video format
@@ -2381,7 +2407,6 @@ restart:
 
       if (self->video_format == ::NTV2_FORMAT_UNKNOWN) {
         GST_DEBUG_OBJECT(self, "No signal, waiting");
-        frames_dropped_last = G_MAXUINT64;
         if (have_signal) {
           QueueItem item = {
               .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
@@ -2390,8 +2415,7 @@ restart:
                                 .vpid = 0}};
           gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
-          have_signal = FALSE;
-          discont = TRUE;
+          have_signal = false;
         }
         self->device->device->WaitForInputVerticalInterrupt(self->channel);
         continue;
@@ -2505,7 +2529,6 @@ restart:
 
       GST_DEBUG_OBJECT(self, "No signal, waiting");
       g_mutex_unlock(&self->queue_lock);
-      frames_dropped_last = G_MAXUINT64;
       if (have_signal || current_video_format != last_detected_video_format) {
         QueueItem item = {
             .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
@@ -2515,8 +2538,7 @@ restart:
         last_detected_video_format = ::NTV2_FORMAT_UNKNOWN;
         gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
-        have_signal = FALSE;
-        discont = TRUE;
+        have_signal = false;
       }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
@@ -2542,7 +2564,6 @@ restart:
                        current_string.c_str(), configured_string.c_str(),
                        effective_string.c_str());
       g_mutex_unlock(&self->queue_lock);
-      frames_dropped_last = G_MAXUINT64;
       if (have_signal || current_video_format != last_detected_video_format) {
         QueueItem item = {
             .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
@@ -2552,8 +2573,7 @@ restart:
         last_detected_video_format = current_video_format;
         gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
-        have_signal = FALSE;
-        discont = TRUE;
+        have_signal = false;
       }
       self->device->device->WaitForInputVerticalInterrupt(self->channel);
       g_mutex_lock(&self->queue_lock);
@@ -2592,7 +2612,7 @@ restart:
         GST_TIME_ARGS(status.acRDTSCCurrentTime * 100),
         status.acFramesProcessed, status.acFramesDropped, status.acBufferLevel);
 
-    if (status.IsRunning() && status.acBufferLevel > 1) {
+    if (status.IsRunning() && status.HasAvailableInputFrame()) {
       GstBuffer *video_buffer = NULL;
       GstBuffer *audio_buffer = NULL;
       GstBuffer *anc_buffer = NULL, *anc_buffer2 = NULL;
@@ -2610,8 +2630,8 @@ restart:
                               .vpid = vpid_a}};
         gst_vec_deque_push_tail_struct(self->queue, &item);
         g_cond_signal(&self->queue_cond);
-        have_signal = TRUE;
-        reset_clock = true;
+        have_signal = true;
+        last_frame_time = GST_CLOCK_TIME_NONE;
 
         // Drop the next frames after signal recovery as the capture times
         // are generally just wrong.
@@ -2699,16 +2719,6 @@ restart:
         continue;
       }
 
-      if (frames_to_drop > 0) {
-        GST_TRACE_OBJECT(self, "Dropping frame");
-        frames_to_drop -= 1;
-        gst_clear_buffer(&anc_buffer2);
-        gst_clear_buffer(&anc_buffer);
-        gst_clear_buffer(&audio_buffer);
-        gst_clear_buffer(&video_buffer);
-        continue;
-      }
-
       const AUTOCIRCULATE_TRANSFER_STATUS &transfer_status =
           transfer.GetTransferStatus();
       const FRAME_STAMP &frame_stamp = transfer_status.GetFrameStamp();
@@ -2735,6 +2745,16 @@ restart:
                        transfer_status.acFramesDropped,
                        transfer_status.acBufferLevel);
 
+      if (frames_to_drop > 0) {
+        GST_TRACE_OBJECT(self, "Dropping frame");
+        frames_to_drop -= 1;
+        gst_clear_buffer(&anc_buffer2);
+        gst_clear_buffer(&anc_buffer);
+        gst_clear_buffer(&audio_buffer);
+        gst_clear_buffer(&video_buffer);
+        continue;
+      }
+
       GstClockTime frame_time_real = frame_stamp.acFrameTime * 100;
 
       // Convert capture time from real-time clock to monotonic clock by
@@ -2758,19 +2778,55 @@ restart:
         frame_time_monotonic = frame_time_real + diff;
       }
 
+      // Detect frame drop: backwards capture time is clearly a problem,
+      // otherwise consider a frame being dropped if more than 1.75 frame
+      // durations are between two frames
+      if (last_frame_time != GST_CLOCK_TIME_NONE) {
+        GstClockTime frame_drop_threshold =
+            (7 * self->configured_info.fps_d * GST_SECOND) /
+            (4 * self->configured_info.fps_n);
+        if (last_frame_time >= frame_time_monotonic) {
+          GST_ERROR_OBJECT(self, "Frame capture time went backwards");
+          last_frame_time = GST_CLOCK_TIME_NONE;
+        } else if (frame_time_monotonic - last_frame_time >
+                   frame_drop_threshold) {
+          GstClockTime timestamp =
+              last_frame_time + self->configured_info.fps_d * GST_SECOND /
+                                    self->configured_info.fps_n;
+          GstClockTime timestamp_end = frame_time_monotonic;
+
+          GST_WARNING_OBJECT(self,
+                             "Frame drop of %" GST_TIME_FORMAT " detected",
+                             GST_TIME_ARGS(timestamp_end - timestamp));
+
+          QueueItem item = {.type = QUEUE_ITEM_TYPE_FRAMES_DROPPED,
+                            .frames_dropped = {.driver_side = TRUE,
+                                               .timestamp_start = timestamp,
+                                               .timestamp_end = timestamp_end}};
+          gst_vec_deque_push_tail_struct(self->queue, &item);
+          g_cond_signal(&self->queue_cond);
+
+          last_frame_time = GST_CLOCK_TIME_NONE;
+        } else {
+          GST_TRACE_OBJECT(
+              self, "Time since last frame: %" GST_TIME_FORMAT,
+              GST_TIME_ARGS(frame_time_monotonic - last_frame_time));
+        }
+      }
+
       GstClockTime frame_src_time;
 
       // Update clock mapping
-      if (first_frame_after_start || reset_clock) {
+      if (first_frame_after_start || last_frame_time == GST_CLOCK_TIME_NONE) {
         GstClockTime internal, external;
         guint64 num, denom;
 
-        // Keep observations if there was only temporary signal loss or a
-        // format change as the source is either using the same clock as
-        // before, or it's different but then our previous configuration would
-        // be as good/bad as the local monotonic system clock and over some
-        // frames we would converge to the new clock.
-        if (!first_frame_after_start) {
+        // Keep observations if there was only temporary signal loss as the
+        // source is either using the same clock as before, or it's different
+        // but then our previous configuration would be as good/bad as the
+        // local monotonic system clock and over some frames we would converge
+        // to the new clock.
+        if (first_frame_after_start) {
           // FIXME: Workaround to get rid of all previous observations
           g_object_set(self->clock, "window-size", 32, NULL);
         }
@@ -2787,35 +2843,29 @@ restart:
                                   &denom);
         first_frame_time = frame_src_time = gst_clock_adjust_with_calibration(
             NULL, frame_time_monotonic, internal, external, num, denom);
-        first_frame_processed_plus_dropped_minus_buffered =
-            transfer_status.acFramesProcessed +
-            transfer_status.acFramesDropped - transfer_status.acBufferLevel;
 
         GST_TRACE_OBJECT(
-            self,
-            "Initializing clock with first frame time %" GST_TIME_FORMAT
-            " and initial frame count %" G_GUINT64_FORMAT,
-            GST_TIME_ARGS(first_frame_time),
-            first_frame_processed_plus_dropped_minus_buffered);
+            self, "Initializing clock with first frame time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS(first_frame_time));
 
         first_frame_after_start = false;
-        reset_clock = false;
+        discont = TRUE;
+        num_frames = 0;
       } else {
         gdouble r_squared;
 
         frame_src_time =
             first_frame_time +
-            gst_util_uint64_scale_ceil(
-                transfer_status.acFramesProcessed +
-                    transfer_status.acFramesDropped -
-                    transfer_status.acBufferLevel -
-                    first_frame_processed_plus_dropped_minus_buffered,
-                self->configured_info.fps_d * GST_SECOND,
-                self->configured_info.fps_n);
+            gst_util_uint64_scale_ceil(num_frames,
+                                       self->configured_info.fps_d * GST_SECOND,
+                                       self->configured_info.fps_n);
 
         gst_clock_add_observation(self->clock, frame_time_monotonic,
                                   frame_src_time, &r_squared);
       }
+
+      last_frame_time = frame_time_monotonic;
+      num_frames += 1;
 
       GstClockTime capture_time;
       if (self->clock == clock) {
@@ -2881,33 +2931,6 @@ restart:
       GST_BUFFER_DURATION(audio_buffer) = gst_util_uint64_scale(
           GST_SECOND, self->configured_info.fps_d, self->configured_info.fps_n);
 
-      if (frames_dropped_last == G_MAXUINT64) {
-        frames_dropped_last = transfer_status.acFramesDropped;
-      } else if (frames_dropped_last < transfer_status.acFramesDropped) {
-        GST_WARNING_OBJECT(
-            self, "Dropped %" G_GUINT64_FORMAT " frames",
-            transfer_status.acFramesDropped - frames_dropped_last);
-
-        GstClockTime timestamp = gst_util_uint64_scale(
-            transfer_status.acFramesProcessed + frames_dropped_last,
-            self->configured_info.fps_n,
-            self->configured_info.fps_d * GST_SECOND);
-        GstClockTime timestamp_end = gst_util_uint64_scale(
-            transfer_status.acFramesProcessed + transfer_status.acFramesDropped,
-            self->configured_info.fps_n,
-            self->configured_info.fps_d * GST_SECOND);
-
-        QueueItem item = {.type = QUEUE_ITEM_TYPE_FRAMES_DROPPED,
-                          .frames_dropped = {.driver_side = TRUE,
-                                             .timestamp_start = timestamp,
-                                             .timestamp_end = timestamp_end}};
-        gst_vec_deque_push_tail_struct(self->queue, &item);
-        g_cond_signal(&self->queue_cond);
-
-        frames_dropped_last = transfer_status.acFramesDropped;
-        discont = TRUE;
-      }
-
       gst_buffer_set_size(audio_buffer, transfer.GetCapturedAudioByteCount());
       if (anc_buffer)
         gst_buffer_set_size(anc_buffer,
@@ -2964,7 +2987,7 @@ restart:
             gst_vec_deque_drop_struct(self->queue, i, NULL);
             gst_vec_deque_push_tail_struct(self->queue, &item);
             self->queue_num_frames -= 1;
-            discont = TRUE;
+            discont = true;
             g_cond_signal(&self->queue_cond);
             break;
           }
@@ -2974,7 +2997,7 @@ restart:
       if (discont) {
         GST_BUFFER_FLAG_SET(video_buffer, GST_BUFFER_FLAG_DISCONT);
         GST_BUFFER_FLAG_SET(audio_buffer, GST_BUFFER_FLAG_DISCONT);
-        discont = FALSE;
+        discont = false;
       }
 
       QueueItem item = {
@@ -3006,7 +3029,6 @@ restart:
       if (have_signal && iterations_without_frame < 32) {
         iterations_without_frame++;
       } else {
-        frames_dropped_last = G_MAXUINT64;
         if (have_signal || last_detected_video_format != current_video_format) {
           QueueItem item = {
               .type = QUEUE_ITEM_TYPE_SIGNAL_CHANGE,
@@ -3016,8 +3038,7 @@ restart:
           last_detected_video_format = current_video_format;
           gst_vec_deque_push_tail_struct(self->queue, &item);
           g_cond_signal(&self->queue_cond);
-          have_signal = FALSE;
-          discont = TRUE;
+          have_signal = false;
         }
       }
 
