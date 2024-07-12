@@ -580,6 +580,23 @@ gst_vulkan_image_buffer_pool_stop (GstBufferPool * pool)
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
+static void
+gst_vulkan_image_buffer_pool_reset_buffer (GstBufferPool * pool,
+    GstBuffer * buffer)
+{
+  GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
+  GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
+  GstVulkanImageMemory *mem;
+  guint i, n = gst_buffer_n_memory (buffer);
+
+  GST_BUFFER_POOL_CLASS (parent_class)->reset_buffer (pool, buffer);
+
+  for (i = 0; i < n; i++) {
+    mem = (GstVulkanImageMemory *) gst_buffer_peek_memory (buffer, i);
+    mem->barrier.parent.access_flags = priv->initial_access;
+  }
+}
+
 /**
  * gst_vulkan_image_buffer_pool_new:
  * @device: the #GstVulkanDevice to use
@@ -614,6 +631,7 @@ gst_vulkan_image_buffer_pool_class_init (GstVulkanImageBufferPoolClass * klass)
   gstbufferpool_class->set_config = gst_vulkan_image_buffer_pool_set_config;
   gstbufferpool_class->alloc_buffer = gst_vulkan_image_buffer_pool_alloc;
   gstbufferpool_class->stop = gst_vulkan_image_buffer_pool_stop;
+  gstbufferpool_class->reset_buffer = gst_vulkan_image_buffer_pool_reset_buffer;
 }
 
 static void
