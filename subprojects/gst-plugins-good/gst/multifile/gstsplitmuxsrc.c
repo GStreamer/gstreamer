@@ -1046,6 +1046,7 @@ add_to_active_readers (GstSplitMuxSrc * splitmux,
   }
 }
 
+/* Called with splitmuxsrc lock held */
 static gboolean
 gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
     GstSeekFlags extra_flags)
@@ -1062,6 +1063,8 @@ gst_splitmux_src_activate_part (GstSplitMuxSrc * splitmux, guint part,
   if (!gst_splitmux_part_reader_activate (reader,
           &splitmux->play_segment, extra_flags)) {
     gst_object_unref (reader);
+    /* Re-take the lock before exiting */
+    SPLITMUX_SRC_LOCK (splitmux);
     return FALSE;
   }
   gst_object_unref (reader);
