@@ -480,7 +480,7 @@ gst_va_display_check_version (GstVaDisplay * self, guint major, guint minor)
 
   if (priv->driver_major < major)
     return FALSE;
-  if (priv->driver_minor < minor)
+  if (priv->driver_major == major && priv->driver_minor < minor)
     return FALSE;
 
   return TRUE;
