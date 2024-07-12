@@ -76,6 +76,7 @@ struct _GstSplitMuxPartReader
 
   gboolean async_pending;
 
+  gboolean created;
   gboolean loaded;
   gboolean playing;
 

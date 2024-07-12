@@ -710,25 +710,11 @@ gst_splitmux_part_reader_class_init (GstSplitMuxPartReaderClass * klass)
 }
 
 static void
-gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
+create_elements (GstSplitMuxPartReader * reader)
 {
+  /* Called on the first state change to create our internal elements */
   GstElement *typefind;
 
-  reader->prep_state = PART_STATE_NULL;
-  reader->need_duration_measuring = TRUE;
-
-  reader->loaded = FALSE;
-  reader->playing = FALSE;
-  reader->smallest_ts_offset = GST_CLOCK_TIME_NONE;
-  reader->info.start_offset = GST_CLOCK_TIME_NONE;
-  reader->info.duration = GST_CLOCK_TIME_NONE;
-
-  g_cond_init (&reader->inactive_cond);
-  g_mutex_init (&reader->lock);
-  g_mutex_init (&reader->type_lock);
-  g_mutex_init (&reader->msg_lock);
-
-  /* FIXME: Create elements on a state change */
   reader->src = gst_element_factory_make ("filesrc", NULL);
   if (reader->src == NULL) {
     GST_ERROR_OBJECT (reader, "Failed to create filesrc element");
@@ -754,6 +740,25 @@ gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
 
   g_signal_connect (reader->typefind, "have-type", G_CALLBACK (type_found),
       reader);
+}
+
+static void
+gst_splitmux_part_reader_init (GstSplitMuxPartReader * reader)
+{
+  reader->prep_state = PART_STATE_NULL;
+  reader->need_duration_measuring = TRUE;
+
+  reader->created = FALSE;
+  reader->loaded = FALSE;
+  reader->playing = FALSE;
+  reader->smallest_ts_offset = GST_CLOCK_TIME_NONE;
+  reader->info.start_offset = GST_CLOCK_TIME_NONE;
+  reader->info.duration = GST_CLOCK_TIME_NONE;
+
+  g_cond_init (&reader->inactive_cond);
+  g_mutex_init (&reader->lock);
+  g_mutex_init (&reader->type_lock);
+  g_mutex_init (&reader->msg_lock);
 }
 
 static void
@@ -1216,6 +1221,10 @@ gst_splitmux_part_reader_change_state (GstElement * element,
     }
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
       SPLITMUX_PART_LOCK (reader);
+      if (!reader->created) {
+        create_elements (reader);
+        reader->created = TRUE;
+      }
       g_object_set (reader->src, "location", reader->path, NULL);
       reader->prep_state = PART_STATE_PREPARING_COLLECT_STREAMS;
       gst_splitmux_part_reader_set_flushing_locked (reader, FALSE);
