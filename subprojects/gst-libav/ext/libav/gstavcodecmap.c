@@ -3884,7 +3884,7 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
 gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
     enum AVCodecID **video_codec_list, enum AVCodecID **audio_codec_list,
-    AVOutputFormat * plugin)
+    const AVOutputFormat * plugin)
 {
   static enum AVCodecID tmp_vlist[] = {
     AV_CODEC_ID_NONE,
