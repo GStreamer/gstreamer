@@ -347,6 +347,8 @@ SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
     }
   }
 
+  gst_clear_buffer (&resource_->cached_buf);
+
   render_format_ = format;
   crop_rect_ = CD3DX12_BOX (0, 0, in_info->width, in_info->height);
   prev_crop_rect_ = crop_rect_;
