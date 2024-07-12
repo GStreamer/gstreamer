@@ -1306,7 +1306,13 @@ gst_splitmux_src_stop (GstSplitMuxSrc * splitmux)
   for (i = 0; i < splitmux->num_parts; i++) {
     if (splitmux->parts[i] == NULL)
       continue;
-    gst_splitmux_part_reader_unprepare (splitmux->parts[i]);
+
+    /* Take a ref so we can drop the lock around calling unprepare */
+    GstSplitMuxPartReader *part = g_object_ref (splitmux->parts[i]);
+    SPLITMUX_SRC_UNLOCK (splitmux);
+    gst_splitmux_part_reader_unprepare (part);
+    g_object_unref (part);
+    SPLITMUX_SRC_LOCK (splitmux);
   }
 
   SPLITMUX_SRC_PADS_WLOCK (splitmux);
@@ -1946,10 +1952,11 @@ do_lookahead_check (GstSplitMuxSrc * splitmux)
             i, reader, splitmux->cur_part);
         gst_object_ref (reader);
         add_to_active_readers (splitmux, reader, FALSE);
-        SPLITMUX_SRC_UNLOCK (splitmux);
 
         /* Drop lock before calling activate, as it might call back
          * into the splitmuxsrc when exposing pads */
+        SPLITMUX_SRC_UNLOCK (splitmux);
+
         gst_splitmux_part_reader_prepare (reader);
         gst_object_unref (reader);
         /* Only prepare one part at a time */
