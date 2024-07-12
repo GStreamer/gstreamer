@@ -69,7 +69,7 @@ struct _GstFFMpegMuxClass
 {
   GstElementClass parent_class;
 
-  AVOutputFormat *in_plugin;
+  const AVOutputFormat *in_plugin;
 };
 
 #define GST_TYPE_FFMPEGMUX \
@@ -192,7 +192,7 @@ gst_ffmpegmux_base_init (gpointer g_class)
   GstFFMpegMuxClass *klass = (GstFFMpegMuxClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
-  AVOutputFormat *in_plugin;
+  const AVOutputFormat *in_plugin;
   GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
   enum AVCodecID *video_ids = NULL, *audio_ids = NULL;
   gchar *longname, *description, *name;
@@ -332,7 +332,7 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
       (GstCollectPadsFunction) gst_ffmpegmux_collected, ffmpegmux);
 
   ffmpegmux->context = avformat_alloc_context ();
-  ffmpegmux->context->oformat = oclass->in_plugin;
+  ffmpegmux->context->oformat = (struct AVOutputFormat *) oclass->in_plugin;
   ffmpegmux->context->nb_streams = 0;
   ffmpegmux->opened = FALSE;
 
@@ -872,6 +872,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
   GType type;
   const AVOutputFormat *in_plugin;
   void *i = 0;
+  enum AVCodecID *video_ids = NULL, *audio_ids = NULL;
 
   GST_LOG ("Registering muxers");
 
@@ -923,6 +924,12 @@ gst_ffmpegmux_register (GstPlugin * plugin)
         GST_LOG ("Ignoring raw muxer %s", in_plugin->name);
         continue;
       }
+    }
+
+    if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name, &video_ids,
+            &audio_ids, in_plugin)) {
+      GST_LOG ("Ignoring muxer %s because no sink caps", in_plugin->name);
+      continue;
     }
 
     if (gst_ffmpegmux_get_replacement (in_plugin->name))
