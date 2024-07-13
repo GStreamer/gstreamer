@@ -171,6 +171,7 @@ option('srt', type : 'feature', value : 'auto', description : 'Secure, Reliable,
 option('srtp', type : 'feature', value : 'auto', description : 'Secure RTP codec plugin')
 option('svtav1', type : 'feature', value : 'auto', description : 'Scalable Video Technology for AV1 plugin')
 option('svthevcenc', type : 'feature', value : 'auto', description : 'Scalable Video Technology for HEVC encoder plugin')
+option('svtjpegxs', type : 'feature', value : 'auto', description : 'Scalable Video Technology for JPEG-XS plugin')
 option('teletext', type : 'feature', value : 'auto', description : 'Teletext plugin')
 option('tinyalsa', type : 'feature', value : 'auto', description : 'TinyALSA plugin')
 option('transcode', type : 'feature', value : 'auto', description : 'Transcode plugin')
