@@ -405,8 +405,12 @@ gst_d3d12_window_prepare (GstD3D12Window * window, GstD3D12Device * device,
     }
   }
 
-  gst_video_info_set_format (&priv->display_info, format,
-      display_width, display_height);
+  {
+    std::lock_guard < std::recursive_mutex > lk (priv->lock);
+    priv->input_info = in_info;
+    gst_video_info_set_format (&priv->display_info, format,
+        display_width, display_height);
+  }
 
   if (!gst_d3d12_device_is_equal (window->device, device)) {
     gst_clear_object (&window->device);
