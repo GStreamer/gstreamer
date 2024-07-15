@@ -174,6 +174,13 @@ plugin_register_encoders (GstPlugin * plugin, GstVaDevice * device,
   GHashTableIter iter;
   gpointer key, value;
 
+  if (GST_VA_DISPLAY_IS_IMPLEMENTATION (device->display, INTEL_I965)
+      && g_getenv ("GST_VA_ALL_DRIVERS") == NULL) {
+    gst_plugin_add_status_warning (plugin,
+        "The Intel i965 VA driver is blocklisted for encoding, use GST_VA_ALL_DRIVERS to overwrite.");
+    return;
+  }
+
   g_hash_table_iter_init (&iter, encoders);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     guint32 codec = *((gint64 *) key);
