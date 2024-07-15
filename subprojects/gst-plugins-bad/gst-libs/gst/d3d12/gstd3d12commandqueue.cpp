@@ -62,11 +62,6 @@ struct gc_cmp {
 
 struct _GstD3D12CommandQueuePrivate
 {
-  _GstD3D12CommandQueuePrivate ()
-  {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-  }
-
   ~_GstD3D12CommandQueuePrivate ()
   {
     {
@@ -78,13 +73,8 @@ struct _GstD3D12CommandQueuePrivate
     g_clear_pointer (&gc_thread, g_thread_join);
 
     auto completed = fence->GetCompletedValue ();
-    if (fence_val > completed) {
-      auto hr = fence->SetEventOnCompletion (completed, event_handle);
-      if (SUCCEEDED (hr))
-        WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
-    }
-
-    CloseHandle (event_handle);
+    if (fence_val > completed)
+      fence->SetEventOnCompletion (completed, nullptr);
   }
 
   D3D12_COMMAND_QUEUE_DESC desc;
@@ -92,7 +82,6 @@ struct _GstD3D12CommandQueuePrivate
   ComPtr<ID3D12Device> device;
   ComPtr<ID3D12CommandQueue> cq;
   ComPtr<ID3D12Fence> fence;
-  HANDLE event_handle;
   guint64 fence_val = 0;
 
   GThread *gc_thread = nullptr;
@@ -251,12 +240,11 @@ gst_d3d12_command_queue_execute_command_lists_unlocked (GstD3D12CommandQueue *
 
     if (completed + priv->queue_size < priv->fence_val) {
       hr = priv->fence->SetEventOnCompletion (priv->fence_val -
-          priv->queue_size, priv->event_handle);
+          priv->queue_size, nullptr);
       if (FAILED (hr)) {
         GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
         return hr;
       }
-      WaitForSingleObjectEx (priv->event_handle, INFINITE, FALSE);
     }
   }
 
@@ -380,7 +368,6 @@ gst_d3d12_command_queue_get_completed_value (GstD3D12CommandQueue * queue)
  * gst_d3d12_command_queue_fence_wait:
  * @queue: a #GstD3D12CommandQueue
  * @fence_value: fence value to wait
- * @handle: (nullable) (transfer none): event handle used for fence wait
  *
  * Blocks calling CPU thread until command corresponding @fence_value
  * is completed. If @fence_value is %G_MAXUINT64, this method will block
@@ -392,7 +379,7 @@ gst_d3d12_command_queue_get_completed_value (GstD3D12CommandQueue * queue)
  */
 HRESULT
 gst_d3d12_command_queue_fence_wait (GstD3D12CommandQueue * queue,
-    guint64 fence_value, HANDLE event_handle)
+    guint64 fence_value)
 {
   g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
 
@@ -414,24 +401,11 @@ gst_d3d12_command_queue_fence_wait (GstD3D12CommandQueue * queue,
 
   auto completed = priv->fence->GetCompletedValue ();
   if (completed < fence_to_wait) {
-    bool close_handle = false;
-    if (!event_handle) {
-      event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-      close_handle = true;
-    }
-
-    hr = priv->fence->SetEventOnCompletion (fence_to_wait, event_handle);
+    hr = priv->fence->SetEventOnCompletion (fence_to_wait, nullptr);
     if (FAILED (hr)) {
       GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
-      if (close_handle)
-        CloseHandle (event_handle);
-
       return hr;
     }
-
-    WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
-    if (close_handle)
-      CloseHandle (event_handle);
   }
 
   return S_OK;
@@ -443,8 +417,6 @@ gst_d3d12_command_queue_gc_thread (GstD3D12CommandQueue * self)
   auto priv = self->priv;
 
   GST_INFO_OBJECT (self, "Entering GC thread");
-
-  HANDLE event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
 
   while (true) {
     GCDataPtr gc_data;
@@ -477,12 +449,10 @@ gst_d3d12_command_queue_gc_thread (GstD3D12CommandQueue * self)
     if (gc_data) {
       GST_LOG_OBJECT (self, "Waiting for fence data %" G_GUINT64_FORMAT,
           gc_data->fence_val);
-      auto hr =
-          priv->fence->SetEventOnCompletion (gc_data->fence_val, event_handle);
+      auto hr = priv->fence->SetEventOnCompletion (gc_data->fence_val, nullptr);
       if (FAILED (hr)) {
         GST_ERROR_OBJECT (self, "SetEventOnCompletion failed");
       } else {
-        WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
         GST_LOG_OBJECT (self, "Waiting done, %" G_GUINT64_FORMAT,
             gc_data->fence_val);
       }
@@ -490,8 +460,6 @@ gst_d3d12_command_queue_gc_thread (GstD3D12CommandQueue * self)
   }
 
   GST_INFO_OBJECT (self, "Leaving GC thread");
-
-  CloseHandle (event_handle);
 
   return nullptr;
 }
@@ -569,16 +537,11 @@ gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
 
     auto completed = priv->fence->GetCompletedValue ();
     if (completed < priv->fence_val) {
-      auto event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-      hr = priv->fence->SetEventOnCompletion (priv->fence_val, event_handle);
+      hr = priv->fence->SetEventOnCompletion (priv->fence_val, nullptr);
       if (FAILED (hr)) {
         GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
-        CloseHandle (event_handle);
         return hr;
       }
-
-      WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
-      CloseHandle (event_handle);
     }
 
     {
@@ -597,7 +560,7 @@ gst_d3d12_command_queue_drain (GstD3D12CommandQueue * queue)
 
 HRESULT
 gst_d3d12_command_queue_idle_for_swapchain (GstD3D12CommandQueue * queue,
-    guint64 fence_value, HANDLE event_handle)
+    guint64 fence_value)
 {
   g_return_val_if_fail (GST_IS_D3D12_COMMAND_QUEUE (queue), E_INVALIDARG);
 
@@ -624,24 +587,11 @@ gst_d3d12_command_queue_idle_for_swapchain (GstD3D12CommandQueue * queue,
 
   auto completed = priv->fence->GetCompletedValue ();
   if (completed < fence_to_wait) {
-    bool close_handle = false;
-    if (!event_handle) {
-      event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-      close_handle = true;
-    }
-
-    hr = priv->fence->SetEventOnCompletion (fence_to_wait, event_handle);
+    hr = priv->fence->SetEventOnCompletion (fence_to_wait, nullptr);
     if (FAILED (hr)) {
       GST_ERROR_OBJECT (queue, "SetEventOnCompletion failed");
-      if (close_handle)
-        CloseHandle (event_handle);
-
       return hr;
     }
-
-    WaitForSingleObjectEx (event_handle, INFINITE, FALSE);
-    if (close_handle)
-      CloseHandle (event_handle);
   }
 
   return S_OK;

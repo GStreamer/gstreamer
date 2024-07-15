@@ -88,17 +88,11 @@ struct EncoderSessionData
 
 struct EncoderCmdData
 {
-  EncoderCmdData ()
-  {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-  }
-
   ~EncoderCmdData ()
   {
     if (queue)
-      gst_d3d12_command_queue_fence_wait (queue, G_MAXUINT64, event_handle);
+      gst_d3d12_command_queue_fence_wait (queue, G_MAXUINT64);
 
-    CloseHandle (event_handle);
     gst_clear_object (&ca_pool);
     gst_clear_object (&queue);
   }
@@ -107,7 +101,6 @@ struct EncoderCmdData
   ComPtr<ID3D12VideoEncodeCommandList2> cl;
   GstD3D12CommandQueue *queue = nullptr;
   GstD3D12CommandAllocatorPool *ca_pool = nullptr;
-  HANDLE event_handle;
   guint64 fence_val = 0;
 };
 
@@ -353,8 +346,7 @@ gst_d3d12_encoder_drain (GstD3D12Encoder * self, gboolean locked)
   if (priv->cmd) {
     GST_DEBUG_OBJECT (self, "Waiting for command finish %" G_GUINT64_FORMAT,
         priv->cmd->fence_val);
-    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
-        priv->cmd->event_handle);
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val);
   }
 
   if (priv->session && priv->output_thread) {
@@ -1145,8 +1137,6 @@ gst_d3d12_encoder_output_loop (GstD3D12Encoder * self)
 
   GST_DEBUG_OBJECT (self, "Entering output thread");
 
-  HANDLE event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-
   while (true) {
     EncoderOutputData output_data;
     {
@@ -1167,8 +1157,8 @@ gst_d3d12_encoder_output_loop (GstD3D12Encoder * self)
     GST_LOG_OBJECT (self, "Processing output %" G_GUINT64_FORMAT,
         output_data.fence_val);
 
-    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, output_data.fence_val,
-        event_handle);
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
+        output_data.fence_val);
 
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "We are flushing");
@@ -1217,8 +1207,6 @@ gst_d3d12_encoder_output_loop (GstD3D12Encoder * self)
   }
 
   GST_DEBUG_OBJECT (self, "Leaving output thread");
-
-  CloseHandle (event_handle);
 
   return nullptr;
 }

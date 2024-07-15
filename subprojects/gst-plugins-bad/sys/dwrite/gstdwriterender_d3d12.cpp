@@ -42,7 +42,6 @@ struct GstDWriteD3D12RenderPrivate
   GstDWriteD3D12RenderPrivate ()
   {
     fence_data_pool = gst_d3d12_fence_data_pool_new ();
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
   }
 
   ~GstDWriteD3D12RenderPrivate ()
@@ -52,14 +51,13 @@ struct GstDWriteD3D12RenderPrivate
     d2d_factory = nullptr;
     ClearResource ();
     gst_clear_object (&fence_data_pool);
-    CloseHandle (event_handle);
   }
 
   void ClearResource ()
   {
     if (device) {
       gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
-          fence_val, event_handle);
+          fence_val);
     }
 
     gst_clear_object (&ca_pool);
@@ -109,7 +107,6 @@ struct GstDWriteD3D12RenderPrivate
   GstD3D12Converter *blend_conv = nullptr;
   GstD3D12Converter *post_conv = nullptr;
 
-  HANDLE event_handle;
   guint64 fence_val = 0;
 
   ComPtr<ID3D12GraphicsCommandList> cl;
@@ -331,7 +328,7 @@ gst_dwrite_d3d12_render_draw_layout (GstDWriteRender * render,
     auto fence_to_wait = priv->scheduled.front ();
     priv->scheduled.pop ();
     gst_d3d12_device_fence_wait (priv->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait, priv->event_handle);
+        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
   }
 
   GstBuffer *layout_buf = nullptr;
@@ -404,7 +401,7 @@ gst_dwrite_d3d12_render_blend (GstDWriteRender * render, GstBuffer * layout_buf,
     auto fence_to_wait = priv->scheduled.front ();
     priv->scheduled.pop ();
     gst_d3d12_device_fence_wait (priv->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait, priv->event_handle);
+        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
   }
 
   GstD3D12Frame out_frame;

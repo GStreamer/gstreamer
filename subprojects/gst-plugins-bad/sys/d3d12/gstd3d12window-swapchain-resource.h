@@ -69,7 +69,6 @@ struct SwapChainResource
   GstD3D12OverlayCompositor *comp = nullptr;
   GstD3D12Device *device = nullptr;
   GstD3D12CommandAllocatorPool *ca_pool = nullptr;
-  HANDLE event_handle = nullptr;
   UINT64 fence_val = 0;
   std::queue<UINT64> prev_fence_val;
   DXGI_FORMAT render_format = DXGI_FORMAT_UNKNOWN;

@@ -229,7 +229,6 @@ struct PadContext
 {
   PadContext (GstD3D12Device * dev)
   {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     device = (GstD3D12Device *) gst_object_ref (dev);
     auto device_handle = gst_d3d12_device_get_device_handle (device);
     ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
@@ -242,9 +241,7 @@ struct PadContext
   ~PadContext ()
   {
     gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        fence_val, event_handle);
-
-    CloseHandle (event_handle);
+        fence_val);
 
     gst_clear_d3d12_fence_data (&fence_data);
     gst_clear_object (&conv);
@@ -258,7 +255,6 @@ struct PadContext
   GstD3D12FenceData *fence_data = nullptr;
   GstD3D12Device *device;
   GstD3D12Converter *conv = nullptr;
-  HANDLE event_handle;
   guint64 fence_val = 0;
 };
 /* *INDENT-ON* */
@@ -321,7 +317,6 @@ struct BackgroundRender
 {
   BackgroundRender (GstD3D12Device * dev, const GstVideoInfo & info)
   {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     device = (GstD3D12Device *) gst_object_ref (dev);
     auto device_handle = gst_d3d12_device_get_device_handle (device);
     ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
@@ -510,9 +505,7 @@ struct BackgroundRender
   ~BackgroundRender ()
   {
     gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        fence_val, event_handle);
-
-    CloseHandle (event_handle);
+        fence_val);
 
     gst_clear_object (&ca_pool);
     gst_clear_object (&device);
@@ -532,7 +525,6 @@ struct BackgroundRender
   guint rtv_inc_size;
   bool need_upload = true;
   bool is_valid = false;
-  HANDLE event_handle;
   guint64 fence_val = 0;
 };
 /* *INDENT-ON* */
@@ -2378,8 +2370,7 @@ gst_d3d12_compositor_aggregate_frames (GstVideoAggregator * vagg,
     GST_LOG_OBJECT (self, "Waiting for previous command, %" G_GUINT64_FORMAT,
         fence_to_wait);
     gst_d3d12_device_fence_wait (self->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait,
-        priv->bg_render->event_handle);
+        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
   }
 
   if (!gst_d3d12_compositor_draw_background (self)) {

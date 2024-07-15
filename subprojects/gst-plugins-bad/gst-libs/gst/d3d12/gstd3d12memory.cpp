@@ -326,15 +326,8 @@ struct D3D11Interop
 
 struct _GstD3D12MemoryPrivate
 {
-  _GstD3D12MemoryPrivate ()
-  {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-  }
-
   ~_GstD3D12MemoryPrivate ()
   {
-    CloseHandle (event_handle);
-
     if (nt_handle)
       CloseHandle (nt_handle);
 
@@ -352,7 +345,6 @@ struct _GstD3D12MemoryPrivate
 
   D3D12_RESOURCE_DESC desc;
 
-  HANDLE event_handle = nullptr;
   HANDLE nt_handle = nullptr;
   std::map<gint64, std::unique_ptr<GstD3D12MemoryTokenData>> token_map;
   std::vector<std::shared_ptr<D3D11Interop>> shared_texture11;
@@ -420,15 +412,13 @@ gst_d3d12_memory_set_fence_unlocked (GstD3D12Memory * dmem,
     ID3D12Fence * fence, guint64 fence_val, gboolean wait)
 {
   auto priv = dmem->priv;
-  HRESULT hr;
 
   if (priv->fence && priv->fence.Get () != fence && wait) {
     auto completed = priv->fence->GetCompletedValue ();
     if (completed < priv->fence_val) {
-      hr = priv->fence->SetEventOnCompletion (priv->fence_val,
-          priv->event_handle);
-      if (SUCCEEDED (hr))
-        WaitForSingleObjectEx (priv->event_handle, INFINITE, FALSE);
+      auto hr = priv->fence->SetEventOnCompletion (priv->fence_val, nullptr);
+      /* For debugging */
+      gst_d3d12_result (hr, dmem->device);
     }
   }
 
@@ -478,7 +468,7 @@ gst_d3d12_memory_download (GstD3D12Memory * dmem)
   }
 
   gst_d3d12_device_fence_wait (dmem->device, D3D12_COMMAND_LIST_TYPE_COPY,
-      fence_val, priv->event_handle);
+      fence_val);
 
   priv->fence = nullptr;
   priv->fence_val = 0;

@@ -118,8 +118,7 @@ gboolean                gst_d3d12_device_set_fence_notify         (GstD3D12Devic
 GST_D3D12_API
 HRESULT                 gst_d3d12_device_fence_wait               (GstD3D12Device * device,
                                                                    D3D12_COMMAND_LIST_TYPE queue_type,
-                                                                   guint64 fence_value,
-                                                                   HANDLE event_handle);
+                                                                   guint64 fence_value);
 
 GST_D3D12_API
 gboolean                gst_d3d12_device_is_equal                 (GstD3D12Device * device1,

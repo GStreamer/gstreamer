@@ -1696,7 +1696,6 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
  * @device: a #GstD3D12Device
  * @queue_type: a D3D12_COMMAND_LIST_TYPE
  * @fence_value: target fence value
- * @handle: (nullable) (transfer none): event handle used for fence wait
  *
  * Exectues gst_d3d12_command_queue_fence_wait ()
  * using a #GstD3D12CommandQueue corresponding to @queue_type
@@ -1707,8 +1706,7 @@ gst_d3d12_device_set_fence_notify (GstD3D12Device * device,
  */
 HRESULT
 gst_d3d12_device_fence_wait (GstD3D12Device * device,
-    D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value,
-    HANDLE event_handle)
+    D3D12_COMMAND_LIST_TYPE queue_type, guint64 fence_value)
 {
   g_return_val_if_fail (GST_IS_D3D12_DEVICE (device), E_INVALIDARG);
 
@@ -1727,7 +1725,7 @@ gst_d3d12_device_fence_wait (GstD3D12Device * device,
       return E_INVALIDARG;
   }
 
-  return gst_d3d12_command_queue_fence_wait (queue, fence_value, event_handle);
+  return gst_d3d12_command_queue_fence_wait (queue, fence_value);
 }
 
 gboolean

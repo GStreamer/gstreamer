@@ -104,8 +104,7 @@ guint64                gst_d3d12_command_queue_get_completed_value (GstD3D12Comm
 
 GST_D3D12_API
 HRESULT                gst_d3d12_command_queue_fence_wait   (GstD3D12CommandQueue * queue,
-                                                             guint64 fence_value,
-                                                             HANDLE event_handle);
+                                                             guint64 fence_value);
 
 GST_D3D12_API
 void                   gst_d3d12_command_queue_set_notify (GstD3D12CommandQueue * queue,

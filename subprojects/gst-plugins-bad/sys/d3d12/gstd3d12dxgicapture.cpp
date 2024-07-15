@@ -895,7 +895,6 @@ struct GstD3D12DxgiCapturePrivate
 {
   GstD3D12DxgiCapturePrivate ()
   {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     fence_data_pool = gst_d3d12_fence_data_pool_new ();
   }
 
@@ -903,7 +902,6 @@ struct GstD3D12DxgiCapturePrivate
   {
     WaitGPU ();
     ctx = nullptr;
-    CloseHandle (event_handle);
     if (shared_fence_handle)
       CloseHandle (shared_fence_handle);
     gst_clear_buffer (&mouse_buf);
@@ -919,11 +917,8 @@ struct GstD3D12DxgiCapturePrivate
   {
     if (shared_fence) {
       auto completed = shared_fence->GetCompletedValue ();
-      if (completed < fence_val) {
-        auto hr = shared_fence->SetEventOnCompletion (fence_val, event_handle);
-        if (SUCCEEDED (hr))
-          WaitForSingleObject (event_handle, INFINITE);
-      }
+      if (completed < fence_val)
+        shared_fence->SetEventOnCompletion (fence_val, nullptr);
     }
   }
 
@@ -948,7 +943,6 @@ struct GstD3D12DxgiCapturePrivate
   guint cached_width = 0;
   guint cached_height = 0;
 
-  HANDLE event_handle;
   guint64 fence_val = 0;
 
   guint64 mouse_token = 0;

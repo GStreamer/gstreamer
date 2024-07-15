@@ -71,30 +71,20 @@ enum
 /* *INDENT-OFF* */
 struct GstWebView2SrcPrivate
 {
-  GstWebView2SrcPrivate ()
-  {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-  }
-
   ~GstWebView2SrcPrivate ()
   {
     ClearResource ();
     gst_clear_object (&object);
     gst_clear_object (&device12);
     gst_clear_object (&device);
-
-    CloseHandle (event_handle);
   }
 
   void ClearResource ()
   {
     if (fence12) {
       auto completed = fence12->GetCompletedValue ();
-      if (completed < fence_val) {
-        auto hr = fence12->SetEventOnCompletion (fence_val, event_handle);
-        if (SUCCEEDED (hr))
-          WaitForSingleObject (event_handle, INFINITE);
-      }
+      if (completed < fence_val)
+        fence12->SetEventOnCompletion (fence_val, nullptr);
     }
 
     staging = nullptr;
@@ -124,7 +114,6 @@ struct GstWebView2SrcPrivate
   ComPtr<ID3D12Fence> fence12;
   gboolean can_d3d12_copy;
   UINT64 fence_val = 0;
-  HANDLE event_handle;
 
   /* properties */
   gint adapter_index = DEFAULT_ADAPTER;

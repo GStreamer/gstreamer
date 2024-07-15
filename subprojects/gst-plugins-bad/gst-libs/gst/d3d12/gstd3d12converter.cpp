@@ -237,7 +237,7 @@ struct _GstD3D12ConverterPrivate
   ~_GstD3D12ConverterPrivate ()
   {
     if (fence_val > 0 && cq)
-      gst_d3d12_command_queue_fence_wait (cq, fence_val, nullptr);
+      gst_d3d12_command_queue_fence_wait (cq, fence_val);
 
     gst_clear_object (&srv_heap_pool);
     gst_clear_object (&cq);

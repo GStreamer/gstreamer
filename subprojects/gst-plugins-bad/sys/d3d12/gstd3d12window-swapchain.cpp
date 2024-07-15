@@ -49,7 +49,6 @@ SwapChainBuffer::~SwapChainBuffer ()
 
 SwapChainResource::SwapChainResource (GstD3D12Device * dev)
 {
-  event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
   device = (GstD3D12Device *) gst_object_ref (dev);
   auto device_handle = gst_d3d12_device_get_device_handle (device);
   ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
@@ -80,8 +79,6 @@ SwapChainResource::~SwapChainResource ()
   gst_clear_object (&conv);
   gst_clear_object (&ca_pool);
   gst_clear_object (&device);
-
-  CloseHandle (event_handle);
 }
 
 void
@@ -90,7 +87,7 @@ SwapChainResource::clear_resource ()
   if (!buffers.empty ()) {
     auto cq = gst_d3d12_device_get_command_queue (device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    gst_d3d12_command_queue_idle_for_swapchain (cq, fence_val, event_handle);
+    gst_d3d12_command_queue_idle_for_swapchain (cq, fence_val);
     prev_fence_val = { };
   }
 
@@ -234,8 +231,7 @@ SwapChain::~SwapChain()
   if (!resource_->buffers.empty ()) {
     auto cq = gst_d3d12_device_get_command_queue (resource_->device,
         D3D12_COMMAND_LIST_TYPE_DIRECT);
-    gst_d3d12_command_queue_idle_for_swapchain (cq, resource_->fence_val,
-        resource_->event_handle);
+    gst_d3d12_command_queue_idle_for_swapchain (cq, resource_->fence_val);
   }
 
   resource_ = nullptr;
@@ -269,8 +265,7 @@ SwapChain::setup_swapchain (GstD3D12Window * window, GstD3D12Device * device,
   std::lock_guard <std::recursive_mutex> lk (lock_);
   if (!gst_d3d12_device_is_equal (device, resource_->device)) {
      gst_d3d12_device_fence_wait (resource_->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, resource_->fence_val,
-        resource_->event_handle);
+        D3D12_COMMAND_LIST_TYPE_DIRECT, resource_->fence_val);
     resource_ = std::make_unique <SwapChainResource> (device);
   }
 
@@ -615,8 +610,7 @@ SwapChain::before_rendering ()
         D3D12_COMMAND_LIST_TYPE_DIRECT);
     if (completed < fence_val_to_wait) {
       gst_d3d12_device_fence_wait (resource_->device,
-          D3D12_COMMAND_LIST_TYPE_DIRECT, fence_val_to_wait,
-          resource->event_handle);
+          D3D12_COMMAND_LIST_TYPE_DIRECT, fence_val_to_wait);
     }
   }
 }

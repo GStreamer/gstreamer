@@ -218,16 +218,6 @@ constexpr UINT64 ASYNC_DEPTH = 4;
 
 struct DecoderCmdData
 {
-  DecoderCmdData ()
-  {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-  }
-
-  ~DecoderCmdData ()
-  {
-    CloseHandle (event_handle);
-  }
-
   ComPtr<ID3D12Device> device;
   ComPtr<ID3D12VideoDevice> video_device;
   ComPtr<ID3D12VideoDecodeCommandList> cl;
@@ -235,7 +225,6 @@ struct DecoderCmdData
   bool need_full_drain = false;
 
   /* Fence to wait at command record thread */
-  HANDLE event_handle;
   UINT64 fence_val = 0;
 };
 
@@ -333,13 +322,11 @@ struct GstD3D12DecoderPrivate
 {
   GstD3D12DecoderPrivate ()
   {
-    copy_event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     fence_data_pool = gst_d3d12_fence_data_pool_new ();
   }
 
   ~GstD3D12DecoderPrivate ()
   {
-    CloseHandle (copy_event_handle);
     gst_clear_object (&fence_data_pool);
   }
 
@@ -351,8 +338,6 @@ struct GstD3D12DecoderPrivate
   GThread *output_thread = nullptr;
   std::atomic<bool> flushing;
   std::atomic<GstFlowReturn> last_flow;
-
-  HANDLE copy_event_handle;
 
   GstD3D12FenceDataPool *fence_data_pool;
 
@@ -464,10 +449,8 @@ gst_d3d12_decoder_drain (GstD3D12Decoder * decoder, GstVideoDecoder * videodec)
   auto priv = decoder->priv;
 
   GST_DEBUG_OBJECT (decoder, "Draining");
-  if (priv->cmd) {
-    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val,
-        priv->cmd->event_handle);
-  }
+  if (priv->cmd)
+    gst_d3d12_command_queue_fence_wait (priv->cmd->queue, priv->cmd->fence_val);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (videodec);
   if (priv->output_thread && priv->session) {
@@ -808,7 +791,7 @@ gst_d3d12_decoder_stop (GstD3D12Decoder * decoder)
       gst_d3d12_command_queue_drain (priv->cmd->queue);
     } else {
       gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
-          priv->cmd->fence_val, priv->cmd->event_handle);
+          priv->cmd->fence_val);
     }
   }
 
@@ -1471,8 +1454,7 @@ gst_d3d12_decoder_process_output (GstD3D12Decoder * self,
       guint8 *map_data;
       GstVideoFrame vframe;
 
-      gst_d3d12_device_fence_wait (self->device, queue_type,
-          copy_fence_val, priv->copy_event_handle);
+      gst_d3d12_device_fence_wait (self->device, queue_type, copy_fence_val);
 
       hr = priv->session->staging->Map (0, nullptr, (void **) &map_data);
       if (!gst_d3d12_result (hr, self->device)) {
@@ -1538,8 +1520,6 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
 
   GST_DEBUG_OBJECT (self, "Entering output thread");
 
-  auto event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
-
   while (true) {
     DecoderOutputData output_data;
     {
@@ -1561,7 +1541,7 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
     g_assert (decoder_pic);
 
     gst_d3d12_command_queue_fence_wait (priv->cmd->queue,
-        decoder_pic->fence_val, event_handle);
+        decoder_pic->fence_val);
 
     if (priv->flushing) {
       GST_DEBUG_OBJECT (self, "Drop framem, we are flushing");
@@ -1586,8 +1566,6 @@ gst_d3d12_decoder_output_loop (GstD3D12Decoder * self)
   }
 
   GST_DEBUG_OBJECT (self, "Leaving output thread");
-
-  CloseHandle (event_handle);
 
   return nullptr;
 }

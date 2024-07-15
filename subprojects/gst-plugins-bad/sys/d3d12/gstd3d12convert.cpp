@@ -80,7 +80,6 @@ struct ConvertContext
 {
   ConvertContext (GstD3D12Device * dev)
   {
-    event_handle = CreateEventEx (nullptr, nullptr, 0, EVENT_ALL_ACCESS);
     device = (GstD3D12Device *) gst_object_ref (dev);
     auto device_handle = gst_d3d12_device_get_device_handle (device);
     ca_pool = gst_d3d12_command_allocator_pool_new (device_handle,
@@ -90,9 +89,8 @@ struct ConvertContext
    ~ConvertContext ()
   {
     gst_d3d12_device_fence_wait (device, D3D12_COMMAND_LIST_TYPE_DIRECT,
-        fence_val, event_handle);
+        fence_val);
 
-    CloseHandle (event_handle);
     gst_clear_object (&ca_pool);
     gst_clear_object (&conv);
     gst_clear_object (&device);
@@ -103,7 +101,6 @@ struct ConvertContext
   ComPtr<ID3D12GraphicsCommandList> cl;
   std::queue<guint64> scheduled;
   GstD3D12CommandAllocatorPool *ca_pool;
-  HANDLE event_handle;
   guint64 fence_val = 0;
 };
 
@@ -1984,7 +1981,7 @@ gst_d3d12_convert_transform (GstBaseTransform * trans, GstBuffer * inbuf,
     auto fence_to_wait = priv->ctx->scheduled.front ();
     priv->ctx->scheduled.pop ();
     gst_d3d12_device_fence_wait (priv->ctx->device,
-        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait, priv->ctx->event_handle);
+        D3D12_COMMAND_LIST_TYPE_DIRECT, fence_to_wait);
   }
 
   GstD3D12CommandAllocator *gst_ca;
