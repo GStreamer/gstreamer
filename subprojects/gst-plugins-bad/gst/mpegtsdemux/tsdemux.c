@@ -243,6 +243,7 @@ struct _TSDemuxStream
       "wmvversion = (int) 3, " \
       "format = (string) WVC1;" \
       "image/x-jpc;" \
+      "image/x-jxsc;" \
 )
 
 #define AUDIO_CAPS \
@@ -1848,6 +1849,53 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
             "colorspace", G_TYPE_STRING, colorspace, NULL);
       }
       break;
+    case GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS:
+    {
+      GstMpegtsJpegXsDescriptor jpegxs;
+      desc =
+          mpegts_get_descriptor_from_stream_with_extension (bstream,
+          GST_MTS_DESC_EXTENSION, GST_MTS_DESC_EXT_JXS_VIDEO);
+      if (!desc) {
+        GST_WARNING_OBJECT (demux,
+            "image/x-jxsc stream does not have mandatory descriptor");
+        break;
+      }
+      if (!gst_mpegts_descriptor_parse_jpeg_xs (desc, &jpegxs)) {
+        GST_WARNING_OBJECT (demux, "Invalid JPEG XS descriptor");
+        break;
+      }
+      if (jpegxs.frat >> 30) {
+        GST_WARNING_OBJECT (demux, "Interlaced JPEG-XS not supported yet");
+        break;
+      }
+      if ((jpegxs.schar >> 15) == 0) {
+        GST_WARNING_OBJECT (demux, "JPEG-XS sampling properties are required");
+        break;
+      }
+      is_video = TRUE;
+      caps =
+          gst_caps_from_string
+          ("image/x-jxsc, alignment=(string)frame, interlace-mode=(string)progressive");
+
+      /* interlace-mode, sampling, depth */
+      gst_caps_set_simple (caps, "width", G_TYPE_INT, jpegxs.horizontal_size,
+          "height", G_TYPE_INT, jpegxs.vertical_size, "depth", G_TYPE_INT,
+          (jpegxs.schar >> 4) & 0xf, NULL);
+      switch (jpegxs.schar & 0xf) {
+        case 0:
+          gst_caps_set_simple (caps, "sampling", G_TYPE_STRING, "YCbCr-4:2:2",
+              NULL);
+          break;
+        case 1:
+          gst_caps_set_simple (caps, "sampling", G_TYPE_STRING, "YCbCr-4:4:4",
+              NULL);
+          break;
+        default:
+          GST_WARNING_OBJECT (demux, "Unsupported JPEG-XS sampling format");
+          break;
+      }
+      break;
+    }
     case ST_VIDEO_DIRAC:
       if (bstream->registration_id == 0x64726163) {
         GST_LOG_OBJECT (demux, "dirac");
@@ -3119,6 +3167,50 @@ error:
   }
 }
 
+static GstBuffer *
+parse_jpegxs_access_unit (TSDemuxStream * stream)
+{
+  GstByteReader br;
+  guint32 header_tag;
+  guint32 header_size;
+  GstBuffer *retbuf;
+
+  if (stream->current_size < 30) {
+    GST_ERROR_OBJECT (stream->pad, "Not enough data for header");
+    goto error;
+  }
+
+  gst_byte_reader_init (&br, stream->data, stream->current_size);
+
+  /* Should start with `jxes` box header */
+  header_size = gst_byte_reader_get_uint32_be_unchecked (&br);
+  header_tag = gst_byte_reader_get_uint32_be_unchecked (&br);
+  if (header_size != 30 || header_tag != 0x6a786573) {
+    GST_ERROR_OBJECT (stream->pad,
+        "Invalid 'jxes' header (size:%u, tag:%" GST_FOURCC_FORMAT ")",
+        header_size, GST_FOURCC_ARGS (header_tag));
+    return NULL;
+  }
+
+  /* FIXME : Parse/extract timecode */
+
+  /* Ignore the rest of that box */
+  retbuf =
+      gst_buffer_new_wrapped_full (0, stream->data, stream->current_size,
+      header_size, stream->current_size - header_size, stream->data, g_free);
+  stream->data = NULL;
+  stream->current_size = 0;
+  return retbuf;
+
+error:
+  GST_ERROR ("Failed to parse JPEG-XS access unit");
+  g_free (stream->data);
+  stream->data = NULL;
+  stream->current_size = 0;
+  return NULL;
+
+}
+
 /* interlaced mode is disabled at the moment */
 /*#define TSDEMUX_JP2K_SUPPORT_INTERLACE */
 static GstBuffer *
@@ -3472,6 +3564,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
       } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
           && bs->registration_id == DRF_ID_KLVA) {
         buffer_list = parse_pes_metadata_frame (stream);
+      } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS) {
+        buffer = parse_jpegxs_access_unit (stream);
       } else {
         buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
       }
@@ -3522,6 +3616,8 @@ gst_ts_demux_push_pending_data (GstTSDemux * demux, TSDemuxStream * stream,
     } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_METADATA_PES_PACKETS
         && bs->registration_id == DRF_ID_KLVA) {
       buffer_list = parse_pes_metadata_frame (stream);
+    } else if (bs->stream_type == GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS) {
+      buffer = parse_jpegxs_access_unit (stream);
     } else {
       buffer = gst_buffer_new_wrapped (stream->data, stream->current_size);
     }

@@ -85,6 +85,7 @@
 #include "gstbasetsmuxttxt.h"
 #include "gstbasetsmuxopus.h"
 #include "gstbasetsmuxjpeg2000.h"
+#include "gstbasetsmuxjpegxs.h"
 
 GST_DEBUG_CATEGORY (gst_base_ts_mux_debug);
 #define GST_CAT_DEFAULT gst_base_ts_mux_debug
@@ -440,6 +441,140 @@ release_buffer_cb (guint8 * data, void *user_data)
   stream_data_free ((StreamData *) user_data);
 }
 
+static GstMpegtsJpegXsDescriptor *
+gst_base_ts_mux_jpegxs_descriptor (GstBaseTsMux * mux,
+    GstBaseTsMuxPad * ts_pad, GstCaps * caps)
+{
+  GstStructure *s = gst_caps_get_structure (caps, 0);
+  gint codestream_length, depth;
+  GstMpegtsJpegXsDescriptor *jpegxs_descriptor;
+  GstVideoInfo video_info;
+  const gchar *sampling;
+
+  if (!gst_video_info_from_caps (&video_info, caps))
+    return NULL;
+
+  /* Get (and calculate) all fields from the caps information */
+  sampling = gst_structure_get_string (s, "sampling");
+  if (!gst_structure_get_int (s, "codestream-length", &codestream_length)
+      || !sampling || !gst_structure_get_int (s, "depth", &depth) || !depth) {
+    GST_ERROR_OBJECT (ts_pad,
+        "JPEG-XS caps doesn't contain all required fields");
+    return NULL;
+  }
+
+  jpegxs_descriptor = g_new0 (GstMpegtsJpegXsDescriptor, 1);
+
+  jpegxs_descriptor->horizontal_size = GST_VIDEO_INFO_WIDTH (&video_info);
+  jpegxs_descriptor->vertical_size = GST_VIDEO_INFO_HEIGHT (&video_info);
+
+  {
+    /* FIXME : Cap according to limit defined by profile/level */
+    guint32 brat = G_MAXUINT32;
+    if (GST_VIDEO_INFO_FPS_N (&video_info) > 0
+        && GST_VIDEO_INFO_FPS_D (&video_info) > 0) {
+      // 125000 = * 8 / 1000000 (convert to bits, divide to Mbps)
+      guint64 v =
+          gst_util_uint64_scale_ceil (GST_VIDEO_INFO_FPS_N (&video_info),
+          codestream_length,
+          GST_VIDEO_INFO_FPS_D (&video_info) * 125000);
+      if (v < G_MAXUINT32)
+        brat = v & 0xffffffff;
+    }
+    jpegxs_descriptor->brat = brat;
+  }
+
+  {
+    guint32 frat = 0;
+    gint fps_n = GST_VIDEO_INFO_FPS_N (&video_info);
+    gint fps_d = GST_VIDEO_INFO_FPS_D (&video_info);
+    gint denom_value = 1;
+
+    /* Only framerate divisible by 1 or 1.001 are allowed */
+    if (fps_d == 1001) {
+      fps_n /= 1000;
+      denom_value = 2;
+    } else if (fps_d != 1) {
+      GST_ERROR_OBJECT (ts_pad, "framerate %d/%d is not allowed for JPEG-XS",
+          fps_n, fps_d);
+      goto free_return;
+    }
+    if (fps_n > G_MAXUINT16) {
+      GST_ERROR_OBJECT (ts_pad, "framerate %d/%d exceeds limits for JPEG-XS",
+          fps_n, fps_d);
+      goto free_return;
+    }
+
+    if (GST_VIDEO_INFO_IS_INTERLACED (&video_info)) {
+      if (GST_VIDEO_INFO_FIELD_ORDER (&video_info) ==
+          GST_VIDEO_FIELD_ORDER_TOP_FIELD_FIRST) {
+        frat |= 1 << 30;
+      } else if (GST_VIDEO_INFO_FIELD_ORDER (&video_info) ==
+          GST_VIDEO_FIELD_ORDER_BOTTOM_FIELD_FIRST) {
+        frat |= 1 << 31;
+      } else {
+        GST_ERROR_OBJECT (ts_pad, "Unknown interlace mode");
+        goto free_return;
+      }
+    }
+
+    frat |= denom_value << 24;
+    frat |= fps_n;
+
+    jpegxs_descriptor->frat = frat;
+  }
+
+  {
+    guint16 schar = (depth & 0xf) << 4;
+    /* FIXME : Support all other variants */
+    if (!g_strcmp0 (sampling, "YCbCr-4:2:2")) {
+      schar |= 0;
+    } else if (!g_strcmp0 (sampling, "YCbCr-4:4:4")) {
+      schar |= 1;
+    } else {
+      GST_ERROR_OBJECT (ts_pad, "Unsupported sampling %s", sampling);
+      goto free_return;
+    }
+
+    /* schar is valid */
+    schar |= 1 << 15;
+
+    jpegxs_descriptor->schar = schar;
+  }
+
+  /* FIXME : Handle profile/level/sublevel once provided by caps. For now we are unrestricted */
+  jpegxs_descriptor->Ppih = 0;
+  jpegxs_descriptor->Plev = 0;
+
+  /* FIXME : Calculate max_buffer_size based on profile/level if specified */
+  jpegxs_descriptor->max_buffer_size = jpegxs_descriptor->brat / 160;
+
+  /* Hardcoded buffer_model_type of 2 accordingly to H.222.0 specification */
+  jpegxs_descriptor->buffer_model_type = 2;
+
+  jpegxs_descriptor->colour_primaries =
+      gst_video_color_primaries_to_iso (video_info.colorimetry.primaries);
+  jpegxs_descriptor->transfer_characteristics =
+      gst_video_transfer_function_to_iso (video_info.colorimetry.transfer);
+  jpegxs_descriptor->matrix_coefficients =
+      gst_video_color_matrix_to_iso (video_info.colorimetry.matrix);
+  jpegxs_descriptor->video_full_range_flag =
+      video_info.colorimetry.range == GST_VIDEO_COLOR_RANGE_0_255;
+
+  /* We don't accept still pictures */
+  jpegxs_descriptor->still_mode = FALSE;
+
+  /* FIXME : Add support for Mastering Display Metadata parsing */
+
+  return jpegxs_descriptor;
+
+free_return:
+  {
+    g_free (jpegxs_descriptor);
+    return NULL;
+  }
+}
+
 /* Must be called with mux->lock held */
 static GstFlowReturn
 gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
@@ -459,6 +594,7 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
   const gchar *stream_format = NULL;
   const char *interlace_mode = NULL;
   gchar *pmt_name;
+  GstMpegtsDescriptor *pmt_descriptor = NULL;
 
   GST_DEBUG_OBJECT (ts_pad,
       "%s stream with PID 0x%04x for caps %" GST_PTR_FORMAT,
@@ -676,6 +812,22 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
     st = TSMUX_ST_PS_KLV;
   } else if (strcmp (mt, "meta/x-id3") == 0) {
     st = TSMUX_ST_PS_ID3;
+  } else if (strcmp (mt, "image/x-jxsc") == 0) {
+    /* FIXME: Get actual values from caps */
+    GstMpegtsJpegXsDescriptor *jpegxs_descriptor =
+        gst_base_ts_mux_jpegxs_descriptor (mux, ts_pad, caps);
+    if (!jpegxs_descriptor)
+      goto not_negotiated;
+
+    pmt_descriptor = gst_mpegts_descriptor_from_jpeg_xs (jpegxs_descriptor);
+    if (!pmt_descriptor) {
+      g_free (jpegxs_descriptor);
+      goto not_negotiated;
+    }
+    st = TSMUX_ST_VIDEO_JPEG_XS;
+    ts_pad->prepare_func = gst_base_ts_mux_prepare_jpegxs;
+    ts_pad->prepare_data = jpegxs_descriptor;
+    ts_pad->free_func = gst_base_ts_mux_free_jpegxs;
   } else if (strcmp (mt, "image/x-jpc") == 0) {
     /*
      * See this document for more details on standard:
@@ -802,6 +954,10 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
       goto error;
   }
 
+  if (pmt_descriptor) {
+    ts_pad->stream->pmt_descriptor = pmt_descriptor;
+  }
+
   pmt_name = g_strdup_printf ("PMT_%d", ts_pad->pid);
   if (mux->prog_map && gst_structure_has_field (mux->prog_map, pmt_name)) {
     gst_structure_get_int (mux->prog_map, pmt_name, &ts_pad->stream->pmt_index);
@@ -842,9 +998,13 @@ gst_base_ts_mux_create_or_update_stream (GstBaseTsMux * mux,
 
   /* ERRORS */
 not_negotiated:
+  if (pmt_descriptor)
+    gst_mpegts_descriptor_free (pmt_descriptor);
   return GST_FLOW_NOT_NEGOTIATED;
 
 error:
+  if (pmt_descriptor)
+    gst_mpegts_descriptor_free (pmt_descriptor);
   return GST_FLOW_ERROR;
 }
 

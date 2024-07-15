@@ -153,6 +153,11 @@ tsmux_stream_new (guint16 pid, guint stream_type, guint stream_number)
       stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
       stream->gst_stream_type = GST_STREAM_TYPE_VIDEO;
       break;
+    case TSMUX_ST_VIDEO_JPEG_XS:
+      stream->id = 0xBD;        /* Private Stream 1 */
+      stream->pi.flags |= TSMUX_PACKET_FLAG_PES_FULL_HEADER;
+      stream->gst_stream_type = GST_STREAM_TYPE_VIDEO;
+      break;
     case TSMUX_ST_AUDIO_AAC:
     case TSMUX_ST_AUDIO_MPEG1:
     case TSMUX_ST_AUDIO_MPEG2:
@@ -296,6 +301,8 @@ tsmux_stream_free (TsMuxStream * stream)
   }
   g_list_free (stream->buffers);
 
+  if (stream->pmt_descriptor)
+    gst_mpegts_descriptor_free (stream->pmt_descriptor);
   g_free (stream);
 }
 
@@ -900,6 +907,12 @@ tsmux_stream_default_get_es_descrs (TsMuxStream * stream,
     {
       descriptor = j2k_descriptor (stream);
       g_ptr_array_add (pmt_stream->descriptors, descriptor);
+    }
+      break;
+    case TSMUX_ST_VIDEO_JPEG_XS:
+    {
+      g_ptr_array_add (pmt_stream->descriptors,
+          gst_mpegts_descriptor_copy (stream->pmt_descriptor));
     }
       break;
     case TSMUX_ST_PS_AUDIO_AC3:

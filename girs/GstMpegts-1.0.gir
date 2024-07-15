@@ -1311,6 +1311,20 @@ two bytes are the @tag and @length.</doc>
           <type name="gpointer" c:type="gpointer"/>
         </array>
       </field>
+      <method name="copy" c:identifier="gst_mpegts_descriptor_copy" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Copy the given descriptor.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">A copy of @desc.</doc>
+          <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="desc" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">A #GstMpegtsDescriptor:</doc>
+            <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+          </instance-parameter>
+        </parameters>
+      </method>
       <method name="free" c:identifier="gst_mpegts_descriptor_free">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Frees @desc</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
@@ -2047,6 +2061,24 @@ ISO 639-1 language code from the returned ISO 639-2 one.</doc>
           </instance-parameter>
         </parameters>
       </method>
+      <method name="parse_jpeg_xs" c:identifier="gst_mpegts_descriptor_parse_jpeg_xs" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Parses the JPEG-XS descriptor information from @descriptor:</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+        <return-value transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">TRUE if the information could be parsed, else FALSE.</doc>
+          <type name="gboolean" c:type="gboolean"/>
+        </return-value>
+        <parameters>
+          <instance-parameter name="descriptor" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">A #GstMpegtsDescriptor</doc>
+            <type name="Descriptor" c:type="const GstMpegtsDescriptor*"/>
+          </instance-parameter>
+          <parameter name="res" direction="out" caller-allocates="1" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">A parsed #GstMpegtsJpegXsDescriptor</doc>
+            <type name="JpegXsDescriptor" c:type="GstMpegtsJpegXsDescriptor*"/>
+          </parameter>
+        </parameters>
+      </method>
       <method name="parse_logical_channel" c:identifier="gst_mpegts_descriptor_parse_logical_channel">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Extracts the logical channels from @descriptor.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
@@ -2307,6 +2339,20 @@ a single language</doc>
           <parameter name="language" transfer-ownership="none">
             <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">ISO-639-2 language 3-char code</doc>
             <type name="utf8" c:type="const gchar*"/>
+          </parameter>
+        </parameters>
+      </function>
+      <function name="from_jpeg_xs" c:identifier="gst_mpegts_descriptor_from_jpeg_xs" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Create a new #GstMpegtsDescriptor based on the information in @jpegxs</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+        <return-value transfer-ownership="full">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">The #GstMpegtsDescriptor</doc>
+          <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+        </return-value>
+        <parameters>
+          <parameter name="jpegxs" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">A #GstMpegtsJpegXsDescriptor</doc>
+            <type name="JpegXsDescriptor" c:type="const GstMpegtsJpegXsDescriptor*"/>
           </parameter>
         </parameters>
       </function>
@@ -2799,6 +2845,94 @@ Consult the relevant specifications for more details.</doc>
       <member name="visual_impaired_commentary" value="3" c:identifier="GST_MPEGTS_AUDIO_TYPE_VISUAL_IMPAIRED_COMMENTARY">
       </member>
     </enumeration>
+    <record name="JpegXsDescriptor" c:type="GstMpegtsJpegXsDescriptor" version="1.26" glib:type-name="GstMpegtsJpegXsDescriptor" glib:get-type="gst_mpegts_jpeg_xs_descriptor_get_type" c:symbol-prefix="jpeg_xs_descriptor">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h">JPEG-XS descriptor</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <field name="descriptor_version" writable="1">
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="horizontal_size" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="vertical_size" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="brat" writable="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="frat" writable="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="schar" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="Ppih" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="Plev" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="max_buffer_size" writable="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="buffer_model_type" writable="1">
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="colour_primaries" writable="1">
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="transfer_characteristics" writable="1">
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="matrix_coefficients" writable="1">
+        <type name="guint8" c:type="guint8"/>
+      </field>
+      <field name="video_full_range_flag" writable="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="still_mode" writable="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="mdm_flag" writable="1">
+        <type name="gboolean" c:type="gboolean"/>
+      </field>
+      <field name="X_c0" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="Y_c0" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="X_c1" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="Y_c1" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="X_c2" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="Y_c2" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="X_wp" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="Y_wp" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="L_max" writable="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="L_min" writable="1">
+        <type name="guint32" c:type="guint32"/>
+      </field>
+      <field name="MaxCLL" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+      <field name="MaxFALL" writable="1">
+        <type name="guint16" c:type="guint16"/>
+      </field>
+    </record>
     <record name="LogicalChannel" c:type="GstMpegtsLogicalChannel" glib:type-name="GstMpegtsLogicalChannel" glib:get-type="gst_mpegts_logical_channel_get_type" c:symbol-prefix="logical_channel">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
       <field name="service_id" writable="1">
@@ -4746,6 +4880,9 @@ profiles defined in Annex A for service-compatible stereoscopic 3D services</doc
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">Rec. ITU-T H.265 | ISO/IEC 23008-2 video
      stream or an HEVC temporal video sub-bitstream</doc>
       </member>
+      <member name="video_jpeg_xs" value="50" c:identifier="GST_MPEGTS_STREAM_TYPE_VIDEO_JPEG_XS" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">JPEG-XS stream type</doc>
+      </member>
       <member name="ipmp_stream" value="127" c:identifier="GST_MPEGTS_STREAM_TYPE_IPMP_STREAM">
         <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtssection.h">IPMP stream</doc>
       </member>
@@ -5088,6 +5225,20 @@ a single language</doc>
         <parameter name="language" transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">ISO-639-2 language 3-char code</doc>
           <type name="utf8" c:type="const gchar*"/>
+        </parameter>
+      </parameters>
+    </function>
+    <function name="descriptor_from_jpeg_xs" c:identifier="gst_mpegts_descriptor_from_jpeg_xs" moved-to="Descriptor.from_jpeg_xs" version="1.26">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">Create a new #GstMpegtsDescriptor based on the information in @jpegxs</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.h"/>
+      <return-value transfer-ownership="full">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">The #GstMpegtsDescriptor</doc>
+        <type name="Descriptor" c:type="GstMpegtsDescriptor*"/>
+      </return-value>
+      <parameters>
+        <parameter name="jpegxs" transfer-ownership="none">
+          <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/mpegts/gstmpegtsdescriptor.c">A #GstMpegtsJpegXsDescriptor</doc>
+          <type name="JpegXsDescriptor" c:type="const GstMpegtsJpegXsDescriptor*"/>
         </parameter>
       </parameters>
     </function>
