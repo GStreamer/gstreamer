@@ -1895,6 +1895,9 @@ gst_d3d12_compositor_calculate_background_color (GstD3D12Compositor * self,
       }
     }
   }
+
+  priv->clear_color[2] = priv->clear_color[0];
+  priv->clear_color[2].color[0][3] = 0.0;
 }
 
 static gboolean
