@@ -171,7 +171,6 @@ gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
   GST_LOG_OBJECT (ffmpegdec, "closing libav codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
-  av_freep (&ffmpegdec->context->extradata);
   avcodec_free_context (&ffmpegdec->context);
 }
 
