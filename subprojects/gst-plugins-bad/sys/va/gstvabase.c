@@ -44,8 +44,6 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
   guint i, n_planes, usage_hint;
   gsize offset[GST_VIDEO_MAX_PLANES];
   uintptr_t fd[GST_VIDEO_MAX_PLANES];
-  gsize plane_size[GST_VIDEO_MAX_PLANES];
-  GstVideoAlignment align = { 0, };
 
   /* This will eliminate most non-dmabuf out there */
   if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
@@ -68,9 +66,6 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
     }
   }
 
-  if (!gst_video_info_align_full (&drm_info.vinfo, &align, plane_size))
-    return FALSE;
-
   /* Find and validate all memories */
   for (i = 0; i < n_planes; i++) {
     guint length;
@@ -78,8 +73,8 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
     gsize mem_skip;
 
     if (!gst_buffer_find_memory (inbuf,
-            GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, i), plane_size[i],
-            &mem_idx, &length, &mem_skip))
+            GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, i), 1, &mem_idx,
+            &length, &mem_skip))
       return FALSE;
 
     /* We can't have more then one dmabuf per plane */
