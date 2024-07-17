@@ -1876,7 +1876,7 @@ gst_d3d12_test_src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
     if (!params) {
       params = gst_d3d12_allocation_params_new (self->device, &vinfo,
           GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
-          D3D12_HEAP_FLAG_NONE);
+          D3D12_HEAP_FLAG_SHARED);
     } else {
       gst_d3d12_allocation_params_set_resource_flags (params, resource_flags);
       gst_d3d12_allocation_params_unset_resource_flags (params,

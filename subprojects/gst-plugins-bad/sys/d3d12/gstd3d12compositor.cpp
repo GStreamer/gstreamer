@@ -2155,7 +2155,8 @@ gst_d3d12_compositor_decide_allocation (GstAggregator * agg, GstQuery * query)
       params = gst_d3d12_allocation_params_new (self->device, &info,
           GST_D3D12_ALLOCATION_FLAG_DEFAULT,
           D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
-          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS, D3D12_HEAP_FLAG_NONE);
+          D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS,
+          D3D12_HEAP_FLAG_SHARED);
     } else {
       gst_d3d12_allocation_params_set_resource_flags (params,
           D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |

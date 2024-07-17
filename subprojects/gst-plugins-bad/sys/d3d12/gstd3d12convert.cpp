@@ -1571,7 +1571,10 @@ gst_d3d12_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   if ((device_format.format_flags & GST_D3D12_FORMAT_FLAG_OUTPUT_UAV)
       == GST_D3D12_FORMAT_FLAG_OUTPUT_UAV) {
     resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-  } else {
+  }
+
+  if ((device_format.support1 & D3D12_FORMAT_SUPPORT1_RENDER_TARGET) ==
+      D3D12_FORMAT_SUPPORT1_RENDER_TARGET) {
     resource_flags |= D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
   }
 
@@ -1580,7 +1583,7 @@ gst_d3d12_convert_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   if (!d3d12_params) {
     d3d12_params = gst_d3d12_allocation_params_new (filter->device, &info,
         GST_D3D12_ALLOCATION_FLAG_DEFAULT, resource_flags,
-        D3D12_HEAP_FLAG_NONE);
+        D3D12_HEAP_FLAG_SHARED);
   } else {
     gst_d3d12_allocation_params_set_resource_flags (d3d12_params,
         resource_flags);
