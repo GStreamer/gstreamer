@@ -70,11 +70,42 @@ typedef enum _GstTensorDataType
 } GstTensorDataType;
 
 /**
+ * GstTensorDimOrder:
+ * @GST_TENSOR_DIM_ORDER_ROW_MAJOR: elements along a row are consecutive in memory
+ * @GST_TENSOR_DIM_ORDER_COL_MAJOR: elements along a column are consecutive in memory
+ *
+ * Indicate to read tensor from memory in row-major or column-major.
+ *
+ * Since: 1.26
+ */
+typedef enum _GstTensorDimOrder
+{
+  GST_TENSOR_DIM_ORDER_ROW_MAJOR,
+  GST_TENSOR_DIM_ORDER_COL_MAJOR
+} GstTensorDimOrder;
+
+/**
+ * GstTensorLayout:
+ * @GST_TENSOR_LAYOUT_STRIDED: indicate the tensor is stored in a dense format in memory
+ *
+ * Indicate tensor storage in memory.
+ *
+ * Since: 1.26
+ */
+typedef enum _GstTensorLayout
+{
+  GST_TENSOR_LAYOUT_STRIDED
+} GstTensorLayout;
+
+/**
  * GstTensor:
  * @id: semantically identify the contents of the tensor
  * @num_dims: number of tensor dimensions
  * @dims: tensor dimensions
+ * @dims_order: Indicate tensor elements layout in memory.
+ * @layout: Indicate tensor layout
  * @type: #GstTensorDataType of tensor data
+ * @batch_size: Model batch size
  * @data: #GstBuffer holding tensor data
  *
  * Hold tensor data
@@ -84,9 +115,12 @@ typedef enum _GstTensorDataType
 typedef struct _GstTensor
 {
   GQuark id;
-  gint num_dims;
-  int64_t *dims;
+  gsize num_dims;
+  gsize *dims;
+  GstTensorDimOrder dims_order;
+  GstTensorLayout layout;
   GstTensorDataType data_type;
+  gsize batch_size;
   GstBuffer *data;
 } GstTensor;
 

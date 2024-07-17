@@ -348,7 +348,8 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
         tensor->id = 0;
       auto tensorShape = outputTensor.GetTensorTypeAndShapeInfo ().GetShape ();
       tensor->num_dims = tensorShape.size ();
-      tensor->dims = g_new (int64_t, tensor->num_dims);
+      tensor->dims = g_new (gsize, tensor->num_dims);
+      tensor->batch_size = 1;
 
       for (size_t j = 0; j < tensorShape.size (); ++j)
         tensor->dims[j] = tensorShape[j];

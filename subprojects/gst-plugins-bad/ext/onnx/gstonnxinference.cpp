@@ -587,7 +587,6 @@ gst_onnx_inference_process (GstBaseTransform * trans, GstBuffer * buf)
       if (!meta)
         return FALSE;
       GST_TRACE_OBJECT (trans, "Num tensors:%zu", meta->num_tensors);
-      meta->batch_size = 1;
     }
     catch (Ort::Exception & ortex) {
       GST_ERROR_OBJECT (self, "%s", ortex.what ());

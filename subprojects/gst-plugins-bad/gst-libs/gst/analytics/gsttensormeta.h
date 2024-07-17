@@ -46,7 +46,6 @@ typedef struct _GstTensorMeta
 
   gsize num_tensors;
   GstTensor *tensor;
-  gsize batch_size;
 } GstTensorMeta;
 
 G_BEGIN_DECLS
