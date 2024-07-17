@@ -109,17 +109,56 @@ gst_tensor_new_simple (GQuark id, GstTensorDataType data_type, GstBuffer * data,
     GstTensorDimOrder dims_order, gsize num_dims, gsize * dims)
 {
   GstTensor *tensor;
+
+  tensor = gst_tensor_alloc (num_dims);
+  if (!gst_tensor_set_simple (tensor, id,
+          data_type, data, dims_order, num_dims, dims)) {
+    g_free (tensor);
+    return NULL;
+  }
+
+  return tensor;
+}
+
+
+/**
+ * gst_tensor_set_simple:
+ * @tensor: a #GstTensor
+ * @id: semantically identify the contents of the tensor
+ * @data_type: #GstTensorDataType of tensor data
+ * @data: (transfer full): #GstBuffer holding tensor data
+ * @dims_order: Indicate tensor dimension indexing order
+ * @num_dims: number of tensor dimensions
+ * @dims: (array length=num_dims): size of tensor in each dimension.
+ *     A value of 0 means the dimension is dynamic.
+ *
+ * Sets the content of a #GstTensor of @dims_order ROW_MAJOR or COLUMN_MAJOR and
+ * with an interleaved layout. The #GstTensor must have exactly num_dims.
+ *
+ * For example, a two-dimensional tensor with 32 rows and 4 columns, @dims would
+ * be the two element array `[32, 4]`.
+ *
+ * Returns: TRUE if it coudl be set correctly
+ *
+ * Since: 1.28
+ */
+gboolean
+gst_tensor_set_simple (GstTensor * tensor, GQuark id,
+    GstTensorDataType data_type, GstBuffer * data,
+    GstTensorDimOrder dims_order, gsize num_dims, gsize * dims)
+{
   gsize num_elements = 1;
   gsize i;
   gboolean dynamic_tensor_size = FALSE;
 
   /* Update this if adding more to GstTensorDataType */
-  g_return_val_if_fail (data_type <= GST_TENSOR_DATA_TYPE_BFLOAT16, NULL);
+  g_return_val_if_fail (data_type <= GST_TENSOR_DATA_TYPE_BFLOAT16, FALSE);
 
-  g_return_val_if_fail (GST_IS_BUFFER (data), NULL);
+  g_return_val_if_fail (GST_IS_BUFFER (data), FALSE);
   g_return_val_if_fail (dims_order == GST_TENSOR_DIM_ORDER_ROW_MAJOR ||
-      dims_order == GST_TENSOR_DIM_ORDER_COL_MAJOR, NULL);
-  g_return_val_if_fail (num_dims > 0, NULL);
+      dims_order == GST_TENSOR_DIM_ORDER_COL_MAJOR, FALSE);
+  g_return_val_if_fail (num_dims > 0, FALSE);
+  g_return_val_if_fail (tensor->num_dims == num_dims, FALSE);
 
   for (i = 0; i < num_dims; i++) {
     dynamic_tensor_size = dims[i] == 0;
@@ -138,10 +177,11 @@ gst_tensor_new_simple (GQuark id, GstTensorDataType data_type, GstBuffer * data,
         " but buffer has size %zu",
         size_for_elements (data_type, num_elements), num_elements,
         gst_buffer_get_size (data));
-    return NULL;
+    return FALSE;
   }
 
-  tensor = gst_tensor_alloc (num_dims);
+  memset (tensor, 0, sizeof (GstTensor));
+
   tensor->id = id;
   tensor->layout = GST_TENSOR_LAYOUT_CONTIGUOUS;
   tensor->data_type = data_type;
@@ -150,7 +190,7 @@ gst_tensor_new_simple (GQuark id, GstTensorDataType data_type, GstBuffer * data,
   tensor->num_dims = num_dims;
   memcpy (tensor->dims, dims, sizeof (gsize) * num_dims);
 
-  return tensor;
+  return TRUE;
 }
 
 /**

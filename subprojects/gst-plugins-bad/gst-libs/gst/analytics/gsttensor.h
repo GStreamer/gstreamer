@@ -206,6 +206,11 @@ GstTensor * gst_tensor_new_simple (GQuark id,
     gsize * dims) G_GNUC_WARN_UNUSED_RESULT;
 
 GST_ANALYTICS_META_API
+gboolean gst_tensor_set_simple (GstTensor * tensor, GQuark id,
+    GstTensorDataType data_type, GstBuffer * data,
+    GstTensorDimOrder dims_order, gsize num_dims, gsize * dims);
+
+GST_ANALYTICS_META_API
 void gst_tensor_free (GstTensor * tensor);
 
 GST_ANALYTICS_META_API
