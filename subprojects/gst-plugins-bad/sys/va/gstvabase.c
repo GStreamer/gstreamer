@@ -39,7 +39,6 @@ static gboolean
 _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
 {
   GstVideoMeta *meta;
-  GstVideoInfo in_info = *importer->in_info;
   GstVideoInfoDmaDrm drm_info = *importer->in_drm_info;
   GstMemory *mems[GST_VIDEO_MAX_PLANES];
   guint i, n_planes, usage_hint;
@@ -52,24 +51,24 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
   if (!gst_is_dmabuf_memory (gst_buffer_peek_memory (inbuf, 0)))
     return FALSE;
 
-  n_planes = GST_VIDEO_INFO_N_PLANES (&in_info);
+  n_planes = GST_VIDEO_INFO_N_PLANES (&drm_info.vinfo);
 
   meta = gst_buffer_get_video_meta (inbuf);
 
   /* Update video info importerd on video meta */
   if (meta) {
-    GST_VIDEO_INFO_WIDTH (&in_info) = meta->width;
-    GST_VIDEO_INFO_HEIGHT (&in_info) = meta->height;
+    GST_VIDEO_INFO_WIDTH (&drm_info.vinfo) = meta->width;
+    GST_VIDEO_INFO_HEIGHT (&drm_info.vinfo) = meta->height;
 
     g_assert (n_planes == meta->n_planes);
 
     for (i = 0; i < n_planes; i++) {
-      GST_VIDEO_INFO_PLANE_OFFSET (&in_info, i) = meta->offset[i];
-      GST_VIDEO_INFO_PLANE_STRIDE (&in_info, i) = meta->stride[i];
+      GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, i) = meta->offset[i];
+      GST_VIDEO_INFO_PLANE_STRIDE (&drm_info.vinfo, i) = meta->stride[i];
     }
   }
 
-  if (!gst_video_info_align_full (&in_info, &align, plane_size))
+  if (!gst_video_info_align_full (&drm_info.vinfo, &align, plane_size))
     return FALSE;
 
   /* Find and validate all memories */
@@ -79,8 +78,8 @@ _try_import_dmabuf_unlocked (GstVaBufferImporter * importer, GstBuffer * inbuf)
     gsize mem_skip;
 
     if (!gst_buffer_find_memory (inbuf,
-            GST_VIDEO_INFO_PLANE_OFFSET (&in_info, i), plane_size[i], &mem_idx,
-            &length, &mem_skip))
+            GST_VIDEO_INFO_PLANE_OFFSET (&drm_info.vinfo, i), plane_size[i],
+            &mem_idx, &length, &mem_skip))
       return FALSE;
 
     /* We can't have more then one dmabuf per plane */
