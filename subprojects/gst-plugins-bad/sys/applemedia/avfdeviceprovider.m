@@ -48,6 +48,8 @@ gst_avf_device_provider_class_init (GstAVFDeviceProviderClass * klass)
   // https://gitlab.freedesktop.org/gstreamer/gst-plugins-bad/issues/886
   dm_class->probe = gst_avf_device_provider_probe;
 
+  gst_avf_video_src_debug_init ();
+
   gst_device_provider_class_set_static_metadata (dm_class,
                                                  "AVF Device Provider", "Source/Video",
                                                  "List and provide AVF source devices",
