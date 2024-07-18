@@ -98,10 +98,8 @@ static void
 gst_d3d12_mpeg2_dec_init (GstD3D12Mpeg2Dec * self)
 {
   auto klass = GST_D3D12_MPEG2_DEC_GET_CLASS (self);
-  auto cdata = &klass->class_data;
 
-  self->decoder = gst_d3d12_decoder_new (GST_DXVA_CODEC_MPEG2,
-      cdata->adapter_luid);
+  self->decoder = gst_d3d12_decoder_new (&klass->class_data);
 
   gst_dxva_mpeg2_decoder_disable_postproc (GST_DXVA_MPEG2_DECODER (self));
 }
@@ -325,7 +323,7 @@ gst_d3d12_mpeg2_dec_output_picture (GstDxvaMpeg2Decoder * decoder,
 
 void
 gst_d3d12_mpeg2_dec_register (GstPlugin * plugin, GstD3D12Device * device,
-    ID3D12VideoDevice * video_device, guint rank)
+    ID3D12VideoDevice * video_device, guint rank, gboolean d3d11_interop)
 {
   GType type;
   gchar *type_name;
@@ -346,11 +344,13 @@ gst_d3d12_mpeg2_dec_register (GstPlugin * plugin, GstD3D12Device * device,
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_mpeg2_dec_debug, "d3d12mpeg2dec", 0,
       "d3d12mpeg2dec");
 
-  type_info.class_data =
-      gst_d3d12_decoder_check_feature_support (device, video_device,
+  auto cdata = gst_d3d12_decoder_check_feature_support (device, video_device,
       GST_DXVA_CODEC_MPEG2);
-  if (!type_info.class_data)
+  if (!cdata)
     return;
+
+  cdata->subclass_data.d3d11_interop = d3d11_interop;
+  type_info.class_data = cdata;
 
   type_name = g_strdup ("GstD3D12Mpeg2Dec");
   feature_name = g_strdup ("d3d12mpeg2dec");

@@ -95,17 +95,15 @@ gst_d3d12_h264_dec_class_init (GstD3D12H264DecClass * klass, gpointer data)
 static void
 gst_d3d12_h264_dec_init (GstD3D12H264Dec * self)
 {
-  GstD3D12H264DecClass *klass = GST_D3D12_H264_DEC_GET_CLASS (self);
-  GstD3D12DecoderSubClassData *cdata = &klass->class_data;
+  auto klass = GST_D3D12_H264_DEC_GET_CLASS (self);
 
-  self->decoder = gst_d3d12_decoder_new (GST_DXVA_CODEC_H264,
-      cdata->adapter_luid);
+  self->decoder = gst_d3d12_decoder_new (&klass->class_data);
 }
 
 static void
 gst_d3d12_h264_dec_finalize (GObject * object)
 {
-  GstD3D12H264Dec *self = GST_D3D12_H264_DEC (object);
+  auto self = GST_D3D12_H264_DEC (object);
 
   gst_object_unref (self->decoder);
 
@@ -116,8 +114,8 @@ static void
 gst_d3d12_h264_dec_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstD3D12H264DecClass *klass = GST_D3D12_H264_DEC_GET_CLASS (object);
-  GstD3D12DecoderSubClassData *cdata = &klass->class_data;
+  auto klass = GST_D3D12_H264_DEC_GET_CLASS (object);
+  auto cdata = &klass->class_data;
 
   gst_d3d12_decoder_proxy_get_property (object, prop_id, value, pspec, cdata);
 }
@@ -125,7 +123,7 @@ gst_d3d12_h264_dec_get_property (GObject * object, guint prop_id,
 static void
 gst_d3d12_h264_dec_set_context (GstElement * element, GstContext * context)
 {
-  GstD3D12H264Dec *self = GST_D3D12_H264_DEC (element);
+  auto self = GST_D3D12_H264_DEC (element);
 
   gst_d3d12_decoder_set_context (self->decoder, element, context);
 
@@ -322,7 +320,7 @@ gst_d3d12_h264_dec_output_picture (GstDxvaH264Decoder * decoder,
 
 void
 gst_d3d12_h264_dec_register (GstPlugin * plugin, GstD3D12Device * device,
-    ID3D12VideoDevice * video_device, guint rank)
+    ID3D12VideoDevice * video_device, guint rank, gboolean d3d11_interop)
 {
   GType type;
   gchar *type_name;
@@ -343,11 +341,13 @@ gst_d3d12_h264_dec_register (GstPlugin * plugin, GstD3D12Device * device,
   GST_DEBUG_CATEGORY_INIT (gst_d3d12_h264_dec_debug, "d3d12h264dec", 0,
       "d3d12h264dec");
 
-  type_info.class_data =
-      gst_d3d12_decoder_check_feature_support (device, video_device,
+  auto cdata = gst_d3d12_decoder_check_feature_support (device, video_device,
       GST_DXVA_CODEC_H264);
-  if (!type_info.class_data)
+  if (!cdata)
     return;
+
+  cdata->subclass_data.d3d11_interop = d3d11_interop;
+  type_info.class_data = cdata;
 
   type_name = g_strdup ("GstD3D12H264Dec");
   feature_name = g_strdup ("d3d12h264dec");

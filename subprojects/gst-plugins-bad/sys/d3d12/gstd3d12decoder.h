@@ -31,14 +31,21 @@ G_BEGIN_DECLS
 G_DECLARE_FINAL_TYPE (GstD3D12Decoder,
     gst_d3d12_decoder, GST, D3D12_DECODER, GstObject);
 
-typedef struct _GstD3D12DecoderClassData GstD3D12DecoderClassData;
-
 struct GstD3D12DecoderSubClassData
 {
   GstDxvaCodec codec;
   gint64 adapter_luid;
   guint device_id;
   guint vendor_id;
+  gboolean d3d11_interop;
+};
+
+struct GstD3D12DecoderClassData
+{
+  GstD3D12DecoderSubClassData subclass_data;
+  GstCaps *sink_caps;
+  GstCaps *src_caps;
+  gchar *description;
 };
 
 #define GST_D3D12_DECODER_DEFINE_TYPE(ModuleObjName,module_obj_name,MODULE,OBJ_NAME,ParentName) \
@@ -100,8 +107,7 @@ struct GstD3D12DecoderSubClassData
   static GstFlowReturn  module_obj_name##_duplicate_picture (ParentName * decoder, \
       GstCodecPicture * src, GstCodecPicture * dst);
 
-GstD3D12Decoder * gst_d3d12_decoder_new               (GstDxvaCodec codec,
-                                                       gint64 adapter_luid);
+GstD3D12Decoder * gst_d3d12_decoder_new               (const GstD3D12DecoderSubClassData * cdata);
 
 gboolean          gst_d3d12_decoder_open              (GstD3D12Decoder * decoder,
                                                        GstElement * element);

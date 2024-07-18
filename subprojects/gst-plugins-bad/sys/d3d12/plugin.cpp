@@ -55,6 +55,9 @@
 
 #ifdef HAVE_GST_D3D11
 #include "gstd3d12memorycopy.h"
+#include <gst/d3d11/gstd3d11.h>
+#include <gst/d3d11/gstd3d11device-private.h>
+#include <d3d11_4.h>
 #else
 #include "gstd3d12download.h"
 #include "gstd3d12upload.h"
@@ -94,6 +97,7 @@ plugin_init (GstPlugin * plugin)
     ID3D12Device *device_handle;
     ComPtr < ID3D12VideoDevice > video_device;
     HRESULT hr;
+    gboolean d3d11_interop = FALSE;
 
     device = gst_d3d12_device_new (i);
     if (!device)
@@ -106,21 +110,43 @@ plugin_init (GstPlugin * plugin)
       gst_object_unref (device);
       continue;
     }
+#ifdef HAVE_GST_D3D11
+    gint64 luid;
+    g_object_get (device, "adapter-luid", &luid, nullptr);
+    auto device11 = gst_d3d11_device_new_for_adapter_luid (luid,
+        D3D11_CREATE_DEVICE_BGRA_SUPPORT);
+    if (device11 && gst_d3d11_device_d3d12_import_supported (device11)) {
+      auto device11_handle = gst_d3d11_device_get_device_handle (device11);
+      ComPtr < ID3D11Device5 > device11_5;
+      hr = device11_handle->QueryInterface (IID_PPV_ARGS (&device11_5));
+      if (SUCCEEDED (hr)) {
+        ComPtr < ID3D11DeviceContext > context11;
+        ComPtr < ID3D11DeviceContext4 > context11_4;
+        device11_5->GetImmediateContext (&context11);
+        hr = context11.As (&context11_4);
+        if (SUCCEEDED (hr))
+          d3d11_interop = TRUE;
+      }
+    }
+
+    gst_clear_object (&device11);
+#endif
+
 
     have_video_device = true;
 
     gst_d3d12_mpeg2_dec_register (plugin, device, video_device.Get (),
-        decoder_rank);
+        decoder_rank, d3d11_interop);
     gst_d3d12_h264_dec_register (plugin, device, video_device.Get (),
-        decoder_rank);
+        decoder_rank, d3d11_interop);
     gst_d3d12_h265_dec_register (plugin, device, video_device.Get (),
-        decoder_rank);
+        decoder_rank, d3d11_interop);
     gst_d3d12_vp8_dec_register (plugin, device, video_device.Get (),
-        decoder_rank);
+        decoder_rank, d3d11_interop);
     gst_d3d12_vp9_dec_register (plugin, device, video_device.Get (),
-        decoder_rank);
+        decoder_rank, d3d11_interop);
     gst_d3d12_av1_dec_register (plugin, device, video_device.Get (),
-        decoder_rank);
+        decoder_rank, d3d11_interop);
 
     gst_d3d12_h264_enc_register (plugin, device, video_device.Get (),
         GST_RANK_NONE);
