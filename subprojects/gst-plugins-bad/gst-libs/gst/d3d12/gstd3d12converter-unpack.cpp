@@ -110,7 +110,7 @@ gst_d3d12_unpack_finalize (GObject * object)
 }
 
 static GstBufferPool *
-gst_d3d12_unpacker_create_pool (GstD3D12Unpack * self,
+gst_d3d12_unpack_create_pool (GstD3D12Unpack * self,
     const GstVideoInfo * info, D3D12_RESOURCE_FLAGS resource_flags)
 {
   auto priv = self->priv;
@@ -291,7 +291,7 @@ gst_d3d12_unpack_new (GstD3D12Device * device,
     return nullptr;
   }
 
-  priv->output_pool = gst_d3d12_unpacker_create_pool (self,
+  priv->output_pool = gst_d3d12_unpack_create_pool (self,
       &priv->pool_info, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS |
       D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
   if (!priv->output_pool) {
@@ -366,7 +366,7 @@ gst_d3d12_unpack_upload (GstD3D12Unpack * self, GstBuffer * in_buf,
   }
 
   if (!priv->upload_pool) {
-    priv->upload_pool = gst_d3d12_unpacker_create_pool (self,
+    priv->upload_pool = gst_d3d12_unpack_create_pool (self,
         &priv->upload_info, D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
     if (!priv->upload_pool)
       return nullptr;
@@ -401,7 +401,7 @@ gst_d3d12_unpack_create_output (GstD3D12Unpack * self, gint width, gint height)
   }
 
   if (!priv->output_pool) {
-    priv->output_pool = gst_d3d12_unpacker_create_pool (self,
+    priv->output_pool = gst_d3d12_unpack_create_pool (self,
         &priv->pool_info, D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS |
         D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
     if (!priv->output_pool)

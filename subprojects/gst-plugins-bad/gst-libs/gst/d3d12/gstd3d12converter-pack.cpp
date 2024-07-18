@@ -102,7 +102,7 @@ gst_d3d12_pack_finalize (GObject * object)
 }
 
 static GstBufferPool *
-gst_d3d12_unpacker_create_pool (GstD3D12Pack * self,
+gst_d3d12_pack_create_pool (GstD3D12Pack * self,
     const GstVideoInfo * info, D3D12_RESOURCE_FLAGS resource_flags)
 {
   auto priv = self->priv;
@@ -284,7 +284,7 @@ gst_d3d12_pack_new (GstD3D12Device * device,
     return nullptr;
   }
 
-  priv->render_target_pool = gst_d3d12_unpacker_create_pool (self,
+  priv->render_target_pool = gst_d3d12_pack_create_pool (self,
       &priv->in_info, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET |
       D3D12_RESOURCE_FLAG_ALLOW_SIMULTANEOUS_ACCESS);
   if (!priv->render_target_pool) {
