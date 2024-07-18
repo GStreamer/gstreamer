@@ -27,6 +27,8 @@
 #include <config.h>
 #endif
 
+#include "gstd3d12plugin-config.h"
+
 #include <gst/gst.h>
 #include <gst/d3d12/gstd3d12.h>
 #include "gstd3d12pluginutils.h"

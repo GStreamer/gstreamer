@@ -34,6 +34,8 @@
 #include "config.h"
 #endif
 
+#include "gstd3d12plugin-config.h"
+
 #include "gstd3d12screencapturesrc.h"
 #include "gstd3d12dxgicapture.h"
 #ifdef HAVE_WGC

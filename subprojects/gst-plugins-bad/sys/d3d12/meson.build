@@ -38,6 +38,8 @@ extra_args = [
   '-DGST_D3D12_USE_DIRECTX_HEADERS',
 ]
 
+d3d12_cdata = configuration_data()
+
 # Disable this warning error. Otherwise d3dx12.h will break build
 if cc.get_argument_syntax() == 'msvc'
   extra_args += cc.get_supported_arguments([
@@ -145,20 +147,14 @@ if not have_d3d12_headers
   subdir_done()
 endif
 
-# https://learn.microsoft.com/en-us/windows/win32/dxmath/pg-xnamath-internals#windows-sse-versus-sse2
-# x86 with Windows 7 or older may not support SSE2
-if host_machine.cpu_family() != 'x86'
-  extra_args += ['-DHAVE_DIRECTX_MATH_SIMD']
-endif
-
 if have_wgc and dwmapi_lib.found()
+  d3d12_cdata.set('HAVE_WGC', true)
   d3d12_sources += ['gstd3d12graphicscapture.cpp']
-  extra_args += ['-DHAVE_WGC']
   extra_deps += [dwmapi_lib]
 endif
 
 if gstd3d11_dep.found()
-  extra_args += ['-DHAVE_GST_D3D11']
+  d3d12_cdata.set('HAVE_GST_D3D11', true)
   extra_deps += [gstd3d11_dep]
   d3d12_sources += [
     'gstd3d12memorycopy.cpp',
@@ -169,6 +165,11 @@ else
     'gstd3d12upload.cpp',
   ]
 endif
+
+configure_file(
+  output: 'gstd3d12plugin-config.h',
+  configuration: d3d12_cdata,
+)
 
 gstd3d12 = library('gstd3d12',
   d3d12_sources,
