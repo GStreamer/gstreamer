@@ -719,8 +719,35 @@ gst_vulkan_decoder_decode (GstVulkanDecoder * self,
       }
 
       if (!ref_pic->dpb) {
-        gst_vulkan_operation_add_frame_barrier (priv->exec, ref_buf,
-            VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+        guint i, n = gst_buffer_n_memory (ref_buf);
+        GArray *barriers =
+            gst_vulkan_operation_new_extra_image_barriers (priv->exec);
+
+        for (i = 0; i < n; i++) {
+          GstVulkanImageMemory *vkmem =
+              (GstVulkanImageMemory *) gst_buffer_peek_memory (ref_buf, i);
+          VkImageMemoryBarrier2KHR barrier = {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2_KHR,
+            .pNext = NULL,
+            .srcStageMask = VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+            .dstStageMask = VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
+            .srcAccessMask = VK_ACCESS_2_NONE,
+            .dstAccessMask = VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR
+                | VK_ACCESS_2_VIDEO_DECODE_READ_BIT_KHR,
+            .oldLayout = vkmem->barrier.image_layout,
+            .newLayout = VK_IMAGE_LAYOUT_VIDEO_DECODE_DPB_KHR,
+            .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+            .image = vkmem->image,
+            .subresourceRange = vkmem->barrier.subresource_range,
+          };
+
+          g_array_append_val (barriers, barrier);
+        }
+
+        gst_vulkan_operation_add_extra_image_barriers (priv->exec, barriers);
+        g_array_unref (barriers);
+        gst_vulkan_operation_update_frame (priv->exec, ref_buf,
             VK_PIPELINE_STAGE_2_VIDEO_DECODE_BIT_KHR,
             VK_ACCESS_2_VIDEO_DECODE_WRITE_BIT_KHR
             | VK_ACCESS_2_VIDEO_DECODE_READ_BIT_KHR,
