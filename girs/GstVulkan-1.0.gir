@@ -4594,8 +4594,8 @@ hold the same semaphores but increasing their current value.</doc>
     gst_vulkan_operation_new_extra_image_barriers() and
     gst_vulkan_operation_update_frame()
 
-Any non-repeated image barrier in @extra is appended to the internal barrier
-list.
+Any non-repeated image barrier in @extra_barriers is appended to the internal
+barrier list.
 
 Remember to call gst_vulkan_operation_update_frame() on those frames with
 images in @extra_barriers.</doc>
@@ -4683,7 +4683,7 @@ called internally if something failed.</doc>
         </parameters>
       </method>
       <method name="begin_query" c:identifier="gst_vulkan_operation_begin_query">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Begins a query operation in the current command buffer.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Begins a query operation with @id in the current command buffer.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the begin command was set</doc>
@@ -4695,6 +4695,7 @@ called internally if something failed.</doc>
             <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
           </instance-parameter>
           <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">query id</doc>
             <type name="guint32" c:type="guint32"/>
           </parameter>
         </parameters>
@@ -4762,7 +4763,8 @@ gst_vulkan_operation_reset() is called internally if something fails</doc>
         </parameters>
       </method>
       <method name="end_query" c:identifier="gst_vulkan_operation_end_query">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Ends a query operation in the current command buffer.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">Ends a query operation with @id in the current command buffer. A query with
+@id has had started with gst_vulkan_operation_begin_query()</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.h"/>
         <return-value transfer-ownership="none">
           <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">whether the end command was set</doc>
@@ -4774,6 +4776,7 @@ gst_vulkan_operation_reset() is called internally if something fails</doc>
             <type name="VulkanOperation" c:type="GstVulkanOperation*"/>
           </instance-parameter>
           <parameter name="id" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkoperation.c">query id</doc>
             <type name="guint32" c:type="guint32"/>
           </parameter>
         </parameters>

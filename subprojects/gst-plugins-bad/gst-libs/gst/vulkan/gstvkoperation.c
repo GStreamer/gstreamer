@@ -784,8 +784,8 @@ gst_vulkan_operation_new_extra_image_barriers (GstVulkanOperation * self)
  *     gst_vulkan_operation_new_extra_image_barriers() and
  *     gst_vulkan_operation_update_frame()
  *
- * Any non-repeated image barrier in @extra is appended to the internal barrier
- * list.
+ * Any non-repeated image barrier in @extra_barriers is appended to the internal
+ * barrier list.
  *
  * Remember to call gst_vulkan_operation_update_frame() on those frames with
  * images in @extra_barriers.
@@ -1333,8 +1333,9 @@ gst_vulkan_operation_get_query (GstVulkanOperation * self, gpointer * result,
 /**
  * gst_vulkan_operation_begin_query:
  * @self: a #GstVulkanOperation
+ * @id: query id
  *
- * Begins a query operation in the current command buffer.
+ * Begins a query operation with @id in the current command buffer.
  *
  * Returns: whether the begin command was set
  */
@@ -1364,8 +1365,10 @@ gst_vulkan_operation_begin_query (GstVulkanOperation * self, guint32 id)
 /**
  * gst_vulkan_operation_end_query:
  * @self: a #GstVulkanOperation
+ * @id: query id
  *
- * Ends a query operation in the current command buffer.
+ * Ends a query operation with @id in the current command buffer. A query with
+ * @id has had started with gst_vulkan_operation_begin_query()
  *
  * Returns: whether the end command was set
  */
