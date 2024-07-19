@@ -90,6 +90,7 @@ struct _GstTimeCodeStamper
   GstClockTime ltc_extra_latency;
   GstClockTime rtc_max_drift;
   gboolean rtc_auto_resync;
+  gboolean scale;
   gint timecode_offset;
   gchar *ancillary_meta_locations;
 

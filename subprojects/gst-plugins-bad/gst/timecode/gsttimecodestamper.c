@@ -73,6 +73,7 @@ enum
   PROP_RTC_AUTO_RESYNC,
   PROP_TIMECODE_OFFSET,
   PROP_ANCILLARY_META_LOCATIONS,
+  PROP_SCALE,
 };
 
 #define DEFAULT_SOURCE GST_TIME_CODE_STAMPER_SOURCE_INTERNAL
@@ -88,6 +89,7 @@ enum
 #define DEFAULT_LTC_EXTRA_LATENCY (150 * GST_MSECOND)
 #define DEFAULT_RTC_MAX_DRIFT 250000000
 #define DEFAULT_RTC_AUTO_RESYNC TRUE
+#define DEFAULT_SCALE FALSE
 #define DEFAULT_TIMECODE_OFFSET 0
 #define DEFAULT_ANCILLARY_META_LOCATIONS NULL
 
@@ -335,6 +337,19 @@ gst_timecodestamper_class_init (GstTimeCodeStamperClass * klass)
           "If true the RTC timecode will be automatically resynced if it drifts, "
           "otherwise it will only be counted up from the last known one",
           DEFAULT_RTC_AUTO_RESYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstTimeCodeStamper:scale:
+   *
+   * Scale incoming timecode according to framerate conversion.
+   *
+   * Since: 1.30
+   */
+  g_object_class_install_property (gobject_class, PROP_SCALE,
+      g_param_spec_boolean ("scale",
+          "Scale incoming timecode",
+          "If true the incoming timecode will be scaled according to framerate conversion. "
+          "Only valid for last known timecode settings",
+          DEFAULT_SCALE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_TIMECODE_OFFSET,
       g_param_spec_int ("timecode-offset",
           "Timecode Offset",
@@ -584,6 +599,9 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
     case PROP_RTC_AUTO_RESYNC:
       timecodestamper->rtc_auto_resync = g_value_get_boolean (value);
       break;
+    case PROP_SCALE:
+      timecodestamper->scale = g_value_get_boolean (value);
+      break;
     case PROP_TIMECODE_OFFSET:
       timecodestamper->timecode_offset = g_value_get_int (value);
       break;
@@ -645,6 +663,9 @@ gst_timecodestamper_get_property (GObject * object, guint prop_id,
       break;
     case PROP_RTC_AUTO_RESYNC:
       g_value_set_boolean (value, timecodestamper->rtc_auto_resync);
+      break;
+    case PROP_SCALE:
+      g_value_set_boolean (value, timecodestamper->scale);
       break;
     case PROP_TIMECODE_OFFSET:
       g_value_set_int (value, timecodestamper->timecode_offset);
@@ -1513,12 +1534,96 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   /* If we have a new timecode on the incoming frame, update our last known
    * timecode or otherwise increment it by one */
   if (tc_meta && (!timecodestamper->last_tc || timecodestamper->tc_auto_resync)) {
-    g_clear_pointer (&timecodestamper->last_tc, gst_video_time_code_free);
-    timecodestamper->last_tc = gst_video_time_code_copy (&tc_meta->tc);
-    timecodestamper->last_tc_running_time = running_time;
+    GstVideoTimeCode *upstream_tc = &tc_meta->tc, *scaled_tc;
+    GstVideoTimeCodeConfig *upstream_cfg = &upstream_tc->config;
 
-    report_tc_update (timecodestamper, "Updated upstream",
-        timecodestamper->last_tc);
+    if (timecodestamper->scale) {
+      /* Rescale timecode to current FPS */
+      {
+        gchar *tc_str = NULL;
+
+        GST_DEBUG_OBJECT (timecodestamper,
+            "Rescaling upstream timecode %s from %d/%d to %d/%d FPS",
+            (tc_str = gst_video_time_code_to_string (upstream_tc)),
+            upstream_cfg->fps_n, upstream_cfg->fps_d,
+            timecodestamper->fps_n, timecodestamper->fps_d);
+        g_free (tc_str);
+      }
+
+      /* Rescale upstream timecode into our framerate */
+      scaled_tc = gst_video_time_code_copy (upstream_tc);
+      gst_timecodestamper_update_timecode_framerate (timecodestamper,
+          timecodestamper->fps_n, timecodestamper->fps_d, scaled_tc);
+
+      /* If we don't have a scaled timecode yet, directly initialize with this one */
+      if (!timecodestamper->last_tc) {
+        timecodestamper->last_tc = g_steal_pointer (&scaled_tc);
+        report_tc_update (timecodestamper, "Initialized scaled",
+            timecodestamper->last_tc);
+      } else {
+        GstClockTime upstream_since_jam, current_since_jam;
+        GstClockTimeDiff current_drift;
+        GstClockTime upstream_frame_duration, current_frame_duration;
+        GstClockTime max_drift;
+
+        /* Increment the old scaled timecode to this frame */
+        gst_video_time_code_increment_frame (timecodestamper->last_tc);
+
+        /* Check if we drifted too much and need to resync */
+        upstream_since_jam =
+            gst_video_time_code_nsec_since_daily_jam (upstream_tc);
+        current_since_jam =
+            gst_video_time_code_nsec_since_daily_jam (timecodestamper->last_tc);
+        current_drift = GST_CLOCK_DIFF (upstream_since_jam, current_since_jam);
+
+        upstream_frame_duration = gst_util_uint64_scale_int_ceil (GST_SECOND,
+            upstream_cfg->fps_d, upstream_cfg->fps_n);
+        current_frame_duration = gst_util_uint64_scale_int_ceil (GST_SECOND,
+            timecodestamper->fps_d, timecodestamper->fps_n);
+        max_drift = MAX (upstream_frame_duration, current_frame_duration);
+
+        GST_DEBUG_OBJECT (timecodestamper, "Scaled drift %" GST_STIME_FORMAT,
+            GST_STIME_ARGS (current_drift));
+
+        if (ABS (current_drift) > max_drift) {
+          gst_video_time_code_free (timecodestamper->last_tc);
+          timecodestamper->last_tc = g_steal_pointer (&scaled_tc);
+
+          report_tc_update (timecodestamper, "Reset scaled",
+              timecodestamper->last_tc);
+        } else {
+          /* No resync necessary */
+          report_tc_update (timecodestamper, "Incremented scaled",
+              timecodestamper->last_tc);
+        }
+      }
+
+      g_clear_pointer (&scaled_tc, gst_video_time_code_free);
+    } else {
+      /* No rescaling */
+      if (timecodestamper->fps_n != upstream_cfg->fps_n ||
+          timecodestamper->fps_d != upstream_cfg->fps_d) {
+        GST_WARNING_OBJECT (timecodestamper,
+            "Upstream timecode framerate (%d/%d) "
+            "different from current framerate (%d/%d)",
+            upstream_cfg->fps_n, upstream_cfg->fps_d,
+            timecodestamper->fps_n, timecodestamper->fps_d);
+      }
+
+      if (timecodestamper->last_tc) {
+        gst_video_time_code_free (timecodestamper->last_tc);
+        timecodestamper->last_tc = gst_video_time_code_copy (upstream_tc);
+
+        report_tc_update (timecodestamper, "Updated upstream",
+            timecodestamper->last_tc);
+      } else {
+        timecodestamper->last_tc = gst_video_time_code_copy (upstream_tc);
+        report_tc_update (timecodestamper, "Initialized upstream",
+            timecodestamper->last_tc);
+      }
+    }
+
+    timecodestamper->last_tc_running_time = running_time;
   } else if (timecodestamper->last_tc) {
     GstClockTime timeout = timecodestamper->tc_timeout;
     GstClockTime tc_running_time = timecodestamper->last_tc_running_time;
