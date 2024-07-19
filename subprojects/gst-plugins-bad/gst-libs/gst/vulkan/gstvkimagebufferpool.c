@@ -255,17 +255,17 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   }
 
   {
-    gboolean dpb_only = FALSE, sampleable;
+    gboolean video = FALSE, sampleable;
     const GstVulkanFormatMap *vkmap;
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-    dpb_only = (priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)
-        && !(priv->usage & VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR);
+    video = (priv->usage & (VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
+            | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR));
 #endif
     sampleable = priv->usage &
         (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
 
-    if (sampleable && !dpb_only) {
+    if (sampleable && !video) {
       vkmap = gst_vulkan_format_get_map (GST_VIDEO_INFO_FORMAT (&priv->v_info));
       priv->img_flags = VK_IMAGE_CREATE_ALIAS_BIT;
       if (GST_VIDEO_INFO_N_PLANES (&priv->v_info) > 1
