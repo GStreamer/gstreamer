@@ -534,7 +534,7 @@ gst_gl_mixer_bin_set_property (GObject * object,
         g_object_set_property (G_OBJECT (self->mixer), pspec->name, value);
       break;
     case PROP_START_TIME_SELECTION:
-      self->start_time_selection = g_value_get_uint (value);
+      self->start_time_selection = g_value_get_enum (value);
       if (self->mixer)
         g_object_set_property (G_OBJECT (self->mixer), pspec->name, value);
       break;
