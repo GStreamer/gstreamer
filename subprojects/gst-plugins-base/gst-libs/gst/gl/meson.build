@@ -1082,18 +1082,15 @@ if build_gstgl
     'gl_winsys=' + ' '.join(enabled_gl_winsys),
     'gl_apis=' + ' '.join(enabled_gl_apis),
   ]
-  pkgconfig_installed_variables = [
-    'libinc=-I${libdir}/gstreamer-1.0/include',
-  ]
 
   library_def = {'lib': gstgl}
   pkg_name = 'gstreamer-gl-1.0'
   pkgconfig.generate(gstgl,
     libraries : [gstvideo, gst_base_dep, gst_dep],
-    variables : pkgconfig_variables + pkgconfig_gl_variables + pkgconfig_installed_variables,
+    variables : pkgconfig_variables + pkgconfig_gl_variables,
     uninstalled_variables : pkgconfig_gl_variables,
     subdirs : pkgconfig_subdirs,
-    extra_cflags : ['${libinc}'],
+    extra_cflags : ['-I${libdir}/gstreamer-1.0/include'],
     name : pkg_name,
     description : 'Streaming media framework, OpenGL plugins libraries',
   )
