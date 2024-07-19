@@ -323,8 +323,9 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
     height = newHeight;
   }
 
-// copy tensor data to a GstTensorMeta
-  GstTensorMeta *GstOnnxClient::copy_tensors_to_meta (std::vector < Ort::Value >
+  // copy tensor data to a GstTensorMeta
+  GstTensorMeta *
+  GstOnnxClient::copy_tensors_to_meta (std::vector < Ort::Value >
       &outputs, GstBuffer * buffer)
   {
     size_t num_tensors = outputNamesRaw.size ();
@@ -344,7 +345,7 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
       if (hasIds)
         tensor->id = outputIds[i];
       else
-	tensor->id = 0;
+        tensor->id = 0;
       auto tensorShape = outputTensor.GetTensorTypeAndShapeInfo ().GetShape ();
       tensor->num_dims = tensorShape.size ();
       tensor->dims = g_new (int64_t, tensor->num_dims);
@@ -356,25 +357,26 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
           outputTensor.GetTensorTypeAndShapeInfo ().GetElementCount ();
 
       if (tensorType == ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT) {
-	size_t buffer_size = 0;
+        size_t buffer_size = 0;
 
         buffer_size = numElements * sizeof (float);
-	tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
-	gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
+        tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
+        gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
             buffer_size);
         tensor->data_type = GST_TENSOR_TYPE_FLOAT32;
       } else if (tensorType == ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32) {
-	size_t buffer_size = 0;
+        size_t buffer_size = 0;
 
         buffer_size = numElements * sizeof (int);
-	tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
-	gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
+        tensor->data = gst_buffer_new_allocate (NULL, buffer_size, NULL);
+        gst_buffer_fill (tensor->data, 0, outputTensor.GetTensorData < float >(),
             buffer_size);
         tensor->data_type = GST_TENSOR_TYPE_INT32;
       } else {
-	GST_ERROR_OBJECT (debug_parent, "Output tensor is not FLOAT32 or INT32, not supported");
-	gst_buffer_remove_meta (buffer, (GstMeta*) tmeta);
-	return NULL;
+        GST_ERROR_OBJECT (debug_parent,
+            "Output tensor is not FLOAT32 or INT32, not supported");
+        gst_buffer_remove_meta (buffer, (GstMeta *) tmeta);
+        return NULL;
       }
     }
 
@@ -383,7 +385,8 @@ GstOnnxClient::GstOnnxClient (GstElement *debug_parent):debug_parent(debug_paren
   }
 
   std::vector < Ort::Value > GstOnnxClient::run (uint8_t * img_data,
-      GstVideoInfo vinfo) {
+      GstVideoInfo vinfo)
+  {
     std::vector < Ort::Value > modelOutput;
     doRun (img_data, vinfo, modelOutput);
 
