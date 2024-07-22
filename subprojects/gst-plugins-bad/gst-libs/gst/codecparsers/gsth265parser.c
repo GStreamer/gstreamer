@@ -5093,8 +5093,6 @@ gst_h265_parser_parse_decoder_config_record (GstH265Parser * parser,
   if (ret->length_size_minus_one == 2) {
     /* "length_size_minus_one + 1" should be 1, 2, or 4 */
     GST_WARNING ("Wrong nal-length-size");
-    result = GST_H265_PARSER_ERROR;
-    goto error;
   }
 
   READ_CONFIG_UINT8 (num_of_arrays, 8);
