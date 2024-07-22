@@ -845,12 +845,14 @@ GST_START_TEST (test_h264_decoder_config_record)
   assert_equals_int (ret, GST_H264_PARSER_ERROR);
   fail_unless (config == NULL);
 
-  /* wrong length size, return error with null config data */
+  /* wrong length size, since we still try to use it. so return ok */
   ret = gst_h264_parser_parse_decoder_config_record (parser,
       h264_wrong_length_size_codec_data,
       sizeof (h264_wrong_length_size_codec_data), &config);
-  assert_equals_int (ret, GST_H264_PARSER_ERROR);
-  fail_unless (config == NULL);
+  assert_equals_int (ret, GST_H264_PARSER_OK);
+  fail_unless (config != NULL);
+  assert_equals_int (config->length_size_minus_one, 2);
+  g_clear_pointer (&config, gst_h264_decoder_config_record_free);
 
   gst_h264_nal_parser_free (parser);
 }

@@ -3781,8 +3781,6 @@ gst_h264_parser_parse_decoder_config_record (GstH264NalParser * nalparser,
   if (ret->length_size_minus_one == 2) {
     /* "length_size_minus_one + 1" should be 1, 2, or 4 */
     GST_WARNING ("Wrong nal-length-size");
-    result = GST_H264_PARSER_ERROR;
-    goto error;
   }
 
   /* reserved 3bits */
