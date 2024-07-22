@@ -281,7 +281,10 @@ GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format,
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_RGB:
-      frag_shader = ":/org/freedesktop/gstreamer/qml6/RGBA.frag.qsb";
+      if (target == GST_GL_TEXTURE_TARGET_EXTERNAL_OES)
+        frag_shader = ":/org/freedesktop/gstreamer/qml6/RGBA.frag.qsb.external";
+      else
+        frag_shader = ":/org/freedesktop/gstreamer/qml6/RGBA.frag.qsb";
       break;
     case GST_VIDEO_FORMAT_YV12:
       frag_shader = ":/org/freedesktop/gstreamer/qml6/YUV_TRIPLANAR.frag.qsb";

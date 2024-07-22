@@ -115,7 +115,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     "width = " GST_VIDEO_SIZE_RANGE ", "
     "height = " GST_VIDEO_SIZE_RANGE ", "
     "framerate = " GST_VIDEO_FPS_RANGE ", "
-    "texture-target = (string) 2D"));
+    "texture-target = (string) { " GST_GL_TEXTURE_TARGET_2D_STR ", "
+                                   GST_GL_TEXTURE_TARGET_EXTERNAL_OES_STR " } "));
 
 #define DEFAULT_FORCE_ASPECT_RATIO  TRUE
 #define DEFAULT_PAR_N               0
