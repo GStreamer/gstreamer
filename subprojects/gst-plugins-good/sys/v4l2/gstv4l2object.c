@@ -3756,6 +3756,18 @@ gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
       && gst_video_colorimetry_is_equal (cinfo, &ci_jpeg))
     return TRUE;
 
+  /* bypass check the below GST_VIDEO_TRANSFER_ARIB_STD_B67 type, 
+   * because kernel do not support it. GST_VIDEO_TRANSFER_ARIB_STD_B67 is cast
+   * to GST_VIDEO_TRANSFER_BT2020_12 type in gst_v4l2_object_get_colorspace */
+  if (info.colorimetry.transfer == GST_VIDEO_TRANSFER_ARIB_STD_B67) {
+    info.colorimetry.transfer = cinfo->transfer;
+    GST_WARNING
+        ("v4l2 framework do not support GST_VIDEO_TRANSFER_ARIB_STD_B67");
+
+    if (gst_video_colorimetry_is_equal (&info.colorimetry, cinfo))
+      return TRUE;
+  }
+
   /* bypass check the below transfer types, because those types are cast to
    * V4L2_XFER_FUNC_NONE type when try format or set format and V4L2_XFER_FUNC_NONE
    * type is cast to GST_VIDEO_TRANSFER_GAMMA10 type in gst_v4l2_object_get_colorspace */
