@@ -80,6 +80,11 @@ struct _GstDecklinkVideoSink
 
   gboolean initial_sync;
   GQueue *pending_frames;
+
+  gboolean have_light_level;
+  GstVideoContentLightLevel light_level;
+  gboolean have_mastering_info;
+  GstVideoMasteringDisplayInfo mastering_info;
 };
 
 struct _GstDecklinkVideoSinkClass

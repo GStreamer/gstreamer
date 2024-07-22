@@ -216,7 +216,7 @@ public:
     return S_OK;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE QueryInterface (REFIID, LPVOID *)
+  virtual HRESULT STDMETHODCALLTYPE QueryInterface (REFIID iid, LPVOID *)
   {
     return E_NOINTERFACE;
   }
@@ -253,21 +253,46 @@ private:
   }
 };
 
-class GstDecklinkVideoFrame:public IDeckLinkVideoFrame
+class GstDecklinkVideoFrame:public IDeckLinkVideoFrame, public IDeckLinkVideoFrameMetadataExtensions
 {
 public:
   GstDecklinkVideoFrame (GstVideoFrame * frame):
       running_time(0), running_time_duration(0), sync_buffer(0), m_frame(0),
-      m_dframe (0), m_ancillary (0), m_timecode (0), m_refcount (1)
+      have_light_level(FALSE), have_mastering_info(FALSE), m_dframe (0),
+      m_ancillary (0), m_timecode (0), m_refcount (1)
   {
     m_frame = g_new0 (GstVideoFrame, 1);
     *m_frame = *frame;
+    memset (&light_level, 0, sizeof (light_level));
+    memset (&mastering_info, 0, sizeof (mastering_info));
+    memset (&colorimetry, 0, sizeof (colorimetry));
   }
 
   GstDecklinkVideoFrame (IDeckLinkMutableVideoFrame * dframe):
       running_time(0), running_time_duration(0), sync_buffer(0), m_frame(0),
-      m_dframe (dframe), m_ancillary (0), m_timecode (0), m_refcount (1)
+      have_light_level(FALSE), have_mastering_info(FALSE), m_dframe (dframe),
+      m_ancillary (0), m_timecode (0), m_refcount (1)
   {
+    memset (&light_level, 0, sizeof (light_level));
+    memset (&mastering_info, 0, sizeof (mastering_info));
+    memset (&colorimetry, 0, sizeof (colorimetry));
+  }
+
+  void SetColorimetry (GstVideoColorimetry *colorimetry)
+  {
+    this->colorimetry = *colorimetry;
+  }
+
+  void SetLightLevel (GstVideoContentLightLevel * ll)
+  {
+    light_level = *ll;
+    have_light_level = TRUE;
+  }
+
+  void SetMastringInfo (GstVideoMasteringDisplayInfo * mdi)
+  {
+    memcpy (&mastering_info, mdi, sizeof (*mdi));
+    have_mastering_info = TRUE;
   }
 
   virtual long STDMETHODCALLTYPE GetWidth (void)
@@ -305,7 +330,14 @@ public:
   }
   virtual BMDFrameFlags STDMETHODCALLTYPE GetFlags (void)
   {
-    return m_dframe ? m_dframe->GetFlags () : bmdFrameFlagDefault;
+    BMDFrameFlags flags = m_dframe ? m_dframe->GetFlags () : bmdFrameFlagDefault;
+
+    if (have_mastering_info || have_light_level ||
+        colorimetry.transfer == GST_VIDEO_TRANSFER_ARIB_STD_B67) {
+      flags |= bmdFrameContainsHDRMetadata;
+    }
+
+    return flags;
   }
   virtual HRESULT STDMETHODCALLTYPE GetBytes (void **buffer)
   {
@@ -363,9 +395,159 @@ public:
     return S_OK;
   }
 
-  virtual HRESULT STDMETHODCALLTYPE QueryInterface (REFIID, LPVOID *)
+  virtual HRESULT STDMETHODCALLTYPE QueryInterface (REFIID iid, LPVOID * ret)
   {
+    GST_LOG ("frame queryinterface: %" REFIID_FORMAT, REFIID_ARGS (iid));
+    if (memcmp (&iid, &IID_IDeckLinkVideoFrameMetadataExtensions, sizeof (iid))
+        == 0) {
+      AddRef ();
+      *ret = (LPVOID *) static_cast<IDeckLinkVideoFrameMetadataExtensions *>(this);
+      return S_OK;
+    }
     return E_NOINTERFACE;
+  }
+
+  virtual HRESULT STDMETHODCALLTYPE GetInt (/* in */ BMDDeckLinkFrameMetadataID metadataID, /* out */ int64_t* value)
+  {
+    GST_LOG ("frame meta get int for 0x%x", metadataID);
+
+    switch (metadataID) {
+      case bmdDeckLinkFrameMetadataColorspace: {
+        switch (colorimetry.matrix) {
+          case GST_VIDEO_COLOR_MATRIX_BT601:
+            *value = bmdColorspaceRec601;
+            return S_OK;
+          case GST_VIDEO_COLOR_MATRIX_BT709:
+            *value = bmdColorspaceRec709;
+            return S_OK;
+          case GST_VIDEO_COLOR_MATRIX_BT2020:
+            *value = bmdColorspaceRec2020;
+            return S_OK;
+          default:
+            GST_DEBUG ("no mapping from video color matrix 0x%x to BMD", colorimetry.matrix);
+            return E_INVALIDARG;
+        }
+        break;
+      }
+      case bmdDeckLinkFrameMetadataHDRElectroOpticalTransferFunc:
+        switch (colorimetry.transfer) {
+          case GST_VIDEO_TRANSFER_BT601:
+          case GST_VIDEO_TRANSFER_BT709:
+          case GST_VIDEO_TRANSFER_BT2020_10:
+            if (have_mastering_info && have_mastering_info)
+              *value = 1;
+            else
+              *value = 0;
+            return S_OK;
+          case GST_VIDEO_TRANSFER_SMPTE2084:
+            *value = 2;
+            return S_OK;
+          case GST_VIDEO_TRANSFER_ARIB_STD_B67:
+            *value = 3;
+            return S_OK;
+          default:
+            return E_INVALIDARG;
+        }
+        break;
+      default:
+        return E_INVALIDARG;
+    }
+  }
+  virtual HRESULT STDMETHODCALLTYPE GetFloat (/* in */ BMDDeckLinkFrameMetadataID metadataID, /* out */ double* value)
+  {
+    GST_LOG ("frame meta get float for 0x%x", metadataID);\
+
+    switch (metadataID) {
+      case bmdDeckLinkFrameMetadataHDRDisplayPrimariesRedX:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.display_primaries[0].x / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRDisplayPrimariesRedY:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.display_primaries[0].y / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenX:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.display_primaries[1].x / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRDisplayPrimariesGreenY:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.display_primaries[1].y / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueX:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.display_primaries[2].x / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRDisplayPrimariesBlueY:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.display_primaries[2].y / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRWhitePointX:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.white_point.x / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRWhitePointY:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.white_point.y / 50000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRMaxDisplayMasteringLuminance:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.max_display_mastering_luminance * 65535.0 / 10000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRMinDisplayMasteringLuminance:
+        if (have_mastering_info) {
+          *value = (double) mastering_info.min_display_mastering_luminance * 6.55350 / 10000.0;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRMaximumContentLightLevel:
+        if (have_light_level) {
+          *value = (double) light_level.max_content_light_level;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      case bmdDeckLinkFrameMetadataHDRMaximumFrameAverageLightLevel:
+        if (have_light_level) {
+          *value = (double) light_level.max_frame_average_light_level;
+          return S_OK;
+        }
+        return E_INVALIDARG;
+      default:
+        return E_INVALIDARG;
+    }
+  }
+  virtual HRESULT STDMETHODCALLTYPE GetFlag (/* in */ BMDDeckLinkFrameMetadataID metadataID, /* out */ bool* value)
+  {
+    GST_LOG ("frame meta get flag for 0x%x", metadataID);
+    return E_INVALIDARG;
+  }
+  virtual HRESULT STDMETHODCALLTYPE GetString (/* in */ BMDDeckLinkFrameMetadataID metadataID, /* out */ COMSTR_T* value)
+  {
+    GST_LOG ("frame meta get string for 0x%x", metadataID);
+    return E_INVALIDARG;
+  }
+  virtual HRESULT STDMETHODCALLTYPE GetBytes (/* in */ BMDDeckLinkFrameMetadataID metadataID, /* out */ void* buffer /* optional */, /* in, out */ uint32_t* bufferSize)
+  {
+    GST_LOG ("frame meta get bytes for 0x%x", metadataID);
+    return E_INVALIDARG;
   }
 
   virtual ULONG STDMETHODCALLTYPE AddRef (void)
@@ -394,10 +576,15 @@ public:
   GstBuffer *sync_buffer;
 private:
   GstVideoFrame * m_frame;
+  gboolean have_light_level;
+  gboolean have_mastering_info;
   IDeckLinkMutableVideoFrame *m_dframe;
   IDeckLinkVideoFrameAncillary *m_ancillary;
   GstDecklinkTimecode *m_timecode;
   int m_refcount;
+  GstVideoContentLightLevel light_level;
+  GstVideoMasteringDisplayInfo mastering_info;
+  GstVideoColorimetry colorimetry;
 
   virtual ~ GstDecklinkVideoFrame () {
     if (m_frame) {
@@ -923,7 +1110,6 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!gst_video_info_from_caps (&info, caps))
     return FALSE;
 
-
   g_mutex_lock (&self->output->lock);
   if (self->output->video_enabled) {
     if (self->info.finfo->format == info.finfo->format &&
@@ -932,6 +1118,11 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       // for mode selection below in auto mode
       GST_DEBUG_OBJECT (self, "Nothing relevant has changed");
       self->info = info;
+      self->have_light_level =
+          gst_video_content_light_level_from_caps (&self->light_level, caps);
+      self->have_mastering_info =
+          gst_video_mastering_display_info_from_caps (&self->mastering_info,
+          caps);
       g_mutex_unlock (&self->output->lock);
       return TRUE;
     } else {
@@ -1012,6 +1203,10 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   self->info = info;
+  self->have_light_level =
+      gst_video_content_light_level_from_caps (&self->light_level, caps);
+  self->have_mastering_info =
+      gst_video_mastering_display_info_from_caps (&self->mastering_info, caps);
   g_mutex_lock (&self->output->lock);
   self->output->mode = mode;
   self->output->video_enabled = TRUE;
@@ -1028,6 +1223,52 @@ gst_decklink_video_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   return TRUE;
 }
 
+static BMDDisplayModeFlags
+display_mode_flags (GstDecklinkVideoSink * self, GstDecklinkModeEnum e)
+{
+  BMDDisplayModeFlags display_flags =
+      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
+      bmdDisplayModeColorspaceRec2020;
+
+  if (self->output && self->output->output) {
+    const GstDecklinkMode *gst_mode = gst_decklink_get_mode (e);
+    IDeckLinkDisplayMode *display_mode = nullptr;
+    bool supports_colorspace = false;
+
+    self->output->attributes->GetFlag (BMDDeckLinkSupportsColorspaceMetadata,
+        &supports_colorspace);
+
+    if (!supports_colorspace) {
+      self->output->output->GetDisplayMode (gst_mode->mode, &display_mode);
+      if (display_mode) {
+        display_flags = display_mode->GetFlags ();
+        display_mode->Release();
+      }
+    }
+  }
+
+  return display_flags;
+}
+
+static BMDDynamicRange
+device_dynamic_range (GstDecklinkVideoSink * self)
+{
+  BMDDynamicRange range =
+      (BMDDynamicRange) (bmdDynamicRangeSDR | bmdDynamicRangeHDRStaticPQ |
+      bmdDynamicRangeHDRStaticHLG);
+
+  if (self->output && self->output->attributes) {
+    gint64 tmp_int = 0;
+    HRESULT ret =
+        self->output->attributes->GetInt (BMDDeckLinkSupportedDynamicRange,
+        &tmp_int);
+    if (ret == S_OK)
+      range = (BMDDynamicRange) tmp_int;
+  }
+
+  return range;
+}
+
 static GstCaps *
 gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
 {
@@ -1038,15 +1279,21 @@ gst_decklink_video_sink_get_caps (GstBaseSink * bsink, GstCaps * filter)
       && self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO)
     mode_caps = gst_decklink_mode_get_template_caps (FALSE);
   else if (self->video_format == GST_DECKLINK_VIDEO_FORMAT_AUTO)
-    mode_caps = gst_decklink_mode_get_caps_all_formats (self->mode, FALSE);
+    mode_caps =
+        gst_decklink_mode_get_caps_all_formats (self->mode,
+        display_mode_flags (self, self->mode), device_dynamic_range (self),
+        FALSE);
   else if (self->mode == GST_DECKLINK_MODE_AUTO)
     mode_caps =
         gst_decklink_pixel_format_get_caps (gst_decklink_pixel_format_from_type
         (self->video_format), FALSE);
-  else
+  else {
     mode_caps =
         gst_decklink_mode_get_caps (self->mode,
-        gst_decklink_pixel_format_from_type (self->video_format), FALSE);
+        display_mode_flags (self, self->mode),
+        gst_decklink_pixel_format_from_type (self->video_format),
+        device_dynamic_range (self), FALSE);
+  }
   mode_caps = gst_caps_make_writable (mode_caps);
   /* For output we support any framerate and only really care about timestamps */
   gst_caps_map_in_place (mode_caps, reset_framerate, NULL);
@@ -1654,6 +1901,7 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     const guint8 *indata;
     gint i, src_stride, dest_stride, stride;
     IDeckLinkMutableVideoFrame *dframe;
+    GstVideoColorimetry colorimetry;
 
     ret = self->output->output->CreateVideoFrame (self->info.width,
         self->info.height, self->info.stride[0], format, bmdFrameFlagDefault,
@@ -1677,13 +1925,16 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
       indata += src_stride;
       outdata += dest_stride;
     }
+    colorimetry = vframe.info.colorimetry;
     gst_video_frame_unmap (&vframe);
 
     // Takes ownership of the frame
     frame = new GstDecklinkVideoFrame (dframe);
+    frame->SetColorimetry (&colorimetry);
   } else {
     // Takes ownership of the frame
     frame = new GstDecklinkVideoFrame (&vframe);
+    frame->SetColorimetry (&vframe.info.colorimetry);
   }
 
   tc_meta = gst_buffer_get_video_time_code_meta (buffer);
@@ -1695,6 +1946,11 @@ gst_decklink_video_sink_prepare (GstBaseSink * bsink, GstBuffer * buffer)
     GST_DEBUG_OBJECT (self, "Set frame timecode to %s", tc_str);
     g_free (tc_str);
   }
+
+  if (self->have_light_level)
+    frame->SetLightLevel (&self->light_level);
+  if (self->have_mastering_info)
+    frame->SetMastringInfo (&self->mastering_info);
 
   write_vbi (self, buffer, format, frame, tc_meta);
 
@@ -1739,7 +1995,7 @@ gst_decklink_video_sink_render (GstBaseSink * bsink, GstBuffer * buffer)
     GST_OBJECT_UNLOCK (self);
 
     frame = (GstDecklinkVideoFrame *) g_queue_peek_head (self->pending_frames);
-    GST_ERROR_OBJECT (self, "attempting preroll");
+    GST_DEBUG_OBJECT (self, "attempting preroll");
     flow_ret =
         gst_base_sink_do_preroll (bsink,
         GST_MINI_OBJECT_CAST (frame->sync_buffer));

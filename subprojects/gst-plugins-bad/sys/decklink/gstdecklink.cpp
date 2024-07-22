@@ -353,12 +353,12 @@ gst_decklink_audio_channels_get_type (void)
   return (GType) id;
 }
 
-#define NTSC 10, 11, false, "bt601"
-#define PAL 12, 11, true, "bt601"
-#define NTSC_WS 40, 33, false, "bt601"
-#define PAL_WS 16, 11, true, "bt601"
-#define HD 1, 1, true, "bt709"
-#define UHD 1, 1, true, "bt2020"
+#define NTSC 10, 11, false
+#define PAL 12, 11, true
+#define NTSC_WS 40, 33, false
+#define PAL_WS 16, 11, true
+#define HD 1, 1, true
+#define UHD 1, 1, true
 
 static const GstDecklinkMode modes[] = {
   {bmdModeNTSC, 720, 486, 30000, 1001, true, NTSC},     // default is ntsc
@@ -757,6 +757,25 @@ gst_decklink_video_format_from_type (BMDPixelFormat pf)
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
+GstVideoColorRange
+gst_decklink_pixel_format_to_range (BMDPixelFormat pf)
+{
+  switch (pf) {
+    case bmdFormat8BitYUV:
+    case bmdFormat10BitYUV:
+    case bmdFormat8BitARGB:
+    case bmdFormat8BitBGRA:
+    case bmdFormat10BitRGB:
+    case bmdFormat10BitRGBXLE:
+    case bmdFormat10BitRGBX:
+      return GST_VIDEO_COLOR_RANGE_16_235;
+    case bmdFormat12BitRGB:
+    case bmdFormat12BitRGBLE:
+      return GST_VIDEO_COLOR_RANGE_0_255;
+    default:
+      return GST_VIDEO_COLOR_RANGE_UNKNOWN;
+  }
+}
 
 const BMDTimecodeFormat
 gst_decklink_timecode_format_from_enum (GstDecklinkTimecodeFormat f)
@@ -868,7 +887,6 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f,
   switch (f) {
     case bmdFormat8BitYUV:     /* '2vuy' */
       gst_structure_set (s, "format", G_TYPE_STRING, "UYVY",
-          "colorimetry", G_TYPE_STRING, mode->colorimetry,
           "chroma-site", G_TYPE_STRING, "mpeg2", NULL);
       break;
     case bmdFormat10BitYUV:    /* 'v210' */
@@ -898,30 +916,69 @@ gst_decklink_mode_get_structure (GstDecklinkModeEnum e, BMDPixelFormat f,
 }
 
 GstCaps *
-gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f,
-    gboolean input)
+gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDDisplayModeFlags mode_flags, BMDPixelFormat f,
+    BMDDynamicRange dynamic_range, gboolean input)
 {
   GstCaps *caps;
+  GstStructure *generic;
+  const char *format;
 
   caps = gst_caps_new_empty ();
-  caps =
-      gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e, f,
-          input));
+  generic = gst_decklink_mode_get_structure (e, f, input);
+  format = gst_structure_get_string (generic, "format");
+
+  if (g_strcmp0 (format, "UYVY") == 0 || g_strcmp0 (format, "v210") == 0) {
+    if (mode_flags & bmdDisplayModeColorspaceRec601) {
+      GstStructure *s = gst_structure_copy (generic);
+      gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt601", NULL);
+      caps = gst_caps_merge_structure (caps, s);
+    }
+
+    if (mode_flags & bmdDisplayModeColorspaceRec709) {
+      GstStructure *s = gst_structure_copy (generic);
+      gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt709", NULL);
+      caps = gst_caps_merge_structure (caps, s);
+    }
+
+    if (mode_flags & bmdDisplayModeColorspaceRec2020) {
+      GstStructure *s = gst_structure_copy (generic);
+      gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2020", NULL);
+      caps = gst_caps_merge_structure (caps, s);
+    }
+
+    if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
+      GstStructure *s = gst_structure_copy (generic);
+      gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq", NULL);
+      caps = gst_caps_merge_structure (caps, s);
+    }
+
+    if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
+      GstStructure *s = gst_structure_copy (generic);
+      gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg", NULL);
+      caps = gst_caps_merge_structure (caps, s);
+    }
+  } else {
+    caps = gst_caps_merge_structure (caps, generic);
+  }
 
   return caps;
 }
 
 GstCaps *
-gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e, gboolean input)
+gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e,
+    BMDDisplayModeFlags mode_flags, BMDDynamicRange dynamic_range,
+    gboolean input)
 {
   GstCaps *caps;
   guint i;
 
   caps = gst_caps_new_empty ();
-  for (i = 1; i < G_N_ELEMENTS (formats); i++)
-    caps =
-        gst_caps_merge_structure (caps, gst_decklink_mode_get_structure (e,
-            formats[i].format, input));
+  for (i = 1; i < G_N_ELEMENTS (formats); i++) {
+    GstCaps *format_caps =
+        gst_decklink_mode_get_caps (e, mode_flags, formats[i].format,
+        dynamic_range, input);
+    caps = gst_caps_merge (caps, format_caps);
+  }
 
   return caps;
 }
@@ -931,12 +988,19 @@ gst_decklink_pixel_format_get_caps (BMDPixelFormat f, gboolean input)
 {
   int i;
   GstCaps *caps;
-  GstStructure *s;
+  BMDDisplayModeFlags mode_flags =
+      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
+      bmdDisplayModeColorspaceRec2020;
+  BMDDynamicRange dynamic_range =
+      (BMDDynamicRange) (bmdDynamicRangeSDR | bmdDynamicRangeHDRStaticPQ |
+      bmdDynamicRangeHDRStaticHLG);
 
   caps = gst_caps_new_empty ();
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
-    s = gst_decklink_mode_get_structure ((GstDecklinkModeEnum) i, f, input);
-    caps = gst_caps_merge_structure (caps, s);
+    GstCaps *format_caps =
+        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, mode_flags, f,
+        dynamic_range, input);
+    caps = gst_caps_merge (caps, format_caps);
   }
 
   return caps;
@@ -952,8 +1016,8 @@ gst_decklink_mode_get_template_caps (gboolean input)
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++)
     caps =
         gst_caps_merge (caps,
-        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i,
-            input));
+        gst_decklink_mode_get_caps_all_formats ((GstDecklinkModeEnum) i, -1,
+            (BMDDynamicRange) -1, input));
 
   return caps;
 }
@@ -962,6 +1026,9 @@ const GstDecklinkMode *
 gst_decklink_find_mode_and_format_for_caps (GstCaps * caps,
     BMDPixelFormat * format)
 {
+  BMDDisplayModeFlags mode_flags =
+      bmdDisplayModeColorspaceRec601 | bmdDisplayModeColorspaceRec709 |
+      bmdDisplayModeColorspaceRec2020;
   int i;
   GstCaps *mode_caps;
 
@@ -971,7 +1038,8 @@ gst_decklink_find_mode_and_format_for_caps (GstCaps * caps,
 
   for (i = 1; i < (int) G_N_ELEMENTS (modes); i++) {
     mode_caps =
-        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, *format, FALSE);
+        gst_decklink_mode_get_caps ((GstDecklinkModeEnum) i, mode_flags, *format,
+            (BMDDynamicRange) -1, FALSE);
     if (gst_caps_can_intersect (caps, mode_caps)) {
       gst_caps_unref (mode_caps);
       return gst_decklink_get_mode ((GstDecklinkModeEnum) i);
@@ -1558,12 +1626,18 @@ gst_decklink_com_thread (gpointer data)
 static GOnce devices_once = G_ONCE_INIT;
 static GPtrArray *devices;      /* array of Device */
 
+enum SupportedFlags {
+  SUPPORT_NONE = 0,
+  SUPPORT_FORMAT_DETECTION = (1 << 0),
+  SUPPORT_HDR = (1 << 1),
+  SUPPORT_COLORSPACE = (1 << 2),
+};
 
 static GstDecklinkDevice *
 gst_decklink_device_new (const gchar * model_name, const gchar * display_name,
     const gchar * serial_number, gint64 persistent_id,
-    gboolean supports_format_detection, GstCaps * video_caps,
-    guint max_channels, gboolean video, gboolean capture, guint device_number)
+    enum SupportedFlags supported, GstCaps * video_caps, guint max_channels,
+    gboolean video, gboolean capture, guint device_number)
 {
   GstDevice *ret;
   gchar *name;
@@ -1606,7 +1680,11 @@ gst_decklink_device_new (const gchar * model_name, const gchar * display_name,
 
   if (capture)
     gst_structure_set (properties, "supports-format-detection", G_TYPE_BOOLEAN,
-        supports_format_detection, NULL);
+        (supported & SUPPORT_FORMAT_DETECTION) != SUPPORT_NONE, NULL);
+
+  gst_structure_set (properties, "supports-hdr", G_TYPE_BOOLEAN,
+      (supported & SUPPORT_HDR) != SUPPORT_NONE, "supports-colorspace",
+      G_TYPE_BOOLEAN, (supported & SUPPORT_COLORSPACE) != SUPPORT_NONE, NULL);
 
   if (serial_number)
     gst_structure_set (properties, "serial-number", G_TYPE_STRING,
@@ -1679,7 +1757,8 @@ init_devices (gpointer data)
     gchar *display_name = NULL;
     gchar *serial_number = NULL;
     gint64 persistent_id = 0;
-    gboolean supports_format_detection = 0;
+    enum SupportedFlags supported = SUPPORT_NONE;
+    BMDDynamicRange dynamic_range = (BMDDynamicRange) 0;
     gint64 max_channels = 2;
     GstCaps *video_input_caps = gst_caps_new_empty ();
     GstCaps *video_output_caps = gst_caps_new_empty ();
@@ -1689,6 +1768,59 @@ init_devices (gpointer data)
     g_mutex_init (&dev->input.lock);
     g_mutex_init (&dev->output.lock);
     g_cond_init (&dev->output.cond);
+
+    ret = decklink->QueryInterface (IID_IDeckLinkProfileAttributes,
+        (void **) &dev->input.attributes);
+    dev->output.attributes = dev->input.attributes;
+    if (ret != S_OK) {
+      GST_WARNING ("selected device does not have attributes interface: "
+          "0x%08lx", (unsigned long) ret);
+    } else {
+      bool tmp_bool = false;
+      int64_t tmp_int = 2;
+      int64_t tmp_int_persistent_id = 0;
+
+      dev->input.attributes->GetInt (BMDDeckLinkMaximumAudioChannels, &tmp_int);
+      max_channels = tmp_int;
+      dev->input.attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
+          &tmp_bool);
+      GST_INFO ("device %d supports format detection %u", i, tmp_bool);
+      if (tmp_bool)
+        supported = (enum SupportedFlags) ((guint32) supported | SUPPORT_FORMAT_DETECTION);
+
+      dev->input.attributes->GetFlag (BMDDeckLinkSupportsColorspaceMetadata,
+          &tmp_bool);
+      GST_INFO ("device %d supports Colorspace Metadata %u", i, tmp_bool);
+      if (tmp_bool)
+        supported = (enum SupportedFlags) ((guint32) supported | SUPPORT_COLORSPACE);
+      dev->input.attributes->GetFlag (BMDDeckLinkSupportsHDRMetadata,
+          &tmp_bool);
+      GST_INFO ("device %d supports HDR %u", i, tmp_bool);
+      if (tmp_bool)
+        supported = (enum SupportedFlags) ((guint32) supported | SUPPORT_HDR);
+
+      if (supported & SUPPORT_HDR) {
+        ret = dev->input.attributes->GetInt (BMDDeckLinkSupportedDynamicRange,
+            &tmp_int);
+        if (ret == S_OK)
+          dynamic_range = (BMDDynamicRange) tmp_int;
+      }
+
+      ret =
+          dev->input.attributes->GetInt (BMDDeckLinkPersistentID,
+          &tmp_int_persistent_id);
+      if (ret == S_OK) {
+        persistent_id = tmp_int_persistent_id;
+        dev->output.persistent_id = persistent_id;
+        dev->input.persistent_id = persistent_id;
+        GST_DEBUG ("device %d has persistent id %" G_GINT64_FORMAT, i, persistent_id);
+      } else {
+        persistent_id = i;
+        dev->output.persistent_id = i;
+        dev->input.persistent_id = i;
+        GST_DEBUG ("device %d does not have persistent id. Value set to %d", i, i);
+      }
+    }
 
     ret = decklink->QueryInterface (IID_IDeckLinkInput,
         (void **) &dev->input.input);
@@ -1712,10 +1844,54 @@ init_devices (gpointer data)
 
           mode_enum =
               gst_decklink_get_mode_enum_from_bmd (mode->GetDisplayMode ());
-          if (mode_enum != (GstDecklinkModeEnum) - 1)
-            video_input_caps =
-                gst_caps_merge_structure (video_input_caps,
-                gst_decklink_mode_get_generic_structure (mode_enum));
+          if (mode_enum != (GstDecklinkModeEnum) - 1) {
+            GstStructure *generic = gst_decklink_mode_get_generic_structure (mode_enum);
+            BMDDisplayModeFlags flags = mode->GetFlags ();
+
+            if ((supported & SUPPORT_COLORSPACE) ||
+                  (flags & bmdDisplayModeColorspaceRec601)) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt601",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if ((supported & SUPPORT_COLORSPACE) ||
+                  (flags & bmdDisplayModeColorspaceRec709)) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt709",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if ((supported & SUPPORT_COLORSPACE) ||
+                (flags & bmdDisplayModeColorspaceRec2020)) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2020",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+            gst_clear_structure (&generic);
+          }
 
           mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
@@ -1759,10 +1935,54 @@ init_devices (gpointer data)
 
           mode_enum =
               gst_decklink_get_mode_enum_from_bmd (mode->GetDisplayMode ());
-          if (mode_enum != (GstDecklinkModeEnum) - 1)
-            video_output_caps =
-                gst_caps_merge_structure (video_output_caps,
-                gst_decklink_mode_get_generic_structure (mode_enum));
+          if (mode_enum != (GstDecklinkModeEnum) - 1) {
+            GstStructure *generic = gst_decklink_mode_get_generic_structure (mode_enum);
+            BMDDisplayModeFlags flags = mode->GetFlags ();
+
+            if ((supported & SUPPORT_COLORSPACE) ||
+                  (flags & bmdDisplayModeColorspaceRec601)) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt601",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if ((supported & SUPPORT_COLORSPACE) ||
+                  (flags & bmdDisplayModeColorspaceRec601)) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt709",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if ((supported & SUPPORT_COLORSPACE) ||
+                  (flags & bmdDisplayModeColorspaceRec2020)) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2020",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if (dynamic_range & bmdDynamicRangeHDRStaticPQ) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-pq",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+
+            if (dynamic_range & bmdDynamicRangeHDRStaticHLG) {
+              GstStructure *s = gst_structure_copy (generic);
+              gst_structure_set (s, "colorimetry", G_TYPE_STRING, "bt2100-hlg",
+                  NULL);
+              video_input_caps =
+                  gst_caps_merge_structure (video_input_caps, s);
+            }
+            gst_clear_structure (&generic);
+          }
 
           mode->GetName ((COMSTR_T *) & name);
           CONVERT_COM_STRING (name);
@@ -1800,39 +2020,6 @@ init_devices (gpointer data)
       }
     }
 
-    ret = decklink->QueryInterface (IID_IDeckLinkProfileAttributes,
-        (void **) &dev->input.attributes);
-    dev->output.attributes = dev->input.attributes;
-    if (ret != S_OK) {
-      GST_WARNING ("selected device does not have attributes interface: "
-          "0x%08lx", (unsigned long) ret);
-    } else {
-      bool tmp_bool = false;
-      int64_t tmp_int = 2;
-      int64_t tmp_int_persistent_id = 0;
-
-      dev->input.attributes->GetInt (BMDDeckLinkMaximumAudioChannels, &tmp_int);
-      dev->input.attributes->GetFlag (BMDDeckLinkSupportsInputFormatDetection,
-          &tmp_bool);
-      supports_format_detection = tmp_bool;
-      max_channels = tmp_int;
-
-      ret =
-          dev->input.attributes->GetInt (BMDDeckLinkPersistentID,
-          &tmp_int_persistent_id);
-      if (ret == S_OK) {
-        persistent_id = tmp_int_persistent_id;
-        dev->output.persistent_id = persistent_id;
-        dev->input.persistent_id = persistent_id;
-        GST_DEBUG ("device %d has persistent id %" G_GINT64_FORMAT, i, persistent_id);
-      } else {
-        persistent_id = i;
-        dev->output.persistent_id = i;
-        dev->input.persistent_id = i;
-        GST_DEBUG ("device %d does not have persistent id. Value set to %d", i, i);
-      }
-    }
-
     decklink->GetModelName ((COMSTR_T *) & model_name);
     if (model_name)
       CONVERT_COM_STRING (model_name);
@@ -1843,22 +2030,22 @@ init_devices (gpointer data)
     if (capture) {
       dev->devices[0] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          persistent_id, supports_format_detection, video_input_caps,
-          max_channels, TRUE, TRUE, i);
+          persistent_id, supported, video_input_caps, max_channels, TRUE, TRUE,
+          i);
       dev->devices[1] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          persistent_id, supports_format_detection, video_input_caps,
-          max_channels, FALSE, TRUE, i);
+          persistent_id, supported, video_input_caps, max_channels, FALSE, TRUE,
+          i);
     }
     if (output) {
       dev->devices[2] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          persistent_id, supports_format_detection, video_output_caps,
-          max_channels, TRUE, FALSE, i);
+          persistent_id, supported, video_output_caps, max_channels, TRUE,
+          FALSE, i);
       dev->devices[3] =
           gst_decklink_device_new (model_name, display_name, serial_number,
-          persistent_id, supports_format_detection, video_output_caps,
-          max_channels, FALSE, FALSE, i);
+          persistent_id, supported, video_output_caps, max_channels, FALSE,
+          FALSE, i);
     }
 
     if (model_name)

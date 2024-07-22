@@ -60,6 +60,12 @@ struct _GstDecklinkVideoSrc
   GstDecklinkModeEnum caps_mode;
   gint aspect_ratio_flag; /* -1 when unknown, 0 not set, 1 set */
   BMDPixelFormat caps_format;
+  GstVideoColorimetry colorimetry;
+  GstVideoColorimetry caps_colorimetry;
+  gboolean caps_have_light_level;
+  GstVideoContentLightLevel caps_light_level;
+  gboolean caps_have_mastering_info;
+  GstVideoMasteringDisplayInfo caps_mastering_info;
   GstDecklinkConnectionEnum connection;
   gint device_number;
   gint64 persistent_id;

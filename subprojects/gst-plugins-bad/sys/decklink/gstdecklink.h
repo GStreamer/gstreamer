@@ -50,6 +50,11 @@
   ::MultiByteToWideChar(CP_ACP, 0, (char*)_s, -1, s, _length); \
   g_free(_s); \
 } G_STMT_END
+#define REFIID_FORMAT "08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X"
+#define REFIID_ARGS(_id) \
+    (guint32) (_id).Data1, (_id).Data2, (_id).Data3, \
+    (_id).Data4[0], (_id).Data4[1], (_id).Data4[2], (_id).Data4[3], \
+    (_id).Data4[4], (_id).Data4[5], (_id).Data4[6], (_id).Data4[7]
 #elif defined(__APPLE__)
 #include "osx/DeckLinkAPI.h"
 
@@ -70,6 +75,12 @@
   g_free(_s); \
 } G_STMT_END
 #define WINAPI
+#define REFIID_FORMAT "02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X"
+#define REFIID_ARGS(_id) \
+    (_id).byte0, (_id).byte1, (_id).byte2, (_id).byte3, \
+    (_id).byte4, (_id).byte5, (_id).byte6, (_id).byte7, \
+    (_id).byte8, (_id).byte9, (_id).byte10, (_id).byte11, \
+    (_id).byte12, (_id).byte13, (_id).byte14, (_id).byte15
 #else /* Linux */
 #include "linux/DeckLinkAPI.h"
 
@@ -79,6 +90,12 @@
 /* While this is a const char*, the string still has to be freed */
 #define FREE_COM_STRING(s) free(s);
 #define WINAPI
+#define REFIID_FORMAT "02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X"
+#define REFIID_ARGS(_id) \
+    (_id).byte0, (_id).byte1, (_id).byte2, (_id).byte3, \
+    (_id).byte4, (_id).byte5, (_id).byte6, (_id).byte7, \
+    (_id).byte8, (_id).byte9, (_id).byte10, (_id).byte11, \
+    (_id).byte12, (_id).byte13, (_id).byte14, (_id).byte15
 #endif /* G_OS_WIN32 */
 
 void decklink_element_init (GstPlugin * plugin);
@@ -395,6 +412,7 @@ enum _BMDKeyerMode
 };
 
 const BMDPixelFormat gst_decklink_pixel_format_from_type (GstDecklinkVideoFormat t);
+GstVideoColorRange gst_decklink_pixel_format_to_range (BMDPixelFormat pf);
 const gint gst_decklink_bpp_from_type (GstDecklinkVideoFormat t);
 const GstDecklinkVideoFormat gst_decklink_type_from_video_format (GstVideoFormat f);
 GstVideoFormat gst_decklink_video_format_from_type (BMDPixelFormat pf);
@@ -416,13 +434,12 @@ struct _GstDecklinkMode {
   int par_n;
   int par_d;
   gboolean tff;
-  const gchar *colorimetry;
 };
 
 const GstDecklinkMode * gst_decklink_get_mode (GstDecklinkModeEnum e);
 const GstDecklinkModeEnum gst_decklink_get_mode_enum_from_bmd (BMDDisplayMode mode);
 const BMDVideoConnection gst_decklink_get_connection (GstDecklinkConnectionEnum e);
-GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDPixelFormat f, gboolean input);
+GstCaps * gst_decklink_mode_get_caps (GstDecklinkModeEnum e, BMDDisplayModeFlags flags, BMDPixelFormat f, BMDDynamicRange dynamic_range, gboolean input);
 GstCaps * gst_decklink_mode_get_template_caps (gboolean input);
 
 typedef struct _GstDecklinkOutput GstDecklinkOutput;
@@ -494,7 +511,7 @@ void                gst_decklink_release_nth_input (gint n, gint64 persistent_id
 
 const GstDecklinkMode * gst_decklink_find_mode_for_caps (GstCaps * caps);
 const GstDecklinkMode * gst_decklink_find_mode_and_format_for_caps (GstCaps * caps, BMDPixelFormat * format);
-GstCaps * gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e, gboolean input);
+GstCaps * gst_decklink_mode_get_caps_all_formats (GstDecklinkModeEnum e, BMDDisplayModeFlags flags, BMDDynamicRange dynamic_range, gboolean input);
 GstCaps * gst_decklink_pixel_format_get_caps (BMDPixelFormat f, gboolean input);
 
 #define GST_TYPE_DECKLINK_DEVICE gst_decklink_device_get_type()
