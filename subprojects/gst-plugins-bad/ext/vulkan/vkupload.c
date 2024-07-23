@@ -1387,7 +1387,8 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
 
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_LAYOUT_UNDEFINED, 0);
+      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
+      0 /* VK_ACCESS_NONE */ );
 
   if (!gst_buffer_pool_set_config (pool, config)) {
     gst_object_unref (pool);
