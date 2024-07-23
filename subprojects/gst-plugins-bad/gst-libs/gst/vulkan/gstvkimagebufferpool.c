@@ -262,7 +262,9 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
     video = (priv->usage & (VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
-            | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR));
+            | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
+            | VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
+            | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR));
 #endif
     sampleable = priv->usage &
         (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
