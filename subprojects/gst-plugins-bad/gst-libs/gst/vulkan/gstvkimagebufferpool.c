@@ -208,6 +208,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   {
     guint n = 0;
+
+    priv->n_profiles = 0;
     if (decode_caps && ((priv->usage
                 & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
                     | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
