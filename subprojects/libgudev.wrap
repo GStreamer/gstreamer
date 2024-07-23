@@ -1,6 +1,7 @@
 [wrap-file]
 directory = libgudev-238
 source_url = https://gitlab.gnome.org/GNOME/libgudev/-/archive/238/libgudev-238.tar.bz2
+source_fallback_url = https://gstreamer.freedesktop.org/src/mirror/libgudev-238.tar.bz2
 source_filename = libgudev-238.tar.bz2
 source_hash = 3e131e4a37435b0ca04593f3427e7b74956793342276430bdcd2d25a4e901e4e
 
