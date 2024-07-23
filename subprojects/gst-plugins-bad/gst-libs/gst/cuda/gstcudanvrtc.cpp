@@ -45,10 +45,19 @@ GST_DEBUG_CATEGORY_STATIC (gst_cuda_nvrtc_debug);
   } \
 } G_STMT_END;
 
+#define LOAD_OPTIONAL_SYMBOL(name,func) G_STMT_START { \
+  if (!g_module_symbol (module, G_STRINGIFY (name), (gpointer *) &vtable->func)) { \
+    GST_WARNING ("Failed to load '%s', %s", G_STRINGIFY (name), g_module_error()); \
+    return TRUE; \
+  } \
+} G_STMT_END;
+
+
 /* *INDENT-OFF* */
 typedef struct _GstCudaNvrtcVTable
 {
   gboolean loaded;
+  gboolean have_cubin;
 
   nvrtcResult (*NvrtcCompileProgram) (nvrtcProgram prog, int numOptions,
       const char **options);
@@ -154,6 +163,7 @@ gst_cuda_nvrtc_load_library_once (void)
   }
 
   vtable = &gst_cuda_nvrtc_vtable;
+  vtable->have_cubin = FALSE;
 
   LOAD_SYMBOL (nvrtcCompileProgram, NvrtcCompileProgram);
   LOAD_SYMBOL (nvrtcCreateProgram, NvrtcCreateProgram);
@@ -162,10 +172,11 @@ gst_cuda_nvrtc_load_library_once (void)
   LOAD_SYMBOL (nvrtcGetPTXSize, NvrtcGetPTXSize);
   LOAD_SYMBOL (nvrtcGetProgramLog, NvrtcGetProgramLog);
   LOAD_SYMBOL (nvrtcGetProgramLogSize, NvrtcGetProgramLogSize);
-  LOAD_SYMBOL (nvrtcGetCUBINSize, NvrtcGetCUBINSize);
-  LOAD_SYMBOL (nvrtcGetCUBIN, NvrtcGetCUBIN);
-
   vtable->loaded = TRUE;
+
+  LOAD_OPTIONAL_SYMBOL (nvrtcGetCUBINSize, NvrtcGetCUBINSize);
+  LOAD_OPTIONAL_SYMBOL (nvrtcGetCUBIN, NvrtcGetCUBIN);
+  vtable->have_cubin = TRUE;
 
   return TRUE;
 
@@ -386,6 +397,11 @@ gst_cuda_nvrtc_compile_cubin (const gchar * source, gint device)
 
   if (!gst_cuda_nvrtc_load_library ())
     return nullptr;
+
+  if (!gst_cuda_nvrtc_vtable.have_cubin) {
+    GST_DEBUG ("CUBIN related symbols are unavailable");
+    return nullptr;
+  }
 
   GST_TRACE ("CUDA kernel source \n%s", source);
 
