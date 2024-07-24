@@ -131,6 +131,9 @@ gst_base_qr_overlay_caps_changed_cb (GstBaseQROverlay * self, GstCaps * caps,
     priv->valid = TRUE;
   else
     priv->valid = FALSE;
+
+  /* needs to redraw the overlay as its position depends of the video size */
+  gst_mini_object_replace (((GstMiniObject **) & priv->prev_overlay), NULL);
 }
 
 static GstVideoOverlayComposition *
