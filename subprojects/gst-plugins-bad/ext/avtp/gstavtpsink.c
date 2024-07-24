@@ -44,10 +44,10 @@
  */
 
 #include <arpa/inet.h>
+#include <net/ethernet.h>
 #include <linux/errqueue.h>
 #include <linux/if_packet.h>
 #include <linux/net_tstamp.h>
-#include <net/ethernet.h>
 #include <net/if.h>
 #include <stdio.h>
 #include <string.h>
