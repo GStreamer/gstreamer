@@ -125,6 +125,8 @@ gst_base_qr_overlay_caps_changed_cb (GstBaseQROverlay * self, GstCaps * caps,
 {
   GstBaseQROverlayPrivate *priv = PRIV (self);
 
+  GST_DEBUG_OBJECT (self, "%" GST_PTR_FORMAT, caps);
+
   if (gst_video_info_from_caps (&priv->info, caps))
     priv->valid = TRUE;
   else
@@ -191,6 +193,9 @@ draw_overlay (GstBaseQROverlay * self, QRcode * qrcode)
   x = GST_ROUND_DOWN_2 (x);
   y = (int) (priv->info.height - square_size) * (priv->y_percent / 100);
   y = GST_ROUND_DOWN_4 (y);
+
+  GST_DEBUG_OBJECT (self, "draw overlay at (%d,%d) size: %dx%d", x, y,
+      info.width, info.height);
 
   rect = gst_video_overlay_rectangle_new_raw (buf, x, y,
       info.width, info.height, GST_VIDEO_OVERLAY_FORMAT_FLAG_NONE);
