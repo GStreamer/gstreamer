@@ -8357,9 +8357,9 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
       GstWebRTCBinPad *pad2;
       gboolean has_matching_caps;
 
-      /* Ignore transceivers with a non-matching kind */
+      /* Ignore transceivers with a non-matching kind or where we don't know the kind we want */
       if (tmptrans->kind != GST_WEBRTC_KIND_UNKNOWN &&
-          kind != GST_WEBRTC_KIND_UNKNOWN && tmptrans->kind != kind)
+          (kind == GST_WEBRTC_KIND_UNKNOWN || tmptrans->kind != kind))
         continue;
 
       /* Ignore stopped transmitters */
@@ -8381,7 +8381,7 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
 
       GST_OBJECT_LOCK (tmptrans);
       has_matching_caps = (caps && tmptrans->codec_preferences &&
-          !gst_caps_can_intersect (caps, tmptrans->codec_preferences));
+          gst_caps_can_intersect (caps, tmptrans->codec_preferences));
       GST_OBJECT_UNLOCK (tmptrans);
       /* Ignore transceivers with non-matching caps */
       if (!has_matching_caps)
