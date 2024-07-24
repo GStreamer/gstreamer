@@ -34,6 +34,19 @@ G_BEGIN_DECLS
   ((const GstVTEncoderDetails *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), \
       GST_VTENC_CODEC_DETAILS_QDATA))
 
+/**
+ * GstVtencRateControl:
+ * @GST_VTENC_RATE_CONTROL_ABR: average (variable) bitrate
+ * @GST_VTENC_RATE_CONTROL_CBR: constant bitrate
+ *
+ * Since: 1.26
+ */
+typedef enum
+{
+  GST_VTENC_RATE_CONTROL_ABR,
+  GST_VTENC_RATE_CONTROL_CBR,
+} GstVtencRateControl;
+
 typedef struct _GstVTEncoderDetails GstVTEncoderDetails;
 
 typedef struct _GstVTEncClassParams GstVTEncClassParams;
@@ -71,6 +84,7 @@ struct _GstVTEnc
   GstClockTime max_keyframe_interval_duration;
   gint latency_frames;
   gboolean preserve_alpha;
+  GstVtencRateControl rate_control;
 
   gboolean dump_properties;
   gboolean dump_attributes;

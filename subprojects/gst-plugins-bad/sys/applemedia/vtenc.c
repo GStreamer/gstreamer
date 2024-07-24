@@ -192,6 +192,7 @@ enum
   PROP_MAX_KEYFRAME_INTERVAL,
   PROP_MAX_KEYFRAME_INTERVAL_DURATION,
   PROP_PRESERVE_ALPHA,
+  PROP_RATE_CONTROL,
 };
 
 typedef struct _GstVTEncFrame GstVTEncFrame;
@@ -262,6 +263,24 @@ static void gst_pixel_buffer_release_cb (void *releaseRefCon,
     const void *dataPtr, size_t dataSize, size_t numberOfPlanes,
     const void *planeAddresses[]);
 #endif
+
+#define GST_TYPE_VTENC_RATE_CONTROL (gst_vtenc_rate_control_get_type())
+static GType
+gst_vtenc_rate_control_get_type (void)
+{
+  static GType rc_type = 0;
+
+  static const GEnumValue rc_types[] = {
+    {GST_VTENC_RATE_CONTROL_ABR, "Average Bitrate", "abr"},
+    {GST_VTENC_RATE_CONTROL_CBR, "Constant Bitrate", "cbr"},
+    {0, NULL, NULL},
+  };
+
+  if (!rc_type) {
+    rc_type = g_enum_register_static ("GstVtencRateControl", rc_types);
+  }
+  return rc_type;
+}
 
 static GstStaticCaps sink_caps =
 GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ AYUV64, UYVY, NV12, I420 }"));
@@ -461,6 +480,15 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           G_MAXUINT64, VTENC_DEFAULT_MAX_KEYFRAME_INTERVAL_DURATION,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_RATE_CONTROL,
+      g_param_spec_enum ("rate-control", "Rate Control",
+          "Desired rate control for the encoder", GST_TYPE_VTENC_RATE_CONTROL,
+          GST_VTENC_RATE_CONTROL_ABR,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
   /*
    * H264 doesn't support alpha components, and H265 uses a separate element for encoding
    * with alpha, so only add the property for prores
@@ -625,6 +653,9 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
     case PROP_MAX_KEYFRAME_INTERVAL_DURATION:
       g_value_set_uint64 (value, self->max_keyframe_interval_duration);
       break;
+    case PROP_RATE_CONTROL:
+      g_value_set_enum (value, self->rate_control);
+      break;
     case PROP_PRESERVE_ALPHA:
       g_value_set_boolean (value, self->preserve_alpha);
       break;
@@ -659,6 +690,9 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
     case PROP_MAX_KEYFRAME_INTERVAL_DURATION:
       gst_vtenc_set_max_keyframe_interval_duration (self,
           g_value_get_uint64 (value));
+      break;
+    case PROP_RATE_CONTROL:
+      self->rate_control = g_value_get_enum (value);
       break;
     case PROP_PRESERVE_ALPHA:
       self->preserve_alpha = g_value_get_boolean (value);
@@ -1640,8 +1674,23 @@ static void
 gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     VTCompressionSessionRef session, guint bitrate)
 {
-  gst_vtenc_session_configure_property_int (self, session,
-      kVTCompressionPropertyKey_AverageBitRate, bitrate);
+  CFStringRef key = kVTCompressionPropertyKey_AverageBitRate;
+
+  if (self->rate_control == GST_VTENC_RATE_CONTROL_CBR) {
+#ifdef __aarch64__
+    /*
+     * In addition to the OS requirements, CBR also requires Apple Silicon
+     */
+    if (__builtin_available (macOS 13.0, iOS 16.0, *)) {
+      key = kVTCompressionPropertyKey_ConstantBitRate;
+    } else
+#endif
+    {
+      GST_WARNING_OBJECT (self, "CBR is unsupported on your system, using ABR");
+    }
+  }
+
+  gst_vtenc_session_configure_property_int (self, session, key, bitrate);
 }
 
 static void
