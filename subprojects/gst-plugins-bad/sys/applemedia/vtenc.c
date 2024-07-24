@@ -615,8 +615,8 @@ gst_vtenc_set_quality (GstVTEnc * self, gdouble quality)
 {
   GST_OBJECT_LOCK (self);
   self->quality = quality;
-  GST_INFO_OBJECT (self, "setting quality %f", quality);
   if (self->session != NULL) {
+    GST_INFO_OBJECT (self, "setting quality %f", quality);
     gst_vtenc_session_configure_property_double (self, self->session,
         kVTCompressionPropertyKey_Quality, quality);
   }
@@ -1588,7 +1588,8 @@ gst_vtenc_create_session (GstVTEnc * self)
       gst_vtenc_get_realtime (self));
   gst_vtenc_session_configure_allow_frame_reordering (self, session,
       gst_vtenc_get_allow_frame_reordering (self));
-  gst_vtenc_set_quality (self, self->quality);
+  gst_vtenc_session_configure_property_double (self, session,
+      kVTCompressionPropertyKey_Quality, self->quality);
 
   if (self->dump_properties) {
     gst_vtenc_session_dump_properties (self, session);
