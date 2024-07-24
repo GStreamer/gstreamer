@@ -68,6 +68,7 @@ private:
     GstBuffer * sync_buffer_;
     GstMemory * mem_;
     GstVideoInfo v_info;
+    GstGLTextureTarget tex_target;
     GstVideoFrame v_frame;
     QSGTexture::Filtering m_filtering;
 };

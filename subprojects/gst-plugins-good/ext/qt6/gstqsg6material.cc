@@ -258,7 +258,7 @@ GstQSGTexture::rhiTexture() const
 
 class GstQSGMaterialShader : public QSGMaterialShader {
 public:
-  GstQSGMaterialShader(GstVideoFormat v_format);
+  GstQSGMaterialShader(GstVideoFormat v_format, GstGLTextureTarget target);
   ~GstQSGMaterialShader();
 
   bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
@@ -269,7 +269,8 @@ private:
   QSGTexture *m_textures[GST_VIDEO_MAX_PLANES];
 };
 
-GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format)
+GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format,
+    GstGLTextureTarget target)
   : v_format(v_format)
 {
   const gchar *frag_shader;
@@ -441,17 +442,28 @@ QSGMaterialShader *
 GstQSGMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
   GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&this->v_info);
+  GstGLTextureTarget target = this->tex_target;
 
-  return new GstQSGMaterialShader(v_format);
+  return new GstQSGMaterialShader(v_format, target);
 }
 
 /* only called from the streaming thread with scene graph thread blocked */
 void
 GstQSGMaterial::setCaps (GstCaps * caps)
 {
+  GstStructure *s;
+  const gchar *target_str;
+
   GST_LOG ("%p setCaps %" GST_PTR_FORMAT, this, caps);
 
   gst_video_info_from_caps (&this->v_info, caps);
+
+  s = gst_caps_get_structure (caps, 0);
+  target_str = gst_structure_get_string (s, "texture-target");
+  if (!target_str)
+      target_str = GST_GL_TEXTURE_TARGET_2D_STR;
+
+  this->tex_target = gst_gl_texture_target_from_string(target_str);
 }
 
 /* only called from the streaming thread with scene graph thread blocked */
