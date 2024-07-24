@@ -8285,6 +8285,9 @@ gst_webrtc_bin_request_new_pad (GstElement * element, GstPadTemplate * templ,
     /* parse serial number from requested padname */
     serial = g_ascii_strtoull (&name[5], NULL, 10);
     lock_mline = TRUE;
+    if (serial >= webrtc->priv->max_sink_pad_serial) {
+      webrtc->priv->max_sink_pad_serial = serial + 1;
+    }
   }
 
   if (lock_mline) {
