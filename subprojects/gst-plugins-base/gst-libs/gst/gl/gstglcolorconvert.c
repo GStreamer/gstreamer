@@ -448,7 +448,6 @@ static const struct shader_templ templ_AV12_to_RGB =
 
 /* TILED semi-planar to RGB conversion */
 static const gchar templ_TILED_SEMI_PLANAR_to_RGB_BODY[] =
-    "  vec4 rgba;\n"
     "  vec4 yuva;\n"
     "  ivec2 texel;\n"
     "\n"
