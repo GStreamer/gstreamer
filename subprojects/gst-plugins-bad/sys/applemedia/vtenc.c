@@ -526,18 +526,6 @@ gst_vtenc_finalize (GObject * obj)
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-static guint
-gst_vtenc_get_bitrate (GstVTEnc * self)
-{
-  guint result;
-
-  GST_OBJECT_LOCK (self);
-  result = self->bitrate;
-  GST_OBJECT_UNLOCK (self);
-
-  return result;
-}
-
 static void
 gst_vtenc_set_bitrate (GstVTEnc * self, guint bitrate)
 {
@@ -549,18 +537,6 @@ gst_vtenc_set_bitrate (GstVTEnc * self, guint bitrate)
     gst_vtenc_session_configure_bitrate (self, self->session, bitrate);
 
   GST_OBJECT_UNLOCK (self);
-}
-
-static gboolean
-gst_vtenc_get_allow_frame_reordering (GstVTEnc * self)
-{
-  gboolean result;
-
-  GST_OBJECT_LOCK (self);
-  result = self->allow_frame_reordering;
-  GST_OBJECT_UNLOCK (self);
-
-  return result;
 }
 
 static void
@@ -576,18 +552,6 @@ gst_vtenc_set_allow_frame_reordering (GstVTEnc * self,
   GST_OBJECT_UNLOCK (self);
 }
 
-static gboolean
-gst_vtenc_get_realtime (GstVTEnc * self)
-{
-  gboolean result;
-
-  GST_OBJECT_LOCK (self);
-  result = self->realtime;
-  GST_OBJECT_UNLOCK (self);
-
-  return result;
-}
-
 static void
 gst_vtenc_set_realtime (GstVTEnc * self, gboolean realtime)
 {
@@ -596,18 +560,6 @@ gst_vtenc_set_realtime (GstVTEnc * self, gboolean realtime)
   if (self->session != NULL)
     gst_vtenc_session_configure_realtime (self, self->session, realtime);
   GST_OBJECT_UNLOCK (self);
-}
-
-static gdouble
-gst_vtenc_get_quality (GstVTEnc * self)
-{
-  gdouble result;
-
-  GST_OBJECT_LOCK (self);
-  result = self->quality;
-  GST_OBJECT_UNLOCK (self);
-
-  return result;
 }
 
 static void
@@ -623,18 +575,6 @@ gst_vtenc_set_quality (GstVTEnc * self, gdouble quality)
   GST_OBJECT_UNLOCK (self);
 }
 
-static gint
-gst_vtenc_get_max_keyframe_interval (GstVTEnc * self)
-{
-  gint result;
-
-  GST_OBJECT_LOCK (self);
-  result = self->max_keyframe_interval;
-  GST_OBJECT_UNLOCK (self);
-
-  return result;
-}
-
 static void
 gst_vtenc_set_max_keyframe_interval (GstVTEnc * self, gint interval)
 {
@@ -645,18 +585,6 @@ gst_vtenc_set_max_keyframe_interval (GstVTEnc * self, gint interval)
         interval);
   }
   GST_OBJECT_UNLOCK (self);
-}
-
-static GstClockTime
-gst_vtenc_get_max_keyframe_interval_duration (GstVTEnc * self)
-{
-  GstClockTime result;
-
-  GST_OBJECT_LOCK (self);
-  result = self->max_keyframe_interval_duration;
-  GST_OBJECT_UNLOCK (self);
-
-  return result;
 }
 
 static void
@@ -680,23 +608,22 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_BITRATE:
-      g_value_set_uint (value, gst_vtenc_get_bitrate (self) / 1000);
+      g_value_set_uint (value, self->bitrate / 1000);
       break;
     case PROP_ALLOW_FRAME_REORDERING:
-      g_value_set_boolean (value, gst_vtenc_get_allow_frame_reordering (self));
+      g_value_set_boolean (value, self->allow_frame_reordering);
       break;
     case PROP_REALTIME:
-      g_value_set_boolean (value, gst_vtenc_get_realtime (self));
+      g_value_set_boolean (value, self->realtime);
       break;
     case PROP_QUALITY:
-      g_value_set_double (value, gst_vtenc_get_quality (self));
+      g_value_set_double (value, self->quality);
       break;
     case PROP_MAX_KEYFRAME_INTERVAL:
-      g_value_set_int (value, gst_vtenc_get_max_keyframe_interval (self));
+      g_value_set_int (value, self->max_keyframe_interval);
       break;
     case PROP_MAX_KEYFRAME_INTERVAL_DURATION:
-      g_value_set_uint64 (value,
-          gst_vtenc_get_max_keyframe_interval_duration (self));
+      g_value_set_uint64 (value, self->max_keyframe_interval_duration);
       break;
     case PROP_PRESERVE_ALPHA:
       g_value_set_boolean (value, self->preserve_alpha);
@@ -1532,8 +1459,7 @@ gst_vtenc_create_session (GstVTEnc * self)
     gst_vtenc_session_configure_max_keyframe_interval_duration (self, session,
         self->max_keyframe_interval_duration / ((gdouble) GST_SECOND));
 
-    gst_vtenc_session_configure_bitrate (self, session,
-        gst_vtenc_get_bitrate (self));
+    gst_vtenc_session_configure_bitrate (self, session, self->bitrate);
   }
 
   /* Force encoder to not preserve alpha with 4444(XQ) ProRes formats if
@@ -1584,10 +1510,9 @@ gst_vtenc_create_session (GstVTEnc * self)
       g_assert_not_reached ();
   }
 
-  gst_vtenc_session_configure_realtime (self, session,
-      gst_vtenc_get_realtime (self));
+  gst_vtenc_session_configure_realtime (self, session, self->realtime);
   gst_vtenc_session_configure_allow_frame_reordering (self, session,
-      gst_vtenc_get_allow_frame_reordering (self));
+      self->allow_frame_reordering);
   gst_vtenc_session_configure_property_double (self, session,
       kVTCompressionPropertyKey_Quality, self->quality);
 
