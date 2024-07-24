@@ -272,23 +272,28 @@ private:
 GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format)
   : v_format(v_format)
 {
+  const gchar *frag_shader;
+
   setShaderFileName(VertexStage, ":/org/freedesktop/gstreamer/qml6/vertex.vert.qsb");
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_RGB:
-      setShaderFileName(FragmentStage, ":/org/freedesktop/gstreamer/qml6/RGBA.frag.qsb");
+      frag_shader = ":/org/freedesktop/gstreamer/qml6/RGBA.frag.qsb";
       break;
     case GST_VIDEO_FORMAT_YV12:
-      setShaderFileName(FragmentStage, ":/org/freedesktop/gstreamer/qml6/YUV_TRIPLANAR.frag.qsb");
+      frag_shader = ":/org/freedesktop/gstreamer/qml6/YUV_TRIPLANAR.frag.qsb";
       break;
     case GST_VIDEO_FORMAT_NV12:
-      setShaderFileName(FragmentStage, ":/org/freedesktop/gstreamer/qml6/YUV_BIPLANAR.frag.qsb");
+      frag_shader = ":/org/freedesktop/gstreamer/qml6/YUV_BIPLANAR.frag.qsb";
       break;
     default:
       g_assert_not_reached ();
   }
+
+  GST_DEBUG("load fragment shader: %s", frag_shader);
+  setShaderFileName(FragmentStage, frag_shader);
 
   m_textures[0] = nullptr;
   m_textures[1] = nullptr;
