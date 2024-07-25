@@ -208,8 +208,12 @@ gst_d3d12_fence_data_pool_acquire (GstD3D12FenceDataPool * pool,
     }
   }
 
-  if (!new_data)
+  if (!new_data) {
     new_data = gst_d3d12_fence_data_new ();
+
+    if (GST_OBJECT_FLAG_IS_SET (pool, GST_OBJECT_FLAG_MAY_BE_LEAKED))
+      GST_MINI_OBJECT_FLAG_SET (new_data, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
+  }
 
   new_data->pool = (GstD3D12FenceDataPool *) gst_object_ref (pool);
   new_data->dispose =
