@@ -21,7 +21,7 @@ _jobs=$(nproc || sysctl -n hw.ncpu)
 jobs="${FDO_CI_CONCURRENT:-$_jobs}"
 
 date -R
-ci/scripts/handle-subprojects-cache.py --cache-dir /subprojects subprojects/
+ci/scripts/handle-subprojects-cache.py --cache-dir "${SUBPROJECTS_CACHE_DIR}" subprojects/
 
 ARGS="${BUILD_TYPE:---default-library=both} ${BUILD_GST_DEBUG:--Dgstreamer:gst_debug=true} ${MESON_ARGS}"
 echo "Werror: $GST_WERROR"
