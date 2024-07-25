@@ -40,7 +40,7 @@ ensure_debug_category (void)
   static GstDebugCategory *cat = nullptr;
 
   GST_D3D12_CALL_ONCE_BEGIN {
-    cat = _gst_debug_category_new ("d3d12allocator", 0, "d3d12allocator");
+    cat = _gst_debug_category_new ("d3d12utils", 0, "d3d12utils");
   } GST_D3D12_CALL_ONCE_END;
 
   return cat;
