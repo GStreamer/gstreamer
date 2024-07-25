@@ -3069,8 +3069,7 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 
     for (i = 0; i < h265parse->time_code.num_clock_ts; i++) {
       gint field_count = -1;
-      guint64 n_frames_tmp;
-      guint n_frames = G_MAXUINT32;
+      guint64 n_frames = G_MAXUINT64;
       GstVideoTimeCodeFlags flags = 0;
       guint64 scale_n, scale_d;
 
@@ -3146,30 +3145,37 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       scale_n = (guint64) h265parse->parsed_fps_n * vui->num_units_in_tick;
       scale_d = (guint64) h265parse->parsed_fps_d * vui->time_scale;
 
-      n_frames_tmp =
-          gst_util_uint64_scale_int (h265parse->time_code.n_frames[i], scale_n,
-          scale_d);
-      if (n_frames_tmp <= G_MAXUINT32) {
-        if (h265parse->time_code.units_field_based_flag[i])
-          n_frames_tmp *= 2;
+      if (h265parse->time_code.units_field_based_flag[i])
+        scale_n *= 2;
 
-        if (n_frames_tmp <= G_MAXUINT32)
-          n_frames = (guint) n_frames_tmp;
-      }
+      n_frames = gst_util_uint64_scale (h265parse->time_code.n_frames[i],
+          scale_n, scale_d);
 
-      if (n_frames != G_MAXUINT32) {
+      if (n_frames <= G_MAXUINT32) {
+        GST_LOG_OBJECT (h265parse,
+            "Add time code meta %02u:%02u:%02u:%02u",
+            h265parse->time_code.hours_flag[i] ?
+            h265parse->time_code.hours_value[i] : 0,
+            h265parse->time_code.minutes_flag[i] ?
+            h265parse->time_code.minutes_value[i] : 0,
+            h265parse->time_code.seconds_flag[i] ?
+            h265parse->time_code.seconds_value[i] : 0, (guint) n_frames);
+
         gst_buffer_add_video_time_code_meta_full (parse_buffer,
             h265parse->parsed_fps_n,
             h265parse->parsed_fps_d,
             NULL,
             flags,
-            h265parse->time_code.hours_flag[i] ? h265parse->time_code.
-            hours_value[i] : 0,
-            h265parse->time_code.minutes_flag[i] ? h265parse->time_code.
-            minutes_value[i] : 0,
-            h265parse->time_code.seconds_flag[i] ? h265parse->time_code.
-            seconds_value[i] : 0, n_frames, field_count);
-      }
+            h265parse->time_code.hours_flag[i] ?
+            h265parse->time_code.hours_value[i] : 0,
+            h265parse->time_code.minutes_flag[i] ?
+            h265parse->time_code.minutes_value[i] : 0,
+            h265parse->time_code.seconds_flag[i] ?
+            h265parse->time_code.seconds_value[i] : 0,
+            (guint) n_frames, field_count);
+      } else
+        GST_WARNING_OBJECT (h265parse,
+            "Skipping time code meta, n_frames calculation failed");
     }
   }
 

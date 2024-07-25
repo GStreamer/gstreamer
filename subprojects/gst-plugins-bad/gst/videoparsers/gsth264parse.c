@@ -3388,8 +3388,7 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       GstH264ClockTimestamp *tim =
           &h264parse->pic_timing_sei.clock_timestamp[i];
       gint field_count = -1;
-      guint64 n_frames_tmp;
-      guint n_frames = G_MAXUINT32;
+      guint64 n_frames = G_MAXUINT64;
       GstVideoTimeCodeFlags flags = 0;
       guint64 scale_n, scale_d;
 
@@ -3467,19 +3466,17 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       scale_n = (guint64) h264parse->parsed_fps_n * vui->num_units_in_tick;
       scale_d = (guint64) h264parse->parsed_fps_d * vui->time_scale;
 
-      n_frames_tmp = gst_util_uint64_scale (tim->n_frames, scale_n, scale_d);
-      if (n_frames_tmp <= G_MAXUINT32) {
-        if (tim->nuit_field_based_flag)
-          n_frames_tmp *= 2;
+      if (tim->nuit_field_based_flag)
+        scale_n *= 2;
 
-        if (n_frames_tmp <= G_MAXUINT32)
-          n_frames = (guint) n_frames_tmp;
-      }
+      n_frames = gst_util_uint64_scale (tim->n_frames, scale_n, scale_d);
 
-      if (n_frames != G_MAXUINT32) {
+      if (n_frames <= G_MAXUINT32) {
         GST_LOG_OBJECT (h264parse,
             "Add time code meta %02u:%02u:%02u:%02u",
-            tim->hours_value, tim->minutes_value, tim->seconds_value, n_frames);
+            tim->hours_flag ? tim->hours_value : 0,
+            tim->minutes_flag ? tim->minutes_value : 0,
+            tim->seconds_flag ? tim->seconds_value : 0, (guint) n_frames);
 
         gst_buffer_add_video_time_code_meta_full (parse_buffer,
             h264parse->parsed_fps_n,
@@ -3488,8 +3485,11 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
             flags,
             tim->hours_flag ? tim->hours_value : 0,
             tim->minutes_flag ? tim->minutes_value : 0,
-            tim->seconds_flag ? tim->seconds_value : 0, n_frames, field_count);
-      }
+            tim->seconds_flag ? tim->seconds_value : 0,
+            (guint) n_frames, field_count);
+      } else
+        GST_WARNING_OBJECT (h264parse,
+            "Skipping time code meta, n_frames calculation failed");
     }
 
     h264parse->num_clock_timestamp = 0;
