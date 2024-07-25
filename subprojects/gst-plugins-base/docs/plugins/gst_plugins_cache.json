@@ -14856,7 +14856,7 @@
                     "GInitiallyUnowned",
                     "GObject"
                 ],
-                "klass": "Filter/Converter/Video/Scaler",
+                "klass": "Filter/Video/Scaler",
                 "long-name": "Video scaler",
                 "pad-templates": {
                     "sink": {
