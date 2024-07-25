@@ -2256,6 +2256,12 @@ gst_svthevc_enc_get_property (GObject * object, guint prop_id,
   GST_OBJECT_UNLOCK (encoder);
 }
 
+/**
+ * plugin-svthevcenc:
+ *
+ * Since: 1.18
+ */
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

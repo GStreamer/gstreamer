@@ -24,6 +24,12 @@
 #include "gstldacenc.h"
 #include <string.h>
 
+/**
+ * plugin-ldac:
+ *
+ * Since: 1.20
+ */
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
