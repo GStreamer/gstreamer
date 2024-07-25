@@ -628,6 +628,11 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
 
 failed:
   {
+    /* Free DMAbufs on failure */
+    for (guint32 i = 0; i < desc.num_objects; i++) {
+      gint fd = desc.objects[i].fd;
+      close (fd);
+    }
     va_destroy_surfaces (display, &surface, 1);
     return FALSE;
   }
@@ -660,6 +665,11 @@ gst_va_dmabuf_get_modifier_for_format (GstVaDisplay * display,
           NULL, 0, &info, &surface, &desc))
     return DRM_FORMAT_MOD_INVALID;
 
+  /* Close the fds we won't be using */
+  for (guint32 i = 0; i < desc.num_objects; i++) {
+    gint fd = desc.objects[i].fd;
+    close (fd);
+  }
   va_destroy_surfaces (display, &surface, 1);
 
   return desc.objects[0].drm_format_modifier;
