@@ -29,6 +29,8 @@
 #include <gst/d3d11/gstd3d11device-private.h>
 #include <directx/d3dx12.h>
 #include <mutex>
+#include <condition_variable>
+#include <memory>
 #include <wrl.h>
 
 /* *INDENT-OFF* */
@@ -108,6 +110,111 @@ enum
 
 #define DEFAULT_ADAPTER -1
 
+#define ASYNC_FENCE_WAIT_DEPTH 16
+
+struct FenceWaitData
+{
+  UINT64 fence_value = 0;
+  GstMemory *mem = nullptr;
+};
+
+static gpointer gst_d3d12_memory_copy_fence_wait_thread (gpointer data);
+
+struct FenceAsyncWaiter
+{
+  FenceAsyncWaiter (ID3D12Fence * fence)
+  {
+    fence_ = fence;
+    queue_ = gst_vec_deque_new_for_struct (sizeof (FenceWaitData),
+        ASYNC_FENCE_WAIT_DEPTH);
+    thread_ = g_thread_new ("GstD3D12MemoryCopy",
+        gst_d3d12_memory_copy_fence_wait_thread, this);
+  }
+
+   ~FenceAsyncWaiter ()
+  {
+    {
+      std::lock_guard < std::mutex > lk (lock_);
+      shutdown_ = true;
+      cond_.notify_one ();
+    }
+    g_thread_join (thread_);
+
+    while (!gst_vec_deque_is_empty (queue_)) {
+      auto fence_data = *((FenceWaitData *)
+          gst_vec_deque_pop_head_struct (queue_));
+      auto completed = fence_->GetCompletedValue ();
+      if (completed < fence_data.fence_value)
+        fence_->SetEventOnCompletion (fence_data.fence_value, nullptr);
+      gst_memory_unref (fence_data.mem);
+    }
+
+    gst_vec_deque_free (queue_);
+  }
+
+  void wait_async (UINT64 fence_value, GstMemory * mem)
+  {
+    auto completed = fence_->GetCompletedValue ();
+    if (completed + ASYNC_FENCE_WAIT_DEPTH < fence_value) {
+      fence_->SetEventOnCompletion (fence_value - ASYNC_FENCE_WAIT_DEPTH,
+          nullptr);
+    }
+
+    FenceWaitData data;
+    data.fence_value = fence_value;
+    data.mem = gst_memory_ref (mem);
+
+    std::lock_guard < std::mutex > lk (lock_);
+    gst_vec_deque_push_tail_struct (queue_, &data);
+    cond_.notify_one ();
+  }
+
+  ComPtr < ID3D12Fence > fence_;
+  GThread *thread_;
+  std::mutex lock_;
+  std::condition_variable cond_;
+  GstVecDeque *queue_;
+  bool shutdown_ = false;
+};
+
+static gpointer
+gst_d3d12_memory_copy_fence_wait_thread (gpointer data)
+{
+  auto self = (FenceAsyncWaiter *) data;
+
+  while (true) {
+    FenceWaitData fence_data;
+
+    {
+      std::unique_lock < std::mutex > lk (self->lock_);
+      while (gst_vec_deque_is_empty (self->queue_) && !self->shutdown_)
+        self->cond_.wait (lk);
+
+      if (self->shutdown_)
+        return nullptr;
+
+      fence_data = *((FenceWaitData *)
+          gst_vec_deque_pop_head_struct (self->queue_));
+    }
+
+    auto completed = self->fence_->GetCompletedValue ();
+    if (completed < fence_data.fence_value) {
+      GST_TRACE ("Waiting for fence value %" G_GUINT64_FORMAT,
+          fence_data.fence_value);
+      self->fence_->SetEventOnCompletion (fence_data.fence_value, nullptr);
+      GST_TRACE ("Fence completed with value %" G_GUINT64_FORMAT,
+          fence_data.fence_value);
+    } else {
+      GST_TRACE ("Fence was completed already, fence value: %" G_GUINT64_FORMAT
+          ", completed: %" G_GUINT64_FORMAT, fence_data.fence_value, completed);
+    }
+
+    gst_memory_unref (fence_data.mem);
+  }
+
+  return nullptr;
+}
+
 struct _GstD3D12MemoryCopyPrivate
 {
   ~_GstD3D12MemoryCopyPrivate ()
@@ -120,6 +227,8 @@ struct _GstD3D12MemoryCopyPrivate
     if (fallback_pool12)
       gst_buffer_pool_set_active (fallback_pool12, FALSE);
     gst_clear_object (&fallback_pool12);
+
+    fence_waiter = nullptr;
 
     fence12 = nullptr;
     fence11 = nullptr;
@@ -174,6 +283,8 @@ struct _GstD3D12MemoryCopyPrivate
   MemoryType in_type = MemoryType::SYSTEM;
   MemoryType out_type = MemoryType::SYSTEM;
   UINT64 fence_val = 0;
+
+  std::shared_ptr < FenceAsyncWaiter > fence_waiter;
 
   gint adapter = DEFAULT_ADAPTER;
 
@@ -577,6 +688,9 @@ gst_d3d12_memory_copy_setup_resource (GstD3D12MemoryCopy * self)
       priv->transfer_type = TransferType::SYSTEM;
       return TRUE;
     }
+
+    priv->fence_waiter =
+        std::make_shared < FenceAsyncWaiter > (priv->fence12_on_11.Get ());
   }
 
   priv->device11_5 = device11_5;
@@ -1350,8 +1464,7 @@ gst_d3d12_memory_copy_12_to_11 (GstD3D12MemoryCopy * self,
       return FALSE;
     }
 
-    gst_d3d12_memory_set_fence (in_mem12,
-        priv->fence12_on_11.Get (), priv->fence_val, FALSE);
+    priv->fence_waiter->wait_async (priv->fence_val, in_mem);
   }
 
   return TRUE;
