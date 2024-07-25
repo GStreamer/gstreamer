@@ -1987,7 +1987,8 @@ fill_picture (GstVaapiDecoderH265 * decoder, GstVaapiPictureH265 * picture,
   pic_param->pic_fields.bits.NoBiPredFlag = 0;
 
   pic_param->sps_max_dec_pic_buffering_minus1 =
-      sps->max_dec_pic_buffering_minus1[0];
+      sps->max_dec_pic_buffering_minus1[sps->max_sub_layers_minus1];
+
   COPY_FIELD (sps, bit_depth_luma_minus8);
   COPY_FIELD (sps, bit_depth_chroma_minus8);
   COPY_FIELD (sps, pcm_sample_bit_depth_luma_minus1);
