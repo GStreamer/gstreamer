@@ -369,7 +369,7 @@ gst_d3d12_frame_copy (GstD3D12Frame * dest, const GstD3D12Frame * src,
   GstD3D12CopyTextureRegionArgs args[GST_VIDEO_MAX_PLANES] = { };
   D3D12_BOX src_box[GST_VIDEO_MAX_PLANES] = { };
 
-  for (guint i = 0; GST_VIDEO_INFO_N_PLANES (&dest->info); i++) {
+  for (guint i = 0; i < GST_VIDEO_INFO_N_PLANES (&dest->info); i++) {
     gst_d3d12_frame_build_copy_args (dest, src, i, &args[i], &src_box[i]);
     args[i].src_box = &src_box[i];
   }
