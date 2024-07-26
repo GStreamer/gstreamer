@@ -256,10 +256,10 @@ GstQSGTexture::rhiTexture() const
   return m_texture;
 }
 
-class GstQSGMaterialShader : public QSGMaterialShader {
+class GstQSG6MaterialShader : public QSGMaterialShader {
 public:
-  GstQSGMaterialShader(GstVideoFormat v_format, GstGLTextureTarget target);
-  ~GstQSGMaterialShader();
+  GstQSG6MaterialShader(GstVideoFormat v_format, GstGLTextureTarget target);
+  ~GstQSG6MaterialShader();
 
   bool updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial) override;
   void updateSampledImage(RenderState &state, int binding, QSGTexture **texture, QSGMaterial *newMaterial, QSGMaterial *) override;
@@ -269,7 +269,7 @@ private:
   QSGTexture *m_textures[GST_VIDEO_MAX_PLANES];
 };
 
-GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format,
+GstQSG6MaterialShader::GstQSG6MaterialShader(GstVideoFormat v_format,
     GstGLTextureTarget target)
   : v_format(v_format)
 {
@@ -305,7 +305,7 @@ GstQSGMaterialShader::GstQSGMaterialShader(GstVideoFormat v_format,
   m_textures[3] = nullptr;
 }
 
-GstQSGMaterialShader::~GstQSGMaterialShader()
+GstQSG6MaterialShader::~GstQSG6MaterialShader()
 {
   for (int i = 0; i < 4; i++) {
     if (m_textures[i]) {
@@ -316,7 +316,7 @@ GstQSGMaterialShader::~GstQSGMaterialShader()
 }
 
 bool
-GstQSGMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
+GstQSG6MaterialShader::updateUniformData(RenderState &state, QSGMaterial *newMaterial, QSGMaterial *oldMaterial)
 {
   const GstVideoFormatInfo *finfo = gst_video_format_get_info (v_format);
   bool changed = false;
@@ -337,7 +337,7 @@ GstQSGMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newMate
     changed = true;
   }
 
-  auto *mat = static_cast<GstQSGMaterial *>(newMaterial);
+  auto *mat = static_cast<GstQSG6Material *>(newMaterial);
   if (oldMaterial != newMaterial || mat->uniforms.dirty) {
     memcpy(buf->data() + 64, &mat->uniforms.input_swizzle, 4 * sizeof (int));
     memcpy(buf->data() + 80, mat->uniforms.color_matrix.constData(), 64);
@@ -358,7 +358,7 @@ GstQSGMaterialShader::updateUniformData(RenderState &state, QSGMaterial *newMate
 }
 
 void
-GstQSGMaterialShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
+GstQSG6MaterialShader::updateSampledImage(RenderState &state, int binding, QSGTexture **texture,
     QSGMaterial *newMaterial, QSGMaterial *)
 {
   *texture = this->m_textures[binding - 1];
@@ -366,39 +366,39 @@ GstQSGMaterialShader::updateSampledImage(RenderState &state, int binding, QSGTex
 }
 
 #define DEFINE_MATERIAL(format) \
-class G_PASTE(GstQSGMaterial_,format) : public GstQSGMaterial { \
+class G_PASTE(GstQSG6Material_,format) : public GstQSG6Material { \
 public: \
-  G_PASTE(GstQSGMaterial_,format)(); \
-  ~G_PASTE(GstQSGMaterial_,format)(); \
+  G_PASTE(GstQSG6Material_,format)(); \
+  ~G_PASTE(GstQSG6Material_,format)(); \
   QSGMaterialType *type() const override { static QSGMaterialType type; return &type; }; \
 }; \
-G_PASTE(GstQSGMaterial_,format)::G_PASTE(GstQSGMaterial_,format)() {} \
-G_PASTE(GstQSGMaterial_,format)::~G_PASTE(GstQSGMaterial_,format)() {}
+G_PASTE(GstQSG6Material_,format)::G_PASTE(GstQSG6Material_,format)() {} \
+G_PASTE(GstQSG6Material_,format)::~G_PASTE(GstQSG6Material_,format)() {}
 
 DEFINE_MATERIAL(RGBA_SWIZZLE);
 DEFINE_MATERIAL(YUV_TRIPLANAR);
 DEFINE_MATERIAL(YUV_BIPLANAR);
 
-GstQSGMaterial *
-GstQSGMaterial::new_for_format(GstVideoFormat format)
+GstQSG6Material *
+GstQSG6Material::new_for_format(GstVideoFormat format)
 {
   const GstVideoFormatInfo *finfo = gst_video_format_get_info (format);
 
   if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo) && finfo->n_planes == 1) {
-    return static_cast<GstQSGMaterial *>(new GstQSGMaterial_RGBA_SWIZZLE());
+    return static_cast<GstQSG6Material *>(new GstQSG6Material_RGBA_SWIZZLE());
   }
 
   switch (format) {
     case GST_VIDEO_FORMAT_YV12:
-      return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_TRIPLANAR());
+      return static_cast<GstQSG6Material *>(new GstQSG6Material_YUV_TRIPLANAR());
     case GST_VIDEO_FORMAT_NV12:
-      return static_cast<GstQSGMaterial *>(new GstQSGMaterial_YUV_BIPLANAR());
+      return static_cast<GstQSG6Material *>(new GstQSG6Material_YUV_BIPLANAR());
     default:
       g_assert_not_reached ();
   }
 }
 
-GstQSGMaterial::GstQSGMaterial ()
+GstQSG6Material::GstQSG6Material ()
 {
   static gsize _debug;
 
@@ -419,7 +419,7 @@ GstQSGMaterial::GstQSGMaterial ()
   this->uniforms.dirty = true;
 }
 
-GstQSGMaterial::~GstQSGMaterial ()
+GstQSG6Material::~GstQSG6Material ()
 {
   g_weak_ref_clear (&this->qt_context_ref_);
   gst_buffer_replace (&this->buffer_, NULL);
@@ -433,7 +433,7 @@ GstQSGMaterial::~GstQSGMaterial ()
 }
 
 bool
-GstQSGMaterial::compatibleWith(GstVideoInfo * v_info)
+GstQSG6Material::compatibleWith(GstVideoInfo * v_info)
 {
   if (GST_VIDEO_INFO_FORMAT (&this->v_info) != GST_VIDEO_INFO_FORMAT (v_info))
     return false;
@@ -442,17 +442,17 @@ GstQSGMaterial::compatibleWith(GstVideoInfo * v_info)
 }
 
 QSGMaterialShader *
-GstQSGMaterial::createShader(QSGRendererInterface::RenderMode renderMode) const
+GstQSG6Material::createShader(QSGRendererInterface::RenderMode renderMode) const
 {
   GstVideoFormat v_format = GST_VIDEO_INFO_FORMAT (&this->v_info);
   GstGLTextureTarget target = this->tex_target;
 
-  return new GstQSGMaterialShader(v_format, target);
+  return new GstQSG6MaterialShader(v_format, target);
 }
 
 /* only called from the streaming thread with scene graph thread blocked */
 void
-GstQSGMaterial::setCaps (GstCaps * caps)
+GstQSG6Material::setCaps (GstCaps * caps)
 {
   GstStructure *s;
   const gchar *target_str;
@@ -471,7 +471,7 @@ GstQSGMaterial::setCaps (GstCaps * caps)
 
 /* only called from the streaming thread with scene graph thread blocked */
 gboolean
-GstQSGMaterial::setBuffer (GstBuffer * buffer)
+GstQSG6Material::setBuffer (GstBuffer * buffer)
 {
   GST_LOG ("%p setBuffer %" GST_PTR_FORMAT, this, buffer);
   /* FIXME: update more state here */
@@ -512,7 +512,7 @@ GstQSGMaterial::setBuffer (GstBuffer * buffer)
 
 /* only called from the streaming thread with scene graph thread blocked */
 GstBuffer *
-GstQSGMaterial::getBuffer (bool * was_bound)
+GstQSG6Material::getBuffer (bool * was_bound)
 {
   GstBuffer *buffer = NULL;
 
@@ -525,7 +525,7 @@ GstQSGMaterial::getBuffer (bool * was_bound)
 }
 
 void
-GstQSGMaterial::setFiltering(QSGTexture::Filtering filtering)
+GstQSG6Material::setFiltering(QSGTexture::Filtering filtering)
 {
   m_filtering = filtering;
 }
@@ -565,7 +565,7 @@ video_format_to_texel_size (GstVideoFormat format, guint plane)
 }
 
 QSGTexture *
-GstQSGMaterial::bind(GstQSGMaterialShader *shader, QRhi * rhi, QRhiResourceUpdateBatch *res_updates, guint plane, GstVideoFormat v_format)
+GstQSG6Material::bind(GstQSG6MaterialShader *shader, QRhi * rhi, QRhiResourceUpdateBatch *res_updates, guint plane, GstVideoFormat v_format)
 {
   GstGLContext *qt_context, *context;
   GstMemory *mem;

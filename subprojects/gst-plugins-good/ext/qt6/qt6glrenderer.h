@@ -107,13 +107,13 @@ private:
     struct SharedRenderData *m_sharedRenderData;
 };
 
-class CreateSurfaceWorker : public QObject
+class Qt6CreateSurfaceWorker : public QObject
 {
   Q_OBJECT
 
 public:
-  CreateSurfaceWorker (struct SharedRenderData * rdata);
-  ~CreateSurfaceWorker ();
+  Qt6CreateSurfaceWorker (struct SharedRenderData * rdata);
+  ~Qt6CreateSurfaceWorker ();
 
   bool event(QEvent *ev) override;
 

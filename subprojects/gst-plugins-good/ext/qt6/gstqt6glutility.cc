@@ -292,7 +292,7 @@ gst_qml6_get_gl_wrapcontext (GstGLDisplay * display,
 }
 
 QOpenGLContext *
-qt_opengl_native_context_from_gst_gl_context (GstGLContext * context)
+qt6_opengl_native_context_from_gst_gl_context (GstGLContext * context)
 {
   guintptr handle;
   GstGLPlatform platform;

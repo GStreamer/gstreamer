@@ -220,16 +220,16 @@ dup_shared_render_data (gpointer data, gpointer user_data)
   return NULL;
 }
 
-class CreateSurfaceEvent : public QEvent
+class Qt6CreateSurfaceEvent : public QEvent
 {
 public:
-  CreateSurfaceEvent (CreateSurfaceWorker * worker)
-      : QEvent(CreateSurfaceEvent::type())
+  Qt6CreateSurfaceEvent (Qt6CreateSurfaceWorker * worker)
+      : QEvent(Qt6CreateSurfaceEvent::type())
   {
     m_worker = worker;
   }
 
-  ~CreateSurfaceEvent()
+  ~Qt6CreateSurfaceEvent()
   {
     GST_TRACE ("%p destroying create surface event", this);
     delete m_worker;
@@ -246,25 +246,25 @@ public:
 
 private:
   static QEvent::Type customEventType;
-  CreateSurfaceWorker *m_worker;
+  Qt6CreateSurfaceWorker *m_worker;
 };
 
-QEvent::Type CreateSurfaceEvent::customEventType = QEvent::None;
+QEvent::Type Qt6CreateSurfaceEvent::customEventType = QEvent::None;
 
 
-CreateSurfaceWorker::CreateSurfaceWorker (struct SharedRenderData * rdata)
+Qt6CreateSurfaceWorker::Qt6CreateSurfaceWorker (struct SharedRenderData * rdata)
 {
   m_sharedRenderData = shared_render_data_ref (rdata);
 }
 
-CreateSurfaceWorker::~CreateSurfaceWorker ()
+Qt6CreateSurfaceWorker::~Qt6CreateSurfaceWorker ()
 {
   shared_render_data_unref (m_sharedRenderData);
 }
 
-bool CreateSurfaceWorker::event(QEvent * ev)
+bool Qt6CreateSurfaceWorker::event(QEvent * ev)
 {
-    if (ev->type() == CreateSurfaceEvent::type()) {
+    if (ev->type() == Qt6CreateSurfaceEvent::type()) {
         GST_TRACE ("%p creating surface", m_sharedRenderData);
         /* create the window surface in the main thread */
         g_mutex_lock (&m_sharedRenderData->lock);
@@ -284,7 +284,7 @@ bool GstQt6QuickRenderer::init (GstGLContext * context, GError ** error)
     g_return_val_if_fail (GST_IS_GL_CONTEXT (context), false);
     g_return_val_if_fail (gst_gl_context_get_current () == context, false);
 
-    QOpenGLContext *qt_native_context = qt_opengl_native_context_from_gst_gl_context (context);
+    QOpenGLContext *qt_native_context = qt6_opengl_native_context_from_gst_gl_context (context);
 
     if (!qt_native_context) {
         g_set_error (error, GST_RESOURCE_ERROR, GST_RESOURCE_ERROR_NOT_FOUND,
@@ -340,11 +340,11 @@ bool GstQt6QuickRenderer::init (GstGLContext * context, GError ** error)
             m_sharedRenderData->m_context = qt_native_context;
             GST_TRACE ("%p new QOpenGLContext %p", this, m_sharedRenderData->m_context);
 
-            CreateSurfaceWorker *w = new CreateSurfaceWorker (m_sharedRenderData);
+            Qt6CreateSurfaceWorker *w = new Qt6CreateSurfaceWorker (m_sharedRenderData);
             GST_TRACE ("%p posting create surface event to main thread with "
                 "worker %p", this, w);
             w->moveToThread (app->thread());
-            app->postEvent (w, new CreateSurfaceEvent (w));
+            app->postEvent (w, new Qt6CreateSurfaceEvent (w));
             m_sharedRenderData->state = STATE_WAITING_FOR_WINDOW;
         }
 

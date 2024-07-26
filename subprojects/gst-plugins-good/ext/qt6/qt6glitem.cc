@@ -274,7 +274,7 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     UpdatePaintNodeData * updatePaintNodeData)
 {
   GstBuffer *old_buffer;
-  GstQSGMaterial *tex = nullptr;
+  GstQSG6Material *tex = nullptr;
   QSGGeometry *geometry = nullptr;
   bool was_bound = false;
 
@@ -298,7 +298,7 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     gst_gl_context_activate (this->priv->other_context, TRUE);
 
   if (texNode) {
-    tex = static_cast<GstQSGMaterial *>(texNode->material());
+    tex = static_cast<GstQSG6Material *>(texNode->material());
     if (tex && !tex->compatibleWith(&this->priv->v_info)) {
       delete texNode;
       texNode = nullptr;
@@ -311,7 +311,7 @@ Qt6GLVideoItem::updatePaintNode(QSGNode * oldNode,
     geometry = new QSGGeometry(QSGGeometry::defaultAttributes_TexturedPoint2D(), 4);
     texNode->setGeometry(geometry);
     texNode->setFlag(QSGGeometryNode::OwnsGeometry);
-    tex = GstQSGMaterial::new_for_format(GST_VIDEO_INFO_FORMAT (&this->priv->v_info));
+    tex = GstQSG6Material::new_for_format(GST_VIDEO_INFO_FORMAT (&this->priv->v_info));
     tex->setFiltering(is_smooth ? QSGTexture::Filtering::Linear :
         QSGTexture::Filtering::Nearest);
     texNode->setMaterial(tex);
