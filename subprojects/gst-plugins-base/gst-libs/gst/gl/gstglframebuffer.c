@@ -576,8 +576,14 @@ gst_gl_context_check_framebuffer_status (GstGLContext * context,
       GST_WARNING_OBJECT (context, "GL_FRAMEBUFFER_UNDEFINED");
       break;
 #endif
+    case 0:
+      ret = context->gl_vtable->GetError ();
+      GST_ERROR_OBJECT (context,
+          "Error calling glCheckFramebufferStatus(0x%X): %d (0x%X)",
+          fbo_target, ret, ret);
+      break;
     default:
-      GST_WARNING_OBJECT (context, "Unknown FBO error: %d (0x%x)", ret, ret);
+      GST_WARNING_OBJECT (context, "Unknown FBO status: %d (0x%X)", ret, ret);
       break;
   }
 
