@@ -291,7 +291,6 @@ gst_validate_reporter_g_log_func (const gchar * log_domain,
 {
   GstValidateReporter *reporter = g_weak_ref_get (&log_reporter);
 
-  g_printerr ("G_LOG: %s\n", message);
   if (!reporter) {
     gst_validate_default_log_hanlder (log_domain, log_level, message, NULL);
     return;
