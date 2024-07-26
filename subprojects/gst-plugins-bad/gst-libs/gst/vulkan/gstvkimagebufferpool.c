@@ -171,11 +171,10 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   GstVulkanImageBufferPool *vk_pool = GST_VULKAN_IMAGE_BUFFER_POOL_CAST (pool);
   GstVulkanImageBufferPoolPrivate *priv = GET_PRIV (vk_pool);
   VkImageTiling tiling;
-  VkImageUsageFlags requested_usage, supported_usage;
+  VkImageUsageFlags requested_usage;
   VkImageCreateInfo image_info;
   guint min_buffers, max_buffers;
   GstCaps *caps = NULL, *decode_caps = NULL, *encode_caps = NULL;
-
   GstCapsFeatures *features;
   gboolean found, no_multiplane, ret = TRUE;
   guint i;
@@ -201,16 +200,15 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
       GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
 
   gst_vulkan_image_buffer_pool_config_get_allocation_params (config,
-      &priv->usage, &priv->mem_props, &priv->initial_layout,
+      &requested_usage, &priv->mem_props, &priv->initial_layout,
       &priv->initial_access, &priv->n_layers, &decode_caps, &encode_caps);
-
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   {
     guint n = 0;
 
     priv->n_profiles = 0;
-    if (decode_caps && ((priv->usage
+    if (decode_caps && ((requested_usage
                 & (VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
                     | VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR)) != 0)) {
       n++;
@@ -219,7 +217,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
         priv->n_profiles++;
     }
     gst_clear_caps (&decode_caps);
-    if (encode_caps && ((priv->usage
+    if (encode_caps && ((requested_usage
                 & (VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
                     | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR)) != 0)) {
       n++;
@@ -234,39 +232,30 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   }
   if (priv->n_profiles > 0) {
     no_multiplane = FALSE;
-
-    /* HACK(victor): NVIDIA & RADV drivers don't report decoding features for
-     * color format. Setting usage to zero to short circuit validation. */
-    requested_usage = 0;
   } else
 #endif
   {
     no_multiplane = TRUE;
-    requested_usage = priv->usage;
   }
 
   tiling = priv->raw_caps ? VK_IMAGE_TILING_LINEAR : VK_IMAGE_TILING_OPTIMAL;
   found = gst_vulkan_format_from_video_info_2 (vk_pool->device->physical_device,
       &priv->v_info, tiling, no_multiplane, requested_usage, priv->vk_fmts,
-      &priv->n_imgs, &supported_usage);
+      &priv->n_imgs, NULL);
   if (!found)
     goto no_vk_format;
-
-  if (priv->usage == 0) {
-    priv->usage = supported_usage & default_usage;
-  }
 
   {
     gboolean video = FALSE, sampleable;
     const GstVulkanFormatMap *vkmap;
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
-    video = (priv->usage & (VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
+    video = (requested_usage & (VK_IMAGE_USAGE_VIDEO_DECODE_DPB_BIT_KHR
             | VK_IMAGE_USAGE_VIDEO_DECODE_DST_BIT_KHR
             | VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR
             | VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR));
 #endif
-    sampleable = priv->usage &
+    sampleable = requested_usage &
         (VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT);
 
     if (sampleable && !video) {
@@ -293,7 +282,7 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
     .arrayLayers = priv->n_layers,
     .samples = VK_SAMPLE_COUNT_1_BIT,
     .tiling = tiling,
-    .usage = priv->usage,
+    .usage = requested_usage,
     .sharingMode = VK_SHARING_MODE_EXCLUSIVE,
     .queueFamilyIndexCount = 0,
     .pQueueFamilyIndices = NULL,
@@ -350,6 +339,8 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
 
   gst_buffer_pool_config_set_params (config, caps,
       priv->v_info.size, min_buffers, max_buffers);
+
+  priv->usage = requested_usage;
 
   return GST_BUFFER_POOL_CLASS (parent_class)->set_config (pool, config) && ret;
 
