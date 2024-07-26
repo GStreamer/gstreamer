@@ -85,6 +85,9 @@ enum
   PROP_HEIGHT_RELATIVE
 };
 
+GST_DEBUG_CATEGORY_STATIC (rsvg_overlay_debug);
+#define GST_CAT_DEFAULT rsvg_overlay_debug
+
 #define GST_RSVG_LOCK(overlay) G_STMT_START { \
   GST_LOG_OBJECT (overlay, "Locking rsvgoverlay from thread %p", g_thread_self ()); \
   g_mutex_lock (&overlay->rsvg_lock); \
@@ -122,7 +125,12 @@ static GstStaticPadTemplate data_sink_template =
     GST_STATIC_CAPS ("image/svg+xml; image/svg; text/plain"));
 
 #define gst_rsv_overlay_parent_class parent_class
-G_DEFINE_TYPE (GstRsvgOverlay, gst_rsvg_overlay, GST_TYPE_VIDEO_FILTER);
+
+#define _do_init \
+    GST_DEBUG_CATEGORY_INIT (rsvg_overlay_debug, "rsvgoverlay", 0, "SVG Overlay");
+
+G_DEFINE_TYPE_WITH_CODE (GstRsvgOverlay, gst_rsvg_overlay,
+    GST_TYPE_VIDEO_FILTER, _do_init);
 GST_ELEMENT_REGISTER_DEFINE (rsvgoverlay, "rsvgoverlay", GST_RANK_NONE,
     GST_TYPE_RSVG_OVERLAY);
 
