@@ -344,6 +344,7 @@ struct _GstD3D12MemoryPrivate
   gpointer staging_ptr = nullptr;
 
   D3D12_RESOURCE_DESC desc;
+  D3D12_HEAP_FLAGS heap_flags;
 
   HANDLE nt_handle = nullptr;
   std::map<gint64, std::unique_ptr<GstD3D12MemoryTokenData>> token_map;
@@ -939,6 +940,9 @@ gst_d3d12_memory_get_nt_handle_unlocked (GstD3D12Memory * mem, HANDLE * handle)
     return TRUE;
   }
 
+  if ((priv->heap_flags & D3D12_HEAP_FLAG_SHARED) != D3D12_HEAP_FLAG_SHARED)
+    return FALSE;
+
   auto device = gst_d3d12_device_get_device_handle (mem->device);
   auto hr = device->CreateSharedHandle (priv->resource.Get (), nullptr,
       GENERIC_ALL, nullptr, &priv->nt_handle);
@@ -1120,8 +1124,12 @@ gst_d3d12_memory_get_d3d11_texture (GstD3D12Memory * mem,
     return (*it)->texture11.Get ();
 
   HANDLE shared_handle;
-  if (!gst_d3d12_memory_get_nt_handle_unlocked (mem, &shared_handle))
+  /* d3d11 interop requires rtv binding and shared heap */
+  if ((priv->desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET) !=
+      D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET ||
+      !gst_d3d12_memory_get_nt_handle_unlocked (mem, &shared_handle)) {
     return nullptr;
+  }
 
   ComPtr < ID3D11Device1 > device11_1;
   auto hr = device11->QueryInterface (IID_PPV_ARGS (&device11_1));
@@ -1344,6 +1352,7 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
   auto desc = GetDesc (resource);
   guint8 num_subresources =
       D3D12GetFormatPlaneCount (device_handle, desc.Format);
+  D3D12_HEAP_FLAGS heap_flags;
 
   if (num_subresources == 0) {
     GST_ERROR_OBJECT (allocator, "Couldn't get format info");
@@ -1355,11 +1364,18 @@ gst_d3d12_allocator_alloc_wrapped (GstD3D12Allocator * allocator,
     return nullptr;
   }
 
+  auto hr = resource->GetHeapProperties (nullptr, &heap_flags);
+  if (!gst_d3d12_result (hr, device)) {
+    GST_ERROR_OBJECT (allocator, "Couldn't get heap property");
+    return nullptr;
+  }
+
   auto mem = g_new0 (GstD3D12Memory, 1);
   mem->priv = new GstD3D12MemoryPrivate ();
 
   auto priv = mem->priv;
   priv->desc = desc;
+  priv->heap_flags = heap_flags;
   priv->num_subresources = num_subresources;
   priv->resource = resource;
   gst_d3d12_dxgi_format_get_resource_format (priv->desc.Format,
