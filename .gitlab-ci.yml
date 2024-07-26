@@ -428,7 +428,17 @@ build fedora gcc:
         #
         # Disabling gstreamer-sharp tests because they download things as part of configure with
         # nuget which frequently fails on the CI (possibly because we're hammering the site)
-        MESON_ARGS: "${DEFAULT_MESON_ARGS} -Dvaapi=disabled -Dpython=auto -Dgst-editing-services:python=disabled -Dintrospection=disabled -Ddoc=disabled -Dgstreamer-sharp:tests=disabled"
+        #
+        # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
+        MESON_ARGS: >-
+          ${DEFAULT_MESON_ARGS}
+          -Dvaapi=disabled
+          -Dpython=auto
+          -Dgst-editing-services:python=disabled
+          -Dintrospection=disabled
+          -Ddoc=disabled
+          -Dgstreamer-sharp:tests=disabled
+          -Dqt5=disabled -Dqt6=enabled
 
 build fedora clang:
   extends: '.build fedora x86_64'
@@ -449,6 +459,8 @@ build fedora clang:
         #
         # Disabling gstreamer-sharp tests because they download things as part of configure with
         # nuget which frequently fails on the CI (possibly because we're hammering the site)
+        #
+        # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
         MESON_ARGS: >-
           ${DEFAULT_MESON_ARGS}
           -Dvaapi=disabled
@@ -456,6 +468,7 @@ build fedora clang:
           -Dpython=disabled
           -Ddoc=disabled
           -Dgstreamer-sharp:tests=disabled
+          -Dqt5=disabled -Dqt6=enabled
 
 build debian x86_64:
   extends:
@@ -782,8 +795,11 @@ gstreamer-full static build:
   stage: 'build'
   variables:
     BUILD_TYPE: "--default-library=static"
+    # Disabling building both qt5 and qt6 when doing static builds since we can only link against one
     MESON_ARGS: >-
       -Ddoc=disabled
+      -Dqt5=disabled -Dqt6=enabled
+
     SUBPROJECTS_CACHE_DIR: "/subprojects"
   script:
   - $CI_PROJECT_DIR/ci/scripts/build.sh build/
