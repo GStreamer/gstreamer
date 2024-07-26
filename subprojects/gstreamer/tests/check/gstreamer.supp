@@ -4095,3 +4095,14 @@
   ...
   fun:g_socket_create_source
 }
+
+{
+   And more dlopen work leaks
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:dl_open_worker_begin
+   ...
+   fun:dl_open_worker
+}
+
