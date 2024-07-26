@@ -888,8 +888,13 @@ gst_svtav1enc_dequeue_encoded_frames (GstSvtAv1Enc * svtav1enc,
       return GST_FLOW_ERROR;
     } else if (res != EB_NoErrorEmptyQueue && output_frames && output_buf) {
       // AV1 has no frame re-ordering so always get the oldest frame
-      frame =
-          gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (svtav1enc));
+      if (!(frame =
+              gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER
+                  (svtav1enc)))) {
+        svt_av1_enc_release_out_buffer (&output_buf);
+        break;
+      }
+
       if (output_buf->pic_type == EB_AV1_KEY_PICTURE
           || output_buf->pic_type == EB_AV1_INTRA_ONLY_PICTURE) {
         GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
