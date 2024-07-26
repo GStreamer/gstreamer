@@ -1154,6 +1154,9 @@ gst_adaptive_demux2_stream_create_parser (GstAdaptiveDemux2Stream * stream)
     }
 
     stream->parsebin = gst_element_factory_make ("parsebin", NULL);
+    if (stream->parsebin == NULL) {
+      return FALSE;
+    }
     if (tsdemux_type)
       g_signal_connect (stream->parsebin, "deep-element-added",
           (GCallback) parsebin_deep_element_added_cb, demux);
