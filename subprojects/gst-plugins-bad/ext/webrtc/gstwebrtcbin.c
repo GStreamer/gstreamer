@@ -8777,8 +8777,11 @@ gst_webrtc_bin_dispose (GObject * object)
 {
   GstWebRTCBin *webrtc = GST_WEBRTC_BIN (object);
 
-  if (webrtc->priv->ice)
+  if (webrtc->priv->ice) {
+    gst_webrtc_ice_set_on_ice_candidate (webrtc->priv->ice, NULL, NULL, NULL);
+    g_signal_handlers_disconnect_by_data (webrtc->priv->ice, webrtc);
     gst_object_unref (webrtc->priv->ice);
+  }
   webrtc->priv->ice = NULL;
 
   if (webrtc->priv->ice_stream_map)
