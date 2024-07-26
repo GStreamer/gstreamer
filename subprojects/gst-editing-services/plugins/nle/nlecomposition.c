@@ -2072,7 +2072,7 @@ nle_composition_event_handler (GstPad * ghostpad, GstObject * parent,
           || comp->priv->waiting_serialized_query_or_buffer) {
         GST_INFO_OBJECT (comp,
             "QoS event while setting up new stack... discarding");
-
+        gst_event_unref (event);
         goto beach;
       }
 
