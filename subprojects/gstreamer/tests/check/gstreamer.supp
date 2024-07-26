@@ -4113,3 +4113,13 @@
    fun:duk_heap_mem_realloc_indirect.lto_priv.0
    fun:duk_hbuffer_resize.lto_priv.0
 }
+
+{
+   And more dlopen work leaks
+   Memcheck:Leak
+   fun:malloc
+   ...
+   fun:dl_open_worker_begin
+   ...
+   fun:dl_open_worker
+}
