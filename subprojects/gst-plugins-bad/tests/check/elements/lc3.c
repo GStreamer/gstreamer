@@ -316,6 +316,7 @@ dec_plc_test (void)
 
   gst_buffer_unref (buf);
   gst_harness_teardown (h);
+  gst_object_unref (dec);
 }
 
 GST_START_TEST (test_48k_8ch_10000us)
