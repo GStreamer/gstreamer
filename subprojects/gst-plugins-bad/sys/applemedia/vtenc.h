@@ -77,6 +77,8 @@ struct _GstVTEnc
   CFStringRef profile_level;
   GstH264Profile h264_profile;
   guint bitrate;
+  guint max_bitrate;
+  float bitrate_window;
   gboolean allow_frame_reordering;
   gboolean realtime;
   gdouble quality;
