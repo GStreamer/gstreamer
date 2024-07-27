@@ -84,6 +84,7 @@ struct _GstVTEnc
   gdouble quality;
   gint max_keyframe_interval;
   GstClockTime max_keyframe_interval_duration;
+  gint max_frame_delay;
   gint latency_frames;
   gboolean preserve_alpha;
   GstVtencRateControl rate_control;

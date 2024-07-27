@@ -194,6 +194,7 @@ enum
   PROP_PRESERVE_ALPHA,
   PROP_RATE_CONTROL,
   PROP_DATA_RATE_LIMITS,
+  PROP_MAX_FRAME_DELAY,
 };
 
 typedef struct _GstVTEncFrame GstVTEncFrame;
@@ -235,6 +236,8 @@ static void gst_vtenc_session_configure_max_keyframe_interval (GstVTEnc * self,
     VTCompressionSessionRef session, gint interval);
 static void gst_vtenc_session_configure_max_keyframe_interval_duration
     (GstVTEnc * self, VTCompressionSessionRef session, gdouble duration);
+static void gst_vtenc_session_configure_max_frame_delay (GstVTEnc * self,
+    VTCompressionSessionRef session, int delay);
 static void gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     VTCompressionSessionRef session, guint bitrate);
 static OSStatus gst_vtenc_session_configure_property_int (GstVTEnc * self,
@@ -501,9 +504,19 @@ gst_vtenc_class_init (GstVTEncClass * klass)
 
   /*
    * H264 doesn't support alpha components, and H265 uses a separate element for encoding
-   * with alpha, so only add the property for prores
+   * with alpha, so only add the preserve-alpha property for ProRes.
+   *
+   * MaxFrameDelayCount seems to only be supported with ProRes
    */
   if (g_strcmp0 (G_OBJECT_CLASS_NAME (klass), "vtenc_prores") == 0) {
+    /**
+     * Since: 1.26
+     */
+    g_object_class_install_property (gobject_class, PROP_MAX_FRAME_DELAY,
+        g_param_spec_int ("max-frame-delay", "Maximum Frame Delay",
+            "Maximum frames allowed in the compression window (-1 = unlimited)",
+            -1, G_MAXINT, -1,
+            G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
     /**
      * vtenc_prores:preserve-alpha
      *
@@ -639,6 +652,16 @@ gst_vtenc_set_max_keyframe_interval_duration (GstVTEnc * self,
 }
 
 static void
+gst_vtenc_set_max_frame_delay (GstVTEnc * self, int delay)
+{
+  GST_OBJECT_LOCK (self);
+  self->max_frame_delay = delay;
+  if (self->session != NULL)
+    gst_vtenc_session_configure_max_frame_delay (self, self->session, delay);
+  GST_OBJECT_UNLOCK (self);
+}
+
+static void
 gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
@@ -671,6 +694,9 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
       g_value_take_string (value, g_strdup_printf ("%u,%.5f",
               self->max_bitrate / 1000, self->bitrate_window));
       GST_OBJECT_UNLOCK (self);
+      break;
+    case PROP_MAX_FRAME_DELAY:
+      g_value_set_int (value, self->max_frame_delay);
       break;
     case PROP_PRESERVE_ALPHA:
       g_value_set_boolean (value, self->preserve_alpha);
@@ -724,6 +750,9 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
         g_warning ("Failed to parse data rate limits: '%s'", s);
       }
     }
+      break;
+    case PROP_MAX_FRAME_DELAY:
+      gst_vtenc_set_max_frame_delay (self, g_value_get_int (value));
       break;
     case PROP_PRESERVE_ALPHA:
       self->preserve_alpha = g_value_get_boolean (value);
@@ -1443,11 +1472,10 @@ gst_vtenc_create_session (GstVTEnc * self)
   VTCompressionSessionRef session = NULL;
   CFMutableDictionaryRef encoder_spec = NULL, pb_attrs = NULL;
   OSStatus status;
-
-#if !HAVE_IOS
   const GstVTEncoderDetails *codec_details =
       GST_VTENC_CLASS_GET_CODEC_DETAILS (G_OBJECT_GET_CLASS (self));
 
+#if !HAVE_IOS
   /* Apple's M1 hardware encoding fails when provided with an interlaced ProRes source.
    * It's most likely a bug in VideoToolbox, as no such limitation has been officially mentioned anywhere.
    * For now let's disable HW encoding entirely when such case occurs. */
@@ -1523,6 +1551,9 @@ gst_vtenc_create_session (GstVTEnc * self)
         self->max_keyframe_interval);
     gst_vtenc_session_configure_max_keyframe_interval_duration (self, session,
         self->max_keyframe_interval_duration / ((gdouble) GST_SECOND));
+    if (codec_details->format_id == GST_kCMVideoCodecType_Some_AppleProRes)
+      gst_vtenc_session_configure_max_frame_delay (self, session,
+          self->max_frame_delay);
 
     gst_vtenc_session_configure_bitrate (self, session, self->bitrate);
   }
@@ -1699,6 +1730,16 @@ gst_vtenc_session_configure_max_keyframe_interval_duration (GstVTEnc * self,
 {
   gst_vtenc_session_configure_property_double (self, session,
       kVTCompressionPropertyKey_MaxKeyFrameIntervalDuration, duration);
+}
+
+static void
+gst_vtenc_session_configure_max_frame_delay (GstVTEnc * self,
+    VTCompressionSessionRef session, int delay)
+{
+  if (delay < 0)
+    delay = kVTUnlimitedFrameDelayCount;
+  gst_vtenc_session_configure_property_int (self, session,
+      kVTCompressionPropertyKey_MaxFrameDelayCount, delay);
 }
 
 static void
@@ -2079,7 +2120,6 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstVideoCodecFrame * frame)
   /* HEVCWithAlpha encoder has a bug where it does not throttle the amount
    * of input frames queued internally. Other encoders do not have this
    * problem and correctly block until the internal queue has space.
-   * Trying to use kVTCompressionPropertyKey_MaxFrameDelayCount does not help.
    * When paired with a fast enough source like videotestsrc, this can result in
    * a ton of memory being taken up by frames inside the encoder, eventually killing
    * the process because of OOM.
