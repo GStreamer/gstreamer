@@ -193,6 +193,7 @@ enum
   PROP_MAX_KEYFRAME_INTERVAL_DURATION,
   PROP_PRESERVE_ALPHA,
   PROP_RATE_CONTROL,
+  PROP_DATA_RATE_LIMITS,
 };
 
 typedef struct _GstVTEncFrame GstVTEncFrame;
@@ -489,6 +490,15 @@ gst_vtenc_class_init (GstVTEncClass * klass)
           GST_VTENC_RATE_CONTROL_ABR,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, PROP_DATA_RATE_LIMITS,
+      g_param_spec_string ("data-rate-limits", "Data Rate Limits",
+          "Desired bitrate in kbps averaged over a duration in seconds: "
+          "bitrate,duration (0,0 = disabled)", "0,0",
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
   /*
    * H264 doesn't support alpha components, and H265 uses a separate element for encoding
    * with alpha, so only add the property for prores
@@ -656,6 +666,12 @@ gst_vtenc_get_property (GObject * obj, guint prop_id, GValue * value,
     case PROP_RATE_CONTROL:
       g_value_set_enum (value, self->rate_control);
       break;
+    case PROP_DATA_RATE_LIMITS:
+      GST_OBJECT_LOCK (self);
+      g_value_take_string (value, g_strdup_printf ("%u,%.5f",
+              self->max_bitrate / 1000, self->bitrate_window));
+      GST_OBJECT_UNLOCK (self);
+      break;
     case PROP_PRESERVE_ALPHA:
       g_value_set_boolean (value, self->preserve_alpha);
       break;
@@ -693,6 +709,21 @@ gst_vtenc_set_property (GObject * obj, guint prop_id, const GValue * value,
       break;
     case PROP_RATE_CONTROL:
       self->rate_control = g_value_get_enum (value);
+      break;
+    case PROP_DATA_RATE_LIMITS:
+    {
+      guint max_bitrate;
+      float window;
+      const char *s = g_value_get_string (value);
+      if (s && sscanf (s, "%u,%f", &max_bitrate, &window) == 2) {
+        GST_OBJECT_LOCK (self);
+        self->max_bitrate = max_bitrate * 1000;
+        self->bitrate_window = window;
+        GST_OBJECT_UNLOCK (self);
+      } else {
+        g_warning ("Failed to parse data rate limits: '%s'", s);
+      }
+    }
       break;
     case PROP_PRESERVE_ALPHA:
       self->preserve_alpha = g_value_get_boolean (value);
@@ -1687,6 +1718,38 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
 #endif
     {
       GST_WARNING_OBJECT (self, "CBR is unsupported on your system, using ABR");
+    }
+  }
+
+  if (self->max_bitrate > 0 && self->bitrate_window > 0) {
+    if (self->rate_control == GST_VTENC_RATE_CONTROL_CBR)
+      GST_INFO_OBJECT (self, "Ignoring data-rate-limits property, CBR mode is "
+          "enabled");
+
+    if (key == kVTCompressionPropertyKey_AverageBitRate) {
+      /* Convert to bytes */
+      int size = (self->max_bitrate * self->bitrate_window) / 8;
+
+      CFNumberRef cf_size = CFNumberCreate (NULL, kCFNumberIntType, &size);
+      CFNumberRef cf_window = CFNumberCreate (NULL, kCFNumberFloatType,
+          &self->bitrate_window);
+
+      CFTypeRef values[2] = { cf_size, cf_window };
+      CFArrayRef data = CFArrayCreate (NULL, values, 2, &kCFTypeArrayCallBacks);
+
+      OSStatus code = VTSessionSetProperty (session,
+          kVTCompressionPropertyKey_DataRateLimits, data);
+      if (code != noErr)
+        GST_WARNING_OBJECT (self,
+            "FAILED: kVTCompressionPropertyKey_DataRateLimits %i, %f => %i",
+            size, self->bitrate_window, code);
+      else
+        GST_DEBUG_OBJECT (self, "kVTCompressionPropertyKey_DataRateLimits "
+            "%i, %f => %i", size, self->bitrate_window, code);
+
+      CFRelease (cf_size);
+      CFRelease (cf_window);
+      CFRelease (data);
     }
   }
 
