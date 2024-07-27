@@ -1609,8 +1609,9 @@ gst_vtenc_create_session (GstVTEnc * self)
   gst_vtenc_session_configure_realtime (self, session, self->realtime);
   gst_vtenc_session_configure_allow_frame_reordering (self, session,
       self->allow_frame_reordering);
-  gst_vtenc_session_configure_property_double (self, session,
-      kVTCompressionPropertyKey_Quality, self->quality);
+  if (codec_details->format_id != GST_kCMVideoCodecType_Some_AppleProRes)
+    gst_vtenc_session_configure_property_double (self, session,
+        kVTCompressionPropertyKey_Quality, self->quality);
 
   if (self->dump_properties) {
     gst_vtenc_session_dump_properties (self, session);
