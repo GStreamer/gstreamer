@@ -94,3 +94,17 @@
    fun:create_context
    fun:receive_netlink_message
 }
+{
+   Issues in srt library
+   Memcheck:Param
+   sendmsg(msg.msg_control)
+   fun:__libc_sendmsg
+   fun:sendmsg
+   fun:_ZNK3srt8CChannel6sendtoERKNS_12sockaddr_anyERNS_7CPacketES3_
+}
+
+{
+   Issues in srt library
+   Memcheck:Cond
+   fun:_ZN3srt4CUDT11sendCtrlAckERNS_7CPacketEi
+}
