@@ -1307,11 +1307,10 @@ gst_vtenc_create_session (GstVTEnc * self)
   VTCompressionSessionRef session = NULL;
   CFMutableDictionaryRef encoder_spec = NULL, pb_attrs = NULL;
   OSStatus status;
-
-#if !HAVE_IOS
   const GstVTEncoderDetails *codec_details =
       GST_VTENC_CLASS_GET_CODEC_DETAILS (G_OBJECT_GET_CLASS (self));
 
+#if !HAVE_IOS
   /* Apple's M1 hardware encoding fails when provided with an interlaced ProRes source.
    * It's most likely a bug in VideoToolbox, as no such limitation has been officially mentioned anywhere.
    * For now let's disable HW encoding entirely when such case occurs. */
@@ -1442,8 +1441,9 @@ gst_vtenc_create_session (GstVTEnc * self)
   gst_vtenc_session_configure_realtime (self, session, self->realtime);
   gst_vtenc_session_configure_allow_frame_reordering (self, session,
       self->allow_frame_reordering);
-  gst_vtenc_session_configure_property_double (self, session,
-      kVTCompressionPropertyKey_Quality, self->quality);
+  if (codec_details->format_id != GST_kCMVideoCodecType_Some_AppleProRes)
+    gst_vtenc_session_configure_property_double (self, session,
+        kVTCompressionPropertyKey_Quality, self->quality);
 
   if (self->dump_properties) {
     gst_vtenc_session_dump_properties (self, session);
