@@ -1603,7 +1603,10 @@ gst_vtenc_session_configure_property_int (GstVTEnc * self,
   CFRelease (num);
 
   CFStringGetCString (name, name_str, sizeof (name_str), kCFStringEncodingUTF8);
-  GST_DEBUG_OBJECT (self, "%s(%d) => %d", name_str, value, (int) status);
+  if (status != noErr)
+    GST_WARNING_OBJECT (self, "FAILED: %s(%d) => %d", name_str, value, status);
+  else
+    GST_DEBUG_OBJECT (self, "%s(%d) => %d", name_str, value, status);
 
   return status;
 }
@@ -1621,7 +1624,10 @@ gst_vtenc_session_configure_property_double (GstVTEnc * self,
   CFRelease (num);
 
   CFStringGetCString (name, name_str, sizeof (name_str), kCFStringEncodingUTF8);
-  GST_DEBUG_OBJECT (self, "%s(%f) => %d", name_str, value, (int) status);
+  if (status != noErr)
+    GST_WARNING_OBJECT (self, "FAILED: %s(%f) => %d", name_str, value, status);
+  else
+    GST_DEBUG_OBJECT (self, "%s(%f) => %d", name_str, value, status);
 
   return status;
 }
