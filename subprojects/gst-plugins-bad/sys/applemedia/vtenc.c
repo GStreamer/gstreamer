@@ -1705,6 +1705,9 @@ static void
 gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     VTCompressionSessionRef session, guint bitrate)
 {
+  gboolean emulate_cbr = FALSE;
+  double bitrate_window = self->bitrate_window;
+  guint max_bitrate = self->max_bitrate;
   CFStringRef key = kVTCompressionPropertyKey_AverageBitRate;
 
   if (self->rate_control == GST_VTENC_RATE_CONTROL_CBR) {
@@ -1717,22 +1720,28 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     } else
 #endif
     {
-      GST_WARNING_OBJECT (self, "CBR is unsupported on your system, using ABR");
+      GST_INFO_OBJECT (self, "CBR is unsupported on your system, emulating "
+          "with custom data rate limits");
+      emulate_cbr = TRUE;
+      max_bitrate = bitrate;
+      gst_util_fraction_to_double (self->video_info.fps_d,
+          self->video_info.fps_n, &bitrate_window);
     }
   }
 
-  if (self->max_bitrate > 0 && self->bitrate_window > 0) {
-    if (self->rate_control == GST_VTENC_RATE_CONTROL_CBR)
+  if (max_bitrate > 0 && bitrate_window > 0) {
+    if (self->rate_control == GST_VTENC_RATE_CONTROL_CBR &&
+        self->max_bitrate > 0 && self->bitrate_window > 0)
       GST_INFO_OBJECT (self, "Ignoring data-rate-limits property, CBR mode is "
           "enabled");
 
     if (key == kVTCompressionPropertyKey_AverageBitRate) {
       /* Convert to bytes */
-      int size = (self->max_bitrate * self->bitrate_window) / 8;
+      int size = (max_bitrate * bitrate_window) / 8;
 
       CFNumberRef cf_size = CFNumberCreate (NULL, kCFNumberIntType, &size);
       CFNumberRef cf_window = CFNumberCreate (NULL, kCFNumberFloatType,
-          &self->bitrate_window);
+          &bitrate_window);
 
       CFTypeRef values[2] = { cf_size, cf_window };
       CFArrayRef data = CFArrayCreate (NULL, values, 2, &kCFTypeArrayCallBacks);
@@ -1753,7 +1762,8 @@ gst_vtenc_session_configure_bitrate (GstVTEnc * self,
     }
   }
 
-  gst_vtenc_session_configure_property_int (self, session, key, bitrate);
+  if (!emulate_cbr)
+    gst_vtenc_session_configure_property_int (self, session, key, bitrate);
 }
 
 static void
