@@ -543,6 +543,17 @@ _modifier_found (guint64 modifier, guint64 * modifiers, guint num_modifiers)
   return FALSE;
 }
 
+static void
+_close_fds (VADRMPRIMESurfaceDescriptor * desc)
+{
+#ifndef G_OS_WIN32
+  for (guint32 i = 0; i < desc->num_objects; i++) {
+    gint fd = desc->objects[i].fd;
+    close (fd);
+  }
+#endif
+}
+
 static gboolean
 _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
     guint usage_hint, guint64 * modifiers, guint num_modifiers,
@@ -629,10 +640,7 @@ _va_create_surface_and_export_to_dmabuf (GstVaDisplay * display,
 failed:
   {
     /* Free DMAbufs on failure */
-    for (guint32 i = 0; i < desc.num_objects; i++) {
-      gint fd = desc.objects[i].fd;
-      close (fd);
-    }
+    _close_fds (&desc);
     va_destroy_surfaces (display, &surface, 1);
     return FALSE;
   }
@@ -666,10 +674,7 @@ gst_va_dmabuf_get_modifier_for_format (GstVaDisplay * display,
     return DRM_FORMAT_MOD_INVALID;
 
   /* Close the fds we won't be using */
-  for (guint32 i = 0; i < desc.num_objects; i++) {
-    gint fd = desc.objects[i].fd;
-    close (fd);
-  }
+  _close_fds (&desc);
   va_destroy_surfaces (display, &surface, 1);
 
   return desc.objects[0].drm_format_modifier;
