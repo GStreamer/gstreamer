@@ -3600,8 +3600,7 @@ gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
     if ((align->padding_left + align->padding_top) > 0)
       GST_WARNING_OBJECT (v4l2object->dbg_obj,
           "Left and top padding is not permitted for tiled formats");
-    memset (v4l2object->plane_size, 0,
-        sizeof (v4l2object->plane_size[0] * GST_VIDEO_MAX_PLANES));
+    memset (v4l2object->plane_size, 0, sizeof (v4l2object->plane_size));
   } else {
     if (!gst_video_info_align_full (info, align, v4l2object->plane_size)) {
       GST_WARNING_OBJECT (v4l2object->dbg_obj, "Failed to align video info");
