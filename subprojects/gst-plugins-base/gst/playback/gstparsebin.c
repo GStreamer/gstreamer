@@ -3190,9 +3190,28 @@ gst_parse_chain_accept_caps (GstParseChain * chain, GstCaps * caps)
       GST_ELEMENT_NAME (initial_element->element), caps);
 
   sink = gst_element_get_static_pad (initial_element->element, "sink");
-  ret = gst_pad_query_accept_caps (sink, caps);
-  gst_object_unref (sink);
-
+  if (sink) {
+    ret = gst_pad_query_accept_caps (sink, caps);
+    gst_object_unref (sink);
+  } else {
+    GST_OBJECT_LOCK (initial_element->element);
+    if (G_UNLIKELY (!initial_element->element->numsinkpads)) {
+      GST_ERROR_OBJECT (chain->parsebin,
+          "element %" GST_PTR_FORMAT " has no sink pad",
+          initial_element->element);
+      GST_OBJECT_UNLOCK (initial_element->element);
+      return FALSE;
+    }
+    GstPad *pad =
+        GST_PAD_CAST (gst_object_ref (initial_element->element->sinkpads));
+    GST_OBJECT_UNLOCK (initial_element->element);
+    GST_DEBUG_OBJECT (chain->parsebin,
+        "element %" GST_PTR_FORMAT
+        " doesn't have a 'sink' pad, sending accept-caps query to "
+        "%" GST_PTR_FORMAT, initial_element->element, pad);
+    ret = gst_pad_query_accept_caps (pad, caps);
+    gst_object_unref (pad);
+  }
   GST_DEBUG_OBJECT (chain->parsebin, "Chain can%s handle caps",
       ret ? "" : " NOT");
 
