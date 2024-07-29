@@ -8,7 +8,7 @@ sed -i '/tsflags=nodocs/d' /etc/dnf/dnf.conf
 dnf -y swap coreutils-single coreutils-full
 
 # Add rpm fusion repositories in order to access all of the gst plugins
-sudo dnf install -y \
+dnf install -y \
   "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
   "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 

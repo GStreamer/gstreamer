@@ -130,7 +130,6 @@ trigger:
 .fedora image:
   variables:
     CCACHE_DIR: '/cache/gstreamer/gstreamer/ccache/'
-    FDO_BASE_IMAGE: 'registry.fedoraproject.org/fedora-toolbox:40'
     FDO_DISTRIBUTION_VERSION: '40'
     FDO_REPO_SUFFIX: "$FEDORA_AMD64_SUFFIX"
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
@@ -145,6 +144,21 @@ fedora amd64 docker:
   # Note: assumption is that placeholder jobs run on a packet runner
   # (which has faster network connectivity to the registry).
   tags: [ 'placeholder-job' ]
+
+# Build a toolbox specific image to workaround ci-templates
+fedora amd64 toolbox:
+  image: quay.io/freedesktop.org/ci-templates:container-build-base-2024-01-31.0
+  stage: 'preparation'
+  needs: ["fedora amd64 docker"]
+  # Note: assumption is that placeholder jobs run on a packet runner
+  # (which has faster network connectivity to the registry).
+  tags: [ 'placeholder-job' ]
+  variables:
+    GST_CI_IMAGE: !reference [".build fedora x86_64", "variables", FDO_DISTRIBUTION_IMAGE]
+    FDO_DISTRIBUTION_TAG: !reference [".fedora image", "variables", FDO_DISTRIBUTION_TAG]
+    FDO_REPO_SUFFIX: !reference [".fedora image", "variables", FDO_REPO_SUFFIX]
+  script:
+    - bash ci/scripts/build-toolbox-image.sh $GST_CI_IMAGE $FDO_DISTRIBUTION_TAG $GST_UPSTREAM_BRANCH
 
 .debian image:
   variables:
