@@ -12,6 +12,10 @@ dnf install -y \
   "https://mirrors.rpmfusion.org/free/fedora/rpmfusion-free-release-$(rpm -E %fedora).noarch.rpm" \
   "https://mirrors.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-$(rpm -E %fedora).noarch.rpm"
 
+# Enable the debuginfo repos so -debug packages are kept in sync
+dnf install -y dnf-plugins-core
+dnf config-manager --set-enabled '*-debuginfo'
+
 dnf upgrade -y && dnf distro-sync -y
 
 # Install the dependencies of gstreamer
