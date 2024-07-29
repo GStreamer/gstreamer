@@ -551,6 +551,7 @@ if need_platform_egl != 'no'
     gl_egl_sources += files([
       'egl/gstegl.c',
       'egl/gsteglimage.c',
+      'egl/gsteglimagecache.c',
       'egl/gstglcontext_egl.c',
       'egl/gstgldisplay_egl.c',
       'egl/gstglmemoryegl.c',

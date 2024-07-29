@@ -32,6 +32,7 @@
 #if GST_GL_HAVE_PLATFORM_EGL
 #include "egl/gsteglimage.h"
 #include "egl/gsteglimage_private.h"
+#include "egl/gsteglimagecache.h"
 #include "egl/gstglmemoryegl.h"
 #include "egl/gstglcontext_egl.h"
 #endif
@@ -717,18 +718,6 @@ static const UploadMethod _gl_memory_upload = {
 
 #if GST_GL_HAVE_DMABUF
 
-typedef struct _GstEGLImageCacheEntry
-{
-  GstEGLImage *eglimage[GST_VIDEO_MAX_PLANES];
-} GstEGLImageCacheEntry;
-
-typedef struct _GstEGLImageCache
-{
-  gint ref_count;
-  GHashTable *hash_table;       /* for GstMemory -> GstEGLImageCacheEntry lookup */
-  GMutex lock;                  /* protects hash_table */
-} GstEGLImageCache;
-
 struct DmabufUpload
 {
   GstGLUpload *upload;
@@ -746,112 +735,6 @@ struct DmabufUpload
   /* only used for pointer comparison */
   gpointer out_caps;
 };
-
-static void
-gst_egl_image_cache_ref (GstEGLImageCache * cache)
-{
-  g_atomic_int_inc (&cache->ref_count);
-}
-
-static void
-gst_egl_image_cache_unref (GstEGLImageCache * cache)
-{
-  if (g_atomic_int_dec_and_test (&cache->ref_count)) {
-    g_hash_table_unref (cache->hash_table);
-    g_mutex_clear (&cache->lock);
-    g_free (cache);
-  }
-}
-
-static void
-gst_egl_image_cache_entry_remove (GstEGLImageCache * cache, GstMiniObject * mem)
-{
-  g_mutex_lock (&cache->lock);
-  g_hash_table_remove (cache->hash_table, mem);
-  g_mutex_unlock (&cache->lock);
-  gst_egl_image_cache_unref (cache);
-}
-
-static GstEGLImageCacheEntry *
-gst_egl_image_cache_entry_new (GstEGLImageCache * cache, GstMemory * mem)
-{
-  GstEGLImageCacheEntry *cache_entry;
-
-  cache_entry = g_new0 (GstEGLImageCacheEntry, 1);
-  gst_egl_image_cache_ref (cache);
-  gst_mini_object_weak_ref (GST_MINI_OBJECT (mem),
-      (GstMiniObjectNotify) gst_egl_image_cache_entry_remove, cache);
-  g_mutex_lock (&cache->lock);
-  g_hash_table_insert (cache->hash_table, mem, cache_entry);
-  g_mutex_unlock (&cache->lock);
-
-  return cache_entry;
-}
-
-static void
-gst_egl_image_cache_entry_free (GstEGLImageCacheEntry * cache_entry)
-{
-  gint i;
-
-  for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-    if (cache_entry->eglimage[i])
-      gst_egl_image_unref (cache_entry->eglimage[i]);
-  }
-  g_free (cache_entry);
-}
-
-/*
- * Looks up a cache_entry for mem if mem is different from previous_mem.
- * If mem is the same as previous_mem, the costly lookup is skipped and the
- * provided (previous) cache_entry is used instead.
- *
- * Returns the cached eglimage for the given plane from the cache_entry, or
- * NULL. previous_mem is set to mem.
- */
-static GstEGLImage *
-gst_egl_image_cache_lookup (GstEGLImageCache * cache, GstMemory * mem,
-    gint plane, GstMemory ** previous_mem, GstEGLImageCacheEntry ** cache_entry)
-{
-  if (mem != *previous_mem) {
-    g_mutex_lock (&cache->lock);
-    *cache_entry = g_hash_table_lookup (cache->hash_table, mem);
-    g_mutex_unlock (&cache->lock);
-    *previous_mem = mem;
-  }
-
-  if (*cache_entry)
-    return (*cache_entry)->eglimage[plane];
-
-  return NULL;
-}
-
-/*
- * Creates a new cache_entry for mem if no cache_entry is provided.
- * Stores the eglimage for the given plane in the cache_entry.
- */
-static void
-gst_egl_image_cache_store (GstEGLImageCache * cache, GstMemory * mem,
-    gint plane, GstEGLImage * eglimage, GstEGLImageCacheEntry ** cache_entry)
-{
-  if (!(*cache_entry))
-    *cache_entry = gst_egl_image_cache_entry_new (cache, mem);
-  (*cache_entry)->eglimage[plane] = eglimage;
-}
-
-static GstEGLImageCache *
-gst_egl_image_cache_new (void)
-{
-  GstEGLImageCache *cache;
-
-  cache = g_new0 (GstEGLImageCache, 1);
-  cache->ref_count = 1;
-
-  cache->hash_table = g_hash_table_new_full (g_direct_hash, g_direct_equal,
-      NULL, (GDestroyNotify) gst_egl_image_cache_entry_free);
-  g_mutex_init (&cache->lock);
-
-  return cache;
-}
 
 static GstStaticCaps _dma_buf_upload_caps =
     GST_STATIC_CAPS (GST_VIDEO_DMA_DRM_CAPS_MAKE ";"
