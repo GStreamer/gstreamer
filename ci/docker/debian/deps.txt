@@ -168,7 +168,6 @@ libqt5x11extras5-dev
 libraw1394-dev
 librsvg2-dev
 librtmp-dev
-librust-wayland-protocols-dev
 libsbc-dev
 libsdl2-dev
 libshaderc1
