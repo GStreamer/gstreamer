@@ -3513,8 +3513,40 @@ inside @handle.</doc>
           </parameter>
         </parameters>
       </constructor>
+      <function name="config_get_allocation_params" c:identifier="gst_vulkan_image_buffer_pool_config_get_allocation_params" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Gets the configuration of the Vulkan image buffer pool.</doc>
+        <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
+        <return-value transfer-ownership="none">
+          <type name="none" c:type="void"/>
+        </return-value>
+        <parameters>
+          <parameter name="config" transfer-ownership="none">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">the #GstStructure with the pool's configuration.</doc>
+            <type name="Gst.Structure" c:type="GstStructure*"/>
+          </parameter>
+          <parameter name="usage" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">The Vulkan image usage flags.</doc>
+            <type name="Vulkan.ImageUsageFlags" c:type="VkImageUsageFlags*"/>
+          </parameter>
+          <parameter name="mem_props" transfer-ownership="none">
+            <type name="Vulkan.MemoryPropertyFlags" c:type="VkMemoryPropertyFlags*"/>
+          </parameter>
+          <parameter name="initial_layout" direction="out" caller-allocates="1" transfer-ownership="none" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Initial Vulkan image layout.</doc>
+            <type name="Vulkan.ImageLayout" c:type="VkImageLayout*"/>
+          </parameter>
+          <parameter name="initial_access" direction="out" caller-allocates="0" transfer-ownership="full" optional="1" allow-none="1">
+            <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Initial Vulkan access flags.</doc>
+            <type name="guint64" c:type="guint64*"/>
+          </parameter>
+        </parameters>
+      </function>
       <function name="config_set_allocation_params" c:identifier="gst_vulkan_image_buffer_pool_config_set_allocation_params" version="1.24">
-        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Sets the @usage and @mem_properties of the images to setup.</doc>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.c">Sets the @usage and @mem_properties, @initial_layout and @initial_access of
+the images to setup.
+
+If @initial_access is VK_IMAGE_LAYOUT_UNDEFINED or
+VK_IMAGE_LAYOUT_PREINITIALIZED images does not do layout initialization.</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>

@@ -81,7 +81,11 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanImageBufferPool, gst_vulkan_image_buffer_pool,
  * @initial_access: Access flags for the layout transition if @initial_layout is
  * not VK_IMAGE_LAYOUT_UNDEFINED or VK_IMAGE_LAYOUT_PREINITIALIZED.
  *
- * Sets the @usage and @mem_properties of the images to setup.
+ * Sets the @usage and @mem_properties, @initial_layout and @initial_access of
+ * the images to setup.
+ *
+ * If @initial_access is VK_IMAGE_LAYOUT_UNDEFINED or
+ * VK_IMAGE_LAYOUT_PREINITIALIZED images does not do layout initialization.
  *
  * Since: 1.24
  */
@@ -90,6 +94,8 @@ gst_vulkan_image_buffer_pool_config_set_allocation_params (GstStructure *
     config, VkImageUsageFlags usage, VkMemoryPropertyFlags mem_properties,
     VkImageLayout initial_layout, guint64 initial_access)
 {
+  g_return_if_fail (GST_IS_STRUCTURE (config));
+
   /* assumption: G_TYPE_UINT is compatible with uint32_t (VkFlags) */
   gst_structure_set (config, "usage", G_TYPE_UINT, usage, "memory-properties",
       G_TYPE_UINT, mem_properties, "initial-layout", G_TYPE_UINT,
@@ -134,23 +140,54 @@ gst_vulkan_image_buffer_pool_config_set_encode_caps (GstStructure * config,
   gst_structure_set (config, "encode-caps", GST_TYPE_CAPS, caps, NULL);
 }
 
-static inline gboolean
+/**
+ * gst_vulkan_image_buffer_pool_config_get_allocation_params:
+ * @config: the #GstStructure with the pool's configuration.
+ * @usage: (out) (optional): The Vulkan image usage flags.
+ * @mem_properties: (out) (optional): Vulkan memory property flags.
+ * @initial_layout: (out) (optional): Initial Vulkan image layout.
+ * @initial_access: (out) (optional): Initial Vulkan access flags.
+ *
+ * Gets the configuration of the Vulkan image buffer pool.
+ *
+ * Since: 1.26
+ */
+void
 gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
     config, VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props,
+    VkImageLayout * initial_layout, guint64 * initial_access)
+{
+  g_return_if_fail (GST_IS_STRUCTURE (config));
+
+  if (usage) {
+    if (!gst_structure_get_uint (config, "usage", usage))
+      *usage = default_usage;
+  }
+
+  if (mem_props) {
+    if (!gst_structure_get_uint (config, "memory-properties", mem_props))
+      *mem_props = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+  }
+
+  if (initial_layout) {
+    if (!gst_structure_get_uint (config, "initial-layout", initial_layout))
+      *initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+  }
+
+  if (initial_access) {
+    if (!gst_structure_get_uint64 (config, "initial-access", initial_access))
+      *initial_access = 0;      /* VK_ACCESS_NONE */
+  }
+}
+
+static inline void
+internal_config_get_allocation_params (GstStructure * config,
+    VkImageUsageFlags * usage, VkMemoryPropertyFlags * mem_props,
     VkImageLayout * initial_layout, guint64 * initial_access,
     guint32 * n_layers, GstCaps ** decode_caps, GstCaps ** encode_caps)
 {
-  if (!gst_structure_get_uint (config, "usage", usage))
-    *usage = default_usage;
-
-  if (!gst_structure_get_uint (config, "memory-properties", mem_props))
-    *mem_props = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-
-  if (!gst_structure_get_uint (config, "initial-layout", initial_layout))
-    *initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-  if (!gst_structure_get_uint64 (config, "initial-access", initial_access))
-    *initial_access = 0;
+  gst_vulkan_image_buffer_pool_config_get_allocation_params (config, usage,
+      mem_props, initial_layout, initial_access);
 
   if (!gst_structure_get_uint (config, "num-layers", n_layers))
     *n_layers = 1;
@@ -160,8 +197,6 @@ gst_vulkan_image_buffer_pool_config_get_allocation_params (GstStructure *
 
   if (encode_caps)
     gst_structure_get (config, "encode-caps", GST_TYPE_CAPS, encode_caps, NULL);
-
-  return TRUE;
 }
 
 static gboolean
@@ -199,9 +234,9 @@ gst_vulkan_image_buffer_pool_set_config (GstBufferPool * pool,
   priv->raw_caps = features == NULL || gst_caps_features_is_equal (features,
       GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY);
 
-  gst_vulkan_image_buffer_pool_config_get_allocation_params (config,
-      &requested_usage, &priv->mem_props, &priv->initial_layout,
-      &priv->initial_access, &priv->n_layers, &decode_caps, &encode_caps);
+  internal_config_get_allocation_params (config, &requested_usage,
+      &priv->mem_props, &priv->initial_layout, &priv->initial_access,
+      &priv->n_layers, &decode_caps, &encode_caps);
 
 #if GST_VULKAN_HAVE_VIDEO_EXTENSIONS
   {
