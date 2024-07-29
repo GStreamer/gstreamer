@@ -30,16 +30,16 @@
 #include <gst/gl/gstglmemory.h>
 #include <gst/gl/gstglsyncmeta.h>
 #include <gst/gl/egl/gsteglimage.h>
-
-#define GST_GL_DMABUF_EGLIMAGE "gst.gl.dmabuf.eglimage"
+#include <gst/gl/egl/gsteglimagecache.h>
+#include <gst/gl/egl/gstglmemoryegl.h>
 
 typedef struct _GstGLDMABufBufferPoolPrivate
 {
   GstBufferPool *dmabuf_pool;
   GstCaps *dmabuf_caps;
-  GstGLMemoryAllocator *allocator;
   GstGLVideoAllocationParams *glparams;
   GstVideoInfoDmaDrm drm_info;
+  GstEGLImageCache *eglimage_cache;
 
   gboolean add_glsyncmeta;
 } GstGLDMABufBufferPoolPrivate;
@@ -78,19 +78,8 @@ gst_gl_dmabuf_buffer_pool_set_config (GstBufferPool * pool,
     goto wrong_config;
   }
 
-  gst_clear_object (&self->priv->allocator);
-
-  if (allocator) {
-    if (!GST_IS_GL_MEMORY_ALLOCATOR (allocator)) {
-      gst_clear_object (&allocator);
-      goto wrong_allocator;
-    } else {
-      self->priv->allocator = gst_object_ref (allocator);
-    }
-  } else {
-    self->priv->allocator =
-        gst_gl_memory_allocator_get_default (GST_GL_BUFFER_POOL
-        (pool)->context);
+  if (allocator && !GST_IS_GL_MEMORY_EGL_ALLOCATOR (allocator)) {
+    goto wrong_allocator;
   }
 
   /*
@@ -193,6 +182,11 @@ gst_gl_dmabuf_buffer_pool_start (GstBufferPool * pool)
     return FALSE;
   }
 
+  if (self->priv->eglimage_cache) {
+    gst_egl_image_cache_unref (self->priv->eglimage_cache);
+  }
+  self->priv->eglimage_cache = gst_egl_image_cache_new ();
+
   return GST_BUFFER_POOL_CLASS (parent_class)->start (pool);
 }
 
@@ -205,33 +199,34 @@ gst_gl_dmabuf_buffer_pool_stop (GstBufferPool * pool)
     return FALSE;
   }
 
+  if (self->priv->eglimage_cache) {
+    gst_egl_image_cache_unref (self->priv->eglimage_cache);
+  }
+
   return GST_BUFFER_POOL_CLASS (parent_class)->stop (pool);
 }
 
 typedef struct
 {
   GstEGLImage *eglimage[GST_VIDEO_MAX_PLANES];
-  gpointer gpuhandle[GST_VIDEO_MAX_PLANES];
-  guint n_planes;
-} WrapDMABufData;
+  GstGLVideoAllocationParams *glparams;
+  GstBuffer *outbuf;
+} BufferSetupData;
 
 static void
-_wrap_dmabuf_eglimage (GstGLContext * context, gpointer data)
+_setup_buffer_gl_thread (GstGLContext * context, BufferSetupData * d)
 {
-  WrapDMABufData *d = data;
-  const GstGLFuncs *gl = context->gl_vtable;
-  GLuint tex_ids[GST_VIDEO_MAX_PLANES];
-  guint i;
+  GstGLMemoryAllocator *allocator =
+      GST_GL_MEMORY_ALLOCATOR (gst_allocator_find
+      (GST_GL_MEMORY_EGL_ALLOCATOR_NAME));
 
-  gl->GenTextures (d->n_planes, tex_ids);
-
-  for (i = 0; i < d->n_planes; ++i) {
-    gl->BindTexture (GL_TEXTURE_2D, tex_ids[i]);
-    gl->EGLImageTargetTexture2D (GL_TEXTURE_2D,
-        gst_egl_image_get_image (d->eglimage[i]));
-
-    d->gpuhandle[i] = GUINT_TO_POINTER (tex_ids[i]);
+  if (!gst_gl_memory_setup_buffer (allocator, d->outbuf, d->glparams, NULL,
+          (gpointer *) d->eglimage,
+          GST_VIDEO_INFO_N_PLANES (d->glparams->v_info))) {
+    gst_clear_buffer (&d->outbuf);
   }
+
+  gst_clear_object (&allocator);
 }
 
 static GstFlowReturn
@@ -274,8 +269,9 @@ gst_gl_dmabuf_buffer_pool_acquire_buffer (GstBufferPool * pool,
   GstVideoMeta *vmeta;
   GstFlowReturn ret;
   GstBuffer *dmabuf;
-  GstBuffer *buf;
-  WrapDMABufData data;
+  GstMemory *previous_mem = NULL;
+  GstEGLImageCacheEntry *cache_entry = NULL;
+  BufferSetupData data;
   guint i;
 
   ret = gst_buffer_pool_acquire_buffer (self->priv->dmabuf_pool, &dmabuf, NULL);
@@ -286,9 +282,7 @@ gst_gl_dmabuf_buffer_pool_acquire_buffer (GstBufferPool * pool,
   vmeta = gst_buffer_get_video_meta (dmabuf);
   g_return_val_if_fail (vmeta, GST_FLOW_ERROR);
 
-  data.n_planes = GST_VIDEO_INFO_N_PLANES (v_info);
-
-  for (i = 0; i < data.n_planes; ++i) {
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (v_info); ++i) {
     guint mem_idx, length;
     gsize skip;
     GstMemory *dmabufmem;
@@ -306,6 +300,16 @@ gst_gl_dmabuf_buffer_pool_acquire_buffer (GstBufferPool * pool,
 
     g_assert (gst_is_dmabuf_memory (dmabufmem));
 
+    /*
+     * Check if an EGLImage is cached. Remember the previous memory and cache
+     * entry to avoid repeated lookups if all dmabufmem point to the same
+     * memory. Otherwise create one and cache it.
+     */
+    data.eglimage[i] = gst_egl_image_cache_lookup (self->priv->eglimage_cache,
+        dmabufmem, i, &previous_mem, &cache_entry);
+    if (data.eglimage[i])
+      continue;
+
     /* Anything that is not using GLMemory format RGBA is using indirect
      * dmabuf importation with linear modifiers */
     if (GST_VIDEO_INFO_FORMAT (v_info) != GST_VIDEO_FORMAT_RGBA) {
@@ -317,49 +321,48 @@ gst_gl_dmabuf_buffer_pool_acquire_buffer (GstBufferPool * pool,
           gst_egl_image_from_dmabuf_direct_target_with_dma_drm (glpool->context,
           1, &fd, &skip, &self->priv->drm_info, GL_TEXTURE_2D);
     }
+
+    gst_egl_image_cache_store (self->priv->eglimage_cache, dmabufmem, i,
+        data.eglimage[i], &cache_entry);
   }
 
-  gst_gl_context_thread_add (glpool->context, _wrap_dmabuf_eglimage, &data);
+  data.glparams = self->priv->glparams;
 
-  ret = GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool, &buf,
+  ret =
+      GST_BUFFER_POOL_CLASS (parent_class)->acquire_buffer (pool, &data.outbuf,
       params);
   if (ret != GST_FLOW_OK) {
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto out;
   }
 
-  if (!gst_gl_memory_setup_buffer (self->priv->allocator, buf,
-          self->priv->glparams, NULL, data.gpuhandle, data.n_planes)) {
+  gst_gl_context_thread_add (glpool->context,
+      (GstGLContextThreadFunc) _setup_buffer_gl_thread, &data);
+  if (!data.outbuf) {
     goto mem_create_failed;
   }
 
-  for (i = 0; i < data.n_planes; ++i) {
-    GstMemory *mem = gst_buffer_peek_memory (buf, i);
+  gst_buffer_add_parent_buffer_meta (data.outbuf, dmabuf);
 
-    /* Unset wrapped flag, we want the texture be freed with the memory. */
-    GST_GL_MEMORY_CAST (mem)->texture_wrapped = FALSE;
+  *buffer = data.outbuf;
 
-    gst_mini_object_set_qdata (GST_MINI_OBJECT (mem),
-        g_quark_from_static_string (GST_GL_DMABUF_EGLIMAGE),
-        data.eglimage[i], (GDestroyNotify) gst_egl_image_unref);
-  }
-
-  gst_buffer_add_parent_buffer_meta (buf, dmabuf);
+out:
   gst_clear_buffer (&dmabuf);
 
-  *buffer = buf;
-
-  return GST_FLOW_OK;
+  return ret;
 
   /* ERROR */
 no_buffer:
   {
     GST_WARNING_OBJECT (self, "Could not create DMABuf buffer");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto out;
   }
 mem_create_failed:
   {
     GST_WARNING_OBJECT (self, "Could not create GL Memory");
-    return GST_FLOW_ERROR;
+    ret = GST_FLOW_ERROR;
+    goto out;
   }
 }
 
@@ -381,18 +384,10 @@ gst_is_gl_dmabuf_buffer (GstBuffer * buffer)
 GstBuffer *
 gst_gl_dmabuf_buffer_unwrap (GstBuffer * buffer)
 {
-  GstGLDMABufBufferPool *pool;
   GstParentBufferMeta *meta;
   GstBuffer *wrapped_dmabuf = NULL;
 
   g_return_val_if_fail (gst_is_gl_dmabuf_buffer (buffer), NULL);
-
-  pool = GST_GL_DMABUF_BUFFER_POOL (buffer->pool);
-
-  if (gst_buffer_peek_memory (buffer, 0)->allocator !=
-      GST_ALLOCATOR (pool->priv->allocator)) {
-    return NULL;
-  }
 
   meta = gst_buffer_get_parent_buffer_meta (buffer);
 
