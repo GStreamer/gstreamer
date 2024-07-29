@@ -10,6 +10,4 @@ git config --global user.name "Gstbuild Runner"
 
 bash ./ci/scripts/install-rust.sh
 
-bash ./ci/docker/fedora/virtme-fluster-setup.sh
-
 bash ./ci/scripts/create-subprojects-cache.sh

@@ -135,12 +135,32 @@ trigger:
     FDO_DISTRIBUTION_TAG: "$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
     FDO_DISTRIBUTION_EXEC: 'GIT_BRANCH=$CI_COMMIT_REF_NAME GIT_URL=$CI_REPOSITORY_URL bash ci/docker/fedora/prepare.sh'
 
+.fedora fluster image:
+  variables:
+    CCACHE_DIR: !reference [".fedora image", "variables", CCACHE_DIR]
+    FDO_DISTRIBUTION_VERSION: !reference [".fedora image", "variables", FDO_DISTRIBUTION_VERSION]
+    FDO_REPO_SUFFIX: !reference [".fedora image", "variables", FDO_REPO_SUFFIX]
+    FDO_DISTRIBUTION_TAG: "fluster-$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
+    FDO_DISTRIBUTION_EXEC: "bash ./ci/docker/fedora/virtme-fluster-setup.sh"
+    # Base the fluster image on top of the main fedora build image
+    FDO_BASE_IMAGE: "$CI_REGISTRY_IMAGE/$FDO_REPO_SUFFIX:$FEDORA_TAG-$GST_UPSTREAM_BRANCH"
+
 fedora amd64 docker:
   extends:
     - '.fedora image'
     - '.fdo.container-build@fedora'
   stage: 'preparation'
   needs: []
+  # Note: assumption is that placeholder jobs run on a packet runner
+  # (which has faster network connectivity to the registry).
+  tags: [ 'placeholder-job' ]
+
+fedora amd64 docker fluster:
+  extends:
+    - '.fedora fluster image'
+    - '.fdo.container-build@fedora'
+  stage: 'preparation'
+  needs: ["fedora amd64 docker"]
   # Note: assumption is that placeholder jobs run on a packet runner
   # (which has faster network connectivity to the registry).
   tags: [ 'placeholder-job' ]
@@ -850,7 +870,9 @@ gstreamer-full-minimal static build:
 
 # v4l2-stateless-decoders tests
 fluster v4l2-stateless on visl:
-  extends: 'gstreamer-full static build'
+  extends:
+    - '.fedora fluster image'
+    - '.fdo.suffixed-image@fedora'
   stage: 'test'
   variables:
     BUILD_GST_DEBUG: '-Dgstreamer:gst_debug=false'
