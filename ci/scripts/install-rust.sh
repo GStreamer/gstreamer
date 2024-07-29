@@ -24,3 +24,7 @@ cargo install --locked cargo-c --version 0.10.5+cargo-0.83.0
 rustup --version
 cargo --version
 rustc --version
+
+# Cleanup the registry after install
+# so we don't have to save 200mb of the index in the ci image
+rm -rf "$CARGO_HOME/registry"
