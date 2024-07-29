@@ -1354,10 +1354,13 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
   GstStructure *config;
   GstCaps *caps;
   guint min, max, size;
-  gboolean update_pool;
-  const VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT
+  gboolean update_pool, is_vulkan_pool;
+  VkImageUsageFlags usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT
       | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
       | VK_IMAGE_USAGE_STORAGE_BIT;
+  VkImageLayout layout = VK_IMAGE_LAYOUT_UNDEFINED;
+  VkMemoryPropertyFlags mem_props = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+  guint64 access = 0;           /* VK_ACCESS_NONE */
 
   gst_query_parse_allocation (query, &caps, NULL);
   if (!caps)
@@ -1367,6 +1370,7 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
 
     update_pool = TRUE;
+    is_vulkan_pool = GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool);
   } else {
     GstVideoInfo vinfo;
 
@@ -1374,10 +1378,10 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
     gst_video_info_from_caps (&vinfo, caps);
     size = vinfo.size;
     min = max = 0;
-    update_pool = FALSE;
+    is_vulkan_pool = update_pool = FALSE;
   }
 
-  if (!pool || !GST_IS_VULKAN_IMAGE_BUFFER_POOL (pool)) {
+  if (!pool || !is_vulkan_pool) {
     if (pool)
       gst_object_unref (pool);
     pool = gst_vulkan_image_buffer_pool_new (vk_upload->device);
@@ -1385,14 +1389,22 @@ gst_vulkan_upload_decide_allocation (GstBaseTransform * bt, GstQuery * query)
 
   config = gst_buffer_pool_get_config (pool);
 
+  if (is_vulkan_pool) {
+    gst_vulkan_image_buffer_pool_config_get_allocation_params (config, &usage,
+        &mem_props, &layout, &access);
+    /* these usage parameters are essential for upload */
+    usage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+  }
+
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
   gst_vulkan_image_buffer_pool_config_set_allocation_params (config, usage,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, VK_IMAGE_LAYOUT_UNDEFINED,
-      0 /* VK_ACCESS_NONE */ );
+      mem_props, layout, access);
 
   if (!gst_buffer_pool_set_config (pool, config)) {
+    GST_ERROR_OBJECT (pool, "Vulkan Image buffer pool doesn't support requested"
+        " configuration");
     gst_object_unref (pool);
-    return TRUE;
+    return FALSE;
   }
 
   if (update_pool)
