@@ -2342,11 +2342,7 @@ gst_v4l2_object_get_colorspace (GstV4l2Object * v4l2object,
       break;
     case V4L2_QUANTIZATION_DEFAULT:
       /* replicated V4L2_MAP_QUANTIZATION_DEFAULT macro behavior */
-      if (is_rgb && colorspace == V4L2_COLORSPACE_BT2020)
-        cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
-      else if (is_rgb || matrix == V4L2_YCBCR_ENC_XV601
-          || matrix == V4L2_YCBCR_ENC_XV709
-          || colorspace == V4L2_COLORSPACE_JPEG)
+      if (is_rgb || colorspace == V4L2_COLORSPACE_JPEG)
         cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
       else
         cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
