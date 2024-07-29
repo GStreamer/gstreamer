@@ -21,6 +21,7 @@ cuda_headers = files([
   'gstcudautils.h',
 ])
 
+extra_deps = []
 gstcuda_dep = dependency('', required : false)
 cuda_stubinc = include_directories('./stub')
 gstcuda_stub_dep = declare_dependency(
@@ -29,6 +30,7 @@ gstcuda_stub_dep = declare_dependency(
 
 have_nvbufsurface_h = false
 gstcuda_nvmm_inc = []
+nvbuf_dep = dependency('', required: false)
 
 gstcuda_platform_dep = []
 if host_system not in ['windows', 'linux']
@@ -92,12 +94,35 @@ else
       gstcuda_nvmm_inc = [include_directories(nvmm_inc_opt)]
     endif
 
-    have_nvbufsurface_h = cc.has_header('nvbufsurface.h',
-                                        include_directories: gstcuda_nvmm_inc,
-                                        required: nvmm_opt)
+    if cc.has_header('nvbufsurface.h',
+                     include_directories: gstcuda_nvmm_inc,
+                     required: false)
+      have_nvbufsurface_h = true
+    # try some other default locations
+    elif cc.has_header('/usr/src/jetson_multimedia_api/include/nvbufsurface.h',
+	               required: false)
+      have_nvbufsurface_h = true
+      gstcuda_nvmm_inc = [include_directories('/usr/src/jetson_multimedia_api/include')]
+    elif cc.has_header('/opt/nvidia/deepstream/deepstream/sources/includes/nvbufsurface.h',
+                       required: false)
+      have_nvbufsurface_h = true
+      gstcuda_nvmm_inc = [include_directories('/opt/nvidia/deepstream/deepstream/sources/includes')]
+    endif
+    if nvmm_opt.enabled() and not have_nvbufsurface_h
+      error('Could not find required header: "nvbufsurface.h"')
+      subdir_done()
+    endif
   endif
+
   if have_nvbufsurface_h
     extra_args += ['-DHAVE_CUDA_NVMM']
+
+    # check if we have a tegra based system (jetson)
+    nvbuf_dep = cc.find_library('nvbufsurface', dirs: '/usr/lib/aarch64-linux-gnu/tegra/', required: false)
+    if nvbuf_dep.found()
+      extra_deps += [nvbuf_dep]
+      extra_args += ['-DHAVE_CUDA_NVMM_JETSON']
+    endif
   endif
 endif
 
@@ -110,7 +135,7 @@ gstcuda= library('gstcuda-' + api_version,
   version : libversion,
   soversion : soversion,
   install : true,
-  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstd3d11_dep, gstcuda_platform_dep]
+  dependencies : [gstbase_dep, gmodule_dep, gstvideo_dep, gstglproto_dep, gstd3d11_dep, gstcuda_platform_dep, extra_deps]
 )
 
 gen_sources = []

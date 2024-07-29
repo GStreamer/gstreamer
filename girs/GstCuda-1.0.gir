@@ -668,6 +668,9 @@ Free with gst_cuda_graphics_resource_free</doc>
       </member>
       <member name="d3d11_resource" value="2" c:identifier="GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE">
       </member>
+      <member name="egl_resource" value="3" c:identifier="GST_CUDA_GRAPHICS_RESOURCE_EGL_RESOURCE" version="1.26">
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudautils.h">Resource represents a EGL resource.</doc>
+      </member>
     </enumeration>
     <record name="CudaMemory" c:type="GstCudaMemory" version="1.22">
       <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/cuda/gstcudamemory.h"/>

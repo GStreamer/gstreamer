@@ -71,5 +71,24 @@ G_END_DECLS
 
 #define GST_CUDA_CALL_ONCE_END )
 
+/* cudaEGL.h */
+#if defined(HAVE_CUDA_NVMM_JETSON) && defined(HAVE_CUDA_GST_GL)
+#include <gst/gl/gstglconfig.h>
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <cudaEGL.h>
+#include <gst/gl/egl/egl.h>
+GST_CUDA_API
+CUresult CUDAAPI CuGraphicsEGLRegisterImage (CUgraphicsResource *pCudaResource,
+                                             EGLImageKHR image,
+                                             unsigned int flags);
+
+GST_CUDA_API
+CUresult CUDAAPI CuGraphicsResourceGetMappedEglFrame(CUeglFrame* eglFrame,
+                                                     CUgraphicsResource resource,
+                                                     unsigned int index,
+                                                     unsigned int mipLevel);
+#endif /* HAVE_CUDA_GST_GL */
+#endif /* HAVE_CUDA_NVMM_JETSON */
+
 #endif /* __cplusplus */
 

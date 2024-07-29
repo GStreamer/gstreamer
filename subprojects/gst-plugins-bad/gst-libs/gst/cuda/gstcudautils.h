@@ -69,14 +69,23 @@ typedef enum
  * @GST_CUDA_GRAPHICS_RESSOURCE_NONE: Ressource represents a CUDA buffer.
  * @GST_CUDA_GRAPHICS_RESSOURCE_GL_BUFFER: Ressource represents a GL buffer.
  * @GST_CUDA_GRAPHICS_RESSOURCE_D3D11_RESOURCE: Ressource represents a D3D resource.
+ * @GST_CUDA_GRAPHICS_RESSOURCE_EGL_RESOURCE: Ressource represents a EGL resource.
  *
  * Since: 1.22
+ */
+/**
+ * GST_CUDA_GRAPHICS_RESOURCE_EGL_RESOURCE:
+ *
+ * Resource represents a EGL resource.
+ *
+ * Since: 1.26
  */
 typedef enum
 {
   GST_CUDA_GRAPHICS_RESOURCE_NONE = 0,
   GST_CUDA_GRAPHICS_RESOURCE_GL_BUFFER = 1,
   GST_CUDA_GRAPHICS_RESOURCE_D3D11_RESOURCE = 2,
+  GST_CUDA_GRAPHICS_RESOURCE_EGL_RESOURCE = 3,
 } GstCudaGraphicsResourceType;
 
 /**

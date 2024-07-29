@@ -8,6 +8,10 @@ nvcodec_sources = [
   'gstcudaipcsink.cpp',
   'gstcudaipcsrc.cpp',
   'gstcudamemorycopy.c',
+  'plugin.c'
+]
+
+nvcodec_dgpu_sources = [
   'gstcuvidloader.c',
   'gstnvav1dec.cpp',
   'gstnvav1encoder.cpp',
@@ -23,8 +27,7 @@ nvcodec_sources = [
   'gstnvh265encoder.cpp',
   'gstnvjpegenc.cpp',
   'gstnvvp8dec.cpp',
-  'gstnvvp9dec.cpp',
-  'plugin.c',
+  'gstnvvp9dec.cpp'
 ]
 
 nvcodec_win32_sources = [
@@ -68,6 +71,12 @@ if host_system == 'linux'
   nvcodec_sources += nvcodec_unix_sources
 else
   nvcodec_sources += nvcodec_win32_sources
+endif
+
+# if the system is not a tegra based system we add the other sources for encoding and decoding
+if not nvbuf_dep.found()
+  extra_args += ['-DHAVE_NVCODEC_DGPU']
+  nvcodec_sources += nvcodec_dgpu_sources
 endif
 
 if cc.get_id() != 'msvc'

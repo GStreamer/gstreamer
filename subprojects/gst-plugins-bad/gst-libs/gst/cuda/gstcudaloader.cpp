@@ -26,6 +26,13 @@
 #include <gmodule.h>
 #include "gstcuda-private.h"
 
+#ifdef HAVE_CUDA_GST_GL
+#include <gst/gl/gstglconfig.h>
+#if GST_GL_HAVE_PLATFORM_EGL
+#include <gst/gl/egl/egl.h>
+#endif /* GST_GL_HAVE_PLATFORM_EGL */
+#endif /* HAVE_CUDA_GST_GL */
+
 GST_DEBUG_CATEGORY (gst_cudaloader_debug);
 #define GST_CAT_DEFAULT gst_cudaloader_debug
 
@@ -65,6 +72,7 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuCtxDestroy) (CUcontext ctx);
   CUresult (CUDAAPI * CuCtxPopCurrent) (CUcontext * pctx);
   CUresult (CUDAAPI * CuCtxPushCurrent) (CUcontext ctx);
+  CUresult (CUDAAPI * CuCtxSynchronize) (void);
 
   CUresult (CUDAAPI * CuCtxEnablePeerAccess) (CUcontext peerContext,
       unsigned int Flags);
@@ -135,7 +143,6 @@ typedef struct _GstNvCodecCudaVTable
       unsigned int blockDimX, unsigned int blockDimY, unsigned int blockDimZ,
       unsigned int sharedMemBytes, CUstream hStream, void **kernelParams,
       void **extra);
-
   CUresult (CUDAAPI * CuGraphicsGLRegisterImage) (CUgraphicsResource *
       pCudaResource, unsigned int image, unsigned int target,
       unsigned int Flags);
@@ -144,6 +151,14 @@ typedef struct _GstNvCodecCudaVTable
   CUresult (CUDAAPI * CuGLGetDevices) (unsigned int *pCudaDeviceCount,
       CUdevice * pCudaDevices, unsigned int cudaDeviceCount,
       CUGLDeviceList deviceList);
+
+#if defined(HAVE_CUDA_NVMM_JETSON) && GST_GL_HAVE_PLATFORM_EGL
+  CUresult (CUDAAPI* CuGraphicsEGLRegisterImage) (CUgraphicsResource *
+      pCudaResource, EGLImageKHR image, unsigned int flags);
+  CUresult (CUDAAPI* CuGraphicsResourceGetMappedEglFrame)
+      (CUeglFrame* eglFrame, CUgraphicsResource resource, unsigned int index,
+      unsigned int mipLevel);
+#endif
 
   CUresult (CUDAAPI * CuEventCreate) (CUevent *phEvent, unsigned int Flags);
   CUresult (CUDAAPI * CuEventDestroy) (CUevent hEvent);
@@ -255,6 +270,7 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuCtxCreate, CuCtxCreate);
   LOAD_SYMBOL (cuCtxDestroy, CuCtxDestroy);
   LOAD_SYMBOL (cuCtxPopCurrent, CuCtxPopCurrent);
+  LOAD_SYMBOL (cuCtxSynchronize, CuCtxSynchronize);
   LOAD_SYMBOL (cuCtxPushCurrent, CuCtxPushCurrent);
   LOAD_SYMBOL (cuCtxEnablePeerAccess, CuCtxEnablePeerAccess);
   LOAD_SYMBOL (cuCtxDisablePeerAccess, CuCtxDisablePeerAccess);
@@ -318,6 +334,13 @@ gst_cuda_load_library_once_func (void)
   LOAD_SYMBOL (cuGraphicsGLRegisterImage, CuGraphicsGLRegisterImage);
   LOAD_SYMBOL (cuGraphicsGLRegisterBuffer, CuGraphicsGLRegisterBuffer);
   LOAD_SYMBOL (cuGLGetDevices, CuGLGetDevices);
+
+  /* cudaEGL.h */
+#if defined(HAVE_CUDA_NVMM_JETSON) && GST_GL_HAVE_PLATFORM_EGL
+  LOAD_SYMBOL (cuGraphicsEGLRegisterImage, CuGraphicsEGLRegisterImage);
+  LOAD_SYMBOL (cuGraphicsResourceGetMappedEglFrame,
+      CuGraphicsResourceGetMappedEglFrame);
+#endif
 
 #ifdef G_OS_WIN32
   /* cudaD3D11.h */
@@ -413,6 +436,14 @@ CuCtxPushCurrent (CUcontext ctx)
   g_assert (gst_cuda_vtable.CuCtxPushCurrent != nullptr);
 
   return gst_cuda_vtable.CuCtxPushCurrent (ctx);
+}
+
+CUresult CUDAAPI
+CuCtxSynchronize (void)
+{
+  g_assert (gst_cuda_vtable.CuCtxSynchronize != nullptr);
+
+  return gst_cuda_vtable.CuCtxSynchronize ();
 }
 
 CUresult CUDAAPI
@@ -965,6 +996,29 @@ CuGLGetDevices (unsigned int *pCudaDeviceCount, CUdevice * pCudaDevices,
   return gst_cuda_vtable.CuGLGetDevices (pCudaDeviceCount, pCudaDevices,
       cudaDeviceCount, deviceList);
 }
+
+/* cudaEGL.h */
+#if defined(HAVE_CUDA_NVMM_JETSON) && GST_GL_HAVE_PLATFORM_EGL
+CUresult CUDAAPI
+CuGraphicsEGLRegisterImage (CUgraphicsResource * pCudaResource,
+    EGLImageKHR image, unsigned int Flags)
+{
+  g_assert (gst_cuda_vtable.CuGraphicsEGLRegisterImage != nullptr);
+
+  return gst_cuda_vtable.CuGraphicsEGLRegisterImage (pCudaResource, image,
+      Flags);
+}
+
+CUresult CUDAAPI
+CuGraphicsResourceGetMappedEglFrame (CUeglFrame * eglFrame,
+    CUgraphicsResource resource, unsigned int index, unsigned int mipLevel)
+{
+  g_assert (gst_cuda_vtable.CuGraphicsResourceGetMappedEglFrame != nullptr);
+
+  return gst_cuda_vtable.CuGraphicsResourceGetMappedEglFrame (eglFrame,
+      resource, index, mipLevel);
+}
+#endif
 
 /* cudaD3D11.h */
 #ifdef G_OS_WIN32

@@ -30,6 +30,7 @@
 #endif
 
 #include <gst/cuda/gstcuda.h>
+#ifdef HAVE_NVCODEC_DGPU
 #include "gstnvdec.h"
 #include "gstnvenc.h"
 #include "gstnvav1dec.h"
@@ -38,6 +39,7 @@
 #include "gstnvvp8dec.h"
 #include "gstnvvp9dec.h"
 #include "gstnvdecoder.h"
+#endif
 #include "gstcudamemorycopy.h"
 #include "gstcudaconvertscale.h"
 #include <gst/cuda/gstcudanvmm-private.h>
@@ -45,13 +47,16 @@
 #ifdef G_OS_WIN32
 #include <gst/d3d11/gstd3d11.h>
 #endif
+#ifdef HAVE_NVCODEC_DGPU
 #include "gstnvh264encoder.h"
 #include "gstnvh265encoder.h"
 #include "gstnvav1encoder.h"
+#include "gstnvjpegenc.h"
+#endif
+
 #include "gstcudaipcsink.h"
 #include "gstcudaipcsrc.h"
 #include "gstnvcodecutils.h"
-#include "gstnvjpegenc.h"
 
 #include <glib/gi18n-lib.h>
 
@@ -114,6 +119,7 @@ plugin_init (GstPlugin * plugin)
   const char *err_name = NULL, *err_desc = NULL;
   gint dev_count = 0;
   guint i;
+#ifdef HAVE_NVCODEC_DGPU
   gboolean nvdec_available = TRUE;
   gboolean nvenc_available = TRUE;
   /* hardcoded minimum supported version */
@@ -122,6 +128,7 @@ plugin_init (GstPlugin * plugin)
   GList *h264_enc_cdata = NULL;
   GList *h265_enc_cdata = NULL;
   GList *av1_enc_cdata = NULL;
+#endif
   gboolean have_nvrtc = FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_nvcodec_debug, "nvcodec", 0, "nvcodec");
@@ -135,6 +142,7 @@ plugin_init (GstPlugin * plugin)
     return TRUE;
   }
 
+#ifdef HAVE_NVCODEC_DGPU
   /* get available API version from nvenc and it will be passed to
    * nvdec */
   if (!gst_nvenc_load_library (&api_major_ver, &api_minor_ver)) {
@@ -153,6 +161,7 @@ plugin_init (GstPlugin * plugin)
 
   if (!nvdec_available && !nvenc_available)
     return TRUE;
+#endif
 
   cuda_ret = CuInit (0);
   if (cuda_ret != CUDA_SUCCESS) {
@@ -192,8 +201,12 @@ plugin_init (GstPlugin * plugin)
 
   for (i = 0; i < dev_count; i++) {
     GstCudaContext *context = gst_cuda_context_new (i);
+#ifdef HAVE_NVCODEC_DGPU
     CUcontext cuda_ctx;
+#endif
+#if defined(G_OS_WIN32) || defined(HAVE_NVCODEC_DGPU)
     gint64 adapter_luid = 0;
+#endif
 
     if (!context) {
       GST_WARNING ("Failed to create context for device %d", i);
@@ -203,6 +216,7 @@ plugin_init (GstPlugin * plugin)
     g_object_get (context, "dxgi-adapter-luid", &adapter_luid, NULL);
 #endif
 
+#ifdef HAVE_NVCODEC_DGPU
     cuda_ctx = gst_cuda_context_get_handle (context);
     if (nvdec_available) {
       gint j;
@@ -310,9 +324,11 @@ plugin_init (GstPlugin * plugin)
 
     gst_nv_jpeg_enc_register (plugin, context, GST_RANK_NONE, have_nvrtc);
 
+#endif
     gst_object_unref (context);
   }
 
+#ifdef HAVE_NVCODEC_DGPU
   if (h264_enc_cdata) {
     gst_nv_h264_encoder_register_auto_select (plugin, h264_enc_cdata,
         GST_RANK_NONE);
@@ -327,6 +343,7 @@ plugin_init (GstPlugin * plugin)
     gst_nv_av1_encoder_register_auto_select (plugin, av1_enc_cdata,
         GST_RANK_NONE);
   }
+#endif
 
   gst_cuda_memory_copy_register (plugin, GST_RANK_NONE);
 

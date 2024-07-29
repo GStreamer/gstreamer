@@ -43,6 +43,9 @@ GST_CUDA_API
 CUresult CUDAAPI CuCtxPushCurrent   (CUcontext ctx);
 
 GST_CUDA_API
+CUresult CUDAAPI CuCtxSynchronize   (void);
+
+GST_CUDA_API
 CUresult CUDAAPI CuCtxEnablePeerAccess (CUcontext peerContext,
                                              unsigned int Flags);
 
@@ -325,7 +328,6 @@ CUresult CUDAAPI CuGLGetDevices (unsigned int * pCudaDeviceCount,
                                  CUdevice * pCudaDevices,
                                  unsigned int cudaDeviceCount,
                                  CUGLDeviceList deviceList);
-
 
 #ifdef G_OS_WIN32
 /* cudaD3D11.h */
