@@ -2280,6 +2280,11 @@ gst_v4l2_object_get_colorspace (GstV4l2Object * v4l2object,
       cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
       break;
     case V4L2_COLORSPACE_SRGB:
+      cinfo->range = GST_VIDEO_COLOR_RANGE_16_235;
+      cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
+      cinfo->transfer = GST_VIDEO_TRANSFER_SRGB;
+      cinfo->primaries = GST_VIDEO_COLOR_PRIMARIES_BT709;
+      break;
     case V4L2_COLORSPACE_JPEG:
       cinfo->range = GST_VIDEO_COLOR_RANGE_0_255;
       cinfo->matrix = GST_VIDEO_COLOR_MATRIX_BT601;
@@ -3821,12 +3826,16 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
   /* We first pick the main colorspace from the primaries */
   switch (info.colorimetry.primaries) {
     case GST_VIDEO_COLOR_PRIMARIES_BT709:
-      /* There is two colorspaces using these primaries, use the range to
-       * differentiate */
-      if (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235)
-        colorspace = V4L2_COLORSPACE_REC709;
-      else
-        colorspace = V4L2_COLORSPACE_SRGB;
+      /* There is three colorspaces using these primaries, use the range
+       * and format type to differentiate them  */
+      if (info.colorimetry.range == GST_VIDEO_COLOR_RANGE_16_235) {
+        if (GST_VIDEO_INFO_IS_RGB (&info))
+          colorspace = V4L2_COLORSPACE_SRGB;
+        else
+          colorspace = V4L2_COLORSPACE_REC709;
+      } else {
+        colorspace = V4L2_COLORSPACE_JPEG;
+      }
       break;
     case GST_VIDEO_COLOR_PRIMARIES_BT2020:
       colorspace = V4L2_COLORSPACE_BT2020;
