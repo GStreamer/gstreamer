@@ -1832,6 +1832,31 @@ add_alternate_variant (GstV4l2Object * v4l2object, GstCaps * caps,
       gst_caps_features_new (GST_CAPS_FEATURE_FORMAT_INTERLACED, NULL));
 }
 
+static void
+add_non_colorimetry_caps (GstV4l2Object * v4l2object, GstCaps * caps)
+{
+  gint caps_size;
+  gint i;
+
+  caps_size = gst_caps_get_size (caps);
+  for (i = 0; i < caps_size; i++) {
+    GstStructure *structure = gst_caps_get_structure (caps, i);
+    GstCapsFeatures *features = gst_caps_get_features (caps, i);
+
+    if (gst_structure_has_name (structure, "video/x-raw")
+        && gst_structure_has_field (structure, "colorimetry")) {
+      GstStructure *alt_s = gst_structure_copy (structure);
+      gst_structure_remove_field (alt_s, "colorimetry");
+      if (gst_caps_features_contains (features,
+              GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY))
+        gst_caps_append_structure (caps, alt_s);
+      else
+        gst_caps_append_structure_full (caps, alt_s,
+            gst_caps_features_copy (features));
+    }
+  }
+}
+
 static GstCaps *
 gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
 {
@@ -5120,6 +5145,13 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     tmp = ret;
     ret = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp);
+  }
+
+  /* Add a variant of the caps without the colorimetry so that we can negotiate
+     successfully even if the detected colorimetry from upstream is not supported
+     by the device */
+  if (ret) {
+    add_non_colorimetry_caps (v4l2object, ret);
   }
 
   GST_INFO_OBJECT (v4l2object->dbg_obj, "probed caps: %" GST_PTR_FORMAT, ret);
