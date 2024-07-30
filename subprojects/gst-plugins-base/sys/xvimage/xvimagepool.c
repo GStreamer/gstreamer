@@ -138,7 +138,6 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   if (!xvpool->pre_alloc_mem) {
     GST_ERROR_OBJECT (pool, "couldn't allocate image");
-    gst_structure_free (config);
     return FALSE;
   } else {
     gint i;
