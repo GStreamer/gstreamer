@@ -19,7 +19,7 @@ dnf config-manager --set-enabled '*-debuginfo'
 dnf upgrade -y && dnf distro-sync -y
 
 # Install the dependencies of gstreamer
-dnf builddep -y --skip-broken --allowerasing --best \
+dnf builddep -y --setopt=install_weak_deps=false --skip-broken --allowerasing --best \
     gstreamer1 \
     gstreamer1-plugins-bad-free \
     gstreamer1-plugins-bad-free-extras \
@@ -35,7 +35,7 @@ dnf remove -y \
     'ffmpeg-free*' \
     'fdk-aac-free*'
 
-dnf install -y $(<./ci/docker/fedora/deps.txt)
+dnf install --setopt=install_weak_deps=false -y $(<./ci/docker/fedora/deps.txt)
 
 dnf remove -y meson -x ninja-build
 pip3 install meson hotdoc python-gitlab tomli junitparser
