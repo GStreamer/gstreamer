@@ -3127,9 +3127,12 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
     tim->nuit_field_based_flag = 1;
     tim->counting_type = 0;
 
-    if ((tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME)
-        == GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME)
-      tim->counting_type = 4;
+    if (tc->config.flags & GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME) {
+      if (tc->config.fps_n == 30000 && tc->config.fps_d == 1001)
+        tim->counting_type = 4;
+      else
+        tim->counting_type = 6;
+    }
 
     tim->discontinuity_flag = 0;
     tim->cnt_dropped_flag = 0;
@@ -3434,11 +3437,36 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         field_count = 0;
       }
 
-      /* dropping of the two lowest (value 0 and 1) n_frames
-       * counts when seconds_value is equal to 0 and
-       * minutes_value is not an integer multiple of 10 */
-      if (tim->counting_type == 4)
-        flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+      /* Table D-3 - Definition of counting_type values */
+      switch (tim->counting_type) {
+          /* dropping of the two lowest (value 0 and 1) n_frames counts when
+           * seconds_value is equal to 0 and minutes_value is not an integer
+           * multiple of 10 */
+        case 4:
+          flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+          break;
+
+          /* dropping of unspecified numbers of unspecified n_frames count
+           * values */
+        case 6:
+          if (h264parse->parsed_fps_d != 1001)
+            break;
+
+          switch (h264parse->parsed_fps_n) {
+            case 30000:
+            case 60000:
+            case 120000:
+              flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+              break;
+
+            default:
+              break;
+          }
+          break;
+
+        default:
+          break;
+      }
 
       if (tim->ct_type == GST_H264_CT_TYPE_INTERLACED) {
         flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;

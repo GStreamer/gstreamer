@@ -3113,11 +3113,36 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         field_count = 0;
       }
 
-      /* Dropping of the two lowest (value 0 and 1) n_frames[ i ] counts when
-       * seconds_value[ i ] is equal to 0 and minutes_value[ i ] is not an integer
-       * multiple of 10 */
-      if (h265parse->time_code.counting_type[i] == 4)
-        flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+      /* Table D.11 - Definition of counting_type[ i ] values */
+      switch (h265parse->time_code.counting_type[i]) {
+          /* Dropping of the two lowest (value 0 and 1) n_frames[ i ] counts when
+           * seconds_value[ i ] is equal to 0 and minutes_value[ i ] is not an
+           * integer multiple of 10 */
+        case 4:
+          flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+          break;
+
+          /* Dropping of unspecified numbers of unspecified n_frames[ i ] count
+           * values */
+        case 6:
+          if (h265parse->parsed_fps_d != 1001)
+            break;
+
+          switch (h265parse->parsed_fps_n) {
+            case 30000:
+            case 60000:
+            case 120000:
+              flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
+              break;
+
+            default:
+              break;
+          }
+          break;
+
+        default:
+          break;
+      }
 
       if (h265parse->sei_pic_struct != GST_H265_SEI_PIC_STRUCT_FRAME)
         flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
