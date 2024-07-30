@@ -101,6 +101,9 @@ enum
   PROP_MIRRORING,
 #endif
   PROP_SCALING_MODE,
+#if (MFX_VERSION >= 1033)
+  PROP_INTERPOLATION_METHOD,
+#endif
   PROP_FORCE_ASPECT_RATIO,
   PROP_FRC_ALGORITHM,
   PROP_VIDEO_DIRECTION,
@@ -127,6 +130,10 @@ enum
 #define PROP_CONTRAST_DEFAULT            1
 #define PROP_DETAIL_DEFAULT              0
 #define PROP_SCALING_MODE_DEFAULT        MFX_SCALING_MODE_DEFAULT
+#if (MFX_VERSION >= 1033)
+#define PROP_INTERPOLATION_METHOD_DEFAULT \
+  MFX_INTERPOLATION_DEFAULT
+#endif
 #define PROP_FORCE_ASPECT_RATIO_DEFAULT  TRUE
 #define PROP_FRC_ALGORITHM_DEFAULT       _MFX_FRC_ALGORITHM_NONE
 #define PROP_VIDEO_DIRECTION_DEFAULT     GST_VIDEO_ORIENTATION_IDENTITY
@@ -1107,8 +1114,9 @@ ensure_filters (GstMsdkVPP * thiz)
     gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_mirroring);
   }
 
-  /* Scaling Mode */
-  if (thiz->flags & GST_MSDK_FLAG_SCALING_MODE) {
+  /* Scaling Mode & Interpolation Method */
+  if (thiz->flags & (GST_MSDK_FLAG_SCALING_MODE |
+          GST_MSDK_FLAG_INTERPOLATION_METHOD)) {
     gboolean scaling_mode_is_compute = FALSE;
 #if (MFX_VERSION >= 2007)
     if (thiz->scaling_mode == MFX_SCALING_MODE_INTEL_GEN_COMPUTE)
@@ -1120,6 +1128,14 @@ ensure_filters (GstMsdkVPP * thiz)
       mfx_scaling->Header.BufferId = MFX_EXTBUFF_VPP_SCALING;
       mfx_scaling->Header.BufferSz = sizeof (mfxExtVPPScaling);
       mfx_scaling->ScalingMode = thiz->scaling_mode;
+      if (MFX_RUNTIME_VERSION_ATLEAST (thiz->version, 1, 33)) {
+#if (MFX_VERSION >= 1033)
+        mfx_scaling->InterpolationMethod = thiz->interpolation_method;
+#endif
+      } else if (thiz->flags & GST_MSDK_FLAG_INTERPOLATION_METHOD) {
+        GST_WARNING_OBJECT (thiz,
+            "Interpolation method not supported, ignore it...");
+      }
       gst_msdkvpp_add_extra_param (thiz, (mfxExtBuffer *) mfx_scaling);
     } else {
       GST_WARNING_OBJECT (thiz,
@@ -1666,6 +1682,12 @@ gst_msdkvpp_set_property (GObject * object, guint prop_id,
       thiz->scaling_mode = g_value_get_enum (value);
       thiz->flags |= GST_MSDK_FLAG_SCALING_MODE;
       break;
+#if (MFX_VERSION >= 1033)
+    case PROP_INTERPOLATION_METHOD:
+      thiz->interpolation_method = g_value_get_enum (value);
+      thiz->flags |= GST_MSDK_FLAG_INTERPOLATION_METHOD;
+      break;
+#endif
     case PROP_FORCE_ASPECT_RATIO:
       thiz->keep_aspect = g_value_get_boolean (value);
       break;
@@ -1746,6 +1768,11 @@ gst_msdkvpp_get_property (GObject * object, guint prop_id,
     case PROP_SCALING_MODE:
       g_value_set_enum (value, thiz->scaling_mode);
       break;
+#if (MFX_VERSION >= 1033)
+    case PROP_INTERPOLATION_METHOD:
+      g_value_set_enum (value, thiz->interpolation_method);
+      break;
+#endif
     case PROP_FORCE_ASPECT_RATIO:
       g_value_set_boolean (value, thiz->keep_aspect);
       break;
@@ -1895,6 +1922,16 @@ _msdkvpp_install_properties (GObjectClass * gobject_class)
       "The Scaling mode to use", gst_msdkvpp_scaling_mode_get_type (),
       PROP_SCALING_MODE_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
+#if (MFX_VERSION >= 1033)
+  obj_properties[PROP_INTERPOLATION_METHOD] =
+      g_param_spec_enum ("interpolation-method", "Interpolation Method",
+      "The Interpolation method used for scaling, note that not all interpolation-methods "
+      "may be compatible with all scaling-modes",
+      gst_msdkvpp_interpolation_method_get_type (),
+      PROP_INTERPOLATION_METHOD_DEFAULT, G_PARAM_READWRITE |
+      G_PARAM_STATIC_STRINGS);
+#endif
+
   obj_properties[PROP_FORCE_ASPECT_RATIO] =
       g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
       "When enabled, scaling will respect original aspect ratio",
@@ -2029,6 +2066,9 @@ gst_msdkvpp_init (GTypeInstance * instance, gpointer g_class)
   thiz->contrast = PROP_CONTRAST_DEFAULT;
   thiz->detail = PROP_DETAIL_DEFAULT;
   thiz->scaling_mode = PROP_SCALING_MODE_DEFAULT;
+#if (MFX_VERSION >= 1033)
+  thiz->interpolation_method = PROP_INTERPOLATION_METHOD_DEFAULT;
+#endif
   thiz->keep_aspect = PROP_FORCE_ASPECT_RATIO_DEFAULT;
   thiz->frc_algm = PROP_FRC_ALGORITHM_DEFAULT;
   thiz->video_direction = PROP_VIDEO_DIRECTION_DEFAULT;
