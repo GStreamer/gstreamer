@@ -678,7 +678,8 @@ enum
   PROP_ICE_AGENT,
   PROP_LATENCY,
   PROP_SCTP_TRANSPORT,
-  PROP_HTTP_PROXY
+  PROP_HTTP_PROXY,
+  PROP_REUSE_SRC_PADS,
 };
 
 static guint gst_webrtc_bin_signals[LAST_SIGNAL] = { 0 };
@@ -5750,20 +5751,22 @@ _update_transceiver_from_sdp_media (GstWebRTCBin * webrtc,
         gst_webrtc_rtp_transceiver_direction_to_string (new_dir));
 
     if (new_dir == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE) {
-      GstWebRTCBinPad *pad;
-
-      pad = _find_pad_for_mline (webrtc, GST_PAD_SRC, media_idx);
-      if (pad) {
-        GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-        if (target) {
-          GstPad *peer = gst_pad_get_peer (target);
-          if (peer) {
-            gst_pad_send_event (peer, gst_event_new_eos ());
-            gst_object_unref (peer);
+      if (!webrtc->priv->reuse_source_pads) {
+        /* pad reuse is disallowed, so send EOS on this pad */
+        GstWebRTCBinPad *pad =
+            _find_pad_for_mline (webrtc, GST_PAD_SRC, media_idx);
+        if (pad) {
+          GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+          if (target) {
+            GstPad *peer = gst_pad_get_peer (target);
+            if (peer) {
+              gst_pad_send_event (peer, gst_event_new_eos ());
+              gst_object_unref (peer);
+            }
+            gst_object_unref (target);
           }
-          gst_object_unref (target);
+          gst_object_unref (pad);
         }
-        gst_object_unref (pad);
       }
 
       /* XXX: send eos event up the sink pad as well? */
@@ -8539,6 +8542,9 @@ gst_webrtc_bin_set_property (GObject * object, guint prop_id,
       gst_webrtc_ice_set_http_proxy (webrtc->priv->ice,
           g_value_get_string (value));
       break;
+    case PROP_REUSE_SRC_PADS:
+      webrtc->priv->reuse_source_pads = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -8619,6 +8625,9 @@ gst_webrtc_bin_get_property (GObject * object, guint prop_id,
     case PROP_HTTP_PROXY:
       g_value_take_string (value,
           gst_webrtc_ice_get_http_proxy (webrtc->priv->ice));
+      break;
+    case PROP_REUSE_SRC_PADS:
+      g_value_set_boolean (value, webrtc->priv->reuse_source_pads);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -8933,6 +8942,23 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
           "The WebRTC SCTP Transport",
           GST_TYPE_WEBRTC_SCTP_TRANSPORT,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstWebRTCBin:reuse-source-pads:
+   *
+   * When set to FALSE, if a transceiver becomes send-only or inactive then
+   * pre-existing source pads will receive an EOS event and no further traffic
+   * even after further renegotiation. When TRUE, pads will simply not
+   * receive any output when the negotiated transceiver state doesn't have
+   * incoming traffic. If renegotiated later, the pad will receive data again.
+   *
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class,
+      PROP_REUSE_SRC_PADS,
+      g_param_spec_boolean ("reuse-source-pads", "Reuse source pads",
+          "If FALSE, webrtcbin will send EOS on source pads with inactive transceivers. TRUE to reuse pads after renegotiation with no EOS",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstWebRTCBin::create-offer:
