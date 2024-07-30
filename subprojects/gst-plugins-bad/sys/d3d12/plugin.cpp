@@ -48,6 +48,7 @@
 #include "gstd3d12ipcclient.h"
 #include "gstd3d12ipcsrc.h"
 #include "gstd3d12ipcsink.h"
+#include "gstd3d12swapchainsink.h"
 #include <windows.h>
 #include <versionhelpers.h>
 #include <wrl.h>
@@ -178,6 +179,8 @@ plugin_init (GstPlugin * plugin)
       "d3d12ipcsrc", GST_RANK_NONE, GST_TYPE_D3D12_IPC_SRC);
   gst_element_register (plugin,
       "d3d12ipcsink", GST_RANK_NONE, GST_TYPE_D3D12_IPC_SINK);
+  gst_element_register (plugin,
+      "d3d12swapchainsink", GST_RANK_NONE, GST_TYPE_D3D12_SWAPCHAIN_SINK);
 
   g_object_set_data_full (G_OBJECT (plugin),
       "plugin-d3d12-shutdown", (gpointer) "shutdown-data",

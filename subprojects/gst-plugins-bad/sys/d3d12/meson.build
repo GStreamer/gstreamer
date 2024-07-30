@@ -23,6 +23,7 @@ d3d12_sources = [
   'gstd3d12screencapture.cpp',
   'gstd3d12screencapturedevice.cpp',
   'gstd3d12screencapturesrc.cpp',
+  'gstd3d12swapchainsink.cpp',
   'gstd3d12testsrc.cpp',
   'gstd3d12videosink.cpp',
   'gstd3d12vp8dec.cpp',
