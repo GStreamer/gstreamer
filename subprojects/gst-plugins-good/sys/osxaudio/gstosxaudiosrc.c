@@ -76,7 +76,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_DEVICE
+  ARG_DEVICE,
+  ARG_UNIQUE_ID,
 };
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -151,6 +152,14 @@ gst_osx_audio_src_class_init (GstOsxAudioSrcClass * klass)
       g_param_spec_int ("device", "Device ID", "Device ID of input device",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /*
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, ARG_UNIQUE_ID,
+      g_param_spec_string ("unique-id", "Unique ID",
+          "Unique persistent ID for the input device",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   gstaudiobasesrc_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_osx_audio_src_create_ringbuffer);
 
@@ -168,6 +177,7 @@ gst_osx_audio_src_init (GstOsxAudioSrc * src)
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
 
   src->device_id = kAudioDeviceUnknown;
+  src->unique_id = NULL;
 }
 
 static void
@@ -195,6 +205,9 @@ gst_osx_audio_src_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_DEVICE:
       g_value_set_int (value, src->device_id);
+      break;
+    case ARG_UNIQUE_ID:
+      g_value_set_string (value, src->unique_id);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -225,6 +238,7 @@ gst_osx_audio_src_change_state (GstElement * element, GstStateChange transition)
           GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SRC (osxsrc)->ringbuffer);
       if (ringbuffer->core_audio->device_id != osxsrc->device_id) {
         osxsrc->device_id = ringbuffer->core_audio->device_id;
+        osxsrc->unique_id = ringbuffer->core_audio->unique_id;
         g_object_notify (G_OBJECT (osxsrc), "device");
       }
       break;
@@ -314,16 +328,11 @@ gst_osx_audio_src_create_ringbuffer (GstAudioBaseSrc * src)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc),
       (void *) gst_osx_audio_src_io_proc);
 
+  ringbuffer->core_audio = g_object_new (GST_TYPE_CORE_AUDIO,
+      "is-src", TRUE, "device", osxsrc->device_id, NULL);
+  ringbuffer->core_audio->osxbuf = GST_OBJECT (ringbuffer);
   ringbuffer->core_audio->element =
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc);
-  ringbuffer->core_audio->is_src = TRUE;
-
-  /* By default the coreaudio instance created by the ringbuffer
-   * has device_id==kAudioDeviceUnknown. The user might have
-   * selected a different one here
-   */
-  if (ringbuffer->core_audio->device_id != osxsrc->device_id)
-    ringbuffer->core_audio->device_id = osxsrc->device_id;
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }

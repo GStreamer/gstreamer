@@ -559,3 +559,51 @@ gst_core_audio_dump_channel_layout (AudioChannelLayout * channel_layout)
         channel_desc->mCoordinates[2]);
   }
 }
+
+char *
+gst_core_audio_device_get_prop (AudioDeviceID device_id,
+    AudioObjectPropertyElement prop_id)
+{
+  OSStatus status = noErr;
+  UInt32 propertySize = 0;
+  CFStringRef prop_val;
+  gchar *result = NULL;
+
+  AudioObjectPropertyAddress propAddress = {
+    prop_id,
+    kAudioDevicePropertyScopeOutput,
+    kAudioObjectPropertyElementMain
+  };
+
+  propAddress.mScope = kAudioObjectPropertyScopeGlobal;
+
+  /* Get the length of the device name */
+  status = AudioObjectGetPropertyDataSize (device_id,
+      &propAddress, 0, NULL, &propertySize);
+  if (status != noErr) {
+    goto beach;
+  }
+
+  /* Get the requested property */
+  status = AudioObjectGetPropertyData (device_id,
+      &propAddress, 0, NULL, &propertySize, &prop_val);
+  if (status != noErr) {
+    goto beach;
+  }
+
+  /* Convert to UTF-8 C String */
+  CFIndex prop_len = CFStringGetLength (prop_val);
+  CFIndex max_size =
+      CFStringGetMaximumSizeForEncoding (prop_len, kCFStringEncodingUTF8) + 1;
+  result = g_malloc (max_size);
+
+  if (!CFStringGetCString (prop_val, result, max_size, kCFStringEncodingUTF8)) {
+    g_free (result);
+    result = NULL;
+  }
+
+  CFRelease (prop_val);
+
+beach:
+  return result;
+}

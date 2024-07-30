@@ -88,7 +88,8 @@ enum
 {
   ARG_0,
   ARG_DEVICE,
-  ARG_VOLUME
+  ARG_VOLUME,
+  ARG_UNIQUE_ID
 };
 
 #define DEFAULT_VOLUME 1.0
@@ -176,6 +177,14 @@ gst_osx_audio_sink_class_init (GstOsxAudioSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_DEVICE,
       g_param_spec_int ("device", "Device ID", "Device ID of output device",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /*
+   * Since: 1.26
+   */
+  g_object_class_install_property (gobject_class, ARG_UNIQUE_ID,
+      g_param_spec_string ("unique-id", "Unique ID",
+          "Unique persistent ID for the input device",
+          NULL, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 #endif
 
   gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_osx_audio_sink_query);
@@ -257,6 +266,7 @@ gst_osx_audio_sink_change_state (GstElement * element,
           GST_OSX_AUDIO_RING_BUFFER (GST_AUDIO_BASE_SINK (osxsink)->ringbuffer);
       if (ringbuffer->core_audio->device_id != osxsink->device_id) {
         osxsink->device_id = ringbuffer->core_audio->device_id;
+        osxsink->unique_id = ringbuffer->core_audio->unique_id;
         g_object_notify (G_OBJECT (osxsink), "device");
       }
       break;
@@ -278,6 +288,9 @@ gst_osx_audio_sink_get_property (GObject * object, guint prop_id,
 #ifndef HAVE_IOS
     case ARG_DEVICE:
       g_value_set_int (value, sink->device_id);
+      break;
+    case ARG_UNIQUE_ID:
+      g_value_set_string (value, sink->unique_id);
       break;
 #endif
     case ARG_VOLUME:
@@ -493,16 +506,11 @@ gst_osx_audio_sink_create_ringbuffer (GstAudioBaseSink * sink)
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink),
       (void *) gst_osx_audio_sink_io_proc);
 
+  ringbuffer->core_audio = g_object_new (GST_TYPE_CORE_AUDIO,
+      "is-src", FALSE, "device", osxsink->device_id, NULL);
+  ringbuffer->core_audio->osxbuf = GST_OBJECT (ringbuffer);
   ringbuffer->core_audio->element =
       GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink);
-  ringbuffer->core_audio->is_src = FALSE;
-
-  /* By default the coreaudio instance created by the ringbuffer
-   * has device_id==kAudioDeviceUnknown. The user might have
-   * selected a different one here
-   */
-  if (ringbuffer->core_audio->device_id != osxsink->device_id)
-    ringbuffer->core_audio->device_id = osxsink->device_id;
 
   return GST_AUDIO_RING_BUFFER (ringbuffer);
 }
