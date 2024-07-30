@@ -469,38 +469,18 @@ gst_timecodestamper_dispose (GObject * object)
 {
   GstTimeCodeStamper *timecodestamper = GST_TIME_CODE_STAMPER (object);
 
-  if (timecodestamper->ltc_daily_jam) {
-    g_date_time_unref (timecodestamper->ltc_daily_jam);
-    timecodestamper->ltc_daily_jam = NULL;
-  }
+  g_clear_pointer (&timecodestamper->ltc_daily_jam, g_date_time_unref);
+  g_clear_pointer (&timecodestamper->internal_tc, gst_video_time_code_free);
+  g_clear_pointer (&timecodestamper->set_internal_tc, gst_video_time_code_free);
+  g_clear_pointer (&timecodestamper->last_tc, gst_video_time_code_free);
+  g_clear_pointer (&timecodestamper->rtc_tc, gst_video_time_code_free);
+  g_clear_pointer (&timecodestamper->last_anc_tc, gst_video_time_code_free);
 
-  if (timecodestamper->internal_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->internal_tc);
-    timecodestamper->internal_tc = NULL;
-  }
-
-  if (timecodestamper->set_internal_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->set_internal_tc);
-    timecodestamper->set_internal_tc = NULL;
-  }
-
-  if (timecodestamper->last_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->last_tc);
-    timecodestamper->last_tc = NULL;
-  }
   timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
-  if (timecodestamper->last_anc_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->last_anc_tc);
-    timecodestamper->last_anc_tc = NULL;
-  }
   timecodestamper->last_anc_tc_running_time = GST_CLOCK_TIME_NONE;
   g_free (timecodestamper->ancillary_meta_locations);
   timecodestamper->ancillary_meta_locations = NULL;
 
-  if (timecodestamper->rtc_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->rtc_tc);
-    timecodestamper->rtc_tc = NULL;
-  }
 #if HAVE_LTC
   g_mutex_lock (&timecodestamper->mutex);
   {
@@ -510,21 +490,10 @@ gst_timecodestamper_dispose (GObject * object)
       g_free (tc);
     }
   }
-  if (timecodestamper->ltc_internal_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->ltc_internal_tc);
-    timecodestamper->ltc_internal_tc = NULL;
-  }
-  timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
-  if (timecodestamper->ltc_dec) {
-    ltc_decoder_free (timecodestamper->ltc_dec);
-    timecodestamper->ltc_dec = NULL;
-  }
-
-  if (timecodestamper->stream_align) {
-    gst_audio_stream_align_free (timecodestamper->stream_align);
-    timecodestamper->stream_align = NULL;
-  }
+  g_clear_pointer (&timecodestamper->ltc_internal_tc, gst_video_time_code_free);
+  g_clear_pointer (&timecodestamper->ltc_dec, ltc_decoder_free);
+  g_clear_pointer (&timecodestamper->stream_align, gst_audio_stream_align_free);
   g_mutex_unlock (&timecodestamper->mutex);
 #endif
 
@@ -558,8 +527,7 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
       gst_timecodestamper_update_drop_frame (timecodestamper);
       break;
     case PROP_LTC_DAILY_JAM:
-      if (timecodestamper->ltc_daily_jam)
-        g_date_time_unref (timecodestamper->ltc_daily_jam);
+      g_clear_pointer (&timecodestamper->ltc_daily_jam, g_date_time_unref);
       timecodestamper->ltc_daily_jam = g_value_dup_boxed (value);
 
 #if HAVE_LTC
@@ -569,19 +537,16 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
         for (l = timecodestamper->ltc_current_tcs.head; l; l = l->next) {
           TimestampedTimecode *tc = l->data;
 
-          if (tc->timecode.config.latest_daily_jam) {
-            g_date_time_unref (tc->timecode.config.latest_daily_jam);
-          }
+          g_clear_pointer (&tc->timecode.config.latest_daily_jam,
+              g_date_time_unref);
           tc->timecode.config.latest_daily_jam =
               g_date_time_ref (timecodestamper->ltc_daily_jam);
         }
       }
 
       if (timecodestamper->ltc_internal_tc) {
-        if (timecodestamper->ltc_internal_tc->config.latest_daily_jam) {
-          g_date_time_unref (timecodestamper->ltc_internal_tc->
-              config.latest_daily_jam);
-        }
+        g_clear_pointer (&timecodestamper->ltc_internal_tc->
+            config.latest_daily_jam, g_date_time_unref);
         timecodestamper->ltc_internal_tc->config.latest_daily_jam =
             g_date_time_ref (timecodestamper->ltc_daily_jam);
       }
@@ -591,16 +556,16 @@ gst_timecodestamper_set_property (GObject * object, guint prop_id,
       timecodestamper->post_messages = g_value_get_boolean (value);
       break;
     case PROP_SET_INTERNAL_TIMECODE:{
-      if (timecodestamper->set_internal_tc)
-        gst_video_time_code_free (timecodestamper->set_internal_tc);
+      g_clear_pointer (&timecodestamper->set_internal_tc,
+          gst_video_time_code_free);
       timecodestamper->set_internal_tc = g_value_dup_boxed (value);
 
       /* Reset the internal timecode on the next opportunity if a new
        * timecode was set here. If none was set we just continue counting
        * from the previous one */
-      if (timecodestamper->set_internal_tc && timecodestamper->internal_tc) {
-        gst_video_time_code_free (timecodestamper->internal_tc);
-        timecodestamper->internal_tc = NULL;
+      if (timecodestamper->set_internal_tc) {
+        g_clear_pointer (&timecodestamper->internal_tc,
+            gst_video_time_code_free);
       }
       break;
     }
@@ -715,20 +680,9 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
   timecodestamper->fps_n = 0;
   timecodestamper->fps_d = 1;
 
-  if (timecodestamper->internal_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->internal_tc);
-    timecodestamper->internal_tc = NULL;
-  }
-
-  if (timecodestamper->rtc_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->rtc_tc);
-    timecodestamper->rtc_tc = NULL;
-  }
-
-  if (timecodestamper->last_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->last_tc);
-    timecodestamper->last_tc = NULL;
-  }
+  g_clear_pointer (&timecodestamper->internal_tc, gst_video_time_code_free);
+  g_clear_pointer (&timecodestamper->rtc_tc, gst_video_time_code_free);
+  g_clear_pointer (&timecodestamper->last_tc, gst_video_time_code_free);
   timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
   if (timecodestamper->last_anc_tc != NULL) {
     gst_video_time_code_free (timecodestamper->last_anc_tc);
@@ -743,10 +697,7 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
   timecodestamper->ltc_first_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->ltc_current_running_time = GST_CLOCK_TIME_NONE;
 
-  if (timecodestamper->ltc_internal_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->ltc_internal_tc);
-    timecodestamper->ltc_internal_tc = NULL;
-  }
+  g_clear_pointer (&timecodestamper->ltc_internal_tc, gst_video_time_code_free);
   timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
   {
@@ -757,16 +708,8 @@ gst_timecodestamper_stop (GstBaseTransform * trans)
     }
   }
 
-  if (timecodestamper->ltc_dec) {
-    ltc_decoder_free (timecodestamper->ltc_dec);
-    timecodestamper->ltc_dec = NULL;
-  }
-
-  if (timecodestamper->stream_align) {
-    gst_audio_stream_align_free (timecodestamper->stream_align);
-    timecodestamper->stream_align = NULL;
-  }
-
+  g_clear_pointer (&timecodestamper->ltc_dec, ltc_decoder_free);
+  g_clear_pointer (&timecodestamper->stream_align, gst_audio_stream_align_free);
   timecodestamper->ltc_total = 0;
   g_mutex_unlock (&timecodestamper->mutex);
 #endif
@@ -876,8 +819,7 @@ gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
     gst_video_time_code_clear (timecode);
     gst_video_time_code_init (timecode, timecodestamper->fps_n,
         timecodestamper->fps_d, jam, tc_flags, 0, 0, 0, 0, 0);
-    if (jam)
-      g_date_time_unref (jam);
+    g_clear_pointer (&jam, g_date_time_unref);
 
     nframes = gst_util_uint64_scale (time, fps_n, GST_SECOND * fps_d);
     gst_video_time_code_add_frames (timecode, nframes);
@@ -1512,8 +1454,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       || timecodestamper->reset_internal_tc_from_seek) {
     gchar *tc_str;
 
-    if (timecodestamper->internal_tc)
-      gst_video_time_code_free (timecodestamper->internal_tc);
+    g_clear_pointer (&timecodestamper->internal_tc, gst_video_time_code_free);
 
     timecodestamper->reset_internal_tc_from_seek = FALSE;
     if (timecodestamper->set_internal_tc) {
@@ -1559,8 +1500,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   if (tc_meta && (!timecodestamper->last_tc || timecodestamper->tc_auto_resync)) {
     gchar *tc_str;
 
-    if (timecodestamper->last_tc)
-      gst_video_time_code_free (timecodestamper->last_tc);
+    g_clear_pointer (&timecodestamper->last_tc, gst_video_time_code_free);
     timecodestamper->last_tc = gst_video_time_code_copy (&tc_meta->tc);
     timecodestamper->last_tc_running_time = running_time;
 
@@ -1577,9 +1517,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
               || running_time >=
               timecodestamper->last_tc_running_time +
               timecodestamper->tc_timeout)) {
-        if (timecodestamper->last_tc)
-          gst_video_time_code_free (timecodestamper->last_tc);
-        timecodestamper->last_tc = NULL;
+        g_clear_pointer (&timecodestamper->last_tc, gst_video_time_code_free);
         timecodestamper->last_tc_running_time = GST_CLOCK_TIME_NONE;
         GST_DEBUG_OBJECT (timecodestamper, "Upstream timecode timed out");
       } else {
@@ -1832,8 +1770,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
         GST_INFO_OBJECT (timecodestamper, "Invalid LTC timecode %s", tc_str);
         g_free (tc_str);
         gst_video_time_code_clear (&ltc_tc->timecode);
-        g_free (ltc_tc);
-        ltc_tc = NULL;
+        g_clear_pointer (&ltc_tc, g_free);
         continue;
       }
 
@@ -1848,8 +1785,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
          * counting based on the previous timecode we had
          */
         if (timecodestamper->ltc_auto_resync) {
-          if (timecodestamper->ltc_internal_tc)
-            gst_video_time_code_free (timecodestamper->ltc_internal_tc);
+          g_clear_pointer (&timecodestamper->ltc_internal_tc,
+              gst_video_time_code_free);
           timecodestamper->ltc_internal_tc =
               gst_video_time_code_copy (&ltc_tc->timecode);
           timecodestamper->ltc_internal_running_time = ltc_tc->running_time;
@@ -1874,8 +1811,7 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
       /* otherwise it's in the past and we need to consider the next
        * timecode. Read a new one */
       gst_video_time_code_clear (&ltc_tc->timecode);
-      g_free (ltc_tc);
-      ltc_tc = NULL;
+      g_clear_pointer (&ltc_tc, g_free);
     }
 
     /* If we didn't update from LTC above, increment our internal timecode
@@ -2052,12 +1988,10 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
 out:
 #endif
 
-  if (dt_now)
-    g_date_time_unref (dt_now);
-  if (dt_frame)
-    g_date_time_unref (dt_frame);
-  if (free_tc && tc)
-    gst_video_time_code_free (tc);
+  g_clear_pointer (&dt_now, g_date_time_unref);
+  g_clear_pointer (&dt_frame, g_date_time_unref);
+  if (free_tc)
+    g_clear_pointer (&tc, gst_video_time_code_free);
 
   return flow_ret;
 }
@@ -2127,10 +2061,7 @@ gst_timecodestamper_release_pad (GstElement * element, GstPad * pad)
 
   timecodestamper->ltcpad = NULL;
 
-  if (timecodestamper->ltc_internal_tc != NULL) {
-    gst_video_time_code_free (timecodestamper->ltc_internal_tc);
-    timecodestamper->ltc_internal_tc = NULL;
-  }
+  g_clear_pointer (&timecodestamper->ltc_internal_tc, gst_video_time_code_free);
   timecodestamper->ltc_internal_running_time = GST_CLOCK_TIME_NONE;
 
   {
@@ -2156,15 +2087,8 @@ gst_timecodestamper_release_pad (GstElement * element, GstPad * pad)
   timecodestamper->ltc_first_running_time = GST_CLOCK_TIME_NONE;
   timecodestamper->ltc_current_running_time = GST_CLOCK_TIME_NONE;
 
-  if (timecodestamper->ltc_dec) {
-    ltc_decoder_free (timecodestamper->ltc_dec);
-    timecodestamper->ltc_dec = NULL;
-  }
-
-  if (timecodestamper->stream_align) {
-    gst_audio_stream_align_free (timecodestamper->stream_align);
-    timecodestamper->stream_align = NULL;
-  }
+  g_clear_pointer (&timecodestamper->ltc_dec, ltc_decoder_free);
+  g_clear_pointer (&timecodestamper->stream_align, gst_audio_stream_align_free);
 
   timecodestamper->ltc_total = 0;
 
