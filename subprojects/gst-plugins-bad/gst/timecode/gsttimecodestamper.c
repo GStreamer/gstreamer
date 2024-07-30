@@ -788,42 +788,38 @@ gst_timecodestamper_update_drop_frame (GstTimeCodeStamper * timecodestamper)
 
 static void
 gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
-    timecodestamper, gint fps_n, gint fps_d, GstVideoTimeCode * timecode,
-    gboolean is_ltc)
+    timecodestamper, gint fps_n, gint fps_d, GstVideoTimeCode * timecode)
 {
   GstVideoTimeCodeFlags tc_flags = GST_VIDEO_TIME_CODE_FLAGS_NONE;
   guint64 nframes;
   GstClockTime time;
-  GDateTime *jam = NULL;
+  GDateTime *jam;
 
   if (!timecode)
+    return;
+
+  if (timecode->config.fps_n == 0 || timecode->config.fps_d == 0)
     return;
 
   if (timecodestamper->interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
-  if (timecodestamper->drop_frame && timecodestamper->fps_d == 1001 &&
-      (timecodestamper->fps_n == 30000 || timecodestamper->fps_n == 60000))
+  if (timecodestamper->drop_frame && fps_d == 1001 &&
+      (fps_n == 30000 || fps_n == 60000))
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 
-  /* If this is an LTC timecode and we have no framerate yet in there then
-   * just do nothing. We're going to set the framerate at a later time */
-  if (timecode->config.fps_d != 0 || !is_ltc) {
-    nframes = gst_video_time_code_frames_since_daily_jam (timecode);
-    time =
-        gst_util_uint64_scale (nframes,
-        GST_SECOND * timecodestamper->fps_d, timecodestamper->fps_n);
-    jam =
-        timecode->config.latest_daily_jam ? g_date_time_ref (timecode->config.
-        latest_daily_jam) : NULL;
-    gst_video_time_code_clear (timecode);
-    gst_video_time_code_init (timecode, timecodestamper->fps_n,
-        timecodestamper->fps_d, jam, tc_flags, 0, 0, 0, 0, 0);
-    g_clear_pointer (&jam, g_date_time_unref);
+  nframes = gst_video_time_code_frames_since_daily_jam (timecode);
+  time = gst_util_uint64_scale_round (nframes,
+      GST_SECOND * timecode->config.fps_d, timecode->config.fps_n);
+  jam = timecode->config.latest_daily_jam ?
+      g_date_time_ref (timecode->config.latest_daily_jam) : NULL;
+  gst_video_time_code_clear (timecode);
+  gst_video_time_code_init (timecode, fps_n, fps_d, jam, tc_flags,
+      0, 0, 0, 0, 0);
+  g_clear_pointer (&jam, g_date_time_unref);
 
-    nframes = gst_util_uint64_scale (time, fps_n, GST_SECOND * fps_d);
-    gst_video_time_code_add_frames (timecode, nframes);
-  }
+  nframes = gst_util_uint64_scale_round (time, fps_n, GST_SECOND * fps_d);
+  gst_video_time_code_add_frames (timecode, nframes);
 }
 
 /* Must be called with object lock */
@@ -836,13 +832,13 @@ gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
     return FALSE;
 
   gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
-      timecodestamper->internal_tc, FALSE);
+      timecodestamper->internal_tc);
   gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
-      timecodestamper->last_tc, FALSE);
+      timecodestamper->last_tc);
   gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
-      timecodestamper->last_anc_tc, FALSE);
+      timecodestamper->last_anc_tc);
   gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
-      timecodestamper->rtc_tc, FALSE);
+      timecodestamper->rtc_tc);
 
 #if HAVE_LTC
   {
@@ -852,11 +848,11 @@ gst_timecodestamper_update_framerate (GstTimeCodeStamper * timecodestamper,
       TimestampedTimecode *tc = l->data;
 
       gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n,
-          fps_d, &tc->timecode, TRUE);
+          fps_d, &tc->timecode);
     }
   }
   gst_timecodestamper_update_timecode_framerate (timecodestamper, fps_n, fps_d,
-      timecodestamper->ltc_internal_tc, FALSE);
+      timecodestamper->ltc_internal_tc);
 #endif
 
   return TRUE;
