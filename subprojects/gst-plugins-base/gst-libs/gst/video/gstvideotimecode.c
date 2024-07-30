@@ -303,14 +303,14 @@ gst_video_time_code_init_from_date_time_full (GstVideoTimeCode * tc,
     gst_video_time_code_init (tc, fps_n, fps_d, jam, flags,
         hour, min, sec, 0, field_count);
   } else {
+    GstClockTime time;
     guint64 frames;
     gboolean add_a_frame = FALSE;
 
     /* Note: This might be inaccurate for 1 frame
      * in case we have a drop frame timecode */
-    frames =
-        gst_util_uint64_scale_round (g_date_time_get_microsecond (dt) *
-        G_GINT64_CONSTANT (1000), fps_n, fps_d * GST_SECOND);
+    time = g_date_time_get_microsecond (dt) * GST_USECOND;
+    frames = gst_util_uint64_scale_round (time, fps_n, fps_d * GST_SECOND);
     if (G_UNLIKELY (((frames == fps_n) && (fps_d == 1)) ||
             ((frames == fps_n / 1000) && (fps_d == 1001)))) {
       /* Avoid invalid timecodes */
