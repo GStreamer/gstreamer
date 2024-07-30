@@ -736,12 +736,29 @@ gst_timecodestamper_start (GstBaseTransform * trans)
   return TRUE;
 }
 
+static gboolean
+is_drop_frame_fps (gint fps_n, gint fps_d)
+{
+  if (fps_d != 1001)
+    return FALSE;
+
+  switch (fps_n) {
+    case 30000:
+    case 60000:
+    case 120000:
+      return TRUE;
+
+    default:
+      return FALSE;
+  }
+}
+
 /* Must be called with object lock */
 static void
 gst_timecodestamper_update_drop_frame (GstTimeCodeStamper * timecodestamper)
 {
-  if (timecodestamper->drop_frame && timecodestamper->fps_d == 1001 &&
-      (timecodestamper->fps_n == 30000 || timecodestamper->fps_n == 60000)) {
+  if (timecodestamper->drop_frame &&
+      is_drop_frame_fps (timecodestamper->fps_n, timecodestamper->fps_d)) {
     if (timecodestamper->internal_tc)
       timecodestamper->internal_tc->config.flags |=
           GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
@@ -804,8 +821,7 @@ gst_timecodestamper_update_timecode_framerate (GstTimeCodeStamper *
   if (timecodestamper->interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
-  if (timecodestamper->drop_frame && fps_d == 1001 &&
-      (fps_n == 30000 || fps_n == 60000))
+  if (timecodestamper->drop_frame && is_drop_frame_fps (fps_n, fps_d))
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 
   nframes = gst_video_time_code_frames_since_daily_jam (timecode);
@@ -1450,8 +1466,8 @@ gst_timecodestamper_transform_ip (GstBaseTransform * vfilter,
   if (timecodestamper->interlace_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_INTERLACED;
 
-  if (timecodestamper->drop_frame && timecodestamper->fps_d == 1001 &&
-      (timecodestamper->fps_n == 30000 || timecodestamper->fps_n == 60000))
+  if (timecodestamper->drop_frame &&
+      is_drop_frame_fps (timecodestamper->fps_n, timecodestamper->fps_d))
     tc_flags |= GST_VIDEO_TIME_CODE_FLAGS_DROP_FRAME;
 
   /* If we don't have an internal timecode yet then either a new one was just
