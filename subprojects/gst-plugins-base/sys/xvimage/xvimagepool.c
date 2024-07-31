@@ -62,6 +62,7 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
   GstCaps *caps;
   guint size, min_buffers, max_buffers;
   GstXvContext *context;
+  GError *error = NULL;
 
   if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
           &max_buffers))
@@ -134,10 +135,11 @@ xvimage_buffer_pool_set_config (GstBufferPool * pool, GstStructure * config)
 
   xvpool->pre_alloc_mem = gst_xvimage_allocator_alloc (xvpool->allocator,
       xvpool->im_format, &info, xvpool->padded_width,
-      xvpool->padded_height, &xvpool->crop, NULL);
+      xvpool->padded_height, &xvpool->crop, &error);
 
   if (!xvpool->pre_alloc_mem) {
-    GST_ERROR_OBJECT (pool, "couldn't allocate image");
+    GST_ERROR_OBJECT (pool, "Couldn't allocate image: %s", error->message);
+    g_error_free (error);
     return FALSE;
   } else {
     gint i;
