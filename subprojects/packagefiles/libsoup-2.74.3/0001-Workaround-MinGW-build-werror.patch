@@ -1,0 +1,30 @@
+From 2aeb31086b665eac6dc70c5259056d9c1eb819ea Mon Sep 17 00:00:00 2001
+From: Seungha Yang <seungha@centricular.com>
+Date: Tue, 9 Jul 2024 22:53:11 +0900
+Subject: [PATCH] Workaround MinGW build werror
+
+../libsoup/soup-socket.c:1325:29: error:
+passing argument 4 of 'setsockopt' from incompatible pointer type [-Wincompatible-pointer-types]
+---
+ meson.build | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/meson.build b/meson.build
+index 130f813..b00f3e8 100644
+--- a/meson.build
++++ b/meson.build
+@@ -70,6 +70,11 @@ else
+       '-Wno-format-zero-length',
+   ]
+ 
++  if host_system == 'windows'
++    # setsockopt() argument type mismatch
++    test_cflags += ['-Wno-incompatible-pointer-types']
++  endif
++
+   common_flags += cc.get_supported_arguments(test_cflags)
+ endif
+ 
+-- 
+2.44.0.windows.1
+
