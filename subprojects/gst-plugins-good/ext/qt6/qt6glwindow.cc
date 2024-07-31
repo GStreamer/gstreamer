@@ -270,6 +270,7 @@ done:
   gst_gl_context_activate (this->priv->other_context, FALSE);
 
   this->priv->result = ret;
+  gst_clear_buffer (&this->priv->produced_buffer);
   this->priv->produced_buffer = this->priv->buffer;
   this->priv->buffer = NULL;
   this->priv->updated = TRUE;
