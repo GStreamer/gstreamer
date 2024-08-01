@@ -205,6 +205,7 @@ Qt6GLWindow::afterRendering()
   guint width, height;
   const GstGLFuncs *gl;
   GstGLSyncMeta *sync_meta;
+  GLenum fbo_target;
 
   g_mutex_lock (&this->priv->lock);
 
@@ -220,13 +221,16 @@ Qt6GLWindow::afterRendering()
   gst_gl_context_activate (this->priv->other_context, TRUE);
   gl = this->priv->other_context->gl_vtable;
 
+  fbo_target = gl->BlitFramebuffer ? GL_READ_FRAMEBUFFER : GL_FRAMEBUFFER;
+
   if (!this->priv->useDefaultFbo) {
       gst_video_frame_unmap (&this->priv->mapped_frame);
     ret = TRUE;
   } else {
-    gl->BindFramebuffer (GL_READ_FRAMEBUFFER, 0);
 
-    ret = gst_gl_context_check_framebuffer_status (this->priv->other_context, GL_READ_FRAMEBUFFER);
+    gl->BindFramebuffer (fbo_target, 0);
+
+    ret = gst_gl_context_check_framebuffer_status (this->priv->other_context, fbo_target);
     if (!ret) {
       GST_ERROR ("FBO errors");
       goto errors;
@@ -254,7 +258,10 @@ Qt6GLWindow::afterRendering()
   }
 
   gst_video_frame_unmap (&this->priv->mapped_frame);
-  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+  gl->BindFramebuffer (fbo_target, 0);
+
+  if (gl->BlitFramebuffer)
+      gl->BindFramebuffer (GL_DRAW_FRAMEBUFFER, 0);
 
   if (this->priv->context) {
     sync_meta = gst_buffer_get_gl_sync_meta (this->priv->buffer);
