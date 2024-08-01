@@ -1470,6 +1470,7 @@ gst_d3d12_dxgi_capture_do_capture (GstD3D12DxgiCapture * capture,
   priv->fence_val++;
   ret = priv->ctx->Execute (texture, (D3D11_BOX *) crop_box, priv->fence_val);
   if (ret != GST_FLOW_OK) {
+    priv->fence_val--;
     priv->WaitGPU ();
     priv->ctx = nullptr;
     if (ret == GST_D3D12_SCREEN_CAPTURE_FLOW_EXPECTED_ERROR) {
