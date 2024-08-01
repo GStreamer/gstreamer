@@ -85,7 +85,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVulkanImageBufferPool, gst_vulkan_image_buffer_pool,
  * the images to setup.
  *
  * If @initial_access is VK_IMAGE_LAYOUT_UNDEFINED or
- * VK_IMAGE_LAYOUT_PREINITIALIZED images does not do layout initialization.
+ * VK_IMAGE_LAYOUT_PREINITIALIZED, the image crated by this pool has not been
+ * initialized to a particular layout
  *
  * Since: 1.24
  */

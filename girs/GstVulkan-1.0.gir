@@ -3546,7 +3546,8 @@ inside @handle.</doc>
 the images to setup.
 
 If @initial_access is VK_IMAGE_LAYOUT_UNDEFINED or
-VK_IMAGE_LAYOUT_PREINITIALIZED images does not do layout initialization.</doc>
+VK_IMAGE_LAYOUT_PREINITIALIZED, the image crated by this pool has not been
+initialized to a particular layout</doc>
         <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/vulkan/gstvkimagebufferpool.h"/>
         <return-value transfer-ownership="none">
           <type name="none" c:type="void"/>
