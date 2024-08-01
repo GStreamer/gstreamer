@@ -672,6 +672,78 @@ public:
   }
 
   GstFlowReturn
+  ExecuteInternal (IDXGIResource * resource)
+  {
+    ComPtr<ID3D11Texture2D> cur_texture;
+    HRESULT hr;
+    resource->QueryInterface (IID_PPV_ARGS (&cur_texture));
+    if (!cur_texture) {
+      GST_ERROR ("Couldn't get texture interface");
+      return GST_FLOW_ERROR;
+    }
+
+    metadata_buffer_.resize (frame_info_.TotalMetadataBufferSize);
+    if (frame_info_.TotalMetadataBufferSize > 0) {
+      UINT buf_size = frame_info_.TotalMetadataBufferSize;
+      hr = dupl_->GetFrameMoveRects (buf_size,
+        (DXGI_OUTDUPL_MOVE_RECT *) metadata_buffer_.data (), &buf_size);
+      if (FAILED (hr)) {
+        GST_ERROR ("Couldn't get move rect, hr: 0x%x", (guint) hr);
+        return flow_return_from_hr (device_.Get (),
+            hr, FrameInfoExpectedErrors);
+      }
+
+      auto move_count = buf_size / sizeof (DXGI_OUTDUPL_MOVE_RECT);
+      if (move_count > 0) {
+        auto ret = copyMoveRects (cur_texture.Get (),
+            (DXGI_OUTDUPL_MOVE_RECT *) metadata_buffer_.data (), move_count);
+        if (ret != GST_FLOW_OK)
+          return ret;
+      }
+
+      auto dirty_rects = metadata_buffer_.data () + buf_size;
+      buf_size = frame_info_.TotalMetadataBufferSize - buf_size;
+
+      hr = dupl_->GetFrameDirtyRects (buf_size, (RECT *) dirty_rects,
+          &buf_size);
+      if (FAILED (hr)) {
+        GST_ERROR ("Couldn't get dirty rect, hr: 0x%x", (guint) hr);
+        return flow_return_from_hr (device_.Get (),
+            hr, FrameInfoExpectedErrors);
+      }
+
+      auto dirty_count = buf_size / sizeof (RECT);
+      if (dirty_count > 0) {
+        auto ret = copyDirtyRects (cur_texture.Get (), (RECT *) dirty_rects,
+            dirty_count);
+        if (ret != GST_FLOW_OK)
+          return ret;
+      }
+    }
+
+    if (frame_info_.LastMouseUpdateTime.QuadPart != 0) {
+      ptr_info_.position_info = frame_info_.PointerPosition;
+      ptr_info_.LastTimeStamp = frame_info_.LastMouseUpdateTime;
+
+      if (frame_info_.PointerShapeBufferSize > 0) {
+        UINT buf_size;
+        ptr_info_.shape_buffer.resize (frame_info_.PointerShapeBufferSize);
+        hr = dupl_->GetFramePointerShape (frame_info_.PointerShapeBufferSize,
+            (void *) ptr_info_.shape_buffer.data (), &buf_size,
+            &ptr_info_.shape_info);
+        if (FAILED (hr)) {
+          return flow_return_from_hr(device_.Get (),
+              hr, FrameInfoExpectedErrors);
+        }
+
+        ptr_info_.BuildTexture ();
+      }
+    }
+
+    return GST_FLOW_OK;
+  }
+
+  GstFlowReturn
   Execute (ID3D11Texture2D * dest, D3D11_BOX * src_box, UINT64 fence_val)
   {
     ComPtr<IDXGIResource> resource;
@@ -679,74 +751,16 @@ public:
     if (hr != DXGI_ERROR_WAIT_TIMEOUT) {
       if (FAILED (hr)) {
         GST_WARNING ("AcquireNextFrame failed with 0x%x", (guint) hr);
+        dupl_->ReleaseFrame ();
         return flow_return_from_hr (device_.Get (), hr, FrameInfoExpectedErrors);
       }
 
-      ComPtr<ID3D11Texture2D> cur_texture;
-      resource.As (&cur_texture);
-      if (!cur_texture) {
-        GST_ERROR ("Couldn't get texture interface");
-        return GST_FLOW_ERROR;
-      }
+      auto ret = ExecuteInternal(resource.Get ());
+      dupl_->ReleaseFrame ();
 
-      metadata_buffer_.resize (frame_info_.TotalMetadataBufferSize);
-      if (frame_info_.TotalMetadataBufferSize > 0) {
-        UINT buf_size = frame_info_.TotalMetadataBufferSize;
-        hr = dupl_->GetFrameMoveRects (buf_size,
-          (DXGI_OUTDUPL_MOVE_RECT *) metadata_buffer_.data (), &buf_size);
-        if (FAILED (hr)) {
-          GST_ERROR ("Couldn't get move rect, hr: 0x%x", (guint) hr);
-          return flow_return_from_hr (device_.Get (),
-              hr, FrameInfoExpectedErrors);
-        }
-
-        auto move_count = buf_size / sizeof (DXGI_OUTDUPL_MOVE_RECT);
-        if (move_count > 0) {
-          auto ret = copyMoveRects (cur_texture.Get (),
-              (DXGI_OUTDUPL_MOVE_RECT *) metadata_buffer_.data (), move_count);
-          if (ret != GST_FLOW_OK)
-            return ret;
-        }
-
-        auto dirty_rects = metadata_buffer_.data () + buf_size;
-        buf_size = frame_info_.TotalMetadataBufferSize - buf_size;
-
-        hr = dupl_->GetFrameDirtyRects (buf_size, (RECT *) dirty_rects,
-            &buf_size);
-        if (FAILED (hr)) {
-          GST_ERROR ("Couldn't get dirty rect, hr: 0x%x", (guint) hr);
-          return flow_return_from_hr (device_.Get (),
-              hr, FrameInfoExpectedErrors);
-        }
-
-        auto dirty_count = buf_size / sizeof (RECT);
-        if (dirty_count > 0) {
-          auto ret = copyDirtyRects (cur_texture.Get (), (RECT *) dirty_rects,
-              dirty_count);
-          if (ret != GST_FLOW_OK)
-            return ret;
-        }
-      }
-
-      if (frame_info_.LastMouseUpdateTime.QuadPart != 0) {
-        ptr_info_.position_info = frame_info_.PointerPosition;
-        ptr_info_.LastTimeStamp = frame_info_.LastMouseUpdateTime;
-
-        if (frame_info_.PointerShapeBufferSize > 0) {
-          UINT buf_size;
-          ptr_info_.shape_buffer.resize (frame_info_.PointerShapeBufferSize);
-          hr = dupl_->GetFramePointerShape (frame_info_.PointerShapeBufferSize,
-              (void *) ptr_info_.shape_buffer.data (), &buf_size,
-              &ptr_info_.shape_info);
-          if (FAILED (hr)) {
-            return flow_return_from_hr(device_.Get (),
-                hr, FrameInfoExpectedErrors);
-          }
-
-          ptr_info_.BuildTexture ();
-        }
-      }
-
+      if (ret != GST_FLOW_OK)
+        return ret;
+    } else {
       dupl_->ReleaseFrame ();
     }
 
