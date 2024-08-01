@@ -224,7 +224,6 @@ Qt6GLWindow::afterRendering()
   fbo_target = gl->BlitFramebuffer ? GL_READ_FRAMEBUFFER : GL_FRAMEBUFFER;
 
   if (!this->priv->useDefaultFbo) {
-      gst_video_frame_unmap (&this->priv->mapped_frame);
     ret = TRUE;
   } else {
 
