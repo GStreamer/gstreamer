@@ -720,6 +720,14 @@ test_webrtc_reset_negotiation (struct test_webrtc *t)
 }
 
 static void
+test_webrtc_clear_states (struct test_webrtc *t)
+{
+  GST_DEBUG ("clearing states");
+  g_array_free (t->states, TRUE);
+  t->states = g_array_new (FALSE, TRUE, sizeof (TestState));
+}
+
+static void
 test_webrtc_free (struct test_webrtc *t)
 {
   /* Otherwise while one webrtcbin is being destroyed, the other could
@@ -3789,6 +3797,110 @@ GST_START_TEST (test_renego_transceiver_set_direction)
 
 GST_END_TEST;
 
+GST_START_TEST (test_renego_triggering)
+{
+
+  struct test_webrtc *t = create_audio_test ();
+
+  VAL_SDP_INIT (no_duplicate_payloads, on_sdp_media_no_duplicate_payloads,
+      NULL, NULL);
+
+  guint media_format_count[] = { 1 };
+  VAL_SDP_INIT (media_formats, on_sdp_media_count_formats,
+      media_format_count, &no_duplicate_payloads);
+  VAL_SDP_INIT (count, _count_num_sdp_media, GUINT_TO_POINTER (1),
+      &media_formats);
+
+  const gchar *expected_offer_setup[] = { "actpass" };
+  VAL_SDP_INIT (offer_setup, on_sdp_media_setup, expected_offer_setup, &count);
+  const gchar *expected_answer_setup[] = { "active" };
+  VAL_SDP_INIT (answer_setup, on_sdp_media_setup, expected_answer_setup,
+      &count);
+  const gchar *expected_offer_direction[] = { "sendrecv" };
+  VAL_SDP_INIT (offer, on_sdp_media_direction, expected_offer_direction,
+      &offer_setup);
+  const gchar *expected_answer_direction[] = { "recvonly" };
+  VAL_SDP_INIT (answer, on_sdp_media_direction, expected_answer_direction,
+      &answer_setup);
+  GstCaps *caps;
+  GArray *transceivers;
+
+  /* Ensure sendrecv stream on webrtc1 */
+  g_signal_emit_by_name (t->webrtc1, "get-transceivers", &transceivers);
+  fail_unless (transceivers != NULL);
+  fail_unless_equals_int (transceivers->len, 1);
+
+  GstWebRTCRTPTransceiver *trans_local =
+      g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
+  g_object_set (trans_local, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV, NULL);
+
+  /* setup recvonly peer */
+  caps = gst_caps_from_string (OPUS_RTP_CAPS (96));
+  gst_caps_set_simple (caps, "ssrc", G_TYPE_UINT, 0xDEADBEEF, NULL);
+
+  GstWebRTCRTPTransceiver *trans_remote = NULL;
+  GstWebRTCRTPTransceiverDirection direction =
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+  g_signal_emit_by_name (t->webrtc2, "add-transceiver", direction, caps,
+      &trans_remote);
+  gst_caps_unref (caps);
+  fail_unless (trans_remote != NULL);
+  gst_object_unref (trans_remote);
+
+  test_validate_sdp (t, &offer, &answer);
+
+  GST_LOG
+      ("Finished validating sendrecv <-> recvonly nego. Triggering renego with recvonly <-> recvonly peers");
+
+  /* Now change the sender to recvonly and expect to renegotiate to inactive */
+  test_webrtc_reset_negotiation (t);
+  test_webrtc_clear_states (t);
+
+  GST_LOG ("Setting local transceiver to RECVONLY");
+  g_object_set (trans_local, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY, NULL);
+
+  GST_LOG ("Waiting for on-negotiation-needed");
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_NEGOTIATION_NEEDED);
+
+  const gchar *new_expected_offer_direction[] = { "recvonly" };
+  VAL_SDP_INIT (new_offer, on_sdp_media_direction, new_expected_offer_direction,
+      NULL);
+  const gchar *new_expected_answer_direction[] = { "inactive" };
+  VAL_SDP_INIT (new_answer, on_sdp_media_direction,
+      new_expected_answer_direction, NULL);
+
+  test_validate_sdp (t, &new_offer, &new_answer);
+
+  g_array_unref (transceivers);
+
+  /* At this point webrtc2 is the answerer. Check that it also triggers nego
+   * if we change the direction to sendonly */
+  test_webrtc_reset_negotiation (t);
+  test_webrtc_clear_states (t);
+
+  GST_LOG ("Setting remote transceiver to SENDONLY");
+  g_signal_emit_by_name (t->webrtc2, "get-transceivers", &transceivers);
+  fail_unless (transceivers != NULL);
+  fail_unless_equals_int (transceivers->len, 1);
+
+  trans_remote = g_array_index (transceivers, GstWebRTCRTPTransceiver *, 0);
+
+  g_object_set (trans_remote, "direction",
+      GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY, NULL);
+
+  g_array_unref (transceivers);
+
+  GST_LOG ("Waiting for on-negotiation-needed");
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_NEGOTIATION_NEEDED);
+
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
+
 static void
 offer_remove_last_media (struct test_webrtc *t, GstElement * element,
     GstPromise * promise, gpointer user_data)
@@ -6140,6 +6252,7 @@ webrtcbin_suite (void)
     tcase_add_test (tc, test_bundle_renego_add_stream);
     tcase_add_test (tc, test_bundle_max_compat_max_bundle_renego_add_stream);
     tcase_add_test (tc, test_renego_transceiver_set_direction);
+    tcase_add_test (tc, test_renego_triggering);
     tcase_add_test (tc, test_renego_lose_media_fails);
     tcase_add_test (tc,
         test_bundle_codec_preferences_rtx_no_duplicate_payloads);

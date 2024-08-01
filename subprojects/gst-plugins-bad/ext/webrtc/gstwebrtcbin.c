@@ -1773,6 +1773,22 @@ done:
   return res;
 }
 
+static GstWebRTCRTPTransceiverDirection
+_reverse_direction (GstWebRTCRTPTransceiverDirection direction)
+{
+  switch (direction) {
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE:
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE:
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV:
+      return direction;
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY:
+      return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY:
+      return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  }
+  return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE;
+}
+
 /* http://w3c.github.io/webrtc-pc/#dfn-check-if-negotiation-is-needed */
 static gboolean
 _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
@@ -1862,33 +1878,39 @@ _check_if_negotiation_is_needed (GstWebRTCBin * webrtc)
         /* If connection's currentLocalDescription if of type "offer", and
          * the direction of the associated m= section in neither the offer
          * nor answer matches t's direction, return "true". */
-
-        if (local_dir != trans->direction && remote_dir != trans->direction) {
-          GST_LOG_OBJECT (webrtc, "transceiver direction (%s) doesn't match "
-              "description (local %s remote %s)",
+        if (local_dir != trans->direction
+            && _reverse_direction (remote_dir) != trans->direction) {
+          GST_LOG_OBJECT (webrtc,
+              "transceiver direction (%s) doesn't match "
+              "description (local %s remote %s (reversed %s))",
               gst_webrtc_rtp_transceiver_direction_to_string (trans->direction),
               gst_webrtc_rtp_transceiver_direction_to_string (local_dir),
-              gst_webrtc_rtp_transceiver_direction_to_string (remote_dir));
+              gst_webrtc_rtp_transceiver_direction_to_string (remote_dir),
+              gst_webrtc_rtp_transceiver_direction_to_string (_reverse_direction
+                  (remote_dir))
+              );
           return TRUE;
         }
       } else if (webrtc->current_local_description->type ==
           GST_WEBRTC_SDP_TYPE_ANSWER) {
-        GstWebRTCRTPTransceiverDirection intersect_dir;
-
         /* If connection's currentLocalDescription if of type "answer", and
-         * the direction of the associated m= section in the answer does not
-         * match t's direction intersected with the offered direction (as
-         * described in [JSEP] (section 5.3.1.)), return "true". */
+         * the direction of the associated m= section in the answer we sent
+         * (local_dir) does not match t's direction intersected with the
+         * offer direction (as described in [JSEP] (section 5.3.1.)),
+         * return "true" because we want to propose a different
+         * direction now. */
 
         /* remote is the offer, local is the answer */
-        intersect_dir = _intersect_answer_directions (remote_dir, local_dir);
-
-        if (intersect_dir != trans->direction) {
-          GST_LOG_OBJECT (webrtc, "transceiver direction (%s) doesn't match "
-              "description intersected direction %s (local %s remote %s)",
+        GstWebRTCRTPTransceiverDirection now_intersect_dir =
+            _intersect_answer_directions (remote_dir, trans->direction);
+        if (now_intersect_dir != local_dir) {
+          GST_LOG_OBJECT (webrtc,
+              "transceiver direction (%s) doesn't match for the "
+              "new description intersected direction %s (prev local %s remote %s)",
               gst_webrtc_rtp_transceiver_direction_to_string (trans->direction),
               gst_webrtc_rtp_transceiver_direction_to_string (local_dir),
-              gst_webrtc_rtp_transceiver_direction_to_string (intersect_dir),
+              gst_webrtc_rtp_transceiver_direction_to_string
+              (now_intersect_dir),
               gst_webrtc_rtp_transceiver_direction_to_string (remote_dir));
           return TRUE;
         }
@@ -6281,22 +6303,6 @@ get_last_generated_description (GstWebRTCBin * webrtc, SDPSource source,
   }
 
   return NULL;
-}
-
-static GstWebRTCRTPTransceiverDirection
-_reverse_direction (GstWebRTCRTPTransceiverDirection direction)
-{
-  switch (direction) {
-    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE:
-    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE:
-    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV:
-      return direction;
-    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY:
-      return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
-    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY:
-      return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
-  }
-  return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE;
 }
 
 /* https://w3c.github.io/webrtc-pc/#set-description (steps in 4.6.10.) */
