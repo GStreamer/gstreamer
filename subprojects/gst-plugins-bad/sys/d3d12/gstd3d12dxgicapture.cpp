@@ -272,7 +272,10 @@ public:
     }
   }
 
-  GstFlowReturn Init (HMONITOR monitor, HANDLE fence_handle)
+  GstFlowReturn Init (HMONITOR monitor, ID3D11Device5 * device,
+      ID3D11DeviceContext4 * context, ID3D11Fence * fence,
+      ID3D11SamplerState * sampler, ID3D11PixelShader * ps,
+      ID3D11VertexShader * vs, ID3D11InputLayout * layout)
   {
     ComPtr<IDXGIAdapter1> adapter;
     ComPtr<IDXGIOutput> output;
@@ -302,32 +305,8 @@ public:
       GST_WARNING ("OpenInputDesktop() failed, error %lu", GetLastError());
     }
 
-    D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_1;
-
-    ComPtr<ID3D11Device> device;
-    ComPtr<ID3D11DeviceContext> context;
-    hr = D3D11CreateDevice (adapter.Get (), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
-        D3D11_CREATE_DEVICE_BGRA_SUPPORT, &feature_level, 1, D3D11_SDK_VERSION,
-        &device, nullptr, &context);
-    if (FAILED (hr)) {
-      GST_ERROR ("Couldn't create d3d11 device");
-      return GST_FLOW_ERROR;
-    }
-
-    hr = device.As (&device_);
-    if (FAILED (hr)) {
-      GST_ERROR ("ID3D11Device5 interface unavilable");
-      return GST_FLOW_ERROR;
-    }
-
-    hr = context.As (&context_);
-    if (FAILED (hr)) {
-      GST_ERROR ("ID3D11DeviceContext4 interface unavilable");
-      return GST_FLOW_ERROR;
-    }
-
     /* FIXME: Use DuplicateOutput1 to avoid potentail color conversion */
-    hr = output1->DuplicateOutput(device_.Get(), &dupl_);
+    hr = output1->DuplicateOutput(device, &dupl_);
     if (FAILED (hr)) {
       if (hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE) {
         GST_ERROR ("Hit the max allowed number of Desktop Duplication session");
@@ -345,16 +324,17 @@ public:
         return GST_D3D12_SCREEN_CAPTURE_FLOW_UNSUPPORTED;
       }
 
-      return flow_return_from_hr (device_.Get(), hr,
+      return flow_return_from_hr (device, hr,
           CreateDuplicationExpectedErrors);
     }
 
-    hr = device_->OpenSharedFence (fence_handle,
-        IID_PPV_ARGS (&shared_fence_));
-    if (FAILED (hr)) {
-      GST_ERROR ("Couldn't create fence");
-      return GST_FLOW_ERROR;
-    }
+    device_ = device;
+    context_ = context;
+    shared_fence_ = fence;
+    sampler_ = sampler;
+    ps_ = ps;
+    vs_ = vs;
+    layout_ = layout;
 
     dupl_->GetDesc (&output_desc_);
 
@@ -386,70 +366,6 @@ public:
     viewport_.MaxDepth = 1;
     viewport_.Width = desc.Width;
     viewport_.Height = desc.Height;
-
-    GstD3DShaderByteCode vs_code;
-    GstD3DShaderByteCode ps_code;
-    if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COORD,
-            GST_D3D_SM_5_0, &vs_code)) {
-      GST_ERROR ("Couldn't get vs bytecode");
-      return GST_FLOW_ERROR;
-    }
-
-    if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SAMPLE,
-            GST_D3D_SM_5_0, &ps_code)) {
-      GST_ERROR ("Couldn't get ps bytecode");
-      return GST_FLOW_ERROR;
-    }
-
-    D3D11_INPUT_ELEMENT_DESC input_desc[2] = { };
-    input_desc[0].SemanticName = "POSITION";
-    input_desc[0].SemanticIndex = 0;
-    input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-    input_desc[0].InputSlot = 0;
-    input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-    input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-    input_desc[0].InstanceDataStepRate = 0;
-    input_desc[1].SemanticName = "TEXCOORD";
-    input_desc[1].SemanticIndex = 0;
-    input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-    input_desc[1].InputSlot = 0;
-    input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
-    input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-    input_desc[1].InstanceDataStepRate = 0;
-
-    hr = device_->CreateVertexShader (vs_code.byte_code, vs_code.byte_code_len,
-        nullptr, &vs_);
-    if (FAILED (hr)) {
-      GST_ERROR ("Couldn't create vertex shader");
-      return GST_FLOW_ERROR;
-    }
-
-    hr = device_->CreateInputLayout (input_desc, 2, vs_code.byte_code,
-        vs_code.byte_code_len, &layout_);
-    if (FAILED (hr)) {
-      GST_ERROR ("Couldn't create input layout");
-      return GST_FLOW_ERROR;
-    }
-
-    hr = device_->CreatePixelShader (ps_code.byte_code, ps_code.byte_code_len,
-        nullptr, &ps_);
-    if (FAILED (hr)) {
-      GST_ERROR ("Couldn't create pixel shader");
-      return GST_FLOW_ERROR;
-    }
-
-    D3D11_SAMPLER_DESC sampler_desc = { };
-    sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
-    sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
-    sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
-    sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
-    hr = device_->CreateSamplerState (&sampler_desc, &sampler_);
-    if (FAILED (hr)) {
-      GST_ERROR ("Couldn't create sampler state");
-      return GST_FLOW_ERROR;
-    }
 
     return GST_FLOW_OK;
   }
@@ -902,15 +818,12 @@ struct GstD3D12DxgiCapturePrivate
   {
     WaitGPU ();
     ctx = nullptr;
-    if (shared_fence_handle)
-      CloseHandle (shared_fence_handle);
     gst_clear_buffer (&mouse_buf);
     gst_clear_buffer (&mouse_xor_buf);
     gst_clear_object (&ca_pool);
     gst_clear_object (&fence_data_pool);
     gst_clear_object (&mouse_blend);
     gst_clear_object (&mouse_xor_blend);
-    gst_clear_object (&device);
   }
 
   void WaitGPU ()
@@ -922,15 +835,20 @@ struct GstD3D12DxgiCapturePrivate
     }
   }
 
-  GstD3D12Device *device = nullptr;
-
   std::unique_ptr<DesktopDupCtx> ctx;
   ComPtr<IDXGIOutput1> output;
   GstD3D12CommandAllocatorPool *ca_pool = nullptr;
   GstD3D12FenceDataPool *fence_data_pool;
   ComPtr<ID3D12GraphicsCommandList> cl;
   ComPtr<ID3D12Fence> shared_fence;
-  HANDLE shared_fence_handle = nullptr;
+  ComPtr<ID3D11Device5> device11;
+  ComPtr<ID3D11DeviceContext4> context11;
+  ComPtr<ID3D11Fence> shared_fence11;
+  ComPtr<ID3D11SamplerState> sampler;
+  ComPtr<ID3D11PixelShader> ps;
+  ComPtr<ID3D11VertexShader> vs;
+  ComPtr<ID3D11InputLayout> layout;
+
   GstBuffer *mouse_buf = nullptr;
   GstBuffer *mouse_xor_buf = nullptr;
 
@@ -1016,8 +934,9 @@ gst_d3d12_dxgi_capture_open (GstD3D12DxgiCapture * self,
   priv->monitor_handle = monitor_handle;
 
   ComPtr < IDXGIOutput > output;
+  ComPtr < IDXGIAdapter1 > adapter;
   auto hr = gst_d3d12_screen_capture_find_output_for_monitor (monitor_handle,
-      nullptr, &output);
+      &adapter, &output);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_WARNING_OBJECT (self,
         "Failed to find associated adapter for monitor %p", monitor_handle);
@@ -1111,17 +1030,107 @@ gst_d3d12_dxgi_capture_open (GstD3D12DxgiCapture * self,
     return FALSE;
   }
 
+  priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
+      D3D12_COMMAND_LIST_TYPE_DIRECT);
+
+  D3D_FEATURE_LEVEL feature_level = D3D_FEATURE_LEVEL_11_1;
+  ComPtr < ID3D11Device > device11;
+  ComPtr < ID3D11DeviceContext > context11;
+  hr = D3D11CreateDevice (adapter.Get (), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+      D3D11_CREATE_DEVICE_BGRA_SUPPORT, &feature_level, 1, D3D11_SDK_VERSION,
+      &device11, nullptr, &context11);
+
+  hr = device11.As (&priv->device11);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "ID3D11Device5 interface unavilable");
+    return FALSE;
+  }
+
+  hr = context11.As (&priv->context11);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "ID3D11DeviceContext4 interface unavilable");
+    return FALSE;
+  }
+
+  HANDLE fence_handle;
   hr = device->CreateSharedHandle (priv->shared_fence.Get (),
-      nullptr, GENERIC_ALL, nullptr, &priv->shared_fence_handle);
+      nullptr, GENERIC_ALL, nullptr, &fence_handle);
   if (!gst_d3d12_result (hr, self->device)) {
     GST_ERROR_OBJECT (self, "Couldn't create shared fence handle");
     return FALSE;
   }
 
-  priv->ca_pool = gst_d3d12_command_allocator_pool_new (device,
-      D3D12_COMMAND_LIST_TYPE_DIRECT);
+  hr = priv->device11->OpenSharedFence (fence_handle,
+      IID_PPV_ARGS (&priv->shared_fence11));
+  CloseHandle (fence_handle);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't create fence");
+    return FALSE;
+  }
 
-  priv->device = (GstD3D12Device *) gst_object_ref (self->device);
+  GstD3DShaderByteCode vs_code;
+  GstD3DShaderByteCode ps_code;
+  if (!gst_d3d_plugin_shader_get_vs_blob (GST_D3D_PLUGIN_VS_COORD,
+          GST_D3D_SM_5_0, &vs_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get vs bytecode");
+    return FALSE;
+  }
+
+  if (!gst_d3d_plugin_shader_get_ps_blob (GST_D3D_PLUGIN_PS_SAMPLE,
+          GST_D3D_SM_5_0, &ps_code)) {
+    GST_ERROR_OBJECT (self, "Couldn't get ps bytecode");
+    return FALSE;
+  }
+
+  D3D11_INPUT_ELEMENT_DESC input_desc[2] = { };
+  input_desc[0].SemanticName = "POSITION";
+  input_desc[0].SemanticIndex = 0;
+  input_desc[0].Format = DXGI_FORMAT_R32G32B32_FLOAT;
+  input_desc[0].InputSlot = 0;
+  input_desc[0].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+  input_desc[0].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+  input_desc[0].InstanceDataStepRate = 0;
+  input_desc[1].SemanticName = "TEXCOORD";
+  input_desc[1].SemanticIndex = 0;
+  input_desc[1].Format = DXGI_FORMAT_R32G32_FLOAT;
+  input_desc[1].InputSlot = 0;
+  input_desc[1].AlignedByteOffset = D3D11_APPEND_ALIGNED_ELEMENT;
+  input_desc[1].InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+  input_desc[1].InstanceDataStepRate = 0;
+
+  hr = priv->device11->CreateVertexShader (vs_code.byte_code,
+      vs_code.byte_code_len, nullptr, &priv->vs);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't create vertex shader");
+    return FALSE;
+  }
+
+  hr = device11->CreateInputLayout (input_desc, 2, vs_code.byte_code,
+      vs_code.byte_code_len, &priv->layout);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't create input layout");
+    return FALSE;
+  }
+
+  hr = priv->device11->CreatePixelShader (ps_code.byte_code,
+      ps_code.byte_code_len, nullptr, &priv->ps);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't create pixel shader");
+    return FALSE;
+  }
+
+  D3D11_SAMPLER_DESC sampler_desc = { };
+  sampler_desc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+  sampler_desc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+  sampler_desc.ComparisonFunc = D3D11_COMPARISON_ALWAYS;
+  sampler_desc.MaxLOD = D3D11_FLOAT32_MAX;
+  hr = priv->device11->CreateSamplerState (&sampler_desc, &priv->sampler);
+  if (FAILED (hr)) {
+    GST_ERROR_OBJECT (self, "Couldn't create sampler state");
+    return FALSE;
+  }
 
   return TRUE;
 }
@@ -1181,7 +1190,10 @@ gst_d3d12_dxgi_capture_prepare_unlocked (GstD3D12DxgiCapture * self)
   }
 
   auto ctx = std::make_unique < DesktopDupCtx > ();
-  auto ret = ctx->Init (priv->monitor_handle, priv->shared_fence_handle);
+  auto ret = ctx->Init (priv->monitor_handle, priv->device11.Get (),
+      priv->context11.Get (), priv->shared_fence11.Get (),
+      priv->sampler.Get (), priv->ps.Get (), priv->vs.Get (),
+      priv->layout.Get ());
   if (ret != GST_FLOW_OK) {
     GST_WARNING_OBJECT (self,
         "Couldn't prepare capturing, %sexpected failure",
@@ -1382,7 +1394,7 @@ gst_d3d12_dxgi_capture_draw_mouse (GstD3D12DxgiCapture * self,
       ptr_w, "src-height", ptr_h, "dest-x", ptr_x, "dest-y", ptr_y,
       "dest-width", ptr_w, "dest-height", ptr_h, nullptr);
 
-  auto cq = gst_d3d12_device_get_command_queue (priv->device,
+  auto cq = gst_d3d12_device_get_command_queue (self->device,
       D3D12_COMMAND_LIST_TYPE_DIRECT);
   if (!gst_d3d12_converter_convert_buffer (priv->mouse_blend,
           priv->mouse_buf, buffer, fence_data, cl.Get (), TRUE)) {
