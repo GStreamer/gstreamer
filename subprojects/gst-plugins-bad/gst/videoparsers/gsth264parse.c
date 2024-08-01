@@ -354,6 +354,7 @@ gst_h264_parse_stop (GstBaseParse * parse)
   gst_h264_parse_reset (h264parse);
 
   gst_h264_nal_parser_free (h264parse->nalparser);
+  h264parse->nalparser = NULL;
 
   return TRUE;
 }
