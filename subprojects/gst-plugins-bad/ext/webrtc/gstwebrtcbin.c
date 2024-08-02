@@ -6280,6 +6280,22 @@ get_last_generated_description (GstWebRTCBin * webrtc, SDPSource source,
   return NULL;
 }
 
+static GstWebRTCRTPTransceiverDirection
+_reverse_direction (GstWebRTCRTPTransceiverDirection direction)
+{
+  switch (direction) {
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE:
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE:
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV:
+      return direction;
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY:
+      return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY;
+    case GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY:
+      return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDONLY;
+  }
+  return GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_NONE;
+}
+
 /* https://w3c.github.io/webrtc-pc/#set-description (steps in 4.6.10.) */
 static gboolean
 _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
@@ -6328,12 +6344,14 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
     const gchar *mid;
     guint transport_idx;
     TransportStream *stream;
+    GstWebRTCRTPTransceiverDirection direction;
 
     if (_message_media_is_datachannel (sd->sdp->sdp, i))
       continue;
 
     media = gst_sdp_message_get_media (sd->sdp->sdp, i);
     mid = gst_sdp_media_get_attribute_val (media, "mid");
+    direction = _get_direction_from_media (media);
 
     /* XXX: not strictly required but a lot of functionality requires a mid */
     if (!mid) {
@@ -6390,8 +6408,6 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
          * that were added to the PeerConnection by addTrack and are not associated with any "m=" section
          * and are not stopped, find the first (according to the canonical order described in Section 5.2.1)
          * such RtpTransceiver. */
-        GstWebRTCRTPTransceiverDirection direction =
-            _get_direction_from_media (media);
         if (direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV
             || direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY) {
           int j;
@@ -6464,11 +6480,18 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
       trans->mid = g_strdup (mid);
       g_object_notify (G_OBJECT (trans), "mid");
 
+      /* Let direction be an RTCRtpTransceiverDirection value representing the direction from the media
+         description, but with the send and receive directions reversed to represent this peer's point of view. */
+      direction = _reverse_direction (direction);
+      /* If the media description is rejected, set direction to "inactive". */
+      if (gst_sdp_media_get_port (media) == 0)
+        direction = GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_INACTIVE;
+
       /* If description is of type "answer" or "pranswer", then run the following steps: */
       if (sd->sdp->type == GST_WEBRTC_SDP_TYPE_ANSWER
           || sd->sdp->type == GST_WEBRTC_SDP_TYPE_PRANSWER) {
         /* Set transceiver.[[CurrentDirection]] to direction. */
-        trans->current_direction = _get_direction_from_media (media);
+        trans->current_direction = direction;
       }
       /* Let transport be the RTCDtlsTransport object representing the RTP/RTCP component of the media transport
        * used by transceiver's associated media description, according to [RFC8843]. */
