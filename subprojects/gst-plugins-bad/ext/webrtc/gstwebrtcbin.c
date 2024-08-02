@@ -6500,6 +6500,12 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
         webrtc_transceiver_set_transport (wtrans, stream);
       }
     }
+
+    wtrans = WEBRTC_TRANSCEIVER (trans);
+    if (wtrans->stream
+        && (direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_SENDRECV
+            || direction == GST_WEBRTC_RTP_TRANSCEIVER_DIRECTION_RECVONLY))
+      _connect_output_stream (webrtc, wtrans->stream, transport_idx);
   }
 
   ret = TRUE;
