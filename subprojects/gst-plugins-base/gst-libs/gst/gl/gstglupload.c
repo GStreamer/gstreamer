@@ -1818,11 +1818,12 @@ _direct_dma_buf_upload_transform_caps (gpointer impl, GstGLContext * context,
     ret = _dma_buf_upload_transform_caps_common (tmp_caps, context, direction,
         flags, 1 << dmabuf->target, GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
         GST_CAPS_FEATURE_MEMORY_DMABUF);
-    gst_caps_unref (tmp_caps);
 
-    tmp = _dma_buf_upload_transform_caps_common (caps, context, direction,
+
+    tmp = _dma_buf_upload_transform_caps_common (tmp_caps, context, direction,
         flags, 1 << dmabuf->target, GST_CAPS_FEATURE_MEMORY_GL_MEMORY,
         GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY);
+    gst_caps_unref (tmp_caps);
 
     if (!ret) {
       ret = tmp;
