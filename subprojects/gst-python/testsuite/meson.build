@@ -4,6 +4,7 @@ tests = [
     ['Test gst', 'test_gst.py'],
     ['Test fundamentals', 'test_types.py'],
     ['Test plugins', 'test_plugin.py'],
+    ['Test analytics', 'test_analytics.py'],
 ]
 
 pluginsdirs = []
