@@ -387,6 +387,12 @@ void                 gst_video_encoder_set_min_force_key_unit_interval (GstVideo
 GST_VIDEO_API
 GstClockTime         gst_video_encoder_get_min_force_key_unit_interval (GstVideoEncoder * encoder);
 
+GST_VIDEO_API
+void                 gst_video_encoder_release_frame (GstVideoEncoder *encoder, GstVideoCodecFrame *frame);
+
+GST_VIDEO_API
+void                 gst_video_encoder_drop_frame (GstVideoEncoder *encoder, GstVideoCodecFrame *frame);
+
 G_DEFINE_AUTOPTR_CLEANUP_FUNC(GstVideoEncoder, gst_object_unref)
 
 G_END_DECLS
