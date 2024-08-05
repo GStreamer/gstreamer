@@ -262,6 +262,7 @@ struct _GstVaCompositor
   GstBufferPool *other_pool;    /* downstream pool */
 
   guint32 scale_method;
+  guint32 interpolation_method;
 };
 
 struct CData
@@ -274,6 +275,7 @@ enum
 {
   PROP_DEVICE_PATH = 1,
   PROP_SCALE_METHOD,
+  PROP_INTERPOLATION_METHOD,
   N_PROPERTIES
 };
 
@@ -291,6 +293,13 @@ gst_va_compositor_set_property (GObject * object, guint prop_id,
     {
       GST_OBJECT_LOCK (object);
       self->scale_method = g_value_get_enum (value);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    }
+    case PROP_INTERPOLATION_METHOD:
+    {
+      GST_OBJECT_LOCK (object);
+      self->interpolation_method = g_value_get_enum (value);
       GST_OBJECT_UNLOCK (object);
       break;
     }
@@ -322,6 +331,13 @@ gst_va_compositor_get_property (GObject * object, guint prop_id,
     {
       GST_OBJECT_LOCK (object);
       g_value_set_enum (value, self->scale_method);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    }
+    case PROP_INTERPOLATION_METHOD:
+    {
+      GST_OBJECT_LOCK (object);
+      g_value_set_enum (value, self->interpolation_method);
       GST_OBJECT_UNLOCK (object);
       break;
     }
@@ -1028,6 +1044,10 @@ gst_va_compositor_aggregate_frames (GstVideoAggregator * vagg,
   if (!gst_va_filter_set_scale_method (self->filter, self->scale_method))
     GST_WARNING_OBJECT (self, "couldn't set filter scale method");
 
+  if (!gst_va_filter_set_interpolation_method (self->filter,
+          self->interpolation_method))
+    GST_WARNING_OBJECT (self, "couldn't set filter interpolation method");
+
   if (!gst_va_filter_compose (self->filter, &tx)) {
     GST_ERROR_OBJECT (self, "couldn't apply filter");
     ret = GST_FLOW_ERROR;
@@ -1642,6 +1662,17 @@ gst_va_compositor_class_init (gpointer g_class, gpointer class_data)
       VA_FILTER_SCALING_DEFAULT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   gst_type_mark_as_plugin_api (GST_TYPE_VA_SCALE_METHOD, 0);
+
+  /**
+   * GstVaCompositor:interpolation-method:
+   *
+   * Sets the interpolation method algorithm to use when resizing.
+   */
+  properties[PROP_INTERPOLATION_METHOD] =
+      g_param_spec_enum ("interpolation-method", "Interpolation Method",
+      "Interpolation method to use for scaling",
+      GST_TYPE_VA_INTERPOLATION_METHOD, VA_FILTER_INTERPOLATION_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (object_class, N_PROPERTIES, properties);
 

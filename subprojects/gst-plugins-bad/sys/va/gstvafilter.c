@@ -61,6 +61,7 @@ struct _GstVaFilter
   GstVideoOrientationMethod orientation;
 
   guint32 scale_method;
+  guint32 interpolation_method;
 
   gboolean crop_enabled;
 
@@ -154,6 +155,8 @@ gst_va_filter_class_init (GstVaFilterClass * klass)
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, N_PROPERTIES, g_properties);
+
+  gst_type_mark_as_plugin_api (GST_TYPE_VA_INTERPOLATION_METHOD, 0);
 }
 
 static void
@@ -930,6 +933,18 @@ gst_va_filter_set_scale_method (GstVaFilter * self, guint32 method)
   return TRUE;
 }
 
+gboolean
+gst_va_filter_set_interpolation_method (GstVaFilter * self, guint32 method)
+{
+  g_return_val_if_fail (GST_IS_VA_FILTER (self), FALSE);
+
+  GST_OBJECT_LOCK (self);
+  self->interpolation_method = method;
+  GST_OBJECT_UNLOCK (self);
+
+  return TRUE;
+}
+
 static gboolean
 _from_video_orientation_method (GstVideoOrientationMethod orientation,
     guint * mirror, guint * rotation)
@@ -1612,7 +1627,7 @@ _create_pipeline_buffer (GstVaFilter * self, GstVaSample * src,
     .output_surface_flag = dst->flags,
     .input_color_properties = self->input_color_properties,
     .output_color_properties = self->output_color_properties,
-    .filter_flags = self->scale_method,
+    .filter_flags = self->scale_method | self->interpolation_method,
     /* output to SDR */
     .output_hdr_metadata = NULL,
   };
@@ -1795,7 +1810,7 @@ gst_va_filter_compose (GstVaFilter * self, GstVaComposeTransaction * tx)
       .surface_region = &sample->input_region,
       .output_region = &sample->output_region,
       .output_background_color = 0xff000000,
-      .filter_flags = self->scale_method,
+      .filter_flags = self->scale_method | self->interpolation_method,
     };
     /* *INDENT-ON* */
     GST_OBJECT_UNLOCK (self);
@@ -1943,6 +1958,29 @@ gst_va_scale_method_get_type (void)
 
   if (g_once_init_enter (&type)) {
     const GType _type = g_enum_register_static ("GstVaScaleMethod", values);
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+GType
+gst_va_interpolation_method_get_type (void)
+{
+  static gsize type = 0;
+  static const GEnumValue values[] = {
+    {VA_FILTER_INTERPOLATION_DEFAULT, "Default interpolation", "default"},
+    {VA_FILTER_INTERPOLATION_NEAREST_NEIGHBOR, "Nearest neighbor interpolation",
+        "nearest-neighbor"},
+    {VA_FILTER_INTERPOLATION_BILINEAR, "Bilinear interpolation", "bilinear"},
+    {VA_FILTER_INTERPOLATION_ADVANCED, "Advanced interpolation method is "
+          "defined by each implementation and usually gives best quality.",
+        "advanced"},
+    {0, NULL, NULL},
+  };
+
+  if (g_once_init_enter (&type)) {
+    const GType _type =
+        g_enum_register_static ("GstVaInterpolationMethod", values);
     g_once_init_leave (&type, _type);
   }
   return type;

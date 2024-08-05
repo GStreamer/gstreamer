@@ -120,6 +120,7 @@ struct _GstVaVpp
   gint borders_h;
   gint borders_w;
   guint32 scale_method;
+  guint32 interpolation_method;
 
   gboolean hdr_mapping;
   gboolean has_hdr_meta;
@@ -143,6 +144,7 @@ enum
   PROP_DISABLE_PASSTHROUGH = GST_VA_FILTER_PROP_LAST + 1,
   PROP_ADD_BORDERS,
   PROP_SCALE_METHOD,
+  PROP_INTERPOLATION_METHOD,
   N_PROPERTIES
 };
 
@@ -254,6 +256,9 @@ _update_properties_unlocked (GstVaVpp * self)
 
   if (!gst_va_filter_set_scale_method (btrans->filter, self->scale_method))
     GST_WARNING_OBJECT (self, "could not set the filter scale method.");
+  if (!gst_va_filter_set_interpolation_method (btrans->filter,
+          self->interpolation_method))
+    GST_WARNING_OBJECT (self, "could not set the filter interpolation method.");
 }
 
 static void
@@ -332,6 +337,9 @@ gst_va_vpp_set_property (GObject * object, guint prop_id,
     case PROP_SCALE_METHOD:
       self->scale_method = g_value_get_enum (value);
       break;
+    case PROP_INTERPOLATION_METHOD:
+      self->interpolation_method = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -398,6 +406,9 @@ gst_va_vpp_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SCALE_METHOD:
       g_value_set_enum (value, self->scale_method);
+      break;
+    case PROP_INTERPOLATION_METHOD:
+      g_value_set_enum (value, self->interpolation_method);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2169,6 +2180,20 @@ _install_static_properties (GObjectClass * klass)
       | GST_PARAM_MUTABLE_PLAYING);
   g_object_class_install_property (klass, PROP_SCALE_METHOD,
       PROPERTIES (PROP_SCALE_METHOD));
+
+  /**
+   * GstVaPostProc:interpolation-method
+   *
+   * Sets the interpolation method algorithm to use when resizing.
+   *
+   */
+  PROPERTIES (PROP_INTERPOLATION_METHOD) =
+      g_param_spec_enum ("interpolation-method", "Interpolation Method",
+      "Interpolation method to use for scaling",
+      GST_TYPE_VA_INTERPOLATION_METHOD, VA_FILTER_INTERPOLATION_DEFAULT,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_MUTABLE_PLAYING);
+  g_object_class_install_property (klass, PROP_INTERPOLATION_METHOD,
+      PROPERTIES (PROP_INTERPOLATION_METHOD));
 }
 
 static void
