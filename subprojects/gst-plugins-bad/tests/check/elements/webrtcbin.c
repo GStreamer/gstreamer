@@ -6040,6 +6040,63 @@ GST_START_TEST (test_sdp_session_setup_attribute)
 
 GST_END_TEST;
 
+static void
+_rollback_complete (GstPromise * promise, gpointer user_data)
+{
+  GstPromiseResult result = gst_promise_wait (promise);
+  fail_unless (result == GST_PROMISE_RESULT_REPLIED);
+
+  const GstStructure *reply = gst_promise_get_reply (promise);
+  GError *error = NULL;
+  if (reply != NULL
+      && gst_structure_get (reply, "error", G_TYPE_ERROR, &error, NULL)) {
+    /* Ignore invalid-state error, which just means WebRTCbin already processed the remote
+     * offer/answer and went back to stable state */
+    if (error->domain != GST_WEBRTC_ERROR
+        || error->code != GST_WEBRTC_ERROR_INVALID_STATE) {
+      fail ("rollback request resulted in error: %s", error->message);
+      g_clear_error (&error);
+      return;
+    }
+    g_clear_error (&error);
+  }
+}
+
+static void
+_rollback_offer (struct test_webrtc *t, GstElement * element,
+    GstPromise * promise, gpointer user_data)
+{
+  GstWebRTCSessionDescription *rollback =
+      gst_webrtc_session_description_new (GST_WEBRTC_SDP_TYPE_ROLLBACK, NULL);
+
+  promise = gst_promise_new_with_change_func (_rollback_complete, t, NULL);
+  if (element == t->webrtc1) {
+    g_signal_emit_by_name (t->webrtc1, "set-local-description", rollback,
+        promise);
+  } else {
+    g_signal_emit_by_name (t->webrtc2, "set-remote-description", rollback,
+        promise);
+  }
+  gst_promise_unref (promise);
+  gst_webrtc_session_description_free (rollback);
+}
+
+GST_START_TEST (test_offer_rollback)
+{
+  struct test_webrtc *t = create_audio_test ();
+
+  t->on_offer_set = _rollback_offer;
+  t->offer_set_data = NULL;
+
+  t->on_answer_set = NULL;
+  t->answer_set_data = NULL;
+
+  test_validate_sdp (t, NULL, NULL);
+  test_webrtc_free (t);
+}
+
+GST_END_TEST;
+
 static Suite *
 webrtcbin_suite (void)
 {
@@ -6130,6 +6187,7 @@ webrtcbin_suite (void)
           "All datachannel tests are disabled. sctpenc %p, sctpdec %p", sctpenc,
           sctpdec);
     }
+    tcase_add_test (tc, test_offer_rollback);
   } else {
     GST_WARNING ("Some required elements were not found. "
         "All media tests are disabled. nicesrc %p, nicesink %p, "

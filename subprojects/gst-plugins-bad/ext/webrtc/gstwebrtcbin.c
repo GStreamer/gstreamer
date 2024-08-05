@@ -6323,7 +6323,9 @@ _create_and_associate_transceivers_from_sdp (GstWebRTCBin * webrtc,
      * Restore the value of connection's [[ sctpTransport]] internal slot
      * to its value at the last stable signaling state.
      */
-    return ret;
+    GST_FIXME_OBJECT (webrtc,
+        "Rolling back transceiver associations is not implemented");
+    return TRUE;
   }
 
   /* FIXME: With some peers, it's possible we could have
@@ -6534,51 +6536,57 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
         webrtc->signaling_state);
     const gchar *type_str =
         _enum_value_to_string (GST_TYPE_WEBRTC_SDP_TYPE, sd->sdp->type);
-    gchar *sdp_text = gst_sdp_message_as_text (sd->sdp->sdp);
     GST_INFO_OBJECT (webrtc, "Attempting to set %s %s in the %s state",
         _sdp_source_to_string (sd->source), type_str, state);
-    GST_TRACE_OBJECT (webrtc, "SDP contents\n%s", sdp_text);
-    g_free (sdp_text);
   }
 
-  if (!validate_sdp (webrtc->signaling_state, sd->source, sd->sdp, &error))
-    goto out;
+  if (sd->sdp->type != GST_WEBRTC_SDP_TYPE_ROLLBACK) {
+    {
+      gchar *sdp_text = gst_sdp_message_as_text (sd->sdp->sdp);
+      GST_TRACE_OBJECT (webrtc, "SDP contents\n%s", sdp_text);
+      g_free (sdp_text);
+    }
 
-  if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE)
-    if (!_parse_bundle (sd->sdp->sdp, &bundled, &error))
+    if (!validate_sdp (webrtc->signaling_state, sd->source, sd->sdp, &error))
       goto out;
 
-  if (bundled) {
-    if (!_get_bundle_index (sd->sdp->sdp, bundled, &bundle_idx)) {
-      g_set_error (&error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-          "Bundle tag is %s but no matching media found", bundled[0]);
+    if (webrtc->bundle_policy != GST_WEBRTC_BUNDLE_POLICY_NONE)
+      if (!_parse_bundle (sd->sdp->sdp, &bundled, &error))
+        goto out;
+
+    if (bundled) {
+      if (!_get_bundle_index (sd->sdp->sdp, bundled, &bundle_idx)) {
+        g_set_error (&error, GST_WEBRTC_ERROR,
+            GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+            "Bundle tag is %s but no matching media found", bundled[0]);
+        goto out;
+      }
+    }
+
+    if (transceivers_media_num_cmp (webrtc,
+            get_previous_description (webrtc, sd->source, sd->sdp->type),
+            sd->sdp) < 0) {
+      g_set_error_literal (&error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+          "m=lines removed from the SDP. Processing a completely new connection "
+          "is not currently supported.");
       goto out;
     }
-  }
 
-  if (transceivers_media_num_cmp (webrtc,
-          get_previous_description (webrtc, sd->source, sd->sdp->type),
-          sd->sdp) < 0) {
-    g_set_error_literal (&error, GST_WEBRTC_ERROR,
-        GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-        "m=lines removed from the SDP. Processing a completely new connection "
-        "is not currently supported.");
-    goto out;
-  }
+    if ((sd->sdp->type == GST_WEBRTC_SDP_TYPE_PRANSWER ||
+            sd->sdp->type == GST_WEBRTC_SDP_TYPE_ANSWER) &&
+        transceivers_media_num_cmp (webrtc,
+            get_last_generated_description (webrtc, sd->source, sd->sdp->type),
+            sd->sdp) != 0) {
+      g_set_error_literal (&error, GST_WEBRTC_ERROR,
+          GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
+          "Answer doesn't have the same number of m-lines as the offer.");
+      goto out;
+    }
 
-  if ((sd->sdp->type == GST_WEBRTC_SDP_TYPE_PRANSWER ||
-          sd->sdp->type == GST_WEBRTC_SDP_TYPE_ANSWER) &&
-      transceivers_media_num_cmp (webrtc,
-          get_last_generated_description (webrtc, sd->source, sd->sdp->type),
-          sd->sdp) != 0) {
-    g_set_error_literal (&error, GST_WEBRTC_ERROR,
-        GST_WEBRTC_ERROR_SDP_SYNTAX_ERROR,
-        "Answer doesn't have the same number of m-lines as the offer.");
-    goto out;
+    if (!check_locked_mlines (webrtc, sd->sdp, &error))
+      goto out;
   }
-
-  if (!check_locked_mlines (webrtc, sd->sdp, &error))
-    goto out;
 
   switch (sd->sdp->type) {
     case GST_WEBRTC_SDP_TYPE_OFFER:{
@@ -6639,7 +6647,24 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
       break;
     }
     case GST_WEBRTC_SDP_TYPE_ROLLBACK:{
-      GST_FIXME_OBJECT (webrtc, "rollbacks are completely untested");
+      if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE ||
+          webrtc->signaling_state ==
+          GST_WEBRTC_SIGNALING_STATE_HAVE_LOCAL_PRANSWER
+          || webrtc->signaling_state ==
+          GST_WEBRTC_SIGNALING_STATE_HAVE_REMOTE_PRANSWER) {
+        /* If description.type is "rollback" and connection's signaling state is
+         * either "stable", "have-local-pranswer", or "have-remote-pranswer",
+         * then reject p with a newly created InvalidStateError and abort these
+         * steps. */
+        const gchar *state_name =
+            _enum_value_to_string (GST_TYPE_WEBRTC_SIGNALING_STATE,
+            webrtc->signaling_state);
+        g_set_error (&error, GST_WEBRTC_ERROR, GST_WEBRTC_ERROR_INVALID_STATE,
+            "Cannot roll back from current state %s", state_name);
+        goto out;
+      }
+
+      GST_FIXME_OBJECT (webrtc, "Rollbacks are only partially implemented");
       if (sd->source == SDP_LOCAL) {
         if (webrtc->pending_local_description)
           gst_webrtc_session_description_free
@@ -6684,6 +6709,11 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
   if (webrtc->signaling_state != new_signaling_state) {
     webrtc->signaling_state = new_signaling_state;
     signalling_state_changed = TRUE;
+  }
+
+  if (sd->sdp->type == GST_WEBRTC_SDP_TYPE_ROLLBACK) {
+    /* If rolling back, leave all the transceivers and other setup alone. There's no SDP attached to use anyway */
+    goto update_signaling_state;
   }
 
   {
@@ -6863,6 +6893,7 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     ICE_UNLOCK (webrtc);
   }
 
+update_signaling_state:
   /*
    * If connection's signaling state changed above, fire an event named
    * signalingstatechange at connection.
@@ -6879,7 +6910,8 @@ _set_description_task (GstWebRTCBin * webrtc, struct set_description *sd)
     PC_LOCK (webrtc);
   }
 
-  if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE) {
+  if (webrtc->signaling_state == GST_WEBRTC_SIGNALING_STATE_STABLE
+      && sd->sdp->type != GST_WEBRTC_SDP_TYPE_ROLLBACK) {
     gboolean prev_need_negotiation = webrtc->priv->need_negotiation;
 
     /* If connection's signaling state is now stable, update the
@@ -6923,7 +6955,8 @@ gst_webrtc_bin_set_remote_description (GstWebRTCBin * webrtc,
 
   if (remote_sdp == NULL)
     goto bad_input;
-  if (remote_sdp->sdp == NULL)
+  if (remote_sdp->sdp == NULL
+      && remote_sdp->type != GST_WEBRTC_SDP_TYPE_ROLLBACK)
     goto bad_input;
 
   sd = g_new0 (struct set_description, 1);
@@ -6961,7 +6994,7 @@ gst_webrtc_bin_set_local_description (GstWebRTCBin * webrtc,
 
   if (local_sdp == NULL)
     goto bad_input;
-  if (local_sdp->sdp == NULL)
+  if (local_sdp->sdp == NULL && local_sdp->type != GST_WEBRTC_SDP_TYPE_ROLLBACK)
     goto bad_input;
 
   sd = g_new0 (struct set_description, 1);
