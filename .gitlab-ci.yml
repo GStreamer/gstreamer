@@ -713,6 +713,7 @@ gstreamer-full-minimal static build:
     MESON_ARGS: >-
       -Ddoc=disabled
       -Dauto_features=disabled
+      -Dgst-full=enabled
       -Dgstreamer:check=enabled
       -Dtests=enabled
       -Dgst-plugins-base:alsa=enabled
@@ -742,6 +743,7 @@ fluster v4l2-stateless on visl:
     MESON_ARGS: >-
       -Dvirtme_kernel_image=/opt/linux/bzImage
       -Dauto_features=disabled
+      -Dgst-full=enabled
       -Dgstreamer:check=enabled
       -Ddoc=disabled
       -Dtests=enabled

@@ -1,5 +1,4 @@
-
-dep = dependency('gstreamer-full-1.0', required: get_option('default_library') == 'static')
+dep = dependency('gstreamer-full-1.0', required: get_option('gst-full'))
 if dep.found()
 	test_gst_full_features = executable('test-gst-full-features', 'test-gst-full-features.c', dependencies : gst_full_dep, c_args: ['-DHAVE_CONFIG_H'])
 	test('test-gst-full-features', test_gst_full_features)
