@@ -1335,7 +1335,7 @@ gst_va_av1_enc_reorder_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame,
   va_frame->frame_num = self->gop.frame_num_since_kf;
   self->gop.frame_num_since_kf++;
 
-  GST_LOG_OBJECT (self, "push frame: system_frame_number %d, frame_num: %d",
+  GST_LOG_OBJECT (self, "push frame: system_frame_number %u, frame_num: %d",
       frame->system_frame_number, va_frame->frame_num);
 
   /* A new key frame force to finish the current GF group. */
@@ -1377,7 +1377,7 @@ gst_va_av1_enc_reorder_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame,
 
   if (!_av1_gf_group_push_frame (&self->gop.current_group, frame)) {
     GST_WARNING_OBJECT (base, "Failed to push the frame,"
-        " system_frame_number %d.", frame->system_frame_number);
+        " system_frame_number %u.", frame->system_frame_number);
     goto error;
   }
 
@@ -1391,7 +1391,7 @@ pop:
 finish:
   if (*out_frame) {
     va_frame = _enc_frame (*out_frame);
-    GST_LOG_OBJECT (self, "pop frame: system_frame_number %d,"
+    GST_LOG_OBJECT (self, "pop frame: system_frame_number %u,"
         " frame_num: %d, frame_type %s", (*out_frame)->system_frame_number,
         va_frame->frame_num, _av1_get_frame_type_name (va_frame->type));
   }
@@ -1401,7 +1401,7 @@ finish:
 error:
   if (frame) {
     GST_ERROR_OBJECT (base, "Failed to reorder the frame,"
-        " system_frame_number %d.", frame->system_frame_number);
+        " system_frame_number %u.", frame->system_frame_number);
   } else {
     GST_ERROR_OBJECT (base, "error when poping frame.");
   }
@@ -3864,7 +3864,7 @@ gst_va_av1_enc_encode_frame (GstVaBaseEnc * base,
 
   if (!_av1_assign_ref_index (self, gst_frame)) {
     GST_ERROR_OBJECT (self, "Failed to assign reference for frame:"
-        "system_frame_number %d, frame_num: %d, frame_type %s",
+        "system_frame_number %u, frame_num: %d, frame_type %s",
         gst_frame->system_frame_number, va_frame->frame_num,
         _av1_get_frame_type_name (va_frame->type));
     return GST_FLOW_ERROR;
@@ -3978,7 +3978,7 @@ _av1_create_tu_output_buffer (GstVaAV1Enc * self,
         frame_enc->base.picture, data + offset, total_sz - offset);
     if (frame_size <= 0) {
       GST_ERROR_OBJECT (self, "Fails to copy the output data of "
-          "system_frame_number %d, frame_num: %d",
+          "system_frame_number %u, frame_num: %d",
           self->frames_in_tu[num]->system_frame_number, frame_enc->frame_num);
       goto error;
     }
@@ -3998,7 +3998,7 @@ _av1_create_tu_output_buffer (GstVaAV1Enc * self,
       frame_enc->base.picture, data + offset, total_sz - offset);
   if (frame_size <= 0) {
     GST_ERROR_OBJECT (self, "Fails to copy the output data of "
-        "system_frame_number %d, frame_num: %d",
+        "system_frame_number %u, frame_num: %d",
         last_frame->system_frame_number, frame_enc->frame_num);
     goto error;
   }

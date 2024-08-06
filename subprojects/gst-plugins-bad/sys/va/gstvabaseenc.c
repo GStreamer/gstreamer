@@ -463,7 +463,7 @@ _push_buffer_to_downstream (GstVaBaseEnc * base, GstVideoCodecFrame * frame)
   }
 
   if (frame->output_buffer)
-    GST_LOG_OBJECT (base, "Push to downstream: frame system_frame_number: %d,"
+    GST_LOG_OBJECT (base, "Push to downstream: frame system_frame_number: %u,"
         " pts: %" GST_TIME_FORMAT ", dts: %" GST_TIME_FORMAT
         " duration: %" GST_TIME_FORMAT ", buffer size: %" G_GSIZE_FORMAT,
         frame->system_frame_number, GST_TIME_ARGS (frame->pts),
@@ -503,7 +503,7 @@ _push_out_one_buffer (GstVaBaseEnc * base)
 
   if (ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (base, "fails to push one buffer, system_frame_number "
-        "%d: %s", system_frame_number, gst_flow_get_name (ret));
+        "%u: %s", system_frame_number, gst_flow_get_name (ret));
   }
 
   return ret;
@@ -527,7 +527,7 @@ _try_to_push_out_one_buffer (GstVaBaseEnc * base)
 
   ready = va_check_surface_has_status (base->display, surface, VASurfaceReady);
 
-  GST_LOG_OBJECT (base, "Output of system_frame_number %d is %s",
+  GST_LOG_OBJECT (base, "Output of system_frame_number %u is %s",
       frame_out->system_frame_number, ready ? "ready" : "not ready");
 
   if (!ready)
@@ -657,7 +657,7 @@ gst_va_base_enc_handle_frame (GstVideoEncoder * venc,
   GstVideoCodecFrame *frame_encode = NULL;
 
   GST_LOG_OBJECT (venc,
-      "handle frame id %d, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
+      "handle frame id %u, dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT,
       frame->system_frame_number,
       GST_TIME_ARGS (GST_BUFFER_DTS (frame->input_buffer)),
       GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)));

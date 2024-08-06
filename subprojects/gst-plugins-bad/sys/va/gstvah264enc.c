@@ -1759,7 +1759,7 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
     if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (gst_frame) &&
         !(self->gop.cur_frame_index == 0 ||
             self->gop.cur_frame_index == self->gop.idr_period)) {
-      GST_DEBUG_OBJECT (base, "system_frame_number: %d is a force key "
+      GST_DEBUG_OBJECT (base, "system_frame_number: %u is a force key"
           "frame(IDR), begin a new GOP.", gst_frame->system_frame_number);
 
       frame->poc = 0;
@@ -1797,7 +1797,7 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
       /* TODO: move most this logic onto vabaseenc class  */
       if (self->gop.cur_frame_index == 0) {
         g_assert (frame->poc == 0);
-        GST_LOG_OBJECT (self, "system_frame_number: %d, an IDR frame, starts"
+        GST_LOG_OBJECT (self, "system_frame_number: %u, an IDR frame, starts"
             " a new GOP", gst_frame->system_frame_number);
 
         g_queue_clear_full (&base->ref_list,
@@ -1806,7 +1806,7 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
 
       frame_setup_from_gop (self, frame, self->gop.cur_frame_index);
 
-      GST_LOG_OBJECT (self, "Push frame, system_frame_number: %d, poc %d, "
+      GST_LOG_OBJECT (self, "Push frame, system_frame_number: %u, poc %d, "
           "frame type %s", gst_frame->system_frame_number, frame->poc,
           gst_h264_slice_type_to_string (frame->type));
 
@@ -2028,11 +2028,11 @@ get_one:
 
   if (self->gop.b_pyramid && vaframe->type == GST_H264_B_SLICE) {
     GST_LOG_OBJECT (self, "pop a pyramid B frame with system_frame_number:"
-        " %d, poc: %d, frame num: %d, is_ref: %s, level %d",
+        " %u, poc: %d, frame num: %d, is_ref: %s, level %u",
         frame->system_frame_number, vaframe->poc, vaframe->frame_num,
         vaframe->is_ref ? "true" : "false", vaframe->pyramid_level);
   } else {
-    GST_LOG_OBJECT (self, "pop a frame with system_frame_number: %d,"
+    GST_LOG_OBJECT (self, "pop a frame with system_frame_number: %u,"
         " frame type: %s, poc: %d, frame num: %d, is_ref: %s",
         frame->system_frame_number,
         gst_h264_slice_type_to_string (vaframe->type),
@@ -2051,7 +2051,7 @@ gst_va_h264_enc_reorder_frame (GstVaBaseEnc * base, GstVideoCodecFrame * frame,
 {
   if (!_push_one_frame (base, frame, bump_all)) {
     GST_ERROR_OBJECT (base, "Failed to push the input frame"
-        " system_frame_number: %d into the reorder list",
+        " system_frame_number: %u into the reorder list",
         frame->system_frame_number);
 
     *out_frame = NULL;
