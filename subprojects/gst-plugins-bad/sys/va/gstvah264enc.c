@@ -1172,6 +1172,10 @@ create_poc:
       self->gop.num_ref_frames, PROP_NUM_REF_FRAMES);
   update_property_uint (base, &self->prop.num_iframes, self->gop.num_iframes,
       PROP_IFRAMES);
+  update_property_uint (base, &self->prop.num_bframes, self->gop.num_bframes,
+      PROP_BFRAMES);
+  update_property_bool (base, &self->prop.b_pyramid, self->gop.b_pyramid,
+      PROP_B_PYRAMID);
 }
 
 static void
@@ -1638,13 +1642,6 @@ gst_va_h264_enc_reconfig (GstVaBaseEnc * base)
     return FALSE;
 
   _calculate_coded_size (self);
-
-  /* updates & notifications */
-  /* num_bframes are modified several times before */
-  update_property_uint (base, &self->prop.num_bframes, self->gop.num_bframes,
-      PROP_BFRAMES);
-  update_property_bool (base, &self->prop.b_pyramid, self->gop.b_pyramid,
-      PROP_B_PYRAMID);
 
   if (!_init_packed_headers (self))
     return FALSE;
