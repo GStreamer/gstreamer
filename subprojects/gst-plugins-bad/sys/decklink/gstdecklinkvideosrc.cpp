@@ -1091,7 +1091,7 @@ gst_decklink_video_src_got_frame (GstElement * element,
         f.mastering_info.max_display_mastering_luminance = (guint32) (x * 10000.0 / 65535.0);
         f.mastering_info.min_display_mastering_luminance = (guint32) (y * 10000.0 / 6.5535);
         GST_LOG_OBJECT (self, "ret 0x%x mastering_info "
-            "R:%u,%u G:%u,%u B:%u,%u W:%u,%u", dk_ret,
+            "R:%u,%u G:%u,%u B:%u,%u W:%u,%u", (gint) dk_ret,
             f.mastering_info.display_primaries[0].x,
             f.mastering_info.display_primaries[0].y,
             f.mastering_info.display_primaries[1].x,
