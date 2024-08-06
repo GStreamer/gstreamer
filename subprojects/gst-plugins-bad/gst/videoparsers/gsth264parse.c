@@ -235,7 +235,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->idr_pos = -1;
   h264parse->sei_pos = -1;
   h264parse->pic_timing_sei_pos = -1;
-  h264parse->pic_timing_sei_size = -1;
+  h264parse->pic_timing_sei_end = -1;
   h264parse->keyframe = FALSE;
   h264parse->predicted = FALSE;
   h264parse->bidirectional = FALSE;
@@ -677,9 +677,17 @@ gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
            * Updating only this SEI message and preserving the others
            * is a bit complicated */
           if (messages->len == 1) {
-            h264parse->pic_timing_sei_pos = nalu->sc_offset;
-            h264parse->pic_timing_sei_size =
-                nalu->size + (nalu->offset - nalu->sc_offset);
+            if (h264parse->transform)
+              h264parse->pic_timing_sei_pos =
+                  gst_adapter_available (h264parse->frame_out);
+            else
+              h264parse->pic_timing_sei_pos = nalu->sc_offset;
+
+            GST_LOG_OBJECT (h264parse, "Located pic_timing SEI at pos %i",
+                h264parse->pic_timing_sei_pos);
+          } else {
+            GST_FIXME_OBJECT (h264parse,
+                "Cannot update timecode in multi-message SEI NALU");
           }
         }
 
@@ -978,6 +986,19 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
   GST_DEBUG_OBJECT (h264parse, "processing nal of type %u %s, size %u",
       nal_type, _nal_name (nal_type), nalu->size);
+
+  if (h264parse->pic_timing_sei_pos != -1 &&
+      h264parse->pic_timing_sei_end == -1) {
+    if (h264parse->transform)
+      h264parse->pic_timing_sei_end =
+          gst_adapter_available (h264parse->frame_out);
+    else
+      h264parse->pic_timing_sei_end = nalu->sc_offset;
+
+    GST_LOG_OBJECT (h264parse, "Located pic_timing SEI end at pos %i (size %i)",
+        h264parse->pic_timing_sei_end,
+        h264parse->pic_timing_sei_end - h264parse->pic_timing_sei_pos);
+  }
 
   switch (nal_type) {
     case GST_H264_NAL_SUBSET_SPS:
@@ -3048,6 +3069,7 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
     GstBuffer * buffer)
 {
   guint num_meta;
+  gint sei_pos, sei_end;
   const guint8 num_clock_ts_table[9] = {
     1, 1, 1, 2, 2, 3, 3, 2, 3
   };
@@ -3069,10 +3091,18 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
   if (num_meta == 0)
     return NULL;
 
-  if (!h264parse->sei_pic_struct_pres_flag || h264parse->pic_timing_sei_pos < 0) {
+  sei_pos = h264parse->pic_timing_sei_pos;
+  sei_end = h264parse->pic_timing_sei_end;
+
+  if (!h264parse->sei_pic_struct_pres_flag || sei_pos < 0) {
     GST_ELEMENT_WARNING (h264parse, STREAM, NOT_IMPLEMENTED, (NULL),
         ("timecode update was requested but VUI doesn't support timecode"));
     return NULL;
+  }
+
+  if (h264parse->align != GST_H264_PARSE_ALIGN_NAL && sei_end < 0) {
+    GST_ELEMENT_WARNING (h264parse, STREAM, NOT_IMPLEMENTED, (NULL),
+        ("timecode update was requested but end of pic_timing SEI not found"));
   }
 
   g_assert (h264parse->sei_pic_struct <=
@@ -3184,31 +3214,67 @@ gst_h264_parse_create_pic_timing_sei (GstH264Parse * h264parse,
   gst_buffer_copy_into (out_buf, buffer, GST_BUFFER_COPY_METADATA, 0, -1);
 
   if (h264parse->align == GST_H264_PARSE_ALIGN_NAL) {
+    GstMapInfo map;
+
+    /* FIXME: We're replacing the entire buffer.
+     * Is this buffer always the pic_timing SEI? */
+
+    GST_DEBUG_OBJECT (h264parse, "Replacing buffer with new pic_timing SEI");
+
+    if (GST_LEVEL_MEMDUMP <= _gst_debug_min &&
+        gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+      GST_MEMDUMP_OBJECT (h264parse, "Old SEI", map.data, map.size);
+      gst_buffer_unmap (buffer, &map);
+    }
+
+    if (GST_LEVEL_MEMDUMP <= _gst_debug_min &&
+        gst_memory_map (sei_mem, &map, GST_MAP_READ)) {
+      GST_MEMDUMP_OBJECT (h264parse, "New SEI", map.data, map.size);
+      gst_memory_unmap (sei_mem, &map);
+    }
+
     gst_buffer_append_memory (out_buf, sei_mem);
   } else {
-    gsize mem_size;
+    GstMapInfo map;
+    gint sei_size = sei_end - sei_pos;
 
-    mem_size = gst_memory_get_sizes (sei_mem, NULL, NULL);
+    GST_DEBUG_OBJECT (h264parse, "Replacing pic_timing SEI in buffer at %i "
+        "size %i with new size %i", sei_pos, sei_size, (gint) sei_mem->size);
+
+    if (GST_LEVEL_MEMDUMP <= _gst_debug_min && sei_pos >= 0 &&
+        gst_buffer_map (buffer, &map, GST_MAP_READ)) {
+      gint context_start = MIN (sei_pos, 16);
+      gint context_end = MIN (map.size - sei_end, 16);
+
+      GST_MEMDUMP_OBJECT (h264parse, "Old SEI with up to 16 bytes context",
+          map.data + sei_pos - context_start,
+          context_start + sei_size + context_end);
+      GST_MEMDUMP_OBJECT (h264parse, "Old SEI", map.data + sei_pos, sei_size);
+      gst_buffer_unmap (buffer, &map);
+    }
+
+    if (GST_LEVEL_MEMDUMP <= _gst_debug_min &&
+        gst_memory_map (sei_mem, &map, GST_MAP_READ)) {
+      GST_MEMDUMP_OBJECT (h264parse, "New SEI", map.data, map.size);
+      gst_memory_unmap (sei_mem, &map);
+    }
 
     /* copy every data except for the SEI */
-    if (h264parse->pic_timing_sei_pos > 0) {
+    if (sei_pos > 0) {
       gst_buffer_copy_into (out_buf, buffer, GST_BUFFER_COPY_MEMORY, 0,
-          h264parse->pic_timing_sei_pos);
+          sei_pos);
     }
 
     /* insert new SEI */
     gst_buffer_append_memory (out_buf, sei_mem);
 
-    if (gst_buffer_get_size (buffer) >
-        h264parse->pic_timing_sei_pos + h264parse->pic_timing_sei_size) {
-      gst_buffer_copy_into (out_buf, buffer, GST_BUFFER_COPY_MEMORY,
-          h264parse->pic_timing_sei_pos + h264parse->pic_timing_sei_size, -1);
+    if (gst_buffer_get_size (buffer) > sei_end) {
+      gst_buffer_copy_into (out_buf, buffer, GST_BUFFER_COPY_MEMORY, sei_end,
+          -1);
     }
 
-    if (h264parse->idr_pos >= 0) {
-      h264parse->idr_pos += mem_size;
-      h264parse->idr_pos -= h264parse->pic_timing_sei_size;
-    }
+    if (h264parse->idr_pos >= 0)
+      h264parse->idr_pos += sei_mem->size - sei_size;
   }
 
   return out_buf;
@@ -3269,6 +3335,12 @@ gst_h264_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
       gst_buffer_prepend_memory (frame->out_buffer, mem);
       if (h264parse->idr_pos >= 0)
         h264parse->idr_pos += sizeof (au_delim);
+      if (h264parse->sei_pos >= 0)
+        h264parse->sei_pos += sizeof (au_delim);
+      if (h264parse->pic_timing_sei_pos >= 0)
+        h264parse->pic_timing_sei_pos += sizeof (au_delim);
+      if (h264parse->pic_timing_sei_end >= 0)
+        h264parse->pic_timing_sei_end += sizeof (au_delim);
 
       buffer = frame->out_buffer;
     } else {
