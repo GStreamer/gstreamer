@@ -23,6 +23,7 @@ option('oss_fuzz', type : 'feature', value : 'disabled',
 
 # Other options
 option('custom_subprojects', type : 'string', value : '', description : 'Comma-separated project names')
+option('gst-full', type: 'feature', value: 'auto', description: 'Enable the gstreamer-full library feature')
 option('gst-full-libraries', type : 'array', value : [],
   description : '''List of libraries to expose in gstreamer-full's ABI. gstreamer, glib and gobject are always included.''')
 option('gst-full-version-script', type : 'string', value: 'data/misc/gstreamer-full-default.map',

@@ -84,7 +84,7 @@ if not meson.is_subproject() and cc.get_id() == 'msvc'
       language: ['c', 'cpp'])
 endif
 
-building_full = get_option('default_library') == 'static'
+building_full = get_option('default_library') == 'static' and not get_option('gst-full').disabled()
 building_full_static = false
 building_full_options = []
 if building_full
