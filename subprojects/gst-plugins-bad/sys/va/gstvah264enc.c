@@ -337,23 +337,6 @@ static const GstVaH264LevelLimits _va_h264_level_limits[] = {
 
 #ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
-_slice_type_name (GstH264SliceType type)
-{
-  switch (type) {
-    case GST_H264_P_SLICE:
-      return "P";
-    case GST_H264_B_SLICE:
-      return "B";
-    case GST_H264_I_SLICE:
-      return "I";
-    default:
-      g_assert_not_reached ();
-  }
-
-  return NULL;
-}
-
-static const gchar *
 _rate_control_get_name (guint32 rc_mode)
 {
   GParamSpecEnum *spec;
@@ -825,7 +808,7 @@ _print_gop_structure (GstVaH264Enc * self)
     }
 
     g_string_append_printf (str, "%s",
-        _slice_type_name (self->gop.frame_types[i].slice_type));
+        gst_h264_slice_type_to_string (self->gop.frame_types[i].slice_type));
 
     if (self->gop.b_pyramid
         && self->gop.frame_types[i].slice_type == GST_H264_B_SLICE) {
@@ -1828,7 +1811,7 @@ _push_one_frame (GstVaBaseEnc * base, GstVideoCodecFrame * gst_frame,
 
       GST_LOG_OBJECT (self, "Push frame, system_frame_number: %d, poc %d, "
           "frame type %s", gst_frame->system_frame_number, frame->poc,
-          _slice_type_name (frame->type));
+          gst_h264_slice_type_to_string (frame->type));
 
       self->gop.cur_frame_index++;
 
@@ -2054,7 +2037,8 @@ get_one:
   } else {
     GST_LOG_OBJECT (self, "pop a frame with system_frame_number: %d,"
         " frame type: %s, poc: %d, frame num: %d, is_ref: %s",
-        frame->system_frame_number, _slice_type_name (vaframe->type),
+        frame->system_frame_number,
+        gst_h264_slice_type_to_string (vaframe->type),
         vaframe->poc, vaframe->frame_num, vaframe->is_ref ? "true" : "false");
   }
 
@@ -2391,7 +2375,7 @@ _fill_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
 
     if (g_queue_is_empty (&base->ref_list)) {
       GST_ERROR_OBJECT (self, "No reference found for frame type %s",
-          _slice_type_name (frame->type));
+          gst_h264_slice_type_to_string (frame->type));
       return FALSE;
     }
 
