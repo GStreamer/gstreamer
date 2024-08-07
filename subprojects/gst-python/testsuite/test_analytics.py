@@ -30,9 +30,11 @@ import gi
 gi.require_version("GLib", "2.0")
 gi.require_version("Gst", "1.0")
 gi.require_version("GstAnalytics", "1.0")
+gi.require_version("GstVideo", "1.0")
 from gi.repository import GLib
 from gi.repository import Gst
 from gi.repository import GstAnalytics
+from gi.repository import GstVideo
 Gst.init(None)
 
 
@@ -132,3 +134,33 @@ class TestAnalyticsTrackingMtd(TestCase):
         mtd.set_lost()
         rets = mtd.get_info()
         self.assertTrue(rets.tracking_lost)
+
+
+class TestAnalyticsSegmentationMtd(TestCase):
+    def test(self):
+        buf = Gst.Buffer()
+        self.assertIsNotNone(buf)
+
+        meta = GstAnalytics.buffer_add_analytics_relation_meta(buf)
+        self.assertIsNotNone(meta)
+
+        mask_buf = Gst.Buffer.new_allocate(None, 100, None)
+        GstVideo.buffer_add_video_meta(mask_buf,
+                                       GstVideo.VideoFrameFlags.NONE,
+                                       GstVideo.VideoFormat.GRAY8, 10, 10)
+
+        (ret, mtd) = meta.add_segmentation_mtd(mask_buf,
+                                               GstAnalytics.SegmentationType.SEMANTIC,
+                                               [7, 4, 2], 0, 0, 7, 13)
+        self.assertTrue(ret)
+
+        self.assertEqual((mask_buf, 0, 0, 7, 13), mtd.get_mask())
+        self.assertEqual(mtd.get_region_count(), 3)
+        self.assertEqual(mtd.get_region_id(0), 7)
+        self.assertEqual(mtd.get_region_id(1), 4)
+        self.assertEqual(mtd.get_region_id(2), 2)
+
+        self.assertEqual(mtd.get_region_index(1), (False, 0))
+        self.assertEqual(mtd.get_region_index(7), (True, 0))
+        self.assertEqual(mtd.get_region_index(4), (True, 1))
+        self.assertEqual(mtd.get_region_index(2), (True, 2))
