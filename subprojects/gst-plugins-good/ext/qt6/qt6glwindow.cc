@@ -62,6 +62,7 @@ struct _Qt6GLWindowPrivate
   GstVideoFrame mapped_frame;
   GstGLBaseMemoryAllocator *gl_allocator;
   GstGLAllocationParams *gl_params;
+  GLenum internal_format;
 
   gboolean initted;
   gboolean updated;
@@ -99,6 +100,7 @@ Qt6GLWindow::Qt6GLWindow (QWindow * parent, QQuickWindow *src)
 
   this->priv->display = gst_qml6_get_gl_display(FALSE);
   this->priv->result = TRUE;
+  this->priv->internal_format = GL_RGBA;
 
   connect (source, SIGNAL(beforeRendering()), this, SLOT(beforeRendering()), Qt::DirectConnection);
   connect (source, SIGNAL(afterRendering()), this, SLOT(afterRendering()), Qt::DirectConnection);
@@ -252,7 +254,21 @@ Qt6GLWindow::afterRendering()
           0, 0, width, height,
           GL_COLOR_BUFFER_BIT, GL_LINEAR);
     } else {
-      gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, 0, 0, width, height, 0);
+      gl->CopyTexImage2D (GL_TEXTURE_2D, 0, this->priv->internal_format, 0, 0, width, height, 0);
+
+      GLenum err = gl->GetError ();
+      if (err && this->priv->internal_format == GL_RGBA) {
+        this->priv->internal_format = GL_RGB;
+        GST_WARNING ("Falling back to GL_RGB (opaque) when copying QML texture.");
+        gl->CopyTexImage2D (GL_TEXTURE_2D, 0, GL_RGB, 0, 0, width, height, 0);
+        err = gl->GetError ();
+      }
+
+      if (err) {
+        GST_ERROR ("CopyTexImage2D() failed with error: 0x%X", err);
+        ret = FALSE;
+        goto errors;
+      }
     }
   }
 
@@ -304,6 +320,7 @@ Qt6GLWindow::onSceneGraphInitialized()
 
   this->priv->initted = gst_qml6_get_gl_wrapcontext (this->priv->display,
       &this->priv->other_context, &this->priv->context);
+  this->priv->internal_format = GL_RGBA;
 
   if (this->priv->initted && this->priv->other_context) {
     const GstGLFuncs *gl;
