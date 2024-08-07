@@ -277,8 +277,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         GST_STATIC_CAPS ("video/x-raw, "
         "format = (string) { I420, Y42B, Y444, YV12 }, "
         "framerate = (fraction) [0, MAX], "
-        "width = (int) [ 4, MAX ], "
-        "height = (int) [ 4, MAX ]")
+        "width = (int) [ 4, 65536 ], "
+        "height = (int) [ 4, 65536 ]")
     );
 /* *INDENT-ON* */
 
