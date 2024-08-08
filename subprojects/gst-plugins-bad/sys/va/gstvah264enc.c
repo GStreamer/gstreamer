@@ -2356,7 +2356,7 @@ _fill_picture_parameter (GstVaH264Enc * self, GstVaH264EncFrame * frame,
     .pic_fields.bits.weighted_bipred_idc = 0,
     .pic_fields.bits.constrained_intra_pred_flag = 0,
     .pic_fields.bits.transform_8x8_mode_flag = self->use_dct8x8,
-    /* enable debloking */
+    /* enable deblocking */
     .pic_fields.bits.deblocking_filter_control_present_flag = 1,
     .pic_fields.bits.redundant_pic_cnt_present_flag = 0,
     /* bottom_field_pic_order_in_frame_present_flag */
