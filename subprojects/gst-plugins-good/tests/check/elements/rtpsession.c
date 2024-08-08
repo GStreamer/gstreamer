@@ -2882,13 +2882,16 @@ typedef struct
 } TWCCPacket;
 
 #define TWCC_DELTA_UNIT (250 * GST_USECOND)
+#define TWCC_REF_TIME_UNIT (64 * GST_MSECOND)
+#define TWCC_REF_TIME_INITIAL_OFFSET ((1 << 24) * TWCC_REF_TIME_UNIT)
 
 static void
 fail_unless_equals_twcc_clocktime (GstClockTime twcc_packet_ts,
     GstClockTime pkt_ts)
 {
   fail_unless_equals_clocktime (
-      (twcc_packet_ts / TWCC_DELTA_UNIT) * TWCC_DELTA_UNIT, pkt_ts);
+      (twcc_packet_ts / TWCC_DELTA_UNIT) * TWCC_DELTA_UNIT +
+      TWCC_REF_TIME_INITIAL_OFFSET, pkt_ts);
 }
 
 #define twcc_push_packets(h, packets)                                          \
@@ -3739,17 +3742,17 @@ GST_START_TEST (test_twcc_delta_ts_rounding)
   };
 
   TWCCPacket exp_packets[] = {
-    {2002, 9 * GST_SECOND + 366250000, FALSE}
+    {2002, TWCC_REF_TIME_INITIAL_OFFSET + 9 * GST_SECOND + 366250000, FALSE}
     ,
-    {2003, 9 * GST_SECOND + 366250000, FALSE}
+    {2003, TWCC_REF_TIME_INITIAL_OFFSET + 9 * GST_SECOND + 366250000, FALSE}
     ,
-    {2017, 9 * GST_SECOND + 366750000, FALSE}
+    {2017, TWCC_REF_TIME_INITIAL_OFFSET + 9 * GST_SECOND + 366750000, FALSE}
     ,
-    {2019, 9 * GST_SECOND + 391500000, FALSE}
+    {2019, TWCC_REF_TIME_INITIAL_OFFSET + 9 * GST_SECOND + 391500000, FALSE}
     ,
-    {2020, 9 * GST_SECOND + 426750000, FALSE}
+    {2020, TWCC_REF_TIME_INITIAL_OFFSET + 9 * GST_SECOND + 426750000, FALSE}
     ,
-    {2025, 9 * GST_SECOND + 427000000, TRUE}
+    {2025, TWCC_REF_TIME_INITIAL_OFFSET + 9 * GST_SECOND + 427000000, TRUE}
     ,
   };
 
