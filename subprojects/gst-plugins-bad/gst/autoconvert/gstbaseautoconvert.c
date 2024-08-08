@@ -627,7 +627,8 @@ gst_base_auto_convert_activate_element (GstBaseAutoConvert * self,
   }
 
   if (!gst_element_sync_state_with_parent (element)) {
-    GST_WARNING_OBJECT (self, "Could sync %" GST_PTR_FORMAT " state", element);
+    GST_WARNING_OBJECT (self, "Could not sync %" GST_PTR_FORMAT " state",
+        element);
     goto error;
   }
 
@@ -1210,8 +1211,7 @@ gst_base_auto_convert_getcaps (GstBaseAutoConvert * self, GstCaps * filter,
     other_caps = gst_pad_peer_query_caps (self->sinkpad, NULL);
 
   GST_DEBUG_OBJECT (self,
-      "Finding elements that can fit with src caps %" GST_PTR_FORMAT,
-      other_caps);
+      "Finding elements that can fit with caps %" GST_PTR_FORMAT, other_caps);
 
   if (other_caps && gst_caps_is_empty (other_caps)) {
     goto out;
@@ -1228,7 +1228,7 @@ gst_base_auto_convert_getcaps (GstBaseAutoConvert * self, GstCaps * filter,
       if (!filter_info_can_intersect (self, filter_info, dir, filter)) {
         GST_LOG_OBJECT (self,
             "Bin %s does not accept %s caps %" GST_PTR_FORMAT,
-            filter_info->name, dir == GST_PAD_SRC ? "src" : "sink", other_caps);
+            filter_info->name, dir == GST_PAD_SRC ? "src" : "sink", filter);
         continue;
       }
     }
