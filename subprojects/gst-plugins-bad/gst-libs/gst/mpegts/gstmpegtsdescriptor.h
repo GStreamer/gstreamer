@@ -611,7 +611,6 @@ typedef struct _GstMpegtsMetadataPointerDescriptor
  */
 struct _GstMpegtsMetadataPointerDescriptor
 {
-  /** Since: 1.26 */
   GstMpegtsMetadataApplicationFormat metadata_application_format;
   GstMpegtsMetadataFormat metadata_format;
   guint32 metadata_format_identifier;
