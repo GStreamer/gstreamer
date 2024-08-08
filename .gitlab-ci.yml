@@ -262,6 +262,16 @@ rustfmt:
     - export RUSTUP_HOME="/usr/local/rustup"
     - export PATH="/usr/local/cargo/bin:$PATH"
     - ./scripts/format-rust --check
+  rules:
+    - changes:
+        compare_to: "$GST_UPSTREAM_BRANCH"
+        paths:
+          - .gitlab-ci.yml
+          - .gitlab-image-tags.yml
+          - subprojects/gstreamer/**/*.rs
+          - subprojects/gst-examples/**/*.rs
+          - ci/**/*
+          - ./scripts/format-rust
 
 commitlint:
   extends:
