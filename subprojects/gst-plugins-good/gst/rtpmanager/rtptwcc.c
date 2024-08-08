@@ -103,6 +103,9 @@ struct _RTPTWCCManager
 
   GstClockTime next_feedback_send_time;
   GstClockTime feedback_interval;
+
+  guint64 remote_ts_base;
+  gint64 base_time_prev;
 };
 
 G_DEFINE_TYPE (RTPTWCCManager, rtp_twcc_manager, G_TYPE_OBJECT);
@@ -124,6 +127,8 @@ rtp_twcc_manager_init (RTPTWCCManager * twcc)
 
   twcc->feedback_interval = GST_CLOCK_TIME_NONE;
   twcc->next_feedback_send_time = GST_CLOCK_TIME_NONE;
+
+  twcc->remote_ts_base = -1;
 }
 
 static void
@@ -1015,6 +1020,7 @@ rtp_twcc_manager_parse_fci (RTPTWCCManager * twcc,
   guint16 base_seqnum;
   guint16 packet_count;
   GstClockTime base_time;
+  gint64 base_time_ext;
   GstClockTime ts_rounded;
   guint8 fb_pkt_count;
   guint packets_parsed = 0;
@@ -1029,12 +1035,17 @@ rtp_twcc_manager_parse_fci (RTPTWCCManager * twcc,
 
   base_seqnum = GST_READ_UINT16_BE (&fci_data[0]);
   packet_count = GST_READ_UINT16_BE (&fci_data[2]);
-  base_time = GST_READ_UINT24_BE (&fci_data[4]) * REF_TIME_UNIT;
+  base_time = GST_READ_UINT24_BE (&fci_data[4]);
+  /* Sign-extend the base_time from a 24-bit integer into a 64-bit signed integer
+   * so that we can calculate diffs with regular 64-bit operations. */
+  base_time_ext =
+      (base_time & 0x800000) ? base_time | 0xFFFFFFFFFF800000 : base_time;
   fb_pkt_count = fci_data[7];
 
   GST_DEBUG ("Parsed TWCC feedback: base_seqnum: #%u, packet_count: %u, "
       "base_time %" GST_TIME_FORMAT " fb_pkt_count: %u",
-      base_seqnum, packet_count, GST_TIME_ARGS (base_time), fb_pkt_count);
+      base_seqnum, packet_count, GST_TIME_ARGS (base_time * REF_TIME_UNIT),
+      fb_pkt_count);
 
   twcc_packets = g_array_sized_new (FALSE, FALSE,
       sizeof (RTPTWCCPacket), packet_count);
@@ -1064,7 +1075,21 @@ rtp_twcc_manager_parse_fci (RTPTWCCManager * twcc,
   if (twcc->sent_packets->len > 0)
     first_sent_pkt = &g_array_index (twcc->sent_packets, SentPacket, 0);
 
-  ts_rounded = base_time;
+  if (twcc->remote_ts_base == -1) {
+    /* Add an initial offset of 1 << 24 so that we don't risk going below 0 if
+     * a future extended timestamp is earlier than the first. */
+    twcc->remote_ts_base = (G_GINT64_CONSTANT (1) << 24) + base_time_ext;
+  } else {
+    /* Calculate our internal accumulated reference timestamp by continously
+     * adding the diff between the current and the previous sign-extended
+     * reference time. */
+    twcc->remote_ts_base += base_time_ext - twcc->base_time_prev;
+  }
+  twcc->base_time_prev = base_time_ext;
+  /* Our internal accumulated reference time is in units of 64ms, propagate as
+   * GstClockTime in ns. */
+  ts_rounded = twcc->remote_ts_base * REF_TIME_UNIT;
+
   for (i = 0; i < twcc_packets->len; i++) {
     RTPTWCCPacket *pkt = &g_array_index (twcc_packets, RTPTWCCPacket, i);
     gint16 delta = 0;
