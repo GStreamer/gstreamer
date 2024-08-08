@@ -300,7 +300,104 @@ typedef enum {
    *
    * Since: 1.22
    */
-  GST_DECKLINK_MODE_8Kp60
+  GST_DECKLINK_MODE_8Kp60,
+
+  /**
+   * GstDecklinkModes::640x480p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_640x480p60,
+  /**
+   * GstDecklinkModes::800x600p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_800x600p60,
+  /**
+   * GstDecklinkModes::1440x900p50
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1440x900p50,
+  /**
+   * GstDecklinkModes::1440x900p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1440x900p60,
+  /**
+   * GstDecklinkModes::1440x1080p50
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1440x1080p50,
+  /**
+   * GstDecklinkModes::1440x1080p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1440x1080p60,
+  /**
+   * GstDecklinkModes::1600x1200p50
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1600x1200p50,
+  /**
+   * GstDecklinkModes::1600x1200p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1600x1200p60,
+  /**
+   * GstDecklinkModes::1920x1200p50
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1920x1200p50,
+  /**
+   * GstDecklinkModes::1920x1200p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1920x1200p60,
+  /**
+   * GstDecklinkModes::1920x1440p50
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1920x1440p50,
+  /**
+   * GstDecklinkModes::1920x1440p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_1920x1440p60,
+  /**
+   * GstDecklinkModes::2560x1440p50
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_2560x1440p50,
+  /**
+   * GstDecklinkModes::2560x1440p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_2560x1440p60,
+  /**
+   * GstDecklinkModes::2560x1600p50
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_2560x1600p50,
+  /**
+   * GstDecklinkModes::2560x1600p60
+   * 
+   * Since: 1.26
+   */
+  GST_DECKLINK_MODE_2560x1600p60
 } GstDecklinkModeEnum;
 #define GST_TYPE_DECKLINK_MODE (gst_decklink_mode_get_type ())
 GType gst_decklink_mode_get_type (void);
