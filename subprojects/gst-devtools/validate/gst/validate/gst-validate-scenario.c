@@ -438,8 +438,8 @@ _action_copy (GstValidateAction * act)
   if (act->structure) {
     copy->structure = gst_structure_copy (act->structure);
     copy->type = gst_structure_get_name (copy->structure);
-    if (!(act->name = gst_structure_get_string (copy->structure, "name")))
-      act->name = "";
+    if (!(copy->name = gst_structure_get_string (copy->structure, "name")))
+      copy->name = "";
   }
 
   if (act->priv->main_structure)
