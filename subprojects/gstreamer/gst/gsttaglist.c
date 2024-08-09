@@ -44,6 +44,7 @@
 #include "gstbuffer.h"
 #include "gstquark.h"
 #include "gststructure.h"
+#include "gstidstr-private.h"
 
 #include <gobject/gvaluecollector.h>
 #include <string.h>
@@ -755,7 +756,7 @@ gst_tag_list_new_empty (void)
   GstStructure *s;
   GstTagList *tag_list;
 
-  s = gst_structure_new_id_empty (GST_QUARK (TAGLIST));
+  s = gst_structure_new_empty ("taglist");
   tag_list = gst_tag_list_new_internal (s, GST_TAG_SCOPE_STREAM);
   return tag_list;
 }

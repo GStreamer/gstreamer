@@ -25,6 +25,7 @@
 #include <gst/gstclock.h>
 #include <gst/gstdatetime.h>
 #include <gst/glib-compat.h>
+#include <gst/gstidstr.h>
 
 G_BEGIN_DECLS
 
@@ -134,10 +135,20 @@ GST_API
 GstStructure *        gst_structure_new_empty            (const gchar * name) G_GNUC_MALLOC;
 
 GST_API
+GstStructure *        gst_structure_new_static_str_empty (const gchar * name) G_GNUC_MALLOC;
+
+GST_DEPRECATED_FOR(gst_structure_new_id_str_empty)
 GstStructure *        gst_structure_new_id_empty         (GQuark quark) G_GNUC_MALLOC;
 
 GST_API
+GstStructure *        gst_structure_new_id_str_empty     (const GstIdStr *name) G_GNUC_MALLOC;
+
+GST_API
 GstStructure *        gst_structure_new                  (const gchar * name,
+                                                          const gchar * firstfield,
+                                                          ...) G_GNUC_NULL_TERMINATED  G_GNUC_MALLOC;
+GST_API
+GstStructure *        gst_structure_new_static_str       (const gchar * name,
                                                           const gchar * firstfield,
                                                           ...) G_GNUC_NULL_TERMINATED  G_GNUC_MALLOC;
 GST_API
@@ -145,9 +156,19 @@ GstStructure *        gst_structure_new_valist           (const gchar * name,
                                                           const gchar * firstfield,
                                                           va_list       varargs) G_GNUC_MALLOC;
 GST_API
+GstStructure *        gst_structure_new_static_str_valist(const gchar * name,
+                                                          const gchar * firstfield,
+                                                          va_list       varargs) G_GNUC_MALLOC;
+GST_DEPRECATED_FOR(gst_structure_new_id_str)
 GstStructure *        gst_structure_new_id               (GQuark name_quark,
                                                           GQuark field_quark,
                                                           ...) G_GNUC_MALLOC;
+
+GST_API
+GstStructure *        gst_structure_new_id_str           (const GstIdStr *name,
+                                                          GQuark field_quark,
+                                                          ...) G_GNUC_MALLOC;
+
 GST_API
 GstStructure *        gst_structure_new_from_string      (const gchar * string);
 
@@ -170,14 +191,19 @@ gboolean              gst_structure_take                 (GstStructure ** oldstr
 GST_API
 const gchar *         gst_structure_get_name             (const GstStructure  * structure);
 
-GST_API
+GST_DEPRECATED_FOR(gst_structure_get_name_id_str)
 GQuark                gst_structure_get_name_id          (const GstStructure  * structure);
+
+GST_API
+const GstIdStr *      gst_structure_get_name_id_str      (const GstStructure  * structure);
 
 GST_API
 gboolean              gst_structure_has_name             (const GstStructure  * structure,
                                                           const gchar         * name);
 GST_API
 void                  gst_structure_set_name             (GstStructure        * structure,
+                                                          const gchar         * name);
+void                  gst_structure_set_name_static_str  (GstStructure        * structure,
                                                           const gchar         * name);
 GST_API
 void                  gst_structure_id_set_value         (GstStructure        * structure,

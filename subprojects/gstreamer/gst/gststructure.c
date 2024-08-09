@@ -142,8 +142,8 @@
 #include <string.h>
 
 #include "gst_private.h"
-#include "gstquark.h"
 #include <gst/gst.h>
+#include "gstidstr-private.h"
 #include <gobject/gvaluecollector.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_structure_debug);
@@ -161,6 +161,9 @@ typedef struct
 {
   GstStructure s;
 
+  /* Actual structure name */
+  GstIdStr name;
+
   /* owned by parent structure, NULL if no parent */
   gint *parent_refcount;
 
@@ -176,6 +179,7 @@ typedef struct
 
 #define GST_STRUCTURE_REFCOUNT(s) (((GstStructureImpl*)(s))->parent_refcount)
 #define GST_STRUCTURE_LEN(s) (((GstStructureImpl*)(s))->fields_len)
+#define GST_STRUCTURE_NAME(s) (&((GstStructureImpl*)(s))->name)
 
 #define GST_STRUCTURE_IS_USING_DYNAMIC_ARRAY(s) \
   (((GstStructureImpl*)(s))->fields != &((GstStructureImpl*)(s))->arr[0])
@@ -188,7 +192,8 @@ typedef struct
      g_atomic_int_get (GST_STRUCTURE_REFCOUNT(structure)) == 1)
 
 #define IS_TAGLIST(structure) \
-    (structure->name == GST_QUARK (TAGLIST))
+    (((const GstIdStrPrivate *) GST_STRUCTURE_NAME (structure))->s.string_type.t == 0 && \
+     (memcmp (((const GstIdStrPrivate *) GST_STRUCTURE_NAME (structure))->s.short_string.s, "taglist", sizeof ("taglist")) == 0))
 
 /* Replacement for g_array_append_val */
 static void
@@ -267,8 +272,9 @@ _priv_gst_structure_initialize (void)
       "GstStructure debug");
 }
 
+/* takes ownership of @name */
 static GstStructure *
-gst_structure_new_id_empty_with_size (GQuark quark, guint prealloc)
+gst_structure_new_take_id_str_empty_with_size (GstIdStr * name, guint prealloc)
 {
   guint n_alloc;
   GstStructureImpl *structure;
@@ -282,7 +288,8 @@ gst_structure_new_id_empty_with_size (GQuark quark, guint prealloc)
           1) * sizeof (GstStructureField));
 
   ((GstStructure *) structure)->type = _gst_structure_type;
-  ((GstStructure *) structure)->name = quark;
+  ((GstStructure *) structure)->name = 0;
+  gst_id_str_move (&structure->name, name);
   GST_STRUCTURE_REFCOUNT (structure) = NULL;
 
   structure->fields_len = 0;
@@ -294,6 +301,26 @@ gst_structure_new_id_empty_with_size (GQuark quark, guint prealloc)
   return GST_STRUCTURE_CAST (structure);
 }
 
+static GstStructure *
+gst_structure_new_id_str_empty_with_size (const GstIdStr * name, guint prealloc)
+{
+  GstIdStr s = GST_ID_STR_INIT;
+
+  gst_id_str_copy_into (&s, name);
+
+  return gst_structure_new_take_id_str_empty_with_size (&s, prealloc);
+}
+
+static GstStructure *
+gst_structure_new_str_empty_with_size (const gchar * name, guint prealloc)
+{
+  GstIdStr s = GST_ID_STR_INIT;
+
+  gst_id_str_set (&s, name);
+
+  return gst_structure_new_take_id_str_empty_with_size (&s, prealloc);
+}
+
 /**
  * gst_structure_new_id_empty:
  * @quark: name of new structure
@@ -303,13 +330,19 @@ gst_structure_new_id_empty_with_size (GQuark quark, guint prealloc)
  * Free-function: gst_structure_free
  *
  * Returns: (transfer full): a new, empty #GstStructure
+ *
+ * Deprecated: 1.26: Use gst_structure_new_id_str_empty().
  */
 GstStructure *
 gst_structure_new_id_empty (GQuark quark)
 {
+  GstIdStr s = GST_ID_STR_INIT;
+
   g_return_val_if_fail (quark != 0, NULL);
 
-  return gst_structure_new_id_empty_with_size (quark, 0);
+  gst_id_str_set_static_str (&s, g_quark_to_string (quark));
+
+  return gst_structure_new_take_id_str_empty_with_size (&s, 0);
 }
 
 static gboolean
@@ -347,6 +380,28 @@ gst_structure_validate_name (const gchar * name)
 }
 
 /**
+ * gst_structure_new_id_str_empty:
+ * @name: name of new structure
+ *
+ * Creates a new, empty #GstStructure with the given name.
+ *
+ * Free-function: gst_structure_free
+ *
+ * Returns: (transfer full): a new, empty #GstStructure
+ *
+ * Since: 1.26
+ */
+GstStructure *
+gst_structure_new_id_str_empty (const GstIdStr * name)
+{
+  g_return_val_if_fail (name != 0, NULL);
+  g_return_val_if_fail (gst_structure_validate_name (gst_id_str_as_str (name)),
+      NULL);
+
+  return gst_structure_new_id_str_empty_with_size (name, 0);
+}
+
+/**
  * gst_structure_new_empty:
  * @name: name of new structure
  *
@@ -363,7 +418,68 @@ gst_structure_new_empty (const gchar * name)
 {
   g_return_val_if_fail (gst_structure_validate_name (name), NULL);
 
-  return gst_structure_new_id_empty_with_size (g_quark_from_string (name), 0);
+  return gst_structure_new_str_empty_with_size (name, 0);
+}
+
+/**
+ * gst_structure_new_static_str_empty:
+ * @name: name of new structure
+ *
+ * Creates a new, empty #GstStructure with the given @name.
+ *
+ * See gst_structure_set_name() for constraints on the @name parameter.
+ *
+ * @name needs to be valid for the remaining lifetime of the process, e.g. has
+ * to be a static string.
+ *
+ * Free-function: gst_structure_free
+ *
+ * Returns: (transfer full): a new, empty #GstStructure
+ *
+ * Since: 1.26
+ */
+GstStructure *
+gst_structure_new_static_str_empty (const gchar * name)
+{
+  GstIdStr s = GST_ID_STR_INIT;
+
+  g_return_val_if_fail (gst_structure_validate_name (name), NULL);
+
+  gst_id_str_set_static_str (&s, name);
+  return gst_structure_new_take_id_str_empty_with_size (&s, 0);
+}
+
+/**
+ * gst_structure_new_static_str:
+ * @name: name of new structure
+ * @firstfield: name of first field to set
+ * @...: additional arguments
+ *
+ * Creates a new #GstStructure with the given name.  Parses the
+ * list of variable arguments and sets fields to the values listed.
+ * Variable arguments should be passed as field name, field type,
+ * and value.  Last variable argument should be %NULL.
+ *
+ * @name needs to be valid for the remaining lifetime of the process, e.g. has
+ * to be a static string.
+ *
+ * Free-function: gst_structure_free
+ *
+ * Returns: (transfer full): a new #GstStructure
+ *
+ * Since: 1.26
+ */
+GstStructure *
+gst_structure_new_static_str (const gchar * name, const gchar * firstfield, ...)
+{
+  GstStructure *structure;
+  va_list varargs;
+
+  va_start (varargs, firstfield);
+  structure = gst_structure_new_static_str_valist (name, firstfield, varargs);
+  va_end (varargs);
+
+  return structure;
 }
 
 /**
@@ -432,8 +548,61 @@ gst_structure_new_valist (const gchar * name,
   }
   va_end (copy);
 
-  structure =
-      gst_structure_new_id_empty_with_size (g_quark_from_string (name), len);
+  structure = gst_structure_new_str_empty_with_size (name, len);
+
+  if (structure)
+    gst_structure_set_valist (structure, firstfield, varargs);
+
+  return structure;
+}
+
+/**
+ * gst_structure_new_static_str_valist:
+ * @name: name of new structure
+ * @firstfield: name of first field to set
+ * @varargs: variable argument list
+ *
+ * Creates a new #GstStructure with the given @name.  Structure fields
+ * are set according to the varargs in a manner similar to
+ * gst_structure_new().
+ *
+ * See gst_structure_set_name() for constraints on the @name parameter.
+ *
+ * @name needs to be valid for the remaining lifetime of the process, e.g. has
+ * to be a static string.
+ *
+ * Free-function: gst_structure_free
+ *
+ * Returns: (transfer full): a new #GstStructure
+ *
+ * Since: 1.26
+ */
+GstStructure *
+gst_structure_new_static_str_valist (const gchar * name,
+    const gchar * firstfield, va_list varargs)
+{
+  GstIdStr s = GST_ID_STR_INIT;
+  GstStructure *structure;
+  va_list copy;
+  guint len = 0;
+  const gchar *field_copy = firstfield;
+  GType type_copy;
+
+  g_return_val_if_fail (gst_structure_validate_name (name), NULL);
+
+  /* Calculate size of varargs */
+  va_copy (copy, varargs);
+  while (field_copy) {
+    type_copy = va_arg (copy, GType);
+    G_VALUE_COLLECT_SKIP (type_copy, copy);
+    field_copy = va_arg (copy, gchar *);
+    len++;
+  }
+  va_end (copy);
+
+  gst_id_str_set_static_str (&s, name);
+
+  structure = gst_structure_new_take_id_str_empty_with_size (&s, len);
 
   if (structure)
     gst_structure_set_valist (structure, firstfield, varargs);
@@ -497,7 +666,9 @@ gst_structure_copy (const GstStructure * structure)
   g_return_val_if_fail (structure != NULL, NULL);
 
   len = GST_STRUCTURE_LEN (structure);
-  new_structure = gst_structure_new_id_empty_with_size (structure->name, len);
+  new_structure =
+      gst_structure_new_id_str_empty_with_size (GST_STRUCTURE_NAME (structure),
+      len);
 
   for (i = 0; i < len; i++) {
     GstStructureField new_field = { 0 };
@@ -540,6 +711,8 @@ gst_structure_free (GstStructure * structure)
   }
   if (GST_STRUCTURE_IS_USING_DYNAMIC_ARRAY (structure))
     g_free (((GstStructureImpl *) structure)->fields);
+
+  gst_id_str_clear (GST_STRUCTURE_NAME (structure));
 
 #ifdef USE_POISONING
   memset (structure, 0xff, sizeof (GstStructure));
@@ -627,7 +800,7 @@ gst_structure_get_name (const GstStructure * structure)
 {
   g_return_val_if_fail (structure != NULL, NULL);
 
-  return g_quark_to_string (structure->name);
+  return gst_id_str_as_str (GST_STRUCTURE_NAME (structure));
 }
 
 /**
@@ -642,17 +815,11 @@ gst_structure_get_name (const GstStructure * structure)
 gboolean
 gst_structure_has_name (const GstStructure * structure, const gchar * name)
 {
-  const gchar *structure_name;
-
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
 
-  /* getting the string is cheap and comparing short strings is too
-   * should be faster than getting the quark for name and comparing the quarks
-   */
-  structure_name = g_quark_to_string (structure->name);
-
-  return (structure_name && strcmp (structure_name, name) == 0);
+  return gst_id_str_is_equal_to_str (gst_structure_get_name_id_str (structure),
+      name);
 }
 
 /**
@@ -668,7 +835,26 @@ gst_structure_get_name_id (const GstStructure * structure)
 {
   g_return_val_if_fail (structure != NULL, 0);
 
-  return structure->name;
+  return
+      g_quark_from_string (gst_id_str_as_str (GST_STRUCTURE_NAME (structure)));
+}
+
+/**
+ * gst_structure_get_name_id_str:
+ * @structure: a #GstStructure
+ *
+ * Get the name of @structure as a GstIdStr.
+ *
+ * Returns: the quark representing the name of the structure.
+ *
+ * Since: 1.26
+ */
+const GstIdStr *
+gst_structure_get_name_id_str (const GstStructure * structure)
+{
+  g_return_val_if_fail (structure != NULL, 0);
+
+  return GST_STRUCTURE_NAME (structure);
 }
 
 /**
@@ -687,7 +873,31 @@ gst_structure_set_name (GstStructure * structure, const gchar * name)
   g_return_if_fail (IS_MUTABLE (structure));
   g_return_if_fail (gst_structure_validate_name (name));
 
-  structure->name = g_quark_from_string (name);
+  gst_id_str_set (GST_STRUCTURE_NAME (structure), name);
+}
+
+/**
+ * gst_structure_set_name_static_str:
+ * @structure: a #GstStructure
+ * @name: the new name of the structure
+ *
+ * Sets the name of the structure to the given @name.  The string
+ * provided is copied before being used. It must not be empty, start with a
+ * letter and can be followed by letters, numbers and any of "/-_.:".
+ *
+ * @name needs to be valid for the remaining lifetime of the process, e.g. has
+ * to be a static string.
+ *
+ * Since: 1.26
+ */
+void
+gst_structure_set_name_static_str (GstStructure * structure, const gchar * name)
+{
+  g_return_if_fail (structure != NULL);
+  g_return_if_fail (IS_MUTABLE (structure));
+  g_return_if_fail (gst_structure_validate_name (name));
+
+  gst_id_str_set_static_str (GST_STRUCTURE_NAME (structure), name);
 }
 
 static inline void
@@ -965,6 +1175,7 @@ gst_structure_id_set_valist (GstStructure * structure,
 GstStructure *
 gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
 {
+  GstIdStr name = GST_ID_STR_INIT;
   GstStructure *s;
   va_list varargs;
   va_list copy;
@@ -987,7 +1198,62 @@ gst_structure_new_id (GQuark name_quark, GQuark field_quark, ...)
   }
   va_end (copy);
 
-  s = gst_structure_new_id_empty_with_size (name_quark, len);
+  gst_id_str_set_static_str (&name, g_quark_to_string (name_quark));
+  s = gst_structure_new_take_id_str_empty_with_size (&name, len);
+
+  gst_structure_id_set_valist_internal (s, field_quark, varargs);
+  va_end (varargs);
+
+  return s;
+}
+
+/**
+ * gst_structure_new_id_str:
+ * @name: name of new structure
+ * @field_quark: the GQuark for the name of the field to set
+ * @...: variable arguments
+ *
+ * Creates a new #GstStructure with the given name as a GQuark, followed by
+ * fieldname quark, GType, argument(s) "triplets" in the same format as
+ * gst_structure_id_set(). Basically a convenience wrapper around
+ * gst_structure_new_id_empty() and gst_structure_id_set().
+ *
+ * The last variable argument must be %NULL (or 0).
+ *
+ * Free-function: gst_structure_free
+ *
+ * Returns: (transfer full): a new #GstStructure
+ *
+ * Since: 1.26
+ */
+GstStructure *
+gst_structure_new_id_str (const GstIdStr * name, GQuark field_quark, ...)
+{
+  GstStructure *s;
+  va_list varargs;
+  va_list copy;
+  guint len = 0;
+  GQuark quark_copy = field_quark;
+  GType type_copy;
+
+  g_return_val_if_fail (name != 0, NULL);
+  g_return_val_if_fail (gst_structure_validate_name (gst_id_str_as_str (name)),
+      NULL);
+  g_return_val_if_fail (field_quark != 0, NULL);
+
+  va_start (varargs, field_quark);
+
+  /* Calculate size of varargs */
+  va_copy (copy, varargs);
+  while (quark_copy) {
+    type_copy = va_arg (copy, GType);
+    G_VALUE_COLLECT_SKIP (type_copy, copy);
+    quark_copy = va_arg (copy, GQuark);
+    len++;
+  }
+  va_end (copy);
+
+  s = gst_structure_new_id_str_empty_with_size (name, len);
 
   gst_structure_id_set_valist_internal (s, field_quark, varargs);
   va_end (varargs);
@@ -2077,7 +2343,7 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
       const GstStructure *substruct = gst_value_get_structure (&field->value);
 
       g_string_append_c (s, '[');
-      g_string_append (s, g_quark_to_string (substruct->name));
+      g_string_append (s, gst_structure_get_name (substruct));
       if (!priv_gst_structure_append_to_gstring (substruct, s, flags))
         return FALSE;
       g_string_append_c (s, ']');
@@ -2187,7 +2453,7 @@ structure_serialize (const GstStructure * structure, GstSerializeFlags flags)
   /* we estimate a minimum size based on the number of fields in order to
    * avoid unnecessary reallocs within GString */
   s = g_string_sized_new (STRUCTURE_ESTIMATED_STRING_LEN (structure));
-  g_string_append (s, g_quark_to_string (structure->name));
+  g_string_append (s, gst_structure_get_name (structure));
   if (!priv_gst_structure_append_to_gstring (structure, s, flags)) {
     g_string_free (s, TRUE);
     return NULL;
@@ -3166,7 +3432,8 @@ gst_structure_is_equal (const GstStructure * structure1,
   if (G_UNLIKELY (structure1 == structure2))
     return TRUE;
 
-  if (structure1->name != structure2->name) {
+  if (!gst_id_str_is_equal (GST_STRUCTURE_NAME (structure1),
+          GST_STRUCTURE_NAME (structure2))) {
     return FALSE;
   }
   if (GST_STRUCTURE_LEN (structure1) != GST_STRUCTURE_LEN (structure2)) {
@@ -3196,14 +3463,17 @@ gst_structure_intersect (const GstStructure * struct1,
   g_assert (struct1 != NULL);
   g_assert (struct2 != NULL);
 
-  if (G_UNLIKELY (struct1->name != struct2->name))
+  if (!gst_id_str_is_equal (GST_STRUCTURE_NAME (struct1),
+          GST_STRUCTURE_NAME (struct2)))
     return NULL;
 
   len1 = GST_STRUCTURE_LEN (struct1);
   len2 = GST_STRUCTURE_LEN (struct2);
 
   /* Resulting structure will be at most the size of the smallest structure */
-  dest = gst_structure_new_id_empty_with_size (struct1->name, MIN (len1, len2));
+  dest =
+      gst_structure_new_id_str_empty_with_size (GST_STRUCTURE_NAME (struct1),
+      MIN (len1, len2));
 
   /* copy fields from struct1 which we have not in struct2 to target
    * intersect if we have the field in both */
@@ -3298,7 +3568,8 @@ gst_structure_can_intersect (const GstStructure * struct1,
   g_return_val_if_fail (GST_IS_STRUCTURE (struct1), FALSE);
   g_return_val_if_fail (GST_IS_STRUCTURE (struct2), FALSE);
 
-  if (G_UNLIKELY (struct1->name != struct2->name))
+  if (G_UNLIKELY (!gst_id_str_is_equal (GST_STRUCTURE_NAME (struct1),
+              GST_STRUCTURE_NAME (struct2))))
     return FALSE;
 
   /* tries to intersect if we have the field in both */
@@ -3326,7 +3597,8 @@ gst_structure_is_subset (const GstStructure * subset,
 
   g_assert (superset);
 
-  if (G_UNLIKELY (superset->name != subset->name))
+  if (G_UNLIKELY (!gst_id_str_is_equal (GST_STRUCTURE_NAME (superset),
+              GST_STRUCTURE_NAME (subset))))
     return FALSE;
 
   len1 = GST_STRUCTURE_LEN (subset);
