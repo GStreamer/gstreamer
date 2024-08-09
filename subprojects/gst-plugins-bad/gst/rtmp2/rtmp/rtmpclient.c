@@ -153,9 +153,16 @@ gst_rtmp_authmod_get_type (void)
 {
   static gsize authmod_type = 0;
   static const GEnumValue authmod[] = {
-    {GST_RTMP_AUTHMOD_NONE, "GST_RTMP_AUTHMOD_NONE", "none"},
-    {GST_RTMP_AUTHMOD_AUTO, "GST_RTMP_AUTHMOD_AUTO", "auto"},
-    {GST_RTMP_AUTHMOD_ADOBE, "GST_RTMP_AUTHMOD_ADOBE", "adobe"},
+    {GST_RTMP_AUTHMOD_NONE, "Attempt no authentication", "none"},
+    {GST_RTMP_AUTHMOD_AUTO, "Automatically switch to server-suggested method",
+        "auto"},
+    {GST_RTMP_AUTHMOD_ADOBE, "Adobe-style authentication", "adobe"},
+    /**
+     * GstRtmpAuthmod::llnw:
+     *
+     * Since: 1.26
+    */
+    {GST_RTMP_AUTHMOD_LLNW, "Limelight Networks authentication", "llnw"},
     {0, NULL, NULL},
   };
 
@@ -591,6 +598,68 @@ do_adobe_auth (const gchar * username, const gchar * password,
   return auth_query;
 }
 
+static gchar *
+do_llnw_auth (const gchar * username, const gchar * password,
+    const gchar * nonce, const gchar * app)
+{
+  const gchar *nc = "00000001";
+  gchar cnonce[10];
+  gchar *auth_query;
+  GChecksum *md5_1, *md5_2, *md5_3;
+
+  /* FIXME: Handle case were nonce is NULL */
+
+  g_return_val_if_fail (username, NULL);
+  g_return_val_if_fail (password, NULL);
+  g_return_val_if_fail (app, NULL);
+
+  md5_1 = g_checksum_new (G_CHECKSUM_MD5);
+  g_checksum_update (md5_1, (guchar *) username, -1);
+  g_checksum_update (md5_1, (guchar *) ":live:", -1);   /* realm */
+  g_checksum_update (md5_1, (guchar *) password, -1);
+
+  md5_2 = g_checksum_new (G_CHECKSUM_MD5);
+  /* FIXME: Might be possible to use play method in rtmp2src */
+  g_checksum_update (md5_2, (guchar *) "publish:/", -1);        /* method */
+  g_checksum_update (md5_2, (guchar *) app, -1);
+
+  /*
+   *   When streaming to limelight, the app name is either a full
+   *   "appname/subaccount" or "appname/_definst_". In the latter case, the app
+   *   name can be simplified into simply "appname", but the authentication
+   *   hashing assumes the /_definst_ still to be present.
+   */
+  if (!strchr (app, '/'))
+    g_checksum_update (md5_2, (guchar *) "/_definst_", -1);
+
+  md5_3 = g_checksum_new (G_CHECKSUM_MD5);
+  g_checksum_update (md5_3, (guchar *) g_checksum_get_string (md5_1), -1);
+
+  g_checksum_update (md5_3, (guchar *) ":", 1);
+  if (nonce)
+    g_checksum_update (md5_3, (guchar *) nonce, -1);
+
+  g_checksum_update (md5_3, (guchar *) ":", -1);
+  g_checksum_update (md5_3, (guchar *) nc, -1);
+  g_checksum_update (md5_3, (guchar *) ":", -1);
+  g_snprintf (cnonce, sizeof (cnonce), "%08x", g_random_int ());
+  g_checksum_update (md5_3, (guchar *) cnonce, -1);
+  g_checksum_update (md5_3, (guchar *) ":auth:", -1);
+  g_checksum_update (md5_3, (guchar *) g_checksum_get_string (md5_2), -1);
+
+  auth_query =
+      g_strdup_printf
+      ("authmod=llnw&user=%s&nonce=%s&cnonce=%s&nc=%s&response=%s",
+      username, nonce ? nonce : "(null)", cnonce, nc,
+      g_checksum_get_string (md5_3));
+
+  g_checksum_free (md5_1);
+  g_checksum_free (md5_2);
+  g_checksum_free (md5_3);
+
+  return auth_query;
+}
+
 static GstAmfNode *
 parse_conn_token (gchar type, const gchar * value, GError ** error)
 {
@@ -758,20 +827,20 @@ send_connect (GTask * task)
     const gchar *query = data->auth_query;
     appstr = g_strdup_printf ("%s?%s", app, query);
     uristr = g_strdup_printf ("%s?%s", uri, query);
-  } else if (data->location.authmod == GST_RTMP_AUTHMOD_ADOBE) {
+  } else if (data->location.authmod > GST_RTMP_AUTHMOD_AUTO) {
     const gchar *user = data->location.username;
-    const gchar *authmod = "adobe";
+    const gchar *authmod = gst_rtmp_authmod_get_nick (data->location.authmod);
 
     if (!user) {
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
-          "no username for adobe authentication");
+          "no username for %s authentication", authmod);
       g_object_unref (task);
       goto out;
     }
 
     if (!data->location.password) {
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
-          "no password for adobe authentication");
+          "no password for %s authentication", authmod);
       g_object_unref (task);
       goto out;
     }
@@ -933,6 +1002,13 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
         return;
       }
 
+      if (strstr (desc, "authmod=llnw")) {
+        GST_INFO ("Reconnecting with authmod=llnw");
+        data->location.authmod = GST_RTMP_AUTHMOD_LLNW;
+        socket_connect (task);
+        return;
+      }
+
       g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
           "'connect' cmd returned unhandled authmod: %s", desc);
       g_object_unref (task);
@@ -958,6 +1034,10 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
       switch (authmod) {
         case GST_RTMP_AUTHMOD_ADOBE:
           matches = g_str_equal (authmod_str, "adobe");
+          break;
+
+        case GST_RTMP_AUTHMOD_LLNW:
+          matches = g_str_equal (authmod_str, "llnw");
           break;
 
         default:
@@ -1016,12 +1096,13 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
       }
     }
 
-    {
+    if (authmod == GST_RTMP_AUTHMOD_ADOBE) {
       const gchar *salt, *opaque, *challenge;
 
       salt = gst_uri_get_query_value (query, "salt");
       if (!salt) {
-        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_PERMISSION_DENIED,
+        g_task_return_new_error (task, G_IO_ERROR,
+            G_IO_ERROR_PERMISSION_DENIED,
             "salt missing from auth request: %s", desc);
         g_object_unref (task);
         gst_uri_unref (query);
@@ -1034,19 +1115,39 @@ send_connect_done (const gchar * command_name, GPtrArray * args,
       g_warn_if_fail (!data->auth_query);
       data->auth_query = do_adobe_auth (data->location.username,
           data->location.password, salt, opaque, challenge);
-    }
 
-    gst_uri_unref (query);
+      gst_uri_unref (query);
 
-    if (!data->auth_query) {
-      /* do_adobe_auth should not fail; send_connect tests if username
-       * and password are provided */
-      g_warn_if_reached ();
-      g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
-          "internal error: failed to generate adobe auth query");
-      g_object_unref (task);
-      return;
-    }
+      if (!data->auth_query) {
+        /* do_adobe_auth should not fail; send_connect tests if username
+         * and password are provided */
+        g_warn_if_reached ();
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+            "internal error: failed to generate adobe auth query");
+        g_object_unref (task);
+        return;
+      }
+    } else if (authmod == GST_RTMP_AUTHMOD_LLNW) {
+      const gchar *nonce;
+      nonce = gst_uri_get_query_value (query, "nonce");
+
+      g_warn_if_fail (!data->auth_query);
+      data->auth_query = do_llnw_auth (data->location.username,
+          data->location.password, nonce, data->location.application);
+
+      gst_uri_unref (query);
+
+      if (!data->auth_query) {
+        /* do_llnw_auth should not fail; send_connect tests if username
+         * and password are provided */
+        g_warn_if_reached ();
+        g_task_return_new_error (task, G_IO_ERROR, G_IO_ERROR_FAILED,
+            "internal error: failed to generate llnw auth query");
+        g_object_unref (task);
+        return;
+      }
+    } else
+      g_return_if_reached ();
 
     socket_connect (task);
     return;

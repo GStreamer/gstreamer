@@ -45,11 +45,19 @@ guint gst_rtmp_scheme_get_default_port (GstRtmpScheme scheme);
 
 #define GST_TYPE_RTMP_AUTHMOD (gst_rtmp_authmod_get_type ())
 
+/**
+ * GstRtmpAuthmod:
+ * @GST_RTMP_AUTHMOD_NONE: Attempt no authentication.
+ * @GST_RTMP_AUTHMOD_AUTO: Automatically switch to server-suggested method.
+ * @GST_RTMP_AUTHMOD_ADOBE: Adobe-style authentication.
+ * @GST_RTMP_AUTHMOD_LLNW: Limelight Networks authentication. (Since 1.26)
+ */
 typedef enum
 {
   GST_RTMP_AUTHMOD_NONE = 0,
   GST_RTMP_AUTHMOD_AUTO,
   GST_RTMP_AUTHMOD_ADOBE,
+  GST_RTMP_AUTHMOD_LLNW,
 } GstRtmpAuthmod;
 
 GType gst_rtmp_authmod_get_type (void);
