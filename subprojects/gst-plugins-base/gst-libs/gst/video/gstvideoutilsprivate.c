@@ -39,8 +39,8 @@ __gst_video_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
   gint caps_size = gst_caps_get_size (caps);
 
   for (i = 0; i < templ_caps_size; i++) {
-    GQuark q_name =
-        gst_structure_get_name_id (gst_caps_get_structure (templ_caps, i));
+    const GstIdStr *name =
+        gst_structure_get_name_id_str (gst_caps_get_structure (templ_caps, i));
     GstCapsFeatures *features = gst_caps_get_features (templ_caps, i);
 
     for (j = 0; j < caps_size; j++) {
@@ -49,7 +49,7 @@ __gst_video_element_proxy_caps (GstElement * element, GstCaps * templ_caps,
       GstStructure *s;
       GstCaps *tmp = gst_caps_new_empty ();
 
-      s = gst_structure_new_id_empty (q_name);
+      s = gst_structure_new_id_str_empty (name);
       if ((val = gst_structure_get_value (caps_s, "width")))
         gst_structure_set_value (s, "width", val);
       if ((val = gst_structure_get_value (caps_s, "height")))

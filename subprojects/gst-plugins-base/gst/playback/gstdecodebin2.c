@@ -587,22 +587,10 @@ static GstPadProbeReturn pad_event_cb (GstPad * pad, GstPadProbeInfo * info,
 static void gst_decode_bin_dispose (GObject * object);
 static void gst_decode_bin_finalize (GObject * object);
 
-/* Register some quarks here for the stream topology message */
-static GQuark topology_structure_name = 0;
-static GQuark topology_caps = 0;
-static GQuark topology_next = 0;
-static GQuark topology_pad = 0;
-static GQuark topology_element_srcpad = 0;
-
 GType gst_decode_bin_get_type (void);
 G_DEFINE_TYPE (GstDecodeBin, gst_decode_bin, GST_TYPE_BIN);
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin", 0, "decoder bin");\
-    topology_structure_name = g_quark_from_static_string ("stream-topology"); \
-    topology_caps = g_quark_from_static_string ("caps");\
-    topology_next = g_quark_from_static_string ("next");\
-    topology_pad = g_quark_from_static_string ("pad");\
-    topology_element_srcpad = g_quark_from_static_string ("element-srcpad");\
     playback_element_init (plugin);\
 
 GST_ELEMENT_REGISTER_DEFINE_WITH_CODE (decodebin, "decodebin", GST_RANK_NONE,
@@ -4565,28 +4553,26 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     return NULL;
   }
 
-  u = gst_structure_new_id_empty (topology_structure_name);
+  u = gst_structure_new_static_str_empty ("stream-topology");
 
   /* Now at the last element */
   if ((chain->elements || !chain->active_group) &&
       (chain->endpad || chain->deadend)) {
     GstPad *srcpad;
 
-    s = gst_structure_new_id_empty (topology_structure_name);
-    gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, chain->endcaps,
-        NULL);
+    s = gst_structure_new_static_str_empty ("stream-topology");
+    gst_structure_set (u, "caps", GST_TYPE_CAPS, chain->endcaps, NULL);
 
     if (chain->endpad) {
-      gst_structure_id_set (u, topology_pad, GST_TYPE_PAD, chain->endpad, NULL);
+      gst_structure_set (u, "pad", GST_TYPE_PAD, chain->endpad, NULL);
 
       srcpad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (chain->endpad));
-      gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD,
-          srcpad, NULL);
+      gst_structure_set (u, "element-srcpad", GST_TYPE_PAD, srcpad, NULL);
 
       gst_object_unref (srcpad);
     }
 
-    gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
+    gst_structure_set (s, "next", GST_TYPE_STRUCTURE, u, NULL);
     gst_structure_free (u);
     u = s;
   } else if (chain->active_group) {
@@ -4604,7 +4590,7 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
         gst_structure_free (s);
       }
     }
-    gst_structure_id_set_value (u, topology_next, &list);
+    gst_structure_set_value (u, "next", &list);
     g_value_unset (&list);
     g_value_unset (&item);
   }
@@ -4627,18 +4613,17 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     caps = _gst_element_get_linked_caps (elem_next, elem, capsfilter, &srcpad);
 
     if (caps) {
-      s = gst_structure_new_id_empty (topology_structure_name);
-      gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
+      s = gst_structure_new_static_str_empty ("stream-topology");
+      gst_structure_set (u, "caps", GST_TYPE_CAPS, caps, NULL);
       gst_caps_unref (caps);
 
-      gst_structure_id_set (s, topology_next, GST_TYPE_STRUCTURE, u, NULL);
+      gst_structure_set (s, "next", GST_TYPE_STRUCTURE, u, NULL);
       gst_structure_free (u);
       u = s;
     }
 
     if (srcpad) {
-      gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD, srcpad,
-          NULL);
+      gst_structure_set (u, "element-srcpad", GST_TYPE_PAD, srcpad, NULL);
       gst_object_unref (srcpad);
     }
   }
@@ -4649,9 +4634,8 @@ gst_decode_chain_get_topology (GstDecodeChain * chain)
     GST_WARNING_OBJECT (chain->pad, "Couldn't get the caps of decode chain");
     return u;
   }
-  gst_structure_id_set (u, topology_caps, GST_TYPE_CAPS, caps, NULL);
-  gst_structure_id_set (u, topology_element_srcpad, GST_TYPE_PAD, chain->pad,
-      NULL);
+  gst_structure_set (u, "caps", GST_TYPE_CAPS, caps, NULL);
+  gst_structure_set (u, "element-srcpad", GST_TYPE_PAD, chain->pad, NULL);
   gst_caps_unref (caps);
 
   return u;

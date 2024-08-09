@@ -65,8 +65,6 @@ static GQuark _TAGS_QUARK;
 static GQuark _ELEMENT_SRCPAD_QUARK;
 static GQuark _TOC_QUARK;
 static GQuark _STREAM_ID_QUARK;
-static GQuark _MISSING_PLUGIN_QUARK;
-static GQuark _STREAM_TOPOLOGY_QUARK;
 static GQuark _TOPOLOGY_PAD_QUARK;
 
 
@@ -158,8 +156,6 @@ _do_init (void)
   _TAGS_QUARK = g_quark_from_static_string ("tags");
   _TOC_QUARK = g_quark_from_static_string ("toc");
   _STREAM_ID_QUARK = g_quark_from_static_string ("stream-id");
-  _MISSING_PLUGIN_QUARK = g_quark_from_static_string ("missing-plugin");
-  _STREAM_TOPOLOGY_QUARK = g_quark_from_static_string ("stream-topology");
   _TOPOLOGY_PAD_QUARK = g_quark_from_static_string ("pad");
 };
 
@@ -1673,14 +1669,12 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
 
     case GST_MESSAGE_ELEMENT:
     {
-      GQuark sttype;
       const GstStructure *structure;
 
       structure = gst_message_get_structure (msg);
-      sttype = gst_structure_get_name_id (structure);
       GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
           "structure %" GST_PTR_FORMAT, structure);
-      if (sttype == _MISSING_PLUGIN_QUARK) {
+      if (gst_structure_has_name (structure, "missing-plugin")) {
         GST_DEBUG_OBJECT (GST_MESSAGE_SRC (msg),
             "Setting result to MISSING_PLUGINS");
         dc->priv->current_info->result = GST_DISCOVERER_MISSING_PLUGINS;
@@ -1692,7 +1686,7 @@ handle_message (GstDiscoverer * dc, GstMessage * msg)
         dc->priv->current_info->misc = gst_structure_copy (structure);
         g_ptr_array_add (dc->priv->current_info->missing_elements_details,
             gst_missing_plugin_message_get_installer_detail (msg));
-      } else if (sttype == _STREAM_TOPOLOGY_QUARK) {
+      } else if (gst_structure_has_name (structure, "stream-topology")) {
         if (dc->priv->current_topology)
           gst_structure_free (dc->priv->current_topology);
         dc->priv->current_topology = gst_structure_copy (structure);

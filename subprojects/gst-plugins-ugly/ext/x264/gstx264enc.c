@@ -848,8 +848,8 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
   filter_caps = gst_caps_new_empty ();
 
   for (i = 0; i < gst_caps_get_size (supported_incaps); i++) {
-    GQuark q_name =
-        gst_structure_get_name_id (gst_caps_get_structure (supported_incaps,
+    const GstIdStr *name =
+        gst_structure_get_name_id_str (gst_caps_get_structure (supported_incaps,
             i));
 
     for (j = 0; j < gst_caps_get_size (allowed); j++) {
@@ -859,7 +859,7 @@ gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 
       /* FIXME Find a way to reuse gst_video_encoder_proxy_getcaps so that
        * we do not need to copy that logic */
-      s = gst_structure_new_id_empty (q_name);
+      s = gst_structure_new_id_str_empty (name);
       if ((val = gst_structure_get_value (allowed_s, "width")))
         gst_structure_set_value (s, "width", val);
       if ((val = gst_structure_get_value (allowed_s, "height")))

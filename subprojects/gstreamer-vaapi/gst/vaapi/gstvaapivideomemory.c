@@ -1355,9 +1355,9 @@ gst_allocator_set_vaapi_video_info (GstAllocator * allocator,
   g_return_val_if_fail (alloc_info != NULL, FALSE);
 
   g_object_set_qdata_full (G_OBJECT (allocator), GST_VAAPI_VIDEO_INFO_QUARK,
-      gst_structure_new_id (GST_VAAPI_VIDEO_INFO_QUARK,
-          ALLOCATION_VINFO_QUARK, GST_TYPE_VIDEO_INFO, alloc_info,
-          SURFACE_ALLOC_FLAGS_QUARK, G_TYPE_UINT, surface_alloc_flags, NULL),
+      gst_structure_new_static_str ("GstVaapiVideoInfo",
+          "allocation-vinfo", GST_TYPE_VIDEO_INFO, alloc_info,
+          "surface-alloc-flags", G_TYPE_UINT, surface_alloc_flags, NULL),
       (GDestroyNotify) gst_structure_free);
 
   return TRUE;

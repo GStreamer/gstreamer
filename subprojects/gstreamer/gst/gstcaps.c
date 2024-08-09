@@ -1927,7 +1927,7 @@ gst_caps_subtract (GstCaps * minuend, GstCaps * subtrahend)
       /* Same reason as above for ANY caps */
       g_return_val_if_fail (!gst_caps_features_is_any (min_f), NULL);
 
-      if (gst_structure_get_name_id (min) == gst_structure_get_name_id (sub) &&
+      if (gst_structure_has_name (min, gst_structure_get_name (sub)) &&
           gst_caps_features_is_equal (min_f, sub_f)) {
         GSList *list;
 
@@ -2204,8 +2204,7 @@ gst_caps_simplify (GstCaps * caps)
     compare_f = gst_caps_get_features_unchecked (caps, start);
     if (!compare_f)
       compare_f = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
-    if (gst_structure_get_name_id (simplify) !=
-        gst_structure_get_name_id (compare) ||
+    if (!gst_structure_has_name (simplify, gst_structure_get_name (compare)) ||
         !gst_caps_features_is_equal (simplify_f, compare_f))
       start = i;
     for (j = start; j >= 0; j--) {
@@ -2215,9 +2214,8 @@ gst_caps_simplify (GstCaps * caps)
       compare_f = gst_caps_get_features_unchecked (caps, j);
       if (!compare_f)
         compare_f = GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY;
-      if (gst_structure_get_name_id (simplify) !=
-          gst_structure_get_name_id (compare) ||
-          !gst_caps_features_is_equal (simplify_f, compare_f)) {
+      if (!gst_structure_has_name (simplify, gst_structure_get_name (compare))
+          || !gst_caps_features_is_equal (simplify_f, compare_f)) {
         break;
       }
       if (gst_caps_structure_simplify (&result, simplify, compare)) {

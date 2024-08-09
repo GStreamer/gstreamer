@@ -405,8 +405,8 @@ gst_event_writable_structure (GstEvent * event)
 
   if (structure == NULL) {
     structure =
-        gst_structure_new_id_empty (gst_event_type_to_quark (GST_EVENT_TYPE
-            (event)));
+        gst_structure_new_static_str_empty (gst_event_type_get_name
+        (GST_EVENT_TYPE (event)));
     gst_structure_set_parent_refcount (structure, &event->mini_object.refcount);
     GST_EVENT_STRUCTURE (event) = structure;
   }
@@ -445,16 +445,13 @@ gst_event_has_name (GstEvent * event, const gchar * name)
  * Returns: %TRUE if @name matches the name of the event structure.
  *
  * Since: 1.18
+ *
+ * Deprecated: 1.26: Use gst_event_has_name().
  */
 gboolean
 gst_event_has_name_id (GstEvent * event, GQuark name)
 {
-  g_return_val_if_fail (GST_IS_EVENT (event), FALSE);
-
-  if (GST_EVENT_STRUCTURE (event) == NULL)
-    return FALSE;
-
-  return (gst_structure_get_name_id (GST_EVENT_STRUCTURE (event)) == name);
+  return gst_event_has_name (event, g_quark_to_string (name));
 }
 
 /**
@@ -609,8 +606,8 @@ gst_event_new_flush_stop (gboolean reset_time)
   GST_CAT_INFO (GST_CAT_EVENT, "creating flush stop %d", reset_time);
 
   event = gst_event_new_custom (GST_EVENT_FLUSH_STOP,
-      gst_structure_new_id (GST_QUARK (EVENT_FLUSH_STOP),
-          GST_QUARK (RESET_TIME), G_TYPE_BOOLEAN, reset_time, NULL));
+      gst_structure_new_static_str ("GstEventFlushStop",
+          "reset-time", G_TYPE_BOOLEAN, reset_time, NULL));
 
   return event;
 }
@@ -668,7 +665,7 @@ gst_event_new_select_streams (GList * streams)
   g_return_val_if_fail (streams != NULL, NULL);
 
   GST_CAT_INFO (GST_CAT_EVENT, "Creating new select-streams event");
-  struc = gst_structure_new_id_empty (GST_QUARK (EVENT_SELECT_STREAMS));
+  struc = gst_structure_new_static_str_empty ("GstEventSelectStreams");
   g_value_init (&val, GST_TYPE_LIST);
   /* Fill struc with streams */
   for (tmpl = streams; tmpl; tmpl = tmpl->next) {
@@ -741,8 +738,8 @@ gst_event_new_stream_group_done (guint group_id)
 
   g_return_val_if_fail (group_id != GST_GROUP_ID_INVALID, NULL);
 
-  s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_GROUP_DONE),
-      GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+  s = gst_structure_new_static_str ("GstEventStreamGroupDone",
+      "group-id", G_TYPE_UINT, group_id, NULL);
 
   return gst_event_new_custom (GST_EVENT_STREAM_GROUP_DONE, s);
 }
@@ -820,9 +817,9 @@ gst_event_new_gap (GstClockTime timestamp, GstClockTime duration)
       GST_TIME_ARGS (duration));
 
   event = gst_event_new_custom (GST_EVENT_GAP,
-      gst_structure_new_id (GST_QUARK (EVENT_GAP),
-          GST_QUARK (TIMESTAMP), GST_TYPE_CLOCK_TIME, timestamp,
-          GST_QUARK (DURATION), GST_TYPE_CLOCK_TIME, duration, NULL));
+      gst_structure_new_static_str ("GstEventGap",
+          "timestamp", GST_TYPE_CLOCK_TIME, timestamp,
+          "duration", GST_TYPE_CLOCK_TIME, duration, NULL));
 
   return event;
 }
@@ -918,8 +915,8 @@ gst_event_new_caps (GstCaps * caps)
   GST_CAT_INFO (GST_CAT_EVENT, "creating caps event %" GST_PTR_FORMAT, caps);
 
   event = gst_event_new_custom (GST_EVENT_CAPS,
-      gst_structure_new_id (GST_QUARK (EVENT_CAPS),
-          GST_QUARK (CAPS), GST_TYPE_CAPS, caps, NULL));
+      gst_structure_new_static_str ("GstEventCaps", "caps", GST_TYPE_CAPS, caps,
+          NULL));
 
   return event;
 }
@@ -999,8 +996,8 @@ gst_event_new_segment (const GstSegment * segment)
       segment);
 
   event = gst_event_new_custom (GST_EVENT_SEGMENT,
-      gst_structure_new_id (GST_QUARK (EVENT_SEGMENT),
-          GST_QUARK (SEGMENT), GST_TYPE_SEGMENT, segment, NULL));
+      gst_structure_new_static_str ("GstEventSegment",
+          "segment", GST_TYPE_SEGMENT, segment, NULL));
 
   return event;
 }
@@ -1075,7 +1072,8 @@ gst_event_new_tag (GstTagList * taglist)
 
   g_return_val_if_fail (taglist != NULL, NULL);
 
-  s = gst_structure_new_empty (names[gst_tag_list_get_scope (taglist)]);
+  s = gst_structure_new_static_str_empty (names[gst_tag_list_get_scope
+          (taglist)]);
   g_value_init (&val, GST_TYPE_TAG_LIST);
   g_value_take_boxed (&val, taglist);
   gst_structure_id_take_value (s, GST_QUARK (TAGLIST), &val);
@@ -1134,11 +1132,10 @@ gst_event_new_buffer_size (GstFormat format, gint64 minsize,
       ", maxsize %" G_GINT64_FORMAT ", async %d", gst_format_get_name (format),
       minsize, maxsize, async);
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_BUFFER_SIZE),
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
-      GST_QUARK (MINSIZE), G_TYPE_INT64, minsize,
-      GST_QUARK (MAXSIZE), G_TYPE_INT64, maxsize,
-      GST_QUARK (ASYNC), G_TYPE_BOOLEAN, async, NULL);
+  structure = gst_structure_new_static_str ("GstEventBufferSize",
+      "format", GST_TYPE_FORMAT, format,
+      "minsize", G_TYPE_INT64, minsize,
+      "maxsize", G_TYPE_INT64, maxsize, "async", G_TYPE_BOOLEAN, async, NULL);
   event = gst_event_new_custom (GST_EVENT_BUFFERSIZE, structure);
 
   return event;
@@ -1249,11 +1246,10 @@ gst_event_new_qos (GstQOSType type, gdouble proportion,
       ", timestamp %" GST_TIME_FORMAT, type, proportion,
       diff, GST_TIME_ARGS (timestamp));
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_QOS),
-      GST_QUARK (TYPE), GST_TYPE_QOS_TYPE, type,
-      GST_QUARK (PROPORTION), G_TYPE_DOUBLE, proportion,
-      GST_QUARK (DIFF), G_TYPE_INT64, diff,
-      GST_QUARK (TIMESTAMP), G_TYPE_UINT64, timestamp, NULL);
+  structure = gst_structure_new_static_str ("GstEventQOS",
+      "type", GST_TYPE_QOS_TYPE, type,
+      "proportion", G_TYPE_DOUBLE, proportion,
+      "diff", G_TYPE_INT64, diff, "timestamp", G_TYPE_UINT64, timestamp, NULL);
   event = gst_event_new_custom (GST_EVENT_QOS, structure);
 
   return event;
@@ -1401,16 +1397,15 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
         stop);
   }
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_SEEK),
-      GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
-      GST_QUARK (FLAGS), GST_TYPE_SEEK_FLAGS, flags,
-      GST_QUARK (CUR_TYPE), GST_TYPE_SEEK_TYPE, start_type,
-      GST_QUARK (CUR), G_TYPE_INT64, start,
-      GST_QUARK (STOP_TYPE), GST_TYPE_SEEK_TYPE, stop_type,
-      GST_QUARK (STOP), G_TYPE_INT64, stop,
-      GST_QUARK (TRICKMODE_INTERVAL), GST_TYPE_CLOCK_TIME, (GstClockTime) 0,
-      NULL);
+  structure = gst_structure_new_static_str ("GstEventSeek",
+      "rate", G_TYPE_DOUBLE, rate,
+      "format", GST_TYPE_FORMAT, format,
+      "flags", GST_TYPE_SEEK_FLAGS, flags,
+      "cur-type", GST_TYPE_SEEK_TYPE, start_type,
+      "cur", G_TYPE_INT64, start,
+      "stop-type", GST_TYPE_SEEK_TYPE, stop_type,
+      "stop", G_TYPE_INT64, stop,
+      "trickmode-interval", GST_TYPE_CLOCK_TIME, (GstClockTime) 0, NULL);
   event = gst_event_new_custom (GST_EVENT_SEEK, structure);
 
   return event;
@@ -1557,8 +1552,8 @@ gst_event_new_latency (GstClockTime latency)
   GST_CAT_INFO (GST_CAT_EVENT,
       "creating latency event %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_LATENCY),
-      GST_QUARK (LATENCY), G_TYPE_UINT64, latency, NULL);
+  structure = gst_structure_new_static_str ("GstEventLatency",
+      "latency", G_TYPE_UINT64, latency, NULL);
   event = gst_event_new_custom (GST_EVENT_LATENCY, structure);
 
   return event;
@@ -1618,12 +1613,12 @@ gst_event_new_step (GstFormat format, guint64 amount, gdouble rate,
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating step event");
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_STEP),
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
-      GST_QUARK (AMOUNT), G_TYPE_UINT64, amount,
-      GST_QUARK (RATE), G_TYPE_DOUBLE, rate,
-      GST_QUARK (FLUSH), G_TYPE_BOOLEAN, flush,
-      GST_QUARK (INTERMEDIATE), G_TYPE_BOOLEAN, intermediate, NULL);
+  structure = gst_structure_new_static_str ("GstEventStep",
+      "format", GST_TYPE_FORMAT, format,
+      "amount", G_TYPE_UINT64, amount,
+      "rate", G_TYPE_DOUBLE, rate,
+      "flush", G_TYPE_BOOLEAN, flush,
+      "intermediate", G_TYPE_BOOLEAN, intermediate, NULL);
   event = gst_event_new_custom (GST_EVENT_STEP, structure);
 
   return event;
@@ -1715,8 +1710,9 @@ gst_event_new_sink_message (const gchar * name, GstMessage * msg)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating sink-message event");
 
-  structure = gst_structure_new_id (g_quark_from_string (name),
-      GST_QUARK (MESSAGE), GST_TYPE_MESSAGE, msg, NULL);
+  structure =
+      gst_structure_new_static_str (name, "message", GST_TYPE_MESSAGE, msg,
+      NULL);
   event = gst_event_new_custom (GST_EVENT_SINK_MESSAGE, structure);
 
   return event;
@@ -1779,9 +1775,9 @@ gst_event_new_stream_start (const gchar * stream_id)
 
   g_return_val_if_fail (stream_id != NULL, NULL);
 
-  s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_START),
-      GST_QUARK (STREAM_ID), G_TYPE_STRING, stream_id,
-      GST_QUARK (FLAGS), GST_TYPE_STREAM_FLAGS, GST_STREAM_FLAG_NONE, NULL);
+  s = gst_structure_new_static_str ("GstEventStreamStart",
+      "stream-id", G_TYPE_STRING, stream_id,
+      "flags", GST_TYPE_STREAM_FLAGS, GST_STREAM_FLAG_NONE, NULL);
 
   return gst_event_new_custom (GST_EVENT_STREAM_START, s);
 }
@@ -1970,8 +1966,8 @@ gst_event_new_stream_collection (GstStreamCollection * collection)
   g_return_val_if_fail (collection != NULL, NULL);
   g_return_val_if_fail (GST_IS_STREAM_COLLECTION (collection), NULL);
 
-  s = gst_structure_new_id (GST_QUARK (EVENT_STREAM_COLLECTION),
-      GST_QUARK (COLLECTION), GST_TYPE_STREAM_COLLECTION, collection, NULL);
+  s = gst_structure_new_static_str ("stream-collection",
+      "collection", GST_TYPE_STREAM_COLLECTION, collection, NULL);
 
   return gst_event_new_custom (GST_EVENT_STREAM_COLLECTION, s);
 }
@@ -2016,7 +2012,7 @@ GstEvent *
 gst_event_new_toc (GstToc * toc, gboolean updated)
 {
   GstStructure *toc_struct;
-  GQuark id;
+  const gchar *name;
 
   g_return_val_if_fail (toc != NULL, NULL);
 
@@ -2025,13 +2021,12 @@ gst_event_new_toc (GstToc * toc, gboolean updated)
   /* need different structure names so sticky_multi event stuff on pads
    * works, i.e. both TOC events are kept around */
   if (gst_toc_get_scope (toc) == GST_TOC_SCOPE_GLOBAL)
-    id = GST_QUARK (EVENT_TOC_GLOBAL);
+    name = "GstEventTocGlobal";
   else
-    id = GST_QUARK (EVENT_TOC_CURRENT);
+    name = "GstEventTocCurrent";
 
-  toc_struct = gst_structure_new_id (id,
-      GST_QUARK (TOC), GST_TYPE_TOC, toc,
-      GST_QUARK (UPDATED), G_TYPE_BOOLEAN, updated, NULL);
+  toc_struct = gst_structure_new_static_str (name,
+      "toc", GST_TYPE_TOC, toc, "updated", G_TYPE_BOOLEAN, updated, NULL);
 
   return gst_event_new_custom (GST_EVENT_TOC, toc_struct);
 }
@@ -2079,8 +2074,8 @@ gst_event_new_toc_select (const gchar * uid)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating toc select event for UID: %s", uid);
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_TOC_SELECT),
-      GST_QUARK (UID), G_TYPE_STRING, uid, NULL);
+  structure = gst_structure_new_static_str ("GstEventTocSelect",
+      "uid", G_TYPE_STRING, uid, NULL);
 
   return gst_event_new_custom (GST_EVENT_TOC_SELECT, structure);
 }
@@ -2239,9 +2234,9 @@ gst_event_new_segment_done (GstFormat format, gint64 position)
 
   GST_CAT_INFO (GST_CAT_EVENT, "creating segment-done event");
 
-  structure = gst_structure_new_id (GST_QUARK (EVENT_SEGMENT_DONE),
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, format,
-      GST_QUARK (POSITION), G_TYPE_INT64, position, NULL);
+  structure = gst_structure_new_static_str ("GstEventSegmentDone",
+      "format", GST_TYPE_FORMAT, format,
+      "position", G_TYPE_INT64, position, NULL);
 
   event = gst_event_new_custom (GST_EVENT_SEGMENT_DONE, structure);
 
@@ -2311,9 +2306,9 @@ gst_event_new_instant_rate_change (gdouble rate_multiplier,
       rate_multiplier, new_flags);
 
   event = gst_event_new_custom (GST_EVENT_INSTANT_RATE_CHANGE,
-      gst_structure_new_id (GST_QUARK (EVENT_INSTANT_RATE_CHANGE),
-          GST_QUARK (RATE), G_TYPE_DOUBLE, rate_multiplier,
-          GST_QUARK (FLAGS), GST_TYPE_SEGMENT_FLAGS, new_flags, NULL));
+      gst_structure_new_static_str ("GstEventInstantRateChange",
+          "rate", G_TYPE_DOUBLE, rate_multiplier,
+          "flags", GST_TYPE_SEGMENT_FLAGS, new_flags, NULL));
 
   return event;
 }
@@ -2385,10 +2380,10 @@ gst_event_new_instant_rate_sync_time (gdouble rate_multiplier,
       GST_TIME_ARGS (running_time), GST_TIME_ARGS (upstream_running_time));
 
   event = gst_event_new_custom (GST_EVENT_INSTANT_RATE_SYNC_TIME,
-      gst_structure_new_id (GST_QUARK (EVENT_INSTANT_RATE_SYNC_TIME),
-          GST_QUARK (RATE), G_TYPE_DOUBLE, rate_multiplier,
-          GST_QUARK (RUNNING_TIME), GST_TYPE_CLOCK_TIME, running_time,
-          GST_QUARK (UPSTREAM_RUNNING_TIME), GST_TYPE_CLOCK_TIME,
+      gst_structure_new_static_str ("GstEventInstantRateSyncTime",
+          "rate", G_TYPE_DOUBLE, rate_multiplier,
+          "running-time", GST_TYPE_CLOCK_TIME, running_time,
+          "upstream-running-time", GST_TYPE_CLOCK_TIME,
           upstream_running_time, NULL));
 
   return event;

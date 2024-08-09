@@ -24,7 +24,7 @@
 /* TODO:
  * - Handle the case were a track only references specific channels
  *   of the essence (ChannelID property)
- * - Add support for more codecs 
+ * - Add support for more codecs
  * - Handle more of the metadata inside the descriptors
  */
 
@@ -519,7 +519,7 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_wave_audio_essence_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (WAVE_AUDIO_ESSENCE_DESCRIPTOR);
+  metadata_base_class->name = "wave-audio-essence-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_wave_audio_essence_descriptor_to_structure;
   metadata_base_class->write_tags =
@@ -1070,7 +1070,7 @@ static void
   object_class->finalize = mxf_metadata_aes3_audio_essence_descriptor_finalize;
   metadata_base_class->handle_tag =
       mxf_metadata_aes3_audio_essence_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (AES3_AUDIO_ESSENCE_DESCRIPTOR);
+  metadata_base_class->name = "aes3-audio-essence-descriptor";
   metadata_base_class->to_structure =
       mxf_metadata_aes3_audio_essence_descriptor_to_structure;
   metadata_base_class->write_tags =

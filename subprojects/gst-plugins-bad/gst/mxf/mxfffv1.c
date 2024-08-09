@@ -259,7 +259,7 @@ static void
 
   metadata_base_class->handle_tag =
       mxf_metadata_ffv1_picture_descriptor_handle_tag;
-  metadata_base_class->name_quark = MXF_QUARK (FFV1_PICTURE_DESCRIPTOR);
+  metadata_base_class->name = "ffv1-picture-descriptor";
 
   metadata_class->type = 0x0181;
 }

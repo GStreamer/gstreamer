@@ -118,30 +118,6 @@ gst_play_error_quark (void)
   return g_quark_from_static_string ("gst-play-error-quark");
 }
 
-static GQuark QUARK_CONFIG;
-
-/* Keep ConfigQuarkId and _config_quark_strings ordered and synced */
-typedef enum
-{
-  CONFIG_QUARK_USER_AGENT = 0,
-  CONFIG_QUARK_POSITION_INTERVAL_UPDATE,
-  CONFIG_QUARK_ACCURATE_SEEK,
-  CONFIG_QUARK_PIPELINE_DUMP_IN_ERROR_DETAILS,
-
-  CONFIG_QUARK_MAX
-} ConfigQuarkId;
-
-static const gchar *_config_quark_strings[] = {
-  "user-agent",
-  "position-interval-update",
-  "accurate-seek",
-  "pipeline-dump-in-error-details",
-};
-
-static GQuark _config_quark_table[CONFIG_QUARK_MAX];
-
-#define CONFIG_QUARK(q) _config_quark_table[CONFIG_QUARK_##q]
-
 enum
 {
   PROP_0,
@@ -317,10 +293,10 @@ gst_play_init (GstPlay * self)
   gst_object_set_name (GST_OBJECT (self->api_bus), "api_bus");
 
   /* *INDENT-OFF* */
-  self->config = gst_structure_new_id (QUARK_CONFIG,
-      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
-      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, FALSE,
-      CONFIG_QUARK (PIPELINE_DUMP_IN_ERROR_DETAILS), G_TYPE_BOOLEAN, FALSE,
+  self->config = gst_structure_new_static_str ("play-config",
+      "position-interval-update", G_TYPE_UINT, DEFAULT_POSITION_UPDATE_INTERVAL_MS,
+      "accurate-seek", G_TYPE_BOOLEAN, FALSE,
+      "pipeline-dump-error-in-details", G_TYPE_BOOLEAN, FALSE,
       NULL);
   /* *INDENT-ON* */
 
@@ -347,7 +323,7 @@ api_bus_post_message (GstPlay * self, GstPlayMessage message_type,
 
   GST_INFO ("Posting API-bus message-type: %s",
       gst_play_message_get_name (message_type));
-  message_data = gst_structure_new (GST_PLAY_MESSAGE_DATA,
+  message_data = gst_structure_new_static_str (GST_PLAY_MESSAGE_DATA,
       GST_PLAY_MESSAGE_DATA_TYPE, GST_TYPE_PLAY_MESSAGE, message_type, NULL);
 
   va_start (varargs, firstfield);
@@ -359,23 +335,6 @@ api_bus_post_message (GstPlay * self, GstPlayMessage message_type,
   GST_DEBUG ("Created message with payload: [ %" GST_PTR_FORMAT " ]",
       message_data);
   gst_bus_post (self->api_bus, msg);
-}
-
-static void
-config_quark_initialize (void)
-{
-  gint i;
-
-  QUARK_CONFIG = g_quark_from_static_string ("play-config");
-
-  if (G_N_ELEMENTS (_config_quark_strings) != CONFIG_QUARK_MAX)
-    g_warning ("the quark table is not consistent! %d != %d",
-        (int) G_N_ELEMENTS (_config_quark_strings), CONFIG_QUARK_MAX);
-
-  for (i = 0; i < CONFIG_QUARK_MAX; i++) {
-    _config_quark_table[i] =
-        g_quark_from_static_string (_config_quark_strings[i]);
-  }
 }
 
 static void
@@ -476,8 +435,6 @@ gst_play_class_init (GstPlayClass * klass)
       G_MININT64, G_MAXINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, param_specs);
-
-  config_quark_initialize ();
 }
 
 static void
@@ -988,7 +945,7 @@ on_error (GstPlay * self, GError * err, const GstStructure * details)
   if (details != NULL) {
     extra_details = gst_structure_copy (details);
   } else {
-    extra_details = gst_structure_new_empty ("error-details");
+    extra_details = gst_structure_new_static_str_empty ("error-details");
   }
   if (gst_play_config_get_pipeline_dump_in_error_details (self->config)) {
     dot_data = gst_debug_bin_to_dot_data (GST_BIN_CAST (self->playbin),
@@ -4455,8 +4412,7 @@ gst_play_config_set_user_agent (GstStructure * config, const gchar * agent)
   g_return_if_fail (config != NULL);
   g_return_if_fail (agent != NULL);
 
-  gst_structure_id_set (config,
-      CONFIG_QUARK (USER_AGENT), G_TYPE_STRING, agent, NULL);
+  gst_structure_set (config, "user-agent", G_TYPE_STRING, agent, NULL);
 }
 
 /**
@@ -4476,8 +4432,7 @@ gst_play_config_get_user_agent (const GstStructure * config)
 
   g_return_val_if_fail (config != NULL, NULL);
 
-  gst_structure_id_get (config,
-      CONFIG_QUARK (USER_AGENT), G_TYPE_STRING, &agent, NULL);
+  gst_structure_get (config, "user-agent", G_TYPE_STRING, &agent, NULL);
 
   return agent;
 }
@@ -4498,8 +4453,8 @@ gst_play_config_set_position_update_interval (GstStructure * config,
   g_return_if_fail (config != NULL);
   g_return_if_fail (interval <= 10000);
 
-  gst_structure_id_set (config,
-      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, interval, NULL);
+  gst_structure_set (config,
+      "position-update-interval", G_TYPE_UINT, interval, NULL);
 }
 
 /**
@@ -4517,8 +4472,8 @@ gst_play_config_get_position_update_interval (const GstStructure * config)
 
   g_return_val_if_fail (config != NULL, DEFAULT_POSITION_UPDATE_INTERVAL_MS);
 
-  gst_structure_id_get (config,
-      CONFIG_QUARK (POSITION_INTERVAL_UPDATE), G_TYPE_UINT, &interval, NULL);
+  gst_structure_get (config,
+      "position-update-interval", G_TYPE_UINT, &interval, NULL);
 
   return interval;
 }
@@ -4545,8 +4500,7 @@ gst_play_config_set_seek_accurate (GstStructure * config, gboolean accurate)
 {
   g_return_if_fail (config != NULL);
 
-  gst_structure_id_set (config,
-      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, accurate, NULL);
+  gst_structure_set (config, "accurate-seek", G_TYPE_BOOLEAN, accurate, NULL);
 }
 
 /**
@@ -4564,8 +4518,7 @@ gst_play_config_get_seek_accurate (const GstStructure * config)
 
   g_return_val_if_fail (config != NULL, FALSE);
 
-  gst_structure_id_get (config,
-      CONFIG_QUARK (ACCURATE_SEEK), G_TYPE_BOOLEAN, &accurate, NULL);
+  gst_structure_get (config, "accurate-seek", G_TYPE_BOOLEAN, &accurate, NULL);
 
   return accurate;
 }
@@ -4589,7 +4542,7 @@ gst_play_config_set_pipeline_dump_in_error_details (GstStructure * config,
 {
   g_return_if_fail (config != NULL);
 
-  gst_structure_id_set (config, CONFIG_QUARK (PIPELINE_DUMP_IN_ERROR_DETAILS),
+  gst_structure_set (config, "pipeline-dump-in-error-details",
       G_TYPE_BOOLEAN, value, NULL);
 }
 
@@ -4609,7 +4562,7 @@ gst_play_config_get_pipeline_dump_in_error_details (const GstStructure * config)
 
   g_return_val_if_fail (config != NULL, FALSE);
 
-  gst_structure_id_get (config, CONFIG_QUARK (PIPELINE_DUMP_IN_ERROR_DETAILS),
+  gst_structure_get (config, "pipeline-dump-in-error-details",
       G_TYPE_BOOLEAN, &value, NULL);
 
   return value;

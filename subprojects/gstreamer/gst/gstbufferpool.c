@@ -167,7 +167,7 @@ gst_buffer_pool_init (GstBufferPool * pool)
   priv->active = FALSE;
   priv->configured = FALSE;
   priv->started = FALSE;
-  priv->config = gst_structure_new_id_empty (GST_QUARK (BUFFER_POOL_CONFIG));
+  priv->config = gst_structure_new_static_str_empty ("GstBufferPoolConfig");
   gst_buffer_pool_config_set_params (priv->config, NULL, 0, 0, 0);
   priv->allocator = NULL;
   gst_allocation_params_init (&priv->params);

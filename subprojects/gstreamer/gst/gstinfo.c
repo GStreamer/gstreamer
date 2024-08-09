@@ -903,8 +903,7 @@ gst_info_structure_to_string (const GstStructure * s)
 {
   if (G_LIKELY (s)) {
     gchar *str = gst_structure_to_string (s);
-    if (G_UNLIKELY (pretty_tags
-            && gst_structure_get_name_id (s) == GST_QUARK (TAGLIST)))
+    if (G_UNLIKELY (pretty_tags && gst_structure_has_name (s, "taglist")))
       return prettify_structure_string (str);
     else
       return str;

@@ -2893,18 +2893,18 @@ gst_value_serialize_segment_internal (const GValue * value, gboolean escape)
   gchar *t, *res;
   GstStructure *s;
 
-  s = gst_structure_new_id (GST_QUARK (SEGMENT),
-      GST_QUARK (FLAGS), GST_TYPE_SEGMENT_FLAGS, seg->flags,
-      GST_QUARK (RATE), G_TYPE_DOUBLE, seg->rate,
-      GST_QUARK (APPLIED_RATE), G_TYPE_DOUBLE, seg->applied_rate,
-      GST_QUARK (FORMAT), GST_TYPE_FORMAT, seg->format,
-      GST_QUARK (BASE), G_TYPE_UINT64, seg->base,
-      GST_QUARK (OFFSET), G_TYPE_UINT64, seg->offset,
-      GST_QUARK (START), G_TYPE_UINT64, seg->start,
-      GST_QUARK (STOP), G_TYPE_UINT64, seg->stop,
-      GST_QUARK (TIME), G_TYPE_UINT64, seg->time,
-      GST_QUARK (POSITION), G_TYPE_UINT64, seg->position,
-      GST_QUARK (DURATION), G_TYPE_UINT64, seg->duration, NULL);
+  s = gst_structure_new_static_str ("segment",
+      "flags", GST_TYPE_SEGMENT_FLAGS, seg->flags,
+      "rate", G_TYPE_DOUBLE, seg->rate,
+      "applied-rate", G_TYPE_DOUBLE, seg->applied_rate,
+      "format", GST_TYPE_FORMAT, seg->format,
+      "base", G_TYPE_UINT64, seg->base,
+      "offset", G_TYPE_UINT64, seg->offset,
+      "start", G_TYPE_UINT64, seg->start,
+      "stop", G_TYPE_UINT64, seg->stop,
+      "time", G_TYPE_UINT64, seg->time,
+      "position", G_TYPE_UINT64, seg->position,
+      "duration", G_TYPE_UINT64, seg->duration, NULL);
 
   t = gst_structure_to_string (s);
   if (escape) {
@@ -8051,11 +8051,11 @@ gst_value_transform_allocation_params_string (const GValue * value1,
   gchar *res;
   GstStructure *s;
 
-  s = gst_structure_new_id (GST_QUARK (ALLOCATION_PARAMS),
-      GST_QUARK (FLAGS), GST_TYPE_MEMORY_FLAGS, params->flags,
-      GST_QUARK (ALIGN), G_TYPE_UINT64, params->align,
-      GST_QUARK (PREFIX), G_TYPE_UINT64, params->prefix,
-      GST_QUARK (PADDING), G_TYPE_UINT64, params->padding, NULL);
+  s = gst_structure_new_static_str ("GstAllocationParams",
+      "flags", GST_TYPE_MEMORY_FLAGS, params->flags,
+      "align", G_TYPE_UINT64, params->align,
+      "prefix", G_TYPE_UINT64, params->prefix,
+      "padding", G_TYPE_UINT64, params->padding, NULL);
 
   res = gst_structure_to_string (s);
   gst_structure_free (s);

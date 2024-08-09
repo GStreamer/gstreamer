@@ -88,14 +88,6 @@ GST_DEBUG_CATEGORY_STATIC (ts_demux_debug);
 
 #define ABSDIFF(a,b) (((a) > (b)) ? ((a) - (b)) : ((b) - (a)))
 
-static GQuark QUARK_TSDEMUX;
-static GQuark QUARK_PID;
-static GQuark QUARK_PCR;
-static GQuark QUARK_OPCR;
-static GQuark QUARK_PTS;
-static GQuark QUARK_DTS;
-static GQuark QUARK_OFFSET;
-
 typedef enum
 {
   PENDING_PACKET_EMPTY = 0,     /* No pending packet/buffer
@@ -349,21 +341,8 @@ static void gst_ts_demux_check_and_sync_streams (GstTSDemux * demux,
     GstClockTime time);
 static void handle_psi (MpegTSBase * base, GstMpegtsSection * section);
 
-static void
-_extra_init (void)
-{
-  QUARK_TSDEMUX = g_quark_from_string ("tsdemux");
-  QUARK_PID = g_quark_from_string ("pid");
-  QUARK_PCR = g_quark_from_string ("pcr");
-  QUARK_OPCR = g_quark_from_string ("opcr");
-  QUARK_PTS = g_quark_from_string ("pts");
-  QUARK_DTS = g_quark_from_string ("dts");
-  QUARK_OFFSET = g_quark_from_string ("offset");
-}
-
 #define gst_ts_demux_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstTSDemux, gst_ts_demux, GST_TYPE_MPEGTS_BASE,
-    _extra_init ());
+G_DEFINE_TYPE (GstTSDemux, gst_ts_demux, GST_TYPE_MPEGTS_BASE);
 #define _do_element_init \
   GST_DEBUG_CATEGORY_INIT (ts_demux_debug, "tsdemux", 0, \
       "MPEG transport stream demuxer");\
@@ -1159,7 +1138,7 @@ handle_psi (MpegTSBase * base, GstMpegtsSection * section)
       GstMpegtsSCTESIT *sit =
           (GstMpegtsSCTESIT *) gst_mpegts_section_get_scte_sit (new_section);
 
-      rtime_map = gst_structure_new_empty ("running-time-map");
+      rtime_map = gst_structure_new_static_str_empty ("running-time-map");
 
       if (sit->fully_parsed) {
         if (sit->splice_time_specified) {
@@ -2465,11 +2444,9 @@ gst_ts_demux_record_pts (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
-    gst_structure_id_set (st,
-        QUARK_PID, G_TYPE_UINT, bs->pid,
-        QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_PTS, G_TYPE_UINT64, pts,
-        NULL);
+    st = gst_structure_new_static_str ("tsdemux",
+        "pid", G_TYPE_UINT, bs->pid,
+        "offset", G_TYPE_UINT64, offset, "pts", G_TYPE_UINT64, pts, NULL);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT (demux), st));
   }
@@ -2499,11 +2476,9 @@ gst_ts_demux_record_dts (GstTSDemux * demux, TSDemuxStream * stream,
 
   if (G_UNLIKELY (demux->emit_statistics)) {
     GstStructure *st;
-    st = gst_structure_new_id_empty (QUARK_TSDEMUX);
-    gst_structure_id_set (st,
-        QUARK_PID, G_TYPE_UINT, bs->pid,
-        QUARK_OFFSET, G_TYPE_UINT64, offset, QUARK_DTS, G_TYPE_UINT64, dts,
-        NULL);
+    st = gst_structure_new_static_str ("tsdemux",
+        "pid", G_TYPE_UINT, bs->pid,
+        "offset", G_TYPE_UINT64, offset, "dts", G_TYPE_UINT64, dts, NULL);
     gst_element_post_message (GST_ELEMENT_CAST (demux),
         gst_message_new_element (GST_OBJECT (demux), st));
   }

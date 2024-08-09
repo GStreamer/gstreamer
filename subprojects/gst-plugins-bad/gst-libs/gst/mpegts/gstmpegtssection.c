@@ -90,18 +90,6 @@
  * # API
  */
 
-static GQuark QUARK_PAT;
-static GQuark QUARK_CAT;
-static GQuark QUARK_BAT;
-static GQuark QUARK_PMT;
-static GQuark QUARK_NIT;
-static GQuark QUARK_SDT;
-static GQuark QUARK_EIT;
-static GQuark QUARK_TDT;
-static GQuark QUARK_TOT;
-static GQuark QUARK_SCTE_SIT;
-static GQuark QUARK_SECTION;
-
 static GType _gst_mpegts_section_type = 0;
 #define MPEG_TYPE_TS_SECTION (_gst_mpegts_section_type)
 GST_DEFINE_MINI_OBJECT_TYPE (GstMpegtsSection, gst_mpegts_section);
@@ -278,7 +266,7 @@ gst_message_parse_mpegts_section (GstMessage * message)
 
   st = gst_message_get_structure (message);
   /* FIXME : Add checks against know section names */
-  if (!gst_structure_id_get (st, QUARK_SECTION, GST_TYPE_MPEGTS_SECTION,
+  if (!gst_structure_get (st, "section", GST_TYPE_MPEGTS_SECTION,
           &section, NULL))
     return NULL;
 
@@ -289,46 +277,46 @@ static GstStructure *
 _mpegts_section_get_structure (GstMpegtsSection * section)
 {
   GstStructure *st;
-  GQuark quark;
+  const gchar *name;
 
   switch (section->section_type) {
     case GST_MPEGTS_SECTION_PAT:
-      quark = QUARK_PAT;
+      name = "pat";
       break;
     case GST_MPEGTS_SECTION_PMT:
-      quark = QUARK_PMT;
+      name = "pmt";
       break;
     case GST_MPEGTS_SECTION_CAT:
-      quark = QUARK_CAT;
+      name = "cat";
       break;
     case GST_MPEGTS_SECTION_EIT:
-      quark = QUARK_EIT;
+      name = "eit";
       break;
     case GST_MPEGTS_SECTION_BAT:
-      quark = QUARK_BAT;
+      name = "bat";
       break;
     case GST_MPEGTS_SECTION_NIT:
-      quark = QUARK_NIT;
+      name = "nit";
       break;
     case GST_MPEGTS_SECTION_SDT:
-      quark = QUARK_SDT;
+      name = "sdt";
       break;
     case GST_MPEGTS_SECTION_TDT:
-      quark = QUARK_TDT;
+      name = "tdt";
       break;
     case GST_MPEGTS_SECTION_TOT:
-      quark = QUARK_TOT;
+      name = "tot";
       break;
     case GST_MPEGTS_SECTION_SCTE_SIT:
-      quark = QUARK_SCTE_SIT;
+      name = "scte-sit";
       break;
     default:
       GST_DEBUG ("Creating structure for unknown GstMpegtsSection");
-      quark = QUARK_SECTION;
+      name = "section";
       break;
   }
 
-  st = gst_structure_new_id (quark, QUARK_SECTION, MPEG_TYPE_TS_SECTION,
+  st = gst_structure_new_static_str (name, "section", MPEG_TYPE_TS_SECTION,
       section, NULL);
 
   return st;
@@ -399,7 +387,7 @@ gst_event_parse_mpegts_section (GstEvent * event)
   if (!structure)
     return NULL;
 
-  if (!gst_structure_id_get (structure, QUARK_SECTION, MPEG_TYPE_TS_SECTION,
+  if (!gst_structure_get (structure, "section", MPEG_TYPE_TS_SECTION,
           &section, NULL))
     return NULL;
 
@@ -1333,16 +1321,4 @@ __initialize_sections (void)
 {
   /* FIXME : Temporary hack to initialize section gtype */
   _gst_mpegts_section_type = gst_mpegts_section_get_type ();
-
-  QUARK_PAT = g_quark_from_string ("pat");
-  QUARK_CAT = g_quark_from_string ("cat");
-  QUARK_PMT = g_quark_from_string ("pmt");
-  QUARK_NIT = g_quark_from_string ("nit");
-  QUARK_BAT = g_quark_from_string ("bat");
-  QUARK_SDT = g_quark_from_string ("sdt");
-  QUARK_EIT = g_quark_from_string ("eit");
-  QUARK_TDT = g_quark_from_string ("tdt");
-  QUARK_TOT = g_quark_from_string ("tot");
-  QUARK_SCTE_SIT = g_quark_from_string ("scte-sit");
-  QUARK_SECTION = g_quark_from_string ("section");
 }
