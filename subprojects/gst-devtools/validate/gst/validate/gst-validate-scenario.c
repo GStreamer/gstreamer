@@ -2903,6 +2903,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
   GstValidateExecuteActionReturn res = GST_VALIDATE_EXECUTE_ACTION_NONE;
   gboolean optional, needs_parsing = FALSE;
 
+  structure = gst_structure_copy (structure);
   action->type = gst_structure_get_name (structure);
   action_type = _find_action_type (action->type);
 
@@ -2910,6 +2911,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
     GST_ERROR_OBJECT (scenario, "Action type %s no found",
         gst_structure_get_name (structure));
 
+    gst_structure_free (structure);
     return GST_VALIDATE_EXECUTE_ACTION_ERROR;
   }
 
@@ -2935,7 +2937,7 @@ _fill_action (GstValidateScenario * scenario, GstValidateAction * action,
         "No timeout time for action %" GST_PTR_FORMAT, structure);
   }
 
-  action->structure = gst_structure_copy (structure);
+  action->structure = structure;
 
   if (!(action->name = gst_structure_get_string (action->structure, "name")))
     action->name = "";
