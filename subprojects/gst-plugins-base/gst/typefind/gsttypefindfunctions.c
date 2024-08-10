@@ -3028,6 +3028,100 @@ h265_video_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** video/x-h266 H266 elementary video stream ***/
+
+static GstStaticCaps h266_video_caps =
+GST_STATIC_CAPS ("video/x-h266,stream-format=byte-stream");
+
+#define H266_VIDEO_CAPS gst_static_caps_get(&h266_video_caps)
+
+#define H266_MAX_PROBE_LENGTH (128 * 1024)      /* 128kB for HD should be enough. */
+
+static void
+h266_video_type_find (GstTypeFind * tf, gpointer unused)
+{
+  DataScanCtx c = { 0, NULL, 0 };
+
+  /* Stream consists of: a series of sync codes (00 00 00 01) followed
+   * by NALs
+   */
+  gboolean seen_irap = FALSE;
+  gboolean seen_vps = FALSE;
+  gboolean seen_sps = FALSE;
+  gboolean seen_pps = FALSE;
+  int nuh, nut;
+  int good = 0;
+  int bad = 0;
+
+  while (c.offset < H266_MAX_PROBE_LENGTH) {
+    if (G_UNLIKELY (!data_scan_ctx_ensure_data (tf, &c, 5)))
+      break;
+
+    if (IS_MPEG_HEADER (c.data)) {
+      /* forbidden_zero_bit(1) | nuh_reserved_zero_bit(1) | nuh_layer_id(6) */
+      nuh = c.data[3] & 0xc0;
+      /* nal_unit_type(5) | nuh_temporal_id_plus1(3) */
+      nut = c.data[4] & 0xf8;
+
+      /* if forbidden bit and nuh_reserved_zero_bit are different to 0 won't be h266 */
+      if (nuh) {
+        bad++;
+        break;
+      }
+      nut = nut >> 3;
+
+      /* if nuh_temporal_id_plus1 is zero then it won't be h266 */
+      if (!(c.data[4] & 0x07)) {
+        bad++;
+        break;
+      }
+
+      /* collect statistics about the NAL types */
+      if ((nut >= 0 && nut <= 27)) {
+        if (nut == 14)
+          seen_vps = TRUE;
+        else if (nut == 15)
+          seen_sps = TRUE;
+        else if (nut == 16)
+          seen_pps = TRUE;
+        else if (nut >= 7 && nut <= 9) {
+          /* BLA, IDR and CRA pictures are belongs to be IRAP picture */
+          /* we are not counting the reserved IRAP pictures (22 and 23) to good */
+          seen_irap = TRUE;
+        }
+
+        good++;
+      } else if (nut >= 27) {
+        /* reserved values are counting as bad */
+        bad++;
+      }
+
+      GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, vps:%d, irap:%d", good, bad,
+          seen_pps, seen_sps, seen_vps, seen_irap);
+
+      if (seen_sps && seen_pps && seen_irap && good >= 10 && bad < 4) {
+        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, H266_VIDEO_CAPS);
+        return;
+      }
+
+      data_scan_ctx_advance (tf, &c, 5);
+    }
+    data_scan_ctx_advance (tf, &c, 1);
+  }
+
+  GST_LOG ("good:%d, bad:%d, pps:%d, sps:%d, vps:%d, irap:%d", good, bad,
+      seen_pps, seen_sps, seen_vps, seen_irap);
+
+  if (good >= 2 && bad == 0) {
+    GstTypeFindProbability probability = GST_TYPE_FIND_POSSIBLE;
+
+    if (seen_pps && seen_sps && seen_vps)
+      probability = GST_TYPE_FIND_LIKELY;
+
+    gst_type_find_suggest (tf, probability, H266_VIDEO_CAPS);
+  }
+}
+
 /*** video/mpeg video stream ***/
 
 static GstStaticCaps mpeg_video_caps = GST_STATIC_CAPS ("video/mpeg, "
@@ -6742,6 +6836,8 @@ GST_TYPE_FIND_REGISTER_DEFINE (h264_video, "video/x-h264", GST_RANK_PRIMARY,
     h264_video_type_find, "h264,x264,264", H264_VIDEO_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (h265_video, "video/x-h265", GST_RANK_PRIMARY,
     h265_video_type_find, "h265,x265,265", H265_VIDEO_CAPS, NULL, NULL);
+GST_TYPE_FIND_REGISTER_DEFINE (h266_video, "video/x-h266", GST_RANK_PRIMARY,
+    h266_video_type_find, "h266,266", H266_VIDEO_CAPS, NULL, NULL);
 GST_TYPE_FIND_REGISTER_DEFINE (nuv, "video/x-nuv", GST_RANK_SECONDARY,
     nuv_type_find, "nuv", NUV_CAPS, NULL, NULL);
 /* ISO formats */
