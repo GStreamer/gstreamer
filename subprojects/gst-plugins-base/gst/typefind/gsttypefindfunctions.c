@@ -2858,7 +2858,7 @@ h264_video_type_find (GstTypeFind * tf, gpointer unused)
       break;
 
     if (IS_MPEG_HEADER (c.data)) {
-      nut = c.data[3] & 0x9f;   /* forbiden_zero_bit | nal_unit_type */
+      nut = c.data[3] & 0x9f;   /* forbidden_zero_bit | nal_unit_type */
       ref = c.data[3] & 0x60;   /* nal_ref_idc */
 
       /* if forbidden bit is different to 0 won't be h264 */
@@ -2960,7 +2960,7 @@ h265_video_type_find (GstTypeFind * tf, gpointer unused)
       break;
 
     if (IS_MPEG_HEADER (c.data)) {
-      /* forbiden_zero_bit | nal_unit_type */
+      /* forbidden_zero_bit | nal_unit_type */
       nut = c.data[3] & 0xfe;
 
       /* if forbidden bit is different to 0 won't be h265 */

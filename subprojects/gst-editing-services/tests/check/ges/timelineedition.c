@@ -344,7 +344,7 @@ GST_START_TEST (test_snapping)
   DEEP_CHECK (clip1, 20, 0, 10);
   DEEP_CHECK (clip2, 62, 0, 60);
 
-  /* clip and clip1 would fully overlap ... forbiden */
+  /* clip and clip1 would fully overlap ... forbidden */
   fail_if (ges_timeline_element_roll_end (GES_TIMELINE_ELEMENT (clip1), 62));
   DEEP_CHECK (clip, 25, 0, 37);
   DEEP_CHECK (clip1, 20, 0, 10);
