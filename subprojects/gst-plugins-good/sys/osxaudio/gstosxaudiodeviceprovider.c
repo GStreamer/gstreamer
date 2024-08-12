@@ -176,35 +176,6 @@ _audio_device_has_input (AudioDeviceID device_id)
   return TRUE;
 }
 
-
-static inline AudioDeviceID
-_audio_system_get_default_device (gboolean output)
-{
-  OSStatus status = noErr;
-  UInt32 propertySize = sizeof (AudioDeviceID);
-  AudioDeviceID device_id = kAudioDeviceUnknown;
-  AudioObjectPropertySelector prop_selector;
-
-  prop_selector = output ? kAudioHardwarePropertyDefaultOutputDevice :
-      kAudioHardwarePropertyDefaultInputDevice;
-
-  AudioObjectPropertyAddress defaultDeviceAddress = {
-    prop_selector,
-    kAudioObjectPropertyScopeGlobal,
-    kAudioObjectPropertyElementMain
-  };
-
-  status = AudioObjectGetPropertyData (kAudioObjectSystemObject,
-      &defaultDeviceAddress, 0, NULL, &propertySize, &device_id);
-  if (status != noErr) {
-    GST_ERROR ("failed getting default output device: %d", (int) status);
-  }
-
-  GST_DEBUG ("Default device id: %u", (unsigned) device_id);
-
-  return device_id;
-}
-
 static inline AudioDeviceID *
 _audio_system_get_devices (gint * ndevices)
 {
