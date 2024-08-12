@@ -74,7 +74,6 @@ struct _GstVulkanEncoderPrivate
   } prop;
 
   guint out_buffer_size_aligned;
-  guint out_buffer_offset_aligned;
   gboolean layered_dpb;
   GstBufferPool *dpb_pool;
   GstBuffer *layered_buffer;
@@ -820,8 +819,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
 
   priv->out_buffer_size_aligned = GST_ROUND_UP_N (out_buffer_size,
       priv->caps.caps.minBitstreamBufferSizeAlignment);
-  priv->out_buffer_offset_aligned = GST_ROUND_UP_N (0,
-      priv->caps.caps.minBitstreamBufferOffsetAlignment);
 
   priv->started = TRUE;
 
@@ -1275,7 +1272,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     .pNext = pic->codec_pic_info,
     .flags = 0x0,
     .dstBuffer = ((GstVulkanBufferMemory *) mem)->buffer,
-    .dstBufferOffset = priv->out_buffer_offset_aligned,
+    .dstBufferOffset = 0,
     .dstBufferRange = ((GstVulkanBufferMemory *) mem)->barrier.size, //FIXME is it the correct value ?
     .srcPictureResource = (VkVideoPictureResourceInfoKHR) { // SPEC: this should be separate
         .sType = VK_STRUCTURE_TYPE_VIDEO_PICTURE_RESOURCE_INFO_KHR,
@@ -1349,7 +1346,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     GST_INFO_OBJECT (self, "The frame %d has been encoded with size %lu",
         pic->pic_num, encode_res->data_size + params_size);
     gst_buffer_resize (pic->out_buffer, encode_res->offset,
-        encode_res->data_size + params_size + priv->out_buffer_offset_aligned);
+        encode_res->data_size + params_size);
   } else {
     GST_ERROR_OBJECT (self,
         "The operation did not complete properly, query status = %d",
