@@ -657,7 +657,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
         /* *INDENT-ON* */
       };
       codec_idx = GST_VK_VIDEO_EXTENSION_ENCODE_H265;
-
       break;
     default:
       g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,

@@ -178,7 +178,7 @@ gboolean                gst_vulkan_encoder_encode               (GstVulkanEncode
                                                                  GstVulkanEncodePicture * pic,
                                                                  GstVulkanEncodePicture ** ref_pics);
 GST_VULKAN_API
-gboolean                gst_vulkan_encoder_caps              (GstVulkanEncoder * self,
+gboolean                gst_vulkan_encoder_caps                 (GstVulkanEncoder * self,
                                                                  GstVulkanVideoCapabilities * caps);
 GST_VULKAN_API
 GstCaps *               gst_vulkan_encoder_profile_caps         (GstVulkanEncoder * self);
