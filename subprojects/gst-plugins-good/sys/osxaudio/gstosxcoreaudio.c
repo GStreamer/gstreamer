@@ -23,7 +23,6 @@
 
 #include "gstosxcoreaudio.h"
 #include "gstosxcoreaudiocommon.h"
-#include <CoreAudio/CoreAudio.h>
 
 GST_DEBUG_CATEGORY (osx_coreaudio_debug);
 #define GST_CAT_DEFAULT osx_coreaudio_debug
@@ -34,6 +33,7 @@ G_DEFINE_TYPE (GstCoreAudio, gst_core_audio, G_TYPE_OBJECT);
 #include "gstosxcoreaudioremoteio.c"
 #else
 #include "gstosxcoreaudiohal.c"
+#include <CoreAudio/CoreAudio.h>
 #endif
 
 enum
@@ -425,10 +425,12 @@ gst_core_audio_select_device (GstCoreAudio * core_audio)
 {
   gboolean ret = gst_core_audio_select_device_impl (core_audio);
 
+#ifndef HAVE_IOS
   if (core_audio->device_id != kAudioDeviceUnknown)
     core_audio->unique_id =
         gst_core_audio_device_get_prop (core_audio->device_id,
         kAudioDevicePropertyDeviceUID);
+#endif
 
   return ret;
 }

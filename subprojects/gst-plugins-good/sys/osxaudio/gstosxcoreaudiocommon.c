@@ -560,6 +560,7 @@ gst_core_audio_dump_channel_layout (AudioChannelLayout * channel_layout)
   }
 }
 
+#ifndef HAVE_IOS
 char *
 gst_core_audio_device_get_prop (AudioDeviceID device_id,
     AudioObjectPropertyElement prop_id)
@@ -607,3 +608,4 @@ gst_core_audio_device_get_prop (AudioDeviceID device_id,
 beach:
   return result;
 }
+#endif
