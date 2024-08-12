@@ -18,14 +18,10 @@ endif
 
 if host_system == 'darwin'
   # TODO: https://github.com/mesonbuild/meson/issues/3940
-  have_osxaudio = cc.has_header('CoreAudio/CoreAudio.h')
+  have_osxaudio = cc.has_header('CoreAudio/CoreAudio.h', required: osxaudio_option)
   osxaudio_sources += ['gstosxaudiodeviceprovider.c']
 elif host_system == 'ios'
-  have_osxaudio = cc.has_header('CoreAudio/CoreAudioTypes.h')
-endif
-
-if not have_osxaudio and osxaudio_option.enabled()
-  error('osxaudio plugin was enabled but CoreAudio headers not found')
+  have_osxaudio = cc.has_header('CoreAudio/CoreAudioTypes.h', required: osxaudio_option)
 endif
 
 if have_osxaudio
