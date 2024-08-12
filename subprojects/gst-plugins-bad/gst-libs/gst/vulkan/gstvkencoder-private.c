@@ -487,8 +487,7 @@ gst_vulkan_encode_picture_free (GstVulkanEncodePicture * pic)
     gst_vulkan_image_view_unref (pic->dpb_view);
     pic->dpb_view = NULL;
   }
-  if (pic->packed_headers)
-    g_ptr_array_free (pic->packed_headers, FALSE);
+  g_clear_pointer (&pic->packed_headers, g_ptr_array_unref);
 
   g_free (pic);
 }
@@ -1253,8 +1252,7 @@ gst_vulkan_encoder_encode (GstVulkanEncoder * self,
     gst_buffer_insert_memory (pic->out_buffer, i, mem);
     n_mems++;
   }
-  g_ptr_array_free (pic->packed_headers, TRUE);
-  pic->packed_headers = NULL;
+  g_clear_pointer (&pic->packed_headers, g_ptr_array_unref);
   /* Peek the output memory to be used by VkVideoEncodeInfoKHR.dstBuffer */
   mem = gst_buffer_peek_memory (pic->out_buffer, n_mems);
   /* Peek the image view to be encoded */
