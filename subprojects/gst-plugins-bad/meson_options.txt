@@ -148,6 +148,7 @@ option('musepack', type : 'feature', value : 'auto', description : 'libmpcdec Mu
 option('neon', type : 'feature', value : 'auto', description : 'NEON HTTP source plugin')
 option('nvcomp', type : 'feature', value : 'auto', description : 'NVIDIA nvCOMP compression/decompression plugin')
 option('nvcodec', type : 'feature', value : 'auto', description : 'NVIDIA GPU codec plugin')
+option('nvdswrapper', type : 'feature', value : 'auto', description : 'NVIDIA DeepStream SDK wrapper plugin')
 option('onnx', type : 'feature', value : 'auto', description : 'ONNX neural network plugin')
 option('openal', type : 'feature', value : 'auto', description : 'OpenAL plugin')
 option('openexr', type : 'feature', value : 'auto', description : 'OpenEXR plugin')
@@ -248,6 +249,12 @@ option('mfx_api', type : 'combo', choices : ['MSDK', 'oneVPL', 'auto'], value : 
 # nvCOMP plugin options
 option('nvcomp-sdk-path', type: 'string', value : '',
        description : 'nvCOMP SDK root directory')
+
+# nvdswrapper plugin options
+option('nvds-include-path', type: 'string', value : '',
+       description : 'DeepStream SDK include directory')
+option('nvds-lib-path', type: 'string', value : '',
+       description : 'DeepStream SDK library directory')
 
 # QSV plugin options
 option('mfx-modules-dir', type: 'string', value : '',
