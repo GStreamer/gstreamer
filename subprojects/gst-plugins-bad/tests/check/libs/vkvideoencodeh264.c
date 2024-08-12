@@ -357,7 +357,7 @@ allocate_frame (GstVulkanEncoder * enc, int width,
   upload_buffer_to_image(img_pool, in_buffer, &img_buffer);
 
   frame = _h264_encode_frame_new (gst_vulkan_encoder_picture_new (enc,
-      img_buffer, width, height, is_ref, nb_refs));
+      img_buffer, width, height, width * height * 3, is_ref, nb_refs));
   fail_unless (frame);
   fail_unless (frame->picture);
   gst_buffer_unref (in_buffer);
@@ -693,8 +693,7 @@ setup_h264_encoder (guint32 width, gint32 height, gint sps_id, gint pps_id)
     return NULL;
   }
 
-  fail_unless (gst_vulkan_encoder_start (enc, &profile, width * height * 3,
-          &err));
+  fail_unless (gst_vulkan_encoder_start (enc, &profile, &err));
 
   mbAlignedWidth = GST_ROUND_UP_16 (width);
   mbAlignedHeight = GST_ROUND_UP_16 (height);

@@ -72,7 +72,6 @@ struct _GstVulkanEncoderPrivate
     guint quality_level;
   } prop;
 
-  guint out_buffer_size_aligned;
   gboolean layered_dpb;
   GstBufferPool *dpb_pool;
   GstBuffer *layered_buffer;
@@ -388,10 +387,11 @@ gst_vulkan_encoder_new_video_session_parameters (GstVulkanEncoder * self,
  */
 GstVulkanEncoderPicture *
 gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
-    int width, int height, gboolean is_ref, gint nb_refs)
+    int width, int height, gsize size, gboolean is_ref, gint nb_refs)
 {
   GstVulkanEncoderPicture *pic;
   GstVulkanEncoderPrivate *priv;
+  gsize size_aligned;
 
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), NULL);
   g_return_val_if_fail (GST_IS_BUFFER (in_buffer), NULL);
@@ -399,6 +399,9 @@ gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
   priv = gst_vulkan_encoder_get_instance_private (self);
 
   pic = g_new0 (GstVulkanEncoderPicture, 1);
+
+  size_aligned = GST_ROUND_UP_N (size,
+      priv->caps.caps.minBitstreamBufferSizeAlignment);
 
   if (priv->layered_dpb) {
     g_assert (priv->layered_buffer);
@@ -417,7 +420,7 @@ gst_vulkan_encoder_picture_new (GstVulkanEncoder * self, GstBuffer * in_buffer,
   pic->in_buffer = gst_buffer_ref (in_buffer);
   pic->out_buffer =
       gst_vulkan_video_codec_buffer_new (self->queue->device, &priv->profile,
-      VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR, priv->out_buffer_size_aligned);
+      VK_BUFFER_USAGE_VIDEO_ENCODE_DST_BIT_KHR, size_aligned);
   pic->width = width;
   pic->height = height;
   pic->is_ref = is_ref;
@@ -564,7 +567,6 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
  * gst_vulkan_encoder_start:
  * @self: a #GstVulkanEncoder
  * @profile: a #GstVulkanVideoProfile
- * @out_buffer_size: a maximal buffer size to be used by the encoder to store the output
  * @error: (out) : an error result in case of failure or %NULL
  *
  * Start the encoding session according to a valid Vulkan profile
@@ -574,7 +576,7 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
  */
 gboolean
 gst_vulkan_encoder_start (GstVulkanEncoder * self,
-    GstVulkanVideoProfile * profile, guint out_buffer_size, GError ** error)
+    GstVulkanVideoProfile * profile, GError ** error)
 {
   GstVulkanEncoderPrivate *priv;
   VkResult res;
@@ -818,9 +820,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
           &priv->vk, &session_create, error))
     goto failed;
 
-
-  priv->out_buffer_size_aligned = GST_ROUND_UP_N (out_buffer_size,
-      priv->caps.caps.minBitstreamBufferSizeAlignment);
 
   priv->started = TRUE;
 

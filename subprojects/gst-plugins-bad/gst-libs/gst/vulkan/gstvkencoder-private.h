@@ -153,7 +153,6 @@ GstVulkanEncoder *      gst_vulkan_encoder_create_from_queue    (GstVulkanQueue 
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_start                (GstVulkanEncoder * self,
                                                                  GstVulkanVideoProfile * profile,
-                                                                 guint32 out_buffer_size,
                                                                  GError ** error);
 GST_VULKAN_API
 gboolean                gst_vulkan_encoder_stop                 (GstVulkanEncoder * self);
@@ -187,6 +186,7 @@ GstVulkanEncoderPicture* gst_vulkan_encoder_picture_new         (GstVulkanEncode
                                                                  GstBuffer * in_buffer,
                                                                  gint width,
                                                                  gint height,
+                                                                 gsize size,
                                                                  gboolean is_ref,
                                                                  gint nb_refs);
 GST_VULKAN_API
