@@ -1387,7 +1387,7 @@ setup_past_independence (GstVp9StatefulParser * self,
 }
 
 /**
- * gst_vp9_stateful_parser_new:
+ * gst_vp9_stateful_parser_new: (skip)
  *
  * Creates a new #GstVp9StatefulParser. It should be freed with
  * gst_vp9_stateful_parser_free() after use.

@@ -5921,5 +5921,14 @@ gst_vp9_stateful_parser_free() after use.</doc>
         </parameter>
       </parameters>
     </function>
+    <function name="vp9_stateful_parser_new" c:identifier="gst_vp9_stateful_parser_new" moved-to="Vp9StatefulParser.new" version="1.20" introspectable="0">
+      <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.c">Creates a new #GstVp9StatefulParser. It should be freed with
+gst_vp9_stateful_parser_free() after use.</doc>
+      <source-position filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.h"/>
+      <return-value>
+        <doc xml:space="preserve" filename="../subprojects/gst-plugins-bad/gst-libs/gst/codecs/gstvp9statefulparser.c">a new #GstVp9StatefulParser</doc>
+        <type name="Vp9StatefulParser" c:type="GstVp9StatefulParser*"/>
+      </return-value>
+    </function>
   </namespace>
 </repository>

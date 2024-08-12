@@ -48,7 +48,7 @@
  */
 /**
  * SECTION:gstvp9decoder
- * @title: Gstvp9Decoder
+ * @title: GstVp9Decoder
  * @short_description: Base class to implement stateless VP9 decoders
  * @sources:
  * - gstvp9picture.h

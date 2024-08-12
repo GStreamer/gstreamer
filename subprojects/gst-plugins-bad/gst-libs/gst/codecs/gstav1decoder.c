@@ -19,7 +19,7 @@
 
 /**
  * SECTION:gstav1decoder
- * @title: Gstav1Decoder
+ * @title: GstAV1Decoder
  * @short_description: Base class to implement stateless AV1 decoders
  * @sources:
  * - gstav1picture.h

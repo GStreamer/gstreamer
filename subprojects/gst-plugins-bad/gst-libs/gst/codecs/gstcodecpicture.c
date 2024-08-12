@@ -17,6 +17,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstcodecpicture
+ * @title: GstCodecPicture
+ * @short_description: Base struct for coded picture representation
+ */
+
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
