@@ -562,12 +562,9 @@ gst_vulkan_encoder_stop (GstVulkanEncoder * self)
 {
   GstVulkanEncoderPrivate *priv;
 
-  if (!self)
-    return TRUE;
-
   g_return_val_if_fail (GST_IS_VULKAN_ENCODER (self), FALSE);
-  priv = gst_vulkan_encoder_get_instance_private (self);
 
+  priv = gst_vulkan_encoder_get_instance_private (self);
   if (!priv->started)
     return TRUE;
 
