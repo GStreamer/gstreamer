@@ -2,6 +2,8 @@
 
 set -eux
 
+sudo dnf install -y bc
+
 # Install virtme-ng
 git clone https://github.com/arighi/virtme-ng.git
 pushd virtme-ng
