@@ -111,7 +111,7 @@ gst_v4l2_video_enc_open (GstVideoEncoder * encoder)
 {
   GstV4l2VideoEnc *self = GST_V4L2_VIDEO_ENC (encoder);
   GstV4l2Error error = GST_V4L2_ERROR_INIT;
-  GstCaps *codec_caps;
+  GstCaps *tmp_caps, *codec_caps;
 
   GST_DEBUG_OBJECT (self, "Opening");
 
@@ -123,6 +123,15 @@ gst_v4l2_video_enc_open (GstVideoEncoder * encoder)
 
   self->probed_sinkcaps = gst_v4l2_object_probe_caps (self->v4l2output,
       gst_v4l2_object_get_raw_caps ());
+
+  /*
+   * Relax the framerate to always allow 0/1 regardless of what the driver
+   * wants. This improve compatibility of the encoder with sources which may
+   * not know the frame rate
+   */
+  tmp_caps = gst_caps_copy (self->probed_sinkcaps);
+  gst_caps_set_simple (tmp_caps, "framerate", GST_TYPE_FRACTION, 0, 1, NULL);
+  gst_caps_append (self->probed_sinkcaps, tmp_caps);
 
   if (gst_caps_is_empty (self->probed_sinkcaps))
     goto no_raw_format;
