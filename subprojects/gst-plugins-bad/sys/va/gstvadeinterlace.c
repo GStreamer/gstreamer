@@ -263,6 +263,19 @@ _build_filter (GstVaDeinterlace * self)
       }
       GST_INFO_OBJECT (self, "References for method: %u forward / %u backward",
           self->num_forward_references, self->num_backward_references);
+
+      /* num_backward_references > 0 means we need to cache several frames
+         after the current frame. But the basetransform class does not
+         provide any _drain() kind function, so we do not have the chance
+         to push out our cached frames when EOS or set caps event comes.
+         Rather than losing the last several frames, we should just give up
+         the backward reference here. */
+      if (self->num_backward_references > 0) {
+        GST_INFO_OBJECT (self, "num_backward_references should only be set "
+            "to 0 now because of the implementation limitation.");
+        self->num_backward_references = 0;
+      }
+
       self->hcurr = -1;
       return;
     }
