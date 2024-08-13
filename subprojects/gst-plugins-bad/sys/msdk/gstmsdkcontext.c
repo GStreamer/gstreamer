@@ -130,8 +130,8 @@ get_device_path (void)
       dev = (GUdevDevice *) l->data;
 
       parent = g_udev_device_get_parent (dev);
-      if (strcmp (g_udev_device_get_subsystem (parent), "pci") != 0 ||
-          strcmp (g_udev_device_get_driver (parent), "i915") != 0) {
+      if (g_strcmp0 (g_udev_device_get_subsystem (parent), "pci") != 0 ||
+          g_strcmp0 (g_udev_device_get_driver (parent), "i915") != 0) {
         g_object_unref (parent);
         continue;
       }

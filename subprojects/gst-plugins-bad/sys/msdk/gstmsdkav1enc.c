@@ -126,7 +126,7 @@ gst_msdkav1enc_set_format (GstMsdkEnc * encoder)
     profile = gst_structure_get_string (s, "profile");
 
     if (profile) {
-      if (!strcmp (profile, "main"))
+      if (!g_strcmp0 (profile, "main"))
         thiz->profile = MFX_PROFILE_AV1_MAIN;
       else
         g_assert_not_reached ();

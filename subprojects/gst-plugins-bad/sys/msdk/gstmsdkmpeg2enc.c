@@ -109,11 +109,11 @@ gst_msdkmpeg2enc_set_format (GstMsdkEnc * encoder)
 
     profile = gst_structure_get_string (s, "profile");
     if (profile) {
-      if (!strcmp (profile, "high")) {
+      if (!g_strcmp0 (profile, "high")) {
         thiz->profile = MFX_PROFILE_MPEG2_HIGH;
-      } else if (!strcmp (profile, "main")) {
+      } else if (!g_strcmp0 (profile, "main")) {
         thiz->profile = MFX_PROFILE_MPEG2_MAIN;
-      } else if (!strcmp (profile, "simple")) {
+      } else if (!g_strcmp0 (profile, "simple")) {
         thiz->profile = MFX_PROFILE_MPEG2_SIMPLE;
       } else {
         g_assert_not_reached ();

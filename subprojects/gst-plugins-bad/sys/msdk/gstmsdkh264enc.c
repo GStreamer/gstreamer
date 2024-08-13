@@ -305,13 +305,13 @@ gst_msdkh264enc_set_format (GstMsdkEnc * encoder)
 
     profile = gst_structure_get_string (s, "profile");
     if (profile) {
-      if (!strcmp (profile, "high")) {
+      if (!g_strcmp0 (profile, "high")) {
         thiz->profile = MFX_PROFILE_AVC_HIGH;
-      } else if (!strcmp (profile, "main")) {
+      } else if (!g_strcmp0 (profile, "main")) {
         thiz->profile = MFX_PROFILE_AVC_MAIN;
-      } else if (!strcmp (profile, "baseline")) {
+      } else if (!g_strcmp0 (profile, "baseline")) {
         thiz->profile = MFX_PROFILE_AVC_BASELINE;
-      } else if (!strcmp (profile, "constrained-baseline")) {
+      } else if (!g_strcmp0 (profile, "constrained-baseline")) {
         thiz->profile = MFX_PROFILE_AVC_CONSTRAINED_BASELINE;
       } else {
         thiz->profile = MFX_PROFILE_UNKNOWN;
