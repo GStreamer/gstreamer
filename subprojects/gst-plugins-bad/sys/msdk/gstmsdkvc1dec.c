@@ -97,9 +97,9 @@ gst_msdkvc1dec_configure (GstMsdkDec * decoder)
 
   profile_str = gst_structure_get_string (structure, "profile");
 
-  if (!strcmp (profile_str, "simple"))
+  if (!g_strcmp0 (profile_str, "simple"))
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_SIMPLE;
-  else if (!strcmp (profile_str, "main"))
+  else if (!g_strcmp0 (profile_str, "main"))
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_MAIN;
   else {
     decoder->param.mfx.CodecProfile = MFX_PROFILE_VC1_ADVANCED;

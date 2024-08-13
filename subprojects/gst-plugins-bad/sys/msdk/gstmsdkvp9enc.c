@@ -113,13 +113,13 @@ gst_msdkvp9enc_set_format (GstMsdkEnc * encoder)
     profile = gst_structure_get_string (s, "profile");
 
     if (profile) {
-      if (!strcmp (profile, "3")) {
+      if (!g_strcmp0 (profile, "3")) {
         thiz->profile = MFX_PROFILE_VP9_3;
-      } else if (!strcmp (profile, "2")) {
+      } else if (!g_strcmp0 (profile, "2")) {
         thiz->profile = MFX_PROFILE_VP9_2;
-      } else if (!strcmp (profile, "1")) {
+      } else if (!g_strcmp0 (profile, "1")) {
         thiz->profile = MFX_PROFILE_VP9_1;
-      } else if (!strcmp (profile, "0")) {
+      } else if (!g_strcmp0 (profile, "0")) {
         thiz->profile = MFX_PROFILE_VP9_0;
       } else {
         g_assert_not_reached ();

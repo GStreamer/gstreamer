@@ -92,8 +92,8 @@ get_device_path (void)
     if (fd >= 0) {
       drmVersionPtr drm_version = drmGetVersion (fd);
 
-      if (!drm_version || (strncmp (drm_version->name, "i915", 4) &&
-              strncmp (drm_version->name, "xe", 2))) {
+      if (!drm_version || (strncmp (drm_version->name, "i915", 4)
+              && strncmp (drm_version->name, "xe", 2))) {
         GST_ERROR ("The specified device isn't an Intel device");
         drmFreeVersion (drm_version);
         close (fd);
@@ -131,9 +131,9 @@ get_device_path (void)
       dev = (GUdevDevice *) l->data;
 
       parent = g_udev_device_get_parent (dev);
-      if (strcmp (g_udev_device_get_subsystem (parent), "pci") != 0 ||
-          (strcmp (g_udev_device_get_driver (parent), "i915") != 0 &&
-              strcmp (g_udev_device_get_driver (parent), "xe") != 0)) {
+      if (g_strcmp0 (g_udev_device_get_subsystem (parent), "pci") != 0
+          || (g_strcmp0 (g_udev_device_get_driver (parent), "i915") != 0
+              && g_strcmp0 (g_udev_device_get_driver (parent), "xe") != 0)) {
         g_object_unref (parent);
         continue;
       }
