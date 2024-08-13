@@ -814,6 +814,7 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->handle_events = TRUE;
   glimage_sink->ignore_alpha = TRUE;
   glimage_sink->overlay_compositor = NULL;
+  glimage_sink->need_resize_window = FALSE;
 
   glimage_sink->mview_output_mode = DEFAULT_MULTIVIEW_MODE;
   glimage_sink->mview_output_flags = DEFAULT_MULTIVIEW_FLAGS;
@@ -1527,10 +1528,18 @@ update_output_format (GstGLImageSink * glimage_sink)
   GstVideoMultiviewMode mv_mode;
   GstGLWindow *window = NULL;
   GstGLTextureTarget previous_target;
+  gint pre_width = 0, pre_height = 0;
+  gint cur_width = 0, cur_height = 0;
   GstStructure *s;
   const gchar *target_str;
   GstCaps *out_caps;
   gboolean ret;
+
+  pre_width = GST_VIDEO_INFO_WIDTH (out_info);
+  pre_height = GST_VIDEO_INFO_HEIGHT (out_info);
+
+  cur_width = GST_VIDEO_INFO_WIDTH (&glimage_sink->in_info);
+  cur_height = GST_VIDEO_INFO_HEIGHT (&glimage_sink->in_info);
 
   *out_info = glimage_sink->in_info;
   previous_target = glimage_sink->texture_target;
@@ -1624,6 +1633,10 @@ update_output_format (GstGLImageSink * glimage_sink)
   if (glimage_sink->out_caps)
     gst_caps_unref (glimage_sink->out_caps);
   glimage_sink->out_caps = out_caps;
+
+  if ((pre_width != 0 && pre_width != cur_width) ||
+      (pre_height != 0 && pre_height != cur_height))
+    glimage_sink->need_resize_window = TRUE;
 
   if (previous_target != GST_GL_TEXTURE_TARGET_NONE &&
       glimage_sink->texture_target != previous_target) {
@@ -2517,6 +2530,7 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
   GstGLWindow *window;
   GstBuffer *old_stored_buffer[2], *old_sync;
   gulong handler_id;
+  gboolean resize_window = gl_sink->need_resize_window;
 
   window = gst_gl_context_get_window (gl_sink->context);
   if (!window)
@@ -2537,6 +2551,12 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
       gst_object_unref (window);
       return FALSE;
     }
+
+    resize_window = TRUE;
+  }
+
+  if (resize_window) {
+    gl_sink->need_resize_window = FALSE;
 
     gst_gl_window_set_preferred_size (window, GST_VIDEO_SINK_WIDTH (gl_sink),
         GST_VIDEO_SINK_HEIGHT (gl_sink));
