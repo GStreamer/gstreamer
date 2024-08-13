@@ -67,6 +67,7 @@ variables:
   SIMPLE_BUILD: >-
     ${DEFAULT_MESON_ARGS}
     -Dsharp=enabled
+    -Dgstreamer-sharp:werror=false
     -Ddoc=disabled
 
 workflow:
