@@ -103,7 +103,7 @@ Qt6GLWindow::Qt6GLWindow (QWindow * parent, QQuickWindow *src)
   this->priv->internal_format = GL_RGBA;
 
   connect (source, SIGNAL(beforeRendering()), this, SLOT(beforeRendering()), Qt::DirectConnection);
-  connect (source, SIGNAL(afterRendering()), this, SLOT(afterRendering()), Qt::DirectConnection);
+  connect (source, SIGNAL(afterFrameEnd()), this, SLOT(afterFrameEnd()), Qt::DirectConnection);
   if (source->isSceneGraphInitialized())
     source->scheduleRenderJob(new RenderJob(std::bind(&Qt6GLWindow::onSceneGraphInitialized, this)), QQuickWindow::BeforeSynchronizingStage);
   else
@@ -201,7 +201,7 @@ Qt6GLWindow::beforeRendering()
 }
 
 void
-Qt6GLWindow::afterRendering()
+Qt6GLWindow::afterFrameEnd()
 {
   gboolean ret;
   guint width, height;
