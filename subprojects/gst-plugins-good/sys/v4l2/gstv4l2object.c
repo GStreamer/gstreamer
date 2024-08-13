@@ -4380,15 +4380,25 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       goto done;
     }
 
-    /* Note: V4L2 wants the frame interval, we have the frame rate */
-    streamparm.parm.capture.timeperframe.numerator = fps_d;
-    streamparm.parm.capture.timeperframe.denominator = fps_n;
+    /* Variable framerate is not a V4L2 concept, simply default to 30fps */
+    if (fps_n == 0 && fps_d == 1) {
+      GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+          "Variable framerate not supported, assuming 30fps");
+      streamparm.parm.capture.timeperframe.numerator = 1;
+      streamparm.parm.capture.timeperframe.denominator = 30;
+    } else {
+      /* Note: V4L2 wants the frame interval, we have the frame rate */
+      streamparm.parm.capture.timeperframe.numerator = fps_d;
+      streamparm.parm.capture.timeperframe.denominator = fps_n;
+    }
 
     /* some cheap USB cam's won't accept any change */
     if (v4l2object->ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
       goto set_parm_failed;
 
-    if (streamparm.parm.capture.timeperframe.numerator > 0 &&
+    if (fps_n == 0 && fps_d == 1) {
+      /* just keep reporting variable framerate */
+    } else if (streamparm.parm.capture.timeperframe.numerator > 0 &&
         streamparm.parm.capture.timeperframe.denominator > 0) {
       /* get new values */
       fps_d = streamparm.parm.capture.timeperframe.numerator;
@@ -4423,14 +4433,24 @@ gst_v4l2_object_set_format_full (GstV4l2Object * v4l2object, GstCaps * caps,
       goto done;
     }
 
-    /* Note: V4L2 wants the frame interval, we have the frame rate */
-    streamparm.parm.output.timeperframe.numerator = fps_d;
-    streamparm.parm.output.timeperframe.denominator = fps_n;
+    /* Variable framerate is not a V4L2 concept, simply default to 30fps */
+    if (fps_n == 0 && fps_d == 1) {
+      GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+          "Variable framerate not supported, assuming 30fps");
+      streamparm.parm.output.timeperframe.numerator = 1;
+      streamparm.parm.output.timeperframe.denominator = 30;
+    } else {
+      /* Note: V4L2 wants the frame interval, we have the frame rate */
+      streamparm.parm.output.timeperframe.numerator = fps_d;
+      streamparm.parm.output.timeperframe.denominator = fps_n;
+    }
 
     if (v4l2object->ioctl (fd, VIDIOC_S_PARM, &streamparm) < 0)
       goto set_parm_failed;
 
-    if (streamparm.parm.output.timeperframe.numerator > 0 &&
+    if (fps_n == 0 && fps_d == 1) {
+      /* just keep reporting variable framerate */
+    } else if (streamparm.parm.output.timeperframe.numerator > 0 &&
         streamparm.parm.output.timeperframe.denominator > 0) {
       /* get new values */
       fps_d = streamparm.parm.output.timeperframe.numerator;
