@@ -456,9 +456,35 @@ static const gchar *caps_strings[] = {
   /* raw video */
   "video/x-raw, format=(string)RGB16, width=(int)320, height=(int)240, framerate=(fraction)30/1, pixel-aspect-ratio=(fraction)1/1",
   "video/x-raw, format=(string)YUY2, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+  "video/x-raw, format=(string)I420, width=(int)320, height=(int)240, framerate=(fraction)30/1",
+  "video/x-raw, format=(string)AYUV, width=(int)320, height=(int)240, framerate=(fraction)30/1",
   /* and a made-up format */
   "video/x-tpm"
 };
+
+static gboolean
+validate_video_subsampling (GstCaps * caps, gchar * desc)
+{
+  GstStructure *st;
+  const gchar *format;
+
+  st = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_has_name (st, "video/x-raw"))
+    return TRUE;
+
+  format = gst_structure_get_string (st, "format");
+  if (!format)
+    return TRUE;
+
+  if (g_strcmp0 (format, "YUY2") == 0)
+    return g_str_has_suffix (desc, "4:2:2");
+  if (g_strcmp0 (format, "I420") == 0)
+    return g_str_has_suffix (desc, "4:2:0");
+  if (g_strcmp0 (format, "AYUV") == 0)
+    return g_str_has_suffix (desc, "4:4:4");
+
+  return TRUE;
+}
 
 GST_START_TEST (test_pb_utils_get_codec_description)
 {
@@ -478,6 +504,7 @@ GST_START_TEST (test_pb_utils_get_codec_description)
     fail_unless (desc != NULL);
     GST_LOG (" - codec   : %s", desc);
     fail_unless (g_utf8_validate (desc, -1, NULL));
+    fail_unless (validate_video_subsampling (caps, desc));
     g_free (desc);
     desc = gst_pb_utils_get_decoder_description (caps);
     fail_unless (desc != NULL);
