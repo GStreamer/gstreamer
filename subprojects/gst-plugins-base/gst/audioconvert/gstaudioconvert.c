@@ -1112,6 +1112,7 @@ gst_audio_convert_transform_caps (GstBaseTransform * btrans,
   gst_caps_map_in_place (tmp, remove_format_from_structure, NULL);
   gst_caps_map_in_place (tmp, remove_layout_from_structure, NULL);
 
+  GST_OBJECT_LOCK (this);
   gboolean force_removing = this->mix_matrix_is_set
       || (direction == GST_PAD_SINK
       && this->input_channels_reorder_mode !=
@@ -1134,6 +1135,7 @@ gst_audio_convert_transform_caps (GstBaseTransform * btrans,
     gst_caps_map_in_place (tmp, add_other_channels_to_structure,
         GINT_TO_POINTER (other_channels));
   }
+  GST_OBJECT_UNLOCK (this);
 
   if (filter) {
     tmp2 = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
@@ -1489,14 +1491,103 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
 }
 
 static gboolean
+gst_audio_convert_ensure_converter (GstBaseTransform * base,
+    GstAudioInfo * in_info, GstAudioInfo * out_info)
+{
+  GstAudioConvert *this = GST_AUDIO_CONVERT (base);
+  GstStructure *config;
+  gboolean in_place;
+  gboolean ret = TRUE;
+
+  GST_OBJECT_LOCK (this);
+  if (this->convert) {
+    GST_TRACE_OBJECT (this, "We already have a converter");
+    goto done;
+  }
+
+  if (!GST_AUDIO_INFO_IS_VALID (in_info) || !GST_AUDIO_INFO_IS_VALID (out_info)) {
+    GST_LOG_OBJECT (this,
+        "No format information (yet), not creating converter");
+    goto done;
+  }
+
+  config = gst_structure_new ("GstAudioConverterConfig",
+      GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
+      this->dither,
+      GST_AUDIO_CONVERTER_OPT_DITHER_THRESHOLD, G_TYPE_UINT,
+      this->dither_threshold,
+      GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD,
+      GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL);
+
+  if (this->mix_matrix_is_set) {
+    gst_structure_set_value (config, GST_AUDIO_CONVERTER_OPT_MIX_MATRIX,
+        &this->mix_matrix);
+
+    this->convert = gst_audio_converter_new (0, in_info, out_info, config);
+  } else if (this->input_channels_reorder_mode !=
+      GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_MODE_NONE) {
+    GstAudioFlags in_flags;
+    GstAudioChannelPosition in_position[64];
+    gboolean restore_in = FALSE;
+
+    if (this->input_channels_reorder_mode ==
+        GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_MODE_FORCE
+        || GST_AUDIO_INFO_IS_UNPOSITIONED (in_info)) {
+      in_flags = GST_AUDIO_INFO_FLAGS (in_info);
+      memcpy (in_position, in_info->position,
+          GST_AUDIO_INFO_CHANNELS (in_info) * sizeof (GstAudioChannelPosition));
+
+      if (gst_audio_convert_position_channels_from_reorder_configuration
+          (GST_AUDIO_INFO_CHANNELS (in_info), this->input_channels_reorder,
+              in_info->position)) {
+        GST_AUDIO_INFO_FLAGS (in_info) &= ~GST_AUDIO_FLAG_UNPOSITIONED;
+        restore_in = TRUE;
+      }
+    }
+
+    this->convert = gst_audio_converter_new (0, in_info, out_info, config);
+
+    if (restore_in) {
+      GST_AUDIO_INFO_FLAGS (in_info) = in_flags;
+      memcpy (in_info->position, in_position,
+          GST_AUDIO_INFO_CHANNELS (in_info) * sizeof (GstAudioChannelPosition));
+    }
+
+  } else {
+    this->convert = gst_audio_converter_new (0, in_info, out_info, config);
+  }
+
+  if (this->convert == NULL)
+    goto no_converter;
+
+  in_place = gst_audio_converter_supports_inplace (this->convert);
+  GST_OBJECT_UNLOCK (this);
+
+  gst_base_transform_set_in_place (base, in_place);
+
+  gst_base_transform_set_passthrough (base,
+      gst_audio_converter_is_passthrough (this->convert));
+
+  GST_OBJECT_LOCK (this);
+
+done:
+  GST_OBJECT_UNLOCK (this);
+  return ret;
+
+no_converter:
+  GST_ERROR_OBJECT (this, "Failed to make converter");
+  ret = FALSE;
+  goto done;
+}
+
+static gboolean
 gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
   GstAudioInfo in_info;
   GstAudioInfo out_info;
-  gboolean in_place;
-  GstStructure *config;
+  gboolean ret;
 
   GST_DEBUG_OBJECT (base, "incaps %" GST_PTR_FORMAT ", outcaps %"
       GST_PTR_FORMAT, incaps, outcaps);
@@ -1511,84 +1602,28 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
   if (!gst_audio_info_from_caps (&out_info, outcaps))
     goto invalid_out;
 
-  config = gst_structure_new ("GstAudioConverterConfig",
-      GST_AUDIO_CONVERTER_OPT_DITHER_METHOD, GST_TYPE_AUDIO_DITHER_METHOD,
-      this->dither,
-      GST_AUDIO_CONVERTER_OPT_DITHER_THRESHOLD, G_TYPE_UINT,
-      this->dither_threshold,
-      GST_AUDIO_CONVERTER_OPT_NOISE_SHAPING_METHOD,
-      GST_TYPE_AUDIO_NOISE_SHAPING_METHOD, this->ns, NULL);
+  ret = gst_audio_convert_ensure_converter (base, &in_info, &out_info);
 
-  if (this->mix_matrix_is_set) {
-    gst_structure_set_value (config, GST_AUDIO_CONVERTER_OPT_MIX_MATRIX,
-        &this->mix_matrix);
-
-    this->convert = gst_audio_converter_new (0, &in_info, &out_info, config);
-
-  } else if (this->input_channels_reorder_mode !=
-      GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_MODE_NONE) {
-    GstAudioFlags in_flags;
-    GstAudioChannelPosition in_position[64];
-    gboolean restore_in = FALSE;
-
-    if (this->input_channels_reorder_mode ==
-        GST_AUDIO_CONVERT_INPUT_CHANNELS_REORDER_MODE_FORCE
-        || GST_AUDIO_INFO_IS_UNPOSITIONED (&in_info)) {
-      in_flags = GST_AUDIO_INFO_FLAGS (&in_info);
-      memcpy (in_position, in_info.position,
-          GST_AUDIO_INFO_CHANNELS (&in_info) *
-          sizeof (GstAudioChannelPosition));
-
-      if (gst_audio_convert_position_channels_from_reorder_configuration
-          (GST_AUDIO_INFO_CHANNELS (&in_info), this->input_channels_reorder,
-              in_info.position)) {
-        GST_AUDIO_INFO_FLAGS (&in_info) &= ~GST_AUDIO_FLAG_UNPOSITIONED;
-        restore_in = TRUE;
-      }
-    }
-
-    this->convert = gst_audio_converter_new (0, &in_info, &out_info, config);
-
-    if (restore_in) {
-      GST_AUDIO_INFO_FLAGS (&in_info) = in_flags;
-      memcpy (in_info.position, in_position,
-          GST_AUDIO_INFO_CHANNELS (&in_info) *
-          sizeof (GstAudioChannelPosition));
-    }
-
-  } else {
-    this->convert = gst_audio_converter_new (0, &in_info, &out_info, config);
+  if (ret) {
+    this->in_info = in_info;
+    this->out_info = out_info;
   }
 
-  if (this->convert == NULL)
-    goto no_converter;
-
-  in_place = gst_audio_converter_supports_inplace (this->convert);
-  gst_base_transform_set_in_place (base, in_place);
-
-  gst_base_transform_set_passthrough (base,
-      gst_audio_converter_is_passthrough (this->convert));
-
-  this->in_info = in_info;
-  this->out_info = out_info;
-
-  return TRUE;
+done:
+  return ret;
 
   /* ERRORS */
 invalid_in:
   {
     GST_ERROR_OBJECT (base, "invalid input caps");
-    return FALSE;
+    ret = FALSE;
+    goto done;
   }
 invalid_out:
   {
     GST_ERROR_OBJECT (base, "invalid output caps");
-    return FALSE;
-  }
-no_converter:
-  {
-    GST_ERROR_OBJECT (base, "could not make converter");
-    return FALSE;
+    ret = FALSE;
+    goto done;
   }
 }
 
@@ -1606,6 +1641,13 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   /* https://bugzilla.gnome.org/show_bug.cgi?id=396835 */
   if (gst_buffer_get_size (inbuf) == 0)
     return GST_FLOW_OK;
+
+  gst_audio_convert_ensure_converter (base, &this->in_info, &this->out_info);
+
+  if (!this->convert) {
+    GST_ERROR_OBJECT (this, "No audio converter at transform time");
+    return GST_FLOW_ERROR;
+  }
 
   if (inbuf != outbuf) {
     inbuf_writable = gst_buffer_is_writable (inbuf)
@@ -1757,6 +1799,73 @@ gst_audio_convert_prepare_output_buffer (GstBaseTransform * base,
 }
 
 static void
+gst_audio_convert_set_mix_matrix (GstAudioConvert * this, const GValue * value)
+{
+  gboolean mix_matrix_was_set;
+  GstAudioConverter *old_converter;
+  GValue old_mix_matrix;
+  gboolean restore = FALSE;
+
+  g_value_init (&old_mix_matrix, GST_TYPE_ARRAY);
+
+  GST_OBJECT_LOCK (this);
+
+  mix_matrix_was_set = this->mix_matrix_is_set;
+  old_converter = this->convert;
+  if (mix_matrix_was_set) {
+    g_value_copy (&this->mix_matrix, &old_mix_matrix);
+  }
+
+  if (this->convert) {
+    this->convert = NULL;
+  }
+
+  if (!gst_value_array_get_size (value)) {
+    g_value_copy (value, &this->mix_matrix);
+    this->mix_matrix_is_set = TRUE;
+  } else {
+    const GValue *first_row = gst_value_array_get_value (value, 0);
+
+    if (gst_value_array_get_size (first_row)) {
+      g_value_copy (value, &this->mix_matrix);
+      this->mix_matrix_is_set = TRUE;
+    } else {
+      g_warning ("Empty mix matrix's first row.");
+      restore = TRUE;
+      goto done;
+    }
+  }
+
+  GST_OBJECT_UNLOCK (this);
+
+  /* We need to call this here already because gst_audio_convert_transform
+   * might never get called otherwise if the element was set to passthrough.
+   *
+   * In any case if this succeeds we still want to reconfigure the sink to give
+   * upstream a chance to renegotiate channels.
+   */
+  if (gst_audio_convert_ensure_converter (GST_BASE_TRANSFORM (this),
+          &this->in_info, &this->out_info)) {
+    gst_base_transform_reconfigure_sink (GST_BASE_TRANSFORM (this));
+  } else {
+    g_warning ("Cannot build converter with this mix matrix");
+    restore = TRUE;
+    goto done;
+  }
+
+done:
+  if (restore) {
+    this->mix_matrix_is_set = mix_matrix_was_set;
+    if (mix_matrix_was_set) {
+      g_value_copy (&old_mix_matrix, &this->mix_matrix);
+    }
+    this->convert = old_converter;
+  } else if (old_converter) {
+    gst_audio_converter_free (old_converter);
+  }
+}
+
+static void
 gst_audio_convert_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -1773,23 +1882,7 @@ gst_audio_convert_set_property (GObject * object, guint prop_id,
       this->dither_threshold = g_value_get_uint (value);
       break;
     case PROP_MIX_MATRIX:
-      if (!gst_value_array_get_size (value)) {
-        g_value_copy (value, &this->mix_matrix);
-        this->mix_matrix_is_set = TRUE;
-      } else {
-        const GValue *first_row = gst_value_array_get_value (value, 0);
-
-        if (gst_value_array_get_size (first_row)) {
-          g_value_copy (value, &this->mix_matrix);
-          this->mix_matrix_is_set = TRUE;
-
-          /* issue a reconfigure upstream */
-          gst_base_transform_reconfigure_sink (GST_BASE_TRANSFORM (this));
-        } else {
-          g_warning ("Empty mix matrix's first row.");
-          this->mix_matrix_is_set = FALSE;
-        }
-      }
+      gst_audio_convert_set_mix_matrix (this, value);
       break;
     case PROP_INPUT_CHANNELS_REORDER:
       this->input_channels_reorder = g_value_get_enum (value);
@@ -1820,8 +1913,10 @@ gst_audio_convert_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, this->dither_threshold);
       break;
     case PROP_MIX_MATRIX:
+      GST_OBJECT_LOCK (object);
       if (this->mix_matrix_is_set)
         g_value_copy (&this->mix_matrix, value);
+      GST_OBJECT_UNLOCK (object);
       break;
     case PROP_INPUT_CHANNELS_REORDER:
       g_value_set_enum (value, this->input_channels_reorder);
