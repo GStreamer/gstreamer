@@ -625,8 +625,11 @@ static gboolean
 gst_jpeg_parse_app14 (GstJpegParse * parse, GstJpegSegment * seg)
 {
   GstByteReader reader;
-  const gchar *id_str;
   guint8 transform;
+  const guint8 *id = NULL;
+  const guint8 adobe_tag[] = {
+    'A', 'd', 'o', 'b', 'e'
+  };
 
   if (seg->size < 6)            /* less than 6 means no id string */
     return FALSE;
@@ -634,11 +637,14 @@ gst_jpeg_parse_app14 (GstJpegParse * parse, GstJpegSegment * seg)
   gst_byte_reader_init (&reader, seg->data + seg->offset, seg->size);
   gst_byte_reader_skip_unchecked (&reader, 2);
 
-  if (!gst_byte_reader_get_string_utf8 (&reader, &id_str))
+  if (!gst_byte_reader_peek_data (&reader, 5, &id))
     return FALSE;
 
-  if (!g_str_has_prefix (id_str, "Adobe")) {
-    GST_DEBUG_OBJECT (parse, "Unhandled app14: %s", id_str);
+  if (G_LIKELY (!memcmp (id, adobe_tag, 5))) {
+    if (!gst_byte_reader_skip (&reader, 5))
+      return FALSE;
+  } else {
+    GST_DEBUG_OBJECT (parse, "Unhandled app14");
     return TRUE;
   }
 
