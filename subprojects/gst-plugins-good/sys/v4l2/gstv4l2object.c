@@ -1824,99 +1824,97 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       fourcc_nc = desc->v4l2_format;
     if (fallback_desc)
       fourcc = fallback_desc->v4l2_format;
-  } else {
-    if (g_str_equal (mimetype, "video/mpegts")) {
-      fourcc = V4L2_PIX_FMT_MPEG;
-    } else if (g_str_equal (mimetype, "video/x-dv")) {
-      fourcc = V4L2_PIX_FMT_DV;
-    } else if (g_str_equal (mimetype, "image/jpeg")) {
-      fourcc = V4L2_PIX_FMT_JPEG;
-    } else if (g_str_equal (mimetype, "video/mpeg")) {
-      gint version;
-      if (gst_structure_get_int (structure, "mpegversion", &version)) {
-        switch (version) {
-          case 1:
-            fourcc = V4L2_PIX_FMT_MPEG1;
-            break;
-          case 2:
-            fourcc = V4L2_PIX_FMT_MPEG2;
-            break;
-          case 4:
-            fourcc = V4L2_PIX_FMT_MPEG4;
-            fourcc_nc = V4L2_PIX_FMT_XVID;
-            break;
-          default:
-            break;
-        }
+  } else if (g_str_equal (mimetype, "video/mpegts")) {
+    fourcc = V4L2_PIX_FMT_MPEG;
+  } else if (g_str_equal (mimetype, "video/x-dv")) {
+    fourcc = V4L2_PIX_FMT_DV;
+  } else if (g_str_equal (mimetype, "image/jpeg")) {
+    fourcc = V4L2_PIX_FMT_JPEG;
+  } else if (g_str_equal (mimetype, "video/mpeg")) {
+    gint version;
+    if (gst_structure_get_int (structure, "mpegversion", &version)) {
+      switch (version) {
+        case 1:
+          fourcc = V4L2_PIX_FMT_MPEG1;
+          break;
+        case 2:
+          fourcc = V4L2_PIX_FMT_MPEG2;
+          break;
+        case 4:
+          fourcc = V4L2_PIX_FMT_MPEG4;
+          fourcc_nc = V4L2_PIX_FMT_XVID;
+          break;
+        default:
+          break;
       }
-    } else if (g_str_equal (mimetype, "video/x-fwht")) {
-      fourcc = V4L2_PIX_FMT_FWHT;
-    } else if (g_str_equal (mimetype, "video/x-h263")) {
-      fourcc = V4L2_PIX_FMT_H263;
-    } else if (g_str_equal (mimetype, "video/x-h264")) {
-      const gchar *stream_format =
-          gst_structure_get_string (structure, "stream-format");
-      if (g_str_equal (stream_format, "avc"))
-        fourcc = V4L2_PIX_FMT_H264_NO_SC;
-      else
-        fourcc = V4L2_PIX_FMT_H264;
-    } else if (g_str_equal (mimetype, "video/x-h265")) {
-      fourcc = V4L2_PIX_FMT_HEVC;
-    } else if (g_str_equal (mimetype, "video/x-vp8")) {
-      fourcc = V4L2_PIX_FMT_VP8;
-    } else if (g_str_equal (mimetype, "video/x-vp9")) {
-      fourcc = V4L2_PIX_FMT_VP9;
-    } else if (g_str_equal (mimetype, "video/x-bayer")) {
-      const gchar *format = gst_structure_get_string (structure, "format");
-      if (format) {
-        if (!g_ascii_strcasecmp (format, "bggr"))
-          fourcc = V4L2_PIX_FMT_SBGGR8;
-        else if (!g_ascii_strcasecmp (format, "gbrg"))
-          fourcc = V4L2_PIX_FMT_SGBRG8;
-        else if (!g_ascii_strcasecmp (format, "grbg"))
-          fourcc = V4L2_PIX_FMT_SGRBG8;
-        else if (!g_ascii_strcasecmp (format, "rggb"))
-          fourcc = V4L2_PIX_FMT_SRGGB8;
-        else if (!g_ascii_strcasecmp (format, "bggr10le"))
-          fourcc = V4L2_PIX_FMT_SBGGR10;
-        else if (!g_ascii_strcasecmp (format, "gbrg10le"))
-          fourcc = V4L2_PIX_FMT_SGBRG10;
-        else if (!g_ascii_strcasecmp (format, "grbg10le"))
-          fourcc = V4L2_PIX_FMT_SGRBG10;
-        else if (!g_ascii_strcasecmp (format, "rggb10le"))
-          fourcc = V4L2_PIX_FMT_SRGGB10;
-        else if (!g_ascii_strcasecmp (format, "bggr12le"))
-          fourcc = V4L2_PIX_FMT_SBGGR12;
-        else if (!g_ascii_strcasecmp (format, "gbrg12le"))
-          fourcc = V4L2_PIX_FMT_SGBRG12;
-        else if (!g_ascii_strcasecmp (format, "grbg12le"))
-          fourcc = V4L2_PIX_FMT_SGRBG12;
-        else if (!g_ascii_strcasecmp (format, "rggb12le"))
-          fourcc = V4L2_PIX_FMT_SRGGB12;
-        else if (!g_ascii_strcasecmp (format, "bggr14le"))
-          fourcc = V4L2_PIX_FMT_SBGGR14;
-        else if (!g_ascii_strcasecmp (format, "gbrg14le"))
-          fourcc = V4L2_PIX_FMT_SGBRG14;
-        else if (!g_ascii_strcasecmp (format, "grbg14le"))
-          fourcc = V4L2_PIX_FMT_SGRBG14;
-        else if (!g_ascii_strcasecmp (format, "rggb14le"))
-          fourcc = V4L2_PIX_FMT_SRGGB14;
-        else if (!g_ascii_strcasecmp (format, "bggr16le"))
-          fourcc = V4L2_PIX_FMT_SBGGR16;
-        else if (!g_ascii_strcasecmp (format, "gbrg16le"))
-          fourcc = V4L2_PIX_FMT_SGBRG16;
-        else if (!g_ascii_strcasecmp (format, "grbg16le"))
-          fourcc = V4L2_PIX_FMT_SGRBG16;
-        else if (!g_ascii_strcasecmp (format, "rggb16le"))
-          fourcc = V4L2_PIX_FMT_SRGGB16;
-      }
-    } else if (g_str_equal (mimetype, "video/x-sonix")) {
-      fourcc = V4L2_PIX_FMT_SN9C10X;
-    } else if (g_str_equal (mimetype, "video/x-pwc1")) {
-      fourcc = V4L2_PIX_FMT_PWC1;
-    } else if (g_str_equal (mimetype, "video/x-pwc2")) {
-      fourcc = V4L2_PIX_FMT_PWC2;
     }
+  } else if (g_str_equal (mimetype, "video/x-fwht")) {
+    fourcc = V4L2_PIX_FMT_FWHT;
+  } else if (g_str_equal (mimetype, "video/x-h263")) {
+    fourcc = V4L2_PIX_FMT_H263;
+  } else if (g_str_equal (mimetype, "video/x-h264")) {
+    const gchar *stream_format =
+        gst_structure_get_string (structure, "stream-format");
+    if (g_str_equal (stream_format, "avc"))
+      fourcc = V4L2_PIX_FMT_H264_NO_SC;
+    else
+      fourcc = V4L2_PIX_FMT_H264;
+  } else if (g_str_equal (mimetype, "video/x-h265")) {
+    fourcc = V4L2_PIX_FMT_HEVC;
+  } else if (g_str_equal (mimetype, "video/x-vp8")) {
+    fourcc = V4L2_PIX_FMT_VP8;
+  } else if (g_str_equal (mimetype, "video/x-vp9")) {
+    fourcc = V4L2_PIX_FMT_VP9;
+  } else if (g_str_equal (mimetype, "video/x-bayer")) {
+    const gchar *format = gst_structure_get_string (structure, "format");
+    if (format) {
+      if (!g_ascii_strcasecmp (format, "bggr"))
+        fourcc = V4L2_PIX_FMT_SBGGR8;
+      else if (!g_ascii_strcasecmp (format, "gbrg"))
+        fourcc = V4L2_PIX_FMT_SGBRG8;
+      else if (!g_ascii_strcasecmp (format, "grbg"))
+        fourcc = V4L2_PIX_FMT_SGRBG8;
+      else if (!g_ascii_strcasecmp (format, "rggb"))
+        fourcc = V4L2_PIX_FMT_SRGGB8;
+      else if (!g_ascii_strcasecmp (format, "bggr10le"))
+        fourcc = V4L2_PIX_FMT_SBGGR10;
+      else if (!g_ascii_strcasecmp (format, "gbrg10le"))
+        fourcc = V4L2_PIX_FMT_SGBRG10;
+      else if (!g_ascii_strcasecmp (format, "grbg10le"))
+        fourcc = V4L2_PIX_FMT_SGRBG10;
+      else if (!g_ascii_strcasecmp (format, "rggb10le"))
+        fourcc = V4L2_PIX_FMT_SRGGB10;
+      else if (!g_ascii_strcasecmp (format, "bggr12le"))
+        fourcc = V4L2_PIX_FMT_SBGGR12;
+      else if (!g_ascii_strcasecmp (format, "gbrg12le"))
+        fourcc = V4L2_PIX_FMT_SGBRG12;
+      else if (!g_ascii_strcasecmp (format, "grbg12le"))
+        fourcc = V4L2_PIX_FMT_SGRBG12;
+      else if (!g_ascii_strcasecmp (format, "rggb12le"))
+        fourcc = V4L2_PIX_FMT_SRGGB12;
+      else if (!g_ascii_strcasecmp (format, "bggr14le"))
+        fourcc = V4L2_PIX_FMT_SBGGR14;
+      else if (!g_ascii_strcasecmp (format, "gbrg14le"))
+        fourcc = V4L2_PIX_FMT_SGBRG14;
+      else if (!g_ascii_strcasecmp (format, "grbg14le"))
+        fourcc = V4L2_PIX_FMT_SGRBG14;
+      else if (!g_ascii_strcasecmp (format, "rggb14le"))
+        fourcc = V4L2_PIX_FMT_SRGGB14;
+      else if (!g_ascii_strcasecmp (format, "bggr16le"))
+        fourcc = V4L2_PIX_FMT_SBGGR16;
+      else if (!g_ascii_strcasecmp (format, "gbrg16le"))
+        fourcc = V4L2_PIX_FMT_SGBRG16;
+      else if (!g_ascii_strcasecmp (format, "grbg16le"))
+        fourcc = V4L2_PIX_FMT_SGRBG16;
+      else if (!g_ascii_strcasecmp (format, "rggb16le"))
+        fourcc = V4L2_PIX_FMT_SRGGB16;
+    }
+  } else if (g_str_equal (mimetype, "video/x-sonix")) {
+    fourcc = V4L2_PIX_FMT_SN9C10X;
+  } else if (g_str_equal (mimetype, "video/x-pwc1")) {
+    fourcc = V4L2_PIX_FMT_PWC1;
+  } else if (g_str_equal (mimetype, "video/x-pwc2")) {
+    fourcc = V4L2_PIX_FMT_PWC2;
   }
 
   /* Prefer the non-contiguous if supported */
