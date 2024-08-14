@@ -289,9 +289,9 @@ gst_vulkan_video_encoder_get_format (GstVulkanEncoder * self,
   }
 
   if (n_fmts == 0) {
-    g_free (fmts);
     g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
         "Profile doesn't have an output format");
+    goto beach;
   }
 
   /* find the best output format */
@@ -776,11 +776,8 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
       gst_vulkan_video_encoder_get_format (self,
       VK_IMAGE_USAGE_VIDEO_ENCODE_SRC_BIT_KHR |
       VK_IMAGE_USAGE_VIDEO_ENCODE_DPB_BIT_KHR, error);
-  if (pic_format == VK_FORMAT_UNDEFINED) {
-    g_set_error (error, GST_VULKAN_ERROR, VK_ERROR_INITIALIZATION_FAILED,
-        "No valid picture format found");
+  if (pic_format == VK_FORMAT_UNDEFINED)
     goto failed;
-  }
 
   session_create = (VkVideoSessionCreateInfoKHR) {
     /* *INDENT-OFF* */
