@@ -66,7 +66,6 @@ private:
     bool buffer_was_bound;
     GWeakRef qt_context_ref_;
     GstBuffer * sync_buffer_;
-    GstMemory * mem_;
     GstVideoInfo v_info;
     GstGLTextureTarget tex_target;
     GstVideoFrame v_frame;
