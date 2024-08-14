@@ -659,13 +659,6 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
       return FALSE;
   }
 
-  priv->enc_caps = (VkVideoEncodeCapabilitiesKHR) {
-    /* *INDENT-OFF* */
-    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_CAPABILITIES_KHR,
-    .pNext = &priv->caps.codec,
-    /* *INDENT-ON* */
-  };
-
   priv->profile = *profile;
 
   priv->profile.usage.encode = (VkVideoEncodeUsageInfoKHR) {
