@@ -1347,7 +1347,7 @@ gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object)
   return v4l2object->formats;
 }
 
-static GstVideoFormat
+GstVideoFormat
 gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
 {
   GstVideoFormat format;
