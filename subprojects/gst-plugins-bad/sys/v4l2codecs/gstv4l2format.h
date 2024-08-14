@@ -29,13 +29,23 @@
   "NV12, YUY2, NV12_4L4, NV12_32L32, NV12_16L32S, I420" \
   "}"
 
-gboolean   gst_v4l2_format_to_video_info (struct v4l2_format * fmt,
-                                          GstVideoInfo * out_info);
+gboolean   gst_v4l2_format_to_dma_drm_info (struct v4l2_format * fmt,
+                                            GstVideoInfoDmaDrm * out_drm_info);
 
 gboolean   gst_v4l2_format_to_video_format (guint32 pix_fmt,
                                             GstVideoFormat * out_format);
 
+gboolean   gst_v4l2_format_to_drm_format (guint32 pix_fmt,
+                                          guint32 * out_drm_fourcc,
+                                          guint64 * out_drm_mod);
+
 gboolean   gst_v4l2_format_from_video_format (GstVideoFormat format,
                                               guint32 * out_pix_fmt);
+
+gboolean   gst_v4l2_format_from_drm_format (guint32 drm_fourcc,
+                                            guint64 drm_mod,
+                                            guint32 * out_pix_fmt);
+
+guint      gst_v4l2_format_get_n_planes (GstVideoInfoDmaDrm * info);
 
 #endif /* __GST_V4L2_FORMAT_H__ */

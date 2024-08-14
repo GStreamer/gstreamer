@@ -19,6 +19,7 @@
  */
 
 #include "gstv4l2codecpool.h"
+#include "gstv4l2format.h"
 
 #include <string.h>
 
@@ -88,7 +89,7 @@ gst_v4l2_codec_pool_acquire_buffer (GstBufferPool * pool, GstBuffer ** buffer,
   vmeta->format = GST_VIDEO_INFO_FORMAT (&self->vinfo_drm->vinfo);
   vmeta->width = GST_VIDEO_INFO_WIDTH (&self->vinfo_drm->vinfo);
   vmeta->height = GST_VIDEO_INFO_HEIGHT (&self->vinfo_drm->vinfo);
-  vmeta->n_planes = GST_VIDEO_INFO_N_PLANES (&self->vinfo_drm->vinfo);
+  vmeta->n_planes = gst_v4l2_format_get_n_planes (self->vinfo_drm);
   memcpy (vmeta->offset, self->vinfo_drm->vinfo.offset, sizeof (vmeta->offset));
   memcpy (vmeta->stride, self->vinfo_drm->vinfo.stride, sizeof (vmeta->stride));
 
