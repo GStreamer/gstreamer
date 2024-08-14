@@ -73,150 +73,157 @@ typedef enum
   GST_V4L2_CODEC = 1u << 1,
   GST_V4L2_TRANSPORT = 1u << 2,
   GST_V4L2_NO_PARSE = 1u << 3,
+  GST_V4L2_BAYER = GST_V4L2_RAW | (1u << 5),
   GST_V4L2_ALL = 0xffff
 } GstV4L2FormatFlags;
 
 typedef struct
 {
-  guint32 format;
+  guint32 v4l2_format;
+  GstVideoFormat gst_format;
   GstV4L2FormatFlags flags;
 } GstV4L2FormatDesc;
 
+/* *INDENT-OFF* */
+#define MAP_FMT(v4l2_format, gst_fmt) V4L2_PIX_FMT_##v4l2_format, GST_VIDEO_FORMAT_##gst_fmt
 static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   /* RGB formats */
-  {V4L2_PIX_FMT_RGB332, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_ARGB555, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_XRGB555, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_ARGB555X, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_XRGB555X, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB565, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB565X, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_BGR666, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_BGR24, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB24, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_ABGR32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_XBGR32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_BGRA32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_BGRX32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGBA32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGBX32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_ARGB32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_XRGB32, GST_V4L2_RAW},
+  {MAP_FMT (RGB332, UNKNOWN),   GST_V4L2_RAW},
+  {MAP_FMT (ARGB555, UNKNOWN),  GST_V4L2_RAW},
+  {MAP_FMT (XRGB555, RGB15),    GST_V4L2_RAW},
+  {MAP_FMT (XRGB555X, RGB15),   GST_V4L2_RAW},
+  {MAP_FMT (ARGB555X, UNKNOWN), GST_V4L2_RAW},
+  {MAP_FMT (RGB565, RGB16),     GST_V4L2_RAW},
+  {MAP_FMT (RGB565X, UNKNOWN),  GST_V4L2_RAW},
+  {MAP_FMT (BGR666, UNKNOWN),   GST_V4L2_RAW},
+  {MAP_FMT (BGR24, BGR),        GST_V4L2_RAW},
+  {MAP_FMT (RGB24, RGB),        GST_V4L2_RAW},
+  {MAP_FMT (ABGR32, BGRA),      GST_V4L2_RAW},
+  {MAP_FMT (XBGR32, BGRx),      GST_V4L2_RAW},
+  {MAP_FMT (BGRA32, ABGR),      GST_V4L2_RAW},
+  {MAP_FMT (BGRX32, xBGR),      GST_V4L2_RAW},
+  {MAP_FMT (RGBA32, RGBA),      GST_V4L2_RAW},
+  {MAP_FMT (RGBX32, RGBx),      GST_V4L2_RAW},
+  {MAP_FMT (ARGB32, ARGB),      GST_V4L2_RAW},
+  {MAP_FMT (XRGB32, xRGB),      GST_V4L2_RAW},
 
   /* Deprecated Packed RGB Image Formats (alpha ambiguity) */
-  {V4L2_PIX_FMT_RGB444, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB555, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB555X, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_BGR32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_RGB32, GST_V4L2_RAW},
+  {MAP_FMT (RGB444, UNKNOWN), GST_V4L2_RAW},
+  {MAP_FMT (RGB555, RGB15),   GST_V4L2_RAW},
+  {MAP_FMT (RGB555X, BGR15),  GST_V4L2_RAW},
+  {MAP_FMT (BGR32, BGRx),     GST_V4L2_RAW},
+  {MAP_FMT (BGR32, BGRA),     GST_V4L2_RAW},
+  {MAP_FMT (RGB32, xRGB),     GST_V4L2_RAW},
+  {MAP_FMT (RGB32, ARGB),     GST_V4L2_RAW},
 
   /* Grey formats */
-  {V4L2_PIX_FMT_GREY, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y4, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y6, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y10, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y12, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y16, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y16_BE, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y10BPACK, GST_V4L2_RAW},
+  {MAP_FMT (GREY, GRAY8),       GST_V4L2_RAW},
+  {MAP_FMT (Y4, UNKNOWN),       GST_V4L2_RAW},
+  {MAP_FMT (Y6, UNKNOWN),       GST_V4L2_RAW},
+  {MAP_FMT (Y10, UNKNOWN),      GST_V4L2_RAW},
+  {MAP_FMT (Y12, UNKNOWN),      GST_V4L2_RAW},
+  {MAP_FMT (Y16, GRAY16_LE),    GST_V4L2_RAW},
+  {MAP_FMT (Y16_BE, GRAY16_BE), GST_V4L2_RAW},
+  {MAP_FMT (Y10BPACK, UNKNOWN), GST_V4L2_RAW},
 
   /* Palette formats */
-  {V4L2_PIX_FMT_PAL8, GST_V4L2_RAW},
+  {MAP_FMT (PAL8, UNKNOWN),   GST_V4L2_RAW},
 
   /* Chrominance formats */
-  {V4L2_PIX_FMT_UV8, GST_V4L2_RAW},
+  {MAP_FMT (UV8, UNKNOWN),    GST_V4L2_RAW},
 
   /* Luminance+Chrominance formats */
-  {V4L2_PIX_FMT_YVU410, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YVU420, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YVU420M, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUYV, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YYUV, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YVYU, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_UYVY, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_VYUY, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV422P, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV422M, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV411P, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_Y41P, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV444, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV555, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV565, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV32, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV410, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV420, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_YUV420M, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_HI240, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_HM12, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_M420, GST_V4L2_RAW},
+  {MAP_FMT (YVU410, YVU9),    GST_V4L2_RAW},
+  {MAP_FMT (YVU420M, YV12),   GST_V4L2_RAW},
+  {MAP_FMT (YVU420, YV12),    GST_V4L2_RAW},
+  {MAP_FMT (YUYV, YUY2),      GST_V4L2_RAW},
+  {MAP_FMT (YYUV, UNKNOWN),   GST_V4L2_RAW},
+  {MAP_FMT (YVYU, YVYU),      GST_V4L2_RAW},
+  {MAP_FMT (UYVY, UYVY),      GST_V4L2_RAW},
+  {MAP_FMT (VYUY, UNKNOWN),   GST_V4L2_RAW},
+  {MAP_FMT (YUV422M, Y42B),   GST_V4L2_RAW},
+  {MAP_FMT (YUV422P, Y42B),   GST_V4L2_RAW},
+  {MAP_FMT (YUV411P, Y41B),   GST_V4L2_RAW},
+  {MAP_FMT (Y41P, UNKNOWN),   GST_V4L2_RAW},
+  {MAP_FMT (YUV444, UNKNOWN), GST_V4L2_RAW},
+  {MAP_FMT (YUV555, UNKNOWN), GST_V4L2_RAW},
+  {MAP_FMT (YUV565, UNKNOWN), GST_V4L2_RAW},
+  {MAP_FMT (YUV32, UNKNOWN),  GST_V4L2_RAW},
+  {MAP_FMT (YUV410, YUV9),    GST_V4L2_RAW},
+  {MAP_FMT (YUV420M, I420),   GST_V4L2_RAW},
+  {MAP_FMT (YUV420, I420),    GST_V4L2_RAW},
+  {MAP_FMT (HI240, UNKNOWN),  GST_V4L2_RAW},
+  {MAP_FMT (M420, UNKNOWN),   GST_V4L2_RAW},
 
-  /* two planes -- one Y, one Cr + Cb interleaved  */
-  {V4L2_PIX_FMT_NV12, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV12M, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV12MT, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV12MT_16X16, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV12M_8L128, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV12M_10BE_8L128, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV21, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV21M, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV16, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV16M, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV61, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV61M, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV24, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_NV42, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_MM21, GST_V4L2_RAW},
+  /* two planes -- one Y,         one Cr + Cb interleaved  */
+  {MAP_FMT (NV12M, NV12),                       GST_V4L2_RAW},
+  {MAP_FMT (NV12, NV12),                        GST_V4L2_RAW},
+  {MAP_FMT (NV12MT, NV12_64Z32),                GST_V4L2_RAW},
+  {MAP_FMT (NV12MT_16X16, UNKNOWN),             GST_V4L2_RAW},
+  {MAP_FMT (NV12_16L16, UNKNOWN),               GST_V4L2_RAW},
+  {MAP_FMT (NV12M_8L128, NV12_8L128),           GST_V4L2_RAW},
+  {MAP_FMT (NV12M_10BE_8L128, NV12_10BE_8L128), GST_V4L2_RAW},
+  {MAP_FMT (NV21M, NV21),                       GST_V4L2_RAW},
+  {MAP_FMT (NV21, NV21),                        GST_V4L2_RAW},
+  {MAP_FMT (NV16M, NV16),                       GST_V4L2_RAW},
+  {MAP_FMT (NV16, NV16),                        GST_V4L2_RAW},
+  {MAP_FMT (NV61M, NV61),                       GST_V4L2_RAW},
+  {MAP_FMT (NV61, NV61),                        GST_V4L2_RAW},
+  {MAP_FMT (NV24, NV24),                        GST_V4L2_RAW},
+  {MAP_FMT (NV42, UNKNOWN),                     GST_V4L2_RAW},
+  {MAP_FMT (MM21, NV12_16L32S),                 GST_V4L2_RAW},
 
   /* Bayer formats - see http://www.siliconimaging.com/RGB%20Bayer.htm */
-  {V4L2_PIX_FMT_SBGGR8, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGBRG8, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGRBG8, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SRGGB8, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SBGGR10, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGBRG10, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGRBG10, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SRGGB10, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SBGGR12, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGBRG12, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGRBG12, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SRGGB12, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SBGGR14, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGBRG14, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGRBG14, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SRGGB14, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SBGGR16, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGBRG16, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SGRBG16, GST_V4L2_RAW},
-  {V4L2_PIX_FMT_SRGGB16, GST_V4L2_RAW},
+  {MAP_FMT (SBGGR8, ENCODED),   GST_V4L2_BAYER},
+  {MAP_FMT (SGBRG8, ENCODED),   GST_V4L2_BAYER},
+  {MAP_FMT (SGRBG8, ENCODED),   GST_V4L2_BAYER},
+  {MAP_FMT (SRGGB8, ENCODED),   GST_V4L2_BAYER},
+  {MAP_FMT (SBGGR10, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGBRG10, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGRBG10, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SRGGB10, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SBGGR12, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGBRG12, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGRBG12, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SRGGB12, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SBGGR14, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGBRG14, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGRBG14, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SRGGB14, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SBGGR16, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGBRG16, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SGRBG16, ENCODED),  GST_V4L2_BAYER},
+  {MAP_FMT (SRGGB16, ENCODED),  GST_V4L2_BAYER},
 
   /* compressed formats */
-  {V4L2_PIX_FMT_MJPEG, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_JPEG, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_PJPG, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_DV, GST_V4L2_TRANSPORT},
-  {V4L2_PIX_FMT_MPEG, GST_V4L2_TRANSPORT},
-  {V4L2_PIX_FMT_FWHT, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_H264, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_H264_NO_SC, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_H264_MVC, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_HEVC, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_H263, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_MPEG1, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_MPEG2, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_MPEG4, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_XVID, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_VC1_ANNEX_G, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_VC1_ANNEX_L, GST_V4L2_CODEC},
-  {V4L2_PIX_FMT_VP8, GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
-  {V4L2_PIX_FMT_VP9, GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
+  {MAP_FMT (MJPEG, ENCODED),        GST_V4L2_CODEC},
+  {MAP_FMT (JPEG, ENCODED),         GST_V4L2_CODEC},
+  {MAP_FMT (PJPG, ENCODED),         GST_V4L2_CODEC},
+  {MAP_FMT (DV, ENCODED),           GST_V4L2_TRANSPORT},
+  {MAP_FMT (MPEG, ENCODED),         GST_V4L2_TRANSPORT},
+  {MAP_FMT (FWHT, ENCODED),         GST_V4L2_CODEC},
+  {MAP_FMT (H264, ENCODED),         GST_V4L2_CODEC},
+  {MAP_FMT (H264_NO_SC, ENCODED),   GST_V4L2_CODEC},
+  {MAP_FMT (H264_MVC, ENCODED),     GST_V4L2_CODEC},
+  {MAP_FMT (HEVC, ENCODED),         GST_V4L2_CODEC},
+  {MAP_FMT (H263, ENCODED),         GST_V4L2_CODEC},
+  {MAP_FMT (MPEG1, ENCODED),        GST_V4L2_CODEC},
+  {MAP_FMT (MPEG2, ENCODED),        GST_V4L2_CODEC},
+  {MAP_FMT (MPEG4, ENCODED),        GST_V4L2_CODEC},
+  {MAP_FMT (XVID, ENCODED),         GST_V4L2_CODEC},
+  {MAP_FMT (VC1_ANNEX_G, ENCODED),  GST_V4L2_CODEC},
+  {MAP_FMT (VC1_ANNEX_L, ENCODED),  GST_V4L2_CODEC},
+  {MAP_FMT (VP8, ENCODED),          GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
+  {MAP_FMT (VP9, ENCODED),          GST_V4L2_CODEC | GST_V4L2_NO_PARSE},
 
   /*  Vendor-specific formats   */
-  {V4L2_PIX_FMT_WNVA, GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
-  {V4L2_PIX_FMT_SN9C10X, GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
-  {V4L2_PIX_FMT_PWC1, GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
-  {V4L2_PIX_FMT_PWC2, GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
+  {MAP_FMT (WNVA, ENCODED),     GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
+  {MAP_FMT (SN9C10X, ENCODED),  GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
+  {MAP_FMT (PWC1, ENCODED),     GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
+  {MAP_FMT (PWC2, ENCODED),     GST_V4L2_CODEC | GST_V4L2_RESOLUTION_AND_RATE},
 };
-
+#undef MAP_FMT
+/* *INDENT-ON* */
 #define GST_V4L2_FORMAT_COUNT (G_N_ELEMENTS (gst_v4l2_formats))
 
 static GSList *gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object);
@@ -1347,180 +1354,75 @@ gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object)
   return v4l2object->formats;
 }
 
+static const GstV4L2FormatDesc *
+gst_v4l2_object_get_desc_from_v4l2fourcc (guint32 fourcc)
+{
+  gint i;
+
+  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+    if (gst_v4l2_formats[i].v4l2_format == fourcc) {
+      return &gst_v4l2_formats[i];
+    }
+  }
+
+  return NULL;
+}
+
 GstVideoFormat
 gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
 {
-  GstVideoFormat format;
+  const GstV4L2FormatDesc *desc;
+  desc = gst_v4l2_object_get_desc_from_v4l2fourcc (fourcc);
+  if (!desc)
+    return GST_VIDEO_FORMAT_UNKNOWN;
 
-  switch (fourcc) {
-    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
-      format = GST_VIDEO_FORMAT_GRAY8;
-      break;
-    case V4L2_PIX_FMT_Y16:
-      format = GST_VIDEO_FORMAT_GRAY16_LE;
-      break;
-    case V4L2_PIX_FMT_Y16_BE:
-      format = GST_VIDEO_FORMAT_GRAY16_BE;
-      break;
-    case V4L2_PIX_FMT_XRGB555:
-    case V4L2_PIX_FMT_RGB555:
-      format = GST_VIDEO_FORMAT_RGB15;
-      break;
-    case V4L2_PIX_FMT_XRGB555X:
-    case V4L2_PIX_FMT_RGB555X:
-      format = GST_VIDEO_FORMAT_BGR15;
-      break;
-    case V4L2_PIX_FMT_RGB565:
-      format = GST_VIDEO_FORMAT_RGB16;
-      break;
-    case V4L2_PIX_FMT_RGB24:
-      format = GST_VIDEO_FORMAT_RGB;
-      break;
-    case V4L2_PIX_FMT_BGR24:
-      format = GST_VIDEO_FORMAT_BGR;
-      break;
-    case V4L2_PIX_FMT_XRGB32:
-    case V4L2_PIX_FMT_RGB32:
-      format = GST_VIDEO_FORMAT_xRGB;
-      break;
-    case V4L2_PIX_FMT_RGBX32:
-      format = GST_VIDEO_FORMAT_RGBx;
-      break;
-    case V4L2_PIX_FMT_XBGR32:
-    case V4L2_PIX_FMT_BGR32:
-      format = GST_VIDEO_FORMAT_BGRx;
-      break;
-    case V4L2_PIX_FMT_BGRX32:
-      format = GST_VIDEO_FORMAT_xBGR;
-      break;
-    case V4L2_PIX_FMT_ABGR32:
-      format = GST_VIDEO_FORMAT_BGRA;
-      break;
-    case V4L2_PIX_FMT_BGRA32:
-      format = GST_VIDEO_FORMAT_ABGR;
-      break;
-    case V4L2_PIX_FMT_RGBA32:
-      format = GST_VIDEO_FORMAT_RGBA;
-      break;
-    case V4L2_PIX_FMT_ARGB32:
-      format = GST_VIDEO_FORMAT_ARGB;
-      break;
-    case V4L2_PIX_FMT_NV12:
-    case V4L2_PIX_FMT_NV12M:
-      format = GST_VIDEO_FORMAT_NV12;
-      break;
-    case V4L2_PIX_FMT_NV12MT:
-      format = GST_VIDEO_FORMAT_NV12_64Z32;
-      break;
-    case V4L2_PIX_FMT_MM21:
-      format = GST_VIDEO_FORMAT_NV12_16L32S;
-      break;
-    case V4L2_PIX_FMT_NV12M_8L128:
-      format = GST_VIDEO_FORMAT_NV12_8L128;
-      break;
-    case V4L2_PIX_FMT_NV12M_10BE_8L128:
-      format = GST_VIDEO_FORMAT_NV12_10BE_8L128;
-      break;
-    case V4L2_PIX_FMT_NV21:
-    case V4L2_PIX_FMT_NV21M:
-      format = GST_VIDEO_FORMAT_NV21;
-      break;
-    case V4L2_PIX_FMT_YVU410:
-      format = GST_VIDEO_FORMAT_YVU9;
-      break;
-    case V4L2_PIX_FMT_YUV410:
-      format = GST_VIDEO_FORMAT_YUV9;
-      break;
-    case V4L2_PIX_FMT_YUV420:
-    case V4L2_PIX_FMT_YUV420M:
-      format = GST_VIDEO_FORMAT_I420;
-      break;
-    case V4L2_PIX_FMT_YUYV:
-      format = GST_VIDEO_FORMAT_YUY2;
-      break;
-    case V4L2_PIX_FMT_YVU420:
-    case V4L2_PIX_FMT_YVU420M:
-      format = GST_VIDEO_FORMAT_YV12;
-      break;
-    case V4L2_PIX_FMT_UYVY:
-      format = GST_VIDEO_FORMAT_UYVY;
-      break;
-    case V4L2_PIX_FMT_YUV411P:
-      format = GST_VIDEO_FORMAT_Y41B;
-      break;
-    case V4L2_PIX_FMT_YUV422P:
-    case V4L2_PIX_FMT_YUV422M:
-      format = GST_VIDEO_FORMAT_Y42B;
-      break;
-    case V4L2_PIX_FMT_YVYU:
-      format = GST_VIDEO_FORMAT_YVYU;
-      break;
-    case V4L2_PIX_FMT_NV16:
-    case V4L2_PIX_FMT_NV16M:
-      format = GST_VIDEO_FORMAT_NV16;
-      break;
-    case V4L2_PIX_FMT_NV61:
-    case V4L2_PIX_FMT_NV61M:
-      format = GST_VIDEO_FORMAT_NV61;
-      break;
-    case V4L2_PIX_FMT_NV24:
-      format = GST_VIDEO_FORMAT_NV24;
-      break;
-    default:
-      format = GST_VIDEO_FORMAT_UNKNOWN;
-      break;
-  }
-
-  return format;
+  return desc->gst_format;
 }
+
 
 static gboolean
 gst_v4l2_object_v4l2fourcc_is_rgb (guint32 fourcc)
 {
-  gboolean ret = FALSE;
+  const GstV4L2FormatDesc *desc;
+  const GstVideoFormatInfo *finfo;
 
-  switch (fourcc) {
-    case V4L2_PIX_FMT_XRGB555:
-    case V4L2_PIX_FMT_RGB555:
-    case V4L2_PIX_FMT_XRGB555X:
-    case V4L2_PIX_FMT_RGB555X:
-    case V4L2_PIX_FMT_RGB565:
-    case V4L2_PIX_FMT_RGB24:
-    case V4L2_PIX_FMT_BGR24:
-    case V4L2_PIX_FMT_XRGB32:
-    case V4L2_PIX_FMT_RGB32:
-    case V4L2_PIX_FMT_RGBA32:
-    case V4L2_PIX_FMT_RGBX32:
-    case V4L2_PIX_FMT_XBGR32:
-    case V4L2_PIX_FMT_BGR32:
-    case V4L2_PIX_FMT_BGRA32:
-    case V4L2_PIX_FMT_BGRX32:
-    case V4L2_PIX_FMT_ABGR32:
-    case V4L2_PIX_FMT_ARGB32:
-    case V4L2_PIX_FMT_SBGGR8:
-    case V4L2_PIX_FMT_SGBRG8:
-    case V4L2_PIX_FMT_SGRBG8:
-    case V4L2_PIX_FMT_SRGGB8:
-    case V4L2_PIX_FMT_SBGGR10:
-    case V4L2_PIX_FMT_SGBRG10:
-    case V4L2_PIX_FMT_SGRBG10:
-    case V4L2_PIX_FMT_SRGGB10:
-    case V4L2_PIX_FMT_SBGGR12:
-    case V4L2_PIX_FMT_SGBRG12:
-    case V4L2_PIX_FMT_SGRBG12:
-    case V4L2_PIX_FMT_SRGGB12:
-    case V4L2_PIX_FMT_SBGGR14:
-    case V4L2_PIX_FMT_SGBRG14:
-    case V4L2_PIX_FMT_SGRBG14:
-    case V4L2_PIX_FMT_SRGGB14:
-    case V4L2_PIX_FMT_SBGGR16:
-    case V4L2_PIX_FMT_SGBRG16:
-    case V4L2_PIX_FMT_SGRBG16:
-    case V4L2_PIX_FMT_SRGGB16:
-      ret = TRUE;
-      break;
-    default:
-      break;
+  desc = gst_v4l2_object_get_desc_from_v4l2fourcc (fourcc);
+  if (!desc || desc->gst_format == GST_VIDEO_FORMAT_UNKNOWN)
+    return FALSE;
+
+  finfo = gst_video_format_get_info (desc->gst_format);
+  if (finfo) {
+    if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo))
+      return TRUE;
+    if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo))
+      return TRUE;
+  }
+
+  if ((desc->flags & GST_V4L2_BAYER) == GST_V4L2_BAYER)
+    return TRUE;
+
+  return FALSE;
+}
+
+static const GstV4L2FormatDesc *
+gst_v4l2_object_get_desc_from_video_format (GstVideoFormat format,
+    const GstV4L2FormatDesc ** fallback)
+{
+  const GstV4L2FormatDesc *ret = NULL;
+  gint i;
+
+  if (fallback)
+    *fallback = NULL;
+
+  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+    if (gst_v4l2_formats[i].gst_format == format) {
+      if (!ret)
+        ret = &gst_v4l2_formats[i];
+      else if (fallback && !*fallback)
+        *fallback = &gst_v4l2_formats[i];
+      else
+        break;
+    }
   }
 
   return ret;
@@ -1529,16 +1431,14 @@ gst_v4l2_object_v4l2fourcc_is_rgb (guint32 fourcc)
 static gboolean
 gst_v4l2_object_v4l2fourcc_is_codec (guint32 fourcc)
 {
-  gint i;
+  const GstV4L2FormatDesc *desc;
 
-  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].format == fourcc) {
-      if (gst_v4l2_formats[i].flags & (GST_V4L2_CODEC | GST_V4L2_TRANSPORT))
-        return TRUE;
-      else
-        return FALSE;
-    }
-  }
+  desc = gst_v4l2_object_get_desc_from_v4l2fourcc (fourcc);
+  if (!desc)
+    return FALSE;
+
+  if (desc->flags & (GST_V4L2_CODEC | GST_V4L2_TRANSPORT))
+    return TRUE;
 
   return FALSE;
 }
@@ -1603,58 +1503,6 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_VP9:
       structure = gst_structure_new_empty ("video/x-vp9");
       break;
-    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
-    case V4L2_PIX_FMT_Y16:
-    case V4L2_PIX_FMT_Y16_BE:
-    case V4L2_PIX_FMT_XRGB555:
-    case V4L2_PIX_FMT_RGB555:
-    case V4L2_PIX_FMT_XRGB555X:
-    case V4L2_PIX_FMT_RGB555X:
-    case V4L2_PIX_FMT_RGB565:
-    case V4L2_PIX_FMT_RGB24:
-    case V4L2_PIX_FMT_BGR24:
-    case V4L2_PIX_FMT_RGB32:
-    case V4L2_PIX_FMT_XRGB32:
-    case V4L2_PIX_FMT_ARGB32:
-    case V4L2_PIX_FMT_RGBX32:
-    case V4L2_PIX_FMT_RGBA32:
-    case V4L2_PIX_FMT_BGR32:
-    case V4L2_PIX_FMT_BGRX32:
-    case V4L2_PIX_FMT_BGRA32:
-    case V4L2_PIX_FMT_XBGR32:
-    case V4L2_PIX_FMT_ABGR32:
-    case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
-    case V4L2_PIX_FMT_NV12M:
-    case V4L2_PIX_FMT_NV12MT:
-    case V4L2_PIX_FMT_MM21:
-    case V4L2_PIX_FMT_NV12M_8L128:
-    case V4L2_PIX_FMT_NV12M_10BE_8L128:
-    case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
-    case V4L2_PIX_FMT_NV21M:
-    case V4L2_PIX_FMT_NV16:    /* 16  Y/CbCr 4:2:2  */
-    case V4L2_PIX_FMT_NV16M:
-    case V4L2_PIX_FMT_NV61:    /* 16  Y/CrCb 4:2:2  */
-    case V4L2_PIX_FMT_NV61M:
-    case V4L2_PIX_FMT_NV24:    /* 24  Y/CrCb 4:4:4  */
-    case V4L2_PIX_FMT_YVU410:
-    case V4L2_PIX_FMT_YUV410:
-    case V4L2_PIX_FMT_YUV420:  /* I420/IYUV */
-    case V4L2_PIX_FMT_YUV420M:
-    case V4L2_PIX_FMT_YUYV:
-    case V4L2_PIX_FMT_YVU420:
-    case V4L2_PIX_FMT_YVU420M:
-    case V4L2_PIX_FMT_UYVY:
-    case V4L2_PIX_FMT_YUV422P:
-    case V4L2_PIX_FMT_YUV422M:
-    case V4L2_PIX_FMT_YVYU:
-    case V4L2_PIX_FMT_YUV411P:{
-      GstVideoFormat format;
-      format = gst_v4l2_object_v4l2fourcc_to_video_format (fourcc);
-      if (format != GST_VIDEO_FORMAT_UNKNOWN)
-        structure = gst_structure_new ("video/x-raw",
-            "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
-      break;
-    }
     case V4L2_PIX_FMT_DV:
       structure =
           gst_structure_new ("video/x-dv", "systemstream", G_TYPE_BOOLEAN, TRUE,
@@ -1735,35 +1583,25 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     case V4L2_PIX_FMT_PWC2:
       structure = gst_structure_new_empty ("video/x-pwc2");
       break;
-    case V4L2_PIX_FMT_RGB332:
-    case V4L2_PIX_FMT_BGR666:
-    case V4L2_PIX_FMT_ARGB555X:
-    case V4L2_PIX_FMT_RGB565X:
-    case V4L2_PIX_FMT_RGB444:
-    case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
-    case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
-    case V4L2_PIX_FMT_Y4:
-    case V4L2_PIX_FMT_Y6:
-    case V4L2_PIX_FMT_Y10:
-    case V4L2_PIX_FMT_Y12:
-    case V4L2_PIX_FMT_Y10BPACK:
-    case V4L2_PIX_FMT_YUV444:
-    case V4L2_PIX_FMT_YUV555:
-    case V4L2_PIX_FMT_YUV565:
-    case V4L2_PIX_FMT_Y41P:
-    case V4L2_PIX_FMT_YUV32:
-    case V4L2_PIX_FMT_NV12MT_16X16:
-    case V4L2_PIX_FMT_NV42:
-    case V4L2_PIX_FMT_H264_MVC:
     default:
-      GST_DEBUG ("Unsupported fourcc 0x%08x %" GST_FOURCC_FORMAT,
-          fourcc, GST_FOURCC_ARGS (fourcc));
       break;
   }
 
   if (bayer_format)
     structure = gst_structure_new ("video/x-bayer", "format", G_TYPE_STRING,
         bayer_format, NULL);
+
+  if (!structure) {
+    GstVideoFormat format;
+    format = gst_v4l2_object_v4l2fourcc_to_video_format (fourcc);
+
+    if (format <= GST_VIDEO_FORMAT_ENCODED)
+      GST_DEBUG ("Unsupported V4L2 fourcc 0x%08x %" GST_FOURCC_FORMAT,
+          fourcc, GST_FOURCC_ARGS (fourcc));
+    else
+      structure = gst_structure_new ("video/x-raw",
+          "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
+  }
 
   return structure;
 }
@@ -1780,7 +1618,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     goto done;
 
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].format != fourcc)
+    if (gst_v4l2_formats[i].v4l2_format != fourcc)
       continue;
 
     if (gst_v4l2_formats[i].flags & GST_V4L2_RESOLUTION_AND_RATE) {
@@ -1805,7 +1643,7 @@ gst_v4l2_object_is_raw (GstV4l2Object * v4l2object)
     return TRUE;
 
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].format == GST_V4L2_PIXELFORMAT (v4l2object)) {
+    if (gst_v4l2_formats[i].v4l2_format == GST_V4L2_PIXELFORMAT (v4l2object)) {
       return !!(gst_v4l2_formats[i].flags & GST_V4L2_RAW);
     }
   }
@@ -1867,12 +1705,12 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
   caps = gst_caps_new_empty ();
   caps_interlaced = gst_caps_new_empty ();
   for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+    guint32 fourcc = gst_v4l2_formats[i].v4l2_format;
 
     if ((gst_v4l2_formats[i].flags & flags) == 0)
       continue;
 
-    structure =
-        gst_v4l2_object_v4l2fourcc_to_bare_struct (gst_v4l2_formats[i].format);
+    structure = gst_v4l2_object_v4l2fourcc_to_bare_struct (fourcc);
 
     if (structure) {
       GstStructure *alt_s = NULL;
@@ -1884,7 +1722,7 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
             "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
       }
 
-      switch (gst_v4l2_formats[i].format) {
+      switch (fourcc) {
         case V4L2_PIX_FMT_RGB32:
           alt_s = gst_structure_copy (structure);
           gst_structure_set (alt_s, "format", G_TYPE_STRING, "ARGB", NULL);
@@ -1979,119 +1817,13 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     goto invalid_format;
 
   if (g_str_equal (mimetype, "video/x-raw")) {
-    switch (GST_VIDEO_INFO_FORMAT (info)) {
-      case GST_VIDEO_FORMAT_I420:
-        fourcc = V4L2_PIX_FMT_YUV420;
-        fourcc_nc = V4L2_PIX_FMT_YUV420M;
-        break;
-      case GST_VIDEO_FORMAT_YUY2:
-        fourcc = V4L2_PIX_FMT_YUYV;
-        break;
-      case GST_VIDEO_FORMAT_UYVY:
-        fourcc = V4L2_PIX_FMT_UYVY;
-        break;
-      case GST_VIDEO_FORMAT_YV12:
-        fourcc = V4L2_PIX_FMT_YVU420;
-        fourcc_nc = V4L2_PIX_FMT_YVU420M;
-        break;
-      case GST_VIDEO_FORMAT_Y41B:
-        fourcc = V4L2_PIX_FMT_YUV411P;
-        break;
-      case GST_VIDEO_FORMAT_Y42B:
-        fourcc = V4L2_PIX_FMT_YUV422P;
-        fourcc_nc = V4L2_PIX_FMT_YUV422M;
-        break;
-      case GST_VIDEO_FORMAT_NV12:
-        fourcc = V4L2_PIX_FMT_NV12;
-        fourcc_nc = V4L2_PIX_FMT_NV12M;
-        break;
-      case GST_VIDEO_FORMAT_NV12_64Z32:
-        fourcc_nc = V4L2_PIX_FMT_NV12MT;
-        break;
-      case GST_VIDEO_FORMAT_NV12_16L32S:
-        fourcc_nc = V4L2_PIX_FMT_MM21;
-        break;
-      case GST_VIDEO_FORMAT_NV12_8L128:
-        fourcc_nc = V4L2_PIX_FMT_NV12M_8L128;
-        break;
-      case GST_VIDEO_FORMAT_NV12_10BE_8L128:
-        fourcc_nc = V4L2_PIX_FMT_NV12M_10BE_8L128;
-        break;
-      case GST_VIDEO_FORMAT_NV21:
-        fourcc = V4L2_PIX_FMT_NV21;
-        fourcc_nc = V4L2_PIX_FMT_NV21M;
-        break;
-      case GST_VIDEO_FORMAT_NV16:
-        fourcc = V4L2_PIX_FMT_NV16;
-        fourcc_nc = V4L2_PIX_FMT_NV16M;
-        break;
-      case GST_VIDEO_FORMAT_NV61:
-        fourcc = V4L2_PIX_FMT_NV61;
-        fourcc_nc = V4L2_PIX_FMT_NV61M;
-        break;
-      case GST_VIDEO_FORMAT_NV24:
-        fourcc = V4L2_PIX_FMT_NV24;
-        break;
-      case GST_VIDEO_FORMAT_YVYU:
-        fourcc = V4L2_PIX_FMT_YVYU;
-        break;
-      case GST_VIDEO_FORMAT_RGB15:
-        fourcc = V4L2_PIX_FMT_RGB555;
-        fourcc_nc = V4L2_PIX_FMT_XRGB555;
-        break;
-      case GST_VIDEO_FORMAT_RGB16:
-        fourcc = V4L2_PIX_FMT_RGB565;
-        break;
-      case GST_VIDEO_FORMAT_RGB:
-        fourcc = V4L2_PIX_FMT_RGB24;
-        break;
-      case GST_VIDEO_FORMAT_BGR:
-        fourcc = V4L2_PIX_FMT_BGR24;
-        break;
-      case GST_VIDEO_FORMAT_xRGB:
-        fourcc = V4L2_PIX_FMT_RGB32;
-        fourcc_nc = V4L2_PIX_FMT_XRGB32;
-        break;
-      case GST_VIDEO_FORMAT_RGBx:
-        fourcc = V4L2_PIX_FMT_RGBX32;
-        break;
-      case GST_VIDEO_FORMAT_ARGB:
-        fourcc = V4L2_PIX_FMT_RGB32;
-        fourcc_nc = V4L2_PIX_FMT_ARGB32;
-        break;
-      case GST_VIDEO_FORMAT_RGBA:
-        fourcc = V4L2_PIX_FMT_RGBA32;
-        break;
-      case GST_VIDEO_FORMAT_BGRx:
-        fourcc = V4L2_PIX_FMT_BGR32;
-        fourcc_nc = V4L2_PIX_FMT_XBGR32;
-        break;
-      case GST_VIDEO_FORMAT_xBGR:
-        fourcc = V4L2_PIX_FMT_BGRX32;
-        break;
-      case GST_VIDEO_FORMAT_BGRA:
-        fourcc = V4L2_PIX_FMT_BGR32;
-        fourcc_nc = V4L2_PIX_FMT_ABGR32;
-        break;
-      case GST_VIDEO_FORMAT_ABGR:
-        fourcc = V4L2_PIX_FMT_BGRA32;
-        break;
-      case GST_VIDEO_FORMAT_GRAY8:
-        fourcc = V4L2_PIX_FMT_GREY;
-        break;
-      case GST_VIDEO_FORMAT_GRAY16_LE:
-        fourcc = V4L2_PIX_FMT_Y16;
-        break;
-      case GST_VIDEO_FORMAT_GRAY16_BE:
-        fourcc = V4L2_PIX_FMT_Y16_BE;
-        break;
-      case GST_VIDEO_FORMAT_BGR15:
-        fourcc = V4L2_PIX_FMT_RGB555X;
-        fourcc_nc = V4L2_PIX_FMT_XRGB555X;
-        break;
-      default:
-        break;
-    }
+    const GstV4L2FormatDesc *desc, *fallback_desc;
+    GstVideoFormat format = GST_VIDEO_INFO_FORMAT (info);
+    desc = gst_v4l2_object_get_desc_from_video_format (format, &fallback_desc);
+    if (desc)
+      fourcc_nc = desc->v4l2_format;
+    if (fallback_desc)
+      fourcc = fallback_desc->v4l2_format;
   } else {
     if (g_str_equal (mimetype, "video/mpegts")) {
       fourcc = V4L2_PIX_FMT_MPEG;
@@ -2187,7 +1919,6 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     }
   }
 
-
   /* Prefer the non-contiguous if supported */
   v4l2object->prefered_non_contiguous = TRUE;
 
@@ -2211,17 +1942,20 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
   /* ERRORS */
 invalid_format:
   {
-    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "invalid format");
+    GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+        "Invalid format %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 unhandled_format:
   {
-    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "unhandled format");
+    GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+        "Unhandled format %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 unsupported_format:
   {
-    GST_DEBUG_OBJECT (v4l2object->dbg_obj, "unsupported format");
+    GST_DEBUG_OBJECT (v4l2object->dbg_obj,
+        "Unsupported format: %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
 }
@@ -2997,7 +2731,7 @@ gst_v4l2_object_update_and_append (GstV4l2Object * v4l2object,
     gint i = 0;
 
     for (; i < GST_V4L2_FORMAT_COUNT; i++) {
-      if (format == gst_v4l2_formats[i].format &&
+      if (format == gst_v4l2_formats[i].v4l2_format &&
           gst_v4l2_formats[i].flags & GST_V4L2_CODEC &&
           !(gst_v4l2_formats[i].flags & GST_V4L2_NO_PARSE)) {
         gst_structure_set (s, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
