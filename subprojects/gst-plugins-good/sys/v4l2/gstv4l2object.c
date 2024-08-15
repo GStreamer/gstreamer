@@ -1696,7 +1696,8 @@ add_non_colorimetry_caps (GstV4l2Object * v4l2object, GstCaps * caps)
 }
 
 static GstCaps *
-gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
+gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags,
+    const GstV4L2FormatDesc * formats, const guint len)
 {
   GstStructure *structure;
   GstCaps *caps, *caps_interlaced;
@@ -1704,10 +1705,10 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
 
   caps = gst_caps_new_empty ();
   caps_interlaced = gst_caps_new_empty ();
-  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    guint32 fourcc = gst_v4l2_formats[i].v4l2_format;
+  for (i = 0; i < len; i++) {
+    guint32 fourcc = formats[i].v4l2_format;
 
-    if ((gst_v4l2_formats[i].flags & flags) == 0)
+    if ((formats[i].flags & flags) == 0)
       continue;
 
     structure = gst_v4l2_object_v4l2fourcc_to_bare_struct (fourcc);
@@ -1715,7 +1716,7 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
     if (structure) {
       GstStructure *alt_s = NULL;
 
-      if (gst_v4l2_formats[i].flags & GST_V4L2_RESOLUTION_AND_RATE) {
+      if (formats[i].flags & GST_V4L2_RESOLUTION_AND_RATE) {
         gst_structure_set (structure,
             "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
@@ -1757,7 +1758,8 @@ gst_v4l2_object_get_all_caps (void)
   static GstCaps *caps = NULL;
 
   if (g_once_init_enter (&caps)) {
-    GstCaps *all_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_ALL);
+    GstCaps *all_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_ALL,
+        gst_v4l2_formats, GST_V4L2_FORMAT_COUNT);
     GST_MINI_OBJECT_FLAG_SET (all_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
     g_once_init_leave (&caps, all_caps);
   }
@@ -1771,7 +1773,8 @@ gst_v4l2_object_get_raw_caps (void)
   static GstCaps *caps = NULL;
 
   if (g_once_init_enter (&caps)) {
-    GstCaps *raw_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_RAW);
+    GstCaps *raw_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_RAW,
+        gst_v4l2_formats, GST_V4L2_FORMAT_COUNT);
     GST_MINI_OBJECT_FLAG_SET (raw_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
     g_once_init_leave (&caps, raw_caps);
   }
@@ -1785,10 +1788,51 @@ gst_v4l2_object_get_codec_caps (void)
   static GstCaps *caps = NULL;
 
   if (g_once_init_enter (&caps)) {
-    GstCaps *codec_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_CODEC);
+    GstCaps *codec_caps = gst_v4l2_object_get_caps_helper (GST_V4L2_CODEC,
+        gst_v4l2_formats, GST_V4L2_FORMAT_COUNT);
     GST_MINI_OBJECT_FLAG_SET (codec_caps, GST_MINI_OBJECT_FLAG_MAY_BE_LEAKED);
     g_once_init_leave (&caps, codec_caps);
   }
+
+  return caps;
+}
+
+/* This is a minimalist probe, for speed, we only enumerate formats */
+GstCaps *
+gst_v4l2_object_probe_template_caps (const gchar * device, gint video_fd,
+    enum v4l2_buf_type type)
+{
+  GArray *formats = g_array_new (FALSE, TRUE, sizeof (GstV4L2FormatDesc));
+  GstCaps *caps;
+  gint n;
+
+  GST_DEBUG ("Getting %s format enumerations", device);
+  for (n = 0;; n++) {
+    const GstV4L2FormatDesc *desc;
+    struct v4l2_fmtdesc fmtdesc = {
+      .index = n,
+      .type = type,
+    };
+
+    /* FIXME, missing libv4l2 support */
+    if (ioctl (video_fd, VIDIOC_ENUM_FMT, &fmtdesc) < 0)
+      break;                    /* end of enumeration */
+
+    GST_LOG ("index:       %u", fmtdesc.index);
+    GST_LOG ("type:        %d", fmtdesc.type);
+    GST_LOG ("flags:       %08x", fmtdesc.flags);
+    GST_LOG ("description: '%s'", fmtdesc.description);
+    GST_LOG ("pixelformat: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (fmtdesc.pixelformat));
+
+    desc = gst_v4l2_object_get_desc_from_v4l2fourcc (fmtdesc.pixelformat);
+    if (desc)
+      g_array_append_val (formats, *desc);
+  }
+
+  caps = gst_v4l2_object_get_caps_helper (GST_V4L2_ALL,
+      (const GstV4L2FormatDesc *) formats->data, formats->len);
+  g_array_free (formats, TRUE);
 
   return caps;
 }
