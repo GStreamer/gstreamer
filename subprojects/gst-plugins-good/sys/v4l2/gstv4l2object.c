@@ -3532,7 +3532,7 @@ gst_v4l2_video_colorimetry_matches (const GstVideoColorimetry * cinfo,
       && gst_video_colorimetry_is_equal (cinfo, &ci_jpeg))
     return TRUE;
 
-  /* bypass check the below GST_VIDEO_TRANSFER_ARIB_STD_B67 type, 
+  /* bypass check the below GST_VIDEO_TRANSFER_ARIB_STD_B67 type,
    * because kernel do not support it. GST_VIDEO_TRANSFER_ARIB_STD_B67 is cast
    * to GST_VIDEO_TRANSFER_BT2020_12 type in gst_v4l2_object_get_colorspace */
   if (info.colorimetry.transfer == GST_VIDEO_TRANSFER_ARIB_STD_B67) {
@@ -4851,7 +4851,7 @@ done:
 GstCaps *
 gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 {
-  GstCaps *ret;
+  GstCaps *caps, *interlaced_caps;
   GSList *walk;
   GSList *formats;
   guint32 fourcc = 0;
@@ -4868,7 +4868,8 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     v4l2object->fmtdesc =
         gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
 
-  ret = gst_caps_new_empty ();
+  caps = gst_caps_new_empty ();
+  interlaced_caps = gst_caps_new_empty ();
 
   if (v4l2object->keep_aspect && !v4l2object->par) {
     struct v4l2_cropcap cropcap;
@@ -4924,6 +4925,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
       GstCaps *format_caps = gst_caps_new_empty ();
 
       gst_caps_append_structure (format_caps, gst_structure_copy (template));
+      add_alternate_variant (v4l2object, format_caps, template);
 
       if (!gst_caps_can_intersect (format_caps, filter)) {
         gst_caps_unref (format_caps);
@@ -4937,34 +4939,42 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
     tmp = gst_v4l2_object_probe_caps_for_format (v4l2object,
         format->pixelformat, template);
     if (tmp) {
-      gst_caps_append (ret, tmp);
-
       /* Add a variant of the caps with the Interlaced feature so we can negotiate it if needed */
-      add_alternate_variant (v4l2object, ret, gst_caps_get_structure (ret,
-              gst_caps_get_size (ret) - 1));
+      gint i;
+      for (i = 0; i < gst_caps_get_size (tmp); i++) {
+        GstStructure *s = gst_caps_get_structure (tmp, i);
+        add_alternate_variant (v4l2object, interlaced_caps, s);
+      }
+
+      gst_caps_append (caps, tmp);
     }
 
     gst_structure_free (template);
   }
 
+  caps = gst_caps_simplify (caps);
+  interlaced_caps = gst_caps_simplify (interlaced_caps);
+
+  gst_caps_append (caps, interlaced_caps);
+
   if (filter) {
     GstCaps *tmp;
 
-    tmp = ret;
-    ret = gst_caps_intersect_full (filter, ret, GST_CAPS_INTERSECT_FIRST);
+    tmp = caps;
+    caps = gst_caps_intersect_full (filter, tmp, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (tmp);
   }
 
   /* Add a variant of the caps without the colorimetry so that we can negotiate
      successfully even if the detected colorimetry from upstream is not supported
      by the device */
-  if (ret) {
-    add_non_colorimetry_caps (v4l2object, ret);
+  if (caps) {
+    add_non_colorimetry_caps (v4l2object, caps);
   }
 
-  GST_INFO_OBJECT (v4l2object->dbg_obj, "probed caps: %" GST_PTR_FORMAT, ret);
+  GST_INFO_OBJECT (v4l2object->dbg_obj, "probed caps: %" GST_PTR_FORMAT, caps);
 
-  return ret;
+  return caps;
 }
 
 GstCaps *
