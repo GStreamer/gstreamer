@@ -62,63 +62,6 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
 
 #ifdef GST_V4L2_ENABLE_PROBE
-/* This is a minimalist probe, for speed, we only enumerate formats */
-static GstCaps *
-gst_v4l2_probe_template_caps (const gchar * device, gint video_fd,
-    enum v4l2_buf_type type)
-{
-  gint n;
-  struct v4l2_fmtdesc format;
-  GstCaps *caps;
-
-  GST_DEBUG ("Getting %s format enumerations", device);
-  caps = gst_caps_new_empty ();
-
-  for (n = 0;; n++) {
-    GstStructure *template;
-
-    memset (&format, 0, sizeof (format));
-
-    format.index = n;
-    format.type = type;
-
-    if (ioctl (video_fd, VIDIOC_ENUM_FMT, &format) < 0)
-      break;                    /* end of enumeration */
-
-    GST_LOG ("index:       %u", format.index);
-    GST_LOG ("type:        %d", format.type);
-    GST_LOG ("flags:       %08x", format.flags);
-    GST_LOG ("description: '%s'", format.description);
-    GST_LOG ("pixelformat: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (format.pixelformat));
-
-    template = gst_v4l2_object_v4l2fourcc_to_structure (format.pixelformat);
-
-    if (template) {
-      GstStructure *alt_t = NULL;
-
-      switch (format.pixelformat) {
-        case V4L2_PIX_FMT_RGB32:
-          alt_t = gst_structure_copy (template);
-          gst_structure_set (alt_t, "format", G_TYPE_STRING, "ARGB", NULL);
-          break;
-        case V4L2_PIX_FMT_BGR32:
-          alt_t = gst_structure_copy (template);
-          gst_structure_set (alt_t, "format", G_TYPE_STRING, "BGRA", NULL);
-        default:
-          break;
-      }
-
-      gst_caps_append_structure (caps, template);
-
-      if (alt_t)
-        gst_caps_append_structure (caps, alt_t);
-    }
-  }
-
-  return gst_caps_simplify (caps);
-}
-
 static gboolean
 gst_v4l2_probe_and_register (GstPlugin * plugin)
 {
@@ -126,6 +69,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
   gint video_fd = -1;
   struct v4l2_capability vcap;
   guint32 device_caps;
+  enum v4l2_buf_type output_type, capture_type;
 
   v4l2_element_init (plugin);
 
@@ -140,6 +84,7 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
     if (video_fd >= 0)
       close (video_fd);
 
+    /* FIXME, missing libv4l2 support */
     video_fd = open (it->device_path, O_RDWR | O_CLOEXEC);
 
     if (video_fd == -1) {
@@ -150,7 +95,8 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
     memset (&vcap, 0, sizeof (vcap));
 
     if (ioctl (video_fd, VIDIOC_QUERYCAP, &vcap) < 0) {
-      GST_DEBUG ("Failed to get device capabilities: %s", g_strerror (errno));
+      GST_DEBUG ("Failed to get device '%s' capabilities: %s",
+          it->device_path, g_strerror (errno));
       continue;
     }
 
@@ -162,26 +108,33 @@ gst_v4l2_probe_and_register (GstPlugin * plugin)
     if (!GST_V4L2_IS_M2M (device_caps))
       continue;
 
+    if (device_caps & V4L2_CAP_VIDEO_M2M_MPLANE) {
+      output_type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+      capture_type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+    } else {
+      output_type = V4L2_BUF_TYPE_VIDEO_OUTPUT;
+      capture_type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    }
+
     GST_DEBUG ("Probing '%s' located at '%s'",
         it->device_name ? it->device_name : (const gchar *) vcap.driver,
         it->device_path);
 
     /* get sink supported format (no MPLANE for codec) */
-    sink_caps = gst_caps_merge (gst_v4l2_probe_template_caps (it->device_path,
-            video_fd, V4L2_BUF_TYPE_VIDEO_OUTPUT),
-        gst_v4l2_probe_template_caps (it->device_path, video_fd,
-            V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE));
-
+    sink_caps = gst_v4l2_object_probe_template_caps (it->device_path,
+        video_fd, output_type);
     /* get src supported format */
-    src_caps = gst_caps_merge (gst_v4l2_probe_template_caps (it->device_path,
-            video_fd, V4L2_BUF_TYPE_VIDEO_CAPTURE),
-        gst_v4l2_probe_template_caps (it->device_path, video_fd,
-            V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE));
+    src_caps = gst_v4l2_object_probe_template_caps (it->device_path,
+        video_fd, capture_type);
 
     /* Skip devices without any supported formats */
     if (gst_caps_is_empty (sink_caps) || gst_caps_is_empty (src_caps)) {
       gst_caps_unref (sink_caps);
       gst_caps_unref (src_caps);
+
+      GST_DEBUG ("Skipping unsupported device '%s' located at '%s'",
+          it->device_name ? it->device_name : (const gchar *) vcap.driver,
+          it->device_path);
       continue;
     }
 
