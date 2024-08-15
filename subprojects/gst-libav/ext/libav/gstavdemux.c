@@ -67,6 +67,8 @@ struct _GstFFMpegDemux
   guint group_id;
 
   AVFormatContext *context;
+  /* set while avformat_open_input() is called */
+  gboolean opening;
 
   GstFFStream *streams[MAX_STREAMS];
 
@@ -463,7 +465,7 @@ gst_ffmpegdemux_do_seek (GstFFMpegDemux * demux, GstSegment * segment)
   GST_LOG_OBJECT (demux, "do seek to time %" GST_TIME_FORMAT,
       GST_TIME_ARGS (target));
 
-  /* if we need to land on a keyframe, try to do so, we don't try to do a 
+  /* if we need to land on a keyframe, try to do so, we don't try to do a
    * keyframe seek if we are not absolutely sure we have an index.*/
   if (segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
     gint keyframeidx;
@@ -1261,7 +1263,9 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
 
   demux->context = avformat_alloc_context ();
   demux->context->pb = iocontext;
+  demux->opening = TRUE;
   res = avformat_open_input (&demux->context, uri, oclass->in_plugin, NULL);
+  demux->opening = FALSE;
 
   g_free (uri);
 
@@ -1724,10 +1728,12 @@ gst_ffmpegdemux_sink_event (GstPad * sinkpad, GstObject * parent,
       /* for a serialized event, wait until an earlier data is gone,
        * though this is no guarantee as to when task is done with it.
        *
-       * If the demuxer isn't opened, push straight away, since we'll
-       * be waiting against a cond that will never be signalled. */
+       * If the demuxer isn't opened yet, i.e. this is called as part of opening
+       * the demuxer, queue up the events for sending them at a later time since
+       * we'll otherwise be waiting against a cond that will never be signalled.
+       */
       if (GST_EVENT_IS_SERIALIZED (event)) {
-        if (demux->context) {
+        if (demux->context && !demux->opening) {
           GST_FFMPEG_PIPE_MUTEX_LOCK (ffpipe);
           while (!ffpipe->needed)
             GST_FFMPEG_PIPE_WAIT (ffpipe);
