@@ -1305,7 +1305,7 @@ failed:
   {
     g_free (format);
 
-    if (v4l2object->element)
+    if (!v4l2object->element)
       return FALSE;
 
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
