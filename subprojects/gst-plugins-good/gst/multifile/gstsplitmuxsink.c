@@ -2321,6 +2321,7 @@ start_next_fragment (GstSplitMuxSink * splitmux, MqStreamCtx * ctx)
   g_list_foreach (splitmux->contexts, (GFunc) unlock_context, splitmux);
   g_list_foreach (splitmux->contexts, (GFunc) restart_context, splitmux);
 
+  update_output_fragment_info (splitmux);
   send_fragment_opened_closed_msg (splitmux, TRUE, sink);
 
   /* FIXME: Is this always the correct next state? */
