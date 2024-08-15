@@ -150,9 +150,12 @@ several overrides and listening to different pads with different settings.
    caps={width, height, framerate}, buffer={pts}"`. Overrides
    `ignored-event-fields` for specified event types.
 * `ignored-event-types`: Default: `{ }`. List of event type names to not record
-* `logged-event-types`: Default: `NULL`. List of event type names to not record,
+* `logged-event-types`: Default: `NULL`. List of (downstream) event type names to not record,
    if noone provided, all events are logged, except the ones defined in the
    `ignored-event-types`.
+* `logged-upstream-event-types`: Default: `NULL`. List of upstream event type names to record,
+  for backward compatibility reasons, upstream events are not logged by default,
+  and you must specify the ones you want to be logged.
 * `expectations-dir`: Path to the directory where the expectations will be
    written if they don't exist, relative to the current working directory. By
    default the current working directory is used, but this setting is usually

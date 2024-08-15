@@ -2428,10 +2428,13 @@ gst_validate_pad_monitor_src_event_func (GstPad * pad, GstObject * parent,
   GstValidatePadMonitor *pad_monitor = _GET_PAD_MONITOR (pad);
   gboolean ret;
 
+  gst_validate_pad_monitor_event_overrides (pad_monitor, event);
+
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
   ret = gst_validate_pad_monitor_src_event_check (pad_monitor, parent, event,
       pad_monitor->event_func);
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
+
   return ret;
 }
 

@@ -87,6 +87,7 @@ struct _ValidateFlowOverride
   GstStructure *logged_fields;
 
   gchar **logged_event_types;
+  gchar **logged_upstream_event_types;
   gchar **ignored_event_types;
 
   gchar *expectations_file_path;
@@ -192,7 +193,8 @@ validate_flow_override_event_handler (GstValidateOverride * override,
       flow->logged_fields,
       flow->ignored_fields,
       (const gchar * const *) flow->ignored_event_types,
-      (const gchar * const *) flow->logged_event_types);
+      (const gchar * const *) flow->logged_event_types,
+      (const gchar * const *) flow->logged_upstream_event_types);
 
   if (event_string) {
     validate_flow_override_printf (flow, "event %s\n", event_string);
@@ -294,6 +296,8 @@ validate_flow_override_new (GstStructure * config)
 
   flow->logged_event_types =
       gst_validate_utils_get_strv (config, "logged-event-types");
+  flow->logged_upstream_event_types =
+      gst_validate_utils_get_strv (config, "logged-upstream-event-types");
   flow->ignored_event_types =
       gst_validate_utils_get_strv (config, "ignored-event-types");
 
@@ -619,6 +623,7 @@ validate_flow_override_finalize (GObject * object)
     fclose (flow->output_file);
   g_strfreev (flow->caps_properties);
   g_strfreev (flow->logged_event_types);
+  g_strfreev (flow->logged_upstream_event_types);
   g_strfreev (flow->ignored_event_types);
   if (flow->ignored_fields)
     gst_structure_free (flow->ignored_fields);
