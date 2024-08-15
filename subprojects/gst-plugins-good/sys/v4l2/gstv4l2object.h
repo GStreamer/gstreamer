@@ -325,8 +325,6 @@ gboolean     gst_v4l2_object_propose_allocation (GstV4l2Object * obj, GstQuery *
 
 GstBufferPool * gst_v4l2_object_get_buffer_pool (GstV4l2Object * v4l2object);
 
-GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
-
 GstVideoFormat gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc);
 
 GstFlowReturn  gst_v4l2_object_poll (GstV4l2Object * v4l2object, GstClockTime timeout);

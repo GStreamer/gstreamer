@@ -1459,7 +1459,8 @@ gst_v4l2_object_v4l2fourcc_is_codec (guint32 fourcc)
 }
 
 static GstStructure *
-gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
+gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc,
+    GstStructure ** drm_template)
 {
   GstStructure *structure = NULL;
   const gchar *bayer_format = NULL;
@@ -1606,47 +1607,34 @@ gst_v4l2_object_v4l2fourcc_to_bare_struct (guint32 fourcc)
     structure = gst_structure_new ("video/x-bayer", "format", G_TYPE_STRING,
         bayer_format, NULL);
 
-  if (!structure) {
-    GstVideoFormat format;
-    format = gst_v4l2_object_v4l2fourcc_to_video_format (fourcc);
+  if (drm_template)
+    *drm_template = NULL;
 
-    if (format <= GST_VIDEO_FORMAT_ENCODED)
+  if (!structure) {
+    const GstV4L2FormatDesc *desc;
+    desc = gst_v4l2_object_get_desc_from_v4l2fourcc (fourcc);
+    if (!desc) {
       GST_DEBUG ("Unsupported V4L2 fourcc 0x%08x %" GST_FOURCC_FORMAT,
           fourcc, GST_FOURCC_ARGS (fourcc));
-    else
-      structure = gst_structure_new ("video/x-raw",
-          "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
+    } else {
+      if (desc->gst_format > GST_VIDEO_FORMAT_ENCODED) {
+        structure = gst_structure_new ("video/x-raw", "format", G_TYPE_STRING,
+            gst_video_format_to_string (desc->gst_format), NULL);
+      }
+
+      if (drm_template && desc->drm_fourcc) {
+        gchar *drm_format =
+            gst_video_dma_drm_fourcc_to_string (desc->drm_fourcc,
+            desc->drm_modifier);
+        *drm_template = gst_structure_new ("video/x-raw",
+            "format", G_TYPE_STRING, "DMA_DRM",
+            "drm-format", G_TYPE_STRING, drm_format, NULL);
+        g_free (drm_format);
+      }
+    }
   }
 
   return structure;
-}
-
-GstStructure *
-gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
-{
-  GstStructure *template;
-  gint i;
-
-  template = gst_v4l2_object_v4l2fourcc_to_bare_struct (fourcc);
-
-  if (template == NULL)
-    goto done;
-
-  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-    if (gst_v4l2_formats[i].v4l2_format != fourcc)
-      continue;
-
-    if (gst_v4l2_formats[i].flags & GST_V4L2_RESOLUTION_AND_RATE) {
-      gst_structure_set (template,
-          "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-          "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    }
-    break;
-  }
-
-done:
-  return template;
 }
 
 gboolean
@@ -1668,22 +1656,32 @@ gst_v4l2_object_is_raw (GstV4l2Object * v4l2object)
 /* Add an 'alternate' variant of the caps with the feature */
 static void
 add_alternate_variant (GstV4l2Object * v4l2object, GstCaps * caps,
-    GstStructure * structure)
+    GstStructure * structure, GstCapsFeatures * features)
 {
   GstStructure *alt_s;
 
   if (v4l2object && v4l2object->never_interlaced)
-    return;
+    goto skip;
 
   if (!gst_structure_has_name (structure, "video/x-raw"))
-    return;
+    goto skip;
 
   alt_s = gst_structure_copy (structure);
   gst_structure_set (alt_s, "interlace-mode", G_TYPE_STRING, "alternate", NULL);
 
-  gst_caps_append_structure_full (caps, alt_s,
-      gst_caps_features_new_static_str (GST_CAPS_FEATURE_FORMAT_INTERLACED,
-          NULL));
+  if (features)
+    gst_caps_features_add (features, GST_CAPS_FEATURE_FORMAT_INTERLACED);
+  else
+    features =
+        gst_caps_features_new_single_static_str
+        (GST_CAPS_FEATURE_FORMAT_INTERLACED);
+
+  gst_caps_append_structure_full (caps, alt_s, features);
+  return;
+
+skip:
+  if (features)
+    gst_caps_features_free (features);
 }
 
 static void
@@ -1715,25 +1713,29 @@ static GstCaps *
 gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags,
     const GstV4L2FormatDesc * formats, const guint len)
 {
-  GstStructure *structure;
-  GstCaps *caps, *caps_interlaced;
+  GstCaps *caps, *sysmem_caps, *interlaced_caps, *interdma_caps;
   guint i;
 
   caps = gst_caps_new_empty ();
-  caps_interlaced = gst_caps_new_empty ();
+  sysmem_caps = gst_caps_new_empty ();
+  interlaced_caps = gst_caps_new_empty ();
+  interdma_caps = gst_caps_new_empty ();
+
   for (i = 0; i < len; i++) {
+    GstStructure *sysmem_tmpl, *dmabuf_tmpl;
     guint32 fourcc = formats[i].v4l2_format;
 
     if ((formats[i].flags & flags) == 0)
       continue;
 
-    structure = gst_v4l2_object_v4l2fourcc_to_bare_struct (fourcc);
+    sysmem_tmpl =
+        gst_v4l2_object_v4l2fourcc_to_bare_struct (fourcc, &dmabuf_tmpl);
 
-    if (structure) {
+    if (sysmem_tmpl) {
       GstStructure *alt_s = NULL;
 
       if (formats[i].flags & GST_V4L2_RESOLUTION_AND_RATE) {
-        gst_structure_set (structure,
+        gst_structure_set (sysmem_tmpl,
             "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
             "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
@@ -1741,31 +1743,51 @@ gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags,
 
       switch (fourcc) {
         case V4L2_PIX_FMT_RGB32:
-          alt_s = gst_structure_copy (structure);
+          alt_s = gst_structure_copy (sysmem_tmpl);
           gst_structure_set (alt_s, "format", G_TYPE_STRING, "ARGB", NULL);
           break;
         case V4L2_PIX_FMT_BGR32:
-          alt_s = gst_structure_copy (structure);
+          alt_s = gst_structure_copy (sysmem_tmpl);
           gst_structure_set (alt_s, "format", G_TYPE_STRING, "BGRA", NULL);
         default:
           break;
       }
 
-      gst_caps_append_structure (caps, structure);
+      gst_caps_append_structure (sysmem_caps, sysmem_tmpl);
+      add_alternate_variant (NULL, interlaced_caps, sysmem_tmpl, NULL);
 
       if (alt_s) {
-        gst_caps_append_structure (caps, alt_s);
-        add_alternate_variant (NULL, caps_interlaced, alt_s);
+        gst_caps_append_structure (sysmem_caps, alt_s);
+        add_alternate_variant (NULL, interlaced_caps, alt_s, NULL);
       }
+    }
 
-      add_alternate_variant (NULL, caps_interlaced, structure);
+    if (dmabuf_tmpl) {
+      if (formats[i].flags & GST_V4L2_RESOLUTION_AND_RATE)
+        gst_structure_set (dmabuf_tmpl,
+            "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+            "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+      gst_caps_append_structure_full (caps, dmabuf_tmpl,
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_DMABUF));
+      add_alternate_variant (NULL, interdma_caps, dmabuf_tmpl,
+          gst_caps_features_new_single_static_str
+          (GST_CAPS_FEATURE_MEMORY_DMABUF));
     }
   }
 
   caps = gst_caps_simplify (caps);
-  caps_interlaced = gst_caps_simplify (caps_interlaced);
+  interdma_caps = gst_caps_simplify (interdma_caps);
+  sysmem_caps = gst_caps_simplify (sysmem_caps);
+  interlaced_caps = gst_caps_simplify (interlaced_caps);
 
-  return gst_caps_merge (caps, caps_interlaced);
+  gst_caps_append (caps, interdma_caps);
+  gst_caps_append (caps, sysmem_caps);
+  gst_caps_append (caps, interlaced_caps);
+
+  return caps;
 }
 
 GstCaps *
@@ -5097,7 +5119,8 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
     format = (struct v4l2_fmtdesc *) walk->data;
 
-    template = gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat);
+    template = gst_v4l2_object_v4l2fourcc_to_bare_struct (format->pixelformat,
+        NULL);
 
     if (!template) {
       GST_DEBUG_OBJECT (v4l2object->dbg_obj,
@@ -5111,7 +5134,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
       GstCaps *format_caps = gst_caps_new_empty ();
 
       gst_caps_append_structure (format_caps, gst_structure_copy (template));
-      add_alternate_variant (v4l2object, format_caps, template);
+      add_alternate_variant (v4l2object, format_caps, template, NULL);
 
       if (!gst_caps_can_intersect (format_caps, filter)) {
         gst_caps_unref (format_caps);
@@ -5129,7 +5152,7 @@ gst_v4l2_object_probe_caps (GstV4l2Object * v4l2object, GstCaps * filter)
       gint i;
       for (i = 0; i < gst_caps_get_size (tmp); i++) {
         GstStructure *s = gst_caps_get_structure (tmp, i);
-        add_alternate_variant (v4l2object, interlaced_caps, s);
+        add_alternate_variant (v4l2object, interlaced_caps, s, NULL);
       }
 
       gst_caps_append (caps, tmp);
