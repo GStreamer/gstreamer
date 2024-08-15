@@ -470,10 +470,10 @@ validate_flow_format_event (GstEvent * event,
 
     if (!g_strv_contains (logged_upstream_event_types, event_type))
       return NULL;
-  }
-
-  if (logged_event_types && !g_strv_contains (logged_event_types, event_type))
+  } else if (logged_event_types
+      && !g_strv_contains (logged_event_types, event_type)) {
     return NULL;
+  }
 
   if (ignored_event_types && g_strv_contains (ignored_event_types, event_type))
     return NULL;
