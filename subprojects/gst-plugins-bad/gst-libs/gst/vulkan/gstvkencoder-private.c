@@ -661,16 +661,8 @@ gst_vulkan_encoder_start (GstVulkanEncoder * self,
 
   priv->profile = *profile;
 
-  /* *INDENT-OFF* */
-  priv->profile.usage.encode = (VkVideoEncodeUsageInfoKHR) {
-    .pNext = &priv->profile.codec,
-    .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR,
-    .tuningMode = VK_VIDEO_ENCODE_TUNING_MODE_DEFAULT_KHR,
-    .videoContentHints = VK_VIDEO_ENCODE_CONTENT_DEFAULT_KHR,
-    .videoUsageHints = VK_VIDEO_ENCODE_USAGE_DEFAULT_KHR,
-  };
-  /* *INDENT-ON* */
-
+  /* ensure the chain up of structure */
+  priv->profile.usage.encode.pNext = &priv->profile.codec;
   priv->profile.profile.pNext = &priv->profile.usage.encode;
 
   /* *INDENT-OFF* */

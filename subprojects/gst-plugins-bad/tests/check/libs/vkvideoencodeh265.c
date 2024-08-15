@@ -757,6 +757,13 @@ setup_h265_encoder (uint32_t width, uint32_t height, gint vps_id,
       .chromaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
       .lumaBitDepth = VK_VIDEO_COMPONENT_BIT_DEPTH_8_BIT_KHR,
     },
+    .usage.encode = {
+      .pNext = &profile.codec,
+      .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_USAGE_INFO_KHR,
+      .videoUsageHints = VK_VIDEO_ENCODE_USAGE_DEFAULT_KHR,
+      .videoContentHints = VK_VIDEO_ENCODE_CONTENT_DEFAULT_KHR,
+      .tuningMode = VK_VIDEO_ENCODE_TUNING_MODE_DEFAULT_KHR,
+    },
     .codec.h265enc = (VkVideoEncodeH265ProfileInfoKHR) {
       .sType = VK_STRUCTURE_TYPE_VIDEO_ENCODE_H265_PROFILE_INFO_KHR,
       .stdProfileIdc = profile_idc,
