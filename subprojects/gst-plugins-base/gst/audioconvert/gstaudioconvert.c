@@ -71,6 +71,16 @@
  * g_value_unset (&v);
  * ]|
  *
+ * The mix matrix can also be passed through a custom upstream event:
+ *
+ * |[
+ * GstStructure *s = gst_structure_new("GstRequestAudioMixMatrix", "matrix", GST_TYPE_ARRAY, &v, NULL);
+ * GstEvent *event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, s);
+ * GstPad *srcpad = gst_element_get_static_pad(audioconvert, "src");
+ * gst_pad_send_event (srcpad, event);
+ * gst_object_unref (pad);
+ * ]|
+ *
  * ## Example launch line
  * |[
  * gst-launch-1.0 audiotestsrc ! audio/x-raw, channels=4 ! audioconvert mix-matrix="<<(float)1.0, (float)0.0, (float)0.0, (float)0.0>, <(float)0.0, (float)1.0, (float)0.0, (float)0.0>>" ! audio/x-raw,channels=2 ! autoaudiosink
@@ -294,6 +304,39 @@ gst_audio_convert_input_channels_reorder_mode_get_type (void)
 }
 
 static void
+gst_audio_convert_set_mix_matrix (GstAudioConvert * this, const GValue * value);
+
+static gboolean
+gst_audio_convert_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  gboolean ret = TRUE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    {
+      const GstStructure *s = gst_event_get_structure (event);
+
+      if (s && gst_structure_has_name (s, "GstRequestAudioMixMatrix")) {
+        const GValue *matrix = gst_structure_get_value (s, "matrix");
+
+        if (matrix) {
+          gst_audio_convert_set_mix_matrix (GST_AUDIO_CONVERT (trans), matrix);
+          g_object_notify (G_OBJECT (trans), "mix-matrix");
+        }
+        goto done;
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->src_event (trans, event);
+
+done:
+  return ret;
+}
+
+static void
 gst_audio_convert_class_init (GstAudioConvertClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -420,6 +463,8 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
       GST_DEBUG_FUNCPTR (gst_audio_convert_submit_input_buffer);
   basetransform_class->prepare_output_buffer =
       GST_DEBUG_FUNCPTR (gst_audio_convert_prepare_output_buffer);
+  basetransform_class->src_event =
+      GST_DEBUG_FUNCPTR (gst_audio_convert_src_event);
 
   basetransform_class->transform_ip_on_passthrough = FALSE;
 
@@ -1803,7 +1848,7 @@ gst_audio_convert_set_mix_matrix (GstAudioConvert * this, const GValue * value)
 {
   gboolean mix_matrix_was_set;
   GstAudioConverter *old_converter;
-  GValue old_mix_matrix;
+  GValue old_mix_matrix = G_VALUE_INIT;
   gboolean restore = FALSE;
 
   g_value_init (&old_mix_matrix, GST_TYPE_ARRAY);
@@ -1816,9 +1861,7 @@ gst_audio_convert_set_mix_matrix (GstAudioConvert * this, const GValue * value)
     g_value_copy (&this->mix_matrix, &old_mix_matrix);
   }
 
-  if (this->convert) {
-    this->convert = NULL;
-  }
+  this->convert = NULL;
 
   if (!gst_value_array_get_size (value)) {
     g_value_copy (value, &this->mix_matrix);
@@ -1863,6 +1906,7 @@ done:
   } else if (old_converter) {
     gst_audio_converter_free (old_converter);
   }
+  g_value_unset (&old_mix_matrix);
 }
 
 static void
