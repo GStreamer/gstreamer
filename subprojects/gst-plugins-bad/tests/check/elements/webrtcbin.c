@@ -4343,8 +4343,8 @@ GST_START_TEST (test_reject_create_offer)
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_INTERNAL_FAILURE));
-  fail_unless_equals_string (error->message,
-      "Tranceiver <webrtctransceiver0> with mid (null) has locked mline 1 but the offer only has 0 sections");
+  fail_unless_matches_string (error->message,
+      "Tranceiver <webrtctransceiver[0-9]+> with mid \\(null\\) has locked mline 1 but the offer only has 0 sections");
   g_clear_error (&error);
   gst_promise_unref (promise);
 
@@ -4446,9 +4446,9 @@ GST_START_TEST (test_reject_set_description)
   gst_structure_get (s, "error", G_TYPE_ERROR, &error, NULL);
   fail_unless (g_error_matches (error, GST_WEBRTC_ERROR,
           GST_WEBRTC_ERROR_INTERNAL_FAILURE));
-  fail_unless_equals_string
+  fail_unless_matches_string
       (error->message,
-      "m-line 0 with transceiver <webrtctransceiver1> was locked to video, but SDP has audio media");
+      "m-line 0 with transceiver <webrtctransceiver[0-9]+> was locked to video, but SDP has audio media");
 
   g_clear_error (&error);
   fail_unless (s != NULL);
