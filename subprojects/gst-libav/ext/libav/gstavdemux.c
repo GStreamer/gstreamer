@@ -1044,6 +1044,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
     if (stream->tags == NULL)
       stream->tags = gst_tag_list_new_empty ();
 
+    gst_tag_list_set_scope (stream->tags, GST_TAG_SCOPE_STREAM);
     gst_tag_list_add (stream->tags, GST_TAG_MERGE_REPLACE,
         (ctx->codec_type == AVMEDIA_TYPE_VIDEO) ?
         GST_TAG_VIDEO_CODEC : GST_TAG_AUDIO_CODEC, codec, NULL);
@@ -1332,7 +1333,8 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   /* grab the global tags */
   tags = gst_ffmpeg_metadata_to_tag_list (demux->context->metadata);
   if (tags) {
-    GST_INFO_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, tags);
+    gst_tag_list_set_scope (demux->tags, GST_TAG_SCOPE_GLOBAL);
+    GST_INFO_OBJECT (demux, "global tags: %" GST_PTR_FORMAT, demux->tags);
   }
 
   /* now handle the stream tags */
