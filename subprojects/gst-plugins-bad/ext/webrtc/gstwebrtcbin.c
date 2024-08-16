@@ -9169,7 +9169,7 @@ gst_webrtc_bin_class_init (GstWebRTCBinClass * klass)
    *  "address"              G_TYPE_STRING              address of the candidate, allowing for IPv4, IPv6 and FQDNs
    *  "port"                 G_TYPE_UINT                port number of the candidate
    *  "candidate-type"       G_TYPE_STRING              RTCIceCandidateType
-   *  "priority"             G_TYPE_UINT64              calculated as defined in RFC 5245
+   *  "priority"             G_TYPE_UINT                calculated as defined in RFC 5245
    *  "protocol"             G_TYPE_STRING              Either "udp" or "tcp". Based on the "transport" defined in RFC 5245
    *  "relay-protocol"       G_TYPE_STRING              protocol used by the endpoint to communicate with the TURN server. Only present for local candidates. Either "udp", "tcp" or "tls"
    *  "url"                  G_TYPE_STRING              URL of the ICE server from which the candidate was obtained. Only present for local candidates

@@ -1753,8 +1753,7 @@ validate_candidate_stats (const GstStructure * s, const GstStructure * stats)
   fail_unless (gst_structure_get (s, "port", G_TYPE_UINT, &port, NULL));
   fail_unless (gst_structure_get (s, "candidate-type", G_TYPE_STRING,
           &candidateType, NULL));
-  fail_unless (gst_structure_get (s, "priority", G_TYPE_UINT64, &priority,
-          NULL));
+  fail_unless (gst_structure_get (s, "priority", G_TYPE_UINT, &priority, NULL));
   fail_unless (gst_structure_get (s, "protocol", G_TYPE_STRING, &protocol,
           NULL));
 
