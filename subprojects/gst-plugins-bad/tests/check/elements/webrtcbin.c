@@ -110,6 +110,8 @@ struct test_webrtc
                                          gpointer user_data);
   gpointer offer_set_data;
   GDestroyNotify offer_set_notify;
+
+  gboolean perform_create_answer;
   void      (*on_answer_created)        (struct test_webrtc * t,
                                          GstElement * element,
                                          GstPromise * promise,
@@ -339,6 +341,9 @@ _on_offer_received (GstPromise * promise, gpointer user_data)
     g_signal_emit_by_name (answerer, "set-remote-description", t->offer_desc,
         promise);
 
+  }
+
+  if (t->perform_create_answer) {
     promise = gst_promise_new_with_change_func (_on_answer_received, t, NULL);
     g_signal_emit_by_name (answerer, "create-answer", NULL, promise);
   }
@@ -635,6 +640,7 @@ test_webrtc_new (void)
   ret->on_negotiation_needed = _negotiation_not_reached;
   ret->on_ice_candidate = _ice_candidate_not_reached;
   ret->on_pad_added = _pad_added_not_reached;
+  ret->perform_create_answer = TRUE;
   ret->on_offer_created = _offer_answer_not_reached;
   ret->on_answer_created = _offer_answer_not_reached;
   ret->on_prepare_data_channel = _on_prepare_data_channel_not_reached;
@@ -6155,6 +6161,7 @@ GST_END_TEST;
 static void
 _rollback_complete (GstPromise * promise, gpointer user_data)
 {
+  struct test_webrtc *t = user_data;
   GstPromiseResult result = gst_promise_wait (promise);
   fail_unless (result == GST_PROMISE_RESULT_REPLIED);
 
@@ -6172,6 +6179,18 @@ _rollback_complete (GstPromise * promise, gpointer user_data)
     }
     g_clear_error (&error);
   }
+
+  g_mutex_lock (&t->lock);
+  gint i = GPOINTER_TO_INT (t->user_data);
+  i++;
+  t->user_data = GINT_TO_POINTER (i);
+  g_mutex_unlock (&t->lock);
+
+  GST_INFO ("%d rollbacks complete", i);
+
+  /* Signal completion once 2 rollbacks are done */
+  if (i >= 2)
+    test_webrtc_signal_state (t, STATE_CUSTOM);
 }
 
 static void
@@ -6197,13 +6216,24 @@ GST_START_TEST (test_offer_rollback)
 {
   struct test_webrtc *t = create_audio_test ();
 
+  t->on_offer_created = NULL;
+  t->on_answer_created = NULL;
   t->on_offer_set = _rollback_offer;
   t->offer_set_data = NULL;
 
+  t->perform_create_answer = FALSE;
   t->on_answer_set = NULL;
   t->answer_set_data = NULL;
 
-  test_validate_sdp (t, NULL, NULL);
+  fail_if (gst_element_set_state (t->webrtc1,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+  fail_if (gst_element_set_state (t->webrtc2,
+          GST_STATE_READY) == GST_STATE_CHANGE_FAILURE);
+
+  test_webrtc_create_offer (t);
+
+  test_webrtc_wait_for_state_mask (t, 1 << STATE_CUSTOM);
+
   test_webrtc_free (t);
 }
 
