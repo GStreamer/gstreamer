@@ -914,7 +914,6 @@ static GstPadProbeReturn
 demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
 {
   GstURISourceBin *urisrc = slot->linked_info->urisrc;
-  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
   GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
 
   GST_URI_SOURCE_BIN_LOCK (urisrc);
@@ -941,13 +940,14 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
         /* EOS means this element is no longer buffering */
         remove_buffering_msgs (urisrc, GST_OBJECT_CAST (slot->queue));
 
+      GST_URI_SOURCE_BIN_UNLOCK (urisrc);
       if (all_streams_eos) {
         GST_DEBUG_OBJECT (urisrc, "Posting about-to-finish");
         g_signal_emit (urisrc,
             gst_uri_source_bin_signals[SIGNAL_ABOUT_TO_FINISH], 0, NULL);
       }
+      goto unlock_done;
     }
-      break;
     case GST_EVENT_STREAM_START:
     {
       /* This is a temporary hack to notify downstream decodebin3 to *not*
@@ -973,7 +973,8 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
 
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
-  return ret;
+unlock_done:
+  return GST_PAD_PROBE_OK;
 }
 
 static GstPadProbeReturn
