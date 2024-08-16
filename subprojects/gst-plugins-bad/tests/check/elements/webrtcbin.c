@@ -1829,9 +1829,13 @@ _on_stats (GstPromise * promise, gpointer user_data)
   int i;
 
   validate_stats (reply);
+
+  g_mutex_lock (&t->lock);
   i = GPOINTER_TO_INT (t->user_data);
   i++;
   t->user_data = GINT_TO_POINTER (i);
+  g_mutex_unlock (&t->lock);
+
   if (i >= 2)
     test_webrtc_signal_state (t, STATE_CUSTOM);
 
