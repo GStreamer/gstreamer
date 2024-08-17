@@ -463,6 +463,7 @@ build debian x86_64:
       -Dgst-plugins-good:cairo=enabled
       -Dgst-plugins-good:soup=enabled
       -Dgst-plugins-bad:d3d11-wgc=enabled
+      -Dgtk=enabled
   rules:
     - !reference [.upstream-branch-rules, rules]
     - changes:
@@ -606,6 +607,7 @@ build macos:
           -Dgst-plugins-base:pango=enabled
           -Dgst-plugins-good:cairo=enabled
           -Dgst-plugins-good:soup=enabled
+          -Dgtk=enabled
 
 # ---- Tests ----- #
 

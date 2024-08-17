@@ -16,6 +16,7 @@ option('sharp', type : 'feature', value : 'disabled')
 # External subprojects
 option('tls', type : 'feature', value : 'auto', description : 'TLS support using glib-networking as a subproject')
 option('libnice', type : 'feature', value : 'auto', description: 'ICE support using libnice as a subproject')
+option('gtk', type: 'feature', value: 'disabled', description: 'Build GTK4 as a subproject')
 
 # Build for fuzzing
 option('oss_fuzz', type : 'feature', value : 'disabled',

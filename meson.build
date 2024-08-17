@@ -10,6 +10,7 @@ project('gstreamer-full', 'c',
 apiversion = '1.0'
 gst_version = '>= @0@'.format(meson.project_version())
 
+host_system = host_machine.system()
 build_system = build_machine.system()
 cc = meson.get_compiler('c')
 
@@ -100,6 +101,18 @@ if get_option('webrtc').enabled()
   libnice_options += ['gstreamer=enabled']
 endif
 
+gtk_options = [
+  'build-demos=false',
+  'build-examples=false',
+  'build-testsuite=false',
+  'build-tests=false',
+]
+if host_system == 'windows'
+  gtk_options += ['vulkan=disabled']
+elif host_system == 'darwin'
+  gtk_options += ['x11-backend=false']
+endif
+
 # Disable gst-python if we've disabled introspection
 gst_python_option = get_option('python').disable_if(get_option('introspection').disabled())
 
@@ -121,6 +134,7 @@ subprojects = [
   ['pygobject', { 'option': get_option('python'), 'match_gst_version': false, 'sysdep': 'pygobject-3.0', 'sysdep_version': '>= 3.8' }],
   ['gst-python', { 'option': gst_python_option}],
   ['gst-examples', { 'option': get_option('gst-examples'), 'match_gst_versions': false}],
+  ['gtk', {'option': get_option('gtk'), 'match_gst_version': false, 'subproject_options': gtk_options}],
   ['gst-plugins-rs', { 'option': get_option('rs'), 'build-hotdoc': true, 'match_gst_version': false}],
 ]
 
