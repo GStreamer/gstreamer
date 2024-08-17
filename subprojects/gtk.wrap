@@ -1,10 +1,10 @@
 [wrap-file]
-directory = gtk-4.14.4
-source_url = https://download.gnome.org/sources/gtk/4.14/gtk-4.14.4.tar.xz
-source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/gtk/4.14/gtk-4.14.4.tar.xz
-source_filename = gtk-4.14.4.tar.xz
-source_hash = 443518b97e8348f9f6430ac435b1010f9a6c5207f4dc6a7cd5d24e3820cee633
-wrapdb_version = 4.14.4
+directory = gtk-4.14.5
+source_url = https://download.gnome.org/sources/gtk/4.14/gtk-4.14.5.tar.xz
+source_fallback_url = https://ftp.acc.umu.se/pub/gnome/sources/gtk/4.14/gtk-4.14.5.tar.xz
+source_filename = gtk-4.14.5.tar.xz
+source_hash = 5547f2b9f006b133993e070b87c17804e051efda3913feaca1108fa2be41e24d
+wrapdb_version = 4.14.5
 
 [provide]
 dependency_names = gtk4, gtk4-broadway, gtk4-macos, gtk4-wayland, gtk4-win32, gtk4-x11, gtk4-unix-print
