@@ -39,12 +39,12 @@ protected:
     GstQSGMaterial();
     ~GstQSGMaterial();
 public:
-    static GstQSGMaterial *new_for_format (GstVideoFormat format);
+    static GstQSGMaterial *new_for_format_and_target(GstVideoFormat format, GstGLTextureTarget target);
 
     void setCaps (GstCaps * caps);
     gboolean setBuffer (GstBuffer * buffer);
     GstBuffer * getBuffer (gboolean * was_bound);
-    bool compatibleWith(GstVideoInfo *v_info);
+    bool compatibleWith(GstVideoInfo *v_info, GstGLTextureTarget tex_target);
 
     void bind(GstQSGMaterialShader *, GstVideoFormat);
 
@@ -61,6 +61,7 @@ private:
     GWeakRef qt_context_ref_;
     GstMemory * mem_;
     GstVideoInfo v_info;
+    GstGLTextureTarget tex_target;
     GstVideoFrame v_frame;
     float *cms_offset;
     float *cms_ycoeff;
