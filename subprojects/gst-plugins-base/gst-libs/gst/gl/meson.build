@@ -566,7 +566,7 @@ if need_platform_egl != 'no'
     gl_platform_deps += egl_dep
     glconf.set('GST_GL_HAVE_PLATFORM_EGL', 1)
 
-    if cc.has_header('drm_fourcc.h', dependencies: libdrm_dep)
+    if libdrm_dep.type_name() == 'internal' or cc.has_header('drm_fourcc.h', dependencies: libdrm_dep)
       gl_misc_deps += [allocators_dep, libdrm_dep]
       glconf.set('GST_GL_HAVE_DMABUF', 1)
     endif
