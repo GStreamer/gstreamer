@@ -685,6 +685,7 @@ gst_tee_query_allocation (const GValue * item, GValue * ret, gpointer user_data)
     /* Afterward, aggregate the common params */
     if (gst_query_find_allocation_meta (ctx->query, api, &ctx_index)) {
       const GstStructure *ctx_param;
+      GstStructure *aggregated_params = NULL;
 
       gst_query_parse_nth_allocation_meta (ctx->query, ctx_index, &ctx_param);
 
@@ -692,7 +693,17 @@ gst_tee_query_allocation (const GValue * item, GValue * ret, gpointer user_data)
       if (ctx_param == NULL && param == NULL)
         continue;
 
-      GST_DEBUG_OBJECT (ctx->tee, "Dropping allocation meta %s",
+      /* Aggregate the two params, if successful, add it to the query.
+       * and then, we always Drop the old params from the query. */
+      if (gst_meta_api_type_aggregate_params (api, &aggregated_params,
+              ctx_param, param)) {
+        gst_query_add_allocation_meta (ctx->query, api, aggregated_params);
+
+        if (aggregated_params)
+          gst_structure_free (aggregated_params);
+      }
+
+      GST_DEBUG_OBJECT (ctx->tee, "Dropping old allocation meta %s",
           g_type_name (api));
       gst_query_remove_nth_allocation_meta (ctx->query, ctx_index);
     }
