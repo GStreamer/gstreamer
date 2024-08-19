@@ -915,6 +915,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
 {
   GstURISourceBin *urisrc = slot->linked_info->urisrc;
   GstEvent *ev = GST_PAD_PROBE_INFO_EVENT (info);
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
 
   GST_URI_SOURCE_BIN_LOCK (urisrc);
 
@@ -926,7 +927,8 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
       GST_LOG_OBJECT (urisrc, "EOS on pad %" GST_PTR_FORMAT, pad);
 
       if (slot->pending_pad && pad != slot->pending_pad) {
-        GST_DEBUG_OBJECT (pad, "A pending pad is present, ignoring");
+        GST_DEBUG_OBJECT (pad, "A pending pad is present, dropping");
+        ret = GST_PAD_PROBE_DROP;
         break;
       }
 
@@ -974,7 +976,7 @@ demux_pad_events (GstPad * pad, GstPadProbeInfo * info, OutputSlotInfo * slot)
   GST_URI_SOURCE_BIN_UNLOCK (urisrc);
 
 unlock_done:
-  return GST_PAD_PROBE_OK;
+  return ret;
 }
 
 static GstPadProbeReturn
