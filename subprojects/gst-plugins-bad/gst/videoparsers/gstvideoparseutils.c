@@ -28,6 +28,7 @@
 #include <gst/video/video.h>
 #include <gst/video/video-sei.h>
 #include <gst/base/gstbitreader.h>
+#include <gst/codecparsers/gstlcevcmeta.h>
 #include <gstvideoparseutils.h>
 
 GST_DEBUG_CATEGORY_EXTERN (videoparseutils_debug);
@@ -97,6 +98,9 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
       break;
     case ITU_T_T35_MANUFACTURER_US_DIRECTV:
       user_data_id = USER_DATA_ID_DIRECTV_CC;
+      break;
+    case ITU_T_T35_MANUFACTURER_UK_LCEVC:
+      user_data_id = USER_DATA_ID_LCEVC_ENHANCEMENT;
       break;
     default:
       GST_LOG_OBJECT (elt, "Unsupported provider code %d", provider_code);
@@ -233,6 +237,22 @@ gst_video_parse_user_data (GstElement * elt, GstVideoParseUserData * user_data,
           break;
       }
       break;
+    case USER_DATA_ID_LCEVC_ENHANCEMENT:
+      if (!gst_byte_reader_get_uint8 (br, &user_data_type_code)) {
+        GST_WARNING_OBJECT (elt, "Missing user data type code, ignoring");
+        break;
+      }
+      bar_size = gst_byte_reader_get_remaining (br);
+      if (bar_size == 0) {
+        GST_WARNING_OBJECT (elt, "Bar data packet too short, ignoring");
+        break;
+      }
+      if (!gst_byte_reader_get_data (br, bar_size, &data))
+        break;
+      g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
+      user_data->lcevc_enhancement_data =
+          gst_buffer_new_memdup (data, bar_size);
+      break;
     default:
       GST_DEBUG_OBJECT (elt,
           "Unrecognized user data id %d of size %d", user_data_id,
@@ -287,6 +307,18 @@ gst_video_push_user_data (GstElement * elt, GstVideoParseUserData * user_data,
   } else {
     gst_buffer_add_video_bar_meta (buf, bar.field, bar.is_letterbox,
         bar.bar_data[0], bar.bar_data[1]);
+  }
+
+  /* 4. handle LCEVC */
+  if (user_data->lcevc_enhancement_data) {
+    if (!gst_buffer_get_meta (buf, GST_LCEVC_META_API_TYPE)) {
+      gst_buffer_add_lcevc_meta (buf, user_data->lcevc_enhancement_data);
+    } else {
+      GST_DEBUG_OBJECT (elt, "LCEVC data already found on buffer, "
+          "discarding to avoid duplication");
+    }
+
+    g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
   }
 }
 
@@ -447,11 +479,13 @@ gst_video_parse_utils_parse_afd (const guint8 data, GstVideoAFDSpec spec,
  * Clears the user data, resetting it for the next frame
  */
 void
-gst_video_clear_user_data (GstVideoParseUserData * user_data)
+gst_video_clear_user_data (GstVideoParseUserData * user_data, gboolean free)
 {
   user_data->closedcaptions_size = 0;
   user_data->bar_data_size = 0;
   user_data->active_format_flag = 0;
+  if (free)
+    g_clear_pointer (&user_data->lcevc_enhancement_data, gst_buffer_unref);
 }
 
 /*

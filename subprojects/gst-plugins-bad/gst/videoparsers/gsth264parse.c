@@ -214,6 +214,9 @@ gst_h264_parse_finalize (GObject * object)
 
   gst_video_clear_user_data_unregistered (&h264parse->user_data_unregistered,
       TRUE);
+  gst_video_clear_user_data (&h264parse->user_data, TRUE);
+  gst_video_clear_user_data_unregistered (&h264parse->user_data_unregistered,
+      TRUE);
 
   g_object_unref (h264parse->frame_out);
 
@@ -242,7 +245,7 @@ gst_h264_parse_reset_frame (GstH264Parse * h264parse)
   h264parse->have_pps_in_frame = FALSE;
   h264parse->have_aud_in_frame = FALSE;
   gst_adapter_clear (h264parse->frame_out);
-  gst_video_clear_user_data (&h264parse->user_data);
+  gst_video_clear_user_data (&h264parse->user_data, FALSE);
   gst_video_clear_user_data_unregistered (&h264parse->user_data_unregistered,
       FALSE);
 }
@@ -588,8 +591,9 @@ gst_h264_parse_process_sei_user_data (GstH264Parse * h264parse,
   GstByteReader br;
   GstVideoParseUtilsField field = GST_VIDEO_PARSE_UTILS_FIELD_1;
 
-  /* only US country code is currently supported */
+  /* only US and UK country codes are currently supported */
   switch (rud->country_code) {
+    case ITU_T_T35_COUNTRY_CODE_UK:
     case ITU_T_T35_COUNTRY_CODE_US:
       break;
     default:
@@ -2444,6 +2448,11 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       GST_WARNING_OBJECT (h264parse,
           "Couldn't set content light level to caps");
     }
+
+    if (h264parse->user_data.lcevc_enhancement_data)
+      gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, TRUE, NULL);
+    else
+      gst_caps_set_simple (caps, "lcevc", G_TYPE_BOOLEAN, FALSE, NULL);
 
     src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
 

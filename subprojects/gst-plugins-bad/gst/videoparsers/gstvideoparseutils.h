@@ -32,6 +32,8 @@
 #define A53_USER_DATA_ID_GA94 0x47413934
 #define A53_USER_DATA_ID_DTG1 0x44544731
 
+/* custom id for LCEVC */
+#define USER_DATA_ID_LCEVC_ENHANCEMENT 0xFFFFFFFD
 /* custom id for SCTE 20 608 */
 #define USER_DATA_ID_SCTE_20_CC 0xFFFFFFFE
 /* custom id for DirecTV */
@@ -49,11 +51,13 @@
 #define CEA_708_PROCESS_EM_DATA_FLAG 0x80
 
 /* country codes */
+#define ITU_T_T35_COUNTRY_CODE_UK			0xB4
 #define ITU_T_T35_COUNTRY_CODE_US			0xB5
 
 /* provider codes */
 #define ITU_T_T35_MANUFACTURER_US_ATSC     	0x31
 #define ITU_T_T35_MANUFACTURER_US_DIRECTV  	0x2F
+#define ITU_T_T35_MANUFACTURER_UK_LCEVC  	0x50
 
 /*
  * GstVideoAFDAspectRatio:
@@ -144,7 +148,7 @@ typedef struct {
 /*
  * GstVideoParseUserData
  *
- * Holds unparsed and parsed user data for closed captions, AFD and Bar data.
+ * Holds unparsed and parsed user data for closed captions, LCEVC, AFD and Bar data.
  */
 typedef struct
 {
@@ -163,6 +167,9 @@ typedef struct
   guint8 afd;
   gboolean active_format_flag;
   GstVideoAFDSpec afd_spec;
+
+  /* pending LCEVC data */
+  GstBuffer *lcevc_enhancement_data;
 
 } GstVideoParseUserData;
 
@@ -200,7 +207,8 @@ void gst_video_push_user_data (GstElement            * elt,
                                GstVideoParseUserData * user_data,
                                GstBuffer             * buf);
 
-void gst_video_clear_user_data (GstVideoParseUserData * user_data);
+void gst_video_clear_user_data (GstVideoParseUserData * user_data,
+                                gboolean                free);
 
 
 void gst_video_parse_user_data_unregistered (GstElement                        * elt,
