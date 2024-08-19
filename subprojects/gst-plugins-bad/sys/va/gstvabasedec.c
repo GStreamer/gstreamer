@@ -658,8 +658,7 @@ gst_va_base_dec_set_context (GstElement * element, GstContext * context)
   if (!ret
       || (old_display && new_display && old_display != new_display
           && base->decoder)) {
-    GST_ELEMENT_WARNING (base, RESOURCE, BUSY,
-        ("Can't replace VA display while operating"), (NULL));
+    GST_WARNING_OBJECT (base, "Can't replace VA display while operating");
   }
 
   gst_clear_object (&old_display);

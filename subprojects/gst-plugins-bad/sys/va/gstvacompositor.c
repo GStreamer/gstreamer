@@ -420,8 +420,7 @@ gst_va_compositor_set_context (GstElement * element, GstContext * context)
   if (!ret
       || (old_display && new_display && old_display != new_display
           && self->filter)) {
-    GST_ELEMENT_WARNING (element, RESOURCE, BUSY,
-        ("Can't replace VA display while operating"), (NULL));
+    GST_WARNING_OBJECT (element, "Can't replace VA display while operating");
   }
 
   gst_clear_object (&old_display);
